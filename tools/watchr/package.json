@@ -19,7 +19,6 @@
     "url": "https://github.com/ChrisCummins/pip-db"
   },
   "dependencies": {
-    "walk": ">= 2.0.1",
     "colors": "~0.6.2",
     "node-watch": "~0.3.4"
   }
