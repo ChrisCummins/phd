@@ -30,6 +30,7 @@ var getProjectRoot = function(dir) {
 var rootDir = getProjectRoot(__dirname);             // Project root
 var srcDirs = [rootDir + '/src', rootDir + '/test']; // Clojure sources
 var resourcesDirs = [rootDir + '/resources'];        // Web resources
+var reportDir = [rootDir + '/Documentation/report']; // Report
 
 // Print a message
 var message = function (msg) {
@@ -84,12 +85,19 @@ var srcModified = function (filename) {
   run('make', ['-s', '-C', 'Documentation/']);
 };
 
+// Report modified callback
+var reportModified = function(filename) {
+  run('make', ['-s', '-C', 'Documentation/report']);
+};
+
 process.chdir(rootDir);
 
 // Register our handlers
 watch(resourcesDirs, resourcesModified);
 watch(srcDirs, srcModified);
+watch(reportDir, reportModified);
 
 // Run the handlers on startup
 resourcesModified();
 srcModified();
+reportModified();
