@@ -87,7 +87,8 @@ var srcModified = function (filename) {
 
 // Report modified callback
 var reportModified = function(filename) {
-  run('make', ['-s', '-C', 'Documentation/report']);
+  if (filename.match(/\.tex$/))
+    run('make', ['-s', '-C', 'Documentation/report']);
 };
 
 process.chdir(rootDir);
