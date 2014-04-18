@@ -98,6 +98,6 @@ watch(srcDirs, srcModified);
 watch(reportDir, reportModified);
 
 // Run the handlers on startup
-resourcesModified();
-srcModified();
-reportModified();
+resourcesModified('');
+srcModified('');
+reportModified('');
