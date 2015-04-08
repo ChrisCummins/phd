@@ -51,25 +51,6 @@ struct Colour {
   explicit operator Pixel() const {
     return {clamp(r), clamp(g), clamp(b)};
   }
-
-#ifdef DEBUG
-  // Print to stdout: #rrggbb
-  void print() const {
-    printf("Colour[%p] #%02x%02x%02x\n", this,
-           clamp(r), clamp(g), clamp(b));
-  }
-
-  // Returns true if value is equal to r, g, b literals.
-  bool eq(const float r, const float g, const float b,
-          bool verbose=true) {
-    bool equal = this->r == r && this->g == g && this->b == b;
-
-    if (verbose && !equal)
-      print();
-
-    return equal;
-  }
-#endif
 };
 
 
@@ -151,24 +132,6 @@ struct Vector {
   Vector normalise() const {
     return *this / magnitude();
   }
-
-#ifdef DEBUG
-  // Returns true if value is equal to x, y, z literals.
-  bool eq(const double x, const double y, const double z,
-          bool verbose=true) {
-    bool equal = this->x == x && this->y == y && this->z == z;
-
-    if (verbose && !equal)
-      print();
-
-    return equal;
-  }
-
-  // Print to stdout: {x, y, z}
-  void print() const {
-    printf("Vector[%p] {%.1f %.1f %.1f}\n", this, x, y, z);
-  }
-#endif
 };
 
 // Vector dot product.
@@ -206,25 +169,6 @@ struct Sphere {
   Vector surfaceNormal(const Vector &p) const {
     return (p - position).normalise();
   }
-
-#ifdef DEBUG
-  // Returns true if values are equal.
-  bool eq(const double x, const double y, const double z, const double r,
-          bool verbose=true) {
-    bool equal = position.x == x && position.y == y && position.z == z && radius == r;
-
-    if (verbose && !equal)
-      print();
-
-    return equal;
-  }
-
-  // Print to stdout.
-  void print() const {
-    printf("Sphere[%p] {%.1f %.1f %.1f} %.1f\n", this,
-           position.x, position.y, position.z, radius);
-  }
-#endif
 };
 
 
@@ -296,28 +240,6 @@ struct Ray {
     }
     return false;
   }
-
-#ifdef DEBUG
-  // Returns true if value is equal to x, y, z literals.
-  bool eq(const double x, const double y, const double z,
-          const double dx, const double dy, const double dz,
-          bool verbose=true) const {
-    bool equal = (position.x == x && position.y == y && position.z == z &&
-                  direction.x == dx && direction.y == dy && direction.z == dz);
-
-    if (verbose && !equal)
-      print();
-
-    return equal;
-  }
-
-  // Print to stdout.
-  void print() const {
-    printf("Ray[%p] {%.1f %.1f %.1f} -> {%.1f %.1f %.1f}\n", this,
-           position.x, position.y, position.z,
-           direction.x, direction.y, direction.z);
-  }
-#endif
 };
 
 
@@ -330,15 +252,6 @@ struct Light {
   // Constructor.
   Light(const Vector &position, const Colour &colour=Colour(0xaa, 0xaa, 0xaa))
       : position(position), colour(colour) {};
-
-#ifdef DEBUG
-  // Print to stdout.
-  void print() const {
-    printf("Light[%p] {%.1f %.1f %.1f} #%02x%02x%02x\n", this,
-           position.x, position.y, position.z,
-           clamp(colour.r), clamp(colour.g), clamp(colour.b));
-  }
-#endif
 };
 
 
@@ -431,123 +344,7 @@ struct Scene {
       fprintf(out, "\n");
     }
   }
-
-#ifdef DEBUG
-  void print() const {
-    printf("Scene[%p]:\n", this);
-
-    for (std::vector<Sphere>::const_iterator s = spheres.begin();
-         s != spheres.end(); s++) {
-      const Sphere sphere = *s;
-      sphere.print();
-    }
-
-    for (std::vector<Light>::const_iterator l = lights.begin();
-         l != lights.end(); l++) {
-      const Light light = *l;
-      light.print();
-    }
-  }
-#endif
 };
-
-
-#ifdef DEBUG
-static const double TEST_ACCURACY = 1e-4;
-
-// Unit tests for colour operations.
-void colourTests() {
-  printf("Running colour tests...\n");
-
-  Colour a(0, 0xf0, 0xff);
-  Colour n = Colour();
-
-  // Default constructor values.
-  assert(n.eq(0, 0, 0));
-
-  // Constructor.
-  assert(a.eq(0, 240, 255));
-}
-
-// Unit tests for vector operations.
-void vectorTests() {
-  printf("Running vector tests...\n");
-
-  Vector a(0, 1, 2);
-  Vector b(0, -1, 1.5);
-  Vector c(0, 1, 2);
-  Vector n = Vector();
-
-  Vector t;
-
-  // Default constructor values.
-  assert(n.eq(0, 0, 0));
-
-  // Constructor.
-  assert(a.eq(0, 1, 2));
-
-  // Vector equality testing.
-  assert(a == c);
-  assert(a != b);
-
-  // Vector scalar multiplication.
-  t = a * 2;
-  assert(t.eq(0, 2, 4));
-
-  // Vector scalar division.
-  t = a / 2;
-  assert(t.eq(0, .5, 1));
-
-  // Vector magntidue.
-  assert(t.magnitude() - 1.118034 < TEST_ACCURACY);
-
-  // Vector addition.
-  t = a + b;
-  assert(t.eq(0, 0, 3.5));
-
-  // Vector multiplication.
-  t = a * b;
-  assert(t.eq(0, -1, 3));
-
-  // Vector normalise.
-  t = b.normalise();
-  assert(t.x == 0);
-  assert(t.y - -0.554700 < TEST_ACCURACY);
-  assert(t.z - 0.832050 < TEST_ACCURACY);
-
-  // Dot product.
-  assert(dot(a, b) == 2);
-}
-
-// Unit tests for ray operations.
-void rayTests() {
-  printf("Running ray tests...\n");
-
-  Ray a(10, 100);
-  Ray n = Ray();
-
-  // Default constructor values.
-  assert(n.eq(0, 0, RAY_START_Z, 0, 0, 1));
-
-  // Constructor.
-  assert(a.eq(10, 100, RAY_START_Z, 0, 0, 1));
-}
-
-// Unit tests for sphere operations.
-void sphereTests() {
-  printf("Running sphere tests...\n");
-}
-
-// Unit tests for light operations.
-void lightTests() {
-  printf("Running light tests...\n");
-}
-
-// Unit tests for scene operations.
-void sceneTests() {
-  printf("Running scene tests...\n");
-}
-#endif
 
 // Return the length of array.
 #define ARRAY_LENGTH(x) (sizeof(x) / sizeof(x[0]))
@@ -556,14 +353,6 @@ void sceneTests() {
 
 // Program entry point.
 int main() {
-
-#ifdef DEBUG
-  // Run tests.
-  colourTests();
-  vectorTests();
-  rayTests();
-  sphereTests();
-#endif
 
   // The scene:
   const Sphere _spheres[] = {
@@ -589,10 +378,6 @@ int main() {
   // Open the output file.
   printf("Opening file '%s'...\n", path);
   FILE *const out = fopen(path, "w");
-
-#ifdef DEBUG
-  scene.print();
-#endif
 
   // Render the scene to the output file.
   scene.render(512, 512, out);
