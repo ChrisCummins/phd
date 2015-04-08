@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <math.h>
 #include <cstdio>
 #include <stdint.h>
@@ -38,6 +39,27 @@ struct Colour {
     return equal;
   }
 #endif
+};
+
+
+// Clamp a value to within the range [0,255].
+uint8_t clamp(const double x) {
+  const double min = 0;
+  const double max = 255;
+
+  return static_cast<uint8_t>(std::max (std::min(x, max), min));
+}
+
+
+// A pixel is a byte representation of a colour.
+struct Pixel {
+  uint8_t r, g, b;
+
+  Pixel(const Colour &c=Colour()) {
+    r = clamp(c.r);
+    g = clamp(c.g);
+    b = clamp(c.b);
+  }
 };
 
 
@@ -138,7 +160,7 @@ double dot(const Vector &a, const Vector &b) {
 // Starting depth of rays.
 static const double RAY_START_Z = -1000;
 // We use this value to accomodate for rounding errors in the
-// interset() code.
+// intersect() code.
 static const double ROUNDING_ERROR = 1e-2;
 
 
@@ -185,7 +207,7 @@ struct Ray {
 
   // Return the distance to intersect of the given sphere. If no
   // intersection, return 0.
-  bool intersect(const Sphere &s) {
+  bool intersect(const Sphere &s) const {
     const Vector distance = s.position - position;
     const double B = dot(direction, distance);
     const double D = B * B - dot(distance, distance) + s.radius * s.radius;
@@ -209,7 +231,7 @@ struct Ray {
   // Returns true if value is equal to x, y, z literals.
   bool eq(const double x, const double y, const double z,
           const double dx, const double dy, const double dz,
-          bool verbose=true) {
+          bool verbose=true) const {
     bool equal = (position.x == x && position.y == y && position.z == z &&
                   direction.x == dx && direction.y == dy && direction.z == dz);
 
@@ -253,27 +275,60 @@ struct Scene {
       : spheres(spheres), lights(lights) {}
 
   // The heart of the raytracing engine.
-  void render(const size_t width, const size_t height, FILE *const out) {
+  void render(const size_t width, const size_t height, FILE *const out) const {
     printf("Rendering scene size [%lu x %lu] ...\n", width, height);
 
-    // For each pixel in screen.
+    Pixel image[height][width];
+
+    // For each pixel in the screen:
     for (size_t y = 0; y < height; y++) {
       for (size_t x = 0; x < width; x++) {
-        //    colour = 0
+        Colour colour = Colour(x, y, 0);
+
+        // Emit a ray.
         const Ray ray(x, y);
-        //
-        //    do:
-        //        foreach object in scene:
-        //           determine closes ray-object intersection
-        //           if ray intersects:
-        //               foreach light in scene:
-        //                   if light is not in shadow of another object:
-        //                       add light contribution to colour
-        //        colour += computed colour * previous reflection factor
-        //        reflection factor *= surface reflection property;
-        //        depth += 1
-        //    while reflection factor > 0 and depth < maximum depth
+
+        // For each object in the scene:
+        for (std::vector<Sphere>::const_iterator i = spheres.begin();
+             i != spheres.end(); i++) {
+          const Sphere sphere = *i;
+          // Determine the closest ray-object intersection.
+          double t = ray.intersect(sphere);
+
+          // If there is no intersection, continue.
+          if (t == 0)
+            continue;
+
+          // For each light in the scene:
+          for (std::vector<Light>::const_iterator l = lights.begin();
+               l != lights.end(); l++) {
+            const Light light = *l;
+            //                   if light is not in shadow of another object:
+            //                       add light contribution to colour
+            //        colour += computed colour * previous reflection factor
+            //        reflection factor *= surface reflection property;
+            //        depth += 1
+            //    while reflection factor > 0 and depth < maximum depth
+          }
+
+        }
+        image[y][x] = Pixel(colour);
       }
+    }
+
+    // One rendering is complete, write data to file.
+    fprintf(out, "P3\n"); // PPM Magic number
+    fprintf(out, "%lu %lu\n", width, height); // Header line 2
+    fprintf(out, "255\n"); // Header line 3: max colour value
+
+    // Iterate over each point in the image, generating and writing
+    // pixel data.
+    for (size_t y = 0; y < height; y++) {
+      for (size_t x = 0; x < width; x++) {
+        const Pixel pixel = image[y][x];
+        fprintf(out, "%u %u %u ", pixel.r, pixel.g, pixel.b);
+      }
+      fprintf(out, "\n");
     }
   }
 };
@@ -404,7 +459,7 @@ int main() {
   Scene scene(spheres, lights);
 
   // Output file to write to.
-  const char *path = "render.pgm";
+  const char *path = "render.ppm";
 
   // Open the output file.
   printf("Opening file '%s'...\n", path);
