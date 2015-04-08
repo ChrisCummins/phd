@@ -37,6 +37,16 @@ struct Colour {
     b += c.b;
   }
 
+  // Scalar colour multiplication.
+  Colour operator*(const double x) const {
+    return Colour(r * x, g * x, b * x);
+  }
+
+  // Combination of two colours.
+  Colour operator*(const Colour c) const {
+    return Colour(r * (c.r / 255), g * (c.g / 255), b * (c.b / 255));
+  }
+
   // Explicit cast operation for Colour -> Pixel.
   explicit operator Pixel() const {
     return {clamp(r), clamp(g), clamp(b)};
@@ -60,6 +70,17 @@ struct Colour {
     return equal;
   }
 #endif
+};
+
+
+
+// Properties that describe a material.
+struct Material {
+  const Colour diffuse;
+  const double diffuseCoefficient;
+
+  Material(const Colour &diffuse, const double diffuseCoefficient)
+      : diffuse(diffuse), diffuseCoefficient(diffuseCoefficient) {}
 };
 
 
@@ -155,13 +176,18 @@ double dot(const Vector &a, const Vector &b) {
   return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-
+// Vector cross product.
+Vector cross(const Vector &a, const Vector &b) {
+  return Vector(a.y * b.z - a.z * b.y,
+                a.z * b.x - a.x * b.z,
+                a.x * b.y - a.y * b.z);
+}
 
 // Starting depth of rays.
 static const double RAY_START_Z = -1000;
 // We use this value to accomodate for rounding errors in the
 // intersect() code.
-static const double ROUNDING_ERROR = 1e-2;
+static const double ROUNDING_ERROR = 1e-6;
 
 
 
@@ -169,12 +195,17 @@ static const double ROUNDING_ERROR = 1e-2;
 struct Sphere {
   const Vector position;
   const double radius;
-  const Colour colour;
+  const Material material;
 
-  Sphere(const Vector &position=Vector(),
-         const double radius=5,
-         const Colour &colour=Colour())
-      : position(position), radius(radius), colour(colour) {}
+  Sphere(const Vector &position,
+         const double radius,
+         const Material &material)
+      : position(position), radius(radius), material(material) {}
+
+  // Return surface normal at point p.
+  Vector surfaceNormal(const Vector &p) const {
+    return (p - position).normalise();
+  }
 
 #ifdef DEBUG
   // Returns true if values are equal.
@@ -190,9 +221,8 @@ struct Sphere {
 
   // Print to stdout.
   void print() const {
-    printf("Sphere[%p] {%.1f %.1f %.1f} %.1f #%02x%02x%02x\n", this,
-           position.x, position.y, position.z,
-           radius, clamp(colour.r), clamp(colour.g), clamp(colour.b));
+    printf("Sphere[%p] {%.1f %.1f %.1f} %.1f\n", this,
+           position.x, position.y, position.z, radius);
   }
 #endif
 };
@@ -208,9 +238,14 @@ struct Ray {
     direction = Vector(0, 0, 1);
   }
 
+  Ray(const Vector &position, const Vector &direction) {
+    this->position = position;
+    this->direction = direction;
+  }
+
   // Return the distance to intersect of the given sphere. If no
   // intersection, return 0.
-  bool intersect(const Sphere &s) const {
+  double intersect(const Sphere &s) const {
     const Vector distance = s.position - position;
     const double B = dot(direction, distance);
     const double D = B * B - dot(distance, distance) + s.radius * s.radius;
@@ -261,7 +296,7 @@ struct Light {
   const Colour colour;
 
   // Constructor.
-  Light(const Vector position, const Colour colour=Colour(0xaa, 0xaa, 0xaa))
+  Light(const Vector &position, const Colour &colour=Colour(0xaa, 0xaa, 0xaa))
       : position(position), colour(colour) {};
 
 #ifdef DEBUG
@@ -290,51 +325,73 @@ struct Scene {
       : spheres(spheres), lights(lights) {}
 
   // Find and return the sphere with the closest ray-sphere
-  // intersection. If no intersect, return NULL.
-  const Sphere *closestObject(const Ray &ray) const {
-    double t_min = INFINITY; // Distance to closest intersect.
-    const Sphere *sphere_closest; // Close intersecting sphere.
+  // intersection.
+  void closestObject(const Ray &ray, int &index, double &t) const {
+    t = INFINITY; // Distance to closest intersect.
 
     // For each object in the scene:
-    for (std::vector<Sphere>::const_iterator i = spheres.begin();
-         i != spheres.end(); i++) {
-      const Sphere sphere = *i;
-      double t = ray.intersect(sphere);
+    for (size_t i = 0; i < spheres.size(); i++) {
+      const Sphere sphere = spheres[i];
+      double currentT = ray.intersect(sphere);
 
       // Check if intersection is closer than current best.
-      if (t > 0 && t < t_min) {
-        t_min = t;
-        sphere_closest = &sphere;
+      if (currentT > 0 && currentT < t) {
+        // New closest intersection. Set output parameters.
+        t = currentT;
+        index = static_cast<int>(i);
       }
     }
-
-    return t_min == INFINITY ? NULL : sphere_closest;
   }
 
   // Trace a ray and set the colour.
-  void traceRay(Ray &ray, Colour &colour, const unsigned int depth=0) const {
+  void traceRay(const Ray &ray, Colour &colour, const unsigned int depth=0) const {
     // Do nothing if we have reached the maximum depth.
     if (depth > MAX_DEPTH)
       return;
 
     // Determine the closet ray-object intersection.
-    const Sphere *intersectObject = closestObject(ray);
+    double t;
+    int index = -1;
+    closestObject(ray, index, t);
 
-    if (intersectObject != NULL) {
-      // FIXME: placeholder lighting model. If there is an intersection,
-      // simply add the colour of the sphere.
-      colour += intersectObject->colour;
+    if (index != -1) {
+      const Sphere sphere = spheres[index];
 
-      //         // For each light in the scene:
-      //         for (std::vector<Light>::const_iterator l = lights.begin();
-      //              l != lights.end(); l++) {
-      //           const Light light = *l;
-      //           //                   if light is not in shadow of another object:
-      //           //                       add light contribution to colour
-      //           //        colour += computed colour * previous reflection factor
-      //           //        reflection factor *= surface reflection property;
-      //         }
-      //       }
+      // Point of intersection.
+      const Vector intersect = ray.position + ray.direction * t;
+      // Surface normal at point of intersection.
+      const Vector surfaceNormal = sphere.surfaceNormal(intersect);
+
+      // Accumulate each light in turn:
+      for (std::vector<Light>::const_iterator l = lights.begin();
+           l != lights.end(); l++) {
+        const Light light = *l;
+        // Direction vector from intersection to light.
+        const Vector toLight = (light.position - intersect).normalise();
+
+        // Determined whether we're in shadow or not.
+        const Ray shadowRay = Ray(intersect, toLight);
+        bool blocked = false;
+        for (std::vector<Sphere>::const_iterator i = spheres.begin();
+             i != spheres.end(); i++) {
+          double t = shadowRay.intersect(*i);
+          if (t > 0) {
+            // printf("s");
+            blocked = true;
+          }
+        }
+
+        // Don't apply shading if the light is blocked.
+        if (blocked)
+          continue;
+
+        // Diffuse lighting.
+        const Colour illumination = light.colour * sphere.material.diffuse;
+        const double lambert = std::max(dot(surfaceNormal, toLight),
+                                        static_cast<double>(0));
+
+        colour += illumination * sphere.material.diffuseCoefficient * lambert;
+      }
     }
   }
 
@@ -478,15 +535,6 @@ void rayTests() {
 // Unit tests for sphere operations.
 void sphereTests() {
   printf("Running sphere tests...\n");
-
-  Sphere a(Vector(10, 100, 5), 100);
-  Sphere n = Sphere();
-
-  // Default constructor values.
-  assert(n.eq(0, 0, 0, 5));
-
-  // Constructor.
-  assert(a.eq(10, 100, 5, 100));
 }
 
 // Unit tests for light operations.
@@ -518,13 +566,15 @@ int main() {
 
   // The scene:
   const Sphere _spheres[] = {
-    Sphere(Vector(150, 250, 0), 75, Colour(100, 50, 25)),
-    Sphere(Vector(250, 250, -75), 50, Colour(255, 255, 255)),
-    Sphere(Vector(400, 250, -100), 50, Colour(0, 100, 200))
+    Sphere(Vector(125, 250,  300), 75, Material(Colour(0,   200,   5), 1)),
+    Sphere(Vector(150, 250,    0), 75, Material(Colour(100,  25,   5), 1)),
+    Sphere(Vector(250, 275,  -75), 50, Material(Colour(255, 255, 255), 1)),
+    Sphere(Vector(400, 275, -100), 50, Material(Colour(  0, 100, 200), 1))
   };
 
   const Light _lights[] = {
-    Light(Vector(0, 0, -1000))
+    Light(Vector(800, -200, -300), Colour(255, 255, 255)),
+    Light(Vector(-300, -200, -700), Colour(80, 80, 80))
   };
 
   // Create the scene to render.
