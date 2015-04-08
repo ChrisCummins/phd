@@ -1,6 +1,6 @@
 Sources = main.cc
 
-CxxFlags = -O0 -DDEBUG
+CxxFlags = -O0 -DDEBUG -Wall -Wextra
 LdFlags =
 
 Objects = $(patsubst %.cc,%.o,$(Sources))
