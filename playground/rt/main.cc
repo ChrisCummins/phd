@@ -254,7 +254,7 @@ struct Scene {
 
   // The heart of the raytracing engine.
   void render(const size_t width, const size_t height, FILE *const out) {
-    printf("Rendering scene size [%d x %d] ...\n", width, height);
+    printf("Rendering scene size [%lu x %lu] ...\n", width, height);
 
     // For each pixel in screen.
     for (size_t y = 0; y < height; y++) {
