@@ -30,6 +30,13 @@ struct Colour {
     this->b = b;
   }
 
+  // Colour addition.
+  void operator+=(const Colour &c) {
+    r += c.r;
+    g += c.g;
+    b += c.b;
+  }
+
   // Explicit cast operation for Colour -> Pixel.
   explicit operator Pixel() const {
     return {clamp(r), clamp(g), clamp(b)};
@@ -39,9 +46,7 @@ struct Colour {
   // Print to stdout: #rrggbb
   void print() const {
     printf("Colour[%p] #%02x%02x%02x\n", this,
-           static_cast<uint8_t>(r),
-           static_cast<uint8_t>(g),
-           static_cast<uint8_t>(b));
+           clamp(r), clamp(g), clamp(b));
   }
 
   // Returns true if value is equal to r, g, b literals.
@@ -164,9 +169,12 @@ static const double ROUNDING_ERROR = 1e-2;
 struct Sphere {
   const Vector position;
   const double radius;
+  const Colour colour;
 
-  Sphere(const Vector &position=Vector(), const double radius=5)
-      : position(position), radius(radius) {}
+  Sphere(const Vector &position=Vector(),
+         const double radius=5,
+         const Colour &colour=Colour())
+      : position(position), radius(radius), colour(colour) {}
 
 #ifdef DEBUG
   // Returns true if values are equal.
@@ -182,9 +190,9 @@ struct Sphere {
 
   // Print to stdout.
   void print() const {
-    printf("Sphere[%p] {%.1f %.1f %.1f} %.1f\n", this,
+    printf("Sphere[%p] {%.1f %.1f %.1f} %.1f #%02x%02x%02x\n", this,
            position.x, position.y, position.z,
-           radius);
+           radius, clamp(colour.r), clamp(colour.g), clamp(colour.b));
   }
 #endif
 };
@@ -255,8 +263,20 @@ struct Light {
   // Constructor.
   Light(const Vector position, const Colour colour=Colour(0xaa, 0xaa, 0xaa))
       : position(position), colour(colour) {};
+
+#ifdef DEBUG
+  // Print to stdout.
+  void print() const {
+    printf("Light[%p] {%.1f %.1f %.1f} #%02x%02x%02x\n", this,
+           position.x, position.y, position.z,
+           clamp(colour.r), clamp(colour.g), clamp(colour.b));
+  }
+#endif
 };
 
+
+// The maximum depth to trace rays for.
+static const unsigned int MAX_DEPTH = 1;
 
 
 // A full scene, consisting of objects (spheres) and lighting (point
@@ -269,6 +289,55 @@ struct Scene {
   Scene(const std::vector<Sphere> &spheres, const std::vector<Light> &lights)
       : spheres(spheres), lights(lights) {}
 
+  // Find and return the sphere with the closest ray-sphere
+  // intersection. If no intersect, return NULL.
+  const Sphere *closestObject(const Ray &ray) const {
+    double t_min = INFINITY; // Distance to closest intersect.
+    const Sphere *sphere_closest; // Close intersecting sphere.
+
+    // For each object in the scene:
+    for (std::vector<Sphere>::const_iterator i = spheres.begin();
+         i != spheres.end(); i++) {
+      const Sphere sphere = *i;
+      double t = ray.intersect(sphere);
+
+      // Check if intersection is closer than current best.
+      if (t > 0 && t < t_min) {
+        t_min = t;
+        sphere_closest = &sphere;
+      }
+    }
+
+    return t_min == INFINITY ? NULL : sphere_closest;
+  }
+
+  // Trace a ray and set the colour.
+  void traceRay(Ray &ray, Colour &colour, const unsigned int depth=0) const {
+    // Do nothing if we have reached the maximum depth.
+    if (depth > MAX_DEPTH)
+      return;
+
+    // Determine the closet ray-object intersection.
+    const Sphere *intersectObject = closestObject(ray);
+
+    if (intersectObject != NULL) {
+      // FIXME: placeholder lighting model. If there is an intersection,
+      // simply add the colour of the sphere.
+      colour += intersectObject->colour;
+
+      //         // For each light in the scene:
+      //         for (std::vector<Light>::const_iterator l = lights.begin();
+      //              l != lights.end(); l++) {
+      //           const Light light = *l;
+      //           //                   if light is not in shadow of another object:
+      //           //                       add light contribution to colour
+      //           //        colour += computed colour * previous reflection factor
+      //           //        reflection factor *= surface reflection property;
+      //         }
+      //       }
+    }
+  }
+
   // The heart of the raytracing engine.
   void render(const size_t width, const size_t height, FILE *const out) const {
     printf("Rendering scene size [%lu x %lu] ...\n", width, height);
@@ -278,37 +347,14 @@ struct Scene {
     // For each pixel in the screen:
     for (size_t y = 0; y < height; y++) {
       for (size_t x = 0; x < width; x++) {
-        Colour colour = Colour(x, y, 0);
+        Colour colour = Colour(0, 0, 0);
+        Ray ray(x, y);
 
-        // Emit a ray.
-        const Ray ray(x, y);
+        // Trace the ray.
+        traceRay(ray, colour);
 
-        // For each object in the scene:
-        for (std::vector<Sphere>::const_iterator i = spheres.begin();
-             i != spheres.end(); i++) {
-          const Sphere sphere = *i;
-          // Determine the closest ray-object intersection.
-          double t = ray.intersect(sphere);
-
-          // If there is no intersection, continue.
-          if (t == 0)
-            continue;
-
-          // For each light in the scene:
-          for (std::vector<Light>::const_iterator l = lights.begin();
-               l != lights.end(); l++) {
-            const Light light = *l;
-            //                   if light is not in shadow of another object:
-            //                       add light contribution to colour
-            //        colour += computed colour * previous reflection factor
-            //        reflection factor *= surface reflection property;
-            //        depth += 1
-            //    while reflection factor > 0 and depth < maximum depth
-          }
-
-          // Convert final colour to pixel data.
-          image[y][x] = static_cast<Pixel>(colour);
-        }
+        // Convert final colour to pixel data.
+        image[y][x] = static_cast<Pixel>(colour);
       }
     }
 
@@ -327,6 +373,24 @@ struct Scene {
       fprintf(out, "\n");
     }
   }
+
+#ifdef DEBUG
+  void print() const {
+    printf("Scene[%p]:\n", this);
+
+    for (std::vector<Sphere>::const_iterator s = spheres.begin();
+         s != spheres.end(); s++) {
+      const Sphere sphere = *s;
+      sphere.print();
+    }
+
+    for (std::vector<Light>::const_iterator l = lights.begin();
+         l != lights.end(); l++) {
+      const Light light = *l;
+      light.print();
+    }
+  }
+#endif
 };
 
 
@@ -436,7 +500,10 @@ void sceneTests() {
 }
 #endif
 
-
+// Return the length of array.
+#define ARRAY_LENGTH(x) (sizeof(x) / sizeof(x[0]))
+// Return the end of an array.
+#define ARRAY_END(x) (x + ARRAY_LENGTH(x))
 
 // Program entry point.
 int main() {
@@ -449,9 +516,20 @@ int main() {
   sphereTests();
 #endif
 
+  // The scene:
+  const Sphere _spheres[] = {
+    Sphere(Vector(150, 250, 0), 75, Colour(100, 50, 25)),
+    Sphere(Vector(250, 250, -75), 50, Colour(255, 255, 255)),
+    Sphere(Vector(400, 250, -100), 50, Colour(0, 100, 200))
+  };
+
+  const Light _lights[] = {
+    Light(Vector(0, 0, -1000))
+  };
+
   // Create the scene to render.
-  const std::vector<Sphere> spheres = std::vector<Sphere>();
-  const std::vector<Light> lights = std::vector<Light>();
+  const std::vector<Sphere> spheres(_spheres, ARRAY_END(_spheres));
+  const std::vector<Light> lights(_lights, ARRAY_END(_lights));
   Scene scene(spheres, lights);
 
   // Output file to write to.
@@ -460,6 +538,10 @@ int main() {
   // Open the output file.
   printf("Opening file '%s'...\n", path);
   FILE *const out = fopen(path, "w");
+
+#ifdef DEBUG
+  scene.print();
+#endif
 
   // Render the scene to the output file.
   scene.render(512, 512, out);
