@@ -265,6 +265,38 @@ struct Ray {
       return 0;
   }
 
+  int closestIntersect(const std::vector<Sphere> &spheres, double &t) const {
+    int index = -1;
+    t = INFINITY; // Distance to closest intersect.
+
+    // For each object:
+    for (size_t i = 0; i < spheres.size(); i++) {
+      const Sphere sphere = spheres[i];
+      double currentT = intersect(sphere);
+
+      // Check if intersects, and if so, whether the intersection is
+      // closer than the current best.
+      if (currentT > 0 && currentT < t) {
+        // New closest intersection.
+        t = currentT;
+        index = static_cast<int>(i);
+      }
+    }
+
+    return index;
+  }
+
+  bool intersects(const std::vector<Sphere> &spheres) const {
+    for (std::vector<Sphere>::const_iterator i = spheres.begin();
+         i != spheres.end(); i++) {
+      double t = intersect(*i);
+      if (t > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 #ifdef DEBUG
   // Returns true if value is equal to x, y, z literals.
   bool eq(const double x, const double y, const double z,
@@ -324,25 +356,6 @@ struct Scene {
   Scene(const std::vector<Sphere> &spheres, const std::vector<Light> &lights)
       : spheres(spheres), lights(lights) {}
 
-  // Find and return the sphere with the closest ray-sphere
-  // intersection.
-  void closestObject(const Ray &ray, int &index, double &t) const {
-    t = INFINITY; // Distance to closest intersect.
-
-    // For each object in the scene:
-    for (size_t i = 0; i < spheres.size(); i++) {
-      const Sphere sphere = spheres[i];
-      double currentT = ray.intersect(sphere);
-
-      // Check if intersection is closer than current best.
-      if (currentT > 0 && currentT < t) {
-        // New closest intersection. Set output parameters.
-        t = currentT;
-        index = static_cast<int>(i);
-      }
-    }
-  }
-
   // Trace a ray and set the colour.
   void traceRay(const Ray &ray, Colour &colour, const unsigned int depth=0) const {
     // Do nothing if we have reached the maximum depth.
@@ -351,12 +364,11 @@ struct Scene {
 
     // Determine the closet ray-object intersection.
     double t;
-    int index = -1;
-    closestObject(ray, index, t);
+    int index = ray.closestIntersect(spheres, t);
 
     if (index != -1) {
+      // Object with closest intersection.
       const Sphere sphere = spheres[index];
-
       // Point of intersection.
       const Vector intersect = ray.position + ray.direction * t;
       // Surface normal at point of intersection.
@@ -368,29 +380,18 @@ struct Scene {
         const Light light = *l;
         // Direction vector from intersection to light.
         const Vector toLight = (light.position - intersect).normalise();
-
-        // Determined whether we're in shadow or not.
         const Ray shadowRay = Ray(intersect, toLight);
-        bool blocked = false;
-        for (std::vector<Sphere>::const_iterator i = spheres.begin();
-             i != spheres.end(); i++) {
-          double t = shadowRay.intersect(*i);
-          if (t > 0) {
-            // printf("s");
-            blocked = true;
-          }
-        }
+        const bool blocked = shadowRay.intersects(spheres);
 
         // Don't apply shading if the light is blocked.
-        if (blocked)
-          continue;
+        if (!blocked) {
+          // Diffuse lighting.
+          const Colour illumination = light.colour * sphere.material.diffuse;
+          const double lambert = std::max(dot(surfaceNormal, toLight),
+                                          static_cast<double>(0));
 
-        // Diffuse lighting.
-        const Colour illumination = light.colour * sphere.material.diffuse;
-        const double lambert = std::max(dot(surfaceNormal, toLight),
-                                        static_cast<double>(0));
-
-        colour += illumination * sphere.material.diffuseCoefficient * lambert;
+          colour += illumination * sphere.material.diffuseCoefficient * lambert;
+        }
       }
     }
   }
