@@ -306,7 +306,6 @@ void vectorTests() {
   Vector n = Vector();
 
   Vector t;
-  double d;
 
   // Default constructor values.
   assert(n.eq(0, 0, 0));
