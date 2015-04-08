@@ -6,6 +6,17 @@
 #include <vector>
 
 
+// A pixel is a trio of R,G,B bytes.
+struct Pixel { uint8_t r, g, b; };
+
+
+// Clamp a value to within the range [0,255].
+uint8_t clamp(const double x) {
+  const double min = 0;
+  const double max = 255;
+
+  return static_cast<uint8_t>(std::max (std::min(x, max), min));
+}
 
 // Colour class.
 struct Colour {
@@ -17,6 +28,11 @@ struct Colour {
     this->r = r;
     this->g = g;
     this->b = b;
+  }
+
+  // Explicit cast operation for Colour -> Pixel.
+  explicit operator Pixel() const {
+    return {clamp(r), clamp(g), clamp(b)};
   }
 
 #ifdef DEBUG
@@ -39,27 +55,6 @@ struct Colour {
     return equal;
   }
 #endif
-};
-
-
-// Clamp a value to within the range [0,255].
-uint8_t clamp(const double x) {
-  const double min = 0;
-  const double max = 255;
-
-  return static_cast<uint8_t>(std::max (std::min(x, max), min));
-}
-
-
-// A pixel is a byte representation of a colour.
-struct Pixel {
-  uint8_t r, g, b;
-
-  Pixel(const Colour &c=Colour()) {
-    r = clamp(c.r);
-    g = clamp(c.g);
-    b = clamp(c.b);
-  }
 };
 
 
@@ -311,8 +306,9 @@ struct Scene {
             //    while reflection factor > 0 and depth < maximum depth
           }
 
+          // Convert final colour to pixel data.
+          image[y][x] = static_cast<Pixel>(colour);
         }
-        image[y][x] = Pixel(colour);
       }
     }
 
