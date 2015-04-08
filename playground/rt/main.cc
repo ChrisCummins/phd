@@ -18,6 +18,7 @@ struct Colour {
     this->b = b;
   }
 
+#ifdef DEBUG
   // Print to stdout: #rrggbb
   void print() const {
     printf("Colour[%p] #%02x%02x%02x\n", this,
@@ -36,6 +37,7 @@ struct Colour {
 
     return equal;
   }
+#endif
 };
 
 
@@ -107,11 +109,7 @@ struct Vector {
     return *this / magnitude();
   }
 
-  // Print to stdout: {x, y, z}
-  void print() const {
-    printf("Vector[%p] {%.1f %.1f %.1f}\n", this, x, y, z);
-  }
-
+#ifdef DEBUG
   // Returns true if value is equal to x, y, z literals.
   bool eq(const double x, const double y, const double z,
           bool verbose=true) {
@@ -122,6 +120,12 @@ struct Vector {
 
     return equal;
   }
+
+  // Print to stdout: {x, y, z}
+  void print() const {
+    printf("Vector[%p] {%.1f %.1f %.1f}\n", this, x, y, z);
+  }
+#endif
 };
 
 // Vector dot product.
@@ -147,6 +151,7 @@ struct Sphere {
   Sphere(const Vector &position=Vector(), const double radius=5)
       : position(position), radius(radius) {}
 
+#ifdef DEBUG
   // Returns true if values are equal.
   bool eq(const double x, const double y, const double z, const double r,
           bool verbose=true) {
@@ -164,6 +169,7 @@ struct Sphere {
            position.x, position.y, position.z,
            radius);
   }
+#endif
 };
 
 
@@ -175,19 +181,6 @@ struct Ray {
   Ray(const double x=0, const double y=0) {
     position = Vector(x, y, RAY_START_Z);
     direction = Vector(0, 0, 1);
-  }
-
-  // Returns true if value is equal to x, y, z literals.
-  bool eq(const double x, const double y, const double z,
-          const double dx, const double dy, const double dz,
-          bool verbose=true) {
-    bool equal = (position.x == x && position.y == y && position.z == z &&
-                  direction.x == dx && direction.y == dy && direction.z == dz);
-
-    if (verbose && !equal)
-      print();
-
-    return equal;
   }
 
   // Return the distance to intersect of the given sphere. If no
@@ -212,12 +205,27 @@ struct Ray {
       return 0;
   }
 
+#ifdef DEBUG
+  // Returns true if value is equal to x, y, z literals.
+  bool eq(const double x, const double y, const double z,
+          const double dx, const double dy, const double dz,
+          bool verbose=true) {
+    bool equal = (position.x == x && position.y == y && position.z == z &&
+                  direction.x == dx && direction.y == dy && direction.z == dz);
+
+    if (verbose && !equal)
+      print();
+
+    return equal;
+  }
+
   // Print to stdout.
   void print() const {
     printf("Ray[%p] {%.1f %.1f %.1f} -> {%.1f %.1f %.1f}\n", this,
            position.x, position.y, position.z,
            direction.x, direction.y, direction.z);
   }
+#endif
 };
 
 
@@ -271,7 +279,7 @@ struct Scene {
 };
 
 
-
+#ifdef DEBUG
 static const double TEST_ACCURACY = 1e-4;
 
 // Unit tests for colour operations.
@@ -376,6 +384,8 @@ void lightTests() {
 void sceneTests() {
   printf("Running scene tests...\n");
 }
+#endif
+
 
 
 // Program entry point.
