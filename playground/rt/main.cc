@@ -10,6 +10,7 @@
 //////////////////////////
 // Configurable Options //
 //////////////////////////
+#define SEXY 1
 
 // The maximum depth to trace rays for.
 static const unsigned int MAX_DEPTH = 100;
@@ -22,8 +23,24 @@ static const double ROUNDING_ERROR = 1e-6;
 // locations normally distributed about x,y. The sample count
 // determines the number of extra rays to trace, and the offset
 // determines the maximum distance about the origin.
+#if SEXY
 static const size_t ANTIALIASING_SAMPLE_COUNT = 8;
 static const double ANTIALIASING_OFFSET = .6;
+#else
+static const size_t ANTIALIASING_SAMPLE_COUNT = 0;
+static const double ANTIALIASING_OFFSET = .6;
+#endif
+
+// For softlights, we emit rays at points normally distributed about
+// the light's position. The number of rays emitted is equal to:
+//   N = (base + radius * factor) ^ 3.
+#if SEXY
+static const double SOFTLIGHT_FACTOR = .075;
+static const double SOFTLIGHT_BASE = 3;
+#else
+static const double SOFTLIGHT_FACTOR = .01;
+static const double SOFTLIGHT_BASE = 3;
+#endif
 
 // Dimensions of rendered image.
 static const int IMG_WIDTH = 750;
@@ -42,6 +59,12 @@ static const double RAY_START_Z = -1000;
 // A profiling counter that keeps track of how many times we've called
 // Renderer::trace().
 static std::atomic<long long> traceCounter;
+
+// A profiling counter that keeps track of how many times we've
+// contributed light to a ray.
+static std::atomic<long long> rayCounter;
+
+long long samplesPerRay;
 
 // The random distribution sampler for calculating the offsets of
 // stochastic anti-aliasing.
@@ -77,6 +100,10 @@ void Colour::operator/=(const double x) {
 
 Colour Colour::operator*(const double x) const {
         return Colour(r * x, g * x, b * x);
+}
+
+Colour Colour::operator/(const double x) const {
+        return Colour(r / x, g / x, b / x);
 }
 
 Colour Colour::operator*(const Colour c) const {
@@ -270,6 +297,9 @@ Colour PointLight::shade(const Vector &point,
         if (blocked)
                 return shade;
 
+        // Bump the profiling counter.
+        rayCounter++;
+
         // Product of material and light colour.
         const Colour illumination = colour * material->colour;
 
@@ -284,6 +314,61 @@ Colour PointLight::shade(const Vector &point,
                                           static_cast<double>(0)),
                                  material->shininess);
         shade += illumination * material->specular * phong;
+
+        return shade;
+}
+
+static NormalDistribution softSampler(-1, 1);
+
+SoftLight::SoftLight(const Vector &position, const double radius,
+                     const Colour &colour)
+                : position(position), radius(radius), colour(colour),
+                  samples(SOFTLIGHT_BASE +
+                          std::pow(radius * SOFTLIGHT_FACTOR, 3)) {
+        samplesPerRay += samples;
+};
+
+Colour SoftLight::shade(const Vector &point,
+                        const Vector &normal,
+                        const Vector &toRay,
+                        const Material *const material,
+                        const std::vector<const Object *> objects) const {
+        // Shading is additive, starting with black.
+        Colour shade = Colour();
+
+        // Product of material and light colour.
+        const Colour illumination = (colour * material->colour) / samples;
+
+        // Cast multiple light rays, nomrally distributed about the
+        // light's centre.
+        for (size_t i = 0; i < samples; i++) {
+                const Vector origin = Vector(position.x + softSampler() * radius,
+                                             position.y + softSampler() * radius,
+                                             position.z + softSampler() * radius);
+
+                // Direction vector from point to light.
+                const Vector toLight = (origin - point).normalise();
+                // Determine whether the light is blocked.
+                const bool blocked = intersects(Ray(point, toLight), objects);
+                // Do nothing without line of sight.
+                if (blocked)
+                        continue;
+
+                // Bump the profiling counter.
+                rayCounter++;
+
+                // Apply Lambert (diffuse) shading.
+                const double lambert = std::max(normal ^ toLight,
+                                                static_cast<double>(0));
+                shade += illumination * material->diffuse * lambert;
+
+                // Apply Blinn-Phong (specular) shading.
+                const Vector bisector = (toRay + toLight).normalise();
+                const double phong = pow(std::max(normal ^ bisector,
+                                                  static_cast<double>(0)),
+                                         material->shininess);
+                shade += illumination * material->specular * phong;
+        }
 
         return shade;
 }
@@ -308,9 +393,20 @@ Colour Renderer::supersample(size_t x, size_t y) const {
         // Trace the origin ray.
         sample += trace(Ray(x, y));
 
+// For fast builds, we disable antialiasing. This sets
+// ANTIALIASING_SAMPLE_COUNT to 0, which causes the compiler to kick
+// up a fuss about comparing 0 < 0. Let's disable that warning for
+// such builds.
+#if !SEXY
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtype-limits"
+#endif
         // Accumulate extra samples, normally distributed around x,y.
         for (size_t i = 0; i < ANTIALIASING_SAMPLE_COUNT; i++)
                 sample += trace(Ray(x + sampler(), y + sampler()));
+#if !SEXY
+#pragma GCC diagnostic pop
+#endif
 
         // Average the accumulated samples.
         sample /= ANTIALIASING_SAMPLE_COUNT + 1;
@@ -469,9 +565,9 @@ int main() {
                 new Sphere(Vector(650, 310,   0), 50,  grey)    // Grey ball
         };
         const Light *_lights[] = {
-                new PointLight(Vector( 800, 0, -800), Colour(0xffffff)),
-                new PointLight(Vector(-300, -200,  -700), Colour(0x105010)),
-                new PointLight(Vector( 100, -200,   200), Colour(0x501010))
+                new SoftLight(Vector( 800, -100, -500),   75, Colour(0xffffff)),
+                new SoftLight(Vector(-300, -200,  -700), 200, Colour(0x105010)),
+                new SoftLight(Vector( 100, -200,   200), 100, Colour(0x501010))
         };
 
         // Create the scene and renderer.
@@ -488,7 +584,8 @@ int main() {
         FILE *const out = fopen(path, "w");
 
         // Print start message.
-        printf("Rendering %d pixels ...\n", RENDER_WIDTH * RENDER_HEIGHT);
+        printf("Rendering %d pixels, with %lld samples per ray ...\n",
+               RENDER_WIDTH * RENDER_HEIGHT, samplesPerRay);
 
         // Record start time.
         const std::chrono::high_resolution_clock::time_point startTime
@@ -515,7 +612,9 @@ int main() {
         double elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
             endTime - startTime).count() / 1e6;
         long long traceCount = static_cast<long long>(traceCounter);
+        long long rayCount = static_cast<long long>(rayCounter);
         long long traceRate = traceCount / elapsed;
+        long long rayRate = rayCount / elapsed;
         long long pixelRate = RENDER_WIDTH * RENDER_HEIGHT / elapsed;
         double tracePerPixel = double(traceCount) / double(RENDER_WIDTH * RENDER_HEIGHT);
 
@@ -523,6 +622,7 @@ int main() {
         printf("Rendered %d pixels from %lld traces in %.3f seconds.\n\n",
                RENDER_WIDTH * RENDER_HEIGHT, traceCount, elapsed);
         printf("Render performance:\n");
+        printf("\tRays per second:\t%lld\n", rayRate);
         printf("\tTraces per second:\t%lld\n", traceRate);
         printf("\tPixels per second:\t%lld\n", pixelRate);
         printf("\tTraces per pixel:\t%.2f\n", tracePerPixel);

@@ -41,6 +41,9 @@ public:
         // Scalar colour multiplication.
         Colour operator*(const double x) const;
 
+        // Scalar colour divison.
+        Colour operator/(const double x) const;
+
         // Combination of two colours.
         Colour operator*(const Colour c) const;
 
@@ -226,6 +229,25 @@ public:
                          const Vector &toRay,
                          const Material *const material,
                          const std::vector<const Object *> objects) const;
+};
+
+// A round light source.
+class SoftLight : public Light {
+public:
+        const Vector position;
+        const double radius;
+        const Colour colour;
+        const size_t samples;
+
+        // Constructor.
+        SoftLight(const Vector &position, const double radius,
+                  const Colour &colour=Colour(0xff, 0xff, 0xff));
+
+        virtual Colour shade(const Vector &point,
+                             const Vector &normal,
+                             const Vector &toRay,
+                             const Material *const material,
+                             const std::vector<const Object *> objects) const;
 };
 
 // A full scene, consisting of objects (spheres) and lighting (point
