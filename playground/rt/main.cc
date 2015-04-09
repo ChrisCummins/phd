@@ -400,7 +400,7 @@ int main() {
         // Material parameters:
         //   colour, ambient, diffuse, specular, shininess, reflectivity
         const Material *const green = new Material(Colour(0x00c805),
-                                                   0, 1,  .7, 50, 0);
+                                                   0, 1, .9, 75, 0);
         const Material *const red   = new Material(Colour(0x641905),
                                                    0, 1, .6, 150, 0.4);
         const Material *const mirror = new Material(Colour(0xffffff),
@@ -414,13 +414,13 @@ int main() {
         const Object *_objects[] = {
                 new CheckerBoard(Vector(0, 380, 300),
                                  Vector(0, -30, -1).normalise(), 30),     // Floor
-                new Sphere(Vector(WIDTH / 5,     210, 300), 135, green),  // Green ball
-                new Sphere(Vector(WIDTH / 3.5,   250,   0), 105, red),    // Red ball
-                new Sphere(Vector(WIDTH / 2,     288, -85), 75,  mirror), // Mirror ball
-                new Sphere(Vector(WIDTH * 3 / 4, 288, -85), 50,  blue),   // Blue ball
-                new Sphere(Vector(WIDTH * 4 / 5, 310,   0), 50,  grey),   // Grey ball
-                new Sphere(Vector(WIDTH * 4 / 5, 210,   0), 50,  grey),   // Grey ball
-                new Sphere(Vector(WIDTH * 4 / 5, 110,   0), 50,  grey)    // Grey ball
+                new Sphere(Vector(150, 240, 300), 135, green),  // Green ball
+                new Sphere(Vector(225, 285,   0), 105, red),    // Red ball
+                new Sphere(Vector(415, 288, -85), 75,  mirror), // Mirror ball
+                new Sphere(Vector(550, 288, -85), 50,  blue),   // Blue ball
+                new Sphere(Vector(650, 110,   0), 50,  grey),   // Grey ball
+                new Sphere(Vector(650, 210,   0), 50,  grey),   // Grey ball
+                new Sphere(Vector(650, 310,   0), 50,  grey)    // Grey ball
         };
         const Light *_lights[] = {
                 new PointLight(Vector( 800, 0, -800), Colour(0xffffff)),
