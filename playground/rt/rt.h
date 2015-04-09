@@ -1,11 +1,8 @@
 #ifndef _RT_H_
 #define _RT_H_
 
-#include <algorithm>
-#include <math.h>
 #include <cstdio>
 #include <stdint.h>
-#include <cassert>
 #include <vector>
 
 // A pixel is a trio of R,G,B bytes.
@@ -92,7 +89,7 @@ public:
         bool operator!=(const Vector &b) const;
 
         // Length of vector.
-        double magnitude() const;
+        double size() const;
 
         // Scalar product of components.
         double product() const;
@@ -108,16 +105,19 @@ public:
 // A ray abstraction.
 class Ray {
 public:
-        Vector position, direction;
+        const Vector position, direction;
 
+        // Constructors.
         Ray(const double x=0, const double y=0);
         Ray(const Vector &position, const Vector &direction);
 };
 
+// A physical object that light interacts with.
 class Object {
 public:
         const Vector position;
 
+        // Constructor.
         Object(const Vector &position);
 
         // Virtual destructor.
@@ -184,11 +184,12 @@ public:
     // Virtual destructor.
     virtual ~Light() {};
 
-    // Calculate shading at intersect.
-    virtual Colour shade(const Material *const material,
-                         const Vector &intersect,
+    // Calculate the shading colour at `point' for a given surface
+    // material, surface normal, and direction to the ray.
+    virtual Colour shade(const Vector &point,
                          const Vector &normal,
-                         const Ray &ray,
+                         const Vector &toRay,
+                         const Material *const material,
                          const std::vector<const Object *> objects) const = 0;
 };
 
@@ -202,10 +203,10 @@ public:
     PointLight(const Vector &position,
                const Colour &colour=Colour(0xff, 0xff, 0xff));
 
-    virtual Colour shade(const Material *const material,
-                         const Vector &intersect,
+    virtual Colour shade(const Vector &point,
                          const Vector &normal,
-                         const Ray &ray,
+                         const Vector &toRay,
+                         const Material *const material,
                          const std::vector<const Object *> objects) const;
 };
 
@@ -233,7 +234,8 @@ public:
 private:
         const size_t width, height;
 
-        // Trace a ray trough a given scene and output the colour.
+        // Trace a ray trough a given scene and return the final
+        // colour.
         Colour trace(const Ray &ray,
                      Colour colour=Colour(0, 0, 0),
                      const unsigned int depth=0) const;
@@ -242,8 +244,14 @@ private:
 // Return the index of the object with the closest intersection, and
 // the distance to the intersection `t'. If no intersection, return
 // -1.
-int closestIntersect(const Ray &ray, const std::vector<const Object *> &objects, double &t);
+int closestIntersect(const Ray &ray,
+                     const std::vector<const Object *> &objects,
+                     double &t);
 
+// Return whether a given ray intersects any of the objects.
 bool intersects(const Ray &ray, const std::vector<const Object *> &objects);
+
+// Clamp a value to within the range [0,255]
+uint8_t inline clamp(const double x);
 
 #endif  // _RT_H_
