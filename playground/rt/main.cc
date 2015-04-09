@@ -396,19 +396,24 @@ int main() {
                                                    0, 1,  .7, 50, 0);
         const Material *const red   = new Material(Colour(0x641905),
                                                    0, 1, .6, 150, 0.4);
-        const Material *const white = new Material(Colour(0xffffff),
-                                                   0, .5, .5, 200, .5);
+        const Material *const mirror = new Material(Colour(0xffffff),
+                                                    0, 0, 1, 200, .9999);
+        const Material *const grey  = new Material(Colour(0xffffff),
+                                                   0, 0.25, 1, 200, .05);
         const Material *const blue  = new Material(Colour(0x0064c8),
                                                    0, .7, .7, 90, 0);
 
         // The scene:
         const Object *_objects[] = {
-                new CheckerBoard(Vector(0, 300, 300),
-                                 Vector(0, -10, -1).normalise(), 30),   // Floor
-                new Sphere(Vector(WIDTH / 5,     220, 300), 75, green), // Green ball
-                new Sphere(Vector(WIDTH / 3.5,   256,   0), 75, red),   // Red ball
-                new Sphere(Vector(WIDTH / 2,     288, -85), 50, white), // White ball
-                new Sphere(Vector(WIDTH * 2 / 3, 275,   0), 50, blue)   // Blue ball
+                new CheckerBoard(Vector(0, 380, 300),
+                                 Vector(0, -30, -1).normalise(), 30),     // Floor
+                new Sphere(Vector(WIDTH / 5,     210, 300), 135, green),  // Green ball
+                new Sphere(Vector(WIDTH / 3.5,   250,   0), 105, red),    // Red ball
+                new Sphere(Vector(WIDTH / 2,     288, -85), 75,  mirror), // Mirror ball
+                new Sphere(Vector(WIDTH * 3 / 4, 288, -85), 50,  blue),   // Blue ball
+                new Sphere(Vector(WIDTH * 4 / 5, 310,   0), 50,  grey),   // Grey ball
+                new Sphere(Vector(WIDTH * 4 / 5, 210,   0), 50,  grey),   // Grey ball
+                new Sphere(Vector(WIDTH * 4 / 5, 110,   0), 50,  grey)    // Grey ball
         };
         const Light *_lights[] = {
                 new PointLight(Vector( 800, 0, -800), Colour(0xffffff)),
