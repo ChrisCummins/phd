@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <atomic>
+#include <chrono>
 #include <math.h>
 
 #include "tbb/parallel_for.h"
@@ -26,6 +28,10 @@ static const double RAY_START_Z = -1000;
 ////////////////////
 // Implementation //
 ////////////////////
+
+// A profiling counter that keeps track of how many times we've called
+// Renderer::trace().
+static std::atomic<long long> traceCounter;
 
 Colour::Colour(const int hex)
                 : r(hex >> 16), g((hex >> 8) & 0xff), b(hex & 0xff) {}
@@ -267,8 +273,6 @@ Renderer::Renderer(const Scene scene)
                 : scene(scene), width(WIDTH), height(HEIGHT) {}
 
 void Renderer::render(FILE *const out) const {
-        printf("Rendering scene size [%lu x %lu] ...\n", width, height);
-
         // Image data.
         Pixel image[height * width];
 
@@ -300,6 +304,9 @@ void Renderer::render(FILE *const out) const {
 
 Colour Renderer::trace(const Ray &ray, Colour colour,
                        const unsigned int depth) const {
+        // Bump the profiling counter.
+        traceCounter++;
+
         // Determine the closet ray-object intersection.
         double t;
         int index = closestIntersect(ray, scene.objects, t);
@@ -434,11 +441,22 @@ int main() {
         printf("Opening file '%s'...\n", path);
         FILE *const out = fopen(path, "w");
 
+        // Print start message.
+        printf("Rendering %d pixels ...\n", WIDTH * HEIGHT);
+
+        // Record start time.
+        const std::chrono::high_resolution_clock::time_point startTime
+                        = std::chrono::high_resolution_clock::now();
+
         // Render the scene to the output file.
         renderer.render(out);
 
+        // Record end time.
+        const std::chrono::high_resolution_clock::time_point endTime
+                        = std::chrono::high_resolution_clock::now();
+
         // Close the output file.
-        printf("Closing file '%s'...\n", path);
+        printf("Closing file '%s'...\n\n", path);
         fclose(out);
 
         // Free heap memory.
@@ -446,6 +464,22 @@ int main() {
                 delete _objects[i];
         for (size_t i = 0; i < ARRAY_LENGTH(_lights); i++)
                 delete _lights[i];
+
+        // Calculate performance information.
+        double elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
+            endTime - startTime).count() / 1e6;
+        long long traceCount = static_cast<long long>(traceCounter);
+        long long traceRate = traceCount / elapsed;
+        long long pixelRate = WIDTH * HEIGHT / elapsed;
+        double tracePerPixel = double(traceCount) / double(WIDTH * HEIGHT);
+
+        // Print performance summary.
+        printf("Rendered %d pixels from %lld traces in %.3f seconds.\n\n",
+               WIDTH * HEIGHT, traceCount, elapsed);
+        printf("Render performance:\n");
+        printf("\t%lld\ttraces per second\n", traceRate);
+        printf("\t%lld\tpixels per second.\n", pixelRate);
+        printf("\t%.5f\ttraces per pixel.\n", tracePerPixel);
 
         return 0;
 }
