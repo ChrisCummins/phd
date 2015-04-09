@@ -17,6 +17,9 @@ uint8_t inline clamp(const double x) {
 
 // COLOUR
 
+Colour::Colour(const int hex)
+                : r(hex >> 16), g((hex >> 8) & 0xff), b(hex & 0xff) {}
+
 Colour::Colour(const float r, const float g, const float b)
                 : r(r), g(g), b(b) {}
 
@@ -42,11 +45,14 @@ Colour::operator Pixel() const {
 
 // MATERIAL
 
-Material::Material(const Colour &diffuse, const double diffuseCoefficient,
-                   const double specularCoefficient)
-                : diffuse(diffuse),
-                  diffuseCoefficient(diffuseCoefficient),
-                  specularCoefficient(specularCoefficient) {}
+Material::Material(const Colour &colour,
+                   const double ambient,
+                   const double diffuse,
+                   const double specular)
+                : colour(colour),
+                  ambient(ambient),
+                  diffuse(diffuse),
+                  specular(specular) {}
 
 
 
@@ -116,13 +122,13 @@ static const double RAY_START_Z = -1000;
 // intersect() code.
 static const double ROUNDING_ERROR = 1e-6;
 
-Object::Object(const Vector &position, const Material &material)
-                : position(position), material(material) {}
+Object::Object(const Vector &position)
+                : position(position) {}
 
 Sphere::Sphere(const Vector &position,
                const double radius,
-               const Material &material)
-                : Object(position, material), radius(radius) {}
+               const Material *const material)
+                : Object(position), radius(radius), material(material) {}
 
 Vector Sphere::normal(const Vector &p) const {
         return (p - position).normalise();
@@ -148,13 +154,51 @@ double Sphere::intersect(const Ray &ray) const {
                 return 0;
 }
 
+const Material *Sphere::surface(const Vector &point) const {
+        return material;
+}
 
 // LIGHT
 
-Light::Light(const Vector &position, const Colour &colour)
+PointLight::PointLight(const Vector &position, const Colour &colour)
                 : position(position), colour(colour) {};
 
+Colour PointLight::shade(const Material *const material,
+                         const Vector &intersect,
+                         const Vector &normal,
+                         const Ray &ray,
+                         const std::vector<const Object *> objects) const {
+        // Shading is additive, starting with black.
+        Colour shade = Colour();
 
+        // Direction vector from intersection to light.
+        const Vector toLight = (position - intersect).normalise();
+        const Ray shadowRay = Ray(intersect, toLight);
+        const bool blocked = intersects(shadowRay, objects);
+
+        // Don't apply shading if the light is blocked.
+        if (blocked)
+                return shade;
+
+        //const Material &material = object->material;
+
+        // Product of material and light colour.
+        const Colour illumination = colour * material->colour;
+
+        // Lambert shading.
+        const double lambert = std::max(normal ^ toLight,
+                                        static_cast<double>(0));
+        shade += illumination * material->diffuse * lambert;
+
+        // Blinn-Phong Specular shading.
+        const Vector toRay = (ray.position - intersect).normalise();
+        const Vector bisector = (toRay + toLight).normalise();
+        const double phong = pow(std::max(normal ^ bisector,
+                                          static_cast<double>(0)), 40);
+        shade += illumination * material->specular * phong;
+
+        return shade;
+}
 
 // SCENE
 
@@ -224,38 +268,33 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
         double t;
         int index = closestIntersect(ray, scene.objects, t);
 
-        if (index != -1) {
-                // Object with closest intersection.
-                const Object *object = scene.objects[index];
-                // Point of intersection.
-                const Vector intersect = ray.position + ray.direction * t;
-                // Surface normal at point of intersection.
-                const Vector normal = object->normal(intersect);
+        // Test whether there's an intersect.
+        if (index == -1) {
+                if (depth == 0)
+                        // The ray doesn't intersect anything, so
+                        // apply a background gradient.
+                        colour += WHITE * (ray.position.y / HEIGHT) * .4;
+                return colour;
+        }
 
-                // Accumulate each light in turn:
-                for (std::vector<const Light *>::const_iterator l = scene.lights.begin();
-                     l != scene.lights.end(); l++) {
-                        const Light *light = *l;
-                        // Direction vector from intersection to light.
-                        const Vector toLight = (light->position - intersect).normalise();
-                        const Ray shadowRay = Ray(intersect, toLight);
-                        const bool blocked = intersects(shadowRay, scene.objects);
+        // Object with closest intersection.
+        const Object *object = scene.objects[index];
+        // Point of intersection.
+        const Vector intersect = ray.position + ray.direction * t;
+        // Surface normal at point of intersection.
+        const Vector normal = object->normal(intersect);
+        // Material at point of intersection.
+        const Material *material = object->surface(intersect);
 
-                        // Don't apply shading if the light is blocked.
-                        if (!blocked) {
-                                // TODO: Ambient lighting.
+        // Ambient lighting.
+        colour += material->colour * material->ambient;
 
-                                // Diffuse lighting.
-                                const Colour illumination = light->colour * object->material.diffuse;
-                                const double lambert = std::max(normal ^ toLight,
-                                                                static_cast<double>(0));
-
-                                colour += illumination * object->material.diffuseCoefficient * lambert;
-                        }
-                }
-        } else if (depth == 0) {
-                // The ray doesn't intersect anything, so apply a background gradient.
-                colour += WHITE * (ray.position.y / HEIGHT) * .4;
+        // Accumulate each light in turn:
+        for (std::vector<const Light *>::const_iterator l = scene.lights.begin();
+             l != scene.lights.end(); l++) {
+                const Light *light = *l;
+                colour += light->shade(material, intersect, normal,
+                                       ray, scene.objects);
         }
 
         return colour;
@@ -299,17 +338,27 @@ bool intersects(const Ray &ray, const std::vector<const Object *> &objects) {
 
 // Program entry point.
 int main() {
+        // Material parameters: colour, ambient, diffuse, specular, shininess
+        const Material *const green = new Material(Colour(0x00c805),
+                                                   0,  1,  0);
+        const Material *const red   = new Material(Colour(0x641905),
+                                                   0,  1,  1);
+        const Material *const white = new Material(Colour(0xffffff),
+                                                   0,  1,  1);
+        const Material *const blue  = new Material(Colour(0x0064c8),
+                                                   0, .7, .3);
+
         // The scene:
         const Object *_objects[] = {
-                new Sphere(Vector( 95, 250,  300), 75, Material(Colour(  0, 200,   5),  1,  0)), // Green ball
-                new Sphere(Vector(150, 250,    0), 75, Material(Colour(100,  25,   5),  1, .2)), // Red ball
-                new Sphere(Vector(250, 275,  -85), 50, Material(Colour(255, 255, 255),  1,  1)), // White ball
-                new Sphere(Vector(400, 275,    0), 50, Material(Colour(  0, 100, 200),  1,  1))  // Blue ball
+                new Sphere(Vector( 95, 250,  300), 75, green), // Green ball
+                new Sphere(Vector(150, 250,    0), 75, red),   // Red ball
+                new Sphere(Vector(250, 275,  -85), 50, white), // White ball
+                new Sphere(Vector(400, 275,    0), 50, blue)   // Blue ball
         };
 
         const Light *_lights[] = {
-                new Light(Vector( 800, -200, -300), Colour(255, 255, 255)),
-                new Light(Vector(-300, -200, -700), Colour( 80,  80,  80))
+                new PointLight(Vector( 800, -200, -300), Colour(0xffffff)),
+                new PointLight(Vector(-300, -200, -700), Colour(0x505050))
         };
 
         // Create the scene and renderer.

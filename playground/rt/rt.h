@@ -16,7 +16,8 @@ class Colour {
 public:
         float r, g, b;
 
-        // Colour constructor.
+        // Colour constructors.
+        Colour(const int hex);
         Colour(const float r=0, const float g=0, const float b=0);
 
         // Colour addition.
@@ -35,13 +36,16 @@ public:
 // Properties that describe a material.
 class Material {
 public:
-        const Colour diffuse;
-        const double diffuseCoefficient;
-        const double specularCoefficient;
+        const Colour colour;
+        const double ambient;
+        const double diffuse;
+        const double specular;
 
         // Constructor.
-        Material(const Colour &diffuse, const double diffuseCoefficient,
-                 const double specularCoefficient);
+        Material(const Colour &colour,
+                 const double ambient,
+                 const double diffuse,
+                 const double specular);
 };
 
 // Vector class.
@@ -109,44 +113,66 @@ public:
 class Object {
 public:
         const Vector position;
-        const Material material;
 
-        Object(const Vector &position, const Material &material);
+        Object(const Vector &position);
 
         // Virtual destructor.
-        virtual ~Object(){};
+        virtual ~Object() {};
 
         // Return surface normal at point p.
         virtual Vector normal(const Vector &p) const = 0;
         // Return whether ray intersects object, and if so, at what
         // distance (0 if no intersect).
         virtual double intersect(const Ray &ray) const = 0;
+        // Return material at point on surface.
+        virtual const Material *surface(const Vector &point) const = 0;
 };
 
 // A sphere consits of a position and a radius.
 class Sphere : public Object {
 public:
         const double radius;
+        const Material *const material;
 
         // Constructor.
         Sphere(const Vector &position,
                const double radius,
-               const Material &material);
+               const Material *const material);
 
         virtual Vector normal(const Vector &p) const;
         virtual double intersect(const Ray &ray) const;
+        virtual const Material *surface(const Vector &point) const;
 };
 
-
-// A point light source.
+// Base class light source.
 class Light {
 public:
-        const Vector position;
-        const Colour colour;
+    // Virtual destructor.
+    virtual ~Light() {};
 
-        // Constructor.
-        Light(const Vector &position,
-              const Colour &colour=Colour(0xff, 0xff, 0xff));
+    // Calculate shading at intersect.
+    virtual Colour shade(const Material *const material,
+                         const Vector &intersect,
+                         const Vector &normal,
+                         const Ray &ray,
+                         const std::vector<const Object *> objects) const = 0;
+};
+
+// A point light source.
+class PointLight : public Light {
+public:
+    const Vector position;
+    const Colour colour;
+
+    // Constructor.
+    PointLight(const Vector &position,
+               const Colour &colour=Colour(0xff, 0xff, 0xff));
+
+    virtual Colour shade(const Material *const material,
+                         const Vector &intersect,
+                         const Vector &normal,
+                         const Ray &ray,
+                         const std::vector<const Object *> objects) const;
 };
 
 // A full scene, consisting of objects (spheres) and lighting (point
