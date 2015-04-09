@@ -18,9 +18,19 @@ static const unsigned int MAX_DEPTH = 100;
 // distances.
 static const double ROUNDING_ERROR = 1e-6;
 
+// For each pixel at location x,y, we sample N extra points at
+// locations normally distributed about x,y. The sample count
+// determines the number of extra rays to trace, and the offset
+// determines the maximum distance about the origin.
+static const size_t ANTIALIASING_SAMPLE_COUNT = 8;
+static const double ANTIALIASING_OFFSET = .6;
+
 // Dimensions of rendered image.
-static const int WIDTH = 750;
-static const int HEIGHT = 422;
+static const int IMG_WIDTH = 750;
+static const int IMG_HEIGHT = 422;
+
+static const int RENDER_WIDTH = 750;
+static const int RENDER_HEIGHT = 422;
 
 // Starting depth of rays.
 static const double RAY_START_Z = -1000;
@@ -33,6 +43,20 @@ static const double RAY_START_Z = -1000;
 // Renderer::trace().
 static std::atomic<long long> traceCounter;
 
+// The random distribution sampler for calculating the offsets of
+// stochastic anti-aliasing.
+static NormalDistribution sampler(-ANTIALIASING_OFFSET, ANTIALIASING_OFFSET);
+
+NormalDistribution::NormalDistribution(const double min, const double max) {
+        std::random_device random;
+        generator = std::mt19937(random());
+        distribution = std::uniform_real_distribution<double>(min, max);
+}
+
+double NormalDistribution::operator()() {
+        return distribution(generator);
+}
+
 Colour::Colour(const int hex)
                 : r(hex >> 16), g((hex >> 8) & 0xff), b(hex & 0xff) {}
 
@@ -43,6 +67,12 @@ void Colour::operator+=(const Colour &c) {
         r += c.r;
         g += c.g;
         b += c.b;
+}
+
+void Colour::operator/=(const double x) {
+        r /= x;
+        g /= x;
+        b /= x;
 }
 
 Colour Colour::operator*(const double x) const {
@@ -270,7 +300,23 @@ Ray::Ray(const Vector &position, const Vector &direction)
                 : position(position), direction(direction) {}
 
 Renderer::Renderer(const Scene scene)
-                : scene(scene), width(WIDTH), height(HEIGHT) {}
+                : scene(scene), width(RENDER_WIDTH), height(RENDER_HEIGHT) {}
+
+Colour Renderer::supersample(size_t x, size_t y) const {
+        Colour sample = Colour();
+
+        // Trace the origin ray.
+        sample += trace(Ray(x, y));
+
+        // Accumulate extra samples, normally distributed around x,y.
+        for (size_t i = 0; i < ANTIALIASING_SAMPLE_COUNT; i++)
+                sample += trace(Ray(x + sampler(), y + sampler()));
+
+        // Average the accumulated samples.
+        sample /= ANTIALIASING_SAMPLE_COUNT + 1;
+
+        return sample;
+}
 
 void Renderer::render(FILE *const out) const {
         // Image data.
@@ -282,8 +328,8 @@ void Renderer::render(FILE *const out) const {
                     const size_t y = i / width;
                     const size_t x = i % width;
 
-                    // Emit and trace a ray.
-                    image[y * width + x] = trace(Ray(x, y));
+                    // Calculate pixel data.
+                    image[y * width + x] = supersample(x, y);
             });
 
         // Once rendering is complete, write data to file.
@@ -442,7 +488,7 @@ int main() {
         FILE *const out = fopen(path, "w");
 
         // Print start message.
-        printf("Rendering %d pixels ...\n", WIDTH * HEIGHT);
+        printf("Rendering %d pixels ...\n", RENDER_WIDTH * RENDER_HEIGHT);
 
         // Record start time.
         const std::chrono::high_resolution_clock::time_point startTime
@@ -470,16 +516,16 @@ int main() {
             endTime - startTime).count() / 1e6;
         long long traceCount = static_cast<long long>(traceCounter);
         long long traceRate = traceCount / elapsed;
-        long long pixelRate = WIDTH * HEIGHT / elapsed;
-        double tracePerPixel = double(traceCount) / double(WIDTH * HEIGHT);
+        long long pixelRate = RENDER_WIDTH * RENDER_HEIGHT / elapsed;
+        double tracePerPixel = double(traceCount) / double(RENDER_WIDTH * RENDER_HEIGHT);
 
         // Print performance summary.
         printf("Rendered %d pixels from %lld traces in %.3f seconds.\n\n",
-               WIDTH * HEIGHT, traceCount, elapsed);
+               RENDER_WIDTH * RENDER_HEIGHT, traceCount, elapsed);
         printf("Render performance:\n");
-        printf("\t%lld\ttraces per second\n", traceRate);
-        printf("\t%lld\tpixels per second.\n", pixelRate);
-        printf("\t%.5f\ttraces per pixel.\n", tracePerPixel);
+        printf("\tTraces per second:\t%lld\n", traceRate);
+        printf("\tPixels per second:\t%lld\n", pixelRate);
+        printf("\tTraces per pixel:\t%.2f\n", tracePerPixel);
 
         return 0;
 }

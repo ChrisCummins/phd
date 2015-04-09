@@ -2,8 +2,23 @@
 #define _RT_H_
 
 #include <cstdio>
+#include <random>
 #include <stdint.h>
 #include <vector>
+
+// Utility class. Represents a normal distribution of range
+// min-max. The () operator returns a sample from this distribution.
+class NormalDistribution {
+public:
+        // Constructor.
+        NormalDistribution(const double min, const double max);
+
+        // Return a sample from distribution.
+        double operator()();
+private:
+        std::mt19937 generator;
+        std::uniform_real_distribution<double> distribution;
+};
 
 // A pixel is a trio of R,G,B bytes.
 struct Pixel { uint8_t r, g, b; };
@@ -19,6 +34,9 @@ public:
 
         // Colour addition.
         void operator+=(const Colour &c);
+
+        // Scalar division.
+        void operator/=(const double x);
 
         // Scalar colour multiplication.
         Colour operator*(const double x) const;
@@ -239,6 +257,9 @@ private:
         Colour trace(const Ray &ray,
                      Colour colour=Colour(0, 0, 0),
                      const unsigned int depth=0) const;
+
+        // Calculate the colour at position x,y through supersampling.
+        Colour supersample(size_t x, size_t y) const;
 };
 
 // Return the index of the object with the closest intersection, and
