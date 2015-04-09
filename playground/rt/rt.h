@@ -29,8 +29,8 @@ public:
         // Combination of two colours.
         Colour operator*(const Colour c) const;
 
-        // Explicit cast operation from Colour -> Pixel.
-        explicit operator Pixel() const;
+        // Cast operation from Colour -> Pixel.
+        operator Pixel() const;
 };
 
 // Properties that describe a material.

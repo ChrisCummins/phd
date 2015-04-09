@@ -2,7 +2,7 @@ Sources = main.cc
 Headers = rt.h
 
 CxxFlags = -O0 -g -DDEBUG -Wall -Wextra -std=c++11 -Wno-unused-parameter
-LdFlags =
+LdFlags = -ltbb
 
 Objects = $(patsubst %.cc,%.o,$(Sources))
 Binary = rt

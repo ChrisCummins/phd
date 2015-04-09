@@ -1,5 +1,7 @@
 #include "rt.h"
 
+#include "tbb/parallel_for.h"
+
 #include <memory>
 
 // The maximum depth to trace rays for.
@@ -290,17 +292,17 @@ void Renderer::render(FILE *const out) const {
         printf("Rendering scene size [%lu x %lu] ...\n", width, height);
 
         // Image data.
-        Pixel image[height][width];
+        Pixel image[height * width];
 
-        // For each pixel in the screen:
-        for (size_t y = 0; y < height; y++) {
-                for (size_t x = 0; x < width; x++) {
-                        // Emit a ray.
-                        const Ray ray(x, y);
-                        // Trace the ray.
-                        image[y][x] = static_cast<Pixel>(trace(ray));
-                }
-        }
+        // For each pixel in the image:
+        tbb::parallel_for(
+            static_cast<size_t>(0), height * width, [&](size_t i) {
+                    const size_t y = i / width;
+                    const size_t x = i % width;
+
+                    // Emit and trace a ray.
+                    image[y * width + x] = trace(Ray(x, y));
+            });
 
         // Once rendering is complete, write data to file.
         fprintf(out, "P3\n"); // PPM Magic number
@@ -311,7 +313,7 @@ void Renderer::render(FILE *const out) const {
         // pixel data.
         for (size_t y = 0; y < height; y++) {
                 for (size_t x = 0; x < width; x++) {
-                        const Pixel pixel = image[y][x];
+                        const Pixel pixel = image[y * width + x];
                         fprintf(out, "%u %u %u ", pixel.r, pixel.g, pixel.b);
                 }
                 fprintf(out, "\n");
