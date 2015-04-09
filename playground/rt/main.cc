@@ -1,5 +1,7 @@
 #include "rt.h"
 
+#include <memory>
+
 // The maximum depth to trace rays for.
 static const unsigned int MAX_DEPTH = 1;
 
@@ -114,21 +116,14 @@ static const double RAY_START_Z = -1000;
 // intersect() code.
 static const double ROUNDING_ERROR = 1e-6;
 
-
-// OBJECT
-
 Object::Object(const Vector &position, const Material &material)
                 : position(position), material(material) {}
-
-Vector Object::normal(const Vector &p) const { return p; }
-double Object::intersect(const Ray &r) const { return 0; }
 
 Sphere::Sphere(const Vector &position,
                const double radius,
                const Material &material)
                 : Object(position, material), radius(radius) {}
 
-// Return surface normal at point p.
 Vector Sphere::normal(const Vector &p) const {
         return (p - position).normalise();
 }
@@ -164,8 +159,8 @@ Light::Light(const Vector &position, const Colour &colour)
 // SCENE
 
 
-Scene::Scene(const std::vector<Object> &objects,
-             const std::vector<Light> &lights)
+Scene::Scene(const std::vector<const Object *> &objects,
+             const std::vector<const Light *> &lights)
                 : objects(objects), lights(lights) {}
 
 
@@ -231,18 +226,18 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
 
         if (index != -1) {
                 // Object with closest intersection.
-                const Object object = scene.objects[index];
+                const Object *object = scene.objects[index];
                 // Point of intersection.
                 const Vector intersect = ray.position + ray.direction * t;
                 // Surface normal at point of intersection.
-                const Vector normal = object.normal(intersect);
+                const Vector normal = object->normal(intersect);
 
                 // Accumulate each light in turn:
-                for (std::vector<Light>::const_iterator l = scene.lights.begin();
+                for (std::vector<const Light *>::const_iterator l = scene.lights.begin();
                      l != scene.lights.end(); l++) {
-                        const Light light = *l;
+                        const Light *light = *l;
                         // Direction vector from intersection to light.
-                        const Vector toLight = (light.position - intersect).normalise();
+                        const Vector toLight = (light->position - intersect).normalise();
                         const Ray shadowRay = Ray(intersect, toLight);
                         const bool blocked = intersects(shadowRay, scene.objects);
 
@@ -251,11 +246,11 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
                                 // TODO: Ambient lighting.
 
                                 // Diffuse lighting.
-                                const Colour illumination = light.colour * object.material.diffuse;
+                                const Colour illumination = light->colour * object->material.diffuse;
                                 const double lambert = std::max(normal ^ toLight,
                                                                 static_cast<double>(0));
 
-                                colour += illumination * object.material.diffuseCoefficient * lambert;
+                                colour += illumination * object->material.diffuseCoefficient * lambert;
                         }
                 }
         } else if (depth == 0) {
@@ -266,14 +261,14 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
         return colour;
 }
 
-int closestIntersect(const Ray &ray, const std::vector<Object> &objects, double &t) {
+int closestIntersect(const Ray &ray, const std::vector<const Object *> &objects, double &t) {
         int index = -1;
         t = INFINITY; // Distance to closest intersect.
 
         // For each object:
         for (size_t i = 0; i < objects.size(); i++) {
-                const Object object = objects[i];
-                double currentT = object.intersect(ray);
+                const Object *object = objects[i];
+                double currentT = object->intersect(ray);
 
                 // Check if intersects, and if so, whether the intersection is
                 // closer than the current best.
@@ -286,10 +281,10 @@ int closestIntersect(const Ray &ray, const std::vector<Object> &objects, double 
         return index;
 }
 
-bool intersects(const Ray &ray, const std::vector<Object> &objects) {
+bool intersects(const Ray &ray, const std::vector<const Object *> &objects) {
         for (size_t i = 0; i < objects.size(); i++) {
-                const Object object = objects[i];
-                double t = object.intersect(ray);
+                const Object *const object = objects[i];
+                double t = object->intersect(ray);
                 if (t > 0)
                         return true;
         }
@@ -305,21 +300,21 @@ bool intersects(const Ray &ray, const std::vector<Object> &objects) {
 // Program entry point.
 int main() {
         // The scene:
-        const Object _objects[] = {
-                Sphere(Vector( 95, 250,  300), 75, Material(Colour(  0, 200,   5),  1,  0)), // Green ball
-                Sphere(Vector(150, 250,    0), 75, Material(Colour(100,  25,   5),  1, .2)), // Red ball
-                Sphere(Vector(250, 275,  -85), 50, Material(Colour(255, 255, 255),  1,  1)), // White ball
-                Sphere(Vector(400, 275,    0), 50, Material(Colour(  0, 100, 200),  1,  1))  // Blue ball
+        const Object *_objects[] = {
+                new Sphere(Vector( 95, 250,  300), 75, Material(Colour(  0, 200,   5),  1,  0)), // Green ball
+                new Sphere(Vector(150, 250,    0), 75, Material(Colour(100,  25,   5),  1, .2)), // Red ball
+                new Sphere(Vector(250, 275,  -85), 50, Material(Colour(255, 255, 255),  1,  1)), // White ball
+                new Sphere(Vector(400, 275,    0), 50, Material(Colour(  0, 100, 200),  1,  1))  // Blue ball
         };
 
-        const Light _lights[] = {
-                Light(Vector( 800, -200, -300), Colour(255, 255, 255)),
-                Light(Vector(-300, -200, -700), Colour( 80,  80,  80))
+        const Light *_lights[] = {
+                new Light(Vector( 800, -200, -300), Colour(255, 255, 255)),
+                new Light(Vector(-300, -200, -700), Colour( 80,  80,  80))
         };
 
         // Create the scene and renderer.
-        const std::vector<Object> objects(_objects, ARRAY_END(_objects));
-        const std::vector<Light> lights(_lights, ARRAY_END(_lights));
+        const std::vector<const Object *> objects(_objects, ARRAY_END(_objects));
+        const std::vector<const Light *> lights(_lights, ARRAY_END(_lights));
         const Scene scene(objects, lights);
         const Renderer renderer(scene);
 
@@ -336,6 +331,12 @@ int main() {
         // Close the output file.
         printf("Closing file '%s'...\n", path);
         fclose(out);
+
+        // Free heap memory.
+        for (size_t i = 0; i < ARRAY_LENGTH(_objects); i++)
+                delete _objects[i];
+        for (size_t i = 0; i < ARRAY_LENGTH(_lights); i++)
+                delete _lights[i];
 
         return 0;
 }

@@ -113,11 +113,14 @@ public:
 
         Object(const Vector &position, const Material &material);
 
+        // Virtual destructor.
+        virtual ~Object(){};
+
         // Return surface normal at point p.
-        virtual Vector normal(const Vector &p) const;
+        virtual Vector normal(const Vector &p) const = 0;
         // Return whether ray intersects object, and if so, at what
         // distance (0 if no intersect).
-        virtual double intersect(const Ray &ray) const;
+        virtual double intersect(const Ray &ray) const = 0;
 };
 
 // A sphere consits of a position and a radius.
@@ -150,12 +153,12 @@ public:
 // lights).
 class Scene {
 public:
-        const std::vector<Object> objects;
-        const std::vector<Light> lights;
+        const std::vector<const Object *> objects;
+        const std::vector<const Light *> lights;
 
         // Constructor.
-        Scene(const std::vector<Object> &objects,
-              const std::vector<Light> &lights);
+        Scene(const std::vector<const Object *> &objects,
+              const std::vector<const Light *> &lights);
 };
 
 class Renderer {
@@ -179,8 +182,8 @@ private:
 // Return the index of the object with the closest intersection, and
 // the distance to the intersection `t'. If no intersection, return
 // -1.
-int closestIntersect(const Ray &ray, const std::vector<Object> &objects, double &t);
+int closestIntersect(const Ray &ray, const std::vector<const Object *> &objects, double &t);
 
-bool intersects(const Ray &ray, const std::vector<Object> &objects);
+bool intersects(const Ray &ray, const std::vector<const Object *> &objects);
 
 #endif  // _RT_H_

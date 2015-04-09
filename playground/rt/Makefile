@@ -1,4 +1,5 @@
 Sources = main.cc
+Headers = rt.h
 
 CxxFlags = -O0 -DDEBUG -Wall -Wextra -std=c++11
 LdFlags =
@@ -11,7 +12,7 @@ all: $(Binary)
 clean:
 	rm -fv $(Binary) $(Objects)
 
-%.o: %.cc
+%.o: %.cc $(Headers)
 	g++ $(CxxFlags) -c $<
 
 $(Binary): $(Objects)
