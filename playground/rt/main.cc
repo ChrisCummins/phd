@@ -48,11 +48,13 @@ Colour::operator Pixel() const {
 Material::Material(const Colour &colour,
                    const double ambient,
                    const double diffuse,
-                   const double specular)
+                   const double specular,
+                   const double shininess)
                 : colour(colour),
                   ambient(ambient),
                   diffuse(diffuse),
-                  specular(specular) {}
+                  specular(specular),
+                  shininess(shininess) {}
 
 
 
@@ -194,7 +196,8 @@ Colour PointLight::shade(const Material *const material,
         const Vector toRay = (ray.position - intersect).normalise();
         const Vector bisector = (toRay + toLight).normalise();
         const double phong = pow(std::max(normal ^ bisector,
-                                          static_cast<double>(0)), 40);
+                                          static_cast<double>(0)),
+                                 material->shininess);
         shade += illumination * material->specular * phong;
 
         return shade;
@@ -340,13 +343,13 @@ bool intersects(const Ray &ray, const std::vector<const Object *> &objects) {
 int main() {
         // Material parameters: colour, ambient, diffuse, specular, shininess
         const Material *const green = new Material(Colour(0x00c805),
-                                                   0,  1,  0);
+                                                   0,  1,  0, 0);
         const Material *const red   = new Material(Colour(0x641905),
-                                                   0,  1,  1);
+                                                   0,  1,  .5, 40);
         const Material *const white = new Material(Colour(0xffffff),
-                                                   0,  1,  1);
+                                                   .05,  .8,  1, 150);
         const Material *const blue  = new Material(Colour(0x0064c8),
-                                                   0, .7, .3);
+                                                   0, .7, .7, 90);
 
         // The scene:
         const Object *_objects[] = {
@@ -357,8 +360,9 @@ int main() {
         };
 
         const Light *_lights[] = {
-                new PointLight(Vector( 800, -200, -300), Colour(0xffffff)),
-                new PointLight(Vector(-300, -200, -700), Colour(0x505050))
+                new PointLight(Vector( 250, -200,  -100), Colour(0x202020)),
+                new PointLight(Vector( 800, -200,  -300), Colour(0xffffff)),
+                new PointLight(Vector(-300, -200,  -700), Colour(0x505050))
         };
 
         // Create the scene and renderer.

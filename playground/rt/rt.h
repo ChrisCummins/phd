@@ -37,15 +37,17 @@ public:
 class Material {
 public:
         const Colour colour;
-        const double ambient;
-        const double diffuse;
-        const double specular;
+        const double ambient;    // 0 <= ambient <= 1
+        const double diffuse;    // 0 <= diffuse <= 1
+        const double specular;   // 0 <= specular <= 1
+        const double shininess;  // shininess >= 0
 
         // Constructor.
         Material(const Colour &colour,
                  const double ambient,
                  const double diffuse,
-                 const double specular);
+                 const double specular,
+                 const double shininess);
 };
 
 // Vector class.
