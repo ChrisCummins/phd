@@ -17,7 +17,7 @@ public:
         double operator()();
 private:
         std::mt19937 generator;
-        std::uniform_real_distribution<double> distribution;
+        std::normal_distribution<double> distribution;
 };
 
 // A pixel is a trio of R,G,B bytes.

@@ -73,7 +73,7 @@ static NormalDistribution sampler(-ANTIALIASING_OFFSET, ANTIALIASING_OFFSET);
 NormalDistribution::NormalDistribution(const double min, const double max) {
         std::random_device random;
         generator = std::mt19937(random());
-        distribution = std::uniform_real_distribution<double>(min, max);
+        distribution = std::normal_distribution<double>(min, max);
 }
 
 double NormalDistribution::operator()() {
