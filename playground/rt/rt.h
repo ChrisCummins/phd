@@ -37,17 +37,19 @@ public:
 class Material {
 public:
         const Colour colour;
-        const double ambient;    // 0 <= ambient <= 1
-        const double diffuse;    // 0 <= diffuse <= 1
-        const double specular;   // 0 <= specular <= 1
-        const double shininess;  // shininess >= 0
+        const double ambient;      // 0 <= ambient <= 1
+        const double diffuse;      // 0 <= diffuse <= 1
+        const double specular;     // 0 <= specular <= 1
+        const double shininess;    // shininess >= 0
+        const double reflectivity; // 0 <= reflectivity < 1
 
         // Constructor.
         Material(const Colour &colour,
                  const double ambient,
                  const double diffuse,
                  const double specular,
-                 const double shininess);
+                 const double shininess,
+                 const double reflectivity);
 };
 
 // Vector class.
@@ -57,7 +59,7 @@ public:
         const double y;
         const double z;
 
-        // Constructor.
+        // Constructors.
         Vector(const double x, const double y, const double z);
 
         //Vector& operator=(const Vector& rhs);
@@ -128,6 +130,36 @@ public:
         virtual double intersect(const Ray &ray) const = 0;
         // Return material at point on surface.
         virtual const Material *surface(const Vector &point) const = 0;
+};
+
+// A plane.
+class Plane : public Object {
+public:
+        const Vector direction;
+        const Material *const material;
+
+        // Constructor.
+        Plane(const Vector &origin,
+              const Vector &direction,
+              const Material *const material);
+
+        virtual Vector normal(const Vector &p) const;
+        virtual double intersect(const Ray &ray) const;
+        virtual const Material *surface(const Vector &point) const;
+};
+
+class CheckerBoard : public Plane {
+public:
+        const Material *const black;
+        const Material *const white;
+        const double checkerWidth;
+
+        CheckerBoard(const Vector &origin,
+                     const Vector &direction,
+                     const double checkerWidth);
+        ~CheckerBoard();
+
+        virtual const Material *surface(const Vector &point) const;
 };
 
 // A sphere consits of a position and a radius.
