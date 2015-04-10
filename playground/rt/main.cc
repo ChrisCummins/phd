@@ -15,31 +15,27 @@
 // The maximum depth to trace rays for.
 static const unsigned int MAX_DEPTH = 100;
 
-// The level of precision to use when calculating intersection
-// distances.
-static const double ROUNDING_ERROR = 1e-6;
-
 // For each pixel at location x,y, we sample N extra points at
 // locations normally distributed about x,y. The sample count
 // determines the number of extra rays to trace, and the offset
 // determines the maximum distance about the origin.
 #if SEXY
 static const size_t ANTIALIASING_SAMPLE_COUNT = 8;
-static const double ANTIALIASING_OFFSET = .6;
+static const Scalar ANTIALIASING_OFFSET = .6;
 #else
 static const size_t ANTIALIASING_SAMPLE_COUNT = 0;
-static const double ANTIALIASING_OFFSET = .6;
+static const Scalar ANTIALIASING_OFFSET = .6;
 #endif
 
 // For softlights, we emit rays at points normally distributed about
 // the light's position. The number of rays emitted is equal to:
 //   N = (base + radius * factor) ^ 3.
 #if SEXY
-static const double SOFTLIGHT_FACTOR = .075;
-static const double SOFTLIGHT_BASE = 3;
+static const Scalar SOFTLIGHT_FACTOR = .075;
+static const Scalar SOFTLIGHT_BASE = 3;
 #else
-static const double SOFTLIGHT_FACTOR = .01;
-static const double SOFTLIGHT_BASE = 3;
+static const Scalar SOFTLIGHT_FACTOR = .01;
+static const Scalar SOFTLIGHT_BASE = 3;
 #endif
 
 // Dimensions of rendered image.
@@ -50,7 +46,7 @@ static const int RENDER_WIDTH = 750;
 static const int RENDER_HEIGHT = 422;
 
 // Starting depth of rays.
-static const double RAY_START_Z = -1000;
+static const Scalar RAY_START_Z = -1000;
 
 ////////////////////
 // Implementation //
@@ -70,13 +66,13 @@ long long samplesPerRay;
 // stochastic anti-aliasing.
 static NormalDistribution sampler(-ANTIALIASING_OFFSET, ANTIALIASING_OFFSET);
 
-NormalDistribution::NormalDistribution(const double min, const double max) {
+NormalDistribution::NormalDistribution(const Scalar min, const Scalar max) {
         std::random_device random;
         generator = std::mt19937(random());
-        distribution = std::normal_distribution<double>(min, max);
+        distribution = std::normal_distribution<Scalar>(min, max);
 }
 
-double NormalDistribution::operator()() {
+Scalar NormalDistribution::operator()() {
         return distribution(generator);
 }
 
@@ -92,17 +88,17 @@ void Colour::operator+=(const Colour &c) {
         b += c.b;
 }
 
-void Colour::operator/=(const double x) {
+void Colour::operator/=(const Scalar x) {
         r /= x;
         g /= x;
         b /= x;
 }
 
-Colour Colour::operator*(const double x) const {
+Colour Colour::operator*(const Scalar x) const {
         return Colour(r * x, g * x, b * x);
 }
 
-Colour Colour::operator/(const double x) const {
+Colour Colour::operator/(const Scalar x) const {
         return Colour(r / x, g / x, b / x);
 }
 
@@ -115,11 +111,11 @@ Colour::operator Pixel() const {
 }
 
 Material::Material(const Colour &colour,
-                   const double ambient,
-                   const double diffuse,
-                   const double specular,
-                   const double shininess,
-                   const double reflectivity)
+                   const Scalar ambient,
+                   const Scalar diffuse,
+                   const Scalar specular,
+                   const Scalar shininess,
+                   const Scalar reflectivity)
                 : colour(colour),
                   ambient(ambient),
                   diffuse(diffuse),
@@ -127,7 +123,7 @@ Material::Material(const Colour &colour,
                   shininess(shininess),
                   reflectivity(reflectivity) {}
 
-Vector::Vector(const double x, const double y, const double z)
+Vector::Vector(const Scalar x, const Scalar y, const Scalar z)
                 : x(x), y(y), z(z) {}
 
 Vector Vector::operator+(const Vector &b) const {
@@ -138,11 +134,11 @@ Vector Vector::operator-(const Vector &b) const {
         return Vector(x - b.x, y - b.y, z - b.z);
 }
 
-Vector Vector::operator*(const double a) const {
+Vector Vector::operator*(const Scalar a) const {
         return Vector(a * x, a * y, a * z);
 }
 
-Vector Vector::operator/(const double a) const {
+Vector Vector::operator/(const Scalar a) const {
         return Vector(x / a, y / a, z / a);
 }
 
@@ -158,15 +154,15 @@ bool Vector::operator!=(const Vector &b) const {
         return !(*this == b);
 }
 
-double Vector::size() const {
+Scalar Vector::size() const {
         return sqrt(x * x + y * y + z * z);
 }
 
-double Vector::product() const {
+Scalar Vector::product() const {
         return x * y * z;
 }
 
-double Vector::sum() const {
+Scalar Vector::sum() const {
         return x + y + z;
 }
 
@@ -174,7 +170,7 @@ Vector Vector::normalise() const {
         return *this / size();
 }
 
-double Vector::operator^(const Vector &b) const {
+Scalar Vector::operator^(const Vector &b) const {
         return x * b.x + y * b.y + z * b.z;
 }
 
@@ -196,19 +192,19 @@ Vector Plane::normal(const Vector &p) const {
         return direction;
 }
 
-double Plane::intersect(const Ray &ray) const {
+Scalar Plane::intersect(const Ray &ray) const {
         // Calculate intersection of line and plane.
-        const double f = (position - ray.position) ^ direction;
-        const double g = ray.direction ^ direction;
-        const double t = f / g;
+        const Scalar f = (position - ray.position) ^ direction;
+        const Scalar g = ray.direction ^ direction;
+        const Scalar t = f / g;
 
         // Accommodate for precision errors.
-        const double t0 = t - ROUNDING_ERROR / 2;
-        const double t1 = t + ROUNDING_ERROR / 2;
+        const Scalar t0 = t - ScalarPrecision / 2;
+        const Scalar t1 = t + ScalarPrecision / 2;
 
-        if (t0 > ROUNDING_ERROR)
+        if (t0 > ScalarPrecision)
                 return t0;
-        else if (t1 > ROUNDING_ERROR)
+        else if (t1 > ScalarPrecision)
                 return t1;
         else
                 return 0;
@@ -224,7 +220,7 @@ static const Material CWHITE = Material(Colour(0x888888), 0, .3, 1, 10, 0.7);
 
 CheckerBoard::CheckerBoard(const Vector &origin,
                            const Vector &direction,
-                           const double checkerWidth)
+                           const Scalar checkerWidth)
                 : Plane(origin, direction, NULL), black(&CBLACK), white(&CWHITE),
                   checkerWidth(checkerWidth) {}
 
@@ -246,7 +242,7 @@ const Material *CheckerBoard::surface(const Vector &point) const {
 }
 
 Sphere::Sphere(const Vector &position,
-               const double radius,
+               const Scalar radius,
                const Material *const material)
                 : Object(position), radius(radius), material(material) {}
 
@@ -254,21 +250,21 @@ Vector Sphere::normal(const Vector &p) const {
         return (p - position).normalise();
 }
 
-double Sphere::intersect(const Ray &ray) const {
+Scalar Sphere::intersect(const Ray &ray) const {
         // Calculate intersection of line and sphere.
         const Vector distance = position - ray.position;
-        const double b = ray.direction ^ distance;
-        const double d = b * b + radius * radius - (distance ^ distance);
+        const Scalar b = ray.direction ^ distance;
+        const Scalar d = b * b + radius * radius - (distance ^ distance);
 
         if (d < 0)
                 return 0;
 
-        const double t0 = b - sqrt(d);
-        const double t1 = b + sqrt(d);
+        const Scalar t0 = b - sqrt(d);
+        const Scalar t1 = b + sqrt(d);
 
-        if (t0 > ROUNDING_ERROR)
+        if (t0 > ScalarPrecision)
                 return t0;
-        else if (t1 > ROUNDING_ERROR)
+        else if (t1 > ScalarPrecision)
                 return t1;
         else
                 return 0;
@@ -304,14 +300,14 @@ Colour PointLight::shade(const Vector &point,
         const Colour illumination = colour * material->colour;
 
         // Apply Lambert (diffuse) shading.
-        const double lambert = std::max(normal ^ toLight,
-                                        static_cast<double>(0));
+        const Scalar lambert = std::max(normal ^ toLight,
+                                        static_cast<Scalar>(0));
         shade += illumination * material->diffuse * lambert;
 
         // Apply Blinn-Phong (specular) shading.
         const Vector bisector = (toRay + toLight).normalise();
-        const double phong = pow(std::max(normal ^ bisector,
-                                          static_cast<double>(0)),
+        const Scalar phong = pow(std::max(normal ^ bisector,
+                                          static_cast<Scalar>(0)),
                                  material->shininess);
         shade += illumination * material->specular * phong;
 
@@ -320,7 +316,7 @@ Colour PointLight::shade(const Vector &point,
 
 static NormalDistribution softSampler(-1, 1);
 
-SoftLight::SoftLight(const Vector &position, const double radius,
+SoftLight::SoftLight(const Vector &position, const Scalar radius,
                      const Colour &colour)
                 : position(position), radius(radius), colour(colour),
                   samples(SOFTLIGHT_BASE +
@@ -358,14 +354,14 @@ Colour SoftLight::shade(const Vector &point,
                 rayCounter++;
 
                 // Apply Lambert (diffuse) shading.
-                const double lambert = std::max(normal ^ toLight,
-                                                static_cast<double>(0));
+                const Scalar lambert = std::max(normal ^ toLight,
+                                                static_cast<Scalar>(0));
                 shade += illumination * material->diffuse * lambert;
 
                 // Apply Blinn-Phong (specular) shading.
                 const Vector bisector = (toRay + toLight).normalise();
-                const double phong = pow(std::max(normal ^ bisector,
-                                                  static_cast<double>(0)),
+                const Scalar phong = pow(std::max(normal ^ bisector,
+                                                  static_cast<Scalar>(0)),
                                          material->shininess);
                 shade += illumination * material->specular * phong;
         }
@@ -377,7 +373,7 @@ Scene::Scene(const std::vector<const Object *> &objects,
              const std::vector<const Light *> &lights)
                 : objects(objects), lights(lights) {}
 
-Ray::Ray(const double x, const double y)
+Ray::Ray(const Scalar x, const Scalar y)
                 : position(Vector(x, y, RAY_START_Z)),
                   direction(Vector(0, 0, 1)) {}
 
@@ -450,7 +446,7 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
         traceCounter++;
 
         // Determine the closet ray-object intersection.
-        double t;
+        Scalar t;
         int index = closestIntersect(ray, scene.objects, t);
 
         // If the ray doesn't intersect any object, return.
@@ -477,7 +473,7 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
                                                  material, scene.objects);
 
         // Create reflection ray and recursive evaluate.
-        const double reflectivity = material->reflectivity;
+        const Scalar reflectivity = material->reflectivity;
         if (depth < MAX_DEPTH && reflectivity > 0) {
                 // Direction of reflected ray.
                 const Vector reflectionDirection = (normal * 2*(normal ^ toRay) - toRay).normalise();
@@ -492,7 +488,7 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
 
 int closestIntersect(const Ray &ray,
                      const std::vector<const Object *> &objects,
-                     double &t) {
+                     Scalar &t) {
         // Index of, and distance to closest intersect:
         int index = -1;
         t = INFINITY;
@@ -500,7 +496,7 @@ int closestIntersect(const Ray &ray,
         // For each object:
         for (size_t i = 0; i < objects.size(); i++) {
                 // Get intersect distance.
-                double currentT = objects[i]->intersect(ray);
+                Scalar currentT = objects[i]->intersect(ray);
 
                 // Check if intersects, and if so, whether the
                 // intersection is closer than the current best.
@@ -525,9 +521,9 @@ bool intersects(const Ray &ray, const std::vector<const Object *> &objects) {
         return false;
 }
 
-uint8_t inline clamp(const double x) {
-        const double min = 0;
-        const double max = 255;
+uint8_t inline clamp(const Scalar x) {
+        const Scalar min = 0;
+        const Scalar max = 255;
 
         return static_cast<uint8_t>(std::max(std::min(x, max), min));
 }
@@ -609,14 +605,15 @@ int main() {
                 delete _lights[i];
 
         // Calculate performance information.
-        double elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
+        Scalar elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
             endTime - startTime).count() / 1e6;
         long long traceCount = static_cast<long long>(traceCounter);
         long long rayCount = static_cast<long long>(rayCounter);
         long long traceRate = traceCount / elapsed;
         long long rayRate = rayCount / elapsed;
         long long pixelRate = RENDER_WIDTH * RENDER_HEIGHT / elapsed;
-        double tracePerPixel = double(traceCount) / double(RENDER_WIDTH * RENDER_HEIGHT);
+        Scalar tracePerPixel = static_cast<Scalar>(traceCount)
+            / static_cast<Scalar>(RENDER_WIDTH * RENDER_HEIGHT);
 
         // Print performance summary.
         printf("Rendered %d pixels from %lld traces in %.3f seconds.\n\n",

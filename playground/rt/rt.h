@@ -6,18 +6,79 @@
 #include <stdint.h>
 #include <vector>
 
+// BASIC TYPES.
+
+// Individual real numbers are known as scalars. Precision can be
+// controlled by changing the data type between different floating
+// point types.
+typedef double Scalar;
+
+// The "rounding error" to accomodate for when approximate infinite
+// precision real numbers.
+static const Scalar ScalarPrecision = 1e-6;
+
+// A vector consits of three coordinate scalars.
+class Vector {
+public:
+        const Scalar x;
+        const Scalar y;
+        const Scalar z;
+
+        // Contructor: V = (x,y,z)
+        Vector(const Scalar x, const Scalar y, const Scalar z);
+
+        // Addition: A' = A + B
+        Vector operator+(const Vector &b) const;
+
+        // Subtraction: A' = A - B
+        Vector operator-(const Vector &b) const;
+
+        // Multiplication: A' = aA
+        Vector operator*(const Scalar a) const;
+
+        // Division: A' = A / a
+        Vector operator/(const Scalar a) const;
+
+        // Product: A' = (Ax * Bx, Ay * By, Az * Bz)
+        Vector operator*(const Vector &b) const;
+
+        // Dot product: x = A . B
+        Scalar operator^(const Vector &b) const;
+
+        // Cross product: A' = A x B
+        Vector operator|(const Vector &b) const;
+
+        // Equality: A == B
+        bool operator==(const Vector &b) const;
+
+        // Inequality: A != B
+        bool operator!=(const Vector &b) const;
+
+        // Length of vector: |A| = sqrt(x^2 + y^2 + z^2)
+        Scalar size() const;
+
+        // Product of components: x * y * z
+        Scalar product() const;
+
+        // Sum of components: x + y + z
+        Scalar sum() const;
+
+        // Normalise: A' = A / |A|
+        Vector normalise() const;
+};
+
 // Utility class. Represents a normal distribution of range
 // min-max. The () operator returns a sample from this distribution.
 class NormalDistribution {
 public:
         // Constructor.
-        NormalDistribution(const double min, const double max);
+        NormalDistribution(const Scalar min, const Scalar max);
 
         // Return a sample from distribution.
-        double operator()();
+        Scalar operator()();
 private:
         std::mt19937 generator;
-        std::normal_distribution<double> distribution;
+        std::normal_distribution<Scalar> distribution;
 };
 
 // A pixel is a trio of R,G,B bytes.
@@ -26,7 +87,7 @@ struct Pixel { uint8_t r, g, b; };
 // Colour class. Note that colours are NOT immutable.
 class Colour {
 public:
-        float r, g, b;
+        Scalar r, g, b;
 
         // Colour constructors.
         Colour(const int hex);
@@ -36,13 +97,13 @@ public:
         void operator+=(const Colour &c);
 
         // Scalar division.
-        void operator/=(const double x);
+        void operator/=(const Scalar x);
 
         // Scalar colour multiplication.
-        Colour operator*(const double x) const;
+        Colour operator*(const Scalar x) const;
 
         // Scalar colour divison.
-        Colour operator/(const double x) const;
+        Colour operator/(const Scalar x) const;
 
         // Combination of two colours.
         Colour operator*(const Colour c) const;
@@ -55,73 +116,20 @@ public:
 class Material {
 public:
         const Colour colour;
-        const double ambient;      // 0 <= ambient <= 1
-        const double diffuse;      // 0 <= diffuse <= 1
-        const double specular;     // 0 <= specular <= 1
-        const double shininess;    // shininess >= 0
-        const double reflectivity; // 0 <= reflectivity < 1
+        const Scalar ambient;      // 0 <= ambient <= 1
+        const Scalar diffuse;      // 0 <= diffuse <= 1
+        const Scalar specular;     // 0 <= specular <= 1
+        const Scalar shininess;    // shininess >= 0
+        const Scalar reflectivity; // 0 <= reflectivity < 1
 
         // Constructor.
         Material(const Colour &colour,
-                 const double ambient,
-                 const double diffuse,
-                 const double specular,
-                 const double shininess,
-                 const double reflectivity);
+                 const Scalar ambient,
+                 const Scalar diffuse,
+                 const Scalar specular,
+                 const Scalar shininess,
+                 const Scalar reflectivity);
 };
-
-// Vector class.
-class Vector {
-public:
-        const double x;
-        const double y;
-        const double z;
-
-        // Constructors.
-        Vector(const double x, const double y, const double z);
-
-        //Vector& operator=(const Vector& rhs);
-
-        // Vector addition.
-        Vector operator+(const Vector &b) const;
-
-        // Vector subtraction.
-        Vector operator-(const Vector &b) const;
-
-        // Scalar multiplication.
-        Vector operator*(const double a) const;
-
-        // Scalar division.
-        Vector operator/(const double a) const;
-
-        // Vector product.
-        Vector operator*(const Vector &b) const;
-
-        // Dot product.
-        double operator^(const Vector &b) const;
-
-        // Cross product.
-        Vector operator|(const Vector &b) const;
-
-        // Equality testing.
-        bool operator==(const Vector &b) const;
-
-        // Negative equality testing.
-        bool operator!=(const Vector &b) const;
-
-        // Length of vector.
-        double size() const;
-
-        // Scalar product of components.
-        double product() const;
-
-        // Scalar sum of components.
-        double sum() const;
-
-        // Normalise vector.
-        Vector normalise() const;
-};
-
 
 // A ray abstraction.
 class Ray {
@@ -129,7 +137,7 @@ public:
         const Vector position, direction;
 
         // Constructors.
-        Ray(const double x=0, const double y=0);
+        Ray(const Scalar x=0, const Scalar y=0);
         Ray(const Vector &position, const Vector &direction);
 };
 
@@ -148,7 +156,7 @@ public:
         virtual Vector normal(const Vector &p) const = 0;
         // Return whether ray intersects object, and if so, at what
         // distance (0 if no intersect).
-        virtual double intersect(const Ray &ray) const = 0;
+        virtual Scalar intersect(const Ray &ray) const = 0;
         // Return material at point on surface.
         virtual const Material *surface(const Vector &point) const = 0;
 };
@@ -165,7 +173,7 @@ public:
               const Material *const material);
 
         virtual Vector normal(const Vector &p) const;
-        virtual double intersect(const Ray &ray) const;
+        virtual Scalar intersect(const Ray &ray) const;
         virtual const Material *surface(const Vector &point) const;
 };
 
@@ -173,11 +181,11 @@ class CheckerBoard : public Plane {
 public:
         const Material *const black;
         const Material *const white;
-        const double checkerWidth;
+        const Scalar checkerWidth;
 
         CheckerBoard(const Vector &origin,
                      const Vector &direction,
-                     const double checkerWidth);
+                     const Scalar checkerWidth);
         ~CheckerBoard();
 
         virtual const Material *surface(const Vector &point) const;
@@ -186,16 +194,16 @@ public:
 // A sphere consits of a position and a radius.
 class Sphere : public Object {
 public:
-        const double radius;
+        const Scalar radius;
         const Material *const material;
 
         // Constructor.
         Sphere(const Vector &position,
-               const double radius,
+               const Scalar radius,
                const Material *const material);
 
         virtual Vector normal(const Vector &p) const;
-        virtual double intersect(const Ray &ray) const;
+        virtual Scalar intersect(const Ray &ray) const;
         virtual const Material *surface(const Vector &point) const;
 };
 
@@ -235,12 +243,12 @@ public:
 class SoftLight : public Light {
 public:
         const Vector position;
-        const double radius;
+        const Scalar radius;
         const Colour colour;
         const size_t samples;
 
         // Constructor.
-        SoftLight(const Vector &position, const double radius,
+        SoftLight(const Vector &position, const Scalar radius,
                   const Colour &colour=Colour(0xff, 0xff, 0xff));
 
         virtual Colour shade(const Vector &point,
@@ -289,12 +297,12 @@ private:
 // -1.
 int closestIntersect(const Ray &ray,
                      const std::vector<const Object *> &objects,
-                     double &t);
+                     Scalar &t);
 
 // Return whether a given ray intersects any of the objects.
 bool intersects(const Ray &ray, const std::vector<const Object *> &objects);
 
 // Clamp a value to within the range [0,255]
-uint8_t inline clamp(const double x);
+uint8_t inline clamp(const Scalar x);
 
 #endif  // _RT_H_
