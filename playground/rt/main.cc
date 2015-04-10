@@ -102,8 +102,8 @@ Colour Colour::operator/(const Scalar x) const {
         return Colour(r / x, g / x, b / x);
 }
 
-Colour Colour::operator*(const Colour c) const {
-        return Colour(r * (c.r / 255), g * (c.g / 255), b * (c.b / 255));
+Colour Colour::operator*(const Colour &rhs) const {
+        return Colour(r * (rhs.r / 255), g * (rhs.g / 255), b * (rhs.b / 255));
 }
 
 Colour::operator Pixel() const {
@@ -420,8 +420,11 @@ void Renderer::render(FILE *const out) const {
                     const size_t y = i / width;
                     const size_t x = i % width;
 
-                    // Calculate pixel data.
-                    image[y * width + x] = supersample(x, y);
+                    // Calculate the sample colour.
+                    const Colour colour = supersample(x, y);
+
+                    // Convert to pixel data.
+                    image[y * width + x] = static_cast<Pixel>(colour);
             });
 
         // Once rendering is complete, write data to file.

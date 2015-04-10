@@ -6,6 +6,14 @@
 #include <stdint.h>
 #include <vector>
 
+// A simple ray tacer. Features:
+//
+//   * Objects: Spheres & Planes.
+//   * Lighting: point light and soft lights.
+//   * Shading: Lambert (diffuse) and Phong (specular).
+//   * Anti-aliasing: Stochastic supersampling.
+
+
 // BASIC TYPES.
 
 // Individual real numbers are known as scalars. Precision can be
@@ -17,7 +25,7 @@ typedef double Scalar;
 // precision real numbers.
 static const Scalar ScalarPrecision = 1e-6;
 
-// A vector consits of three coordinate scalars.
+// A vector consits of three coordinate scalars. Vectors are immutable.
 class Vector {
 public:
         const Scalar x;
@@ -67,8 +75,9 @@ public:
         Vector normalise() const;
 };
 
-// Utility class. Represents a normal distribution of range
-// min-max. The () operator returns a sample from this distribution.
+// UTILITY TYPES.
+
+// A random number generator for sampling a normal distribution.
 class NormalDistribution {
 public:
         // Constructor.
@@ -81,16 +90,22 @@ private:
         std::normal_distribution<Scalar> distribution;
 };
 
+// GRAPHICS TYPES.
+
 // A pixel is a trio of R,G,B bytes.
 struct Pixel { uint8_t r, g, b; };
 
-// Colour class. Note that colours are NOT immutable.
+// A colour is represented by R,G,B scalars, and are mutable through
+// the += and /= operators. They behave identically to Vectors.
 class Colour {
 public:
         Scalar r, g, b;
 
-        // Colour constructors.
+        // Constructor for specifying colours as 32 bit hex
+        // string. E.g. 0xff00aa.
         Colour(const int hex);
+
+        // Contructor: C = (r,g,b)
         Colour(const float r=0, const float g=0, const float b=0);
 
         // Colour addition.
@@ -105,11 +120,11 @@ public:
         // Scalar colour divison.
         Colour operator/(const Scalar x) const;
 
-        // Combination of two colours.
-        Colour operator*(const Colour c) const;
+        // Combination of two colours: A' = (Ar * Br, Ag * Bg, Ab * Bb)
+        Colour operator*(const Colour &rhs) const;
 
-        // Cast operation from Colour -> Pixel.
-        operator Pixel() const;
+        // Explicit cast operation from Colour -> Pixel.
+        explicit operator Pixel() const;
 };
 
 // Properties that describe a material.
