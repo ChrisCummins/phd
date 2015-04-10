@@ -67,17 +67,20 @@ long long samplesPerRay;
 static NormalDistribution sampler(-ANTIALIASING_OFFSET, ANTIALIASING_OFFSET);
 
 NormalDistribution::NormalDistribution(const Scalar min, const Scalar max) {
+        // Instantiate a random number generator.
         std::random_device random;
         generator = std::mt19937(random());
-        distribution = std::normal_distribution<Scalar>(min, max);
+        distribution = DistributionType(min, max);
 }
 
-Scalar NormalDistribution::operator()() {
+Scalar inline NormalDistribution::operator()() {
         return distribution(generator);
 }
 
 Colour::Colour(const int hex)
-                : r(hex >> 16), g((hex >> 8) & 0xff), b(hex & 0xff) {}
+                : r((hex >> 16) / 255.),
+                  g(((hex >> 8) & 0xff) / 255.),
+                  b((hex & 0xff) / 255.) {}
 
 Colour::Colour(const float r, const float g, const float b)
                 : r(r), g(g), b(b) {}
@@ -103,11 +106,11 @@ Colour Colour::operator/(const Scalar x) const {
 }
 
 Colour Colour::operator*(const Colour &rhs) const {
-        return Colour(r * (rhs.r / 255), g * (rhs.g / 255), b * (rhs.b / 255));
+        return Colour(r * rhs.r, g * rhs.g, b * rhs.b);
 }
 
 Colour::operator Pixel() const {
-        return {clamp(r), clamp(g), clamp(b)};
+        return {scale(clamp(r)), scale(clamp(g)), scale(clamp(b))};
 }
 
 Material::Material(const Colour &colour,
@@ -126,55 +129,55 @@ Material::Material(const Colour &colour,
 Vector::Vector(const Scalar x, const Scalar y, const Scalar z)
                 : x(x), y(y), z(z) {}
 
-Vector Vector::operator+(const Vector &b) const {
+Vector inline Vector::operator+(const Vector &b) const {
         return Vector(x + b.x, y + b.y, z + b.z);
 }
 
-Vector Vector::operator-(const Vector &b) const {
+Vector inline Vector::operator-(const Vector &b) const {
         return Vector(x - b.x, y - b.y, z - b.z);
 }
 
-Vector Vector::operator*(const Scalar a) const {
+Vector inline Vector::operator*(const Scalar a) const {
         return Vector(a * x, a * y, a * z);
 }
 
-Vector Vector::operator/(const Scalar a) const {
+Vector inline Vector::operator/(const Scalar a) const {
         return Vector(x / a, y / a, z / a);
 }
 
-Vector Vector::operator*(const Vector &b) const {
+Vector inline Vector::operator*(const Vector &b) const {
         return Vector(x * b.x, y * b.y, z * b.z);
 }
 
-bool Vector::operator==(const Vector &b) const {
+bool inline Vector::operator==(const Vector &b) const {
         return x == b.x && y == b.y && z == b.z;
 }
 
-bool Vector::operator!=(const Vector &b) const {
+bool inline Vector::operator!=(const Vector &b) const {
         return !(*this == b);
 }
 
-Scalar Vector::size() const {
+Scalar inline Vector::size() const {
         return sqrt(x * x + y * y + z * z);
 }
 
-Scalar Vector::product() const {
+Scalar inline Vector::product() const {
         return x * y * z;
 }
 
-Scalar Vector::sum() const {
+Scalar inline Vector::sum() const {
         return x + y + z;
 }
 
-Vector Vector::normalise() const {
+Vector inline Vector::normalise() const {
         return *this / size();
 }
 
-Scalar Vector::operator^(const Vector &b) const {
+Scalar inline Vector::operator^(const Vector &b) const {
         return x * b.x + y * b.y + z * b.z;
 }
 
-Vector Vector::operator|(const Vector &b) const {
+Vector inline Vector::operator|(const Vector &b) const {
         return Vector(y * b.z - z * b.y,
                       z * b.x - x * b.z,
                       x * b.y - y * b.z);
@@ -524,11 +527,21 @@ bool intersects(const Ray &ray, const std::vector<const Object *> &objects) {
         return false;
 }
 
-uint8_t inline clamp(const Scalar x) {
-        const Scalar min = 0;
-        const Scalar max = 255;
+Scalar inline clamp(const Scalar x) {
+        if (x > 1)
+                return 1;
+        if (x < 0)
+                return 0;
+        else
+                return x;
+}
 
-        return static_cast<uint8_t>(std::max(std::min(x, max), min));
+PixelColourType inline scale(const Scalar x) {
+        // Scale value.
+        const Scalar scaled = x * static_cast<Scalar>(PixelColourMax);
+
+        // Cast to output type.
+        return static_cast<PixelColourType>(scaled);
 }
 
 // Return the length of array.
@@ -564,9 +577,9 @@ int main() {
                 new Sphere(Vector(650, 310,   0), 50,  grey)    // Grey ball
         };
         const Light *_lights[] = {
-                new SoftLight(Vector( 800, -100, -500),   75, Colour(0xffffff)),
-                new SoftLight(Vector(-300, -200,  -700), 200, Colour(0x105010)),
-                new SoftLight(Vector( 100, -200,   200), 100, Colour(0x501010))
+                new SoftLight (Vector( 800, -100, -500),   80, Colour(0xffffff)), // White light
+                new SoftLight (Vector(-300, -200,  -700),  75, Colour(0x105010)), // Green light
+                new SoftLight (Vector( 100, -200,   200),  25, Colour(0x501010))  // Red light
         };
 
         // Create the scene and renderer.

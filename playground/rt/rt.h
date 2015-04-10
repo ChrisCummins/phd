@@ -36,64 +36,80 @@ public:
         Vector(const Scalar x, const Scalar y, const Scalar z);
 
         // Addition: A' = A + B
-        Vector operator+(const Vector &b) const;
+        Vector inline operator+(const Vector &b) const;
 
         // Subtraction: A' = A - B
-        Vector operator-(const Vector &b) const;
+        Vector inline operator-(const Vector &b) const;
 
         // Multiplication: A' = aA
-        Vector operator*(const Scalar a) const;
+        Vector inline operator*(const Scalar a) const;
 
         // Division: A' = A / a
-        Vector operator/(const Scalar a) const;
+        Vector inline operator/(const Scalar a) const;
 
         // Product: A' = (Ax * Bx, Ay * By, Az * Bz)
-        Vector operator*(const Vector &b) const;
+        Vector inline operator*(const Vector &b) const;
 
         // Dot product: x = A . B
-        Scalar operator^(const Vector &b) const;
+        Scalar inline operator^(const Vector &b) const;
 
         // Cross product: A' = A x B
-        Vector operator|(const Vector &b) const;
+        Vector inline operator|(const Vector &b) const;
 
         // Equality: A == B
-        bool operator==(const Vector &b) const;
+        bool inline operator==(const Vector &b) const;
 
         // Inequality: A != B
-        bool operator!=(const Vector &b) const;
+        bool inline operator!=(const Vector &b) const;
 
         // Length of vector: |A| = sqrt(x^2 + y^2 + z^2)
-        Scalar size() const;
+        Scalar inline size() const;
 
         // Product of components: x * y * z
-        Scalar product() const;
+        Scalar inline product() const;
 
         // Sum of components: x + y + z
-        Scalar sum() const;
+        Scalar inline sum() const;
 
         // Normalise: A' = A / |A|
-        Vector normalise() const;
+        Vector inline normalise() const;
 };
 
-// UTILITY TYPES.
+// RANDOM NUMBERS.
+
+// The distribution type for generating random numbers.
+typedef std::normal_distribution<Scalar> DistributionType;
 
 // A random number generator for sampling a normal distribution.
 class NormalDistribution {
 public:
-        // Constructor.
+        // Construct a normal distribution about the range [min,max].
         NormalDistribution(const Scalar min, const Scalar max);
 
-        // Return a sample from distribution.
+        // Return a sample from the distribution.
         Scalar operator()();
 private:
         std::mt19937 generator;
-        std::normal_distribution<Scalar> distribution;
+        DistributionType distribution;
 };
 
 // GRAPHICS TYPES.
 
-// A pixel is a trio of R,G,B bytes.
-struct Pixel { uint8_t r, g, b; };
+// The output type of a single R,G,B colour component.
+typedef uint8_t PixelColourType;
+
+// The maximum value of a single R,G,B colour component.
+static const uint8_t PixelColourMax = 255;
+
+// Clamp a Scalar value to within the range [0,1].
+Scalar inline clamp(const Scalar x);
+
+// Transform a scalar from the range [0,1] to [0,PixelColourMax]. Note
+// that this transformation may be non-linear.
+PixelColourType inline scale(const Scalar x);
+
+// A pixel is a trio of R,G,B components.
+struct Pixel { PixelColourType r, g, b; };
 
 // A colour is represented by R,G,B scalars, and are mutable through
 // the += and /= operators. They behave identically to Vectors.
@@ -316,8 +332,5 @@ int closestIntersect(const Ray &ray,
 
 // Return whether a given ray intersects any of the objects.
 bool intersects(const Ray &ray, const std::vector<const Object *> &objects);
-
-// Clamp a value to within the range [0,255]
-uint8_t inline clamp(const Scalar x);
 
 #endif  // _RT_H_
