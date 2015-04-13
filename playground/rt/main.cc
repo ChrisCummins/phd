@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 8; -*-
+
 #include <algorithm>
 #include <atomic>
 #include <chrono>
