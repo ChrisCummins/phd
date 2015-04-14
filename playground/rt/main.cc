@@ -437,10 +437,7 @@ Colour Renderer::supersample(const Ray &ray) const {
         return sample;
 }
 
-void Renderer::render(FILE *const out) const {
-        // Image data.
-        Pixel image[height * width];
-
+void Renderer::render(const Image &image) const {
         // For each pixel in the image:
         tbb::parallel_for(
             static_cast<size_t>(0), height * width, [&](size_t i) {
@@ -457,26 +454,8 @@ void Renderer::render(FILE *const out) const {
                     const Ray ray = Ray(origin, camera.direction);
 
                     // Sample the ray.
-                    const Colour colour = supersample(ray);
-
-                    // Convert to pixel data.
-                    image[y * width + x] = static_cast<Pixel>(colour);
+                    image.set(x, y, supersample(ray));
             });
-
-        // Once rendering is complete, write data to file.
-        fprintf(out, "P3\n"); // PPM Magic number
-        fprintf(out, "%lu %lu\n", width, height); // Header line 2
-        fprintf(out, "255\n"); // Header line 3: max colour value
-
-        // Iterate over each point in the image, generating and writing
-        // pixel data.
-        for (size_t y = 0; y < height; y++) {
-                for (size_t x = 0; x < width; x++) {
-                        const Pixel pixel = image[y * width + x];
-                        fprintf(out, "%u %u %u ", pixel.r, pixel.g, pixel.b);
-                }
-                fprintf(out, "\n");
-        }
 }
 
 Colour Renderer::trace(const Ray &ray, Colour colour,
@@ -633,12 +612,8 @@ int main() {
         // Create the renderer.
         const Renderer renderer(scene, camera);
 
-        // Output file to write to.
-        const char *path = "render.ppm";
-
-        // Open the output file.
-        printf("Opening file '%s'...\n", path);
-        FILE *const out = fopen(path, "w");
+        // Create the output image.
+        const Image image = Image(IMG_WIDTH, IMG_HEIGHT);
 
         // Print start message.
         printf("Rendering %d pixels, with %lld samples per ray ...\n",
@@ -649,11 +624,19 @@ int main() {
                         = std::chrono::high_resolution_clock::now();
 
         // Render the scene to the output file.
-        renderer.render(out);
+        renderer.render(image);
 
         // Record end time.
         const std::chrono::high_resolution_clock::time_point endTime
                         = std::chrono::high_resolution_clock::now();
+
+        // Open the output file.
+        const char *path = "render.ppm";
+        printf("Opening file '%s'...\n", path);
+        FILE *const out = fopen(path, "w");
+
+        // Write to output file.
+        image.write(out);
 
         // Close the output file.
         printf("Closing file '%s'...\n\n", path);
@@ -686,4 +669,40 @@ int main() {
         printf("\tTraces per pixel:\t%.2f\n", tracePerPixel);
 
         return 0;
+}
+
+
+Image::Image(const size_t width, const size_t height)
+                : image(new Pixel[width * height]),
+                  width(width), height(height) {}
+
+Image::~Image() {
+        // Free pixel data.
+        delete[] image;
+}
+
+void inline Image::set(const size_t x, const size_t y,
+                       const Colour &value) const {
+        // Explicitly cast colour to pixel data.
+        image[width * y + x] = static_cast<Pixel>(value);
+}
+
+void Image::write(FILE *const out) const {
+        // Print PPM header.
+        fprintf(out, "P3\n"); // Magic number
+        fprintf(out, "%lu %lu\n", width, height); // Image dimensions
+        fprintf(out, "%d\n", PixelColourMax); // Max colour value
+
+        // Iterate over each point in the image, writing pixel data.
+        for (size_t i = 0; i < height * width; i++) {
+                const Pixel pixel = image[i];
+                fprintf(out,
+                        PixelFormatString" "
+                        PixelFormatString" "
+                        PixelFormatString" ",
+                        pixel.r, pixel.g, pixel.b);
+
+                if (!i % width) // Add newline at the end of each row.
+                        fprintf(out, "\n");
+        }
 }

@@ -106,6 +106,9 @@ typedef uint8_t PixelColourType;
 // The maximum value of a single R,G,B colour component.
 static const uint8_t PixelColourMax = 255;
 
+// Format string to be passed to fprintf().
+#define PixelFormatString "%u"
+
 // Clamp a Scalar value to within the range [0,1].
 Scalar inline clamp(const Scalar x);
 
@@ -322,6 +325,25 @@ public:
                const size_t height);
 };
 
+// A rendered image.
+class Image {
+public:
+        Pixel *const image;
+        const size_t width;
+        const size_t height;
+
+        Image(const size_t width, const size_t height);
+        ~Image();
+
+        // [x,y] = value
+        void inline set(const size_t x,
+                        const size_t y,
+                        const Colour &value) const;
+
+        // Write data to file.
+        void write(FILE *const out) const;
+};
+
 class Renderer {
 public:
         const Scene scene;
@@ -331,7 +353,7 @@ public:
                  const Camera &camera);
 
         // The heart of the raytracing engine.
-        void render(FILE *const out) const;
+        void render(const Image &image) const;
 
 private:
         const size_t width, height;
