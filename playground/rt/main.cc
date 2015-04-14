@@ -12,32 +12,28 @@
 //////////////////////////
 // Configurable Options //
 //////////////////////////
-#define SEXY 1
-
-// The maximum depth to trace rays for.
-static const unsigned int MAX_DEPTH = 100;
+#define SEXY 0
 
 // For each pixel at location x,y, we sample N extra points at
 // locations randomly distributed about x,y. The sample count
 // determines the number of extra rays to trace, and the offset
 // determines the maximum distance about the origin.
-#if SEXY
-static const size_t ANTIALIASING_SAMPLE_COUNT = 8;
-static const Scalar ANTIALIASING_OFFSET = .6;
-#else
-static const size_t ANTIALIASING_SAMPLE_COUNT = 0;
-static const Scalar ANTIALIASING_OFFSET = .6;
-#endif
-
+//
 // For softlights, we emit rays at points randomly distributed about
 // the light's position. The number of rays emitted is equal to: N =
 // (base + radius * factor) ^ 3.
 #if SEXY
-static const Scalar SOFTLIGHT_FACTOR = .075;
-static const Scalar SOFTLIGHT_BASE = 3;
+static const unsigned int MAX_DEPTH           = 100;
+static const size_t ANTIALIASING_SAMPLE_COUNT = 8;
+static const Scalar ANTIALIASING_OFFSET       = .6;
+static const Scalar SOFTLIGHT_FACTOR          = .075;
+static const Scalar SOFTLIGHT_BASE            = 3;
 #else
-static const Scalar SOFTLIGHT_FACTOR = .01;
-static const Scalar SOFTLIGHT_BASE = 3;
+static const unsigned int MAX_DEPTH           = 5;
+static const size_t ANTIALIASING_SAMPLE_COUNT = 0;
+static const Scalar ANTIALIASING_OFFSET       = .6;
+static const Scalar SOFTLIGHT_FACTOR          = .01;
+static const Scalar SOFTLIGHT_BASE            = 3;
 #endif
 
 // Dimensions of rendered image.
