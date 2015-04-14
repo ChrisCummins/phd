@@ -28,12 +28,14 @@ static const size_t ANTIALIASING_SAMPLE_COUNT = 8;
 static const Scalar ANTIALIASING_OFFSET       = .6;
 static const Scalar SOFTLIGHT_FACTOR          = .075;
 static const Scalar SOFTLIGHT_BASE            = 3;
+static const float RENDER_SCALE               = 3;
 #else
 static const unsigned int MAX_DEPTH           = 5;
 static const size_t ANTIALIASING_SAMPLE_COUNT = 0;
 static const Scalar ANTIALIASING_OFFSET       = .6;
 static const Scalar SOFTLIGHT_FACTOR          = .01;
 static const Scalar SOFTLIGHT_BASE            = 3;
+static const float RENDER_SCALE               = 1;
 #endif
 
 // Dimensions of "camera" image.
@@ -41,7 +43,6 @@ static const int IMG_WIDTH = 750;
 static const int IMG_HEIGHT = 422;
 
 // Dimensions of rendered image (output pixels).
-static const float RENDER_SCALE = 1;
 static const int RENDER_WIDTH = IMG_WIDTH * RENDER_SCALE;
 static const int RENDER_HEIGHT = IMG_HEIGHT * RENDER_SCALE;
 
@@ -564,33 +565,34 @@ PixelColourType inline scale(const Scalar x) {
 int main() {
         // Material parameters:
         //   colour, ambient, diffuse, specular, shininess, reflectivity
-        const Material *const green = new Material(Colour(0x00c805),
-                                                   0, 1, .9, 75, 0);
-        const Material *const red   = new Material(Colour(0x641905),
-                                                   0, 1, .6, 150, 0.4);
+        const Material *const green  = new Material(Colour(0x00c805),
+                                                    0, 1, .9, 75, 0);
+        const Material *const red    = new Material(Colour(0x641905),
+                                                    0, 1, .6, 150, 0.25);
         const Material *const mirror = new Material(Colour(0xffffff),
-                                                    0, 0, 1, 200, .9999);
-        const Material *const grey  = new Material(Colour(0xffffff),
-                                                   0, 0.25, 1, 200, .05);
-        const Material *const blue  = new Material(Colour(0x0064c8),
-                                                   0, .7, .7, 90, 0);
+                                                    0, 0, 1, 200, .99999);
+        const Material *const grey   = new Material(Colour(0xffffff),
+                                                    0, .25, 1, 200, .05);
+        const Material *const blue   = new Material(Colour(0x0064c8),
+                                                    0, .7, .7, 90, 0);
 
         // The scene:
         const Object *_objects[] = {
-                new CheckerBoard(Vector(0, 380, 300),
-                                 Vector(0, -30, -1).normalise(), 30),     // Floor
-                new Sphere(Vector(150, 240, 300), 135, green),  // Green ball
-                new Sphere(Vector(225, 285,   0), 105, red),    // Red ball
-                new Sphere(Vector(415, 288, -85), 75,  mirror), // Mirror ball
-                new Sphere(Vector(550, 288, -85), 50,  blue),   // Blue ball
-                new Sphere(Vector(650, 110,   0), 50,  grey),   // Grey ball
-                new Sphere(Vector(650, 210,   0), 50,  grey),   // Grey ball
-                new Sphere(Vector(650, 310,   0), 50,  grey)    // Grey ball
+                new CheckerBoard(Vector(0, 169, -300),
+                                 Vector(0, -30, 1).normalise(), 30), // Floor
+                new Sphere(Vector(-220,   29, -300), 135, green),  // Green ball
+                new Sphere(Vector(-155,   74,    0), 105, red),    // Red ball
+                new Sphere(Vector(  50,   77,   85), 75,  mirror), // Mirror ball
+                new Sphere(Vector( 180,   77,  105), 50,  blue),   // Blue ball
+                new Sphere(Vector( 290, -101,    0), 50,  grey),   // Grey ball
+                new Sphere(Vector( 290,   -1,    0), 50,  grey),   // Grey ball
+                new Sphere(Vector( 290,   99,    0), 50,  grey)    // Grey ball
         };
         const Light *_lights[] = {
-                new SoftLight (Vector( 800, -100, -500),  120, Colour(0xffffff)), // White light
-                new SoftLight (Vector(-300, -200,  -700),  75, Colour(0x105010)), // Green light
-                new SoftLight (Vector( 100, -200,   200),  25, Colour(0x501010))  // Red light
+                new SoftLight (Vector( 350, -311,  500), 120, Colour(0xffffff)), // White light
+                new SoftLight (Vector(-650, -411,  700),  75, Colour(0x105010)), // Green light
+                new SoftLight (Vector(-250, -411, -200),  25, Colour(0x501010)), // Red light
+                new PointLight(Vector(-250, -111, -500),      Colour(0x303030))  // Fill light
         };
 
         // Create the scene.
@@ -599,12 +601,8 @@ int main() {
         const Scene scene(objects, lights);
 
         // Setup the camera.
-        const Vector cameraPosition = Vector(IMG_WIDTH / 2,
-                                             IMG_HEIGHT / 2,
-                                             RAY_START_Z);
-        const Vector cameraLookat = Vector(cameraPosition.x,
-                                           cameraPosition.y,
-                                           0);
+        const Vector cameraPosition = Vector(0, 0, 1000);
+        const Vector cameraLookat = Vector(0, cameraPosition.y, 0);
         const Camera camera(cameraPosition, cameraLookat,
                             IMG_WIDTH, IMG_HEIGHT);
 
