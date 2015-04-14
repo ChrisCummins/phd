@@ -36,12 +36,14 @@ static const Scalar SOFTLIGHT_FACTOR          = .01;
 static const Scalar SOFTLIGHT_BASE            = 3;
 #endif
 
-// Dimensions of rendered image.
+// Dimensions of "camera" image.
 static const int IMG_WIDTH = 750;
 static const int IMG_HEIGHT = 422;
 
-static const int RENDER_WIDTH = 750;
-static const int RENDER_HEIGHT = 422;
+// Dimensions of rendered image (output pixels).
+static const float RENDER_SCALE = 1;
+static const int RENDER_WIDTH = IMG_WIDTH * RENDER_SCALE;
+static const int RENDER_HEIGHT = IMG_HEIGHT * RENDER_SCALE;
 
 // Starting depth of rays.
 static const Scalar RAY_START_Z = -1000;
@@ -399,8 +401,7 @@ Camera::Camera(const Vector &position,
 
 Renderer::Renderer(const Scene &scene,
                    const Camera &camera)
-                : scene(scene), camera(camera),
-                  width(RENDER_WIDTH), height(RENDER_HEIGHT) {}
+                : scene(scene), camera(camera) {}
 
 Colour Renderer::supersample(const Ray &ray) const {
         Colour sample = Colour();
@@ -434,17 +435,26 @@ Colour Renderer::supersample(const Ray &ray) const {
 }
 
 void Renderer::render(const Image &image) const {
+        // Scale conversions between "camera" and "pixel" coordiantes.
+        const Scalar dX = camera.width / static_cast<Scalar>(image.width);
+        const Scalar dY = camera.height / static_cast<Scalar>(image.height);
+
+        // Determine base "camera" position of [0,0].
+        const Vector rayOrigin = Vector(camera.position.x - (image.width / 2) * dX,
+                                        camera.position.y - (image.height / 2) * dY,
+                                        camera.position.z);
+
         // For each pixel in the image:
         tbb::parallel_for(
-            static_cast<size_t>(0), height * width, [&](size_t i) {
-                    const size_t y = i / width;
-                    const size_t x = i % width;
+            static_cast<size_t>(0), image.height * image.width, [&](size_t i) {
+                    // Image coordinates.
+                    const size_t y = i / image.width;
+                    const size_t x = i % image.width;
 
                     // Translate image coordinates into camera coordinates.
-                    const Vector origin = Vector(
-                        camera.position.x - width / 2 + x,
-                        camera.position.y - height / 2 + y,
-                        camera.position.z);
+                    const Vector origin = Vector(rayOrigin.x + x * dX,
+                                                 rayOrigin.y + y * dY,
+                                                 rayOrigin.z);
 
                     // Create a ray at camera coordinate origin.
                     const Ray ray = Ray(origin, camera.direction);
@@ -609,7 +619,7 @@ int main() {
         const Renderer renderer(scene, camera);
 
         // Create the output image.
-        const Image image = Image(IMG_WIDTH, IMG_HEIGHT);
+        const Image image = Image(RENDER_WIDTH, RENDER_HEIGHT);
 
         // Print start message.
         printf("Rendering %d pixels, with %lld samples per ray ...\n",

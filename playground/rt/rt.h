@@ -356,8 +356,6 @@ public:
         void render(const Image &image) const;
 
 private:
-        const size_t width, height;
-
         // Trace a ray trough a given scene and return the final
         // colour.
         Colour trace(const Ray &ray,
