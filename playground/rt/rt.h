@@ -306,11 +306,29 @@ public:
               const std::vector<const Light *> &lights);
 };
 
+// A camera has a "film" size (width and height), and a position and a
+// point of focus.
+class Camera {
+public:
+        const Vector position;
+        const Vector lookAt;
+        const Vector direction;
+        const size_t width;
+        const size_t height;
+
+        Camera(const Vector &position,
+               const Vector &lookAt,
+               const size_t width,
+               const size_t height);
+};
+
 class Renderer {
 public:
         const Scene scene;
+        const Camera camera;
 
-        Renderer(const Scene scene);
+        Renderer(const Scene &scene,
+                 const Camera &camera);
 
         // The heart of the raytracing engine.
         void render(FILE *const out) const;
@@ -324,8 +342,8 @@ private:
                      Colour colour=Colour(0, 0, 0),
                      const unsigned int depth=0) const;
 
-        // Calculate the colour at position x,y through supersampling.
-        Colour supersample(size_t x, size_t y) const;
+        // Calculate the colour of ray through supersampling.
+        Colour supersample(const Ray &ray) const;
 };
 
 // Return the index of the object with the closest intersection, and

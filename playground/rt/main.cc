@@ -393,14 +393,24 @@ Ray::Ray(const Scalar x, const Scalar y)
 Ray::Ray(const Vector &position, const Vector &direction)
                 : position(position), direction(direction) {}
 
-Renderer::Renderer(const Scene scene)
-                : scene(scene), width(RENDER_WIDTH), height(RENDER_HEIGHT) {}
+Camera::Camera(const Vector &position,
+               const Vector &lookAt,
+               const size_t width,
+               const size_t height)
+                : position(position), lookAt(lookAt),
+                  direction((lookAt - position).normalise()),
+                  width(width), height(height) {}
 
-Colour Renderer::supersample(size_t x, size_t y) const {
+Renderer::Renderer(const Scene &scene,
+                   const Camera &camera)
+                : scene(scene), camera(camera),
+                  width(RENDER_WIDTH), height(RENDER_HEIGHT) {}
+
+Colour Renderer::supersample(const Ray &ray) const {
         Colour sample = Colour();
 
         // Trace the origin ray.
-        sample += trace(Ray(x, y));
+        sample += trace(ray);
 
 // For fast builds, we disable antialiasing. This sets
 // ANTIALIASING_SAMPLE_COUNT to 0, which causes the compiler to kick
@@ -411,8 +421,12 @@ Colour Renderer::supersample(size_t x, size_t y) const {
 #pragma GCC diagnostic ignored "-Wtype-limits"
 #endif
         // Accumulate extra samples, randomly distributed around x,y.
-        for (size_t i = 0; i < ANTIALIASING_SAMPLE_COUNT; i++)
-                sample += trace(Ray(x + sampler(), y + sampler()));
+        for (size_t i = 0; i < ANTIALIASING_SAMPLE_COUNT; i++) {
+                const Vector origin = Vector(ray.position.x + sampler(),
+                                             ray.position.y + sampler(),
+                                             ray.position.z);
+                sample += trace(Ray(origin, ray.direction));
+        }
 #if !SEXY
 #pragma GCC diagnostic pop
 #endif
@@ -433,8 +447,17 @@ void Renderer::render(FILE *const out) const {
                     const size_t y = i / width;
                     const size_t x = i % width;
 
-                    // Calculate the sample colour.
-                    const Colour colour = supersample(x, y);
+                    // Translate image coordinates into camera coordinates.
+                    const Vector origin = Vector(
+                        camera.position.x - width / 2 + x,
+                        camera.position.y - height / 2 + y,
+                        camera.position.z);
+
+                    // Create a ray at camera coordinate origin.
+                    const Ray ray = Ray(origin, camera.direction);
+
+                    // Sample the ray.
+                    const Colour colour = supersample(ray);
 
                     // Convert to pixel data.
                     image[y * width + x] = static_cast<Pixel>(colour);
@@ -592,11 +615,23 @@ int main() {
                 new SoftLight (Vector( 100, -200,   200),  25, Colour(0x501010))  // Red light
         };
 
-        // Create the scene and renderer.
+        // Create the scene.
         const std::vector<const Object *> objects(_objects, ARRAY_END(_objects));
         const std::vector<const Light *> lights(_lights, ARRAY_END(_lights));
         const Scene scene(objects, lights);
-        const Renderer renderer(scene);
+
+        // Setup the camera.
+        const Vector cameraPosition = Vector(IMG_WIDTH / 2,
+                                             IMG_HEIGHT / 2,
+                                             RAY_START_Z);
+        const Vector cameraLookat = Vector(cameraPosition.x,
+                                           cameraPosition.y,
+                                           0);
+        const Camera camera(cameraPosition, cameraLookat,
+                            IMG_WIDTH, IMG_HEIGHT);
+
+        // Create the renderer.
+        const Renderer renderer(scene, camera);
 
         // Output file to write to.
         const char *path = "render.ppm";
