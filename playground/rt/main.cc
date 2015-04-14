@@ -587,7 +587,7 @@ int main() {
                 new Sphere(Vector(650, 310,   0), 50,  grey)    // Grey ball
         };
         const Light *_lights[] = {
-                new SoftLight (Vector( 800, -100, -500),   80, Colour(0xffffff)), // White light
+                new SoftLight (Vector( 800, -100, -500),  120, Colour(0xffffff)), // White light
                 new SoftLight (Vector(-300, -200,  -700),  75, Colour(0x105010)), // Green light
                 new SoftLight (Vector( 100, -200,   200),  25, Colour(0x501010))  // Red light
         };
