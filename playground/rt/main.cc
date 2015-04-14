@@ -18,7 +18,7 @@
 static const unsigned int MAX_DEPTH = 100;
 
 // For each pixel at location x,y, we sample N extra points at
-// locations normally distributed about x,y. The sample count
+// locations randomly distributed about x,y. The sample count
 // determines the number of extra rays to trace, and the offset
 // determines the maximum distance about the origin.
 #if SEXY
@@ -29,9 +29,9 @@ static const size_t ANTIALIASING_SAMPLE_COUNT = 0;
 static const Scalar ANTIALIASING_OFFSET = .6;
 #endif
 
-// For softlights, we emit rays at points normally distributed about
-// the light's position. The number of rays emitted is equal to:
-//   N = (base + radius * factor) ^ 3.
+// For softlights, we emit rays at points randomly distributed about
+// the light's position. The number of rays emitted is equal to: N =
+// (base + radius * factor) ^ 3.
 #if SEXY
 static const Scalar SOFTLIGHT_FACTOR = .075;
 static const Scalar SOFTLIGHT_BASE = 3;
@@ -66,17 +66,25 @@ long long samplesPerRay;
 
 // The random distribution sampler for calculating the offsets of
 // stochastic anti-aliasing.
-static NormalDistribution sampler(-ANTIALIASING_OFFSET, ANTIALIASING_OFFSET);
+static UniformDistribution sampler = UniformDistribution(-ANTIALIASING_OFFSET,
+                                                         ANTIALIASING_OFFSET);
 
-NormalDistribution::NormalDistribution(const Scalar min, const Scalar max) {
-        // Instantiate a random number generator.
-        std::random_device random;
-        generator = std::mt19937(random());
-        distribution = DistributionType(min, max);
-}
+static const unsigned long long rngMax = 4294967295ULL;
+const unsigned long long UniformDistribution::longMax = rngMax;
+const Scalar UniformDistribution::scalarMax = rngMax;
+const unsigned long long UniformDistribution::mult = 62089911ULL;
 
-Scalar inline NormalDistribution::operator()() {
-        return distribution(generator);
+UniformDistribution::UniformDistribution(const Scalar min, const Scalar max,
+                                         const unsigned long long seed)
+                : divisor(scalarMax / (max - min)), min(min), seed(seed) {}
+
+Scalar inline UniformDistribution::operator()() {
+        seed *= mult;
+
+        // Generate a new random value in the range [0,max - min].
+        const double r = seed % longMax / divisor;
+        // Apply "-min" offset to value.
+        return r + min;
 }
 
 Colour::Colour(const int hex)
@@ -319,7 +327,7 @@ Colour PointLight::shade(const Vector &point,
         return shade;
 }
 
-static NormalDistribution softSampler(-1, 1);
+static UniformDistribution softSampler = UniformDistribution(-1, 1);
 
 SoftLight::SoftLight(const Vector &position, const Scalar radius,
                      const Colour &colour)
@@ -402,7 +410,7 @@ Colour Renderer::supersample(size_t x, size_t y) const {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wtype-limits"
 #endif
-        // Accumulate extra samples, normally distributed around x,y.
+        // Accumulate extra samples, randomly distributed around x,y.
         for (size_t i = 0; i < ANTIALIASING_SAMPLE_COUNT; i++)
                 sample += trace(Ray(x + sampler(), y + sampler()));
 #if !SEXY

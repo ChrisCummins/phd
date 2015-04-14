@@ -78,20 +78,24 @@ public:
 
 // RANDOM NUMBERS.
 
-// The distribution type for generating random numbers.
-typedef std::normal_distribution<Scalar> DistributionType;
-
-// A random number generator for sampling a normal distribution.
-class NormalDistribution {
+// A random number generator for sampling a uniform distribution
+// within a specific range.
+class UniformDistribution {
 public:
-        // Construct a normal distribution about the range [min,max].
-        NormalDistribution(const Scalar min, const Scalar max);
+        UniformDistribution(const Scalar min, const Scalar max,
+                            const unsigned long long seed = 7564231ULL);
 
-        // Return a sample from the distribution.
         Scalar operator()();
+
+        const Scalar divisor;
+        const Scalar min;
+        unsigned long long seed;
+
 private:
-        std::mt19937 generator;
-        DistributionType distribution;
+        // Constant values for random number generators.
+        static const unsigned long long longMax;
+        static const Scalar scalarMax;
+        static const unsigned long long mult;
 };
 
 // GRAPHICS TYPES.
