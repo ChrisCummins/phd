@@ -175,8 +175,7 @@ class Ray {
 public:
         const Vector position, direction;
 
-        // Constructors.
-        Ray(const Scalar x=0, const Scalar y=0);
+        // Construct a ray at starting position and in direction.
         Ray(const Vector &position, const Vector &direction);
 };
 

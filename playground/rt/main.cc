@@ -45,9 +45,6 @@ static const float RENDER_SCALE = 1;
 static const int RENDER_WIDTH = IMG_WIDTH * RENDER_SCALE;
 static const int RENDER_HEIGHT = IMG_HEIGHT * RENDER_SCALE;
 
-// Starting depth of rays.
-static const Scalar RAY_START_Z = -1000;
-
 ////////////////////
 // Implementation //
 ////////////////////
@@ -383,10 +380,6 @@ Colour SoftLight::shade(const Vector &point,
 Scene::Scene(const std::vector<const Object *> &objects,
              const std::vector<const Light *> &lights)
                 : objects(objects), lights(lights) {}
-
-Ray::Ray(const Scalar x, const Scalar y)
-                : position(Vector(x, y, RAY_START_Z)),
-                  direction(Vector(0, 0, 1)) {}
 
 Ray::Ray(const Vector &position, const Vector &direction)
                 : position(position), direction(direction) {}
