@@ -330,8 +330,10 @@ public:
         Pixel *const image;
         const size_t width;
         const size_t height;
+        const bool inverted;
 
-        Image(const size_t width, const size_t height);
+        Image(const size_t width, const size_t height,
+              const bool inverted=true);
         ~Image();
 
         // [x,y] = value

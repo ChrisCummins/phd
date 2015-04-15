@@ -434,9 +434,10 @@ void Renderer::render(const Image &image) const {
         const Scalar dY = camera.height / static_cast<Scalar>(image.height);
 
         // Determine base "camera" position of [0,0].
-        const Vector rayOrigin = Vector(camera.position.x - (image.width / 2) * dX,
-                                        camera.position.y - (image.height / 2) * dY,
-                                        camera.position.z);
+        const Vector imageOffset = Vector((image.width / 2) * dX,
+                                          (image.height / 2) * dY,
+                                          0);
+        const Vector imageOrigin = camera.position - imageOffset;
 
         // For each pixel in the image:
         tbb::parallel_for(
@@ -446,12 +447,11 @@ void Renderer::render(const Image &image) const {
                     const size_t x = i % image.width;
 
                     // Translate image coordinates into camera coordinates.
-                    const Vector origin = Vector(rayOrigin.x + x * dX,
-                                                 rayOrigin.y + y * dY,
-                                                 rayOrigin.z);
+                    const Vector cameraOffset = Vector(x * dX, y * dY, 0);
+                    const Vector position = imageOrigin + cameraOffset;
 
                     // Create a ray at camera coordinate origin.
-                    const Ray ray = Ray(origin, camera.direction);
+                    const Ray ray = Ray(position, camera.direction);
 
                     // Sample the ray.
                     image.set(x, y, supersample(ray));
@@ -578,21 +578,21 @@ int main() {
 
         // The scene:
         const Object *_objects[] = {
-                new CheckerBoard(Vector(0, 169, -300),
-                                 Vector(0, -30, 1).normalise(), 30), // Floor
-                new Sphere(Vector(-220,   29, -300), 135, green),  // Green ball
-                new Sphere(Vector(-155,   74,    0), 105, red),    // Red ball
-                new Sphere(Vector(  50,   77,   85), 75,  mirror), // Mirror ball
-                new Sphere(Vector( 180,   77,  105), 50,  blue),   // Blue ball
-                new Sphere(Vector( 290, -101,    0), 50,  grey),   // Grey ball
-                new Sphere(Vector( 290,   -1,    0), 50,  grey),   // Grey ball
-                new Sphere(Vector( 290,   99,    0), 50,  grey)    // Grey ball
+                new CheckerBoard(Vector(0, 0, -300),
+                                 Vector(0, 30, 1).normalise(), 30), // Floor
+                new Sphere(Vector(-220,  140, -300), 135, green),  // Green ball
+                new Sphere(Vector(-155,   95,    0), 105, red),    // Red ball
+                new Sphere(Vector(  50,   92,   85), 75,  mirror), // Mirror ball
+                new Sphere(Vector( 180,   90,  105), 50,  blue),   // Blue ball
+                new Sphere(Vector( 290,  270,    0), 50,  grey),   // Grey ball
+                new Sphere(Vector( 290,  170,    0), 50,  grey),   // Grey ball
+                new Sphere(Vector( 290,   70,    0), 50,  grey)    // Grey ball
         };
         const Light *_lights[] = {
-                new SoftLight (Vector( 350, -311,  500), 120, Colour(0xffffff)), // White light
-                new SoftLight (Vector(-650, -411,  700),  75, Colour(0x105010)), // Green light
-                new SoftLight (Vector(-250, -411, -200),  25, Colour(0x501010)), // Red light
-                new PointLight(Vector(-250, -111, -500),      Colour(0x303030))  // Fill light
+                new SoftLight (Vector( 350, 480,  500), 120, Colour(0xffffff)), // White light
+                new SoftLight (Vector(-650, 580,  700),  75, Colour(0x105010)), // Green light
+                new SoftLight (Vector(-250, 580, -200),  25, Colour(0x501010)), // Red light
+                new PointLight(Vector(-250, 280, -500),      Colour(0x303030))  // Fill light
         };
 
         // Create the scene.
@@ -601,10 +601,9 @@ int main() {
         const Scene scene(objects, lights);
 
         // Setup the camera.
-        const Vector cameraPosition = Vector(0, 0, 1000);
-        const Vector cameraLookat = Vector(0, cameraPosition.y, 0);
-        const Camera camera(cameraPosition, cameraLookat,
-                            IMG_WIDTH, IMG_HEIGHT);
+        const Camera camera(Vector(0, 170, 1000), // position
+                            Vector(0, 170, 0), // look at
+                            IMG_WIDTH, IMG_HEIGHT); // size
 
         // Create the renderer.
         const Renderer renderer(scene, camera);
@@ -669,9 +668,9 @@ int main() {
 }
 
 
-Image::Image(const size_t width, const size_t height)
+Image::Image(const size_t width, const size_t height, const bool inverted)
                 : image(new Pixel[width * height]),
-                  width(width), height(height) {}
+                  width(width), height(height), inverted(inverted) {}
 
 Image::~Image() {
         // Free pixel data.
@@ -680,8 +679,11 @@ Image::~Image() {
 
 void inline Image::set(const size_t x, const size_t y,
                        const Colour &value) const {
+        // Apply Y axis inversion if needed.
+        const size_t row = inverted ? height - 1 - y : y;
+
         // Explicitly cast colour to pixel data.
-        image[width * y + x] = static_cast<Pixel>(value);
+        image[row * width + x] = static_cast<Pixel>(value);
 }
 
 void Image::write(FILE *const out) const {
