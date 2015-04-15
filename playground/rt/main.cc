@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <math.h>
 
 #include "tbb/parallel_for.h"
@@ -132,8 +133,8 @@ Material::Material(const Colour &colour,
                   shininess(shininess),
                   reflectivity(reflectivity) {}
 
-Vector::Vector(const Scalar x, const Scalar y, const Scalar z)
-                : x(x), y(y), z(z) {}
+Vector::Vector(const Scalar x, const Scalar y, const Scalar z, const Scalar w)
+                : x(x), y(y), z(z), w(w) {}
 
 Vector inline Vector::operator+(const Vector &b) const {
         return Vector(x + b.x, y + b.y, z + b.z);
@@ -180,13 +181,110 @@ Vector inline Vector::normalise() const {
 }
 
 Scalar inline Vector::operator^(const Vector &b) const {
-        return x * b.x + y * b.y + z * b.z;
+        // Dot product uses the forth component.
+        return x * b.x + y * b.y + z * b.z + w * b.w;
 }
 
 Vector inline Vector::operator|(const Vector &b) const {
         return Vector(y * b.z - z * b.y,
                       z * b.x - x * b.z,
                       x * b.y - y * b.z);
+}
+
+Transformation::Transformation(const Vector transformX,
+                               const Vector transformY,
+                               const Vector transformZ,
+                               const Vector translate)
+                : transformX(transformX), transformY(transformY),
+                  transformZ(transformZ), translate(translate) {}
+
+Transformation Transformation::operator*(const Transformation &b) const {
+        const Vector A1 = Vector(transformX.x, transformY.x,
+                                 transformZ.x, translate.x);
+        const Vector A2 = Vector(transformX.y, transformY.y,
+                                 transformZ.y, translate.y);
+        const Vector A3 = Vector(transformX.z, transformY.z,
+                                 transformZ.z, translate.z);
+        const Vector A4 = Vector(transformX.w, transformY.w,
+                                 transformZ.w, translate.w);
+
+        return Transformation(
+            Vector(A1 ^ b.transformX, A2 ^ b.transformX,
+                   A3 ^ b.transformX, A4 ^ b.transformX),
+            Vector(A1 ^ b.transformY, A2 ^ b.transformY,
+                   A3 ^ b.transformY, A4 ^ b.transformY),
+            Vector(A1 ^ b.transformZ, A2 ^ b.transformZ,
+                   A3 ^ b.transformZ, A4 ^ b.transformZ),
+            Vector(A1 ^ b.translate,  A2 ^ b.translate,
+                   A3 ^ b.translate,  A4 ^ b.translate));
+}
+
+Vector Transformation::operator*(const Vector &b) const {
+        const Vector b1 = Vector(b.x, b.y, b.z, 1);
+        const Vector A1 = Vector(transformX.x, transformY.x,
+                                 transformZ.x, translate.x);
+        const Vector A2 = Vector(transformX.y, transformY.y,
+                                 transformZ.y, translate.y);
+        const Vector A3 = Vector(transformX.z, transformY.z,
+                                 transformZ.z, translate.z);
+        const Vector A4 = Vector(transformX.w, transformY.w,
+                                 transformZ.w, translate.w);
+
+        return Vector(A1 ^ b1, A2 ^ b1, A3 ^ b1, A4 ^ b1);
+}
+
+Translation::Translation(const Scalar x, const Scalar y, const Scalar z)
+                : Transformation(Vector(1, 0, 0, 0),
+                                 Vector(0, 1, 0, 0),
+                                 Vector(0, 0, 1, 0),
+                                 Vector(x, y, z, 1)) {}
+
+Translation::Translation(const Vector &t)
+                : Transformation(Vector(1, 0, 0, 0),
+                                 Vector(0, 1, 0, 0),
+                                 Vector(0, 0, 1, 0),
+                                 Vector(t.x, t.y, t.z, 1)) {}
+
+Scale::Scale(const Scalar x, const Scalar y, const Scalar z)
+                : Transformation(Vector(x, 0, 0, 0),
+                                 Vector(0, y, 0, 0),
+                                 Vector(0, 0, z, 0),
+                                 Vector(0, 0, 0, 1)) {}
+
+Scale::Scale(const Vector &s)
+                : Transformation(Vector(s.x, 0, 0, 0),
+                                 Vector(0, s.y, 0, 0),
+                                 Vector(0, 0, s.z, 0),
+                                 Vector(0, 0, 0, 1)) {}
+
+RotationX::RotationX(const Scalar theta)
+                : Transformation(Vector(1, 0, 0, 0),
+                                 Vector(0, dcos(theta), dsin(theta), 0),
+                                 Vector(0, -dsin(theta), dcos(theta), 0),
+                                 Vector(0, 0, 0, 1)) {}
+
+RotationY::RotationY(const Scalar theta)
+                : Transformation(Vector(dcos(theta), 0, -dsin(theta), 0),
+                                 Vector(0, 1, 0, 0),
+                                 Vector(dsin(theta), 0, dcos(theta), 0),
+                                 Vector(0, 0, 0, 1)) {}
+
+RotationZ::RotationZ(const Scalar theta)
+                : Transformation(Vector(dcos(theta), dsin(theta), 0, 0),
+                                 Vector(-dsin(theta), dcos(theta), 0, 0),
+                                 Vector(0, 0, 1, 0),
+                                 Vector(0, 0, 0, 1)) {}
+
+Scalar inline dsin(const Scalar theta) {
+        return sin(theta * M_PI / 180.0);
+}
+
+Scalar inline dcos(const Scalar theta) {
+        return cos(theta * M_PI / 180.0);
+}
+
+Scalar inline datan(const Scalar theta) {
+        return atan(theta) * 180.0 / M_PI;
 }
 
 Object::Object(const Vector &position)
@@ -429,28 +527,19 @@ Colour Renderer::supersample(const Ray &ray) const {
 }
 
 void Renderer::render(const Image &image) const {
-        // Scale conversions between "camera" and "pixel" coordiantes.
-        const Scalar dX = camera.width / static_cast<Scalar>(image.width);
-        const Scalar dY = camera.height / static_cast<Scalar>(image.height);
-
-        // Determine base "camera" position of [0,0].
-        const Vector imageOffset = Vector((image.width / 2) * dX,
-                                          (image.height / 2) * dY,
-                                          0);
-        const Vector imageOrigin = camera.position - imageOffset;
+        const Transformation imageToWorld = imageToGlobalSpace(image, camera);
 
         // For each pixel in the image:
         tbb::parallel_for(
             static_cast<size_t>(0), image.height * image.width, [&](size_t i) {
-                    // Image coordinates.
+                    // Image space coordinates.
                     const size_t y = i / image.width;
                     const size_t x = i % image.width;
 
-                    // Translate image coordinates into camera coordinates.
-                    const Vector cameraOffset = Vector(x * dX, y * dY, 0);
-                    const Vector position = imageOrigin + cameraOffset;
+                    // Translate image space to global space.
+                    const Vector position = imageToWorld * Vector(x, y, 0);
 
-                    // Create a ray at camera coordinate origin.
+                    // Create a ray.
                     const Ray ray = Ray(position, camera.direction);
 
                     // Sample the ray.
@@ -539,6 +628,27 @@ bool intersects(const Ray &ray, const std::vector<const Object *> &objects) {
         return false;
 }
 
+Transformation imageToGlobalSpace(const Image &image, const Camera &camera) {
+        // Create Scale matrix from image space to local (camera) space.
+        const Scalar dX = camera.width / static_cast<Scalar>(image.width);
+        const Scalar dY = camera.height / static_cast<Scalar>(image.height);
+        const Scale scale(dX, dY, 1);
+
+        // Create rotation matrix from local (camera) space to world space.
+        const Scalar oY = camera.lookAt.y - camera.position.y;
+        const Scalar aY = camera.lookAt.z - camera.position.z;
+        const RotationX rotation(-datan(oY / aY));
+
+        // Determine image space [0,0] position.
+        const Vector imageOffset = Vector(image.width / 2, image.height / 2, 0);
+        // Create translation matrix from image space to global world space.
+        const Translation offset(camera.position -
+                                 rotation * scale * imageOffset);
+
+        // Combine the transformations.
+        return offset * rotation * scale;
+}
+
 Scalar inline clamp(const Scalar x) {
         if (x > 1)
                 return 1;
@@ -578,15 +688,15 @@ int main() {
 
         // The scene:
         const Object *_objects[] = {
-                new CheckerBoard(Vector(0, 0, -300),
-                                 Vector(0, 30, 1).normalise(), 30), // Floor
-                new Sphere(Vector(-220,  140, -300), 135, green),  // Green ball
-                new Sphere(Vector(-155,   95,    0), 105, red),    // Red ball
-                new Sphere(Vector(  50,   92,   85), 75,  mirror), // Mirror ball
-                new Sphere(Vector( 180,   90,  105), 50,  blue),   // Blue ball
-                new Sphere(Vector( 290,  270,    0), 50,  grey),   // Grey ball
-                new Sphere(Vector( 290,  170,    0), 50,  grey),   // Grey ball
-                new Sphere(Vector( 290,   70,    0), 50,  grey)    // Grey ball
+                new CheckerBoard(Vector(0, 0, 0),
+                                 Vector(0, 1, 0), 30), // Floor
+                new Sphere(Vector(-220,  140, -385), 135, green),  // Green ball
+                new Sphere(Vector(-155,   95,  -85), 105, red),    // Red ball
+                new Sphere(Vector(  50,   92,    0), 75,  mirror), // Mirror ball
+                new Sphere(Vector( 180,   90,   20), 50,  blue),   // Blue ball
+                new Sphere(Vector( 290,  270,  -85), 50,  grey),   // Grey ball
+                new Sphere(Vector( 290,  170,  -85), 50,  grey),   // Grey ball
+                new Sphere(Vector( 290,   70,  -85), 50,  grey)    // Grey ball
         };
         const Light *_lights[] = {
                 new SoftLight (Vector( 350, 480,  500), 120, Colour(0xffffff)), // White light
@@ -601,7 +711,7 @@ int main() {
         const Scene scene(objects, lights);
 
         // Setup the camera.
-        const Camera camera(Vector(0, 170, 1000), // position
+        const Camera camera(Vector(0, 400, 1000), // position
                             Vector(0, 170, 0), // look at
                             IMG_WIDTH, IMG_HEIGHT); // size
 

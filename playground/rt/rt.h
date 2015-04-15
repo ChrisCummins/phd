@@ -26,15 +26,18 @@ typedef double Scalar;
 // precision real numbers.
 static const Scalar ScalarPrecision = 1e-6;
 
-// A vector consits of three coordinate scalars. Vectors are immutable.
+// A vector consits of three coordinate and a translation
+// scalar. Vectors are immutable.
 class Vector {
 public:
         const Scalar x;
         const Scalar y;
         const Scalar z;
+        const Scalar w;
 
         // Contructor: V = (x,y,z)
-        Vector(const Scalar x, const Scalar y, const Scalar z);
+        Vector(const Scalar x, const Scalar y, const Scalar z,
+               const Scalar w=0);
 
         // Addition: A' = A + B
         Vector inline operator+(const Vector &b) const;
@@ -74,6 +77,58 @@ public:
 
         // Normalise: A' = A / |A|
         Vector inline normalise() const;
+};
+
+// A 4x4 transformation matrix.
+class Transformation {
+public:
+        const Vector transformX;
+        const Vector transformY;
+        const Vector transformZ;
+        const Vector translate;
+
+        Transformation(const Vector transformX,
+                       const Vector transformY,
+                       const Vector transformZ,
+                       const Vector translate);
+
+        // Matrix multiplication.
+        Transformation operator*(const Transformation &b) const;
+
+        // Matrix by vector multiplication.
+        Vector operator*(const Vector &b) const;
+};
+
+// A translation matrix.
+class Translation : public Transformation {
+public:
+        Translation(const Scalar x, const Scalar y, const Scalar z);
+        Translation(const Vector &t);
+};
+
+// A scale matrix.
+class Scale : public Transformation {
+public:
+        Scale(const Scalar x, const Scalar y, const Scalar z);
+        Scale(const Vector &w);
+};
+
+// A rotation matrix about the X axis.
+class RotationX : public Transformation {
+public:
+        RotationX(const Scalar theta);
+};
+
+// A rotation matrix about the Y axis.
+class RotationY : public Transformation {
+public:
+        RotationY(const Scalar theta);
+};
+
+// A rotation matrix about the Z axis.
+class RotationZ : public Transformation {
+public:
+        RotationZ(const Scalar theta);
 };
 
 // RANDOM NUMBERS.
@@ -376,5 +431,14 @@ int closestIntersect(const Ray &ray,
 
 // Return whether a given ray intersects any of the objects.
 bool intersects(const Ray &ray, const std::vector<const Object *> &objects);
+
+// Returns a transformation matrix for converting from image space
+// into global space.
+Transformation imageToGlobalSpace(const Image &image, const Camera &camera);
+
+// Trigonometric functions accepting theta angles in degrees.
+Scalar inline dsin(const Scalar theta);
+Scalar inline dcos(const Scalar theta);
+Scalar inline datan(const Scalar theta);
 
 #endif  // _RT_H_
