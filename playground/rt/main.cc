@@ -306,8 +306,8 @@ const Material *Plane::surface(const Vector &point) const {
 }
 
 // Checkerboard material types.
-static const Material CBLACK = Material(Colour(0x888888), 0, .3, 1, 10, 0.7);
-static const Material CWHITE = Material(Colour(0x888888), 0, .3, 1, 10, 0.7);
+static const Material CBLACK = Material(Colour(0x505050), 0, .07, 1, 10, 0.999);
+static const Material CWHITE = Material(Colour(0xffffff), 0, .07, 1, 10, 0.999);
 
 CheckerBoard::CheckerBoard(const Vector &origin,
                            const Vector &direction,
@@ -317,9 +317,12 @@ CheckerBoard::CheckerBoard(const Vector &origin,
 
 CheckerBoard::~CheckerBoard() {}
 
+static const Scalar gridOffset = 3000000;
+
 const Material *CheckerBoard::surface(const Vector &point) const {
         // TODO: translate point to a relative position on plane.
-        const Vector relative = point;
+        const Vector relative = Vector(point.x + gridOffset,
+                                       point.z + gridOffset, 0);
 
         const int x = relative.x;
         const int y = relative.y;
@@ -673,9 +676,9 @@ int main() {
         // The scene:
         const Object *_objects[] = {
                 new CheckerBoard(Vector(0, 0, 0),
-                                 Vector(0, 1, 0), 30), // Floor
-                new Sphere(Vector(-220,  140, -385), 135, green),  // Green ball
-                new Sphere(Vector(-155,   95,  -85), 105, red),    // Red ball
+                                 Vector(0, 1, 0), 50), // Floor
+                new Sphere(Vector(-220,  135, -385), 135, green),  // Green ball
+                new Sphere(Vector(-155,  105,  -85), 105, red),    // Red ball
                 new Sphere(Vector(  50,   92,    0), 75,  mirror), // Mirror ball
                 new Sphere(Vector( 180,   90,   20), 50,  blue),   // Blue ball
                 new Sphere(Vector( 290,  270,  -85), 50,  grey),   // Grey ball
@@ -695,7 +698,7 @@ int main() {
         const Scene scene(objects, lights);
 
         // Setup the camera.
-        const Camera camera(Vector(0, 400, 1000), // position
+        const Camera camera(Vector(0, 300, 1000), // position
                             Vector(0, 170, 0), // look at
                             IMG_WIDTH, IMG_HEIGHT); // size
 
