@@ -59,7 +59,9 @@ static std::atomic<long long> traceCounter;
 // contributed light to a ray.
 static std::atomic<long long> rayCounter;
 
-long long samplesPerRay;
+// Scene object and light counters.
+long long objectsCount;
+long long lightsCount;
 
 // The random distribution sampler for calculating the offsets of
 // stochastic anti-aliasing.
@@ -272,7 +274,10 @@ Scalar inline datan(const Scalar theta) {
 }
 
 Object::Object(const Vector &position)
-                : position(position) {}
+                : position(position) {
+        // Register object with profiling counter.
+        objectsCount += 1;
+}
 
 Plane::Plane(const Vector &origin,
              const Vector &direction,
@@ -369,7 +374,10 @@ const Material *Sphere::surface(const Vector &point) const {
 }
 
 PointLight::PointLight(const Vector &position, const Colour &colour)
-                : position(position), colour(colour) {};
+                : position(position), colour(colour) {
+        // Register light with profiling counter.
+        lightsCount += 1;
+};
 
 Colour PointLight::shade(const Vector &point,
                          const Vector &normal,
@@ -415,7 +423,8 @@ SoftLight::SoftLight(const Vector &position, const Scalar radius,
                 : position(position), radius(radius), colour(colour),
                   samples(SOFTLIGHT_BASE +
                           std::pow(radius * SOFTLIGHT_FACTOR, 3)) {
-        samplesPerRay += samples;
+        // Register lights with profiling counter.
+        lightsCount += samples;
 };
 
 Colour SoftLight::shade(const Vector &point,
@@ -747,8 +756,11 @@ int main() {
         const Image image = Image(RENDER_WIDTH, RENDER_HEIGHT);
 
         // Print start message.
-        printf("Rendering %d pixels, with %lld samples per ray ...\n",
-               RENDER_WIDTH * RENDER_HEIGHT, samplesPerRay);
+        printf("Rendering %d pixels with %lu samples per pixel, "
+               "%lld objects, and %lld light sources ...\n",
+               RENDER_WIDTH * RENDER_HEIGHT,
+               1 + ANTIALIASING_SAMPLE_COUNT,
+               objectsCount, lightsCount);
 
         // Record start time.
         const std::chrono::high_resolution_clock::time_point startTime
