@@ -191,89 +191,73 @@ Vector inline Vector::operator|(const Vector &b) const {
                       x * b.y - y * b.z);
 }
 
-Transformation::Transformation(const Vector transformX,
-                               const Vector transformY,
-                               const Vector transformZ,
-                               const Vector translate)
-                : transformX(transformX), transformY(transformY),
-                  transformZ(transformZ), translate(translate) {}
+Matrix::Matrix(const Vector r1, const Vector r2,
+                               const Vector r3, const Vector r4)
+                : r({r1, r2, r3, r4}),
+                  c({Vector(r1.x, r2.x, r3.x, r4.x),
+                     Vector(r1.y, r2.y, r3.y, r4.y),
+                     Vector(r1.z, r2.z, r3.z, r4.z),
+                     Vector(r1.w, r2.w, r3.w, r4.w)}) {}
 
-Transformation Transformation::operator*(const Transformation &b) const {
-        const Vector A1 = Vector(transformX.x, transformY.x,
-                                 transformZ.x, translate.x);
-        const Vector A2 = Vector(transformX.y, transformY.y,
-                                 transformZ.y, translate.y);
-        const Vector A3 = Vector(transformX.z, transformY.z,
-                                 transformZ.z, translate.z);
-        const Vector A4 = Vector(transformX.w, transformY.w,
-                                 transformZ.w, translate.w);
-
-        return Transformation(
-            Vector(A1 ^ b.transformX, A2 ^ b.transformX,
-                   A3 ^ b.transformX, A4 ^ b.transformX),
-            Vector(A1 ^ b.transformY, A2 ^ b.transformY,
-                   A3 ^ b.transformY, A4 ^ b.transformY),
-            Vector(A1 ^ b.transformZ, A2 ^ b.transformZ,
-                   A3 ^ b.transformZ, A4 ^ b.transformZ),
-            Vector(A1 ^ b.translate,  A2 ^ b.translate,
-                   A3 ^ b.translate,  A4 ^ b.translate));
+Matrix Matrix::operator*(const Matrix &b) const {
+        return Matrix(
+            Vector(r[0] ^ b.c[0], r[0] ^ b.c[1], r[0] ^ b.c[2], r[0] ^ b.c[3]),
+            Vector(r[1] ^ b.c[0], r[1] ^ b.c[1], r[1] ^ b.c[2], r[1] ^ b.c[3]),
+            Vector(r[2] ^ b.c[0], r[2] ^ b.c[1], r[2] ^ b.c[2], r[2] ^ b.c[3]),
+            Vector(r[3] ^ b.c[0], r[3] ^ b.c[1], r[3] ^ b.c[2], r[3] ^ b.c[3]));
 }
 
-Vector Transformation::operator*(const Vector &b) const {
-        const Vector b1 = Vector(b.x, b.y, b.z, 1);
-        const Vector A1 = Vector(transformX.x, transformY.x,
-                                 transformZ.x, translate.x);
-        const Vector A2 = Vector(transformX.y, transformY.y,
-                                 transformZ.y, translate.y);
-        const Vector A3 = Vector(transformX.z, transformY.z,
-                                 transformZ.z, translate.z);
-        const Vector A4 = Vector(transformX.w, transformY.w,
-                                 transformZ.w, translate.w);
-
-        return Vector(A1 ^ b1, A2 ^ b1, A3 ^ b1, A4 ^ b1);
+Vector Matrix::operator*(const Vector &b) const {
+        // Pad the "w" component.
+        const Vector v = Vector(b.x, b.y, b.z, 1);
+        return Vector(r[0] ^ v, r[1] ^ v, r[2] ^ v, r[3] ^ v);
 }
 
 Translation::Translation(const Scalar x, const Scalar y, const Scalar z)
-                : Transformation(Vector(1, 0, 0, 0),
-                                 Vector(0, 1, 0, 0),
-                                 Vector(0, 0, 1, 0),
-                                 Vector(x, y, z, 1)) {}
+                : Matrix(Vector(1, 0, 0, x),
+                         Vector(0, 1, 0, y),
+                         Vector(0, 0, 1, z),
+                         Vector(0, 0, 0, 1)) {}
 
 Translation::Translation(const Vector &t)
-                : Transformation(Vector(1, 0, 0, 0),
-                                 Vector(0, 1, 0, 0),
-                                 Vector(0, 0, 1, 0),
-                                 Vector(t.x, t.y, t.z, 1)) {}
+                : Matrix(Vector(1, 0, 0, t.x),
+                         Vector(0, 1, 0, t.y),
+                         Vector(0, 0, 1, t.z),
+                         Vector(0, 0, 0, 1)) {}
 
 Scale::Scale(const Scalar x, const Scalar y, const Scalar z)
-                : Transformation(Vector(x, 0, 0, 0),
-                                 Vector(0, y, 0, 0),
-                                 Vector(0, 0, z, 0),
-                                 Vector(0, 0, 0, 1)) {}
+                : Matrix(Vector(x, 0, 0, 0),
+                         Vector(0, y, 0, 0),
+                         Vector(0, 0, z, 0),
+                         Vector(0, 0, 0, 1)) {}
 
 Scale::Scale(const Vector &s)
-                : Transformation(Vector(s.x, 0, 0, 0),
-                                 Vector(0, s.y, 0, 0),
-                                 Vector(0, 0, s.z, 0),
-                                 Vector(0, 0, 0, 1)) {}
+                : Matrix(Vector(s.x, 0, 0, 0),
+                         Vector(0, s.y, 0, 0),
+                         Vector(0, 0, s.z, 0),
+                         Vector(0, 0, 0, 1)) {}
+
+Matrix rotation(const Scalar x, const Scalar y, const Scalar z) {
+        return RotationZ(z) * RotationY(y) * RotationX(x);
+}
 
 RotationX::RotationX(const Scalar theta)
-                : Transformation(Vector(1, 0, 0, 0),
-                                 Vector(0, dcos(theta), dsin(theta), 0),
-                                 Vector(0, -dsin(theta), dcos(theta), 0),
-                                 Vector(0, 0, 0, 1)) {}
+                : Matrix(Vector(1, 0, 0, 0),
+                         Vector(0, dcos(theta), -dsin(theta), 0),
+                         Vector(0, dsin(theta), dcos(theta), 0),
+                         Vector(0, 0, 0, 1)) {}
 
 RotationY::RotationY(const Scalar theta)
-                : Transformation(Vector(dcos(theta), 0, -dsin(theta), 0),
-                                 Vector(0, 1, 0, 0),
-                                 Vector(dsin(theta), 0, dcos(theta), 0),
-                                 Vector(0, 0, 0, 1)) {}
+                : Matrix(Vector(dcos(theta), 0, dsin(theta), 0),
+                         Vector(0, 1, 0, 0),
+                         Vector(-dsin(theta), 0, dcos(theta), 0),
+                         Vector(0, 0, 0, 1)) {}
 
 RotationZ::RotationZ(const Scalar theta)
-                : Transformation(Vector(dcos(theta), dsin(theta), 0, 0),
-                                 Vector(-dsin(theta), dcos(theta), 0, 0),
-                                 Vector(0, 0, 1, 0),
-                                 Vector(0, 0, 0, 1)) {}
+                : Matrix(Vector(dcos(theta), -dsin(theta), 0, 0),
+                         Vector(dsin(theta), dcos(theta), 0, 0),
+                         Vector(0, 0, 1, 0),
+                         Vector(0, 0, 0, 1)) {}
 
 Scalar inline dsin(const Scalar theta) {
         return sin(theta * M_PI / 180.0);
@@ -527,7 +511,7 @@ Colour Renderer::supersample(const Ray &ray) const {
 }
 
 void Renderer::render(const Image &image) const {
-        const Transformation imageToWorld = imageToGlobalSpace(image, camera);
+        const Matrix imageToWorld = imageToGlobalSpace(image, camera);
 
         // For each pixel in the image:
         tbb::parallel_for(
@@ -628,7 +612,7 @@ bool intersects(const Ray &ray, const std::vector<const Object *> &objects) {
         return false;
 }
 
-Transformation imageToGlobalSpace(const Image &image, const Camera &camera) {
+Matrix imageToGlobalSpace(const Image &image, const Camera &camera) {
         // Create Scale matrix from image space to local (camera) space.
         const Scalar dX = camera.width / static_cast<Scalar>(image.width);
         const Scalar dY = camera.height / static_cast<Scalar>(image.height);

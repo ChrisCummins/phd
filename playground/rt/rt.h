@@ -77,54 +77,59 @@ public:
         Vector inline normalise() const;
 };
 
-// A 4x4 transformation matrix.
-class Transformation {
+// A 4x4 matrix. Matrices are immutable, and while declared row-wise,
+// they store both row-wise and column-wise vectors internally for
+// efficient indexing for matrix multiplication.
+class Matrix {
 public:
-        const Vector transformX;
-        const Vector transformY;
-        const Vector transformZ;
-        const Vector translate;
+        // Row-wise vectors.
+        const Vector r[4];
+        // Column-wise vectors.
+        const Vector c[4];
 
-        Transformation(const Vector transformX,
-                       const Vector transformY,
-                       const Vector transformZ,
-                       const Vector translate);
+        Matrix(const Vector r1,
+               const Vector r2,
+               const Vector r3,
+               const Vector r4);
 
         // Matrix multiplication.
-        Transformation operator*(const Transformation &b) const;
+        Matrix operator*(const Matrix &b) const;
 
         // Matrix by vector multiplication.
         Vector operator*(const Vector &b) const;
 };
 
 // A translation matrix.
-class Translation : public Transformation {
+class Translation : public Matrix {
 public:
         Translation(const Scalar x, const Scalar y, const Scalar z);
         Translation(const Vector &t);
 };
 
 // A scale matrix.
-class Scale : public Transformation {
+class Scale : public Matrix {
 public:
         Scale(const Scalar x, const Scalar y, const Scalar z);
         Scale(const Vector &w);
 };
 
+// Yaw, pitch, roll rotation.
+Matrix rotation(const Scalar x, const Scalar y, const Scalar z);
+
 // A rotation matrix about the X axis.
-class RotationX : public Transformation {
+class RotationX : public Matrix {
 public:
         RotationX(const Scalar theta);
 };
 
 // A rotation matrix about the Y axis.
-class RotationY : public Transformation {
+class RotationY : public Matrix {
 public:
         RotationY(const Scalar theta);
 };
 
 // A rotation matrix about the Z axis.
-class RotationZ : public Transformation {
+class RotationZ : public Matrix {
 public:
         RotationZ(const Scalar theta);
 };
@@ -432,7 +437,7 @@ bool intersects(const Ray &ray, const std::vector<const Object *> &objects);
 
 // Returns a transformation matrix for converting from image space
 // into global space.
-Transformation imageToGlobalSpace(const Image &image, const Camera &camera);
+Matrix imageToGlobalSpace(const Image &image, const Camera &camera);
 
 // Trigonometric functions accepting theta angles in degrees.
 Scalar inline dsin(const Scalar theta);
