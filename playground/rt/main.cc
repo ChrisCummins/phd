@@ -478,6 +478,44 @@ Camera::Camera(const Vector &position,
                   direction((lookAt - position).normalise()),
                   width(width), height(height) {}
 
+Image::Image(const size_t width, const size_t height, const bool inverted)
+                : image(new Pixel[width * height]),
+                  width(width), height(height), inverted(inverted) {}
+
+Image::~Image() {
+        // Free pixel data.
+        delete[] image;
+}
+
+void inline Image::set(const size_t x, const size_t y,
+                       const Colour &value) const {
+        // Apply Y axis inversion if needed.
+        const size_t row = inverted ? height - 1 - y : y;
+
+        // Explicitly cast colour to pixel data.
+        image[row * width + x] = static_cast<Pixel>(value);
+}
+
+void Image::write(FILE *const out) const {
+        // Print PPM header.
+        fprintf(out, "P3\n"); // Magic number
+        fprintf(out, "%lu %lu\n", width, height); // Image dimensions
+        fprintf(out, "%d\n", PixelColourMax); // Max colour value
+
+        // Iterate over each point in the image, writing pixel data.
+        for (size_t i = 0; i < height * width; i++) {
+                const Pixel pixel = image[i];
+                fprintf(out,
+                        PixelFormatString" "
+                        PixelFormatString" "
+                        PixelFormatString" ",
+                        pixel.r, pixel.g, pixel.b);
+
+                if (!i % width) // Add newline at the end of each row.
+                        fprintf(out, "\n");
+        }
+}
+
 Renderer::Renderer(const Scene &scene,
                    const Camera &camera)
                 : scene(scene), camera(camera) {}
@@ -762,43 +800,4 @@ int main() {
         printf("\tTraces per pixel:\t%.2f\n", tracePerPixel);
 
         return 0;
-}
-
-
-Image::Image(const size_t width, const size_t height, const bool inverted)
-                : image(new Pixel[width * height]),
-                  width(width), height(height), inverted(inverted) {}
-
-Image::~Image() {
-        // Free pixel data.
-        delete[] image;
-}
-
-void inline Image::set(const size_t x, const size_t y,
-                       const Colour &value) const {
-        // Apply Y axis inversion if needed.
-        const size_t row = inverted ? height - 1 - y : y;
-
-        // Explicitly cast colour to pixel data.
-        image[row * width + x] = static_cast<Pixel>(value);
-}
-
-void Image::write(FILE *const out) const {
-        // Print PPM header.
-        fprintf(out, "P3\n"); // Magic number
-        fprintf(out, "%lu %lu\n", width, height); // Image dimensions
-        fprintf(out, "%d\n", PixelColourMax); // Max colour value
-
-        // Iterate over each point in the image, writing pixel data.
-        for (size_t i = 0; i < height * width; i++) {
-                const Pixel pixel = image[i];
-                fprintf(out,
-                        PixelFormatString" "
-                        PixelFormatString" "
-                        PixelFormatString" ",
-                        pixel.r, pixel.g, pixel.b);
-
-                if (!i % width) // Add newline at the end of each row.
-                        fprintf(out, "\n");
-        }
 }
