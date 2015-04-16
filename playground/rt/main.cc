@@ -26,10 +26,10 @@
 #if SEXY
 static const unsigned int MAX_DEPTH           = 100;
 static const size_t ANTIALIASING_SAMPLE_COUNT = 8;
-static const Scalar ANTIALIASING_OFFSET       = .6;
-static const Scalar SOFTLIGHT_FACTOR          = .075;
+static const Scalar ANTIALIASING_OFFSET       = .4;
+static const Scalar SOFTLIGHT_FACTOR          = .035;
 static const Scalar SOFTLIGHT_BASE            = 3;
-static const float RENDER_SCALE               = 3;
+static const float RENDER_SCALE               = 1.5;
 #else
 static const unsigned int MAX_DEPTH           = 5;
 static const size_t ANTIALIASING_SAMPLE_COUNT = 0;
