@@ -2,8 +2,6 @@
 #ifndef _RT_H_
 #define _RT_H_
 
-#include <cstdio>
-#include <random>
 #include <stdint.h>
 #include <vector>
 
