@@ -215,6 +215,10 @@ Vector Matrix::operator*(const Vector &b) const {
         return Vector(r[0] ^ v, r[1] ^ v, r[2] ^ v, r[3] ^ v);
 }
 
+Matrix Matrix::operator*(const Scalar a) const {
+        return Matrix(r[0] * a, r[1] * a, r[2] * a, r[3] * a);
+}
+
 Translation::Translation(const Scalar x, const Scalar y, const Scalar z)
                 : Matrix(Vector(1, 0, 0, x),
                          Vector(0, 1, 0, y),

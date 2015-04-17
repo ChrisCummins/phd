@@ -97,6 +97,9 @@ public:
 
         // Matrix by vector multiplication.
         Vector operator*(const Vector &b) const;
+
+        // Scalar multiplication.
+        Matrix operator*(const Scalar a) const;
 };
 
 // A translation matrix.
