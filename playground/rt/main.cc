@@ -270,6 +270,103 @@ RotationZ::RotationZ(const Scalar theta)
                          Vector(0, 0, 1, 0),
                          Vector(0, 0, 0, 1)) {}
 
+Scalar ONB::epsilon = 0.01;
+
+bool inline ONB::operator==(const ONB &rhs) {
+        return u == rhs.u && v == rhs.v && w == rhs.w;
+}
+
+bool inline ONB::operator!=(const ONB &rhs) {
+        return !(*this == rhs);
+}
+
+ONB ONB::initFromU(const Vector &u) {
+        const Vector n(1, 0, 0);
+        const Vector m(0, 1, 0);
+
+        const Vector u1 = u.normalise();
+        const Vector u2 = u1 | n;
+        const Vector u3 = u1 | m;
+        const Vector v = u2.size() < ONB::epsilon ? u3 : u2;
+        const Vector w = u1 | v;
+
+        return ONB(u, v, w);
+}
+
+ONB ONB::initFromV(const Vector &v) {
+        const Vector n(1, 0, 0);
+        const Vector m(0, 1, 0);
+
+        const Vector v1 = v.normalise();
+        const Vector u0 = v1 | n;
+        const Vector u1 = v1 | m;
+        const Vector u = u0.size() * u0.size() < epsilon ? u1 : u0;
+        const Vector w = u | v1;
+
+        return ONB(u, v, w);
+}
+
+ONB ONB::initFromW(const Vector &w) {
+        const Vector n(1, 0, 0);
+        const Vector m(0, 1, 0);
+
+        const Vector w1 = w.normalise();
+        const Vector u0 = w1 | n;
+        const Vector u1 = w1 | m;
+        const Vector u = u0.size() < epsilon ? u1 : u0;
+        const Vector v = w1 | u;
+
+        return ONB(u, v, w);
+}
+
+ONB ONB::initFromUV(const Vector &u, const Vector &v) {
+        const Vector u1 = u.normalise();
+        const Vector w = (u1 | v).normalise();
+        const Vector v1 = w | u1;
+
+        return ONB(u1, v1, w);
+}
+
+ONB ONB::initFromVU(const Vector &v, const Vector &u) {
+        const Vector v1 = v.normalise();
+        const Vector w = (u | v1).normalise();
+        const Vector u1 = v1 | w;
+
+        return ONB(u1, v1, w);
+}
+
+ONB ONB::initFromUW(const Vector &u, const Vector &w) {
+        const Vector u1 = u.normalise();
+        const Vector v = w | u1;
+        const Vector w1 = u1 | v;
+
+        return ONB(u1, v, w1);
+}
+
+ONB ONB::initFromWU(const Vector &w, const Vector &u) {
+        const Vector w1 = w.normalise();
+        const Vector v = (w1 | u).normalise();
+        const Vector u1 = v | w1;
+
+        return ONB(u1, v, w1);
+}
+
+ONB ONB::initFromVW(const Vector &v, const Vector &w) {
+        const Vector v1 = v.normalise();
+        const Vector u = (v1 | w).normalise();
+        const Vector w1 = u | v1;
+
+        return ONB(u, v1, w1);
+}
+
+ONB ONB::initFromWV(const Vector &w, const Vector &v) {
+        const Vector w1 = w.normalise();
+        const Vector u = v | w1;
+        const Vector v1 = w1 | u;
+
+        return ONB(u, v1, w1);
+}
+
 Scalar inline dsin(const Scalar theta) {
         return sin(theta * M_PI / 180.0);
 }
@@ -681,23 +778,34 @@ bool intersects(const Ray &ray, const std::vector<const Object *> &objects) {
 
 Matrix imageToGlobalSpace(const Image &image, const Camera &camera) {
         // Create Scale matrix from image space to local (camera) space.
-        const Scalar dX = camera.width / static_cast<Scalar>(image.width);
-        const Scalar dY = camera.height / static_cast<Scalar>(image.height);
-        const Scale scale(dX, dY, 1);
+        const Scalar sX = camera.width / static_cast<Scalar>(image.width);
+        const Scalar sY = camera.height / static_cast<Scalar>(image.height);
+        const Scale scale(sX, sY, 1);
 
         // Create rotation matrix from local (camera) space to world space.
-        const Scalar oY = camera.lookAt.y - camera.position.y;
-        const Scalar aY = camera.lookAt.z - camera.position.z;
-        const RotationX rotation(-datan(oY / aY));
+        //const Scalar dX = camera.lookAt.x - camera.position.x;
+        const Scalar dY = camera.lookAt.y - camera.position.y;
+        const Scalar dZ = camera.lookAt.z - camera.position.z;
+
+        const Scalar thetaX = -datan(dY / dZ);
+        const Scalar thetaY = 0;
+        const Scalar thetaZ = 0;
+        const Matrix rotate = rotation(thetaX, thetaY, thetaZ);
+
+        //const Vector lookAt = Vector(0, 0, 0) - camera.direction;
+        //const Vector N = camera.direction;
+        //const Vector U = Vector(0, 1, 0) | camera.direction;
+        //const Vector V = N | U;
+        //const Matrix rotate = Matrix(U, V, N, Vector(0, 0, 0, 1));
 
         // Determine image space [0,0] position.
         const Vector imageOffset = Vector(image.width / 2, image.height / 2, 0);
         // Create translation matrix from image space to global world space.
         const Translation offset(camera.position -
-                                 rotation * scale * imageOffset);
+                                 rotate * scale * imageOffset);
 
         // Combine the transformations.
-        return offset * rotation * scale;
+        return offset * rotate * scale;
 }
 
 Scalar inline clamp(const Scalar x) {
@@ -762,7 +870,7 @@ int main() {
         const Scene scene(objects, lights);
 
         // Setup the camera.
-        const Camera camera(Vector(0, 300, 1000), // position
+        const Camera camera(Vector(0, 170, 1000), // position
                             Vector(0, 170, 0), // look at
                             IMG_WIDTH, IMG_HEIGHT); // size
 

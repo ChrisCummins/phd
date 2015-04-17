@@ -137,6 +137,32 @@ public:
         RotationZ(const Scalar theta);
 };
 
+class ONB {
+public:
+        const Vector u;
+        const Vector v;
+        const Vector w;
+
+ONB(const Vector &u, const Vector &v, const Vector &w)
+                : u(u), v(v), w(w) {}
+
+        static Scalar epsilon;
+
+        bool inline operator==(const ONB &rhs);
+        bool inline operator!=(const ONB &rhs);
+
+        // Constructors.
+        static ONB initFromU(const Vector &u);
+        static ONB initFromV(const Vector &v);
+        static ONB initFromW(const Vector &w);
+        static ONB initFromUV(const Vector &u, const Vector &v);
+        static ONB initFromVU(const Vector &v, const Vector &u);
+        static ONB initFromUW(const Vector &u, const Vector &w);
+        static ONB initFromWU(const Vector &w, const Vector &u);
+        static ONB initFromVW(const Vector &v, const Vector &w);
+        static ONB initFromWV(const Vector &w, const Vector &v);
+};
+
 // RANDOM NUMBERS.
 
 // A random number generator for sampling a uniform distribution
