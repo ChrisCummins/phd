@@ -47,6 +47,11 @@ static const int IMG_HEIGHT = 422;
 static const int RENDER_WIDTH = IMG_WIDTH * RENDER_SCALE;
 static const int RENDER_HEIGHT = IMG_HEIGHT * RENDER_SCALE;
 
+// Gamma of output image.
+static const Scalar RENDER_R_GAMMA = 1;
+static const Scalar RENDER_G_GAMMA = .98;
+static const Scalar RENDER_B_GAMMA = 1.01;
+
 ////////////////////
 // Implementation //
 ////////////////////
@@ -491,9 +496,12 @@ Camera::Camera(const Vector &position,
                   direction((lookAt - position).normalise()),
                   width(width), height(height) {}
 
-Image::Image(const size_t width, const size_t height, const bool inverted)
+Image::Image(const size_t width, const size_t height,
+             const Colour gamma, const bool inverted)
                 : image(new Pixel[width * height]),
-                  width(width), height(height), inverted(inverted) {}
+                  width(width), height(height),
+                  power(Colour(1 / gamma.r, 1 / gamma.g, 1 / gamma.b)),
+                  inverted(inverted) {}
 
 Image::~Image() {
         // Free pixel data.
@@ -505,8 +513,13 @@ void inline Image::set(const size_t x, const size_t y,
         // Apply Y axis inversion if needed.
         const size_t row = inverted ? height - 1 - y : y;
 
+        // Apply gamma correction.
+        const Colour corrected = Colour(std::pow(value.r, power.r),
+                                        std::pow(value.g, power.g),
+                                        std::pow(value.b, power.b));
+
         // Explicitly cast colour to pixel data.
-        image[row * width + x] = static_cast<Pixel>(value);
+        image[row * width + x] = static_cast<Pixel>(corrected);
 }
 
 void Image::write(FILE *const out) const {
@@ -757,7 +770,10 @@ int main() {
         const Renderer renderer(scene, camera);
 
         // Create the output image.
-        const Image image = Image(RENDER_WIDTH, RENDER_HEIGHT);
+        const Image image = Image(RENDER_WIDTH, RENDER_HEIGHT,
+                                  Colour(RENDER_R_GAMMA,
+                                         RENDER_G_GAMMA,
+                                         RENDER_B_GAMMA));
 
         // Print start message.
         printf("Rendering %d pixels with %lu samples per pixel, "

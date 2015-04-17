@@ -391,9 +391,11 @@ public:
         Pixel *const image;
         const size_t width;
         const size_t height;
+        const Colour power;
         const bool inverted;
 
         Image(const size_t width, const size_t height,
+              const Colour gamma=Colour(1, 1, 1),
               const bool inverted=true);
         ~Image();
 
