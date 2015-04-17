@@ -400,15 +400,17 @@ public:
 class Camera {
 public:
         const Vector position;
-        const Vector lookAt;
         const Vector direction;
-        const size_t width;
-        const size_t height;
+        const Vector right;
+        const Vector up;
+        const Scalar width;
+        const Scalar height;
 
         Camera(const Vector &position,
                const Vector &lookAt,
-               const size_t width,
-               const size_t height);
+               const Vector &up,
+               const Scalar width,
+               const Scalar height);
 };
 
 // A rendered image.
@@ -465,10 +467,6 @@ int closestIntersect(const Ray &ray,
 
 // Return whether a given ray intersects any of the objects.
 bool intersects(const Ray &ray, const std::vector<const Object *> &objects);
-
-// Returns a transformation matrix for converting from image space
-// into global space.
-Matrix imageToGlobalSpace(const Image &image, const Camera &camera);
 
 // Trigonometric functions accepting theta angles in degrees.
 Scalar inline dsin(const Scalar theta);

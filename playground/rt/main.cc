@@ -587,11 +587,16 @@ Ray::Ray(const Vector &position, const Vector &direction)
 
 Camera::Camera(const Vector &position,
                const Vector &lookAt,
-               const size_t width,
-               const size_t height)
-                : position(position), lookAt(lookAt),
+               const Vector &up,
+               const Scalar width,
+               const Scalar height)
+                : position(position),
                   direction((lookAt - position).normalise()),
-                  width(width), height(height) {}
+                  right((lookAt - position).normalise() | up),
+                  up(((lookAt - position).normalise() | up) |
+                     (lookAt - position).normalise()),
+                  width(width),
+                  height(height) {}
 
 Image::Image(const size_t width, const size_t height,
              const Colour gamma, const bool inverted)
@@ -675,17 +680,30 @@ Colour Renderer::supersample(const Ray &ray) const {
 }
 
 void Renderer::render(const Image &image) const {
-        const Matrix imageToWorld = imageToGlobalSpace(image, camera);
+        // Scale image coordinates to camera coordinates.
+        const Scale scale(camera.width / image.width,
+                          camera.height / image.height, 1);
+        // Offset from image coordinates to camera coordinates.
+        const Translation offset(-(image.width * .5),
+                                 -(image.height * .5), 0);
+        // Create combined transformation matrix.
+        const Matrix transform = scale * offset;
 
         // For each pixel in the image:
         tbb::parallel_for(
             static_cast<size_t>(0), image.height * image.width, [&](size_t i) {
                     // Image space coordinates.
-                    const size_t y = i / image.width;
-                    const size_t x = i % image.width;
+                    const Scalar x = i % image.width;
+                    const Scalar y = i / image.width;
 
-                    // Translate image space to global space.
-                    const Vector position = imageToWorld * Vector(x, y, 0);
+                    // Convert image to camera (local) space coordinates.
+                    const Vector localPosition = transform * Vector(x, y, 0);
+
+                    // Translate camera (local) space to world space.
+                    const Vector position =
+                                    camera.right * localPosition.x +
+                                    camera.up * localPosition.y +
+                                    camera.position;
 
                     // Create a ray.
                     const Ray ray = Ray(position, camera.direction);
@@ -776,38 +794,6 @@ bool intersects(const Ray &ray, const std::vector<const Object *> &objects) {
         return false;
 }
 
-Matrix imageToGlobalSpace(const Image &image, const Camera &camera) {
-        // Create Scale matrix from image space to local (camera) space.
-        const Scalar sX = camera.width / static_cast<Scalar>(image.width);
-        const Scalar sY = camera.height / static_cast<Scalar>(image.height);
-        const Scale scale(sX, sY, 1);
-
-        // Create rotation matrix from local (camera) space to world space.
-        //const Scalar dX = camera.lookAt.x - camera.position.x;
-        const Scalar dY = camera.lookAt.y - camera.position.y;
-        const Scalar dZ = camera.lookAt.z - camera.position.z;
-
-        const Scalar thetaX = -datan(dY / dZ);
-        const Scalar thetaY = 0;
-        const Scalar thetaZ = 0;
-        const Matrix rotate = rotation(thetaX, thetaY, thetaZ);
-
-        //const Vector lookAt = Vector(0, 0, 0) - camera.direction;
-        //const Vector N = camera.direction;
-        //const Vector U = Vector(0, 1, 0) | camera.direction;
-        //const Vector V = N | U;
-        //const Matrix rotate = Matrix(U, V, N, Vector(0, 0, 0, 1));
-
-        // Determine image space [0,0] position.
-        const Vector imageOffset = Vector(image.width / 2, image.height / 2, 0);
-        // Create translation matrix from image space to global world space.
-        const Translation offset(camera.position -
-                                 rotate * scale * imageOffset);
-
-        // Combine the transformations.
-        return offset * rotate * scale;
-}
-
 Scalar inline clamp(const Scalar x) {
         if (x > 1)
                 return 1;
@@ -870,8 +856,9 @@ int main() {
         const Scene scene(objects, lights);
 
         // Setup the camera.
-        const Camera camera(Vector(0, 170, 1000), // position
+        const Camera camera(Vector(100, 300, 1000), // position
                             Vector(0, 170, 0), // look at
+                            Vector(0, 1, 0), // up
                             IMG_WIDTH, IMG_HEIGHT); // size
 
         // Create the renderer.
