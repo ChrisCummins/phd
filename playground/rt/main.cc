@@ -29,23 +29,24 @@ static const size_t ANTIALIASING_SAMPLE_COUNT = 8;
 static const Scalar ANTIALIASING_OFFSET       = .4;
 static const Scalar SOFTLIGHT_FACTOR          = .035;
 static const Scalar SOFTLIGHT_BASE            = 3;
-static const float RENDER_SCALE               = 1.5;
+static const float RENDER_SCALE               = 40;
 #else
 static const unsigned int MAX_DEPTH           = 5;
 static const size_t ANTIALIASING_SAMPLE_COUNT = 0;
 static const Scalar ANTIALIASING_OFFSET       = .6;
 static const Scalar SOFTLIGHT_FACTOR          = .01;
 static const Scalar SOFTLIGHT_BASE            = 3;
-static const float RENDER_SCALE               = 1;
+static const float RENDER_SCALE               = 20;
 #endif
 
 // Dimensions of "camera" image.
-static const int IMG_WIDTH = 750;
-static const int IMG_HEIGHT = 422;
+static const int FILM_WIDTH = 36;
+static const int FILM_HEIGHT = 24;
+static const Scalar FOCAL_LENGTH = 30;
 
 // Dimensions of rendered image (output pixels).
-static const int RENDER_WIDTH = IMG_WIDTH * RENDER_SCALE;
-static const int RENDER_HEIGHT = IMG_HEIGHT * RENDER_SCALE;
+static const int RENDER_WIDTH = FILM_WIDTH * RENDER_SCALE;
+static const int RENDER_HEIGHT = FILM_HEIGHT * RENDER_SCALE;
 
 // Gamma of output image.
 static const Scalar RENDER_R_GAMMA = 1;
@@ -589,9 +590,12 @@ Camera::Camera(const Vector &position,
                const Vector &lookAt,
                const Vector &up,
                const Scalar width,
-               const Scalar height)
+               const Scalar height,
+               const Scalar focalLength)
                 : position(position),
                   direction((lookAt - position).normalise()),
+                  filmBack(position - (lookAt - position).normalise()
+                           * focalLength),
                   right((lookAt - position).normalise() | up),
                   up(((lookAt - position).normalise() | up) |
                      (lookAt - position).normalise()),
@@ -700,13 +704,17 @@ void Renderer::render(const Image &image) const {
                     const Vector localPosition = transform * Vector(x, y, 0);
 
                     // Translate camera (local) space to world space.
-                    const Vector position =
+                    const Vector lensPoint =
                                     camera.right * localPosition.x +
                                     camera.up * localPosition.y +
                                     camera.position;
 
+                    // Determine direction from point on lens to exposure point.
+                    const Vector direction =
+                                    (lensPoint - camera.filmBack).normalise();
+
                     // Create a ray.
-                    const Ray ray = Ray(position, camera.direction);
+                    const Ray ray = Ray(camera.filmBack, direction);
 
                     // Sample the ray.
                     image.set(x, y, supersample(ray));
@@ -856,10 +864,11 @@ int main() {
         const Scene scene(objects, lights);
 
         // Setup the camera.
-        const Camera camera(Vector(100, 300, 1000), // position
-                            Vector(0, 170, 0), // look at
+        const Camera camera(Vector(200, 200, 500), // position
+                            Vector(80, 170, 0), // look at
                             Vector(0, 1, 0), // up
-                            IMG_WIDTH, IMG_HEIGHT); // size
+                            FILM_WIDTH, FILM_HEIGHT, // film size
+                            FOCAL_LENGTH); // focal length
 
         // Create the renderer.
         const Renderer renderer(scene, camera);

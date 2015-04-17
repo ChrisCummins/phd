@@ -401,6 +401,7 @@ class Camera {
 public:
         const Vector position;
         const Vector direction;
+        const Vector filmBack;
         const Vector right;
         const Vector up;
         const Scalar width;
@@ -410,7 +411,8 @@ public:
                const Vector &lookAt,
                const Vector &up,
                const Scalar width,
-               const Scalar height);
+               const Scalar height,
+               const Scalar focalLength);
 };
 
 // A rendered image.
