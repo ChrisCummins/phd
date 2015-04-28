@@ -40,12 +40,12 @@ static const float RENDER_SCALE               = 20;
 #endif
 
 // Dimensions of "camera" image.
-static const int FILM_WIDTH = 36;
-static const int FILM_HEIGHT = 24;
+static const int FILM_WIDTH      = 36;
+static const int FILM_HEIGHT     = 24;
 static const Scalar FOCAL_LENGTH = 30;
 
 // Dimensions of rendered image (output pixels).
-static const int RENDER_WIDTH = FILM_WIDTH * RENDER_SCALE;
+static const int RENDER_WIDTH  = FILM_WIDTH * RENDER_SCALE;
 static const int RENDER_HEIGHT = FILM_HEIGHT * RENDER_SCALE;
 
 // Gamma of output image.
@@ -843,7 +843,7 @@ int main() {
         const Object *_objects[] = {
                 new CheckerBoard(Vector(0, 0, 0),
                                  Vector(0, 1, 0), 50), // Floor
-                new Sphere(Vector(-220,  135, -385), 135, green),  // Green ball
+                new Sphere(Vector(-120,  135, -385), 135, green),  // Green ball
                 new Sphere(Vector(-155,  105,  -85), 105, red),    // Red ball
                 new Sphere(Vector(  50,   92,    0), 75,  mirror), // Mirror ball
                 new Sphere(Vector( 180,   90,   20), 50,  blue),   // Blue ball
