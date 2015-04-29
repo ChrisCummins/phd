@@ -1,0 +1,545 @@
+#!/usr/bin/env python
+
+from copy import copy
+from os.path import abspath
+from random import randint
+from re import compile,search,sub
+from sys import argv,exit,stdout
+
+verbosity = {
+    "debug": {
+        "file_paths": True,
+        "macro_defs": False
+    },
+    "warn": {
+        "unused_def": True
+    }
+}
+
+
+def debug(*args, **kwargs):
+    print("[DEBUG ]", *args, **kwargs)
+
+def warn(*args, **kwargs):
+    print("[WARN  ]", *args, **kwargs)
+
+def fatal(*args, **kwargs):
+    print("[FATAL ]", *args, **kwargs)
+    exit(1)
+
+def tokenise(characters):
+    # Parser state.
+    in_quotes = False
+    in_comment = False
+    tokens = []
+    buf = "" # Token buffer.
+
+    # Iterate over characters in file
+    for c in characters:
+        if c == '#':
+            in_comment = not in_comment
+        elif c == "\n" or c == "\r":
+            in_comment = False
+            if in_quotes:
+                buf += c
+            else:
+                if buf:
+                    tokens.append(buf)
+                    buf = ""
+            continue
+
+        if in_comment:
+            continue
+
+        if c == '"':
+            if in_quotes:
+                in_quotes = False
+                if buf:
+                    tokens.append(buf)
+                    buf = ""
+            else:
+                in_quotes = True
+                if buf:
+                    tokens.append(buf)
+                    buf = ""
+        elif c == " " or c == "\t":
+            if in_quotes:
+                buf += c
+            else:
+                if buf:
+                    tokens.append(buf)
+                    buf = ""
+        else:
+            buf += c
+
+    # Flush the last token.
+    if buf:
+        tokens.append(buf)
+
+    return tokens
+
+# Return the absolute path to a file.
+def get_path(path):
+    return abspath(path)
+
+# Accepts a line and returns the path to an @import statement, if
+# found. Else, returns false.
+def is_import_macro(line):
+    match = search(import_re, line)
+
+    if match:
+        return get_path(match.group("path"))
+    else:
+        return False
+
+def preprocess(tokens):
+    return tokens
+
+# Strip a line of comments and whitespace.
+def strip_line(line):
+    return sub(comment_re, "", line.strip())
+
+def lookup_macro(word, macros):
+    if word[0] != "@":
+        return word
+
+    key = word[1:]
+
+    if key in macros:
+        # Set "used" flag for word.
+        macros[key][1] = True
+        # Recurse based on key value.
+        return lookup_macro(macros[key][0], macros)
+    else:
+        return word
+
+def preprocess(tokens, macros={}):
+    processed = []
+    next_token_def = False
+    next_token_def_val = False
+    next_token_import = False
+
+    for token in tokens:
+        # First expand macros.
+        token = lookup_macro(token, macros)
+        lowertoken = token.lower()
+
+        if next_token_import:
+            # Expand @import statements.
+            processed += get_tokens(token, macros)
+            next_token_import = False
+        elif next_token_def:
+            # Set macro name.
+            next_token_def_val = token
+            next_token_def = False
+        elif next_token_def_val:
+            # Define new macro.
+            name = next_token_def_val
+            macros[name] = [token, False]
+            if verbosity["debug"]["macro_defs"]:
+                debug("Defined macro '{0}' = '{1}'"
+                      .format(name, token))
+            next_token_def_val = False
+            next_token_def = False
+        elif lowertoken == "@import":
+            next_token_import = True
+        elif lowertoken == "@def":
+            next_token_def = True
+        else:
+            processed.append(token)
+
+    return processed
+
+def read_file(path):
+    path = get_path(path)
+    try:
+        lines = open(path).readlines()
+        if verbosity["debug"]["file_paths"]:
+            debug("Read '{0}'".format(path))
+        return lines
+    except FileNotFoundError:
+        fatal("No such file or directory: '{0}'.".format(path))
+
+# Read an input file and return a list of source-tokens, stripped of
+# comments, and recursively expanded @include statements and macros.
+def get_tokens(path, macros={}):
+    # Step 1. Read input file.
+    lines = read_file(path)
+    # Step 2. Tokenise.
+    tokens = tokenise("".join(lines))
+    # Step 3. Pre-process tokens.
+    tokens = preprocess(tokens)
+
+    return tokens
+
+def get_sections(tokens):
+    sections = []
+    buf = []
+
+    for token in tokens:
+        if token[0] == "[" and token[-1] == "]":
+            if buf:
+                sections.append(buf)
+            buf = [token[1:-1]]
+        else:
+            buf.append(token)
+
+    if buf:
+        sections.append(buf)
+
+    return sections
+
+colour_6_re = compile("^0x[0-9a-f]{6}$")
+
+def get_colour(token):
+    if search(colour_6_re, token):
+        return "Colour({0})".format(token)
+    else:
+        fatal("Unrecognised colour: '{0}'".format(token))
+
+def get_vector(tokens):
+    return ("Vector({0}, {1}, {2})"
+            .format(tokens[0], tokens[1], tokens[2]))
+
+def pairs_to_str(pairs):
+    s = [key + ": " + " ".join(pairs[key]) for key in pairs]
+    return '"' + ", ".join(s) + '"'
+
+def percent_to_float(string):
+    return float(string) / 100
+
+def consume_colour(pairs, name, default="0x000"):
+    if "colour" in pairs:
+        val = get_colour("".join(pairs["colour"]))
+        pairs.pop("colour", None)
+        return val
+    else:
+        return get_colour(default)
+
+def consume_percent(pairs, name, default=0):
+    if name in pairs:
+        val = percent_to_float("".join(pairs[name]))
+        pairs.pop(name, None)
+        return val
+    else:
+        return default
+
+def consume_int(pairs, name, default=0):
+    if name in pairs:
+        val = int("".join(pairs[name]))
+        pairs.pop(name, None)
+        return val
+    else:
+        return default
+
+def consume_vector(pairs, name, default=[0,0,0]):
+    if name in pairs:
+        val = get_vector(pairs[name])
+        pairs.pop(name, None)
+        return val
+    else:
+        return get_vector(default)
+
+def consume_rgb(pairs, name, default=[100,100,100]):
+    if name in pairs:
+        val = pairs[name]
+        rgb = [float(val[0]) / 100, float(val[1]) / 100, float(val[2]) / 100]
+        pairs.pop(name, None)
+        return rgb
+    else:
+        return get_vector(default)
+
+material_name_re = "^\$[mM]aterial\.(?P<val>.+)"
+
+def consume_material(pairs, name):
+    if name in pairs:
+        key = "".join(pairs[name])
+        match = search(material_name_re, key)
+
+        if not match:
+            fatal("Invalid material name '{0}'".format(key))
+        else:
+            val = match.group("val")
+            if val in materials:
+                return val
+            else:
+                fatal("No material named '{0}'".format(val))
+
+    else:
+        fatal("Missing material name.")
+
+materials = set()
+
+def get_material_code(name, pairs):
+    colour = consume_colour(pairs, "colour")
+    ambient = consume_percent(pairs, "ambient")
+    diffuse = consume_percent(pairs, "diffuse")
+    specular = consume_percent(pairs, "specular")
+    shininess = consume_int(pairs, "shininess")
+    reflectivity = consume_percent(pairs, "reflectivity")
+
+    if len(pairs):
+        fatal("Unrecognised attributes:", pairs_to_str(pairs))
+
+    if name in materials:
+        fatal("Duplicate material name '{0}'"
+              .format(name))
+    materials.add(name);
+
+    return ("const Material *const {name} = "
+            "new Material({colour}, {ambient}, {diffuse}, "
+            "{specular}, {shininess}, {reflectivity});"
+            .format(name=name, colour=colour, ambient=ambient, diffuse=diffuse,
+                    specular=specular, shininess=shininess,
+                    reflectivity=reflectivity))
+
+objects = set()
+
+def get_checkerboard_code(name, pairs):
+    position = consume_vector(pairs, "position")
+    direction = consume_vector(pairs, "direction")
+    size = consume_int(pairs, "size")
+
+    if name in objects:
+        fatal("Duplicate object name '{0}'"
+              .format(name))
+    objects.add(name)
+
+    return ("const CheckerBoard *const {name} = "
+            "new CheckerBoard({position}, {direction}, {size});"
+            .format(name=name, position=position, direction=direction,
+                    size=size))
+
+def get_sphere_code(name, pairs):
+    position = consume_vector(pairs, "position")
+    size = consume_int(pairs, "size")
+    material = consume_material(pairs, "material")
+
+    if name in objects:
+        fatal("Duplicate object name '{0}'"
+              .format(name))
+    objects.add(name)
+
+    return ("const Sphere *const {name} = "
+            "new Sphere({position}, {size}, {material});"
+            .format(name=name, position=position, size=size,
+                    material=material))
+
+lights = set()
+
+def get_softlight_code(name, pairs):
+    position = consume_vector(pairs, "position")
+    colour = consume_colour(pairs, "colour")
+    size = consume_int(pairs, "size")
+
+    if name in lights:
+        fatal("Duplicate light name '{0}'"
+              .format(name))
+    lights.add(name)
+
+    return ("const SoftLight *const {name} = "
+            "new SoftLight({position}, {size}, {colour});"
+            .format(name=name, position=position, size=size,
+                    colour=colour))
+
+def get_pointlight_code(name, pairs):
+    position = consume_vector(pairs, "position")
+    colour = consume_colour(pairs, "colour")
+
+    if name in lights:
+        fatal("Duplicate light name '{0}'"
+              .format(name))
+    lights.add(name)
+
+    return ("const PointLight *const {name} = "
+            "new PointLight({position}, {colour});"
+            .format(name=name, position=position, colour=colour))
+
+def consume_val(pairs, name):
+    val = pairs[name]
+    pairs.pop(name, None)
+    return "".join(val)
+
+def consume_lens(pairs, name):
+    val = sub("^\$[lL]ens\.", "", consume_val(pairs, name))
+    return lenses[val]
+
+def consume_film(pairs, name):
+    val = sub("^\$[fF]ilm\.", "", consume_val(pairs, name))
+    return films[val]
+
+film = None
+camera = None
+
+def get_camera_perspective_code(name, pairs):
+    global camera
+    global film
+
+    position = consume_vector(pairs, "position")
+    lookat = consume_vector(pairs, "lookat")
+    up = get_vector([0, 1, 0])
+    lens = consume_lens(pairs, "lens")
+    film = consume_film(pairs, "film")
+
+    if camera:
+        fatal("Duplicate camera definitions: '{0}' and '{1}'"
+              .format(camera, name))
+    camera = name
+
+    return ("const Camera *const {name} = "
+            "new Camera({position}, {lookat}, {up}, "
+            "{width}, {height}, {focal});"
+            .format(name=name, position=position, lookat=lookat,
+                    up=up, width=film["width"], height=film["height"],
+                    focal=lens["focal"]))
+
+
+films = {}
+
+def add_film(name, pairs):
+    gamma = consume_rgb(pairs, "rgbgamma")
+    saturation = consume_percent(pairs, "saturation", 100)
+    width = consume_int(pairs, "width")
+    height = consume_int(pairs, "height")
+
+    if name in films:
+        fatal("Duplicate film type '{0}'"
+              .format(name))
+    films[name] = {
+        "gamma": gamma,
+        "saturation": saturation,
+        "width": width,
+        "height": height
+    }
+
+lenses = {}
+
+def add_lens(name, pairs):
+    focal = consume_int(pairs, "focallength")
+
+    if name in lenses:
+        fatal("Duplicate lens type '{0}'"
+              .format(name))
+    lenses[name] = {"focal": focal}
+
+def get_keyval_pairs(tokens):
+    pairs = {}
+    key = ""
+
+    for token in tokens:
+        if token[-1] == ":":
+            key = token[0:-1].lower()
+            if key in pairs:
+                fatal("Duplicate key '{0}'"
+                      .format(key))
+            pairs[key] = []
+        else:
+            if key:
+                pairs[key].append(token)
+            else:
+                fatal("Value without key '{0}'"
+                      .format(token))
+
+    return pairs
+
+def newid():
+    return "__id{0:09d}__".format(randint(0, 999999999))
+
+material_re = compile("^material\.")
+film_re = compile("^film\.")
+lens_re = compile("^lens\.")
+
+renderer = {}
+
+def set_renderer(pairs):
+    if renderer:
+        fatal("Duplicate renderer settings.")
+
+    renderer["depth"] = consume_int(pairs, "raydepth")
+    renderer["scale"] = consume_int(pairs, "scale")
+
+def get_section_code(section):
+    name = section[0].lower()
+    pairs = get_keyval_pairs(section[1:])
+
+    if search(material_re, name):
+        return get_material_code(sub(material_re, "", name), pairs)
+    elif name == "object.checkerboard":
+        return get_checkerboard_code(newid(), pairs)
+    elif name == "object.sphere":
+        return get_sphere_code(newid(), pairs)
+    elif name == "light.soft":
+        return get_softlight_code(newid(), pairs)
+    elif name == "light.point":
+        return get_pointlight_code(newid(), pairs)
+    elif search(film_re, name):
+        return add_film(sub(film_re, "", name), pairs)
+    elif search(lens_re, name):
+        return add_lens(sub(lens_re, "", name), pairs)
+    elif name == "camera.perspective":
+        return get_camera_perspective_code(newid(), pairs)
+    elif name == "renderer":
+        return set_renderer(pairs)
+    else:
+        return "// Not implemented: {0}".format(name)
+
+def get_scene_code():
+    c = "const Object *_objects[] = {\n"
+    for object in objects:
+        c += "  {0},\n".format(object)
+    c += "};\n"
+    c += "const Light *_lights[] = {\n"
+    for light in lights:
+        c += "  {0},\n".format(light)
+    c += "};\n"
+    c += "const std::vector<const Object *> objects(_objects, _objects + (sizeof(_objects) / sizeof(_objects[0])));\n"
+    c += "const std::vector<const Light *> lights(_lights, _lights + (sizeof(_lights) / sizeof(_lights[0])));\n"
+    c += "const Scene *const scene = new Scene(objects, lights);\n"
+
+    return c
+
+def get_renderer_code():
+    c = ("return new Renderer(scene, {0});".format(camera))
+    return c
+
+def get_image_code():
+    c = ("    return new Image({width}, {height}, "
+         "{colour});".format(width=renderer["scale"] * film["width"],
+                             height=renderer["scale"] * film["height"],
+                             colour=("Colour({0}, {1}, {2})"
+                                     .format(film["gamma"][0],
+                                             film["gamma"][1],
+                                             film["gamma"][2]))))
+    return c
+
+def get_code(sections):
+    code = []
+    renderer = []
+    for section in sections:
+        renderer.append(get_section_code(section))
+
+    renderer.append(get_scene_code())
+    renderer.append(get_renderer_code())
+
+    code.append("Renderer *getRenderer() {")
+    [code.append(line) for line in renderer if line]
+    code.append("}\n")
+
+    code.append("Image *getImage() {")
+    code.append(get_image_code())
+    code.append("}")
+
+    return "\n".join(code)
+
+input = argv[1]
+if len(argv) > 2:
+    output = open(argv[2], "w")
+else:
+    output = stdout
+
+out = output
+tokens = get_tokens(input)
+sections = get_sections(tokens)
+code = get_code(sections)
+
+print(code, file=out)

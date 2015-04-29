@@ -7,13 +7,20 @@ LdFlags = -ltbb
 Objects = $(patsubst %.cc,%.o,$(Sources))
 Binary = rt
 
-all: $(Binary)
+Scene = quick.rt.out
+
+all: quick
+
+quick: $(Scene) $(Binary)
 
 clean:
-	rm -fv $(Binary) $(Objects)
+	rm -fv $(Binary) $(Objects) $(Scene)
 
-%.o: %.cc $(Headers)
+%.o: %.cc $(Headers) $(Scene)
 	g++ $(CxxFlags) -c $<
 
 $(Binary): $(Objects)
 	g++ $(LdFlags) $^ -o $@
+
+%.rt.out: %.rt
+	./parser.py $< $@

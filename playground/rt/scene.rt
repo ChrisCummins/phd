@@ -1,0 +1,116 @@
+# Macros.
+@def white 0xffffff
+
+# Materials.
+
+[Material.green]
+Colour: 0x00c805
+Diffuse: 100
+Specular: 90
+Shininess: 75
+
+[Material.red]
+Colour: 0x641905
+Diffuse: 100
+Specular: 60
+Shininess: 150
+Reflectivity: 25
+
+[Material.mirror]
+Colour: @white
+Specular: 100
+Shininess: 200
+Reflectivity: 99
+
+[Material.grey]
+Colour: @white
+Diffuse: 25
+Specular: 100
+Shininess: 200
+Reflectivity: 50
+
+[Material.blue]
+Colour: 0x0064c8
+Diffuse: 70
+Specular: 70
+Shininess: 90
+
+# Objects.
+
+[Object.Checkerboard] # floor
+Position: 0 0 0
+Direction: 0 1 0
+Size: 50
+
+[Object.Sphere] # green
+Position: -120 135 -385
+Size: 135
+Material: $Material.green
+
+[Object.Sphere] # red
+Position: -155 105 -85
+Size: 105
+Material: $Material.red
+
+[Object.Sphere] # mirror ball
+Position: 50 92 0
+Size: 75
+Material: $Material.mirror
+
+[Object.Sphere] # blue
+Position: 180 90 20
+Size: 50
+Material: $Material.blue
+
+[Object.Sphere] # grey1
+Position: 290 270 -85
+Size: 50
+Material: $Material.grey
+
+[Object.Sphere] # grey2
+Position: 290 170 -85
+Size: 50
+Material: $Material.grey
+
+[Object.Sphere] # grey3
+Position: 290 70 -85
+Size: 50
+Material: $Material.grey
+
+# Lights.
+
+[Light.Soft] # main
+Colour: @white
+Position: 350 480 500
+Size: 120
+
+[Light.Soft] # green
+Colour: 0x105010
+Position: -650 580 700
+Size: 75
+
+[Light.Soft] # red
+Colour: 0x501010
+Position: -250 580 -200
+Size: 25
+
+[Light.Point] # fill
+Colour: 0x303030
+Position: -250 280 -500
+
+# Camera.
+
+[Lens.wideangle]
+FocalLength: 30
+
+[Film.colour]
+Saturation: 100
+RGBGamma: 100 98 101
+Width: 36
+Height: 24
+
+[Camera.Perspective]
+Position: 200 200 500
+Lookat: 80 170 0
+Lens: $Lens.wideangle
+Film: $Film.colour

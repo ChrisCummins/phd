@@ -393,6 +393,7 @@ public:
         // Constructor.
         Scene(const std::vector<const Object *> &objects,
               const std::vector<const Light *> &lights);
+        ~Scene();
 };
 
 // A camera has a "film" size (width and height), and a position and a
@@ -440,14 +441,15 @@ public:
 
 class Renderer {
 public:
-        const Scene scene;
-        const Camera camera;
+        const Scene *const scene;
+        const Camera *const camera;
 
-        Renderer(const Scene &scene,
-                 const Camera &camera);
+        Renderer(const Scene *const scene,
+                 const Camera *const camera);
+        ~Renderer();
 
         // The heart of the raytracing engine.
-        void render(const Image &image) const;
+        void render(const Image *const image) const;
 
 private:
         // Trace a ray trough a given scene and return the final

@@ -10,6 +10,9 @@
 
 #include "rt.h"
 
+// Generated renderer and image factory:
+#include "quick.rt.out"
+
 //////////////////////////
 // Configurable Options //
 //////////////////////////
@@ -583,6 +586,13 @@ Scene::Scene(const std::vector<const Object *> &objects,
              const std::vector<const Light *> &lights)
                 : objects(objects), lights(lights) {}
 
+Scene::~Scene() {
+        for (size_t i = 0; i < objects.size(); i++)
+                delete objects[i];
+        for (size_t i = 0; i < lights.size(); i++)
+                delete lights[i];
+}
+
 Ray::Ray(const Vector &position, const Vector &direction)
                 : position(position), direction(direction) {}
 
@@ -648,9 +658,14 @@ void Image::write(FILE *const out) const {
         }
 }
 
-Renderer::Renderer(const Scene &scene,
-                   const Camera &camera)
+Renderer::Renderer(const Scene *const scene,
+                   const Camera *const camera)
                 : scene(scene), camera(camera) {}
+
+Renderer::~Renderer() {
+        delete scene;
+        delete camera;
+}
 
 Colour Renderer::supersample(const Ray &ray) const {
         Colour sample = Colour();
@@ -683,41 +698,41 @@ Colour Renderer::supersample(const Ray &ray) const {
         return sample;
 }
 
-void Renderer::render(const Image &image) const {
+void Renderer::render(const Image *const image) const {
         // Scale image coordinates to camera coordinates.
-        const Scale scale(camera.width / image.width,
-                          camera.height / image.height, 1);
+        const Scale scale(camera->width / image->width,
+                          camera->height / image->height, 1);
         // Offset from image coordinates to camera coordinates.
-        const Translation offset(-(image.width * .5),
-                                 -(image.height * .5), 0);
+        const Translation offset(-(image->width * .5),
+                                 -(image->height * .5), 0);
         // Create combined transformation matrix.
         const Matrix transform = scale * offset;
 
         // For each pixel in the image:
         tbb::parallel_for(
-            static_cast<size_t>(0), image.height * image.width, [&](size_t i) {
+            static_cast<size_t>(0), image->height * image->width, [&](size_t i) {
                     // Image space coordinates.
-                    const Scalar x = i % image.width;
-                    const Scalar y = i / image.width;
+                    const Scalar x = i % image->width;
+                    const Scalar y = i / image->width;
 
                     // Convert image to camera (local) space coordinates.
                     const Vector localPosition = transform * Vector(x, y, 0);
 
                     // Translate camera (local) space to world space.
                     const Vector lensPoint =
-                                    camera.right * localPosition.x +
-                                    camera.up * localPosition.y +
-                                    camera.position;
+                                    camera->right * localPosition.x +
+                                    camera->up * localPosition.y +
+                                    camera->position;
 
                     // Determine direction from point on lens to exposure point.
                     const Vector direction =
-                                    (lensPoint - camera.filmBack).normalise();
+                                    (lensPoint - camera->filmBack).normalise();
 
                     // Create a ray.
-                    const Ray ray = Ray(camera.filmBack, direction);
+                    const Ray ray = Ray(camera->filmBack, direction);
 
                     // Sample the ray.
-                    image.set(x, y, supersample(ray));
+                    image->set(x, y, supersample(ray));
             });
 }
 
@@ -728,14 +743,14 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
 
         // Determine the closet ray-object intersection.
         Scalar t;
-        int index = closestIntersect(ray, scene.objects, t);
+        int index = closestIntersect(ray, scene->objects, t);
 
         // If the ray doesn't intersect any object, return.
         if (index == -1)
             return colour;
 
         // Object with closest intersection.
-        const Object *object = scene.objects[index];
+        const Object *object = scene->objects[index];
         // Point of intersection.
         const Vector intersect = ray.position + ray.direction * t;
         // Surface normal at point of intersection.
@@ -749,9 +764,9 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
         colour += material->colour * material->ambient;
 
         // Apply shading from each light source.
-        for (size_t i = 0; i < scene.lights.size(); i++)
-                colour += scene.lights[i]->shade(intersect, normal, toRay,
-                                                 material, scene.objects);
+        for (size_t i = 0; i < scene->lights.size(); i++)
+                colour += scene->lights[i]->shade(intersect, normal, toRay,
+                                                 material, scene->objects);
 
         // Create reflection ray and recursive evaluate.
         const Scalar reflectivity = material->reflectivity;
@@ -826,58 +841,9 @@ PixelColourType inline scale(const Scalar x) {
 
 // Program entry point.
 int main() {
-        // Material parameters:
-        //   colour, ambient, diffuse, specular, shininess, reflectivity
-        const Material *const green  = new Material(Colour(0x00c805),
-                                                    0, 1, .9, 75, 0);
-        const Material *const red    = new Material(Colour(0x641905),
-                                                    0, 1, .6, 150, 0.25);
-        const Material *const mirror = new Material(Colour(0xffffff),
-                                                    0, 0, 1, 200, .99999);
-        const Material *const grey   = new Material(Colour(0xffffff),
-                                                    0, .25, 1, 200, .05);
-        const Material *const blue   = new Material(Colour(0x0064c8),
-                                                    0, .7, .7, 90, 0);
-
-        // The scene:
-        const Object *_objects[] = {
-                new CheckerBoard(Vector(0, 0, 0),
-                                 Vector(0, 1, 0), 50), // Floor
-                new Sphere(Vector(-120,  135, -385), 135, green),  // Green ball
-                new Sphere(Vector(-155,  105,  -85), 105, red),    // Red ball
-                new Sphere(Vector(  50,   92,    0), 75,  mirror), // Mirror ball
-                new Sphere(Vector( 180,   90,   20), 50,  blue),   // Blue ball
-                new Sphere(Vector( 290,  270,  -85), 50,  grey),   // Grey ball
-                new Sphere(Vector( 290,  170,  -85), 50,  grey),   // Grey ball
-                new Sphere(Vector( 290,   70,  -85), 50,  grey)    // Grey ball
-        };
-        const Light *_lights[] = {
-                new SoftLight (Vector( 350, 480,  500), 120, Colour(0xffffff)), // White light
-                new SoftLight (Vector(-650, 580,  700),  75, Colour(0x105010)), // Green light
-                new SoftLight (Vector(-250, 580, -200),  25, Colour(0x501010)), // Red light
-                new PointLight(Vector(-250, 280, -500),      Colour(0x303030))  // Fill light
-        };
-
-        // Create the scene.
-        const std::vector<const Object *> objects(_objects, ARRAY_END(_objects));
-        const std::vector<const Light *> lights(_lights, ARRAY_END(_lights));
-        const Scene scene(objects, lights);
-
-        // Setup the camera.
-        const Camera camera(Vector(200, 200, 500), // position
-                            Vector(80, 170, 0), // look at
-                            Vector(0, 1, 0), // up
-                            FILM_WIDTH, FILM_HEIGHT, // film size
-                            FOCAL_LENGTH); // focal length
-
-        // Create the renderer.
-        const Renderer renderer(scene, camera);
-
-        // Create the output image.
-        const Image image = Image(RENDER_WIDTH, RENDER_HEIGHT,
-                                  Colour(RENDER_R_GAMMA,
-                                         RENDER_G_GAMMA,
-                                         RENDER_B_GAMMA));
+        // Get the renderer and image.
+        const Renderer *const renderer = getRenderer();
+        const Image *const image = getImage();
 
         // Print start message.
         printf("Rendering %d pixels with %lu samples per pixel, "
@@ -891,7 +857,7 @@ int main() {
                         = std::chrono::high_resolution_clock::now();
 
         // Render the scene to the output file.
-        renderer.render(image);
+        renderer->render(image);
 
         // Record end time.
         const std::chrono::high_resolution_clock::time_point endTime
@@ -903,17 +869,15 @@ int main() {
         FILE *const out = fopen(path, "w");
 
         // Write to output file.
-        image.write(out);
+        image->write(out);
 
         // Close the output file.
         printf("Closing file '%s'...\n\n", path);
         fclose(out);
 
         // Free heap memory.
-        for (size_t i = 0; i < ARRAY_LENGTH(_objects); i++)
-                delete _objects[i];
-        for (size_t i = 0; i < ARRAY_LENGTH(_lights); i++)
-                delete _lights[i];
+        delete renderer;
+        delete image;
 
         // Calculate performance information.
         Scalar elapsed = std::chrono::duration_cast<std::chrono::microseconds>(

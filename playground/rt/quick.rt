@@ -1,0 +1,16 @@
+# quick.rt
+@def SCENE "scene.rt"
+@import @SCENE
+
+
+[Renderer]
+RayDepth: 5
+Scale: 20 # foo
+
+[Renderer.Antialiasing]
+Samples: 0
+Offset: 0
+
+[Renderer.Softlights]
+Base: 3
+GrowthFactor: .01
