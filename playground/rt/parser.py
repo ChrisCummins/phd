@@ -295,6 +295,21 @@ def get_material_code(name, pairs):
 
 objects = set()
 
+def get_plane_code(name, pairs):
+    position = consume_vector(pairs, "position")
+    direction = consume_vector(pairs, "direction")
+    material = consume_material(pairs, "material")
+
+    if name in objects:
+        fatal("Duplicate object name '{0}'"
+              .format(name))
+    objects.add(name)
+
+    return ("const Plane *const {name} = "
+            "new Plane({position}, {direction}, {material});"
+            .format(name=name, position=position, direction=direction,
+                    material=material))
+
 def get_checkerboard_code(name, pairs):
     position = consume_vector(pairs, "position")
     direction = consume_vector(pairs, "direction")
@@ -467,6 +482,8 @@ def get_section_code(section):
 
     if search(material_re, name):
         return get_material_code(sub(material_re, "", name), pairs)
+    elif name == "object.plane":
+        return get_plane_code(newid(), pairs)
     elif name == "object.checkerboard":
         return get_checkerboard_code(newid(), pairs)
     elif name == "object.sphere":
