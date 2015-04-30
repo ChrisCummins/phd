@@ -6,6 +6,7 @@ LdFlags = -ltbb
 
 Objects = $(patsubst %.cc,%.o,$(Sources))
 Binary = rt
+Parser = parser.py
 
 Scene = quick.rt.out
 
@@ -22,5 +23,5 @@ clean:
 $(Binary): $(Objects)
 	g++ $(LdFlags) $^ -o $@
 
-%.rt.out: %.rt
-	./parser.py $< $@
+%.rt.out: %.rt $(Parser) scene.rt
+	./$(Parser) $< $@
