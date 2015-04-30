@@ -299,6 +299,8 @@ def get_checkerboard_code(name, pairs):
     position = consume_vector(pairs, "position")
     direction = consume_vector(pairs, "direction")
     size = consume_int(pairs, "size")
+    material1 = consume_material(pairs, "material1")
+    material2 = consume_material(pairs, "material2")
 
     if name in objects:
         fatal("Duplicate object name '{0}'"
@@ -306,9 +308,10 @@ def get_checkerboard_code(name, pairs):
     objects.add(name)
 
     return ("const CheckerBoard *const {name} = "
-            "new CheckerBoard({position}, {direction}, {size});"
+            "new CheckerBoard({position}, {direction}, {size}, "
+            "{material1}, {material2});"
             .format(name=name, position=position, direction=direction,
-                    size=size))
+                    size=size, material1=material1, material2=material2))
 
 def get_sphere_code(name, pairs):
     position = consume_vector(pairs, "position")

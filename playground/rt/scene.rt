@@ -35,12 +35,28 @@ Diffuse: 70
 Specular: 70
 Shininess: 90
 
+[Material.black]
+Colour: 0x505050
+Diffuse: 7
+Specular: 100
+Shininess: 10
+Reflectivity: 99
+
+[Material.white]
+Colour: 0xffffff
+Diffuse: 7
+Specular: 100
+Shininess: 10
+Reflectivity: 99
+
 # Objects.
 
 [Object.Checkerboard] # floor
 Position: 0 0 0
 Direction: 0 1 0
 Size: 50
+Material1: $Material.white
+Material2: $Material.black
 
 [Object.Sphere] # green
 Position: -120 135 -385

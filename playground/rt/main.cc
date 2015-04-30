@@ -420,14 +420,13 @@ const Material *Plane::surface(const Vector &point) const {
         return material;
 }
 
-// Checkerboard material types.
-static const Material CBLACK = Material(Colour(0x505050), 0, .07, 1, 10, 0.999);
-static const Material CWHITE = Material(Colour(0xffffff), 0, .07, 1, 10, 0.999);
-
 CheckerBoard::CheckerBoard(const Vector &origin,
                            const Vector &direction,
-                           const Scalar checkerWidth)
-                : Plane(origin, direction, NULL), black(&CBLACK), white(&CWHITE),
+                           const Scalar checkerWidth,
+                           const Material *const material1,
+                           const Material *const material2)
+                : Plane(origin, direction, NULL),
+                  material1(material1), material2(material2),
                   checkerWidth(checkerWidth) {}
 
 CheckerBoard::~CheckerBoard() {}
@@ -445,9 +444,9 @@ const Material *CheckerBoard::surface(const Vector &point) const {
         const int mod = half * 2;
 
         if (x % mod < half)
-                return y % mod < half ? black : white;
+                return y % mod < half ? material1 : material2;
         else
-                return y % mod < half ? white : black;
+                return y % mod < half ? material2 : material1;
 }
 
 Sphere::Sphere(const Vector &position,

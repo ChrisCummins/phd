@@ -304,13 +304,15 @@ public:
 
 class CheckerBoard : public Plane {
 public:
-        const Material *const black;
-        const Material *const white;
+        const Material *const material1;
+        const Material *const material2;
         const Scalar checkerWidth;
 
         CheckerBoard(const Vector &origin,
                      const Vector &direction,
-                     const Scalar checkerWidth);
+                     const Scalar checkerWidth,
+                     const Material *const material1,
+                     const Material *const material2);
         ~CheckerBoard();
 
         virtual const Material *surface(const Vector &point) const;
