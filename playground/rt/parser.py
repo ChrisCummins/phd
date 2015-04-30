@@ -37,7 +37,7 @@ def tokenise(characters):
     # Iterate over characters in file
     for c in characters:
         if c == '#':
-            in_comment = not in_comment
+            in_comment = True
         elif c == "\n" or c == "\r":
             in_comment = False
             if in_quotes:
