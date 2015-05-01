@@ -275,7 +275,7 @@ ONB ONB::initFromU(const Vector &u) {
         const Vector u1 = u.normalise();
         const Vector u2 = u1 | n;
         const Vector u3 = u1 | m;
-        const Vector v = u2.size() < ONB::epsilon ? u3 : u2;
+        const Vector v = u2.size() < epsilon ? u3 : u2;
         const Vector w = u1 | v;
 
         return ONB(u, v, w);
