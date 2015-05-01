@@ -497,10 +497,16 @@ Colour PointLight::shade(const Vector &point,
         // Shading is additive, starting with black.
         Colour shade = Colour();
 
-        // Direction vector from point to light.
-        const Vector toLight = (position - point).normalise();
-        // Determine with light is blocked.
-        const bool blocked = intersects(Ray(point, toLight), objects);
+        // Vector from point to light.
+        const Vector toLight = position - point;
+        // Distance from point to light.
+        const Scalar distance = toLight.size();
+        // Direction from point to light.
+        const Vector direction = toLight / distance;
+
+        // Determine whether light is blocked.
+        const bool blocked = intersects(Ray(point, direction),
+                                        objects, distance);
         // Do nothing without line of sight.
         if (blocked)
                 return shade;
@@ -512,12 +518,12 @@ Colour PointLight::shade(const Vector &point,
         const Colour illumination = colour * material->colour;
 
         // Apply Lambert (diffuse) shading.
-        const Scalar lambert = std::max(normal ^ toLight,
+        const Scalar lambert = std::max(normal ^ direction,
                                         static_cast<Scalar>(0));
         shade += illumination * material->diffuse * lambert;
 
         // Apply Blinn-Phong (specular) shading.
-        const Vector bisector = (toRay + toLight).normalise();
+        const Vector bisector = (toRay + direction).normalise();
         const Scalar phong = pow(std::max(normal ^ bisector,
                                           static_cast<Scalar>(0)),
                                  material->shininess);
@@ -554,11 +560,16 @@ Colour SoftLight::shade(const Vector &point,
                 const Vector origin = Vector(position.x + softSampler() * radius,
                                              position.y + softSampler() * radius,
                                              position.z + softSampler() * radius);
+                // Vector from point to light.
+                const Vector toLight = origin - point;
+                // Distance from point to light.
+                const Scalar distance = toLight.size();
+                // Direction from point to light.
+                const Vector direction = toLight / distance;
 
-                // Direction vector from point to light.
-                const Vector toLight = (origin - point).normalise();
-                // Determine whether the light is blocked.
-                const bool blocked = intersects(Ray(point, toLight), objects);
+                // Determine whether light is blocked.
+                const bool blocked = intersects(Ray(point, direction),
+                                                objects, distance);
                 // Do nothing without line of sight.
                 if (blocked)
                         continue;
@@ -567,12 +578,12 @@ Colour SoftLight::shade(const Vector &point,
                 rayCounter++;
 
                 // Apply Lambert (diffuse) shading.
-                const Scalar lambert = std::max(normal ^ toLight,
+                const Scalar lambert = std::max(normal ^ direction,
                                                 static_cast<Scalar>(0));
                 shade += illumination * material->diffuse * lambert;
 
                 // Apply Blinn-Phong (specular) shading.
-                const Vector bisector = (toRay + toLight).normalise();
+                const Vector bisector = (toRay + direction).normalise();
                 const Scalar phong = pow(std::max(normal ^ bisector,
                                                   static_cast<Scalar>(0)),
                                          material->shininess);
@@ -806,12 +817,14 @@ int closestIntersect(const Ray &ray,
         return index;
 }
 
-bool intersects(const Ray &ray, const std::vector<const Object *> &objects) {
-        // Iterate over all objects:
-        for (size_t i = 0; i < objects.size(); i++)
-                // If the ray intersects object, return true.
-                if (objects[i]->intersect(ray) != 0)
+bool intersects(const Ray &ray, const std::vector<const Object *> &objects,
+                const Scalar distance) {
+        // Determine any object intersects ray within distance:
+        for (size_t i = 0; i < objects.size(); i++) {
+                const Scalar t = objects[i]->intersect(ray);
+                if (t > 0 && t < distance)
                         return true;
+        }
 
         // No intersect.
         return false;

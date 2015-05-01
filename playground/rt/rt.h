@@ -471,8 +471,10 @@ int closestIntersect(const Ray &ray,
                      const std::vector<const Object *> &objects,
                      Scalar &t);
 
-// Return whether a given ray intersects any of the objects.
-bool intersects(const Ray &ray, const std::vector<const Object *> &objects);
+// Return whether a given ray intersects any of the objects within a
+// given distance.
+bool intersects(const Ray &ray, const std::vector<const Object *> &objects,
+                const Scalar distance);
 
 // Trigonometric functions accepting theta angles in degrees.
 Scalar inline dsin(const Scalar theta);
