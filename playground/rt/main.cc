@@ -392,7 +392,8 @@ Object::Object(const Vector &position)
 Plane::Plane(const Vector &origin,
              const Vector &direction,
              const Material *const material)
-                : Object(origin), direction(direction), material(material) {}
+                : Object(origin), direction(direction.normalise()),
+                  material(material) {}
 
 Vector Plane::normal(const Vector &p) const {
         return direction;
