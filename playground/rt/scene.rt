@@ -3,130 +3,115 @@
 
 # Materials.
 
-[Material.green]
-Colour: 0x00c805
-Diffuse: 100
-Specular: 90
-Shininess: 75
-
-[Material.red]
-Colour: 0x641905
-Diffuse: 100
-Specular: 60
-Shininess: 150
-Reflectivity: 25
-
 [Material.mirror]
 Colour: @white
+Ambient: 0
+Diffuse: 0
 Specular: 100
 Shininess: 200
 Reflectivity: 99
 
-[Material.grey]
-Colour: @white
-Diffuse: 25
-Specular: 100
-Shininess: 200
-Reflectivity: 50
+@def grey 0x808080
 
-[Material.blue]
-Colour: 0x0064c8
-Diffuse: 70
-Specular: 70
-Shininess: 90
+[Material.plaster]
+Colour: 0x948697
+Diffuse: 50
+Specular: 80
+Shininess: 10
+
+[Material.left_wall]
+Colour: 0xb76c73
+Diffuse: 90
+Specular: 80
+Shininess: 10
+Reflectivity: 0
+
+[Material.right_wall]
+Colour: 0x6f67b2
+Diffuse: 90
+Specular: 80
+Shininess: 10
 
 [Material.black]
-Colour: 0x505050
-Diffuse: 7
-Specular: 100
-Shininess: 10
-Reflectivity: 99
+Colour: 0x101010
+Diffuse: 1
+Specular: 50
+Shininess: 40
+Reflectivity: 25
 
 [Material.white]
 Colour: 0xffffff
-Diffuse: 7
+Diffuse: 30
 Specular: 100
-Shininess: 10
-Reflectivity: 99
+Shininess: 6
+Reflectivity: 50
 
 # Objects.
 
 [Object.Checkerboard] # floor
 Position: 0 0 0
 Direction: 0 1 0
-Size: 50
+Size: 250
 Material1: $Material.white
 Material2: $Material.black
 
-[Object.Sphere] # green
-Position: -120 135 -385
-Size: 135
-Material: $Material.green
+[Object.Plane] # cieling
+Position: 0 2200 0
+Direction: 0 -1 0
+Size: 50
+Material: $Material.plaster
 
-[Object.Sphere] # red
-Position: -155 105 -85
-Size: 105
-Material: $Material.red
+[Object.Plane] # left wall
+Position: -2000 0 0
+Direction: 1 0 0
+Material: $Material.left_wall
 
-[Object.Sphere] # mirror ball
-Position: 50 92 0
-Size: 75
+[Object.Plane] # right wall
+Position: 2000 0 0
+Direction: -1 0 0
+Material: $Material.right_wall
+
+[Object.Plane] # back wall
+Position: 0 0 -2000
+Direction: 0 0 1
+Material: $Material.plaster
+
+[Object.Plane] # behind wall
+Position: 0 0 3100
+Direction: 0 0 -1
+Material: $Material.plaster
+
+@def ball_size 500
+[Object.Sphere] # left ball
+Position: -1200 @ball_size -1000
+Size: @ball_size
 Material: $Material.mirror
 
-[Object.Sphere] # blue
-Position: 180 90 20
-Size: 50
-Material: $Material.blue
-
-[Object.Sphere] # grey1
-Position: 290 270 -85
-Size: 50
-Material: $Material.grey
-
-[Object.Sphere] # grey2
-Position: 290 170 -85
-Size: 50
-Material: $Material.grey
-
-[Object.Sphere] # grey3
-Position: 290 70 -85
-Size: 50
-Material: $Material.grey
+[Object.Sphere] # right ball
+Position: 700 @ball_size 0
+Size: @ball_size
+Material: $Material.mirror
 
 # Lights.
 
-[Light.Soft] # main
+[Light.Soft]
 Colour: @white
-Position: 350 480 500
-Size: 120
-
-[Light.Soft] # green
-Colour: 0x105010
-Position: -650 580 700
-Size: 75
-
-[Light.Soft] # red
-Colour: 0x501010
-Position: -250 580 -200
-Size: 25
-
-[Light.Point] # fill
-Colour: 0x303030
-Position: -250 280 -500
+Position: 0 1500 200
+Size: 225
 
 # Camera.
 
 [Lens.wideangle]
-FocalLength: 30
+FocalLength: 35
 
 [Film.colour]
 Saturation: 100
-RGBGamma: 100 98 101
+RGBGamma: 98 102 98
 Width: 36
 Height: 24
 
 [Camera.Perspective]
-Position: 200 200 500
-Lookat: 80 170 0
+Position: 250 1000 3000
+Lookat: 0 850 0
 Lens: $Lens.wideangle
 Film: $Film.colour

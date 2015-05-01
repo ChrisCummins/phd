@@ -16,7 +16,7 @@
 //////////////////////////
 // Configurable Options //
 //////////////////////////
-#define SEXY 0
+#define SEXY 1
 
 // For each pixel at location x,y, we sample N extra points at
 // locations randomly distributed about x,y. The sample count
@@ -29,8 +29,8 @@
 #if SEXY
 static const unsigned int MAX_DEPTH           = 100;
 static const size_t ANTIALIASING_SAMPLE_COUNT = 8;
-static const Scalar ANTIALIASING_OFFSET       = .4;
-static const Scalar SOFTLIGHT_FACTOR          = .035;
+static const Scalar ANTIALIASING_OFFSET       = 1;
+static const Scalar SOFTLIGHT_FACTOR          = .016;
 static const Scalar SOFTLIGHT_BASE            = 3;
 static const float RENDER_SCALE               = 40;
 #else
