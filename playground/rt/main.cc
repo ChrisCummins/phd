@@ -32,29 +32,13 @@ static const size_t ANTIALIASING_SAMPLE_COUNT = 8;
 static const Scalar ANTIALIASING_OFFSET       = 1;
 static const Scalar SOFTLIGHT_FACTOR          = .016;
 static const Scalar SOFTLIGHT_BASE            = 3;
-static const float RENDER_SCALE               = 40;
 #else
 static const unsigned int MAX_DEPTH           = 5;
 static const size_t ANTIALIASING_SAMPLE_COUNT = 0;
 static const Scalar ANTIALIASING_OFFSET       = .6;
 static const Scalar SOFTLIGHT_FACTOR          = .01;
 static const Scalar SOFTLIGHT_BASE            = 3;
-static const float RENDER_SCALE               = 20;
 #endif
-
-// Dimensions of "camera" image.
-static const int FILM_WIDTH      = 36;
-static const int FILM_HEIGHT     = 24;
-static const Scalar FOCAL_LENGTH = 30;
-
-// Dimensions of rendered image (output pixels).
-static const int RENDER_WIDTH  = FILM_WIDTH * RENDER_SCALE;
-static const int RENDER_HEIGHT = FILM_HEIGHT * RENDER_SCALE;
-
-// Gamma of output image.
-static const Scalar RENDER_R_GAMMA = 1;
-static const Scalar RENDER_G_GAMMA = .98;
-static const Scalar RENDER_B_GAMMA = 1.01;
 
 ////////////////////
 // Implementation //
@@ -859,9 +843,9 @@ int main() {
         const Image *const image = getImage();
 
         // Print start message.
-        printf("Rendering %d pixels with %lu samples per pixel, "
+        printf("Rendering %lu pixels with %lu samples per pixel, "
                "%lld objects, and %lld light sources ...\n",
-               RENDER_WIDTH * RENDER_HEIGHT,
+               image->width * image->height,
                1 + ANTIALIASING_SAMPLE_COUNT,
                objectsCount, lightsCount);
 
@@ -899,13 +883,13 @@ int main() {
         long long rayCount = static_cast<long long>(rayCounter);
         long long traceRate = traceCount / elapsed;
         long long rayRate = rayCount / elapsed;
-        long long pixelRate = RENDER_WIDTH * RENDER_HEIGHT / elapsed;
+        long long pixelRate = image->width * image->height / elapsed;
         Scalar tracePerPixel = static_cast<Scalar>(traceCount)
-            / static_cast<Scalar>(RENDER_WIDTH * RENDER_HEIGHT);
+            / static_cast<Scalar>(image->width * image->height);
 
         // Print performance summary.
-        printf("Rendered %d pixels from %lld traces in %.3f seconds.\n\n",
-               RENDER_WIDTH * RENDER_HEIGHT, traceCount, elapsed);
+        printf("Rendered %lu pixels from %lld traces in %.3f seconds.\n\n",
+               image->width * image->height, traceCount, elapsed);
         printf("Render performance:\n");
         printf("\tRays per second:\t%lld\n", rayRate);
         printf("\tTraces per second:\t%lld\n", traceRate);
