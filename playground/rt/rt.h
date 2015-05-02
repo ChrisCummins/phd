@@ -180,6 +180,7 @@ public:
 
 private:
         // Constant values for random number generators.
+        static const unsigned long long rngMax;
         static const unsigned long long longMax;
         static const Scalar scalarMax;
         static const unsigned long long mult;
@@ -376,7 +377,8 @@ public:
 
         // Constructor.
         SoftLight(const Vector &position, const Scalar radius,
-                  const Colour &colour=Colour(0xff, 0xff, 0xff));
+                  const Colour &colour=Colour(0xff, 0xff, 0xff),
+                  const size_t samples=1);
 
         virtual Colour shade(const Vector &point,
                              const Vector &normal,
@@ -424,6 +426,7 @@ public:
         Pixel *const image;
         const size_t width;
         const size_t height;
+        const size_t size;
         const Colour power;
         const bool inverted;
 
@@ -446,8 +449,23 @@ public:
         const Scene *const scene;
         const Camera *const camera;
 
+        // Renderer configuration:
+
+        // The maximum depth to trace reflected rays to:
+        const size_t maxDepth;
+        // The number of *additional* samples to perform for
+        // antialiasing:
+        const size_t aaSamples;
+        const size_t totalSamples;
+        // The random distribution sampler for calculating the offsets of
+        // stochastic anti-aliasing:
+        mutable UniformDistribution aaSampler;
+
         Renderer(const Scene *const scene,
-                 const Camera *const camera);
+                 const Camera *const camera,
+                 const size_t maxDepth = 100,
+                 const size_t aaSamples = 0,
+                 const size_t aaRadius = 8);
         ~Renderer();
 
         // The heart of the raytracing engine.

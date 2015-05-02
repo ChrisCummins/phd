@@ -13,37 +13,6 @@
 // Generated renderer and image factory:
 #include "quick.rt.out"
 
-//////////////////////////
-// Configurable Options //
-//////////////////////////
-#define SEXY 1
-
-// For each pixel at location x,y, we sample N extra points at
-// locations randomly distributed about x,y. The sample count
-// determines the number of extra rays to trace, and the offset
-// determines the maximum distance about the origin.
-//
-// For softlights, we emit rays at points randomly distributed about
-// the light's position. The number of rays emitted is equal to: N =
-// (base + radius * factor) ^ 3.
-#if SEXY
-static const unsigned int MAX_DEPTH           = 100;
-static const size_t ANTIALIASING_SAMPLE_COUNT = 8;
-static const Scalar ANTIALIASING_OFFSET       = 1;
-static const Scalar SOFTLIGHT_FACTOR          = .016;
-static const Scalar SOFTLIGHT_BASE            = 3;
-#else
-static const unsigned int MAX_DEPTH           = 5;
-static const size_t ANTIALIASING_SAMPLE_COUNT = 0;
-static const Scalar ANTIALIASING_OFFSET       = .6;
-static const Scalar SOFTLIGHT_FACTOR          = .01;
-static const Scalar SOFTLIGHT_BASE            = 3;
-#endif
-
-////////////////////
-// Implementation //
-////////////////////
-
 // A profiling counter that keeps track of how many times we've called
 // Renderer::trace().
 static std::atomic<long long> traceCounter;
@@ -56,19 +25,14 @@ static std::atomic<long long> rayCounter;
 long long objectsCount;
 long long lightsCount;
 
-// The random distribution sampler for calculating the offsets of
-// stochastic anti-aliasing.
-static UniformDistribution sampler = UniformDistribution(-ANTIALIASING_OFFSET,
-                                                         ANTIALIASING_OFFSET);
-
-static const unsigned long long rngMax = 4294967295ULL;
-const unsigned long long UniformDistribution::longMax = rngMax;
-const Scalar UniformDistribution::scalarMax = rngMax;
-const unsigned long long UniformDistribution::mult = 62089911ULL;
-
 UniformDistribution::UniformDistribution(const Scalar min, const Scalar max,
                                          const unsigned long long seed)
                 : divisor(scalarMax / (max - min)), min(min), seed(seed) {}
+
+const unsigned long long UniformDistribution::rngMax = 4294967295ULL;
+const unsigned long long UniformDistribution::longMax = rngMax;
+const Scalar UniformDistribution::scalarMax = rngMax;
+const unsigned long long UniformDistribution::mult = 62089911ULL;
 
 Scalar inline UniformDistribution::operator()() {
         seed *= mult;
@@ -519,10 +483,9 @@ Colour PointLight::shade(const Vector &point,
 static UniformDistribution softSampler = UniformDistribution(-1, 1);
 
 SoftLight::SoftLight(const Vector &position, const Scalar radius,
-                     const Colour &colour)
+                     const Colour &colour, const size_t samples)
                 : position(position), radius(radius), colour(colour),
-                  samples(SOFTLIGHT_BASE +
-                          std::pow(radius * SOFTLIGHT_FACTOR, 3)) {
+                  samples(samples) {
         // Register lights with profiling counter.
         lightsCount += samples;
 };
@@ -610,7 +573,7 @@ Camera::Camera(const Vector &position,
 Image::Image(const size_t width, const size_t height,
              const Colour gamma, const bool inverted)
                 : image(new Pixel[width * height]),
-                  width(width), height(height),
+                  width(width), height(height), size(width * height),
                   power(Colour(1 / gamma.r, 1 / gamma.g, 1 / gamma.b)),
                   inverted(inverted) {}
 
@@ -654,8 +617,13 @@ void Image::write(FILE *const out) const {
 }
 
 Renderer::Renderer(const Scene *const scene,
-                   const Camera *const camera)
-                : scene(scene), camera(camera) {}
+                   const Camera *const camera,
+                   const size_t maxDepth,
+                   const size_t aaSamples,
+                   const size_t aaRadius)
+                : scene(scene), camera(camera), maxDepth(maxDepth),
+                  aaSamples(aaSamples), totalSamples(aaSamples + 1),
+                  aaSampler(UniformDistribution(-aaRadius, aaRadius)) {};
 
 Renderer::~Renderer() {
         delete scene;
@@ -668,27 +636,24 @@ Colour Renderer::supersample(const Ray &ray) const {
         // Trace the origin ray.
         sample += trace(ray);
 
-// For fast builds, we disable antialiasing. This sets
-// ANTIALIASING_SAMPLE_COUNT to 0, which causes the compiler to kick
-// up a fuss about comparing 0 < 0. Let's disable that warning for
-// such builds.
-#if !SEXY
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wtype-limits"
-#endif
         // Accumulate extra samples, randomly distributed around x,y.
-        for (size_t i = 0; i < ANTIALIASING_SAMPLE_COUNT; i++) {
-                const Vector origin = Vector(ray.position.x + sampler(),
-                                             ray.position.y + sampler(),
+        for (size_t i = 0; i < aaSamples; i++) {
+                const Scalar offsetX = aaSampler();
+                const Scalar offsetY = aaSampler();
+
+                if (offsetX < 0 || offsetX > 1)
+                        printf("OFFSETX %f\n", offsetX);
+                if (offsetY < 0 || offsetY > 1)
+                        printf("OFFSETY %f\n", offsetY);
+
+                const Vector origin = Vector(ray.position.x + offsetX,
+                                             ray.position.y + offsetY,
                                              ray.position.z);
                 sample += trace(Ray(origin, ray.direction));
         }
-#if !SEXY
-#pragma GCC diagnostic pop
-#endif
 
         // Average the accumulated samples.
-        sample /= ANTIALIASING_SAMPLE_COUNT + 1;
+        sample /= aaSamples + 1;
 
         return sample;
 }
@@ -765,7 +730,7 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
 
         // Create reflection ray and recursive evaluate.
         const Scalar reflectivity = material->reflectivity;
-        if (depth < MAX_DEPTH && reflectivity > 0) {
+        if (depth < maxDepth && reflectivity > 0) {
                 // Direction of reflected ray.
                 const Vector reflectionDirection = (normal * 2*(normal ^ toRay) - toRay).normalise();
                 // Create a reflection.
@@ -845,8 +810,7 @@ int main() {
         // Print start message.
         printf("Rendering %lu pixels with %lu samples per pixel, "
                "%lld objects, and %lld light sources ...\n",
-               image->width * image->height,
-               1 + ANTIALIASING_SAMPLE_COUNT,
+               image->size, renderer->totalSamples,
                objectsCount, lightsCount);
 
         // Record start time.
@@ -883,13 +847,13 @@ int main() {
         long long rayCount = static_cast<long long>(rayCounter);
         long long traceRate = traceCount / elapsed;
         long long rayRate = rayCount / elapsed;
-        long long pixelRate = image->width * image->height / elapsed;
+        long long pixelRate = image->size / elapsed;
         Scalar tracePerPixel = static_cast<Scalar>(traceCount)
-            / static_cast<Scalar>(image->width * image->height);
+            / static_cast<Scalar>(image->size);
 
         // Print performance summary.
         printf("Rendered %lu pixels from %lld traces in %.3f seconds.\n\n",
-               image->width * image->height, traceCount, elapsed);
+               image->size, traceCount, elapsed);
         printf("Render performance:\n");
         printf("\tRays per second:\t%lld\n", rayRate);
         printf("\tTraces per second:\t%lld\n", traceRate);

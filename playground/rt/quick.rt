@@ -1,13 +1,13 @@
-@import "scene.rt"
-
 [Renderer]
-RayDepth: 100
+RayDepth: 5000
 Scale: 20
 
 [Renderer.Antialiasing]
-Samples: 0
-Offset: .5
+Samples: 1
+Radius: .5
 
 [Renderer.Softlights]
 Base: 3
-GrowthFactor: .01
+ScaleFactor: 0.01
+
+@import "scene.rt"

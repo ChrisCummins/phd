@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from copy import copy
+from math import ceil
 from os.path import abspath
 from random import randint
 from re import compile,search,sub
@@ -34,10 +35,14 @@ def tokenise(characters):
     tokens = []
     buf = "" # Token buffer.
 
-    # Iterate over characters in file
+    # Iterate over characters:
     for c in characters:
+        # If it's a comment character, set "in_comment" flag.
         if c == '#':
             in_comment = True
+        # If it's the end of a line, reset the "in_comment" flag, but
+        # *don't* empty the buffer if we're in quotes, to support
+        # multi-line strings.
         elif c == "\n" or c == "\r":
             in_comment = False
             if in_quotes:
@@ -48,9 +53,13 @@ def tokenise(characters):
                     buf = ""
             continue
 
+        # If we're in a comment, do nothing.
         if in_comment:
             continue
 
+        # If it's a quote character determine whether we're opening or
+        # closing a quote. If we're closing, then dump the quoted
+        # characters (excluding the surrounding "" quotation marks).
         if c == '"':
             if in_quotes:
                 in_quotes = False
@@ -62,6 +71,8 @@ def tokenise(characters):
                 if buf:
                     tokens.append(buf)
                     buf = ""
+        # If we're at a word break, dump the buffer, except if we're
+        # in quotes.
         elif c == " " or c == "\t":
             if in_quotes:
                 buf += c
@@ -69,10 +80,11 @@ def tokenise(characters):
                 if buf:
                     tokens.append(buf)
                     buf = ""
+        # Fall-through state: we're in a normal word.
         else:
             buf += c
 
-    # Flush the last token.
+    # Flush the last token (if any).
     if buf:
         tokens.append(buf)
 
@@ -216,6 +228,17 @@ def consume_colour(pairs, name, default="0x000"):
     else:
         return get_colour(default)
 
+def cast_scalar(val):
+    return "static_cast<Scalar>({val})".format(val=val)
+
+def consume_scalar(pairs, name, default=0):
+    if name in pairs:
+        val = float("".join(pairs[name]))
+        pairs.pop(name, None)
+    else:
+        val = default
+    return val
+
 def consume_percent(pairs, name, default=0):
     if name in pairs:
         val = percent_to_float("".join(pairs[name]))
@@ -267,6 +290,26 @@ def consume_material(pairs, name):
 
     else:
         fatal("Missing material name.")
+
+renderer = {}
+
+def set_renderer(pairs):
+    renderer["depth"] = consume_int(pairs, "raydepth", default=100)
+    renderer["scale"] = consume_int(pairs, "scale", default=1)
+
+def set_renderer_antialiasing(pairs):
+    aa = {}
+    renderer["aa"] = aa
+    aa["samples"] = consume_int(pairs, "samples", default=0)
+    aa["radius"] = consume_scalar(pairs, "radius", default=1)
+
+
+def set_renderer_softlights(pairs):
+    lights = {}
+    renderer["lights"] = lights
+    lights["base"] = consume_int(pairs, "base", default=3)
+    lights["scalefactor"] = consume_scalar(pairs, "scalefactor", default=.01)
+
 
 materials = set()
 
@@ -350,15 +393,29 @@ def get_softlight_code(name, pairs):
     colour = consume_colour(pairs, "colour")
     size = consume_int(pairs, "size")
 
+    # Get renderer configuration. If the renderer configuration has
+    # not been set, this should throw a fatal error.
+    base = renderer["lights"]["base"]
+    scale = renderer["lights"]["scalefactor"]
+
+    # Calculate the number of samples:
+    #
+    #    N = Nb + (r*s)^3
+    #
+    # Where: Nb is the base number of samples.
+    #        r  is the radius of the softlight.
+    #        s  is the soft light scale factor.
+    samples = ceil(base + (size * scale) ** 3)
+
     if name in lights:
         fatal("Duplicate light name '{0}'"
               .format(name))
     lights.add(name)
 
     return ("const SoftLight *const {name} = "
-            "new SoftLight({position}, {size}, {colour});"
+            "new SoftLight({position}, {size}, {colour}, {samples});"
             .format(name=name, position=position, size=size,
-                    colour=colour))
+                    colour=colour, samples=samples))
 
 def get_pointlight_code(name, pairs):
     position = consume_vector(pairs, "position")
@@ -467,20 +524,17 @@ material_re = compile("^material\.")
 film_re = compile("^film\.")
 lens_re = compile("^lens\.")
 
-renderer = {}
-
-def set_renderer(pairs):
-    if renderer:
-        fatal("Duplicate renderer settings.")
-
-    renderer["depth"] = consume_int(pairs, "raydepth")
-    renderer["scale"] = consume_int(pairs, "scale")
-
 def get_section_code(section):
     name = section[0].lower()
     pairs = get_keyval_pairs(section[1:])
 
-    if search(material_re, name):
+    if name == "renderer":
+        set_renderer(pairs)
+    elif name == "renderer.antialiasing":
+        set_renderer_antialiasing(pairs)
+    elif name == "renderer.softlights":
+        set_renderer_softlights(pairs)
+    elif search(material_re, name):
         return get_material_code(sub(material_re, "", name), pairs)
     elif name == "object.plane":
         return get_plane_code(newid(), pairs)
@@ -493,13 +547,11 @@ def get_section_code(section):
     elif name == "light.point":
         return get_pointlight_code(newid(), pairs)
     elif search(film_re, name):
-        return add_film(sub(film_re, "", name), pairs)
+        add_film(sub(film_re, "", name), pairs)
     elif search(lens_re, name):
-        return add_lens(sub(lens_re, "", name), pairs)
+        add_lens(sub(lens_re, "", name), pairs)
     elif name == "camera.perspective":
         return get_camera_perspective_code(newid(), pairs)
-    elif name == "renderer":
-        return set_renderer(pairs)
     else:
         return "// Not implemented: {0}".format(name)
 
@@ -519,7 +571,14 @@ def get_scene_code():
     return c
 
 def get_renderer_code():
-    c = ("return new Renderer(scene, {0});".format(camera))
+    depth = renderer["depth"]
+    aa_samples = renderer["aa"]["samples"]
+    aa_radius = renderer["aa"]["radius"]
+
+    c = ("return new Renderer({scene}, {camera}, {depth}, "
+         "{aa_samples}, {aa_radius});"
+         .format(scene="scene", camera=camera, depth=depth,
+                 aa_samples=aa_samples, aa_radius=aa_radius))
     return c
 
 def get_image_code():
