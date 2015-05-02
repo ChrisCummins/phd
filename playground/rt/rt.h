@@ -7,6 +7,8 @@
 
 #include "./math.h"
 #include "./random.h"
+#include "./graphics.h"
+#include "./ray.h"
 
 // A simple ray tacer. Features:
 //
@@ -14,61 +16,6 @@
 //   * Lighting: Point & soft lighting, reflections.
 //   * Shading: Lambert (diffuse) and Phong (specular).
 //   * Anti-aliasing: Stochastic supersampling.
-
-// GRAPHICS TYPES.
-
-// The output type of a single R,G,B colour component.
-typedef uint8_t PixelColourType;
-
-// The maximum value of a single R,G,B colour component.
-static const uint8_t PixelColourMax = 255;
-
-// Format string to be passed to fprintf().
-#define PixelFormatString "%u"
-
-// Clamp a Scalar value to within the range [0,1].
-Scalar inline clamp(const Scalar x);
-
-// Transform a scalar from the range [0,1] to [0,PixelColourMax]. Note
-// that this transformation may be non-linear.
-PixelColourType inline scale(const Scalar x);
-
-// A pixel is a trio of R,G,B components.
-struct Pixel { PixelColourType r, g, b; };
-
-// A colour is represented by R,G,B scalars, and are mutable through
-// the += and /= operators. They behave identically to Vectors.
-class Colour {
- public:
-        Scalar r, g, b;
-
-        // Constructor for specifying colours as 32 bit hex
-        // string. E.g. 0xff00aa.
-        explicit Colour(const int hex);
-
-        // Contructor: C = (r,g,b)
-        explicit Colour(const float r = 0,
-                        const float g = 0,
-                        const float b = 0);
-
-        // Colour addition.
-        void operator+=(const Colour &c);
-
-        // Scalar division.
-        void operator/=(const Scalar x);
-
-        // Scalar colour multiplication.
-        Colour operator*(const Scalar x) const;
-
-        // Scalar colour divison.
-        Colour operator/(const Scalar x) const;
-
-        // Combination of two colours: A' = (Ar * Br, Ag * Bg, Ab * Bb)
-        Colour operator*(const Colour &rhs) const;
-
-        // Explicit cast operation from Colour -> Pixel.
-        explicit operator Pixel() const;
-};
 
 // Properties that describe a material.
 class Material {
@@ -87,15 +34,6 @@ class Material {
                  const Scalar specular,
                  const Scalar shininess,
                  const Scalar reflectivity);
-};
-
-// A ray abstraction.
-class Ray {
- public:
-        const Vector position, direction;
-
-        // Construct a ray at starting position and in direction.
-        Ray(const Vector &position, const Vector &direction);
 };
 
 // A physical object that light interacts with.

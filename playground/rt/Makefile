@@ -2,6 +2,7 @@ RayTracerSources =		\
 	$(NULL)
 RayTracerHeaders =		\
 	math.h			\
+	graphics.h		\
 	random.h		\
 	rt.h			\
 	$(NULL)

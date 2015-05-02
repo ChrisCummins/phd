@@ -39,6 +39,16 @@ namespace deg {
         }
 }  // namespace deg
 
+// Clamp a Scalar value to within the range [0,1].
+Scalar inline clamp(const Scalar x) {
+        if (x > 1)
+                return 1;
+        if (x < 0)
+                return 0;
+        else
+                return x;
+}
+
 // A vector consists of three coordinates and a translation
 // scalar. Vectors are immutable.
 class Vector {

@@ -23,42 +23,6 @@ static std::atomic<uint64_t> rayCounter;
 uint64_t objectsCount;
 uint64_t lightsCount;
 
-Colour::Colour(const int hex)
-                : r((hex >> 16) / 255.),
-                  g(((hex >> 8) & 0xff) / 255.),
-                  b((hex & 0xff) / 255.) {}
-
-Colour::Colour(const float r, const float g, const float b)
-                : r(r), g(g), b(b) {}
-
-void Colour::operator+=(const Colour &c) {
-        r += c.r;
-        g += c.g;
-        b += c.b;
-}
-
-void Colour::operator/=(const Scalar x) {
-        r /= x;
-        g /= x;
-        b /= x;
-}
-
-Colour Colour::operator*(const Scalar x) const {
-        return Colour(r * x, g * x, b * x);
-}
-
-Colour Colour::operator/(const Scalar x) const {
-        return Colour(r / x, g / x, b / x);
-}
-
-Colour Colour::operator*(const Colour &rhs) const {
-        return Colour(r * rhs.r, g * rhs.g, b * rhs.b);
-}
-
-Colour::operator Pixel() const {
-        return {scale(clamp(r)), scale(clamp(g)), scale(clamp(b))};
-}
-
 Material::Material(const Colour &colour,
                    const Scalar ambient,
                    const Scalar diffuse,
@@ -291,9 +255,6 @@ Scene::~Scene() {
                 delete lights[i];
 }
 
-Ray::Ray(const Vector &position, const Vector &direction)
-                : position(position), direction(direction) {}
-
 Camera::Camera(const Vector &position,
                const Vector &lookAt,
                const Vector &up,
@@ -518,23 +479,6 @@ bool intersects(const Ray &ray, const std::vector<const Object *> &objects,
 
         // No intersect.
         return false;
-}
-
-Scalar inline clamp(const Scalar x) {
-        if (x > 1)
-                return 1;
-        if (x < 0)
-                return 0;
-        else
-                return x;
-}
-
-PixelColourType inline scale(const Scalar x) {
-        // Scale value.
-        const Scalar scaled = x * static_cast<Scalar>(PixelColourMax);
-
-        // Cast to output type.
-        return static_cast<PixelColourType>(scaled);
 }
 
 // Return the length of array.
