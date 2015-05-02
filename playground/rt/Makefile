@@ -1,14 +1,19 @@
 RayTracerSources =		\
+	image.cc		\
 	lights.cc		\
 	objects.cc		\
 	random.cc		\
+	rt.cc			\
 	$(NULL)
 RayTracerHeaders =		\
+	camera.h		\
 	graphics.h		\
+	image.h			\
 	lights.h		\
 	math.h			\
 	random.h		\
 	rt.h			\
+	scene.h			\
 	$(NULL)
 
 Sources = main.cc $(RayTracerSources)
