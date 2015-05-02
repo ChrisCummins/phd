@@ -5,7 +5,7 @@
 
 [Material.mirror]
 Colour: @white
-Ambient: 0
+Ambient: 1
 Diffuse: 0
 Specular: 100
 Shininess: 200
@@ -15,8 +15,8 @@ Reflectivity: 99
 
 [Material.plaster]
 Colour: 0x948697
-Diffuse: 50
-Specular: 80
+Diffuse: 100
+Specular: 70
 Shininess: 10
 
 [Material.left_wall]
@@ -41,10 +41,10 @@ Reflectivity: 25
 
 [Material.white]
 Colour: 0xffffff
-Diffuse: 30
-Specular: 100
+Diffuse: 60
+Specular: 50
 Shininess: 6
-Reflectivity: 50
+Reflectivity: 45
 
 # Objects.
 
@@ -96,8 +96,8 @@ Material: $Material.mirror
 
 [Light.Soft]
 Colour: @white
-Position: 0 1500 200
-Size: 225
+Position: -300 1500 200
+Size: 200
 
 # Camera.
 
