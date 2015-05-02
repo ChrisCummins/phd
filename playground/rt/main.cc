@@ -23,24 +23,6 @@ static std::atomic<long long> rayCounter;
 long long objectsCount;
 long long lightsCount;
 
-UniformDistribution::UniformDistribution(const Scalar min, const Scalar max,
-                                         const unsigned long long seed)
-                : divisor(scalarMax / (max - min)), min(min), seed(seed) {}
-
-const unsigned long long UniformDistribution::rngMax = 4294967295ULL;
-const unsigned long long UniformDistribution::longMax = rngMax;
-const Scalar UniformDistribution::scalarMax = rngMax;
-const unsigned long long UniformDistribution::mult = 62089911ULL;
-
-Scalar inline UniformDistribution::operator()() {
-        seed *= mult;
-
-        // Generate a new random value in the range [0,max - min].
-        const double r = seed % longMax / divisor;
-        // Apply "-min" offset to value.
-        return r + min;
-}
-
 Colour::Colour(const int hex)
                 : r((hex >> 16) / 255.),
                   g(((hex >> 8) & 0xff) / 255.),
@@ -239,15 +221,13 @@ Colour PointLight::shade(const Vector &point,
         return shade;
 }
 
-static UniformDistribution softSampler = UniformDistribution(-1, 1);
-
 SoftLight::SoftLight(const Vector &position, const Scalar radius,
                      const Colour &colour, const size_t samples)
-                : position(position), radius(radius), colour(colour),
-                  samples(samples) {
+                : position(position), colour(colour), samples(samples),
+                  sampler(UniformDistribution(-radius, radius)) {
         // Register lights with profiling counter.
         lightsCount += samples;
-};
+}
 
 Colour SoftLight::shade(const Vector &point,
                         const Vector &normal,
@@ -263,9 +243,10 @@ Colour SoftLight::shade(const Vector &point,
         // Cast multiple light rays, nomrally distributed about the
         // light's centre.
         for (size_t i = 0; i < samples; i++) {
-                const Vector origin = Vector(position.x + softSampler() * radius,
-                                             position.y + softSampler() * radius,
-                                             position.z + softSampler() * radius);
+                // Create a new point origin randomly offset from centre.
+                const Vector origin = Vector(position.x + sampler(),
+                                             position.y + sampler(),
+                                             position.z + sampler());
                 // Vector from point to light.
                 const Vector toLight = origin - point;
                 // Distance from point to light.

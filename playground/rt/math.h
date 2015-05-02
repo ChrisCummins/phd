@@ -11,8 +11,6 @@
  * no implementation file.
  */
 
-// BASIC TYPES.
-
 // Changing between different floating point sizes for scalar values
 // will affect the system's performance.
 typedef double Scalar;
