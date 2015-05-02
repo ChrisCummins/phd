@@ -2,6 +2,8 @@
 #ifndef GRAPHICS_H_
 #define GRAPHICS_H_
 
+#include <cstdint>
+
 #include "./math.h"
 
 /*

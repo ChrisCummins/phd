@@ -1,8 +1,12 @@
 RayTracerSources =		\
+	lights.cc		\
+	objects.cc		\
+	random.cc		\
 	$(NULL)
 RayTracerHeaders =		\
-	math.h			\
 	graphics.h		\
+	lights.h		\
+	math.h			\
 	random.h		\
 	rt.h			\
 	$(NULL)
