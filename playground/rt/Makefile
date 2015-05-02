@@ -1,5 +1,12 @@
-Sources = main.cc
-Headers = rt.h
+RayTracerSources =		\
+	$(NULL)
+RayTracerHeaders =		\
+	math.h			\
+	rt.h			\
+	$(NULL)
+
+Sources = main.cc $(RayTracerSources)
+Headers = $(RayTracerHeaders)
 
 CxxFlags = -O2 -Wall -Wextra -std=c++11 -Wno-unused-parameter
 LdFlags = -ltbb
