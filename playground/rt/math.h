@@ -1,6 +1,6 @@
 // -*- c-basic-offset: 8; -*-
-#ifndef _RT_MATH_H_
-#define _RT_MATH_H_
+#ifndef MATH_H_
+#define MATH_H_
 
 #include <cmath>
 
@@ -24,7 +24,7 @@ namespace radians {
         Scalar inline toDegrees(const Scalar radians) {
                 return radians * M_PI / 180.0;
         }
-}
+}  // namespace radians
 
 namespace deg {
         // Trigonometric functions accepting theta angles in degrees
@@ -37,12 +37,12 @@ namespace deg {
         Scalar inline cos(const Scalar theta) {
                 return cos(radians::toDegrees(theta));
         }
-}  // deg
+}  // namespace deg
 
 // A vector consists of three coordinates and a translation
 // scalar. Vectors are immutable.
 class Vector {
-public:
+ public:
         const Scalar x;
         const Scalar y;
         const Scalar z;
@@ -50,7 +50,7 @@ public:
 
         // Contructor: V = (x,y,z,w)
         inline Vector(const Scalar x, const Scalar y, const Scalar z,
-                      const Scalar w=0) : x(x), y(y), z(z), w(w) {};
+                      const Scalar w = 0) : x(x), y(y), z(z), w(w) {}
 
         // Addition: A' = A + B
         Vector inline operator+(const Vector &b) const {
@@ -125,7 +125,7 @@ public:
 // they store both row-wise and column-wise vectors internally for
 // quick row or column-wise indexing.
 class Matrix {
-public:
+ public:
         // Row-wise vectors.
         const Vector r[4];
         // Column-wise vectors.
@@ -169,13 +169,13 @@ public:
 
 // A translation matrix.
 class Translation : public Matrix {
-public:
+ public:
         inline Translation(const Scalar x, const Scalar y, const Scalar z)
                         : Matrix(Vector(1, 0, 0, x),
                                  Vector(0, 1, 0, y),
                                  Vector(0, 0, 1, z),
                                  Vector(0, 0, 0, 1)) {}
-        Translation(const Vector &t)
+        explicit inline Translation(const Vector &t)
                         : Matrix(Vector(1, 0, 0, t.x),
                                  Vector(0, 1, 0, t.y),
                                  Vector(0, 0, 1, t.z),
@@ -184,14 +184,14 @@ public:
 
 // A scale matrix.
 class Scale : public Matrix {
-public:
-        Scale(const Scalar x, const Scalar y, const Scalar z)
+ public:
+        inline Scale(const Scalar x, const Scalar y, const Scalar z)
                         : Matrix(Vector(x, 0, 0, 0),
                                  Vector(0, y, 0, 0),
                                  Vector(0, 0, z, 0),
                                  Vector(0, 0, 0, 1)) {}
 
-        Scale(const Vector &w)
+        explicit inline Scale(const Vector &w)
                         : Matrix(Vector(w.x, 0, 0, 0),
                                  Vector(0, w.y, 0, 0),
                                  Vector(0, 0, w.z, 0),
@@ -200,37 +200,37 @@ public:
 
 // A rotation matrix about the X axis.
 class RotationX : public Matrix {
-public:
-        RotationX(const Scalar theta)
-                        : Matrix(Vector(1, 0, 0, 0),
-                                 Vector(0, deg::cos(theta), -deg::sin(theta), 0),
-                                 Vector(0, deg::sin(theta), deg::cos(theta), 0),
-                                 Vector(0, 0, 0, 1)) {}
+ public:
+        explicit inline RotationX(const Scalar theta)
+                       : Matrix(Vector(1, 0, 0, 0),
+                                Vector(0, deg::cos(theta), -deg::sin(theta), 0),
+                                Vector(0, deg::sin(theta), deg::cos(theta), 0),
+                                Vector(0, 0, 0, 1)) {}
 };
 
 // A rotation matrix about the Y axis.
 class RotationY : public Matrix {
-public:
-        RotationY(const Scalar theta)
-                        : Matrix(Vector(deg::cos(theta), 0, deg::sin(theta), 0),
-                                 Vector(0, 1, 0, 0),
-                                 Vector(-deg::sin(theta), 0, deg::cos(theta), 0),
-                                 Vector(0, 0, 0, 1)) {}
+ public:
+        explicit inline RotationY(const Scalar theta)
+                       : Matrix(Vector(deg::cos(theta), 0, deg::sin(theta), 0),
+                                Vector(0, 1, 0, 0),
+                                Vector(-deg::sin(theta), 0, deg::cos(theta), 0),
+                                Vector(0, 0, 0, 1)) {}
 };
 
 // A rotation matrix about the Z axis.
 class RotationZ : public Matrix {
-public:
-        RotationZ(const Scalar theta)
-                        : Matrix(Vector(deg::cos(theta), -deg::sin(theta), 0, 0),
-                                 Vector(deg::sin(theta), deg::cos(theta), 0, 0),
-                                 Vector(0, 0, 1, 0),
-                                 Vector(0, 0, 0, 1)) {}
+ public:
+        explicit inline RotationZ(const Scalar theta)
+                       : Matrix(Vector(deg::cos(theta), -deg::sin(theta), 0, 0),
+                                Vector(deg::sin(theta), deg::cos(theta), 0, 0),
+                                Vector(0, 0, 1, 0),
+                                Vector(0, 0, 0, 1)) {}
 };
 
 // Yaw, pitch, roll rotation.
 Matrix inline rotation(const Scalar x, const Scalar y, const Scalar z) {
-    return RotationZ(z) * RotationY(y) * RotationX(x);
+        return RotationZ(z) * RotationY(y) * RotationX(x);
 }
 
-#endif  // _RT_MATH_H_
+#endif  // MATH_H_

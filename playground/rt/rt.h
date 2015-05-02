@@ -1,17 +1,17 @@
 // -*- c-basic-offset: 8; -*-
-#ifndef _RT_H_
-#define _RT_H_
+#ifndef RT_H_
+#define RT_H_
 
 #include <stdint.h>
 #include <vector>
 
-#include "math.h"
-#include "random.h"
+#include "./math.h"
+#include "./random.h"
 
 // A simple ray tacer. Features:
 //
-//   * Objects: Spheres & Planes.
-//   * Lighting: point light and soft lights.
+//   * Objects: Spheres, Planes, Checkerboards.
+//   * Lighting: Point & soft lighting, reflections.
 //   * Shading: Lambert (diffuse) and Phong (specular).
 //   * Anti-aliasing: Stochastic supersampling.
 
@@ -39,15 +39,17 @@ struct Pixel { PixelColourType r, g, b; };
 // A colour is represented by R,G,B scalars, and are mutable through
 // the += and /= operators. They behave identically to Vectors.
 class Colour {
-public:
+ public:
         Scalar r, g, b;
 
         // Constructor for specifying colours as 32 bit hex
         // string. E.g. 0xff00aa.
-        Colour(const int hex);
+        explicit Colour(const int hex);
 
         // Contructor: C = (r,g,b)
-        Colour(const float r=0, const float g=0, const float b=0);
+        explicit Colour(const float r = 0,
+                        const float g = 0,
+                        const float b = 0);
 
         // Colour addition.
         void operator+=(const Colour &c);
@@ -70,13 +72,13 @@ public:
 
 // Properties that describe a material.
 class Material {
-public:
+ public:
         const Colour colour;
-        const Scalar ambient;      // 0 <= ambient <= 1
-        const Scalar diffuse;      // 0 <= diffuse <= 1
-        const Scalar specular;     // 0 <= specular <= 1
-        const Scalar shininess;    // shininess >= 0
-        const Scalar reflectivity; // 0 <= reflectivity < 1
+        const Scalar ambient;       // 0 <= ambient <= 1
+        const Scalar diffuse;       // 0 <= diffuse <= 1
+        const Scalar specular;      // 0 <= specular <= 1
+        const Scalar shininess;     // shininess >= 0
+        const Scalar reflectivity;  // 0 <= reflectivity < 1
 
         // Constructor.
         Material(const Colour &colour,
@@ -89,7 +91,7 @@ public:
 
 // A ray abstraction.
 class Ray {
-public:
+ public:
         const Vector position, direction;
 
         // Construct a ray at starting position and in direction.
@@ -98,14 +100,14 @@ public:
 
 // A physical object that light interacts with.
 class Object {
-public:
+ public:
         const Vector position;
 
         // Constructor.
-        Object(const Vector &position);
+        explicit Object(const Vector &position);
 
         // Virtual destructor.
-        virtual ~Object() {};
+        virtual ~Object() {}
 
         // Return surface normal at point p.
         virtual Vector normal(const Vector &p) const = 0;
@@ -118,7 +120,7 @@ public:
 
 // A plane.
 class Plane : public Object {
-public:
+ public:
         const Vector direction;
         const Material *const material;
 
@@ -133,7 +135,7 @@ public:
 };
 
 class CheckerBoard : public Plane {
-public:
+ public:
         const Material *const material1;
         const Material *const material2;
         const Scalar checkerWidth;
@@ -150,7 +152,7 @@ public:
 
 // A sphere consits of a position and a radius.
 class Sphere : public Object {
-public:
+ public:
         const Scalar radius;
         const Material *const material;
 
@@ -166,9 +168,9 @@ public:
 
 // Base class light source.
 class Light {
-public:
+ public:
     // Virtual destructor.
-    virtual ~Light() {};
+    virtual ~Light() {}
 
     // Calculate the shading colour at `point' for a given surface
     // material, surface normal, and direction to the ray.
@@ -181,13 +183,13 @@ public:
 
 // A point light source.
 class PointLight : public Light {
-public:
+ public:
     const Vector position;
     const Colour colour;
 
     // Constructor.
     PointLight(const Vector &position,
-               const Colour &colour=Colour(0xff, 0xff, 0xff));
+               const Colour &colour = Colour(0xff, 0xff, 0xff));
 
     virtual Colour shade(const Vector &point,
                          const Vector &normal,
@@ -198,7 +200,7 @@ public:
 
 // A round light source.
 class SoftLight : public Light {
-public:
+ public:
         const Vector position;
         const Colour colour;
         const size_t samples;
@@ -206,8 +208,8 @@ public:
 
         // Constructor.
         SoftLight(const Vector &position, const Scalar radius,
-                  const Colour &colour=Colour(0xff, 0xff, 0xff),
-                  const size_t samples=1);
+                  const Colour &colour = Colour(0xff, 0xff, 0xff),
+                  const size_t samples = 1);
 
         virtual Colour shade(const Vector &point,
                              const Vector &normal,
@@ -219,7 +221,7 @@ public:
 // A full scene, consisting of objects (spheres) and lighting (point
 // lights).
 class Scene {
-public:
+ public:
         const std::vector<const Object *> objects;
         const std::vector<const Light *> lights;
 
@@ -232,7 +234,7 @@ public:
 // A camera has a "film" size (width and height), and a position and a
 // point of focus.
 class Camera {
-public:
+ public:
         const Vector position;
         const Vector direction;
         const Vector filmBack;
@@ -251,7 +253,7 @@ public:
 
 // A rendered image.
 class Image {
-public:
+ public:
         Pixel *const image;
         const size_t width;
         const size_t height;
@@ -260,8 +262,8 @@ public:
         const bool inverted;
 
         Image(const size_t width, const size_t height,
-              const Colour gamma=Colour(1, 1, 1),
-              const bool inverted=true);
+              const Colour gamma = Colour(1, 1, 1),
+              const bool inverted = true);
         ~Image();
 
         // [x,y] = value
@@ -274,7 +276,7 @@ public:
 };
 
 class Renderer {
-public:
+ public:
         const Scene *const scene;
         const Camera *const camera;
 
@@ -300,12 +302,12 @@ public:
         // The heart of the raytracing engine.
         void render(const Image *const image) const;
 
-private:
+ private:
         // Trace a ray trough a given scene and return the final
         // colour.
         Colour trace(const Ray &ray,
-                     Colour colour=Colour(0, 0, 0),
-                     const unsigned int depth=0) const;
+                     Colour colour = Colour(0, 0, 0),
+                     const unsigned int depth = 0) const;
 
         // Calculate the colour of ray through supersampling.
         Colour supersample(const Ray &ray) const;
@@ -316,7 +318,7 @@ private:
 // -1.
 int closestIntersect(const Ray &ray,
                      const std::vector<const Object *> &objects,
-                     Scalar &t);
+                     Scalar *const t);
 
 // Return whether a given ray intersects any of the objects within a
 // given distance.
@@ -328,4 +330,4 @@ Scalar inline dsin(const Scalar theta);
 Scalar inline dcos(const Scalar theta);
 Scalar inline datan(const Scalar theta);
 
-#endif  // _RT_H_
+#endif  // RT_H_

@@ -6,22 +6,22 @@
 
 #include "tbb/parallel_for.h"
 
-#include "rt.h"
+#include "./rt.h"
 
 // Generated renderer and image factory:
 #include "quick.rt.out"
 
 // A profiling counter that keeps track of how many times we've called
 // Renderer::trace().
-static std::atomic<long long> traceCounter;
+static std::atomic<uint64_t> traceCounter;
 
 // A profiling counter that keeps track of how many times we've
 // contributed light to a ray.
-static std::atomic<long long> rayCounter;
+static std::atomic<uint64_t> rayCounter;
 
 // Scene object and light counters.
-long long objectsCount;
-long long lightsCount;
+uint64_t objectsCount;
+uint64_t lightsCount;
 
 Colour::Colour(const int hex)
                 : r((hex >> 16) / 255.),
@@ -176,7 +176,7 @@ PointLight::PointLight(const Vector &position, const Colour &colour)
                 : position(position), colour(colour) {
         // Register light with profiling counter.
         lightsCount += 1;
-};
+}
 
 Colour PointLight::shade(const Vector &point,
                          const Vector &normal,
@@ -338,9 +338,9 @@ void inline Image::set(const size_t x, const size_t y,
 
 void Image::write(FILE *const out) const {
         // Print PPM header.
-        fprintf(out, "P3\n"); // Magic number
-        fprintf(out, "%lu %lu\n", width, height); // Image dimensions
-        fprintf(out, "%d\n", PixelColourMax); // Max colour value
+        fprintf(out, "P3\n");                      // Magic number
+        fprintf(out, "%lu %lu\n", width, height);  // Image dimensions
+        fprintf(out, "%d\n", PixelColourMax);      // Max colour value
 
         // Iterate over each point in the image, writing pixel data.
         for (size_t i = 0; i < height * width; i++) {
@@ -351,7 +351,7 @@ void Image::write(FILE *const out) const {
                         PixelFormatString" ",
                         pixel.r, pixel.g, pixel.b);
 
-                if (!i % width) // Add newline at the end of each row.
+                if (!i % width)  // Add newline at the end of each row.
                         fprintf(out, "\n");
         }
 }
@@ -363,7 +363,7 @@ Renderer::Renderer(const Scene *const scene,
                    const size_t aaRadius)
                 : scene(scene), camera(camera), maxDepth(maxDepth),
                   aaSamples(aaSamples), totalSamples(aaSamples + 1),
-                  aaSampler(UniformDistribution(-aaRadius, aaRadius)) {};
+                  aaSampler(UniformDistribution(-aaRadius, aaRadius)) {}
 
 Renderer::~Renderer() {
         delete scene;
@@ -410,7 +410,7 @@ void Renderer::render(const Image *const image) const {
 
         // For each pixel in the image:
         tbb::parallel_for(
-            static_cast<size_t>(0), image->height * image->width, [&](size_t i) {
+            static_cast<size_t>(0), image->size, [&](size_t i) {
                     // Image space coordinates.
                     const Scalar x = i % image->width;
                     const Scalar y = i / image->width;
@@ -443,7 +443,7 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
 
         // Determine the closet ray-object intersection.
         Scalar t;
-        int index = closestIntersect(ray, scene->objects, t);
+        int index = closestIntersect(ray, scene->objects, &t);
 
         // If the ray doesn't intersect any object, return.
         if (index == -1)
@@ -472,7 +472,8 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
         const Scalar reflectivity = material->reflectivity;
         if (depth < maxDepth && reflectivity > 0) {
                 // Direction of reflected ray.
-                const Vector reflectionDirection = (normal * 2*(normal ^ toRay) - toRay).normalise();
+                const Vector reflectionDirection = (normal * 2*(normal ^ toRay)
+                                                    - toRay).normalise();
                 // Create a reflection.
                 const Ray reflection(intersect, reflectionDirection);
                 // Add reflection light.
@@ -484,10 +485,10 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
 
 int closestIntersect(const Ray &ray,
                      const std::vector<const Object *> &objects,
-                     Scalar &t) {
+                     Scalar *const t) {
         // Index of, and distance to closest intersect:
         int index = -1;
-        t = INFINITY;
+        *t = INFINITY;
 
         // For each object:
         for (size_t i = 0; i < objects.size(); i++) {
@@ -496,9 +497,9 @@ int closestIntersect(const Ray &ray,
 
                 // Check if intersects, and if so, whether the
                 // intersection is closer than the current best.
-                if (currentT != 0 && currentT < t) {
+                if (currentT != 0 && currentT < *t) {
                         // New closest intersection.
-                        t = currentT;
+                        *t = currentT;
                         index = static_cast<int>(i);
                 }
         }
@@ -549,7 +550,7 @@ int main() {
 
         // Print start message.
         printf("Rendering %lu pixels with %lu samples per pixel, "
-               "%lld objects, and %lld light sources ...\n",
+               "%lu objects, and %lu light sources ...\n",
                image->size, renderer->totalSamples,
                objectsCount, lightsCount);
 
@@ -583,21 +584,21 @@ int main() {
         // Calculate performance information.
         Scalar elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
             endTime - startTime).count() / 1e6;
-        long long traceCount = static_cast<long long>(traceCounter);
-        long long rayCount = static_cast<long long>(rayCounter);
-        long long traceRate = traceCount / elapsed;
-        long long rayRate = rayCount / elapsed;
-        long long pixelRate = image->size / elapsed;
+        uint64_t traceCount = static_cast<uint64_t>(traceCounter);
+        uint64_t rayCount = static_cast<uint64_t>(rayCounter);
+        uint64_t traceRate = traceCount / elapsed;
+        uint64_t rayRate = rayCount / elapsed;
+        uint64_t pixelRate = image->size / elapsed;
         Scalar tracePerPixel = static_cast<Scalar>(traceCount)
             / static_cast<Scalar>(image->size);
 
         // Print performance summary.
-        printf("Rendered %lu pixels from %lld traces in %.3f seconds.\n\n",
+        printf("Rendered %lu pixels from %lu traces in %.3f seconds.\n\n",
                image->size, traceCount, elapsed);
         printf("Render performance:\n");
-        printf("\tRays per second:\t%lld\n", rayRate);
-        printf("\tTraces per second:\t%lld\n", traceRate);
-        printf("\tPixels per second:\t%lld\n", pixelRate);
+        printf("\tRays per second:\t%lu\n", rayRate);
+        printf("\tTraces per second:\t%lu\n", traceRate);
+        printf("\tPixels per second:\t%lu\n", pixelRate);
         printf("\tTraces per pixel:\t%.2f\n", tracePerPixel);
 
         return 0;
