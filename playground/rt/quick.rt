@@ -3,7 +3,7 @@ RayDepth: 5000
 Scale: 20
 
 [Renderer.Antialiasing]
-Samples: 1
+Samples: 0
 Radius: .5
 
 [Renderer.Softlights]
