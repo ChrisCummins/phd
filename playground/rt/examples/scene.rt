@@ -6,19 +6,19 @@
 # The maximum depth to trace rays to:
 RayDepth: 5000
 # The output image scale factor:
-Scale: 20
+Scale: 45
 
 [Renderer.Antialiasing]
 # The number of sub-pixel samples to make:
-Samples: 0
+Samples: 8
 # The maximum sub-pixel sampling offset:
-Radius: .5
+Radius: .999
 
 [Renderer.Softlights]
 # The number of rays to cast for soft lights is defined by:
 #   N = base + (scalefactor * lightradius) ^ 3
 Base: 3
-ScaleFactor: 0.01
+ScaleFactor: 0.03
 
 
 ##########
