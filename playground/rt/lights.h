@@ -45,9 +45,9 @@ class PointLight : public Light {
     const Colour colour;
 
     // Constructor.
-    inline PointLight(const Vector &position,
-                      const Colour &colour = Colour(0xff, 0xff, 0xff))
-            : position(position), colour(colour) {
+    inline PointLight(const Vector &_position,
+                      const Colour &_colour = Colour(0xff, 0xff, 0xff))
+            : position(_position), colour(_colour) {
         // Register light with profiling counter.
         lightsCount += 1;
     }

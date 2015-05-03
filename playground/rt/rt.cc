@@ -33,14 +33,14 @@ int closestIntersect(const Ray &ray,
 
 }  // namespace
 
-Renderer::Renderer(const Scene *const scene,
-                   const Camera *const camera,
-                   const size_t maxDepth,
-                   const size_t aaSamples,
-                   const size_t aaRadius)
-                : scene(scene), camera(camera), maxDepth(maxDepth),
-                  aaSamples(aaSamples), totalSamples(aaSamples + 1),
-                  aaSampler(UniformDistribution(-aaRadius, aaRadius)) {}
+Renderer::Renderer(const Scene *const _scene,
+                   const Camera *const _camera,
+                   const size_t _maxDepth,
+                   const size_t _aaSamples,
+                   const size_t _aaRadius)
+                : scene(_scene), camera(_camera), maxDepth(_maxDepth),
+                  aaSamples(_aaSamples), totalSamples(_aaSamples + 1),
+                  aaSampler(UniformDistribution(-_aaRadius, _aaRadius)) {}
 
 Renderer::~Renderer() {
         delete scene;

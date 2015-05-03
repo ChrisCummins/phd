@@ -59,8 +59,8 @@ class Vector {
         const Scalar w;
 
         // Contructor: V = (x,y,z,w)
-        inline Vector(const Scalar x, const Scalar y, const Scalar z,
-                      const Scalar w = 0) : x(x), y(y), z(z), w(w) {}
+        inline Vector(const Scalar _x, const Scalar _y, const Scalar _z,
+                      const Scalar _w = 0) : x(_x), y(_y), z(_z), w(_w) {}
 
         // Addition: A' = A + B
         Vector inline operator+(const Vector &b) const {

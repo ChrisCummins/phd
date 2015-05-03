@@ -1,12 +1,14 @@
 // -*- c-basic-offset: 8; -*-
 #include "./image.h"
 
-Image::Image(const size_t width, const size_t height,
-             const Colour gamma, const bool inverted)
-                : data(new Pixel[width * height]),
-                  width(width), height(height), size(width * height),
-                  gamma(Colour(1 / gamma.r, 1 / gamma.g, 1 / gamma.b)),
-                  inverted(inverted) {}
+Image::Image(const size_t _width, const size_t _height,
+             const Colour _gamma, const bool _inverted)
+                : data(new Pixel[_width * _height]),
+                  width(_width),
+                  height(_height),
+                  size(_width * _height),
+                  gamma(Colour(1 / _gamma.r, 1 / _gamma.g, 1 / _gamma.b)),
+                  inverted(_inverted) {}
 
 Image::~Image() {
         // Free pixel data.

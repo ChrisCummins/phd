@@ -16,21 +16,21 @@ public:
         const Scalar width;
         const Scalar height;
 
-        inline Camera(const Vector &position,
-                      const Vector &lookAt,
-                      const Vector &up,
-                      const Scalar width,
-                      const Scalar height,
-                      const Scalar focalLength)
-                : position(position),
-                  direction((lookAt - position).normalise()),
-                  filmBack(position - (lookAt - position).normalise()
-                           * focalLength),
-                  right((lookAt - position).normalise() | up),
-                  up(((lookAt - position).normalise() | up) |
-                     (lookAt - position).normalise()),
-                  width(width),
-                  height(height) {}
+        inline Camera(const Vector &_position,
+                      const Vector &_lookAt,
+                      const Vector &_up,
+                      const Scalar _width,
+                      const Scalar _height,
+                      const Scalar _focalLength)
+                : position(_position),
+                  direction((_lookAt - _position).normalise()),
+                  filmBack(_position - (_lookAt - _position).normalise()
+                           * _focalLength),
+                  right((_lookAt - _position).normalise() | _up),
+                  up(((_lookAt - _position).normalise() | _up) |
+                     (_lookAt - _position).normalise()),
+                  width(_width),
+                  height(_height) {}
 };
 
 #endif  // CAMERA_H_

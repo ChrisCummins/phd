@@ -43,10 +43,10 @@ class Colour {
                         b((hex & 0xff) / 255.) {}
 
         // Contructor: C = (r,g,b)
-        explicit inline Colour(const float r = 0,
-                               const float g = 0,
-                               const float b = 0)
-                        : r(r), g(g), b(b) {}
+        explicit inline Colour(const float _r = 0,
+                               const float _g = 0,
+                               const float _b = 0)
+                        : r(_r), g(_g), b(_b) {}
 
         // Colour addition.
         void operator+=(const Colour &c) {

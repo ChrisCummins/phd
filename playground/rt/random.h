@@ -11,9 +11,9 @@
 // within a specific range.
 class UniformDistribution {
  public:
-    UniformDistribution(const Scalar min, const Scalar max,
-                        const uint64_t seed = 7564231ULL)
-            : divisor(scalarMax / (max - min)), min(min), seed(seed) {}
+    UniformDistribution(const Scalar _min, const Scalar _max,
+                        const uint64_t _seed = 7564231ULL)
+            : divisor(scalarMax / (_max - _min)), min(_min), seed(_seed) {}
 
     // Return a new random number.
     Scalar inline operator()() {

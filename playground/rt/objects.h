@@ -20,18 +20,18 @@ class Material {
         const Scalar reflectivity;  // 0 <= reflectivity < 1
 
         // Constructor.
-        inline Material(const Colour &colour,
-                 const Scalar ambient,
-                 const Scalar diffuse,
-                 const Scalar specular,
-                 const Scalar shininess,
-                 const Scalar reflectivity)
-                : colour(colour),
-                  ambient(ambient),
-                  diffuse(diffuse),
-                  specular(specular),
-                  shininess(shininess),
-                  reflectivity(reflectivity) {}
+        inline Material(const Colour &_colour,
+                        const Scalar _ambient,
+                        const Scalar _diffuse,
+                        const Scalar _specular,
+                        const Scalar _shininess,
+                        const Scalar _reflectivity)
+                : colour(_colour),
+                  ambient(_ambient),
+                  diffuse(_diffuse),
+                  specular(_specular),
+                  shininess(_shininess),
+                  reflectivity(_reflectivity) {}
 };
 
 // A physical object that light interacts with.
@@ -40,8 +40,8 @@ class Object {
         const Vector position;
 
         // Constructor.
-        explicit inline Object(const Vector &position)
-                : position(position) {
+        explicit inline Object(const Vector &_position)
+                : position(_position) {
             // Register object with profiling counter.
             objectsCount += 1;
         }
@@ -65,12 +65,12 @@ class Plane : public Object {
         const Material *const material;
 
         // Constructor.
-        inline Plane(const Vector &origin,
-                     const Vector &direction,
-                     const Material *const material)
-                : Object(origin),
-                  direction(direction.normalise()),
-                  material(material) {}
+        inline Plane(const Vector &_origin,
+                     const Vector &_direction,
+                     const Material *const _material)
+                : Object(_origin),
+                  direction(_direction.normalise()),
+                  material(_material) {}
 
         virtual inline Vector normal(const Vector &p) const {
             return direction;
@@ -105,14 +105,14 @@ class CheckerBoard : public Plane {
         const Material *const material2;
         const Scalar checkerWidth;
 
-        inline CheckerBoard(const Vector &origin,
-                            const Vector &direction,
-                            const Scalar checkerWidth,
-                            const Material *const material1,
-                            const Material *const material2)
-                : Plane(origin, direction, nullptr),
-                  material1(material1), material2(material2),
-                  checkerWidth(checkerWidth) {}
+        inline CheckerBoard(const Vector &_origin,
+                            const Vector &_direction,
+                            const Scalar _checkerWidth,
+                            const Material *const _material1,
+                            const Material *const _material2)
+                : Plane(_origin, _direction, nullptr),
+                  material1(_material1), material2(_material2),
+                  checkerWidth(_checkerWidth) {}
 
         inline ~CheckerBoard() {}
 
@@ -143,10 +143,10 @@ class Sphere : public Object {
         const Material *const material;
 
         // Constructor.
-        inline Sphere(const Vector &position,
-                      const Scalar radius,
-                      const Material *const material)
-                : Object(position), radius(radius), material(material) {}
+        inline Sphere(const Vector &_position,
+                      const Scalar _radius,
+                      const Material *const _material)
+                : Object(_position), radius(_radius), material(_material) {}
 
         virtual inline Vector normal(const Vector &p) const {
             return (p - position).normalise();

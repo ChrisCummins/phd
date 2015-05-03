@@ -36,7 +36,7 @@ Colour PointLight::shade(const Vector &point,
                          const Material *const material,
                          const std::vector<const Object *> objects) const {
         // Shading is additive, starting with black.
-        Colour shade = Colour();
+        Colour output = Colour();
 
         // Vector from point to light.
         const Vector toLight = position - point;
@@ -50,7 +50,7 @@ Colour PointLight::shade(const Vector &point,
                                         objects, distance);
         // Do nothing without line of sight.
         if (blocked)
-                return shade;
+                return output;
 
         // Bump the profiling counter.
         rayCounter++;
@@ -61,22 +61,22 @@ Colour PointLight::shade(const Vector &point,
         // Apply Lambert (diffuse) shading.
         const Scalar lambert = std::max(normal ^ direction,
                                         static_cast<Scalar>(0));
-        shade += illumination * material->diffuse * lambert;
+        output += illumination * material->diffuse * lambert;
 
         // Apply Blinn-Phong (specular) shading.
         const Vector bisector = (toRay + direction).normalise();
         const Scalar phong = pow(std::max(normal ^ bisector,
                                           static_cast<Scalar>(0)),
                                  material->shininess);
-        shade += illumination * material->specular * phong;
+        output += illumination * material->specular * phong;
 
-        return shade;
+        return output;
 }
 
-SoftLight::SoftLight(const Vector &position, const Scalar radius,
-                     const Colour &colour, const size_t samples)
-                : position(position), colour(colour), samples(samples),
-                  sampler(UniformDistribution(-radius, radius)) {
+SoftLight::SoftLight(const Vector &_position, const Scalar _radius,
+                     const Colour &_colour, const size_t _samples)
+                : position(_position), colour(_colour), samples(_samples),
+                  sampler(UniformDistribution(-_radius, _radius)) {
         // Register lights with profiling counter.
         lightsCount += samples;
 }
@@ -87,7 +87,7 @@ Colour SoftLight::shade(const Vector &point,
                         const Material *const material,
                         const std::vector<const Object *> objects) const {
         // Shading is additive, starting with black.
-        Colour shade = Colour();
+        Colour output = Colour();
 
         // Product of material and light colour.
         const Colour illumination = (colour * material->colour) / samples;
@@ -119,15 +119,15 @@ Colour SoftLight::shade(const Vector &point,
                 // Apply Lambert (diffuse) shading.
                 const Scalar lambert = std::max(normal ^ direction,
                                                 static_cast<Scalar>(0));
-                shade += illumination * material->diffuse * lambert;
+                output += illumination * material->diffuse * lambert;
 
                 // Apply Blinn-Phong (specular) shading.
                 const Vector bisector = (toRay + direction).normalise();
                 const Scalar phong = pow(std::max(normal ^ bisector,
                                                   static_cast<Scalar>(0)),
                                          material->shininess);
-                shade += illumination * material->specular * phong;
+                output += illumination * material->specular * phong;
         }
 
-        return shade;
+        return output;
 }
