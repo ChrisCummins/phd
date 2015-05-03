@@ -5,6 +5,9 @@
 # The default goal is...
 .DEFAULT_GOAL = all
 
+# Use V=1 argument for verbose builds
+QUIET_  = @
+QUIET   = $(QUIET_$(V))
 
 ###############
 # Portability #
@@ -147,13 +150,16 @@ all: examples/example1 examples/example2 lib
 
 # Examples.
 examples/example1: examples/example1.cc $(Library)
-	$(CXX) $(CxxFlags) $(LdFlags) -ldl $^ -o $@
+	@echo '  CXXLD    $(notdir $@)'
+	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) -ldl $^ -o $@
 
 examples/example2: examples/example2.cc examples/scene.cc $(Library)
-	$(CXX) $(CxxFlags) $(LdFlags) -ldl $^ -o $@
+	@echo '  CXXLD    $(notdir $@)'
+	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) -ldl $^ -o $@
 
 examples/scene.cc: examples/scene.rt $(MkScene)
-	$(MkScene) $< $@
+	@echo '  MKSCENE  $(notdir $@)'
+	$(QUIET)$(MkScene) $< $@
 
 CleanFiles += examples/example2 examples/scene.cc
 
@@ -161,11 +167,13 @@ CleanFiles += examples/example2 examples/scene.cc
 lib: $(Library) $(LintFiles)
 
 $(Library): $(Objects)
-	$(CXX) $(CxxFlags) $(LdFlags) -fPIC -shared $? -o $@
+	@echo '  LD       $(notdir $@)'
+	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) -fPIC -shared $? -o $@
 
 %.o: %.cc $(Headers)
-	$(CXX) $(CxxFlags) -fPIC -shared -c $< -o $@
-	@$(call cpplint,$<,$<$(CpplintExtension))
+	@echo '  CXX      $(notdir $@)'
+	$(QUIET)$(CXX) $(CxxFlags) -fPIC -shared -c $< -o $@
+	$(QUIET)$(call cpplint,$<,$<$(CpplintExtension))
 
 # Clean up.
 .PHONY: clean
