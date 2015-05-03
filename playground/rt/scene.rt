@@ -58,7 +58,6 @@ Material2: $Material.black
 [Object.Plane] # cieling
 Position: 0 2200 0
 Direction: 0 -1 0
-Size: 50
 Material: $Material.plaster
 
 [Object.Plane] # left wall
