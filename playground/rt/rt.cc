@@ -6,12 +6,12 @@ namespace {
 
 // Return the index of the object with the closest intersection, and
 // the distance to the intersection `t'. If no intersection, return
-// -1.
-int closestIntersect(const Ray &ray,
-                     const std::vector<const Object *> &objects,
-                     Scalar *const t) {
+// the number of number of objects (i.e. an illegal index).
+size_t closestIntersect(const Ray &ray,
+                        const std::vector<const Object *> &objects,
+                        Scalar *const t) {
     // Index of, and distance to closest intersect:
-    int index = -1;
+    size_t index = objects.size();
     *t = INFINITY;
 
     // For each object:
@@ -24,7 +24,7 @@ int closestIntersect(const Ray &ray,
         if (currentT != 0 && currentT < *t) {
             // New closest intersection.
             *t = currentT;
-            index = static_cast<int>(i);
+            index = i;
         }
     }
 
@@ -118,12 +118,12 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
         // Bump the profiling counter.
         traceCounter++;
 
-        // Determine the closet ray-object intersection.
+        // Determine the closet ray-object intersection (if any).
         Scalar t;
-        int index = closestIntersect(ray, scene->objects, &t);
+        size_t index = closestIntersect(ray, scene->objects, &t);
 
         // If the ray doesn't intersect any object, return.
-        if (index == -1)
+        if (index == scene->objects.size())
             return colour;
 
         // Object with closest intersection.
