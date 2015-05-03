@@ -1,4 +1,5 @@
-#include "./rt.h"
+// -*- c-basic-offset: 8; -*-
+#include "rt/rt.h"
 
 #include "tbb/parallel_for.h"
 
@@ -10,25 +11,25 @@ namespace {
 size_t closestIntersect(const Ray &ray,
                         const std::vector<const Object *> &objects,
                         Scalar *const t) {
-    // Index of, and distance to closest intersect:
-    size_t index = objects.size();
-    *t = INFINITY;
+        // Index of, and distance to closest intersect:
+        size_t index = objects.size();
+        *t = INFINITY;
 
-    // For each object:
-    for (size_t i = 0; i < objects.size(); i++) {
-        // Get intersect distance.
-        Scalar currentT = objects[i]->intersect(ray);
+        // For each object:
+        for (size_t i = 0; i < objects.size(); i++) {
+                // Get intersect distance.
+                Scalar currentT = objects[i]->intersect(ray);
 
-        // Check if intersects, and if so, whether the
-        // intersection is closer than the current best.
-        if (currentT != 0 && currentT < *t) {
-            // New closest intersection.
-            *t = currentT;
-            index = i;
+                // Check if intersects, and if so, whether the
+                // intersection is closer than the current best.
+                if (currentT != 0 && currentT < *t) {
+                        // New closest intersection.
+                        *t = currentT;
+                        index = i;
+                }
         }
-    }
 
-    return index;
+        return index;
 }
 
 }  // namespace
@@ -124,7 +125,7 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
 
         // If the ray doesn't intersect any object, return.
         if (index == scene->objects.size())
-            return colour;
+                return colour;
 
         // Object with closest intersection.
         const Object *object = scene->objects[index];
@@ -143,7 +144,7 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
         // Apply shading from each light source.
         for (size_t i = 0; i < scene->lights.size(); i++)
                 colour += scene->lights[i]->shade(intersect, normal, toRay,
-                                                 material, scene->objects);
+                                                  material, scene->objects);
 
         // Create reflection ray and recursive evaluate.
         const Scalar reflectivity = material->reflectivity;

@@ -1,6 +1,6 @@
 // -*- c-basic-offset: 8; -*-
-#ifndef GRAPHICS_H_
-#define GRAPHICS_H_
+#ifndef RT_GRAPHICS_H_
+#define RT_GRAPHICS_H_
 
 #include <cstdint>
 
@@ -83,4 +83,4 @@ class Colour {
         }
 };
 
-#endif  // GRAPHICS_H_
+#endif  // RT_GRAPHICS_H_

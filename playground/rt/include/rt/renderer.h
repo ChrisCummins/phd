@@ -1,28 +1,22 @@
 // -*- c-basic-offset: 8; -*-
-#ifndef RT_H_
-#define RT_H_
+#ifndef RT_RENDERER_H_
+#define RT_RENDERER_H_
 
 #include <cstdint>
 
-#include "./scene.h"
 #include "./camera.h"
 #include "./image.h"
-#include "./ray.h"
 #include "./random.h"
+#include "./ray.h"
+#include "./scene.h"
 
-// A simple ray tacer. Features:
-//
-//   * Objects: Spheres, Planes, Checkerboards.
-//   * Lighting: Point & soft lighting, reflections.
-//   * Shading: Lambert (diffuse) and Phong (specular).
-//   * Anti-aliasing: Stochastic supersampling.
 class Renderer {
  public:
         Renderer(const Scene  *const scene,
                  const Camera *const camera,
-                 const size_t maxDepth = 100,
-                 const size_t aaSamples = 0,
-                 const size_t aaRadius = 8);
+                 const size_t maxDepth  = 5000,
+                 const size_t aaSamples = 8,
+                 const size_t aaRadius  = .9);
 
         ~Renderer();
 
@@ -59,4 +53,4 @@ class Renderer {
         Colour supersample(const Ray &ray) const;
 };
 
-#endif  // RT_H_
+#endif  // RT_RENDERER_H_

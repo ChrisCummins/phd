@@ -12,7 +12,6 @@
 # Program paths.
 export CPPLINT := cpplint
 export CXX     := g++
-export LD      := g++
 export RM      := rm -rf
 export SHELL   := /bin/bash
 
@@ -77,8 +76,10 @@ RayTracerSources =		\
 	lights.cc		\
 	objects.cc		\
 	random.cc		\
+	renderer.cc		\
 	rt.cc			\
 	$(NULL)
+
 RayTracerHeaders =		\
 	camera.h		\
 	graphics.h		\
@@ -86,16 +87,21 @@ RayTracerHeaders =		\
 	lights.h		\
 	math.h			\
 	random.h		\
+	renderer.h		\
 	rt.h			\
 	scene.h			\
 	$(NULL)
 
-Sources = main.cc $(RayTracerSources)
-Headers = $(RayTracerHeaders)
+RayTracerSourceDir = src
+RayTracerHeaderDir = include
 
-Binary = rt
-Parser = parser.py
-Scene = quick.rt.out
+CxxFlags += -I$(RayTracerHeaderDir)
+
+Sources = $(addprefix $(RayTracerSourceDir)/,$(RayTracerSources))
+Headers = $(addprefix $(RayTracerHeaderDir)/rt/,$(RayTracerHeaders))
+
+Library = $(RayTracerSourceDir)/librt.so
+MkScene = ./scripts/mkscene.py
 
 Objects = $(patsubst %.cc,%.o,$(Sources))
 CleanFiles = $(Binary) $(Objects) $(Scene)
@@ -125,7 +131,7 @@ $(LintFiles): %$(CpplintExtension): %
 
 # Function for generating lint files.
 define cpplint
-$(CPPLINT) --filter=$(CpplintFilters) $1 2>&1	 		\
+$(CPPLINT) --root=include --filter=$(CpplintFilters) $1 2>&1	\
 	| grep -v '^Done processing\|^Total errors found: ' 	\
 	| tee $2
 endef
@@ -135,21 +141,31 @@ endef
 # Rules #
 #########
 
-all: quick $(LintFiles)
+all: examples/example1 examples/example2 lib
 
-quick: $(Scene) $(Binary)
+# Examples.
+examples/example1: examples/example1.cc $(Library)
+	$(CXX) $(CxxFlags) $(LdFlags) -ldl $^ -o $@
 
-.PHONY: clean
+examples/example2: examples/example2.cc examples/scene.cc $(Library)
+	$(CXX) $(CxxFlags) $(LdFlags) -ldl $^ -o $@
 
-clean:
-	$(RM) $(CleanFiles)
+examples/scene.cc: examples/scene.rt $(MkScene)
+	$(MkScene) $< $@
 
-%.o: %.cc $(Headers) $(Scene)
-	$(CXX) $(CxxFlags) -c $<
+CleanFiles += examples/example2 examples/scene.cc
+
+# Library target.
+lib: $(Library) $(LintFiles)
+
+$(Library): $(Objects)
+	$(CXX) $(CxxFlags) $(LdFlags) -fPIC -shared $? -o $@
+
+%.o: %.cc $(Headers)
+	$(CXX) $(CxxFlags) -fPIC -shared -c $< -o $@
 	@$(call cpplint,$<,$<$(CpplintExtension))
 
-$(Binary): $(Objects)
-	$(LD) $(LdFlags) $^ -o $@
-
-%.rt.out: %.rt $(Parser) scene.rt
-	./$(Parser) $< $@
+# Clean up.
+.PHONY: clean
+clean:
+	$(RM) $(CleanFiles)

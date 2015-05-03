@@ -1,23 +1,15 @@
 // -*- c-basic-offset: 8; -*-
-#include <algorithm>
 #include <chrono>
 
-#include "./rt.h"
+#include "rt/rt.h"
 
-// Generated renderer and image factory:
-#include "quick.rt.out"
+#include "tbb/parallel_for.h"
 
-// Return the length of array.
-#define ARRAY_LENGTH(x) (sizeof(x) / sizeof(x[0]))
-// Return the end of an array.
-#define ARRAY_END(x) (x + ARRAY_LENGTH(x))
+namespace rt {
 
-// Program entry point.
-int main() {
-        // Get the renderer and image.
-        const Renderer *const renderer = getRenderer();
-        const Image *const image = getImage();
-
+void render(const Renderer *const renderer,
+            const Image *const image,
+            const char *const path) {
         // Print start message.
         printf("Rendering %lu pixels with %lu samples per pixel, "
                "%lu objects, and %lu light sources ...\n",
@@ -36,7 +28,6 @@ int main() {
                         = std::chrono::high_resolution_clock::now();
 
         // Open the output file.
-        const char *path = "render.ppm";
         printf("Opening file '%s'...\n", path);
         FILE *const out = fopen(path, "w");
 
@@ -60,7 +51,7 @@ int main() {
         uint64_t rayRate = rayCount / elapsed;
         uint64_t pixelRate = image->size / elapsed;
         Scalar tracePerPixel = static_cast<Scalar>(traceCount)
-            / static_cast<Scalar>(image->size);
+                        / static_cast<Scalar>(image->size);
 
         // Print performance summary.
         printf("Rendered %lu pixels from %lu traces in %.3f seconds.\n\n",
@@ -70,6 +61,6 @@ int main() {
         printf("\tTraces per second:\t%lu\n", traceRate);
         printf("\tPixels per second:\t%lu\n", pixelRate);
         printf("\tTraces per pixel:\t%.2f\n", tracePerPixel);
-
-        return 0;
 }
+
+}  // namespace rt

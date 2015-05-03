@@ -1,13 +1,13 @@
 // -*- c-basic-offset: 8; -*-
-#ifndef CAMERA_H_
-#define CAMERA_H_
+#ifndef RT_CAMERA_H_
+#define RT_CAMERA_H_
 
 #include "./math.h"
 
 // A camera has a "film" size (width and height), and a position and a
 // point of focus.
 class Camera {
-public:
+ public:
         const Vector position;
         const Vector direction;
         const Vector filmBack;
@@ -33,4 +33,4 @@ public:
                   height(_height) {}
 };
 
-#endif  // CAMERA_H_
+#endif  // RT_CAMERA_H_

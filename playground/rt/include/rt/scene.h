@@ -1,6 +1,8 @@
 // -*- c-basic-offset: 8; -*-
-#ifndef SCENE_H_
-#define SCENE_H_
+#ifndef RT_SCENE_H_
+#define RT_SCENE_H_
+
+#include <vector>
 
 #include "./lights.h"
 #include "./objects.h"
@@ -8,7 +10,7 @@
 // A full scene, consisting of objects (spheres) and lighting (point
 // lights).
 class Scene {
-public:
+ public:
     const std::vector<const Object *> objects;
     const std::vector<const Light *> lights;
 
@@ -25,4 +27,4 @@ public:
     }
 };
 
-#endif  // SCENE_H_
+#endif  // RT_SCENE_H_

@@ -1,6 +1,6 @@
 // -*- c-basic-offset: 8; -*-
-#ifndef MATH_H_
-#define MATH_H_
+#ifndef RT_MATH_H_
+#define RT_MATH_H_
 
 #include <cmath>
 
@@ -243,4 +243,4 @@ Matrix inline rotation(const Scalar x, const Scalar y, const Scalar z) {
         return RotationZ(z) * RotationY(y) * RotationX(x);
 }
 
-#endif  // MATH_H_
+#endif  // RT_MATH_H_

@@ -594,6 +594,9 @@ def get_image_code():
 def get_code(sections):
     code = []
     renderer = []
+
+    code.append('#include "rt/rt.h"')
+
     for section in sections:
         renderer.append(get_section_code(section))
 

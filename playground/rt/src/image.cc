@@ -1,5 +1,5 @@
 // -*- c-basic-offset: 8; -*-
-#include "./image.h"
+#include "rt/image.h"
 
 Image::Image(const size_t _width, const size_t _height,
              const Colour _gamma, const bool _inverted)

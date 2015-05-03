@@ -1,6 +1,6 @@
 // -*- c-basic-offset: 8; -*-
-#ifndef IMAGE_H_
-#define IMAGE_H_
+#ifndef RT_IMAGE_H_
+#define RT_IMAGE_H_
 
 #include <cstddef>
 #include <cstdint>
@@ -49,4 +49,4 @@ class Image {
         char _pad[7];
 };
 
-#endif  // IMAGE_H_
+#endif  // RT_IMAGE_H_

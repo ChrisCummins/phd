@@ -1,5 +1,5 @@
 // -*- c-basic-offset: 8; -*-
-#include "./objects.h"
+#include "rt/objects.h"
 
 // Profiling counter.
 uint64_t objectsCount;

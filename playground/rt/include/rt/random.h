@@ -1,6 +1,6 @@
 // -*- c-basic-offset: 8; -*-
-#ifndef RANDOM_H_
-#define RANDOM_H_
+#ifndef RT_RANDOM_H_
+#define RT_RANDOM_H_
 
 #include <cstdint>
 #include <cstddef>
@@ -11,9 +11,11 @@
 // within a specific range.
 class UniformDistribution {
  public:
-    UniformDistribution(const Scalar _min, const Scalar _max,
-                        const uint64_t _seed = 7564231ULL)
-            : divisor(scalarMax / (_max - _min)), min(_min), seed(_seed) {}
+    inline UniformDistribution(const Scalar _min, const Scalar _max,
+                               const uint64_t _seed = 7564231ULL)
+            : divisor(scalarMax / (_max - _min)),
+                      min(_min),  // NOLINT(build/include_what_you_use)
+                      seed(_seed) {}
 
     // Return a new random number.
     Scalar inline operator()() {
@@ -37,4 +39,4 @@ class UniformDistribution {
     static const uint64_t mult;
 };
 
-#endif  // RANDOM_H_
+#endif  // RT_RANDOM_H_

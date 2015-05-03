@@ -1,7 +1,36 @@
-# Macros.
+##########################
+# Renderer configuration #
+##########################
+
+[Renderer]
+# The maximum depth to trace rays to:
+RayDepth: 5000
+# The output image scale factor:
+Scale: 20
+
+[Renderer.Antialiasing]
+# The number of sub-pixel samples to make:
+Samples: 0
+# The maximum sub-pixel sampling offset:
+Radius: .5
+
+[Renderer.Softlights]
+# The number of rays to cast for soft lights is defined by:
+#   N = base + (scalefactor * lightradius) ^ 3
+Base: 3
+ScaleFactor: 0.01
+
+
+##########
+# Macros #
+##########
+
 @def white 0xffffff
 
-# Materials.
+
+#############
+# Materials #
+#############
 
 [Material.mirror]
 Colour: @white
@@ -10,8 +39,6 @@ Diffuse: 0
 Specular: 100
 Shininess: 200
 Reflectivity: 99
-
-@def grey 0x808080
 
 [Material.plaster]
 Colour: 0x948697
@@ -46,59 +73,68 @@ Specular: 50
 Shininess: 6
 Reflectivity: 45
 
-# Objects.
 
-[Object.Checkerboard] # floor
+###########
+# Objects #
+###########
+
+[Object.Checkerboard] # Floor
 Position: 0 0 0
 Direction: 0 1 0
 Size: 250
 Material1: $Material.white
 Material2: $Material.black
 
-[Object.Plane] # cieling
+[Object.Plane] # Cieling
 Position: 0 2200 0
 Direction: 0 -1 0
 Material: $Material.plaster
 
-[Object.Plane] # left wall
+[Object.Plane] # Left wall
 Position: -2000 0 0
 Direction: 1 0 0
 Material: $Material.left_wall
 
-[Object.Plane] # right wall
+[Object.Plane] # Right wall
 Position: 2000 0 0
 Direction: -1 0 0
 Material: $Material.right_wall
 
-[Object.Plane] # back wall
+[Object.Plane] # Back wall (facing camera)
 Position: 0 0 -2000
 Direction: 0 0 1
 Material: $Material.plaster
 
-[Object.Plane] # behind wall
+[Object.Plane] # Front wall (behind camera)
 Position: 0 0 3100
 Direction: 0 0 -1
 Material: $Material.plaster
 
 @def ball_size 500
-[Object.Sphere] # left ball
+[Object.Sphere] # Left ball
 Position: -1200 @ball_size -1000
 Size: @ball_size
 Material: $Material.mirror
 
-[Object.Sphere] # right ball
+[Object.Sphere] # Right ball
 Position: 700 @ball_size 0
 Size: @ball_size
 Material: $Material.mirror
 
-# Lights.
+
+##########
+# Lights #
+##########
 
 [Light.Soft]
 Colour: @white
 Position: -300 1500 200
 Size: 200
 
-# Camera.
+
+##########
+# Camera #
+##########
 
 [Lens.wideangle]
 FocalLength: 35

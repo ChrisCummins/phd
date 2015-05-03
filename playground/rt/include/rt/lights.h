@@ -1,6 +1,6 @@
 // -*- c-basic-offset: 8; -*-
-#ifndef LIGHTS_H_
-#define LIGHTS_H_
+#ifndef RT_LIGHTS_H_
+#define RT_LIGHTS_H_
 
 #include <atomic>
 #include <cstdint>
@@ -79,4 +79,4 @@ class SoftLight : public Light {
                              const std::vector<const Object *> objects) const;
 };
 
-#endif  // LIGHTS_H_
+#endif  // RT_LIGHTS_H_

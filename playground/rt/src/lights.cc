@@ -1,4 +1,4 @@
-#include "./lights.h"
+#include "rt/lights.h"
 
 // A profiling counter that keeps track of how many times we've called
 // Renderer::trace().

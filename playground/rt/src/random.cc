@@ -1,6 +1,6 @@
 // -*- c-basic-offset: 8; -*-
 
-#include "./random.h"
+#include "rt/random.h"
 
 // Set static member values:
 
