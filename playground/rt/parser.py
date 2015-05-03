@@ -600,10 +600,12 @@ def get_code(sections):
     renderer.append(get_scene_code())
     renderer.append(get_renderer_code())
 
+    code.append("Renderer *getRenderer();")
     code.append("Renderer *getRenderer() {")
     [code.append(line) for line in renderer if line]
     code.append("}\n")
 
+    code.append("Image *getImage();")
     code.append("Image *getImage() {")
     code.append(get_image_code())
     code.append("}")
