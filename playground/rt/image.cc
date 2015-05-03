@@ -3,14 +3,14 @@
 
 Image::Image(const size_t width, const size_t height,
              const Colour gamma, const bool inverted)
-                : image(new Pixel[width * height]),
+                : data(new Pixel[width * height]),
                   width(width), height(height), size(width * height),
-                  power(Colour(1 / gamma.r, 1 / gamma.g, 1 / gamma.b)),
+                  gamma(Colour(1 / gamma.r, 1 / gamma.g, 1 / gamma.b)),
                   inverted(inverted) {}
 
 Image::~Image() {
         // Free pixel data.
-        delete[] image;
+        delete[] data;
 }
 
 void Image::write(FILE *const out) const {
@@ -21,7 +21,7 @@ void Image::write(FILE *const out) const {
 
         // Iterate over each point in the image, writing pixel data.
         for (size_t i = 0; i < height * width; i++) {
-                const Pixel pixel = image[i];
+                const Pixel pixel = data[i];
                 fprintf(out,
                         PixelFormatString" "
                         PixelFormatString" "
