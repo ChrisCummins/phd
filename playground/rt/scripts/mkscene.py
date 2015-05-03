@@ -300,8 +300,8 @@ def set_renderer(pairs):
 def set_renderer_antialiasing(pairs):
     aa = {}
     renderer["aa"] = aa
-    aa["samples"] = consume_int(pairs, "samples", default=0)
-    aa["radius"] = consume_scalar(pairs, "radius", default=1)
+    aa["subpixels"] = consume_int(pairs, "subpixels", default=0)
+    aa["overlap"] = consume_int(pairs, "overlap", default=1)
 
 
 def set_renderer_softlights(pairs):
@@ -572,13 +572,13 @@ def get_scene_code():
 
 def get_renderer_code():
     depth = renderer["depth"]
-    aa_samples = renderer["aa"]["samples"]
-    aa_radius = renderer["aa"]["radius"]
+    sub = renderer["aa"]["subpixels"]
+    overlap = renderer["aa"]["overlap"]
 
-    c = ("return new Renderer({scene}, {camera}, {depth}, "
-         "{aa_samples}, {aa_radius});"
+    c = ("return new Renderer({scene}, {camera}, "
+         "{sub}, {overlap}, {depth});"
          .format(scene="scene", camera=camera, depth=depth,
-                 aa_samples=aa_samples, aa_radius=aa_radius))
+                 sub=sub, overlap=overlap))
     return c
 
 def get_image_code():

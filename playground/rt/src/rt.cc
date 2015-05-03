@@ -11,7 +11,7 @@ void render(const Renderer *const renderer,
         // Print start message.
         printf("Rendering %lu pixels with %lu samples per pixel, "
                "%lu objects, and %lu light sources ...\n",
-               image->size, renderer->totalSamples,
+               image->size, renderer->numSubpixels,
                profiling::counters::getObjectsCount(),
                profiling::counters::getLightsCount());
 

@@ -16,9 +16,9 @@ class Renderer {
  public:
         Renderer(const Scene  *const scene,
                  const rt::Camera *const camera,
-                 const size_t maxDepth  = 5000,
-                 const size_t aaSamples = 8,
-                 const size_t aaRadius  = .9);
+                 const size_t subpixels = 4,
+                 const size_t overlap   = 1,
+                 const size_t maxDepth  = 5000);
 
         ~Renderer();
 
@@ -30,16 +30,11 @@ class Renderer {
         // The maximum depth to trace reflected rays to:
         const size_t maxDepth;
 
-        // The number of *additional* samples to perform for
-        // antialiasing:
-        const size_t aaSamples;
-
-        // The total number of samples = 1 + aaSamples.
-        const size_t totalSamples;
-
-        // A random distribution sampler for offseting rays in
-        // stochastic anti-aliasing:
-        mutable UniformDistribution aaSampler;
+        // Super sampling anti-aliasing configuration:
+        const size_t subpixels;
+        const size_t overlap;
+        const size_t tileSize;
+        const size_t numSubpixels;
 
         // The heart of the raytracing engine.
         void render(const Image *const image) const;
@@ -51,8 +46,11 @@ class Renderer {
                      Colour colour = Colour(0, 0, 0),
                      const unsigned int depth = 0) const;
 
-        // Calculate the colour of a ray through supersampling.
-        Colour supersample(const Ray &ray) const;
+        // Perform supersample interpolation.
+        Colour interpolate(const size_t image_x,
+                           const size_t image_y,
+                           const size_t dataWidth,
+                           const Colour *const data) const;
 };
 
 }  // namespace rt

@@ -7,6 +7,7 @@
 
 namespace {
 
+using rt::Colour;
 using rt::Object;
 using rt::Ray;
 using rt::Scalar;
@@ -44,62 +45,42 @@ namespace rt {
 
 Renderer::Renderer(const Scene *const _scene,
                    const rt::Camera *const _camera,
-                   const size_t _maxDepth,
-                   const size_t _aaSamples,
-                   const size_t _aaRadius)
-                : scene(_scene), camera(_camera), maxDepth(_maxDepth),
-                  aaSamples(_aaSamples), totalSamples(_aaSamples + 1),
-                  aaSampler(UniformDistribution(-_aaRadius, _aaRadius)) {}
+                   const size_t _subpixels,
+                   const size_t _overlap,
+                   const size_t _maxDepth)
+                : scene(_scene), camera(_camera),
+                  maxDepth(_maxDepth),
+                  subpixels(_subpixels), overlap(_overlap),
+                  tileSize(_subpixels + 2 * _overlap),
+                  numSubpixels((_subpixels + 2 * _overlap) *
+                               (_subpixels + 2 * _overlap)) {}
 
 Renderer::~Renderer() {
         delete scene;
         delete camera;
 }
 
-Colour Renderer::supersample(const Ray &ray) const {
-        Colour sample = Colour();
-
-        // Trace the origin ray.
-        sample += trace(ray);
-
-        // Accumulate extra samples, randomly distributed around x,y.
-        for (size_t i = 0; i < aaSamples; i++) {
-                const Scalar offsetX = aaSampler();
-                const Scalar offsetY = aaSampler();
-
-                if (offsetX < 0 || offsetX > 1)
-                        printf("OFFSETX %f\n", offsetX);
-                if (offsetY < 0 || offsetY > 1)
-                        printf("OFFSETY %f\n", offsetY);
-
-                const Vector origin = Vector(ray.position.x + offsetX,
-                                             ray.position.y + offsetY,
-                                             ray.position.z);
-                sample += trace(Ray(origin, ray.direction));
-        }
-
-        // Average the accumulated samples.
-        sample /= aaSamples + 1;
-
-        return sample;
-}
-
 void Renderer::render(const Image *const image) const {
-        // Scale image coordinates to camera coordinates.
-        const Scale scale(camera->width / image->width,
-                          camera->height / image->height, 1);
-        // Offset from image coordinates to camera coordinates.
-        const Translation offset(-(image->width * .5),
-                                 -(image->height * .5), 0);
+        const size_t dataWidth = image->width * subpixels + 2 * overlap;
+        const size_t dataHeight = image->height * subpixels + 2 * overlap;
+        const size_t dataSize = dataWidth * dataHeight;
+        Colour *const data = new Colour[dataSize];
+
+        // Scale data coordinates to camera coordinates.
+        const Scale scale(camera->width / dataWidth,
+                          camera->height / dataHeight, 1);
+        // Offset from data coordinates to camera coordinates.
+        const Translation offset(-(dataWidth * .5),
+                                 -(dataHeight * .5), 0);
         // Create combined transformation matrix.
         const Matrix transform = scale * offset;
 
-        // For each pixel in the image:
+        // For each point in the super-sampled grid:
         tbb::parallel_for(
-            static_cast<size_t>(0), image->size, [&](size_t i) {
+            static_cast<size_t>(0), dataSize, [&](size_t i) {
                     // Image space coordinates.
-                    const Scalar x = i % image->width;
-                    const Scalar y = i / image->width;
+                    const Scalar x = i % dataWidth;
+                    const Scalar y = i / dataWidth;
 
                     // Convert image to camera (local) space coordinates.
                     const Vector localPosition = transform * Vector(x, y, 0);
@@ -118,8 +99,32 @@ void Renderer::render(const Image *const image) const {
                     const Ray ray = Ray(camera->filmBack, direction);
 
                     // Sample the ray.
-                    image->set(x, y, supersample(ray));
+                    data[i] = trace(ray);
             });
+
+        // Iterate over each pixel in the image.
+        for (size_t y = 0; y < image->height; y++)
+                for (size_t x = 0; x < image->width; x++)
+                        image->set(x, y, interpolate(x, y, dataWidth, data));
+}
+
+Colour Renderer::interpolate(const size_t image_x,
+                             const size_t image_y,
+                             const size_t dataWidth,
+                             const Colour *const data) const {
+        const size_t y = image_y * subpixels;
+        const size_t x = image_x * subpixels;
+
+        // Accumulate colour values of sub-pixels.
+        Colour acc;
+        for (size_t j = 0; j < tileSize; j++) {
+                for (size_t i = 0; i < tileSize; i++) {
+                        const size_t index = (y + j) * dataWidth + x + i;
+                        acc += data[index] / numSubpixels;
+                }
+        }
+
+        return acc;
 }
 
 Colour Renderer::trace(const Ray &ray, Colour colour,

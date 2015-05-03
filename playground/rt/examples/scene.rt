@@ -10,15 +10,15 @@ Scale: 45
 
 [Renderer.Antialiasing]
 # The number of sub-pixel samples to make:
-Samples: 8
+Subpixels: 5
 # The maximum sub-pixel sampling offset:
-Radius: .999
+Overlap: 1
 
 [Renderer.Softlights]
 # The number of rays to cast for soft lights is defined by:
 #   N = base + (scalefactor * lightradius) ^ 3
 Base: 3
-ScaleFactor: 0.03
+ScaleFactor: 0.021
 
 
 ##########
