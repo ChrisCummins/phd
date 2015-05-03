@@ -1,7 +1,8 @@
 // -*- c-basic-offset: 8; -*-
 #include "rt/objects.h"
 
-// Profiling counter.
-uint64_t objectsCount;
+namespace rt {
 
 const Scalar CheckerBoard::gridOffset = 3e6;
+
+}  // namespace rt

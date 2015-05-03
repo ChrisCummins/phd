@@ -1,9 +1,15 @@
 // -*- c-basic-offset: 8; -*-
 #include "rt/rt.h"
 
+#include "rt/profiling.h"
+
 #include "tbb/parallel_for.h"
 
 namespace {
+
+using rt::Object;
+using rt::Ray;
+using rt::Scalar;
 
 // Return the index of the object with the closest intersection, and
 // the distance to the intersection `t'. If no intersection, return
@@ -34,8 +40,10 @@ size_t closestIntersect(const Ray &ray,
 
 }  // namespace
 
+namespace rt {
+
 Renderer::Renderer(const Scene *const _scene,
-                   const Camera *const _camera,
+                   const rt::Camera *const _camera,
                    const size_t _maxDepth,
                    const size_t _aaSamples,
                    const size_t _aaRadius)
@@ -117,7 +125,7 @@ void Renderer::render(const Image *const image) const {
 Colour Renderer::trace(const Ray &ray, Colour colour,
                        const unsigned int depth) const {
         // Bump the profiling counter.
-        traceCounter++;
+        profiling::traceCounter++;
 
         // Determine the closet ray-object intersection (if any).
         Scalar t;
@@ -160,3 +168,5 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
 
         return colour;
 }
+
+}  // namespace rt

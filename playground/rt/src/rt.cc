@@ -14,7 +14,7 @@ void render(const Renderer *const renderer,
         printf("Rendering %lu pixels with %lu samples per pixel, "
                "%lu objects, and %lu light sources ...\n",
                image->size, renderer->totalSamples,
-               objectsCount, lightsCount);
+               profiling::objectsCount, profiling::lightsCount);
 
         // Record start time.
         const std::chrono::high_resolution_clock::time_point startTime
@@ -45,8 +45,8 @@ void render(const Renderer *const renderer,
         // Calculate performance information.
         Scalar elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
             endTime - startTime).count() / 1e6;
-        uint64_t traceCount = static_cast<uint64_t>(traceCounter);
-        uint64_t rayCount = static_cast<uint64_t>(rayCounter);
+        uint64_t traceCount = static_cast<uint64_t>(profiling::traceCounter);
+        uint64_t rayCount = static_cast<uint64_t>(profiling::rayCounter);
         uint64_t traceRate = traceCount / elapsed;
         uint64_t rayRate = rayCount / elapsed;
         uint64_t pixelRate = image->size / elapsed;

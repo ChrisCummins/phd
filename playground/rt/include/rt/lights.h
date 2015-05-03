@@ -2,7 +2,6 @@
 #ifndef RT_LIGHTS_H_
 #define RT_LIGHTS_H_
 
-#include <atomic>
 #include <cstdint>
 #include <cstddef>
 #include <vector>
@@ -12,16 +11,7 @@
 #include "./graphics.h"
 #include "./objects.h"
 
-// A profiling counter that keeps track of how many times we've called
-// Renderer::trace().
-extern std::atomic<uint64_t> traceCounter;
-
-// A profiling counter that keeps track of how many times we've
-// contributed light to a ray.
-extern std::atomic<uint64_t> rayCounter;
-
-// Profiling counter.
-extern uint64_t lightsCount;
+namespace rt {
 
 // Base class light source.
 class Light {
@@ -48,8 +38,8 @@ class PointLight : public Light {
     inline PointLight(const Vector &_position,
                       const Colour &_colour = Colour(0xff, 0xff, 0xff))
             : position(_position), colour(_colour) {
-        // Register light with profiling counter.
-        lightsCount += 1;
+            // Register light with profiling counter.
+            profiling::lightsCount += 1;
     }
 
     virtual Colour shade(const Vector &point,
@@ -78,5 +68,7 @@ class SoftLight : public Light {
                              const Material *const material,
                              const std::vector<const Object *> objects) const;
 };
+
+}  // namespace rt
 
 #endif  // RT_LIGHTS_H_

@@ -596,6 +596,7 @@ def get_code(sections):
     renderer = []
 
     code.append('#include "rt/rt.h"')
+    code.append('using namespace rt;')
 
     for section in sections:
         renderer.append(get_section_code(section))

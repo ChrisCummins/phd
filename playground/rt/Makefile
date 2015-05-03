@@ -75,6 +75,7 @@ RayTracerSources =		\
 	image.cc		\
 	lights.cc		\
 	objects.cc		\
+	profiling.cc		\
 	random.cc		\
 	renderer.cc		\
 	rt.cc			\
@@ -86,6 +87,7 @@ RayTracerHeaders =		\
 	image.h			\
 	lights.h		\
 	math.h			\
+	profiling.h		\
 	random.h		\
 	renderer.h		\
 	rt.h			\

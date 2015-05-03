@@ -4,6 +4,8 @@
 
 #include "./math.h"
 
+namespace rt {
+
 // A camera has a "film" size (width and height), and a position and a
 // point of focus.
 class Camera {
@@ -32,5 +34,7 @@ class Camera {
                   width(_width),
                   height(_height) {}
 };
+
+}  // namespace rt
 
 #endif  // RT_CAMERA_H_

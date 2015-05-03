@@ -7,6 +7,8 @@
 
 #include "./math.h"
 
+namespace rt {
+
 // A random number generator for sampling a uniform distribution
 // within a specific range.
 class UniformDistribution {
@@ -38,5 +40,7 @@ class UniformDistribution {
     static const Scalar scalarMax;
     static const uint64_t mult;
 };
+
+}  // namespace rt
 
 #endif  // RT_RANDOM_H_

@@ -5,9 +5,9 @@
 #include "./math.h"
 #include "./ray.h"
 #include "./graphics.h"
+#include "./profiling.h"
 
-// Profiling counter.
-extern uint64_t objectsCount;
+namespace rt {
 
 // Properties that describe a material.
 class Material {
@@ -42,8 +42,8 @@ class Object {
         // Constructor.
         explicit inline Object(const Vector &_position)
                 : position(_position) {
-            // Register object with profiling counter.
-            objectsCount += 1;
+                // Register object with profiling counter.
+                profiling::objectsCount += 1;
         }
 
         // Virtual destructor.
@@ -73,34 +73,34 @@ class Plane : public Object {
                   material(_material) {}
 
         virtual inline Vector normal(const Vector &p) const {
-            return direction;
+                return direction;
         }
 
         virtual inline Scalar intersect(const Ray &ray) const {
-            // Calculate intersection of line and plane.
-            const Scalar f = (position - ray.position) ^ direction;
-            const Scalar g = ray.direction ^ direction;
-            const Scalar t = f / g;
+                // Calculate intersection of line and plane.
+                const Scalar f = (position - ray.position) ^ direction;
+                const Scalar g = ray.direction ^ direction;
+                const Scalar t = f / g;
 
-            // Accommodate for precision errors.
-            const Scalar t0 = t - ScalarPrecision / 2;
-            const Scalar t1 = t + ScalarPrecision / 2;
+                // Accommodate for precision errors.
+                const Scalar t0 = t - ScalarPrecision / 2;
+                const Scalar t1 = t + ScalarPrecision / 2;
 
-            if (t0 > ScalarPrecision)
-                return t0;
-            else if (t1 > ScalarPrecision)
-                return t1;
-            else
-                return 0;
+                if (t0 > ScalarPrecision)
+                        return t0;
+                else if (t1 > ScalarPrecision)
+                        return t1;
+                else
+                        return 0;
         }
 
         virtual inline const Material *surface(const Vector &point) const {
-            return material;
+                return material;
         }
 };
 
 class CheckerBoard : public Plane {
- public:
+public:
         const Material *const material1;
         const Material *const material2;
         const Scalar checkerWidth;
@@ -111,34 +111,34 @@ class CheckerBoard : public Plane {
                             const Material *const _material1,
                             const Material *const _material2)
                 : Plane(_origin, _direction, nullptr),
-                  material1(_material1), material2(_material2),
-                  checkerWidth(_checkerWidth) {}
+                        material1(_material1), material2(_material2),
+                        checkerWidth(_checkerWidth) {}
 
         inline ~CheckerBoard() {}
 
         virtual inline const Material *surface(const Vector &point) const {
-            // TODO: translate point to a relative position on plane.
-            const Vector relative = Vector(point.x + gridOffset,
-                                           point.z + gridOffset, 0);
+                // TODO: translate point to a relative position on plane.
+                const Vector relative = Vector(point.x + gridOffset,
+                                               point.z + gridOffset, 0);
 
-            const int x = relative.x;
-            const int y = relative.y;
-            const int half = static_cast<int>(checkerWidth * 2);
-            const int mod = half * 2;
+                const int x = relative.x;
+                const int y = relative.y;
+                const int half = static_cast<int>(checkerWidth * 2);
+                const int mod = half * 2;
 
-            if (x % mod < half)
-                return y % mod < half ? material1 : material2;
-            else
-                return y % mod < half ? material2 : material1;
+                if (x % mod < half)
+                        return y % mod < half ? material1 : material2;
+                else
+                        return y % mod < half ? material2 : material1;
         }
 
- private:
+private:
         static const Scalar gridOffset;
 };
 
 // A sphere consits of a position and a radius.
 class Sphere : public Object {
- public:
+public:
         const Scalar radius;
         const Material *const material;
 
@@ -149,32 +149,34 @@ class Sphere : public Object {
                 : Object(_position), radius(_radius), material(_material) {}
 
         virtual inline Vector normal(const Vector &p) const {
-            return (p - position).normalise();
+                return (p - position).normalise();
         }
 
         virtual inline Scalar intersect(const Ray &ray) const {
-            // Calculate intersection of line and sphere.
-            const Vector distance = position - ray.position;
-            const Scalar b = ray.direction ^ distance;
-            const Scalar d = b * b + radius * radius - (distance ^ distance);
+                // Calculate intersection of line and sphere.
+                const Vector distance = position - ray.position;
+                const Scalar b = ray.direction ^ distance;
+                const Scalar d = b * b + radius * radius - (distance ^ distance);
 
-            if (d < 0)
-                return 0;
+                if (d < 0)
+                        return 0;
 
-            const Scalar t0 = b - sqrt(d);
-            const Scalar t1 = b + sqrt(d);
+                const Scalar t0 = b - sqrt(d);
+                const Scalar t1 = b + sqrt(d);
 
-            if (t0 > ScalarPrecision)
-                return t0;
-            else if (t1 > ScalarPrecision)
-                return t1;
-            else
-                return 0;
+                if (t0 > ScalarPrecision)
+                        return t0;
+                else if (t1 > ScalarPrecision)
+                        return t1;
+                else
+                        return 0;
         }
 
         virtual inline const Material *surface(const Vector &point) const {
-            return material;
+                return material;
         }
 };
+
+}  // namespace rt
 
 #endif  // OBJECTS_H_

@@ -1,6 +1,8 @@
 // -*- c-basic-offset: 8; -*-
 #include "rt/image.h"
 
+namespace rt {
+
 Image::Image(const size_t _width, const size_t _height,
              const Colour _gamma, const bool _inverted)
                 : data(new Pixel[_width * _height]),
@@ -34,3 +36,5 @@ void Image::write(FILE *const out) const {
                         fprintf(out, "\n");
         }
 }
+
+}  // namespace rt

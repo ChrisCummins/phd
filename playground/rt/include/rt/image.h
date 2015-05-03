@@ -8,6 +8,8 @@
 
 #include "./graphics.h"
 
+namespace rt {
+
 // A rendered image.
 class Image {
  public:
@@ -48,5 +50,7 @@ class Image {
         // single byte.
         char _pad[7];
 };
+
+}  // namespace rt
 
 #endif  // RT_IMAGE_H_

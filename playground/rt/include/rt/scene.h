@@ -7,6 +7,8 @@
 #include "./lights.h"
 #include "./objects.h"
 
+namespace rt {
+
 // A full scene, consisting of objects (spheres) and lighting (point
 // lights).
 class Scene {
@@ -26,5 +28,7 @@ class Scene {
             delete lights[i];
     }
 };
+
+}  // namespace rt
 
 #endif  // RT_SCENE_H_

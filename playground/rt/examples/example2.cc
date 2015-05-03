@@ -2,8 +2,8 @@
 #include "rt/rt.h"
 
 // Generated scene code.
-Renderer *getRenderer();
-Image    *getImage();
+rt::Renderer *getRenderer();
+rt::Image    *getImage();
 
 int main() {
         rt::render(getRenderer(), getImage(), "example2.ppm");

@@ -1,15 +1,9 @@
+// -*- c-basic-offset: 8; -*-
 #include "rt/lights.h"
 
-// A profiling counter that keeps track of how many times we've called
-// Renderer::trace().
-std::atomic<uint64_t> traceCounter;
+#include "rt/profiling.h"
 
-// A profiling counter that keeps track of how many times we've
-// contributed light to a ray.
-std::atomic<uint64_t> rayCounter;
-
-// Profiling counter.
-uint64_t lightsCount;
+namespace rt {
 
 namespace {
 
@@ -53,7 +47,7 @@ Colour PointLight::shade(const Vector &point,
                 return output;
 
         // Bump the profiling counter.
-        rayCounter++;
+        profiling::rayCounter++;
 
         // Product of material and light colour.
         const Colour illumination = colour * material->colour;
@@ -78,7 +72,7 @@ SoftLight::SoftLight(const Vector &_position, const Scalar _radius,
                 : position(_position), colour(_colour), samples(_samples),
                   sampler(UniformDistribution(-_radius, _radius)) {
         // Register lights with profiling counter.
-        lightsCount += samples;
+        profiling::lightsCount += samples;
 }
 
 Colour SoftLight::shade(const Vector &point,
@@ -114,7 +108,7 @@ Colour SoftLight::shade(const Vector &point,
                         continue;
 
                 // Bump the profiling counter.
-                rayCounter++;
+                profiling::rayCounter++;
 
                 // Apply Lambert (diffuse) shading.
                 const Scalar lambert = std::max(normal ^ direction,
@@ -131,3 +125,6 @@ Colour SoftLight::shade(const Vector &point,
 
         return output;
 }
+
+
+}  // namespace rt

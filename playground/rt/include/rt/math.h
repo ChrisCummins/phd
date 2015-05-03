@@ -4,6 +4,8 @@
 
 #include <cmath>
 
+namespace rt {
+
 /*
  * Maths. can't live with it, can't live without it. For ray tracing,
  * we're interested in vector and matrix manipulation. Both vector and
@@ -242,5 +244,7 @@ class RotationZ : public Matrix {
 Matrix inline rotation(const Scalar x, const Scalar y, const Scalar z) {
         return RotationZ(z) * RotationY(y) * RotationX(x);
 }
+
+}  // namespace rt
 
 #endif  // RT_MATH_H_

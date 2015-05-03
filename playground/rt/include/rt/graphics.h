@@ -6,6 +6,8 @@
 
 #include "./math.h"
 
+namespace rt {
+
 /*
  * Pixels and colour types.
  */
@@ -82,5 +84,7 @@ class Colour {
                 return {scale(clamp(r)), scale(clamp(g)), scale(clamp(b))};
         }
 };
+
+}  // namespace rt
 
 #endif  // RT_GRAPHICS_H_

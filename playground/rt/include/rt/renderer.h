@@ -10,10 +10,12 @@
 #include "./ray.h"
 #include "./scene.h"
 
+namespace rt {
+
 class Renderer {
  public:
         Renderer(const Scene  *const scene,
-                 const Camera *const camera,
+                 const rt::Camera *const camera,
                  const size_t maxDepth  = 5000,
                  const size_t aaSamples = 8,
                  const size_t aaRadius  = .9);
@@ -21,7 +23,7 @@ class Renderer {
         ~Renderer();
 
         const Scene *const scene;
-        const Camera *const camera;
+        const rt::Camera *const camera;
 
         // Renderer configuration:
 
@@ -52,5 +54,7 @@ class Renderer {
         // Calculate the colour of a ray through supersampling.
         Colour supersample(const Ray &ray) const;
 };
+
+}  // namespace rt
 
 #endif  // RT_RENDERER_H_
