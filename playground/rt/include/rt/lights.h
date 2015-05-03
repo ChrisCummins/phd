@@ -39,7 +39,7 @@ class PointLight : public Light {
                       const Colour &_colour = Colour(0xff, 0xff, 0xff))
             : position(_position), colour(_colour) {
             // Register light with profiling counter.
-            profiling::lightsCount += 1;
+            profiling::counters::incLightsCount();
     }
 
     virtual Colour shade(const Vector &point,

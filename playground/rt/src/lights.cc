@@ -46,8 +46,7 @@ Colour PointLight::shade(const Vector &point,
         if (blocked)
                 return output;
 
-        // Bump the profiling counter.
-        profiling::rayCounter++;
+        profiling::counters::incRayCount();
 
         // Product of material and light colour.
         const Colour illumination = colour * material->colour;
@@ -72,7 +71,7 @@ SoftLight::SoftLight(const Vector &_position, const Scalar _radius,
                 : position(_position), colour(_colour), samples(_samples),
                   sampler(UniformDistribution(-_radius, _radius)) {
         // Register lights with profiling counter.
-        profiling::lightsCount += samples;
+        profiling::counters::incLightsCount();
 }
 
 Colour SoftLight::shade(const Vector &point,
@@ -108,7 +107,7 @@ Colour SoftLight::shade(const Vector &point,
                         continue;
 
                 // Bump the profiling counter.
-                profiling::rayCounter++;
+                profiling::counters::incRayCount();
 
                 // Apply Lambert (diffuse) shading.
                 const Scalar lambert = std::max(normal ^ direction,

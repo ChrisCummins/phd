@@ -5,19 +5,46 @@ namespace rt {
 
 namespace profiling {
 
-// Profiling counter.
-uint64_t objectsCount;
+namespace counters {
 
-// Profiling counter.
-uint64_t lightsCount;
+static std::atomic<Counter> objectsCount;
+static std::atomic<Counter> lightsCount;
+static std::atomic<Counter> traceCounter;
+static std::atomic<Counter> rayCounter;
 
-// A profiling counter that keeps track of how many times we've called
-// Renderer::trace().
-std::atomic<uint64_t> traceCounter;
+void incObjectsCount() {
+    objectsCount++;
+}
 
-// A profiling counter that keeps track of how many times we've
-// contributed light to a ray.
-std::atomic<uint64_t> rayCounter;
+Counter getObjectsCount() {
+    return static_cast<Counter>(objectsCount);
+}
+
+void incLightsCount() {
+    lightsCount++;
+}
+
+Counter getLightsCount() {
+    return static_cast<Counter>(lightsCount);
+}
+
+void incTraceCount() {
+    traceCounter++;
+}
+
+Counter getTraceCount() {
+    return static_cast<Counter>(traceCounter);
+}
+
+void incRayCount() {
+    rayCounter++;
+}
+
+Counter getRayCount() {
+    return static_cast<Counter>(rayCounter);
+}
+
+}  // namespace counters
 
 }  // namespace profiling
 

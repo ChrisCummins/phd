@@ -1,6 +1,4 @@
 // -*- c-basic-offset: 8; -*-
-#include <chrono>
-
 #include "rt/rt.h"
 
 #include "tbb/parallel_for.h"
@@ -14,18 +12,17 @@ void render(const Renderer *const renderer,
         printf("Rendering %lu pixels with %lu samples per pixel, "
                "%lu objects, and %lu light sources ...\n",
                image->size, renderer->totalSamples,
-               profiling::objectsCount, profiling::lightsCount);
+               profiling::counters::getObjectsCount(),
+               profiling::counters::getLightsCount());
 
-        // Record start time.
-        const std::chrono::high_resolution_clock::time_point startTime
-                        = std::chrono::high_resolution_clock::now();
+        // Start timer.
+        profiling::Timer t = profiling::Timer();
 
         // Render the scene to the output file.
         renderer->render(image);
 
-        // Record end time.
-        const std::chrono::high_resolution_clock::time_point endTime
-                        = std::chrono::high_resolution_clock::now();
+        // Get elapsed time.
+        Scalar runTime = t.elapsed();
 
         // Open the output file.
         printf("Opening file '%s'...\n", path);
@@ -43,19 +40,17 @@ void render(const Renderer *const renderer,
         delete image;
 
         // Calculate performance information.
-        Scalar elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
-            endTime - startTime).count() / 1e6;
-        uint64_t traceCount = static_cast<uint64_t>(profiling::traceCounter);
-        uint64_t rayCount = static_cast<uint64_t>(profiling::rayCounter);
-        uint64_t traceRate = traceCount / elapsed;
-        uint64_t rayRate = rayCount / elapsed;
-        uint64_t pixelRate = image->size / elapsed;
+        profiling::Counter traceCount = profiling::counters::getTraceCount();
+        profiling::Counter rayCount   = profiling::counters::getRayCount();
+        profiling::Counter traceRate  = traceCount / runTime;
+        profiling::Counter rayRate    = rayCount / runTime;
+        profiling::Counter pixelRate  = image->size / runTime;
         Scalar tracePerPixel = static_cast<Scalar>(traceCount)
                         / static_cast<Scalar>(image->size);
 
         // Print performance summary.
         printf("Rendered %lu pixels from %lu traces in %.3f seconds.\n\n",
-               image->size, traceCount, elapsed);
+               image->size, traceCount, runTime);
         printf("Render performance:\n");
         printf("\tRays per second:\t%lu\n", rayRate);
         printf("\tTraces per second:\t%lu\n", traceRate);

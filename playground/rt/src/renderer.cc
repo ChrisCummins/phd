@@ -125,7 +125,7 @@ void Renderer::render(const Image *const image) const {
 Colour Renderer::trace(const Ray &ray, Colour colour,
                        const unsigned int depth) const {
         // Bump the profiling counter.
-        profiling::traceCounter++;
+        profiling::counters::incTraceCount();
 
         // Determine the closet ray-object intersection (if any).
         Scalar t;

@@ -43,7 +43,7 @@ class Object {
         explicit inline Object(const Vector &_position)
                 : position(_position) {
                 // Register object with profiling counter.
-                profiling::objectsCount += 1;
+                profiling::counters::incObjectsCount();
         }
 
         // Virtual destructor.
