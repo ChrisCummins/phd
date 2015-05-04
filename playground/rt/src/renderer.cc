@@ -9,15 +9,16 @@ namespace {
 
 using rt::Colour;
 using rt::Object;
+using rt::Objects;
 using rt::Ray;
 using rt::Scalar;
 
 // Return the index of the object with the closest intersection, and
-// the distance to the intersection `t'. If no intersection, return
-// the number of number of objects (i.e. an illegal index).
-size_t closestIntersect(const Ray &ray,
-                        const std::vector<const Object *> &objects,
-                        Scalar *const t) {
+// set the distance to the intersection `t'. If no intersection,
+// return the number of number of objects (i.e. an illegal index).
+size_t static inline closestIntersect(const Ray &ray,
+                                      const Objects &objects,
+                                      Scalar *const t) {
         // Index of, and distance to closest intersect:
         size_t index = objects.size();
         *t = INFINITY;

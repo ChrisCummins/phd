@@ -564,8 +564,8 @@ def get_scene_code():
     for light in lights:
         c += "  {0},\n".format(light)
     c += "};\n"
-    c += "const std::vector<const Object *> objects(_objects, _objects + (sizeof(_objects) / sizeof(_objects[0])));\n"
-    c += "const std::vector<const Light *> lights(_lights, _lights + (sizeof(_lights) / sizeof(_lights[0])));\n"
+    c += "const Objects objects(_objects, _objects + (sizeof(_objects) / sizeof(_objects[0])));\n"
+    c += "const Lights lights(_lights, _lights + (sizeof(_lights) / sizeof(_lights[0])));\n"
     c += "const Scene *const scene = new Scene(objects, lights);\n"
 
     return c

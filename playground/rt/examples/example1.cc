@@ -32,8 +32,9 @@ int main() {
                                        50, 50,  // film width & height
                                        50);     // lens focal length
 
-        const std::vector<const rt::Object *> objects(_objects, _objects + 3);
-        const std::vector<const rt::Light *>  lights( _lights,  _lights  + 2);
+        // Create collections.
+        const rt::Objects objects(_objects, _objects + 3);
+        const rt::Lights  lights( _lights,  _lights  + 2);
 
         // Create renderer.
         const rt::Renderer *const renderer =

@@ -13,12 +13,12 @@ namespace rt {
 // lights).
 class Scene {
  public:
-        const std::vector<const Object *> objects;
-        const std::vector<const Light *> lights;
+        const Objects objects;
+        const Lights lights;
 
         // Constructor.
-        inline Scene(const std::vector<const Object *> &_objects,
-                     const std::vector<const Light *> &_lights)
+        inline Scene(const Objects &_objects,
+                     const Lights &_lights)
                 : objects(_objects), lights(_lights) {}
 
         inline ~Scene() {

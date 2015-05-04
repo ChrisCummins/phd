@@ -25,8 +25,10 @@ class Light {
                          const Vector &normal,
                          const Vector &toRay,
                          const Material *const material,
-                         const std::vector<const Object *> objects) const = 0;
+                         const Objects objects) const = 0;
 };
+
+typedef std::vector<const Light *> Lights;
 
 // A round light source.
 class SoftLight : public Light {
@@ -51,7 +53,7 @@ class SoftLight : public Light {
                              const Vector &normal,
                              const Vector &toRay,
                              const Material *const material,
-                             const std::vector<const Object *> objects) const;
+                             const Objects objects) const;
 };
 
 }  // namespace rt

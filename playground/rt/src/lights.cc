@@ -9,7 +9,8 @@ namespace {
 
 // Return whether a given ray intersects any of the objects within a
 // given distance.
-bool intersects(const Ray &ray, const std::vector<const Object *> &objects,
+bool intersects(const Ray &ray,
+                const Objects &objects,
                 const Scalar distance) {
     // Determine any object intersects ray within distance:
     for (size_t i = 0; i < objects.size(); i++) {
@@ -28,7 +29,7 @@ Colour SoftLight::shade(const Vector &point,
                         const Vector &normal,
                         const Vector &toRay,
                         const Material *const material,
-                        const std::vector<const Object *> objects) const {
+                        const Objects objects) const {
         // Shading is additive, starting with black.
         Colour output = Colour();
 

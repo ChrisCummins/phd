@@ -2,6 +2,8 @@
 #ifndef OBJECTS_H_
 #define OBJECTS_H_
 
+#include <vector>
+
 #include "./math.h"
 #include "./ray.h"
 #include "./graphics.h"
@@ -57,6 +59,8 @@ class Object {
         // Return material at point on surface.
         virtual const Material *surface(const Vector &point) const = 0;
 };
+
+typedef std::vector<const Object *> Objects;
 
 // A plane.
 class Plane : public Object {
