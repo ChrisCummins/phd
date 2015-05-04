@@ -137,12 +137,12 @@ Size: 200
 ##########
 
 [Lens.wideangle]
-FocalLength: 35
+FocalLength: 36
 
 [Film.colour]
 Saturation: 100
 RGBGamma: 98 102 98
-Width: 36
+Width: 43
 Height: 24
 
 [Camera.Perspective]
