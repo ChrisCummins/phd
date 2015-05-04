@@ -40,7 +40,7 @@ int main() {
                        new rt::Renderer(new rt::Scene(objects, lights), camera);
 
         // Run ray tracer.
-        rt::render(renderer, new rt::Image(512, 512), "example1.ppm");
+        rt::render(renderer, new rt::Image(512, 512), "render1.ppm");
 
         return 0;
 }

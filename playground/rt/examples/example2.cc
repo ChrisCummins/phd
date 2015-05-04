@@ -6,7 +6,7 @@ rt::Renderer *getRenderer();
 rt::Image    *getImage();
 
 int main() {
-        rt::render(getRenderer(), getImage(), "example2.ppm");
+        rt::render(getRenderer(), getImage(), "render2.ppm");
 
         return 0;
 }
