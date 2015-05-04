@@ -66,14 +66,6 @@ Colour PointLight::shade(const Vector &point,
         return output;
 }
 
-SoftLight::SoftLight(const Vector &_position, const Scalar _radius,
-                     const Colour &_colour, const size_t _samples)
-                : position(_position), colour(_colour), samples(_samples),
-                  sampler(UniformDistribution(-_radius, _radius)) {
-        // Register lights with profiling counter.
-        profiling::counters::incLightsCount(_samples);
-}
-
 Colour SoftLight::shade(const Vector &point,
                         const Vector &normal,
                         const Vector &toRay,
