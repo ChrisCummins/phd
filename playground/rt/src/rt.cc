@@ -8,10 +8,13 @@ namespace rt {
 void render(const Renderer *const renderer,
             const Image *const image,
             const char *const path) {
+        const size_t subWidth = renderer->subpixels + 2 * renderer->overlap;
+        const size_t subpixels = subWidth * subWidth;
+
         // Print start message.
         printf("Rendering %lu pixels with %lu samples per pixel, "
                "%lu objects, and %lu light sources ...\n",
-               image->size, renderer->numSubpixels,
+               image->size, subpixels,
                profiling::counters::getObjectsCount(),
                profiling::counters::getLightsCount());
 

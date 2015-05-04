@@ -7,11 +7,8 @@
 
 namespace {
 
-using rt::Colour;
-using rt::Object;
-using rt::Objects;
-using rt::Ray;
-using rt::Scalar;
+// We're using an anonymous namespace so we're allowed to import rt::
+using namespace rt;  // NOLINT(build/namespaces)
 
 // Return the index of the object with the closest intersection, and
 // set the distance to the intersection `t'. If no intersection,
@@ -40,6 +37,22 @@ size_t static inline closestIntersect(const Ray &ray,
         return index;
 }
 
+// Create a transformation matrix to scale from image space
+// coordinates (i.e. [x,y] coordinates with reference to the image
+// size) to camera space coordinates (i.e. [x,y] coordinates with
+// reference to the camera's film size).
+Matrix cameraImageTransform(const Camera *const camera,
+                            const DataImage *const image) {
+        // Scale image coordinates to camera coordinates.
+        const Scale scale(camera->width / image->width,
+                          camera->height / image->height, 1);
+        // Offset from image coordinates to camera coordinates.
+        const Translation offset(-(image->width * .5),
+                                 -(image->height * .5), 0);
+        // Combine the transformation matrices.
+        return scale * offset;
+}
+
 }  // namespace
 
 namespace rt {
@@ -51,10 +64,8 @@ Renderer::Renderer(const Scene *const _scene,
                    const size_t _maxDepth)
                 : scene(_scene), camera(_camera),
                   maxDepth(_maxDepth),
-                  subpixels(_subpixels), overlap(_overlap),
-                  tileSize(_subpixels + 2 * _overlap),
-                  numSubpixels((_subpixels + 2 * _overlap) *
-                               (_subpixels + 2 * _overlap)) {}
+                  subpixels(_subpixels),
+                  overlap(_overlap) {}
 
 Renderer::~Renderer() {
         delete scene;
@@ -62,31 +73,35 @@ Renderer::~Renderer() {
 }
 
 void Renderer::render(const Image *const image) const {
-        const size_t dataWidth = image->width * subpixels + 2 * overlap;
-        const size_t dataHeight = image->height * subpixels + 2 * overlap;
-        const size_t dataSize = dataWidth * dataHeight;
-        Colour *const data = new Colour[dataSize];
+        // Create an enlarged image to render to.
+        const size_t width  = image->width  * subpixels + 2 * overlap;
+        const size_t height = image->height * subpixels + 2 * overlap;
+        const DataImage *const data = new DataImage(width, height);
 
-        // Scale data coordinates to camera coordinates.
-        const Scale scale(camera->width / dataWidth,
-                          camera->height / dataHeight, 1);
-        // Offset from data coordinates to camera coordinates.
-        const Translation offset(-(dataWidth * .5),
-                                 -(dataHeight * .5), 0);
+        // Render to this image.
+        render(data);
+
+        // Shrink this larger image to the final output size.
+        data->downsample(image, subpixels, overlap);
+
+        delete data;
+}
+
+void Renderer::render(const DataImage *const image) const {
         // Create combined transformation matrix.
-        const Matrix transform = scale * offset;
+        const Matrix transform = cameraImageTransform(camera, image);
 
-        // For each point in the super-sampled grid:
+        // For each pixel in the image:
         tbb::parallel_for(
-            static_cast<size_t>(0), dataSize, [&](size_t i) {
-                    // Image space coordinates.
-                    const Scalar x = i % dataWidth;
-                    const Scalar y = i / dataWidth;
+            static_cast<size_t>(0), image->size, [&](size_t i) {
+                    // Get the image space coordinates.
+                    const Scalar x = i % image->width;
+                    const Scalar y = i / image->width;
 
-                    // Convert image to camera (local) space coordinates.
+                    // Convert image to camera space coordinates.
                     const Vector localPosition = transform * Vector(x, y, 0);
 
-                    // Translate camera (local) space to world space.
+                    // Translate camera space to world space.
                     const Vector lensPoint =
                                     camera->right * localPosition.x +
                                     camera->up * localPosition.y +
@@ -100,32 +115,8 @@ void Renderer::render(const Image *const image) const {
                     const Ray ray = Ray(camera->filmBack, direction);
 
                     // Sample the ray.
-                    data[i] = trace(ray);
+                    image->set(i, trace(ray));
             });
-
-        // Iterate over each pixel in the image.
-        for (size_t y = 0; y < image->height; y++)
-                for (size_t x = 0; x < image->width; x++)
-                        image->set(x, y, interpolate(x, y, dataWidth, data));
-}
-
-Colour Renderer::interpolate(const size_t image_x,
-                             const size_t image_y,
-                             const size_t dataWidth,
-                             const Colour *const data) const {
-        const size_t y = image_y * subpixels;
-        const size_t x = image_x * subpixels;
-
-        // Accumulate colour values of sub-pixels.
-        Colour acc;
-        for (size_t j = 0; j < tileSize; j++) {
-                for (size_t i = 0; i < tileSize; i++) {
-                        const size_t index = (y + j) * dataWidth + x + i;
-                        acc += data[index] / numSubpixels;
-                }
-        }
-
-        return acc;
 }
 
 Colour Renderer::trace(const Ray &ray, Colour colour,

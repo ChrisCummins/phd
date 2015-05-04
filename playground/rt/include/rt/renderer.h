@@ -16,7 +16,7 @@ class Renderer {
  public:
         Renderer(const Scene  *const scene,
                  const rt::Camera *const camera,
-                 const size_t subpixels = 4,
+                 const size_t subpixels = 6,
                  const size_t overlap   = 1,
                  const size_t maxDepth  = 5000);
 
@@ -33,13 +33,15 @@ class Renderer {
         // Super sampling anti-aliasing configuration:
         const size_t subpixels;
         const size_t overlap;
-        const size_t tileSize;
-        const size_t numSubpixels;
 
         // The heart of the raytracing engine.
         void render(const Image *const image) const;
 
  private:
+        // Private render to function to create the supersampled
+        // image.
+        void render(const DataImage *const image) const;
+
         // Trace a ray trough a given scene and return the final
         // colour.
         Colour trace(const Ray &ray,
