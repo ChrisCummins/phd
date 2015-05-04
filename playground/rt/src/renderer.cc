@@ -119,9 +119,11 @@ void Renderer::render(const DataImage *const image) const {
             });
 }
 
-Colour Renderer::trace(const Ray &ray, Colour colour,
+Colour Renderer::trace(const Ray &ray,
                        const unsigned int depth) const {
-        // Bump the profiling counter.
+        Colour colour;
+
+        // Bump profiling counter.
         profiling::counters::incTraceCount();
 
         // Determine the closet ray-object intersection (if any).
@@ -160,7 +162,7 @@ Colour Renderer::trace(const Ray &ray, Colour colour,
                 // Create a reflection.
                 const Ray reflection(intersect, reflectionDirection);
                 // Add reflection light.
-                colour += trace(reflection, colour, depth + 1) * reflectivity;
+                colour += trace(reflection, depth + 1) * reflectivity;
         }
 
         return colour;

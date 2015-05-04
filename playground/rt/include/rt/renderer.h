@@ -45,7 +45,6 @@ class Renderer {
         // Trace a ray trough a given scene and return the final
         // colour.
         Colour trace(const Ray &ray,
-                     Colour colour = Colour(0, 0, 0),
                      const unsigned int depth = 0) const;
 
         // Perform supersample interpolation.
