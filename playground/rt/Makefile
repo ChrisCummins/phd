@@ -22,9 +22,14 @@ export SHELL   := /bin/bash
 #################
 # Build options #
 #################
+# Whether to enable support for gprof profiling tool:
+GPROF_ENABLED = 0
+# The GCC optimisation level to use:
+OPTIMISATION_LEVEL = -O2
+
 # Compile-time flags.
 CxxFlags =			\
-	-O2			\
+	$(OPTIMISATION_LEVEL)	\
 	-pedantic		\
 	-Wall			\
 	-Wextra			\
@@ -70,6 +75,10 @@ CxxWarnings =			\
 	$(NULL)
 CxxFlags += $(addprefix -W,$(CxxWarnings))
 
+# Enable GPROF flags if required.
+ifeq ($(GPROF_ENABLED),1)
+CxxFlags += -pg
+endif
 
 ###########
 # Targets #
