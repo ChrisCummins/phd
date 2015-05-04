@@ -68,10 +68,10 @@ Reflectivity: 25
 
 [Material.white]
 Colour: 0xffffff
-Diffuse: 60
+Diffuse: 80
 Specular: 50
-Shininess: 6
-Reflectivity: 45
+Shininess: 4
+Reflectivity: 50
 
 
 ###########
