@@ -10,14 +10,14 @@ namespace {
 // We're using an anonymous namespace so we're allowed to import rt::
 using namespace rt;  // NOLINT(build/namespaces)
 
-// Return the index of the object with the closest intersection, and
-// set the distance to the intersection `t'. If no intersection,
-// return the number of number of objects (i.e. an illegal index).
-size_t static inline closestIntersect(const Ray &ray,
-                                      const Objects &objects,
-                                      Scalar *const t) {
+// Return the object with the closest intersection to ray, and set the
+// distance to the intersection `t'. If no intersection, returns a
+// nullptr.
+static inline const Object *closestIntersect(const Ray &ray,
+                                             const Objects &objects,
+                                             Scalar *const t) {
         // Index of, and distance to closest intersect:
-        size_t index = objects.size();
+        const Object *closest = nullptr;
         *t = INFINITY;
 
         // For each object:
@@ -30,11 +30,11 @@ size_t static inline closestIntersect(const Ray &ray,
                 if (currentT != 0 && currentT < *t) {
                         // New closest intersection.
                         *t = currentT;
-                        index = i;
+                        closest = objects[i];
                 }
         }
 
-        return index;
+        return closest;
 }
 
 // Create a transformation matrix to scale from image space
@@ -128,14 +128,11 @@ Colour Renderer::trace(const Ray &ray,
 
         // Determine the closet ray-object intersection (if any).
         Scalar t;
-        size_t index = closestIntersect(ray, scene->objects, &t);
-
-        // If the ray doesn't intersect any object, return.
-        if (index == scene->objects.size())
+        const Object *const object = closestIntersect(ray, scene->objects, &t);
+        // If the ray doesn't intersect any object, do nothing.
+        if (object == nullptr)
                 return colour;
 
-        // Object with closest intersection.
-        const Object *object = scene->objects[index];
         // Point of intersection.
         const Vector intersect = ray.position + ray.direction * t;
         // Surface normal at point of intersection.
