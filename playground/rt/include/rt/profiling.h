@@ -36,19 +36,19 @@ typedef uint64_t Counter;
 namespace counters {
 
 // Counter for the number of objects.
-void incObjectsCount();
+void incObjectsCount(const size_t n = 1);
 Counter getObjectsCount();
 
 // Counter for the number of lights.
-void incLightsCount();
+void incLightsCount(const size_t n = 1);
 Counter getLightsCount();
 
 // Counter for the number of traces.
-void incTraceCount();
+void incTraceCount(const size_t n = 1);
 Counter getTraceCount();
 
 // Counter for the number of rays.
-void incRayCount();
+void incRayCount(const size_t n = 1);
 Counter getRayCount();
 
 }  // namespace counters

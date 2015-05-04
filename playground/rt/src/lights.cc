@@ -71,7 +71,7 @@ SoftLight::SoftLight(const Vector &_position, const Scalar _radius,
                 : position(_position), colour(_colour), samples(_samples),
                   sampler(UniformDistribution(-_radius, _radius)) {
         // Register lights with profiling counter.
-        profiling::counters::incLightsCount();
+        profiling::counters::incLightsCount(_samples);
 }
 
 Colour SoftLight::shade(const Vector &point,
