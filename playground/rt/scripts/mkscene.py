@@ -413,7 +413,7 @@ def get_softlight_code(name, pairs):
     lights.add(name)
 
     return ("const SoftLight *const {name} = "
-            "new SoftLight({position}, {size}, {colour}, {samples});"
+            "new SoftLight({position}, {colour}, {size}, {samples});"
             .format(name=name, position=position, size=size,
                     colour=colour, samples=samples))
 
@@ -426,8 +426,8 @@ def get_pointlight_code(name, pairs):
               .format(name))
     lights.add(name)
 
-    return ("const PointLight *const {name} = "
-            "new PointLight({position}, {colour});"
+    return ("const SoftLight *const {name} = "
+            "new SoftLight({position}, {colour});"
             .format(name=name, position=position, colour=colour))
 
 def consume_val(pairs, name):

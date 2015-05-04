@@ -24,48 +24,6 @@ bool intersects(const Ray &ray, const std::vector<const Object *> &objects,
 
 }  // namespace
 
-Colour PointLight::shade(const Vector &point,
-                         const Vector &normal,
-                         const Vector &toRay,
-                         const Material *const material,
-                         const std::vector<const Object *> objects) const {
-        // Shading is additive, starting with black.
-        Colour output = Colour();
-
-        // Vector from point to light.
-        const Vector toLight = position - point;
-        // Distance from point to light.
-        const Scalar distance = toLight.size();
-        // Direction from point to light.
-        const Vector direction = toLight / distance;
-
-        // Determine whether light is blocked.
-        const bool blocked = intersects(Ray(point, direction),
-                                        objects, distance);
-        // Do nothing without line of sight.
-        if (blocked)
-                return output;
-
-        profiling::counters::incRayCount();
-
-        // Product of material and light colour.
-        const Colour illumination = colour * material->colour;
-
-        // Apply Lambert (diffuse) shading.
-        const Scalar lambert = std::max(normal ^ direction,
-                                        static_cast<Scalar>(0));
-        output += illumination * material->diffuse * lambert;
-
-        // Apply Blinn-Phong (specular) shading.
-        const Vector bisector = (toRay + direction).normalise();
-        const Scalar phong = pow(std::max(normal ^ bisector,
-                                          static_cast<Scalar>(0)),
-                                 material->shininess);
-        output += illumination * material->specular * phong;
-
-        return output;
-}
-
 Colour SoftLight::shade(const Vector &point,
                         const Vector &normal,
                         const Vector &toRay,

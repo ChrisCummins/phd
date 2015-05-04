@@ -18,10 +18,10 @@ int main() {
 
         // Create lights.
         const rt::Light *_lights[] = {
-                new rt::PointLight(rt::Vector(-300,  400, -400),
-                                   rt::Colour(0xffffff)),
-                new rt::PointLight(rt::Vector( 300, -200,  100),
-                                   rt::Colour(0x505050))
+                new rt::SoftLight(rt::Vector(-300,  400, -400),
+                                  rt::Colour(0xffffff)),
+                new rt::SoftLight(rt::Vector( 300, -200,  100),
+                                  rt::Colour(0x505050))
         };
 
         // Create camera.

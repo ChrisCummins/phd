@@ -28,27 +28,6 @@ class Light {
                          const std::vector<const Object *> objects) const = 0;
 };
 
-// A point light source.
-class PointLight : public Light {
- public:
-    const Vector position;
-    const Colour colour;
-
-    // Constructor.
-    inline PointLight(const Vector &_position,
-                      const Colour &_colour = Colour(0xff, 0xff, 0xff))
-            : position(_position), colour(_colour) {
-            // Register light with profiling counter.
-            profiling::counters::incLightsCount();
-    }
-
-    virtual Colour shade(const Vector &point,
-                         const Vector &normal,
-                         const Vector &toRay,
-                         const Material *const material,
-                         const std::vector<const Object *> objects) const;
-};
-
 // A round light source.
 class SoftLight : public Light {
  public:
@@ -58,8 +37,9 @@ class SoftLight : public Light {
         mutable UniformDistribution sampler;
 
         // Constructor.
-        inline SoftLight(const Vector &_position, const Scalar _radius,
+        inline SoftLight(const Vector &_position,
                          const Colour &_colour = Colour(0xff, 0xff, 0xff),
+                         const Scalar _radius = 0,
                          const size_t _samples = 1)
                 : position(_position), colour(_colour), samples(_samples),
                            sampler(UniformDistribution(-_radius, _radius)) {
