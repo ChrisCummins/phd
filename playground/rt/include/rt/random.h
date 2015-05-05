@@ -9,12 +9,15 @@
 
 namespace rt {
 
+// Data type for seeding random number generators.
+typedef uint64_t Seed;
+
 // A random number generator for sampling a uniform distribution
 // within a specific range.
 class UniformDistribution {
  public:
     inline UniformDistribution(const Scalar _min, const Scalar _max,
-                               const uint64_t _seed = 7564231ULL)
+                               const Seed _seed = 7564231ULL)
             : divisor(scalarMax / (_max - _min)),
                       min(_min),  // NOLINT(build/include_what_you_use)
                       seed(_seed) {}
