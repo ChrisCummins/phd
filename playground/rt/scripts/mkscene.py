@@ -593,12 +593,13 @@ def get_renderer_code():
 
 def get_image_code():
     c = ("    return new Image({width}, {height}, "
-         "{colour});".format(width=renderer["scale"] * film["width"],
-                             height=renderer["scale"] * film["height"],
-                             colour=("Colour({0}, {1}, {2})"
-                                     .format(film["gamma"][0],
-                                             film["gamma"][1],
-                                             film["gamma"][2]))))
+         "{saturation}, {colour});"
+         .format(width=renderer["scale"] * film["width"],
+                 height=renderer["scale"] * film["height"],
+                 saturation=film["saturation"],
+                 colour=("Colour({0}, {1}, {2})".format(film["gamma"][0],
+                                                        film["gamma"][1],
+                                                        film["gamma"][2]))))
     return c
 
 def get_code(sections):

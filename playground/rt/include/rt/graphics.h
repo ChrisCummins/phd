@@ -2,6 +2,7 @@
 #ifndef RT_GRAPHICS_H_
 #define RT_GRAPHICS_H_
 
+#include <algorithm>
 #include <cstdint>
 
 #include "./math.h"
@@ -31,6 +32,9 @@ PixelColourType inline scale(const Scalar x) {
 // A pixel is a trio of R,G,B components.
 struct Pixel { PixelColourType r, g, b; };
 
+// Forward declaration of HSL colour type (defined below Colour).
+class HSL;
+
 // A colour is represented by R,G,B scalars, and are mutable through
 // the += and /= operators. They behave identically to Vectors.
 class Colour {
@@ -49,6 +53,9 @@ class Colour {
                                const float _g = 0,
                                const float _b = 0)
                         : r(_r), g(_g), b(_b) {}
+
+        // Constructor from (h,s,l) description.
+        explicit Colour(const HSL &hsl);
 
         // Colour addition.
         void operator+=(const Colour &c) {
@@ -83,6 +90,30 @@ class Colour {
         explicit operator Pixel() const {
                 return {scale(clamp(r)), scale(clamp(g)), scale(clamp(b))};
         }
+
+        Scalar max() const {
+                return std::max(r, std::max(g, b));
+        }
+
+        Scalar min() const {
+                return std::min(r, std::min(g, b));
+        }
+
+        Colour clampRange() const {
+                return Colour(clamp(r), clamp(g), clamp(b));
+        }
+
+        Scalar delta() const {
+                return max() - min();
+        }
+};
+
+// Colour as a Hue, Saturation, Luminance set.
+class HSL {
+ public:
+        Scalar h, s, l;
+
+        explicit HSL(const Colour &c);
 };
 
 }  // namespace rt

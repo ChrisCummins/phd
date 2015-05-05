@@ -84,6 +84,7 @@ endif
 # Targets #
 ###########
 RayTracerSources =		\
+	graphics.cc		\
 	image.cc		\
 	lights.cc		\
 	objects.cc		\

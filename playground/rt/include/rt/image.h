@@ -17,10 +17,12 @@ class Image {
         const size_t width;
         const size_t height;
         const size_t size;
+        const Scalar saturation;
         const Colour gamma;
         const bool inverted;
 
         Image(const size_t width, const size_t height,
+              const Scalar saturation = 1,
               const Colour gamma = Colour(1, 1, 1),
               const bool inverted = true);
 
@@ -39,9 +41,19 @@ class Image {
         void inline set(const size_t i,
                         const Colour &value) const {
                 // Apply gamma correction.
-                const Colour corrected = Colour(std::pow(value.r, gamma.r),
-                                                std::pow(value.g, gamma.g),
-                                                std::pow(value.b, gamma.b));
+                Colour corrected = Colour(std::pow(value.r, gamma.r),
+                                          std::pow(value.g, gamma.g),
+                                          std::pow(value.b, gamma.b));
+
+                // TODO: Fix strange aliasing effect as a result of
+                // RGB -> HSL -> RGB conversion.
+                //
+                // Apply saturation.
+                // HSL hsl(corrected);
+                // hsl.s *= saturation;
+
+                // Convert back to .
+                // corrected = Colour(hsl);
 
                 // Explicitly cast colour to pixel data.
                 data[i] = static_cast<Pixel>(corrected);

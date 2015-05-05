@@ -4,11 +4,13 @@
 namespace rt {
 
 Image::Image(const size_t _width, const size_t _height,
-             const Colour _gamma, const bool _inverted)
+             const Scalar _saturation, const Colour _gamma,
+             const bool _inverted)
                 : data(new Pixel[_width * _height]),
                   width(_width),
                   height(_height),
                   size(_width * _height),
+                  saturation(_saturation),
                   gamma(Colour(1 / _gamma.r, 1 / _gamma.g, 1 / _gamma.b)),
                   inverted(_inverted) {}
 
