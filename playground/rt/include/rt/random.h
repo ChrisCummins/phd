@@ -44,6 +44,32 @@ class UniformDistribution {
     static const uint64_t mult;
 };
 
+// A generator for sampling random points over a disk.
+class UniformDiskDistribution {
+ public:
+        inline UniformDiskDistribution(const Scalar _radius,
+                                       const Seed _seed)
+                : angle(-M_PI, M_PI, _seed),
+                  distance(0, sqrt(_radius), _seed) {}
+
+        // Return a random point on the disk, with the vector x and y
+        // components corresponding to the x and y coordinates of the
+        // point within the disk.
+        Vector inline operator()() {
+                const Scalar theta = angle();
+                const Scalar radius = distance();
+
+                const Scalar x = radius * cos(theta);
+                const Scalar y = radius * sin(theta);
+
+                return Vector(x, y, 0);
+        }
+
+ private:
+        UniformDistribution angle;
+        UniformDistribution distance;
+};
+
 }  // namespace rt
 
 #endif  // RT_RANDOM_H_
