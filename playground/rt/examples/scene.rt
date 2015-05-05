@@ -10,15 +10,35 @@ Scale: 45
 
 [Renderer.Antialiasing]
 # The number of sub-pixel samples to make:
-Subpixels: 5
+Subpixels: 8
 # The maximum sub-pixel sampling offset:
-Overlap: 1
+Overlap: 0
 
 [Renderer.Softlights]
 # The number of rays to cast for soft lights is defined by:
 #   N = base + (scalefactor * lightradius) ^ 3
 Base: 3
 ScaleFactor: 0.021
+
+
+##########
+# Camera #
+##########
+
+[Lens.wideangle]
+FocalLength: 36
+
+[Film.colour]
+Saturation: 100
+RGBGamma: 98 102 98
+Width: 43
+Height: 24
+
+[Camera.Perspective]
+Position: 250 1000 3000
+Lookat: 0 850 0
+Lens: $Lens.wideangle
+Film: $Film.colour
 
 
 ##########
@@ -130,23 +150,3 @@ Material: $Material.mirror
 Colour: @white
 Position: -300 1500 200
 Size: 200
-
-
-##########
-# Camera #
-##########
-
-[Lens.wideangle]
-FocalLength: 36
-
-[Film.colour]
-Saturation: 100
-RGBGamma: 98 102 98
-Width: 43
-Height: 24
-
-[Camera.Perspective]
-Position: 250 1000 3000
-Lookat: 0 850 0
-Lens: $Lens.wideangle
-Film: $Film.colour
