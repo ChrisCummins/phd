@@ -28,9 +28,8 @@ int main() {
         const rt::Camera *const camera =
                         new rt::Camera(rt::Vector(0, 0, -250),  // position
                                        rt::Vector(0, 0, 0),     // look at
-                                       rt::Vector(0, 1, 0),     // up
-                                       50, 50,  // film width & height
-                                       50);     // lens focal length
+                                       50, 50,         // film width & height
+                                       rt::Lens(50));  // focal length
 
         // Create collections.
         const rt::Objects objects(_objects, _objects + 3);

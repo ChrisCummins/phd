@@ -8,11 +8,15 @@
 # The maximum depth to trace rays to:
 RayDepth: 5000
 # The output image scale factor:
-Scale: 45
+Scale: 20
+# The number of samples to make for rendering DoF. A higher value
+# results in higher quality depth of field, at the expense of greater
+# computational time:
+DofSamples: 128
 
 [Renderer.Antialiasing]
 # The number of sub-pixel samples to make:
-Subpixels: 8
+Subpixels: 6
 # The maximum sub-pixel sampling offset:
 Overlap: 0
 
@@ -20,7 +24,7 @@ Overlap: 0
 # The number of rays to cast for soft lights is defined by:
 #   N = base + (scalefactor * lightradius) ^ 3
 Base: 3
-ScaleFactor: 0.021
+ScaleFactor: 0.02
 
 
 ##########
@@ -29,10 +33,12 @@ ScaleFactor: 0.021
 
 [Lens.wideangle]
 FocalLength: 36
+Aperture: 15000
+Focus: .95
 
 [Film.colour]
 Saturation: 100
-RGBGamma: 98 102 98
+RGBGamma: 102 101 98
 Width: 43
 Height: 24
 

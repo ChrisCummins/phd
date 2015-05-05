@@ -14,11 +14,12 @@ namespace rt {
 
 class Renderer {
  public:
-        Renderer(const Scene  *const scene,
+        Renderer(const Scene *const scene,
                  const rt::Camera *const camera,
-                 const size_t subpixels = 6,
-                 const size_t overlap   = 1,
-                 const size_t maxDepth  = 5000);
+                 const size_t numSubsamples    = 8,
+                 const size_t subsampleOverlap = 0,
+                 const size_t numDofSamples    = 1,
+                 const size_t maxDepth         = 5000);
 
         ~Renderer();
 
@@ -33,6 +34,9 @@ class Renderer {
         // Super sampling anti-aliasing configuration:
         const size_t subpixels;
         const size_t overlap;
+
+        // Number of samples to make for depth of field:
+        const size_t numDofSamples;
 
         // The heart of the raytracing engine.
         void render(const Image *const image) const;

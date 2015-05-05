@@ -48,7 +48,7 @@ class UniformDistribution {
 class UniformDiskDistribution {
  public:
         inline UniformDiskDistribution(const Scalar _radius,
-                                       const Seed _seed)
+                                       const Seed _seed = 7564231ULL)
                 : angle(-M_PI, M_PI, _seed),
                   distance(0, sqrt(_radius), _seed) {}
 

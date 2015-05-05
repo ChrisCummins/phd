@@ -296,6 +296,7 @@ renderer = {}
 def set_renderer(pairs):
     renderer["depth"] = consume_int(pairs, "raydepth", default=100)
     renderer["scale"] = consume_int(pairs, "scale", default=1)
+    renderer["dof"] = consume_int(pairs, "dofsamples", default=1)
 
 def set_renderer_antialiasing(pairs):
     aa = {}
@@ -452,7 +453,6 @@ def get_camera_perspective_code(name, pairs):
 
     position = consume_vector(pairs, "position")
     lookat = consume_vector(pairs, "lookat")
-    up = get_vector([0, 1, 0])
     lens = consume_lens(pairs, "lens")
     film = consume_film(pairs, "film")
 
@@ -462,11 +462,13 @@ def get_camera_perspective_code(name, pairs):
     camera = name
 
     return ("const Camera *const {name} = "
-            "new Camera({position}, {lookat}, {up}, "
-            "{width}, {height}, {focal});"
+            "new Camera({position}, {lookat}, "
+            "{width}, {height}, "
+            "Lens({focal}, {aperture}, {focus}));"
             .format(name=name, position=position, lookat=lookat,
-                    up=up, width=film["width"], height=film["height"],
-                    focal=lens["focal"]))
+                    width=film["width"], height=film["height"],
+                    focal=lens["focal"], aperture=lens["aperture"],
+                    focus=lens["focus"]))
 
 
 films = {}
@@ -491,11 +493,18 @@ lenses = {}
 
 def add_lens(name, pairs):
     focal = consume_int(pairs, "focallength")
+    aperture = consume_scalar(pairs, "aperture", 1)
+    focus = consume_scalar(pairs, "focus", 1)
 
     if name in lenses:
         fatal("Duplicate lens type '{0}'"
               .format(name))
-    lenses[name] = {"focal": focal}
+
+    lenses[name] = {
+        "focal": focal,
+        "aperture": aperture,
+        "focus": focus
+    }
 
 def get_keyval_pairs(tokens):
     pairs = {}
@@ -574,11 +583,12 @@ def get_renderer_code():
     depth = renderer["depth"]
     sub = renderer["aa"]["subpixels"]
     overlap = renderer["aa"]["overlap"]
+    dofsamples = renderer["dof"]
 
     c = ("return new Renderer({scene}, {camera}, "
-         "{sub}, {overlap}, {depth});"
+         "{sub}, {overlap}, {dof}, {depth});"
          .format(scene="scene", camera=camera, depth=depth,
-                 sub=sub, overlap=overlap))
+                 sub=sub, dof=dofsamples, overlap=overlap))
     return c
 
 def get_image_code():

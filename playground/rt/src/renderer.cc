@@ -59,13 +59,15 @@ namespace rt {
 
 Renderer::Renderer(const Scene *const _scene,
                    const rt::Camera *const _camera,
-                   const size_t _subpixels,
-                   const size_t _overlap,
+                   const size_t _numSubsamples,
+                   const size_t _subsampleOverlap,
+                   const size_t _numDofSamples,
                    const size_t _maxDepth)
                 : scene(_scene), camera(_camera),
                   maxDepth(_maxDepth),
-                  subpixels(_subpixels),
-                  overlap(_overlap) {}
+                  subpixels(_numSubsamples),
+                  overlap(_subsampleOverlap),
+                  numDofSamples(_numDofSamples) {}
 
 Renderer::~Renderer() {
         delete scene;
@@ -99,23 +101,51 @@ void Renderer::render(const DataImage *const image) const {
                     const Scalar y = i / image->width;
 
                     // Convert image to camera space coordinates.
-                    const Vector localPosition = transform * Vector(x, y, 0);
+                    const Vector imageOrigin = transform * Vector(x, y, 0);
 
                     // Translate camera space to world space.
-                    const Vector lensPoint =
-                                    camera->right * localPosition.x +
-                                    camera->up * localPosition.y +
-                                    camera->position;
+                    const Vector focalOrigin =
+                                    camera->right * imageOrigin.x +
+                                    camera->up * imageOrigin.y +
+                                    camera->position * 1;
 
-                    // Determine direction from point on lens to exposure point.
-                    const Vector direction =
-                                    (lensPoint - camera->filmBack).normalise();
+                    // Determine direction from point on lens to
+                    // exposure point.
+                    const Vector focalDirection =
+                                    (focalOrigin - camera->filmBack)
+                                    .normalise();
 
-                    // Create a ray.
-                    const Ray ray = Ray(camera->filmBack, direction);
+                    // Determine the focus point of the pixel.
+                    const Vector focalPoint = camera->filmBack + focalDirection
+                                    * camera->focusDistance;
 
-                    // Sample the ray.
-                    image->set(i, trace(ray));
+                    // Accumulate numDofSamples samples.
+                    Colour acc;
+                    for (size_t j = 0; j < numDofSamples; j++) {
+                            // Convert image to camera space coordinates.
+                            const Vector cameraSpace = imageOrigin +
+                                            camera->lens.aperture();
+
+                            // Translate camera space to world space.
+                            const Vector worldSpace =
+                                            camera->right * cameraSpace.x +
+                                            camera->up * cameraSpace.y +
+                                            camera->position;
+
+                            // Determine direction from point on lens
+                            // to focus point.
+                            const Vector direction =
+                                            (focalPoint - worldSpace)
+                                            .normalise();
+
+                            // Create a ray.
+                            const Ray ray = Ray(worldSpace, direction);
+
+                            // Sample the ray.
+                            acc += trace(ray) / numDofSamples;
+                    }
+
+                    image->set(i, acc);
             });
 }
 
