@@ -8,11 +8,11 @@
 # The maximum depth to trace rays to:
 RayDepth: 5000
 # The output image scale factor:
-Scale: 20
+Scale: 45
 # The number of samples to make for rendering DoF. A higher value
 # results in higher quality depth of field, at the expense of greater
 # computational time:
-DofSamples: 128
+DofSamples: 256
 
 [Renderer.Antialiasing]
 # The number of sub-pixel samples to make:
@@ -23,8 +23,8 @@ Overlap: 0
 [Renderer.Softlights]
 # The number of rays to cast for soft lights is defined by:
 #   N = base + (scalefactor * lightradius) ^ 3
-Base: 3
-ScaleFactor: 0.02
+Base: 1
+ScaleFactor: 0
 
 
 ##########
@@ -33,8 +33,8 @@ ScaleFactor: 0.02
 
 [Lens.wideangle]
 FocalLength: 36
-Aperture: 15000
-Focus: .95
+Aperture: 8500
+Focus: .97
 
 [Film.colour]
 Saturation: 100
@@ -43,8 +43,8 @@ Width: 43
 Height: 24
 
 [Camera.Perspective]
-Position: 300 850 3000
-Lookat: 0 820 0
+Position: 450 650 3000
+Lookat: 0 720 0
 Lens: $Lens.wideangle
 Film: $Film.colour
 
@@ -140,17 +140,17 @@ Material: $Material.plaster
 
 @def ball_size 500
 [Object.Sphere] # Left ball
-Position: -900 @ball_size -800
+Position: -900 @ball_size -1200
 Size: @ball_size
 Material: $Material.mirror
 
 [Object.Sphere] # Centre ball
-Position: 0 @ball_size 0
+Position: 100 @ball_size 0
 Size: @ball_size
 Material: $Material.mirror
 
 [Object.Sphere] # Right ball
-Position: 800 @ball_size 850
+Position: 850 @ball_size 1150
 Size: @ball_size
 Material: $Material.mirror
 
@@ -161,5 +161,5 @@ Material: $Material.mirror
 
 [Light.Soft]
 Colour: @white
-Position: -300 1500 200
+Position: 300 1500 200
 Size: 200
