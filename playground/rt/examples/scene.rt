@@ -33,7 +33,7 @@ ScaleFactor: 0
 
 [Lens.wideangle]
 FocalLength: 36
-Aperture: 8500
+Aperture: 135
 Focus: .97
 
 [Film.colour]

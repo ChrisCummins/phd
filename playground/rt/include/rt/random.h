@@ -49,25 +49,27 @@ class UniformDiskDistribution {
  public:
         inline UniformDiskDistribution(const Scalar _radius,
                                        const Seed _seed = 7564231ULL)
-                : angle(-M_PI, M_PI, _seed),
-                  distance(0, sqrt(_radius), _seed) {}
+                : angle(UniformDistribution(0, 2 * M_PI, _seed)),
+                  rand01(UniformDistribution(0, 1, _seed)),
+                  radius(_radius) {}
 
         // Return a random point on the disk, with the vector x and y
         // components corresponding to the x and y coordinates of the
         // point within the disk.
         Vector inline operator()() {
                 const Scalar theta = angle();
-                const Scalar radius = distance();
+                const Scalar distance = radius * sqrt(rand01());
 
-                const Scalar x = radius * cos(theta);
-                const Scalar y = radius * sin(theta);
+                const Scalar x = distance * cos(theta);
+                const Scalar y = distance * sin(theta);
 
                 return Vector(x, y, 0);
         }
 
  private:
         UniformDistribution angle;
-        UniformDistribution distance;
+        UniformDistribution rand01;
+        const Scalar radius;
 };
 
 }  // namespace rt
