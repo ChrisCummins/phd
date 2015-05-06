@@ -17,8 +17,6 @@ DofSamples: 256
 [Renderer.Antialiasing]
 # The number of sub-pixel samples to make:
 Subpixels: 6
-# The maximum sub-pixel sampling offset:
-Overlap: 0
 
 [Renderer.Softlights]
 # The number of rays to cast for soft lights is defined by:

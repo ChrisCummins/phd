@@ -42,7 +42,7 @@ static inline const Object *closestIntersect(const Ray &ray,
 // size) to camera space coordinates (i.e. [x,y] coordinates with
 // reference to the camera's film size).
 Matrix cameraImageTransform(const Camera *const camera,
-                            const DataImage *const image) {
+                            const Image *const image) {
         // Scale image coordinates to camera coordinates.
         const Scale scale(camera->width / image->width,
                           camera->height / image->height, 1);
@@ -59,14 +59,14 @@ namespace rt {
 
 Renderer::Renderer(const Scene *const _scene,
                    const rt::Camera *const _camera,
-                   const size_t _numSubsamples,
-                   const size_t _subsampleOverlap,
+                   const size_t _subpixels,
                    const size_t _numDofSamples,
                    const size_t _maxDepth)
                 : scene(_scene), camera(_camera),
                   maxDepth(_maxDepth),
-                  subpixels(_numSubsamples),
-                  overlap(_subsampleOverlap),
+                  subpixels(_subpixels),
+                  numSubpixels(_subpixels * _subpixels),
+                  subpixelWidth(1.0 / _subpixels),
                   numDofSamples(_numDofSamples) {}
 
 Renderer::~Renderer() {
@@ -75,78 +75,94 @@ Renderer::~Renderer() {
 }
 
 void Renderer::render(const Image *const image) const {
-        // Create an enlarged image to render to.
-        const size_t width  = image->width  * subpixels + 2 * overlap;
-        const size_t height = image->height * subpixels + 2 * overlap;
-        const DataImage *const data = new DataImage(width, height);
-
-        // Render to this image.
-        render(data);
-
-        // Shrink this larger image to the final output size.
-        data->downsample(image, subpixels, overlap);
-
-        delete data;
-}
-
-void Renderer::render(const DataImage *const image) const {
-        // Create combined transformation matrix.
+        // Create image to camera transformation matrix.
         const Matrix transform = cameraImageTransform(camera, image);
 
         // For each pixel in the image:
         tbb::parallel_for(
-            static_cast<size_t>(0), image->size, [&](size_t i) {
-                    // Get the image space coordinates.
-                    const Scalar x = i % image->width;
-                    const Scalar y = i / image->width;
+            static_cast<size_t>(0), image->size, [&](size_t index) {
+                    // Get the pixel coordinates.
+                    const Scalar x = index % image->width;
+                    const Scalar y = index / image->width;
 
-                    // Convert image to camera space coordinates.
-                    const Vector imageOrigin = transform * Vector(x, y, 0);
+                    // Render a region of size 1x1:
+                    const Colour output = renderRegion(x, y, 1, 1, transform);
 
-                    // Translate camera space to world space.
-                    const Vector focalOrigin =
-                                    camera->right * imageOrigin.x +
-                                    camera->up * imageOrigin.y +
-                                    camera->position * 1;
-
-                    // Determine direction from point on lens to
-                    // exposure point.
-                    const Vector focalDirection =
-                                    (focalOrigin - camera->filmBack)
-                                    .normalise();
-
-                    // Determine the focus point of the pixel.
-                    const Vector focalPoint = camera->filmBack + focalDirection
-                                    * camera->focusDistance;
-
-                    // Accumulate numDofSamples samples.
-                    Colour acc;
-                    for (size_t j = 0; j < numDofSamples; j++) {
-                            // Convert image to camera space coordinates.
-                            const Vector cameraSpace = imageOrigin +
-                                            camera->lens.aperture();
-
-                            // Translate camera space to world space.
-                            const Vector worldSpace =
-                                            camera->right * cameraSpace.x +
-                                            camera->up * cameraSpace.y +
-                                            camera->position;
-
-                            // Determine direction from point on lens
-                            // to focus point.
-                            const Vector direction =
-                                            (focalPoint - worldSpace)
-                                            .normalise();
-
-                            // Create a ray.
-                            const Ray ray = Ray(worldSpace, direction);
-
-                            // Sample the ray.
-                            acc += trace(ray) / numDofSamples;
-                    }
-
-                    image->set(i, acc);
+                    // Set output image colour.
+                    image->set(x, y, output);
             });
+}
+
+Colour Renderer::renderRegion(const Scalar regionX,
+                              const Scalar regionY,
+                              const Scalar regionWidth,
+                              const Scalar regionHeight,
+                              const Matrix &transform) const {
+        Colour output;
+
+        // Perform super-sampling by rendering multiple
+        for (size_t j = 0; j < numSubpixels; j++) {
+                for (size_t i = 0; i < numSubpixels; i++) {
+                        const Scalar x = regionX + i * subpixelWidth;
+                        const Scalar y = regionY + j * subpixelWidth;
+
+                        output += renderPoint(x, y, transform) / numSubpixels;
+                }
+        }
+
+        return output;
+}
+
+Colour Renderer::renderPoint(const Scalar x,
+                             const Scalar y,
+                             const Matrix &transform) const {
+        Colour output;
+
+        // Convert image to camera space coordinates.
+        const Vector imageOrigin = transform * Vector(x, y, 0);
+
+        // Translate camera space to world space.
+        const Vector focalOrigin =
+                        camera->right * imageOrigin.x +
+                        camera->up * imageOrigin.y +
+                        camera->position * 1;
+
+        // Determine direction from point on lens to
+        // exposure point.
+        const Vector focalDirection =
+                        (focalOrigin - camera->filmBack)
+                        .normalise();
+
+        // Determine the focus point of the pixel.
+        const Vector focalPoint = camera->filmBack + focalDirection
+                        * camera->focusDistance;
+
+        // Accumulate numDofSamples samples.
+        for (size_t i = 0; i < numDofSamples; i++) {
+                // Convert image to camera space coordinates.
+                const Vector cameraSpace = imageOrigin +
+                                camera->lens.aperture();
+
+                // Translate camera space to world space.
+                const Vector worldSpace =
+                                camera->right * cameraSpace.x +
+                                camera->up * cameraSpace.y +
+                                camera->position;
+
+                // Determine direction from point on lens
+                // to focus point.
+                const Vector direction =
+                                (focalPoint - worldSpace)
+                                .normalise();
+
+                // Create a ray.
+                const Ray ray = Ray(worldSpace, direction);
+
+                // Sample the ray.
+                output += trace(ray) / numDofSamples;
+        }
+
+        return output;
 }
 
 Colour Renderer::trace(const Ray &ray,

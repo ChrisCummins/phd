@@ -16,10 +16,9 @@ class Renderer {
  public:
         Renderer(const Scene *const scene,
                  const rt::Camera *const camera,
-                 const size_t numSubsamples    = 8,
-                 const size_t subsampleOverlap = 0,
-                 const size_t numDofSamples    = 1,
-                 const size_t maxDepth         = 5000);
+                 const size_t subpixels     = 8,
+                 const size_t numDofSamples = 1,
+                 const size_t maxDepth      = 5000);
 
         ~Renderer();
 
@@ -33,7 +32,8 @@ class Renderer {
 
         // Super sampling anti-aliasing configuration:
         const size_t subpixels;
-        const size_t overlap;
+        const size_t numSubpixels;
+        const Scalar subpixelWidth;
 
         // Number of samples to make for depth of field:
         const size_t numDofSamples;
@@ -42,9 +42,18 @@ class Renderer {
         void render(const Image *const image) const;
 
  private:
-        // Private render to function to create the supersampled
-        // image.
-        void render(const DataImage *const image) const;
+        // Interpolate the colour value over a region by performing
+        // "numSubpixels" samples.
+        Colour renderRegion(const Scalar x,
+                            const Scalar y,
+                            const Scalar regionWidth,
+                            const Scalar regionHeight,
+                            const Matrix &transform) const;
+
+        // Get the colour value at a single point.
+        Colour renderPoint(const Scalar x,
+                           const Scalar y,
+                           const Matrix &transform) const;
 
         // Trace a ray trough a given scene and return the final
         // colour.
