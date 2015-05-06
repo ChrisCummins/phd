@@ -1,7 +1,10 @@
 // -*- c-basic-offset: 8; -*-
+
+// Include ray tracer header.
 #include "rt/rt.h"
 
 int main() {
+        // Create colours.
         const rt::Colour red   = rt::Colour(0xff0000);
         const rt::Colour green = rt::Colour(0x00ff00);
         const rt::Colour blue  = rt::Colour(0x0000ff);
@@ -35,9 +38,11 @@ int main() {
         const rt::Objects objects(_objects, _objects + 3);
         const rt::Lights  lights( _lights,  _lights  + 2);
 
+        // Create scene.
+        const rt::Scene *const scene = new rt::Scene(objects, lights);
+
         // Create renderer.
-        const rt::Renderer *const renderer =
-                       new rt::Renderer(new rt::Scene(objects, lights), camera);
+        const rt::Renderer *const renderer = new rt::Renderer(scene, camera);
 
         // Run ray tracer.
         rt::render(renderer, new rt::Image(512, 512), "render1.ppm");
