@@ -101,8 +101,8 @@ Colour Renderer::renderRegion(const Scalar regionX,
         Colour output;
 
         // Perform super-sampling by rendering multiple
-        for (size_t j = 0; j < numSubpixels; j++) {
-                for (size_t i = 0; i < numSubpixels; i++) {
+        for (size_t j = 0; j < subpixels; j++) {
+                for (size_t i = 0; i < subpixels; i++) {
                         const Scalar x = regionX + i * subpixelWidth;
                         const Scalar y = regionY + j * subpixelWidth;
 
