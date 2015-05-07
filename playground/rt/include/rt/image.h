@@ -10,6 +10,25 @@
 
 namespace rt {
 
+namespace image {
+
+// Helper functions to convert 2D to 1D flat array co-ordinates, and
+// vice versa.
+
+inline size_t index(const size_t x, const size_t y, const size_t width) {
+        return y * width + x;
+}
+
+inline size_t x(const size_t index, const size_t width) {
+        return index % width;
+}
+
+inline size_t y(const size_t index, const size_t width) {
+        return index / width;
+}
+
+}  // namespace image
+
 // A rendered image.
 class Image {
  public:
@@ -35,28 +54,16 @@ class Image {
                 // Apply Y axis inversion if needed.
                 const size_t row = inverted ? height - 1 - y : y;
                 // Convert 2D coordinates to flat array index.
-                set(row * width + x, value);
+                _set(image::index(x, row, width), value);
         }
 
-        void inline set(const size_t i,
+        // [index] = value
+        void inline set(const size_t index,
                         const Colour &value) const {
-                // Apply gamma correction.
-                Colour corrected = Colour(std::pow(value.r, gamma.r),
-                                          std::pow(value.g, gamma.g),
-                                          std::pow(value.b, gamma.b));
+                const size_t x = image::x(index, width);
+                const size_t y = image::y(index, width);
 
-                // TODO: Fix strange aliasing effect as a result of
-                // RGB -> HSL -> RGB conversion.
-                //
-                // Apply saturation.
-                // HSL hsl(corrected);
-                // hsl.s *= saturation;
-
-                // Convert back to .
-                // corrected = Colour(hsl);
-
-                // Explicitly cast colour to pixel data.
-                data[i] = static_cast<Pixel>(corrected);
+                set(x, y, value);
         }
 
         // Write data to file.
@@ -66,6 +73,9 @@ class Image {
         // Padding bytes since the "inverted" member bool is only a
         // single byte.
         char _pad[7];
+
+        void _set(const size_t i,
+                  const Colour &value) const;
 };
 
 }  // namespace rt

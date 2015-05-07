@@ -16,9 +16,8 @@ class Renderer {
  public:
         Renderer(const Scene *const scene,
                  const rt::Camera *const camera,
-                 const size_t subpixels     = 8,
                  const size_t numDofSamples = 1,
-                 const size_t maxDepth      = 5000);
+                 const size_t maxRayDepth   = 5000);
 
         ~Renderer();
 
@@ -28,12 +27,9 @@ class Renderer {
         // Renderer configuration:
 
         // The maximum depth to trace reflected rays to:
-        const size_t maxDepth;
+        const size_t maxRayDepth;
 
-        // Super sampling anti-aliasing configuration:
-        const size_t subpixels;
-        const size_t numSubpixels;
-        const Scalar subpixelWidth;
+        // TODO: Super sampling anti-aliasing configuration:
 
         // Number of samples to make for depth of field:
         const size_t numDofSamples;
@@ -42,13 +38,12 @@ class Renderer {
         void render(const Image *const image) const;
 
  private:
-        // Interpolate the colour value over a region by performing
-        // "numSubpixels" samples.
+        // Recursively supersample a region.
         Colour renderRegion(const Scalar x,
                             const Scalar y,
-                            const Scalar regionWidth,
-                            const Scalar regionHeight,
-                            const Matrix &transform) const;
+                            const Scalar regionSize,
+                            const Matrix &transform,
+                            const size_t depth = 0) const;
 
         // Get the colour value at a single point.
         Colour renderPoint(const Scalar x,

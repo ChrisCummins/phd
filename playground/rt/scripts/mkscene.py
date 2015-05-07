@@ -301,7 +301,6 @@ def set_renderer(pairs):
 def set_renderer_antialiasing(pairs):
     aa = {}
     renderer["aa"] = aa
-    aa["subpixels"] = consume_int(pairs, "subpixels", default=0)
 
 
 def set_renderer_softlights(pairs):
@@ -580,13 +579,12 @@ def get_scene_code():
 
 def get_renderer_code():
     depth = renderer["depth"]
-    sub = renderer["aa"]["subpixels"]
     dofsamples = renderer["dof"]
 
     c = ("return new Renderer({scene}, {camera}, "
-         "{sub}, {dof}, {depth});"
+         "{dof}, {depth});"
          .format(scene="scene", camera=camera, depth=depth,
-                 sub=sub, dof=dofsamples))
+                 dof=dofsamples))
     return c
 
 def get_image_code():

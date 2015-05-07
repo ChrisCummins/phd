@@ -8,13 +8,10 @@ namespace rt {
 void render(const Renderer *const renderer,
             const Image *const image,
             const char *const path) {
-        const size_t numSamplesPerPixel =
-                        renderer->numSubpixels * renderer->numDofSamples;
-
         // Print start message.
-        printf("Rendering %lu pixels with %lu samples per pixel, "
+        printf("Rendering %lu pixels, with "
                "%lu objects, and %lu light sources ...\n",
-               image->size, numSamplesPerPixel,
+               image->size,
                profiling::counters::getObjectsCount(),
                profiling::counters::getLightsCount());
 
