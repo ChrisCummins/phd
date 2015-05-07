@@ -12,8 +12,8 @@ namespace {
 using namespace rt;  // NOLINT(build/namespaces)
 
 // Anti-aliasing tunable knobs.
-const Scalar maxPixelDiff     = 0.05;
-const Scalar maxSubpixelDiff  = 4 * maxPixelDiff;
+const Scalar maxPixelDiff     = 0.040;
+const Scalar maxSubpixelDiff  = 0.008;
 const size_t maxSubpixelDepth = 3;
 
 // Return the object with the closest intersection to ray, and set the
@@ -111,29 +111,36 @@ void Renderer::render(const Image *const image) const {
                 Colour pixel = sampled[image::index(x + 1, y + 1,
                                                     borderedWidth)];
 
-                // Determine mean colour of neighbouring elements.
-                Colour mean;
-                mean += sampled[image::index(x - 1, y - 1, borderedWidth)];
-                mean += sampled[image::index(x,     y - 1, borderedWidth)];
-                mean += sampled[image::index(x + 1, y - 1, borderedWidth)];
-                mean += sampled[image::index(x - 1, y,     borderedWidth)];
-                mean += sampled[image::index(x + 1, y,     borderedWidth)];
-                mean += sampled[image::index(x - 1, y + 1, borderedWidth)];
-                mean += sampled[image::index(x,     y + 1, borderedWidth)];
-                mean += sampled[image::index(x + 1, y + 1, borderedWidth)];
-                mean /= 8;
+                // Create a list of all neighbouring elements.
+                const size_t neighbours[] = {
+                        image::index(x - 1, y - 1, borderedWidth),
+                        image::index(x,     y - 1, borderedWidth),
+                        image::index(x + 1, y - 1, borderedWidth),
+                        image::index(x - 1, y,     borderedWidth),
+                        image::index(x + 1, y,     borderedWidth),
+                        image::index(x - 1, y + 1, borderedWidth),
+                        image::index(x,     y + 1, borderedWidth),
+                        image::index(x + 1, y + 1, borderedWidth)
+                };
 
-                // Determine the difference between mean of
-                // neighbouring values and this pixel.
-                const Scalar diff = mean.diff(pixel);
+                // Iterate over each of the neighbouring elements.
+                for (size_t i = 0; i < 8; i++) {
+                        // Calculate the difference between the centre
+                        // pixel and the neighbour.
+                        const Scalar diff = pixel.diff(sampled[neighbours[i]]);
 
-                // If the difference is above a given threshold, then
-                // recursively supersample the pixel.
-                if (diff > maxPixelDiff) {
-                        if (debug::SHOW_SUPERSAMPLE_PIXELS)
-                                pixel = Colour(debug::PIXEL_HIGHLIGHT_COLOUR);
-                        else
-                                pixel = renderRegion(x, y, 1, transform);
+                        // If the difference is above a given
+                        // threshold, then recursively supersample the
+                        // pixel.
+                        if (diff > maxPixelDiff) {
+                                if (debug::SHOW_SUPERSAMPLE_PIXELS)
+                                        pixel = Colour(
+                                            debug::PIXEL_HIGHLIGHT_COLOUR);
+                                else
+                                        pixel = renderRegion(x, y, 1,
+                                                             transform);
+                                break;
+                        }
                 }
 
                 // Set new value.
