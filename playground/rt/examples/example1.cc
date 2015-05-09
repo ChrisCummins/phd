@@ -28,7 +28,7 @@ int main() {
         };
 
         // Create camera.
-        const rt::Camera *const camera =
+        const rt::Camera *const restrict camera =
                         new rt::Camera(rt::Vector(0, 0, -250),  // position
                                        rt::Vector(0, 0, 0),     // look at
                                        50, 50,         // film width & height
@@ -38,11 +38,11 @@ int main() {
         const rt::Objects objects(_objects, _objects + 3);
         const rt::Lights  lights( _lights,  _lights  + 2);
 
-        // Create scene.
-        const rt::Scene *const scene = new rt::Scene(objects, lights);
-
-        // Create renderer.
-        const rt::Renderer *const renderer = new rt::Renderer(scene, camera);
+        // Create scene and renderer.
+        const rt::Scene *const restrict scene
+                        = new rt::Scene(objects, lights);
+        const rt::Renderer *const restrict renderer
+                        = new rt::Renderer(scene, camera);
 
         // Run ray tracer.
         rt::render(renderer, new rt::Image(512, 512), "render1.ppm");

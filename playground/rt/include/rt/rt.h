@@ -4,6 +4,7 @@
 
 #include "./image.h"
 #include "./renderer.h"
+#include "./restrict.h"
 
 // A simple ray tacer. Features:
 //
@@ -15,9 +16,9 @@ namespace rt {
 
         // Render the target image and write output to path. Prints
         // profiling information.
-        void render(const Renderer *const renderer,
-                    const Image *const image,
-                    const char *const path);
+        void render(const Renderer *const restrict renderer,
+                    const Image *const restrict image,
+                    const char *const restrict path);
 
 }  // namespace rt
 

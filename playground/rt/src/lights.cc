@@ -28,7 +28,7 @@ bool intersects(const Ray &ray,
 Colour SoftLight::shade(const Vector &point,
                         const Vector &normal,
                         const Vector &toRay,
-                        const Material *const material,
+                        const Material *const restrict material,
                         const Objects objects) const {
         // Shading is additive, starting with black.
         Colour output = Colour();

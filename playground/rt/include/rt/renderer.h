@@ -14,15 +14,15 @@ namespace rt {
 
 class Renderer {
  public:
-        Renderer(const Scene *const scene,
-                 const rt::Camera *const camera,
+        Renderer(const Scene *const restrict scene,
+                 const rt::Camera *const restrict camera,
                  const size_t numDofSamples = 1,
                  const size_t maxRayDepth   = 5000);
 
         ~Renderer();
 
-        const Scene *const scene;
-        const rt::Camera *const camera;
+        const Scene *const restrict scene;
+        const rt::Camera *const restrict camera;
 
         // Renderer configuration:
 
@@ -35,7 +35,7 @@ class Renderer {
         const size_t numDofSamples;
 
         // The heart of the raytracing engine.
-        void render(const Image *const image) const;
+        void render(const Image *const restrict image) const;
 
  private:
         // Recursively supersample a region.
@@ -59,7 +59,7 @@ class Renderer {
         Colour interpolate(const size_t image_x,
                            const size_t image_y,
                            const size_t dataWidth,
-                           const Colour *const data) const;
+                           const Colour *const restrict data) const;
 };
 
 }  // namespace rt

@@ -19,7 +19,7 @@ Image::~Image() {
         delete[] data;
 }
 
-void Image::write(FILE *const out) const {
+void Image::write(FILE *const restrict out) const {
         // Print PPM header.
         fprintf(out, "P3\n");                      // Magic number
         fprintf(out, "%lu %lu\n", width, height);  // Image dimensions

@@ -7,6 +7,7 @@
 #include <cstdio>
 
 #include "./graphics.h"
+#include "./restrict.h"
 
 namespace rt {
 
@@ -32,7 +33,7 @@ inline size_t y(const size_t index, const size_t width) {
 // A rendered image.
 class Image {
  public:
-        Pixel *const data;
+        Pixel *const restrict data;
         const size_t width;
         const size_t height;
         const size_t size;
@@ -67,7 +68,7 @@ class Image {
         }
 
         // Write data to file.
-        void write(FILE *const out) const;
+        void write(FILE *const restrict out) const;
 
  private:
         // Padding bytes since the "inverted" member bool is only a

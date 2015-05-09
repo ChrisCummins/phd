@@ -4,10 +4,11 @@
 
 #include <vector>
 
-#include "./math.h"
-#include "./ray.h"
 #include "./graphics.h"
+#include "./math.h"
 #include "./profiling.h"
+#include "./ray.h"
+#include "./restrict.h"
 
 namespace rt {
 
@@ -66,12 +67,12 @@ typedef std::vector<const Object *> Objects;
 class Plane : public Object {
  public:
         const Vector direction;
-        const Material *const material;
+        const Material *const restrict material;
 
         // Constructor.
         inline Plane(const Vector &_origin,
                      const Vector &_direction,
-                     const Material *const _material)
+                     const Material *const restrict _material)
                 : Object(_origin),
                   direction(_direction.normalise()),
                   material(_material) {}
@@ -105,15 +106,15 @@ class Plane : public Object {
 
 class CheckerBoard : public Plane {
 public:
-        const Material *const material1;
-        const Material *const material2;
+        const Material *const restrict material1;
+        const Material *const restrict material2;
         const Scalar checkerWidth;
 
         inline CheckerBoard(const Vector &_origin,
                             const Vector &_direction,
                             const Scalar _checkerWidth,
-                            const Material *const _material1,
-                            const Material *const _material2)
+                            const Material *const restrict _material1,
+                            const Material *const restrict _material2)
                 : Plane(_origin, _direction, nullptr),
                         material1(_material1), material2(_material2),
                         checkerWidth(_checkerWidth) {}
@@ -144,12 +145,12 @@ private:
 class Sphere : public Object {
 public:
         const Scalar radius;
-        const Material *const material;
+        const Material *const restrict material;
 
         // Constructor.
         inline Sphere(const Vector &_position,
                       const Scalar _radius,
-                      const Material *const _material)
+                      const Material *const restrict _material)
                 : Object(_position), radius(_radius), material(_material) {}
 
         virtual inline Vector normal(const Vector &p) const {

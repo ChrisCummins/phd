@@ -21,7 +21,7 @@ const size_t maxSubpixelDepth = 3;
 // nullptr.
 static inline const Object *closestIntersect(const Ray &ray,
                                              const Objects &objects,
-                                             Scalar *const t) {
+                                             Scalar *const restrict t) {
         // Index of, and distance to closest intersect:
         const Object *closest = nullptr;
         *t = INFINITY;
@@ -47,8 +47,8 @@ static inline const Object *closestIntersect(const Ray &ray,
 // coordinates (i.e. [x,y] coordinates with reference to the image
 // size) to camera space coordinates (i.e. [x,y] coordinates with
 // reference to the camera's film size).
-Matrix cameraImageTransform(const Camera *const camera,
-                            const Image *const image) {
+Matrix cameraImageTransform(const Camera *const restrict camera,
+                            const Image *const restrict image) {
         // Scale image coordinates to camera coordinates.
         const Scale scale(camera->width / image->width,
                           camera->height / image->height, 1);
@@ -63,8 +63,8 @@ Matrix cameraImageTransform(const Camera *const camera,
 
 namespace rt {
 
-Renderer::Renderer(const Scene *const _scene,
-                   const rt::Camera *const _camera,
+Renderer::Renderer(const Scene *const restrict _scene,
+                   const rt::Camera *const restrict _camera,
                    const size_t _numDofSamples,
                    const size_t _maxRayDepth)
                 : scene(_scene), camera(_camera),
@@ -76,7 +76,7 @@ Renderer::~Renderer() {
         delete camera;
 }
 
-void Renderer::render(const Image *const image) const {
+void Renderer::render(const Image *const restrict image) const {
         // Create image to camera transformation matrix.
         const Matrix transform = cameraImageTransform(camera, image);
 
@@ -85,7 +85,7 @@ void Renderer::render(const Image *const image) const {
         const size_t borderedWidth = image->width + 2;
         const size_t borderedHeight = image->height + 2;
         const size_t borderedSize = borderedWidth * borderedHeight;
-        Colour *const sampled = new Colour[borderedSize];
+        Colour *const restrict sampled = new Colour[borderedSize];
 
         // Collect pixel samples:
         tbb::parallel_for(
@@ -99,7 +99,7 @@ void Renderer::render(const Image *const image) const {
                                                  transform);
             });
 
-        Colour *const superSampled = new Colour[image->size];
+        Colour *const restrict superSampled = new Colour[image->size];
 
         // For each pixel in the image:
         for (size_t index = 0; index < image->size; index++) {
@@ -305,7 +305,8 @@ Colour Renderer::trace(const Ray &ray,
 
         // Determine the closet ray-object intersection (if any).
         Scalar t;
-        const Object *const object = closestIntersect(ray, scene->objects, &t);
+        const Object *const restrict object =
+                        closestIntersect(ray, scene->objects, &t);
         // If the ray doesn't intersect any object, do nothing.
         if (object == nullptr)
                 return colour;
