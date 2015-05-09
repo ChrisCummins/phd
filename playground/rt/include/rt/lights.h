@@ -6,10 +6,11 @@
 #include <cstddef>
 #include <vector>
 
-#include "./math.h"
-#include "./random.h"
 #include "./graphics.h"
+#include "./math.h"
 #include "./objects.h"
+#include "./random.h"
+#include "./restrict.h"
 
 namespace rt {
 
@@ -24,7 +25,7 @@ class Light {
     virtual Colour shade(const Vector &point,
                          const Vector &normal,
                          const Vector &toRay,
-                         const Material *const material,
+                         const Material *const restrict material,
                          const Objects objects) const = 0;
 };
 
@@ -52,7 +53,7 @@ class SoftLight : public Light {
         virtual Colour shade(const Vector &point,
                              const Vector &normal,
                              const Vector &toRay,
-                             const Material *const material,
+                             const Material *const restrict material,
                              const Objects objects) const;
 };
 

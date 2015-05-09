@@ -5,16 +5,13 @@
 
 namespace rt {
 
-void render(const Renderer *const renderer,
-            const Image *const image,
-            const char *const path) {
-        const size_t numSamplesPerPixel =
-                        renderer->numSubpixels * renderer->numDofSamples;
-
+void render(const Renderer *const restrict renderer,
+            const Image *const restrict image,
+            const char *const restrict path) {
         // Print start message.
-        printf("Rendering %lu pixels with %lu samples per pixel, "
+        printf("Rendering %lu pixels, with "
                "%lu objects, and %lu light sources ...\n",
-               image->size, numSamplesPerPixel,
+               image->size,
                profiling::counters::getObjectsCount(),
                profiling::counters::getLightsCount());
 
@@ -29,7 +26,7 @@ void render(const Renderer *const renderer,
 
         // Open the output file.
         printf("Opening file '%s'...\n", path);
-        FILE *const out = fopen(path, "w");
+        FILE *const restrict out = fopen(path, "w");
 
         // Write to output file.
         image->write(out);

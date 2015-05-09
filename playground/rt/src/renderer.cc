@@ -1,6 +1,7 @@
 // -*- c-basic-offset: 8; -*-
 #include "rt/rt.h"
 
+#include "rt/debug.h"
 #include "rt/profiling.h"
 
 #include "tbb/parallel_for.h"
@@ -10,12 +11,17 @@ namespace {
 // We're using an anonymous namespace so we're allowed to import rt::
 using namespace rt;  // NOLINT(build/namespaces)
 
+// Anti-aliasing tunable knobs.
+const Scalar maxPixelDiff     = 0.040;
+const Scalar maxSubpixelDiff  = 0.008;
+const size_t maxSubpixelDepth = 3;
+
 // Return the object with the closest intersection to ray, and set the
 // distance to the intersection `t'. If no intersection, returns a
 // nullptr.
 static inline const Object *closestIntersect(const Ray &ray,
                                              const Objects &objects,
-                                             Scalar *const t) {
+                                             Scalar *const restrict t) {
         // Index of, and distance to closest intersect:
         const Object *closest = nullptr;
         *t = INFINITY;
@@ -41,8 +47,8 @@ static inline const Object *closestIntersect(const Ray &ray,
 // coordinates (i.e. [x,y] coordinates with reference to the image
 // size) to camera space coordinates (i.e. [x,y] coordinates with
 // reference to the camera's film size).
-Matrix cameraImageTransform(const Camera *const camera,
-                            const Image *const image) {
+Matrix cameraImageTransform(const Camera *const restrict camera,
+                            const Image *const restrict image) {
         // Scale image coordinates to camera coordinates.
         const Scale scale(camera->width / image->width,
                           camera->height / image->height, 1);
@@ -57,16 +63,12 @@ Matrix cameraImageTransform(const Camera *const camera,
 
 namespace rt {
 
-Renderer::Renderer(const Scene *const _scene,
-                   const rt::Camera *const _camera,
-                   const size_t _subpixels,
+Renderer::Renderer(const Scene *const restrict _scene,
+                   const rt::Camera *const restrict _camera,
                    const size_t _numDofSamples,
-                   const size_t _maxDepth)
+                   const size_t _maxRayDepth)
                 : scene(_scene), camera(_camera),
-                  maxDepth(_maxDepth),
-                  subpixels(_subpixels),
-                  numSubpixels(_subpixels * _subpixels),
-                  subpixelWidth(1.0 / _subpixels),
+                  maxRayDepth(_maxRayDepth),
                   numDofSamples(_numDofSamples) {}
 
 Renderer::~Renderer() {
@@ -74,41 +76,170 @@ Renderer::~Renderer() {
         delete camera;
 }
 
-void Renderer::render(const Image *const image) const {
+void Renderer::render(const Image *const restrict image) const {
         // Create image to camera transformation matrix.
         const Matrix transform = cameraImageTransform(camera, image);
 
-        // For each pixel in the image:
+        // First, we collect a single sample for every pixel in the
+        // image, plus an additional border of 1 pixel on all sides.
+        const size_t borderedWidth = image->width + 2;
+        const size_t borderedHeight = image->height + 2;
+        const size_t borderedSize = borderedWidth * borderedHeight;
+        Colour *const restrict sampled = new Colour[borderedSize];
+
+        // Collect pixel samples:
         tbb::parallel_for(
-            static_cast<size_t>(0), image->size, [&](size_t index) {
+            static_cast<size_t>(0), borderedSize, [&](size_t index) {
                     // Get the pixel coordinates.
-                    const Scalar x = index % image->width;
-                    const Scalar y = index / image->width;
+                    const size_t x = image::x(index, borderedWidth);
+                    const size_t y = image::y(index, borderedWidth);
 
-                    // Render a region of size 1x1:
-                    const Colour output = renderRegion(x, y, 1, 1, transform);
-
-                    // Set output image colour.
-                    image->set(x, y, output);
+                    // Sample a point in the centre of the pixel.
+                    sampled[index] = renderPoint(x + .5, y + .5,
+                                                 transform);
             });
+
+        Colour *const restrict superSampled = new Colour[image->size];
+
+        // For each pixel in the image:
+        for (size_t index = 0; index < image->size; index++) {
+                // Get the pixel coordinates.
+                const size_t x = image::x(index, image->width);
+                const size_t y = image::y(index, image->width);
+
+                // Get the previously sampled pixel value.
+                Colour pixel = sampled[image::index(x + 1, y + 1,
+                                                    borderedWidth)];
+
+                // Create a list of all neighbouring elements.
+                const size_t neighbours[] = {
+                        image::index(x - 1, y - 1, borderedWidth),
+                        image::index(x,     y - 1, borderedWidth),
+                        image::index(x + 1, y - 1, borderedWidth),
+                        image::index(x - 1, y,     borderedWidth),
+                        image::index(x + 1, y,     borderedWidth),
+                        image::index(x - 1, y + 1, borderedWidth),
+                        image::index(x,     y + 1, borderedWidth),
+                        image::index(x + 1, y + 1, borderedWidth)
+                };
+
+                // Iterate over each of the neighbouring elements.
+                for (size_t i = 0; i < 8; i++) {
+                        // Calculate the difference between the centre
+                        // pixel and the neighbour.
+                        const Scalar diff = pixel.diff(sampled[neighbours[i]]);
+
+                        // If the difference is above a given
+                        // threshold, then recursively supersample the
+                        // pixel.
+                        if (diff > maxPixelDiff) {
+                                if (debug::SHOW_SUPERSAMPLE_PIXELS)
+                                        pixel = Colour(
+                                            debug::PIXEL_HIGHLIGHT_COLOUR);
+                                else
+                                        pixel = renderRegion(x, y, 1,
+                                                             transform);
+                                break;
+                        }
+                }
+
+                // Set new value.
+                superSampled[index] = pixel;
+        }
+
+        delete[] sampled;
+
+        // Write pixel information to image.
+        for (size_t index = 0; index < image->size; index++)
+                image->set(index, superSampled[index]);
+
+        delete[] superSampled;
 }
 
 Colour Renderer::renderRegion(const Scalar regionX,
                               const Scalar regionY,
-                              const Scalar regionWidth,
-                              const Scalar regionHeight,
-                              const Matrix &transform) const {
-        Colour output;
+                              const Scalar regionSize,
+                              const Matrix &transform,
+                              const size_t depth) const {
+        Colour samples[4];
+        Colour supersamples[4];
+        Scalar subregion_x[4];
+        Scalar subregion_y[4];
+        Colour *sample;
 
-        // Perform super-sampling by rendering multiple
-        for (size_t j = 0; j < subpixels; j++) {
-                for (size_t i = 0; i < subpixels; i++) {
-                        const Scalar x = regionX + i * subpixelWidth;
-                        const Scalar y = regionY + j * subpixelWidth;
+        // Determine the size of a sample.
+        const Scalar subregionSize = regionSize / 2;
+        // Determine the offset to centre of a sample.
+        const Scalar subregionOffset = subregionSize / 2;
 
-                        output += renderPoint(x, y, transform) / numSubpixels;
-                }
+        // Iterate over each subregion.
+        sample = &samples[0];
+        for (size_t index = 0; index < 4; index ++) {
+                const size_t i = image::x(index, 2);
+                const size_t j = image::y(index, 2);
+
+                // Determine subregion origin.
+                const Scalar x = regionX + i * subregionSize;
+                const Scalar y = regionY + j * subregionSize;
+
+                // Save X,Y coordinates for later.
+                subregion_x[index] = x;
+                subregion_y[index] = y;
+
+                // Take a sample at the centre of the subregion.
+                *sample++ = renderPoint(x + subregionOffset,
+                                        y + subregionOffset,
+                                        transform);
         }
+
+        // Determine the average region colour.
+        Colour mean;
+        mean += samples[0];
+        mean += samples[1];
+        mean += samples[2];
+        mean += samples[3];
+        mean /= 4;
+
+        // If we've already recursed as far as we can do, there's
+        // nothing more to do.
+        if (depth >= maxSubpixelDepth)
+                return mean;
+
+        // Iterate over each sub-region.
+        for (size_t i = 0; i < 4; i++) {
+                sample = &samples[i];
+
+                // Determine the difference between the average region
+                // colour and the subregion sample.
+                const Scalar diff = mean.diff(*sample);
+
+                // If the difference is above a threshold, recursively
+                // supersample this region.
+                if (diff > maxSubpixelDiff) {
+                        const Scalar x = subregion_x[i];
+                        const Scalar y = subregion_y[i];
+
+                        if (debug::SHOW_RECURSIVE_SUPERSAMPLE_PIXELS)
+                                return Colour(debug::PIXEL_HIGHLIGHT_COLOUR);
+
+                        // Recursively evaluate sample.
+                        *sample = renderRegion(x, y,
+                                                 regionSize / 4,
+                                                 transform,
+                                                 depth + 1);
+                }
+
+                // Write updated value.
+                supersamples[i] = *sample;
+        }
+
+        // Determine mean colour of supersampled subregions.
+        Colour output;
+        output += supersamples[0];
+        output += supersamples[1];
+        output += supersamples[2];
+        output += supersamples[3];
+        output /= 4;
 
         return output;
 }
@@ -174,7 +305,8 @@ Colour Renderer::trace(const Ray &ray,
 
         // Determine the closet ray-object intersection (if any).
         Scalar t;
-        const Object *const object = closestIntersect(ray, scene->objects, &t);
+        const Object *const restrict object =
+                        closestIntersect(ray, scene->objects, &t);
         // If the ray doesn't intersect any object, do nothing.
         if (object == nullptr)
                 return colour;
@@ -198,7 +330,7 @@ Colour Renderer::trace(const Ray &ray,
 
         // Create reflection ray and recursive evaluate.
         const Scalar reflectivity = material->reflectivity;
-        if (depth < maxDepth && reflectivity > 0) {
+        if (depth < maxRayDepth && reflectivity > 0) {
                 // Direction of reflected ray.
                 const Vector reflectionDirection = (normal * 2*(normal ^ toRay)
                                                     - toRay).normalise();

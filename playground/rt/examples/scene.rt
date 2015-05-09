@@ -15,8 +15,7 @@ Scale: 45
 DofSamples: 256
 
 [Renderer.Antialiasing]
-# The number of sub-pixel samples to make:
-Subpixels: 6
+# TODO:
 
 [Renderer.Softlights]
 # The number of rays to cast for soft lights is defined by:
@@ -31,7 +30,7 @@ ScaleFactor: 0
 
 [Lens.wideangle]
 FocalLength: 36
-Aperture: 135
+Aperture: 75
 Focus: .97
 
 [Film.colour]

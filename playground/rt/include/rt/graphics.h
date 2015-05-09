@@ -3,6 +3,7 @@
 #define RT_GRAPHICS_H_
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 
 #include "./math.h"
@@ -64,6 +65,13 @@ class Colour {
                 b += c.b;
         }
 
+        // Colour subtraction.
+        void operator-=(const Colour &c) {
+                r -= c.r;
+                g -= c.g;
+                b -= c.b;
+        }
+
         // Scalar division.
         void operator/=(const Scalar x) {
                 r /= x;
@@ -105,6 +113,12 @@ class Colour {
 
         Scalar delta() const {
                 return max() - min();
+        }
+
+        // Return the sum difference between the r,g,b colour
+        // components.
+        Scalar inline diff(const Colour &rhs) const {
+                return fabs(rhs.r - r) + fabs(rhs.g - g) + fabs(rhs.b - b);
         }
 };
 

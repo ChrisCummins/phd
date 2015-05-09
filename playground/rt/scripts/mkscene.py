@@ -301,7 +301,6 @@ def set_renderer(pairs):
 def set_renderer_antialiasing(pairs):
     aa = {}
     renderer["aa"] = aa
-    aa["subpixels"] = consume_int(pairs, "subpixels", default=0)
 
 
 def set_renderer_softlights(pairs):
@@ -329,7 +328,7 @@ def get_material_code(name, pairs):
               .format(name))
     materials.add(name);
 
-    return ("const Material *const {name} = "
+    return ("const Material *const restrict {name} = "
             "new Material({colour}, {ambient}, {diffuse}, "
             "{specular}, {shininess}, {reflectivity});"
             .format(name=name, colour=colour, ambient=ambient, diffuse=diffuse,
@@ -348,7 +347,7 @@ def get_plane_code(name, pairs):
               .format(name))
     objects.add(name)
 
-    return ("const Plane *const {name} = "
+    return ("const Plane *const restrict {name} = "
             "new Plane({position}, {direction}, {material});"
             .format(name=name, position=position, direction=direction,
                     material=material))
@@ -365,7 +364,7 @@ def get_checkerboard_code(name, pairs):
               .format(name))
     objects.add(name)
 
-    return ("const CheckerBoard *const {name} = "
+    return ("const CheckerBoard *const restrict {name} = "
             "new CheckerBoard({position}, {direction}, {size}, "
             "{material1}, {material2});"
             .format(name=name, position=position, direction=direction,
@@ -381,7 +380,7 @@ def get_sphere_code(name, pairs):
               .format(name))
     objects.add(name)
 
-    return ("const Sphere *const {name} = "
+    return ("const Sphere *const restrict {name} = "
             "new Sphere({position}, {size}, {material});"
             .format(name=name, position=position, size=size,
                     material=material))
@@ -412,7 +411,7 @@ def get_softlight_code(name, pairs):
               .format(name))
     lights.add(name)
 
-    return ("const SoftLight *const {name} = "
+    return ("const SoftLight *const restrict {name} = "
             "new SoftLight({position}, {colour}, {size}, {samples});"
             .format(name=name, position=position, size=size,
                     colour=colour, samples=samples))
@@ -426,7 +425,7 @@ def get_pointlight_code(name, pairs):
               .format(name))
     lights.add(name)
 
-    return ("const SoftLight *const {name} = "
+    return ("const SoftLight *const restrict {name} = "
             "new SoftLight({position}, {colour});"
             .format(name=name, position=position, colour=colour))
 
@@ -460,7 +459,7 @@ def get_camera_perspective_code(name, pairs):
               .format(camera, name))
     camera = name
 
-    return ("const Camera *const {name} = "
+    return ("const Camera *const restrict {name} = "
             "new Camera({position}, {lookat}, "
             "{width}, {height}, "
             "Lens({focal}, {aperture}, {focus}));"
@@ -574,19 +573,18 @@ def get_scene_code():
     c += "};\n"
     c += "const Objects objects(_objects, _objects + (sizeof(_objects) / sizeof(_objects[0])));\n"
     c += "const Lights lights(_lights, _lights + (sizeof(_lights) / sizeof(_lights[0])));\n"
-    c += "const Scene *const scene = new Scene(objects, lights);\n"
+    c += "const Scene *const restrict scene = new Scene(objects, lights);\n"
 
     return c
 
 def get_renderer_code():
     depth = renderer["depth"]
-    sub = renderer["aa"]["subpixels"]
     dofsamples = renderer["dof"]
 
     c = ("return new Renderer({scene}, {camera}, "
-         "{sub}, {dof}, {depth});"
+         "{dof}, {depth});"
          .format(scene="scene", camera=camera, depth=depth,
-                 sub=sub, dof=dofsamples))
+                 dof=dofsamples))
     return c
 
 def get_image_code():
