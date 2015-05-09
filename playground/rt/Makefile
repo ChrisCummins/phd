@@ -13,7 +13,7 @@ QUIET   = $(QUIET_$(V))
 # Portability #
 ###############
 # Program paths.
-export CPPLINT := cpplint
+export CPPLINT := scripts/cpplint.py
 export CXX     := g++
 export RM      := rm -rf
 export SHELL   := /bin/bash
@@ -133,7 +133,6 @@ CpplintExtension = .lint
 #
 #   http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml
 #
-CPPLINT = cpplint
 LintFiles = $(addsuffix $(CpplintExtension),$(Sources) $(Headers))
 CleanFiles += $(LintFiles)
 
