@@ -12,7 +12,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
-from unittest import TestCase, main
+from unittest import main
+from tests import TestCase
 
 import labm8 as lab
 import labm8.fs
@@ -23,63 +24,38 @@ class TestFs(TestCase):
 
     # path()
     def test_path(self):
-        expected = os.path.abspath(".") + "/foo/bar"
-        actual = lab.fs.path("foo", "bar")
-        print(actual)
-        self.assertTrue(actual == expected)
+        self._test(os.path.abspath(".") + "/foo/bar",
+                   lab.fs.path("foo", "bar"))
 
     def test_path_relpath(self):
-        expected = "foo/bar"
-        actual = lab.fs.path("foo", "bar", abspath=False)
-        print(actual)
-        self.assertTrue(actual == expected)
+        self._test("foo/bar",
+                   lab.fs.path("foo", "bar", abspath=False))
 
     # is_subdir()
     def test_is_subdir(self):
-        expected = True
-        actual = lab.fs.is_subdir("/home", "/")
-        print(actual)
-        self.assertTrue(actual == expected)
-
-        expected = True
-        actual = lab.fs.is_subdir("/proc/1", "/proc")
-        print(actual)
-        self.assertTrue(actual == expected)
-
-    def test_is_subdir_same(self):
-        expected = True
-        actual = lab.fs.is_subdir("/proc/1", "/proc/1/")
-        print(actual)
-        self.assertTrue(actual == expected)
+        self._test(True, lab.fs.is_subdir("/home", "/"))
+        self._test(True, lab.fs.is_subdir("/proc/1", "/proc"))
+        self._test(True, lab.fs.is_subdir("/proc/1", "/proc/1/"))
 
     def test_is_subdir_not_subdir(self):
-        expected = False
-        actual = lab.fs.is_subdir("/", "/home")
-        print(actual)
-        self.assertTrue(actual == expected)
+        self._test(False,
+                   lab.fs.is_subdir("/", "/home"))
 
     # pwd()
     def test_pwd(self):
-        expected = os.getcwd()
-        actual = lab.fs.pwd()
-        print(actual)
-        self.assertTrue(actual == expected)
+        self._test(os.getcwd(), lab.fs.pwd())
 
     # read()
     def test_read_empty(self):
-        expected = []
-        actual = lab.fs.read("tests/data/empty_file")
-        print(actual)
-        self.assertTrue(actual == expected)
+        self._test([],
+                   lab.fs.read("tests/data/empty_file"))
 
     def test_read_hello_world(self):
-        expected = ['Hello, world!']
-        actual = lab.fs.read("tests/data/hello_world")
-        print(actual)
-        self.assertTrue(actual == expected)
+        self._test(['Hello, world!'],
+                   lab.fs.read("tests/data/hello_world"))
 
     def test_read_data1(self):
-        expected = [
+        self._test([
             '# data1 - test file',
             'This',
             'is a test file',
@@ -90,13 +66,11 @@ class TestFs(TestCase):
             '',
             'whitespace',
             '0.344'
-        ]
-        actual = lab.fs.read("tests/data/data1")
-        print(actual)
-        self.assertTrue(actual == expected)
+        ],
+                   lab.fs.read("tests/data/data1"))
 
     def test_read_data1_comment(self):
-        expected = [
+        self._test([
             'This',
             'is a test file',
             'With',
@@ -106,13 +80,11 @@ class TestFs(TestCase):
             '',
             'whitespace',
             '0.344'
-        ]
-        actual = lab.fs.read("tests/data/data1", comment_char="#")
-        print(actual)
-        self.assertTrue(actual == expected)
+        ],
+                   lab.fs.read("tests/data/data1", comment_char="#"))
 
     def test_read_data1_no_rstrip(self):
-        expected = [
+        self._test([
             '# data1 - test file\n',
             'This\n',
             'is a test file\n',
@@ -123,10 +95,8 @@ class TestFs(TestCase):
             '\n',
             'whitespace\n',
             '0.344\n'
-        ]
-        actual = lab.fs.read("tests/data/data1", rstrip=False)
-        print(actual)
-        self.assertTrue(actual == expected)
+        ],
+                   lab.fs.read("tests/data/data1", rstrip=False))
 
 if __name__ == '__main__':
     main()

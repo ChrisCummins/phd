@@ -12,7 +12,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
-from unittest import TestCase, main
+from unittest import main
+from tests import TestCase
 
 import labm8 as lab
 import labm8.crypto
@@ -21,21 +22,21 @@ class TestCrypto(TestCase):
 
     # sha1()
     def test_sha1_empty_str(self):
-        self.assertTrue(lab.crypto.sha1("")
-                        == "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+        self._test("da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                   lab.crypto.sha1(""))
 
     def test_sha1_hello_world(self):
-        self.assertTrue(lab.crypto.sha1("Hello, World!")
-                        == "0a0a9f2a6772942557ab5355d76af442f8f65e01")
+        self._test("0a0a9f2a6772942557ab5355d76af442f8f65e01",
+                   lab.crypto.sha1("Hello, World!"))
 
     # sha1_file()
     def test_sha1_file_empty(self):
-        sha1 = lab.crypto.sha1_file("tests/data/empty_file")
-        self.assertTrue(sha1 == "da39a3ee5e6b4b0d3255bfef95601890afd80709")
+        self._test("da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                   lab.crypto.sha1_file("tests/data/empty_file"))
 
     def test_sha1_file_hello_world(self):
-        sha1 = lab.crypto.sha1_file("tests/data/hello_world")
-        self.assertTrue(sha1 == "09fac8dbfd27bd9b4d23a00eb648aa751789536d")
+        self._test("09fac8dbfd27bd9b4d23a00eb648aa751789536d",
+                   lab.crypto.sha1_file("tests/data/hello_world"))
 
 if __name__ == '__main__':
     main()
