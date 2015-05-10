@@ -17,8 +17,12 @@ import os
 import re
 
 # Concatenate all components into a path.
-def path(*components, abspath=True):
-    relpath = "/".join(components)
+def path(*args, **kwargs):
+    relpath = "/".join(args)
+    abspath = True
+    if "abspath" in kwargs:
+        abspath = kwargs["abspath"]
+
     if abspath:
         return os.path.abspath(relpath)
     return relpath
