@@ -12,9 +12,45 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
+import labm8 as lab
 
 import os
 import re
+
+class Watcher:
+    """
+    A Watcher is a filesystem monitor that is notified whenever one of
+    it's member files is read or written to.
+    """
+
+    def __init__(self, path):
+        """
+        Create a new watcher object for the given path.
+        """
+        self._path = path
+
+    def on_read(self, path):
+        """
+        File modified callback. Receives an absolute path to the read
+        file.
+        """
+        pass
+
+    def on_write(self, path):
+        """
+        File written callback. Receives an absolute path to the modified
+        file.
+        """
+        pass
+
+    def path(self):
+        """
+        Return the Watcher path.
+        """
+        return self._path
+
+    def __str__(self):
+        return "Watcher({0})".format(self.path())
 
 # Concatenate all components into a path. Optional "abspath" keyword
 # can be set to false to prevent real path expansion.
@@ -60,6 +96,54 @@ def ls(p=".", abspaths=True):
     else:
         return os.listdir(p)
 
+# The global list of watchers.
+_WATCHERS = set()
+
+def register(watcher):
+    """
+    Register a new watcher object.
+    """
+    _WATCHERS.add(watcher)
+
+def unregister(watcher):
+    """
+    Unregister a watcher object.
+    """
+    if watcher in _WATCHERS:
+        _WATCHERS.remove(watcher)
+
+def notified_watchers(path):
+    """
+    Return a list of watchers for the given path.
+    """
+    return set(filter(lambda x: is_subdir(path, x.path()), _WATCHERS))
+
+def markread(path):
+    """
+    Mark a file as read.
+    """
+    abspath = os.path.abspath(path)
+    listeners = notified_watchers(path)
+
+    # Notify all listeners.
+    for watcher in listeners:
+        watcher.on_read(abspath)
+
+    return path
+
+def markwrite(path):
+    """
+    Mark a file as written (i.e. modified).
+    """
+    abspath = os.path.abspath(path)
+    listeners = notified_watchers(path)
+
+    # Notify all listeners.
+    for watcher in listeners:
+        watcher.on_write(abspath)
+
+    return path
+
 # Make directory "path", including any required parents. If directory
 # already exists, do nothing.
 def mkdir(path):
@@ -86,7 +170,7 @@ def read(path, rstrip=True, comment_char=None):
         not_comment_re = re.compile("[^{char}]+".format(char=comment_char))
 
     # Read file.
-    file = open(path)
+    file = open(markread(path))
     lines = file.readlines()
     file.close()
 
