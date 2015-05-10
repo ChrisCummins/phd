@@ -12,7 +12,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
-from unittest import TestCase, main
+from unittest import main
+from tests import TestCase
 
 import math
 import labm8 as lab
@@ -22,90 +23,73 @@ class TestMath(TestCase):
 
     # sqrt() tests
     def test_sqrt_4(self):
-        self.assertTrue(lab.math.sqrt(4) == 2)
+        self._test(2, lab.math.sqrt(4))
 
     def test_sqrt(self):
-        self.assertTrue(lab.math.sqrt(1024) == math.sqrt(1024))
+        self._test(math.sqrt(1024), lab.math.sqrt(1024))
 
     # mean() tests
     def test_mean_empty_array(self):
-        data = []
-        self.assertTrue(lab.math.mean(data) == 0)
+        self._test(0, lab.math.mean([]))
 
     def test_mean_single_item_array(self):
-        data = [1]
-        self.assertTrue(lab.math.mean(data) == 1)
+        self._test(1, lab.math.mean([1]))
 
     def test_mean_123_array(self):
-        data = [1, 2, 3]
-        self.assertTrue(lab.math.mean(data) == 2)
+        self._test(2, lab.math.mean([1,2,3]))
 
 
     # range() tests
     def test_range_empty_array(self):
-        data = []
-        self.assertTrue(lab.math.range(data) == 0)
+        self._test(0, lab.math.range([]))
 
     def test_range_single_item_array(self):
-        data = [1]
-        self.assertTrue(lab.math.range(data) == 0)
+        self._test(0, lab.math.range([1]))
 
     def test_range_123_array(self):
-        data = [1, 2, 3]
-        self.assertTrue(lab.math.range(data) == 2)
+        self._test(2, lab.math.range([1,2,3]))
 
 
     # variance() tests
     def test_variance_empty_array(self):
-        data = []
-        self.assertTrue(lab.math.variance(data) == 0)
+        self._test(0, lab.math.variance([]))
 
     def test_variance_single_item_array(self):
-        data = [1]
-        self.assertTrue(lab.math.variance(data) == 0)
+        self._test(0, lab.math.variance([1]))
 
     def test_variance_123_array(self):
-        data = [1, 2, 3]
-        self.assertTrue(lab.math.variance(data) == 1)
+        self._test(1, lab.math.variance([1,2,3]))
 
 
     # stdev() tests
     def test_stdev_empty_array(self):
-        data = []
-        self.assertTrue(lab.math.stdev(data) == 0)
+        self._test(0, lab.math.stdev([]))
 
     def test_stdev_single_item_array(self):
-        data = [1]
-        self.assertTrue(lab.math.stdev(data) == 0)
+        self._test(0, lab.math.stdev([1]))
 
     def test_stdev_123_array(self):
-        data = [1, 2, 3]
-        self.assertTrue(lab.math.stdev(data) == 1)
+        self._test(1, lab.math.stdev([1,2,3]))
 
 
     # confinterval() tests
     def test_confinterval_empty_array(self):
-        data = []
-        self.assertTrue(lab.math.confinterval(data) == (0, 0))
+        self._test((0, 0), lab.math.confinterval([]))
 
     def test_confinterval_single_item_array(self):
-        data = [1]
-        self.assertTrue(lab.math.confinterval(data) == (1, 1))
+        self._test((1, 1), lab.math.confinterval([1]))
 
     def test_confinterval_123_array(self):
-        data = [1, 2, 3]
-        self.assertTrue(lab.math.confinterval(data) ==
-                        (-0.48413771184375287, 4.4841377118437524))
+        self._test((-0.48413771184375287, 4.4841377118437524),
+                   lab.math.confinterval([1,2,3]))
 
     def test_confinterval_c50(self):
-        data = [1, 2, 3]
-        self.assertTrue(lab.math.confinterval(data, conf=0.5) ==
-                        (1.528595479208968, 2.4714045207910322))
+        self._test((1.528595479208968, 2.4714045207910322),
+                   lab.math.confinterval([1,2,3], conf=0.5))
 
     def test_confinterval_t_dist(self):
-        data = [1, 2, 3]
-        self.assertTrue(lab.math.confinterval(data, normal_threshold=1) ==
-                        (0.86841426592382809, 3.1315857340761717))
+        self._test((0.86841426592382809, 3.1315857340761717),
+                   lab.math.confinterval([1,2,3], normal_threshold=1))
 
 if __name__ == '__main__':
     main()
