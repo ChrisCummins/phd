@@ -14,13 +14,22 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
-import math
+import labm8 as lab
+import labm8.modules
+
+import sys
 import scipy
 from scipy import stats
 
+# Namespace collision between this "math" and system "math" packages.
+if sys.version_info >= (3, 0):
+    import math as std_math
+else:
+    std_math = lab.modules.import_foreign("math", "std_math")
+
 # Return the square root of a number.
 def sqrt(number):
-    return math.sqrt(number)
+    return std_math.sqrt(number)
 
 # Return the mean value of a list of divisible numbers.
 def mean(array):
