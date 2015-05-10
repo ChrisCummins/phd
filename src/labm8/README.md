@@ -1,7 +1,7 @@
 # Labm8
 
 A collection of functions and utilities for collecting and
-manipulating experimental data.
+manipulating quantitative experimental data.
 
 ## Installation
 

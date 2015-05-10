@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(name='labm8',
       version='0.0.1',
-      description='A collection of functions and utilities for scientific computing',
+      description='A collection of utilities for collecting and manipulating quantitative experimental data',
       url='',
       author='Chris Cummins',
       author_email='chrisc.101@gmail.com',
