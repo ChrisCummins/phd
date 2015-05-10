@@ -1,4 +1,6 @@
 # Labm8
+[![Build Status](https://travis-ci.org/ChrisCummins/labm8.svg)](https://travis-ci.org/ChrisCummins/labm8)
+[![Coverage Status](https://coveralls.io/repos/ChrisCummins/labm8/badge.svg)](https://coveralls.io/r/ChrisCummins/labm8)
 
 A collection of functions and utilities for collecting and
 manipulating quantitative experimental data.
