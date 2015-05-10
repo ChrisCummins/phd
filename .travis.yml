@@ -30,3 +30,8 @@ script:
 after_success:
   # Create coverage report:
   - coveralls
+
+notifications:
+  email:
+    on_success: change # [always|never|change]
+    on_failure: change # [always|never|change]
