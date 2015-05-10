@@ -45,6 +45,28 @@ class TestFs(TestCase):
     def test_pwd(self):
         self._test(os.getcwd(), lab.fs.pwd())
 
+    # notified_watchers()
+    def test_notified_watchers_empty(self):
+        self._test(set(), lab.fs.notified_watchers("/home"))
+        self._test(set(), lab.fs.notified_watchers("/"))
+
+    def test_notified_watchers(self):
+        home = lab.fs.Watcher("/home")
+        root = lab.fs.Watcher("/")
+        watchers = set([home, root])
+
+        # Register watchers.
+        for watcher in watchers:
+            lab.fs.register(watcher)
+
+        self._test(watchers, lab.fs.notified_watchers("/home"))
+        self._test(watchers, lab.fs.notified_watchers("/home/foo"))
+        self._test(set([root]), lab.fs.notified_watchers("/tmp"))
+
+        # Test teardown.
+        for watcher in watchers:
+            lab.fs.unregister(watcher)
+
     # read()
     def test_read_empty(self):
         self._test([],
