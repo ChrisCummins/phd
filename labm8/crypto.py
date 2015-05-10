@@ -17,10 +17,17 @@ import hashlib
 def _sha1(data):
     return hashlib.sha1(data).hexdigest()
 
-# Return the sha1 of string "data".
 def sha1(data):
+    """
+    Return the sha1 of string "data".
+    """
     return _sha1(data.encode("utf-8"))
 
-# Return the sha1 of file at "path".
 def sha1_file(path):
-    return _sha1(open(path, 'rb').read())
+    """
+    Return the sha1 of file at "path".
+    """
+    file = open(path, 'rb')
+    sha1 = _sha1(file.read())
+    file.close()
+    return sha1
