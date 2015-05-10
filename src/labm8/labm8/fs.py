@@ -16,7 +16,8 @@
 import os
 import re
 
-# Concatenate all components into a path.
+# Concatenate all components into a path. Optional "abspath" keyword
+# can be set to false to prevent real path expansion.
 def path(*args, **kwargs):
     relpath = "/".join(args)
     abspath = True
@@ -26,6 +27,21 @@ def path(*args, **kwargs):
     if abspath:
         return os.path.abspath(relpath)
     return relpath
+
+# Determine if "child" is a subdirectory of "parent". If child ==
+# parent, returns True.
+def is_subdir(child, parent):
+    child_path = os.path.realpath(child)
+    parent_path = os.path.realpath(parent)
+
+    if len(child_path) < len(parent_path):
+        return False
+
+    for i in range(len(parent_path)):
+        if parent_path[i] != child_path[i]:
+            return False
+
+    return True
 
 # Change working directory.
 def cd(path):
