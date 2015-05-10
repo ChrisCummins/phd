@@ -34,6 +34,30 @@ class TestFs(TestCase):
         print(actual)
         self.assertTrue(actual == expected)
 
+    # is_subdir()
+    def test_is_subdir(self):
+        expected = True
+        actual = lab.fs.is_subdir("/home", "/")
+        print(actual)
+        self.assertTrue(actual == expected)
+
+        expected = True
+        actual = lab.fs.is_subdir("/proc/1", "/proc")
+        print(actual)
+        self.assertTrue(actual == expected)
+
+    def test_is_subdir_same(self):
+        expected = True
+        actual = lab.fs.is_subdir("/proc/1", "/proc/1/")
+        print(actual)
+        self.assertTrue(actual == expected)
+
+    def test_is_subdir_not_subdir(self):
+        expected = False
+        actual = lab.fs.is_subdir("/", "/home")
+        print(actual)
+        self.assertTrue(actual == expected)
+
     # pwd()
     def test_pwd(self):
         expected = os.getcwd()
