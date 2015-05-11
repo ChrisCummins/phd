@@ -21,7 +21,7 @@ import sys
 
 def exit(status=0):
     if status == 0:
-        lab.io.Colours.print(lab.io.Colours.GREEN, "Done.")
+        lab.io.printf(lab.io.Colours.GREEN, "Done.")
     else:
-        lab.io.Colours.print(lab.io.Colours.RED, "Error {0}".format(status))
+        lab.io.printf(lab.io.Colours.RED, "Error {0}".format(status))
     sys.exit(status)

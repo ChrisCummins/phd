@@ -46,7 +46,7 @@ def pid():
     else:
         return _PID
 
-def exec(args, out=None, exit_on_error=False):
+def system(args, out=None, exit_on_error=False):
     """
     Run "args", redirecting stdout and stderr to "out". Returns exit
     status.

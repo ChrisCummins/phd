@@ -14,9 +14,16 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
+from __future__ import print_function
+
 import labm8 as lab
 
 import json
+
+def printf(colour, *args, **kwargs):
+    print(colour, end="")
+    print(*args, end="")
+    print(Colours.RESET, **kwargs)
 
 def pprint(data):
     print(json.dumps(data, sort_keys=True, indent=2, separators=(",", ": ")))
@@ -33,7 +40,7 @@ def warn(*args, **kwargs):
 def error(*args, **kwargs):
     print("[ERROR ]", *args, **kwargs)
 
-def fatal(*args, status=1, **kwargs):
+def fatal(status=1, *args, **kwargs):
     error("fatal:", *args, **kwargs)
     lab.exit(status)
 
@@ -49,9 +56,3 @@ class Colours:
     YELLOW  = '\033[93m'
     BLUE    = '\033[94m'
     RED     = '\033[91m'
-
-    @staticmethod
-    def print(colour, *args, **kwargs):
-        print(colour, end="")
-        print(*args, end="")
-        print(Colours.RESET, **kwargs)

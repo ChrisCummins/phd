@@ -49,8 +49,7 @@ def _commitandpush():
     if _diskwrites < 1:
         return
 
-    lab.io.Colours.print(lab.io.Colours.GREEN,
-                         "Commiting", len(_diskwritten), "files")
+    lab.io.printf(lab.io.Colours.GREEN, "Commiting", len(_diskwritten), "files")
 
     for file in _diskwritten:
         lab.fs.cd(os.path.dirname(file))

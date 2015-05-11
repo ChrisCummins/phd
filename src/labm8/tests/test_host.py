@@ -35,9 +35,9 @@ class TestHost(TestCase):
         self._test(pid, lab.host.pid())
         self._test(pid, lab.host.pid())
 
-    def test_exec(self):
-        self._test(0, lab.host.exec(["true"]))
-        self._test(1, lab.host.exec(["false"]))
+    def test_system(self):
+        self._test(0, lab.host.system(["true"]))
+        self._test(1, lab.host.system(["false"]))
 
 if __name__ == '__main__':
     main()
