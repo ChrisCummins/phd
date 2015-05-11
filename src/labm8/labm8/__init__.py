@@ -20,8 +20,20 @@ import labm8.io
 import sys
 
 def exit(status=0):
+    """
+    Terminate the program with the given status code.
+    """
     if status == 0:
         lab.io.printf(lab.io.Colours.GREEN, "Done.")
     else:
         lab.io.printf(lab.io.Colours.RED, "Error {0}".format(status))
     sys.exit(status)
+
+def is_string(obj):
+    """
+    Check if an object is a string (Python 2 and 3 compatible).
+    """
+    try:
+        return isinstance(obj, basestring)
+    except NameError:
+        return isinstance(obj, str)
