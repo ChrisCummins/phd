@@ -40,9 +40,10 @@ def warn(*args, **kwargs):
 def error(*args, **kwargs):
     print("[ERROR ]", *args, **kwargs)
 
-def fatal(status=1, *args, **kwargs):
-    error("fatal:", *args, **kwargs)
-    lab.exit(status)
+def fatal(*args, **kwargs):
+    returncode = kwargs.pop("stats", 1)
+    error("fatal:", *args)
+    lab.exit(returncode)
 
 def colourise(colour, *args):
     return str(colour + str(args) + Colours.RESET)
