@@ -16,7 +16,7 @@ from unittest import main
 from tests import TestCase
 
 import labm8 as lab
-import labm8.host
+from labm8 import host
 
 import os
 import socket
@@ -25,19 +25,25 @@ class TestHost(TestCase):
 
     def test_name(self):
         hostname = socket.gethostname()
-        self._test(hostname, lab.host.name())
-        self._test(hostname, lab.host.name())
-        self._test(hostname, lab.host.name())
+        self._test(hostname, host.name())
+        self._test(hostname, host.name())
+        self._test(hostname, host.name())
 
     def test_pid(self):
         pid = os.getpid()
-        self._test(pid, lab.host.pid())
-        self._test(pid, lab.host.pid())
-        self._test(pid, lab.host.pid())
+        self._test(pid, host.pid())
+        self._test(pid, host.pid())
+        self._test(pid, host.pid())
 
     def test_system(self):
-        self._test(0, lab.host.system(["true"]))
-        self._test(1, lab.host.system(["false"]))
+        self._test(0, host.system(["true"]))
+        self._test(1, host.system(["false"], exit_on_error=False))
+
+    def test_check_output(self):
+        self._test("", host.check_output(["true"]))
+        self.assertRaises(host.SubprocessError,
+                          host.check_output, ["false"], exit_on_error=False)
+        self._test("hello\n", host.check_output(["echo", "hello"]))
 
 if __name__ == '__main__':
     main()
