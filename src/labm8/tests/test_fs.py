@@ -19,6 +19,7 @@ import labm8 as lab
 import labm8.fs
 
 import os
+import re
 
 class TestFs(TestCase):
 
@@ -30,6 +31,10 @@ class TestFs(TestCase):
     def test_path_relpath(self):
         self._test("foo/bar",
                    lab.fs.path("foo", "bar", abspath=False))
+
+    def test_path_homedir(self):
+        self._test("/home",
+                   re.search("^(/home).*", lab.fs.path("~", "foo")).group(1))
 
     # is_subdir()
     def test_is_subdir(self):

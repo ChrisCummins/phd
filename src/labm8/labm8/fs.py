@@ -52,17 +52,19 @@ class Watcher:
     def __str__(self):
         return "Watcher({0})".format(self.path())
 
-# Concatenate all components into a path. Optional "abspath" keyword
-# can be set to false to prevent real path expansion.
 def path(*args, **kwargs):
-    relpath = "/".join(args)
-    abspath = True
-    if "abspath" in kwargs:
-        abspath = kwargs["abspath"]
+    """Get a file path.
 
-    if abspath:
-        return os.path.abspath(relpath)
-    return relpath
+    Concatenate all components into a path. Optional "abspath" keyword
+    can be set to false to prevent real path expansion.
+    """
+    abspath = kwargs.pop('abspath', True)
+
+    _path = os.path.join(*args)
+    _path = os.path.expanduser(_path)
+    if abspath: _path = os.path.abspath(_path)
+
+    return _path
 
 # Determine if "child" is a subdirectory of "parent". If child ==
 # parent, returns True.
