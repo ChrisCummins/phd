@@ -25,15 +25,13 @@ class TestHost(TestCase):
 
     def test_name(self):
         hostname = socket.gethostname()
-        self._test(hostname, lab.host.name())
-        self._test(hostname, lab.host.name())
-        self._test(hostname, lab.host.name())
+        self._test(hostname, lab.host.HOSTNAME)
+        self._test(hostname, lab.host.HOSTNAME)
 
     def test_pid(self):
         pid = os.getpid()
-        self._test(pid, lab.host.pid())
-        self._test(pid, lab.host.pid())
-        self._test(pid, lab.host.pid())
+        self._test(pid, lab.host.PID)
+        self._test(pid, lab.host.PID)
 
     def test_system(self):
         self._test(0, lab.host.system(["true"]))
