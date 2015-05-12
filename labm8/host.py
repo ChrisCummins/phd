@@ -14,29 +14,66 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
-import labm8 as lab
-import labm8.io
+
+"""
+Host module.
+
+Variables:
+  HOSTNAME System hostname.
+  PID Process ID.
+"""
 
 import os
 import socket
 import subprocess
 
-# System hostname.
+import labm8 as lab
+from labm8 import io
+
 HOSTNAME = socket.gethostname()
 
-# Process ID.
 PID = os.getpid()
 
-def system(args, out=None, exit_on_error=False):
+class Error(Exception):
+    pass
+
+class SubprocessError(Error):
+    """
+    Error thrown if a subprocess fails.
+    """
+    pass
+
+def check_output(args, shell=False, exit_on_error=True):
+    """Run "args", returning stdout and stderr.
+
+    If the process fails, raises a SubprocessError. If "exit_on_error"
+    is True, execution halts.
+    """
+    try:
+        output = subprocess.check_output(args, shell=shell,
+                                         stderr=subprocess.STDOUT)
+        return output.decode()
+    except subprocess.CalledProcessError as err:
+        msg = ("Subprocess '%s' failed with exit code '{}'"
+               % err.cmd, err.returncode)
+
+        if exit_on_error:
+            io.error(err.output)
+            io.fatal(msg, err.returncode)
+        raise SubprocessError(msg)
+
+
+
+def system(args, out=None, exit_on_error=True):
     """
     Run "args", redirecting stdout and stderr to "out". Returns exit
     status.
     """
     try:
-        exitstatus = subprocess.call(args, stdout=out, stderr=out)
+        returncode = subprocess.call(args, stdout=out, stderr=out)
     except KeyboardInterrupt:
         print()
-        lab.io.fatal("Keyboard interrupt", status=0)
-    if exitstatus != 0 and exit_on_error:
-        lab.io.fatal(*args, status=exitstatus)
-    return exitstatus
+        io.fatal("Keyboard interrupt", status=0)
+    if returncode and exit_on_error:
+        io.fatal(args, status=returncode)
+    return returncode

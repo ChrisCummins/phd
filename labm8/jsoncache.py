@@ -47,7 +47,7 @@ def _readjson(path):
         return {}
 
 def _writejson(path, data):
-    lab.fs.mkdir(os.path.dirname(path)
+    lab.fs.mkdir(os.path.dirname(path))
     json.dump(data, lab.gitfs.markwrite(open(path, 'w')),
               sort_keys=True, indent=2, separators=(',', ': '))
 
