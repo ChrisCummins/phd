@@ -1,5 +1,5 @@
 PYTHON3 = python3
-PYTHON2 = python2.7
+PYTHON2 = python2
 
 PYTHON3_LOG = test.python3.log
 PYTHON2_LOG = test.python2.log
