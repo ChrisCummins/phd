@@ -14,3 +14,13 @@ check test:
 	@$(PYTHON2) ./setup.py test &> $(PYTHON2_LOG) && 		\
 		grep -E '^Ran [0-9]+ tests in' $(PYTHON2_LOG) ||	\
 		cat $(PYTHON2_LOG)
+
+install:
+	@sudo $(PYTHON3) ./setup.py install
+	@sudo $(PYTHON2) ./setup.py install
+
+help:
+	@echo "Makefile options:"
+	@echo
+	@echo "    make check     Run test suite using python2 and python3"
+	@echo "    make install   Install labm8 to system"
