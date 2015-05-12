@@ -1,8 +1,8 @@
 PYTHON3 = python3
 PYTHON2 = python2
 
-PYTHON3_LOG = test.python3.log
-PYTHON2_LOG = test.python2.log
+PYTHON3_LOG = .test.python3.log
+PYTHON2_LOG = .test.python2.log
 
 check test:
 	@echo -n "Python3: "
