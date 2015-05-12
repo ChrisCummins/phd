@@ -21,30 +21,11 @@ import os
 import socket
 import subprocess
 
-_HOSTNAME = None
-def name():
-    """
-    Return the system hostname.
-    """
-    global _HOSTNAME
+# System hostname.
+HOSTNAME = socket.gethostname()
 
-    if _HOSTNAME == None:
-        _HOSTNAME = socket.gethostname()
-        return name()
-    else:
-        return _HOSTNAME
-
-_PID = None
-def pid():
-    """
-    Return the current process ID.
-    """
-    global _PID
-    if _PID == None:
-        _PID = os.getpid()
-        return pid()
-    else:
-        return _PID
+# Process ID.
+PID = os.getpid()
 
 def system(args, out=None, exit_on_error=False):
     """

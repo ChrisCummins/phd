@@ -42,7 +42,7 @@ def _commitandpush():
     global _diskwrites, _diskwritten
 
     # Don't commit from master hosts.
-    if lab.host.name() in MASTER_HOSTS:
+    if lab.host.HOSTNAME in MASTER_HOSTS:
         return
 
     # Escape if we have nothing to do.
@@ -57,7 +57,7 @@ def _commitandpush():
 
     lab.fs.cd(_cwd)
     subprocess.call(["git", "commit", "-m",
-                     "{host}: Auto-bot commit".format(host=labe.host.name())])
+                     "{host}: Auto-bot commit".format(host=labe.host.HOSTNAME)])
     subprocess.call(["git", "pull", "--rebase"])
 
     for remote in REMOTES:
