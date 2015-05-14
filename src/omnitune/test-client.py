@@ -17,7 +17,7 @@ INTERFACE_NAME = "org.omnitune.skelcl"
 
 wgs = []
 def test_RequestWgSize(proxy):
-    wg = proxy.RequestWorkgroupSize()
+    wg = proxy.RequestWorkgroupSize(["foo", "bar"])
 
     wgs.append((int(wg[0]), int(wg[1])))
 
@@ -30,7 +30,7 @@ def main():
         print("Connected to interface %s ..." % INTERFACE_NAME)
 
         start = time.time()
-        n = 1000
+        n = 5
         for i in range(n):
             test_RequestWgSize(proxy)
         end = time.time()
