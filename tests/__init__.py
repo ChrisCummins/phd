@@ -16,8 +16,13 @@ class TestCase(unittest.TestCase):
     # actual result. The benefit over just calling assertTrue() is
     # that it prints the expected and actual values if the test fails.
     def _test(self, expected, actual):
-        print("Expected:", end="")
+        print("Expected: ", end="")
         self._print(expected)
-        print("Actual:", end="")
+        print("Actual:   ", end="")
         self._print(actual)
-        self.assertTrue(actual == expected)
+        try:
+            self.assertTrue(actual == expected)
+            print("OK\n")
+        except AssertionError as e:
+            print("FAIL")
+            raise(e)
