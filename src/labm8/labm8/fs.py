@@ -16,6 +16,7 @@ import labm8 as lab
 
 import os
 import re
+import os.path
 
 class Watcher:
     """
@@ -88,6 +89,21 @@ def cd(path):
 # Return the path to the current working directory.
 def pwd():
     return os.getcwd()
+
+
+def exists(path):
+    """
+    Return whether a file exists.
+    """
+    return os.path.exists(path)
+
+
+def isfile(path):
+    """
+    Return whether a path exists, and is a file.
+    """
+    return os.path.isfile(path)
+
 
 # List all files and directories in "path". If "abspaths", return
 # absolute paths.

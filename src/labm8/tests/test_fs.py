@@ -50,6 +50,21 @@ class TestFs(TestCase):
     def test_pwd(self):
         self._test(os.getcwd(), lab.fs.pwd())
 
+
+    # exists()
+    def test_exists(self):
+        self._test(True, lab.fs.exists(__file__))
+        self._test(True, lab.fs.exists("/"))
+        self._test(False, lab.fs.exists("/not/a/real/path (I hope!)"))
+
+
+    # isfile()
+    def test_isfile(self):
+        self._test(True, lab.fs.isfile(__file__))
+        self._test(False, lab.fs.isfile("/"))
+        self._test(False, lab.fs.isfile("/not/a/real/path (I hope!)"))
+
+
     # notified_watchers()
     def test_notified_watchers_empty(self):
         self._test(set(), lab.fs.notified_watchers("/home"))
