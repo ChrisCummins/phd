@@ -53,8 +53,10 @@ class Watcher:
     def __str__(self):
         return "Watcher({0})".format(self.path())
 
+
 def path(*args, **kwargs):
-    """Get a file path.
+    """
+    Get a file path.
 
     Concatenate all components into a path. Optional "abspath" keyword
     can be set to false to prevent real path expansion.
@@ -67,9 +69,12 @@ def path(*args, **kwargs):
 
     return _path
 
-# Determine if "child" is a subdirectory of "parent". If child ==
-# parent, returns True.
+
 def is_subdir(child, parent):
+    """
+    Determine if "child" is a subdirectory of "parent". If child ==
+    parent, returns True.
+    """
     child_path = os.path.realpath(child)
     parent_path = os.path.realpath(parent)
 
@@ -82,12 +87,18 @@ def is_subdir(child, parent):
 
     return True
 
-# Change working directory.
+
 def cd(path):
+    """
+    Change working directory.
+    """
     os.chdir(path)
 
-# Return the path to the current working directory.
+
 def pwd():
+    """
+    Return the path to the current working directory.
+    """
     return os.getcwd()
 
 
@@ -105,9 +116,11 @@ def isfile(path):
     return os.path.isfile(path)
 
 
-# List all files and directories in "path". If "abspaths", return
-# absolute paths.
 def ls(p=".", abspaths=True):
+    """
+    List all files and directories in "path". If "abspaths", return
+    absolute paths.
+    """
     if abspaths:
         files = ls(p, abspaths=False)
         return [os.path.abspath(path(p, file)) for file in files]
@@ -162,24 +175,33 @@ def markwrite(path):
 
     return path
 
-# Make directory "path", including any required parents. If directory
-# already exists, do nothing.
+
 def mkdir(path):
+    """
+    Make directory "path", including any required parents. If
+    directory already exists, do nothing.
+    """
     try:
         os.makedirs(path)
     except OSError:
         pass
 
-# A wrapper for the open() builtin which also ensures that the
-# directory exists.
+
 def mkopen(p, *args, **kwargs):
+    """
+    A wrapper for the open() builtin which also ensures that the
+    directory exists.
+    """
     dir = os.path.dirname(p)
     mkdir(dir)
     return open(p, *args, **kwargs)
 
-# Read file "path" and return a list of lines. If comment_char is set,
-# ignore the contents of lines following the comment_char.
+
 def read(path, rstrip=True, comment_char=None):
+    """
+    Read file "path" and return a list of lines. If comment_char is
+    set, ignore the contents of lines following the comment_char.
+    """
     has_comment_char = comment_char != None
 
     # Compile regexps.
