@@ -27,35 +27,47 @@ if sys.version_info >= (3, 0):
 else:
     std_math = lab.modules.import_foreign("math", "std_math")
 
-# Return the square root of a number.
 def sqrt(number):
+    """
+    Return the square root of a number.
+    """
     return std_math.sqrt(number)
 
-# Return the mean value of a list of divisible numbers.
 def mean(array):
+    """
+    Return the mean value of a list of divisible numbers.
+    """
     if len(array) < 1:
         return 0
     return sum([float(x) for x in array]) / float(len(array))
 
-# Return the range between min and max values.
 def range(array):
+    """
+    Return the range between min and max values.
+    """
     if len(array) < 1:
         return 0
     return max(array) - min(array)
 
-# Return the variance of a list of divisible numbers.
 def variance(array):
+    """
+    Return the variance of a list of divisible numbers.
+    """
     if len(array) < 2:
         return 0
     u = mean(array)
     return sum([(x - u) ** 2 for x in array]) / (len(array) - 1)
 
-# Return the standard deviation of a list of divisible numbers.
 def stdev(array):
+    """
+    Return the standard deviation of a list of divisible numbers.
+    """
     return sqrt(variance(array))
 
-# Return the confidence interval of a list for a given confidence.
 def confinterval(array, conf=0.95, normal_threshold=30):
+    """
+    Return the confidence interval of a list for a given confidence.
+    """
     n = len(array)
 
     if n < 1:
