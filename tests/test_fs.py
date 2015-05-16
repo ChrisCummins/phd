@@ -55,6 +55,32 @@ class TestFs(TestCase):
         self._test(False,
                    lab.fs.is_subdir("/", "/home"))
 
+
+    # basename()
+    def test_basename(self):
+        self._test("foo", lab.fs.basename("foo"))
+        self._test("foo", lab.fs.basename(lab.fs.abspath("foo")))
+
+
+    # cd(), cdpop()
+    def test_cd(self):
+        cwd = os.getcwd()
+
+        print("CWD", cwd)
+        lab.fs.cd("..")
+        print("CWD", os.getcwd())
+        cwd = lab.fs.cdpop()
+        print("CWD", cwd)
+        #self._test(cwd, lab.fs.cdpop())
+
+
+    # cdpop()
+    def test_cdpop(self):
+        cwd = os.getcwd()
+        for i in range(10):
+            self._test(cwd, lab.fs.cdpop())
+
+
     # pwd()
     def test_pwd(self):
         self._test(os.getcwd(), lab.fs.pwd())
@@ -106,6 +132,7 @@ class TestFs(TestCase):
                    lab.fs.read("tests/data/hello_world"))
 
     def test_read_data1(self):
+        print("PWD", os.getcwd())
         self._test([
             '# data1 - test file',
             'This',

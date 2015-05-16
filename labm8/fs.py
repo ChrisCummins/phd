@@ -18,6 +18,11 @@ import os
 import re
 import os.path
 
+
+class Error(Exception):
+    pass
+
+
 class Watcher:
     """
     A Watcher is a filesystem monitor that is notified whenever one of
@@ -75,6 +80,13 @@ def abspath(*components):
     return os.path.abspath(path(*components))
 
 
+def basename(path):
+    """
+    Return the basename of a given file path.
+    """
+    return os.path.basename(path)
+
+
 def is_subdir(child, parent):
     """
     Determine if "child" is a subdirectory of "parent". If child ==
@@ -93,18 +105,39 @@ def is_subdir(child, parent):
     return True
 
 
+# Directory history.
+_cdhist = [os.getcwd()]
+
+
 def cd(path):
     """
     Change working directory.
+
+    Returns absolute path to new working directory.
     """
+    path = abspath(path) # convert to absolute path
+    _cdhist.append(path)
     os.chdir(path)
+    return path
+
+
+def cdpop():
+    """
+    Return the last directory.
+
+    Returns absolute path to new working directory.
+    """
+    if len(_cdhist) > 1:
+        _cdhist.pop() # remove current directory
+        os.chdir(_cdhist[-1])
+    return _cdhist[-1]
 
 
 def pwd():
     """
     Return the path to the current working directory.
     """
-    return os.getcwd()
+    return _cdhist[-1]
 
 
 def exists(path):
