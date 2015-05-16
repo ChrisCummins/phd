@@ -37,9 +37,13 @@ def mean(array):
     """
     Return the mean value of a list of divisible numbers.
     """
-    if len(array) < 1:
+    n = len(array)
+
+    if n < 1:
         return 0
-    return sum([float(x) for x in array]) / float(len(array))
+    elif n == 1:
+        return array[0]
+    return sum([float(x) for x in array]) / float(n)
 
 def range(array):
     """
