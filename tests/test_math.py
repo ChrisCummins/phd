@@ -35,8 +35,24 @@ class TestMath(TestCase):
     def test_mean_single_item_array(self):
         self._test(1, lab.math.mean([1]))
 
-    def test_mean_123_array(self):
+    def test_mean(self):
         self._test(2, lab.math.mean([1,2,3]))
+        self._test((1/3.), lab.math.mean([1,1.5,-1.5]))
+        self._test(2, lab.math.mean([2,2,2,2,2]))
+        self._test(2.5, lab.math.mean([1,2,3,4]))
+
+
+    # median() tests
+    def test_median_empty_array(self):
+        self._test(0, lab.math.median([]))
+
+    def test_median_single_item_array(self):
+        self._test(1, lab.math.median([1]))
+
+    def test_median(self):
+        self._test(2, lab.math.median([1,2,3]))
+        self._test(1, lab.math.median([1,1.5,-1.5]))
+        self._test(2.5, lab.math.median([1, 2, 3, 4]))
 
 
     # range() tests

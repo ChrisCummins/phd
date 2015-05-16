@@ -14,12 +14,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
-import labm8 as lab
-import labm8.modules
-
 import sys
+
+import numpy
 import scipy
 from scipy import stats
+
+import labm8 as lab
+import labm8.modules
 
 # Namespace collision between this "math" and system "math" packages.
 if sys.version_info >= (3, 0):
@@ -44,6 +46,26 @@ def mean(array):
     elif n == 1:
         return array[0]
     return sum([float(x) for x in array]) / float(n)
+
+
+def median(array):
+    """
+    Return the median value of a list of numbers.
+    """
+    n = len(array)
+
+    if n < 1:
+        return 0
+    elif n == 1:
+        return array[0]
+
+    sorted_vals = sorted(array)
+    midpoint = int(n / 2)
+    if n % 2 == 1:
+        return sorted_vals[midpoint]
+    else:
+        return (sorted_vals[midpoint - 1] + sorted_vals[midpoint]) / 2.0
+
 
 def range(array):
     """
