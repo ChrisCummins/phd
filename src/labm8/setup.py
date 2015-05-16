@@ -14,6 +14,7 @@ setup(name='labm8',
           'nose'
       ],
       install_requires=[
+          'numpy',
           'scipy'
       ],
       zip_safe=False)
