@@ -25,16 +25,25 @@ class TestFs(TestCase):
 
     # path()
     def test_path(self):
-        self._test(os.path.abspath(".") + "/foo/bar",
-                   lab.fs.path("foo", "bar"))
-
-    def test_path_relpath(self):
-        self._test("foo/bar",
-                   lab.fs.path("foo", "bar", abspath=False))
+        self._test("foo/bar", lab.fs.path("foo", "bar"))
+        self._test("foo/bar/car", lab.fs.path("foo/bar", "car"))
 
     def test_path_homedir(self):
         self._test("/home",
                    re.search("^(/home).*", lab.fs.path("~", "foo")).group(1))
+
+
+    # abspath()
+    def test_abspath(self):
+        self._test(os.path.abspath(".") + "/foo/bar",
+                   lab.fs.abspath("foo", "bar"))
+        self._test(os.path.abspath(".") + "/foo/bar/car",
+                   lab.fs.abspath("foo/bar", "car"))
+
+    def test_abspath_homedir(self):
+        self._test("/home",
+                   re.search("^(/home).*", lab.fs.abspath("~", "foo")).group(1))
+
 
     # is_subdir()
     def test_is_subdir(self):

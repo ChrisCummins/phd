@@ -54,20 +54,25 @@ class Watcher:
         return "Watcher({0})".format(self.path())
 
 
-def path(*args, **kwargs):
+def path(*components):
     """
     Get a file path.
 
-    Concatenate all components into a path. Optional "abspath" keyword
-    can be set to false to prevent real path expansion.
+    Concatenate all components into a path.
     """
-    abspath = kwargs.pop('abspath', True)
-
-    _path = os.path.join(*args)
+    _path = os.path.join(*components)
     _path = os.path.expanduser(_path)
-    if abspath: _path = os.path.abspath(_path)
 
     return _path
+
+
+def abspath(*components):
+    """
+    Get an absolute file path.
+
+    Concatenate all components into an absolute path.
+    """
+    return os.path.abspath(path(*components))
 
 
 def is_subdir(child, parent):
