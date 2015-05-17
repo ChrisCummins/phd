@@ -72,7 +72,7 @@ class RtOlevel(testcase.TestCase):
         output = system.check_output("./examples/example1")
         match = re.search(self.TIME_RE, output)
         if match:
-            return {"Runtime": float(match.group(1)))}
+            return {"Runtime": float(match.group(1))}
 
 
 def main():
