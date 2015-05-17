@@ -1,24 +1,20 @@
-# Import common build script.
-include $(top_srcdir)/Makefile.common
+SUBDIRS = native
 
-AM_CXXFLAGS = -isystem $(OPENCL_HEADERS) \
-	`pkg-config --cflags glibmm-2.4 giomm-2.4`
-AM_LDFLAGS = -L$(OPENCL_LIB) -lOpenCL \
-	`pkg-config --libs glibmm-2.4 giomm-2.4`
+PYTHON = python2
 
-noinst_PROGRAMS = 			\
-	client				\
-	$(NULL)
+PYTHON_LOG = .test.$(PYTHON).log
 
-client_SOURCES = client.cc
+check test:
+	@echo -n "$(PYTHON): "
+	@$(PYTHON) ./setup.py test &> $(PYTHON_LOG) && 		\
+		grep -E '^Ran [0-9]+ tests in' $(PYTHON_LOG) ||	\
+		cat $(PYTHON_LOG)
 
-#------------------------------------------------------------------------
-# Auxiliary build targets.
-#------------------------------------------------------------------------
+install-data-local:
+	@sudo $(PYTHON) ./setup.py install
 
-# Execute all binaries.
-run-local: $(noinst_PROGRAMS)
-	@for bin in $^; do			\
-		echo ./$$bin;			\
-		./$$bin;			\
-	done
+help-local:
+	@echo "Makefile options:"
+	@echo
+	@echo "    make check     Run test suite using python2 and python3"
+	@echo "    make install   Install labm8 to system"
