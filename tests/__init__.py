@@ -7,8 +7,11 @@ class TestCase(unittest.TestCase):
 
     @staticmethod
     def _print(obj, **kwargs):
-        if hasattr(obj, "__iter__") and not isinstance(obj, str):
-            print([str(x) for x in obj], **kwargs)
+        if hasattr(obj, "__iter__"):
+            if isinstance(obj, dict):
+                print(obj, **kwargs)
+            elif not isinstance(obj, str):
+                print([str(x) for x in obj], **kwargs)
         else:
             print(str(obj), **kwargs)
 
