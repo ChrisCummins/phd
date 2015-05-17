@@ -16,7 +16,7 @@
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Host module.
+System module.
 
 Variables:
   HOSTNAME System hostname.
@@ -28,20 +28,24 @@ import socket
 import subprocess
 
 import labm8 as lab
+from labm8 import fs
 from labm8 import io
 
 HOSTNAME = socket.gethostname()
 
 PID = os.getpid()
 
+
 class Error(Exception):
     pass
+
 
 class SubprocessError(Error):
     """
     Error thrown if a subprocess fails.
     """
     pass
+
 
 def check_output(args, shell=False, exit_on_error=True):
     """Run "args", returning stdout and stderr.
@@ -63,8 +67,7 @@ def check_output(args, shell=False, exit_on_error=True):
         raise SubprocessError(msg)
 
 
-
-def system(args, out=None, exit_on_error=True):
+def run(args, out=None, exit_on_error=True):
     """
     Run "args", redirecting stdout and stderr to "out". Returns exit
     status.
@@ -77,3 +80,12 @@ def system(args, out=None, exit_on_error=True):
     if returncode and exit_on_error:
         io.fatal(args, status=returncode)
     return returncode
+
+
+def sed(match, replacement, path, modifiers=""):
+    """
+    Perform sed text substitution.
+    """
+    cmd = "sed -r -i 's/%s/%s/%s' %s" % (match, replacement, modifiers, path)
+
+    os.system(cmd)

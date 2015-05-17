@@ -16,32 +16,32 @@ from unittest import main
 from tests import TestCase
 
 import labm8 as lab
-from labm8 import host
+from labm8 import system
 
 import os
 import socket
 
-class TestHost(TestCase):
+class TestSystem(TestCase):
 
     def test_name(self):
         hostname = socket.gethostname()
-        self._test(hostname, lab.host.HOSTNAME)
-        self._test(hostname, lab.host.HOSTNAME)
+        self._test(hostname, system.HOSTNAME)
+        self._test(hostname, system.HOSTNAME)
 
     def test_pid(self):
         pid = os.getpid()
-        self._test(pid, lab.host.PID)
-        self._test(pid, lab.host.PID)
+        self._test(pid, system.PID)
+        self._test(pid, system.PID)
 
-    def test_system(self):
-        self._test(0, host.system(["true"]))
-        self._test(1, host.system(["false"], exit_on_error=False))
+    def test_run(self):
+        self._test(0, system.run(["true"]))
+        self._test(1, system.run(["false"], exit_on_error=False))
 
     def test_check_output(self):
-        self._test("", host.check_output(["true"]))
-        self.assertRaises(host.SubprocessError,
-                          host.check_output, ["false"], exit_on_error=False)
-        self._test("hello\n", host.check_output(["echo", "hello"]))
+        self._test("", system.check_output(["true"]))
+        self.assertRaises(system.SubprocessError,
+                          system.check_output, ["false"], exit_on_error=False)
+        self._test("hello\n", system.check_output(["echo", "hello"]))
 
 if __name__ == '__main__':
     main()
