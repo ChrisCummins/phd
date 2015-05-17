@@ -8,6 +8,7 @@ import dbus.mainloop.glib
 import gobject
 
 import labm8
+from labm8 import crypto
 from labm8 import io
 
 SESSION_NAME   = "org.omnitune"
@@ -27,13 +28,16 @@ class SkelCLProxy(dbus.service.Object):
             return msg
 
     @dbus.service.method(INTERFACE_NAME, in_signature='ss', out_signature='(nn)')
-    def RequestWorkgroupSize(self, foo, bar):
+    def RequestWorkgroupSize(self, device_name, source):
         wg = (64, 32)
 
-        foo = self.parse_str(foo)
-        bar = self.parse_str(bar)
+        device_name = self.parse_str(device_name).strip()
+        source = self.parse_str(source)
+        source_id = crypto.sha1(source)
 
-        io.debug("RequestWorkGroupSize({0}) -> ({1}, {2})".format(", ".join([foo, bar]), *wg))
+        io.debug(("RequestWorkGroupSize({dev}, {id}) -> ({c}, {r})"
+                  .format(dev=device_name[:8], id=source_id[:8],
+                          c=wg[0], r=wg[1])))
         return wg
 
     @dbus.service.method(INTERFACE_NAME, in_signature='', out_signature='')
