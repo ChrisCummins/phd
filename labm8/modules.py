@@ -15,9 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 
-# Import a module with "name", using the optional imported name
-# "custom_name". See: http://stackoverflow.com/a/6032023
-def import_foreign(name, custom_name=None):
+
+def import_foreign_module(name, custom_name=None):
+    """
+    Import a module with "name", using the optional imported name
+    "custom_name". See: http://stackoverflow.com/a/6032023
+    """
     import imp, sys
 
     custom_name = custom_name or name
