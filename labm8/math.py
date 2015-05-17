@@ -21,13 +21,13 @@ import scipy
 from scipy import stats
 
 import labm8 as lab
-import labm8.modules
+from labm8 import modules
 
 # Namespace collision between this "math" and system "math" packages.
 if sys.version_info >= (3, 0):
     import math as std_math
 else:
-    std_math = lab.modules.import_foreign("math", "std_math")
+    std_math = modules.import_foreign("math", "std_math")
 
 def sqrt(number):
     """
