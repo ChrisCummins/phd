@@ -15,19 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 import labm8 as lab
-import labm8.fs
-import labm8.io
-import labm8.gitfs
+from labm8 import fs
+from labm8 import io
 
 import atexit
 import os
-import json
 
 # json - Persistent store for JSON objects.
 #
 # There are two public methods: load() and store(). After loading from
 # disk, JSON objects are cached locally, and written to disk every
 # CACHEWRITE_THRESHOLD writes, and when the process exits.
+
+import json
 
 # Maximum number of writes to cache before writing to disk.
 CACHEWRITE_THRESHOLD = 10
@@ -41,14 +41,17 @@ _cache = {}
 
 def _readjson(path):
     try:
-        data = json.load(lab.gitfs.markread(open(path)))
+        data = json.load(fs.markread(open(path)))
         return data
     except:
         return {}
 
 def _writejson(path, data):
-    lab.fs.mkdir(os.path.dirname(path))
-    json.dump(data, lab.gitfs.markwrite(open(path, 'w')),
+    try:
+        fs.mkdir(os.path.dirname(path))
+    except:
+        pass
+    json.dump(data, fs.markwrite(open(path, 'w')),
               sort_keys=True, indent=2, separators=(',', ': '))
 
 # Reduce total cache size by evicting elements.

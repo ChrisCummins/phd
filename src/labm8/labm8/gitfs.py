@@ -14,13 +14,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
-import labm8 as lab
-import labm8.io
-import labm8.fs
-
 import atexit
 import os
 import subprocess
+
+import labm8 as lab
+from labm8 import fs
+from labm8 import io
+from labm8 import system
 
 # gitfs - File system abstraction.
 #
@@ -36,28 +37,28 @@ _diskread = set()
 _diskwrites = 0
 _diskwritten = set()
 
-_cwd = lab.fs.path(os.path.dirname(__file__))
+_cwd = fs.path(os.path.dirname(__file__))
 
 def _commitandpush():
     global _diskwrites, _diskwritten
 
     # Don't commit from master hosts.
-    if lab.host.HOSTNAME in MASTER_HOSTS:
+    if system.HOSTNAME in MASTER_HOSTS:
         return
 
     # Escape if we have nothing to do.
     if _diskwrites < 1:
         return
 
-    lab.io.printf(lab.io.Colours.GREEN, "Commiting", len(_diskwritten), "files")
+    io.printf(io.Colours.GREEN, "Commiting", len(_diskwritten), "files")
 
     for file in _diskwritten:
-        lab.fs.cd(os.path.dirname(file))
+        fs.cd(os.path.dirname(file))
         subprocess.call(["git", "add", os.path.basename(file)])
 
-    lab.fs.cd(_cwd)
+    fs.cd(_cwd)
     subprocess.call(["git", "commit", "-m",
-                     "{host}: Auto-bot commit".format(host=labe.host.HOSTNAME)])
+                     "{host}: Auto-bot commit".format(host=system.HOSTNAME)])
     subprocess.call(["git", "pull", "--rebase"])
 
     for remote in REMOTES:
