@@ -15,43 +15,51 @@
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
+import json
 
 import labm8 as lab
 
-import json
 
 def printf(colour, *args, **kwargs):
     print(colour, end="")
     print(*args, end="")
     print(Colours.RESET, **kwargs)
 
+
 def pprint(data):
     print(json.dumps(data, sort_keys=True, indent=2, separators=(",", ": ")))
+
 
 def info(*args, **kwargs):
     print("[INFO  ]", *args, **kwargs)
 
+
 def debug(*args, **kwargs):
     print("[DEBUG ]", *args, **kwargs)
+
 
 def warn(*args, **kwargs):
     print("[WARN  ]", *args, **kwargs)
 
+
 def error(*args, **kwargs):
     print("[ERROR ]", *args, **kwargs)
+
 
 def fatal(*args, **kwargs):
     returncode = kwargs.pop("stats", 1)
     error("fatal:", *args)
     lab.exit(returncode)
 
+
 def colourise(colour, *args):
     return str(colour + str(args) + Colours.RESET)
 
-#############################
-# Shell escape colour codes #
-#############################
+
 class Colours:
+    """
+    Shell escape colour codes.
+    """
     RESET   = '\033[0m'
     GREEN   = '\033[92m'
     YELLOW  = '\033[93m'
