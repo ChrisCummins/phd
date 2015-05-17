@@ -154,6 +154,13 @@ def isfile(path):
     return os.path.isfile(path)
 
 
+def isdir(path):
+    """
+    Return whether a path exists, and is a directory.
+    """
+    return os.path.isdir(path)
+
+
 def ls(p=".", abspaths=True):
     """
     List all files and directories in "path". If "abspaths", return

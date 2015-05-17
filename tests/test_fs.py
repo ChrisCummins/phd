@@ -100,6 +100,13 @@ class TestFs(TestCase):
         self._test(False, lab.fs.isfile("/not/a/real/path (I hope!)"))
 
 
+    # isdir()
+    def test_isdir(self):
+        self._test(False, lab.fs.isdir(__file__))
+        self._test(True, lab.fs.isdir("/"))
+        self._test(False, lab.fs.isdir("/not/a/real/path (I hope!)"))
+
+
     # notified_watchers()
     def test_notified_watchers_empty(self):
         self._test(set(), lab.fs.notified_watchers("/home"))
