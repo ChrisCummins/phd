@@ -3,7 +3,7 @@ from setuptools import setup
 setup(name='labm8',
       version='0.0.1',
       description='A collection of utilities for collecting and manipulating quantitative experimental data',
-      url='',
+      url='https://github.com/ChrisCummins/labm8',
       author='Chris Cummins',
       author_email='chrisc.101@gmail.com',
       license='GPL v3',
