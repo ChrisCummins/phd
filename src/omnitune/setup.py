@@ -16,6 +16,7 @@ setup(name='omnitune',
           'nose'
       ],
       install_requires=[
-          'labm8'
+          'labm8',
+          'pyopencl'
       ],
       zip_safe=False)
