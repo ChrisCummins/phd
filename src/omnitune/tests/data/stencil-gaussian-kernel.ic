@@ -1,0 +1,39 @@
+Printing analysis 'Counts the various types of Instructions' for function 'getData':
+Printing analysis 'Counts the various types of Instructions' for function 'USR_FUNC':
+Printing analysis 'Counts the various types of Instructions' for function 'SCL_STENCIL':
+===-------------------------------------------------------------------------===
+                          ... Statistics Collected ...
+===-------------------------------------------------------------------------===
+
+  2 instcount - Number of AShr insts
+164 instcount - Number of Add insts
+  1 instcount - Number of Alloca insts
+ 22 instcount - Number of And insts
+ 95 instcount - Number of Br insts
+ 88 instcount - Number of Call insts
+  2 instcount - Number of FAdd insts
+  1 instcount - Number of FDiv insts
+  1 instcount - Number of FMul insts
+  1 instcount - Number of FPToSI insts
+ 51 instcount - Number of GetElementPtr insts
+ 58 instcount - Number of ICmp insts
+ 14 instcount - Number of Load insts
+ 43 instcount - Number of Mul insts
+  3 instcount - Number of Or insts
+ 24 instcount - Number of PHI insts
+  3 instcount - Number of Ret insts
+  1 instcount - Number of SDiv insts
+  3 instcount - Number of SExt insts
+  1 instcount - Number of SIToFP insts
+  6 instcount - Number of Shl insts
+ 37 instcount - Number of Store insts
+  3 instcount - Number of Sub insts
+ 15 instcount - Number of Trunc insts
+  1 instcount - Number of UDiv insts
+  3 instcount - Number of Xor insts
+ 14 instcount - Number of ZExt insts
+ 98 instcount - Number of basic blocks
+657 instcount - Number of instructions (of all types)
+191 instcount - Number of memory instructions
+  3 instcount - Number of non-external functions
+
