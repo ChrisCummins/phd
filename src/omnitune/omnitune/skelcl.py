@@ -17,6 +17,7 @@ from omnitune import util
 from omnitune import llvm
 from omnitune import opencl
 
+
 SESSION_NAME   = "org.omnitune"
 INTERFACE_NAME = "org.omnitune.skelcl"
 OBJECT_PATH    = "/"
@@ -63,7 +64,7 @@ STENCIL_KERNEL_FEATURES = (
 )
 
 
-STENCIL_DEVICE_FEATURES = (
+OPENCL_DEVICE_FEATURES = (
     "address_bits",
     "double_fp_config",
     "endian_little",
@@ -147,7 +148,7 @@ def vectorise_devinfo(info):
     Vectorise a dictionary of OpenCL device info.
     """
     vector = []
-    for feature in STENCIL_DEVICE_FEATURES:
+    for feature in OPENCL_DEVICE_FEATURES:
         vector.append(info[feature])
 
     return vector
@@ -197,23 +198,39 @@ class SkelCLProxy(omnitune.Proxy):
         self.kcache = cache.JsonCache("/tmp/omnitune-skelcl-kcache.json")
         self.dcache = cache.JsonCache("/tmp/omnitune-skelcl-dcache.json")
 
-        self.dev_vectors = {}
+        # Get the local device features.
+        self.device_features = {}
         for name,info in opencl.get_devinfos().iteritems():
-            self.dev_vectors[name] = vectorise_devinfo(info)
-        io.debug("Number of OpenCL Devices:", len(self.dev_vectors))
-
-    def get_device_features(self, device_name):
-        return self.dev_vectors[device_name]
+            self.device_features[name] = vectorise_devinfo(info)
 
     @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiis', out_signature='(nn)')
     def RequestStencilParams(self, device_name, device_count,
                              north, south, east, west, data_width,
                              data_height, source):
         """
-        Request a set of parameter values for a stencil skeleton.
+        Request parameter values for a SkelCL stencil operation.
 
-        @param device_name OpenCL device name.
-        @param source SkelCL stencil program source code.
+        Determines the parameter values to use for a SkelCL stencil
+        operation, using a machine learning classifier to predict the
+        optimal parameter values given a set of features determined
+        from the arguments.
+
+        Args:
+            device_name: The name of the execution device, as returned by
+                OpenCL getDeviceInfo() API.
+            device_count: The number of execution devices.
+            north: The stencil shape north direction.
+            south: The stencil shape south direction.
+            east: The stencil shape east direction.
+            west: The stencil shape west direction.
+            data_width: The number of columns of input data.
+            data_height: The number of rows of input data.
+            source: The stencil kernel source code.
+
+        Returns:
+            A tuple of work group size values, e.g.
+
+            (16,32)
         """
 
         start_time = time.time()
@@ -229,25 +246,27 @@ class SkelCLProxy(omnitune.Proxy):
         data_height = int(data_height)
         source = util.parse_str(source)
 
-        # Calculate source checksum.
+        # Calculate checksum of source code.
         checksum = checksum_str(source)
 
+        # Get the source features.
         sourcefeatures = self.kcache.get(checksum)
         if sourcefeatures is None:
             features = get_source_features(source, path=self.LLVM_PATH)
             sourcefeatures = self.kcache.set(checksum, features)
 
+        # Get the device features.
         devicefeatures = self.dcache.get(device_name)
         if devicefeatures is None:
             features = self.get_device_features(device_name)
             devicefeatures = self.dcache.set(device_name, features)
 
+        # Assemble the full features vector.
         features = devicefeatures + sourcefeatures + [
             north, south, east, west,
             data_width, data_height,
             device_count,
         ]
-        print(features)
 
         wg = (64, 32)
 
