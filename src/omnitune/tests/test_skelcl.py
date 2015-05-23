@@ -14,8 +14,14 @@ class TestSkelCL(TestCase):
                    skelcl.checksum_str("a\nc"))
         self._test("da39a3ee5e6b4b0d3255bfef95601890afd80709",
                    skelcl.checksum_str(""))
-        self._test("35b1e342a8662025ddb60a9f7867bbadd8d60ef1",
+        self._test("9e97c70ba595f82d52b11d5602567c2410cf9b84",
                    skelcl.checksum_str(self.stencil_gaussian_kernel))
+
+
+    # get_user_source()
+    def test_get_user_source(self):
+        self._test(self.stencil_gaussian_kernel_user,
+                   skelcl.get_user_source(self.stencil_gaussian_kernel))
 
 
 if __name__ == '__main__':

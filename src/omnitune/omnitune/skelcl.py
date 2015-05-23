@@ -79,8 +79,27 @@ def vectorise_ratios(ratios):
     return vector
 
 
+def get_user_source(source):
+    """
+    Return the user source code for a stencil kernel.
+
+    This strips the common stencil implementation, i.e. the border
+    loading logic.
+    """
+    lines = source.split("\n")
+    user_source = []
+    for line in lines:
+        if line == "// --- SKELCL END USER CODE ---":
+            return "\n".join(user_source)
+        user_source.append(line)
+
+    io.warn("Failed to find end of user code marker")
+    return source
+
+
 def get_source_features(source, path=""):
-    bitcode = llvm.bitcode(source, path=path)
+    user_source = get_user_source(source)
+    bitcode = llvm.bitcode(user_source, path=path)
     instcounts = llvm.instcounts(bitcode, path=path)
     ratios = llvm.instcounts2ratios(instcounts)
 

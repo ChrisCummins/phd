@@ -1,7 +1,3 @@
-
-
-
-
 #ifndef float_MATRIX_T
 typedef struct {
   __global float* data;
@@ -81,6 +77,8 @@ int USR_FUNC(input_matrix_t* img, __global float* kernelVec, int range)
 
     return sum / norm;
 }
+
+// --- SKELCL END USER CODE ---
 
 #define STENCIL_PADDING_NEUTRAL         1
 #define STENCIL_PADDING_NEAREST         0
