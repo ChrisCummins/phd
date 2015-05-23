@@ -1,3 +1,6 @@
+import re
+import time
+
 import dbus
 import dbus.service
 import dbus.mainloop.glib
@@ -12,6 +15,7 @@ import omnitune
 from omnitune import cache
 from omnitune import util
 from omnitune import llvm
+from omnitune import opencl
 
 SESSION_NAME   = "org.omnitune"
 INTERFACE_NAME = "org.omnitune.skelcl"
@@ -59,6 +63,65 @@ STENCIL_KERNEL_FEATURES = (
 )
 
 
+STENCIL_DEVICE_FEATURES = (
+    "address_bits",
+    "double_fp_config",
+    "endian_little",
+    "execution_capabilities",
+    "extensions",
+    "global_mem_cache_size",
+    "global_mem_cache_type",
+    "global_mem_cacheline_size",
+    "global_mem_size",
+    "host_unified_memory",
+    "image2d_max_height",
+    "image2d_max_width",
+    "image3d_max_depth",
+    "image3d_max_height",
+    "image3d_max_width",
+    "image_support",
+    "local_mem_size",
+    "local_mem_type",
+    "max_clock_frequency",
+    "max_compute_units",
+    "max_constant_args",
+    "max_constant_buffer_size",
+    "max_mem_alloc_size",
+    "max_parameter_size",
+    "max_read_image_args",
+    "max_samplers",
+    "max_work_group_size",
+    "max_work_item_dimensions",
+    "max_work_item_sizes[0]",
+    "max_work_item_sizes[1]",
+    "max_work_item_sizes[2]",
+    "max_write_image_args",
+    "mem_base_addr_align",
+    "min_data_type_align_size",
+    "name",
+    "native_vector_width_char",
+    "native_vector_width_double",
+    "native_vector_width_float",
+    "native_vector_width_half",
+    "native_vector_width_int",
+    "native_vector_width_long",
+    "native_vector_width_short",
+    "preferred_vector_width_char",
+    "preferred_vector_width_double",
+    "preferred_vector_width_float",
+    "preferred_vector_width_half",
+    "preferred_vector_width_int",
+    "preferred_vector_width_long",
+    "preferred_vector_width_short",
+    "queue_properties",
+    "single_fp_config",
+    "type",
+    "vendor",
+    "vendor_id",
+    "version"
+)
+
+
 def checksum_str(string):
     """
     Return the checksum for a string.
@@ -76,6 +139,17 @@ def vectorise_ratios(ratios):
             vector.append(ratios[feature])
         else:
             vector.append(0)
+    return vector
+
+
+def vectorise_devinfo(info):
+    """
+    Vectorise a dictionary of OpenCL device info.
+    """
+    vector = []
+    for feature in STENCIL_DEVICE_FEATURES:
+        vector.append(info[feature])
+
     return vector
 
 
@@ -106,10 +180,6 @@ def get_source_features(source, path=""):
     return vectorise_ratios(ratios)
 
 
-def get_device_features(device_name):
-    return []
-
-
 class SkelCLProxy(omnitune.Proxy):
 
     LLVM_PATH = fs.path("~/src/msc-thesis/skelcl/libraries/llvm/build/bin/")
@@ -127,6 +197,14 @@ class SkelCLProxy(omnitune.Proxy):
         self.kcache = cache.JsonCache("/tmp/omnitune-skelcl-kcache.json")
         self.dcache = cache.JsonCache("/tmp/omnitune-skelcl-dcache.json")
 
+        self.dev_vectors = {}
+        for name,info in opencl.get_devinfos().iteritems():
+            self.dev_vectors[name] = vectorise_devinfo(info)
+        io.debug("Number of OpenCL Devices:", len(self.dev_vectors))
+
+    def get_device_features(self, device_name):
+        return self.dev_vectors[device_name]
+
     @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiis', out_signature='(nn)')
     def RequestStencilParams(self, device_name, device_count,
                              north, south, east, west, data_width,
@@ -138,8 +216,10 @@ class SkelCLProxy(omnitune.Proxy):
         @param source SkelCL stencil program source code.
         """
 
+        start_time = time.time()
+
         # Parse arguments.
-        device_name = util.parse_str(device_name).strip()
+        device_name = util.parse_str(device_name)
         device_count = int(device_count)
         north = int(north)
         south = int(south)
@@ -159,27 +239,29 @@ class SkelCLProxy(omnitune.Proxy):
 
         devicefeatures = self.dcache.get(device_name)
         if devicefeatures is None:
-            features = get_device_features(device_name)
+            features = self.get_device_features(device_name)
             devicefeatures = self.dcache.set(device_name, features)
 
         features = devicefeatures + sourcefeatures + [
-            device_count,
             north, south, east, west,
-            data_width, data_height
+            data_width, data_height,
+            device_count,
         ]
         print(features)
 
         wg = (64, 32)
 
+        end_time = time.time()
+
         io.debug(("RequestStencilParams({dev}, {count}, "
-                  "[{n}, {s}, {e}, {w}], {width}, {height}, {id}) ->"
-                  "({c}, {r})"
-                  .format(dev=device_name[:8],
+                  "[{n}, {s}, {e}, {w}], {width}, {height}, {id}) -> "
+                  "({c}, {r}) [{t:.3f}s]"
+                  .format(dev=device_name.strip()[:8],
                           count=device_count,
                           n=north, s=south, e=east, w=west,
                           width=data_width, height=data_height,
                           id=checksum[:8],
-                          c=wg[0], r=wg[1])))
+                          c=wg[0], r=wg[1], t=end_time - start_time)))
 
         return wg
 
