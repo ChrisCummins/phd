@@ -13,6 +13,7 @@ def parse_str(msg):
     Parse Dbus string argument.
     """
     if isinstance(msg[0], dbus.Byte):
-        return bytes2str(msg)
+        # Strip the terminating '0x00' byte.
+        return bytes2str(msg[:-1])
     else:
         return msg
