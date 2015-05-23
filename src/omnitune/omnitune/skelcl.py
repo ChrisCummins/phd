@@ -99,6 +99,10 @@ class SkelCLProxy(omnitune.Proxy):
         """
         Construct a SkelCL proxy.
         """
+        # Fail if we can't find the path
+        if not fs.isdir(self.LLVM_PATH):
+            io.fatal("Could not find llvm path '{0}'".format(self.LLVM_PATH))
+
         super(SkelCLProxy, self).__init__(*args, **kwargs)
         io.info("Registered proxy %s/SkelCLProxy ..." % SESSION_NAME)
         self.kcache = cache.JsonCache("/tmp/omnitune-skelcl-kcache.json")

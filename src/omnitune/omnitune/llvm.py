@@ -15,6 +15,13 @@ class Error(Exception):
     pass
 
 
+class ProgramNotFoundError(Error):
+    """
+    Error thrown if a program is not found.
+    """
+    pass
+
+
 class ClangError(Error):
     """
     Error thrown if clang exits with non-zero status.
@@ -27,6 +34,17 @@ class OptError(Error):
     Error thrown if opt exits with non-zero status.
     """
     pass
+
+
+def assert_program_exists(path):
+    """
+    Assert that a program exists.
+
+    If the given path does not exist and is not a file, raises
+    ProgramNotFoundError.
+    """
+    if not fs.exists(path) or not fs.isfile(path):
+        raise ProgramNotFoundError(path)
 
 
 def parse_instcount(output):
@@ -56,6 +74,8 @@ def parse_instcount(output):
 
 
 def bitcode(source, language="cl", path=""):
+    assert_program_exists(str(path) + "clang")
+
     clang_args = [
         str(path) + "clang",
         "-Dcl_clang_storage_class_specifiers",
@@ -103,6 +123,8 @@ def parse_instcounts(out):
 
 
 def instcounts(bitcode, path=""):
+    assert_program_exists(str(path) + "opt")
+
     opt_args = [
         str(path) + "opt",
         "-analyze",
