@@ -1,18 +1,17 @@
 import pyopencl as cl
 
 
-def get_context():
-    """
-    Return the global OpenCL context.
-    """
-    return cl.create_some_context()
-
-
 def get_devices():
     """
     Return a list of OpenCL devices.
     """
-    return get_context().devices
+    devices = []
+    platforms = cl.get_platforms()
+
+    for platform in platforms:
+        devices += platform.get_devices()
+
+    return devices
 
 
 def get_devinfo(device):

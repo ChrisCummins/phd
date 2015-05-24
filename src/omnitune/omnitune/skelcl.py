@@ -207,6 +207,7 @@ class SkelCLProxy(omnitune.Proxy):
 
         # Add local device features to dcache.
         for device,info in get_local_device_features().iteritems():
+            io.debug("Local device: '{0}'".format(device))
             self.dcache.set(device, info)
 
     @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiis', out_signature='(nn)')

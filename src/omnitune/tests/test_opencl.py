@@ -8,11 +8,6 @@ from omnitune import opencl
 
 class TestOpenCL(TestCase):
 
-    # get_context()
-    def test_get_context(self):
-        self._test(cl.Context,
-                   type(opencl.get_context()))
-
     # get_devices()
     def test_get_devices(self):
         self._test(True,
