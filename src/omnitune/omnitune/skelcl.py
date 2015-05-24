@@ -181,6 +181,13 @@ def get_source_features(source, path=""):
     return vectorise_ratios(ratios)
 
 
+def get_local_device_features():
+    devices = {}
+    for name,info in opencl.get_devinfos().iteritems():
+        devices[name] = vectorise_devinfo(info)
+    return devices
+
+
 class SkelCLProxy(omnitune.Proxy):
 
     LLVM_PATH = fs.path("~/src/msc-thesis/skelcl/libraries/llvm/build/bin/")
@@ -198,9 +205,9 @@ class SkelCLProxy(omnitune.Proxy):
         self.kcache = cache.JsonCache("/tmp/omnitune-skelcl-kcache.json")
         self.dcache = cache.JsonCache("/tmp/omnitune-skelcl-dcache.json")
 
-        # Get the local device features.
-        for name,info in opencl.get_devinfos().iteritems():
-            self.dcache.set(name, vectorise_devinfo(info))
+        # Add local device features to dcache.
+        for device,info in get_local_device_features().iteritems():
+            self.dcache.set(device, info)
 
     @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiis', out_signature='(nn)')
     def RequestStencilParams(self, device_name, device_count,
