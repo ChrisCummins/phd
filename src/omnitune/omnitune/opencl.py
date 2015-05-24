@@ -77,9 +77,7 @@ def get_devinfo(device):
 
 
 def get_devinfos():
-    devices = get_devices()
-    infos = {}
-    for device in devices:
-        info = get_devinfo(device)
-        infos[info["name"]] = info
-    return infos
+    """
+    Return a list of device info dicts for each device on system.
+    """
+    return [get_devinfo(device) for device in get_devices()]

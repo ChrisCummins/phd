@@ -199,8 +199,8 @@ def get_source_features(source, path=""):
 
 def get_local_device_features():
     devices = {}
-    for name,info in opencl.get_devinfos().iteritems():
-        devices[name] = vectorise_devinfo(info)
+    for info in opencl.get_devinfos():
+        devices[info["name"]] = vectorise_devinfo(info)
     return devices
 
 
