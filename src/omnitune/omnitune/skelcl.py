@@ -123,6 +123,20 @@ OPENCL_DEVICE_FEATURES = (
 )
 
 
+class Error(Exception):
+    """
+    Module-level base error class.
+    """
+    pass
+
+
+class FeatureExtractionError(Error):
+    """
+    Error thrown if feature extraction fails.
+    """
+    pass
+
+
 def checksum_str(string):
     """
     Return the checksum for a string.
@@ -160,6 +174,9 @@ def get_user_source(source):
 
     This strips the common stencil implementation, i.e. the border
     loading logic.
+
+    Raises:
+        FeatureExtractionError if the "end of user code" marker is not found.
     """
     lines = source.split("\n")
     user_source = []
@@ -168,8 +185,7 @@ def get_user_source(source):
             return "\n".join(user_source)
         user_source.append(line)
 
-    io.warn("Failed to find end of user code marker")
-    return source
+    raise FeatureExtractionError("Failed to find end of user code marker")
 
 
 def get_source_features(source, path=""):
@@ -264,6 +280,9 @@ class SkelCLProxy(omnitune.Proxy):
 
         # Get the device features.
         devicefeatures = self.dcache.get(device_name)
+        if devicefeatures is None:
+            raise FeatureExtractionError(("Failed to lookup device features for "
+                                          "'{0}'".format(device_name)))
 
         # Assemble the full features vector.
         features = devicefeatures + sourcefeatures + [
