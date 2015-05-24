@@ -19,4 +19,7 @@ setup(name='omnitune',
           'labm8',
           'pyopencl'
       ],
+      data_files=[
+          ('/etc/dbus-1/system.d', ['etc/org.omnitune.conf'])
+      ],
       zip_safe=False)

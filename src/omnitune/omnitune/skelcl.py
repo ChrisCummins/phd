@@ -199,9 +199,8 @@ class SkelCLProxy(omnitune.Proxy):
         self.dcache = cache.JsonCache("/tmp/omnitune-skelcl-dcache.json")
 
         # Get the local device features.
-        self.device_features = {}
         for name,info in opencl.get_devinfos().iteritems():
-            self.device_features[name] = vectorise_devinfo(info)
+            self.dcache.set(name, vectorise_devinfo(info))
 
     @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiis', out_signature='(nn)')
     def RequestStencilParams(self, device_name, device_count,
@@ -257,9 +256,6 @@ class SkelCLProxy(omnitune.Proxy):
 
         # Get the device features.
         devicefeatures = self.dcache.get(device_name)
-        if devicefeatures is None:
-            features = self.get_device_features(device_name)
-            devicefeatures = self.dcache.set(device_name, features)
 
         # Assemble the full features vector.
         features = devicefeatures + sourcefeatures + [
@@ -292,7 +288,7 @@ class SkelCLProxy(omnitune.Proxy):
 def main():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
-    bus = dbus.SessionBus()
+    bus = dbus.SystemBus()
     name = dbus.service.BusName(SESSION_NAME, bus)
     io.info("Launched session %s ..." % SESSION_NAME)
 
