@@ -10,9 +10,11 @@ import labm8
 from labm8 import crypto
 from labm8 import fs
 from labm8 import io
+from labm8 import system
 
 import omnitune
 from omnitune import cache
+from omnitune import db
 from omnitune import util
 from omnitune import llvm
 from omnitune import opencl
@@ -23,103 +25,106 @@ INTERFACE_NAME = "org.omnitune.skelcl"
 OBJECT_PATH    = "/"
 
 
-STENCIL_KERNEL_FEATURES = (
-    "instructions (of all types)",
-    "ratio AShr insts",
-    "ratio Add insts",
-    "ratio Alloca insts",
-    "ratio And insts",
-    "ratio Br insts",
-    "ratio Call insts",
-    "ratio FAdd insts",
-    "ratio FCmp insts",
-    "ratio FDiv insts",
-    "ratio FMul insts",
-    "ratio FPExt insts",
-    "ratio FPToSI insts",
-    "ratio FSub insts",
-    "ratio GetElementPtr insts",
-    "ratio ICmp insts",
-    "ratio InsertValue insts",
-    "ratio Load insts",
-    "ratio Mul insts",
-    "ratio Or insts",
-    "ratio PHI insts",
-    "ratio Ret insts",
-    "ratio SDiv insts",
-    "ratio SExt insts",
-    "ratio SIToFP insts",
-    "ratio SRem insts",
-    "ratio Select insts",
-    "ratio Shl insts",
-    "ratio Store insts",
-    "ratio Sub insts",
-    "ratio Trunc insts",
-    "ratio UDiv insts",
-    "ratio Xor insts",
-    "ratio ZExt insts",
-    "ratio basic blocks",
-    "ratio memory instructions",
-    "ratio non-external functions"
+KERNEL_TABLE_SCHEMA = (
+    ("checksum",                     "TEXT", "PRIMARY KEY"),
+    ("source",                       "TEXT"),
+    ("instruction_count",            "INTEGER"),
+    ("ratio_AShr_insts",             "REAL"),
+    ("ratio_Add_insts",              "REAL"),
+    ("ratio_Alloca_insts",           "REAL"),
+    ("ratio_And_insts",              "REAL"),
+    ("ratio_Br_insts",               "REAL"),
+    ("ratio_Call_insts",             "REAL"),
+    ("ratio_FAdd_insts",             "REAL"),
+    ("ratio_FCmp_insts",             "REAL"),
+    ("ratio_FDiv_insts",             "REAL"),
+    ("ratio_FMul_insts",             "REAL"),
+    ("ratio_FPExt_insts",            "REAL"),
+    ("ratio_FPToSI_insts",           "REAL"),
+    ("ratio_FSub_insts",             "REAL"),
+    ("ratio_GetElementPtr_insts",    "REAL"),
+    ("ratio_ICmp_insts",             "REAL"),
+    ("ratio_InsertValue_insts",      "REAL"),
+    ("ratio_Load_insts",             "REAL"),
+    ("ratio_Mul_insts",              "REAL"),
+    ("ratio_Or_insts",               "REAL"),
+    ("ratio_PHI_insts",              "REAL"),
+    ("ratio_Ret_insts",              "REAL"),
+    ("ratio_SDiv_insts",             "REAL"),
+    ("ratio_SExt_insts",             "REAL"),
+    ("ratio_SIToFP_insts",           "REAL"),
+    ("ratio_SRem_insts",             "REAL"),
+    ("ratio_Select_insts",           "REAL"),
+    ("ratio_Shl_insts",              "REAL"),
+    ("ratio_Store_insts",            "REAL"),
+    ("ratio_Sub_insts",              "REAL"),
+    ("ratio_Trunc_insts",            "REAL"),
+    ("ratio_UDiv_insts",             "REAL"),
+    ("ratio_Xor_insts",              "REAL"),
+    ("ratio_ZExt_insts",             "REAL"),
+    ("ratio_basic_blocks",           "REAL"),
+    ("ratio_memory_instructions",    "REAL"),
+    ("ratio_non_external_function",  "REAL")
 )
 
 
-OPENCL_DEVICE_FEATURES = (
-    "address_bits",
-    "double_fp_config",
-    "endian_little",
-    "execution_capabilities",
-    "extensions",
-    "global_mem_cache_size",
-    "global_mem_cache_type",
-    "global_mem_cacheline_size",
-    "global_mem_size",
-    "host_unified_memory",
-    "image2d_max_height",
-    "image2d_max_width",
-    "image3d_max_depth",
-    "image3d_max_height",
-    "image3d_max_width",
-    "image_support",
-    "local_mem_size",
-    "local_mem_type",
-    "max_clock_frequency",
-    "max_compute_units",
-    "max_constant_args",
-    "max_constant_buffer_size",
-    "max_mem_alloc_size",
-    "max_parameter_size",
-    "max_read_image_args",
-    "max_samplers",
-    "max_work_group_size",
-    "max_work_item_dimensions",
-    "max_work_item_sizes[0]",
-    "max_work_item_sizes[1]",
-    "max_work_item_sizes[2]",
-    "max_write_image_args",
-    "mem_base_addr_align",
-    "min_data_type_align_size",
-    "name",
-    "native_vector_width_char",
-    "native_vector_width_double",
-    "native_vector_width_float",
-    "native_vector_width_half",
-    "native_vector_width_int",
-    "native_vector_width_long",
-    "native_vector_width_short",
-    "preferred_vector_width_char",
-    "preferred_vector_width_double",
-    "preferred_vector_width_float",
-    "preferred_vector_width_half",
-    "preferred_vector_width_int",
-    "preferred_vector_width_long",
-    "preferred_vector_width_short",
-    "queue_properties",
-    "single_fp_config",
-    "type",
-    "vendor",
-    "vendor_id",
-    "version"
+DEVICE_TABLE_SCHEMA = (
+    ("host",                           "TEXT"),
+    ("address_bits",                   "INTEGER"),
+    ("double_fp_config",               "INTEGER"),
+    ("endian_little",                  "INTEGER"),
+    ("execution_capabilities",         "INTEGER"),
+    ("extensions",                     "TEXT"),
+    ("global_mem_cache_size",          "INTEGER"),
+    ("global_mem_cache_type",          "INTEGER"),
+    ("global_mem_cacheline_size",      "INTEGER"),
+    ("global_mem_size",                "INTEGER"),
+    ("host_unified_memory",            "INTEGER"),
+    ("image2d_max_height",             "INTEGER"),
+    ("image2d_max_width",              "INTEGER"),
+    ("image3d_max_depth",              "INTEGER"),
+    ("image3d_max_height",             "INTEGER"),
+    ("image3d_max_width",              "INTEGER"),
+    ("image_support",                  "INTEGER"),
+    ("local_mem_size",                 "INTEGER"),
+    ("local_mem_type",                 "INTEGER"),
+    ("max_clock_frequency",            "INTEGER"),
+    ("max_compute_units",              "INTEGER"),
+    ("max_constant_args",              "INTEGER"),
+    ("max_constant_buffer_size",       "INTEGER"),
+    ("max_mem_alloc_size",             "INTEGER"),
+    ("max_parameter_size",             "INTEGER"),
+    ("max_read_image_args",            "INTEGER"),
+    ("max_samplers",                   "INTEGER"),
+    ("max_work_group_size",            "INTEGER"),
+    ("max_work_item_dimensions",       "INTEGER"),
+    ("max_work_item_sizes_0",          "INTEGER"),
+    ("max_work_item_sizes_1",          "INTEGER"),
+    ("max_work_item_sizes_2",          "INTEGER"),
+    ("max_write_image_args",           "INTEGER"),
+    ("mem_base_addr_align",            "INTEGER"),
+    ("min_data_type_align_size",       "INTEGER"),
+    ("name",                           "TEXT", "PRIMARY KEY"),
+    ("native_vector_width_char",       "INTEGER"),
+    ("native_vector_width_double",     "INTEGER"),
+    ("native_vector_width_float",      "INTEGER"),
+    ("native_vector_width_half",       "INTEGER"),
+    ("native_vector_width_int",        "INTEGER"),
+    ("native_vector_width_long",       "INTEGER"),
+    ("native_vector_width_short",      "INTEGER"),
+    ("preferred_vector_width_char",    "INTEGER"),
+    ("preferred_vector_width_double",  "INTEGER"),
+    ("preferred_vector_width_float",   "INTEGER"),
+    ("preferred_vector_width_half",    "INTEGER"),
+    ("preferred_vector_width_int",     "INTEGER"),
+    ("preferred_vector_width_long",    "INTEGER"),
+    ("preferred_vector_width_short",   "INTEGER"),
+    ("queue_properties",               "INTEGER"),
+    ("single_fp_config",               "INTEGER"),
+    ("type",                           "INTEGER"),
+    ("vendor",                         "TEXT"),
+    ("vendor_id",                      "TEXT"),
+    ("version",                        "TEXT")
 )
 
 
@@ -144,14 +149,15 @@ def checksum_str(string):
     return crypto.sha1(string)
 
 
-def vectorise_ratios(ratios):
+def vectorise_ratios(checksum, source, ratios):
     """
     Vectorise a dictionary of stencil kernel features.
     """
-    vector = []
-    for feature in STENCIL_KERNEL_FEATURES:
-        if feature in ratios:
-            vector.append(ratios[feature])
+    vector = [checksum, source]
+    for feature in KERNEL_TABLE_SCHEMA[2:]:
+        # FIXME: underscores??
+        if feature[0] in ratios:
+            vector.append(ratios[feature[0]])
         else:
             vector.append(0)
     return vector
@@ -161,9 +167,9 @@ def vectorise_devinfo(info):
     """
     Vectorise a dictionary of OpenCL device info.
     """
-    vector = []
-    for feature in OPENCL_DEVICE_FEATURES:
-        vector.append(info[feature])
+    vector = [system.HOSTNAME]
+    for feature in DEVICE_TABLE_SCHEMA[1:]:
+        vector.append(info[feature[0]])
 
     return vector
 
@@ -188,20 +194,17 @@ def get_user_source(source):
     raise FeatureExtractionError("Failed to find end of user code marker")
 
 
-def get_source_features(source, path=""):
+def get_source_features(checksum, source, path=""):
     user_source = get_user_source(source)
     bitcode = llvm.bitcode(user_source, path=path)
     instcounts = llvm.instcounts(bitcode, path=path)
     ratios = llvm.instcounts2ratios(instcounts)
 
-    return vectorise_ratios(ratios)
+    return vectorise_ratios(checksum, source, ratios)
 
 
 def get_local_device_features():
-    devices = {}
-    for info in opencl.get_devinfos():
-        devices[info["name"]] = vectorise_devinfo(info)
-    return devices
+    return [vectorise_devinfo(info) for info in opencl.get_devinfos()]
 
 
 class SkelCLProxy(omnitune.Proxy):
@@ -218,18 +221,42 @@ class SkelCLProxy(omnitune.Proxy):
 
         super(SkelCLProxy, self).__init__(*args, **kwargs)
         io.info("Registered proxy %s/SkelCLProxy ..." % SESSION_NAME)
-        self.kcache = cache.JsonCache("/tmp/omnitune-skelcl-kcache.json")
-        self.dcache = cache.JsonCache("/tmp/omnitune-skelcl-dcache.json")
 
-        # Add local device features to dcache.
-        for device,info in get_local_device_features().iteritems():
-            io.debug("Local device: '{0}'".format(device))
-            self.dcache.set(device, info)
+        # Setup persistent database.
+        self.db = db.Database("/tmp/omnitune.skelcl.db")
+        self.db.create_table("kernels", KERNEL_TABLE_SCHEMA)
+        self.db.create_table("devices", DEVICE_TABLE_SCHEMA)
+        self.db.create_table("runtime", RUNTIMES_TABLE_SCHEMA)
 
-    @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiis', out_signature='(nn)')
+        # Add local device features to database.
+        for info in get_local_device_features():
+            self.db.insert_unique("devices", info)
+
+    def get_source_features(self, source, checksum):
+        try:
+            what = ", ".join(x[0] for x in KERNEL_TABLE_SCHEMA[2:])
+            where = "checksum = '{0}'".format(checksum)
+            sourcefeatures = list(self.db.select1("kernels", what, where))
+        except TypeError:
+            sourcefeatures = get_source_features(checksum, source,
+                                                 path=self.LLVM_PATH)
+            self.db.insert_unique("kernels", sourcefeatures)
+        return sourcefeatures
+
+    def get_device_features(self, device_name):
+        try:
+            what = ", ".join([x[0] for x in DEVICE_TABLE_SCHEMA[1:]])
+            where = "name = '{0}'".format(device_name)
+            return list(self.db.select1("devices", what, where))
+        except TypeError:
+            raise FeatureExtractionError(("Failed to lookup device features for "
+                                          "'{0}'".format(device_name)))
+
+    @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiiis',
+                         out_signature='(nn)')
     def RequestStencilParams(self, device_name, device_count,
                              north, south, east, west, data_width,
-                             data_height, source):
+                             data_height, source, max_wg_size):
         """
         Request parameter values for a SkelCL stencil operation.
 
@@ -249,6 +276,7 @@ class SkelCLProxy(omnitune.Proxy):
             data_width: The number of columns of input data.
             data_height: The number of rows of input data.
             source: The stencil kernel source code.
+            max_wg_size: The maximum kernel workgroup size.
 
         Returns:
             A tuple of work group size values, e.g.
@@ -268,21 +296,13 @@ class SkelCLProxy(omnitune.Proxy):
         data_width = int(data_width)
         data_height = int(data_height)
         source = util.parse_str(source)
+        max_wg_size = int(max_wg_size)
 
         # Calculate checksum of source code.
         checksum = checksum_str(source)
 
-        # Get the source features.
-        sourcefeatures = self.kcache.get(checksum)
-        if sourcefeatures is None:
-            features = get_source_features(source, path=self.LLVM_PATH)
-            sourcefeatures = self.kcache.set(checksum, features)
-
-        # Get the device features.
-        devicefeatures = self.dcache.get(device_name)
-        if devicefeatures is None:
-            raise FeatureExtractionError(("Failed to lookup device features for "
-                                          "'{0}'".format(device_name)))
+        sourcefeatures = self.get_source_features(source, checksum)
+        devicefeatures = self.get_device_features(device_name)
 
         # Assemble the full features vector.
         features = devicefeatures + sourcefeatures + [
@@ -306,10 +326,6 @@ class SkelCLProxy(omnitune.Proxy):
                           c=wg[0], r=wg[1], t=end_time - start_time)))
 
         return wg
-
-    @dbus.service.method(INTERFACE_NAME, in_signature='', out_signature='')
-    def Exit(self):
-        mainloop.quit()
 
 
 def main():

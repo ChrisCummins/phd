@@ -150,9 +150,9 @@ def instcounts(bitcode, path=""):
 def instcounts2ratios(counts):
     ratios = {}
 
-    total_key ="instructions (of all types)"
+    total_key = "instructions (of all types)"
     total = counts[total_key]
-    ratios[total_key] = total
+    ratios["instruction_count"] = total
 
     # Remove total from dict.
     del counts[total_key]
