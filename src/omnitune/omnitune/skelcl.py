@@ -249,7 +249,8 @@ class SkelCLDatabase(db.Database):
         """
         Create a new connection to database.
         """
-        super(SkelCLDatabase, self).__init__("/tmp/omnitune.skelcl.db")
+        super(SkelCLDatabase, self).__init__("/tmp/omnitune.skelcl." +
+                                             str(system.HOSTNAME) + ".db")
         self.create_table("kernels",         KERNELS_TABLE)
         self.create_table("kernel_features", KERNEL_FEATURES_TABLE)
         self.create_table("devices",         DEVICES_TABLE)
