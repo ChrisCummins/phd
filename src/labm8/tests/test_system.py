@@ -15,11 +15,13 @@
 from unittest import main
 from tests import TestCase
 
-import labm8 as lab
-from labm8 import system
-
 import os
 import socket
+
+import labm8 as lab
+from labm8 import fs
+from labm8 import system
+
 
 class TestSystem(TestCase):
 
@@ -73,6 +75,23 @@ class TestSystem(TestCase):
         self.assertRaises(system.SubprocessError,
                           system.check_output, ["false"], exit_on_error=False)
         self._test("hello\n", system.check_output(["echo", "hello"]))
+
+    # echo()
+    def test_echo(self):
+        system.echo("foo", "/tmp/labm8.tmp")
+        self._test(["foo"], fs.read("/tmp/labm8.tmp"))
+        system.echo("", "/tmp/labm8.tmp")
+        self._test([""], fs.read("/tmp/labm8.tmp"))
+
+    # sed()
+    def test_sed(self):
+        system.echo("Hello, world!", "/tmp/labm8.tmp")
+        system.sed("Hello", "Goodbye", "/tmp/labm8.tmp")
+        self._test(["Goodbye, world!"], fs.read("/tmp/labm8.tmp"))
+        system.sed("o", "_", "/tmp/labm8.tmp")
+        self._test(["G_odbye, world!"], fs.read("/tmp/labm8.tmp"))
+        system.sed("o", "_", "/tmp/labm8.tmp", "g")
+        self._test(["G__dbye, w_rld!"], fs.read("/tmp/labm8.tmp"))
 
 
 if __name__ == '__main__':
