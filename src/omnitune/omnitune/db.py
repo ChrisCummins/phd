@@ -36,14 +36,14 @@ class Database(object):
         self.cursor.execute(cmd_str)
         # io.debug(cmd_str)
 
-    def _escape_value(self, table, i, value):
+    def escape_value(self, table, i, value):
         if self.tables[table][i][1].upper() == "TEXT":
             return "'" + str(value) + "'"
         else:
             return value
 
     def _insert(self, table, values, ignore_duplicates=False):
-        escaped_values = [self._escape_value(table, i, values[i])
+        escaped_values = [self.escape_value(table, i, values[i])
                           for i in range(len(values))]
 
         cmd = ["INSERT"]
@@ -73,8 +73,15 @@ class Database(object):
     def commit(self):
         return self.connection.commit()
 
-    def select1(self, table, select, where):
+    def select(self, table, select, where):
         cmd = ["SELECT", select, "FROM", table, "WHERE", where]
         cmd_str = " ".join(cmd)
-        ret = self.cursor.execute(cmd_str)
-        return ret.fetchone()
+        return self.cursor.execute(cmd_str)
+
+    def select1(self, table, select, where):
+        return self.select(self, table, select, where).fetchone()
+
+    def count(self, table, where):
+        cmd = ["SELECT Count(*) FROM", table, "WHERE", where]
+        cmd_str = " ".join(cmd)
+        return self.cursor.execute(cmd_str).fetchone()[0]

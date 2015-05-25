@@ -1,3 +1,4 @@
+import itertools
 import re
 import time
 
@@ -271,6 +272,96 @@ class SkelCLProxy(omnitune.Proxy):
 
     @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiiis',
                          out_signature='(nn)')
+    def RequestTrainingStencilParams(self, device_name, device_count,
+                                     north, south, east, west, data_width,
+                                     data_height, source, max_wg_size):
+        """
+        Request training parameter values for a SkelCL stencil operation.
+
+        Determines the parameter values to use for a SkelCL stencil
+        operation by iterating over the space of parameter values.
+
+        Args:
+            device_name: The name of the execution device, as returned by
+                OpenCL getDeviceInfo() API.
+            device_count: The number of execution devices.
+            north: The stencil shape north direction.
+            south: The stencil shape south direction.
+            east: The stencil shape east direction.
+            west: The stencil shape west direction.
+            data_width: The number of columns of input data.
+            data_height: The number of rows of input data.
+            source: The stencil kernel source code.
+            max_wg_size: The maximum kernel workgroup size.
+
+        Returns:
+            A tuple of work group size values, e.g.
+
+            (16,32)
+        """
+
+        start_time = time.time()
+
+        # Parse arguments.
+        device_name = util.parse_str(device_name)
+        device_count = int(device_count)
+        north = int(north)
+        south = int(south)
+        east = int(east)
+        west = int(west)
+        data_width = int(data_width)
+        data_height = int(data_height)
+        source = util.parse_str(source)
+        max_wg_size = int(max_wg_size)
+
+        # Calculate checksum of source code.
+        checksum = checksum_str(source)
+
+        param_values = [4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96]
+        unconstrained_space = list(itertools.product(param_values, param_values))
+        space = [[x] for x in unconstrained_space if x[0] * x[1] < max_wg_size]
+
+        for point in space:
+            params = [
+                system.HOSTNAME,
+                device_name,
+                device_count,
+                checksum,
+                north, south, east, west,
+                data_width, data_height,
+                max_wg_size,
+                point[0][0], point[0][1]
+            ]
+            where = []
+            for i in range(len(params)):
+                where.append(RUNTIMES_TABLE_SCHEMA[i][0] + "=" +
+                             str(self.db.escape_value("runtimes", i, params[i])))
+            point.append(self.db.count("runtimes", "(" + " AND ".join(where) + ")"))
+
+        space = sorted(space, key = lambda x: x[1])
+        wg = space[0][0]
+
+        possible = len(space) * 250
+        total = sum([x[1] for x in space])
+        coverage = float(total) / float(possible)
+
+        end_time = time.time()
+
+        io.debug(("RequestTrainingStencilParams({dev}, {count}, "
+                  "[{n}, {s}, {e}, {w}], {width}, {height}, {id}, {max}) -> "
+                  "({c}, {r}) [{t:.3f}s] ({p:.1f}%)"
+                  .format(dev=device_name.strip()[:8],
+                          count=device_count,
+                          n=north, s=south, e=east, w=west,
+                          width=data_width, height=data_height,
+                          id=checksum[:8], max=max_wg_size,
+                          c=wg[0], r=wg[1], t=end_time - start_time,
+                          p=coverage * 100)))
+
+        return wg
+
+    @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiiis',
+                         out_signature='(nn)')
     def RequestStencilParams(self, device_name, device_count,
                              north, south, east, west, data_width,
                              data_height, source, max_wg_size):
@@ -345,7 +436,7 @@ class SkelCLProxy(omnitune.Proxy):
         return wg
 
     @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiisiiid',
-                         out_signature='(d)')
+                         out_signature='')
     def AddStencilRuntime(self, device_name, device_count,
                           north, south, east, west, data_width,
                           data_height, source, wg_c, wg_r,
@@ -388,24 +479,20 @@ class SkelCLProxy(omnitune.Proxy):
         # Calculate checksum of source code.
         checksum = checksum_str(source)
 
-        coverage = .5
-
         self.db.insert("runtimes", (system.HOSTNAME, device_name, device_count,
                                     checksum, north, south, east, west,
                                     data_width, data_height, max_wg_size,
                                     wg_c, wg_r, runtime))
 
         io.debug(("AddStencilRuntime({dev}, {count}, "
-                  "[{n}, {s}, {e}, {w}], {width}, {height}, {id}, {max}, {t}) "
-                  "-> {out}"
+                  "[{n}, {s}, {e}, {w}], {width}, {height}, {id}, {max}, "
+                  "{c}, {r}, {t})"
                   .format(dev=device_name.strip()[:8],
                           count=device_count,
                           n=north, s=south, e=east, w=west,
                           width=data_width, height=data_height,
-                          id=checksum[:8], max=max_wg_size, t=runtime,
-                          out=coverage)))
-
-        return [coverage]
+                          id=checksum[:8], max=max_wg_size,
+                          c=wg_c, r=wg_r, t=runtime)))
 
 
 def main():
