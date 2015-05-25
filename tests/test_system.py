@@ -83,6 +83,11 @@ class TestSystem(TestCase):
         system.echo("", "/tmp/labm8.tmp")
         self._test([""], fs.read("/tmp/labm8.tmp"))
 
+    def test_echo_append(self):
+        system.echo("foo", "/tmp/labm8.tmp")
+        system.echo("bar", "/tmp/labm8.tmp", append=True)
+        self._test(["foo", "bar"], fs.read("/tmp/labm8.tmp"))
+
     # sed()
     def test_sed(self):
         system.echo("Hello, world!", "/tmp/labm8.tmp")

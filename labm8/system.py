@@ -171,7 +171,7 @@ def sed(match, replacement, path, modifiers=""):
         raise SubprocessError("Sed command failed!")
 
 
-def echo(*args):
+def echo(*args, **kwargs):
     """
     Write a message to a file.
 
@@ -181,6 +181,11 @@ def echo(*args):
     """
     msg = args[:-1]
     path = fs.path(args[-1])
+    append = kwargs.pop("append", False)
 
-    with open(fs.path(path), "w") as file:
-        print(*msg, file=file)
+    if append:
+        with open(path, "a") as file:
+            print(*msg, file=file)
+    else:
+        with open(fs.path(path), "w") as file:
+            print(*msg, file=file)
