@@ -1,4 +1,5 @@
 import atexit
+import csv
 import os
 import os.path
 import sqlite3 as sql
@@ -32,6 +33,39 @@ class Database(object):
 
         # Register exit handler
         atexit.register(self.close)
+
+    def export_csv(self, table, path=None):
+        """
+        Export table to CSV file.
+
+        Arguments:
+            table The name of the table as a string.
+            path (optional) The path to the exported csv. If not given,
+                defaults to the path of the database, with the suffix
+                "-{table_name}.csv".
+        """
+        if path is None:
+            path = self.path + "-" + str(table) + ".csv"
+
+        with open(path, 'wb') as file:
+            writer = csv.writer(file)
+            writer.writerow([x[0] for x in self.tables[table]])
+            data = self.execute("SELECT * FROM " + str(table))
+            writer.writerows(data)
+
+    def export_csvs(self, prefix=None):
+        """
+        Export all tables to CSV files.
+
+        Arguments:
+            prefix (optional) If supplied, the filename prefix to use.
+        """
+        if prefix is None:
+            prefix = self.path + "-"
+
+        for table in self.tables:
+            csv_path = prefix + table + ".csv"
+            self.export_csv(table, path=csv_path)
 
     def close(self):
         self.connection.close()
