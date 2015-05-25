@@ -26,6 +26,7 @@ Variables:
 import os
 import socket
 import subprocess
+import threading
 
 import labm8 as lab
 from labm8 import fs
@@ -47,6 +48,88 @@ class SubprocessError(Error):
     pass
 
 
+class Subprocess(object):
+    """
+    Subprocess abstraction.
+
+    Wrapper around subprocess.Popen() which provides the ability to
+    force a timeout after a number of seconds have elapsed.
+    """
+    def __init__(self, cmd, shell=False,
+                 stdout=subprocess.PIPE,
+                 stderr=subprocess.PIPE,
+                 decode_out=True):
+        """
+        Create a new subprocess.
+        """
+        self.cmd = cmd
+        self.process = None
+        self.stdout = None
+        self.stderr = None
+        self.shell = shell
+        self.decode_out = decode_out
+
+        self.stdout_dest = stdout
+        self.stderr_dest = stderr
+
+    def run(self, timeout=-1):
+        """
+        Run the subprocess.
+
+        Arguments:
+            timeout (optional) If a positive real value, then timout after
+                the given number of seconds.
+
+        Raises:
+            SubprocessError If subprocess has not completed after "timeout"
+                seconds.
+        """
+        def target():
+            self.process = subprocess.Popen(self.cmd,
+                                            stdout=self.stdout_dest,
+                                            stderr=self.stderr_dest,
+                                            shell=self.shell)
+            self.stdout, self.stderr = self.process.communicate()
+
+            # Decode output if required by the user.
+            if self.decode_out:
+                self.stdout = self.stdout.decode("utf-8")
+                self.stderr = self.stderr.decode("utf-8")
+
+        thread = threading.Thread(target=target)
+        thread.start()
+
+        if timeout > 0:
+            thread.join(timeout)
+            if thread.is_alive():
+                self.process.terminate()
+                thread.join()
+                raise SubprocessError(("Reached timeout after {t} seconds"
+                                       .format(t=timeout)))
+        else:
+            thread.join()
+
+        return self.process.returncode, self.stdout, self.stderr
+
+
+
+def run(args, num_attempts=1, timeout=-1, **kwargs):
+    """
+    Run "args", redirecting stdout and stderr to "out". Returns exit
+    status.
+    """
+    for i in range(num_attempts):
+        try:
+            process = Subprocess(args, **kwargs)
+            return process.run(timeout)
+        except SubprocessError:
+            pass
+        except AttributeError:
+            pass
+
+    raise SubprocessError("Failed after {i} attempts".format(i=i))
+
+
 def check_output(args, shell=False, exit_on_error=True):
     """Run "args", returning stdout and stderr.
 
@@ -65,21 +148,6 @@ def check_output(args, shell=False, exit_on_error=True):
             io.error(err.output)
             io.fatal(msg, err.returncode)
         raise SubprocessError(msg)
-
-
-def run(args, out=None, exit_on_error=True):
-    """
-    Run "args", redirecting stdout and stderr to "out". Returns exit
-    status.
-    """
-    try:
-        returncode = subprocess.call(args, stdout=out, stderr=out)
-    except KeyboardInterrupt:
-        print()
-        io.fatal("Keyboard interrupt", status=0)
-    if returncode and exit_on_error:
-        io.fatal(args, status=returncode)
-    return returncode
 
 
 def sed(match, replacement, path, modifiers=""):
