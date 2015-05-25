@@ -1,4 +1,6 @@
 import atexit
+import os
+import os.path
 import sqlite3 as sql
 
 import labm8
@@ -14,6 +16,10 @@ class Database(object):
             schema A list of tuple pairs, of the form: (name, type).
         """
         self.path = fs.path(path)
+
+        # Create directory if needed.
+        fs.mkdir(os.path.dirname(path))
+
         self.connection = sql.connect(self.path)
         self.cursor = self.connection.cursor()
         self.tables = {}
