@@ -91,12 +91,14 @@ class Subprocess(object):
                                             stdout=self.stdout_dest,
                                             stderr=self.stderr_dest,
                                             shell=self.shell)
-            self.stdout, self.stderr = self.process.communicate()
+            stdout, stderr = self.process.communicate()
 
-            # Decode output if required by the user.
+            # Decode output if the user wants, and if there is any.
             if self.decode_out:
-                self.stdout = self.stdout.decode("utf-8")
-                self.stderr = self.stderr.decode("utf-8")
+                if stdout:
+                    self.stdout = stdout.decode("utf-8")
+                if stderr:
+                    self.stderr = stderr.decode("utf-8")
 
         thread = threading.Thread(target=target)
         thread.start()
