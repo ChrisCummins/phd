@@ -1,26 +1,28 @@
-PYTHON3 = python3
-PYTHON2 = python2
-
-PYTHON3_LOG = .test.python3.log
-PYTHON2_LOG = .test.python2.log
+# I can haz pythons?
+PYTHONS := python2 python3
 
 check test:
-	@echo -n "Python3: "
-	@$(PYTHON3) ./setup.py test &> $(PYTHON3_LOG) && 		\
-		grep -E '^Ran [0-9]+ tests in' $(PYTHON3_LOG) || 	\
-		cat $(PYTHON3_LOG)
+	@for python in $(PYTHONS); do						\
+		echo -n "$$python: ";						\
+		$$python ./setup.py test &>.test.$$python.log &&		\
+			grep -E '^Ran [0-9]+ tests in' .test.$$python.log || 	\
+		cat .test.$$python.log;						\
+	done
 
-	@echo -n "Python2: "
-	@$(PYTHON2) ./setup.py test &> $(PYTHON2_LOG) && 		\
-		grep -E '^Ran [0-9]+ tests in' $(PYTHON2_LOG) ||	\
-		cat $(PYTHON2_LOG)
-
+# I can haz root permissions si?
 install:
-	@sudo $(PYTHON3) ./setup.py install
-	@sudo $(PYTHON2) ./setup.py install
+	@for python in $(PYTHONS); do						\
+		echo -n "$$python install: ";					\
+			sudo $$python ./setup.py install &>.install.$$python.log && \
+			echo "ok" || cat .install.$$python.log;			\
+	done
 
 help:
+	@echo "Makefile commands:"
+	@echo
+	@echo "    make check     Run test suites"
+	@echo "    make install   Install labm8 to system (requires sudo)"
+	@echo
 	@echo "Makefile options:"
 	@echo
-	@echo "    make check     Run test suite using python2 and python3"
-	@echo "    make install   Install labm8 to system"
+	@echo "    Python versions: [$(PYTHONS)]."
