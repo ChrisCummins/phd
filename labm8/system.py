@@ -23,6 +23,8 @@ Variables:
   PID Process ID.
 """
 
+from __future__ import print_function
+
 import os
 import socket
 import subprocess
@@ -157,3 +159,18 @@ def sed(match, replacement, path, modifiers=""):
     cmd = "sed -r -i 's/%s/%s/%s' %s" % (match, replacement, modifiers, path)
 
     os.system(cmd)
+
+
+def echo(*args):
+    """
+    Write a message to a file.
+
+    Arguments:
+        args A list of arguments which make up the message. The last argument
+            is the path to the file to write to.
+    """
+    msg = args[:-1]
+    path = fs.path(args[-1])
+
+    with open(fs.path(path), "w") as file:
+        print(*msg, file=file)
