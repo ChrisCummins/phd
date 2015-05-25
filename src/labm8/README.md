@@ -5,6 +5,8 @@
 A collection of functions and utilities for collecting and
 manipulating quantitative experimental data.
 
+![pip-db](https://raw.github.com/ChrisCummins/labm8/master/docs/logo.jpg)
+
 ## Installation
 
 Install with `sudo python ./setup.py install`.
