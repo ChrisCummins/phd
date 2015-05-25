@@ -183,5 +183,13 @@ class TestFs(TestCase):
         ],
                    lab.fs.read("tests/data/data1", rstrip=False))
 
+    # rm()
+    def test_rm(self):
+        lab.fs.rm("/tmp/labm8.tmp")
+        with open("/tmp/lamb8.tmp", "w") as file:
+            file.write("Hello, world!")
+        lab.fs.rm("/tmp/labm8.tmp")
+
+
 if __name__ == '__main__':
     main()
