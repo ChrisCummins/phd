@@ -9,11 +9,12 @@ from labm8 import io
 
 
 class Database(object):
-    def __init__(self, path):
+    def __init__(self, path, tables={}):
         """
         Arguments:
             path The path to the database file.
-            schema A list of tuple pairs, of the form: (name, type).
+            tables (optional) A diction of {name: schema} pairs, where a
+                a schema is list of tuple pairs, of the form: (name, type).
         """
         self.path = fs.path(path)
 
@@ -23,6 +24,9 @@ class Database(object):
         self.connection = sql.connect(self.path)
         self.cursor = self.connection.cursor()
         self.tables = {}
+
+        for name,schema in tables.iteritems():
+            self.create_table(name, schema)
 
         io.debug("Opened connection to '{0}'".format(self.path))
 

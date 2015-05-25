@@ -245,16 +245,26 @@ class SkelCLDatabase(db.Database):
         runtimes Table of offline training data.
     """
 
-    def __init__(self):
+    def __init__(self, path=None):
         """
         Create a new connection to database.
+
+        Arguments:
+           path (optional) If set, load database from path. If not, use
+               standard system-wide default path.
         """
-        super(SkelCLDatabase, self).__init__(fs.path(omnitune.LOCAL_DIR,
-                                                     "skelcl.db"))
-        self.create_table("kernels",         KERNELS_TABLE)
-        self.create_table("kernel_features", KERNEL_FEATURES_TABLE)
-        self.create_table("devices",         DEVICES_TABLE)
-        self.create_table("runtimes",        RUNTIMES_TABLE)
+        if path is None:
+            path = fs.path(omnitune.LOCAL_DIR, "skelcl.db")
+
+        tables = {
+            "kernels":         KERNELS_TABLE,
+            "kernel_features": KERNEL_FEATURES_TABLE,
+            "devices":         DEVICES_TABLE,
+            "runtimes":        RUNTIMES_TABLE
+        }
+
+        super(SkelCLDatabase, self).__init__(path, tables)
+
 
     def get_device_info(self, device_name):
         """
