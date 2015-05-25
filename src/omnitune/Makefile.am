@@ -1,20 +1,26 @@
-SUBDIRS = native
-
-PYTHON = python2
-
-PYTHON_LOG = .test.$(PYTHON).log
+PYTHONS := python2
 
 check test:
-	@echo -n "$(PYTHON): "
-	@$(PYTHON) ./setup.py test &> $(PYTHON_LOG) && 		\
-		grep -E '^Ran [0-9]+ tests in' $(PYTHON_LOG) ||	\
-		cat $(PYTHON_LOG)
+	@for python in $(PYTHONS); do						\
+		echo -n "$$python: ";						\
+		$$python ./setup.py test &>.test.$$python.log &&		\
+			grep -E '^Ran [0-9]+ tests in' .test.$$python.log || 	\
+		cat .test.$$python.log;						\
+	done
 
 install-data-local:
-	@sudo $(PYTHON) ./setup.py install
+	@for python in $(PYTHONS); do						\
+		echo -n "$$python install: ";					\
+			sudo $$python ./setup.py install &>.install.$$python.log && \
+			echo "ok" || cat .install.$$python.log;			\
+	done
 
 help-local:
+	@echo "Makefile commands:"
+	@echo
+	@echo "    make check     Run test suites"
+	@echo "    make install   Install labm8 to system (requires sudo)"
+	@echo
 	@echo "Makefile options:"
 	@echo
-	@echo "    make check     Run test suite using python2 and python3"
-	@echo "    make install   Install labm8 to system"
+	@echo "    Python versions: [$(PYTHONS)]."
