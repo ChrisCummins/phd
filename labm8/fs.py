@@ -17,6 +17,7 @@ import labm8 as lab
 import os
 import re
 import os.path
+import shutil
 
 
 class Error(Exception):
@@ -230,6 +231,13 @@ def mkdir(path):
         os.makedirs(path)
     except OSError:
         pass
+
+
+def rm(path):
+    """
+    Remove path or directory.
+    """
+    shutil.rmtree(path, ignore_errors=True)
 
 
 def mkopen(p, *args, **kwargs):
