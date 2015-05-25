@@ -127,6 +127,23 @@ DEVICE_TABLE_SCHEMA = (
     ("version",                        "TEXT")
 )
 
+RUNTIMES_TABLE_SCHEMA = (
+    ("host",                           "TEXT"),
+    ("device_name",                    "TEXT"),
+    ("device_count",                   "INTEGER"),
+    ("kernel_checksum",                "TEXT"),
+    ("north",                          "INTEGER"),
+    ("south",                          "INTEGER"),
+    ("east",                           "INTEGER"),
+    ("west",                           "INTEGER"),
+    ("data_width",                     "INTEGER"),
+    ("data_height",                    "INTEGER"),
+    ("max_wg_size",                    "INTEGER"),
+    ("wg_c",                           "INTEGER"),
+    ("wg_r",                           "INTEGER"),
+    ("runtime",                        "REAL"),
+)
+
 
 class Error(Exception):
     """
@@ -224,9 +241,9 @@ class SkelCLProxy(omnitune.Proxy):
 
         # Setup persistent database.
         self.db = db.Database("/tmp/omnitune.skelcl.db")
-        self.db.create_table("kernels", KERNEL_TABLE_SCHEMA)
-        self.db.create_table("devices", DEVICE_TABLE_SCHEMA)
-        self.db.create_table("runtime", RUNTIMES_TABLE_SCHEMA)
+        self.db.create_table("kernels",  KERNEL_TABLE_SCHEMA)
+        self.db.create_table("devices",  DEVICE_TABLE_SCHEMA)
+        self.db.create_table("runtimes", RUNTIMES_TABLE_SCHEMA)
 
         # Add local device features to database.
         for info in get_local_device_features():
@@ -316,16 +333,79 @@ class SkelCLProxy(omnitune.Proxy):
         end_time = time.time()
 
         io.debug(("RequestStencilParams({dev}, {count}, "
-                  "[{n}, {s}, {e}, {w}], {width}, {height}, {id}) -> "
+                  "[{n}, {s}, {e}, {w}], {width}, {height}, {id}, {max}) -> "
                   "({c}, {r}) [{t:.3f}s]"
                   .format(dev=device_name.strip()[:8],
                           count=device_count,
                           n=north, s=south, e=east, w=west,
                           width=data_width, height=data_height,
-                          id=checksum[:8],
+                          id=checksum[:8], max=max_wg_size,
                           c=wg[0], r=wg[1], t=end_time - start_time)))
 
         return wg
+
+    @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiisiiid',
+                         out_signature='(d)')
+    def AddStencilRuntime(self, device_name, device_count,
+                          north, south, east, west, data_width,
+                          data_height, source, wg_c, wg_r,
+                          max_wg_size, runtime):
+        """
+        Add a new stencil runtime.
+
+        Args:
+            device_name: The name of the execution device, as returned by
+                OpenCL getDeviceInfo() API.
+            device_count: The number of execution devices.
+            north: The stencil shape north direction.
+            south: The stencil shape south direction.
+            east: The stencil shape east direction.
+            west: The stencil shape west direction.
+            data_width: The number of columns of input data.
+            data_height: The number of rows of input data.
+            source: The stencil kernel source code.
+            wg_c: The workgroup size (columns).
+            wg_r: The workgroup size (rows).
+            max_wg_size: The maximum kernel workgroup size.
+            runtime: The measured kernel runtime.
+        """
+
+        # Parse arguments.
+        device_name = util.parse_str(device_name)
+        device_count = int(device_count)
+        north = int(north)
+        south = int(south)
+        east = int(east)
+        west = int(west)
+        data_width = int(data_width)
+        data_height = int(data_height)
+        source = util.parse_str(source)
+        wg_c = int(wg_c)
+        wg_r = int(wg_r)
+        max_wg_size = int(max_wg_size)
+        runtime = float(runtime)
+
+        # Calculate checksum of source code.
+        checksum = checksum_str(source)
+
+        coverage = .5
+
+        self.db.insert("runtimes", (system.HOSTNAME, device_name, device_count,
+                                    checksum, north, south, east, west,
+                                    data_width, data_height, max_wg_size,
+                                    wg_c, wg_r, runtime))
+
+        io.debug(("AddStencilRuntime({dev}, {count}, "
+                  "[{n}, {s}, {e}, {w}], {width}, {height}, {id}, {max}, {t}) "
+                  "-> {out}"
+                  .format(dev=device_name.strip()[:8],
+                          count=device_count,
+                          n=north, s=south, e=east, w=west,
+                          width=data_width, height=data_height,
+                          id=checksum[:8], max=max_wg_size, t=runtime,
+                          out=coverage)))
+
+        return [coverage]
 
 
 def main():
