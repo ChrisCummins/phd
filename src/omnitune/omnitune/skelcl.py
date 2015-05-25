@@ -1,4 +1,5 @@
 import itertools
+import random
 import re
 import time
 
@@ -304,6 +305,80 @@ class SkelCLDatabase(db.Database):
         self.insert("runtimes", args)
 
 
+class StencilSamplingStrategy(object):
+
+    param_values = [4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96]
+    unconstrained_space = list(itertools.product(param_values,
+                                                 param_values))
+
+    def __init__(self, device_name, device_count,
+                 checksum, north, south, east, west,
+                 data_width, data_height,
+                 max_wg_size, db):
+        self.db = db
+
+        # Generate the sample space.
+        self.sample_space = [x for x in self.unconstrained_space
+                             if x[0] * x[1] < max_wg_size]
+
+        for point in self.sample_space:
+            # Get the number of samples at each point in the sample
+            # space.
+            params = [
+                system.HOSTNAME,
+                device_name,
+                device_count,
+                checksum,
+                north, south, east, west,
+                data_width, data_height,
+                max_wg_size,
+                point[0], point[1]
+            ]
+
+            where = []
+            for i in range(len(params)):
+                where.append(RUNTIMES_TABLE[i][0] + "=" +
+                             str(db.escape_value("runtimes", i, params[i])))
+
+        self.where = "(" + " AND ".join(where) + ")"
+
+        # Generate list of samples.
+        self._wgs = []
+        self._update_wgs()
+
+    def _update_wgs(self):
+        sample_counts = []
+
+        io.debug("Creating sample list...")
+
+        for point in self.sample_space:
+            sample_count = self.db.count("runtimes", self.where)
+            sample_counts.append((point, sample_count))
+
+        most_samples = max([x[1] for x in sample_counts]) + 5
+
+        jobs = []
+        for sample in sample_counts:
+            wg = sample[0]
+            count = sample[1]
+            diff = most_samples - count
+            for i in range(diff):
+                self._wgs.append(wg)
+
+        random.shuffle(self._wgs)
+
+        possible = len(sample_counts) * 250
+        total = sum([x[1] for x in sample_counts])
+        self.coverage = float(total) / float(possible)
+
+
+    def next(self):
+        if not len(self._wgs):
+            self._update_wgs()
+
+        return self._wgs.pop(0)
+
+
 class SkelCLProxy(omnitune.Proxy):
 
     LLVM_PATH = fs.path("~/src/msc-thesis/skelcl/libraries/llvm/build/bin/")
@@ -321,6 +396,9 @@ class SkelCLProxy(omnitune.Proxy):
 
         # Setup persistent database.
         self.db = SkelCLDatabase()
+
+        # Create an in-memory sample strategy cache.
+        self.strategies = cache.TransientCache()
 
         # Add local device features to database.
         for info in get_local_device_features():
@@ -392,33 +470,22 @@ class SkelCLProxy(omnitune.Proxy):
         # Record kernel source.
         self.db.add_kernel_source(checksum, source)
 
-        param_values = [4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96]
-        unconstrained_space = list(itertools.product(param_values, param_values))
-        space = [[x] for x in unconstrained_space if x[0] * x[1] < max_wg_size]
+        # Get sampling strategy.
+        strategy_id = "".join([str(x) for x in (
+            device_name, device_count, checksum,
+            north, south, east, west,
+            data_width, data_height,
+            max_wg_size, checksum)])
+        strategy = self.strategies.get(strategy_id)
+        if strategy is None:
+            strategy = StencilSamplingStrategy(device_name, device_count,
+                                               checksum, north, south, east,
+                                               west, data_width, data_height,
+                                               max_wg_size, self.db)
+            self.strategies.set(strategy_id, strategy)
 
-        for point in space:
-            params = [
-                system.HOSTNAME,
-                device_name,
-                device_count,
-                checksum,
-                north, south, east, west,
-                data_width, data_height,
-                max_wg_size,
-                point[0][0], point[0][1]
-            ]
-            where = []
-            for i in range(len(params)):
-                where.append(RUNTIMES_TABLE[i][0] + "=" +
-                             str(self.db.escape_value("runtimes", i, params[i])))
-            point.append(self.db.count("runtimes", "(" + " AND ".join(where) + ")"))
-
-        space = sorted(space, key = lambda x: x[1])
-        wg = space[0][0]
-
-        possible = len(space) * 250
-        total = sum([x[1] for x in space])
-        coverage = float(total) / float(possible)
+        # Get the sampling strategy's next recommendation.
+        wg = strategy.next()
 
         end_time = time.time()
 
@@ -431,7 +498,7 @@ class SkelCLProxy(omnitune.Proxy):
                           width=data_width, height=data_height,
                           id=checksum[:8], max=max_wg_size,
                           c=wg[0], r=wg[1], t=end_time - start_time,
-                          p=coverage * 100)))
+                          p=strategy.coverage * 100)))
 
         return wg
 
