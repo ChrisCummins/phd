@@ -83,5 +83,10 @@ class TestLabm8(TestCase):
         self._test(False, lab.is_seq({10: ["a", "b", "c"]}))
 
 
+    # flatten()
+    def test_flatten(self):
+        self._test([1, 2, 3], lab.flatten([[1], [2, 3]]))
+
+
 if __name__ == '__main__':
     main()
