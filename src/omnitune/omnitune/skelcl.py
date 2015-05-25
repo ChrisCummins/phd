@@ -225,6 +225,60 @@ def get_local_device_features():
     return [vectorise_devinfo(info) for info in opencl.get_devinfos()]
 
 
+class SkelCLDatabase(db.Database):
+    """
+    Persistent database store for SkelCL OmniTune data.
+
+    Tables:
+        kernels  Table of kernel features (extracted from LLVM IR).
+        devices  Table of device features (extracted from OpenCL API).
+        runtimes Table of offline training data.
+    """
+
+    def __init__(self):
+        """
+        Create a new connection to database.
+        """
+        super(SkelCLDatabase, self).__init__("/tmp/omnitune.skelcl.db")
+        self.create_table("kernels",  KERNEL_TABLE_SCHEMA)
+        self.create_table("devices",  DEVICE_TABLE_SCHEMA)
+        self.create_table("runtimes", RUNTIMES_TABLE_SCHEMA)
+
+    def get_device_info(self, device_name):
+        """
+        Lookup info for a device.
+        """
+        what = ", ".join([x[0] for x in DEVICE_TABLE_SCHEMA[1:]])
+        where = "name = '{0}'".format(device_name)
+        return list(self.db.select1("devices", what, where))
+
+    def add_device_info(self, *args):
+        """
+        Add a new row of device info.
+        """
+        self.insert_unique("devices", args)
+
+    def get_kernel_info(self, checksum):
+        """
+        Lookup info for a kernel.
+        """
+        what = ", ".join(x[0] for x in KERNEL_TABLE_SCHEMA[2:])
+        where = "checksum = '{0}'".format(checksum)
+        return list(self.db.select1("kernels", what, where))
+
+    def add_kernel_info(self, source_info):
+        """
+        Add a new row of kernel info.
+        """
+        self.insert_unique("kernels", source_info)
+
+    def add_runtime(self, *args):
+        """
+        Add a new measured experimental runtime.
+        """
+        self.insert("runtimes", args)
+
+
 class SkelCLProxy(omnitune.Proxy):
 
     LLVM_PATH = fs.path("~/src/msc-thesis/skelcl/libraries/llvm/build/bin/")
@@ -241,31 +295,24 @@ class SkelCLProxy(omnitune.Proxy):
         io.info("Registered proxy %s/SkelCLProxy ..." % SESSION_NAME)
 
         # Setup persistent database.
-        self.db = db.Database("/tmp/omnitune.skelcl.db")
-        self.db.create_table("kernels",  KERNEL_TABLE_SCHEMA)
-        self.db.create_table("devices",  DEVICE_TABLE_SCHEMA)
-        self.db.create_table("runtimes", RUNTIMES_TABLE_SCHEMA)
+        self.db = SkelCLDatabase()
 
         # Add local device features to database.
         for info in get_local_device_features():
-            self.db.insert_unique("devices", info)
+            self.db.add_device_info(*info)
 
     def get_source_features(self, source, checksum):
         try:
-            what = ", ".join(x[0] for x in KERNEL_TABLE_SCHEMA[2:])
-            where = "checksum = '{0}'".format(checksum)
-            sourcefeatures = list(self.db.select1("kernels", what, where))
+            return self.db.get_kernel_info(checksum)
         except TypeError:
             sourcefeatures = get_source_features(checksum, source,
                                                  path=self.LLVM_PATH)
-            self.db.insert_unique("kernels", sourcefeatures)
-        return sourcefeatures
+            self.db.add_kernel_info(*sourcefeatures)
+            return sourcefeatures
 
     def get_device_features(self, device_name):
         try:
-            what = ", ".join([x[0] for x in DEVICE_TABLE_SCHEMA[1:]])
-            where = "name = '{0}'".format(device_name)
-            return list(self.db.select1("devices", what, where))
+            return self.db.get_device_info(device_name)
         except TypeError:
             raise FeatureExtractionError(("Failed to lookup device features for "
                                           "'{0}'".format(device_name)))
@@ -479,10 +526,10 @@ class SkelCLProxy(omnitune.Proxy):
         # Calculate checksum of source code.
         checksum = checksum_str(source)
 
-        self.db.insert("runtimes", (system.HOSTNAME, device_name, device_count,
-                                    checksum, north, south, east, west,
-                                    data_width, data_height, max_wg_size,
-                                    wg_c, wg_r, runtime))
+        self.db.add_runtime(system.HOSTNAME, device_name, device_count,
+                            checksum, north, south, east, west,
+                            data_width, data_height, max_wg_size,
+                            wg_c, wg_r, runtime)
 
         io.debug(("AddStencilRuntime({dev}, {count}, "
                   "[{n}, {s}, {e}, {w}], {width}, {height}, {id}, {max}, "

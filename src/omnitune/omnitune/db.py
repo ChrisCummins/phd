@@ -33,7 +33,7 @@ class Database(object):
         schema_str = "(" + ", ".join([" ".join([str(a) for a in x])
                                      for x in schema]) + ")"
         cmd_str = "CREATE TABLE IF NOT EXISTS " + name + "\n" + schema_str
-        self.cursor.execute(cmd_str)
+        self.execute(cmd_str)
         # io.debug(cmd_str)
 
     def escape_value(self, table, i, value):
@@ -58,8 +58,8 @@ class Database(object):
         cmd_str = " ".join(cmd)
         # io.debug(cmd_str)
 
-        self.cursor.execute(cmd_str)
-        self.connection.commit()
+        self.execute(cmd_str)
+        self.commit()
 
     def insert(self, table, values):
         return self._insert(table, values)
