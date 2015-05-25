@@ -158,7 +158,10 @@ def sed(match, replacement, path, modifiers=""):
     """
     cmd = "sed -r -i 's/%s/%s/%s' %s" % (match, replacement, modifiers, path)
 
-    os.system(cmd)
+    process = Subprocess(cmd, shell=True)
+    ret, out, err = process.run(timeout=60)
+    if ret:
+        raise SubprocessError("Sed command failed!")
 
 
 def echo(*args):
