@@ -26,9 +26,13 @@ INTERFACE_NAME = "org.omnitune.skelcl"
 OBJECT_PATH    = "/"
 
 
-KERNEL_TABLE_SCHEMA = (
+KERNELS_TABLE = (
     ("checksum",                     "TEXT", "PRIMARY KEY"),
-    ("source",                       "TEXT"),
+    ("source",                       "TEXT")
+)
+
+KERNEL_FEATURES_TABLE = (
+    ("checksum",                     "TEXT", "PRIMARY KEY"),
     ("instruction_count",            "INTEGER"),
     ("ratio_AShr_insts",             "REAL"),
     ("ratio_Add_insts",              "REAL"),
@@ -69,7 +73,8 @@ KERNEL_TABLE_SCHEMA = (
 )
 
 
-DEVICE_TABLE_SCHEMA = (
+DEVICES_TABLE = (
+    ("name",                           "TEXT", "PRIMARY KEY"),
     ("host",                           "TEXT"),
     ("address_bits",                   "INTEGER"),
     ("double_fp_config",               "INTEGER"),
@@ -105,7 +110,6 @@ DEVICE_TABLE_SCHEMA = (
     ("max_write_image_args",           "INTEGER"),
     ("mem_base_addr_align",            "INTEGER"),
     ("min_data_type_align_size",       "INTEGER"),
-    ("name",                           "TEXT", "PRIMARY KEY"),
     ("native_vector_width_char",       "INTEGER"),
     ("native_vector_width_double",     "INTEGER"),
     ("native_vector_width_float",      "INTEGER"),
@@ -128,11 +132,11 @@ DEVICE_TABLE_SCHEMA = (
     ("version",                        "TEXT")
 )
 
-RUNTIMES_TABLE_SCHEMA = (
+RUNTIMES_TABLE = (
     ("host",                           "TEXT"),
-    ("device_name",                    "TEXT"),
-    ("device_count",                   "INTEGER"),
-    ("kernel_checksum",                "TEXT"),
+    ("dev_name",                       "TEXT"),
+    ("dev_count",                      "INTEGER"),
+    ("kern_checksum",                  "TEXT"),
     ("north",                          "INTEGER"),
     ("south",                          "INTEGER"),
     ("east",                           "INTEGER"),
@@ -142,7 +146,7 @@ RUNTIMES_TABLE_SCHEMA = (
     ("max_wg_size",                    "INTEGER"),
     ("wg_c",                           "INTEGER"),
     ("wg_r",                           "INTEGER"),
-    ("runtime",                        "REAL"),
+    ("runtime",                        "REAL")
 )
 
 
@@ -172,10 +176,11 @@ def vectorise_ratios(checksum, source, ratios):
     Vectorise a dictionary of stencil kernel features.
     """
     vector = [checksum, source]
-    for feature in KERNEL_TABLE_SCHEMA[2:]:
+    for column in KERNEL_FEATURES_TABLE[1:]:
+        column_name = column[0]
         # FIXME: underscores??
-        if feature[0] in ratios:
-            vector.append(ratios[feature[0]])
+        if column_name in ratios:
+            vector.append(ratios[column_name])
         else:
             vector.append(0)
     return vector
@@ -185,9 +190,13 @@ def vectorise_devinfo(info):
     """
     Vectorise a dictionary of OpenCL device info.
     """
-    vector = [system.HOSTNAME]
-    for feature in DEVICE_TABLE_SCHEMA[1:]:
-        vector.append(info[feature[0]])
+    vector = [
+        info[DEVICES_TABLE[0][0]],
+        system.HOSTNAME
+    ]
+    for column in DEVICES_TABLE[2:]:
+        column_name = column[0]
+        vector.append(info[column_name])
 
     return vector
 
@@ -240,17 +249,18 @@ class SkelCLDatabase(db.Database):
         Create a new connection to database.
         """
         super(SkelCLDatabase, self).__init__("/tmp/omnitune.skelcl.db")
-        self.create_table("kernels",  KERNEL_TABLE_SCHEMA)
-        self.create_table("devices",  DEVICE_TABLE_SCHEMA)
-        self.create_table("runtimes", RUNTIMES_TABLE_SCHEMA)
+        self.create_table("kernels",         KERNELS_TABLE)
+        self.create_table("kernel_features", KERNEL_FEATURES_TABLE)
+        self.create_table("devices",         DEVICES_TABLE)
+        self.create_table("runtimes",        RUNTIMES_TABLE)
 
     def get_device_info(self, device_name):
         """
         Lookup info for a device.
         """
-        what = ", ".join([x[0] for x in DEVICE_TABLE_SCHEMA[1:]])
+        what = ", ".join(["name"] + [x[0] for x in DEVICES_TABLE[2:]])
         where = "name = '{0}'".format(device_name)
-        return list(self.db.select1("devices", what, where))
+        return list(self.select1("devices", what, where))
 
     def add_device_info(self, *args):
         """
@@ -258,13 +268,28 @@ class SkelCLDatabase(db.Database):
         """
         self.insert_unique("devices", args)
 
+
+    def get_kernel_source(self, checksum):
+        """
+        Lookup kernel source.
+        """
+        what = "source"
+        where = "checkum = '{0}'".format(checksum)
+        return list(self.select1("kernels", what, where))
+
+    def add_kernel_source(self, checksum, source):
+        """
+        Add a new kernel source code.
+        """
+        self.insert_unique("kernels", (checksum, source))
+
     def get_kernel_info(self, checksum):
         """
         Lookup info for a kernel.
         """
-        what = ", ".join(x[0] for x in KERNEL_TABLE_SCHEMA[2:])
+        what = ", ".join(x[0] for x in KERNEL_FEATURES_TABLE[1:])
         where = "checksum = '{0}'".format(checksum)
-        return list(self.db.select1("kernels", what, where))
+        return list(self.select1("kernels", what, where))
 
     def add_kernel_info(self, source_info):
         """
@@ -364,6 +389,9 @@ class SkelCLProxy(omnitune.Proxy):
         # Calculate checksum of source code.
         checksum = checksum_str(source)
 
+        # Record kernel source.
+        self.db.add_kernel_source(checksum, source)
+
         param_values = [4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96]
         unconstrained_space = list(itertools.product(param_values, param_values))
         space = [[x] for x in unconstrained_space if x[0] * x[1] < max_wg_size]
@@ -381,7 +409,7 @@ class SkelCLProxy(omnitune.Proxy):
             ]
             where = []
             for i in range(len(params)):
-                where.append(RUNTIMES_TABLE_SCHEMA[i][0] + "=" +
+                where.append(RUNTIMES_TABLE[i][0] + "=" +
                              str(self.db.escape_value("runtimes", i, params[i])))
             point.append(self.db.count("runtimes", "(" + " AND ".join(where) + ")"))
 
