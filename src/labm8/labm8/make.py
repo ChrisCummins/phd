@@ -16,22 +16,24 @@
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 import os
 
-import labm8 as lab
-import labm8.fs
+import labm8
+from labm8 import fs
+from labm8 import system
 
 
-def clean(dir="."):
+def make(name="all", dir=".", stdout=system.STDOUT, stderr=system.STDERR):
     """
     Run make clean.
     """
     fs.cd(dir)
-    os.system("make clean")
+    ret, out, err = system.run(["make", str(name)], timeout=180,
+                               stdout=stdout, stderr=stderr)
     fs.cdpop()
+    return ret, out, err
 
-def target(name, dir="."):
+
+def clean(**kwargs):
     """
     Run make clean.
     """
-    fs.cd(dir)
-    os.system("make %s" % name)
-    fs.cdpop()
+    make("clean", **kwargs)
