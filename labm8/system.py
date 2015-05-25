@@ -27,6 +27,7 @@ from __future__ import print_function
 
 import os
 import socket
+import sys
 import subprocess
 import threading
 
@@ -38,6 +39,10 @@ HOSTNAME = socket.gethostname()
 
 PID = os.getpid()
 
+argv = sys.argv
+STDOUT = sys.stdout
+STDERR = sys.stderr
+PIPE = subprocess.PIPE
 
 class Error(Exception):
     pass
