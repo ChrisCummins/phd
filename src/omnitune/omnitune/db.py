@@ -9,6 +9,20 @@ from labm8 import fs
 from labm8 import io
 
 
+class Error(Exception):
+    """
+    Module-level base error class.
+    """
+    pass
+
+
+class SchemaError(Exception):
+    """
+    Error thrown in case of conflicting schemas.
+    """
+    pass
+
+
 class Database(object):
     def __init__(self, path, tables={}):
         """
@@ -120,7 +134,7 @@ class Database(object):
     def select(self, table, select, where):
         cmd = ["SELECT", select, "FROM", table, "WHERE", where]
         cmd_str = " ".join(cmd)
-        return self.cursor.execute(cmd_str)
+        return self.execute(cmd_str)
 
     def select1(self, table, select, where):
         return self.select(self, table, select, where).fetchone()
@@ -128,4 +142,28 @@ class Database(object):
     def count(self, table, where):
         cmd = ["SELECT Count(*) FROM", table, "WHERE", where]
         cmd_str = " ".join(cmd)
-        return self.cursor.execute(cmd_str).fetchone()[0]
+        return self.execute(cmd_str).fetchone()[0]
+
+    def merge(self, rhs):
+        """
+        Merge the contents of the supplied database.
+
+        Arguments:
+            rhs Another Database instance to merge into this database.
+
+        Raises:
+            SchemaError If the schema of the merged database does not match.
+        """
+        # Throw an "eppy" if the schemas do not match.
+        if self.tables.keys() != rhs.tables.keys():
+            raise SchemaError("Schema of merged table does not match")
+
+        self.execute("ATTACH '" + rhs.path + "' as rhs")
+
+        for table in self.tables:
+            self.execute("INSERT OR IGNORE INTO " + table +
+                         " SELECT * FROM rhs." + table)
+
+        # Tidy up.
+        self.commit()
+        self.execute("DETACH rhs")
