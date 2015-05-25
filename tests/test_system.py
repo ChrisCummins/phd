@@ -33,15 +33,47 @@ class TestSystem(TestCase):
         self._test(pid, system.PID)
         self._test(pid, system.PID)
 
+    # Subprocess()
+    def test_subprocess_stdout(self):
+        p = system.Subprocess(["echo Hello"], shell=True)
+        ret, out, err = p.run()
+        self._test(0, ret)
+        self._test("Hello\n", out)
+        self._test("", err)
+
+    def test_subprocess_stderr(self):
+        p = system.Subprocess(["echo Hello >&2"], shell=True)
+        ret, out, err = p.run()
+        self._test(0, ret)
+        self._test("", out)
+        self._test("Hello\n", err)
+
+    def test_subprocess_timeout(self):
+        p = system.Subprocess(["sleep 10"], shell=True)
+        self.assertRaises(system.SubprocessError, p.run, timeout=.1)
+
+    def test_subprocess_timeout_pass(self):
+        p = system.Subprocess(["true"], shell=True)
+        ret, out, err = p.run(timeout=.1)
+        self._test(0, ret)
+
+    # run()
     def test_run(self):
-        self._test(0, system.run(["true"]))
-        self._test(1, system.run(["false"], exit_on_error=False))
+        self._test((0, "", ""), system.run(["true"]))
+        self._test((1, "", ""), system.run(["false"]))
+
+    def test_run_timeout(self):
+        self.assertRaises(system.SubprocessError, system.run,
+                          ["sleep 10"], timeout=.1)
+        self.assertRaises(system.SubprocessError, system.run,
+                          ["sleep 10"], timeout=.1, num_attempts=2)
 
     def test_check_output(self):
         self._test("", system.check_output(["true"]))
         self.assertRaises(system.SubprocessError,
                           system.check_output, ["false"], exit_on_error=False)
         self._test("hello\n", system.check_output(["echo", "hello"]))
+
 
 if __name__ == '__main__':
     main()
