@@ -93,6 +93,10 @@ class TestSystem(TestCase):
         system.sed("o", "_", "/tmp/labm8.tmp", "g")
         self._test(["G__dbye, w_rld!"], fs.read("/tmp/labm8.tmp"))
 
+    def test_sed_fail_no_file(self):
+        self.assertRaises(system.SubprocessError, system.sed,
+                          "Hello", "Goodbye", "/not/a/real/file")
+
 
 if __name__ == '__main__':
     main()
