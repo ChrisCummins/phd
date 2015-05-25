@@ -41,13 +41,13 @@ class TestSystem(TestCase):
         ret, out, err = p.run()
         self._test(0, ret)
         self._test("Hello\n", out)
-        self._test("", err)
+        self._test(None, err)
 
     def test_subprocess_stderr(self):
         p = system.Subprocess(["echo Hello >&2"], shell=True)
         ret, out, err = p.run()
         self._test(0, ret)
-        self._test("", out)
+        self._test(None, out)
         self._test("Hello\n", err)
 
     def test_subprocess_timeout(self):
@@ -61,8 +61,8 @@ class TestSystem(TestCase):
 
     # run()
     def test_run(self):
-        self._test((0, "", ""), system.run(["true"]))
-        self._test((1, "", ""), system.run(["false"]))
+        self._test((0, None, None), system.run(["true"]))
+        self._test((1, None, None), system.run(["false"]))
 
     def test_run_timeout(self):
         self.assertRaises(system.SubprocessError, system.run,
