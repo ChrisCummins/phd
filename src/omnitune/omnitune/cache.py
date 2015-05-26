@@ -10,7 +10,7 @@ class Cache(object):
     def contains(self, key):
         pass
 
-    def get(self, key):
+    def get(self, key, default=None):
         pass
 
     def set(self, key, value):
@@ -28,9 +28,11 @@ class TransientCache(Cache):
     def contains(self, key):
         return key in self._cache
 
-    def get(self, key):
+    def get(self, key, default=None):
         if key in self._cache:
             return self._cache[key]
+        else:
+            return default
 
     def set(self, key, value):
         self._cache[key] = value
