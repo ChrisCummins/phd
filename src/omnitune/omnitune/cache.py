@@ -60,7 +60,7 @@ class JsonCache(TransientCache):
 
     def __init__(self, path):
         super(JsonCache, self).__init__()
-        self.path = fs.path(path)
+        self.path = fs.abspath(path)
 
         if fs.exists(self.path):
             io.debug(("Loading cache '{0}'".format(self.path)))
