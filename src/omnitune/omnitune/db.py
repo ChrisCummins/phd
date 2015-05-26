@@ -37,7 +37,6 @@ class Database(object):
         fs.mkdir(os.path.dirname(path))
 
         self.connection = sql.connect(self.path)
-        self.cursor = self.connection.cursor()
         self.tables = {}
 
         for name,schema in tables.iteritems():
@@ -126,7 +125,7 @@ class Database(object):
         return self._insert(table, values, ignore_duplicates=True)
 
     def execute(self, *args):
-        return self.cursor.execute(*args)
+        return self.connection.cursor().execute(*args)
 
     def commit(self):
         return self.connection.commit()
