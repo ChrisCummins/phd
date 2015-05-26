@@ -315,10 +315,11 @@ class SkelCLDatabase(db.Database):
         """
         self.insert("runtimes", args)
 
+WG_VALUES = [4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96]
 
 class StencilSamplingStrategy(object):
 
-    param_values = [4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96]
+    param_values = WG_VALUES
     unconstrained_space = list(itertools.product(param_values,
                                                  param_values))
 
