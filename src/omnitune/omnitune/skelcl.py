@@ -12,6 +12,7 @@ import labm8
 from labm8 import crypto
 from labm8 import fs
 from labm8 import io
+from labm8 import math as labmath
 from labm8 import system
 
 import omnitune
@@ -30,6 +31,7 @@ SESSION_NAME   = "org.omnitune"
 INTERFACE_NAME = "org.omnitune.skelcl"
 OBJECT_PATH    = "/"
 
+WG_VALUES = [4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96]
 
 KERNELS_TABLE = (
     ("checksum",                     "TEXT", "PRIMARY KEY"),
@@ -152,6 +154,19 @@ RUNTIMES_TABLE = (
     ("wg_c",                           "INTEGER"),
     ("wg_r",                           "INTEGER"),
     ("runtime",                        "REAL")
+)
+
+SAMPLES_TABLE = (
+    ("host",           "TEXT"),
+    ("device",         "TEXT"),
+    ("dev_count",      "INTEGER"),
+    ("kernel",         "TEXT"),
+    ("data_width",     "INTEGER"),
+    ("data_height",    "INTEGER"),
+    ("wg_c",           "INTEGER"),
+    ("wg_r",           "INTEGER"),
+    ("sample_count",   "INTEGER"),
+    ("runtime",        "REAL")
 )
 
 
@@ -318,7 +333,41 @@ class SkelCLDatabase(db.Database):
         """
         self.insert("runtimes", args)
 
-WG_VALUES = [4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96]
+    def create_samples_table(self):
+        self.create_table("samples", SAMPLES_TABLE)
+
+        query_keys = [x[0] for x in RUNTIMES_TABLE[:-1]]
+        query = self.execute("SELECT DISTINCT " + ",".join(query_keys) +
+                             " FROM runtimes")
+
+        for row in query:
+            where = []
+            for key,val in zip(query_keys, row):
+                val = self.escape_keyval("runtimes", key, val)
+                where.append('{key} = {val}'.format(key=key, val=val))
+            where = " AND ".join(where)
+
+            runtimes_query = self.execute("SELECT runtime from runtimes WHERE "
+                                          + where)
+            runtimes = [x[0] for x in runtimes_query]
+            sample_count = len(runtimes)
+            runtime = labmath.mean(runtimes)
+
+            samples_values = [
+                row[0],   # host
+                row[1],   # device
+                row[2],   # dev_count
+                row[3],   # kernel
+                row[8],   # data_width
+                row[9],   # data_height
+                row[11],  # wg_c
+                row[12],  # wg_r
+                sample_count,
+                runtime
+            ]
+            io.debug(*samples_values)
+            self.insert("samples", samples_values)
+
 
 class StencilSamplingStrategy(object):
 

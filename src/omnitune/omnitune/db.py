@@ -99,6 +99,20 @@ class Database(object):
         else:
             return value
 
+    def lookup_keytype(self, table, key):
+        for schema in self.tables[table]:
+            if schema[0] == key:
+                return schema[1]
+        raise SchemaError(("Failed to lookup key '{key}' in table {table}"
+                           .format(key=key, table=table)))
+
+    def escape_keyval(self, table, key, value):
+        keytype = self.lookup_keytype(table, key)
+        if keytype.upper() == "TEXT":
+            return "'" + str(value) + "'"
+        else:
+            return value
+
     def _insert(self, table, values, ignore_duplicates=False):
         escaped_values = [self.escape_value(table, i, values[i])
                           for i in range(len(values))]
@@ -138,8 +152,10 @@ class Database(object):
     def select1(self, table, select, where):
         return self.select(self, table, select, where).fetchone()
 
-    def count(self, table, where):
-        cmd = ["SELECT Count(*) FROM", table, "WHERE", where]
+    def count(self, table, where=None):
+        cmd = ["SELECT Count(*) FROM", table]
+        if where is not None:
+            cmd += ["WHERE", where]
         cmd_str = " ".join(cmd)
         return self.execute(cmd_str).fetchone()[0]
 
