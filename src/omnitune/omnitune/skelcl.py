@@ -19,7 +19,11 @@ from omnitune import cache
 from omnitune import db
 from omnitune import util
 from omnitune import llvm
-from omnitune import opencl
+
+if system.HOSTNAME != "tim":
+    from omnitune import opencl
+else:
+    from omnitune import opencl_tim as opencl
 
 
 SESSION_NAME   = "org.omnitune"
