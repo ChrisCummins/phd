@@ -265,7 +265,6 @@ class SkelCLDatabase(db.Database):
 
         super(SkelCLDatabase, self).__init__(path, tables)
 
-
     def get_device_info(self, device_name):
         """
         Lookup info for a device.
