@@ -222,6 +222,23 @@ def markwrite(path):
     return path
 
 
+def rm(path):
+    """
+    Remove a file or directory.
+
+    If path is a directory, this recursively removes the directory and
+    any contents. Non-existent paths are silently ignored.
+
+    Arguments:
+        path (string): path to the file or directory to remove. May be
+          absolute or relative.
+    """
+    if isfile(path):
+        os.remove(path)
+    elif exists(path):
+        shutil.rmtree(path, ignore_errors=False)
+
+
 def mkdir(path):
     """
     Make directory "path", including any required parents. If
@@ -231,13 +248,6 @@ def mkdir(path):
         os.makedirs(path)
     except OSError:
         pass
-
-
-def rm(path):
-    """
-    Remove path or directory.
-    """
-    shutil.rmtree(path, ignore_errors=True)
 
 
 def mkopen(p, *args, **kwargs):

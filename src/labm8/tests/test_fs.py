@@ -17,6 +17,7 @@ from tests import TestCase
 
 import labm8 as lab
 import labm8.fs
+from labm8 import system
 
 import os
 import re
@@ -185,9 +186,11 @@ class TestFs(TestCase):
 
     # rm()
     def test_rm(self):
+        system.echo("Hello, world!", "/tmp/labm8.tmp")
+        self._test(True, lab.fs.isfile("/tmp/labm8.tmp"))
         lab.fs.rm("/tmp/labm8.tmp")
-        with open("/tmp/lamb8.tmp", "w") as file:
-            file.write("Hello, world!")
+        self._test(False, lab.fs.isfile("/tmp/labm8.tmp"))
+        lab.fs.rm("/tmp/labm8.tmp")
         lab.fs.rm("/tmp/labm8.tmp")
 
 
