@@ -11,13 +11,13 @@ import gobject
 import labm8
 from labm8 import cache
 from labm8 import crypto
+from labm8 import db
 from labm8 import fs
 from labm8 import io
 from labm8 import math as labmath
 from labm8 import system
 
 import omnitune
-from omnitune import db
 from omnitune import util
 from omnitune import llvm
 
