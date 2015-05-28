@@ -63,6 +63,11 @@ class TestFs(TestCase):
         self._test("foo", lab.fs.basename(lab.fs.abspath("foo")))
 
 
+    def test_dirname(self):
+        self._test("", lab.fs.dirname("foo"))
+        self._test("/tmp", lab.fs.dirname("/tmp/labm8.tmp"))
+
+
     # cd(), cdpop()
     def test_cd(self):
         cwd = os.getcwd()
