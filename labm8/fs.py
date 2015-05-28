@@ -88,6 +88,13 @@ def basename(path):
     return os.path.basename(path)
 
 
+def dirname(path):
+    """
+    Return the directory name of a given file path.
+    """
+    return os.path.dirname(path)
+
+
 def is_subdir(child, parent):
     """
     Determine if "child" is a subdirectory of "parent". If child ==
