@@ -15,57 +15,58 @@
 from unittest import main
 from tests import TestCase
 
-import labm8 as lab
-import labm8.fs
-from labm8 import system
-
 import os
 import re
+
+import labm8 as lab
+from labm8 import fs
+from labm8 import system
+
 
 class TestFs(TestCase):
 
     # path()
     def test_path(self):
-        self._test("foo/bar", lab.fs.path("foo", "bar"))
-        self._test("foo/bar/car", lab.fs.path("foo/bar", "car"))
+        self._test("foo/bar", fs.path("foo", "bar"))
+        self._test("foo/bar/car", fs.path("foo/bar", "car"))
 
     def test_path_homedir(self):
         self._test("/home",
-                   re.search("^(/home).*", lab.fs.path("~", "foo")).group(1))
+                   re.search("^(/home).*", fs.path("~", "foo")).group(1))
 
 
     # abspath()
     def test_abspath(self):
         self._test(os.path.abspath(".") + "/foo/bar",
-                   lab.fs.abspath("foo", "bar"))
+                   fs.abspath("foo", "bar"))
         self._test(os.path.abspath(".") + "/foo/bar/car",
-                   lab.fs.abspath("foo/bar", "car"))
+                   fs.abspath("foo/bar", "car"))
 
     def test_abspath_homedir(self):
         self._test("/home",
-                   re.search("^(/home).*", lab.fs.abspath("~", "foo")).group(1))
+                   re.search("^(/home).*", fs.abspath("~", "foo")).group(1))
 
 
     # is_subdir()
     def test_is_subdir(self):
-        self._test(True, lab.fs.is_subdir("/home", "/"))
-        self._test(True, lab.fs.is_subdir("/proc/1", "/proc"))
-        self._test(True, lab.fs.is_subdir("/proc/1", "/proc/1/"))
+        self._test(True, fs.is_subdir("/home", "/"))
+        self._test(True, fs.is_subdir("/proc/1", "/proc"))
+        self._test(True, fs.is_subdir("/proc/1", "/proc/1/"))
 
     def test_is_subdir_not_subdir(self):
         self._test(False,
-                   lab.fs.is_subdir("/", "/home"))
+                   fs.is_subdir("/", "/home"))
 
 
     # basename()
     def test_basename(self):
-        self._test("foo", lab.fs.basename("foo"))
-        self._test("foo", lab.fs.basename(lab.fs.abspath("foo")))
+        self._test("foo", fs.basename("foo"))
+        self._test("foo", fs.basename(fs.abspath("foo")))
 
 
     def test_dirname(self):
-        self._test("", lab.fs.dirname("foo"))
-        self._test("/tmp", lab.fs.dirname("/tmp/labm8.tmp"))
+        self._test("", fs.dirname("foo"))
+        self._test("/tmp", fs.dirname("/tmp/labm8.tmp"))
 
 
     # cd(), cdpop()
@@ -73,53 +74,53 @@ class TestFs(TestCase):
         cwd = os.getcwd()
 
         print("CWD", cwd)
-        lab.fs.cd("..")
+        fs.cd("..")
         print("CWD", os.getcwd())
-        cwd = lab.fs.cdpop()
+        cwd = fs.cdpop()
         print("CWD", cwd)
-        #self._test(cwd, lab.fs.cdpop())
+        #self._test(cwd, fs.cdpop())
 
 
     # cdpop()
     def test_cdpop(self):
         cwd = os.getcwd()
         for i in range(10):
-            self._test(cwd, lab.fs.cdpop())
+            self._test(cwd, fs.cdpop())
 
 
     # pwd()
     def test_pwd(self):
-        self._test(os.getcwd(), lab.fs.pwd())
+        self._test(os.getcwd(), fs.pwd())
 
 
     # exists()
     def test_exists(self):
-        self._test(True, lab.fs.exists(__file__))
-        self._test(True, lab.fs.exists("/"))
-        self._test(False, lab.fs.exists("/not/a/real/path (I hope!)"))
+        self._test(True, fs.exists(__file__))
+        self._test(True, fs.exists("/"))
+        self._test(False, fs.exists("/not/a/real/path (I hope!)"))
 
 
     # isfile()
     def test_isfile(self):
-        self._test(True, lab.fs.isfile(__file__))
-        self._test(False, lab.fs.isfile("/"))
-        self._test(False, lab.fs.isfile("/not/a/real/path (I hope!)"))
+        self._test(True, fs.isfile(__file__))
+        self._test(False, fs.isfile("/"))
+        self._test(False, fs.isfile("/not/a/real/path (I hope!)"))
 
 
     # isdir()
     def test_isdir(self):
-        self._test(False, lab.fs.isdir(__file__))
-        self._test(True, lab.fs.isdir("/"))
-        self._test(False, lab.fs.isdir("/not/a/real/path (I hope!)"))
+        self._test(False, fs.isdir(__file__))
+        self._test(True, fs.isdir("/"))
+        self._test(False, fs.isdir("/not/a/real/path (I hope!)"))
 
     # read()
     def test_read_empty(self):
         self._test([],
-                   lab.fs.read("tests/data/empty_file"))
+                   fs.read("tests/data/empty_file"))
 
     def test_read_hello_world(self):
         self._test(['Hello, world!'],
-                   lab.fs.read("tests/data/hello_world"))
+                   fs.read("tests/data/hello_world"))
 
     def test_read_data1(self):
         print("PWD", os.getcwd())
@@ -135,7 +136,7 @@ class TestFs(TestCase):
             'whitespace',
             '0.344'
         ],
-                   lab.fs.read("tests/data/data1"))
+                   fs.read("tests/data/data1"))
 
     def test_read_data1_comment(self):
         self._test([
@@ -149,7 +150,7 @@ class TestFs(TestCase):
             'whitespace',
             '0.344'
         ],
-                   lab.fs.read("tests/data/data1", comment_char="#"))
+                   fs.read("tests/data/data1", comment_char="#"))
 
     def test_read_data1_no_rstrip(self):
         self._test([
@@ -164,16 +165,16 @@ class TestFs(TestCase):
             'whitespace\n',
             '0.344\n'
         ],
-                   lab.fs.read("tests/data/data1", rstrip=False))
+                   fs.read("tests/data/data1", rstrip=False))
 
     # rm()
     def test_rm(self):
         system.echo("Hello, world!", "/tmp/labm8.tmp")
-        self._test(True, lab.fs.isfile("/tmp/labm8.tmp"))
-        lab.fs.rm("/tmp/labm8.tmp")
-        self._test(False, lab.fs.isfile("/tmp/labm8.tmp"))
-        lab.fs.rm("/tmp/labm8.tmp")
-        lab.fs.rm("/tmp/labm8.tmp")
+        self._test(True, fs.isfile("/tmp/labm8.tmp"))
+        fs.rm("/tmp/labm8.tmp")
+        self._test(False, fs.isfile("/tmp/labm8.tmp"))
+        fs.rm("/tmp/labm8.tmp")
+        fs.rm("/tmp/labm8.tmp")
 
 
 if __name__ == '__main__':
