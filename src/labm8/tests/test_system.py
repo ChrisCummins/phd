@@ -66,9 +66,10 @@ class TestSystem(TestCase):
 
     def test_run_timeout(self):
         self.assertRaises(system.SubprocessError, system.run,
-                          ["sleep 10"], timeout=.1)
+                          ["sleep 10"], timeout=.1, shell=True)
         self.assertRaises(system.SubprocessError, system.run,
-                          ["sleep 10"], timeout=.1, num_attempts=2)
+                          ["sleep 10"], timeout=.1, num_attempts=2,
+                          shell=True)
 
     def test_check_output(self):
         self._test("", system.check_output(["true"]))
