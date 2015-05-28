@@ -9,6 +9,7 @@ import dbus.mainloop.glib
 import gobject
 
 import labm8
+from labm8 import cache
 from labm8 import crypto
 from labm8 import fs
 from labm8 import io
@@ -16,7 +17,6 @@ from labm8 import math as labmath
 from labm8 import system
 
 import omnitune
-from omnitune import cache
 from omnitune import db
 from omnitune import util
 from omnitune import llvm
@@ -540,13 +540,14 @@ class SkelCLProxy(omnitune.Proxy):
             north, south, east, west,
             data_width, data_height,
             max_wg_size, checksum)])
-        strategy = self.strategies.get(strategy_id)
-        if strategy is None:
+        try:
+            strategy = self.strategies[strategy_id]
+        except KeyError:
             strategy = StencilSamplingStrategy(device_name, device_count,
                                                checksum, north, south, east,
                                                west, data_width, data_height,
                                                max_wg_size, self.db)
-            self.strategies.set(strategy_id, strategy)
+            self.strategies[strategy_id] = strategy
 
         # Get the sampling strategy's next recommendation.
         wg = strategy.next()
