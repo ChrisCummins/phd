@@ -122,21 +122,38 @@ class Subprocess(object):
 
 
 
-def run(args, num_attempts=1, timeout=-1, **kwargs):
+def run(command, num_retries=1, timeout=-1, **kwargs):
     """
-    Run "args", redirecting stdout and stderr to "out". Returns exit
-    status.
-    """
-    for i in range(num_attempts):
-        try:
-            process = Subprocess(args, **kwargs)
-            return process.run(timeout)
-        except SubprocessError:
-            pass
-        except AttributeError:
-            pass
+    Run a command with optional timeout and retries.
 
-    raise SubprocessError("Failed after {i} attempts".format(i=i))
+    Provides a convenience method for executing a subprocess with
+    additional error handling.
+
+    Arguments:
+        command (list of str): The command to execute.
+        num_retries (int, optional): If the subprocess fails, the number of
+          attempts to execute it before failing.
+        timeout (float, optional): If positive, the number of seconds to wait
+          for subprocess completion before failing.
+        **kwargs: Additional args to pass to Subprocess.__init__()
+
+    Returns:
+        Tuple of (int, str, str): Where the variables represent
+        (exit status, stdout, stderr).
+
+    Raises:
+        SubprocessError: If the command fails after the given number of
+          retries.
+    """
+    last_error = None
+    for _ in range(num_retries):
+        try:
+            process = Subprocess(command, **kwargs)
+            return process.run(timeout)
+        except Exception as err:
+            last_error = err
+
+    raise last_error
 
 
 def sed(match, replacement, path, modifiers=""):
