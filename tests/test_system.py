@@ -71,12 +71,6 @@ class TestSystem(TestCase):
                           ["sleep 10"], timeout=.1, num_attempts=2,
                           shell=True)
 
-    def test_check_output(self):
-        self._test("", system.check_output(["true"]))
-        self.assertRaises(system.SubprocessError,
-                          system.check_output, ["false"], exit_on_error=False)
-        self._test("hello\n", system.check_output(["echo", "hello"]))
-
     # echo()
     def test_echo(self):
         system.echo("foo", "/tmp/labm8.tmp")
