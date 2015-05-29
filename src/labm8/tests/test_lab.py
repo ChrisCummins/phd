@@ -16,7 +16,10 @@ from unittest import main
 from tests import TestCase
 
 import math
+import sys
+
 import labm8 as lab
+
 
 class TestLabm8(TestCase):
 
@@ -28,6 +31,14 @@ class TestLabm8(TestCase):
         with self.assertRaises(SystemExit) as ctx:
             lab.exit(1)
         self.assertEqual(ctx.exception.code, 1)
+
+    # is_python3()
+    def test_is_python3(self):
+        if sys.version_info >= (3, 0):
+            self._test(True, lab.is_python3())
+        else:
+            self._test(False, lab.is_python3())
+
 
     # is_str() tests
     def test_is_str(self):

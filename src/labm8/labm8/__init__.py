@@ -31,6 +31,27 @@ def exit(status=0):
     sys.exit(status)
 
 
+def is_python3():
+    """
+    Returns whether the Python version is >= 3.0.
+
+    This is for compatability purposes, where you need to implement different
+    code for Python 2 and 3.
+
+    Example:
+        To import the StringIO class:
+
+          if is_python3():
+            from io import StringIO
+          else:
+            from StringIO import StringIO
+
+    Returns:
+        bool: True if Python >= 3, else False.
+    """
+    return sys.version_info >= (3, 0)
+
+
 def is_str(obj):
     """
     Check if an object is a string (Python 2 and 3 compatible).
