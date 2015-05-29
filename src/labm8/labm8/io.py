@@ -16,18 +16,23 @@
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 import json
+import sys
 
 import labm8 as lab
 
 
+def colourise(colour, *args):
+    return "".join([colour] + list(args) + [Colours.RESET])
+
+
 def printf(colour, *args, **kwargs):
-    print(colour, end="")
-    print(*args, end="")
-    print(Colours.RESET, **kwargs)
+    string = colourise(colour, *args)
+    print(string, **kwargs)
 
 
-def pprint(data):
-    print(json.dumps(data, sort_keys=True, indent=2, separators=(",", ": ")))
+def pprint(data, **kwargs):
+    print(json.dumps(data, sort_keys=True, indent=2, separators=(",", ": ")),
+          **kwargs)
 
 
 def info(*args, **kwargs):
@@ -47,13 +52,9 @@ def error(*args, **kwargs):
 
 
 def fatal(*args, **kwargs):
-    returncode = kwargs.pop("stats", 1)
-    error("fatal:", *args)
+    returncode = kwargs.pop("status", 1)
+    error("fatal:", *args, **kwargs)
     lab.exit(returncode)
-
-
-def colourise(colour, *args):
-    return str(colour + str(args) + Colours.RESET)
 
 
 class Colours:
