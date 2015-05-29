@@ -84,7 +84,7 @@ class RtOlevel(testcase.TestCase):
 
         Execute the program and graph the runtime from the stdout.
         """
-        output = system.check_output("./examples/example1")
+        _, output, _ = system.run(["./examples/example1"])
         match = re.search(self.TIME_RE, output)
         if match:
             return {"Runtime": float(match.group(1))}

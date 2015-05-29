@@ -139,26 +139,6 @@ def run(args, num_attempts=1, timeout=-1, **kwargs):
     raise SubprocessError("Failed after {i} attempts".format(i=i))
 
 
-def check_output(args, shell=False, exit_on_error=True):
-    """Run "args", returning stdout and stderr.
-
-    If the process fails, raises a SubprocessError. If "exit_on_error"
-    is True, execution halts.
-    """
-    try:
-        output = subprocess.check_output(args, shell=shell,
-                                         stderr=subprocess.STDOUT)
-        return output.decode()
-    except subprocess.CalledProcessError as err:
-        msg = ("Subprocess '%s' failed with exit code '{}'"
-               % err.cmd, err.returncode)
-
-        if exit_on_error:
-            io.error(err.output)
-            io.fatal(msg, err.returncode)
-        raise SubprocessError(msg)
-
-
 def sed(match, replacement, path, modifiers=""):
     """
     Perform sed text substitution.
