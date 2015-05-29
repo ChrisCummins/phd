@@ -47,6 +47,10 @@ class TestCache(TestCase):
         self._test(None, _cache.get("baz"))
         self._test(10, _cache.get("baz", 10))
 
+        # "del" operator
+        del _cache["bar"]
+        self._test(False, "baz" in _cache)
+
         _cache.clear()
 
     # Cache
