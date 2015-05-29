@@ -161,15 +161,13 @@ def rm(path):
         shutil.rmtree(path, ignore_errors=False)
 
 
-def mkdir(path):
+def mkdir(path, **kwargs):
     """
     Make directory "path", including any required parents. If
     directory already exists, do nothing.
     """
-    try:
-        os.makedirs(path)
-    except OSError:
-        pass
+    if not isdir(path):
+        os.makedirs(path, **kwargs)
 
 
 def mkopen(p, *args, **kwargs):

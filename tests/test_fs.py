@@ -49,9 +49,11 @@ class TestFs(TestCase):
 
     # is_subdir()
     def test_is_subdir(self):
-        self._test(True, fs.is_subdir("/home", "/"))
-        self._test(True, fs.is_subdir("/proc/1", "/proc"))
-        self._test(True, fs.is_subdir("/proc/1", "/proc/1/"))
+        self._test(True,  fs.is_subdir("/home", "/"))
+        self._test(True,  fs.is_subdir("/proc/1", "/proc"))
+        self._test(True,  fs.is_subdir("/proc/1", "/proc/1/"))
+        self._test(False, fs.is_subdir("/proc/3", "/proc/1/"))
+        self._test(False, fs.is_subdir("/", "/home"))
 
     def test_is_subdir_not_subdir(self):
         self._test(False,
@@ -167,6 +169,37 @@ class TestFs(TestCase):
         ],
                    fs.read("tests/data/data1", rstrip=False))
 
+    # ls()
+    def test_ls(self):
+        pass
+
+    # mkdir()
+    def test_mkdir(self):
+        fs.rm("/tmp/labm8.dir")
+        self._test(False, fs.isdir("/tmp/labm8.dir"))
+        fs.mkdir("/tmp/labm8.dir")
+        self._test(True, fs.isdir("/tmp/labm8.dir"))
+
+    def test_mkdir_parents(self):
+        self._test(False, fs.isdir("/tmp/labm8.dir/foo/bar"))
+        fs.mkdir("/tmp/labm8.dir/foo/bar")
+        self._test(True, fs.isdir("/tmp/labm8.dir/foo/bar"))
+
+    def test_mkdir_exists(self):
+        fs.mkdir("/tmp/labm8.dir/")
+        self._test(True, fs.isdir("/tmp/labm8.dir/"))
+        fs.mkdir("/tmp/labm8.dir/")
+        fs.mkdir("/tmp/labm8.dir/")
+        self._test(True, fs.isdir("/tmp/labm8.dir/"))
+
+    # mkopen()
+    def test_mkopen(self):
+        fs.rm("/tmp/labm8.dir")
+        self._test(False, fs.isdir("/tmp/labm8.dir/"))
+        f = fs.mkopen("/tmp/labm8.dir/foo", "w")
+        self._test(True, fs.isdir("/tmp/labm8.dir/"))
+        f.close()
+
     # rm()
     def test_rm(self):
         system.echo("Hello, world!", "/tmp/labm8.tmp")
@@ -175,6 +208,13 @@ class TestFs(TestCase):
         self._test(False, fs.isfile("/tmp/labm8.tmp"))
         fs.rm("/tmp/labm8.tmp")
         fs.rm("/tmp/labm8.tmp")
+        fs.rm("/tmp/labm8.dir")
+        fs.mkdir("/tmp/labm8.dir/foo/bar")
+        system.echo("Hello, world!", "/tmp/labm8.dir/foo/bar/baz")
+        self._test(True, fs.isfile("/tmp/labm8.dir/foo/bar/baz"))
+        fs.rm("/tmp/labm8.dir")
+        self._test(False, fs.isfile("/tmp/labm8.dir/foo/bar/baz"))
+        self._test(False, fs.isfile("/tmp/labm8.dir/"))
 
 
 if __name__ == '__main__':

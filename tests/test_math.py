@@ -99,6 +99,10 @@ class TestMath(TestCase):
         self._test((-0.48413771184375287, 4.4841377118437524),
                    lab.math.confinterval([1,2,3]))
 
+    def test_confinterval_all_same(self):
+        self._test((1, 1),
+                   lab.math.confinterval([1,1,1,1,1]))
+
     def test_confinterval_c50(self):
         self._test((1.528595479208968, 2.4714045207910322),
                    lab.math.confinterval([1,2,3], conf=0.5))
