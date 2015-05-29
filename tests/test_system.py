@@ -68,7 +68,7 @@ class TestSystem(TestCase):
         self.assertRaises(system.SubprocessError, system.run,
                           ["sleep 10"], timeout=.1, shell=True)
         self.assertRaises(system.SubprocessError, system.run,
-                          ["sleep 10"], timeout=.1, num_attempts=2,
+                          ["sleep 10"], timeout=.1, num_retries=2,
                           shell=True)
 
     # echo()
