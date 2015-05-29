@@ -24,7 +24,7 @@ import labm8 as lab
 from labm8 import modules
 
 # Namespace collision between this "math" and system "math" packages.
-if sys.version_info >= (3, 0):
+if lab.is_python3():
     import math as std_math
 else:
     std_math = modules.import_foreign("math", "std_math")

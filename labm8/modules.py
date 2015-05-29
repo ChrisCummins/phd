@@ -18,7 +18,7 @@
 import imp
 import sys
 
-import labm8
+import labm8 as lab
 from labm8 import io
 
 
@@ -36,7 +36,7 @@ def import_foreign(name, custom_name=None):
 
       To import the standard module "math" as "std_math":
 
-          if sys.version_info >= (3, 0):
+          if labm8.is_python3():
             import math as std_math
           else:
             std_math = modules.import_foreign("math", "std_math")
@@ -49,7 +49,7 @@ def import_foreign(name, custom_name=None):
     Raises:
         ImportError: If the module is not found.
     """
-    if sys.version_info >= (3, 0):
+    if lab.is_python3():
         io.error(("Ignoring attempt to import foreign module '{mod}' "
                   "using python version {major}.{minor}"
                   .format(mod=name, major=sys.version_info[0],
