@@ -20,6 +20,15 @@ import labm8 as lab
 
 class TestLabm8(TestCase):
 
+    # exit()
+    def test_exit(self):
+        with self.assertRaises(SystemExit) as ctx:
+            lab.exit(0)
+        self.assertEqual(ctx.exception.code, 0)
+        with self.assertRaises(SystemExit) as ctx:
+            lab.exit(1)
+        self.assertEqual(ctx.exception.code, 1)
+
     # is_str() tests
     def test_is_str(self):
         self._test(True, lab.is_str("a"))
