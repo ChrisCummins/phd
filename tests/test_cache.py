@@ -98,7 +98,7 @@ class TestCache(TestCase):
         _cache["bar"] = 2
         _cache["baz"] = 3
 
-        cache2 = cache.TransientCache(_cache)
+        cache2 = cache.JsonCache("/tmp/labm8.cache.json", _cache)
         self._test(1, cache2["foo"])
         self._test(2, cache2["bar"])
         self._test(3, cache2["baz"])
