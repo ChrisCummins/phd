@@ -37,19 +37,19 @@ class Cache(object):
             key: Item key.
             default (optional): Default value if item not found.
         """
-        pass
+        raise NotImplementedError
 
     def clear(self):
         """
         Remove all items from cache.
         """
-        pass
+        raise NotImplementedError
 
     def items(self):
         """
         Returns a generator for iterating over (key, value) pairs.
         """
-        pass
+        raise NotImplementedError
 
     def __getitem__(self, key):
         """
@@ -61,25 +61,25 @@ class Cache(object):
         Raises:
            KeyError: If key is not in cache.
         """
-        pass
+        raise NotImplementedError
 
     def __setitem__(self, key, value):
         """
         Set (key, value) pair.
         """
-        pass
+        raise NotImplementedError
 
     def __contains__(self, key):
         """
         Returns whether key is in cache.
         """
-        pass
+        raise NotImplementedError
 
     def __delitem__(self, key):
         """
         Remove (key, value) pair.
         """
-        pass
+        raise NotImplementedError
 
 
 class TransientCache(Cache):
