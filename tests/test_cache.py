@@ -27,7 +27,7 @@ class TestCache(TestCase):
         _cache["foo"] = 1
         _cache["bar"] = 2
 
-        # "in" keyword
+        # in operator
         self._test(True, "foo" in _cache)
         self._test(True, "bar" in _cache)
 
@@ -48,6 +48,18 @@ class TestCache(TestCase):
         self._test(10, _cache.get("baz", 10))
 
         _cache.clear()
+
+    # Cache
+    def test_cache(self):
+        # Test interface.
+        _cache = cache.Cache()
+        self.assertRaises(NotImplementedError, _cache.get, "foo")
+        self.assertRaises(NotImplementedError, _cache.clear)
+        self.assertRaises(NotImplementedError, _cache.items)
+        self.assertRaises(NotImplementedError, _cache.__getitem__, "foo")
+        self.assertRaises(NotImplementedError, _cache.__setitem__, "foo", 1)
+        self.assertRaises(NotImplementedError, _cache.__contains__, "foo")
+        self.assertRaises(NotImplementedError, _cache.__delitem__, "foo")
 
     # TransientCache
     def test_transient_cache(self):
