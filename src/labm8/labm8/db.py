@@ -14,6 +14,7 @@
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 import atexit
 import csv
+import six
 import sqlite3 as sql
 
 import labm8 as lab
@@ -52,13 +53,32 @@ class Database(object):
         self.connection = sql.connect(self.path)
         self.tables = {}
 
-        for name,schema in tables.iteritems():
+        for name,schema in six.iteritems(tables):
             self.create_table(name, schema)
 
         io.debug("Opened connection to '{0}'".format(self.path))
 
         # Register exit handler
         atexit.register(self.close)
+
+    def table_exists(self, name):
+        """
+        Check if a table exists.
+
+        Arguments:
+
+            name (str): The name of the table to check whether it exists
+
+        Returns:
+
+            bool: True if table exists, else False.
+        """
+        select = ("SELECT name FROM sqlite_master WHERE name = ?", (name,))
+        query = self.execute(*select)
+        result = query.fetchone()
+
+        return result is not None and len(result) == 1
+
 
     def export_csv(self, table, path=None):
         """
