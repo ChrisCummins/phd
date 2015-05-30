@@ -19,7 +19,19 @@ import labm8 as lab
 from labm8 import db
 
 class TestDatabase(TestCase):
-    pass
+
+    def __init__(self, *args, **kwargs):
+        super(TestDatabase, self).__init__(*args, **kwargs)
+
+        # Load test database
+        self.db = db.Database("tests/data/db.sql")
+
+    # table_exists()
+    def test_table_exists(self):
+        self._test(True, self.db.table_exists("names"))
+
+    def test_table_exists_not(self):
+        self._test(False, self.db.table_exists("not_a_real_table"))
 
 
 if __name__ == '__main__':
