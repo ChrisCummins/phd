@@ -80,6 +80,27 @@ class Database(object):
         return result is not None and len(result) == 1
 
 
+    def get_tables(self):
+        """
+        Returns a list of table names.
+
+        Example:
+
+            >>> db.get_tables()
+            ["bar", "foo"]
+
+        Returns:
+
+            list of str: One string for each table.
+        """
+        select = ("SELECT name FROM sqlite_master",)
+        query = self.execute(*select)
+        result = query.fetchall()
+
+        # Filter first column from rows.
+        return [row[0] for row in result]
+
+
     def export_csv(self, table, path=None):
         """
         Export table to CSV file.
