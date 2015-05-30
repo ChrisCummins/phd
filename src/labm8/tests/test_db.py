@@ -17,6 +17,7 @@ from tests import TestCase
 
 import labm8 as lab
 from labm8 import db
+from labm8 import fs
 
 class TestDatabase(TestCase):
 
@@ -45,6 +46,18 @@ class TestDatabase(TestCase):
 
     def test_get_tables_empty(self):
         self._test([], self.db_empty.get_tables())
+
+    # drop_table(), create_table()
+    def test_create_drop_tables(self):
+        fs.rm("/tmp/labm8.sql")
+        _db = db.Database("/tmp/labm8.sql")
+
+        _db.drop_table("foo")
+        self._test(False, _db.table_exists("foo"))
+        _db.create_table("foo", (("id", "integer primary key"),))
+        self._test(True, _db.table_exists("foo"))
+        _db.drop_table("foo")
+        self._test(False, _db.table_exists("foo"))
 
 
 if __name__ == '__main__':

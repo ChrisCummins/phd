@@ -140,13 +140,30 @@ class Database(object):
         self.connection.close()
         io.debug("Closed connection to '{0}'".format(self.path))
 
-    def create_table(self, name, schema):
-        self.tables[name] = schema
+    def drop_table(self, name):
+        """
+        Drop an existing table.
 
-        schema_str = "(" + ", ".join([" ".join([str(a) for a in x])
-                                     for x in schema]) + ")"
-        cmd_str = "CREATE TABLE IF NOT EXISTS " + name + "\n" + schema_str
-        self.execute(cmd_str)
+        If the table does not exist, nothing happens.
+        """
+        if self.table_exists(name):
+            self.execute("DROP TABLE " + name)
+
+    def create_table(self, name, schema):
+        """
+        Create a new table.
+
+        If the table already exists, nothing happens.
+        """
+        self.tables[name] = schema
+        constraints = [" ".join(constraint) for constraint in schema]
+        cmd = [
+            "CREATE TABLE IF NOT EXISTS ",
+            name,
+            " (", ",".join(constraints),
+            ")"
+        ]
+        self.execute("".join(cmd))
 
     def escape_value(self, table, i, value):
         if self.tables[table][i][1].upper() == "TEXT":
