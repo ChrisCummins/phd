@@ -171,6 +171,9 @@ def cp(src, dst):
     creates a copy of the source in the destination directory with the
     same basename.
 
+    If the destination already exists, this will attempt to overwrite
+    it.
+
     Arguments:
 
         src (string): path to the source file or directory.

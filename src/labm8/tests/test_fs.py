@@ -240,5 +240,17 @@ class TestFs(TestCase):
         self._test(True, fs.isdir("/tmp/labm8.copy/foo"))
         self._test(True, fs.isdir("/tmp/labm8.copy/foo/bar"))
 
+    def test_cp_overwrite(self):
+        system.echo("Hello, world!", "/tmp/labm8.tmp")
+        self._test(["Hello, world!"], fs.read("/tmp/labm8.tmp"))
+        # Cleanup any existing file.
+        fs.rm("/tmp/labm8.tmp.copy")
+        self._test(False, fs.exists("/tmp/labm8.tmp.copy"))
+        fs.cp("/tmp/labm8.tmp", "/tmp/labm8.tmp.copy")
+        system.echo("Goodbye, world!", "/tmp/labm8.tmp")
+        fs.cp("/tmp/labm8.tmp", "/tmp/labm8.tmp.copy")
+        self._test(fs.read("/tmp/labm8.tmp"), fs.read("/tmp/labm8.tmp.copy"))
+
+
 if __name__ == '__main__':
     main()
