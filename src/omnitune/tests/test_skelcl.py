@@ -6,6 +6,13 @@ from omnitune import skelcl
 
 class TestSkelCL(TestCase):
 
+
+    def __init__(self, *args, **kwargs):
+        super(TestSkelCL, self).__init__(*args, **kwargs)
+
+        # Load test database.
+        self.db = skelcl.SkelCLDatabase("tests/data/skelcl.db")
+
     # checksum_str()
     def test_checksum_str(self):
         self._test("a9993e364706816aba3e25717850c26c9cd0d89d",

@@ -8,7 +8,7 @@ import dbus.service
 import dbus.mainloop.glib
 import gobject
 
-import labm8
+import labm8 as lab
 from labm8 import cache
 from labm8 import crypto
 from labm8 import db
@@ -283,6 +283,15 @@ class SkelCLDatabase(db.Database):
         }
 
         super(SkelCLDatabase, self).__init__(path, tables)
+
+        # Get the database version.
+        try:
+            # Look up the version in the table.
+            query = self.execute("SELECT version from version")
+            self.version = query.fetchone()[0]
+        except Exception:
+            # Base case: This is pre-versioning.
+            self.version = 0
 
     def get_device_info(self, device_name):
         """
