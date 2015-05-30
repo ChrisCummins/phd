@@ -493,11 +493,12 @@ class SkelCLProxy(omnitune.Proxy):
             raise FeatureExtractionError(("Failed to lookup device features for "
                                           "'{0}'".format(device_name)))
 
-    @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiiis',
+    @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiiisss',
                          out_signature='(nn)')
     def RequestTrainingStencilParams(self, device_name, device_count,
                                      north, south, east, west, data_width,
-                                     data_height, source, max_wg_size):
+                                     data_height, type_in, type_out, source,
+                                     max_wg_size):
         """
         Request training parameter values for a SkelCL stencil operation.
 
@@ -576,11 +577,12 @@ class SkelCLProxy(omnitune.Proxy):
 
         return wg
 
-    @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiiis',
+    @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiiisss',
                          out_signature='(nn)')
     def RequestStencilParams(self, device_name, device_count,
                              north, south, east, west, data_width,
-                             data_height, source, max_wg_size):
+                             data_height, type_in, type_out, source,
+                             max_wg_size):
         """
         Request parameter values for a SkelCL stencil operation.
 
