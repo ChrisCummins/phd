@@ -25,13 +25,26 @@ class TestDatabase(TestCase):
 
         # Load test database
         self.db = db.Database("tests/data/db.sql")
+        self.db_empty = db.Database("tests/data/db_empty.sql")
 
     # table_exists()
     def test_table_exists(self):
         self._test(True, self.db.table_exists("names"))
+        self._test(True, self.db.table_exists("prices"))
 
     def test_table_exists_not(self):
         self._test(False, self.db.table_exists("not_a_real_table"))
+
+    def test_table_exists_empty(self):
+        self._test(False, self.db_empty.table_exists("names"))
+        self._test(False, self.db_empty.table_exists("prices"))
+
+    # get_tables()
+    def test_get_tables(self):
+        self._test(["names","prices"], self.db.get_tables())
+
+    def test_get_tables_empty(self):
+        self._test([], self.db_empty.get_tables())
 
 
 if __name__ == '__main__':
