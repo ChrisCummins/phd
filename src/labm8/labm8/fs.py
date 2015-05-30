@@ -144,6 +144,7 @@ def ls(p=".", abspaths=True):
     else:
         return os.listdir(p)
 
+
 def rm(path):
     """
     Remove a file or directory.
@@ -159,6 +160,32 @@ def rm(path):
         os.remove(path)
     elif exists(path):
         shutil.rmtree(path, ignore_errors=False)
+
+
+def cp(src, dst):
+    """
+    Copy a file or directory.
+
+    If source is a directory, this recursively copies the directory
+    and its contents. If the destination is a directory, then this
+    creates a copy of the source in the destination directory with the
+    same basename.
+
+    Arguments:
+
+        src (string): path to the source file or directory.
+        dst (string): path to the destination file or directory.
+
+    Raises:
+
+        IOError: if source does not exist.
+    """
+    if isdir(src):
+        shutil.copytree(src, dst)
+    elif isfile(src):
+        shutil.copy(src, dst)
+    else:
+        raise IOError("Source '{0}' not found".format(src))
 
 
 def mkdir(path, **kwargs):
@@ -184,6 +211,10 @@ def read(path, rstrip=True, comment_char=None):
     """
     Read file "path" and return a list of lines. If comment_char is
     set, ignore the contents of lines following the comment_char.
+
+    Raises:
+
+        IOError: if reading path fails
     """
     has_comment_char = comment_char != None
 
