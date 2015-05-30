@@ -216,6 +216,29 @@ class TestFs(TestCase):
         self._test(False, fs.isfile("/tmp/labm8.dir/foo/bar/baz"))
         self._test(False, fs.isfile("/tmp/labm8.dir/"))
 
+    # cp()
+    def test_cp(self):
+        system.echo("Hello, world!", "/tmp/labm8.tmp")
+        self._test(["Hello, world!"], fs.read("/tmp/labm8.tmp"))
+        # Cleanup any existing file.
+        fs.rm("/tmp/labm8.tmp.copy")
+        self._test(False, fs.exists("/tmp/labm8.tmp.copy"))
+        fs.cp("/tmp/labm8.tmp", "/tmp/labm8.tmp.copy")
+        self._test(fs.read("/tmp/labm8.tmp"), fs.read("/tmp/labm8.tmp.copy"))
+
+    def test_cp_no_file(self):
+        self.assertRaises(IOError, fs.cp,
+                          "/not a real src", "/not/a/real dest")
+
+    def test_cp_dir(self):
+        fs.rm("/tmp/labm8")
+        fs.rm("/tmp/labm8.copy")
+        fs.mkdir("/tmp/labm8/foo/bar")
+        self._test(False, fs.exists("/tmp/labm8.copy"))
+        fs.cp("/tmp/labm8/", "/tmp/labm8.copy")
+        self._test(True, fs.isdir("/tmp/labm8.copy"))
+        self._test(True, fs.isdir("/tmp/labm8.copy/foo"))
+        self._test(True, fs.isdir("/tmp/labm8.copy/foo/bar"))
 
 if __name__ == '__main__':
     main()
