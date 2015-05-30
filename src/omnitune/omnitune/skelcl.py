@@ -2,6 +2,7 @@ import itertools
 import random
 import re
 import time
+import thread
 
 import dbus
 import dbus.service
@@ -254,6 +255,42 @@ def get_local_device_features():
     return [vectorise_devinfo(info) for info in opencl.get_devinfos()]
 
 
+def hash_kernel(north, south, east, west, max_wg_size, source):
+    """
+    Returns the hash of a kernel.
+    """
+    return crypto.sha1(".".join((str(north), str(south), str(east), str(west),
+                                 str(max_wg_size), source)))
+
+
+def hash_scenario(host, device_id, kernel_id, data_id):
+    """
+    Returns the hash of a scenario.
+    """
+    return crypto.sha1(".".join((host, device_id, kernel_id, data_id)))
+
+
+def hash_workgroup_size(wg_c, wg_r):
+    """
+    Returns the hash of a workgroup size.
+    """
+    return str(wg_c) + "x" + str(wg_r)
+
+
+def hash_device(name, count):
+    """
+    Returns the hash of a device name + device count pair.
+    """
+    return str(count) + "x" + name.strip()
+
+
+def hash_data(width, height, tin, tout):
+    """
+    Returns the hash of a data description.
+    """
+    return ".".join((str(width), str(height), tin, tout))
+
+
 class SkelCLDatabase(db.Database):
     """
     Persistent database store for SkelCL OmniTune data.
@@ -306,7 +343,6 @@ class SkelCLDatabase(db.Database):
         Add a new row of device info.
         """
         self.insert_unique("devices", args)
-
 
     def get_kernel_source(self, checksum):
         """
@@ -452,6 +488,221 @@ class StencilSamplingStrategy(object):
         return self._wgs.pop(0)
 
 
+def migrate_0_to_1(old):
+    """
+    Migrate a SkelCL database from v0 to v1.
+
+    Arguments:
+
+        old (SkelCLDatabase): The version 0 database to migrate
+    """
+    def get_source(checksum):
+        query = old.execute("SELECT source FROM kernels WHERE checksum = ?",
+                            (checksum,))
+        return query.fetchone()[0]
+
+    def get_device_attr(device_id, name, count):
+        query = old.execute("SELECT * FROM devices WHERE name = ?",
+                            (name,))
+        attr = query.fetchone()
+
+        # Splice into the new
+        newattr = (device_id, attr[0], count) + attr[2:]
+        return newattr
+
+    def process_row(tmp, row):
+        # Get column values from row.
+        host = row[0]
+        dev_name = row[1]
+        dev_count = row[2]
+        kern_checksum = row[3]
+        north = row[4]
+        south = row[5]
+        east = row[6]
+        west = row[7]
+        data_width = row[8]
+        data_height = row[9]
+        max_wg_size = row[10]
+        wg_c = row[11]
+        wg_r = row[12]
+        runtime = row[13]
+        type_in = "float"
+        type_out = "float"
+
+        # Lookup source code.
+        source = get_source(kern_checksum)
+        user_source = get_user_source(source)
+
+        kernel_id = hash_kernel(north, south, east, west, max_wg_size, source)
+        device_id = hash_device(dev_name, dev_count)
+        data_id = hash_data(data_width, data_height, type_in, type_out)
+        scenario_id = hash_scenario(host, device_id, kernel_id, data_id)
+        params_id = hash_workgroup_size(wg_c, wg_r)
+
+        device_attr = get_device_attr(device_id, dev_name, dev_count)
+
+        # Add database entries.
+        tmp.execute("INSERT OR IGNORE INTO kernels VALUES (?,?,?,?,?,?,?)",
+                    (kernel_id,north,south,east,west,max_wg_size,user_source))
+
+        placeholders = ",".join(["?"] * len(device_attr))
+        tmp.execute("INSERT OR IGNORE INTO devices VALUES (" + placeholders + ")",
+                    device_attr)
+
+        tmp.execute("INSERT OR IGNORE INTO data VALUES (?,?,?,?,?)",
+                    (data_id, data_width, data_height, type_in, type_out))
+
+        tmp.execute("INSERT OR IGNORE INTO params VALUES (?,?,?)",
+                    (params_id, wg_c, wg_r))
+
+        tmp.execute("INSERT OR IGNORE INTO scenarios VALUES (?,?,?,?,?)",
+                    (scenario_id, host, device_id, kernel_id, data_id))
+
+        tmp.execute("INSERT INTO runtimes VALUES (?,?,?)",
+                    (scenario_id, params_id, runtime))
+
+    # Create temporary database
+    tmp = db.Database("/tmp/omnitune.skelcl.migration.db")
+
+    # Clear anything that's already in the database.
+    for table in tmp.get_tables():
+        tmp.drop_table(table)
+
+    io.info("Beginning database migration.")
+
+    backup_path = old.path + ".0"
+    io.info("Creating backup of old database at '{0}'".format(backup_path))
+    fs.cp(old.path, backup_path)
+
+    io.debug("Migration: creating tables ...")
+
+    # Create table: kernels
+    tmp.create_table("version",
+                     (("version",                         "integer"),))
+
+    # Set database version
+    tmp.execute("INSERT INTO version VALUES (1)")
+
+    # Create table: kernels
+    tmp.create_table("kernels",
+                     (("id",                              "text primary key"),
+                      ("north",                           "integer"),
+                      ("south",                           "integer"),
+                      ("east",                            "integer"),
+                      ("west",                            "integer"),
+                      ("max_wg_size",                     "integer"),
+                      ("source",                          "text")))
+
+    # Create table: devices
+    tmp.create_table("devices",
+                     (("id",                              "text primary key"),
+                      ("name",                            "text"),
+                      ("count",                           "integer"),
+                      ("address_bits",                    "integer"),
+                      ("double_fp_config",                "integer"),
+                      ("endian_little",                   "integer"),
+                      ("execution_capabilities",          "integer"),
+                      ("extensions",                      "text"),
+                      ("global_mem_cache_size",           "integer"),
+                      ("global_mem_cache_type",           "integer"),
+                      ("global_mem_cacheline_size",       "integer"),
+                      ("global_mem_size",                 "integer"),
+                      ("host_unified_memory",             "integer"),
+                      ("image2d_max_height",              "integer"),
+                      ("image2d_max_width",               "integer"),
+                      ("image3d_max_depth",               "integer"),
+                      ("image3d_max_height",              "integer"),
+                      ("image3d_max_width",               "integer"),
+                      ("image_support",                   "integer"),
+                      ("local_mem_size",                  "integer"),
+                      ("local_mem_type",                  "integer"),
+                      ("max_clock_frequency",             "integer"),
+                      ("max_compute_units",               "integer"),
+                      ("max_constant_args",               "integer"),
+                      ("max_constant_buffer_size",        "integer"),
+                      ("max_mem_alloc_size",              "integer"),
+                      ("max_parameter_size",              "integer"),
+                      ("max_read_image_args",             "integer"),
+                      ("max_samplers",                    "integer"),
+                      ("max_work_group_size",             "integer"),
+                      ("max_work_item_dimensions",        "integer"),
+                      ("max_work_item_sizes_0",           "integer"),
+                      ("max_work_item_sizes_1",           "integer"),
+                      ("max_work_item_sizes_2",           "integer"),
+                      ("max_write_image_args",            "integer"),
+                      ("mem_base_addr_align",             "integer"),
+                      ("min_data_type_align_size",        "integer"),
+                      ("native_vector_width_char",        "integer"),
+                      ("native_vector_width_double",      "integer"),
+                      ("native_vector_width_float",       "integer"),
+                      ("native_vector_width_half",        "integer"),
+                      ("native_vector_width_int",         "integer"),
+                      ("native_vector_width_long",        "integer"),
+                      ("native_vector_width_short",       "integer"),
+                      ("preferred_vector_width_char",     "integer"),
+                      ("preferred_vector_width_double",   "integer"),
+                      ("preferred_vector_width_float",    "integer"),
+                      ("preferred_vector_width_half",     "integer"),
+                      ("preferred_vector_width_int",      "integer"),
+                      ("preferred_vector_width_long",     "integer"),
+                      ("preferred_vector_width_short",    "integer"),
+                      ("queue_properties",                "integer"),
+                      ("single_fp_config",                "integer"),
+                      ("type",                            "integer"),
+                      ("vendor",                          "text"),
+                      ("vendor_id",                       "text"),
+                      ("version",                         "text")))
+
+    # Create table: data
+    tmp.create_table("data",
+                     (("id",                              "text primary key"),
+                      ("width",                           "integer"),
+                      ("height",                          "integer"),
+                      ("tin",                             "text"),
+                      ("tout",                            "text")))
+
+    # Create table: params
+    tmp.create_table("params",
+                     (("id",                              "text primary key"),
+                      ("wg_c",                            "integer"),
+                      ("wg_r",                            "integer")))
+
+    # Create table: scenarios
+    tmp.create_table("scenarios",
+                     (("id",                              "text primary key"),
+                      ("host",                            "text"),
+                      ("device",                          "text"),
+                      ("kernel",                          "text"),
+                      ("data",                            "text")))
+
+    # Create table: runtimes
+    tmp.create_table("runtimes",
+                     (("scenario",                        "text"),
+                      ("params",                          "text"),
+                      ("runtime",                         "real")))
+
+    i = 0
+    for row in old.execute("SELECT * from runtimes"):
+        process_row(tmp, row)
+        i += 1
+        if not i % 2500:
+            io.debug("Processed", i, "rows ...")
+            if not i % 5000:
+                tmp.commit()
+
+    tmp.commit()
+
+    old_path = old.path
+    tmp_path = tmp.path
+
+    # Copy migrated database over the original one.
+    fs.cp(tmp_path, old_path)
+    fs.rm(tmp_path)
+
+    old.close()
+    tmp.close()
+
+
 class SkelCLProxy(omnitune.Proxy):
 
     LLVM_PATH = fs.path("~/src/msc-thesis/skelcl/libraries/llvm/build/bin/")
@@ -470,8 +721,18 @@ class SkelCLProxy(omnitune.Proxy):
         # Setup persistent database.
         self.db = SkelCLDatabase()
 
+        # Perform database migration if required.
+        if self.db.version == 0:
+            migrate_0_to_1(self.db)
+            self.db = SkelCLDatabase()
+
         # Create an in-memory sample strategy cache.
         self.strategies = cache.TransientCache()
+
+        # TODO: We need to fixup the existing database logic before we
+        # let this loose!
+        lab.exit("Not implemented yet!")
+        lab.exit(0)
 
         # Add local device features to database.
         for info in get_local_device_features():

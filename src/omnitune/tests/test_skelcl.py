@@ -1,6 +1,8 @@
 from unittest import main
 from tests import TestCase
 
+import itertools
+
 import omnitune
 from omnitune import skelcl
 
@@ -12,6 +14,25 @@ class TestSkelCL(TestCase):
 
         # Load test database.
         self.db = skelcl.SkelCLDatabase("tests/data/skelcl.db")
+
+    def test_hash_workgroup_size(self):
+        vals = range(4,40,4)
+        wgs = itertools.product(vals, vals)
+        checksums = [skelcl.hash_workgroup_size(*wg) for wg in wgs]
+        print(checksums)
+        self._test(len(checksums), len(set(checksums)))
+
+    def test_hash_data(self):
+        vals = [
+            [1024, 1024, "int", "float"],
+            [1024, 2048, "int", "float"],
+            [1024, 1024, "float", "float"],
+            [1024, 1024, "int", "int"]
+        ]
+        checksums = [skelcl.hash_data(*val) for val in vals]
+        print(checksums)
+        self._test(len(checksums), len(set(checksums)))
+
 
     # checksum_str()
     def test_checksum_str(self):
