@@ -145,7 +145,6 @@ class Database(object):
                                      for x in schema]) + ")"
         cmd_str = "CREATE TABLE IF NOT EXISTS " + name + "\n" + schema_str
         self.execute(cmd_str)
-        # io.debug(cmd_str)
 
     def escape_value(self, table, i, value):
         if self.tables[table][i][1].upper() == "TEXT":
