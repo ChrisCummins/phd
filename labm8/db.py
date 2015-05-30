@@ -48,7 +48,9 @@ class Database(object):
         self.path = fs.path(path)
 
         # Create directory if needed.
-        fs.mkdir(fs.dirname(path))
+        parent_dir = fs.dirname(path)
+        if parent_dir:
+            fs.mkdir(parent_dir)
 
         self.connection = sql.connect(self.path)
         self.tables = {}
