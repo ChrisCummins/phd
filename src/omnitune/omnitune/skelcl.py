@@ -490,11 +490,11 @@ class StencilSamplingStrategy(object):
 
 def migrate_0_to_1(old):
     """
-    Migrate a SkelCL database from v0 to v1.
+    SkelCL database migration script.
 
     Arguments:
 
-        old (SkelCLDatabase): The version 0 database to migrate
+        old (SkelCLDatabase): The database to migrate
     """
     def get_source(checksum):
         query = old.execute("SELECT source FROM kernels WHERE checksum = ?",
@@ -568,7 +568,7 @@ def migrate_0_to_1(old):
     for table in tmp.get_tables():
         tmp.drop_table(table)
 
-    io.info("Beginning database migration.")
+    io.info("Migrating database to version 1.")
 
     backup_path = old.path + ".0"
     io.info("Creating backup of old database at '{0}'".format(backup_path))
@@ -701,6 +701,66 @@ def migrate_0_to_1(old):
 
     old.close()
     tmp.close()
+    io.info("Migration completed.")
+
+
+def migrate_1_to_2(old):
+    """
+    SkelCL database migration script.
+
+    Arguments:
+
+        old (SkelCLDatabase): The database to migrate
+    """
+    # Create temporary database
+    fs.cp(old.path, "/tmp/omnitune.skelcl.migration.db")
+    tmp = db.Database("/tmp/omnitune.skelcl.migration.db")
+
+    io.info("Migrating database to version 2.")
+
+    backup_path = old.path + ".1"
+    io.info("Creating backup of old database at '{0}'".format(backup_path))
+    fs.cp(old.path, backup_path)
+
+    # Update database version
+    tmp.drop_table("version")
+    tmp.create_table("version",
+                     (("version",                         "integer"),))
+    tmp.execute("INSERT INTO version VALUES (2)")
+
+    # Rename table "data" to "datasets"
+    tmp.create_table("datasets",
+                     (("id",                              "text primary key"),
+                      ("width",                           "integer"),
+                      ("height",                          "integer"),
+                      ("tin",                             "text"),
+                      ("tout",                            "text")))
+    tmp.execute("INSERT INTO datasets SELECT * FROM data")
+    tmp.drop_table("data")
+
+    # Rename column "scenarios.data" to "scenarios.dataset"
+    tmp.execute("ALTER TABLE scenarios RENAME TO old_scenarios")
+    tmp.create_table("scenarios",
+                     (("id",                              "text primary key"),
+                      ("host",                            "text"),
+                      ("device",                          "text"),
+                      ("kernel",                          "text"),
+                      ("dataset",                         "text")))
+    tmp.execute("INSERT INTO scenarios SELECT * FROM old_scenarios")
+    tmp.drop_table("old_scenarios")
+
+    tmp.commit()
+
+    old_path = old.path
+    tmp_path = tmp.path
+
+    # Copy migrated database over the original one.
+    fs.cp(tmp_path, old_path)
+    fs.rm(tmp_path)
+
+    old.close()
+    tmp.close()
+    io.info("Migration completed.")
 
 
 class SkelCLProxy(omnitune.Proxy):
@@ -724,6 +784,9 @@ class SkelCLProxy(omnitune.Proxy):
         # Perform database migration if required.
         if self.db.version == 0:
             migrate_0_to_1(self.db)
+            self.db = SkelCLDatabase()
+        if self.db.version == 1:
+            migrate_1_to_2(self.db)
             self.db = SkelCLDatabase()
 
         # Create an in-memory sample strategy cache.
