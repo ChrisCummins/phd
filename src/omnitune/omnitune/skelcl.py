@@ -207,21 +207,6 @@ def vectorise_ratios(checksum, source, ratios):
     return vector
 
 
-def vectorise_devinfo(info):
-    """
-    Vectorise a dictionary of OpenCL device info.
-    """
-    vector = [
-        info[DEVICES_TABLE[0][0]],
-        system.HOSTNAME
-    ]
-    for column in DEVICES_TABLE[2:]:
-        column_name = column[0]
-        vector.append(info[column_name])
-
-    return vector
-
-
 def get_user_source(source):
     """
     Return the user source code for a stencil kernel.
@@ -249,10 +234,6 @@ def get_source_features(checksum, source, path=""):
     ratios = llvm.instcounts2ratios(instcounts)
 
     return vectorise_ratios(checksum, source, ratios)
-
-
-def get_local_device_features():
-    return [vectorise_devinfo(info) for info in opencl.get_devinfos()]
 
 
 def hash_kernel(north, south, east, west, max_wg_size, source):
@@ -312,14 +293,7 @@ class SkelCLDatabase(db.Database):
         if path is None:
             path = fs.path(omnitune.LOCAL_DIR, "skelcl.db")
 
-        tables = {
-            "kernels":         KERNELS_TABLE,
-            "kernel_features": KERNEL_FEATURES_TABLE,
-            "devices":         DEVICES_TABLE,
-            "runtimes":        RUNTIMES_TABLE
-        }
-
-        super(SkelCLDatabase, self).__init__(path, tables)
+        super(SkelCLDatabase, self).__init__(path)
 
         # Get the database version.
         try:
@@ -330,6 +304,7 @@ class SkelCLDatabase(db.Database):
             # Base case: This is pre-versioning.
             self.version = 0
 
+
     def get_device_info(self, device_name):
         """
         Lookup info for a device.
@@ -338,11 +313,93 @@ class SkelCLDatabase(db.Database):
         where = "name = '{0}'".format(device_name)
         return list(self.select1("devices", what, where))
 
-    def add_device_info(self, *args):
+    def add_device(self, devinfo, count):
         """
         Add a new row of device info.
+
+        Arguments:
+
+            deviceinfo (dict of {string:(int|str)}): The device info,
+              as returned by opencl.get_devinfo().
+            count (int): The number of devices.
+
+        Returns:
+
+            str: The device ID.
         """
-        self.insert_unique("devices", args)
+        dev_name = devinfo["name"]
+        dev_count = count
+        dev_id = hash_device(dev_name, dev_count)
+
+        # Quit if there's already an entry for the device.
+        query = self.execute("SELECT id FROM devices where id=?", (dev_id,))
+        if query.fetchone():
+            return dev_id
+
+        columns = (
+            dev_id,
+            dev_name,
+            dev_count,
+            devinfo["address_bits"],
+            devinfo["double_fp_config"],
+            devinfo["endian_little"],
+            devinfo["execution_capabilities"],
+            devinfo["extensions"],
+            devinfo["global_mem_cache_size"],
+            devinfo["global_mem_cache_type"],
+            devinfo["global_mem_cacheline_size"],
+            devinfo["global_mem_size"],
+            devinfo["host_unified_memory"],
+            devinfo["image2d_max_height"],
+            devinfo["image2d_max_width"],
+            devinfo["image3d_max_depth"],
+            devinfo["image3d_max_height"],
+            devinfo["image3d_max_width"],
+            devinfo["image_support"],
+            devinfo["local_mem_size"],
+            devinfo["local_mem_type"],
+            devinfo["max_clock_frequency"],
+            devinfo["max_compute_units"],
+            devinfo["max_constant_args"],
+            devinfo["max_constant_buffer_size"],
+            devinfo["max_mem_alloc_size"],
+            devinfo["max_parameter_size"],
+            devinfo["max_read_image_args"],
+            devinfo["max_samplers"],
+            devinfo["max_work_group_size"],
+            devinfo["max_work_item_dimensions"],
+            devinfo["max_work_item_sizes_0"],
+            devinfo["max_work_item_sizes_1"],
+            devinfo["max_work_item_sizes_2"],
+            devinfo["max_write_image_args"],
+            devinfo["mem_base_addr_align"],
+            devinfo["min_data_type_align_size"],
+            devinfo["native_vector_width_char"],
+            devinfo["native_vector_width_double"],
+            devinfo["native_vector_width_float"],
+            devinfo["native_vector_width_half"],
+            devinfo["native_vector_width_int"],
+            devinfo["native_vector_width_long"],
+            devinfo["native_vector_width_short"],
+            devinfo["preferred_vector_width_char"],
+            devinfo["preferred_vector_width_double"],
+            devinfo["preferred_vector_width_float"],
+            devinfo["preferred_vector_width_half"],
+            devinfo["preferred_vector_width_int"],
+            devinfo["preferred_vector_width_long"],
+            devinfo["preferred_vector_width_short"],
+            devinfo["queue_properties"],
+            devinfo["single_fp_config"],
+            devinfo["type"],
+            devinfo["vendor"],
+            devinfo["vendor_id"],
+            devinfo["version"]
+        )
+
+        placeholders = ",".join(["?"] * len(columns))
+        self.execute("INSERT INTO devices VALUES (" + placeholders + ")", args)
+
+        return dev_id
 
     def get_kernel_source(self, checksum):
         """
@@ -413,6 +470,29 @@ class SkelCLDatabase(db.Database):
             io.debug(*samples_values)
             self.insert("samples", samples_values)
 
+    def lookup_best_workgroup_size(self, scenario):
+        """
+        Return the best workgroup size for a given scenario.
+
+        Returns the workgroup size which, for a given scenario,
+        resulted in the lowest mean runtime.
+
+        Arguments:
+
+            scenario (str): The scenario ID to lookup.
+
+        Returns:
+
+            tuple of ints: In the form (wg_c,wg_r).
+        """
+        cmd = ("SELECT wg_c,wg_r FROM params WHERE id=("
+               "SELECT params from runtimes WHERE scenario=? AND "
+               "runtime=(SELECT MIN(runtime) FROM runtimes WHERE SCENARIO=?))")
+        args = (scenario,scenario)
+        io.info(cmd)
+        query = self.execute(cmd, args)
+
+        return query.fetchone()
 
 class StencilSamplingStrategy(object):
 
@@ -792,14 +872,12 @@ class SkelCLProxy(omnitune.Proxy):
         # Create an in-memory sample strategy cache.
         self.strategies = cache.TransientCache()
 
-        # TODO: We need to fixup the existing database logic before we
-        # let this loose!
-        lab.exit("Not implemented yet!")
-        lab.exit(0)
+        # Make a cache of local devices.
+        self.local_devices = cache.TransientCache()
+        for devinfo in opencl.get_devinfos():
+            dev_name = devinfo["name"]
+            self.local_devices[dev_name] = devinfo
 
-        # Add local device features to database.
-        for info in get_local_device_features():
-            self.db.add_device_info(*info)
 
     def get_source_features(self, source, checksum):
         try:
@@ -948,32 +1026,14 @@ class SkelCLProxy(omnitune.Proxy):
         source = util.parse_str(source)
         max_wg_size = int(max_wg_size)
 
-        # Calculate checksum of source code.
-        checksum = checksum_str(source)
-
-        sourcefeatures = self.get_source_features(source, checksum)
-        devicefeatures = self.get_device_features(device_name)
-
-        # Assemble the full features vector.
-        features = devicefeatures + sourcefeatures + [
-            north, south, east, west,
-            data_width, data_height,
-            device_count,
-        ]
-
+        # TODO: Perform feature extraction & classification
         wg = (64, 32)
 
         end_time = time.time()
 
-        io.debug(("RequestStencilParams({dev}, {count}, "
-                  "[{n}, {s}, {e}, {w}], {width}, {height}, {id}, {max}) -> "
+        io.debug(("RequestStencilParams() -> "
                   "({c}, {r}) [{t:.3f}s]"
-                  .format(dev=device_name.strip()[:8],
-                          count=device_count,
-                          n=north, s=south, e=east, w=west,
-                          width=data_width, height=data_height,
-                          id=checksum[:8], max=max_wg_size,
-                          c=wg[0], r=wg[1], t=end_time - start_time)))
+                  .format(c=wg[0], r=wg[1], t=end_time - start_time)))
 
         return wg
 
@@ -1017,6 +1077,10 @@ class SkelCLProxy(omnitune.Proxy):
         wg_r = int(wg_r)
         max_wg_size = int(max_wg_size)
         runtime = float(runtime)
+
+        # Add entry into devices table.
+        devinfo = self.local_devices[device_name]
+        device_id = self.db.add_device(devinfo, device_count)
 
         # Calculate checksum of source code.
         checksum = checksum_str(source)
