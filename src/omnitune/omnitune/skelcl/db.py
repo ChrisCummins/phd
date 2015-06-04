@@ -339,7 +339,7 @@ class Database(db.Database):
             wg_r
         )
 
-        self.execute("INSERT INTO datasets VALUES (?,?,?)", columns)
+        self.execute("INSERT INTO params VALUES (?,?,?)", columns)
         return checksum
 
     def add_runtime(self, scenario, params, runtime):

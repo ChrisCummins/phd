@@ -136,34 +136,26 @@ class Proxy(omnitune.Proxy):
         max_wg_size = int(max_wg_size)
 
         # Get the scenario ID.
-        device = hash_device(device_name, device_count)
-        kernel = hash_kernel(north, south, east, west, max_wg_size, source)
-        dataset = hash_dataset(data_width, data_height, type_in, type_out)
-        scenario = hash_scenario(system.HOSTNAME, device, kernel, dataset)
+        # device = hash_device(device_name, device_count)
+        # kernel = hash_kernel(north, south, east, west, max_wg_size, source)
+        # dataset = hash_dataset(data_width, data_height, type_in, type_out)
+        # scenario = hash_scenario(system.HOSTNAME, device, kernel, dataset)
 
         # Get sampling strategy.
-        try:
-            strategy = self.strategies[scenario]
-        except KeyError:
-            strategy = training.SampleStrategy(scenario, max_wg_size, self.db)
-            self.strategies[scenario] = strategy
-
-        # Get the sampling strategy's next recommendation.
-        wg = strategy.next()
+        # try:
+        #     strategy = self.strategies[scenario]
+        # except KeyError:
+        #     strategy = training.SampleStrategy(scenario, max_wg_size, self.db)
+        #     self.strategies[scenario] = strategy
+        #
+        # # Get the sampling strategy's next recommendation.
+        # wg = strategy.next()
+        wg = training.random_wg_value(max_wg_size)
 
         end_time = time.time()
 
-        io.debug(("RequestTrainingStencilParams({count}x {dev}, "
-                  "{tout}({tin},{n},{s},{e},{w}) : {width}x{height}, "
-                  "{id}, {max}) -> ({c}, {r}) [{t:.3f}s] ({p:.1f}%)"
-                  .format(dev=device_name.strip()[:8],
-                          count=device_count,
-                          n=north, s=south, e=east, w=west,
-                          width=data_width, height=data_height,
-                          tin=type_in, tout=type_out,
-                          id=kernel[:8], max=max_wg_size,
-                          c=wg[0], r=wg[1], t=end_time - start_time,
-                          p=strategy.coverage * 100)))
+        io.debug(("RequestTrainingStencilParams() -> ({c}, {r}) [{t:.3f}s]"
+                  .format(c=wg[0], r=wg[1], t=end_time - start_time)))
 
         return wg
 

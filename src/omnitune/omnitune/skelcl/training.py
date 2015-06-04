@@ -8,6 +8,14 @@ from . import hash_params
 
 WG_VALUES = [4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96]
 
+SPACE = list(itertools.product(WG_VALUES, WG_VALUES))
+
+def random_wg_value(max_wg_size):
+    wg = random.choice(SPACE)
+    if wg[0] * wg[1] > max_wg_size:
+        return random_wg_value(max_wg_size)
+    return wg
+
 
 class SampleStrategy(object):
     param_values = WG_VALUES
