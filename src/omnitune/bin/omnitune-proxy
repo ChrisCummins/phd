@@ -1,8 +1,8 @@
 #!/usr/bin/env python2
 
 import omnitune
-import omnitune.skelcl
+from omnitune import skelcl
 
 
 if __name__ == "__main__":
-    omnitune.skelcl.main()
+    skelcl.main()

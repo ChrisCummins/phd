@@ -5,6 +5,7 @@ import itertools
 
 import omnitune
 from omnitune import skelcl
+from omnitune.skelcl import db as database
 
 class TestSkelCL(TestCase):
 
@@ -13,7 +14,7 @@ class TestSkelCL(TestCase):
         super(TestSkelCL, self).__init__(*args, **kwargs)
 
         # Load test database.
-        self.db = skelcl.SkelCLDatabase("tests/data/skelcl.db")
+        self.db = database.Database("tests/data/skelcl.db")
 
     def test_hash_workgroup_size(self):
         vals = range(4,40,4)

@@ -9,7 +9,10 @@ setup(name='omnitune',
       author='Chris Cummins',
       author_email='chrisc.101@gmail.com',
       license='',
-      packages=['omnitune'],
+      packages=[
+          'omnitune',
+          'omnitune.skelcl'
+      ],
       scripts=['bin/omnitune-proxy'],
       test_suite='nose.collector',
       tests_require=[
