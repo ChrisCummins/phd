@@ -8,6 +8,7 @@ from labm8 import math as labmath
 
 import omnitune
 
+from . import get_user_source
 from . import hash_device
 from . import hash_kernel
 from . import hash_dataset
