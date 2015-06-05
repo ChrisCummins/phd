@@ -1,3 +1,5 @@
+import sqlite3 as sql
+
 import labm8 as lab
 from labm8 import db
 from labm8 import fs
@@ -5,7 +7,6 @@ from labm8 import io
 from labm8 import math as labmath
 
 import omnitune
-from omnitune.skelcl import migrate
 
 from . import hash_device
 from . import hash_kernel
@@ -15,15 +16,18 @@ from . import hash_params
 
 class Database(db.Database):
     """
-    Persistent database store for SkelCL OmniTune data.
+    Persistent database store for SkelCL runtime data.
 
     Tables:
-        kernels  Table of kernel features (extracted from LLVM IR).
-        devices  Table of device features (extracted from OpenCL API).
-        runtimes Table of offline training data.
+        kernels   Table of kernel attributes.
+        devices   Table of device attributes.
+        datasets  Table of dataset attributes.
+        params    Table of parameter attributes.
+        scenarios Table of scenario attributes.
+        runtimes  Table of runtime information.
     """
 
-    def __init__(self, path=None):
+    def __init__(self, path=fs.path(omnitune.LOCAL_DIR, "skelcl.db")):
         """
         Create a new connection to database.
 
@@ -31,10 +35,11 @@ class Database(db.Database):
            path (optional) If set, load database from path. If not, use
                standard system-wide default path.
         """
-        if path is None:
-            path = fs.path(omnitune.LOCAL_DIR, "skelcl.db")
-
         super(Database, self).__init__(path)
+
+        # Create database is needed.
+        if self.isempty():
+            self.create_tables()
 
         # Get the database version.
         try:
@@ -45,6 +50,127 @@ class Database(db.Database):
             # Base case: This is pre-versioning.
             self.version = 0
 
+    def isempty(self):
+        """
+        Return whether the database is empty.
+
+        Returns:
+
+            bool: True if database is empty, else false.
+        """
+        try:
+            self.execute("SELECT Count(*) FROM runtimes")
+            return False
+        except sql.OperationalError:
+            return True
+
+    def create_tables(self):
+        """
+        Instantiate the necessary tables.
+        """
+        # Create table: kernels
+        self.create_table("version",
+                         (("version",                         "integer"),))
+        # Set version.
+        self.execute("INSERT INTO version VALUES (2)")
+
+        # Create table: kernels
+        self.create_table("kernels",
+                         (("id",                              "text primary key"),
+                          ("north",                           "integer"),
+                          ("south",                           "integer"),
+                          ("east",                            "integer"),
+                          ("west",                            "integer"),
+                          ("max_wg_size",                     "integer"),
+                          ("source",                          "text")))
+
+        # Create table: devices
+        self.create_table("devices",
+                         (("id",                              "text primary key"),
+                          ("name",                            "text"),
+                          ("count",                           "integer"),
+                          ("address_bits",                    "integer"),
+                          ("double_fp_config",                "integer"),
+                          ("endian_little",                   "integer"),
+                          ("execution_capabilities",          "integer"),
+                          ("extensions",                      "text"),
+                          ("global_mem_cache_size",           "integer"),
+                          ("global_mem_cache_type",           "integer"),
+                          ("global_mem_cacheline_size",       "integer"),
+                          ("global_mem_size",                 "integer"),
+                          ("host_unified_memory",             "integer"),
+                          ("image2d_max_height",              "integer"),
+                          ("image2d_max_width",               "integer"),
+                          ("image3d_max_depth",               "integer"),
+                          ("image3d_max_height",              "integer"),
+                          ("image3d_max_width",               "integer"),
+                          ("image_support",                   "integer"),
+                          ("local_mem_size",                  "integer"),
+                          ("local_mem_type",                  "integer"),
+                          ("max_clock_frequency",             "integer"),
+                          ("max_compute_units",               "integer"),
+                          ("max_constant_args",               "integer"),
+                          ("max_constant_buffer_size",        "integer"),
+                          ("max_mem_alloc_size",              "integer"),
+                          ("max_parameter_size",              "integer"),
+                          ("max_read_image_args",             "integer"),
+                          ("max_samplers",                    "integer"),
+                          ("max_work_group_size",             "integer"),
+                          ("max_work_item_dimensions",        "integer"),
+                          ("max_work_item_sizes_0",           "integer"),
+                          ("max_work_item_sizes_1",           "integer"),
+                          ("max_work_item_sizes_2",           "integer"),
+                          ("max_write_image_args",            "integer"),
+                          ("mem_base_addr_align",             "integer"),
+                          ("min_data_type_align_size",        "integer"),
+                          ("native_vector_width_char",        "integer"),
+                          ("native_vector_width_double",      "integer"),
+                          ("native_vector_width_float",       "integer"),
+                          ("native_vector_width_half",        "integer"),
+                          ("native_vector_width_int",         "integer"),
+                          ("native_vector_width_long",        "integer"),
+                          ("native_vector_width_short",       "integer"),
+                          ("preferred_vector_width_char",     "integer"),
+                          ("preferred_vector_width_double",   "integer"),
+                          ("preferred_vector_width_float",    "integer"),
+                          ("preferred_vector_width_half",     "integer"),
+                          ("preferred_vector_width_int",      "integer"),
+                          ("preferred_vector_width_long",     "integer"),
+                          ("preferred_vector_width_short",    "integer"),
+                          ("queue_properties",                "integer"),
+                          ("single_fp_config",                "integer"),
+                          ("type",                            "integer"),
+                          ("vendor",                          "text"),
+                          ("vendor_id",                       "text"),
+                          ("version",                         "text")))
+
+        # Create table: data
+        self.create_table("datasets",
+                         (("id",                              "text primary key"),
+                          ("width",                           "integer"),
+                          ("height",                          "integer"),
+                          ("tin",                             "text"),
+                          ("tout",                            "text")))
+
+        # Create table: scenarios
+        self.create_table("scenarios",
+                         (("id",                              "text primary key"),
+                          ("host",                            "text"),
+                          ("device",                          "text"),
+                          ("kernel",                          "text"),
+                          ("dataset",                         "text")))
+
+        # Create table: params
+        self.create_table("params",
+                         (("id",                              "text primary key"),
+                          ("wg_c",                            "integer"),
+                          ("wg_r",                            "integer")))
+
+        # Create table: runtimes
+        self.create_table("runtimes",
+                         (("scenario",                        "text"),
+                          ("params",                          "text"),
+                          ("runtime",                         "real")))
 
     def device_exists(self, device_id):
         """
@@ -60,7 +186,6 @@ class Database(db.Database):
         """
         query = self.execute("SELECT id FROM devices where id=?", (device_id,))
         return True if query.fetchone() else False
-
 
     def add_device(self, devinfo, dev_count):
         """

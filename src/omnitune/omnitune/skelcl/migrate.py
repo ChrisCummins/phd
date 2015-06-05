@@ -3,6 +3,7 @@ from labm8 import db
 from labm8 import fs
 from labm8 import io
 
+from omnitune.skelcl import db
 
 def migrate_0_to_1(old):
     """
@@ -295,10 +296,10 @@ def migrate(db):
         skelcl.Database: Migrated database
     """
     if db.version == 0:
-        migrate.migrate_0_to_1(db)
-        db = SkelCLDatabase()
+        migrate_0_to_1(db)
+        db = db.Database()
     if db.version == 1:
-        migrate.migrate_1_to_2(db)
-        db = SkelCLDatabase()
+        migrate_1_to_2(db)
+        db = db.Database()
 
     return db
