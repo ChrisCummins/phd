@@ -231,6 +231,27 @@ class Database(object):
         cmd_str = " ".join(cmd)
         return self.execute(cmd_str).fetchone()[0]
 
+    def attach(self, path, name):
+        """
+        Attach a database.
+
+        Arguments:
+
+            path (str): Path to the database to merge.
+            name (str): Name to attach database as.
+        """
+        self.execute("ATTACH ? as ?", (path, name))
+
+    def detach(self, name):
+        """
+        Detach a database.
+
+        Arguments:
+
+            name (str): Name of database to detach.
+        """
+        self.execute("DETACH ?", (name,))
+
     def merge(self, rhs):
         """
         Merge the contents of the supplied database.
@@ -245,7 +266,7 @@ class Database(object):
         if self.tables.keys() != rhs.tables.keys():
             raise SchemaError("Schema of merged table does not match")
 
-        self.execute("ATTACH '" + rhs.path + "' as rhs")
+        self.attach(rhs.path, "rhs")
 
         for table in self.tables:
             self.execute("INSERT OR IGNORE INTO " + table +
@@ -253,4 +274,4 @@ class Database(object):
 
         # Tidy up.
         self.commit()
-        self.execute("DETACH rhs")
+        self.detach("rhs")
