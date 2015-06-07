@@ -51,6 +51,36 @@ class Database(db.Database):
             # Base case: This is pre-versioning.
             self.version = 0
 
+    def num_runtimes(self):
+        """
+        Return the number of runtimes.
+
+        Returns:
+
+            int: Number of rows in runtimes table.
+        """
+        query = self.execute("SELECT Count(*) FROM runtimes")
+        return query.fetchone()[0]
+
+    def merge(self, rhs):
+        """
+        Merge the contents of the supplied database.
+
+        Arguments:
+
+            rhs (Database): Database instance to merge into this.
+        """
+        self.attach(rhs.path, "rhs")
+
+        self.execute("INSERT OR IGNORE INTO kernels SELECT * from rhs.kernels")
+        self.execute("INSERT OR IGNORE INTO devices SELECT * from rhs.devices")
+        self.execute("INSERT OR IGNORE INTO datasets SELECT * from rhs.datasets")
+        self.execute("INSERT OR IGNORE INTO scenarios SELECT * from rhs.scenarios")
+        self.execute("INSERT OR IGNORE INTO params SELECT * from rhs.params")
+        self.execute("INSERT INTO runtimes SELECT * from rhs.runtimes")
+
+        self.detach("rhs")
+
     def isempty(self):
         """
         Return whether the database is empty.
