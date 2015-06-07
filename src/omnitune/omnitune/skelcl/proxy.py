@@ -307,4 +307,4 @@ def main():
     try:
         mainloop.run()
     except KeyboardInterrupt:
-        labm8.exit()
+        lab.exit()
