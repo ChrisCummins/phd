@@ -14,6 +14,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
+
+# Use floating point division by default.
+from __future__ import division
+
 import sys
 
 import numpy
@@ -45,7 +49,7 @@ def mean(array):
         return 0
     elif n == 1:
         return array[0]
-    return sum([float(x) for x in array]) / float(n)
+    return sum(array) / n
 
 
 def median(array):
