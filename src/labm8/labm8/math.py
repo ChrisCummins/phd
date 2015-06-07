@@ -15,9 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 
+# Use absolute paths for imports so as to prevent a conflict with the
+# system "math" module.
+from __future__ import absolute_import
+
 # Use floating point division by default.
 from __future__ import division
 
+import math
 import sys
 
 import numpy
@@ -27,17 +32,12 @@ from scipy import stats
 import labm8 as lab
 from labm8 import modules
 
-# Namespace collision between this "math" and system "math" packages.
-if lab.is_python3():
-    import math as std_math
-else:
-    std_math = modules.import_foreign("math", "std_math")
 
 def sqrt(number):
     """
     Return the square root of a number.
     """
-    return std_math.sqrt(number)
+    return math.sqrt(number)
 
 def mean(array):
     """
