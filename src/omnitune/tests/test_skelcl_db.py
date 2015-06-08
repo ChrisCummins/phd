@@ -22,10 +22,14 @@ class TestSkelCLDB(TestCase):
     def test_create_test_db(self):
         test = db.create_test_db("/tmp/skelcl.test.db", self.db,
                                  num_runtimes=100)
+        # Check table sizes.
         self._test(100, test.num_rows("runtimes"))
-        self._test(self.db.num_rows("devices"), test.num_rows("devices"))
-        self._test(self.db.num_rows("kernels"), test.num_rows("kernels"))
-        self._test(self.db.num_rows("datasets"), test.num_rows("datasets"))
+        self._test(True, test.num_rows("devices") > 0)
+        self._test(True, test.num_rows("devices") <= self.db.num_rows("devices"))
+        self._test(True, test.num_rows("kernels") > 0)
+        self._test(True, test.num_rows("kernels") <= self.db.num_rows("kernels"))
+        self._test(True, test.num_rows("datasets") > 0)
+        self._test(True, test.num_rows("datasets") <= self.db.num_rows("datasets"))
 
         test.close()
         fs.rm(test.path)

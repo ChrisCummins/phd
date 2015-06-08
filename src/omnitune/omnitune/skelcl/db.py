@@ -592,9 +592,22 @@ def create_test_db(dst, src, num_runtimes=100000):
     cmd = ("INSERT INTO runtimes SELECT * FROM runtimes_tmp "
            "ORDER BY RANDOM() LIMIT {n}".format(n=num_runtimes))
     test.execute(cmd)
-
-    # Save changes.
     test.drop_table("runtimes_tmp")
+
+    # Remove unused scenarios.
+    test.execute("DELETE FROM scenarios WHERE id NOT IN "
+                 "(SELECT DISTINCT scenario from runtimes)")
+
+    # Remove unused kernels.
+    test.execute("DELETE FROM kernels WHERE id NOT IN "
+                 "(SELECT DISTINCT kernel from scenarios)")
+    # Remove unused devices.
+    test.execute("DELETE FROM devices WHERE id NOT IN "
+                 "(SELECT DISTINCT device from scenarios)")
+    # Remove unused datasets.
+    test.execute("DELETE FROM datasets WHERE id NOT IN "
+                 "(SELECT DISTINCT dataset from scenarios)")
+
     test.commit()
 
     # Shrink database to reclaim lost space.
