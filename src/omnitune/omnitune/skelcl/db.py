@@ -508,14 +508,11 @@ class Database(db.Database):
                              " FROM runtimes")
 
         for row in query:
-            where = []
-            for key,val in zip(query_keys, row):
-                val = self.escape_keyval("runtimes", key, val)
-                where.append('{key} = {val}'.format(key=key, val=val))
-            where = " AND ".join(where)
+            where_c = ["{key}=?".format(key=key) for key in query_keys]
+            where = " AND ".join(where_c)
 
             runtimes_query = self.execute("SELECT runtime from runtimes WHERE "
-                                          + where)
+                                          + where, row)
             runtimes = [x[0] for x in runtimes_query]
             sample_count = len(runtimes)
             runtime = labmath.mean(runtimes)
