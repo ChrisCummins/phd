@@ -225,51 +225,11 @@ class Database(object):
         else:
             return value
 
-    def _insert(self, table, values, ignore_duplicates=False):
-        escaped_values = [self.escape_value(table, i, values[i])
-                          for i in range(len(values))]
-
-        cmd = ["INSERT"]
-        if ignore_duplicates:
-            cmd.append("OR IGNORE")
-        cmd.append("INTO")
-        cmd.append(table)
-        cmd.append("VALUES (")
-        cmd.append(", ".join([str(x) for x in escaped_values]))
-        cmd.append(")")
-
-        cmd_str = " ".join(cmd)
-        # io.debug(cmd_str)
-
-        self.execute(cmd_str)
-        self.commit()
-
-    def insert(self, table, values):
-        return self._insert(table, values)
-
-    def insert_unique(self, table, values):
-        return self._insert(table, values, ignore_duplicates=True)
-
     def execute(self, *args):
         return self.connection.cursor().execute(*args)
 
     def commit(self):
         return self.connection.commit()
-
-    def select(self, table, select, where):
-        cmd = ["SELECT", select, "FROM", table, "WHERE", where]
-        cmd_str = " ".join(cmd)
-        return self.execute(cmd_str)
-
-    def select1(self, table, select, where):
-        return self.select(self, table, select, where).fetchone()
-
-    def count(self, table, where=None):
-        cmd = ["SELECT Count(*) FROM", table]
-        if where is not None:
-            cmd += ["WHERE", where]
-        cmd_str = " ".join(cmd)
-        return self.execute(cmd_str).fetchone()[0]
 
     def attach(self, path, name):
         """
