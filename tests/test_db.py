@@ -49,6 +49,13 @@ class TestDatabase(TestCase):
     def test_get_tables_empty(self):
         self._test([], self.db_empty.get_tables())
 
+
+    # isempty()
+    def test_isempty(self):
+        self._test(True, self.db_empty.isempty())
+        self._test(False, self.db.isempty())
+
+
     # drop_table(), create_table()
     def test_create_drop_tables(self):
         fs.rm("/tmp/labm8.sql")

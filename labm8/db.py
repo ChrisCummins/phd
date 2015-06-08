@@ -103,6 +103,19 @@ class Database(object):
         return [row[0] for row in result]
 
 
+    def isempty(self):
+        """
+        Return whether the database is empty.
+
+        A database is empty is if it has no tables.
+
+        Returns:
+
+            bool: True if database is empty, else false.
+        """
+        return len(self.get_tables()) == 0
+
+
     def export_csv(self, table, path=None):
         """
         Export table to CSV file.
