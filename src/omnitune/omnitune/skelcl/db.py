@@ -717,11 +717,10 @@ class MLDatabase(Database):
                            ("num_samples",                     "integer"),
                            ("mean_runtime",                    "real")))
 
-    def populate_tables(self):
+    def populate_kernel_features_table(self):
         """
-        Populate the derived tables from the base database.
+        Derive kernel features from "kernels" table.
         """
-        # Extract features from kernels.
         for row in self.execute("SELECT * FROM kernels"):
             source = row[6]
             bitcode = llvm.bitcode(source)
@@ -777,13 +776,22 @@ class MLDatabase(Database):
             self.execute("INSERT INTO kernel_features VALUES ({placeholders})"
                          .format(placeholders=placeholders), features)
 
-        # Extract features from devices.
+    def populate_device_features_table(self):
+        """
+        Derive device features from "devices" table.
+        """
         self.execute("INSERT INTO device_features SELECT * FROM devices")
 
-        # Extract features from datasets.
+    def populate_dataset_features_table(self):
+        """
+        Derive dataset features from "datasets" table.
+        """
         self.execute("INSERT INTO dataset_features SELECT * FROM datasets")
 
-        # Populate stats table.
+    def populate_runtime_stats_table(self):
+        """
+        Derive runtime stats from "runtimes" table.
+        """
         query = self.execute("SELECT scenario,params FROM runtimes "
                              "GROUP BY scenario,params")
         rows = query.fetchall()
@@ -806,7 +814,10 @@ class MLDatabase(Database):
                 io.info("Creating runtime_stats ... {0:02.3f}%."
                         .format((i / total) * 100))
 
-        # Populate oracle_params table.
+    def populate_oracle_params_table(self):
+        """
+        Derive oracle params from "runtime_stats" table.
+        """
         query = self.execute("SELECT distinct scenario FROM runtime_stats")
         rows = query.fetchall()
         total = len(rows)
@@ -832,6 +843,16 @@ class MLDatabase(Database):
         # Tidy up.
         self.execute("VACUUM")
         self.commit()
+
+    def populate_tables(self):
+        """
+        Populate the derived tables from the base database.
+        """
+        self.populate_kernel_features_table()
+        self.populate_device_features_table()
+        self.populate_dataset_features_table()
+        self.populate_runtime_stats_table()
+        self.populate_oracle_params_table()
 
     @staticmethod
     def init_from_db(dst, src):
