@@ -97,11 +97,26 @@ class TestDatabase(TestCase):
     def test_schema_empty(self):
         self._test([], self.db_empty.schema)
 
+    # num_rows()
+    def test_num_rows(self):
+        self._test(3, self.db.num_rows("names"))
+        self._test(0, self.db.num_rows("prices"))
+
+    def test_num_rows_missing_table(self):
+        # Error is raised if table does not exist.
+        with self.assertRaises(sql.OperationalError) as ctx:
+            self.db.num_rows("foo")
+
     # isempty()
     def test_isempty(self):
         self._test(True, self.db_empty.isempty())
         self._test(False, self.db.isempty())
+        self._test(True, self.db.isempty(("prices",)))
 
+    def test_isempty_missing_table(self):
+        # Error is raised if table does not exist.
+        with self.assertRaises(sql.OperationalError) as ctx:
+            self.db.isempty("foo")
 
     # drop_table(), create_table()
     def test_create_drop_tables(self):

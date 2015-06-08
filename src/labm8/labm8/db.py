@@ -155,17 +155,58 @@ class Database(object):
         query = self.execute("PRAGMA table_info({table})".format(table=table))
         return [_row2dict(row) for row in query]
 
-    def isempty(self):
+    def isempty(self, tables=None):
         """
-        Return whether the database is empty.
+        Return whether a table or the entire database is empty.
 
-        A database is empty is if it has no tables.
+        A database is empty is if it has no tables. A table is empty
+        if it has no rows.
+
+        Arguments:
+
+            tables (sequence of str, optional): If provided, check
+              that the named tables are empty. If not provided, check
+              that all tables are empty.
 
         Returns:
 
-            bool: True if database is empty, else false.
+            bool: True if tables are empty, else false.
+
+        Raises:
+
+            sql.OperationalError: If one or more of the tables do not
+              exist.
         """
-        return len(self.tables) == 0
+        tables = tables or self.tables
+
+        for table in tables:
+            if self.num_rows(table) > 0:
+                return False
+
+        return True
+
+    def num_rows(self, table):
+        """
+        Return the number of rows in the named table.
+
+        Example:
+
+            >>> db.num_rows("foo")
+            3
+
+        Arguments:
+
+            table (str): The name of the table to count the rows in.
+
+        Returns:
+
+            int: The number of rows in the named table.
+
+        Raises:
+
+            sql.OperationalError: If the named table does not exist.
+        """
+        return self.execute("SELECT Count(*) from " + table).fetchone()[0]
 
     def close(self):
         """
