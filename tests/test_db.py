@@ -26,9 +26,13 @@ class TestDatabase(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestDatabase, self).__init__(*args, **kwargs)
 
-        # Load test database
-        self.db = db.Database("tests/data/db.sql")
-        self.db_empty = db.Database("tests/data/db_empty.sql")
+        # Make a copy of test databases.
+        fs.cp("tests/data/db.sql", "/tmp/labm8.db.sql")
+        fs.cp("tests/data/db_empty.sql", "/tmp/labm8.db_empty.sql")
+
+        # Load test databases.
+        self.db = db.Database("/tmp/labm8.db.sql")
+        self.db_empty = db.Database("/tmp/labm8.db_empty.sql")
 
     # table_exists()
     def test_table_exists(self):
