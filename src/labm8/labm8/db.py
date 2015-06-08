@@ -54,7 +54,6 @@ class Database(object):
             fs.mkdir(parent_dir)
 
         self.connection = sql.connect(self.path)
-        self.tables = {}
 
         for name,schema in six.iteritems(tables):
             self.create_table(name, schema)
@@ -114,40 +113,10 @@ class Database(object):
         """
         return len(self.get_tables()) == 0
 
-    def export_csv(self, table, path=None):
-        """
-        Export table to CSV file.
-
-        Arguments:
-            table The name of the table as a string.
-            path (optional) The path to the exported csv. If not given,
-                defaults to the path of the database, with the suffix
-                "-{table_name}.csv".
-        """
-        if path is None:
-            path = self.path + "-" + str(table) + ".csv"
-
-        with open(path, 'wb') as file:
-            writer = csv.writer(file)
-            writer.writerow([x[0] for x in self.tables[table]])
-            data = self.execute("SELECT * FROM " + str(table))
-            writer.writerows(data)
-
-    def export_csvs(self, prefix=None):
-        """
-        Export all tables to CSV files.
-
-        Arguments:
-            prefix (optional) If supplied, the filename prefix to use.
-        """
-        if prefix is None:
-            prefix = self.path + "-"
-
-        for table in self.tables:
-            csv_path = prefix + table + ".csv"
-            self.export_csv(table, path=csv_path)
-
     def close(self):
+        """
+        Close a database connection.
+        """
         self.connection.close()
         io.debug("Closed connection to '{0}'".format(self.path))
 
@@ -166,7 +135,6 @@ class Database(object):
 
         If the table already exists, nothing happens.
         """
-        self.tables[name] = schema
         constraints = [" ".join(constraint) for constraint in schema]
         cmd = [
             "CREATE TABLE IF NOT EXISTS ",
@@ -205,30 +173,19 @@ class Database(object):
         self.execute("INSERT INTO {dst} SELECT * FROM {src}"
                      .format(dst=dst, src=src))
 
-    def escape_value(self, table, i, value):
-        if self.tables[table][i][1].upper() == "TEXT":
-            return "'" + str(value) + "'"
-        else:
-            return value
-
-    def lookup_keytype(self, table, key):
-        for schema in self.tables[table]:
-            if schema[0] == key:
-                return schema[1]
-        raise SchemaError(("Failed to lookup key '{key}' in table {table}"
-                           .format(key=key, table=table)))
-
-    def escape_keyval(self, table, key, value):
-        keytype = self.lookup_keytype(table, key)
-        if keytype.upper() == "TEXT":
-            return "'" + str(value) + "'"
-        else:
-            return value
-
     def execute(self, *args):
+        """
+        Execute the given arguments.
+        """
         return self.connection.cursor().execute(*args)
 
     def commit(self):
+        """
+        Commit the current transaction.
+
+        Make sure to call this method after you've modified the
+        database's state!
+        """
         return self.connection.commit()
 
     def attach(self, path, name):
@@ -263,14 +220,14 @@ class Database(object):
             SchemaError If the schema of the merged database does not match.
         """
         # Throw an "eppy" if the schemas do not match.
-        if self.tables.keys() != rhs.tables.keys():
+        if self.get_tables() != rhs.get_tables():
             raise SchemaError("Schema of merged table does not match")
 
         self.attach(rhs.path, "rhs")
 
-        for table in self.tables:
-            self.execute("INSERT OR IGNORE INTO " + table +
-                         " SELECT * FROM rhs." + table)
+        for table in self.get_tables():
+            self.execute("INSERT OR IGNORE INTO {0} SELECT * FROM rhs.{0}"
+                         .format(table))
 
         # Tidy up.
         self.commit()
