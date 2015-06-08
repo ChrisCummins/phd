@@ -383,3 +383,131 @@ class Database(object):
                                  self.connection)
         table.to_csv(output, **kwargs)
         return None if isfile else output.getvalue()
+
+    def arff_attr(self, table, types=None):
+        """
+        Export a table schema to a list of arff attributes.
+
+        Arff types can be either NUMERIC or NOMINAL. If the arff types
+        are not provided, the types will be derived from the SQL
+        schema specification for the table. INTEGER and REAL types
+        will be converted to NUMERIC, and all else will be converted
+        to NOMINAL. NOMINAL values are a set of all unique values.
+
+        Example:
+
+            >>> db.arff_attr("names")
+            (("id", "NUMERIC"), ("first", ("David","Joe")),
+             ("last", ("Bloggs","Bowie","Brent")))
+
+        Arguments:
+
+            table (str): Name of the table to export.
+            types (sequence of str, optional): The arff attribute
+              types to use.
+
+        Returns:
+
+            list of tuples: Where each tuple is a (name,type) pair
+              describing an SQL column. The "type" is itself a tuple
+              of str, either a single str containing a names type, or
+              a set of nominal category values.
+
+        Raises:
+
+            SchemaError: If the named table is not found.
+        """
+        def _sql_type2arff_type(ctype):
+            if ctype == "integer":
+                return "NUMERIC"
+            if ctype == "real":
+                return "NUMERIC"
+            return "NOMINAL"
+
+        def _columns2types(columns):
+            return [_sql_type2arff_type(column["type"]) for column in columns]
+
+        def _expand_nominal(cname):
+            query = self.execute("SELECT DISTINCT {col} FROM {table}"
+                                 .format(col=cname, table=table))
+            distinct = sorted(set(row[0] for row in query))
+
+            return cname, tuple(distinct)
+
+        def _expand_nominals(attr):
+            return tuple([_expand_nominal(cname) if ctype == "NOMINAL"
+                          else (cname, (ctype,)) for cname, ctype in attr])
+
+        if table not in self.tables:
+            raise SchemaError("Cannot find table '{table}'"
+                              .format(table=table))
+
+        info = self.table_info(table)
+        names = [column["name"] for column in info]
+        types = types or _columns2types(info)
+
+        return _expand_nominals(zip(names, types))
+
+    def export_arff(self, table, output=None, types=None, relation=None):
+        """
+        Export a table to Weka arff format.
+
+        If an output path is provided, write to file. Else, return a
+        string. If the arff types are not provided, the types will be
+        derived from the SQL schema specification for the
+        table. INTEGER and REAL types will be converted to NUMERIC,
+        and all else will be converted to nominal specification.
+
+        Arguments:
+
+            table (str): Name of the table to export.
+            output (str, optional): Path of the file to write.
+            types (sequence of str, optional): The arff attribute
+              types to use.
+            relation (str, optional): The name of the relation. If
+              not given, defaults to the name of the table.
+
+        Returns:
+
+            str: ARFF string, or None if writing to file.
+
+        Raises:
+
+            IOError: In case of error writing to file.
+            SchemaError: If the named table is not found.
+        """
+        # Determine if we're writing to a file or returning a string
+        # and create either StringIO or file object.
+        isfile = output is not None
+        if isfile:
+            if lab.is_python3():
+                output = open(output, "w", newline="")
+            else:
+                output = open(output, "wb")
+        else:
+            output = StringIO()
+
+        attributes = self.arff_attr(table, types=types)
+        relation = relation or table
+        writer = csv.writer(output)
+
+        # Write header.
+        writer.writerow(["@RELATION", relation])
+        writer.writerow([])
+
+        # Write schema.
+        for attribute in attributes:
+            aname, atype = attribute
+            writer.writerow(("@ATTRIBUTE", aname) + atype)
+
+        # Write body.
+        writer.writerow([])
+        writer.writerow(["@DATA"])
+        query = "SELECT * FROM {table}".format(table=table)
+        for row in self.execute(query):
+            writer.writerow(row)
+
+        if isfile:
+            output.close()
+        else:
+            return output.getvalue()
