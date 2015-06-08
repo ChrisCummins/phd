@@ -15,6 +15,7 @@ setup(name='labm8',
       ],
       install_requires=[
           'numpy',
+          'pandas',
           'scipy'
       ],
       zip_safe=False)
