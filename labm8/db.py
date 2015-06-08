@@ -18,9 +18,16 @@ import re
 import six
 import sqlite3 as sql
 
+import pandas.io.sql as panda
+
 import labm8 as lab
 from labm8 import fs
 from labm8 import io
+
+if lab.is_python3():
+    from io import StringIO
+else:
+    from StringIO import StringIO
 
 
 class Error(Exception):
@@ -30,7 +37,7 @@ class Error(Exception):
     pass
 
 
-class SchemaError(Exception):
+class SchemaError(Error):
     """
     Error thrown in case of conflicting schemas.
     """
@@ -335,3 +342,45 @@ class Database(object):
             name (str): Name of database to detach.
         """
         self.execute("DETACH ?", (name,))
+
+    def export_csv(self, table, output=None, **kwargs):
+        """
+        Export a table to a CSV file.
+
+        If an output path is provided, write to file. Else, return a
+        string.
+
+        Wrapper around pandas.sql.to_csv(). See:
+        http://pandas.pydata.org/pandas-docs/stable/io.html#io-store-in-csv
+
+        Arguments:
+
+            table (str): Name of the table to export.
+            output (str, optional): Path of the file to write.
+            **kwargs: Additional args passed to pandas.sql.to_csv()
+
+        Returns:
+
+            str: CSV string, or None if writing to file.
+
+        Raises:
+
+            IOError: In case of error writing to file.
+            SchemaError: If the named table is not found.
+        """
+        # Determine if we're writing to a file or returning a string.
+        isfile = output is not None
+        output = output or StringIO()
+
+        if table not in self.tables:
+            raise SchemaError("Cannot find table '{table}'"
+                              .format(table=table))
+
+        # Don't print row indexes by default.
+        if "index" not in kwargs:
+            kwargs["index"] = False
+
+        table = panda.read_frame("select * from {table}".format(table=table),
+                                 self.connection)
+        table.to_csv(output, **kwargs)
+        return None if isfile else output.getvalue()

@@ -17,6 +17,8 @@ from tests import TestCase
 
 import sqlite3 as sql
 
+import pandas.io.sql as panda
+
 import labm8 as lab
 from labm8 import db
 from labm8 import fs
@@ -275,6 +277,45 @@ class TestDatabase(TestCase):
         # Check that detaching an unknown database raises an error.
         self.assertRaises(sql.OperationalError,
                           self.db_empty.detach, "bar")
+
+    # export_csv()
+    def test_export_csv(self):
+        self._test("first,last\n"
+                   "David,Bowie\n"
+                   "David,Brent\n"
+                   "Joe,Bloggs\n",
+                   self.db.export_csv("names"))
+        self._test("id,description,price\n",
+                   self.db.export_csv("prices"))
+
+    def test_export_csv_file(self):
+        tmp = "/tmp/labm8.sql.csv"
+        self._test(None, self.db.export_csv("names", tmp))
+        self._test("first,last\n"
+                   "David,Bowie\n"
+                   "David,Brent\n"
+                   "Joe,Bloggs\n",
+                   open(tmp).read())
+
+    def test_export_csv_no_headers(self):
+        # Printing without header row.
+        self._test("David,Bowie\n"
+                   "David,Brent\n"
+                   "Joe,Bloggs\n",
+                   self.db.export_csv("names", header=False))
+        self._test("",
+                   self.db.export_csv("prices", header=False))
+
+    def test_export_csv_bad_path(self):
+        # An error is thrown if we can't write to file.
+        with self.assertRaises(IOError) as ctx:
+            self.db.export_csv("names", "/root")
+
+    def test_export_csv_missing_table(self):
+        # An error is thrown if the table is not found.
+        with self.assertRaises(db.SchemaError) as ctx:
+            self.db.export_csv("foo")
+
 
 if __name__ == '__main__':
     main()
