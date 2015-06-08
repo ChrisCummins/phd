@@ -130,6 +130,13 @@ class TestDatabase(TestCase):
         _db.drop_table("foo")
         self._test(False, "foo" in _db.tables)
 
+    # Constructor "schema" argument
+    def test_constructor_schema(self):
+        fs.rm("/tmp/labm8.sql")
+        _db = db.Database("/tmp/labm8.sql", {
+            "foo": (("id", "integer"), ("prop", "text"))
+        })
+        self._test(["foo"], _db.tables)
 
     # copy_table()
     def test_copy_table(self):
