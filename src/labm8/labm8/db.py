@@ -14,6 +14,7 @@
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 import atexit
 import csv
+import re
 import six
 import sqlite3 as sql
 
@@ -81,7 +82,6 @@ class Database(object):
 
         return result is not None and len(result) == 1
 
-
     def get_tables(self):
         """
         Returns a list of table names.
@@ -102,7 +102,6 @@ class Database(object):
         # Filter first column from rows.
         return [row[0] for row in result]
 
-
     def isempty(self):
         """
         Return whether the database is empty.
@@ -114,7 +113,6 @@ class Database(object):
             bool: True if database is empty, else false.
         """
         return len(self.get_tables()) == 0
-
 
     def export_csv(self, table, path=None):
         """
@@ -177,6 +175,35 @@ class Database(object):
             ")"
         ]
         self.execute("".join(cmd))
+
+    def copy_table(self, src, dst):
+        """
+        Copy a table schema, and all of its contents.
+
+        Arguments:
+
+            src (str): The name of the table to copy.
+            dst (str): The name of the target duplicate table.
+        """
+        # Lookup the command which was used to create the "src" table.
+        query = self.execute("SELECT sql FROM sqlite_master WHERE "
+                             "type='table' and name=?", (src,))
+        try:
+            cmd = query.fetchone()[0]
+        except TypeError:
+            raise sql.OperationalError("Cannot copy non-existent table '{0}'"
+                                       .format(src))
+
+        # Modify the original command to replace the old table name
+        # with the new one.
+        new_cmd = re.sub("(CREATE TABLE) \w+", "\\1 " + dst, cmd, re.IGNORECASE)
+
+        # Execute this new command.
+        self.execute(new_cmd)
+
+        # Copy contents of src to dst.
+        self.execute("INSERT INTO {dst} SELECT * FROM {src}"
+                     .format(dst=dst, src=src))
 
     def escape_value(self, table, i, value):
         if self.tables[table][i][1].upper() == "TEXT":
