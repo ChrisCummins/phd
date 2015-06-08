@@ -190,6 +190,24 @@ class TestDatabase(TestCase):
         # Cool, we're jammin'
         fs.rm("/tmp/labm8.con.sql")
 
+    # close()
+    def test_close(self):
+        c = db.Database(self.db.path)
+        cmd = 'SELECT first FROM names WHERE first="Joe"'
+
+        # Run a test query.
+        self._test(("Joe",), c.execute(cmd).fetchone())
+
+        # Close the connection.
+        c.close()
+
+        # Now the test query will raise an error.
+        with self.assertRaises(sql.ProgrammingError) as ctx:
+            c.execute(cmd).fetchone()
+
+        # You can close an already-closed database.
+        c.close()
+
     # copy_table()
     def test_copy_table(self):
         cmd = 'SELECT first from names_cpy where first="Joe"'
