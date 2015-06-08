@@ -520,7 +520,7 @@ class Database(db.Database):
             sample_count = len(runtimes)
             runtime = labmath.mean(runtimes)
 
-            samples_values = [
+            samples_values = (
                 row[0],   # host
                 row[1],   # device
                 row[2],   # dev_count
@@ -531,9 +531,10 @@ class Database(db.Database):
                 row[12],  # wg_r
                 sample_count,
                 runtime
-            ]
+            )
             io.debug(*samples_values)
-            self.insert("samples", samples_values)
+            self.insert("INSERT INTO samples VALUES (?,?,?,?,?,?,?,?)",
+                        samples_values)
 
     def lookup_best_workgroup_size(self, scenario):
         """
