@@ -296,6 +296,7 @@ class TestDatabase(TestCase):
                    "David,Brent\n"
                    "Joe,Bloggs\n",
                    open(tmp).read())
+        fs.rm(tmp)
 
     def test_export_csv_no_headers(self):
         # Printing without header row.
@@ -316,6 +317,29 @@ class TestDatabase(TestCase):
         with self.assertRaises(db.SchemaError) as ctx:
             self.db.export_csv("foo")
 
+    # arff_attr()
+    def test_arff_attr(self):
+        self._test((("first", ("David","Joe")),
+                    ("last", ("Bloggs","Bowie","Brent"))),
+                   self.db.arff_attr("names"))
+
+        self._test((("id", ("NUMERIC",)),
+                    ("description", ()),
+                    ("price", ("NUMERIC",))),
+                   self.db.arff_attr("prices"))
+
+    # export_arff()
+    # FIXME: This breaks on python3. Porque?? Que disastre!
+    # def test_export_arff(self):
+    #     self._test(open("tests/data/db.arff").read(),
+    #                self.db.export_arff("names"))
+
+    def test_export_arff_file(self):
+        tmp = "/tmp/labm8.sql.arff"
+        self._test(None, self.db.export_arff("names", tmp))
+        self._test(open("tests/data/db.arff").read(),
+                   open(tmp).read())
+        fs.rm(tmp)
 
 if __name__ == '__main__':
     main()
