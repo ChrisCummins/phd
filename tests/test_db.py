@@ -73,6 +73,38 @@ class TestDatabase(TestCase):
         self._test(False, _db.table_exists("foo"))
 
 
+    # copy_table()
+    def test_copy_table(self):
+        cmd = 'SELECT first from names_cpy where first="Joe"'
+
+        self.db.drop_table("names_cpy")
+        self.assertRaises(sql.OperationalError, self.db.execute, cmd)
+
+        # Copy table "names" to "names_cpy".
+        self.db.copy_table("names", "names_cpy")
+        # Check that there's a "names_cpy" table.
+        self._test(True, "names_cpy" in self.db.get_tables())
+        # Run query on copied table.
+        self._test(("Joe",), self.db.execute(cmd).fetchone())
+        # Drop copied table.
+        self.db.drop_table("names_cpy")
+
+    def test_copy_table_no_src(self):
+        # Copying a non-existent table raises an error.
+        self.assertRaises(sql.OperationalError,
+                          self.db.copy_table, "foo", "foo_cpy")
+
+    def test_copy_table_dst_exists(self):
+        self.db.drop_table("names_cpy")
+
+        # Copying the same table twice raises an error.
+        self.db.copy_table("names", "names_cpy")
+        self.assertRaises(sql.OperationalError,
+                          self.db.copy_table, "names", "names_cpy")
+        # Drop copied table.
+        self.db.drop_table("names_cpy")
+
+
     # attach(), detach()
     def test_attach_detach(self):
         cmd = 'SELECT first from foo.names where first="Joe"'
