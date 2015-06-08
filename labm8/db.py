@@ -220,7 +220,6 @@ class Database(object):
         Close a database connection.
         """
         self.connection.close()
-        io.debug("Closed connection to '{0}'".format(self.path))
 
     def drop_table(self, name):
         """
