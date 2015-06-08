@@ -229,28 +229,36 @@ class Database(object):
         Create a new table.
 
         If the table already exists, nothing happens.
-        """
-        constraints = [" ".join(constraint) for constraint in schema]
-        cmd = [
-            "CREATE TABLE IF NOT EXISTS ",
-            name,
-            " (", ",".join(constraints),
-            ")"
-        ]
-        self.execute("".join(cmd))
 
-    def copy_table(self, src, dst):
-        """
-        Copy a table schema, and all of its contents.
+        Example:
+
+            >>> db.create_table("foo", (("id", "integer primary key"),
+                                        ("value", "text")))
 
         Arguments:
 
-            src (str): The name of the table to copy.
-            dst (str): The name of the target duplicate table.
+           name (str): The name of the table to create.
+           schema (sequence of tuples): A list of (name, type) tuples
+             representing each of the columns.
+        """
+        columns = [" ".join(column) for column in schema]
+        self.execute("CREATE TABLE IF NOT EXISTS {name} ({columns})"
+                     .format(name=name, columns=",".join(columns)))
+
+    def create_table_from(self, name, src):
+        """
+        Create a new table with same schema as the source.
+
+        If the named table already exists, nothing happens.
+
+        Arguments:
+
+            name (str): The name of the table to create.
+            src (str): The name of the source table to duplicate.
 
         Raises:
 
-            sql.OperationalError: If named table does not exist.
+            sql.OperationalError: If source table does not exist.
         """
         # Lookup the command which was used to create the "src" table.
         query = self.execute("SELECT sql FROM sqlite_master WHERE "
@@ -263,10 +271,27 @@ class Database(object):
 
         # Modify the original command to replace the old table name
         # with the new one.
-        new_cmd = re.sub("(CREATE TABLE) \w+", "\\1 " + dst, cmd, re.IGNORECASE)
+        new_cmd = re.sub("(CREATE TABLE) \w+", "\\1 " + name, cmd,
+                         re.IGNORECASE)
 
         # Execute this new command.
         self.execute(new_cmd)
+
+    def copy_table(self, src, dst):
+        """
+        Create a carbon copy of the source table.
+
+        Arguments:
+
+            src (str): The name of the table to copy.
+            dst (str): The name of the target duplicate table.
+
+        Raises:
+
+            sql.OperationalError: If source table does not exist.
+        """
+        # Create table.
+        self.create_table_from(dst, src)
 
         # Copy contents of src to dst.
         self.execute("INSERT INTO {dst} SELECT * FROM {src}"
