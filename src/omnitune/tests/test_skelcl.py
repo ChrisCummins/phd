@@ -13,27 +13,25 @@ class TestSkelCL(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestSkelCL, self).__init__(*args, **kwargs)
 
-        # Load test database.
-        self.db = database.Database("tests/data/skelcl.db")
-
-    def test_hash_workgroup_size(self):
+    # hash_params()
+    def test_hash_params(self):
         vals = range(4,40,4)
         wgs = itertools.product(vals, vals)
-        checksums = [skelcl.hash_workgroup_size(*wg) for wg in wgs]
+        checksums = [skelcl.hash_params(*wg) for wg in wgs]
         print(checksums)
         self._test(len(checksums), len(set(checksums)))
 
-    def test_hash_data(self):
+    # hash_dataset()
+    def test_hash_dataset(self):
         vals = [
             [1024, 1024, "int", "float"],
             [1024, 2048, "int", "float"],
             [1024, 1024, "float", "float"],
             [1024, 1024, "int", "int"]
         ]
-        checksums = [skelcl.hash_data(*val) for val in vals]
+        checksums = [skelcl.hash_dataset(*val) for val in vals]
         print(checksums)
         self._test(len(checksums), len(set(checksums)))
-
 
     # checksum_str()
     def test_checksum_str(self):
@@ -45,7 +43,6 @@ class TestSkelCL(TestCase):
                    skelcl.checksum_str(""))
         self._test("9e97c70ba595f82d52b11d5602567c2410cf9b84",
                    skelcl.checksum_str(self.stencil_gaussian_kernel))
-
 
     # get_user_source()
     def test_get_user_source(self):

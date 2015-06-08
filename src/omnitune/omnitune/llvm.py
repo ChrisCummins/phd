@@ -140,7 +140,7 @@ def instcounts(bitcode, path=""):
                            stdin=subprocess.PIPE,
                            stdout=subprocess.PIPE,
                            stderr=subprocess.STDOUT)
-    out, err = opt.communicate(bitcode)
+    out, _ = opt.communicate(bitcode)
     if opt.returncode != 0:
         raise OptError(out)
 
