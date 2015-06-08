@@ -7,6 +7,8 @@ from labm8 import io
 
 _LINE_RE = re.compile("^(?P<count>\d+) instcount - Number of (?P<type>.+)")
 
+DEFAULT_LLVM_PATH = fs.path("~/src/msc-thesis/skelcl/libraries/llvm/build/bin/")
+
 
 class Error(Exception):
     """
@@ -73,7 +75,7 @@ def parse_instcount(output):
     return out
 
 
-def bitcode(source, language="cl", path=""):
+def bitcode(source, language="cl", path=DEFAULT_LLVM_PATH):
     assert_program_exists(str(path) + "clang")
 
     clang_args = [
@@ -122,7 +124,7 @@ def parse_instcounts(out):
     return counts
 
 
-def instcounts(bitcode, path=""):
+def instcounts(bitcode, path=DEFAULT_LLVM_PATH):
     assert_program_exists(str(path) + "opt")
 
     opt_args = [

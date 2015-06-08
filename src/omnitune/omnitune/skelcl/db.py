@@ -1,4 +1,10 @@
+from __future__ import division
+
 import sqlite3 as sql
+
+from time import time
+from datetime import datetime
+from dateutil import relativedelta
 
 import labm8 as lab
 from labm8 import db
@@ -7,6 +13,7 @@ from labm8 import io
 from labm8 import math as labmath
 
 import omnitune
+from omnitune import llvm
 
 from . import get_user_source
 from . import hash_device
@@ -14,6 +21,7 @@ from . import hash_kernel
 from . import hash_dataset
 from . import hash_scenario
 from . import hash_params
+
 
 class Database(db.Database):
     """
@@ -556,6 +564,278 @@ class Database(db.Database):
         query = self.execute(cmd, args)
 
         return query.fetchone()
+
+
+class MLDatabase(Database):
+    """
+    Persistent database store for SkelCL training data.
+
+    Extends the base class Database with additional tables.
+
+    Tables (in addition to those of base class Database):
+        kernel_features  Table of kernel features.
+        device_features  Table of device features.
+        dataset_features Table of dataset features.
+        runtime_stats    Table of (scenario,params,runtime) observations.
+    """
+
+    def __init__(self, path=fs.path(omnitune.LOCAL_DIR, "training.db")):
+        """
+        Create a new connection to database.
+
+        Arguments:
+            path (str, optional): If set, load database from path. If not, use
+              standard system-wide path.
+        """
+        super(Database, self).__init__(path)
+
+
+    def create_tables(self):
+        # Create table: kernel_features
+        self.create_table("kernel_features",
+                          (("id",                              "text primary key"),
+                           ("north",                           "integer"),
+                           ("south",                           "integer"),
+                           ("east",                            "integer"),
+                           ("west",                            "integer"),
+                           ("max_wg_size",                     "integer"),
+                           ("instruction_count",               "integer"),
+                           ("ratio_AShr_insts",                "real"),
+                           ("ratio_Add_insts",                 "real"),
+                           ("ratio_Alloca_insts",              "real"),
+                           ("ratio_And_insts",                 "real"),
+                           ("ratio_Br_insts",                  "real"),
+                           ("ratio_Call_insts",                "real"),
+                           ("ratio_FAdd_insts",                "real"),
+                           ("ratio_FCmp_insts",                "real"),
+                           ("ratio_FDiv_insts",                "real"),
+                           ("ratio_FMul_insts",                "real"),
+                           ("ratio_FPExt_insts",               "real"),
+                           ("ratio_FPToSI_insts",              "real"),
+                           ("ratio_FSub_insts",                "real"),
+                           ("ratio_GetElementPtr_insts",       "real"),
+                           ("ratio_ICmp_insts",                "real"),
+                           ("ratio_InsertValue_insts",         "real"),
+                           ("ratio_Load_insts",                "real"),
+                           ("ratio_Mul_insts",                 "real"),
+                           ("ratio_Or_insts",                  "real"),
+                           ("ratio_PHI_insts",                 "real"),
+                           ("ratio_Ret_insts",                 "real"),
+                           ("ratio_SDiv_insts",                "real"),
+                           ("ratio_SExt_insts",                "real"),
+                           ("ratio_SIToFP_insts",              "real"),
+                           ("ratio_SRem_insts",                "real"),
+                           ("ratio_Select_insts",              "real"),
+                           ("ratio_Shl_insts",                 "real"),
+                           ("ratio_Store_insts",               "real"),
+                           ("ratio_Sub_insts",                 "real"),
+                           ("ratio_Trunc_insts",               "real"),
+                           ("ratio_UDiv_insts",                "real"),
+                           ("ratio_Xor_insts",                 "real"),
+                           ("ratio_ZExt_insts",                "real"),
+                           ("ratio_basic_blocks",              "real"),
+                           ("ratio_memory_instructions",       "real"),
+                           ("ratio_non_external_functions",    "real")))
+
+        # Create table: device_features
+        self.create_table("device_features",
+                          (("id",                              "text primary key"),
+                           ("name",                            "text"),
+                           ("count",                           "integer"),
+                           ("address_bits",                    "integer"),
+                           ("double_fp_config",                "integer"),
+                           ("endian_little",                   "integer"),
+                           ("execution_capabilities",          "integer"),
+                           ("extensions",                      "text"),
+                           ("global_mem_cache_size",           "integer"),
+                           ("global_mem_cache_type",           "integer"),
+                           ("global_mem_cacheline_size",       "integer"),
+                           ("global_mem_size",                 "integer"),
+                           ("host_unified_memory",             "integer"),
+                           ("image2d_max_height",              "integer"),
+                           ("image2d_max_width",               "integer"),
+                           ("image3d_max_depth",               "integer"),
+                           ("image3d_max_height",              "integer"),
+                           ("image3d_max_width",               "integer"),
+                           ("image_support",                   "integer"),
+                           ("local_mem_size",                  "integer"),
+                           ("local_mem_type",                  "integer"),
+                           ("max_clock_frequency",             "integer"),
+                           ("max_compute_units",               "integer"),
+                           ("max_constant_args",               "integer"),
+                           ("max_constant_buffer_size",        "integer"),
+                           ("max_mem_alloc_size",              "integer"),
+                           ("max_parameter_size",              "integer"),
+                           ("max_read_image_args",             "integer"),
+                           ("max_samplers",                    "integer"),
+                           ("max_work_group_size",             "integer"),
+                           ("max_work_item_dimensions",        "integer"),
+                           ("max_work_item_sizes_0",           "integer"),
+                           ("max_work_item_sizes_1",           "integer"),
+                           ("max_work_item_sizes_2",           "integer"),
+                           ("max_write_image_args",            "integer"),
+                           ("mem_base_addr_align",             "integer"),
+                           ("min_data_type_align_size",        "integer"),
+                           ("native_vector_width_char",        "integer"),
+                           ("native_vector_width_double",      "integer"),
+                           ("native_vector_width_float",       "integer"),
+                           ("native_vector_width_half",        "integer"),
+                           ("native_vector_width_int",         "integer"),
+                           ("native_vector_width_long",        "integer"),
+                           ("native_vector_width_short",       "integer"),
+                           ("preferred_vector_width_char",     "integer"),
+                           ("preferred_vector_width_double",   "integer"),
+                           ("preferred_vector_width_float",    "integer"),
+                           ("preferred_vector_width_half",     "integer"),
+                           ("preferred_vector_width_int",      "integer"),
+                           ("preferred_vector_width_long",     "integer"),
+                           ("preferred_vector_width_short",    "integer"),
+                           ("queue_properties",                "integer"),
+                           ("single_fp_config",                "integer"),
+                           ("type",                            "integer"),
+                           ("vendor",                          "text"),
+                           ("vendor_id",                       "text"),
+                           ("version",                         "text")))
+
+        self.create_table("dataset_features",
+                          (("id",                              "text primary key"),
+                           ("width",                           "integer"),
+                           ("height",                          "integer"),
+                           ("tin",                             "text"),
+                           ("tout",                            "text")))
+
+        self.create_table("runtime_stats",
+                          (("scenario",    "text"),
+                           ("params",      "text"),
+                           ("num_samples", "integer"),
+                           ("min",         "real"),
+                           ("mean",        "real"),
+                           ("max",         "real")))
+
+    def populate_tables(self):
+        """
+        Populate the derived tables from the base database.
+        """
+        # Extract features from kernels.
+        for row in self.execute("SELECT * FROM kernels"):
+            source = row[6]
+            bitcode = llvm.bitcode(source)
+            instcounts = llvm.instcounts(bitcode)
+            ratios = llvm.instcounts2ratios(instcounts)
+            features = (
+                row[0], # id
+                row[1], # north
+                row[2], # south
+                row[3], # east
+                row[4], # west
+                row[5], # max_wg_size
+                ratios.get("instruction_count", 0),           # instruction_count
+                ratios.get("ratio AShr insts", 0),            # ratio_AShr_insts
+                ratios.get("ratio Add insts", 0),             # ratio_Add_insts
+                ratios.get("ratio Alloca insts", 0),          # ratio_Alloca_insts
+                ratios.get("ratio And insts", 0),             # ratio_And_insts
+                ratios.get("ratio Br insts", 0),              # ratio_Br_insts
+                ratios.get("ratio Call insts", 0),            # ratio_Call_insts
+                ratios.get("ratio FAdd insts", 0),            # ratio_FAdd_insts
+                ratios.get("ratio FCmp insts", 0),            # ratio_FCmp_insts
+                ratios.get("ratio FDiv insts", 0),            # ratio_FDiv_insts
+                ratios.get("ratio FMul insts", 0),            # ratio_FMul_insts
+                ratios.get("ratio FPExt insts", 0),           # ratio_FPExt_insts
+                ratios.get("ratio FPToSI insts", 0),          # ratio_FPToSI_insts
+                ratios.get("ratio FSub insts", 0),            # ratio_FSub_insts
+                ratios.get("ratio GetElementPtr insts", 0),   # ratio_GetElementPtr_insts
+                ratios.get("ratio ICmp insts", 0),            # ratio_ICmp_insts
+                ratios.get("ratio InsertValue insts", 0),     # ratio_InsertValue_insts
+                ratios.get("ratio Load insts", 0),            # ratio_Load_insts
+                ratios.get("ratio Mul insts", 0),             # ratio_Mul_insts
+                ratios.get("ratio Or insts", 0),              # ratio_Or_insts
+                ratios.get("ratio PHI insts", 0),             # ratio_PHI_insts
+                ratios.get("ratio Ret insts", 0),             # ratio_Ret_insts
+                ratios.get("ratio SDiv insts", 0),            # ratio_SDiv_insts
+                ratios.get("ratio SExt insts", 0),            # ratio_SExt_insts
+                ratios.get("ratio SIToFP insts", 0),          # ratio_SIToFP_insts
+                ratios.get("ratio SRem insts", 0),            # ratio_SRem_insts
+                ratios.get("ratio Select insts", 0),          # ratio_Select_insts
+                ratios.get("ratio Shl insts", 0),             # ratio_Shl_insts
+                ratios.get("ratio Store insts", 0),           # ratio_Store_insts
+                ratios.get("ratio Sub insts", 0),             # ratio_Sub_insts
+                ratios.get("ratio Trunc insts", 0),           # ratio_Trunc_insts
+                ratios.get("ratio UDiv insts", 0),            # ratio_UDiv_insts
+                ratios.get("ratio Xor insts", 0),             # ratio_Xor_insts
+                ratios.get("ratio ZExt insts", 0),            # ratio_ZExt_insts
+                ratios.get("ratio basic blocks", 0),          # ratio_basic_blocks
+                ratios.get("ratio memory instructions", 0),   # ratio_memory_instructions
+                ratios.get("ratio non-external functions", 0) # ratio_non_external_functions
+            )
+
+            placeholders = ",".join(["?"] * len(features))
+            self.execute("INSERT INTO kernel_features VALUES ({placeholders})"
+                         .format(placeholders=placeholders), features)
+
+        # Extract features from devices.
+        self.execute("INSERT INTO device_features SELECT * FROM devices")
+
+        # Extract features from datasets.
+        self.execute("INSERT INTO dataset_features SELECT * FROM datasets")
+
+        # Populate stats table.
+        query = self.execute("SELECT scenario,params FROM runtimes "
+                             "GROUP BY scenario,params")
+        rows = query.fetchall()
+        total = len(rows)
+
+        start_time = time()
+        i = 0
+        # Iterate over each row.
+        for row in rows:
+            scenario, params = row
+
+            # Gather statistics about runtimes for a (scenario,params)
+            # pair.
+            self.execute("INSERT INTO runtime_stats SELECT scenario,params,"
+                         "COUNT(runtime),MIN(runtime),AVG(runtime),MAX(runtime) "
+                         "FROM runtimes WHERE scenario=? AND params=?",
+                         (scenario, params))
+
+            # Intermediate progress reports.
+            i += 1
+            if not i % 10:
+                # Commit progress.
+                self.commit()
+
+                # Estimate job completion time.
+                elapsed = time() - start_time
+                remaining_rows = total - i
+                rate = i / elapsed
+
+                dt1 = datetime.fromtimestamp(0)
+                dt2 = datetime.fromtimestamp(rate * remaining_rows)
+                rd = relativedelta.relativedelta(dt2, dt1)
+
+                io.info("Progress: {0:02.3f}%. Estimated completion in "
+                        "{1:02d}:{2:02d}:{3:02d}."
+                         .format((i / total) * 100,
+                                 rd.hours, rd.minutes, rd.seconds))
+
+        # Tidy up.
+        self.execute("VACUUM")
+        self.commit()
+
+        # Double check to ensure we have everything.
+        assert self.num_rows("runtime_stats") == total
+
+    @staticmethod
+    def init_from_db(dst, src):
+        """
+        Create and populate the tables of
+        """
+        fs.cp(src.path, dst)
+        db = MLDatabase(dst)
+        db.create_tables()
+        db.populate_tables()
+
+        db.commit()
+        return db
 
 
 def create_test_db(dst, src, num_runtimes=100000):
