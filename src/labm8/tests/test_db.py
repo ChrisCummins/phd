@@ -138,6 +138,22 @@ class TestDatabase(TestCase):
         })
         self._test(["foo"], _db.tables)
 
+    # create_table_from()
+    def test_create_table_from(self):
+        cmd = 'SELECT first from names_cpy where first="Joe"'
+
+        self.db.drop_table("names_cpy")
+        self.assertRaises(sql.OperationalError, self.db.execute, cmd)
+
+        # Create table "names_cpy" from "names".
+        self.db.create_table_from("names_cpy", "names")
+        # Check that there's a "names_cpy" table.
+        self._test(True, "names_cpy" in self.db.tables)
+        # Check that table is empty.
+        self._test(0, self.db.num_rows("names_cpy"))
+        # Drop copied table.
+        self.db.drop_table("names_cpy")
+
     # copy_table()
     def test_copy_table(self):
         cmd = 'SELECT first from names_cpy where first="Joe"'
