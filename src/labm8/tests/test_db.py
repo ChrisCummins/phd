@@ -154,6 +154,42 @@ class TestDatabase(TestCase):
         # Drop copied table.
         self.db.drop_table("names_cpy")
 
+    # commit()
+    def test_commit(self):
+        # Create a copy database.
+        fs.cp(self.db.path, "/tmp/labm8.con.sql")
+
+        # Open two connections to database.
+        c1 = db.Database("/tmp/labm8.con.sql")
+        c2 = db.Database("/tmp/labm8.con.sql")
+
+        cmd = 'SELECT * FROM names WHERE first="Bob" AND last="Marley"'
+
+        # Check there's no Bob Marley entry.
+        self._test(None, c1.execute(cmd).fetchone())
+        self._test(None, c2.execute(cmd).fetchone())
+
+        # Add a Bob Marley entry to one connection.
+        c1.execute("INSERT INTO names VALUES ('Bob', 'Marley')")
+
+        # Create a third database connection.
+        c3 = db.Database("/tmp/labm8.con.sql")
+
+        # Check that the second and third connections can't see this new entry.
+        self._test(("Bob", "Marley"), c1.execute(cmd).fetchone())
+        self._test(None, c2.execute(cmd).fetchone())
+        self._test(None, c3.execute(cmd).fetchone())
+
+        # Commit, and repeat. Check that all connections can now see
+        # Bob Marley.
+        c1.commit()
+        self._test(("Bob", "Marley"), c1.execute(cmd).fetchone())
+        self._test(("Bob", "Marley"), c2.execute(cmd).fetchone())
+        self._test(("Bob", "Marley"), c3.execute(cmd).fetchone())
+
+        # Cool, we're jammin'
+        fs.rm("/tmp/labm8.con.sql")
+
     # copy_table()
     def test_copy_table(self):
         cmd = 'SELECT first from names_cpy where first="Joe"'
