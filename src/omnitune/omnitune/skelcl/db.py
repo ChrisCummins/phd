@@ -2,10 +2,6 @@ from __future__ import division
 
 import sqlite3 as sql
 
-from time import time
-from datetime import datetime
-from dateutil import relativedelta
-
 import labm8 as lab
 from labm8 import db
 from labm8 import fs
@@ -577,6 +573,9 @@ class MLDatabase(Database):
         device_features  Table of device features.
         dataset_features Table of dataset features.
         runtime_stats    Table of (scenario,params,runtime) observations.
+        oracle_params    Table of (scenario,params,num_samples,mean_runtime)
+                         tuples, where params is the params which
+                         provided the lowest runtime.
     """
 
     def __init__(self, path=fs.path(omnitune.LOCAL_DIR, "training.db")):
@@ -705,12 +704,18 @@ class MLDatabase(Database):
                            ("tout",                            "text")))
 
         self.create_table("runtime_stats",
-                          (("scenario",    "text"),
-                           ("params",      "text"),
-                           ("num_samples", "integer"),
-                           ("min",         "real"),
-                           ("mean",        "real"),
-                           ("max",         "real")))
+                          (("scenario",                        "text"),
+                           ("params",                          "text"),
+                           ("num_samples",                     "integer"),
+                           ("min",                             "real"),
+                           ("mean",                            "real"),
+                           ("max",                             "real")))
+
+        self.create_table("oracle_params",
+                          (("scenario",                        "text primary key"),
+                           ("params",                          "text"),
+                           ("num_samples",                     "integer"),
+                           ("mean_runtime",                    "real")))
 
     def populate_tables(self):
         """
@@ -783,46 +788,50 @@ class MLDatabase(Database):
                              "GROUP BY scenario,params")
         rows = query.fetchall()
         total = len(rows)
-
-        start_time = time()
         i = 0
-        # Iterate over each row.
         for row in rows:
             scenario, params = row
+            i += 1
 
-            # Gather statistics about runtimes for a (scenario,params)
-            # pair.
+            # Gather statistics about runtimes for each scenario,params pair.
             self.execute("INSERT INTO runtime_stats SELECT scenario,params,"
                          "COUNT(runtime),MIN(runtime),AVG(runtime),MAX(runtime) "
                          "FROM runtimes WHERE scenario=? AND params=?",
                          (scenario, params))
 
             # Intermediate progress reports.
-            i += 1
             if not i % 10:
                 # Commit progress.
                 self.commit()
+                io.info("Creating runtime_stats ... {0:02.3f}%."
+                        .format((i / total) * 100))
 
-                # Estimate job completion time.
-                elapsed = time() - start_time
-                remaining_rows = total - i
-                rate = i / elapsed
+        # Populate oracle_params table.
+        query = self.execute("SELECT distinct scenario FROM runtime_stats")
+        rows = query.fetchall()
+        total = len(rows)
+        i = 0
+        for row in rows:
+            scenario = row[0]
+            i += 1
 
-                dt1 = datetime.fromtimestamp(0)
-                dt2 = datetime.fromtimestamp(rate * remaining_rows)
-                rd = relativedelta.relativedelta(dt2, dt1)
+            # Lookup best params for each scenario.
+            self.execute("INSERT INTO oracle_params SELECT "
+                         "scenario,params,num_samples,mean as mean_runtime "
+                         "FROM runtime_stats WHERE scenario=? and "
+                         "mean=(select min(mean) FROM runtime_stats "
+                         "WHERE scenario=?)", (scenario, scenario))
 
-                io.info("Progress: {0:02.3f}%. Estimated completion in "
-                        "{1:02d}:{2:02d}:{3:02d}."
-                         .format((i / total) * 100,
-                                 rd.hours, rd.minutes, rd.seconds))
+            # Intermediate progress reports.
+            if not i % 10:
+                # Commit progress.
+                self.commit()
+                io.info("Creating oracle_params ... {0:02.3f}%."
+                        .format((i / total) * 100))
 
         # Tidy up.
         self.execute("VACUUM")
         self.commit()
-
-        # Double check to ensure we have everything.
-        assert self.num_rows("runtime_stats") == total
 
     @staticmethod
     def init_from_db(dst, src):

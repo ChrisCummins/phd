@@ -48,7 +48,7 @@ class TestSkelCLDB(TestCase):
         self._test(self.db_tiny.num_rows("datasets"),
                    test.num_rows("dataset_features"))
         self._test(True, test.num_rows("runtime_stats") > 0)
-
+        self._test(True, test.num_rows("oracle_params") > 0)
 
 
 if __name__ == '__main__':
