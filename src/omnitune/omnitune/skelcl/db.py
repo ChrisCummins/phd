@@ -38,7 +38,7 @@ class Database(db.Database):
         """
         super(Database, self).__init__(path)
 
-        # Create database is needed.
+        # Create tables if needed.
         if self.isempty():
             self.create_tables()
 
@@ -80,20 +80,6 @@ class Database(db.Database):
         self.execute("INSERT INTO runtimes SELECT * from rhs.runtimes")
 
         self.detach("rhs")
-
-    def isempty(self):
-        """
-        Return whether the database is empty.
-
-        Returns:
-
-            bool: True if database is empty, else false.
-        """
-        try:
-            self.execute("SELECT Count(*) FROM runtimes")
-            return False
-        except sql.OperationalError:
-            return True
 
     def create_tables(self):
         """
