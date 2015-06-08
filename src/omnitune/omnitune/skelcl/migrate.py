@@ -82,7 +82,7 @@ def migrate_0_to_1(old):
     tmp = db.Database("/tmp/omnitune.skelcl.migration.db")
 
     # Clear anything that's already in the database.
-    for table in tmp.get_tables():
+    for table in tmp.tables:
         tmp.drop_table(table)
 
     io.info("Migrating database to version 1.")
