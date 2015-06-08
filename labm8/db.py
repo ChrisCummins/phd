@@ -63,36 +63,19 @@ class Database(object):
         # Register exit handler
         atexit.register(self.close)
 
-    def table_exists(self, name):
-        """
-        Check if a table exists.
-
-        Arguments:
-
-            name (str): The name of the table to check whether it exists
-
-        Returns:
-
-            bool: True if table exists, else False.
-        """
-        select = ("SELECT name FROM sqlite_master WHERE name = ?", (name,))
-        query = self.execute(*select)
-        result = query.fetchone()
-
-        return result is not None and len(result) == 1
-
-    def get_tables(self):
+    @property
+    def tables(self):
         """
         Returns a list of table names.
 
         Example:
 
-            >>> db.get_tables()
+            >>> db.tables
             ["bar", "foo"]
 
         Returns:
 
-            list of str: One string for each table.
+            list of str: One string for each table name.
         """
         select = ("SELECT name FROM sqlite_master",)
         query = self.execute(*select)
@@ -100,6 +83,77 @@ class Database(object):
 
         # Filter first column from rows.
         return [row[0] for row in result]
+
+    @property
+    def schema(self):
+        """
+        Returns the schema of all tables.
+
+        For each table, return the name, and a list of tuples
+        representing the columns. Each column tuple consists of a
+        (name, type) pair. Note that additional metadata, such as
+        whether a column may be null, or whether a column is a primary
+        key, is not returned.
+
+        Example:
+
+            >>> db.schema
+            [("bar", (("id", "integer"), ("name", "table"))]
+
+        Returns:
+
+            list of tuples: Each tuple has the format (name, columns), where
+              "columns" is a list of tuples of the form (name, type).
+        """
+        def _info2columns(info):
+            return tuple((column["name"], column["type"]) for column in info)
+
+        def _table2tuple(table):
+            return (table, _info2columns(self.table_info(table)))
+
+        return [_table2tuple(table) for table in self.tables]
+
+    def table_info(self, table):
+        """
+        Returns information about the named table.
+
+        See: https://www.sqlite.org/pragma.html#pragma_table_info
+
+        Example:
+
+            >>> db.table_info("foo")
+            [{"name": "id", "type": "integer", "primary key": True,
+              "notnull": False, "default_value": None}]
+
+        Arguments:
+
+            name (str): The name of the table to lookup.
+
+        Returns:
+
+            list of dicts: One dict per column. Each dict contains the
+              keys: "name", "type", "primary key", "notnull", and
+              "default_value".
+
+        Raises:
+
+            sql.OperationalError: If table does not exist.
+        """
+        def _row2dict(row):
+            return {
+                "name": row[1],
+                "type": row[2].lower(),
+                "notnull": row[3] == 1,
+                "default_value": row[4],
+                "primary_key": row[5] == 1
+            }
+
+        if table not in self.tables:
+            raise sql.OperationalError("Cannot retrieve information about "
+                                       "missing table '{0}'".format(table))
+
+        query = self.execute("PRAGMA table_info({table})".format(table=table))
+        return [_row2dict(row) for row in query]
 
     def isempty(self):
         """
@@ -111,7 +165,7 @@ class Database(object):
 
             bool: True if database is empty, else false.
         """
-        return len(self.get_tables()) == 0
+        return len(self.tables) == 0
 
     def close(self):
         """
@@ -126,7 +180,7 @@ class Database(object):
 
         If the table does not exist, nothing happens.
         """
-        if self.table_exists(name):
+        if name in self.tables:
             self.execute("DROP TABLE " + name)
 
     def create_table(self, name, schema):
@@ -152,6 +206,10 @@ class Database(object):
 
             src (str): The name of the table to copy.
             dst (str): The name of the target duplicate table.
+
+        Raises:
+
+            sql.OperationalError: If named table does not exist.
         """
         # Lookup the command which was used to create the "src" table.
         query = self.execute("SELECT sql FROM sqlite_master WHERE "

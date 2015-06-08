@@ -34,25 +34,68 @@ class TestDatabase(TestCase):
         self.db = db.Database("/tmp/labm8.db.sql")
         self.db_empty = db.Database("/tmp/labm8.db_empty.sql")
 
-    # table_exists()
+    # tables attribute
+    def test_tables(self):
+        self._test(["names","prices"], self.db.tables)
+
+    def test_tables_setter(self):
+        with self.assertRaises(AttributeError) as ctx:
+            self.db.tables = ["foo", "bar"]
+
+    def test_tables_empty(self):
+        self._test([], self.db_empty.tables)
+
     def test_table_exists(self):
-        self._test(True, self.db.table_exists("names"))
-        self._test(True, self.db.table_exists("prices"))
+        self._test(True, "names" in self.db.tables)
+        self._test(True, "prices" in self.db.tables)
 
     def test_table_exists_not(self):
-        self._test(False, self.db.table_exists("not_a_real_table"))
+        self._test(False, "not_a_real_table" in self.db.tables)
 
     def test_table_exists_empty(self):
-        self._test(False, self.db_empty.table_exists("names"))
-        self._test(False, self.db_empty.table_exists("prices"))
+        self._test(False, "names" in self.db_empty.tables)
+        self._test(False, "prices" in self.db_empty.tables)
 
-    # get_tables()
-    def test_get_tables(self):
-        self._test(["names","prices"], self.db.get_tables())
+    # table_info()
+    def test_table_info(self):
+        self._test([{
+            "name": "id",
+            "type": "integer",
+            "primary_key": True,
+            "notnull": False,
+            "default_value": None
+        }, {
+            "name": "description",
+            "type": "text",
+            "primary_key": False,
+            "notnull": False,
+            "default_value": None
+        }, {
+            "name": "price",
+            "type": "real",
+            "primary_key": False,
+            "notnull": False,
+            "default_value": None
+        }], self.db.table_info("prices"))
 
-    def test_get_tables_empty(self):
-        self._test([], self.db_empty.get_tables())
+    def test_table_info_missing_table(self):
+        # table_info() raises an error if table does not exist.
+        with self.assertRaises(sql.OperationalError) as ctx:
+            self.db.table_info("foo")
 
+    # schema attribute
+    def test_schema(self):
+        self._test([("names",
+                     (("first",       "text"),
+                      ("last",        "text"))),
+                    ("prices",
+                     (("id",          "integer"),
+                      ("description", "text"),
+                      ("price",       "real")))],
+                   self.db.schema)
+
+    def test_schema_empty(self):
+        self._test([], self.db_empty.schema)
 
     # isempty()
     def test_isempty(self):
@@ -66,11 +109,11 @@ class TestDatabase(TestCase):
         _db = db.Database("/tmp/labm8.sql")
 
         _db.drop_table("foo")
-        self._test(False, _db.table_exists("foo"))
+        self._test(False, "foo" in _db.tables)
         _db.create_table("foo", (("id", "integer primary key"),))
-        self._test(True, _db.table_exists("foo"))
+        self._test(True, "foo" in _db.tables)
         _db.drop_table("foo")
-        self._test(False, _db.table_exists("foo"))
+        self._test(False, "foo" in _db.tables)
 
 
     # copy_table()
@@ -83,7 +126,7 @@ class TestDatabase(TestCase):
         # Copy table "names" to "names_cpy".
         self.db.copy_table("names", "names_cpy")
         # Check that there's a "names_cpy" table.
-        self._test(True, "names_cpy" in self.db.get_tables())
+        self._test(True, "names_cpy" in self.db.tables)
         # Run query on copied table.
         self._test(("Joe",), self.db.execute(cmd).fetchone())
         # Drop copied table.
