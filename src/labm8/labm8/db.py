@@ -208,27 +208,3 @@ class Database(object):
             name (str): Name of database to detach.
         """
         self.execute("DETACH ?", (name,))
-
-    def merge(self, rhs):
-        """
-        Merge the contents of the supplied database.
-
-        Arguments:
-            rhs Another Database instance to merge into this database.
-
-        Raises:
-            SchemaError If the schema of the merged database does not match.
-        """
-        # Throw an "eppy" if the schemas do not match.
-        if self.get_tables() != rhs.get_tables():
-            raise SchemaError("Schema of merged table does not match")
-
-        self.attach(rhs.path, "rhs")
-
-        for table in self.get_tables():
-            self.execute("INSERT OR IGNORE INTO {0} SELECT * FROM rhs.{0}"
-                         .format(table))
-
-        # Tidy up.
-        self.commit()
-        self.detach("rhs")
