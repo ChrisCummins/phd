@@ -556,3 +556,48 @@ class Database(db.Database):
         query = self.execute(cmd, args)
 
         return query.fetchone()
+
+
+def create_test_db(dst, src, num_runtimes=100000):
+    """
+    Create a reduced-size database for testing.
+
+    A copy of the source database is made, but "num_runtimes" are
+    selected randomly. This is to allow faster testing on smaller
+    databases.
+
+    Arguments:
+
+        dst (path): The path to the destination database.
+        src (Database): The source database.
+        num_runtimes (int, optional): The maximum number of runtimes
+          to keep.
+
+    Returns:
+
+        Database: The reduced test database.
+    """
+    io.info("Creating test database of {n} runtimes"
+            .format(n=num_runtimes))
+
+    fs.cp(src.path, dst)
+    test = Database(dst)
+
+    # Copy old runtimes table.
+    test.copy_table("runtimes", "runtimes_tmp")
+    test.drop_table("runtimes")
+
+    # Create new runtimes table.
+    test.create_table_from("runtimes", "runtimes_tmp")
+    cmd = ("INSERT INTO runtimes SELECT * FROM runtimes_tmp "
+           "ORDER BY RANDOM() LIMIT {n}".format(n=num_runtimes))
+    test.execute(cmd)
+
+    # Save changes.
+    test.drop_table("runtimes_tmp")
+    test.commit()
+
+    # Shrink database to reclaim lost space.
+    test.execute("VACUUM")
+
+    return test

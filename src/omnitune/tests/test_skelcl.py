@@ -9,10 +9,6 @@ from omnitune.skelcl import db as database
 
 class TestSkelCL(TestCase):
 
-
-    def __init__(self, *args, **kwargs):
-        super(TestSkelCL, self).__init__(*args, **kwargs)
-
     # hash_params()
     def test_hash_params(self):
         vals = range(4,40,4)
