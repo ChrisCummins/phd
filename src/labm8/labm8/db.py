@@ -297,6 +297,9 @@ class Database(object):
         self.execute("INSERT INTO {dst} SELECT * FROM {src}"
                      .format(dst=dst, src=src))
 
+        # Commit changes.
+        self.commit()
+
     def execute(self, *args):
         """
         Execute the given arguments.
