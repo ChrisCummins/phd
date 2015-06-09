@@ -23,9 +23,10 @@ import labm8 as lab
 from labm8 import fs
 from labm8 import io
 from labm8 import math as labmath
+from labm8 import system
 
 #
-MODULE_SUPPORTED = not lab.is_python3()
+MODULE_SUPPORTED = system.which("weka") and not lab.is_python3()
 
 if MODULE_SUPPORTED:
     import weka
