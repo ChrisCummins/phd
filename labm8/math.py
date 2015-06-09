@@ -34,9 +34,54 @@ from labm8 import modules
 
 
 def ceil(number):
+    """
+    Return the ceiling of a number as an int.
+
+    This is the smallest integral value >= number.
+
+    Example:
+
+        >>> labmath.ceil(1.5)
+        2
+
+    Arguments:
+
+        number (float): A numeric value.
+
+    Returns:
+
+        int: Smallest integer >= number.
+
+    Raises:
+
+        TypeError: If argument is not a numeric value.
+    """
     return int(math.ceil(number))
 
+
 def floor(number):
+    """
+    Return the floor of a number as an int.
+
+    This is the largest integral value <= number.
+
+    Example:
+
+        >>> labmath.floor(1.5)
+        1
+
+    Arguments:
+
+        number (float): A numeric value.
+
+    Returns:
+
+        int: Largest integer <= number.
+
+    Raises:
+
+        TypeError: If argument is not a numeric value.
+    """
     return int(math.floor(number))
 
 

@@ -21,6 +21,34 @@ from labm8 import math as labmath
 
 class TestMath(TestCase):
 
+    # ceil()
+    def test_ceil(self):
+        self._test(int, type(labmath.ceil(1)))
+        self._test(1, labmath.ceil(1))
+        self._test(2, labmath.ceil(1.1))
+        self._test(3, labmath.ceil(2.5))
+        self._test(4, labmath.ceil(3.9))
+
+    def test_ceil_bad_params(self):
+        with self.assertRaises(TypeError):
+            self._test(None, labmath.ceil(None))
+        with self.assertRaises(TypeError):
+            self._test(None, labmath.ceil("abc"))
+
+    # floor()
+    def test_floor(self):
+        self._test(int, type(labmath.floor(1)))
+        self._test(1, labmath.floor(1))
+        self._test(1, labmath.floor(1.1))
+        self._test(2, labmath.floor(2.5))
+        self._test(3, labmath.floor(3.9))
+
+    def test_floor_bad_params(self):
+        with self.assertRaises(TypeError):
+            self._test(None, labmath.floor(None))
+        with self.assertRaises(TypeError):
+            self._test(None, labmath.floor("abc"))
+
     # sqrt() tests
     def test_sqrt_4(self):
         self._test(2, labmath.sqrt(4))
