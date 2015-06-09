@@ -126,6 +126,32 @@ def isfile(path):
     return os.path.isfile(path)
 
 
+def isexe(path):
+    """
+    Return whether a path is an executable file.
+
+    Arguments:
+
+        path (str): Path of the file to check.
+
+    Examples:
+
+        >>> fs.isexe("/bin/ls")
+        True
+
+        >>> fs.isexe("/home")
+        False
+
+        >>> fs.isexe("/not/a/real/path")
+        False
+
+    Returns:
+
+        bool: True if file is executable, else false.
+    """
+    return isfile(path) and os.access(path, os.X_OK)
+
+
 def isdir(path):
     """
     Return whether a path exists, and is a directory.

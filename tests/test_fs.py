@@ -108,6 +108,11 @@ class TestFs(TestCase):
         self._test(False, fs.isfile("/"))
         self._test(False, fs.isfile("/not/a/real/path (I hope!)"))
 
+    # isexe()
+    def test_isexe(self):
+        self._test(True, fs.isexe("/bin/ls"))
+        self._test(False, fs.isexe("/home"))
+        self._test(False, fs.isexe("/not/a/real/path (I hope!)"))
 
     # isdir()
     def test_isdir(self):
