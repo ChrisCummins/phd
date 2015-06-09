@@ -20,7 +20,8 @@ setup(name='omnitune',
       ],
       install_requires=[
           'labm8',
-          'pyopencl'
+          'pyopencl',
+          'python-weka-wrapper'
       ],
       data_files=[
           ('/etc/dbus-1/system.d', ['etc/org.omnitune.conf'])
