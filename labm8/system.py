@@ -186,3 +186,51 @@ def echo(*args, **kwargs):
     else:
         with open(fs.path(path), "w") as file:
             print(*msg, file=file)
+
+
+def which(program, path=os.environ["PATH"].split(os.pathsep)):
+    """
+    Returns the full path of shell commands.
+
+    Replicates the functionality of system which (1) command. Looks
+    for the named program in the directories indicated in the $PATH
+    environment variable, and returns the full path if found.
+
+    Examples:
+
+        >>> system.which("ls")
+        "/bin/ls"
+
+        >>> system.which("/bin/ls")
+        "/bin/ls"
+
+        >>> system.which("not-a-real-command")
+        None
+
+        >>> system.which("ls", path=("/usr/bin", "/bin"))
+        "/bin/ls"
+
+    Arguments:
+
+        program (str): The name of the program to look for. Can
+          be an absolute path.
+        path (sequence of str, optional): A list of directories to
+          look for the pgoram in. Default value is system $PATH.
+
+    Returns:
+
+       str: Full path to program if found, else None.
+    """
+    abspath = True if os.path.split(program)[0] else False
+    if abspath:
+        if fs.isexe(program):
+            return program
+    else:
+        for directory in path:
+            # De-quote directories.
+            directory = directory.strip('"')
+            exe_file = os.path.join(directory, program)
+            if fs.isexe(exe_file):
+                return exe_file
+
+    return None
