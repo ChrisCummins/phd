@@ -476,6 +476,16 @@ class Database(object):
             IOError: In case of error writing to file.
             SchemaError: If the named table is not found.
         """
+        def _quote(value):
+            if lab.is_str(value) and re.search('\s', value):
+                buf = StringIO()
+                writer = csv.writer(buf, quoting=csv.QUOTE_ALL)
+                writer.writerow((value,))
+                return buf.getvalue().rstrip()
+            else:
+                return str(value)
+
+
         # Determine if we're writing to a file or returning a string
         # and create either StringIO or file object.
         isfile = output is not None
@@ -492,30 +502,27 @@ class Database(object):
         writer = csv.writer(output)
 
         # Write header.
-        writer.writerow(("@RELATION " + relation,))
-        writer.writerow([])
+        output.write("@RELATION {relation}\n\n"
+                     .format(relation=_quote(relation)))
 
         # Write schema.
         for attribute in attributes:
             aname, atype = attribute
-
             if len(atype) > 1:
-                # Write out all attribute values.
-                sname, stype = StringIO(), StringIO()
-                namewriter, typewriter = csv.writer(sname), csv.writer(stype)
-                namewriter.writerow((aname,))
-                typewriter.writerow(atype)
                 output.write("@ATTRIBUTE {name} {{{type}}}\n"
-                             .format(name=sname.getvalue().rstrip(),
-                                     type=stype.getvalue().rstrip()))
+                             .format(name=_quote(aname),
+                                     type=",".join(_quote(value) for value in atype)))
             else:
-                writer.writerow(("@ATTRIBUTE " + aname, atype[0]))
+                output.write("@ATTRIBUTE {name} {type}\n"
+                             .format(name=_quote(aname),
+                                     type=_quote(atype[0])))
 
         # Write body.
-        writer.writerow([])
-        writer.writerow(["@DATA"])
+        output.write("\n@DATA\n")
         query = self.execute("SELECT * FROM {table}".format(table=table))
-        writer.writerows(query)
+        for row in query:
+            values = [_quote(column) for column in row]
+            output.write("{0}\n".format(",".join(values)))
 
         if isfile:
             output.close()
