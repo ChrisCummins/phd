@@ -22,6 +22,9 @@ class TestSkelCLDB(TestCase):
         fs.cp("tests/data/skelcl.tiny.db", "/tmp/skelcl.tiny.db")
         self.db_tiny = db.Database("/tmp/skelcl.tiny.db")
 
+        fs.cp("tests/data/ml.db", "/tmp/ml.db")
+        self.mldb = db.MLDatabase("/tmp/ml.db")
+
     # create_test_db()
     def test_create_test_db(self):
         test = db.create_test_db("/tmp/skelcl.test.db", self.db,
@@ -53,6 +56,10 @@ class TestSkelCLDB(TestCase):
                    test.num_rows("features_runtime_stats"))
         self._test(test.num_rows("oracle_params"),
                    test.num_rows("features_oracle_params"))
+
+    def test_mldatabase_oracle_param_frequencies(self):
+        self._test([("4x16", 1), ("88x4", 1), ("8x8", 1)],
+                   self.mldb.oracle_param_frequencies())
 
 
 if __name__ == '__main__':

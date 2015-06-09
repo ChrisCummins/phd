@@ -7,6 +7,7 @@ from labm8 import db
 from labm8 import fs
 from labm8 import io
 from labm8 import math as labmath
+from labm8 import ml
 
 import omnitune
 from omnitune import llvm
@@ -1313,113 +1314,24 @@ class MLDatabase(Database):
         self.populate_features_oracle_params_table()
         self.execute("VACUUM")
 
-    def export_oracle_arff(self, output=None):
-        types = (
-            "NUMERIC", # data_width
-            "NUMERIC", # data_height
-            "NOMINAL", # data_tin
-            "NOMINAL", # data_tout
-            "NUMERIC", # kern_north
-            "NUMERIC", # kern_south
-            "NUMERIC", # kern_east
-            "NUMERIC", # kern_west
-            "NUMERIC", # kern_max_wg_size
-            "NUMERIC", # kern_instruction_count
-            "NUMERIC", # kern_ratio_AShr_insts
-            "NUMERIC", # kern_ratio_Add_insts
-            "NUMERIC", # kern_ratio_Alloca_insts
-            "NUMERIC", # kern_ratio_And_insts
-            "NUMERIC", # kern_ratio_Br_insts
-            "NUMERIC", # kern_ratio_Call_insts
-            "NUMERIC", # kern_ratio_FAdd_insts
-            "NUMERIC", # kern_ratio_FCmp_insts
-            "NUMERIC", # kern_ratio_FDiv_insts
-            "NUMERIC", # kern_ratio_FMul_insts
-            "NUMERIC", # kern_ratio_FPExt_insts
-            "NUMERIC", # kern_ratio_FPToSI_insts
-            "NUMERIC", # kern_ratio_FSub_insts
-            "NUMERIC", # kern_ratio_GetElementPtr_insts
-            "NUMERIC", # kern_ratio_ICmp_insts
-            "NUMERIC", # kern_ratio_InsertValue_insts
-            "NUMERIC", # kern_ratio_Load_insts
-            "NUMERIC", # kern_ratio_Mul_insts
-            "NUMERIC", # kern_ratio_Or_insts
-            "NUMERIC", # kern_ratio_PHI_insts
-            "NUMERIC", # kern_ratio_Ret_insts
-            "NUMERIC", # kern_ratio_SDiv_insts
-            "NUMERIC", # kern_ratio_SExt_insts
-            "NUMERIC", # kern_ratio_SIToFP_insts
-            "NUMERIC", # kern_ratio_SRem_insts
-            "NUMERIC", # kern_ratio_Select_insts
-            "NUMERIC", # kern_ratio_Shl_insts
-            "NUMERIC", # kern_ratio_Store_insts
-            "NUMERIC", # kern_ratio_Sub_insts
-            "NUMERIC", # kern_ratio_Trunc_insts
-            "NUMERIC", # kern_ratio_UDiv_insts
-            "NUMERIC", # kern_ratio_Xor_insts
-            "NUMERIC", # kern_ratio_ZExt_insts
-            "NUMERIC", # kern_ratio_basic_blocks
-            "NUMERIC", # kern_ratio_memory_instructions
-            "NUMERIC", # kern_ratio_non_external_functions
-            "NUMERIC", # dev_count
-            "NUMERIC", # dev_address_bits
-            "NUMERIC", # dev_double_fp_config
-            "NUMERIC", # dev_endian_little
-            "NUMERIC", # dev_execution_capabilities
-            "NOMINAL", # dev_extensions
-            "NUMERIC", # dev_global_mem_cache_size
-            "NUMERIC", # dev_global_mem_cache_type
-            "NUMERIC", # dev_global_mem_cacheline_size
-            "NUMERIC", # dev_global_mem_size
-            "NUMERIC", # dev_host_unified_memory
-            "NUMERIC", # dev_image2d_max_height
-            "NUMERIC", # dev_image2d_max_width
-            "NUMERIC", # dev_image3d_max_depth
-            "NUMERIC", # dev_image3d_max_height
-            "NUMERIC", # dev_image3d_max_width
-            "NUMERIC", # dev_image_support
-            "NUMERIC", # dev_local_mem_size
-            "NUMERIC", # dev_local_mem_type
-            "NUMERIC", # dev_max_clock_frequency
-            "NUMERIC", # dev_max_compute_units
-            "NUMERIC", # dev_max_constant_args
-            "NUMERIC", # dev_max_constant_buffer_size
-            "NUMERIC", # dev_max_mem_alloc_size
-            "NUMERIC", # dev_max_parameter_size
-            "NUMERIC", # dev_max_read_image_args
-            "NUMERIC", # dev_max_samplers
-            "NUMERIC", # dev_max_work_group_size
-            "NUMERIC", # dev_max_work_item_dimensions
-            "NUMERIC", # dev_max_work_item_sizes_0
-            "NUMERIC", # dev_max_work_item_sizes_1
-            "NUMERIC", # dev_max_work_item_sizes_2
-            "NUMERIC", # dev_max_write_image_args
-            "NUMERIC", # dev_mem_base_addr_align
-            "NUMERIC", # dev_min_data_type_align_size
-            "NUMERIC", # dev_native_vector_width_char
-            "NUMERIC", # dev_native_vector_width_double
-            "NUMERIC", # dev_native_vector_width_float
-            "NUMERIC", # dev_native_vector_width_half
-            "NUMERIC", # dev_native_vector_width_int
-            "NUMERIC", # dev_native_vector_width_long
-            "NUMERIC", # dev_native_vector_width_short
-            "NUMERIC", # dev_preferred_vector_width_char
-            "NUMERIC", # dev_preferred_vector_width_double
-            "NUMERIC", # dev_preferred_vector_width_float
-            "NUMERIC", # dev_preferred_vector_width_half
-            "NUMERIC", # dev_preferred_vector_width_int
-            "NUMERIC", # dev_preferred_vector_width_long
-            "NUMERIC", # dev_preferred_vector_width_short
-            "NUMERIC", # dev_queue_properties
-            "NUMERIC", # dev_single_fp_config
-            "NUMERIC", # dev_type
-            "NOMINAL", # dev_vendor
-            "NOMINAL", # dev_vendor_id
-            "NOMINAL", # dev_version
-            "NOMINAL"  # wgsize
-        )
-        self.export_arff("features_oracle_params",
-                         output=output, types=types)
+    def oracle_param_frequencies(self, table="oracle_params"):
+        """
+        Return a frequency table of optimal parameter values.
+
+        Arguments:
+
+            table (str, optional): The name of the table to calculate
+              the frequencies of.
+
+        Returns:
+
+           list of tuples: Where each tuple consists of a
+             (params,frequency) pair.
+        """
+        query = self.execute("SELECT params,Count(*) AS count FROM "
+                             "{table} GROUP BY params ORDER BY count ASC"
+                             .format(table=table))
+        return [row for row in query]
 
     @staticmethod
     def init_from_db(dst, src):
