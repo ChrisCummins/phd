@@ -492,20 +492,30 @@ class Database(object):
         writer = csv.writer(output)
 
         # Write header.
-        writer.writerow(["@RELATION", relation])
+        writer.writerow(("@RELATION " + relation,))
         writer.writerow([])
 
         # Write schema.
         for attribute in attributes:
             aname, atype = attribute
-            writer.writerow(("@ATTRIBUTE", aname) + atype)
+
+            if len(atype) > 1:
+                # Write out all attribute values.
+                sname, stype = StringIO(), StringIO()
+                namewriter, typewriter = csv.writer(sname), csv.writer(stype)
+                namewriter.writerow((aname,))
+                typewriter.writerow(atype)
+                output.write("@ATTRIBUTE {name} {{{type}}}\n"
+                             .format(name=sname.getvalue().rstrip(),
+                                     type=stype.getvalue().rstrip()))
+            else:
+                writer.writerow(("@ATTRIBUTE " + aname, atype[0]))
 
         # Write body.
         writer.writerow([])
         writer.writerow(["@DATA"])
-        query = "SELECT * FROM {table}".format(table=table)
-        for row in self.execute(query):
-            writer.writerow(row)
+        query = self.execute("SELECT * FROM {table}".format(table=table))
+        writer.writerows(query)
 
         if isfile:
             output.close()
