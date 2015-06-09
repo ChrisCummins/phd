@@ -17,8 +17,32 @@
 from setuptools import setup
 from sys import version_info
 
-# Python weka wrapper currently only supports Python2.
-python_weka_wrapper = "python-weka-wrapper" if version_info[0] == 2 else ""
+def program_exists(program):
+    """
+    Return if a program exists in $PATH.
+
+    Arguments:
+
+        program (str): Name of program.
+
+    Returns:
+
+        bool: True if program name found in system path, else false.
+    """
+    import os
+    for path in os.environ["PATH"].split(os.pathsep):
+        path = path.strip('"')
+        exe_file = os.path.join(path, program)
+        if os.path.isfile(exe_file) and os.access(exe_file, os.X_OK):
+            return True
+    return False
+
+# Python weka wrapper required weka (obviously), and only supports
+# Python2.
+if program_exists("weka") and version_info[0] == 2:
+    python_weka_wrapper = "python-weka-wrapper"
+else:
+    python_weka_wrapper = ""
 
 setup(name="labm8",
       version="0.0.1",
