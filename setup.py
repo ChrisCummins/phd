@@ -1,4 +1,8 @@
 from setuptools import setup
+from sys import version_info
+
+# Python weka wrapper currently only supports Python2.
+python_weka_wrapper = "python-weka-wrapper" if version_info[0] == 2 else ""
 
 setup(name='labm8',
       version='0.0.1',
@@ -16,6 +20,7 @@ setup(name='labm8',
       install_requires=[
           'numpy',
           'pandas',
-          'scipy'
+          'scipy',
+          python_weka_wrapper
       ],
       zip_safe=False)
