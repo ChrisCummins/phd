@@ -562,6 +562,450 @@ class Database(db.Database):
         return query.fetchone()
 
 
+CREATE_FEATURES_RUNTIME_STATS_TABLE = """
+CREATE TABLE IF NOT EXISTS features_runtime_stats (
+  data_width integer,
+  data_height integer,
+  data_tin text,
+  data_tout text,
+  kern_north integer,
+  kern_south integer,
+  kern_east integer,
+  kern_west integer,
+  kern_max_wg_size integer,
+  kern_instruction_count integer,
+  kern_ratio_AShr_insts real,
+  kern_ratio_Add_insts real,
+  kern_ratio_Alloca_insts real,
+  kern_ratio_And_insts real,
+  kern_ratio_Br_insts real,
+  kern_ratio_Call_insts real,
+  kern_ratio_FAdd_insts real,
+  kern_ratio_FCmp_insts real,
+  kern_ratio_FDiv_insts real,
+  kern_ratio_FMul_insts real,
+  kern_ratio_FPExt_insts real,
+  kern_ratio_FPToSI_insts real,
+  kern_ratio_FSub_insts real,
+  kern_ratio_GetElementPtr_insts real,
+  kern_ratio_ICmp_insts real,
+  kern_ratio_InsertValue_insts real,
+  kern_ratio_Load_insts real,
+  kern_ratio_Mul_insts real,
+  kern_ratio_Or_insts real,
+  kern_ratio_PHI_insts real,
+  kern_ratio_Ret_insts real,
+  kern_ratio_SDiv_insts real,
+  kern_ratio_SExt_insts real,
+  kern_ratio_SIToFP_insts real,
+  kern_ratio_SRem_insts real,
+  kern_ratio_Select_insts real,
+  kern_ratio_Shl_insts real,
+  kern_ratio_Store_insts real,
+  kern_ratio_Sub_insts real,
+  kern_ratio_Trunc_insts real,
+  kern_ratio_UDiv_insts real,
+  kern_ratio_Xor_insts real,
+  kern_ratio_ZExt_insts real,
+  kern_ratio_basic_blocks real,
+  kern_ratio_memory_instructions real,
+  kern_ratio_non_external_functions real,
+  dev_count integer,
+  dev_address_bits integer,
+  dev_double_fp_config integer,
+  dev_endian_little integer,
+  dev_execution_capabilities integer,
+  dev_extensions text,
+  dev_global_mem_cache_size integer,
+  dev_global_mem_cache_type integer,
+  dev_global_mem_cacheline_size integer,
+  dev_global_mem_size integer,
+  dev_host_unified_memory integer,
+  dev_image2d_max_height integer,
+  dev_image2d_max_width integer,
+  dev_image3d_max_depth integer,
+  dev_image3d_max_height integer,
+  dev_image3d_max_width integer,
+  dev_image_support integer,
+  dev_local_mem_size integer,
+  dev_local_mem_type integer,
+  dev_max_clock_frequency integer,
+  dev_max_compute_units integer,
+  dev_max_constant_args integer,
+  dev_max_constant_buffer_size integer,
+  dev_max_mem_alloc_size integer,
+  dev_max_parameter_size integer,
+  dev_max_read_image_args integer,
+  dev_max_samplers integer,
+  dev_max_work_group_size integer,
+  dev_max_work_item_dimensions integer,
+  dev_max_work_item_sizes_0 integer,
+  dev_max_work_item_sizes_1 integer,
+  dev_max_work_item_sizes_2 integer,
+  dev_max_write_image_args integer,
+  dev_mem_base_addr_align integer,
+  dev_min_data_type_align_size integer,
+  dev_native_vector_width_char integer,
+  dev_native_vector_width_double integer,
+  dev_native_vector_width_float integer,
+  dev_native_vector_width_half integer,
+  dev_native_vector_width_int integer,
+  dev_native_vector_width_long integer,
+  dev_native_vector_width_short integer,
+  dev_preferred_vector_width_char integer,
+  dev_preferred_vector_width_double integer,
+  dev_preferred_vector_width_float integer,
+  dev_preferred_vector_width_half integer,
+  dev_preferred_vector_width_int integer,
+  dev_preferred_vector_width_long integer,
+  dev_preferred_vector_width_short integer,
+  dev_queue_properties integer,
+  dev_single_fp_config integer,
+  dev_type integer,
+  dev_vendor text,
+  dev_vendor_id text,
+  dev_version text,
+  wgsize text,
+  runtime real
+)"""
+
+
+POPULATE_FEATURES_RUNTIME_STATS_TABLE = """
+INSERT INTO features_runtime_stats SELECT
+  width                          as  data_width,
+  height                         as  data_height,
+  tin                            as  data_tin,
+  tout                           as  data_tout,
+  north                          as  kern_north,
+  south                          as  kern_south,
+  east                           as  kern_east,
+  west                           as  kern_west,
+  instruction_count              as  kern_instruction_count,
+  ratio_AShr_insts               as  kern_ratio_AShr_insts,
+  ratio_Add_insts                as  kern_ratio_Add_insts,
+  ratio_Alloca_insts             as  kern_ratio_Alloca_insts,
+  ratio_And_insts                as  kern_ratio_And_insts,
+  ratio_Br_insts                 as  kern_ratio_Br_insts,
+  ratio_Call_insts               as  kern_ratio_Call_insts,
+  ratio_FAdd_insts               as  kern_ratio_FAdd_insts,
+  ratio_FCmp_insts               as  kern_ratio_FCmp_insts,
+  ratio_FDiv_insts               as  kern_ratio_FDiv_insts,
+  ratio_FMul_insts               as  kern_ratio_FMul_insts,
+  ratio_FPExt_insts              as  kern_ratio_FPExt_insts,
+  ratio_FPToSI_insts             as  kern_ratio_FPToSI_insts,
+  ratio_FSub_insts               as  kern_ratio_FSub_insts,
+  ratio_GetElementPtr_insts      as  kern_ratio_GetElementPtr_insts,
+  ratio_ICmp_insts               as  kern_ratio_ICmp_insts,
+  ratio_InsertValue_insts        as  kern_ratio_InsertValue_insts,
+  ratio_Load_insts               as  kern_ratio_Load_insts,
+  ratio_Mul_insts                as  kern_ratio_Mul_insts,
+  ratio_Or_insts                 as  kern_ratio_Or_insts,
+  ratio_PHI_insts                as  kern_ratio_PHI_insts,
+  ratio_Ret_insts                as  kern_ratio_Ret_insts,
+  ratio_SDiv_insts               as  kern_ratio_SDiv_insts,
+  ratio_SExt_insts               as  kern_ratio_SExt_insts,
+  ratio_SIToFP_insts             as  kern_ratio_SIToFP_insts,
+  ratio_SRem_insts               as  kern_ratio_SRem_insts,
+  ratio_Select_insts             as  kern_ratio_Select_insts,
+  ratio_Shl_insts                as  kern_ratio_Shl_insts,
+  ratio_Store_insts              as  kern_ratio_Store_insts,
+  ratio_Sub_insts                as  kern_ratio_Sub_insts,
+  ratio_Trunc_insts              as  kern_ratio_Trunc_insts,
+  ratio_UDiv_insts               as  kern_ratio_UDiv_insts,
+  ratio_Xor_insts                as  kern_ratio_Xor_insts,
+  ratio_ZExt_insts               as  kern_ratio_ZExt_insts,
+  ratio_basic_blocks             as  kern_ratio_basic_blocks,
+  ratio_memory_instructions      as  kern_ratio_memory_instructions,
+  ratio_non_external_functions   as  kern_ratio_non_external_functions,
+  max_wg_size                    as  kern_max_wg_size,
+  count                          as  dev_count,
+  address_bits                   as  dev_address_bits,
+  double_fp_config               as  dev_double_fp_config,
+  endian_little                  as  dev_endian_little,
+  execution_capabilities         as  dev_execution_capabilities,
+  extensions                     as  dev_extensions,
+  global_mem_cache_size          as  dev_global_mem_cache_size,
+  global_mem_cache_type          as  dev_global_mem_cache_type,
+  global_mem_cacheline_size      as  dev_global_mem_cacheline_size,
+  global_mem_size                as  dev_global_mem_size,
+  host_unified_memory            as  dev_host_unified_memory,
+  image2d_max_height             as  dev_image2d_max_height,
+  image2d_max_width              as  dev_image2d_max_width,
+  image3d_max_depth              as  dev_image3d_max_depth,
+  image3d_max_height             as  dev_image3d_max_height,
+  image3d_max_width              as  dev_image3d_max_width,
+  image_support                  as  dev_image_support,
+  local_mem_size                 as  dev_local_mem_size,
+  local_mem_type                 as  dev_local_mem_type,
+  max_clock_frequency            as  dev_max_clock_frequency,
+  max_compute_units              as  dev_max_compute_units,
+  max_constant_args              as  dev_max_constant_args,
+  max_constant_buffer_size       as  dev_max_constant_buffer_size,
+  max_mem_alloc_size             as  dev_max_mem_alloc_size,
+  max_parameter_size             as  dev_max_parameter_size,
+  max_read_image_args            as  dev_max_read_image_args,
+  max_samplers                   as  dev_max_samplers,
+  max_work_group_size            as  dev_max_work_group_size,
+  max_work_item_dimensions       as  dev_max_work_item_dimensions,
+  max_work_item_sizes_0          as  dev_max_work_item_sizes_0,
+  max_work_item_sizes_1          as  dev_max_work_item_sizes_1,
+  max_work_item_sizes_2          as  dev_max_work_item_sizes_2,
+  max_write_image_args           as  dev_max_write_image_args,
+  mem_base_addr_align            as  dev_mem_base_addr_align,
+  min_data_type_align_size       as  dev_min_data_type_align_size,
+  native_vector_width_char       as  dev_native_vector_width_char,
+  native_vector_width_double     as  dev_native_vector_width_double,
+  native_vector_width_float      as  dev_native_vector_width_float,
+  native_vector_width_half       as  dev_native_vector_width_half,
+  native_vector_width_int        as  dev_native_vector_width_int,
+  native_vector_width_long       as  dev_native_vector_width_long,
+  native_vector_width_short      as  dev_native_vector_width_short,
+  preferred_vector_width_char    as  dev_preferred_vector_width_char,
+  preferred_vector_width_double  as  dev_preferred_vector_width_double,
+  preferred_vector_width_float   as  dev_preferred_vector_width_float,
+  preferred_vector_width_half    as  dev_preferred_vector_width_half,
+  preferred_vector_width_int     as  dev_preferred_vector_width_int,
+  preferred_vector_width_long    as  dev_preferred_vector_width_long,
+  preferred_vector_width_short   as  dev_preferred_vector_width_short,
+  queue_properties               as  dev_queue_properties,
+  single_fp_config               as  dev_single_fp_config,
+  type                           as  dev_type,
+  vendor                         as  dev_vendor,
+  vendor_id                      as  dev_vendor_id,
+  version                        as  dev_version,
+  params                         as  wgsize,
+  mean                           as  runtime
+FROM (
+    SELECT * FROM (
+        SELECT * FROM (
+            SELECT * FROM runtime_stats
+            LEFT JOIN scenarios ON runtime_stats.scenario=scenarios.id
+        ) LEFT JOIN dataset_features ON dataset=dataset_features.id
+    ) LEFT JOIN kernel_features ON kernel=kernel_features.id
+) LEFT JOIN device_features ON device=device_features.id"""
+
+
+CREATE_FEATURES_ORACLE_PARAMS_TABLE = """
+CREATE TABLE IF NOT EXISTS features_oracle_params (
+  data_width integer,
+  data_height integer,
+  data_tin text,
+  data_tout text,
+  kern_north integer,
+  kern_south integer,
+  kern_east integer,
+  kern_west integer,
+  kern_max_wg_size integer,
+  kern_instruction_count integer,
+  kern_ratio_AShr_insts real,
+  kern_ratio_Add_insts real,
+  kern_ratio_Alloca_insts real,
+  kern_ratio_And_insts real,
+  kern_ratio_Br_insts real,
+  kern_ratio_Call_insts real,
+  kern_ratio_FAdd_insts real,
+  kern_ratio_FCmp_insts real,
+  kern_ratio_FDiv_insts real,
+  kern_ratio_FMul_insts real,
+  kern_ratio_FPExt_insts real,
+  kern_ratio_FPToSI_insts real,
+  kern_ratio_FSub_insts real,
+  kern_ratio_GetElementPtr_insts real,
+  kern_ratio_ICmp_insts real,
+  kern_ratio_InsertValue_insts real,
+  kern_ratio_Load_insts real,
+  kern_ratio_Mul_insts real,
+  kern_ratio_Or_insts real,
+  kern_ratio_PHI_insts real,
+  kern_ratio_Ret_insts real,
+  kern_ratio_SDiv_insts real,
+  kern_ratio_SExt_insts real,
+  kern_ratio_SIToFP_insts real,
+  kern_ratio_SRem_insts real,
+  kern_ratio_Select_insts real,
+  kern_ratio_Shl_insts real,
+  kern_ratio_Store_insts real,
+  kern_ratio_Sub_insts real,
+  kern_ratio_Trunc_insts real,
+  kern_ratio_UDiv_insts real,
+  kern_ratio_Xor_insts real,
+  kern_ratio_ZExt_insts real,
+  kern_ratio_basic_blocks real,
+  kern_ratio_memory_instructions real,
+  kern_ratio_non_external_functions real,
+  dev_count integer,
+  dev_address_bits integer,
+  dev_double_fp_config integer,
+  dev_endian_little integer,
+  dev_execution_capabilities integer,
+  dev_extensions text,
+  dev_global_mem_cache_size integer,
+  dev_global_mem_cache_type integer,
+  dev_global_mem_cacheline_size integer,
+  dev_global_mem_size integer,
+  dev_host_unified_memory integer,
+  dev_image2d_max_height integer,
+  dev_image2d_max_width integer,
+  dev_image3d_max_depth integer,
+  dev_image3d_max_height integer,
+  dev_image3d_max_width integer,
+  dev_image_support integer,
+  dev_local_mem_size integer,
+  dev_local_mem_type integer,
+  dev_max_clock_frequency integer,
+  dev_max_compute_units integer,
+  dev_max_constant_args integer,
+  dev_max_constant_buffer_size integer,
+  dev_max_mem_alloc_size integer,
+  dev_max_parameter_size integer,
+  dev_max_read_image_args integer,
+  dev_max_samplers integer,
+  dev_max_work_group_size integer,
+  dev_max_work_item_dimensions integer,
+  dev_max_work_item_sizes_0 integer,
+  dev_max_work_item_sizes_1 integer,
+  dev_max_work_item_sizes_2 integer,
+  dev_max_write_image_args integer,
+  dev_mem_base_addr_align integer,
+  dev_min_data_type_align_size integer,
+  dev_native_vector_width_char integer,
+  dev_native_vector_width_double integer,
+  dev_native_vector_width_float integer,
+  dev_native_vector_width_half integer,
+  dev_native_vector_width_int integer,
+  dev_native_vector_width_long integer,
+  dev_native_vector_width_short integer,
+  dev_preferred_vector_width_char integer,
+  dev_preferred_vector_width_double integer,
+  dev_preferred_vector_width_float integer,
+  dev_preferred_vector_width_half integer,
+  dev_preferred_vector_width_int integer,
+  dev_preferred_vector_width_long integer,
+  dev_preferred_vector_width_short integer,
+  dev_queue_properties integer,
+  dev_single_fp_config integer,
+  dev_type integer,
+  dev_vendor text,
+  dev_vendor_id text,
+  dev_version text,
+  wgsize text
+)"""
+
+
+POPULATE_FEATURES_ORACLE_PARAMS_TABLE = """
+INSERT INTO features_oracle_params SELECT
+  width                          as  data_width,
+  height                         as  data_height,
+  tin                            as  data_tin,
+  tout                           as  data_tout,
+  north                          as  kern_north,
+  south                          as  kern_south,
+  east                           as  kern_east,
+  west                           as  kern_west,
+  instruction_count              as  kern_instruction_count,
+  ratio_AShr_insts               as  kern_ratio_AShr_insts,
+  ratio_Add_insts                as  kern_ratio_Add_insts,
+  ratio_Alloca_insts             as  kern_ratio_Alloca_insts,
+  ratio_And_insts                as  kern_ratio_And_insts,
+  ratio_Br_insts                 as  kern_ratio_Br_insts,
+  ratio_Call_insts               as  kern_ratio_Call_insts,
+  ratio_FAdd_insts               as  kern_ratio_FAdd_insts,
+  ratio_FCmp_insts               as  kern_ratio_FCmp_insts,
+  ratio_FDiv_insts               as  kern_ratio_FDiv_insts,
+  ratio_FMul_insts               as  kern_ratio_FMul_insts,
+  ratio_FPExt_insts              as  kern_ratio_FPExt_insts,
+  ratio_FPToSI_insts             as  kern_ratio_FPToSI_insts,
+  ratio_FSub_insts               as  kern_ratio_FSub_insts,
+  ratio_GetElementPtr_insts      as  kern_ratio_GetElementPtr_insts,
+  ratio_ICmp_insts               as  kern_ratio_ICmp_insts,
+  ratio_InsertValue_insts        as  kern_ratio_InsertValue_insts,
+  ratio_Load_insts               as  kern_ratio_Load_insts,
+  ratio_Mul_insts                as  kern_ratio_Mul_insts,
+  ratio_Or_insts                 as  kern_ratio_Or_insts,
+  ratio_PHI_insts                as  kern_ratio_PHI_insts,
+  ratio_Ret_insts                as  kern_ratio_Ret_insts,
+  ratio_SDiv_insts               as  kern_ratio_SDiv_insts,
+  ratio_SExt_insts               as  kern_ratio_SExt_insts,
+  ratio_SIToFP_insts             as  kern_ratio_SIToFP_insts,
+  ratio_SRem_insts               as  kern_ratio_SRem_insts,
+  ratio_Select_insts             as  kern_ratio_Select_insts,
+  ratio_Shl_insts                as  kern_ratio_Shl_insts,
+  ratio_Store_insts              as  kern_ratio_Store_insts,
+  ratio_Sub_insts                as  kern_ratio_Sub_insts,
+  ratio_Trunc_insts              as  kern_ratio_Trunc_insts,
+  ratio_UDiv_insts               as  kern_ratio_UDiv_insts,
+  ratio_Xor_insts                as  kern_ratio_Xor_insts,
+  ratio_ZExt_insts               as  kern_ratio_ZExt_insts,
+  ratio_basic_blocks             as  kern_ratio_basic_blocks,
+  ratio_memory_instructions      as  kern_ratio_memory_instructions,
+  ratio_non_external_functions   as  kern_ratio_non_external_functions,
+  max_wg_size                    as  kern_max_wg_size,
+  count                          as  dev_count,
+  address_bits                   as  dev_address_bits,
+  double_fp_config               as  dev_double_fp_config,
+  endian_little                  as  dev_endian_little,
+  execution_capabilities         as  dev_execution_capabilities,
+  extensions                     as  dev_extensions,
+  global_mem_cache_size          as  dev_global_mem_cache_size,
+  global_mem_cache_type          as  dev_global_mem_cache_type,
+  global_mem_cacheline_size      as  dev_global_mem_cacheline_size,
+  global_mem_size                as  dev_global_mem_size,
+  host_unified_memory            as  dev_host_unified_memory,
+  image2d_max_height             as  dev_image2d_max_height,
+  image2d_max_width              as  dev_image2d_max_width,
+  image3d_max_depth              as  dev_image3d_max_depth,
+  image3d_max_height             as  dev_image3d_max_height,
+  image3d_max_width              as  dev_image3d_max_width,
+  image_support                  as  dev_image_support,
+  local_mem_size                 as  dev_local_mem_size,
+  local_mem_type                 as  dev_local_mem_type,
+  max_clock_frequency            as  dev_max_clock_frequency,
+  max_compute_units              as  dev_max_compute_units,
+  max_constant_args              as  dev_max_constant_args,
+  max_constant_buffer_size       as  dev_max_constant_buffer_size,
+  max_mem_alloc_size             as  dev_max_mem_alloc_size,
+  max_parameter_size             as  dev_max_parameter_size,
+  max_read_image_args            as  dev_max_read_image_args,
+  max_samplers                   as  dev_max_samplers,
+  max_work_group_size            as  dev_max_work_group_size,
+  max_work_item_dimensions       as  dev_max_work_item_dimensions,
+  max_work_item_sizes_0          as  dev_max_work_item_sizes_0,
+  max_work_item_sizes_1          as  dev_max_work_item_sizes_1,
+  max_work_item_sizes_2          as  dev_max_work_item_sizes_2,
+  max_write_image_args           as  dev_max_write_image_args,
+  mem_base_addr_align            as  dev_mem_base_addr_align,
+  min_data_type_align_size       as  dev_min_data_type_align_size,
+  native_vector_width_char       as  dev_native_vector_width_char,
+  native_vector_width_double     as  dev_native_vector_width_double,
+  native_vector_width_float      as  dev_native_vector_width_float,
+  native_vector_width_half       as  dev_native_vector_width_half,
+  native_vector_width_int        as  dev_native_vector_width_int,
+  native_vector_width_long       as  dev_native_vector_width_long,
+  native_vector_width_short      as  dev_native_vector_width_short,
+  preferred_vector_width_char    as  dev_preferred_vector_width_char,
+  preferred_vector_width_double  as  dev_preferred_vector_width_double,
+  preferred_vector_width_float   as  dev_preferred_vector_width_float,
+  preferred_vector_width_half    as  dev_preferred_vector_width_half,
+  preferred_vector_width_int     as  dev_preferred_vector_width_int,
+  preferred_vector_width_long    as  dev_preferred_vector_width_long,
+  preferred_vector_width_short   as  dev_preferred_vector_width_short,
+  queue_properties               as  dev_queue_properties,
+  single_fp_config               as  dev_single_fp_config,
+  type                           as  dev_type,
+  vendor                         as  dev_vendor,
+  vendor_id                      as  dev_vendor_id,
+  version                        as  dev_version,
+  params                         as  wgsize
+FROM (
+    SELECT * FROM (
+        SELECT * FROM (
+            SELECT * FROM oracle_params
+            LEFT JOIN scenarios ON oracle_params.scenario=scenarios.id
+        ) LEFT JOIN dataset_features ON dataset=dataset_features.id
+    ) LEFT JOIN kernel_features ON kernel=kernel_features.id
+) LEFT JOIN device_features ON device=device_features.id"""
+
+
 class MLDatabase(Database):
     """
     Persistent database store for SkelCL training data.
@@ -717,6 +1161,9 @@ class MLDatabase(Database):
                            ("num_samples",                     "integer"),
                            ("mean_runtime",                    "real")))
 
+        self.execute(CREATE_FEATURES_RUNTIME_STATS_TABLE)
+        self.execute(CREATE_FEATURES_ORACLE_PARAMS_TABLE)
+
     def populate_kernel_features_table(self):
         """
         Derive kernel features from "kernels" table.
@@ -845,6 +1292,14 @@ class MLDatabase(Database):
                         .format((i / total) * 100))
         self.commit()
 
+    def populate_features_runtime_stats_table(self):
+        self.execute(POPULATE_FEATURES_RUNTIME_STATS_TABLE)
+        self.commit()
+
+    def populate_features_oracle_params_table(self):
+        self.execute(POPULATE_FEATURES_ORACLE_PARAMS_TABLE)
+        self.commit()
+
     def populate_tables(self):
         """
         Populate the derived tables from the base database.
@@ -854,7 +1309,117 @@ class MLDatabase(Database):
         self.populate_dataset_features_table()
         self.populate_runtime_stats_table()
         self.populate_oracle_params_table()
+        self.populate_features_runtime_stats_table()
+        self.populate_features_oracle_params_table()
         self.execute("VACUUM")
+
+    def export_oracle_arff(self, output=None):
+        types = (
+            "NUMERIC", # data_width
+            "NUMERIC", # data_height
+            "NOMINAL", # data_tin
+            "NOMINAL", # data_tout
+            "NUMERIC", # kern_north
+            "NUMERIC", # kern_south
+            "NUMERIC", # kern_east
+            "NUMERIC", # kern_west
+            "NUMERIC", # kern_max_wg_size
+            "NUMERIC", # kern_instruction_count
+            "NUMERIC", # kern_ratio_AShr_insts
+            "NUMERIC", # kern_ratio_Add_insts
+            "NUMERIC", # kern_ratio_Alloca_insts
+            "NUMERIC", # kern_ratio_And_insts
+            "NUMERIC", # kern_ratio_Br_insts
+            "NUMERIC", # kern_ratio_Call_insts
+            "NUMERIC", # kern_ratio_FAdd_insts
+            "NUMERIC", # kern_ratio_FCmp_insts
+            "NUMERIC", # kern_ratio_FDiv_insts
+            "NUMERIC", # kern_ratio_FMul_insts
+            "NUMERIC", # kern_ratio_FPExt_insts
+            "NUMERIC", # kern_ratio_FPToSI_insts
+            "NUMERIC", # kern_ratio_FSub_insts
+            "NUMERIC", # kern_ratio_GetElementPtr_insts
+            "NUMERIC", # kern_ratio_ICmp_insts
+            "NUMERIC", # kern_ratio_InsertValue_insts
+            "NUMERIC", # kern_ratio_Load_insts
+            "NUMERIC", # kern_ratio_Mul_insts
+            "NUMERIC", # kern_ratio_Or_insts
+            "NUMERIC", # kern_ratio_PHI_insts
+            "NUMERIC", # kern_ratio_Ret_insts
+            "NUMERIC", # kern_ratio_SDiv_insts
+            "NUMERIC", # kern_ratio_SExt_insts
+            "NUMERIC", # kern_ratio_SIToFP_insts
+            "NUMERIC", # kern_ratio_SRem_insts
+            "NUMERIC", # kern_ratio_Select_insts
+            "NUMERIC", # kern_ratio_Shl_insts
+            "NUMERIC", # kern_ratio_Store_insts
+            "NUMERIC", # kern_ratio_Sub_insts
+            "NUMERIC", # kern_ratio_Trunc_insts
+            "NUMERIC", # kern_ratio_UDiv_insts
+            "NUMERIC", # kern_ratio_Xor_insts
+            "NUMERIC", # kern_ratio_ZExt_insts
+            "NUMERIC", # kern_ratio_basic_blocks
+            "NUMERIC", # kern_ratio_memory_instructions
+            "NUMERIC", # kern_ratio_non_external_functions
+            "NUMERIC", # dev_count
+            "NUMERIC", # dev_address_bits
+            "NUMERIC", # dev_double_fp_config
+            "NUMERIC", # dev_endian_little
+            "NUMERIC", # dev_execution_capabilities
+            "NOMINAL", # dev_extensions
+            "NUMERIC", # dev_global_mem_cache_size
+            "NUMERIC", # dev_global_mem_cache_type
+            "NUMERIC", # dev_global_mem_cacheline_size
+            "NUMERIC", # dev_global_mem_size
+            "NUMERIC", # dev_host_unified_memory
+            "NUMERIC", # dev_image2d_max_height
+            "NUMERIC", # dev_image2d_max_width
+            "NUMERIC", # dev_image3d_max_depth
+            "NUMERIC", # dev_image3d_max_height
+            "NUMERIC", # dev_image3d_max_width
+            "NUMERIC", # dev_image_support
+            "NUMERIC", # dev_local_mem_size
+            "NUMERIC", # dev_local_mem_type
+            "NUMERIC", # dev_max_clock_frequency
+            "NUMERIC", # dev_max_compute_units
+            "NUMERIC", # dev_max_constant_args
+            "NUMERIC", # dev_max_constant_buffer_size
+            "NUMERIC", # dev_max_mem_alloc_size
+            "NUMERIC", # dev_max_parameter_size
+            "NUMERIC", # dev_max_read_image_args
+            "NUMERIC", # dev_max_samplers
+            "NUMERIC", # dev_max_work_group_size
+            "NUMERIC", # dev_max_work_item_dimensions
+            "NUMERIC", # dev_max_work_item_sizes_0
+            "NUMERIC", # dev_max_work_item_sizes_1
+            "NUMERIC", # dev_max_work_item_sizes_2
+            "NUMERIC", # dev_max_write_image_args
+            "NUMERIC", # dev_mem_base_addr_align
+            "NUMERIC", # dev_min_data_type_align_size
+            "NUMERIC", # dev_native_vector_width_char
+            "NUMERIC", # dev_native_vector_width_double
+            "NUMERIC", # dev_native_vector_width_float
+            "NUMERIC", # dev_native_vector_width_half
+            "NUMERIC", # dev_native_vector_width_int
+            "NUMERIC", # dev_native_vector_width_long
+            "NUMERIC", # dev_native_vector_width_short
+            "NUMERIC", # dev_preferred_vector_width_char
+            "NUMERIC", # dev_preferred_vector_width_double
+            "NUMERIC", # dev_preferred_vector_width_float
+            "NUMERIC", # dev_preferred_vector_width_half
+            "NUMERIC", # dev_preferred_vector_width_int
+            "NUMERIC", # dev_preferred_vector_width_long
+            "NUMERIC", # dev_preferred_vector_width_short
+            "NUMERIC", # dev_queue_properties
+            "NUMERIC", # dev_single_fp_config
+            "NUMERIC", # dev_type
+            "NOMINAL", # dev_vendor
+            "NOMINAL", # dev_vendor_id
+            "NOMINAL", # dev_version
+            "NOMINAL"  # wgsize
+        )
+        self.export_arff("features_oracle_params",
+                         output=output, types=types)
 
     @staticmethod
     def init_from_db(dst, src):
