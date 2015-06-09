@@ -33,6 +33,13 @@ import labm8 as lab
 from labm8 import modules
 
 
+def ceil(number):
+    return int(math.ceil(number))
+
+def floor(number):
+    return int(math.floor(number))
+
+
 def sqrt(number):
     """
     Return the square root of a number.
@@ -69,7 +76,6 @@ def median(array):
         return sorted_vals[midpoint]
     else:
         return (sorted_vals[midpoint - 1] + sorted_vals[midpoint]) / 2.0
-
 
 def range(array):
     """
