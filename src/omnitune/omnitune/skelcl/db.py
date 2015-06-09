@@ -775,18 +775,21 @@ class MLDatabase(Database):
             placeholders = ",".join(["?"] * len(features))
             self.execute("INSERT INTO kernel_features VALUES ({placeholders})"
                          .format(placeholders=placeholders), features)
+        self.commit()
 
     def populate_device_features_table(self):
         """
         Derive device features from "devices" table.
         """
         self.execute("INSERT INTO device_features SELECT * FROM devices")
+        self.commit()
 
     def populate_dataset_features_table(self):
         """
         Derive dataset features from "datasets" table.
         """
         self.execute("INSERT INTO dataset_features SELECT * FROM datasets")
+        self.commit()
 
     def populate_runtime_stats_table(self):
         """
@@ -813,6 +816,7 @@ class MLDatabase(Database):
                 self.commit()
                 io.info("Creating runtime_stats ... {0:02.3f}%."
                         .format((i / total) * 100))
+        self.commit()
 
     def populate_oracle_params_table(self):
         """
@@ -839,9 +843,6 @@ class MLDatabase(Database):
                 self.commit()
                 io.info("Creating oracle_params ... {0:02.3f}%."
                         .format((i / total) * 100))
-
-        # Tidy up.
-        self.execute("VACUUM")
         self.commit()
 
     def populate_tables(self):
@@ -853,6 +854,7 @@ class MLDatabase(Database):
         self.populate_dataset_features_table()
         self.populate_runtime_stats_table()
         self.populate_oracle_params_table()
+        self.execute("VACUUM")
 
     @staticmethod
     def init_from_db(dst, src):
