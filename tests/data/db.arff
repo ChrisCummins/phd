@@ -1,7 +1,7 @@
-@RELATION,names
+@RELATION names
 
-@ATTRIBUTE,first,David,Joe
-@ATTRIBUTE,last,Bloggs,Bowie,Brent
+@ATTRIBUTE first {David,Joe}
+@ATTRIBUTE last {Bloggs,Bowie,Brent}
 
 @DATA
 David,Bowie
