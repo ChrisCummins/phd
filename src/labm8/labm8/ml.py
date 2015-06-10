@@ -46,13 +46,30 @@ class Error(Exception):
 
 
 def start(*args, **kwargs):
+    """
+    Open a weka connection.
+
+    May be called multiple times, but not after calling stop().
+
+    Arguments:
+
+        *args, **kwargs: Any additional arguments to pass to
+          jvm.start().
+    """
     if MODULE_SUPPORTED:
         jvm.start(*args, **kwargs)
 
 
 def stop():
+    """
+    Stop a weka connection.
+
+    May be called multiple times, but note that a new connection
+    cannot be started after calling this.
+    """
     if MODULE_SUPPORTED:
         jvm.stop()
+
 
 def load(src, loader="weka.core.converters.ArffLoader"):
     if not MODULE_SUPPORTED: return
@@ -60,10 +77,18 @@ def load(src, loader="weka.core.converters.ArffLoader"):
     return loader.load_file(src)
 
 
+def load_csv(src):
+    return load(src, loader="weka.core.converters.CSVLoader")
+
+
 def save(data, dst, saver="weka.core.converters.ArffSaver"):
     if not MODULE_SUPPORTED: return
     saver = WekaSaver(classname=saver)
     saver.save_file(data, dst)
+
+
+def save_csv(src):
+    return save(src, saver="weka.core.converters.CSVSaver")
 
 
 def load_and_save(src, dst, loader, saver):
