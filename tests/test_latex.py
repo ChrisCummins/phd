@@ -65,6 +65,17 @@ class TestLatex(TestCase):
                                           headers=("A", "B"),
                                           header_fmt=lambda x: x))
 
+    def test_write_table_body_hlines(self):
+        self._test("\\hline\n"
+                   "1 & foo\\\\\n"
+                   "2 & bar\\\\\n",
+                   latex.write_table_body(((1, "foo"), (2, "bar")),
+                                          hline_before=True))
+        self._test("1 & foo\\\\\n"
+                   "2 & bar\\\\\n"
+                   "\\hline\n",
+                   latex.write_table_body(((1, "foo"), (2, "bar")),
+                                          hline_after=True))
 
 if __name__ == '__main__':
     main()
