@@ -19,6 +19,7 @@ from . import hash_dataset
 from . import hash_scenario
 from . import hash_params
 
+from space import ParamSpace
 
 class Database(db.Database):
     """
@@ -1314,7 +1315,22 @@ class MLDatabase(Database):
         self.populate_features_oracle_params_table()
         self.execute("VACUUM")
 
-    def oracle_param_frequencies(self, table="oracle_params"):
+    def get_params(self):
+        """
+        Returns a pair of tuples containing unique wg c and r values.
+
+        Returns:
+
+           tuple of ints, tuple of ints: Distinct wg_c and wg_r values.
+        """
+        c = [row[0] for row in
+             self.execute("SELECT DISTINCT wg_c FROM params ORDER BY wg_c ASC")]
+        r = [row[0] for row in
+             self.execute("SELECT DISTINCT wg_r FROM params ORDER BY wg_r ASC")]
+        return c, r
+
+    def oracle_param_frequencies(self, table="oracle_params",
+                                 normalise=False):
         """
         Return a frequency table of optimal parameter values.
 
@@ -1322,16 +1338,46 @@ class MLDatabase(Database):
 
             table (str, optional): The name of the table to calculate
               the frequencies of.
+            normalise (bool, optional): Whether to normalise the
+              frequencies, such that the sum of all frequencies is 1.
 
         Returns:
 
            list of tuples: Where each tuple consists of a
              (params,frequency) pair.
         """
-        query = self.execute("SELECT params,Count(*) AS count FROM "
-                             "{table} GROUP BY params ORDER BY count ASC"
-                             .format(table=table))
-        return [row for row in query]
+        freqs = [row for row in
+                 self.execute("SELECT params,Count(*) AS count FROM "
+                              "{table} GROUP BY params ORDER BY count ASC"
+                              .format(table=table))]
+
+        # Normalise frequencies.
+        if normalise:
+            total = sum([freq[1] for freq in freqs])
+            freqs = [(freq[0], freq[1] / total) for freq in freqs]
+
+        return freqs
+
+    def oracle_param_space(self, table="oracle_pararms", *args, **kwargs):
+        """
+        Summarise the frequency at which parameters were optimal.
+
+        Returns:
+
+            space.ParamSpace: A populated parameter space.
+        """
+        # Normalise frequencies by default.
+        if "normalise" not in kwargs:
+            kwargs["normalise"] = True
+
+        freqs = self.oracle_param_frequencies(*args, **kwargs)
+        space = ParamSpace(*self.get_params())
+
+        for wgsize,count in freqs:
+            space[wgsize] = count
+
+        return space
+
 
     @staticmethod
     def init_from_db(dst, src):
