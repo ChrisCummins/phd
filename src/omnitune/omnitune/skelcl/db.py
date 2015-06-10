@@ -95,6 +95,10 @@ class Database(db.Database):
                 self.execute("SELECT DISTINCT name FROM kernel_names")]
 
     @property
+    def num_scenarios(self):
+        return self.execute("SELECT Count(*) from scenarios").fetchone()[0]
+
+    @property
     def scenarios(self):
         return [row[0] for row in
                 self.execute("SELECT DISTINCT id from scenarios")]
@@ -581,6 +585,22 @@ class Database(db.Database):
             self.insert("INSERT INTO samples VALUES (?,?,?,?,?,?,?,?)",
                         samples_values)
 
+    def lookup_named_kernels(self):
+        """
+        Lookup Kernel IDs by name.
+
+        Returns:
+
+           dict of {str: tuple of str}: Where kernel names are keys,
+             and the values are a tuple of kernel IDs with that name.
+        """
+        def _kernel_ids(name):
+            return [row[0] for row in
+                    self.execute("SELECT id FROM kernel_names WHERE name=?",
+                                 (name,))]
+
+        return {name: _kernel_ids(name) for name in self.kernel_names}
+
     def lookup_best_workgroup_size(self, scenario):
         """
         Return the best workgroup size for a given scenario.
@@ -1050,6 +1070,11 @@ FROM (
 ) LEFT JOIN device_features ON device=device_features.id"""
 
 
+GET_PERC_ORACLE = """SELECT params,
+  ((SELECT mean_runtime FROM oracle_params WHERE scenario=?) / mean)
+FROM runtime_stats WHERE scenario=?"""
+
+
 class MLDatabase(Database):
     """
     Persistent database store for SkelCL training data.
@@ -1357,22 +1382,8 @@ class MLDatabase(Database):
         self.populate_features_oracle_params_table()
         self.execute("VACUUM")
 
-    def get_params(self):
-        """
-        Returns a pair of tuples containing unique wg c and r values.
-
-        Returns:
-
-           tuple of ints, tuple of ints: Distinct wg_c and wg_r values.
-        """
-        c = [row[0] for row in
-             self.execute("SELECT DISTINCT wg_c FROM params ORDER BY wg_c ASC")]
-        r = [row[0] for row in
-             self.execute("SELECT DISTINCT wg_r FROM params ORDER BY wg_r ASC")]
-        return c, r
-
     def oracle_param_frequencies(self, table="oracle_params",
-                                 normalise=False):
+                                 where=None, normalise=False):
         """
         Return a frequency table of optimal parameter values.
 
@@ -1385,13 +1396,15 @@ class MLDatabase(Database):
 
         Returns:
 
-           list of tuples: Where each tuple consists of a
+           list of (str,int) tuples: Where each tuple consists of a
              (params,frequency) pair.
         """
+        select = table
+        if where: select += " WHERE " + where
         freqs = [row for row in
                  self.execute("SELECT params,Count(*) AS count FROM "
-                              "{table} GROUP BY params ORDER BY count ASC"
-                              .format(table=table))]
+                              "{select} GROUP BY params ORDER BY count ASC"
+                              .format(select=select))]
 
         # Normalise frequencies.
         if normalise:
@@ -1400,9 +1413,41 @@ class MLDatabase(Database):
 
         return freqs
 
-    def oracle_param_space(self, table="oracle_pararms", *args, **kwargs):
+    def max_wgsize_frequencies(self, normalise=False):
         """
-        Summarise the frequency at which parameters were optimal.
+        Return a frequency table of maximum workgroup sizes.
+
+        Arguments:
+
+            normalise (bool, optional): Whether to normalise the
+              frequencies, such that the sum of all frequencies is 1.
+
+        Returns:
+
+           list of (int,int) tuples: Where each tuple consists of a
+             (max_wgsize,frequency) pair.
+        """
+        freqs = [row for row in
+                 self.execute("SELECT max_wg_size,Count(*) AS count FROM "
+                              "kernels LEFT JOIN scenarios ON "
+                              "kernel = kernels.id GROUP BY max_wg_size "
+                              "ORDER BY count ASC")]
+
+        # Normalise frequencies.
+        if normalise:
+            total = sum(freq[1] for freq in freqs)
+            freqs = [(freq[0], freq[1] / total) for freq in freqs]
+
+        return freqs
+
+    def oracle_param_space(self, *args, **kwargs):
+        """
+        Summarise the frequency at which workgroup sizes are optimal.
+
+        Arguments:
+
+            *args, **kwargs: Any additional arguments to be passed to
+              oracle_param_frequencies()
 
         Returns:
 
@@ -1413,12 +1458,198 @@ class MLDatabase(Database):
             kwargs["normalise"] = True
 
         freqs = self.oracle_param_frequencies(*args, **kwargs)
-        space = ParamSpace(*self.get_params())
+        space = ParamSpace(self.wg_c, self.wg_r)
 
         for wgsize,count in freqs:
             space[wgsize] = count
 
         return space
+
+    def param_coverage_frequencies(self, **kwargs):
+        """
+        Return a frequency table of workgroup sizes.
+
+        Arguments:
+
+            **kwargs: Any additional arguments to be passed to param_coverage()
+
+        Returns:
+
+           list of (int,flaot) tuples: Where each tuple consists of a
+             (wgsize,frequency) pair.
+        """
+        return [(param,self.param_coverage(param, **kwargs))
+                for param in self.params]
+
+    def param_coverage_space(self, **kwargs):
+        """
+        Summarise the frequency at workgroup sizes are safe.
+
+        Arguments:
+
+            **kwargs: Any additional arguments to be passed to param_coverage()
+
+        Returns:
+
+            space.ParamSpace: A populated parameter space.
+        """
+        freqs = self.param_coverage_frequencies(**kwargs)
+        space = ParamSpace(self.wg_c, self.wg_r)
+
+        for wgsize,freq in freqs:
+            space[wgsize] = freq
+
+        return space
+
+    def param_safeties(self, **kwargs):
+        """
+        Return a frequency table of workgroup sizes.
+
+        Arguments:
+
+            **kwargs: Any additional arguments to be passed to param_coverage()
+
+        Returns:
+
+           list of (int,bool) tuples: Where each tuple consists of a
+             (wgsize,is_safe) pair.
+        """
+        return [(param, self.param_is_safe(param, **kwargs))
+                for param in self.params]
+
+    def param_safe_space(self, **kwargs):
+        """
+        Summarise the frequency at workgroup sizes are safe.
+
+        Arguments:
+
+            **kwargs: Any additional arguments to be passed to param_coverage()
+
+        Returns:
+
+            space.ParamSpace: A populated parameter space.
+        """
+        freqs = self.param_safeties(**kwargs)
+        space = ParamSpace(self.wg_c, self.wg_r)
+
+        for wgsize,safe in freqs:
+            space[wgsize] = 1 if safe else 0
+
+        return space
+
+    def max_wgsize_space(self, *args, **kwargs):
+        """
+        Summarise the frequency at which workgroup sizes are legal.
+
+        Arguments:
+
+            *args, **kwargs: Any additional arguments to be passed to
+              max_wgsize_frequencies()
+
+        Returns:
+
+            space.ParamSpace: A populated parameter space.
+        """
+        # Normalise frequencies by default.
+        if "normalise" not in kwargs:
+            kwargs["normalise"] = True
+
+        freqs = self.max_wgsize_frequencies(*args, **kwargs)
+        space = ParamSpace(self.wg_c, self.wg_r)
+
+        for maxwgsize,count in freqs:
+            for j in range(space.matrix.shape[0]):
+                for i in range(space.matrix.shape[1]):
+                    wg_r, wg_c = space.r[j], space.c[i]
+                    wgsize = wg_r * wg_c
+                    if wgsize <= maxwgsize:
+                        space.matrix[j][i] += count
+
+        return space
+
+    def performance_of_all_params_for_scenario(self, scenario):
+        """
+        Return performance of all workgroup sizes relative to oracle.
+
+        Performance relative to the oracle is calculated using mean
+        runtime of oracle params / mean runtime of each params.
+
+        Arguments:
+
+            scenario (str): Scenario ID.
+
+        Returns:
+
+            list of (str,float) tuples: Where each tuple consists of
+              the parameters ID, and the performance of that parameter
+              relative to the oracle.
+        """
+        return self.execute(GET_PERC_ORACLE, (scenario,scenario)).fetchall()
+
+    def param_coverage(self, param_id, where=None):
+        """
+        Returns the ratio of values for a params across scenarios.
+
+        Arguments:
+
+            param (str): Parameters ID.
+
+        Returns:
+
+            float: Number of scenarios with recorded values for parm /
+              total number of scenarios.
+        """
+        # Get the total number of scenarios.
+        select = "SELECT Count(*) FROM (SELECT id as scenario from scenarios)"
+        if where:
+            select += " WHERE " + where
+        num_scenarios = self.execute(select).fetchone()[0]
+
+        # Get the ratio of runtimes to total where params = param_id.
+        select = ("SELECT (CAST(Count(*) as REAL) / CAST(? AS REAL)) "
+                  "FROM runtime_stats WHERE params=?")
+        if where:
+            select += " AND " + where
+        return self.execute(select, (num_scenarios, param_id)).fetchone()[0]
+
+    def param_is_safe(self, param_id, **kwargs):
+        """
+        Returns whether a parameter is safe.
+
+        A parameter is safe if, for all scenarios, there is recorded
+        runtimes. This implies that the parameter is valid for all
+        possible cases.
+
+        Arguments:
+
+            param (str): Parameters ID.
+            **kwargs: Any additional arguments to be passed to param_coverage()
+
+        Returns:
+
+            bool: True if parameter is safe, else false.
+        """
+        return self.param_coverage(param_id, **kwargs) == 1
+
+    def performance_of_scenarios_for_param(self, param_id):
+        """
+        Return performance of param relative to oracle for all scenarios.
+
+        Performance relative to the oracle is calculated using mean
+        runtime of oracle params / mean runtime of each params.
+
+        Arguments:
+
+            param (str): Parameters ID.
+
+        Returns:
+
+            list of (str,float) tuples: Where each tuple consists of
+              the parameters ID, and the performance of that parameter
+              relative to the oracle.
+        """
+        return [row for row in  self.execute("SELECT scenario FROM runtime_stats WHERE params=?",
+                                (param_id,))]
 
 
     @staticmethod
