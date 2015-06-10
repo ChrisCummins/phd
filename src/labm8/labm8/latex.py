@@ -28,10 +28,6 @@ def escape(text):
     return re.sub(r"(_)", r"\\\g<1>", str(text))
 
 
-def nullfmt(text):
-    return text
-
-
 def wrap_bold(text):
     return "\\textbf{" + text + "}"
 
