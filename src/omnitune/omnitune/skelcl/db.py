@@ -1070,9 +1070,14 @@ FROM (
 ) LEFT JOIN device_features ON device=device_features.id"""
 
 
-GET_PERC_ORACLE = """SELECT params,
+GET_PERC_ORACLE_PARAMS = """SELECT params,
   ((SELECT mean_runtime FROM oracle_params WHERE scenario=?) / mean)
 FROM runtime_stats WHERE scenario=?"""
+
+
+GET_PERC_ORACLE_SCENARIO = """SELECT runtime_stats.scenario,mean_runtime / mean
+FROM runtime_stats LEFT JOIN oracle_params ON
+runtime_stats.scenario=oracle_params.scenario WHERE runtime_stats.params=?"""
 
 
 class MLDatabase(Database):
@@ -1584,7 +1589,59 @@ class MLDatabase(Database):
               the parameters ID, and the performance of that parameter
               relative to the oracle.
         """
-        return self.execute(GET_PERC_ORACLE, (scenario,scenario)).fetchall()
+        return self.execute(GET_PERC_ORACLE_PARAMS,
+                            (scenario,scenario)).fetchall()
+
+    def performance_of_all_scenarios_for_param(self, param_id):
+        """
+        Return performance of param relative to oracle for all scenarios.
+
+        Performance relative to the oracle is calculated using mean
+        runtime of oracle params / mean runtime of each params.
+
+        Arguments:
+
+            param_id (str): Parameters ID.
+
+        Returns:
+
+            list of (str,float) tuples: Where each tuple consists of
+              the parameters ID, and the performance of that parameter
+              relative to the oracle.
+        """
+        return self.execute(GET_PERC_ORACLE_SCENARIO,
+                            (param_id,)).fetchall()
+
+    def performance_of_param(self, param_id):
+        """
+        Return the average param performance vs oracle across all scenarios.
+
+        Calculated using the geometric mean of performance relative to
+        the oracle of all scenarios.
+
+        Arguments:
+
+            param_id (str): Parameters ID.
+
+        Returns:
+
+            float: Geometric mean of performance relative to oracle.
+        """
+        return labmath.geomean([perf for _,perf in self.performance_of_all_scenarios_for_param(param_id)])
+
+    def params_summary(self):
+        """
+        Return a summary of parameters.
+
+        Returns:
+
+            list of (str,float,float) tuples: Where each tuple is of
+              the format (param_id,perforance,coverage).
+        """
+        return sorted([(param,
+                        self.performance_of_param(param),
+                        self.param_coverage(param)) for param in self.params],
+                      key=lambda t: t[1], reverse=True)
 
     def param_coverage(self, param_id, where=None):
         """
@@ -1630,26 +1687,6 @@ class MLDatabase(Database):
             bool: True if parameter is safe, else false.
         """
         return self.param_coverage(param_id, **kwargs) == 1
-
-    def performance_of_scenarios_for_param(self, param_id):
-        """
-        Return performance of param relative to oracle for all scenarios.
-
-        Performance relative to the oracle is calculated using mean
-        runtime of oracle params / mean runtime of each params.
-
-        Arguments:
-
-            param (str): Parameters ID.
-
-        Returns:
-
-            list of (str,float) tuples: Where each tuple consists of
-              the parameters ID, and the performance of that parameter
-              relative to the oracle.
-        """
-        return [row for row in  self.execute("SELECT scenario FROM runtime_stats WHERE params=?",
-                                (param_id,))]
 
 
     @staticmethod
