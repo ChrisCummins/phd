@@ -57,6 +57,48 @@ class Database(db.Database):
             # Base case: This is pre-versioning.
             self.version = 0
 
+    @property
+    def params(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT id FROM params")]
+
+    @property
+    def wg_r(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT wg_r FROM params "
+                             "ORDER BY wg_r ASC")]
+
+    @property
+    def wg_c(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT wg_c FROM params "
+                             "ORDER BY wg_c ASC")]
+
+    @property
+    def devices(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT id FROM devices")]
+
+    @property
+    def datasets(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT id FROM datasets")]
+
+    @property
+    def kernels(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT id FROM kernels")]
+
+    @property
+    def kernel_names(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT name FROM kernel_names")]
+
+    @property
+    def scenarios(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT id from scenarios")]
+
     def num_runtimes(self):
         """
         Return the number of runtimes.
