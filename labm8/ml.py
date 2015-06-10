@@ -32,10 +32,9 @@ if MODULE_SUPPORTED:
     import weka
     import weka.core
     import weka.core.jvm as jvm
+    from weka.classifiers import Classifier as WekaClassifier
     from weka.core.converters import Loader as WekaLoader
     from weka.core.converters import Saver as WekaSaver
-    from weka.classifiers import Classifier as WekaClassifier
-    import weka.core.converters as weka_converters
 
 
 class Error(Exception):
