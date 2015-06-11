@@ -551,40 +551,6 @@ class Database(db.Database):
                              "scenario=? AND params=?", (scenario, params))
         return query.fetchone()[0]
 
-
-    def create_samples_table(self):
-        self.create_table("samples", SAMPLES_TABLE)
-
-        query_keys = [x[0] for x in RUNTIMES_TABLE[:-1]]
-        query = self.execute("SELECT DISTINCT " + ",".join(query_keys) +
-                             " FROM runtimes")
-
-        for row in query:
-            where_c = ["{key}=?".format(key=key) for key in query_keys]
-            where = " AND ".join(where_c)
-
-            runtimes_query = self.execute("SELECT runtime from runtimes WHERE "
-                                          + where, row)
-            runtimes = [x[0] for x in runtimes_query]
-            sample_count = len(runtimes)
-            runtime = labmath.mean(runtimes)
-
-            samples_values = (
-                row[0],   # host
-                row[1],   # device
-                row[2],   # dev_count
-                row[3],   # kernel
-                row[8],   # data_width
-                row[9],   # data_height
-                row[11],  # wg_c
-                row[12],  # wg_r
-                sample_count,
-                runtime
-            )
-            io.debug(*samples_values)
-            self.insert("INSERT INTO samples VALUES (?,?,?,?,?,?,?,?)",
-                        samples_values)
-
     def lookup_named_kernels(self):
         """
         Lookup Kernel IDs by name.
