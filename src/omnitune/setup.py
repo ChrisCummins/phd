@@ -1,7 +1,23 @@
 from setuptools import setup
 
-# TODO: Set license.
-# TODO: Set description.
+base_deps = [
+    'labm8',
+    'numpy',
+    'pyopencl'
+]
+
+bells_and_whistles = True
+extra_deps = [
+    'matplotlib',
+    'python-weka-wrapper',
+    'seaborn'
+]
+
+if bells_and_whistles:
+    deps = base_deps + extra_deps
+else:
+    deps = base_deps
+
 setup(name='omnitune',
       version='0.0.1',
       description='',
@@ -18,11 +34,7 @@ setup(name='omnitune',
       tests_require=[
           'nose'
       ],
-      install_requires=[
-          'labm8',
-          'pyopencl',
-          'python-weka-wrapper'
-      ],
+      install_requires=deps,
       data_files=[
           ('/etc/dbus-1/system.d', ['etc/org.omnitune.conf'])
       ],
