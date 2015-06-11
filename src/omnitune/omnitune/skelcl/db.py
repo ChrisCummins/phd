@@ -1242,7 +1242,11 @@ class MLDatabase(Database):
         """
         Derive kernel features from "kernels" table.
         """
-        for row in self.execute("SELECT * FROM kernels"):
+        query = self.execute("SELECT * FROM kernels")
+        rows = query.fetchall()
+        total = len(rows)
+
+        for i,row in enumerate(rows):
             source = row[6]
             bitcode = llvm.bitcode(source)
             instcounts = llvm.instcounts(bitcode)
@@ -1296,6 +1300,13 @@ class MLDatabase(Database):
             placeholders = ",".join(["?"] * len(features))
             self.execute("INSERT INTO kernel_features VALUES ({placeholders})"
                          .format(placeholders=placeholders), features)
+
+            # Intermediate progress.
+            if not i % 5:
+                self.commit()
+                io.info("Creating kernel_features ... {0:02.3f}%."
+                        .format((i / total) * 100))
+
         self.commit()
 
     def populate_device_features_table(self):
@@ -1320,10 +1331,8 @@ class MLDatabase(Database):
                              "GROUP BY scenario,params")
         rows = query.fetchall()
         total = len(rows)
-        i = 0
-        for row in rows:
+        for i,row in enumerate(rows):
             scenario, params = row
-            i += 1
 
             # Gather statistics about runtimes for each scenario,params pair.
             self.execute("INSERT INTO runtime_stats SELECT scenario,params,"
@@ -1331,9 +1340,8 @@ class MLDatabase(Database):
                          "FROM runtimes WHERE scenario=? AND params=?",
                          (scenario, params))
 
-            # Intermediate progress reports.
+            # Intermediate progress.
             if not i % 10:
-                # Commit progress.
                 self.commit()
                 io.info("Creating runtime_stats ... {0:02.3f}%."
                         .format((i / total) * 100))
