@@ -131,13 +131,8 @@ class Database(db.Database):
         self.execute("INSERT OR IGNORE INTO scenarios SELECT * from rhs.scenarios")
         self.execute("INSERT OR IGNORE INTO params SELECT * from rhs.params")
         self.execute("INSERT INTO runtimes SELECT * from rhs.runtimes")
-
-        # Copy the kernel names, if there are any.
-        if "kernel_names" in rhs.tables:
-            if "kernel_names" in self.tables:
-                self.execute("INSERT OR IGNOR INTO kernel_names * from rhs.kernel_names")
-            else:
-                self.copy_table("rhs.kernel_names", "kernel_names")
+        self.execute("INSERT OR IGNORE INTO kernel_names SELECT * FROM "
+                     "rhs.kernel_names")
 
         self.detach("rhs")
 
@@ -248,6 +243,12 @@ class Database(db.Database):
                          (("scenario",                        "text"),
                           ("params",                          "text"),
                           ("runtime",                         "real")))
+
+        # Create table: kernel_names
+        self.create_table("kernel_names",
+                          (("id",                             "text primary key"),
+                           ("synthetic",                      "integer"),
+                           ("name",                           "text")))
 
     def device_exists(self, device_id):
         """
@@ -1220,11 +1221,6 @@ class MLDatabase(Database):
                            ("params",                          "text"),
                            ("num_samples",                     "integer"),
                            ("mean_runtime",                    "real")))
-
-        self.create_table("kernel_names",
-                          (("id",                              "text primary key"),
-                           ("synthetic",                       "integer"),
-                           ("name",                            "text")))
 
         self.execute(CREATE_FEATURES_RUNTIME_STATS_TABLE)
         self.execute(CREATE_FEATURES_ORACLE_PARAMS_TABLE)
