@@ -18,8 +18,6 @@ import re
 import six
 import sqlite3 as sql
 
-import pandas.io.sql as panda
-
 import labm8 as lab
 from labm8 import fs
 from labm8 import io
@@ -367,6 +365,8 @@ class Database(object):
             IOError: In case of error writing to file.
             SchemaError: If the named table is not found.
         """
+        import pandas.io.sql as panda
+
         # Determine if we're writing to a file or returning a string.
         isfile = output is not None
         output = output or StringIO()
