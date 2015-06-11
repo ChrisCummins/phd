@@ -70,30 +70,30 @@ def stop():
         jvm.stop()
 
 
-def load(src, loader="weka.core.converters.ArffLoader"):
+def load(src, loader="weka.core.converters.ArffLoader", **kwargs):
     if not MODULE_SUPPORTED: return
-    loader = WekaLoader(classname=loader)
+    loader = WekaLoader(classname=loader, **kwargs)
     return loader.load_file(src)
 
 
-def load_csv(src):
-    return load(src, loader="weka.core.converters.CSVLoader")
+def load_csv(src, **kwargs):
+    return load(src, loader="weka.core.converters.CSVLoader", **kwargs)
 
 
-def save(data, dst, saver="weka.core.converters.ArffSaver"):
+def save(data, dst, saver="weka.core.converters.ArffSaver", **kwargs):
     if not MODULE_SUPPORTED: return
-    saver = WekaSaver(classname=saver)
+    saver = WekaSaver(classname=saver, **kwargs)
     saver.save_file(data, dst)
 
 
-def save_csv(src):
-    return save(src, saver="weka.core.converters.CSVSaver")
+def save_csv(src, **kwargs):
+    return save(src, saver="weka.core.converters.CSVSaver", **kwargs)
 
 
-def load_and_save(src, dst, loader, saver):
+def load_and_save(src, dst, loader, saver, loader_args=None, saver_args=None):
     if not MODULE_SUPPORTED: return
-    data = load(src, loader)
-    save(data, dst, saver)
+    data = load(src, loader, **loader_args)
+    save(data, dst, saver, **saver_args)
 
 
 def csv2arff(csv_path, arff_path):
@@ -118,20 +118,33 @@ class Classifier(object):
     """
     Object representing a classifier.
     """
-    def __init__(self, data, classname, *args):
+    def __init__(self, classname, data, *args):
         """
         """
         self.data = data
         # Create the classifier.
-        self.classifier = WekaClassifier(classname=classname, *args)
+        self.classifier = WekaClassifier(classname=classname, options=args)
         # Train on data.
         self.classifier.build_classifier(self.data)
+        # Index of class labels.
+        # TODO: Determine from dataset.
+        self.label_index = self.data.num_attributes - 1
 
     def classify(self, instance):
-        # TODO: Determine label_index, then set once in constructor.
-        label_index = self.data.num_attributes - 1
-        value_index = classifier.classify_instance(instance)
-        return self.data.attribute(label_index).value(value_index)
+        value_index = self.classifier.classify_instance(instance)
+        return self.data.attribute(self.label_index).value(value_index)
+
+
+class J48(Classifier):
+    def __init__(self, *args, **kwargs):
+        classname = "weka.classifiers.trees.J48"
+        super(J48, self).__init__(classname, *args, **kwargs)
+
+
+class NaiveBayes(Classifier):
+    def __init__(self, *args, **kwargs):
+        classname = "weka.classifiers.bayes.NaiveBayes"
+        super(NaiveBayes, self).__init__(classname, *args, **kwargs)
 
 
 def evaluate(classifier, testing):
