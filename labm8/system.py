@@ -284,7 +284,10 @@ def scp(host, src, dst, user=None):
         arg = "{user}@{host}:{path}".format(user=user, host=host, path=src)
 
     # Run system "scp" command.
-    ret,out,err = run(["scp", arg, dst])
+    ret,out,err = run(["scp",
+                       "-o", "StrictHostKeyChecking=no",
+                       "-o", "UserKnownHostsFile=/dev/null",
+                       arg, dst])
 
     # Check return code for error.
     if ret:
