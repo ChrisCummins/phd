@@ -12,12 +12,13 @@ from labm8 import ml
 import omnitune
 from omnitune import llvm
 
+from . import get_kernel_name_and_type
 from . import get_user_source
+from . import hash_dataset
 from . import hash_device
 from . import hash_kernel
-from . import hash_dataset
-from . import hash_scenario
 from . import hash_params
+from . import hash_scenario
 
 from space import ParamSpace
 
@@ -130,6 +131,13 @@ class Database(db.Database):
         self.execute("INSERT OR IGNORE INTO scenarios SELECT * from rhs.scenarios")
         self.execute("INSERT OR IGNORE INTO params SELECT * from rhs.params")
         self.execute("INSERT INTO runtimes SELECT * from rhs.runtimes")
+
+        # Copy the kernel names, if there are any.
+        if "kernel_names" in rhs.tables:
+            if "kernel_names" in self.tables:
+                self.execute("INSERT OR IGNOR INTO kernel_names * from rhs.kernel_names")
+            else:
+                self.copy_table("rhs.kernel_names", "kernel_names")
 
         self.detach("rhs")
 
@@ -1213,6 +1221,11 @@ class MLDatabase(Database):
                            ("num_samples",                     "integer"),
                            ("mean_runtime",                    "real")))
 
+        self.create_table("kernel_names",
+                          (("id",                              "text primary key"),
+                           ("synthetic",                       "integer"),
+                           ("name",                            "text")))
+
         self.execute(CREATE_FEATURES_RUNTIME_STATS_TABLE)
         self.execute(CREATE_FEATURES_ORACLE_PARAMS_TABLE)
 
@@ -1348,10 +1361,28 @@ class MLDatabase(Database):
         self.execute(POPULATE_FEATURES_ORACLE_PARAMS_TABLE)
         self.commit()
 
+    def populate_kernel_names_table(self):
+        query = self.execute("SELECT id,source FROM kernels")
+        rows = query.fetchall()
+        total = len(rows)
+
+        for i,row in enumerate(rows):
+            kernel, source = row
+
+            query = self.execute("SELECT id FROM kernel_names WHERE id=?",
+                                 (kernel,))
+
+            if not query.fetchone():
+                synthetic, name = get_kernel_name_and_type(source)
+                self.execute("INSERT INTO kernel_names VALUES (?,?,?)",
+                             (kernel, 1 if synthetic else 0, name))
+                self._progress_report("kernel_names", i, 1, total)
+
     def populate_tables(self):
         """
         Populate the derived tables from the base database.
         """
+        self.populate_kernel_names_table()
         self.populate_kernel_features_table()
         self.populate_device_features_table()
         self.populate_dataset_features_table()
@@ -1666,7 +1697,16 @@ class MLDatabase(Database):
     @staticmethod
     def init_from_db(dst, src):
         """
-        Create and populate the tables of
+        Create and populate an MLDatabase from a Database.
+
+        Arguments:
+
+            dst (str): Path to destination database.
+            src (Database): source database instance.
+
+        Returns:
+
+            MLDatabase: Populated database.
         """
         fs.cp(src.path, dst)
         db = MLDatabase(dst)

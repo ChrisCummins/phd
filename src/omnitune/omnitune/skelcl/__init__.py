@@ -1,3 +1,7 @@
+from __future__ import print_function
+
+import re
+
 import labm8 as lab
 from labm8 import cache
 from labm8 import crypto
@@ -100,6 +104,64 @@ def get_source_features(checksum, source, path=""):
     ratios = llvm.instcounts2ratios(instcounts)
 
     return vectorise_ratios(checksum, source, ratios)
+
+
+def get_kernel_name_and_type(source):
+    """
+    Figure out whether a kernel is synthetic or otherwise.
+
+    Arguments:
+
+        source (str): User source code for kernel.
+
+    Returns:
+
+        (bool, str): Where bool is whether the kernel is synthetic,
+          and str is the name of the kernel. If it can't figure out
+          the name, returns "unknown".
+    """
+    def _get_printable_source(lines):
+        for i,line in enumerate(lines):
+            # Store index of shape define lines.
+            if re.search(r"^#define SCL_NORTH", line): north = i
+            if re.search(r"^#define SCL_SOUTH", line): south = i
+            if re.search(r"^#define SCL_EAST",  line): east  = i
+            if re.search(r"^#define SCL_WEST",  line): west  = i
+
+            # If we've got as far as the user function, then print
+            # what we have.
+            if re.search("^(\w+) USR_FUNC", line):
+                return "\n".join([
+                    lines[north],
+                    lines[south],
+                    lines[east],
+                    lines[west],
+                    ""
+                ] + lines[i:])
+
+        # Fall through, just print the whole bloody lot.
+        return "\n".join(lines)
+
+    lines = source.split("\n")
+
+    # Look for clues in the source.
+    for line in lines:
+        if re.search('^// "Simple" kernel', line):
+            return True, "simple"
+        if re.search('^// "Complex" kernel', line):
+            return True, "complex"
+
+    # Base case, prompt the user.
+    print("\nFailed to automatically deduce a kernel name and type.")
+    print("Resorting to help from meat space:")
+    print("***************** BEGIN SOURCE *****************")
+    print(_get_printable_source(lines), "\n")
+    name = raw_input("Name me: ")
+    synthetic = raw_input("Synthetic? (y/n): ")
+
+    # Sanitise and return user input
+    return (True if synthetic.strip().lower() == "y" else False,
+            name.strip().lower())
 
 
 def main():
