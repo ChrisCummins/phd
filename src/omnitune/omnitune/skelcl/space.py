@@ -1,9 +1,5 @@
 import numpy as np
 
-import matplotlib.pyplot as plt
-from matplotlib.ticker import FormatStrFormatter
-import seaborn as sns
-
 class ParamSpace(object):
     """
     Represents the parameter space of workgroup sizes.
@@ -40,6 +36,11 @@ class ParamSpace(object):
         self.matrix[j][i] = value
 
     def heatmap(self, path=None, title=None, figsize=(5,4), **kwargs):
+        # Graphics imports.
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        from matplotlib.ticker import FormatStrFormatter
+
         new_order = list(reversed(range(self.matrix.shape[0])))
         data = self.matrix[:][new_order]
 
