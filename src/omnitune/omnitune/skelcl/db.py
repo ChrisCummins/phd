@@ -1081,6 +1081,11 @@ class MLDatabase(Database):
         """
         super(Database, self).__init__(path)
 
+    @property
+    def mean_samples(self):
+        return self.execute("SELECT AVG(num_samples) FROM "
+                            "runtime_stats").fetchone()[0]
+
     def _progress_report(self, table_name, i=0, n=1, total=None):
         """
         Intermediate progress updates for long running table jobs.
@@ -1572,6 +1577,34 @@ class MLDatabase(Database):
                         space.matrix[j][i] += count
 
         return space
+
+    def num_params_for_scenario(self, scenario):
+        """
+        Return the number of parameters tested for a given scenario.
+
+        Arguments:
+
+            scenario (str): Scenario ID.
+
+        Returns:
+
+            int: The number of unique parameters sampled for the given
+              scenario.
+        """
+        return self.execute("SELECT Count(*) FROM runtime_stats WHERE "
+                            "scenario=?", (scenario,)).fetchone()[0]
+
+    def num_params_for_scenarios(self):
+        """
+        Return the number of parameters tested for each scenario.
+
+        Returns:
+
+            {str: int} dict: Each key is a scenario, each value is the
+              number of parameters sampled for that scenario.
+        """
+        return {scenario: self.num_params_for_scenario(scenario)
+                for scenario in self.scenarios}
 
     def performance_of_all_params_for_scenario(self, scenario):
         """
