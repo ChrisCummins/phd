@@ -340,7 +340,7 @@ class Database(object):
         """
         self.execute("DETACH ?", (name,))
 
-    def export_csv(self, table, output=None, **kwargs):
+    def export_csv(self, table, output=None, columns="*", **kwargs):
         """
         Export a table to a CSV file.
 
@@ -354,6 +354,8 @@ class Database(object):
 
             table (str): Name of the table to export.
             output (str, optional): Path of the file to write.
+            columns (str, optional): A comma separated list of columns
+              to export.
             **kwargs: Additional args passed to pandas.sql.to_csv()
 
         Returns:
@@ -379,7 +381,8 @@ class Database(object):
         if "index" not in kwargs:
             kwargs["index"] = False
 
-        table = panda.read_frame("select * from {table}".format(table=table),
+        table = panda.read_frame("SELECT {columns} FROM {table}"
+                                 .format(columns=columns, table=table),
                                  self.connection)
         table.to_csv(output, **kwargs)
         return None if isfile else output.getvalue()

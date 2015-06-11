@@ -288,6 +288,18 @@ class TestDatabase(TestCase):
         self._test("id,description,price\n",
                    self.db.export_csv("prices"))
 
+    def test_export_csv_columns(self):
+        self._test("first\n"
+                   "David\n"
+                   "David\n"
+                   "Joe\n",
+                   self.db.export_csv("names", columns="first"))
+        self._test("last\n"
+                   "Bowie\n"
+                   "Brent\n"
+                   "Bloggs\n",
+                   self.db.export_csv("names", columns="last"))
+
     def test_export_csv_file(self):
         tmp = "/tmp/labm8.sql.csv"
         self._test(None, self.db.export_csv("names", tmp))
