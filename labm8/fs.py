@@ -12,13 +12,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
-import labm8 as lab
-
 import os
 import re
 import os.path
 import shutil
 
+import labm8 as lab
 
 class Error(Exception):
     pass
