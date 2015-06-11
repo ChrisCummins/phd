@@ -69,6 +69,19 @@ class TestMath(TestCase):
         self._test(2, labmath.mean([2,2,2,2,2]))
         self._test(2.5, labmath.mean([1,2,3,4]))
 
+    # mean() tests
+    def test_geomean_empty_array(self):
+        self._test(0, labmath.geomean([]))
+
+    def test_geomean_single_item_array(self):
+        self._test(1, labmath.geomean([1]))
+
+    def test_geomean(self):
+        self._test(1.81712059283, labmath.geomean([1,2,3]), approximate=True)
+        self._test(1.44224957031, labmath.geomean([1,1.5,2]), approximate=True)
+        self._test(2, labmath.geomean([2,2,2,2,2]))
+        self._test(2.2133638394, labmath.geomean([1,2,3,4]), approximate=True)
+        self._test(0, labmath.geomean([0,1,2,3,4]))
 
     # median() tests
     def test_median_empty_array(self):

@@ -104,6 +104,19 @@ def mean(array):
     return sum(array) / n
 
 
+def geomean(array):
+    """
+    Return the mean value of a list of divisible numbers.
+    """
+    n = len(array)
+
+    if n < 1:
+        return 0
+    elif n == 1:
+        return array[0]
+    return stats.mstats.gmean(array)
+
+
 def median(array):
     """
     Return the median value of a list of numbers.
