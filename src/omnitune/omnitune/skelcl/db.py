@@ -81,6 +81,16 @@ class Database(db.Database):
                 self.execute("SELECT DISTINCT id FROM devices")]
 
     @property
+    def gpus(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT id FROM devices where type=4")]
+
+    @property
+    def cpus(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT id FROM devices where type=2")]
+
+    @property
     def datasets(self):
         return [row[0] for row in
                 self.execute("SELECT DISTINCT id FROM datasets")]
@@ -560,6 +570,22 @@ class Database(db.Database):
                              "scenario=? AND params=?", (scenario, params))
         return query.fetchone()[0]
 
+    def lookup_named_kernel(self, name):
+        """
+        Get the IDs of all kernels with the given name
+
+        Arguments:
+
+            name (str): Kernel name.
+
+        Returns:
+
+            list of str: A list of kernel IDs for the named kernel.
+        """
+        return [row[0] for row in
+                self.execute("SELECT id FROM kernel_names WHERE name=?",
+                             (name,))]
+
     def lookup_named_kernels(self):
         """
         Lookup Kernel IDs by name.
@@ -569,12 +595,8 @@ class Database(db.Database):
            dict of {str: tuple of str}: Where kernel names are keys,
              and the values are a tuple of kernel IDs with that name.
         """
-        def _kernel_ids(name):
-            return [row[0] for row in
-                    self.execute("SELECT id FROM kernel_names WHERE name=?",
-                                 (name,))]
-
-        return {name: _kernel_ids(name) for name in self.kernel_names}
+        return {name: self.lookup_named_kernel(name)
+                for name in self.kernel_names}
 
     def lookup_best_workgroup_size(self, scenario):
         """
@@ -1662,6 +1684,71 @@ class MLDatabase(Database):
             float: Geometric mean of performance relative to oracle.
         """
         return labmath.geomean([perf for _,perf in self.performance_of_all_scenarios_for_param(param_id)])
+
+    def performance_of_device(self, device):
+        """
+        Get the performance of all params for all scenarios for a device.
+
+        Arguments:
+
+            device (str): Device ID.
+
+        Returns:
+
+            list of float: Performance of each entry in runtime_Stats
+              for that device.
+        """
+        def _scenario_performance(scenario):
+            return [t[1] for t in
+                    self.performance_of_all_params_for_scenario(scenario)]
+
+        return lab.flatten([_scenario_performance(row[0]) for row in
+                            self.execute("SELECT id FROM scenarios WHERE "
+                                         "device=?", (device,))])
+
+    def performance_of_kernels_with_name(self, name):
+        """
+        Get the performance of all params for all scenarios for a kernel.
+
+        Arguments:
+
+            name (str): Kernel name.
+
+        Returns:
+
+            list of float: Performance of each entry in runtime_stats
+              for all kernels with that name.
+        """
+        def _scenario_performance(scenario):
+            return [t[1] for t in
+                    self.performance_of_all_params_for_scenario(scenario)]
+
+        kernel_ids = ['"' + id + '"' for id in self.lookup_named_kernel(name)]
+        query = self.execute("SELECT id FROM scenarios WHERE "
+                             "kernel IN ({kernels})"
+                             .format(kernels=",".join(kernel_ids)))
+        return lab.flatten([_scenario_performance(row[0]) for row in query])
+
+    def performance_of_dataset(self, dataset):
+        """
+        Get the performance of all params for all scenarios for a dataset.
+
+        Arguments:
+
+            dataset (str): Dataset ID.
+
+        Returns:
+
+            list of float: Performance of each entry in runtime_stats
+              for that dataset.
+        """
+        def _scenario_performance(scenario):
+            return [t[1] for t in
+                    self.performance_of_all_params_for_scenario(scenario)]
+
+        return lab.flatten([_scenario_performance(row[0]) for row in
+                            self.execute("SELECT id FROM scenarios WHERE "
+                                         "dataset=?", (dataset,))])
 
     def params_summary(self):
         """
