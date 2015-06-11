@@ -55,6 +55,26 @@ class SubprocessError(Error):
     pass
 
 
+class ScpError(Error):
+    """
+    Error thrown if scp file transfer fails.
+    """
+    def __init__(self, stdout, stderr):
+        """
+        Construct an ScpError.
+
+        Arguments:
+
+            stdout (str): Captured stdout of scp subprocess.
+            stderr (str): Captured stderr of scp subprocess.
+        """
+        self.out = stdout
+        self.err = stderr
+
+    def __repr__(self):
+        return self.out + "\n" + self.err
+
+
 class Subprocess(object):
     """
     Subprocess abstraction.
@@ -234,3 +254,38 @@ def which(program, path=os.environ["PATH"].split(os.pathsep)):
                 return exe_file
 
     return None
+
+
+def scp(host, src, dst, user=None):
+    """
+    Copy a file or directory from a remote location.
+
+    A thin wrapper around the scp (1) system command.
+
+    If the destination already exists, this will attempt to overwrite
+    it.
+
+    Arguments:
+
+        host (str): name of the host
+        src (str): path to the source file or directory.
+        dst (str): path to the destination file or directory.
+        user (str, optional): Alternative username for remote access.
+          If not provided, the default scp behaviour is used.
+
+    Raises:
+
+        IOError: if transfer fails.
+    """
+    # Create the first argument.
+    if user is None:
+        arg = "{host}:{path}".format(host=host, path=src)
+    else:
+        arg = "{user}@{host}:{path}".format(user=user, host=host, path=src)
+
+    # Run system "scp" command.
+    ret,out,err = run(["scp", arg, dst])
+
+    # Check return code for error.
+    if ret:
+        raise ScpError(out, err)

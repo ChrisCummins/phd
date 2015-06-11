@@ -109,6 +109,42 @@ class TestSystem(TestCase):
         self._test(None, system.which("ls", path=("/not-a-real-path",)))
         self._test(None, system.which("not-a-real-command", path=("/bin",)))
 
+    # scp()
+    def test_scp(self):
+        system.echo("Hello, world!", "/tmp/labm8.tmp")
+        self._test(["Hello, world!"], fs.read("/tmp/labm8.tmp"))
+        # Cleanup any existing file.
+        fs.rm("/tmp/labm8.tmp.copy")
+        self._test(False, fs.exists("/tmp/labm8.tmp.copy"))
+        # Perform scp.
+        system.scp("localhost", "/tmp/labm8.tmp", "/tmp/labm8.tmp.copy")
+        self._test(fs.read("/tmp/labm8.tmp"), fs.read("/tmp/labm8.tmp.copy"))
+
+    def test_scp_bad_src(self):
+        # Error is raised if source file cannot be found.
+        with self.assertRaises(system.ScpError):
+            system.scp("localhost", "/not/a/real/path", "/tmp/labm8.tmp.copy")
+
+    def test_scp_bad_dst(self):
+        system.echo("Hello, world!", "/tmp/labm8.tmp")
+        self._test(["Hello, world!"], fs.read("/tmp/labm8.tmp"))
+        # Error is raised if destination file cannot be written.
+        with self.assertRaises(system.ScpError):
+            system.scp("localhost", "/tmp/labm8.tmp", "/not/a/valid/path")
+
+    def test_scp_bad_dst_permission(self):
+        system.echo("Hello, world!", "/tmp/labm8.tmp")
+        self._test(["Hello, world!"], fs.read("/tmp/labm8.tmp"))
+        # Error is raised if no write permission for destination.
+        with self.assertRaises(system.ScpError):
+            system.scp("localhost", "/tmp/labm8.tmp", "/dev")
+
+    def test_scp_bad_host(self):
+        # Error is raised if host cannot be found.
+        with self.assertRaises(system.ScpError):
+            system.scp("not-a-real-host", "/not/a/real/path",
+                       "/tmp/labm8.tmp.copy")
+
 
 if __name__ == '__main__':
     main()
