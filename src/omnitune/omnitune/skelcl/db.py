@@ -1106,6 +1106,18 @@ class MLDatabase(Database):
         """
         super(Database, self).__init__(path)
 
+    def _progress_report(self, table_name, i=0, n=1, total=None):
+        """
+        Intermediate progress updates for long running table jobs.
+        """
+        if total is None:
+            io.info("Creating {table} ...".format(table=table_name))
+        else:
+            if not i % n:
+                self.commit()
+                io.info("Creating {table} ... {perc:02.3f}%."
+                        .format(table=table_name, perc=(i / total) * 100))
+
 
     def create_tables(self):
         # Create table: kernel_features
@@ -1300,12 +1312,7 @@ class MLDatabase(Database):
             placeholders = ",".join(["?"] * len(features))
             self.execute("INSERT INTO kernel_features VALUES ({placeholders})"
                          .format(placeholders=placeholders), features)
-
-            # Intermediate progress.
-            if not i % 5:
-                self.commit()
-                io.info("Creating kernel_features ... {0:02.3f}%."
-                        .format((i / total) * 100))
+            self._progress_report("kernel_features", i, 5, total)
 
         self.commit()
 
@@ -1313,6 +1320,7 @@ class MLDatabase(Database):
         """
         Derive device features from "devices" table.
         """
+        self._progress_report("device_features")
         self.execute("INSERT INTO device_features SELECT * FROM devices")
         self.commit()
 
@@ -1320,6 +1328,7 @@ class MLDatabase(Database):
         """
         Derive dataset features from "datasets" table.
         """
+        self._progress_report("dataset_features")
         self.execute("INSERT INTO dataset_features SELECT * FROM datasets")
         self.commit()
 
@@ -1339,12 +1348,7 @@ class MLDatabase(Database):
                          "COUNT(runtime),MIN(runtime),AVG(runtime),MAX(runtime) "
                          "FROM runtimes WHERE scenario=? AND params=?",
                          (scenario, params))
-
-            # Intermediate progress.
-            if not i % 10:
-                self.commit()
-                io.info("Creating runtime_stats ... {0:02.3f}%."
-                        .format((i / total) * 100))
+            self._progress_report("runtime_stats", i, 10, total)
         self.commit()
 
     def populate_oracle_params_table(self):
@@ -1354,10 +1358,9 @@ class MLDatabase(Database):
         query = self.execute("SELECT distinct scenario FROM runtime_stats")
         rows = query.fetchall()
         total = len(rows)
-        i = 0
-        for row in rows:
+
+        for i,row in enumerate(rows):
             scenario = row[0]
-            i += 1
 
             # Lookup best params for each scenario.
             self.execute("INSERT INTO oracle_params SELECT "
@@ -1365,20 +1368,17 @@ class MLDatabase(Database):
                          "FROM runtime_stats WHERE scenario=? and "
                          "mean=(select min(mean) FROM runtime_stats "
                          "WHERE scenario=?)", (scenario, scenario))
+            self._progress_report("oracle_params", i, 10, total)
 
-            # Intermediate progress reports.
-            if not i % 10:
-                # Commit progress.
-                self.commit()
-                io.info("Creating oracle_params ... {0:02.3f}%."
-                        .format((i / total) * 100))
         self.commit()
 
     def populate_features_runtime_stats_table(self):
+        self._progress_report("features_runtime_stats")
         self.execute(POPULATE_FEATURES_RUNTIME_STATS_TABLE)
         self.commit()
 
     def populate_features_oracle_params_table(self):
+        self._progress_report("features_oracle_params")
         self.execute(POPULATE_FEATURES_ORACLE_PARAMS_TABLE)
         self.commit()
 
