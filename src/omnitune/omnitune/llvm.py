@@ -89,7 +89,6 @@ def bitcode(source, language="cl", path=DEFAULT_LLVM_PATH):
         "-c", "-", # Read from stdin
         "-o", "-" # Output to stdout
     ]
-    io.debug(" ".join(clang_args))
 
     clang = subprocess.Popen(clang_args,
                              stdin=subprocess.PIPE,
@@ -134,7 +133,6 @@ def instcounts(bitcode, path=DEFAULT_LLVM_PATH):
         "-instcount",
         "-" # Read from stdin
     ]
-    io.debug(" ".join(opt_args))
 
     # LLVM pass output pritns to stderr, so we'll pipe stderr to
     # stdout.
