@@ -381,8 +381,8 @@ class Database(object):
         if "index" not in kwargs:
             kwargs["index"] = False
 
-        table = panda.read_frame("SELECT {columns} FROM {table}"
-                                 .format(columns=columns, table=table),
-                                 self.connection)
+        table = panda.read_sql("SELECT {columns} FROM {table}"
+                               .format(columns=columns, table=table),
+                               self.connection)
         table.to_csv(output, **kwargs)
         return None if isfile else output.getvalue()
