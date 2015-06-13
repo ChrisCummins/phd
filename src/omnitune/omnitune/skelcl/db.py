@@ -1,9 +1,11 @@
 from __future__ import division
+from __future__ import print_function
 
 import sqlite3 as sql
 
 import labm8 as lab
 from labm8 import db
+from labm8 import fmt
 from labm8 import fs
 from labm8 import io
 from labm8 import math as labmath
@@ -1406,6 +1408,7 @@ class MLDatabase(Database):
         Populate the derived tables from the base database.
         """
         self.populate_kernel_names_table()
+        self.compress_kernels()
         self.populate_kernel_features_table()
         self.populate_device_features_table()
         self.populate_dataset_features_table()
@@ -1414,6 +1417,225 @@ class MLDatabase(Database):
         self.populate_features_runtime_stats_table()
         self.populate_features_oracle_params_table()
         self.execute("VACUUM")
+
+    def detect_kernels_to_merge_by_name(self, name):
+        """
+        Determine which kernels with the given name to merge.
+
+        For each kernel ID with the given name, select those which
+        have identical north,south,east,west,max_wg_size
+        properties. From those, determine whether they should be
+        merged, by checking the kernel features. If the kernel
+        features are the same (i.e. they are functionally identical
+        kernels), then mark them for merging. If the features are
+        different, then interactively prompt the user so that we can
+        Do The Right Thing (TM).
+
+        Arguments:
+
+            name (str): Name of the kernel to check for merges.
+        """
+        ids = self.lookup_named_kernel(name)
+        quoted_ids = ['"' + id + '"' for id in ids]
+        kernel_ids = "(" + ",".join(quoted_ids) + ")"
+
+        query = self.execute("SELECT north,south,east,west,max_wg_size "
+                             "FROM kernels "
+                             "WHERE id IN {kernel_ids} "
+                             "GROUP BY north,south,east,west,max_wg_size"
+                             .format(kernel_ids=kernel_ids));
+
+        for row in query:
+            north, south, east, west, max_wg_size = row
+            where = " AND ".join("{0}={1}".format(key,val) for key,val in [
+                ("north", north),
+                ("south", south),
+                ("east", east),
+                ("west", west),
+                ("max_wg_size", max_wg_size)
+            ])
+
+            id_query = self.execute("SELECT id "
+                                    "FROM kernels "
+                                    "WHERE {where} AND id IN {kernel_ids}"
+                                    .format(where=where,
+                                            kernel_ids=kernel_ids))
+            frequencies = [
+                (row[0],
+                 self.execute("SELECT Count(*) FROM kernels "
+                              "WHERE {where} AND id=?"
+                              .format(where=where), (row[0],)).fetchone()[0])
+                for row in id_query
+            ]
+            if len(frequencies) == 1:
+                return
+
+            dst, maxfreq = sorted(frequencies, key=lambda x: x[1])[-1]
+
+            for id,_ in frequencies:
+                if id != dst:
+                    entry_exists = (
+                        self.execute("SELECT Count(*) "
+                                     "FROM kernel_translate "
+                                     "WHERE id=?", (id,)).fetchone()[0] > 0
+                    ) or (
+                        self.execute("SELECT Count(*) "
+                                     "FROM kernel_skip_translate "
+                                     "WHERE id=?", (id,)).fetchone()[0] > 0
+                    )
+
+                    if not entry_exists:
+                        feature_columns = [
+                            "instruction_count",
+                            "ratio_AShr_insts",
+                            "ratio_Add_insts",
+                            "ratio_Alloca_insts",
+                            "ratio_And_insts",
+                            "ratio_Br_insts",
+                            "ratio_Call_insts",
+                            "ratio_FAdd_insts",
+                            "ratio_FCmp_insts",
+                            "ratio_FDiv_insts",
+                            "ratio_FMul_insts",
+                            "ratio_FPExt_insts",
+                            "ratio_FPToSI_insts",
+                            "ratio_FSub_insts",
+                            "ratio_GetElementPtr_insts",
+                            "ratio_ICmp_insts",
+                            "ratio_InsertValue_insts",
+                            "ratio_Load_insts",
+                            "ratio_Mul_insts",
+                            "ratio_Or_insts",
+                            "ratio_PHI_insts",
+                            "ratio_Ret_insts",
+                            "ratio_SDiv_insts",
+                            "ratio_SExt_insts",
+                            "ratio_SIToFP_insts",
+                            "ratio_SRem_insts",
+                            "ratio_Select_insts",
+                            "ratio_Shl_insts",
+                            "ratio_Store_insts",
+                            "ratio_Sub_insts",
+                            "ratio_Trunc_insts",
+                            "ratio_UDiv_insts",
+                            "ratio_Xor_insts",
+                            "ratio_ZExt_insts",
+                            "ratio_basic_blocks",
+                            "ratio_memory_instructions",
+                            "ratio_non_external_functions"
+                        ]
+
+                        cmd = ("SELECT {columns} "
+                               "FROM kernel_features "
+                               "WHERE id=?"
+                               .format(columns=",".join(feature_columns)))
+
+                        left_features = self.execute(cmd, (id,)).fetchone()
+                        right_features = self.execute(cmd, (dst,)).fetchone()
+
+                        differences = [
+                            (column,
+                             left,
+                             right,
+                             "{:.2f}%".format((abs(left - right)
+                                               / max(left, right)) * 100))
+                            for column,left,right in
+                            zip(feature_columns, left_features, right_features)
+                            if left != right
+                        ]
+
+                        should_merge = True
+                        if len(differences):
+                            print("Kernel:", name,
+                                  "north:", north,
+                                  "south:", south,
+                                  "east:", east,
+                                  "west:", west,
+                                  "max_wg_size:", max_wg_size)
+                            print(fmt.table(differences,
+                                            columns=("feature", "left",
+                                                     "right", "diff")))
+                            answer = raw_input("Should we merge? (y/n): ")
+                            should_merge = (False
+                                            if answer.strip().lower() != "y"
+                                            else True)
+
+                        if should_merge:
+                            io.info("Merging", id, "->", dst)
+                            self.execute("INSERT INTO kernel_translate "
+                                         "VALUES (?,?)", (id, dst))
+                        else:
+                            io.info("Skipping", id, "->", dst)
+                            self.execute("INSERT INTO kernel_skip_translate "
+                                         "VALUES (?)", (id,))
+                        self.commit()
+
+    def translate_kernel(self, src, dst):
+        def _count_scenarios(scenario):
+            return self.execute("SELECT Count(*) FROM runtimes "
+                                "WHERE scenario=?", (scenario,)).fetchone()[0]
+
+        io.info("Translating kernel", src, "->", dst)
+        scenarios = [
+            (row[0], self.add_scenario(row[1], row[2], dst, row[3]))
+            for row in
+            self.execute("SELECT id,host,device,dataset "
+                         "FROM scenarios "
+                         "WHERE kernel=?", (src,))
+        ]
+
+        counts = [_count_scenarios(x[0]) + _count_scenarios(x[1])
+                  for x in scenarios]
+
+        for scenario in scenarios:
+            self.execute("UPDATE runtimes "
+                         "SET scenario=? "
+                         "WHERE scenario=?", (dst, src))
+        self.commit()
+
+        new_counts = [_count_scenarios(x[1]) for x in scenarios]
+
+        for x,y in zip(counts,new_counts):
+            if x != y:
+                io.error("Wrong merge count!", x, y)
+
+        drop_scenarios = ",".join(['"' + x[0] + '"' for x in scenarios])
+        self.execute("DELETE FROM scenarios WHERE id IN ({drop})"
+                     .format(drop=drop_scenarios))
+        self.execute("DELETE FROM kernel_translate WHERE id=?",
+                     (src,))
+        self.execute("DELETE FROM kernels WHERE id=?", (src,))
+
+    def perform_kernel_translation(self):
+        for row in self.execute("SELECT id,dst FROM kernel_translate"):
+            self.translate_kernel(*row)
+        self.commit()
+
+    def compress_kernels(self):
+        """
+        Merge kernels with identical (or similar) features.
+
+        Once we have labelled the kernels with names, we can use this
+        information to see if we can merge any of the kernel IDs.
+        """
+        io.info("Compressing kernels ...")
+
+        # Create table.
+        self.execute("CREATE TABLE IF NOT EXISTS kernel_translate "
+                     "(id text primary key, dst text)")
+        self.execute("CREATE TABLE IF NOT EXISTS kernel_skip_translate "
+                     "(id text primary key)")
+
+        # Populate table.
+        for name in self.kernel_names:
+            self.detect_kernels_to_merge_by_name(name)
+
+        self.perform_kernel_translation()
+
+        # self.execute("DROP TABLE kernel_translate")
+        # self.execute("DROP TABLE kernel_skip_translate")
+
+
 
     def oracle_param_frequencies(self, table="oracle_params",
                                  where=None, normalise=False):
