@@ -158,16 +158,111 @@ def isdir(path):
     return os.path.isdir(path)
 
 
-def ls(p=".", abspaths=True):
+def ls(root=".", abspaths=False, recursive=False):
     """
-    List all files and directories in "path". If "abspaths", return
-    absolute paths.
+    Return a list of files in directory.
+
+    Directory listings are sorted alphabetically. If the named
+    directory is a file, return it's path.
+
+    Examples:
+
+        >>> fs.ls("foo")
+        ["a", "b", "c"]
+
+        >>> fs.ls("foo/a")
+        ["foo/a"]
+
+        >>> fs.ls("foo", abspaths=True)
+        ["/home/test/foo/a", "/home/test/foo/b", "/home/test/foo/c"]
+
+        >>> fs.ls("foo", recursive=True)
+        ["a", "b", "b/d", "b/d/e", "c"]
+
+    Arguments:
+
+        root (str): Path to directory. Can be relative or absolute.
+        abspaths (bool, optional): Return absolute paths if true.
+        recursive (bool, optional): Recursively list subdirectories if
+          true.
+
+    Returns:
+
+        list of str: A list of paths.
+
+    Raises:
+
+        OSError: If root directory does not exist.
     """
-    if abspaths:
-        files = ls(p, abspaths=False)
-        return [os.path.abspath(path(p, file)) for file in files]
+    def _expand_subdirs(file):
+        if isdir(path(root, file)):
+            return [file] + [path(file, x) for x in
+                             ls(path(root, file), recursive=True)]
+        else:
+            return [file]
+
+    if isfile(root):
+        # If argument is a file, return path.
+        return [abspath(root)] if abspaths else [basename(root)]
+    elif abspaths:
+        # Get relative names.
+        relpaths = ls(root, recursive=recursive, abspaths=False)
+        # Prepend the absolute path to each relative name.
+        base = abspath(root)
+        return [path(base, relpath) for relpath in relpaths]
+    elif recursive:
+        # Recursively expand subdirectories.
+        paths = ls(root, abspaths=abspaths, recursive=False)
+        return lab.flatten([_expand_subdirs(file) for file in paths])
     else:
-        return os.listdir(p)
+        # List directory contents.
+        return list(sorted(os.listdir(root)))
+
+
+def lsdirs(root=".", **kwargs):
+    """
+    Return only subdirectories from a directory listing.
+
+    Arguments:
+
+        root (str): Path to directory. Can be relative or absolute.
+        **kwargs: Any additional arguments to be passed to ls().
+
+    Returns:
+
+        list of str: A list of directory paths.
+
+    Raises:
+
+        OSError: If root directory does not exist.
+    """
+    paths = ls(root=root, **kwargs)
+    if isfile(root):
+        return []
+    return [_path for _path in paths if isdir(path(root, _path))]
+
+
+def lsfiles(root=".", **kwargs):
+    """
+    Return only files from a directory listing.
+
+    Arguments:
+
+        root (str): Path to directory. Can be relative or absolute.
+        **kwargs: Any additional arguments to be passed to ls().
+
+    Returns:
+
+        list of str: A list of file paths.
+
+    Raises:
+
+        OSError: If root directory does not exist.
+    """
+    paths = ls(root=root, **kwargs)
+    if isfile(root):
+        return paths
+    return [_path for _path in paths if isfile(path(root, _path))]
 
 
 def rm(path):
@@ -209,6 +304,8 @@ def cp(src, dst):
         IOError: if source does not exist.
     """
     if isdir(src):
+        if isdir(dst):
+            rm(dst)
         shutil.copytree(src, dst)
     elif isfile(src):
         shutil.copy(src, dst)

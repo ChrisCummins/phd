@@ -174,10 +174,6 @@ class TestFs(TestCase):
         ],
                    fs.read("tests/data/data1", rstrip=False))
 
-    # ls()
-    def test_ls(self):
-        pass
-
     # mkdir()
     def test_mkdir(self):
         fs.rm("/tmp/labm8.dir")
@@ -256,6 +252,70 @@ class TestFs(TestCase):
         fs.cp("/tmp/labm8.tmp", "/tmp/labm8.tmp.copy")
         self._test(fs.read("/tmp/labm8.tmp"), fs.read("/tmp/labm8.tmp.copy"))
 
+    # ls()
+    def test_ls(self):
+        self._test(["a", "b", "c", "d"],
+                   fs.ls("tests/data/testdir"))
 
-if __name__ == '__main__':
+    def test_ls_recursive(self):
+        self._test(["a", "b", "c", "c/e", "c/f", "c/f/h", "c/f/i", "c/g", "d"],
+                   fs.ls("tests/data/testdir", recursive=True))
+
+    def test_ls_abspaths(self):
+        fs.cp("tests/data/testdir", "/tmp/testdir")
+        self._test(["/tmp/testdir/a",
+                    "/tmp/testdir/b",
+                    "/tmp/testdir/c",
+                    "/tmp/testdir/d"],
+                   fs.ls("/tmp/testdir", abspaths=True))
+        self._test(["/tmp/testdir/a",
+                    "/tmp/testdir/b",
+                    "/tmp/testdir/c",
+                    "/tmp/testdir/c/e",
+                    "/tmp/testdir/c/f",
+                    "/tmp/testdir/c/f/h",
+                    "/tmp/testdir/c/f/i",
+                    "/tmp/testdir/c/g",
+                    "/tmp/testdir/d"],
+                   fs.ls("/tmp/testdir", recursive=True, abspaths=True))
+        fs.rm("/tmp/testdir")
+
+    def test_ls_bad_path(self):
+        with self.assertRaises(OSError):
+            fs.ls("/not/a/real/path/bro")
+
+    def test_ls_single_file(self):
+        self._test(["a"], fs.ls("tests/data/testdir/a"))
+
+    # lsdirs()
+    def test_lsdirs(self):
+        self._test(["c"], fs.lsdirs("tests/data/testdir"))
+
+    def test_lsdirs_recursive(self):
+        self._test(["c", "c/f", "c/f/i"],
+                   fs.lsdirs("tests/data/testdir", recursive=True))
+
+    def test_lsdirs_bad_path(self):
+        with self.assertRaises(OSError):
+            fs.lsdirs("/not/a/real/path/bro")
+
+    def test_lsdirs_single_file(self):
+        self._test([], fs.lsdirs("tests/data/testdir/a"))
+
+    # lsdirs()
+    def test_lsfiles(self):
+        self._test(["a", "b", "d"], fs.lsfiles("tests/data/testdir"))
+
+    def test_lsfiles_recursive(self):
+        self._test(["a", "b", "c/e", "c/f/h", "c/g", "d"],
+                   fs.lsfiles("tests/data/testdir", recursive=True))
+
+    def test_lsfiles_bad_path(self):
+        with self.assertRaises(OSError):
+            fs.lsfiles("/not/a/real/path/bro")
+
+    def test_lsfiles_single_file(self):
+        self._test(["a"], fs.lsfiles("tests/data/testdir/a"))
+
+if __name__ == "__main__":
     main()
