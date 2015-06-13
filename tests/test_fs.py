@@ -258,7 +258,8 @@ class TestFs(TestCase):
                    fs.ls("tests/data/testdir"))
 
     def test_ls_recursive(self):
-        self._test(["a", "b", "c", "c/e", "c/f", "c/f/h", "c/f/i", "c/g", "d"],
+        self._test(["a", "b", "c", "c/e", "c/f", "c/f/f",
+                    "c/f/f/i", "c/f/h", "c/g", "d"],
                    fs.ls("tests/data/testdir", recursive=True))
 
     def test_ls_abspaths(self):
@@ -273,12 +274,18 @@ class TestFs(TestCase):
                     "/tmp/testdir/c",
                     "/tmp/testdir/c/e",
                     "/tmp/testdir/c/f",
+                    "/tmp/testdir/c/f/f",
+                    "/tmp/testdir/c/f/f/i",
                     "/tmp/testdir/c/f/h",
-                    "/tmp/testdir/c/f/i",
                     "/tmp/testdir/c/g",
                     "/tmp/testdir/d"],
                    fs.ls("/tmp/testdir", recursive=True, abspaths=True))
         fs.rm("/tmp/testdir")
+
+    def test_ls_empty_dir(self):
+        fs.mkdir("/tmp/labm8.empty")
+        self._test([], fs.ls("/tmp/labm8.empty"))
+        fs.rm("/tmp/labm8.empty")
 
     def test_ls_bad_path(self):
         with self.assertRaises(OSError):
@@ -292,7 +299,7 @@ class TestFs(TestCase):
         self._test(["c"], fs.lsdirs("tests/data/testdir"))
 
     def test_lsdirs_recursive(self):
-        self._test(["c", "c/f", "c/f/i"],
+        self._test(["c", "c/f", "c/f/f"],
                    fs.lsdirs("tests/data/testdir", recursive=True))
 
     def test_lsdirs_bad_path(self):
@@ -307,7 +314,7 @@ class TestFs(TestCase):
         self._test(["a", "b", "d"], fs.lsfiles("tests/data/testdir"))
 
     def test_lsfiles_recursive(self):
-        self._test(["a", "b", "c/e", "c/f/h", "c/g", "d"],
+        self._test(["a", "b", "c/e", "c/f/f/i", "c/f/h", "c/g", "d"],
                    fs.lsfiles("tests/data/testdir", recursive=True))
 
     def test_lsfiles_bad_path(self):
