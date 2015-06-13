@@ -1258,7 +1258,8 @@ class MLDatabase(Database):
         """
         Derive kernel features from "kernels" table.
         """
-        query = self.execute("SELECT * FROM kernels")
+        query = self.execute("SELECT * FROM kernels WHERE id NOT in "
+                             "(SELECT id FROM kernel_features)")
         rows = query.fetchall()
         total = len(rows)
 
@@ -1325,7 +1326,8 @@ class MLDatabase(Database):
         Derive device features from "devices" table.
         """
         self._progress_report("device_features")
-        self.execute("INSERT INTO device_features SELECT * FROM devices")
+        self.execute("INSERT OR IGNORE INTO device_features "
+                     "SELECT * FROM devices")
         self.commit()
 
     def populate_dataset_features_table(self):
@@ -1333,7 +1335,8 @@ class MLDatabase(Database):
         Derive dataset features from "datasets" table.
         """
         self._progress_report("dataset_features")
-        self.execute("INSERT INTO dataset_features SELECT * FROM datasets")
+        self.execute("INSERT OR IGNORE INTO dataset_features "
+                     "SELECT * FROM datasets")
         self.commit()
 
     def populate_runtime_stats_table(self):
