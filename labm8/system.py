@@ -55,6 +55,12 @@ class SubprocessError(Error):
     pass
 
 
+class CommandNotFoundError(Exception):
+    """
+    Error thrown a system command is not found.
+    """
+    pass
+
 class ScpError(Error):
     """
     Error thrown if scp file transfer fails.
@@ -256,7 +262,7 @@ def which(program, path=os.environ["PATH"].split(os.pathsep)):
     return None
 
 
-def scp(host, src, dst, user=None):
+def scp(host, src, dst, user=None, path=None):
     """
     Copy a file or directory from a remote location.
 
@@ -272,9 +278,12 @@ def scp(host, src, dst, user=None):
         dst (str): path to the destination file or directory.
         user (str, optional): Alternative username for remote access.
           If not provided, the default scp behaviour is used.
+        path (str, optional): Directory containing scp command. If not
+          provided, attempt to locate scp using which().
 
     Raises:
 
+        CommandNotFoundError: If scp binary not found.
         IOError: if transfer fails.
     """
     # Create the first argument.
@@ -283,8 +292,13 @@ def scp(host, src, dst, user=None):
     else:
         arg = "{user}@{host}:{path}".format(user=user, host=host, path=src)
 
+    # Get path to scp binary.
+    scp_bin = which("scp", path=(path,))
+    if scp_bin is None:
+        raise CommandNotFoundError("Could not find scp in '{0}'".format(path))
+
     # Run system "scp" command.
-    ret,out,err = run(["scp",
+    ret,out,err = run([scp_bin,
                        "-o", "StrictHostKeyChecking=no",
                        "-o", "UserKnownHostsFile=/dev/null",
                        arg, dst])
