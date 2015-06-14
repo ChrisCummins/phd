@@ -90,7 +90,7 @@ def save_csv(src, **kwargs):
     return save(src, saver="weka.core.converters.CSVSaver", **kwargs)
 
 
-def load_and_save(src, dst, loader, saver, loader_args=None, saver_args=None):
+def load_and_save(src, dst, loader, saver, loader_args={}, saver_args={}):
     if not MODULE_SUPPORTED: return
     data = load(src, loader, **loader_args)
     save(data, dst, saver, **saver_args)
