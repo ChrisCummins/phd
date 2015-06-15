@@ -39,7 +39,7 @@ class TestDatabase(TestCase):
     # placeholders
     def test_placeholders(self):
         self._test("()", db.placeholders())
-        self._test("?,?,?,?", db.placeholders("a", "b", "c", "d"))
+        self._test("(?,?,?,?)", db.placeholders("a", "b", "c", "d"))
 
     # tables attribute
     def test_tables(self):
