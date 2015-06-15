@@ -3,7 +3,7 @@ from labm8 import db
 from labm8 import fs
 from labm8 import io
 
-from omnitune.skelcl import db
+from omnitune.skelcl import db as _db
 
 def migrate_0_to_1(old):
     """
@@ -79,7 +79,7 @@ def migrate_0_to_1(old):
                     (scenario_id, params_id, runtime))
 
     # Create temporary database
-    tmp = db.Database("/tmp/omnitune.skelcl.migration.db")
+    tmp = _db.Database("/tmp/omnitune.skelcl.migration.db")
 
     # Clear anything that's already in the database.
     for table in tmp.tables:
@@ -231,7 +231,7 @@ def migrate_1_to_2(old):
     """
     # Create temporary database
     fs.cp(old.path, "/tmp/omnitune.skelcl.migration.db")
-    tmp = db.Database("/tmp/omnitune.skelcl.migration.db")
+    tmp = _db.Database("/tmp/omnitune.skelcl.migration.db")
 
     io.info("Migrating database to version 2.")
 
@@ -297,9 +297,9 @@ def migrate(db):
     """
     if db.version == 0:
         migrate_0_to_1(db)
-        db = db.Database()
+        db = _db.Database()
     if db.version == 1:
         migrate_1_to_2(db)
-        db = db.Database()
+        db = _db.Database()
 
     return db
