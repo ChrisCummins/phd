@@ -809,6 +809,28 @@ class Database(db.Database):
                             self.execute("SELECT id FROM scenarios WHERE "
                                          "dataset=?", (dataset,))])
 
+    def speedup(self, scenario, left, right):
+        """
+        Return the speedup of left params over right params for scenario.
+
+        Arguments:
+
+            scenario (str): Scenario ID.
+            left (str): Parameters ID for left (base) case.
+            right (str): Parameters ID for right (comparison) case.
+
+        Returns:
+
+            float: Speedup of left over right.
+        """
+        left = self.execute("SELECT mean FROM runtime_stats WHERE "
+                            "scenario=? AND params=?",
+                            (scenario, left)).fetchone()[0]
+        right = self.execute("SELECT mean FROM runtime_stats WHERE "
+                             "scenario=? AND params=?",
+                             (scenario, right)).fetchone()[0]
+        return left / right
+
     def max_speedup(self, scenario):
         """
         Return the max speedup for a given scenarios.
