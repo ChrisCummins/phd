@@ -195,7 +195,6 @@ def filter_iqr(array, lower, upper):
     new = list(array)
     for x in new[:]:
         if x < lower or x > upper:
-            print("REMOV", x, lower, upper)
             new.remove(x)
 
     return new
