@@ -42,31 +42,33 @@ class SchemaError(Error):
     pass
 
 
-def placeholders(*args):
+def placeholders(*columns):
     """
     Generate placeholders string for given arguments.
 
     Examples:
 
-        >>> db.execute("INSERT INTO foo VALUES ({})"
-                       .format(placeholders(a, b, c)),
-                       (a, b, c))
-        "?,?,?"
+        >>> placeholders(a, b, c)
+        "(?,?,?)"
 
-        >>> db.execute("INSERT INTO bar VALUES ({})"
-                       .format(placeholders(*sequence)),
-                       sequence)
-        "?,?,?,?,?,?,?,?,?,?"
+        >>> placeholders(*sequence)
+        "(?,?,?,?,?,?,?,?,?,?)"
+
+        >>> db.execute("INSERT INTO foo VALUES " +
+                       placeholders(a, b, c), (a, b, c))
+
+        >>> db.execute("INSERT INTO bar VALUES " +
+                       placeholders(*sequence), sequence)
 
     Arguments:
 
-        *args: Arguments to generate placeholders for.
+        *columns: Arguments to generate placeholders for.
 
     Returns:
 
-        str: Comma separated placeholders for given arguments.
+        str: Bracketed, comma separated placeholders for given arguments.
     """
-    return ",".join(["?"] * len(args))
+    return "(" + ",".join(["?"] * len(columns)) + ")"
 
 
 class Database(object):
