@@ -71,6 +71,30 @@ def placeholders(*columns):
     return "(" + ",".join(["?"] * len(columns)) + ")"
 
 
+def where(*columns):
+    """
+    String together multiple where clauses.
+
+    Examples:
+
+        >>> where("a", "b", "c")
+        "a=? AND b=? AND c=?"
+
+        >>> db.execute("SELECT * FROM foo WHERE {}"
+                       .format(where("a", "b", "c")),
+                       (a, b, c))
+
+    Arguments:
+
+        *columns: Arguments to generate '<name>=?' placeholders for.
+
+    Returns:
+
+        str: Equivalence checks for all columns.
+    """
+    return " AND ".join(["{}=?".format(column) for column in columns])
+
+
 class Database(object):
     def __init__(self, path, tables={}):
         """
