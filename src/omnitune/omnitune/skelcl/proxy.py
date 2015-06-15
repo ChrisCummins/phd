@@ -21,11 +21,6 @@ import omnitune
 from omnitune import llvm
 from omnitune import util
 
-if system.HOSTNAME != "tim":
-    from omnitune import opencl
-else:
-    from omnitune import opencl_tim as opencl
-
 # Local imports.
 import training
 from . import checksum_str
@@ -63,12 +58,6 @@ class Proxy(omnitune.Proxy):
 
         # Create an in-memory sample strategy cache.
         self.strategies = cache.TransientCache()
-
-        # Make a cache of local devices.
-        self.local_devices = cache.TransientCache()
-        for devinfo in opencl.get_devinfos():
-            dev_name = devinfo["name"]
-            self.local_devices[dev_name] = devinfo
 
     def get_source_features(self, source, checksum):
         try:
@@ -119,8 +108,6 @@ class Proxy(omnitune.Proxy):
 
             (16,32)
         """
-        start_time = time.time()
-
         # Parse arguments.
         device_name = util.parse_str(device_name)
         device_count = int(device_count)
@@ -135,27 +122,8 @@ class Proxy(omnitune.Proxy):
         source = util.parse_str(source)
         max_wg_size = int(max_wg_size)
 
-        # Get the scenario ID.
-        # device = hash_device(device_name, device_count)
-        # kernel = hash_kernel(north, south, east, west, max_wg_size, source)
-        # dataset = hash_dataset(data_width, data_height, type_in, type_out)
-        # scenario = hash_scenario(system.HOSTNAME, device, kernel, dataset)
-
-        # Get sampling strategy.
-        # try:
-        #     strategy = self.strategies[scenario]
-        # except KeyError:
-        #     strategy = training.SampleStrategy(scenario, max_wg_size, self.db)
-        #     self.strategies[scenario] = strategy
-        #
-        # # Get the sampling strategy's next recommendation.
-        # wg = strategy.next()
+        # Get the next scenario ID to train on.
         wg = training.random_wg_value(max_wg_size)
-
-        end_time = time.time()
-
-        io.debug(("RequestTrainingStencilParams() -> ({c}, {r}) [{t:.3f}s]"
-                  .format(c=wg[0], r=wg[1], t=end_time - start_time)))
 
         return wg
 
@@ -264,28 +232,16 @@ class Proxy(omnitune.Proxy):
         wg_r = int(wg_r)
         runtime = float(runtime)
 
-        # Add entry into devices table.
-        devinfo = self.local_devices[device_name]
-        device_id = self.db.add_device(devinfo, device_count)
-
-        # Add entry into kernels table.
-        kernel_id = self.db.add_kernel(north, south, east, west,
-                                       max_wg_size, source)
-
-        # Add entry into datasets table.
-        dataset_id = self.db.add_dataset(data_width, data_height,
-                                         type_in, type_out)
-
-        # Add entry into scenarios table.
-        scenario_id = self.db.add_scenario(system.HOSTNAME, device_id,
-                                           kernel_id, dataset_id)
-
-        # Add entry into params table.
-        params_id = self.db.add_params(wg_c, wg_r)
+        # Lookup IDs
+        device = self.db.device_id(device_name, device_count)
+        kernel = self.db.kernel_id(north, south, east, west,
+                                   max_wg_size, source)
+        dataset = self.db.dataset_id(data_width, data_height, type_in, type_out)
+        scenario = self.db.scenario_id(device, kernel, dataset)
+        params = self.db.params_id(wg_c, wg_r)
 
         # Add entry into runtimes table.
-        self.db.add_runtime(scenario_id, params_id, runtime)
-
+        self.db.add_runtime(scenario, params, runtime)
         self.db.commit()
 
         io.debug(("AddStencilRuntime({scenario}, {params}, {runtime})"

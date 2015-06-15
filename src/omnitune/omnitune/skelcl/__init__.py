@@ -34,26 +34,20 @@ class FeatureExtractionError(Error):
     pass
 
 
-def hash_kernel(north, south, east, west, max_wg_size, source):
-    """
-    Returns the hash of a kernel.
-    """
-    return crypto.sha1(".".join((str(north), str(south), str(east), str(west),
-                                 str(max_wg_size), source)))
-
-
-def hash_params(wg_c, wg_r):
-    """
-    Returns the hash of a set of parameter values.
-    """
-    return str(wg_c) + "x" + str(wg_r)
-
-
-def hash_device(name, count):
+def hash_device(*features):
     """
     Returns the hash of a device name + device count pair.
     """
+    name = features[0]
+    count = features[1]
     return str(count) + "x" + name.strip()
+
+
+def hash_kernel(*features):
+    """
+    Returns the hash of a kernel.
+    """
+    return crypto.sha1(".".join([str(feature) for feature in features]))
 
 
 def hash_dataset(width, height, tin, tout):
@@ -63,11 +57,18 @@ def hash_dataset(width, height, tin, tout):
     return ".".join((str(width), str(height), tin, tout))
 
 
-def hash_scenario(host, device_id, kernel_id, data_id):
+def hash_params(wg_c, wg_r):
+    """
+    Returns the hash of a set of parameter values.
+    """
+    return str(wg_c) + "x" + str(wg_r)
+
+
+def hash_scenario(device_id, kernel_id, dataset_id):
     """
     Returns the hash of a scenario.
     """
-    return crypto.sha1(".".join((host, device_id, kernel_id, data_id)))
+    return crypto.sha1(".".join((device_id, kernel_id, dataset_id)))
 
 
 def get_user_source(source):
@@ -88,22 +89,6 @@ def get_user_source(source):
         user_source.append(line)
 
     raise FeatureExtractionError("Failed to find end of user code marker")
-
-
-def checksum_str(string):
-    """
-    Return the checksum for a string.
-    """
-    return crypto.sha1(string)
-
-
-def get_source_features(checksum, source, path=""):
-    user_source = skelcl.get_user_source(source)
-    bitcode = llvm.bitcode(user_source, path=path)
-    instcounts = llvm.instcounts(bitcode, path=path)
-    ratios = llvm.instcounts2ratios(instcounts)
-
-    return vectorise_ratios(checksum, source, ratios)
 
 
 def get_kernel_name_and_type(source):

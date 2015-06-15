@@ -3,7 +3,15 @@ from labm8 import db
 from labm8 import fs
 from labm8 import io
 
+from labm8.db import placeholders
+
+from . import hash_dataset
+from . import hash_device
+from . import hash_scenario
+
 from omnitune.skelcl import db as _db
+from omnitune.skelcl import features
+from omnitune.skelcl.db import sql_command
 
 def migrate_0_to_1(old):
     """
@@ -279,6 +287,137 @@ def migrate_1_to_2(old):
     tmp.close()
     io.info("Migration completed.")
 
+def migrate_2_to_3(old):
+    """
+    SkelCL database migration script.
+
+    Arguments:
+
+        old (SkelCLDatabase): The database to migrate
+    """
+    def _old_kernel2new(old_id):
+        kernel = old.execute("SELECT north,south,east,west,max_wg_size,source "
+                             "FROM kernels WHERE id=?",
+                             (old_id,)).fetchone()
+        if kernel:
+            return tmp.kernel_id(*kernel)
+
+    def _old_scenario2new(old_id):
+        device, old_kernel, dataset = old.execute("SELECT device,kernel,dataset "
+                                                  "FROM scenarios WHERE id=?",
+                                                  (old_id,)).fetchone()
+        kernel = _old_kernel2new(old_kernel)
+        return tmp.scenario_id(device, kernel, dataset)
+
+    # TODO: Un-comment out code!
+
+    # Create temporary database
+    fs.rm("/tmp/omnitune.skelcl.migration.db")
+    tmp = _db.Database("/tmp/omnitune.skelcl.migration.db")
+    tmp.attach(old.path, "rhs")
+
+    io.info("Migrating database to version 3.")
+
+    backup_path = old.path + ".1"
+    io.info("Creating backup of old database at '{0}'".format(backup_path))
+    fs.cp(old.path, backup_path)
+
+    tmp_path = tmp.path
+    old_path = old.path
+
+    tmp.run("create_tables")
+
+    # Populate feature and lookup tables.
+    for row in old.execute("SELECT * FROM devices"):
+        features = row[1:]
+        id = hash_device(*features)
+        io.debug("Features extracted for device", id)
+        row = (id,) + features
+        tmp.execute("INSERT INTO devices VALUES " +
+                    placeholders(*row), row)
+
+        row = (features[0], features[1], id)
+        tmp.execute("INSERT INTO device_lookup VALUES " +
+                    placeholders(*row), row)
+        tmp.commit()
+
+    for row in old.execute("SELECT * FROM kernels"):
+        args = row[1:]
+        tmp.kernel_id(*args)
+
+    for row in old.execute("SELECT * FROM datasets"):
+        features = row[1:]
+        id = hash_dataset(*features)
+        io.debug("Features extracted for dataset", id)
+        row = (id,) + features
+        tmp.execute("INSERT INTO datasets VALUES " +
+                    placeholders(*row), row)
+
+        row = features + (id,)
+        tmp.execute("INSERT INTO dataset_lookup VALUES " +
+                    placeholders(*row), row)
+        tmp.commit()
+
+    # Populate kernel_names table.
+    for row in old.execute("SELECT * FROM kernel_names"):
+        old_id = row[0]
+        synthetic, name = row[1:]
+
+        kernel = _old_kernel2new(old_id)
+        if kernel:
+            row = (kernel, synthetic, name)
+            tmp.execute("INSERT OR IGNORE INTO kernel_names VALUES " +
+                        placeholders(*row), row)
+    tmp.commit()
+
+    # Populate scenarios table.
+    for row in old.execute("SELECT * FROM scenarios"):
+        old_id, _, device, old_kernel, dataset = row
+        kernel = _old_kernel2new(old_kernel)
+        new_id = hash_scenario(device, kernel, dataset)
+
+        row = (new_id, device, kernel, dataset)
+        tmp.execute("INSERT OR IGNORE INTO scenarios VALUES " +
+                    placeholders(*row), row)
+    tmp.commit()
+
+    # Populate params table.
+    tmp.execute("INSERT INTO params SELECT * from rhs.params")
+    tmp.commit()
+
+    scenario_replacements = {
+        row[0]: _old_scenario2new(row[0])
+        for row in old.execute("SELECT * FROM scenarios")
+    }
+
+    tmp.execute("INSERT INTO runtimes SELECT * from rhs.runtimes")
+    for old_id, new_id in scenario_replacements.iteritems():
+        io.info("Runtimes", old_id, "->", new_id)
+        tmp.execute("UPDATE runtimes SET scenario=? WHERE scenario=?",
+                    (new_id, old_id))
+    tmp.commit()
+
+    # Sanity checks
+    bad = False
+    for row in tmp.execute("SELECT DISTINCT scenario FROM runtimes"):
+        count = tmp.execute("SELECT Count(*) FROM scenarios WHERE id=?",
+                            (row[0],)).fetchone()[0]
+        if count != 1:
+            io.error("Bad scenario count:", row[0], count)
+            bad = True
+
+    if bad:
+        io.fatal("Failed sanity check, aborting.")
+    else:
+        io.info("Passed sanity check.")
+
+    # Copy migrated database over the original one.
+    fs.cp(tmp_path, old_path)
+    fs.rm(tmp_path)
+
+    old.close()
+    tmp.close()
+    io.info("Migration completed.")
 
 def migrate(db):
     """
@@ -295,11 +434,15 @@ def migrate(db):
 
         skelcl.Database: Migrated database
     """
+    path = db.path
     if db.version == 0:
         migrate_0_to_1(db)
-        db = _db.Database()
+        db = _db.Database(path=path)
     if db.version == 1:
         migrate_1_to_2(db)
-        db = _db.Database()
+        db = _db.Database(path=path)
+    if db.version == 2:
+        migrate_2_to_3(db)
+        db = _db.Database(path=path)
 
     return db
