@@ -25,7 +25,7 @@ from __future__ import division
 import math
 import sys
 
-import numpy
+import numpy as np
 import scipy
 from scipy import stats
 
@@ -157,6 +157,49 @@ def stdev(array):
     Return the standard deviation of a list of divisible numbers.
     """
     return sqrt(variance(array))
+
+
+def iqr(array, lower, upper):
+    """
+    Return interquartile range for given array.
+
+    Arguments:
+
+        lower (float): Lower bound for IQR, in range 0 <= lower <= 1.
+        upper (float): Upper bound for IQR, in range 0 <= upper <= 1.
+
+    Returns:
+
+        (float, float): Lower and upper IQR values.
+    """
+    return np.percentile(array, [lower * 100, upper * 100])
+
+
+def filter_iqr(array, lower, upper):
+    """
+    Return elements which falls within specified interquartile range.
+
+    Arguments:
+
+        array (list): Sequence of numbers.
+        lower (float): Lower bound for IQR, in range 0 <= lower <= 1.
+        upper (float): Upper bound for IQR, in range 0 <= upper <= 1.
+
+    Returns:
+
+        list: Copy of original list, with elements outside of IQR
+          removed.
+    """
+    upper, lower = iqr(array, upper, lower)
+
+    new = list(array)
+    for x in new[:]:
+        if x < lower or x > upper:
+            print("REMOV", x, lower, upper)
+            new.remove(x)
+
+    return new
+
 
 def confinterval(array, conf=0.95, normal_threshold=30):
     """
