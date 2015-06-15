@@ -29,6 +29,9 @@ setup(name='omnitune',
           'omnitune',
           'omnitune.skelcl'
       ],
+      package_data={
+          'omnitune.skelcl': ['data/*.sql']
+      },
       scripts=['bin/omnitune-proxy'],
       test_suite='nose.collector',
       tests_require=[

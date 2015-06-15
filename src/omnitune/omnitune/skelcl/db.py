@@ -24,6 +24,28 @@ from . import hash_scenario
 
 from space import ParamSpace
 
+from pkg_resources import resource_string
+
+
+def sql_command(name):
+    """
+    Return named SQL command.
+
+    SQL commands may be stored in external files, located under:
+
+        omnitune/skelcl/data/<command-name>.sql
+
+    Arguments:
+
+        name (str): Name of the SQL command.
+
+    Returns:
+
+        str: The SQL command.
+    """
+    return resource_string(__name__, "data/" + name + ".sql")
+
+
 class Database(db.Database):
     """
     Persistent database store for SkelCL runtime data.
