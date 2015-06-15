@@ -337,6 +337,18 @@ class Database(object):
         """
         return self.connection.cursor().execute(*args)
 
+    def executemany(self, *args):
+        """
+        Execute the given arguments.
+        """
+        return self.connection.cursor().executemany(*args)
+
+    def executescript(self, *args):
+        """
+        Execute the given arguments.
+        """
+        return self.connection.cursor().executescript(*args)
+
     def commit(self):
         """
         Commit the current transaction.
