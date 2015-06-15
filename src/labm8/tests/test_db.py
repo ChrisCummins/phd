@@ -36,6 +36,11 @@ class TestDatabase(TestCase):
         self.db = db.Database("/tmp/labm8.db.sql")
         self.db_empty = db.Database("/tmp/labm8.db_empty.sql")
 
+    # placeholders
+    def test_placeholders(self):
+        self._test("()", db.placeholders())
+        self._test("?,?,?,?", db.placeholders("a", "b", "c", "d"))
+
     # tables attribute
     def test_tables(self):
         self._test(["names","prices"], self.db.tables)
