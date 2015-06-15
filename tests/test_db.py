@@ -41,6 +41,11 @@ class TestDatabase(TestCase):
         self._test("()", db.placeholders())
         self._test("(?,?,?,?)", db.placeholders("a", "b", "c", "d"))
 
+    # where
+    def test_where(self):
+        self._test("", db.where())
+        self._test("a=? AND b=? AND c=? AND d=?", db.where("a", "b", "c", "d"))
+
     # tables attribute
     def test_tables(self):
         self._test(["names","prices"], self.db.tables)
