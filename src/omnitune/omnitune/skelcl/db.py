@@ -733,7 +733,7 @@ class Database(db.Database):
                              (param,)).fetchall()
         return {t[0]: t[1] for t in query}
 
-    def performance_of_param(self, param):
+    def perf_param_avg(self, param):
         """
         Return the average param performance vs oracle across all scenarios.
 
@@ -809,6 +809,38 @@ class Database(db.Database):
                             self.execute("SELECT id FROM scenarios WHERE "
                                          "dataset=?", (dataset,))])
 
+    def oracle_runtime(self, scenario):
+        """
+        Return the mean runtime of the oracle param for a given scenario.
+
+        Arguments:
+
+            scenario (str): Scenario ID.
+
+        Returns:
+
+            float: Mean runtime of oracle param for scenario.
+        """
+        return self.execute("SELECT runtime FROM oracle_params WHERE "
+                            "scenario=?", (scenario,)).fetchone()[0]
+
+    def runtime(self, scenario, param):
+        """
+        Return the mean runtime for a given scenario and param.
+
+        Arguments:
+
+            scenario (str): Scenario ID.
+            param (str): Parameters ID.
+
+        Returns:
+
+            float: Mean runtime of param for scenario.
+        """
+        return self.execute("SELECT mean FROM runtime_stats WHERE "
+                            "scenario=? AND params=?",
+                            (scenario, param)).fetchone()[0]
+
     def speedup(self, scenario, left, right):
         """
         Return the speedup of left params over right params for scenario.
@@ -823,13 +855,27 @@ class Database(db.Database):
 
             float: Speedup of left over right.
         """
-        left = self.execute("SELECT mean FROM runtime_stats WHERE "
-                            "scenario=? AND params=?",
-                            (scenario, left)).fetchone()[0]
-        right = self.execute("SELECT mean FROM runtime_stats WHERE "
-                             "scenario=? AND params=?",
-                             (scenario, right)).fetchone()[0]
+        left = self.runtime(scenario, left)
+        right = self.runtime(scenario, right)
         return left / right
+
+    def perf(self, scenario, param):
+        """
+        Return the performance of the given param relative to the oracle.
+
+        Arguments:
+
+            scenario (str): Scenario ID.
+            param (str): Parameters ID.
+
+        Returns:
+
+            float: Mean runtime for scenario with param, normalised
+              against runtime of oracle.
+        """
+        oracle = self.runtime(scenario, param)
+        perf = self.runtime(scenario, param)
+        return oracle / perf
 
     def max_speedup(self, scenario):
         """
@@ -925,7 +971,7 @@ class Database(db.Database):
               the format (param_id,perforance,coverage).
         """
         return sorted([(param,
-                        self.performance_of_param(param),
+                        self.perf_param_avg(param),
                         self.param_coverage(param)) for param in self.params],
                       key=lambda t: t[1], reverse=True)
 
@@ -973,6 +1019,45 @@ class Database(db.Database):
             bool: True if parameter is safe, else false.
         """
         return self.param_coverage(param_id, **kwargs) == 1
+
+    def zero_r(self):
+        """
+        Return the ZeroR parameter, and its performance.
+
+        The ZeroR parameter is the parameter which is most often
+        optimal.
+
+        Returns:
+
+           (str, float): Where str if the parameters ID of the ZeroR,
+             and float is the average performance relative to the
+             oracle.
+        """
+        zeror = self.execute("SELECT params,Count(params) AS count "
+                             "FROM oracle_params GROUP BY params "
+                             "ORDER BY count DESC LIMIT 1").fetchone()[0]
+
+        return zeror, self.perf_param_avg(zeror)
+
+    def one_r(self):
+        """
+        Return the OneR parameter, and its performance.
+
+        The OneR parameter is the parameter which provides the best
+        average case performance across all scenarios. Average
+        performance is calculated using the geometric mean of
+        performance relative to the oracle.
+
+        Returns:
+
+           (str, float): Where str if the parameters ID of the OneR,
+             and float is the average performance relative to the
+             oracle.
+        """
+        # Get average performance of each param.
+        avgs = [(param, self.perf_param_avg(param)) for param in self.params]
+        # Return the "best" param
+        return max(avgs, key=lambda x: x[1])
 
     def dump_csvs(self, path="."):
         """
