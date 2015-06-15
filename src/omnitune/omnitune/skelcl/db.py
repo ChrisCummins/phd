@@ -809,6 +809,90 @@ class Database(db.Database):
                             self.execute("SELECT id FROM scenarios WHERE "
                                          "dataset=?", (dataset,))])
 
+    def max_speedup(self, scenario):
+        """
+        Return the max speedup for a given scenarios.
+
+        The max speedup is the speedup the *best* parameter over the
+        *worst* parameter for the scenario.
+
+        Returns:
+
+            float: Max speedup for scenario.
+        """
+        best = self.execute("SELECT runtime FROM oracle_params WHERE "
+                            "scenario=?", (scenario,)).fetchone()[0]
+        worst = self.execute("SELECT"
+                             "    mean AS runtime"
+                             "FROM runtime_stats"
+                             "WHERE"
+                             "    scenario=? AND"
+                             "    mean=("
+                             "        SELECT MAX(mean) "
+                             "        FROM runtime_stats "
+                             "        WHERE scenario=?"
+                             ")", (scenario, scenario)).fetchone()[0]
+        return best / worst
+
+    def max_speedups(self):
+        """
+        Return the max speedups for all scenarios.
+
+        The max speedup is the speedup the *best* parameter over the
+        *worst* parameter for a given scenario.
+
+        Returns:
+
+            dict of {str: float}: Where the keys are scenario IDs, and
+              the values are max speedup of that scenario.
+        """
+        return {scenario: self.max_speedup(scenario)
+                for scenario in self.scenarios}
+
+    def min_max_runtime(self, scenario, params):
+        """
+        Return the ratio of min and max runtimes to the mean.
+
+        Arguments:
+
+            scenario (str): Scenario ID.
+            parms (str): Parameters ID.
+
+        Returns:
+
+            (float, float): The minimum and maximum runtimes,
+              normalised against the mean.
+        """
+        min_t, mean_t, max_t = self.execute("SELECT min,mean,max "
+                                            "FROM runtime_stats "
+                                            "WHERE scenario=? AND params=?",
+                                            (scenario, params)).fetchone()
+        return min_t / mean_t, max_t / mean_t
+
+    def min_max_runtimes(self):
+        """
+        Return the min/max runtimes for all scenarios and params.
+
+        Returns:
+
+            dict of {str: {str: (float, float)}}: Nested dicts, where
+              the key of the outer dict is the scenario ID, the key of
+              the inner dict is the param ID, and values are
+              normalised min max runtimes.
+        """
+        def _scenario_dict(scenario):
+            return {
+                row[0]: self.min_max_runtime(scenario, row[0])
+                for row in self.execute("SELECT params "
+                                        "FROM runtime_stats "
+                                        "WHERE scenario=?", (scenario,))
+            }
+        return {
+            row[0]: _scenario_dict(row[0])
+            for row in self.execute("SELECT DISTINCT scenario "
+                                    "FROM runtime_stats")
+        }
+
     def params_summary(self):
         """
         Return a summary of parameters.
