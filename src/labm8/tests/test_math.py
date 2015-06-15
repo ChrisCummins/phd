@@ -129,6 +129,28 @@ class TestMath(TestCase):
         self._test(1, labmath.stdev([1,2,3]))
 
 
+    # iqr() tests
+    def test_filter_iqr(self):
+        a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        self._test(0,
+                   labmath.iqr(a, 0, 1))
+        self._test([4, 5, 6, 7],
+                   labmath.iqr(a, 0.25, 0.75))
+        self._test([2, 3, 4, 5, 6, 7],
+                   labmath.iqr(a, 0.1, 0.75))
+
+
+    # filter_iqr() tests
+    def test_filter_iqr(self):
+        a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        self._test(a,
+                   labmath.filter_iqr(a, 0, 1))
+        self._test([4, 5, 6, 7],
+                   labmath.filter_iqr(a, 0.25, 0.75))
+        self._test([2, 3, 4, 5, 6, 7],
+                   labmath.filter_iqr(a, 0.1, 0.75))
+
+
     # confinterval() tests
     def test_confinterval_empty_array(self):
         self._test((0, 0), labmath.confinterval([]))
