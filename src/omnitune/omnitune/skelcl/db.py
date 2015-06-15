@@ -1605,9 +1605,6 @@ class MLDatabase(Database):
         drop_scenarios = ",".join(['"' + x[0] + '"' for x in scenarios])
         self.execute("DELETE FROM scenarios WHERE id IN ({drop})"
                      .format(drop=drop_scenarios))
-        self.execute("DELETE FROM kernel_translate WHERE id=?",
-                     (src,))
-        self.execute("DELETE FROM kernels WHERE id=?", (src,))
 
     def perform_kernel_translation(self):
         for row in self.execute("SELECT id,dst FROM kernel_translate"):
