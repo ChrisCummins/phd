@@ -2,6 +2,8 @@ from itertools import product
 
 import numpy as np
 
+from . import unhash_params
+
 class ParamSpace(object):
     """
     Represents the parameter space of workgroup sizes.
@@ -12,8 +14,7 @@ class ParamSpace(object):
         self.matrix = np.zeros(shape=(len(wg_c), len(wg_r)))
 
     def wgsize2indexes(self, wgsize):
-        wg_c, wg_r = wgsize.split("x")
-        wg_c, wg_r = int(wg_c), int(wg_r)
+        wg_c, wg_r = unhash_params(wgsize)
         i = self.c.index(wg_c)
         j = self.r.index(wg_r)
         return j, i

@@ -64,6 +64,14 @@ def hash_params(wg_c, wg_r):
     return str(wg_c) + "x" + str(wg_r)
 
 
+def unhash_params(params):
+    """
+    Returns the wg_c and wg_r values of a parameters ID.
+    """
+    wg_c, wg_r = params.split("x")
+    return int(wg_c), int(wg_r)
+
+
 def hash_scenario(device_id, kernel_id, dataset_id):
     """
     Returns the hash of a scenario.
