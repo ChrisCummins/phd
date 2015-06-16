@@ -304,10 +304,10 @@ class Database(db.Database):
 
             str: The unique dataset ID.
         """
-        return self._lookup_id("dataset",
-                               ("width", "height", "tin", "tout"),
-                               (width,    height,   tin,   tout),
-                               features.dataset, hash_dataset)
+        return self._id("dataset",
+                        ("width", "height", "tin", "tout"),
+                        ( width,   height,   tin,   tout),
+                        features.dataset, hash_dataset)
 
     def scenario_id(self, device, kernel, dataset):
         """
@@ -341,8 +341,8 @@ class Database(db.Database):
 
            str: The unique parameters ID.
         """
-        id = hash_scenario(wg_c, wg_r)
-        row = (id,) + (device, wg_c, wg_r)
+        id = hash_params(wg_c, wg_r)
+        row = (id,) + (wg_c, wg_r)
         self.execute("INSERT OR IGNORE INTO params VALUES (?,?,?)", row)
         return id
 

@@ -153,3 +153,7 @@ def device(name, count):
         devinfo["vendor_id"],
         devinfo["version"]
     )
+
+
+def dataset(*features):
+    return features
