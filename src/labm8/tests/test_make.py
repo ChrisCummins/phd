@@ -22,11 +22,14 @@ from labm8 import system
 
 class TestMake(TestCase):
 
+    # make()
     def test_make(self):
         ret, out, err = make.make(dir="tests/data/makeproj")
         self._test(0, ret)
         self._test(True, out is not None)
         self._test(None, err)
+        self._test(True, fs.isfile("tests/data/makeproj/foo"))
+        self._test(True, fs.isfile("tests/data/makeproj/foo.o"))
 
     def test_make_bad_target(self):
         with self.assertRaises(make.NoTargetError):
@@ -41,6 +44,17 @@ class TestMake(TestCase):
     def test_make_fail(self):
         with self.assertRaises(make.MakeError):
             make.make(target="fail", dir="tests/data/makeproj")
+
+    # clean()
+    def test_make_clean(self,):
+        fs.cd("tests/data/makeproj")
+        make.make()
+        self._test(True, fs.isfile("foo"))
+        self._test(True, fs.isfile("foo.o"))
+        make.clean()
+        self._test(False, fs.isfile("foo"))
+        self._test(False, fs.isfile("foo.o"))
+        fs.cdpop()
 
 
 if __name__ == '__main__':
