@@ -80,6 +80,14 @@ class Database(db.Database):
             # Base case: This is pre-versioning.
             self.version = 0
 
+    def status_report(self):
+        io.info("Database status:")
+        io.info("    Number of runtimes:   " + str(self.num_rows("runtimes")))
+        io.info("    Number of params:     " + str(self.num_rows("params")))
+        io.info("    Number of scenarios:  " + str(self.num_rows("scenarios")))
+        io.info("    Number of kernels:    " + str(self.num_rows("kernels")))
+        io.info("    Number of devices:    " + str(self.num_rows("devices")))
+
     @property
     def params(self):
         return [row[0] for row in
