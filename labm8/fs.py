@@ -344,28 +344,30 @@ def read(path, rstrip=True, comment_char=None):
 
         IOError: if reading path fails
     """
-    has_comment_char = comment_char != None
+    ignore_comments = comment_char is not None
 
-    # Compile regexps.
-    if has_comment_char:
-        comment_line_re = re.compile("^\s*{char}".format(char=comment_char))
-        not_comment_re = re.compile("[^{char}]+".format(char=comment_char))
-
-    # Read file.
     file = open(path)
     lines = file.readlines()
     file.close()
 
     # Multiple definitions to handle all cases.
-    if has_comment_char and rstrip:
-        return [re.match(not_comment_re, line).group(0).rstrip()
-                for line in lines
-                if not re.match(comment_line_re, line)]
-    elif has_comment_char:
-        return [re.match(not_comment_re, line).group(0)
-                for line in lines
-                if not re.match(comment_line_re, line)]
+    if ignore_comments:
+        comment_line_re = re.compile("^\s*{char}".format(char=comment_char))
+        not_comment_re = re.compile("[^{char}]+".format(char=comment_char))
+
+        if rstrip:
+            # Ignore comments, and right strip results.
+            return [re.match(not_comment_re, line).group(0).rstrip()
+                    for line in lines
+                    if not re.match(comment_line_re, line)]
+        else:
+            # Ignore comments, and don't strip results.
+            return [re.match(not_comment_re, line).group(0)
+                    for line in lines
+                    if not re.match(comment_line_re, line)]
     elif rstrip:
+        # No comments, and right strip results.
         return [line.rstrip() for line in lines]
     else:
+        # Just a good old-fashioned read!
         return lines
