@@ -23,7 +23,6 @@ from omnitune import util
 
 # Local imports.
 import training
-from . import checksum_str
 from . import FeatureExtractionError
 from . import hash_dataset
 from . import hash_device
@@ -55,26 +54,10 @@ class Proxy(omnitune.Proxy):
 
         # Setup persistent database.
         self.db = migrate(Database())
+        self.db.status_report()
 
         # Create an in-memory sample strategy cache.
         self.strategies = cache.TransientCache()
-
-    def get_source_features(self, source, checksum):
-        try:
-            return self.db.get_kernel_info(checksum)
-        except TypeError:
-            sourcefeatures = get_source_features(checksum, source,
-                                                 path=self.LLVM_PATH)
-            self.db.add_kernel_info(*sourcefeatures)
-            return sourcefeatures
-
-    def get_device_features(self, device_name):
-        try:
-            return self.db.get_device_info(device_name)
-        except TypeError:
-            raise FeatureExtractionError(("Failed to lookup device "
-                                          "features for {0}'"
-                                          .format(device_name)))
 
     @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiiisss',
                          out_signature='(nn)')
@@ -236,7 +219,8 @@ class Proxy(omnitune.Proxy):
         device = self.db.device_id(device_name, device_count)
         kernel = self.db.kernel_id(north, south, east, west,
                                    max_wg_size, source)
-        dataset = self.db.dataset_id(data_width, data_height, type_in, type_out)
+        dataset = self.db.datasets_id(data_width, data_height,
+                                      type_in, type_out)
         scenario = self.db.scenario_id(device, kernel, dataset)
         params = self.db.params_id(wg_c, wg_r)
 
@@ -245,7 +229,7 @@ class Proxy(omnitune.Proxy):
         self.db.commit()
 
         io.debug(("AddStencilRuntime({scenario}, {params}, {runtime})"
-                  .format(scenario=scenario_id[:8], params=params_id,
+                  .format(scenario=scenario[:8], params=params,
                           runtime=runtime)))
 
 
