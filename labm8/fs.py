@@ -306,6 +306,7 @@ def cp(src, dst):
         IOError: if source does not exist.
     """
     if isdir(src):
+        # Overwrite an existing directory.
         if isdir(dst):
             rm(dst)
         shutil.copytree(src, dst)

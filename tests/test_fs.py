@@ -251,6 +251,23 @@ class TestFs(TestCase):
         fs.cp("/tmp/labm8.tmp", "/tmp/labm8.tmp.copy")
         self._test(fs.read("/tmp/labm8.tmp"), fs.read("/tmp/labm8.tmp.copy"))
 
+    def test_cp_over_dir(self):
+        fs.mkdir("/tmp/labm8.tmp.src")
+        system.echo("Hello, world!", "/tmp/labm8.tmp.src/foo")
+        fs.rm("/tmp/labm8.tmp.copy")
+        fs.mkdir("/tmp/labm8.tmp.copy")
+        self._test(True, fs.isdir("/tmp/labm8.tmp.src"))
+        self._test(True, fs.isfile("/tmp/labm8.tmp.src/foo"))
+        self._test(True, fs.isdir("/tmp/labm8.tmp.copy"))
+        self._test(False, fs.isfile("/tmp/labm8.tmp.copy/foo"))
+        fs.cp("/tmp/labm8.tmp.src", "/tmp/labm8.tmp.copy/")
+        self._test(True, fs.isdir("/tmp/labm8.tmp.src"))
+        self._test(True, fs.isfile("/tmp/labm8.tmp.src/foo"))
+        self._test(True, fs.isdir("/tmp/labm8.tmp.copy"))
+        self._test(True, fs.isfile("/tmp/labm8.tmp.copy/foo"))
+        self._test(fs.read("/tmp/labm8.tmp.src/foo"),
+                   fs.read("/tmp/labm8.tmp.copy/foo"))
+
     # ls()
     def test_ls(self):
         self._test(["a", "b", "c", "d"],
