@@ -219,9 +219,10 @@ class Database(db.Database):
         features_table = table + "s"
 
         # Query lookup table.
-        select = ("SELECT id FROM " + lookup_table + " WHERE " +
-                  where(*lookup_columns))
-        query = self.execute(select, lookup_vals).fetchone()
+        query = self.execute("SELECT id\n"
+                             "FROM " + lookup_table + "\n"
+                             "WHERE " + where(*lookup_columns),
+                             lookup_vals).fetchone()
 
         # If there's an entry in the lookup table, return.
         if query:
