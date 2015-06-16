@@ -71,6 +71,9 @@ class Database(db.Database):
         self._select_perf_scenario = sql_command("select_perf_scenario")
         self._select_perf_param = sql_command("select_perf_param")
 
+        if self.isempty():
+            self.create_tables()
+
         # Get the database version.
         try:
             # Look up the version in the table.
