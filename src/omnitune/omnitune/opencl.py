@@ -81,3 +81,11 @@ def get_devinfos():
     Return a list of device info dicts for each device on system.
     """
     return [get_devinfo(device) for device in get_devices()]
+
+
+def lookup_by_name(name):
+    lname = name.strip().lower()
+    for device in get_devinfos():
+        if device["name"].strip().lower() == lname:
+            return device
+    raise Exception("Could not find device '{}'".format(lname))
