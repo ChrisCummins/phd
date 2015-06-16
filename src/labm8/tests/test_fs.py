@@ -120,16 +120,9 @@ class TestFs(TestCase):
         self._test(False, fs.isdir("/not/a/real/path (I hope!)"))
 
     # read()
-    def test_read_empty(self):
-        self._test([],
-                   fs.read("tests/data/empty_file"))
-
-    def test_read_hello_world(self):
+    def test_read(self):
         self._test(['Hello, world!'],
                    fs.read("tests/data/hello_world"))
-
-    def test_read_data1(self):
-        print("PWD", os.getcwd())
         self._test([
             '# data1 - test file',
             'This',
@@ -144,21 +137,7 @@ class TestFs(TestCase):
         ],
                    fs.read("tests/data/data1"))
 
-    def test_read_data1_comment(self):
-        self._test([
-            'This',
-            'is a test file',
-            'With',
-            'trailing',
-            '',
-            '',
-            '',
-            'whitespace',
-            '0.344'
-        ],
-                   fs.read("tests/data/data1", comment_char="#"))
-
-    def test_read_data1_no_rstrip(self):
+    def test_read_no_rstrip(self):
         self._test([
             '# data1 - test file\n',
             'This\n',
@@ -172,6 +151,39 @@ class TestFs(TestCase):
             '0.344\n'
         ],
                    fs.read("tests/data/data1", rstrip=False))
+
+    def test_read_ignore_comments(self):
+        self._test([
+            'This',
+            'is a test file',
+            'With',
+            'trailing',
+            '',
+            '',
+            '',
+            'whitespace',
+            '0.344'
+        ],
+                   fs.read("tests/data/data1", comment_char="#"))
+
+    def test_read_ignore_comments_no_rstrip(self):
+        self._test([
+            'This\n',
+            'is a test file\n',
+            'With\n',
+            'trailing  ',
+            '\n',
+            '\n',
+            '\n',
+            'whitespace\n',
+            '0.344\n'
+        ],
+                   fs.read("tests/data/data1",
+                           rstrip=False, comment_char="#"))
+
+    def test_read_empty_file(self):
+        self._test([],
+                   fs.read("tests/data/empty_file"))
 
     # mkdir()
     def test_mkdir(self):
