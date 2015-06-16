@@ -16,11 +16,31 @@ from unittest import main
 from tests import TestCase
 
 import labm8 as lab
-import labm8.make
+from labm8 import fs
+from labm8 import make
+from labm8 import system
 
-# TODO: Write tests.
 class TestMake(TestCase):
-    pass
+
+    def test_make(self):
+        ret, out, err = make.make(dir="tests/data/makeproj")
+        self._test(0, ret)
+        self._test(True, out is not None)
+        self._test(None, err)
+
+    def test_make_bad_target(self):
+        with self.assertRaises(make.NoTargetError):
+            make.make(target="bad-target", dir="tests/data/makeproj")
+
+    def test_make_bad_target(self):
+        with self.assertRaises(make.NoMakefileError):
+            make.make(dir="/bad/path")
+        with self.assertRaises(make.NoMakefileError):
+            make.make(target="foo", dir="tests/data")
+
+    def test_make_fail(self):
+        with self.assertRaises(make.MakeError):
+            make.make(target="fail", dir="tests/data/makeproj")
 
 
 if __name__ == '__main__':
