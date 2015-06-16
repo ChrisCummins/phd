@@ -35,6 +35,14 @@ class TestSystem(TestCase):
         self._test(pid, system.PID)
         self._test(pid, system.PID)
 
+    # ScpError
+    def test_ScpError(self):
+        err = system.ScpError("out", "err")
+        self._test("out", err.out)
+        self._test("err", err.err)
+        self._test("out\nerr", err.__repr__())
+        self._test("out\nerr", str(err))
+
     # Subprocess()
     def test_subprocess_stdout(self):
         p = system.Subprocess(["echo Hello"], shell=True)
