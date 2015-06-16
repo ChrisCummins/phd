@@ -121,6 +121,17 @@ class TestSystem(TestCase):
                    path="tests/bin")
         self._test(fs.read("/tmp/labm8.tmp"), fs.read("/tmp/labm8.tmp.copy"))
 
+    def test_scp_user(self):
+        system.echo("Hello, world!", "/tmp/labm8.tmp")
+        self._test(["Hello, world!"], fs.read("/tmp/labm8.tmp"))
+        # Cleanup any existing file.
+        fs.rm("/tmp/labm8.tmp.copy")
+        self._test(False, fs.exists("/tmp/labm8.tmp.copy"))
+        # Perform scp.
+        system.scp("localhost", "/tmp/labm8.tmp", "/tmp/labm8.tmp.copy",
+                   path="tests/bin", user="test")
+        self._test(fs.read("/tmp/labm8.tmp"), fs.read("/tmp/labm8.tmp.copy"))
+
     def test_scp_bad_path(self):
         # Error is raised if scp binary cannot be found.
         with self.assertRaises(system.CommandNotFoundError):
