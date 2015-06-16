@@ -80,6 +80,9 @@ class ScpError(Error):
     def __repr__(self):
         return self.out + "\n" + self.err
 
+    def __str__(self):
+        return self.__repr__()
+
 
 class Subprocess(object):
     """
