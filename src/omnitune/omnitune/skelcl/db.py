@@ -218,7 +218,7 @@ class Database(db.Database):
 
         # If there's no entry in lookup table, perform feature extraction.
         features = feature_fn(*lookup_vals)
-        id = id_fn(features)
+        id = id_fn(*features)
 
         io.debug("Added lookup table entry for", table, id, "...")
 
