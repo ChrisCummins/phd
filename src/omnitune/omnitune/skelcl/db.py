@@ -748,6 +748,25 @@ class Database(db.Database):
 
             float: Geometric mean of performance relative to oracle.
         """
+        return labmath.geomean([self.perf(scenario, param)
+                                for scenario in self.scenarios])
+
+    def perf_param_avg_legal(self, param):
+        """
+        Param performance across all scenarios for which param was legal.
+
+        Calculated using the geometric mean of performance relative to
+        the oracle for the subset of scenarios in which the param was
+        legal.
+
+        Arguments:
+
+            param_id (str): Parameters ID.
+
+        Returns:
+
+            float: Geometric mean of performance relative to oracle.
+        """
         return labmath.geomean(self.perf_param(param).values())
 
     def performance_of_device(self, device):
@@ -824,7 +843,7 @@ class Database(db.Database):
         return self.execute("SELECT runtime FROM oracle_params WHERE "
                             "scenario=?", (scenario,)).fetchone()[0]
 
-    def runtime(self, scenario, param):
+    def runtime(self, scenario, param, default=None):
         """
         Return the mean runtime for a given scenario and param.
 
@@ -837,9 +856,16 @@ class Database(db.Database):
 
             float: Mean runtime of param for scenario.
         """
-        return self.execute("SELECT mean FROM runtime_stats WHERE "
-                            "scenario=? AND params=?",
-                            (scenario, param)).fetchone()[0]
+        try:
+            return self.execute("SELECT mean\n"
+                                "FROM runtime_stats\n"
+                                "WHERE scenario=? AND params=?",
+                                (scenario, param)).fetchone()[0]
+        except TypeError as err:
+            if default is not None:
+                return default
+            else:
+                raise err
 
     def speedup(self, scenario, left, right):
         """
@@ -873,9 +899,11 @@ class Database(db.Database):
             float: Mean runtime for scenario with param, normalised
               against runtime of oracle.
         """
-        oracle = self.runtime(scenario, param)
-        perf = self.runtime(scenario, param)
-        return oracle / perf
+        oracle = self.execute("SELECT runtime\n"
+                              "FROM oracle_params\n"
+                              "WHERE scenario=?", (scenario,)).fetchone()[0]
+        perf = self.runtime(scenario, param, 0)
+        return perf / oracle
 
     def max_speedup(self, scenario):
         """
@@ -901,9 +929,9 @@ class Database(db.Database):
                              "        SELECT MAX(mean)\n"
                              "        FROM runtime_stats\n"
                              "        WHERE scenario=?\n"
-                             ")",
+                             "    )",
                              (scenario, scenario)).fetchone()[0]
-        return best / worst
+        return worst / best
 
     def max_speedups(self):
         """
@@ -934,11 +962,12 @@ class Database(db.Database):
             (float, float): The minimum and maximum runtimes,
               normalised against the mean.
         """
-        min_t, mean_t, max_t = self.execute("SELECT min,mean,max "
-                                            "FROM runtime_stats "
-                                            "WHERE scenario=? AND params=?",
-                                            (scenario, params)).fetchone()
-        return min_t / mean_t, max_t / mean_t
+        return self.execute("SELECT\n"
+                            "    (min / mean),\n"
+                            "    (max / mean),\n"
+                            "FROM runtime_stats "
+                            "WHERE scenario=? AND params=?",
+                            (scenario, params)).fetchone()
 
     def min_max_runtimes(self):
         """
