@@ -77,7 +77,7 @@ def is_subdir(child, parent):
 
 
 # Directory history.
-_cdhist = [os.getcwd()]
+_cdhist = []
 
 
 def cd(path):
@@ -86,8 +86,8 @@ def cd(path):
 
     Returns absolute path to new working directory.
     """
-    path = abspath(path) # convert to absolute path
-    _cdhist.append(path)
+    _cdhist.append(pwd()) # Push to history.
+    path = abspath(path)
     os.chdir(path)
     return path
 
@@ -98,17 +98,19 @@ def cdpop():
 
     Returns absolute path to new working directory.
     """
-    if len(_cdhist) > 1:
-        _cdhist.pop() # remove current directory
-        os.chdir(_cdhist[-1])
-    return _cdhist[-1]
+    if len(_cdhist) >= 1:
+        old = _cdhist.pop() # Pop from history.
+        os.chdir(old)
+        return old
+    else:
+        return pwd()
 
 
 def pwd():
     """
     Return the path to the current working directory.
     """
-    return _cdhist[-1]
+    return os.getcwd()
 
 
 def exists(path):

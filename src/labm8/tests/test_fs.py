@@ -74,20 +74,19 @@ class TestFs(TestCase):
     # cd(), cdpop()
     def test_cd(self):
         cwd = os.getcwd()
+        new = fs.abspath("..")
 
-        print("CWD", cwd)
-        fs.cd("..")
-        print("CWD", os.getcwd())
-        cwd = fs.cdpop()
-        print("CWD", cwd)
-        #self._test(cwd, fs.cdpop())
+        self._test(new, fs.cd(".."))
+        self._test(new, os.getcwd())
 
+        self._test(cwd, fs.cdpop())
+        self._test(cwd, os.getcwd())
 
-    # cdpop()
-    def test_cdpop(self):
-        cwd = os.getcwd()
-        for i in range(10):
-            self._test(cwd, fs.cdpop())
+        self._test(cwd, fs.cdpop())
+        self._test(cwd, os.getcwd())
+
+        self._test(cwd, fs.cdpop())
+        self._test(cwd, os.getcwd())
 
 
     # pwd()
