@@ -9,6 +9,7 @@
 .out "oracle_params.csv"
 
 SELECT
+  scenarios.id                   as  scenario,
   width                          as  data_width,
   height                         as  data_height,
   tin                            as  data_tin,
@@ -111,14 +112,15 @@ SELECT
   vendor_id                      as  dev_vendor_id,
   version                        as  dev_version,
   params                         as  wgsize
-FROM (
-    SELECT * FROM (
-        SELECT * FROM (
-            SELECT * FROM oracle_params
-            LEFT JOIN scenarios ON oracle_params.scenario=scenarios.id
-        ) LEFT JOIN datasets ON dataset=datasets.id
-    ) LEFT JOIN kernels ON kernel=kernels.id
-) LEFT JOIN devices ON device=devices.id;
+FROM oracle_params
+LEFT JOIN scenarios
+    ON oracle_params.scenario=scenarios.id
+LEFT JOIN datasets
+    ON scenarios.dataset=datasets.id
+LEFT JOIN kernels
+    ON scenarios.kernel=kernels.id
+LEFT JOIN devices
+    ON scenarios.device=devices.id;
 
 
 -------------------
@@ -127,6 +129,7 @@ FROM (
 .out "runtime_stats.csv"
 
 SELECT
+  scenarios.id                   as  scenario,
   width                          as  data_width,
   height                         as  data_height,
   tin                            as  data_tin,
@@ -230,11 +233,12 @@ SELECT
   version                        as  dev_version,
   params                         as  wgsize,
   mean                           as  runtime
-FROM (
-    SELECT * FROM (
-        SELECT * FROM (
-            SELECT * FROM runtime_stats
-            LEFT JOIN scenarios ON runtime_stats.scenario=scenarios.id
-        ) LEFT JOIN datasets ON dataset=datasets.id
-    ) LEFT JOIN kernels ON kernel=kernels.id
-) LEFT JOIN devices ON device=devices.id;
+FROM runtime_stats
+LEFT JOIN scenarios
+  ON runtime_stats.scenario=scenarios.id
+LEFT JOIN datasets
+  ON scenarios.dataset=datasets.id
+LEFT JOIN kernels
+  ON scenarios.kernel=kernels.id
+LEFT JOIN devices
+  ON scenarios.device=devices.id;
