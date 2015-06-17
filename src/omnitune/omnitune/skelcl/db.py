@@ -79,7 +79,8 @@ class Database(db.Database):
         self._insert_runtime_stat = sql_command("insert_runtime_stat")
         self._insert_oracle_param = sql_command("insert_oracle_param")
         self._select_perf_scenario = sql_command("select_perf_scenario")
-        self._select_perf_param = sql_command("select_perf_param")
+        self._select_perf_param_legal = sql_command("select_perf_param_legal")
+        self._select_ratio_max_wgsize = sql_command("select_ratio_max_wgsize")
 
         self.connection.create_function("merge_min", 2, _merge_min)
         self.connection.create_function("merge_mean", 4, _merge_mean)
@@ -165,6 +166,22 @@ class Database(db.Database):
     def mean_samples(self):
         return self.execute("SELECT AVG(num_samples) FROM "
                             "runtime_stats").fetchone()[0]
+
+    @property
+    def scenario_params(self):
+        return [row for row in
+                self.execute("SELECT scenario,params FROM "
+                             "runtime_stats GROUP BY scenario,params")]
+
+    @property
+    def oracle_params(self):
+        return [(row[0], int(row[1])) for row in
+                self.execute("SELECT\n"
+                             "    params,\n"
+                             "    Count(params) AS count\n"
+                             "FROM oracle_params\n"
+                             "GROUP BY params\n"
+                             "ORDER BY count DESC")]
 
     def run(self, name):
         """
@@ -800,7 +817,27 @@ class Database(db.Database):
               the parameters ID, and the performance of that parameter
               relative to the oracle.
         """
-        query = self.execute(self._select_perf_param,
+        return {scenario: self.perf(scenario, param)
+                for scenario in self.scenarios}
+
+    def perf_param_legal(self, param):
+        """
+        Return performance of param relative to oracle for all scenarios.
+
+        Performance relative to the oracle is calculated using mean
+        runtime of oracle params / mean runtime of each params.
+
+        Arguments:
+
+            param (str): Parameters ID.
+
+        Returns:
+
+            list of (str,float) tuples: Where each tuple consists of
+              the parameters ID, and the performance of that parameter
+              relative to the oracle.
+        """
+        query = self.execute(self._select_perf_param_legal,
                              (param,)).fetchall()
         return {t[0]: t[1] for t in query}
 
@@ -819,8 +856,7 @@ class Database(db.Database):
 
             float: Geometric mean of performance relative to oracle.
         """
-        return labmath.geomean([self.perf(scenario, param)
-                                for scenario in self.scenarios])
+        return labmath.geomean(self.perf_param(param).values())
 
     def perf_param_avg_legal(self, param):
         """
@@ -838,7 +874,7 @@ class Database(db.Database):
 
             float: Geometric mean of performance relative to oracle.
         """
-        return labmath.geomean(self.perf_param(param).values())
+        return labmath.geomean(self.perf_param_legal(param).values())
 
     def performance_of_device(self, device):
         """
@@ -898,6 +934,13 @@ class Database(db.Database):
                             for row in
                             self.execute("SELECT id FROM scenarios WHERE "
                                          "dataset=?", (dataset,))])
+
+    def oracle_param(self, scenario):
+        # TODO: Document!
+        """
+        """
+        return self.execute("SELECT params FROM oracle_params WHERE scenario=?",
+                            (scenario,)).fetchone()[0]
 
     def oracle_runtime(self, scenario):
         """
@@ -970,11 +1013,20 @@ class Database(db.Database):
             float: Mean runtime for scenario with param, normalised
               against runtime of oracle.
         """
-        oracle = self.execute("SELECT runtime\n"
-                              "FROM oracle_params\n"
-                              "WHERE scenario=?", (scenario,)).fetchone()[0]
+        oracle = self.runtime(scenario, self.oracle_param(scenario))
         perf = self.runtime(scenario, param, 0)
-        return perf / oracle
+
+        if perf > 0:
+            return oracle / perf
+        else:
+            return 0
+
+    def ratio_max_wgsize(self, scenario, param):
+        """
+        Return the ratio of the given param size to the max legal.
+        """
+        return self.execute(sql_command("select_ratio_max_wgsize"),
+                            (param, scenario)).fetchone()[0]
 
     def max_speedup(self, scenario):
         """
@@ -1076,20 +1128,6 @@ class Database(db.Database):
                              "FROM runtime_stats\n"
                              "ORDER BY num_samples DESC")]
 
-    def params_summary(self):
-        """
-        Return a summary of parameters.
-
-        Returns:
-
-            list of (str,float,float) tuples: Where each tuple is of
-              the format (param_id,perforance,coverage).
-        """
-        return sorted([(param,
-                        self.perf_param_avg(param),
-                        self.param_coverage(param)) for param in self.params],
-                      key=lambda t: t[1], reverse=True)
-
     def param_coverage(self, param_id, where=None):
         """
         Returns the ratio of values for a params across scenarios.
@@ -1144,15 +1182,17 @@ class Database(db.Database):
 
         Returns:
 
-           (str, float): Where str if the parameters ID of the ZeroR,
-             and float is the average performance relative to the
+           (str, float, float): Where first element is the parameters
+             ID of the OneR, the second element is the ratio of times
+             this parameter was optimal, and the third parameter is
+             the average performance of the parameter relative to the
              oracle.
         """
-        zeror = self.execute("SELECT params,Count(params) AS count "
-                             "FROM oracle_params GROUP BY params "
-                             "ORDER BY count DESC LIMIT 1").fetchone()[0]
-
-        return zeror, self.perf_param_avg(zeror)
+        oracles = self.oracle_params
+        num_oracles = sum(x[1] for x in oracles)
+        best_wgsize, best_count = oracles[0]
+        best_perf = self.perf_param_avg(best_wgsize)
+        return (best_wgsize, best_count / num_oracles, best_perf)
 
     def one_r(self):
         """
@@ -1165,14 +1205,28 @@ class Database(db.Database):
 
         Returns:
 
-           (str, float): Where str if the parameters ID of the OneR,
-             and float is the average performance relative to the
+           (str, float, float): Where first element is the parameters
+             ID of the OneR, the second element is the ratio of times
+             this parameter was optimal, and the third parameter is
+             the average performance of the parameter relative to the
              oracle.
         """
+        def _num_times_optimal(param):
+            oracles = self.oracle_params
+            for row in oracles:
+                wgsize, count = row
+                if wgsize == param:
+                    return count
+            return 0
+
         # Get average performance of each param.
         avgs = [(param, self.perf_param_avg(param)) for param in self.params]
+        best_wgsize, best_perf = max(avgs, key=lambda x: x[1])
+        num_oracles = sum([x[1] for x in self.oracle_params])
+        best_count = _num_times_optimal(best_wgsize)
+
         # Return the "best" param
-        return max(avgs, key=lambda x: x[1])
+        return best_wgsize, best_count / num_oracles, best_perf
 
     def dump_csvs(self, path="."):
         """
