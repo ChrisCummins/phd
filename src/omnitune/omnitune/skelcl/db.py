@@ -50,6 +50,16 @@ def sql_command(name):
     return resource_string(__name__, "data/" + name + ".sql")
 
 
+def _merge_min(lhs, rhs):
+    return min(lhs, rhs)
+
+def _merge_mean(lhs, nl, rhs, nr):
+    n = nl + nr
+    return (lhs * nl + rhs * nr) / n
+
+def _merge_max(lhs, rhs):
+    return max(lhs, rhs)
+
 class Database(db.Database):
     """
     Persistent database store for Omnitune SkelCL data.
@@ -70,6 +80,10 @@ class Database(db.Database):
         self._insert_oracle_param = sql_command("insert_oracle_param")
         self._select_perf_scenario = sql_command("select_perf_scenario")
         self._select_perf_param = sql_command("select_perf_param")
+
+        self.connection.create_function("merge_min", 2, _merge_min)
+        self.connection.create_function("merge_mean", 4, _merge_mean)
+        self.connection.create_function("merge_max", 2, _merge_max)
 
         if self.isempty():
             self.create_tables()
