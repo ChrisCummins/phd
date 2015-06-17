@@ -57,3 +57,16 @@ INSERT OR IGNORE INTO params SELECT * FROM rhs.params;
 
 -- Runtimes table
 INSERT INTO runtimes SELECT * FROM rhs.runtimes;
+
+-- Runtime stats table
+DELETE FROM rhs.runtime_stats;
+INSERT INTO rhs.runtime_stats
+SELECT
+    scenario,
+    params,
+    Count(runtime),
+    MIN(runtime),
+    AVG(runtime),
+    MAX(runtime)
+FROM rhs.runtimes
+GROUP BY scenario,params;

@@ -346,17 +346,73 @@ class Database(db.Database):
         self.execute("INSERT OR IGNORE INTO params VALUES (?,?,?)", row)
         return id
 
-    def merge(self, rhs):
+    def _merge_rhs(self, rhs):
+        io.info("Merging", rhs.path)
+        self.attach(rhs.path, "rhs")
+
+        # Import runtimes,features,datasets tables.
+        # Populate rhs runtime_stats table.
+        self.run("merge_rhs")
+
+        rows = [row for row in
+                self.execute("SELECT * FROM rhs.runtime_stats")]
+        total = len(rows)
+
+        # Insert or merge the contents of the rhs.runtime_stats table.
+        # TODO: This could probably be implemented using an SQL
+        # query, if I had the time and the know-how.
+        for i,row in enumerate(rows):
+            self._progress_report("runtime_stats", i, 10, total)
+            scenario, params, rhs_count, rhs_min, rhs_mean, rhs_max = row
+            lhs = self.execute("SELECT num_samples,min,mean,max\n"
+                               "FROM runtime_stats\n"
+                               "WHERE scenario=? AND params=?",
+                               (scenario, params)).fetchone()
+            if lhs:
+                # Prior value, so update the existing value.
+                lhs_count, lhs_min, lhs_mean, lhs_max = lhs
+
+                new_count = lhs_count + rhs_count
+                new_min = min(lhs_min, rhs_min)
+                new_mean = ((lhs_mean * lhs_count + rhs_mean * rhs_count)
+                            / new_count)
+                new_max = max(lhs_max, rhs_max)
+
+                self.execute("UPDATE runtime_stats\n"
+                             "SET num_samples=?,min=?,mean=?,max=?\n"
+                             "WHERE scenario=? AND params=?",
+                             (new_count, new_min, new_mean, new_max,
+                              scenario, params))
+            else:
+                # No prior value, so just add a new row.
+                self.execute("INSERT INTO runtime_stats\n"
+                             "VALUES (?,?,?,?,?,?)",
+                             (scenario, params, rhs_count,
+                              rhs_min, rhs_mean, rhs_max))
+
+        self.commit()
+        self.detach("rhs")
+
+    def merge(self, dbs):
         """
-        Merge the contents of the given database.
+        Merge the contents of the given databases.
 
         Arguments:
 
-            rhs (Database): Database instance to merge into this.
+            dbs (list of Database objects): Database instances to
+              merge into this.
         """
-        self.attach(rhs.path, "rhs")
-        self.run("merge_rhs")
-        self.detach("rhs")
+        for db in dbs:
+            self._merge_rhs(db)
+
+        io.info("Updating oracle tables ...")
+        self.execute("DELETE FROM oracle_params")
+        self.populate_oracle_params_table()
+
+        io.debug("Compacting database ...")
+        self.execute("VACUUM")
+
+        io.info("Done.")
 
     def add_runtime(self, scenario, params, runtime):
         """
@@ -409,18 +465,7 @@ class Database(db.Database):
         """
         Derive runtime stats from "runtimes" table.
         """
-        # Get unique (scenario,param) pairs
-        query = self.execute("SELECT scenario,params FROM runtimes "
-                             "GROUP BY scenario,params")
-        rows = query.fetchall()
-        total = len(rows)
-
-        for i,row in enumerate(rows):
-            scenario, params = row
-
-            # Gather statistics about runtimes for each scenario,params pair.
-            self.execute(self._insert_runtime_stat, (scenario, params))
-            self._progress_report("runtime_stats", i, 5, total)
+        self.run("populate_runtime_stats")
         self.commit()
 
     def populate_oracle_params_table(self):
