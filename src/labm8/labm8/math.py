@@ -32,6 +32,8 @@ from scipy import stats
 import labm8 as lab
 from labm8 import modules
 
+if lab.is_python3():
+    from functools import reduce
 
 def ceil(number):
     """
@@ -114,7 +116,7 @@ def geomean(array):
         return 0
     elif n == 1:
         return array[0]
-    return stats.mstats.gmean(array)
+    return (reduce(lambda x, y: x * y, array)) ** (1 / n)
 
 
 def median(array):
