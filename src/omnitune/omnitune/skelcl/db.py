@@ -583,12 +583,14 @@ class Database(db.Database):
            list of (str,int) tuples: Where each tuple consists of a
              (params,frequency) pair.
         """
-        select = table
-        if where: select += " WHERE " + where
+        select = [table]
+        if where:
+            select.append("WHERE")
+            select.append(where)
         freqs = [row for row in
                  self.execute("SELECT params,Count(*) AS count FROM "
                               "{select} GROUP BY params ORDER BY count ASC"
-                              .format(select=select))]
+                              .format(select=" ".join(select)))]
 
         # Normalise frequencies.
         if normalise:
@@ -596,6 +598,31 @@ class Database(db.Database):
             freqs = [(freq[0], freq[1] / total) for freq in freqs]
 
         return freqs
+
+    def rand_wgsize(self, max_wgsize=0):
+        """
+        Fetch a random wgsize pair.
+
+        Arguments:
+
+            max_wgsize (int, optional): If greater than 0, return a
+              workgroup size <= max_wgsize.
+
+        Returns:
+
+            (int, int): wg_c and wg_r parameter values, in that order.
+        """
+        query = ["SELECT wg_c,wg_r FROM params"]
+
+        # Limit maximum wgsize.
+        if max_wgsize > 0:
+            query.append("WHERE wg_c * wg_r <=")
+            query.append(str(max_wgsize))
+
+        query.append("ORDER BY RANDOM() LIMIT 1")
+
+        return self.execute(" ".join(query)).fetchone()
+
 
     def max_wgsize_frequencies(self, normalise=False):
         """
