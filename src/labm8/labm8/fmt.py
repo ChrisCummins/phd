@@ -24,7 +24,7 @@ class Error(Exception):
     pass
 
 
-def table(rows, **kwargs):
+def table(rows, str_args={}, **kwargs):
     """
     Return a formatted string of "list of list" table data.
 
@@ -46,8 +46,10 @@ def table(rows, **kwargs):
 
         rows (list of list): Data to format, one row per element,
           multiple columns per row.
-        **kwargs: Any additional arguments to pass to
+        str_args (dict, optional): Any additional kwargs to pass to
           pandas.DataFrame.to_string().
+        **kwargs: Any additional arguments to pass to
+          pandas.DataFrame constructor.
 
     Returns:
 
@@ -79,4 +81,4 @@ def table(rows, **kwargs):
                     "match the number of columns in the data ({c_rows})"
                     .format(c_header=len(columns), c_rows=num_columns))
 
-    return pandas.DataFrame(list(rows), **kwargs).to_string()
+    return pandas.DataFrame(list(rows), **kwargs).to_string(**str_args)
