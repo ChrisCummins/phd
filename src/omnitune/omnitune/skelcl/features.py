@@ -10,10 +10,10 @@ from labm8 import system
 import omnitune
 from omnitune import llvm
 
-if system.HOSTNAME != "tim":
-    from omnitune import opencl
-else:
+if system.HOSTNAME == "tim" or system.HOSTNAME == "zoo":
     from omnitune import opencl_tim as opencl
+else:
+    from omnitune import opencl
 
 
 class Error(Exception):
