@@ -34,7 +34,7 @@ DEVINFOS = [
         "max_write_image_args": 8,
         "mem_base_addr_align": 4096,
         "min_data_type_align_size": 128,
-        "name": "geforce gtx 590",
+        "name": "GeForce GTX 590",
         "native_vector_width_char": 1,
         "native_vector_width_double": 1,
         "native_vector_width_float": 1,
