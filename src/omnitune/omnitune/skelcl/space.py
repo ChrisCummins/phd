@@ -38,7 +38,7 @@ class ParamSpace(object):
     def set(self, j, i, value):
         self.matrix[j][i] = value
 
-    def heatmap(self, path=None, title=None, figsize=(5,4), **kwargs):
+    def heatmap(self, output=None, title=None, figsize=(5,4), **kwargs):
         import matplotlib.pyplot as plt
         import seaborn as sns
 
@@ -63,13 +63,13 @@ class ParamSpace(object):
         plt.tight_layout()
         plt.gcf().set_size_inches(*figsize, dpi=300)
 
-        if path:
-            plt.savefig(path)
-        else:
+        if output is None:
             plt.show()
+        else:
+            plt.savefig(output)
         plt.close()
 
-    def trisurf(self, path=None, title=None, figsize=(5,4),
+    def trisurf(self, output=None, title=None, figsize=(5,4),
                 zlabel=None, zticklabels=None, **kwargs):
         import matplotlib.pyplot as plt
         import matplotlib.cm as cm
@@ -110,8 +110,8 @@ class ParamSpace(object):
         plt.tight_layout()
         plt.gcf().set_size_inches(*figsize, dpi=300)
 
-        if path:
-            plt.savefig(path)
-        else:
+        if output is None:
             plt.show()
+        else:
+            plt.savefig(output)
         plt.close()
