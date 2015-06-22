@@ -23,6 +23,7 @@ from labm8 import io
 
 from labm8 import ml
 
+
 class TestML(TestCase):
 
     def __init__(self, *args, **kwargs):
@@ -50,17 +51,40 @@ class TestML(TestCase):
 
     # csv2arff()
     def test_csv2arff(self):
+        if not ml.MODULE_SUPPORTED: return
         ml.csv2arff(self.csv, "/tmp/labm8.arfftest")
-        if ml.MODULE_SUPPORTED:
-            self._test(open("tests/data/diabetes.csv2arff").read(),
-                       open("/tmp/labm8.arfftest").read())
+        self._test(open("tests/data/diabetes.csv2arff").read(),
+                   open("/tmp/labm8.arfftest").read())
 
     # arff2csv()
     def test_arff2csv(self):
+        if not ml.MODULE_SUPPORTED: return
         ml.arff2csv(self.arff, "/tmp/labm8.csvtest")
-        if ml.MODULE_SUPPORTED:
-            self._test(open(self.csv).read(),
-                       open("/tmp/labm8.csvtest").read())
+        self._test(open(self.csv).read(),
+                   open("/tmp/labm8.csvtest").read())
+
+    # Classifier
+    def test_classifier(self):
+        if not ml.MODULE_SUPPORTED: return
+        j48 = ml.Classifier("weka.classifiers.trees.J48")
+
+    # Dataset
+    def test_dataset_len(self):
+        if not ml.MODULE_SUPPORTED: return
+        dataset = ml.Dataset.load("tests/data/diabetes.arff")
+        self._test(768, len(dataset))
+
+    def test_dataset_folds(self):
+        if not ml.MODULE_SUPPORTED: return
+        dataset = ml.Dataset.load("tests/data/diabetes.arff")
+        folds = dataset.folds(nfolds=10)
+
+        self._test(10, len(folds))
+        for training,testing in folds:
+            io.debug("Training:", training.num_instances,
+                     "Testing:", testing.num_instances)
+            self._test(True, training.num_instances > testing.num_instances)
+
 
 if __name__ == '__main__':
     main()
