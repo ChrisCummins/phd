@@ -68,6 +68,18 @@ class TestML(TestCase):
         if not ml.MODULE_SUPPORTED: return
         j48 = ml.Classifier("weka.classifiers.trees.J48")
 
+        # str() representation
+        self._test("weka.classifiers.trees.J48 -C 0.25 -M 2", str(j48))
+
+        # Train on dataset
+        dataset = ml.Dataset.load(self.arff)
+        dataset.class_index = -1
+        j48.train(dataset)
+
+        # Test on a couple of instances.
+        self._test("tested_positive", j48.classify(dataset[0]))
+        self._test("tested_negative", j48.classify(dataset[-1]))
+
     # Dataset
     def test_dataset_len(self):
         if not ml.MODULE_SUPPORTED: return

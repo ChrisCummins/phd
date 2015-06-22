@@ -142,6 +142,11 @@ class Dataset(object):
     def __len__(self):
         return self.instances.num_instances
 
+    def __getitem__(self, index):
+        if index < 0:
+            index = self.instances.num_instances + index
+        return self.instances.get_instance(index)
+
     @property
     def class_index(self):
         return self.instances.class_index
@@ -202,14 +207,18 @@ class Dataset(object):
 
         return folds
 
+    def save(dst, saver="weka.core.converters.ArffSaver", **kwargs):
+        save(self.instances, dst, saver=saver, **kwargs)
+
     @staticmethod
     def load(src, loader="weka.core.converters.ArffLoader", **kwargs):
         instances = load(src, loader=loader, **kwargs)
         return Dataset(instances)
 
     @staticmethod
-    def save(dst, saver="weka.core.converters.ArffSaver", **kwargs):
-        save(self.instances, dst, saver=saver, **kwargs)
+    def load_csv(src, **kwargs):
+        return Dataset.load(src, loader="weka.core.converters.CSVLoader",
+                            **kwargs)
 
 
 class Classifier(WekaClassifier):
@@ -221,8 +230,12 @@ class Classifier(WekaClassifier):
         """
         Classify an instance and return the value.
         """
-        value_index = self.classifier.classify_instance(instance)
-        return self.data.attribute(self.label_index).value(value_index)
+        value_index = self.classify_instance(instance)
+        dataset = instance.dataset
+        return dataset.attribute(dataset.class_index).value(value_index)
+
+    def train(self, dataset):
+        self.build_classifier(dataset.instances)
 
     def __repr__(self):
         return " ".join([self.classname,] + self.options)
@@ -247,3 +260,22 @@ class ZeroR(Classifier):
     def __init__(self, *args, **kwargs):
         classname = "weka.classifiers.rules.ZeroR"
         super(ZeroR, self).__init__(classname=classname, *args, **kwargs)
+
+
+class SMO(Classifier):
+    def __init__(self, *args, **kwargs):
+        classname = "weka.classifiers.functions.SMO"
+        super(SMO, self).__init__(classname=classname, *args, **kwargs)
+
+
+class SimpleLogistic(Classifier):
+    def __init__(self, *args, **kwargs):
+        classname = "weka.classifiers.functions.SMO"
+        super(SimpleLogistic, self).__init__(classname=classname,
+                                             *args, **kwargs)
+
+
+class RandomForest(Classifier):
+    def __init__(self, *args, **kwargs):
+        classname = "weka.classifiers.trees.RandomForest"
+        super(RandomForest, self).__init__(classname=classname, *args, **kwargs)
