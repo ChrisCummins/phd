@@ -33,7 +33,7 @@ class TestML(TestCase):
         fs.cp("tests/data/diabetes.arff", "/tmp/labm8.diabetes.arff")
         fs.cp("tests/data/diabetes.csv", "/tmp/labm8.diabetes.csv")
 
-        # Load test data.
+        # Test data paths.
         self.arff = "/tmp/labm8.diabetes.arff"
         self.csv = "/tmp/labm8.diabetes.csv"
 
@@ -71,12 +71,12 @@ class TestML(TestCase):
     # Dataset
     def test_dataset_len(self):
         if not ml.MODULE_SUPPORTED: return
-        dataset = ml.Dataset.load("tests/data/diabetes.arff")
+        dataset = ml.Dataset.load(self.arff)
         self._test(768, len(dataset))
 
     def test_dataset_folds(self):
         if not ml.MODULE_SUPPORTED: return
-        dataset = ml.Dataset.load("tests/data/diabetes.arff")
+        dataset = ml.Dataset.load(self.arff)
         folds = dataset.folds(nfolds=10)
 
         self._test(10, len(folds))
