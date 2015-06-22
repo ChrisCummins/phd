@@ -129,8 +129,9 @@ class Dataset(object):
     Dataset object, wrapper around weka.core.dataset.Instances.
     """
 
-    def __init__(self, instances):
+    def __init__(self, instances, class_index=-1):
         self.instances = instances
+        self.class_index = class_index
 
     def __repr__(self):
         return self.instances.__repr__()
@@ -140,6 +141,17 @@ class Dataset(object):
 
     def __len__(self):
         return self.instances.num_instances
+
+    @property
+    def class_index(self):
+        return self.instances.class_index
+
+    @class_index.setter
+    def class_index(self, index):
+        # If index is < 0, add value to num_attributes.
+        if index < 0:
+            index = self.instances.num_attributes + index
+        self.instances.class_index = index
 
     def folds(self, nfolds=10, seed=None):
         """
