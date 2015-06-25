@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.ticker import FormatStrFormatter
 
+from . import space as _space
+
 import labm8 as lab
 from labm8 import io
 from labm8 import fs
@@ -32,6 +34,11 @@ def safety(db, output=None, where=None, title="All data"):
 def oracle_wgsizes(db, output=None, where=None, title="All data"):
     space = db.oracle_param_space(where=where)
     space.heatmap(output=output, title=title, vmin=0, vmax=1)
+
+
+def scenario_performance(db, scenario, output=None, title=None):
+    space = _space.ParamSpace.from_dict(db.perf_scenario(scenario))
+    space.heatmap(output=output, title=title)
 
 
 def performance_vs_coverage(db, output=None):

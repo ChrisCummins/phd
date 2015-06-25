@@ -163,6 +163,42 @@ class Database(db.Database):
                 self.execute("SELECT id FROM scenarios")]
 
     @property
+    def scenario_properties(self, where=None):
+        """
+        Return a list of scenario descriptions.
+
+        Returns:
+
+            list of tuples: Elements in tuple:
+
+                scenario,device,kernel,north,south,east,west,width,height,tout
+        """
+        query = ("SELECT\n"
+                 "    scenarios.id,\n"
+                 "    devices.name,\n"
+                 "    kernel_names.name,\n"
+                 "    kernels.north,\n"
+                 "    kernels.south,\n"
+                 "    kernels.east,\n"
+                 "    kernels.west,\n"
+                 "    datasets.width,\n"
+                 "    datasets.height,\n"
+                 "    datasets.tout\n"
+                 "FROM scenarios\n"
+                 "LEFT JOIN devices\n"
+                 "    ON scenarios.device=devices.id\n"
+                 "LEFT JOIN kernel_names\n"
+                 "    ON scenarios.kernel=kernel_names.id\n"
+                 "LEFT JOIN kernels\n"
+                 "    ON scenarios.kernel=kernels.id\n"
+                 "LEFT JOIN datasets\n"
+                 "    ON scenarios.dataset=datasets.id\n"
+                 "ORDER BY scenarios.device ASC")
+        if where is not None:
+            query += " WHERE " + where
+        return self.execute(query).fetchall()
+
+    @property
     def mean_samples(self):
         return self.execute("SELECT AVG(num_samples) FROM "
                             "runtime_stats").fetchone()[0]
@@ -1007,7 +1043,8 @@ class Database(db.Database):
             if default is not None:
                 return default
             else:
-                raise err
+                raise db.Error("No runtime information for {scenario} {params}"
+                               .format(scenario=scenario, params=param))
 
     def speedup(self, scenario, left, right):
         """
