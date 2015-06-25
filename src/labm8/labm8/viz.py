@@ -17,8 +17,6 @@
 """
 Visualisations module.
 """
-import matplotlib.pyplot as plt
-
 import labm8 as lab
 from labm8 import io
 
@@ -34,6 +32,8 @@ def finalise(output=None):
         output (str, optional): Path to save figure to. If not given,
           show plot.
     """
+    import matplotlib.pyplot as plt
+
     if output is None:
         plt.show()
     else:
