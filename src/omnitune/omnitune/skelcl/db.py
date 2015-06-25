@@ -1119,7 +1119,7 @@ class Database(db.Database):
                             "WHERE scenario=? AND params=?",
                             (scenario, params)).fetchone()
 
-    def min_max_runtimes(self):
+    def min_max_runtimes(self, where=None):
         """
         Return the min/max runtimes for all scenarios and params.
 
@@ -1129,15 +1129,17 @@ class Database(db.Database):
               the scenario ID, the second is the param ID, and the
               third and fourth are the normalised min max runtimes.
         """
-        return [row for row in
-                self.execute("SELECT\n"
-                             "    scenario,\n"
-                             "    params,\n"
-                             "    (min / mean),\n"
-                             "    (max / mean)\n"
-                             "FROM runtime_stats")]
+        query = ("SELECT\n"
+                 "    scenario,\n"
+                 "    params,\n"
+                 "    (min / mean),\n"
+                 "    (max / mean)\n"
+                 "FROM runtime_stats")
+        if where is not None:
+            query += " WHERE " + where
+        return [row for row in self.execute(query)]
 
-    def num_samples(self):
+    def num_samples(self, where=None):
         """
         Return the number of samples for all scenarios and params.
 
@@ -1147,13 +1149,15 @@ class Database(db.Database):
               scenario ID, the second the params ID, the third the
               number of samples for that (scenario, params) pair.
         """
-        return [row for row in
-                self.execute("SELECT\n"
-                             "    scenario,\n"
-                             "    params,\n"
-                             "    num_samples\n"
-                             "FROM runtime_stats\n"
-                             "ORDER BY num_samples DESC")]
+        query = ("SELECT\n"
+                 "    scenario,\n"
+                 "    params,\n"
+                 "    num_samples\n"
+                 "FROM runtime_stats\n"
+                 "ORDER BY num_samples DESC")
+        if where is not None:
+            query += " WHERE " + where
+        return [row for row in self.execute(query)]
 
     def param_coverage(self, param_id, where=None):
         """

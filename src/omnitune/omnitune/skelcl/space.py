@@ -4,6 +4,10 @@ import numpy as np
 
 from . import unhash_params
 
+import labm8 as lab
+from labm8 import viz
+
+
 class ParamSpace(object):
     """
     Represents the parameter space of workgroup sizes.
@@ -63,11 +67,7 @@ class ParamSpace(object):
         plt.tight_layout()
         plt.gcf().set_size_inches(*figsize, dpi=300)
 
-        if output is None:
-            plt.show()
-        else:
-            plt.savefig(output)
-        plt.close()
+        viz.finalise(output)
 
     def trisurf(self, output=None, title=None, figsize=(5,4),
                 zlabel=None, zticklabels=None, **kwargs):
