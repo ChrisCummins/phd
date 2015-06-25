@@ -13,6 +13,14 @@ class ParamSpace(object):
     Represents the parameter space of workgroup sizes.
     """
     def __init__(self, wg_c, wg_r):
+        """
+        Create a new parameter space.
+
+        Arguments:
+
+            wg_c (list of int): List of workgroup column values.
+            wg_r (list of int): List of workgroup row values.
+        """
         self.c = wg_c
         self.r = wg_r
         self.matrix = np.zeros(shape=(len(wg_r), len(wg_c)))
