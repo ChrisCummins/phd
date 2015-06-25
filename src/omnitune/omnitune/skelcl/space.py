@@ -123,3 +123,31 @@ class ParamSpace(object):
         else:
             plt.savefig(output)
         plt.close()
+
+
+    @staticmethod
+    def from_dict(data):
+        """
+        Construct a parameter space from a dict.
+
+        Determines the bounding space from the dict, then populates
+        the space with the values from the dict.
+
+        Arguments:
+
+            data: dict of {str: <type>} pairs.
+        """
+        uniq_c, uniq_r = set(), set()
+        for params in data.keys():
+            c,r = unhash_params(params)
+            uniq_c.add(c)
+            uniq_r.add(r)
+
+        wg_c = sorted(list(uniq_c))
+        wg_r = sorted(list(uniq_r))
+        space = ParamSpace(wg_c, wg_r)
+
+        for params,value in data.iteritems():
+            space[params] = value
+
+        return space
