@@ -15,7 +15,7 @@ class ParamSpace(object):
     def __init__(self, wg_c, wg_r):
         self.c = wg_c
         self.r = wg_r
-        self.matrix = np.zeros(shape=(len(wg_c), len(wg_r)))
+        self.matrix = np.zeros(shape=(len(wg_r), len(wg_c)))
 
     def wgsize2indexes(self, wgsize):
         wg_c, wg_r = unhash_params(wgsize)
