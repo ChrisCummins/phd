@@ -26,6 +26,42 @@ class Error(Exception):
     pass
 
 
+class TruncateError(Error):
+    """
+    Thrown in case of truncation error.
+    """
+    pass
+
+
+def truncate(string, maxchar):
+    """
+    Truncate a string to a maximum number of characters.
+
+    If the string is longer than maxchar, then remove excess
+    characters and append an ellipses.
+
+    Arguments:
+
+        string (str): String to truncate.
+        maxchar (int): Maximum length of string in characters. Must be >= 4.
+
+    Returns:
+
+        str: Of length <= maxchar.
+
+    Raises:
+
+        TruncateError: In case of an error.
+    """
+    if maxchar < 4:
+        raise TruncateError("Maxchar must be > 3")
+
+    if len(string) <= maxchar:
+        return string
+    else:
+        return string[:maxchar-3] + "..."
+
+
 def levenshtein(s1, s2):
     """
     Return the Levenshtein distance between two strings.

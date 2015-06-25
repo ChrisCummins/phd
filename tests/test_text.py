@@ -22,6 +22,22 @@ from labm8 import text
 
 class TestText(TestCase):
 
+    # truncate()
+    def test_truncate(self):
+        self._test("foo", text.truncate("foo", 100))
+        self._test("1234567890", text.truncate("1234567890", 10))
+        self._test("12345...", text.truncate("1234567890", 8))
+        for i in range(10, 20):
+            self._test(i,
+                       len(text.truncate("The quick brown fox jumped "
+                                         "over the slow lazy dog", i)))
+
+    def test_truncate_bad_maxchar(self):
+        with self.assertRaises(text.TruncateError):
+            text.truncate("foo", -1)
+            text.truncate("foo", 3)
+
+
     # distance()
     def test_levenshtein(self):
         self._test(0, text.levenshtein("foo", "foo"))
