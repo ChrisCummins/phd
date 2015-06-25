@@ -487,10 +487,11 @@ class Database(db.Database):
             if not query.fetchone():
                 source = self.execute("SELECT source "
                                       "FROM kernel_lookup "
-                                      "WHERE id=? LIMIT 1", (kernel,))
+                                      "WHERE id=? LIMIT 1", (kernel,)).fetchone()[0]
                 synthetic, name = get_kernel_name_and_type(source)
                 self.execute("INSERT INTO kernel_names VALUES (?,?,?)",
                              (kernel, 1 if synthetic else 0, name))
+                self.commit()
 
     def populate_runtime_stats_table(self):
         """
