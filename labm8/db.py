@@ -121,6 +121,12 @@ class Database(object):
         # Register exit handler
         atexit.register(self.close)
 
+    def __repr__(self):
+        return self.path
+
+    def __str__(self):
+        return self.__repr__()
+
     @property
     def tables(self):
         """
