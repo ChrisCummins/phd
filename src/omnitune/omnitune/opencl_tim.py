@@ -51,7 +51,7 @@ DEVINFOS = [
         "preferred_vector_width_short": 1,
         "queue_properties": 3,
         "single_fp_config": 63,
-        "type": "cl_device_type_gpu",
+        "type": 4,
         "vendor": "nvidia corporation",
         "vendor_id": "10deh",
         "version": "opencl 1.1 cuda",
