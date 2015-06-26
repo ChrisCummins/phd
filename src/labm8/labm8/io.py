@@ -57,6 +57,20 @@ def fatal(*args, **kwargs):
     lab.exit(returncode)
 
 
+def prof(*args, **kwargs):
+    """
+    Print a profiling message.
+
+    Profiling messages are intended for printing runtime performance
+    data. They are prefixed by the "PROF" title.
+
+    Arguments:
+
+        *args, **kwargs: Message payload.
+    """
+    print("[PROF  ]", *args, **kwargs)
+
+
 class Colours:
     """
     Shell escape colour codes.
