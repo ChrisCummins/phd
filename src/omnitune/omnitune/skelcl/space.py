@@ -126,7 +126,7 @@ class ParamSpace(object):
 
 
     @staticmethod
-    def from_dict(data):
+    def from_dict(data, wg_c=None, wg_r=None):
         """
         Construct a parameter space from a dict.
 
@@ -135,16 +135,27 @@ class ParamSpace(object):
 
         Arguments:
 
-            data: dict of {str: <type>} pairs.
-        """
-        uniq_c, uniq_r = set(), set()
-        for params in data.keys():
-            c,r = unhash_params(params)
-            uniq_c.add(c)
-            uniq_r.add(r)
+            data (dict of {str: <type>} pairs): Data to create space from.
+            wg_c (list of int, optional): Legal wg_c values. If not
+              given, values are deduced automatically from the data.
+            wg_r (list of int, optional): Legal wg_r values. If not
+              given, values are deduced automatically from the data.
 
-        wg_c = sorted(list(uniq_c))
-        wg_r = sorted(list(uniq_r))
+        Returns:
+
+            ParamSpace: Populated param space.
+        """
+        if wg_c is None or wg_r is None:
+            uniq_c, uniq_r = set(), set()
+            for params in data.keys():
+                c,r = unhash_params(params)
+                uniq_c.add(c)
+                uniq_r.add(r)
+            if wg_c is None:
+                wg_c = sorted(list(uniq_c))
+            if wg_r is None:
+                wg_r = sorted(list(uniq_r))
+
         space = ParamSpace(wg_c, wg_r)
 
         for params,value in data.iteritems():
