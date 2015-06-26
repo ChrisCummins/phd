@@ -49,6 +49,7 @@ def performance_vs_coverage(db, output=None):
             db.param_coverage(param) * 100
         )
         for param in db.params
+        if db.perf_param_avg_legal(param) > 0
     ], reverse=True, key=lambda x: (x[0], x[2], x[1]))
     X = np.arange(len(data))
 
