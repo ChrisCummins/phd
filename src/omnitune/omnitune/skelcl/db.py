@@ -624,15 +624,18 @@ class Database(db.Database):
         if where:
             select.append("WHERE")
             select.append(where)
-        freqs = [row for row in
-                 self.execute("SELECT params,Count(*) AS count FROM "
-                              "{select} GROUP BY params ORDER BY count ASC"
-                              .format(select=" ".join(select)))]
+        freqs = {
+            row[0]: row[1] for row in
+            self.execute("SELECT params,Count(*) AS count FROM "
+                         "{select} GROUP BY params ORDER BY count ASC"
+                         .format(select=" ".join(select)))
+        }
 
         # Normalise frequencies.
         if normalise:
-            total = sum([freq[1] for freq in freqs])
-            freqs = [(freq[0], freq[1] / total) for freq in freqs]
+            total = sum(freqs.values())
+            for freq in freqs:
+                freqs[freq] /= total
 
         return freqs
 
@@ -706,12 +709,8 @@ class Database(db.Database):
             kwargs["normalise"] = True
 
         freqs = self.oracle_param_frequencies(*args, **kwargs)
-        space = ParamSpace(self.wg_c, self.wg_r)
+        return ParamSpace.from_dict(freqs, wg_c=self.wg_c, wg_r=self.wg_r)
 
-        for wgsize,count in freqs:
-            space[wgsize] = count
-
-        return space
 
     def param_coverage_frequencies(self, **kwargs):
         """
