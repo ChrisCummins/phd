@@ -69,6 +69,29 @@ def performance_vs_coverage(db, output=None):
     viz.finalise(output)
 
 
+def num_params_vs_accuracy(db, output=None, where=None):
+    freqs = sorted(db.oracle_param_frequencies(normalise=True).values(),
+                   reverse=True)
+    acc = 0
+    Data = [0] * len(freqs)
+    for i,freq in enumerate(freqs):
+        acc += freq * 100
+        Data[i] = acc
+
+    X = np.arange(len(Data))
+    ax = plt.subplot(111)
+    ax.plot(X, Data)
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.xlim(xmin=0, xmax=len(X) - 1)
+    plt.ylim(ymin=0, ymax=100)
+    plt.title("Number of parameters vs oracle accuracy")
+    plt.ylabel("Accuracy")
+    plt.xlabel("Number of distinct workgroup sizes")
+    plt.tight_layout()
+    plt.legend(frameon=True)
+    viz.finalise(output)
+
+
 def performance_vs_max_wgsize(db, output=None):
     data = sorted([
         (
