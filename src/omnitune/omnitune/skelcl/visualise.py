@@ -16,24 +16,41 @@ from labm8 import math as labmath
 from labm8 import viz
 
 
-def max_wgsizes(db, output=None):
+def max_wgsizes(db, output=None, trisurf=False, **kwargs):
     space = db.max_wgsize_space()
-    space.heatmap(output=output, title="Distribution of maximum workgroup sizes")
+    if "title" not in kwargs: kwargs["title"] = ("Distribution of maximum "
+                                                 "workgroup sizes")
+    if trisurf:
+        space.trisurf(output=output, **kwargs)
+    else:
+        space.heatmap(output=output, **kwargs)
 
 
-def coverage(db, output=None, where=None, title="All data"):
+def coverage(db, output=None, where=None):
     space = db.param_coverage_space(where=where)
-    space.heatmap(output=output, title=title, vmin=0, vmax=1)
+    if "title" not in kwargs: kwargs["title"] = "All data"
+    if "vim" not in kwargs: kwargs["vmin"] = 0
+    if "vmax" not in kwargs: kwargs["vmax"] = 1
+    space.heatmap(output=output, **kwargs)
 
 
-def safety(db, output=None, where=None, title="All data"):
+def safety(db, output=None, where=None):
     space = db.param_safe_space(where=where)
-    space.heatmap(output=output, title=title, vmin=0, vmax=1)
+    if "title" not in kwargs: kwargs["title"] = "All data"
+    if "vim" not in kwargs: kwargs["vmin"] = 0
+    if "vmax" not in kwargs: kwargs["vmax"] = 1
+    space.heatmap(output=output, **kwargs)
 
 
-def oracle_wgsizes(db, output=None, where=None, title="All data"):
+def oracle_wgsizes(db, output=None, where=None, trisurf=False, **kwargs):
     space = db.oracle_param_space(where=where)
-    space.heatmap(output=output, title=title, vmin=0, vmax=1)
+    if "title" not in kwargs: kwargs["title"] = "All data"
+    if trisurf:
+        space.trisurf(output=output, **kwargs)
+    else:
+        if "vim" not in kwargs: kwargs["vmin"] = 0
+        if "vmax" not in kwargs: kwargs["vmax"] = 1
+        space.heatmap(output=output, **kwargs)
 
 
 def scenario_performance(db, scenario, output=None, title=None):
@@ -41,7 +58,7 @@ def scenario_performance(db, scenario, output=None, title=None):
     space.heatmap(output=output, title=title)
 
 
-def performance_vs_coverage(db, output=None):
+def performance_vs_coverage(db, output=None, figsize=None):
     data = sorted([
         (
             db.perf_param_avg(param) * 100,
@@ -67,10 +84,12 @@ def performance_vs_coverage(db, output=None):
     plt.xlabel("Parameters")
     plt.tight_layout()
     plt.legend(frameon=True)
+    if figsize is not None:
+        plt.gcf().set_size_inches(*figsize, dpi=300)
     viz.finalise(output)
 
 
-def num_params_vs_accuracy(db, output=None, where=None):
+def num_params_vs_accuracy(db, output=None, where=None, figsize=None):
     freqs = sorted(db.oracle_param_frequencies(normalise=True).values(),
                    reverse=True)
     acc = 0
@@ -85,11 +104,13 @@ def num_params_vs_accuracy(db, output=None, where=None):
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.xlim(xmin=0, xmax=len(X) - 1)
     plt.ylim(ymin=0, ymax=100)
-    plt.title("Number of parameters vs oracle accuracy")
+    plt.title("Number of workgroup sizes vs oracle accuracy")
     plt.ylabel("Accuracy")
     plt.xlabel("Number of distinct workgroup sizes")
     plt.tight_layout()
     plt.legend(frameon=True)
+    if figsize is not None:
+        plt.gcf().set_size_inches(*figsize, dpi=300)
     viz.finalise(output)
 
 
