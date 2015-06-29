@@ -617,8 +617,8 @@ class Database(db.Database):
 
         Returns:
 
-           list of (str,int) tuples: Where each tuple consists of a
-             (params,frequency) pair.
+           dict of {str: int} pairs: Where the keys are parameters and
+             the values are frequencies.
         """
         select = [table]
         if where:
