@@ -58,7 +58,8 @@ def scenario_performance(db, scenario, output=None, title=None):
     space.heatmap(output=output, title=title)
 
 
-def performance_vs_coverage(db, output=None, figsize=None):
+def performance_vs_coverage(db, output=None, figsize=None,
+                            title="Workgroup size performance vs. legality"):
     data = sorted([
         (
             db.perf_param_avg(param) * 100,
@@ -79,7 +80,7 @@ def performance_vs_coverage(db, output=None, figsize=None):
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.xlim(xmin=0, xmax=len(X) - 1)
     plt.ylim(ymin=0, ymax=100)
-    plt.title("Workgroup size performance vs. legality")
+    plt.title(title)
     plt.ylabel("Performance / Legality")
     plt.xlabel("Parameters")
     plt.tight_layout()
@@ -89,7 +90,9 @@ def performance_vs_coverage(db, output=None, figsize=None):
     viz.finalise(output)
 
 
-def num_params_vs_accuracy(db, output=None, where=None, figsize=None):
+def num_params_vs_accuracy(db, output=None, where=None, figsize=None,
+                           title=("Number of workgroup sizes "
+                                  "vs. oracle accuracy")):
     freqs = sorted(db.oracle_param_frequencies(normalise=True).values(),
                    reverse=True)
     acc = 0
@@ -104,7 +107,7 @@ def num_params_vs_accuracy(db, output=None, where=None, figsize=None):
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.xlim(xmin=0, xmax=len(X) - 1)
     plt.ylim(ymin=0, ymax=100)
-    plt.title("Number of workgroup sizes vs oracle accuracy")
+    plt.title(title)
     plt.ylabel("Accuracy")
     plt.xlabel("Number of distinct workgroup sizes")
     plt.tight_layout()
@@ -114,7 +117,9 @@ def num_params_vs_accuracy(db, output=None, where=None, figsize=None):
     viz.finalise(output)
 
 
-def performance_vs_max_wgsize(db, output=None):
+def performance_vs_max_wgsize(db, output=None, figsize=None,
+                              title=("Workgroup size performance "
+                                     "vs. maximum workgroup size")):
     data = sorted([
         (
             db.perf(scenario, param) * 100,
@@ -132,43 +137,51 @@ def performance_vs_max_wgsize(db, output=None):
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.xlim(xmin=0, xmax=len(X) - 1)
     plt.ylim(ymin=0, ymax=100)
-    plt.title("Workgroup size performance vs. maximum workgroup size")
-    plt.ylabel("Performance / Ratio max wgsize")
+    plt.title(title)
+    plt.ylabel("Performance / Size")
     plt.xlabel("Scenarios, Parameters")
     plt.tight_layout()
     plt.legend(frameon=True)
+    if figsize is not None:
+        plt.gcf().set_size_inches(*figsize, dpi=300)
     viz.finalise(output)
 
 
-def _performance_plot(output, labels, values, title):
+def _performance_plot(output, labels, values, **kwargs):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     sns.boxplot(values)
     ax.set_xticklabels(labels, rotation=90)
     plt.ylim(ymin=0, ymax=1)
-    plt.title(title)
+    if "title" in kwargs:
+        plt.title(kwargs["title"])
+    if "figsize" in kwargs:
+        plt.gcf().set_size_inches(*kwargs["figsize"], dpi=300)
     viz.finalise(output)
 
 
-def kernel_performance(db, output=None):
+def kernel_performance(db, output=None, **kwargs):
     labels = db.kernel_names
     values = [db.performance_of_kernels_with_name(label) for label in labels]
-    _performance_plot(output, labels, values,
-                      "Workgroup size performance across kernels")
+    if "title" not in kwargs:
+        kwargs["title"] = "Workgroup size performance across kernels"
+    _performance_plot(output, labels, values, **kwargs)
 
 
-def device_performance(db, output=None):
+def device_performance(db, output=None, **kwargs):
     labels = db.cpus + db.gpus # Arrange CPUs on the left, GPUs on the right.
     values = [db.performance_of_device(label) for label in labels]
-    _performance_plot(output, labels, values,
-                      "Workgroup size performance across devices")
+    if "title" not in kwargs:
+        kwargs["title"] = "Workgroup size performance across devices"
+    _performance_plot(output, labels, values, **kwargs)
 
 
-def dataset_performance(db, output=None):
+def dataset_performance(db, output=None, **kwargs):
     labels = db.datasets
     values = [db.performance_of_dataset(label) for label in labels]
-    _performance_plot(output, labels, values,
-                      "Workgroup size performance across datasets")
+    if "title" not in kwargs:
+        kwargs["title"] = "Workgroup size performance across datasets"
+    _performance_plot(output, labels, values, **kwargs)
 
 
 def sample_counts(db, output=None, where=None, nbins=25,
@@ -183,7 +196,9 @@ def sample_counts(db, output=None, where=None, nbins=25,
     viz.finalise(output)
 
 
-def runtimes_range(db, output=None, where=None, nbins=25, iqr=(0.25,0.75)):
+def runtimes_range(db, output=None, where=None, nbins=25,
+                   iqr=(0.25,0.75), figsize=None,
+                   title="Normalised distribution of min and max runtimes"):
     data = [t[2:] for t in db.min_max_runtimes(where=where)]
     min_t, max_t = zip(*data)
 
@@ -196,11 +211,13 @@ def runtimes_range(db, output=None, where=None, nbins=25, iqr=(0.25,0.75)):
 
     plt.hist(lower, bins, label="Min")
     plt.hist(upper, bins, label="Max");
-    plt.title("Normalised distribution of min and max runtimes")
+    plt.title(title)
     plt.ylabel("Frequency")
     plt.xlabel("Runtime (normalised to mean)")
     plt.legend(frameon=True)
     plt.tight_layout()
+    if figsize is not None:
+        plt.gcf().set_size_inches(*figsize, dpi=300)
     viz.finalise(output)
 
 
