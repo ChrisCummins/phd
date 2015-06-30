@@ -26,7 +26,7 @@ def max_wgsizes(db, output=None, trisurf=False, **kwargs):
         space.heatmap(output=output, **kwargs)
 
 
-def coverage(db, output=None, where=None):
+def coverage(db, output=None, where=None, **kwargs):
     space = db.param_coverage_space(where=where)
     if "title" not in kwargs: kwargs["title"] = "All data"
     if "vim" not in kwargs: kwargs["vmin"] = 0
@@ -34,7 +34,7 @@ def coverage(db, output=None, where=None):
     space.heatmap(output=output, **kwargs)
 
 
-def safety(db, output=None, where=None):
+def safety(db, output=None, where=None, **kwargs):
     space = db.param_safe_space(where=where)
     if "title" not in kwargs: kwargs["title"] = "All data"
     if "vim" not in kwargs: kwargs["vmin"] = 0
