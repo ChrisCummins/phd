@@ -142,6 +142,19 @@ class TestDatabase(TestCase):
         _db.drop_table("foo")
         self._test(False, "foo" in _db.tables)
 
+    # empty_table()
+    def test_empty_table(self):
+        fs.rm("/tmp/labm8.sql")
+        _db = db.Database("/tmp/labm8.sql")
+
+        _db.create_table("foo", (("id", "integer primary key"),))
+        _db.execute("INSERT INTO foo VALUES (1)")
+        _db.execute("INSERT INTO foo VALUES (2)")
+        _db.execute("INSERT INTO foo VALUES (3)")
+        self._test(3, _db.num_rows("foo"))
+        _db.empty_table("foo")
+        self._test(0, _db.num_rows("foo"))
+
     # Constructor "schema" argument
     def test_constructor_schema(self):
         fs.rm("/tmp/labm8.sql")
