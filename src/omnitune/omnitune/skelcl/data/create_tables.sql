@@ -290,6 +290,7 @@ CREATE TABLE classification_results (
     scenario                        TEXT,     -- Key for scenarios
     actual                          TEXT,     -- Oracle params value, key for params
     predicted                       TEXT,     -- Predicted params value, key for params
+    baseline                        TEXT,     -- Baseline params value, key for params
     correct                         INTEGER,  -- 1 if prediction is correct, else 0
     invalid                         INTEGER,  -- 1 if *first* prediction was valid, else 0
     performance                     REAL,     -- Performance relative to oracle, 0 <= performance <= 1
@@ -298,10 +299,9 @@ CREATE TABLE classification_results (
 
 
 -- Regression results table
-CREATE TABLE regression_runtime_results (
+CREATE TABLE runtime_regression_results (
     job                             TEXT,     -- Key for ml_jobs
     classifier                      TEXT,     -- Key for classifiers.id
-    err_fn                          TEXT,     -- Key for err_fns.id
     dataset                         TEXT,     -- Key for datasets.id
     scenario                        TEXT,     -- Key for scenarios
     actual                          REAL,     -- Actual runtime value

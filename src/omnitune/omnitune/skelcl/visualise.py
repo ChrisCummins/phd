@@ -13,6 +13,7 @@ import labm8 as lab
 from labm8 import io
 from labm8 import fs
 from labm8 import math as labmath
+from labm8 import text
 from labm8 import viz
 
 
@@ -242,5 +243,107 @@ def num_samples(db, output=None, nbins=25):
     plt.title("Sample counts for unique scenarios and params")
     plt.ylabel("Frequency")
     plt.xlabel("Number of samples")
+    plt.tight_layout()
+    viz.finalise(output)
+
+
+def xval_classifier_speedups(db, classifier, output=None,
+                             job="xval_classifiers", **kwargs):
+    for err_fn in db.err_fns:
+        performances = [row for row in
+                        db.execute("SELECT speedup\n"
+                                   "FROM classification_results\n"
+                                   "WHERE job=? AND classifier=? AND err_fn=?",
+                                   (job, classifier, err_fn))]
+        plt.plot(performances, "-", label=err_fn)
+
+    plt.title(text.truncate(classifier, 60))
+    plt.ylabel("Speedup over baseline")
+    plt.xlabel("Test instances")
+    plt.axhline(y=1, color="k")
+    plt.xlim(xmin=0, xmax=len(performances))
+    plt.legend()
+    plt.tight_layout()
+    viz.finalise(output)
+
+
+def xval_err_fn_speedups(db, err_fn, output=None,
+                         job="xval_classifiers", **kwargs):
+    for classifier in db.classifiers:
+        performances = [row for row in
+                        db.execute("SELECT speedup\n"
+                                   "FROM classification_results\n"
+                                   "WHERE job=? AND classifier=? AND err_fn=?",
+                                   (job, classifier, err_fn))]
+        plt.plot(performances, "-", label=text.truncate(classifier, 40))
+
+    plt.title(err_fn)
+    plt.ylabel("Speedup over baseline")
+    plt.xlabel("Test instances")
+    plt.axhline(y=1, color="k")
+    plt.xlim(xmin=0, xmax=len(performances))
+    plt.legend()
+    plt.tight_layout()
+    viz.finalise(output)
+
+
+def xval_classifiers_accuracy(db, output=None, job="xval_classifiers",
+                              **kwargs):
+    err_fn = db.err_fns[0]
+    query = db.execute(
+        "SELECT classifier,Count(*) AS count\n"
+        "FROM classification_results\n"
+        "WHERE job=? AND err_fn=?\n"
+        "GROUP BY classifier",
+        (job,err_fn)
+    )
+    results = []
+    for classifier,count in query:
+        correct = db.execute(
+            "SELECT (SUM(correct) / CAST(? AS FLOAT)) * 100\n"
+            "FROM classification_results\n"
+            "WHERE job=? AND classifier=? AND err_fn=?",
+            (count, job, classifier, err_fn)
+        ).fetchone()[0]
+
+        results.append((classifier, correct))
+
+    classifiers,correct = zip(*results)
+    labels = [text.truncate(classifier, 40) for classifier in classifiers]
+    X = np.arange(len(classifiers))
+    plt.bar(X, correct, color="g")
+    plt.xticks(X + .5, labels, rotation='vertical')
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.title("Classification accuracy")
+    plt.tight_layout()
+    viz.finalise(output)
+
+def xval_classifiers_invalid(db, output=None, job="xval_classifiers",
+                             **kwargs):
+    err_fn = db.err_fns[0]
+    query = db.execute(
+        "SELECT classifier,Count(*) AS count\n"
+        "FROM classification_results\n"
+        "WHERE job=? AND err_fn=? GROUP BY classifier",
+        (job,err_fn)
+    )
+    results = []
+    for classifier,count in query:
+        incorrect = db.execute(
+            "SELECT (SUM(invalid) / CAST(? AS FLOAT)) * 100\n"
+            "FROM classification_results\n"
+            "WHERE job=? AND classifier=? AND err_fn=?",
+            (count, job, classifier, err_fn)
+        ).fetchone()[0]
+
+        results.append((classifier, incorrect))
+
+    classifiers,incorrect = zip(*results)
+    labels = [text.truncate(classifier, 40) for classifier in classifiers]
+    X = np.arange(len(classifiers))
+    plt.bar(X, incorrect, color="r")
+    plt.xticks(X + .5, labels, rotation='vertical')
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.title("Ratio of invalid classifications")
     plt.tight_layout()
     viz.finalise(output)

@@ -25,6 +25,10 @@ from . import hash_device
 from . import hash_kernel
 from . import hash_params
 from . import hash_scenario
+from . import hash_classifier
+from . import hash_err_fn
+from . import hash_ml_dataset
+from . import hash_ml_job
 
 from space import ParamSpace
 
@@ -218,6 +222,25 @@ class Database(db.Database):
                              "FROM oracle_params\n"
                              "GROUP BY params\n"
                              "ORDER BY count DESC")]
+
+    @property
+    def classifiers(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT classifier FROM "
+                             "classification_results")]
+
+    @property
+    def err_fns(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT err_fn FROM "
+                             "classification_results")]
+
+    @property
+    def classifier_err_fns(self):
+        return [row for row in
+                self.execute("SELECT classifier,err_fn FROM "
+                             "classification_results "
+                             "GROUP BY classifier,err_fn")]
 
     def run(self, name):
         """
@@ -487,6 +510,80 @@ class Database(db.Database):
         """
         self.execute("INSERT INTO runtimes VALUES (?,?,?)",
                      (scenario, params, runtime))
+
+    def add_classification_result(self, job, classifier, err_fn, dataset,
+                                  scenario, actual, predicted, baseline,
+                                  correct, invalid, performance, speedup):
+        """
+        Arguments:
+
+            job (str): ML job name.
+            classifier (ml.Classifier): Classifier.
+            err_fn (function partial): Error handler function.
+            dataset (WekaInstances): Classifier training data.
+            scenario (str): Scenario ID.
+            actual (str): Params ID of oracle.
+            predicted (str): Params ID of classifier prediction.
+            baseline (str): Params ID of baseline for performance baseline.
+            correct (int): 1 if prediction is correct.
+            invalid (int): 1 if *first* prediction was legal.
+            performance (float): Performance relative to oracle of prediction.
+            speedup (float): Speedup over performance baseline.
+        """
+        job_id = self.ml_job_id(job)
+        classifier_id = self.classifier_id(classifier)
+        err_fn_id = self.err_fn_id(err_fn)
+        dataset_id = self.ml_dataset_id(dataset)
+
+        self.execute("INSERT INTO classification_results VALUES "
+                     "(?,?,?,?,?,?,?,?,?,?,?,?)",
+                     (job_id, classifier_id, err_fn_id, dataset_id,
+                      scenario, actual, predicted, baseline, correct,
+                      invalid, performance, speedup))
+
+    def add_runtime_regression_result(self, job, classifier, dataset, scenario,
+                                      actual, predicted,
+                                      norm_predicted, norm_error):
+        job_id = self.ml_job_id(job)
+        classifier_id = self.classifier_id(classifier)
+        dataset_id = self.ml_dataset_id(dataset)
+
+        self.execute("INSERT INTO runtime_regression_results VALUES "
+                     "(?,?,?,?,?,?,?,?)",
+                     (job_id, classifier_id, dataset_id, scenario, actual,
+                      predicted, norm_predicted, norm_error))
+
+    def ml_job_id(self, name):
+        """
+        Return the ml job id
+        """
+        id = hash_ml_job(name)
+        self.execute("INSERT OR IGNORE INTO ml_jobs VALUES (?)", (id,))
+        return id
+
+    def classifier_id(self, classifier):
+        """
+        Return the classifier ID.
+        """
+        # FIXME: We should be using hash_classifier() !!!
+        classifier_id = str(classifier)
+        classname = classifier.classname
+        options = " ".join(classifier.options)
+        self.execute("INSERT OR IGNORE INTO classifiers VALUES (?,?,?)",
+                     (classifier_id, classname, options))
+        return classifier_id
+
+    def err_fn_id(self, err_fn):
+        id = hash_err_fn(err_fn)
+        self.execute("INSERT OR IGNORE INTO err_fns VALUES (?)", (id,))
+        return id
+
+    def ml_dataset_id(self, dataset):
+        id = hash_ml_dataset(dataset)
+        data = str(dataset)
+        self.execute("INSERT OR IGNORE INTO ml_datasets VALUES (?,?)",
+                     (id, data))
+        return id
 
     def _progress_report(self, table_name, i=0, n=1, total=None):
         """

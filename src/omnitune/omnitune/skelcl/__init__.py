@@ -74,6 +74,35 @@ def hash_scenario(device_id, kernel_id, dataset_id):
     return crypto.sha1(".".join((device_id, kernel_id, dataset_id)))
 
 
+def hash_classifier(classifier):
+    """
+    Returns the hash of a classifier.
+    """
+    string = " ".join([classifier.classname,] + classifier.options)
+    return re.sub(r"[ -\.]+", "-", string)
+
+
+def hash_err_fn(err_fn):
+    """
+    Returns the hash of an error handler partial.
+    """
+    return err_fn.func.__name__
+
+
+def hash_ml_dataset(instances):
+    """
+    Returns the hash of a WekaInstances object.
+    """
+    return crypto.sha1(str(instances))
+
+
+def hash_ml_job(name):
+    """
+    Returns the hash of an ml job name.
+    """
+    return name
+
+
 def get_user_source(source):
     """
     Return the user source code for a stencil kernel.
