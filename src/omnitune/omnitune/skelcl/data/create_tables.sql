@@ -7,7 +7,7 @@ CREATE TABLE version (
     version                         INTEGER,
     PRIMARY KEY (version)
 );
-INSERT INTO version VALUES (3);
+INSERT INTO version VALUES (4);
 
 
 -------------
@@ -243,4 +243,69 @@ CREATE TABLE oracle_params (
     params                          TEXT,
     runtime                         REAL,
     PRIMARY KEY (scenario, params, runtime)
+);
+
+
+---------------
+-- ML TABLES --
+---------------
+
+-- Classifiers table
+CREATE TABLE classifiers (
+    id                              TEXT,
+    classname                       TEXT,
+    options                         TEXT,
+    PRIMARY KEY (id)
+);
+
+
+-- Error handlers table
+CREATE TABLE err_fns (
+    id                              TEXT,
+    PRIMARY KEY (id)
+);
+
+
+-- Error handlers table
+CREATE TABLE ml_datasets (
+    id                              TEXT,
+    data                            TEXT,     -- JSON dataset blob
+    PRIMARY KEY (id)
+);
+
+
+-- ML evaluation jobs table
+CREATE TABLE ml_jobs (
+    id                              TEXT,     -- Descriptive job "name"
+    PRIMARY KEY (id)
+);
+
+
+-- Classification results table
+CREATE TABLE classification_results (
+    job                             TEXT,     -- Key for ml_jobs
+    classifier                      TEXT,     -- Key for classifiers.id
+    err_fn                          TEXT,     -- Key for err_fns.id
+    dataset                         TEXT,     -- Key for datasets.id
+    scenario                        TEXT,     -- Key for scenarios
+    actual                          TEXT,     -- Oracle params value, key for params
+    predicted                       TEXT,     -- Predicted params value, key for params
+    correct                         INTEGER,  -- 1 if prediction is correct, else 0
+    invalid                         INTEGER,  -- 1 if *first* prediction was valid, else 0
+    performance                     REAL,     -- Performance relative to oracle, 0 <= performance <= 1
+    speedup                         REAL      -- Speedup over baseline, 0 <= speedup
+);
+
+
+-- Regression results table
+CREATE TABLE regression_runtime_results (
+    job                             TEXT,     -- Key for ml_jobs
+    classifier                      TEXT,     -- Key for classifiers.id
+    err_fn                          TEXT,     -- Key for err_fns.id
+    dataset                         TEXT,     -- Key for datasets.id
+    scenario                        TEXT,     -- Key for scenarios
+    actual                          REAL,     -- Actual runtime value
+    predicted                       REAL,     -- Predicted runtime value
+    norm_predicted                  REAL,     -- Predicted runtime, normalise to actual runtime
+    norm_err                        REAL      -- abs(norm_predicted - 1)
 );

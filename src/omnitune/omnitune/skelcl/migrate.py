@@ -318,7 +318,7 @@ def migrate_2_to_3(old):
 
     io.info("Migrating database to version 3.")
 
-    backup_path = old.path + ".1"
+    backup_path = old.path + ".2"
     io.info("Creating backup of old database at '{0}'".format(backup_path))
     fs.cp(old.path, backup_path)
 
@@ -419,6 +419,74 @@ def migrate_2_to_3(old):
     tmp.close()
     io.info("Migration completed.")
 
+
+def migrate_3_to_4(old):
+    """
+    SkelCL database migration script.
+
+    Arguments:
+
+        old (SkelCLDatabase): The database to migrate
+    """
+    # Create temporary database
+    fs.rm("/tmp/omnitune.skelcl.migration.db")
+    tmp = _db.Database("/tmp/omnitune.skelcl.migration.db")
+    tmp.attach(old.path, "rhs")
+
+    io.info("Migrating database to version 4.")
+
+    backup_path = old.path + ".3"
+    io.info("Creating backup of old database at '{0}'".format(backup_path))
+    fs.cp(old.path, backup_path)
+
+    tables = [
+        "kernels",
+        "kernel_lookup",
+        "kernel_names",
+        "devices",
+        "device_lookup",
+        "datasets",
+        "dataset_lookup",
+        "scenarios",
+        "params",
+        "runtimes",
+        "runtime_stats",
+        "oracle_params"
+    ]
+
+    for table in tables:
+        io.info("Copying data from '{}' ...".format(table))
+        tmp.execute("INSERT INTO {} SELECT * FROM rhs.{}".format(table, table))
+
+    tmp_path = tmp.path
+    old_path = old.path
+
+    tmp.execute("VACUUM")
+
+    # Sanity checks
+    bad = False
+    for table in tables:
+        old_count = tmp.num_rows("rhs." + table)
+        tmp_count = tmp.num_rows(table)
+
+        if old_count != tmp_count:
+            io.error("Bad rows count:", old_count, tmp_count)
+            bad = True
+
+    if bad:
+        io.fatal("Failed sanity check, aborting.")
+    else:
+        io.info("Passed sanity check.")
+
+    # Copy migrated database over the original one.
+    fs.cp(tmp_path, old_path)
+    fs.rm(tmp_path)
+
+    old.close()
+    tmp.close()
+    io.info("Migration completed.")
+
+
 def migrate(db):
     """
     Perform database migration.
@@ -443,6 +511,9 @@ def migrate(db):
         db = _db.Database(path=path)
     if db.version == 2:
         migrate_2_to_3(db)
+        db = _db.Database(path=path)
+    if db.version == 3:
+        migrate_3_to_4(db)
         db = _db.Database(path=path)
 
     return db
