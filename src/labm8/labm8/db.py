@@ -283,6 +283,10 @@ class Database(object):
         Drop an existing table.
 
         If the table does not exist, nothing happens.
+
+        Arguments:
+
+            name (str): The name of the table to drop.
         """
         if name in self.tables:
             self.execute("DROP TABLE " + name)
@@ -307,6 +311,19 @@ class Database(object):
         columns = [" ".join(column) for column in schema]
         self.execute("CREATE TABLE IF NOT EXISTS {name} ({columns})"
                      .format(name=name, columns=",".join(columns)))
+
+    def empty_table(self, name):
+        """
+        Delete all rows in a table.
+
+        If the table does not exist, nothing happens.
+
+        Arguments:
+
+            name (str): The name of the table to empty.
+        """
+        if name in self.tables:
+            self.execute("DELETE FROM " + name)
 
     def create_table_from(self, name, src):
         """
