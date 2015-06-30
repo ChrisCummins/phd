@@ -270,7 +270,7 @@ class SMO(Classifier):
 
 class SimpleLogistic(Classifier):
     def __init__(self, *args, **kwargs):
-        classname = "weka.classifiers.functions.SMO"
+        classname = "weka.classifiers.functions.SimpleLogistic"
         super(SimpleLogistic, self).__init__(classname=classname,
                                              *args, **kwargs)
 
