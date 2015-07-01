@@ -292,3 +292,9 @@ class LibSVM(Classifier):
     def __init__(self, *args, **kwargs):
         classname = "weka.classifiers.functions.LibSVM"
         super(LibSVM, self).__init__(classname=classname, *args, **kwargs)
+
+
+class SMOreg(Classifier):
+    def __init__(self, *args, **kwargs):
+        classname = "weka.classifiers.functions.SMOreg"
+        super(SMOreg, self).__init__(classname=classname, *args, **kwargs)
