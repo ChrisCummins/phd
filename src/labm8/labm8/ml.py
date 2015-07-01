@@ -279,3 +279,16 @@ class RandomForest(Classifier):
     def __init__(self, *args, **kwargs):
         classname = "weka.classifiers.trees.RandomForest"
         super(RandomForest, self).__init__(classname=classname, *args, **kwargs)
+
+
+class LinearRegression(Classifier):
+    def __init__(self, *args, **kwargs):
+        classname = "weka.classifiers.functions.LinearRegression"
+        super(LinearRegression, self).__init__(classname=classname,
+                                               *args, **kwargs)
+
+
+class LibSVM(Classifier):
+    def __init__(self, *args, **kwargs):
+        classname = "weka.classifiers.functions.LibSVM"
+        super(LibSVM, self).__init__(classname=classname, *args, **kwargs)
