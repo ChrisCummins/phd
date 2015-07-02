@@ -21,7 +21,7 @@ import labm8 as lab
 from labm8 import io
 
 
-def finalise(output=None):
+def finalise(output=None, **kwargs):
     """
     Finalise a plot.
 
@@ -31,12 +31,14 @@ def finalise(output=None):
 
         output (str, optional): Path to save figure to. If not given,
           show plot.
+        **kwargs: Any additional arguments to pass to
+          plt.savefig(). Only required if output is not None.
     """
     import matplotlib.pyplot as plt
 
     if output is None:
         plt.show()
     else:
-        plt.savefig(output)
+        plt.savefig(output, **kwargs)
         io.info("Wrote '{}'".format(output))
     plt.close()
