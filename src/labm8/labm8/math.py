@@ -202,9 +202,29 @@ def filter_iqr(array, lower, upper):
     return new
 
 
-def confinterval(array, conf=0.95, normal_threshold=30):
+def confinterval(array, conf=0.95, normal_threshold=30, error_only=False,
+                 array_mean=None):
     """
     Return the confidence interval of a list for a given confidence.
+
+    Arguments:
+
+        array (list): Sequence of numbers.
+        conf (float): Confidence interval, in range 0 <= ci <= 1
+        normal_threshold (int): The number of elements in the array is
+          < normal_threshold, use a T-distribution. If the number of
+          elements in the array is >= normal_threshold, use a normal
+          distribution.
+        error_only (bool, optional): If true, return only the size of
+          symmetrical confidence interval, equal to ci_upper - mean.
+        array_mean (float, optional): Optimisation trick for if you
+          already know the arithmetic mean of the array to prevent
+          this function from re-calculating.
+
+    Returns:
+
+        (float, float): Lower and upper bounds on confidence interval,
+          respectively.
     """
     n = len(array)
 
@@ -222,9 +242,20 @@ def confinterval(array, conf=0.95, normal_threshold=30):
     if values_all_same:
         # If values are all the same, return that value.
         return (array[0], array[0])
+
+    # Defer calculating mean until we actually need it.
+    if array_mean is None: array_mean = mean(array)
+
     if n < normal_threshold:
         # We have a "small" number of datapoints, so use a t-distribution.
-        return scipy.stats.t.interval(conf, n - 1, loc=mean(array), scale=scale)
+        c0, c1 = scipy.stats.t.interval(conf, n - 1, loc=array_mean,
+                                        scale=scale)
     else:
         # We have a "large" number of datapoints, so use a normal distribution.
-        return scipy.stats.norm.interval(conf, loc=mean(array), scale=scale)
+        c0, c1 = scipy.stats.norm.interval(conf, loc=array_mean,
+                                           scale=scale)
+
+    if error_only:
+        return c1 - array_mean
+    else:
+        return c0, c1
