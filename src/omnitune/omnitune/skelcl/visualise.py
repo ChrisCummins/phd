@@ -278,7 +278,7 @@ def xval_err_fn_speedups(db, err_fn, output=None, sort=False,
     """
     Plot speedup over the baseline of all classifiers for an err_fn.
     """
-    for classifier in db.classifiers:
+    for classifier in db.classification_classifiers:
         basename = ml.classifier_basename(classifier)
         performances = [row for row in
                         db.execute("SELECT speedup\n"
@@ -378,3 +378,36 @@ def xval_classification(db, output=None, job="xval_classifiers", **kwargs):
     #
     art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -0.1), ncol=3)]
     viz.finalise(output, additional_artists=art, bbox_inches="tight")
+
+
+def xval_runtime_regression(db, output=None, job="xval_runtimes", **kwargs):
+    """
+    Plot accuracy of a classifier at predicted runtime.
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    for classifier in db.regression_classifiers:
+        basename = ml.classifier_basename(classifier)
+        actual, norm_predicted = zip(*sorted([
+            row for row in
+            db.execute(
+                "SELECT\n"
+                "    actual,\n"
+                "    predicted\n"
+                "FROM runtime_regression_results\n"
+                "WHERE job=? AND classifier=?",
+                (job, classifier)
+            )
+        ], key=lambda x: x[0], reverse=True))
+
+        ax.plot(norm_predicted, label=basename)
+        # TODO: Once we have all regression results, we only need to
+        # plot "actual" once.
+        ax.plot(actual, label=basename + " - Actual")
+    ax.set_yscale("log")
+    plt.legend()
+    plt.title("Runtime")
+    plt.xlabel("Test instances (sorted by descending runtime)")
+    plt.ylabel("Runtime (ms)")
+    viz.finalise(output)

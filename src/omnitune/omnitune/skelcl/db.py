@@ -251,9 +251,19 @@ class Database(db.Database):
 
     @property
     def classifiers(self):
+        return [row[0] for row in self.execute("SELECT id FROM classifiers")]
+
+    @property
+    def classification_classifiers(self):
         return [row[0] for row in
                 self.execute("SELECT DISTINCT classifier FROM "
                              "classification_results")]
+
+    @property
+    def regression_classifiers(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT classifier FROM "
+                             "runtime_regression_results")]
 
     @property
     def err_fns(self):
