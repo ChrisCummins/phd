@@ -10,9 +10,10 @@ from matplotlib.ticker import FormatStrFormatter
 from . import space as _space
 
 import labm8 as lab
-from labm8 import io
 from labm8 import fs
+from labm8 import io
 from labm8 import math as labmath
+from labm8 import ml
 from labm8 import text
 from labm8 import viz
 
@@ -247,18 +248,23 @@ def num_samples(db, output=None, nbins=25):
     viz.finalise(output)
 
 
-def xval_classifier_speedups(db, classifier, output=None,
+def xval_classifier_speedups(db, classifier, output=None, sort=False,
                              job="xval_classifiers", **kwargs):
+    """
+    Plot speedup over the baseline of a classifier for each err_fn.
+    """
     for err_fn in db.err_fns:
         performances = [row for row in
                         db.execute("SELECT speedup\n"
                                    "FROM classification_results\n"
                                    "WHERE job=? AND classifier=? AND err_fn=?",
                                    (job, classifier, err_fn))]
+        if sort: performances = sorted(performances, reverse=True)
         plt.plot(performances, "-", label=err_fn)
 
-    plt.title(text.truncate(classifier, 60))
-    plt.ylabel("Speedup over baseline")
+    basename = ml.classifier_basename(classifier)
+    plt.title(basename)
+    plt.ylabel("Speedup")
     plt.xlabel("Test instances")
     plt.axhline(y=1, color="k")
     plt.xlim(xmin=0, xmax=len(performances))
@@ -267,18 +273,23 @@ def xval_classifier_speedups(db, classifier, output=None,
     viz.finalise(output)
 
 
-def xval_err_fn_speedups(db, err_fn, output=None,
+def xval_err_fn_speedups(db, err_fn, output=None, sort=False,
                          job="xval_classifiers", **kwargs):
+    """
+    Plot speedup over the baseline of all classifiers for an err_fn.
+    """
     for classifier in db.classifiers:
+        basename = ml.classifier_basename(classifier)
         performances = [row for row in
                         db.execute("SELECT speedup\n"
                                    "FROM classification_results\n"
                                    "WHERE job=? AND classifier=? AND err_fn=?",
                                    (job, classifier, err_fn))]
-        plt.plot(performances, "-", label=text.truncate(classifier, 40))
+        if sort: performances = sorted(performances, reverse=True)
+        plt.plot(performances, "-", label=basename)
 
     plt.title(err_fn)
-    plt.ylabel("Speedup over baseline")
+    plt.ylabel("Speedup")
     plt.xlabel("Test instances")
     plt.axhline(y=1, color="k")
     plt.xlim(xmin=0, xmax=len(performances))
@@ -288,38 +299,82 @@ def xval_err_fn_speedups(db, err_fn, output=None,
 
 
 def xval_classification(db, output=None, job="xval_classifiers", **kwargs):
-    err_fn = db.err_fns[0]
+    err_fns = db.err_fns
+    base_err_fn = err_fns[0]
+    # Get a list of classifiers and result counts.
     query = db.execute(
         "SELECT classifier,Count(*) AS count\n"
         "FROM classification_results\n"
         "WHERE job=? AND err_fn=?\n"
         "GROUP BY classifier",
-        (job,err_fn)
+        (job,base_err_fn)
     )
     results = []
     for classifier,count in query:
+        basename = ml.classifier_basename(classifier)
         correct, invalid = db.execute(
             "SELECT\n"
             "    (SUM(correct) / CAST(? AS FLOAT)) * 100,\n"
             "    (SUM(invalid) / CAST(? AS FLOAT)) * 100\n"
             "FROM classification_results\n"
             "WHERE job=? AND classifier=? AND err_fn=?",
-            (count, count, job, classifier, err_fn)
+            (count, count, job, classifier, base_err_fn)
         ).fetchone()
+        # Get a list of mean speedups for each err_fn.
+        speedups = [
+            db.execute(
+                "SELECT\n"
+                "    GEOMEAN(speedup) * 100,\n"
+                "    CONFERROR(speedup, .95) * 100\n"
+                "FROM classification_results\n"
+                "WHERE job=? AND classifier=? AND err_fn=?",
+                (job, classifier, err_fn)
+            ).fetchone()
+            for err_fn in err_fns
+        ]
 
-        results.append((classifier, correct, invalid))
+        results.append([basename, correct, invalid] + speedups)
 
-    classifiers,correct,invalid = zip(*results)
-    labels = [text.truncate(classifier, 40) for classifier in classifiers]
-    X = np.arange(len(classifiers))
-    plt.bar(X, invalid, width=.4, color=sns.color_palette("Reds", 1),
-            label="Invalid")
-    plt.bar(X + .4, correct, width=.4, color=sns.color_palette("Greens", 1),
-            label="Accuracy")
+    # Zip into lists.
+    labels, correct, invalid = zip(*[
+        (text.truncate(result[0], 40), result[1], result[2])
+        for result in results
+    ])
+
+    X = np.arange(len(labels))
+    # Bar width.
+    width = (.8 / (len(results[0]) - 1))
+
+    plt.bar(X, invalid, width=width,
+            color=sns.color_palette("Reds", 1), label="Invalid")
+    plt.bar(X + width, correct, width=width,
+            color=sns.color_palette("Blues", 1), label="Accuracy")
+    # Colour palette for speedups.
+    colors=sns.color_palette("Greens", len(err_fns))
+    # Plot speedups.
+    for i,err_fn in enumerate(db.err_fns):
+        pairs = [result[3 + i] for result in results]
+        speedups, yerrs = zip(*pairs)
+        plt.bar(X + (2 + i) * width, speedups, width=width,
+                label="Speedup ({})".format(err_fn), color=colors[i])
+
+        # Plot confidence intervals separately so that we can have
+        # full control over formatting.
+        _,caps,_ = plt.errorbar(X + (2.5 + i) * width, speedups, fmt="none",
+                                yerr=yerrs, capsize=3, ecolor="k")
+        for cap in caps:
+            cap.set_color('k')
+            cap.set_markeredgewidth(1)
+
     plt.xlim(xmin=-.2)
-    plt.xticks(X + .4, labels, rotation='vertical')
+    plt.xticks(X + .4, labels)
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
-    plt.title("Classification accuracy")
-    plt.tight_layout()
-    plt.legend()
-    viz.finalise(output)
+    plt.title("Classification results")
+
+    # Add legend *beneath* plot. To do this, we need to pass some
+    # extra arguments to plt.savefig(). See:
+    #
+    # http://jb-blog.readthedocs.org/en/latest/posts/12-matplotlib-legend-outdide-plot.html
+    #
+    art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -0.1), ncol=3)]
+    viz.finalise(output, additional_artists=art, bbox_inches="tight")
