@@ -170,9 +170,23 @@ class TestMath(TestCase):
         self._test((1.528595479208968, 2.4714045207910322),
                    labmath.confinterval([1,2,3], conf=0.5))
 
-    def test_confinterval_t_dist(self):
+    def test_confinterval_normal_dist(self):
         self._test((0.86841426592382809, 3.1315857340761717),
                    labmath.confinterval([1,2,3], normal_threshold=1))
+
+    def test_confinterval_array_mean(self):
+        self._test((1.528595479208968, 2.4714045207910322),
+                   labmath.confinterval([1,2,3], conf=0.5, array_mean=2))
+        expected_ci = (0.528595479209, 1.47140452079)
+        actual_ci = labmath.confinterval([1,2,3], conf=0.5, array_mean=1)
+        self._test(expected_ci[0], actual_ci[0], approximate=True)
+        self._test(expected_ci[0], actual_ci[0], approximate=True)
+
+    def test_confinterval_error_only(self):
+        self._test(0.4714045207910322, labmath.confinterval([1,2,3], conf=.5,
+                                                            error_only=True),
+                   approximate=True)
+
 
 if __name__ == '__main__':
     main()
