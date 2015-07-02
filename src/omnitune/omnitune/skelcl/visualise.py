@@ -16,6 +16,93 @@ from labm8 import math as labmath
 from labm8 import ml
 from labm8 import text
 from labm8 import viz
+from labm8 import prof
+
+
+def num_samples(db, output=None, sample_range=None):
+    def _get_sample_count_range():
+        return db.execute(
+            "SELECT\n"
+            "    MIN(num_samples),\n"
+            "    MAX(num_samples) + 2\n"
+            "FROM runtime_stats"
+        ).fetchone()
+
+    # Range of sample counts.
+    sample_range = sample_range or _get_sample_count_range()
+    sequence = range(*sample_range)
+    # Total number of test cases.
+    num_instances = db.num_rows("runtime_stats")
+
+    # Number of samples vs. ratio of runtime_stats.
+    X,Y = zip(*[
+        (i, db.execute(
+            "SELECT\n"
+            "    (CAST(Count(*) AS FLOAT) / CAST(? AS FLOAT)) * 100\n"
+            "FROM runtime_stats\n"
+            "WHERE num_samples >= ?",
+            (num_instances, i)
+        ).fetchone()[0])
+        for i in sequence
+    ])
+
+    plt.title("Frequency of number of samples counts")
+    plt.xlabel("Number of samples")
+    plt.ylabel("Ratio of instances")
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.plot(X, Y)
+    plt.tight_layout()
+    plt.xlim(*sample_range)
+    viz.finalise(output)
+
+
+def runtimes_variance(db, output=None, min_samples=1, where=None):
+    # Create temporary table of scenarios and params to use, ignoring
+    # those with less than "min_samples" samples.
+    db.execute("CREATE TABLE _temp (\n"
+               "    scenario TEXT,\n"
+               "    params TEXT,\n"
+               "    PRIMARY KEY (scenario,params)\n"
+               ")")
+    query = (
+        "INSERT INTO _temp\n"
+        "SELECT\n"
+        "    scenario,\n"
+        "    params\n"
+        "FROM runtime_stats\n"
+        "WHERE num_samples >= ?"
+    )
+    if where is not None:
+        query += " AND " + where
+    db.execute(query, (min_samples,))
+
+    X,Y = zip(*sorted([
+        row for row in
+        db.execute(
+            "SELECT\n"
+            "    AVG(runtime),\n"
+            "    CONFERROR(runtime, .95) / AVG(runtime)\n"
+            "FROM _temp\n"
+            "LEFT JOIN runtimes\n"
+            "    ON _temp.scenario=runtimes.scenario\n"
+            "       AND _temp.params=runtimes.params\n"
+            "GROUP BY _temp.scenario,_temp.params"
+        )
+    ], key=lambda x: x[0]))
+    db.execute("DROP TABLE _temp")
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(X, Y)
+    ax.set_xscale("log")
+
+    plt.title("Runtime variance as a function of mean runtime")
+    plt.ylabel("Normalised confidence interval")
+    plt.xlabel("Runtime (ms)")
+    plt.xlim(0, X[-1])
+    plt.ylim(ymin=0)
+    plt.tight_layout()
+    viz.finalise(output)
 
 
 def max_wgsizes(db, output=None, trisurf=False, **kwargs):
@@ -186,18 +273,6 @@ def dataset_performance(db, output=None, **kwargs):
     _performance_plot(output, labels, values, **kwargs)
 
 
-def sample_counts(db, output=None, where=None, nbins=25,
-                  title="Sample counts for unique scenarios and params"):
-    data = sorted([t[2] for t in db.num_samples(where=where)])
-    bins = np.linspace(min(data), max(data), nbins)
-    plt.hist(data, bins)
-    plt.title(title)
-    plt.ylabel("Frequency")
-    plt.xlabel("Sample count")
-    plt.tight_layout()
-    viz.finalise(output)
-
-
 def runtimes_range(db, output=None, where=None, nbins=25,
                    iqr=(0.25,0.75), figsize=None,
                    title="Normalised distribution of min and max runtimes"):
@@ -226,24 +301,15 @@ def runtimes_range(db, output=None, where=None, nbins=25,
 def max_speedups(db, output=None):
     Speedups = sorted(db.max_speedups().values(), reverse=True)
     X = np.arange(len(Speedups))
-    plt.plot(X, Speedups, 'b')
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(X, Speedups, 'b')
+    ax.set_yscale("log")
     plt.xlim(xmin=0, xmax=len(X) - 1)
-    plt.ylim(ymin=0, ymax=10)
-    plt.axhline(y=1, color="k")
     plt.title("Max attainable speedups")
     plt.ylabel("Max speedup")
     plt.xlabel("Scenarios")
-    plt.tight_layout()
-    viz.finalise(output)
-
-
-def num_samples(db, output=None, nbins=25):
-    data = sorted([t[2] for t in db.num_samples()])
-    bins = np.linspace(min(data), max(data), nbins)
-    plt.hist(data, bins)
-    plt.title("Sample counts for unique scenarios and params")
-    plt.ylabel("Frequency")
-    plt.xlabel("Number of samples")
     plt.tight_layout()
     viz.finalise(output)
 
