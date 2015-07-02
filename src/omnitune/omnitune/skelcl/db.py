@@ -78,6 +78,15 @@ class GeomeanAggregate(ItemAggregator):
         return labmath.geomean(self.items)
 
 
+class ConfErrorAggregate(ItemAggregator):
+    def step(self, value, conf):
+        super(ConfErrorAggregate, self).step(value)
+        self.conf = conf
+
+    def finalize(self):
+        return labmath.confinterval(self.items, self.conf, error_only=True)
+
+
 class Database(db.Database):
     """
     Persistent database store for Omnitune SkelCL data.
@@ -101,6 +110,7 @@ class Database(db.Database):
         self._select_ratio_max_wgsize = sql_command("select_ratio_max_wgsize")
 
         self.connection.create_aggregate("geomean", 1, GeomeanAggregate)
+        self.connection.create_aggregate("conferror", 2, ConfErrorAggregate)
         self.connection.create_function("merge_min", 2, _merge_min)
         self.connection.create_function("merge_mean", 4, _merge_mean)
         self.connection.create_function("merge_max", 2, _merge_max)
