@@ -64,6 +64,20 @@ def _merge_mean(lhs, nl, rhs, nr):
 def _merge_max(lhs, rhs):
     return max(lhs, rhs)
 
+
+class ItemAggregator(object):
+    def __init__(self):
+        self.items = []
+
+    def step(self, value):
+        self.items.append(value)
+
+
+class GeomeanAggregate(ItemAggregator):
+    def finalize(self):
+        return labmath.geomean(self.items)
+
+
 class Database(db.Database):
     """
     Persistent database store for Omnitune SkelCL data.
@@ -86,6 +100,7 @@ class Database(db.Database):
         self._select_perf_param_legal = sql_command("select_perf_param_legal")
         self._select_ratio_max_wgsize = sql_command("select_ratio_max_wgsize")
 
+        self.connection.create_aggregate("geomean", 1, GeomeanAggregate)
         self.connection.create_function("merge_min", 2, _merge_min)
         self.connection.create_function("merge_mean", 4, _merge_mean)
         self.connection.create_function("merge_max", 2, _merge_max)
