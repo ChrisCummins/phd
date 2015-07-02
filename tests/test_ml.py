@@ -63,6 +63,13 @@ class TestML(TestCase):
         self._test(open(self.csv).read(),
                    open("/tmp/labm8.csvtest").read())
 
+    # classifier_basename()
+    def test_classifier_basename(self):
+        self._test("ZeroR", ml.classifier_basename("weka.classifiers."
+                                                   "rules.ZeroR"))
+        self._test("SMO", ml.classifier_basename("weka.classifiers."
+                                                 "functions.SMO -C 1.0"))
+
     # Classifier
     def test_classifier(self):
         if not ml.MODULE_SUPPORTED: return
@@ -70,6 +77,9 @@ class TestML(TestCase):
 
         # str() representation
         self._test("weka.classifiers.trees.J48 -C 0.25 -M 2", str(j48))
+
+        # basename property
+        self._test("J48", j48.basename)
 
         # Train on dataset
         dataset = ml.Dataset.load(self.arff)

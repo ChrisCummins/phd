@@ -221,10 +221,40 @@ class Dataset(object):
                             **kwargs)
 
 
+def classifier_basename(id):
+    """
+    Return the name of a classifier.
+
+    Example:
+
+        >>> ml.classifier_name("weka.classifiers.rules.ZeroR")
+        "ZeroR"
+
+        >>> ml.classifier_name("weka.classifiers.functions.SMO -C 1.0")
+        "SMO"
+
+    Arguments:
+
+        id (str): The string argument to weka for a classifier.
+
+    Returns:
+
+        str: Classname of classifier, stripped of package and
+          arguments.
+    """
+    components = id.split()
+    classname = components[0]
+    return classname.split(".")[-1]
+
+
 class Classifier(WekaClassifier):
     """
     Object representing a classifier.
     """
+
+    @property
+    def basename(self):
+        return classifier_basename(self.classname)
 
     def classify(self, instance):
         """
