@@ -287,8 +287,7 @@ def xval_err_fn_speedups(db, err_fn, output=None,
     viz.finalise(output)
 
 
-def xval_classifiers_accuracy(db, output=None, job="xval_classifiers",
-                              **kwargs):
+def xval_classification(db, output=None, job="xval_classifiers", **kwargs):
     err_fn = db.err_fns[0]
     query = db.execute(
         "SELECT classifier,Count(*) AS count\n"
@@ -299,51 +298,28 @@ def xval_classifiers_accuracy(db, output=None, job="xval_classifiers",
     )
     results = []
     for classifier,count in query:
-        correct = db.execute(
-            "SELECT (SUM(correct) / CAST(? AS FLOAT)) * 100\n"
+        correct, invalid = db.execute(
+            "SELECT\n"
+            "    (SUM(correct) / CAST(? AS FLOAT)) * 100,\n"
+            "    (SUM(invalid) / CAST(? AS FLOAT)) * 100\n"
             "FROM classification_results\n"
             "WHERE job=? AND classifier=? AND err_fn=?",
-            (count, job, classifier, err_fn)
-        ).fetchone()[0]
+            (count, count, job, classifier, err_fn)
+        ).fetchone()
 
-        results.append((classifier, correct))
+        results.append((classifier, correct, invalid))
 
-    classifiers,correct = zip(*results)
+    classifiers,correct,invalid = zip(*results)
     labels = [text.truncate(classifier, 40) for classifier in classifiers]
     X = np.arange(len(classifiers))
-    plt.bar(X, correct, color="g")
-    plt.xticks(X + .5, labels, rotation='vertical')
+    plt.bar(X, invalid, width=.4, color=sns.color_palette("Reds", 1),
+            label="Invalid")
+    plt.bar(X + .4, correct, width=.4, color=sns.color_palette("Greens", 1),
+            label="Accuracy")
+    plt.xlim(xmin=-.2)
+    plt.xticks(X + .4, labels, rotation='vertical')
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.title("Classification accuracy")
     plt.tight_layout()
-    viz.finalise(output)
-
-def xval_classifiers_invalid(db, output=None, job="xval_classifiers",
-                             **kwargs):
-    err_fn = db.err_fns[0]
-    query = db.execute(
-        "SELECT classifier,Count(*) AS count\n"
-        "FROM classification_results\n"
-        "WHERE job=? AND err_fn=? GROUP BY classifier",
-        (job,err_fn)
-    )
-    results = []
-    for classifier,count in query:
-        incorrect = db.execute(
-            "SELECT (SUM(invalid) / CAST(? AS FLOAT)) * 100\n"
-            "FROM classification_results\n"
-            "WHERE job=? AND classifier=? AND err_fn=?",
-            (count, job, classifier, err_fn)
-        ).fetchone()[0]
-
-        results.append((classifier, incorrect))
-
-    classifiers,incorrect = zip(*results)
-    labels = [text.truncate(classifier, 40) for classifier in classifiers]
-    X = np.arange(len(classifiers))
-    plt.bar(X, incorrect, color="r")
-    plt.xticks(X + .5, labels, rotation='vertical')
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
-    plt.title("Ratio of invalid classifications")
-    plt.tight_layout()
+    plt.legend()
     viz.finalise(output)
