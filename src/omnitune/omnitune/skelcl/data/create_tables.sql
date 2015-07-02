@@ -298,7 +298,7 @@ CREATE TABLE classification_results (
 );
 
 
--- Regression results table
+-- Runtime regression results table
 CREATE TABLE runtime_regression_results (
     job                             TEXT,     -- Key for ml_jobs
     classifier                      TEXT,     -- Key for classifiers.id
@@ -306,6 +306,19 @@ CREATE TABLE runtime_regression_results (
     scenario                        TEXT,     -- Key for scenarios
     actual                          REAL,     -- Actual runtime value
     predicted                       REAL,     -- Predicted runtime value
-    norm_predicted                  REAL,     -- Predicted runtime, normalise to actual runtime
+    norm_predicted                  REAL,     -- Predicted runtime, normalised to actual runtime
+    norm_err                        REAL      -- abs(norm_predicted - 1)
+);
+
+
+-- Speedup regression results table
+CREATE TABLE speedup_regression_results (
+    job                             TEXT,     -- Key for ml_jobs
+    classifier                      TEXT,     -- Key for classifiers.id
+    dataset                         TEXT,     -- Key for datasets.id
+    scenario                        TEXT,     -- Key for scenarios
+    actual                          REAL,     -- Actual speedup value
+    predicted                       REAL,     -- Predicted speedup value
+    norm_predicted                  REAL,     -- Predicted speedup, normalised to actual speedup
     norm_err                        REAL      -- abs(norm_predicted - 1)
 );

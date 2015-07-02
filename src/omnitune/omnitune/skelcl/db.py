@@ -1,6 +1,7 @@
 from __future__ import division
 from __future__ import print_function
 
+import csv
 import subprocess
 import sqlite3 as sql
 
@@ -567,13 +568,25 @@ class Database(db.Database):
                       invalid, performance, speedup))
 
     def add_runtime_regression_result(self, job, classifier, dataset, scenario,
-                                      actual, predicted,
-                                      norm_predicted, norm_error):
+                                      actual, predicted, norm_predicted,
+                                      norm_error):
         job_id = self.ml_job_id(job)
         classifier_id = self.classifier_id(classifier)
         dataset_id = self.ml_dataset_id(dataset)
 
         self.execute("INSERT INTO runtime_regression_results VALUES "
+                     "(?,?,?,?,?,?,?,?)",
+                     (job_id, classifier_id, dataset_id, scenario, actual,
+                      predicted, norm_predicted, norm_error))
+
+    def add_speedup_regression_result(self, job, classifier, dataset, scenario,
+                                      actual, predicted, norm_predicted,
+                                      norm_error):
+        job_id = self.ml_job_id(job)
+        classifier_id = self.classifier_id(classifier)
+        dataset_id = self.ml_dataset_id(dataset)
+
+        self.execute("INSERT INTO speedup_regression_results VALUES "
                      "(?,?,?,?,?,?,?,?)",
                      (job_id, classifier_id, dataset_id, scenario, actual,
                       predicted, norm_predicted, norm_error))
@@ -1430,6 +1443,24 @@ class Database(db.Database):
         fs.mkdir(path)
         fs.cd(path)
         self.runscript("dump_csvs")
+
+        # Derive speedup CSV from runtime stats.
+        one_r = self.one_r()[0]
+        with open("speedup_stats.csv", "wb") as outfile:
+            writer = csv.writer(outfile)
+            with open("runtime_stats.csv", "rb") as infile:
+                reader = csv.reader(infile)
+                header = True
+                for row in reader:
+                    if header:
+                        writer.writerow(row)
+                        header = False
+                        continue
+                    scenario = row[0]
+                    params = row[-2]
+                    row[-1] = self.speedup(scenario, one_r, params)
+                    writer.writerow(row)
+
         fs.cdpop()
 
 
