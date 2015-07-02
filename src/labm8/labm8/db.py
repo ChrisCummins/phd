@@ -96,13 +96,15 @@ def where(*columns):
 
 
 class Database(object):
-    def __init__(self, path, tables={}):
+    def __init__(self, path, tables={}, enable_traces=True):
         """
         Arguments:
             path (str): The path to the database file.
             tables (dictionary of {str: tuple of str}, optional): A diction
               of {name: schema} pairs, where a schema is list of tuple pairs,
               of the form: (name, type).
+           enable_traces(bool, optional): Enable traces for user
+             defined functions and aggregates.
         """
         self.path = fs.path(path)
 
@@ -120,6 +122,12 @@ class Database(object):
 
         # Register exit handler
         atexit.register(self.close)
+
+        # Enable traces for user defined functions and aggregates. See:
+        #
+        # https://docs.python.org/2/library/sqlite3.html#sqlite3.enable_callback_tracebacks
+        if enable_traces:
+            sql.enable_callback_tracebacks(True)
 
     def __repr__(self):
         return self.path
