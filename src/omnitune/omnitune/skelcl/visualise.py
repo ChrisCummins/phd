@@ -317,8 +317,8 @@ def max_speedups(db, output=None):
     viz.finalise(output)
 
 
-def xval_classifier_speedups(db, classifier, output=None, sort=False,
-                             job="xval_classifiers", **kwargs):
+def classifier_speedups(db, classifier, output=None, sort=False,
+                        job="xval_classifiers", **kwargs):
     """
     Plot speedup over the baseline of a classifier for each err_fn.
     """
@@ -342,8 +342,8 @@ def xval_classifier_speedups(db, classifier, output=None, sort=False,
     viz.finalise(output)
 
 
-def xval_err_fn_speedups(db, err_fn, output=None, sort=False,
-                         job="xval_classifiers", **kwargs):
+def err_fn_speedups(db, err_fn, output=None, sort=False,
+                    job="xval_classifiers", **kwargs):
     """
     Plot speedup over the baseline of all classifiers for an err_fn.
     """
@@ -367,7 +367,7 @@ def xval_err_fn_speedups(db, err_fn, output=None, sort=False,
     viz.finalise(output)
 
 
-def xval_classification(db, output=None, job="xval_classifiers", **kwargs):
+def classification(db, output=None, job="xval_classifiers", **kwargs):
     err_fns = db.err_fns
     base_err_fn = err_fns[0]
     # Get a list of classifiers and result counts.

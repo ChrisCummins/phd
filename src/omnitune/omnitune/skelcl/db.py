@@ -184,6 +184,16 @@ class Database(db.Database):
                 self.execute("SELECT DISTINCT name FROM kernel_names")]
 
     @property
+    def real_kernels(self):
+        return [row[0] for row in
+                self.execute("SELECT id FROM kernel_names WHERE synthetic=1")]
+
+    @property
+    def synthetic_kernels(self):
+        return [row[0] for row in
+                self.execute("SELECT id FROM kernel_names WHERE synthetic=0")]
+
+    @property
     def num_scenarios(self):
         return self.execute("SELECT Count(*) from scenarios").fetchone()[0]
 
@@ -191,6 +201,18 @@ class Database(db.Database):
     def scenarios(self):
         return [row[0] for row in
                 self.execute("SELECT id FROM scenarios")]
+
+    @property
+    def real_scenarios(self):
+        return [row[0] for row in
+                self.execute("SELECT id FROM scenarios WHERE kernel IN"
+                             "(SELECT id FROM kernel_names WHERE synthetic=1)")]
+
+    @property
+    def synthetic_scenarios(self):
+        return [row[0] for row in
+                self.execute("SELECT id FROM scenarios WHERE kernel IN"
+                             "(SELECT id FROM kernel_names WHERE synthetic=0)")]
 
     @property
     def scenario_properties(self, where=None):
