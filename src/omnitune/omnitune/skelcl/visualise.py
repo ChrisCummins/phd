@@ -59,6 +59,9 @@ def num_samples(db, output=None, sample_range=None):
 def runtimes_variance(db, output=None, min_samples=1, where=None):
     # Create temporary table of scenarios and params to use, ignoring
     # those with less than "min_samples" samples.
+    if "_temp" in db.tables:
+        db.drop_table("_temp")
+
     db.execute("CREATE TABLE _temp (\n"
                "    scenario TEXT,\n"
                "    params TEXT,\n"
