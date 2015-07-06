@@ -304,6 +304,7 @@ CREATE TABLE runtime_regression_results (
     classifier                      TEXT,     -- Key for classifiers.id
     dataset                         TEXT,     -- Key for datasets.id
     scenario                        TEXT,     -- Key for scenarios
+    params                          TEXT,     -- Key for params
     actual                          REAL,     -- Actual runtime value
     predicted                       REAL,     -- Predicted runtime value
     norm_predicted                  REAL,     -- Predicted runtime, normalised to actual runtime
@@ -317,6 +318,7 @@ CREATE TABLE speedup_regression_results (
     classifier                      TEXT,     -- Key for classifiers.id
     dataset                         TEXT,     -- Key for datasets.id
     scenario                        TEXT,     -- Key for scenarios
+    params                          TEXT,     -- Key for params
     actual                          REAL,     -- Actual speedup value
     predicted                       REAL,     -- Predicted speedup value
     norm_predicted                  REAL,     -- Predicted speedup, normalised to actual speedup

@@ -600,28 +600,28 @@ class Database(db.Database):
                       invalid, performance, speedup))
 
     def add_runtime_regression_result(self, job, classifier, dataset, scenario,
-                                      actual, predicted, norm_predicted,
+                                      params, actual, predicted, norm_predicted,
                                       norm_error):
         job_id = self.ml_job_id(job)
         classifier_id = self.classifier_id(classifier)
         dataset_id = self.ml_dataset_id(dataset)
 
         self.execute("INSERT INTO runtime_regression_results VALUES "
-                     "(?,?,?,?,?,?,?,?)",
-                     (job_id, classifier_id, dataset_id, scenario, actual,
-                      predicted, norm_predicted, norm_error))
+                     "(?,?,?,?,?,?,?,?,?)",
+                     (job_id, classifier_id, dataset_id, scenario, params,
+                      actual, predicted, norm_predicted, norm_error))
 
     def add_speedup_regression_result(self, job, classifier, dataset, scenario,
-                                      actual, predicted, norm_predicted,
+                                      params, actual, predicted, norm_predicted,
                                       norm_error):
         job_id = self.ml_job_id(job)
         classifier_id = self.classifier_id(classifier)
         dataset_id = self.ml_dataset_id(dataset)
 
         self.execute("INSERT INTO speedup_regression_results VALUES "
-                     "(?,?,?,?,?,?,?,?)",
-                     (job_id, classifier_id, dataset_id, scenario, actual,
-                      predicted, norm_predicted, norm_error))
+                     "(?,?,?,?,?,?,?,?,?)",
+                     (job_id, classifier_id, dataset_id, scenario, params,
+                      actual, predicted, norm_predicted, norm_error))
 
     def ml_job_id(self, name):
         """
