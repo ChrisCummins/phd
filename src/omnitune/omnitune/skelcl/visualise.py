@@ -174,7 +174,7 @@ def performance_vs_coverage(db, output=None, figsize=None,
     plt.ylim(ymin=0, ymax=100)
     plt.title(title)
     plt.ylabel("Performance / Legality")
-    plt.xlabel("Parameters")
+    plt.xlabel("Parameters (sorted by descending Legality)")
     plt.tight_layout()
     plt.legend(frameon=True)
     if figsize is not None:
@@ -343,7 +343,7 @@ def classifier_speedups(db, classifier, output=None, sort=False,
 
 
 def err_fn_speedups(db, err_fn, output=None, sort=False,
-                    job="xval_classifiers", **kwargs):
+                    job="xval", **kwargs):
     """
     Plot speedup over the baseline of all classifiers for an err_fn.
     """
@@ -367,7 +367,7 @@ def err_fn_speedups(db, err_fn, output=None, sort=False,
     viz.finalise(output)
 
 
-def classification(db, output=None, job="xval_classifiers", **kwargs):
+def classification(db, output=None, job="xval", title=None, **kwargs):
     err_fns = db.err_fns
     base_err_fn = err_fns[0]
     # Get a list of classifiers and result counts.
@@ -438,7 +438,10 @@ def classification(db, output=None, job="xval_classifiers", **kwargs):
     plt.xlim(xmin=-.2)
     plt.xticks(X + .4, labels)
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
-    plt.title("Classification results")
+
+    if title is None:
+        title = "Classification results for " + job
+    plt.title(title)
 
     # Add legend *beneath* plot. To do this, we need to pass some
     # extra arguments to plt.savefig(). See:
@@ -449,16 +452,18 @@ def classification(db, output=None, job="xval_classifiers", **kwargs):
     viz.finalise(output, additional_artists=art, bbox_inches="tight")
 
 
-def xval_runtime_regression(db, output=None, job="xval_runtimes", **kwargs):
+def runtime_regression(db, output=None, job="xval", title=None, **kwargs):
     """
     Plot accuracy of a classifier at predicted runtime.
     """
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    for classifier in db.regression_classifiers:
+    colors = sns.color_palette()
+
+    for i,classifier in enumerate(db.regression_classifiers):
         basename = ml.classifier_basename(classifier)
-        actual, norm_predicted = zip(*sorted([
+        actual, predicted = zip(*sorted([
             row for row in
             db.execute(
                 "SELECT\n"
@@ -470,13 +475,55 @@ def xval_runtime_regression(db, output=None, job="xval_runtimes", **kwargs):
             )
         ], key=lambda x: x[0], reverse=True))
 
-        ax.plot(norm_predicted, label=basename)
-        # TODO: Once we have all regression results, we only need to
-        # plot "actual" once.
-        ax.plot(actual, label=basename + " - Actual")
+        if basename == "ZeroR":
+            ax.plot(predicted, label=basename, color=colors[i - 1])
+        else:
+            ax.scatter(np.arange(len(predicted)), predicted, label=basename,
+                       color=colors[i - 1])
+
+    ax.plot(actual, label="Actual", color=colors[i])
     ax.set_yscale("log")
+    plt.xlim(0, len(actual))
     plt.legend()
-    plt.title("Runtime")
+    if title is None:
+        title = "Runtime regression for " + job
+    plt.title(title)
     plt.xlabel("Test instances (sorted by descending runtime)")
+    plt.ylabel("Runtime (ms, log)")
+    viz.finalise(output)
+
+
+def speedup_regression(db, output=None, job="xval", title=None, **kwargs):
+    """
+    Plot accuracy of a classifier at predicted runtime.
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    for classifier in db.regression_classifiers:
+        basename = ml.classifier_basename(classifier)
+        actual, predicted = zip(*sorted([
+            row for row in
+            db.execute(
+                "SELECT\n"
+                "    actual,\n"
+                "    predicted\n"
+                "FROM speedup_regression_results\n"
+                "WHERE job=? AND classifier=?",
+                (job, classifier)
+            )
+        ], key=lambda x: x[0], reverse=True))
+
+        ax.scatter(np.arange(len(predicted)), predicted, label=basename,
+                   marker='x', edgecolors='none')
+
+    ax.plot(actual, label="Actual")
+    ax.set_yscale("log")
+    plt.xlim(0, len(actual))
+    plt.legend()
+    if title is None:
+        title = "Speedup regression for " + job
+    plt.title(title)
+    plt.xlabel("Test instances (sorted by descending speedup)")
     plt.ylabel("Runtime (ms)")
     viz.finalise(output)
