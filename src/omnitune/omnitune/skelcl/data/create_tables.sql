@@ -312,6 +312,20 @@ CREATE TABLE runtime_regression_results (
 );
 
 
+-- Table for results of classification using runtime regression.
+CREATE TABLE runtime_classification_results (
+    job                             TEXT,     -- Key for ml_jobs
+    classifier                      TEXT,     -- Key for classifiers.id
+    scenario                        TEXT,     -- Key for scenarios
+    actual                          TEXT,     -- Oracle params value, key for params
+    predicted                       TEXT,     -- Predicted params value, key for params
+    baseline                        TEXT,     -- Baseline params value, key for params
+    correct                         INTEGER,  -- 1 if prediction is correct, else 0
+    performance                     REAL,     -- Performance relative to oracle, 0 <= performance <= 1
+    speedup                         REAL      -- Speedup over baseline, 0 <= speedup
+);
+
+
 -- Speedup regression results table
 CREATE TABLE speedup_regression_results (
     job                             TEXT,     -- Key for ml_jobs
@@ -323,4 +337,17 @@ CREATE TABLE speedup_regression_results (
     predicted                       REAL,     -- Predicted speedup value
     norm_predicted                  REAL,     -- Predicted speedup, normalised to actual speedup
     norm_err                        REAL      -- abs(norm_predicted - 1)
+);
+
+-- Table for results of classification using speedup regression.
+CREATE TABLE speedup_classification_results (
+    job                             TEXT,     -- Key for ml_jobs
+    classifier                      TEXT,     -- Key for classifiers.id
+    scenario                        TEXT,     -- Key for scenarios
+    actual                          TEXT,     -- Oracle params value, key for params
+    predicted                       TEXT,     -- Predicted params value, key for params
+    baseline                        TEXT,     -- Baseline params value, key for params
+    correct                         INTEGER,  -- 1 if prediction is correct, else 0
+    performance                     REAL,     -- Performance relative to oracle, 0 <= performance <= 1
+    speedup                         REAL      -- Speedup over baseline, 0 <= speedup
 );

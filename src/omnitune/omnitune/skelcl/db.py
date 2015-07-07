@@ -573,6 +573,8 @@ class Database(db.Database):
                                   scenario, actual, predicted, baseline,
                                   correct, invalid, performance, speedup):
         """
+        Add result of using a classifier to predict optimal workgroup size.
+
         Arguments:
 
             job (str): ML job name.
@@ -602,6 +604,21 @@ class Database(db.Database):
     def add_runtime_regression_result(self, job, classifier, dataset, scenario,
                                       params, actual, predicted, norm_predicted,
                                       norm_error):
+        """
+        Add result of using a regressor to predict stencil runtime.
+
+        Arguments:
+
+            job (str): ML job name.
+            classifier (ml.Classifier): Classifier.
+            dataset (WekaInstances): Classifier training data.
+            scenario (str): Scenario ID.
+            params (str): Parameters ID.
+            actual (float): Actual measured mean runtime.
+            predicted (float): Predicted mean runtime.
+            norm_predicted (float): Predicted runtime, normalised against actual.
+            norm_error (float): abs(norm_predicted - 1)
+        """
         job_id = self.ml_job_id(job)
         classifier_id = self.classifier_id(classifier)
         dataset_id = self.ml_dataset_id(dataset)
@@ -611,9 +628,51 @@ class Database(db.Database):
                      (job_id, classifier_id, dataset_id, scenario, params,
                       actual, predicted, norm_predicted, norm_error))
 
+    def add_runtime_classification_result(self, job, classifier, scenario,
+                                          actual, predicted, baseline,
+                                          correct, performance, speedup):
+        """
+        Add result of using a runtime regressor to predict optimal
+        workgroup size.
+
+        Arguments:
+
+            job (str): ML job name.
+            classifier (ml.Classifier): Classifier.
+            scenario (str): Scenario ID.
+            actual (str): Params ID of oracle.
+            predicted (str): Params ID of classifier prediction.
+            baseline (str): Params ID of baseline for performance baseline.
+            correct (int): 1 if prediction is correct.
+            performance (float): Performance relative to oracle of prediction.
+            speedup (float): Speedup over performance baseline.
+        """
+        job_id = self.ml_job_id(job)
+        classifier_id = self.classifier_id(classifier)
+
+        self.execute("INSERT INTO runtime_classification_results VALUES "
+                     "(?,?,?,?,?,?,?,?,?)",
+                     (job_id, classifier_id, scenario, actual, predicted,
+                      baseline, correct, performance, speedup))
+
     def add_speedup_regression_result(self, job, classifier, dataset, scenario,
                                       params, actual, predicted, norm_predicted,
                                       norm_error):
+        """
+        Add result of using a regressor to predict relative performance stencil.
+
+        Arguments:
+
+            job (str): ML job name.
+            classifier (ml.Classifier): Classifier.
+            dataset (WekaInstances): Classifier training data.
+            scenario (str): Scenario ID.
+            params (str): Parameters ID.
+            actual (float): Actual measured speedup.
+            predicted (float): Predicted mean speedup.
+            norm_predicted (float): Predicted speedup, normalised against actual.
+            norm_error (float): abs(norm_predicted - 1)
+        """
         job_id = self.ml_job_id(job)
         classifier_id = self.classifier_id(classifier)
         dataset_id = self.ml_dataset_id(dataset)
@@ -622,6 +681,33 @@ class Database(db.Database):
                      "(?,?,?,?,?,?,?,?,?)",
                      (job_id, classifier_id, dataset_id, scenario, params,
                       actual, predicted, norm_predicted, norm_error))
+
+    def add_speedup_classification_result(self, job, classifier,
+                                          scenario, actual, predicted, baseline,
+                                          correct, performance, speedup):
+        """
+        Add result of using a speedup regressor to predict optimal
+        workgroup size.
+
+        Arguments:
+
+            job (str): ML job name.
+            classifier (ml.Classifier): Classifier.
+            scenario (str): Scenario ID.
+            actual (str): Params ID of oracle.
+            predicted (str): Params ID of classifier prediction.
+            baseline (str): Params ID of baseline for performance baseline.
+            correct (int): 1 if prediction is correct.
+            performance (float): Performance relative to oracle of prediction.
+            speedup (float): Speedup over performance baseline.
+        """
+        job_id = self.ml_job_id(job)
+        classifier_id = self.classifier_id(classifier)
+
+        self.execute("INSERT INTO speedup_classification_results VALUES "
+                     "(?,?,?,?,?,?,?,?,?)",
+                     (job_id, classifier_id, scenario, actual, predicted,
+                      baseline, correct, performance, speedup))
 
     def ml_job_id(self, name):
         """
@@ -996,6 +1082,24 @@ class Database(db.Database):
         """
         return self.execute("SELECT Count(*) FROM runtime_stats WHERE "
                             "scenario=?", (scenario,)).fetchone()[0]
+
+    def scenarios_for_device(self, device):
+        """
+        Return the scenario IDs for a given device.
+
+        Arguments:
+
+            device (str): Device ID.
+
+        Returns:
+
+            list of str: List of scenario IDs.
+        """
+        return [
+            row[0] for row in
+            self.execute("SELECT id FROM scenarios WHERE device=?",
+                         (device,))
+        ]
 
     def num_params_for_scenarios(self):
         """
@@ -1462,6 +1566,28 @@ class Database(db.Database):
 
         # Return the "best" param
         return best_wgsize, best_count / num_oracles, best_perf
+
+    def runtime_predictions(self, scenario, job):
+        return [
+            row for row in
+            self.execute(
+                "SELECT params,predicted "
+                "FROM runtime_regression_results "
+                "WHERE job=? AND scenario=?",
+                (job, scenario)
+            )
+        ]
+
+    def speedup_predictions(self, scenario, job):
+        return [
+            row for row in
+            self.execute(
+                "SELECT params,predicted "
+                "FROM speedup_regression_results "
+                "WHERE job=? AND scenario=?",
+                (job, scenario)
+            )
+        ]
 
     def dump_csvs(self, path="."):
         """
