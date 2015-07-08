@@ -117,13 +117,7 @@ class ParamSpace(object):
 
         plt.tight_layout()
         plt.gcf().set_size_inches(*figsize, dpi=300)
-
-        if output is None:
-            plt.show()
-        else:
-            plt.savefig(output)
-        plt.close()
-
+        viz.finalise(output)
 
     @staticmethod
     def from_dict(data, wg_c=None, wg_r=None):
