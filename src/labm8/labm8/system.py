@@ -211,10 +211,10 @@ def echo(*args, **kwargs):
 
     if append:
         with open(path, "a") as file:
-            print(*msg, file=file)
+            print(*msg, file=file, **kwargs)
     else:
         with open(fs.path(path), "w") as file:
-            print(*msg, file=file)
+            print(*msg, file=file, **kwargs)
 
 
 def which(program, path=os.environ["PATH"].split(os.pathsep)):

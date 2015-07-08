@@ -91,6 +91,10 @@ class TestSystem(TestCase):
         system.echo("bar", "/tmp/labm8.tmp", append=True)
         self._test(["foo", "bar"], fs.read("/tmp/labm8.tmp"))
 
+    def test_echo_kwargs(self):
+        system.echo("foo", "/tmp/labm8.tmp", end="_")
+        self._test(["foo_"], fs.read("/tmp/labm8.tmp"))
+
     # sed()
     def test_sed(self):
         system.echo("Hello, world!", "/tmp/labm8.tmp")
