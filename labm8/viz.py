@@ -21,6 +21,13 @@ import labm8 as lab
 from labm8 import io
 
 
+class Error(Exception):
+    """
+    Visualisation module base error class.
+    """
+    pass
+
+
 def finalise(output=None, **kwargs):
     """
     Finalise a plot.
