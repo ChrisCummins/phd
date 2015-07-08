@@ -21,8 +21,8 @@ class ParamSpace(object):
             wg_c (list of int): List of workgroup column values.
             wg_r (list of int): List of workgroup row values.
         """
-        self.c = wg_c
         self.r = wg_r
+        self.c = wg_c
         self.matrix = np.zeros(shape=(len(wg_r), len(wg_c)))
 
     def wgsize2indexes(self, wgsize):
@@ -102,10 +102,12 @@ class ParamSpace(object):
         ax.plot_trisurf(X, Y, Z, cmap=cm.jet, **kwargs)
 
         # Set X axis labels
+        ax.set_xticks(np.arange(len(self.c)))
         ax.set_xticklabels(self.c)
         ax.set_xlabel("Columns")
 
         # Set Y axis labels
+        ax.set_yticks(np.arange(len(self.r)))
         ax.set_yticklabels(self.r)
         ax.set_ylabel("Rows")
 
@@ -113,18 +115,86 @@ class ParamSpace(object):
         if zlabel is not None:
             ax.set_zlabel(zlabel)
         if zticklabels is not None:
-            ax.set_zticklabels(zlabel)
+            ax.set_zticks(np.arange(len(zticklabels)))
+            ax.set_zticklabels(zticklabels)
 
         # Set plot rotation.
-        if rotation is not None:
-            ax.view_init(azim=rotation)
-
-        if title:
-            plt.title(title)
-
+        if rotation is not None: ax.view_init(azim=rotation)
+        # Set plot title.
+        if title: plt.title(title)
         plt.tight_layout()
         plt.gcf().set_size_inches(*figsize, dpi=300)
         viz.finalise(output)
+
+    def bar3d(self, output=None, title=None, figsize=(5,4), zlabel=None,
+              zticklabels=None, rotation=None, **kwargs):
+        import matplotlib.pyplot as plt
+        import matplotlib.cm as cm
+        from mpl_toolkits.mplot3d import Axes3D
+
+        num_vals = self.matrix.shape[0] * self.matrix.shape[1]
+        X = np.zeros((num_vals,))
+        Y = np.zeros((num_vals,))
+        Z = np.zeros((num_vals,))
+        dX = np.ones((num_vals,))
+        dY = np.ones((num_vals,))
+        dZ = np.zeros((num_vals,))
+
+        # Iterate over every point in space.
+        for j,i in product(range(self.matrix.shape[0]),
+                           range(self.matrix.shape[1])):
+            # Convert point to list index.
+            index = j * self.matrix.shape[1] + i
+            X[index] = i
+            Y[index] = j
+            dZ[index] = self.matrix[j][i]
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.bar3d(X, Y, Z, dX, dY, dZ, **kwargs)
+
+        # Set X axis labels
+        ax.set_xticks(np.arange(len(self.c)))
+        ax.set_xticklabels(self.c)
+        ax.set_xlabel("Columns")
+
+        # Set Y axis labels
+        ax.set_yticks(np.arange(len(self.r)))
+        ax.set_yticklabels(self.r)
+        ax.set_ylabel("Rows")
+
+        # Set Z axis labels
+        if zlabel is not None:
+            ax.set_zlabel(zlabel)
+        if zticklabels is not None:
+            ax.set_zticks(np.arange(len(zticklabels)))
+            ax.set_zticklabels(zticklabels)
+
+        # Set plot rotation.
+        if rotation is not None: ax.view_init(azim=rotation)
+        # Set plot title.
+        if title: plt.title(title)
+        plt.tight_layout()
+        plt.gcf().set_size_inches(*figsize, dpi=300)
+        viz.finalise(output)
+
+    def reshape(self, max_c=0, max_r=0, min_c=0, min_r=0):
+        if max_c < 1:
+            max_c = len(self.c) + max_c
+        if max_r < 1:
+            max_r = len(self.r) + max_r
+
+        new_r = self.r[min_r:max_r]
+        new_c = self.c[min_c:max_c]
+        new_matrix = np.zeros(shape=(len(new_r), len(new_c)))
+
+        for j in range(min_r, max_r):
+            for i in range(min_c, max_c):
+                new_matrix[j][i] = self.matrix[j - min_r][i - min_c]
+
+        self.c = new_c
+        self.r = new_r
+        self.matrix = new_matrix
 
     @staticmethod
     def from_dict(data, wg_c=None, wg_r=None):

@@ -145,13 +145,22 @@ def oracle_wgsizes(db, output=None, where=None, trisurf=False, **kwargs):
         space.heatmap(output=output, **kwargs)
 
 
-def scenario_performance(db, scenario, output=None, title=None, trisurf=False):
+def scenario_performance(db, scenario, output=None, title=None, type="heatmap",
+                         reshape_args=None):
     space = _space.ParamSpace.from_dict(db.perf_scenario(scenario))
-    if trisurf:
+    if reshape_args is not None:
+        space.reshape(**reshape_args)
+    if type == "heatmap":
+        space.heatmap(output=output, title=title)
+    elif type == "trisurf":
         space.trisurf(output=output, title=title, zlabel="Performance",
                       rotation=45)
+    elif type == "bar3d":
+        space.bar3d(output=output, title=title, zlabel="Performance",
+                    rotation=45)
     else:
-        space.heatmap(output=output, title=title)
+        raise viz.Error("Unrecognised visualisation type '{}'".format(type))
+
 
 
 def performance_vs_coverage(db, output=None, figsize=None,
