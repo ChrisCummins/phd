@@ -1567,6 +1567,22 @@ class Database(db.Database):
         # Return the "best" param
         return best_wgsize, best_count / num_oracles, best_perf
 
+    def oracle_speedups(self):
+        """
+        Return speedups over the OneR for all parameters.
+
+        Returns:
+
+            dict of {str: float}: Where the keys are scenario IDs, and
+              the keys are speedups of the oracle params over the
+              OneR.
+        """
+        one_r = self.one_r()[0]
+        return {
+            scenario: self.speedup(scenario, one_r, self.oracle_param(scenario))
+            for scenario in self.scenarios
+        }
+
     def runtime_predictions(self, scenario, job):
         return [
             row for row in

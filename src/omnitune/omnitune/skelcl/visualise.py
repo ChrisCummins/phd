@@ -51,7 +51,6 @@ def num_samples(db, output=None, sample_range=None):
     plt.ylabel("Ratio of instances")
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.plot(X, Y)
-    plt.tight_layout()
     plt.xlim(*sample_range)
     viz.finalise(output)
 
@@ -104,7 +103,6 @@ def runtimes_variance(db, output=None, min_samples=1, where=None):
     plt.xlabel("Runtime (ms)")
     plt.xlim(0, X[-1])
     plt.ylim(ymin=0)
-    plt.tight_layout()
     viz.finalise(output)
 
 
@@ -188,11 +186,23 @@ def performance_vs_coverage(db, output=None, figsize=None,
     plt.title(title)
     plt.ylabel("Performance / Legality")
     plt.xlabel("Parameters (sorted by descending Legality)")
-    plt.tight_layout()
     plt.legend(frameon=True)
-    if figsize is not None:
-        plt.gcf().set_size_inches(*figsize, dpi=300)
-    viz.finalise(output)
+    viz.finalise(output, figsize=figsize)
+
+
+def oracle_speedups(db, output=None,
+                    title="Attainable performance over baseline", figsize=None):
+    data = db.oracle_speedups().values()
+    #Speedups = sorted(data, reverse=True)
+    Speedups = data
+    X = np.arange(len(Speedups))
+
+    plt.plot(X, Speedups)
+    plt.xlim(0, len(X) - 1)
+    plt.title(title)
+    plt.xlabel("Scenarios")
+    plt.ylabel("Speedup")
+    viz.finalise(output, figsize=figsize)
 
 
 def num_params_vs_accuracy(db, output=None, where=None, figsize=None,
@@ -215,11 +225,8 @@ def num_params_vs_accuracy(db, output=None, where=None, figsize=None,
     plt.title(title)
     plt.ylabel("Accuracy")
     plt.xlabel("Number of distinct workgroup sizes")
-    plt.tight_layout()
     plt.legend(frameon=True)
-    if figsize is not None:
-        plt.gcf().set_size_inches(*figsize, dpi=300)
-    viz.finalise(output)
+    viz.finalise(output, figsize=figsize)
 
 
 def performance_vs_max_wgsize(db, output=None, figsize=None,
@@ -245,11 +252,8 @@ def performance_vs_max_wgsize(db, output=None, figsize=None,
     plt.title(title)
     plt.ylabel("Performance / Size")
     plt.xlabel("Scenarios, Parameters")
-    plt.tight_layout()
     plt.legend(frameon=True)
-    if figsize is not None:
-        plt.gcf().set_size_inches(*figsize, dpi=300)
-    viz.finalise(output)
+    viz.finalise(output, figsize=figsize)
 
 
 def _performance_plot(output, labels, values, **kwargs):
@@ -260,9 +264,8 @@ def _performance_plot(output, labels, values, **kwargs):
     plt.ylim(ymin=0, ymax=1)
     if "title" in kwargs:
         plt.title(kwargs["title"])
-    if "figsize" in kwargs:
-        plt.gcf().set_size_inches(*kwargs["figsize"], dpi=300)
-    viz.finalise(output)
+    figsize = kwargs.pop("figsize", None)
+    viz.finalise(output, figsize=figsize)
 
 
 def kernel_performance(db, output=None, **kwargs):
@@ -308,26 +311,22 @@ def runtimes_range(db, output=None, where=None, nbins=25,
     plt.ylabel("Frequency")
     plt.xlabel("Runtime (normalised to mean)")
     plt.legend(frameon=True)
-    plt.tight_layout()
-    if figsize is not None:
-        plt.gcf().set_size_inches(*figsize, dpi=300)
-    viz.finalise(output)
+    viz.finalise(output, figsize=figsize)
 
 
-def max_speedups(db, output=None):
-    Speedups = sorted(db.max_speedups().values(), reverse=True)
+def max_speedups(db, output=None, figsize=None,
+                 title="Max attainable speedups"):
+    Speedups = db.max_speedups().values()
     X = np.arange(len(Speedups))
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.plot(X, Speedups, 'b')
-    ax.set_yscale("log")
+    ax.plot(X, Speedups)
     plt.xlim(xmin=0, xmax=len(X) - 1)
-    plt.title("Max attainable speedups")
+    plt.title(title)
     plt.ylabel("Max speedup")
     plt.xlabel("Scenarios")
-    plt.tight_layout()
-    viz.finalise(output)
+    viz.finalise(output, figsize=figsize)
 
 
 def classifier_speedups(db, classifier, output=None, sort=False,
@@ -351,7 +350,6 @@ def classifier_speedups(db, classifier, output=None, sort=False,
     plt.axhline(y=1, color="k")
     plt.xlim(xmin=0, xmax=len(performances))
     plt.legend()
-    plt.tight_layout()
     viz.finalise(output)
 
 
@@ -376,7 +374,6 @@ def err_fn_speedups(db, err_fn, output=None, sort=False,
     plt.axhline(y=1, color="k")
     plt.xlim(xmin=0, xmax=len(performances))
     plt.legend()
-    plt.tight_layout()
     viz.finalise(output)
 
 
