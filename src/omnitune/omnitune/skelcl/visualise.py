@@ -145,9 +145,13 @@ def oracle_wgsizes(db, output=None, where=None, trisurf=False, **kwargs):
         space.heatmap(output=output, **kwargs)
 
 
-def scenario_performance(db, scenario, output=None, title=None):
+def scenario_performance(db, scenario, output=None, title=None, trisurf=False):
     space = _space.ParamSpace.from_dict(db.perf_scenario(scenario))
-    space.heatmap(output=output, title=title)
+    if trisurf:
+        space.trisurf(output=output, title=title, zlabel="Performance",
+                      rotation=45)
+    else:
+        space.heatmap(output=output, title=title)
 
 
 def performance_vs_coverage(db, output=None, figsize=None,

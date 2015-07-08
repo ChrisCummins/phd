@@ -77,16 +77,16 @@ class ParamSpace(object):
 
         viz.finalise(output)
 
-    def trisurf(self, output=None, title=None, figsize=(5,4),
-                zlabel=None, zticklabels=None, **kwargs):
+    def trisurf(self, output=None, title=None, figsize=(5,4), zlabel=None,
+                zticklabels=None, rotation=None, **kwargs):
         import matplotlib.pyplot as plt
         import matplotlib.cm as cm
         from mpl_toolkits.mplot3d import Axes3D
 
         num_vals = self.matrix.shape[0] * self.matrix.shape[1]
-        X = [0] * num_vals
-        Y = [0] * num_vals
-        Z = [0] * num_vals
+        X = np.zeros((num_vals,))
+        Y = np.zeros((num_vals,))
+        Z = np.zeros((num_vals,))
 
         # Iterate over every point in space.
         for j,i in product(range(self.matrix.shape[0]),
@@ -114,6 +114,13 @@ class ParamSpace(object):
             ax.set_zlabel(zlabel)
         if zticklabels is not None:
             ax.set_zticklabels(zlabel)
+
+        # Set plot rotation.
+        if rotation is not None:
+            ax.view_init(azim=rotation)
+
+        if title:
+            plt.title(title)
 
         plt.tight_layout()
         plt.gcf().set_size_inches(*figsize, dpi=300)
