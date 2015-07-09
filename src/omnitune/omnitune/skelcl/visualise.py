@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
 from __future__ import division
+from collections import defaultdict
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,6 +9,7 @@ import seaborn as sns
 from matplotlib.ticker import FormatStrFormatter
 
 from . import space as _space
+from . import unhash_params
 
 import labm8 as lab
 from labm8 import fs
@@ -184,10 +186,9 @@ def performance_vs_coverage(db, output=None, figsize=None,
     plt.xlim(xmin=0, xmax=len(X) - 1)
     plt.ylim(ymin=0, ymax=100)
     plt.title(title)
-    plt.ylabel("Performance / Legality")
-    plt.xlabel("Parameters (sorted by descending Legality)")
-    plt.legend(frameon=True)
-    viz.finalise(output, figsize=figsize)
+    plt.xlabel("Parameters (sorted by legality and performance)")
+    art = [plt.legend(loc=9, bbox_to_anchor=(0.5, 1.2), ncol=3)]
+    viz.finalise(output, figsize=figsize, additional_artists=art)
 
 
 def oracle_speedups(db, output=None,
@@ -229,29 +230,78 @@ def num_params_vs_accuracy(db, output=None, where=None, figsize=None,
     viz.finalise(output, figsize=figsize)
 
 
-def performance_vs_max_wgsize(db, output=None, figsize=None,
+def _performance_size(data, output, title, xlabel, **kwargs):
+    # Calculate moving average.
+    # FIXME: Plot moving averages.
+    # avgs = defaultdict(list)
+    # for p,s in data:
+    #     avgs[s].append(p)
+    # for s,p in avgs.items():
+    #     avgs[s] = labmath.mean(p)
+    # avgs = sorted(avgs.items())
+
+    Y, X = zip(*data)
+    # aX, aY = zip(*avgs)
+
+    plt.scatter(X, Y)
+    # plt.plot(aX, aY, color="r")
+    plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.xlim(0, max(X) + 2)
+    plt.ylim(0, max(Y) + 2)
+    plt.title(title)
+    plt.ylabel("Performance (% oracle)")
+    plt.xlabel(xlabel)
+    viz.finalise(output, **kwargs)
+
+
+def performance_vs_max_wgsize(db, output=None,
                               title=("Workgroup size performance "
-                                     "vs. maximum workgroup size")):
-    data = sorted([
+                                     "vs. maximum workgroup size"),
+                              **kwargs):
+    data = [
         (
             db.perf(scenario, param) * 100,
             db.ratio_max_wgsize(scenario, param) * 100
         )
         for scenario, param in db.scenario_params
-    ], reverse=True)
-    X = np.arange(len(data))
+    ]
 
-    Performance, Ratios = zip(*data)
-    plt.scatter(Performance, Ratios)
-    plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%d%%'))
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
-    plt.xlim(0, max(Performance))
-    plt.ylim(0, max(Ratios))
-    plt.title(title)
-    plt.ylabel("Performance (% oracle)")
-    plt.xlabel("Workgroup size (% max)")
-    plt.legend(frameon=True)
-    viz.finalise(output, figsize=figsize)
+    _performance_size(data, output, title, "Workgroup size (% max)", **kwargs)
+
+
+def performance_vs_wg_c(db, output=None,
+                        title=("Workgroup size performance "
+                               "vs. number of columns"),
+                        **kwargs):
+    max_wg_c = db.wg_c[-1]
+    data = [
+        (
+            db.perf(scenario, param) * 100,
+            (unhash_params(param)[0] / max_wg_c) * 100,
+        )
+        for scenario, param in db.scenario_params
+    ]
+
+    _performance_size(data, output, title, "Workgroup columns (% max)",
+                      **kwargs)
+
+
+def performance_vs_wg_r(db, output=None,
+                        title=("Workgroup size performance "
+                               "vs. number of rows"),
+                        **kwargs):
+    max_wg_r = db.wg_r[-1]
+    data = [
+        (
+            db.perf(scenario, param) * 100,
+            (unhash_params(param)[1] / max_wg_r) * 100,
+        )
+        for scenario, param in db.scenario_params
+    ]
+
+    _performance_size(data, output, title, "Workgroup rows (% max)",
+                      **kwargs)
 
 
 def _performance_plot(output, labels, values, **kwargs):
@@ -260,8 +310,8 @@ def _performance_plot(output, labels, values, **kwargs):
     sns.boxplot(values)
     ax.set_xticklabels(labels, rotation=90)
     plt.ylim(ymin=0, ymax=1)
-    if "title" in kwargs:
-        plt.title(kwargs["title"])
+    title = kwargs.pop("title", "")
+    plt.title(title)
     figsize = kwargs.pop("figsize", None)
     viz.finalise(output, figsize=figsize)
 
