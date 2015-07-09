@@ -242,16 +242,14 @@ def performance_vs_max_wgsize(db, output=None, figsize=None,
     X = np.arange(len(data))
 
     Performance, Ratios = zip(*data)
-
-    ax = plt.subplot(111)
-    ax.plot(X, Ratios, 'g', label="Ratio max wgsize")
-    ax.plot(X, Performance, 'b', label="Performance")
+    plt.scatter(Performance, Ratios)
+    plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
-    plt.xlim(xmin=0, xmax=len(X) - 1)
-    plt.ylim(ymin=0, ymax=100)
+    plt.xlim(0, max(Performance))
+    plt.ylim(0, max(Ratios))
     plt.title(title)
-    plt.ylabel("Performance / Size")
-    plt.xlabel("Scenarios, Parameters")
+    plt.ylabel("Performance (% oracle)")
+    plt.xlabel("Workgroup size (% max)")
     plt.legend(frameon=True)
     viz.finalise(output, figsize=figsize)
 
