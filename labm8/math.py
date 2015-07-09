@@ -230,30 +230,30 @@ def confinterval(array, conf=0.95, normal_threshold=30, error_only=False,
 
     if n < 1:
         # We have no data.
-        return (0, 0)
+        array_mean, c0, c1 = 0, 0, 0
     elif n == 1:
         # We have only a single datapoint, so return that value.
-        return (array[0], array[0])
-
-    scale = stdev(array) / sqrt(n)
-    # Check if all values are the same.
-    values_all_same = all(x == array[0] for x in array[1:])
-
-    if values_all_same:
-        # If values are all the same, return that value.
-        return (array[0], array[0])
-
-    # Defer calculating mean until we actually need it.
-    if array_mean is None: array_mean = mean(array)
-
-    if n < normal_threshold:
-        # We have a "small" number of datapoints, so use a t-distribution.
-        c0, c1 = scipy.stats.t.interval(conf, n - 1, loc=array_mean,
-                                        scale=scale)
+        array_mean, c0, c1 = array[0], array[0], array[0]
     else:
-        # We have a "large" number of datapoints, so use a normal distribution.
-        c0, c1 = scipy.stats.norm.interval(conf, loc=array_mean,
-                                           scale=scale)
+        scale = stdev(array) / sqrt(n)
+        # Check if all values are the same.
+        values_all_same = all(x == array[0] for x in array[1:])
+
+        if values_all_same:
+            # If values are all the same, return that value.
+            array_mean, c0, c1 = array[0], array[0], array[0]
+        else:
+            if array_mean is None: array_mean = mean(array)
+            if n < normal_threshold:
+                # We have a "small" number of datapoints, so use a
+                # t-distribution.
+                c0, c1 = scipy.stats.t.interval(conf, n - 1, loc=array_mean,
+                                                scale=scale)
+            else:
+                # We have a "large" number of datapoints, so use a
+                # normal distribution.
+                c0, c1 = scipy.stats.norm.interval(conf, loc=array_mean,
+                                                   scale=scale)
 
     if error_only:
         return c1 - array_mean
