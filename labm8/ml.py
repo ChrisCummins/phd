@@ -207,6 +207,11 @@ class Dataset(object):
 
         return folds
 
+    def copy(self, from_row=None, num_rows=None):
+        return WekaInstances.copy_instances(self.instances,
+                                            from_row=from_row,
+                                            num_rows=num_rows)
+
     def save(dst, saver="weka.core.converters.ArffSaver", **kwargs):
         save(self.instances, dst, saver=saver, **kwargs)
 
