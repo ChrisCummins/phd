@@ -77,5 +77,39 @@ class TestLatex(TestCase):
                    latex.write_table_body(((1, "foo"), (2, "bar")),
                                           hline_after=True))
 
+    # table()
+    def test_table(self):
+        self._test("\\begin{tabular}{lr}\n"
+                   "\\toprule\n"
+                   "   0 &  1 \\\\\n"
+                   "\\midrule\n"
+                   " foo &  1 \\\\\n"
+                   " bar &  2 \\\\\n"
+                   "\\bottomrule\n"
+                   "\\end{tabular}\n",
+                   latex.table((("foo", 1), ("bar", 2))))
+
+    def test_table_columns(self):
+        self._test("\\begin{tabular}{lr}\n"
+                   "\\toprule\n"
+                   "type &  value \\\\\n"
+                   "\\midrule\n"
+                   " foo &      1 \\\\\n"
+                   " bar &      2 \\\\\n"
+                   "\\bottomrule\n"
+                   "\\end{tabular}\n",
+                   latex.table((("foo", 1), ("bar", 2)),
+                               columns=("type", "value")))
+
+    def test_table_bad_columns(self):
+        with self.assertRaises(latex.Error):
+            latex.table((("foo", 1), ("bar", 2)),
+                        columns=("type", "value", "too", "many", "values"))
+
+    def test_table_bad_rows(self):
+        with self.assertRaises(latex.Error):
+            latex.table((("foo", 1), ("bar", 2), ("car",)))
+
+
 if __name__ == '__main__':
     main()
