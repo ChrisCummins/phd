@@ -12,6 +12,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
+from __future__ import print_function
+
 import re
 
 import labm8 as lab
@@ -22,6 +24,13 @@ if lab.is_python3():
     from io import StringIO
 else:
     from StringIO import StringIO
+
+
+class Error(Exception):
+    """
+    Module-level error.
+    """
+    pass
 
 
 def escape(text):
@@ -62,3 +71,77 @@ def write_table_body(data, output=None, headers=None,
         output.write("\\hline\n")
 
     return None if isfile else output.getvalue()
+
+def table(rows, columns=None, output=None, latex_args={}, **kwargs):
+    """
+    Return a LaTeX formatted string of "list of list" table data.
+
+    See: http://pandas.pydata.org/pandas-docs/dev/generated/pandas.DataFrame.html
+
+    Requires the "booktabs" package to be included in LaTeX preamble:
+
+        \\usepackage{booktabs}
+
+    Examples:
+
+        >>> fmt.print([("foo", 1), ("bar", 2)])
+             0  1
+        0  foo  1
+        1  bar  2
+
+        >>> fmt.print([("foo", 1), ("bar", 2)], columns=("type", "value"))
+          type  value
+        0  foo      1
+        1  bar      2
+
+    Arguments:
+
+        rows (list of list): Data to format, one row per element,
+          multiple columns per row.
+        columns (list of str, optional): Column names.
+        output (str, optional): Path to output file.
+        latex_args (dict, optional): Any additional kwargs to pass to
+          pandas.DataFrame.to_latex().
+        **kwargs: Any additional arguments to pass to
+          pandas.DataFrame constructor.
+
+    Returns:
+
+        str: Formatted data as LaTeX table.
+
+    Raises:
+
+        Error: If number of columns (if provided) does not equal
+          number of columns in rows; or if number of columns is not
+          consistent across all rows.
+    """
+    import pandas
+
+    # Number of columns.
+    num_columns = len(rows[0])
+
+    # Check that each row is the same length.
+    for i,row in enumerate(rows[1:]):
+        if len(row) != num_columns:
+            raise Error("Number of columns in row {i_row} ({c_row}) "
+                        "does not match number of columns in row 0 ({z_row})"
+                        .format(i_row=i, c_row=len(row), z_row=num_columns))
+
+    # Check that (if supplied), number of columns matches number of
+    # columns in rows.
+    if columns is not None and len(columns) != num_columns:
+        raise Error("Number of columns in header ({c_header}) does not "
+                    "match the number of columns in the data ({c_rows})"
+                    .format(c_header=len(columns), c_rows=num_columns))
+
+    if "index" not in latex_args:
+        latex_args["index"] = False
+
+    kwargs["columns"] = columns
+
+    string = pandas.DataFrame(list(rows), **kwargs).to_latex(**latex_args)
+    if output is None:
+        return string
+    else:
+        print(string, file=open(output, "w"))
+        io.info("Wrote " + output)
