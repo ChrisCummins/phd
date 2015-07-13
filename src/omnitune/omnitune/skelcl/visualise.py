@@ -440,6 +440,64 @@ def err_fn_speedups(db, err_fn, output=None, sort=False,
     viz.finalise(output, **kwargs)
 
 
+def err_fn_performance(db, output=None, job="xval", **kwargs):
+    err_fns = db.err_fns
+    results = [
+        db.execute(
+            "SELECT\n"
+            "    GEOMEAN(performance) * 100,\n"
+            "    CONFERROR(performance, .95) * 100,\n"
+            "    GEOMEAN(speedup) * 100,\n"
+            "    CONFERROR(speedup, .95) * 100\n"
+            "FROM classification_results\n"
+            "WHERE job=? AND err_fn=? AND invalid=1",
+            (job, err_fn)
+        ).fetchone()
+        for err_fn in err_fns
+    ]
+
+    perfs, perfErrors, speedups, speedupErrors = zip(*results)
+
+    X = np.arange(len(err_fns))
+    # Bar width.
+    width = (.8 / (len(results[0]) - 1))
+
+    plt.bar(X, perfs, width=width,
+            color=sns.color_palette("Reds", 1), label="Performance")
+    # Plot confidence intervals separately so that we can have
+    # full control over formatting.
+    _,caps,_ = plt.errorbar(X + .5 * width, perfs, fmt="none",
+                            yerr=perfErrors, capsize=3, ecolor="k")
+    for cap in caps:
+        cap.set_color('k')
+        cap.set_markeredgewidth(1)
+
+    plt.bar(X + width, speedups, width=width,
+            color=sns.color_palette("Greens", 1), label="Speedup")
+    # Plot confidence intervals separately so that we can have
+    # full control over formatting.
+    _,caps,_ = plt.errorbar(X + 1.5 * width, speedups, fmt="none",
+                            yerr=speedupErrors, capsize=3, ecolor="k")
+    for cap in caps:
+        cap.set_color('k')
+        cap.set_markeredgewidth(1)
+
+    plt.xlim(xmin=-.2)
+    plt.xticks(X + .4, err_fns)
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+
+    title = kwargs.pop("title", "Error handler performance for " + job)
+    plt.title(title)
+
+    # Add legend *beneath* plot. To do this, we need to pass some
+    # extra arguments to plt.savefig(). See:
+    #
+    # http://jb-blog.readthedocs.org/en/latest/posts/12-matplotlib-legend-outdide-plot.html
+    #
+    art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -0.1), ncol=3)]
+    viz.finalise(output, additional_artists=art, bbox_inches="tight", **kwargs)
+
+
 def classification(db, output=None, job="xval", **kwargs):
     err_fns = db.err_fns
     base_err_fn = err_fns[0]
