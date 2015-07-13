@@ -1583,25 +1583,27 @@ class Database(db.Database):
             for scenario in self.scenarios
         }
 
-    def runtime_predictions(self, scenario, job):
+    def runtime_predictions(self, scenario, classifier, job):
+        clsasifier_id = self.classifier_id(classifier)
         return [
             row for row in
             self.execute(
                 "SELECT params,predicted "
                 "FROM runtime_regression_results "
-                "WHERE job=? AND scenario=?",
-                (job, scenario)
+                "WHERE job=? AND classifier=? AND scenario=?",
+                (job, classifier_id, scenario)
             )
         ]
 
-    def speedup_predictions(self, scenario, job):
+    def speedup_predictions(self, scenario, classifier, job):
+        clsasifier_id = self.classifier_id(classifier)
         return [
             row for row in
             self.execute(
                 "SELECT params,predicted "
                 "FROM speedup_regression_results "
-                "WHERE job=? AND scenario=?",
-                (job, scenario)
+                "WHERE job=? AND classifier=? AND scenario=?",
+                (job, classifier_id, scenario)
             )
         ]
 
