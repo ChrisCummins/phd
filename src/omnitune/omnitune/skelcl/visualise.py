@@ -2,6 +2,8 @@
 
 from __future__ import division
 from collections import defaultdict
+from functools import reduce
+import operator
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,7 +23,7 @@ from labm8 import viz
 from labm8 import prof
 
 
-def num_samples(db, output=None, sample_range=None):
+def num_samples(db, output=None, sample_range=None, **kwargs):
     def _get_sample_count_range():
         return db.execute(
             "SELECT\n"
@@ -48,16 +50,17 @@ def num_samples(db, output=None, sample_range=None):
         for i in sequence
     ])
 
-    plt.title("Frequency of number of samples counts")
+    title = kwargs.pop("title", "Frequency of number of samples counts")
+    plt.title(title)
     plt.xlabel("Number of samples")
     plt.ylabel("Ratio of instances")
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.plot(X, Y)
     plt.xlim(*sample_range)
-    viz.finalise(output)
+    viz.finalise(output, **kwargs)
 
 
-def runtimes_variance(db, output=None, min_samples=1, where=None):
+def runtimes_variance(db, output=None, min_samples=1, where=None, **kwargs):
     # Create temporary table of scenarios and params to use, ignoring
     # those with less than "min_samples" samples.
     if "_temp" in db.tables:
@@ -100,18 +103,20 @@ def runtimes_variance(db, output=None, min_samples=1, where=None):
     ax.scatter(X, Y)
     ax.set_xscale("log")
 
-    plt.title("Runtime variance as a function of mean runtime")
+    title = kwargs.pop("title",
+                       "Runtime variance as a function of mean runtime")
+    plt.title(title)
     plt.ylabel("Normalised confidence interval")
     plt.xlabel("Runtime (ms)")
     plt.xlim(0, X[-1])
     plt.ylim(ymin=0)
-    viz.finalise(output)
+    viz.finalise(output, **kwargs)
 
 
 def max_wgsizes(db, output=None, trisurf=False, **kwargs):
     space = db.max_wgsize_space()
-    if "title" not in kwargs: kwargs["title"] = ("Distribution of maximum "
-                                                 "workgroup sizes")
+    if "title" not in kwargs:
+        kwargs["title"] = "Distribution of maximum workgroup sizes"
     if trisurf:
         space.trisurf(output=output, **kwargs)
     else:
@@ -163,8 +168,7 @@ def scenario_performance(db, scenario, output=None, title=None, type="heatmap",
 
 
 
-def performance_vs_coverage(db, output=None, figsize=None,
-                            title="Workgroup size performance vs. legality"):
+def performance_vs_coverage(db, output=None, **kwargs):
     data = sorted([
         (
             db.perf_param_avg(param) * 100,
@@ -185,14 +189,14 @@ def performance_vs_coverage(db, output=None, figsize=None,
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.xlim(xmin=0, xmax=len(X) - 1)
     plt.ylim(ymin=0, ymax=100)
+    title = kwargs.pop("title", "Workgroup size performance vs. legality")
     plt.title(title)
     plt.xlabel("Parameters (sorted by legality and performance)")
     art = [plt.legend(loc=9, bbox_to_anchor=(0.5, 1.2), ncol=3)]
-    viz.finalise(output, figsize=figsize, additional_artists=art)
+    viz.finalise(output, additional_artists=art, **kwargs)
 
 
-def oracle_speedups(db, output=None,
-                    title="Attainable performance over baseline", figsize=None):
+def oracle_speedups(db, output=None, **kwargs):
     data = db.oracle_speedups().values()
     #Speedups = sorted(data, reverse=True)
     Speedups = data
@@ -200,15 +204,14 @@ def oracle_speedups(db, output=None,
 
     plt.plot(X, Speedups)
     plt.xlim(0, len(X) - 1)
+    title = kwargs.pop("title", "Attainable performance over baseline")
     plt.title(title)
     plt.xlabel("Scenarios")
     plt.ylabel("Speedup")
-    viz.finalise(output, figsize=figsize)
+    viz.finalise(output, **kwargs)
 
 
-def num_params_vs_accuracy(db, output=None, where=None, figsize=None,
-                           title=("Number of workgroup sizes "
-                                  "vs. oracle accuracy")):
+def num_params_vs_accuracy(db, output=None, where=None, **kwargs):
     freqs = sorted(db.oracle_param_frequencies(normalise=True).values(),
                    reverse=True)
     acc = 0
@@ -223,30 +226,34 @@ def num_params_vs_accuracy(db, output=None, where=None, figsize=None,
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.xlim(xmin=0, xmax=len(X) - 1)
     plt.ylim(ymin=0, ymax=100)
+    title = kwargs.pop("title", "Number of workgroup sizes vs. oracle accuracy")
     plt.title(title)
     plt.ylabel("Accuracy")
     plt.xlabel("Number of distinct workgroup sizes")
     plt.legend(frameon=True)
-    viz.finalise(output, figsize=figsize)
+    viz.finalise(output, **kwargs)
 
 
-def _performance_size(data, output, title, xlabel, **kwargs):
+def _performance_size(data, output, title, xlabel, percs=True, **kwargs):
     # Calculate moving average.
-    # FIXME: Plot moving averages.
-    # avgs = defaultdict(list)
-    # for p,s in data:
-    #     avgs[s].append(p)
-    # for s,p in avgs.items():
-    #     avgs[s] = labmath.mean(p)
-    # avgs = sorted(avgs.items())
+    avgs = defaultdict(list)
+    for p,s in data:
+        avgs[s].append(p)
+    for s,p in avgs.items():
+        mean = labmath.mean(p)
+        avgs[s] = (mean, labmath.confinterval(p, array_mean=mean,
+                                              error_only=True) * 2)
+    avgs = sorted(avgs.items())
 
     Y, X = zip(*data)
-    # aX, aY = zip(*avgs)
+    aX, data = zip(*avgs)
+    aY, aErr = zip(*data)
 
     plt.scatter(X, Y)
-    # plt.plot(aX, aY, color="r")
-    plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%d%%'))
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.errorbar(aX, aY, yerr=aErr, color="r")
+    if percs:
+        plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+        plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.xlim(0, max(X) + 2)
     plt.ylim(0, max(Y) + 2)
     plt.title(title)
@@ -255,10 +262,7 @@ def _performance_size(data, output, title, xlabel, **kwargs):
     viz.finalise(output, **kwargs)
 
 
-def performance_vs_max_wgsize(db, output=None,
-                              title=("Workgroup size performance "
-                                     "vs. maximum workgroup size"),
-                              **kwargs):
+def performance_vs_max_wgsize(db, output=None, **kwargs):
     data = [
         (
             db.perf(scenario, param) * 100,
@@ -267,82 +271,91 @@ def performance_vs_max_wgsize(db, output=None,
         for scenario, param in db.scenario_params
     ]
 
+    title = kwargs.pop("title",
+                       "Workgroup size performance vs. maximum workgroup size")
     _performance_size(data, output, title, "Workgroup size (% max)", **kwargs)
 
 
-def performance_vs_wg_c(db, output=None,
-                        title=("Workgroup size performance "
-                               "vs. number of columns"),
-                        **kwargs):
+def performance_vs_wgsize(db, output=None, **kwargs):
+    data = [
+        (
+            db.perf(scenario, param) * 100,
+            reduce(operator.mul, unhash_params(param), 1)
+        )
+        for scenario, param in db.scenario_params
+    ]
+
+    title = kwargs.pop("title",
+                       "Size of workgroup vs. performance")
+    _performance_size(data, output, title, "Workgroup size", percs=False,
+                      **kwargs)
+
+
+def performance_vs_wg_c(db, output=None, **kwargs):
     max_wg_c = db.wg_c[-1]
     data = [
         (
             db.perf(scenario, param) * 100,
-            (unhash_params(param)[0] / max_wg_c) * 100,
+            unhash_params(param)[0],
         )
         for scenario, param in db.scenario_params
     ]
 
-    _performance_size(data, output, title, "Workgroup columns (% max)",
+    title = kwargs.pop("title",
+                       "Workgroup size performance vs. number of columns")
+    _performance_size(data, output, title, "Workgroup columns", percs=False,
                       **kwargs)
 
 
-def performance_vs_wg_r(db, output=None,
-                        title=("Workgroup size performance "
-                               "vs. number of rows"),
-                        **kwargs):
+def performance_vs_wg_r(db, output=None, **kwargs):
     max_wg_r = db.wg_r[-1]
     data = [
         (
             db.perf(scenario, param) * 100,
-            (unhash_params(param)[1] / max_wg_r) * 100,
+            unhash_params(param)[1],
         )
         for scenario, param in db.scenario_params
     ]
 
-    _performance_size(data, output, title, "Workgroup rows (% max)",
+    title = kwargs.pop("title",
+                       "Workgroup size performance vs. number of rows")
+    _performance_size(data, output, title, "Workgroup rows", percs=False,
                       **kwargs)
 
 
-def _performance_plot(output, labels, values, **kwargs):
+def _performance_plot(output, labels, values, title, **kwargs):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     sns.boxplot(values)
     ax.set_xticklabels(labels, rotation=90)
     plt.ylim(ymin=0, ymax=1)
-    title = kwargs.pop("title", "")
     plt.title(title)
-    figsize = kwargs.pop("figsize", None)
-    viz.finalise(output, figsize=figsize)
+    viz.finalise(output, **kwargs)
 
 
 def kernel_performance(db, output=None, **kwargs):
     labels = db.kernel_names
     values = [db.performance_of_kernels_with_name(label) for label in labels]
-    if "title" not in kwargs:
-        kwargs["title"] = "Workgroup size performance across kernels"
-    _performance_plot(output, labels, values, **kwargs)
+    title = kwargs.pop("title", "Workgroup size performance across kernels")
+    _performance_plot(output, labels, values, title, **kwargs)
 
 
 def device_performance(db, output=None, **kwargs):
     labels = db.cpus + db.gpus # Arrange CPUs on the left, GPUs on the right.
     values = [db.performance_of_device(label) for label in labels]
-    if "title" not in kwargs:
-        kwargs["title"] = "Workgroup size performance across devices"
-    _performance_plot(output, labels, values, **kwargs)
+    title = kwargs.pop("title", "Workgroup size performance across devices")
+    _performance_plot(output, labels, values, title, **kwargs)
 
 
 def dataset_performance(db, output=None, **kwargs):
     labels = db.datasets
     values = [db.performance_of_dataset(label) for label in labels]
-    if "title" not in kwargs:
-        kwargs["title"] = "Workgroup size performance across datasets"
-    _performance_plot(output, labels, values, **kwargs)
+    title = kwargs.pop("title", "Workgroup size performance across datasets")
+    _performance_plot(output, labels, values, title, **kwargs)
 
 
 def runtimes_range(db, output=None, where=None, nbins=25,
-                   iqr=(0.25,0.75), figsize=None,
-                   title="Normalised distribution of min and max runtimes"):
+                   iqr=(0.25,0.75), **kwargs):
     data = [t[2:] for t in db.min_max_runtimes(where=where)]
     min_t, max_t = zip(*data)
 
@@ -355,15 +368,15 @@ def runtimes_range(db, output=None, where=None, nbins=25,
 
     plt.hist(lower, bins, label="Min")
     plt.hist(upper, bins, label="Max");
+    title = kwargs.pop("title", "Normalised distribution of min and max runtimes")
     plt.title(title)
     plt.ylabel("Frequency")
     plt.xlabel("Runtime (normalised to mean)")
     plt.legend(frameon=True)
-    viz.finalise(output, figsize=figsize)
+    viz.finalise(output, **kwargs)
 
 
-def max_speedups(db, output=None, figsize=None,
-                 title="Max attainable speedups"):
+def max_speedups(db, output=None, **kwargs):
     Speedups = db.max_speedups().values()
     X = np.arange(len(Speedups))
 
@@ -371,10 +384,11 @@ def max_speedups(db, output=None, figsize=None,
     ax = fig.add_subplot(111)
     ax.plot(X, Speedups)
     plt.xlim(xmin=0, xmax=len(X) - 1)
+    title = kwargs.pop("title", "Max attainable speedups")
     plt.title(title)
     plt.ylabel("Max speedup")
     plt.xlabel("Scenarios")
-    viz.finalise(output, figsize=figsize)
+    viz.finalise(output, **kwargs)
 
 
 def classifier_speedups(db, classifier, output=None, sort=False,
@@ -398,7 +412,7 @@ def classifier_speedups(db, classifier, output=None, sort=False,
     plt.axhline(y=1, color="k")
     plt.xlim(xmin=0, xmax=len(performances))
     plt.legend()
-    viz.finalise(output)
+    viz.finalise(output, **kwargs)
 
 
 def err_fn_speedups(db, err_fn, output=None, sort=False,
@@ -422,10 +436,10 @@ def err_fn_speedups(db, err_fn, output=None, sort=False,
     plt.axhline(y=1, color="k")
     plt.xlim(xmin=0, xmax=len(performances))
     plt.legend()
-    viz.finalise(output)
+    viz.finalise(output, **kwargs)
 
 
-def classification(db, output=None, job="xval", title=None, **kwargs):
+def classification(db, output=None, job="xval", **kwargs):
     err_fns = db.err_fns
     base_err_fn = err_fns[0]
     # Get a list of classifiers and result counts.
@@ -497,8 +511,7 @@ def classification(db, output=None, job="xval", title=None, **kwargs):
     plt.xticks(X + .4, labels)
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
 
-    if title is None:
-        title = "Classification results for " + job
+    title = kwargs.pop("title", "Classification results for " + job)
     plt.title(title)
 
     # Add legend *beneath* plot. To do this, we need to pass some
@@ -507,10 +520,10 @@ def classification(db, output=None, job="xval", title=None, **kwargs):
     # http://jb-blog.readthedocs.org/en/latest/posts/12-matplotlib-legend-outdide-plot.html
     #
     art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -0.1), ncol=3)]
-    viz.finalise(output, additional_artists=art, bbox_inches="tight")
+    viz.finalise(output, additional_artists=art, bbox_inches="tight", **kwargs)
 
 
-def runtime_regression(db, output=None, job="xval", title=None, **kwargs):
+def runtime_regression(db, output=None, job="xval", **kwargs):
     """
     Plot accuracy of a classifier at predicted runtime.
     """
@@ -543,15 +556,14 @@ def runtime_regression(db, output=None, job="xval", title=None, **kwargs):
     ax.set_yscale("log")
     plt.xlim(0, len(actual))
     plt.legend()
-    if title is None:
-        title = "Runtime regression for " + job
+    title = kwargs.pop("title", "Runtime regression for " + job)
     plt.title(title)
     plt.xlabel("Test instances (sorted by descending runtime)")
     plt.ylabel("Runtime (ms, log)")
-    viz.finalise(output)
+    viz.finalise(output, **kwargs)
 
 
-def speedup_regression(db, output=None, job="xval", title=None, **kwargs):
+def speedup_regression(db, output=None, job="xval", **kwargs):
     """
     Plot accuracy of a classifier at predicted runtime.
     """
@@ -579,9 +591,8 @@ def speedup_regression(db, output=None, job="xval", title=None, **kwargs):
     ax.set_yscale("log")
     plt.xlim(0, len(actual))
     plt.legend()
-    if title is None:
-        title = "Speedup regression for " + job
+    title = kwargs.pop("title", "Speedup regression for " + job)
     plt.title(title)
     plt.xlabel("Test instances (sorted by descending speedup)")
     plt.ylabel("Runtime (ms)")
-    viz.finalise(output)
+    viz.finalise(output, **kwargs)
