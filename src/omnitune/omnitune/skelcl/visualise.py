@@ -430,7 +430,8 @@ def err_fn_speedups(db, err_fn, output=None, sort=False,
         if sort: performances = sorted(performances, reverse=True)
         plt.plot(performances, "-", label=basename)
 
-    plt.title(err_fn)
+    title = kwargs.pop("title", err_fn)
+    plt.title(title)
     plt.ylabel("Speedup")
     plt.xlabel("Test instances")
     plt.axhline(y=1, color="k")
@@ -563,6 +564,78 @@ def runtime_regression(db, output=None, job="xval", **kwargs):
     viz.finalise(output, **kwargs)
 
 
+def runtime_classification(db, output=None, job="xval", **kwargs):
+    """
+    Plot performance of classification using runtime regression.
+    """
+    # Get a list of classifiers and result counts.
+    query = db.execute(
+        "SELECT classifier,Count(*) AS count\n"
+        "FROM runtime_classification_results\n"
+        "WHERE job=? GROUP BY classifier", (job,)
+    )
+    results = []
+    for classifier,count in query:
+        basename = ml.classifier_basename(classifier)
+        correct = db.execute(
+            "SELECT\n"
+            "    (SUM(correct) / CAST(? AS FLOAT)) * 100\n"
+            "FROM runtime_classification_results\n"
+            "WHERE job=? AND classifier=?",
+            (count, job, classifier)
+        ).fetchone()[0]
+        # Get a list of mean speedups for each err_fn.
+        speedups = [
+            row for row in
+            db.execute(
+                "SELECT\n"
+                "    GEOMEAN(speedup) * 100,\n"
+                "    CONFERROR(speedup, .95) * 100\n"
+                "FROM runtime_classification_results\n"
+                "WHERE job=? AND classifier=?",
+                (job, classifier)
+            ).fetchone()
+        ]
+
+        results.append([basename, correct] + speedups)
+
+    # Zip into lists.
+    labels, correct, speedups, yerrs = zip(*results)
+
+    X = np.arange(len(labels))
+    # Bar width.
+    width = (.8 / (len(results[0]) - 1))
+
+    plt.bar(X + width, correct, width=width,
+            color=sns.color_palette("Blues", 1), label="Accuracy")
+    plt.bar(X + 2 * width, speedups, width=width,
+            color=sns.color_palette("Greens", 1), label="Speedup")
+    # Plot confidence intervals separately so that we can have
+    # full control over formatting.
+    _,caps,_ = plt.errorbar(X + 2.5 * width, speedups, fmt="none",
+                            yerr=yerrs, capsize=3, ecolor="k")
+    for cap in caps:
+        cap.set_color('k')
+        cap.set_markeredgewidth(1)
+
+    plt.xlim(xmin=-.2)
+    plt.xticks(X + .4, labels)
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+
+    title = kwargs.pop("title",
+                       "Classification results for " + job +
+                       " using runtime regression")
+    plt.title(title)
+
+    # Add legend *beneath* plot. To do this, we need to pass some
+    # extra arguments to plt.savefig(). See:
+    #
+    # http://jb-blog.readthedocs.org/en/latest/posts/12-matplotlib-legend-outdide-plot.html
+    #
+    art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -0.1), ncol=3)]
+    viz.finalise(output, additional_artists=art, bbox_inches="tight", **kwargs)
+
+
 def speedup_regression(db, output=None, job="xval", **kwargs):
     """
     Plot accuracy of a classifier at predicted runtime.
@@ -570,7 +643,8 @@ def speedup_regression(db, output=None, job="xval", **kwargs):
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    for classifier in db.regression_classifiers:
+    colors = sns.color_palette()
+    for i,classifier in enumerate(db.regression_classifiers):
         basename = ml.classifier_basename(classifier)
         actual, predicted = zip(*sorted([
             row for row in
@@ -584,15 +658,18 @@ def speedup_regression(db, output=None, job="xval", **kwargs):
             )
         ], key=lambda x: x[0], reverse=True))
 
-        ax.scatter(np.arange(len(predicted)), predicted, label=basename,
-                   marker='x', edgecolors='none')
+        if basename == "ZeroR":
+            ax.plot(predicted, label=basename, color=colors[i - 1])
+        else:
+            ax.scatter(np.arange(len(predicted)), predicted, label=basename,
+                       color=colors[i - 1])
 
-    ax.plot(actual, label="Actual")
-    ax.set_yscale("log")
+    ax.plot(actual, label="Actual", color=colors[i])
+    # ax.set_yscale("log")
     plt.xlim(0, len(actual))
     plt.legend()
     title = kwargs.pop("title", "Speedup regression for " + job)
     plt.title(title)
     plt.xlabel("Test instances (sorted by descending speedup)")
-    plt.ylabel("Runtime (ms)")
+    plt.ylabel("Speedup")
     viz.finalise(output, **kwargs)
