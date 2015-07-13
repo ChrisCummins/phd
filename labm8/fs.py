@@ -17,6 +17,8 @@ import re
 import os.path
 import shutil
 
+from glob import iglob
+
 import labm8 as lab
 
 class Error(Exception):
@@ -267,21 +269,31 @@ def lsfiles(root=".", **kwargs):
     return [_path for _path in paths if isfile(path(root, _path))]
 
 
-def rm(path):
+def rm(path, glob=True):
     """
     Remove a file or directory.
 
     If path is a directory, this recursively removes the directory and
     any contents. Non-existent paths are silently ignored.
 
+    Supports Unix style globbing by default (disable using
+    glob=False). For details on globbing pattern expansion, see:
+
+        https://docs.python.org/2/library/glob.html
+
     Arguments:
         path (string): path to the file or directory to remove. May be
-          absolute or relative.
+          absolute or relative. May contain unix glob
+        glob (bool, optional): whether to perform Unix style pattern
+          expansion of paths.
     """
-    if isfile(path):
-        os.remove(path)
-    elif exists(path):
-        shutil.rmtree(path, ignore_errors=False)
+    paths = iglob(path) if glob else [path]
+
+    for file in paths:
+        if isfile(file):
+            os.remove(file)
+        elif exists(file):
+            shutil.rmtree(file, ignore_errors=False)
 
 
 def cp(src, dst):

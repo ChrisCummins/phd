@@ -228,6 +228,27 @@ class TestFs(TestCase):
         self._test(False, fs.isfile("/tmp/labm8.dir/foo/bar/baz"))
         self._test(False, fs.isfile("/tmp/labm8.dir/"))
 
+    def test_rm_glob(self):
+        fs.mkdir("/tmp/labm8.glob")
+        system.echo("Hello, world!", "/tmp/labm8.glob/1")
+        system.echo("Hello, world!", "/tmp/labm8.glob/2")
+        system.echo("Hello, world!", "/tmp/labm8.glob/abc")
+
+        fs.rm("/tmp/labm8.glob/a*", glob=False)
+        self._test(True, fs.isfile("/tmp/labm8.glob/1"))
+        self._test(True, fs.isfile("/tmp/labm8.glob/2"))
+        self._test(True, fs.isfile("/tmp/labm8.glob/abc"))
+
+        fs.rm("/tmp/labm8.glob/a*")
+        self._test(True, fs.isfile("/tmp/labm8.glob/1"))
+        self._test(True, fs.isfile("/tmp/labm8.glob/2"))
+        self._test(False, fs.isfile("/tmp/labm8.glob/abc"))
+
+        fs.rm("/tmp/labm8.glob/*")
+        self._test(False, fs.isfile("/tmp/labm8.glob/1"))
+        self._test(False, fs.isfile("/tmp/labm8.glob/2"))
+        self._test(False, fs.isfile("/tmp/labm8.glob/abc"))
+
     # cp()
     def test_cp(self):
         system.echo("Hello, world!", "/tmp/labm8.tmp")
