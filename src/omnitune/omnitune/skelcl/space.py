@@ -137,22 +137,20 @@ class ParamSpace(object):
         import matplotlib.cm as cm
         from mpl_toolkits.mplot3d import Axes3D
 
-        num_vals = self.matrix.shape[0] * self.matrix.shape[1]
-        X = np.zeros((num_vals,))
-        Y = np.zeros((num_vals,))
-        Z = np.zeros((num_vals,))
-        dX = np.ones((num_vals,))
-        dY = np.ones((num_vals,))
-        dZ = np.zeros((num_vals,))
+        X, Y, dZ = [], [], []
 
         # Iterate over every point in space.
         for j,i in product(range(self.matrix.shape[0]),
                            range(self.matrix.shape[1])):
-            # Convert point to list index.
-            index = j * self.matrix.shape[1] + i
-            X[index] = i
-            Y[index] = j
-            dZ[index] = self.matrix[j][i]
+            if self.matrix[j][i] > 0:
+                X.append(i)
+                Y.append(j)
+                dZ.append(self.matrix[j][i])
+
+        num_vals = len(X)
+        Z = np.zeros((num_vals,))
+        dX = np.ones((num_vals,))
+        dY = np.ones((num_vals,))
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
