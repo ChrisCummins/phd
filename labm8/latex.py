@@ -72,7 +72,7 @@ def write_table_body(data, output=None, headers=None,
 
     return None if isfile else output.getvalue()
 
-def table(rows, columns=None, output=None, latex_args={}, **kwargs):
+def table(rows, columns=None, output=None, data_args={}, **kwargs):
     """
     Return a LaTeX formatted string of "list of list" table data.
 
@@ -100,10 +100,10 @@ def table(rows, columns=None, output=None, latex_args={}, **kwargs):
           multiple columns per row.
         columns (list of str, optional): Column names.
         output (str, optional): Path to output file.
-        latex_args (dict, optional): Any additional kwargs to pass to
-          pandas.DataFrame.to_latex().
-        **kwargs: Any additional arguments to pass to
+        data_args (dict, optional): Any additional kwargs to pass to
           pandas.DataFrame constructor.
+        **kwargs: Any additional arguments to pass to
+          pandas.DataFrame.to_latex().
 
     Returns:
 
@@ -134,12 +134,13 @@ def table(rows, columns=None, output=None, latex_args={}, **kwargs):
                     "match the number of columns in the data ({c_rows})"
                     .format(c_header=len(columns), c_rows=num_columns))
 
-    if "index" not in latex_args:
-        latex_args["index"] = False
+    # Default arguments.
+    if "index" not in kwargs:
+        kwargs["index"] = False
 
-    kwargs["columns"] = columns
+    data_args["columns"] = columns
 
-    string = pandas.DataFrame(list(rows), **kwargs).to_latex(**latex_args)
+    string = pandas.DataFrame(list(rows), **data_args).to_latex(**kwargs)
     if output is None:
         return string
     else:
