@@ -14,6 +14,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
+from __future__ import print_function
+
 import labm8 as lab
 
 
@@ -24,7 +26,7 @@ class Error(Exception):
     pass
 
 
-def table(rows, str_args={}, **kwargs):
+def table(rows, columns=None, output=None, data_args={}, **kwargs):
     """
     Return a formatted string of "list of list" table data.
 
@@ -46,10 +48,12 @@ def table(rows, str_args={}, **kwargs):
 
         rows (list of list): Data to format, one row per element,
           multiple columns per row.
+        columns (list of str, optional): Column names.
+        output (str, optional): Path to output file.
         str_args (dict, optional): Any additional kwargs to pass to
-          pandas.DataFrame.to_string().
-        **kwargs: Any additional arguments to pass to
           pandas.DataFrame constructor.
+        **kwargs: Any additional arguments to pass to
+          pandas.DataFrame.to_string().
 
     Returns:
 
@@ -73,12 +77,26 @@ def table(rows, str_args={}, **kwargs):
                         "does not match number of columns in row 0 ({z_row})"
                         .format(i_row=i, c_row=len(row), z_row=num_columns))
 
-    # Check that (if supplied), number of columns matches number of
-    # columns in rows.
-    columns = kwargs.get("columns", None)
-    if columns is not None and len(columns) != num_columns:
+    if columns is None:
+        # Default parameters.
+        if "header" not in kwargs:
+            kwargs["header"] = False
+    elif len(columns) != num_columns:
+        # Check that number of columns matches number of columns in
+        # rows.
         raise Error("Number of columns in header ({c_header}) does not "
                     "match the number of columns in the data ({c_rows})"
                     .format(c_header=len(columns), c_rows=num_columns))
 
-    return pandas.DataFrame(list(rows), **kwargs).to_string(**str_args)
+    # Default arguments.
+    if "index" not in kwargs:
+        kwargs["index"] = False
+
+    data_args["columns"] = columns
+
+    string = pandas.DataFrame(list(rows), **data_args).to_string(**kwargs)
+    if output is None:
+        return string
+    else:
+        print(string, file=open(output, "w"))
+        io.info("Wrote", output)

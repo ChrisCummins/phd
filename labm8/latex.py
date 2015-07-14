@@ -145,4 +145,4 @@ def table(rows, columns=None, output=None, data_args={}, **kwargs):
         return string
     else:
         print(string, file=open(output, "w"))
-        io.info("Wrote " + output)
+        io.info("Wrote", output)
