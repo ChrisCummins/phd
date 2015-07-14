@@ -117,6 +117,8 @@ class Database(db.Database):
             "best_average_synthetic_real_classification_performance")
         self._best_average_synthetic_real_classification_speedup = sql_command(
             "best_average_synthetic_real_classification_speedup")
+        self._biggest_syn_real_classification_performance_drop = sql_command(
+            "biggest_syn_real_classification_performance_drop")
 
         self.connection.create_aggregate("geomean", 1, GeomeanAggregate)
         self.connection.create_aggregate("conferror", 2, ConfErrorAggregate)
@@ -361,6 +363,12 @@ class Database(db.Database):
     def best_average_synthetic_real_classification_speedup(self):
         return self.execute(
             self._best_average_synthetic_real_classification_speedup
+        ).fetchone()[0]
+
+    @property
+    def biggest_synthetic_real_classification_performance_drop(self):
+        return self.execute(
+            self._biggest_syn_real_classification_performance_drop
         ).fetchone()[0]
 
     def create_tables(self):
