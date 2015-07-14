@@ -109,14 +109,10 @@ class Database(db.Database):
         self._select_perf_scenario = sql_command("select_perf_scenario")
         self._select_perf_param_legal = sql_command("select_perf_param_legal")
         self._select_ratio_max_wgsize = sql_command("select_ratio_max_wgsize")
-        self._best_average_classification_performance = sql_command(
-            "best_average_classification_performance")
-        self._best_average_classification_speedup = sql_command(
-            "best_average_classification_speedup")
-        self._best_average_synthetic_real_classification_performance = sql_command(
-            "best_average_synthetic_real_classification_performance")
-        self._best_average_synthetic_real_classification_speedup = sql_command(
-            "best_average_synthetic_real_classification_speedup")
+        self._best_classification_results = sql_command(
+            "best_classification_results")
+        self._best_synthetic_real_classification_results = sql_command(
+            "best_syn_real_classification_results")
         self._biggest_syn_real_classification_performance_drop = sql_command(
             "biggest_syn_real_classification_performance_drop")
 
@@ -342,28 +338,16 @@ class Database(db.Database):
                              "GROUP BY classifier,err_fn")]
 
     @property
-    def best_average_classification_performance(self):
+    def best_classification_results(self):
         return self.execute(
-            self._best_average_classification_performance
-        ).fetchone()[0]
+            self._best_classification_results
+        ).fetchone()
 
     @property
-    def best_average_classification_speedup(self):
+    def best_synthetic_real_classification_results(self):
         return self.execute(
-            self._best_average_classification_speedup
-        ).fetchone()[0]
-
-    @property
-    def best_average_synthetic_real_classification_performance(self):
-        return self.execute(
-            self._best_average_synthetic_real_classification_performance
-        ).fetchone()[0]
-
-    @property
-    def best_average_synthetic_real_classification_speedup(self):
-        return self.execute(
-            self._best_average_synthetic_real_classification_speedup
-        ).fetchone()[0]
+            self._best_synthetic_real_classification_results
+        ).fetchone()
 
     @property
     def biggest_synthetic_real_classification_performance_drop(self):
