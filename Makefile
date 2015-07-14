@@ -1,6 +1,8 @@
 # I can haz pythons?
 PYTHONS := python2 python3
 
+.PHONY: check test install help
+
 check test:
 	@for python in $(PYTHONS); do						\
 		echo -n "$$python: ";						\
