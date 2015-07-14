@@ -5,6 +5,7 @@ import numpy as np
 from . import unhash_params
 
 import labm8 as lab
+from labm8 import io
 from labm8 import viz
 
 
@@ -84,6 +85,10 @@ class ParamSpace(object):
         from mpl_toolkits.mplot3d import Axes3D
 
         num_vals = self.matrix.shape[0] * self.matrix.shape[1]
+        if num_vals < 3:
+            io.error("Cannot create trisurf of", num_vals, "values")
+            return
+
         X = np.zeros((num_vals,))
         Y = np.zeros((num_vals,))
         Z = np.zeros((num_vals,))
