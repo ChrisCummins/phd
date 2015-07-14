@@ -109,6 +109,14 @@ class Database(db.Database):
         self._select_perf_scenario = sql_command("select_perf_scenario")
         self._select_perf_param_legal = sql_command("select_perf_param_legal")
         self._select_ratio_max_wgsize = sql_command("select_ratio_max_wgsize")
+        self._best_average_classification_performance = sql_command(
+            "best_average_classification_performance")
+        self._best_average_classification_speedup = sql_command(
+            "best_average_classification_speedup")
+        self._best_average_synthetic_real_classification_performance = sql_command(
+            "best_average_synthetic_real_classification_performance")
+        self._best_average_synthetic_real_classification_speedup = sql_command(
+            "best_average_synthetic_real_classification_speedup")
 
         self.connection.create_aggregate("geomean", 1, GeomeanAggregate)
         self.connection.create_aggregate("conferror", 2, ConfErrorAggregate)
@@ -135,6 +143,37 @@ class Database(db.Database):
         io.info("    Number of scenarios:  " + str(self.num_rows("scenarios")))
         io.info("    Number of kernels:    " + str(self.num_rows("kernels")))
         io.info("    Number of devices:    " + str(self.num_rows("devices")))
+
+    def run(self, name):
+        """
+        Run the names SQL script.
+
+        Arguments:
+
+            name (str): Name of the SQL script to be passed to
+              sql_command()
+        """
+        self.executescript(sql_command(name))
+
+    def runscript(self, name):
+        """
+        Run an sqlite subprocess, passing as input the named script.
+
+        Arguments:
+
+            name (str): Name of the SQL script to be passed to
+              sql_command().
+
+        Returns:
+
+            (str, str): sqlite3 subprocess stdout and stderr.
+        """
+        script = sql_command(name)
+        process = subprocess.Popen(["sqlite3", self.path],
+                                   stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        return process.communicate(input=script)
 
     @property
     def params(self):
@@ -300,36 +339,29 @@ class Database(db.Database):
                              "classification_results "
                              "GROUP BY classifier,err_fn")]
 
-    def run(self, name):
-        """
-        Run the names SQL script.
+    @property
+    def best_average_classification_performance(self):
+        return self.execute(
+            self._best_average_classification_performance
+        ).fetchone()[0]
 
-        Arguments:
+    @property
+    def best_average_classification_speedup(self):
+        return self.execute(
+            self._best_average_classification_speedup
+        ).fetchone()[0]
 
-            name (str): Name of the SQL script to be passed to
-              sql_command()
-        """
-        self.executescript(sql_command(name))
+    @property
+    def best_average_synthetic_real_classification_performance(self):
+        return self.execute(
+            self._best_average_synthetic_real_classification_performance
+        ).fetchone()[0]
 
-    def runscript(self, name):
-        """
-        Run an sqlite subprocess, passing as input the named script.
-
-        Arguments:
-
-            name (str): Name of the SQL script to be passed to
-              sql_command().
-
-        Returns:
-
-            (str, str): sqlite3 subprocess stdout and stderr.
-        """
-        script = sql_command(name)
-        process = subprocess.Popen(["sqlite3", self.path],
-                                   stdin=subprocess.PIPE,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
-        return process.communicate(input=script)
+    @property
+    def best_average_synthetic_real_classification_speedup(self):
+        return self.execute(
+            self._best_average_synthetic_real_classification_speedup
+        ).fetchone()[0]
 
     def create_tables(self):
         """
