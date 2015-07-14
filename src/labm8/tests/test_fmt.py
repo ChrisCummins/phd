@@ -22,15 +22,14 @@ class TestFmt(TestCase):
 
     # table()
     def test_table(self):
-        self._test("     0  1\n"
-                   "0  foo  1\n"
-                   "1  bar  2",
+        self._test(" foo  1\n"
+                   " bar  2",
                    fmt.table((("foo", 1), ("bar", 2))))
 
     def test_table_columns(self):
-        self._test("  type  value\n"
-                   "0  foo      1\n"
-                   "1  bar      2",
+        self._test("type  value\n"
+                   " foo      1\n"
+                   " bar      2",
                    fmt.table((("foo", 1), ("bar", 2)),
                              columns=("type", "value")))
 
