@@ -309,3 +309,24 @@ def scp(host, src, dst, user=None, path=None):
     # Check return code for error.
     if ret:
         raise ScpError(out, err)
+
+
+def isprocess(pid, error=False):
+    """
+    Check that a process is running.
+
+    Arguments:
+
+        pid (int): Process ID to check.
+
+    Returns:
+
+        True if the process is running, else false.
+    """
+    try:
+        # Don't worry folks, no processes are harmed in the making of
+        # this system call:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
