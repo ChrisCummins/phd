@@ -87,7 +87,7 @@ class TestIO(TestCase):
         self._test("fatal", re.search("fatal", out.getvalue()).group(0))
 
     # prof()
-    def test_error(self):
+    def test_prof(self):
         out = StringIO()
         io.prof("foo", file=out)
         self._test("PROF", re.search("PROF", out.getvalue()).group(0))
