@@ -217,7 +217,7 @@ def echo(*args, **kwargs):
             print(*msg, file=file, **kwargs)
 
 
-def which(program, path=os.environ["PATH"].split(os.pathsep)):
+def which(program, path=None):
     """
     Returns the full path of shell commands.
 
@@ -250,6 +250,8 @@ def which(program, path=os.environ["PATH"].split(os.pathsep)):
 
        str: Full path to program if found, else None.
     """
+    # If path is not given, read the $PATH environment variable.
+    path = path or os.environ["PATH"].split(os.pathsep)
     abspath = True if os.path.split(program)[0] else False
     if abspath:
         if fs.isexe(program):
