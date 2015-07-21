@@ -326,7 +326,7 @@ def performance_vs_wg_r(db, output=None, **kwargs):
 def _performance_plot(output, labels, values, title, **kwargs):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    sns.boxplot(values)
+    sns.boxplot(data=values)
     ax.set_xticklabels(labels, rotation=90)
     plt.ylim(ymin=0, ymax=1)
     plt.title(title)
