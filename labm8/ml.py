@@ -14,6 +14,11 @@
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 """
 Machine learning module.
+
+Attributes:
+
+    WEKA_IS_INSTALLED (bool): True if weka is installed.
+    MODULE_SUPPORTED (bool): True if this module is supported.
 """
 from __future__ import division
 
@@ -28,7 +33,8 @@ from labm8 import math as labmath
 from labm8 import system
 
 
-MODULE_SUPPORTED = system.which("weka") and not lab.is_python3()
+WEKA_IS_INSTALLED = system.which("weka") or fs.isexe("/Applications/Weka.app")
+MODULE_SUPPORTED = WEKA_IS_INSTALLED and not lab.is_python3()
 
 
 if MODULE_SUPPORTED:
