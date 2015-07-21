@@ -6,7 +6,9 @@ from labm8 import io
 
 from . import hash_params
 
-WG_VALUES = [4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96]
+# FIXME: Remove the "if not in" check and use the entire range.
+WG_VALUES = [i for i in range(2, 101, 2) if i not in
+             [4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96]]
 
 SPACE = list(itertools.product(WG_VALUES, WG_VALUES))
 
