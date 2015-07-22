@@ -1692,6 +1692,77 @@ class Database(db.Database):
 
         fs.cdpop()
 
+    def prune_safe_params(self, nsafe=1):
+        params = sorted([
+            (
+                param,
+                self.param_coverage(param),
+                self.perf_param_avg_legal(param)
+            )
+            for param in self.params
+        ], reverse=True, key=lambda x: (x[1], x[2], x[0]))
+
+        num_scenarios_at_start = self.num_scenarios
+
+        safe_params = params[:nsafe]
+        for row in safe_params:
+            param = row[0]
+            scenarios_to_delete = [
+                row[0] for row in self.execute(
+                    "SELECT DISTINCT scenario FROM runtime_stats "
+                    "WHERE scenario NOT IN (SELECT scenario FROM "
+                    "runtime_stats WHERE params=?)",
+                    (param,)
+                )
+            ]
+            if not len(scenarios_to_delete):
+                continue
+
+            quoted_scenarios = '"' + '","'.join(scenarios_to_delete) + '"'
+            self.execute("DELETE FROM scenarios WHERE id IN ({})"
+                         .format(quoted_scenarios))
+            self.execute("DELETE FROM runtime_stats WHERE scenario IN ({})"
+                         .format(quoted_scenarios))
+            self.execute("DELETE FROM oracle_params WHERE scenario IN ({})"
+                         .format(quoted_scenarios))
+
+        self.commit()
+        num_scenarios_at_end = self.num_scenarios
+        num_scenarios_removed = num_scenarios_at_start - num_scenarios_at_end
+        io.info("Pruned", num_scenarios_removed, "scenarios ({:.1f}%)".format(
+            (num_scenarios_removed / num_scenarios_at_start) * 100))
+        io.info("Safe params:",
+                ", ".join([row[0] for row in safe_params]))
+
+    def prune_min_params_per_scenario(self, min_params=10):
+        # Get a list of scenarios where there are less than
+        # "min_params" unique parameters.
+        scenarios_to_delete = [
+            scenario for scenario in self.scenarios
+            if self.num_params_for_scenario(scenario) < min_params
+        ]
+
+        # Do nothing if we have nothing to delete.
+        if not len(scenarios_to_delete):
+            return
+
+        num_scenarios_at_start = self.num_scenarios
+        quoted_scenarios = '"' + '","'.join(scenarios_to_delete) + '"'
+        # Delete all data for scenarios where the number of params is
+        # less than "min_params".
+        self.execute("DELETE FROM scenarios WHERE id IN ({})"
+                     .format(quoted_scenarios))
+        self.execute("DELETE FROM runtime_stats WHERE scenario IN ({})"
+                     .format(quoted_scenarios))
+        self.execute("DELETE FROM oracle_params WHERE scenario IN ({})"
+                     .format(quoted_scenarios))
+        self.commit()
+
+        num_scenarios_at_end = self.num_scenarios
+        num_scenarios_removed = num_scenarios_at_start - num_scenarios_at_end
+        io.info("Pruned", num_scenarios_removed, "scenarios ({:.1f}%)".format(
+            (num_scenarios_removed / num_scenarios_at_start) * 100))
+
 
 def create_test_db(dst, src, num_runtimes=100000):
     """
