@@ -13,10 +13,12 @@ WG_VALUES = [i for i in range(2, 101, 2) if i not in
 SPACE = list(itertools.product(WG_VALUES, WG_VALUES))
 
 def random_wg_value(max_wg_size):
-    wg = random.choice(SPACE)
-    if wg[0] * wg[1] > max_wg_size:
+    wg_c = random.randint(1, max_wg_size)
+    wg_r = random.randint(1, max_wg_size)
+
+    if wg_g * wg_r > max_wg_size:
         return random_wg_value(max_wg_size)
-    return wg
+    return [wg_c, wg_r]
 
 
 class SampleStrategy(object):
