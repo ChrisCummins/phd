@@ -36,6 +36,27 @@ from space import ParamSpace
 from pkg_resources import resource_string
 
 
+class Error(db.Error):
+    """
+    Module-level error.
+    """
+    pass
+
+
+class NoSafeParamError(Error):
+    """
+    Thrown if an expected safe param is missing.
+    """
+    pass
+
+
+class MissingDataError(Error):
+    """
+    Thrown if expected experimental data is missing.
+    """
+    pass
+
+
 def sql_command(name):
     """
     Return named SQL command.
@@ -1337,8 +1358,9 @@ class Database(db.Database):
             if default is not None:
                 return default
             else:
-                raise db.Error("No runtime information for {scenario} {params}"
-                               .format(scenario=scenario, params=param))
+                raise MissingDataError("No runtime information for "
+                                       "{scenario} {params}"
+                                       .format(scenario=scenario, params=param))
 
     def speedup(self, scenario, left, right):
         """
@@ -1585,6 +1607,13 @@ class Database(db.Database):
         # Get average performance of each param.
         avgs = [(param, self.perf_param_avg(param)) for param in self.params]
         best_wgsize, best_perf = max(avgs, key=lambda x: x[1])
+
+        # Geometric mean performance is zero if a parameter isn't
+        # safe. If the *best* parameter is 0, then clearly there's no
+        # one_r.
+        if best_perf == 0:
+            raise NoSafeParamError()
+
         num_oracles = sum([x[1] for x in self.oracle_params])
         best_count = _num_times_optimal(best_wgsize)
 
