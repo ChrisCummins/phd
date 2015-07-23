@@ -17,7 +17,6 @@ from labm8 import prof
 from labm8.db import placeholders
 from labm8.db import where
 
-import mysql.connector
 
 import omnitune
 from omnitune.skelcl import features
@@ -164,8 +163,9 @@ class Database(db.Database):
             self.version = 0
 
         # Open a connection to the remote database.
-        self.remote = mysql.connector.connect(**remote_cfg) if remote else None
-
+        if remote:
+            import mysql.connector
+            self.remote = mysql.connector.connect(**remote_cfg)
 
     def pull_remote(self):
         """
