@@ -12,9 +12,12 @@ from labm8 import fs
 from labm8 import io
 from labm8 import math as labmath
 from labm8 import ml
+from labm8 import prof
 
 from labm8.db import placeholders
 from labm8.db import where
+
+import mysql.connector
 
 import omnitune
 from omnitune.skelcl import features
@@ -114,13 +117,18 @@ class Database(db.Database):
     Persistent database store for Omnitune SkelCL data.
     """
 
-    def __init__(self, path=fs.path(omnitune.LOCAL_DIR, "skelcl.db")):
+    def __init__(self, path=fs.path(omnitune.LOCAL_DIR, "skelcl.db"),
+                 remote=False, remote_cfg={}):
         """
         Create a new connection to database.
 
         Arguments:
-           path (optional) If set, load database from path. If not, use
+           path (str, optional) If set, load database from path. If not, use
                standard system-wide default path.
+           remote (bool, optional): Whether to use a remote shared
+             database, to enable push and pull.
+           remote_cfg (dict, optional): Any arguments to be passed to
+             mysql.connector.connect() for remote connection.
         """
         super(Database, self).__init__(path)
 
@@ -154,6 +162,92 @@ class Database(db.Database):
         except Exception:
             # Base case: This is pre-versioning.
             self.version = 0
+
+        # Open a connection to the remote database.
+        self.remote = mysql.connector.connect(**remote_cfg) if remote else None
+
+
+    def pull_remote(self):
+        """
+        Pull remote data to the local database.
+        """
+        if self.remote:
+            self.replace_table_from_remote("scenarios", 4)
+            self.replace_table_from_remote("kernels", 43)
+            self.replace_table_from_remote("kernel_lookup", 7)
+            self.replace_table_from_remote("devices", 57)
+            self.replace_table_from_remote("device_lookup", 3)
+            self.replace_table_from_remote("datasets", 5)
+            self.replace_table_from_remote("dataset_lookup", 5)
+            self.replace_table_from_remote("params", 3)
+            # self.replace_table_from_remote("runtimes", 5)
+            self.replace_table_from_remote("runtime_stats", 6)
+            self.replace_table_from_remote("oracle_params", 3)
+            self.commit()
+
+    def push_remote(self):
+        """
+        Push local data to the remote database.
+        """
+        if self.remote:
+            self.replace_remote_table("scenarios", 4)
+            self.replace_remote_table("kernels", 43)
+            self.replace_remote_table("kernel_lookup", 7)
+            self.replace_remote_table("devices", 57)
+            self.replace_remote_table("device_lookup", 3)
+            self.replace_remote_table("datasets", 5)
+            self.replace_remote_table("dataset_lookup", 5)
+            self.replace_remote_table("params", 3)
+            # self.replace_remote_table("runtimes", 5)
+            self.replace_remote_table("runtime_stats", 6)
+            self.replace_remote_table("oracle_params", 3)
+
+    def replace_table_from_remote(self, table, ncols=1):
+        """
+        Replace the contents of a given table (if any) with the contents
+        of that table on the remote server (if any).
+
+        Arguments:
+
+            table (str): Name of the table to update.
+            ncols (int, optional): The number of columns in the table.
+        """
+        timer = "Fetched from remote {}".format(table)
+        prof.start(timer)
+
+        cursor = self.remote.cursor()
+        cursor.execute("SELECT * FROM " + table)
+        self.execute("DELETE FROM " + table)
+        placeholders = ",".join(["?"] * ncols)
+        self.executemany("INSERT INTO " + table + " VALUES ("
+                         + placeholders + ")", cursor)
+        cursor.close()
+
+        prof.stop(timer)
+
+    def replace_remote_table(self, table, ncols=1):
+        """
+        Replace the contents of a given table on the remote database (if
+        any) with the contents of that table in the local database (if
+        any).
+
+        Arguments:
+
+            table (str): Name of the table to update.
+            ncols (int, optional): The number of columns in the table.
+        """
+        timer = "Pushed to remote {}".format(table)
+        prof.start(timer)
+
+        cursor = self.remote.cursor()
+        rows = self.execute("SELECT * FROM " + table).fetchall()
+        cursor.execute("DELETE FROM " + table)
+        placeholders = ",".join(["%s"] * ncols)
+        cursor.executemany("INSERT INTO " + table + " VALUES ("
+                           + placeholders + ")", rows)
+        cursor.close()
+
+        prof.stop(timer)
 
     def status_report(self):
         io.info("Database status:")
@@ -1690,6 +1784,15 @@ class Database(db.Database):
                     row[-1] = self.speedup(scenario, one_r, params)
                     writer.writerow(row)
 
+        fs.cdpop()
+
+    def export_csvs(self, path="."):
+        """
+        Export a set of CSVs for the database.
+        """
+        fs.mkdir(path)
+        fs.cd(path)
+        self.runscript("export_csvs")
         fs.cdpop()
 
     def prune_safe_params(self, nsafe=1):
