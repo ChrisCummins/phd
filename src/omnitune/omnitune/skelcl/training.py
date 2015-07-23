@@ -8,8 +8,8 @@ from . import hash_params
 
 
 def random_wg_value(max_wg_size):
-    wg_c = random.randint(1, max_wg_size)
-    wg_r = random.randint(1, max_wg_size)
+    wg_c = random.randint(2, max_wg_size, 2)
+    wg_r = random.randint(2, max_wg_size, 2)
 
     if wg_g * wg_r > max_wg_size:
         return random_wg_value(max_wg_size)
