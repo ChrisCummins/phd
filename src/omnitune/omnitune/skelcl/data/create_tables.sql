@@ -1,6 +1,5 @@
---------------
--- METADATA --
---------------
+/* METADATA */
+
 
 -- Version table
 CREATE TABLE version (
@@ -10,13 +9,12 @@ CREATE TABLE version (
 INSERT INTO version VALUES (4);
 
 
--------------
--- KERNELS --
--------------
+/* KERNELS */
+
 
 -- Kernels table
 CREATE TABLE kernels (
-    id                              TEXT,
+    id                              CHAR(40),
     north                           INTEGER,
     south                           INTEGER,
     east                            INTEGER,
@@ -69,28 +67,26 @@ CREATE TABLE kernel_lookup (
     east                            INTEGER,
     west                            INTEGER,
     max_wg_size                     INTEGER,
-    source                          TEXT,
-    id                              TEXT,
-    PRIMARY KEY (north, south, east, west, max_wg_size, source)
+    source                          VARCHAR(32768),
+    id                              CHAR(40)
 );
 
 -- Kernel names table
 CREATE TABLE kernel_names (
-    id                              TEXT,
+    id                              CHAR(40),
     synthetic                       INTEGER,
-    name                            TEXT,
+    name                            VARCHAR(255),
     PRIMARY KEY (id)
 );
 
 
--------------
--- DEVICES --
--------------
+/* DEVICES */
+
 
 -- Devices table
 CREATE TABLE devices (
-    id                              TEXT,
-    name                            TEXT,
+    id                              VARCHAR(255),
+    name                            VARCHAR(255),
     count                           INTEGER,
     address_bits                    INTEGER,
     double_fp_config                TEXT,
@@ -151,24 +147,23 @@ CREATE TABLE devices (
 
 -- Devices lookup table
 CREATE TABLE device_lookup (
-    name                            TEXT,
+    name                            VARCHAR(255),
     count                           INTEGER,
-    id                              TEXT,
+    id                              CHAR(40),
     PRIMARY KEY (name, count)
 );
 
 
---------------
--- DATASETS --
---------------
+/* DATASETS */
+
 
 -- Datasets table
 CREATE TABLE datasets (
-    id                              TEXT,
+    id                              CHAR(40),
     width                           INTEGER,
     height                          INTEGER,
-    tin                             TEXT,
-    tout                            TEXT,
+    tin                             VARCHAR(255),
+    tout                            VARCHAR(255),
     PRIMARY KEY (id)
 );
 
@@ -176,60 +171,56 @@ CREATE TABLE datasets (
 CREATE TABLE dataset_lookup (
     width                           INTEGER,
     height                          INTEGER,
-    tin                             TEXT,
-    tout                            TEXT,
-    id                              TEXT,
+    tin                             VARCHAR(255),
+    tout                            VARCHAR(255),
+    id                              CHAR(40),
     PRIMARY KEY (width, height, tin, tout, id)
 );
 
 
----------------
--- SCENARIOS --
----------------
+/* SCENARIOS */
+
 
 -- Scenarios table
 CREATE TABLE scenarios (
-    id                              TEXT,
-    device                          TEXT,
-    kernel                          TEXT,
-    dataset                         TEXT,
+    id                              CHAR(40),
+    device                          VARCHAR(255),
+    kernel                          CHAR(40),
+    dataset                         CHAR(40),
     PRIMARY KEY (id)
 );
 
 
-------------
--- PARAMS --
-------------
+/* PARAMS */
+
 
 -- Params table
 CREATE TABLE params (
-    id                              TEXT,
+    id                              VARCHAR(255),
     wg_c                            INTEGER,
     wg_r                            INTEGER,
     PRIMARY KEY (id)
 );
 
 
---------------
--- RUNTIMES --
---------------
+/* RUNTIMES */
+
 
 -- Runtimes table
 CREATE TABLE runtimes (
-    scenario                        TEXT,
-    params                          TEXT,
+    scenario                        CHAR(40),
+    params                          VARCHAR(255),
     runtime                         REAL
 );
 
 
--------------------
--- ORACLE TABLES --
--------------------
+/* ORACLE TABLES */
+
 
 -- Runtime stats table
 CREATE TABLE runtime_stats (
-    scenario                        TEXT,
-    params                          TEXT,
+    scenario                        CHAR(40),
+    params                          VARCHAR(255),
     num_samples                     INTEGER,
     min                             REAL,
     mean                            REAL,
@@ -239,20 +230,19 @@ CREATE TABLE runtime_stats (
 
 -- Oracle parameters table
 CREATE TABLE oracle_params (
-    scenario                        TEXT,
-    params                          TEXT,
+    scenario                        CHAR(40),
+    params                          VARCHAR(255),
     runtime                         REAL,
     PRIMARY KEY (scenario, params, runtime)
 );
 
 
----------------
--- ML TABLES --
----------------
+/* ML TABLES */
+
 
 -- Classifiers table
 CREATE TABLE classifiers (
-    id                              TEXT,
+    id                              VARCHAR(512),
     classname                       TEXT,
     options                         TEXT,
     PRIMARY KEY (id)
@@ -261,14 +251,14 @@ CREATE TABLE classifiers (
 
 -- Error handlers table
 CREATE TABLE err_fns (
-    id                              TEXT,
+    id                              VARCHAR(255),
     PRIMARY KEY (id)
 );
 
 
 -- Error handlers table
 CREATE TABLE ml_datasets (
-    id                              TEXT,
+    id                              CHAR(40),
     data                            TEXT,     -- JSON dataset blob
     PRIMARY KEY (id)
 );
@@ -276,7 +266,7 @@ CREATE TABLE ml_datasets (
 
 -- ML evaluation jobs table
 CREATE TABLE ml_jobs (
-    id                              TEXT,     -- Descriptive job "name"
+    id                              VARCHAR(255),     -- Descriptive job "name"
     PRIMARY KEY (id)
 );
 
