@@ -1847,7 +1847,7 @@ class Database(db.Database):
 
         # Do nothing if we have nothing to delete.
         if not len(scenarios_to_delete):
-            return
+            io.info("Nothing to prune.")
 
         num_scenarios_at_start = self.num_scenarios
         quoted_scenarios = '"' + '","'.join(scenarios_to_delete) + '"'
