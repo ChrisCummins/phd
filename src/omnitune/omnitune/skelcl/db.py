@@ -240,13 +240,23 @@ class Database(db.Database):
         prof.start(timer)
 
         cursor = self.remote.cursor()
-        rows = self.execute("SELECT * FROM " + table).fetchall()
         cursor.execute("DELETE FROM " + table)
         placeholders = ",".join(["%s"] * ncols)
-        cursor.executemany("INSERT INTO " + table + " VALUES ("
-                           + placeholders + ")", rows)
-        cursor.close()
 
+        # Break tables up into slices for transfer.
+        num_rows = self.num_rows(table)
+        slice_size = 10000
+
+        for i in range(0, num_rows, slice_size):
+            rows = self.execute("SELECT * FROM {} LIMIT {} OFFSET {}"
+                                .format(table, slice_size, i)).fetchall()
+            if i:
+                io.info("transmitting slice", i // slice_size)
+            cursor.executemany("INSERT INTO " + table + " VALUES ("
+                               + placeholders + ")", rows)
+
+        self.remote.commit()
+        cursor.close()
         prof.stop(timer)
 
     def status_report(self):
