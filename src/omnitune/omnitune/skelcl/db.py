@@ -649,7 +649,7 @@ class Database(db.Database):
         # TODO: This could probably be implemented using an SQL
         # query, if I had the time and the know-how.
         for i,row in enumerate(rows):
-            self._progress_report("runtime_stats", i, 100, total)
+            self._progress_report("runtime_stats", i, 1000, total)
             scenario, params, rhs_count, rhs_min, rhs_mean, rhs_max = row
             lhs = self.execute("SELECT num_samples,min,mean,max\n"
                                "FROM runtime_stats\n"
