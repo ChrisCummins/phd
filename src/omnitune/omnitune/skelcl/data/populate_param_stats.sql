@@ -16,7 +16,7 @@ SELECT
         WHERE params=id
     ) AS coverage,
     (
-        SELECT AVG(oracle.runtime / stats.mean)
+        SELECT GEOMEAN(oracle.runtime / stats.mean)
         FROM runtime_stats AS stats
         LEFT JOIN oracle_params AS oracle
         ON stats.scenario=oracle.scenario

@@ -1769,6 +1769,22 @@ class Database(db.Database):
             )
         ]
 
+    def W_legal(self, scenario):
+        return [
+            row[0] for row in
+            self.execute(
+                "SELECT params FROM runtime_stats WHERE scenario=?",
+                (scenario,)
+            )
+        ]
+
+    @property
+    def W_safe(self):
+        return [
+            row[0] for row in
+            self.execute("SELECT params FROM param_stats WHERE coverage = 1")
+        ]
+
     def dump_csvs(self, path="."):
         """
         Dump CSV files.
