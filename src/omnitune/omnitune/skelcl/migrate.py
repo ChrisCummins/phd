@@ -603,21 +603,21 @@ def migrate(db):
     path = db.path
     if db.version == 0:
         migrate_0_to_1(db)
-        db = _db.Database(path=path)
+        db = migrate(_db.Database(path=path))
     if db.version == 1:
         migrate_1_to_2(db)
-        db = _db.Database(path=path)
+        db = migrate(_db.Database(path=path))
     if db.version == 2:
         migrate_2_to_3(db)
-        db = _db.Database(path=path)
+        db = migrate(_db.Database(path=path))
     if db.version == 3:
         migrate_3_to_4(db)
-        db = _db.Database(path=path)
+        db = migrate(_db.Database(path=path))
     if db.version == 4:
         migrate_4_to_5(db)
-        db = _db.Database(path=path)
+        db = migrate(_db.Database(path=path))
     if db.version == 5:
         migrate_5_to_6(db)
-        db = _db.Database(path=path)
+        db = migrate(_db.Database(path=path))
 
     return db
