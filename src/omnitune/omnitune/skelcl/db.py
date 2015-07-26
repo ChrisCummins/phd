@@ -955,11 +955,15 @@ class Database(db.Database):
         self.commit()
 
     def populate_scenario_stats_table(self):
+        prof.start("populated scenario_stats")
         self.runscript("populate_scenario_stats")
+        prof.stop("populated scenario_stats")
         self.commit()
 
     def populate_param_stats_table(self):
+        prof.start("populated param_stats")
         self.runscript("populate_param_stats")
+        prof.start("populated param_stats")
         self.commit()
 
     def populate_oracle_tables(self):
