@@ -237,6 +237,18 @@ CREATE TABLE param_stats (
     PRIMARY KEY (params)
 );
 
+-- Scenario stats table
+CREATE TABLE scenario_stats (
+    scenario                        CHAR(40),     -- Key for scenarios
+    num_params                      INTEGER,      -- The number of parameters in W_legal for scenario
+    oracle_param                    VARCHAR(255), -- The best parameter
+    oracle_runtime                  REAL,         -- The runtime of the best parameter
+    worst_param                     VARCHAR(255), -- The worst parameter
+    worst_runtime                   REAL,         -- The runtime of the worst parameter
+    mean_runtime                    REAL,         -- The mean runtime of all parameters
+    PRIMARY KEY (scenario)
+);
+
 -- Oracle parameters table
 CREATE TABLE oracle_params (
     scenario                        CHAR(40),

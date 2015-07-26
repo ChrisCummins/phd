@@ -705,6 +705,7 @@ class Database(db.Database):
         io.info("Updating oracle tables ...")
         self.execute("DELETE FROM oracle_params")
         self.populate_oracle_params_table()
+        self.populate_scenario_stats_table()
         self.populate_param_stats_table()
 
         io.debug("Compacting database ...")
@@ -953,6 +954,10 @@ class Database(db.Database):
 
         self.commit()
 
+    def populate_scenario_stats_table(self):
+        self.runscript("populate_scenario_stats")
+        self.commit()
+
     def populate_param_stats_table(self):
         self.runscript("populate_param_stats")
         self.commit()
@@ -967,6 +972,7 @@ class Database(db.Database):
         self.execute("DELETE FROM oracle_params")
         self.populate_oracle_params_table()
 
+        self.populate_scenario_stats_table()
         self.populate_param_stats_table()
 
         io.debug("Compacting database ...")
@@ -1713,15 +1719,13 @@ class Database(db.Database):
                     return count
             return 0
 
-        # Get average performance of each param.
-        avgs = [(param, self.perf_param_avg(param)) for param in self.params]
-        best_wgsize, best_perf = max(avgs, key=lambda x: x[1])
-
-        # Geometric mean performance is zero if a parameter isn't
-        # safe. If the *best* parameter is 0, then clearly there's no
-        # one_r.
-        if best_perf == 0:
-            raise NoSafeParamError()
+        best_perf = 0
+        best_wgsize = None
+        for param in self.W_safe:
+            perf = self.perf_param_avg(param)
+            if perf > best_perf:
+                best_perf = perf
+                best_wgsize = param
 
         num_oracles = sum([x[1] for x in self.oracle_params])
         best_count = _num_times_optimal(best_wgsize)

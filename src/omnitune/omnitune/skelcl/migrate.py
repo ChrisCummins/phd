@@ -535,6 +535,56 @@ CREATE TABLE param_stats (
     io.info("Migration completed.")
 
 
+def migrate_5_to_6(db):
+    """
+    SkelCL database migration script.
+
+    Database version 5 adds an additional "param_stats" table.
+
+    Arguments:
+
+        old (SkelCLDatabase): The database to migrate
+    """
+    io.info("Migrating database to version 6.")
+
+    backup_path = db.path + ".5"
+    io.info("Creating backup of old database at '{0}'".format(backup_path))
+    fs.cp(db.path, backup_path)
+
+    db.execute("DELETE FROM version")
+    db.execute("INSERT INTO version VALUES (6)")
+
+    db.execute("""
+CREATE TABLE scenario_stats (
+    scenario                        CHAR(40),     -- Key for scenarios
+    num_params                      INTEGER,      -- The number of parameters in W_legal for scenario
+    oracle_param                    VARCHAR(255), -- The best parameter
+    oracle_runtime                  REAL,         -- The runtime of the best parameter
+    worst_param                     VARCHAR(255), -- The worst parameter
+    worst_runtime                   REAL,         -- The runtime of the worst parameter
+    mean_runtime                    REAL,         -- The mean runtime of all parameters
+    PRIMARY KEY (scenario)
+)
+""")
+
+    db.populate_scenario_stats_table()
+
+    # Sanity checks
+    bad = False
+    if db.num_rows("scenario_stats") != len(db.scenarios):
+        io.error("Bad row count in scenario_stats table!")
+        bad = True
+
+    if bad:
+        io.fatal("Failed sanity check, aborting.")
+    else:
+        io.info("Passed sanity check.")
+
+    # Copy migrated database over the original one.
+    db.close()
+    io.info("Migration completed.")
+
+
 def migrate(db):
     """
     Perform database migration.
@@ -565,6 +615,9 @@ def migrate(db):
         db = _db.Database(path=path)
     if db.version == 4:
         migrate_4_to_5(db)
+        db = _db.Database(path=path)
+    if db.version == 5:
+        migrate_5_to_6(db)
         db = _db.Database(path=path)
 
     return db
