@@ -487,6 +487,54 @@ def migrate_3_to_4(old):
     io.info("Migration completed.")
 
 
+def migrate_4_to_5(db):
+    """
+    SkelCL database migration script.
+
+    Database version 5 adds an additional "param_stats" table.
+
+    Arguments:
+
+        old (SkelCLDatabase): The database to migrate
+    """
+    io.info("Migrating database to version 5.")
+
+    backup_path = db.path + ".4"
+    io.info("Creating backup of old database at '{0}'".format(backup_path))
+    fs.cp(db.path, backup_path)
+
+    db.execute("DELETE FROM version")
+    db.execute("INSERT INTO version VALUES (5)")
+
+    db.execute("""
+-- Parameter stats table
+CREATE TABLE param_stats (
+    params                          VARCHAR(255), -- Key for params
+    num_scenarios                   INTEGER,      -- Number of scenarios for which param is legal, 0 < num_scenarios
+    coverage                        REAL,         -- num_scenarios / total number of scenarios, 0 < coverage <= 1
+    performance                     REAL,         -- Geometric mean of performance relative to the oracle for all scenarios for which param was legal, 0 < performance <= 1
+    PRIMARY KEY (params)
+)
+""")
+
+    db.populate_param_stats_table()
+
+    # Sanity checks
+    bad = False
+    if db.num_rows("param_stats") != len(db.params):
+        io.error("Bad row count in params table!")
+        bad = True
+
+    if bad:
+        io.fatal("Failed sanity check, aborting.")
+    else:
+        io.info("Passed sanity check.")
+
+    # Copy migrated database over the original one.
+    db.close()
+    io.info("Migration completed.")
+
+
 def migrate(db):
     """
     Perform database migration.
@@ -514,6 +562,9 @@ def migrate(db):
         db = _db.Database(path=path)
     if db.version == 3:
         migrate_3_to_4(db)
+        db = _db.Database(path=path)
+    if db.version == 4:
+        migrate_4_to_5(db)
         db = _db.Database(path=path)
 
     return db

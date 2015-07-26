@@ -705,6 +705,7 @@ class Database(db.Database):
         io.info("Updating oracle tables ...")
         self.execute("DELETE FROM oracle_params")
         self.populate_oracle_params_table()
+        self.populate_param_stats_table()
 
         io.debug("Compacting database ...")
         self.execute("VACUUM")
@@ -935,7 +936,7 @@ class Database(db.Database):
         """
         Derive runtime stats from "runtimes" table.
         """
-        self.run("populate_runtime_stats")
+        self.runscript("populate_runtime_stats")
         self.commit()
 
     def populate_oracle_params_table(self):
@@ -952,17 +953,21 @@ class Database(db.Database):
 
         self.commit()
 
+    def populate_param_stats_table(self):
+        self.runscript("populate_param_stats")
+        self.commit()
+
     def populate_oracle_tables(self):
         """
         Populate the oracle tables.
         """
         self.populate_kernel_names_table()
-
-        self.execute("DELETE FROM runtime_stats")
         self.populate_runtime_stats_table()
 
         self.execute("DELETE FROM oracle_params")
         self.populate_oracle_params_table()
+
+        self.populate_param_stats_table()
 
         io.debug("Compacting database ...")
         self.execute("VACUUM")

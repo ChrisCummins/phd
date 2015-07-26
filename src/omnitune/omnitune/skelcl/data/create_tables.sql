@@ -228,6 +228,15 @@ CREATE TABLE runtime_stats (
     PRIMARY KEY (scenario, params)
 );
 
+-- Parameter stats table
+CREATE TABLE param_stats (
+    params                          VARCHAR(255), -- Key for params
+    num_scenarios                   INTEGER,      -- Number of scenarios for which param is legal, 0 < num_scenarios
+    coverage                        REAL,         -- num_scenarios / total number of scenarios, 0 < coverage <= 1
+    performance                     REAL,         -- Geometric mean of performance relative to the oracle for all scenarios for which param was legal, 0 < performance <= 1
+    PRIMARY KEY (params)
+);
+
 -- Oracle parameters table
 CREATE TABLE oracle_params (
     scenario                        CHAR(40),
