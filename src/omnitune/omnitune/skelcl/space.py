@@ -199,6 +199,14 @@ class ParamSpace(object):
         self.r = new_r
         self.matrix = new_matrix
 
+    def clip(self, max_c=0, max_r=0):
+        """
+        Clip a space within a bounded area.
+        """
+        new_c = min(len(self.c), max_c)
+        new_r = min(len(self.r), max_r)
+        self.reshape(new_c, new_r)
+
     @staticmethod
     def from_dict(data, wg_c=None, wg_r=None):
         """
