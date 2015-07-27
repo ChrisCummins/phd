@@ -34,7 +34,10 @@ setup(name='omnitune',
       },
       scripts=[
           'bin/omnitune-migrate',
-          'bin/omnitune-proxy'
+          'bin/omnitune-proxy',
+          'bin/omnitune-pull',
+          'bin/omnitune-push',
+          'bin/omnitune-stats',
       ],
       test_suite='nose.collector',
       tests_require=[
