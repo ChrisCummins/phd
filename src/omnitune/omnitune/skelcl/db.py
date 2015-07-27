@@ -1918,41 +1918,47 @@ CREATE TABLE IF NOT EXISTS variance_stats (
         self.runscript("export_csvs")
         fs.cdpop()
 
-    def prune_safe_params(self, nsafe=1):
-        params = sorted([
-            (
-                param,
-                self.param_coverage(param),
-                self.perf_param_avg_legal(param)
+    def prune_safe_param(self, param):
+        timer = "made {} safe".format(param)
+        prof.start(timer)
+        scenarios_to_delete = [
+            row[0] for row in self.execute(
+                "SELECT DISTINCT scenario FROM runtime_stats "
+                "WHERE scenario NOT IN ("
+                "    SELECT scenario FROM runtime_stats WHERE params=?"
+                ")",
+                (param,)
             )
-            for param in self.params
-        ], reverse=True, key=lambda x: (x[1], x[2], x[0]))
-
-        num_scenarios_at_start = self.num_scenarios
-
-        safe_params = params[:nsafe]
-        for row in safe_params:
-            param = row[0]
-            scenarios_to_delete = [
-                row[0] for row in self.execute(
-                    "SELECT DISTINCT scenario FROM runtime_stats "
-                    "WHERE scenario NOT IN (SELECT scenario FROM "
-                    "runtime_stats WHERE params=?)",
-                    (param,)
-                )
-            ]
-            if not len(scenarios_to_delete):
-                continue
-
+        ]
+        if not len(scenarios_to_delete):
+            io.info("Param", param, "already safe")
+        else:
             quoted_scenarios = '"' + '","'.join(scenarios_to_delete) + '"'
             self.execute("DELETE FROM scenarios WHERE id IN ({})"
                          .format(quoted_scenarios))
-            self.execute("DELETE FROM scenario_stats WHERE scenario IN ({})"
-                         .format(quoted_scenarios))
             self.execute("DELETE FROM runtime_stats WHERE scenario IN ({})"
+                         .format(quoted_scenarios))
+            self.execute("DELETE FROM scenario_stats WHERE scenario IN ({})"
                          .format(quoted_scenarios))
             self.execute("DELETE FROM oracle_params WHERE scenario IN ({})"
                          .format(quoted_scenarios))
+        prof.stop(timer)
+
+    def prune_safe_params(self, nsafe=1):
+        num_scenarios_at_start = self.num_scenarios
+
+        safe_params = [
+            row[0] for row in
+            self.execute(
+                "SELECT params FROM param_stats\n"
+                "ORDER BY coverage DESC, performance DESC, params DESC\n"
+                "LIMIT ?",
+                (nsafe,)
+            )
+        ]
+
+        for param in safe_params:
+            self.prune_safe(param)
 
         self.commit()
         num_scenarios_at_end = self.num_scenarios
@@ -1960,7 +1966,7 @@ CREATE TABLE IF NOT EXISTS variance_stats (
         io.info("Pruned", num_scenarios_removed, "scenarios ({:.1f}%)".format(
             (num_scenarios_removed / num_scenarios_at_start) * 100))
         io.info("Safe params:",
-                ", ".join([row[0] for row in safe_params]))
+                ", ".join([param for param in safe_params]))
 
 
     def repair(self, dry_run=True):
