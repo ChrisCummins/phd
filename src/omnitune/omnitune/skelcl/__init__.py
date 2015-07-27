@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import json
 import re
 
 import labm8 as lab
@@ -25,6 +26,13 @@ class Error(Exception):
 class FeatureExtractionError(Error):
     """
     Error thrown if feature extraction fails.
+    """
+    pass
+
+
+class ConfigNotFoundError(Error):
+    """
+    Error thrown if config file is not found.
     """
     pass
 
@@ -179,6 +187,14 @@ def get_kernel_name_and_type(source):
     # Sanitise and return user input
     return (True if synthetic.strip().lower() == "y" else False,
             name.strip().lower())
+
+
+def load_config(path="~/.omnitunerc.json"):
+    path = fs.abspath(path)
+    if fs.isfile(path):
+        return json.load(open(path))
+    else:
+        raise ConfigNotFoundError("File '{}' not found!".format(path))
 
 
 def main():
