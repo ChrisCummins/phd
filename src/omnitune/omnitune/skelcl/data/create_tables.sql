@@ -257,6 +257,14 @@ CREATE TABLE oracle_params (
     PRIMARY KEY (scenario, params, runtime)
 );
 
+-- Variance stats table.
+CREATE TABLE IF NOT EXISTS variance_stats (
+    num_samples                     INTEGER,
+    mean                            REAL,
+    confinterval                    REAL,
+    PRIMARY KEY (num_samples)
+)
+
 
 /* ML TABLES */
 

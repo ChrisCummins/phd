@@ -975,6 +975,69 @@ class Database(db.Database):
         prof.stop("populated param_stats")
         self.commit()
 
+    def populate_variance_stats_table(self):
+        max_samples=1000
+        num_tests=10
+        num_repetitions=10
+        conf=.95
+
+        self.execute("""
+CREATE TABLE IF NOT EXISTS variance_stats (
+    num_samples                     INTEGER,
+    mean                            REAL,
+    confinterval                    REAL,
+    PRIMARY KEY (num_samples)
+)
+""")
+        self.execute("DELETE FROM variance_stats")
+
+        scenario_params = [
+            row for row in
+            self.execute(
+                "SELECT scenario,params\n"
+                "FROM runtime_stats\n"
+                "WHERE num_samples >= ?\n"
+                "ORDER BY RANDOM()\n"
+                "LIMIT ?",
+                (max_samples, num_tests)
+            )
+        ]
+
+        for num_samples in range(5, 50+1, 5):
+            confintervals = []
+            timer = "variance_stats for {} samples".format(num_samples)
+            prof.start(timer)
+            for _ in range(num_repetitions):
+                for row in scenario_params:
+                    scenario, params = row
+
+                    confintervals.append(self.execute(
+                        "SELECT\n"
+                        "    (\n"
+                        "        SELECT (\n"
+                        "                    CONFERROR(runtime, ?) \n"
+                        "                    / runtime_stats.mean\n"
+                        "                ) * 100 FROM (\n"
+                        "            SELECT runtime FROM runtimes\n"
+                        "            WHERE\n"
+                        "                runtimes.scenario=runtime_stats.scenario\n"
+                        "                AND runtimes.params=runtime_stats.params\n"
+                        "            ORDER BY RANDOM()\n"
+                        "            LIMIT ?\n"
+                        "        )\n"
+                        "    ) AS confinterval\n"
+                        "FROM runtime_stats\n"
+                        "WHERE\n"
+                        "    runtime_stats.scenario=?\n"
+                        "    AND runtime_stats.params=?\n",
+                        (conf, num_samples, scenario, params)).fetchone()[0])
+
+            self.execute("INSERT INTO variance_stats VALUES (?,?,?)",
+                         (num_samples, labmath.mean(confintervals),
+                          labmath.confinterval(confintervals, error_only=True)))
+            prof.stop(timer)
+        self.commit()
+
     def populate_oracle_tables(self):
         """
         Populate the oracle tables.
