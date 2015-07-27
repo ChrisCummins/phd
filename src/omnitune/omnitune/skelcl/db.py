@@ -308,6 +308,11 @@ class Database(db.Database):
         return process.communicate(input=script)
 
     @property
+    def num_samples(self):
+        return self.execute("SELECT SUM(num_samples) "
+                            "FROM runtime_stats").fetchone()[0]
+
+    @property
     def params(self):
         return [row[0] for row in
                 self.execute("SELECT id FROM params")]
