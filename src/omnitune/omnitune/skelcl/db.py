@@ -1935,6 +1935,8 @@ CREATE TABLE IF NOT EXISTS variance_stats (
             quoted_scenarios = '"' + '","'.join(scenarios_to_delete) + '"'
             self.execute("DELETE FROM scenarios WHERE id IN ({})"
                          .format(quoted_scenarios))
+            self.execute("DELETE FROM scenario_stats WHERE scenario IN ({})"
+                         .format(quoted_scenarios))
             self.execute("DELETE FROM runtime_stats WHERE scenario IN ({})"
                          .format(quoted_scenarios))
             self.execute("DELETE FROM oracle_params WHERE scenario IN ({})"
@@ -1947,6 +1949,71 @@ CREATE TABLE IF NOT EXISTS variance_stats (
             (num_scenarios_removed / num_scenarios_at_start) * 100))
         io.info("Safe params:",
                 ", ".join([row[0] for row in safe_params]))
+
+
+    def repair(self, dry_run=True):
+        scenarios = self.scenarios
+        params = self.params
+
+        num_scenarios_in_runtime_stats = self.execute(
+            "SELECT Count(*) FROM (SELECT DISTINCT scenario FROM runtime_stats)"
+        ).fetchone()[0]
+        num_params_in_runtime_stats = self.execute(
+            "SELECT Count(*) FROM (SELECT DISTINCT params FROM runtime_stats)"
+        ).fetchone()[0]
+        if num_scenarios_in_runtime_stats != len(scenarios):
+            io.warn("Inconsitent number of scenarios in runtime_stats.",
+                    "Expected:", len(scenarios),
+                    "Actual:", num_scenarios_in_runtime_stats)
+
+            if not dry_run:
+                self.execute("DELETE FROM runtime_stats WHERE scenario NOT IN "
+                             "({})".format(",".join(['"' + scenario + '"'
+                                                     for scenario in scenarios])))
+                self.commit()
+                self.repair(dry_run=dry_run)
+        elif num_params_in_runtime_stats != len(params):
+            io.warn("Inconsitent number of params in runtime_stats.",
+                    "Expected:", len(params),
+                    "Actual:", num_params_in_runtime_stats)
+
+            if not dry_run:
+                if num_params_in_runtime_stats > len(params):
+                    quoted_params = ",".join(['"' + param + '"' for param in params])
+                    self.execute("DELETE FROM runtime_stats WHERE params NOT IN "
+                                 "({})".format(quoted_params))
+                else:
+                    params = [
+                        '"' + row[0] + '"' for row in
+                        self.execute(
+                            "SELECT DISTINCT params FROM runtime_stats"
+                        )
+                    ]
+                    self.execute("DELETE FROM params WHERE id NOT IN ({})"
+                                 .format(",".join(params)))
+
+                self.commit()
+                self.repair(dry_run=dry_run)
+        else:
+            io.info("runtime_stats is OK")
+
+        if self.num_rows("scenario_stats") != len(scenarios):
+            io.warn("Inconsitent number of scenarios in scenario_stats.",
+                    "Expected:", len(scenarios),
+                    "Actual:", self.num_rows("scenario_stats"))
+        else:
+            io.info("scenario_stats is OK")
+
+        if self.num_rows("param_stats") != len(params):
+            io.warn("Inconsistent number of params in param_stats.",
+                    "Expected:", len(params),
+                    "Actual:", self.num_rows("param_stats"))
+            if not dry_run:
+                self.populate_param_stats_table()
+                self.repair(dry_run=dry_run)
+        else:
+            io.info("param_stats is OK")
+
 
     def prune_min_params_per_scenario(self, min_params=10):
         # Get a list of scenarios where there are less than
@@ -1965,6 +2032,8 @@ CREATE TABLE IF NOT EXISTS variance_stats (
         # Delete all data for scenarios where the number of params is
         # less than "min_params".
         self.execute("DELETE FROM scenarios WHERE id IN ({})"
+                     .format(quoted_scenarios))
+        self.execute("DELETE FROM scenario_stats WHERE scenario IN ({})"
                      .format(quoted_scenarios))
         self.execute("DELETE FROM runtime_stats WHERE scenario IN ({})"
                      .format(quoted_scenarios))
