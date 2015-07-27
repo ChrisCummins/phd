@@ -260,12 +260,18 @@ class Database(db.Database):
         prof.stop(timer)
 
     def status_report(self):
+        W_safe = ", ".join([str(x) for x in self.W_safe])
+
         io.info("Database status:")
         io.info("    Number of runtimes:   " + str(self.num_rows("runtimes")))
         io.info("    Number of params:     " + str(self.num_rows("params")))
         io.info("    Number of scenarios:  " + str(self.num_rows("scenarios")))
         io.info("    Number of kernels:    " + str(self.num_rows("kernels")))
         io.info("    Number of devices:    " + str(self.num_rows("devices")))
+        if W_safe:
+            io.info("    W_safe:               " + W_safe)
+        else:
+            io.info("    W_safe:               None")
 
     def run(self, name):
         """
