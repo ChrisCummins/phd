@@ -38,6 +38,9 @@ from space import ParamSpace
 from pkg_resources import resource_string
 
 
+DEFAULT_PATH = fs.path("~/.omnitune/skelcl.db")
+
+
 class Error(db.Error):
     """
     Module-level error.
