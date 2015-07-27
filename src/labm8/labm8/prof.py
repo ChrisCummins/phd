@@ -147,6 +147,13 @@ def stop(name=None, **kwargs):
     io.prof("{}: {} ms".format(name, elapsed), **kwargs)
 
 
+def end(*args, **kwargs):
+    """
+    Stop a timer, see stop().
+    """
+    stop(*args, **kwars)
+
+
 def reset(name=None):
     """
     Reset a timer.
