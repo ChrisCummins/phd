@@ -32,7 +32,10 @@ setup(name='omnitune',
       package_data={
           'omnitune.skelcl': ['data/*.sql']
       },
-      scripts=['bin/omnitune-proxy'],
+      scripts=[
+          'bin/omnitune-migrate',
+          'bin/omnitune-proxy'
+      ],
       test_suite='nose.collector',
       tests_require=[
           'nose'
