@@ -508,7 +508,7 @@ def migrate_4_to_5(db):
 
     db.execute("""
 -- Parameter stats table
-CREATE TABLE param_stats (
+CREATE TABLE IF NOT EXISTS param_stats (
     params                          VARCHAR(255), -- Key for params
     num_scenarios                   INTEGER,      -- Number of scenarios for which param is legal, 0 < num_scenarios
     coverage                        REAL,         -- num_scenarios / total number of scenarios, 0 < coverage <= 1
