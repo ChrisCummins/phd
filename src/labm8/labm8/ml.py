@@ -33,7 +33,7 @@ from labm8 import math as labmath
 from labm8 import system
 
 
-WEKA_IS_INSTALLED = system.which("weka") or fs.isexe("/Applications/Weka.app")
+WEKA_IS_INSTALLED = system.which("weka") or fs.exists("/Applications/Weka.app")
 MODULE_SUPPORTED = WEKA_IS_INSTALLED and not lab.is_python3()
 
 
