@@ -522,7 +522,8 @@ CREATE TABLE param_stats (
     # Sanity checks
     bad = False
     if db.num_rows("param_stats") != len(db.params):
-        io.error("Bad row count in params table!")
+        io.error("Bad row count in params table! Expected", len(db.params),
+                 "Observed:", db.num_rows("param_stats"))
         bad = True
 
     if bad:
@@ -572,7 +573,8 @@ CREATE TABLE scenario_stats (
     # Sanity checks
     bad = False
     if db.num_rows("scenario_stats") != len(db.scenarios):
-        io.error("Bad row count in scenario_stats table!")
+        io.error("Bad row count in scenario_stats table! Expected",
+                 len(db.scenarios), "Observed:", db.num_rows("scenario_stats"))
         bad = True
 
     if bad:
