@@ -556,7 +556,7 @@ def migrate_5_to_6(db):
     db.execute("INSERT INTO version VALUES (6)")
 
     db.execute("""
-CREATE TABLE scenario_stats (
+CREATE TABLE IF NOT EXISTS scenario_stats (
     scenario                        CHAR(40),     -- Key for scenarios
     num_params                      INTEGER,      -- The number of parameters in W_legal for scenario
     oracle_param                    VARCHAR(255), -- The best parameter
