@@ -115,6 +115,7 @@ def runtimes_variance(db, output=None, min_samples=1, where=None, **kwargs):
 
 def max_wgsizes(db, output=None, trisurf=False, **kwargs):
     space = db.max_wgsize_space()
+    space.clip(50, 50)
     if "title" not in kwargs:
         kwargs["title"] = "Distribution of maximum workgroup sizes"
     if trisurf:
@@ -141,6 +142,7 @@ def safety(db, output=None, where=None, **kwargs):
 
 def oracle_wgsizes(db, output=None, where=None, trisurf=False, **kwargs):
     space = db.oracle_param_space(where=where)
+    space.clip(50, 50)
     if "title" not in kwargs: kwargs["title"] = "All data"
     if trisurf:
         space.trisurf(output=output, **kwargs)
