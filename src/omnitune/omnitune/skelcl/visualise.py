@@ -1,9 +1,12 @@
 #!/usr/bin/env python2
 
 from __future__ import division
+
+import operator
+import re
+
 from collections import defaultdict
 from functools import reduce
-import operator
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -170,16 +173,20 @@ def scenario_performance(db, scenario, output=None, title=None, type="heatmap",
 
 
 
-def performance_vs_coverage(db, output=None, **kwargs):
-    data = sorted([
-        (
-            db.perf_param_avg(param) * 100,
-            db.perf_param_avg_legal(param) * 100,
-            db.param_coverage(param) * 100
+def performance_vs_coverage(db, output=None, max_values=200, **kwargs):
+    data = [
+        row for row in
+        db.execute(
+            "SELECT "
+            "    CASE WHEN coverage=1 THEN performance * 100.0 ELSE 0 END AS perf_all, "
+            "    performance * 100.0 AS perf_legal, "
+            "    coverage * 100.0 "
+            "FROM param_stats "
+            "ORDER BY coverage DESC, perf_all DESC, perf_legal DESC "
+            "LIMIT ?",
+            (max_values,)
         )
-        for param in db.params
-        if db.perf_param_avg_legal(param) > 0
-    ], reverse=True, key=lambda x: (x[0], x[2], x[1]))
+    ]
     X = np.arange(len(data))
 
     GeoPerformance, Performance, Coverage = zip(*data)
@@ -265,12 +272,27 @@ def _performance_size(data, output, title, xlabel, percs=True, **kwargs):
 
 
 def performance_vs_max_wgsize(db, output=None, **kwargs):
+    # TODO: Replace with box plot of 10% ranges of max wgsize.
     data = [
-        (
-            db.perf(scenario, param) * 100,
-            db.ratio_max_wgsize(scenario, param) * 100
+        row for row in
+        db.execute(
+            "SELECT "
+            "    (scenario_stats.oracle_runtime / runtime_stats.mean) * 100 "
+            "  AS performance, "
+            "    (params.wg_c * params.wg_r * 1.0 / kernels.max_wg_size) "
+            "  * 100 AS ratio_max_wgsize "
+            "FROM runtime_stats "
+            "LEFT JOIN scenarios "
+            "  ON runtime_stats.scenario=scenarios.id "
+            "LEFT JOIN kernels "
+            "  ON scenarios.kernel=kernels.id "
+            "LEFT JOIN params "
+            "  ON runtime_stats.params=params.id "
+            "LEFT JOIN scenario_stats "
+            "  ON runtime_stats.scenario=scenario_stats.scenario "
+            "ORDER BY RANDOM() "
+            "LIMIT 1000"
         )
-        for scenario, param in db.scenario_params
     ]
 
     title = kwargs.pop("title",
@@ -294,13 +316,25 @@ def performance_vs_wgsize(db, output=None, **kwargs):
 
 
 def performance_vs_wg_c(db, output=None, **kwargs):
-    max_wg_c = db.wg_c[-1]
     data = [
-        (
-            db.perf(scenario, param) * 100,
-            unhash_params(param)[0],
+        row for row in
+        db.execute(
+            "SELECT "
+            "    scenario_stats.oracle_runtime / runtime_stats.mean "
+            "  AS performance, "
+            "    params.wg_c "
+            "FROM runtime_stats "
+            "LEFT JOIN scenarios "
+            "  ON runtime_stats.scenario=scenarios.id "
+            "LEFT JOIN kernels "
+            "  ON scenarios.kernel=kernels.id "
+            "LEFT JOIN params "
+            "  ON runtime_stats.params=params.id "
+            "LEFT JOIN scenario_stats "
+            "  ON runtime_stats.scenario=scenario_stats.scenario "
+            "ORDER BY RANDOM() "
+            "LIMIT 1000"
         )
-        for scenario, param in db.scenario_params
     ]
 
     title = kwargs.pop("title",
@@ -310,13 +344,25 @@ def performance_vs_wg_c(db, output=None, **kwargs):
 
 
 def performance_vs_wg_r(db, output=None, **kwargs):
-    max_wg_r = db.wg_r[-1]
     data = [
-        (
-            db.perf(scenario, param) * 100,
-            unhash_params(param)[1],
+        row for row in
+        db.execute(
+            "SELECT "
+            "    scenario_stats.oracle_runtime / runtime_stats.mean "
+            "  AS performance, "
+            "    params.wg_r "
+            "FROM runtime_stats "
+            "LEFT JOIN scenarios "
+            "  ON runtime_stats.scenario=scenarios.id "
+            "LEFT JOIN kernels "
+            "  ON scenarios.kernel=kernels.id "
+            "LEFT JOIN params "
+            "  ON runtime_stats.params=params.id "
+            "LEFT JOIN scenario_stats "
+            "  ON runtime_stats.scenario=scenario_stats.scenario "
+            "ORDER BY RANDOM() "
+            "LIMIT 1000"
         )
-        for scenario, param in db.scenario_params
     ]
 
     title = kwargs.pop("title",
@@ -336,15 +382,30 @@ def _performance_plot(output, labels, values, title, **kwargs):
 
 
 def kernel_performance(db, output=None, **kwargs):
-    labels = db.kernel_names
-    values = [db.performance_of_kernels_with_name(label) for label in labels]
+    labels = ["synthetic"] + db.real_kernel_names
+
+    values = [lab.flatten([db.performance_of_kernels_with_name(name) for name in
+                          db.synthetic_kernel_names])]
+    values += [db.performance_of_kernels_with_name(name) for name in
+               db.real_kernel_names]
+
     title = kwargs.pop("title", "Workgroup size performance across kernels")
     _performance_plot(output, labels, values, title, **kwargs)
 
 
 def device_performance(db, output=None, **kwargs):
-    labels = db.cpus + db.gpus # Arrange CPUs on the left, GPUs on the right.
-    values = [db.performance_of_device(label) for label in labels]
+    def _fmtid(id):
+        name = id.strip()
+        name = re.sub("^\dx ", "", name)
+        name = re.sub("GeForce", "Nvidia", name)
+        name = re.sub("Tahiti", "AMD Tahiti 7970", name)
+        name = re.sub("Intel\(R\) Core\(TM\)", "Intel", name)
+        name = re.sub(" CPU @ [0-9\.]+GHz", "", name)
+        return name
+
+    ids = db.cpus + db.gpus # Arrange CPUs on the left, GPUs on the right.
+    labels = [_fmtid(id) for id in ids]
+    values = [db.performance_of_device(id) for id in ids]
     title = kwargs.pop("title", "Workgroup size performance across devices")
     _performance_plot(output, labels, values, title, **kwargs)
 
@@ -358,18 +419,18 @@ def dataset_performance(db, output=None, **kwargs):
 
 def runtimes_range(db, output=None, where=None, nbins=25,
                    iqr=(0.25,0.75), **kwargs):
-    data = [t[2:] for t in db.min_max_runtimes(where=where)]
-    min_t, max_t = zip(*data)
+    # data = [t[2:] for t in db.min_max_runtimes(where=where)]
+    # min_t, max_t = zip(*data)
 
-    lower = labmath.filter_iqr(min_t, *iqr)
-    upper = labmath.filter_iqr(max_t, *iqr)
+    # lower = labmath.filter_iqr(min_t, *iqr)
+    # upper = labmath.filter_iqr(max_t, *iqr)
 
-    min_data = np.r_[lower, upper].min()
-    max_data = np.r_[lower, upper].max()
-    bins = np.linspace(min_data, max_data, nbins)
+    # min_data = np.r_[lower, upper].min()
+    # max_data = np.r_[lower, upper].max()
+    # bins = np.linspace(min_data, max_data, nbins)
 
-    plt.hist(lower, bins, label="Min")
-    plt.hist(upper, bins, label="Max");
+    # Plt.hist(lower, bins, label="Min")
+    # plt.hist(upper, bins, label="Max");
     title = kwargs.pop("title", "Normalised distribution of min and max runtimes")
     plt.title(title)
     plt.ylabel("Frequency")
@@ -592,6 +653,7 @@ def runtime_regression(db, output=None, job="xval", **kwargs):
     ax = fig.add_subplot(111)
 
     colors = sns.color_palette()
+    i, actual = 0, []
 
     for i,classifier in enumerate(db.regression_classifiers):
         basename = ml.classifier_basename(classifier)

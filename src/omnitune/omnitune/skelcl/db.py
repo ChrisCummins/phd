@@ -355,6 +355,18 @@ class Database(db.Database):
                 self.execute("SELECT DISTINCT name FROM kernel_names")]
 
     @property
+    def real_kernel_names(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT name FROM kernel_names "
+                             "WHERE synthetic=0")]
+
+    @property
+    def synthetic_kernel_names(self):
+        return [row[0] for row in
+                self.execute("SELECT DISTINCT name FROM kernel_names "
+                             "WHERE synthetic=1")]
+
+    @property
     def real_kernels(self):
         return [row[0] for row in
                 self.execute("SELECT id FROM kernel_names WHERE synthetic=1")]
@@ -1092,7 +1104,7 @@ CREATE TABLE IF NOT EXISTS variance_stats (
         return {name: self.lookup_named_kernel(name)
                 for name in self.kernel_names}
 
-    def oracle_param_frequencies(self, table="oracle_params",
+    def oracle_param_frequencies(self, table="scenario_stats",
                                  where=None, normalise=False):
         """
         Return a frequency table of optimal parameter values.
@@ -1115,8 +1127,8 @@ CREATE TABLE IF NOT EXISTS variance_stats (
             select.append(where)
         freqs = {
             row[0]: row[1] for row in
-            self.execute("SELECT params,Count(*) AS count FROM "
-                         "{select} GROUP BY params ORDER BY count ASC"
+            self.execute("SELECT oracle_param AS param,Count(*) AS count FROM "
+                         "{select} GROUP BY oracle_param ORDER BY count ASC"
                          .format(select=" ".join(select)))
         }
 
