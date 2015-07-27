@@ -263,7 +263,7 @@ CREATE TABLE IF NOT EXISTS variance_stats (
     mean                            REAL,
     confinterval                    REAL,
     PRIMARY KEY (num_samples)
-)
+);
 
 
 /* ML TABLES */
