@@ -43,11 +43,63 @@ def num_samples(db, output=None, sample_range=None, **kwargs):
 
     title = kwargs.pop("title", "Frequency of number of samples counts")
     plt.title(title)
-    plt.xlabel("Number of samples")
-    plt.ylabel("Ratio of instances")
+    plt.xlabel("Minimum sample count")
+    plt.ylabel("Ratio of test cases")
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.plot(X, Y)
     plt.xlim(*sample_range)
+    viz.finalise(output, **kwargs)
+
+
+def num_params(db, output=None, sample_range=None, **kwargs):
+
+    # Range of param counts.
+    sample_range = sample_range or (1, 100)
+
+    num_instances = db.num_rows("scenario_stats")
+
+    X = np.arange(num_instances)
+    Y = np.zeros(num_instances)
+
+    for i in range(sample_range[0], sample_range[1] + 1):
+        Y[i] = db.execute("SELECT (Count(*) * 1.0 / ?) * 100 "
+                          "FROM scenario_stats WHERE num_params >= ?",
+                          (num_instances, i)).fetchone()[0]
+
+    title = kwargs.pop("title", "Number of parameters")
+    plt.title(title)
+    plt.xlabel("Number of parameters")
+    plt.ylabel("Ratio of scenarios")
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.plot(X, Y)
+    plt.xlim(*sample_range)
+    viz.finalise(output, **kwargs)
+
+
+def runtimes_histogram(runtimes, output=None, **kwargs):
+    mean = np.mean(runtimes)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    sns.distplot(runtimes)
+    ax.axvline(mean, color='k', linestyle='--')
+    plt.xlim(min(runtimes), max(runtimes))
+    plt.gca().axes.get_yaxis().set_ticks([])
+    plt.xlabel("Runtime (ms)")
+    plt.locator_params(axis="x", nbins=6)
+    viz.finalise(output, **kwargs)
+
+
+def confinterval_trend(sample_counts, confintervals, output=None,
+                       vlines=[], **kwargs):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    plt.plot(sample_counts, [y * 100 for y in confintervals])
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    for vline in vlines:
+        ax.axvline(vline, color='k', linestyle='--')
+    plt.ylabel("95% CI / mean")
+    plt.xlabel("Number of samples")
+    plt.xlim(min(sample_counts), max(sample_counts))
     viz.finalise(output, **kwargs)
 
 
