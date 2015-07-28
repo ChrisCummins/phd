@@ -320,7 +320,9 @@ CREATE TABLE classification_results (
     correct                         INTEGER,  -- 1 if prediction is correct, else 0
     invalid                         INTEGER,  -- 1 if *first* prediction was valid, else 0
     performance                     REAL,     -- Performance relative to oracle, 0 <= performance <= 1
-    speedup                         REAL      -- Speedup over baseline, 0 <= speedup
+    speedup                         REAL,     -- Speedup over baseline, 0 <= speedup
+    speedup_he                      REAL,     -- Speedup over human expert
+    speedup_mo                      REAL      -- Speedup over mode param
 );
 
 
