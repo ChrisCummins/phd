@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+online_share=/usr/share/omnitune
+online_data=~/data/msc-thesis
+
+set -eu
+
+if mount | grep $online_share >/dev/null; then
+    echo "unmounting $online_share"
+    sudo umount $online_share
+fi
+
+if mount | grep $online_data >/dev/null; then
+    echo "unmounting $online_data"
+    sudo umount $online_data
+fi
