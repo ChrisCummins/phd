@@ -2,8 +2,12 @@ from __future__ import division
 from __future__ import print_function
 
 import csv
+import json
+import random
 import subprocess
 import sqlite3 as sql
+
+import numpy as np
 
 import labm8 as lab
 from labm8 import db
@@ -441,6 +445,16 @@ class Database(db.Database):
     @property
     def mean_samples(self):
         return self.execute("SELECT AVG(num_samples) FROM "
+                            "runtime_stats").fetchone()[0]
+
+    @property
+    def min_sample_count(self):
+        return self.execute("SELECT MIN(num_samples) FROM "
+                            "runtime_stats").fetchone()[0]
+
+    @property
+    def max_sample_count(self):
+        return self.execute("SELECT MAX(num_samples) FROM "
                             "runtime_stats").fetchone()[0]
 
     @property
@@ -992,22 +1006,7 @@ class Database(db.Database):
         prof.stop("populated param_stats")
         self.commit()
 
-    def populate_variance_stats_table(self):
-        max_samples=1000
-        num_tests=10
-        num_repetitions=10
-        conf=.95
-
-        self.execute("""
-CREATE TABLE IF NOT EXISTS variance_stats (
-    num_samples                     INTEGER,
-    mean                            REAL,
-    confinterval                    REAL,
-    PRIMARY KEY (num_samples)
-)
-""")
-        self.execute("DELETE FROM variance_stats")
-
+    def dump_nm_runtimes(self, path, num_tests=1000, num_samples=1000):
         scenario_params = [
             row for row in
             self.execute(
@@ -1016,44 +1015,80 @@ CREATE TABLE IF NOT EXISTS variance_stats (
                 "WHERE num_samples >= ?\n"
                 "ORDER BY RANDOM()\n"
                 "LIMIT ?",
-                (max_samples, num_tests)
+                (num_samples, num_tests)
             )
         ]
 
-        for num_samples in range(5, 50+1, 5):
+        fs.mkdir("/tmp/omnitune.export")
+
+        if len(scenario_params) < num_tests:
+            io.fatal("There isn't enough data to work with! "
+                     "Requested:", num_tests, "Found:", len(scenario_params))
+
+        samples = []
+        for i,row in enumerate(scenario_params):
+            timer = "fetched runtimes set {}".format(i + 1)
+            prof.start(timer)
+            scenario, params = row
+            runtimes = [
+                row[0] for row in
+                self.execute("SELECT runtime FROM runtimes WHERE "
+                             "scenario=? AND params=? LIMIT ?",
+                             (scenario, params, num_samples))
+            ]
+            samples.append(runtimes)
+            prof.stop(timer)
+
+            json.dump(runtimes, open("/tmp/omnitune.export/{}.json".format(i+1), "wb"))
+
+        runtimes = [
+            json.load(open(file)) for file in
+            fs.ls("/tmp/omnitune.export", abspaths=True)
+        ]
+
+        json.dump(runtimes, open(path, "wb"))
+
+        fs.rm("/tmp/omnitune.export")
+
+
+    def calculate_variance_stats(self, sample_runtimes):
+        min_samples=5
+        max_samples=len(sample_runtimes[0])
+        sample_step=1
+        num_tests=len(sample_runtimes)
+        num_repetitions=10
+        conf=.95
+
+        means = [labmath.mean(runtimes) for runtimes in sample_runtimes]
+
+        output = open("/tmp/ci.csv", "w")
+
+        for num_samples in range(min_samples, max_samples + 1, sample_step):
             confintervals = []
-            timer = "variance_stats for {} samples".format(num_samples)
+            timer = "variance_stats for {} of {} samples".format(num_samples,
+                                                                 max_samples)
+
             prof.start(timer)
             for _ in range(num_repetitions):
-                for row in scenario_params:
-                    scenario, params = row
+                for mean,runtimes in zip(means, sample_runtimes):
+                    random.shuffle(runtimes)
+                    subsample = runtimes[:num_samples]
+                    confinterval = labmath.confinterval(subsample,
+                                                        error_only=True,
+                                                        conf=conf)
 
-                    confintervals.append(self.execute(
-                        "SELECT\n"
-                        "    (\n"
-                        "        SELECT (\n"
-                        "                    CONFERROR(runtime, ?) \n"
-                        "                    / runtime_stats.mean\n"
-                        "                ) * 100 FROM (\n"
-                        "            SELECT runtime FROM runtimes\n"
-                        "            WHERE\n"
-                        "                runtimes.scenario=runtime_stats.scenario\n"
-                        "                AND runtimes.params=runtime_stats.params\n"
-                        "            ORDER BY RANDOM()\n"
-                        "            LIMIT ?\n"
-                        "        )\n"
-                        "    ) AS confinterval\n"
-                        "FROM runtime_stats\n"
-                        "WHERE\n"
-                        "    runtime_stats.scenario=?\n"
-                        "    AND runtime_stats.params=?\n",
-                        (conf, num_samples, scenario, params)).fetchone()[0])
+                    confintervals.append(confinterval / mean)
 
-            self.execute("INSERT INTO variance_stats VALUES (?,?,?)",
-                         (num_samples, labmath.mean(confintervals),
-                          labmath.confinterval(confintervals, error_only=True)))
+            mean_ci = labmath.mean(confintervals)
+            ci_ci = labmath.confinterval(confintervals, error_only=True, conf=.95)
             prof.stop(timer)
-        self.commit()
+
+            output.write(",".join([str(x) for x in
+                                   [num_samples, mean_ci, ci_ci]]) + "\n")
+            output.flush()
+
+        output.close()
+
 
     def populate_oracle_tables(self):
         """
