@@ -198,5 +198,5 @@ def load_config(path="~/.omnitunerc.json"):
 
 
 def main():
-    import proxy
-    proxy.main()
+    import server
+    server.main()

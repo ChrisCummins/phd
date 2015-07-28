@@ -37,20 +37,20 @@ INTERFACE_NAME = "org.omnitune.skelcl"
 OBJECT_PATH    = "/"
 
 
-class Proxy(omnitune.Proxy):
+class Server(omnitune.Server):
 
     LLVM_PATH = fs.path("~/src/msc-thesis/skelcl/libraries/llvm/build/bin/")
 
     def __init__(self, *args, **kwargs):
         """
-        Construct a SkelCL proxy.
+        Construct a SkelCL server.
         """
         # Fail if we can't find the path
         if not fs.isdir(self.LLVM_PATH):
             io.fatal("Could not find llvm path '{0}'".format(self.LLVM_PATH))
 
-        super(Proxy, self).__init__(*args, **kwargs)
-        io.info("Registered proxy %s/SkelCLProxy ..." % SESSION_NAME)
+        super(Server, self).__init__(*args, **kwargs)
+        io.info("Registered server %s/SkelCLServer ..." % SESSION_NAME)
 
         # Setup persistent database.
         self.db = migrate(Database())
@@ -240,8 +240,8 @@ def main():
     name = dbus.service.BusName(SESSION_NAME, bus)
     io.info("Launched session %s ..." % SESSION_NAME)
 
-    # Launch proxy.
-    Proxy(bus, OBJECT_PATH)
+    # Launch server.
+    Server(bus, OBJECT_PATH)
 
     mainloop = gobject.MainLoop()
     try:

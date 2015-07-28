@@ -35,7 +35,7 @@ setup(name='omnitune',
       scripts=[
           'bin/omnitune-migrate',
           'bin/omnitune-mount',
-          'bin/omnitune-proxy',
+          'bin/omnitune-server',
           'bin/omnitune-pull',
           'bin/omnitune-push',
           'bin/omnitune-repair',

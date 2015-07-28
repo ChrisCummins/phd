@@ -11,5 +11,5 @@ class Error(Exception):
     pass
 
 
-class Proxy(dbus.service.Object):
+class Server(dbus.service.Object):
     pass
