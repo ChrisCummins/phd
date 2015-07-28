@@ -278,7 +278,7 @@ class Database(db.Database):
 
     def run(self, name):
         """
-        Run the names SQL script.
+        Run the named SQL script.
 
         Arguments:
 
