@@ -449,6 +449,84 @@ class Database(db.Database):
                             "runtime_stats").fetchone()[0]
 
     @property
+    def num_scenarios_by_device(self):
+        return [
+            (
+                device,
+                self.execute("SELECT Count(*) FROM scenarios WHERE device=?",
+                             (device,)).fetchone()[0]
+            )
+            for device in self.devices
+        ]
+
+    @property
+    def num_runtime_stats_by_device(self):
+        return [
+            (
+                device,
+                self.execute("SELECT Count(*) FROM runtime_stats "
+                             "WHERE scenario IN ("
+                             "    SELECT id FROM scenarios WHERE device=?"
+                             ")", (device,)).fetchone()[0]
+            )
+            for device in self.devices
+        ]
+
+    @property
+    def num_scenarios_by_kernel(self):
+        return [
+            (
+                name,
+                self.execute("SELECT Count(*) FROM scenarios "
+                             "WHERE kernel IN ("
+                             "    SELECT id FROM kernel_names WHERE name=?"
+                             ")",
+                             (name,)).fetchone()[0]
+            )
+            for name in self.kernel_names
+        ]
+
+    @property
+    def num_runtime_stats_by_kernel(self):
+        return [
+            (
+                name,
+                self.execute("SELECT Count(*) FROM runtime_stats "
+                             "WHERE scenario IN ("
+                             "    SELECT id FROM scenarios WHERE kernel IN ("
+                             "        SELECT id FROM kernel_names WHERE name=?"
+                             "    )"
+                             ")",
+                             (name,)).fetchone()[0]
+            )
+            for name in self.kernel_names
+        ]
+
+    @property
+    def num_scenarios_by_dataset(self):
+        return [
+            (
+                dataset,
+                self.execute("SELECT Count(*) FROM scenarios WHERE dataset=?",
+                             (dataset,)).fetchone()[0]
+            )
+            for dataset in self.datasets
+        ]
+
+    @property
+    def num_runtime_stats_by_dataset(self):
+        return [
+            (
+                dataset,
+                self.execute("SELECT Count(*) FROM runtime_stats "
+                             "WHERE scenario IN ("
+                             "    SELECT id FROM scenarios WHERE dataset=?"
+                             ")", (dataset,)).fetchone()[0]
+            )
+            for dataset in self.datasets
+        ]
+
+    @property
     def min_sample_count(self):
         return self.execute("SELECT MIN(num_samples) FROM "
                             "runtime_stats").fetchone()[0]
@@ -791,11 +869,23 @@ class Database(db.Database):
         err_fn_id = self.err_fn_id(err_fn)
         dataset_id = self.ml_dataset_id(dataset)
 
+        HE_PARAM = "32x4"
+        try:
+            speedup_he = self.speedup(scenario, HE_PARAM, predicted)
+        except:
+            speedup_he = None
+
+        MO_PARAM = "64x4"
+        try:
+            speedup_mo = self.speedup(scenario, MO_PARAM, predicted)
+        except:
+            speedup_mo = None
+
         self.execute("INSERT INTO classification_results VALUES "
-                     "(?,?,?,?,?,?,?,?,?,?,?,?)",
+                     "(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                      (job_id, classifier_id, err_fn_id, dataset_id,
                       scenario, actual, predicted, baseline, correct,
-                      invalid, performance, speedup))
+                      invalid, performance, speedup, speedup_he, speedup_mo))
 
     def add_runtime_regression_result(self, job, classifier, dataset, scenario,
                                       params, actual, predicted, norm_predicted,
@@ -1963,6 +2053,27 @@ class Database(db.Database):
         self.runscript("export_csvs")
         fs.cdpop()
 
+    def prune_scenarios(self, scenarios):
+        num_scenarios_at_start = self.num_scenarios
+        quoted_scenarios = '"' + '","'.join(scenarios) + '"'
+        # Delete all data for scenarios where the number of params is
+        # less than "min_params".
+        self.execute("DELETE FROM scenarios WHERE id IN ({})"
+                     .format(quoted_scenarios))
+        self.execute("DELETE FROM scenario_stats WHERE scenario IN ({})"
+                     .format(quoted_scenarios))
+        self.execute("DELETE FROM runtime_stats WHERE scenario IN ({})"
+                     .format(quoted_scenarios))
+        self.execute("DELETE FROM oracle_params WHERE scenario IN ({})"
+                     .format(quoted_scenarios))
+        self.commit()
+
+        num_scenarios_at_end = self.num_scenarios
+        num_scenarios_removed = num_scenarios_at_start - num_scenarios_at_end
+        io.info("Pruned", num_scenarios_removed, "scenarios ({:.1f}%)".format(
+            (num_scenarios_removed / num_scenarios_at_start) * 100))
+
+
     def prune_safe_param(self, param):
         timer = "made {} safe".format(param)
         prof.start(timer)
@@ -2076,7 +2187,6 @@ class Database(db.Database):
                 self.repair(dry_run=dry_run)
         else:
             io.info("param_stats is OK")
-
 
     def prune_min_params_per_scenario(self, min_params=10):
         # Get a list of scenarios where there are less than

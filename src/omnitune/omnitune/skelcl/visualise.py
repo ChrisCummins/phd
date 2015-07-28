@@ -311,6 +311,14 @@ def _performance_size(data, output, title, xlabel, percs=True, **kwargs):
     viz.finalise(output, **kwargs)
 
 
+def pie(data, output=None, **kwargs):
+    labels, values = zip(*data)
+    plt.pie(values, labels=labels, autopct='%1.1f%%', shadow=True,
+            startangle=90)
+    viz.finalise(output, **kwargs)
+
+
+
 def performance_vs_max_wgsize(db, output=None, **kwargs):
     # TODO: Replace with box plot of 10% ranges of max wgsize.
     data = [
