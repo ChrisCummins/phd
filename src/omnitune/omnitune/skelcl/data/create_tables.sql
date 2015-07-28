@@ -203,6 +203,13 @@ CREATE TABLE params (
 );
 
 
+-- Refused params table
+CREATE TABLE refused_params (
+    scenario                        CHAR(40),
+    params                          VARCHAR(255),
+    PRIMARY KEY (scenario, params)
+);
+
 /* RUNTIMES */
 
 

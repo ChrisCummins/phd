@@ -232,6 +232,66 @@ class Server(omnitune.Server):
                   .format(scenario=scenario[:8], params=params,
                           runtime=runtime)))
 
+    @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiisssiiid',
+                         out_signature='')
+    def RefuseStencilParams(self, device_name, device_count,
+                            north, south, east, west, data_width,
+                            data_height, type_in, type_out, source,
+                            max_wg_size, wg_c, wg_r):
+        """
+        Mark a set of parameters as bad.
+
+        Args:
+
+            device_name (str): The name of the execution device.
+            device_count (int): The number of execution devices.
+            north (int): The stencil shape north direction.
+            south (int): The stencil shape south direction.
+            east (int): The stencil shape east direction.
+            west (int): The stencil shape west direction.
+            data_width (int): The number of columns of data.
+            data_height (int): The number of rows of data.
+            type_in (str): The input data type.
+            type_out (str): The output data type.
+            source (str): The stencil kernel source code.
+            max_wg_size (int): The maximum kernel workgroup size.
+            wg_c (int): The workgroup size used (columns).
+            wg_r (int): The workgroup size used (rows).
+
+        """
+        # Parse arguments.
+        device_name = util.parse_str(device_name)
+        device_count = int(device_count)
+        north = int(north)
+        south = int(south)
+        east = int(east)
+        west = int(west)
+        data_width = int(data_width)
+        data_height = int(data_height)
+        type_in = util.parse_str(type_in)
+        type_out = util.parse_str(type_out)
+        source = util.parse_str(source)
+        max_wg_size = int(max_wg_size)
+        wg_c = int(wg_c)
+        wg_r = int(wg_r)
+
+        # Lookup IDs
+        device = self.db.device_id(device_name, device_count)
+        kernel = self.db.kernel_id(north, south, east, west,
+                                   max_wg_size, source)
+        dataset = self.db.datasets_id(data_width, data_height,
+                                      type_in, type_out)
+        scenario = self.db.scenario_id(device, kernel, dataset)
+        params = self.db.params_id(wg_c, wg_r)
+
+        # Add entry into runtimes table.
+        self.db.refuse_params(scenario, params)
+        self.db.commit()
+
+        io.debug(("RefuseStencilParams({scenario}, {params})"
+                  .format(scenario=scenario[:8], params=params,
+                          runtime=runtime)))
+
 
 def main():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)

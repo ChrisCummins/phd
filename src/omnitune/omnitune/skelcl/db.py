@@ -760,6 +760,10 @@ class Database(db.Database):
         self.execute("INSERT INTO runtimes VALUES (?,?,?)",
                      (scenario, params, runtime))
 
+    def refuse_params(self, scenario, params):
+        self.execute("INSERT OR IGNORE INTO refused_params VALUES(?,?)",
+                     (scenario, params))
+
     def add_classification_result(self, job, classifier, err_fn, dataset,
                                   scenario, actual, predicted, baseline,
                                   correct, invalid, performance, speedup):
