@@ -27,31 +27,19 @@ from labm8 import prof
 
 
 def num_samples(db, output=None, sample_range=None, **kwargs):
-    def _get_sample_count_range():
-        return db.execute(
-            "SELECT\n"
-            "    MIN(num_samples),\n"
-            "    MAX(num_samples) + 2\n"
-            "FROM runtime_stats"
-        ).fetchone()
 
     # Range of sample counts.
-    sample_range = sample_range or _get_sample_count_range()
-    sequence = range(*sample_range)
-    # Total number of test cases.
+    sample_range = sample_range or (1, 100)
+
     num_instances = db.num_rows("runtime_stats")
 
-    # Number of samples vs. ratio of runtime_stats.
-    X,Y = zip(*[
-        (i, db.execute(
-            "SELECT\n"
-            "    (CAST(Count(*) AS FLOAT) / CAST(? AS FLOAT)) * 100\n"
-            "FROM runtime_stats\n"
-            "WHERE num_samples >= ?",
-            (num_instances, i)
-        ).fetchone()[0])
-        for i in sequence
-    ])
+    X = np.arange(num_instances)
+    Y = np.zeros(num_instances)
+
+    for i in range(sample_range[0], sample_range[1] + 1):
+        Y[i] = db.execute("SELECT (Count(*) * 1.0 / ?) * 100 "
+                          "FROM runtime_stats WHERE num_samples >= ?",
+                          (num_instances, i)).fetchone()[0]
 
     title = kwargs.pop("title", "Frequency of number of samples counts")
     plt.title(title)
