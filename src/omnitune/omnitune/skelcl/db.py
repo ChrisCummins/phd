@@ -415,7 +415,7 @@ class Database(db.Database):
 
             list of tuples: Elements in tuple:
 
-                scenario,device,kernel,north,south,east,west,width,height,tout
+                scenario,device,kernel,north,south,east,west,max_wg_size,width,height,tout
         """
         query = ("SELECT\n"
                  "    scenarios.id,\n"
@@ -425,6 +425,7 @@ class Database(db.Database):
                  "    kernels.south,\n"
                  "    kernels.east,\n"
                  "    kernels.west,\n"
+                 "    kernels.max_wg_size,\n"
                  "    datasets.width,\n"
                  "    datasets.height,\n"
                  "    datasets.tout\n"
