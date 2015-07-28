@@ -38,7 +38,7 @@ from space import ParamSpace
 from pkg_resources import resource_string
 
 
-DEFAULT_PATH = fs.path("~/.omnitune/skelcl.db")
+DEFAULT_PATH = fs.path("/usr/share/omnitune/db/skelcl.db")
 
 
 class Error(db.Error):

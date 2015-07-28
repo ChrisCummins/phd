@@ -18,10 +18,10 @@ def print_usage_and_exit():
 
 
 def main(arguments):
-    if len(arguments) != 1:
+    if len(arguments) > 1:
         print_usage_and_exit()
 
-    path = arguments[0]
+    path = arguments[0] if len(arguments) else _db.DEFAULT_PATH
 
     if not fs.isfile(path):
         print("File not found!")

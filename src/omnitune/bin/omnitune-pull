@@ -22,10 +22,10 @@ def print_usage_and_exit():
 
 
 def main(arguments):
-    if len(arguments) > 2:
+    if len(arguments) > 1:
         print_usage_and_exit()
 
-    path = arguments[0] if len(arguments) == 1 else _db.DEFAULT_PATH
+    path = arguments[0] if len(arguments) else _db.DEFAULT_PATH
     if not fs.isfile(path):
         io.fatal("File", path, "not found!")
 

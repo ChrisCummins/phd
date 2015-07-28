@@ -16,11 +16,17 @@ def print_usage_and_exit():
 
 
 def main(arguments):
-    if len(arguments) > 3:
+    if len(arguments) > 2:
         print_usage_and_exit()
 
-    path = arguments[0]
-    dry_run = True if len(arguments) > 1 else False
+    if len(arguments) and arguments[0] != "--dry-run":
+        path = arguments[0]
+    else:
+        path = _db.DEFAULT_PATH
+    if len(arguments) and arguments[-1] == "--dry-run":
+        dry_run = True
+    else:
+        dry_run = False
 
     if not fs.isfile(path):
         print("File not found!")
