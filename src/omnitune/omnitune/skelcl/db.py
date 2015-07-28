@@ -266,7 +266,7 @@ class Database(db.Database):
         W_safe = ", ".join([str(x) for x in self.W_safe])
 
         io.info("Database status:")
-        io.info("    Number of runtimes:   " + str(self.num_rows("runtimes")))
+        io.info("    Number of runtimes:   " + str(self.num_runtimes))
         io.info("    Number of params:     " + str(self.num_rows("params")))
         io.info("    Number of scenarios:  " + str(self.num_rows("scenarios")))
         io.info("    Number of kernels:    " + str(self.num_rows("kernels")))
@@ -308,7 +308,7 @@ class Database(db.Database):
         return process.communicate(input=script)
 
     @property
-    def num_samples(self):
+    def num_runtimes(self):
         return self.execute("SELECT SUM(num_samples) "
                             "FROM runtime_stats").fetchone()[0]
 
