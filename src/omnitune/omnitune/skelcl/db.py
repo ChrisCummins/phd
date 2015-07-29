@@ -542,6 +542,27 @@ class Database(db.Database):
                             "runtime_stats").fetchone()[0]
 
     @property
+    def ratio_refused_params(self):
+        """
+        The ratio of refused params.
+        """
+        return self.execute(
+            "SELECT (SELECT Count(*) FROM refused_params) * 1.0 / "
+            "       (SELECT Count(*) FROM runtime_stats)"
+        ).fetchone()[0]
+
+    @property
+    def approximate_compute_time(self):
+        """
+        An approximate of the total compute time in the training set, in
+        ms:
+
+            T = num of samples * mean runtime for each
+        """
+        return self.execute(
+            "SELECT SUM(num_samples * mean) FROM runtime_stats").fetchone()[0]
+
+    @property
     def scenario_params(self):
         return [row for row in
                 self.execute("SELECT scenario,params FROM "
@@ -849,7 +870,7 @@ class Database(db.Database):
                      (scenario, params))
 
     def add_model_result(self, model, err_fn, scenario, actual, predicted,
-                         correct, invalid, performance, speedup):
+                         correct, illegal, refused, performance, speedup):
         try:
             speedup_he = self.speedup(scenario, HE_PARAM, predicted)
         except:
@@ -861,13 +882,15 @@ class Database(db.Database):
             speedup_mo = None
 
         self.execute("INSERT INTO model_results VALUES "
-                     "(?,?,?,?,?,?,?,?,?,?,?)",
+                     "(?,?,?,?,?,?,?,?,?,?,?,?)",
                      (model, err_fn, scenario, actual, predicted, correct,
-                      invalid, performance, speedup, speedup_he, speedup_mo))
+                      illegal, refused, performance, speedup, speedup_he,
+                      speedup_mo))
 
     def add_classification_result(self, job, classifier, err_fn, dataset,
                                   scenario, actual, predicted, baseline,
-                                  correct, invalid, performance, speedup):
+                                  correct, illegal, refused, performance,
+                                  speedup):
         """
         Add result of using a classifier to predict optimal workgroup size.
 
@@ -881,8 +904,9 @@ class Database(db.Database):
             actual (str): Params ID of oracle.
             predicted (str): Params ID of classifier prediction.
             baseline (str): Params ID of baseline for performance baseline.
-            correct (int): 1 if prediction is correct.
-            invalid (int): 1 if *first* prediction was legal.
+            correct (int): 1 if *first* prediction was correct.
+            illegal (int): 1 if *first* prediction was legal.
+            refused (int): 1 if *first* prediction was refused.
             performance (float): Performance relative to oracle of prediction.
             speedup (float): Speedup over performance baseline.
         """
@@ -902,10 +926,11 @@ class Database(db.Database):
             speedup_mo = None
 
         self.execute("INSERT INTO classification_results VALUES "
-                     "(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                     "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                      (job_id, classifier_id, err_fn_id, dataset_id,
                       scenario, actual, predicted, baseline, correct,
-                      invalid, performance, speedup, speedup_he, speedup_mo))
+                      illegal, refused, performance, speedup, speedup_he,
+                      speedup_mo))
 
     def add_runtime_regression_result(self, job, classifier, dataset, scenario,
                                       params, actual, predicted, norm_predicted,

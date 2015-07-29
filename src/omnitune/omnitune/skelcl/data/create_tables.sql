@@ -315,7 +315,8 @@ CREATE TABLE model_results (
     actual                          TEXT,     -- Oracle params value, key for params
     predicted                       TEXT,     -- Predicted params value, key for params
     correct                         INTEGER,  -- 1 if prediction is correct, else 0
-    invalid                         INTEGER,  -- 1 if *first* prediction was valid, else 0
+    illegal                         INTEGER,  -- 1 if prediction is >= max_wgsize, else 0
+    refused                         INTEGER,  -- 1 if prediction is < max_wgsize and is refused, else 0
     performance                     REAL,     -- Performance relative to oracle, 0 <= performance <= 1
     speedup                         REAL,     -- Speedup over baseline, 0 <= speedup
     speedup_he                      REAL,     -- Speedup over human expert
@@ -334,7 +335,8 @@ CREATE TABLE classification_results (
     predicted                       TEXT,     -- Predicted params value, key for params
     baseline                        TEXT,     -- Baseline params value, key for params
     correct                         INTEGER,  -- 1 if prediction is correct, else 0
-    invalid                         INTEGER,  -- 1 if *first* prediction was valid, else 0
+    illegal                         INTEGER,  -- 1 if prediction is >= max_wgsize, else 0
+    refused                         INTEGER,  -- 1 if prediction is < max_wgsize and is refused, else 0
     performance                     REAL,     -- Performance relative to oracle, 0 <= performance <= 1
     speedup                         REAL,     -- Speedup over baseline, 0 <= speedup
     speedup_he                      REAL,     -- Speedup over human expert

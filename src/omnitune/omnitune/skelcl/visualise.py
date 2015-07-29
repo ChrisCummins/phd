@@ -451,7 +451,7 @@ def err_fn_performance(db, output=None, job="xval", **kwargs):
             "    GEOMEAN(speedup) * 100,\n"
             "    CONFERROR(speedup, .95) * 100\n"
             "FROM classification_results\n"
-            "WHERE job=? AND err_fn=? AND invalid=1",
+            "WHERE job=? AND err_fn=? AND (illegal=1 or refused=1)",
             (job, err_fn)
         ).fetchone()
         for err_fn in err_fns
@@ -513,20 +513,21 @@ def classification(db, output=None, job="xval", **kwargs):
     results = []
     for classifier,count in query:
         basename = ml.classifier_basename(classifier)
-        correct, invalid = db.execute(
+        correct, illegal, refused = db.execute(
             "SELECT\n"
             "    (SUM(correct) / CAST(? AS FLOAT)) * 100,\n"
-            "    (SUM(invalid) / CAST(? AS FLOAT)) * 100\n"
+            "    (SUM(illegal) / CAST(? AS FLOAT)) * 100,\n"
+            "    (SUM(refused) / CAST(? AS FLOAT)) * 100\n"
             "FROM classification_results\n"
             "WHERE job=? AND classifier=? AND err_fn=?",
-            (count, count, job, classifier, base_err_fn)
+            (count, count, count, job, classifier, base_err_fn)
         ).fetchone()
         # Get a list of mean speedups for each err_fn.
         speedups = [
             db.execute(
                 "SELECT\n"
-                "    GEOMEAN(speedup) * 100,\n"
-                "    CONFERROR(speedup, .95) * 100\n"
+                "    GEOMEAN(speedup),\n"
+                "    CONFERROR(speedup, .95)\n"
                 "FROM classification_results\n"
                 "WHERE job=? AND classifier=? AND err_fn=?",
                 (job, classifier, err_fn)
@@ -534,42 +535,56 @@ def classification(db, output=None, job="xval", **kwargs):
             for err_fn in err_fns
         ]
 
-        results.append([basename, correct, invalid] + speedups)
+        results.append([basename, correct, illegal, refused] + speedups)
 
     # Zip into lists.
-    labels, correct, invalid = zip(*[
-        (text.truncate(result[0], 40), result[1], result[2])
+    labels, correct, illegal, refused = zip(*[
+        (text.truncate(result[0], 40), result[1], result[2], result[3])
         for result in results
     ])
 
     X = np.arange(len(labels))
     # Bar width.
-    width = (.8 / (len(results[0]) - 1))
+    width = (.8 / 3)
 
-    plt.bar(X, invalid, width=width,
-            color=sns.color_palette("Reds", 1), label="Invalid")
-    plt.bar(X + width, correct, width=width,
-            color=sns.color_palette("Blues", 1), label="Accuracy")
+    ax = plt.subplot(2, 1, 1)
+    ax.bar(X + .1, illegal, width=width,
+           color=sns.color_palette("Reds", 1), label="Illegal")
+    ax.bar(X + .1 + width, refused, width=width,
+           color=sns.color_palette("Oranges", 1), label="Refused")
+    ax.bar(X + .1 + 2 * width, correct, width=width,
+           color=sns.color_palette("Blues", 1), label="Accurate")
+
+    ax.set_xticklabels([])
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+
+    art = [plt.legend(loc=9, bbox_to_anchor=(0.5, 0), ncol=3)]
+
     # Colour palette for speedups.
     colors=sns.color_palette("Greens", len(err_fns))
+    ax = plt.subplot(2, 1, 2)
+    width = (.8 / 3)
+
     # Plot speedups.
     for i,err_fn in enumerate(db.err_fns):
-        pairs = [result[3 + i] for result in results]
+        pairs = [result[4 + i] for result in results]
         speedups, yerrs = zip(*pairs)
-        plt.bar(X + (2 + i) * width, speedups, width=width,
-                label="Speedup ({})".format(err_fn), color=colors[i])
+        ax.bar(X + .1 + (i * width), speedups, width=width,
+               label="Speedup ({})".format(err_fn), color=colors[i])
 
         # Plot confidence intervals separately so that we can have
         # full control over formatting.
-        _,caps,_ = plt.errorbar(X + (2.5 + i) * width, speedups, fmt="none",
-                                yerr=yerrs, capsize=3, ecolor="k")
+        _,caps,_ = ax.errorbar(X + .1 + (i + .5) * width, speedups,
+                               fmt="none", yerr=yerrs, capsize=3, ecolor="k")
         for cap in caps:
             cap.set_color('k')
             cap.set_markeredgewidth(1)
 
-    plt.xlim(xmin=-.2)
-    plt.xticks(X + .4, labels)
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    # ax[0].set_xlim(xmin=-.2)
+    ax.set_xticks(X + .4)
+    ax.set_xticklabels(labels)
+    # ax[1].set_xlim(xmin=-.2)
+    ax.set_xticks(X + .4, labels)
 
     title = kwargs.pop("title", "Classification results for " + job)
     plt.title(title)
