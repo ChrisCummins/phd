@@ -6,7 +6,11 @@ SELECT
     err_fn,
     AVG(performance) * 100 AS mean_performance,
     GEOMEAN(speedup) AS mean_speedup,
-    MAX(speedup) AS max_speedup
+    MAX(speedup) AS max_speedup,
+    AVG(speedup_he) AS mean_speedup_he,
+    MAX(speedup_he) AS max_speedup_he,
+    AVG(speedup_mo) AS mean_speedup_mo,
+    MAX(speedup_mo) AS max_speedup_mo
 FROM classification_results
 WHERE job="synthetic_real"
 GROUP BY classifier,err_fn

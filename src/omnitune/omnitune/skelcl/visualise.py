@@ -80,7 +80,7 @@ def runtimes_histogram(runtimes, output=None, **kwargs):
     mean = np.mean(runtimes)
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    sns.distplot(runtimes)
+    sns.distplot(runtimes, bins=40, kde_kws={"bw": .3})
     ax.axvline(mean, color='k', linestyle='--')
     plt.xlim(min(runtimes), max(runtimes))
     plt.gca().axes.get_yaxis().set_ticks([])
@@ -283,34 +283,6 @@ def num_params_vs_accuracy(db, output=None, where=None, **kwargs):
     viz.finalise(output, **kwargs)
 
 
-def _performance_size(data, output, title, xlabel, percs=True, **kwargs):
-    # Calculate moving average.
-    avgs = defaultdict(list)
-    for p,s in data:
-        avgs[s].append(p)
-    for s,p in avgs.items():
-        mean = labmath.mean(p)
-        avgs[s] = (mean, labmath.confinterval(p, array_mean=mean,
-                                              error_only=True) * 2)
-    avgs = sorted(avgs.items())
-
-    Y, X = zip(*data)
-    aX, data = zip(*avgs)
-    aY, aErr = zip(*data)
-
-    plt.scatter(X, Y)
-    plt.errorbar(aX, aY, yerr=aErr, color="r")
-    if percs:
-        plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%d%%'))
-        plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
-    plt.xlim(0, max(X) + 2)
-    plt.ylim(0, max(Y) + 2)
-    plt.title(title)
-    plt.ylabel("Performance (% oracle)")
-    plt.xlabel(xlabel)
-    viz.finalise(output, **kwargs)
-
-
 def pie(data, output=None, **kwargs):
     labels, values = zip(*data)
     plt.pie(values, labels=labels, autopct='%1.1f%%', shadow=True,
@@ -318,105 +290,23 @@ def pie(data, output=None, **kwargs):
     viz.finalise(output, **kwargs)
 
 
-
-def performance_vs_max_wgsize(db, output=None, **kwargs):
-    # TODO: Replace with box plot of 10% ranges of max wgsize.
-    data = [
-        row for row in
-        db.execute(
-            "SELECT "
-            "    (scenario_stats.oracle_runtime / runtime_stats.mean) * 100 "
-            "  AS performance, "
-            "    (params.wg_c * params.wg_r * 1.0 / kernels.max_wg_size) "
-            "  * 100 AS ratio_max_wgsize "
-            "FROM runtime_stats "
-            "LEFT JOIN scenarios "
-            "  ON runtime_stats.scenario=scenarios.id "
-            "LEFT JOIN kernels "
-            "  ON scenarios.kernel=kernels.id "
-            "LEFT JOIN params "
-            "  ON runtime_stats.params=params.id "
-            "LEFT JOIN scenario_stats "
-            "  ON runtime_stats.scenario=scenario_stats.scenario "
-            "ORDER BY RANDOM() "
-            "LIMIT 1000"
-        )
-    ]
-
+def performance_vs_max_wgsize(ratios, output=None, **kwargs):
     title = kwargs.pop("title",
                        "Workgroup size performance vs. maximum workgroup size")
-    _performance_size(data, output, title, "Workgroup size (% max)", **kwargs)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
+    sns.boxplot(data=ratios)
 
-def performance_vs_wgsize(db, output=None, **kwargs):
-    data = [
-        (
-            db.perf(scenario, param) * 100,
-            reduce(operator.mul, unhash_params(param), 1)
-        )
-        for scenario, param in db.scenario_params
-    ]
+    multiplier = kwargs.pop("multiplier", 10)
+    ax.set_xticklabels([str((x+1) * multiplier) + "%"
+                        for x in np.arange(len(ratios))])
 
-    title = kwargs.pop("title",
-                       "Size of workgroup vs. performance")
-    _performance_size(data, output, title, "Workgroup size", percs=False,
-                      **kwargs)
-
-
-def performance_vs_wg_c(db, output=None, **kwargs):
-    data = [
-        row for row in
-        db.execute(
-            "SELECT "
-            "    scenario_stats.oracle_runtime / runtime_stats.mean "
-            "  AS performance, "
-            "    params.wg_c "
-            "FROM runtime_stats "
-            "LEFT JOIN scenarios "
-            "  ON runtime_stats.scenario=scenarios.id "
-            "LEFT JOIN kernels "
-            "  ON scenarios.kernel=kernels.id "
-            "LEFT JOIN params "
-            "  ON runtime_stats.params=params.id "
-            "LEFT JOIN scenario_stats "
-            "  ON runtime_stats.scenario=scenario_stats.scenario "
-            "ORDER BY RANDOM() "
-            "LIMIT 1000"
-        )
-    ]
-
-    title = kwargs.pop("title",
-                       "Workgroup size performance vs. number of columns")
-    _performance_size(data, output, title, "Workgroup columns", percs=False,
-                      **kwargs)
-
-
-def performance_vs_wg_r(db, output=None, **kwargs):
-    data = [
-        row for row in
-        db.execute(
-            "SELECT "
-            "    scenario_stats.oracle_runtime / runtime_stats.mean "
-            "  AS performance, "
-            "    params.wg_r "
-            "FROM runtime_stats "
-            "LEFT JOIN scenarios "
-            "  ON runtime_stats.scenario=scenarios.id "
-            "LEFT JOIN kernels "
-            "  ON scenarios.kernel=kernels.id "
-            "LEFT JOIN params "
-            "  ON runtime_stats.params=params.id "
-            "LEFT JOIN scenario_stats "
-            "  ON runtime_stats.scenario=scenario_stats.scenario "
-            "ORDER BY RANDOM() "
-            "LIMIT 1000"
-        )
-    ]
-
-    title = kwargs.pop("title",
-                       "Workgroup size performance vs. number of rows")
-    _performance_size(data, output, title, "Workgroup rows", percs=False,
-                      **kwargs)
+    title = kwargs.pop("title", "")
+    plt.title(title)
+    xlabel = kwargs.pop("xlabel", "")
+    plt.xlabel(xlabel)
+    viz.finalise(output, **kwargs)
 
 
 def _performance_plot(output, labels, values, title, **kwargs):

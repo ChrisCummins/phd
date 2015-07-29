@@ -1141,10 +1141,41 @@ class Database(db.Database):
             fs.ls("/tmp/omnitune.export", abspaths=True)
         ]
 
-        json.dump(runtimes, open(path, "wb"))
+        json.dump(runtimes, open(fs.path(path), "wb"))
 
         fs.rm("/tmp/omnitune.export")
 
+    def _dump_perf_max(self, command, path, max_ratio=100, num_bins=10):
+        bin_size = labmath.floor(max_ratio / num_bins)
+
+        samples = []
+        for i,bin_start in enumerate(range(0, max_ratio, bin_size)):
+            timer = "fetched performances set {}".format(i+1)
+            prof.start(timer)
+            bin_end = bin_start + bin_size
+
+            performances = [
+                row[0] for row in
+                self.execute(sql_command(command),
+                             (bin_start, bin_end))
+            ]
+            samples.append(performances)
+            prof.stop(timer)
+
+        json.dump(samples, open(fs.path(path), "wb"))
+
+    def dump_perf_max_wgsize(self, *args, **kwargs):
+        self._dump_perf_max("perf_vs_max_wgsize", *args, **kwargs)
+
+    def dump_perf_max_c(self, *args, **kwargs):
+        kwargs["max_ratio"] = 50
+        kwargs["num_bins"] = 5
+        self._dump_perf_max("perf_vs_max_c", *args, **kwargs)
+
+    def dump_perf_max_r(self, *args, **kwargs):
+        kwargs["max_ratio"] = 50
+        kwargs["num_bins"] = 5
+        self._dump_perf_max("perf_vs_max_r", *args, **kwargs)
 
     def calculate_variance_stats(self, sample_runtimes):
         min_samples=5
