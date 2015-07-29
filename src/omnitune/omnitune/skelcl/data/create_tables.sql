@@ -308,6 +308,22 @@ CREATE TABLE ml_jobs (
 
 
 -- Classification results table
+CREATE TABLE model_results (
+    model                           TEXT,     -- Model name
+    err_fn                          TEXT,     -- Key for err_fns.id
+    scenario                        TEXT,     -- Key for scenarios
+    actual                          TEXT,     -- Oracle params value, key for params
+    predicted                       TEXT,     -- Predicted params value, key for params
+    correct                         INTEGER,  -- 1 if prediction is correct, else 0
+    invalid                         INTEGER,  -- 1 if *first* prediction was valid, else 0
+    performance                     REAL,     -- Performance relative to oracle, 0 <= performance <= 1
+    speedup                         REAL,     -- Speedup over baseline, 0 <= speedup
+    speedup_he                      REAL,     -- Speedup over human expert
+    speedup_mo                      REAL      -- Speedup over mode param
+);
+
+
+-- Classification results table
 CREATE TABLE classification_results (
     job                             TEXT,     -- Key for ml_jobs
     classifier                      TEXT,     -- Key for classifiers.id

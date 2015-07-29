@@ -848,6 +848,23 @@ class Database(db.Database):
         self.execute("INSERT OR IGNORE INTO refused_params VALUES(?,?)",
                      (scenario, params))
 
+    def add_model_result(self, model, err_fn, scenario, actual, predicted,
+                         correct, invalid, performance, speedup):
+        try:
+            speedup_he = self.speedup(scenario, HE_PARAM, predicted)
+        except:
+            speedup_he = None
+
+        try:
+            speedup_mo = self.speedup(scenario, MO_PARAM, predicted)
+        except:
+            speedup_mo = None
+
+        self.execute("INSERT INTO model_results VALUES "
+                     "(?,?,?,?,?,?,?,?,?,?,?)",
+                     (model, err_fn, scenario, actual, predicted, correct,
+                      invalid, performance, speedup, speedup_he, speedup_mo))
+
     def add_classification_result(self, job, classifier, err_fn, dataset,
                                   scenario, actual, predicted, baseline,
                                   correct, invalid, performance, speedup):
