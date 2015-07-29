@@ -44,6 +44,11 @@ from pkg_resources import resource_string
 
 DEFAULT_PATH = fs.path("/usr/share/omnitune/db/skelcl.db")
 
+# Human-expert params
+HE_PARAM = "32x4"
+# Mode of oracle params
+MO_PARAM = "64x4"
+
 
 class Error(db.Error):
     """
@@ -869,13 +874,11 @@ class Database(db.Database):
         err_fn_id = self.err_fn_id(err_fn)
         dataset_id = self.ml_dataset_id(dataset)
 
-        HE_PARAM = "32x4"
         try:
             speedup_he = self.speedup(scenario, HE_PARAM, predicted)
         except:
             speedup_he = None
 
-        MO_PARAM = "64x4"
         try:
             speedup_mo = self.speedup(scenario, MO_PARAM, predicted)
         except:
