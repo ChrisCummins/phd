@@ -158,7 +158,7 @@ def define(name, val):
 
 
 def escape_kernel(kernel):
-    return 'R"(' + kernel + '");'
+    return 'R"(' + kernel + ')";'
 
 def make_synthetic_benchmark(complexity, north, south, east, west,
                              width, height):
