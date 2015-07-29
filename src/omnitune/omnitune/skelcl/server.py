@@ -232,7 +232,7 @@ class Server(omnitune.Server):
                   .format(scenario=scenario[:8], params=params,
                           runtime=runtime)))
 
-    @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiisssiiid',
+    @dbus.service.method(INTERFACE_NAME, in_signature='siiiiiiisssiii',
                          out_signature='')
     def RefuseStencilParams(self, device_name, device_count,
                             north, south, east, west, data_width,
