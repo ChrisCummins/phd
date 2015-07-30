@@ -43,7 +43,7 @@ def num_samples(db, output=None, sample_range=None, **kwargs):
 
     title = kwargs.pop("title", "Frequency of number of samples counts")
     plt.title(title)
-    plt.xlabel("Minimum sample count")
+    plt.xlabel("Sample count")
     plt.ylabel("Ratio of test cases")
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.plot(X, Y)
@@ -66,7 +66,7 @@ def num_params(db, output=None, sample_range=None, **kwargs):
                           "FROM scenario_stats WHERE num_params >= ?",
                           (num_instances, i)).fetchone()[0]
 
-    title = kwargs.pop("title", "Number of parameters")
+    title = kwargs.pop("title", "Parameter values count")
     plt.title(title)
     plt.xlabel("Number of parameters")
     plt.ylabel("Ratio of scenarios")
@@ -378,16 +378,19 @@ def runtimes_range(db, output=None, where=None, nbins=25,
 
 
 def max_speedups(db, output=None, **kwargs):
-    Speedups = db.max_speedups().values()
-    X = np.arange(len(Speedups))
+    max_speedups,min_static = zip(*db.max_and_static_speedups)
+    X = np.arange(len(max_speedups))
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.plot(X, Speedups)
+    ax.plot(X, max_speedups, label="Worst")
+    ax.plot(X, min_static, label="Best static")
     plt.xlim(xmin=0, xmax=len(X) - 1)
     title = kwargs.pop("title", "Max attainable speedups")
     plt.title(title)
-    plt.ylabel("Max speedup")
+    ax.set_yscale("log")
+    plt.legend(frameon=True)
+    plt.ylabel("Speedup")
     plt.xlabel("Scenarios")
     viz.finalise(output, **kwargs)
 

@@ -547,9 +547,20 @@ class Database(db.Database):
         The ratio of refused params.
         """
         return self.execute(
+            "SELECT ("
+            "    SELECT Count(*) FROM ("
+            "         SELECT DISTINCT params FROM refused_params"
+            "    )"
+            ") * 1.0 / (SELECT Count(*) FROM params)"
+        ).fetchone()[0]
+
+    @property
+    def ratio_refused_test_cases(self):
+        return self.execute(
             "SELECT (SELECT Count(*) FROM refused_params) * 1.0 / "
             "       (SELECT Count(*) FROM runtime_stats)"
         ).fetchone()[0]
+
 
     @property
     def approximate_compute_time(self):
@@ -1850,6 +1861,43 @@ class Database(db.Database):
                              "    )",
                              (scenario, scenario)).fetchone()[0]
         return worst / best
+
+    @property
+    def max_and_static_speedups(self):
+        return [
+            row for row in
+            self.execute(
+                "SELECT "
+                "    scenario_stats.worst_runtime / "
+                "      scenario_stats.oracle_runtime AS max_speedup, "
+                "    scenario_stats.worst_runtime / runtime_stats.mean "
+                "      AS static_speedup "
+                "FROM scenario_stats "
+                "LEFT JOIN runtime_stats "
+                "  ON scenario_stats.scenario=runtime_stats.scenario "
+                "    AND runtime_stats.params=? "
+                "ORDER BY max_speedup DESC",
+                ("4x4",)
+            )
+        ]
+
+    @property
+    def min_num_params(self):
+        return self.execute(
+            "SELECT MIN(num_params) from scenario_stats"
+        ).fetchone()[0]
+
+    @property
+    def max_num_params(self):
+        return self.execute(
+            "SELECT MAX(num_params) from scenario_stats"
+        ).fetchone()[0]
+
+    @property
+    def avg_num_params(self):
+        return self.execute(
+            "SELECT AVG(num_params) from scenario_stats"
+        ).fetchone()[0]
 
     def max_speedups(self):
         """
