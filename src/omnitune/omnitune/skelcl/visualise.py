@@ -185,16 +185,13 @@ def safety(db, output=None, where=None, **kwargs):
 
 
 def oracle_wgsizes(db, output=None, where=None, trisurf=False, **kwargs):
-
     data = db.oracle_params_xy
     x, y = zip(*data)
     df = pandas.DataFrame(data, columns=["Rows", "Columns"])
 
-    sns.jointplot(x="Rows", y="Columns", data=df);
-    plt.xlim(0, 200)
-    plt.ylim(0, 200)
-    # plt.xlim(0, max(x))
-    # plt.ylim(0, max(y))
+    sns.jointplot(x="Rows", y="Columns", data=df, stat_func=None,
+                  xlim=(0, max(x) + 2),
+                  ylim=(0, max(y) + 2))
     viz.finalise(output, **kwargs)
 
 
