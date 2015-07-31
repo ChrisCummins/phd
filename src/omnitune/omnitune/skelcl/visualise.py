@@ -11,6 +11,7 @@ from functools import reduce
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas
 from matplotlib.ticker import FormatStrFormatter
 
 from . import space as _space
@@ -184,15 +185,17 @@ def safety(db, output=None, where=None, **kwargs):
 
 
 def oracle_wgsizes(db, output=None, where=None, trisurf=False, **kwargs):
-    space = db.oracle_param_space(where=where)
-    space.clip(50, 50)
-    if "title" not in kwargs: kwargs["title"] = "All data"
-    if trisurf:
-        space.trisurf(output=output, **kwargs)
-    else:
-        if "vim" not in kwargs: kwargs["vmin"] = 0
-        if "vmax" not in kwargs: kwargs["vmax"] = 1
-        space.heatmap(output=output, **kwargs)
+
+    data = db.oracle_params_xy
+    x, y = zip(*data)
+    df = pandas.DataFrame(data, columns=["Rows", "Columns"])
+
+    sns.jointplot(x="Rows", y="Columns", data=df);
+    plt.xlim(0, 200)
+    plt.ylim(0, 200)
+    # plt.xlim(0, max(x))
+    # plt.ylim(0, max(y))
+    viz.finalise(output, **kwargs)
 
 
 def scenario_performance(db, scenario, output=None, title=None, type="heatmap",

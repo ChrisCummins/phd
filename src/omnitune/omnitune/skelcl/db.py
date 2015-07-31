@@ -27,15 +27,16 @@ from omnitune.skelcl import features
 
 from . import get_kernel_name_and_type
 from . import get_user_source
+from . import hash_classifier
 from . import hash_dataset
 from . import hash_device
-from . import hash_kernel
-from . import hash_params
-from . import hash_scenario
-from . import hash_classifier
 from . import hash_err_fn
+from . import hash_kernel
 from . import hash_ml_dataset
 from . import hash_ml_job
+from . import hash_params
+from . import hash_scenario
+from . import unhash_params
 
 from space import ParamSpace
 
@@ -588,6 +589,13 @@ class Database(db.Database):
                              "FROM oracle_params\n"
                              "GROUP BY params\n"
                              "ORDER BY count DESC")]
+
+    @property
+    def oracle_params_xy(self):
+        return [
+            unhash_params(row[0]) for row in
+            self.execute("SELECT oracle_param FROM scenario_stats")
+        ]
 
     @property
     def classifiers(self):
