@@ -328,6 +328,10 @@ class Database(db.Database):
                 self.execute("SELECT id FROM params")]
 
     @property
+    def num_params(self):
+        return self.execute("SELECT Count(*) FROM params").fetchone()[0]
+
+    @property
     def wg_r(self):
         return [row[0] for row in
                 self.execute("SELECT DISTINCT wg_r FROM params "
@@ -1358,7 +1362,7 @@ class Database(db.Database):
         freqs = {
             row[0]: row[1] for row in
             self.execute("SELECT oracle_param AS param,Count(*) AS count FROM "
-                         "{select} GROUP BY oracle_param ORDER BY count ASC"
+                         "{select} GROUP BY oracle_param"
                          .format(select=" ".join(select)))
         }
 
@@ -1442,6 +1446,27 @@ class Database(db.Database):
         freqs = self.oracle_param_frequencies(*args, **kwargs)
         return ParamSpace.from_dict(freqs, wg_c=self.wg_c, wg_r=self.wg_r)
 
+    def refused_param_frequencies(self, normalise=False):
+        freqs = {
+            row[0]: row[1] for row in
+            self.execute("SELECT params,Count(*) AS count FROM refused_params "
+                         "GROUP BY params")
+        }
+
+        if normalise:
+            total = sum(freqs.values())
+            for freq in freqs:
+                freqs[freq] /= total
+
+        return freqs
+
+    def refused_param_space(self, *args, **kwargs):
+        # Normalise frequencies by default.
+        if "normalise" not in kwargs:
+            kwargs["normalise"] = True
+
+        freqs = self.refused_param_frequencies(*args, **kwargs)
+        return ParamSpace.from_dict(freqs)
 
     def param_coverage_frequencies(self, **kwargs):
         """

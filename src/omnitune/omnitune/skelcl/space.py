@@ -51,7 +51,8 @@ class ParamSpace(object):
     def set(self, j, i, value):
         self.matrix[j][i] = value
 
-    def heatmap(self, output=None, title=None, figsize=(5,4), **kwargs):
+    def heatmap(self, output=None, title=None, figsize=(5,4),
+                xlabels=True, ylabels=True, cbar=True, **kwargs):
         import matplotlib.pyplot as plt
         import seaborn as sns
 
@@ -61,11 +62,12 @@ class ParamSpace(object):
         if "square" not in kwargs:
             kwargs["square"] = True
 
+        xticklabels = self.c if xlabels == True else xlabels
+        yticklabels = list(reversed(self.r)) if ylabels == True else ylabels
+
         _, ax = plt.subplots(figsize=figsize)
-        sns.heatmap(data,
-                    xticklabels=self.c,
-                    yticklabels=list(reversed(self.r)),
-                    **kwargs)
+        sns.heatmap(data, xticklabels=xticklabels, yticklabels=yticklabels,
+                    cbar=cbar, **kwargs)
 
         # Set labels.
         ax.set_ylabel("Rows")

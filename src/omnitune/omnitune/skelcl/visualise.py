@@ -27,6 +27,16 @@ from labm8 import viz
 from labm8 import prof
 
 
+def fmtdevid(id):
+    name = id.strip()
+    name = re.sub("^\dx", "", name)
+    name = re.sub("GeForce", "Nvidia", name)
+    name = re.sub("Tahiti", "AMD Tahiti 7970", name)
+    name = re.sub("Intel\(R\) Core\(TM\)", "Intel", name)
+    name = re.sub(" CPU @ [0-9\.]+GHz", "", name)
+    return name
+
+
 def num_samples(db, output=None, sample_range=None, **kwargs):
 
     # Range of sample counts.
@@ -82,7 +92,8 @@ def runtimes_histogram(runtimes, output=None, **kwargs):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     sns.distplot(runtimes, bins=40, kde_kws={"bw": .3})
-    ax.axvline(mean, color='k', linestyle='--')
+
+    ax.axvline(mean, color='0.25', linestyle='--')
     plt.xlim(min(runtimes), max(runtimes))
     plt.gca().axes.get_yaxis().set_ticks([])
     plt.xlabel("Runtime (ms)")
@@ -212,29 +223,26 @@ def scenario_performance(db, scenario, output=None, title=None, type="heatmap",
         raise viz.Error("Unrecognised visualisation type '{}'".format(type))
 
 
-
-def performance_vs_coverage(db, output=None, max_values=200, **kwargs):
+def performance_vs_coverage(db, output=None, max_values=250, **kwargs):
     data = [
         row for row in
         db.execute(
             "SELECT "
-            "    CASE WHEN coverage=1 THEN performance * 100.0 ELSE 0 END AS perf_all, "
-            "    performance * 100.0 AS perf_legal, "
+            "    performance * 100.0 AS performance, "
             "    coverage * 100.0 "
             "FROM param_stats "
-            "ORDER BY coverage DESC, perf_all DESC, perf_legal DESC "
+            "ORDER BY coverage DESC, performance DESC "
             "LIMIT ?",
             (max_values,)
         )
     ]
     X = np.arange(len(data))
 
-    GeoPerformance, Performance, Coverage = zip(*data)
+    Performance, Coverage = zip(*data)
 
     ax = plt.subplot(111)
     ax.plot(X, Coverage, 'r', label="Legality")
-    ax.plot(X, Performance, 'g', label="Performance (when legal)")
-    ax.plot(X, GeoPerformance, 'b', label="Performance")
+    ax.plot(X, Performance, 'g', label="Performance")
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.xlim(xmin=0, xmax=len(X) - 1)
     plt.ylim(ymin=0, ymax=100)
@@ -332,17 +340,8 @@ def kernel_performance(db, output=None, **kwargs):
 
 
 def device_performance(db, output=None, **kwargs):
-    def _fmtid(id):
-        name = id.strip()
-        name = re.sub("^\dx ", "", name)
-        name = re.sub("GeForce", "Nvidia", name)
-        name = re.sub("Tahiti", "AMD Tahiti 7970", name)
-        name = re.sub("Intel\(R\) Core\(TM\)", "Intel", name)
-        name = re.sub(" CPU @ [0-9\.]+GHz", "", name)
-        return name
-
     ids = db.cpus + db.gpus # Arrange CPUs on the left, GPUs on the right.
-    labels = [_fmtid(id) for id in ids]
+    labels = [fmtdevid(id) for id in ids]
     values = [db.performance_of_device(id) for id in ids]
     title = kwargs.pop("title", "Workgroup size performance across devices")
     _performance_plot(output, labels, values, title, **kwargs)
@@ -599,6 +598,104 @@ def classification(db, output=None, job="xval", **kwargs):
     #
     art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -0.1), ncol=3)]
     viz.finalise(output, additional_artists=art, bbox_inches="tight", **kwargs)
+
+
+def refused_params_by_device(db, output=None, **kwargs):
+    data = [
+        (fmtdevid(row[0]), round(row[1], 2))
+        for row in db.execute(
+                "SELECT "
+                "    devices.id AS device, "
+                "    (Count(*) * 1.0 / ( "
+                "        SELECT Count(*) "
+                "        FROM runtime_stats "
+                "        LEFT JOIN scenarios "
+                "          ON runtime_stats.scenario=scenarios.id "
+                "        WHERE scenarios.device=devices.id "
+                "    )) * 100 AS ratio_refused "
+                "FROM refused_params "
+                "LEFT JOIN scenarios "
+                "  ON refused_params.scenario=scenarios.id "
+                "LEFT JOIN devices "
+                "  ON scenarios.device=devices.id "
+                "GROUP BY devices.id "
+                "ORDER BY ratio_refused DESC"
+        )
+    ]
+
+    labels, Y = zip(*data)
+    X = np.arange(len(Y))
+
+    fig, ax = plt.subplots()
+    ax.bar(X + .1, Y, width = .8)
+    ax.set_xticks(X + .5)
+    ax.set_xticklabels(labels, rotation=90)
+    ax.set_ylabel("Refused Parameters")
+
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+
+    for tick in ax.xaxis.get_minor_ticks():
+        tick.tick1line.set_markersize(0)
+        tick.tick2line.set_markersize(0)
+        tick.label1.set_horizontalalignment('center')
+
+    viz.finalise(output, **kwargs)
+
+
+def refused_params_by_vendor(db, output=None, **kwargs):
+    data = [
+        row for row in db.execute(
+            "SELECT devices.vendor,"
+            "    ratio_refused "
+            "FROM devices LEFT JOIN ("
+            "SELECT "
+            "    devices.vendor AS opencl, "
+            "    (Count(*) * 1.0 / ( "
+            "        SELECT Count(*) "
+            "        FROM runtime_stats "
+            "        LEFT JOIN scenarios "
+            "          ON runtime_stats.scenario=scenarios.id "
+            "        LEFT JOIN devices AS dev "
+            "          ON scenarios.device=dev.id "
+            "        WHERE dev.vendor=devices.vendor "
+            "    )) * 100 AS ratio_refused "
+            "FROM refused_params "
+            "LEFT JOIN scenarios "
+            "  ON refused_params.scenario=scenarios.id "
+            "LEFT JOIN devices "
+            "  ON scenarios.device=devices.id "
+            "GROUP BY devices.vendor COLLATE NOCASE )"
+            "ON devices.vendor like opencl "
+            "GROUP BY devices.vendor COLLATE NOCASE "
+            "ORDER BY ratio_refused DESC"
+        )
+    ]
+
+    labels, Y = zip(*data)
+    Y = [0 if not y else y for y in Y]
+    X = np.arange(len(Y))
+
+    fig, ax = plt.subplots()
+    ax.bar(X + .1, Y, width = .8)
+    ax.set_xticks(X + .5)
+    ax.set_xticklabels(labels, rotation=90)
+    ax.set_ylabel("Refused Parameters")
+
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+
+    for tick in ax.xaxis.get_minor_ticks():
+        tick.tick1line.set_markersize(0)
+        tick.tick2line.set_markersize(0)
+        tick.label1.set_horizontalalignment('center')
+
+    viz.finalise(output, **kwargs)
+    return data
+
+
+def refused_param_space(db, output=None, **kwargs):
+    space = db.refused_param_space()
+    space.heatmap(xlabels=False, ylabels=False, cbar=False,
+                  output=output, **kwargs)
 
 
 def runtime_regression(db, output=None, job="xval", **kwargs):
