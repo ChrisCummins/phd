@@ -195,14 +195,17 @@ def safety(db, output=None, where=None, **kwargs):
     space.heatmap(output=output, **kwargs)
 
 
-def oracle_wgsizes(db, output=None, where=None, trisurf=False, **kwargs):
+def oracle_wgsizes(db, output=None, where=None, trisurf=False, clip=100,
+                   **kwargs):
     data = db.oracle_params_xy
+    # Limit the range of results to be <= "clip" param:
+    data = [(x,y) for x,y in data if x <= clip and y <= clip]
     x, y = zip(*data)
     df = pandas.DataFrame(data, columns=["Rows", "Columns"])
 
     sns.jointplot(x="Rows", y="Columns", data=df, stat_func=None,
-                  xlim=(0, max(x) + 2),
-                  ylim=(0, max(y) + 2))
+                  xlim=(0, clip),
+                  ylim=(0, clip))
     viz.finalise(output, **kwargs)
 
 
