@@ -364,8 +364,12 @@ CREATE TABLE runtime_classification_results (
     classifier                      TEXT,     -- Key for classifiers.id
     scenario                        TEXT,     -- Key for scenarios
     actual                          TEXT,     -- Oracle params value, key for params
+    actual_runtime                  REAL,
     predicted                       TEXT,     -- Predicted params value, key for params
-    baseline                        TEXT,     -- Baseline params value, key for params
+    predicted_runtime               REAL,
+    actual_range                    REAL,
+    predicted_range                 REAL,
+    num_attempts                    INTEGER,  -- Number of attempts done
     correct                         INTEGER,  -- 1 if prediction is correct, else 0
     performance                     REAL,     -- Performance relative to oracle, 0 <= performance <= 1
     speedup                         REAL      -- Speedup over baseline, 0 <= speedup

@@ -2,6 +2,7 @@ from itertools import product
 
 import numpy as np
 
+from . import hash_params
 from . import unhash_params
 
 import labm8 as lab
@@ -246,3 +247,13 @@ class ParamSpace(object):
             space[params] = value
 
         return space
+
+
+def enumerate_wlegal_params(maxwgsize):
+    return [
+        hash_params(j, i) for j,i in
+        product(
+            range(2, maxwgsize / 2 + 1, 2),
+            range(2, maxwgsize / 2 + 1, 2)
+        ) if j * i < maxwgsize
+    ]

@@ -2199,7 +2199,7 @@ class Database(db.Database):
                         header = False
                     else:
                         scenario = row[0]
-                        params = row[-2]
+                        params = hash_params(row[-3], row[-2])
                         row[-1] = self.speedup(scenario, one_r, params)
                         writer.writerow(row)
 

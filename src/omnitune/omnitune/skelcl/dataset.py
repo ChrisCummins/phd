@@ -115,3 +115,38 @@ class Dataset(ml.Dataset):
         dataset.instances = filtered
 
         return dataset
+
+
+class RegressionDataset(Dataset):
+    @staticmethod
+    def load(path, db):
+        nominals = [
+            49,  # dev_global_mem_cache_type
+            52,  # dev_host_unified_memory
+            54,  # dev_local_mem_type
+            56,  # dev_type
+            57,  # dev_vendor
+        ]
+        nominal_indices = ",".join([str(index) for index in nominals])
+        force_nominal = ["-N", nominal_indices]
+
+        # Load data from CSV.
+        dataset = Dataset.load_csv(path, options=force_nominal)
+        dataset.__class__ = Dataset
+
+        # Set class index and database connection.
+        dataset.class_index = -1
+        dataset.db = db
+
+        # Create string->nominal type attribute filter, ignoring the first
+        # attribute (scenario ID), since we're not classifying with it.
+        string_to_nominal = WekaFilter(classname=("weka.filters.unsupervised."
+                                                  "attribute.StringToNominal"),
+                                       options=["-R", "2-last"])
+        string_to_nominal.inputformat(dataset.instances)
+
+        # Create filtered dataset, and swap data around.
+        filtered = string_to_nominal.filter(dataset.instances)
+        dataset.instances = filtered
+
+        return dataset
