@@ -66,10 +66,15 @@ def _add_timer(name):
     _timers[name] = time()
 
 
-def _stop_timer(name):
+def _get_elapsed_time(name):
     t = _timers[name]
+    return (time() - t) * 1000
+
+
+def _stop_timer(name):
+    elapsed = _get_elapsed_time(name)
     del _timers[name]
-    return int(round((time() - t) * 1000))
+    return elapsed
 
 
 def _new_timer_name():
@@ -140,7 +145,7 @@ def stop(name=None, **kwargs):
         else:
             raise TimerNameError("No timer named '{}'".format(name))
 
-    elapsed = _stop_timer(name)
+    elapsed = int(round(_stop_timer(name)))
     if name == _GLOBAL_TIMER:
         name = "Timer"
 
@@ -171,3 +176,15 @@ def reset(name=None):
         raise TimerNameError("No timer named '{}'".format(name))
 
     _add_timer(name)
+
+
+def elapsed(name=None):
+    name = name or _GLOBAL_TIMER
+
+    if name not in _timers:
+        if name == _GLOBAL_TIMER:
+            raise Error("Global timer has not been started")
+        else:
+            raise TimerNameError("No timer named '{}'".format(name))
+
+    return _get_elapsed_time(name)
