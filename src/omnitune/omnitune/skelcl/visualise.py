@@ -768,7 +768,9 @@ def runtime_classification(db, output=None, job="xval", **kwargs):
             db.execute(
                 "SELECT\n"
                 "    GEOMEAN(speedup) * 100,\n"
-                "    CONFERROR(speedup, .95) * 100\n"
+                "    CONFERROR(speedup, .95) * 100,\n"
+                "    GEOMEAN(performance) * 100,\n"
+                "    CONFERROR(performance, .95) * 100\n"
                 "FROM runtime_classification_results\n"
                 "WHERE job=? AND classifier=?",
                 (job, classifier)
@@ -778,7 +780,7 @@ def runtime_classification(db, output=None, job="xval", **kwargs):
         results.append([basename, correct] + speedups)
 
     # Zip into lists.
-    labels, correct, speedups, yerrs = zip(*results)
+    labels, correct, speedups, yerrs, perfs, perf_yerrs = zip(*results)
 
     X = np.arange(len(labels))
     # Bar width.
@@ -788,10 +790,18 @@ def runtime_classification(db, output=None, job="xval", **kwargs):
             color=sns.color_palette("Blues", 1), label="Accuracy")
     plt.bar(X + 2 * width, speedups, width=width,
             color=sns.color_palette("Greens", 1), label="Speedup")
+    plt.bar(X + 3 * width, perfs, width=width,
+            color=sns.color_palette("Oranges", 1), label="Performance")
     # Plot confidence intervals separately so that we can have
     # full control over formatting.
     _,caps,_ = plt.errorbar(X + 2.5 * width, speedups, fmt="none",
                             yerr=yerrs, capsize=3, ecolor="k")
+    for cap in caps:
+        cap.set_color('k')
+        cap.set_markeredgewidth(1)
+
+    _,caps,_ = plt.errorbar(X + 3.5 * width, perfs, fmt="none",
+                            yerr=perf_yerrs, capsize=3, ecolor="k")
     for cap in caps:
         cap.set_color('k')
         cap.set_markeredgewidth(1)
@@ -879,7 +889,9 @@ def speedup_classification(db, output=None, job="xval", **kwargs):
             db.execute(
                 "SELECT\n"
                 "    GEOMEAN(speedup) * 100,\n"
-                "    CONFERROR(speedup, .95) * 100\n"
+                "    CONFERROR(speedup, .95) * 100,\n"
+                "    GEOMEAN(performance) * 100,\n"
+                "    CONFERROR(performance, .95) * 100\n"
                 "FROM speedup_classification_results\n"
                 "WHERE job=? AND classifier=?",
                 (job, classifier)
@@ -889,7 +901,7 @@ def speedup_classification(db, output=None, job="xval", **kwargs):
         results.append([basename, correct] + speedups)
 
     # Zip into lists.
-    labels, correct, speedups, yerrs = zip(*results)
+    labels, correct, speedups, yerrs, perfs, perf_yerrs = zip(*results)
 
     X = np.arange(len(labels))
     # Bar width.
@@ -899,10 +911,17 @@ def speedup_classification(db, output=None, job="xval", **kwargs):
             color=sns.color_palette("Blues", 1), label="Accuracy")
     plt.bar(X + 2 * width, speedups, width=width,
             color=sns.color_palette("Greens", 1), label="Speedup")
+    plt.bar(X + 3 * width, perfs, width=width,
+            color=sns.color_palette("Oranges", 1), label="Performance")
     # Plot confidence intervals separately so that we can have
     # full control over formatting.
     _,caps,_ = plt.errorbar(X + 2.5 * width, speedups, fmt="none",
                             yerr=yerrs, capsize=3, ecolor="k")
+    for cap in caps:
+        cap.set_color('k')
+        cap.set_markeredgewidth(1)
+    _,caps,_ = plt.errorbar(X + 3.5 * width, perfs, fmt="none",
+                            yerr=perf_yerrs, capsize=3, ecolor="k")
     for cap in caps:
         cap.set_color('k')
         cap.set_markeredgewidth(1)
