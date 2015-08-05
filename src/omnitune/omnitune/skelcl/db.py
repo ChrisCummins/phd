@@ -2191,13 +2191,14 @@ class Database(db.Database):
                 header = True
                 for row in reader:
                     if header:
+                        row[-1] = "speedup"
                         writer.writerow(row)
                         header = False
-                        continue
-                    scenario = row[0]
-                    params = row[-2]
-                    row[-1] = self.speedup(scenario, one_r, params)
-                    writer.writerow(row)
+                    else:
+                        scenario = row[0]
+                        params = row[-2]
+                        row[-1] = self.speedup(scenario, one_r, params)
+                        writer.writerow(row)
 
         fs.cdpop()
 
