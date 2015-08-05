@@ -916,7 +916,7 @@ class Database(db.Database):
     def add_classification_result(self, job, classifier, err_fn, dataset,
                                   scenario, actual, predicted, baseline,
                                   correct, illegal, refused, performance,
-                                  speedup):
+                                  speedup, elapsed):
         """
         Add result of using a classifier to predict optimal workgroup size.
 
@@ -952,11 +952,11 @@ class Database(db.Database):
             speedup_mo = None
 
         self.execute("INSERT INTO classification_results VALUES "
-                     "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                     "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                      (job_id, classifier_id, err_fn_id, dataset_id,
                       scenario, actual, predicted, baseline, correct,
                       illegal, refused, performance, speedup, speedup_he,
-                      speedup_mo))
+                      speedup_mo, elapsed))
 
     def add_runtime_regression_result(self, job, classifier, dataset, scenario,
                                       params, actual, predicted, norm_predicted,
@@ -1605,6 +1605,42 @@ class Database(db.Database):
             row[0] for row in
             self.execute("SELECT id FROM scenarios WHERE device=?",
                          (device,))
+        ]
+
+    def scenarios_for_kernel(self, kernel):
+        """
+        Return the scenario IDs for a given kernel.
+
+        Arguments:
+
+            kernel (str): Kernel ID.
+
+        Returns:
+
+            list of str: List of scenario IDs.
+        """
+        return [
+            row[0] for row in
+            self.execute("SELECT id FROM scenarios WHERE kernel=?",
+                         (kernel,))
+        ]
+
+    def scenarios_for_dataset(self, dataset):
+        """
+        Return the scenario IDs for a given dataset.
+
+        Arguments:
+
+            dataset (str): Dataset ID.
+
+        Returns:
+
+            list of str: List of scenario IDs.
+        """
+        return [
+            row[0] for row in
+            self.execute("SELECT id FROM scenarios WHERE dataset=?",
+                         (dataset,))
         ]
 
     def num_params_for_scenarios(self):

@@ -244,4 +244,6 @@ LEFT JOIN datasets
 LEFT JOIN kernels
   ON scenarios.kernel=kernels.id
 LEFT JOIN devices
-  ON scenarios.device=devices.id;
+  ON scenarios.device=devices.id
+ORDER BY RANDOM()
+LIMIT 100000;

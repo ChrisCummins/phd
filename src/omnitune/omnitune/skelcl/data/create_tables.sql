@@ -340,21 +340,8 @@ CREATE TABLE classification_results (
     performance                     REAL,     -- Performance relative to oracle, 0 <= performance <= 1
     speedup                         REAL,     -- Speedup over baseline, 0 <= speedup
     speedup_he                      REAL,     -- Speedup over human expert
-    speedup_mo                      REAL      -- Speedup over mode param
-);
-
-
--- Runtime regression results table
-CREATE TABLE runtime_regression_results (
-    job                             TEXT,     -- Key for ml_jobs
-    classifier                      TEXT,     -- Key for classifiers.id
-    dataset                         TEXT,     -- Key for datasets.id
-    scenario                        TEXT,     -- Key for scenarios
-    params                          TEXT,     -- Key for params
-    actual                          REAL,     -- Actual runtime value
-    predicted                       REAL,     -- Predicted runtime value
-    norm_predicted                  REAL,     -- Predicted runtime, normalised to actual runtime
-    norm_err                        REAL      -- abs(norm_predicted - 1)
+    speedup_mo                      REAL,     -- Speedup over mode param
+    time                            REAL
 );
 
 
@@ -372,32 +359,29 @@ CREATE TABLE runtime_classification_results (
     num_attempts                    INTEGER,  -- Number of attempts done
     correct                         INTEGER,  -- 1 if prediction is correct, else 0
     performance                     REAL,     -- Performance relative to oracle, 0 <= performance <= 1
-    speedup                         REAL      -- Speedup over baseline, 0 <= speedup
+    speedup                         REAL,     -- Speedup over baseline, 0 <= speedup
+    speedup_he                      REAL,     -- Speedup over human expert
+    speedup_mo                      REAL,     -- Speedup over mode param
+    time                            REAL
 );
 
 
 -- Speedup regression results table
-CREATE TABLE speedup_regression_results (
-    job                             TEXT,     -- Key for ml_jobs
-    classifier                      TEXT,     -- Key for classifiers.id
-    dataset                         TEXT,     -- Key for datasets.id
-    scenario                        TEXT,     -- Key for scenarios
-    params                          TEXT,     -- Key for params
-    actual                          REAL,     -- Actual speedup value
-    predicted                       REAL,     -- Predicted speedup value
-    norm_predicted                  REAL,     -- Predicted speedup, normalised to actual speedup
-    norm_err                        REAL      -- abs(norm_predicted - 1)
-);
-
--- Table for results of classification using speedup regression.
 CREATE TABLE speedup_classification_results (
     job                             TEXT,     -- Key for ml_jobs
     classifier                      TEXT,     -- Key for classifiers.id
     scenario                        TEXT,     -- Key for scenarios
     actual                          TEXT,     -- Oracle params value, key for params
+    actual_speedup                  REAL,
     predicted                       TEXT,     -- Predicted params value, key for params
-    baseline                        TEXT,     -- Baseline params value, key for params
+    predicted_speedup               REAL,
+    actual_range                    REAL,
+    predicted_range                 REAL,
+    num_attempts                    INTEGER,  -- Number of attempts done
     correct                         INTEGER,  -- 1 if prediction is correct, else 0
     performance                     REAL,     -- Performance relative to oracle, 0 <= performance <= 1
-    speedup                         REAL      -- Speedup over baseline, 0 <= speedup
+    speedup                         REAL,     -- Speedup over baseline, 0 <= speedup
+    speedup_he                      REAL,     -- Speedup over human expert
+    speedup_mo                      REAL,     -- Speedup over mode param
+    time                            REAL
 );
