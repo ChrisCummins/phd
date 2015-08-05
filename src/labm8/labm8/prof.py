@@ -69,7 +69,7 @@ def _add_timer(name):
 def _stop_timer(name):
     t = _timers[name]
     del _timers[name]
-    return round((time() - t) * 1000)
+    return int(round((time() - t) * 1000))
 
 
 def _new_timer_name():
