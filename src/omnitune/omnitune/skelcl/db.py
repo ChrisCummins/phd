@@ -2133,7 +2133,7 @@ class Database(db.Database):
         }
 
     def runtime_predictions(self, scenario, classifier, job):
-        clsasifier_id = self.classifier_id(classifier)
+        classifier_id = self.classifier_id(classifier)
         return [
             row for row in
             self.execute(
@@ -2145,7 +2145,7 @@ class Database(db.Database):
         ]
 
     def speedup_predictions(self, scenario, classifier, job):
-        clsasifier_id = self.classifier_id(classifier)
+        classifier_id = self.classifier_id(classifier)
         return [
             row for row in
             self.execute(
