@@ -117,11 +117,14 @@ class GeomeanAggregate(ItemAggregator):
 
 class ConfErrorAggregate(ItemAggregator):
     def step(self, value, conf):
-        super(ConfErrorAggregate, self).step(value)
+        self.items.append(value)
         self.conf = conf
 
     def finalize(self):
-        return labmath.confinterval(self.items, self.conf, error_only=True)
+        if len(self.items):
+            return labmath.confinterval(self.items, self.conf, error_only=True)
+        else:
+            return 0
 
 
 class Database(db.Database):
