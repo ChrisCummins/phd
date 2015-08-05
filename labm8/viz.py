@@ -55,5 +55,5 @@ def finalise(output=None, figsize=None, **kwargs):
         plt.show()
     else:
         plt.savefig(output, **kwargs)
-        io.info("Wrote '{}'".format(output))
+        io.info("Wrote", output)
     plt.close()
