@@ -301,13 +301,13 @@ def pie(data, output=None, **kwargs):
     viz.finalise(output, **kwargs)
 
 
-def performance_vs_max_wgsize(ratios, output=None, **kwargs):
+def performance_vs_max_wgsize(ratios, output=None, color=None, **kwargs):
     title = kwargs.pop("title",
                        "Workgroup size performance vs. maximum workgroup size")
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    sns.boxplot(data=ratios)
+    sns.violinplot(data=ratios, inner="quartile", linewidth=.5)#, palette=color)
 
     multiplier = kwargs.pop("multiplier", 10)
     ax.set_xticklabels([str((x+1) * multiplier) + "%"
@@ -315,17 +315,20 @@ def performance_vs_max_wgsize(ratios, output=None, **kwargs):
 
     title = kwargs.pop("title", "")
     plt.title(title)
+    plt.ylim(ymin=0, ymax=1)
+    plt.ylabel("Performance")
     xlabel = kwargs.pop("xlabel", "")
     plt.xlabel(xlabel)
     viz.finalise(output, **kwargs)
 
 
-def _performance_plot(output, labels, values, title, **kwargs):
+def _performance_plot(output, labels, values, title, color=None, **kwargs):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    sns.boxplot(data=values)
+    sns.violinplot(data=values, inner="quartile", linewidth=.5)#, palette=color)
     ax.set_xticklabels(labels, rotation=90)
     plt.ylim(ymin=0, ymax=1)
+    plt.ylabel("Performance")
     plt.title(title)
     viz.finalise(output, **kwargs)
 
@@ -339,7 +342,8 @@ def kernel_performance(db, output=None, **kwargs):
                db.real_kernel_names]
 
     title = kwargs.pop("title", "Workgroup size performance across kernels")
-    _performance_plot(output, labels, values, title, **kwargs)
+    _performance_plot(output, labels, values, title,
+                      color=sns.color_palette("Greens"), **kwargs)
 
 
 def device_performance(db, output=None, **kwargs):
@@ -347,14 +351,16 @@ def device_performance(db, output=None, **kwargs):
     labels = [fmtdevid(id) for id in ids]
     values = [db.performance_of_device(id) for id in ids]
     title = kwargs.pop("title", "Workgroup size performance across devices")
-    _performance_plot(output, labels, values, title, **kwargs)
+    _performance_plot(output, labels, values, title,
+                      color=sns.color_palette("Blues"), **kwargs)
 
 
 def dataset_performance(db, output=None, **kwargs):
     labels = db.datasets
     values = [db.performance_of_dataset(label) for label in labels]
     title = kwargs.pop("title", "Workgroup size performance across datasets")
-    _performance_plot(output, labels, values, title, **kwargs)
+    _performance_plot(output, labels, values, title,
+                      color=sns.color_palette("Reds"), **kwargs)
 
 
 def runtimes_range(db, output=None, where=None, nbins=25,
