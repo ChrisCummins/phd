@@ -1818,6 +1818,13 @@ class Database(db.Database):
         return self.execute("SELECT params FROM oracle_params WHERE scenario=?",
                             (scenario,)).fetchone()[0]
 
+    def worst_param(self, scenario):
+        # TODO: Document!
+        """
+        """
+        return self.execute("SELECT worst_param FROM scenario_stats WHERE scenario=?",
+                            (scenario,)).fetchone()[0]
+
     def oracle_runtime(self, scenario):
         """
         Return the mean runtime of the oracle param for a given scenario.
