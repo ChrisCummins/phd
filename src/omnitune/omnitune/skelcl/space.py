@@ -1,4 +1,5 @@
 from itertools import product
+from math import log
 
 import numpy as np
 
@@ -201,6 +202,12 @@ class ParamSpace(object):
         self.c = new_c
         self.r = new_r
         self.matrix = new_matrix
+
+    def log(self):
+        for j in range(len(self.r)):
+            for i in range(len(self.c)):
+                if self.matrix[j][i] > 0:
+                    self.matrix[j][i] = log(self.matrix[j][i])
 
     def clip(self, max_c=0, max_r=0):
         """
