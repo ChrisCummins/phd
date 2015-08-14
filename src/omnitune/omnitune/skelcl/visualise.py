@@ -195,8 +195,7 @@ def safety(db, output=None, where=None, **kwargs):
     space.heatmap(output=output, **kwargs)
 
 
-def oracle_wgsizes(db, output=None, where=None, trisurf=False, clip=100,
-                   **kwargs):
+def oracle_wgsizes(db, output=None, clip=100, **kwargs):
     data = db.oracle_params_xy
     # Limit the range of results to be <= "clip" param:
     data = [(x,y) for x,y in data if x <= clip and y <= clip]
