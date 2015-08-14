@@ -64,11 +64,20 @@ class ParamSpace(object):
         if "square" not in kwargs:
             kwargs["square"] = True
 
-        xticklabels = self.c if xlabels == True else xlabels
-        yticklabels = list(reversed(self.r)) if ylabels == True else ylabels
+        if xlabels == True:
+            xticklabels = ["" if x % 20 else str(x)
+                           for x in self.c]
+        else:
+            xticklabels = xlabels
+        if ylabels == True:
+            yticklabels = ["" if x % 20 else str(x)
+                           for x in list(reversed(self.r))]
+        else:
+            yticklabels = ylabels
 
         _, ax = plt.subplots(figsize=figsize)
-        sns.heatmap(data, xticklabels=xticklabels, yticklabels=yticklabels,
+        sns.heatmap(data,
+                    xticklabels=xticklabels, yticklabels=yticklabels,
                     cbar=cbar, **kwargs)
 
         # Set labels.

@@ -196,16 +196,11 @@ def safety(db, output=None, where=None, **kwargs):
 
 
 def oracle_wgsizes(db, output=None, clip=100, **kwargs):
-    data = db.oracle_params_xy
-    # Limit the range of results to be <= "clip" param:
-    data = [(x,y) for x,y in data if x <= clip and y <= clip]
-    x, y = zip(*data)
-    df = pandas.DataFrame(data, columns=["Rows", "Columns"])
-
-    sns.jointplot(x="Rows", y="Columns", data=df, stat_func=None,
-                  xlim=(0, clip),
-                  ylim=(0, clip))
-    viz.finalise(output, **kwargs)
+    space = db.oracle_param_space(normalise=False)
+    space.clip(clip, clip)
+    space.log()
+    #space.heatmap(output=output, **kwargs)
+    space.trisurf(output=output, **kwargs)
 
 
 def scenario_performance(db, scenario, output=None, title=None, type="heatmap",
