@@ -625,7 +625,8 @@ def classification(db, output=None, job="xval", **kwargs):
         pairs = [result[4 + i] for result in results]
         speedups, yerrs = zip(*pairs)
         ax.bar(X + .1 + (i * width), speedups, width=width,
-               label="Speedup ({})".format(err_fn), color=colors[i])
+               label="Speedup ({})".format(re.sub("_", " ", err_fn)),
+               color=colors[i])
 
         # Plot confidence intervals separately so that we can have
         # full control over formatting.

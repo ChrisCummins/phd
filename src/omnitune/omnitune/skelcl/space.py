@@ -81,8 +81,8 @@ class ParamSpace(object):
                     cbar=cbar, **kwargs)
 
         # Set labels.
-        ax.set_ylabel("Rows")
-        ax.set_xlabel("Columns")
+        ax.set_ylabel("$w_r$")
+        ax.set_xlabel("$w_c$")
         if title:
             plt.title(title)
 
