@@ -120,13 +120,25 @@ class ParamSpace(object):
         ax.plot_trisurf(X, Y, Z, cmap=cm.jet, **kwargs)
 
         # Set X axis labels
-        ax.set_xticks(np.arange(len(self.c)))
-        ax.set_xticklabels(self.c)
+        xticks = []
+        xticklabels = []
+        for i,c in enumerate(self.c):
+            if not len(xticks) or c % 20 == 0:
+                xticks.append(i)
+                xticklabels.append(c)
+        ax.set_xticks(xticks)
+        ax.set_xticklabels(xticklabels)
         ax.set_xlabel("Columns")
 
         # Set Y axis labels
-        ax.set_yticks(np.arange(len(self.r)))
-        ax.set_yticklabels(self.r)
+        yticks = []
+        yticklabels = []
+        for i,c in enumerate(self.c):
+            if not len(yticks) or c % 20 == 0:
+                yticks.append(i)
+                yticklabels.append(c)
+        ax.set_yticks(yticks)
+        ax.set_yticklabels(yticklabels)
         ax.set_ylabel("Rows")
 
         # Set Z axis labels

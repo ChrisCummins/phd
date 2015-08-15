@@ -15,6 +15,7 @@ import pandas
 from matplotlib.ticker import FormatStrFormatter
 
 from . import space as _space
+from . import hash_params
 from . import unhash_params
 
 import labm8 as lab
@@ -174,17 +175,64 @@ def max_wgsizes(db, output=None, trisurf=False, **kwargs):
     if "title" not in kwargs:
         kwargs["title"] = "Distribution of maximum workgroup sizes"
     if trisurf:
-        space.trisurf(output=output, **kwargs)
+        space.trisurf(output=output, zlabel="Coverage (ratio)", **kwargs)
     else:
         space.heatmap(output=output, **kwargs)
 
 
-def coverage(db, output=None, where=None, **kwargs):
-    space = db.param_coverage_space(where=where)
-    if "title" not in kwargs: kwargs["title"] = "All data"
-    if "vim" not in kwargs: kwargs["vmin"] = 0
-    if "vmax" not in kwargs: kwargs["vmax"] = 1
-    space.heatmap(output=output, **kwargs)
+def coverage(db, output=None, trisurf=False, clip=100, **kwargs):
+    if trisurf:
+        data = {
+        row[0]: row[1]
+        for row in
+            db.execute(
+                "SELECT params,num_scenarios "
+                "FROM param_stats "
+                "LEFT JOIN params "
+                "ON param_stats.params=params.id "
+                "WHERE wg_c <= ? AND wg_r <= ?",
+                (clip, clip)
+            )
+        }
+        space = _space.ParamSpace.from_dict(data)
+        space.log()
+        space.trisurf(output=output, zlabel="Legal frequency (log)", **kwargs)
+    else:
+        data = {
+        row[0]: row[1]
+        for row in
+            db.execute(
+                "SELECT params,coverage "
+                "FROM param_stats "
+                "LEFT JOIN params "
+                "ON param_stats.params=params.id "
+                "WHERE wg_c <= ? AND wg_r <= ?",
+                (clip, clip)
+            )
+        }
+        space = _space.ParamSpace.from_dict(data)
+        space.heatmap(output=output, **kwargs)
+
+
+def performance(db, output=None, trisurf=False, clip=100, **kwargs):
+    data = {
+        row[0]: row[1]
+        for row in
+        db.execute(
+            "SELECT params,performance "
+            "FROM param_stats "
+            "LEFT JOIN params "
+            "ON param_stats.params=params.id "
+            "WHERE wg_c <= ? AND wg_r <= ?",
+            (clip, clip)
+        )
+    }
+
+    space = _space.ParamSpace.from_dict(data)
+    if trisurf:
+        space.trisurf(output=output, rotation=45, **kwargs)
+    else:
+        space.heatmap(output=output, **kwargs)
 
 
 def safety(db, output=None, where=None, **kwargs):
@@ -195,12 +243,14 @@ def safety(db, output=None, where=None, **kwargs):
     space.heatmap(output=output, **kwargs)
 
 
-def oracle_wgsizes(db, output=None, clip=100, **kwargs):
+def oracle_wgsizes(db, output=None, trisurf=False, clip=100, **kwargs):
     space = db.oracle_param_space(normalise=False)
     space.clip(clip, clip)
     space.log()
-    #space.heatmap(output=output, **kwargs)
-    space.trisurf(output=output, **kwargs)
+    if trisurf:
+        space.trisurf(output=output, zlabel="Oracle frequency (log)", **kwargs)
+    else:
+        space.heatmap(output=output, **kwargs)
 
 
 def scenario_performance(db, scenario, output=None, title=None, type="heatmap",
