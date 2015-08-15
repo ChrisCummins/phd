@@ -81,8 +81,8 @@ class ParamSpace(object):
                     cbar=cbar, **kwargs)
 
         # Set labels.
-        ax.set_ylabel("$w_r$")
-        ax.set_xlabel("$w_c$")
+        ax.set_ylabel("Rows")
+        ax.set_xlabel("Columns")
         if title:
             plt.title(title)
 
@@ -128,7 +128,7 @@ class ParamSpace(object):
                 xticklabels.append(c)
         ax.set_xticks(xticks)
         ax.set_xticklabels(xticklabels)
-        ax.set_xlabel("Columns")
+        ax.set_xlabel("$w_c$")
 
         # Set Y axis labels
         yticks = []
@@ -139,7 +139,7 @@ class ParamSpace(object):
                 yticklabels.append(c)
         ax.set_yticks(yticks)
         ax.set_yticklabels(yticklabels)
-        ax.set_ylabel("Rows")
+        ax.set_ylabel("$w_r$")
 
         # Set Z axis labels
         if zlabel is not None:

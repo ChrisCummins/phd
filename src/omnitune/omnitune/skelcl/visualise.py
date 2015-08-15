@@ -288,7 +288,7 @@ def performance_vs_coverage(db, output=None, max_values=250, **kwargs):
     Performance, Coverage = zip(*data)
 
     ax = plt.subplot(111)
-    ax.plot(X, Coverage, 'r', label="Legality")
+    ax.plot(X, Coverage, 'r-', label="Legality")
     ax.plot(X, Performance, 'g', label="Performance")
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.xlim(xmin=0, xmax=len(X) - 1)
