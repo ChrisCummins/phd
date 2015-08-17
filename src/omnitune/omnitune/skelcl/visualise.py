@@ -290,7 +290,7 @@ def performance_vs_coverage(db, output=None, max_values=250, **kwargs):
 
     ax = plt.subplot(111)
     ax.plot(X, Coverage, 'r', linestyle="--", label="Legality")
-    ax.plot(X, Performance, 'g', label="Performance")
+    ax.plot(X, Performance, label="Performance")
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
     plt.xlim(xmin=0, xmax=len(X) - 1)
     plt.ylim(ymin=0, ymax=100)
@@ -436,7 +436,7 @@ def max_speedups(db, output=None, **kwargs):
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.plot(X, max_speedups, label="Worst")
+    ax.plot(X, max_speedups, "r", linestyle="--", label="Worst")
     ax.plot(X, min_static, label="Best static")
     plt.xlim(xmin=0, xmax=len(X) - 1)
     title = kwargs.pop("title", "Max attainable speedups")
