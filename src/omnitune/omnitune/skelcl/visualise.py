@@ -677,7 +677,7 @@ def refused_params_by_device(db, output=None, **kwargs):
     ax.bar(X + .1, Y, width = .8)
     ax.set_xticks(X + .5)
     ax.set_xticklabels(labels, rotation=90)
-    ax.set_ylabel("Ratio refused (%)")
+    ax.set_ylabel("Ratio refused (\\%)")
 
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
 
@@ -726,7 +726,7 @@ def refused_params_by_vendor(db, output=None, **kwargs):
     ax.bar(X + .1, Y, width = .8)
     ax.set_xticks(X + .5)
     ax.set_xticklabels(labels, rotation=90)
-    ax.set_ylabel("Ratio refused (%)")
+    ax.set_ylabel("Ratio refused (\\%)")
 
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
 
