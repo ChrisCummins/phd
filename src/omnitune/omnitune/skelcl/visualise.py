@@ -654,7 +654,7 @@ def classification(db, output=None, job="xval", **kwargs):
 
     # PLOT TIMES
     width = .8
-    ax = plt.subplot(4, 1, 1)
+    ax = plt.subplot(3, 1, 1)
     ax.bar(X + .1, time, width=width)
     ax.set_xticks(X + .4)
     ax.set_xticklabels(labels)
@@ -669,8 +669,9 @@ def classification(db, output=None, job="xval", **kwargs):
         cap.set_color('k')
         cap.set_markeredgewidth(1)
 
+    # RATIOS
     width = (.8 / 3)
-    ax = plt.subplot(4, 1, 2)
+    ax = plt.subplot(3, 1, 2)
     ax.bar(X + .1, illegal, width=width,
            color=sns.color_palette("Reds", 1), label="Illegal")
     ax.bar(X + .1 + width, refused, width=width,
@@ -684,34 +685,34 @@ def classification(db, output=None, job="xval", **kwargs):
     ax.yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
     art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -.1), ncol=3)]
 
-    # Plot speedups.
-    ax = plt.subplot(4, 1, 3)
-    width = (.8 / 3)
-    colors=sns.color_palette("Greens", len(err_fns))
-    for i,err_fn in enumerate(db.err_fns):
-        pairs = [result[6 + i] for result in results]
-        speedups, yerrs = zip(*pairs)
-        ax.bar(X + .1 + (i * width), speedups, width=width,
-               label=errfn2label(err_fn), color=colors[i])
+    # # Plot speedups.
+    # ax = plt.subplot(3, 1, 3)
+    # width = (.8 / 3)
+    # colors=sns.color_palette("Greens", len(err_fns))
+    # for i,err_fn in enumerate(db.err_fns):
+    #     pairs = [result[6 + i] for result in results]
+    #     speedups, yerrs = zip(*pairs)
+    #     ax.bar(X + .1 + (i * width), speedups, width=width,
+    #            label=errfn2label(err_fn), color=colors[i])
 
-        # Plot confidence intervals separately so that we can have
-        # full control over formatting.
-        _,caps,_ = ax.errorbar(X + .1 + (i + .5) * width, speedups,
-                               fmt="none", yerr=yerrs, capsize=3, ecolor="k")
-        for cap in caps:
-            cap.set_color('k')
-            cap.set_markeredgewidth(1)
-    ax.set_xticks(X + .4)
-    ax.set_xticklabels(labels)
-    ax.set_ylim(0, 5)
-    ax.set_xticks(X + .4, labels)
-    ax.set_ylabel("Speedup")
-    art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -.1), ncol=3)]
+    #     # Plot confidence intervals separately so that we can have
+    #     # full control over formatting.
+    #     _,caps,_ = ax.errorbar(X + .1 + (i + .5) * width, speedups,
+    #                            fmt="none", yerr=yerrs, capsize=3, ecolor="k")
+    #     for cap in caps:
+    #         cap.set_color('k')
+    #         cap.set_markeredgewidth(1)
+    # ax.set_xticks(X + .4)
+    # ax.set_xticklabels(labels)
+    # ax.set_ylim(0, 5)
+    # ax.set_xticks(X + .4, labels)
+    # ax.set_ylabel("Speedup")
+    # art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -.1), ncol=3)]
 
     # Colour palette for performance.
-    colors=sns.color_palette("Blues", len(err_fns))
+    colors=sns.color_palette("Greens", len(err_fns))
     width = (.8 / 3)
-    ax = plt.subplot(4, 1, 4)
+    ax = plt.subplot(3, 1, 3)
     for i,err_fn in enumerate(db.err_fns):
         pairs = [result[9 + i] for result in results]
         perfs, yerrs = zip(*pairs)
@@ -910,11 +911,20 @@ def regression_classification(db, output=None, job="xval",
             (job,)
         ).fetchone()
         results.append([job, speedup, serr, perf, perr, time, terr, correct])
-        print(job, speedup, serr, perf, perr, time, terr, correct)
 
     # Zip into lists.
     labels, speedup, serr, perf, perr, time, terr, correct = zip(*results)
     labels = [jobs[x] for x in jobs]
+
+    # Add averages.
+    labels.append("Average")
+    speedup += (labmath.mean(speedup),)
+    serr += (labmath.mean(serr),)
+    perf += (labmath.mean(perf),)
+    perr += (labmath.mean(perr),)
+    time += (labmath.mean(time),)
+    terr += (labmath.mean(terr),)
+    correct += (labmath.mean(correct),)
 
     X = np.arange(len(labels))
 
@@ -922,7 +932,7 @@ def regression_classification(db, output=None, job="xval",
 
     # PLOT TIMES
     ax = plt.subplot(3, 1, 1)
-    ax.bar(X + .1, time, width=width)
+    ax.bar(X + .1, time, width=width, color=sns.color_palette("Blues"))
     ax.set_xticks(X + .5)
     ax.set_ylim(0, 150)
     ax.set_xticklabels(labels, rotation='vertical')
@@ -952,7 +962,7 @@ def regression_classification(db, output=None, job="xval",
 
     # PERFORMANCE
     ax = plt.subplot(3, 1, 3)
-    ax.bar(X + .1, perf, width=width, color=sns.color_palette("Blues"))
+    ax.bar(X + .1, perf, width=width, color=sns.color_palette("Greens"))
     ax.set_xticks(X + .5)
     ax.set_xticklabels(labels, rotation='vertical')
     ax.set_ylabel("Performance")
