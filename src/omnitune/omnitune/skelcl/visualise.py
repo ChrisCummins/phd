@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 
+from __future__ import print_function
 from __future__ import division
 
 import operator
@@ -57,7 +58,7 @@ def num_samples(db, output=None, sample_range=None, **kwargs):
     plt.title(title)
     plt.xlabel("Sample count")
     plt.ylabel("Ratio of test cases")
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
     plt.plot(X, Y)
     plt.xlim(*sample_range)
     viz.finalise(output, **kwargs)
@@ -82,7 +83,7 @@ def num_params(db, output=None, sample_range=None, **kwargs):
     plt.title(title)
     plt.xlabel("Number of parameters")
     plt.ylabel("Ratio of scenarios")
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
     plt.plot(X, Y)
     plt.xlim(*sample_range)
     viz.finalise(output, **kwargs)
@@ -107,10 +108,10 @@ def confinterval_trend(sample_counts, confintervals, output=None,
     fig = plt.figure()
     ax = fig.add_subplot(111)
     plt.plot(sample_counts, [y * 100 for y in confintervals])
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
     for vline in vlines:
         ax.axvline(vline, color='k', linestyle='--')
-    plt.ylabel("95% CI / mean")
+    plt.ylabel("95\\% CI / mean")
     plt.xlabel("Number of samples")
     plt.xlim(min(sample_counts), max(sample_counts))
     viz.finalise(output, **kwargs)
@@ -314,7 +315,7 @@ def num_params_vs_accuracy(db, output=None, where=None, **kwargs):
     X = np.arange(len(Data))
     ax = plt.subplot(111)
     ax.plot(X, Data)
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
     plt.xlim(xmin=0, xmax=len(X) - 1)
     plt.ylim(ymin=0, ymax=100)
     title = kwargs.pop("title", "Number of workgroup sizes vs. oracle accuracy")
@@ -533,7 +534,7 @@ def err_fn_performance(db, output=None, job="xval", **kwargs):
 
     plt.xlim(xmin=-.2)
     plt.xticks(X + .4, err_fns)
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
 
     title = kwargs.pop("title", "Error handler performance for " + job)
     plt.title(title)
@@ -547,6 +548,15 @@ def err_fn_performance(db, output=None, job="xval", **kwargs):
     viz.finalise(output, additional_artists=art, bbox_inches="tight", **kwargs)
 
 
+def errfn2label(errfn):
+    if errfn == "default_fn":
+        return r'\textsc{Baseline}'
+    elif errfn == "random_fn":
+        return r'\textsc{Random}'
+    else:
+        return r'\textsc{NearestNeighbour}'
+
+
 def classification(db, output=None, job="xval", **kwargs):
     err_fns = db.err_fns
     base_err_fn = err_fns[0]
@@ -554,18 +564,51 @@ def classification(db, output=None, job="xval", **kwargs):
     query = db.execute(
         "SELECT classifier,Count(*) AS count\n"
         "FROM classification_results\n"
-        "WHERE job=? AND err_fn=?\n"
+        "WHERE job=? AND err_fn=? AND classifier!='weka.classifiers.rules.ZeroR'\n"
         "GROUP BY classifier",
         (job,base_err_fn)
     )
     results = []
+
+    # Add baseline results.
+    baseline = ("4x4")
+    correct = db.execute("SELECT Count(*) * 1.0 / 3 FROM classification_results "
+                         "WHERE job=? AND actual=?", (job,baseline)).fetchone()[0]
+    illegal = 0
+    refused = 0
+    time = 0
+    terr = 0
+    speedup = (1, 0)
+    perfs = [
+        row[1] for row in
+        db.execute(
+            "SELECT "
+            "  DISTINCT runtime_stats.scenario, "
+            "  (scenario_stats.oracle_runtime / runtime_stats.mean) "
+            "FROM classification_results "
+            "LEFT JOIN runtime_stats "
+            "  ON classification_results.scenario=runtime_stats.scenario "
+            "LEFT JOIN scenario_stats "
+            "  ON classification_results.scenario=scenario_stats.scenario "
+            "WHERE job=? and runtime_stats.params=?",
+            (job, baseline)
+        )
+    ]
+    perf = (labmath.mean(perfs), labmath.confinterval(perfs, error_only=True))
+    results.append(["ZeroR", correct, illegal, refused, time, terr,
+                    speedup, speedup, speedup,
+                    perf, perf, perf])
+
+    # Get results
     for classifier,count in query:
         basename = ml.classifier_basename(classifier)
-        correct, illegal, refused = db.execute(
+        correct, illegal, refused, time, terr = db.execute(
             "SELECT\n"
             "    (SUM(correct) / CAST(? AS FLOAT)) * 100,\n"
             "    (SUM(illegal) / CAST(? AS FLOAT)) * 100,\n"
-            "    (SUM(refused) / CAST(? AS FLOAT)) * 100\n"
+            "    (SUM(refused) / CAST(? AS FLOAT)) * 100,\n"
+            "    AVG(time),\n"
+            "    CONFERROR(time, .95)\n"
             "FROM classification_results\n"
             "WHERE job=? AND classifier=? AND err_fn=?",
             (count, count, count, job, classifier, base_err_fn)
@@ -582,44 +625,68 @@ def classification(db, output=None, job="xval", **kwargs):
             ).fetchone()
             for err_fn in err_fns
         ]
+        # Get a list of mean perfs for each err_fn.
+        perfs = [
+            db.execute(
+                "SELECT\n"
+                "    GEOMEAN(performance),\n"
+                "    CONFERROR(performance, .95)\n"
+                "FROM classification_results\n"
+                "WHERE job=? AND classifier=? AND err_fn=?",
+                (job, classifier, err_fn)
+            ).fetchone()
+            for err_fn in err_fns
+        ]
 
-        results.append([basename, correct, illegal, refused] + speedups)
+        results.append([basename, correct, illegal, refused, time, terr] + speedups + perfs)
 
     # Zip into lists.
-    labels, correct, illegal, refused = zip(*[
-        (text.truncate(result[0], 40), result[1], result[2], result[3])
+    labels, correct, illegal, refused, time, terr = zip(*[
+        (text.truncate(result[0], 40), result[1], result[2],
+         result[3], result[4], result[5])
         for result in results
     ])
 
     X = np.arange(len(labels))
-    # Bar width.
-    width = (.8 / 3)
 
-    ax = plt.subplot(2, 1, 1)
+    # PLOT TIMES
+    width = .8
+    ax = plt.subplot(4, 1, 1)
+    ax.bar(X + .1, time, width=width)
+    ax.set_xticks(X + .4)
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("Classification time (ms)")
+    # art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -.1), ncol=3)]
+    # Plot confidence intervals separately so that we can have
+    # full control over formatting.
+    _,caps,_ = ax.errorbar(X + .5, time,
+                           fmt="none", yerr=terr, capsize=3, ecolor="k")
+    for cap in caps:
+        cap.set_color('k')
+        cap.set_markeredgewidth(1)
+
+    width = (.8 / 3)
+    ax = plt.subplot(4, 1, 2)
     ax.bar(X + .1, illegal, width=width,
            color=sns.color_palette("Reds", 1), label="Illegal")
     ax.bar(X + .1 + width, refused, width=width,
            color=sns.color_palette("Oranges", 1), label="Refused")
     ax.bar(X + .1 + 2 * width, correct, width=width,
            color=sns.color_palette("Blues", 1), label="Accurate")
-
-    ax.set_xticklabels([])
-    ax.yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
-
-    art = [plt.legend(loc=9, bbox_to_anchor=(0.5, 0), ncol=3)]
-
-    # Colour palette for speedups.
-    colors=sns.color_palette("Greens", len(err_fns))
-    ax = plt.subplot(2, 1, 2)
-    width = (.8 / 3)
+    ax.set_xticks(X + .4)
+    ax.set_xticklabels(labels)
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
+    art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -.1), ncol=3)]
 
     # Plot speedups.
+    ax = plt.subplot(4, 1, 3)
+    width = (.8 / 3)
+    colors=sns.color_palette("Greens", len(err_fns))
     for i,err_fn in enumerate(db.err_fns):
-        pairs = [result[4 + i] for result in results]
+        pairs = [result[6 + i] for result in results]
         speedups, yerrs = zip(*pairs)
         ax.bar(X + .1 + (i * width), speedups, width=width,
-               label="Speedup ({})".format(re.sub("_", " ", err_fn)),
-               color=colors[i])
+               label=errfn2label(err_fn), color=colors[i])
 
         # Plot confidence intervals separately so that we can have
         # full control over formatting.
@@ -628,12 +695,34 @@ def classification(db, output=None, job="xval", **kwargs):
         for cap in caps:
             cap.set_color('k')
             cap.set_markeredgewidth(1)
-
-    # ax[0].set_xlim(xmin=-.2)
     ax.set_xticks(X + .4)
     ax.set_xticklabels(labels)
-    # ax[1].set_xlim(xmin=-.2)
     ax.set_xticks(X + .4, labels)
+    ax.set_ylabel("Speedup")
+    art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -.1), ncol=3)]
+
+    # Colour palette for performance.
+    colors=sns.color_palette("Blues", len(err_fns))
+    width = (.8 / 3)
+    ax = plt.subplot(4, 1, 4)
+    for i,err_fn in enumerate(db.err_fns):
+        pairs = [result[9 + i] for result in results]
+        perfs, yerrs = zip(*pairs)
+        ax.bar(X + .1 + (i * width), perfs, width=width,
+               label=errfn2label(err_fn), color=colors[i])
+
+        # Plot confidence intervals separately so that we can have
+        # full control over formatting.
+        _,caps,_ = ax.errorbar(X + .1 + (i + .5) * width, perfs,
+                               fmt="none", yerr=yerrs, capsize=3, ecolor="k")
+        for cap in caps:
+            cap.set_color('k')
+            cap.set_markeredgewidth(1)
+    ax.set_xticks(X + .4)
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("Performance")
+    ax.set_xticks(X + .4, labels)
+
 
     title = kwargs.pop("title", "Classification results for " + job)
     plt.title(title)
@@ -679,7 +768,7 @@ def refused_params_by_device(db, output=None, **kwargs):
     ax.set_xticklabels(labels, rotation=90)
     ax.set_ylabel("Ratio refused (\\%)")
 
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
 
     for tick in ax.xaxis.get_minor_ticks():
         tick.tick1line.set_markersize(0)
@@ -728,7 +817,7 @@ def refused_params_by_vendor(db, output=None, **kwargs):
     ax.set_xticklabels(labels, rotation=90)
     ax.set_ylabel("Ratio refused (\\%)")
 
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
 
     for tick in ax.xaxis.get_minor_ticks():
         tick.tick1line.set_markersize(0)
@@ -852,7 +941,7 @@ def runtime_classification(db, output=None, job="xval", **kwargs):
 
     plt.xlim(xmin=-.2)
     plt.xticks(X + .4, labels)
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
 
     title = kwargs.pop("title",
                        "Classification results for " + job +
@@ -972,7 +1061,7 @@ def speedup_classification(db, output=None, job="xval", **kwargs):
 
     plt.xlim(xmin=-.2)
     plt.xticks(X + .4, labels)
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d\\%%' ))
 
     title = kwargs.pop("title",
                        "Classification results for " + job +
