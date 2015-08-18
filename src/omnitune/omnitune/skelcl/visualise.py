@@ -917,7 +917,7 @@ def regression_classification(db, output=None, job="xval",
     labels = [jobs[x] for x in jobs]
 
     # Add averages.
-    labels.append("Average")
+    labels.append(r'\textbf{Average}')
     speedup += (labmath.mean(speedup),)
     serr += (labmath.mean(serr),)
     perf += (labmath.mean(perf),)
