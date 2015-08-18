@@ -53,6 +53,11 @@ class ParamSpace(object):
     def set(self, j, i, value):
         self.matrix[j][i] = value
 
+    def inspace(self, param):
+        c, r = unhash_params(param)
+        return (c >= min(self.c) and c <= max(self.c) and
+                r >= min(self.r) and r <= max(self.r))
+
     def heatmap(self, output=None, title=None, figsize=(5,4),
                 xlabels=True, ylabels=True, cbar=True, **kwargs):
         import matplotlib.pyplot as plt

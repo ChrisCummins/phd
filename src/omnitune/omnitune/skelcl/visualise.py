@@ -470,6 +470,8 @@ def err_fn_speedups(db, err_fn, output=None, sort=False,
     """
     Plot speedup over the baseline of all classifiers for an err_fn.
     """
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
     for classifier in db.classification_classifiers:
         basename = ml.classifier_basename(classifier)
         performances = [row for row in
@@ -479,12 +481,13 @@ def err_fn_speedups(db, err_fn, output=None, sort=False,
                                    (job, classifier, err_fn))]
         if sort: performances = sorted(performances, reverse=True)
         plt.plot(performances, "-", label=basename)
+    plt.plot([1 for _ in performances], "-", label="ZeroR")
 
     title = kwargs.pop("title", err_fn)
+    ax.set_yscale("log")
     plt.title(title)
-    plt.ylabel("Speedup")
+    plt.ylabel("Speedup (log)")
     plt.xlabel("Test instances")
-    plt.axhline(y=1, color="k")
     plt.xlim(xmin=0, xmax=len(performances))
     plt.legend()
     viz.finalise(output, **kwargs)
@@ -584,7 +587,7 @@ def classification(db, output=None, job="xval", **kwargs):
         db.execute(
             "SELECT "
             "  DISTINCT runtime_stats.scenario, "
-            "  (scenario_stats.oracle_runtime / runtime_stats.mean) "
+            "  (scenario_stats.oracle_runtime / runtime_stats.mean) * 100 "
             "FROM classification_results "
             "LEFT JOIN runtime_stats "
             "  ON classification_results.scenario=runtime_stats.scenario "
@@ -629,8 +632,8 @@ def classification(db, output=None, job="xval", **kwargs):
         perfs = [
             db.execute(
                 "SELECT\n"
-                "    GEOMEAN(performance),\n"
-                "    CONFERROR(performance, .95)\n"
+                "    GEOMEAN(performance) * 100.0,\n"
+                "    CONFERROR(performance, .95) * 100.0\n"
                 "FROM classification_results\n"
                 "WHERE job=? AND classifier=? AND err_fn=?",
                 (job, classifier, err_fn)
@@ -655,6 +658,7 @@ def classification(db, output=None, job="xval", **kwargs):
     ax.bar(X + .1, time, width=width)
     ax.set_xticks(X + .4)
     ax.set_xticklabels(labels)
+    ax.set_ylim(0, 6)
     ax.set_ylabel("Classification time (ms)")
     # art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -.1), ncol=3)]
     # Plot confidence intervals separately so that we can have
@@ -674,6 +678,8 @@ def classification(db, output=None, job="xval", **kwargs):
     ax.bar(X + .1 + 2 * width, correct, width=width,
            color=sns.color_palette("Blues", 1), label="Accurate")
     ax.set_xticks(X + .4)
+    ax.set_ylabel("Ratio")
+    ax.set_ylim(0, 35)
     ax.set_xticklabels(labels)
     ax.yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
     art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -.1), ncol=3)]
@@ -697,6 +703,7 @@ def classification(db, output=None, job="xval", **kwargs):
             cap.set_markeredgewidth(1)
     ax.set_xticks(X + .4)
     ax.set_xticklabels(labels)
+    ax.set_ylim(0, 5)
     ax.set_xticks(X + .4, labels)
     ax.set_ylabel("Speedup")
     art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -.1), ncol=3)]
@@ -719,7 +726,9 @@ def classification(db, output=None, job="xval", **kwargs):
             cap.set_color('k')
             cap.set_markeredgewidth(1)
     ax.set_xticks(X + .4)
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
     ax.set_xticklabels(labels)
+    ax.set_ylim(0, 100)
     ax.set_ylabel("Performance")
     ax.set_xticks(X + .4, labels)
 
@@ -875,86 +884,98 @@ def runtime_regression(db, output=None, job="xval", **kwargs):
     viz.finalise(output, **kwargs)
 
 
-def runtime_classification(db, output=None, job="xval", **kwargs):
+def regression_classification(db, output=None, job="xval",
+                              table="runtime_classification_results",
+                              **kwargs):
     """
     Plot performance of classification using runtime regression.
     """
-    # Get a list of classifiers and result counts.
-    query = db.execute(
-        "SELECT classifier,Count(*) AS count\n"
-        "FROM runtime_classification_results\n"
-        "WHERE job=? GROUP BY classifier", (job,)
-    )
-    results = []
-    for classifier,count in query:
-        basename = ml.classifier_basename(classifier)
-        correct = db.execute(
-            "SELECT\n"
-            "    (SUM(correct) / CAST(? AS FLOAT)) * 100\n"
-            "FROM runtime_classification_results\n"
-            "WHERE job=? AND classifier=?",
-            (count, job, classifier)
-        ).fetchone()[0]
-        # Get a list of mean speedups for each err_fn.
-        speedups = [
-            row for row in
-            db.execute(
-                "SELECT\n"
-                "    GEOMEAN(speedup) * 100,\n"
-                "    CONFERROR(speedup, .95) * 100,\n"
-                "    GEOMEAN(performance) * 100,\n"
-                "    CONFERROR(performance, .95) * 100\n"
-                "FROM runtime_classification_results\n"
-                "WHERE job=? AND classifier=?",
-                (job, classifier)
-            ).fetchone()
-        ]
+    jobs = {
+        "xval": "10-fold",
+        "synthetic_real": "Synthetic",
+        "arch": "Device",
+        "kern": "Kernel",
+        "data": "Dataset",
+    }
 
-        results.append([basename, correct] + speedups)
+    results = []
+    for job in jobs:
+        speedup, serr, perf, perr, time, terr, correct = db.execute(
+            "SELECT "
+            "  AVG(speedup) - 1.5, CONFERROR(speedup, .95), "
+            "  AVG( performance) * 100, CONFERROR(performance, .95) * 100, "
+            "  AVG(time), CONFERROR(time, .95), "
+            "  AVG(correct) * 100 "
+            "FROM {} WHERE job=?".format(table),
+            (job,)
+        ).fetchone()
+        results.append([job, speedup, serr, perf, perr, time, terr, correct])
+        print(job, speedup, serr, perf, perr, time, terr, correct)
 
     # Zip into lists.
-    labels, correct, speedups, yerrs, perfs, perf_yerrs = zip(*results)
+    labels, speedup, serr, perf, perr, time, terr, correct = zip(*results)
+    labels = [jobs[x] for x in jobs]
 
     X = np.arange(len(labels))
-    # Bar width.
-    width = (.8 / (len(results[0]) - 1))
 
-    plt.bar(X + width, correct, width=width,
-            color=sns.color_palette("Blues", 1), label="Accuracy")
-    plt.bar(X + 2 * width, speedups, width=width,
-            color=sns.color_palette("Greens", 1), label="Speedup")
-    plt.bar(X + 3 * width, perfs, width=width,
-            color=sns.color_palette("Oranges", 1), label="Performance")
+    width = .8
+
+    # PLOT TIMES
+    ax = plt.subplot(3, 1, 1)
+    ax.bar(X + .1, time, width=width)
+    ax.set_xticks(X + .5)
+    ax.set_ylim(0, 150)
+    ax.set_xticklabels(labels, rotation='vertical')
+    ax.set_ylabel("Classification time (ms)")
     # Plot confidence intervals separately so that we can have
     # full control over formatting.
-    _,caps,_ = plt.errorbar(X + 2.5 * width, speedups, fmt="none",
-                            yerr=yerrs, capsize=3, ecolor="k")
+    _,caps,_ = ax.errorbar(X + .5, time,
+                           fmt="none", yerr=terr, capsize=3, ecolor="k")
     for cap in caps:
         cap.set_color('k')
         cap.set_markeredgewidth(1)
 
-    _,caps,_ = plt.errorbar(X + 3.5 * width, perfs, fmt="none",
-                            yerr=perf_yerrs, capsize=3, ecolor="k")
-    for cap in caps:
-        cap.set_color('k')
-        cap.set_markeredgewidth(1)
+    # # SPEEDUPS
+    # ax = plt.subplot(4, 1, 3)
+    # ax.bar(X + .1, speedup, width=width, color=sns.color_palette("Greens"))
+    # ax.set_xticks(X + .5)
+    # ax.set_ylim(0, 5)
+    # ax.set_xticklabels(labels, rotation='vertical')
+    # ax.set_ylabel("Speedup")
+    # # Plot confidence intervals separately so that we can have
+    # # full control over formatting.
+    # _,caps,_ = ax.errorbar(X + .5, speedup,
+    #                        fmt="none", yerr=serr, capsize=3, ecolor="k")
+    # for cap in caps:
+    #     cap.set_color('k')
+    #     cap.set_markeredgewidth(1)
 
-    plt.xlim(xmin=-.2)
-    plt.xticks(X + .4, labels)
+    # PERFORMANCE
+    ax = plt.subplot(3, 1, 3)
+    ax.bar(X + .1, perf, width=width, color=sns.color_palette("Blues"))
+    ax.set_xticks(X + .5)
+    ax.set_xticklabels(labels, rotation='vertical')
+    ax.set_ylabel("Performance")
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
+    ax.set_ylim(0, 100)
+    # Plot confidence intervals separately so that we can have
+    # full control over formatting.
+    _,caps,_ = ax.errorbar(X + .5, perf,
+                           fmt="none", yerr=perr, capsize=3, ecolor="k")
+    for cap in caps:
+        cap.set_color('k')
+        cap.set_markeredgewidth(1)
 
-    title = kwargs.pop("title",
-                       "Classification results for " + job +
-                       " using runtime regression")
-    plt.title(title)
+    # ACCURACY
+    ax = plt.subplot(3, 1, 2)
+    ax.bar(X + .1, correct, width=width, color=sns.color_palette("Reds"))
+    ax.set_xticks(X + .5)
+    ax.set_xticklabels(labels, rotation='vertical')
+    ax.set_ylabel("Accuracy")
+    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
+    ax.set_ylim(0, 12)
 
-    # Add legend *beneath* plot. To do this, we need to pass some
-    # extra arguments to plt.savefig(). See:
-    #
-    # http://jb-blog.readthedocs.org/en/latest/posts/12-matplotlib-legend-outdide-plot.html
-    #
-    art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -0.1), ncol=3)]
-    viz.finalise(output, additional_artists=art, bbox_inches="tight", **kwargs)
+    viz.finalise(output, **kwargs)
 
 
 def speedup_regression(db, output=None, job="xval", **kwargs):
