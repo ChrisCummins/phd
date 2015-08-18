@@ -276,29 +276,15 @@ def performance_vs_coverage(db, output=None, max_values=250, **kwargs):
         row for row in
         db.execute(
             "SELECT "
-            "    performance * 100.0 AS performance, "
-            "    coverage * 100.0 "
-            "FROM param_stats "
-            "ORDER BY coverage DESC, performance DESC "
-            "LIMIT ?",
-            (max_values,)
+            "    performance AS performance, "
+            "    coverage "
+            "FROM param_stats"
         )
     ]
-    X = np.arange(len(data))
-
-    Performance, Coverage = zip(*data)
-
-    ax = plt.subplot(111)
-    ax.plot(X, Coverage, 'r', linestyle="--", label="Legality")
-    ax.plot(X, Performance, label="Performance")
-    plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
-    plt.xlim(xmin=0, xmax=len(X) - 1)
-    plt.ylim(ymin=0, ymax=100)
-    title = kwargs.pop("title", "Workgroup size performance vs. legality")
-    plt.title(title)
-    plt.xlabel("Parameters (sorted by legality and performance)")
-    art = [plt.legend(loc=9, bbox_to_anchor=(0.5, 1.2), ncol=3)]
-    viz.finalise(output, additional_artists=art, **kwargs)
+    frame = pandas.DataFrame(data, columns=("Performance", "Legality"))
+    sns.jointplot("Legality", "Performance", data=frame,
+                  xlim=(0, 1), ylim=(0, 1))
+    viz.finalise(output, **kwargs)
 
 
 def oracle_speedups(db, output=None, **kwargs):
@@ -352,7 +338,8 @@ def performance_vs_max_wgsize(ratios, output=None, color=None, **kwargs):
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    sns.violinplot(data=ratios, inner="quartile", linewidth=.5)#, palette=color)
+    sns.boxplot(data=ratios)
+    # sns.violinplot(data=ratios, inner="quartile", linewidth=.5)
 
     multiplier = kwargs.pop("multiplier", 10)
     ax.set_xticklabels([str((x+1) * multiplier) + "%"
@@ -370,7 +357,10 @@ def performance_vs_max_wgsize(ratios, output=None, color=None, **kwargs):
 def _performance_plot(output, labels, values, title, color=None, **kwargs):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    sns.violinplot(data=values, inner="quartile", linewidth=.5)#, palette=color)
+
+    sns.boxplot(data=values)
+    # sns.violinplot(data=values, inner="quartile", linewidth=.5)
+
     ax.set_xticklabels(labels, rotation=90)
     plt.ylim(ymin=0, ymax=1)
     plt.ylabel("Performance")
@@ -431,20 +421,22 @@ def runtimes_range(db, output=None, where=None, nbins=25,
 
 
 def max_speedups(db, output=None, **kwargs):
-    max_speedups,min_static = zip(*db.max_and_static_speedups)
+    max_speedups,min_static,he = zip(*db.max_and_static_speedups)
     X = np.arange(len(max_speedups))
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.plot(X, max_speedups, "r", linestyle="--", label="Worst")
-    ax.plot(X, min_static, label="Best static")
+    ax.plot(X, max_speedups, "r", linestyle="--", label="Max")
+    ax.plot(X, min_static, label="$w_{(4 \\times 4)}$")
+    ax.plot(X, he, linestyle="-", label="$w_{(32 \\times 4)}$")
+    # plt.ylim(ymin=0, ymax=100)
     plt.xlim(xmin=0, xmax=len(X) - 1)
     title = kwargs.pop("title", "Max attainable speedups")
     plt.title(title)
     ax.set_yscale("log")
     plt.legend(frameon=True)
-    plt.ylabel("Speedup")
-    plt.xlabel("Scenarios")
+    plt.ylabel("Speedup (log)")
+    plt.xlabel("Scenarios (sorted by descending max speedup)")
     viz.finalise(output, **kwargs)
 
 
@@ -685,7 +677,7 @@ def refused_params_by_device(db, output=None, **kwargs):
     ax.bar(X + .1, Y, width = .8)
     ax.set_xticks(X + .5)
     ax.set_xticklabels(labels, rotation=90)
-    ax.set_ylabel("Refused Parameters")
+    ax.set_ylabel("Ratio refused (%)")
 
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
 
@@ -734,7 +726,7 @@ def refused_params_by_vendor(db, output=None, **kwargs):
     ax.bar(X + .1, Y, width = .8)
     ax.set_xticks(X + .5)
     ax.set_xticklabels(labels, rotation=90)
-    ax.set_ylabel("Refused Parameters")
+    ax.set_ylabel("Ratio refused (%)")
 
     plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%d%%'))
 

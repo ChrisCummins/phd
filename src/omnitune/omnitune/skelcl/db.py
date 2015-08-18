@@ -1948,15 +1948,21 @@ class Database(db.Database):
             self.execute(
                 "SELECT "
                 "    scenario_stats.worst_runtime / "
-                "      scenario_stats.oracle_runtime AS max_speedup, "
-                "    scenario_stats.worst_runtime / runtime_stats.mean "
-                "      AS static_speedup "
+                "      scenario_stats.oracle_runtime "
+                "      AS max_speedup, "
+                "    baseline.mean / scenario_stats.oracle_runtime "
+                "      AS baseline_speedup, "
+                "    he.mean / scenario_stats.oracle_runtime "
+                "      AS he_speedup "
                 "FROM scenario_stats "
-                "LEFT JOIN runtime_stats "
-                "  ON scenario_stats.scenario=runtime_stats.scenario "
-                "    AND runtime_stats.params=? "
+                "LEFT JOIN runtime_stats AS baseline "
+                "  ON scenario_stats.scenario=baseline.scenario "
+                "    AND baseline.params=? "
+                "LEFT JOIN runtime_stats AS he "
+                " ON scenario_stats.scenario=he.scenario "
+                "    AND he.params=? "
                 "ORDER BY max_speedup DESC",
-                ("4x4",)
+                ("4x4", "32x4")
             )
         ]
 

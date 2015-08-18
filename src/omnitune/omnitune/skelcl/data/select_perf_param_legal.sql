@@ -14,4 +14,5 @@ SELECT stats.scenario AS scenario,
 FROM runtime_stats AS stats
 LEFT JOIN oracle_params AS oracle
     ON stats.scenario=oracle.scenario
-WHERE stats.params=?
+WHERE stats.params={}
+WHERE stats.scenario IN ({})
