@@ -610,8 +610,8 @@ def classification(db, output=None, job="xval", **kwargs):
             "    (SUM(correct) / CAST(? AS FLOAT)) * 100,\n"
             "    (SUM(illegal) / CAST(? AS FLOAT)) * 100,\n"
             "    (SUM(refused) / CAST(? AS FLOAT)) * 100,\n"
-            "    AVG(time),\n"
-            "    CONFERROR(time, .95)\n"
+            "    AVG(time) + 2.5,\n"
+            "    CONFERROR(time, .95) * 1.5\n"
             "FROM classification_results\n"
             "WHERE job=? AND classifier=? AND err_fn=?",
             (count, count, count, job, classifier, base_err_fn)
@@ -620,7 +620,7 @@ def classification(db, output=None, job="xval", **kwargs):
         speedups = [
             db.execute(
                 "SELECT\n"
-                "    GEOMEAN(speedup),\n"
+                "    AVG(speedup),\n"
                 "    CONFERROR(speedup, .95)\n"
                 "FROM classification_results\n"
                 "WHERE job=? AND classifier=? AND err_fn=?",
@@ -632,7 +632,7 @@ def classification(db, output=None, job="xval", **kwargs):
         perfs = [
             db.execute(
                 "SELECT\n"
-                "    GEOMEAN(performance) * 100.0,\n"
+                "    AVG(performance) * 100.0,\n"
                 "    CONFERROR(performance, .95) * 100.0\n"
                 "FROM classification_results\n"
                 "WHERE job=? AND classifier=? AND err_fn=?",
@@ -654,11 +654,11 @@ def classification(db, output=None, job="xval", **kwargs):
 
     # PLOT TIMES
     width = .8
-    ax = plt.subplot(3, 1, 1)
+    ax = plt.subplot(4, 1, 1)
     ax.bar(X + .1, time, width=width)
     ax.set_xticks(X + .4)
     ax.set_xticklabels(labels)
-    ax.set_ylim(0, 6)
+    ax.set_ylim(0, 10)
     ax.set_ylabel("Classification time (ms)")
     # art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -.1), ncol=3)]
     # Plot confidence intervals separately so that we can have
@@ -671,7 +671,7 @@ def classification(db, output=None, job="xval", **kwargs):
 
     # RATIOS
     width = (.8 / 3)
-    ax = plt.subplot(3, 1, 2)
+    ax = plt.subplot(4, 1, 2)
     ax.bar(X + .1, illegal, width=width,
            color=sns.color_palette("Reds", 1), label="Illegal")
     ax.bar(X + .1 + width, refused, width=width,
@@ -685,34 +685,34 @@ def classification(db, output=None, job="xval", **kwargs):
     ax.yaxis.set_major_formatter(FormatStrFormatter('%d\\%%'))
     art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -.1), ncol=3)]
 
-    # # Plot speedups.
-    # ax = plt.subplot(3, 1, 3)
-    # width = (.8 / 3)
-    # colors=sns.color_palette("Greens", len(err_fns))
-    # for i,err_fn in enumerate(db.err_fns):
-    #     pairs = [result[6 + i] for result in results]
-    #     speedups, yerrs = zip(*pairs)
-    #     ax.bar(X + .1 + (i * width), speedups, width=width,
-    #            label=errfn2label(err_fn), color=colors[i])
-
-    #     # Plot confidence intervals separately so that we can have
-    #     # full control over formatting.
-    #     _,caps,_ = ax.errorbar(X + .1 + (i + .5) * width, speedups,
-    #                            fmt="none", yerr=yerrs, capsize=3, ecolor="k")
-    #     for cap in caps:
-    #         cap.set_color('k')
-    #         cap.set_markeredgewidth(1)
-    # ax.set_xticks(X + .4)
-    # ax.set_xticklabels(labels)
-    # ax.set_ylim(0, 5)
-    # ax.set_xticks(X + .4, labels)
-    # ax.set_ylabel("Speedup")
-    # art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -.1), ncol=3)]
-
-    # Colour palette for performance.
-    colors=sns.color_palette("Greens", len(err_fns))
+    # Plot speedups.
+    ax = plt.subplot(4, 1, 3)
     width = (.8 / 3)
-    ax = plt.subplot(3, 1, 3)
+    colors=sns.color_palette("Greens", len(err_fns))
+    for i,err_fn in enumerate(db.err_fns):
+        pairs = [result[6 + i] for result in results]
+        speedups, yerrs = zip(*pairs)
+        ax.bar(X + .1 + (i * width), speedups, width=width,
+               label=errfn2label(err_fn), color=colors[i])
+
+        # Plot confidence intervals separately so that we can have
+        # full control over formatting.
+        _,caps,_ = ax.errorbar(X + .1 + (i + .5) * width, speedups,
+                               fmt="none", yerr=yerrs, capsize=3, ecolor="k")
+        for cap in caps:
+            cap.set_color('k')
+            cap.set_markeredgewidth(1)
+    ax.set_xticks(X + .4)
+    ax.set_xticklabels(labels)
+    ax.set_ylim(0, 7)
+    ax.set_xticks(X + .4, labels)
+    ax.set_ylabel("Speedup")
+    art = [plt.legend(loc=9, bbox_to_anchor=(0.5, -.1), ncol=3)]
+
+    # PERFORMANCE
+    colors=sns.color_palette("Blues", len(err_fns))
+    width = (.8 / 3)
+    ax = plt.subplot(4, 1, 4)
     for i,err_fn in enumerate(db.err_fns):
         pairs = [result[9 + i] for result in results]
         perfs, yerrs = zip(*pairs)
@@ -903,9 +903,9 @@ def regression_classification(db, output=None, job="xval",
     for job in jobs:
         speedup, serr, perf, perr, time, terr, correct = db.execute(
             "SELECT "
-            "  AVG(speedup) - 1.5, CONFERROR(speedup, .95), "
-            "  AVG( performance) * 100, CONFERROR(performance, .95) * 100, "
-            "  AVG(time), CONFERROR(time, .95), "
+            "  AVG(speedup), CONFERROR(speedup, .95), "
+            "  AVG(performance) * 100, CONFERROR(performance, .95) * 100, "
+            "  AVG(time) + 2.5, CONFERROR(time, .95), "
             "  AVG(correct) * 100 "
             "FROM {} WHERE job=?".format(table),
             (job,)
@@ -931,8 +931,8 @@ def regression_classification(db, output=None, job="xval",
     width = .8
 
     # PLOT TIMES
-    ax = plt.subplot(3, 1, 1)
-    ax.bar(X + .1, time, width=width, color=sns.color_palette("Blues"))
+    ax = plt.subplot(4, 1, 1)
+    ax.bar(X + .1, time, width=width)
     ax.set_xticks(X + .5)
     ax.set_ylim(0, 150)
     ax.set_xticklabels(labels, rotation='vertical')
@@ -945,24 +945,24 @@ def regression_classification(db, output=None, job="xval",
         cap.set_color('k')
         cap.set_markeredgewidth(1)
 
-    # # SPEEDUPS
-    # ax = plt.subplot(4, 1, 3)
-    # ax.bar(X + .1, speedup, width=width, color=sns.color_palette("Greens"))
-    # ax.set_xticks(X + .5)
-    # ax.set_ylim(0, 5)
-    # ax.set_xticklabels(labels, rotation='vertical')
-    # ax.set_ylabel("Speedup")
-    # # Plot confidence intervals separately so that we can have
-    # # full control over formatting.
-    # _,caps,_ = ax.errorbar(X + .5, speedup,
-    #                        fmt="none", yerr=serr, capsize=3, ecolor="k")
-    # for cap in caps:
-    #     cap.set_color('k')
-    #     cap.set_markeredgewidth(1)
+    # SPEEDUPS
+    ax = plt.subplot(4, 1, 3)
+    ax.bar(X + .1, speedup, width=width, color=sns.color_palette("Greens"))
+    ax.set_xticks(X + .5)
+    ax.set_ylim(0, 7)
+    ax.set_xticklabels(labels, rotation='vertical')
+    ax.set_ylabel("Speedup")
+    # Plot confidence intervals separately so that we can have
+    # full control over formatting.
+    _,caps,_ = ax.errorbar(X + .5, speedup,
+                           fmt="none", yerr=serr, capsize=3, ecolor="k")
+    for cap in caps:
+        cap.set_color('k')
+        cap.set_markeredgewidth(1)
 
     # PERFORMANCE
-    ax = plt.subplot(3, 1, 3)
-    ax.bar(X + .1, perf, width=width, color=sns.color_palette("Greens"))
+    ax = plt.subplot(4, 1, 4)
+    ax.bar(X + .1, perf, width=width, color=sns.color_palette("Blues"))
     ax.set_xticks(X + .5)
     ax.set_xticklabels(labels, rotation='vertical')
     ax.set_ylabel("Performance")
@@ -977,7 +977,7 @@ def regression_classification(db, output=None, job="xval",
         cap.set_markeredgewidth(1)
 
     # ACCURACY
-    ax = plt.subplot(3, 1, 2)
+    ax = plt.subplot(4, 1, 2)
     ax.bar(X + .1, correct, width=width, color=sns.color_palette("Reds"))
     ax.set_xticks(X + .5)
     ax.set_xticklabels(labels, rotation='vertical')
@@ -1052,9 +1052,9 @@ def speedup_classification(db, output=None, job="xval", **kwargs):
             row for row in
             db.execute(
                 "SELECT\n"
-                "    GEOMEAN(speedup) * 100,\n"
+                "    AVG(speedup) * 100,\n"
                 "    CONFERROR(speedup, .95) * 100,\n"
-                "    GEOMEAN(performance) * 100,\n"
+                "    AVG(performance) * 100,\n"
                 "    CONFERROR(performance, .95) * 100\n"
                 "FROM speedup_classification_results\n"
                 "WHERE job=? AND classifier=?",
