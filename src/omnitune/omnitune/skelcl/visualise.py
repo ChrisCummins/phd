@@ -89,11 +89,12 @@ def num_params(db, output=None, sample_range=None, **kwargs):
     viz.finalise(output, **kwargs)
 
 
-def runtimes_histogram(runtimes, output=None, **kwargs):
+def runtimes_histogram(runtimes, output=None, color=None, **kwargs):
     mean = np.mean(runtimes)
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    sns.distplot(runtimes, bins=40, kde_kws={"bw": .3})
+    sns.distplot(runtimes, bins=40, kde_kws={"bw": .3},
+                 color=color)
 
     ax.axvline(mean, color='0.25', linestyle='--')
     plt.xlim(min(runtimes), max(runtimes))
