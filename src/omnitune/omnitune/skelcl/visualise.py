@@ -360,7 +360,7 @@ def _performance_plot(output, labels, values, title, color=None, **kwargs):
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    sns.boxplot(data=values)
+    sns.boxplot(data=values, linewidth=1)
     # sns.violinplot(data=values, inner="quartile", linewidth=.5)
 
     ax.set_xticklabels(labels, rotation=90)
