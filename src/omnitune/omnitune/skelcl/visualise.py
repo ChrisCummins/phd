@@ -340,7 +340,7 @@ def performance_vs_max_wgsize(ratios, output=None, color=None, **kwargs):
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    sns.boxplot(data=ratios)
+    sns.boxplot(data=ratios, linewidth=1, fliersize=1)
     # sns.violinplot(data=ratios, inner="quartile", linewidth=.5)
 
     multiplier = kwargs.pop("multiplier", 10)
@@ -360,7 +360,7 @@ def _performance_plot(output, labels, values, title, color=None, **kwargs):
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    sns.boxplot(data=values, linewidth=1)
+    sns.boxplot(data=values, linewidth=1, fliersize=1)
     # sns.violinplot(data=values, inner="quartile", linewidth=.5)
 
     ax.set_xticklabels(labels, rotation=90)
