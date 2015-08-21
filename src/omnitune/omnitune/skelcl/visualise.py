@@ -344,7 +344,7 @@ def performance_vs_max_wgsize(ratios, output=None, color=None, **kwargs):
     # sns.violinplot(data=ratios, inner="quartile", linewidth=.5)
 
     multiplier = kwargs.pop("multiplier", 10)
-    ax.set_xticklabels([str((x+1) * multiplier) + "%"
+    ax.set_xticklabels([str((x+1) * multiplier) + r'\%'
                         for x in np.arange(len(ratios))])
 
     title = kwargs.pop("title", "")
