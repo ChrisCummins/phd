@@ -1,16 +1,123 @@
+% A two page document describing lessons learned from the project, the
+% revised PhD vision and insights, and a plan of activities for the
+% next three months
+%
 \documentclass[11pt]{article}
 
 \author{Chris Cummins}
 \date{September 2015}
-\title{PhD Progression}
+\title{PhD Progression: Skeleton-aware Compilation}
 
 \input{preamble}
 
 \begin{document}
+\maketitle
 
-\section{Introduction}\label{sec:introduction}
+\begin{abstract}
+\noindent
+The first year of this CDT was spent investigating autotuning
+algorithmic skeletons for stencil codes on CPUs and GPUs. This was a
+challenging but rewarding project which providing me with a grounding
+in research approaches to high level parallel programming, GPU
+parallelism, autotuning, and machine learning. In this document I
+critically evaluate my work during this MSc phase, and propose a
+direction for future research which builds upon the knowledge and
+skills acquired in the first year, while addressing the challenges I
+faced.
+\end{abstract}
 
-\lipsum
+\section{Introduction}
+
+Widen the scope of autotuning and to consider optimisations for
+algorithmic skeletons at the compiler level. This will involve the
+
+I’ve shown that the optimisation space of a fixed implementation can
+be successfully tuned using machine learning. The next step is to
+combine these techniques with an understanding of optimising compilers
+in order to generate adaptive implementations.
+
+\section{MSc Phase Review}
+
+In the MSc phase of the CDT, I developed a system for autotuning
+algorithmic skeletons for stencil codes on CPUs and GPUs. The
+autotuning was achieved using offline machine learning and a
+distributed training set of empirical performance data gathered from
+multiple devices.
+
+
+\subsection{Contributions}
+
+% Contributions of thesis:
+
+The key contributions of my submitted thesis were the application of
+machine learning-enabled autotuning to the workgroup size optimisation
+space of stencil skeletons, and the development of a framework to
+facilitate autotuning using performance data gathered from
+synthetically generated training programs across multiple devices.
+
+
+\subsection{Methodology}
+
+A three-step methodology was used: identifying a profitable
+optimisation space, probing the space to gather empirical performance
+data, and developing a system to exploit this optimisation space. In
+reality, there was a great overlap between each step of the
+methodology. Identifying the optimisation space was achieved using
+empirical performance data, and in turn gathering performance data
+required partial development of an autotuning system. The broad
+time-line for development was that the stencil optimisations space had
+been identified by early March, the collection of empirical
+performance data began in mid April, and the development of the
+OmniTune autotuning system began in mid May.
+
+
+\subsection{Evaluation}
+
+Good things:
+
+- kept a log, although didn't write-up as much as I should have
+(especially on paper reviews)
+
+- took relevant taught courses in applied machine learning and
+compiler optimisations.
+
+
+Things to improve:
+
+- short development cycles, with milestones and reviews at each stage
+
+- a more clearly testable hypothesis - i.e. a less vague project plan
+
+
+% \subsection{Conclusions}
+
+
+\section{Beginning the PhD Phase}
+
+
+% \subsection{Background}
+
+
+\subsection{Objectives}
+
+\begin{itemize}
+\item TO CHANGE THE WORLD
+\end{itemize}
+
+
+\subsection{Motivation}
+
+
+\subsection{Methodology}
+
+% Open development style (GitHub)
+
+
+\subsection{Conclusions}
+
+
+\section{Conclusion}
+
 
 
 \label{bibliography}

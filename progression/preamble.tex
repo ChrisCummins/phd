@@ -10,6 +10,8 @@
 
 \usepackage[utf8]{inputenc}
 
+\usepackage[margin=1.5in]{geometry}
+
 % Fix for "'babel/polyglossia' detected but 'csquotes' missing"
 % warning. NOTE: Include after inputenc.
 %
@@ -74,7 +76,7 @@
 % directory. Note that this is a relative path and will break if
 % either this file or the BibTex library are moved. If the library is
 % not present, use the local refs.bib file.
-\newcommand{\BibResourceGlobal}{../../../library.bib}
+\newcommand{\BibResourceGlobal}{../../library.bib}
 \newcommand{\BibResourceLocal}{refs.bib}
 
 \IfFileExists{\BibResourceGlobal}
