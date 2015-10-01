@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------
 # Build configuration.
 #------------------------------------------------------------------------
-Document         = hlpgpgpu
+Document         = hlpgpu
 DocumentPDF      = $(Document).pdf
 DocumentTxt      = $(Document).txt
 DocumentTex      = $(Document).tex
