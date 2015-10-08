@@ -65,12 +65,13 @@
 \begin{abstract}
   Selecting an appropriate workgroup size is critical for the
   performance of OpenCL kernels, and requires knowledge of the
-  underlying hardware, the data being operated on, and properties of
-  the kernel. This makes portable performance of OpenCL programs a
-  difficult goal, since simple heuristics and statically chosen values
-  fail to exploit the available performance. To address this, we
-  propose the use of machine learning-enabled autotuning to predict
-  workgroup sizes for stencil patterns on CPUs and multi-GPUs.
+  underlying hardware, the data being operated on, and the
+  implementation of the kernel. This makes portable performance of
+  OpenCL programs a challenging goal, since simple heuristics and
+  statically chosen values fail to exploit the available
+  performance. To address this, we propose the use of machine
+  learning-enabled autotuning to automatically predict workgroup sizes
+  for stencil patterns on CPUs and multi-GPUs.
 
   We present three methodologies for predicting workgroup sizes. The
   first, using classifiers to select the optimal workgroup size. The
@@ -112,17 +113,16 @@ standard has introduced greater programmability of heterogeneous
 devices by providing a vendor-independent layer of abstraction for
 data parallel programming of CPUs, GPUs, DSPs, and other
 devices~\cite{Stone2010}. However, achieving portable performance of
-OpenCL programs is a hard task --- such programs are sensitive to
-properties of the underlying hardware, to the program being executed,
-and even to the \emph{dataset} that is operated upon. This forces
-developers to laboriously hand tune performance on a case-by-case
-basis, since simple heuristics fail to exploit the available
-performance.
+OpenCL programs is a hard task --- OpenCL kernels are sensitive to
+properties of the underlying hardware, to the implementation, and even
+to the \emph{dataset} that is operated upon. This forces developers to
+laboriously hand tune performance on a case-by-case basis, since
+simple heuristics fail to exploit the available performance.
 
 In this paper, we demonstrate how machine learning-enabled autotuning
 can addresses this issue for one such optimisation parameter of OpenCL
-programs --- that of workgroup size selection. The 2D optimisation
-space of OpenCL kernel workgroup sizes is large, complex and
+programs --- that of workgroup size. The 2D optimisation space of
+OpenCL kernel workgroup sizes is large, complex and
 non-linear. Successfully applying machine learning to such a space
 requires plentiful training data, the careful selection of features,
 and an appropriate classification approach. The approaches presented
@@ -141,7 +141,7 @@ predict workgroup sizes for unseen programs.
   workgroups, consisting of $w_r \times w_c$ elements. Each element is
   mapped to a work-item. Each work-item operates on its corresponding
   element and a surrounding border region (in this example, 1 element
-  to the south, and 2 elements to the north, east, and west). The %
+  to the south, and 2 elements to the north, east, and west).%
 }
 \label{fig:stencil-shape}
 \end{figure}
@@ -168,14 +168,14 @@ divided into \emph{workgroups} for execution on the target hardware. A
 work-item reads the value of its corresponding matrix element and the
 surrounding elements defined by the border region. Since the border
 regions of neighbouring elements overlap, each element in the matrix
-is read multiple times. Because of this, a \emph{tile} of elements the
-size of the workgroup and the perimeter border region is allocated as
-a contiguous block of local memory. This greatly reduces the latency
-of the repeated memory accessed performed by work-items. As a result,
-changing the workgroup size affects both the number of workgroups
-which can be active simultaneously, and the amount of local memory
-required for each workgroup. While the user defines the size, type,
-and border region of the matrix being operated upon, it is the
+is read multiple times. Because of this, a \emph{tile} of elements of
+the size of the workgroup and the perimeter border region is allocated
+as a contiguous block in local memory. This greatly reduces the
+latency of the repeated memory accessed performed by work-items. As a
+result, changing the workgroup size affects both the number of
+workgroups which can be active simultaneously, and the amount of local
+memory required for each workgroup. While the user defines the size,
+type, and border region of the matrix being operated upon, it is the
 responsibility of the SkelCL stencil implementation to select an
 appropriate workgroup size to use.
 
@@ -455,7 +455,7 @@ risk of control flow leading to inaccurate predictions.
 \begin{figure}
   \centering
   \vspace{-3em}
-  \includegraphics[width=\columnwidth]{img/oracle_param_space.pdf}
+  \includegraphics[width=1.08\columnwidth]{img/oracle_param_space.pdf}
   \vspace{-2.5em}
   \caption{%
     Oracle frequency counts for a subset of the workgroup sizes,
@@ -501,7 +501,8 @@ an in-memory file system. All runtimes were recorded with millisecond
 precision using OpenCL's Profiling API to record the kernel execution
 time. The workgroup size space was enumerated for each combination of
 $w_r$ and $w_c$ values in multiples of 2, up to the maximum workgroup
-size. A minimum of 30 samples were recorded for each.
+size. A minimum of 30 samples were recorded for each combination of
+scenario and workgroup size.
 
 \begin{table}
 \scriptsize
@@ -555,11 +556,11 @@ programs request workgroup sizes from this daemon, which performs
 feature extraction and classification.
 
 
-\section{Workgroup Size Results}\label{sec:results}
+\section{Performance Results}\label{sec:results}
 
-This section describes the results of enumerating the workgroup size
-optimisation space. The effectiveness of autotuning techniques for
-exploiting this space are examined in
+This section describes the performance results of enumerating the
+workgroup size optimisation space. The effectiveness of autotuning
+techniques for exploiting this space are examined in
 Section~\ref{sec:evaluation}. The experimental results consist of
 measured runtimes for a set of \emph{test cases}, where a test case
 $\tau_i$ consists of a scenario, workgroup size pair
@@ -571,12 +572,12 @@ for an average of 629 (max 7260) unique workgroup sizes were
 measured. The average sample size for each test case is 83 (min 33,
 total 16917118).
 
-The workgroup size optimisation space is non-linear and
-complex. Across the 429 scenarios, there are 135 distinct optimal
-workgroup sizes (31.5\%). Figure~\ref{fig:oracle-wgsizes} shows the
-distribution of these oracle workgroup sizes. The average speedup of
-the oracle workgroup size over the worst workgroup size for each
-scenario is $15.14\times$ (min $1.03\times$, max $207.72\times$).
+The workgroup size optimisation space is non-linear and complex, as
+shown in Figure~\ref{fig:oracle-wgsize}, which plots the distribution
+of optimal workgroup sizes. Across the 429 scenarios, there are 135
+distinct optimal workgroup sizes (31.5\%). The average speedup of the
+oracle workgroup size over the worst workgroup size for each scenario
+is $15.14\times$ (min $1.03\times$, max $207.72\times$).
 
 Of the 8504 unique workgroup sizes tested, 11.4\% were refused in one
 or more test cases, with an average of 5.5\% test cases leading to
@@ -693,8 +694,8 @@ that it successfully exploits structure in the optimisation space.
 \subsection{Predicting with Regressors}
 
 Figure~\ref{fig:regression-class} shows a summary of results for
-autotuning using regressors to predict kernel runtimes and
-speedups. Of the two regression techniques, predicting the
+autotuning using regressors to predict kernel runtimes (a) and
+speedups (b). Of the two regression techniques, predicting the
 \emph{speedup} of workgroup sizes is much more successful than
 predicting the \emph{runtime}. This is most likely caused by the
 inherent difficulty in predicting the runtime of arbitrary code, where
@@ -834,19 +835,18 @@ report any performance results.
 \section{Conclusions}\label{sec:conclusions}
 
 To the best of our knowledge, the autotuning methodologies presented
-in this work constitute the first attempt to autotune the workgroup
+in this work constitutes the first attempt to autotune the workgroup
 size of high-level stencil patterns. The autotuning techniques
-proposed in this paper achieve up to 94\% of the available
-performance, providing speedups of $5.57\times$ over static tuning,
-while providing robust fallbacks in the presence of unexpected
-behaviour of OpenCL driver implementations. Of the techniques
-proposed, predicting the relative performances of workgroup sizes
-using regressors provides the highest median speedup, whilst
-predicting the oracle workgroup size using decision tree classifiers
-requires the lowest overhead. This presents a trade-off between
-classification time and training time, which could be explored in
-future work, possibly using a hybrid combination of the techniques
-presented in this paper.
+proposed in this paper achieve up to 94\% of the maximum performance,
+providing average speedups of $5.57\times$ over static tuning, while
+providing robust fallbacks in the presence of unexpected behaviour of
+OpenCL driver implementations. Of the three techniques proposed,
+predicting the relative performances of workgroup sizes using
+regressors provides the highest median speedup, whilst predicting the
+oracle workgroup size using decision tree classifiers requires the
+lowest overhead. This presents a trade-off between classification time
+and training time, which could be explored in future work, possibly
+using a hybrid combination of the techniques presented in this paper.
 
 In the future, we will expand the autotuner to accommodate additional
 optimisation parameters, as well as further exploring the transition
