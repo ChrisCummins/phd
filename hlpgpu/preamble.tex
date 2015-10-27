@@ -60,13 +60,14 @@
     url=true,            % print URL?
     doi=false,           % print DOI?
     natbib=true,         % natbib compatability
+    maxbibnames=99       % no 'et-al' in the bibliography pls
   ]{biblatex}
 
 % % Filter annoying and unavoidable biblatex warning:
 \WarningFilter{biblatex}{Patching footnotes failed}
 
 % Reduce the font size of the bibliography:
-% \renewcommand{\bibfont}{\normalfont\scriptsize}
+\renewcommand{\bibfont}{\normalfont\scriptsize}
 
 % Determine which BibTeX file to use:
 %

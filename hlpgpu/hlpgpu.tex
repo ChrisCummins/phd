@@ -48,47 +48,40 @@
 
 % \subtitle{Subtitle Text, if any}
 
-\authorinfo{Chris Cummins\and Pavlos Petoumenos\and Hugh Leather}
+\authorinfo{Chris Cummins\and Pavlos Petoumenos \and Michel Steuwer \and Hugh Leather}
            {University of Edinburgh}
-           {c.cummins@ed.ac.uk,\{ppetoume,hleather\}@inf.ed.ac.uk}
+           {c.cummins@ed.ac.uk, ppetoume@inf.ed.ac.uk, michel.steuwer@ed.ac.uk, hleather@inf.ed.ac.uk}
 
 \maketitle
 
 \begin{abstract}
-The physical limitations of microprocessor design have forced the
-industry towards increasingly heterogeneous architectures to extract
-performance. This trend has not been matched with software tools to
-cope with such parallelism, leading to a growing disparity between the
-levels of available performance and the ability for application
-developers to exploit it.
+  The physical limitations of microprocessor design have forced the
+  industry towards increasingly heterogeneous architectures to extract
+  performance. This trend has not been matched with software tools to
+  cope with such parallelism, leading to a growing disparity between
+  the levels of available performance and the ability for application
+  developers to exploit it.
 
-Algorithmic skeletons simplify parallel programming by providing
-high-level, reusable patterns of computation. Achieving performant
-skeleton implementations is a difficult task; developers must attempt
-to anticipate and tune for a wide range of architectures and use
-cases. This results in implementations that target the general case
-and cannot provide the performance advantages that are gained from
-tuning low level optimisation parameters.
+  Algorithmic skeletons simplify parallel programming by providing
+  high-level, reusable patterns of computation. Achieving performant
+  skeleton implementations is a difficult task; skeleton authors must
+  attempt to anticipate and tune for a wide range of architectures and
+  use cases. This results in implementations that target the general
+  case and cannot provide the performance advantages that are gained
+  from tuning low level optimisation parameters.
 
-To address this, I present OmniTune --- an extensible and distributed
-framework for runtime autotuning of optimisation parameters. Targeting
-the workgroup size of OpenCL kernels, I demonstrate an implementation
-of OmniTune for stencil codes on CPUs and multi-GPU systems. I show in
-a comprehensive evaluation of $2.7\times 10^5$ test cases that simple
-heuristics cannot provide portable performance across the range of
-architectures, kernels, and datasets which algorithmic skeletons must
-target.
+  % Autotuning can address this, but requires large setup costs, and
+  % few attempts have been made to unify the
 
-OmniTune uses procedurally generated synthetic benchmarks and machine
-learning to predict workgroup sizes for unseen programs. In an
-evaluation of 429 combinations of programs, architectures, and
-datasets, with up to $7.3\times 10^3$ parameter values for each,
-OmniTune is able to achieve a median $94\%$ of the available
-performance, providing a $1.33\times$ speedup over the values selected
-by human experts, without requiring any user intervention. This
-adaptive tuning provides a median speedup of $3.79\times$ (max
-$74.0\times$) over the best possible performance which can be achieved
-without autotuning.
+  To address this, we present OmniTune --- an extensible and
+  distributed framework for runtime autotuning of optimisation
+  parameters. OmniTune uses a client-server model with a generic API
+  to allow quick repurposing for different autotuning targets. We
+  demonstrate an implementation of OmniTune for the SkelCL library,
+  demonstrating in a comprehensive evaluation of $2.7\times 10^5$ test
+  cases that static tuning of Stencil skeleton workgroup sizes can
+  achieve only $26\%$ of the optimal performance, while OmniTune
+  achieves $94\%$.
 \end{abstract}
 
 % \category{CR-number}{subcategory}{third-level}
@@ -103,27 +96,16 @@ without autotuning.
 
 \section{Introduction}\label{sec:introduction}
 
-Parallelism is increasingly seen as the only viable approach to
-maintaining continued performance improvements in a multicore world.
-Despite this, the adoption of parallel programming practises has been
-slow and awkward, leading to a growing disparity between the levels of
-available performance and the ability for application developers to
-exploit it.
-
-The multicore processors of modern devices offer many opportunities
-for parallelism, but fully harnessing this processing power requires
-an intimate knowledge of both the parallel programming semantics of
-the language and performance characteristics of the underlying
-hardware. In recent years, general purpose programming with GPUs
-promises even greater data parallel throughput, but is a significantly
-greater challenge to tame, forcing developers to master an unfamiliar
-programming model (such as provided by CUDA or OpenCL) and
+In recent years, general purpose programming with GPUs has shown to
+provide great data parallel throughput, but is a significant
+programming challenge, forcing application developers to master an
+unfamiliar programming model (such as provided by CUDA or OpenCL) and
 architecture (SIMD with a multi-level memory hierarchy). As such,
-GPGPU programming is often considered beyond the realm of all but the
-most expert of programmers. If steps are not taken to increase the
-accessibility of such parallelism, this will only serve to widen the
-gap between available and utilised performance as the core counts of
-hardware continue to increase.
+GPGPU programming is often considered beyond the realm of everyday
+development. If steps are not taken to increase the accessibility of
+such parallelism, this will only serve to widen the gap between
+available and utilised performance as the core counts of hardware
+continue to increase.
 
 One possible solution for this \emph{programmability challenge} comes
 in the form of algorithmic skeletons, which offer to simplify parallel
@@ -137,21 +119,159 @@ structure their problem solving logic sequentially, while offloading
 the cognitive cost of parallel coordination to the skeleton author.
 
 
-\subsection{Sacrificing Performance for Ease of Use}
+% \subsection{Background}
 
-Unfortunately, the performance of parallel programs is often sensitive
-to low level parameter values, and when tuning these values, one size
-\emph{cannot} fit all. The performance of parallel program parameters
-are sensitive to the underlying hardware, to the program being
-executed, and even to the \emph{dataset} that is operated upon. This
-is especially problematic for algorithmic skeletons, as skeleton
-authors cannot tune the performance of an implementation across the
-breadth of these three dimensions, and this results in programs which
-forgo the performance advantages that can be achieved with the low
-level tuning of hand written parallel code.
+Introduced by \citeauthor{Cole1989} in \citeyear{Cole1989},
+algorithmic skeletons simplify the task of parallel programming by
+abstracting common patterns of communication, providing parallel
+implementations of higher order functions~\cite{Cole1989}. The
+interfaces to generic parallel algorithms exposed by algorithmic
+skeletons are parameterised by the user with \emph{muscle functions}
+that implement problem specific logic. The idea is that this allows
+the user to focus on solving the problem at hand, affording greater
+ease of use by automating the coordination of parallel resources.
 
 
-% First prong: standardise autotuning
+% \subsection{High-Level GPU Programming with SkelCL}\label{subsec:skelcl-intro}
+
+Introduced in~\cite{Steuwer2011}, SkelCL is an object oriented C++
+library that provides OpenCL implementations of data parallel
+algorithmic skeletons for heterogeneous parallelism using CPUs or
+multi-GPUs. SkelCL addresses the parallel programmability challenge by
+allowing users to easily harness the power of GPUs and CPUs for data
+parallel computing.
+
+The goal of SkelCL is to enable the transition towards higher-level
+programming of GPUS, without requiring users to be intimately
+knowledgeable of the concepts unique to OpenCL programming, such as
+the memory or execution model~\cite{Steuwer2012}. SkelCL has been
+shown to reduce programmer effort for developing real applications
+through the use of robust pattern implementations and automated memory
+management, maintaining performance within 5\% of that of equivalent
+hand-written implementations in OpenCL~\cite{Steuwer2013}.
+
+SkelCL skeletons are parameterised with muscle functions by the user,
+which are compiled into OpenCL kernels for execution on device
+hardware. SkelCL supports operations on one or two dimensional arrays
+of data, with the Vector and Matrix container types transparently
+handling lazy transfers between host and device memory, and supporting
+partitioning for multi-GPU execution~\cite{Steuwer2013a}. SkelCL is
+freely available and distributed under dual GPL and academic
+licenses\footnote{\url{http://skelcl.uni-muenster.de}}.
+
+SkelCL provides six skeletons for data parallel operations: $\map$,
+$\zip$, $\reduce$, $\scan$, $\allpairs$, and $\stencil$. The focus of
+this work is on tuning the $\stencil$ skeleton.
+
+Stencils are patterns of computation which operate on uniform grids of
+data, where the value of each cell is updated based on its current
+value and the value of one or more neighbouring elements, called the
+\emph{border region}. Introduced in~\cite{Breuer2014}, SkelCL provides
+a 2D stencil skeleton which allows users to provide a function which
+updates a cell's value, while SkelCL orchestrates the parallel
+execution of this function across all cells.
+
+The border region is described by a \emph{stencil shape}, which
+defines an $i \times j$ rectangular region about each cell which is
+used to update the cell value. Stencil shapes may be asymmetrical, and
+are defined in terms of the number of cells in the border region to
+the north, east, south, and west of each cell, shown in
+Figure~\ref{fig:stencil-shape}. Given a customising function $f$, a
+stencil shape $S$, and an $n \times m$ matrix:
+%
+\begin{equation}
+\scriptsize
+% \begin{split}
+\stencil \left( f, S,
+\begin{bmatrix}
+  x_{11} & \cdots & x_{1m} \\
+  \vdots & \ddots & \vdots \\
+  x_{n1} & \cdots & x_{nm}
+\end{bmatrix} \right)
+\to
+\begin{bmatrix}
+  z_{11} & \cdots & z_{1m} \\
+  \vdots & \ddots & \vdots \\
+  z_{n1} & \cdots & z_{nm}
+\end{bmatrix}
+% \end{split}
+\end{equation}
+%
+where:
+%
+\begin{equation}
+\scriptsize
+z_{ij} = f \left(
+\begin{bmatrix}
+  z_{i-S_n,j-S_w} & \cdots & z_{i-S_n,j+S_e} \\
+  \vdots & \ddots & \vdots \\
+  z_{i+S_s,j-S_w} & \cdots & z_{i+S_s,j+S_e}
+\end{bmatrix} \right)
+\end{equation}
+%
+Note that a stencil operation in which the size of the stencil shape
+$S$ is zero in every direction is functionally equivalent to a $\map$
+operation. Where the border region includes elements outside of the
+matrix, values are substituted from either a predefined padding value,
+or the value of the nearest cell within the matrix, depending on user
+preference.
+
+A popular usage of Stencil codes is for solving problems iteratively,
+whereby a stencil operation is repeated over a range of discrete time
+steps $0 \le t \le t_{max}$, and $t \in \mathbb{Z}$. An iterative
+stencil operation $g$ accepts a customising function $f$, a Stencil
+shape $S$, and a matrix $M$ with initial values $M_{init}$. The value
+of an iterative stencil can be defined recursively as:
+%
+\begin{equation}
+\scriptsize
+g(f, S, M, t) =
+\begin{cases}
+  \stencil \left( f, S, g(f, S, M, t-1) \right),& \text{if } t \geq 1\\
+  M_{init}, & \text{otherwise}
+\end{cases}
+\end{equation}
+%
+Examples of iterative stencils are cellular automata. Another
+extension of the stencil operation accepts an ordered list of
+customising functions which are applied sequentially for each
+iteration. This has applications for multi-stage stencil operations
+such as Canny Edge Detection, in which four distinct stencil
+operations are performed as a sequence.
+
+
+\paragraph{Stencil Implementation}
+
+For the stencil skeleton, each cell maps to a single work item; and
+this collection of work items is then divided into \emph{workgroups}
+for execution on the target hardware. In a stencil code, each
+work-item reads the value of the corresponding grid elements, and the
+surrounding elements defined by the border region. Since the border
+regions of neighbouring elements overlap, the value of all elements
+within a workgroup are stored in a \emph{tile}, which is a region of
+local memory. As local memory access times are much smaller than that
+of global memory, this greatly reduces the latency of the border
+region reads performed by each workitem. Changing the workgroup size
+thus affects the amount of local memory required for each workgroup,
+which in turn affects the number of workgroups which may be
+simultaneously active. So while the user defines the size, type, and
+border region of the of the grid being operated upon, it is the
+responsibility of the SkelCL stencil implementation to select an
+appropriate workgroup size to use.
+
+
+\subsection{The Problem}
+
+The performance of parallel programs is often sensitive to low level
+parameter values, and when tuning these values, one size \emph{cannot}
+fit all. The performance of parallel program parameters are sensitive
+to the underlying hardware, to the program being executed, and even to
+the \emph{dataset} that is operated upon. This is especially
+problematic for algorithmic skeletons, as skeleton authors cannot tune
+the performance of an implementation across the breadth of these three
+dimensions, and this results in programs which forgo the performance
+advantages that can be achieved with the low level tuning of hand
+written parallel code.
 
 If the performance of algorithmic skeletons is to be competitive with
 that of hand crafted parallel programs, then these skeletons must be
@@ -166,66 +286,63 @@ competing approaches and implementations has resulted in a fragmented
 state in which no one system has been able to gain the critical mass
 to achieve mainstream traction.
 
-This is the first aim of this thesis: to tackle the issue of providing
-a unified interface for autotuning which reduces the amount of
-redundant and overlapping work needed to implement autotuning for
-different optimisation targets.
+In this work we tackle the issue by providing a unified interface for
+autotuning which reduces the amount of redundant and overlapping work
+needed to implement autotuning for different optimisation targets.
 
-% Second prong: machine learning to cut down cost
+The key contribution of this work is the development of
+\emph{OmniTune} --- a novel and extensible framework for the
+collaborative autotuning of optimisation parameters across the life
+cycle of programs. The application of OmniTune for tuning of the
+SkelCL algorithmic skeleton library. When tasked with predicting the
+workgroup sizes of stencil skeletons on both GPUs and CPUs, OmniTune
+achieves 94\% of the available performance, providing a median speedup
+of $1.33\times$ over values predicted by human experts, or
+$3.79\times$ over the best possible statically chosen parameter
+values.
 
-The second aim of this thesis is to explore techniques for predictive,
-machine learning-enabled autotuning for use in algorithmic
-skeletons. Typically, autotuning using iterative compilation requires
-enumerating some portion of the optimisation space for each program
-being tuned; however, the cost of such an exploration is prohibitively
-expensive when summed across the broad range of use cases targeted by
-algorithmic skeletons. As such, successfully autotuning algorithmic
-skeletons will require a method for \emph{predicting} the values of
-parameters which will maximise performance, without the need for trial
-and error. To succeed, such a method of tuning does not need to
-provide perfectly accurate predictions, but simply sufficiently
-performant results so that, when combined with the vast accessibility
-improvements offered by algorithmic skeletons, it provides a
-convincing argument for algorithmic skeletons as the solution to the
-parallel programmability crisis.
+\section{Motivation}
 
-
-\subsection{Contributions}
-
-The key contributions of this thesis are:
-
-\begin{itemize}
-\item The development of \emph{OmniTune} --- a novel and extensible
-  framework for the collaborative autotuning of optimisation
-  parameters across the life cycle of programs.
-\item The application of OmniTune for tuning of the SkelCL algorithmic
-  skeleton library. When tasked with predicting the workgroup sizes of
-  stencil skeletons on both GPUs and CPUs, OmniTune achieves 94\% of
-  the available performance, providing a median speedup of
-  $1.33\times$ over values predicted by human experts, or $3.79\times$
-  over the best possible statically chosen parameter values.
-\item The novel application of procedurally generated benchmark
-  programs for training machine learning-enabled autotuners. This
-  reduces the cost of training while increasing the size of the space
-  which can be explored. The effectiveness of this approach is
-  demonstrated by testing the OmniTune SkelCL autotuner trained using
-  synthetic benchmarks against 68 configurations of real world stencil
-  kernels, achieving comparable autotuning performance with that of
-  cross-validation.
-\item An empirical evaluation of the performance of workgroup size to
-  parameterise high-level parallel patterns. I enumerate the
-  optimisation space of workgroup sizes for SkelCL stencil kernels
-  across 269813 test cases, demonstrating an average performance loss
-  of up to $15.14\times$ if workgroup size is not correctly tuned.
-\item A comparison of multiple approaches for runtime autotuning:
-  using classifiers to predict optimal parameter values, using
-  regressors to predict the absolute runtime of programs, and using
-  regressors to predict the relative performance of different
-  parameter values.
-\end{itemize}
-
-
-\subsection{Motivation}
+% \begin{figure}
+% \centering
+% \begin{subfigure}[h]{.45\columnwidth}
+% \centering
+% \includegraphics[width=1.0\columnwidth]{img/motivation_1}
+% \vspace{-1.5em} % Shrink vertical padding
+% \caption{}
+% \label{fig:m-1}
+% \end{subfigure}
+% ~%
+% \begin{subfigure}[h]{.45\columnwidth}
+% \centering
+% \includegraphics[width=1.0\columnwidth]{img/motivation_2}
+% \vspace{-1.5em} % Shrink vertical padding
+% \caption{}
+% \label{fig:m-2}
+% \end{subfigure}
+% \\
+% \begin{subfigure}[h]{.45\columnwidth}
+% \centering
+% \includegraphics[width=1.0\columnwidth]{img/motivation_3}
+% \vspace{-1.5em} % Shrink vertical padding
+% \caption{}
+% \label{fig:m-3}
+% \end{subfigure}
+% ~%
+% \begin{subfigure}[h]{.45\columnwidth}
+% \centering
+% \includegraphics[width=1.0\columnwidth]{img/motivation_4}
+% \vspace{-1.5em} % Shrink vertical padding
+% \caption{}
+% \label{fig:m-4}
+% \end{subfigure}
+% \caption{%
+%   Examples stencil workgroup size optimisation spaces. In
+%   (\subref{fig:m-1}-\subref{fig:m-2}) we vary the execution hardware.
+% %
+% }
+% \label{fig:motivation-prog}
+% \end{figure}
 
 \begin{figure}
 \centering
@@ -244,13 +361,10 @@ The key contributions of this thesis are:
 \caption{}
 \label{fig:motivation-2}
 \end{subfigure}
-\caption[Workgroup size optimisation space across devices]{%
-  Workgroup size optimisation space of a stencil benchmark across
-  devices: (\subref{fig:motivation-1}) Intel CPU,
-  (\subref{fig:motivation-2}) NVIDIA GPU. This shows that stencil
-  performance is dependent on properties of the underlying
-  architecture, with different optimal workgroup sizes ($56 \times 20$
-  vs.\ $64 \times 4$) for the two devices shown.%
+\caption{%
+  The optimisation spaces of a stencil program on two different
+  execution devices: (\subref{fig:motivation-1}) Intel CPU,
+  (\subref{fig:motivation-2}) NVIDIA GPU.%
 }
 \label{fig:motivation-arch}
 \end{figure}
@@ -272,22 +386,18 @@ The key contributions of this thesis are:
 \caption{}
 \label{fig:motivation-4}
 \end{subfigure}
-\caption[Workgroup size optimisation space across stencils]{%
-  Workgroup size optimisation space of two stencils on the same
-  device. Despite the underlying hardware being the same, the relative
-  performance of workgroup sizes varies greatly between the two
-  programs. The optimal workgroup sizes are $128\times2$ and
-  $256\times4$ respectively.%
+\caption{%
+  The optimisation spaces of two different stencil programs on the
+  same execution device.%
 }
 \label{fig:motivation-prog}
 \end{figure}
 
-In this section I present the case for autotuning the workgroup size
-of SkelCL stencil skeletons. Stencil workgroup sizes presents a two
-dimensional parameter space, consisting of a number of rows and
-columns. It is constrained by properties of both the stencil code and
-underlying architecture. For a detailed discussion of the parameter
-space and experimental methodology, see Sections~\ref{sec:background}
+Stencil workgroup sizes presents a two dimensional parameter space,
+consisting of a number of rows and columns. It is constrained by
+properties of both the stencil code and underlying architecture. For a
+detailed discussion of the parameter space and experimental
+methodology, see Sections~\ref{sec:background}
 and~\ref{sec:methodology}.
 
 By comparing the mean runtime of a stencil program using different
@@ -358,1358 +468,40 @@ hand tuning which traditionally came at the cost of many man hours of
 work from expert programmers to develop.
 
 
-\subsection{Structure}
+% \subsection{Summary}
 
-The remainder of the document is structured as follows:
-%
-\begin{itemize}
-\item Section~\ref{sec:background} contains necessary background
-  material, an introduction to the SkelCL framework, and a description
-  of the techniques used throughout the thesis;
-\item Section~\ref{sec:related} contains an exposition of relevant
-  literature in the field of autotuning and heterogeneous parallelism,
-  contrasting the related research with my own;
-\item % Section~\ref{sec:autotune} presents OmniTune, an extensible and
-%   distributed autotuner capable of predicting optimisation parameter
-%   values for unseen programs and devices at runtime;
-% \item Section~\ref{sec:omnitune-skelcl} describes the application of
-%   OmniTune for selecting the workgroup size of SkelCL stencils;
-% \item Section~\ref{sec:methodology} describes a comprehensive
-%   exploration of the workgroup size optimisation space for stencil
-%   skeletons, including the methodology for obtaining performance data
-%   and experimental setup;
-% \item Section~\ref{sec:evaluation} evaluates the effectiveness of
-%   OmniTune with respect to its accuracy, performance compared to human
-%   experts, and a cost benefit analysis of autotuning;
-\item Section~\ref{sec:conclusions} contains concluding remarks and
-  plans for future work.
-\end{itemize}
+% This introductory section has outlined the need for higher levels of
+% abstraction for parallel programming and the difficulty that this
+% provides for performance tuning. It advocates the use of adaptive
+% tuning for algorithmic skeletons, and describes the contributions of
+% this thesis towards this goal. In the next section, I provide an
+% overview of the techniques and methodology used in this thesis.
 
 
-\subsection{Summary}
+\section{The OmniTune Framework}\label{sec:autotune}
 
-This introductory section has outlined the need for higher levels of
-abstraction for parallel programming and the difficulty that this
-provides for performance tuning. It advocates the use of adaptive
-tuning for algorithmic skeletons, and describes the contributions of
-this thesis towards this goal. In the next section, I provide an
-overview of the techniques and methodology used in this thesis.
-
-
-\section{Background}\label{sec:background}
-
-This section provides a detailed though non-exhaustive description of
-the theory and techniques used in this thesis. First is an overview of
-algorithmic skeletons, GPGPU programming, and the combination of the
-two in SkelCL. Second is an overview of the machine learning
-techniques used in this thesis, followed by a description of the
-Statistical tools tools and methodologies used in the evaluation.
+OmniTune is a framework for extensible, distributed autotuning using
+machine learning. It provides a replacement for the kinds of ad-hoc
+tuning typically performed on a per-case basis by expert programmers,
+and emphasises collaborative, online learning of optimisation
+spaces. It uses separate client-server components with a distributed
+dataset backend to minimise the code footprint in client applications,
+and provides a lightweight interface for communication between each of
+the components. It aims to strike a balance between offering a fully
+featured environment for quickly implementing autotuning, while
+providing enough flexibility to cater to a wide range of autotuning
+scenarios.
 
 
-\subsection{Algorithmic Skeletons}
-
-Introduced by \citeauthor{Cole1989} in \citeyear{Cole1989},
-algorithmic skeletons simplify the task of parallel programming by
-abstracting common patterns of communication, providing parallel
-implementations of higher order functions~\cite{Cole1989}. The
-interfaces to generic parallel algorithms exposed by algorithmic
-skeletons are parameterised by the user with \emph{muscle functions}
-that implement problem specific logic. The idea is that this allows
-the user to focus on solving the problem at hand, affording greater
-ease of use by automating the coordination of parallel resources.
-
-
-\subsubsection{Abstracting Task and Data Parallelism}
-
-Algorithmic skeletons are categorised as either \emph{data} parallel
-or \emph{task} parallel. In data parallel skeletons, data are
-distributed across nodes for parallel processing, where each parallel
-node executes the same code on a unique subset of the data. Examples
-of data parallel algorithmic skeletons include \emph{map}, \emph{zip},
-and \emph{reduce}. The data parallel operations provided by SkelCL are
-described in detail in Subsection~\ref{subsec:skelcl-intro}.
-
-Task parallel skeletons treat the data as a singular object and
-instead parallelise the execution of multiple tasks. Tasks are
-assigned to threads, which can communicate with each other by passing
-data between threads. Examples of task parallel algorithmic skeletons
-include \emph{pipe}, \emph{task farm}, and \emph{for loops}.
-
-
-\subsubsection{Algorithmic Skeleton Frameworks}
+\subsection{System Architecture}
 
 \begin{figure}
 \centering
-\includegraphics[width=0.99\columnwidth]{img/askf}
-\caption[Overview of an Algorithmic Skeleton Framework]{%
-  Typical usage of a library based Algorithmic Skeleton
-  Framework. Other approaches to algorithmic skeletons involve
-  embedding the API into the core language itself, or using template
-  and macro substitution to remove the need for linking with a
-  library.%
-}
-\label{fig:askf}
-\end{figure}
-
-Algorithmic Skeleton Frameworks (ASkFs) provide concrete parallel
-implementations of parallel patterns, which are parameterised by the
-user to generate specific problem solving programs. The interfaces
-exposed by frameworks must be sufficiently generic to allow users to
-express a range of problems.
-
-Implementations of algorithmic skeletons abound, targeting a range of
-different use cases and host languages. Notable examples include:
-eSkel~\cite{Benoit2005a}, Skandium~\cite{Leyton2010}, and
-FastFlow~\cite{Aldinucci2011}. The most prevalent form of ASkF is that
-of the standalone library which exposes a set of public APIs, shown in
-Figure~\ref{fig:askf}. See~\cite{Gonzalez2010} for a more exhaustive
-review of ASkFs in the research literature.
-
-In industry, Google's MapReduce~\cite{Dean2008} and Intel's Thread
-Building Blocks~\cite{IntelTBB} have utilised a similar approach to
-abstracting the coordination of parallel resources as in algorithmic
-skeletons, to great commercial success, although they do not advertise
-themselves as such.
-
-
-\subsection{GPGPU Programming}\label{subsec:gpgpu}
-
-General purpose programming with graphics hardware is a nascent field,
-but has shown to enable massive data parallel throughput by
-re-purposing the hardware traditionally dedicated to the rendering of
-3D graphics for generic computation. This was enabled by hardware
-support for programmable shaders replacing the fixed function graphics
-pipeline, and support for floating point operations in
-2001. \citeauthor{Owens2006} provide a review of the first five years
-of general purpose computation on graphics hardware
-in~\cite{Owens2006}.
-
-In the ensuing progress towards increasingly programmable graphics
-hardware, two dominant programming models have emerged: CUDA and
-OpenCL, which both abstract the graphics primitives of GPU hardware
-and provide a platform for GPGPU programming. CUDA is a language
-developed by NVIDIA for programming their GPUs using a proprietary SDK
-and API~\cite{Nvidia2007}, while OpenCL is a vendor-independent open
-standard based on a subset of the ISO C99 programming language, with
-implementations for devices from most major GPU
-manufactures~\cite{Stone2010}. Quantitative evaluations of the
-performance of CUDA and OpenCL programs suggest that performance is
-comparable between the two systems, although the wider range of target
-architectures for OpenCL means that appropriate optimisations must be
-made by hand or by the compiler~\cite{Komatsu2010,Karimi2010}.
-
-
-\subsubsection{The OpenCL Programming Model}
-
-\begin{figure}
-\centering
-\includegraphics[width=.8\columnwidth]{img/opencl-memory}
-\caption[The OpenCL memory model]{%
-  The OpenCL memory model. The host communicates with each device
-  through transfers between global memory spaces. The capacity of each
-  type of memory is dependent on the device hardware. In general,
-  private memory is the fastest and smallest, and global memory is the
-  largest and slowest.%
-}
-\label{fig:opencl-memory}
-\end{figure}
-
-OpenCL is a parallel programming framework which targets CPUs, GPUs,
-and other parallel processors such as Field-Programmable Gate
-Arrays. It provides a set of APIs and a language (based on an extended
-subset of C) for controlling heterogeneous \emph{compute devices} from
-a central host. Programs written for these devices are called
-\emph{kernels}, and are compiled by platform-specific tool chains. At
-runtime, an OpenCL \emph{platform} is selected and a \emph{context}
-object is created which exposes access to each supported compute
-device through \emph{command queues}.  When a kernel is executed, each
-unit of computation is referred to as a \emph{workitem}, and these
-workitems are grouped into \emph{workgroups}. The sum of all workgroup
-dimensions defines the \emph{global size}. For GPUs, workgroups
-execute on the Single Instruction Multiple Data (SIMD) processing
-units in lockstep. This is very different from the behaviour of
-traditional CPUs, and can cause severe performance penalties in the
-presence of flow control, as workitems must be stalled across divering
-flow paths.
-
-
-\paragraph{Memory Model}
-
-Unlike the flat model of CPUs, OpenCL uses a hierarchical memory
-model. The host and each OpenCL device has a single global memory
-address space. Each workgroup has a local memory space, and each
-workitem has a region of private memory.
-
-Workgroups cannot access the memory of neighbouring workgroups, nor
-can workitems access the private memory of other workitems. OpenCL
-provides synchronisation barriers to allow for communication between
-workitems within a single workgroup via the local memory, but not
-global barriers. Memory transfers between the host and devices occurs
-between global memory regions. In the case of programming
-heterogeneous devices, these transfers must occur over the connection
-bus between the CPU and device (e.g.\ PCIe for discrete GPUs), which
-typically creates a performance bottleneck by introducing a
-performance overhead to transfer data to the device for processing,
-then back to the device afterwards. Direct transfers of data between
-devices is not supported, requiring an intermediate transfer to the
-host memory.
-
-
-\paragraph{Performance Optimisations}
-
-The wide range of supported execution devices and differing
-standards-compliant implementations makes portable performance tuning
-of OpenCL programs a difficult task~\cite{Rul2010}, and the
-interactions between optimisations and the hardware are complex and
-sometimes counter-intuitive~\cite{Ryoo2008}.
-
-The overhead introduced by memory transfers between host and compute
-devices further complicates comparisons of OpenCL performance on
-different devices. The conclusion of~\cite{Gregg2011} is that this
-overhead can account for a $2\times$ to $50\times$ difference of GPU
-program runtime. In~\cite{Lee2010}, \citeauthor{Lee2010} present a
-performance analysis of optimised throughput computing applications
-for GPUs and CPUs. Of the 14 applications tested, they found GPU
-performance to be $0.7\times$ to $14.9\times$ that of multi-threaded
-CPU code, with an average of only 2.5$\times$. This is much lower than
-the $100\times$ to $1000\times$ values reported by other studies, a
-fact that they attribute to uneven comparison of optimised GPU code to
-unoptimised CPU code, or vice versa. \citeauthor{Lee2010} found that
-multithreading, cache blocking, reordering of memory accesses and use
-of SIMD instructions to contribute most to CPU performance. For GPUs,
-the most effective optimisations are reducing synchronization costs,
-and exploiting local shared memory. In all cases, the programs were
-optimised and hand-tuned by programmers with expert knowledge of the
-target architectures. It is unclear whether their performance results
-still hold for subsequent generations of devices.
-
-Despite the concerns of over-represented speedups, the potential for
-high performance coupled with the complexity and low levels of
-abstraction provided by OpenCL make it an ideal target for skeletal
-abstractions. SkelCL and SkePU are two such examples which add a layer
-of abstraction above OpenCL and CUDA respectively in order to simplify
-GPGPU programming~\cite{Enmyren2010}.
-
-\subsection{High-Level GPU Programming with
-  SkelCL}\label{subsec:skelcl-intro}
-
-Introduced in~\cite{Steuwer2011}, SkelCL is an object oriented C++
-library that provides OpenCL implementations of data parallel
-algorithmic skeletons for heterogeneous parallelism using CPUs or
-multi-GPUs. SkelCL addresses the parallel programmability challenge by
-allowing users to easily harness the power of GPUs and CPUs for data
-parallel computing.
-
-The goal of SkelCL is to enable the transition towards higher-level
-programming of GPUS, without requiring users to be intimately
-knowledgeable of the concepts unique to OpenCL programming, such as
-the memory or execution model~\cite{Steuwer2012}. SkelCL has been
-shown to reduce programmer effort for developing real applications
-through the use of robust pattern implementations and automated memory
-management, maintaining performance within 5\% of that of equivalent
-hand-written implementations in OpenCL~\cite{Steuwer2013}.
-
-SkelCL skeletons are parameterised with muscle functions by the user,
-which are compiled into OpenCL kernels for execution on device
-hardware. SkelCL supports operations on one or two dimensional arrays
-of data, with the Vector and Matrix container types transparently
-handling lazy transfers between host and device memory, and supporting
-partitioning for multi-GPU execution~\cite{Steuwer2013a}. SkelCL is
-freely available and distributed under dual GPL and academic
-licenses\footnote{\url{http://skelcl.uni-muenster.de}}.
-
-
-\subsubsection{Pattern definitions}
-
-SkelCL provides six skeletons for data parallel operations: $\map$,
-$\zip$, $\reduce$, $\scan$, $\allpairs$, and $\stencil$. The focus of
-this thesis is on tuning the $\stencil$ skeleton, but for the sake of
-completeness I provide here a brief overview of the behaviour of all
-six patterns.
-
-
-\paragraph{Map}
-
-The $\map$ operation is a basic building block of data parallel
-algorithms. Given a customising function $f$ and a vector $x$ of $n$
-elements, the $\map$ operation applies the function $f$ to each
-element $x_1, x_2, \ldots, x_n$, returning a vector of the same
-length:
-%
-\begin{equation}
-\map\left(f, [x_1,x_2,\ldots,x_n]\right) \to [f(x_1),f(x_2),\ldots,f(x_n)]
-\end{equation}
-%
-The process is the same for an $n \times m$ matrix:
-%
-\begin{equation}
-\begin{split}
-\map\left(f,
-\begin{bmatrix}
-  x_{11} & \cdots & x_{1m} \\
-  \vdots & \ddots & \vdots \\
-  x_{n1} & \cdots & x_{nm}
-\end{bmatrix}\right) \\
-\to
-\begin{bmatrix}
-  f(x_{11}) & \cdots & f(x_{1m}) \\
-  \vdots & \ddots & \vdots \\
-  f(x_{n1}) & \cdots & f(x_{nm})
-\end{bmatrix}
-\end{split}
-\end{equation}
-%
-Execution of the customising function can be parallelised as each
-element is processed independently. There are no guarantees on
-execution ordering.
-
-
-\paragraph{Zip}
-
-The $\zip$ operation combines elements of containers pairwise. Given a
-binary operator $\oplus$ and two vectors $x$ and $y$ of $n$ elements
-each:
-%
-\begin{equation}
-\begin{split}
-\zip\left( \oplus, [x_1,x_2,\ldots,x_n], [y_1,y_2,\ldots,y_n] \right) \\
-\to
-\left[ x_1 \oplus y_1, x_2 \oplus y_2, \ldots, x_n \oplus y_n \right]
-\end{split}
-\end{equation}
-%
-For two matrices of $n \times m$ elements each:
-%
-\begin{equation}
-\begin{split}
-\zip \left( \oplus,
-\begin{bmatrix}
-  x_{11} & \cdots & x_{1m} \\
-  \vdots & \ddots & \vdots \\
-  x_{n1} & \cdots & x_{nm}
-\end{bmatrix},
-\begin{bmatrix}
-  y_{11} & \cdots & y_{1m} \\
-  \vdots & \ddots & \vdots \\
-  y_{n1} & \cdots & y_{nm}
-\end{bmatrix} \right) \\
-\to
-\begin{bmatrix}
-  x_{11} \oplus y_{11} & \cdots & x_{1m} \oplus y_{1m} \\
-  \vdots & \ddots & \vdots \\
-  x_{n1} \oplus y_{n1} & \cdots & x_{nm} \oplus y_{nm}
-\end{bmatrix}
-\end{split}
-\end{equation}
-%
-The $\zip$ operation is parallelised in the same manner as $\map$.
-
-
-\paragraph{Reduce}
-
-The $\reduce$ operator combines all elements of an input vector and
-returns a scalar. Given a binary operator $\oplus$, its identity
-$\bm{i}$ and a vector $x$ of $n$ elements:
-%
-\begin{equation}
-\begin{split}
-  \reduce \left( \oplus, \bm{i}, [x_1,x_2,\ldots,x_n] \right) \\
-  \to
-  x_1 \oplus x_2 \oplus \ldots \oplus x_n
-\end{split}
-\end{equation}
-%
-For a $n \times m$ matrix:
-%
-\begin{equation}
-\begin{split}
-\reduce \left( \oplus, i,
-\begin{bmatrix}
-  x_{11} & \cdots & x_{1m} \\
-  \vdots & \ddots & \vdots \\
-  x_{n1} & \cdots & x_{nm}
-\end{bmatrix} \right) \\
-\to
-x_{11} \oplus x_{12} \oplus \ldots \oplus x_{nm}
-\end{split}
-\end{equation}
-%
-Reduction operates by recursively combining elements, storing
-intermediate results in fast local memory. No guarantee is made on
-execution ordering, so the binary operator must be associative.
-
-
-\paragraph{Scan}
-
-The $\scan$ operator applies a binary function $\oplus$ to each member
-of an input array $x$ of $n$ elements, such that element $x_i$ at the
-$i$th position is calculated by applying the binary function to all
-elements $x_1,x_2, \ldots x_{i-1}$. For the first element $x_i$, the
-value is the identify $\bm{i}$ of the $\oplus$ operator:
-%
-\begin{equation}
-\begin{split}
-  \scan \left( \oplus, \bm{i}, [x_1,x_2,\ldots,x_n] \right) \\
-  \to
-  \left[ \bm{i}, x_1, x_1 \oplus x_2, \ldots, x_1 \oplus x_2 \oplus
-    \ldots \oplus x_n \right]
-\end{split}
-\end{equation}
-%
-The SkelCL scan implementation is heavily optimised to make use of
-local memory, based on the design from~\cite{Harris2007a}.
-
-
-\paragraph{AllPairs}
-
-The AllPairs skeleton is a specialised pattern for Matrix Matrix
-operations, introduced in~\cite{Steuwer2014}. Given two matrices of
-size $n \times d$ and $n \times m$, a binary operator $\oplus$:
-%
-\begin{equation}
-\begin{split}
-\allpairs \left( \oplus,
-\begin{bmatrix}
-  x_{11} & \cdots & x_{1d} \\
-  \vdots & \ddots & \vdots \\
-  x_{n1} & \cdots & x_{nd}
-\end{bmatrix},
-\begin{bmatrix}
-  y_{11} & \cdots & y_{1m} \\
-  \vdots & \ddots & \vdots \\
-  y_{n1} & \cdots & y_{nm}
-\end{bmatrix} \right) \\
-\to
-\begin{bmatrix}
-  z_{11} & \cdots & z_{1m} \\
-  \vdots & \ddots & \vdots \\
-  z_{n1} & \cdots & z_{nm}
-\end{bmatrix}
-\end{split}
-\end{equation}
-%
-where:
-%
-\begin{equation}
-z_{ij} =
-\left[ x_{i1}, x_{i2}, \ldots, x_{id} \right] \oplus
-\left[ y_{j1}, y_{j2}, \ldots, y_{jd} \right]
-\end{equation}
-%
-An additional implementation is provided for when the $\oplus$
-operator is known to match that of a zip pattern:
-%
-\begin{equation}
-z_{ij} =
-\left[
-  x_{i1}, \oplus y_{j1}, x_{i2} \oplus y_{j2}, \ldots, x_{id} \oplus y_{jd}
-\right]
-\end{equation}
-%
-This pattern has applications from bioinformatics to matrix
-multiplication, and uses fast local memory to reduce data access times
-for repeated reads.
-
-
-\paragraph{Stencil}
-
-\begin{figure}
-\centering
-\includegraphics[width=.6\columnwidth]{img/stencil-shape}
-\caption[Stencil border region]{%
-  The border region of a stencil is defined using a stencil shape $S$,
-  consisting of the four independent components describing the number
-  of cells north $S_n$, east $S_e$, west $S_w$, and south $S_s$.%
-}
-\label{fig:stencil-shape}
-\end{figure}
-
-Stencils are patterns of computation which operate on uniform grids of
-data, where the value of each cell is updated based on its current
-value and the value of one or more neighbouring elements, called the
-\emph{border region}. Introduced in~\cite{Breuer2014}, SkelCL provides
-a 2D stencil skeleton which allows users to provide a function which
-updates a cell's value, while SkelCL orchestrates the parallel
-execution of this function across all cells.
-
-The border region is described by a \emph{stencil shape}, which
-defines an $i \times j$ rectangular region about each cell which is
-used to update the cell value. Stencil shapes may be asymmetrical, and
-are defined in terms of the number of cells in the border region to
-the north, east, south, and west of each cell, shown in
-Figure~\ref{fig:stencil-shape}. Given a customising function $f$, a
-stencil shape $S$, and an $n \times m$ matrix:
-%
-\begin{equation}
-\begin{split}
-\stencil \left( f, S,
-\begin{bmatrix}
-  x_{11} & \cdots & x_{1m} \\
-  \vdots & \ddots & \vdots \\
-  x_{n1} & \cdots & x_{nm}
-\end{bmatrix} \right) \\
-\to
-\begin{bmatrix}
-  z_{11} & \cdots & z_{1m} \\
-  \vdots & \ddots & \vdots \\
-  z_{n1} & \cdots & z_{nm}
-\end{bmatrix}
-\end{split}
-\end{equation}
-%
-where:
-%
-\begin{equation}
-z_{ij} = f \left(
-\begin{bmatrix}
-  z_{i-S_n,j-S_w} & \cdots & z_{i-S_n,j+S_e} \\
-  \vdots & \ddots & \vdots \\
-  z_{i+S_s,j-S_w} & \cdots & z_{i+S_s,j+S_e}
-\end{bmatrix} \right)
-\end{equation}
-%
-Note that a stencil operation in which the size of the stencil shape
-$S$ is zero in every direction is functionally equivalent to a $\map$
-operation. Where the border region includes elements outside of the
-matrix, values are substituted from either a predefined padding value,
-or the value of the nearest cell within the matrix, depending on user
-preference.
-
-A popular usage of Stencil codes is for solving problems iteratively,
-whereby a stencil operation is repeated over a range of discrete time
-steps $0 \le t \le t_{max}$, and $t \in \mathbb{Z}$. An iterative
-stencil operation $g$ accepts a customising function $f$, a Stencil
-shape $S$, and a matrix $M$ with initial values $M_{init}$. The value
-of an iterative stencil can be defined recursively as:
-%
-\begin{equation}
-g(f, S, M, t) =
-\begin{cases}
-  \stencil \left( f, S, g(f, S, M, t-1) \right),& \text{if } t \geq 1\\
-  M_{init}, & \text{otherwise}
-\end{cases}
-\end{equation}
-%
-Examples of iterative stencils are cellular automata. Another
-extension of the stencil operation accepts an ordered list of
-customising functions which are applied sequentially for each
-iteration. This has applications for multi-stage stencil operations
-such as Canny Edge Detection, in which four distinct stencil
-operations are performed as a sequence.
-
-
-\subsubsection{Implementation Details}
-
-Each skeleton is represented by a template class, declared in a header
-file detailing the public API, e.g.\ \path{SkelCL/Stencil.h}. A
-private header file contains the template class declaration, e.g.\
-\path{SkelCL/detail/StencilDef.h}. Small OpenCL kernels are stored as
-inline strings inside the definition headers. Non-trivial OpenCL
-kernels are stored in separate source files, e.g.\
-\path{SkelCL/detail/StencilKernel.cl}. Muscle functions are passed as
-OpenCL strings to the skeleton template classes, and the LLVM API is
-used to perform argument and function name substitution.
-
-\paragraph{Stencil Implementation}
-
-For the stencil skeleton, each cell maps to a single work item; and
-this collection of work items is then divided into \emph{workgroups}
-for execution on the target hardware. In a stencil code, each
-work-item reads the value of the corresponding grid elements, and the
-surrounding elements defined by the border region. Since the border
-regions of neighbouring elements overlap, the value of all elements
-within a workgroup are stored in a \emph{tile}, which is a region of
-local memory. As local memory access times are much smaller than that
-of global memory, this greatly reduces the latency of the border
-region reads performed by each workitem. Changing the workgroup size
-thus affects the amount of local memory required for each workgroup,
-which in turn affects the number of workgroups which may be
-simultaneously active. So while the user defines the size, type, and
-border region of the of the grid being operated upon, it is the
-responsibility of the SkelCL stencil implementation to select an
-appropriate workgroup size to use.
-
-\begin{figure}
-\centering
-\includegraphics[width=.75\columnwidth]{img/stencil-wg}
-\caption[Workgroup decomposition in stencils]{%
-  The components of a stencil: a grid of cells is decomposed into
-  workgroups, consisting of multiple workitems. Each work item
-  operates on a border region, and the size of the workgroup and outer
-  border region defines a tile, which is a region of local memory
-  allocated to each workgroup.%
-}
-\label{fig:stencil-wg}
-\end{figure}
-
-
-\subsection{Machine Learning}
-
-
-Multiple machine learning methods are used in this thesis to perform
-classification and regression tasks. Classification is the task of
-predicting the correct category --- or class --- for a new instance,
-based on ``labelled'' training data, i.e.\ instances whose categories
-are known. The properties describing instances are called
-\emph{features}. The purpose of regression is to predict the
-relationship between a dependent variable and the value of one or more
-independent variables. Unlike with classification, the predicted
-dependent variable can be continuous, rather than categorical. This
-subsection briefly describes the properties of classifiers and regressors
-used in this thesis.
-
-
-\paragraph{ZeroR}
-
-A ``ZeroR'' classifier represents the simplest approach to
-classification, in that it ignores all features, and simply predicts
-the mode of the training data labels. This is useful for providing a
-baseline to evaluate the performance of more complex classifiers
-against, since a ZeroR classifier has no power of prediction.
-
-
-\paragraph{Naive Bayes}
-
-Naive Bayes classifiers are probabilistic classifiers which assume
-strong independence between features. That is, the value of one
-feature is considered independently of another, and is what lends the
-\emph{Naive} portion of the name. The goal of Naive Bayes is to
-predict the probability of a class $y$, given a set of $d$ independent
-variables $x = x_1, x_2, \ldots x_d$. Naive Bayes applies Bayes
-theorem, which states that given a \emph{prior} (i.e.\ unconditional)
-probability for each class $P(y)$, a class-\emph{conditional} model
-$P(x|y)$, and a normaliser across all classes
-$P(x) = \sum_{y'}P(x|y')P(y')$: the probability of a class $y$ given
-dependent variables $x$ is equal to the probability of $x$ given $y$,
-multiplied by the probability of $y$:
-%
-\begin{equation}
-  P(y|x) = \frac{P(x|y)P(y)}{\sum_{y'}P(x|y')P(y')}
-\end{equation}
-%
-The class which has the highest probability from the set of possible
-classes $Y$ is the prediction. Note that the normaliser $P(x)$ does
-not affect the class which is most likely. The class conditional model
-uses ``counts'' for each observation based on training data:
-%
-\begin{equation}
-  P(x|y) = \prod_{i=1}^{d} P(x_i|y)
-\end{equation}
-%
-The simplicity of Naive Bayes makes it attractive for various purposes
-such as text classification (using word frequency as features), but
-the assumption of independence makes it unsuitable for certain use
-cases.
-
-
-\paragraph{Decision Trees}
-
-Decision trees are an intuitive form of classification in which a tree
-structure of decision nodes are used to predict the class for a given
-set of features. Decision trees are built using binary recursive
-partitioning: by creating a decision node for the feature which
-provides the highest gain, creating new child nodes for each possible
-outcome, splitting dividing the data amongst these child nodes, and
-recursing. To find the gain of an feature, we first compute the
-entropy of the data set. Given a set of data points $D$, and $p_{(+)}$
-and $p_{(-)}$ are the number of positive and negative examples in $D$:
-%
-\begin{equation}
-  H(D) = - p_{(+)}\log_2p_{(+)} - p_{(-)}\log_2p_{(-)}
-\end{equation}
-%
-The gain of an feature $x$ is then found using:
-%
-\begin{equation}
-  \gain(D, x) = H(D) - \sum_{V \in \text{Values}(x)}\frac{|D_V|}{|D|}H(D_V)
-\end{equation}
-%
-Decision trees are very popular and low overhead form of
-classification, as they can be implemented using a nested set of
-\texttt{if}/\texttt{else} statements. However, they can often overfit
-to the training data.
-
-
-\paragraph{Random Forest}
-
-Random Forests are an ensemble technique which attempt to overcome the
-tendency of decision trees to overfit to training data by training
-multiple decision trees and using the mode of each tree to select
-predictions~\cite{Breiman1999}. Alternatively they can be trained
-using regression trees, in which case the predicted value is the mean
-output of all trees.
-
-
-% \paragraph{Logistic Regression}
-
-% A logistic regressor is a set of linear weights and a bias fitted with
-% a logistic squashing function in order to generate a sigmoid shape
-% decision boundary.
-
-
-% \paragraph{SMO}
-
-
-\subsection{Statistics}
-
-This subsection describes a number of the statistical tools used
-throughout this thesis.
-
-% \paragraph{Statistical Testing}
-
-% Student's \emph{t}-test
-
-
-\paragraph{Interquartile Range}
-
-For a given set of ordered data values, the quartiles are the three
-points that divide the data set into four groups of equal size. The
-first quartile is the point which $Q_1$ divides the data equally
-between the lowest value and the median, $Q_2$. The third quartile
-$Q_3$ is the point which divides the data between the median and the
-highest value. The interquartile range (IQR) measures the dispersion
-of a data set, and is the difference between the third and first
-quartiles, $Q_3 - Q_1$.
-
-
-\paragraph{Confidence Intervals}
-
-Confidence intervals estimate the interval for the true range of a
-population parameter. Given a set of samples of a population with
-estimates of a parameter value for each, the confidence interval
-$(c_1,c_2)$ estimates the frequency that the true parameter value will
-fall between the per-sample confidence interval. Given a sample $x$
-with sample size $n$, the confidence interval for a confidence
-$\alpha$ is found using:
-%
-\begin{align}
-  \bar{x} &= \frac{1}{n}\sum_{i=1}^{n} x_i\\
-  \sigma &= \sqrt{\frac{\sum_{i=1}^{n}(x_i - \bar{x})^2}{n - 1}}\\
-  c_1 &= \bar{x} - z_{1-\alpha/2}\frac{\sigma}{\sqrt{n}}\\
-  c_2 &= \bar{x} + z_{1-\alpha/2}\frac{\sigma}{\sqrt{n}}
-\end{align}
-%
-Where the value $z_{1-\alpha/2}$ assumes a Gaussian distribution of
-the underlying data, and the values for popular $\alpha$ values are
-typically found using pre-computed ``Z-tables''. To calculate
-confidence intervals for the ratio of two means, $\bar{x}_1$ and
-$\bar{x}_2$ with sample sizes $n_1$ and $n_2$, and respective standard
-deviations $\sigma_1$ and $\sigma_2$:
-%
-\begin{align}
-  \sigma_x &= \sqrt{\frac{\sigma_1^2}{n_1} + \frac{\sigma_2^2}{n_2}}\\
-  c_1 &= \bar{x}_1 - \bar{x}_2 - z_{1-\alpha/2}\sigma_x\\
-  c_2 &= \bar{x}_1 - \bar{x}_2 + z_{1-\alpha/2}\sigma_x
-\end{align}
-%
-The above calculations assumes that the sample variance ($\sigma^2$)
-is an accurate estimation of the true population variance. This relies
-on the assumption of an underlying Gaussian distribution, which,
-according to the central limit theorem, is true of large sample sizes
-(typically $n \ge 30$).  In cases of smaller sample sizes, the sample
-and population variances can differ significantly, so one must instead
-use a Student's $t$-distribution, $t_{1-\alpha/2}$, in place of
-$z_{1-\alpha/2}$.
-
-
-\paragraph{Histogram}
-
-Histograms are a widely used statistical visualisation which shows the
-distribution of numerical data. The data is first divided into a set
-of discrete, equally sized sub-intervals, or \emph{bins}. The number
-of data points in each bin is used to show visualise the density
-distribution. The shortcoming of histograms is that their appearance
-is heavily influenced by three user-selected parameters: the number of
-bins, the width of bins (binwidth), and the endpoints chosen. As such,
-they may provide a misleading representation of the data if
-inappropriate values for any of these parameters are chosen. Kernel
-Density estimation is a technique for showing the distribution of data
-which circumvents some of these issues.
-
-
-\paragraph{Kernel Density Estimation}
-
-A Kernel Density Estimate (KDE) is an approximation of the probability
-density function of a random variable. Given a random variable $x$,
-and bandwidth $h$ and a kernel $K$, the Kernel Density Estimate
-$\hat{f}_h(x)$ can be found using:
-%
-\begin{equation}
-  \hat{f}_h(x) = \frac{1}{nh} \sum^{n}_{i=1} K\left( \frac{x - x_i}{h} \right)
-\end{equation}
-%
-Using a smooth kernel such as a Gaussian distribution for the kernel
-produces a smooth density estimated, unlike histograms. However, like
-histograms, the appearance of a Kernel Density Estimate plot is
-dependent on the value of the bandwidth parameter $h$ (equivalent to
-binwidth in histograms), so care must be taken to select a value to
-minimise over or under smoothing. Grouped data can be shown by
-plotting multiple KDEs on the same axes, although if the number of
-groups is large, a box plot or violin plot may be more appropriate.
-
-
-\paragraph{Box plot}
-
-Box plots are used to show the distribution of quartile ranges for
-grouped data. The contain the following features:
-%
-\begin{itemize}
-\item Horizontal lines at the lower quartile, median and upper
-  quartile.
-\item Vertical lines above and below the upper and lower quartiles to
-  the most extreme data point within 1.5 IQR of the upper/lower
-  quartile, with horizontal whiskers at the end of the vertical lines.
-\item Dots beyond the ends of the vertical lines to show outliers.
-\end{itemize}
-%
-A variation of box plots used in this thesis is the violin plot, which
-extends the box plot with a fitted Kernel Density Estimate plot to
-show the probability \emph{density} of data at different values. To
-construct a violin plot, KDEs for each group are rotated and mirrored
-to generate a smoothed visualisation of the distribution.
-
-
-\subsection{Summary}
-
-This section gave a brief introduction to general-purpose computing
-using graphics hardware, the OpenCL framework, and SkelCL. It was
-followed by a description of the machine learning techniques used
-throughout this thesis, and the statistical tools used for the
-evaluation. In the next section, I review the state of the art in the
-field of autotuning, and provide context for the contributions of this
-thesis.
-
-
-\section{Related Work}\label{sec:related}
-
-This section begins with a brief survey of the broad field of
-literature that is relevant to algorithmic skeletons. This is followed
-by a review of the current state of the art in autotuning research,
-focusing on heterogeneous parallelism, algorithmic skeletons, and
-stencil codes. It presents the context and rationale for the research
-undertaken for this thesis.
-
-
-\subsection{Automating Parallelism}
-
-It is widely accepted that parallel programming is difficult, and the
-continued repetition of this claim has become something of a trite
-mantra for the parallelism research community. An interesting
-digression is to discuss some of the ways in which researchers have
-attempted to tackle this difficult problem, and why, despite years of
-research, it remains an ongoing challenge.
-
-The most ambitious and perhaps daring field of parallelism research is
-that of automatic parallelisation, where the goal is to develop
-methods and systems to transform arbitrary sequential code into
-parallelised code. This is a well studied subject, with the typical
-approach being to perform these code transformations at the
-compilation stage. In \citeauthor{Banerjee1993}'s thorough
-review~\cite{Banerjee1993} on the subject, they outline the key
-challenges of automatic parallelisation:
-%
-\begin{itemize}
-\item determining whether sequential code can be legally transformed
-  for parallel execution; and
-\item identifying the transformation which will provide the highest
-  performance improvement for a given piece of code.
-\end{itemize}
-%
-Both of these challenges are extremely hard to tackle. For the former,
-the difficulties lie in performing accurate analysis of code
-behaviour. Obtaining accurate dynamic dependency analysis at compile
-time is an unsolved problem, as is resolving pointers and points-to
-analysis~\cite{Atkin-granville2013, Hind2001,Ghiya2001}.
-
-The result of these challenges is that reliably performant, automatic
-parallelisation of arbitrary programs remains a far from reached goal;
-however, there are many note worthy variations on the theme which have
-been able to achieve some measure of success.
-
-One such example is speculative parallelism, which circumvents the
-issue of having incomplete dependency information by speculatively
-executing code regions in parallel while performing dependency tests
-at runtime, with the possibility to fall back to ``safe'' sequential
-execution if correctness guarantees are not
-met~\cite{Prabhu2010,Trachsel2010}.  In~\cite{Jimborean2014},
-\citeauthor{Jimborean2014} present a system which combines polyhedral
-transformations of user code with binary algorithmic skeleton
-implementations for speculative parallelisation, reporting speedups
-over sequential code of up to $15.62\times$ on a 24 core processor.
-
-Another example is PetaBricks, which is a language and compiler
-enabling parallelism through ``algorithmic choice''~\cite{Ansel2009,
-  Ansel2010}. With PetaBricks, users provide multiple implementations
-of algorithms, optimised for different parameters or use cases. This
-creates a search space of possible execution paths for a given
-program. This has been combined with autotuning techniques for
-enabling optimised multigrid programs~\cite{Chan2009}, with the wider
-ambition that these autotuning techniques may be applied to all
-algorithmic choice programs~\cite{Ansel2014}. While this helps produce
-efficient parallel programs, it places a great burden on the
-developer, requiring them to provide enough contrasting
-implementations to make a search of the optimisation space fruitful.
-
-Annotation-driven parallelism takes a similar approach. The user
-annotates their code to provide ``hints'' to the compiler, which can
-then perform parallelising transformations. A popular example of this
-is OpenMP, which uses compiler pragmas to mark code sections for
-parallel or vectorised execution~\cite{Dagum1998}. Previous work has
-demonstrated code generators for translating OpenMP to
-OpenCL~\cite{Grewe2013} and CUDA~\cite{Lee2009}. Again,
-annotation-driven parallelism suffers from placing a burden on the
-developer to identify the potential areas for parallelism, and lacks
-the structure that algorithmic skeletons provide.
-
-Algorithmic skeletons contrast the goals of automatic parallelisation
-by removing the challenge of identifying potential parallelism from
-compilers or users, instead allowing users to frame their problems in
-terms of well defined patterns of computation. This places the
-responsibility of providing performant, well tuned implementations for
-these patterns on the skeleton author.
-
-
-\subsection{Iterative Compilation \& Machine
-  Learning}\label{subsec:iterative-compilation}
-
-Iterative compilation is the method of performance tuning in which a
-program is compiled and profiled using multiple different
-configurations of optimisations in order to find the configuration
-which maximises performance. One of the the first formalised
-publications of the technique appeared in \citeyear{Bodin1998} by
-\citeauthor{Bodin1998}~\cite{Bodin1998}.  Iterative compilation has
-since been demonstrated to be a highly effective form of empirical
-performance tuning for selecting compiler optimisations.
-
-Given the huge number of possible compiler optimisations (there are
-207 flags and parameters to control optimisations in GCC v4.9), it is
-often unfeasible to perform an exhaustive search of the entire
-optimisation space, leading to the development of methods for reducing
-the cost of evaluating configurations. These methods reduce evaluation
-costs either by shrinking the dimensionality or size of the
-optimisation space, or by guiding a directed search to traverse a
-subset of the space.
-
-Machine learning has been successful applied to this problem,
-in~\cite{Stephenson2003}, using ``meta optimisation'' to tune compiler
-heuristics through an evolutionary algorithm to automate the search of
-the optimisation space. \citeauthor{Fursin2011} continued this with
-Milepost GCC, the first machine learning-enabled self-tuning
-compiler~\cite{Fursin2011}. A recent survey of the use of machine
-learning to improve heuristics quality by \citeauthor{Burke2013}
-concludes that the automatic \emph{generation} of these self-tuning
-heuristics but is an ongoing research challenge that offers the
-greatest generalisation benefits~\cite{Burke2013}.
-
-% An approach to online tuning of parallel programs is presented
-% in~\cite{Ansel2012} which partitions the available parallel resources
-% of a device in to two partitions and then executes two different
-% configurations simultaneously using each partition. The configuration
-% used for one of the configuration is guaranteed to be ``safe'', and
-% the performance
-
-% % Eastep, J., Wingate, D., & Agarwal, A. (2011). Smart Data
-% % Structures: An Online Machine Learning Approach to Multicore Data
-% % Structures. In Proceedings of the 8th ACM International Conference
-% % on Autonomic Computing (pp. 11–20). New York, NY, USA:
-% % ACM. doi:10.1145/1998582.1998587
-% \TODO{Online reinforcement learning for optimising data structures
-%   online, \cite{Tesauro2005}}
-
-% % Tesauro, G. (2005). Online Resource Allocation Using Decompositional
-% % Reinforcement Learning. In AAAI (pp. 886–891).
-% \TODO{Reinforcement learning for resource allocation~\cite{Eastep2011}}
-
-% % W. F. Ogilvie, P. Petoumenos, Z. Wang, and H. Leather, “Intelligent
-% % Heuristic Construction with Active Learning,” in 18th International
-% % Workshop on Compilers for Parallel Computing, 2015.
-% \TODO{Using Active Learning to speed up the learning of compiler
-%   heuristics~\cite{Ogilvie2015}. Towards online autotuning, albeit
-%   only with binary optimisation parameter.}
-
-%
-% SOME EXAMPLES OF ML IN THE WILD:
-%
-
-% % R. Bitirgen, E. Ipek, and J. F. Martinez, “Coordinated Management of
-% % Multiple Interacting Resources in Chip Multiprocessors: A Machine
-% % Learning Approach,” in 2008 41st IEEE/ACM International Symposium on
-% % Microarchitecture, 2008, pp. 318–329.
-% \TODO{Artificial Neural Networks for resource allocation of CMPS:
-% \cite{Bitirgen2008}}
-
-% % Z. Wang and M. F. P. O. Boyle, “Partitioning Streaming Parallelism
-% % for Multi-cores: A Machine Learning Based Approach,” in Proceedings
-% % of the 19th international conference on Parallel architectures and
-% % compilation techniques, 2010, pp. 307–318.
-% \TODO{Offline ML for partitioning streaming applications:
-% \cite{Wang2010}}
-
-In~\cite{Saclay2010,Memon2013,Fursin2014}, \citeauthor{Fursin2014}
-advocate a collaborative and ``big data'' driven approach to
-autotuning, arguing that the challenges facing the widespread adoption
-of autotuning and machine learning methodologies can be attributed to:
-a lack of common, diverse benchmarks and datasets; a lack of common
-experimental methodology; problems with continuously changing hardware
-and software stacks; and the difficulty to validate techniques due to
-a lack of sharing in publications. They propose a system for
-addressing these concerns, the Collective Mind knowledge system,
-which, while in early stages of ongoing development, is intended to
-provide a modular infrastructure for sharing autotuning performance
-data and related artifacts across the internet. In addition to sharing
-performance data, the approach taken in this thesis emphasises the
-collective \emph{exploitation} of such performance data, so that data
-gathered from one device may be used to inform the autotuning
-decisions of another. This requires each device to maintain local
-caches of shared data to remove the network overhead that would be
-present from querying a single centralised data store during execution
-of a hot path. The current implementation of Collective Mind uses a
-NoSQL JSON format for storing performance data. The relational schema
-used in this thesis offers greater scaling performance and lower
-storage overhead as the amount of performance data grows.
-
-Whereas iterative compilation requires an expensive offline training
-phase to search an optimisation space, dynamic optimisers perform this
-optimisation space exploration at runtime, allowing programs to
-respond to dynamic features ``online''. This is a challenging task, as
-a random search of an optimisation space may result in configurations
-with vastly suboptimal performance. In a real world system, evaluating
-many suboptimal configurations will cause a significant slowdown of
-the program. Thus a requirement of dynamic optimisers is that
-convergence time towards optimal parameters is minimised.
-
-Existing dynamic optimisation research has typically taken a low level
-approach to performing optimisations. Dynamo is a dynamic optimiser
-which performs binary level transformations of programs using
-information gathered from runtime profiling and
-tracing~\cite{Bala2000}. While this provides the ability to respond to
-dynamic features, it restricts the range of optimisations that can be
-applied to binary transformations. These low level transformations
-cannot match the performance gains that higher level parameter tuning
-produces.
-
-An interesting related tangent to iterative compilation is the
-development of so-called ``superoptimisers''. In~\cite{Massalin1987},
-the smallest possible program which performs a specific function is
-found through a brute force enumeration of the entire instruction
-set. Starting with a program of a single instruction, the
-superoptimiser tests to see if any possible instruction passes a set
-of conformity tests. If not, the program length is increased by a
-single instruction and the process repeats. The exponential growth in
-the size of the search space is far too expensive for all but the
-smallest of hot paths, typically less than 13 instructions. The
-optimiser is limited to register to register memory transfers, with no
-support for pointers, a limitation which is addressed
-in~\cite{Joshi2002}. Denali is a superoptimiser which uses constraint
-satisfaction and rewrite rules to generate programs which are
-\emph{provably} optimal, instead of searching for the optimal
-configuration through empirical testing. Denali first translates a low
-level machine code into guarded multi-assignment form, then uses a
-matching algorithm to build a graph of all of a set of logical axioms
-which match parts of the graph, before using boolean satisfiability to
-disprove the conjecture that a program cannot be written in $n$
-instructions. If the conjecture cannot be disproved, the size of $n$
-is increased and the process repeats.
-
-
-\subsubsection{Training with Synthetic Benchmarks}
-
-The use of synthetic benchmarks for providing empirical performance
-evaluations dates back to as early as 1974~\cite{Curnow1976}. The
-\emph{automatic generation} of such synthetic benchmarks is a more
-recent innovation, serving the purpose initially of stress-testing
-increasingly complex software systems for behaviour validation and
-automatic bug detection~\cite{Verplaetse2000,Godefroid2008}. A range
-of techniques have been developed for these purposes, ranging from
-applying random mutations to a known dataset to generate test stimuli,
-to so-called ``whitebox fuzz testing'' which analyses program traces
-to explore the space of a program's control flow. Csmith is one such
-tool which generates randomised C source programs for the purpose of
-automatically detecting compiler bugs~\cite{Yang2012}.
-
-A method for the automatic generation of synthetic benchmarks for the
-purpose of \emph{performance} tuning is presented
-in~\cite{Chiu2015}. \citeauthor{Chiu2015} use template substitution
-over a user-defined range of values to generate training programs with
-a statistically controlled range of features. A Perl preprocessor
-generates output source codes from an input description using a custom
-input language Genesis. Genesis is more flexible than the system
-presented in this thesis, supporting substitution of arbitrary
-sources. The authors describe an application of their tool for
-generating OpenCL stencil kernels, but do not report any performance
-results.
-
-
-\subsection{Performance Tuning for Heterogeneous Parallelism}
-
-As briefly discussed in Subsection~\ref{subsec:gpgpu}, the complex
-interactions between optimisations and heterogeneous hardware makes
-performance tuning for heterogeneous parallelism a difficult
-task. Performant GPGPU programs require careful attention from the
-developer to properly manage data layout in DRAM, caching, diverging
-control flow, and thread communication. The performance of programs
-depends heavily on fully utilising zero-overhead thread scheduling,
-memory bandwidth, and thread grouping. \citeauthor{Ryoo2008a}
-illustrate the importance of these factors by demonstrating speedups
-of up to $432\times$ for matrix multiplication in CUDA by appropriate
-use of tiling and loop unrolling~\cite{Ryoo2008a}. The importance of
-proper exploitation of local shared memory and synchronisation costs
-is explored in~\cite{Lee2010}.
-
-In~\cite{Chen2014}, data locality optimisations are automated using a
-description of the hardware and a memory-placement-agnostic
-compiler. The authors demonstrate impressive speedups of up to
-$2.08\times$, although at the cost of requiring accurate memory
-hierarchy descriptor files for all targeted hardware. The descriptor
-files must be hand generated, requiring expert knowledge of the
-underlying hardware in order to properly exploit memory locality.
-
-Data locality for nested parallel patterns is explored in~\cite{Lee}.
-The authors use an automatic mapping strategy for nested parallel
-skeletons on GPUs, which uses a custom intermediate representation and
-a CUDA code generator, achieving $1.24\times$ speedup over hand
-optimised code on 7 of 8 Rodinia benchmarks.
-
-Reduction of the GPGPU optimisation space is demonstrated
-in~\cite{Ryoo2008}, using the common subset of optimal configurations
-across a set of training examples. This technique reduces the search
-space by 98\%, although it does not guarantee that for a new program,
-the reduced search space will include the optimal configuration.
-
-\citeauthor{Magni2014} demonstrated that thread coarsening of OpenCL
-kernels can lead to speedups in program performance between
-$1.11\times$ and $1.33\times$ in~\cite{Magni2014}. The authors achieve
-this using a machine learning model to predict optimal thread
-coarsening factors based on the static features of kernels, and an
-LLVM function pass to perform the required code transformations.
-
-A framework for the automatic generation of OpenCL kernels from
-high-level programming concepts is described in~\cite{Steuwer2015}. A
-set of rewrite rules is used to transform high-level expressions to
-OpenCL code, creating a space of possible implementations. This
-approach is ideologically similar to that of PetaBricks, in that
-optimisations are made through algorithmic choice, although in this
-case the transformations are performed automatically at the compiler
-level. The authors report performance on a par with that of hand
-written OpenCL kernels.
-
-
-\subsection{Autotuning Algorithmic Skeletons}
-
-An enumeration of the optimisation space of Intel Thread Building
-Blocks in~\cite{Contreras2008} shows that runtime knowledge of the
-available parallel hardware can have a significant impact on program
-performance. \citeauthor{Collins2012} exploit this
-in~\cite{Collins2012}, first using Principle Components Analysis to
-reduce the dimensionality of the space of possible optimisation
-parameters, followed by a search of parameter values to optimise
-program performance by a factor of $1.6\times$ over values chosen by a
-human expert. In~\cite{Collins2013}, they extend this using static
-feature extraction and nearest neighbour classification to further
-prune the search space, achieving an average 89\% of the oracle
-performance after evaluating 45 parameters.
-
-\citeauthor{Dastgeer2011} developed a machine learning based autotuner
-for the SkePU skeleton library in~\cite{Dastgeer2011}. Training data
-is used to predict the optimal execution device (i.e.\ CPU, GPU) for a
-given program by predicting execution time and memory copy overhead
-based on problem size. The autotuner only supports vector operations,
-and there is limited cross-architecture
-evaluation. In~\cite{Dastgeer2015a}, the authors extend SkePU to
-improve the data consistency and transfer overhead of container types,
-reporting up to a $33.4\times$ speedup over the previous
-implementation.
-
-
-\subsection{Code Generation and Autotuning for Stencils}
-
-Stencil codes have a variety of computationally expensive uses from
-fluid dynamics to quantum mechanics. Efficient, tuned stencil kernels
-are highly sought after, with early work in \citeyear{Bolz2003} by
-\citeauthor{Bolz2003} demonstrating the capability of GPUs for
-massively parallel stencil operations~\cite{Bolz2003}. In the
-resulting years, stencil codes have received much attention from the
-performance tuning research community.
-
-\citeauthor{Ganapathi2009} demonstrated early attempts at autotuning
-multicore stencil codes in~\cite{Ganapathi2009}, drawing upon the
-successes of statistical machine learning techniques in the compiler
-community, as discussed in
-Subsection~\ref{subsec:iterative-compilation}. They present an autotuner
-which can achieve performance up to 18\% better than that of a human
-expert. From a space of 10 million configurations, they evaluate the
-performance of a randomly selected 1500 combinations, using Kernel
-Canonical Correlation Analysis to build correlations between tunable
-parameter values and measured performance targets. Performance targets
-are L1 cache misses, TLB misses, cycles per thread, and power
-consumption. The use of KCAA restricts the scalability of their system
-as the complexity of model building grows exponentially with the
-number of features. In their evaluation, the system requires two hours
-of compute time to build the KCAA model for only 400 seconds of
-benchmark data. They present a compelling argument for the use of
-energy efficiency as an optimisation target in addition to runtime,
-citing that it was the power wall that lead to the multicore
-revolution in the first place. Their choice of only 2 benchmarks and 2
-platforms makes the evaluation of their autotuner somewhat limited.
-
-\citeauthor{Berkeley2009} targeted 3D stencils code performance
-in~\cite{Berkeley2009}. Stencils are decomposed into core blocks,
-sufficiently small to avoid last level cache capacity misses. These
-are then further decomposed to thread blocks, designed to exploit
-common locality threads may have within a shared cache or local
-memory. Thread blocks are divided into register blocks in order to
-take advantage of data level parallelism provided by the available
-registers. Data allocation is optimised on NUMA systems. The
-performance evaluation considers speedups of various optimisations
-with and without consideration for host/device transfer overhead.
-
-\citeauthor{Kamil2010} present an autotuning framework
-in~\cite{Kamil2010} which accepts as input a Fortran 95 stencil
-expression and generates tuned shared-memory parallel implementations
-in Fortan, C, or CUDA. The system uses an IR to explore autotuning
-transformations, enumerating a subset of the optimisation space and
-recording only a single execution time for each configuration,
-reporting the fastest. They demonstrate their system on 4
-architectures using 3 benchmarks, with speedups of up to $22\times$
-compared to serial implementations. The CUDA code generator does not
-optimise for the GPU memory hierarchy, using only global memory. As
-demonstrated in this thesis, improper utilisation of local memory can
-hinder program performance by two orders of magnitude. There is no
-directed search or cross-program learning.
-
-In~\cite{Zhang2013a}, \citeauthor{Zhang2013a} present a code generator
-and autotuner for 3D Jacobi stencil codes. Using a DSL to express
-kernel functions, the code generator performs substitution from one of
-two CUDA templates to create programs for execution on GPUs. GPU
-programs are parameterised and tuned for block size, block dimensions,
-and whether input data is stored in read only texture memory. This
-creates an optimisation space of up to 200 configurations. In an
-evaluation of 4 benchmarks, the authors report impressive performance
-that is comparable with previous implementations of iterative Jacobi
-stencils on GPUs~\cite{Holewinski2012, Phillips2010}. The dominating
-parameter is shown to be block dimensions, followed by block size,
-then read only memory. The DSL presented in the paper is limited to
-expressing only Jacobi Stencils applications. Critically, their
-autotuner requires a full enumeration of the parameter space for each
-program. Since there is no indication of the compute time required to
-gather this data, it gives the impression that the system would be
-impractical for the needs of general purpose stencil computing. The
-autotuner presented in this thesis overcomes this drawback by learning
-parameter values which transfer to unseen stencils, without the need
-for an expensive tuning phase for each program and architecture.
-% TODO: Depending on results of cross-architecture validation, this
-% last claim may not hold up.
-%
-% The majority of applications tested are memory bound. Does this
-% transfer to computer bound?
-
-In~\cite{Christen2011}, \citeauthor{Christen2011} presentf a DSL for
-expressing stencil codes, a C code generator, and an autotuner for
-exploring the optimisation space of blocking and vectorisation
-strategies. The DSL supports stencil operations on arbitrarily
-high-dimensional grids. The autotuner performs either an exhaustive,
-multi-run Powell search, Nelder Mead, or evolutionary search to find
-optimal parameter values. They evaluate their system on two CPUS and
-one GPU using 6 benchmarks. A comparison of tuning results between
-different GPU architectures would have been welcome, as the results
-presented in this thesis show that devices have different responses to
-optimisation parameters. The authors do not present a ratio of the
-available performance that their system achieves, or how the
-performance of optimisations vary across benchmarks or devices.
-
-A stencil grid can be decomposed into smaller subsections so that
-multiple GPUs can operate on each subsection independently. This
-requires a small overlapping region where each subsection meets ---
-the halo region --- to be shared between devices. For iterative
-stencils, values in the halo region must be synchronised between
-devices after each iteration, leading to costly communication
-overheads. One possible optimisation is to deliberately increase the
-size of the halo region, allowing each device to compute updated
-values for the halo region, instead of requiring a synchronisation of
-shared state. This reduces the communication costs between GPUs, at
-the expense of introducing redundant computation. Tuning the size of
-this halo region is the goal of PARTANS~\cite{Lutz2013}, an autotuning
-framework for multi-GPU stencil computations. \citeauthor{Lutz2013}
-explore the effect of varying the size of the halo regions using six
-benchmark applications, finding that the optimal halo size depends on
-the size of the grid, the number of partitions, and the connection
-mechanism (i.e.\ PCI express). The authors present an autotuner which
-determines problem decomposition and swapping strategy offline, and
-performs an online search for the optimal halo size. The selection of
-overlapping halo region size compliments the selection of workgroup
-size which is the subject of this thesis. However, PARTANS uses a
-custom DSL rather than the generic interface provided by SkelCL, and
-PARTANS does not learn the results of tuning across programs, or
-across multiple runs of the same program.
-
-
-\subsection{Summary}
-
-There is already a wealth of research literature on the topic
-autotuning which begs the question, why isn't the majority of software
-autotuned? In this section I attempted to answer the question by
-reviewing the state of the art in the autotuning literature, with
-specific reference to auotuning for GPUs and stencil codes. The bulk
-of this research falls prey of one of two shortcomings. Either they
-identify and develop a methodology for tuning a particular
-optimisation space but then fail to develop a system which can
-properly exploit this (for example, by using machine learning to
-predict optimal values across programs), or they present an autotuner
-which targets too specific of a class of optimisations to be widely
-applicable. This project attempts to address both of those
-shortcomings by expending great effort to deliver a working
-implementation which users can download and use without any setup
-costs, and by providing a modular and extensible framework which
-allows rapid targeting of new autotuning platforms, enabled by a
-shared autotuning logic and distributed training data. The following
-section outlines the design of this system.
-
-
-\section{OmniTune --- an Extensible, Dynamic Autotuner}\label{sec:autotune}
-
-In previous sections I have advocated the use of machine learning for
-autotuning. In this section, I present OmniTune, a framework for
-extensible, distributed autotuning using machine learning. OmniTune
-provides a replacement for the kinds of ad-hoc tuning typically
-performed by expert programmers by providing runtime prediction of
-tunable parameters using collaborative, online learning of
-optimisation spaces. First I describe the high level overview of the
-approach to autotuning, then I describe the system architecture and
-set of interfaces exposed by Omnitune.
-
-
-\subsection{Predicting Optimisation Parameter Values}
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{img/omnitune-system-flow.pdf}
-\caption[Optimisation parameter selection with OmniTune]{%
-  The process of selecting optimisation parameter values for a given
-  user program with OmniTune.%
-}
-\label{fig:omnitune-system-flow}
-\end{figure}
-
-The goal of machine learning-enabled autotuning is to \emph{predict}
-the values for optimisation parameters to maximise some measure of
-profit. These predictions are based on models built from prior
-observations. The prediction quality is influenced by the number of
-prior observations. OmniTune supports both prediction of parameters
-based on prior observations, and a method for collecting these
-observations. When a client program requests parameter values, it
-indicates whether the request is for training or performance purposes,
-and uses a different backend to select parameter values for each. New
-observations can then be added once parameters have been evaluated.
-Figure~\ref{fig:omnitune-system-flow} shows this process.
-
-
-\subsection{System Architecture and Interface}
-
-\begin{figure}
-\centering
-\includegraphics[width=.9\columnwidth]{img/omnitune-system-overview.pdf}
+\includegraphics[width=.98\columnwidth]{img/omnitune-system-overview.pdf}
 \caption[OmniTune system diagram]{%
-  High level overview of OmniTune components.%
+  OmniTune system architecture, showing the separate components and
+  the one to many relationship between clients, servers, and the
+  remote.%
 }
 \label{fig:omnitune-system-overview}
 \end{figure}
@@ -1755,34 +547,26 @@ training phase is enforced only by the client. The following sections
 describe the interfaces between the three components.
 
 
-\begin{figure}
-\centering
-\includegraphics[width=1.0\columnwidth]{img/omnitune-comms}
-\caption[Communication pattern between OmniTune components]{%
-  An example communication pattern between OmniTune components,
-  showing an offline training phase.%
-}
-\label{fig:omnitune-comms}
-\end{figure}
+\subsection{Interfaces}
 
-
-\subsubsection{Client Interface: Lightweight Communication}
-
-Client applications communicate with an OmniTune server through four
-operations:
+\paragraph{Server Interface} Client applications communicate with an
+OmniTune server through four operations:
 %
 \begin{itemize}
-\item \textsc{Request}$(x) \to p$ Given a set of explanatory variables
-  $x$, request a set of parameter values $p$ to maximise performance.
-\item \textsc{RequestTraining}$(x) \to p$ Given a set of explanatory
-  variables $x$, allow the server to select a set of parameter values
-  $p$ for evaluating their fitness.
-\item \textsc{Submit}$(x, p, y)$ Submit an observed measurement of
-  fitness $y$ of parameters $p$, given explantory variables $x$.
-\item \textsc{Refuse}$(x, p)$ Refuse a set of parameters $p$ given a
-  set of explanatory variables $x$. Once refused, those parameters
-  will not be returned by any subsequent calls to \textsc{Request()}
-  or \textsc{RequestTraining()}.
+\item \textsc{Request}$(x) \to p$\\*Given explanatory variables $x$,
+  request the parameter values $p$ which are expected to provide
+  maximum performance.
+\item \textsc{RequestTraining}$(x) \to p$\\*Given explanatory
+  variables $x$, allow the server to select parameter values $p$ for
+  evaluating their fitness.
+\item \textsc{Submit}$(x, p, y)$\\*Submit an observed measurement of
+  fitness $y$ for parameter values $p$, given explanatory variables
+  $x$.
+\item \textsc{Refuse}$(x, p)$\\*Refuse parameter values $p$, given a
+  set of explanatory variables $x$. Once refused, those parameters are
+  blacklisted and will not be returned by any subsequent calls to
+  \textsc{Request()} or \textsc{RequestTraining()} for the same
+  explanatory variables $x$.
 \end{itemize}
 %
 This set of operations enables the core functionality of an autotuner,
@@ -1790,15 +574,13 @@ while providing flexibility for the client to control how and when
 training data is collected.
 
 
-\subsubsection{Server: Autotuning Engine}
-
-For each autotuning-capable machine, a system-level daemon hosts a
-DBus session bus which client processes communicate with. This daemon
-acts as an intermediate between the training data and the client
-applications, \emph{serving} requests for optimisation parameter
-values. Servers operations are application-specific, so there is a set
-of operations to implement autotuning of each supported optimisation
-target.
+\paragraph{Remote Interface} For each autotuning-capable machine,
+a system-level daemon hosts a DBus session bus which client processes
+communicate with. This daemon acts as an intermediate between the
+training data and the client applications, \emph{serving} requests for
+optimisation parameter values. Servers operations are
+application-specific, so there is a set of operations to implement
+autotuning of each supported optimisation target.
 
 The server is implemented as a standalone Python program, and contains
 a library of machine learning tools to perform parameter prediction,
@@ -1823,14 +605,26 @@ remotes by submitting or requesting training data in batches, using
 two operations:
 %
 \begin{itemize}
-\item \textsc{Push}$(\bf{f}, \bf{c})$ Submit a set of labelled training
-  points as pairs $(f,c)$.
-\item \textsc{Pull}$() \to (\bf{f}, \bf{c})$ Request training data as a
-  set of labelled $(f,c)$ pairs.
+\item \textsc{Push}$(\bf{x}, \bf{p}, \bf{y})$\\*Asynchronously submit
+  training point data, as three lists of features, parameter values,
+  and observed outcomes.
+\item \textsc{Pull}$() \to (\bf{x}, \bf{p}, \bf{y})$\\*Request
+  training data as three lists of features, parameter values, and
+  observed outcomes.
 \end{itemize}
 
+\begin{figure}
+\centering
+\includegraphics[width=1.0\columnwidth]{img/omnitune-comms}
+\caption{%
+  An example communication pattern between OmniTune components,
+  showing an offline training phase.%
+}
+\label{fig:omnitune-comms}
+\end{figure}
 
-\subsubsection{Remote: Distributed Training Data}
+
+% \subsubsection{Remote: Distributed Training Data}
 
 The role of the remote is to provide bookkeeping of training data for
 machine learning. Using the interface described in the previous
@@ -1838,7 +632,21 @@ subsection, remotes allow shared access to data from multiple servers
 using a transactional communication pattern.
 
 
-\subsection{Summary}
+\subsection{Specialising OmniTune}
+
+The goal of machine learning-enabled autotuning is to \emph{predict}
+the values for optimisation parameters to maximise some measure of
+profit. These predictions are based on models built from prior
+observations. The prediction quality is influenced by the number of
+prior observations. OmniTune supports both prediction of parameters
+based on prior observations, and a method for collecting these
+observations. When a client program requests parameter values, it
+indicates whether the request is for training or performance purposes,
+and uses a different backend to select parameter values for each. New
+observations can then be added once parameters have been evaluated.
+Figure~\ref{fig:omnitune-system-flow} shows this process.
+
+% \subsection{Summary}
 
 This section has described the architecture of of OmniTune, a
 distributed autotuner which is capable of performing runtime
@@ -1850,11 +658,20 @@ achieve low latency autotuning, and uses caches and lookup tables to
 minimise the one-off costs of feature extraction.
 
 
+\section{Applying OmniTune to SkelCL}\label{sec:omnitune-skelcl}
 
-\section{Autotuning SkelCL Stencils}\label{sec:omnitune-skelcl}
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{img/omnitune-system-flow.pdf}
+\caption[Optimisation parameter selection with OmniTune]{%
+  The process of selecting optimisation parameter values for a given
+  user program with OmniTune.%
+}
+\label{fig:omnitune-system-flow}
+\end{figure}
 
-In this section I apply the OmniTune framework to SkelCL. The publicly
-available implementation
+In this section I demonstrate the practicality of OmniTune by applying
+the framework to SkelCL. The publicly available implementation
 \footnote{\url{https://github.com/ChrisCummins/omnitune}} predicts
 workgroup sizes for OpenCL stencil skeleton kernels in order to
 minimise their runtime on CPUs and multi-GPU systems. The optimisation
@@ -1915,179 +732,24 @@ than if relying solely on reference applications, reducing the risk of
 overfitting to particular program features.
 
 
-\subsection{Stencil Features}
+\subsection{Features for Machine Learning}
 
+Device features encode the device type (e.g. CPU or GPU, integrated or
+external, connection bus), properties about the host (e.g.\ system
+memory, maximum clock frequency), and numerous properties about the
+execution device (e.g.\ number of compute units, local memory size,
+global caches).
 
-\begin{table}
-  \scriptsize
-  \centering
-  \begin{tabular}{p{5cm}p{1.5cm}}
-    \toprule
-    \textbf{Dataset Features} &         \textbf{Type} \\
-    \midrule
-    Number of columns in matrix & numeric \\
-    Number of rows in matrix & numeric \\
-    Input data type & categorical \\
-    Output data type & categorical \\
-    \bottomrule
-  \end{tabular}
-\caption{OmniTune SkelCL Stencil features for datasets.}
-\label{tab:features-datasets}
-\end{table}
+Program features include per-instruction type densities, the total
+number of basic blocks, and the total instruction count. They are
+extracted using static instruction count passes over an LLVM IR
+compiled version of the user stencil implementation. Compilation to
+bitcode is the most expensive step of the autotuning process, and
+lookup tables are used to cache repeated uses of the same
+implementation, identified by a checksum key.
 
-\begin{table}
-  \scriptsize
-  \centering
-  \begin{tabular}{p{5cm}p{1.5cm}}
-    \toprule
-    \textbf{Kernel Features} &         \textbf{Type} \\
-    \midrule
-    Border region north &      numeric \\
-    Border region south &      numeric \\
-    Border region east &      numeric \\
-    Border region west &      numeric \\
-    Static instruction count &      numeric \\
-    \texttt{AShr} instruction density &      numeric \\
-    \texttt{Add} instruction density &      numeric \\
-    \texttt{Alloca} instruction density &      numeric \\
-    \texttt{And} instruction density &      numeric \\
-    \texttt{Br} instruction density &      numeric \\
-    \texttt{Call} instruction density &      numeric \\
-    \texttt{FAdd} instruction density &      numeric \\
-    \texttt{FCmp} instruction density &      numeric \\
-    \texttt{FDiv} instruction density &      numeric \\
-    \texttt{FMul} instruction density &      numeric \\
-    \texttt{FPExt} instruction density &      numeric \\
-    \texttt{FPToSI} instruction density &      numeric \\
-    \texttt{FSub} instruction density &      numeric \\
-    \texttt{GetElementPtr} instruction density  &      numeric \\
-    \texttt{ICmp} instruction density &      numeric \\
-    \texttt{InsertValue} instruction density &      numeric \\
-    \texttt{Load} instruction density &      numeric \\
-    \texttt{Mul} instruction density &      numeric \\
-    \texttt{Or} instruction density &      numeric \\
-    \texttt{PHI} instruction density &      numeric \\
-    \texttt{Ret} instruction density &      numeric \\
-    \texttt{SDiv} instruction density &      numeric \\
-    \texttt{SExt} instruction density &      numeric \\
-    \texttt{SIToFP} instruction density &      numeric \\
-    \texttt{SRem} instruction density &      numeric \\
-    \texttt{Select} instruction density &      numeric \\
-    \texttt{Shl} instruction density &      numeric \\
-    \texttt{Store} instruction density &      numeric \\
-    \texttt{Sub} instruction density &      numeric \\
-    \texttt{Trunc} instruction density &      numeric \\
-    \texttt{UDiv} instruction density &      numeric \\
-    \texttt{Xor} instruction density &      numeric \\
-    \texttt{ZExt} instruction density &      numeric \\
-    Basic block density & numeric \\
-    Memory instruction density & numeric \\
-    Non external functions density &      numeric \\
-    Kernel max workgroup size &      numeric \\
-    \bottomrule
-  \end{tabular}
-\caption{OmniTune SkelCL Stencil features for kernels.}
-\label{tab:features-kernels}
-\end{table}
-
-\begin{table}
-  \scriptsize
-  \centering
-  \begin{tabular}{p{5cm}p{1.5cm}}
-    \toprule
-    \textbf{Device Features} &         \textbf{Type} \\
-    \midrule
-    SkelCL device count &      numeric \\
-    Device address width &  categorical \\
-    Double precision fp.\ configuration &  categorical \\
-    Big endian? &  categorical \\
-    Execution capabilities &  categorical \\
-    Supported extensions &  categorical \\
-    Global memory cache size &  numeric \\
-    Global memory cache size &      categorical \\
-    Global memory cacheline size &      numeric \\
-    Global memory size &  numeric \\
-    Host unified memory? &      categorical \\
-    2D image max height &      numeric \\
-    2D image max width &      numeric \\
-    3D image max depth &      numeric \\
-    3D image max height &      numeric \\
-    3D image max width &  numeric \\
-    Image support &      categorical \\
-    Local memory size &  numeric \\
-    Local memory type &      categorical \\
-    Max clock frequency &      numeric \\
-    Number of compute units &      numeric \\
-    Max kernel constant args &      numeric \\
-    Max constant buffer size &      numeric \\
-    Max memory allocation size &      numeric \\
-    Max parameter size &      numeric \\
-    Max read image arguments &      numeric \\
-    Max samplers &      numeric \\
-    Max device workgroup size &      numeric \\
-    Max workitem dimensions &      numeric \\
-    Max work item sizes width &      numeric \\
-    Max work item sizes height &      numeric \\
-    Max work item sizes depth &      numeric \\
-    Max write image arguments &      numeric \\
-    Mem base address align &      numeric \\
-    Min data type align size &      numeric \\
-    Native vector width \texttt{char} &      numeric \\
-    Native vector width \texttt{double} &      numeric \\
-    Native vector width \texttt{float} &      numeric \\
-    Native vector width \texttt{half} &      numeric \\
-    Native vector width \texttt{int} &      numeric \\
-    Native vector width \texttt{long} &      numeric \\
-    Native vector width \texttt{short} &      numeric \\
-    Preferred vector width \texttt{char} &      numeric \\
-    Preferred vector width \texttt{double} &      numeric \\
-    Preferred vector width \texttt{float} &      numeric \\
-    Preferred vector width \texttt{half} &      numeric \\
-    Preferred vector width \texttt{int} &      numeric \\
-    Preferred vector width \texttt{long} &      numeric \\
-    Preferred vector width \texttt{short} &  categorical \\
-    Queue properties &  categorical \\
-    Single precision fp.\ configuration &  categorical \\
-    Device type &      categorical \\
-    OpenCL vendor &  categorical \\
-    OpenCL vendor ID &  categorical \\
-    OpenCL version &  categorical \\
-    \bottomrule
-  \end{tabular}
-\caption{OmniTune SkelCL Stencil features for devices.}
-\label{tab:features-devices}
-\end{table}
-
-
-Properties of the architecture, program, and dataset all contribute to
-the performance of a workgroup size. The success of a machine learning
-system depends on the ability to translate these properties into
-meaningful explanatory variables --- \emph{features}. To capture this
-in OmniTune, parameter requests are packed with a copy of the OpenCL
-kernel and attributes of the dataset and device. The OmniTune server
-extracts 102 features describing hte architecture, kernel, and dataset
-from the message:
-%
-\begin{itemize}
-\item \textbf{Device} --- OmniTune uses the OpenCL
-  \texttt{clGetDeviceInfo()} API to query a number of properties about
-  the target execution device. Examples include the size of local
-  memory, maximum work group size, number of compute units, etc.
-\item \textbf{Kernel} --- The user code for a stencil is passed to the
-  OmniTune server, which compiles the OpenCL kernel to LLVM IR
-  bitcode. The \texttt{opt} \texttt{InstCount} statistics pass is used
-  to obtain static counts for each type of instruction present in the
-  kernel, as well as the total number of instructions. The instruction
-  counts for each type are divided by the total number of instructions
-  to produce a \emph{density} of instruction for that type. Examples
-  include total static instruction count, ratio of instructions per
-  type, ratio of basic blocks per instruction, etc.
-\item \textbf{Dataset} --- The SkelCL container type is used to
-  extract the input and output data types, and the 2D grid size.
-\end{itemize}
-%
-See Tables~\ref{tab:features-datasets},~\ref{tab:features-kernels},
-and~\ref{tab:features-devices} for a list of feature names and types.
+Dataset features include the data type and dimensions of the SkelCL
+container type.
 
 
 \subsubsection{Reducing Feature Extraction Overhead}
@@ -2283,84 +945,9 @@ select a legal workgroup size:
   from prior observations is known to be legal, and has the lowest
   Euclidian distance to the prediction.
 \end{enumerate}
-%
-See Algorithm~\ref{alg:autotune-classification} for definitions.
 
-\begin{algorithm}
-\begin{algorithmic}[1]
-\Require scenario $s$
-$d$.
-\Ensure workgroup size $w$
-
-\Procedure{Baseline}{s}
-\Comment Select the best $w$ from $W_{safe}$.
-\State $w \leftarrow \text{classify}(f(s))$
-\If{$w \in W_{legal}(s)$}
-    \State \textbf{return} $w$
-\Else
-  \State \textbf{return} $\underset{w \in W_{safe}}{\argmax}
-\left(
-  \prod_{s \in S_{training}} p(s, w)
-\right)^{1/|S_{training}|}$
-\EndIf
-\EndProcedure
-\item[] % line break
-
-\Procedure{Random}{s}
-\Comment Select a random workgroup size.
-\State $w \leftarrow \text{classify}(f(s))$
-\While{$w \not\in W_{legal}(s)$}
-  \State $w \leftarrow $ random selection $w \in \left\{ w | w < W_{max}(s), w \not\in W_{refused}(s) \right\}$
-\EndWhile
-\State \textbf{return} $w$
-\EndProcedure
-\item[] % line break
-
-\Procedure{NearestNeighbour}{s}
-\Comment Select the closest workgroup size to prediction.
-\State $w \leftarrow \text{classify}(f(s))$
-\While{$w \not\in W_{legal}(s)$}
-  \State $d_{min} \leftarrow \infty$
-  \State $w_{closest} \leftarrow \text{null}$
-  \For{$c \in \left\{ w | w < W_{\max}(s), w \not\in W_{refused}(s) \right\}$}
-    \State $d \leftarrow \sqrt{\left(c_r - w_r\right)^2 + \left(c_c - w_c\right)^2}$
-    \If{$d < d_{min}$}
-      \State $d_{min} \leftarrow d$
-      \State $w_{closest} \leftarrow c$
-    \EndIf
-  \EndFor
-  \State $w \leftarrow w_{closest}$
-\EndWhile
-\State \textbf{return} $w$
-\EndProcedure
-\end{algorithmic}
-\caption{Selecting optimal workgroup sizes using classification}
-\label{alg:autotune-classification}
-\end{algorithm}
 
 \subsubsection{Predicting Stencil Code Runtime}
-
-\begin{algorithm}
-\begin{algorithmic}[1]
-\Require kernel features $k$, hardware features $h$, dataset features
-$d$.
-\Ensure workgroup size $w$
-
-\State $W \leftarrow \left\{ w | w < W_{\max}(s) \right\} - W_{refused}(s)$
-\Comment Set of possible workgroup sizes.
-\State $w \leftarrow \underset{w \in W}{\argmin} g(f(s), w)$
-\Comment Predict candidate workgroup size.
-\While{$w \not\in W_{legal}(s)$}
-  \State $W \leftarrow W - \left\{ w \right\}$
-  \Comment Remove candidate from set.
-  \State $w \leftarrow \underset{w \in W}{\argmin} g(f(s), w)$
-  \Comment Select next candidate workgroup size.
-\EndWhile
-\State \textbf{return} $w$
-\end{algorithmic}
-\caption{Selecting workgroup sizes by predicting program runtimes}
-\label{alg:autotune-runtime-regression}
-\end{algorithm}
 
 A problem of predicting oracle workgroup sizes is that it requires
 each training point to be labelled with the oracle workgroup size
@@ -2390,28 +977,6 @@ this process.
 
 \subsubsection{Predicting Relative Performance of Workgroup Sizes}
 
-\begin{algorithm}
-\begin{algorithmic}[1]
-\Require kernel features $k$, hardware features $h$, dataset features
-$d$, baseline $w_b$.
-\Ensure workgroup size $w$
-
-\State $W \leftarrow \left\{ w | w < W_{\max}(s) \right\} - W_{refused}(s)$
-\Comment Set of possible workgroup sizes.
-\State $w \leftarrow \underset{w \in W}{\argmax} g(f(s), w,w_b)$
-\Comment Predict candidate workgroup size.
-\While{$w \not\in W_{legal}(s)$}
-  \State $W \leftarrow W - \left\{ w \right\}$
-  \Comment Remove candidate from set.
-  \State $w \leftarrow \underset{w \in W}{\argmax} g(f(s), w,w_b)$
-  \Comment Select next candidate workgroup size.
-\EndWhile
-\State \textbf{return} $w$
-\end{algorithmic}
-\caption{Selecting workgroup sizes by predicting relative performance}
-\label{alg:autotune-speedup-regression}
-\end{algorithm}
-
 Accurately predicting the runtime of an arbitrary program is a
 difficult problem due to the impacts of flow control. In such cases,
 it may be more effective to instead predict the \emph{relative}
@@ -2431,7 +996,23 @@ Algorithm~\ref{alg:autotune-speedup-regression} for a description of
 this process.
 
 
-\subsection{Implementation}
+\subsection{Summary}
+
+This section has described has the application of OmniTune for
+predicting workgroup sizes of SkelCL stencil programs, using three
+different machine learning approaches. The first approach is to
+predict the optimal workgroup size for a given program based on
+training data which included the optimal workgroup sizes for other
+stencils. The second approach is to select a workgroup sizex by
+sweeping the space of possible workgroup sizes, predicting the runtime
+a program with each. The third approach is to select a workgroup size
+by sweeping the space of possible workgroup sizes, predicting the
+relative gain of each compared to a known baseline. In the next
+section, we will describe the process for collecting empirical
+performance data.
+
+
+\section{Methodology}
 
 The OmniTune framework is implemented as a set of Python classes and
 interfaces, which are inherited from or implemented to target specific
@@ -2456,38 +1037,6 @@ Decision tree, and Random Forest. For regression, a Random Forest with
 regression trees is used, chosen because of its efficient handling of
 large feature sets, compared to linear models.
 
-\begin{figure}
-\centering
-\includegraphics[width=.95\columnwidth]{img/omnitune-data-schema.pdf}
-\caption[Database schema for storing performance results]{%
-  Database schema for storing SkelCL stencil runtimes. Feature lookup
-  tables and normalisation are used to provide extremely compact
-  storage, requiring only 56 bytes for each additional runtime of a
-  known stencil program.%
-}
-\label{fig:omnitune-system-flow}
-\end{figure}
-
-
-\subsection{Summary}
-
-This section has described has the application of OmniTune for
-predicting workgroup sizes of SkelCL stencil programs, using three
-different machine learning approaches. The first approach is to
-predict the optimal workgroup size for a given program based on
-training data which included the optimal workgroup sizes for other
-stencils. The second approach is to select a workgroup sizex by
-sweeping the space of possible workgroup sizes, predicting the runtime
-a program with each. The third approach is to select a workgroup size
-by sweeping the space of possible workgroup sizes, predicting the
-relative gain of each compared to a known baseline. In the next
-section, we will describe the process for collecting empirical
-performance data.
-
-
-
-\section{Methodology}\label{sec:methodology}
-
 This section describes an exhaustive enumeration of the workgroup size
 optimisation space for 429 combinations of architecture, program, and
 dataset. It contains the methodology used to collect empirical
@@ -2495,309 +1044,93 @@ performance data on which to base performance comparisons of different
 workgroup sizes, and the steps necessary to obtain repeatable results.
 
 
-\subsection{Experimental Setup}
+\section{Experimental Setup}
 
-\begin{table}
-\scriptsize
-\centering
-\begin{tabular}{lllp{.95cm}}
-\toprule
-  Processor & Memory & OpenCL Devices & OpenCL Version \\
-\midrule
-  Intel i7-2600 &   8 GB &                Nvidia GTX TITAN &  1.1 \\
- Intel i7-2600K &  16 GB &                  Nvidia GTX 690 &  1.1 \\
-  Intel i7-3820 &   8 GB &         $4\times$Nvidia GTX 590 &  1.1 \\
-  Intel i7-3820 &   8 GB &   CPU, $2\times$AMD Tahiti 7970 &  1.2 \\
-  Intel i5-4570 &   8 GB &                             CPU &  1.2 \\
- Intel i5-2430M &   8 GB &                             CPU &  1.2 \\
-\bottomrule
-\end{tabular}
-\caption[Specification of experimental platforms]{%
-  Specification of experimental platforms.%
-}
-\label{tab:hosts}
-\end{table}
-
-Table~\ref{tab:hosts} describes the experimental platforms used.  All
-runtimes were recorded with millisecond precision using either the
-system clock or OpenCL's Profiling API. Measurement noise was
-minimised by reducing system load through disabling all unwanted
-services and graphical environments, and exclusive single-user access
-was ensured for each platform. Frequency governors for each CPU were
-disabled, and the benchmark processes were set to the highest priority
-available to the task scheduler. Datasets and programs were stored in
-an in-memory file system.
-
-\subsubsection{Devices}
 
 \begin{table*}
 \scriptsize
 \centering
-\begin{tabular}{lp{1cm}lp{1.2cm}p{1cm}p{1.3cm}}
+\begin{tabular}{l r | l r r r r r}
 \toprule
-             Name &  Compute units & Frequency & Local Memory & Global Cache & Global Memory \\
+Host & Host Memory &  OpenCL Device &  Compute units & Frequency & Local Memory & Global Cache & Global Memory \\
 \midrule
-  AMD Tahiti 7970 &             32 &   1000 Hz &        32 KB &        16 KB &       2959 MB \\
-   Intel i5-2430M &              4 &   2400 Hz &        32 KB &       256 KB &       7937 MB \\
-    Intel i5-4570 &              4 &   3200 Hz &        32 KB &       256 KB &       7901 MB \\
-    Intel i7-3820 &              8 &   1200 Hz &        32 KB &        32 KB &       7944 MB \\
-   Nvidia GTX 590 &              1 &   1215 Hz &        48 KB &       256 KB &       1536 MB \\
-   Nvidia GTX 690 &              8 &   1019 Hz &        48 KB &       128 KB &       2048 MB \\
- Nvidia GTX TITAN &             14 &    980 Hz &        48 KB &       224 KB &       6144 MB \\
+Intel i5-2430M & 8 GB  & CPU              &              4 &   2400 Hz &        32 KB &       256 KB &       7937 MB \\
+Intel i5-4570  & 8 GB  & CPU              &              4 &   3200 Hz &        32 KB &       256 KB &       7901 MB \\
+Intel i7-3820  & 8 GB  & CPU              &              8 &   1200 Hz &        32 KB &       256 KB &       7944 MB \\
+Intel i7-3820  & 8 GB  & AMD Tahiti 7970  &             32 &   1000 Hz &        32 KB &        16 KB &       2959 MB \\
+Intel i7-3820  & 8 GB  & Nvidia GTX 590   &              1 &   1215 Hz &        48 KB &       256 KB &       1536 MB \\
+Intel i7-2600K & 16 GB & Nvidia GTX 690   &              8 &   1019 Hz &        48 KB &       128 KB &       2048 MB \\
+Intel i7-2600  & 8 GB  & Nvidia GTX TITAN &             14 &    980 Hz &        48 KB &       224 KB &       6144 MB \\
 \bottomrule
 \end{tabular}
-\caption[Specification of experimental OpenCL devices]{%
-  Specification of experimental OpenCL devices.%
-}
+\caption{Specification of experimental platforms and OpenCL devices.}
 \label{tab:hw}
 \end{table*}
 
-Table~\ref{tab:hw} describes the OpenCL devices used for testing, as
-available on the experimental platforms.
+Intel i5-2430M, Intel i5-4570, i7-3820, AMD Tahiti 7970, Nvidia GTX
+590, Nvidia GTX 690, Nvidia GTX TITAN.
 
-\subsubsection{Benchmark Applications}
-
-In addition to the synthetic stencil benchmarks described in
-Subsection~\ref{subsec:training}, six stencil kernels taken from four
-reference implementations of standard stencil applications from the
-fields of image processing, cellular automata, and partial
-differential equation solvers are used:
-%
-\begin{itemize}
-\item \textbf{Game of Life} Conway's Game of Life~\cite{Conway1970} is
-  a cellular automaton which models the evolution of a regular grid of
-  cells over discrete time steps. At each time step, each cell value
-  is updated to be either \emph{live} or \emph{dead} based on it's
-  current state and the state of the one immediately neighbouring cell
-  to the north, south, east, and west.
-\item \textbf{Heat Equation} The heat equation is a partial
-  differential equation which describes the distribution of heat in a
-  given region over time. Each iteration of the stencil represents a
-  discrete time step, and the value of each cell (i.e.\ the
-  temperature) is smoothed based on the temperatures of surrounding
-  cells and the thermal conductivity of the material being simulated.
-\item \textbf{Gaussian Blur} The Gaussian blur is a common image
-  processing algorithm, used to reduce noise and detail in an image. A
-  two dimensional Gaussian blur defines a function to compute a pixel
-  value based on the value of neighbouring pixels. Gaussian blurs are
-  parameterised by a radius which define symmetric, square stencil
-  regions about the centre pixel. Unlike the previous two
-  applications, the Gaussian blur is not an iterative stencil.
-\item \textbf{Canny Edge Detection} The Canny edge detection algorithm
-  is a multi-stage approach to detecting edges in
-  images~\cite{Canny1986}. It consists of four distinct stages: a
-  noise reduction operation, an edge detection operation, a
-  non-maximum suppression, and a threshold operation. Each step is
-  implemented as a separate SkelCL stencil and combined into a SkelCL
-  StencilSequence.
-\end{itemize}
-%
-Table~\ref{tab:kernels} shows details of the stencils kernels for
-these reference applications, and the synthetic training benchmarks
-used.
+Table~\ref{tab:hw} describes the experimental platforms and OpenCL
+devices used. Each platform was unloaded, frequency governors
+disabled, and benchmark processes set to the highest priority
+available to the task scheduler. Datasets and programs were stored in
+an in-memory file system. All runtimes were recorded with millisecond
+precision using OpenCL's Profiling API to record the kernel execution
+time. The workgroup size space was enumerated for each combination of
+$w_r$ and $w_c$ values in multiples of 2, up to the maximum workgroup
+size. For each combination of scenario and workgroup size, a minimum
+of 30 samples were recorded.
 
 \begin{table}
 \scriptsize
 \centering
-\begin{tabular}{lrrrrp{1.3cm}}
+\begin{tabular}{lrrrrR{1.4cm}}
 \toprule
       Name &  North &  South &  East &  West &  Instruction Count \\
 \midrule
-   % complex &     30 &     30 &    30 &    30 &                161 \\
-   % complex &      1 &     10 &    30 &    30 &                681 \\
-   % complex &     20 &     10 &    20 &    10 &                161 \\
-   % complex &      5 &      5 &     5 &     5 &                734 \\
-   % complex &      5 &      5 &     5 &     5 &                161 \\
-   % complex &      1 &     10 &    30 &    30 &                154 \\
-   % complex &     10 &     10 &    10 &    10 &                161 \\
-   % complex &     20 &     20 &    20 &    20 &                706 \\
-   % complex &      1 &      1 &     1 &     1 &                137 \\
-   % complex &     20 &     10 &    20 &    10 &                706 \\
-   % complex &      1 &      1 &     1 &     1 &                661 \\
-   % complex &     10 &     10 &    10 &    10 &                794 \\
-   % complex &     30 &     30 &    30 &    30 &                706 \\
-   % complex &     20 &     20 &    20 &    20 &                161 \\
-   %  simple &      5 &      5 &     5 &     5 &                 67 \\
-   %  simple &     20 &     10 &    20 &    10 &                612 \\
-   %  simple &     20 &     20 &    20 &    20 &                612 \\
-   %  simple &      1 &     10 &    30 &    30 &                592 \\
-   %  simple &     10 &     10 &    10 &    10 &                700 \\
-   %  simple &     30 &     30 &    30 &    30 &                612 \\
-   %  simple &      1 &      1 &     1 &     1 &                 93 \\
-   %  simple &     30 &     30 &    30 &    30 &                 67 \\
-   %  simple &     20 &     10 &    20 &    10 &                 67 \\
-   %  simple &      5 &      5 &     5 &     5 &                640 \\
-   %  simple &     20 &     20 &    20 &    20 &                 67 \\
-   %  simple &     10 &     10 &    10 &    10 &                 67 \\
-   %  simple &      0 &      0 &     0 &     0 &                 40 \\
-   %  simple &      1 &     10 &    30 &    30 &                 65 \\
-   %  simple &      1 &      1 &     1 &     1 &                617 \\
    synthetic-a & 1--30 & 1--30 & 1--30 & 1--30 & 67--137\\
    synthetic-b & 1--30 & 1--30 & 1--30 & 1--30 & 592--706\\
-   gaussian &      1--10 &      1--10 &     1--10 &     1--10 & 82--83 \\
-  % gaussian &      5 &      5 &     5 &     5 &                655 \\
-  % gaussian &      5 &      5 &     5 &     5 &                657 \\
-  % gaussian &      0 &      0 &     0 &     0 &                 46 \\
-  % gaussian &      5 &      5 &     5 &     5 &                 82 \\
-  % gol &      1 &      1 &     1 &     1 &                714 \\
-   gol &      1 &      1 &     1 &     1 &                190 \\
-   he  &      1 &      1 &     1 &     1 &                113 \\
-% he &      1 &      1 &     1 &     1 &                637 \\
-%nms &      1 &      1 &     1 &     1 &                748 \\
-   nms &      1 &      1 &     1 &     1 &                224 \\
-%     sobel &      1 &      1 &     1 &     1 &               1008 \\
-   sobel &      1 &      1 &     1 &     1 &                246 \\
-% threshold &      0 &      0 &     0 &     0 &                 16 \\
-   threshold &      0 &      0 &     0 &     0 &                 46 \\
+   gaussian    & 1--10 & 1--10 & 1--10 & 1--10 & 82--83 \\
+   gol         &      1 &      1 &     1 &     1 &                190 \\
+   he          &      1 &      1 &     1 &     1 &                113 \\
+   nms         &      1 &      1 &     1 &     1 &                224 \\
+   sobel       &      1 &      1 &     1 &     1 &                246 \\
+   threshold   &      0 &      0 &     0 &     0 &                 46 \\
 \bottomrule
 \end{tabular}
-\caption[Description of stencil kernels]{%
+\caption{%
   Stencil kernels, border sizes (north, south, east, and west),
   and static instruction counts.
 }
 \label{tab:kernels}
 \end{table}
 
+In addition to the synthetic stencil benchmarks described in
+Section~\ref{subsec:training}, six stencil kernels taken from four
+reference implementations of standard stencil applications from the
+fields of image processing, cellular automata, and partial
+differential equation solvers are used: Canny Edge Detection, Conway's
+Game of Life, Heat Equation, and Gaussian
+Blur. Table~\ref{tab:kernels} shows details of the stencil kernels for
+these reference applications and the synthetic training benchmarks
+used. Dataset sizes of size $512\times512$, $1024\times1024$,
+$2048\times2048$, and $4096\times4096$ were used.
 
-\subsubsection{Datasets}
-
-For each benchmark, multiple dataset sizes were used, as shown in
-table~\ref{tab:datasets}.
-
-\begin{table}
-\scriptsize
-\centering
-\begin{tabular}{rrll}
-\toprule
- Width &  Height & Type in & Type out \\
-\midrule
-   512 &     512 &   float &    float \\
-  1024 &    1024 &   float &    float \\
-  2048 &    2048 &   float &    float \\
-  4096 &    4096 &   float &    float \\
-  4096 &    4096 &     int &      int \\
-\bottomrule
-\end{tabular}
-\caption[Description of experimental datasets]{%
-  Description of experimental datasets.%
-}
-\label{tab:datasets}
-\end{table}
-
-
-\subsubsection{Sampling Strategy}\label{subsec:sampling}
-
-The number of ``moving parts'' in the modern software stack provides
-multiple sources of noise when measuring program execution times. As
-such, evaluating the relative performance of different versions of
-programs requires a judicious approach to isolate the appropriate
-performance metrics and to take a statistically rigorous approach to
-collecting data.
-
-\paragraph{Isolating the Impact of Workgroup Size}
-
-\begin{table}
-\begin{tabular}{llll}
-\toprule
-          &                                      Description &    Type &       Cost \\
-\midrule
- $\bm{c}$ &                         Kernel compilation times &    Host &      Fixed \\
- $\bm{p}$ &                           Skeleton prepare times &    Host &      Fixed \\
- $\bm{u}$ &              Host $\rightarrow$ Device transfers &  Device &      Fixed \\
- $\bm{k}$ &                           Kernel execution times &  Device &  Iterative \\
- $\bm{d}$ &              Device $\rightarrow$ Host transfers &  Device &      Fixed \\
- $\bm{s}$ &  Devices $\leftrightarrow$ Host (sync) transfers &    Host &  Iterative \\
-\bottomrule
-\end{tabular}
-\caption[SkelCL stencil execution phases]{%
-  Execution phases of a SkelCL stencil skeleton. ``Fixed''
-  costs are those which occur up to once per stencil
-  invocation. ``Iterative'' costs are those which scale with the
-  number of iterations of a stencil.%
-}
-\label{tab:stencil-runtime-components}
-\end{table}
-
-The execution of a SkelCL stencil application can be divided into 6
-distinct phases, shown in Table~\ref{tab:stencil-runtime-components}.
-%
-\begin{itemize}
-\item \textbf{Kernel compilation times} Upon invocation, template
-  substitution is performed of the user code into the stencil skeleton
-  implementation, then compiled into an OpenCL program. Once compiled,
-  the program binary is cached for the lifetime of the host program.
-\item \textbf{Skeleton preparation times} Before a kernel is executed,
-  a preparation phase is required to allocate buffers for the input
-  and output data on each execution device.
-\item \textbf{Host $\rightarrow$ Device and Device $\rightarrow$ Host
-    transfer times} Data must be copied to and from the execution
-  devices before and after execution of the stencils,
-  respectively. Note that this is performed lazily, so iterative
-  stencils do not require repeated transfers between host and device
-  memory.
-\item \textbf{Kernel execution times} This is the time elapsed
-  executing the stencil kernel, and is representative of ``work
-  done''.
-\item \textbf{Devices $\leftrightarrow$ Host (sync) transfer times}
-  For iterative stencils on multiple execution devices, an overlapping
-  halo region is shared at the border between the devices' grids. This
-  must be synchronised between iterations, requiring an intermediate
-  transfer to host memory, since device to device memory is not
-  currently supported by OpenCL.
-\end{itemize}
-%
-For each of the six distinct phases of execution, accurate runtime
-information can be gathered either through timers embedded in the host
-code, or using the OpenCL \texttt{clGetEventProfilingInfo()} API for
-operations on the execution devices. For single-device stencils, the
-total time $t$ of a SkelCL stencil application is simply the sum of
-all times recorded for each distinct phase:
-%
-\begin{equation}
-t = \bm{1c^T} + \bm{1p^T} + \bm{1u^T} + \bm{1k^T} + \bm{1d^T}
-\end{equation}
-%
-Note that there are no synchronisation costs $s$. For applications
-with $n$ execution devices, the runtime can be approximate as the sum
-of the sequential host-side phases, and the sum of the device-side
-phases divided by the number of devices:
-%
-\begin{equation}
-t \approx \sum_{i=1}^n{(\bm{1c^T}_{i})} + \bm{1p^T} + \bm{1s^T} +
-  \frac{\sum_{i=1}^n{\bm{1u^T}_{i} + \bm{1k^T}_{i} + \bm{1d^T}_{i}}}{n}
-\end{equation}
-%
-The purpose of tuning workgroup size is to maximise the throughput of
-stencil kernels. For this reason, isolating the kernel execution times
-$\bm{k}$ produces the most accurate performance comparisons, as it
-removes the impact of constant overheads introduced by memory
-transfers between host and device memory, for which the selection of
-workgroup size has no influence. Note that as demonstrated
-in~\cite{Gregg2011}, care must be taken to ensure that isolating
-device compute time does not cause misleading comparisons to be made
-between devices. For example, if using an autotuner to determine
-whether execution of a given stencil is faster on a CPU or GPU, the
-device transfer times $\bm{u}$, $\bm{d}$, and $\bm{s}$ would need to
-be considered. For our purposes, we do not need to consider the
-location of the data in the system's memory as it is has no bearing on
-the execution time of a stencil kernel.
-
-
-\paragraph{Validating Program Behaviour}
-
-Gold standard output was recorded by executing each of the real-world
+Program behavior is validated by comparing program output against a
+gold standard output collected by executing each of the real-world
 benchmarks programs using the baseline workgroup size. The output of
-real-world benchmarks with other workgroup sizes was compared to this
-gold standard output to guarantee correct program execution.
+real-world benchmarks with other workgroup sizes is compared to this
+gold standard output to test for correct program execution.
 
-
-\subsection{Summary}
-
-This subsection describes the methodology for collecting relative
-performance data of SkelCL stencil benchmarks under different
-combinations of architecture, program, dataset, and workgroup size.
-The next section evaluates these performance results, and analyses the
-performance of OmniTune at predicting workgroup sizes.
+Five different classification algorithms are used to predict oracle
+workgroup sizes, chosen for their contrasting properties: Naive Bayes,
+SMO, Logistic Regression, J48 Decision tree, and Random
+Forest~\cite{Han2011}. For regression, a Random Forest with regression
+trees is used, chosen because of its efficient handling of large
+feature sets compared to linear models~\cite{Breiman1999}. The
+autotuning system is implemented in Python as a system daemon. SkelCL
+stencil programs request workgroup sizes from this daemon, which
+performs feature extraction and classification.
 
 
 \section{Evaluation}\label{sec:evaluation}
@@ -3019,35 +1352,6 @@ $w_{(64 \times 4)} \not\in W_{safe}$.
 
 \subsubsection{Workgroup Size Legality}
 
-\begin{figure}
-\begin{subfigure}[t]{0.98\columnwidth}
-\centering
-\includegraphics[width=\columnwidth]{img/oracle_param_space.pdf}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:oracle-wgsizes}
-\end{subfigure}
-\\
-\begin{subfigure}[t]{0.98\columnwidth}
-\centering
-\includegraphics[width=\columnwidth]{img/coverage_space.pdf}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:coverage}
-\end{subfigure}
-\caption[Workgroup size legality and optimality]{%
-  Log frequency counts for: (\subref{fig:oracle-wgsizes}) optimality,
-  and (\subref{fig:coverage}) legality for a subset of the aggregated
-  workgroup size optimisation space, $w_c \le 100, w_r \le 100$. The
-  space of oracle workgroup size frequencies is highly irregular and
-  uneven, with a peak frequency of $w_{(64 \times 4)}$. Legality
-  frequencies are highest for smaller row and column counts (where
-  $w < W_{\max}(s) \forall s \in S$), and $w_c$ and $w_r$ values which
-  are multiples of 8.%
-}
-\label{fig:heatmaps}
-\end{figure}
-
 As explained in Subsection~\ref{subsec:op-params}, the space of legal
 workgroup sizes $W_{legal}(s)$ for a given scenario $s$ comprises all
 workgroup sizes which: do not exceed the maximum allowed by the OpenCL
@@ -3055,25 +1359,6 @@ device and kernel $W_{\max}(s)$, and are not refused by the OpenCL
 runtime.
 
 \paragraph{Maximum workgroup sizes}
-
-\begin{figure}
-  \centering
-  \includegraphics[width=\columnwidth]{img/max_wgsizes.pdf}
-  \vspace{-1.5em} % Shrink vertical padding
-  \caption[Workgroup size coverage]{%
-    A subset of the aggregated workgroup size optimisation space,
-    $w_c \le 100, w_r \le 100$, showing the \emph{coverage} of each
-    workgroup size, i.e.\ the ratio of scenarios for which a workgroup
-    size satisfies architecture and kernel enforced constraints
-    ($W_{\max}(s)$). Workgroup sizes with a coverage of $< 1$ fail to
-    satisfy these constraints for one or more scenarios. Only
-    workgroup sizes with a coverage of 1 may be used for static
-    tuning, which greatly reduces the size of the optimisation
-    space. Observed $W_{\max}(s)$ values are multiples of 256, hence
-    the abrupt ``steps'' in coverage.%
-  }
-\label{fig:max-wgsizes}
-\end{figure}
 
 We define the \emph{coverage} of a workgroup size to be the ratio
 $0 \le x \le 1$ between the number of scenarios for which the
@@ -3094,85 +1379,6 @@ the optimisation space when $W_{\max}(s) = 8192$, even though only
 
 % Size of optimisation space for Wmax =  256: 273
 % Size of optimisation space for Wmax = 8192: 15925
-
-\paragraph{Refused Parameters}
-
-\begin{table}
-\parbox{.45\linewidth}{
-  \centering
-  \scriptsize
-  \begin{tabular}{lr}
-    \toprule
-    Parameter &  Refused (\%) \\
-    \midrule
-    $18 \times 24$ &          0.32 \\
-    $26 \times 16$ &          0.31 \\
-    $28 \times 32$ &          0.31 \\
-    $4 \times 2$ &          0.31 \\
-    $16 \times 14$ &          0.30 \\
-    $14 \times 40$ &          0.30 \\
-    $24 \times 36$ &          0.30 \\
-    $36 \times 24$ &          0.30 \\
-    $4 \times 26$ &          0.30 \\
-    $4 \times 6$ &          0.30 \\
-    \bottomrule
-  \end{tabular}
-}
-\hfill
-\parbox{.45\linewidth}{
-  \centering
-  \scriptsize
-  \begin{tabular}{lr}
-    \toprule
-    Parameter &  Refused (\%) \\
-    \midrule
-    $8 \times 18$ &          0.30 \\
-    $8 \times 22$ &          0.30 \\
-    $14 \times 48$ &          0.29 \\
-    $28 \times 24$ &          0.29 \\
-    $30 \times 8$ &          0.29 \\
-    $48 \times 14$ &          0.29 \\
-    $8 \times 10$ &          0.29 \\
-    $10 \times 8$ &          0.28 \\
-    $24 \times 18$ &          0.28 \\
-    $26 \times 32$ &          0.28 \\
-    \bottomrule
-  \end{tabular}
-}
-\caption[Workgroup sizes most frequently refused]{%
-  The twenty most refused parameters, ranked in descending
-  order. There is little correlation between the size of workgroup and the
-  likelihood that it is refused, suggesting that the cause of refused
-  parameters is not a resource constraint, but a behavioural issue.%
-}
-\label{tab:top-refused-params}
-\end{table}
-
-\begin{figure*}
-  \centering
-  \begin{subfigure}[h]{.45\textwidth}
-    \centering
-    \includegraphics[width=.8\textwidth]{img/refused_params_by_device}
-    \caption{}
-    \label{fig:refused-params-by-device}
-  \end{subfigure}
-  ~%
-  \begin{subfigure}[h]{.45\textwidth}
-    \centering
-    \includegraphics[width=.8\textwidth]{img/refused_params_by_vendor}
-    \caption{}
-    \label{fig:refused-params-by-vendor}
-  \end{subfigure}
-  \caption[Refused workgroup sizes by device and vendor]{%
-    The ratio of test cases with refused workgroup sizes, grouped by:
-    (\subref{fig:refused-params-by-device}) OpenCL device ID;\
-    (\subref{fig:refused-params-by-vendor}) device vendor ID. Parameters
-    were refused most frequently by Intel i5 CPUs, then by
-    previous-generation NVIDIA GPUs. No parameters were refused by AMD
-    devices.%
-  }
-  \label{fig:refused-params-by-dev-vendor}
-\end{figure*}
 
 In addition to the hard constraints imposed by the maximum workgroup
 size, there are also refused parameters, which are workgroup sizes
@@ -3270,88 +1476,6 @@ possible performance which can be expected from autotuning.
 }
 \label{fig:performance-legality}
 \end{figure}
-
-
-\begin{table}
-  \centering
-  \scriptsize
-  \begin{tabular}{lrr}
-    \toprule
-    Parameter &  Legality (\%) &  Performance (\%) \\
-    \midrule
-    $4 \times 4$ &          100.0 &              34.6 \\
-    $32 \times 4$ &           97.4 &              79.2 \\
-    $40 \times 4$ &           96.5 &              77.5 \\
-    $16 \times 4$ &           96.3 &              65.5 \\
-    $56 \times 4$ &           95.6 &              81.0 \\
-    $16 \times 8$ &           95.6 &              75.7 \\
-    $8 \times 4$ &           95.6 &              51.7 \\
-    $24 \times 4$ &           95.3 &              69.6 \\
-    $24 \times 8$ &           95.1 &              78.4 \\
-    $48 \times 4$ &           94.6 &              83.1 \\
-    $8 \times 8$ &           94.6 &              63.4 \\
-    $4 \times 16$ &           94.6 &              50.1 \\
-    $4 \times 8$ &           94.4 &              41.5 \\
-    $8 \times 16$ &           94.2 &              70.6 \\
-    $4 \times 40$ &           94.2 &              50.2 \\
-    $4 \times 32$ &           93.9 &              53.6 \\
-    $4 \times 48$ &           93.9 &              51.9 \\
-    $4 \times 56$ &           93.9 &              50.3 \\
-    $4 \times 24$ &           93.5 &              50.4 \\
-    $8 \times 24$ &           92.5 &              69.5 \\
-    $64 \times 4$ &           84.1 &              87.5 \\
-    $16 \times 16$ &           84.1 &              74.5 \\
-    $24 \times 16$ &           83.2 &              75.1 \\
-    $32 \times 8$ &           83.0 &              81.3 \\
-    $40 \times 16$ &           82.8 &              80.3 \\
-    \bottomrule
-  \end{tabular}
-  \caption[Workgroup sizes with greatest legality]{%
-    The 25 workgroup sizes with the greatest legality.%
-  }
-  \label{tab:highest-legality}
-\end{table}
-
-\begin{table}
-  \centering
-  \scriptsize
-  \begin{tabular}{lrr}
-    \toprule
-    Parameter &  Legality (\%) &  Performance (\%) \\
-    \midrule
-    $270 \times 24$ &            0.2 &              97.5 \\
-    $174 \times 38$ &            0.2 &              94.4 \\
-    $310 \times 20$ &            0.2 &              94.2 \\
-    $546 \times 10$ &            0.2 &              93.0 \\
-    $282 \times 16$ &            0.2 &              93.0 \\
-    $520 \times 10$ &            0.2 &              92.9 \\
-    $520 \times 12$ &            0.2 &              92.3 \\
-    $746 \times 8$ &            0.2 &              92.0 \\
-    $38 \times 140$ &            0.2 &              91.9 \\
-    $300 \times 18$ &            0.2 &              91.3 \\
-    $700 \times 6$ &            0.2 &              91.1 \\
-    $96 \times 24$ &           24.7 &              90.6 \\
-    $88 \times 48$ &            0.7 &              90.6 \\
-    $820 \times 6$ &            0.2 &              90.4 \\
-    $88 \times 32$ &           24.9 &              90.0 \\
-    $96 \times 32$ &           25.4 &              89.8 \\
-    $88 \times 40$ &           21.0 &              89.7 \\
-    $80 \times 16$ &           30.3 &              89.6 \\
-    $722 \times 10$ &            0.2 &              89.5 \\
-    $280 \times 24$ &            0.2 &              89.5 \\
-    $910 \times 6$ &            0.2 &              89.4 \\
-    $88 \times 24$ &           28.7 &              89.4 \\
-    $64 \times 24$ &           29.4 &              89.2 \\
-    $80 \times 32$ &           24.5 &              89.2 \\
-    $72 \times 16$ &           29.4 &              89.2 \\
-    \bottomrule
-  \end{tabular}
-  \caption[Workgroup sizes with greatest performance]{%
-    The 25 workgroup sizes with the greatest mean
-    performance.%
-  }
-  \label{tab:highest-performance}
-\end{table}
 
 
 \subsubsection{Speedup Upper Bounds}
@@ -3784,53 +1908,6 @@ learning-enabled autotuning for predicting workgroup sizes of SkelCL
 stencils codes. First, we consider the prediction performance of
 classifiers.
 
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{img/classification-syn-real}
-\caption[Classification results using synthetic benchmarks]{%
-  Classification results for synthetic benchmarks. Each classifier is
-  trained on data from synthetic stencils, and tested for prediction
-  quality using data from 6 real world benchmarks.%
-}
-\label{fig:class-syn}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{img/classification-arch}
-\caption[Classification results using cross-device evaluation]{%
-  Classification results of cross-device evaluation. Each classifier
-  is trained using data from $n-1$ devices, and tested for prediction
-  quality using data for the $n^{th}$ device.%
-}
-\label{fig:class-arch}
-\end{figure}
-
-\begin{figure}
-\centering
-\begin{subfigure}[h]{.45\columnwidth}
-\centering
-\includegraphics[width=\columnwidth]{img/runtime-class-xval}
-\caption{}
-\label{fig:runtime-class-xval}
-\end{subfigure}
-~%
-\begin{subfigure}[h]{.45\columnwidth}
-\centering
-\includegraphics[width=\columnwidth]{img/speedup-class-xval}
-\caption{}
-\label{fig:speedup-class-xval}
-\end{subfigure}
-\caption[Autotuning performance using regressors]{%
-  Evaluating the effectiveness of classification using regressors, by
-  predicting: (\subref{fig:runtime-class-xval}) the workgroup size
-  with the minimal runtime, and (\subref{fig:speedup-class-xval}) the
-  workgroup size with the greatest speedup over a baseline.%
-}
-\label{fig:regression-class}
-\end{figure}
-
 With the exception of the ZeroR, which predicts \emph{only} the
 baseline workgroup size $w_{\left( 4 \times 4 \right)}$, the
 classifiers achieve good speedups over the baseline. Average
@@ -3846,17 +1923,6 @@ tested against real-world programs. This suggests the model
 over-fitting to features of the synthetic benchmarks which are not
 shared by the real-world
 tests.
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{img/fallback_speedups}
-\caption[Comparison of fallback handler speedups]{%
-  Comparison of fallback handlers, showing the speedup over baseline
-  parameter for all test cases where a classifier predicted an illegal
-  workgroup size.%
-}
-\label{fig:fallback-speedups}
-\end{figure}
 
 By isolating the test cases where classifiers predicted an illegal or
 refused parameter, we can directly compare the relative effectiveness
@@ -3913,20 +1979,6 @@ the human expert selected workgroup size.
 % The lower average speedup attained by speedup regression over the
 % J48 classifier belies the fact that the \emph{median} speedup is
 % much greater, at $1.33 \times$.
-
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{img/speedup-distributions}
-\caption[Speedup results over human expert]{%
-  Distributions of speedups over \emph{human expert}, ignoring cases
-  where human expert prediction is invalid. Classifiers are using
-  \textsc{NearestNeighbour} fallback handlers. The speedup axis is
-  fixed to the range 0--2.5 to highlight the IQRs, which results in
-  some outliers > 2.5 being clipped.%
-}
-\label{fig:speedup-distributions}
-\end{figure}
 
 
 \begin{table}
@@ -3986,67 +2038,6 @@ the human expert selected workgroup size.
 \end{table}
 
 
-% \subsubsection{Visualising Prediction Errors}
-
-\begin{figure}
-\centering
-\begin{subfigure}[t]{0.45\columnwidth}
-\centering
-\includegraphics[width=\columnwidth]{img/heatmap_1}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:class-hmaps-1}
-\end{subfigure}
-~%
-\begin{subfigure}[t]{0.45\columnwidth}
-\centering
-\includegraphics[width=\columnwidth]{img/heatmap_2}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:class-hmaps-2}
-\end{subfigure}
-\\
-\begin{subfigure}[t]{0.45\columnwidth}
-\centering
-\includegraphics[width=\columnwidth]{img/heatmap_3}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:class-hmaps-3}
-\end{subfigure}
-~%
-\begin{subfigure}[t]{0.45\columnwidth}
-\centering
-\includegraphics[width=\columnwidth]{img/heatmap_5}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:class-hmaps-4}
-\end{subfigure}
-\\
-\begin{subfigure}[t]{0.45\columnwidth}
-\centering
-\includegraphics[width=\columnwidth]{img/reg_runtime_heatmap}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:class-hmaps-5}
-\end{subfigure}
-~%
-\begin{subfigure}[t]{0.45\columnwidth}
-\centering
-\includegraphics[width=\columnwidth]{img/reg_speedup_heatmap}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:class-hmaps-6}
-\end{subfigure}
-\caption[Classification error heatmaps]{%
-  Heatmaps of classification errors for 10-fold cross-validation,
-  showing a subset of the optimisation space. The shading in each
-  cells indicates if it is predicted less frequently (blue), ore more
-  frequently (red) than it is optimal. Colour gradients are normalised
-  across plots.%
-}
-\label{fig:class-hmaps}
-\end{figure}
-
 
 The prediction costs using regression are significantly greater than
 using classifiers. This is because, while a classifier makes a single
@@ -4090,6 +2081,327 @@ autotuning performance can be drawn:
   overhead.
 \end{itemize}
 
+
+\section{Related Work}\label{sec:related}
+
+In~\cite{Saclay2010,Memon2013,Fursin2014}, \citeauthor{Fursin2014}
+advocate a collaborative and ``big data'' driven approach to
+autotuning, arguing that the challenges facing the widespread adoption
+of autotuning and machine learning methodologies can be attributed to:
+a lack of common, diverse benchmarks and datasets; a lack of common
+experimental methodology; problems with continuously changing hardware
+and software stacks; and the difficulty to validate techniques due to
+a lack of sharing in publications. They propose a system for
+addressing these concerns, the Collective Mind knowledge system,
+which, while in early stages of ongoing development, is intended to
+provide a modular infrastructure for sharing autotuning performance
+data and related artifacts across the internet. In addition to sharing
+performance data, the approach taken in this thesis emphasises the
+collective \emph{exploitation} of such performance data, so that data
+gathered from one device may be used to inform the autotuning
+decisions of another. This requires each device to maintain local
+caches of shared data to remove the network overhead that would be
+present from querying a single centralised data store during execution
+of a hot path. The current implementation of Collective Mind uses a
+NoSQL JSON format for storing performance data. The relational schema
+used in this thesis offers greater scaling performance and lower
+storage overhead as the amount of performance data grows.
+
+Whereas iterative compilation requires an expensive offline training
+phase to search an optimisation space, dynamic optimisers perform this
+optimisation space exploration at runtime, allowing programs to
+respond to dynamic features ``online''. This is a challenging task, as
+a random search of an optimisation space may result in configurations
+with vastly suboptimal performance. In a real world system, evaluating
+many suboptimal configurations will cause a significant slowdown of
+the program. Thus a requirement of dynamic optimisers is that
+convergence time towards optimal parameters is minimised.
+
+Existing dynamic optimisation research has typically taken a low level
+approach to performing optimisations. Dynamo is a dynamic optimiser
+which performs binary level transformations of programs using
+information gathered from runtime profiling and
+tracing~\cite{Bala2000}. While this provides the ability to respond to
+dynamic features, it restricts the range of optimisations that can be
+applied to binary transformations. These low level transformations
+cannot match the performance gains that higher level parameter tuning
+produces.
+
+An interesting related tangent to iterative compilation is the
+development of so-called ``superoptimisers''. In~\cite{Massalin1987},
+the smallest possible program which performs a specific function is
+found through a brute force enumeration of the entire instruction
+set. Starting with a program of a single instruction, the
+superoptimiser tests to see if any possible instruction passes a set
+of conformity tests. If not, the program length is increased by a
+single instruction and the process repeats. The exponential growth in
+the size of the search space is far too expensive for all but the
+smallest of hot paths, typically less than 13 instructions. The
+optimiser is limited to register to register memory transfers, with no
+support for pointers, a limitation which is addressed
+in~\cite{Joshi2002}. Denali is a superoptimiser which uses constraint
+satisfaction and rewrite rules to generate programs which are
+\emph{provably} optimal, instead of searching for the optimal
+configuration through empirical testing. Denali first translates a low
+level machine code into guarded multi-assignment form, then uses a
+matching algorithm to build a graph of all of a set of logical axioms
+which match parts of the graph, before using boolean satisfiability to
+disprove the conjecture that a program cannot be written in $n$
+instructions. If the conjecture cannot be disproved, the size of $n$
+is increased and the process repeats.
+
+
+\subsubsection{Training with Synthetic Benchmarks}
+
+The use of synthetic benchmarks for providing empirical performance
+evaluations dates back to as early as 1974~\cite{Curnow1976}. The
+\emph{automatic generation} of such synthetic benchmarks is a more
+recent innovation, serving the purpose initially of stress-testing
+increasingly complex software systems for behaviour validation and
+automatic bug detection~\cite{Verplaetse2000,Godefroid2008}. A range
+of techniques have been developed for these purposes, ranging from
+applying random mutations to a known dataset to generate test stimuli,
+to so-called ``whitebox fuzz testing'' which analyses program traces
+to explore the space of a program's control flow. Csmith is one such
+tool which generates randomised C source programs for the purpose of
+automatically detecting compiler bugs~\cite{Yang2012}.
+
+A method for the automatic generation of synthetic benchmarks for the
+purpose of \emph{performance} tuning is presented
+in~\cite{Chiu2015}. \citeauthor{Chiu2015} use template substitution
+over a user-defined range of values to generate training programs with
+a statistically controlled range of features. A Perl preprocessor
+generates output source codes from an input description using a custom
+input language Genesis. Genesis is more flexible than the system
+presented in this thesis, supporting substitution of arbitrary
+sources. The authors describe an application of their tool for
+generating OpenCL stencil kernels, but do not report any performance
+results.
+
+
+\subsection{Performance Tuning for Heterogeneous Parallelism}
+
+As briefly discussed in Subsection~\ref{subsec:gpgpu}, the complex
+interactions between optimisations and heterogeneous hardware makes
+performance tuning for heterogeneous parallelism a difficult
+task. Performant GPGPU programs require careful attention from the
+developer to properly manage data layout in DRAM, caching, diverging
+control flow, and thread communication. The performance of programs
+depends heavily on fully utilising zero-overhead thread scheduling,
+memory bandwidth, and thread grouping. \citeauthor{Ryoo2008a}
+illustrate the importance of these factors by demonstrating speedups
+of up to $432\times$ for matrix multiplication in CUDA by appropriate
+use of tiling and loop unrolling~\cite{Ryoo2008a}. The importance of
+proper exploitation of local shared memory and synchronisation costs
+is explored in~\cite{Lee2010}.
+
+In~\cite{Chen2014}, data locality optimisations are automated using a
+description of the hardware and a memory-placement-agnostic
+compiler. The authors demonstrate impressive speedups of up to
+$2.08\times$, although at the cost of requiring accurate memory
+hierarchy descriptor files for all targeted hardware. The descriptor
+files must be hand generated, requiring expert knowledge of the
+underlying hardware in order to properly exploit memory locality.
+
+Data locality for nested parallel patterns is explored in~\cite{Lee}.
+The authors use an automatic mapping strategy for nested parallel
+skeletons on GPUs, which uses a custom intermediate representation and
+a CUDA code generator, achieving $1.24\times$ speedup over hand
+optimised code on 7 of 8 Rodinia benchmarks.
+
+Reduction of the GPGPU optimisation space is demonstrated
+in~\cite{Ryoo2008}, using the common subset of optimal configurations
+across a set of training examples. This technique reduces the search
+space by 98\%, although it does not guarantee that for a new program,
+the reduced search space will include the optimal configuration.
+
+\citeauthor{Magni2014} demonstrated that thread coarsening of OpenCL
+kernels can lead to speedups in program performance between
+$1.11\times$ and $1.33\times$ in~\cite{Magni2014}. The authors achieve
+this using a machine learning model to predict optimal thread
+coarsening factors based on the static features of kernels, and an
+LLVM function pass to perform the required code transformations.
+
+A framework for the automatic generation of OpenCL kernels from
+high-level programming concepts is described in~\cite{Steuwer2015}. A
+set of rewrite rules is used to transform high-level expressions to
+OpenCL code, creating a space of possible implementations. This
+approach is ideologically similar to that of PetaBricks, in that
+optimisations are made through algorithmic choice, although in this
+case the transformations are performed automatically at the compiler
+level. The authors report performance on a par with that of hand
+written OpenCL kernels.
+
+
+\subsection{Autotuning Algorithmic Skeletons}
+
+An enumeration of the optimisation space of Intel Thread Building
+Blocks in~\cite{Contreras2008} shows that runtime knowledge of the
+available parallel hardware can have a significant impact on program
+performance. \citeauthor{Collins2012} exploit this
+in~\cite{Collins2012}, first using Principle Components Analysis to
+reduce the dimensionality of the space of possible optimisation
+parameters, followed by a search of parameter values to optimise
+program performance by a factor of $1.6\times$ over values chosen by a
+human expert. In~\cite{Collins2013}, they extend this using static
+feature extraction and nearest neighbour classification to further
+prune the search space, achieving an average 89\% of the oracle
+performance after evaluating 45 parameters.
+
+\citeauthor{Dastgeer2011} developed a machine learning based autotuner
+for the SkePU skeleton library in~\cite{Dastgeer2011}. Training data
+is used to predict the optimal execution device (i.e.\ CPU, GPU) for a
+given program by predicting execution time and memory copy overhead
+based on problem size. The autotuner only supports vector operations,
+and there is limited cross-architecture
+evaluation. In~\cite{Dastgeer2015a}, the authors extend SkePU to
+improve the data consistency and transfer overhead of container types,
+reporting up to a $33.4\times$ speedup over the previous
+implementation.
+
+
+\subsection{Code Generation and Autotuning for Stencils}
+
+Stencil codes have a variety of computationally expensive uses from
+fluid dynamics to quantum mechanics. Efficient, tuned stencil kernels
+are highly sought after, with early work in \citeyear{Bolz2003} by
+\citeauthor{Bolz2003} demonstrating the capability of GPUs for
+massively parallel stencil operations~\cite{Bolz2003}. In the
+resulting years, stencil codes have received much attention from the
+performance tuning research community.
+
+\citeauthor{Ganapathi2009} demonstrated early attempts at autotuning
+multicore stencil codes in~\cite{Ganapathi2009}, drawing upon the
+successes of statistical machine learning techniques in the compiler
+community, as discussed in
+Subsection~\ref{subsec:iterative-compilation}. They present an autotuner
+which can achieve performance up to 18\% better than that of a human
+expert. From a space of 10 million configurations, they evaluate the
+performance of a randomly selected 1500 combinations, using Kernel
+Canonical Correlation Analysis to build correlations between tunable
+parameter values and measured performance targets. Performance targets
+are L1 cache misses, TLB misses, cycles per thread, and power
+consumption. The use of KCAA restricts the scalability of their system
+as the complexity of model building grows exponentially with the
+number of features. In their evaluation, the system requires two hours
+of compute time to build the KCAA model for only 400 seconds of
+benchmark data. They present a compelling argument for the use of
+energy efficiency as an optimisation target in addition to runtime,
+citing that it was the power wall that lead to the multicore
+revolution in the first place. Their choice of only 2 benchmarks and 2
+platforms makes the evaluation of their autotuner somewhat limited.
+
+\citeauthor{Berkeley2009} targeted 3D stencils code performance
+in~\cite{Berkeley2009}. Stencils are decomposed into core blocks,
+sufficiently small to avoid last level cache capacity misses. These
+are then further decomposed to thread blocks, designed to exploit
+common locality threads may have within a shared cache or local
+memory. Thread blocks are divided into register blocks in order to
+take advantage of data level parallelism provided by the available
+registers. Data allocation is optimised on NUMA systems. The
+performance evaluation considers speedups of various optimisations
+with and without consideration for host/device transfer overhead.
+
+\citeauthor{Kamil2010} present an autotuning framework
+in~\cite{Kamil2010} which accepts as input a Fortran 95 stencil
+expression and generates tuned shared-memory parallel implementations
+in Fortan, C, or CUDA. The system uses an IR to explore autotuning
+transformations, enumerating a subset of the optimisation space and
+recording only a single execution time for each configuration,
+reporting the fastest. They demonstrate their system on 4
+architectures using 3 benchmarks, with speedups of up to $22\times$
+compared to serial implementations. The CUDA code generator does not
+optimise for the GPU memory hierarchy, using only global memory. As
+demonstrated in this thesis, improper utilisation of local memory can
+hinder program performance by two orders of magnitude. There is no
+directed search or cross-program learning.
+
+In~\cite{Zhang2013a}, \citeauthor{Zhang2013a} present a code generator
+and autotuner for 3D Jacobi stencil codes. Using a DSL to express
+kernel functions, the code generator performs substitution from one of
+two CUDA templates to create programs for execution on GPUs. GPU
+programs are parameterised and tuned for block size, block dimensions,
+and whether input data is stored in read only texture memory. This
+creates an optimisation space of up to 200 configurations. In an
+evaluation of 4 benchmarks, the authors report impressive performance
+that is comparable with previous implementations of iterative Jacobi
+stencils on GPUs~\cite{Holewinski2012, Phillips2010}. The dominating
+parameter is shown to be block dimensions, followed by block size,
+then read only memory. The DSL presented in the paper is limited to
+expressing only Jacobi Stencils applications. Critically, their
+autotuner requires a full enumeration of the parameter space for each
+program. Since there is no indication of the compute time required to
+gather this data, it gives the impression that the system would be
+impractical for the needs of general purpose stencil computing. The
+autotuner presented in this thesis overcomes this drawback by learning
+parameter values which transfer to unseen stencils, without the need
+for an expensive tuning phase for each program and architecture.
+% TODO: Depending on results of cross-architecture validation, this
+% last claim may not hold up.
+%
+% The majority of applications tested are memory bound. Does this
+% transfer to computer bound?
+
+In~\cite{Christen2011}, \citeauthor{Christen2011} presentf a DSL for
+expressing stencil codes, a C code generator, and an autotuner for
+exploring the optimisation space of blocking and vectorisation
+strategies. The DSL supports stencil operations on arbitrarily
+high-dimensional grids. The autotuner performs either an exhaustive,
+multi-run Powell search, Nelder Mead, or evolutionary search to find
+optimal parameter values. They evaluate their system on two CPUS and
+one GPU using 6 benchmarks. A comparison of tuning results between
+different GPU architectures would have been welcome, as the results
+presented in this thesis show that devices have different responses to
+optimisation parameters. The authors do not present a ratio of the
+available performance that their system achieves, or how the
+performance of optimisations vary across benchmarks or devices.
+
+A stencil grid can be decomposed into smaller subsections so that
+multiple GPUs can operate on each subsection independently. This
+requires a small overlapping region where each subsection meets ---
+the halo region --- to be shared between devices. For iterative
+stencils, values in the halo region must be synchronised between
+devices after each iteration, leading to costly communication
+overheads. One possible optimisation is to deliberately increase the
+size of the halo region, allowing each device to compute updated
+values for the halo region, instead of requiring a synchronisation of
+shared state. This reduces the communication costs between GPUs, at
+the expense of introducing redundant computation. Tuning the size of
+this halo region is the goal of PARTANS~\cite{Lutz2013}, an autotuning
+framework for multi-GPU stencil computations. \citeauthor{Lutz2013}
+explore the effect of varying the size of the halo regions using six
+benchmark applications, finding that the optimal halo size depends on
+the size of the grid, the number of partitions, and the connection
+mechanism (i.e.\ PCI express). The authors present an autotuner which
+determines problem decomposition and swapping strategy offline, and
+performs an online search for the optimal halo size. The selection of
+overlapping halo region size compliments the selection of workgroup
+size which is the subject of this thesis. However, PARTANS uses a
+custom DSL rather than the generic interface provided by SkelCL, and
+PARTANS does not learn the results of tuning across programs, or
+across multiple runs of the same program.
+
+
+\subsection{Summary}
+
+There is already a wealth of research literature on the topic
+autotuning which begs the question, why isn't the majority of software
+autotuned? In this section I attempted to answer the question by
+reviewing the state of the art in the autotuning literature, with
+specific reference to auotuning for GPUs and stencil codes. The bulk
+of this research falls prey of one of two shortcomings. Either they
+identify and develop a methodology for tuning a particular
+optimisation space but then fail to develop a system which can
+properly exploit this (for example, by using machine learning to
+predict optimal values across programs), or they present an autotuner
+which targets too specific of a class of optimisations to be widely
+applicable. This project attempts to address both of those
+shortcomings by expending great effort to deliver a working
+implementation which users can download and use without any setup
+costs, and by providing a modular and extensible framework which
+allows rapid targeting of new autotuning platforms, enabled by a
+shared autotuning logic and distributed training data. The following
+section outlines the design of this system.
 
 
 \section{Conclusions}\label{sec:conclusions}
@@ -4140,156 +2452,18 @@ performance improvements and the collaborative nature of OmniTune
 makes for a compelling case for the use of autotuning as a key
 component for enabling performant, high level parallel programming.
 
-
-\subsection{Critical Analysis}
-
-This subsection contains a critical analysis of the work presented in
-previous sections.
-
-\paragraph{OmniTune Framework}
-
-The purpose of the OmniTune framework is to provide a generic
-interface for runtime autotuning. This is demonstrated through the
-implementation of a SkelCL frontend; however, to truly evaluate the
-ease of use of this framework, it would have been preferable to
-implement one or more additional autotuning frontends, to target
-different optimisation spaces. This could expose any leakages in the
-abstractions between the SkelCL-specific and generic autotuning
-components.
-
-
-\paragraph{Synthetic Benchmarks}
-
-The OmniTune SkelCL frontend provides a template substitution engine
-for generating synthetic stencil benchmarks. The implementation of
-this generator is rigidly tied to the SkelCL stencil format. It would
-be preferred if this template engine was made more flexible, to
-support generation of arbitrary test programs. Additionally, due to
-time constraints, I did not have the opportunity to explore how the
-number of synthetic benchmarks in machine learning test data sets
-affects classification performance.
-
-One possible use of the synthetic stencil benchmark generator could be
-for creating minimal test cases of refused OpenCL parameters so that
-bug reports could be filed with the relevant implementation
-vendor. However, this would have added a great level of complexity to
-the the generator, as it would have to isolate and remove the
-dependency on SkelCL to generate minimal programs, requiring
-significant implementation work.
-
-
-\paragraph{Use of Machine Learning}
-
-The evaluation of OmniTune in this thesis uses multiple classifiers
-and regressors to predict workgroup sizes. The behaviour of these
-classifiers and regressors is provided by the Weka data mining
-suite. Many of these classifiers have parameters which affect their
-prediction behaviour. The quality of the evaluation could have been
-improved by exploring the effects that changing the values of these
-parameters has on the OmniTune classification performance. It would
-also have been informative to dedicate a portion of the evaluation to
-feature engineering, evaluating the information gain of each feature
-and exploring the effects of feature transformations on classification
-performance.
-
-
-\paragraph{Evaluation Methodology}
-
-The evaluation compares autotuning performance against the best
-possible performance that can be achieved using static tuning, a
-simple heuristic to tune workgroup size on a per-device basis, and
-against the workgroup size chosen by human experts. It would have been
-beneficial to also include a comparison of the performance of these
-autotuned stencils against hand-crafted equivalent programs in pure
-OpenCL, without using the SkelCL framework. This would allow a direct
-comparison between the performance of stencil kernels using high level
-and low level abstractions, but could not be completed due to time
-constraints and difficulties in acquiring suitable comparison
-benchmarks and datasets.
-
-
-\subsection{Future Work}
-
-Future work can be divided into two categories: continued development
-of OmniTune, and extending the behaviour of the SkelCL autotuner.
-
 The cost of offline training with OmniTune could be reduced by
 exploring the use of adaptive sampling plans, such as presented
 in~\cite{Leather2009}. This could reduce the number of runtime samples
 required to distinguish good from bad optimisation parameter values.
 
-Algorithm~\ref{alg:autotune-hybrid} proposes the behaviour of a hybrid
-approach to selecting the workgroup size of iterative SkelCL
-stencils. This approach attempts to exploit the advantages of all of
-the techniques presented in this thesis. First, runtime regression is
-used to predict the minimum runtime and a candidate workgroup
-size. If, after evaluating this workgroup size, the predicted runtime
-turned out to be inaccurate, then a prediction is made using speedup
-regression. Such a hybrid approach would enable online tuning through
-the continued acquisition of runtime and speedup performance, which
-would compliment the collaborative aspirations of OmniTune, and the
-existing server-remote infrastructure.
+Collaborative training --- hive mind for selecting training
+parameters, and built-in redundancy checking/validation
 
-Other skeleton optimisation parameters could be autotuned by SkelCL,
-including higher level optimisations such as the selection of border
-region loading strategy, or selecting the optimal execution device(s)
-for multi-device systems. Optimisation parameters of additional
-skeletons could be autotuned, or the interaction of multiple related
-optimisation parameters could be explored. Power consumption could be
-used as an additional optimisation cotarget.
+TODO: deltas for push and pull, scalability for huge datasets
 
-\begin{algorithm}
-\begin{algorithmic}[1]
-\Require kernel features $k$, hardware features $h$, dataset features $d$.
-\Ensure workgroup size $w$
-
-\State $r \leftarrow \underset{w \in W_{legal}(s)}{\min} f(k,h,d,w)$
-\Comment Predict minimum runtime.
-\State $w \leftarrow \underset{w \in W_{legal}(s)}{\argmin} f(k,h,d,w)$
-\Comment Workgroup size for $r$.
-\State $t_r \leftarrow$ measure runtime of program with $w$
-\State \textsc{Submit}$\left( f(s), w, t_r \right)$
-\Comment Submit observed runtime
-\If{$t_r \approx r$}
-  \State \textbf{return} $w$
-\Comment Predicted runtime is accurate.
-\Else
-   \State $W \leftarrow \left\{ w | w < W_{\max}(s) \right\}$
-   \State converged $\leftarrow$ false
-   \State $w_b \leftarrow$ baseline parameter
-   \State $t_b \leftarrow$ measure runtime of runtime of program with
-   $w_b$
-   \State \textsc{Submit}$\left( f(s), w_b, t_b \right)$
-   \Comment Submit observed runtime
-   \While{not converged}
-     \State $s \leftarrow \underset{w \in W}{\max} g(k,h,d,w)$
-     \Comment Predict best speedup.
-     \State $w \leftarrow \underset{w \in W}{\argmax} g(k,h,d,w)$
-     \Comment Workgroup size for $s$.
-     \State $t \leftarrow$ measure runtime of program with $s$
-     \State \textsc{Submit}$\left( f(s), w, t \right)$
-     \Comment Submit observed runtime
-     \State $s_w \leftarrow t_t / t$
-     \State \textsc{Submit}$\left( f(s), w, s_w \right)$
-     \Comment Submit observed speedup
-     \If{$s_w \approx s$}
-       \State converged = true
-       \Comment Predicted speedup is accurate.
-     \Else
-       \State $W = W - \{ w \}$
-     \EndIf
-   \EndWhile
-   \State \textbf{return} $w$
-\EndIf
-\end{algorithmic}
-\caption{%
-  Selecting workgroup size using a combination of classifiers and
-  regressors.%
-}
-\label{alg:autotune-hybrid}
-\end{algorithm}
-
-
+TODO: involuntary training requests, or non-binary selectors between
+training and performance
 
 %
 % \appendix
@@ -4300,10 +2474,12 @@ used as an additional optimisation cotarget.
 
 \acks
 
-This work was supported by grant EP/L01503X/1 for the University of
+This work was supported by the UK Engineering and Physical Sciences
+Research Council under grants EP/L01503X/1 for the University of
 Edinburgh School of Informatics Centre for Doctoral Training in
-Pervasive Parallelism (\url{http://pervasiveparallelism.inf.ed.ac.uk/}) from
-the UK Engineering and Physical Sciences Research Council (EPSRC).
+Pervasive Parallelism
+(\url{http://pervasiveparallelism.inf.ed.ac.uk/}),\\* EP/H044752/1
+(ALEA), and EP/M015793/1 (DIVIDEND).
 
 % We recommend abbrvnat bibliography style.
 
