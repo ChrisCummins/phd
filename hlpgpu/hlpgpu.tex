@@ -56,7 +56,7 @@
 
 \begin{abstract}
   The physical limitations of microprocessor design have forced the
-  industry towards increasingly heterogeneous architectures to extract
+  industry towards increasing heterogeneous designs to extract
   performance. This trend has not been matched with software tools to
   cope with such parallelism, leading to a growing disparity between
   the levels of available performance and the ability for application
@@ -68,20 +68,25 @@
   attempt to anticipate and tune for a wide range of architectures and
   use cases. This results in implementations that target the general
   case and cannot provide the performance advantages that are gained
-  from tuning low level optimisation parameters.
-
-  % Autotuning can address this, but requires large setup costs, and
-  % few attempts have been made to unify the
+  from tuning low level optimisation parameters. Autotuning and
+  machine learning offer promising performance benefits in these
+  situations, but the high cost of training and lack of standardised
+  tooling limits the practicality of autotuning for real world
+  programming.
 
   To address this, we present OmniTune --- an extensible and
   distributed framework for runtime autotuning of optimisation
   parameters. OmniTune uses a client-server model with a generic API
-  to allow quick repurposing for different autotuning targets. We
-  demonstrate an implementation of OmniTune for the SkelCL library,
-  demonstrating in a comprehensive evaluation of $2.7\times 10^5$ test
-  cases that static tuning of Stencil skeleton workgroup sizes can
-  achieve only $26\%$ of the optimal performance, while OmniTune
-  achieves $94\%$.
+  for quickly extending software for machine learning-enabled
+  autotuning, creating a unified environment training data is shared
+  across a network of cooperating devices, and autotuning is performed
+  on-the-fly.
+
+  We demonstrate the practicality of OmniTune by targeting the SkelCL
+  library. By targeting the workgroup size of OpenCL Stencil skeleton
+  kernels, we show that that static tuning can achieve only $26\%$ of
+  the optimal performance, while OmniTune achieves $94\%$ of this
+  maximum.
 \end{abstract}
 
 % \category{CR-number}{subcategory}{third-level}
@@ -96,16 +101,15 @@
 
 \section{Introduction}\label{sec:introduction}
 
-In recent years, general purpose programming with GPUs has shown to
-provide great data parallel throughput, but is a significant
-programming challenge, forcing application developers to master an
-unfamiliar programming model (such as provided by CUDA or OpenCL) and
-architecture (SIMD with a multi-level memory hierarchy). As such,
-GPGPU programming is often considered beyond the realm of everyday
-development. If steps are not taken to increase the accessibility of
-such parallelism, this will only serve to widen the gap between
-available and utilised performance as the core counts of hardware
-continue to increase.
+General purpose programming with GPUs has shown to provide huge
+parallel throughput, but poses a significant programming challenge,
+requiring application developers to master an unfamiliar programming
+model (such as provided by CUDA or OpenCL) and architecture (SIMD with
+a multi-level memory hierarchy). As such, GPGPU programming is often
+considered beyond the realm of everyday development. If steps are not
+taken to increase the accessibility of such parallelism, this will
+only serve to widen the gap between available and utilised performance
+as the core counts of hardware continues to increase.
 
 One possible solution for this \emph{programmability challenge} comes
 in the form of algorithmic skeletons, which offer to simplify parallel
@@ -113,35 +117,23 @@ programming by raising the level of abstraction so that developers can
 focus on solving problems, rather than coordinating parallel
 resources. They achieve this by providing robust parallel
 implementations of common patterns of computation which developers
-parameterise with their application-specific code. This greatly
-reduces the challenge of parallel programming, allowing users to
-structure their problem solving logic sequentially, while offloading
-the cognitive cost of parallel coordination to the skeleton author.
-
-
-% \subsection{Background}
-
-% Introduced by \citeauthor{Cole1989} in \citeyear{Cole1989},
-% algorithmic skeletons simplify the task of parallel programming by
-% abstracting common patterns of communication, providing parallel
-% implementations of higher order functions~\cite{Cole1989}. The
-% interfaces to generic parallel algorithms exposed by algorithmic
-% skeletons are parameterised by the user with \emph{muscle functions}
-% that implement problem specific logic. The idea is that this allows
-% the user to focus on solving the problem at hand, affording greater
-% ease of use by automating the coordination of parallel resources.
-
-
-% \subsection{High-Level GPU Programming with SkelCL}\label{subsec:skelcl-intro}
+parameterise with their application-specific
+code~\cite{Gonzalez2010}. This greatly reduces the challenge of
+parallel programming, allowing users to structure their problem
+solving logic sequentially, while offloading the cognitive cost of
+parallel coordination to the skeleton author. The rising number of
+skeleton frameworks supporting graphics hardware illustrates the
+demand for high level abstractions for GPGPU
+programming~\cite{Enmyren2010, Marques2013, Nugteren2014a}.
 
 
 \subsection{The Problem}
 
 The performance of parallel programs is often sensitive to low level
-parameter values, and when tuning these values, one size \emph{cannot}
-fit all. The performance of parallel program parameters are sensitive
-to the underlying hardware, to the program being executed, and even to
-the \emph{dataset} that is operated upon. This is especially
+parameter values, and in selecting values to maximise performance,
+often one size does not fit all. The suitability of parameter values
+depends on the underlying hardware, the program being executed, and
+even to the \emph{dataset} that is operated upon. This is especially
 problematic for algorithmic skeletons, as skeleton authors cannot tune
 the performance of an implementation across the breadth of these three
 dimensions, and this results in programs which forgo the performance
@@ -152,17 +144,17 @@ If the performance of algorithmic skeletons is to be competitive with
 that of hand crafted parallel programs, then these skeletons must be
 capable of adapting to their environments. The development of such
 \emph{autotuning} software is an entire research field itself --- and
-understandably so: there is an irresistible appeal to the idea of
-software which is capable of improving its own efficiency without the
-need for human intervention. The unfortunate reality is that while
-these autotuning systems share the unified goal of improving the
-performance of their respective optimisation targets, the range of
-competing approaches and implementations has resulted in a fragmented
-state in which no one system has been able to gain the critical mass
-to achieve mainstream traction.
+understandably so: there is a definite appeal to the idea of software
+which is capable of maximising its own performance without the need
+for human intervention. The unfortunate reality is that while existing
+autotuning systems share the unified goal of improving the performance
+of their respective optimisation targets, the range of competing
+approaches and implementations has resulted in a fragmented state in
+which no one system has been able to gain the critical mass to achieve
+mainstream traction.
 
-In this work we tackle the issue by providing a unified interface for
-autotuning which reduces the amount of redundant and overlapping work
+In this work we tackle the issue by designing a unified interface for
+autotuning, reducing the amount of redundant and overlapping work
 needed to implement autotuning for different optimisation targets.
 
 The key contribution of this work is the development of
@@ -336,7 +328,7 @@ determined at runtime. Effective searching of these spaces can only be
 performed by collecting empirical data rather than building predictive
 models.
 
-The ambition of this thesis is to demonstrate that, using machine
+The ambition of this work is to demonstrate that, using machine
 learning, we can develop predictive tuning systems which closely
 approach --- and in some cases, outperform --- the kinds of ad-hoc
 hand tuning which traditionally came at the cost of many man hours of
@@ -481,11 +473,11 @@ two operations:
 %
 \begin{itemize}
 \item \textsc{Push}$(\bf{x}, \bf{p}, \bf{y})$\\*Asynchronously submit
-  training point data, as three lists of features, parameter values,
-  and observed outcomes.
+  training point data, as three lists of explanatory variables
+  $\bf{x}$, parameter values $\bf{p}$, and observed outcomes $\bf{y}$.
 \item \textsc{Pull}$() \to (\bf{x}, \bf{p}, \bf{y})$\\*Request
-  training data as three lists of features, parameter values, and
-  observed outcomes.
+  training data as three lists of explanatory variables $\bf{x}$,
+  parameter values $\bf{p}$, and observed outcomes $\bf{y}$.
 \end{itemize}
 
 \begin{figure}
@@ -2398,6 +2390,12 @@ costs, and by providing a modular and extensible framework which
 allows rapid targeting of new autotuning platforms, enabled by a
 shared autotuning logic and distributed training data. The following
 section outlines the design of this system.
+
+
+\paragraph{OpenTuner} Similar in both name and intent is OpenTuner, a
+\ldots
+
+\paragraph{cTuning} \ldots
 
 
 \section{Conclusions}\label{sec:conclusions}
