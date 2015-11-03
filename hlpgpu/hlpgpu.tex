@@ -153,6 +153,8 @@ user program; and second, by targeting a library, it enables a broader
 and more substantive range of performance data to be gathered than
 with ad-hoc tuning of individual programs.
 
+% TODO: Background about ML
+
 
 \subsection{Contributions}
 
@@ -261,6 +263,9 @@ selection of workgroup size should be made dynamically. To the best of
 our knowledge, there are no existing systems for runtime autotuning of
 arbitrary parameter values, and autotuners are generally developed
 ad-hoc and on a per-case basis.
+
+
+% \section{Background}
 
 
 \section{The OmniTune Framework}\label{sec:autotune}
@@ -690,36 +695,40 @@ W_{safe} &= \cap \left\{ W_{legal}(s) | s \in S \right\}\\
 \end{align}
 
 
-\subsection{Autotuning Methodology}
+\subsection{Machine Learning}
 
 The optimisation space presented by the workgroup size of OpenCL
-kernels is large, complex, and non-linear. Successfully applying
-machine learning to such a space requires plentiful training data, the
-careful selection of features, and appropriate machine learning
-methods. For the purpose of this work we use a \emph{classification}
-approach, in which machine learning is used to correlate patterns
-between explanatory variables (features) and the workgroup sizes which
-provide optimal performance.
+kernels is large, complex, and non-linear. The challenge is to design
+a system which, given a set of prior observations of the empirical
+performance of stencil codes with different workgroup sizes, predict
+workgroup sizes for \emph{unseen} stencils which will maximise the
+performance. Successfully applying machine learning requires plentiful
+training data, the careful selection of features, and appropriate
+machine learning methods. For the purpose of this work we use a
+\emph{classification} approach, in which a classifier automatically
+correlates patterns between explanatory variables (features) and the
+workgroup sizes which provide optimal performance. The classifier used
+is the popular J48 Decision Tree~\cite{Han2011}, chosen due to its low
+classification cost and ability to efficiently handle large
+dimensionality training data.
 
-Explanatory variables capture information about the device, program,
-and dataset. Device features encode the device type (e.g. CPU or GPU,
-integrated or external, connection bus), properties about the host
-(e.g.\ system memory, maximum clock frequency), and numerous
-properties about the execution device (e.g.\ number of compute units,
-local memory size, global caches). Program features include
-per-instruction type densities, the total number of basic blocks, and
-the total instruction count. They are extracted using static
-instruction count passes over an LLVM IR compiled version of the user
-stencil implementation. Compilation to bitcode is a relatively
-expensive task, so lookup tables are used to cache repeated uses of
-the same stencil codes, identified by the source code
-checksum. Dataset features include the data type and dimensions of the
-SkelCL container type.
-
-% \paragraph{Training}
+For each scenario, a total of 102 explanatory variables are extracted
+to capture information about the device, program, and dataset. Device
+features encode the device type (e.g. CPU or GPU, integrated or
+external, connection bus), properties about the host (e.g.\ system
+memory, maximum clock frequency), and numerous properties about the
+execution device (e.g.\ number of compute units, local memory size,
+global caches). Program features include per-instruction type
+densities, the total number of basic blocks, and the total instruction
+count. They are extracted using static instruction count passes over
+an LLVM IR compiled version of the user stencil
+implementation. Compilation to bitcode is a relatively expensive task,
+so lookup tables are used to cache repeated uses of the same stencil
+codes, identified by the source code checksum. Dataset features
+include the data type and dimensions of the SkelCL container type.
 
 To collect training data, we run multiple iterations of a stencil
-operation to enumerate the workgroup size optimisation space, and use
+program to enumerate the workgroup size optimisation space, and use
 the OpenCL's Profiling API to record stencil kernel execution times in
 the client application, which are then submitted to the OmniTune
 server. The \textsc{RequestTraining}$(x)$ server interface returns a
@@ -733,44 +742,39 @@ data. Stencils templates are parameterised with a border region size
 and \emph{complexity}, a simple metric which broadly dictates the
 number of operations in a given stencil code.
 
-% \paragraph{Prediction}
-
-Using the OmniTune framework, the challenge is to design a system
-which, given a set of prior observations of the empirical performance
-of stencil codes with different workgroup sizes, predict workgroup
-sizes for \emph{unseen} stencils which will maximise the
-performance. Once the performance of different workgroup sizes for a
-particular scenario are gathered, the set of features describing the
-scenario is labelled with the oracle workgroup size, which is used as
-the target class to train a classifier.
+Once the performance of a particular workgroup size for a scenario is
+assessed, the set of features describing the scenario is labelled with
+the oracle workgroup size, which is used as the target class to train
+a classifier. A classifier uses these performance results to make
+predictions of the oracle workgroup size for new sets of features, by
+predicting a workgroup size from the set of oracle workgroup sizes of
+the training data.
+% TODO: reword? ^^^
 
 This approach presents the problem that after training, there is no
 guarantee that the set of workgroup sizes which may be predicted is
-within the set of legal workgroup sizes for future scenarios:
-%
+within the set of legal workgroup sizes for future scenarios. This may
+result in a classifier predicting a workgroup size which is not legal
+for a scenario, $w \not\in W_{legal}(s)$, either because it exceeds
+$W_{\max}(s)$, or because the parameter is refused. If this occurs, a
+\emph{nearest neighbour} approach is used to select the workgroup size
+$w$ which is expected to be legal and has the lowest Euclidian
+distance to the predicted value $c$:
+
 \begin{equation}
-  \bigcup_{\forall s \in S_{testing}} W_{legal}(s) \nsubseteq W_{training}
+  w = \underset{w \in W_{legal(s)}}{\argmin} \sqrt{\left(c_r - w_r\right)^2 + \left(c_c - w_c\right)^2}
 \end{equation}
-%
-This may result in a classifier predicting a workgroup size which is
-not legal for a scenario, $w \not\in W_{legal}(s)$, either because it
-exceeds $W_{\max}(s)$, or because the parameter is refused. For these
-cases, a \emph{nearest neighbour} approach is used to select the
-workgroup size which is expected to be legal and has the lowest
-Euclidian distance to the prediction.
 
-\paragraph{Implementation}
+\subsection{Implementation}
 
-of which 976 is dedicated to the SkelCL frontend. By design, the
-client-server model minimises the impact of number of modifications
-that are required to enable autotuning in client applications. The
-only modification required is to replace the hardcoded values for
-workgroup size with a subroutine to request a workgroup size from the
-OmniTune server over a D-Bus connection.
-
-For classification, four classifiers are supported, chosen for their
-contrasting properties: Naive Bayes, SMO, J48 Decision tree, and
-Random Forest.
+The OmniTune framework consists of 8987 lines of Python and MySQL
+code. A further 976 lines are required for the SkelCL frontend to
+implement the server response handlers and database backend. By
+design, the client-server model minimises the impact of number of
+modifications that are required to enable autotuning in client
+applications. The only modification required to SkelCL to replace the
+hardcoded values for workgroup size with a subroutine to request a
+workgroup size from the OmniTune server over a D-Bus connection.
 
 
 \section{Experimental Setup}
@@ -800,16 +804,6 @@ gold standard output collected by executing each of the real-world
 benchmarks programs using the baseline workgroup size. The output of
 real-world benchmarks with other workgroup sizes is compared to this
 gold standard output to test for correct program execution.
-
-Five different classification algorithms are used to predict oracle
-workgroup sizes, chosen for their contrasting properties: Naive Bayes,
-SMO, Logistic Regression, J48 Decision tree, and Random
-Forest~\cite{Han2011}. For regression, a Random Forest with regression
-trees is used, chosen because of its efficient handling of large
-feature sets compared to linear models~\cite{Breiman1999}. The
-autotuning system is implemented in Python as a system daemon. SkelCL
-stencil programs request workgroup sizes from this daemon, which
-performs feature extraction and classification.
 
 
 \section{Evaluation}\label{sec:evaluation}
