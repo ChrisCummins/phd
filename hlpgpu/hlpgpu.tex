@@ -72,21 +72,24 @@
   with machine learning offers promising performance benefits in these
   situations, but the high cost of training and lack of available
   tools limits the practicality of autotuning for real world
-  programming.
+  programming. We believe that performing autotuning at the level of
+  the skeleton library can overcome these issues.
 
-  To address this, we present OmniTune --- an extensible and
-  distributed framework for dynamic autotuning of optimisation
-  parameters at runtime. OmniTune uses a client-server model with a
-  flexible API to support machine learning enabled
-  autotuning. Training data is shared across a network of cooperating
-  systems, using a collective approach to performance tuning.
+  In this work, we present OmniTune --- an extensible and distributed
+  framework for dynamic autotuning of optimisation parameters at
+  runtime. OmniTune uses a client-server model with a flexible API to
+  support machine learning enabled autotuning. Training data is shared
+  across a network of cooperating systems, using a collective approach
+  to performance tuning.
 
   We demonstrate the practicality of OmniTune in a case study using
   the algorithmic skeleton library SkelCL. By automatically tuning the
   workgroup size of OpenCL Stencil skeleton kernels, we show that that
   static tuning across a range of GPUs and programs can achieve only
   $26\%$ of the optimal performance, while OmniTune achieves $92\%$ of
-  this maximum, without introducing a significant runtime overhead.
+  this maximum, equating to an average $5.65\times$ speedup. This is
+  achieved without introducing a significant runtime overhead, and
+  enables portable, cross-device and cross-program tuning.
 \end{abstract}
 
 % \category{CR-number}{subcategory}{third-level}
@@ -123,22 +126,26 @@ their problem-solving logic sequentially, while offloading the
 cognitive cost of parallel coordination to the skeleton library
 author. The rising number of skeleton frameworks supporting graphics
 hardware illustrates the demand for high level abstractions for GPGPU
-programming~\cite{Enmyren2010, Marques2013, Nugteren2014a}.
+programming~\cite{Enmyren2010, Marques2013, Nugteren2014a}. The
+challenge is in maintaining portable performance across the breadth of
+devices in the rapidly developing GPU and heterogeneous architecture
+landscape.
 
 
 \subsection{The Performance Portability Challenge}
 
 The performance of parallel programs is sensitive to low level
-parameter values, and when selecting values for maximising
+\emph{parameters}, and when tuning such parameters for maximising
 performance, one size does not fit all. The suitability of parameter
 values depends on the program implementation, the target hardware, and
-the dataset that is operated upon. Iterative compilation and
-autotuning have been shown to help in these cases by automating the
-process of tuning parameter values to match individual execution
-environments. However, there have been few attempts to develop general
-mechanisms for these techniques, and the time taken to develop ad-hoc
-autotuning solutions and gather performance data is often
-prohibitively expensive.
+the dataset that is operated upon. % TODO: citation
+Iterative compilation and autotuning have been shown to help in these
+cases by automating the process of tuning parameter values to match
+individual execution environments. % TODO: citation
+However, there have been few attempts to develop general mechanisms
+for these techniques, and the time taken to develop ad-hoc autotuning
+solutions and gather performance data is often prohibitively
+expensive.
 
 We believe that by embedding autotuning at the skeletal level, it is
 possible to achieve performance with algorithmic skeletons that is
@@ -153,23 +160,25 @@ user program; and second, by targeting a library, it enables a broader
 and more substantive range of performance data to be gathered than
 with ad-hoc tuning of individual programs.
 
-% TODO: Background about ML
-
 
 \subsection{Contributions}
 
-The first key contribution of this work is the design and
-implementation of a generic toolset for autotuning: \emph{OmniTune} is
-a novel and extensible framework for collaborative autotuning of
-optimisation parameters across the life cycle of programs. The second
-contribution is the integration of OmniTune with an established
-skeleton library for CPU and multi-GPU parallelism,
-SkelCL~\cite{Steuwer2011}. We demonstrate that predicting the
-workgroup sizes of stencil skeletons across a range of devices and
-programs using OmniTune achieves 92\% of the best possible
-performance, providing a median speedup of $5.65\times$ over the best
-possible statically chosen workgroup size.
+The key contributions of this work are:
 
+\begin{itemize}
+\item The design and implementation of a generic toolset for
+  autotuning: \emph{OmniTune} is a novel and extensible framework for
+  collaborative autotuning of optimisation parameters across the life
+  cycle of programs.
+\item The integration of OmniTune with an established skeleton library
+  for CPU and multi-GPU parallelism, SkelCL~\cite{Steuwer2011}. We
+  extend SkelCL to provide autotuning for the selection of OpenCL
+  workgroup size for Stencil skeletons.
+\item An empirical evaluation of OmniTune across 7 different
+  architectures, demonstrating that OmniTune achieves 92\% of the best
+  possible performance, providing a median speedup of $5.65\times$
+  over the best possible statically chosen workgroup size.
+\end{itemize}
 
 \section{Motivation}
 
@@ -193,7 +202,8 @@ possible statically chosen workgroup size.
 \caption{%
   The performance of different workgroup sizes for the same stencil
   program on two different devices: (\subref{fig:motivation-1}) Intel
-  CPU, (\subref{fig:motivation-2}) NVIDIA GPU.%
+  CPU, (\subref{fig:motivation-2}) NVIDIA GPU. Selecting an
+  appropriate workgroup size depends on the execution device.%
 }
 \label{fig:motivation-arch}
 \end{figure}
@@ -217,29 +227,33 @@ possible statically chosen workgroup size.
 \end{subfigure}
 \caption{%
   The performance of different workgroup sizes for two different
-  stencil programs on the same execution device.%
+  stencil programs on the same execution device. Selecting an
+  appropriate workgroup size depends on the program.%
 }
 \label{fig:motivation-prog}
 \end{figure}
 
 
 In this section we will briefly examine the performance impact of
-selecting workgroup size for the SkelCL Stencil skeleton. In OpenCL,
-multiple threads are grouped into \emph{workgroups}. The shape and
-size of these groups is known to have a big impact on performance. A
-full explanation of SkelCL and the workgroup size parameter space is
-given Section~\ref{sec:omnitune-skelcl}.
+selecting workgroup size for the SkelCL Stencil skeleton. A full
+explanation of SkelCL and the workgroup size parameter space is given
+Section~\ref{sec:omnitune-skelcl}.
 
-For the SkelCL stencil skeleton, the selection of workgroup size
-presents a two dimensional parameter space, consisting of a number of
-rows and columns ($w_r \times w_c$).  Plotting the runtime of stencil
-programs using different workgroup sizes allows us to compare
-performance. Figure~\ref{fig:motivation-arch} shows this performance
+SkelCL uses OpenCL to parallelise skeleton operations across many
+threads. In OpenCL, multiple threads are grouped into
+\emph{workgroups}. The shape and size of these groups is known to have
+a big impact on performance. For the SkelCL stencil skeleton, the
+selection of workgroup size presents a two dimensional parameter
+space, consisting of a number of rows and columns ($w_r \times w_c$).
+Measuring and plotting the runtime of stencil programs using different
+workgroup sizes allows us to compare the performance of different
+workgroup sizes for different combinations of architecture and
+program. Figure~\ref{fig:motivation-arch} shows this performance
 comparison for a single stencil program on two different devices,
 demonstrating that a good choice of workgroup size is device
 dependent. The optimisation space of the same stencil benchmark on
-different devices being radically different --- not only does the
-optimal workgroup size change between devices, but the performance of
+different devices is radically different --- not only does the optimal
+workgroup size change between devices, but the performance of
 suboptimal workgroup sizes is also dissimilar. The optimisation space
 of~\ref{fig:motivation-1} has a grid-like structure, with clear
 performance advantages of workgroup sizes at multiples of 8 for
@@ -255,7 +269,7 @@ examples, the optimal workgroup size changes, as does the relative
 performance of suboptimal parameters. The average speedup of the best
 over the worst workgroup size is $37.0\times$, and the \emph{best}
 average performance that can be achieved using a single fixed
-workgroup size is 63\%.
+workgroup size is only 63\% of the maximum.
 
 SkelCL uses a fixed workgroup size. Since both the execution device
 and the user-provided stencil code are not known until runtime,
@@ -265,56 +279,56 @@ arbitrary parameter values, and autotuners are generally developed
 ad-hoc and on a per-case basis.
 
 
-% \section{Background}
-
-
 \section{The OmniTune Framework}\label{sec:autotune}
-
-OmniTune is a novel framework for extensible, distributed autotuning
-of parameter values at runtime using machine learning. It serves as a
-generic platform for developing autotuning solutions, aiming to reduce
-the developer and amount of duplicate effort required by ad-hoc
-solutions.
-
-and emphasises collaborative, online learning of optimisation
-spaces. A client-server architecture with clearly delineated
-separation of concerns minimises the code footprint in client
-applications, enabling quick re-purposing for autotuning
-targets. OmniTune provides a lightweight interface for communication
-between each of the components, and aims to strike a balance between
-offering a fully featured environment for quickly implementing
-autotuning, while providing enough flexibility to cater to a wide
-range of use cases. First, we describe the overall structure of
-OmniTune and the rationale for the design, followed by the interfaces
-and steps necessary to apply OmniTune.
-
-
-\subsection{System Architecture}
 
 \begin{figure}
 \centering
 \includegraphics[width=.98\columnwidth]{img/omnitune-system-overview.pdf}
-\caption[OmniTune system diagram]{%
+\caption{%
   OmniTune system architecture, showing the separate components and
   the one to many relationship between servers to client applications,
   and remotes to servers.%
+  % \vspace{-2em}%
 }
 \label{fig:omnitune-system-overview}
 \end{figure}
 
+OmniTune is a novel framework for extensible, distributed autotuning
+of parameter values at runtime using machine learning. It serves as a
+generic platform for developing autotuning solutions, aiming to reduce
+both the engineering time required to target new optimisation
+parameters, and the time to deploy on new systems.
+
+It emphasises collaborative, online learning of optimisation spaces. A
+client-server architecture with clearly delineated separation of
+concerns minimises the code footprint in client applications, enabling
+quick re-purposing for autotuning targets. OmniTune provides a
+lightweight interface for communication between each of the
+components, and aims to strike a balance between offering a fully
+featured environment for quickly implementing autotuning, while
+providing enough flexibility to cater to a wide range of use
+cases. First, we describe the overall structure of OmniTune and the
+rationale for the design, followed by the interfaces and steps
+necessary to apply OmniTune.
+
+
+\subsection{System Architecture}
+
 Common implementations of autotuning in the literature either embed
-the autotuning logic within the each target application, or take a
-standalone approach in which the autotuner is a program which must be
-invoked by the user to tune a target application. Embedding the
-autotuner within each target application has the advantage of
-providing ``always-on'' behaviour, but is infeasible for complex
-systems in which the cost of building machine learning models must be
-added to each program run. The standalone approach separates the
-autotuning logic, at the expense of adding one additional step to the
-build process. The approach taken in OmniTune aims to combine the
+the autotuning logic within the each target application, % TODO:
+                                % citation
+or take a standalone approach in which the autotuner is a program
+which must be invoked by the user to tune a target
+application. % TODO: citation
+Embedding the autotuner within each target application has the
+advantage of providing ``always-on'' behaviour, but is infeasible for
+complex systems in which the cost of building machine learning models
+must be added to each program run. The standalone approach separates
+the autotuning logic, at the expense of adding one additional step to
+the build process. The approach taken in OmniTune aims to combine the
 advantages of both techniques by implementing autotuning \emph{as a
-  service}, in which a standalone autotuning server provides the heavy
-lifting of training data and machine learning model management, with a
+  service}, in which a standalone autotuning server performs the heavy
+lifting of managing training data and machine learning models, with a
 minimal set of lightweight communication logic to be embedded in
 target applications.
 
@@ -323,19 +337,17 @@ Figure~\ref{fig:omnitune-system-overview}. The applications which are
 to be autotuned are the \emph{clients}. These clients communicate with
 a system-wide \emph{server}, which handles autotuning requests. The
 server communicates and caches data sourced from a \emph{remote}
-server, which maintains a global store of all autotuning data.
-
-There is a many to one relationship between clients, servers, and
-remotes, such that a single remote may handle connections to multiple
-servers, which in turn may accept connections from multiple
-clients. This design has two primary advantages: the first is that it
-decouples the autotuning logic from that of the client program,
-allowing developers to easily repurpose the autotuning framework to
-target additional optimisation parameters without a significant
-development overhead for the target applications; the second advantage
-is that this enables collective tuning, in which training data
-gathered from a range of devices can be accessed and added to by any
-OmniTune server.
+server, which maintains a global store of all autotuning data. There
+is a many to one relationship between clients, servers, and remotes,
+such that a single remote may handle connections to multiple servers,
+which in turn may accept connections from multiple clients. This
+design has two primary advantages: the first is that it decouples the
+autotuning logic from that of the client program, allowing developers
+to easily repurpose the autotuning framework to target additional
+optimisation parameters without a significant development overhead for
+the target applications; the second advantage is that this enables
+collective tuning, in which training data gathered from a range of
+devices can be accessed and added to by any OmniTune server.
 
 The OmniTune framework is implemented as a set of Python classes,
 which are inherited from or implemented to target specific autotuning
@@ -351,14 +363,78 @@ servers and remotes uses TCP/IP (we used an Amazon Web Services
 database instance for development).
 
 
+\subsection{Autotuning Behaviour}
+
+The goal of machine learning enabled autotuning is to build models
+from empirical performance data of past programs to select parameter
+values for new \emph{unseen} programs. Instead of an iterative process
+of trial and improvement, parameter values are \emph{predicted}, by
+building correlations between performance, and \emph{features}
+(explanatory variables). The data used to build such models is called
+training data. OmniTune supports autotuning using a separate offline
+training phase, online training, or a mixture of both. For each
+autotuning-capable machine, an OmniTune server acts as an intermediary
+between training data and the client application, and hosts the
+autotuning logic. On launch, a server requests the latest training
+data from the remote, which it uses to build the relevant models for
+performing prediction of optimisation parameter values. If additional
+training data is gathered by the server, this can be uploaded to the
+remote.
+
+The autotuning technique is application-specific, and can depend on
+the type of parameter being tuned (e.g. a binary flag or one or more
+numeric values). The general pattern is that a client application will
+request parameter values from an OmniTune server by sending it a set
+of explanatory variables. The server will then use machine learning
+models to form a prediction for the optimal parameter values and
+return these. Crucially, there is a mechanism provided for the client
+to \emph{refuse} parameter values. This functionality is provided for
+cases where the predicted parameter values are in some way invalid and
+do not lead to a functioning program. % TODO: citation
+
+The server contains a library of machine learning tools to perform
+parameter prediction, interfacing with the popular datamining software
+suite Weka\footnote{\url{http://www.cs.waikato.ac.nz/ml/weka/}} using
+a Java Native Interface. The provided tools include classifiers,
+regressors, and a selection of meta-learning algorithms.
+
+OmniTune servers may perform additional feature extraction of
+explanatory variables supplied by incoming client requests. The reason
+for performing feature extraction on the server as opposed to on the
+client side is that this allows the results of expensive operations
+(for example, analysing source code of target applications) to be
+cached for use across the lifespan of client applications. The
+contents of these local caches are periodically and asynchronously
+synced with the remote to maintain a global store of lookup tables for
+expensive operations.
+
+
 \subsection{Interfaces}
 
 Key design elements of OmniTune are the interfaces exposed by the
-server and remote components.
+server and remote components. Figure~\ref{fig:omnitune-comms} shows an
+example communication pattern between the three components of an
+OmniTune system using these interfaces. In the example, a server first
+requests training data from the remote. A client application then
+performs a training phase in which it requests a set of parameters for
+training, evaluates the performance of the parameters, and then
+submits a measured value, which the server uses to update the
+remote. After training, another client program requests a set of
+parameters for performance, refuses them, and makes a new request.
 
-\paragraph{Client-Server Interface} An OmniTune server exposes a
-public interface over D-Bus with four operations. Client applications
-invoke these methods to request parameter values, submit new training
+\begin{figure}
+\centering
+\includegraphics[width=1.0\columnwidth]{img/omnitune-comms}
+\caption{%
+  An example communication pattern between OmniTune components,
+  showing an offline training phase.%
+}
+\label{fig:omnitune-comms}
+\end{figure}
+
+\paragraph{Client-Server} An OmniTune server exposes a public
+interface over D-Bus with four operations. Client applications invoke
+these methods to request parameter values, submit new training
 observations, and refuse suggested parameters:
 %
 \begin{itemize}
@@ -382,10 +458,10 @@ observations, and refuse suggested parameters:
 % while providing flexibility for the client to control how and when
 % training data is collected.
 
-\paragraph{Server-Remote Interface} The role of the remote is to
-provide bookkeeping of training data for machine learning. Remotes
-allow shared access to data from multiple servers using a
-transactional communication pattern, supported by two methods:
+\paragraph{Server-Remote} The role of the remote is to provide
+bookkeeping of training data for machine learning. Remotes allow
+shared access to data from multiple servers using a transactional
+communication pattern, supported by two methods:
 %
 \begin{itemize}
 \item \textsc{Push}$(\bf{x}, \bf{p}, \bf{y})$\\*Asynchronously submit
@@ -395,61 +471,9 @@ transactional communication pattern, supported by two methods:
   training data as three lists: explanatory variables $\bf{x}$,
   parameter values $\bf{p}$, and observed outcomes $\bf{y}$.
 \end{itemize}
-%
-Figure~\ref{fig:omnitune-comms} shows an example communication pattern
-between the three components of an OmniTune system using these
-interfaces. In the example, a server first requests training data from
-the remote. A client application then performs a training phase in
-which it requests a set of parameters for training, evaluates the
-performance of the parameters, and then submits a measured value,
-which the server uses to update the remote. After training, another
-client program requests a set of parameters for performance, refuses
-them, and makes a new request.
-
-\begin{figure}
-\centering
-\includegraphics[width=1.0\columnwidth]{img/omnitune-comms}
-\caption{%
-  An example communication pattern between OmniTune components,
-  showing an offline training phase.%
-}
-\label{fig:omnitune-comms}
-\end{figure}
 
 
-\subsection{Autotuning Behaviour}
-
-OmniTune supports autotuning using a separate offline training phase,
-online training, or a mixture of both. For each autotuning-capable
-machine, the server acts as an intermediary between training data and
-by hosting the machine learning logic. On launch, a server requests
-the latest training data from the remote, which it uses to build the
-relevant models for performing prediction of optimisation parameter
-values. If additional training data is gathered by the server, this
-can be uploaded to the remote.
-
-The autotuning technique is application-specific, and can depend on
-the type of parameter being tuned (e.g. a binary flag or one or more
-numeric values). The server contains a library of machine learning
-tools to perform parameter prediction, interfacing with the popular
-datamining software suite
-Weka\footnote{\url{http://www.cs.waikato.ac.nz/ml/weka/}} using a Java
-Native Interface. The provided tools include classifiers, regressors,
-and a selection of meta-learning algorithms.
-
-OmniTune servers may perform additional feature extraction of
-explanatory variables supplied by incoming client requests. The reason
-for performing feature extraction on the server as opposed to on the
-client side is that this allows the results of expensive operations
-(for example, analysing source code of target applications) to be
-cached for use across the lifespan of client applications. The
-contents of these local caches are periodically and asynchronously
-synced with the remote to maintain a global store of lookup tables for
-expensive operations.
-
-
-
-\subsection{Usage}
+\subsection{Extensibility}
 
 \begin{figure}
 \centering
@@ -461,26 +485,26 @@ expensive operations.
 \label{fig:omnitune-system-flow}
 \end{figure}
 
-To use OmniTune, a developer extends the server class to implement
-response handlers for the four public interface operations, and then
-insert client code into the target application to call these
-operations. The implementation of these response handlers and invoking
-client code dictates the type of autotuning methods
-supported. Figure~\ref{fig:omnitune-system-flow} shows the flow
-diagram for an example OmniTune implementation. TODO: explain! In the
-next Section, we will detail the steps required to apply OmniTune to
-SkelCL.
+To extend OmniTune to target an optimisation parameter, a developer
+extends the server class to implement response handlers for the four
+public interface operations, and then inserts client code into the
+target application to call these operations. The implementation of
+these response handlers and invoking client code dictates the type of
+autotuning methods supported. Figure~\ref{fig:omnitune-system-flow}
+shows the flow diagram for an example OmniTune implementation, in
+which a training observation is recorded for every training parameter
+requested. In the next Section, we will detail the steps required to
+apply OmniTune to SkelCL.
 
 
 \section{Integration of OmniTune with SkelCL}\label{sec:omnitune-skelcl}
 
 In this section we demonstrate the practicality of OmniTune by
-integrating the framework with SkelCL. Introduced
-in~\cite{Steuwer2011}, SkelCL addresses the parallel programmability
-challenge by allowing users to easily harness the power of GPUs and
-CPUs for data parallel computing, offering a set of OpenCL
-implementations of data parallel skeletons in an object oriented C++
-library.
+integrating the framework into an established algorithmic skeleton
+library. Introduced in~\cite{Steuwer2011}, SkelCL allows users to
+easily harness the power of GPUs and CPUs for data parallel computing,
+offering a set of OpenCL implementations of data parallel skeletons in
+an object oriented C++ library.
 
 The goal of SkelCL is to enable the transition towards higher-level
 programming of GPUs, without requiring users to be intimately
@@ -592,37 +616,23 @@ size and type, the shape of the border region, and the function being
 applied to each element, it is the responsibility of the SkelCL
 stencil implementation to select an appropriate workgroup size to use.
 
-\begin{figure}
-\centering
-\includegraphics[width=.98\columnwidth]{img/lena-stencil.pdf}
-\caption{%
-  Application of a Gaussian blur stencil operation to an image, with a
-  border region of radius 1. In a Gaussian blur, pixel values are
-  interpolated with neighbouring pixels, producing a smoothed effect.%
-}
-\label{fig:stencil-img}
-\end{figure}
-
-
-\subsection{Optimisation Space}\label{subsec:op-params}
+\subsection{Optimisation Parameters}\label{subsec:op-params}
 
 SkelCL stencil kernels are parameterised by a workgroup size $w$,
 which consists of two integer values to denote the number of rows and
-columns of work items. The space of optimisation parameter values is
+columns in a workgroup. The space of optimisation parameter values is
 subject to hard constraints, and these constraints cannot conveniently
 be statically determined. Contributing factors are architectural
 limitations, kernel constraints, and refused parameters.  Each OpenCL
 device imposes a maximum workgroup size which can be statically
-checked by querying the \texttt{clGetDeviceInfo()} API for that
-device. These are defined by archiectural limitations of how code is
+checked. These are defined by archiectural limitations of how code is
 mapped to the underlying execution hardware. Typical values are powers
 of two, e.g.\ 1024, 4096, 8192. At runtime, once an OpenCL program has
 been compiled to a kernel, users can query the maximum workgroup size
-supported by that particular kernel using the
-\texttt{clGetKernelInfo()} API. This value cannot easily be obtained
-statically as there is no mechanism to determine the maximum workgroup
-size for a given source code and device without first compiling it,
-which in OpenCL does not occur until runtime.
+supported by that particular kernel dynamically. This value cannot
+easily be obtained statically as there is no mechanism to determine
+the maximum workgroup size for a given source code and device without
+first compiling it, which in OpenCL does not occur until runtime.
 
 Factors which affect a kernel's maximum workgroup size include the
 number registers required for a kernel, and the available number of
@@ -639,7 +649,7 @@ resources constraints. We define a \emph{legal} workgroup size as one
 which, for a given \emph{scenario} (a combination of program, device,
 and dataset), satisfies the architectural and kernel constraints, and
 is not refused. The subset of all possible workgroup sizes
-$W_{legal}(s) \subset W$ that are legal for a given sceanario $s$ is
+$W_{legal}(s) \subset W$ that are legal for a given scenario $s$ is
 then:
 %
 \begin{equation}
@@ -650,20 +660,18 @@ Where $W_{\max}(s)$ can be determined at runtime prior to the kernels
 execution, but the set $W_{refused}(s)$ can only be determined
 experimentally.
 
-% \subsubsection{Assessing Relative Performance}
 
-%, where an observation is a scenario,
-% workgroup size tuple $(s,w)$; a function $t(s,w)$ which returns the
-% arithmetic mean of the runtimes for a set of observations; we can
-% calculate the speedup $r(s, w_1, w_2)$ of competing workgroup sizes
-% $w_1$ over $w_2$ using:
-% %
-% \begin{equation}
-%   r(s, w_1, w_2) = \frac{t(s,w_2)}{t(s,w_1)}\\
-% \end{equation}
-% %
+\begin{figure}
+\centering
+\includegraphics[width=.98\columnwidth]{img/lena-stencil.pdf}
+\caption{%
+  Application of a Gaussian blur stencil operation to an image, with a
+  border region of radius 1. In a Gaussian blur, pixel values are
+  interpolated with neighbouring pixels, producing a smoothed effect.%
+}
+\label{fig:stencil-img}
+\end{figure}
 
-% \paragraph{Oracle Workgroup Size}
 
 The \emph{oracle} workgroup size $\Omega(s) \in W_{legal}(s)$ of a
 scenario $s$ is the $w$ value which provides the lowest mean
@@ -760,10 +768,13 @@ $W_{\max}(s)$, or because the parameter is refused. If this occurs, a
 \emph{nearest neighbour} approach is used to select the workgroup size
 $w$ which is expected to be legal and has the lowest Euclidian
 distance to the predicted value $c$:
-
+%
 \begin{equation}
   w = \underset{w \in W_{legal(s)}}{\argmin} \sqrt{\left(c_r - w_r\right)^2 + \left(c_c - w_c\right)^2}
 \end{equation}
+%
+This process of selecting alternative parameters will iterate until a
+legal parameter is found.
 
 \subsection{Implementation}
 
@@ -772,9 +783,14 @@ code. A further 976 lines are required for the SkelCL frontend to
 implement the server response handlers and database backend. By
 design, the client-server model minimises the impact of number of
 modifications that are required to enable autotuning in client
-applications. The only modification required to SkelCL to replace the
-hardcoded values for workgroup size with a subroutine to request a
-workgroup size from the OmniTune server over a D-Bus connection.
+applications. The only modification required to SkelCL is to replace
+the hardcoded values for workgroup size with a subroutine to request a
+workgroup size from the OmniTune server over a D-Bus connection. To
+use the system, a user must download a copy of SkelCL modified with
+the OmniTune functionality, and start a local OmniTune server
+instance. A configuration file is used to determine the domain address
+and authentication details of the remote server. On first launch, the
+OmniTune server will fetch the latest training data from the remote.
 
 
 \section{Experimental Setup}
@@ -791,15 +807,15 @@ stencil benchmarks: Canny Edge Detection, Conway's Game of Life, Heat
 Equation, and Gaussian Blur. Performance data was collected from 7
 experimental platforms, comprising 4 GPU devices: AMD Tahiti 7970,
 Nvidia GTX 590, Nvidia GTX 690, Nvidia GTX TITAN; and 3 CPU devices:
-Intel i5-2430M, Intel i5-4570, i7-3820.  Each platform was unloaded,
+Intel i5-2430M, Intel i5-4570, i7-3820. Each platform was unloaded,
 frequency governors disabled, and benchmark processes set to the
 highest priority available to the task scheduler. Datasets and
-programs were stored in an in-memory file system. For each combination
-of scenario and workgroup size, a minimum of 30 samples were
-recorded. Dataset sizes of size $512\times512$, $1024\times1024$,
-$2048\times2048$, and $4096\times4096$ were used.
+programs were stored in an in-memory file system. For each program,
+dataset sizes of size $512\times512$, $1024\times1024$,
+$2048\times2048$, and $4096\times4096$ were used. A minimum of 30
+samples were recorded for each scenario and workgroup size.
 
-Program behavior is validated by comparing program output against a
+Program behavior was validated by comparing program output against a
 gold standard output collected by executing each of the real-world
 benchmarks programs using the baseline workgroup size. The output of
 real-world benchmarks with other workgroup sizes is compared to this
@@ -809,9 +825,9 @@ gold standard output to test for correct program execution.
 \section{Evaluation}\label{sec:evaluation}
 
 This section evaluates the performance of OmniTune when tasked with
-selecting workgroup sizes for SkelCL stencil codes. First I discuss
+selecting workgroup sizes for SkelCL stencil codes. First we discuss
 measurement noise present in the experimental results, and the methods
-used to accommodate for it. Then I examine the observed effect that
+used to accommodate for it. Then we examine the observed effect that
 workgroup size has on the performance of SkelCL stencils. The
 prediction quality of OmniTune is scrutinised for portability across
 programs, devices, and datasets.
@@ -909,8 +925,8 @@ runtimes for each test case is 83 (min 33, total 16917118).
   is shown as a vertical dashed line. The top row are from the Intel
   i5-4570, the second row from the Nvidia GTX 590, and the third row
   from the AMD Tahiti 7970. In some of the plots, the distribution of
-  runtimes is bimodal, and skewed to the lower end of the runtimes
-  range.%
+  runtimes is bi- or multi-modal, and skewed to the lower end of the
+  runtimes range.%
 }
 \label{fig:runtime-histograms}
 \end{figure}
@@ -926,7 +942,7 @@ fine-grained histograms of runtimes for individual test
 cases. Figure~\ref{fig:runtime-histograms} shows an example nine of
 these, for test cases from three devices. The plots show that the
 distribution of runtimes is not always Gaussian; rather, it is
-sometimes bimodal, and generally skewed to the lower end of the
+sometimes multimodal, and generally skewed to the lower end of the
 runtime range, with a long ``tail'' to the right. This fits our
 intuition that programs have a hard \emph{minimum} runtime enforced by
 the time taken to execute the instructions of a program, and that
@@ -1320,11 +1336,8 @@ scenarios, the following conclusions can be drawn:
   is optimal for only 15\% of scenarios.
 \end{enumerate}
 %
-% I believe this presents a compelling case for the development of an
-% autotuner which can select the optimal workgroup size at runtime.
-%
-In the following subsection, we will evaluate the performance of OmniTune
-for selecting workgroup sizes.
+In the following subsection, we will evaluate the performance of
+OmniTune for selecting workgroup sizes.
 
 
 \subsection{Autotuning Workgroup Sizes}
@@ -1788,6 +1801,8 @@ execution of a hot path. The current implementation of Collective Mind
 uses a NoSQL JSON format for storing performance data. The relational
 schema used in this thesis offers greater scaling performance and
 lower storage overhead as the amount of performance data grows.
+
+TODO: Collective Optimization paper: \cite{Fursin2010}
 
 
 \section{Conclusions}\label{sec:conclusions}
