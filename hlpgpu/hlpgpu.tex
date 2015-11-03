@@ -816,112 +816,265 @@ workgroup size has on the performance of SkelCL stencils. The
 prediction quality of OmniTune is scrutinised for portability across
 programs, devices, and datasets.
 
-% The effectiveness of each of the autotuning techniques described in
-% the previous sections is evaluated using multiple different machine
-% learning algorithms.
-
-% % \paragraph{Overview of Experimental Results}
-
 The experimental results consist of measured runtimes for a set of
 \emph{test cases}, collected using the methodology explained in the
 previous section. Each test case $\tau_i$ consists of a scenario,
 workgroup size pair $\tau_i = (s_i,w_i)$, and is associated with a
 \emph{sample} of observed runtimes from multiple runs of the
-program. A total of 269813 test cases have been evaluated, which
-represents an exhaustive enumeration of the workgroup size
-optimisation space for 429 scenarios. For each scenario, runtimes for
-an average of 629 (max 7260) unique workgroup sizes were measured. The
-average sample size of runtimes for each test case is 83 (min 33,
-total 16917118).
+program. A total of 269813 evaluated, which represents an exhaustive
+enumeration of the workgroup size optimisation space for 429
+scenarios. For each scenario, runtimes for an average of 629 (max
+7260) unique workgroup sizes were measured. The average sample size of
+runtimes for each test case is 83 (min 33, total 16917118).
 
 
-% % \subsection{Statistical Soundness}
+\subsection{Statistical Soundness}
 
-% \begin{figure}
-% \begin{subfigure}[h]{.32\columnwidth}
-% \centering
-% \includegraphics[width=\textwidth]{img/runtimes_histogram_1}
-% \vspace{-1.5em} % Shrink vertical padding
-% \caption{}
-% \label{fig:runtimes-histogram-1}
-% \end{subfigure}
-% ~%
-% \begin{subfigure}[h]{.32\columnwidth}
-% \centering
-% \includegraphics[width=\textwidth]{img/runtimes_histogram_2}
-% \vspace{-1.5em} % Shrink vertical padding
-% \caption{}
-% \label{fig:runtimes-histogram-2}
-% \end{subfigure}
-% ~%
-% \begin{subfigure}[h]{.32\columnwidth}
-% \centering
-% \includegraphics[width=\textwidth]{img/runtimes_histogram_3}
-% \vspace{-1.5em} % Shrink vertical padding
-% \caption{}
-% \label{fig:runtimes-histogram-3}
-% \end{subfigure}
-% \\
-% \begin{subfigure}[h]{.32\columnwidth}
-% \centering
-% \includegraphics[width=\textwidth]{img/runtimes_histogram_4}
-% \vspace{-1.5em} % Shrink vertical padding
-% \caption{}
-% \label{fig:runtimes-histogram-4}
-% \end{subfigure}
-% ~%
-% \begin{subfigure}[h]{.32\columnwidth}
-% \centering
-% \includegraphics[width=\textwidth]{img/runtimes_histogram_5}
-% \vspace{-1.5em} % Shrink vertical padding
-% \caption{}
-% \label{fig:runtimes-histogram-5}
-% \end{subfigure}
-% ~%
-% \begin{subfigure}[h]{.32\columnwidth}
-% \centering
-% \includegraphics[width=\textwidth]{img/runtimes_histogram_6}
-% \vspace{-1.5em} % Shrink vertical padding
-% \caption{}
-% \label{fig:runtimes-histogram-6}
-% \end{subfigure}
-% \\
-% \begin{subfigure}[h]{.32\columnwidth}
-% \centering
-% \includegraphics[width=\textwidth]{img/runtimes_histogram_7}
-% \vspace{-1.5em} % Shrink vertical padding
-% \caption{}
-% \label{fig:runtimes-histogram-7}
-% \end{subfigure}
-% ~%
-% \begin{subfigure}[h]{.32\columnwidth}
-% \centering
-% \includegraphics[width=\textwidth]{img/runtimes_histogram_8}
-% \vspace{-1.5em} % Shrink vertical padding
-% \caption{}
-% \label{fig:runtimes-histogram-8}
-% \end{subfigure}
-% ~%
-% \begin{subfigure}[h]{.32\columnwidth}
-% \centering
-% \includegraphics[width=\textwidth]{img/runtimes_histogram_9}
-% \vspace{-1.5em} % Shrink vertical padding
-% \caption{}
-% \label{fig:runtimes-histogram-9}
-% \end{subfigure}
-% \caption[Distribution of stencil code runtimes]{%
-%   Distribution of runtime samples for test cases from three
-%   devices. Each plot contains a 35-bin histogram of 1000 samples, and
-%   a fitted kernel density estimate with bandwidth 0.3. The sample mean
-%   is shown as a vertical dashed line. The top row are from the Intel
-%   i5-4570, the second row from the Nvidia GTX 590, and the third row
-%   from the AMD Tahiti 7970. In some of the plots, the distribution of
-%   runtimes is bimodal, and skewed to the lower end of the runtimes
-%   range.%
-% }
-% \label{fig:runtime-histograms}
-% \end{figure}
+\begin{figure}
+\begin{subfigure}[h]{.32\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{img/runtimes_histogram_1}
+\vspace{-1.5em} % Shrink vertical padding
+\caption{}
+\label{fig:runtimes-histogram-1}
+\end{subfigure}
+~%
+\begin{subfigure}[h]{.32\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{img/runtimes_histogram_2}
+\vspace{-1.5em} % Shrink vertical padding
+\caption{}
+\label{fig:runtimes-histogram-2}
+\end{subfigure}
+~%
+\begin{subfigure}[h]{.32\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{img/runtimes_histogram_3}
+\vspace{-1.5em} % Shrink vertical padding
+\caption{}
+\label{fig:runtimes-histogram-3}
+\end{subfigure}
+\\
+\begin{subfigure}[h]{.32\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{img/runtimes_histogram_4}
+\vspace{-1.5em} % Shrink vertical padding
+\caption{}
+\label{fig:runtimes-histogram-4}
+\end{subfigure}
+~%
+\begin{subfigure}[h]{.32\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{img/runtimes_histogram_5}
+\vspace{-1.5em} % Shrink vertical padding
+\caption{}
+\label{fig:runtimes-histogram-5}
+\end{subfigure}
+~%
+\begin{subfigure}[h]{.32\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{img/runtimes_histogram_6}
+\vspace{-1.5em} % Shrink vertical padding
+\caption{}
+\label{fig:runtimes-histogram-6}
+\end{subfigure}
+\\
+\begin{subfigure}[h]{.32\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{img/runtimes_histogram_7}
+\vspace{-1.5em} % Shrink vertical padding
+\caption{}
+\label{fig:runtimes-histogram-7}
+\end{subfigure}
+~%
+\begin{subfigure}[h]{.32\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{img/runtimes_histogram_8}
+\vspace{-1.5em} % Shrink vertical padding
+\caption{}
+\label{fig:runtimes-histogram-8}
+\end{subfigure}
+~%
+\begin{subfigure}[h]{.32\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{img/runtimes_histogram_9}
+\vspace{-1.5em} % Shrink vertical padding
+\caption{}
+\label{fig:runtimes-histogram-9}
+\end{subfigure}
+\caption[Distribution of stencil code runtimes]{%
+  Distribution of runtime samples for test cases from three
+  devices. Each plot contains a 35-bin histogram of 1000 samples, and
+  a fitted kernel density estimate with bandwidth 0.3. The sample mean
+  is shown as a vertical dashed line. The top row are from the Intel
+  i5-4570, the second row from the Nvidia GTX 590, and the third row
+  from the AMD Tahiti 7970. In some of the plots, the distribution of
+  runtimes is bimodal, and skewed to the lower end of the runtimes
+  range.%
+}
+\label{fig:runtime-histograms}
+\end{figure}
 
+The complex interaction between processes competing for the finite
+resources of a system introduces many sources for noise in program
+runtime measurements. Before making any judgements about the relative
+performance of optimisation configurations, we must establish the
+level of noise present in these measurements. To do this, we evaluate
+the distribution of runtimes for a randomly selected 1000 test cases,
+recording 1000 runtime observations for each. We can then produce
+fine-grained histograms of runtimes for individual test
+cases. Figure~\ref{fig:runtime-histograms} shows an example nine of
+these, for test cases from three devices. The plots show that the
+distribution of runtimes is not always Gaussian; rather, it is
+sometimes bimodal, and generally skewed to the lower end of the
+runtime range, with a long ``tail'' to the right. This fits our
+intuition that programs have a hard \emph{minimum} runtime enforced by
+the time taken to execute the instructions of a program, and that
+noise introduced to the system extends this runtime. For example,
+preempting an OpenCL process on a CPU so that another process may run
+may cause the very long tail visible in
+Figure~\ref{fig:runtimes-histogram-1}.
+
+The central limit theorem allows the assumption of an underlying
+Gaussian distribution for samples of size $\ge 30$~\cite{Georges2007}.
+Given our minimum sample size of 33, we can use 95\% confidence
+intervals to provide statistical confidence that the arithmetic mean
+of observed runtimes with respect to the true mean. As the number or
+samples increases, we should expect the size of the confidence
+interval to shrink. This is illustrated in Figure~\ref{fig:ci-trends},
+which plots the average size of 95\% confidence intervals across the
+1000 test cases, normalised to their respective means, as a function
+of sample size. It shows the diminishing returns that increasing
+sample size provides. For example, increasing the sample count from 10
+to 30 results in an approximate 50\% reduction in confidence interval
+size. Increasing the sample size from 30 to 50 results in only a 25\%
+reduction.
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{img/ci_trend}
+\caption[Confidence interval size vs.\ sample count]{%
+  Ratio of confidence interval to mean as a function of sample
+  count. Two dashed lines indicate the confidence intervals at the
+  minimum (3.7\%) and mean (2.5\%) number of samples used in the
+  experimental dataset.%
+}
+\label{fig:ci-trends}
+\end{figure}
+
+By comparing the average confidence interval at different sample
+counts against the full experiment results of 269813 test cases, we
+can assert with 95\% confidence that the true mean for each test case
+is within 2.5\% of the sample mean (given the average number of
+samples per test case), or 3.7\% in the worst case (at the minimum
+number of samples). Since the differences between baseline and optimal
+workgroup sizes is often well in excess of 100\%, there is no overlap
+of confidence intervals between competing workgroup sizes.
+
+
+\subsection{Workgroup Size Optimisation Space}
+
+In this subsection we explore the impact that the workgroup size
+optimisation space has on the performance of SkelCL stencil programs.
+
+\subsubsection{Oracle Workgroup Sizes}
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{img/num_params_oracle.pdf}
+\caption[Oracle accuracy vs.\ number of workgroup sizes]{%
+  Accuracy compared to the oracle as a function of the number of
+  workgroup sizes used. The best accuracy that can be achieved using a
+  single statically chosen workgroup size is 15\%. Achieving 50\%
+  oracle accuracy requires a minimum of 14 distinct workgroup sizes.%
+}
+\label{fig:oracle-accuracy}
+\end{figure}
+
+For each scenario $s$, the oracle workgroup size $\Omega(s)$ is the
+workgroup size which resulted in the lowest mean runtime. If the
+performance of stencils were independent of workgroup size, we would
+expect that the oracle workgroup size would remain constant across all
+scenarios $s \in S$. Instead, we find that there are 135 unique oracle
+workgroup sizes, with 31.5\% of scenarios having a unique workgroup
+size. This demonstrates the difficult in attempting to tune for
+\emph{optimal} parameter values, since 14 distinct workgroup sizes are
+needed to achieve just 50\% of the oracle accuracy
+(Figure~\ref{fig:oracle-accuracy}), although it is important to make
+the distinction that oracle \emph{accuracy} and \emph{performance} are
+not equivalent. The workgroup size which is most frequently optimal is
+$w_{(64 \times 4)}$, which is optimal for 15\% of scenarios. Note that
+this is not adequate to use as a baseline for static tuning, as it
+does not respect legality constraints, that is
+$w_{(64 \times 4)} \not\in W_{safe}$.
+
+
+\paragraph{Maximum workgroup sizes}
+
+We define the \emph{coverage} of a workgroup size to be the ratio
+$0 \le x \le 1$ between the number of scenarios for which the
+workgroup size is less than $W_{\max}(s)$, normalised to the total
+number of scenarios. A coverage of 1 implies a workgroup size which is
+always legal for all combinations of stencil and architecture. A
+workgroup size with a coverage of 0 is never legal. Note that since
+$W_{\max}(s)$ defines a hard limit for a given $s$, if statically
+selecting a workgroup size, one must limit the optimisation space to
+the smallest $W_{\max}(s)$ value, i.e.\ only the workgroup sizes with
+a coverage of 1. The observed $W_{\max}(s)$ values range from
+256--8192, which results in up to a 97\% reduction in the size of the
+optimisation space when $W_{\max}(s) = 8192$, even though only 14\% of
+scenarios have the minimum value of $W_{\max}(s) = 256$.
+
+\paragraph{Refused Parameters}
+
+In addition to the hard constraints imposed by the maximum workgroup
+size, there are also refused parameters, which are workgroup sizes
+which are rejected by the OpenCL runtime and do not provide a
+functioning program. Of the 8504 unique workgroup sizes tested, 11.4\%
+were refused in one or more test cases. An average of 5.5\% of all
+test cases lead to refused parameters. For a workgroup size to be
+refused, it must satisfy the architectural and program-specific
+constraints which are exposed by OpenCL, but still lead to a
+\texttt{CL\_OUT\_OF\_RESOURCES} error when the kernel is
+enqueued. While uncommon, a refused parameter is an obvious
+inconvenience to the user, as one would expect that any workgroup size
+within the specified maximum should behave \emph{correctly}, if not
+efficiently. For now, it is imperative that any autotuning system is
+capable of adapting to these refused parameters by suggesting
+alternatives when they occur.
+
+
+\subsubsection{Baseline Parameter}
+
+The baseline parameter $\bar{w}$ is the workgroup size which provides
+the best overall performance while being legal for all scenarios. It
+is the workgroup size $w \in W_{safe}$ which maximises the output of
+the performance function $\bar{p}(w)$. As shown in
+Table~\ref{tab:highest-legality}, only a \emph{single} workgroup size
+$w_{(4 \times 4)}$ from the set of experimental results is found to
+have a legality of 100\%, suggesting that an adaptive approach to
+setting workgroup size is necessary not just for the sake of
+maximising performance, but also for guaranteeing program correctness.
+
+The utility of the baseline parameter is that it represents the best
+performance that can be achieved through static tuning of the
+workgroup size parameter. We can evaluate the performance of
+suboptimal workgroup sizes by calculating the geometric mean of their
+\emph{performance} for a particular scenario $p(s, w)$ across all
+scenarios, $\bar{p}(w)$. The baseline parameter $\bar{p}(\bar{w})$
+achieves only 24\% of the available performance.
+
+Figure~\ref{fig:speedups} shows the speedup of the oracle workgroup
+size over the baseline parameter $w_{(4 \times 4)}$ for all
+scenarios. If we assume that sufficiently pragmatic developer with
+enough time would eventually find this static optimal, then this
+provides a reasonable comparison for calculating speedups of an
+autotuner for workgroup size. Comparing the runtime of workgroup sizes
+relative to the oracle allows us to calculate upper bounds on the
+possible performance which can be expected from autotuning.
+
+
+\subsubsection{Speedup Upper Bounds}
 
 \begin{figure}
   \includegraphics[width=\columnwidth]{img/max_speedups}
@@ -951,93 +1104,13 @@ $1.03\times$, max $207.72\times$). This demonstrates the importance of
 tuning stencil workgroup sizes --- if chosen incorrectly, the runtime
 of stencil programs can be extended by up to $207.72\times$. Note too
 that for 5 of the scenarios, the speedup of the best over worst
-workgroup sizes is $\le 5\%$.
-% TODO: t-test for this!
-For these scenarios, there is little benefit to autotuning; however,
-this represents only 1.1\% of the tested scenarios. For 50\% of the
-scenarios, the speedup of the best over worst workgroup sizes is
-$\ge 6.19\times$.
+workgroup sizes is $\le 5\%$. For these scenarios, there is little
+benefit to autotuning; however, this represents only 1.1\% of the
+tested scenarios. For 50\% of the scenarios, the speedup of the best
+over worst workgroup sizes is $\ge 6.19\times$.
 
 
-% The complex interaction between processes competing for the finite
-% resources of a system introduces many sources for noise in program
-% runtime measurements. Before making any judgements about the relative
-% performance of optimisation configurations, we must establish the
-% level of noise present in these measurements. To do this, we evaluate
-% the distribution of runtimes for a randomly selected 1000 test cases,
-% recording 1000 runtime observations for each. We can then produce
-% fine-grained histograms of runtimes for individual test
-% cases.
-
-Figure~\ref{fig:runtime-histograms} shows the distributions of 1000
-runtimes for each of nine test cases, from three devices. The plots
-show that the distribution of runtimes is not always Gaussian; rather,
-it is sometimes bimodal, and generally skewed to the lower end of the
-runtime range, with a long ``tail'' to the right. This fits our
-intuition that programs have a hard \emph{minimum} runtime enforced by
-the time taken to execute the instructions of a program, and that
-noise introduced to the system extends this runtime. For example,
-preempting an OpenCL process on a CPU so that another process may run
-may cause the very long tail visible in
-Figure~\ref{fig:runtimes-histogram-1}.
-
-As the number of samples increases, we
-should expect the size of the confidence interval to shrink. This is
-illustrated in Figure~\ref{fig:ci-trends}, which plots the average
-size of 95\% confidence intervals across the 1000 test cases,
-normalised to their respective means, as a function of sample
-size. It shows the diminishing returns that increasing sample size
-provides. For example, increasing the sample count from 10 to 30
-results in an approximate 50\% reduction in confidence interval
-size. Increasing the sample size from 30 to 50 results in only a
-25\% reduction.
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{img/ci_trend}
-\caption[Confidence interval size vs.\ sample count]{%
-  Ratio of confidence interval to mean as a function of sample
-  count. Two dashed lines indicate the confidence intervals at the
-  minimum (3.7\%) and mean (2.5\%) number of samples used in the
-  experimental dataset.%
-}
-\label{fig:ci-trends}
-\end{figure}
-
-By comparing the average confidence interval at different sample
-counts against the full experiment results of 269813 test cases, we
-can assert with 95\% confidence that the true mean for each test case
-is within 2.5\% of the sample mean (given the average number of
-samples per test case), or 3.7\% in the worst case (at the minimum
-number of samples). Since the differences between baseline and optimal
-workgroup sizes is often well in excess of 100\%, there is no overlap
-of confidence intervals between competing workgroup sizes.
-
-
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{img/num_params_oracle.pdf}
-\caption[Oracle accuracy vs.\ number of workgroup sizes]{%
-  Accuracy compared to the oracle as a function of the number of
-  workgroup sizes used. The best accuracy that can be achieved using a
-  single statically chosen workgroup size is 15\%. Achieving 50\%
-  oracle accuracy requires a minimum of 14 distinct workgroup sizes.%
-}
-\label{fig:oracle-accuracy}
-\end{figure}
-
-For each scenario $s$, the oracle workgroup size $\Omega(s)$ is the
-workgroup size which resulted in the lowest mean runtime. If the
-performance of stencils were independent of workgroup size, we would
-expect that the oracle workgroup size would remain constant across all
-scenarios $s \in S$. Instead, we find that there are 135 unique oracle
-workgroup sizes, with 31.5\% of scenarios having a unique workgroup
-size. This demonstrates the difficult in attempting to tune for
-\emph{optimal} parameter values, since 14 distinct workgroup sizes are
-needed to achieve just 50\% of the oracle accuracy
-(Figure~\ref{fig:oracle-accuracy}), although it is important to make
-the distinction that oracle \emph{accuracy} and \emph{performance} are
-not equivalent.
+\subsubsection{Human Expert}
 
 In the original implementation of the SkelCL stencil
 skeleton~\cite{Breuer2013}, \citeauthor{Breuer2013} selected a
@@ -1056,7 +1129,8 @@ size selected by the human expert is not legal for all scenarios, we
 will examine the effectiveness of heuristics for tuning workgroup
 size.
 
-% % \subsubsection{Heuristics}
+
+\subsubsection{Heuristics}
 
 In this subsection we will consider the effectiveness of instead
 selecting workgroup size using two types of heuristics. The first,
@@ -1065,95 +1139,8 @@ kernel APIs to select the workgroup size adaptively. The second, using
 per-device heuristics, in which the workgroup size is selected based
 on the specific architecture that a stencil is operating on.
 
-% \paragraph{Using maximum legal size}
 
-A common approach taken by OpenCL developers is to set the workgroup
-size for a kernel based on the maximum legal workgroup size queried
-from the OpenCL APIs. For example, to set the size of 2D workgroup, a
-developer the square root of the (scalar) maximum wgsize to set the
-number of columns and rows (since $w_c \cdot w_r$ must be
-$< W_{\max}(s)$). To consider the effectiveness of this approach, we
-group the workgroup size performances based on the ratio of the
-maximum allowed for each scenario. We can also perform this for each
-of the two dimensions --- rows and columns --- of the stencil
-workgroup size.
-
-Figure~\ref{fig:performance-wgsizes} shows the distribution of
-runtimes when grouped this way, demonstrating that the performance of
-(legal) workgroup sizes are not correlated with the maximum workgroup
-sizes $W_{\max}(s)$. However, when considering individual components,
-we observe that the best median workgroup size performances are
-achieved with a number of columns that is between 10\% and 20\% of the
-maximum, and a number of rows that is between 0\% and 10\% of the
-maximum.
-
-% \paragraph{Per-device workgroup sizes}
-
-\begin{table}
-  \scriptsize
-  \centering
-  \begin{tabular}{lllp{.9cm}p{.9cm}}
-    \toprule
-    Device &         Oracle & Legality & Perf.\ min & Perf.\ avg. \\
-    \midrule
-    AMD Tahiti 7970 &   $48\times 4$ &      1.0 &       0.54 &        0.91 \\
-    Intel i5-2430M &  $64\times 16$ &      0.8 &       0.37 &        0.91 \\
-    Intel i5-4570 &   $88\times 8$ &     0.89 &       0.33 &        0.89 \\
-    Intel i7-3820 &  $40\times 24$ &     0.95 &       0.76 &        0.97 \\
-    NVIDIA GTX 590 &  $12\times 2$ &      0.8 &        0.2 &         0.9 \\
-    NVIDIA GTX 690 &   $64\times 4$ &     0.93 &       0.32 &        0.84 \\
-    NVIDIA GTX TITAN &   $64\times 4$ &      1.0 &       0.26 &        0.81 \\
-    \textbf{CPUs} &   $88\times 8$ &     0.88 &       0.33 &        0.91 \\
-    \textbf{GPUs} &   $64\times 4$ &     0.76 &       0.26 &        0.86 \\
-    \bottomrule
-  \end{tabular}
-  \caption[Performance of tuning with a per-device heuristic]{%
-    Selecting workgroup size using a per-device heuristic. The mode
-    optimal workgroup size for each device type is evaluated
-    based on legality, and relative performance to the oracle (minimum
-    and average) when legal.%
-  }
-  \label{tab:heuristic-dev}
-\end{table}
-
-One possible technique to selecting workgroup size is to tune
-particular values for each targeted execution device. This approach is
-sometimes adopted for cases with particularly high requirements for
-performance on a single platform, so it produces an interesting
-contrast to evaluating a machine learning approach, which attempts to
-predict workgroup sizes for unseen platforms without the need for an
-expensive exploration phase on the new platform.
-
-Figure~\ref{fig:performances} shows the performance of workgroup sizes
-relative to the oracle across scenarios grouped by: kernel, device,
-and dataset. When grouped like this, a number of observations can
-made. First is that not all of the kernels are sensitive to tuning
-workgroup size to the same degree. The \emph{sobel} kernel has the
-lowest median performance, indicating that it is the most profitable
-to tune, while the \emph{threshold} kernel is the least
-profitable. Similarly, the Intel i7-3820 is far less amenable to
-tuning than the other devices, while the Intel i5-4570 is the most
-sensitive to the workgroup size parameter. Such variances in the
-distributions of workgroup sizes suggest that properties underlying
-the architecture, kernel, and dataset all contribute towards the
-proper selection of workgroup size.
-
-To test the performance of a per-device heuristic for selecting
-workgroup size, we group the scenarios by device, and compare the
-relative performance of all workgroup sizes for each group of
-scenarios. The most frequently optimal workgroup size $\bar{w}$ for
-each device is selected, and the legality and performance of each
-scenario using that workgroup size is evaluated.
-Table~\ref{tab:heuristic-dev} shows the results of this evaluation.
-The GTX 690 and GTX TITAN share the same $\bar{w}_{(64 \times 4)}$
-value, while every other device has a unique optimum. The general case
-performance of these per-device parameters is very good, although
-legality is only assured for the GTX TITAN and AMD 7970 (which did not
-refuse any parameters). However, the worst case performance of
-per-device workgroup sizes is poor for all except the i7-3820 (which
-is least sensitive to tuning), suggesting that device alone is not
-capable of reliably informing the choice of workgroup size.
-
+\paragraph{Using maximum legal size}
 
 \begin{figure}
   \begin{subfigure}[h]{\columnwidth}
@@ -1223,200 +1210,212 @@ capable of reliably informing the choice of workgroup size.
   \label{fig:performances}
 \end{figure}
 
+A common approach taken by OpenCL developers is to set the workgroup
+size for a kernel based on the maximum legal workgroup size queried
+from the OpenCL APIs. For example, to set the size of 2D workgroup, a
+developer the square root of the (scalar) maximum wgsize to set the
+number of columns and rows (since $w_c \cdot w_r$ must be
+$< W_{\max}(s)$). To consider the effectiveness of this approach, we
+group the workgroup size performances based on the ratio of the
+maximum allowed for each scenario. We can also perform this for each
+of the two dimensions --- rows and columns --- of the stencil
+workgroup size.
 
-% % \subsubsection{Summary}
-
-% In this subsection we have explored the performance impact of the
-% workgroup size optimisation space. By comparing the relative
-% performance of an average of 629 workgroup sizes for each of 429
-% scenarios, the following conclusions can be drawn:
-
-% \begin{enumerate}
-% \item The performance of a workgroup size for a particular scenario
-%   depends properties of the hardware, software, and dataset.
-% \item The performance gap between the best and workgroup sizes for a
-%   particular combination of hardware, software, and dataset is up to
-%   $207.72\times$.
-% \item Not all workgroup sizes are legal, and the space of legal
-%   workgroup sizes cannot statically be determined. Adaptive tuning of
-%   workgroup size is required to ensure reliable performance.
-% \item Differing scenarios have wildly different optimal workgroup
-%   sizes, and the best performance can be achieved using static tuning
-%   is optimal for only 15\% of scenarios.
-% \end{enumerate}
-% %
-% % I believe this presents a compelling case for the development of an
-% % autotuner which can select the optimal workgroup size at runtime.
-% %
-% In the following subsection, we will evaluate the performance of OmniTune
-% for selecting workgroup sizes.
+Figure~\ref{fig:performance-wgsizes} shows the distribution of
+runtimes when grouped this way, demonstrating that the performance of
+(legal) workgroup sizes are not correlated with the maximum workgroup
+sizes $W_{\max}(s)$. However, when considering individual components,
+we observe that the best median workgroup size performances are
+achieved with a number of columns that is between 10\% and 20\% of the
+maximum, and a number of rows that is between 0\% and 10\% of the
+maximum.
 
 
+\paragraph{Per-device workgroup sizes}
 
-% With the exception of the ZeroR, which predicts \emph{only} the
-% baseline workgroup size $w_{\left( 4 \times 4 \right)}$, the
-% classifiers achieve good speedups over the baseline. Average
-% classification speedups across all validation sets range between
-% $4.61\times$ and $5.05\times$. Figures~\ref{fig:class-syn}
-% and~\ref{fig:class-arch} show a summary of results using 10-fold
-% cross-validation and cross-device validation, respectively.  The
-% highest average speedup is achieved by SMO, and the lowest by Naive
-% Bayes. The difference between average speedups is not significant
-% between the types of classifier, with the exception of SimpleLogistic,
-% which performs poorly when trained with synthetic benchmarks and
-% tested against real-world programs. This suggests the model
-% over-fitting to features of the synthetic benchmarks which are not
-% shared by the real-world
-% tests.
+\begin{table}
+  \scriptsize
+  \centering
+  \begin{tabular}{lllp{1cm}p{1cm}}
+    \toprule
+    Device &         Oracle & Legality & Perf.\ min & Perf.\ avg. \\
+    \midrule
+    AMD Tahiti 7970 &   $48\times 4$ &      1.0 &       0.54 &        0.91 \\
+    Intel i5-2430M &  $64\times 16$ &      0.8 &       0.37 &        0.91 \\
+    Intel i5-4570 &   $88\times 8$ &     0.89 &       0.33 &        0.89 \\
+    Intel i7-3820 &  $40\times 24$ &     0.95 &       0.76 &        0.97 \\
+    NVIDIA GTX 590 &  $12\times 2$ &      0.8 &        0.2 &         0.9 \\
+    NVIDIA GTX 690 &   $64\times 4$ &     0.93 &       0.32 &        0.84 \\
+    NVIDIA GTX TITAN &   $64\times 4$ &      1.0 &       0.26 &        0.81 \\
+    \textbf{CPUs} &   $88\times 8$ &     0.88 &       0.33 &        0.91 \\
+    \textbf{GPUs} &   $64\times 4$ &     0.76 &       0.26 &        0.86 \\
+    \bottomrule
+  \end{tabular}
+  \caption[Performance of tuning with a per-device heuristic]{%
+    Selecting workgroup size using a per-device heuristic. The mode
+    optimal workgroup size for each device type $\bar{w}$ is evaluated
+    based on legality, and relative performance to the oracle (minimum
+    and average) when legal.%
+  }
+  \label{tab:heuristic-dev}
+\end{table}
 
-% By isolating the test cases where classifiers predicted an illegal or
-% refused parameter, we can directly compare the relative effectiveness
-% of each fallback handler. The fallback handler with the best average
-% case performance is \textsc{NearestNeighbour}, with an average speedup
-% across all classifiers and validation sets of $5.26\times$. The
-% speedup of \textsc{Random} fallback handler is $3.69\times$, and
-% $1.0\times$ for \textsc{Baseline}. Figure~\ref{fig:fallback-speedups}
-% plots the speedups of each fallback handler for all of these isolated
-% test cases. Interestingly, both the lowest and highest speedups are
-% achieved by the \textsc{Random} fallback handler, since it essentially
-% performs a random exploration of the optimisation space. However, the
-% \textsc{NearestNeighbour} fallback handler provides consistently
-% greater speedups for the majority of test cases, indicating that it
-% successfully exploits the structure of the optimisation spaces.
+One possible technique to selecting workgroup size is to tune
+particular values for each targeted execution device. This approach is
+sometimes adopted for cases with particularly high requirements for
+performance on a single platform, so it produces an interesting
+contrast to evaluating a machine learning approach, which attempts to
+predict workgroup sizes for unseen platforms without the need for an
+expensive exploration phase on the new platform.
 
-% Figures~\ref{fig:runtime-class-xval} and ~\ref{fig:speedup-class-xval}
-% show a summary of results for classification using regressors to
-% predict program runtimes and speedups, respectively. Of the two
-% regression techniques, predicting the \emph{speedup} of workgroup
-% sizes is much more successful than predicting the \emph{runtime}. This
-% is most likely caused by the inherent difficulty in predicting the
-% runtime of arbitrary programs, where dynamic factors such as flow
-% control and loop bounds are not captured by the kernel features used
-% in OmniTune, which instead use simple static static instruction counts
-% and densities. The average speedup achieved by predicting runtimes is
-% $4.14\times$. For predicting speedups, the average is $5.57\times$.
-% Tables~\ref{tab:class}, \ref{tab:runtime-class},
-% and~\ref{tab:speedup-class} show mean performances and speedups for:
-% J48 classifier using the \textsc{NearestNeighour} fallback strategy,
-% classification using runtime regression, and classification using
-% speedup regression, respectively.
+Figure~\ref{fig:performances} shows the performance of workgroup sizes
+relative to the oracle across scenarios grouped by: kernel, device,
+and dataset. When grouped like this, a number of observations can
+made. First is that not all of the kernels are sensitive to tuning
+workgroup size to the same degree. The \emph{sobel} kernel has the
+lowest median performance, indicating that it is the most profitable
+to tune, while the \emph{threshold} kernel is the least
+profitable. Similarly, the Intel i7-3820 is far less amenable to
+tuning than the other devices, while the Intel i5-4570 is the most
+sensitive to the workgroup size parameter. Such variances in the
+distributions of workgroup sizes suggest that properties underlying
+the architecture, kernel, and dataset all contribute towards the
+proper selection of workgroup size.
 
-% If we eliminate the 2.6\% of test cases for which the workgroup size
-% of $w_{(32 \times 4)}$ is illegal, we can compare the performance of
-% OmniTune directly against the human expert chosen workgroup
-% size. Figure~\ref{fig:speedup-distributions} compares the speedups of
-% all such validation instances over the human expert parameter, for
-% each autotuning technique. The speedup distributions show consistent
-% classification results for the five classification techniques, with
-% the speedup at the lower quartile for all classifiers being
-% $\ge 1.0\times$. The IQR for all classifiers is $< 0.5$, but there are
-% outliers with speedups both well below $1.0\times$ and well above
-% $2.0\times$. In contrast, the speedups achieved using runtime
-% regression have a lower range, but also a lower median and a larger
-% IQR. Clearly, runtime regression is the least effective of the
-% evaluated autotuning techniques. Speedup regression is more
-% successful, with the highest median speedup of all the
-% techniques. However, it also has a large IQR and the lower quartile
-% has a speedup value well below 1, meaning that for more than 25\% of
-% test instances, the workgroup size selected did not perform as well as
-% the human expert selected workgroup size.
-
-% % The lower average speedup attained by speedup regression over the
-% % J48 classifier belies the fact that the \emph{median} speedup is
-% % much greater, at $1.33 \times$.
+To test the performance of a per-device heuristic for selecting
+workgroup size, we group the scenarios by device, and compare the
+relative performance of all workgroup sizes for each group of
+scenarios. The most frequently optimal workgroup size $\bar{w}$ for
+each device is selected, and the legality and performance of each
+scenario using that workgroup size is evaluated.
+Table~\ref{tab:heuristic-dev} shows the results of this evaluation.
+The GTX 690 and GTX TITAN share the same $\bar{w}_{(64 \times 4)}$
+value, while every other device has a unique optimum. The general case
+performance of these per-device parameters is very good, although
+legality is only assured for the GTX TITAN and AMD 7970 (which did not
+refuse any parameters). However, the worst case performance of
+per-device workgroup sizes is poor for all except the i7-3820 (which
+is least sensitive to tuning), suggesting that device alone is not
+capable of reliably informing the choice of workgroup size.
 
 
-% \begin{table}
-% \scriptsize
-% \centering
-% \begin{tabular}{llll}
-% \toprule
-%               Job &    Performance &            Speedup &       Human Expert \\
-% \midrule
-%           10-fold &           68\% &       $4.13\times$ &       $0.88\times$ \\
-%         Synthetic &           78\% &       $3.81\times$ &       $1.06\times$ \\
-%            Device &           69\% &       $3.89\times$ &       $0.97\times$ \\
-%            Kernel &           74\% &       $4.36\times$ &       $1.04\times$ \\
-%           Dataset &           72\% &       $4.33\times$ &       $0.98\times$ \\
-%  \textbf{Average} &  \textbf{70\%} &  $\bm{4.14\times}$ &  $\bm{0.92\times}$ \\
-% \bottomrule
-% \end{tabular}
-% \caption{Validation results for runtime regression.}
-% \label{tab:runtime-class}
-% \end{table}
-% \begin{table}
-% \scriptsize
-% \centering
-% \begin{tabular}{llll}
-% \toprule
-%               Job &    Performance &            Speedup &       Human Expert \\
-% \midrule
-%           10-fold &           89\% &       $5.67\times$ &       $1.10\times$ \\
-%         Synthetic &           86\% &       $4.48\times$ &       $1.19\times$ \\
-%            Device &           85\% &       $5.18\times$ &       $1.15\times$ \\
-%            Kernel &           88\% &       $5.38\times$ &       $1.15\times$ \\
-%           Dataset &           88\% &       $5.53\times$ &       $1.13\times$ \\
-%  \textbf{Average} &  \textbf{89\%} &  $\bm{5.57\times}$ &  $\bm{1.12\times}$ \\
-% \bottomrule
-% \end{tabular}
-% \caption{Validation results for speedup regression.}
-% \label{tab:speedup-class}
-% \end{table}
+\subsubsection{Summary}
+
+In this subsection we have explored the performance impact of the
+workgroup size optimisation space. By comparing the relative
+performance of an average of 629 workgroup sizes for each of 429
+scenarios, the following conclusions can be drawn:
+
+\begin{enumerate}
+\item The performance of a workgroup size for a particular scenario
+  depends properties of the hardware, software, and dataset.
+\item The performance gap between the best and workgroup sizes for a
+  particular combination of hardware, software, and dataset is up to
+  $207.72\times$.
+\item Not all workgroup sizes are legal, and the space of legal
+  workgroup sizes cannot statically be determined. Adaptive tuning of
+  workgroup size is required to ensure reliable performance.
+\item Differing scenarios have wildly different optimal workgroup
+  sizes, and the best performance can be achieved using static tuning
+  is optimal for only 15\% of scenarios.
+\end{enumerate}
+%
+% I believe this presents a compelling case for the development of an
+% autotuner which can select the optimal workgroup size at runtime.
+%
+In the following subsection, we will evaluate the performance of OmniTune
+for selecting workgroup sizes.
 
 
+\subsection{Autotuning Workgroup Sizes}
 
-The prediction costs using regression are significantly greater than
-using classifiers. This is because, while a classifier makes a single
-prediction, the number of predictions required of a regressor grows
-with the size of $W_{\max}(s)$, since classification with regression
-requires making predictions for all
-$w \in \left\{ w | w < W_{\max}(s) \right\}$. The fastest classifier
-is J48, due to the it's simplicity (it can be implemented as a
-sequence of nested \texttt{if}/\texttt{else} statements).
+In this Section we evaluate the performance of OmniTune for predicting
+workgroup sizes. To perform an evaluation, we partition the
+experimental data into a training set and a test set:
+$S_{training} \subset S$ and $S_{testing} = S - S_{training}$. A set
+of labelled training data $D_{training}$ is derived from
+$S_{training}$, and the prediction quality is testing using the
+validation set $D_{testing}$ derived from $S_{training}$. We use
+multiple approaches to partitioning test data to evaluate the
+prediction quality under different scenarios. The processes for
+generating validation sets are:
+%
+\begin{itemize}
+\item 10-fold --- shuffle the set of all data and divide into 10
+  validation sets, each containing 10\% of the data. This process is
+  repeated for 10 rounds, resulting in 100 validations of 10
+  permutations of the data.
+\item Synthetic --- divide the training data such that it consists
+  solely of data collected from synthetic benchmarks, and use data
+  collected from real-world benchmarks to test.
+\item Device --- partition the training data into $n$ sets, one for
+  each device. Use $n-1$ sets for training, repeating until every
+  partition has been used for testing once.
+\item Kernel --- partition the training data into $n$ sets, one for
+  each kernel. Use $n-1$ sets for training, repeating until every
+  partition has been used for testing once.
+\item Dataset --- partition the training data into $n$ sets, one for
+  each type of dataset. Use $n-1$ sets for training, repeating until
+  every partition has been used for testing once.
+\end{itemize}
+%
+Training data consists of pairs of feature vectors $f(s)$ and oracle
+workgroup sizes $\Omega(s)$:
+%
+\begin{equation}
+  D_{training} = \left\{ (f(s),\Omega(s)) | s \in S_{training} \right\}
+\end{equation}
+%
+Testing data are not labelled with oracle workgroup sizes:
+%
+\begin{equation}
+  D_{testing} = \left\{ f(s) | s \in S_{testing} \right\}
+\end{equation}
+%
+Workgroup sizes are predicted for each scenario in the testing set,
+and the quality of the predicted workgroup size is evaluated using the
+following metrics:
+%
+\begin{itemize}
+\item accuracy (binary) --- whether the predicted workgroup size is
+  the true oracle, $p(f(s)) = \Omega(s)$.
+\item validity (binary) --- whether the classifier predicted a
+  workgroup size which satisfies the workgroup size constraints
+  constraints, $p(f(s)) < W_{\max}(s)$.
+\item refused (binary) --- whether the classifier predicted a
+  workgroup size which is refused, $p(f(s)) \in W_{refused}(s)$.
+\item performance (real) --- the relative performance of the predicted
+  workgroup size relative to the oracle,
+  $0 \le r(p(f(s)), \Omega(s)) \le 1$.
+\item speedups (real) --- the relative performance of the predicted
+  workgroup size relative to the baseline workgroup size
+  $w_{(4 \times 4)}$, and human expert workgroup size
+  $w_{(32 \times 4)}$ (where applicable).
+\item time (real) --- the round trip time required to make the prediction,
+  as measured by the OmniTune client. This includes classification
+  time and inter-process communication overheads between the client
+  and server.
+\end{itemize}
+%
+The \emph{validty} and \emph{refused} metrics measure how often the
+nearest neighbour fallback strategy is required to select a legal
+workgroup size $w \in W_{legal}(s)$.
 
-% From an evaluation of 17 different autotuning techniques using 5
-% different types of validation sets, the following conclusions about
-% autotuning performance can be drawn:
-% %
-% \begin{itemize}
-% \item In the case of classifiers predicting illegal workgroup sizes,
-%   the best fallback strategy is to select the closest legal workgroup
-%   size.
-% \item The performance of predicted workgroup sizes for unseen devices
-%   is within 8\% of the performance for known devices.
-% \item Predicting the \emph{runtime} of stencils is the least effective
-%   of the evaluated autotuning techniques, achieving an average of only
-%   68\% of the available performance.
-% \item Predicting the \emph{speedup} of workgroup sizes provides the
-%   highest median speedup, but more frequently predicts a poorly
-%   performing workgroup size then the classifiers.
-% \item Classification using regression costs an order of magnitude more
-%   time than using classifiers. The J48 classifier has the lowest
-%   overhead.
-% \end{itemize}
+The purpose of this evaluation is to test the effectiveness of machine
+learning-enabled autotuning for predicting workgroup sizes of SkelCL
+stencils codes.
 
-In the original implementation of the SkelCL stencil
-skeleton~\cite{Breuer2013}, \citeauthor{Breuer2013} selected a
-workgroup size of $w_{(32 \times 4)}$ in an evaluation of 4 stencil
-operations on a Tesla S1070 system. We can use this as an additional
-parameter to compare the relative performance of workgroup sizes
-against. However, the $w_{(32 \times 4)}$ workgroup size is invalid
-for 2.6\% of scenarios, as it is refused in 11 test cases. By device,
-those are: 3 on the GTX 690, 6 on the i5-2430M, and 2 on the i5-4570.
-For the scenarios where $w_{(32 \times 4)}$ \emph{is} legal, the human
-expert chosen workgroup size achieves an impressive geometric mean of
-79.2\% of the oracle performance. The average speedup of oracle
-workgroup sizes over the workgroup size selected by a human expert is
-$1.37\times$ (min $1.0\times$, max $5.17\times$). Since the workgroup
-size selected by the human expert is not legal for all scenarios, we
-will examine the effectiveness of heuristics for tuning workgroup
-size.
+The classifier achieves good speedups over the baseline. Average
+classification speedups across all validation sets range between
+$4.61\times$ and $5.05\times$. Figures~\ref{fig:class-syn}
+and~\ref{fig:class-arch} show a summary of results using 10-fold
+cross-validation and cross-device validation, respectively.
 
-
-\subsection{Autotuning overheads}
-
-
-\subsection{Collective Tuning}
+By isolating the test cases where an illegal or refused parameter was
+predicted, we can analyse the effectiveness of the
+\textsc{NearestNeighbour} fallback handler. The handler has an average
+speedup across all validation sets of $5.26\times$, indicating that it
+successfully exploits the structure of the optimisation spaces.
 
 \begin{table}
 \scriptsize
@@ -1425,12 +1424,12 @@ size.
 \toprule
               Job &    Performance &            Speedup &       Human Expert \\
 \midrule
-\textbf{10-fold} & \textbf{92\%} & \textbf{$5.65\times$} & \textbf{$1.26\times$} \\
+          10-fold &           92\% &       $5.65\times$ &       $1.26\times$ \\
         Synthetic &           92\% &       $4.79\times$ &       $1.13\times$ \\
            Device &           85\% &       $5.23\times$ &       $1.17\times$ \\
            Kernel &           89\% &       $5.43\times$ &       $1.21\times$ \\
           Dataset &           91\% &       $5.63\times$ &       $1.25\times$ \\
- % \textbf{Average} &  \textbf{90\%} &  $\bm{5.45\times}$ &  $\bm{1.22\times}$ \\
+ \textbf{Average} &  \textbf{90\%} &  $\bm{5.45\times}$ &  $\bm{1.22\times}$ \\
 \bottomrule
 \end{tabular}
 \caption{Validation results for J48 and \textsc{NearestNeighbour}
@@ -1482,6 +1481,29 @@ size.
 \label{fig:class-hmaps}
 \end{figure}
 
+The fastest classifier is J48, due to the it's simplicity (it can be
+implemented as a sequence of nested \texttt{if}/\texttt{else}
+statements).
+
+Figure~\ref{fig:class-hmaps} visualises the classification errors of
+each of the autotuning techniques. It shows that while the performance
+of all of the classifiers is comparable, the distribution of
+predictions is not. Only the NaiveBayes and RandomForest classifiers
+predicted the human expert selected workgroup size of
+$w_{(32 \times 4)}$ as frequently, or more frequently, than it was
+optimal.
+
+
+\subsubsection{Summary}
+
+From an evaluation of 17 different autotuning techniques using 5
+different types of validation sets, the following conclusions about
+autotuning performance can be drawn:
+%
+\begin{itemize}
+\item The performance of predicted workgroup sizes for unseen devices
+  is within 8\% of the performance for known devices.
+\end{itemize}
 
 
 \section{Related Work}\label{sec:related}
