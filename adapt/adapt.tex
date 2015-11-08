@@ -1,13 +1,3 @@
-% 2-8 pages, 10pt font
-%
-% Topics:
-%
-% * Machine learning based autotuning.
-% * Representative benchmarking.
-% * Automatic fault tolerance.
-% * Run-time adaption.
-%
-
 % The following \documentclass options may be useful:
 %
 % preprint      Remove this option only once the paper is in final form.
@@ -16,7 +6,161 @@
 % authoryear    To obtain author/year citation style instead of numeric.
 \documentclass[preprint,nonatbib,10pt]{sigplanconf}
 
-\include{preamble}
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Document and Layout %%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Fix for multiple "No room for a new \dimen" errors.
+%
+% See: http://tex.stackexchange.com/questions/38607/no-room-for-a-new-dimen
+%
+\usepackage{etex}
+
+\usepackage[utf8]{inputenc}
+
+% Fix for "'babel/polyglossia' detected but 'csquotes' missing"
+% warning. NOTE: Include after inputenc.
+%
+\usepackage{csquotes}
+
+\usepackage{booktabs}
+
+% Required for full page-width tables.
+\usepackage{tabularx}
+
+% Define column types L, C, R with known text justification and fixed
+% widths:
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+% Make internal macro definitions accessible,
+% e.g. \@title, \@date \@author.
+\makeatletter
+
+% Uncomment the following line to remove column separation:
+%
+%\setlength{\columnsep}{5mm}
+
+
+%%%%%%%%%%%%%%%%%%%%%
+% Table of Contents %
+%%%%%%%%%%%%%%%%%%%%%
+
+% % Set chapter and section numbering depth:
+% %
+% \setcounter{secnumdepth}{2}
+
+
+%%%%%%%%%%%%%%%%
+% Bibliography %
+%%%%%%%%%%%%%%%%
+\usepackage[%
+    backend=biber,
+    style=numeric-comp,
+    % style=numeric-comp,  % numerical-compressed
+    sorting=none,        % nty,nyt,nyvt,anyt,anyvt,ynt,ydnt,none
+    sortcites=true,      % sort \cite{b a d c}: true,false
+    block=none,          % space between blocks: none,space,par,nbpar,ragged
+    indexing=false,      % indexing options: true,false,cite,bib
+    citereset=none,      % don't reset cites
+    isbn=false,          % print ISBN?
+    url=true,            % print URL?
+    doi=false,           % print DOI?
+    natbib=true,         % natbib compatability
+    maxbibnames=99       % no 'et-al' in the bibliography pls
+  ]{biblatex}
+
+\addbibresource{../../library.bib}
+
+% Reduce the font size of the bibliography:
+\renewcommand{\bibfont}{\normalfont\scriptsize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Figures, footnotes and listings %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Pre-requisites for rendering upquotes in listings package.
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+
+% Pseudo-code listings.
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\newcommand{\Break}{\State \textbf{break} }
+\algblockdefx[Loop]{Loop}{EndLoop}[1][]{\textbf{Loop} #1}{\textbf{End
+    Loop}}
+
+\algrenewcommand\ALG@beginalgorithmic{\footnotesize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%% Graphics and maths %%
+%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amsmath}
+
+% Vector notation, e.g. \vv{x}:
+%
+\usepackage{esvect}
+
+% Additional amsmath symbols, see:
+%
+% http://texblog.org/2007/08/27/number-sets-prime-natural-integer-rational-real-and-complex-in-latex/
+%
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+\usepackage{graphicx}
+\usepackage{mathtools}
+
+% Provide bold font face in maths.
+\usepackage{bm}
+
+\usepackage{subcaption}
+\expandafter\def\csname ver@subfig.sty\endcsname{}
+
+% Define an 'myalignat' command which behave as 'alignat' without the
+% vertical top and bottom padding. See:
+%     http://www.latex-community.org/forum/viewtopic.php?f=5&t=1890
+\newenvironment{myalignat}[1]{%
+  \setlength{\abovedisplayskip}{-.7\baselineskip}%
+  \setlength{\abovedisplayshortskip}{\abovedisplayskip}%
+  \start@align\z@\st@rredtrue#1
+}%
+{\endalign}
+
+% Define additional operators:
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\DeclareMathOperator*{\gain}{Gain}
+
+% Skeleton operators.
+\DeclareMathOperator*{\map}{Map}
+\DeclareMathOperator*{\reduce}{Reduce}
+\DeclareMathOperator*{\scan}{Scan}
+\DeclareMathOperator*{\stencil}{Stencil}
+\DeclareMathOperator*{\zip}{Zip}
+\DeclareMathOperator*{\allpairs}{All\,Pairs}
+
+% Define a command to allow word breaking.
+\newcommand*\wrapletters[1]{\wr@pletters#1\@nil}
+\def\wr@pletters#1#2\@nil{#1\allowbreak\if&#2&\else\wr@pletters#2\@nil\fi}
+
+% Define a command to create centred page titles.
+\newcommand{\centredtitle}[1]{
+  \begin{center}
+    \large
+    \vspace{0.9cm}
+    \textbf{#1}
+  \end{center}}
+
+% Provide generic commands \degree, \celsius, \perthousand, \micro
+% and \ohm which work both in text and maths mode.
+\usepackage{gensymb}
 
 \begin{document}
 
@@ -42,17 +186,7 @@
 % \titlebanner{banner above paper title}        % These are ignored unless
 % \preprintfooter{}   % 'preprint' option specified.
 
-% \title{Autotuning Stencil Codes using Synthetic Benchmarks}
-% \title{Autotuning OpenCL Workgroup Sizes for Stencil Codes}
-% \title{Machine learning for OpenCL Workgroup Sizes of Stencil Codes}
-% \title{Machine learning for OpenCL Workgroup Sizes of Stencil Codes}
-% \title{Methods for Autotuning Workgroup Size of OpenCL Stencil Codes}
 \title{Autotuning OpenCL Workgroup Size for Stencil Patterns}
-
-% Comparison of multiple approaches to autotuning stencil patterns:
-%
-% * Compare classifiers with regressors
-% * Compare synthetic vs real training
 
 % \subtitle{Subtitle Text, if any}
 
@@ -97,11 +231,6 @@
 % keyword1, keyword2
 
 \section{Introduction}\label{sec:introduction}
-
-% MORE CRISIS: CPU performance stagnant, more people turn to GPUs for
-% performance and energy efficiency, but even with OpenCL GPU
-% programming is hard and performance portability is a
-% non-existent. Stencil codes are a good example.  Blah Blah Blah.
 
 Stencil codes have a variety of computationally demanding uses from
 fluid dynamics to quantum mechanics. Efficient, tuned stencil
@@ -167,7 +296,7 @@ appropriate workgroup size to use.
 
 \begin{figure}
 \centering
-\includegraphics[width=.75\columnwidth]{img/stencil}
+\includegraphics[width=.75\columnwidth]{stencil}
 \caption[Stencil border region]{%
   The components of a stencil: an input matrix is decomposed into
   workgroups, consisting of $w_r \times w_c$ elements. Each element is
@@ -257,7 +386,6 @@ total number of instructions to produce instruction
 types, and the 2D matrix dimensions.
 
 
-%\newpage
 \subsection{Training Data}\label{subsec:training}
 
 Training data is collected by measuring the runtimes of stencil
@@ -290,7 +418,6 @@ methods for achieving this goal.
 \Ensure workgroup size $w$
 
 \Procedure{Baseline}{s}
-% \Comment Select the best $w$ from $W_{safe}$.
 \State $w \leftarrow \text{classify}(f(s))$
 \If{$w \in W_{legal}(s)$}
     \State \textbf{return} $w$
@@ -304,7 +431,6 @@ methods for achieving this goal.
 \item[] % line break
 
 \Procedure{Random}{s}
-% \Comment Select a random workgroup size.
 \State $w \leftarrow \text{classify}(f(s))$
 \While{$w \not\in W_{legal}(s)$}
   \State $W \leftarrow \left\{ w | w < W_{max}(s), w \not\in W_{refused}(s) \right\}$
@@ -315,7 +441,6 @@ methods for achieving this goal.
 \item[] % line break
 
 \Procedure{NearestNeighbour}{s}
-% \Comment Select the closest workgroup size to prediction.
 \State $w \leftarrow \text{classify}(f(s))$
 \While{$w \not\in W_{legal}(s)$}
   \State $d_{min} \leftarrow \infty$
@@ -583,7 +708,7 @@ program, if not a performant one.
 \begin{figure}
   \centering
   \vspace{-1.5em}
-  \includegraphics[width=1.08\columnwidth]{img/oracle_param_space.pdf}
+  \includegraphics[width=1.08\columnwidth]{oracle_param_space}
   \vspace{-2.5em}
   \caption{%
     Oracle frequency counts for a subset of the workgroup sizes,
@@ -602,15 +727,11 @@ refused parameters for test cases on Intel CPU devices than any other
 type, while no workgroup sizes were refused by the AMD GPU. The exact
 underlying cause for these refused parameters is unknown, but can
 likely by explained by inconsistencies or errors in specific OpenCL
-driver implementations. % As these OpenCL implementations are still in
-% active development, it is anticipated that errors caused by
-% unexpected behaviour will become more infrequent as the technology
-% matures.
-Note that the ratio of refused parameters decreases across the three
-generations of Nvidia GPUs: GTX 590 (2011), GTX 690 (2012), and GTX
-TITAN (2013). For now, it is imperative that any autotuning system is
-capable of adapting to these refused parameters by suggesting
-alternatives when they occur.
+driver implementations. Note that the ratio of refused parameters
+decreases across the three generations of Nvidia GPUs: GTX 590 (2011),
+GTX 690 (2012), and GTX TITAN (2013). For now, it is imperative that
+any autotuning system is capable of adapting to these refused
+parameters by suggesting alternatives when they occur.
 
 The baseline parameter is the workgroup size providing the best
 overall performance while being legal for all scenarios. Because of
@@ -628,7 +749,7 @@ the optimal performance.
 \begin{figure}
   \centering
   \vspace{-2em}
-  \includegraphics[width=.6\columnwidth]{img/refused_params_by_device}
+  \includegraphics[width=.6\columnwidth]{refused_params_by_device}
   \vspace{-1.5em}
   \caption{%
     The ratio of test cases with refused workgroup
@@ -728,7 +849,7 @@ statements.
 
 \begin{figure}
 \centering
-\includegraphics[width=\columnwidth]{img/classification-syn-real}
+\includegraphics[width=\columnwidth]{classification-syn-real}
 \vspace{-2em}
 \caption{%
   Autotuning performance using classifiers and synthetic benchmarks. Each
@@ -747,14 +868,14 @@ statements.
 \centering
 \begin{subfigure}[h]{.48\columnwidth}
 \centering
-\includegraphics[width=\columnwidth]{img/runtime-class-xval}
+\includegraphics[width=\columnwidth]{runtime-class-xval}
 \vspace{-2em}
 \caption{}
 \label{fig:runtime-class-xval}
 \end{subfigure}
 \begin{subfigure}[h]{.48\columnwidth}
 \centering
-\includegraphics[width=\columnwidth]{img/speedup-class-xval}
+\includegraphics[width=\columnwidth]{speedup-class-xval}
 \vspace{-2em}
 \caption{}
 \label{fig:speedup-class-xval}
@@ -774,7 +895,7 @@ statements.
 
 \begin{figure}
 \centering
-\includegraphics[width=\columnwidth]{img/speedup-distributions}
+\includegraphics[width=\columnwidth]{speedup-distributions}
 \vspace{-2.5em}
 \caption[Speedup results over human expert]{%
   Violin plot of speedups over \emph{human expert}, ignoring cases
