@@ -1621,75 +1621,40 @@ evaluation of their technique.
 
 \section{Conclusions}\label{sec:conclusions}
 
-As the trend towards higher core counts and increasing parallelism
-continues, the need for high level, accessible abstractions to manage
-such parallelism will continue to go. Autotuning proves a valuable aid
-for achieving these goals, providing the benefits of low level
-performance tuning while maintaining ease of use, without burdening
-developers with optimisation concerns. As the need for autotuned
-parallelism rises, the desire for collaborative techniques for sharing
-performance data must be met with systems capable of supporting this
-cross-platform learning.
+As the trend towards increasingly programmable heterogeneous
+architectures continues, the need for high level, accessible
+abstractions to manage such parallelism will continue to
+grow. Autotuning proves a valuable aid for achieving these goals,
+providing the benefits of low level performance tuning while
+maintaining ease of use, providing that the burden of development and
+collecting performance data is lifted from the user. The system
+presented in this paper aims to solve this issue, by
+providing a
+generic interface for implementing machine learning-enabled
+autotuning, and a mechanism for distributing the necessary performance
+data to build successful machine learning models.
 
-In this work, we have presented an attempt to provide such a system,
-by designing a novel framework which has the benefits of fast,
-``always-on'' autotuning, while being able to synchronise data with
-global repositories of knowledge which others may contribute to. The
-framework provides an interface for autotuning which is sufficiently
-generic to be easily re-purposed to target a range of optimisation
-parameters.
-
-To demonstrate the utility of this framework, we implemented a
-frontend for predicting the workgroup size of OpenCL kernels for
-SkelCL stencil codes. The publicly available implementation
-\footnote{\url{https://github.com/ChrisCummins/omnitune}} predicts
-workgroup sizes for OpenCL stencil skeleton kernels in order to
-minimise their runtime on CPUs and multi-GPU systems. This
+OmniTune is a novel framework for autotuning which has the benefits of
+fast, ``always-on'' interface for client applications, while being
+able to synchronise data with global repositories of knowledge which
+others may contribute to. The framework provides an interface for
+autotuning which is sufficiently generic to be easily re-purposed to
+target a range of optimisation parameters. To demonstrate the utility
+of this framework, we implemented a frontend for predicting the
+workgroup size of OpenCL kernels for SkelCL stencil codes. This
 optimisation space is complex, non linear, and critical for the
 performance of stencil kernels, with up to a $207.72\times$ slowdown
 if an improper value is picked. Selecting the correct workgroup size
 is difficult --- requiring a knowledge of the kernel, dataset, and
-underlying architecture. The challenge is increased even more so by
-inconsistencies in the underlying system which cause some workgroup
-sizes to fail completely. Of the 269813 combinations of workgroup
-size, device, program, and dataset tested; only a \emph{single}
-workgroup size was valid for all test cases, and achieved only 24\% of
-the available performance. The value selected by human experts was
-invalid for 2.6\% of test cases. Autotuning in this space requires a
-system which is resilient these challenges, and several techniques
-were implemented to address them.
-
-Runtime performance of autotuned stencil kernels is very promising,
-achieving an average 90\% of the available performance with only a 3ms
-autotuning overhead. Even ignoring the cases for which the human
-expert selected workgroup size is invalid, this provides a
-$1.33\times$ speedup, or a $5.57\times$ speedup over the best
-performance that can be achieved using static tuning. Classification
-performance is comparable when predicting workgroup sizes for both
-unseen programs and unseen devices. I believe that the combination of
-performance improvements and the collaborative nature of OmniTune
-makes for a compelling case for the use of autotuning as a key
-component for enabling performant, high level parallel programming.
-
-The cost of offline training with OmniTune could be reduced by
-exploring the use of adaptive sampling plans, such as presented
-in~\cite{Leather2009}. This could reduce the number of runtime samples
-required to distinguish good from bad optimisation parameter values.
-
-Collaborative training --- hive mind for selecting training
-parameters, and built-in redundancy checking/validation
-
-TODO: deltas for push and pull, scalability for huge datasets
-
-TODO: involuntary training requests, or non-binary selectors between
-training and performance
-
-%
-% \appendix
-% \section{Appendix Title}
-%
-% This is the text of the appendix, if you need one.
-%
+underlying architecture. The implemented autotuner achieves 92 \% of
+the maximum performance using training data from a range of
+architectures and benchmarks, and is demonstrated to provide portable
+performance, even achieving an average of 85\% of the maximum
+performance when deployed on a brand new device for which it has no
+prior experience. In future work we will explore methods for reducing
+the cost of collecting performance data for machine learning, by
+employing logic for collaborative exploration of a single optimisation
+space in parallel across multiple cooperating devices.
 
 \acks
 
@@ -1699,8 +1664,6 @@ Edinburgh School of Informatics Centre for Doctoral Training in
 Pervasive Parallelism
 (\url{http://pervasiveparallelism.inf.ed.ac.uk/}),\\* EP/H044752/1
 (ALEA), and EP/M015793/1 (DIVIDEND).
-
-% We recommend abbrvnat bibliography style.
 
 \label{bibliography}
 \printbibliography
