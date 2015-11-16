@@ -899,7 +899,7 @@ dataset sizes of size $512\times512$, $1024\times1024$,
 $2048\times2048$, and $4096\times4096$ were used. A minimum of 30
 samples were recorded for each scenario and workgroup size.
 
-Program behavior was validated by comparing program output against a
+Program behavior is validated by comparing program output against a
 gold standard output collected by executing each of the real-world
 benchmarks programs using the baseline workgroup size. The output of
 real-world benchmarks with other workgroup sizes is compared to this
@@ -908,25 +908,16 @@ gold standard output to test for correct program execution.
 
 \section{Evaluation}\label{sec:evaluation}
 
-In this section we will evaluate the effectiveness of autotuning using
-OmniTune. TODO: This section evaluates the performance of OmniTune
-when tasked with selecting workgroup sizes for SkelCL stencil
-codes. First we discuss measurement noise present in the experimental
-results, and the methods used to accommodate for it. Then we examine
-the observed effect that workgroup size has on the performance of
-SkelCL stencils. The prediction quality of OmniTune is scrutinised for
-portability across programs, devices, and datasets.
-
-The experimental results consist of measured runtimes for a set of
-\emph{test cases}, collected using the methodology explained in the
-previous section. Each test case $\tau_i$ consists of a scenario,
-workgroup size pair $\tau_i = (s_i,w_i)$, and is associated with a
-\emph{sample} of observed runtimes from multiple runs of the
-program. A total of 269813 test cases have been evaluated with an
-average sample size of 83 (min 33, total 16917118). This represents an
-exhaustive enumeration of the workgroup size optimisation space for
-429 scenarios, with an average of 629 (max 7260) unique workgroup
-sizes for each.
+This section evaluates the performance of OmniTune when tasked with
+selecting workgroup sizes for SkelCL stencil codes. The experimental
+results consist of measured runtimes for a set of \emph{test cases},
+where each test case $\tau_i$ consists of a scenario, workgroup size
+pair $\tau_i = (s_i,w_i)$, and is associated with a \emph{sample} of
+observed runtimes from multiple runs of the program. A total of 269813
+test cases have been evaluated with an average sample size of 83 (min
+33, total 16917118). This represents an exhaustive enumeration of the
+workgroup size optimisation space for 429 scenarios, with an average
+of 629 (max 7260) unique workgroup sizes for each.
 
 
 \subsection{Runtime Noise}
@@ -943,30 +934,31 @@ sizes for each.
 \label{fig:ci-trends}
 \end{figure}
 
-The complex interaction between processes competing for the finite
-resources of a system introduces many sources for noise in program
-runtime measurements. Figure~\ref{fig:runtime-histograms} plots the
-distributions of 1000 runtimes recorded for 9 test cases. The plots
-show that the distribution of SkelCL stencil runtimes is not always
-Gaussian; rather, it is sometimes multimodal, and generally skewed to
-the lower end of the runtime range, with a long ``tail'' to the
-right. This fits our intuition that programs have a hard
-\emph{minimum} runtime enforced by the time taken to execute the
-instructions of a program, and that noise introduced to the system
-extends this runtime. For example, preempting an OpenCL process on a
-CPU so that another process may run may cause the very long tail
-visible in Figure~\ref{fig:runtimes-histogram-1}.
+First we examine the noise present in program runtime
+measurements. The complex interaction between processes competing for
+the finite resources of a system introduces many sources for such
+noise. Figure~\ref{fig:runtime-histograms} plots the distributions of
+1000 runtimes recorded for 9 SkelCL stencil kernels. The plots show
+that the distribution of runtimes is not always Gaussian; rather, it
+is sometimes multimodal, and generally skewed to the lower end of the
+runtime range, with a long ``tail'' to the right. This fits our
+intuition that programs have a hard \emph{minimum} runtime enforced by
+the time taken to execute the instructions of a program, and that
+noise introduced to the system extends this runtime. For example,
+preempting an OpenCL process on a CPU so that another process may run
+may cause the very long tail visible in
+Figure~\ref{fig:runtimes-histogram-1}.
 
-Figure~\ref{fig:ci-trends} demonstrates the need for a statistically
-sound approach when collecting performance data for autotuning. By
-plotting the ratio of 95\% confidence interval to the sample mean for
-different sample sizes, we show a 50\% reduction in confidence
-interval size when increasing the sample size from 10 to the 30
-runtimes. In this experimental dataset, the ratio of confidence
-interval to mean at the smallest sample size (33) is 3.7\%, and 2.5\%
-at the mean sample size (83). It is important to maximise the sample
-size when comparing measured program performance, with sample sizes
-$\ge 30$ being recommended~\cite{Georges2007}.
+It is important to maximise the sample size when performing autotuning
+which involves comparing measured program performances. A common
+recommendation in the benchmarking literature is for a minimum sample
+size of 30~\cite{Georges2007}. Our experimental results, support this
+recommendation. Figure~\ref{fig:ci-trends} plots the ratio of 95\%
+confidence interval to the sample mean for different sample sizes,
+showing a 50\% reduction in confidence interval size when increasing
+the sample size from 10 to 30. In this experimental dataset, the ratio
+of confidence interval to mean at the smallest sample size (33) is
+3.7\%, and 2.5\% at the mean sample size (83).
 
 
 \subsection{OpenCL Workgroup Size Optimisation Space}
@@ -985,37 +977,34 @@ $\ge 30$ being recommended~\cite{Georges2007}.
 \end{figure}
 
 
-% From the legal workgroup sizes for a given scenario, we can calculate
-% the maximum speedup.
-
-When applied to all scenarios, we find the average of speedup upper
-bounds to be $15.14\times$ (min $1.03\times$, max
+We can calculate an upper bound for the performance impact of the
+workgroup size parameter by comparing the average runtimes of the
+\emph{best} and \emph{worst} workgroup size for a single
+scenario. Applying this to all scenarios, we find the average speedup
+upper bound to be $15.14\times$ (min $1.03\times$, max
 $207.72\times$). This demonstrates the importance of tuning stencil
 workgroup sizes --- if chosen incorrectly, the runtime of stencil
-programs can be extended by up to $207.72\times$. Note too that for 5
+programs can be extended by up to $207.72\times$. Note that for 5 of
+the scenarios, the speedup of the best over worst workgroup sizes is
+$\le 5\%$. For these scenarios, there is little benefit to autotuning;
+however, this represents only 1.1\% of the tested scenarios. For 50\%
 of the scenarios, the speedup of the best over worst workgroup sizes
-is $\le 5\%$. For these scenarios, there is little benefit to
-autotuning; however, this represents only 1.1\% of the tested
-scenarios. For 50\% of the scenarios, the speedup of the best over
-worst workgroup sizes is $\ge 6.19\times$.
+is $\ge 6.19\times$.
 
-
-
-
-In this section we explore the impact that the workgroup size
-optimisation space has on the performance of SkelCL stencil
-programs. We begin by establishing baselines to compare the relative
-performance of different workgroup sizes against. The relative
+For the purposes of evaluating autotuning, we use three
+\emph{baselines} to compare program runtimes against. The relative
 performance of a workgroup size for a particular scenario is compared
-against three parameters:
+against runtimes for one of three parameters:
 %
 \begin{itemize}
-\item \emph{Performance} --- The \emph{oracle} workgroup size is the
+\item \emph{Oracle} --- The \emph{oracle} workgroup size is the
   workgroup size which provided the lowest mean runtime for a given
-  scenario.
+  scenario. Speedup relative to the oracle is in the range
+  $0 \le x \le 1$, so this can be referred to as \emph{performance}.
 \item \emph{Baseline} --- The \emph{baseline} parameter is the
   workgroup size which provides the best overall performance while
-  being legal for all scenarios. For our experimental data.
+  being legal for all scenarios. For our experimental data, we find
+  this value to be $w_{(4 \times 4)}$.
 \item \emph{Human expert} --- In the original implementation of the
   SkelCL stencil skeleton~\cite{Steuwer2014a},
   \citeauthor{Steuwer2014a} selected a workgroup size of
@@ -1225,17 +1214,18 @@ performance.
 
 \subsection{Autotuning Workgroup Sizes}
 
-To evaluate the performance of the OmniTune SkelCL extension, we
-partition the experimental data into \emph{training} and \emph{test}
-sets. The training set is used to build the machine learning model for
-autotuning. The predicted workgroup size for each entry in the test
-set is then used to evaluate the autotuning performance. We use 5
-different approaches to partitioning the test and training data, which
-each test different aspects of the system. The first is a 10-fold
-cross-validation, a standard machine learning model validation
-technique in which the the set of all data is shuffled and then
-divided into 10 equally sized validation sets. Each validation set is
-used to test a model trained on the remaining 90\% of the data. The
+To evaluate the performance of machine learning-enabled autotuning of
+SkelCL stencils, we partition the experimental data into
+\emph{training} and \emph{test} sets. The training set is used to
+build the machine learning model. The predicted workgroup size for
+each entry in the test set is then used to evaluate the autotuning
+performance. We use 5 different approaches to partitioning the test
+and training data, which each test different aspects of the
+system. The first is a $k$-fold cross validation, a standard machine
+learning model validation technique in which the set of all data is
+shuffled and then divided into $k$ equally sized validation sets. Each
+validation set is used to test a model trained on the remaining
+data~\cite{Han2011}. In our evaluation we use a value of $k=10$. The
 second technique is to partition the data such that it consists of
 data gathered from synthetic benchmarks, and use data collected from
 real-world benchmarks to test. This tests the utility of training
@@ -1245,22 +1235,30 @@ grouped by device, kernel, and dataset, respectively. This tests the
 ability to successfully apply prior knowledge about other devices,
 kernels, and datasets, to new unseen cases. For example, of the $n$
 devices used to collect performance data, the model is trained on data
-from $n-1$ devices, and tested against data from the $n^{th}$.
+from $n-1$ devices, and tested against data from the
+$n^{th}$. Table~\ref{tab:class} summarises the results of evaluating
+the autotuner using each of the different validation techniques.
 
-Table~\ref{tab:class} summarises the results of evaluating the
-autotuner using each of the different validation
-techniques. Autotuning achieves good performance. Average speedups
-over the baseline across all validation sets range between
-$4.79\times$ and $5.65\times$. The measured overhead of this
-autotuning is 2.5ms. Of this, 2.2ms is required for the inter-process
-round trip between the OmniTune server and client, and feature
-extraction. The remaining 0.3ms is for classification, which is a
-lightweight process using decision trees (they can be implemented
-using a chain of \texttt{if}/\texttt{else} statements). By isolating
-the test cases where illegal or refused parameters were predicted, we
-find that the speedup of workgroup sizes across all validation sets to
-be $5.26\times$, indicating that the nearest neighbour approach
-successfully exploits structure in underlying optimisation spaces.
+The autotuner achieves good performance, with average speedups over
+the baseline across all validation sets range between $4.79\times$ and
+$5.65\times$. Importantly, the performance when validating across
+devices, kernels, and datasets, is comparable to the 10-fold
+validation. This demonstrates that the autotuner is capable of
+learning \emph{across} these targets. So if the autotuner is deployed
+to a system for which it has no prior knowledge, it does not suffer a
+significant drop in performance. The same is true for an unseen
+kernel, or dataset type. This, combined with the distributed datasets
+provided by the OmniTune framework, demonstrates the utility of
+autotuning at the skeletal level, allowing machine learning to
+successfully learn predictions across unseen programs, kernels, and
+datasets.
+
+Classification using decision trees is a lightweight process (they can
+be implemented using a chain of \texttt{if}/\texttt{else} statements).
+The measured overhead of autotuning is 2.5ms, of which only 0.3ms is
+required for classification. The remaining 2.2ms is required for
+feature extraction and the inter-process round trip between the
+OmniTune server and client.
 
 
 \begin{table}
@@ -1287,15 +1285,26 @@ successfully exploits structure in underlying optimisation spaces.
 \label{tab:class}
 \end{table}
 
-Figure~\ref{fig:class-hmaps} visualises the differences in
-classification results between four classifiers: J48, NaiveBayes,
-RandomForest, and SMO~\cite{Han2011}. While the average performances
-of each of the classifiers is comparable, the distribution of
-predictions is not. Only the NaiveBayes and RandomForest classifiers
-predicted the human expert selected workgroup size of
-$w_{(32 \times 4)}$ as frequently, or more frequently, than it was
-optimal. low cost switch between machine learning algorithms, future
-work to meta-tune
+\subsection{OmniTune Extensibility}
+
+The client-server architecture OmniTune neatly separates the
+autotuning logic from the target application. This makes adjusting the
+autotuning methodology a simple process. To demonstrate this, we
+changed the machine learning algorithm from a J48 decision tree to a
+Naive classifier, and duplicated the evaluation. This required only a
+single line of source code in the OmniTune server to be
+changed. Figure~\ref{fig:class-hmaps} visualises the differences in
+autotuning predictions when changing between these two
+classifiers. While the average performances of the two classifiers is
+comparable, the distribution of predictions is not. For example, the
+NaiveBayes predicted the human expert selected workgroup size of
+$w_{(32 \times 4)}$ more frequently than it was optimal, while the
+decision tree predicted it less frequently. Selection of machine
+learning algorithms has a large impact on the effectiveness of
+autotuning, and the OmniTune client-server design allows for low cost
+experimenting with different approaches. In future work we will
+investigate meta-tuning techniques for selecting autotuning
+algorithms.
 
 
 \begin{figure}
@@ -1314,27 +1323,27 @@ work to meta-tune
 \caption{}
 \label{fig:class-hmaps-2}
 \end{subfigure}
-\\
-\begin{subfigure}[t]{0.48\columnwidth}
-\centering
-\includegraphics[width=\columnwidth]{img/heatmap_3}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:class-hmaps-3}
-\end{subfigure}
-\begin{subfigure}[t]{0.48\columnwidth}
-\centering
-\includegraphics[width=\columnwidth]{img/heatmap_5}
-\vspace{-1.5em} % Shrink vertical padding
-\caption{}
-\label{fig:class-hmaps-4}
-\end{subfigure}
+% \\
+% \begin{subfigure}[t]{0.48\columnwidth}
+% \centering
+% \includegraphics[width=\columnwidth]{img/heatmap_3}
+% \vspace{-1.5em} % Shrink vertical padding
+% \caption{}
+% \label{fig:class-hmaps-3}
+% \end{subfigure}
+% \begin{subfigure}[t]{0.48\columnwidth}
+% \centering
+% \includegraphics[width=\columnwidth]{img/heatmap_5}
+% \vspace{-1.5em} % Shrink vertical padding
+% \caption{}
+% \label{fig:class-hmaps-4}
+% \end{subfigure}
 \caption{%
-  Heatmaps of workgroup size predictions for a subset of the
-  optimisation space using four different classifiers. The shading in
-  each cells indicates if it is predicted less frequently (blue), ore
-  more frequently (red) than it is optimal. Colour gradients are
-  normalised across plots.%
+  Heatmaps of autotuner predictions for a subset of the optimisation
+  space using two different classifiers. The shading in each cells
+  indicates if it is predicted less frequently (blue), ore more
+  frequently (red) than it is optimal. Colour gradients are normalised
+  across plots.%
 }
 \label{fig:class-hmaps}
 \end{figure}
@@ -1349,19 +1358,22 @@ of an average of 629 workgroup sizes for each of 429 scenarios, the
 following conclusions can be drawn:
 %
 \begin{itemize}
-\item The performance of a workgroup size for a particular scenario
-  depends properties of the hardware, software, and dataset. The
-  optimal workgroup size is unique for 31.5\% of scenarios.
 \item The performance gap between the best and workgroup sizes for a
   particular combination of hardware, software, and dataset is up to
   $207.72\times$.
 \item Not all workgroup sizes are legal, and the space of legal
-  workgroup sizes cannot statically be determined. Adaptive tuning of
-  workgroup size is required to ensure reliable performance.
-\item The best performance that can be achieved using static tuning is
-  optimal for only 15\% of scenarios.
-\item The performance of predicted workgroup sizes for unseen devices
-  is within 8\% of the performance for known devices.
+  workgroup sizes cannot statically be determined. Adaptive tuning is
+  required to ensure reliable performance.
+\item Statically tuning workgroup size fails to extract the potential
+  performance across a range of programs, architectures, and
+  datasets. The best statically chosen workgroup size achieves only
+  26\% of the optimal performance.
+\item Workgroup size prediction using a decision tree achieves an
+  average 90\% of the optimal performance.
+\item Auotuning provides performance portability across programs,
+  devices, and datasets. The performance of predicted workgroup sizes
+  for unseen devices is within 8\% of the performance for known
+  devices.
 \end{itemize}
 
 
