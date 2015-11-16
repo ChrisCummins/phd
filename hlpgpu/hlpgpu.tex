@@ -68,7 +68,7 @@
   attempt to anticipate and tune for a wide range of architectures and
   use cases. This results in implementations that target the general
   case and cannot provide the performance advantages that are gained
-  from tuning low level optimisation parameters. Autotuning combined
+  from tuning low level optimization parameters. Autotuning combined
   with machine learning offers promising performance benefits in these
   situations, but the high cost of training and lack of available
   tools limits the practicality of autotuning for real world
@@ -76,7 +76,7 @@
   the skeleton library can overcome these issues.
 
   In this work, we present OmniTune --- an extensible and distributed
-  framework for dynamic autotuning of optimisation parameters at
+  framework for dynamic autotuning of optimization parameters at
   runtime. OmniTune uses a client-server model with a flexible API to
   support machine learning enabled autotuning. Training data is shared
   across a network of cooperating systems, using a collective approach
@@ -111,7 +111,7 @@ model (such as provided by CUDA or OpenCL) and architecture (SIMD with
 a multi-level memory hierarchy). As a result, GPGPU programming is
 often considered beyond the realm of everyday development. If steps
 are not taken to increase the accessibility of such parallelism, the
-gap between potential and utilised performance will continue to widen
+gap between potential and utilized performance will continue to widen
 as hardware core counts increases.
 
 Algorithmic skeletons offer a solution to this this
@@ -134,10 +134,10 @@ rapidly developing GPU and heterogeneous architecture landscape.
 \subsection{The Performance Portability Challenge}
 
 There are many factors --- or \emph{parameters} --- which influence
-the behaviour of parallel programs. For example, setting the number of
+the behavior of parallel programs. For example, setting the number of
 threads to launch for a particular algorithm. The performance of
 parallel programs is sensitive to the values of these parameters, and
-when tuning to maximise performance, one size does not fit all. The
+when tuning to maximize performance, one size does not fit all. The
 suitability of parameter values depends on the program implementation,
 the target hardware, and the dataset that is operated upon. Iterative
 compilation and autotuning have been shown to help in these cases by
@@ -154,7 +154,7 @@ parallel implementations which traditionally came at the cost of many
 man hours of work from expert programmers to develop.
 
 Incorporating autotuning into algorithmic skeleton libraries has two
-key benefits: first, it minimises development effort by requiring only
+key benefits: first, it minimizes development effort by requiring only
 a modification to the skeleton implementation rather than to every
 user program; and second, by targeting a library, it enables a broader
 and more substantive range of performance data to be gathered than
@@ -168,7 +168,7 @@ The key contributions of this work are:
 \begin{itemize}
 \item The design and implementation of a generic toolset for
   autotuning: \emph{OmniTune} is a novel and extensible framework for
-  collaborative autotuning of optimisation parameters across the life
+  collaborative autotuning of optimization parameters across the life
   cycle of programs.
 \item The integration of OmniTune with an established skeleton library
   for CPU and multi-GPU parallelism, SkelCL~\cite{Steuwer2011}. We
@@ -251,10 +251,10 @@ workgroup sizes for different combinations of architecture and
 program. Figure~\ref{fig:motivation-arch} shows this performance
 comparison for a single stencil program on two different devices,
 demonstrating that a good choice of workgroup size is device
-dependent. The optimisation space of the same stencil benchmark on
+dependent. The optimization space of the same stencil benchmark on
 different devices is radically different: not only does the optimal
 workgroup size change between devices, but the performance of
-suboptimal workgroup sizes is also dissimilar. The optimisation space
+suboptimal workgroup sizes is also dissimilar. The optimization space
 of~\ref{fig:motivation-1} has a grid-like structure, with clear
 performance advantages of workgroup sizes at multiples of 8 for
 $w_c$. A developer specifically targeting this device would learn to
@@ -298,12 +298,12 @@ per-case basis.
 OmniTune is a novel framework for extensible, distributed autotuning
 of parameter values at runtime using machine learning. It serves as a
 generic platform for developing autotuning solutions, aiming to reduce
-both the engineering time required to target new optimisation
+both the engineering time required to target new optimization
 parameters, and the time to deploy on new systems.
 
-It emphasises collaborative, online learning of optimisation spaces. A
+It emphasizes collaborative, online learning of optimization spaces. A
 client-server architecture with clearly delineated separation of
-concerns minimises the code footprint in client applications, enabling
+concerns minimizes the code footprint in client applications, enabling
 quick re-purposing for autotuning targets. OmniTune provides a
 lightweight interface for communication between each of the
 components, and aims to strike a balance between offering a fully
@@ -318,11 +318,11 @@ necessary to apply OmniTune.
 
 Common implementations of autotuning in the literature either embed
 the autotuning logic within each target application
-(e.g.~\cite{ClintWhaley2001}), or take a standalone approach in which
-the autotuner is a program which must be externally invoked by the
-user to tune a target application(e.g.~\cite{Lutz2013}). Embedding the
+(e.g.~\cite{Chen2014}), or take a standalone approach in which the
+autotuner is a program which must be externally invoked by the user to
+tune a target application (e.g.~\cite{Lutz2013}). Embedding the
 autotuner within each target application has the advantage of
-providing ``always-on'' behaviour, but is infeasible for complex
+providing ``always-on'' behavior, but is infeasible for complex
 systems in which the cost of building machine learning models must be
 added to each program run. The standalone approach separates the
 autotuning logic, at the expense of adding one additional step to the
@@ -345,7 +345,7 @@ which in turn may accept connections from multiple clients. This
 design has two primary advantages: the first is that it decouples the
 autotuning logic from that of the client program, allowing developers
 to easily repurpose the autotuning framework to target additional
-optimisation parameters without a significant development overhead for
+optimization parameters without a significant development overhead for
 the target applications; the second advantage is that this enables
 collective tuning, in which training data gathered from a range of
 devices can be accessed and added to by any OmniTune server.
@@ -363,7 +363,7 @@ clients. Communication between servers and remotes uses TCP/IP (we
 used an Amazon Web Services database instance for development).
 
 
-\subsection{Autotuning Behaviour}
+\subsection{Autotuning Behavior}
 
 The goal of machine learning enabled autotuning is to build models
 from empirical performance data of past programs to select parameter
@@ -377,7 +377,7 @@ autotuning-capable machine, an OmniTune server acts as an intermediary
 between training data and the client application, and hosts the
 autotuning logic. On launch, a server requests the latest training
 data from the remote, which it uses to build the relevant models for
-performing prediction of optimisation parameter values. If additional
+performing prediction of optimization parameter values. If additional
 training data is gathered by the server, this can be uploaded to the
 remote.
 
@@ -402,7 +402,7 @@ OmniTune servers may perform additional feature extraction of
 explanatory variables supplied by incoming client requests. The reason
 for performing feature extraction on the server as opposed to on the
 client side is that this allows the results of expensive operations
-(for example, analysing source code of target applications) to be
+(for example, analyzing source code of target applications) to be
 cached for use across the lifespan of client applications. The
 contents of these local caches are periodically and asynchronously
 synced with the remote to maintain a global store of lookup tables for
@@ -478,14 +478,14 @@ communication pattern, supported by two methods:
 \begin{figure}
 \centering
 \includegraphics[width=\columnwidth]{img/omnitune-system-flow.pdf}
-\caption[Optimisation parameter selection with OmniTune]{%
+\caption[Optimization parameter selection with OmniTune]{%
   Predicting parameter values and collecting training data with
   OmniTune.%
 }
 \label{fig:omnitune-system-flow}
 \end{figure}
 
-To extend OmniTune to target an optimisation parameter, a developer
+To extend OmniTune to target an optimization parameter, a developer
 extends the server class to implement response handlers for the four
 public interface operations, and then inserts client code into the
 target application to call these operations. The implementation of
@@ -526,7 +526,7 @@ licenses\footnote{\url{http://skelcl.uni-muenster.de}}.
 
 Stencils are patterns of computation which operate on uniform grids of
 data, where the value of each grid element (cell) is updated based on
-its current value and the value of one or more neighbouring elements,
+its current value and the value of one or more neighboring elements,
 called the \emph{border region}. Figure~\ref{fig:stencil-img} shows
 the use of a stencil to apply a Gaussian blur to an image. SkelCL
 provides a 2D stencil skeleton which allows users to provide a
@@ -579,7 +579,7 @@ preference.
 A popular usage of Stencil codes is for iterative problem solving,
 whereby a stencil operation is repeated over a range of discrete time
 steps $0 \le t \le t_{max}$, and $t \in \mathbb{N}$. An iterative
-stencil operation $g$ accepts a customising function $f$, a Stencil
+stencil operation $g$ accepts a customizing function $f$, a Stencil
 shape $S$, and a matrix $M$ with initial values $M_{init}$. The value
 of an iterative stencil can be defined recursively as:
 %
@@ -605,7 +605,7 @@ in OpenCL) which applies the user-specified function. The work items
 are then divided into \emph{workgroups} for execution on the target
 hardware. Each work-item reads the value of its corresponding matrix
 element and the surrounding elements defined by the border
-region. Since the border regions of neighbouring elements overlap, the
+region. Since the border regions of neighboring elements overlap, the
 value of all elements within a workgroup are copied into a
 \emph{tile}, allocated as a contiguous region of the fast, but small
 local memory. As local memory access times are much faster than that
@@ -619,11 +619,11 @@ and the function being applied to each element, it is the
 responsibility of the SkelCL stencil implementation to select an
 appropriate workgroup size to use.
 
-\subsection{Optimisation Parameters}\label{subsec:op-params}
+\subsection{Optimization Parameters}\label{subsec:op-params}
 
 SkelCL stencil kernels are parameterised by a workgroup size $w$,
 which consists of two integer values to denote the number of rows and
-columns in a workgroup. The space of optimisation parameter values is
+columns in a workgroup. The space of optimization parameter values is
 subject to hard constraints, and these constraints cannot conveniently
 be statically determined. Contributing factors are architectural
 limitations, kernel constraints, and parameters which are refused for
@@ -642,7 +642,7 @@ Factors which affect a kernel's maximum workgroup size include the
 number of registers required for a kernel, and the available number of
 SIMD execution units for each type of instructions in a kernel. In
 addition to satisfying the constraints of the device and kernel, not
-all points in the workgroup size optimisation space are guaranteed to
+all points in the workgroup size optimization space are guaranteed to
 provide working programs. A \emph{refused parameter} is a workgroup
 size which satisfies the kernel and architectural constraints, yet
 causes a \texttt{CL\_OUT\_OF\_RESOURCES} error to be thrown when the
@@ -671,7 +671,7 @@ experimentally.
 \caption{%
   Application of a Gaussian blur stencil operation to an image, with a
   border region of radius 1. In a Gaussian blur, pixel values are
-  interpolated with neighbouring pixels, producing a smoothed effect.%
+  interpolated with neighboring pixels, producing a smoothed effect.%
 }
 \label{fig:stencil-img}
 \end{figure}
@@ -709,11 +709,11 @@ W_{safe} &= \cap \left\{ W_{legal}(s) | s \in S \right\}\\
 
 \subsection{Machine Learning}
 
-The optimisation space presented by the workgroup size of OpenCL
+The optimization space presented by the workgroup size of OpenCL
 kernels is large, complex, and non-linear. The challenge is to design
 a system which, given a set of prior observations of the empirical
 performance of stencil codes with different workgroup sizes, predict
-workgroup sizes for \emph{unseen} stencils which will maximise the
+workgroup sizes for \emph{unseen} stencils which will maximize the
 performance. Successfully applying machine learning requires plentiful
 training data, the careful selection of explanatory variables, and
 appropriate machine learning methods. For the purpose of this work we
@@ -740,28 +740,26 @@ codes, identified by a checksum of the source code. Dataset variables
 include the data type and dimensions of the SkelCL container type.
 
 To collect training data, we run multiple iterations of a stencil
-program to enumerate the workgroup size optimisation space, and use
+program to enumerate the workgroup size optimization space, and use
 the OpenCL's Profiling API to record stencil kernel execution times in
 the client application, which are then submitted to the OmniTune
 server. The \textsc{RequestTraining}$(x)$ server interface returns a
 workgroup size with a randomly selected even number of rows and
-columns up to the maximum allowed.
-%: $\left\{ 2x \in \mathbb{Z} | 1 \le x < \frac{W_{max}(s)}{2} \right\}$.
+columns that obeys the maximum size constraints.
 
 A parameterised template substitution engine is used to generate
 synthetic stencil applications for gathering performance
 data. Stencils templates are parameterised with a border region size
-and \emph{complexity}, a simple metric which broadly dictates the
-number of operations in a given stencil code.
+and \emph{complexity}, a simple metric to broadly dictate the number
+of operations in a given stencil code.
 
-Once the performance of a different workgroup sizes for a scenario is
+Once the performance of different workgroup sizes for a scenario is
 assessed, the set of explanatory variables describing the scenario is
-paired with the oracle workgroup size, and used as training data for a
-classifier. This process is repeated for multiple scenarios to create
-training data. A classifier learns from this training data to make
-predictions for new sets of explanatory variables, by predicting a
-workgroup size from the set of oracle workgroup sizes of the training
-data.
+paired with the oracle workgroup size. This process is repeated for
+multiple scenarios to create training data. A classifier learns from
+this training data to make predictions for new sets of explanatory
+variables, by predicting a workgroup size from the set of oracle
+workgroup sizes of the training data.
 
 This approach presents the problem that after training, there is no
 guarantee that the set of workgroup sizes which may be predicted is
@@ -769,7 +767,7 @@ within the set of legal workgroup sizes for future scenarios. This may
 result in a classifier predicting a workgroup size which is not legal
 for a scenario, $w \not\in W_{legal}(s)$, either because it exceeds
 $W_{\max}(s)$, or because the parameter is refused. If this occurs, a
-\emph{nearest neighbour} approach is used to select the workgroup size
+\emph{nearest neighbor} approach is used to select the workgroup size
 $w$ which is expected to be legal and has the lowest Euclidian
 distance to the predicted value $c$. This is achieved by comparing row
 ($r$) and column ($c$) indices:
@@ -871,7 +869,7 @@ legal parameter is found.
 The OmniTune framework consists of 8987 lines of Python and MySQL
 code. A further 976 lines are required for the SkelCL frontend to
 implement the server response handlers and database backend. By
-design, the client-server model minimises the impact of number of
+design, the client-server model minimizes the impact of number of
 modifications that are required to enable autotuning in client
 applications. The only modification required to SkelCL is to replace
 the hardcoded values for workgroup size with a subroutine to request a
@@ -886,12 +884,12 @@ OmniTune server will fetch the latest training data from the remote.
 \section{Experimental Setup}
 
 This section describes an exhaustive enumeration of the workgroup size
-optimisation space for 429 combinations of architecture, program, and
+optimization space for 429 combinations of architecture, program, and
 dataset. It contains the methodology used to collect empirical
 performance data on which to base performance comparisons of different
 workgroup sizes, and the steps necessary to obtain repeatable results.
 
-A full enumeration of the workgroup size optimisation spaces was
+A full enumeration of the workgroup size optimization spaces was
 performed across synthetically generated benchmarks and four reference
 stencil benchmarks: Canny Edge Detection, Conway's Game of Life, Heat
 Equation, and Gaussian Blur. Performance data was collected from 7
@@ -922,7 +920,7 @@ pair $\tau_i = (s_i,w_i)$, and is associated with a \emph{sample} of
 observed runtimes from multiple runs of the program. A total of
 269,813 test cases have been evaluated with an average sample size of
 83 (min 33, total 16,917,118). This represents an exhaustive
-enumeration of the workgroup size optimisation space for 429
+enumeration of the workgroup size optimization space for 429
 scenarios, with an average of 629 (max 7,260) unique workgroup sizes
 for each scenario.
 
@@ -968,7 +966,7 @@ of confidence interval to mean at the smallest sample size (33) is
 3.7\%, and 2.5\% at the mean sample size (83).
 
 
-\subsection{OpenCL Workgroup Size Optimisation Space}
+\subsection{OpenCL Workgroup Size Optimization Space}
 
 \begin{figure}
 \centering
@@ -1032,7 +1030,7 @@ invalid for 2.6\% of scenarios, as it is refused by 11 test cases. By
 device, these are: 3 on the GTX 690, 6 on the i5-2430M, and 2 on the
 i5-4570. For the purpose of comparing performance against human
 experts, we will ignore these test cases, but it demonstrates the
-utility of autotuning not just for maximising performance, but
+utility of autotuning not just for maximizing performance, but
 ensuring program reliability. For the scenarios where the human expert
 workgroup size \emph{is} legal, it achieves an impressive geometric
 mean of 79.2\% of the oracle performance. The average speedup of
@@ -1042,9 +1040,14 @@ expert is $1.37\times$ (min $1.0\times$, max $5.17\times$).
 The utility of the \emph{baseline} workgroup size is that it
 represents the best performance that can be achieved through static
 tuning. The baseline workgroup size achieves only 24\% of the maximum
-performance.
-
-% TODO: ~\ref{fig:performance-wgsizes}
+performance. Figures~\ref{fig:performance-wgsizes}
+and~\ref{fig:performances} show box plots for the performance of all
+workgroup sizes using different groupings: ratio of maximum workgroup
+size, kernel, device, and dataset. The plots show the median
+performance, interquartile range, and outliers. What is evident is
+both the large range of workgroup size performances (i.e. the high
+performance upper bounds), and the lack of obvious correlations
+between any of the groupings and performance.
 
 
 \begin{figure}
@@ -1076,7 +1079,7 @@ performance.
     a function of: (\subref{fig:performance-max-wgsize})~maximum legal
     size, (\subref{fig:performance-wg-c})~number of columns, and
     (\subref{fig:performance-wg-r})~number of rows. Each workgroup
-    size is normalised to the maximum allowed for that scenario,
+    size is normalized to the maximum allowed for that scenario,
     $W_{\max}(s)$. There is no clear correlation between workgroup
     size and performance.%
   }
@@ -1144,7 +1147,7 @@ ability to successfully apply prior knowledge about other devices,
 kernels, and datasets, to new unseen cases. For example, of the $n$
 devices used to collect performance data, the model is trained on data
 from $n-1$ devices, and tested against data from the
-$n^{th}$. Table~\ref{tab:class} summarises the results of evaluating
+$n^{th}$. Table~\ref{tab:class} summarizes the results of evaluating
 the autotuner using each of the different validation techniques.
 
 The autotuner achieves good performance, with average speedups over
@@ -1164,7 +1167,7 @@ datasets.
 Classification using decision trees is a lightweight process (they can
 be implemented using a chain of \texttt{if}/\texttt{else} statements).
 The measured overhead of autotuning is 2.5ms, of which only 0.3ms is
-required for classification using Weka, although an optimised decision
+required for classification using Weka, although an optimized decision
 tree implementation could reduce this further. The remaining 2.2ms is
 required for feature extraction and the inter-process round trip
 between the OmniTune server and client.
@@ -1202,7 +1205,7 @@ autotuning methodology a simple process. To demonstrate this, we
 changed the machine learning algorithm from a J48 decision tree to a
 Naive Bayes classifier, and duplicated the evaluation. This required
 only a single line of source code in the OmniTune server extension to
-be changed. Figure~\ref{fig:class-hmaps} visualises the differences in
+be changed. Figure~\ref{fig:class-hmaps} visualizes the differences in
 autotuning predictions when changing between these two
 classifiers. While the average performances of the two classifiers is
 comparable, the distribution of predictions is not. For example, the
@@ -1248,10 +1251,10 @@ algorithms.
 % \label{fig:class-hmaps-4}
 % \end{subfigure}
 \caption{%
-  Heatmaps of autotuner predictions for a subset of the optimisation
+  Heatmaps of autotuner predictions for a subset of the optimization
   space using two different classifiers. The shading in each cells
   indicates if it is predicted less frequently (blue), ore more
-  frequently (red) than it is optimal. Colour gradients are normalised
+  frequently (red) than it is optimal. Color gradients are normalized
   across plots.%
 }
 \label{fig:class-hmaps}
@@ -1261,7 +1264,7 @@ algorithms.
 \subsection{Summary}
 
 In this section we have explored the performance impact of the
-workgroup size optimisation space, and the effectiveness of autotuning
+workgroup size optimization space, and the effectiveness of autotuning
 using OmniTune to exploit this. By comparing the relative performance
 of an average of 629 workgroup sizes for each of 429 scenarios, the
 following conclusions can be drawn:
@@ -1294,12 +1297,12 @@ space of compiler optimisations~\cite{Bodin1998,Kisuki}. Since then,
 machine learning techniques have been successfully employed to reduce
 the cost of iterative
 compilation~\cite{Agakov,Stephenson2003,Fursin2011}. However,
-optimising GPGPU programs presents different challenges to that of
+optimizing GPGPU programs presents different challenges to that of
 traditional CPU programming. \citeauthor{Ryoo2008a} demonstrated
 speedups of up to $432\times$ for matrix multiplication in CUDA
 through the appropriate use of zero-overhead thread scheduling, memory
 bandwidth, and thread grouping. The importance of proper exploitation
-of local shared memory and synchronisation costs is explored
+of local shared memory and synchronization costs is explored
 in~\cite{Lee2010}. In~\cite{Chen2014}, data locality optimisations are
 automated using a description of the hardware and a
 memory-placement-agnostic compiler. \citeauthor{Magni2014} use a
@@ -1309,7 +1312,7 @@ $1.11\times$ and $1.33\times$.
 
 Auotuning transformations for stencil codes are explored
 in~\cite{Kamil2010} using an IR to represent stencils and a CUDA code
-generator at the backend. However, they do not optimise for the GPU
+generator at the backend. However, they do not optimize for the GPU
 memory hierarchy, using only global memory. In~\cite{Lutz2013},
 \citeauthor{Lutz2013} demonstrate that optimal swapping strategy for
 multi-GPU stencils depends on the size of the grid, the number of
@@ -1317,9 +1320,9 @@ partitions, and the connection mechanism (e.g.\ PCI express).
 
 OpenTuner is a general purpose toolkit for autotuning which uses
 ensemble search techniques to reduce the cost of exploring an
-optimisation space, rather than the machine learning approach taken in
+optimization space, rather than the machine learning approach taken in
 this work~\cite{Ansel2013}. Since OpenTuner does not \emph{learn}
-optimisation spaces as OmniTune does, performance data is not shared
+optimization spaces as OmniTune does, performance data is not shared
 across devices. This means that the search for performant parameter
 values must be performed by each new device to be autotuned. Our
 approach combines machine learning with distributed training sets so
@@ -1349,23 +1352,21 @@ grow. Autotuning proves to be a valuable aid for achieving these
 goals, provided that the burden of development and collecting
 performance data is lifted from the user. The system presented in this
 paper aims to solve this issue by providing a generic interface for
-implementing machine learning-enabled autotuning, and a mechanism for
-distributing the necessary performance data to build successful
-machine learning models. OmniTune is a novel framework for autotuning
-which has the benefits of fast, ``always-on'' interface for client
-applications, while being able to synchronise data with global
-repositories of knowledge which are built up across devices. To
-demonstrate the utility of this framework, we implemented a frontend
-for predicting the workgroup size of OpenCL kernels for SkelCL stencil
-codes. This optimisation space is complex, non linear, and critical
-for the performance of stencil kernels. Selecting the correct
-workgroup size is difficult --- requiring a knowledge of the kernel,
-dataset, and underlying architecture. The implemented autotuner
-achieves 92 \% of the maximum performance, and is provides performance
-portability, even achieving an average of 85\% of the maximum
-performance when deployed on a device for which it has no prior
-training data. In future work we will explore methods for
-collaborative exploration of optimisation spaces in parallel across
+implementing machine learning-enabled autotuning. OmniTune is a novel
+framework for autotuning which has the benefits of a fast, ``always-on''
+interface for client applications, while being able to synchronize
+data with global repositories of knowledge which are built up across
+devices. To demonstrate the utility of this framework, we implemented
+a frontend for predicting the workgroup size of OpenCL kernels for
+SkelCL stencil codes. This optimization space is complex, non linear,
+and critical for the performance of stencil kernels. Selecting the
+correct workgroup size is difficult --- requiring a knowledge of the
+kernel, dataset, and underlying architecture. The implemented
+autotuner achieves 92 \% of the maximum performance, and is provides
+performance portability, even achieving an average of 85\% of the
+maximum performance when deployed on a device for which it has no
+prior training data. In future work we will explore methods for
+collaborative exploration of optimization spaces in parallel across
 multiple cooperating devices.
 
 \acks
@@ -1374,7 +1375,7 @@ This work was supported by the UK Engineering and Physical Sciences
 Research Council under grants EP/L01503X/1 for the University of
 Edinburgh School of Informatics Centre for Doctoral Training in
 Pervasive Parallelism
-(\url{http://pervasiveparallelism.inf.ed.ac.uk/}),\\* EP/H044752/1
+(\url{http://pervasiveparallelism.inf.ed.ac.uk/}), EP/H044752/1
 (ALEA), and EP/M015793/1 (DIVIDEND).
 
 \label{bibliography}
