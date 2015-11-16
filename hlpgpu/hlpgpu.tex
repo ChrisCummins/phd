@@ -475,16 +475,6 @@ communication pattern, supported by two methods:
 
 \subsection{Extensibility}
 
-\begin{figure}
-\centering
-\includegraphics[width=\columnwidth]{img/omnitune-system-flow.pdf}
-\caption[Optimization parameter selection with OmniTune]{%
-  Predicting parameter values and collecting training data with
-  OmniTune.%
-}
-\label{fig:omnitune-system-flow}
-\end{figure}
-
 To extend OmniTune to target an optimization parameter, a developer
 extends the server class to implement response handlers for the four
 public interface operations, and then inserts client code into the
@@ -499,6 +489,16 @@ apply OmniTune to SkelCL.
 
 
 \section{Integration of OmniTune with SkelCL}\label{sec:omnitune-skelcl}
+
+\begin{figure}
+\centering
+\includegraphics[width=\columnwidth]{img/omnitune-system-flow.pdf}
+\caption[Optimization parameter selection with OmniTune]{%
+  Predicting parameter values and collecting training data with
+  OmniTune.%
+}
+\label{fig:omnitune-system-flow}
+\end{figure}
 
 In this section we demonstrate the practicality of OmniTune by
 integrating the framework into an established algorithmic skeleton
