@@ -18,6 +18,10 @@
 
 \usepackage[utf8]{inputenc}
 
+\usepackage{color}
+
+\newcommand{\fix}[1]{\textcolor{red}{\em#1}}
+
 % Fix for "'babel/polyglossia' detected but 'csquotes' missing"
 % warning. NOTE: Include after inputenc.
 %
@@ -249,15 +253,15 @@ case-by-case basis, since simple heuristics fail to exploit the
 available performance.
 
 In this paper, we demonstrate how machine learning-enabled autotuning
-can addresses this issue for one such optimisation parameter of OpenCL
+can address this issue for one such optimisation parameter of OpenCL
 programs --- that of workgroup size. The 2D optimisation space of
 OpenCL kernel workgroup sizes is large, complex and
 non-linear. Successfully applying machine learning to such a space
 requires plentiful training data, the careful selection of features,
 and an appropriate classification approach. The approaches presented
-in this paper uses features extracted from the architecture and
-kernel, and training data collected from synthetic benchmarks to
-predict workgroup sizes for unseen programs.
+in this paper use features extracted from the architecture and kernel,
+and training data collected from synthetic benchmarks to predict
+workgroup sizes for unseen programs.
 
 
 \section{The SkelCL Stencil Pattern}
@@ -339,7 +343,7 @@ type of executable instruction.
 
 While in theory, any workgroup size which satisfies the device and
 kernel workgroup size constraints should provide a valid program, in
-practise we find that some combinations of scenario and workgroup size
+practice we find that some combinations of scenario and workgroup size
 cause a \texttt{CL\_OUT\_OF\_RESOURCES} error to be thrown when the
 kernel is launched. We refer to these workgroup sizes as \emph{refused
   parameters}. Note that in many OpenCL implementations, this error
@@ -497,7 +501,8 @@ This results in an autotuner which may predict workgroup sizes that
 are not legal for all scenarios, either because they exceed
 $W_{\max}(s)$, or because parameters are refused,
 $w \in W_{refused}(s)$. For these cases, we evaluate the effectiveness
-of three \emph{fallback strategies}:
+of three \emph{fallback handlers}, \fix{which will iteratively select
+  new workgroup sizes until a legal one is found}:
 %
 \begin{enumerate}
 \item \emph{Baseline} --- select the workgroup size which provides the
@@ -553,9 +558,9 @@ correcting in the presence of refused parameters --- if a workgroup
 size is refused, it is removed from the candidate pool, and the next
 best candidate is chosen. This removes the need for fallback
 handlers. Importantly, this technique allows for training on data for
-which the oracle workgroup size is unknown, and has the secondary
-advantage that this allows for an additional training instance to be
-gathered every time a kernel is evaluated.
+which the oracle workgroup size is unknown, \fix{meaning that a full
+  of exploration of space is not required in order to gather a
+  training instance, as is the case with classifiers.}
 
 
 \subsection{Predicting Relative Performance}
@@ -573,7 +578,7 @@ classification using regressors
 (Algorithm~\ref{alg:autotune-regression}). We train a regressor
 $R(f(s), w)$ to predict the relative performance of workgroup size $w$
 over a baseline parameter for scenario $s$. The fitness function
-returns output of the regressor, so the selected workgroup size
+returns the output of the regressor, so the selected workgroup size
 $\bar{\Omega}(s)$ is the workgroup size from a pool of candidates
 which is predicted to provide the best relative performance. This has
 the same advantageous properties as predicting runtimes, but by
@@ -815,7 +820,10 @@ benchmarks and tested against real-world programs. This suggests the
 model over-fitting to features of the synthetic benchmarks which are
 not shared by the real-world tests. Of the three fallback handlers,
 \textsc{NearestNeighbour} provides the best performance, indicating
-that it successfully exploits structure in the optimisation space.
+that it successfully exploits structure in the optimisation
+space. \fix{In our evaluation, the largest number of iterations of a
+  fallback handler required before selecting a legal workgroup size
+  was 2.}
 
 
 \subsection{Predicting with Regressors}
