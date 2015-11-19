@@ -1493,16 +1493,17 @@ in~\cite{Chiu2015}. The authors describe an application of their tool
 for generating OpenCL stencil kernels for machine learning, but do not
 report any performance results.
 
-OpenTuner is a general purpose toolkit for autotuning which uses
-ensemble search techniques to reduce the cost of exploring an
-optimization space, rather than the machine learning approach taken in
-this work~\cite{Ansel2013}. Since OpenTuner does not \emph{learn}
-optimization spaces as OmniTune does, performance data is not shared
-across devices. This means that the search for performant parameter
-values must be performed by each new device to be autotuned. Our
-approach combines machine learning with distributed training sets so
-that new users automatically benefit from the collective tuning
-experience of other users, which reduces the time to deployment.
+OpenTuner~\cite{Ansel2013} and CLTune~\cite{Nugteren2015} are examples
+of generic autotuning frameworks which use iterative search techniques
+to explore optimization spaces. In OpenTuner, using ensemble search
+techniques; in CLTune, using simulated annealing or particle
+swarms. Since OpenTuner and CLTune do not \emph{learn} optimization
+spaces as OmniTune does, performance data is not shared across
+devices. This means that the search for performant parameter values
+must be performed by each new device to be autotuned. Our approach
+combines machine learning with distributed training sets so that new
+users automatically benefit from the collective tuning experience of
+other users, which reduces the time to deployment.
 
 A ``big data'' driven approach to autotuning is presented
 in~\cite{Fursin2014}. The authors propose the use of ``Collective
