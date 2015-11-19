@@ -234,19 +234,19 @@
 
 Stencil codes have a variety of computationally demanding uses from
 fluid dynamics to quantum mechanics. Efficient, tuned stencil
-implementations are highly sought after, with early work in
-\citeyear{Bolz2003} by \citeauthor{Bolz2003} demonstrating the
-capability of GPUs for massively parallel stencil
-operations~\cite{Bolz2003}. Since then, the introduction of the OpenCL
-standard has introduced greater programmability of heterogeneous
-devices by providing a vendor-independent layer of abstraction for
-data parallel programming of CPUs, GPUs, DSPs, and other
-devices~\cite{Stone2010}. However, achieving portable performance of
-OpenCL programs is a hard task --- OpenCL kernels are sensitive to
-properties of the underlying hardware, to the implementation, and even
-to the \emph{dataset} that is operated upon. This forces developers to
-laboriously hand tune performance on a case-by-case basis, since
-simple heuristics fail to exploit the available performance.
+implementations are highly sought after, with early work in 2003 by
+Bolz et al.\ demonstrating the capability of GPUs for massively
+parallel stencil operations~\cite{Bolz2003}. Since then, the
+introduction of the OpenCL standard has introduced greater
+programmability of heterogeneous devices by providing a
+vendor-independent layer of abstraction for data parallel programming
+of CPUs, GPUs, DSPs, and other devices~\cite{Stone2010}. However,
+achieving portable performance of OpenCL programs is a hard task ---
+OpenCL kernels are sensitive to properties of the underlying hardware,
+to the implementation, and even to the \emph{dataset} that is operated
+upon. This forces developers to laboriously hand tune performance on a
+case-by-case basis, since simple heuristics fail to exploit the
+available performance.
 
 In this paper, we demonstrate how machine learning-enabled autotuning
 can addresses this issue for one such optimisation parameter of OpenCL
@@ -910,12 +910,12 @@ statements.
 \end{figure}
 
 In the original implementation of the SkelCL stencil
-pattern~\cite{Steuwer2014a}, \citeauthor{Steuwer2014a} selected a
-workgroup size of $w_{(32 \times 4)}$ in an evaluation of 4 stencil
-operations on a Tesla S1070 system. In our evaluation of 429
-combinations of kernel, architecture, and dataset, we found that this
-workgroup size is refused by 2.6\% of scenarios, making it unsuitable
-for use as a baseline. However, if we remove the scenarios for which
+pattern~\cite{Steuwer2014a}, Steuwer et al.\ selected a workgroup size
+of $w_{(32 \times 4)}$ in an evaluation of 4 stencil operations on a
+Tesla S1070 system. In our evaluation of 429 combinations of kernel,
+architecture, and dataset, we found that this workgroup size is
+refused by 2.6\% of scenarios, making it unsuitable for use as a
+baseline. However, if we remove the scenarios for which
 $w_{(32 \times 4)}$ is \emph{not} a legal workgroup size, we can
 directly compare the performance against the autotuning predictions.
 
@@ -936,9 +936,9 @@ of all the techniques ($1.33\times$).
 
 \section{Related Work}\label{sec:related}
 
-\citeauthor{Ganapathi2009} demonstrated early attempts at autotuning
-multicore stencil codes in~\cite{Ganapathi2009}, drawing upon the
-successes of statistical machine learning techniques in the compiler
+Ganapathi et al.\ demonstrated early attempts at autotuning multicore
+stencil codes in~\cite{Ganapathi2009}, drawing upon the successes of
+statistical machine learning techniques in the compiler
 community. They use Kernel Canonical Correlation Analysis to build
 correlations between stencil features and optimisation
 parameters. Their use of KCCA restricts the scalability of their
