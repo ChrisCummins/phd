@@ -621,7 +621,7 @@ precision using OpenCL's Profiling API to record the kernel execution
 time. The workgroup size space was enumerated for each combination of
 $w_r$ and $w_c$ values in multiples of 2, up to the maximum workgroup
 size. For each combination of scenario and workgroup size, a minimum
-of 30 samples were recorded.
+of 30 runtimes were recorded.
 
 \begin{table}
 \scriptsize
@@ -860,14 +860,12 @@ statements.
 \includegraphics[width=\columnwidth]{classification-syn-real}
 \vspace{-2em}
 \caption{%
-  Autotuning performance using classifiers and synthetic benchmarks. Each
-  classifier is trained on data collected from synthetic stencil
-  applications, and tested for prediction quality using data from 6
-  real-world benchmarks. Each of the different values correspond to a
-  different data partitioning strategy, e.g.\ cross-kernel
-  partitioning, 10-fold validation, etc. 95\% confidence intervals are
-  shown where appropriate.
-  \vspace{-1.5em}
+  Autotuning performance using classifiers and synthetic
+  benchmarks. Each classifier is trained on data collected from
+  synthetic stencil applications, and tested for prediction quality
+  using data from 6 real-world benchmarks. 95\% confidence intervals
+  are shown where appropriate.
+  \vspace{-1.5em}%
 }
 \label{fig:class-syn}
 \end{figure}
@@ -1003,7 +1001,7 @@ This work was supported by the UK Engineering and Physical Sciences
 Research Council under grants EP/L01503X/1 for the University of
 Edinburgh School of Informatics Centre for Doctoral Training in
 Pervasive Parallelism
-(\url{http://pervasiveparallelism.inf.ed.ac.uk/}),\\* EP/H044752/1
+(\url{http://pervasiveparallelism.inf.ed.ac.uk/}), EP/H044752/1
 (ALEA), and EP/M015793/1 (DIVIDEND).
 
 
