@@ -57,7 +57,7 @@
 % Bibliography %
 %%%%%%%%%%%%%%%%
 \usepackage[%
-    backend=biber,
+    backend=biber,%bibtex,
     style=numeric-comp,
     % style=numeric-comp,  % numerical-compressed
     sorting=none,        % nty,nyt,nyvt,anyt,anyvt,ynt,ydnt,none
@@ -619,30 +619,6 @@ $w_r$ and $w_c$ values in multiples of 2, up to the maximum workgroup
 size. For each combination of scenario and workgroup size, a minimum
 of 30 runtimes were recorded.
 
-\begin{table}
-\scriptsize
-\centering
-\begin{tabular}{lrrrrR{1.4cm}}
-\toprule
-      Name &  North &  South &  East &  West &  Instruction Count \\
-\midrule
-   synthetic-a & 1--30 & 1--30 & 1--30 & 1--30 & 67--137\\
-   synthetic-b & 1--30 & 1--30 & 1--30 & 1--30 & 592--706\\
-   gaussian    & 1--10 & 1--10 & 1--10 & 1--10 & 82--83 \\
-   gol         &      1 &      1 &     1 &     1 &                190 \\
-   he          &      1 &      1 &     1 &     1 &                113 \\
-   nms         &      1 &      1 &     1 &     1 &                224 \\
-   sobel       &      1 &      1 &     1 &     1 &                246 \\
-   threshold   &      0 &      0 &     0 &     0 &                 46 \\
-\bottomrule
-\end{tabular}
-\caption{%
-  Stencil kernels, border sizes (north, south, east, and west),
-  and static instruction counts.
-}
-\label{tab:kernels}
-\end{table}
-
 In addition to the synthetic stencil benchmarks described in
 Section~\ref{subsec:training}, six stencil kernels taken from four
 reference implementations of standard stencil applications from the
@@ -672,6 +648,30 @@ performs feature extraction and classification.
 
 
 \section{Performance Results}\label{sec:results}
+
+\begin{table}
+\scriptsize
+\centering
+\begin{tabular}{lrrrrR{1.4cm}}
+\toprule
+      Name &  North &  South &  East &  West &  Instruction Count \\
+\midrule
+   synthetic-a & 1--30 & 1--30 & 1--30 & 1--30 & 67--137\\
+   synthetic-b & 1--30 & 1--30 & 1--30 & 1--30 & 592--706\\
+   gaussian    & 1--10 & 1--10 & 1--10 & 1--10 & 82--83 \\
+   gol         &      1 &      1 &     1 &     1 &                190 \\
+   he          &      1 &      1 &     1 &     1 &                113 \\
+   nms         &      1 &      1 &     1 &     1 &                224 \\
+   sobel       &      1 &      1 &     1 &     1 &                246 \\
+   threshold   &      0 &      0 &     0 &     0 &                 46 \\
+\bottomrule
+\end{tabular}
+\caption{%
+  Stencil kernels, border sizes (north, south, east, and west),
+  and static instruction counts.
+}
+\label{tab:kernels}
+\end{table}
 
 This section describes the performance results of enumerating the
 workgroup size optimisation space. The effectiveness of autotuning
@@ -716,6 +716,7 @@ program, if not a performant one.
     $w_c \le 100, w_r \le 100$. There are 135 unique oracle workgroup
     sizes. The most common oracle workgroup size is
     $w_{(64 \times 4)}$, optimal for 15\% of scenarios.
+    \vspace{-3em}
   }
 \label{fig:oracle-wgsizes}
 \end{figure}
