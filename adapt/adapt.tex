@@ -18,10 +18,6 @@
 
 \usepackage[utf8]{inputenc}
 
-\usepackage{color}
-
-\newcommand{\fix}[1]{\textcolor{red}{\em#1}}
-
 % Fix for "'babel/polyglossia' detected but 'csquotes' missing"
 % warning. NOTE: Include after inputenc.
 %
@@ -501,8 +497,8 @@ This results in an autotuner which may predict workgroup sizes that
 are not legal for all scenarios, either because they exceed
 $W_{\max}(s)$, or because parameters are refused,
 $w \in W_{refused}(s)$. For these cases, we evaluate the effectiveness
-of three \emph{fallback handlers}, \fix{which will iteratively select
-  new workgroup sizes until a legal one is found}:
+of three \emph{fallback handlers}, which will iteratively select new
+workgroup sizes until a legal one is found:
 %
 \begin{enumerate}
 \item \emph{Baseline} --- select the workgroup size which provides the
@@ -558,9 +554,9 @@ correcting in the presence of refused parameters --- if a workgroup
 size is refused, it is removed from the candidate pool, and the next
 best candidate is chosen. This removes the need for fallback
 handlers. Importantly, this technique allows for training on data for
-which the oracle workgroup size is unknown, \fix{meaning that a full
-  of exploration of space is not required in order to gather a
-  training instance, as is the case with classifiers.}
+which the oracle workgroup size is unknown, meaning that a full
+exploration of the space is not required in order to gather a training
+instance, as is the case with classifiers.
 
 
 \subsection{Predicting Relative Performance}
@@ -820,10 +816,9 @@ benchmarks and tested against real-world programs. This suggests the
 model over-fitting to features of the synthetic benchmarks which are
 not shared by the real-world tests. Of the three fallback handlers,
 \textsc{NearestNeighbour} provides the best performance, indicating
-that it successfully exploits structure in the optimisation
-space. \fix{In our evaluation, the largest number of iterations of a
-  fallback handler required before selecting a legal workgroup size
-  was 2.}
+that it successfully exploits structure in the optimisation space. In
+our evaluation, the largest number of iterations of a fallback handler
+required before selecting a legal workgroup size was 2.
 
 
 \subsection{Predicting with Regressors}
@@ -891,7 +886,8 @@ statements.
   Autotuning performance for each type of test dataset using
   regressors to predict: (\subref{fig:runtime-class-xval}) kernel
   runtimes, and (\subref{fig:speedup-class-xval}) relative performance
-  of workgroup sizes.%
+  of workgroup sizes.
+  \vspace{-1em} %
 }
 \label{fig:regression-class}
 \end{figure}
@@ -910,7 +906,8 @@ statements.
   handlers. Horizontal dashed lines show the median, Q1, and
   Q3. Kernel Density Estimates show the distribution of results. The
   speedup axis is fixed to the range 0--2.5 to highlight the IQRs,
-  which results in some outlier speedups > 2.5 being clipped.%
+  which results in some outlier speedups > 2.5 being clipped.
+  \vspace{-.8em} %
 }
 \label{fig:speedup-distributions}
 \end{figure}
@@ -952,19 +949,23 @@ system, as the complexity of model building grows exponentially with
 the number of features. A code generator and autotuner for 3D Jacobi
 stencil codes is presented in~\cite{Zhang2013a}, although their
 approach requires a full enumeration of the parameter space for each
-new program, and has no cross-program learning. A DSL and CUDA code
-generator for stencils is presented in~\cite{Kamil2010}. Unlike the
-SkelCL stencil pattern, the generated stencil codes do not exploit
-fast local device memory. Autotuning memory transfers for multi-GPU
-stencils is explored in~\cite{Lutz2013} using a combination of offline
-tuning and runtime parameter search. A comparison of tuning for CPU
-and GPU architectures is made in~\cite{Christen2011}, although the
-authors did not compare differences between GPUs. The automatic
-generation of synthetic benchmarks using parameterised template
-substitution is presented in~\cite{Chiu2015}. The authors describe an
-application of their tool for generating OpenCL stencil kernels for
-machine learning, but do not report any performance results.
-
+new program, and has no cross-program learning. Similarly,
+CLTune~\cite{Nugteren2015} is an autotuner which applies iterative
+search techniques to user-specified OpenCL parameters. A generic
+OpenCL autotuner is presented in~\cite{Falch2015} which uses neural
+networks to predict good configurations of user-specified parameters,
+although the authors present only a preliminary evaluation using three
+benchmarks. Both systems require the user to specify parameters on a
+per-program basis. The autotuner presented in this work, embedded at
+the skeletal level, requires no user effort for new programs and is
+transparent to the user. A DSL and CUDA code generator for stencils is
+presented in~\cite{Kamil2010}. Unlike the SkelCL stencil pattern, the
+generated stencil codes do not exploit fast local device memory. The
+automatic generation of synthetic benchmarks using parameterised
+template substitution is presented in~\cite{Chiu2015}. The authors
+describe an application of their tool for generating OpenCL stencil
+kernels for machine learning, but do not report any performance
+results.
 
 \section{Conclusions}\label{sec:conclusions}
 
