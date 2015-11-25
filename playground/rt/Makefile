@@ -22,9 +22,14 @@ export SHELL   := /bin/bash
 #################
 # Build options #
 #################
+# Infer whether we're using the clang++ compiler, else assume g++:
+ifeq ($(CXX),clang++)
+IsClang = 1
+endif
+
 # Whether to enable support for gprof profiling tool:
 GPROF_ENABLED = 0
-# The GCC optimisation level to use:
+# The optimisation level to use:
 OPTIMISATION_LEVEL = -O2
 
 # Compile-time flags.
