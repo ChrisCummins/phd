@@ -165,11 +165,11 @@ class Matrix {
                       const Vector r2,
                       const Vector r3,
                       const Vector r4)
-               : r({r1, r2, r3, r4}),
-                 c({Vector(r1.x, r2.x, r3.x, r4.x),
-                    Vector(r1.y, r2.y, r3.y, r4.y),
-                    Vector(r1.z, r2.z, r3.z, r4.z),
-                    Vector(r1.w, r2.w, r3.w, r4.w)}) {}
+               : r{r1, r2, r3, r4},
+                 c{Vector(r1.x, r2.x, r3.x, r4.x),
+                   Vector(r1.y, r2.y, r3.y, r4.y),
+                   Vector(r1.z, r2.z, r3.z, r4.z),
+                   Vector(r1.w, r2.w, r3.w, r4.w)} {}
 
         // Matrix multiplication.
         Matrix inline operator*(const Matrix &b) const {
