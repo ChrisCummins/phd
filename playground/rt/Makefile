@@ -85,6 +85,7 @@ ifeq ($(GPROF_ENABLED),1)
 CxxFlags += -pg
 endif
 
+
 ###########
 # Targets #
 ###########
@@ -186,7 +187,7 @@ $(Library): $(Objects)
 
 %.o: %.cc $(Headers)
 	@echo '  CXX      $(notdir $@)'
-	$(QUIET)$(CXX) $(CxxFlags) -fPIC -shared -c $< -o $@
+	$(QUIET)$(CXX) $(CxxFlags) -fPIC -c $< -o $@
 	$(QUIET)$(call cpplint,$<,$<$(CpplintExtension))
 
 # Clean up.
