@@ -89,9 +89,12 @@ class Image {
         void write(FILE *const restrict out) const;
 
  private:
+#pragma GCC diagnostic push  // Ignore unused "_pad" variable.
+#pragma GCC diagnostic ignored "-Wunused-private-field"
         // Padding bytes since the "inverted" member bool is only a
         // single byte.
         char _pad[7];
+#pragma GCC diagnostic pop  // Ignore unused "_pad" variable.
 
         void _set(const size_t i,
                   const Colour &value) const;
