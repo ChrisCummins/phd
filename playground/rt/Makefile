@@ -58,12 +58,10 @@ CxxWarnings =			\
 	init-self		\
 	inline			\
 	larger-than=2048	\
-	logical-op		\
 	missing-declarations	\
 	missing-include-dirs	\
 	no-div-by-zero		\
 	no-main			\
-	noexcept		\
 	old-style-cast		\
 	overloaded-virtual	\
 	padded			\
@@ -71,13 +69,26 @@ CxxWarnings =			\
 	shadow			\
 	sign-conversion		\
 	sign-promo		\
-	stack-usage=1024	\
-	strict-null-sentinel	\
 	strict-overflow=5	\
 	switch-default		\
 	undef			\
 	write-strings		\
 	$(NULL)
+
+ifeq ($(IsClang),1)
+# Clang specific warnings.
+CxxWarnings +=			\
+	$(NULL)
+else
+# GCC specific warnings.
+CxxWarnings +=			\
+	logical-op		\
+	noexcept		\
+	stack-usage=1024	\
+	strict-null-sentinel	\
+	$(NULL)
+endif
+
 CxxFlags += $(addprefix -W,$(CxxWarnings))
 
 # Enable GPROF flags if required.
