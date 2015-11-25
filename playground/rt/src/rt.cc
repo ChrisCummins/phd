@@ -28,7 +28,7 @@ void render(const Renderer *const restrict renderer,
             const char *const restrict path) {
         // Print start message.
         printf("Rendering %lu pixels, with "
-               "%lu objects, and %lu light sources ...\n",
+               "%llu objects, and %llu light sources ...\n",
                image->size,
                profiling::counters::getObjectsCount(),
                profiling::counters::getLightsCount());
@@ -67,12 +67,12 @@ void render(const Renderer *const restrict renderer,
                         / static_cast<Scalar>(image->size);
 
         // Print performance summary.
-        printf("Rendered %lu pixels from %lu traces in %.3f seconds.\n\n",
+        printf("Rendered %lu pixels from %llu traces in %.3f seconds.\n\n",
                image->size, traceCount, runTime);
         printf("Render performance:\n");
-        printf("\tRays per second:\t%lu\n", rayRate);
-        printf("\tTraces per second:\t%lu\n", traceRate);
-        printf("\tPixels per second:\t%lu\n", pixelRate);
+        printf("\tRays per second:\t%llu\n", rayRate);
+        printf("\tTraces per second:\t%llu\n", traceRate);
+        printf("\tPixels per second:\t%llu\n", pixelRate);
         printf("\tTraces per pixel:\t%.2f\n", tracePerPixel);
 }
 
