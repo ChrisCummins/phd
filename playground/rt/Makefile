@@ -14,7 +14,7 @@ QUIET   = $(QUIET_$(V))
 ###############
 # Program paths.
 export CPPLINT := scripts/cpplint.py
-export CXX     := g++
+export CXX     := clang++
 export RM      := rm -rf
 export SHELL   := /bin/bash
 
