@@ -129,8 +129,8 @@ void Renderer::render(const Image *const restrict image) const {
                 Colour pixel = sampled[image::index(x + 1, y + 1,
                                                     borderedWidth)];
 
-                // Create a list of all neighbouring elements.
-                const size_t neighbours[] = {
+                // Create a list of all neighbouring element indices.
+                const size_t neighbour_indices[] = {
                         image::index(x - 1, y - 1, borderedWidth),
                         image::index(x,     y - 1, borderedWidth),
                         image::index(x + 1, y - 1, borderedWidth),
@@ -145,7 +145,8 @@ void Renderer::render(const Image *const restrict image) const {
                 for (size_t i = 0; i < 8; i++) {
                         // Calculate the difference between the centre
                         // pixel and the neighbour.
-                        const Scalar diff = pixel.diff(sampled[neighbours[i]]);
+                        const Scalar diff = pixel.diff(
+                            sampled[neighbour_indices[i]]);
 
                         // If the difference is above a given
                         // threshold, then recursively supersample the
