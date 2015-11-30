@@ -98,28 +98,29 @@ Renderer::~Renderer() {
 
 void Renderer::render(const Image *const restrict image) const {
         // Create image to camera transformation matrix.
-        const Matrix transform = cameraImageTransform(camera, image);
+        const auto transformMatrix = cameraImageTransform(camera, image);
 
         // First, we collect a single sample for every pixel in the
         // image, plus an additional border of 1 pixel on all sides.
         const size_t borderedWidth = image->width + 2;
         const size_t borderedHeight = image->height + 2;
         const size_t borderedSize = borderedWidth * borderedHeight;
-        Colour *const restrict sampled = new Colour[borderedSize];
+        std::vector<Colour> sampled(borderedSize);
 
         // Collect pixel samples:
         tbb::parallel_for(
-            static_cast<size_t>(0), borderedSize, [&](size_t index) {
+            static_cast<size_t>(0), sampled.size(), [&](const size_t index) {
                     // Get the pixel coordinates.
-                    const size_t x = image::x(index, borderedWidth);
-                    const size_t y = image::y(index, borderedWidth);
+                    const auto x = image::x(index, borderedWidth);
+                    const auto y = image::y(index, borderedWidth);
 
                     // Sample a point in the centre of the pixel.
                     sampled[index] = renderPoint(x + .5, y + .5,
-                                                 transform);
+                                                 transformMatrix);
             });
 
-        Colour *const restrict superSampled = new Colour[image->size];
+        // Allocate memory for super-sampled image.
+        std::vector<Colour> superSampled(image->size);
 
         // For each pixel in the image:
         for (size_t index = 0; index < image->size; index++) {
@@ -159,7 +160,7 @@ void Renderer::render(const Image *const restrict image) const {
                                             debug::PIXEL_HIGHLIGHT_COLOUR);
                                 else
                                         pixel = renderRegion(x, y, 1,
-                                                             transform);
+                                                             transformMatrix);
                                 break;
                         }
                 }
@@ -168,13 +169,9 @@ void Renderer::render(const Image *const restrict image) const {
                 superSampled[index] = pixel;
         }
 
-        delete[] sampled;
-
         // Write pixel information to image.
         for (size_t index = 0; index < image->size; index++)
                 image->set(index, superSampled[index]);
-
-        delete[] superSampled;
 }
 
 Colour Renderer::renderRegion(const Scalar regionX,
