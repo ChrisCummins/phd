@@ -91,6 +91,13 @@ endif
 
 CxxFlags += $(addprefix -W,$(CxxWarnings))
 
+# Compiler warnings to ignore.
+CxxDisabledWarnings =		\
+	missing-braces		\
+	$(NULL)
+
+CxxFlags += $(addprefix -Wno-,$(CxxDisabledWarnings))
+
 # Enable GPROF flags if required.
 ifeq ($(GPROF_ENABLED),1)
 CxxFlags += -pg
