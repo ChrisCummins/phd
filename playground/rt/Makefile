@@ -38,7 +38,7 @@ CxxFlags =			\
 	-pedantic		\
 	-Wall			\
 	-Wextra			\
-	-std=c++11		\
+	-std=c++14		\
 	-Wno-unused-parameter	\
 	$(NULL)
 
