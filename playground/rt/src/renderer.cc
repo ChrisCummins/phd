@@ -144,25 +144,21 @@ void Renderer::render(const Image *const restrict image) const {
                         image::index(x + 1, y + 1, borderedWidth)
                 };
 
-                // Iterate over each of the neighbouring elements.
-                for (const auto neighbour_index : neighbour_indices) {
-                        // Calculate the difference between the centre
-                        // pixel and the neighbour.
-                        const Scalar diff = pixel.diff(
-                            sampled[neighbour_index]);
+                // Calculate the difference between the neighbouring
+                // pixel values.
+                Scalar diff = 0;
+                for (const auto neighbour_index : neighbour_indices)
+                        diff += pixel.diff(sampled[neighbour_index]);
 
-                        // If the difference is above a given
-                        // threshold, then recursively supersample the
-                        // pixel.
-                        if (diff > maxPixelDiff) {
-                                if (debug::SHOW_SUPERSAMPLE_PIXELS)
-                                        pixel = Colour(
-                                            debug::PIXEL_HIGHLIGHT_COLOUR);
-                                else
-                                        pixel = renderRegion(x, y, 1,
-                                                             transformMatrix);
-                                break;
-                        }
+                // If the difference is above a given threshold,
+                // recursively supersample the pixel.
+                if (diff > maxPixelDiff * neighbour_indices.size()) {
+                        if (debug::SHOW_SUPERSAMPLE_PIXELS)
+                                pixel = Colour(
+                                    debug::PIXEL_HIGHLIGHT_COLOUR);
+                        else
+                                pixel = renderRegion(x, y, 1,
+                                                     transformMatrix);
                 }
 
                 // Set new value.
