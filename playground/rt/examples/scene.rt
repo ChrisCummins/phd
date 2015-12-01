@@ -25,11 +25,11 @@
 # The maximum depth to trace rays to:
 RayDepth: 5000
 # The output image scale factor:
-Scale: 45
+Scale: 14
 # The number of samples to make for rendering DoF. A higher value
 # results in higher quality depth of field, at the expense of greater
 # computational time:
-DofSamples: 256
+DofSamples: 8
 
 [Renderer.Antialiasing]
 # TODO:
@@ -47,8 +47,8 @@ ScaleFactor: 0
 
 [Lens.wideangle]
 FocalLength: 36
-Aperture: 75
-Focus: .97
+Aperture: 50
+Focus: .98
 
 [Film.colour]
 Saturation: 100
@@ -56,11 +56,17 @@ RGBGamma: 102 101 98
 Width: 43
 Height: 24
 
+[Film.square]
+Saturation: 100
+RGBGamma: 102 101 98
+Width: 36
+Height: 36
+
 [Camera.Perspective]
 Position: 450 650 3000
-Lookat: 0 720 0
+Lookat: 250 450 0
 Lens: $Lens.wideangle
-Film: $Film.colour
+Film: $Film.square
 
 
 ##########
