@@ -73,42 +73,42 @@ class Colour {
                                const float _b = 0)
                         : r(_r), g(_g), b(_b) {}
 
-        // Constructor from (h,s,l) description.
+        // Constructor from (h,s,l) definition.
         explicit Colour(const HSL &hsl);
 
         // Colour addition.
-        void operator+=(const Colour &c) {
+        auto operator+=(const Colour &c) {
                 r += c.r;
                 g += c.g;
                 b += c.b;
         }
 
         // Colour subtraction.
-        void operator-=(const Colour &c) {
+        auto operator-=(const Colour &c) {
                 r -= c.r;
                 g -= c.g;
                 b -= c.b;
         }
 
         // Scalar division.
-        void operator/=(const Scalar x) {
+        auto operator/=(const Scalar x) {
                 r /= x;
                 g /= x;
                 b /= x;
         }
 
         // Scalar colour multiplication.
-        Colour operator*(const Scalar x) const {
+        auto operator*(const Scalar x) const {
                 return Colour(r * x, g * x, b * x);
         }
 
         // Scalar colour divison.
-        Colour operator/(const Scalar x) const {
+        auto operator/(const Scalar x) const {
                 return Colour(r / x, g / x, b / x);
         }
 
         // Combination of two colours: A' = (Ar * Br, Ag * Bg, Ab * Bb)
-        Colour operator*(const Colour &rhs) const {
+        auto operator*(const Colour &rhs) const {
                 return Colour(r * rhs.r, g * rhs.g, b * rhs.b);
         }
 
@@ -117,25 +117,25 @@ class Colour {
                 return {scale(clamp(r)), scale(clamp(g)), scale(clamp(b))};
         }
 
-        Scalar max() const {
+        auto max() const {
                 return std::max(r, std::max(g, b));
         }
 
-        Scalar min() const {
+        auto min() const {
                 return std::min(r, std::min(g, b));
         }
 
-        Colour clampRange() const {
+        auto clampRange() const {
                 return Colour(clamp(r), clamp(g), clamp(b));
         }
 
-        Scalar delta() const {
+        auto delta() const {
                 return max() - min();
         }
 
         // Return the sum difference between the r,g,b colour
         // components.
-        Scalar inline diff(const Colour &rhs) const {
+        auto inline diff(const Colour &rhs) const {
                 return fabs(rhs.r - r) + fabs(rhs.g - g) + fabs(rhs.b - b);
         }
 };

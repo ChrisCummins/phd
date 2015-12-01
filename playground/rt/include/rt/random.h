@@ -34,32 +34,32 @@ typedef uint64_t Seed;
 // within a specific range.
 class UniformDistribution {
  public:
-    inline UniformDistribution(const Scalar _min, const Scalar _max,
-                               const Seed _seed = 7564231ULL)
-            : divisor(scalarMax / (_max - _min)),
-                      min(_min),  // NOLINT(build/include_what_you_use)
-                      seed(_seed) {}
+        inline UniformDistribution(const Scalar _min, const Scalar _max,
+                                   const Seed _seed = 7564231ULL)
+                : divisor(scalarMax / (_max - _min)),
+                  min(_min),  // NOLINT(build/include_what_you_use)
+                  seed(_seed) {}
 
-    // Return a new random number.
-    Scalar inline operator()() {
-            seed *= mult;
+        // Return a new random number.
+        auto inline operator()() {
+                seed *= mult;
 
-            // Generate a new random value in the range [0,max - min].
-            const double r = seed % longMax / divisor;
-            // Apply "-min" offset to value.
-            return r + min;
-    }
+                // Generate a new random value in the range [0,max - min].
+                const double r = seed % longMax / divisor;
+                // Apply "-min" offset to value.
+                return r + min;
+        }
 
-    const Scalar divisor;
-    const Scalar min;
-    uint64_t seed;
+        const Scalar divisor;
+        const Scalar min;
+        uint64_t seed;
 
  private:
-    // Constant values for random number generators.
-    static const uint64_t rngMax;
-    static const uint64_t longMax;
-    static const Scalar scalarMax;
-    static const uint64_t mult;
+        // Constant values for random number generators.
+        static const uint64_t rngMax;
+        static const uint64_t longMax;
+        static const Scalar scalarMax;
+        static const uint64_t mult;
 };
 
 // A generator for sampling random points over a disk.
@@ -74,7 +74,7 @@ class UniformDiskDistribution {
         // Return a random point on the disk, with the vector x and y
         // components corresponding to the x and y coordinates of the
         // point within the disk.
-        Vector inline operator()() {
+        auto inline operator()() {
                 const Scalar theta = angle();
                 const Scalar distance = radius * sqrt(rand01());
 

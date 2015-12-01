@@ -41,7 +41,7 @@ static const Scalar ScalarPrecision = 1e-6;
 
 namespace radians {
         // Conversion from radians to degrees.
-        Scalar inline toDegrees(const Scalar radians) {
+        auto inline toDegrees(const Scalar radians) {
                 return radians * M_PI / 180.0;
         }
 }  // namespace radians
@@ -63,7 +63,7 @@ namespace deg {
 Scalar inline clamp(const Scalar x) {
         if (x > 1)
                 return 1;
-        if (x < 0)
+        else if (x < 0)
                 return 0;
         else
                 return x;
@@ -83,70 +83,70 @@ class Vector {
                       const Scalar _w = 0) : x(_x), y(_y), z(_z), w(_w) {}
 
         // Addition: A' = A + B
-        Vector inline operator+(const Vector &b) const {
+        auto inline operator+(const Vector &b) const {
                 return Vector(x + b.x, y + b.y, z + b.z);
         }
 
         // Subtraction: A' = A - B
-        Vector inline operator-(const Vector &b) const {
+        auto inline operator-(const Vector &b) const {
                 return Vector(x - b.x, y - b.y, z - b.z);
         }
 
         // Multiplication: A' = aA
-        Vector inline operator*(const Scalar a) const {
+        auto inline operator*(const Scalar a) const {
                 return Vector(a * x, a * y, a * z);
         }
 
         // Division: A' = A / a
-        Vector inline operator/(const Scalar a) const {
+        auto inline operator/(const Scalar a) const {
                 return Vector(x / a, y / a, z / a);
         }
 
         // Product: A' = (Ax * Bx, Ay * By, Az * Bz)
-        Vector inline operator*(const Vector &b) const {
+        auto inline operator*(const Vector &b) const {
                 return Vector(x * b.x, y * b.y, z * b.z);
         }
 
         // Dot product: x = A . B
-        Scalar inline operator^(const Vector &b) const {
+        auto inline operator^(const Vector &b) const {
                 // Dot product uses the forth component.
                 return x * b.x + y * b.y + z * b.z + w * b.w;
         }
 
         // Cross product: A' = A x B
-        Vector inline operator|(const Vector &b) const {
+        auto inline operator|(const Vector &b) const {
                 return Vector(y * b.z - z * b.y,
                               z * b.x - x * b.z,
                               x * b.y - y * b.z);
         }
 
         // Equality: A == B
-        bool inline operator==(const Vector &b) const {
+        auto inline operator==(const Vector &b) const {
                 return x == b.x && y == b.y && z == b.z;
         }
 
         // Inequality: A != B
-        bool inline operator!=(const Vector &b) const {
+        auto inline operator!=(const Vector &b) const {
                 return !(*this == b);
         }
 
         // Length of vector: |A| = sqrt(x^2 + y^2 + z^2)
-        Scalar inline size() const {
+        auto inline size() const {
                 return sqrt(x * x + y * y + z * z);
         }
 
         // Product of components: x * y * z
-        Scalar inline product() const {
+        auto inline product() const {
                 return x * y * z;
         }
 
         // Sum of components: x + y + z
-        Scalar inline sum() const {
+        auto inline sum() const {
                 return x + y + z;
         }
 
         // Normalise: A' = A / |A|
-        Vector inline normalise() const {
+        auto inline normalise() const {
                 return *this / size();
         }
 };

@@ -67,7 +67,7 @@ class Image {
         ~Image();
 
         // [x,y] = value
-        void inline set(const size_t x,
+        auto inline set(const size_t x,
                         const size_t y,
                         const Colour &value) const {
                 // Apply Y axis inversion if needed.
@@ -77,7 +77,7 @@ class Image {
         }
 
         // [index] = value
-        void inline set(const size_t index,
+        auto inline set(const size_t index,
                         const Colour &value) const {
                 const size_t x = image::x(index, width);
                 const size_t y = image::y(index, width);

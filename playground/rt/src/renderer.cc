@@ -39,9 +39,9 @@ const size_t maxSubpixelDepth = 3;
 // Return the object with the closest intersection to ray, and set the
 // distance to the intersection `t'. If no intersection, returns a
 // nullptr.
-static inline const Object *closestIntersect(const Ray &ray,
-                                             const Objects &objects,
-                                             Scalar *const restrict t) {
+static inline auto closestIntersect(const Ray &ray,
+                                    const Objects &objects,
+                                    Scalar *const restrict t) {
         // Index of, and distance to closest intersect:
         const Object *closest = nullptr;
         *t = INFINITY;
@@ -67,8 +67,8 @@ static inline const Object *closestIntersect(const Ray &ray,
 // coordinates (i.e. [x,y] coordinates with reference to the image
 // size) to camera space coordinates (i.e. [x,y] coordinates with
 // reference to the camera's film size).
-Matrix cameraImageTransform(const Camera *const restrict camera,
-                            const Image *const restrict image) {
+auto cameraImageTransform(const Camera *const restrict camera,
+                          const Image *const restrict image) {
         // Scale image coordinates to camera coordinates.
         const Scale scale(camera->width / image->width,
                           camera->height / image->height, 1);
@@ -172,7 +172,7 @@ Colour Renderer::renderRegion(const Scalar regionX,
                               const Scalar regionSize,
                               const Matrix &transform,
                               const size_t depth) const {
-        Colour samples[4];
+        std::array<Colour, 4> samples;
         Colour supersamples[4];
         Scalar subregion_x[4];
         Scalar subregion_y[4];
@@ -274,12 +274,11 @@ Colour Renderer::renderPoint(const Scalar x,
         // Determine direction from point on lens to
         // exposure point.
         const Vector focalDirection =
-                        (focalOrigin - camera->filmBack)
-                        .normalise();
+                        (focalOrigin - camera->filmBack).normalise();
 
         // Determine the focus point of the pixel.
-        const Vector focalPoint = camera->filmBack + focalDirection
-                        * camera->focusDistance;
+        const Vector focalPoint = camera->filmBack +
+                                  focalDirection * camera->focusDistance;
 
         // Accumulate numDofSamples samples.
         for (size_t i = 0; i < numDofSamples; i++) {

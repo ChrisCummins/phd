@@ -36,7 +36,7 @@ class Timer {
         inline Timer() : start(std::chrono::high_resolution_clock::now()) {}
 
         // Return the number of milliseconds.
-        Scalar inline elapsed() {
+        auto inline elapsed() {
                 const std::chrono::high_resolution_clock::time_point end =
                                 std::chrono::high_resolution_clock::now();
                 return static_cast<Scalar>(
