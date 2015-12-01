@@ -24,9 +24,13 @@
 
 namespace debug {
 
-const bool SHOW_SUPERSAMPLE_PIXELS           = false;
-const bool SHOW_RECURSIVE_SUPERSAMPLE_PIXELS = false;
-const int  PIXEL_HIGHLIGHT_COLOUR            = 0xffffff;
+// Highlight pixels which are flagged for recursive super-sampling
+// beyond a certain depth. Useful for debugging the anti-aliasing
+// logic.
+//
+// A value of '0' disables highlighting.
+const size_t RECURSIVE_HIGHLIGHT_DEPTH  = 0;
+const int    RECURSIVE_HIGHLIGHT_COLOUR = 0xffffff;
 
 }  // namespace debug
 

@@ -32,7 +32,7 @@ namespace {
 using namespace rt;  // NOLINT(build/namespaces)
 
 // Anti-aliasing tunable knobs.
-const Scalar maxPixelDiff     = 0.040;
+const Scalar maxPixelDiff     = 0.0000005;
 const Scalar maxSubpixelDiff  = 0.008;
 const size_t maxSubpixelDepth = 3;
 
@@ -146,19 +146,16 @@ void Renderer::render(const Image *const restrict image) const {
 
                 // Calculate the difference between the neighbouring
                 // pixel values.
-                Scalar diff = 0;
-                for (const auto neighbour_index : neighbour_indices)
-                        diff += pixel.diff(sampled[neighbour_index]);
+                Scalar diffSum = 0;
+                for (const auto neighbour_index : neighbour_indices) {
+                        const auto diff = pixel.diff(sampled[neighbour_index]);
+                        diffSum += diff;
+                }
 
                 // If the difference is above a given threshold,
                 // recursively supersample the pixel.
-                if (diff > maxPixelDiff * neighbour_indices.size()) {
-                        if (debug::SHOW_SUPERSAMPLE_PIXELS)
-                                pixel = Colour(
-                                    debug::PIXEL_HIGHLIGHT_COLOUR);
-                        else
-                                pixel = renderRegion(x, y, 1,
-                                                     transformMatrix);
+                if (diffSum > maxPixelDiff * neighbour_indices.size()) {
+                        pixel = renderRegion(x, y, 1, transformMatrix);
                 }
 
                 // Set new value.
@@ -180,6 +177,11 @@ Colour Renderer::renderRegion(const Scalar regionX,
         Scalar subregion_x[4];
         Scalar subregion_y[4];
         Colour *sample;
+
+        if (debug::RECURSIVE_HIGHLIGHT_DEPTH > 0 &&
+            depth == debug::RECURSIVE_HIGHLIGHT_DEPTH) {
+                return Colour(debug::RECURSIVE_HIGHLIGHT_COLOUR);
+        }
 
         // Determine the size of a sample.
         const Scalar subregionSize = regionSize / 2;
@@ -230,17 +232,14 @@ Colour Renderer::renderRegion(const Scalar regionX,
                 // If the difference is above a threshold, recursively
                 // supersample this region.
                 if (diff > maxSubpixelDiff) {
-                        const Scalar x = subregion_x[i];
-                        const Scalar y = subregion_y[i];
-
-                        if (debug::SHOW_RECURSIVE_SUPERSAMPLE_PIXELS)
-                                return Colour(debug::PIXEL_HIGHLIGHT_COLOUR);
+                        const auto x = subregion_x[i];
+                        const auto y = subregion_y[i];
 
                         // Recursively evaluate sample.
                         *sample = renderRegion(x, y,
-                                                 regionSize / 4,
-                                                 transform,
-                                                 depth + 1);
+                                               regionSize / 4,
+                                               transform,
+                                               depth + 1);
                 }
 
                 // Write updated value.
