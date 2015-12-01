@@ -40,10 +40,10 @@ class Scene {
                 : objects(_objects), lights(_lights) {}
 
         inline ~Scene() {
-                for (size_t i = 0; i < objects.size(); i++)
-                        delete objects[i];
-                for (size_t i = 0; i < lights.size(); i++)
-                        delete lights[i];
+                for (auto object : objects)
+                        delete object;
+                for (auto light : lights)
+                        delete light;
         }
 };
 
