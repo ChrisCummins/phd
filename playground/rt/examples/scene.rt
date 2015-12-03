@@ -86,7 +86,7 @@ Ambient: 1
 Diffuse: 0
 Specular: 100
 Shininess: 400
-Reflectivity: 99
+Reflectivity: 90
 
 [Material.plaster]
 Colour: 0x948697
@@ -117,9 +117,9 @@ Reflectivity: 25
 [Material.white]
 Colour: 0xffffff
 Diffuse: 80
-Specular: 50
+Specular: 15
 Shininess: 4
-Reflectivity: 50
+Reflectivity: 30
 
 
 ###########
