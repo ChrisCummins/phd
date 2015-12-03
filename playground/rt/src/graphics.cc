@@ -50,8 +50,7 @@ Colour::Colour(const HSL &hsl) {
         for (size_t i = 0; i < 3; i++) {
                 if (tmp3[i] < 0)
                         tmp3[i] += 1.0;
-
-                if (tmp3[i] > 1)
+                else if (tmp3[i] > 1)
                         tmp3[i] -= 1.0;
 
                 if (6.0 * tmp3[i] < 1.0)
