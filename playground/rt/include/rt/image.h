@@ -20,10 +20,6 @@
 #ifndef RT_IMAGE_H_
 #define RT_IMAGE_H_
 
-#include <cstddef>
-#include <cstdint>
-#include <cstdio>
-
 #include "rt/graphics.h"
 #include "rt/restrict.h"
 
@@ -86,7 +82,7 @@ class Image {
         }
 
         // Write data to file.
-        void write(FILE *const restrict out) const;
+        void write(std::ofstream &out) const;  // NOLINT(runtime/references)
 
  private:
 #pragma GCC diagnostic push  // Ignore unused "_pad" variable.

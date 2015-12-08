@@ -44,14 +44,15 @@ void render(const Renderer *const restrict renderer,
 
         // Open the output file.
         printf("Opening file '%s'...\n", path);
-        FILE *const restrict out = fopen(path, "w");
+        std::ofstream out;
+        out.open(path);
 
         // Write to output file.
         image->write(out);
 
         // Close the output file.
         printf("Closing file '%s'...\n\n", path);
-        fclose(out);
+        out.close();
 
         // Free heap memory.
         delete renderer;

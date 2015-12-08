@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <fstream>
 
 #include "rt/math.h"
 
@@ -32,24 +33,31 @@ namespace rt {
  * Pixels and colour types.
  */
 
-// The output type of a single R,G,B colour component.
-typedef uint8_t PixelColourType;
-
-// The maximum value of a single R,G,B colour component.
-static const uint8_t PixelColourMax = 255;
-
-// Format string to be passed to fprintf().
-#define PixelFormatString "%u"
-
-// Transform a scalar from the range [0,1] to [0,PixelColourMax]. Note
-// that this transformation may be non-linear.
-PixelColourType inline scale(const Scalar x) {
-        return static_cast<PixelColourType>(
-            x * static_cast<Scalar>(PixelColourMax));
-}
-
 // A pixel is a trio of R,G,B components.
-struct Pixel { PixelColourType r, g, b; };
+class Pixel {
+ public:
+        // The output type of a single R,G,B colour component.
+        typedef uint8_t Component;
+        // The maximum value of a single R,G,B colour component.
+        static const Component ComponentMax = 255;
+
+        Component r, g, b;
+
+        // Output stream formatter.
+        friend auto& operator<<(std::ostream& os, const Pixel &pixel) {
+                os << unsigned(pixel.r) << " "
+                   << unsigned(pixel.g) << " "
+                   << unsigned(pixel.b);
+                return os;
+        }
+};
+
+// Transform a scalar from the range [0,1] to [0,Pixel::ComponentMax]. Note
+// that this transformation may be non-linear.
+Pixel::Component inline scale(const Scalar x) {
+        return static_cast<Pixel::Component>(
+            x * static_cast<Scalar>(Pixel::ComponentMax));
+}
 
 // Forward declaration of HSL colour type (defined below Colour).
 class HSL;

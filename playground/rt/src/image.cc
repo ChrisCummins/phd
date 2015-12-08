@@ -19,6 +19,8 @@
  */
 #include "rt/image.h"
 
+#include <iostream>
+
 namespace rt {
 
 Image::Image(const size_t _width, const size_t _height,
@@ -37,23 +39,19 @@ Image::~Image() {
         delete[] data;
 }
 
-void Image::write(FILE *const restrict out) const {
+void Image::write(std::ofstream &out) const {  // NOLINT(runtime/references)
         // Print PPM header.
-        fprintf(out, "P3\n");                      // Magic number
-        fprintf(out, "%lu %lu\n", width, height);  // Image dimensions
-        fprintf(out, "%d\n", PixelColourMax);      // Max colour value
+        out << "P3" << std::endl;                           // Magic number
+        out << width << " " << height << std::endl;         // Image dimensions
+        out << unsigned(Pixel::ComponentMax) << std::endl;  // Max colour value
 
         // Iterate over each point in the image, writing pixel data.
         for (size_t i = 0; i < height * width; i++) {
                 const Pixel pixel = data[i];
-                fprintf(out,
-                        PixelFormatString" "
-                        PixelFormatString" "
-                        PixelFormatString" ",
-                        pixel.r, pixel.g, pixel.b);
+                out << pixel << " ";
 
                 if (!i % width)  // Add newline at the end of each row.
-                        fprintf(out, "\n");
+                        out << std::endl;
         }
 }
 
