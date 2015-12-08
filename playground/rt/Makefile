@@ -13,11 +13,12 @@ QUIET   = $(QUIET_$(V))
 # Portability #
 ###############
 # Program paths.
-export CPPLINT := scripts/cpplint.py
-export CXX     := clang++
-export RM      := rm -rf
-export SHELL   := /bin/bash
-
+export CPPLINT   := scripts/cpplint.py
+export CXX       := clang++
+export RM        := rm -rf
+export SHELL     := /bin/bash
+# Make configuration:
+export MAKEFLAGS := "-j $(SHELL nproc)"
 
 #################
 # Build options #
