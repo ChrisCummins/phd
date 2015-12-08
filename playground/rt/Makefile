@@ -31,6 +31,8 @@ endif
 GPROF_ENABLED = 0
 # The optimisation level to use:
 OPTIMISATION_LEVEL = -O2
+# The C++ standard to use:
+CPP_STANDARD = c++14
 
 # Compile-time flags.
 CxxFlags =			\
@@ -38,7 +40,7 @@ CxxFlags =			\
 	-pedantic		\
 	-Wall			\
 	-Wextra			\
-	-std=c++14		\
+	-std=$(CPP_STANDARD)	\
 	-Wno-unused-parameter	\
 	$(NULL)
 
