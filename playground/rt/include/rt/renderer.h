@@ -22,11 +22,11 @@
 
 #include <cstdint>
 
-#include "./camera.h"
-#include "./image.h"
-#include "./random.h"
-#include "./ray.h"
-#include "./scene.h"
+#include "rt/camera.h"
+#include "rt/image.h"
+#include "rt/random.h"
+#include "rt/ray.h"
+#include "rt/scene.h"
 
 namespace rt {
 

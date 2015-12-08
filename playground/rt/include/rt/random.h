@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <cstddef>
 
-#include "./math.h"
+#include "rt/math.h"
 
 namespace rt {
 

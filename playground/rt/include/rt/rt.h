@@ -20,9 +20,9 @@
 #ifndef RT_RT_H_
 #define RT_RT_H_
 
-#include "./image.h"
-#include "./renderer.h"
-#include "./restrict.h"
+#include "rt/image.h"
+#include "rt/renderer.h"
+#include "rt/restrict.h"
 
 // A simple ray tacer. Features:
 //

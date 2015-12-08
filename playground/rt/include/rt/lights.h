@@ -24,11 +24,11 @@
 #include <cstddef>
 #include <vector>
 
-#include "./graphics.h"
-#include "./math.h"
-#include "./objects.h"
-#include "./random.h"
-#include "./restrict.h"
+#include "rt/graphics.h"
+#include "rt/math.h"
+#include "rt/objects.h"
+#include "rt/random.h"
+#include "rt/restrict.h"
 
 namespace rt {
 

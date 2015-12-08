@@ -22,11 +22,11 @@
 
 #include <vector>
 
-#include "./graphics.h"
-#include "./math.h"
-#include "./profiling.h"
-#include "./ray.h"
-#include "./restrict.h"
+#include "rt/graphics.h"
+#include "rt/math.h"
+#include "rt/profiling.h"
+#include "rt/ray.h"
+#include "rt/restrict.h"
 
 namespace rt {
 

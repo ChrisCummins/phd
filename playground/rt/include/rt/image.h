@@ -24,8 +24,8 @@
 #include <cstdint>
 #include <cstdio>
 
-#include "./graphics.h"
-#include "./restrict.h"
+#include "rt/graphics.h"
+#include "rt/restrict.h"
 
 namespace rt {
 

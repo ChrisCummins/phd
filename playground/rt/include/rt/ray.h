@@ -20,7 +20,7 @@
 #ifndef RAY_H_
 #define RAY_H_
 
-#include "math.h"
+#include "rt/math.h"
 
 namespace rt {
 

@@ -24,7 +24,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include "./math.h"
+#include "rt/math.h"
 
 namespace rt {
 

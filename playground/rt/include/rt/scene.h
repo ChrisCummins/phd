@@ -22,8 +22,8 @@
 
 #include <vector>
 
-#include "./lights.h"
-#include "./objects.h"
+#include "rt/lights.h"
+#include "rt/objects.h"
 
 namespace rt {
 

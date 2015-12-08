@@ -20,8 +20,8 @@
 #ifndef RT_CAMERA_H_
 #define RT_CAMERA_H_
 
-#include "./math.h"
-#include "./random.h"
+#include "rt/math.h"
+#include "rt/random.h"
 
 namespace rt {
 

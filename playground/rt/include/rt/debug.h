@@ -20,7 +20,7 @@
 #ifndef RT_DEBUG_H_
 #define RT_DEBUG_H_
 
-#include "./math.h"
+#include "rt/math.h"
 
 namespace debug {
 
