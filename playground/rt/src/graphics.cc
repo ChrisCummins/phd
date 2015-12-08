@@ -19,7 +19,6 @@
  */
 #include "rt/graphics.h"
 
-#include <cassert>
 #include <cstdlib>
 
 namespace rt {
