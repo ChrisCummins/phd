@@ -83,7 +83,7 @@ auto cameraImageTransform(const Camera *const restrict camera,
 
 namespace rt {
 
-Renderer::Renderer(const Scene *const restrict _scene,
+Renderer::Renderer(const Scene &_scene,
                    const rt::Camera *const restrict _camera,
                    const size_t _numDofSamples,
                    const size_t _maxRayDepth)
@@ -91,10 +91,7 @@ Renderer::Renderer(const Scene *const restrict _scene,
                   maxRayDepth(_maxRayDepth),
                   numDofSamples(_numDofSamples) {}
 
-Renderer::~Renderer() {
-        delete scene;
-        delete camera;
-}
+Renderer::~Renderer() {}
 
 void Renderer::render(Image *const restrict image) const {
         // Create image to camera transformation matrix.
@@ -318,7 +315,7 @@ Colour Renderer::trace(const Ray &ray,
         // Determine the closet ray-object intersection (if any).
         Scalar t;
         const Object *const restrict object =
-                        closestIntersect(ray, scene->objects, &t);
+                        closestIntersect(ray, scene.objects, &t);
         // If the ray doesn't intersect any object, do nothing.
         if (object == nullptr)
                 return colour;
@@ -336,9 +333,9 @@ Colour Renderer::trace(const Ray &ray,
         colour += material->colour * material->ambient;
 
         // Apply shading from each light source.
-        for (size_t i = 0; i < scene->lights.size(); i++)
-                colour += scene->lights[i]->shade(intersect, normal, toRay,
-                                                  material, scene->objects);
+        for (size_t i = 0; i < scene.lights.size(); i++)
+                colour += scene.lights[i]->shade(intersect, normal, toRay,
+                                                  material, scene.objects);
 
         // Create reflection ray and recursive evaluate.
         const Scalar reflectivity = material->reflectivity;

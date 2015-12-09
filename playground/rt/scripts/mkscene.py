@@ -598,7 +598,7 @@ def get_renderer_code():
     depth = renderer["depth"]
     dofsamples = renderer["dof"]
 
-    c = ("return new Renderer({scene}, {camera}, "
+    c = ("return new Renderer(*{scene}, {camera}, "
          "{dof}, {depth});"
          .format(scene="scene", camera=camera, depth=depth,
                  dof=dofsamples))

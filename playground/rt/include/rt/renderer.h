@@ -32,14 +32,14 @@ namespace rt {
 
 class Renderer {
  public:
-        Renderer(const Scene *const restrict scene,
+        Renderer(const Scene &scene,
                  const rt::Camera *const restrict camera,
                  const size_t numDofSamples = 1,
                  const size_t maxRayDepth   = 5000);
 
         ~Renderer();
 
-        const Scene *const restrict scene;
+        const Scene &scene;
         const rt::Camera *const restrict camera;
 
         // Renderer configuration:

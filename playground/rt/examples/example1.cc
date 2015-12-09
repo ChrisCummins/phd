@@ -57,8 +57,7 @@ int main() {
         const rt::Lights  lights( _lights,  _lights  + 2);
 
         // Create scene and renderer.
-        const rt::Scene *const restrict scene
-                        = new rt::Scene(objects, lights);
+        const rt::Scene scene(objects, lights);
         const rt::Renderer *const restrict renderer
                         = new rt::Renderer(scene, camera);
 
