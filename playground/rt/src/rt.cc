@@ -19,13 +19,15 @@
  */
 #include "rt/rt.h"
 
+#include <iostream>
+
 #include "tbb/parallel_for.h"
 
 namespace rt {
 
-void render(const Renderer *const restrict renderer,
-            Image *const restrict image,
-            const char *const restrict path) {
+void render(const Renderer &renderer,
+            const std::string path,
+            Image *const restrict image) {
         // Print start message.
         printf("Rendering %lu pixels, with "
                "%llu objects, and %llu light sources ...\n",
@@ -37,13 +39,13 @@ void render(const Renderer *const restrict renderer,
         profiling::Timer t = profiling::Timer();
 
         // Render the scene to the output file.
-        renderer->render(image);
+        renderer.render(image);
 
         // Get elapsed time.
         Scalar runTime = t.elapsed();
 
         // Open the output file.
-        printf("Opening file '%s'...\n", path);
+        std::cout << "Opening file '" << path << "'..." << std::endl;
         std::ofstream out;
         out.open(path);
 
@@ -51,12 +53,9 @@ void render(const Renderer *const restrict renderer,
         image->write(out);
 
         // Close the output file.
-        printf("Closing file '%s'...\n\n", path);
+        std::cout << "Closing file '" << path << "'..." << std::endl;
+        std::cout << std::endl;
         out.close();
-
-        // Free heap memory.
-        delete renderer;
-        delete image;
 
         // Calculate performance information.
         profiling::Counter traceCount = profiling::counters::getTraceCount();

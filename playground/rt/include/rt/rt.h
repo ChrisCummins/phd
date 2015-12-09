@@ -20,6 +20,8 @@
 #ifndef RT_RT_H_
 #define RT_RT_H_
 
+#include <string>
+
 #include "rt/image.h"
 #include "rt/renderer.h"
 #include "rt/restrict.h"
@@ -32,11 +34,11 @@
 //   * Anti-aliasing: Stochastic supersampling.
 namespace rt {
 
-        // Render the target image and write output to path. Prints
-        // profiling information.
-        void render(const Renderer *const restrict renderer,
-                    Image *const restrict image,
-                    const char *const restrict path);
+// Render the target image and write output to path. Prints
+// profiling information.
+void render(const Renderer &renderer,
+            const std::string path,
+            Image *const restrict image);
 
 }  // namespace rt
 

@@ -24,8 +24,14 @@ rt::Renderer *getRenderer();
 rt::Image    *getImage();
 
 int main() {
+        auto *renderer = getRenderer();
+        auto *image = getImage();
+
         // Get generated scene and image, and render output.
-        rt::render(getRenderer(), getImage(), "render2.ppm");
+        rt::render(*renderer, "render2.ppm", image);
+
+        delete renderer;
+        delete image;
 
         return 0;
 }

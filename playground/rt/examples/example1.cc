@@ -58,11 +58,13 @@ int main() {
 
         // Create scene and renderer.
         const rt::Scene scene(objects, lights);
-        const rt::Renderer *const restrict renderer
-                        = new rt::Renderer(scene, camera);
+        const rt::Renderer renderer(scene, camera);
+        rt::Image *const image = new rt::Image(512, 512);
 
         // Run ray tracer.
-        rt::render(renderer, new rt::Image(512, 512), "render1.ppm");
+        rt::render(renderer, "render1.ppm", image);
+
+        delete image;
 
         return 0;
 }
