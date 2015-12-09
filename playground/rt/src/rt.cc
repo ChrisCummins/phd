@@ -24,7 +24,7 @@
 namespace rt {
 
 void render(const Renderer *const restrict renderer,
-            const Image *const restrict image,
+            Image *const restrict image,
             const char *const restrict path) {
         // Print start message.
         printf("Rendering %lu pixels, with "

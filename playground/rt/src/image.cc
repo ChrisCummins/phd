@@ -26,7 +26,7 @@ namespace rt {
 Image::Image(const size_t _width, const size_t _height,
              const Scalar _saturation, const Colour _gamma,
              const bool _inverted)
-                : data(new Pixel[_width * _height]),
+                : data(_width * _height),
                   width(_width),
                   height(_height),
                   size(_width * _height),
@@ -34,10 +34,7 @@ Image::Image(const size_t _width, const size_t _height,
                   gamma(Colour(1 / _gamma.r, 1 / _gamma.g, 1 / _gamma.b)),
                   inverted(_inverted) {}
 
-Image::~Image() {
-        // Free pixel data.
-        delete[] data;
-}
+Image::~Image() {}
 
 void Image::write(std::ofstream &out) const {  // NOLINT(runtime/references)
         // Print PPM header.
@@ -56,7 +53,7 @@ void Image::write(std::ofstream &out) const {  // NOLINT(runtime/references)
 }
 
 void Image::_set(const size_t i,
-                 const Colour &value) const {
+                 const Colour &value) {
         // Apply gamma correction.
         Colour corrected = Colour(std::pow(value.r, gamma.r),
                                   std::pow(value.g, gamma.g),

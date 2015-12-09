@@ -53,7 +53,7 @@ class Renderer {
         const size_t numDofSamples;
 
         // The heart of the raytracing engine.
-        void render(const Image *const restrict image) const;
+        void render(Image *const restrict image) const;
 
  private:
         // Recursively supersample a region.

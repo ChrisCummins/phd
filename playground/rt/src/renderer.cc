@@ -96,7 +96,7 @@ Renderer::~Renderer() {
         delete camera;
 }
 
-void Renderer::render(const Image *const restrict image) const {
+void Renderer::render(Image *const restrict image) const {
         // Create image to camera transformation matrix.
         const auto transformMatrix = cameraImageTransform(camera, image);
 

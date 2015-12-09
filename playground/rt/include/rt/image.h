@@ -20,6 +20,8 @@
 #ifndef RT_IMAGE_H_
 #define RT_IMAGE_H_
 
+#include <vector>
+
 #include "rt/graphics.h"
 #include "rt/restrict.h"
 
@@ -47,7 +49,7 @@ inline size_t y(const size_t index, const size_t width) {
 // A rendered image.
 class Image {
  public:
-        Pixel *const restrict data;
+        std::vector<Pixel> data;
         const size_t width;
         const size_t height;
         const size_t size;
@@ -65,7 +67,7 @@ class Image {
         // [x,y] = value
         auto inline set(const size_t x,
                         const size_t y,
-                        const Colour &value) const {
+                        const Colour &value) {
                 // Apply Y axis inversion if needed.
                 const size_t row = inverted ? height - 1 - y : y;
                 // Convert 2D coordinates to flat array index.
@@ -74,7 +76,7 @@ class Image {
 
         // [index] = value
         auto inline set(const size_t index,
-                        const Colour &value) const {
+                        const Colour &value) {
                 const size_t x = image::x(index, width);
                 const size_t y = image::y(index, width);
 
@@ -93,7 +95,7 @@ class Image {
 #pragma GCC diagnostic pop  // Ignore unused "_pad" variable.
 
         void _set(const size_t i,
-                  const Colour &value) const;
+                  const Colour &value);
 };
 
 }  // namespace rt
