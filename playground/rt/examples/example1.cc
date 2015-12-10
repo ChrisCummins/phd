@@ -59,7 +59,7 @@ int main() {
 
         // Create camera.
         const rt::Camera *const restrict camera =
-                        new rt::Camera(rt::Vector(0, 0, -250),  // position
+                        new rt::Camera(rt::Vector(0, 0, -200),  // position
                                        rt::Vector(0, 0, 0),     // look at
                                        50, 50,         // film width & height
                                        rt::Lens(50));  // focal length
