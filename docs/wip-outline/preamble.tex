@@ -2,6 +2,8 @@
 %% Document and Layout %%
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
+\documentclass[a4]{article}
+
 % Fix for multiple "No room for a new \dimen" errors.
 %
 % See: http://tex.stackexchange.com/questions/38607/no-room-for-a-new-dimen
@@ -34,6 +36,8 @@
 %
 \usepackage{silence}
 
+\usepackage{adjustbox}
+
 
 %%%%%%%%%%%%%%%%%%%%%
 % Table of Contents %
@@ -49,7 +53,8 @@
 %%%%%%%%%%%%%%%%
 \usepackage[%
     backend=biber,
-    style=numeric-comp,
+    style=ieee,
+    % style=numeric-comp,
     % style=numeric-comp,  % numerical-compressed
     sorting=none,        % nty,nyt,nyvt,anyt,anyvt,ynt,ydnt,none
     sortcites=true,      % sort \cite{b a d c}: true,false
@@ -60,22 +65,21 @@
     url=true,            % print URL?
     doi=false,           % print DOI?
     natbib=true,         % natbib compatability
-    maxbibnames=99       % no 'et-al' in the bibliography pls
-  ]{biblatex}
+   ]{biblatex}
 
-% % Filter annoying and unavoidable biblatex warning:
+% Filter annoying and unavoidable biblatex warning:
 \WarningFilter{biblatex}{Patching footnotes failed}
 
 % Reduce the font size of the bibliography:
 \renewcommand{\bibfont}{\normalfont\scriptsize}
 
 % Determine which BibTeX file to use:
-%
+
 % If available, use my Mendeley BibTex library, located in the home
 % directory. Note that this is a relative path and will break if
 % either this file or the BibTex library are moved. If the library is
 % not present, use the local refs.bib file.
-\newcommand{\BibResourceGlobal}{../../library.bib}
+\newcommand{\BibResourceGlobal}{../../../library.bib}
 \newcommand{\BibResourceLocal}{refs.bib}
 
 \IfFileExists{\BibResourceGlobal}
@@ -146,13 +150,13 @@
 \usepackage{textcomp}
 
 % Pseudo-code listings.
-\usepackage{algorithm}
-\usepackage{algpseudocode}
-\newcommand{\Break}{\State \textbf{break} }
-\algblockdefx[Loop]{Loop}{EndLoop}[1][]{\textbf{Loop} #1}{\textbf{End
-    Loop}}
+% \usepackage{algorithm}
+% \usepackage{algpseudocode}
+% \newcommand{\Break}{\State \textbf{break} }
+% \algblockdefx[Loop]{Loop}{EndLoop}[1][]{\textbf{Loop} #1}{\textbf{End
+%     Loop}}
 
-\algrenewcommand\ALG@beginalgorithmic{\footnotesize}
+% \algrenewcommand\ALG@beginalgorithmic{\footnotesize}
 
 % Code listings.
 \usepackage{listings}
