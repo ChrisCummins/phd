@@ -272,6 +272,14 @@ def consume_int(pairs, name, default=0):
     else:
         return default
 
+def consume_str(pairs, name, default=""):
+    if name in pairs:
+        val = "".join(pairs[name])
+        pairs.pop(name, None)
+        return val
+    else:
+        return default
+
 def consume_vector(pairs, name, default=[0,0,0]):
     if name in pairs:
         val = get_vector(pairs[name])
@@ -314,6 +322,7 @@ def set_renderer(pairs):
     renderer["depth"] = consume_int(pairs, "raydepth", default=100)
     renderer["scale"] = consume_int(pairs, "scale", default=1)
     renderer["dof"] = consume_int(pairs, "dofsamples", default=1)
+    renderer["path"] = consume_str(pairs, "path", default="render.ppm")
 
 def set_renderer_antialiasing(pairs):
     aa = {}
@@ -598,45 +607,53 @@ def get_renderer_code():
     depth = renderer["depth"]
     dofsamples = renderer["dof"]
 
-    c = ("return new Renderer(*{scene}, {camera}, "
+    c = ("Renderer *const renderer = new Renderer(*{scene}, {camera}, "
          "{dof}, {depth});"
          .format(scene="scene", camera=camera, depth=depth,
                  dof=dofsamples))
     return c
 
-def get_image_code():
-    c = ("    return new Image({width}, {height}, "
+def get_image():
+    width = renderer["scale"] * film["width"]
+    height = renderer["scale"] * film["height"]
+    itype = "Image<{width}, {height}>".format(width=width, height=height)
+    c = ("{itype} *const image = new {itype}("
          "{saturation}, {colour});"
-         .format(width=renderer["scale"] * film["width"],
-                 height=renderer["scale"] * film["height"],
+         .format(itype=itype,
                  saturation=film["saturation"],
                  colour=("Colour({0}, {1}, {2})".format(film["gamma"][0],
                                                         film["gamma"][1],
                                                         film["gamma"][2]))))
-    return c
+    return {
+        "code": c,
+        "width": width,
+        "height": height,
+        "type": itype
+    }
 
 def get_code(sections):
     code = []
-    renderer = []
+    render = []
 
     code.append('#include "rt/rt.h"')
     code.append('using namespace rt;')
 
+    code.append('int main(int argc, char **argv) {')
     for section in sections:
-        renderer.append(get_section_code(section))
+        render.append(get_section_code(section))
+    render.append(get_scene_code())
+    render.append(get_renderer_code())
+    [code.append(line) for line in render if line]
 
-    renderer.append(get_scene_code())
-    renderer.append(get_renderer_code())
+    image = get_image()
+    code.append(image["code"])
 
-    code.append("Renderer *getRenderer();")
-    code.append("Renderer *getRenderer() {")
-    [code.append(line) for line in renderer if line]
-    code.append("}\n")
-
-    code.append("Image *getImage();")
-    code.append("Image *getImage() {")
-    code.append(get_image_code())
-    code.append("}")
+    # Render code:
+    code.append('render<{itype}>(*renderer, "{path}", image);'
+                .format(itype=image["type"],
+                        path=renderer["path"]))
+    code.append('return 0;')
+    code.append('}')
 
     return "\n".join(code)
 

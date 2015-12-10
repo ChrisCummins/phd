@@ -112,13 +112,11 @@ endif
 ###########
 RayTracerSources =		\
 	graphics.cc		\
-	image.cc		\
 	lights.cc		\
 	objects.cc		\
 	profiling.cc		\
 	random.cc		\
 	renderer.cc		\
-	rt.cc			\
 	$(NULL)
 
 RayTracerHeaders =		\
@@ -182,22 +180,22 @@ endef
 # Rules #
 #########
 
-all: examples/example1 examples/example2 lib
+all: lib examples/example1 examples/example2
 
 # Examples.
 examples/example1: examples/example1.cc $(Library)
 	@echo '  CXXLD    $(notdir $@)'
 	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) -ldl $^ -o $@
 
-examples/example2: examples/example2.cc examples/scene.cc $(Library)
+examples/example2: examples/example2.cc $(Library)
 	@echo '  CXXLD    $(notdir $@)'
 	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) -ldl $^ -o $@
 
-examples/scene.cc: examples/scene.rt $(MkScene)
+examples/example2.cc: examples/example2.rt $(MkScene)
 	@echo '  MKSCENE  $(notdir $@)'
 	$(QUIET)$(MkScene) $< $@
 
-CleanFiles += examples/example2 examples/scene.cc
+CleanFiles += examples/example1 examples/example2 examples/example2.cc
 
 # Library target.
 lib: $(Library) $(LintFiles)

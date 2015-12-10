@@ -23,6 +23,9 @@
 
 #include <array>
 
+static const size_t width = 512;
+static const size_t height = 512;
+
 int main() {
         // Create colours.
         static const rt::Colour red   = rt::Colour(0xff0000);
@@ -68,10 +71,11 @@ int main() {
         // Create scene and renderer.
         const rt::Scene scene(objects, lights);
         const rt::Renderer renderer(scene, camera);
-        rt::Image *const image = new rt::Image(512, 512);
+
+        rt::Image<width, height> *const image = new rt::Image<width, height>();
 
         // Run ray tracer.
-        rt::render(renderer, "render1.ppm", image);
+        rt::render<rt::Image<width, height>>(renderer, "render1.ppm", image);
 
         delete image;
 

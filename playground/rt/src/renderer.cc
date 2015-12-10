@@ -24,17 +24,10 @@
 #include "rt/debug.h"
 #include "rt/profiling.h"
 
-#include "tbb/parallel_for.h"
-
 namespace {
 
 // We're using an anonymous namespace so we're allowed to import rt::
 using namespace rt;  // NOLINT(build/namespaces)
-
-// Anti-aliasing tunable knobs.
-const Scalar maxPixelDiff     = 0.0000005;
-const Scalar maxSubpixelDiff  = 0.008;
-const size_t maxSubpixelDepth = 3;
 
 // Return the object with the closest intersection to ray, and set the
 // distance to the intersection `t'. If no intersection, returns a
@@ -63,22 +56,6 @@ static inline auto closestIntersect(const Ray &ray,
         return closest;
 }
 
-// Create a transformation matrix to scale from image space
-// coordinates (i.e. [x,y] coordinates with reference to the image
-// size) to camera space coordinates (i.e. [x,y] coordinates with
-// reference to the camera's film size).
-auto cameraImageTransform(const Camera *const restrict camera,
-                          const Image *const restrict image) {
-        // Scale image coordinates to camera coordinates.
-        const Scale scale(camera->width / image->width,
-                          camera->height / image->height, 1);
-        // Offset from image coordinates to camera coordinates.
-        const Translation offset(-(image->width * .5),
-                                 -(image->height * .5), 0);
-        // Combine the transformation matrices.
-        return scale * offset;
-}
-
 }  // namespace
 
 namespace rt {
@@ -93,76 +70,6 @@ Renderer::Renderer(const Scene &_scene,
 
 Renderer::~Renderer() {}
 
-void Renderer::render(Image *const restrict image) const {
-        // Create image to camera transformation matrix.
-        const auto transformMatrix = cameraImageTransform(camera, image);
-
-        // First, we collect a single sample for every pixel in the
-        // image, plus an additional border of 1 pixel on all sides.
-        const size_t borderedWidth = image->width + 2;
-        const size_t borderedHeight = image->height + 2;
-        const size_t borderedSize = borderedWidth * borderedHeight;
-        std::vector<Colour> sampled(borderedSize);
-
-        // Collect pixel samples:
-        tbb::parallel_for(
-            static_cast<size_t>(0), sampled.size(), [&](const size_t index) {
-                    // Get the pixel coordinates.
-                    const auto x = image::x(index, borderedWidth);
-                    const auto y = image::y(index, borderedWidth);
-
-                    // Sample a point in the centre of the pixel.
-                    sampled[index] = renderPoint(x + .5, y + .5,
-                                                 transformMatrix);
-            });
-
-        // Allocate memory for super-sampled image.
-        std::vector<Colour> superSampled(image->size);
-
-        // For each pixel in the image:
-        for (size_t index = 0; index < image->size; index++) {
-                // Get the pixel coordinates.
-                const size_t x = image::x(index, image->width);
-                const size_t y = image::y(index, image->width);
-
-                // Get the previously sampled pixel value.
-                Colour pixel = sampled[image::index(x + 1, y + 1,
-                                                    borderedWidth)];
-
-                // Create a list of all neighbouring element indices.
-                const std::array<size_t, 8> neighbour_indices = {
-                        image::index(x - 1, y - 1, borderedWidth),
-                        image::index(x,     y - 1, borderedWidth),
-                        image::index(x + 1, y - 1, borderedWidth),
-                        image::index(x - 1, y,     borderedWidth),
-                        image::index(x + 1, y,     borderedWidth),
-                        image::index(x - 1, y + 1, borderedWidth),
-                        image::index(x,     y + 1, borderedWidth),
-                        image::index(x + 1, y + 1, borderedWidth)
-                };
-
-                // Calculate the difference between the neighbouring
-                // pixel values.
-                Scalar diffSum = 0;
-                for (const auto neighbour_index : neighbour_indices) {
-                        const auto diff = pixel.diff(sampled[neighbour_index]);
-                        diffSum += diff;
-                }
-
-                // If the difference is above a given threshold,
-                // recursively supersample the pixel.
-                if (diffSum > maxPixelDiff * neighbour_indices.size()) {
-                        pixel = renderRegion(x, y, 1, transformMatrix);
-                }
-
-                // Set new value.
-                superSampled[index] = pixel;
-        }
-
-        // Write pixel information to image.
-        for (size_t index = 0; index < image->size; index++)
-                image->set(index, superSampled[index]);
-}
 
 Colour Renderer::renderRegion(const Scalar regionX,
                               const Scalar regionY,

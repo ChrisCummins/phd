@@ -47,9 +47,10 @@ inline size_t y(const size_t index, const size_t width) {
 }  // namespace image
 
 // A rendered image.
+template<size_t _width, size_t _height>
 class Image {
  public:
-        std::vector<Pixel> data;
+        std::array<Pixel, _width * _height> data;
         const size_t width;
         const size_t height;
         const size_t size;
@@ -57,12 +58,11 @@ class Image {
         const Colour gamma;
         const bool inverted;
 
-        Image(const size_t width, const size_t height,
-              const Scalar saturation = 1,
+        Image(const Scalar saturation = 1,
               const Colour gamma = Colour(1, 1, 1),
               const bool inverted = true);
 
-        ~Image();
+        ~Image() {}
 
         // [x,y] = value
         auto inline set(const size_t x,
@@ -95,7 +95,8 @@ class Image {
                 return image::y(index, width);
         }
 
-        friend auto& operator<<(std::ostream& out, const Image &image) {
+        friend auto& operator<<(std::ostream& out,
+                                const Image<_width, _height> &image) {
                 // Print PPM header.
 
                 // Magic number:
@@ -129,6 +130,42 @@ class Image {
         void _set(const size_t i,
                   const Colour &value);
 };
+
+template<size_t _width, size_t _height>
+Image<_width, _height>::Image(const Scalar _saturation,
+                              const Colour _gamma,
+                              const bool _inverted)
+                : data(),
+                  width(_width),
+                  height(_height),
+                  size(_width * _height),
+                  saturation(_saturation),
+                  gamma(Colour(1 / _gamma.r,
+                               1 / _gamma.g,
+                               1 / _gamma.b)),
+                  inverted(_inverted) {}
+
+template<size_t width, size_t height>
+void Image<width, height>::_set(const size_t i,
+                                const Colour &value) {
+        // Apply gamma correction.
+        Colour corrected = Colour(std::pow(value.r, gamma.r),
+                                  std::pow(value.g, gamma.g),
+                                  std::pow(value.b, gamma.b));
+
+        // TODO: Fix strange aliasing effect as a result of
+        // RGB -> HSL -> RGB conversion.
+        // HSL hsl(corrected);
+        //
+        // Apply saturation.
+        // hsl.s *= saturation;
+        //
+        // Convert back to RGB colour.
+        // corrected = Colour(hsl);
+
+        // Explicitly cast colour to pixel data.
+        data[i] = static_cast<Pixel>(corrected);
+}
 
 }  // namespace rt
 
