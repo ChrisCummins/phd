@@ -21,24 +21,33 @@
 // Include ray tracer header.
 #include "rt/rt.h"
 
+#include <array>
+
 int main() {
         // Create colours.
-        const rt::Colour red   = rt::Colour(0xff0000);
-        const rt::Colour green = rt::Colour(0x00ff00);
-        const rt::Colour blue  = rt::Colour(0x0000ff);
+        static const rt::Colour red   = rt::Colour(0xff0000);
+        static const rt::Colour green = rt::Colour(0x00ff00);
+        static const rt::Colour blue  = rt::Colour(0x0000ff);
+
+        // Create materials.
+        const std::array<const rt::Material *const, 3> materials = {
+                new rt::Material(red, 0, 1, .2, 10, 0),
+                new rt::Material(green, 0, 1, .2, 10, 0),
+                new rt::Material(blue, 0, 1, .2, 10, 0)
+        };
 
         // Create objects.
-        const rt::Object *_objects[] = {
+        const std::array<const rt::Sphere *const, 3> _objects = {
                 new rt::Sphere(rt::Vector(0,    50, 0), 50,
-                               new rt::Material(red, 0, 1, .2, 10, 0)),
+                               materials[0]),
                 new rt::Sphere(rt::Vector(50,  -50, 0), 50,
-                               new rt::Material(green, 0, 1, .2, 10, 0)),
+                               materials[1]),
                 new rt::Sphere(rt::Vector(-50, -50, 0), 50,
-                               new rt::Material(blue, 0, 1, .2, 10, 0))
+                               materials[2])
         };
 
         // Create lights.
-        const rt::Light *_lights[] = {
+        const std::array<const rt::Light *const, 2> _lights = {
                 new rt::SoftLight(rt::Vector(-300,  400, -400),
                                   rt::Colour(0xffffff)),
                 new rt::SoftLight(rt::Vector( 300, -200,  100),
@@ -53,8 +62,8 @@ int main() {
                                        rt::Lens(50));  // focal length
 
         // Create collections.
-        const rt::Objects objects(_objects, _objects + 3);
-        const rt::Lights  lights( _lights,  _lights  + 2);
+        const rt::Objects objects(_objects.begin(), _objects.end());
+        const rt::Lights  lights(_lights.begin(),  _lights.end());
 
         // Create scene and renderer.
         const rt::Scene scene(objects, lights);
