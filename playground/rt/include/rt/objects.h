@@ -79,7 +79,7 @@ class Object {
         virtual const Material *surface(const Vector &point) const = 0;
 };
 
-typedef std::vector<const Object *> Objects;
+typedef std::vector<const Object *const> Objects;
 
 // A plane.
 class Plane : public Object {
