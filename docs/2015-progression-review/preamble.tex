@@ -1,37 +1,3 @@
-\documentclass[prodmode,acmtaco]{acmsmall}
-
-% Package to generate and customize Algorithm as per ACM style
-\usepackage[ruled]{algorithm2e}
-\renewcommand{\algorithmcfname}{ALGORITHM}
-\SetAlFnt{\small}
-\SetAlCapFnt{\small}
-\SetAlCapNameFnt{\small}
-\SetAlCapHSkip{0pt}
-\IncMargin{-\parindent}
-
-% Metadata Information
-\acmVolume{9}
-\acmNumber{4}
-\acmArticle{39}
-\acmYear{2016}
-\acmMonth{3}
-
-% Copyright
-%\setcopyright{acmcopyright}
-\setcopyright{acmlicensed}
-%\setcopyright{rightsretained}
-%\setcopyright{usgov}
-%\setcopyright{usgovmixed}
-%\setcopyright{cagov}
-%\setcopyright{cagovmixed}
-
-% DOI
-\doi{0000001.0000001}
-
-%ISSN
-\issn{1234-56789}
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %% Document and Layout %%
 %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,6 +9,8 @@
 \usepackage{etex}
 
 \usepackage[utf8]{inputenc}
+
+\usepackage[margin=1.12in]{geometry}
 
 % Fix for "'babel/polyglossia' detected but 'csquotes' missing"
 % warning. NOTE: Include after inputenc.
@@ -68,41 +36,36 @@
 %
 \usepackage{silence}
 
-\usepackage{adjustbox}
-
 
 %%%%%%%%%%%%%%%%%%%%%
 % Table of Contents %
 %%%%%%%%%%%%%%%%%%%%%
 
-% % Set chapter and section numbering depth:
-% %
-% \setcounter{secnumdepth}{2}
+% Set chapter and section numbering depth:
+%
+\setcounter{secnumdepth}{2}
 
 
 %%%%%%%%%%%%%%%%
 % Bibliography %
 %%%%%%%%%%%%%%%%
-% \usepackage[%
-%     backend=biber,
-%     style=ieee,
-%     % style=numeric-comp,
-%     % style=numeric-comp,  % numerical-compressed
-%     sorting=none,        % nty,nyt,nyvt,anyt,anyvt,ynt,ydnt,none
-%     sortcites=true,      % sort \cite{b a d c}: true,false
-%     block=none,          % space between blocks: none,space,par,nbpar,ragged
-%     indexing=false,      % indexing options: true,false,cite,bib
-%     citereset=none,      % don't reset cites
-%     isbn=false,          % print ISBN?
-%     url=true,            % print URL?
-%     doi=false,           % print DOI?
-%     natbib=true,         % natbib compatability
-%    ]{biblatex}
+\usepackage[%
+    backend=biber,
+    style=alphabetic,
+    % style=numeric-comp,  % numerical-compressed
+    % sorting=none,        % nty,nyt,nyvt,anyt,anyvt,ynt,ydnt,none
+    sortcites=true,      % sort \cite{b a d c}: true,false
+    block=none,          % space between blocks: none,space,par,nbpar,ragged
+    indexing=false,      % indexing options: true,false,cite,bib
+    citereset=none,      % don't reset cites
+    isbn=false,          % print ISBN?
+    url=true,            % print URL?
+    doi=false,           % print DOI?
+    natbib=true,         % natbib compatability
+  ]{biblatex}
 
-% \usepackage{natbib}
-
-% % Filter annoying and unavoidable biblatex warning:
-% \WarningFilter{biblatex}{Patching footnotes failed}
+% Filter annoying and unavoidable biblatex warning:
+\WarningFilter{biblatex}{Patching footnotes failed}
 
 % Reduce the font size of the bibliography:
 % \renewcommand{\bibfont}{\normalfont\scriptsize}
@@ -113,14 +76,14 @@
 % directory. Note that this is a relative path and will break if
 % either this file or the BibTex library are moved. If the library is
 % not present, use the local refs.bib file.
-% \newcommand{\BibResourceGlobal}{../../library.bib}
-% \newcommand{\BibResourceLocal}{refs.bib}
+\newcommand{\BibResourceGlobal}{../../../library.bib}
+\newcommand{\BibResourceLocal}{refs.bib}
 
-% \IfFileExists{\BibResourceGlobal}
-%   {\newcommand{\BibResource}{\BibResourceGlobal}}
-%   {\newcommand{\BibResource}{\BibResourceLocal}}
+\IfFileExists{\BibResourceGlobal}
+  {\newcommand{\BibResource}{\BibResourceGlobal}}
+  {\newcommand{\BibResource}{\BibResourceLocal}}
 
-% \addbibresource{\BibResource}
+\addbibresource{\BibResource}
 
 
 %%%%%%%%%%%%%%
@@ -184,13 +147,13 @@
 \usepackage{textcomp}
 
 % Pseudo-code listings.
-% \usepackage{algorithm}
-% \usepackage{algpseudocode}
-% \newcommand{\Break}{\State \textbf{break} }
-% \algblockdefx[Loop]{Loop}{EndLoop}[1][]{\textbf{Loop} #1}{\textbf{End
-%     Loop}}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\newcommand{\Break}{\State \textbf{break} }
+\algblockdefx[Loop]{Loop}{EndLoop}[1][]{\textbf{Loop} #1}{\textbf{End
+    Loop}}
 
-% \algrenewcommand\ALG@beginalgorithmic{\footnotesize}
+\algrenewcommand\ALG@beginalgorithmic{\footnotesize}
 
 % Code listings.
 \usepackage{listings}
@@ -217,6 +180,582 @@
 % Add 10pt space between chapters in TOC listings entries:
 %\let\Chapter\chapter
 %\def\chapter{\addtocontents{lol}{\protect\addvspace{10pt}}\Chapter}
+
+% Add JavaScript support to listings. See:
+%
+%     http://tex.stackexchange.com/a/89576
+%
+\lstdefinelanguage{JavaScript}{
+  keywords={
+    break,
+    case,
+    catch,
+    catch,
+    do,
+    else,
+    false,
+    function,
+    if,
+    in,
+    new,
+    null,
+    return,
+    switch,
+    true,
+    typeof,
+    var,
+    while}
+  keywordstyle=\bfseries,
+  ndkeywords={
+    boolean,
+    class,
+    export,
+    implements,
+    import,
+    this,
+    throw}
+  ndkeywordstyle=\bfseries,
+  sensitive=false,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]',
+  morestring=[b]"
+}
+
+% Add Clojure support to listings. See:
+%
+%     http://alexott.blogspot.co.uk/2010/01/clojure-latex.html
+%
+\lstdefinelanguage{Clojure}{morekeywords={
+    *,
+    *1,
+    *2,
+    *3,
+    *agent*,
+    *allow-unresolved-vars*,
+    *assert*,
+    *clojure-version*,
+    *command-line-args*,
+    *compile-files*,
+    *compile-path*,
+    *e,
+    *err*,
+    *file*,
+    *flush-on-newline*,
+    *in*,
+    *macro-meta*,
+    *math-context*,
+    *ns*,
+    *out*,
+    *print-dup*,
+    *print-length*,
+    *print-level*,
+    *print-meta*,
+    *print-readably*,
+    *read-eval*,
+    *source-path*,
+    *use-context-classloader*,
+    *warn-on-reflection*,
+    +,
+    -,
+    ->,
+    ->>,
+    ..,
+    /,
+    :else,
+    <,
+    <=,
+    =,
+    ==,
+    >,
+    >=,
+    @,
+    accessor,
+    aclone,
+    add-classpath,
+    add-watch,
+    agent,
+    agent-errors,
+    aget,
+    alength,
+    alias,
+    all-ns,
+    alter,
+    alter-meta!,
+    alter-var-root,
+    amap,
+    ancestors,
+    and,
+    apply,
+    areduce,
+    array-map,
+    aset,
+    aset-boolean,
+    aset-byte,
+    aset-char,
+    aset-double,
+    aset-float,
+    aset-int,
+    aset-long,
+    aset-short,
+    assert,
+    assoc,
+    assoc!,
+    assoc-in,
+    associative?,
+    atom,
+    await,
+    await-for,
+    await1,
+    bases,
+    bean,
+    bigdec,
+    bigint,
+    binding,
+    bit-and,
+    bit-and-not,
+    bit-clear,
+    bit-flip,
+    bit-not,
+    bit-or,
+    bit-set,
+    bit-shift-left,
+    bit-shift-right,
+    bit-test,
+    bit-xor,
+    boolean,
+    boolean-array,
+    booleans,
+    bound-fn,
+    bound-fn*,
+    butlast,
+    byte,
+    byte-array,
+    bytes,
+    cast,
+    char,
+    char-array,
+    char-escape-string,
+    char-name-string,
+    char?,
+    chars,
+    chunk,
+    chunk-append,
+    chunk-buffer,
+    chunk-cons,
+    chunk-first,
+    chunk-next,
+    chunk-rest,
+    chunked-seq?,
+    class,
+    class?,
+    clear-agent-errors,
+    clojure-version,
+    coll?,
+    comment,
+    commute,
+    comp,
+    comparator,
+    compare,
+    compare-and-set!,
+    compile,
+    complement,
+    concat,
+    cond,
+    condp,
+    conj,
+    conj!,
+    cons,
+    constantly,
+    construct-proxy,
+    contains?,
+    count,
+    counted?,
+    create-ns,
+    create-struct,
+    cycle,
+    dec,
+    decimal?,
+    declare,
+    def,
+    definline,
+    defmacro,
+    defmethod,
+    defmulti,
+    defn,
+    defn-,
+    defonce,
+    defprotocol,
+    defstruct,
+    deftype,
+    delay,
+    delay?,
+    deliver,
+    deref,
+    derive,
+    descendants,
+    destructure,
+    disj,
+    disj!,
+    dissoc,
+    dissoc!,
+    distinct,
+    distinct?,
+    do,
+    do-template,
+    doall,
+    doc,
+    dorun,
+    doseq,
+    dosync,
+    dotimes,
+    doto,
+    double,
+    double-array,
+    doubles,
+    drop,
+    drop-last,
+    drop-while,
+    empty,
+    empty?,
+    ensure,
+    enumeration-seq,
+    eval,
+    even?,
+    every?,
+    false,
+    false?,
+    ffirst,
+    file-seq,
+    filter,
+    finally,
+    find,
+    find-doc,
+    find-ns,
+    find-var,
+    first,
+    float,
+    float-array,
+    float?,
+    floats,
+    flush,
+    fn,
+    fn?,
+    fnext,
+    for,
+    force,
+    format,
+    future,
+    future-call,
+    future-cancel,
+    future-cancelled?,
+    future-done?,
+    future?,
+    gen-class,
+    gen-interface,
+    gensym,
+    get,
+    get-in,
+    get-method,
+    get-proxy-class,
+    get-thread-bindings,
+    get-validator,
+    hash,
+    hash-map,
+    hash-set,
+    identical?,
+    identity,
+    if,
+    if-let,
+    if-not,
+    ifn?,
+    import,
+    in-ns,
+    inc,
+    init-proxy,
+    instance?,
+    int,
+    int-array,
+    integer?,
+    interleave,
+    intern,
+    interpose,
+    into,
+    into-array,
+    ints,
+    io!,
+    isa?,
+    iterate,
+    iterator-seq,
+    juxt,
+    key,
+    keys,
+    keyword,
+    keyword?,
+    last,
+    lazy-cat,
+    lazy-seq,
+    let,
+    letfn,
+    line-seq,
+    list,
+    list*,
+    list?,
+    load,
+    load-file,
+    load-reader,
+    load-string,
+    loaded-libs,
+    locking,
+    long,
+    long-array,
+    longs,
+    loop,
+    macroexpand,
+    macroexpand-1,
+    make-array,
+    make-hierarchy,
+    map,
+    map?,
+    mapcat,
+    max,
+    max-key,
+    memfn,
+    memoize,
+    merge,
+    merge-with,
+    meta,
+    method-sig,
+    methods,
+    min,
+    min-key,
+    mod,
+    monitor-enter,
+    monitor-exit,
+    name,
+    namespace,
+    neg?,
+    new,
+    newline,
+    next,
+    nfirst,
+    nil,
+    nil?,
+    nnext,
+    not,
+    not-any?,
+    not-empty,
+    not-every?,
+    not=,
+    ns,
+    ns-aliases,
+    ns-imports,
+    ns-interns,
+    ns-map,
+    ns-name,
+    ns-publics,
+    ns-refers,
+    ns-resolve,
+    ns-unalias,
+    ns-unmap,
+    nth,
+    nthnext,
+    num,
+    number?,
+    odd?,
+    or,
+    parents,
+    partial,
+    partition,
+    pcalls,
+    peek,
+    persistent!,
+    pmap,
+    pop,
+    pop!,
+    pop-thread-bindings,
+    pos?,
+    pr,
+    pr-str,
+    prefer-method,
+    prefers,
+    primitives-classnames,
+    print,
+    print-ctor,
+    print-doc,
+    print-dup,
+    print-method,
+    print-namespace-doc,
+    print-simple,
+    print-special-doc,
+    print-str,
+    printf,
+    println,
+    println-str,
+    prn,
+    prn-str,
+    promise,
+    proxy,
+    proxy-call-with-super,
+    proxy-mappings,
+    proxy-name,
+    proxy-super,
+    push-thread-bindings,
+    pvalues,
+    quot,
+    rand,
+    rand-int,
+    range,
+    ratio?,
+    rational?,
+    rationalize,
+    re-find,
+    re-groups,
+    re-matcher,
+    re-matches,
+    re-pattern,
+    re-seq,
+    read,
+    read-line,
+    read-string,
+    recur,
+    reduce,
+    ref,
+    ref-history-count,
+    ref-max-history,
+    ref-min-history,
+    ref-set,
+    refer,
+    refer-clojure,
+    reify,
+    release-pending-sends,
+    rem,
+    remove,
+    remove-method,
+    remove-ns,
+    remove-watch,
+    repeat,
+    repeatedly,
+    replace,
+    replicate,
+    require,
+    reset!,
+    reset-meta!,
+    resolve,
+    rest,
+    resultset-seq,
+    reverse,
+    reversible?,
+    rseq,
+    rsubseq,
+    second,
+    select-keys,
+    send,
+    send-off,
+    seq,
+    seq?,
+    seque,
+    sequence,
+    sequential?,
+    set,
+    set!,
+    set-validator!,
+    set?,
+    short,
+    short-array,
+    shorts,
+    shutdown-agents,
+    slurp,
+    some,
+    sort,
+    sort-by,
+    sorted-map,
+    sorted-map-by,
+    sorted-set,
+    sorted-set-by,
+    sorted?,
+    special-form-anchor,
+    special-symbol?,
+    split-at,
+    split-with,
+    str,
+    stream?,
+    string?,
+    struct,
+    struct-map,
+    subs,
+    subseq,
+    subvec,
+    supers,
+    swap!,
+    symbol,
+    symbol?,
+    sync,
+    syntax-symbol-anchor,
+    take,
+    take-last,
+    take-nth,
+    take-while,
+    test,
+    the-ns,
+    throw,
+    time,
+    to-array,
+    to-array-2d,
+    trampoline,
+    transient,
+    tree-seq,
+    true,
+    true?,
+    try,
+    type,
+    unchecked-add,
+    unchecked-dec,
+    unchecked-divide,
+    unchecked-inc,
+    unchecked-multiply,
+    unchecked-negate,
+    unchecked-remainder,
+    unchecked-subtract,
+    underive,
+    unquote,
+    unquote-splicing,
+    update-in,
+    update-proxy,
+    use,
+    val,
+    vals,
+    var,
+    var-get,
+    var-set,
+    var?,
+    vary-meta,
+    vec,
+    vector,
+    vector?,
+    when,
+    when-first,
+    when-let,
+    when-not,
+    while,
+    with-bindings,
+    with-bindings*,
+    with-in-str,
+    with-loading-context,
+    with-local-vars,
+    with-meta,
+    with-open,
+    with-out-str,
+    with-precision,
+    xml-seq,
+    zero?,
+    zipmap
+  },
+  sensitive,
+  alsodigit=-,
+  morecomment=[l];,
+  morestring=[b]"
+}[keywords,comments,strings]
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%
