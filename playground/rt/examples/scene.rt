@@ -29,7 +29,7 @@ Scale: 14
 # The number of samples to make for rendering DoF. A higher value
 # results in higher quality depth of field, at the expense of greater
 # computational time:
-DofSamples: 8
+DofSamples: 16
 
 [Renderer.Antialiasing]
 # TODO:
