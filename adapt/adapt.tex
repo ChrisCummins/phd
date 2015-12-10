@@ -4,7 +4,7 @@
 % 10pt          To set in 10-point type instead of 9-point.
 % 11pt          To set in 11-point type instead of 9-point.
 % authoryear    To obtain author/year citation style instead of numeric.
-\documentclass[preprint,nonatbib,10pt]{sigplanconf}
+\documentclass[preprint,nonatbib,10pt,nocopyrightspace]{sigplanconf}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %% Document and Layout %%
@@ -51,6 +51,9 @@
 % % Set chapter and section numbering depth:
 % %
 % \setcounter{secnumdepth}{2}
+
+\usepackage{color}
+\newcommand{\fix}[1]{\textcolor{red}{\em\footnotesize#1}}
 
 
 %%%%%%%%%%%%%%%%
@@ -252,12 +255,13 @@ In this paper, we demonstrate how machine learning-enabled autotuning
 can address this issue for one such optimisation parameter of OpenCL
 programs --- that of workgroup size. The 2D optimisation space of
 OpenCL kernel workgroup sizes is large, complex and
-non-linear. Successfully applying machine learning to such a space
-requires plentiful training data, the careful selection of features,
-and an appropriate classification approach. The approaches presented
-in this paper use features extracted from the architecture and kernel,
-and training data collected from synthetic benchmarks to predict
-workgroup sizes for unseen programs.
+non-linear. \fix{and analytical models fail} Successfully applying
+machine learning to such a space requires plentiful training data, the
+careful selection of features, and an appropriate classification
+approach. The approaches presented in this paper use features
+extracted from the architecture and kernel, and training data
+collected from synthetic benchmarks to predict workgroup sizes for
+unseen programs.
 
 
 \section{The SkelCL Stencil Pattern}
@@ -399,7 +403,7 @@ indicating the desired number of memory accesses and instructions per
 iteration, reflecting the relatively bi-modal nature of stencil codes,
 either compute intensive (e.g.\ finite difference time domain and
 other PDE solvers), or lightweight (e.g.\ Game of Life and Gaussian
-blur).
+blur). \fix{How are they different from real-world benchmarks?}
 
 
 \section{Machine Learning Methods}\label{sec:ml}
@@ -966,35 +970,38 @@ automatic generation of synthetic benchmarks using parameterised
 template substitution is presented in~\cite{Chiu2015}. The authors
 describe an application of their tool for generating OpenCL stencil
 kernels for machine learning, but do not report any performance
-results.
+results. \fix{ICCS 2015 by Johnston et. al "Performance Tuning of
+  MapReduce Jobs Using Surrogate-Based Modeling"}
 
 \section{Conclusions}\label{sec:conclusions}
 
-To the best of our knowledge, the autotuning methodologies presented
-in this work constitute the first attempt to autotune the workgroup
-size of high-level stencil patterns. The autotuning techniques
-proposed in this paper achieve up to 94\% of the maximum performance,
-providing average speedups of $5.57\times$ over static tuning, while
-providing robust fallbacks in the presence of unexpected behaviour of
-OpenCL driver implementations. Of the three techniques proposed,
-predicting the relative performances of workgroup sizes using
-regressors provides the highest median speedup, whilst predicting the
-oracle workgroup size using decision tree classifiers adds the lowest
-runtime overhead. This presents a trade-off between classification
-time and training time, which could be explored in future work using a
-hybrid of the classifier and regressor techniques presented in this
-paper.
+\fix{To the best of our knowledge, the autotuning methodologies
+  presented in this work constitute the first attempt to autotune the
+  workgroup size of high-level stencil patterns.} The autotuning
+techniques proposed in this paper achieve up to 94\% of the maximum
+performance, providing average speedups of $5.57\times$ over static
+tuning, while providing robust fallbacks in the presence of unexpected
+behaviour of OpenCL driver implementations. Of the three techniques
+proposed, predicting the relative performances of workgroup sizes
+using regressors provides the highest median speedup, whilst
+predicting the oracle workgroup size using decision tree classifiers
+adds the lowest runtime overhead. This presents a trade-off between
+classification time and training time, which could be explored in
+future work using a hybrid of the classifier and regressor techniques
+presented in this paper.
 
-In future work, we will expand the autotuner to accommodate additional
-optimisation parameters, as well as further explore the transition
-towards online machine learning which is enabled by using regressors
-to predict relative performance or kernel runtimes. This could be
-combined with the use of adaptive sampling plans to minimise the
-number of observations required to distinguish bad from good parameter
-values, such as presented in~\cite{Leather2009}. Dynamic profiling
-could be used to increase the prediction accuracy of kernel runtimes
-by enabling features which capture the runtime behaviour of stencil
-kernels.
+\fix{extend for other patterns, and extend stencil to higher
+  dimensions - e.g. for LBM} In future work, we will expand the
+autotuner to accommodate additional optimisation parameters, as well
+as further explore the transition towards online machine learning
+which is enabled by using regressors to predict relative performance
+or kernel runtimes. This could be combined with the use of adaptive
+sampling plans to minimise the number of observations required to
+distinguish bad from good parameter values, such as presented
+in~\cite{Leather2009}. \fix{Feature engineering - PCA} Dynamic
+profiling could be used to increase the prediction accuracy of kernel
+runtimes by enabling features which capture the runtime behaviour of
+stencil kernels. \fix{How many synthetic benchmarks do we need?}
 
 
 \acks
