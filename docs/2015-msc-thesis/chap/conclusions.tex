@@ -1,0 +1,152 @@
+As the trend towards higher core counts and increasing parallelism
+continues, the need for high level, accessible abstractions to manage
+such parallelism will continue to go. Autotuning proves a valuable aid
+for achieving these goals, providing the benefits of low level
+performance tuning while maintaining ease of use, without burdening
+developers with optimisation concerns. As the need for autotuned
+parallelism rises, the desire for collaborative techniques for sharing
+performance data must be met with systems capable of supporting this
+cross-platform learning.
+
+In this thesis, I have presented my attempt at providing such a
+system, by designing a novel framework which has the benefits of fast,
+``always-on'' autotuning, while being able to synchronise data with
+global repositories of knowledge which others may contribute to. The
+framework provides an interface for autotuning which is sufficiently
+generic to be easily re-purposed to target a range of optimisation
+parameters.
+
+To demonstrate the utility of this framework, I implemented a frontend
+for predicting the workgroup size of OpenCL kernels for SkelCL stencil
+codes. This optimisation space is complex, non linear, and critical
+for the performance of stencil kernels, with up to a $207.72\times$
+slowdown if an improper value is picked. Selecting the correct
+workgroup size is difficult --- requiring a knowledge of the kernel,
+dataset, and underlying architecture. The challenge is increased even
+more so by inconsistencies in the underlying system which cause some
+workgroup sizes to fail completely. Of the 269813 combinations of
+workgroup size, device, program, and dataset tested; only a
+\emph{single} workgroup size was valid for all test cases, and
+achieved only 24\% of the available performance. The value selected by
+human experts was invalid for 2.6\% of test cases. Autotuning in this
+space requires a system which is resilient these challenges, and
+several techniques were implemented to address them.
+
+Runtime performance of autotuned stencil kernels is very promising,
+achieving an average 90\% of the available performance with only a 3ms
+autotuning overhead. Even ignoring the cases for which the human
+expert selected workgroup size is invalid, this provides a
+$1.33\times$ speedup, or a $5.57\times$ speedup over the best
+performance that can be achieved using static tuning. Classification
+performance is comparable when predicting workgroup sizes for both
+unseen programs and unseen devices. I believe that the combination of
+performance improvements and the collaborative nature of OmniTune
+makes for a compelling case for the use of autotuning as a key
+component for enabling performant, high level parallel programming.
+
+
+\section{Critical Analysis}
+
+This section contains a critical analysis of the work presented in
+previous chapters.
+
+\subsubsection{OmniTune Framework}
+
+The purpose of the OmniTune framework is to provide a generic
+interface for runtime autotuning. This is demonstrated through the
+implementation of a SkelCL frontend; however, to truly evaluate the
+ease of use of this framework, it would have been preferable to
+implement one or more additional autotuning frontends, to target
+different optimisation spaces. This could expose any leakages in the
+abstractions between the SkelCL-specific and generic autotuning
+components.
+
+
+\subsubsection{Synthetic Benchmarks}
+
+The OmniTune SkelCL frontend provides a template substitution engine
+for generating synthetic stencil benchmarks. The implementation of
+this generator is rigidly tied to the SkelCL stencil format. It would
+be preferred if this template engine was made more flexible, to
+support generation of arbitrary test programs. Additionally, due to
+time constraints, I did not have the opportunity to explore how the
+number of synthetic benchmarks in machine learning test data sets
+affects classification performance.
+
+One possible use of the synthetic stencil benchmark generator could be
+for creating minimal test cases of refused OpenCL parameters so that
+bug reports could be filed with the relevant implementation
+vendor. However, this would have added a great level of complexity to
+the the generator, as it would have to isolate and remove the
+dependency on SkelCL to generate minimal programs, requiring
+significant implementation work.
+
+
+\subsubsection{Use of Machine Learning}
+
+The evaluation of OmniTune in this thesis uses multiple classifiers
+and regressors to predict workgroup sizes. The behaviour of these
+classifiers and regressors is provided by the Weka data mining
+suite. Many of these classifiers have parameters which affect their
+prediction behaviour. The quality of the evaluation could have been
+improved by exploring the effects that changing the values of these
+parameters has on the OmniTune classification performance. It would
+also have been informative to dedicate a portion of the evaluation to
+feature engineering, evaluating the information gain of each feature
+and exploring the effects of feature transformations on classification
+performance.
+
+
+\subsubsection{Evaluation Methodology}
+
+The evaluation compares autotuning performance against the best
+possible performance that can be achieved using static tuning, a
+simple heuristic to tune workgroup size on a per-device basis, and
+against the workgroup size chosen by human experts. It would have been
+beneficial to also include a comparison of the performance of these
+autotuned stencils against hand-crafted equivalent programs in pure
+OpenCL, without using the SkelCL framework. This would allow a direct
+comparison between the performance of stencil kernels using high level
+and low level abstractions, but could not be completed due to time
+constraints and difficulties in acquiring suitable comparison
+benchmarks and datasets.
+
+
+\section{Future Work}
+
+Future work can be divided into two categories: continued development
+of OmniTune, and extending the behaviour of the SkelCL autotuner.
+
+The cost of offline training with OmniTune could be reduced by
+exploring the use of adaptive sampling plans, such as presented
+in~\cite{Leather2009}. This could reduce the number of runtime samples
+required to distinguish good from bad optimisation parameter values.
+
+Algorithm~\ref{alg:autotune-hybrid} proposes the behaviour of a hybrid
+approach to selecting the workgroup size of iterative SkelCL
+stencils. This approach attempts to exploit the advantages of all of
+the techniques presented in this thesis. First, runtime regression is
+used to predict the minimum runtime and a candidate workgroup
+size. If, after evaluating this workgroup size, the predicted runtime
+turned out to be inaccurate, then a prediction is made using speedup
+regression. Such a hybrid approach would enable online tuning through
+the continued acquisition of runtime and speedup performance, which
+would compliment the collaborative aspirations of OmniTune, and the
+existing server-remote infrastructure.
+
+Other skeleton optimisation parameters could be autotuned by SkelCL,
+including higher level optimisations such as the selection of border
+region loading strategy, or selecting the optimal execution device(s)
+for multi-device systems. Optimisation parameters of additional
+skeletons could be autotuned, or the interaction of multiple related
+optimisation parameters could be explored. Power consumption could be
+used as an additional optimisation cotarget.
+
+\begin{algorithm}
+\input{alg/autotune-hybrid}
+\caption{%
+  Selecting workgroup size using a combination of classifiers and
+  regressors.%
+}
+\label{alg:autotune-hybrid}
+\end{algorithm}
