@@ -83,8 +83,40 @@ class Image {
                 set(x, y, value);
         }
 
-        // Write data to file.
-        void write(std::ofstream &out) const;  // NOLINT(runtime/references)
+        auto index(const size_t x, const size_t y) {
+                return image::index(x, y, width);
+        }
+
+        auto x(const size_t index) {
+                return image::x(index, width);
+        }
+
+        auto y(const size_t index) {
+                return image::y(index, width);
+        }
+
+        friend auto& operator<<(std::ostream& out, const Image &image) {
+                // Print PPM header.
+
+                // Magic number:
+                out << "P3" << std::endl;
+                // Image dimensions:
+                out << image.width << " " << image.height << std::endl;
+                // Max colour value:
+                out << unsigned(Pixel::ComponentMax) << std::endl;
+
+                // Iterate over each point in the image, writing pixel data.
+                for (size_t i = 0; i < image.size; i++) {
+                        const Pixel pixel = image.data[i];
+                        out << pixel << " ";
+
+                        // Add newline at the end of each row:
+                        if (!i % image.width)
+                                out << std::endl;
+                }
+
+                return out;
+        }
 
  private:
 #pragma GCC diagnostic push  // Ignore unused "_pad" variable.

@@ -49,8 +49,8 @@ void render(const Renderer &renderer,
         std::ofstream out;
         out.open(path);
 
-        // Write to output file.
-        image->write(out);
+        // Write image to output file.
+        out << *image;
 
         // Close the output file.
         std::cout << "Closing file '" << path << "'..." << std::endl;

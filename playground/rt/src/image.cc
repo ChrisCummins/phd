@@ -36,22 +36,6 @@ Image::Image(const size_t _width, const size_t _height,
 
 Image::~Image() {}
 
-void Image::write(std::ofstream &out) const {  // NOLINT(runtime/references)
-        // Print PPM header.
-        out << "P3" << std::endl;                           // Magic number
-        out << width << " " << height << std::endl;         // Image dimensions
-        out << unsigned(Pixel::ComponentMax) << std::endl;  // Max colour value
-
-        // Iterate over each point in the image, writing pixel data.
-        for (size_t i = 0; i < height * width; i++) {
-                const Pixel pixel = data[i];
-                out << pixel << " ";
-
-                if (!i % width)  // Add newline at the end of each row.
-                        out << std::endl;
-        }
-}
-
 void Image::_set(const size_t i,
                  const Colour &value) {
         // Apply gamma correction.
