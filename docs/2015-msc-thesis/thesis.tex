@@ -1,0 +1,165 @@
+% DEADLINE: 12 NOON, FRIDAY, 21ST AUGUST 2015
+%
+% The project is only assessed on the basis of a final written
+% thesis. Additional material, such as the code you submit, may be taken
+% into account in case of doubt, but you should make sure that all the
+% work you have done is carefully described in the thesis. Theses will
+% typically conform to the following format:
+%
+% * The length should be 40 -- 70 pages in total and no shorter than 35
+%   pages.
+%
+% * Title page with abstract.
+%
+% * Introduction: an introduction to the document, clearing stating
+%   the hypothesis or objective of the project, motivation for the work
+%   and the results achieved. The structure of the remainder of the
+%   document should also be outlined.
+%
+% * Background: background to the project, previous work, exposition of
+%   relevant literature, setting of the work in the proper context. This
+%   should contain sufficient information to allow the reader to
+%   appreciate the contribution you have made.
+%
+% * Description of the work undertaken: this may be divided into
+%   chapters describing the conceptual design work and the actual
+%   implementation separately. Any problems or difficulties and the
+%   suggested solutions should be mentioned. Alternative solutions and
+%   their evaluation should also be included.
+%
+% * Analysis or Evaluation: results and their critical analysis should
+%   be reported, whether the results conform to expectations or
+%   otherwise and how they compare with other related work. Where
+%   appropriate evaluation of the work against the original objectives
+%   should be presented.
+%
+% * Conclusion: concluding remarks and observations, unsolved problems,
+%   suggestions for further work.  Bibliography.
+%
+% In addition, the thesis must be accompanied by a statement declaring
+% that the student has read and understood the University's plagiarism
+% guidelines. Students should budget at least six weeks for the final
+% thesis writing-up phase. Where appropriate the thesis may additionally
+% contain appendices in which relevant program listings, experimental
+% data, circuit diagrams, formal proofs, etc. may be included. However,
+% students should keep in mind that they are marked on the quality of
+% the thesis, not its length. The thesis must be word-processed using
+% either LaTeX or a system with similar capabilities. The LaTeX thesis
+% template can be found via the local packages web page. You don't have
+% to use these packages, but your thesis must match the style (i.e.,
+% font size, text width etc) shown in the sample output for an
+% Informatics thesis. Technical problems during project work are only
+% considered for resources we provide; no technical support,
+% compensation for lost data, extensions for time lost due to technical
+% problems with external hard- and software as provided will be given,
+% except where this is explicitly stated as part of a project
+% specification and adequately resourced at the start of the project.
+
+
+%%%%%%%%%%%%%%%%%%%%%%
+%% Document details %%
+%%%%%%%%%%%%%%%%%%%%%%
+\input{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Draft Version Specification %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Comment out the following line to disable all draft features:
+\def\draft{}
+\def\version{2015-08-14}
+
+\input{draft}
+
+% Paper title
+\title{Autotuning Stencils Codes\\with Algorithmic Skeletons}
+
+% Author
+\author{Chris Cummins}
+
+\input{preamble}
+
+\abstract{\input{abstract}}
+
+%%%%%%%%%%
+%% Body %%
+%%%%%%%%%%
+\begin{document}
+
+\input{preliminary}
+
+
+% INTRODUCTION
+% ============
+%
+% An introduction to the document, clearing stating the hypothesis or
+% objective of the project, motivation for the work and the results
+% achieved. The structure of the remainder of the document should also
+% be outlined.
+\chapter{Introduction}\label{chap:introduction}
+\input{chap/introduction}
+
+
+% BACKGROUND
+% ==========
+%
+% Background to the project, previous work, exposition of relevant
+% literature, setting of the work in the proper context. This should
+% contain sufficient information to allow the reader to appreciate the
+% contribution you have made.
+%
+%   Background - Necessary knowledge to understand thesis. Demonstration
+%     of competence.
+%
+%   Related Work - Description of competitors. How am I better?
+\chapter{Background}\label{chap:background}
+\input{chap/background}
+
+\chapter{Related Work}\label{chap:related}
+\input{chap/related}
+
+\chapter{OmniTune - an Extensible, Dynamic Autotuner}\label{chap:autotune}
+\input{chap/autotune}
+
+
+\chapter{Autotuning SkelCL Stencils}\label{chap:omnitune-skelcl}
+\input{chap/omnitune-skelcl}
+
+
+% METHODOLOGY
+% ===========
+%
+% Description of the work undertaken: this may be divided into
+% chapters describing the conceptual design work and the actual
+% implementation separately. Any problems or difficulties and the
+% suggested solutions should be mentioned. Alternative solutions and
+% their evaluation should also be included.
+
+\chapter{Exploring the Workgroup Size Space}\label{chap:methodology}
+\input{chap/methodology}
+
+% EVALUATION
+% ==========
+%
+% Results and their critical analysis should be reported, whether the
+% results conform to expectations or otherwise and how they compare
+% with other related work. Where appropriate evaluation of the work
+% against the original objectives should be presented.
+
+\chapter{Evaluation}\label{chap:evaluation}
+\input{chap/evaluation}
+
+
+% CONCLUSION
+% ==========
+%
+% Concluding remarks and observations, unsolved problems, suggestions
+% for further work.
+\chapter{Conclusions}\label{chap:conclusions}
+\input{chap/conclusions}
+
+
+\clearpage
+\label{bibliography}
+\printbibliography
+
+\end{document}

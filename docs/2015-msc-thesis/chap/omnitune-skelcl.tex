@@ -1,0 +1,580 @@
+\section{Introduction}
+
+In this chapter I apply the OmniTune framework to SkelCL. The publicly
+available implementation
+\footnote{\url{https://github.com/ChrisCummins/omnitune}} predicts
+workgroup sizes for OpenCL stencil skeleton kernels in order to
+minimise their runtime on CPUs and multi-GPU systems. The optimisation
+space presented by the workgroup size of OpenCL kernels is large,
+complex, and non-linear. Successfully applying machine learning to
+such a space requires plentiful training data, the careful selection
+of features, and classification approach. The following sections
+address these challenges.
+
+
+% Anyone downloading a copy of OmniTune will instantly have access to
+% the global database of training data, including the
+% \checkme{16917118} runtimes which were collected to write this
+% thesis.
+
+% \texttt{cec.chlox1mra3iz.us-west-2.rds.amazonaws.com:3306}
+
+\section{Training}\label{sec:training}
+
+One challenge of performing empirical performance evaluations is
+gathering enough applications to ensure meaningful
+comparisons. Synthetic benchmarks are one technique for circumventing
+this problem. The automatic generation of such benchmarks has clear
+benefits for reducing evaluation costs; however, creating meaningful
+benchmark programs is a difficult problem if we are to avoid the
+problems of redundant computation and produce provable halting
+benchmarks.
+
+In practise, stencil codes exhibit many common traits: they have a
+tightly constrained interface, predictable memory access patterns, and
+well defined numerical input and output data types. This can be used
+to create a confined space of possible stencil codes by enforcing
+upper and lower bounds on properties of the codes which can not
+normally be guaranteed for general-purpose programs, e.g.\ the number
+of floating point operations. In doing so, it is possible to
+programatically generate stencil workloads which share similar
+properties to those which we intend to target.
+
+Based on observations of real world stencil codes from the fields of
+cellular automata, image processing, and PDE solvers, I implemented a
+stencil generator which uses parameterised kernel templates to produce
+source codes for collecting training data. The stencil codes are
+parameterised by stencil shape (one parameter for each of the four
+directions), input and output data types (either integers, or single
+or double precision floating points), and \emph{complexity} --- a
+simple boolean metric for indicating the desired number of memory
+accesses and instructions per iteration, reflecting the relatively
+bi-modal nature of the reference stencil codes, either compute
+intensive (e.g. FDTD simulations), or lightweight (e.g. Game of Life).
+
+Using a large number of synthetic benchmarks helps adress the ``small
+$n$, large $P$'' problem, which describes the difficulty of
+statistical inference in spaces for which the set of possible
+hypotheses $P$ is significantly larger than the number of observations
+$n$. By creating parameterised, synthetic benchmarks, it is possible
+to explore a much larger set of the space of possible stencil codes
+than if relying solely on reference applications, reducing the risk of
+overfitting to particular program features.
+
+
+\section{Stencil Features}
+
+
+\begin{table}
+\begin{multicols}{2}
+  \scriptsize
+  \centering
+  \rowcolors{2}{white}{gray!25}
+  \begin{tabular}{p{4.5cm}p{1.3cm}}
+    \toprule
+    \textbf{Dataset Features} &         \textbf{Type} \\
+    \midrule
+    Number of columns in matrix & numeric \\
+    Number of rows in matrix & numeric \\
+    Input data type & categorical \\
+    Output data type & categorical \\
+    \bottomrule
+  \end{tabular}
+  \vskip 2.75em
+  \begin{tabular}{p{4.5cm}p{1.3cm}}
+    \toprule
+    \textbf{Kernel Features} &         \textbf{Type} \\
+    \midrule
+    Border region north &      numeric \\
+    Border region south &      numeric \\
+    Border region east &      numeric \\
+    Border region west &      numeric \\
+    Static instruction count &      numeric \\
+    \texttt{AShr} instruction density &      numeric \\
+    \texttt{Add} instruction density &      numeric \\
+    \texttt{Alloca} instruction density &      numeric \\
+    \texttt{And} instruction density &      numeric \\
+    \texttt{Br} instruction density &      numeric \\
+    \texttt{Call} instruction density &      numeric \\
+    \texttt{FAdd} instruction density &      numeric \\
+    \texttt{FCmp} instruction density &      numeric \\
+    \texttt{FDiv} instruction density &      numeric \\
+    \texttt{FMul} instruction density &      numeric \\
+    \texttt{FPExt} instruction density &      numeric \\
+    \texttt{FPToSI} instruction density &      numeric \\
+    \texttt{FSub} instruction density &      numeric \\
+    \texttt{GetElementPtr} instruction density  &      numeric \\
+    \texttt{ICmp} instruction density &      numeric \\
+    \texttt{InsertValue} instruction density &      numeric \\
+    \texttt{Load} instruction density &      numeric \\
+    \texttt{Mul} instruction density &      numeric \\
+    \texttt{Or} instruction density &      numeric \\
+    \texttt{PHI} instruction density &      numeric \\
+    \texttt{Ret} instruction density &      numeric \\
+    \texttt{SDiv} instruction density &      numeric \\
+    \texttt{SExt} instruction density &      numeric \\
+    \texttt{SIToFP} instruction density &      numeric \\
+    \texttt{SRem} instruction density &      numeric \\
+    \texttt{Select} instruction density &      numeric \\
+    \texttt{Shl} instruction density &      numeric \\
+    \texttt{Store} instruction density &      numeric \\
+    \texttt{Sub} instruction density &      numeric \\
+    \texttt{Trunc} instruction density &      numeric \\
+    \texttt{UDiv} instruction density &      numeric \\
+    \texttt{Xor} instruction density &      numeric \\
+    \texttt{ZExt} instruction density &      numeric \\
+    Basic block density & numeric \\
+    Memory instruction density & numeric \\
+    Non external functions density &      numeric \\
+    Kernel max workgroup size &      numeric \\
+    \bottomrule
+  \end{tabular}
+  \vfill
+  \columnbreak
+  \rowcolors{2}{white}{gray!25}
+  \begin{tabular}{p{4.5cm}p{1.3cm}}
+    \toprule
+    \textbf{Device Features} &         \textbf{Type} \\
+    \midrule
+    SkelCL device count &      numeric \\
+    Device address width &  categorical \\
+    Double precision fp.\ configuration &  categorical \\
+    Big endian? &  categorical \\
+    Execution capabilities &  categorical \\
+    Supported extensions &  categorical \\
+    Global memory cache size &  numeric \\
+    Global memory cache size &      categorical \\
+    Global memory cacheline size &      numeric \\
+    Global memory size &  numeric \\
+    Host unified memory? &      categorical \\
+    2D image max height &      numeric \\
+    2D image max width &      numeric \\
+    3D image max depth &      numeric \\
+    3D image max height &      numeric \\
+    3D image max width &  numeric \\
+    Image support &      categorical \\
+    Local memory size &  numeric \\
+    Local memory type &      categorical \\
+    Max clock frequency &      numeric \\
+    Number of compute units &      numeric \\
+    Max kernel constant args &      numeric \\
+    Max constant buffer size &      numeric \\
+    Max memory allocation size &      numeric \\
+    Max parameter size &      numeric \\
+    Max read image arguments &      numeric \\
+    Max samplers &      numeric \\
+    Max device workgroup size &      numeric \\
+    Max workitem dimensions &      numeric \\
+    Max work item sizes width &      numeric \\
+    Max work item sizes height &      numeric \\
+    Max work item sizes depth &      numeric \\
+    Max write image arguments &      numeric \\
+    Mem base address align &      numeric \\
+    Min data type align size &      numeric \\
+    Native vector width \texttt{char} &      numeric \\
+    Native vector width \texttt{double} &      numeric \\
+    Native vector width \texttt{float} &      numeric \\
+    Native vector width \texttt{half} &      numeric \\
+    Native vector width \texttt{int} &      numeric \\
+    Native vector width \texttt{long} &      numeric \\
+    Native vector width \texttt{short} &      numeric \\
+    Preferred vector width \texttt{char} &      numeric \\
+    Preferred vector width \texttt{double} &      numeric \\
+    Preferred vector width \texttt{float} &      numeric \\
+    Preferred vector width \texttt{half} &      numeric \\
+    Preferred vector width \texttt{int} &      numeric \\
+    Preferred vector width \texttt{long} &      numeric \\
+    Preferred vector width \texttt{short} &  categorical \\
+    Queue properties &  categorical \\
+    Single precision fp.\ configuration &  categorical \\
+    Device type &      categorical \\
+    OpenCL vendor &  categorical \\
+    OpenCL vendor ID &  categorical \\
+    OpenCL version &  categorical \\
+    \bottomrule
+  \end{tabular}
+\end{multicols}
+\caption[OmniTune SkelCL Stencil features]{%
+  OmniTune SkelCL Stencil features for dataset, kernel, and device.%
+}
+\label{tab:features}
+\end{table}
+
+
+Properties of the architecture, program, and dataset all contribute to
+the performance of a workgroup size. The success of a machine learning
+system depends on the ability to translate these properties into
+meaningful explanatory variables --- \emph{features}. To capture this
+in OmniTune, parameter requests are packed with a copy of the OpenCL
+kernel and attributes of the dataset and device. The OmniTune server
+extracts 102 features describing hte architecture, kernel, and dataset
+from the message:
+%
+\begin{itemize}
+\item \textbf{Device} --- OmniTune uses the OpenCL
+  \texttt{clGetDeviceInfo()} API to query a number of properties about
+  the target execution device. Examples include the size of local
+  memory, maximum work group size, number of compute units, etc.
+\item \textbf{Kernel} --- The user code for a stencil is passed to the
+  OmniTune server, which compiles the OpenCL kernel to LLVM IR
+  bitcode. The \texttt{opt} \texttt{InstCount} statistics pass is used
+  to obtain static counts for each type of instruction present in the
+  kernel, as well as the total number of instructions. The instruction
+  counts for each type are divided by the total number of instructions
+  to produce a \emph{density} of instruction for that type. Examples
+  include total static instruction count, ratio of instructions per
+  type, ratio of basic blocks per instruction, etc.
+\item \textbf{Dataset} --- The SkelCL container type is used to
+  extract the input and output data types, and the 2D grid size.
+\end{itemize}
+%
+See Table~\ref{tab:features} for a list of feature names and types.
+
+
+\subsection{Reducing Feature Extraction Overhead}
+
+
+Feature extraction (particularlly compilation to LLVM IR) introduces a
+runtime overhead to the classification process. To minimise this,
+lookup tables for device and dataset features are used, and cached
+locally in the OmniTune server and pushed to the remote data
+store. The device ID is used to index the devices table, and the
+checksum of an OpenCL source is used to index the kernel features
+table. Before feature extraction for either occurs, a lookup is
+performed in the relevant table, meaning that the cost of feature
+extraction is amortised over time.
+
+
+\section{Optimisation Parameters}\label{sec:op-params}
+
+SkelCL stencil kernels are parameterised by a workgroup size $w$,
+which consists of two integer values to denote the number of rows and
+columns (where we need to distinguish the individual components, we
+will use symbols $w_r$ and $w_c$ to denote rows and columns,
+respectively).
+
+
+\subsection{Constraints}
+
+Unlike in many autotuning applications, the space of optimisation
+parameter values is subject to hard constraints, and these constraints
+cannot conviently be statically determined. Contributing factors are
+architectural limitations, kernel constraints, and refused parameters.
+
+
+\subsubsection{Architectural constraints}
+
+Each OpenCL device imposes a maximum workgroup size which can be
+statically checked by querying the \texttt{clGetDeviceInfo()} API for
+that device. These are defined by archiectural limitations of how code
+is mapped to the underlying execution hardware. Typical values are
+powers of two, e.g.\ 1024, 4096, 8192.
+
+
+\subsubsection{Kernel constraints}
+
+At runtime, once an OpenCL program has been compiled to a kernel,
+users can query the maximum workgroup size supported by that kernel
+using the \texttt{clGetKernelInfo()} API. This value cannot easily be
+obtained statically as there is no mechanism to determine the maximum
+workgroup size for a given source code and device without first
+compiling it, which in OpenCL does not occur until runtime. Factors
+which affect a kernel's maximum workgroup size include the number
+registers required for a kernel, and the available number of SIMD
+execution units for each type of instructions in a kernel.
+
+
+\subsubsection{Refused parameters}
+
+In addition to satisfying the constraints of the device and kernel,
+not all points in the workgroup size optimisation space are guaranteed
+to provide working programs. A refused parameter is a workgroup size
+which satisfies the kernel and architectural constraints, yet causes a
+\texttt{CL\_OUT\_OF\_RESOURCES} error to be thrown when the kernel is
+enqueued. Note that in many OpenCL implementations, this error type
+acts as a generic placeholder and may not necessarily indicate that
+the underlying cause of the error was due to finite resources
+constraints.
+
+
+\subsubsection{Legality}
+
+We define a \emph{legal} workgroup size as one which, for a given
+\emph{scenario} (a combination of program, device, and dataset),
+satisfies the architectural and kernel constraints, and is not
+refused. The subset of all possible workgroup sizes
+$W_{legal}(s) \subset W$ that are legal for a given sceanario $s$ is
+then:
+%
+\begin{equation}
+  W_{legal}(s) = \left\{w | w \in W, w < W_{\max}(s) \right\} - W_{refused}(s)
+\end{equation}
+%
+Where $W_{\max}(s)$ can be determined at runtime prior to the kernels
+execution, but the set $W_{refused}(s)$ can only be determined
+experimentally.
+
+
+\subsection{Assessing Relative Performance}
+
+Given a set of observations, where an observation is a scenario,
+workgroup size tuple $(s,w)$; a function $t(s,w)$ which returns the
+arithmetic mean of the runtimes for a set of observations; we can
+calculate the speedup $r(s, w_1, w_2)$ of competing workgroup sizes
+$w_1$ over $w_2$ using:
+%
+\begin{equation}
+  r(s, w_1, w_2) = \frac{t(s,w_2)}{t(s,w_1)}\\
+\end{equation}
+%
+
+\subsubsection{Oracle Workgroup Size}
+
+The \emph{oracle} workgroup size $\Omega(s) \in W_{legal}(s)$ of a
+sceanrio $s$ is the $w$ value which provides the lowest mean
+runtime. This allows for comparing the performance $p(s,w)$ of a
+particular workgroup against the maximum available performance for
+that scenario, within the range $0 \le p(s,w) \le 1$:
+
+\begin{align}
+  \Omega(s) &= \argmin_{w \in W_{legal}(s)} t(s,w)\\
+  p(s,w) &= r(s, w, \Omega(s))
+\end{align}
+
+
+\subsubsection{Establishing a Baseline}
+
+The geometric mean is used to aggregate normalised relative
+performances due to its multiplicative
+property~\cite{Fleming1986}. For a given workgroup size, the average
+performance $\bar{p}(w)$ across the set of all scenarios $S$ can be
+found using the geometric mean of performance relative to the oracle:
+%
+\begin{equation}
+\bar{p}(w) =
+\left(
+  \prod_{s \in S} r(s, w, \Omega(s))
+\right)^{1/|S|}
+\end{equation}
+%
+The \emph{baseline} workgroup size $\bar{w}$ is the value which
+provides the best average case performance across all scenarios. Such
+a baseline value represents the \emph{best} possible performance which
+can be achieved using a single, statically chosen workgroup size. By
+defining $W_{safe} \in W$ as the intersection of legal workgroup
+sizes, the baseline can be found using:
+
+\begin{align}
+W_{safe} &= \cap \left\{ W_{legal}(s) | s \in S \right\}\\
+\bar{w} &= \argmax_{w \in W_{safe}} \bar{p}(w)
+\end{align}
+
+
+\section{Machine Learning}\label{sec:omnitune-ml}
+
+The challenge is to design a system which, given a set of prior
+observations of the empirical performance of stencil codes with
+different workgroup sizes, predict workgroup sizes for \emph{unseen}
+stencils which will maximise the performance. The OmniTune server
+supports three methods for achieving this.
+
+
+\subsection{Predicting Oracle Workgroup Size}\label{subsec:omnitune-ml-class}
+
+The first approach to predicting workgroup sizes is to consider the
+set of possible workgroup sizes as a hypothesis space, and to use a
+classifier to predict, for a given set of features, the workgroup size
+which will provide the best performance. The classifier takes a set of
+training scenarios $S_{training}$, and generates labelled training
+data as pairs of scenario features $f(s)$ and observed oracle
+workgroup sizes:
+%
+\begin{equation}
+  T = \left\{ \left(f(s), \Omega(s)\right) | s \in S_{training} \right\}
+\end{equation}
+%
+During testing, the classifier predicts workgroup sizes from the set
+of oracle workgroup sizes from the training set:
+%
+\begin{equation}
+  W_{training} = \left\{ \Omega(s) | s \in S_{training} \right\}
+\end{equation}
+%
+This approach presents the problem that after training, there is no
+guarantee that the set of workgroup sizes which may be predicted is
+within the set of legal workgroup sizes for future scenarios:
+%
+\begin{equation}
+  \bigcup_{\forall s \in S_{testing}} W_{legal}(s) \nsubseteq W_{training}
+\end{equation}
+%
+This may result in a classifier predicting a workgroup size which is
+not legal for a scenario, $w \not\in W_{legal}(s)$, either because it
+exceeds $W_{\max}(s)$, or because the parameter is refused. For these
+cases, I evaluate the effectiveness of three fallback strategies to
+select a legal workgroup size:
+%
+\begin{enumerate}
+\item \emph{Baseline} --- select the workgroup size which is known to
+  be safe $w < W_{safe}$, and provides the highest average case
+  performance on training data.
+\item \emph{Random} --- select a random workgroup size which is known
+  from prior observations to be legal $w \in W_{legal}(s)$.
+\item \emph{Nearest Neighbour} --- select the workgroup size which
+  from prior observations is known to be legal, and has the lowest
+  Euclidian distance to the prediction.
+\end{enumerate}
+%
+See Algorithm~\ref{alg:autotune-classification} for definitions.
+
+\begin{algorithm}
+\input{alg/autotune-classification}
+\caption{Selecting optimal workgroup sizes using classification}
+\label{alg:autotune-classification}
+\end{algorithm}
+
+\subsection{Predicting Stencil Code Runtime}\label{subsec:omnitune-ml-runtime}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+\Require kernel features $k$, hardware features $h$, dataset features
+$d$.
+\Ensure workgroup size $w$
+
+\State $W \leftarrow \left\{ w | w < W_{\max}(s) \right\} - W_{refused}(s)$
+\Comment Set of possible workgroup sizes.
+\State $w \leftarrow \underset{w \in W}{\argmin} g(f(s), w)$
+\Comment Predict candidate workgroup size.
+\While{$w \not\in W_{legal}(s)$}
+  \State $W \leftarrow W - \left\{ w \right\}$
+  \Comment Remove candidate from set.
+  \State $w \leftarrow \underset{w \in W}{\argmin} g(f(s), w)$
+  \Comment Select next candidate workgroup size.
+\EndWhile
+\State \textbf{return} $w$
+\end{algorithmic}
+\caption{Selecting workgroup sizes by predicting program runtimes}
+\label{alg:autotune-runtime-regression}
+\end{algorithm}
+
+A problem of predicting oracle workgroup sizes is that it requires
+each training point to be labelled with the oracle workgroup size
+which can be only be evaluated using an exhaustive search. An
+alternative approach is to build a model to attempt to predict the
+\emph{runtime} of a stencil given a specific workgroup size. This
+allows for training on data for which the oracle workgroup size is
+unknown, and has the secondary advantage that this allows for an
+additional training data point to be gathered each time a stencil is
+evaluated. Given training data consisting of $(f(s),w,t)$ tuples,
+where $s$ is a scenario, $w$ is the workgroup size, and $t$ is the
+observed mean runtime, we can train a regressor $g(f(s), w)$ which
+predicts the mean runtime of an unseen scenario. The predicted oracle
+workgroup size $\bar{\Omega}(s)$ is then the $w$ value which minimises
+the output of the regressor:
+%
+\begin{equation}
+  \bar{\Omega}(s) = \underset{w \in W_{legal}(s)}{\argmin} g(f(s), w)
+\end{equation}
+%
+Note that since we cannot know in advance which workgroup sizes will
+be refused, that is, $W_{refused}(s)$ cannot be statically determined,
+this process must be iterated until a workgroup size which not refused
+is selected. Algorithm~\ref{alg:autotune-runtime-regression} shows
+this process.
+
+
+\subsection{Predicting Relative Performance of Workgroup Sizes}\label{subsec:omnitune-ml-speedup}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+\Require kernel features $k$, hardware features $h$, dataset features
+$d$, baseline $w_b$.
+\Ensure workgroup size $w$
+
+\State $W \leftarrow \left\{ w | w < W_{\max}(s) \right\} - W_{refused}(s)$
+\Comment Set of possible workgroup sizes.
+\State $w \leftarrow \underset{w \in W}{\argmax} g(f(s), w,w_b)$
+\Comment Predict candidate workgroup size.
+\While{$w \not\in W_{legal}(s)$}
+  \State $W \leftarrow W - \left\{ w \right\}$
+  \Comment Remove candidate from set.
+  \State $w \leftarrow \underset{w \in W}{\argmax} g(f(s), w,w_b)$
+  \Comment Select next candidate workgroup size.
+\EndWhile
+\State \textbf{return} $w$
+\end{algorithmic}
+\caption{Selecting workgroup sizes by predicting relative performance}
+\label{alg:autotune-speedup-regression}
+\end{algorithm}
+
+Accurately predicting the runtime of an arbitrary program is a
+difficult problem due to the impacts of flow control. In such cases,
+it may be more effective to instead predict the \emph{relative}
+performance of two different workgroup sizes for the same program. To
+do this, we select a baseline workgroup size $w_b \in W_{safe}$, and
+train a regressor $g(f(s),w,w_b)$ with training data labelled with the
+relative performance over the baseline $r(w, w_b)$. Predicting the
+optimal workgroup requires maximising the output of the regressor:
+%
+\begin{equation}
+  \bar{\Omega}(s) = \underset{w \in W_{legal}(s)}{\argmax} g(f(s),w,w_b)
+\end{equation}
+%
+As with predicting runtimes, this process must be iterated to
+accommodate for the emergent properties of $W_{legal}(s)$. See
+Algorithm~\ref{alg:autotune-speedup-regression} for a description of
+this process.
+
+
+\section{Implementation}
+
+The OmniTune framework is implemented as a set of Python classes and
+interfaces, which are inherited from or implemented to target specific
+autotuning cases. The entire framework consists of 8987 lines of
+Python code, of which 976 is dedicated to the SkelCL frontend. By
+design, the client-server model minimises the impact of number of
+modifications that are required to enable autotuning in client
+applications. The only modification required is to replace the
+hardcoded values for workgroup size with a subroutine to request a
+workgroup size from the OmniTune server over a DBUS connection. The
+server is implemented as a standalone Python program, and uses sqlite
+to maintain local data caches. The OmniTune remote is an Amazon Web
+Services virtual machine instance, using MySQL as the relational data
+store. Figure~\ref{fig:omnitune-system-flow} shows the relational
+database schema used to store stencil runtime information. Additional
+tables store data in coalesced forms for use as machine learning
+training data.
+
+For classification, five classifiers are supported, chosen for their
+contrasting properties: Naive Bayes, SMO, Logistic Regression, J48
+Decision tree, and Random Forest. For regression, a Random Forest with
+regression trees is used, chosen because of its efficient handling of
+large feature sets, compared to linear models.
+
+\begin{figure}
+\centering
+\includegraphics[width=.95\textwidth]{img/omnitune-data-schema.pdf}
+\caption[Database schema for storing performance results]{%
+  Database schema for storing SkelCL stencil runtimes. Feature lookup
+  tables and normalisation are used to provide extremely compact
+  storage, requiring only 56 bytes for each additional runtime of a
+  known stencil program.%
+}
+\label{fig:omnitune-system-flow}
+\end{figure}
+
+
+\section{Summary}
+
+This section has described has the application of OmniTune for
+predicting workgroup sizes of SkelCL stencil programs, using three
+different machine learning approaches. The first approach is to
+predict the optimal workgroup size for a given program based on
+training data which included the optimal workgroup sizes for other
+stencils. The second approach is to select a workgroup sizex by
+sweeping the space of possible workgroup sizes, predicting the runtime
+a program with each. The third approach is to select a workgroup size
+by sweeping the space of possible workgroup sizes, predicting the
+relative gain of each compared to a known baseline. In the next
+section, we will describe the process for collecting empirical
+performance data.
