@@ -18,6 +18,7 @@ CLEANBIB         = cleanbib
 DETEX            = detex
 EGREP            = egrep
 GREP             = grep
+TEXCOUNT         = texcount
 PARSE_TEXCOUNT   = parse_texcount
 PDF_OPEN         = open
 PDFLATEX         = pdflatex
