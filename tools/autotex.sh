@@ -65,8 +65,6 @@ get_dependency_list() {
     else
         find $abspath -name '*.tex'
     fi
-
-    # echo "/Users/cec/src/msc-thesis/docs/thesis/thesis.tex"
 }
 
 # Accepts a list of filenames, and prints file modification times and
