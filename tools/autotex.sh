@@ -155,7 +155,7 @@ exec_hooks() {
 
     if [[ -n "$hooks" ]]; then
         for hook in $hooks; do
-            echo "  HOOK     $hook"
+            echo "  HOOK     $PWD/$hook"
             silent_unless_fail $LOGFILE $hook
         done
     fi
@@ -167,7 +167,7 @@ exec_hooks() {
 run_pdflatex() {
     local document=$1
 
-    echo "  LATEX    $document.pdf"
+    echo "  LATEX    $PWD/$document.pdf"
     silent_unless_fail $LOGFILE $PDFLATEX $PDFLATEX_ARGS $document.tex
 }
 
@@ -205,7 +205,7 @@ contains_citations() {
 run_biber() {
     local document=$1
 
-    echo "  BIBER    $document"
+    echo "  BIBER    $PWD/$document"
     silent_unless_fail $LOGFILE $BIBER $document
 }
 
