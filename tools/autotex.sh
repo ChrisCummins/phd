@@ -74,6 +74,8 @@ get_dependency_list() {
 
     echo $abspath/$document.pdf
 
+    # TODO: Add *.pre and *.post executable hooks to dependency list:
+
     # Scour for dependencies in the .fls file:
     egrep '^INPUT ' < $abspath/$document.fls \
         | egrep -v '\.(aux|out|toc|lof|lot|bbl|run\.xml)$' \
@@ -89,12 +91,24 @@ stat_filenames() {
     xargs $STAT -c '%Y %n' 2>/dev/null
 }
 
+# Update dependency file
+#
+# $1 (str) Absolute path to document directory
+# $2 (str) Name of document, without filename extension
+# $3 (str) Path to dependency file
+#
+write_depfile() {
+    local abspath=$1
+    local document=$2
+    local depfile=$3
+
+    get_dependency_list $abspath $document | stat_filenames > $depfile
+}
+
 # Determine if the document needs rebuilding.
 #
 # $1 (str) Absolute path to document directory
 # $2 (str) Name of document, without filename extension
-#
-# FIXME: HAS SIDE EFFECTS, UPDATES DEPFILE.
 rebuild_required() {
     local abspath=$1
     local document=$2
@@ -105,7 +119,7 @@ rebuild_required() {
 
             # Compute dependency list
             scratch=$($MAKETEMP)
-            get_dependency_list $abspath $document | stat_filenames > $scratch
+            write_depfile $abspath $document $scratch
 
             set +e
             diff $scratch $abspath/$DEPFILE &>/dev/null
@@ -253,7 +267,7 @@ build() {
     exec_hooks ".post"
 
     # Build successful, Update depfile.
-    get_dependency_list $abspath $document | stat_filenames > $DEPFILE
+    write_depfile $abspath $document $DEPFILE
 
     cd - &>/dev/null
     exit
@@ -265,6 +279,19 @@ main() {
     local document=$(basename $input)
     local abspath=$($READLINK -f $(dirname $input))
 
+    # Check that directory exists.
+    if ! [[ -d "$abspath" ]]; then
+        echo "autotex: Directory '$abspath' not found!" >&2
+        exit 1
+    fi
+
+    # Check that source file exists.
+    if ! [[ -f "$abspath/$document.tex" ]]; then
+        echo "autotex: File '$abspath/$document.tex' not found!" >&2
+        exit 1
+    fi
+
+    cd $abspath
     case $command in
         "make")
             if (( $(rebuild_required $abspath $document) )); then
@@ -276,5 +303,6 @@ main() {
             exit 1
             ;;
     esac
+    cd - $>/dev/null
 }
 main $@
