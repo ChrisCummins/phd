@@ -62,22 +62,22 @@ can_compute_dependency_list() {
 #
 # Example:
 #
-#      get_dependency_list /Users/cec document
+#      get_dep_files /Users/cec document
 #      /usr/local/texlive/2015/texmf.cnf
 #      /usr/local/texlive/2015/texmf-dist/web2c/texmf.cnf
 #      /usr/local/texlive/2015/texmf-var/web2c/pdftex/pdflatex.fmt
 #      /Users/cec/document.tex
 #      ...
 #
-get_dependency_list() {
+get_dep_files() {
     local abspath=$1
     local document=$2
 
     # TODO: The list of dependencies should include the script itself:
     # $READLINK -f $0
 
+    # Then include the targets:
     echo $abspath/$document.pdf
-    echo $abspath/$document.wc
 
     # TODO: Add *.pre and *.post executable hooks to dependency list:
 
@@ -98,14 +98,26 @@ get_tex_sources() {
     local abspath=$1
     local document=$2
 
-    get_dependency_list $abspath $document | egrep "^$abspath/.*\.tex$" | sed -s "s,^$abspath/,,"
+    get_dep_files $abspath $document \
+        | egrep "^$abspath/.*\.tex$" \
+        | sed -s "s,^$abspath/,,"
 }
 
 # Accepts a list of filenames, and prints file modification times and
 # names.
 #
 stat_filenames() {
-    xargs $STAT -c '%Y %n' 2>/dev/null
+    xargs $STAT -c '%Y' 2>/dev/null
+}
+
+get_depsum() {
+    local abspath=$1
+    local document=$2
+
+    get_dep_files $abspath $document \
+        | stat_filenames \
+        | sha1sum \
+        | awk '{print $1}'
 }
 
 # Update dependency file
@@ -119,7 +131,7 @@ write_depfile() {
     local document=$2
     local depfile=$3
 
-    get_dependency_list $abspath $document | stat_filenames > $depfile
+    get_depsum $abspath $document > $depfile
 }
 
 # Determine if the document needs rebuilding.
