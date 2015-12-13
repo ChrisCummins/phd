@@ -291,8 +291,8 @@ build_wc() {
     local abspath=$1
     local document=$2
 
-    echo "Creating $abspath/$document.wc"
-    $TEXCOUNT $(get_tex_sources $abspath $document) > $abspath/$document.wc
+    $TEXCOUNT $(get_tex_sources $abspath $document) \
+        | $PARSE_TEXCOUNT > $abspath/$document.wc
 }
 
 main() {
@@ -321,10 +321,18 @@ main() {
             fi
             ;;
         "wc")
+            # First perform any necessary re-build
             if (( $(rebuild_required $abspath $document) )); then
+                build $abspath $document
                 build_wc $abspath $document
             fi
-            $PARSE_TEXCOUNT < $abspath/$document.wc
+
+            # Now check to see if we don't have a .wc file.
+            if ! [[ -f $abspath/$document.wc ]];then
+                build_wc $abspath $document
+            fi
+
+            cat $abspath/$document.wc
             ;;
         *)
             echo "autotex: unrecgonised command '$command'!"
