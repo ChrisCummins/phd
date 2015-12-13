@@ -22,6 +22,10 @@ STAT=/usr/local/opt/coreutils/libexec/gnubin/stat
 PDFLATEX=pdflatex
 BIBER=biber
 PDFLATEX_ARGS="-recorder -output-format pdf -progname pdflatex -file-line-error -interaction=nonstopmode --shell-escape"
+# TODO: Get proper path:
+PARSE_TEXCOUNT=~/phd/tools/parse_texcount.py
+# TODO: Include tools
+TEXCOUNT=texcount
 
 # Filename locations
 DEPFILE=.autotex.deps
@@ -73,6 +77,7 @@ get_dependency_list() {
     # $READLINK -f $0
 
     echo $abspath/$document.pdf
+    echo $abspath/$document.wc
 
     # TODO: Add *.pre and *.post executable hooks to dependency list:
 
@@ -81,7 +86,19 @@ get_dependency_list() {
         | egrep -v '\.(aux|out|toc|lof|lot|bbl|run\.xml)$' \
         | awk ' !x[$$0]++' \
         | sed 's/^INPUT //' \
-        | sed -r 's,^(\./|([^/])),'"$1/\2,"
+        | sed -r 's,^(\./|([^/])),'"$abspath/\2,"
+}
+
+# Fetch just the user sources.
+#
+# $1 (str) Absolute path to document directory
+# $2 (str) Name of document, without filename extension
+#
+get_tex_sources() {
+    local abspath=$1
+    local document=$2
+
+    get_dependency_list $abspath $document | egrep "^$abspath/.*\.tex$" | sed -s "s,^$abspath/,,"
 }
 
 # Accepts a list of filenames, and prints file modification times and
@@ -252,8 +269,6 @@ build() {
     local abspath=$1
     local document=$2
 
-    cd $abspath
-
     setup_env
     exec_hooks ".pre"
     run_pdflatex $document
@@ -269,8 +284,15 @@ build() {
     # Build successful, Update depfile.
     write_depfile $abspath $document $DEPFILE
 
-    cd - &>/dev/null
     exit
+}
+
+build_wc() {
+    local abspath=$1
+    local document=$2
+
+    echo "Creating $abspath/$document.wc"
+    $TEXCOUNT $(get_tex_sources $abspath $document) > $abspath/$document.wc
 }
 
 main() {
@@ -298,11 +320,17 @@ main() {
                 build $abspath $document
             fi
             ;;
+        "wc")
+            if (( $(rebuild_required $abspath $document) )); then
+                build_wc $abspath $document
+            fi
+            $PARSE_TEXCOUNT < $abspath/$document.wc
+            ;;
         *)
             echo "autotex: unrecgonised command '$command'!"
             exit 1
             ;;
     esac
-    cd - $>/dev/null
+    cd - &>/dev/null
 }
 main $@
