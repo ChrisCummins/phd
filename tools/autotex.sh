@@ -4,10 +4,6 @@
 #
 # TODO:
 #
-#  * Don't update depfile until build has successfully completed.
-#  * If no depfile exists, then assume rebuild, then recalculate after
-#    compilation.
-#  * If the user deletes a depfile, stat should silently error.
 #  * Add support for "wc", "lint", "cite".
 #  * Add a verbose mode which prints to stderr.
 #
@@ -32,6 +28,23 @@ DEPFILE=.autotex.deps
 LOGFILE=.autotex.log
 HOOKS_DIRECTORY=scripts
 
+# Return whether a dependency list can be computed.
+#
+# Parameters:
+#
+#      $1 Absolute path to directory containing tex source file
+#      $2 Basename of tex source file, without the file extension
+#
+can_compute_dependency_list() {
+    local abspath=$1
+    local document=$2
+
+    if [[ -f $abspath/$document.fls ]]; then
+        echo 1
+    else
+        echo 0
+    fi
+}
 
 # Print absolute paths of texfile dependencies
 #
@@ -56,22 +69,24 @@ get_dependency_list() {
     local abspath=$1
     local document=$2
 
-    if [[ -f $abspath/$document.fls ]]; then
-        egrep '^INPUT ' < $1/$2.fls \
-            | egrep -v '\.(aux|out|toc|lof|lot|bbl|run\.xml)$' \
-            | awk ' !x[$$0]++' \
-            | sed 's/^INPUT //' \
-            | sed -r 's,^(\./|([^/])),'"$1/\2,"
-    else
-        find $abspath -name '*.tex'
-    fi
+    # TODO: The list of dependencies should include the script itself:
+    # $READLINK -f $0
+
+    echo $abspath/$document.pdf
+
+    # Scour for dependencies in the .fls file:
+    egrep '^INPUT ' < $abspath/$document.fls \
+        | egrep -v '\.(aux|out|toc|lof|lot|bbl|run\.xml)$' \
+        | awk ' !x[$$0]++' \
+        | sed 's/^INPUT //' \
+        | sed -r 's,^(\./|([^/])),'"$1/\2,"
 }
 
 # Accepts a list of filenames, and prints file modification times and
 # names.
 #
 stat_filenames() {
-    xargs $STAT -c '%Y %n'
+    xargs $STAT -c '%Y %n' 2>/dev/null
 }
 
 # Determine if the document needs rebuilding.
@@ -84,28 +99,36 @@ rebuild_required() {
     local abspath=$1
     local document=$2
 
-    # Make a temporary dependencies file
-    scratch=$($MAKETEMP)
-    get_dependency_list $abspath $document | stat_filenames > $scratch
+    if (( $(can_compute_dependency_list $abspath $document) )); then
 
-    if [[ -f $abspath/$DEPFILE ]]; then
-        set +e
-        diff $scratch $abspath/$DEPFILE &>/dev/null
-        diff=$?
-        set -e
+        if [[ -f $abspath/$DEPFILE ]]; then
 
-        if ! (( $diff )); then
-            # Not different: remove the temporary file.
-            rm $scratch
-            echo 0
-            return
+            # Compute dependency list
+            scratch=$($MAKETEMP)
+            get_dependency_list $abspath $document | stat_filenames > $scratch
+
+            set +e
+            diff $scratch $abspath/$DEPFILE &>/dev/null
+            diff=$?
+            set -e
+
+            rm -f $scratch
+
+            if (( $diff )); then
+                echo 1
+                return
+            else
+                echo 0
+                return
+            fi
+        else
+            echo 1
         fi
-    fi
 
-    # Different: update the depfile.
-    mv $scratch $abspath/$DEPFILE
-    echo 1
-    return
+    else
+        # Can't compute dependency list, rebuild required.
+        echo 1
+    fi
 }
 
 # Log output of a command silently. If command fails, print log.
@@ -228,6 +251,9 @@ build() {
     fi
     run_pdflatex $document
     exec_hooks ".post"
+
+    # Build successful, Update depfile.
+    get_dependency_list $abspath $document | stat_filenames > $DEPFILE
 
     cd - &>/dev/null
     exit
