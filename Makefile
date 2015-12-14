@@ -18,6 +18,7 @@ BIBER            := biber
 CHECKCITES       := checkcites
 CLEANBIB         := tools/cleanbib.py
 CPPLINT          := tools/cpplint.py
+CC               := clang
 CXX              := clang++
 DETEX            := detex
 EGREP            := egrep
@@ -88,24 +89,43 @@ AutotexDepFiles = $(addsuffix .autotex.deps, $(AutotexDirs))
 AutotexLogFiles = $(addsuffix .autotex.log, $(AutotexDirs))
 
 $(AutotexTargets):
-	$(QUIET)$(AUTOTEX) make $(patsubst %.pdf,%,$@)
+	@$(AUTOTEX) make $(patsubst %.pdf,%,$@)
 
 CleanFiles += $(AutotexTargets) $(AutotexDepFiles) $(AutotexLogFiles)
+
+#
+# C++
+#
+
+CppTargets = \
+	learn/atc++/myvector \
+	$(NULL)
+
+BuildTargets += $(CppTargets)
+
+CppObjects = $(addsuffix .o, $(CppTargets))
+CppSources = $(addsuffix .cpp, $(CppTargets))
+
+CppTargets: $(CppObjects)
+CppObjects: $(CppSources)
+
+CleanFiles += $(CppTargets) $(CppObjects)
+
 
 #
 # C++ Linter
 #
 
 # File name extension.
-CpplintExtension = .lint
+CppLintExtension = .lint
 
 # Arguments to --filter flag for cpplint.
-CpplintFilters = -legal,-build/c++11,-readability/streams,-readability/todo
-CpplintFlags = --root=include --filter=$(CpplintFilters)
+CppLintFilters = -legal,-build/c++11,-readability/streams,-readability/todo
+CppLintFlags = --root=include --filter=$(CppLintFilters)
 
 
 #
-# C++ build
+# C++ Build
 #
 
 # Compiler flags.
@@ -144,15 +164,78 @@ CxxFlags = \
 	$(NULL)
 
 %.o: %.cpp
-	@echo '  CXX      $(notdir $@)'
-	$(QUIET)$(CXX) $(CxxFlags)
-	$(QUIET)$(CPPLINT) $(CpplintFlags) $< 2>&1 \
-		| grep -v '^Done processing\|^Total errors found: ' \
-		| tee $@
+	@echo '  CXX      $(PWD)/$@'
+	$(QUIET)$(CXX) $(CxxFlags) $< -c -o $@
+	$(QUIET)$(CPPLINT) $(CppLintFlags) $< 2>&1 \
+	 	| grep -v '^Done processing\|^Total errors found: ' \
+		| tee $<.lint
 
 
 #
-# C++ Linker
+# C
+#
+
+CTargets = \
+	learn/expert_c/cdecl \
+	learn/expert_c/computer_dating \
+	$(NULL)
+
+BuildTargets += $(CTargets)
+
+CObjects = $(addsuffix .o, $(CTargets))
+CSources = $(addsuffix .c, $(CTargets))
+
+CTargets: $(CObjects)
+CObjects: $(CSources)
+
+CleanFiles += $(CTargets) $(CObjects)
+
+#
+# C Build
+#
+
+# Compiler flags.
+CFlags = \
+	-O2 \
+	-std=c11 \
+	-pedantic \
+	-Wall \
+	-Wextra \
+	-Wcast-align \
+	-Wcast-qual \
+	-Wctor-dtor-privacy \
+	-Wdisabled-optimization \
+	-Wformat=2 \
+	-Wframe-larger-than=1024 \
+	-Winit-self \
+	-Winline \
+	-Wlarger-than=2048 \
+	-Wmissing-declarations \
+	-Wmissing-include-dirs \
+	-Wno-div-by-zero \
+	-Wno-main \
+	-Wno-missing-braces \
+	-Wno-unused-parameter \
+	-Wold-style-cast \
+	-Woverloaded-virtual \
+	-Wpadded \
+	-Wredundant-decls \
+	-Wshadow \
+	-Wsign-conversion \
+	-Wsign-promo \
+	-Wstrict-overflow=5 \
+	-Wswitch-default \
+	-Wundef \
+	-Wwrite-strings \
+	$(NULL)
+
+%.o: %.c
+	@echo '  CC       $(PWD)/$@'
+	$(QUIET)$(CC) $(CFlags) $< -c -o $@
+
+
+#
+# Linker
 #
 
 # Linker flags.
@@ -160,7 +243,7 @@ LdFlags = \
 	$(NULL)
 
 %: %.o
-	@echo '  CXXLD    $(notdir $@)'
+	@echo '  LD       $(PWD)/$@'
 	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) $^ -o $@
 
 
