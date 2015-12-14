@@ -46,6 +46,8 @@ help:
 	@echo "  make distclean"
 	@echo "  make test"
 
+BuildTargets =
+
 #
 # Tidy up
 #
@@ -69,7 +71,7 @@ distclean: clean
 # LaTeX
 #
 
-autotexTargets = \
+AutotexTargets = \
 	docs/2015-msc-thesis/thesis.pdf \
 	docs/2015-progression-review/document.pdf \
 	docs/wip-adapt/adapt.pdf \
@@ -77,16 +79,18 @@ autotexTargets = \
 	docs/wip-outline/outline.pdf \
 	docs/wip-taco/taco.pdf \
 	$(NULL)
-.PHONY: $(autotexTargets)
+.PHONY: $(AutotexTargets)
 
-autotexDirs = $(dir $(autotexTargets))
-autotexDepFiles = $(addsuffix .autotex.deps, $(autotexDirs))
-autotexLogFiles = $(addsuffix .autotex.log, $(autotexDirs))
+BuildTargets += $(AutotexTargets)
 
-$(autotexTargets):
+AutotexDirs = $(dir $(AutotexTargets))
+AutotexDepFiles = $(addsuffix .autotex.deps, $(AutotexDirs))
+AutotexLogFiles = $(addsuffix .autotex.log, $(AutotexDirs))
+
+$(AutotexTargets):
 	$(QUIET)$(AUTOTEX) make $(patsubst %.pdf,%,$@)
 
-CleanFiles += $(autotexTargets) $(autotexDepFiles) $(autotexLogFiles)
+CleanFiles += $(AutotexTargets) $(AutotexDepFiles) $(AutotexLogFiles)
 
 #
 # C++ Linter
@@ -167,4 +171,6 @@ LdFlags = \
 test:
 
 
-all: $(autotexTargets)
+build: $(BuildTargets)
+
+all: build
