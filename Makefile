@@ -5,6 +5,8 @@
 QUIET_  = @
 QUIET   = $(QUIET_$(V))
 
+# Assume no out-of-tree builds:
+root := $(PWD)
 
 #
 # Configuration
@@ -12,19 +14,19 @@ QUIET   = $(QUIET_$(V))
 
 # FIXME: BIBTOOL          := bibtool
 # FIXME: TEXTLINT         := textlint
-AUTOTEX          := tools/autotex.sh
+AUTOTEX          := $(root)/tools/autotex.sh
 AWK              := awk
 BIBER            := biber
 CHECKCITES       := checkcites
-CLEANBIB         := tools/cleanbib.py
-CPPLINT          := tools/cpplint.py
-CC               := $(PWD)/tools/llvm/build/bin/clang
-CXX              := $(PWD)/tools/llvm/build/bin/clang++
+CLEANBIB         := $(root)/tools/cleanbib.py
+CPPLINT          := $(root)/tools/cpplint.py
+CC               := $(root)/tools/llvm/build/bin/clang
+CXX              := $(root)/tools/llvm/build/bin/clang++
 DETEX            := detex
 EGREP            := egrep
 GREP             := grep
 MAKEFLAGS        := "-j $(SHELL NPR)"
-PARSE_TEXCOUNT   := tools/parse_texcount.py
+PARSE_TEXCOUNT   := $(root)/tools/parse_texcount.py
 PDF_OPEN         := open
 PDFLATEX         := pdflatex
 RM               := rm -fv
@@ -73,12 +75,12 @@ distclean: clean
 #
 
 AutotexTargets = \
-	docs/2015-msc-thesis/thesis.pdf \
-	docs/2015-progression-review/document.pdf \
-	docs/wip-adapt/adapt.pdf \
-	docs/wip-hlpgpu/hlpgpu.pdf \
-	docs/wip-outline/outline.pdf \
-	docs/wip-taco/taco.pdf \
+	$(root)/docs/2015-msc-thesis/thesis.pdf \
+	$(root)/docs/2015-progression-review/document.pdf \
+	$(root)/docs/wip-adapt/adapt.pdf \
+	$(root)/docs/wip-hlpgpu/hlpgpu.pdf \
+	$(root)/docs/wip-outline/outline.pdf \
+	$(root)/docs/wip-taco/taco.pdf \
 	$(NULL)
 .PHONY: $(AutotexTargets)
 
@@ -98,7 +100,7 @@ CleanFiles += $(AutotexTargets) $(AutotexDepFiles) $(AutotexLogFiles)
 #
 
 CppTargets = \
-	learn/atc++/myvector \
+	$(root)/learn/atc++/myvector \
 	$(NULL)
 
 BuildTargets += $(CppTargets)
@@ -133,7 +135,7 @@ CxxFlags = \
 	-O2 \
 	-std=c++14 \
 	-stdlib=libc++ \
-	-isystem $(PWD)/extern/libcxx/include \
+	-isystem $(root)/extern/libcxx/include \
 	-pedantic \
 	-Wall \
 	-Wextra \
@@ -166,7 +168,7 @@ CxxFlags = \
 	$(NULL)
 
 %.o: %.cpp
-	@echo '  CXX      $(PWD)/$@'
+	@echo '  CXX      $@'
 	$(QUIET)$(CXX) $(CxxFlags) $< -c -o $@
 	$(QUIET)$(CPPLINT) $(CppLintFlags) $< 2>&1 \
 	 	| grep -v '^Done processing\|^Total errors found: ' \
@@ -178,8 +180,8 @@ CxxFlags = \
 #
 
 CTargets = \
-	learn/expert_c/cdecl \
-	learn/expert_c/computer_dating \
+	$(root)/learn/expert_c/cdecl \
+	$(root)/learn/expert_c/computer_dating \
 	$(NULL)
 
 BuildTargets += $(CTargets)
@@ -232,7 +234,7 @@ CFlags = \
 	$(NULL)
 
 %.o: %.c
-	@echo '  CC       $(PWD)/$@'
+	@echo '  CC       $@'
 	$(QUIET)$(CC) $(CFlags) $< -c -o $@
 
 
@@ -245,7 +247,7 @@ LdFlags = \
 	$(NULL)
 
 %: %.o
-	@echo '  LD       $(PWD)/$@'
+	@echo '  LD       $@'
 	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) $^ -o $@
 
 
