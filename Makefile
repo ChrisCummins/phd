@@ -92,11 +92,66 @@ CleanFiles += $(AutotexTargets) $(AutotexDepFiles) $(AutotexLogFiles)
 # C++
 #
 
+RayTracerDir = $(root)/playground/rt
+
 # Targets:
 CppTargets = \
 	$(root)/learn/atc++/myvector \
+	$(RayTracerDir)/examples/example1 \
+	$(RayTracerDir)/examples/example2 \
 	$(NULL)
 
+$(RayTracerDir)/examples/example1: $(RayTracerDir)/src/librt.so
+
+$(RayTracerDir)/examples/example2: \
+		$(RayTracerDir)/examples/example2.o \
+		$(RayTracerDir)/src/librt.so \
+		$(NULL)
+
+$(RayTracerDir)/examples/example2.o: $(RayTracerDir)/examples/example2.cpp
+	$(QUIET)$(CXX) $(CxxFlags) $< -c -o $@
+
+$(RayTracerDir)/examples/example2.cpp: \
+		$(RayTracerDir)/examples/example2.rt \
+		$(RayTracerDir)/scripts/mkscene.py
+	$(RayTracerDir)/scripts/mkscene.py $< $@
+
+RayTracerSources = \
+	$(RayTracerDir)/src/graphics.cpp \
+	$(RayTracerDir)/src/lights.cpp \
+	$(RayTracerDir)/src/objects.cpp \
+	$(RayTracerDir)/src/profiling.cpp \
+	$(RayTracerDir)/src/random.cpp \
+	$(RayTracerDir)/src/renderer.cpp \
+	$(NULL)
+
+RayTracerHeaders = \
+	$(RayTracerDir)/include/rt/camera.h \
+	$(RayTracerDir)/include/rt/graphics.h \
+	$(RayTracerDir)/include/rt/image.h \
+	$(RayTracerDir)/include/rt/lights.h \
+	$(RayTracerDir)/include/rt/math.h \
+	$(RayTracerDir)/include/rt/profiling.h \
+	$(RayTracerDir)/include/rt/random.h \
+	$(RayTracerDir)/include/rt/renderer.h \
+	$(RayTracerDir)/include/rt/rt.h \
+	$(RayTracerDir)/include/rt/scene.h \
+	$(NULL)
+
+RayTracerCxxFlags = \
+	-I$(RayTracerDir)/include \
+	$(NULL)
+
+RayTracerObjects = $(patsubst %.cpp, %.o, $(RayTracerSources))
+
+# TODO: Use local Intel Thread Building Blocks
+RayTracerLdFlags = \
+	-ltbb \
+	$(NULL)
+
+$(RayTracerDir)/src/librt.so: $(RayTracerObjects)
+	@echo '  LD       $@'
+	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) -fPIC -shared $? -o $@
 
 BuildTargets += $(CppTargets)
 
@@ -127,7 +182,7 @@ CxxFlags = \
 	-Wctor-dtor-privacy \
 	-Wdisabled-optimization \
 	-Wformat=2 \
-	-Wframe-larger-than=1024 \
+	-Wframe-larger-than=2048 \
 	-Winit-self \
 	-Winline \
 	-Wlarger-than=2048 \
@@ -148,6 +203,7 @@ CxxFlags = \
 	-Wswitch-default \
 	-Wundef \
 	-Wwrite-strings \
+	$(RayTracerCxxFlags) \
 	$(NULL)
 
 # Tools:
@@ -234,13 +290,13 @@ CC := $(root)/tools/llvm/build/bin/clang
 
 # Linker flags:
 LdFlags = \
+	$(RayTracerLdFlags) \
 	$(NULL)
 
 # Rules:
 %: %.o
 	@echo '  LD       $@'
 	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) $^ -o $@
-
 
 #
 # Testing
