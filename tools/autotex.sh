@@ -22,10 +22,11 @@ STAT=/usr/local/opt/coreutils/libexec/gnubin/stat
 PDFLATEX=pdflatex
 BIBER=biber
 PDFLATEX_ARGS="-recorder -output-format pdf -progname pdflatex -file-line-error -interaction=nonstopmode --shell-escape"
-# TODO: Get proper path:
-PARSE_TEXCOUNT=~/phd/tools/parse_texcount.py
-# TODO: Include tools
-TEXCOUNT=texcount
+
+# Included tools:
+ROOT=~/phd
+PARSE_TEXCOUNT=$ROOT/tools/parse_texcount.py
+TEXCOUNT=$ROOT/tools/texcount.pl
 
 # Filename locations
 DEPFILE=.autotex.deps

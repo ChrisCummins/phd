@@ -32,7 +32,7 @@ PDFLATEX         := pdflatex
 RM               := rm -fv
 SED              := sed
 SHELL            := /bin/bash
-TEXCOUNT         := texcount
+TEXCOUNT         := $(root)/tools/texcount.pl
 
 
 #
@@ -50,6 +50,7 @@ help:
 	@echo "  make test"
 
 BuildTargets =
+
 
 #
 # Tidy up
