@@ -18,8 +18,8 @@ BIBER            := biber
 CHECKCITES       := checkcites
 CLEANBIB         := tools/cleanbib.py
 CPPLINT          := tools/cpplint.py
-CC               := clang
-CXX              := clang++
+CC               := $(PWD)/tools/llvm/build/bin/clang
+CXX              := $(PWD)/tools/llvm/build/bin/clang++
 DETEX            := detex
 EGREP            := egrep
 GREP             := grep
@@ -132,6 +132,8 @@ CppLintFlags = --root=include --filter=$(CppLintFilters)
 CxxFlags = \
 	-O2 \
 	-std=c++14 \
+	-stdlib=libc++ \
+	-isystem $(PWD)/extern/libcxx/include \
 	-pedantic \
 	-Wall \
 	-Wextra \
@@ -252,6 +254,17 @@ LdFlags = \
 #
 
 test:
+
+
+#
+# Bootstrapping
+#
+
+.bootstrapped: tools/bootstrap.sh
+	@echo "Bootstrapping! Go enjoy a coffee, this will take a while."
+	$(QUIET)./$<
+
+$(CppObjects) $(CObjects): .bootstrapped
 
 
 build: $(BuildTargets)
