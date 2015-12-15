@@ -141,9 +141,9 @@ RayTracerHeaders = \
 
 RayTracerObjects = $(patsubst %.cpp, %.o, $(RayTracerSources))
 
-$(RayTracerDir)/examples/_CxxFlags = -I$(RayTracerDir)/include
-$(RayTracerDir)/examples/_LdFlags = -ltbb
-$(RayTracerDir)/src/_CxxFlags = -I$(RayTracerDir)/include
+$(RayTracerDir)/examples_CxxFlags = -I$(RayTracerDir)/include
+$(RayTracerDir)/examples_LdFlags = -ltbb
+$(RayTracerDir)/src_CxxFlags = -I$(RayTracerDir)/include
 
 $(RayTracerDir)/src/librt.so: $(RayTracerObjects)
 	@echo '  LD       $@'
@@ -209,7 +209,8 @@ CXX := $(root)/tools/llvm/build/bin/clang++
 %.o: %.cpp
 	@echo '  CXX      $@'
 	$(QUIET)$(CXX) $(CxxFlags) \
-		$($@_CxxFlags) $($(dir $@)_CxxFlags) \
+		$($(patsubst %/,%,$@)_CxxFlags) \
+		$($(patsubst %/,%,$(dir $@))_CxxFlags) \
 		$< -c -o $@
 	$(QUIET)if [[ -z "$(filter $<,$(DontLint))" ]]; then \
 		$(CPPLINT) $(CxxLintFlags) $< 2>&1 \
@@ -295,8 +296,10 @@ LdFlags = \
 %: %.o
 	@echo '  LD       $@'
 	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) \
-		$($@_CxxFlags) $($(dir $@)_CxxFlags) \
-		$($@_LdFlags) $($(dir $@)_LdFlags) \
+		$($(patsubst %/,%,$@)_CxxFlags) \
+		$($(patsubst %/,%,$(dir $@))_CxxFlags) \
+		$($(patsubst %/,%,$@)_LdFlags) \
+		$($(patsubst %/,%,$(dir $@))_LdFlags) \
 		$^ -o $@
 
 #
