@@ -4,9 +4,15 @@
 [submodule "playground/rt"]
 	path = playground/rt
 	url = git@github.com:ChrisCummins/rt.git
+[submodule "extern/skelcl"]
+	path = extern/skelcl
+	url = git@bitbucket.org:skelcl/skelcl.git
 [submodule "tools/llvm"]
 	path = tools/llvm
 	url = git@github.com:ChrisCummins/llvm.git
 [submodule "extern/libcxx"]
 	path = extern/libcxx
 	url = https://github.com/llvm-mirror/libcxx.git
+[submodule "extern/intel-tbb"]
+	path = extern/intel-tbb
+	url = https://github.com/intel-tbb/intel-tbb.git
