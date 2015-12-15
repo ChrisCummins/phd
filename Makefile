@@ -36,6 +36,7 @@ help:
 	@echo "  make test"
 
 BuildTargets =
+DontLint =
 
 
 #
@@ -95,7 +96,7 @@ CleanFiles += $(AutotexTargets) $(AutotexDepFiles) $(AutotexLogFiles)
 RayTracerDir = $(root)/playground/rt
 
 # Targets:
-CppTargets = \
+CxxTargets = \
 	$(root)/learn/atc++/myvector \
 	$(RayTracerDir)/examples/example1 \
 	$(RayTracerDir)/examples/example2 \
@@ -108,13 +109,13 @@ $(RayTracerDir)/examples/example2: \
 		$(RayTracerDir)/src/librt.so \
 		$(NULL)
 
-$(RayTracerDir)/examples/example2.o: $(RayTracerDir)/examples/example2.cpp
-	$(QUIET)$(CXX) $(CxxFlags) $< -c -o $@
-
 $(RayTracerDir)/examples/example2.cpp: \
 		$(RayTracerDir)/examples/example2.rt \
 		$(RayTracerDir)/scripts/mkscene.py
-	$(RayTracerDir)/scripts/mkscene.py $< $@
+	@echo "  MKSCENE  $@"
+	$(QUIET)$(RayTracerDir)/scripts/mkscene.py $< $@ >/dev/null
+
+DontLint += $(RayTracerDir)/examples/example2.cpp
 
 RayTracerSources = \
 	$(RayTracerDir)/src/graphics.cpp \
@@ -138,35 +139,30 @@ RayTracerHeaders = \
 	$(RayTracerDir)/include/rt/scene.h \
 	$(NULL)
 
-RayTracerCxxFlags = \
-	-I$(RayTracerDir)/include \
-	$(NULL)
-
 RayTracerObjects = $(patsubst %.cpp, %.o, $(RayTracerSources))
 
-# TODO: Use local Intel Thread Building Blocks
-RayTracerLdFlags = \
-	-ltbb \
-	$(NULL)
+$(RayTracerDir)/examples/_CxxFlags = -I$(RayTracerDir)/include
+$(RayTracerDir)/examples/_LdFlags = -ltbb
+$(RayTracerDir)/src/_CxxFlags = -I$(RayTracerDir)/include
 
 $(RayTracerDir)/src/librt.so: $(RayTracerObjects)
 	@echo '  LD       $@'
 	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) -fPIC -shared $? -o $@
 
-BuildTargets += $(CppTargets)
+BuildTargets += $(CxxTargets)
 
-CppObjects = $(addsuffix .o, $(CppTargets))
-CppSources = $(addsuffix .cpp, $(CppTargets))
+CxxObjects = $(addsuffix .o, $(CxxTargets))
+CxxSources = $(addsuffix .cpp, $(CxxTargets))
 
-CppTargets: $(CppObjects)
-CppObjects: $(CppSources)
+CxxTargets: $(CxxObjects)
+CxxObjects: $(CxxSources)
 
-CleanFiles += $(CppTargets) $(CppObjects)
+CleanFiles += $(CxxTargets) $(CxxObjects)
 
 # Linter:
-CppLintExtension = .lint
-CppLintFilters = -legal,-build/c++11,-readability/streams,-readability/todo
-CppLintFlags = --root=include --filter=$(CppLintFilters)
+CxxLintExtension = .lint
+CxxLintFilters = -legal,-build/c++11,-readability/streams,-readability/todo
+CxxLintFlags = --root=include --filter=$(CxxLintFilters)
 
 # Compiler flags:
 CxxFlags = \
@@ -203,7 +199,6 @@ CxxFlags = \
 	-Wswitch-default \
 	-Wundef \
 	-Wwrite-strings \
-	$(RayTracerCxxFlags) \
 	$(NULL)
 
 # Tools:
@@ -213,10 +208,14 @@ CXX := $(root)/tools/llvm/build/bin/clang++
 # Rules:
 %.o: %.cpp
 	@echo '  CXX      $@'
-	$(QUIET)$(CXX) $(CxxFlags) $< -c -o $@
-	$(QUIET)$(CPPLINT) $(CppLintFlags) $< 2>&1 \
-	 	| grep -v '^Done processing\|^Total errors found: ' \
-		| tee $<.lint
+	$(QUIET)$(CXX) $(CxxFlags) \
+		$($@_CxxFlags) $($(dir $@)_CxxFlags) \
+		$< -c -o $@
+	$(QUIET)if [[ -z "$(filter $<,$(DontLint))" ]]; then \
+		$(CPPLINT) $(CxxLintFlags) $< 2>&1 \
+			| grep -v '^Done processing\|^Total errors found: ' \
+			| tee $<.lint; \
+	fi
 
 
 #
@@ -290,13 +289,15 @@ CC := $(root)/tools/llvm/build/bin/clang
 
 # Linker flags:
 LdFlags = \
-	$(RayTracerLdFlags) \
 	$(NULL)
 
 # Rules:
 %: %.o
 	@echo '  LD       $@'
-	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) $^ -o $@
+	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) \
+		$($@_CxxFlags) $($(dir $@)_CxxFlags) \
+		$($@_LdFlags) $($(dir $@)_LdFlags) \
+		$^ -o $@
 
 #
 # Testing
@@ -313,7 +314,7 @@ test:
 	@echo "Bootstrapping! Go enjoy a coffee, this will take a while."
 	$(QUIET)./$<
 
-$(CppObjects) $(CObjects): .bootstrapped
+$(CxxObjects) $(CObjects): .bootstrapped
 
 
 #
