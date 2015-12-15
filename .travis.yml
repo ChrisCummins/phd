@@ -22,14 +22,14 @@ install:
   - conda install --yes -c dan_blanchard python-coveralls nose-cov
   # Install support for coveralls.io:
   - pip install coveralls coverage
-  - python setup.py install
+  - cd src/labm8 && python setup.py install
 
 script:
-  - coverage run --source=labm8 setup.py test
+  - cd src/labm8 && coverage run --source=labm8 setup.py test
 
 after_success:
   # Create coverage report:
-  - coveralls
+  - cd src/labm8 && coveralls
 
 notifications:
   email:
