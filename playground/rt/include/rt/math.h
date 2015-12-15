@@ -50,6 +50,10 @@ namespace deg {
         // Trigonometric functions accepting theta angles in degrees
         // rather than radians:
 
+// Ignore recursion warning from deg::sin() clashing with cmath's
+// sin():
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winfinite-recursion"
         Scalar inline sin(const Scalar theta) {
                 return sin(radians::toDegrees(theta));
         }
@@ -57,6 +61,8 @@ namespace deg {
         Scalar inline cos(const Scalar theta) {
                 return cos(radians::toDegrees(theta));
         }
+#pragma GCC diagnostic pop
+
 }  // namespace deg
 
 // Clamp a Scalar value to within the range [0,1].

@@ -19,6 +19,8 @@
  */
 #include "rt/lights.h"
 
+#include <algorithm>
+
 #include "rt/profiling.h"
 
 namespace rt {

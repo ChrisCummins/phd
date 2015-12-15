@@ -21,7 +21,7 @@
 // Include ray tracer header.
 #include "rt/rt.h"
 
-#include <array>
+#include <array>  // NOLINT(build/include_order)
 
 static const size_t width = 512;
 static const size_t height = 512;
