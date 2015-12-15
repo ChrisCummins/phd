@@ -12,27 +12,13 @@ root := $(PWD)
 # Configuration
 #
 
-# FIXME: BIBTOOL          := bibtool
-# FIXME: TEXTLINT         := textlint
-AUTOTEX          := $(root)/tools/autotex.sh
-AWK              := awk
-BIBER            := biber
-CHECKCITES       := checkcites
-CLEANBIB         := $(root)/tools/cleanbib.py
-CPPLINT          := $(root)/tools/cpplint.py
-CC               := $(root)/tools/llvm/build/bin/clang
-CXX              := $(root)/tools/llvm/build/bin/clang++
-DETEX            := detex
-EGREP            := egrep
-GREP             := grep
-MAKEFLAGS        := "-j $(SHELL NPR)"
-PARSE_TEXCOUNT   := $(root)/tools/parse_texcount.py
-PDF_OPEN         := open
-PDFLATEX         := pdflatex
-RM               := rm -fv
-SED              := sed
-SHELL            := /bin/bash
-TEXCOUNT         := $(root)/tools/texcount.pl
+AWK := awk
+EGREP := egrep
+GREP := grep
+MAKEFLAGS := "-j $(SHELL NPR)"
+RM := rm -fv
+SED := sed
+SHELL := /bin/bash
 
 
 #
@@ -75,6 +61,7 @@ distclean: clean
 # LaTeX
 #
 
+# Targets:
 AutotexTargets = \
 	$(root)/docs/2015-msc-thesis/thesis.pdf \
 	$(root)/docs/2015-progression-review/document.pdf \
@@ -83,6 +70,7 @@ AutotexTargets = \
 	$(root)/docs/wip-outline/outline.pdf \
 	$(root)/docs/wip-taco/taco.pdf \
 	$(NULL)
+
 .PHONY: $(AutotexTargets)
 
 BuildTargets += $(AutotexTargets)
@@ -91,6 +79,10 @@ AutotexDirs = $(dir $(AutotexTargets))
 AutotexDepFiles = $(addsuffix .autotex.deps, $(AutotexDirs))
 AutotexLogFiles = $(addsuffix .autotex.log, $(AutotexDirs))
 
+# Tools:
+AUTOTEX := $(root)/tools/autotex.sh
+
+# Rules:
 $(AutotexTargets):
 	@$(AUTOTEX) make $(patsubst %.pdf,%,$@)
 
@@ -100,9 +92,11 @@ CleanFiles += $(AutotexTargets) $(AutotexDepFiles) $(AutotexLogFiles)
 # C++
 #
 
+# Targets:
 CppTargets = \
 	$(root)/learn/atc++/myvector \
 	$(NULL)
+
 
 BuildTargets += $(CppTargets)
 
@@ -114,24 +108,12 @@ CppObjects: $(CppSources)
 
 CleanFiles += $(CppTargets) $(CppObjects)
 
-
-#
-# C++ Linter
-#
-
-# File name extension.
+# Linter:
 CppLintExtension = .lint
-
-# Arguments to --filter flag for cpplint.
 CppLintFilters = -legal,-build/c++11,-readability/streams,-readability/todo
 CppLintFlags = --root=include --filter=$(CppLintFilters)
 
-
-#
-# C++ Build
-#
-
-# Compiler flags.
+# Compiler flags:
 CxxFlags = \
 	-O2 \
 	-std=c++14 \
@@ -168,6 +150,11 @@ CxxFlags = \
 	-Wwrite-strings \
 	$(NULL)
 
+# Tools:
+CPPLINT := $(root)/tools/cpplint.py
+CXX := $(root)/tools/llvm/build/bin/clang++
+
+# Rules:
 %.o: %.cpp
 	@echo '  CXX      $@'
 	$(QUIET)$(CXX) $(CxxFlags) $< -c -o $@
@@ -180,10 +167,12 @@ CxxFlags = \
 # C
 #
 
+# Targets:
 CTargets = \
 	$(root)/learn/expert_c/cdecl \
 	$(root)/learn/expert_c/computer_dating \
 	$(NULL)
+
 
 BuildTargets += $(CTargets)
 
@@ -195,11 +184,7 @@ CObjects: $(CSources)
 
 CleanFiles += $(CTargets) $(CObjects)
 
-#
-# C Build
-#
-
-# Compiler flags.
+# Compiler flags:
 CFlags = \
 	-O2 \
 	-std=c11 \
@@ -234,6 +219,10 @@ CFlags = \
 	-Wwrite-strings \
 	$(NULL)
 
+# Tools:
+CC := $(root)/tools/llvm/build/bin/clang
+
+# Rules:
 %.o: %.c
 	@echo '  CC       $@'
 	$(QUIET)$(CC) $(CFlags) $< -c -o $@
@@ -243,10 +232,11 @@ CFlags = \
 # Linker
 #
 
-# Linker flags.
+# Linker flags:
 LdFlags = \
 	$(NULL)
 
+# Rules:
 %: %.o
 	@echo '  LD       $@'
 	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) $^ -o $@
@@ -269,6 +259,10 @@ test:
 
 $(CppObjects) $(CObjects): .bootstrapped
 
+
+#
+# All
+#
 
 build: $(BuildTargets)
 
