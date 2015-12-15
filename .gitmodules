@@ -1,9 +1,6 @@
 [submodule "tools/googletest"]
 	path = tools/googletest
 	url = https://github.com/google/googletest.git
-[submodule "playground/rt"]
-	path = playground/rt
-	url = git@github.com:ChrisCummins/rt.git
 [submodule "extern/skelcl"]
 	path = extern/skelcl
 	url = git@bitbucket.org:skelcl/skelcl.git
