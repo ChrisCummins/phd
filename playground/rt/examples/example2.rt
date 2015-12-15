@@ -1,0 +1,186 @@
+# -*- mode: conf -*-
+#
+# Copyright (C) 2015 Chris Cummins.
+#
+# This file is part of rt.
+#
+# rt is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your
+# option) any later version.
+#
+# rt is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+# License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with rt.  If not, see <http://www.gnu.org/licenses/>.
+
+##########################
+# Renderer configuration #
+##########################
+
+[Renderer]
+# The maximum depth to trace rays to:
+RayDepth: 5000
+# The output image scale factor:
+Scale: 14
+# The number of samples to make for rendering DoF. A higher value
+# results in higher quality depth of field, at the expense of greater
+# computational time:
+DofSamples: 16
+Path: render2.ppm
+
+[Renderer.Antialiasing]
+# TODO:
+
+[Renderer.Softlights]
+# The number of rays to cast for soft lights is defined by:
+#   N = base + (scalefactor * lightradius) ^ 3
+Base: 1
+ScaleFactor: 0
+
+
+##########
+# Camera #
+##########
+
+[Lens.wideangle]
+FocalLength: 36
+Aperture: 50
+Focus: .98
+
+[Film.colour]
+Saturation: 100
+RGBGamma: 102 101 98
+Width: 43
+Height: 24
+
+[Film.square]
+Saturation: 100
+RGBGamma: 102 101 98
+Width: 36
+Height: 36
+
+[Camera.Perspective]
+Position: 450 650 3000
+Lookat: 250 450 0
+Lens: $Lens.wideangle
+Film: $Film.square
+
+
+##########
+# Macros #
+##########
+
+@def white 0xffffff
+
+
+#############
+# Materials #
+#############
+
+[Material.mirror]
+Colour: @white
+Ambient: 1
+Diffuse: 0
+Specular: 100
+Shininess: 400
+Reflectivity: 90
+
+[Material.plaster]
+Colour: 0x948697
+Diffuse: 100
+Specular: 70
+Shininess: 10
+
+[Material.left_wall]
+Colour: 0xb76c73
+Diffuse: 90
+Specular: 80
+Shininess: 10
+Reflectivity: 0
+
+[Material.right_wall]
+Colour: 0x6f67b2
+Diffuse: 90
+Specular: 80
+Shininess: 10
+
+[Material.black]
+Colour: 0x101010
+Diffuse: 1
+Specular: 50
+Shininess: 40
+Reflectivity: 25
+
+[Material.white]
+Colour: 0xffffff
+Diffuse: 80
+Specular: 15
+Shininess: 4
+Reflectivity: 30
+
+
+###########
+# Objects #
+###########
+
+[Object.Checkerboard] # Floor
+Position: 0 0 0
+Direction: 0 1 0
+Size: 250
+Material1: $Material.white
+Material2: $Material.black
+
+[Object.Plane] # Cieling
+Position: 0 2200 0
+Direction: 0 -1 0
+Material: $Material.plaster
+
+[Object.Plane] # Left wall
+Position: -2000 0 0
+Direction: 1 0 0
+Material: $Material.left_wall
+
+[Object.Plane] # Right wall
+Position: 2000 0 0
+Direction: -1 0 0
+Material: $Material.right_wall
+
+[Object.Plane] # Back wall (facing camera)
+Position: 0 0 -2000
+Direction: 0 0 1
+Material: $Material.plaster
+
+[Object.Plane] # Front wall (behind camera)
+Position: 0 0 3100
+Direction: 0 0 -1
+Material: $Material.plaster
+
+@def ball_size 500
+[Object.Sphere] # Left ball
+Position: -900 @ball_size -1200
+Size: @ball_size
+Material: $Material.mirror
+
+[Object.Sphere] # Centre ball
+Position: 100 @ball_size 0
+Size: @ball_size
+Material: $Material.mirror
+
+[Object.Sphere] # Right ball
+Position: 850 @ball_size 1150
+Size: @ball_size
+Material: $Material.mirror
+
+
+##########
+# Lights #
+##########
+
+[Light.Soft]
+Colour: @white
+Position: 300 1500 200
+Size: 200
