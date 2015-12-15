@@ -1,11 +1,12 @@
 # Labm8
-[![Build Status](https://travis-ci.org/ChrisCummins/labm8.svg)](https://travis-ci.org/ChrisCummins/labm8)
-[![Coverage Status](https://coveralls.io/repos/ChrisCummins/labm8/badge.svg)](https://coveralls.io/r/ChrisCummins/labm8)
+
+[![Build Status](https://travis-ci.org/ChrisCummins/phd.svg)](https://travis-ci.org/ChrisCummins/phd)
+[![Coverage Status](https://coveralls.io/repos/ChrisCummins/phd/badge.svg)](https://coveralls.io/r/ChrisCummins/phd)
 
 A collection of functions and utilities for collecting and
 manipulating quantitative experimental data.
 
-![pip-db](https://raw.github.com/ChrisCummins/labm8/master/docs/logo.jpg)
+![pip-db](https://raw.github.com/ChrisCummins/phd/master/src/labm8/docs/logo.jpg)
 
 ## Installation
 
