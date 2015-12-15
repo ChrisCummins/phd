@@ -1,0 +1,9 @@
+@RELATION names
+
+@ATTRIBUTE first {David,Joe}
+@ATTRIBUTE last {Bloggs,Bowie,Brent}
+
+@DATA
+David,Bowie
+David,Brent
+Joe,Bloggs
