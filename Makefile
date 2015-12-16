@@ -172,6 +172,12 @@ $(RayTracerLib): $(RayTracerObjects)
 	$(call o-link, $@, $?, -fPIC -shared)
 
 
+#
+# thesis/
+#
+AutotexTargets += $(root)/thesis/thesis.pdf
+
+
 ########################################################################
 #                         Build rules
 
