@@ -145,7 +145,6 @@ AutotexTargets += \
 	$(root)/docs/wip-adapt/adapt.pdf \
 	$(root)/docs/wip-hlpgpu/hlpgpu.pdf \
 	$(root)/docs/wip-outline/outline.pdf \
-	$(root)/docs/wip-taco/taco.pdf \
 	$(NULL)
 
 
