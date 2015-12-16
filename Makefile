@@ -11,6 +11,9 @@ root := $(PWD)
 SHELL := /bin/bash
 NPROC := 4
 
+space :=
+space +=
+
 #
 # Configuration
 #
@@ -32,6 +35,15 @@ DontLint =
 
 ########################################################################
 #                             Functions
+
+# Joins elements of a list
+#
+# Arguments:
+#   $1 (str)   Separator
+#   $2 (str[]) List
+define join-with
+	$(subst $(space),$1,$(strip $2))
+endef
 
 # Compile C sources to object file
 #
@@ -311,7 +323,7 @@ LdFlags =
 #
 # LaTeX
 #
-.PHONY: $(AutotexTargets)
+AUTOTEX := $(root)/tools/autotex.sh
 
 BuildTargets += $(AutotexTargets)
 
@@ -319,16 +331,63 @@ AutotexDirs = $(dir $(AutotexTargets))
 AutotexDepFiles = $(addsuffix .autotex.deps, $(AutotexDirs))
 AutotexLogFiles = $(addsuffix .autotex.log, $(AutotexDirs))
 
-# Tools:
-AUTOTEX := $(root)/tools/autotex.sh
-
-# Rules:
 $(AutotexTargets):
 	@$(AUTOTEX) make $(patsubst %.pdf,%,$@)
+# Autotex does it's own dependency analysis, so always run it:
+.PHONY: $(AutotexTargets)
 
-CleanFiles += $(AutotexTargets) $(AutotexDepFiles) $(AutotexLogFiles)
+# File extensions to remove in LaTeX build directories:
+LatexBuildfileExtensions = \
+	-blx.bib \
+	.acn \
+	.acr \
+	.alg \
+	.aux \
+	.bbl \
+	.bcf \
+	.blg \
+	.dvi \
+	.fdb_latexmk \
+	.glg \
+	.glo \
+	.gls \
+	.idx \
+	.ilg \
+	.ind \
+	.ist \
+	.lof \
+	.log \
+	.lol \
+	.lot \
+	.maf \
+	.mtc \
+	.mtc0 \
+	.nav \
+	.nlo \
+	.out \
+	.pdfsync \
+	.ps \
+	.run.xml \
+	.snm \
+	.synctex.gz \
+	.tdo \
+	.toc \
+	.vrb \
+	.xdy \
+	$(NULL)
 
+LatexBuildDirs = $(AutotexDirs)
 
+# Discover files to remove using the shell's `find' tool:
+LatexCleanFiles = $(shell find $(LatexBuildDirs) \
+	-name '*$(call join-with,' -o -name '*, $(LatexBuildfileExtensions))')
+
+CleanFiles += \
+	$(AutotexTargets) \
+	$(AutotexDepFiles) \
+	$(AutotexLogFiles) \
+	$(LatexCleanFiles) \
+	$(NULL)
 
 
 #
@@ -355,6 +414,7 @@ distclean: clean
 	$(QUIET)$(RM) $(DistcleanFiles)
 
 .PHONY: clean distclean
+
 
 #
 # All
