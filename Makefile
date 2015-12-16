@@ -545,6 +545,17 @@ DistcleanTargets += bootstrap-clean
 
 
 #
+# Git
+#
+BuildTargets += $(root)/.git/hooks/pre-push
+
+# Install pre-commit hook:
+$(root)/.git/hooks/pre-push: $(root)/tools/pre-push
+	@echo '  GIT     $@'
+	$(QUIET)cp $< $@
+
+
+#
 # Tidy up
 #
 clean: $(CleanTargets)
