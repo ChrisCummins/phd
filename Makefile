@@ -8,62 +8,76 @@ QUIET   = $(QUIET_$(V))
 # Assume no out-of-tree builds:
 root := $(PWD)
 
+SHELL := /bin/bash
+NPROC := 4
+
 #
 # Configuration
 #
-
 AWK := awk
 EGREP := egrep
 GREP := grep
-MAKEFLAGS := "-j $(SHELL NPR)"
+MAKEFLAGS := -j$(NPROC)
 RM := rm -fv
 SED := sed
-SHELL := /bin/bash
-
-
-#
-# Tidy up
-#
-
-.PHONY: help
-
-help:
-	@echo "Build targets:"
-	@echo
-	@echo "  make all"
-	@echo "  make clean"
-	@echo "  make distclean"
-	@echo "  make test"
-
-BuildTargets =
-DontLint =
-
-
-#
-# Tidy up
-#
-
-.PHONY: clean
-
-CleanFiles = \
-	$(NULL)
-
-DistcleanFiles = \
-	$(NULL)
-
-clean:
-	$(QUIET)$(RM) $(CleanFiles)
-
-distclean: clean
-	$(QUIET)$(RM) $(DistcleanFiles)
-
-
-#
-# LaTeX
-#
 
 # Targets:
-AutotexTargets = \
+AutotexTargets =
+BuildTargets =
+CleanFiles =
+CTargets =
+CxxTargets =
+DistcleanFiles =
+DontLint =
+
+########################################################################
+#                             Functions
+
+# Compile C sources to object file
+#
+# Arguments:
+#   $1 (str)   Object file
+#   $2 (str[]) C sources
+#   $3 (str[]) Flags for compiler
+define c-compile-o
+	@echo '  CC      $1'
+	$(QUIET)$(CC) $(CFlags) $3 $2 -c -o $1
+endef
+
+# Compile C++ sources to object file
+#
+# Arguments:
+#   $1 (str)   Object file
+#   $2 (str[]) C++ sources
+#   $3 (str[]) Flags for compiler
+define cxx-compile-o
+	@echo '  CXX     $1'
+	$(QUIET)$(CXX) $(CxxFlags) $3 $2 -c -o $1
+	$(QUIET)if [[ -z "$(filter $2, $(DontLint))" ]]; then \
+		$(CPPLINT) $(CxxLintFlags) $2 2>&1 \
+			| grep -v '^Done processing\|^Total errors found: ' \
+			| tee $2.lint; \
+	fi
+endef
+
+# Link object files to executable
+#
+# Arguments:
+#   $1 (str)   Executable
+#   $2 (str[]) Object files
+#   $3 (str[]) Flags for linker
+define o-link
+	@echo '  LD      $1'
+	$(QUIET)$(LD) $(CxxFlags) $(LdFlags) $3 $2 -o $1
+endef
+
+########################################################################
+#                             Targets
+
+#
+# docs/
+#
+AutotexTargets += \
 	$(root)/docs/2015-msc-thesis/thesis.pdf \
 	$(root)/docs/2015-progression-review/document.pdf \
 	$(root)/docs/wip-adapt/adapt.pdf \
@@ -72,41 +86,40 @@ AutotexTargets = \
 	$(root)/docs/wip-taco/taco.pdf \
 	$(NULL)
 
-.PHONY: $(AutotexTargets)
-
-BuildTargets += $(AutotexTargets)
-
-AutotexDirs = $(dir $(AutotexTargets))
-AutotexDepFiles = $(addsuffix .autotex.deps, $(AutotexDirs))
-AutotexLogFiles = $(addsuffix .autotex.log, $(AutotexDirs))
-
-# Tools:
-AUTOTEX := $(root)/tools/autotex.sh
-
-# Rules:
-$(AutotexTargets):
-	@$(AUTOTEX) make $(patsubst %.pdf,%,$@)
-
-CleanFiles += $(AutotexTargets) $(AutotexDepFiles) $(AutotexLogFiles)
 
 #
-# C++
+# learn/
 #
-
-RayTracerDir = $(root)/playground/rt
-
-# Targets:
-CxxTargets = \
+CxxTargets += \
 	$(root)/learn/atc++/myvector \
+	$(NULL)
+
+CTargets += \
+	$(root)/learn/expert_c/cdecl \
+	$(root)/learn/expert_c/computer_dating \
+	$(NULL)
+
+
+#
+# playground/
+#
+
+#
+# playground/rt/
+#
+RayTracerDir = $(root)/playground/rt
+RayTracerLib = $(RayTracerDir)/src/librt.so
+
+CxxTargets += \
 	$(RayTracerDir)/examples/example1 \
 	$(RayTracerDir)/examples/example2 \
 	$(NULL)
 
-$(RayTracerDir)/examples/example1: $(RayTracerDir)/src/librt.so
+$(RayTracerDir)/examples/example1: $(RayTracerLib)
 
 $(RayTracerDir)/examples/example2: \
 		$(RayTracerDir)/examples/example2.o \
-		$(RayTracerDir)/src/librt.so \
+		$(RayTracerLib) \
 		$(NULL)
 
 $(RayTracerDir)/examples/example2.cpp: \
@@ -115,16 +128,8 @@ $(RayTracerDir)/examples/example2.cpp: \
 	@echo "  MKSCENE  $@"
 	$(QUIET)$(RayTracerDir)/scripts/mkscene.py $< $@ >/dev/null
 
+# Don't run linter on generated file:
 DontLint += $(RayTracerDir)/examples/example2.cpp
-
-RayTracerSources = \
-	$(RayTracerDir)/src/graphics.cpp \
-	$(RayTracerDir)/src/lights.cpp \
-	$(RayTracerDir)/src/objects.cpp \
-	$(RayTracerDir)/src/profiling.cpp \
-	$(RayTracerDir)/src/random.cpp \
-	$(RayTracerDir)/src/renderer.cpp \
-	$(NULL)
 
 RayTracerHeaders = \
 	$(RayTracerDir)/include/rt/camera.h \
@@ -139,101 +144,36 @@ RayTracerHeaders = \
 	$(RayTracerDir)/include/rt/scene.h \
 	$(NULL)
 
+RayTracerSources = $(wildcard $(RayTracerDir)/src/*.cpp)
 RayTracerObjects = $(patsubst %.cpp, %.o, $(RayTracerSources))
 
-$(RayTracerDir)/examples_CxxFlags = -I$(RayTracerDir)/include
+CleanFiles += $(RayTracerObjects) $(RayTracerLib)
+
+# Project specific flags:
+RayTracerCxxFlags = -I$(RayTracerDir)/include
+$(RayTracerDir)/src_CxxFlags = $(RayTracerCxxFlags)
+$(RayTracerDir)/examples_CxxFlags = $(RayTracerCxxFlags)
 $(RayTracerDir)/examples_LdFlags = -ltbb
-$(RayTracerDir)/src_CxxFlags = -I$(RayTracerDir)/include
 
-$(RayTracerDir)/src/librt.so: $(RayTracerObjects)
-	@echo '  LD       $@'
-	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) -fPIC -shared $? -o $@
+# Link library:
+$(RayTracerLib): $(RayTracerObjects)
+	$(call o-link, $@, $?, -fPIC -shared)
 
-BuildTargets += $(CxxTargets)
 
-CxxObjects = $(addsuffix .o, $(CxxTargets))
-CxxSources = $(addsuffix .cpp, $(CxxTargets))
-
-CxxTargets: $(CxxObjects)
-CxxObjects: $(CxxSources)
-
-CleanFiles += $(CxxTargets) $(CxxObjects)
-
-# Linter:
-CxxLintExtension = .lint
-CxxLintFilters = -legal,-build/c++11,-readability/streams,-readability/todo
-CxxLintFlags = --root=include --filter=$(CxxLintFilters)
-
-# Compiler flags:
-CxxFlags = \
-	-O2 \
-	-std=c++14 \
-	-stdlib=libc++ \
-	-isystem $(root)/extern/libcxx/include \
-	-pedantic \
-	-Wall \
-	-Wextra \
-	-Wcast-align \
-	-Wcast-qual \
-	-Wctor-dtor-privacy \
-	-Wdisabled-optimization \
-	-Wformat=2 \
-	-Wframe-larger-than=2048 \
-	-Winit-self \
-	-Winline \
-	-Wlarger-than=2048 \
-	-Wmissing-declarations \
-	-Wmissing-include-dirs \
-	-Wno-div-by-zero \
-	-Wno-main \
-	-Wno-missing-braces \
-	-Wno-unused-parameter \
-	-Wold-style-cast \
-	-Woverloaded-virtual \
-	-Wpadded \
-	-Wredundant-decls \
-	-Wshadow \
-	-Wsign-conversion \
-	-Wsign-promo \
-	-Wstrict-overflow=5 \
-	-Wswitch-default \
-	-Wundef \
-	-Wwrite-strings \
-	$(NULL)
-
-# Tools:
-CPPLINT := $(root)/tools/cpplint.py
-CXX := $(root)/tools/llvm/build/bin/clang++
-
-# Rules:
-%.o: %.cpp
-	@echo '  CXX      $@'
-	$(QUIET)$(CXX) $(CxxFlags) \
-		$($(patsubst %/,%,$@)_CxxFlags) \
-		$($(patsubst %/,%,$(dir $@))_CxxFlags) \
-		$< -c -o $@
-	$(QUIET)if [[ -z "$(filter $<,$(DontLint))" ]]; then \
-		$(CPPLINT) $(CxxLintFlags) $< 2>&1 \
-			| grep -v '^Done processing\|^Total errors found: ' \
-			| tee $<.lint; \
-	fi
+########################################################################
+#                         Build rules
 
 
 #
 # C
 #
-
-# Targets:
-CTargets = \
-	$(root)/learn/expert_c/cdecl \
-	$(root)/learn/expert_c/computer_dating \
-	$(NULL)
-
-
 BuildTargets += $(CTargets)
 
 CObjects = $(addsuffix .o, $(CTargets))
 CSources = $(addsuffix .c, $(CTargets))
+
+# Compilation requires bootstrapped toolchain:
+$(CObjects): .bootstrapped
 
 CTargets: $(CObjects)
 CObjects: $(CSources)
@@ -280,50 +220,152 @@ CC := $(root)/tools/llvm/build/bin/clang
 
 # Rules:
 %.o: %.c
-	@echo '  CC       $@'
-	$(QUIET)$(CC) $(CFlags) $< -c -o $@
+	$(call c-compile-o, $@, $<, \
+		$($(patsubst %/,%,$@)_CFlags) \
+		$($(patsubst %/,%,$(dir $@))_CFlags))
+
+
+#
+# C++
+#
+CPPLINT := $(root)/tools/cpplint.py
+CXX := $(root)/tools/llvm/build/bin/clang++
+
+# Deduce
+CxxObjects = $(addsuffix .o, $(CxxTargets))
+CxxSources = $(addsuffix .cpp, $(CxxTargets))
+
+# Source -> object -> target
+BuildTargets += $(CxxTargets)
+CxxTargets: $(CxxObjects)
+CxxObjects: $(CxxSources)
+
+# Compilation requires bootstrapped toolchain:
+$(CxxObjects): .bootstrapped
+
+CleanFiles += $(CxxTargets) $(CxxObjects)
+
+# Linter:
+CxxLintExtension = .lint
+CxxLintFilters = -legal,-build/c++11,-readability/streams,-readability/todo
+CxxLintFlags = --root=include --filter=$(CxxLintFilters)
+
+# Compiler flags:
+CxxFlags = \
+	-O2 \
+	-std=c++14 \
+	-stdlib=libc++ \
+	-isystem $(root)/extern/libcxx/include \
+	-pedantic \
+	-Wall \
+	-Wextra \
+	-Wcast-align \
+	-Wcast-qual \
+	-Wctor-dtor-privacy \
+	-Wdisabled-optimization \
+	-Wformat=2 \
+	-Wframe-larger-than=2048 \
+	-Winit-self \
+	-Winline \
+	-Wlarger-than=2048 \
+	-Wmissing-declarations \
+	-Wmissing-include-dirs \
+	-Wno-div-by-zero \
+	-Wno-main \
+	-Wno-missing-braces \
+	-Wno-unused-parameter \
+	-Wold-style-cast \
+	-Woverloaded-virtual \
+	-Wpadded \
+	-Wredundant-decls \
+	-Wshadow \
+	-Wsign-conversion \
+	-Wsign-promo \
+	-Wstrict-overflow=5 \
+	-Wswitch-default \
+	-Wundef \
+	-Wwrite-strings \
+	$(NULL)
+
+%.o: %.cpp
+	$(call cxx-compile-o, $@, $<, \
+		$($(patsubst %/,%,$@)_CxxFlags) \
+		$($(patsubst %/,%,$(dir $@))_CxxFlags))
 
 
 #
 # Linker
 #
+LD := $(CXX)
 
-# Linker flags:
-LdFlags = \
-	$(NULL)
+LdFlags =
 
-# Rules:
 %: %.o
-	@echo '  LD       $@'
-	$(QUIET)$(CXX) $(CxxFlags) $(LdFlags) \
+	$(call o-link, $@, $^, \
 		$($(patsubst %/,%,$@)_CxxFlags) \
 		$($(patsubst %/,%,$(dir $@))_CxxFlags) \
 		$($(patsubst %/,%,$@)_LdFlags) \
-		$($(patsubst %/,%,$(dir $@))_LdFlags) \
-		$^ -o $@
+		$($(patsubst %/,%,$(dir $@))_LdFlags))
+
+
+#
+# LaTeX
+#
+.PHONY: $(AutotexTargets)
+
+BuildTargets += $(AutotexTargets)
+
+AutotexDirs = $(dir $(AutotexTargets))
+AutotexDepFiles = $(addsuffix .autotex.deps, $(AutotexDirs))
+AutotexLogFiles = $(addsuffix .autotex.log, $(AutotexDirs))
+
+# Tools:
+AUTOTEX := $(root)/tools/autotex.sh
+
+# Rules:
+$(AutotexTargets):
+	@$(AUTOTEX) make $(patsubst %.pdf,%,$@)
+
+CleanFiles += $(AutotexTargets) $(AutotexDepFiles) $(AutotexLogFiles)
+
+
+
 
 #
 # Testing
 #
-
 test:
 
 
 #
 # Bootstrapping
 #
-
 .bootstrapped: tools/bootstrap.sh
 	@echo "Bootstrapping! Go enjoy a coffee, this will take a while."
 	$(QUIET)./$<
 
-$(CxxObjects) $(CObjects): .bootstrapped
 
+#
+# Tidy up
+#
+clean:
+	$(QUIET)$(RM) $(CleanFiles)
+
+distclean: clean
+	$(QUIET)$(RM) $(DistcleanFiles)
+
+.PHONY: clean distclean
 
 #
 # All
 #
+all: $(BuildTargets)
 
-build: $(BuildTargets)
-
-all: build
+help:
+	@echo "Build targets:"
+	@echo
+	@echo "  make all"
+	@echo "  make clean"
+	@echo "  make distclean"
+	@echo "  make test"
+.PHONY: help
