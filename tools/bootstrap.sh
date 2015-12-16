@@ -22,23 +22,35 @@ BOOTSTRAP_FILE=$ROOT/.bootstrapped
 
 
 build_llvm() {
-    mkdir -vp tools/llvm/build
+    mkdir -vp $ROOT/tools/llvm/build
     cd $ROOT/tools/llvm/build
     cmake .. -DCMAKE_BUILD_TYPE=Release
     make -j$NPROC
     cd $ROOT
 }
 
+clean_llvm() {
+    rm -rfv $ROOT/tools/llvm/build
+}
+
 build_libcxx() {
-    mkdir -vp extern/libcxx/build
+    mkdir -vp $ROOT/extern/libcxx/build
     cd $ROOT/extern/libcxx/build
     cmake .. -DLLVM_CONFIG=$ROOT/tools/llvm/build/bin/llvm-config
     make -j$NPROC
     cd $ROOT
 }
 
+clean_libcxx() {
+    rm -rfv $ROOT/extern/libcxx/build
+}
+
 write_bootstrap_file() {
     date > $BOOTSTRAP_FILE
+}
+
+remove_bootstrap_file() {
+    rm -fv $BOOTSTRAP_FILE
 }
 
 print_boostrapped_info() {
@@ -55,6 +67,12 @@ boostrap() {
     write_bootstrap_file
 }
 
+unboostrap() {
+    clean_llvm
+    clean_libcxx
+    remove_bootstrap_file
+}
+
 main() {
     set +u
     arg=$1
@@ -64,6 +82,10 @@ main() {
         case "$arg" in
             "--check")
                 print_boostrapped_info
+                exit
+                ;;
+            "clean")
+                unboostrap
                 exit
                 ;;
             *)

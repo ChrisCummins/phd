@@ -254,7 +254,7 @@ CObjects = $(addsuffix .o, $(CTargets))
 CSources = $(addsuffix .c, $(CTargets))
 
 # Compilation requires bootstrapped toolchain:
-$(CObjects): .bootstrapped
+$(CObjects): $(root)/.bootstrapped
 
 CTargets: $(CObjects)
 CObjects: $(CSources)
@@ -322,7 +322,7 @@ CxxTargets: $(CxxObjects)
 CxxObjects: $(CxxSources)
 
 # Compilation requires bootstrapped toolchain:
-$(CxxObjects): .bootstrapped
+$(CxxObjects): $(root)/.bootstrapped
 
 CleanFiles += $(CxxTargets) $(CxxObjects)
 
@@ -531,9 +531,18 @@ install: $(InstallTargets)
 #
 # Bootstrapping
 #
-.bootstrapped: tools/bootstrap.sh
+BOOTSTRAP := $(root)/tools/bootstrap.sh
+
+$(root)/.bootstrapped: $(BOOTSTRAP)
 	@echo "Bootstrapping! Go enjoy a coffee, this will take a while."
-	$(QUIET)./$<
+	$(QUIET)$(BOOTSTRAP)
+
+bootstrap-clean:
+	$(QUIET)$(BOOTSTRAP) clean
+
+.PHONY: bootstrap-clean
+
+DistcleanTargets += bootstrap-clean
 
 
 #
