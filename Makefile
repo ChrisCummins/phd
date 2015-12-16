@@ -43,6 +43,7 @@ Python3SetupInstallDirs =
 Python3SetupTestDirs =
 TestTargets =
 
+
 ########################################################################
 #                             Functions
 
@@ -243,7 +244,6 @@ AutotexTargets += $(root)/thesis/thesis.pdf
 
 ########################################################################
 #                         Build rules
-
 
 #
 # C
