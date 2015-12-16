@@ -13,3 +13,6 @@
 [submodule "extern/intel-tbb"]
 	path = extern/intel-tbb
 	url = https://github.com/intel-tbb/intel-tbb.git
+[submodule "extern/benchmark"]
+	path = extern/benchmark
+	url = https://github.com/google/benchmark.git
