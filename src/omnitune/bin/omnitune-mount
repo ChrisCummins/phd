@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+user=$USER
+offline_share=~/data/msc-thesis-offline/share/omnitune
+online_share=/usr/share/omnitune
+
+offline_data=~/data/msc-thesis-offline/data
+online_data=~/data/msc-thesis
+
+set -eu
+
+if ! mount | grep $online_share >/dev/null; then
+    echo "mounting $online_share"
+    sudo mkdir -p $online_share
+    sudo mount -t tmpfs -o size=2048m tmpfs $online_share
+    sudo chown $user:$user -R $online_share
+    rsync -ah $offline_share/ $online_share/
+fi
+
+
+if ! mount | grep $online_data >/dev/null; then
+    echo "mounting $online_data"
+    sudo mkdir -p $online_data
+    sudo mount -t tmpfs -o size=2048m tmpfs $online_data
+    sudo chown $user:$user -R $online_data
+    rsync -ah $offline_data/ $online_data/
+fi

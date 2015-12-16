@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+offline_share=~/data/msc-thesis-offline/share/omnitune
+online_share=/usr/share/omnitune
+
+offline_data=~/data/msc-thesis-offline/data
+online_data=~/data/msc-thesis
+
+set -eu
+
+if mount | grep $online_share >/dev/null; then
+    echo "unmounting $online_share"
+    rsync -avh $online_share/ $offline_share/
+    sudo umount $online_share
+    sudo rmdir $online_share
+fi
+
+if mount | grep $online_data >/dev/null; then
+    echo "unmounting $online_data"
+    rsync -avh $online_data/ $offline_data/
+    sudo umount $online_data
+    sudo rmdir $online_data
+fi
