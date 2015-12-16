@@ -21,6 +21,8 @@ AWK := awk
 EGREP := egrep
 GREP := grep
 MAKEFLAGS := -j$(NPROC)
+PYTHON2 := python2
+PYTHON3 := python3
 RM := rm -fv
 SED := sed
 
@@ -28,10 +30,18 @@ SED := sed
 AutotexTargets =
 BuildTargets =
 CleanFiles =
+CleanTargets =
 CTargets =
 CxxTargets =
 DistcleanFiles =
+DistcleanTargets =
 DontLint =
+InstallTargets =
+Python2SetupInstallDirs =
+Python2SetupTestDirs =
+Python3SetupInstallDirs =
+Python3SetupTestDirs =
+TestTargets =
 
 ########################################################################
 #                             Functions
@@ -82,6 +92,45 @@ define o-link
 	@echo '  LD      $1'
 	$(QUIET)$(LD) $(CxxFlags) $(LdFlags) $3 $2 -o $1
 endef
+
+# Run python setup.py test
+#
+# Arguments:
+#   $1 (str) Python executable
+#   $2 (str) Source directory
+define python-setup-test
+	@echo '  TEST    $(strip $1) $(strip $2)'
+	$(QUIET)cd $2 && $(strip $1) ./setup.py test \
+		&> $2/.$(strip $1).test.log \
+		&& $(GREP) -E '^Ran [0-9]+ tests in' \
+		$2/.$(strip $1).test.log \
+		|| sed -n -e '/ \.\.\. /,$${p}' $2/.$(strip $1).test.log | \
+		grep -v '... ok'
+endef
+
+# Run python setup.py install
+#
+# Arguments:
+#   $1 (str) Python executable
+#   $2 (str) Source directory
+define python-setup-install
+	@echo '  INSTALL $2'
+	$(QUIET)cd $2 && $(strip $1) ./setup.py install \
+		&> $2/.$(strip $1).install.log \
+		|| cat $2/.$(strip $1).install.log
+endef
+
+# Run python setup.py clean
+#
+# Arguments:
+#   $1 (str) Python executable
+#   $2 (str) Source directory
+define python-setup-clean
+	for dir in $2; do \
+		cd $$dir && $1 ./setup.py clean >/dev/null; \
+	done
+endef
+
 
 ########################################################################
 #                             Targets
@@ -171,6 +220,20 @@ $(RayTracerDir)/examples_LdFlags = -ltbb
 $(RayTracerLib): $(RayTracerObjects)
 	$(call o-link, $@, $?, -fPIC -shared)
 
+
+#
+# src/
+#
+
+# src/labm8
+Python2SetupTestDirs += $(root)/src/labm8
+Python2SetupInstallDirs += $(root)/src/labm8
+Python3SetupTestDirs += $(root)/src/labm8
+Python3SetupInstallDirs += $(root)/src/labm8
+
+# src/omnitune
+Python2SetupTestDirs += $(root)/src/omnitune
+Python2SetupInstallDirs += $(root)/src/omnitune
 
 #
 # thesis/
@@ -397,9 +460,72 @@ CleanFiles += \
 
 
 #
+# Python
+#
+Python2SetupTestLogs = $(addsuffix /.python2.test.log, \
+	$(Python2SetupTestDirs))
+
+Python2SetupInstallLogs = $(addsuffix /.python2.install.log, \
+	$(Python2SetupInstallDirs))
+
+Python3SetupTestLogs = $(addsuffix /.python3.test.log, \
+	$(Python3SetupTestDirs))
+
+Python3SetupInstallLogs = $(addsuffix /.python3.install.log, \
+	$(Python3SetupInstallDirs))
+
+$(Python2SetupTestLogs):
+	$(call python-setup-test, $(PYTHON2), $(patsubst %/, %, $(dir $@)))
+
+$(Python2SetupInstallLogs):
+	$(call python-setup-install, $(PYTHON2), $(patsubst %/, %, $(dir $@)))
+
+$(Python3SetupTestLogs):
+	$(call python-setup-test, $(PYTHON3), $(patsubst %/, %, $(dir $@)))
+
+$(Python3SetupInstallLogs):
+	$(call python-setup-install, $(PYTHON3), $(patsubst %/, %, $(dir $@)))
+
+.PHONY: \
+	$(Python2SetupInstallLogs) \
+	$(Python2SetupTestLogs) \
+	$(Python3SetupInstallLogs) \
+	$(Python3SetupTestLogs) \
+	$(NULL)
+
+TestTargets += $(Python2SetupTestLogs) $(Python3SetupTestLogs)
+InstallTargets += $(Python2SetupInstallLogs) $(Python3SetupInstalLogs)
+
+# Clean-up:
+Python2CleanDirs = $(sort $(Python2SetupTestDirs) $(Python2SetupInstallDirs))
+Python3CleanDirs = $(sort $(Python3SetupTestDirs) $(Python3SetupInstallDirs))
+
+python-clean:
+	$(QUIET)$(call python-setup-clean, $(PYTHON2), $(Python2CleanDirs))
+	$(QUIET)$(call python-setup-clean, $(PYTHON3), $(Python3CleanDirs))
+
+.PHONY: python-clean
+
+CleanTargets += python-clean
+
+CleanFiles += \
+	$(Python2SetupInstallLogs) \
+	$(Python2SetupTestLogs) \
+	$(Python3SetupInstallLogs) \
+	$(Python3SetupTestLogs) \
+	$(NULL)
+
+
+#
 # Testing
 #
-test:
+test: $(TestTargets)
+
+
+#
+# Install
+#
+install: $(InstallTargets)
 
 
 #
@@ -413,11 +539,11 @@ test:
 #
 # Tidy up
 #
-clean:
-	$(QUIET)$(RM) $(CleanFiles)
+clean: $(CleanTargets)
+	$(QUIET)$(RM) $(sort $(CleanFiles))
 
-distclean: clean
-	$(QUIET)$(RM) $(DistcleanFiles)
+distclean: clean $(DistcleanTargets)
+	$(QUIET)$(RM) $(sort $(DistcleanFiles))
 
 .PHONY: clean distclean
 
@@ -431,7 +557,9 @@ help:
 	@echo "Build targets:"
 	@echo
 	@echo "  make all"
+	@echo "  make test"
 	@echo "  make clean"
 	@echo "  make distclean"
-	@echo "  make test"
+	@echo "  sudo make install"
+
 .PHONY: help
