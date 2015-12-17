@@ -172,7 +172,7 @@ GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
 
 $(GoogleBenchmark):
 	@echo '  BUILD    $@'
-	$(QUIET)mkdir -v $(extern)/benchmark/build
+	$(QUIET)mkdir -pv $(extern)/benchmark/build
 	$(QUIET)cd $(extern)/benchmark/build \
 		&& cmake .. \
 		&& $(MAKE)
@@ -183,6 +183,28 @@ googlebenchmark-distclean:
 .PHONY: googlebenchmark-distclean
 
 DistcleanTargets += googlebenchmark-distclean
+
+
+#
+# extern/googletest
+#
+GoogleTest = $(extern)/googletest-build/libgtest.a
+GoogleTest_CxxFlags = -I$(extern)/googletest/googletest/include
+GoogleTest_LdFlags = -L$(extern)/googletest-build -lgtest
+
+$(GoogleTest):
+	@echo '  BUILD    $@'
+	$(QUIET)mkdir -pv $(extern)/googletest-build
+	$(QUIET)cd $(extern)/googletest-build \
+		&& cmake ../googletest/googletest \
+		&& $(MAKE)
+
+googletest-distclean:
+	$(QUIET)$(RM) -r $(extern)/googletest-build
+
+.PHONY: googletest-distclean
+
+DistcleanTargets += googletest-distclean
 
 
 #
