@@ -1,7 +1,7 @@
 {
-  "name": "pip-db-watchr",
-  "description": "Automatic pip-db builder",
-  "version": "0.0.1",
+  "name": "watchr",
+  "description": "Automatic source builder",
+  "version": "0.0.2",
   "author": {
     "name": "Chris Cummins",
     "email": "chrisc.101@gmail.com"
@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ChrisCummins/pip-db"
+    "url": "https://github.com/ChrisCummins/phd"
   },
   "dependencies": {
     "colors": "~0.6.2",
