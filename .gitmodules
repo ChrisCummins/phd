@@ -1,5 +1,5 @@
-[submodule "tools/googletest"]
-	path = tools/googletest
+[submodule "extern/googletest"]
+	path = extern/googletest
 	url = https://github.com/google/googletest.git
 [submodule "extern/skelcl"]
 	path = extern/skelcl
