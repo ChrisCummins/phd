@@ -336,7 +336,8 @@ CxxLintFilterFlags = \
 	readability/todo \
 	runtime/references \
 	$(NULL)
-CxxLintFilters = -$(strip $(call join-with,$(comma)-,$(strip $(CxxLintFilterFlags))))
+CxxLintFilters = -$(strip $(call join-with,$(comma)-,\
+			$(strip $(CxxLintFilterFlags))))
 CxxLintFlags = --root=include --filter=$(CxxLintFilters)
 
 # Compiler flags:
