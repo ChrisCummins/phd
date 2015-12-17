@@ -603,12 +603,12 @@ $(toolchain): $(BOOTSTRAP)
 	@echo "Bootstrapping! Go enjoy a coffee, this will take a while."
 	$(QUIET)$(BOOTSTRAP)
 
-bootstrap-clean:
+bootstrap-distclean:
 	$(QUIET)$(BOOTSTRAP) clean
 
-.PHONY: bootstrap-clean
+.PHONY: bootstrap-distclean
 
-DistcleanTargets += bootstrap-clean
+DistcleanTargets += bootstrap-distclean
 
 
 #
