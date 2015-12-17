@@ -97,7 +97,6 @@ endef
 # Arguments:
 #   $1 (str) C++ source/header
 define cpplint
-	@echo '  LINT     $1.lint'
 	$(QUIET)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
 		$(CPPLINT) $(CxxLintFlags) $1 2>&1 \
 			| grep -v '^Done processing\|^Total errors found: ' \
@@ -221,7 +220,7 @@ CppLintTargets += $(RayTracerHeaders)
 RayTracerSources = $(wildcard $(RayTracerDir)/src/*.cpp)
 RayTracerObjects = $(patsubst %.cpp, %.o, $(RayTracerSources))
 
-CleanFiles += $(RayTracerObjects) $(RayTracerLib)
+$(RayTracerObjects): $(RayTracerHeaders) $(toolchain)
 
 # Project specific flags:
 RayTracerCxxFlags = -I$(RayTracerDir)/include
@@ -233,6 +232,7 @@ $(RayTracerDir)/examples_LdFlags = -ltbb -lrt -L$(dir $(RayTracerLib))
 $(RayTracerLib): $(RayTracerObjects)
 	$(call o-link,$@,$?,-fPIC -shared)
 
+CleanFiles += $(RayTracerObjects) $(RayTracerLib)
 
 #
 # src/
@@ -260,20 +260,18 @@ AutotexTargets += $(root)/thesis/thesis.pdf
 #
 # C
 #
+CC := $(root)/tools/llvm/build/bin/clang
+
 BuildTargets += $(CTargets)
 
 CObjects = $(addsuffix .o, $(CTargets))
 CSources = $(addsuffix .c, $(CTargets))
-
-# Compilation requires bootstrapped toolchain:
-$(CObjects): $(root)/.bootstrapped
 
 CTargets: $(CObjects)
 CObjects: $(CSources)
 
 CleanFiles += $(CTargets) $(CObjects)
 
-# Compiler flags:
 CFlags = \
 	-O2 \
 	-std=c11 \
@@ -308,10 +306,6 @@ CFlags = \
 	-Wwrite-strings \
 	$(NULL)
 
-# Tools:
-CC := $(root)/tools/llvm/build/bin/clang
-
-# Rules:
 %.o: %.c
 	$(call c-compile-o,$@,$<,\
 		$($(patsubst %/,%,$@)_CFlags) \
@@ -323,7 +317,6 @@ CC := $(root)/tools/llvm/build/bin/clang
 #
 CXX := $(root)/tools/llvm/build/bin/clang++
 
-# Deduce
 CxxObjects = $(addsuffix .o, $(CxxTargets))
 CxxSources = $(addsuffix .cpp, $(CxxTargets))
 
@@ -331,9 +324,6 @@ CxxSources = $(addsuffix .cpp, $(CxxTargets))
 BuildTargets += $(CxxTargets)
 CxxTargets: $(CxxObjects)
 CxxObjects: $(CxxSources)
-
-# Compilation requires bootstrapped toolchain:
-$(CxxObjects): $(root)/.bootstrapped
 
 CleanFiles += $(CxxTargets) $(CxxObjects)
 
@@ -403,6 +393,7 @@ BuildTargets += $(CppLintFiles)
 CleanFiles += $(CppLintFiles)
 
 %.h.lint: %.h
+	@echo '  LINT     $@'
 	$(call cpplint,$<)
 
 #
@@ -413,7 +404,7 @@ LD := $(CXX)
 LdFlags =
 
 %: %.o
-	$(call o-link,$@,$^,\
+	$(call o-link,$@,$(filter %.o,$^),\
 		$($(patsubst %/,%,$@)_CxxFlags) \
 		$($(patsubst %/,%,$(dir $@))_CxxFlags) \
 		$($(patsubst %/,%,$@)_LdFlags) \
@@ -562,9 +553,19 @@ install: $(InstallTargets)
 #
 # Bootstrapping
 #
+toolchain := $(root)/.bootstrapped
+
 BOOTSTRAP := $(root)/tools/bootstrap.sh
 
-$(root)/.bootstrapped: $(BOOTSTRAP)
+# Compilers depend on boostrapping:
+$(CC): $(toolchain)
+$(CTargets) $(CObjects): $(CC)
+
+$(CXX): $(toolchain)
+$(CxxTargets): $(CXX)
+$(CxxObjects): $(CXX)
+
+$(toolchain): $(BOOTSTRAP)
 	@echo "Bootstrapping! Go enjoy a coffee, this will take a while."
 	$(QUIET)$(BOOTSTRAP)
 
