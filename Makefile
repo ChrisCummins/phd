@@ -212,6 +212,7 @@ DistcleanTargets += googletest-distclean
 #
 learn := $(root)/learn
 
+# learn/atc++/
 CxxTargets += \
 	$(learn)/atc++/benchmark-argument-type \
 	$(learn)/atc++/myvector \
@@ -221,6 +222,19 @@ $(learn)/atc++/benchmark-argument-type.o_CxxFlags = $(GoogleBenchmark_CxxFlags)
 $(learn)/atc++/benchmark-argument-type_LdFlags = $(GoogleBenchmark_LdFlags)
 $(learn)/atc++/benchmark-argument-type.o: $(GoogleBenchmark)
 
+# learn/ctci/
+CtCiTargets = \
+	$(learn)/ctci/0101-unique-chars-in-string \
+	$(NULL)
+
+CxxTargets += $(CtCiTargets)
+
+$(learn)/ctci_CxxFlags = $(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags)
+$(learn)/ctci_LdFlags = $(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
+CtCiObjects = $(addsuffix .o,$(CtCiTargets))
+$(CtCiObjects): $(GoogleBenchmark) $(GoogleTest)
+
+# learn/expert_c/
 CTargets += \
 	$(learn)/expert_c/cdecl \
 	$(learn)/expert_c/computer_dating \
