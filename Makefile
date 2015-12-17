@@ -227,7 +227,7 @@ CleanFiles += $(RayTracerObjects) $(RayTracerLib)
 RayTracerCxxFlags = -I$(RayTracerDir)/include
 $(RayTracerDir)/src_CxxFlags = $(RayTracerCxxFlags)
 $(RayTracerDir)/examples_CxxFlags = $(RayTracerCxxFlags)
-$(RayTracerDir)/examples_LdFlags = -ltbb
+$(RayTracerDir)/examples_LdFlags = -ltbb -lrt -L$(dir $(RayTracerLib))
 
 # Link library:
 $(RayTracerLib): $(RayTracerObjects)
