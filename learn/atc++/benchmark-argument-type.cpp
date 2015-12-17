@@ -4,7 +4,10 @@
 #include <iostream>
 #include <vector>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
 #include <benchmark/benchmark.h>
+#pragma GCC diagnostic pop
 
 #include "./memory.h"
 
