@@ -64,7 +64,7 @@ endef
 #   $2 (str[]) C sources
 #   $3 (str[]) Flags for compiler
 define c-compile-o
-	@echo '  CC      $1'
+	@echo '  CC       $1'
 	$(QUIET)$(CC) $(CFlags) $3 $2 -c -o $1
 endef
 
@@ -75,7 +75,7 @@ endef
 #   $2 (str[]) C++ sources
 #   $3 (str[]) Flags for compiler
 define cxx-compile-o
-	@echo '  CXX     $1'
+	@echo '  CXX      $1'
 	$(QUIET)$(CXX) $(CxxFlags) $3 $2 -c -o $1
 	$(QUIET)if [[ -z "$(filter $2, $(DontLint))" ]]; then \
 		$(CPPLINT) $(CxxLintFlags) $2 2>&1 \
@@ -91,7 +91,7 @@ endef
 #   $2 (str[]) Object files
 #   $3 (str[]) Flags for linker
 define o-link
-	@echo '  LD      $1'
+	@echo '  LD       $1'
 	$(QUIET)$(LD) $(CxxFlags) $(LdFlags) $3 $2 -o $1
 endef
 
@@ -219,7 +219,7 @@ $(RayTracerDir)/examples_LdFlags = -ltbb
 
 # Link library:
 $(RayTracerLib): $(RayTracerObjects)
-	$(call o-link, $@, $?, -fPIC -shared)
+	$(call o-link,$@,$?,-fPIC -shared)
 
 
 #
@@ -301,7 +301,7 @@ CC := $(root)/tools/llvm/build/bin/clang
 
 # Rules:
 %.o: %.c
-	$(call c-compile-o, $@, $<, \
+	$(call c-compile-o,$@,$<,\
 		$($(patsubst %/,%,$@)_CFlags) \
 		$($(patsubst %/,%,$(dir $@))_CFlags))
 
@@ -378,7 +378,7 @@ CxxFlags = \
 	$(NULL)
 
 %.o: %.cpp
-	$(call cxx-compile-o, $@, $<, \
+	$(call cxx-compile-o,$@,$<,\
 		$($(patsubst %/,%,$@)_CxxFlags) \
 		$($(patsubst %/,%,$(dir $@))_CxxFlags))
 
@@ -391,7 +391,7 @@ LD := $(CXX)
 LdFlags =
 
 %: %.o
-	$(call o-link, $@, $^, \
+	$(call o-link,$@,$^,\
 		$($(patsubst %/,%,$@)_CxxFlags) \
 		$($(patsubst %/,%,$(dir $@))_CxxFlags) \
 		$($(patsubst %/,%,$@)_LdFlags) \
@@ -484,16 +484,16 @@ Python3SetupInstallLogs = $(addsuffix /.python3.install.log, \
 	$(Python3SetupInstallDirs))
 
 $(Python2SetupTestLogs):
-	$(call python-setup-test, $(PYTHON2), $(patsubst %/, %, $(dir $@)))
+	$(call python-setup-test,$(PYTHON2),$(patsubst %/,%,$(dir $@)))
 
 $(Python2SetupInstallLogs):
-	$(call python-setup-install, $(PYTHON2), $(patsubst %/, %, $(dir $@)))
+	$(call python-setup-install,$(PYTHON2),$(patsubst %/,%,$(dir $@)))
 
 $(Python3SetupTestLogs):
-	$(call python-setup-test, $(PYTHON3), $(patsubst %/, %, $(dir $@)))
+	$(call python-setup-test, $(PYTHON3),$(patsubst %/,%,$(dir $@)))
 
 $(Python3SetupInstallLogs):
-	$(call python-setup-install, $(PYTHON3), $(patsubst %/, %, $(dir $@)))
+	$(call python-setup-install,$(PYTHON3),$(patsubst %/,%,$(dir $@)))
 
 .PHONY: \
 	$(Python2SetupInstallLogs) \
@@ -510,8 +510,8 @@ Python2CleanDirs = $(sort $(Python2SetupTestDirs) $(Python2SetupInstallDirs))
 Python3CleanDirs = $(sort $(Python3SetupTestDirs) $(Python3SetupInstallDirs))
 
 python-clean:
-	$(QUIET)$(call python-setup-clean, $(PYTHON2), $(Python2CleanDirs))
-	$(QUIET)$(call python-setup-clean, $(PYTHON3), $(Python3CleanDirs))
+	$(QUIET)$(call python-setup-clean,$(PYTHON2),$(Python2CleanDirs))
+	$(QUIET)$(call python-setup-clean,$(PYTHON3),$(Python3CleanDirs))
 
 .PHONY: python-clean
 
