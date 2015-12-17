@@ -329,8 +329,9 @@ CleanFiles += $(CxxTargets) $(CxxObjects)
 # Linter:
 CxxLintExtension = .lint
 CxxLintFilterFlags = \
-	legal \
 	build/c++11 \
+	build/include_order \
+	legal \
 	readability/streams \
 	readability/todo \
 	runtime/references \
