@@ -163,15 +163,26 @@ AutotexTargets += \
 #
 extern := $(root)/extern
 
+#
+# extern/benchmark
+#
 GoogleBenchmark = $(extern)/benchmark/build/src/libbenchmark.a
-GoogleBenchmark_LdFlags = -I$(extern)/benchmark/include
+GoogleBenchmark_CxxFlags = -I$(extern)/benchmark/include
 GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
 
 $(GoogleBenchmark):
 	@echo '  BUILD    $@'
+	$(QUIET)mkdir -v $(extern)/benchmark/build
 	$(QUIET)cd $(extern)/benchmark/build \
 		&& cmake .. \
 		&& $(MAKE)
+
+googlebenchmark-distclean:
+	$(QUIET)$(RM) -r $(extern)/benchmark/build
+
+.PHONY: googlebenchmark-distclean
+
+DistcleanTargets += googlebenchmark-distclean
 
 
 #
@@ -184,6 +195,7 @@ CxxTargets += \
 	$(learn)/atc++/myvector \
 	$(NULL)
 
+$(learn)/atc++/benchmark-argument-type.o_CxxFlags = $(GoogleBenchmark_CxxFlags)
 $(learn)/atc++/benchmark-argument-type_LdFlags = $(GoogleBenchmark_LdFlags)
 $(learn)/atc++/benchmark-argument-type.o: $(GoogleBenchmark)
 
