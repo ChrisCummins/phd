@@ -11,6 +11,7 @@ root := $(PWD)
 SHELL := /bin/bash
 NPROC := 4
 
+comma := ,
 space :=
 space +=
 
@@ -327,7 +328,14 @@ CleanFiles += $(CxxTargets) $(CxxObjects)
 
 # Linter:
 CxxLintExtension = .lint
-CxxLintFilters = -legal,-build/c++11,-readability/streams,-readability/todo
+CxxLintFilterFlags = \
+	legal \
+	build/c++11 \
+	readability/streams \
+	readability/todo \
+	runtime/references \
+	$(NULL)
+CxxLintFilters = -$(strip $(call join-with,$(comma)-,$(strip $(CxxLintFilterFlags))))
 CxxLintFlags = --root=include --filter=$(CxxLintFilters)
 
 # Compiler flags:
