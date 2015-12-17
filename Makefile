@@ -159,15 +159,37 @@ AutotexTargets += \
 
 
 #
+# extern/
+#
+extern := $(root)/extern
+
+GoogleBenchmark = $(extern)/benchmark/build/src/libbenchmark.a
+GoogleBenchmark_LdFlags = -I$(extern)/benchmark/include
+GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
+
+$(GoogleBenchmark):
+	@echo '  BUILD    $@'
+	$(QUIET)cd $(extern)/benchmark/build \
+		&& cmake .. \
+		&& $(MAKE)
+
+
+#
 # learn/
 #
+learn := $(root)/learn
+
 CxxTargets += \
-	$(root)/learn/atc++/myvector \
+	$(learn)/atc++/benchmark-argument-type \
+	$(learn)/atc++/myvector \
 	$(NULL)
 
+$(learn)/atc++/benchmark-argument-type_LdFlags = $(GoogleBenchmark_LdFlags)
+$(learn)/atc++/benchmark-argument-type.o: $(GoogleBenchmark)
+
 CTargets += \
-	$(root)/learn/expert_c/cdecl \
-	$(root)/learn/expert_c/computer_dating \
+	$(learn)/expert_c/cdecl \
+	$(learn)/expert_c/computer_dating \
 	$(NULL)
 
 
