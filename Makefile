@@ -34,6 +34,7 @@ CleanFiles =
 CleanTargets =
 CTargets =
 CxxTargets =
+CppLintTargets =
 DistcleanFiles =
 DistcleanTargets =
 DontLint =
@@ -77,11 +78,7 @@ endef
 define cxx-compile-o
 	@echo '  CXX      $1'
 	$(QUIET)$(CXX) $(CxxFlags) $3 $2 -c -o $1
-	$(QUIET)if [[ -z "$(filter $2, $(DontLint))" ]]; then \
-		$(CPPLINT) $(CxxLintFlags) $2 2>&1 \
-			| grep -v '^Done processing\|^Total errors found: ' \
-			| tee $2.lint; \
-	fi
+	$(call cpplint,$2)
 endef
 
 # Link object files to executable
@@ -93,6 +90,19 @@ endef
 define o-link
 	@echo '  LD       $1'
 	$(QUIET)$(LD) $(CxxFlags) $(LdFlags) $3 $2 -o $1
+endef
+
+# Run cpplint on input, generating a .lint file.
+#
+# Arguments:
+#   $1 (str) C++ source/header
+define cpplint
+	@echo '  LINT     $1.lint'
+	$(QUIET)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
+		$(CPPLINT) $(CxxLintFlags) $1 2>&1 \
+			| grep -v '^Done processing\|^Total errors found: ' \
+			| tee $1.lint; \
+		fi
 endef
 
 # Run python setup.py test
@@ -206,6 +216,8 @@ RayTracerHeaders = \
 	$(RayTracerDir)/include/rt/scene.h \
 	$(NULL)
 
+CppLintTargets += $(RayTracerHeaders)
+
 RayTracerSources = $(wildcard $(RayTracerDir)/src/*.cpp)
 RayTracerObjects = $(patsubst %.cpp, %.o, $(RayTracerSources))
 
@@ -309,7 +321,6 @@ CC := $(root)/tools/llvm/build/bin/clang
 #
 # C++
 #
-CPPLINT := $(root)/tools/cpplint.py
 CXX := $(root)/tools/llvm/build/bin/clang++
 
 # Deduce
@@ -325,20 +336,6 @@ CxxObjects: $(CxxSources)
 $(CxxObjects): $(root)/.bootstrapped
 
 CleanFiles += $(CxxTargets) $(CxxObjects)
-
-# Linter:
-CxxLintExtension = .lint
-CxxLintFilterFlags = \
-	build/c++11 \
-	build/include_order \
-	legal \
-	readability/streams \
-	readability/todo \
-	runtime/references \
-	$(NULL)
-CxxLintFilters = -$(strip $(call join-with,$(comma)-,\
-			$(strip $(CxxLintFilterFlags))))
-CxxLintFlags = --root=include --filter=$(CxxLintFilters)
 
 # Compiler flags:
 CxxFlags = \
@@ -382,6 +379,31 @@ CxxFlags = \
 		$($(patsubst %/,%,$@)_CxxFlags) \
 		$($(patsubst %/,%,$(dir $@))_CxxFlags))
 
+#
+# Cpplint
+#
+CPPLINT := $(root)/tools/cpplint.py
+
+CxxLintFilterFlags = \
+	build/c++11 \
+	build/header_guard \
+	build/include_order \
+	legal \
+	readability/streams \
+	readability/todo \
+	runtime/references \
+	$(NULL)
+CxxLintFilters = -$(strip $(call join-with,$(comma)-,\
+			$(strip $(CxxLintFilterFlags))))
+CxxLintFlags = --root=include --filter=$(CxxLintFilters)
+
+# Deduce:
+CppLintFiles = $(addsuffix .lint, $(CppLintTargets))
+BuildTargets += $(CppLintFiles)
+CleanFiles += $(CppLintFiles)
+
+%.h.lint: %.h
+	$(call cpplint,$<)
 
 #
 # Linker
