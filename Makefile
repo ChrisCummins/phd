@@ -566,6 +566,16 @@ distclean: clean $(DistcleanTargets)
 
 .PHONY: clean distclean
 
+#
+# Watch
+#
+WATCH := $(root)/tools/watchr/watchr.js
+
+watch:
+	$(QUIET)$(WATCH)
+
+.PHONY: watch
+
 
 #
 # All
@@ -578,6 +588,7 @@ help:
 	@echo "  make all"
 	@echo "  make test"
 	@echo "  make clean"
+	@echo "  make watch"
 	@echo "  make distclean"
 	@echo "  sudo make install"
 
