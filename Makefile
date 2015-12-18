@@ -225,6 +225,7 @@ $(learn)/atc++/benchmark-argument-type.o: $(GoogleBenchmark)
 # learn/ctci/
 CtCiTargets = \
 	$(learn)/ctci/0101-unique-chars-in-string \
+	$(learn)/ctci/0102-reverse-string \
 	$(NULL)
 
 CxxTargets += $(CtCiTargets)

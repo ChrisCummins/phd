@@ -99,6 +99,18 @@ static unsigned int seed = 0xcec;
 static const size_t lengthMin = 8;
 static const size_t lengthMax = 10 << 10;
 
+void BM_baseline(benchmark::State& state) {
+    std::string t(static_cast<size_t>(state.range_x()), 'a');
+
+    while (state.KeepRunning()) {
+        for (auto &c : t)
+            c = rand_r(&seed) % std::numeric_limits<char>::max();
+
+        benchmark::DoNotOptimize(t.data());
+    }
+}
+BENCHMARK(BM_baseline)->Range(lengthMin, lengthMax);
+
 void BM_unique1(benchmark::State& state) {
     std::string t(static_cast<size_t>(state.range_x()), 'a');
 
