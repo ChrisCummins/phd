@@ -177,12 +177,12 @@ $(GoogleBenchmark):
 		&& cmake .. \
 		&& $(MAKE)
 
-googlebenchmark-distclean:
+distclean-googlebenchmark:
 	$(QUIET)$(RM) -r $(extern)/benchmark/build
 
-.PHONY: googlebenchmark-distclean
+.PHONY: distclean-googlebenchmark
 
-DistcleanTargets += googlebenchmark-distclean
+DistcleanTargets += distclean-googlebenchmark
 
 
 #
@@ -199,12 +199,12 @@ $(GoogleTest):
 		&& cmake ../googletest/googletest \
 		&& $(MAKE)
 
-googletest-distclean:
+distclean-googletest:
 	$(QUIET)$(RM) -r $(extern)/googletest-build
 
-.PHONY: googletest-distclean
+.PHONY: distclean-googletest
 
-DistcleanTargets += googletest-distclean
+DistcleanTargets += distclean-googletest
 
 
 #
@@ -596,13 +596,13 @@ InstallTargets += $(Python2SetupInstallLogs) $(Python3SetupInstalLogs)
 Python2CleanDirs = $(sort $(Python2SetupTestDirs) $(Python2SetupInstallDirs))
 Python3CleanDirs = $(sort $(Python3SetupTestDirs) $(Python3SetupInstallDirs))
 
-python-clean:
+clean-python:
 	$(QUIET)$(call python-setup-clean,$(PYTHON2),$(Python2CleanDirs))
 	$(QUIET)$(call python-setup-clean,$(PYTHON3),$(Python3CleanDirs))
 
-.PHONY: python-clean
+.PHONY: clean-python
 
-CleanTargets += python-clean
+CleanTargets += clean-python
 
 CleanFiles += \
 	$(Python2SetupInstallLogs) \
@@ -643,12 +643,12 @@ $(toolchain): $(BOOTSTRAP)
 	@echo "Bootstrapping! Go enjoy a coffee, this will take a while."
 	$(QUIET)$(BOOTSTRAP)
 
-bootstrap-distclean:
+distclean-toolchain:
 	$(QUIET)$(BOOTSTRAP) clean
 
-.PHONY: bootstrap-distclean
+.PHONY: distclean-toolchain
 
-DistcleanTargets += bootstrap-distclean
+DistcleanTargets += distclean-toolchain
 
 
 #
