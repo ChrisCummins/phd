@@ -177,10 +177,9 @@ $(GoogleBenchmark):
 		&& cmake .. \
 		&& $(MAKE)
 
+.PHONY: distclean-googlebenchmark
 distclean-googlebenchmark:
 	$(QUIET)$(RM) -r $(extern)/benchmark/build
-
-.PHONY: distclean-googlebenchmark
 
 DistcleanTargets += distclean-googlebenchmark
 
@@ -199,10 +198,9 @@ $(GoogleTest):
 		&& cmake ../googletest/googletest \
 		&& $(MAKE)
 
+.PHONY: distclean-googletest
 distclean-googletest:
 	$(QUIET)$(RM) -r $(extern)/googletest-build
-
-.PHONY: distclean-googletest
 
 DistcleanTargets += distclean-googletest
 
@@ -496,10 +494,10 @@ AutotexDirs = $(dir $(AutotexTargets))
 AutotexDepFiles = $(addsuffix .autotex.deps, $(AutotexDirs))
 AutotexLogFiles = $(addsuffix .autotex.log, $(AutotexDirs))
 
+.PHONY: $(AutotexTargets)
 $(AutotexTargets):
 	@$(AUTOTEX) make $(patsubst %.pdf,%,$@)
 # Autotex does it's own dependency analysis, so always run it:
-.PHONY: $(AutotexTargets)
 
 # File extensions to remove in LaTeX build directories:
 LatexBuildfileExtensions = \
@@ -570,6 +568,13 @@ Python3SetupTestLogs = $(addsuffix /.python3.test.log, \
 Python3SetupInstallLogs = $(addsuffix /.python3.install.log, \
 	$(Python3SetupInstallDirs))
 
+.PHONY: \
+	$(Python2SetupInstallLogs) \
+	$(Python2SetupTestLogs) \
+	$(Python3SetupInstallLogs) \
+	$(Python3SetupTestLogs) \
+	$(NULL)
+
 $(Python2SetupTestLogs):
 	$(call python-setup-test,$(PYTHON2),$(patsubst %/,%,$(dir $@)))
 
@@ -582,13 +587,6 @@ $(Python3SetupTestLogs):
 $(Python3SetupInstallLogs):
 	$(call python-setup-install,$(PYTHON3),$(patsubst %/,%,$(dir $@)))
 
-.PHONY: \
-	$(Python2SetupInstallLogs) \
-	$(Python2SetupTestLogs) \
-	$(Python3SetupInstallLogs) \
-	$(Python3SetupTestLogs) \
-	$(NULL)
-
 TestTargets += $(Python2SetupTestLogs) $(Python3SetupTestLogs)
 InstallTargets += $(Python2SetupInstallLogs) $(Python3SetupInstalLogs)
 
@@ -596,11 +594,10 @@ InstallTargets += $(Python2SetupInstallLogs) $(Python3SetupInstalLogs)
 Python2CleanDirs = $(sort $(Python2SetupTestDirs) $(Python2SetupInstallDirs))
 Python3CleanDirs = $(sort $(Python3SetupTestDirs) $(Python3SetupInstallDirs))
 
+.PHONY: clean-python
 clean-python:
 	$(QUIET)$(call python-setup-clean,$(PYTHON2),$(Python2CleanDirs))
 	$(QUIET)$(call python-setup-clean,$(PYTHON3),$(Python3CleanDirs))
-
-.PHONY: clean-python
 
 CleanTargets += clean-python
 
@@ -643,10 +640,9 @@ $(toolchain): $(BOOTSTRAP)
 	@echo "Bootstrapping! Go enjoy a coffee, this will take a while."
 	$(QUIET)$(BOOTSTRAP)
 
+.PHONY: distclean-toolchain
 distclean-toolchain:
 	$(QUIET)$(BOOTSTRAP) clean
-
-.PHONY: distclean-toolchain
 
 DistcleanTargets += distclean-toolchain
 
@@ -665,23 +661,21 @@ $(root)/.git/hooks/pre-push: $(root)/tools/pre-push
 #
 # Tidy up
 #
+.PHONY: clean distclean
 clean: $(CleanTargets)
 	$(QUIET)$(RM) $(sort $(CleanFiles))
 
 distclean: clean $(DistcleanTargets)
 	$(QUIET)$(RM) $(sort $(DistcleanFiles))
 
-.PHONY: clean distclean
-
 #
 # Watch
 #
 WATCH := $(root)/tools/watchr/watchr.js
 
+.PHONY: watch
 watch:
 	$(QUIET)$(WATCH)
-
-.PHONY: watch
 
 
 #
@@ -689,6 +683,7 @@ watch:
 #
 all: $(BuildTargets)
 
+.PHONY: help
 help:
 	@echo "Build targets:"
 	@echo
