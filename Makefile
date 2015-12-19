@@ -228,6 +228,7 @@ CtCiTargets = \
 	$(learn)/ctci/0102-reverse-string \
 	$(learn)/ctci/0103-permutations \
 	$(learn)/ctci/0104-escape-string \
+	$(learn)/ctci/0105-string-compression \
 	$(NULL)
 
 CxxTargets += $(CtCiTargets)
