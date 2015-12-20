@@ -625,7 +625,8 @@ install: $(InstallTargets)
 #
 toolchain := $(root)/.bootstrapped
 
-BOOTSTRAP := $(root)/tools/bootstrap.sh
+LlvmSrc := $(root)/tools/llvm
+LlvmBuild := $(root)/tools/llvm/build
 
 # Compilers depend on boostrapping:
 $(CC): $(toolchain)
@@ -635,13 +636,18 @@ $(CXX): $(toolchain)
 $(CxxTargets): $(CXX)
 $(CxxObjects): $(CXX)
 
-$(toolchain): $(BOOTSTRAP)
+$(toolchain):
 	@echo "Bootstrapping! Go enjoy a coffee, this will take a while."
-	$(QUIET)$(BOOTSTRAP)
+	$(QUIET)mkdir -vp $(LlvmBuild)
+	$(QUIET)cd $(LlvmBuild) \
+		&& cmake $(LlvmSrc) -DCMAKE_BUILD_TYPE=Release \
+		&& $(MAKE)
+	$(QUIET)date > $(toolchain)
 
 .PHONY: distclean-toolchain
 distclean-toolchain:
-	$(QUIET)$(BOOTSTRAP) clean
+	$(QUIET)$(RM) $(toolchain)
+	$(QUIET)$(RM) -r $(LlvmBuild)
 
 DistcleanTargets += distclean-toolchain
 
