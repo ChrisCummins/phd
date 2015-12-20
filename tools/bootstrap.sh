@@ -33,18 +33,6 @@ clean_llvm() {
     rm -rfv $ROOT/tools/llvm/build
 }
 
-build_libcxx() {
-    mkdir -vp $ROOT/extern/libcxx/build
-    cd $ROOT/extern/libcxx/build
-    cmake .. -DLLVM_CONFIG=$ROOT/tools/llvm/build/bin/llvm-config
-    make -j$NPROC
-    cd $ROOT
-}
-
-clean_libcxx() {
-    rm -rfv $ROOT/extern/libcxx/build
-}
-
 write_bootstrap_file() {
     date > $BOOTSTRAP_FILE
 }
@@ -63,13 +51,11 @@ print_boostrapped_info() {
 
 boostrap() {
     build_llvm
-    build_libcxx
     write_bootstrap_file
 }
 
 unboostrap() {
     clean_llvm
-    clean_libcxx
     remove_bootstrap_file
 }
 

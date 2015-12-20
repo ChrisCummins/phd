@@ -404,7 +404,6 @@ CxxFlags = \
 	-O2 \
 	-std=c++14 \
 	-stdlib=libc++ \
-	-isystem $(root)/extern/libcxx/include \
 	-pedantic \
 	-Wall \
 	-Wextra \
