@@ -78,6 +78,7 @@ endef
 define cxx-compile-o
 	@echo '  CXX      $1'
 	$(QUIET)$(CXX) $(CxxFlags) $3 $2 -c -o $1
+	$(root)/tools/llvm/build/bin/clang-tidy $2 -- $(CxxFlags) $3
 	$(call cpplint,$2)
 endef
 
