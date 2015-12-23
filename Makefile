@@ -220,6 +220,14 @@ $(learn)/atc++/benchmark-argument-type.o_CxxFlags = $(GoogleBenchmark_CxxFlags)
 $(learn)/atc++/benchmark-argument-type_LdFlags = $(GoogleBenchmark_LdFlags)
 $(learn)/atc++/benchmark-argument-type.o: $(GoogleBenchmark)
 
+# learn/challenges/
+CxxTargets = $(learn)/challenges/01-int-average
+$(learn)/challenges_CxxFlags = \
+	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags)
+$(learn)/challenges_LdFlags = \
+	$(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
+$(learn)/challenges/01-int-average.o: $(GoogleBenchmark) $(GoogleTest)
+
 # learn/ctci/
 CtCiTargets = \
 	$(learn)/ctci/0101-unique-chars-in-string \
@@ -227,6 +235,7 @@ CtCiTargets = \
 	$(learn)/ctci/0103-permutations \
 	$(learn)/ctci/0104-escape-string \
 	$(learn)/ctci/0105-string-compression \
+	$(learn)/ctci/0106-matrix-zero \
 	$(NULL)
 
 CxxTargets += $(CtCiTargets)
