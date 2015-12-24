@@ -1,0 +1,42 @@
+PROBLEM
+=======
+
+I have a huge set of files that we want to sync between two
+workstations (A, B). Suppose I know which workstation I was last
+logged into (A). But I cannot figure out which files I have changed
+because somehow all time stamps are lost! So now I have a few modified
+files and many old files on A and B still has the old copies of all
+files. I do not want to transfer all files from A to B blindly because
+that would consume a lot of network bandwidth.
+
+Is there any way I could do this more efficiently?
+
+Are there any possible exceptions that might occur if I do it like
+<answer to above question>?
+
+How would I try to fix these exceptions or how would I minimize them
+at least?
+
+MY SOLUTION
+===========
+
+For each file on each workstation, compute the checksum using a high
+entropy hash algorithm. SHA512 is suitable for this, with an
+incredibly low collision probability. If the checksums differ, copy
+the file. The checksum computation can be parallelised, and can be
+performed simultaneously on both workstations.
+
+The limiting factors for this solution is the disk bandwidth and
+number of files. As the number of files grows, so does the network
+bandwidth required to compare checksums. In this case, we can instead
+recursively compute checksums on the entire contents of
+directories. Beginning at some threshold, compute the checksum of all
+files within the directory. Only if those differ do we descend into
+the directory and compare individual file/subdirectory checksums.
+
+One possible exception which may occur is in the case of new or
+deleted files on only one of the workstations. Checksum comparison
+only works for files which exist on both workstations. To begin with,
+we can compare a list of file names, and diff that in order to find
+out which files are new (must be copied) and which files have been
+removed.
