@@ -78,7 +78,7 @@ endef
 define cxx-compile-o
 	@echo '  CXX      $1'
 	$(QUIET)$(CXX) $(CxxFlags) $3 $2 -c -o $1
-	$(root)/tools/llvm/build/bin/clang-tidy $2 -- $(CxxFlags) $3
+	$(call clang-tidy,$2,$3)
 	$(call cpplint,$2)
 endef
 
@@ -103,6 +103,17 @@ define cpplint
 			| grep -v '^Done processing\|^Total errors found: ' \
 			| tee $1.lint; \
 		fi
+endef
+
+# Run clang-tidy on input.
+#
+# Arguments:
+#  $1 (str) source file
+#  $2 (str[]) Compilation flags
+define clang-tidy
+	$(QUIET)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
+		$(CLANGTIDY) $1 -- $(CxxFlags) $2; \
+	fi
 endef
 
 # Run python setup.py test
@@ -398,6 +409,7 @@ CFlags = \
 # C++
 #
 CXX := $(root)/tools/llvm/build/bin/clang++
+CLANGTIDY := $(root)/tools/llvm/build/bin/clang-tidy
 
 CxxObjects = $(addsuffix .o, $(CxxTargets))
 CxxSources = $(addsuffix .cpp, $(CxxTargets))
