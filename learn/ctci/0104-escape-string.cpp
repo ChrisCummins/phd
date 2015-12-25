@@ -54,16 +54,15 @@ TEST(Permutation, escapeSpace1) {
 
 // Benchmarks
 
-static unsigned int seed = 0xcec;
 static const size_t lengthMin = 8;
 static const size_t lengthMax = 10 << 10;
 
 void populateString(char *const t, const size_t strlen, size_t *len) {
     for (size_t i = 0; i < strlen; i++) {
-        if (!rand_r(&seed) % 4)
+        if (!arc4random() % 4)
             t[i] = ' ';
         else
-            t[i] = static_cast<char>(rand_r(&seed)
+            t[i] = static_cast<char>(arc4random()
                                      % std::numeric_limits<char>::max());
     }
 

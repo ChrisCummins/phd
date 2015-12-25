@@ -95,7 +95,6 @@ TEST(Unique, unique3) {
 
 // Benchmarks
 
-static unsigned int seed = 0xcec;
 static const size_t lengthMin = 8;
 static const size_t lengthMax = 10 << 10;
 
@@ -104,7 +103,7 @@ void BM_baseline(benchmark::State& state) {
 
     while (state.KeepRunning()) {
         for (auto &c : t)
-            c = rand_r(&seed) % std::numeric_limits<char>::max();
+            c = arc4random() % std::numeric_limits<char>::max();
 
         benchmark::DoNotOptimize(t.data());
     }
@@ -116,7 +115,7 @@ void BM_unique1(benchmark::State& state) {
 
     while (state.KeepRunning()) {
         for (auto &c : t)
-            c = rand_r(&seed) % std::numeric_limits<char>::max();
+            c = arc4random() % std::numeric_limits<char>::max();
 
         unique1(t);
         benchmark::DoNotOptimize(t.data());
@@ -129,7 +128,7 @@ void BM_unique2(benchmark::State& state) {
 
     while (state.KeepRunning()) {
         for (auto &c : t)
-            c = rand_r(&seed) % std::numeric_limits<char>::max();
+            c = arc4random() % std::numeric_limits<char>::max();
 
         unique2(t);
         benchmark::DoNotOptimize(t.data());
@@ -142,7 +141,7 @@ void BM_unique3(benchmark::State& state) {
 
     while (state.KeepRunning()) {
         for (auto &c : t)
-            c = rand_r(&seed) % std::numeric_limits<char>::max();
+            c = arc4random() % std::numeric_limits<char>::max();
 
         unique3(t);
         benchmark::DoNotOptimize(t.data());

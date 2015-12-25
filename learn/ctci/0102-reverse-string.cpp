@@ -44,7 +44,6 @@ TEST(Reverse, reverse1) {
 
 // Benchmarks
 
-static unsigned int seed = 0xcec;
 static const size_t lengthMin = 8;
 static const size_t lengthMax = 10 << 10;
 
@@ -53,7 +52,7 @@ void BM_reverse1(benchmark::State& state) {
     auto *t = new char[len];
 
     for (size_t i = 0; i < len; i++)
-        t[i] = rand_r(&seed) % std::numeric_limits<char>::max();
+        t[i] = arc4random() % std::numeric_limits<char>::max();
 
     while (state.KeepRunning()) {
         reverse1(t);
