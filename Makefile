@@ -226,6 +226,7 @@ learn := $(root)/learn
 CxxTargets += \
 	$(learn)/atc++/benchmark-argument-type \
 	$(learn)/atc++/myvector \
+	$(learn)/atc++/user-input \
 	$(NULL)
 
 $(learn)/atc++/benchmark-argument-type.o_CxxFlags = $(GoogleBenchmark_CxxFlags)
