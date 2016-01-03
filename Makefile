@@ -222,9 +222,13 @@ DistcleanTargets += distclean-googletest
 #
 learn := $(root)/learn
 
+
+#
 # learn/atc++/
+#
 CxxTargets += \
 	$(learn)/atc++/benchmark-argument-type \
+	$(learn)/atc++/constructors \
 	$(learn)/atc++/myvector \
 	$(learn)/atc++/user-input \
 	$(NULL)
@@ -233,7 +237,14 @@ $(learn)/atc++/benchmark-argument-type.o_CxxFlags = $(GoogleBenchmark_CxxFlags)
 $(learn)/atc++/benchmark-argument-type_LdFlags = $(GoogleBenchmark_LdFlags)
 $(learn)/atc++/benchmark-argument-type.o: $(GoogleBenchmark)
 
+$(learn)/atc++/constructors.o_CxxFlags = $(GoogleTest_CxxFlags)
+$(learn)/atc++/constructors_LdFlags = $(GoogleTest_LdFlags)
+$(learn)/atc++/constructors.o: $(GoogleTest)
+
+
+#
 # learn/challenges/
+#
 CxxTargets += \
 	$(learn)/challenges/01-int-average \
 	$(learn)/challenges/gray-code \
@@ -245,7 +256,10 @@ $(learn)/challenges_LdFlags = \
 	$(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
 $(learn)/challenges/01-int-average.o: $(GoogleBenchmark) $(GoogleTest)
 
+
+#
 # learn/ctci/
+#
 CtCiTargets = \
 	$(learn)/ctci/0101-unique-chars-in-string \
 	$(learn)/ctci/0102-reverse-string \
@@ -262,7 +276,10 @@ $(learn)/ctci_LdFlags = $(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
 CtCiObjects = $(addsuffix .o,$(CtCiTargets))
 $(CtCiObjects): $(GoogleBenchmark) $(GoogleTest)
 
+
+#
 # learn/expert_c/
+#
 CTargets += \
 	$(learn)/expert_c/cdecl \
 	$(learn)/expert_c/computer_dating \
