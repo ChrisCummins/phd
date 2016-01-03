@@ -234,7 +234,11 @@ $(learn)/atc++/benchmark-argument-type_LdFlags = $(GoogleBenchmark_LdFlags)
 $(learn)/atc++/benchmark-argument-type.o: $(GoogleBenchmark)
 
 # learn/challenges/
-CxxTargets += $(learn)/challenges/01-int-average
+CxxTargets += \
+	$(learn)/challenges/01-int-average \
+	$(learn)/challenges/gray-code \
+	$(NULL)
+
 $(learn)/challenges_CxxFlags = \
 	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags)
 $(learn)/challenges_LdFlags = \
