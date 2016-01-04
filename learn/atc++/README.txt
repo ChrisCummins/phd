@@ -41,5 +41,9 @@ class X {
 
 * Keyword 'override' marks an intentionally overridden method.
 
-* Return resource handlers (e.g. vector, shared_ptr, unique_ptr) by
-  value, and rely on lightweight move operations for performance.
+* Return resource handlers (e.g. vector, string, shared_ptr,
+  unique_ptr) by value, and rely on lightweight move operations for
+  performance.
+
+* regex_match() operates on a string of known size. regex_search()
+  accepts an arbitrarily long stream of data.

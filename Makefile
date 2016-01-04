@@ -230,6 +230,7 @@ CxxTargets += \
 	$(learn)/atc++/benchmark-argument-type \
 	$(learn)/atc++/constructors \
 	$(learn)/atc++/myvector \
+	$(learn)/atc++/strings \
 	$(learn)/atc++/user-input \
 	$(NULL)
 
