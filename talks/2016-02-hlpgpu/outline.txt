@@ -1,0 +1,22 @@
+TOWARDS COLLABORATIVE PERFORMANCE TUNING OF ALGORITHMIC SKELETONS
+
+* intro
+  * what are algorithmic skeletons
+  * motivating examples for performance tuning
+
+* PROBLEM: performance tuning
+  * boilerplate/ad-hoc - bad!
+  * how to apply machine learning
+  * manual data collection - bad!
+
+* SOLUTION: omnitune
+  * goal
+  * interface
+  * implementation
+
+* PROOF: experiment
+  * skelcl/skeletons intro + optimisation space
+  * autotuning
+  * different autotuning methodologies
+
+* conclusions

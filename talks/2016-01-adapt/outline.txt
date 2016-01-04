@@ -1,0 +1,22 @@
+AUTOTUNING OPENCL WORKGROUP SIZE FOR STENCIL PATTERNS
+
+* intro
+  * what are stencils
+
+* PROBLEM: stencils in opencl
+  * skelcl
+  * workgroups
+  * optimisation space
+
+* SOLUTION: autotuning methodologies
+  * features
+  * classification
+  * regression
+
+* PROOF: experiment
+  * experimental hardware
+  * optimisation space
+  * autotuning
+
+* conclusions
+  * advert for paper
