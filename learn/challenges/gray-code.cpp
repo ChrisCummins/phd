@@ -1,5 +1,6 @@
 // Implementation of Gray code
 
+#include <bitset>
 #include <cstdio>
 #include <iostream>
 
@@ -8,26 +9,20 @@
 template<size_t nbits>
 class Gray {
  public:
-  Gray() {
-    _nbits = nbits;
-    _msig = nbits - 1;
-    for (size_t i = 0; i < size(); i++)
-      _bits[i] = false;
-  }
+  Gray() : _msig(nbits - 1), _bits(0) {}
 
   Gray &operator++() {
-    int tail = _msig ? _msig - 1 : nbits - 1;
+    size_t tail = _msig ? _msig - 1 : nbits - 1;
 
     if (_bits[_msig] && _bits[tail]) {
       _bits[tail] = false;
     } else {
-      _msig = (_msig + 1) % static_cast<int>(_nbits);
+      _msig = (_msig + 1) % nbits;
 
-      if (_bits[tail]) {
+      if (_bits[tail])
         _bits[tail] = false;
-      } else {
+      else
         _bits[_msig] = true;
-      }
     }
 
     return *this;
@@ -35,30 +30,19 @@ class Gray {
 
   Gray &operator++(int n) { return ++*this; }
 
-  const bool &operator[](const size_t index) {
-    if (index >= _nbits)
-      throw std::out_of_range("index >= size()");
-    return _bits[index];
-  }
-
   const bool &operator[](const size_t index) const {
-    if (index >= _nbits)
-      throw std::out_of_range("index >= size()");
     return _bits[index];
   }
 
-  size_t size() const { return _nbits; }
+  size_t size() const { return nbits; }
 
   friend std::ostream &operator<<(std::ostream &o, const Gray &g) {
-    for (int i = g.size() - 1; i >= 0; i--)
-      o << (g[static_cast<size_t>(i)] ? '1' : '0');
-    return o;
+    return o << g._bits;
   }
 
  private:
-  size_t _nbits;
-  int _msig;
-  bool _bits[nbits];
+  size_t _msig;
+  std::bitset<nbits> _bits;
 };
 #pragma GCC diagnostic pop  // -Wpadded
 
