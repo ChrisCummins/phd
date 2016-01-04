@@ -350,6 +350,12 @@ $(RayTracerLib): $(RayTracerObjects)
 CleanFiles += $(RayTracerObjects) $(RayTracerLib)
 
 #
+# playground/sc/
+#
+CxxTargets += $(root)/playground/sc/sc
+
+
+#
 # src/
 #
 
