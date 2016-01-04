@@ -1,0 +1,31 @@
+What's the best sorting algorithm known to you?
+
+  Merge sort.
+
+What's its time complexity?
+
+  O(n log(n))
+
+Why did you chose to speak about this particular sort?
+
+  It is easily parallelisable.
+
+Do you think sorting can be performed with better time complexity than
+that? Why / Why not?
+
+  No, assuming it is a comparison-based sort. Of course, there are
+  algorithms which will perform in O(n) in the best case,
+  e.g. insertion sort.
+
+Suppose we make a variant of merge sort (that would no more sort
+anything) like this: partition the list into 3 parts instead of 2. And
+then choose any 2 parts of these 3 and recursively apply our
+algorithm.
+
+What would it's time complexity be?
+
+  TODO.
+
+Can you briefly outline a proof?
+
+  TODO.
