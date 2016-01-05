@@ -34,7 +34,7 @@ CleanFiles =
 CleanTargets =
 CTargets =
 CxxTargets =
-CppLintTargets =
+CppLintSources =
 DistcleanFiles =
 DistcleanTargets =
 DontLint =
@@ -357,7 +357,7 @@ RayTracerHeaders = \
 	$(RayTracerDir)/include/rt/scene.h \
 	$(NULL)
 
-CppLintTargets += $(RayTracerHeaders)
+CppLintSources += $(RayTracerHeaders)
 
 RayTracerSources = $(wildcard $(RayTracerDir)/src/*.cpp)
 RayTracerObjects = $(patsubst %.cpp, %.o, $(RayTracerSources))
@@ -536,7 +536,7 @@ CxxLintFilters = -$(strip $(call join-with,$(comma)-,\
 CxxLintFlags = --root=include --filter=$(CxxLintFilters)
 
 # Deduce:
-CppLintFiles = $(addsuffix .lint, $(CppLintTargets))
+CppLintFiles = $(addsuffix .lint, $(CppLintSources))
 BuildTargets += $(CppLintFiles)
 CleanFiles += $(CppLintFiles)
 
