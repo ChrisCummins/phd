@@ -232,6 +232,8 @@ StlHeaders = \
 	$(lab)/stl/include/ustl/vector \
 	$(NULL)
 
+DontLint += $(lab)/stl/tests.cpp
+
 $(lab)/stl/tests.o: $(StlHeaders)
 $(lab)/stl/tests.o_CxxFlags = \
 	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags) -I$(lab)/stl/include
@@ -536,9 +538,9 @@ CxxLintFilters = -$(strip $(call join-with,$(comma)-,\
 CxxLintFlags = --root=include --filter=$(CxxLintFilters)
 
 # Deduce:
-CppLintFiles = $(addsuffix .lint, $(CppLintSources))
-BuildTargets += $(CppLintFiles)
-CleanFiles += $(CppLintFiles)
+CppLintTargets = $(addsuffix .lint, $(CppLintSources))
+BuildTargets += $(CppLintTargets)
+CleanFiles += $(CppLintTargets)
 
 %.h.lint: %.h
 	@echo '  LINT     $@'
