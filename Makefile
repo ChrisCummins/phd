@@ -229,6 +229,7 @@ CxxTargets += $(lab)/stl/tests
 
 StlHeaders = \
 	$(lab)/stl/include/ustl/array \
+	$(lab)/stl/include/ustl/vector \
 	$(NULL)
 
 $(lab)/stl/tests.o: $(StlHeaders)

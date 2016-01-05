@@ -6,8 +6,10 @@
 #pragma GCC diagnostic pop
 
 #include <array>
-
 #include <ustl/array>
+
+#include <vector>
+#include <ustl/vector>
 
 // Array tests
 
@@ -127,6 +129,115 @@ TEST(array, data) {
   ASSERT_EQ(2, d[1]);
   ASSERT_EQ(3, d[2]);
 }
+
+// Vector tests
+
+TEST(vector, size) {
+  ustl::vector<int> a;
+  ustl::vector<int> b(5);
+  ustl::vector<double> c(6, 3.5f);
+  ustl::vector<char> d = { 'a', 'b', 'c' };
+
+  ASSERT_EQ(0u, a.size());
+  ASSERT_EQ(5u, b.size());
+  ASSERT_EQ(6u, c.size());
+  ASSERT_EQ(3u, d.size());
+}
+
+TEST(vector, capacity) {
+  ustl::vector<int> a;
+  ustl::vector<int> b(5);
+  ustl::vector<double> c(6, 3.5f);
+  ustl::vector<char> d = { 'a', 'b', 'c' };
+
+  ASSERT_TRUE(a.capacity() >= a.size());
+  ASSERT_TRUE(b.capacity() >= b.size());
+  ASSERT_TRUE(c.capacity() >= c.size());
+  ASSERT_TRUE(d.capacity() >= d.size());
+}
+
+TEST(vector, max_size) {
+  ustl::vector<int> a;
+  ustl::vector<int> b(5);
+  ustl::vector<double> c(6, 3.5f);
+  ustl::vector<char> d = { 'a', 'b', 'c' };
+
+  ASSERT_TRUE(a.size() < a.max_size());
+  ASSERT_TRUE(b.size() < b.max_size());
+  ASSERT_TRUE(c.size() < c.max_size());
+
+  ASSERT_EQ(a.max_size(), b.max_size());
+}
+
+TEST(vector, constructorValues) {
+  ustl::vector<int> a(3);
+  ustl::vector<double> b(3, 3.5f);
+  ustl::vector<char> c = { 'a', 'b', 'c' };
+
+  for (size_t i = 0; i < 3; i++)
+    ASSERT_EQ(0, a[i]);
+
+  for (size_t i = 0; i < 3; i++)
+    ASSERT_EQ(3.5f, b[i]);
+
+  ASSERT_EQ('a', c[0]);
+  ASSERT_EQ('b', c[1]);
+  ASSERT_EQ('c', c[2]);
+}
+
+TEST(vector, front) {
+  ustl::vector<int> a(3);
+  ustl::vector<double> b(3, 3.5f);
+  ustl::vector<char> c = { 'a', 'b', 'c' };
+
+  ASSERT_EQ(0, a.front());
+  ASSERT_EQ(3.5, b.front());
+  ASSERT_EQ('a', c.front());
+}
+
+TEST(vector, back) {
+  ustl::vector<int> a(3);
+  ustl::vector<double> b(3, 3.5f);
+  ustl::vector<char> c = { 'a', 'b', 'c' };
+
+  ASSERT_EQ(0, a.back());
+  ASSERT_EQ(3.5, b.back());
+  ASSERT_EQ('c', c.back());
+}
+
+TEST(vector, at) {
+  ustl::vector<int> a(3);
+  ustl::vector<double> b(3, 3.5f);
+  ustl::vector<char> c = { 'a', 'b', 'c' };
+
+  for (size_t i = 0; i < 3; i++) {
+    ASSERT_EQ(0, a.at(i));
+    ASSERT_EQ(a[i], a.at(i));
+  }
+  try {
+    a.at(3);
+    FAIL();
+  } catch (std::out_of_range &e) {}
+
+  for (size_t i = 0; i < 3; i++) {
+    ASSERT_EQ(3.5f, b.at(i));
+    ASSERT_EQ(b[i], b.at(i));
+  }
+  try {
+    b.at(3);
+    FAIL();
+  } catch (std::out_of_range &e) {}
+
+  ASSERT_EQ('a', c.at(0));
+  ASSERT_EQ('b', c.at(1));
+  ASSERT_EQ('c', c.at(2));
+  try {
+    c.at(3);
+    FAIL();
+  } catch (std::out_of_range &e) {}
+}
+
+
 
 // Benchmarks
 
