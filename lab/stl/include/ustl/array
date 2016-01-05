@@ -1,0 +1,89 @@
+// -*-c++-*-
+//
+// array class.
+//
+// Differences between ustl::array and std::array:
+//
+//
+#ifndef __USTL_ARRAY__
+#define __USTL_ARRAY__
+
+namespace ustl {
+
+
+template<typename T, size_t _size>
+class array {
+ public:
+  constexpr size_t size() noexcept { return _size; }
+  constexpr size_t max_size() noexcept { return size(); }
+  constexpr bool empty() noexcept { return !size(); }
+
+  T &operator[](const size_t index) {
+    return _data[index];
+  }
+
+  const T &operator[](const size_t index) const {
+    return _data[index];
+  }
+
+  T &at(const size_t index) {
+    if (index >= size())
+      throw std::out_of_range("ustl::array[]");
+    else
+      return this->operator[](index);
+  }
+
+  const T &at(const size_t index) const {
+    if (index >= size())
+      throw std::out_of_range("ustl::array[]");
+    else
+      return this->operator[](index);
+  }
+
+  T &front() { return _data[0]; }
+  const T &front() const { return _data[0]; }
+  T &back() { return _data[size() - 1]; }
+  const T &back() const { return _data[size() - 1]; }
+  T *data() noexcept { return _data; }
+  const T *data() const noexcept { return _data; }
+
+ private:
+  T _data[_size];
+};
+
+
+// Partial-specialisation where size = 0.
+template<typename T>
+class array<T, 0> {
+ public:
+  constexpr size_t size() noexcept { return 0; }
+  constexpr size_t max_size() noexcept { return size(); }
+  constexpr bool empty() noexcept { return !size(); }
+
+  T &operator[](const size_t index) { return _null; }
+
+  const T &operator[](const size_t index) const { return _null; }
+
+  T &at(const size_t index) {
+    throw std::out_of_range("ustl::array[]");
+  }
+
+  const T &at(const size_t index) const {
+    throw std::out_of_range("ustl::array[]");
+  }
+
+  T &front() { return _null; }
+  const T &front() const { return _null; }
+  T &back() { return _null; }
+  const T &back() const { return _null; }
+  T *data() noexcept { return nullptr; }
+  const T *data() const noexcept { return nullptr; }
+
+ private:
+  T _null;
+};
+
+
+}  // namespace
+
+#endif  // __USTL_ARRAY__

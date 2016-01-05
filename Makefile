@@ -218,6 +218,28 @@ DistcleanTargets += distclean-googletest
 
 
 #
+# lab/
+#
+lab := $(root)/lab
+
+#
+# lab/stl/
+#
+CxxTargets += $(lab)/stl/tests
+
+StlHeaders = \
+	$(lab)/stl/include/ustl/array \
+	$(NULL)
+
+$(lab)/stl/tests.o: $(StlHeaders)
+$(lab)/stl/tests.o_CxxFlags = \
+	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags) -I$(lab)/stl/include
+$(lab)/stl/tests_LdFlags = \
+	$(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
+$(lab)/stl/tests.o: $(GoogleBenchmark) $(GoogleTest)
+
+
+#
 # learn/
 #
 learn := $(root)/learn
