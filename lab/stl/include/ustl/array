@@ -8,32 +8,34 @@
 #ifndef __USTL_ARRAY__
 #define __USTL_ARRAY__
 
+#include <cstddef>
+
 namespace ustl {
 
 
-template<typename T, size_t _size>
+template<typename T, std::size_t _size>
 class array {
  public:
-  constexpr size_t size() noexcept { return _size; }
-  constexpr size_t max_size() noexcept { return size(); }
+  constexpr std::size_t size() noexcept { return _size; }
+  constexpr std::size_t max_size() noexcept { return size(); }
   constexpr bool empty() noexcept { return !size(); }
 
-  T &operator[](const size_t index) {
+  T &operator[](const std::size_t index) {
     return _data[index];
   }
 
-  const T &operator[](const size_t index) const {
+  const T &operator[](const std::size_t index) const {
     return _data[index];
   }
 
-  T &at(const size_t index) {
+  T &at(const std::size_t index) {
     if (index >= size())
       throw std::out_of_range("ustl::array[]");
     else
       return this->operator[](index);
   }
 
-  const T &at(const size_t index) const {
+  const T &at(const std::size_t index) const {
     if (index >= size())
       throw std::out_of_range("ustl::array[]");
     else
@@ -56,19 +58,19 @@ class array {
 template<typename T>
 class array<T, 0> {
  public:
-  constexpr size_t size() noexcept { return 0; }
-  constexpr size_t max_size() noexcept { return size(); }
+  constexpr std::size_t size() noexcept { return 0; }
+  constexpr std::size_t max_size() noexcept { return size(); }
   constexpr bool empty() noexcept { return !size(); }
 
-  T &operator[](const size_t index) { return _null; }
+  T &operator[](const std::size_t index) { return _null; }
 
-  const T &operator[](const size_t index) const { return _null; }
+  const T &operator[](const std::size_t index) const { return _null; }
 
-  T &at(const size_t index) {
+  T &at(const std::size_t index) {
     throw std::out_of_range("ustl::array[]");
   }
 
-  const T &at(const size_t index) const {
+  const T &at(const std::size_t index) const {
     throw std::out_of_range("ustl::array[]");
   }
 
@@ -84,6 +86,6 @@ class array<T, 0> {
 };
 
 
-}  // namespace
+}  // namespace ustl
 
 #endif  // __USTL_ARRAY__

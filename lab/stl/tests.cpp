@@ -237,6 +237,52 @@ TEST(vector, at) {
   } catch (std::out_of_range &e) {}
 }
 
+TEST(vector, resize) {
+  ustl::vector<int> a{1, 2, 3, 4, 5};
+
+  size_t orig_cap = a.capacity();
+
+  // Resize down. This won't reduce the capacity.
+  a.resize(3);
+  ASSERT_EQ(3u, a.size());
+  ASSERT_EQ(orig_cap, a.capacity());
+
+
+  a.push_back(4);
+  ASSERT_EQ(4u, a.size());
+
+  // Resize up.
+  a.resize(5);
+  a[4] = 11;
+
+  ASSERT_EQ(4, a[3]);
+  ASSERT_EQ(11, a[4]);
+
+  // Resize and fill.
+  a.resize(10, -1);
+  ASSERT_EQ(-1, a.back());
+}
+
+TEST(vector, shrink_to_fit) {
+  ustl::vector<int> a(1000);
+  const size_t original_capacity = a.capacity();
+
+  a[2] = 10;
+
+  a.shrink_to_fit();
+  ASSERT_EQ(original_capacity, a.capacity());
+
+  a.resize(3);
+  ASSERT_EQ(10, a[2]);
+  ASSERT_TRUE(a.capacity() > a.size());
+  a.shrink_to_fit();
+
+  // Check that value remains unchanged.
+  ASSERT_EQ(10, a[2]);
+
+  // Check that capacity has shrunk.
+  ASSERT_TRUE(a.capacity() < original_capacity);
+}
 
 
 // Benchmarks
