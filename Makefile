@@ -164,7 +164,7 @@ endef
 AutotexTargets += \
 	$(root)/docs/2015-msc-thesis/thesis.pdf \
 	$(root)/docs/2015-progression-review/document.pdf \
-	$(root)/docs/wip-adapt/adapt.pdf \
+	$(root)/docs/2016-adapt/adapt.pdf \
 	$(root)/docs/wip-hlpgpu/hlpgpu.pdf \
 	$(root)/docs/wip-outline/outline.pdf \
 	$(NULL)
