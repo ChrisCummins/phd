@@ -228,6 +228,7 @@ lab := $(root)/lab
 CxxTargets += $(lab)/stl/tests
 
 StlHeaders = \
+	$(lab)/stl/include/ustl/algorithm \
 	$(lab)/stl/include/ustl/array \
 	$(lab)/stl/include/ustl/vector \
 	$(NULL)

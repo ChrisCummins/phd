@@ -5,11 +5,30 @@
 #include <gtest/gtest.h>
 #pragma GCC diagnostic pop
 
+#include <algorithm>
+#include <ustl/algorithm>
+
 #include <array>
 #include <ustl/array>
 
 #include <vector>
 #include <ustl/vector>
+
+// Algorithm tests
+
+TEST(algorithm, sort) {
+  ustl::vector<int> a{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+  std::vector<int>  b{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+
+  ustl::sort(a.begin(), a.end());
+  std::sort(b.begin(), b.end());
+
+  ASSERT_EQ(a[0], b[0]);
+  for (size_t i = 1; i < a.size(); i++) {
+    ASSERT_TRUE(a[i] >= a[i-1]);
+    ASSERT_EQ(a[i], b[i]);
+  }
+}
 
 // Array tests
 

@@ -17,6 +17,7 @@ class vector {
   // Typedefs:
   using value_type = T;
   using allocator_type = Alloc;
+  using iterator = T*;
 
   // Default constructors:
   vector() : _buffer(nullptr), _size(0), _capacity(0),
@@ -76,6 +77,9 @@ class vector {
   // Initializer list assignment:
   vector& operator=(std::initializer_list<value_type> l);
 
+  // Iterators
+  iterator begin() const { return _buffer; }
+  iterator end() const { return &_buffer[size()]; }
 
   // operator[]
   value_type& operator[](const std::size_t index) {
@@ -208,6 +212,13 @@ class vector {
 
   // get_allocator()
   allocator_type get_allocator() const noexcept { return _alloc; }
+
+  // NOT IN THE SPEC: stream output formatter
+  friend std::ostream& operator<<(std::ostream &o, const vector &v) {
+    for (auto &val : v)
+      o << val << ' ';
+    return o;
+  }
 
  private:
   value_type* _buffer;
