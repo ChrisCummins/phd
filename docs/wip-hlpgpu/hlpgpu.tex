@@ -442,23 +442,23 @@ observations, and refuse suggested parameters:
 %
 \begin{itemize}
 \item
-  \textsc{Request}$(x : \text{\fix{feature vector}}) \to p :
-  \text{\fix{param}}$\\*Given
+  \textsc{Request}$(x : \text{feature vector}) \to p :
+  \text{param}$\\*Given
   explanatory variables $x$, request the parameter values $p$ which
   are expected to provide maximum performance.
 \item
-  \textsc{RequestTraining}$(x : \text{\fix{feature vector}}) \to p :
-  \text{\fix{param}}$\\*Given
+  \textsc{RequestTraining}$(x : \text{feature vector}) \to p :
+  \text{param}$\\*Given
   explanatory variables $x$, allow the server to select parameter
   values $p$ for evaluating their fitness.
 \item
-  \textsc{Submit}$(x : \text{\fix{feature vector}}, p :
-  \text{\fix{param}}, y : \text{\fix{fitness}})$\\*Submit
+  \textsc{Submit}$(x : \text{feature vector}, p :
+  \text{param}, y : \text{fitness})$\\*Submit
   an observed measurement of fitness $y$ for parameter values $p$,
   given explanatory variables $x$.
 \item
-  \textsc{Refuse}$(x : \text{\fix{feature vector}}, p :
-  \text{\fix{param}})$\\*Refuse
+  \textsc{Refuse}$(x : \text{feature vector}, p :
+  \text{param})$\\*Refuse
   parameter values $p$, given a set of explanatory variables $x$. Once
   refused, those parameters are blacklisted and will not be returned
   by any subsequent calls to \textsc{Request()} or
@@ -476,14 +476,14 @@ communication pattern, supported by two methods:
 %
 \begin{itemize}
 \item
-  \textsc{Push}$(\bf{x} : \text{\fix{feature vectors}}, \bf{p} :
-  \text{\fix{params}}, \bf{y} :
-  \text{\fix{fitnesses}})$\\*Asynchronously
+  \textsc{Push}$(\bf{x} : \text{feature vectors}, \bf{p} :
+  \text{params}, \bf{y} :
+  \text{fitnesses})$\\*Asynchronously
   submit training data as three lists: explanatory variables $\bf{x}$,
   parameter values $\bf{p}$, and observed outcomes $\bf{y}$.
 \item
-  \textsc{Pull}$() \to (\bf{x} : \text{\fix{feature vectors}}, \bf{p}
-  : \text{\fix{params}}, \bf{y} : \text{\fix{fitnesses}})$\\*Request
+  \textsc{Pull}$() \to (\bf{x} : \text{feature vectors}, \bf{p}
+  : \text{params}, \bf{y} : \text{fitnesses})$\\*Request
   training data as three lists: explanatory variables $\bf{x}$,
   parameter values $\bf{p}$, and observed outcomes $\bf{y}$.
 \end{itemize}
@@ -732,15 +732,15 @@ variables encode the device type (e.g. CPU or GPU, integrated or
 external, connection bus), properties about the host (e.g.\ system
 memory, maximum clock frequency), and numerous properties about the
 execution device (e.g.\ number of compute units, local memory size,
-global caches). Program variables include \fix{instruction densities
-  for each instruction type}, the total number of basic blocks, and
-the total instruction count. They are extracted using static
-instruction count passes over an LLVM IR compiled version of the user
-stencil implementation. Compilation to bitcode is a relatively
-expensive task, so lookup tables are used to cache repeated uses of
-the same stencil codes, identified by a checksum of the source
-code. Dataset variables include \fix{the data types (input and
-  output), and dimensions of the input matrix and stencil region}.
+global caches). Program variables include instruction densities for
+each instruction type, the total number of basic blocks, and the total
+instruction count. They are extracted using static instruction count
+passes over an LLVM IR compiled version of the user stencil
+implementation. Compilation to bitcode is a relatively expensive task,
+so lookup tables are used to cache repeated uses of the same stencil
+codes, identified by a checksum of the source code. Dataset variables
+include the data types (input and output), and dimensions of the input
+matrix and stencil region.
 
 To collect training data, we run multiple iterations of a stencil
 program to enumerate the workgroup size optimization space, and use
@@ -895,23 +895,23 @@ workgroup sizes, and the steps necessary to obtain repeatable results.
 A full enumeration of the workgroup size optimization spaces was
 performed across synthetically generated benchmarks and four reference
 stencil benchmarks: Canny Edge Detection, Conway's Game of Life, Heat
-Equation, and Gaussian Blur\fix{~\cite{Steuwer2011}}. Performance data
-was collected from 7 experimental platforms, comprising 4 GPU devices:
-AMD Tahiti 7970, Nvidia GTX 590, Nvidia GTX 690, Nvidia GTX TITAN; and
-3 CPU devices: Intel i5-2430M, Intel i5-4570, i7-3820. Each platform
-was unloaded, frequency governors disabled, and benchmark processes
-set to the highest priority available to the task scheduler. Datasets
-and programs were stored in an in-memory file system. For each
-program, dataset sizes of size $512\times512$, $1024\times1024$,
+Equation, and Gaussian Blur~\cite{Steuwer2011}. Performance data was
+collected from 7 experimental platforms, comprising 4 GPU devices: AMD
+Tahiti 7970, Nvidia GTX 590, Nvidia GTX 690, Nvidia GTX TITAN; and 3
+CPU devices: Intel i5-2430M, Intel i5-4570, i7-3820. Each platform was
+unloaded, frequency governors disabled, and benchmark processes set to
+the highest priority available to the task scheduler. Datasets and
+programs were stored in an in-memory file system. For each program,
+dataset sizes of size $512\times512$, $1024\times1024$,
 $2048\times2048$, and $4096\times4096$ were used. A minimum of 30
 samples were recorded for each scenario and workgroup size.
 
 Program behavior is validated by comparing program output against a
 gold standard output collected by executing each of the real-world
-benchmarks programs using the \emph{baseline} workgroup size
-\fix{(defined below)}. The output of real-world benchmarks with other
-workgroup sizes is compared to this gold standard output to test for
-correct program execution.
+benchmarks programs using the \emph{baseline} workgroup size (defined
+below). The output of real-world benchmarks with other workgroup sizes
+is compared to this gold standard output to test for correct program
+execution.
 
 
 \section{Evaluation}\label{sec:evaluation}
@@ -1011,7 +1011,7 @@ against runtimes for each of three parameters:
   $0 \le x \le 1$, so this can be referred to as \emph{performance}.
 \item \emph{Baseline} --- The \emph{baseline} parameter is the
   workgroup size which provides the best overall performance while
-  being legal for all scenarios. \fix{Such a baseline value represents the
+  being legal for all scenarios. Such a baseline value represents the
   \emph{best} possible performance which can be achieved using a
   single, statically chosen workgroup size. By defining
   $W_{safe} \in W$ as the intersection of legal workgroup sizes, the
@@ -1022,7 +1022,7 @@ against runtimes for each of three parameters:
     \bar{w} &= \argmax_{w \in W_{safe}} \bar{p}(w)
   \end{align}
   %
-  } For our experimental data, we find this value to be
+  For our experimental data, we find this value to be
   $w_{(4 \times 4)}$.
   %
 \item \emph{Human expert} --- In the original implementation of the
@@ -1254,6 +1254,7 @@ algorithms.
 \caption{}
 \label{fig:class-hmaps-2}
 \end{subfigure}
+\vspace{-.5em}
 % \\
 % \begin{subfigure}[t]{0.48\columnwidth}
 % \centering
@@ -1270,8 +1271,8 @@ algorithms.
 % \label{fig:class-hmaps-4}
 % \end{subfigure}
 \caption{%
-  Heatmaps of autotuner predictions for a subset of the \fix{explored}
-  optimization space \fix{($w_c < 80, w_r < 80$)} using two different
+  Heatmaps of autotuner predictions for a subset of the explored
+  optimization space ($w_c < 80, w_r < 80$) using two different
   classifiers. The shading in each cells indicates if it is predicted
   less frequently (blue), ore more frequently (red) than it is
   optimal. Color gradients are normalized across plots.
@@ -1337,9 +1338,9 @@ memory hierarchy, using only global memory. In~\cite{Lutz2013},
 \citeauthor{Lutz2013} demonstrate that optimal swapping strategy for
 multi-GPU stencils depends on the size of the grid, the number of
 partitions, and the connection mechanism (e.g.\ PCI
-express). \fix{Autotuning for algorithmic skeletons is performed using
-  Nearest Neighbor classification and Principle Component Analysis
-  in~\cite{Collins2013}}.
+express). Autotuning for algorithmic skeletons is performed using
+Nearest Neighbor classification and Principle Component Analysis
+in~\cite{Collins2013}.
 
 OpenTuner is a general purpose toolkit for autotuning which uses
 ensemble search techniques to reduce the cost of exploring an
@@ -1386,13 +1387,13 @@ requiring a knowledge of the kernel, dataset, and underlying
 architecture. The implemented autotuner achieves 92\% of the maximum
 performance, and provides performance portability, even achieving an
 average of 85\% of the maximum performance when deployed on a device
-for which it has no prior training data. \fix{By performing autotuning
-  at the skeletal level, the system is able to exploit underlying
-  similarities between pattern implementations which are not shared in
-  unstructured code}. In future work we will explore methods for
+for which it has no prior training data. By performing autotuning at
+the skeletal level, the system is able to exploit underlying
+similarities between pattern implementations which are not shared in
+unstructured code. In future work we will explore methods for
 collaborative exploration of optimization spaces in parallel across
-multiple cooperating devices, \fix{and targeting multiple parameters
-  simultaneously}.
+multiple cooperating devices, and targeting multiple parameters
+simultaneously.
 
 \acks
 
