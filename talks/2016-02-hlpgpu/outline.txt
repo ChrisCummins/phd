@@ -21,4 +21,10 @@ TOWARDS COLLABORATIVE PERFORMANCE TUNING OF ALGORITHMIC SKELETONS
   * different autotuning methodologies
 
 * conclusions
+
+  * high level must compete with low level
+  * that means automating the tuning which is typically done by hand
+  * we provide a framework for doing this
+  * the framework allows shared data
+
   * advert for paper
