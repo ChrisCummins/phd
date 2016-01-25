@@ -1,7 +1,0 @@
-	Description	Type	Cost
-$\bm{c}$	Kernel compilation times	Host	Fixed
-$\bm{p}$	Skeleton prepare times	Host	Fixed
-$\bm{u}$	Host $\rightarrow$ Device transfers	Device	Fixed
-$\bm{k}$	Kernel execution times	Device	Iterative
-$\bm{d}$	Device $\rightarrow$ Host transfers	Device	Fixed
-$\bm{s}$	Devices $\leftrightarrow$ Host (sync) transfers	Host	Iterative

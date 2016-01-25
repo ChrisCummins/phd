@@ -1,0 +1,47 @@
+// -*-c++-*-
+//
+// algorithm
+//
+#ifndef __USTL_ALGORITHM__
+#define __USTL_ALGORITHM__
+
+#include <cstddef>
+
+namespace ustl {
+
+template<typename RandomAccessIterator>
+class DefaultComparison {
+  bool operator()(const RandomAccessIterator a, const RandomAccessIterator b) {
+    return *a <= *b;
+  }
+};
+
+template<typename RandomAccessIterator>
+void sort(RandomAccessIterator first, RandomAccessIterator last) {
+  sort(first, last, DefaultComparison<RandomAccessIterator>());
+}
+
+template<typename RandomAccessIterator, typename Compare>
+void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
+  /*
+   * Naive implementation: bubble sort.
+   */
+  bool changed;
+
+  do {
+    changed = false;
+
+    for (RandomAccessIterator i = first + 1; i != last; i++) {
+      if (*i < *(i-1)) {
+        auto tmp = *(i-1);
+        *(i-1) = *i;
+        *i = tmp;
+        changed = true;
+      }
+    }
+  } while (changed);
+}
+
+}  // namespace ustl
+
+#endif  // __USTL_ALGORITHM__

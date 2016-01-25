@@ -1,0 +1,45 @@
+A New File System
+=================
+
+You are given the responsibility of developing a new file system for
+your company. Your supervisor is a non-technical person and so you
+cannot ask any technical questions to him. Instead, you would have to
+ask him non-technical questions that you expect he can answer; and
+then decide yourself the technical parameters based on his answers.
+
+What technical factors should you consider before starting to develop
+the FS?
+
+What decisions do you have to take and how would you extract the
+necessary features to be present in the FS, from the non-tech
+supervisor?
+
+
+MY SOLUTION
+===========
+
+Questions:
+
+1) What types of data are typically stored (e.g. images, audio).
+
+2) How many files do you have? / What is the size of the data?
+
+3) Do people need to share access to the same files?
+
+4) Do you need to record modifications to files? (e.g. version
+control).
+
+5) Does the entire filesystem need to be encrypted?
+
+6) Do multiple people simultaneously work on the same files?
+
+7) How often do your computers fail?
+
+8) Do people access files remotely?
+
+Technical factors:
+
+* File access frequency, and ratio of reads to writes.
+* Write concurrency.
+* Disk corruption prevention.
+* Properties of physical storage medium, e.g. block size.

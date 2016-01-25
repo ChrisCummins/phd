@@ -1,0 +1,30 @@
+TOWARDS COLLABORATIVE PERFORMANCE TUNING OF ALGORITHMIC SKELETONS
+
+* intro
+  * motivating examples from SkelCL
+  * what is autotuning - iterative compilation
+  * how does it relate to GPU programming?
+
+* PROBLEM: making the square autotuning peg fit the round GPGPU hole
+  * boilerplate/ad-hoc iterative compilation - bad! time consuming
+  * "smart" approach - machine learning
+  * collecting training data - hard! error prone / too domain specific / time
+
+* SOLUTION: a framework for autotuning skeletons
+  * goal - allow collaborative performance tuning - sharing training data
+  * interface - abstract the tedium of autotuning, versatile API
+  * implementation - system-agnostic tools, portable interface, reusable parts
+
+* PROOF: OmniTune
+  * skelcl/skeletons intro + optimisation space
+  * autotuning
+  * different autotuning methodologies
+
+* conclusions
+
+  * high level must compete with low level
+  * that means automating the tuning which is typically done by hand
+  * we provide a framework for doing this
+  * the framework allows shared data
+
+  * advert for paper

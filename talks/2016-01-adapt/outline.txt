@@ -1,0 +1,33 @@
+AUTOTUNING OPENCL WORKGROUP SIZE FOR STENCIL PATTERNS
+
+* intro
+  * Introducing Stencils
+  * Stencil patterns
+  * Mapping stencils to OpenCL
+  * OpenCL workgroup size
+
+* PROBLEM: picking the right workgroup size is hard!
+  *
+  * skelcl
+  * workgroups
+  * optimisation space
+
+* SOLUTION: autotuning methodologies
+  * features
+  * classification
+  * regression
+
+* PROOF: experiment
+  * experimental hardware
+  * optimisation space
+  * autotuning
+
+* conclusions
+  * advert for paper
+
+
+questions:
+
+* What features do we need?
+* What programs do we use for training?
+* What algorithm do we use for predictions?

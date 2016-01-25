@@ -1,0 +1,1008 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Document and Layout %%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Fix for multiple "No room for a new \dimen" errors.
+%
+% See: http://tex.stackexchange.com/questions/38607/no-room-for-a-new-dimen
+%
+\usepackage{etex}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[margin=1.12in]{geometry}
+
+% Fix for "'babel/polyglossia' detected but 'csquotes' missing"
+% warning. NOTE: Include after inputenc.
+%
+\usepackage{csquotes}
+
+% Make internal macro definitions accessible,
+% e.g. \@title, \@date \@author.
+\makeatletter
+
+% Multi-column support.
+\usepackage{multicol}
+
+% A useful package which includes macros like \ifdef{}{}{}:
+%
+\usepackage{etoolbox}
+
+% Uncomment the following line to remove column separation:
+%
+%\setlength{\columnsep}{5mm}
+
+% Allow user-defined warning and error filters.
+%
+\usepackage{silence}
+
+
+%%%%%%%%%%%%%%%%%%%%%
+% Table of Contents %
+%%%%%%%%%%%%%%%%%%%%%
+
+% Set chapter and section numbering depth:
+%
+\setcounter{secnumdepth}{2}
+
+
+%%%%%%%%%%%%%%%%
+% Bibliography %
+%%%%%%%%%%%%%%%%
+\usepackage[%
+    backend=biber,
+    style=alphabetic,
+    % style=numeric-comp,  % numerical-compressed
+    % sorting=none,        % nty,nyt,nyvt,anyt,anyvt,ynt,ydnt,none
+    sortcites=true,      % sort \cite{b a d c}: true,false
+    block=none,          % space between blocks: none,space,par,nbpar,ragged
+    indexing=false,      % indexing options: true,false,cite,bib
+    citereset=none,      % don't reset cites
+    isbn=false,          % print ISBN?
+    url=true,            % print URL?
+    doi=false,           % print DOI?
+    natbib=true,         % natbib compatability
+  ]{biblatex}
+
+% Filter annoying and unavoidable biblatex warning:
+\WarningFilter{biblatex}{Patching footnotes failed}
+
+% Reduce the font size of the bibliography:
+% \renewcommand{\bibfont}{\normalfont\scriptsize}
+
+% Determine which BibTeX file to use:
+%
+% If available, use my Mendeley BibTex library, located in the home
+% directory. Note that this is a relative path and will break if
+% either this file or the BibTex library are moved. If the library is
+% not present, use the local refs.bib file.
+\newcommand{\BibResourceGlobal}{../../../library.bib}
+\newcommand{\BibResourceLocal}{refs.bib}
+
+\IfFileExists{\BibResourceGlobal}
+  {\newcommand{\BibResource}{\BibResourceGlobal}}
+  {\newcommand{\BibResource}{\BibResourceLocal}}
+
+\addbibresource{\BibResource}
+
+
+%%%%%%%%%%%%%%
+% Appendices %
+%%%%%%%%%%%%%%
+
+% Appendix package. Documentation:
+%
+%  http://mirror.ox.ac.uk/sites/ctan.org/macros/latex/contrib/appendix/appendix.pdf
+%
+% Package options:
+%
+% toc      - Put a header (e.g., `Appendices') into the Table of Contents
+%            (the ToC) before listing the appendices. (This is done by
+%            calling the \addappheadtotoc command.)
+% page     - Puts a title (e.g., `Appendices') into the document at the
+%            point where the appendices environment is begun. (This is
+%            done by calling the \appendixpage command.)
+% title    - Adds a name (e.g., `Appendix') before each appendix title in
+%            the body of the document. The name is given by the value
+%            of \appendixname. Note that this is the default behaviour
+%            for classes that have chapters.
+% titletoc - Adds a name (e.g., `Appendix') before each appendix listed
+%            in the ToC. The name is given by the value
+%            of \appendixname.
+% header   - Adds a name (e.g., `Appendix') before each appendix in page
+%            headers.  The name is given by the value
+%            of \appendixname. Note that this is the default behaviour
+%            for classes that have chapters.
+\usepackage[title, titletoc]{appendix}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Figures, footnotes and listings %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\usepackage{float}
+%\restylefloat{figure}
+
+% Use bold ``(Figure|Table|Listing)'' caption text.
+%\usepackage[margin=1cm]{caption}
+
+% Set the font for captions.
+% \renewcommand{\captionfont}{\small}
+% Set the font for caption labels.
+% \renewcommand{\captionlabelfont}{\footnotesize\bf}
+
+% Use arabic numbers for footnote.
+%\renewcommand{\thefootnote}{\arabic{footnote}}
+
+% Ensure that footnotes always appear at the bottom of pages.
+%\usepackage[bottom]{footmisc}
+
+% Reset the footnote counter on every page.
+%\usepackage{perpage}
+%\MakePerPage{footnote}
+
+% Pre-requisites for rendering upquotes in listings package.
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+
+% Pseudo-code listings.
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\newcommand{\Break}{\State \textbf{break} }
+\algblockdefx[Loop]{Loop}{EndLoop}[1][]{\textbf{Loop} #1}{\textbf{End
+    Loop}}
+
+\algrenewcommand\ALG@beginalgorithmic{\footnotesize}
+
+% Code listings.
+\usepackage{listings}
+
+% Set \ttfamily to use courier fonts.
+%
+% See: http://tex.stackexchange.com/a/33686
+%
+\usepackage{courier}
+
+\lstset{frame=bt,                    % Add top and bottom frame lines
+        breaklines=true,             % Force line wrapping
+        captionpos=b,                % Place caption below listing
+        numbers=left,                % Add left-side line numbers
+        basicstyle=\scriptsize\ttfamily, % Set font size and type
+        showstringspaces=false,      % Don't show visible whitespace
+        numberstyle=\tiny,
+        upquote=true,                % Use upright quotes, not curly
+        commentstyle=\bfseries}      % Embolden comments
+
+% Use (*@ @*) to escape LaTeX commands within listings.
+\lstset{escapeinside={(*@}{@*)}}
+
+% Add 10pt space between chapters in TOC listings entries:
+%\let\Chapter\chapter
+%\def\chapter{\addtocontents{lol}{\protect\addvspace{10pt}}\Chapter}
+
+% Add JavaScript support to listings. See:
+%
+%     http://tex.stackexchange.com/a/89576
+%
+\lstdefinelanguage{JavaScript}{
+  keywords={
+    break,
+    case,
+    catch,
+    catch,
+    do,
+    else,
+    false,
+    function,
+    if,
+    in,
+    new,
+    null,
+    return,
+    switch,
+    true,
+    typeof,
+    var,
+    while}
+  keywordstyle=\bfseries,
+  ndkeywords={
+    boolean,
+    class,
+    export,
+    implements,
+    import,
+    this,
+    throw}
+  ndkeywordstyle=\bfseries,
+  sensitive=false,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]',
+  morestring=[b]"
+}
+
+% Add Clojure support to listings. See:
+%
+%     http://alexott.blogspot.co.uk/2010/01/clojure-latex.html
+%
+\lstdefinelanguage{Clojure}{morekeywords={
+    *,
+    *1,
+    *2,
+    *3,
+    *agent*,
+    *allow-unresolved-vars*,
+    *assert*,
+    *clojure-version*,
+    *command-line-args*,
+    *compile-files*,
+    *compile-path*,
+    *e,
+    *err*,
+    *file*,
+    *flush-on-newline*,
+    *in*,
+    *macro-meta*,
+    *math-context*,
+    *ns*,
+    *out*,
+    *print-dup*,
+    *print-length*,
+    *print-level*,
+    *print-meta*,
+    *print-readably*,
+    *read-eval*,
+    *source-path*,
+    *use-context-classloader*,
+    *warn-on-reflection*,
+    +,
+    -,
+    ->,
+    ->>,
+    ..,
+    /,
+    :else,
+    <,
+    <=,
+    =,
+    ==,
+    >,
+    >=,
+    @,
+    accessor,
+    aclone,
+    add-classpath,
+    add-watch,
+    agent,
+    agent-errors,
+    aget,
+    alength,
+    alias,
+    all-ns,
+    alter,
+    alter-meta!,
+    alter-var-root,
+    amap,
+    ancestors,
+    and,
+    apply,
+    areduce,
+    array-map,
+    aset,
+    aset-boolean,
+    aset-byte,
+    aset-char,
+    aset-double,
+    aset-float,
+    aset-int,
+    aset-long,
+    aset-short,
+    assert,
+    assoc,
+    assoc!,
+    assoc-in,
+    associative?,
+    atom,
+    await,
+    await-for,
+    await1,
+    bases,
+    bean,
+    bigdec,
+    bigint,
+    binding,
+    bit-and,
+    bit-and-not,
+    bit-clear,
+    bit-flip,
+    bit-not,
+    bit-or,
+    bit-set,
+    bit-shift-left,
+    bit-shift-right,
+    bit-test,
+    bit-xor,
+    boolean,
+    boolean-array,
+    booleans,
+    bound-fn,
+    bound-fn*,
+    butlast,
+    byte,
+    byte-array,
+    bytes,
+    cast,
+    char,
+    char-array,
+    char-escape-string,
+    char-name-string,
+    char?,
+    chars,
+    chunk,
+    chunk-append,
+    chunk-buffer,
+    chunk-cons,
+    chunk-first,
+    chunk-next,
+    chunk-rest,
+    chunked-seq?,
+    class,
+    class?,
+    clear-agent-errors,
+    clojure-version,
+    coll?,
+    comment,
+    commute,
+    comp,
+    comparator,
+    compare,
+    compare-and-set!,
+    compile,
+    complement,
+    concat,
+    cond,
+    condp,
+    conj,
+    conj!,
+    cons,
+    constantly,
+    construct-proxy,
+    contains?,
+    count,
+    counted?,
+    create-ns,
+    create-struct,
+    cycle,
+    dec,
+    decimal?,
+    declare,
+    def,
+    definline,
+    defmacro,
+    defmethod,
+    defmulti,
+    defn,
+    defn-,
+    defonce,
+    defprotocol,
+    defstruct,
+    deftype,
+    delay,
+    delay?,
+    deliver,
+    deref,
+    derive,
+    descendants,
+    destructure,
+    disj,
+    disj!,
+    dissoc,
+    dissoc!,
+    distinct,
+    distinct?,
+    do,
+    do-template,
+    doall,
+    doc,
+    dorun,
+    doseq,
+    dosync,
+    dotimes,
+    doto,
+    double,
+    double-array,
+    doubles,
+    drop,
+    drop-last,
+    drop-while,
+    empty,
+    empty?,
+    ensure,
+    enumeration-seq,
+    eval,
+    even?,
+    every?,
+    false,
+    false?,
+    ffirst,
+    file-seq,
+    filter,
+    finally,
+    find,
+    find-doc,
+    find-ns,
+    find-var,
+    first,
+    float,
+    float-array,
+    float?,
+    floats,
+    flush,
+    fn,
+    fn?,
+    fnext,
+    for,
+    force,
+    format,
+    future,
+    future-call,
+    future-cancel,
+    future-cancelled?,
+    future-done?,
+    future?,
+    gen-class,
+    gen-interface,
+    gensym,
+    get,
+    get-in,
+    get-method,
+    get-proxy-class,
+    get-thread-bindings,
+    get-validator,
+    hash,
+    hash-map,
+    hash-set,
+    identical?,
+    identity,
+    if,
+    if-let,
+    if-not,
+    ifn?,
+    import,
+    in-ns,
+    inc,
+    init-proxy,
+    instance?,
+    int,
+    int-array,
+    integer?,
+    interleave,
+    intern,
+    interpose,
+    into,
+    into-array,
+    ints,
+    io!,
+    isa?,
+    iterate,
+    iterator-seq,
+    juxt,
+    key,
+    keys,
+    keyword,
+    keyword?,
+    last,
+    lazy-cat,
+    lazy-seq,
+    let,
+    letfn,
+    line-seq,
+    list,
+    list*,
+    list?,
+    load,
+    load-file,
+    load-reader,
+    load-string,
+    loaded-libs,
+    locking,
+    long,
+    long-array,
+    longs,
+    loop,
+    macroexpand,
+    macroexpand-1,
+    make-array,
+    make-hierarchy,
+    map,
+    map?,
+    mapcat,
+    max,
+    max-key,
+    memfn,
+    memoize,
+    merge,
+    merge-with,
+    meta,
+    method-sig,
+    methods,
+    min,
+    min-key,
+    mod,
+    monitor-enter,
+    monitor-exit,
+    name,
+    namespace,
+    neg?,
+    new,
+    newline,
+    next,
+    nfirst,
+    nil,
+    nil?,
+    nnext,
+    not,
+    not-any?,
+    not-empty,
+    not-every?,
+    not=,
+    ns,
+    ns-aliases,
+    ns-imports,
+    ns-interns,
+    ns-map,
+    ns-name,
+    ns-publics,
+    ns-refers,
+    ns-resolve,
+    ns-unalias,
+    ns-unmap,
+    nth,
+    nthnext,
+    num,
+    number?,
+    odd?,
+    or,
+    parents,
+    partial,
+    partition,
+    pcalls,
+    peek,
+    persistent!,
+    pmap,
+    pop,
+    pop!,
+    pop-thread-bindings,
+    pos?,
+    pr,
+    pr-str,
+    prefer-method,
+    prefers,
+    primitives-classnames,
+    print,
+    print-ctor,
+    print-doc,
+    print-dup,
+    print-method,
+    print-namespace-doc,
+    print-simple,
+    print-special-doc,
+    print-str,
+    printf,
+    println,
+    println-str,
+    prn,
+    prn-str,
+    promise,
+    proxy,
+    proxy-call-with-super,
+    proxy-mappings,
+    proxy-name,
+    proxy-super,
+    push-thread-bindings,
+    pvalues,
+    quot,
+    rand,
+    rand-int,
+    range,
+    ratio?,
+    rational?,
+    rationalize,
+    re-find,
+    re-groups,
+    re-matcher,
+    re-matches,
+    re-pattern,
+    re-seq,
+    read,
+    read-line,
+    read-string,
+    recur,
+    reduce,
+    ref,
+    ref-history-count,
+    ref-max-history,
+    ref-min-history,
+    ref-set,
+    refer,
+    refer-clojure,
+    reify,
+    release-pending-sends,
+    rem,
+    remove,
+    remove-method,
+    remove-ns,
+    remove-watch,
+    repeat,
+    repeatedly,
+    replace,
+    replicate,
+    require,
+    reset!,
+    reset-meta!,
+    resolve,
+    rest,
+    resultset-seq,
+    reverse,
+    reversible?,
+    rseq,
+    rsubseq,
+    second,
+    select-keys,
+    send,
+    send-off,
+    seq,
+    seq?,
+    seque,
+    sequence,
+    sequential?,
+    set,
+    set!,
+    set-validator!,
+    set?,
+    short,
+    short-array,
+    shorts,
+    shutdown-agents,
+    slurp,
+    some,
+    sort,
+    sort-by,
+    sorted-map,
+    sorted-map-by,
+    sorted-set,
+    sorted-set-by,
+    sorted?,
+    special-form-anchor,
+    special-symbol?,
+    split-at,
+    split-with,
+    str,
+    stream?,
+    string?,
+    struct,
+    struct-map,
+    subs,
+    subseq,
+    subvec,
+    supers,
+    swap!,
+    symbol,
+    symbol?,
+    sync,
+    syntax-symbol-anchor,
+    take,
+    take-last,
+    take-nth,
+    take-while,
+    test,
+    the-ns,
+    throw,
+    time,
+    to-array,
+    to-array-2d,
+    trampoline,
+    transient,
+    tree-seq,
+    true,
+    true?,
+    try,
+    type,
+    unchecked-add,
+    unchecked-dec,
+    unchecked-divide,
+    unchecked-inc,
+    unchecked-multiply,
+    unchecked-negate,
+    unchecked-remainder,
+    unchecked-subtract,
+    underive,
+    unquote,
+    unquote-splicing,
+    update-in,
+    update-proxy,
+    use,
+    val,
+    vals,
+    var,
+    var-get,
+    var-set,
+    var?,
+    vary-meta,
+    vec,
+    vector,
+    vector?,
+    when,
+    when-first,
+    when-let,
+    when-not,
+    while,
+    with-bindings,
+    with-bindings*,
+    with-in-str,
+    with-loading-context,
+    with-local-vars,
+    with-meta,
+    with-open,
+    with-out-str,
+    with-precision,
+    xml-seq,
+    zero?,
+    zipmap
+  },
+  sensitive,
+  alsodigit=-,
+  morecomment=[l];,
+  morestring=[b]"
+}[keywords,comments,strings]
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%% Graphics and maths %%
+%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amsmath}
+
+% Vector notation, e.g. \vv{x}:
+%
+\usepackage{esvect}
+
+% Additional amsmath symbols, see:
+%
+% http://texblog.org/2007/08/27/number-sets-prime-natural-integer-rational-real-and-complex-in-latex/
+%
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{tikz}
+\usepackage{tikz-qtree}
+
+% Provide bold font face in maths.
+\usepackage{bm}
+
+\usepackage{subcaption}
+\expandafter\def\csname ver@subfig.sty\endcsname{}
+
+% Define an 'myalignat' command which behave as 'alignat' without the
+% vertical top and bottom padding. See:
+%     http://www.latex-community.org/forum/viewtopic.php?f=5&t=1890
+\newenvironment{myalignat}[1]{%
+  \setlength{\abovedisplayskip}{-.7\baselineskip}%
+  \setlength{\abovedisplayshortskip}{\abovedisplayskip}%
+  \start@align\z@\st@rredtrue#1
+}%
+{\endalign}
+
+% Define additional operators:
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\DeclareMathOperator*{\gain}{Gain}
+
+% Skeleton operators.
+\DeclareMathOperator*{\map}{Map}
+\DeclareMathOperator*{\reduce}{Reduce}
+\DeclareMathOperator*{\scan}{Scan}
+\DeclareMathOperator*{\stencil}{Stencil}
+\DeclareMathOperator*{\zip}{Zip}
+\DeclareMathOperator*{\allpairs}{All\,Pairs}
+
+% Maths plots using pgfplots, see:
+%
+%     http://pgfplots.sourceforge.net/pgfplots.pdf
+%
+\usepackage{pgfplots}
+
+% Disable compatability mode.
+%
+\pgfplotsset{compat=1.12}
+
+% Gantt charts using pgfgantt, see:
+%
+%     http://www.ctan.org/pkg/pgfgantt
+%
+\usepackage{pgfgantt}
+
+% Fix milestone aspect ratio by defining a custom element.
+\newganttchartelement*{mymilestone}{
+  mymilestone/.style={
+    shape=diamond,
+    inner sep=2pt,
+    draw=black,
+    top color=black,
+    bottom color=black,
+  }
+}
+
+% Tikz flowchart configuration.
+\usetikzlibrary{shapes,arrows,shadows,fit,backgrounds}
+\tikzstyle{decision} = [diamond,
+                        draw,
+                        text width=4.5em,
+                        text badly centered,
+                        node distance=3cm,
+                        inner sep=0pt]
+\tikzstyle{block}    = [rectangle,
+                        draw,
+                        text width=5em,
+                        text centered,
+                        node distance=3cm,
+                        minimum height=4em,
+                        inner sep=.2cm]
+\tikzstyle{line}     = [draw, -latex']
+
+% Add dirtree picture style, see:
+%
+%     http://tex.stackexchange.com/a/34268
+%
+\newcount\dirtree@lvl
+\newcount\dirtree@plvl
+\newcount\dirtree@clvl
+\def\dirtree@growth{%
+  \ifnum\tikznumberofcurrentchild=1\relax
+    \global\advance\dirtree@plvl by 1
+    \expandafter\xdef\csname dirtree@p@\the\dirtree@plvl\endcsname{\the\dirtree@lvl}
+  \fi
+  \global\advance\dirtree@lvl by 1\relax
+  \dirtree@clvl=\dirtree@lvl
+  \advance\dirtree@clvl by -\csname dirtree@p@\the\dirtree@plvl\endcsname
+  \pgf@xa=0.33cm\relax
+  \pgf@ya=-\baselineskip\relax
+  \pgf@ya=\dirtree@clvl\pgf@ya
+  \pgftransformshift{\pgfqpoint{\the\pgf@xa}{\the\pgf@ya}}%
+  \ifnum\tikznumberofcurrentchild=\tikznumberofchildren
+    \global\advance\dirtree@plvl by -1
+  \fi
+}
+\tikzset{
+  dirtree/.style={
+    growth function=\dirtree@growth,
+    every node/.style={anchor=north},
+    every child node/.style={anchor=west},
+    edge from parent path={(\tikzparentnode\tikzparentanchor) |- (\tikzchildnode\tikzchildanchor)}
+  }
+}
+
+% UML sequence diagram macros, see:
+%
+%     https://code.google.com/p/pgf-umlsd/
+%
+% Options:
+%
+%     underline - Underline object names
+%
+\usepackage[underline=false]{pgf-umlsd}
+
+% Support for SVG graphics.
+%
+% NOTE that you must pass the "--shell-escape" argument to pdflatex to
+% compile. NOTE also that images *MUST* be placed within the graphics
+% path.
+\usepackage{svg}
+\graphicspath{{img/}}
+
+%%%%%%%%%%%%%%%%%%%%%%
+%% Tables and lists %%
+%%%%%%%%%%%%%%%%%%%%%%
+
+% Required to use labm8 exported tables.
+%
+\usepackage{booktabs}
+
+% Required for full page-width tables.
+\usepackage{tabularx}
+
+%\usepackage{enumitem}
+%\setenumerate{itemsep=0pt}
+
+% Use no left margin for lists:
+%\setlist{leftmargin=*}
+
+\usepackage{longtable}
+
+% Define column types L, C, R with known text justification and fixed
+% widths:
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Typesetting and symbols %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Adjustable font sizes in \Verbatim{}
+\usepackage{fancyvrb}
+
+%\usepackage{titlesec}
+% Set section and paragraph heading fonts:
+%\titleformat*{\section}{\Large\bfseries}
+%\titleformat*{\subsection}{\normalsize\bfseries}
+%\titleformat*{\subsubsection}{\normalsize}
+%\titleformat*{\paragraph}{\large\bfseries}
+%\titleformat*{\subparagraph}{\large\bfseries}
+
+% Set section heading margins. Usage:
+% \titlespacing*{<command>}{<left>}{<before>}{<after>}
+%\titlespacing*{\section}{0pt}{.6em}{.3em}
+%\titlespacing*{\subsection}{0pt}{.6em}{.2em}
+
+% Set paragraph indentation size. Default is 15pt.
+%\setlength{\parindent}{10pt}
+
+% The line spacing can be globally set using \linespread:
+%
+% \linespread{1.2}
+
+% Add a command \hr{} which will draw a horizontal rule the width of
+% the text.
+%
+\newcommand{\hr}{\noindent\makebox[\linewidth]{\rule{\textwidth}{0.2pt}}}
+
+% Add a command \br{} which will create a horizontal space of exactly
+% one line height.
+%
+\newcommand{\br}{\hspace{\baselineskip}}
+
+% Define a command to allow word breaking.
+\newcommand*\wrapletters[1]{\wr@pletters#1\@nil}
+\def\wr@pletters#1#2\@nil{#1\allowbreak\if&#2&\else\wr@pletters#2\@nil\fi}
+
+% Define a command to create centred page titles.
+\newcommand{\centredtitle}[1]{
+  \begin{center}
+    \large
+    \vspace{0.9cm}
+    \textbf{#1}
+  \end{center}}
+
+% Support hyperlinks using the \hyperref, \url and \href
+% macros. Usage:
+%
+%    \hyperref[label_name]{''link text''}
+%
+%    \url{<my_url>}
+%
+%    \href{<my_url>}{<description>}
+%
+\usepackage{hyperref}
+
+% Disable colored borders of links, cross-references etc in PDF output
+\hypersetup{pdfborder={0 0 0}}
+
+% Provide generic commands \degree, \celsius, \perthousand, \micro
+% and \ohm which work both in text and maths mode.
+\usepackage{gensymb}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Placeholder text generation %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Use either \blindtext or \libpsum to generate placeholder text. Also
+% note the macros \blinditemize, \blindenumerate, \blinddescription.
+\usepackage[english]{babel}
+\usepackage{blindtext}
+\usepackage{lipsum}

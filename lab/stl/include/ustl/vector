@@ -1,0 +1,236 @@
+// -*-c++-*-
+//
+// vector class.
+//
+#ifndef __USTL_VECTOR__
+#define __USTL_VECTOR__
+
+#include <cstddef>
+#include <memory>
+
+namespace ustl {
+
+
+template<typename T, class Alloc = std::allocator<T>>
+class vector {
+ public:
+  // Typedefs:
+  using value_type = T;
+  using allocator_type = Alloc;
+  using iterator = T*;
+
+  // Default constructors:
+  vector() : _buffer(nullptr), _size(0), _capacity(0),
+             _alloc(allocator_type()) {}
+
+  explicit vector(const allocator_type& alloc)
+      : _buffer(nullptr), _size(0), _capacity(0), _alloc(alloc) {}
+
+  // Fill constructors:
+  explicit vector(const std::size_t n, const Alloc& alloc = allocator_type())
+      : vector(n, value_type{}, alloc) {}
+
+  vector(const std::size_t n, const value_type& val,
+         const allocator_type& alloc = allocator_type())
+      : _buffer(nullptr), _size(0), _capacity(0), _alloc(alloc) {
+    // Reserve space.
+    reserve(n);
+
+    // Populate.
+    for (std::size_t i = 0; i < n; i++)
+      push_back(val);
+  }
+
+  // Range constructors:
+  template<class InputIterator>
+  vector(InputIterator first, const InputIterator last,
+         const allocator_type& alloc = allocator_type());
+
+  // Copy constructors:
+  vector(const vector& x);
+  vector(const vector& x, const allocator_type& alloc);
+
+  // Move constructors:
+  vector(const vector&& x);
+  vector(const vector&& x, const allocator_type& alloc);
+
+  // Initializer list constructor:
+  vector(std::initializer_list<value_type> l) :
+      _buffer(nullptr),
+      _size(0),
+      _capacity(0),
+      _alloc(allocator_type()) {
+    reserve(size());
+    for (auto &e : l)
+      push_back(e);
+  }
+
+  // Destructor:
+  ~vector() { _alloc.deallocate(_buffer, _capacity); }
+
+  // Copy assignment:
+  vector& operator=(const vector& x);
+
+  // Move assignment:
+  vector& operator=(vector&& x);
+
+  // Initializer list assignment:
+  vector& operator=(std::initializer_list<value_type> l);
+
+  // Iterators
+  iterator begin() const { return _buffer; }
+  iterator end() const { return &_buffer[size()]; }
+
+  // operator[]
+  value_type& operator[](const std::size_t index) {
+    return _buffer[index];
+  }
+
+  const value_type& operator[](const std::size_t index) const {
+    return _buffer[index];
+  }
+
+  // at()
+  value_type& at(const std::size_t index) {
+    if (index >= size())
+      throw std::out_of_range("vector::at()");
+    else
+      return this->operator[](index);
+  }
+
+  const value_type& at(const std::size_t index) const {
+    if (index >= size())
+      throw std::out_of_range("vector::at()");
+    else
+      return this->operator[](index);
+  }
+
+  // front()
+  value_type& front() { return _buffer[0]; }
+
+  const value_type& front() const { return _buffer[0]; }
+
+  // back()
+  value_type& back() { return _buffer[size() - 1]; }
+
+  const value_type& back() const { return _buffer[size() - 1]; }
+
+  // data()
+  value_type* data() noexcept { return _buffer; };
+
+  const value_type* data() const noexcept { return _buffer; };
+
+  // size()
+  std::size_t size() const noexcept { return _size; };
+
+  // max_size()
+  std::size_t max_size() const noexcept { return _alloc.max_size(); };
+
+  // resize()
+  void resize(const std::size_t n) {
+    if (n > size()) {
+      reserve(n);
+    } else {
+      // Destroy elements between size() and n.
+      for (std::size_t i = size(); i < n; i++)
+        _buffer[i].~value_type();
+    }
+
+    _size = n;
+  }
+
+  void resize(const std::size_t n, const value_type& val) {
+    const std::size_t old_size = size();
+    resize(n);
+
+    // Fill value for new elements.
+    for (std::size_t i = old_size; i < n; i++)
+      _buffer[i] = val;
+  }
+
+  // capacity()
+  std::size_t capacity() const noexcept { return _capacity; };
+
+  // empty()
+  bool empty() const noexcept { return !_size; };
+
+  // reserve()
+  void reserve(const std::size_t n) {
+    // Do nothing unless the new size is greater than the current.
+    if (n <= size())
+      return;
+
+    // Get a new buffer.
+    value_type*const newbuf = _alloc.allocate(n);
+
+    if (_buffer) {
+      // Copy elements from old buffer.
+      for (std::size_t i = 0; i < size(); i++)
+        newbuf[i] = _buffer[i];
+      // Deallocate old buffer.
+      _alloc.deallocate(_buffer, _capacity);
+    }
+
+    _capacity = n;
+    _buffer = newbuf;
+  }
+
+  // shrink_to_fit()
+  void shrink_to_fit() {
+    // Don't perform a shrink unless we're significantly oversized.
+    if (capacity() && capacity() > size() * _capacity_multiplier) {
+      // Allocate and copy new buffer.
+      value_type*const newbuf = _alloc.allocate(size());
+      for (std::size_t i = 0; i < size(); i++)
+        newbuf[i] = _buffer[i];
+
+      // Deallocate old buffer.
+      _alloc.deallocate(_buffer, _capacity);
+      _capacity = size();
+      _buffer = newbuf;
+    }
+  }
+
+  // push_back()
+  void push_back(const value_type &val) {
+    // Expand if required:
+    if (capacity() < size() + 1)
+      reserve(!size() ? _default_capacity : size() * _capacity_multiplier);
+
+    // Assign and increment.
+    _buffer[_size++] = val;
+  }
+
+  void push_back(value_type &&val) {
+    // Expand if required:
+    if (capacity() < size() + 1)
+      reserve(!size() ? _default_capacity : size() * _capacity_multiplier);
+
+    // Assign and increment.
+    _buffer[_size++] = std::move(val);
+  }
+
+  // get_allocator()
+  allocator_type get_allocator() const noexcept { return _alloc; }
+
+  // NOT IN THE SPEC: stream output formatter
+  friend std::ostream& operator<<(std::ostream &o, const vector &v) {
+    for (auto &val : v)
+      o << val << ' ';
+    return o;
+  }
+
+ private:
+  value_type* _buffer;
+  std::size_t _size;
+  std::size_t _capacity;
+  allocator_type _alloc;
+
+  static const std::size_t _default_capacity = 8;
+  static const int _capacity_multiplier = 2;
+};
+
+
+}  // namespace ustl
+
+#endif  // __USTL_VECTOR__

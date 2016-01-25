@@ -1,0 +1,31 @@
+Bit reverse
+===========
+
+Given a long string (array of characters), reverse the bits in the
+entire string. The first bit of the first character would be the last
+bit of the last character in the new string.
+
+Write pseudo-code and explain it's working on a small example
+
+Find any possible exceptions that might exist and how you could fix
+them?
+
+Can you think of ways to make your algorithm faster?
+
+MY SOLUTION
+===========
+
+REVERSEBITS(char str[]):
+  for i in 1..len(str) / 2:
+      char f = str[i]
+      copy_and_reverse_bits str[len(str) - i] -> str[i]
+      copy_and_reverse_bits f -> str[len(str) - i]
+
+  if len(str) % 2:
+      reverse_bits(str[len(str) / 2 + 1])
+
+Possible exeption: If length of character is variable. In which case,
+treat string as array of bits and iterate over each bit.
+
+To make algorithm faster, split string into groups of characters and
+execute in parallel.

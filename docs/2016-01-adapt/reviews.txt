@@ -1,0 +1,99 @@
+----------------------- REVIEW 1 ---------------------
+OVERALL EVALUATION: 2 (accept)
+REVIEWER'S CONFIDENCE: 4 (high)
+
+----------- REVIEW -----------
+This paper addresses an important problem. Stencil computations are
+common; tuning for OpenCL workgroup size is challenging but critical
+to performance. The machine learning methods that they present are
+reasonable and show very good results.
+
+I am interested in seeing the result of applying this technique to
+more complex stencil patterns, such as the LBM, which has a time
+dimension.
+
+
+----------------------- REVIEW 2 ---------------------
+OVERALL EVALUATION: 1 (weak accept)
+REVIEWER'S CONFIDENCE: 5 (expert)
+
+----------- REVIEW -----------
+The paper describes a machine learning approach for tuning the
+workgroup size of openCL stencil patterns. The paper is well written
+but misses a related work section. The applied techniques are
+appropriate and verified by experimental results.
+
+What is missing is, why there is no analytical approach for stencil
+applications. The access patterns are quite simple and therefore the
+workgroup size should be analytically predictable. There are few typos
+in the paper.
+
+
+----------------------- REVIEW 3 ---------------------
+OVERALL EVALUATION: 2 (accept)
+REVIEWER'S CONFIDENCE: 4 (high)
+
+----------- REVIEW -----------
+This is a very well-written and informative study addressing an
+important problem, i.e., the identification of the right work-flow
+size. The authors answer the question for a relevant application such
+as stencil patterns. The paper outlines an exhaustive list of factors
+that impact performance and assessment metrics that are measured to
+quantify the benefit of using machine learning techniques to predict
+work-group sizes for unseen scenarios. A similar problem of predicting
+unseen scenarios was presented at ICCS 2015 by Johnston and co-workers
+in the paper titled "Performance Tuning of MapReduce Jobs Using
+Surrogate-Based Modeling"; the problem was addressed with surrogate
+based modeling rather than machine learning techniques.
+
+I particularity like the fact that the paper combines synthetic and
+real stencil patterns in the evaluation. I was wondering whether the
+entire benchmark is available on Github or another open source
+repository. It would be a very useful tool for educational
+purposes. Overall this is a very good paper for ADAPT.
+
+
+----------------------- REVIEW 4 ---------------------
+OVERALL EVALUATION: 3 (strong accept)
+REVIEWER'S CONFIDENCE: 5 (expert)
+
+----------- REVIEW -----------
+This paper focuses on the auto-tuning of stencil codes to determine
+the most suitable workgroup size. This is a parameter that can
+significantly impact the performance of stencil code, yet it is hard
+to predict based on stencil shape and size. The authors propose a
+machine learning model to predict this parameter. They train the model
+using a relatively large number of synthetic benchmarks and a
+relatively large feature vector (102). They explore a number of
+machine learning models as well as a couple of formulations (runtime
+vs relative performance). The evaluation is thorough.
+
+I have a couple of concerns/questions/comments. First, what is the
+relevance of the 102 features? Feature selection is an important part
+of the machine learning model. It is unclear whether all these
+features were needed or if the authors simply through "all they could
+get of the IR" into features. As some commentators reflected, a PCA
+analysis would give insight into this aspect. The number of features
+impact training/prediction times and may impact the conclusions the
+authors make regarding the suitability of one learning method over
+another.
+
+The second comment is regarding the number of synthetic
+benchmarks. How exactly where they generated and how different are
+they from one another and from the six reference implementations? Did
+the authors explore the impact of the number of these benchmarks,
+particularly on training time.
+
+How will this work extend to higher dimensionality data/stencils?
+
+The authors' conclusion that their "work constitutes the first attempt
+to auto tune workgroup size of high-level stencil patterns" needs to
+be toned down given the discussion on Reddit, where it appears others
+have tuned this and other parameters for stencil code. Indeed, they
+should cite the appropriate literature in this regards. This however,
+does not belittle their contribution.
+
+The paper is relatively easy to follow and is well-written.
+
+In summary, this is very good work, carefully carried out and well
+presented.

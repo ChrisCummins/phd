@@ -1,0 +1,6 @@
+SRC DST DEP ARR
+Prague London 10:00 11:00
+London Prague 13:00 14:30
+London Edinburgh 08:00 08:45
+London Madrid 23:00 02:00
+Edinburgh Madrid 03:00 04:40
