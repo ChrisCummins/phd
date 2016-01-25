@@ -18,15 +18,12 @@
 
 TEST(algorithm, sort) {
   ustl::vector<int> a{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
-  std::vector<int>  b{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+  const std::vector<int> sorted{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
   ustl::sort(a.begin(), a.end());
-  std::sort(b.begin(), b.end());
 
-  ASSERT_EQ(a[0], b[0]);
-  for (size_t i = 1; i < a.size(); i++) {
-    ASSERT_TRUE(a[i] >= a[i-1]);
-    ASSERT_EQ(a[i], b[i]);
+  for (size_t i = 0; i < a.size(); i++) {
+    ASSERT_EQ(a[i], sorted[i]);
   }
 }
 
