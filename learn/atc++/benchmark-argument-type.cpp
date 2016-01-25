@@ -14,8 +14,6 @@
 static const size_t size_min = 8;
 static const size_t size_max = 8 << 10;
 
-static unsigned int seed = 0xcec;
-
 
 // Increment all values in a container.
 template<typename Container>
@@ -48,7 +46,7 @@ void print(Container &c) {
 static void VectorReference(benchmark::State& state) {
     std::vector<int> v(static_cast<size_t>(state.range_x()));
     for (auto &i : v)
-        i = rand_r(&seed);
+        i = static_cast<size_t>(arc4random());
 
     while (state.KeepRunning()) {
         incrementByReference(v);
@@ -60,7 +58,7 @@ BENCHMARK(VectorReference)->Range(size_min, size_max);
 static void VectorPointer(benchmark::State& state) {
     std::vector<int> v(static_cast<size_t>(state.range_x()));
     for (auto &i : v)
-        i = rand_r(&seed);
+        i = static_cast<size_t>(arc4random());
 
     while (state.KeepRunning()) {
         incrementByPointer(&v);
@@ -72,7 +70,7 @@ BENCHMARK(VectorPointer)->Range(size_min, size_max);
 static void VectorValue(benchmark::State& state) {
     std::vector<int> v(static_cast<size_t>(state.range_x()));
     for (auto &i : v)
-        i = rand_r(&seed);
+        i = static_cast<size_t>(arc4random());
 
     while (state.KeepRunning()) {
         incrementByValue(v);
