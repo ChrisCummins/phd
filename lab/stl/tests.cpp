@@ -301,20 +301,7 @@ TEST(vector, shrink_to_fit) {
 }
 
 
-// Benchmarks
-
-void BM_baseline(benchmark::State& state) {
-}
-BENCHMARK(BM_baseline);
-
 int main(int argc, char **argv) {
-    // Run unit tests:
     testing::InitGoogleTest(&argc, argv);
-    const auto ret = RUN_ALL_TESTS();
-
-    // Run benchmarks:
-    benchmark::Initialize(&argc, argv);
-    benchmark::RunSpecifiedBenchmarks();
-
-    return ret;
+    return RUN_ALL_TESTS();
 }

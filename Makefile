@@ -225,7 +225,10 @@ lab := $(root)/lab
 #
 # lab/stl/
 #
-CxxTargets += $(lab)/stl/tests
+CxxTargets += \
+	$(lab)/stl/benchmarks \
+	$(lab)/stl/tests \
+	$(NULL)
 
 StlHeaders = \
 	$(lab)/stl/include/ustl/algorithm \
@@ -233,12 +236,11 @@ StlHeaders = \
 	$(lab)/stl/include/ustl/vector \
 	$(NULL)
 
-DontLint += $(lab)/stl/tests.cpp
-
+$(lab)/stl/benchmarks.o: $(StlHeaders)
 $(lab)/stl/tests.o: $(StlHeaders)
-$(lab)/stl/tests.o_CxxFlags = \
+$(lab)/stl_CxxFlags = \
 	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags) -I$(lab)/stl/include
-$(lab)/stl/tests_LdFlags = \
+$(lab)/stl_LdFlags = \
 	$(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
 $(lab)/stl/tests.o: $(GoogleBenchmark) $(GoogleTest)
 
