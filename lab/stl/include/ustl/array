@@ -12,6 +12,8 @@
 
 namespace ustl {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
 
 template<typename T, std::size_t _size>
 class array {
@@ -85,6 +87,7 @@ class array<T, 0> {
   T _null;
 };
 
+#pragma GCC diagnostic pop  // -Wpadded
 
 }  // namespace ustl
 

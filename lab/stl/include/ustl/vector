@@ -10,6 +10,8 @@
 
 namespace ustl {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
 
 template<typename T, class Alloc = std::allocator<T>>
 class vector {
@@ -229,6 +231,8 @@ class vector {
   static const std::size_t _default_capacity = 8;
   static const int _capacity_multiplier = 2;
 };
+
+#pragma GCC diagnostic pop  // -Wpadded
 
 
 }  // namespace ustl
