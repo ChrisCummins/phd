@@ -135,7 +135,6 @@ void __merge_sort(RandomAccessIterator first,
 //
 template<typename RandomAccessIterator, typename Compare>
 void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
-  // __insertion_sort(first, last, comp);
   __merge_sort(first, last, comp);
 }
 
