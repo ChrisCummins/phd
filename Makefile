@@ -298,6 +298,7 @@ CtCiTargets = \
 	$(learn)/ctci/0106-matrix-zero \
 	$(learn)/ctci/0402-directed-graph-routefinder \
 	$(learn)/ctci/1301-last-k-lines \
+	$(learn)/ctci/1307-tree-copy \
 	$(learn)/ctci/1701-num-swap \
 	$(learn)/ctci/1702-tic-tac-toe \
 	$(NULL)
