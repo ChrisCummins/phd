@@ -6,33 +6,47 @@
 #define __USTL_ALGORITHM__
 
 #include <cstddef>
+#include <memory>
+
+#include "./vector"
 
 namespace ustl {
 
+//
+// Default comparison object. Requires type to implement <= operator.
+//
 template<typename RandomAccessIterator>
-class DefaultComparison {
+class __DefaultComparison {
+ public:
   bool operator()(const RandomAccessIterator a, const RandomAccessIterator b) {
-    return *a <= *b;
+    return *a < *b;
   }
 };
 
+
+//
+// Sort using default comparison.
+//
 template<typename RandomAccessIterator>
 void sort(RandomAccessIterator first, RandomAccessIterator last) {
-  sort(first, last, DefaultComparison<RandomAccessIterator>());
+  sort(first, last, __DefaultComparison<RandomAccessIterator>());
 }
 
+
+//
+// Bubble sort.
+//
 template<typename RandomAccessIterator, typename Compare>
-void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
-  /*
-   * Naive implementation: bubble sort.
-   */
+void __bubble_sort(RandomAccessIterator first,
+                   RandomAccessIterator last,
+                   Compare comp) {
   bool changed;
 
   do {
     changed = false;
 
     for (RandomAccessIterator i = first + 1; i != last; i++) {
-      if (*i < *(i-1)) {
+      if (comp(i, i - 1)) {
         auto tmp = *(i-1);
         *(i-1) = *i;
         *i = tmp;
@@ -40,6 +54,89 @@ void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
       }
     }
   } while (changed);
+}
+
+//
+// Insertion sort.
+//
+template<typename RandomAccessIterator, typename Compare>
+void __insertion_sort(RandomAccessIterator first,
+                      RandomAccessIterator last,
+                      Compare comp) {
+
+  for (auto i = first; i != last; i++) {
+    auto j = i;
+
+    while (j != first && comp(j, j - 1)) {
+      auto temp = *j;
+      *j = *(j - 1);
+      *(j - 1) = temp;
+      j--;
+    }
+  }
+}
+
+//
+// Merge sort.
+//
+#define __merge_sort_bottom_out_sort __bubble_sort
+static const size_t __merge_sort_bottom_out_threshold = 8;
+
+
+template<typename RandomAccessIterator, typename Compare>
+void __merge_sort(RandomAccessIterator first,
+                  RandomAccessIterator last,
+                  Compare comp) {
+  const size_t len = static_cast<size_t>(last - first);
+
+  if (len <= __merge_sort_bottom_out_threshold) {
+    __merge_sort_bottom_out_sort(first, last, comp);
+  } else {
+    // Split midway:
+    const RandomAccessIterator mid = first + len / 2;
+    using ElementType =
+        typename std::pointer_traits<RandomAccessIterator>::element_type;
+
+    ustl::vector<ElementType> left(0);
+    ustl::vector<ElementType> right(0);
+
+    for (auto i = first; i != mid; i++)
+      left.push_back(*i);
+    for (auto i = mid; i != last; i++)
+      right.push_back(*i);
+
+    __merge_sort(left.begin(), left.end(), comp);
+    __merge_sort(right.begin(), right.end(), comp);
+
+    // Merge:
+    auto lp = left.begin(), rp = right.begin(), mp = first;
+
+    while (lp != left.end() && rp != right.end()) {
+      if (comp(lp, rp)) {
+        *mp = *lp;
+        lp++;
+      } else {
+        *mp = *rp;
+        rp++;
+      }
+      mp++;
+    }
+
+    while (lp != left.end())
+      *(mp++) = *(lp++);
+    while (rp != right.end())
+      *(mp++) = *(rp++);
+  }
+}
+
+
+//
+// Sort function.
+//
+template<typename RandomAccessIterator, typename Compare>
+void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
+  // __insertion_sort(first, last, comp);
+  __merge_sort(first, last, comp);
 }
 
 }  // namespace ustl
