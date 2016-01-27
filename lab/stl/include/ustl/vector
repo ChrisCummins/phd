@@ -6,6 +6,7 @@
 #define __USTL_VECTOR__
 
 #include <cstddef>
+#include <iterator>
 #include <memory>
 
 namespace ustl {
@@ -16,26 +17,83 @@ namespace ustl {
 template<typename T, class Alloc = std::allocator<T>>
 class vector {
  public:
-  // Typedefs:
+
+  ///////////////////
+  // Member types: //
+  ///////////////////
+
   using value_type = T;
+
   using allocator_type = Alloc;
+
+  using reference = value_type&;
+
+  using const_reference = const value_type&;
+
+  using pointer = typename std::allocator_traits<allocator_type>::pointer;
+
+  using const_pointer =
+      typename std::allocator_traits<allocator_type>::const_pointer;
+
   using iterator = T*;
 
-  // Default constructors:
-  vector() : _buffer(nullptr), _size(0), _capacity(0),
-             _alloc(allocator_type()) {}
+  using const_iterator = const iterator;
+
+  using reverse_iterator = std::reverse_iterator<iterator>;
+
+  using const_reverse_iterator = const std::reverse_iterator<iterator>;
+
+  using difference_type =
+      typename std::iterator_traits<iterator>::difference_type;
+
+  using size_type = size_t;
+
+
+  ///////////////////
+  // Constructors: //
+  ///////////////////
+  //
+  // The container keeps an internal copy of alloc, which is used to
+  // allocate and deallocate storage for its elements, and to
+  // construct and destroy them (as specified by its
+  // allocator_traits). If no alloc argument is passed to the
+  // constructor, a default-constructed allocator is used, except in
+  // the following cases:
+  //
+  // - The copy constructor (4, first signature) creates a container
+  //  that keeps and uses a copy of the allocator returned by calling
+  //  the appropriate selected_on_container_copy_construction trait -
+  //  on x's allocator.
+  //
+  // - The move constructor (5, first signature) acquires x's
+  //   allocator.
+  //
+  // All elements are copied, moved or otherwise constructed by
+  // calling allocator_traits::construct with the appropriate
+  // arguments.
+  //
+
+  // empty container constructor (default constructor):
+  //
+  // Constructs an empty container, with no elements.
+  //
+  vector() :
+      _buffer(nullptr), _size(0), _capacity(0), _alloc(allocator_type()) {}
 
   explicit vector(const allocator_type& alloc)
       : _buffer(nullptr), _size(0), _capacity(0), _alloc(alloc) {}
 
-  // Fill constructors:
-  explicit vector(const std::size_t n, const Alloc& alloc = allocator_type())
-      : vector(n, value_type{}, alloc) {}
 
-  vector(const std::size_t n, const value_type& val,
+  //
+  // fill constructor:
+  //
+  // Constructs a container with n elements. Each element is a copy of
+  // val (if provided).
+  //
+  vector(const std::size_t n,
+         const value_type& val,
          const allocator_type& alloc = allocator_type())
       : _buffer(nullptr), _size(0), _capacity(0), _alloc(alloc) {
-    // Reserve space.
     reserve(n);
 
     // Populate.
@@ -43,45 +101,281 @@ class vector {
       push_back(val);
   }
 
-  // Range constructors:
+  explicit vector(const std::size_t n,
+                  const allocator_type& alloc = allocator_type())
+      : vector(n, value_type{}, alloc) {}
+
+
+  //
+  // range constructor:
+  //
+  // Constructs a container with as many elements as the range
+  // [first,last), with each element emplace-constructed from its
+  // corresponding element in that range, in the same order.
+  //
   template<class InputIterator>
   vector(InputIterator first, const InputIterator last,
-         const allocator_type& alloc = allocator_type());
+         const allocator_type& alloc = allocator_type()) {
+    // TODO: implement
+  }
 
-  // Copy constructors:
-  vector(const vector& x);
-  vector(const vector& x, const allocator_type& alloc);
 
-  // Move constructors:
-  vector(const vector&& x);
-  vector(const vector&& x, const allocator_type& alloc);
+  //
+  // copy constructor (and copying with allocator):
+  //
+  // Constructs a container with a copy of each of the elements in x,
+  // in the same order.
+  //
+  vector(const vector& x) {
+    // TODO: implement
+  }
 
-  // Initializer list constructor:
-  vector(std::initializer_list<value_type> l) :
-      _buffer(nullptr),
-      _size(0),
-      _capacity(0),
-      _alloc(allocator_type()) {
+  vector(const vector& x, const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+
+  //
+  // move constructor (and moving with allocator):
+  //
+  // Constructs a container that acquires the elements of x.  If alloc
+  // is specified and is different from x's allocator, the elements
+  // are moved. Otherwise, no elements are constructed (their
+  // ownership is directly transferred).  x is left in an unspecified
+  // but valid state.
+  //
+  vector(const vector&& x) {
+    // TODO: implement
+  }
+
+  vector(const vector&& x, const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+  //
+  // initializer list constructor:
+  //
+  // Constructs a container with a copy of each of the elements in il,
+  // in the same order.
+  //
+  vector(std::initializer_list<value_type> il)
+      : _buffer(nullptr), _size(0), _capacity(0), _alloc(allocator_type()) {
+    // Reserve space.
     reserve(size());
-    for (auto &e : l)
+
+    // Copy values over.
+    for (auto& e : il)
       push_back(e);
   }
 
-  // Destructor:
-  ~vector() { _alloc.deallocate(_buffer, _capacity); }
 
+  /////////////////
+  // Destructor: //
+  /////////////////
+  //
+  // This calls allocator_traits::destroy on each of the contained
+  // elements, and deallocates all the storage capacity allocated by
+  // the vector using its allocator.
+  //
+
+  ~vector() {
+    for (size_t i = 0; i < size(); i++)
+      std::allocator_traits<allocator_type>::destroy(_alloc, &_buffer[i]);
+
+    _alloc.deallocate(_buffer, _capacity);
+  }
+
+  /////////////////
+  // Assignment: //
+  /////////////////
+  //
+  // Assigns new contents to the container, replacing its current
+  // contents, and modifying its size accordingly.
+  //
+
+  //
   // Copy assignment:
-  vector& operator=(const vector& x);
+  //
+  // Copies all the elements from x into the container (with x
+  // preserving its contents).
+  //
+  vector& operator=(const vector& x) {
+    // TODO: implement
+  }
 
+  //
   // Move assignment:
-  vector& operator=(vector&& x);
+  //
+  // Moves the elements of x into the container (x is left in an
+  // unspecified but valid state).
+  //
+  vector& operator=(vector&& x) {
+    // TODO: implement
+  }
 
+  //
   // Initializer list assignment:
-  vector& operator=(std::initializer_list<value_type> l);
+  //
+  // Copies the elements of il into the container.
+  //
+  vector& operator=(std::initializer_list<value_type> l) {
+    // TODO: implement
+  }
 
-  // Iterators
-  iterator begin() const { return _buffer; }
-  iterator end() const { return &_buffer[size()]; }
+
+  ////////////////
+  // Iterators: //
+  ////////////////
+
+  //
+  // begin():
+  //
+  // Returns an iterator pointing to the first element in the vector.
+  //
+  // Notice that, unlike member vector::front, which returns a
+  // reference to the first element, this function returns a random
+  // access iterator pointing to it.
+  //
+  // If the container is empty, the returned iterator value shall not
+  // be dereferenced.
+  //
+  iterator begin() noexcept {
+    return iterator(_buffer);
+  }
+
+  const_iterator begin() const noexcept {
+    return iterator(_buffer);
+  }
+
+  //
+  // end():
+  //
+  // Returns an iterator referring to the past-the-end element in the
+  // vector container.
+  //
+  // The past-the-end element is the theoretical element that would
+  // follow the last element in the vector. It does not point to any
+  // element, and thus shall not be dereferenced.
+  //
+  // Because the ranges used by functions of the standard library do
+  // not include the element pointed by their closing iterator, this
+  // function is often used in combination with vector::begin to
+  // specify a range including all the elements in the container.
+  //
+  // If the container is empty, this function returns the same as
+  // vector::begin.
+  //
+  iterator end() noexcept { return iterator(&_buffer[size()]); }
+
+  const_iterator end() const noexcept { return iterator(&_buffer[size()]); }
+
+
+  //
+  // rbegin():
+  //
+  // Returns a reverse iterator pointing to the last element in the
+  // vector (i.e., its reverse beginning).
+  //
+  // Reverse iterators iterate backwards: increasing them moves them
+  // towards the beginning of the container.
+  //
+  // rbegin points to the element right before the one that would be
+  // pointed to by member end.
+  //
+  // Notice that unlike member vector::back, which returns a reference
+  // to this same element, this function returns a reverse random
+  // access iterator.
+  //
+  reverse_iterator rbegin() noexcept {
+    return std::reverse_iterator<iterator>(end());
+  }
+
+  const_reverse_iterator rbegin() const noexcept {
+    return std::reverse_iterator<const_iterator>(end());
+  }
+
+
+  //
+  // rend():
+  //
+  // Returns a reverse iterator pointing to the theoretical element
+  // preceding the first element in the vector (which is considered
+  // its reverse end).
+  //
+  // The range between vector::rbegin and vector::rend contains all
+  // the elements of the vector (in reverse order).
+  //
+  reverse_iterator rend() noexcept {
+    return std::reverse_iterator<iterator>(begin() - 1);
+  }
+
+  const_reverse_iterator rend() const noexcept {
+    return std::reverse_iterator<iterator>(begin() - 1);
+  }
+
+  //
+  // cbegin():
+  //
+  // Returns a const_iterator pointing to the first element in the
+  // container.
+  //
+  // A const_iterator is an iterator that points to const
+  // content. This iterator can be increased and decreased (unless it
+  // is itself also const), just like the iterator returned by
+  // vector::begin, but it cannot be used to modify the contents it
+  // points to, even if the vector object is not itself const.
+  //
+  // If the container is empty, the returned iterator value shall not
+  // be dereferenced.
+  //
+  const_iterator cbegin() const noexcept {
+    return const_iterator(begin());
+  }
+
+
+  //
+  // cend():
+  //
+  // Returns a const_iterator pointing to the past-the-end element in the container.
+  //
+  // A const_iterator is an iterator that points to const
+  // content. This iterator can be increased and decreased (unless it
+  // is itself also const), just like the iterator returned by
+  // vector::end, but it cannot be used to modify the contents it
+  // points to, even if the vector object is not itself const.
+  //
+  // If the container is empty, this function returns the same as
+  // vector::cbegin.
+  //
+  // The value returned shall not be dereferenced.
+  //
+  const_iterator cend() const noexcept {
+    return const_iterator(end());
+  }
+
+
+  //
+  // crbegin():
+  //
+  // Returns a const_reverse_iterator pointing to the last element in
+  // the container (i.e., its reverse beginning).
+  //
+  const_reverse_iterator crbegin() const noexcept {
+    return const_reverse_iterator(end());
+  }
+
+
+  //
+  // crend():
+  //
+  // Returns a const_reverse_iterator pointing to the theoretical
+  // element preceding the first element in the container (which is
+  // considered its reverse end).
+  //
+  const_reverse_iterator crend() const noexcept {
+    return const_reverse_iterator(begin());
+  }
+
 
   // operator[]
   value_type& operator[](const std::size_t index) {

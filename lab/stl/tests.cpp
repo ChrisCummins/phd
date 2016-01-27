@@ -626,6 +626,105 @@ TEST(vector, constructorValues) {
   ASSERT_EQ('c', c[2]);
 }
 
+// vector_iterators:
+
+TEST(vector_iterators, begin) {
+  ustl::vector<int> a{1, 2, 3, 4, 5};
+
+  auto it = a.begin();
+  ASSERT_EQ(1, *it++);
+  ASSERT_EQ(2, *it++);
+  ASSERT_EQ(3, *it);
+  ASSERT_EQ(4, it[1]);
+
+  const auto cit = a.begin();
+  ASSERT_EQ(1, *cit);
+}
+
+TEST(vector_iterators, rbegin) {
+  ustl::vector<int> a{1, 2, 3, 4, 5};
+
+  auto it = a.rbegin();
+  ASSERT_EQ(5, *it++);
+  ASSERT_EQ(4, *it++);
+  ASSERT_EQ(3, *it);
+  ASSERT_EQ(2, it[1]);
+}
+
+TEST(vector_iterators, cbegin) {
+  ustl::vector<int> a{1, 2, 3, 4, 5};
+
+  auto it = a.cbegin();
+  ASSERT_EQ(1, *it++);
+  ASSERT_EQ(2, *it++);
+  ASSERT_EQ(3, *it);
+  ASSERT_EQ(4, it[1]);
+}
+
+TEST(vector_iterators, crbegin) {
+  ustl::vector<int> a{1, 2, 3, 4, 5};
+
+  auto it = a.crbegin();
+  ASSERT_EQ(5, *it++);
+  ASSERT_EQ(4, *it++);
+  ASSERT_EQ(3, *it);
+  ASSERT_EQ(2, it[1]);
+}
+
+TEST(vector_iterators, end) {
+  ustl::vector<int> a{1, 2, 3, 4, 5};
+  ustl::vector<int> b;
+
+  auto first = a.begin(), last = a.end();
+
+  while (first != last)
+    b.push_back(*first++);
+
+  for (size_t i = 0; i < 5; i++)
+    ASSERT_EQ(b[i], a[i]);
+}
+
+TEST(vector_iterators, rend) {
+  ustl::vector<int> a{1, 2, 3, 4, 5};
+  ustl::vector<int> b{5, 4, 3, 2, 1};
+  ustl::vector<int> rev;
+
+  auto first = a.rbegin(), last = a.rend();
+
+  while (first != last)
+    rev.push_back(*first++);
+
+  for (size_t i = 0; i < 5; i++)
+    ASSERT_EQ(rev[i], b[i]);
+}
+
+TEST(vector_iterators, cend) {
+  ustl::vector<int> a{1, 2, 3, 4, 5};
+  ustl::vector<int> b;
+
+  auto first = a.cbegin(), last = a.cend();
+
+  while (first != last)
+    b.push_back(*first++);
+
+  for (size_t i = 0; i < 5; i++)
+    ASSERT_EQ(b[i], a[i]);
+}
+
+TEST(vector_iterators, crend) {
+  ustl::vector<int> a{1, 2, 3, 4, 5};
+  ustl::vector<int> b{5, 4, 3, 2, 1};
+  ustl::vector<int> rev;
+
+  auto first = a.crbegin(), last = a.crend();
+
+  while (first != last)
+    rev.push_back(*first++);
+
+  for (size_t i = 0; i < 5; i++)
+    ASSERT_EQ(rev[i], b[i]);
+}
+
 TEST(vector, front) {
   ustl::vector<int> a(3);
   ustl::vector<double> b(3, 3.5f);

@@ -27,7 +27,7 @@ static void BM_std_sort_int(benchmark::State& state) {
   std::vector<int> v(static_cast<size_t>(state.range_x()));
 
   while (state.KeepRunning()) {
-    for (auto &i : v)
+    for (auto& i : v)
       i = static_cast<int>(arc4random());
 
     std::sort(v.begin(), v.end());
@@ -40,7 +40,7 @@ static void BM_ustl_sort_int(benchmark::State& state) {
   ustl::vector<int> v(static_cast<size_t>(state.range_x()));
 
   while (state.KeepRunning()) {
-    for (auto &i : v)
+    for (auto& i : v)
       i = static_cast<int>(arc4random());
 
     ustl::sort(v.begin(), v.end());
