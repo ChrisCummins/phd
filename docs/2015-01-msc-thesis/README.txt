@@ -1,8 +1,8 @@
 Title:      Autotuning Stencils Codes with Algorithmic Skeletons
 Authors:    Chris Cummins
 Thesis:     Master of Science by Research, Institute of Computing
-            Systems Architecture School of Informatics University
-            of Edinburgh. 2015.
+            Systems Architecture, School of Informatics,
+            University of Edinburgh. 2015.
 
 Abstract:
 
