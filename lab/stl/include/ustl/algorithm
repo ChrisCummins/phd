@@ -14,6 +14,54 @@ namespace ustl {
 
 
 //
+// Merge function.
+//
+template<class InputIterator1, class InputIterator2,
+         class OutputIterator, class Compare>
+OutputIterator merge(InputIterator1 first1, InputIterator1 last1,
+                     InputIterator2 first2, InputIterator2 last2,
+                     OutputIterator result, Compare comp) {
+  auto ret = result;  // Return the initial position of result iterator.
+
+  while (first1 != last1 && first2 != last2) {
+    if (comp(*first1, *first2)) {
+      *result = *first1;
+      first1++;
+    } else {
+      *result = *first2;
+      first2++;
+    }
+    result++;
+  }
+
+  while (first1 != last1)
+    *(result++) = *(first1++);
+  while (first2 != last2)
+    *(result++) = *(first2++);
+
+  return ret;
+}
+
+//
+// Merge function, using '<' operator for comparison.
+//
+template<class InputIterator1, class InputIterator2, class OutputIterator>
+OutputIterator merge(InputIterator1 first1, InputIterator1 last1,
+                     InputIterator2 first2, InputIterator2 last2,
+                     OutputIterator result) {
+  using InputType1 = typename std::iterator_traits<InputIterator1>::value_type;
+  using InputType2 = typename std::iterator_traits<InputIterator2>::value_type;
+  return merge(first1, last1, first2, last2, result,
+               [](const InputType1 &a, const InputType2 &b) { return a < b; });
+}
+
+
+//
+// Sort functions.
+//
+
+
+//
 // Bubble sort.
 //
 template<typename RandomAccessIterator, typename Compare>
@@ -88,24 +136,8 @@ void __merge_sort(RandomAccessIterator first,
     __merge_sort(left.begin(), left.end(), comp);
     __merge_sort(right.begin(), right.end(), comp);
 
-    // Merge:
-    auto lp = left.begin(), rp = right.begin(), mp = first;
-
-    while (lp != left.end() && rp != right.end()) {
-      if (comp(*lp, *rp)) {
-        *mp = *lp;
-        lp++;
-      } else {
-        *mp = *rp;
-        rp++;
-      }
-      mp++;
-    }
-
-    while (lp != left.end())
-      *(mp++) = *(lp++);
-    while (rp != right.end())
-      *(mp++) = *(rp++);
+    // Merge temporary buffers into original array:
+    merge(left.begin(), left.end(), right.begin(), right.end(), first, comp);
   }
 }
 

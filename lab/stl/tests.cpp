@@ -14,7 +14,70 @@
 #include <vector>
 #include <ustl/vector>
 
+template<typename T>
+class InverseComp {
+ public:
+  bool operator()(const T &a, const T &b) { return a > b; }
+};
+
+static bool inverse_comp(const int &a, const int &b) { return a > b; }
+
 // Algorithm tests
+
+// Merge
+
+TEST(algorithm, merge) {
+  ustl::array<int, 5> a{1, 3, 5, 7, 9};
+  ustl::array<int, 5> b{2, 4, 6, 8, 10};
+  ustl::array<int, 10> c;
+  const ustl::array<int, 10> sorted{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+  ustl::merge(a.begin(), a.end(), b.begin(), b.end(), c.begin());
+
+  for (size_t i = 0; i < c.size(); i++)
+    ASSERT_EQ(c[i], sorted[i]);
+}
+
+TEST(algorithm, merge_comp_lambda) {
+  ustl::array<int, 5> a{9, 7, 5, 3, 1};
+  ustl::array<int, 5> b{10, 8, 6, 4, 2};
+  ustl::array<int, 10> c;
+  const ustl::array<int, 10> sorted{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+
+  ustl::merge(a.begin(), a.end(), b.begin(), b.end(), c.begin(),
+              [](int x, int y) { return x > y; });
+
+  for (size_t i = 0; i < c.size(); i++)
+    ASSERT_EQ(c[i], sorted[i]);
+}
+
+TEST(algorithm, merge_comp_funcobj) {
+  ustl::array<int, 5> a{9, 7, 5, 3, 1};
+  ustl::array<int, 5> b{10, 8, 6, 4, 2};
+  ustl::array<int, 10> c;
+  const ustl::array<int, 10> sorted{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+
+  ustl::merge(a.begin(), a.end(), b.begin(), b.end(), c.begin(),
+              InverseComp<int>());
+
+  for (size_t i = 0; i < c.size(); i++)
+    ASSERT_EQ(c[i], sorted[i]);
+}
+
+TEST(algorithm, merge_comp_funcptr) {
+  ustl::array<int, 5> a{9, 7, 5, 3, 1};
+  ustl::array<int, 5> b{10, 8, 6, 4, 2};
+  ustl::array<int, 10> c;
+  const ustl::array<int, 10> sorted{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+
+  ustl::merge(a.begin(), a.end(), b.begin(), b.end(), c.begin(),
+              inverse_comp);
+
+  for (size_t i = 0; i < c.size(); i++)
+    ASSERT_EQ(c[i], sorted[i]);
+}
+
+// Sort
 
 TEST(algorithm, sort) {
   ustl::vector<int> a{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
@@ -41,12 +104,6 @@ TEST(algorithm, sort_comp_lambda) {
     ASSERT_EQ(a[i], sorted[i]);
 }
 
-template<typename T>
-class InverseComp {
- public:
-  bool operator()(const T &a, const T &b) { return a > b; }
-};
-
 TEST(algorithm, sort_comp_funcobj) {
   ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   const ustl::vector<int> sorted{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
@@ -56,8 +113,6 @@ TEST(algorithm, sort_comp_funcobj) {
   for (size_t i = 0; i < a.size(); i++)
     ASSERT_EQ(a[i], sorted[i]);
 }
-
-static bool inverse_comp(const int &a, const int &b) { return a > b; }
 
 TEST(algorithm, sort_comp_funcptr) {
   ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -344,6 +399,6 @@ TEST(vector, shrink_to_fit) {
 
 
 int main(int argc, char **argv) {
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
