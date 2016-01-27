@@ -15,22 +15,13 @@ namespace ustl {
 //
 // Default comparison object. Requires type to implement <= operator.
 //
-template<typename RandomAccessIterator>
+template<typename T>
 class __DefaultComparison {
  public:
-  bool operator()(const RandomAccessIterator a, const RandomAccessIterator b) {
-    return *a < *b;
+  bool operator()(const T a, const T b) {
+    return a < b;
   }
 };
-
-
-//
-// Sort using default comparison.
-//
-template<typename RandomAccessIterator>
-void sort(RandomAccessIterator first, RandomAccessIterator last) {
-  sort(first, last, __DefaultComparison<RandomAccessIterator>());
-}
 
 
 //
@@ -46,7 +37,7 @@ void __bubble_sort(RandomAccessIterator first,
     changed = false;
 
     for (RandomAccessIterator i = first + 1; i != last; i++) {
-      if (comp(i, i - 1)) {
+      if (comp(*i, *(i - 1))) {
         auto tmp = *(i-1);
         *(i-1) = *i;
         *i = tmp;
@@ -67,7 +58,7 @@ void __insertion_sort(RandomAccessIterator first,
   for (auto i = first; i != last; i++) {
     auto j = i;
 
-    while (j != first && comp(j, j - 1)) {
+    while (j != first && comp(*j, *(j - 1))) {
       auto temp = *j;
       *j = *(j - 1);
       *(j - 1) = temp;
@@ -112,7 +103,7 @@ void __merge_sort(RandomAccessIterator first,
     auto lp = left.begin(), rp = right.begin(), mp = first;
 
     while (lp != left.end() && rp != right.end()) {
-      if (comp(lp, rp)) {
+      if (comp(*lp, *rp)) {
         *mp = *lp;
         lp++;
       } else {
@@ -136,6 +127,15 @@ void __merge_sort(RandomAccessIterator first,
 template<typename RandomAccessIterator, typename Compare>
 void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
   __merge_sort(first, last, comp);
+}
+
+//
+// Sort using default comparison.
+//
+template<typename RandomAccessIterator>
+void sort(RandomAccessIterator first, RandomAccessIterator last) {
+  using Type = typename std::iterator_traits<RandomAccessIterator>::value_type;
+  sort(first, last, __DefaultComparison<Type>());
 }
 
 }  // namespace ustl
