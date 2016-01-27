@@ -31,17 +31,39 @@ TEST(algorithm, sort) {
     ASSERT_EQ(b[i], sorted[i]);
 }
 
+TEST(algorithm, sort_comp_lambda) {
+  ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const ustl::vector<int> sorted{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+
+  ustl::sort(a.begin(), a.end(), [](int x, int y) { return x > y; });
+
+  for (size_t i = 0; i < a.size(); i++)
+    ASSERT_EQ(a[i], sorted[i]);
+}
+
 template<typename T>
 class InverseComp {
  public:
   bool operator()(const T &a, const T &b) { return a > b; }
 };
 
-TEST(algorithm, sort_comp) {
+TEST(algorithm, sort_comp_funcobj) {
   ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   const ustl::vector<int> sorted{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
 
   ustl::sort(a.begin(), a.end(), InverseComp<int>());
+
+  for (size_t i = 0; i < a.size(); i++)
+    ASSERT_EQ(a[i], sorted[i]);
+}
+
+static bool inverse_comp(const int &a, const int &b) { return a > b; }
+
+TEST(algorithm, sort_comp_funcptr) {
+  ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const ustl::vector<int> sorted{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+
+  ustl::sort(a.begin(), a.end(), &inverse_comp);
 
   for (size_t i = 0; i < a.size(); i++)
     ASSERT_EQ(a[i], sorted[i]);
