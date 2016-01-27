@@ -159,6 +159,26 @@ void sort(RandomAccessIterator first, RandomAccessIterator last) {
   sort(first, last, [](const Type &a, const Type &b) { return a < b; });
 }
 
+
+//
+// Stable sort function.
+//
+template<class RandomAccessIterator, class Compare>
+void stable_sort(RandomAccessIterator first, RandomAccessIterator last,
+                 Compare comp) {
+  __merge_sort(first, last, comp);
+}
+
+//
+// Stable sort function, using '<' operator for comparison.
+//
+template<class RandomAccessIterator>
+void stable_sort(RandomAccessIterator first, RandomAccessIterator last) {
+  using Type = typename std::iterator_traits<RandomAccessIterator>::value_type;
+  stable_sort(first, last, [](const Type &a, const Type &b) { return a < b; });
+}
+
+
 }  // namespace ustl
 
 #endif  // __USTL_ALGORITHM__

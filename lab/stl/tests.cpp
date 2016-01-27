@@ -14,10 +14,27 @@
 #include <vector>
 #include <ustl/vector>
 
+//
+// Helper functions & objects.
+//
+
 template<typename T>
 class InverseComp {
  public:
   bool operator()(const T &a, const T &b) { return a > b; }
+};
+
+class Comparable {
+ public:
+  Comparable() : data(0) {}
+  explicit Comparable(const int _data) : Comparable(_data, 0) {}
+  Comparable(const int _data, const int _nc) : data(_data), nc(_nc) {}
+  ~Comparable() {}
+
+  int data;
+  int nc;
+  bool operator<(const Comparable &rhs) const { return data < rhs.data; }
+  bool operator==(const Comparable &rhs) const { return data == rhs.data; }
 };
 
 static bool inverse_comp(const int &a, const int &b) { return a > b; }
@@ -122,6 +139,26 @@ TEST(algorithm, sort_comp_funcptr) {
 
   for (size_t i = 0; i < a.size(); i++)
     ASSERT_EQ(a[i], sorted[i]);
+}
+
+// Stable sort
+
+TEST(algorithm, stable_sort) {
+  ustl::vector<Comparable> a{
+    Comparable(0, 0),
+    Comparable(2),
+    Comparable(0, 1),
+    Comparable(1)
+  };
+
+  ustl::stable_sort(a.begin(), a.end());
+
+  ASSERT_EQ(a[0].data, 0);
+  ASSERT_EQ(a[0].nc,   0);
+  ASSERT_EQ(a[1].data, 0);
+  ASSERT_EQ(a[1].nc,   1);
+  ASSERT_EQ(a[2].data, 1);
+  ASSERT_EQ(a[3].data, 2);
 }
 
 // Array tests
