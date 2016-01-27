@@ -12,17 +12,6 @@
 
 namespace ustl {
 
-//
-// Default comparison object. Requires type to implement <= operator.
-//
-template<typename T>
-class __DefaultComparison {
- public:
-  bool operator()(const T &a, const T &b) {
-    return a < b;
-  }
-};
-
 
 //
 // Bubble sort.
@@ -130,12 +119,12 @@ void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
 }
 
 //
-// Sort using default comparison.
+// Sort function, using '<' operator for comparison.
 //
 template<typename RandomAccessIterator>
 void sort(RandomAccessIterator first, RandomAccessIterator last) {
   using Type = typename std::iterator_traits<RandomAccessIterator>::value_type;
-  sort(first, last, __DefaultComparison<Type>());
+  sort(first, last, [](const Type &a, const Type &b) { return a < b; });
 }
 
 }  // namespace ustl
