@@ -19,7 +19,7 @@
 TEST(algorithm, sort) {
   ustl::vector<int> a{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
   ustl::vector<int> b{9, 8, 7, 6, 5, 4, 3, 2, 1};
-  const std::vector<int> sorted{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const ustl::vector<int> sorted{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
   ustl::sort(a.begin(), a.end());
   ustl::sort(b.begin(), b.end());
@@ -29,6 +29,22 @@ TEST(algorithm, sort) {
 
   for (size_t i = 0; i < b.size(); i++)
     ASSERT_EQ(b[i], sorted[i]);
+}
+
+template<typename T>
+class InverseComp {
+ public:
+  bool operator()(T a, T b) { return a > b; }
+};
+
+TEST(algorithm, sort_comp) {
+  ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const ustl::vector<int> sorted{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+
+  ustl::sort(a.begin(), a.end(), InverseComp<int>());
+
+  for (size_t i = 0; i < a.size(); i++)
+    ASSERT_EQ(a[i], sorted[i]);
 }
 
 // Array tests
