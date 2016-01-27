@@ -34,7 +34,7 @@ TEST(algorithm, sort) {
 template<typename T>
 class InverseComp {
  public:
-  bool operator()(T a, T b) { return a > b; }
+  bool operator()(const T &a, const T &b) { return a > b; }
 };
 
 TEST(algorithm, sort_comp) {

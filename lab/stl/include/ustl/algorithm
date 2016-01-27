@@ -18,7 +18,7 @@ namespace ustl {
 template<typename T>
 class __DefaultComparison {
  public:
-  bool operator()(const T a, const T b) {
+  bool operator()(const T &a, const T &b) {
     return a < b;
   }
 };
