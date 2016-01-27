@@ -161,6 +161,20 @@ TEST(algorithm, stable_sort) {
   ASSERT_EQ(a[3].data, 2);
 }
 
+// is_sorted()
+
+TEST(algorithm, is_sorted) {
+  ustl::vector<int> a{1, 2, 3, 4, 5};
+  ustl::vector<int> b{5, 4, 3, 1, 2};
+  ustl::vector<int> c{1, 2, 3, 5, 4};
+  ustl::vector<int> d{1, 1, 1, 1, 1};
+
+  ASSERT_TRUE(ustl::is_sorted(a.begin(), a.end()));
+  ASSERT_FALSE(ustl::is_sorted(b.begin(), b.end()));
+  ASSERT_FALSE(ustl::is_sorted(c.begin(), c.end()));
+  ASSERT_TRUE(ustl::is_sorted(d.begin(), d.end()));
+}
+
 // Array tests
 
 TEST(array, size) {

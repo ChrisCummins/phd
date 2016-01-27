@@ -179,6 +179,38 @@ void stable_sort(RandomAccessIterator first, RandomAccessIterator last) {
 }
 
 
+//
+// Is sorted function.
+//
+template<class ForwardIterator, class Compare>
+bool is_sorted(ForwardIterator first, ForwardIterator last, Compare comp) {
+  auto prev = first;
+  first++;
+
+  while (first != last) {
+    if (comp(*first, *prev))
+      return false;
+    prev = first;
+    first++;
+  }
+
+  return true;
+}
+
+
+//
+// Is sorted function, using '<' operator for comparison.
+//
+template<class ForwardIterator>
+bool is_sorted(ForwardIterator first, ForwardIterator last) {
+  using Type = typename std::iterator_traits<ForwardIterator>::value_type;
+  return is_sorted(first, last, [](const Type &a, const Type &b) {
+      return a < b;
+    });
+}
+
+
+
 }  // namespace ustl
 
 #endif  // __USTL_ALGORITHM__
