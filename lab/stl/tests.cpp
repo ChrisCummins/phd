@@ -39,7 +39,201 @@ class Comparable {
 
 static bool inverse_comp(const int &a, const int &b) { return a > b; }
 
+// lambdas
+auto is_even = [](const int &x) -> bool{ return !(x % 2); };
+auto increment = [](int &x) -> void{ x++; };
+
 // Algorithm tests
+
+// all_of
+
+TEST(algorithm, all_of) {
+  ustl::vector<int> a{2, 4, 6, 8};
+  ustl::vector<int> b{2, 4, 6, 7, 8};
+
+  ASSERT_TRUE(ustl::all_of(a.begin(), a.end(), is_even));
+  ASSERT_FALSE(ustl::all_of(b.begin(), b.end(), is_even));
+}
+
+// any_of
+
+TEST(algorithm, any_of) {
+  ustl::vector<int> a{2, 4, 6, 8};
+  ustl::vector<int> b{1, 3, 5, 7};
+  ustl::vector<int> c{1, 3, 5, 6, 7};
+
+  ASSERT_TRUE(ustl::any_of(a.begin(), a.end(), is_even));
+  ASSERT_FALSE(ustl::any_of(b.begin(), b.end(), is_even));
+  ASSERT_TRUE(ustl::any_of(c.begin(), c.end(), is_even));
+}
+
+// none_of
+
+TEST(algorithm, none_of) {
+  ustl::vector<int> a{2, 4, 6, 8};
+  ustl::vector<int> b{1, 3, 5, 7};
+  ustl::vector<int> c{1, 3, 5, 6, 7};
+
+  ASSERT_FALSE(ustl::none_of(a.begin(), a.end(), is_even));
+  ASSERT_TRUE(ustl::none_of(b.begin(), b.end(), is_even));
+  ASSERT_FALSE(ustl::none_of(c.begin(), c.end(), is_even));
+}
+
+// for_each
+
+TEST(algorithm, for_each) {
+  ustl::vector<int> in{1, 2, 3, 4, 5};
+  ustl::vector<int> out{2, 3, 4, 5, 6};
+
+  ustl::for_each(in.begin(), in.end(), increment);
+
+  for (size_t i = 0; i < 5; i++)
+    ASSERT_EQ(in[i], out[i]);
+}
+
+// find
+
+TEST(algorithm, find) {
+  ustl::vector<int> a{1, 2, 3, 4, 5};
+  ustl::vector<int> b{2, 4, 6, 8, 10};
+
+  ASSERT_EQ(3, *ustl::find(a.begin(), a.end(), 3));
+  ASSERT_EQ(b.end(), ustl::find(b.begin(), b.end(), 3));
+}
+
+// find_if()
+
+TEST(algorithm, find_if) {
+  ustl::vector<int> a{1, 3, 5, 7, 9};
+  ustl::vector<int> b{2, 4, 6, 8, 10};
+
+  ASSERT_EQ(a.end(), ustl::find_if(a.begin(), a.end(), is_even));
+  ASSERT_EQ(b.begin(), ustl::find_if(b.begin(), b.end(), is_even));
+}
+
+// find_if_not()
+
+TEST(algorithm, find_if_not) {
+  ustl::vector<int> a{1, 3, 5, 7, 9};
+  ustl::vector<int> b{2, 4, 6, 8, 10};
+
+  ASSERT_EQ(a.begin(), ustl::find_if_not(a.begin(), a.end(), is_even));
+  ASSERT_EQ(b.end(), ustl::find_if_not(b.begin(), b.end(), is_even));
+}
+
+// find_end()
+
+TEST(algorithm, find_end) {
+  ustl::vector<int> a{1, 2, 3, 4, 5, 6, 1, 2, 3, 9};
+  ustl::vector<int> seq{1, 2, 3};
+  ustl::vector<int> notseq{0, 1};
+
+  ASSERT_EQ(&a[6], ustl::find_end(a.begin(), a.end(),
+                                  seq.begin(), seq.end()));
+  ASSERT_EQ(a.end(), ustl::find_end(a.begin(), a.end(),
+                                    notseq.begin(), notseq.end()));
+
+  // Check against behaviour of std library.
+  ASSERT_EQ(ustl::find_end(a.begin(), a.end(),
+                           seq.begin(), seq.end()),
+            std::find_end(a.begin(), a.end(),
+                       seq.begin(), seq.end()));
+  ASSERT_EQ(ustl::find_end(a.begin(), a.end(),
+                           notseq.begin(), notseq.end()),
+            std::find_end(a.begin(), a.end(),
+                          notseq.begin(), notseq.end()));
+}
+
+// find_first_of()
+
+TEST(algorithm, find_first_of) {
+  ustl::vector<int> a{1, 2, 3, 4, 5, 6, 1, 2, 3, 9};
+  ustl::vector<int> seq{-1, 2, 3};
+  ustl::vector<int> notseq{0, -1};
+
+  ASSERT_EQ(&a[1], ustl::find_first_of(a.begin(), a.end(),
+                                       seq.begin(), seq.end()));
+  ASSERT_EQ(a.end(), ustl::find_first_of(a.begin(), a.end(),
+                                         notseq.begin(), notseq.end()));
+
+  // Check against behaviour of std library.
+  ASSERT_EQ(ustl::find_first_of(a.begin(), a.end(),
+                                seq.begin(), seq.end()),
+            std::find_first_of(a.begin(), a.end(),
+                               seq.begin(), seq.end()));
+  ASSERT_EQ(ustl::find_first_of(a.begin(), a.end(),
+                                notseq.begin(), notseq.end()),
+            std::find_first_of(a.begin(), a.end(),
+                               notseq.begin(), notseq.end()));
+}
+
+// adjacent_find()
+
+TEST(algorithm, adjacent_find) {
+  ustl::vector<int> a{1, 1, 2, 3, 4, 5, 5};
+  ustl::vector<int> b{0, 1, 2, 3, 3, 4, 5};
+
+  ASSERT_EQ(a.begin(), ustl::adjacent_find(a.begin(), a.end()));
+  ASSERT_EQ(&b[3], ustl::adjacent_find(b.begin(), b.end()));
+}
+
+// count_if()
+
+TEST(algorithm, count_if) {
+  ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  ustl::vector<int> b{1, 3, 5, 7, 9};
+
+  ASSERT_EQ(5, ustl::count_if(a.begin(), a.end(), is_even));
+  ASSERT_EQ(0, ustl::count_if(b.begin(), b.end(), is_even));
+}
+
+// count()
+
+TEST(algorithm, count) {
+  ustl::vector<int> a{1, 2, 3, 1, 1};
+  ustl::vector<int> b{1, 3, 5, 7, 9};
+
+  ASSERT_EQ(3, ustl::count(a.begin(), a.end(), 1));
+  ASSERT_EQ(0, ustl::count(b.begin(), b.end(), -10));
+}
+
+// mismatch()
+
+TEST(algorithm, mismatch) {
+  ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8};
+  ustl::vector<int> b{1, 2, 3, 0, 0, 0, 0, 0};
+  ustl::vector<int> c{0, 2, 3, 0, 0, 0, 0, 0};
+
+  ASSERT_EQ(&a[3], ustl::mismatch(a.begin(), a.end(), b.begin()).first);
+  ASSERT_EQ(&b[3], ustl::mismatch(a.begin(), a.end(), b.begin()).second);
+
+  ASSERT_EQ(a.begin(), ustl::mismatch(a.begin(), a.end(), c.begin()).first);
+  ASSERT_EQ(c.begin(), ustl::mismatch(a.begin(), a.end(), c.begin()).second);
+}
+
+// equal()
+
+TEST(algorithm, equal) {
+  ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8};
+  ustl::vector<int> b{1, 2, 3, 4, 5, 6, 7, 8};
+  ustl::vector<int> c{0, 2, 3, 0, 0, 0, 0, 0};
+
+  ASSERT_TRUE(ustl::equal(a.begin(), a.end(), b.begin()));
+  ASSERT_FALSE(ustl::equal(a.begin(), a.end(), c.begin()));
+}
+
+// is_permutation()
+
+TEST(algorithm, is_permutation) {
+  ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8};
+  ustl::vector<int> b{1, 2, 3, 4, 5, 6, 7, 8};
+  ustl::vector<int> c{8, 2, 3, 4, 5, 7, 6, 1};
+  ustl::vector<int> d{0, 0, 0, 0, 1, 1, 2, 3};
+
+  ASSERT_TRUE(ustl::equal(a.begin(), a.end(), b.begin()));
+  ASSERT_FALSE(ustl::equal(a.begin(), a.end(), c.begin()));
+  ASSERT_FALSE(ustl::equal(a.begin(), a.end(), d.begin()));
+}
 
 // Merge
 
