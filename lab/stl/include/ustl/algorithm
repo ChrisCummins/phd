@@ -7,6 +7,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <utility>
 
 #include "./vector"
 
@@ -209,6 +210,101 @@ bool is_sorted(ForwardIterator first, ForwardIterator last) {
     });
 }
 
+
+//
+// min()
+//
+
+template<class T>
+constexpr const T& min(const T& a, const T& b) {
+  return b > a ? a : b;
+}
+
+template<class T, class Compare>
+constexpr const T& min(const T& a, const T& b, Compare comp) {
+  return comp(a, b) ? a : b;
+}
+
+template<class T, class Compare>
+constexpr T min(std::initializer_list<T> il, Compare comp) {
+  auto i = il.begin();
+  auto _min = *i;
+
+  while (i != il.end()) {
+    if (comp(*i, _min))
+      _min = *i;
+    i++;
+  }
+
+  return _min;
+}
+
+template<class T>
+constexpr T min(std::initializer_list<T> il) {
+  return ustl::min(il, [](const T& a, const T& b) { return a < b; });
+}
+
+
+//
+// max()
+//
+
+template<class T>
+constexpr const T& max(const T& a, const T& b) {
+  return b < a ? a : b;
+}
+
+template<class T, class Compare>
+constexpr const T& max(const T& a, const T& b, Compare comp) {
+  return comp(a, b) ? b : a;
+}
+
+template<class T, class Compare>
+constexpr T max(std::initializer_list<T> il, Compare comp) {
+  auto i = il.begin();
+  auto _max = *i;
+
+  while (i != il.end()) {
+    if (comp(_max, *i))
+      _max = *i;
+    i++;
+  }
+
+  return _max;
+}
+
+template<class T>
+constexpr T max(std::initializer_list<T> il) {
+  return ustl::max(il, [](const T& a, const T& b) { return a < b; });
+}
+
+
+//
+// minmax()
+//
+
+template<class T, class Compare>
+constexpr std::pair<const T&, const T&> minmax(const T& a, const T& b,
+                                               Compare comp) {
+  return std::pair<const T&, const T&>(ustl::min(a, b, comp),
+                                       ustl::max(a, b, comp));
+}
+
+template<class T>
+constexpr std::pair<const T&, const T&> minmax(const T& a, const T& b) {
+  return ustl::minmax(a, b, [](const T& x, const T& y) { return x < y; });
+}
+
+template<class T, class Compare>
+constexpr std::pair<T, T> minmax(std::initializer_list<T> il, Compare comp) {
+  return std::pair<const T&, const T&>(ustl::min(il, comp),
+                                       ustl::max(il, comp));
+}
+
+template<class T>
+constexpr std::pair<T, T> minmax(std::initializer_list<T> il) {
+  return ustl::minmax(il, [](const T& a, const T& b) { return a < b; });
+}
 
 
 }  // namespace ustl

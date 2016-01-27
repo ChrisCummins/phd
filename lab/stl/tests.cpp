@@ -175,6 +175,51 @@ TEST(algorithm, is_sorted) {
   ASSERT_TRUE(ustl::is_sorted(d.begin(), d.end()));
 }
 
+// min()
+
+TEST(algorithm, min) {
+  ASSERT_EQ(1, ustl::min(5, 1));
+  ASSERT_EQ(1, ustl::min(1, 5));
+
+  ASSERT_EQ(5, ustl::min(5, 1, inverse_comp));
+  ASSERT_EQ(5, ustl::min(1, 5, inverse_comp));
+
+  ASSERT_EQ(1, ustl::min({3, 4, 1, 10, 1000}));
+  ASSERT_EQ(1000, ustl::min({3, 4, 1, 10, 1000}, inverse_comp));
+}
+
+// max()
+
+TEST(algorithm, max) {
+  ASSERT_EQ(5, ustl::max(5, 1));
+  ASSERT_EQ(5, ustl::max(1, 5));
+
+  ASSERT_EQ(1, ustl::max(5, 1, inverse_comp));
+  ASSERT_EQ(1, ustl::max(1, 5, inverse_comp));
+
+  ASSERT_EQ(1000, ustl::max({3, 4, 1, 10, 1000}));
+  ASSERT_EQ(1, ustl::max({3, 4, 1, 10, 1000}, inverse_comp));
+}
+
+// minmax()
+
+TEST(algorithm, minmax) {
+  ASSERT_EQ(1, ustl::minmax(5, 1).first);
+  ASSERT_EQ(5, ustl::minmax(5, 1).second);
+  ASSERT_EQ(1, ustl::minmax(1, 5).first);
+  ASSERT_EQ(5, ustl::minmax(1, 5).second);
+
+  ASSERT_EQ(5, ustl::minmax(5, 1, inverse_comp).first);
+  ASSERT_EQ(1, ustl::minmax(5, 1, inverse_comp).second);
+  ASSERT_EQ(5, ustl::minmax(1, 5, inverse_comp).first);
+  ASSERT_EQ(1, ustl::minmax(1, 5, inverse_comp).second);
+
+  ASSERT_EQ(1, ustl::minmax({3, 4, 1, 10, 1000}).first);
+  ASSERT_EQ(1000, ustl::minmax({3, 4, 1, 10, 1000}).second);
+  ASSERT_EQ(1000, ustl::minmax({3, 4, 1, 10, 1000}, inverse_comp).first);
+  ASSERT_EQ(1, ustl::minmax({3, 4, 1, 10, 1000}, inverse_comp).second);
+}
+
 // Array tests
 
 TEST(array, size) {
