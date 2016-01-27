@@ -2,6 +2,8 @@
 //
 // algorithm
 //
+// Descriptions of individual algorithms are taken from C++ documentation.
+//
 #ifndef __USTL_ALGORITHM__
 #define __USTL_ALGORITHM__
 
@@ -14,9 +16,335 @@
 namespace ustl {
 
 
+///////////////////////////////////////
+// Non-modifying sequence operations //
+///////////////////////////////////////
+
+
 //
-// Merge function.
+// all_of()
 //
+// Returns true if pred returns true for all the elements in the range
+// [first,last) or if the range is empty, and false otherwise.
+template<class InputIterator, class UnaryPredicate>
+bool all_of(InputIterator first, InputIterator last, UnaryPredicate pred) {
+  // TODO: implement
+}
+
+
+//
+// any_of()
+//
+// Returns true if pred returns true for any of the elements in the
+// range [first,last), and false otherwise.
+//
+// If [first,last) is an empty range, the function returns false.
+template<class InputIterator, class UnaryPredicate>
+bool any_of(InputIterator first, InputIterator last, UnaryPredicate pred) {
+  // TODO: implement
+}
+
+
+//
+// none_of()
+//
+// Returns true if pred returns false for all the elements in the
+// range [first,last) or if the range is empty, and false otherwise.
+template<class InputIterator, class UnaryPredicate>
+bool none_of(InputIterator first, InputIterator last, UnaryPredicate pred) {
+  // TODO: implement
+}
+
+
+//
+// for_each()
+//
+// Applies function fn to each of the elements in the range
+// [first,last).
+template<class InputIterator, class Function>
+Function for_each(InputIterator first, InputIterator last, Function fn) {
+  // TODO: implement
+}
+
+
+//
+// find()
+//
+// Returns an iterator to the first element in the range [first,last)
+// that compares equal to val. If no such element is found, the
+// function returns last.
+//
+// The function uses operator== to compare the individual elements to
+// val.
+template<class InputIterator, class T>
+InputIterator find(InputIterator first, InputIterator last, const T& val) {
+  // TODO: implement
+}
+
+
+//
+// find_if()
+//
+// Returns an iterator to the first element in the range [first,last)
+// for which pred returns true. If no such element is found, the
+// function returns last.
+template<class InputIterator, class UnaryPredicate>
+InputIterator find_if(InputIterator first,
+                      InputIterator last,
+                      UnaryPredicate pred) {
+  // TODO: implement
+}
+
+
+//
+// find_if_not()
+//
+// Returns an iterator to the first element in the range [first,last)
+// for which pred returns false. If no such element is found, the
+// function returns last.
+template<class InputIterator, class UnaryPredicate>
+InputIterator find_if_not (InputIterator first,
+                           InputIterator last,
+                           UnaryPredicate pred) {
+  // TODO: implement
+}
+
+
+//
+// find_end()
+//
+// Searches the range [first1,last1) for the last occurrence of the
+// sequence defined by [first2,last2), and returns an iterator to its
+// first element, or last1 if no occurrences are found.
+//
+// The elements in both ranges are compared sequentially using
+// operator== (or pred, in version (2)): A subsequence of
+// [first1,last1) is considered a match only when this is true for all
+// the elements of [first2,last2).
+//
+// This function returns the last of such occurrences. For an
+// algorithm that returns the first instead, see search.
+template<class ForwardIterator1, class ForwardIterator2>
+ForwardIterator1 find_end(ForwardIterator1 first1, ForwardIterator1 last1,
+                          ForwardIterator2 first2, ForwardIterator2 last2) {
+  // TODO: implement
+}
+
+template<class ForwardIterator1, class ForwardIterator2, class BinaryPredicate>
+ForwardIterator1 find_end(ForwardIterator1 first1, ForwardIterator1 last1,
+                          ForwardIterator2 first2, ForwardIterator2 last2,
+                          BinaryPredicate pred) {
+  // TODO: implement
+}
+
+//
+// find_first_of()
+//
+// Returns an iterator to the first element in the range
+// [first1,last1) that matches any of the elements in
+// [first2,last2). If no such element is found, the function returns
+// last1.
+//
+// The elements in [first1,last1) are sequentially compared to each of
+// the values in [first2,last2) using operator== (or pred, in version
+// (2)), until a pair matches.
+template<class InputIterator, class ForwardIterator>
+InputIterator find_first_of(InputIterator first1, InputIterator last1,
+                            ForwardIterator first2, ForwardIterator last2) {
+  // TODO: implement
+}
+
+template<class InputIterator, class ForwardIterator, class BinaryPredicate>
+InputIterator find_first_of(InputIterator first1, InputIterator last1,
+                            ForwardIterator first2, ForwardIterator last2,
+                            BinaryPredicate pred) {
+  // TODO: implement
+}
+
+
+//
+// adjacent_find()
+//
+// Searches the range [first,last) for the first occurrence of two
+// consecutive elements that match, and returns an iterator to the
+// first of these two elements, or last if no such pair is found.
+//
+// Two elements match if they compare equal using operator== (or using
+// pred, in version (2)).
+template<class ForwardIterator>
+ForwardIterator adjacent_find(ForwardIterator first, ForwardIterator last) {
+  // TODO: implement
+}
+
+template<class ForwardIterator, class BinaryPredicate>
+ForwardIterator adjacent_find(ForwardIterator first, ForwardIterator last,
+                              BinaryPredicate pred) {
+  // TODO: implement
+}
+
+
+//
+// count()
+//
+// Returns the number of elements in the range [first,last) that
+// compare equal to val.
+//
+// The function uses operator== to compare the individual elements to
+// val.
+template<class InputIterator, class T>
+typename std::iterator_traits<InputIterator>::difference_type
+count(InputIterator first, InputIterator last, const T& val) {
+  // TODO: implement
+}
+
+
+//
+// count_if()
+//
+// Returns the number of elements in the range [first,last) for which
+// pred is true.
+template<class InputIterator, class UnaryPredicate>
+typename std::iterator_traits<InputIterator>::difference_type
+count_if(InputIterator first, InputIterator last, UnaryPredicate pred) {
+  // TODO: implement
+}
+
+
+//
+// mismatch()
+//
+// Compares the elements in the range [first1,last1) with those in the
+// range beginning at first2, and returns the first element of both
+// sequences that does not match.
+//
+// The elements are compared using operator== (or pred, in version
+// (2)).
+//
+// The function returns a pair of iterators to the first element in
+// each range that does not match.
+template<class InputIterator1, class InputIterator2>
+pair<InputIterator1, InputIterator2>
+mismatch(InputIterator1 first1, InputIterator1 last1,
+         InputIterator2 first2) {
+  // TODO: implement
+}
+
+template<class InputIterator1, class InputIterator2, class BinaryPredicate>
+pair<InputIterator1, InputIterator2>
+mismatch(InputIterator1 first1, InputIterator1 last1,
+         InputIterator2 first2, BinaryPredicate pred) {
+  // TODO: implement
+}
+
+
+//
+// equal()
+//
+// Compares the elements in the range [first1,last1) with those in the
+// range beginning at first2, and returns true if all of the elements
+// in both ranges match.
+//
+// The elements are compared using operator== (or pred, in version
+// (2)).
+template<class InputIterator1, class InputIterator2>
+bool equal(InputIterator1 first1, InputIterator1 last1,
+           InputIterator2 first2) {
+  // TODO: implement
+}
+
+template<class InputIterator1, class InputIterator2, class BinaryPredicate>
+bool equal(InputIterator1 first1, InputIterator1 last1,
+           InputIterator2 first2, BinaryPredicate pred) {
+  // TODO: implement
+}
+
+
+//
+// is_permutation()
+//
+// Compares the elements in the range [first1,last1) with those in the
+// range beginning at first2, and returns true if all of the elements
+// in both ranges match, even in a different order.
+//
+// The elements are compared using operator== (or pred, in version
+// (2)).
+template<class ForwardIterator1, class ForwardIterator2>
+bool is_permutation(ForwardIterator1 first1, ForwardIterator1 last1,
+                    ForwardIterator2 first2) {
+  // TODO: implement
+}
+
+template<class ForwardIterator1, class ForwardIterator2, class BinaryPredicate>
+bool is_permutation(ForwardIterator1 first1, ForwardIterator1 last1,
+                    ForwardIterator2 first2, BinaryPredicate pred) {
+  // TODO: implement
+}
+
+
+//
+// search()
+//
+// Searches the range [first1,last1) for the first occurrence of the
+// sequence defined by [first2,last2), and returns an iterator to its
+// first element, or last1 if no occurrences are found.
+//
+// The elements in both ranges are compared sequentially using
+// operator== (or pred, in version (2)): A subsequence of
+// [first1,last1) is considered a match only when this is true for all
+// the elements of [first2,last2).
+//
+// This function returns the first of such occurrences. For an
+// algorithm that returns the last instead, see find_end.
+template<class ForwardIterator1, class ForwardIterator2>
+ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
+                        ForwardIterator2 first2, ForwardIterator2 last2) {
+  // TODO: implement
+}
+
+template<class ForwardIterator1, class ForwardIterator2, class BinaryPredicate>
+ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
+                        ForwardIterator2 first2, ForwardIterator2 last2,
+                        BinaryPredicate pred) {
+  // TODO: implement
+}
+
+
+//
+// search_n()
+//
+// Searches the range [first,last) for a sequence of count elements,
+// each comparing equal to val (or for which pred returns true).
+//
+// The function returns an iterator to the first of such elements, or
+// last if no such sequence is found.
+template<class ForwardIterator, class Size, class T>
+ForwardIterator search_n(ForwardIterator first, ForwardIterator last,
+                         Size count, const T& val) {
+  // TODO: implement
+}
+
+template<class ForwardIterator, class Size, class T, class BinaryPredicate>
+ForwardIterator search_n(ForwardIterator first, ForwardIterator last,
+                         Size count, const T& val, BinaryPredicate pred) {
+  // TODO: implement
+}
+
+
+/////////////////////////////////////////
+// Merge (operating on sorted ranges): //
+/////////////////////////////////////////
+
+//
+// merge()
+//
+// Combines the elements in the sorted ranges [first1,last1) and
+// [first2,last2), into a new range beginning at result with all its
+// elements sorted.
+//
+// The elements are compared using operator< for the first version,
+// and comp for the second. The elements in both ranges shall already
+// be ordered according to this same criterion (operator< or
+// comp). The resulting range is also sorted according to this.
 template<class InputIterator1, class InputIterator2,
          class OutputIterator, class Compare>
 OutputIterator merge(InputIterator1 first1, InputIterator1 last1,
@@ -43,9 +371,6 @@ OutputIterator merge(InputIterator1 first1, InputIterator1 last1,
   return ret;
 }
 
-//
-// Merge function, using '<' operator for comparison.
-//
 template<class InputIterator1, class InputIterator2, class OutputIterator>
 OutputIterator merge(InputIterator1 first1, InputIterator1 last1,
                      InputIterator2 first2, InputIterator2 last2,
@@ -57,14 +382,12 @@ OutputIterator merge(InputIterator1 first1, InputIterator1 last1,
 }
 
 
-//
-// Sort functions.
-//
+//////////////
+// Sorting: //
+//////////////
 
 
-//
 // Bubble sort.
-//
 template<typename RandomAccessIterator, typename Compare>
 void __bubble_sort(RandomAccessIterator first,
                    RandomAccessIterator last,
@@ -85,9 +408,7 @@ void __bubble_sort(RandomAccessIterator first,
   } while (changed);
 }
 
-//
 // Insertion sort.
-//
 template<typename RandomAccessIterator, typename Compare>
 void __insertion_sort(RandomAccessIterator first,
                       RandomAccessIterator last,
@@ -105,9 +426,7 @@ void __insertion_sort(RandomAccessIterator first,
   }
 }
 
-//
 // Merge sort.
-//
 #define __merge_sort_bottom_out_sort __bubble_sort
 static const size_t __merge_sort_bottom_out_threshold = 8;
 
@@ -144,16 +463,20 @@ void __merge_sort(RandomAccessIterator first,
 
 
 //
-// Sort function.
+// sort()
 //
+// Sorts the elements in the range [first,last) into ascending order.
+//
+// The elements are compared using operator< for the first version,
+// and comp for the second.
+//
+// Equivalent elements are not guaranteed to keep their original
+// relative order (see stable_sort).
 template<typename RandomAccessIterator, typename Compare>
 void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
   __merge_sort(first, last, comp);
 }
 
-//
-// Sort function, using '<' operator for comparison.
-//
 template<typename RandomAccessIterator>
 void sort(RandomAccessIterator first, RandomAccessIterator last) {
   using Type = typename std::iterator_traits<RandomAccessIterator>::value_type;
@@ -162,17 +485,20 @@ void sort(RandomAccessIterator first, RandomAccessIterator last) {
 
 
 //
-// Stable sort function.
+// stable_sort()
 //
+// Sorts the elements in the range [first,last) into ascending order,
+// like sort, but stable_sort preserves the relative order of the
+// elements with equivalent values.
+//
+// The elements are compared using operator< for the first version,
+// and comp for the second.
 template<class RandomAccessIterator, class Compare>
 void stable_sort(RandomAccessIterator first, RandomAccessIterator last,
                  Compare comp) {
   __merge_sort(first, last, comp);
 }
 
-//
-// Stable sort function, using '<' operator for comparison.
-//
 template<class RandomAccessIterator>
 void stable_sort(RandomAccessIterator first, RandomAccessIterator last) {
   using Type = typename std::iterator_traits<RandomAccessIterator>::value_type;
@@ -181,8 +507,13 @@ void stable_sort(RandomAccessIterator first, RandomAccessIterator last) {
 
 
 //
-// Is sorted function.
+// is_sorted()
 //
+// Returns true if the range [first,last) is sorted into ascending
+// order.
+//
+// The elements are compared using operator< for the first version,
+// and comp for the second.
 template<class ForwardIterator, class Compare>
 bool is_sorted(ForwardIterator first, ForwardIterator last, Compare comp) {
   auto prev = first;
@@ -198,10 +529,6 @@ bool is_sorted(ForwardIterator first, ForwardIterator last, Compare comp) {
   return true;
 }
 
-
-//
-// Is sorted function, using '<' operator for comparison.
-//
 template<class ForwardIterator>
 bool is_sorted(ForwardIterator first, ForwardIterator last) {
   using Type = typename std::iterator_traits<ForwardIterator>::value_type;
@@ -211,10 +538,22 @@ bool is_sorted(ForwardIterator first, ForwardIterator last) {
 }
 
 
+//////////////
+// Min/max: //
+//////////////
+
 //
 // min()
 //
-
+// Returns the smallest of a and b. If both are equivalent, a is
+// returned.
+//
+// The versions for initializer lists (3) return the smallest of all
+// the elements in the list. Returning the first of them if these are
+// more than one.
+//
+// The function uses operator< (or comp, if provided) to compare the
+// values.
 template<class T>
 constexpr const T& min(const T& a, const T& b) {
   return b > a ? a : b;
@@ -248,7 +587,15 @@ constexpr T min(std::initializer_list<T> il) {
 //
 // max()
 //
-
+// Returns the largest of a and b. If both are equivalent, a is
+// returned.
+//
+// The versions for initializer lists (3) return the largest of all
+// the elements in the list. Returning the first of them if these are
+// more than one.
+//
+// The function uses operator< (or comp, if provided) to compare the
+// values.
 template<class T>
 constexpr const T& max(const T& a, const T& b) {
   return b < a ? a : b;
@@ -282,7 +629,17 @@ constexpr T max(std::initializer_list<T> il) {
 //
 // minmax()
 //
-
+// Returns a pair with the smallest of a and b as first element, and
+// the largest as second. If both are equivalent, the function returns
+// make_pair(a,b).
+//
+// The versions for initializer lists (3) return a pair with the
+// smallest of all the elements in the list as first element (the
+// first of them, if there are more than one), and the largest as
+// second (the last of them, if there are more than one).
+//
+// The function uses operator< (or comp, if provided) to compare the
+// values.
 template<class T, class Compare>
 constexpr std::pair<const T&, const T&> minmax(const T& a, const T& b,
                                                Compare comp) {
@@ -297,8 +654,21 @@ constexpr std::pair<const T&, const T&> minmax(const T& a, const T& b) {
 
 template<class T, class Compare>
 constexpr std::pair<T, T> minmax(std::initializer_list<T> il, Compare comp) {
-  return std::pair<const T&, const T&>(ustl::min(il, comp),
-                                       ustl::max(il, comp));
+  // While we could just be lazy and call min() and max() twice, this
+  // requires two iterations over the initializer list, so instead
+  // we'll perform the same operation using a single pass.
+  auto i = il.begin();
+  auto _min = *i, _max = *i;
+
+  while (i != il.end()) {
+    if (comp(*i, _min))
+      _min = *i;
+    else if (comp(_max, *i))
+      _max = *i;
+    i++;
+  }
+
+  return std::pair<const T&, const T&>(_min, _max);
 }
 
 template<class T>
