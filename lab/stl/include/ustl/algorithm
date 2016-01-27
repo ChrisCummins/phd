@@ -433,9 +433,9 @@ bool is_permutation(ForwardIterator1 first1, ForwardIterator1 last1,
 // first element, or last1 if no occurrences are found.
 //
 // The elements in both ranges are compared sequentially using
-// operator== (or pred, in version (2)): A subsequence of
-// [first1,last1) is considered a match only when this is true for all
-// the elements of [first2,last2).
+// operator== (or pred, if given: A subsequence of [first1,last1) is
+// considered a match only when this is true for all the elements of
+// [first2,last2).
 //
 // This function returns the first of such occurrences. For an
 // algorithm that returns the last instead, see find_end.
@@ -444,13 +444,22 @@ template<typename ForwardIterator1, typename ForwardIterator2,
 ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
                         ForwardIterator2 first2, ForwardIterator2 last2,
                         BinaryPredicate pred) {
-  // TODO: implement
+  while (first1 != last1) {
+    if (__is_subseq(first1, last1, first2, last2, pred))
+      return first1;
+    first1++;
+  }
+
+  return last1;
 }
 
 template<typename ForwardIterator1, typename ForwardIterator2>
 ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
                         ForwardIterator2 first2, ForwardIterator2 last2) {
-  // TODO: implement
+  using Type1 = typename std::iterator_traits<ForwardIterator1>::value_type;
+  using Type2 = typename std::iterator_traits<ForwardIterator2>::value_type;
+  auto pred = [](const Type1& a, const Type2& b) -> bool{ return a == b; };
+  return ustl::search(first1, last1, first2, last2, pred);
 }
 
 
@@ -466,13 +475,30 @@ template<typename ForwardIterator, typename Size, typename T,
          typename BinaryPredicate>
 ForwardIterator search_n(ForwardIterator first, ForwardIterator last,
                          Size count, const T& val, BinaryPredicate pred) {
-  // TODO: implement
+  auto _count = 0;
+  auto _seq = last;
+  while (first != last) {
+    if (*first == val || pred(*first, val)) {
+      if (!_count)
+        _seq = first;
+      _count++;
+    } else
+      _count = 0;
+
+    if (_count == count)
+      return _seq;
+
+    first++;
+  }
+
+  return last;
 }
 
 template<typename ForwardIterator, typename Size, typename T>
 ForwardIterator search_n(ForwardIterator first, ForwardIterator last,
                          Size count, const T& val) {
-  // TODO: implement
+  auto pred = [](const T& a, const T& b) -> bool{ return false; };
+  return ustl::search_n(first, last, count, val, pred);
 }
 
 

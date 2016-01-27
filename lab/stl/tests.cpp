@@ -235,6 +235,44 @@ TEST(algorithm, is_permutation) {
   ASSERT_FALSE(ustl::equal(a.begin(), a.end(), d.begin()));
 }
 
+// search()
+
+TEST(algorithm, search) {
+  ustl::vector<int> a{0, 1, 2, 3, 4, 5, 1, 2, 3, 9};
+  ustl::vector<int> seq{1, 2, 3};
+  ustl::vector<int> notseq{-10, -11};
+
+  ASSERT_EQ(&a[1], ustl::search(a.begin(), a.end(),
+                                seq.begin(), seq.end()));
+  ASSERT_EQ(a.end(), ustl::search(a.begin(), a.end(),
+                                  notseq.begin(), notseq.end()));
+
+  // Check against behaviour of std library.
+  ASSERT_EQ(ustl::search(a.begin(), a.end(),
+                         seq.begin(), seq.end()),
+            std::search(a.begin(), a.end(),
+                        seq.begin(), seq.end()));
+  ASSERT_EQ(ustl::search(a.begin(), a.end(),
+                         notseq.begin(), notseq.end()),
+            std::search(a.begin(), a.end(),
+                        notseq.begin(), notseq.end()));
+}
+
+// search_n()
+
+TEST(algorithm, search_n) {
+  ustl::vector<int> a{0, 0, 1, 1, 0, 1, 1, 0, 0, 0};
+
+  ASSERT_EQ(&a[7], ustl::search_n(a.begin(), a.end(), 3, 0));
+  ASSERT_EQ(a.end(), ustl::search_n(a.begin(), a.end(), 3, 1));
+
+  // Check against behaviour of std library.
+  ASSERT_EQ(ustl::search_n(a.begin(), a.end(), 3, 0),
+            std::search_n(a.begin(), a.end(), 3, 0));
+  ASSERT_EQ(ustl::search_n(a.begin(), a.end(), 3, 1),
+            std::search_n(a.begin(), a.end(), 3, 1));
+}
+
 // Merge
 
 TEST(algorithm, merge) {
