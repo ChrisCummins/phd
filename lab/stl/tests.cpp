@@ -571,46 +571,15 @@ TEST(array, data) {
   ASSERT_EQ(3, d[2]);
 }
 
-// Vector tests
 
-TEST(vector, size) {
-  ustl::vector<int> a;
-  ustl::vector<int> b(5);
-  ustl::vector<double> c(6, 3.5f);
-  ustl::vector<char> d = { 'a', 'b', 'c' };
+//////////////
+// Vectors: //
+//////////////
 
-  ASSERT_EQ(0u, a.size());
-  ASSERT_EQ(5u, b.size());
-  ASSERT_EQ(6u, c.size());
-  ASSERT_EQ(3u, d.size());
-}
 
-TEST(vector, capacity) {
-  ustl::vector<int> a;
-  ustl::vector<int> b(5);
-  ustl::vector<double> c(6, 3.5f);
-  ustl::vector<char> d = { 'a', 'b', 'c' };
+// vector constructors
 
-  ASSERT_TRUE(a.capacity() >= a.size());
-  ASSERT_TRUE(b.capacity() >= b.size());
-  ASSERT_TRUE(c.capacity() >= c.size());
-  ASSERT_TRUE(d.capacity() >= d.size());
-}
-
-TEST(vector, max_size) {
-  ustl::vector<int> a;
-  ustl::vector<int> b(5);
-  ustl::vector<double> c(6, 3.5f);
-  ustl::vector<char> d = { 'a', 'b', 'c' };
-
-  ASSERT_TRUE(a.size() < a.max_size());
-  ASSERT_TRUE(b.size() < b.max_size());
-  ASSERT_TRUE(c.size() < c.max_size());
-
-  ASSERT_EQ(a.max_size(), b.max_size());
-}
-
-TEST(vector, constructorValues) {
+TEST(vector, constructors) {
   ustl::vector<int> a(3);
   ustl::vector<double> b(3, 3.5f);
   ustl::vector<char> c = { 'a', 'b', 'c' };
@@ -625,6 +594,115 @@ TEST(vector, constructorValues) {
   ASSERT_EQ('b', c[1]);
   ASSERT_EQ('c', c[2]);
 }
+
+
+// vector capacity tests
+
+TEST(vector_capacity, size) {
+  ustl::vector<int> a;
+  ustl::vector<int> b(5);
+  ustl::vector<double> c(6, 3.5f);
+  ustl::vector<char> d = { 'a', 'b', 'c' };
+
+  ASSERT_EQ(0u, a.size());
+  ASSERT_EQ(5u, b.size());
+  ASSERT_EQ(6u, c.size());
+  ASSERT_EQ(3u, d.size());
+}
+
+TEST(vector_capacity, max_size) {
+  ustl::vector<int> a;
+  ustl::vector<int> b(5);
+  ustl::vector<double> c(6, 3.5f);
+  ustl::vector<char> d = { 'a', 'b', 'c' };
+
+  ASSERT_TRUE(a.size() < a.max_size());
+  ASSERT_TRUE(b.size() < b.max_size());
+  ASSERT_TRUE(c.size() < c.max_size());
+
+  ASSERT_EQ(a.max_size(), b.max_size());
+}
+
+TEST(vector_capacity, resize) {
+  ustl::vector<int> a{1, 2, 3, 4, 5};
+
+  size_t orig_cap = a.capacity();
+
+  // Resize down. This won't reduce the capacity.
+  a.resize(3);
+  ASSERT_EQ(3u, a.size());
+  ASSERT_EQ(orig_cap, a.capacity());
+
+
+  a.push_back(4);
+  ASSERT_EQ(4u, a.size());
+
+  // Resize up.
+  a.resize(5);
+  a[4] = 11;
+
+  ASSERT_EQ(4, a[3]);
+  ASSERT_EQ(11, a[4]);
+
+  // Resize and fill.
+  a.resize(10, -1);
+  ASSERT_EQ(-1, a.back());
+}
+
+TEST(vector_capacity, capacity) {
+  ustl::vector<int> a;
+  ustl::vector<int> b(5);
+  ustl::vector<double> c(6, 3.5f);
+  ustl::vector<char> d = { 'a', 'b', 'c' };
+
+  ASSERT_TRUE(a.capacity() >= a.size());
+  ASSERT_TRUE(b.capacity() >= b.size());
+  ASSERT_TRUE(c.capacity() >= c.size());
+  ASSERT_TRUE(d.capacity() >= d.size());
+}
+
+TEST(vector_capacity, empty) {
+  ustl::vector<int> a;
+  ustl::vector<int> b(0);
+  ustl::vector<int> c{1, 2, 3};
+
+  ASSERT_TRUE(a.empty());
+  ASSERT_TRUE(b.empty());
+  ASSERT_FALSE(c.empty());
+}
+
+TEST(vector_capacity, reserve) {
+  ustl::vector<int> a(100);
+  const size_t original_capacity = a.capacity();
+
+  a.reserve(3);
+  ASSERT_EQ(a.capacity(), original_capacity);
+
+  a.reserve(10000);
+  ASSERT_TRUE(a.capacity() > original_capacity);
+}
+
+TEST(vector_capacity, shrink_to_fit) {
+  ustl::vector<int> a(1000);
+  const size_t original_capacity = a.capacity();
+
+  a[2] = 10;
+
+  a.shrink_to_fit();
+  ASSERT_EQ(original_capacity, a.capacity());
+
+  a.resize(3);
+  ASSERT_EQ(10, a[2]);
+  ASSERT_TRUE(a.capacity() > a.size());
+  a.shrink_to_fit();
+
+  // Check that value remains unchanged.
+  ASSERT_EQ(10, a[2]);
+
+  // Check that capacity has shrunk.
+  ASSERT_TRUE(a.capacity() < original_capacity);
+}
+
 
 // vector_iterators:
 
@@ -725,7 +803,10 @@ TEST(vector_iterators, crend) {
     ASSERT_EQ(rev[i], b[i]);
 }
 
-TEST(vector, front) {
+
+// vector element access:
+
+TEST(vector_access, front) {
   ustl::vector<int> a(3);
   ustl::vector<double> b(3, 3.5f);
   ustl::vector<char> c = { 'a', 'b', 'c' };
@@ -735,7 +816,7 @@ TEST(vector, front) {
   ASSERT_EQ('a', c.front());
 }
 
-TEST(vector, back) {
+TEST(vector_access, back) {
   ustl::vector<int> a(3);
   ustl::vector<double> b(3, 3.5f);
   ustl::vector<char> c = { 'a', 'b', 'c' };
@@ -745,7 +826,7 @@ TEST(vector, back) {
   ASSERT_EQ('c', c.back());
 }
 
-TEST(vector, at) {
+TEST(vector_access, at) {
   ustl::vector<int> a(3);
   ustl::vector<double> b(3, 3.5f);
   ustl::vector<char> c = { 'a', 'b', 'c' };
@@ -777,51 +858,77 @@ TEST(vector, at) {
   } catch (std::out_of_range &e) {}
 }
 
-TEST(vector, resize) {
-  ustl::vector<int> a{1, 2, 3, 4, 5};
 
-  size_t orig_cap = a.capacity();
+// vector modifiers:
 
-  // Resize down. This won't reduce the capacity.
-  a.resize(3);
-  ASSERT_EQ(3u, a.size());
-  ASSERT_EQ(orig_cap, a.capacity());
+TEST(vector_modifiers, assign) {
+  ustl::vector<int> a;
+  std::vector<int> b{1, 2, 3};
 
+  a.assign(b.begin(), b.end());
+  for (size_t i = 0; i < 3; i++)
+    ASSERT_EQ(a[i], b[i]);
 
-  a.push_back(4);
-  ASSERT_EQ(4u, a.size());
+  a.assign(ustl::vector<int>::size_type(100), 3);
+  for (size_t i = 0; i < 100; i++)
+    ASSERT_EQ(a[i], 3);
 
-  // Resize up.
-  a.resize(5);
-  a[4] = 11;
+  a.assign({0, 1, 2, 3});
+  for (size_t i = 0; i < 4; i++)
+    ASSERT_EQ(a[i], static_cast<int>(i));
 
-  ASSERT_EQ(4, a[3]);
-  ASSERT_EQ(11, a[4]);
-
-  // Resize and fill.
-  a.resize(10, -1);
-  ASSERT_EQ(-1, a.back());
+  ASSERT_EQ(a.size(), ustl::vector<int>::size_type(4));
 }
 
-TEST(vector, shrink_to_fit) {
-  ustl::vector<int> a(1000);
-  const size_t original_capacity = a.capacity();
+TEST(vector_modifiers, push_back) {
+  ustl::vector<int> a;
 
-  a[2] = 10;
+  a.push_back(1);
+  a.push_back(2);
 
-  a.shrink_to_fit();
-  ASSERT_EQ(original_capacity, a.capacity());
+  ASSERT_EQ(a.size(), ustl::vector<int>::size_type(2));
+  ASSERT_EQ(a[0], 1);
+  ASSERT_EQ(a[1], 2);
+}
 
-  a.resize(3);
-  ASSERT_EQ(10, a[2]);
-  ASSERT_TRUE(a.capacity() > a.size());
-  a.shrink_to_fit();
+TEST(vector_modifiers, pop_back) {
+  ustl::vector<int> a{1, 2, 3};
 
-  // Check that value remains unchanged.
-  ASSERT_EQ(10, a[2]);
+  a.pop_back();
+  a.pop_back();
+  ASSERT_EQ(a.size(), ustl::vector<int>::size_type(1));
+  ASSERT_EQ(a[0], 1);
+}
 
-  // Check that capacity has shrunk.
-  ASSERT_TRUE(a.capacity() < original_capacity);
+TEST(vector_modifiers, insert) {
+  ustl::vector<int> a{1, 3, 4, 5, 6, 7, 8, 9, 10};
+  ustl::vector<int> b{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  ustl::vector<int> c{1, 2, 3, 0, 0, 0, 4, 5, 6, 7, 8, 9, 10};
+  ustl::vector<int> d{-1, -2, -3, 1, 2, 3, 0, 0, 0, 4, 5, 6, 7, 8, 9, 10};
+  ustl::vector<int> e{
+    -1, -2, -3, 1, 2, 3, 0, 0, 0, 4, 5, 6, 7, 8, 9, -1, -2, 10};
+
+  ustl::vector<int> ins{-1, -2, -3};
+
+  a.insert(&a[1], 2);
+  ASSERT_EQ(a.size(), ustl::vector<int>::size_type(10));
+  for (size_t i = 0; i < a.size(); i++)
+    ASSERT_EQ(a[i], b[i]);
+
+  a.insert(&a[3], ustl::vector<int>::size_type(3), static_cast<int>(0));
+  ASSERT_EQ(a.size(), ustl::vector<int>::size_type(13));
+  for (size_t i = 0; i < a.size(); i++)
+    ASSERT_EQ(a[i], c[i]);
+
+  a.insert(a.begin(), ins.begin(), ins.end());
+  ASSERT_EQ(a.size(), ustl::vector<int>::size_type(16));
+  for (size_t i = 0; i < a.size(); i++)
+    ASSERT_EQ(a[i], d[i]);
+
+  a.insert(a.end() - 1, {-1, -2});
+  ASSERT_EQ(a.size(), ustl::vector<int>::size_type(18));
+  for (size_t i = 0; i < a.size(); i++)
+    ASSERT_EQ(a[i], e[i]);
 }
 
 
