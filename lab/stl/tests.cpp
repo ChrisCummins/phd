@@ -14,6 +14,9 @@
 #include <vector>
 #include <ustl/vector>
 
+#include <map>
+#include <ustl/map>
+
 //
 // Helper functions & objects.
 //

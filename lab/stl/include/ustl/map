@@ -1,0 +1,912 @@
+// -*-c++-*-
+//
+// map class.
+//
+// Maps are associative containers that store elements formed by a
+// combination of a key value and a mapped value, following a specific
+// order.
+//
+// In a map, the key values are generally used to sort and uniquely
+// identify the elements, while the mapped values store the content
+// associated to this key. The types of key and mapped value may
+// differ, and are grouped together in member type value_type, which
+// is a pair type combining both:
+//
+//   typedef pair<const Key, T> value_type;
+//
+// Internally, the elements in a map are always sorted by its key
+// following a specific strict weak ordering criterion indicated by
+// its internal comparison object (of type Compare).
+//
+// map containers are generally slower than unordered_map containers
+// to access individual elements by their key, but they allow the
+// direct iteration on subsets based on their order.
+//
+// The mapped values in a map can be accessed directly by their
+// corresponding key using the bracket operator ((operator[]).
+//
+// Maps are typically implemented as binary search trees.
+//
+#ifndef __USTL_MAP__
+#define __USTL_MAP__
+
+#include <iterator>
+#include <functional>
+#include <memory>
+#include <utility>
+
+namespace ustl {
+
+template<typename Key,
+         typename T,
+         typename Compare = std::less<Key>,
+         typename Alloc = std::allocator<std::pair<const Key, T> >
+         > class map {
+
+  ///////////////////
+  // Member Types: //
+  ///////////////////
+
+  using key_type = Key;
+
+  using mapped_type = T;
+
+  using value_type = std::pair<const key_type, mapped_type>;
+
+  using key_compare = std::less<key_type>;
+
+  // TODO: value_compare - Nested function class to compare elements
+
+  using allocator_type = Alloc;
+
+  using reference = value_type&;
+
+  using const_reference = const value_type&;
+
+  using pointer = typename std::allocator_traits<allocator_type>::pointer;
+
+  using const_pointer =
+      typename std::allocator_traits<allocator_type>::const_pointer;
+
+  // TODO:
+  using iterator = T*;
+
+  // TODO:
+  using const_iterator = const iterator;
+
+  // TODO:
+  using reverse_iterator = std::reverse_iterator<iterator>;
+
+  // TODO:
+  using const_reverse_iterator = const std::reverse_iterator<iterator>;
+
+  // TODO:
+  using difference_type =
+      typename std::iterator_traits<iterator>::difference_type;
+
+  using size_type = size_t;
+
+  // TODO:
+  class value_compare {
+    friend class map;
+   protected:
+    Compare comp;
+    value_compare(Compare c) : comp(c) {}
+   public:
+    typedef bool result_type;
+    typedef value_type first_argument_type;
+    typedef value_type second_argument_type;
+    bool operator()(const value_type& x, const value_type& y) const {
+      return comp(x.first, y.first);
+    }
+  };
+
+
+  ///////////////////
+  // Constructors: //
+  ///////////////////
+  //
+  // The container keeps an internal copy of alloc, which is used to
+  // allocate and deallocate storage for its elements, and to
+  // construct and destroy them (as specified by its
+  // allocator_traits). If no alloc argument is passed to the
+  // constructor, a default-constructed allocator is used, except in
+  // the following cases:
+  //
+  // - The copy constructor (3, first signature) creates a container
+  //   that keeps and uses a copy of the allocator returned by calling
+  //   the appropriate selected_on_container_copy_construction trait
+  //   on x's allocator.
+  //
+  // - The move constructor (4, first signature) acquires x's
+  //   allocator.
+  //
+  // The container also keeps an internal copy of comp (or x's
+  // comparison object), which is used to establish the order of the
+  // elements in the container and to check for elements with
+  // equivalent keys.
+  //
+  // All elements are copied, moved or otherwise constructed by
+  // calling allocator_traits::construct with the appropriate
+  // arguments.
+  //
+
+  // empty container constructors (default constructor):
+  //
+  // Constructs an empty container, with no elements.
+  //
+  map() {
+    // TODO: implement
+  };
+
+  explicit map(const key_compare& comp,
+               const allocator_type& alloc = allocator_type()) {
+    // TODO: implement
+  };
+
+  explicit map(const allocator_type& alloc) {
+    // TODO: implement
+  };
+
+
+  // range constructors:
+  //
+  // Constructs a container with as many elements as the range
+  // [first,last), with each element emplace-constructed from its
+  // corresponding element in that range.
+  //
+  template<typename InputIterator>
+  map(InputIterator first, InputIterator last,
+      const key_compare& comp = key_compare(),
+      const allocator_type& = allocator_type()) {
+    // TODO: implement
+  }
+
+  template<typename InputIterator>
+  map(InputIterator first, InputIterator last,
+      const allocator_type& = allocator_type()) {
+    // TODO: implement
+  }
+
+
+  //
+  // copy constructor (and copying with allocator):
+  //
+  // Constructs a container with a copy of each of the elements in x.
+  //
+  map(const map& x) {
+    // TODO: implement
+  }
+
+  map(const map& x, const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+
+  //
+  // move constructor (and moving with allocator):
+  //
+  // Constructs a container that acquires the elements of x. If alloc
+  // is specified and is different from x's allocator, the elements
+  // are moved. Otherwise, no elements are constructed (their
+  // ownership is directly transferred). x is left in an unspecified
+  // but valid state.
+  //
+  map(map&& x) {
+    // TODO: implement
+  }
+
+  map(map&& x, const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+
+  //
+  // initializer list constructor:
+  //
+  // Constructs a container with a copy of each of the elements in il.
+  //
+  map(std::initializer_list<value_type> il,
+      const key_compare& comp = key_compare(),
+      const allocator_type& alloc = allocator_type()) {
+    // TODO: implement
+  }
+
+  map(std::initializer_list<value_type> il,
+      const allocator_type& alloc = allocator_type()) {
+    // TODO: implement
+  }
+
+
+  /////////////////
+  // Assignment: //
+  /////////////////
+  //
+  // The new container size is the same as the size of x (or il)
+  // before the call.
+  //
+  // The container preserves its current allocator, except if the
+  // allocator traits indicate x's allocator should propagate. This
+  // allocator is used (through its traits) to allocate or deallocate
+  // if there are changes in storage requirements, and to construct or
+  // destroy elements, if needed.
+  //
+
+
+  // copy:
+  //
+  // Copies all the elements from x into the container (with x
+  // preserving its contents).
+  //
+  map& operator=(const map& x) {
+    // TODO: implement
+  }
+
+
+  // move:
+  //
+  // Moves the elements of x into the container (x is left in an
+  // unspecified but valid state).
+  //
+  map& operator=(map&& x) {
+    // TODO: implement
+  }
+
+
+  // initializer list:
+  //
+  // Copies the elements of il into the container.
+  //
+  map& operator=(std::initializer_list<value_type> il) {
+    // TODO: implement
+  }
+
+
+  /////////////////
+  // Destructor: //
+  /////////////////
+
+  ~map() {
+    // TODO: implement
+  }
+
+
+  ////////////////
+  // Iterators: //
+  ////////////////
+
+
+  //
+  // begin():
+  //
+  // Returns an iterator referring to the first element in the map container.
+  //
+  // Because map containers keep their elements ordered at all times,
+  // begin points to the element that goes first following the
+  // container's sorting criterion.
+  //
+  // If the container is empty, the returned iterator value shall not
+  // be dereferenced.
+  //
+  iterator begin() noexcept {
+    // TODO: implement
+  }
+
+  const_iterator begin() const noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // end():
+  //
+  // Returns an iterator referring to the past-the-end element in the
+  // map container.
+  //
+  // The past-the-end element is the theoretical element that would
+  // follow the last element in the map container. It does not point
+  // to any element, and thus shall not be dereferenced.
+  //
+  // Because the ranges used by functions of the standard library do
+  // not include the element pointed by their closing iterator, this
+  // function is often used in combination with map::begin to specify
+  // a range including all the elements in the container.
+  //
+  // If the container is empty, this function returns the same as
+  // map::begin.
+  //
+  iterator end() noexcept {
+    // TODO: implement
+  }
+
+  const_iterator end() const noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // rbegin():
+  //
+  // Returns a reverse iterator pointing to the last element in the
+  // container (i.e., its reverse beginning).
+  //
+  // Reverse iterators iterate backwards: increasing them moves them
+  // towards the beginning of the container.
+  //
+  // rbegin points to the element preceding the one that would be
+  // pointed to by member end.
+  //
+  reverse_iterator rbegin() noexcept {
+    // TODO: implement
+  }
+
+  const_reverse_iterator rbegin() const noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // rend():
+  //
+  // Returns a reverse iterator pointing to the theoretical element
+  // right before the first element in the map container (which is
+  // considered its reverse end).
+  //
+  // The range between map::rbegin and map::rend contains all the
+  // elements of the container (in reverse order).
+  //
+  reverse_iterator rend() noexcept {
+    // TODO: implement
+  }
+
+  const_reverse_iterator rend() const noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // cbegin():
+  //
+  // Returns a const_iterator pointing to the first element in the
+  // container.
+  //
+  // A const_iterator is an iterator that points to const
+  // content. This iterator can be increased and decreased (unless it
+  // is itself also const), just like the iterator returned by
+  // map::begin, but it cannot be used to modify the contents it
+  // points to, even if the map object is not itself const.
+  //
+  // If the container is empty, the returned iterator value shall not
+  // be dereferenced.
+  //
+  const_iterator cbegin() const noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // cend():
+  //
+  // Returns a const_iterator pointing to the past-the-end element in
+  // the container.
+  //
+  // A const_iterator is an iterator that points to const
+  // content. This iterator can be increased and decreased (unless it
+  // is itself also const), just like the iterator returned by
+  // map::end, but it cannot be used to modify the contents it points
+  // to, even if the map object is not itself const.
+  //
+  // If the container is empty, this function returns the same as
+  // map::cbegin.
+  //
+  // The value returned shall not be dereferenced.
+  //
+  const_iterator cend() const noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // crbegin():
+  //
+  // Returns a const_reverse_iterator pointing to the last element in
+  // the container (i.e., its reverse beginning).
+  //
+  const_reverse_iterator crbegin() const noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // crend():
+  //
+  // Returns a const_reverse_iterator pointing to the theoretical
+  // element preceding the first element in the container (which is
+  // considered its reverse end).
+  //
+  const_reverse_iterator crend() const noexcept {
+    // TODO: implement
+  }
+
+
+  ///////////////
+  // Capacity: //
+  ///////////////
+
+
+  //
+  // empty():
+  //
+  // Returns whether the map container is empty (i.e. whether its size
+  // is 0).
+  //
+  // This function does not modify the container in any way. To clear
+  // the content of a map container, see map::clear.
+  //
+  bool empty() const noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // size():
+  //
+  // Returns the number of elements in the map container.
+  //
+  size_type size() const noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // max_size():
+  //
+  // Returns the maximum number of elements that the map container can
+  // hold.
+  //
+  // This is the maximum potential size the container can reach due to
+  // known system or library implementation limitations, but the
+  // container is by no means guaranteed to be able to reach that
+  // size: it can still fail to allocate storage at any point before
+  // that size is reached.
+  //
+  size_type max_size() const noexcept {
+    // TODO: implement
+  }
+
+
+  /////////////////////
+  // Element Access: //
+  /////////////////////
+
+
+  //
+  // operator[]:
+  //
+  // If k matches the key of an element in the container, the function
+  // returns a reference to its mapped value.
+  //
+  // If k does not match the key of any element in the container, the
+  // function inserts a new element with that key and returns a
+  // reference to its mapped value. Notice that this always increases
+  // the container size by one, even if no mapped value is assigned to
+  // the element (the element is constructed using its default
+  // constructor).
+  //
+  // A similar member function, map::at, has the same behavior when an
+  // element with the key exists, but throws an exception when it does
+  // not.
+  //
+  mapped_type& operator[](const key_type& k) {
+    // TODO: implement
+  }
+
+  mapped_type& operator[](key_type&& k) {
+    // TODO: implement
+  }
+
+
+  //
+  // at():
+  //
+  // Returns a reference to the mapped value of the element identified
+  // with key k.
+  //
+  // If k does not match the key of any element in the container, the
+  // function throws an out_of_range exception.
+  //
+  mapped_type& at(const key_type& k) {
+    // TODO: implement
+  }
+
+  const mapped_type& at(const key_type& k) const {
+    // TODO: implement
+  }
+
+
+  ////////////////
+  // Modifiers: //
+  ////////////////
+
+
+  //
+  // insert():
+  //
+  // Extends the container by inserting new elements, effectively
+  // increasing the container size by the number of elements inserted.
+  //
+  // Because element keys in a map are unique, the insertion operation
+  // checks whether each inserted element has a key equivalent to the
+  // one of an element already in the container, and if so, the
+  // element is not inserted, returning an iterator to this existing
+  // element (if the function returns a value).
+  //
+  // For a similar container allowing for duplicate elements, see
+  // multimap.
+  //
+  // An alternative way to insert elements in a map is by using member
+  // function map::operator[].
+  //
+  // Internally, map containers keep all their elements sorted by
+  // their key following the criterion specified by its comparison
+  // object. The elements are always inserted in its respective
+  // position following this ordering.
+  //
+  // The parameters determine how many elements are inserted and to
+  // which values they are initialized:
+  //
+
+  // single element:
+  std::pair<iterator, bool> insert(const value_type& val) {
+    // TODO: implement
+  }
+
+  template<typename P>
+  std::pair<iterator,bool> insert(P&& val) {
+    // TODO: implement
+  }
+
+  // with hint:
+  iterator insert(const_iterator position, const value_type& val) {
+    // TODO: implement
+  }
+
+  template<typename P>
+  iterator insert(const_iterator position, P&& val) {
+    // TODO: implement
+  }
+
+  // range:
+  template<typename InputIterator>
+  void insert(InputIterator first, InputIterator last) {
+    // TODO: implement
+  }
+
+  // initializer list:
+  void insert(std::initializer_list<value_type> il) {
+    // TODO: implement
+  }
+
+
+  //
+  // erase():
+  //
+  // Removes from the map container either a single element or a range
+  // of elements ([first,last)).
+  //
+  // This effectively reduces the container size by the number of
+  // elements removed, which are destroyed.
+  //
+  iterator erase(const_iterator position) {
+    // TODO: implement
+  }
+
+  size_type erase(const key_type& k) {
+    // TODO: implement
+  }
+
+  iterator erase(const_iterator first, const_iterator last) {
+    // TODO: implement
+  }
+
+
+  //
+  // swap():
+  //
+  // Exchanges the content of the container by the content of x, which
+  // is another map of the same type. Sizes may differ.
+  //
+  // After the call to this member function, the elements in this
+  // container are those which were in x before the call, and the
+  // elements of x are those which were in this. All iterators,
+  // references and pointers remain valid for the swapped objects.
+  //
+  // Notice that a non-member function exists with the same name,
+  // swap, overloading that algorithm with an optimization that
+  // behaves like this member function.
+  //
+  void swap(map& x) {
+    // TODO: implement
+  }
+
+
+  //
+  // clear():
+  //
+  // Removes all elements from the map container (which are
+  // destroyed), leaving the container with a size of 0.
+  //
+  void clear() noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // emplace():
+  //
+  // Inserts a new element in the map if its key is unique. This new
+  // element is constructed in place using args as the arguments for
+  // the construction of a value_type (which is an object of a pair
+  // type).
+  //
+  // The insertion only takes place if no other element in the
+  // container has a key equivalent to the one being emplaced (keys in
+  // a map container are unique).
+  //
+  // If inserted, this effectively increases the container size by
+  // one.
+  //
+  // Internally, map containers keep all their elements sorted by
+  // their key following the criterion specified by its comparison
+  // object. The element is always inserted in its respective position
+  // following this ordering.
+  //
+  // The element is constructed in-place by calling
+  // allocator_traits::construct with args forwarded.
+  //
+  // A similar member function exists, insert, which either copies or
+  // moves existing objects into the container.
+  //
+  template<typename... Args>
+  std::pair<iterator, bool> emplace(Args&&... args) {
+    // TODO: implement
+  }
+
+
+  //
+  // emplace_hint():
+  //
+  // Inserts a new element in the map if its key is unique, with a
+  // hint on the insertion position. This new element is constructed
+  // in place using args as the arguments for the construction of a
+  // value_type (which is an object of a pair type).
+  //
+  // The insertion only takes place if no other element in the
+  // container has a key equivalent to the one being emplaced
+  // (elements in a map container are unique).
+  //
+  // If inserted, this effectively increases the container size by
+  // one.
+  //
+  // The value in position is used as a hint on the insertion
+  // point. The element will nevertheless be inserted at its
+  // corresponding position following the order described by its
+  // internal comparison object, but this hint is used by the function
+  // to begin its search for the insertion point, speeding up the
+  // process considerably when the actual insertion point is either
+  // position or close to it.
+  //
+  template<typename... Args>
+  iterator emplace_hint(const_iterator position, Args&&... args) {
+    // TODO: implement
+  }
+
+
+  ////////////////
+  // Observers: //
+  ////////////////
+
+
+  //
+  // key_comp():
+  //
+  // Returns a copy of the comparison object used by the container to
+  // compare keys.
+  //
+  // The comparison object of a map object is set on construction. Its
+  // type (member key_compare) is the third template parameter of the
+  // map template. By default, this is a less object, which returns
+  // the same as operator<.
+  //
+  // This object determines the order of the elements in the
+  // container: it is a function pointer or a function object that
+  // takes two arguments of the same type as the element keys, and
+  // returns true if the first argument is considered to go before the
+  // second in the strict weak ordering it defines, and false
+  // otherwise.
+  //
+  // Two keys are considered equivalent if key_comp returns false
+  // reflexively (i.e., no matter the order in which the keys are
+  // passed as arguments).
+  //
+  key_compare key_comp() const {
+    // TODO: implement
+  }
+
+
+  //
+  // value_comp():
+  //
+  // Returns a comparison object that can be used to compare two
+  // elements to get whether the key of the first one goes before the
+  // second.
+  //
+  // The arguments taken by this function object are of member type
+  // value_type (defined in map as an alias of pair<const
+  // key_type,mapped_type>), but the mapped_type part of the value is
+  // not taken into consideration in this comparison.
+  //
+  // The comparison object returned is an object of the member type
+  // map::value_compare, which is a nested class that uses the
+  // internal comparison object to generate the appropriate comparison
+  // functional class.
+  //
+  value_compare value_comp() const {
+    // TODO: implement
+  }
+
+
+  /////////////////
+  // Operations: //
+  /////////////////
+
+
+  //
+  // find():
+  //
+  // Searches the container for an element with a key equivalent to k
+  // and returns an iterator to it if found, otherwise it returns an
+  // iterator to map::end.
+  //
+  // Two keys are considered equivalent if the container's comparison
+  // object returns false reflexively (i.e., no matter the order in
+  // which the elements are passed as arguments).
+  //
+  // Another member function, map::count, can be used to just check
+  // whether a particular key exists.
+  //
+  iterator find(const key_type& k) {
+    // TODO: implement
+  }
+
+  const_iterator find(const key_type& k) const {
+    // TODO: implement
+  }
+
+
+  //
+  // count():
+  //
+  // Searches the container for elements with a key equivalent to k
+  // and returns the number of matches.
+  //
+  // Because all elements in a map container are unique, the function
+  // can only return 1 (if the element is found) or zero (otherwise).
+  //
+  // Two keys are considered equivalent if the container's comparison
+  // object returns false reflexively (i.e., no matter the order in
+  // which the keys are passed as arguments).
+  //
+  size_type count (const key_type& k) const {
+    // TODO: implement
+  }
+
+
+  //
+  // lower_bound():
+  //
+  // Returns an iterator pointing to the first element in the
+  // container whose key is not considered to go before k (i.e.,
+  // either it is equivalent or goes after).
+  //
+  // The function uses its internal comparison object (key_comp) to
+  // determine this, returning an iterator to the first element for
+  // which key_comp(element_key,k) would return false.
+  //
+  // If the map class is instantiated with the default comparison type
+  // (less), the function returns an iterator to the first element
+  // whose key is not less than k.
+  //
+  // A similar member function, upper_bound, has the same behavior as
+  // lower_bound, except in the case that the map contains an element
+  // with a key equivalent to k: In this case, lower_bound returns an
+  // iterator pointing to that element, whereas upper_bound returns an
+  // iterator pointing to the next element.
+  //
+  iterator lower_bound(const key_type& k) {
+    // TODO: implement
+  }
+
+  const_iterator lower_bound(const key_type& k) const {
+    // TODO: implement
+  }
+
+
+  //
+  // upper_bound():
+  //
+  // Returns an iterator pointing to the first element in the
+  // container whose key is considered to go after k.
+  //
+  // The function uses its internal comparison object (key_comp) to
+  // determine this, returning an iterator to the first element for
+  // which key_comp(k,element_key) would return true.
+  //
+  // If the map class is instantiated with the default comparison type
+  // (less), the function returns an iterator to the first element
+  // whose key is greater than k.
+  //
+  // A similar member function, lower_bound, has the same behavior as
+  // upper_bound, except in the case that the map contains an element
+  // with a key equivalent to k: In this case lower_bound returns an
+  // iterator pointing to that element, whereas upper_bound returns an
+  // iterator pointing to the next element.
+  //
+  iterator upper_bound(const key_type& k) {
+    // TODO: implement
+  }
+
+  const_iterator upper_bound(const key_type& k) const {
+    // TODO: implement
+  }
+
+
+  //
+  // equal_range():
+  //
+  // Returns the bounds of a range that includes all the elements in
+  // the container which have a key equivalent to k.
+  //
+  // Because the elements in a map container have unique keys, the
+  // range returned will contain a single element at most.
+  //
+  // If no matches are found, the range returned has a length of zero,
+  // with both iterators pointing to the first element that has a key
+  // considered to go after k according to the container's internal
+  // comparison object (key_comp).
+  //
+  // Two keys are considered equivalent if the container's comparison
+  // object returns false reflexively (i.e., no matter the order in
+  // which the keys are passed as arguments).
+  //
+  std::pair<const_iterator, const_iterator>
+  equal_range(const key_type& k) const {
+    // TODO: implement
+  }
+
+  std::pair<iterator, iterator>
+  equal_range(const key_type& k) {
+    // TODO: implement
+  }
+
+
+  ////////////////
+  // Allocator: //
+  ////////////////
+
+
+  //
+  // get_allocator():
+  //
+  // Returns a copy of the allocator object associated with the map.
+  //
+  allocator_type get_allocator() const noexcept {
+    // TODO: implement
+  }
+
+};  // map class
+
+
+}  // namespace ustl
+
+#endif  // __USTL_MAP__
