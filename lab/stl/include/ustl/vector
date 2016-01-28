@@ -2,6 +2,46 @@
 //
 // vector class.
 //
+// Vectors are sequence containers representing arrays that can change
+// in size.
+//
+// Just like arrays, vectors use contiguous storage locations for
+// their elements, which means that their elements can also be
+// accessed using offsets on regular pointers to its elements, and
+// just as efficiently as in arrays. But unlike arrays, their size can
+// change dynamically, with their storage being handled automatically
+// by the container.
+//
+// Internally, vectors use a dynamically allocated array to store
+// their elements. This array may need to be reallocated in order to
+// grow in size when new elements are inserted, which implies
+// allocating a new array and moving all elements to it. This is a
+// relatively expensive task in terms of processing time, and thus,
+// vectors do not reallocate each time an element is added to the
+// container.
+//
+// Instead, vector containers may allocate some extra storage to
+// accommodate for possible growth, and thus the container may have an
+// actual capacity greater than the storage strictly needed to contain
+// its elements (i.e., its size). Libraries can implement different
+// strategies for growth to balance between memory usage and
+// reallocations, but in any case, reallocations should only happen at
+// logarithmically growing intervals of size so that the insertion of
+// individual elements at the end of the vector can be provided with
+// amortized constant time complexity (see push_back).
+//
+// Therefore, compared to arrays, vectors consume more memory in
+// exchange for the ability to manage storage and grow dynamically in
+// an efficient way.
+//
+// Compared to the other dynamic sequence containers (deques, lists
+// and forward_lists), vectors are very efficient accessing its
+// elements (just like arrays) and relatively efficient adding or
+// removing elements from its end. For operations that involve
+// inserting or removing elements at positions other than the end,
+// they perform worse than the others, and have less consistent
+// iterators and references than lists and forward_lists.
+//
 #ifndef __USTL_VECTOR__
 #define __USTL_VECTOR__
 
@@ -740,7 +780,12 @@ class vector {
 
   // single element:
   iterator insert(const_iterator position, const value_type& val) {
-    return insert(position, size_type(1), val);
+    auto start_idx = size_type(position - begin());
+    _make_n_elem_space(start_idx, 1);
+
+    _buffer[start_idx] = val;
+
+    return position;
   }
 
   // fill:
@@ -770,7 +815,12 @@ class vector {
 
   // move:
   iterator insert(const_iterator position, value_type&& val) {
-    return insert(position, size_type(1), std::move(val));
+    auto start_idx = size_type(position - begin());
+    _make_n_elem_space(start_idx, 1);
+
+    _buffer[start_idx] = std::move(val);
+
+    return position;
   }
 
   // initializer list:
@@ -789,6 +839,52 @@ class vector {
 
 
   //
+  // erase():
+  //
+  // Removes from the vector either a single element (position) or a
+  // range of elements ([first,last)).
+  //
+  // This effectively reduces the container size by the number of
+  // elements removed, which are destroyed.
+  //
+  // Because vectors use an array as their underlying storage, erasing
+  // elements in positions other than the vector end causes the
+  // container to relocate all the elements after the segment erased
+  // to their new positions. This is generally an inefficient
+  // operation compared to the one performed for the same operation by
+  // other kinds of sequence containers (such as list or
+  // forward_list).
+  //
+  iterator erase(const_iterator position) {
+    // TODO: implement
+  }
+
+  iterator erase(const_iterator first, const_iterator last) {
+    // TODO: implement
+  }
+
+
+  //
+  // swap():
+  //
+  // Exchanges the content of the container by the content of x, which
+  // is another vector object of the same type. Sizes may differ.
+  //
+  // After the call to this member function, the elements in this
+  // container are those which were in x before the call, and the
+  // elements of x are those which were in this. All iterators,
+  // references and pointers remain valid for the swapped objects.
+  //
+  // Notice that a non-member function exists with the same name,
+  // swap, overloading that algorithm with an optimization that
+  // behaves like this member function.
+  //
+  void swap(vector& x) {
+    // TODO: implement
+  }
+
+
+  //
   // clear():
   //
   // Removes all elements from the vector (which are destroyed),
@@ -803,10 +899,82 @@ class vector {
     _size = 0;
   }
 
-  // get_allocator()
+
+  //
+  // emplace():
+  //
+  // The container is extended by inserting a new element at
+  // position. This new element is constructed in place using args as
+  // the arguments for its construction.
+  //
+  // This effectively increases the container size by one.
+  //
+  // An automatic reallocation of the allocated storage space happens
+  // if -and only if- the new vector size surpasses the current vector
+  // capacity.
+  //
+  // Because vectors use an array as their underlying storage,
+  // inserting elements in positions other than the vector end causes
+  // the container to shift all the elements that were after position
+  // by one to their new positions. This is generally an inefficient
+  // operation compared to the one performed by other kinds of
+  // sequence containers (such as list or forward_list). See
+  // emplace_back for a member function that extends the container
+  // directly at the end.
+  //
+  // The element is constructed in-place by calling
+  // allocator_traits::construct with args forwarded.
+  //
+  // A similar member function exists, insert, which either copies or
+  // moves existing objects into the container.
+  //
+  template<typename... Args>
+  iterator emplace(const_iterator position, Args&&... args) {
+    // TODO: implement
+  }
+
+
+  //
+  // emplace_back():
+  //
+  // Inserts a new element at the end of the vector, right after its
+  // current last element. This new element is constructed in place
+  // using args as the arguments for its constructor.
+  //
+  // This effectively increases the container size by one, which
+  // causes an automatic reallocation of the allocated storage space
+  // if -and only if- the new vector size surpasses the current vector
+  // capacity.
+  //
+  // The element is constructed in-place by calling
+  // allocator_traits::construct with args forwarded.
+  //
+  // A similar member function exists, push_back, which either copies
+  // or moves an existing object into the container.
+  //
+  template<typename... Args>
+  void emplace_back(Args&&... args) {
+    // TODO: implement
+  }
+
+
+  ////////////////
+  // Allocator: //
+  ////////////////
+
+  //
+  // get_allocator():
+  //
+  // Returns a copy of the allocator object associated with the
+  // vector.
   allocator_type get_allocator() const noexcept { return _alloc; }
 
-  // NOT IN THE SPEC: stream output formatter
+
+  ///////////////////
+  // Note in spec: //
+  ///////////////////
+
+  // stream output formatting
   friend std::ostream& operator<<(std::ostream &o, const vector &v) {
     for (auto &val : v)
       o << val << ' ';
@@ -814,11 +982,21 @@ class vector {
   }
 
  private:
+
+
+  ///////////////////////////////
+  // Private member variables: //
+  ///////////////////////////////
+
   value_type* _buffer;
   size_type _size;
   size_type _capacity;
   allocator_type _alloc;
 
+
+  //////////////////////
+  // Private methods: //
+  //////////////////////
 
   // Expand vector by 'n' and starting at position 'idx', move
   // elements along by n spaces. This leaves the values in the range
@@ -856,10 +1034,96 @@ class vector {
 
   static const size_type _default_capacity = 8;
   static const int _capacity_multiplier = 2;
-};
+};  // vector class
 
 #pragma GCC diagnostic pop  // -Wpadded
 
+
+////////////////////////////////////
+// Non-member function overloads: //
+////////////////////////////////////
+
+
+//
+// Relational operators:
+//
+// Performs the appropriate comparison operation between the vector
+// containers lhs and rhs.
+//
+// The equality comparison (operator==) is performed by first
+// comparing sizes, and if they match, the elements are compared
+// sequentially using operator==, stopping at the first mismatch (as
+// if using algorithm equal).
+//
+// The less-than comparison (operator<) behaves as if using
+// algorithm lexicographical_compare, which compares the elements
+// sequentially using operator< in a reciprocal manner (i.e.,
+// checking both a<b and b<a) and stopping at the first occurrence.
+//
+// The other operations also use the operators == and < internally
+// to compare the elements, behaving as if the following equivalent
+// operations were performed:
+//
+//   a!=b     !(a==b)
+//   a>b      b<a
+//   a<=b     !(b<a)
+//   a>=b     !(a<b)
+//
+template<typename T, typename Alloc>
+bool operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  // TODO: implement
+}
+
+template<typename T, typename Alloc>
+bool operator!=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  // TODO: implement
+}
+
+template<typename T, typename Alloc>
+bool operator<(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  // TODO: implement
+}
+
+template<typename T, typename Alloc>
+bool operator<=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  // TODO: implement
+}
+
+template<typename T, typename Alloc>
+bool operator>(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  // TODO: implement
+}
+
+template<typename T, typename Alloc>
+bool operator>=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  // TODO: implement
+}
+
+
+//
+// swap():
+//
+// The contents of container x are exchanged with those of y. Both
+// container objects must be of the same type (same template
+// parameters), although sizes may differ.
+//
+// After the call to this member function, the elements in x are those
+// which were in y before the call, and the elements of y are those
+// which were in x. All iterators, references and pointers remain
+// valid for the swapped objects.
+//
+// This is an overload of the generic algorithm swap that improves its
+// performance by mutually transferring ownership over their assets to
+// the other container (i.e., the containers exchange references to
+// their data, without actually performing any element copy or
+// movement): It behaves as if x.swap(y) was called.
+//
+template<typename T, typename Alloc>
+void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) {
+  // TODO: implement
+}
+
+// TODO: vector<bool> specialisation.
 
 }  // namespace ustl
 
