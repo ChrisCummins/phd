@@ -17,6 +17,9 @@
 #include <map>
 #include <ustl/map>
 
+#include <unordered_map>
+#include <ustl/unordered_map>
+
 //
 // Helper functions & objects.
 //

@@ -234,6 +234,7 @@ StlHeaders = \
 	$(lab)/stl/include/ustl/algorithm \
 	$(lab)/stl/include/ustl/array \
 	$(lab)/stl/include/ustl/map \
+	$(lab)/stl/include/ustl/unordered_map \
 	$(lab)/stl/include/ustl/vector \
 	$(NULL)
 

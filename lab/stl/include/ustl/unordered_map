@@ -1,0 +1,1025 @@
+// -*-c++-*-
+//
+// unordered_map class.
+//
+// Unordered maps are associative containers that store elements
+// formed by the combination of a key value and a mapped value, and
+// which allows for fast retrieval of individual elements based on
+// their keys.
+//
+// In an unordered_map, the key value is generally used to uniquely
+// identify the element, while the mapped value is an object with the
+// content associated to this key. Types of key and mapped value may
+// differ.
+//
+// Internally, the elements in the unordered_map are not sorted in any
+// particular order with respect to either their key or mapped values,
+// but organized into buckets depending on their hash values to allow
+// for fast access to individual elements directly by their key values
+// (with a constant average time complexity on average).
+//
+// unordered_map containers are faster than map containers to access
+// individual elements by their key, although they are generally less
+// efficient for range iteration through a subset of their elements.
+//
+// Unordered maps implement the direct access operator (operator[])
+// which allows for direct access of the mapped value using its key
+// value as argument.
+//
+// Iterators in the container are at least forward iterators.
+//
+#ifndef __USTL_UNORDERED_MAP__
+#define __USTL_UNORDERED_MAP__
+
+#include <iterator>
+#include <memory>
+#include <utility>
+
+namespace ustl {
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+
+template<typename Key,
+         typename T,
+         typename Hash = std::hash<Key>,
+         typename Pred = std::equal_to<Key>,
+         typename Alloc = std::allocator<std::pair<const Key,T> >
+         > class unordered_map {
+
+  ///////////////////
+  // Member Types: //
+  ///////////////////
+
+  using key_type = Key;
+
+  using mapped_type = T;
+
+  using value_type = std::pair<const key_type, mapped_type>;
+
+  using hasher = Hash;
+
+  using key_equal = Pred;
+
+  using allocator_type = Alloc;
+
+  using reference = value_type&;
+
+  using const_reference = const value_type&;
+
+  using pointer = typename std::allocator_traits<allocator_type>::pointer;
+
+  using const_pointer
+    = typename std::allocator_traits<allocator_type>::const_pointer;
+
+  // TODO:
+  using iterator = mapped_type*;
+
+  // TODO:
+  using const_iterator = const iterator;
+
+  // TODO:
+  using local_iterator = value_type*;
+
+  // TODO:
+  using const_local_iterator = const local_iterator;
+
+  using size_type = size_t;
+
+  using difference_type =
+    typename std::iterator_traits<iterator>::difference_type;
+
+
+  ///////////////////
+  // Constructors: //
+  ///////////////////
+  //
+  // Constructs an unordered_map container object, initializing its
+  // contents depending on the constructor version used.
+  //
+
+
+  //
+  // empty container constructor (default constructor):
+  //
+  // Constructs an empty unordered_map object, containing no elements
+  // and with a size of zero.
+  //
+  // It can construct the container with specific hasher, key_equal
+  // and allocator objects, along with a minimum number of hash
+  // buckets.
+  //
+  unordered_map() {
+    // TODO: implement
+  }
+
+  explicit unordered_map(size_type n,
+                           const hasher& hf = hasher(),
+                           const key_equal& eql = key_equal(),
+                           const allocator_type& alloc = allocator_type()) {
+    // TODO: implement
+  }
+
+  explicit unordered_map(const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+  unordered_map(size_type n, const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+  unordered_map(size_type n, const hasher& hf, const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+
+  //
+  // range constructor:
+  //
+  // Constructs an unordered_map object containing copies of each of
+  // the elements in the range [first,last).
+  //
+  template<typename InputIterator>
+  unordered_map(InputIterator first, InputIterator last,
+                  size_type n = __min_initial_buckets,
+                  const hasher& hf = hasher(),
+                  const key_equal& eql = key_equal(),
+                  const allocator_type& alloc = allocator_type()) {
+    // TODO: implement
+  }
+
+  template<typename InputIterator>
+  unordered_map(InputIterator first, InputIterator last,
+                  size_type n, const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+  template<typename InputIterator>
+  unordered_map(InputIterator first, InputIterator last,
+                  size_type n, const hasher& hf, const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+
+  //
+  // copy constructor (and copy with allocator):
+  //
+  // The object is initialized to have the same contents and
+  // properties as the ump unordered_map object.
+  //
+  unordered_map(const unordered_map& ump) {
+    // TODO: implement
+  }
+
+  unordered_map(const unordered_map& ump, const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+
+  //
+  // move constructor (and moving with allocator):
+  //
+  // The object acquires the contents of the rvalue ump.
+  //
+  unordered_map(unordered_map&& ump) {
+    // TODO: implement
+  }
+
+  unordered_map(unordered_map&& ump, const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+
+  //
+  // initializer list:
+  //
+  // Initializes the container with the contents of the list.
+  //
+           unordered_map(std::initializer_list<value_type> il,
+                           size_type n = __min_initial_buckets,
+                  const hasher& hf = hasher(),
+                  const key_equal& eql = key_equal(),
+                  const allocator_type& alloc = allocator_type()) {
+    // TODO: implement
+  }
+
+  unordered_map(std::initializer_list<value_type> il,
+                  size_type n, const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+  unordered_map(std::initializer_list<value_type> il,
+                  size_type n, const hasher& hf, const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+
+  /////////////////
+  // Assignment: //
+  /////////////////
+  //
+  // Assigns ump (or il) as the new content for the container.
+  //
+  // The elements contained in the object before the call are
+  // destroyed, and replaced by those in unordered_map ump or
+  // initializer list il, if any.
+  //
+
+
+  //
+  // copy assignment:
+  //
+  // Copies all the elements of ump into the container object (with
+  // ump preserving its contents).
+  //
+  unordered_map& operator=(const unordered_map& ump) {
+    // TODO: implement
+  }
+
+
+  //
+  // move assignment:
+  //
+  // Transfer ownership of the contents of ump to the object. No
+  // copies occur: the content is lost by ump.
+  //
+  unordered_map& operator=(unordered_map&& ump) {
+    // TODO: implement
+  }
+
+
+  //
+  // Initialiser list:
+  //
+  // Assigns the contents of the initializer list il as the elements
+  // of the container object.
+  //
+  unordered_map& operator=(std::initializer_list<value_type> il) {
+    // TODO: implement
+  }
+
+
+  /////////////////
+  // Destructor: //
+  /////////////////
+  //
+  // Destructs the container object. This calls each of the contained
+  // element's destructors, and dealocates all the storage capacity
+  // allocated by the unordered_map container.
+  //
+
+  ~unordered_map() {
+    // TODO: implement
+  }
+
+
+  ///////////////
+  // Capacity: //
+  ///////////////
+
+
+  //
+  // empty():
+  //
+  // Returns a bool value indicating whether the unordered_map
+  // container is empty, i.e. whether its size is 0.
+  //
+  // This function does not modify the content of the container in any
+  // way. To clear the content of an array object, member function
+  // unordered_map::clear exists.
+  //
+  bool empty() const noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // size():
+  //
+  // Returns the number of elements in the unordered_map container.
+  //
+  size_type size() const noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // max_size():
+  //
+  // Returns the maximum number of elements that the unordered_map
+  // container can hold.
+  //
+  // This is the maximum potential number of elements the container
+  // can hold due to system constraints or limitations on its library
+  // implementation.
+  //
+  size_type max_size() const noexcept {
+    // TODO: implement
+  }
+
+
+  ////////////////
+  // Iterators: //
+  ////////////////
+
+
+  //
+  // begin():
+  //
+  // Returns an iterator pointing to the first element in the
+  // unordered_map container or in one of its buckets.
+  //
+  // Notice that an unordered_map object makes no guarantees on which
+  // specific element is considered its first element. But, in any
+  // case, the range that goes from its begin to its end covers all
+  // the elements in the container (or the bucket), until invalidated.
+  //
+  iterator begin() noexcept {
+    // TODO: implement
+  }
+
+  const_iterator begin() const noexcept {
+    // TODO: implement
+  }
+
+  local_iterator begin(size_type n) {
+    // TODO: implement
+  }
+
+  const_local_iterator begin(size_type n) const {
+    // TODO: implement
+  }
+
+
+  //
+  // end():
+  //
+  // Returns an iterator pointing to the past-the-end element in the
+  // unordered_map container or in one of its buckets.
+  //
+  // The iterator returned by end does not point to any element, but
+  // to the position that follows the last element in the
+  // unordered_map container (its past-the-end position). Thus, the
+  // value returned shall not be dereferenced - it is generally used
+  // to describe the open-end of a range, such as [begin,end).
+  //
+  // Notice that an unordered_map object makes no guarantees on which
+  // order its elements follow. But, in any case, the range that goes
+  // from its begin to its end covers all the elements in the
+  // container (or the bucket), until invalidated.
+  //
+  iterator end() noexcept {
+    // TODO: implement
+  }
+
+  const_iterator end() const noexcept {
+    // TODO: implement
+  }
+
+  local_iterator end(size_type n) {
+    // TODO: implement
+  }
+
+  const_local_iterator end(size_type n) const {
+    // TODO: implement
+  }
+
+
+  //
+  // cbegin():
+  //
+  // Returns a const_iterator pointing to the first element in the
+  // unordered_map container or in one of its buckets.
+  //
+  // A const_iterator is an iterator that points to const
+  // content. This iterator can be increased and decreased (unless it
+  // is itself also const), just like the iterator returned by
+  // unordered_map::begin, but it cannot be used to modify the
+  // contents it points to.
+  //
+  const_iterator cbegin() const noexcept {
+    // TODO: implement
+  }
+
+  const_local_iterator cbegin(size_type n) const {
+    // TODO: implement
+  }
+
+
+  //
+  // cend():
+  //
+  // Returns a const_iterator pointing to the past-the-end element in
+  // the unordered_map container or in one of its buckets.
+  //
+  // The const_iterator returned by cend does not point to any
+  // element, but to the position that follows the last element in the
+  // unordered_map container or in one of its buckets (i.e., their
+  // past-the-end position). Thus, the value returned shall not be
+  // dereferenced - it is generally used to describe the open-end of a
+  // range, such as [cbegin,cend).
+  //
+  // Notice that an unordered_map object makes no guarantees on which
+  // order its elements follow. But, in any case, the range that goes
+  // from its cbegin to its cend covers all the elements in the
+  // container (or the bucket), until invalidated.
+  //
+  // A const_iterator is an iterator that points to const
+  // content. This iterator can be increased and decreased (unless it
+  // is itself also const), just like the iterator returned by
+  // unordered_map::end, but it cannot be used to modify the contents
+  // it points to.
+  //
+  const_iterator cend() const noexcept {
+    // TODO: implement
+  }
+
+  const_local_iterator cend(size_type n) const {
+    // TODO: implement
+  }
+
+
+  /////////////////////
+  // Element Access: //
+  /////////////////////
+
+
+  //
+  // operator[]:
+  //
+  // If k matches the key of an element in the container, the function
+  // returns a reference to its mapped value.
+  //
+  // If k does not match the key of any element in the container, the
+  // function inserts a new element with that key and returns a
+  // reference to its mapped value. Notice that this always increases
+  // the container size by one, even if no mapped value is assigned to
+  // the element (the element is constructed using its default
+  // constructor).
+  //
+  // A similar member function, unordered_map::at, has the same
+  // behavior when an element with the key exists, but throws an
+  // exception when it does not.
+  //
+  mapped_type& operator[](const key_type& k) {
+    // TODO: implement
+  }
+
+  mapped_type& operator[](key_type&& k) {
+    // TODO: implement
+  }
+
+
+  //
+  // at():
+  //
+  // Returns a reference to the mapped value of the element with key k
+  // in the unordered_map.
+  //
+  // If k does not match the key of any element in the container, the
+  // function throws an out_of_range exception.
+  //
+  mapped_type& at(const key_type& k) {
+    // TODO: implement
+  }
+
+  const mapped_type& at(const key_type& k) const {
+    // TODO: implement
+  }
+
+
+  /////////////////////
+  // Element Lookup: //
+  /////////////////////
+
+
+  //
+  // find():
+  //
+  // Searches the container for an element with k as key and returns
+  // an iterator to it if found, otherwise it returns an iterator to
+  // unordered_map::end (the element past the end of the container).
+  //
+  // Another member function, unordered_map::count, can be used to
+  // just check whether a particular key exists.
+  //
+  // The mapped value can also be accessed directly by using member
+  // functions at or operator[].
+  //
+  iterator find(const key_type& k) {
+    // TODO: implement
+  }
+
+  const_iterator find(const key_type& k) const {
+    // TODO: implement
+  }
+
+
+  //
+  // count():
+  //
+  // Searches the container for elements whose key is k and returns
+  // the number of elements found. Because unordered_map containers do
+  // not allow for duplicate keys, this means that the function
+  // actually returns 1 if an element with that key exists in the
+  // container, and zero otherwise.
+  //
+  size_type count(const key_type& k) const {
+    // TODO: implement
+  }
+
+
+  //
+  // equal_range():
+  //
+  // Returns the bounds of a range that includes all the elements in
+  // the container with a key that compares equal to k. In
+  // unordered_map containers, where keys are unique, the range will
+  // include one element at most.
+  //
+  // If k does not match any key in the container, the range returned
+  // has end as both its lower and upper range bounds.
+  //
+  std::pair<iterator,iterator>
+  equal_range(const key_type& k) {
+    // TODO: implement
+  }
+
+  std::pair<const_iterator, const_iterator>
+  equal_range(const key_type& k) const {
+    // TODO: implement
+  }
+
+
+  ////////////////
+  // Modifiers: //
+  ////////////////
+
+
+  //
+  // emplace():
+  //
+  // Inserts a new element in the unordered_map if its key is
+  // unique. This new element is constructed in place using args as
+  // the arguments for the element's constructor.
+  //
+  // The insertion only takes place if no element in the container has
+  // a key equivalent to the one being emplaced (keys in an
+  // unordered_map are unique).
+  //
+  // If inserted, this effectively increases the container size by
+  // one.
+  //
+  // A similar member function exists, insert, which either copies or
+  // moves existing objects into the container.
+  //
+  template<typename... Args>
+  std::pair<iterator, bool> emplace(Args&&... args) {
+    // TODO: implement
+  }
+
+
+  //
+  // emplace_hint():
+  //
+  // Inserts a new element in the unordered_map if its key is
+  // unique. This new element is constructed in place using args as
+  // the arguments for the element's constructor. position points to a
+  // location in the container suggested as a hint on where to start
+  // the search for its insertion point (the container may or may not
+  // use this suggestion to optimize the insertion operation).
+  //
+  // The insertion only takes place if no element in the container has
+  // a key equivalent to the one being emplaced (keys in an
+  // unordered_map are unique).
+  //
+  // If inserted, this effectively increases the container size by
+  // one.
+  //
+  // A similar member function exists, insert, which either copies or
+  // moves an existing object into the container, and may also take a
+  // position hint.
+  //
+  template<typename... Args>
+  iterator emplace_hint(const_iterator position, Args&&... args) {
+    // TODO: implement
+  }
+
+
+  //
+  // insert():
+  //
+  // Inserts new elements in the unordered_map.
+  //
+  // Each element is inserted only if its key is not equivalent to the
+  // key of any other element already in the container (keys in an
+  // unordered_map are unique).
+  //
+  // This effectively increases the container size by the number of
+  // elements inserted.
+  //
+  // The parameters determine how many elements are inserted and to
+  // which values they are initialized:
+  //
+  std::pair<iterator,bool> insert(const value_type& val) {
+    // TODO: implement
+  }
+
+  template<typename P>
+  std::pair<iterator,bool> insert(P&& val) {
+    // TODO: implement
+  }
+
+  iterator insert(const_iterator hint, const value_type& val) {
+    // TODO: implement
+  }
+
+  template<typename P>
+  iterator insert(const_iterator hint, P&& val) {
+    // TODO: implement
+  }
+
+  template<typename InputIterator>
+  void insert(InputIterator first, InputIterator last) {
+    // TODO: implement
+  }
+
+  void insert(std::initializer_list<value_type> il) {
+    // TODO: implement
+  }
+
+
+  //
+  // erase():
+  //
+  // Removes from the unordered_map container either a single element
+  // or a range of elements ([first,last)).
+  //
+  // This effectively reduces the container size by the number of
+  // elements removed, calling each element's destructor.
+  //
+  iterator erase(const_iterator position) {
+    // TODO: implement
+  }
+
+  size_type erase(const key_type& k) {
+    // TODO: implement
+  }
+
+  iterator erase(const_iterator first, const_iterator last) {
+    // TODO: implement
+  }
+
+
+  //
+  // clear():
+  //
+  // All the elements in the unordered_map container are dropped:
+  // their destructors are called, and they are removed from the
+  // container, leaving it with a size of 0.
+  //
+  void clear() noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // swap():
+  //
+  // Exchanges the content of the container by the content of ump,
+  // which is another unordered_map object containing elements of the
+  // same type. Sizes may differ.
+  //
+  // After the call to this member function, the elements in this
+  // container are those which were in ump before the call, and the
+  // elements of ump are those which were in this. Other objects kept
+  // internally by the containers (such as their hasher or key_equal
+  // objects) are also swapped.
+  //
+  // This function exchanges internal pointers to data between the
+  // containers without actually performing any copies or moves on the
+  // individual elements, allowing for constant time execution no
+  // matter the sizes.
+  //
+  // Notice that a global algorithm function exists with this same
+  // name, swap. This global function is overloaded for arguments of
+  // type unordered_map to have the same behavior and complexity as
+  // this member function.
+  //
+  void swap(unordered_map& ump) {
+    // TODO: implement
+  }
+
+
+  //////////////
+  // Buckets: //
+  //////////////
+
+
+  //
+  // bucket_count():
+  //
+  // Returns the number of buckets in the unordered_map container.
+  //
+  // A bucket is a slot in the container's internal hash table to
+  // which elements are assigned based on the hash value of their key.
+  //
+  // The number of buckets influences directly the load factor of the
+  // container's hash table (and thus the probability of
+  // collision). The container automatically increases the number of
+  // buckets to keep the load factor below a specific threshold (its
+  // max_load_factor), causing a rehash each time the number of
+  // buckets needs to be increased.
+  //
+  size_type bucket_count() const noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // max_bucket_count():
+  //
+  // Returns the maximum number of buckets that the unordered_map
+  // container can have.
+  //
+  // This is the maximum potential number of buckets the container can
+  // have due to system constraints or limitations on its library
+  // implementation.
+  //
+  size_type max_bucket_count() const noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // bucket_size():
+  //
+  // Returns the number of elements in bucket n.
+  //
+  // A bucket is a slot in the container's internal hash table to
+  // which elements are assigned based on the hash value of their key.
+  //
+  // The number of elements in a bucket influences the time it takes
+  // to access a particular element in the bucket. The container
+  // automatically increases the number of buckets to keep the load
+  // factor (which is the average bucket size) below its
+  // max_load_factor.
+  //
+  size_type bucket_size(size_type n)const {
+    // TODO: implement
+  }
+
+
+  //
+  // bucket():
+  //
+  // Returns the bucket number where the element with key k is
+  // located.
+  //
+  // A bucket is a slot in the container's internal hash table to
+  // which elements are assigned based on the hash value of their
+  // key. Buckets are numbered from 0 to (bucket_count-1).
+  //
+  // Individual elements in a bucket can be accessed by means of the
+  // range iterators returned by unordered_map::begin and
+  // unordered_map::end.
+  //
+  size_type bucket(const key_type& k) const {
+    // TODO: implement
+  }
+
+
+  //////////////////
+  // Hash policy: //
+  //////////////////
+
+
+  //
+  // load_factor():
+  //
+  // Returns the current load factor in the unordered_map container.
+  //
+  // The load factor is the ratio between the number of elements in
+  // the container (its size) and the number of buckets
+  // (bucket_count):
+  //
+  //   load_factor = size / bucket_count
+  //
+  // The load factor influences the probability of collision in the
+  // hash table (i.e., the probability of two elements being located
+  // in the same bucket). The container automatically increases the
+  // number of buckets to keep the load factor below a specific
+  // threshold (its max_load_factor), causing a rehash each time an
+  // expansion is needed.
+  //
+  // To retrieve or change this threshold, use member function
+  // max_load_factor.
+  //
+  float load_factor() const noexcept {
+    // TODO: implement
+  }
+
+
+  //
+  // max_load_factor():
+  //
+  // The first version (1) returns the current maximum load factor for
+  // the unordered_map container.
+  //
+  // The second version (2) sets z as the new maximum load factor for
+  // the unordered_map container.
+  //
+  // The load factor is the ratio between the number of elements in
+  // the container (its size) and the number of buckets
+  // (bucket_count).
+  //
+  // By default, unordered_map containers have a max_load_factor of
+  // 1.0.
+  //
+  // The load factor influences the probability of collision in the
+  // hash table (i.e., the probability of two elements being located
+  // in the same bucket). The container uses the value of
+  // max_load_factor as the threshold that forces an increase in the
+  // number of buckets (and thus causing a rehash).
+  //
+  // Note though, that implementations may impose an upper limit on
+  // the number of buckets (see max_bucket_count), which may force the
+  // container to ignore the max_load_factor.
+  //
+  float max_load_factor() const noexcept {
+    // TODO: implement
+  }
+
+  void max_load_factor(float z) {
+    // TODO: implement
+  }
+
+
+  //
+  // rehash():
+  //
+  // Sets the number of buckets in the container to n or more.
+  //
+  // If n is greater than the current number of buckets in the
+  // container (bucket_count), a rehash is forced. The new bucket
+  // count can either be equal or greater than n.
+  //
+  // If n is lower than the current number of buckets in the container
+  // (bucket_count), the function may have no effect on the bucket
+  // count and may not force a rehash.
+  //
+  // A rehash is the reconstruction of the hash table: All the
+  // elements in the container are rearranged according to their hash
+  // value into the new set of buckets. This may alter the order of
+  // iteration of elements within the container.
+  //
+  // Rehashes are automatically performed by the container whenever
+  // its load factor is going to surpass its max_load_factor in an
+  // operation.
+  //
+  // Notice that this function expects the number of buckets as
+  // argument. A similar function exists, unordered_map::reserve, that
+  // expects the number of elements in the container as argument.
+  //
+  void rehash(size_type n) {
+    // TODO: implement
+  }
+
+
+  //
+  // reserve():
+  //
+  // Sets the number of buckets in the container (bucket_count) to the
+  // most appropriate to contain at least n elements.
+  //
+  // If n is greater than the current bucket_count multiplied by the
+  // max_load_factor, the container's bucket_count is increased and a
+  // rehash is forced.
+  //
+  // If n is lower than that, the function may have no effect.
+  //
+  void reserve(size_type n) {
+    // TODO: implement
+  }
+
+
+  ////////////////
+  // Observers: //
+  ////////////////
+
+
+  //
+  // hash_function():
+  //
+  // Returns the hash function object used by the unordered_map
+  // container.
+  //
+  // The hash function is a unary function that takes an object of
+  // type key_type as argument and returns a unique value of type
+  // size_t based on it. It is adopted by the container on
+  // construction (see unordered_map's constructor for more info). By
+  // default, it is the default hashing function for the corresponding
+  // key type: hash<key_type>.
+  //
+  hasher hash_function() const {
+    // TODO: implement
+  }
+
+
+  //
+  // key_eq():
+  //
+  // Returns the key equivalence comparison predicate used by the
+  // unordered_map container.
+  //
+  // The key equivalence comparison is a predicate that takes two
+  // arguments of the key type and returns a bool value indicating
+  // whether they are to be considered equivalent. It is adopted by
+  // the container on construction (see unordered_map's constructor
+  // for more info). By default, it is equal_to<key_type>, which
+  // returns the same as applying the equal-to operator (==) to the
+  // arguments.
+  //
+  key_equal key_eq() const {
+    // TODO: implement
+  }
+
+
+  //
+  // get_allocator():
+  //
+  // Returns the allocator object used to construct the container.
+  //
+  allocator_type get_allocator() const noexcept {
+    // TODO: implement
+  }
+
+ private:
+
+  static const size_type __min_initial_buckets = 10;
+
+};  // unordered_map class
+
+#pragma GCC diagnostic pop  // -Wpadded
+
+
+////////////////////////////////////
+// Non-member function overloads: //
+////////////////////////////////////
+
+//
+// Relational operators:
+//
+// These overloaded global operator functions perform the appropriate
+// equality or inequality comparison operation between the
+// unordered_map containers lhs and rhs.
+//
+// The procedure for the equality comparison is as follows (stopping
+// at any point if the procedure finds a conclusive answer):
+//
+// * First, the sizes are compared.
+//
+// * Then, each key in one of the containers is looked for in the
+// * other, and if found, their values are compared.
+//
+// Note that the unordered_map::hash_function and
+// unordered_map::key_eq objects are expected to have the same
+// behavior in both lhs and rhs.
+//
+template<typename Key, typename T, typename Hash, typename Pred, typename Alloc>
+bool operator== ( const unordered_map<Key,T,Hash,Pred,Alloc>& lhs,
+                  const unordered_map<Key,T,Hash,Pred,Alloc>& rhs );
+
+template<typename Key, typename T, typename Hash, typename Pred, typename Alloc>
+bool operator!= ( const unordered_map<Key,T,Hash,Pred,Alloc>& lhs,
+                  const unordered_map<Key,T,Hash,Pred,Alloc>& rhs );
+
+
+//
+// swap():
+//
+// The contents of container lhs are exchanged with those of rhs. Both
+// container objects must be of the same type (same template
+// parameters), although sizes may differ.
+//
+// After the call to this function, the elements in lhs are those
+// which were in rhs before the call, and the elements of rhs are
+// those which were in lhs. Other objects kept internally by the
+// containers (such as their hasher or key_equal objects) are also
+// swapped.
+//
+// This is a specialization of the generic algorithm swap that
+// improves its performance by exchanging internal pointers to data,
+// without actually performing any copies or moves on the individual
+// elements.
+//
+template<typename Key, typename T, typename Hash, typename Pred, typename Alloc>
+void swap ( unordered_map<Key,T,Hash,Pred,Alloc>& lhs,
+            unordered_map<Key,T,Hash,Pred,Alloc>& rhs ) {
+  // TODO: implement
+}
+
+
+}  // namespace ustl
+
+#endif  // __USTL_UNORDERED_MAP__
