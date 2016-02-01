@@ -880,7 +880,21 @@ class vector {
   // behaves like this member function.
   //
   void swap(vector& x) {
-    // TODO: implement
+    auto buffer = _buffer;
+    _buffer = x._buffer;
+    x._buffer = buffer;
+
+    auto capacity = _capacity;
+    _capacity = x._capacity;
+    x._capacity = capacity;
+
+    auto size = _size;
+    _size = x._size;
+    x._size = size;
+
+    auto alloc = _alloc;
+    _alloc = x._alloc;
+    x._alloc = alloc;
   }
 
 
@@ -968,6 +982,14 @@ class vector {
   // Returns a copy of the allocator object associated with the
   // vector.
   allocator_type get_allocator() const noexcept { return _alloc; }
+
+
+  /////////////////////////
+  // Non-member friends: //
+  /////////////////////////
+
+  template<typename _T, typename _Alloc>
+  friend void swap(vector<_T, _Alloc>& x, vector<_T, _Alloc>& y);
 
 
   ///////////////////
@@ -1120,7 +1142,7 @@ bool operator>=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
 //
 template<typename T, typename Alloc>
 void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) {
-  // TODO: implement
+  x.swap(y);
 }
 
 // TODO: vector<bool> specialisation.

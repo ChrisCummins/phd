@@ -1709,6 +1709,54 @@ TEST(ustl_vector_modifiers, insert) {
     ASSERT_EQ(a[i], e[i]);
 }
 
+TEST(std_vector_modifiers, swap) {
+  std::vector<int> a{1, 2, 3};
+  std::vector<int> b{4, 5};
+
+  a.swap(b);
+
+  ASSERT_EQ(std::vector<int>::size_type(2), a.size());
+  ASSERT_EQ(std::vector<int>::size_type(3), b.size());
+  ASSERT_TRUE(vector_equal(a, {4, 5}));
+  ASSERT_TRUE(vector_equal(b, {1, 2, 3}));
+}
+
+TEST(ustl_vector_modifiers, swap) {
+  ustl::vector<int> a{1, 2, 3};
+  ustl::vector<int> b{4, 5};
+
+  a.swap(b);
+
+  ASSERT_EQ(ustl::vector<int>::size_type(2), a.size());
+  ASSERT_EQ(ustl::vector<int>::size_type(3), b.size());
+  vector_equal(a, {4, 5});
+  vector_equal(b, {1, 2, 3});
+}
+
+TEST(std_vector_modifiers, swap_overload) {
+  std::vector<int> a{1, 2, 3};
+  std::vector<int> b{4, 5};
+
+  std::swap(a, b);
+
+  ASSERT_EQ(std::vector<int>::size_type(2), a.size());
+  ASSERT_EQ(std::vector<int>::size_type(3), b.size());
+  vector_equal(a, {4, 5});
+  vector_equal(b, {1, 2, 3});
+}
+
+TEST(ustl_vector_modifiers, swap_overload) {
+  ustl::vector<int> a{1, 2, 3};
+  ustl::vector<int> b{4, 5};
+
+  ustl::swap(a, b);
+
+  ASSERT_EQ(ustl::vector<int>::size_type(2), a.size());
+  ASSERT_EQ(ustl::vector<int>::size_type(3), b.size());
+  vector_equal(a, {4, 5});
+  vector_equal(b, {1, 2, 3});
+}
+
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
