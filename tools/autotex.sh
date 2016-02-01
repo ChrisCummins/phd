@@ -254,6 +254,7 @@ setup_env() {
 get_citation_backend() {
     local document=$1
 
+    set +e
     if grep 'cite{' $document.aux &>/dev/null ; then
         # Biber uses \cite{key}:
         echo "biber"
@@ -264,6 +265,7 @@ get_citation_backend() {
         # No citations.
         echo
     fi
+    set -e
 }
 
 # Run citation backend command.
