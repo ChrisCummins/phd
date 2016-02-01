@@ -1130,16 +1130,21 @@ bool operator<(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
   auto lit = lhs.begin();
   auto rit = rhs.begin();
 
-  while (lit != lhs.end() && rit != rhs.end())
-    if (*lit++ > *rit++)
+  while (lit != lhs.end() && rit != rhs.end()) {
+    if (*lit < *rit)
+      return true;
+    else if (*lit > *rit)
       return false;
+    lit++;
+    rit++;
+  }
 
-  return lhs.size() <= rhs.size();
+  return lhs.size() < rhs.size();
 }
 
 template<typename T, typename Alloc>
 bool operator<=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
-  return rhs > lhs;
+  return !(lhs > rhs);
 }
 
 template<typename T, typename Alloc>
@@ -1149,7 +1154,7 @@ bool operator>(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
 
 template<typename T, typename Alloc>
 bool operator>=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
-  return rhs < lhs;
+  return !(lhs < rhs);
 }
 
 
