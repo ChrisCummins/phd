@@ -21,6 +21,7 @@ STAT=/usr/local/opt/coreutils/libexec/gnubin/stat
 # LaTeX tools:
 PDFLATEX=pdflatex
 BIBER=biber
+BIBTEX=bibtex
 PDFLATEX_ARGS="-recorder -output-format pdf -progname pdflatex -file-line-error -interaction=nonstopmode --shell-escape"
 
 # Included tools:
@@ -246,32 +247,47 @@ setup_env() {
     rm -f $LOGFILE
 }
 
-# Determine whether document contains citations, using \cite{}.
+# Determine which citation backend is used. Returns an empty string if
+# none is found.
 #
 # $1 (str) Document name, without extension
-contains_citations() {
+get_citation_backend() {
     local document=$1
 
-    set +e
-    grep 'cite{' $document.aux &>/dev/null
-    status=$?
-    set -e
-
-    if (( $status )); then
-        echo 0
+    if grep 'cite{' $document.aux &>/dev/null ; then
+        # Biber uses \cite{key}:
+        echo "biber"
+    elif grep 'citation{' $document.aux &>/dev/null ; then
+        # Bibtex uses \citation{key}:
+        echo "bibtex"
     else
-        echo 1
+        # No citations.
+        echo
     fi
 }
 
-# Run biber command.
+# Run citation backend command.
 #
-# $1 (str) Document name, without extension
-run_biber() {
-    local document=$1
+# $1 (str) Backend command name
+# $2 (str) Document name, without extension
+run_citation_backend() {
+    local backend=$1
+    local document=$2
 
-    echo "  BIBER    $PWD/$document"
-    silent_unless_fail $LOGFILE $BIBER $document
+    case $backend in
+        "biber")
+            echo "  BIBER    $PWD/$document"
+            silent_unless_fail $LOGFILE $BIBER $document
+            ;;
+        "bibtex")
+            echo "  BIBTEX   $PWD/$document"
+            silent_unless_fail $LOGFILE $BIBTEX $document
+            ;;
+        *)
+            echo "autotex: unrecognized backend '$backend'!" >&2
+            exit 1
+            ;;
+    esac
 }
 
 # Build LaTeX document.
@@ -285,12 +301,14 @@ build() {
     setup_env
     exec_hooks ".pre"
     run_pdflatex $document
-    if (( $(contains_citations $document) )); then
-        # TODO: determine which backend to use (biber,bibtex etc.)
-        run_biber $document
+
+    local backend=$(get_citation_backend $document)
+    if [[ -n $backend ]]; then
+        run_citation_backend $backend $document
         run_pdflatex $document
         # TODO: run bibtool and cleanbib
     fi
+
     run_pdflatex $document
     exec_hooks ".post"
 
