@@ -23,7 +23,7 @@ static const size_t sort_size_min = 8;
 // number of increments:
 static const size_t sort_size_max = 8 << 10;
 
-static void BM_std_sort_int(benchmark::State& state) {
+static void std_sort_int(benchmark::State& state) {
   std::vector<int> v(static_cast<size_t>(state.range_x()));
 
   while (state.KeepRunning()) {
@@ -34,9 +34,9 @@ static void BM_std_sort_int(benchmark::State& state) {
     benchmark::DoNotOptimize(v.data());
   }
 }
-BENCHMARK(BM_std_sort_int)->Range(sort_size_min, sort_size_max);
+BENCHMARK(std_sort_int)->Range(sort_size_min, sort_size_max);
 
-static void BM_ustl_sort_int(benchmark::State& state) {
+static void ustl_sort_int(benchmark::State& state) {
   ustl::vector<int> v(static_cast<size_t>(state.range_x()));
 
   while (state.KeepRunning()) {
@@ -47,7 +47,7 @@ static void BM_ustl_sort_int(benchmark::State& state) {
     benchmark::DoNotOptimize(v.data());
   }
 }
-BENCHMARK(BM_ustl_sort_int)->Range(sort_size_min, sort_size_max);
+BENCHMARK(ustl_sort_int)->Range(sort_size_min, sort_size_max);
 
 
 // Array tests
@@ -56,7 +56,7 @@ BENCHMARK(BM_ustl_sort_int)->Range(sort_size_min, sort_size_max);
 // Vector tests
 
 
-static void BM_std_push_back_int(benchmark::State& state) {
+static void std_push_back_int(benchmark::State& state) {
   std::vector<int> v(0);
 
   while (state.KeepRunning()) {
@@ -64,9 +64,9 @@ static void BM_std_push_back_int(benchmark::State& state) {
     benchmark::DoNotOptimize(v.data());
   }
 }
-BENCHMARK(BM_std_push_back_int);
+BENCHMARK(std_push_back_int);
 
-static void BM_ustl_push_back_int(benchmark::State& state) {
+static void ustl_push_back_int(benchmark::State& state) {
   ustl::vector<int> v(0);
 
   while (state.KeepRunning()) {
@@ -74,7 +74,7 @@ static void BM_ustl_push_back_int(benchmark::State& state) {
     benchmark::DoNotOptimize(v.data());
   }
 }
-BENCHMARK(BM_ustl_push_back_int);
+BENCHMARK(ustl_push_back_int);
 
 
 int main(int argc, char **argv) {

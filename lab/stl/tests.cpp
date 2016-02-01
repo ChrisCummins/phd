@@ -53,7 +53,7 @@ auto increment = [](int &x) -> void{ x++; };
 
 // all_of
 
-TEST(algorithm, all_of) {
+TEST(ustl_algorithm, all_of) {
   ustl::vector<int> a{2, 4, 6, 8};
   ustl::vector<int> b{2, 4, 6, 7, 8};
 
@@ -63,7 +63,7 @@ TEST(algorithm, all_of) {
 
 // any_of
 
-TEST(algorithm, any_of) {
+TEST(ustl_algorithm, any_of) {
   ustl::vector<int> a{2, 4, 6, 8};
   ustl::vector<int> b{1, 3, 5, 7};
   ustl::vector<int> c{1, 3, 5, 6, 7};
@@ -75,7 +75,7 @@ TEST(algorithm, any_of) {
 
 // none_of
 
-TEST(algorithm, none_of) {
+TEST(ustl_algorithm, none_of) {
   ustl::vector<int> a{2, 4, 6, 8};
   ustl::vector<int> b{1, 3, 5, 7};
   ustl::vector<int> c{1, 3, 5, 6, 7};
@@ -87,7 +87,7 @@ TEST(algorithm, none_of) {
 
 // for_each
 
-TEST(algorithm, for_each) {
+TEST(ustl_algorithm, for_each) {
   ustl::vector<int> in{1, 2, 3, 4, 5};
   ustl::vector<int> out{2, 3, 4, 5, 6};
 
@@ -99,7 +99,7 @@ TEST(algorithm, for_each) {
 
 // find
 
-TEST(algorithm, find) {
+TEST(ustl_algorithm, find) {
   ustl::vector<int> a{1, 2, 3, 4, 5};
   ustl::vector<int> b{2, 4, 6, 8, 10};
 
@@ -109,7 +109,7 @@ TEST(algorithm, find) {
 
 // find_if()
 
-TEST(algorithm, find_if) {
+TEST(ustl_algorithm, find_if) {
   ustl::vector<int> a{1, 3, 5, 7, 9};
   ustl::vector<int> b{2, 4, 6, 8, 10};
 
@@ -119,7 +119,7 @@ TEST(algorithm, find_if) {
 
 // find_if_not()
 
-TEST(algorithm, find_if_not) {
+TEST(ustl_algorithm, find_if_not) {
   ustl::vector<int> a{1, 3, 5, 7, 9};
   ustl::vector<int> b{2, 4, 6, 8, 10};
 
@@ -129,7 +129,7 @@ TEST(algorithm, find_if_not) {
 
 // find_end()
 
-TEST(algorithm, find_end) {
+TEST(ustl_algorithm, find_end) {
   ustl::vector<int> a{1, 2, 3, 4, 5, 6, 1, 2, 3, 9};
   ustl::vector<int> seq{1, 2, 3};
   ustl::vector<int> notseq{0, 1};
@@ -152,7 +152,7 @@ TEST(algorithm, find_end) {
 
 // find_first_of()
 
-TEST(algorithm, find_first_of) {
+TEST(ustl_algorithm, find_first_of) {
   ustl::vector<int> a{1, 2, 3, 4, 5, 6, 1, 2, 3, 9};
   ustl::vector<int> seq{-1, 2, 3};
   ustl::vector<int> notseq{0, -1};
@@ -175,7 +175,7 @@ TEST(algorithm, find_first_of) {
 
 // adjacent_find()
 
-TEST(algorithm, adjacent_find) {
+TEST(ustl_algorithm, adjacent_find) {
   ustl::vector<int> a{1, 1, 2, 3, 4, 5, 5};
   ustl::vector<int> b{0, 1, 2, 3, 3, 4, 5};
 
@@ -185,7 +185,7 @@ TEST(algorithm, adjacent_find) {
 
 // count_if()
 
-TEST(algorithm, count_if) {
+TEST(ustl_algorithm, count_if) {
   ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   ustl::vector<int> b{1, 3, 5, 7, 9};
 
@@ -195,7 +195,7 @@ TEST(algorithm, count_if) {
 
 // count()
 
-TEST(algorithm, count) {
+TEST(ustl_algorithm, count) {
   ustl::vector<int> a{1, 2, 3, 1, 1};
   ustl::vector<int> b{1, 3, 5, 7, 9};
 
@@ -205,7 +205,7 @@ TEST(algorithm, count) {
 
 // mismatch()
 
-TEST(algorithm, mismatch) {
+TEST(ustl_algorithm, mismatch) {
   ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8};
   ustl::vector<int> b{1, 2, 3, 0, 0, 0, 0, 0};
   ustl::vector<int> c{0, 2, 3, 0, 0, 0, 0, 0};
@@ -219,7 +219,7 @@ TEST(algorithm, mismatch) {
 
 // equal()
 
-TEST(algorithm, equal) {
+TEST(ustl_algorithm, equal) {
   ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8};
   ustl::vector<int> b{1, 2, 3, 4, 5, 6, 7, 8};
   ustl::vector<int> c{0, 2, 3, 0, 0, 0, 0, 0};
@@ -230,7 +230,7 @@ TEST(algorithm, equal) {
 
 // is_permutation()
 
-TEST(algorithm, is_permutation) {
+TEST(ustl_algorithm, is_permutation) {
   ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8};
   ustl::vector<int> b{1, 2, 3, 4, 5, 6, 7, 8};
   ustl::vector<int> c{8, 2, 3, 4, 5, 7, 6, 1};
@@ -243,7 +243,7 @@ TEST(algorithm, is_permutation) {
 
 // search()
 
-TEST(algorithm, search) {
+TEST(ustl_algorithm, search) {
   ustl::vector<int> a{0, 1, 2, 3, 4, 5, 1, 2, 3, 9};
   ustl::vector<int> seq{1, 2, 3};
   ustl::vector<int> notseq{-10, -11};
@@ -266,7 +266,7 @@ TEST(algorithm, search) {
 
 // search_n()
 
-TEST(algorithm, search_n) {
+TEST(ustl_algorithm, search_n) {
   ustl::vector<int> a{0, 0, 1, 1, 0, 1, 1, 0, 0, 0};
 
   ASSERT_EQ(&a[7], ustl::search_n(a.begin(), a.end(), 3, 0));
@@ -281,7 +281,7 @@ TEST(algorithm, search_n) {
 
 // Merge
 
-TEST(algorithm, merge) {
+TEST(ustl_algorithm, merge) {
   ustl::array<int, 5> a{1, 3, 5, 7, 9};
   ustl::array<int, 5> b{2, 4, 6, 8, 10};
   ustl::array<int, 10> c;
@@ -293,7 +293,7 @@ TEST(algorithm, merge) {
     ASSERT_EQ(c[i], sorted[i]);
 }
 
-TEST(algorithm, merge_comp_lambda) {
+TEST(ustl_algorithm, merge_comp_lambda) {
   ustl::array<int, 5> a{9, 7, 5, 3, 1};
   ustl::array<int, 5> b{10, 8, 6, 4, 2};
   ustl::array<int, 10> c;
@@ -306,7 +306,7 @@ TEST(algorithm, merge_comp_lambda) {
     ASSERT_EQ(c[i], sorted[i]);
 }
 
-TEST(algorithm, merge_comp_funcobj) {
+TEST(ustl_algorithm, merge_comp_funcobj) {
   ustl::array<int, 5> a{9, 7, 5, 3, 1};
   ustl::array<int, 5> b{10, 8, 6, 4, 2};
   ustl::array<int, 10> c;
@@ -319,7 +319,7 @@ TEST(algorithm, merge_comp_funcobj) {
     ASSERT_EQ(c[i], sorted[i]);
 }
 
-TEST(algorithm, merge_comp_funcptr) {
+TEST(ustl_algorithm, merge_comp_funcptr) {
   ustl::array<int, 5> a{9, 7, 5, 3, 1};
   ustl::array<int, 5> b{10, 8, 6, 4, 2};
   ustl::array<int, 10> c;
@@ -334,7 +334,7 @@ TEST(algorithm, merge_comp_funcptr) {
 
 // Sort
 
-TEST(algorithm, sort) {
+TEST(ustl_algorithm, sort) {
   ustl::vector<int> a{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
   ustl::vector<int> b{9, 8, 7, 6, 5, 4, 3, 2, 1};
   const ustl::vector<int> sorted{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -349,7 +349,7 @@ TEST(algorithm, sort) {
     ASSERT_EQ(b[i], sorted[i]);
 }
 
-TEST(algorithm, sort_comp_lambda) {
+TEST(ustl_algorithm, sort_comp_lambda) {
   ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   const ustl::vector<int> sorted{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
 
@@ -359,7 +359,7 @@ TEST(algorithm, sort_comp_lambda) {
     ASSERT_EQ(a[i], sorted[i]);
 }
 
-TEST(algorithm, sort_comp_funcobj) {
+TEST(ustl_algorithm, sort_comp_funcobj) {
   ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   const ustl::vector<int> sorted{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
 
@@ -369,7 +369,7 @@ TEST(algorithm, sort_comp_funcobj) {
     ASSERT_EQ(a[i], sorted[i]);
 }
 
-TEST(algorithm, sort_comp_funcptr) {
+TEST(ustl_algorithm, sort_comp_funcptr) {
   ustl::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   const ustl::vector<int> sorted{10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
 
@@ -381,7 +381,7 @@ TEST(algorithm, sort_comp_funcptr) {
 
 // Stable sort
 
-TEST(algorithm, stable_sort) {
+TEST(ustl_algorithm, stable_sort) {
   ustl::vector<Comparable> a{
     Comparable(0, 0),
     Comparable(2),
@@ -401,7 +401,7 @@ TEST(algorithm, stable_sort) {
 
 // is_sorted()
 
-TEST(algorithm, is_sorted) {
+TEST(ustl_algorithm, is_sorted) {
   ustl::vector<int> a{1, 2, 3, 4, 5};
   ustl::vector<int> b{5, 4, 3, 1, 2};
   ustl::vector<int> c{1, 2, 3, 5, 4};
@@ -415,7 +415,7 @@ TEST(algorithm, is_sorted) {
 
 // min()
 
-TEST(algorithm, min) {
+TEST(ustl_algorithm, min) {
   ASSERT_EQ(1, ustl::min(5, 1));
   ASSERT_EQ(1, ustl::min(1, 5));
 
@@ -428,7 +428,7 @@ TEST(algorithm, min) {
 
 // max()
 
-TEST(algorithm, max) {
+TEST(ustl_algorithm, max) {
   ASSERT_EQ(5, ustl::max(5, 1));
   ASSERT_EQ(5, ustl::max(1, 5));
 
@@ -441,7 +441,7 @@ TEST(algorithm, max) {
 
 // minmax()
 
-TEST(algorithm, minmax) {
+TEST(ustl_algorithm, minmax) {
   ASSERT_EQ(1, ustl::minmax(5, 1).first);
   ASSERT_EQ(5, ustl::minmax(5, 1).second);
   ASSERT_EQ(1, ustl::minmax(1, 5).first);
@@ -460,7 +460,7 @@ TEST(algorithm, minmax) {
 
 // Array tests
 
-TEST(array, size) {
+TEST(ustl_array, size) {
   ustl::array<int, 10> a;
   ustl::array<char, 1> b;
   ustl::array<int, 100> c;
@@ -472,7 +472,7 @@ TEST(array, size) {
   ASSERT_EQ(0u, d.size());
 }
 
-TEST(array, max_size) {
+TEST(ustl_array, max_size) {
   ustl::array<int, 10> a;
   ustl::array<char, 1> b;
   ustl::array<int, 100> c;
@@ -488,7 +488,7 @@ TEST(array, max_size) {
   ASSERT_EQ(d.size(), d.max_size());
 }
 
-TEST(array, empty) {
+TEST(ustl_array, empty) {
   ustl::array<int, 10> a;
   ustl::array<char, 1> b;
   ustl::array<int, 100> c;
@@ -500,7 +500,7 @@ TEST(array, empty) {
   ASSERT_EQ(true,  d.empty());
 }
 
-TEST(array, subscript) {
+TEST(ustl_array, subscript) {
   ustl::array<int, 2> a;
 
   // Set values:
@@ -512,7 +512,7 @@ TEST(array, subscript) {
   ASSERT_EQ(2, a[1]);
 }
 
-TEST(array, at) {
+TEST(ustl_array, at) {
   ustl::array<int, 2> a;
   ustl::array<int, 0> b;
 
@@ -536,7 +536,7 @@ TEST(array, at) {
   } catch (std::out_of_range) {}
 }
 
-TEST(array, front) {
+TEST(ustl_array, front) {
   ustl::array<int, 3> a;
 
   // Set values:
@@ -548,7 +548,7 @@ TEST(array, front) {
   ASSERT_EQ(1, a.front());
 }
 
-TEST(array, back) {
+TEST(ustl_array, back) {
   ustl::array<int, 3> a;
 
   // Set values:
@@ -560,7 +560,7 @@ TEST(array, back) {
   ASSERT_EQ(3, a.back());
 }
 
-TEST(array, data) {
+TEST(ustl_array, data) {
   ustl::array<int, 3> a;
 
   // Set values:
@@ -585,7 +585,7 @@ TEST(array, data) {
 
 // vector constructors
 
-TEST(vector, constructors) {
+TEST(ustl_vector, constructors) {
   ustl::vector<int> a(3);
   ustl::vector<double> b(3, 3.5f);
   ustl::vector<char> c = { 'a', 'b', 'c' };
@@ -604,7 +604,7 @@ TEST(vector, constructors) {
 
 // vector capacity tests
 
-TEST(vector_capacity, size) {
+TEST(ustl_vector_capacity, size) {
   ustl::vector<int> a;
   ustl::vector<int> b(5);
   ustl::vector<double> c(6, 3.5f);
@@ -616,7 +616,7 @@ TEST(vector_capacity, size) {
   ASSERT_EQ(3u, d.size());
 }
 
-TEST(vector_capacity, max_size) {
+TEST(ustl_vector_capacity, max_size) {
   ustl::vector<int> a;
   ustl::vector<int> b(5);
   ustl::vector<double> c(6, 3.5f);
@@ -629,7 +629,7 @@ TEST(vector_capacity, max_size) {
   ASSERT_EQ(a.max_size(), b.max_size());
 }
 
-TEST(vector_capacity, resize) {
+TEST(ustl_vector_capacity, resize) {
   ustl::vector<int> a{1, 2, 3, 4, 5};
 
   size_t orig_cap = a.capacity();
@@ -655,7 +655,7 @@ TEST(vector_capacity, resize) {
   ASSERT_EQ(-1, a.back());
 }
 
-TEST(vector_capacity, capacity) {
+TEST(ustl_vector_capacity, capacity) {
   ustl::vector<int> a;
   ustl::vector<int> b(5);
   ustl::vector<double> c(6, 3.5f);
@@ -667,7 +667,7 @@ TEST(vector_capacity, capacity) {
   ASSERT_TRUE(d.capacity() >= d.size());
 }
 
-TEST(vector_capacity, empty) {
+TEST(ustl_vector_capacity, empty) {
   ustl::vector<int> a;
   ustl::vector<int> b(0);
   ustl::vector<int> c{1, 2, 3};
@@ -677,7 +677,7 @@ TEST(vector_capacity, empty) {
   ASSERT_FALSE(c.empty());
 }
 
-TEST(vector_capacity, reserve) {
+TEST(ustl_vector_capacity, reserve) {
   ustl::vector<int> a(100);
   const size_t original_capacity = a.capacity();
 
@@ -688,7 +688,7 @@ TEST(vector_capacity, reserve) {
   ASSERT_TRUE(a.capacity() > original_capacity);
 }
 
-TEST(vector_capacity, shrink_to_fit) {
+TEST(ustl_vector_capacity, shrink_to_fit) {
   ustl::vector<int> a(1000);
   const size_t original_capacity = a.capacity();
 
@@ -712,7 +712,7 @@ TEST(vector_capacity, shrink_to_fit) {
 
 // vector_iterators:
 
-TEST(vector_iterators, begin) {
+TEST(ustl_vector_iterators, begin) {
   ustl::vector<int> a{1, 2, 3, 4, 5};
 
   auto it = a.begin();
@@ -725,7 +725,7 @@ TEST(vector_iterators, begin) {
   ASSERT_EQ(1, *cit);
 }
 
-TEST(vector_iterators, rbegin) {
+TEST(ustl_vector_iterators, rbegin) {
   ustl::vector<int> a{1, 2, 3, 4, 5};
 
   auto it = a.rbegin();
@@ -735,7 +735,7 @@ TEST(vector_iterators, rbegin) {
   ASSERT_EQ(2, it[1]);
 }
 
-TEST(vector_iterators, cbegin) {
+TEST(ustl_vector_iterators, cbegin) {
   ustl::vector<int> a{1, 2, 3, 4, 5};
 
   auto it = a.cbegin();
@@ -745,7 +745,7 @@ TEST(vector_iterators, cbegin) {
   ASSERT_EQ(4, it[1]);
 }
 
-TEST(vector_iterators, crbegin) {
+TEST(ustl_vector_iterators, crbegin) {
   ustl::vector<int> a{1, 2, 3, 4, 5};
 
   auto it = a.crbegin();
@@ -755,7 +755,7 @@ TEST(vector_iterators, crbegin) {
   ASSERT_EQ(2, it[1]);
 }
 
-TEST(vector_iterators, end) {
+TEST(ustl_vector_iterators, end) {
   ustl::vector<int> a{1, 2, 3, 4, 5};
   ustl::vector<int> b;
 
@@ -768,7 +768,7 @@ TEST(vector_iterators, end) {
     ASSERT_EQ(b[i], a[i]);
 }
 
-TEST(vector_iterators, rend) {
+TEST(ustl_vector_iterators, rend) {
   ustl::vector<int> a{1, 2, 3, 4, 5};
   ustl::vector<int> b{5, 4, 3, 2, 1};
   ustl::vector<int> rev;
@@ -782,7 +782,7 @@ TEST(vector_iterators, rend) {
     ASSERT_EQ(rev[i], b[i]);
 }
 
-TEST(vector_iterators, cend) {
+TEST(ustl_vector_iterators, cend) {
   ustl::vector<int> a{1, 2, 3, 4, 5};
   ustl::vector<int> b;
 
@@ -795,7 +795,7 @@ TEST(vector_iterators, cend) {
     ASSERT_EQ(b[i], a[i]);
 }
 
-TEST(vector_iterators, crend) {
+TEST(ustl_vector_iterators, crend) {
   ustl::vector<int> a{1, 2, 3, 4, 5};
   ustl::vector<int> b{5, 4, 3, 2, 1};
   ustl::vector<int> rev;
@@ -812,7 +812,7 @@ TEST(vector_iterators, crend) {
 
 // vector element access:
 
-TEST(vector_access, front) {
+TEST(ustl_vector_access, front) {
   ustl::vector<int> a(3);
   ustl::vector<double> b(3, 3.5f);
   ustl::vector<char> c = { 'a', 'b', 'c' };
@@ -822,7 +822,7 @@ TEST(vector_access, front) {
   ASSERT_EQ('a', c.front());
 }
 
-TEST(vector_access, back) {
+TEST(ustl_vector_access, back) {
   ustl::vector<int> a(3);
   ustl::vector<double> b(3, 3.5f);
   ustl::vector<char> c = { 'a', 'b', 'c' };
@@ -832,7 +832,7 @@ TEST(vector_access, back) {
   ASSERT_EQ('c', c.back());
 }
 
-TEST(vector_access, at) {
+TEST(ustl_vector_access, at) {
   ustl::vector<int> a(3);
   ustl::vector<double> b(3, 3.5f);
   ustl::vector<char> c = { 'a', 'b', 'c' };
@@ -867,7 +867,7 @@ TEST(vector_access, at) {
 
 // vector modifiers:
 
-TEST(vector_modifiers, assign) {
+TEST(ustl_vector_modifiers, assign) {
   ustl::vector<int> a;
   std::vector<int> b{1, 2, 3};
 
@@ -886,7 +886,7 @@ TEST(vector_modifiers, assign) {
   ASSERT_EQ(a.size(), ustl::vector<int>::size_type(4));
 }
 
-TEST(vector_modifiers, push_back) {
+TEST(ustl_vector_modifiers, push_back) {
   ustl::vector<int> a;
 
   a.push_back(1);
@@ -897,7 +897,7 @@ TEST(vector_modifiers, push_back) {
   ASSERT_EQ(a[1], 2);
 }
 
-TEST(vector_modifiers, pop_back) {
+TEST(ustl_vector_modifiers, pop_back) {
   ustl::vector<int> a{1, 2, 3};
 
   a.pop_back();
@@ -906,7 +906,7 @@ TEST(vector_modifiers, pop_back) {
   ASSERT_EQ(a[0], 1);
 }
 
-TEST(vector_modifiers, insert) {
+TEST(ustl_vector_modifiers, insert) {
   ustl::vector<int> a{1, 3, 4, 5, 6, 7, 8, 9, 10};
   ustl::vector<int> b{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   ustl::vector<int> c{1, 2, 3, 0, 0, 0, 4, 5, 6, 7, 8, 9, 10};
