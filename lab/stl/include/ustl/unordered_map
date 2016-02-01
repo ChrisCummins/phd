@@ -216,18 +216,24 @@ template<typename Key,
                 size_type n = __min_initial_buckets,
                 const hasher& hf = hasher(),
                 const key_equal& eql = key_equal(),
-                const allocator_type& alloc = allocator_type()) {
-    // TODO: implement
+                const allocator_type& alloc = allocator_type())
+      : unordered_map(n, hf, eql, alloc) {
+    for (auto& v : il)
+      this->operator[](v.first, v.second);
   }
 
   unordered_map(std::initializer_list<value_type> il,
-                size_type n, const allocator_type& alloc) {
-    // TODO: implement
+                size_type n, const allocator_type& alloc)
+      : unordered_map(n, alloc) {
+    for (auto& v : il)
+      this->operator[](v.first, v.second);
   }
 
   unordered_map(std::initializer_list<value_type> il,
-                size_type n, const hasher& hf, const allocator_type& alloc) {
-    // TODO: implement
+                size_type n, const hasher& hf, const allocator_type& alloc)
+      : unordered_map(n, hf, alloc) {
+    for (auto& v : il)
+      this->operator[](v.first, v.second);
   }
 
 
