@@ -2,162 +2,539 @@
 //
 // vector class.
 //
+// Vectors are sequence containers representing arrays that can change
+// in size.
+//
+// Just like arrays, vectors use contiguous storage locations for
+// their elements, which means that their elements can also be
+// accessed using offsets on regular pointers to its elements, and
+// just as efficiently as in arrays. But unlike arrays, their size can
+// change dynamically, with their storage being handled automatically
+// by the container.
+//
+// Internally, vectors use a dynamically allocated array to store
+// their elements. This array may need to be reallocated in order to
+// grow in size when new elements are inserted, which implies
+// allocating a new array and moving all elements to it. This is a
+// relatively expensive task in terms of processing time, and thus,
+// vectors do not reallocate each time an element is added to the
+// container.
+//
+// Instead, vector containers may allocate some extra storage to
+// accommodate for possible growth, and thus the container may have an
+// actual capacity greater than the storage strictly needed to contain
+// its elements (i.e., its size). Libraries can implement different
+// strategies for growth to balance between memory usage and
+// reallocations, but in any case, reallocations should only happen at
+// logarithmically growing intervals of size so that the insertion of
+// individual elements at the end of the vector can be provided with
+// amortized constant time complexity (see push_back).
+//
+// Therefore, compared to arrays, vectors consume more memory in
+// exchange for the ability to manage storage and grow dynamically in
+// an efficient way.
+//
+// Compared to the other dynamic sequence containers (deques, lists
+// and forward_lists), vectors are very efficient accessing its
+// elements (just like arrays) and relatively efficient adding or
+// removing elements from its end. For operations that involve
+// inserting or removing elements at positions other than the end,
+// they perform worse than the others, and have less consistent
+// iterators and references than lists and forward_lists.
+//
 #ifndef __USTL_VECTOR__
 #define __USTL_VECTOR__
 
 #include <cstddef>
+#include <iterator>
 #include <memory>
 
 namespace ustl {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
 
 template<typename T, class Alloc = std::allocator<T>>
 class vector {
  public:
-  // Typedefs:
+
+  ///////////////////
+  // Member types: //
+  ///////////////////
+
   using value_type = T;
+
   using allocator_type = Alloc;
+
+  using reference = value_type&;
+
+  using const_reference = const value_type&;
+
+  using pointer = typename std::allocator_traits<allocator_type>::pointer;
+
+  using const_pointer =
+      typename std::allocator_traits<allocator_type>::const_pointer;
+
   using iterator = T*;
 
-  // Default constructors:
-  vector() : _buffer(nullptr), _size(0), _capacity(0),
-             _alloc(allocator_type()) {}
+  using const_iterator = const iterator;
+
+  using reverse_iterator = std::reverse_iterator<iterator>;
+
+  using const_reverse_iterator = const std::reverse_iterator<iterator>;
+
+  using difference_type =
+      typename std::iterator_traits<iterator>::difference_type;
+
+  using size_type = size_t;
+
+
+  ///////////////////
+  // Constructors: //
+  ///////////////////
+  //
+  // The container keeps an internal copy of alloc, which is used to
+  // allocate and deallocate storage for its elements, and to
+  // construct and destroy them (as specified by its
+  // allocator_traits). If no alloc argument is passed to the
+  // constructor, a default-constructed allocator is used, except in
+  // the following cases:
+  //
+  // - The copy constructor (4, first signature) creates a container
+  //  that keeps and uses a copy of the allocator returned by calling
+  //  the appropriate selected_on_container_copy_construction trait -
+  //  on x's allocator.
+  //
+  // - The move constructor (5, first signature) acquires x's
+  //   allocator.
+  //
+  // All elements are copied, moved or otherwise constructed by
+  // calling allocator_traits::construct with the appropriate
+  // arguments.
+  //
+
+  // empty container constructor (default constructor):
+  //
+  // Constructs an empty container, with no elements.
+  //
+  vector() :
+      _buffer(nullptr), _size(0), _capacity(0), _alloc(allocator_type()) {}
 
   explicit vector(const allocator_type& alloc)
       : _buffer(nullptr), _size(0), _capacity(0), _alloc(alloc) {}
 
-  // Fill constructors:
-  explicit vector(const std::size_t n, const Alloc& alloc = allocator_type())
-      : vector(n, value_type{}, alloc) {}
 
-  vector(const std::size_t n, const value_type& val,
+  //
+  // fill constructor:
+  //
+  // Constructs a container with n elements. Each element is a copy of
+  // val (if provided).
+  //
+  vector(const size_type n,
+         const value_type& val,
          const allocator_type& alloc = allocator_type())
       : _buffer(nullptr), _size(0), _capacity(0), _alloc(alloc) {
-    // Reserve space.
     reserve(n);
 
     // Populate.
-    for (std::size_t i = 0; i < n; i++)
+    for (size_type i = 0; i < n; i++)
       push_back(val);
   }
 
-  // Range constructors:
+  explicit vector(const size_type n,
+                  const allocator_type& alloc = allocator_type())
+      : vector(n, value_type{}, alloc) {}
+
+
+  //
+  // range constructor:
+  //
+  // Constructs a container with as many elements as the range
+  // [first,last), with each element emplace-constructed from its
+  // corresponding element in that range, in the same order.
+  //
   template<class InputIterator>
   vector(InputIterator first, const InputIterator last,
-         const allocator_type& alloc = allocator_type());
+         const allocator_type& alloc = allocator_type()) {
+    // TODO: implement
+  }
 
-  // Copy constructors:
-  vector(const vector& x);
-  vector(const vector& x, const allocator_type& alloc);
 
-  // Move constructors:
-  vector(const vector&& x);
-  vector(const vector&& x, const allocator_type& alloc);
+  //
+  // copy constructor (and copying with allocator):
+  //
+  // Constructs a container with a copy of each of the elements in x,
+  // in the same order.
+  //
+  vector(const vector& x) {
+    // TODO: implement
+  }
 
-  // Initializer list constructor:
-  vector(std::initializer_list<value_type> l) :
-      _buffer(nullptr),
-      _size(0),
-      _capacity(0),
-      _alloc(allocator_type()) {
+  vector(const vector& x, const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+
+  //
+  // move constructor (and moving with allocator):
+  //
+  // Constructs a container that acquires the elements of x.  If alloc
+  // is specified and is different from x's allocator, the elements
+  // are moved. Otherwise, no elements are constructed (their
+  // ownership is directly transferred).  x is left in an unspecified
+  // but valid state.
+  //
+  vector(const vector&& x) {
+    // TODO: implement
+  }
+
+  vector(const vector&& x, const allocator_type& alloc) {
+    // TODO: implement
+  }
+
+  //
+  // initializer list constructor:
+  //
+  // Constructs a container with a copy of each of the elements in il,
+  // in the same order.
+  //
+  vector(std::initializer_list<value_type> il)
+      : _buffer(nullptr), _size(0), _capacity(0), _alloc(allocator_type()) {
+    // Reserve space.
     reserve(size());
-    for (auto &e : l)
+
+    // Copy values over.
+    for (auto& e : il)
       push_back(e);
   }
 
-  // Destructor:
-  ~vector() { _alloc.deallocate(_buffer, _capacity); }
 
+  /////////////////
+  // Destructor: //
+  /////////////////
+  //
+  // This calls allocator_traits::destroy on each of the contained
+  // elements, and deallocates all the storage capacity allocated by
+  // the vector using its allocator.
+  //
+
+  ~vector() {
+    _destroy_elements();
+    _alloc.deallocate(_buffer, _capacity);
+  }
+
+  /////////////////
+  // Assignment: //
+  /////////////////
+  //
+  // Assigns new contents to the container, replacing its current
+  // contents, and modifying its size accordingly.
+  //
+
+  //
   // Copy assignment:
-  vector& operator=(const vector& x);
+  //
+  // Copies all the elements from x into the container (with x
+  // preserving its contents).
+  //
+  vector& operator=(const vector& x) {
+    // TODO: implement
+  }
 
+  //
   // Move assignment:
-  vector& operator=(vector&& x);
+  //
+  // Moves the elements of x into the container (x is left in an
+  // unspecified but valid state).
+  //
+  vector& operator=(vector&& x) {
+    // TODO: implement
+  }
 
+  //
   // Initializer list assignment:
-  vector& operator=(std::initializer_list<value_type> l);
-
-  // Iterators
-  iterator begin() const { return _buffer; }
-  iterator end() const { return &_buffer[size()]; }
-
-  // operator[]
-  value_type& operator[](const std::size_t index) {
-    return _buffer[index];
+  //
+  // Copies the elements of il into the container.
+  //
+  vector& operator=(std::initializer_list<value_type> l) {
+    // TODO: implement
   }
 
-  const value_type& operator[](const std::size_t index) const {
-    return _buffer[index];
+
+  ////////////////
+  // Iterators: //
+  ////////////////
+
+  //
+  // begin():
+  //
+  // Returns an iterator pointing to the first element in the vector.
+  //
+  // Notice that, unlike member vector::front, which returns a
+  // reference to the first element, this function returns a random
+  // access iterator pointing to it.
+  //
+  // If the container is empty, the returned iterator value shall not
+  // be dereferenced.
+  //
+  iterator begin() noexcept {
+    return iterator(_buffer);
   }
 
-  // at()
-  value_type& at(const std::size_t index) {
-    if (index >= size())
-      throw std::out_of_range("vector::at()");
-    else
-      return this->operator[](index);
+  const_iterator begin() const noexcept {
+    return iterator(_buffer);
   }
 
-  const value_type& at(const std::size_t index) const {
-    if (index >= size())
-      throw std::out_of_range("vector::at()");
-    else
-      return this->operator[](index);
+  //
+  // end():
+  //
+  // Returns an iterator referring to the past-the-end element in the
+  // vector container.
+  //
+  // The past-the-end element is the theoretical element that would
+  // follow the last element in the vector. It does not point to any
+  // element, and thus shall not be dereferenced.
+  //
+  // Because the ranges used by functions of the standard library do
+  // not include the element pointed by their closing iterator, this
+  // function is often used in combination with vector::begin to
+  // specify a range including all the elements in the container.
+  //
+  // If the container is empty, this function returns the same as
+  // vector::begin.
+  //
+  iterator end() noexcept { return iterator(&_buffer[size()]); }
+
+  const_iterator end() const noexcept { return iterator(&_buffer[size()]); }
+
+
+  //
+  // rbegin():
+  //
+  // Returns a reverse iterator pointing to the last element in the
+  // vector (i.e., its reverse beginning).
+  //
+  // Reverse iterators iterate backwards: increasing them moves them
+  // towards the beginning of the container.
+  //
+  // rbegin points to the element right before the one that would be
+  // pointed to by member end.
+  //
+  // Notice that unlike member vector::back, which returns a reference
+  // to this same element, this function returns a reverse random
+  // access iterator.
+  //
+  reverse_iterator rbegin() noexcept {
+    return std::reverse_iterator<iterator>(end());
   }
 
-  // front()
-  value_type& front() { return _buffer[0]; }
+  const_reverse_iterator rbegin() const noexcept {
+    return std::reverse_iterator<const_iterator>(end());
+  }
 
-  const value_type& front() const { return _buffer[0]; }
 
-  // back()
-  value_type& back() { return _buffer[size() - 1]; }
+  //
+  // rend():
+  //
+  // Returns a reverse iterator pointing to the theoretical element
+  // preceding the first element in the vector (which is considered
+  // its reverse end).
+  //
+  // The range between vector::rbegin and vector::rend contains all
+  // the elements of the vector (in reverse order).
+  //
+  reverse_iterator rend() noexcept {
+    return std::reverse_iterator<iterator>(begin() - 1);
+  }
 
-  const value_type& back() const { return _buffer[size() - 1]; }
+  const_reverse_iterator rend() const noexcept {
+    return std::reverse_iterator<iterator>(begin() - 1);
+  }
 
-  // data()
-  value_type* data() noexcept { return _buffer; };
+  //
+  // cbegin():
+  //
+  // Returns a const_iterator pointing to the first element in the
+  // container.
+  //
+  // A const_iterator is an iterator that points to const
+  // content. This iterator can be increased and decreased (unless it
+  // is itself also const), just like the iterator returned by
+  // vector::begin, but it cannot be used to modify the contents it
+  // points to, even if the vector object is not itself const.
+  //
+  // If the container is empty, the returned iterator value shall not
+  // be dereferenced.
+  //
+  const_iterator cbegin() const noexcept {
+    return const_iterator(begin());
+  }
 
-  const value_type* data() const noexcept { return _buffer; };
 
-  // size()
-  std::size_t size() const noexcept { return _size; };
+  //
+  // cend():
+  //
+  // Returns a const_iterator pointing to the past-the-end element in the container.
+  //
+  // A const_iterator is an iterator that points to const
+  // content. This iterator can be increased and decreased (unless it
+  // is itself also const), just like the iterator returned by
+  // vector::end, but it cannot be used to modify the contents it
+  // points to, even if the vector object is not itself const.
+  //
+  // If the container is empty, this function returns the same as
+  // vector::cbegin.
+  //
+  // The value returned shall not be dereferenced.
+  //
+  const_iterator cend() const noexcept {
+    return const_iterator(end());
+  }
 
-  // max_size()
-  std::size_t max_size() const noexcept { return _alloc.max_size(); };
 
-  // resize()
-  void resize(const std::size_t n) {
+  //
+  // crbegin():
+  //
+  // Returns a const_reverse_iterator pointing to the last element in
+  // the container (i.e., its reverse beginning).
+  //
+  const_reverse_iterator crbegin() const noexcept {
+    return const_reverse_iterator(end());
+  }
+
+
+  //
+  // crend():
+  //
+  // Returns a const_reverse_iterator pointing to the theoretical
+  // element preceding the first element in the container (which is
+  // considered its reverse end).
+  //
+  const_reverse_iterator crend() const noexcept {
+    return const_reverse_iterator(begin());
+  }
+
+
+  ///////////////
+  // Capacity: //
+  ///////////////
+
+  //
+  // size():
+  //
+  // Returns the number of elements in the vector.
+  //
+  // This is the number of actual objects held in the vector, which is
+  // not necessarily equal to its storage capacity.
+  //
+  size_type size() const noexcept { return _size; };
+
+  //
+  // max_size():
+  //
+  // Returns the maximum number of elements that the vector can hold.
+  //
+  // This is the maximum potential size the container can reach due to
+  // known system or library implementation limitations, but the
+  // container is by no means guaranteed to be able to reach that
+  // size: it can still fail to allocate storage at any point before
+  // that size is reached.
+  //
+  size_type max_size() const noexcept { return _alloc.max_size(); };
+
+  //
+  // resize():
+  //
+  // Resizes the container so that it contains n elements.
+  //
+  // If n is smaller than the current container size, the content is
+  // reduced to its first n elements, removing those beyond (and
+  // destroying them).
+  //
+  // If n is greater than the current container size, the content is
+  // expanded by inserting at the end as many elements as needed to
+  // reach a size of n. If val is specified, the new elements are
+  // initialized as copies of val, otherwise, they are
+  // value-initialized.
+  //
+  // If n is also greater than the current container capacity, an
+  // automatic reallocation of the allocated storage space takes
+  // place.
+  //
+  // Notice that this function changes the actual content of the
+  // container by inserting or erasing elements from it.
+  //
+  void resize(const size_type n) {
     if (n > size()) {
       reserve(n);
     } else {
       // Destroy elements between size() and n.
-      for (std::size_t i = size(); i < n; i++)
-        _buffer[i].~value_type();
+      for (size_type i = size(); i < n; i++)
+        _destroy_element(i);
     }
 
     _size = n;
   }
 
-  void resize(const std::size_t n, const value_type& val) {
-    const std::size_t old_size = size();
+  void resize(const size_type n, const value_type& val) {
+    const size_type old_size = size();
     resize(n);
 
     // Fill value for new elements.
-    for (std::size_t i = old_size; i < n; i++)
+    for (size_type i = old_size; i < n; i++)
       _buffer[i] = val;
   }
 
-  // capacity()
-  std::size_t capacity() const noexcept { return _capacity; };
+  //
+  // capacity():
+  //
+  // Returns the size of the storage space currently allocated for the
+  // vector, expressed in terms of elements.
+  //
+  // This capacity is not necessarily equal to the vector size. It can
+  // be equal or greater, with the extra space allowing to accommodate
+  // for growth without the need to reallocate on each insertion.
+  //
+  // Notice that this capacity does not suppose a limit on the size of
+  // the vector. When this capacity is exhausted and more is needed,
+  // it is automatically expanded by the container (reallocating it
+  // storage space). The theoretical limit on the size of a vector is
+  // given by member max_size.
+  //
+  // The capacity of a vector can be explicitly altered by calling
+  // member vector::reserve.
+  //
+  size_type capacity() const noexcept { return _capacity; };
 
-  // empty()
+  //
+  // empty():
+  //
+  // Returns whether the vector is empty (i.e. whether its size is 0).
+  //
+  // This function does not modify the container in any way. To clear
+  // the content of a vector, see vector::clear.
+  //
   bool empty() const noexcept { return !_size; };
 
-  // reserve()
-  void reserve(const std::size_t n) {
+  //
+  // reserve():
+  //
+  // Requests that the vector capacity be at least enough to contain n
+  // elements.
+  //
+  // If n is greater than the current vector capacity, the function
+  // causes the container to reallocate its storage increasing its
+  // capacity to n (or greater).
+  //
+  // In all other cases, the function call does not cause a
+  // reallocation and the vector capacity is not affected.
+  //
+  // This function has no effect on the vector size and cannot alter
+  // its elements.
+  //
+  void reserve(const size_type n) {
     // Do nothing unless the new size is greater than the current.
-    if (n <= size())
+    if (n <= capacity())
       return;
 
     // Get a new buffer.
@@ -165,7 +542,7 @@ class vector {
 
     if (_buffer) {
       // Copy elements from old buffer.
-      for (std::size_t i = 0; i < size(); i++)
+      for (size_type i = 0; i < size(); i++)
         newbuf[i] = _buffer[i];
       // Deallocate old buffer.
       _alloc.deallocate(_buffer, _capacity);
@@ -175,13 +552,24 @@ class vector {
     _buffer = newbuf;
   }
 
-  // shrink_to_fit()
+  //
+  // shrink_to_fit():
+  //
+  // Requests the container to reduce its capacity to fit its size.
+  //
+  // The request is non-binding, and the container implementation is
+  // free to optimize otherwise and leave the vector with a capacity
+  // greater than its size.
+  //
+  // This may cause a reallocation, but has no effect on the vector
+  // size and cannot alter its elements.
+  //
   void shrink_to_fit() {
     // Don't perform a shrink unless we're significantly oversized.
     if (capacity() && capacity() > size() * _capacity_multiplier) {
       // Allocate and copy new buffer.
       value_type*const newbuf = _alloc.allocate(size());
-      for (std::size_t i = 0; i < size(); i++)
+      for (size_type i = 0; i < size(); i++)
         newbuf[i] = _buffer[i];
 
       // Deallocate old buffer.
@@ -191,29 +579,402 @@ class vector {
     }
   }
 
-  // push_back()
+  /////////////////////
+  // Element access: //
+  /////////////////////
+
+  //
+  // operator[]:
+  //
+  // Returns a reference to the element at position n in the vector
+  // container.
+  //
+  // A similar member function, vector::at, has the same behavior as
+  // this operator function, except that vector::at is bound-checked
+  // and signals if the requested position is out of range by throwing
+  // an out_of_range exception.
+  //
+  // Portable programs should never call this function with an
+  // argument n that is out of range, since this causes undefined
+  // behavior.
+  //
+  value_type& operator[](const size_type index) {
+    return _buffer[index];
+  }
+
+  const value_type& operator[](const size_type index) const {
+    return _buffer[index];
+  }
+
+  //
+  // at():
+  //
+  // Returns a reference to the element at position n in the vector.
+  //
+  // The function automatically checks whether n is within the bounds
+  // of valid elements in the vector, throwing an out_of_range
+  // exception if it is not (i.e., if n is greater or equal than its
+  // size). This is in contrast with member operator[], that does not
+  // check against bounds.
+  //
+  value_type& at(const size_type index) {
+    if (index >= size())
+      throw std::out_of_range("vector::at()");
+    else
+      return this->operator[](index);
+  }
+
+  const value_type& at(const size_type index) const {
+    return at(index);
+  }
+
+  //
+  // front():
+  //
+  // Returns a reference to the first element in the vector.
+  //
+  // Unlike member vector::begin, which returns an iterator to this
+  // same element, this function returns a direct reference.
+  //
+  // Calling this function on an empty container causes undefined
+  // behavior.
+  //
+  value_type& front() { return _buffer[0]; }
+
+  const value_type& front() const { return _buffer[0]; }
+
+  //
+  // back():
+  //
+  // Returns a reference to the last element in the vector.
+  //
+  // Unlike member vector::end, which returns an iterator just past
+  // this element, this function returns a direct reference.
+  //
+  // Calling this function on an empty container causes undefined
+  // behavior.
+  //
+  value_type& back() { return _buffer[size() - 1]; }
+
+  const value_type& back() const { return _buffer[size() - 1]; }
+
+  //
+  // data():
+  //
+  // Returns a direct pointer to the memory array used internally by
+  // the vector to store its owned elements.
+  //
+  // Because elements in the vector are guaranteed to be stored in
+  // contiguous storage locations in the same order as represented by
+  // the vector, the pointer retrieved can be offset to access any
+  // element in the array.
+  //
+  value_type* data() noexcept { return _buffer; };
+
+  const value_type* data() const noexcept { return _buffer; };
+
+
+  ////////////////
+  // Modifiers: //
+  ////////////////
+
+  //
+  // assign():
+  //
+  // Assigns new contents to the vector, replacing its current
+  // contents, and modifying its size accordingly.
+  //
+
+  // Range - the new contents are elements constructed from each of
+  // the elements in the range between first and last, in the same
+  // order.
+  template<typename InputIterator>
+  void assign(InputIterator first, InputIterator last) {
+    // Clear and make room for new elements.
+    clear();
+    reserve(static_cast<size_type>(last - first));
+
+    auto it = begin();
+    while (first != last)
+      *it++ = *first++;
+  }
+
+  // Fill - the new contents are n elements, each initialized to a
+  // copy of val.
+  void assign(size_type n, const value_type& val) {
+    // Clear and make room for new elements.
+    clear();
+    reserve(n);
+
+    for (size_type i = 0; i < n; i++)
+      _buffer[i] = val;
+  }
+
+  // Initiliazer list - the new contents are copies of the values
+  // passed as initializer list, in the same order.
+  void assign(std::initializer_list<value_type> il) {
+    clear();
+    for (auto& v : il)
+      push_back(v);
+  }
+
+  //
+  // push_back():
+  //
+  // Adds a new element at the end of the vector, after its current
+  // last element. The content of val is copied (or moved) to the new
+  // element.
+  //
+  // This effectively increases the container size by one, which
+  // causes an automatic reallocation of the allocated storage space
+  // if -and only if- the new vector size surpasses the current vector
+  // capacity.
+  //
   void push_back(const value_type &val) {
-    // Expand if required:
-    if (capacity() < size() + 1)
-      reserve(!size() ? _default_capacity : size() * _capacity_multiplier);
+    _resize_if_smaller_than(size() + 1);
 
     // Assign and increment.
     _buffer[_size++] = val;
   }
 
   void push_back(value_type &&val) {
-    // Expand if required:
-    if (capacity() < size() + 1)
-      reserve(!size() ? _default_capacity : size() * _capacity_multiplier);
+    _resize_if_smaller_than(size() + 1);
 
     // Assign and increment.
     _buffer[_size++] = std::move(val);
   }
 
-  // get_allocator()
+  //
+  // pop_back():
+  //
+  // Removes the last element in the vector, effectively reducing the
+  // container size by one.
+  //
+  // This destroys the removed element.
+  //
+  void pop_back() {
+    _size--;
+    _destroy_element(size());
+  }
+
+  //
+  // insert();
+  //
+  // The vector is extended by inserting new elements before the
+  // element at the specified position, effectively increasing the
+  // container size by the number of elements inserted.
+  //
+  //
+  // This causes an automatic reallocation of the allocated storage
+  // space if -and only if- the new vector size surpasses the current
+  // vector capacity.
+  //
+  // Because vectors use an array as their underlying storage,
+  // inserting elements in positions other than the vector end causes
+  // the container to relocate all the elements that were after
+  // position to their new positions. This is generally an inefficient
+  // operation compared to the one performed for the same operation by
+  // other kinds of sequence containers (such as list or
+  // forward_list).
+  //
+
+  // single element:
+  iterator insert(const_iterator position, const value_type& val) {
+    auto start_idx = size_type(position - begin());
+    _make_n_elem_space(start_idx, 1);
+
+    _buffer[start_idx] = val;
+
+    return position;
+  }
+
+  // fill:
+  iterator insert(const_iterator position, size_type n, const value_type& val) {
+    auto start_idx = size_type(position - begin());
+    _make_n_elem_space(start_idx, n);
+
+    for (size_type i = start_idx; i < start_idx + n; i++)
+      _buffer[i] = val;
+
+    return position;
+  }
+
+  // range:
+  template<typename InputIterator>
+  iterator insert(const_iterator position,
+                  InputIterator first, InputIterator last) {
+    auto start_idx = size_type(position - begin());
+    auto n = size_type(last - first);
+    _make_n_elem_space(start_idx, n);
+
+    for (size_type i = start_idx; i < start_idx + n; i++)
+      _buffer[i] = *first++;
+
+    return position;
+  }
+
+  // move:
+  iterator insert(const_iterator position, value_type&& val) {
+    auto start_idx = size_type(position - begin());
+    _make_n_elem_space(start_idx, 1);
+
+    _buffer[start_idx] = std::move(val);
+
+    return position;
+  }
+
+  // initializer list:
+  iterator insert(const_iterator position,
+                  std::initializer_list<value_type> il) {
+    auto start_idx = size_type(position - begin());
+    auto n = il.size();
+    _make_n_elem_space(start_idx, n);
+
+    auto it = &_buffer[start_idx];
+    for (auto& v : il)
+      *it++ = v;
+
+    return position;
+  }
+
+
+  //
+  // erase():
+  //
+  // Removes from the vector either a single element (position) or a
+  // range of elements ([first,last)).
+  //
+  // This effectively reduces the container size by the number of
+  // elements removed, which are destroyed.
+  //
+  // Because vectors use an array as their underlying storage, erasing
+  // elements in positions other than the vector end causes the
+  // container to relocate all the elements after the segment erased
+  // to their new positions. This is generally an inefficient
+  // operation compared to the one performed for the same operation by
+  // other kinds of sequence containers (such as list or
+  // forward_list).
+  //
+  iterator erase(const_iterator position) {
+    // TODO: implement
+  }
+
+  iterator erase(const_iterator first, const_iterator last) {
+    // TODO: implement
+  }
+
+
+  //
+  // swap():
+  //
+  // Exchanges the content of the container by the content of x, which
+  // is another vector object of the same type. Sizes may differ.
+  //
+  // After the call to this member function, the elements in this
+  // container are those which were in x before the call, and the
+  // elements of x are those which were in this. All iterators,
+  // references and pointers remain valid for the swapped objects.
+  //
+  // Notice that a non-member function exists with the same name,
+  // swap, overloading that algorithm with an optimization that
+  // behaves like this member function.
+  //
+  void swap(vector& x) {
+    // TODO: implement
+  }
+
+
+  //
+  // clear():
+  //
+  // Removes all elements from the vector (which are destroyed),
+  // leaving the container with a size of 0.
+  //
+  // A reallocation is not guaranteed to happen, and the vector
+  // capacity is not guaranteed to change due to calling this
+  // function.
+  //
+  void clear() noexcept {
+    _destroy_elements();
+    _size = 0;
+  }
+
+
+  //
+  // emplace():
+  //
+  // The container is extended by inserting a new element at
+  // position. This new element is constructed in place using args as
+  // the arguments for its construction.
+  //
+  // This effectively increases the container size by one.
+  //
+  // An automatic reallocation of the allocated storage space happens
+  // if -and only if- the new vector size surpasses the current vector
+  // capacity.
+  //
+  // Because vectors use an array as their underlying storage,
+  // inserting elements in positions other than the vector end causes
+  // the container to shift all the elements that were after position
+  // by one to their new positions. This is generally an inefficient
+  // operation compared to the one performed by other kinds of
+  // sequence containers (such as list or forward_list). See
+  // emplace_back for a member function that extends the container
+  // directly at the end.
+  //
+  // The element is constructed in-place by calling
+  // allocator_traits::construct with args forwarded.
+  //
+  // A similar member function exists, insert, which either copies or
+  // moves existing objects into the container.
+  //
+  template<typename... Args>
+  iterator emplace(const_iterator position, Args&&... args) {
+    // TODO: implement
+  }
+
+
+  //
+  // emplace_back():
+  //
+  // Inserts a new element at the end of the vector, right after its
+  // current last element. This new element is constructed in place
+  // using args as the arguments for its constructor.
+  //
+  // This effectively increases the container size by one, which
+  // causes an automatic reallocation of the allocated storage space
+  // if -and only if- the new vector size surpasses the current vector
+  // capacity.
+  //
+  // The element is constructed in-place by calling
+  // allocator_traits::construct with args forwarded.
+  //
+  // A similar member function exists, push_back, which either copies
+  // or moves an existing object into the container.
+  //
+  template<typename... Args>
+  void emplace_back(Args&&... args) {
+    // TODO: implement
+  }
+
+
+  ////////////////
+  // Allocator: //
+  ////////////////
+
+  //
+  // get_allocator():
+  //
+  // Returns a copy of the allocator object associated with the
+  // vector.
   allocator_type get_allocator() const noexcept { return _alloc; }
 
-  // NOT IN THE SPEC: stream output formatter
+
+  ///////////////////
+  // Note in spec: //
+  ///////////////////
+
+  // stream output formatting
   friend std::ostream& operator<<(std::ostream &o, const vector &v) {
     for (auto &val : v)
       o << val << ' ';
@@ -221,15 +982,148 @@ class vector {
   }
 
  private:
+
+  static const size_type _default_capacity = 8;
+  static const int _capacity_multiplier = 2;
+
+  ///////////////////////////////
+  // Private member variables: //
+  ///////////////////////////////
+
   value_type* _buffer;
-  std::size_t _size;
-  std::size_t _capacity;
+  size_type _size;
+  size_type _capacity;
   allocator_type _alloc;
 
-  static const std::size_t _default_capacity = 8;
-  static const int _capacity_multiplier = 2;
-};
 
+  //////////////////////
+  // Private methods: //
+  //////////////////////
+
+  // Expand vector by 'n' and starting at position 'idx', move
+  // elements along by n spaces. This leaves the values in the range
+  // [idx, idx + n) uninitialised.
+  //
+  void _make_n_elem_space(const size_type idx, const size_type n) {
+    _resize_if_smaller_than(size() + n);
+
+    auto end_idx = idx + n;
+
+    // Move elements along to make room.
+    for (size_type i = size() - 1 + n; i >= end_idx; i--)
+      _buffer[i] = _buffer[i - n];
+
+    // Increase size.
+    _size += n;
+  }
+
+  // Resize if smaller than.
+  void _resize_if_smaller_than(const size_type n) {
+    if (capacity() < n)
+      reserve(!size() ? _default_capacity : size() * _capacity_multiplier);
+  }
+
+  // Destroy element at idx.
+  void _destroy_element(const size_type n) {
+    std::allocator_traits<allocator_type>::destroy(_alloc, &_buffer[n]);
+  }
+
+  // Destroy all elements.
+  void _destroy_elements() {
+    for (size_type i = 0; i < size(); i++)
+      _destroy_element(i);
+  }
+
+};  // vector class
+
+#pragma GCC diagnostic pop  // -Wpadded
+
+
+////////////////////////////////////
+// Non-member function overloads: //
+////////////////////////////////////
+
+
+//
+// Relational operators:
+//
+// Performs the appropriate comparison operation between the vector
+// containers lhs and rhs.
+//
+// The equality comparison (operator==) is performed by first
+// comparing sizes, and if they match, the elements are compared
+// sequentially using operator==, stopping at the first mismatch (as
+// if using algorithm equal).
+//
+// The less-than comparison (operator<) behaves as if using
+// algorithm lexicographical_compare, which compares the elements
+// sequentially using operator< in a reciprocal manner (i.e.,
+// checking both a<b and b<a) and stopping at the first occurrence.
+//
+// The other operations also use the operators == and < internally
+// to compare the elements, behaving as if the following equivalent
+// operations were performed:
+//
+//   a!=b     !(a==b)
+//   a>b      b<a
+//   a<=b     !(b<a)
+//   a>=b     !(a<b)
+//
+template<typename T, typename Alloc>
+bool operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  // TODO: implement
+}
+
+template<typename T, typename Alloc>
+bool operator!=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  // TODO: implement
+}
+
+template<typename T, typename Alloc>
+bool operator<(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  // TODO: implement
+}
+
+template<typename T, typename Alloc>
+bool operator<=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  // TODO: implement
+}
+
+template<typename T, typename Alloc>
+bool operator>(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  // TODO: implement
+}
+
+template<typename T, typename Alloc>
+bool operator>=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
+  // TODO: implement
+}
+
+
+//
+// swap():
+//
+// The contents of container x are exchanged with those of y. Both
+// container objects must be of the same type (same template
+// parameters), although sizes may differ.
+//
+// After the call to this member function, the elements in x are those
+// which were in y before the call, and the elements of y are those
+// which were in x. All iterators, references and pointers remain
+// valid for the swapped objects.
+//
+// This is an overload of the generic algorithm swap that improves its
+// performance by mutually transferring ownership over their assets to
+// the other container (i.e., the containers exchange references to
+// their data, without actually performing any element copy or
+// movement): It behaves as if x.swap(y) was called.
+//
+template<typename T, typename Alloc>
+void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) {
+  // TODO: implement
+}
+
+// TODO: vector<bool> specialisation.
 
 }  // namespace ustl
 

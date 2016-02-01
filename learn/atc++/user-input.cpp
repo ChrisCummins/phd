@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <exception>
+#include <string>
 
 enum class UsingTheForce {
     yes,

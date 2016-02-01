@@ -12,13 +12,33 @@
 
 namespace ustl {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
 
 template<typename T, std::size_t _size>
 class array {
  public:
-  constexpr std::size_t size() noexcept { return _size; }
-  constexpr std::size_t max_size() noexcept { return size(); }
-  constexpr bool empty() noexcept { return !size(); }
+  // Typedefs:
+  using value_type = T;
+  using iterator = T*;
+
+  // Default constructor:
+  array() {}
+
+  // Initializer list constructor:
+  array(std::initializer_list<value_type> l) {
+    auto i = 0;
+    for (auto v : l)
+      _data[i++] = v;
+  }
+
+  // Iterators
+  iterator begin() { return &_data[0]; }
+  iterator end() { return &_data[size()]; }
+
+  constexpr std::size_t size() const noexcept { return _size; }
+  constexpr std::size_t max_size() const noexcept { return size(); }
+  constexpr bool empty() const noexcept { return !size(); }
 
   T &operator[](const std::size_t index) {
     return _data[index];
@@ -58,6 +78,9 @@ class array {
 template<typename T>
 class array<T, 0> {
  public:
+  using value_type = T;
+  using iterator = T*;
+
   constexpr std::size_t size() noexcept { return 0; }
   constexpr std::size_t max_size() noexcept { return size(); }
   constexpr bool empty() noexcept { return !size(); }
@@ -85,6 +108,7 @@ class array<T, 0> {
   T _null;
 };
 
+#pragma GCC diagnostic pop  // -Wpadded
 
 }  // namespace ustl
 

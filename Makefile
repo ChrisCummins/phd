@@ -226,20 +226,24 @@ lab := $(root)/lab
 #
 # lab/stl/
 #
-CxxTargets += $(lab)/stl/tests
+CxxTargets += \
+	$(lab)/stl/benchmarks \
+	$(lab)/stl/tests \
+	$(NULL)
 
 StlHeaders = \
 	$(lab)/stl/include/ustl/algorithm \
 	$(lab)/stl/include/ustl/array \
+	$(lab)/stl/include/ustl/map \
+	$(lab)/stl/include/ustl/unordered_map \
 	$(lab)/stl/include/ustl/vector \
 	$(NULL)
 
-DontLint += $(lab)/stl/tests.cpp
-
+$(lab)/stl/benchmarks.o: $(StlHeaders)
 $(lab)/stl/tests.o: $(StlHeaders)
-$(lab)/stl/tests.o_CxxFlags = \
+$(lab)/stl_CxxFlags = \
 	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags) -I$(lab)/stl/include
-$(lab)/stl/tests_LdFlags = \
+$(lab)/stl_LdFlags = \
 	$(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
 $(lab)/stl/tests.o: $(GoogleBenchmark) $(GoogleTest)
 
@@ -295,7 +299,12 @@ CtCiTargets = \
 	$(learn)/ctci/0104-escape-string \
 	$(learn)/ctci/0105-string-compression \
 	$(learn)/ctci/0106-matrix-zero \
+	$(learn)/ctci/0202-linked-list-k-last \
 	$(learn)/ctci/0402-directed-graph-routefinder \
+	$(learn)/ctci/1101-merge-arrays \
+	$(learn)/ctci/1102-sort-anagrams \
+	$(learn)/ctci/1301-last-k-lines \
+	$(learn)/ctci/1307-tree-copy \
 	$(learn)/ctci/1701-num-swap \
 	$(learn)/ctci/1702-tic-tac-toe \
 	$(NULL)

@@ -2,37 +2,576 @@
 //
 // algorithm
 //
+// Descriptions of individual algorithms are taken from C++ documentation.
+//
 #ifndef __USTL_ALGORITHM__
 #define __USTL_ALGORITHM__
 
 #include <cstddef>
+#include <memory>
+#include <utility>
+
+// FIXME: Replace with my own equivalent:
+#include <unordered_map>
+
+#include "./vector"
 
 namespace ustl {
 
-template<typename RandomAccessIterator>
-class DefaultComparison {
-  bool operator()(const RandomAccessIterator a, const RandomAccessIterator b) {
-    return *a <= *b;
-  }
-};
 
-template<typename RandomAccessIterator>
-void sort(RandomAccessIterator first, RandomAccessIterator last) {
-  sort(first, last, DefaultComparison<RandomAccessIterator>());
+///////////////////////////////////////
+// Non-modifying sequence operations //
+///////////////////////////////////////
+
+
+//
+// all_of()
+//
+// Returns true if pred returns true for all the elements in the range
+// [first,last) or if the range is empty, and false otherwise.
+template<typename InputIterator, typename UnaryPredicate>
+bool all_of(InputIterator first, InputIterator last, UnaryPredicate pred) {
+  while (first != last) {
+    if (!pred(*first++))
+      return false;
+  }
+  return true;
 }
 
+
+//
+// any_of()
+//
+// Returns true if pred returns true for any of the elements in the
+// range [first,last), and false otherwise.
+//
+// If [first,last) is an empty range, the function returns false.
+template<typename InputIterator, typename UnaryPredicate>
+bool any_of(InputIterator first, InputIterator last, UnaryPredicate pred) {
+  while (first != last) {
+    if (pred(*first++))
+      return true;
+  }
+  return false;
+}
+
+
+//
+// none_of()
+//
+// Returns true if pred returns false for all the elements in the
+// range [first,last) or if the range is empty, and false otherwise.
+template<typename InputIterator, typename UnaryPredicate>
+bool none_of(InputIterator first, InputIterator last, UnaryPredicate pred) {
+  while (first != last) {
+    if (pred(*first++))
+      return false;
+  }
+  return true;
+}
+
+
+//
+// for_each()
+//
+// Applies function fn to each of the elements in the range
+// [first,last).
+template<typename InputIterator, typename Function>
+Function for_each(InputIterator first, InputIterator last, Function fn) {
+  while (first != last)
+    fn(*first++);
+
+  return fn;
+}
+
+
+//
+// find()
+//
+// Returns an iterator to the first element in the range [first,last)
+// that compares equal to val. If no such element is found, the
+// function returns last.
+//
+// The function uses operator== to compare the individual elements to
+// val.
+template<typename InputIterator, typename T>
+InputIterator find(InputIterator first, InputIterator last, const T& val) {
+  while (first != last) {
+    if (*first == val)
+      return first;
+    first++;
+  }
+
+  return last;
+}
+
+
+//
+// find_if()
+//
+// Returns an iterator to the first element in the range [first,last)
+// for which pred returns true. If no such element is found, the
+// function returns last.
+template<typename InputIterator, typename UnaryPredicate>
+InputIterator find_if(InputIterator first,
+                      InputIterator last,
+                      UnaryPredicate pred) {
+  while (first != last) {
+    if (pred(*first))
+      return first;
+    first++;
+  }
+
+  return last;
+}
+
+
+//
+// find_if_not()
+//
+// Returns an iterator to the first element in the range [first,last)
+// for which pred returns false. If no such element is found, the
+// function returns last.
+template<typename InputIterator, typename UnaryPredicate>
+InputIterator find_if_not(InputIterator first,
+                          InputIterator last,
+                          UnaryPredicate pred) {
+  while (first != last) {
+    if (!pred(*first))
+      return first;
+    first++;
+  }
+
+  return last;
+}
+
+
+//
+// find_end()
+//
+// Searches the range [first1,last1) for the last occurrence of the
+// sequence defined by [first2,last2), and returns an iterator to its
+// first element, or last1 if no occurrences are found.
+//
+// The elements in both ranges are compared sequentially using
+// operator== (or pred, if supplied): A subsequence of [first1,last1)
+// is considered a match only when this is true for all the elements
+// of [first2,last2).
+//
+// This function returns the last of such occurrences. For an
+// algorithm that returns the first instead, see search.
+template<typename ForwardIterator1, typename ForwardIterator2,
+         typename BinaryPredicate>
+bool __is_subseq(ForwardIterator1 first1, ForwardIterator1 last1,
+                 ForwardIterator2 first2, ForwardIterator2 last2,
+                 BinaryPredicate pred) {
+  while(first1 != last1 && first2 != last2) {
+    if (!pred(*first1++, *first2++))
+      return false;
+  }
+
+  return first2 == last2;
+}
+
+template<typename ForwardIterator1, typename ForwardIterator2,
+         typename BinaryPredicate>
+ForwardIterator1 find_end(ForwardIterator1 first1, ForwardIterator1 last1,
+                          ForwardIterator2 first2, ForwardIterator2 last2,
+                          BinaryPredicate pred) {
+  auto last_subseq = last1;
+
+  while (first1 != last1) {
+    if (__is_subseq(first1, last1, first2, last2, pred))
+      last_subseq = first1;
+
+    first1++;
+  }
+
+  return last_subseq;
+}
+
+template<typename ForwardIterator1, typename ForwardIterator2>
+ForwardIterator1 find_end(ForwardIterator1 first1, ForwardIterator1 last1,
+                          ForwardIterator2 first2, ForwardIterator2 last2) {
+  using Type1 = typename std::iterator_traits<ForwardIterator1>::value_type;
+  using Type2 = typename std::iterator_traits<ForwardIterator2>::value_type;
+  return find_end(first1, last1, first2, last2,
+                  [](Type1 &a, Type2 &b) { return a == b; });
+}
+
+//
+// find_first_of()
+//
+// Returns an iterator to the first element in the range
+// [first1,last1) that matches any of the elements in
+// [first2,last2). If no such element is found, the function returns
+// last1.
+//
+// The elements in [first1,last1) are sequentially compared to each of
+// the values in [first2,last2) using operator== (or pred, in version
+// (2)), until a pair matches.
+template<typename InputIterator, typename ForwardIterator,
+         typename BinaryPredicate>
+InputIterator find_first_of(InputIterator first1, InputIterator last1,
+                            ForwardIterator first2, ForwardIterator last2,
+                            BinaryPredicate pred) {
+  while (first1 != last1) {
+    if (ustl::find(first2, last2, *first1) != last2)
+      return first1;
+    first1++;
+  }
+
+  return last1;
+}
+
+template<typename InputIterator, typename ForwardIterator>
+InputIterator find_first_of(InputIterator first1, InputIterator last1,
+                            ForwardIterator first2, ForwardIterator last2) {
+  using InputType = typename std::iterator_traits<InputIterator>::value_type;
+  using ForwardType = typename std::iterator_traits<ForwardIterator>::value_type;
+  auto pred = [](const InputType &a, const ForwardType &b) -> bool{
+    return a == b;
+  };
+  return find_first_of(first1, last1, first2, last2, pred);
+}
+
+
+//
+// adjacent_find()
+//
+// Searches the range [first,last) for the first occurrence of two
+// consecutive elements that match, and returns an iterator to the
+// first of these two elements, or last if no such pair is found.
+//
+// Two elements match if they compare equal using operator== (or using
+// pred, if given).
+template<typename ForwardIterator, typename BinaryPredicate>
+ForwardIterator adjacent_find(ForwardIterator first, ForwardIterator last,
+                              BinaryPredicate pred) {
+  if (first == last)
+    return last;
+
+  auto prev = first++;
+
+  while (first != last) {
+    if (pred(*prev, *first))
+      return prev;
+
+    prev++;
+    first++;
+  }
+
+  return last;
+}
+
+template<typename ForwardIterator>
+ForwardIterator adjacent_find(ForwardIterator first, ForwardIterator last) {
+  using Type = typename std::iterator_traits<ForwardIterator>::value_type;
+  auto pred = [](const Type &a, const Type &b) -> bool{ return a == b; };
+  return ustl::adjacent_find(first, last, pred);
+}
+
+
+//
+// count_if()
+//
+// Returns the number of elements in the range [first,last) for which
+// pred is true.
+template<typename InputIterator, typename UnaryPredicate>
+typename std::iterator_traits<InputIterator>::difference_type
+count_if(InputIterator first, InputIterator last, UnaryPredicate pred) {
+  typename std::iterator_traits<InputIterator>::difference_type count = 0;
+
+  while (first != last) {
+    if (pred(*first++))
+      count++;
+  }
+
+  return count;
+}
+
+
+//
+// count()
+//
+// Returns the number of elements in the range [first,last) that
+// compare equal to val.
+//
+// The function uses operator== to compare the individual elements to
+// val.
+template<typename InputIterator, typename T>
+typename std::iterator_traits<InputIterator>::difference_type
+count(InputIterator first, InputIterator last, const T& val) {
+  auto pred = [val](const T &a) -> bool{ return a == val; };
+  return ustl::count_if(first, last, pred);
+}
+
+
+//
+// mismatch()
+//
+// Compares the elements in the range [first1,last1) with those in the
+// range beginning at first2, and returns the first element of both
+// sequences that does not match.
+//
+// The elements are compared using operator== (or pred, if given).
+//
+// The function returns a pair of iterators to the first element in
+// each range that does not match.
+template<typename InputIterator1, typename InputIterator2,
+         typename BinaryPredicate>
+std::pair<InputIterator1, InputIterator2>
+mismatch(InputIterator1 first1, InputIterator1 last1,
+         InputIterator2 first2, BinaryPredicate pred) {
+  while (first1 != last1) {
+    if (!pred(*first1, *first2)) {
+      return std::pair<InputIterator1, InputIterator2>(first1, first2);
+    }
+
+    first1++;
+    first2++;
+  }
+
+  return std::pair<InputIterator1, InputIterator2>(first1, first2);
+}
+
+template<typename InputIterator1, typename InputIterator2>
+std::pair<InputIterator1, InputIterator2>
+mismatch(InputIterator1 first1, InputIterator1 last1,
+         InputIterator2 first2) {
+  using Type1 = typename std::iterator_traits<InputIterator1>::value_type;
+  using Type2 = typename std::iterator_traits<InputIterator2>::value_type;
+  auto pred = [](const Type1& a, const Type2& b) -> bool{ return a == b; };
+  return ustl::mismatch(first1, last1, first2, pred);
+}
+
+
+//
+// equal()
+//
+// Compares the elements in the range [first1,last1) with those in the
+// range beginning at first2, and returns true if all of the elements
+// in both ranges match.
+//
+// The elements are compared using operator== (or pred, if given).
+template<typename InputIterator1, typename InputIterator2,
+         typename BinaryPredicate>
+bool equal(InputIterator1 first1, InputIterator1 last1,
+           InputIterator2 first2, BinaryPredicate pred) {
+  while (first1 != last1) {
+    if (!pred(*first1++, *first2++))
+      return false;
+  }
+
+  return true;
+}
+
+template<typename InputIterator1, typename InputIterator2>
+bool equal(InputIterator1 first1, InputIterator1 last1,
+           InputIterator2 first2) {
+  using Type1 = typename std::iterator_traits<InputIterator1>::value_type;
+  using Type2 = typename std::iterator_traits<InputIterator2>::value_type;
+  auto pred = [](const Type1& a, const Type2& b) -> bool{ return a == b; };
+  return ustl::equal(first1, last1, first2, pred);
+}
+
+
+//
+// is_permutation()
+//
+// Compares the elements in the range [first1,last1) with those in the
+// range beginning at first2, and returns true if all of the elements
+// in both ranges match, even in a different order.
+//
+// The elements are compared using operator== (or pred, if given).
+template<typename ForwardIterator1, typename ForwardIterator2,
+         typename BinaryPredicate>
+bool is_permutation(ForwardIterator1 first1, ForwardIterator1 last1,
+                    ForwardIterator2 first2, BinaryPredicate pred) {
+  using Type1 = typename std::iterator_traits<ForwardIterator1>::value_type;
+  using Type2 = typename std::iterator_traits<ForwardIterator2>::value_type;
+
+  // FIXME: Use ustl data structures, once implemented.
+  std::unordered_map<Type1, size_t> in1;
+  std::unordered_map<Type2, size_t> in2;
+
+  // Build frequency tables of each elements.
+  while (first1 != last1) {
+    if (in1.find(*first1) == in1.end())
+      in1.insert(*first1, 0);
+    else
+      in1[first1]++;
+
+    if (in2.find(*first2) == in2.end())
+      in2.insert(*first2, 0);
+    else
+      in2[first2]++;
+
+    first1++;
+    first2++;
+  }
+
+  // If they are permutations, then the frequency tables will match.
+  return in1 == in2;
+}
+
+template<typename ForwardIterator1, typename ForwardIterator2>
+bool is_permutation(ForwardIterator1 first1, ForwardIterator1 last1,
+                    ForwardIterator2 first2) {
+  using Type1 = typename std::iterator_traits<ForwardIterator1>::value_type;
+  using Type2 = typename std::iterator_traits<ForwardIterator2>::value_type;
+  auto pred = [](const Type1& a, const Type2& b) -> bool{ return a == b; };
+  return ustl::is_permutation(first1, last1, first2, pred);
+}
+
+
+//
+// search()
+//
+// Searches the range [first1,last1) for the first occurrence of the
+// sequence defined by [first2,last2), and returns an iterator to its
+// first element, or last1 if no occurrences are found.
+//
+// The elements in both ranges are compared sequentially using
+// operator== (or pred, if given: A subsequence of [first1,last1) is
+// considered a match only when this is true for all the elements of
+// [first2,last2).
+//
+// This function returns the first of such occurrences. For an
+// algorithm that returns the last instead, see find_end.
+template<typename ForwardIterator1, typename ForwardIterator2,
+         typename BinaryPredicate>
+ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
+                        ForwardIterator2 first2, ForwardIterator2 last2,
+                        BinaryPredicate pred) {
+  while (first1 != last1) {
+    if (__is_subseq(first1, last1, first2, last2, pred))
+      return first1;
+    first1++;
+  }
+
+  return last1;
+}
+
+template<typename ForwardIterator1, typename ForwardIterator2>
+ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
+                        ForwardIterator2 first2, ForwardIterator2 last2) {
+  using Type1 = typename std::iterator_traits<ForwardIterator1>::value_type;
+  using Type2 = typename std::iterator_traits<ForwardIterator2>::value_type;
+  auto pred = [](const Type1& a, const Type2& b) -> bool{ return a == b; };
+  return ustl::search(first1, last1, first2, last2, pred);
+}
+
+
+//
+// search_n()
+//
+// Searches the range [first,last) for a sequence of count elements,
+// each comparing equal to val (or for which pred returns true).
+//
+// The function returns an iterator to the first of such elements, or
+// last if no such sequence is found.
+template<typename ForwardIterator, typename Size, typename T,
+         typename BinaryPredicate>
+ForwardIterator search_n(ForwardIterator first, ForwardIterator last,
+                         Size count, const T& val, BinaryPredicate pred) {
+  auto _count = 0;
+  auto _seq = last;
+  while (first != last) {
+    if (*first == val || pred(*first, val)) {
+      if (!_count)
+        _seq = first;
+      _count++;
+    } else
+      _count = 0;
+
+    if (_count == count)
+      return _seq;
+
+    first++;
+  }
+
+  return last;
+}
+
+template<typename ForwardIterator, typename Size, typename T>
+ForwardIterator search_n(ForwardIterator first, ForwardIterator last,
+                         Size count, const T& val) {
+  auto pred = [](const T& a, const T& b) -> bool{ return false; };
+  return ustl::search_n(first, last, count, val, pred);
+}
+
+
+/////////////////////////////////////////
+// Merge (operating on sorted ranges): //
+/////////////////////////////////////////
+
+//
+// merge()
+//
+// Combines the elements in the sorted ranges [first1,last1) and
+// [first2,last2), into a new range beginning at result with all its
+// elements sorted.
+//
+// The elements are compared using operator< for the first version,
+// and comp for the second. The elements in both ranges shall already
+// be ordered according to this same criterion (operator< or
+// comp). The resulting range is also sorted according to this.
+template<typename InputIterator1, typename InputIterator2,
+         typename OutputIterator, typename Compare>
+OutputIterator merge(InputIterator1 first1, InputIterator1 last1,
+                     InputIterator2 first2, InputIterator2 last2,
+                     OutputIterator result, Compare comp) {
+  auto ret = result;  // Return the initial position of result iterator.
+
+  while (first1 != last1 && first2 != last2) {
+    if (comp(*first1, *first2)) {
+      *result = *first1;
+      first1++;
+    } else {
+      *result = *first2;
+      first2++;
+    }
+    result++;
+  }
+
+  while (first1 != last1)
+    *(result++) = *(first1++);
+  while (first2 != last2)
+    *(result++) = *(first2++);
+
+  return ret;
+}
+
+template<typename InputIterator1, typename InputIterator2,
+         typename OutputIterator>
+OutputIterator merge(InputIterator1 first1, InputIterator1 last1,
+                     InputIterator2 first2, InputIterator2 last2,
+                     OutputIterator result) {
+  using InputType1 = typename std::iterator_traits<InputIterator1>::value_type;
+  using InputType2 = typename std::iterator_traits<InputIterator2>::value_type;
+  return merge(first1, last1, first2, last2, result,
+               [](const InputType1 &a, const InputType2 &b) { return a < b; });
+}
+
+
+//////////////
+// Sorting: //
+//////////////
+
+
+// Bubble sort.
 template<typename RandomAccessIterator, typename Compare>
-void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
-  /*
-   * Naive implementation: bubble sort.
-   */
+void __bubble_sort(RandomAccessIterator first,
+                   RandomAccessIterator last,
+                   Compare comp) {
   bool changed;
 
   do {
     changed = false;
 
     for (RandomAccessIterator i = first + 1; i != last; i++) {
-      if (*i < *(i-1)) {
+      if (comp(*i, *(i - 1))) {
         auto tmp = *(i-1);
         *(i-1) = *i;
         *i = tmp;
@@ -41,6 +580,275 @@ void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
     }
   } while (changed);
 }
+
+// Insertion sort.
+template<typename RandomAccessIterator, typename Compare>
+void __insertion_sort(RandomAccessIterator first,
+                      RandomAccessIterator last,
+                      Compare comp) {
+
+  for (auto i = first; i != last; i++) {
+    auto j = i;
+
+    while (j != first && comp(*j, *(j - 1))) {
+      auto temp = *j;
+      *j = *(j - 1);
+      *(j - 1) = temp;
+      j--;
+    }
+  }
+}
+
+// Merge sort.
+#define __merge_sort_bottom_out_sort __bubble_sort
+static const size_t __merge_sort_bottom_out_threshold = 8;
+
+
+template<typename RandomAccessIterator, typename Compare>
+void __merge_sort(RandomAccessIterator first,
+                  RandomAccessIterator last,
+                  Compare comp) {
+  const size_t len = static_cast<size_t>(last - first);
+
+  if (len <= __merge_sort_bottom_out_threshold) {
+    __merge_sort_bottom_out_sort(first, last, comp);
+  } else {
+    // Split midway:
+    const RandomAccessIterator mid = first + len / 2;
+    using ElementType =
+        typename std::pointer_traits<RandomAccessIterator>::element_type;
+
+    ustl::vector<ElementType> left(0);
+    ustl::vector<ElementType> right(0);
+
+    for (auto i = first; i != mid; i++)
+      left.push_back(*i);
+    for (auto i = mid; i != last; i++)
+      right.push_back(*i);
+
+    __merge_sort(left.begin(), left.end(), comp);
+    __merge_sort(right.begin(), right.end(), comp);
+
+    // Merge temporary buffers into original array:
+    merge(left.begin(), left.end(), right.begin(), right.end(), first, comp);
+  }
+}
+
+
+//
+// sort()
+//
+// Sorts the elements in the range [first,last) into ascending order.
+//
+// The elements are compared using operator< for the first version,
+// and comp for the second.
+//
+// Equivalent elements are not guaranteed to keep their original
+// relative order (see stable_sort).
+template<typename RandomAccessIterator, typename Compare>
+void sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
+  __merge_sort(first, last, comp);
+}
+
+template<typename RandomAccessIterator>
+void sort(RandomAccessIterator first, RandomAccessIterator last) {
+  using Type = typename std::iterator_traits<RandomAccessIterator>::value_type;
+  sort(first, last, [](const Type &a, const Type &b) { return a < b; });
+}
+
+
+//
+// stable_sort()
+//
+// Sorts the elements in the range [first,last) into ascending order,
+// like sort, but stable_sort preserves the relative order of the
+// elements with equivalent values.
+//
+// The elements are compared using operator< for the first version,
+// and comp for the second.
+template<typename RandomAccessIterator, typename Compare>
+void stable_sort(RandomAccessIterator first, RandomAccessIterator last,
+                 Compare comp) {
+  __merge_sort(first, last, comp);
+}
+
+template<typename RandomAccessIterator>
+void stable_sort(RandomAccessIterator first, RandomAccessIterator last) {
+  using Type = typename std::iterator_traits<RandomAccessIterator>::value_type;
+  stable_sort(first, last, [](const Type &a, const Type &b) { return a < b; });
+}
+
+
+//
+// is_sorted()
+//
+// Returns true if the range [first,last) is sorted into ascending
+// order.
+//
+// The elements are compared using operator< for the first version,
+// and comp for the second.
+template<typename ForwardIterator, typename Compare>
+bool is_sorted(ForwardIterator first, ForwardIterator last, Compare comp) {
+  auto prev = first;
+  first++;
+
+  while (first != last) {
+    if (comp(*first, *prev))
+      return false;
+    prev = first;
+    first++;
+  }
+
+  return true;
+}
+
+template<typename ForwardIterator>
+bool is_sorted(ForwardIterator first, ForwardIterator last) {
+  using Type = typename std::iterator_traits<ForwardIterator>::value_type;
+  return is_sorted(first, last, [](const Type &a, const Type &b) {
+      return a < b;
+    });
+}
+
+
+//////////////
+// Min/max: //
+//////////////
+
+//
+// min()
+//
+// Returns the smallest of a and b. If both are equivalent, a is
+// returned.
+//
+// The versions for initializer lists (3) return the smallest of all
+// the elements in the list. Returning the first of them if these are
+// more than one.
+//
+// The function uses operator< (or comp, if provided) to compare the
+// values.
+template<typename T>
+constexpr const T& min(const T& a, const T& b) {
+  return b > a ? a : b;
+}
+
+template<typename T, typename Compare>
+constexpr const T& min(const T& a, const T& b, Compare comp) {
+  return comp(a, b) ? a : b;
+}
+
+template<typename T, typename Compare>
+constexpr T min(std::initializer_list<T> il, Compare comp) {
+  auto i = il.begin();
+  auto _min = *i;
+
+  while (i != il.end()) {
+    if (comp(*i, _min))
+      _min = *i;
+    i++;
+  }
+
+  return _min;
+}
+
+template<typename T>
+constexpr T min(std::initializer_list<T> il) {
+  return ustl::min(il, [](const T& a, const T& b) { return a < b; });
+}
+
+
+//
+// max()
+//
+// Returns the largest of a and b. If both are equivalent, a is
+// returned.
+//
+// The versions for initializer lists (3) return the largest of all
+// the elements in the list. Returning the first of them if these are
+// more than one.
+//
+// The function uses operator< (or comp, if provided) to compare the
+// values.
+template<typename T>
+constexpr const T& max(const T& a, const T& b) {
+  return b < a ? a : b;
+}
+
+template<typename T, typename Compare>
+constexpr const T& max(const T& a, const T& b, Compare comp) {
+  return comp(a, b) ? b : a;
+}
+
+template<typename T, typename Compare>
+constexpr T max(std::initializer_list<T> il, Compare comp) {
+  auto i = il.begin();
+  auto _max = *i;
+
+  while (i != il.end()) {
+    if (comp(_max, *i))
+      _max = *i;
+    i++;
+  }
+
+  return _max;
+}
+
+template<typename T>
+constexpr T max(std::initializer_list<T> il) {
+  return ustl::max(il, [](const T& a, const T& b) { return a < b; });
+}
+
+
+//
+// minmax()
+//
+// Returns a pair with the smallest of a and b as first element, and
+// the largest as second. If both are equivalent, the function returns
+// make_pair(a,b).
+//
+// The versions for initializer lists (3) return a pair with the
+// smallest of all the elements in the list as first element (the
+// first of them, if there are more than one), and the largest as
+// second (the last of them, if there are more than one).
+//
+// The function uses operator< (or comp, if provided) to compare the
+// values.
+template<typename T, typename Compare>
+constexpr std::pair<const T&, const T&> minmax(const T& a, const T& b,
+                                               Compare comp) {
+  return std::pair<const T&, const T&>(ustl::min(a, b, comp),
+                                       ustl::max(a, b, comp));
+}
+
+template<typename T>
+constexpr std::pair<const T&, const T&> minmax(const T& a, const T& b) {
+  return ustl::minmax(a, b, [](const T& x, const T& y) { return x < y; });
+}
+
+template<typename T, typename Compare>
+constexpr std::pair<T, T> minmax(std::initializer_list<T> il, Compare comp) {
+  // While we could just be lazy and call min() and max() twice, this
+  // requires two iterations over the initializer list, so instead
+  // we'll perform the same operation using a single pass.
+  auto i = il.begin();
+  auto _min = *i, _max = *i;
+
+  while (i != il.end()) {
+    if (comp(*i, _min))
+      _min = *i;
+    else if (comp(_max, *i))
+      _max = *i;
+    i++;
+  }
+
+  return std::pair<const T&, const T&>(_min, _max);
+}
+
+template<typename T>
+constexpr std::pair<T, T> minmax(std::initializer_list<T> il) {
+  return ustl::minmax(il, [](const T& a, const T& b) { return a < b; });
+}
+
 
 }  // namespace ustl
 
