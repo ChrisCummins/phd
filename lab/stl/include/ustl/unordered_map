@@ -31,6 +31,7 @@
 #ifndef __USTL_UNORDERED_MAP__
 #define __USTL_UNORDERED_MAP__
 
+#include <forward_list>
 #include <iterator>
 #include <memory>
 #include <utility>
@@ -70,7 +71,7 @@ template<typename Key,
   using pointer = typename std::allocator_traits<allocator_type>::pointer;
 
   using const_pointer
-    = typename std::allocator_traits<allocator_type>::const_pointer;
+      = typename std::allocator_traits<allocator_type>::const_pointer;
 
   // TODO:
   using iterator = mapped_type*;
@@ -87,7 +88,10 @@ template<typename Key,
   using size_type = size_t;
 
   using difference_type =
-    typename std::iterator_traits<iterator>::difference_type;
+      typename std::iterator_traits<iterator>::difference_type;
+
+  // TODO: Replace with ustl::forward_list, when implemented.
+  using _bucket_type = std::forward_list<value_type>;
 
 
   ///////////////////
@@ -109,28 +113,41 @@ template<typename Key,
   // and allocator objects, along with a minimum number of hash
   // buckets.
   //
-  unordered_map() {
-    // TODO: implement
-  }
+  unordered_map()
+      : _buckets(ustl::vector<_bucket_type, allocator_type>(
+            __min_initial_buckets, allocator_type())),
+        _hasher(hasher()),
+        _key_equal(key_equal()),
+        _size(0) {}
 
   explicit unordered_map(size_type n,
-                           const hasher& hf = hasher(),
-                           const key_equal& eql = key_equal(),
-                           const allocator_type& alloc = allocator_type()) {
-    // TODO: implement
-  }
+                         const hasher& hf = hasher(),
+                         const key_equal& eql = key_equal(),
+                         const allocator_type& alloc = allocator_type())
+      : _buckets(ustl::vector<_bucket_type, allocator_type>(
+            __min_initial_buckets, alloc)),
+        _hasher(hf),
+        _key_equal(eql),
+        _size(0) {}
 
-  explicit unordered_map(const allocator_type& alloc) {
-    // TODO: implement
-  }
+  explicit unordered_map(const allocator_type& alloc)
+      : _buckets(ustl::vector<_bucket_type, allocator_type>(
+            __min_initial_buckets, alloc)),
+        _hasher(hasher()),
+        _key_equal(key_equal()),
+        _size(0) {}
 
-  unordered_map(size_type n, const allocator_type& alloc) {
-    // TODO: implement
-  }
+  unordered_map(size_type n, const allocator_type& alloc)
+      : _buckets(ustl::vector<_bucket_type, allocator_type>(n, alloc)),
+        _hasher(hasher()),
+        _key_equal(key_equal()),
+        _size(0) {}
 
-  unordered_map(size_type n, const hasher& hf, const allocator_type& alloc) {
-    // TODO: implement
-  }
+  unordered_map(size_type n, const hasher& hf, const allocator_type& alloc)
+      : _buckets(ustl::vector<_bucket_type, allocator_type>(n, alloc)),
+        _hasher(hf),
+        _key_equal(key_equal()),
+        _size(0) {}
 
 
   //
@@ -141,22 +158,22 @@ template<typename Key,
   //
   template<typename InputIterator>
   unordered_map(InputIterator first, InputIterator last,
-                  size_type n = __min_initial_buckets,
-                  const hasher& hf = hasher(),
-                  const key_equal& eql = key_equal(),
-                  const allocator_type& alloc = allocator_type()) {
+                size_type n = __min_initial_buckets,
+                const hasher& hf = hasher(),
+                const key_equal& eql = key_equal(),
+                const allocator_type& alloc = allocator_type()) {
     // TODO: implement
   }
 
   template<typename InputIterator>
   unordered_map(InputIterator first, InputIterator last,
-                  size_type n, const allocator_type& alloc) {
+                size_type n, const allocator_type& alloc) {
     // TODO: implement
   }
 
   template<typename InputIterator>
   unordered_map(InputIterator first, InputIterator last,
-                  size_type n, const hasher& hf, const allocator_type& alloc) {
+                size_type n, const hasher& hf, const allocator_type& alloc) {
     // TODO: implement
   }
 
@@ -195,21 +212,21 @@ template<typename Key,
   //
   // Initializes the container with the contents of the list.
   //
-           unordered_map(std::initializer_list<value_type> il,
-                           size_type n = __min_initial_buckets,
-                  const hasher& hf = hasher(),
-                  const key_equal& eql = key_equal(),
-                  const allocator_type& alloc = allocator_type()) {
+  unordered_map(std::initializer_list<value_type> il,
+                size_type n = __min_initial_buckets,
+                const hasher& hf = hasher(),
+                const key_equal& eql = key_equal(),
+                const allocator_type& alloc = allocator_type()) {
     // TODO: implement
   }
 
   unordered_map(std::initializer_list<value_type> il,
-                  size_type n, const allocator_type& alloc) {
+                size_type n, const allocator_type& alloc) {
     // TODO: implement
   }
 
   unordered_map(std::initializer_list<value_type> il,
-                  size_type n, const hasher& hf, const allocator_type& alloc) {
+                size_type n, const hasher& hf, const allocator_type& alloc) {
     // TODO: implement
   }
 
@@ -951,12 +968,21 @@ template<typename Key,
   // Returns the allocator object used to construct the container.
   //
   allocator_type get_allocator() const noexcept {
-    // TODO: implement
+    return _buckets.get_allocator();
   }
 
  private:
 
   static const size_type __min_initial_buckets = 10;
+
+  ///////////////////////////////
+  // Private member variables: //
+  ///////////////////////////////
+
+  std::vector<_bucket_type> _buckets;
+  hasher _hasher;
+  key_equal _key_equal;
+  size_type _size;
 
 };  // unordered_map class
 
