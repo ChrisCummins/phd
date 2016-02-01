@@ -155,8 +155,10 @@ class vector {
   //
   template<class InputIterator>
   vector(InputIterator first, const InputIterator last,
-         const allocator_type& alloc = allocator_type()) {
-    // TODO: implement
+         const allocator_type& alloc = allocator_type())
+      : vector(alloc) {
+    while (first != last)
+      push_back(*first++);
   }
 
 
@@ -166,13 +168,11 @@ class vector {
   // Constructs a container with a copy of each of the elements in x,
   // in the same order.
   //
-  vector(const vector& x) {
-    // TODO: implement
-  }
+  vector(const vector& x) :
+      vector(x.begin(), x.end()) {}
 
-  vector(const vector& x, const allocator_type& alloc) {
-    // TODO: implement
-  }
+  vector(const vector& x, const allocator_type& alloc) :
+      vector(x.begin(), x.end(), alloc) {}
 
 
   //
@@ -185,11 +185,21 @@ class vector {
   // but valid state.
   //
   vector(const vector&& x) {
-    // TODO: implement
+    _buffer = x._buffer;
+    _capacity = x._capacity;
+    _size = x._size;
+    _alloc = x._alloc;
   }
 
   vector(const vector&& x, const allocator_type& alloc) {
-    // TODO: implement
+    if (alloc == x._alloc) {
+      _buffer = x._buffer;
+      _capacity = x._capacity;
+      _size = x._size;
+      _alloc = x._alloc;
+    } else {
+      // TODO: Different allocator.
+    }
   }
 
   //
@@ -201,7 +211,7 @@ class vector {
   vector(std::initializer_list<value_type> il)
       : _buffer(nullptr), _size(0), _capacity(0), _alloc(allocator_type()) {
     // Reserve space.
-    reserve(size());
+    reserve(il.size());
 
     // Copy values over.
     for (auto& e : il)
@@ -238,7 +248,11 @@ class vector {
   // preserving its contents).
   //
   vector& operator=(const vector& x) {
-    // TODO: implement
+    clear();
+    reserve(x.size());
+
+    for (auto& v : x)
+      push_back(v);
   }
 
   //
@@ -256,8 +270,12 @@ class vector {
   //
   // Copies the elements of il into the container.
   //
-  vector& operator=(std::initializer_list<value_type> l) {
-    // TODO: implement
+  vector& operator=(std::initializer_list<value_type> il) {
+    clear();
+    reserve(il.size());
+
+    for (auto& v : il)
+      push_back(v);
   }
 
 

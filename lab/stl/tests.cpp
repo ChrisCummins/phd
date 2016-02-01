@@ -1042,6 +1042,13 @@ TEST(std_vector, constructors) {
   ASSERT_EQ('a', c[0]);
   ASSERT_EQ('b', c[1]);
   ASSERT_EQ('c', c[2]);
+
+  // Range constructor;
+  std::vector<char> d(c.begin(), c.end());
+  ASSERT_TRUE(c == d);
+
+  // Copy constructor:
+  std::vector<char> e = d;
 }
 
 TEST(ustl_vector, constructors) {
@@ -1058,6 +1065,13 @@ TEST(ustl_vector, constructors) {
   ASSERT_EQ('a', c[0]);
   ASSERT_EQ('b', c[1]);
   ASSERT_EQ('c', c[2]);
+
+  // Range constructor;
+  ustl::vector<char> d(c.begin(), c.end());
+  ASSERT_TRUE(c == d);
+
+  // Copy constructor:
+  ustl::vector<char> e = d;
 }
 
 
