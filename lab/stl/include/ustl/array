@@ -151,11 +151,9 @@ class array {
   // to this same element, this function returns a reverse random
   // access iterator.
   //
-  auto rbegin() noexcept { return reverse_iterator(&_data[size() - 1]); }
+  auto rbegin() noexcept { return reverse_iterator(end()); }
 
-  auto rbegin() const noexcept {
-    return const_reverse_iterator(&_data[size() - 1]);
-  }
+  auto rbegin() const noexcept { return const_reverse_iterator(end()); }
 
 
   //
@@ -168,11 +166,9 @@ class array {
   // The range between array::rbegin and array::rend contains all the
   // elements of the array (in reverse order).
   //
-  auto rend() noexcept { return reverse_iterator(_data - 1); }
+  auto rend() noexcept { return reverse_iterator(begin()); }
 
-  auto rend() const noexcept {
-    return const_reverse_iterator(_data - 1);
-  }
+  auto rend() const noexcept { return const_reverse_iterator(begin()); }
 
 
   //
@@ -187,7 +183,7 @@ class array {
   // array::begin, but it cannot be used to modify the contents it
   // points to, even if the array object is not itself const.
   //
-  auto cbegin() const noexcept { return const_iterator(_data); }
+  auto cbegin() const noexcept { return const_iterator(begin()); }
 
 
   //
@@ -202,7 +198,7 @@ class array {
   // array::end, but it cannot be used to modify the contents it
   // points to, even if the array object is not itself const.
   //
-  auto cend() const noexcept { return const_iterator(&_data[size()]); }
+  auto cend() const noexcept { return const_iterator(end()); }
 
 
   //
@@ -217,9 +213,7 @@ class array {
   // like the iterator returned by array::rbegin, but it cannot be
   // used to modify the contents it points to.
   //
-  auto crbegin() const noexcept {
-    return const_reverse_iterator(&_data[size() - 1]);
-  }
+  auto crbegin() const noexcept { return const_reverse_iterator(rbegin()); }
 
 
   //
@@ -235,7 +229,7 @@ class array {
   // like the iterator returned by array::rend, but it cannot be used
   // to modify the contents it points to.
   //
-  auto crend() const noexcept { return const_reverse_iterator(&_data - 1); }
+  auto crend() const noexcept { return const_reverse_iterator(rend()); }
 
 
   ///////////////
@@ -423,67 +417,110 @@ class array {
 
 
  private:
-  value_type _data[_size];
+
+  //
+  // Note that in case of a zero sized array, we default construct a
+  // single element.
+  //
+  value_type _data[_size > 0 ? _size : 1];
 };
 
 
-// Partial-specialisation where size = 0.
-template<typename T>
-class array<T, 0> {
- public:
+////////////////////////////////////
+// Non-member function overloads: //
+////////////////////////////////////
 
-  ///////////////////
-  // Member types: //
-  ///////////////////
 
-  using value_type = T;
+//
+// get():
+//
+// Returns a reference to the Ith element of array arr.
+//
+// This overload of tuple's homonym function get is provided so that
+// array objects can be treated as tuples. For that purpose, header
+// <array> also overloads tuple_size and tuple_element types with the
+// appropriate members defined.
+//
+template<size_t I, typename T, size_t N>
+T& get(array<T, N>& arr) noexcept {
+  return arr[I];
+}
 
-  using size_type = std::size_t;
+template<size_t I, typename T, size_t N>
+T&& get(array<T, N>&& arr) noexcept {
+  return arr[I];
+}
 
-  using difference_type = std::ptrdiff_t;
-
-  using reference = value_type&;
-
-  using const_reference = const value_type&;
-
-  using pointer = value_type*;
-
-  using const_pointer = const value_type*;
-
-  using iterator = pointer;
-
-  using const_iterator = const_pointer;
-
-  using reverse_iterator = std::reverse_iterator<iterator>;
-
-  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-
-  constexpr size_type size() noexcept { return 0; }
-  constexpr size_type max_size() noexcept { return size(); }
-  constexpr bool empty() noexcept { return !size(); }
-
-  T &operator[](const size_type index) { return _null; }
-
-  const T &operator[](const size_type index) const { return _null; }
-
-  T &at(const size_type index) {
-    throw std::out_of_range("ustl::array[]");
-  }
-
-  const T &at(const size_type index) const {
-    throw std::out_of_range("ustl::array[]");
-  }
-
-  T &front() { return _null; }
-  const T &front() const { return _null; }
-  T &back() { return _null; }
-  const T &back() const { return _null; }
-  T *data() noexcept { return nullptr; }
-  const T *data() const noexcept { return nullptr; }
-
- private:
-  T _null;
+template<size_t I, typename T, size_t N>
+const T& get(const array<T, N>& arr) noexcept {
+  return arr[I];
 };
+
+
+//
+// Relational operators:
+//
+// Performs the appropriate comparison operation between the array
+// containers lhs and rhs.
+//
+// The equality comparison (operator==) is performed by comparing the
+// elements sequentially using operator==, stopping at the first
+// mismatch (as if using algorithm equal).
+//
+// The less-than comparison (operator<) behaves as if using algorithm
+// lexicographical_compare, which compares the elements sequentially
+// using operator< in a reciprocal manner (i.e., checking both a<b and
+// b<a) and stopping at the first occurrence.
+//
+template<typename T, size_t N>
+bool operator==(const array<T, N>& lhs, const array<T, N>& rhs) {
+  auto lit = lhs.begin();
+  auto rit = rhs.begin();
+
+  while (lit != lhs.end())
+    if (*lit++ != *rit++)
+      return false;
+
+  return true;
+}
+
+template<typename T, size_t N>
+bool operator!=(const array<T, N>& lhs, const array<T, N>& rhs) {
+  return !(lhs == rhs);
+}
+
+template<typename T, size_t N>
+bool operator<(const array<T, N>& lhs, const array<T, N>& rhs) {
+  auto lit = lhs.begin();
+  auto rit = rhs.begin();
+
+  while (lit != lhs.end()) {
+    if (*lit < *rit)
+      return true;
+    else if (*lit > *rit)
+      return false;
+    lit++;
+    rit++;
+  }
+
+  return false;
+}
+
+template<typename T, size_t N>
+bool operator<=(const array<T, N>& lhs, const array<T, N>& rhs) {
+  return !(lhs > rhs);
+}
+
+template<typename T, size_t N>
+bool operator>(const array<T, N>& lhs, const array<T, N>& rhs) {
+  return rhs < lhs;
+}
+
+template<typename T, size_t N>
+bool operator>=(const array<T, N>& lhs, const array<T, N>& rhs) {
+  return !(lhs < rhs);
+}
+
 
 #pragma GCC diagnostic pop  // -Wpadded
 
