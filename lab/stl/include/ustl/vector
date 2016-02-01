@@ -983,6 +983,8 @@ class vector {
 
  private:
 
+  static const size_type _default_capacity = 8;
+  static const int _capacity_multiplier = 2;
 
   ///////////////////////////////
   // Private member variables: //
@@ -1032,8 +1034,6 @@ class vector {
       _destroy_element(i);
   }
 
-  static const size_type _default_capacity = 8;
-  static const int _capacity_multiplier = 2;
 };  // vector class
 
 #pragma GCC diagnostic pop  // -Wpadded
