@@ -58,6 +58,17 @@ static bool inverse_comp(const int &a, const int &b) { return a > b; }
 auto is_even = [](const int &x) -> bool{ return !(x % 2); };
 auto increment = [](int &x) -> void{ x++; };
 
+template<typename VectorType, typename T>
+bool vector_equal(const VectorType &v, std::initializer_list<T> il) {
+  auto vit = v.begin();
+  auto ilit = il.begin();
+
+  while (vit != v.end())
+    if (*vit++ != *ilit++)
+      return false;
+  return true;
+}
+
 
 /////////////////
 // Algorithms: //
@@ -1755,6 +1766,56 @@ TEST(ustl_vector_modifiers, swap_overload) {
   ASSERT_EQ(ustl::vector<int>::size_type(3), b.size());
   vector_equal(a, {4, 5});
   vector_equal(b, {1, 2, 3});
+}
+
+// relational operators
+
+TEST(std_vector, rational_ops) {
+  std::vector<int> a{1, 2, 3};
+  std::vector<int> b{4, 5, 6};
+  std::vector<int> c{1, 2, 3};
+  std::vector<int> d{1, 2, 3, 4};
+
+  ASSERT_TRUE(a == c);
+  ASSERT_FALSE(a == b);
+  ASSERT_TRUE(a != b);
+  ASSERT_FALSE(a != c);
+
+  ASSERT_TRUE(a < b);
+  ASSERT_FALSE(b < a);
+  ASSERT_TRUE(a <= c);
+  ASSERT_TRUE(a <= b);
+  ASSERT_TRUE(b > a);
+  ASSERT_TRUE(b >= a);
+
+  ASSERT_TRUE(a < d);
+  ASSERT_FALSE(d >= b);
+  ASSERT_TRUE(d >= a);
+  ASSERT_TRUE(d > a);
+}
+
+TEST(ustl_vector, relational_ops) {
+  ustl::vector<int> a{1, 2, 3};
+  ustl::vector<int> b{4, 5, 6};
+  ustl::vector<int> c{1, 2, 3};
+  ustl::vector<int> d{1, 2, 3, 4};
+
+  ASSERT_TRUE(a == c);
+  ASSERT_FALSE(a == b);
+  ASSERT_TRUE(a != b);
+  ASSERT_FALSE(a != c);
+
+  ASSERT_TRUE(a < b);
+  ASSERT_FALSE(b < a);
+  ASSERT_TRUE(a <= c);
+  ASSERT_TRUE(a <= b);
+  ASSERT_TRUE(b > a);
+  ASSERT_TRUE(b >= a);
+
+  ASSERT_TRUE(a < d);
+  ASSERT_FALSE(d >= b);
+  ASSERT_TRUE(d >= a);
+  ASSERT_TRUE(d > a);
 }
 
 

@@ -1082,43 +1082,56 @@ class vector {
 // sequentially using operator< in a reciprocal manner (i.e.,
 // checking both a<b and b<a) and stopping at the first occurrence.
 //
-// The other operations also use the operators == and < internally
-// to compare the elements, behaving as if the following equivalent
-// operations were performed:
-//
-//   a!=b     !(a==b)
-//   a>b      b<a
-//   a<=b     !(b<a)
-//   a>=b     !(a<b)
+// The other operations also use the operators == and < internally to
+// compare the elements.
 //
 template<typename T, typename Alloc>
 bool operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
-  // TODO: implement
+  if (lhs.size() == rhs.size()) {
+
+    auto lit = lhs.begin();
+    auto rit = rhs.begin();
+
+    while (lit != lhs.end())
+      if (!(*lit++ == *rit++))
+        return false;
+
+    return true;
+  }
+
+  return false;
 }
 
 template<typename T, typename Alloc>
 bool operator!=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
-  // TODO: implement
+  return !(lhs == rhs);
 }
 
 template<typename T, typename Alloc>
 bool operator<(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
-  // TODO: implement
+  auto lit = lhs.begin();
+  auto rit = rhs.begin();
+
+  while (lit != lhs.end() && rit != rhs.end())
+    if (*lit++ > *rit++)
+      return false;
+
+  return lhs.size() <= rhs.size();
 }
 
 template<typename T, typename Alloc>
 bool operator<=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
-  // TODO: implement
+  return rhs > lhs;
 }
 
 template<typename T, typename Alloc>
 bool operator>(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
-  // TODO: implement
+  return rhs < lhs;
 }
 
 template<typename T, typename Alloc>
 bool operator>=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
-  // TODO: implement
+  return rhs < lhs;
 }
 
 
