@@ -233,29 +233,30 @@ StlComponents = \
 	vector \
 	$(NULL)
 
+StlHeaders = $(addprefix $(lab)/stl/include/ustl/,$(StlComponents))
 Stl_CxxFlags = -I$(lab)/stl/include
 
-StlHeaders = $(addprefix $(lab)/stl/include/ustl/,$(StlComponents))
-StlTestSources = $(addsuffix .cpp,$(addprefix $(lab)/stl/test/,$(StlComponents)))
-StlTestObjects = $(patsubst %.cpp,%.o,$(StlTestSources))
-$(StlTestObjects): \
-	$(StlTestSources) $(StlHeaders) \
-	$(GoogleBenchmark) $(GoogleTest) \
-	$(NULL)
+# Stl unit tests:
+StlTestsSources = $(addsuffix .cpp,
+	$(addprefix $(lab)/stl/tests/,$(StlComponents)))
+StlTestsObjects = $(patsubst %.cpp,%.o,$(StlTestsSources))
+$(StlTestsObjects): $(StlTestsSources) $(StlHeaders) $(GoogleTest)
+$(lab)/stl/tests/tests: $(StlTestsObjects)
 
-$(lab)/stl/test/test: $(StlTestObjects)
-CxxTargets += $(lab)/stl/test/test
-$(lab)/stl/test_CxxFlags = \
-	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags) $(Stl_CxxFlags)
-$(lab)/stl/test_LdFlags = \
-	$(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
+CxxTargets += $(lab)/stl/tests/tests
+$(lab)/stl/tests_CxxFlags = $(Stl_CxxFlags) $(GoogleTest_CxxFlags)
+$(lab)/stl/tests_LdFlags = $(GoogleTest_LdFlags)
 
-CxxTargets += $(lab)/stl/benchmarks
-$(lab)/stl/benchmarks.o: $(StlHeaders) $(GoogleBenchmark) $(GoogleTest)
-$(lab)/stl/benchmarks.o_CxxFlags = \
-	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags) $(Stl_CxxFlags)
-$(lab)/stl/benchmarks.o_LdFlags = \
-	$(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
+# Stl benchmarks:
+StlBenchmarksSources = $(addsuffix .cpp,
+	$(addprefix $(lab)/stl/benchmarks/,$(StlComponents)))
+StlBenchmarksObjects = $(patsubst %.cpp,%.o,$(StlBenchmarksSources))
+$(StlBenchmarksObjects): $(StlBenchmarksSources) $(StlHeaders) $(GoogleBenchmark)
+$(lab)/stl/benchmarks/benchmarks: $(StlBenchmarksObjects)
+
+CxxTargets += $(lab)/stl/benchmarks/benchmarks
+$(lab)/stl/benchmarks_CxxFlags = $(Stl_CxxFlags) $(GoogleBenchmark_CxxFlags)
+$(lab)/stl/benchmarks_LdFlags = $(GoogleBenchmark_LdFlags)
 
 #
 # learn/
