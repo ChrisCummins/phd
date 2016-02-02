@@ -290,6 +290,7 @@ $(learn)/atc++/constructors.o: $(GoogleTest)
 CxxTargets += \
 	$(learn)/challenges/01-int-average \
 	$(learn)/challenges/gray-code \
+	$(learn)/challenges/linked-list \
 	$(NULL)
 
 $(learn)/challenges_CxxFlags = \
