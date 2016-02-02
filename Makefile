@@ -237,10 +237,10 @@ StlHeaders = $(addprefix $(lab)/stl/include/ustl/,$(StlComponents))
 Stl_CxxFlags = -I$(lab)/stl/include
 
 # Stl unit tests:
-StlTestsSources = $(addsuffix .cpp,
+StlTestsSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/tests/,$(StlComponents)))
 StlTestsObjects = $(patsubst %.cpp,%.o,$(StlTestsSources))
-$(StlTestsObjects): $(StlTestsSources) $(StlHeaders) $(GoogleTest)
+$(StlTestsObjects): $(StlTestsSources) $(StlHeaders) $(GoogleBenchmark)
 $(lab)/stl/tests/tests: $(StlTestsObjects)
 
 CxxTargets += $(lab)/stl/tests/tests
@@ -248,7 +248,7 @@ $(lab)/stl/tests_CxxFlags = $(Stl_CxxFlags) $(GoogleTest_CxxFlags)
 $(lab)/stl/tests_LdFlags = $(GoogleTest_LdFlags)
 
 # Stl benchmarks:
-StlBenchmarksSources = $(addsuffix .cpp,
+StlBenchmarksSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/benchmarks/,$(StlComponents)))
 StlBenchmarksObjects = $(patsubst %.cpp,%.o,$(StlBenchmarksSources))
 $(StlBenchmarksObjects): $(StlBenchmarksSources) $(StlHeaders) $(GoogleBenchmark)

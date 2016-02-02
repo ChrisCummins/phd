@@ -50,6 +50,8 @@ template<typename Key,
          typename Alloc = std::allocator<std::pair<const Key,T> >
          > class unordered_map {
 
+ public:
+
   ///////////////////
   // Member Types: //
   ///////////////////
@@ -76,13 +78,13 @@ template<typename Key,
       = typename std::allocator_traits<allocator_type>::const_pointer;
 
   // TODO:
-  using iterator = mapped_type*;
+  using iterator = value_type*;
 
   // TODO:
   using const_iterator = const iterator;
 
   // TODO:
-  using local_iterator = value_type*;
+  using local_iterator = mapped_type*;
 
   // TODO:
   using const_local_iterator = const local_iterator;
@@ -116,40 +118,26 @@ template<typename Key,
   // buckets.
   //
   unordered_map()
-      : _buckets(ustl::vector<_bucket_type, allocator_type>(
-            __min_initial_buckets, allocator_type())),
-        _hasher(hasher()),
-        _key_equal(key_equal()),
-        _size(0) {}
+      : _buckets(__min_initial_buckets, allocator_type()),
+        _hasher(hasher()), _key_equal(key_equal()), _size(0) {}
 
   explicit unordered_map(size_type n,
                          const hasher& hf = hasher(),
                          const key_equal& eql = key_equal(),
                          const allocator_type& alloc = allocator_type())
-      : _buckets(ustl::vector<_bucket_type, allocator_type>(
-            __min_initial_buckets, alloc)),
-        _hasher(hf),
-        _key_equal(eql),
-        _size(0) {}
+      : _buckets(__min_initial_buckets, alloc), _hasher(hf),
+        _key_equal(eql), _size(0) {}
 
   explicit unordered_map(const allocator_type& alloc)
-      : _buckets(ustl::vector<_bucket_type, allocator_type>(
-            __min_initial_buckets, alloc)),
-        _hasher(hasher()),
-        _key_equal(key_equal()),
-        _size(0) {}
+      : _buckets(__min_initial_buckets, alloc), _hasher(hasher()),
+        _key_equal(key_equal()), _size(0) {}
 
   unordered_map(size_type n, const allocator_type& alloc)
-      : _buckets(ustl::vector<_bucket_type, allocator_type>(n, alloc)),
-        _hasher(hasher()),
-        _key_equal(key_equal()),
+      : _buckets(n, alloc), _hasher(hasher()), _key_equal(key_equal()),
         _size(0) {}
 
   unordered_map(size_type n, const hasher& hf, const allocator_type& alloc)
-      : _buckets(ustl::vector<_bucket_type, allocator_type>(n, alloc)),
-        _hasher(hf),
-        _key_equal(key_equal()),
-        _size(0) {}
+      : _buckets(n, alloc), _hasher(hf), _key_equal(key_equal()), _size(0) {}
 
 
   //
@@ -987,7 +975,7 @@ template<typename Key,
   // Private member variables: //
   ///////////////////////////////
 
-  std::vector<_bucket_type> _buckets;
+  ustl::vector<_bucket_type> _buckets;
   hasher _hasher;
   key_equal _key_equal;
   size_type _size;
