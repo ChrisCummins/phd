@@ -36,6 +36,8 @@
 #include <memory>
 #include <utility>
 
+#include <ustl/vector>
+
 namespace ustl {
 
 #pragma GCC diagnostic push

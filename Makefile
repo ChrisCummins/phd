@@ -225,27 +225,37 @@ lab := $(root)/lab
 #
 # lab/stl/
 #
-CxxTargets += \
-	$(lab)/stl/benchmarks \
-	$(lab)/stl/tests \
+StlComponents = \
+	algorithm \
+	array \
+	map \
+	unordered_map \
+	vector \
 	$(NULL)
 
-StlHeaders = \
-	$(lab)/stl/include/ustl/algorithm \
-	$(lab)/stl/include/ustl/array \
-	$(lab)/stl/include/ustl/map \
-	$(lab)/stl/include/ustl/unordered_map \
-	$(lab)/stl/include/ustl/vector \
+Stl_CxxFlags = -I$(lab)/stl/include
+
+StlHeaders = $(addprefix $(lab)/stl/include/ustl/,$(StlComponents))
+StlTestSources = $(addsuffix .cpp,$(addprefix $(lab)/stl/test/,$(StlComponents)))
+StlTestObjects = $(patsubst %.cpp,%.o,$(StlTestSources))
+$(StlTestObjects): \
+	$(StlTestSources) $(StlHeaders) \
+	$(GoogleBenchmark) $(GoogleTest) \
 	$(NULL)
 
-$(lab)/stl/benchmarks.o: $(StlHeaders)
-$(lab)/stl/tests.o: $(StlHeaders)
-$(lab)/stl_CxxFlags = \
-	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags) -I$(lab)/stl/include
-$(lab)/stl_LdFlags = \
+$(lab)/stl/test/test: $(StlTestObjects)
+CxxTargets += $(lab)/stl/test/test
+$(lab)/stl/test_CxxFlags = \
+	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags) $(Stl_CxxFlags)
+$(lab)/stl/test_LdFlags = \
 	$(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
-$(lab)/stl/tests.o: $(GoogleBenchmark) $(GoogleTest)
 
+CxxTargets += $(lab)/stl/benchmarks
+$(lab)/stl/benchmarks.o: $(StlHeaders) $(GoogleBenchmark) $(GoogleTest)
+$(lab)/stl/benchmarks.o_CxxFlags = \
+	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags) $(Stl_CxxFlags)
+$(lab)/stl/benchmarks.o_LdFlags = \
+	$(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
 
 #
 # learn/
@@ -786,3 +796,6 @@ help:
 		| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
 		| sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' \
 		| sed 's/^/    /'
+
+foo:
+	@echo "$(lab)/stl/include/ustl/$(patsubst %.o,%,$(notdir $(lab)/stl/test/algorithm.o))"
