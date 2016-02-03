@@ -2,17 +2,11 @@
  * Given a directed graph, design an algorithm to find out whether
  * there is a route between two nodes.
  */
+#include "./ctci.h"
+
 #include <string>
 #include <iostream>
 #include <set>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wundef"
-#include <benchmark/benchmark.h>
-#include <gtest/gtest.h>
-#pragma GCC diagnostic pop
-
 
 class Node {
  public:
@@ -97,15 +91,4 @@ TEST(DirectedGraph, routeBetweenNodes1) {
   ASSERT_EQ(false, routeBetweenNodes1(&nodes[6], &nodes[0]));
 }
 
-
-int main(int argc, char **argv) {
-  // Run unit tests:
-  testing::InitGoogleTest(&argc, argv);
-  const auto ret = RUN_ALL_TESTS();
-
-  // Run benchmarks:
-  benchmark::Initialize(&argc, argv);
-  benchmark::RunSpecifiedBenchmarks();
-
-  return ret;
-}
+CTCI_MAIN();

@@ -1,19 +1,13 @@
 /*
  * Write a method to replace all spaces in a string with '%20'.
  */
+#include "./ctci.h"
 
 #include <algorithm>
 #include <limits>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wundef"
-#include <benchmark/benchmark.h>
-#include <gtest/gtest.h>
-#pragma GCC diagnostic pop
 
 void escapeSpace1(char *s, const size_t len) {
     std::vector<size_t> idxs;
@@ -103,15 +97,4 @@ void BM_escapeSpace1(benchmark::State& state) {
 }
 BENCHMARK(BM_escapeSpace1)->Range(lengthMin, lengthMax);
 
-
-int main(int argc, char **argv) {
-    // Run unit tests:
-    testing::InitGoogleTest(&argc, argv);
-    const auto ret = RUN_ALL_TESTS();
-
-    // Run benchmarks:
-    benchmark::Initialize(&argc, argv);
-    benchmark::RunSpecifiedBenchmarks();
-
-    return ret;
-}
+CTCI_MAIN();

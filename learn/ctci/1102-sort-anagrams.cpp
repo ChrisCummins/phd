@@ -2,19 +2,13 @@
  * Write a method to sort an array of strings so that all the anagrams
  * are next to each other.
  */
+#include "./ctci.h"
 
 #include <algorithm>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wundef"
-#include <benchmark/benchmark.h>
-#include <gtest/gtest.h>
-#pragma GCC diagnostic pop
 
 using freq_map = std::unordered_map<char, size_t>;
 
@@ -70,8 +64,4 @@ TEST(anagrams, basic) {
   ASSERT_TRUE(is_anagram(a[4], a[5]));
 }
 
-int main(int argc, char **argv) {
-  // Run unit tests:
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+CTCI_MAIN();

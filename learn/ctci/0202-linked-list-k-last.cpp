@@ -1,16 +1,10 @@
 /*
  * Implement an algorithm to find the kth to last element of a single liked list.
  */
+#include "./ctci.h"
 
 #include <vector>
 #include <forward_list>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wundef"
-#include <benchmark/benchmark.h>
-#include <gtest/gtest.h>
-#pragma GCC diagnostic pop
 
 template<typename T>
 typename std::forward_list<T>::const_iterator
@@ -37,7 +31,4 @@ TEST(challenge, basic) {
     ASSERT_EQ(1, *k_last_elem(l, 4));
 }
 
-int main(int argc, char **argv) {
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
+CTCI_MAIN();

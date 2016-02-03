@@ -3,16 +3,11 @@
  * also has a function min which returns the minimum element? Push,
  * pop and min should all operate in O(1) time.
  */
+#include "./ctci.h"
+
 #include <algorithm>
 #include <forward_list>
 #include <vector>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wundef"
-#include <benchmark/benchmark.h>
-#include <gtest/gtest.h>
-#pragma GCC diagnostic pop
 
 
 //
@@ -213,15 +208,4 @@ void BM_MinStack2(benchmark::State& state) {
 }
 BENCHMARK(BM_MinStack2)->Range(lengthMin, lengthMax);
 
-
-int main(int argc, char **argv) {
-  // Run unit tests:
-  testing::InitGoogleTest(&argc, argv);
-  const auto ret = RUN_ALL_TESTS();
-
-  // Run benchmarks:
-  benchmark::Initialize(&argc, argv);
-  benchmark::RunSpecifiedBenchmarks();
-
-  return ret;
-}
+CTCI_MAIN();

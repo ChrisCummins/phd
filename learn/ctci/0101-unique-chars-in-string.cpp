@@ -2,6 +2,7 @@
  * 1.1 Implement an algorithm to determine if a string has all unique
  * characters. What if you cannot use additional data structures?
  */
+#include "./ctci.h"
 
 #include <cstdlib>
 #include <limits>
@@ -9,13 +10,6 @@
 #include <iostream>
 #include <unordered_map>
 #include <string>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wundef"
-#include <benchmark/benchmark.h>
-#include <gtest/gtest.h>
-#pragma GCC diagnostic pop
 
 bool unique1(const std::string &s) {
     // First implementation. Uses a hash map to store whether a
@@ -149,14 +143,4 @@ void BM_unique3(benchmark::State& state) {
 }
 BENCHMARK(BM_unique3)->Range(lengthMin, lengthMax);
 
-int main(int argc, char **argv) {
-    // Run unit tests:
-    testing::InitGoogleTest(&argc, argv);
-    const auto ret = RUN_ALL_TESTS();
-
-    // Run benchmarks:
-    benchmark::Initialize(&argc, argv);
-    benchmark::RunSpecifiedBenchmarks();
-
-    return ret;
-}
+CTCI_MAIN();

@@ -5,14 +5,9 @@
  * smaller than the original string, your method should return the
  * original string.
  */
-#include <set>
+#include "./ctci.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wundef"
-#include <benchmark/benchmark.h>
-#include <gtest/gtest.h>
-#pragma GCC diagnostic pop
+#include <set>
 
 template<typename Element>
 void matrixZero1(Element *const m, const size_t n) {
@@ -127,15 +122,4 @@ void BM_matrixZero1(benchmark::State& state) {
 }
 BENCHMARK(BM_matrixZero1)->Range(lengthMin, lengthMax);
 
-
-int main(int argc, char **argv) {
-    // Run unit tests:
-    testing::InitGoogleTest(&argc, argv);
-    const auto ret = RUN_ALL_TESTS();
-
-    // Run benchmarks:
-    benchmark::Initialize(&argc, argv);
-    benchmark::RunSpecifiedBenchmarks();
-
-    return ret;
-}
+CTCI_MAIN();
