@@ -2,7 +2,7 @@
 
 set -eu
 
-files="$(find include/ustl -type f) tests.cpp benchmarks.cpp"
+files="$(find include/ustl -type f)"
 
 (echo "FILE LINES TODOs"; \
  for file in $files; do \
