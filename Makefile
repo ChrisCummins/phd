@@ -311,6 +311,7 @@ CtCiTargets = \
 	$(learn)/ctci/0105-string-compression \
 	$(learn)/ctci/0107-matrix-zero \
 	$(learn)/ctci/0108-string-rotation \
+	$(learn)/ctci/0201-list-remove-dups \
 	$(learn)/ctci/0202-linked-list-k-last \
 	$(learn)/ctci/0302-stack-min \
 	$(learn)/ctci/0402-directed-graph-routefinder \
