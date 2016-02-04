@@ -113,6 +113,7 @@ class vector {
   // arguments.
   //
 
+  //
   // empty container constructor (default constructor):
   //
   // Constructs an empty container, with no elements.
