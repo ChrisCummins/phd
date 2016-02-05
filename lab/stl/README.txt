@@ -8,6 +8,7 @@ included in 'include/ustl'. Unit tests in 'tests/', and benchmarks in
   HEADER
   algorithm        Fully implemented.
   array            Fully implemented.
+  forward_list     Mostly implemented (60% functional).
   map              Work in progress.
   unordered_map    Work in progress.
   vector           Mostly implemented (95% functional).
