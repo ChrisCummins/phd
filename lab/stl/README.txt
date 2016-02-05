@@ -23,10 +23,12 @@ using the 'ustl' namespace. Example program:
       ustl::sort(vec.begin(), vec.end());
 
       ustl::forward_list<int> list(vec.begin(), vec.begin() + 3);
-      ustl::for_each(list.begin(), list.end(),
-                     [](int &x) { return 2 * x; });
+      ustl::forward_list<int>::iterator it = list.begin();
+      while (it != list.end())
+        *it++ *= 2;
       list.reverse();
-      return *list.begin();
+
+      return list.front();
     }
 
 The above program exits with return code 6.
