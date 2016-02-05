@@ -1,6 +1,18 @@
 // -*-c++-*-
 //
-// map class.
+#ifndef __USTL_MAP__
+#define __USTL_MAP__
+
+#include <iterator>
+#include <functional>
+#include <memory>
+#include <utility>
+
+namespace ustl {
+
+
+//
+// map
 //
 // Maps are associative containers that store elements formed by a
 // combination of a key value and a mapped value, following a specific
@@ -27,16 +39,6 @@
 //
 // Maps are typically implemented as binary search trees.
 //
-#ifndef __USTL_MAP__
-#define __USTL_MAP__
-
-#include <iterator>
-#include <functional>
-#include <memory>
-#include <utility>
-
-namespace ustl {
-
 template<typename Key,
          typename T,
          typename Compare = std::less<Key>,

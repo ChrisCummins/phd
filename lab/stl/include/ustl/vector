@@ -1,6 +1,20 @@
 // -*-c++-*-
 //
-// vector class.
+#ifndef __USTL_VECTOR__
+#define __USTL_VECTOR__
+
+#include <cstddef>
+#include <iterator>
+#include <memory>
+
+namespace ustl {
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+
+
+//
+// vector
 //
 // Vectors are sequence containers representing arrays that can change
 // in size.
@@ -42,18 +56,6 @@
 // they perform worse than the others, and have less consistent
 // iterators and references than lists and forward_lists.
 //
-#ifndef __USTL_VECTOR__
-#define __USTL_VECTOR__
-
-#include <cstddef>
-#include <iterator>
-#include <memory>
-
-namespace ustl {
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-
 template<typename T, class Alloc = std::allocator<T>>
 class vector {
  public:

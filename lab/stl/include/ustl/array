@@ -1,6 +1,18 @@
 // -*-c++-*-
 //
-// array class.
+#ifndef __USTL_ARRAY__
+#define __USTL_ARRAY__
+
+#include <cstddef>
+#include <iterator>
+
+namespace ustl {
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+
+//
+// array
 //
 // Arrays are fixed-size sequence containers: they hold a specific
 // number of elements ordered in a strict linear sequence.
@@ -34,17 +46,6 @@
 // function to access the elements of the array as if it was a tuple,
 // as well as specialized tuple_size and tuple_element types.
 //
-#ifndef __USTL_ARRAY__
-#define __USTL_ARRAY__
-
-#include <cstddef>
-#include <iterator>
-
-namespace ustl {
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-
 template<typename T, std::size_t _size>
 class array {
  public:
