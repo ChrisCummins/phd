@@ -9,26 +9,92 @@
 #include <utility>
 
 TEST(std_forward_list, constructors) {
+  // default:
   std::forward_list<int> l1;
   l1.insert_after(l1.before_begin(), 3);
   ASSERT_EQ(3, l1.front());
 
-  std::forward_list<int> l2{1, 2, 3, 4, 5};
-  std::forward_list<int> l3{1, 2, 3, 4, 5};
+  // fill:
+  std::forward_list<int> fill1(std::forward_list<int>::size_type(10));
+  auto it1 = fill1.begin();
+  for (size_t i = 0; i < 10; i++)
+    ASSERT_EQ(*it1++, 0);
 
+  std::forward_list<int> fill2(std::forward_list<int>::size_type(10),
+                               static_cast<int>(-1));
+  it1 = fill2.begin();
+  for (size_t i = 0; i < 10; i++)
+    ASSERT_EQ(*it1++, -1);
+
+  // range:
+  std::vector<int> v1{1, 2, 3};
+  std::forward_list<int> range1(v1.begin(), v1.end());
+  const std::forward_list<int> range1a{1, 2, 3};
+  ASSERT_TRUE(range1 == range1a);
+
+  // copy:
+  std::forward_list<int> copy1(range1);
+  ASSERT_TRUE(copy1 == range1a);
+
+  // initializer list:
+  std::forward_list<int> l2{1, 2, 3, 4, 5};
+  const std::forward_list<int> l3{1, 2, 3, 4, 5};
   ASSERT_TRUE(l2 == l3);
 }
 
-
 TEST(ustl_forward_list, constructors) {
+  // default:
   ustl::forward_list<int> l1;
   l1.insert_after(l1.before_begin(), 3);
   ASSERT_EQ(3, l1.front());
 
-  ustl::forward_list<int> l2{1, 2, 3, 4, 5};
-  ustl::forward_list<int> l3{1, 2, 3, 4, 5};
+  // fill:
+  ustl::forward_list<int> fill1(ustl::forward_list<int>::size_type(10));
+  auto it1 = fill1.begin();
+  for (size_t i = 0; i < 10; i++)
+    ASSERT_EQ(*it1++, 0);
 
+  ustl::forward_list<int> fill2(ustl::forward_list<int>::size_type(10),
+                                static_cast<int>(-1));
+  auto it2 = fill2.begin();
+  for (size_t i = 0; i < 10; i++)
+    ASSERT_EQ(*it2++, -1);
+
+  // range:
+  ustl::vector<int> v1{1, 2, 3};
+  ustl::forward_list<int> range1(v1.begin(), v1.end());
+  const ustl::forward_list<int> range1a{1, 2, 3};
+  ASSERT_TRUE(range1 == range1a);
+
+  // copy:
+  ustl::forward_list<int> copy1(range1);
+  std::cout << "range1: " << range1 << '\n';
+  std::cout << "copy1:  " << copy1  << '\n';
+  ASSERT_TRUE(copy1 == range1a);
+
+  // initializer list:
+  ustl::forward_list<int> l2{1, 2, 3, 4, 5};
+  const ustl::forward_list<int> l3{1, 2, 3, 4, 5};
   ASSERT_TRUE(l2 == l3);
+}
+
+
+TEST(std_forward_list, assignment) {
+  std::forward_list<int> src{1, 2, 3, 4};
+  std::forward_list<int> dst{5, 6, 7};
+
+  dst = src;
+  ASSERT_TRUE(src == dst);
+}
+
+TEST(ustl_forward_list, assignment) {
+  ustl::forward_list<int> src{1, 2, 3, 4};
+  ustl::forward_list<int> dst{5, 6, 7};
+
+  dst = src;
+  std::cout << "src: " << src << '\n';
+  std::cout << "dst: " << dst << '\n';
+  ASSERT_TRUE(src == dst);
 }
 
 
@@ -122,24 +188,24 @@ TEST(std_forward_list, emplace_front) {
 }
 
 TEST(ustl_forward_list, emplace_front) {
-    ustl::forward_list<std::pair<int, int>> l1{
-      std::pair<int, int>{1, 2},
-      std::pair<int, int>{2, 3},
-      std::pair<int, int>{3, 4},
-    };
+  ustl::forward_list<std::pair<int, int>> l1{
+    std::pair<int, int>{1, 2},
+    std::pair<int, int>{2, 3},
+    std::pair<int, int>{3, 4},
+  };
 
-    l1.emplace_front(0, 1);
+  l1.emplace_front(0, 1);
 
-    const ustl::forward_list<std::pair<int, int>> l2{
-      std::pair<int, int>{0, 1},
-      std::pair<int, int>{1, 2},
-      std::pair<int, int>{2, 3},
-      std::pair<int, int>{3, 4},
-    };
+  const ustl::forward_list<std::pair<int, int>> l2{
+    std::pair<int, int>{0, 1},
+    std::pair<int, int>{1, 2},
+    std::pair<int, int>{2, 3},
+    std::pair<int, int>{3, 4},
+  };
 
-    ASSERT_TRUE(l1 == l2);
-    const std::pair<int, int> v1{0, 1};
-    ASSERT_EQ(v1, l2.front());
+  ASSERT_TRUE(l1 == l2);
+  const std::pair<int, int> v1{0, 1};
+  ASSERT_EQ(v1, l2.front());
 }
 
 
@@ -153,6 +219,66 @@ TEST(ustl_forward_list, push_front) {
   ustl::forward_list<int> l1{1, 2, 3};
   l1.push_front(-1);
   ASSERT_EQ(-1, l1.front());
+}
+
+
+TEST(std_forward_list, pop_front) {
+  std::forward_list<int> l1{1, 2, 3};
+  l1.pop_front();
+  ASSERT_EQ(2, l1.front());
+  l1.pop_front();
+  ASSERT_EQ(3, l1.front());
+  l1.pop_front();
+  ASSERT_TRUE(l1.empty());
+}
+
+TEST(ustl_forward_list, pop_front) {
+  ustl::forward_list<int> l1{1, 2, 3};
+  l1.pop_front();
+  ASSERT_EQ(2, l1.front());
+  l1.pop_front();
+  ASSERT_EQ(3, l1.front());
+  l1.pop_front();
+  ASSERT_TRUE(l1.empty());
+}
+
+
+TEST(std_forward_list, emplace_after) {
+  std::forward_list<std::pair<int, int>> l1{
+    std::pair<int, int>{1, 2},
+    std::pair<int, int>{2, 3},
+    std::pair<int, int>{3, 4},
+  };
+
+  l1.emplace_after(l1.begin(), 0, 1);
+
+  const std::forward_list<std::pair<int, int>> l2{
+    std::pair<int, int>{1, 2},
+    std::pair<int, int>{0, 1},
+    std::pair<int, int>{2, 3},
+    std::pair<int, int>{3, 4},
+  };
+
+  ASSERT_TRUE(l1 == l2);
+}
+
+TEST(ustl_forward_list, emplace_after) {
+  ustl::forward_list<std::pair<int, int>> l1{
+    std::pair<int, int>{1, 2},
+    std::pair<int, int>{2, 3},
+    std::pair<int, int>{3, 4},
+  };
+
+  l1.emplace_after(l1.begin(), 0, 1);
+
+  const ustl::forward_list<std::pair<int, int>> l2{
+    std::pair<int, int>{1, 2},
+    std::pair<int, int>{0, 1},
+    std::pair<int, int>{2, 3},
+    std::pair<int, int>{3, 4},
+  };
+
+  ASSERT_TRUE(l1 == l2);
 }
 
 
@@ -205,6 +331,78 @@ TEST(ustl_forward_list, insert_after) {
 }
 
 
+TEST(std_forward_list, swap) {
+  std::forward_list<int> l1{1, 2, 3};
+  const std::forward_list<int> l1a{1, 2, 3};
+
+  std::forward_list<int> l2{4, 5, 6, 7};
+  const std::forward_list<int> l2a{4, 5, 6, 7};
+
+  l1.swap(l2);
+  ASSERT_TRUE(l1 == l2a);
+  ASSERT_TRUE(l2 == l1a);
+
+  l2.swap(l1);
+  ASSERT_TRUE(l1 == l1a);
+  ASSERT_TRUE(l2 == l2a);
+}
+
+TEST(ustl_forward_list, swap) {
+  ustl::forward_list<int> l1{1, 2, 3};
+  const ustl::forward_list<int> l1a{1, 2, 3};
+
+  ustl::forward_list<int> l2{4, 5, 6, 7};
+  const ustl::forward_list<int> l2a{4, 5, 6, 7};
+
+  l1.swap(l2);
+  ASSERT_TRUE(l1 == l2a);
+  ASSERT_TRUE(l2 == l1a);
+
+  l2.swap(l1);
+  ASSERT_TRUE(l1 == l1a);
+  ASSERT_TRUE(l2 == l2a);
+}
+
+
+/////////////////
+// Operations: //
+/////////////////
+
+
+TEST(std_forward_list, sort) {
+  std::forward_list<int> l1{3, 1, 2, 5, 4};
+  const std::forward_list<int> l1a{1, 2, 3, 4, 5};
+
+  l1.sort();
+  ASSERT_TRUE(l1 == l1a);
+}
+
+TEST(ustl_forward_list, sort) {
+  ustl::forward_list<int> l1{3, 1, 2, 5, 4};
+  const ustl::forward_list<int> l1a{1, 2, 3, 4, 5};
+
+  l1.sort();
+  ASSERT_TRUE(l1 == l1a);
+}
+
+
+TEST(std_forward_list, reverse) {
+  std::forward_list<int> l1{1, 2, 3};
+  const std::forward_list<int> l1a{3, 2, 1};
+
+  l1.reverse();
+  ASSERT_TRUE(l1 == l1a);
+}
+
+TEST(ustl_forward_list, reverse) {
+  ustl::forward_list<int> l1{1, 2, 3};
+  const ustl::forward_list<int> l1a{3, 2, 1};
+
+  l1.reverse();
+  ASSERT_TRUE(l1 == l1a);
+}
+
+
 ////////////////////////////////////
 // Non-member function overloads: //
 ////////////////////////////////////
@@ -212,52 +410,52 @@ TEST(ustl_forward_list, insert_after) {
 // relational ops:
 
 TEST(std_forward_list, relational_ops) {
-    const std::forward_list<int> a{1, 2, 3};
-    const std::forward_list<int> b{4, 5, 6};
-    const std::forward_list<int> c{1, 2, 3};
-    const std::forward_list<int> d{1, 2, 3, 4};
+  const std::forward_list<int> a{1, 2, 3};
+  const std::forward_list<int> b{4, 5, 6};
+  const std::forward_list<int> c{1, 2, 3};
+  const std::forward_list<int> d{1, 2, 3, 4};
 
-    ASSERT_TRUE(a == c);
-    ASSERT_FALSE(a == b);
-    ASSERT_TRUE(a != b);
-    ASSERT_FALSE(a != c);
+  ASSERT_TRUE(a == c);
+  ASSERT_FALSE(a == b);
+  ASSERT_TRUE(a != b);
+  ASSERT_FALSE(a != c);
 
-    ASSERT_TRUE(a < b);
-    ASSERT_FALSE(b < a);
-    ASSERT_FALSE(a < c);
-    ASSERT_TRUE(a <= c);
-    ASSERT_TRUE(a <= b);
-    ASSERT_TRUE(b > a);
-    ASSERT_TRUE(b >= a);
+  ASSERT_TRUE(a < b);
+  ASSERT_FALSE(b < a);
+  ASSERT_FALSE(a < c);
+  ASSERT_TRUE(a <= c);
+  ASSERT_TRUE(a <= b);
+  ASSERT_TRUE(b > a);
+  ASSERT_TRUE(b >= a);
 
-    ASSERT_TRUE(a < d);
-    ASSERT_FALSE(d >= b);
-    ASSERT_TRUE(d >= a);
-    ASSERT_TRUE(d > a);
+  ASSERT_TRUE(a < d);
+  ASSERT_FALSE(d >= b);
+  ASSERT_TRUE(d >= a);
+  ASSERT_TRUE(d > a);
 }
 
 
 TEST(ustl_forward_list, relational_ops) {
-    const ustl::forward_list<int> a{1, 2, 3};
-    const ustl::forward_list<int> b{4, 5, 6};
-    const ustl::forward_list<int> c{1, 2, 3};
-    const ustl::forward_list<int> d{1, 2, 3, 4};
+  const ustl::forward_list<int> a{1, 2, 3};
+  const ustl::forward_list<int> b{4, 5, 6};
+  const ustl::forward_list<int> c{1, 2, 3};
+  const ustl::forward_list<int> d{1, 2, 3, 4};
 
-    ASSERT_TRUE(a == c);
-    ASSERT_FALSE(a == b);
-    ASSERT_TRUE(a != b);
-    ASSERT_FALSE(a != c);
+  ASSERT_TRUE(a == c);
+  ASSERT_FALSE(a == b);
+  ASSERT_TRUE(a != b);
+  ASSERT_FALSE(a != c);
 
-    ASSERT_TRUE(a < b);
-    ASSERT_FALSE(b < a);
-    ASSERT_FALSE(a < c);
-    ASSERT_TRUE(a <= c);
-    ASSERT_TRUE(a <= b);
-    ASSERT_TRUE(b > a);
-    ASSERT_TRUE(b >= a);
+  ASSERT_TRUE(a < b);
+  ASSERT_FALSE(b < a);
+  ASSERT_FALSE(a < c);
+  ASSERT_TRUE(a <= c);
+  ASSERT_TRUE(a <= b);
+  ASSERT_TRUE(b > a);
+  ASSERT_TRUE(b >= a);
 
-    ASSERT_TRUE(a < d);
-    ASSERT_FALSE(d >= b);
-    ASSERT_TRUE(d >= a);
-    ASSERT_TRUE(d > a);
+  ASSERT_TRUE(a < d);
+  ASSERT_FALSE(d >= b);
+  ASSERT_TRUE(d >= a);
+  ASSERT_TRUE(d > a);
 }

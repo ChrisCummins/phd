@@ -3,6 +3,9 @@
 #ifndef __USTL_FORWARD_LIST__
 #define __USTL_FORWARD_LIST__
 
+#include <ustl/algorithm>
+#include <ustl/vector>
+
 #include <iterator>
 #include <memory>
 
@@ -24,25 +27,24 @@ class __node {
       : _data(), _next(next) {}
 
   explicit __node(const value_type& data,
-                             __node* next = nullptr)
+                  __node* next = nullptr)
       : _data(data), _next(next) {}
 
   explicit __node(const value_type&& data,
-                             __node* next = nullptr)
+                  __node* next = nullptr)
       : _data(std::move(data)), _next(next) {}
 
   reference data() {
     return _data;
-  };
+  }
 
-  __node<value_type>* next() {
+  __node* next() {
     return _next;
-  };
+  }
 
-  __node<value_type>* next(__node<value_type>* newnext) {
-    _next = newnext;
-    return _next;
-  };
+  __node* next(__node* newnext) {
+    return _next = newnext;
+  }
 
  private:
   value_type _data;
@@ -258,13 +260,17 @@ class forward_list {
   // val (if provided).
   //
   explicit forward_list(size_type n,
-                        const allocator_type& alloc = allocator_type()) {
-    // TODO: implement
+                        const allocator_type& alloc = allocator_type())
+      : forward_list(alloc) {
+    while (n--)
+      emplace_front();
   }
 
   explicit forward_list(size_type n, const value_type& val,
-                        const allocator_type& alloc = allocator_type()) {
-    // TODO: implement
+                        const allocator_type& alloc = allocator_type())
+      : forward_list(alloc) {
+    while (n--)
+      insert_after(before_begin(), val);
   }
 
 
@@ -277,7 +283,10 @@ class forward_list {
   //
   template<typename InputIterator>
   forward_list(InputIterator first, InputIterator last,
-               const allocator_type& alloc = allocator_type()) {}
+               const allocator_type& alloc = allocator_type())
+      : forward_list(alloc) {
+    insert_after(before_begin(), first, last);
+  }
 
 
   //
@@ -286,12 +295,14 @@ class forward_list {
   // Constructs a container with a copy of each of the elements in
   // fwdlst, in the same order.
   //
-  forward_list(const forward_list& fwdlst) {
-    // TODO: implement
+  forward_list(const forward_list& fwdlst)
+      : forward_list() {
+    insert_after(before_begin(), fwdlst.begin(), fwdlst.end());
   }
 
-  forward_list(const forward_list& fwdlst, const allocator_type& alloc) {
-    // TODO: implement
+  forward_list(const forward_list& fwdlst, const allocator_type& alloc)
+      : forward_list(alloc) {
+    insert_after(before_begin(), fwdlst.begin(), fwdlst.end());
   }
 
 
@@ -305,7 +316,9 @@ class forward_list {
   // unspecified but valid state.
   //
   forward_list(forward_list&& fwdlst) {
-    // TODO: implement
+    _head = fwdlst._head;
+    _tail = fwdlst._tail;
+    _alloc = fwdlst._alloc;
   }
 
   forward_list(forward_list&& fwdlst, const allocator_type& alloc) {
@@ -356,7 +369,9 @@ class forward_list {
   // fwdlst preserving its contents).
   //
   forward_list& operator=(const forward_list& fwdlst) {
-    // TODO: implement
+    clear();
+    insert_after(before_begin(), fwdlst.begin(), fwdlst.end());
+    return *this;
   }
 
 
@@ -367,7 +382,13 @@ class forward_list {
   // unspecified but valid state).
   //
   forward_list& operator=(forward_list&& fwdlst) {
-    // TODO: implement
+    clear();
+    delete _head;
+    delete _tail;
+    _head = fwdlst._head;
+    _tail = fwdlst._tail;
+    _alloc = fwdlst._alloc;
+    return *this;
   }
 
   //
@@ -376,7 +397,10 @@ class forward_list {
   // Copies the elements of il into the container.
   //
   forward_list& operator=(std::initializer_list<value_type> il) {
-    // TODO: implement
+    clear();
+    insert_after(before_begin(), il);
+
+    return *this;
   }
 
 
@@ -584,6 +608,44 @@ class forward_list {
 
 
   //
+  // assign():
+  //
+  // Assigns new contents to the forward_list container, replacing its
+  // current contents, and modifying its size accordingly.
+  //
+  // In the range version (1), the new contents are elements
+  // constructed from each of the elements in the range between first
+  // and last, in the same order.
+  //
+  // In the fill version (2), the new contents are n elements, each
+  // initialized to a copy of val.
+  //
+  // In the initializer list version (3), the new contents are copies
+  // of the values passed as initializer list, in the same order.
+  //
+  // Any elements held in the container before the call are destroyed
+  // and replaced by newly constructed elements (no assignments of
+  // elements take place).
+  //
+  // If there are changes in storage, the internal allocator is used
+  // (through its traits). It is also used to destroy all existing
+  // elements, and to construct the new ones.
+  //
+  template<typename InputIterator>
+  void assign(InputIterator first, InputIterator last) {
+    // TODO:
+  }
+
+  void assign(size_type n, const value_type& val) {
+    // TODO:
+  }
+
+  void assign(std::initializer_list<value_type> il) {
+    // TODO:
+  }
+
+
+  //
   // emplace_front():
   //
   // Inserts a new element at the beginning of the forward_list, right
@@ -624,6 +686,17 @@ class forward_list {
 
 
   //
+  // pop_front():
+  //
+  // Removes the first element in the forward_list container,
+  // effectively reducing its size by one.
+  //
+  void pop_front() {
+    erase_after(before_begin());
+  }
+
+
+  //
   // emplace_after():
   //
   // The container is extended by inserting a new element after the
@@ -649,7 +722,7 @@ class forward_list {
   //
   template<typename... Args>
   iterator emplace_after(const_iterator position, Args&&... args) {
-    return insert_after(position, value_type{args...});
+    return insert_after(position, value_type(args...));
   }
 
 
@@ -743,7 +816,7 @@ class forward_list {
   // sequence.
   //
   iterator erase_after(const_iterator position) {
-    auto prev = position->node();
+    auto prev = position.node();
     auto curr = prev->next();
     auto next = curr->next();
 
@@ -768,6 +841,87 @@ class forward_list {
 
 
   //
+  // swap():
+  //
+  // Exchanges the content of the container by the content of fwdlst,
+  // which is another forward_list object of the same type. Sizes may
+  // differ.
+  //
+  // After the call to this member function, the elements in this
+  // container are those which were in fwdlst before the call, and the
+  // elements of fwdlst are those which were in this. All iterators,
+  // references and pointers remain valid for the swapped objects.
+  //
+  // Notice that a non-member function exists with the same name,
+  // swap, overloading that algorithm with an optimization that
+  // behaves like this member function.
+  //
+  // Whether the container allocators are also swapped is not defined,
+  // unless in the case the appropriate allocator trait indicates
+  // explicitly that they shall propagate.
+  //
+  void swap(forward_list& fwdlst) {
+    auto head = _head;
+    auto tail = _tail;
+    auto alloc = _alloc;
+
+    _head = fwdlst._head;
+    _tail = fwdlst._tail;
+    _alloc = fwdlst._alloc;
+
+    fwdlst._head = head;
+    fwdlst._tail = tail;
+    fwdlst._alloc = alloc;
+  }
+
+
+  //
+  // resize():
+  //
+  // Resizes the container to contain n elements.
+  //
+  // If n is smaller than the current number of elements in the
+  // container, the content is trimmed to contain only its first n
+  // elements, removing those beyonf (and destroying them).
+  //
+  // If n is greater than the current number of elements in the
+  // container, the content is expanded by inserting at the end as
+  // many elements as needed to reach a size of n elements. If val is
+  // specified, the new elements are initialized as copies of val,
+  // otherwise, they are value-initialized.
+  //
+  // Notice that this function changes the actual content of the
+  // container by inserting or erasing elements from it.
+  //
+  void resize(size_type n) {
+    // TODO: implement
+  }
+
+  void resize(size_type n, const value_type& val) {
+    // TODO: implement
+  }
+
+
+  //
+  // clear():
+  //
+  // Removes all elements from the forward_list container (which are
+  // destroyed), and leaving the container with a size of 0.
+  //
+  void clear() noexcept {
+    node_type* curr = _head->next();
+
+    while (curr != _tail) {
+      node_type* tmp = curr->next();
+      delete curr;
+      curr = tmp;
+    }
+
+    _head->next(_tail);
+  }
+
+
+  //
   // Not in spec: print to output stream.
   //
   friend std::ostream& operator<<(std::ostream &out, const forward_list &list) {
@@ -775,6 +929,259 @@ class forward_list {
       out << v << ' ';
 
     return out;
+  }
+
+
+  /////////////////
+  // Operations: //
+  /////////////////
+
+
+  //
+  // splice_after():
+  //
+  // Transfers elements from fwdlst into the container inserting them
+  // after the element pointed by position.
+  //
+  // This effectively inserts those elements into the container and
+  // removes them from fwdlst, altering the sizes of both
+  // containers. The operation does not involve the construction or
+  // destruction of any element. They are transferred, no matter
+  // whether fwdlst is an lvalue or an rvalue, or whether the
+  // value_type supports move-construction or not.
+  //
+
+  //
+  // Transfer all the elements of fwdlst into the container:
+  //
+  void splice_after(const_iterator position, forward_list& fwdlst) {
+    // TODO: implement
+  }
+
+  void splice_after(const_iterator position, forward_list&& fwdlst) {
+    // TODO: implement
+  }
+
+  //
+  // Transfer only the element pointed by i from fwdlst into the
+  // container:
+  //
+  void splice_after(const_iterator position, forward_list& fwdlst,
+                    const_iterator i) {
+    // TODO: implement
+  }
+
+  void splice_after(const_iterator position, forward_list&& fwdlst,
+                    const_iterator i) {
+    // TODO: implement
+  }
+
+  //
+  // Transfer the range (first,last) from fwdlst into the container:
+  //
+  void splice_after(const_iterator position, forward_list& fwdlst,
+                    const_iterator first, const_iterator last) {
+    // TODO: implement
+  }
+
+  void splice_after(const_iterator position, forward_list&& fwdlst,
+                    const_iterator first, const_iterator last) {
+    // TODO: implement
+  }
+
+
+  //
+  // remove():
+  //
+  // Removes from the container all the elements that compare equal to
+  // val. This calls the destructor of these objects and reduces the
+  // container size by the number of elements removed.
+  //
+  // Unlike member function forward_list::erase_after, which erases
+  // elements by their position (using an iterator), this function
+  // (forward_list::remove) removes elements by their value.
+  //
+  // A similar function, forward_list::remove_if, exists, which allows
+  // for a condition other than an equality comparison to determine
+  // whether an element is removed.
+  //
+  void remove(const value_type& val) {
+    // TODO: implement
+  }
+
+
+  //
+  // remove_if():
+  //
+  // Removes from the container all the elements for which Predicate
+  // pred returns true. This calls the destructor of these objects and
+  // reduces the container size by the number of elements removed.
+  //
+  // The function calls pred(*i) for each element (where i is an
+  // iterator to that element). Any of the elements in the list for
+  // which this returns true, are removed from the container.
+  //
+  template<typename Predicate>
+  void remove_if(Predicate pred) {
+    // TODO: implement
+  }
+
+
+  //
+  // unique():
+  //
+  // The version with no parameters removes all but the first element
+  // from every consecutive group of equal elements in the container.
+  //
+  // Notice that an element is only removed from the forward_list
+  // container if it compares equal to the element immediately
+  // preceding it. Thus, this function is especially useful for sorted
+  // lists.
+  //
+  // The second version takes as argument a specific comparison
+  // function that determine the "uniqueness" of an element. In fact,
+  // any behavior can be implemented (and not only an equality
+  // comparison), but notice that the function will call
+  // binary_pred(*i,*(i-1)) for all pairs of elements (where i is an
+  // iterator to an element, starting from the second) and remove i
+  // from the forward_list if the predicate returns true.
+  //
+  // The elements removed are destroyed.
+  //
+  void unique() {
+    // TODO: implement
+  }
+
+  template<typename BinaryPredicate>
+  void unique(BinaryPredicate binary_pred) {
+    // TODO: implement
+  }
+
+
+  //
+  // merge():
+  //
+  // Merges x into the forward_list by transferring all of its
+  // elements at their respective ordered positions into the container
+  // (both containers shall already be ordered).
+  //
+  // This effectively removes all the elements in x (which becomes
+  // empty), and inserts them into their ordered position within
+  // container (which expands in size by the number of elements
+  // transferred). The operation is performed without constructing nor
+  // destroying any element: they are transferred, no matter whether x
+  // is an lvalue or an rvalue, or whether the value_type supports
+  // move-construction or not.
+  //
+  // The template versions with two parameters (2), have the same
+  // behavior, but take a specific predicate (comp) to perform the
+  // comparison operation between elements. This comparison shall
+  // produce a strict weak ordering of the elements (i.e., a
+  // consistent transitive comparison, without considering its
+  // reflexiveness).
+  //
+  // This function requires that the forward_list containers have
+  // their elements already ordered by value (or by comp) before the
+  // call. For an alternative on unordered lists, see list::splice.
+  //
+  // Assuming such ordering, each element of x is inserted at the
+  // position that corresponds to its value according to the strict
+  // weak ordering defined by operator< or comp. The resulting order
+  // of equivalent elements is stable (i.e., equivalent elements
+  // preserve the relative order they had before the call, and
+  // existing elements precede those equivalent inserted from x).
+  //
+  void merge(forward_list& fwdlst) {
+    // TODO: implement
+  }
+
+  void merge(forward_list&& fwdlst) {
+    // TODO: implement
+  }
+
+  template<typename Compare>
+  void merge(forward_list& fwdlst, Compare comp) {
+    // TODO: implement
+  }
+
+  template<typename Compare>
+  void merge(forward_list&& fwdlst, Compare comp) {
+    // TODO: implement
+  }
+
+
+  //
+  // sort():
+  //
+  // Sorts the elements in the forward_list, altering their position
+  // within the container.
+  //
+  // The sorting is performed by applying an algorithm that uses
+  // either operator< (in version (1)) or comp (in version (2)) to
+  // compare elements. This comparison shall produce a strict weak
+  // ordering of the elements (i.e., a consistent transitive
+  // comparison, without considering its reflexiveness).
+  //
+  // The resulting order of equivalent elements is stable: i.e.,
+  // equivalent elements preserve the relative order they had before
+  // the call.
+  //
+  // The entire operation does not involve the construction,
+  // destruction or copy of any element object. Elements are moved
+  // within the container.
+  //
+  void sort() {
+    sort([](const_reference a, const_reference b){ return a < b; });
+  }
+
+  template<typename Compare>
+  void sort(Compare comp) {
+    //
+    // Sorting this way requires n * sizeof(pointer) memory, in
+    // addition to any overhead of std::sort().
+    //
+
+    // Create a vector of node pointers.
+    ustl::vector<node_type*> idxs;
+    node_type *node = _head->next();
+    while (node != _tail) {
+      idxs.push_back(node);
+      node = node->next();
+    }
+
+    // Sort node pointers by node data.
+    ustl::sort(idxs.begin(), idxs.end(),
+               [comp](node_type* a, node_type* b) {
+                 return comp(a->data(), b->data());
+               });
+
+    // Update list order based on sorted vector.
+    for (size_t i = 1; i < idxs.size(); i++)
+      idxs[i-1]->next(idxs[i]);
+
+    _head->next(idxs[0]);
+    idxs[idxs.size() - 1]->next(_tail);
+  }
+
+
+  //
+  // reverse():
+  //
+  // Reverses the order of the elements in the forward_list container.
+  //
+  void reverse() noexcept {
+    node_type* curr = _head->next(), * prev = _head, * tmp;
+
+    while (curr) {
+      tmp = curr->next();
+      curr->next(prev);
+      prev = curr;
+      curr = tmp;
+    }
+
+    tmp = _head;
+    _head = _tail;
+    _tail = tmp;
   }
 
 
@@ -796,8 +1203,8 @@ class forward_list {
 
  private:
   allocator_type _alloc;
-  node_type*const _tail;
-  node_type*const _head;
+  node_type* _tail;
+  node_type* _head;
 };
 
 
