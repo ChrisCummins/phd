@@ -1,0 +1,705 @@
+// -*-c++-*-
+//
+// forward list
+//
+// Forward lists are sequence containers that allow constant time
+// insert and erase operations anywhere within the sequence.
+//
+// Forward lists are implemented as singly-linked lists; Singly linked
+// lists can store each of the elements they contain in different and
+// unrelated storage locations. The ordering is kept by the
+// association to each element of a link to the next element in the
+// sequence.
+//
+// The main design difference between a forward_list container and a
+// list container is that the first keeps internally only a link to
+// the next element, while the latter keeps two links per element: one
+// pointing to the next element and one to the preceding one, allowing
+// efficient iteration in both directions, but consuming additional
+// storage per element and with a slight higher time overhead
+// inserting and removing elements. forward_list objects are thus more
+// efficient than list objects, although they can only be iterated
+// forwards.
+//
+// Compared to other base standard sequence containers (array, vector
+// and deque), forward_list perform generally better in inserting,
+// extracting and moving elements in any position within the
+// container, and therefore also in algorithms that make intensive use
+// of these, like sorting algorithms.
+//
+// The main drawback of forward_lists and lists compared to these
+// other sequence containers is that they lack direct access to the
+// elements by their position; For example, to access the sixth
+// element in a forward_list one has to iterate from the beginning to
+// that position, which takes linear time in the distance between
+// these. They also consume some extra memory to keep the linking
+// information associated to each element (which may be an important
+// factor for large lists of small-sized elements).
+//
+// The forward_list class template has been designed with efficiency
+// in mind: By design, it is as efficient as a simple handwritten
+// C-style singly-linked list, and in fact is the only standard
+// container to deliberately lack a size member function for
+// efficiency considerations: due to its nature as a linked list,
+// having a size member that takes constant time would require it to
+// keep an internal counter for its size (as list does). This would
+// consume some extra storage and make insertion and removal
+// operations slightly less efficient. To obtain the size of a
+// forward_list object, you can use the distance algorithm with its
+// begin and end, which is an operation that takes linear time.
+//
+#ifndef __USTL_FORWARD_LIST__
+#define __USTL_FORWARD_LIST__
+
+#include <iterator>
+#include <memory>
+
+namespace ustl {
+
+// Forward declaration.
+template<typename T, typename Alloc> class forward_list;
+
+template<typename T>
+class forward_list_node {
+ public:
+  using value_type = T;
+
+  forward_list_node(forward_list_node* next = nullptr)
+      : _data(), _next(next) {}
+
+  explicit forward_list_node(const value_type& data,
+                             forward_list_node* next = nullptr)
+      : _data(data), _next(next) {}
+
+  explicit forward_list_node(const value_type&& data,
+                             forward_list_node* next = nullptr)
+      : _data(std::move(data)), _next(next) {}
+
+
+  T& data() {
+    return _data;
+  };
+
+  forward_list_node<value_type>* next() {
+    return _next;
+  };
+
+  forward_list_node<value_type>* next(forward_list_node<value_type>* newnext) {
+    _next = newnext;
+    return _next;
+  };
+
+ private:
+  T _data;
+  forward_list_node<value_type>* _next;
+};
+
+
+template<typename T, typename PointerT>
+class forward_list_forward_iterator
+    : std::iterator<std::forward_iterator_tag, T> {
+ public:
+
+  using value_type = PointerT;
+
+  using reference = value_type&;
+
+  using node_type = forward_list_node<T>;
+
+  explicit forward_list_forward_iterator(node_type* node)
+      : _node(node) {}
+
+  // copy construct:
+  forward_list_forward_iterator(const forward_list_forward_iterator &x)
+      : _node(x._node) {}
+
+  // move construct:
+  forward_list_forward_iterator(forward_list_forward_iterator &&x)
+      : _node(std::move(x._node)) {}
+
+  // copy assignment:
+  forward_list_forward_iterator& operator=(
+      const forward_list_forward_iterator &x) {
+    _node = x._node;
+    return *this;
+  }
+
+  // move assignment:
+  forward_list_forward_iterator& operator=(
+      forward_list_forward_iterator &&x) {
+    _node = x._node;
+    return *this;
+  }
+
+  // prefix increment
+  forward_list_forward_iterator operator++() {
+    _node = _node->next();
+    return *this;
+  };
+
+  // postfix increment
+  forward_list_forward_iterator operator++(int) {
+    return ++*this;
+  };
+
+  // dereference
+  reference operator*() const {
+    return _node->data();
+  }
+
+  node_type* node() { return _node; }
+
+  friend bool operator==(const forward_list_forward_iterator& lhs,
+                         const forward_list_forward_iterator& rhs) {
+    return lhs._node == rhs._node;
+  }
+
+  friend bool operator!=(const forward_list_forward_iterator& lhs,
+                         const forward_list_forward_iterator& rhs) {
+    return !(lhs == rhs);
+  }
+
+ private:
+  node_type* _node;
+};
+
+
+template<typename T, typename Alloc = std::allocator<T> >
+class forward_list {
+ public:
+
+  ///////////////////
+  // Member types: //
+  ///////////////////
+  using value_type = T;
+
+  using allocator_type = Alloc;
+
+  using reference = value_type&;
+
+  using const_reference = const value_type&;
+
+  using pointer = typename std::allocator_traits<allocator_type>::pointer;
+
+  using const_pointer =
+      typename std::allocator_traits<allocator_type>::const_pointer;
+
+  using iterator = forward_list_forward_iterator<value_type, value_type>;
+
+  // TODO: fix second argument.
+  using const_iterator =
+      forward_list_forward_iterator<value_type, value_type>;
+
+  // TODO: set difference type.
+  using difference_type = size_t;
+  // typename std::iterator_traits<iterator>::difference_type;
+
+  using size_type = size_t;
+
+  using node_type = forward_list_node<value_type>;
+
+
+  ///////////////////
+  // Constructors: //
+  ///////////////////
+  //
+  // Constructs a forward_list container object, initializing its
+  // contents depending on the constructor version used.
+  //
+  // The container keeps an internal copy of alloc, which is used to
+  // allocate and deallocate storage for its elements, and to
+  // construct and destroy them (as specified by its
+  // allocator_traits). If no alloc argument is passed to the
+  // constructor, a default-constructed allocator is used, except in
+  // the following cases:
+  //
+  // - The copy constructor (4, first signature) creates a container
+  //   that keeps and uses a copy of the allocator returned by calling
+  //   the appropriate selected_on_container_copy_construction trait -
+  //   on fwdlst's allocator.
+  //
+  // - The move constructor (5, first signature) acquires fwdlst's
+  //   allocator.
+  //
+  // All elements are copied, moved or otherwise constructed by
+  // calling allocator_traits::construct with the appropriate
+  // arguments.
+  //
+
+  // default:
+  //
+  // Constructs an empty container, with no elements.
+  //
+  forward_list()
+      : _alloc(allocator_type()),
+        _tail(new node_type()),
+        _head(new node_type(_tail)) {}
+
+  explicit forward_list(const allocator_type& alloc)
+      : _alloc(allocator_type()),
+        _tail(new node_type()),
+        _head(new node_type(_tail)) {}
+
+
+  //
+  // fill:
+  //
+  // Constructs a container with n elements. Each element is a copy of
+  // val (if provided).
+  //
+  explicit forward_list(size_type n, const allocator_type& alloc = allocator_type());
+  explicit forward_list(size_type n, const value_type& val,
+                        const allocator_type& alloc = allocator_type());
+
+
+  //
+  // range:
+  //
+  // Constructs a container with as many elements as the range
+  // [first,last), with each element emplace-constructed from its
+  // corresponding element in that range, in the same order.
+  //
+  template<typename InputIterator>
+  forward_list(InputIterator first, InputIterator last,
+               const allocator_type& alloc = allocator_type()) {}
+
+
+  //
+  // copy:
+  //
+  // Constructs a container with a copy of each of the elements in
+  // fwdlst, in the same order.
+  //
+  forward_list(const forward_list& fwdlst);
+
+  forward_list(const forward_list& fwdlst, const allocator_type& alloc);
+
+
+  //
+  // move:
+  //
+  // Constructs a container that acquires the elements of fwdlst.  If
+  // alloc is specified and is different from fwdlst's allocator, the
+  // elements are moved. Otherwise, no elements are constructed (their
+  // ownership is directly transferred).  fwdlst is left in an
+  // unspecified but valid state.
+  //
+  forward_list(forward_list&& fwdlst);
+
+  forward_list(forward_list&& fwdlst, const allocator_type& alloc);
+
+  //
+  // initializer list:
+  //
+  // Constructs a container with a copy of each of the elements in il,
+  // in the same order.
+  //
+  forward_list(std::initializer_list<value_type> il,
+               const allocator_type& alloc = allocator_type())
+      : forward_list(alloc) {
+    insert_after(before_begin(), il);
+  }
+
+
+  /////////////////
+  // Destructor: //
+  /////////////////
+  //
+  // This calls allocator_traits::destroy on each of the contained
+  // elements, and deallocates all the storage capacity allocated by
+  // the forward_list container using its allocator.
+  //
+
+  ~forward_list() {
+    // TODO: implement
+  }
+
+
+  /////////////////
+  // Assignment: //
+  /////////////////
+  //
+  // Assigns new contents to the container, replacing its current
+  // contents.
+  //
+
+  //
+  // copy:
+  //
+  // Copies all the elements from fwdlst into the container (with
+  // fwdlst preserving its contents).
+  //
+  forward_list& operator=(const forward_list& fwdlst);
+
+
+  //
+  // move:
+  //
+  // Moves the elements of fwdlst into the container (x is left in an
+  // unspecified but valid state).
+  //
+  forward_list& operator=(forward_list&& fwdlst);
+
+  //
+  // initializer_list:
+  //
+  // Copies the elements of il into the container.
+  //
+  forward_list& operator=(std::initializer_list<value_type> il);
+
+
+  ////////////////
+  // Iterators: //
+  ////////////////
+  //
+
+  //
+  // before_begin():
+  //
+  // Returns an iterator pointing to the position before the first
+  // element in the container.
+  //
+  // The iterator returned shall not be dereferenced: It is meant to
+  // be used as an argument for member functions emplace_after,
+  // insert_after, erase_after or splice_after, to specify the
+  // beginning of the sequence as the location where the action is
+  // performed.
+  //
+  iterator before_begin() noexcept {
+    return iterator(_head);
+  }
+
+  const_iterator before_begin() const noexcept {
+    return const_iterator(_head);
+  };
+
+
+  //
+  // begin():
+  //
+  // Returns an iterator pointing to the first element in the
+  // forward_list container.
+  //
+  // Notice that, unlike member forward_list::front, which returns a
+  // reference to the first element, this function returns a forward
+  // iterator pointing to it.
+  //
+  // If the container is empty, the returned iterator value shall not
+  // be dereferenced.
+  //
+  iterator begin() noexcept {
+    return iterator(_head->next());
+  };
+
+  const_iterator begin() const noexcept {
+    return const_iterator(_head->next());
+  };
+
+
+  //
+  // end():
+  //
+  // Returns an iterator referring to the past-the-end element in the
+  // forward_list container.
+  //
+  // The past-the-end element is the theoretical element that would
+  // follow the last element in the forward_list. It does not point to
+  // any element, and thus shall not be dereferenced.
+  //
+  // Because the ranges used by functions of the standard library do
+  // not include the element pointed by their closing iterator, this
+  // function is often used in combination with forward_list::begin to
+  // specify a range including all the elements in the container.
+  //
+  // If the container is empty, this function returns the same as
+  // forward_list::begin.
+  //
+  iterator end() noexcept {
+    return iterator(_tail);
+  };
+
+  const_iterator end() const noexcept {
+    return const_iterator(_tail);
+  };
+
+
+  //
+  // cbefore_begin():
+  //
+  // Returns a const_iterator pointing to the position before the
+  // first element in the container.
+  //
+  // A const_iterator is an iterator that points to const
+  // content. This iterator can be increased and decreased (unless it
+  // is itself also const), just like the iterator returned by
+  // forward_list::before_begin, but it cannot be used to modify the
+  // contents it points to.
+  //
+  // The value returned shall not be dereferenced.
+  //
+  const_iterator cbefore_begin() const noexcept;
+
+
+  //
+  // cbegin():
+  //
+  // Returns a const_iterator pointing to the first element in the
+  // container.
+  //
+  // A const_iterator is an iterator that points to const
+  // content. This iterator can be increased and decreased (unless it
+  // is itself also const), just like the iterator returned by
+  // forward_list::begin, but it cannot be used to modify the contents
+  // it points to, even if the forward_list object is not itself
+  // const.
+  //
+  // If the container is empty, the returned iterator value shall not
+  // be dereferenced.
+  //
+  const_iterator cbegin() const noexcept;
+
+
+  //
+  // cend():
+  //
+  // Returns a const_iterator pointing to the past-the-end element in
+  // the forward_list container.
+  //
+  // A const_iterator is an iterator that points to const
+  // content. This iterator can be increased and decreased (unless it
+  // is itself also const), just like the iterator returned by
+  // forward_list::end, but it cannot be used to modify the contents
+  // it points to, even if the forward_list object is not itself
+  // const.
+  //
+  // The value returned shall not be dereferenced.
+  //
+  const_iterator cend () const noexcept;
+
+
+  ///////////////
+  // Capacity: //
+  ///////////////
+
+
+  //
+  // empty():
+  //
+  // Returns a bool value indicating whether the forward_list
+  // container is empty, i.e. whether its size is 0.
+  //
+  // This function does not modify the content of the container in any
+  // way. To clear the content of an array object, see
+  // forward_list::clear.
+  //
+  bool empty() const noexcept;
+
+
+  //
+  // max_size():
+  //
+  // Returns the maximum number of elements that the forward_list
+  // container can hold.
+  //
+  // This is the maximum potential number of elements the container
+  // can reach due to known system or library implementation
+  // limitations, but the container is by no means guaranteed to be
+  // able to reach that size: it can still fail to allocate storage at
+  // any point before that size is reached.
+  //
+  size_type max_size () const noexcept;
+
+
+  /////////////////////
+  // Element access: //
+  /////////////////////
+
+
+  //
+  // front():
+  //
+  // Returns a reference to the first element in the forward_list
+  // container.
+  //
+  // Unlike member forward_list::begin, which returns an iterator to
+  // this same element, this function returns a direct reference.
+  //
+  // Calling this function on an empty container causes undefined
+  // behavior.
+  //
+  reference front() { return _head->next()->data(); }
+
+  const_reference front() const { return _head->next->data(); };
+
+
+  ////////////////
+  // Modifiers: //
+  ////////////////
+
+
+  //
+  // insert_after():
+  //
+  // The container is extended by inserting new elements after the
+  // element at position.
+  //
+  // This effectively increases the container size by the amount of
+  // elements inserted.
+  //
+  // Unlike other standard sequence containers, list and forward_list
+  // objects are specifically designed to be efficient inserting and
+  // removing elements in any position, even in the middle of the
+  // sequence.
+  //
+  // A similar member function exists, emplace_after, which constructs
+  // an inserted element object directly in place, without performing
+  // any copy or move operation.
+  //
+  // The arguments determine how many elements are inserted and to
+  // which values they are initialized.
+  //
+  iterator insert_after(const_iterator position, const value_type& val) {
+    node_type* prev = position.node();
+    node_type* next = prev->next();
+    node_type* curr = new node_type(val, next);
+
+    prev->next(curr);
+
+    return iterator(curr);
+  }
+
+  iterator insert_after(const_iterator position, value_type&& val) {
+    node_type* prev = position.node();
+    node_type* next = prev->next();
+    node_type* curr = new node_type(std::move(val), next);
+
+    prev->next(curr);
+
+    return iterator(curr);
+  }
+
+  iterator insert_after(const_iterator position, size_type n,
+                        const value_type& val);
+
+  template<typename InputIterator>
+  iterator insert_after(const_iterator position,
+                        InputIterator first, InputIterator last);
+
+  iterator insert_after(const_iterator position,
+                        std::initializer_list<value_type> il) {
+    auto rfirst = il.end() - 1;
+    auto rlast = il.begin() - 1;
+    auto ret = begin();
+
+    while (rfirst != rlast)
+      ret = insert_after(position, *rfirst--);
+
+    return ret;
+  }
+
+
+  //
+  // push_front():
+  //
+  // Inserts a new element at the beginning of the forward_list, right
+  // before its current first element. The content of val is copied
+  // (or moved) to the inserted element.
+  //
+  // This effectively increases the container size by one.
+  //
+  // A similar member function exists, emplace_front, which constructs
+  // the inserted element object directly in place, without performing
+  // any copy or move operation.
+  //
+  void push_front(const value_type& val) {
+    insert_after(before_begin(), val);
+  }
+
+  void push_front(value_type&& val) {
+    insert_after(before_begin(), val);
+  }
+
+
+  //
+  // Not in spec: print to output stream.
+  //
+  friend std::ostream& operator<<(std::ostream &out, const forward_list &list) {
+    for (auto& v : list)
+      out << v << ' ';
+
+    return out;
+  }
+
+ private:
+  allocator_type _alloc;
+  node_type*const _tail;
+  node_type*const _head;
+};
+
+
+////////////////////////////////////
+// Non-member function overloads: //
+////////////////////////////////////
+
+
+//
+// Relational operators:
+//
+// Performs the appropriate comparison operation between the
+// forward_list containers lhs and rhs.
+//
+// The equality comparison (operator==) is performed by comparing the
+// elements sequentially using operator==, stopping at the first
+// mismatch (as if using algorithm equal).
+//
+// The less-than comparison (operator<) behaves as if using algorithm
+// lexicographical_compare, which compares the elements sequentially
+// using operator< in a reciprocal manner (i.e., checking both a<b and
+// b<a) and stopping at the first occurrence.
+//
+template<typename T, typename Alloc>
+bool operator==(const forward_list<T,Alloc>& lhs,
+                const forward_list<T,Alloc>& rhs) {
+  auto lit = lhs.begin();
+  auto rit = rhs.begin();
+
+  while (lit != lhs.end() && rit != rhs.end())
+    if (*lit++ != *rit++)
+      return false;
+
+  return lit == lhs.end() && rit == rhs.end();
+}
+
+template<typename T, typename Alloc>
+bool operator!=(const forward_list<T,Alloc>& lhs,
+                const forward_list<T,Alloc>& rhs) {
+  return !(lhs == rhs);
+}
+
+template<typename T, typename Alloc>
+bool operator<(const forward_list<T,Alloc>& lhs,
+               const forward_list<T,Alloc>& rhs) {
+  // TODO: implement
+}
+
+template<typename T, typename Alloc>
+bool operator<=(const forward_list<T,Alloc>& lhs,
+                const forward_list<T,Alloc>& rhs) {
+  // TODO: implement
+}
+
+template<typename T, typename Alloc>
+bool operator>(const forward_list<T,Alloc>& lhs,
+               const forward_list<T,Alloc>& rhs) {
+  // TODO: implement
+}
+
+template<typename T, typename Alloc>
+bool operator>=(const forward_list<T,Alloc>& lhs,
+                const forward_list<T,Alloc>& rhs) {
+  // TODO: implement
+}
+
+}  // namespace ustl
+
+#endif  // __USTL_FORWARD_LIST__

@@ -228,6 +228,7 @@ lab := $(root)/lab
 StlComponents = \
 	algorithm \
 	array \
+	forward_list \
 	map \
 	unordered_map \
 	vector \
