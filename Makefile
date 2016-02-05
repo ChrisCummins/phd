@@ -460,10 +460,8 @@ CFlags = \
 	-Wctor-dtor-privacy \
 	-Wdisabled-optimization \
 	-Wformat=2 \
-	-Wframe-larger-than=1024 \
 	-Winit-self \
 	-Winline \
-	-Wlarger-than=2048 \
 	-Wmissing-declarations \
 	-Wmissing-include-dirs \
 	-Wno-div-by-zero \
@@ -472,7 +470,6 @@ CFlags = \
 	-Wno-unused-parameter \
 	-Wold-style-cast \
 	-Woverloaded-virtual \
-	-Wpadded \
 	-Wredundant-decls \
 	-Wshadow \
 	-Wsign-conversion \
@@ -518,10 +515,8 @@ CxxFlags = \
 	-Wctor-dtor-privacy \
 	-Wdisabled-optimization \
 	-Wformat=2 \
-	-Wframe-larger-than=2048 \
 	-Winit-self \
 	-Winline \
-	-Wlarger-than=2048 \
 	-Wmissing-declarations \
 	-Wmissing-include-dirs \
 	-Wno-div-by-zero \
@@ -530,7 +525,6 @@ CxxFlags = \
 	-Wno-unused-parameter \
 	-Wold-style-cast \
 	-Woverloaded-virtual \
-	-Wpadded \
 	-Wredundant-decls \
 	-Wshadow \
 	-Wsign-conversion \
