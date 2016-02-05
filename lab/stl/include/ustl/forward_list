@@ -257,9 +257,15 @@ class forward_list {
   // Constructs a container with n elements. Each element is a copy of
   // val (if provided).
   //
-  explicit forward_list(size_type n, const allocator_type& alloc = allocator_type());
+  explicit forward_list(size_type n,
+                        const allocator_type& alloc = allocator_type()) {
+    // TODO: implement
+  }
+
   explicit forward_list(size_type n, const value_type& val,
-                        const allocator_type& alloc = allocator_type());
+                        const allocator_type& alloc = allocator_type()) {
+    // TODO: implement
+  }
 
 
   //
@@ -280,9 +286,13 @@ class forward_list {
   // Constructs a container with a copy of each of the elements in
   // fwdlst, in the same order.
   //
-  forward_list(const forward_list& fwdlst);
+  forward_list(const forward_list& fwdlst) {
+    // TODO: implement
+  }
 
-  forward_list(const forward_list& fwdlst, const allocator_type& alloc);
+  forward_list(const forward_list& fwdlst, const allocator_type& alloc) {
+    // TODO: implement
+  }
 
 
   //
@@ -294,9 +304,13 @@ class forward_list {
   // ownership is directly transferred).  fwdlst is left in an
   // unspecified but valid state.
   //
-  forward_list(forward_list&& fwdlst);
+  forward_list(forward_list&& fwdlst) {
+    // TODO: implement
+  }
 
-  forward_list(forward_list&& fwdlst, const allocator_type& alloc);
+  forward_list(forward_list&& fwdlst, const allocator_type& alloc) {
+    // TODO: implement
+  }
 
   //
   // initializer list:
@@ -341,7 +355,9 @@ class forward_list {
   // Copies all the elements from fwdlst into the container (with
   // fwdlst preserving its contents).
   //
-  forward_list& operator=(const forward_list& fwdlst);
+  forward_list& operator=(const forward_list& fwdlst) {
+    // TODO: implement
+  }
 
 
   //
@@ -350,14 +366,18 @@ class forward_list {
   // Moves the elements of fwdlst into the container (x is left in an
   // unspecified but valid state).
   //
-  forward_list& operator=(forward_list&& fwdlst);
+  forward_list& operator=(forward_list&& fwdlst) {
+    // TODO: implement
+  }
 
   //
   // initializer_list:
   //
   // Copies the elements of il into the container.
   //
-  forward_list& operator=(std::initializer_list<value_type> il);
+  forward_list& operator=(std::initializer_list<value_type> il) {
+    // TODO: implement
+  }
 
 
   ////////////////
@@ -835,25 +855,25 @@ bool operator<(const forward_list<T,Alloc>& lhs,
     rit++;
   }
 
-  return !(lit == lhs.end());
+  return lit == lhs.end() && rit != rhs.end();
 }
 
 template<typename T, typename Alloc>
 bool operator<=(const forward_list<T,Alloc>& lhs,
                 const forward_list<T,Alloc>& rhs) {
-  return rhs > lhs;
+  return !(lhs > rhs);
 }
 
 template<typename T, typename Alloc>
 bool operator>(const forward_list<T,Alloc>& lhs,
                const forward_list<T,Alloc>& rhs) {
-  return rhs <= lhs;
+  return rhs < lhs;
 }
 
 template<typename T, typename Alloc>
 bool operator>=(const forward_list<T,Alloc>& lhs,
                 const forward_list<T,Alloc>& rhs) {
-  return rhs < lhs;
+  return !(lhs < rhs);
 }
 
 }  // namespace ustl
