@@ -30,39 +30,40 @@
   performance. This trend has not been matched with adequate software
   tools, leading to a growing disparity between the availability of
   parallelism and the ability for application developers to exploit
-  it. Algorithmic skeletons simplify parallel programming by providing
-  high-level, reusable patterns of computation. Achieving performant
-  skeleton implementations is a difficult task; skeleton authors must
-  attempt to anticipate and tune for a wide range of architectures and
-  use cases. This results in implementations that target the general
-  case and cannot provide the performance advantages that are gained
-  from tuning low level optimization parameters. Autotuning combined
-  with machine learning offers promising performance benefits in these
-  situations, but the high cost of training and lack of available
-  tools limits the practicality of autotuning for real world
-  programming. We believe that performing autotuning at the level of
-  the skeleton library can overcome these issues.
+  it. Algorithmic offer a solution to this problem through reusable
+  patterns of computation, though creating performant skeleton
+  implementations is a difficult task; algorithmic skeleton authors
+  must attempt to anticipate and tune for a wide range of
+  architectures and use cases. This results in implementations that
+  target the general case and cannot provide the performance
+  advantages that are gained from tuning low level optimization
+  parameters. Autotuning combined with machine learning offers
+  promising performance benefits in these situations, but the high
+  cost of training and lack of available tools limits the practicality
+  of autotuning for real world programming. We believe that performing
+  autotuning at the level of the skeleton library can overcome these
+  issues.
 
-  In this work, we present OmniTune --- an extensible and distributed
-  framework for dynamic autotuning of optimization parameters at
-  runtime. OmniTune uses a client-server model with a flexible API to
-  support machine learning enabled autotuning. Training data is shared
-  across a network of cooperating systems, using a collective approach
-  to performance tuning. We demonstrate the practicality of OmniTune
-  in a case study using the algorithmic skeleton library SkelCL. We
-  present three methodologies for predicting workgroup sizes. The
-  first, using classifiers to select the optimal workgroup size. The
-  second and third proposed methodologies employ the novel use of
-  regressors for performing classification by predicting the runtime
-  of kernels and the relative performance of different workgroup
-  sizes, respectively. We evaluate the effectiveness of each technique
-  in an empirical study of 429 combinations of architecture, kernel,
-  and dataset, comparing an average of 629 different workgroup sizes
-  for each. We find that autotuning provides a median $3.79\times$
-  speedup over the best possible fixed workgroup size, achieving 94\%
-  of the maximum performance. OmniTune achieves this without
-  introducing a significant runtime overhead, and enables portable,
-  cross-device and cross-program tuning.
+  In this work, we present OmniTune --- an extensible open source
+  framework for dynamically autotuning optimization parameters at
+  runtime. OmniTune offers a flexible API and client-server model to
+  support machine learning across devices. Training data is
+  distributed between systems, allowing a collaborative approach to
+  performance tuning. We demonstrate the practicality of OmniTune in a
+  case study using the open source Algorithmic Skeleton library
+  SkelCL. We present three methodologies for predicting workgroup
+  sizes. The first, using classifiers to select the optimal workgroup
+  size. The second and third proposed methodologies employ the novel
+  use of regressors for performing classification by predicting the
+  runtime of kernels and the relative performance of different
+  workgroup sizes, respectively. We evaluate the effectiveness of each
+  technique in an empirical study of 429 combinations of architecture,
+  kernel, and dataset, comparing an average of 629 different workgroup
+  sizes for each. We find that autotuning provides a median
+  $3.79\times$ speedup over the best possible fixed workgroup size,
+  achieving 94\% of the maximum performance. OmniTune achieves this
+  without introducing a significant runtime overhead, and enables
+  portable, cross-device and cross-program tuning.
 \end{abstract}
 
 
