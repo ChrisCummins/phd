@@ -1006,7 +1006,7 @@ class forward_list {
   // whether an element is removed.
   //
   void remove(const value_type& val) {
-    // TODO: implement
+    remove_if([val](const value_type &x) { return x == val; });
   }
 
 
@@ -1023,7 +1023,18 @@ class forward_list {
   //
   template<typename Predicate>
   void remove_if(Predicate pred) {
-    // TODO: implement
+    node_type* prev = _head, * curr = _head->next();
+
+    while (curr != _tail) {
+      node_type* next = curr->next();
+
+      if (pred(curr->data()))
+        erase_after(iterator(prev));
+      else
+        prev = curr;
+
+      curr = next;
+    }
   }
 
 
@@ -1049,12 +1060,23 @@ class forward_list {
   // The elements removed are destroyed.
   //
   void unique() {
-    // TODO: implement
+    unique([](const value_type &x, const value_type &y) { return x == y; });
   }
 
   template<typename BinaryPredicate>
   void unique(BinaryPredicate binary_pred) {
-    // TODO: implement
+    node_type* prev = _head, * curr = _head->next();
+
+    while (curr != _tail) {
+      node_type* next = curr->next();
+
+      if (binary_pred(curr->data(), prev->data()))
+        erase_after(iterator(prev));
+      else
+        prev = curr;
+
+      curr = next;
+    }
   }
 
 

@@ -358,15 +358,106 @@ TEST(ustl_forward_list, swap) {
   ASSERT_TRUE(l1 == l2a);
   ASSERT_TRUE(l2 == l1a);
 
-  l2.swap(l1);
+  ustl::swap(l2, l1);   // NOLINT(build/include_what_you_use)
   ASSERT_TRUE(l1 == l1a);
   ASSERT_TRUE(l2 == l2a);
+}
+
+
+TEST(std_forward_list, clear) {
+  std::forward_list<int> l1{0, 0, 0, 0};
+  const std::forward_list<int> l2{1, 2, 3};
+
+  l1.clear();
+  ASSERT_TRUE(l1.begin() == l1.end());
+
+  l1.insert_after(l1.before_begin(), l2.begin(), l2.end());
+  ASSERT_TRUE(l1 == l2);
+}
+
+TEST(ustl_forward_list, clear) {
+  ustl::forward_list<int> l1{0, 0, 0, 0};
+  const ustl::forward_list<int> l2{1, 2, 3};
+
+  l1.clear();
+  ASSERT_TRUE(l1.begin() == l1.end());
+
+  std::cout << "L1 (empty): " << l1 << '\n';
+  l1.insert_after(l1.before_begin(), l2.begin(), l2.end());
+
+  std::cout << "L1: " << l1 << '\n';
+  ASSERT_TRUE(l1 == l2);
 }
 
 
 /////////////////
 // Operations: //
 /////////////////
+
+
+TEST(std_forward_list, remove) {
+  std::forward_list<int> l1{1, 2, 3, 1, 4, 1, 5, 6, 7, 1};
+  const std::forward_list<int> l1a{2, 3, 4, 5, 6, 7};
+
+  l1.remove(1);
+
+  ASSERT_TRUE(l1 == l1a);
+}
+
+TEST(ustl_forward_list, remove) {
+  ustl::forward_list<int> l1{1, 2, 3, 1, 4, 1, 5, 6, 7, 1};
+  const ustl::forward_list<int> l1a{2, 3, 4, 5, 6, 7};
+
+  l1.remove(1);
+
+  ASSERT_TRUE(l1 == l1a);
+}
+
+
+TEST(std_forward_list, remove_if) {
+  std::forward_list<int> l1{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const std::forward_list<int> l1a{1, 3, 5, 7, 9};
+
+  // remove even numbers
+  l1.remove_if([](const int& x) {return !(x % 2);});
+
+  ASSERT_TRUE(l1 == l1a);
+}
+
+TEST(ustl_forward_list, remove_if) {
+  ustl::forward_list<int> l1{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const ustl::forward_list<int> l1a{1, 3, 5, 7, 9};
+
+  // remove even numbers
+  l1.remove_if([](const int& x) {return !(x % 2);});
+
+  ASSERT_TRUE(l1 == l1a);
+}
+
+
+TEST(std_forward_list, unique) {
+  std::forward_list<int> l1{1, 1, 2, 2, 3, 4, 5, 5};
+  const std::forward_list<int> l1a{1, 2, 3, 4, 5};
+  const std::forward_list<int> l1b{1, 1, 3, 4, 5};
+
+  l1.unique();
+  ASSERT_TRUE(l1 == l1a);
+
+  // binary predicate: *i + *(i-1) == 3
+  l1.unique([](const int& x, const int& y) { return x + y == 3; });
+}
+
+TEST(ustl_forward_list, unique) {
+  ustl::forward_list<int> l1{1, 1, 2, 2, 3, 4, 5, 5};
+  const ustl::forward_list<int> l1a{1, 2, 3, 4, 5};
+  const ustl::forward_list<int> l1b{1, 1, 3, 4, 5};
+
+  l1.unique();
+  ASSERT_TRUE(l1 == l1a);
+
+  // binary predicate: *i + *(i-1) == 3
+  l1.unique([](const int& x, const int& y) { return x + y == 3; });
+}
 
 
 TEST(std_forward_list, sort) {
