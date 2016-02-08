@@ -2,12 +2,7 @@
  * Write a function to swap a number in place (that is, without
  * temporary variables).
  */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wundef"
-#include <benchmark/benchmark.h>
-#include <gtest/gtest.h>
-#pragma GCC diagnostic pop
+#include "./ctci.h"
 
 template<typename T>
 void numSwapBaseline(T *const x, T *const y) {
@@ -84,15 +79,4 @@ void BM_numSwap1(benchmark::State& state) {
 }
 BENCHMARK(BM_numSwap1);
 
-
-int main(int argc, char **argv) {
-  // Run unit tests:
-  testing::InitGoogleTest(&argc, argv);
-  const auto ret = RUN_ALL_TESTS();
-
-  // Run benchmarks:
-  benchmark::Initialize(&argc, argv);
-  benchmark::RunSpecifiedBenchmarks();
-
-  return ret;
-}
+CTCI_MAIN();

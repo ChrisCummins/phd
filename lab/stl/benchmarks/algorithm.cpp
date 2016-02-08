@@ -1,0 +1,42 @@
+#include "./benchmarks.h"
+
+#include <algorithm>
+#include <ustl/algorithm>
+
+#include <array>
+#include <ustl/array>
+
+#include <vector>
+#include <ustl/vector>
+
+
+static const size_t sort_size_min = 8;
+// FIXME: Change to a larger maximum sort size, and increase the
+// number of increments:
+static const size_t sort_size_max = 8 << 10;
+
+static void std_algorithm_sort_int(benchmark::State& state) {
+  std::vector<int> v(static_cast<size_t>(state.range_x()));
+
+  while (state.KeepRunning()) {
+    for (auto& i : v)
+      i = static_cast<int>(arc4random());
+
+    std::sort(v.begin(), v.end());
+    benchmark::DoNotOptimize(v.data());
+  }
+}
+BENCHMARK(std_algorithm_sort_int)->Range(sort_size_min, sort_size_max);
+
+static void ustl_algorithm_sort_int(benchmark::State& state) {
+  ustl::vector<int> v(static_cast<size_t>(state.range_x()));
+
+  while (state.KeepRunning()) {
+    for (auto& i : v)
+      i = static_cast<int>(arc4random());
+
+    ustl::sort(v.begin(), v.end());
+    benchmark::DoNotOptimize(v.data());
+  }
+}
+BENCHMARK(ustl_algorithm_sort_int)->Range(sort_size_min, sort_size_max);

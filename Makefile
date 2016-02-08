@@ -226,27 +226,39 @@ lab := $(root)/lab
 #
 # lab/stl/
 #
-CxxTargets += \
-	$(lab)/stl/benchmarks \
-	$(lab)/stl/tests \
+StlComponents = \
+	algorithm \
+	array \
+	forward_list \
+	map \
+	unordered_map \
+	vector \
 	$(NULL)
 
-StlHeaders = \
-	$(lab)/stl/include/ustl/algorithm \
-	$(lab)/stl/include/ustl/array \
-	$(lab)/stl/include/ustl/map \
-	$(lab)/stl/include/ustl/unordered_map \
-	$(lab)/stl/include/ustl/vector \
-	$(NULL)
+StlHeaders = $(addprefix $(lab)/stl/include/ustl/,$(StlComponents))
+Stl_CxxFlags = -I$(lab)/stl/include
 
-$(lab)/stl/benchmarks.o: $(StlHeaders)
-$(lab)/stl/tests.o: $(StlHeaders)
-$(lab)/stl_CxxFlags = \
-	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags) -I$(lab)/stl/include
-$(lab)/stl_LdFlags = \
-	$(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
-$(lab)/stl/tests.o: $(GoogleBenchmark) $(GoogleTest)
+# Stl unit tests:
+StlTestsSources = $(addsuffix .cpp,\
+	$(addprefix $(lab)/stl/tests/,$(StlComponents)))
+StlTestsObjects = $(patsubst %.cpp,%.o,$(StlTestsSources))
+$(StlTestsObjects): $(StlTestsSources) $(StlHeaders) $(GoogleBenchmark)
+$(lab)/stl/tests/tests: $(StlTestsObjects)
 
+CxxTargets += $(lab)/stl/tests/tests
+$(lab)/stl/tests_CxxFlags = $(Stl_CxxFlags) $(GoogleTest_CxxFlags)
+$(lab)/stl/tests_LdFlags = $(GoogleTest_LdFlags)
+
+# Stl benchmarks:
+StlBenchmarksSources = $(addsuffix .cpp,\
+	$(addprefix $(lab)/stl/benchmarks/,$(StlComponents)))
+StlBenchmarksObjects = $(patsubst %.cpp,%.o,$(StlBenchmarksSources))
+$(StlBenchmarksObjects): $(StlBenchmarksSources) $(StlHeaders) $(GoogleBenchmark)
+$(lab)/stl/benchmarks/benchmarks: $(StlBenchmarksObjects)
+
+CxxTargets += $(lab)/stl/benchmarks/benchmarks
+$(lab)/stl/benchmarks_CxxFlags = $(Stl_CxxFlags) $(GoogleBenchmark_CxxFlags)
+$(lab)/stl/benchmarks_LdFlags = $(GoogleBenchmark_LdFlags)
 
 #
 # learn/
@@ -278,8 +290,9 @@ $(learn)/atc++/constructors.o: $(GoogleTest)
 # learn/challenges/
 #
 CxxTargets += \
-	$(learn)/challenges/01-int-average \
-	$(learn)/challenges/gray-code \
+	$(learn)/challenges/001-int-average \
+	$(learn)/challenges/006-gray-code \
+	$(learn)/challenges/008-linked-list \
 	$(NULL)
 
 $(learn)/challenges_CxxFlags = \
@@ -298,13 +311,18 @@ CtCiTargets = \
 	$(learn)/ctci/0103-permutations \
 	$(learn)/ctci/0104-escape-string \
 	$(learn)/ctci/0105-string-compression \
-	$(learn)/ctci/0106-matrix-zero \
+	$(learn)/ctci/0107-matrix-zero \
+	$(learn)/ctci/0108-string-rotation \
+	$(learn)/ctci/0201-list-remove-dups \
 	$(learn)/ctci/0202-linked-list-k-last \
+	$(learn)/ctci/0302-stack-min \
 	$(learn)/ctci/0402-directed-graph-routefinder \
+	$(learn)/ctci/0502-binary-double \
 	$(learn)/ctci/1101-merge-arrays \
 	$(learn)/ctci/1102-sort-anagrams \
 	$(learn)/ctci/1301-last-k-lines \
 	$(learn)/ctci/1307-tree-copy \
+	$(learn)/ctci/1310-2d-alloc \
 	$(learn)/ctci/1701-num-swap \
 	$(learn)/ctci/1702-tic-tac-toe \
 	$(NULL)
@@ -444,10 +462,8 @@ CFlags = \
 	-Wctor-dtor-privacy \
 	-Wdisabled-optimization \
 	-Wformat=2 \
-	-Wframe-larger-than=1024 \
 	-Winit-self \
 	-Winline \
-	-Wlarger-than=2048 \
 	-Wmissing-declarations \
 	-Wmissing-include-dirs \
 	-Wno-div-by-zero \
@@ -456,7 +472,6 @@ CFlags = \
 	-Wno-unused-parameter \
 	-Wold-style-cast \
 	-Woverloaded-virtual \
-	-Wpadded \
 	-Wredundant-decls \
 	-Wshadow \
 	-Wsign-conversion \
@@ -502,10 +517,8 @@ CxxFlags = \
 	-Wctor-dtor-privacy \
 	-Wdisabled-optimization \
 	-Wformat=2 \
-	-Wframe-larger-than=2048 \
 	-Winit-self \
 	-Winline \
-	-Wlarger-than=2048 \
 	-Wmissing-declarations \
 	-Wmissing-include-dirs \
 	-Wno-div-by-zero \
@@ -514,7 +527,6 @@ CxxFlags = \
 	-Wno-unused-parameter \
 	-Wold-style-cast \
 	-Woverloaded-virtual \
-	-Wpadded \
 	-Wredundant-decls \
 	-Wshadow \
 	-Wsign-conversion \
@@ -786,3 +798,6 @@ help:
 		| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
 		| sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' \
 		| sed 's/^/    /'
+
+foo:
+	@echo "$(lab)/stl/include/ustl/$(patsubst %.o,%,$(notdir $(lab)/stl/test/algorithm.o))"

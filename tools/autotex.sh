@@ -254,19 +254,16 @@ setup_env() {
 get_citation_backend() {
     local document=$1
 
-    #
-    # We determine the citation backend by searching the aux file for
-    # different keywords. Note that the order here is important. We
-    # must search first for bibtex _before_ biber, since bibtex uses a
-    # \bibcite{} keyword, which would test true for the biber backend.
-    #
     set +e
-    if grep 'citation{' $document.aux &>/dev/null ; then
-        echo "bibtex"
-    elif grep 'cite{' $document.aux &>/dev/null ; then
+    if grep 'cite{' $document.aux &>/dev/null ; then
+        # Biber uses \cite{key}:
         echo "biber"
+    elif grep 'citation{' $document.aux &>/dev/null ; then
+        # Bibtex uses \citation{key}:
+        echo "bibtex"
     else
-        echo # No citations.
+        # No citations.
+        echo
     fi
     set -e
 }

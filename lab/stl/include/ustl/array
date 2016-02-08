@@ -1,112 +1,527 @@
 // -*-c++-*-
 //
-// array class.
-//
-// Differences between ustl::array and std::array:
-//
-//
 #ifndef __USTL_ARRAY__
 #define __USTL_ARRAY__
 
 #include <cstddef>
+#include <iterator>
 
 namespace ustl {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
 
+//
+// array
+//
+// Arrays are fixed-size sequence containers: they hold a specific
+// number of elements ordered in a strict linear sequence.
+//
+// Internally, an array does not keep any data other than the elements
+// it contains (not even its size, which is a template parameter,
+// fixed on compile time). It is as efficient in terms of storage size
+// as an ordinary array declared with the language's bracket syntax
+// ([]). This class merely adds a layer of member and global functions
+// to it, so that arrays can be used as standard containers.
+//
+// Unlike the other standard containers, arrays have a fixed size and
+// do not manage the allocation of its elements through an allocator:
+// they are an aggregate type encapsulating a fixed-size array of
+// elements. Therefore, they cannot be expanded or contracted
+// dynamically (see vector for a similar container that can be
+// expanded).
+//
+// Zero-sized arrays are valid, but they should not be dereferenced
+// (members front, back, and data).
+//
+// Unlike with the other containers in the Standard Library, swapping
+// two array containers is a linear operation that involves swapping
+// all the elements in the ranges individually, which generally is a
+// considerably less efficient operation. On the other side, this
+// allows the iterators to elements in both containers to keep their
+// original container association.
+//
+// Another unique feature of array containers is that they can be
+// treated as tuple objects: The <array> header overloads the get
+// function to access the elements of the array as if it was a tuple,
+// as well as specialized tuple_size and tuple_element types.
+//
 template<typename T, std::size_t _size>
 class array {
  public:
-  // Typedefs:
+
+  ///////////////////
+  // Member types: //
+  ///////////////////
+
   using value_type = T;
-  using iterator = T*;
+
+  using size_type = std::size_t;
+
+  using difference_type = std::ptrdiff_t;
+
+  using reference = value_type&;
+
+  using const_reference = const value_type&;
+
+  using pointer = value_type*;
+
+  using const_pointer = const value_type*;
+
+  using iterator = pointer;
+
+  using const_iterator = const_pointer;
+
+  using reverse_iterator = std::reverse_iterator<iterator>;
+
+  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+
+  ///////////////////
+  // Constructors: //
+  ///////////////////
 
   // Default constructor:
   array() {}
 
   // Initializer list constructor:
   array(std::initializer_list<value_type> l) {
-    auto i = 0;
-    for (auto v : l)
-      _data[i++] = v;
+    auto it = begin();
+
+    for (auto& v : l)
+      *it++ = v;
   }
 
-  // Iterators
-  iterator begin() { return &_data[0]; }
-  iterator end() { return &_data[size()]; }
 
-  constexpr std::size_t size() const noexcept { return _size; }
-  constexpr std::size_t max_size() const noexcept { return size(); }
-  constexpr bool empty() const noexcept { return !size(); }
+  ////////////////
+  // Iterators: //
+  ////////////////
 
-  T &operator[](const std::size_t index) {
-    return _data[index];
+
+  //
+  // begin():
+  //
+  // Returns an iterator pointing to the first element in the array
+  // container.
+  //
+  // Notice that, unlike member array::front, which returns a
+  // reference to the first element, this function returns a random
+  // access iterator pointing to it.
+  //
+  // In zero-sized arrays, this function returns the same as
+  // array::end, but the returned iterator should not be dereferenced.
+  //
+  auto begin() noexcept { return iterator(_data); }
+
+  auto begin() const noexcept { return const_iterator(_data); }
+
+
+  //
+  // end():
+  //
+  // Returns an iterator pointing to the past-the-end element in the
+  // array container.
+  //
+  // The past-the-end element is the theoretical element that would
+  // follow the last element in the array. It does not point to any
+  // element, and thus shall not be dereferenced.
+  //
+  // Because the ranges used by functions of the standard library do
+  // not include the element pointed by their closing iterator, this
+  // function is often used in combination with array::begin to
+  // specify a range including all the elements in the container.
+  //
+  // In zero-sized arrays, this function returns the same as
+  // array::begin.
+  //
+  auto end() noexcept { return iterator(&_data[size()]); }
+
+  auto end() const noexcept { return const_iterator(&_data[size()]); }
+
+
+  //
+  // rbegin():
+  //
+  // Returns a reverse iterator pointing to the last element in the
+  // array container.
+  //
+  // rbegin points to the element right before the one that would be
+  // pointed to by member end.
+  //
+  // Notice that unlike member array::back, which returns a reference
+  // to this same element, this function returns a reverse random
+  // access iterator.
+  //
+  auto rbegin() noexcept { return reverse_iterator(end()); }
+
+  auto rbegin() const noexcept { return const_reverse_iterator(end()); }
+
+
+  //
+  // rend():
+  //
+  // Returns a reverse iterator pointing to the theoretical element
+  // preceding the first element in the array (which is considered its
+  // reverse end).
+  //
+  // The range between array::rbegin and array::rend contains all the
+  // elements of the array (in reverse order).
+  //
+  auto rend() noexcept { return reverse_iterator(begin()); }
+
+  auto rend() const noexcept { return const_reverse_iterator(begin()); }
+
+
+  //
+  // cbegin():
+  //
+  // Returns a const_iterator pointing to the first element in the
+  // array container.
+  //
+  // A const_iterator is an iterator that points to const
+  // content. This iterator can be increased and decreased (unless it
+  // is itself also const), just like the iterator returned by
+  // array::begin, but it cannot be used to modify the contents it
+  // points to, even if the array object is not itself const.
+  //
+  auto cbegin() const noexcept { return const_iterator(begin()); }
+
+
+  //
+  // cend():
+  //
+  // Returns a const_iterator pointing to the past-the-end element in
+  // the array container.
+  //
+  // A const_iterator is an iterator that points to const
+  // content. This iterator can be increased and decreased (unless it
+  // is itself also const), just like the iterator returned by
+  // array::end, but it cannot be used to modify the contents it
+  // points to, even if the array object is not itself const.
+  //
+  auto cend() const noexcept { return const_iterator(end()); }
+
+
+  //
+  // crbegin():
+  //
+  // Returns a const_reverse_iterator pointing to the last element in
+  // the array container.
+  //
+  // A const_reverse_iterator is an iterator that points to const
+  // content and iterates in reverse order. This iterator can be
+  // increased and decreased (unless it is itself also const), just
+  // like the iterator returned by array::rbegin, but it cannot be
+  // used to modify the contents it points to.
+  //
+  auto crbegin() const noexcept { return const_reverse_iterator(rbegin()); }
+
+
+  //
+  // crend():
+  //
+  // Returns a const_reverse_iterator pointing to the theoretical
+  // element preceding the first element in the vector, which is
+  // considered its reverse end.
+  //
+  // A const_reverse_iterator is an iterator that points to const
+  // content and iterates in reverse order. This iterator can be
+  // increased and decreased (unless it is itself also const), just
+  // like the iterator returned by array::rend, but it cannot be used
+  // to modify the contents it points to.
+  //
+  auto crend() const noexcept { return const_reverse_iterator(rend()); }
+
+
+  ///////////////
+  // Capacity: //
+  ///////////////
+
+
+  //
+  // size():
+  //
+  // Returns the number of elements in the array container.
+  //
+  // The size of an array object is always equal to the second
+  // template parameter used to instantiate the array template class
+  // (N).
+  //
+  // Unlike the language operator sizeof, which returns the size in
+  // bytes, this member function returns the size of the array in
+  // terms of number of elements.
+  //
+  constexpr auto size() const noexcept { return _size; }
+
+
+  //
+  // max_size():
+  //
+  // Returns the maximum number of elements that the array container
+  // can hold.
+  //
+  // The max_size of an array object, just like its size, is always
+  // equal to the second template parameter used to instantiate the
+  // array template class.
+  //
+  constexpr auto max_size() const noexcept { return size(); }
+
+
+  //
+  // empty():
+  //
+  // Returns a bool value indicating whether the array container is
+  // empty, i.e. whether its size is 0.
+  //
+  // This function does not modify the content of the array in any
+  // way. To clear the content of an array object, use array::fill.
+  //
+  constexpr auto empty() const noexcept { return !size(); }
+
+
+  /////////////////////
+  // Element access: //
+  /////////////////////
+
+
+  //
+  // operator[]:
+  //
+  // Returns a reference to the element at position n in the array
+  // container.
+  //
+  // A similar member function, array::at, has the same behavior as
+  // this operator function, except that array::at checks the array
+  // bounds and signals whether n is out of range by throwing an
+  // exception.
+  reference operator[](const size_type index) {
+    return reference(_data[index]);
   }
 
-  const T &operator[](const std::size_t index) const {
-    return _data[index];
+  const_reference operator[](const size_type index) const {
+    return const_reference(_data[index]);
   }
 
-  T &at(const std::size_t index) {
+
+  //
+  // at():
+  //
+  // Returns a reference to the element at position n in the array.
+  //
+  // The function automatically checks whether n is within the bounds
+  // of valid elements in the container, throwing an out_of_range
+  // exception if it is not (i.e., if n is greater or equal than its
+  // size). This is in contrast with member operator[], that does not
+  // check against bounds.
+  //
+  reference at(const size_type index) {
     if (index >= size())
       throw std::out_of_range("ustl::array[]");
     else
       return this->operator[](index);
   }
 
-  const T &at(const std::size_t index) const {
+  const_reference &at(const size_type index) const {
     if (index >= size())
       throw std::out_of_range("ustl::array[]");
     else
       return this->operator[](index);
   }
 
-  T &front() { return _data[0]; }
-  const T &front() const { return _data[0]; }
-  T &back() { return _data[size() - 1]; }
-  const T &back() const { return _data[size() - 1]; }
-  T *data() noexcept { return _data; }
-  const T *data() const noexcept { return _data; }
+
+  //
+  // front():
+  //
+  // Returns a reference to the first element in the array container.
+  //
+  // Unlike member array::begin, which returns an iterator to this
+  // same element, this function returns a direct reference.
+  //
+  // Calling this function on an empty container causes undefined
+  // behavior.
+  //
+  reference front() { return _data[0]; }
+
+  const_reference front() const { return _data[0]; }
+
+
+  //
+  // back():
+  //
+  // Returns a reference to the last element in the array container.
+  //
+  // Unlike member array::end, which returns an iterator just past
+  // this element, this function returns a direct reference.
+  //
+  // Calling this function on an empty container causes undefined
+  // behavior.
+  reference back() { return _data[size() - 1]; }
+
+  const_reference back() const { return _data[size() - 1]; }
+
+
+  //
+  // data():
+  //
+  // Returns a pointer to the first element in the array object.
+  //
+  // Because elements in the array are stored in contiguous storage
+  // locations, the pointer retrieved can be offset to access any
+  // element in the array.
+  //
+  pointer data() noexcept { return _data; }
+
+  const_pointer data() const noexcept { return _data; }
+
+
+  ////////////////
+  // Modifiers: //
+  ////////////////
+
+  //
+  // fill():
+  //
+  // Sets val as the value for all the elements in the array object.
+  //
+  void fill (const value_type& val) {
+    for (auto &v: this)
+      v = val;
+  }
+
+
+  //
+  // swap():
+  //
+  // Exchanges the content of the array by the content of x, which is
+  // another array object of the same type (including the same size).
+  //
+  // After the call to this member function, the elements in this
+  // container are those which were in x before the call, and the
+  // elements of x are those which were in this.
+  //
+  // Unlike with the swap member functions of the other containers,
+  // this member function operates in linear time by performing as
+  // many individual swap operations between the individual elements
+  // as their size (see swap).
+  //
+  void swap(array& x) {
+    auto lhs = begin();
+    auto rhs = x.begin();
+
+    while (lhs != end()) {
+      auto tmp = *lhs;
+
+      *lhs++ = *rhs;
+      *rhs++ = tmp;
+    }
+  }
+
 
  private:
-  T _data[_size];
+
+  //
+  // Note that in case of a zero sized array, we default construct a
+  // single element.
+  //
+  value_type _data[_size > 0 ? _size : 1];
 };
 
 
-// Partial-specialisation where size = 0.
-template<typename T>
-class array<T, 0> {
- public:
-  using value_type = T;
-  using iterator = T*;
+////////////////////////////////////
+// Non-member function overloads: //
+////////////////////////////////////
 
-  constexpr std::size_t size() noexcept { return 0; }
-  constexpr std::size_t max_size() noexcept { return size(); }
-  constexpr bool empty() noexcept { return !size(); }
 
-  T &operator[](const std::size_t index) { return _null; }
+//
+// get():
+//
+// Returns a reference to the Ith element of array arr.
+//
+// This overload of tuple's homonym function get is provided so that
+// array objects can be treated as tuples. For that purpose, header
+// <array> also overloads tuple_size and tuple_element types with the
+// appropriate members defined.
+//
+template<size_t I, typename T, size_t N>
+T& get(array<T, N>& arr) noexcept {
+  return arr[I];
+}
 
-  const T &operator[](const std::size_t index) const { return _null; }
+template<size_t I, typename T, size_t N>
+T&& get(array<T, N>&& arr) noexcept {
+  return arr[I];
+}
 
-  T &at(const std::size_t index) {
-    throw std::out_of_range("ustl::array[]");
-  }
-
-  const T &at(const std::size_t index) const {
-    throw std::out_of_range("ustl::array[]");
-  }
-
-  T &front() { return _null; }
-  const T &front() const { return _null; }
-  T &back() { return _null; }
-  const T &back() const { return _null; }
-  T *data() noexcept { return nullptr; }
-  const T *data() const noexcept { return nullptr; }
-
- private:
-  T _null;
+template<size_t I, typename T, size_t N>
+const T& get(const array<T, N>& arr) noexcept {
+  return arr[I];
 };
+
+
+//
+// Relational operators:
+//
+// Performs the appropriate comparison operation between the array
+// containers lhs and rhs.
+//
+// The equality comparison (operator==) is performed by comparing the
+// elements sequentially using operator==, stopping at the first
+// mismatch (as if using algorithm equal).
+//
+// The less-than comparison (operator<) behaves as if using algorithm
+// lexicographical_compare, which compares the elements sequentially
+// using operator< in a reciprocal manner (i.e., checking both a<b and
+// b<a) and stopping at the first occurrence.
+//
+template<typename T, size_t N>
+bool operator==(const array<T, N>& lhs, const array<T, N>& rhs) {
+  auto lit = lhs.begin();
+  auto rit = rhs.begin();
+
+  while (lit != lhs.end())
+    if (*lit++ != *rit++)
+      return false;
+
+  return true;
+}
+
+template<typename T, size_t N>
+bool operator!=(const array<T, N>& lhs, const array<T, N>& rhs) {
+  return !(lhs == rhs);
+}
+
+template<typename T, size_t N>
+bool operator<(const array<T, N>& lhs, const array<T, N>& rhs) {
+  auto lit = lhs.begin();
+  auto rit = rhs.begin();
+
+  while (lit != lhs.end()) {
+    if (*lit < *rit)
+      return true;
+    else if (*lit > *rit)
+      return false;
+    lit++;
+    rit++;
+  }
+
+  return false;
+}
+
+template<typename T, size_t N>
+bool operator<=(const array<T, N>& lhs, const array<T, N>& rhs) {
+  return !(lhs > rhs);
+}
+
+template<typename T, size_t N>
+bool operator>(const array<T, N>& lhs, const array<T, N>& rhs) {
+  return rhs < lhs;
+}
+
+template<typename T, size_t N>
+bool operator>=(const array<T, N>& lhs, const array<T, N>& rhs) {
+  return !(lhs < rhs);
+}
+
 
 #pragma GCC diagnostic pop  // -Wpadded
 
