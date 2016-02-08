@@ -109,6 +109,20 @@ TEST(my2DAlloc1, tests) {
   my2DFree1((void**)matrix, 4 * sizeof(int));
 }
 
+static const size_t size_min = 8;
+static const size_t size_max = 10 << 10;
+
+void BM_my2DAlloc1(benchmark::State& state) {
+  const size_t size = static_cast<size_t>(state.range_x());
+
+  while (state.KeepRunning()) {
+    int** matrix = (int**)my2DAlloc1(size, size * sizeof(int));
+    benchmark::DoNotOptimize(matrix[0][0]);
+    my2DFree1((void**)matrix, size);
+  }
+}
+BENCHMARK(BM_my2DAlloc1)->Range(size_min, size_max);
+
 TEST(my2DAlloc2, tests) {
   int** matrix = my2DAlloc2(3, 4);
 
@@ -145,6 +159,17 @@ TEST(my2DAlloc2, tests) {
   my2DFree2(matrix);
 }
 
+void BM_my2DAlloc2(benchmark::State& state) {
+  const size_t size = static_cast<size_t>(state.range_x());
+
+  while (state.KeepRunning()) {
+    int** matrix = my2DAlloc2(size, size);
+    benchmark::DoNotOptimize(matrix[0][0]);
+    my2DFree2(matrix);
+  }
+}
+BENCHMARK(BM_my2DAlloc2)->Range(size_min, size_max);
+
 TEST(my2DAlloc3, tests) {
   int** matrix = my2DAlloc3(3, 4);
 
@@ -180,5 +205,16 @@ TEST(my2DAlloc3, tests) {
 
   my2DFree3(matrix);
 }
+
+void BM_my2DAlloc3(benchmark::State& state) {
+  const size_t size = static_cast<size_t>(state.range_x());
+
+  while (state.KeepRunning()) {
+    int** matrix = my2DAlloc3(size, size);
+    benchmark::DoNotOptimize(matrix[0][0]);
+    my2DFree3(matrix);
+  }
+}
+BENCHMARK(BM_my2DAlloc3)->Range(size_min, size_max);
 
 CTCI_MAIN();
