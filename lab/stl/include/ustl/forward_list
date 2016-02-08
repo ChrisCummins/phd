@@ -100,7 +100,9 @@ class __iterator
 
   // postfix increment
   __iterator operator++(int) {
-    return ++*this;
+    auto prev = _node;
+    _node = _node->next();
+    return __iterator(prev);
   };
 
   // dereference
