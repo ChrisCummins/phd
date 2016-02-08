@@ -68,8 +68,6 @@ TEST(ustl_forward_list, constructors) {
 
   // copy:
   ustl::forward_list<int> copy1(range1);
-  std::cout << "range1: " << range1 << '\n';
-  std::cout << "copy1:  " << copy1  << '\n';
   ASSERT_TRUE(copy1 == range1a);
 
   // initializer list:
@@ -92,8 +90,6 @@ TEST(ustl_forward_list, assignment) {
   ustl::forward_list<int> dst{5, 6, 7};
 
   dst = src;
-  std::cout << "src: " << src << '\n';
-  std::cout << "dst: " << dst << '\n';
   ASSERT_TRUE(src == dst);
 }
 
@@ -382,10 +378,7 @@ TEST(ustl_forward_list, clear) {
   l1.clear();
   ASSERT_TRUE(l1.begin() == l1.end());
 
-  std::cout << "L1 (empty): " << l1 << '\n';
   l1.insert_after(l1.before_begin(), l2.begin(), l2.end());
-
-  std::cout << "L1: " << l1 << '\n';
   ASSERT_TRUE(l1 == l2);
 }
 
