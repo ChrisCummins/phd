@@ -300,6 +300,10 @@ TEST(std_forward_list, insert_after) {
   ASSERT_EQ(*r3, -1);
   ASSERT_EQ(*++r3, 1);
   ASSERT_TRUE(l1 == l3);
+
+  std::forward_list<int> l4;
+  l4.insert_after(l4.before_begin(), l1.begin(), l1.end());
+  ASSERT_TRUE(l4 == l1);
 }
 
 TEST(ustl_forward_list, insert_after) {
@@ -324,6 +328,10 @@ TEST(ustl_forward_list, insert_after) {
   ASSERT_EQ(*r3, -1);
   ASSERT_EQ(*++r3, 1);
   ASSERT_TRUE(l1 == l3);
+
+  ustl::forward_list<int> l4;
+  l4.insert_after(l4.before_begin(), l1.begin(), l1.end());
+  ASSERT_TRUE(l4 == l1);
 }
 
 
