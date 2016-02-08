@@ -342,7 +342,7 @@ TEST(std_forward_list, swap) {
   ASSERT_TRUE(l1 == l2a);
   ASSERT_TRUE(l2 == l1a);
 
-  l2.swap(l1);
+  std::swap(l2, l1);
   ASSERT_TRUE(l1 == l1a);
   ASSERT_TRUE(l2 == l2a);
 }

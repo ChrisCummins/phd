@@ -1305,6 +1305,32 @@ bool operator>=(const forward_list<T,Alloc>& lhs,
   return !(lhs < rhs);
 }
 
+
+
+//
+// swap():
+//
+// The contents of container x are exchanged with those of y. Both
+// container objects must be of the same type (same template
+// parameters), although sizes may differ.
+//
+// After the call to this member function, the elements in x are those
+// which were in y before the call, and the elements of y are those
+// which were in x. All iterators, references and pointers remain
+// valid for the swapped objects.
+//
+// This is an overload of the generic algorithm swap that improves its
+// performance by mutually transferring ownership over their assets to
+// the other container (i.e., the containers exchange references to
+// their data, without actually performing any element copy or
+// movement): It behaves as if x.swap(y) was called.
+//
+template<typename T, typename Alloc>
+void swap(forward_list<T, Alloc>& x, forward_list<T, Alloc>& y) {
+  x.swap(y);
+}
+
+
 }  // namespace ustl
 
 #endif  // __USTL_FORWARD_LIST__
