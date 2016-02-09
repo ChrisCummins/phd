@@ -5,64 +5,56 @@
 #include "./ctci.h"
 
 #include <array>
-#include <iostream>
 
 using Board = std::array<std::array<char, 3>, 3>;
 
-void zeroBoard(Board &b) {
+inline void zero_board(Board &b) {
   for (auto &row : b)
     for (auto &cell : row)
       cell = '-';
 }
 
-void printBoard(Board &b) {
-  std::cout << "Board:\n";
-  for (auto &row : b) {
-    for (auto &cell : row)
-      std::cout << cell << " ";
-    std::cout << std::endl;
-  }
-}
-
-bool playerWon1(Board &b, char c) {
-  /*
-   * There are 8 possible winning combinations. Test for each.
-   */
-
+//
+// There are eight possible solutions. Test for each.
+//
+bool player_won(const Board &b, const char player) {
   // Columns:
-  if (b[0][0] == c && b[1][0] == c && b[2][0] == c)
+  if (b[0][0] == player && b[1][0] == player && b[2][0] == player)
     return true;
-  else if (b[0][1] == c && b[1][1] == c && b[2][1] == c)
+  else if (b[0][1] == player && b[1][1] == player && b[2][1] == player)
     return true;
-  else if (b[0][2] == c && b[1][2] == c && b[2][2] == c)
+  else if (b[0][2] == player && b[1][2] == player && b[2][2] == player)
     return true;
 
   // Rows:
-  else if (b[0][0] == c && b[0][1] == c && b[0][2] == c)
+  else if (b[0][0] == player && b[0][1] == player && b[0][2] == player)
     return true;
-  else if (b[1][0] == c && b[1][1] == c && b[1][2] == c)
+  else if (b[1][0] == player && b[1][1] == player && b[1][2] == player)
     return true;
-  else if (b[2][0] == c && b[2][1] == c && b[2][2] == c)
+  else if (b[2][0] == player && b[2][1] == player && b[2][2] == player)
     return true;
 
   // Diagonals:
-  else if (b[0][0] == c && b[1][1] == c && b[2][2] == c)
+  else if (b[0][0] == player && b[1][1] == player && b[2][2] == player)
     return true;
-  else if (b[2][0] == c && b[1][1] == c && b[0][2] == c)
+  else if (b[2][0] == player && b[1][1] == player && b[0][2] == player)
     return true;
 
   else
     return false;
 }
 
-// Unit tests
 
-TEST(TicTacToe, playerWon1) {
+///////////
+// Tests //
+///////////
+
+TEST(TicTacToe, player_won) {
   Board b;
-  zeroBoard(b);
+  zero_board(b);
 
-  ASSERT_EQ(false, playerWon1(b, 'x'));
-  ASSERT_EQ(false, playerWon1(b, 'y'));
+  ASSERT_EQ(false, player_won(b, 'x'));
+  ASSERT_EQ(false, player_won(b, 'y'));
 
   b[0][0] = 'x';
   b[1][0] = 'x';
@@ -71,13 +63,16 @@ TEST(TicTacToe, playerWon1) {
   b[1][2] = 'y';
   b[2][2] = 'y';
 
-  ASSERT_EQ(true,  playerWon1(b, 'x'));
-  ASSERT_EQ(false, playerWon1(b, 'y'));
+  ASSERT_EQ(true,  player_won(b, 'x'));
+  ASSERT_EQ(false, player_won(b, 'y'));
 }
 
-// Benchmarks
 
-void BM_baseline(benchmark::State& state) {
+////////////////
+// Benchmarks //
+////////////////
+
+void BM_player_won(benchmark::State& state) {
   Board b;
 
   while (state.KeepRunning()) {
@@ -85,25 +80,12 @@ void BM_baseline(benchmark::State& state) {
       for (size_t y = 0; y < 3; y++)
         b[x][y] = static_cast<char>(arc4random() % 3);
 
+    player_won(b, 0);
+    player_won(b, 1);
+    player_won(b, 2);
     benchmark::DoNotOptimize(b);
   }
 }
-BENCHMARK(BM_baseline);
-
-void BM_playerWon1(benchmark::State& state) {
-  Board b;
-
-  while (state.KeepRunning()) {
-    for (size_t x = 0; x < 3; x++)
-      for (size_t y = 0; y < 3; y++)
-        b[x][y] = static_cast<char>(arc4random() % 3);
-
-    playerWon1(b, 0);
-    playerWon1(b, 1);
-    playerWon1(b, 2);
-    benchmark::DoNotOptimize(b);
-  }
-}
-BENCHMARK(BM_playerWon1);
+BENCHMARK(BM_player_won);
 
 CTCI_MAIN();
