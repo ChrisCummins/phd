@@ -353,6 +353,18 @@ CTargets += \
 
 
 #
+# learn/triSYCL/
+#
+CxxTargets += \
+	$(learn)/triSYCL/001-dot-product \
+	$(learn)/triSYCL/002-saxpy \
+	$(learn)/triSYCL/003-parallel-matrix \
+	$(NULL)
+
+$(learn)/triSYCL_CxxFlags = $(TriSYCL_CxxFlags) $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
+$(learn)/triSYCL_LdFlags = $(TriSYCL_CxxFlags) $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
+
+#
 # playground/
 #
 
