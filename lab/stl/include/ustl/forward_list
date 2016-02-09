@@ -1117,8 +1117,7 @@ class forward_list {
   /////////////////////
 
   template<typename PointerT>
-  class __iterator
-      : std::iterator<std::forward_iterator_tag, value_type> {
+  class __iterator : std::iterator<std::forward_iterator_tag, value_type> {
    public:
     using pointer_type = PointerT;
 
