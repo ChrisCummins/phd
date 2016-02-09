@@ -4,30 +4,28 @@
  */
 #include "./ctci.h"
 
-#include <string>
-#include <iostream>
 #include <set>
 
 class Node {
  public:
   Node() {}
-  explicit Node(Node *const parent) : _parent(parent), _children() {}
+  explicit Node(Node*const parent) : _parent(parent), _children() {}
 
   auto parent() { return _parent; }
-  auto &children() { return _children; }
-  auto ischild(Node *const n) { return children().find(n) != children().end(); }
+  auto& children() { return _children; }
+  auto ischild(Node*const n) { return children().find(n) != children().end(); }
 
  private:
-  Node *_parent;
-  std::set<Node *> _children;
+  Node* _parent;
+  std::set<Node*> _children;
 };
 
-bool routeBetweenNodes1(Node *const a, Node *const b,
+//
+// Recursive solution.
+//
+bool routeBetweenNodes(Node *const a, Node *const b,
                         const int maxdepth = 1000,
                         int depth = 0) {
-  /*
-   * Recursive solution.
-   */
   if (a == b)
     return true;
 
@@ -37,16 +35,18 @@ bool routeBetweenNodes1(Node *const a, Node *const b,
 
   // Recurse.
   for (auto n : a->children())
-    if (routeBetweenNodes1(n, b, maxdepth, depth))
+    if (routeBetweenNodes(n, b, maxdepth, depth))
       return true;
 
   return false;
 }
 
 
-// Unit tests
+///////////
+// Tests //
+///////////
 
-TEST(DirectedGraph, routeBetweenNodes1) {
+TEST(DirectedGraph, routeBetweenNodes) {
   // Directed graph test.
   Node nodes[] = {
     Node(nullptr),
@@ -82,13 +82,13 @@ TEST(DirectedGraph, routeBetweenNodes1) {
   nodes[7].children().insert(&nodes[0]);
 
   // Tests.
-  ASSERT_EQ(true,  routeBetweenNodes1(&nodes[0], &nodes[0]));
-  ASSERT_EQ(true,  routeBetweenNodes1(&nodes[0], &nodes[1]));
-  ASSERT_EQ(true,  routeBetweenNodes1(&nodes[0], &nodes[6]));
-  ASSERT_EQ(false, routeBetweenNodes1(&nodes[0], &nodes[7]));
-  ASSERT_EQ(true,  routeBetweenNodes1(&nodes[4], &nodes[5]));
-  ASSERT_EQ(true,  routeBetweenNodes1(&nodes[5], &nodes[4]));
-  ASSERT_EQ(false, routeBetweenNodes1(&nodes[6], &nodes[0]));
+  ASSERT_EQ(true,  routeBetweenNodes(&nodes[0], &nodes[0]));
+  ASSERT_EQ(true,  routeBetweenNodes(&nodes[0], &nodes[1]));
+  ASSERT_EQ(true,  routeBetweenNodes(&nodes[0], &nodes[6]));
+  ASSERT_EQ(false, routeBetweenNodes(&nodes[0], &nodes[7]));
+  ASSERT_EQ(true,  routeBetweenNodes(&nodes[4], &nodes[5]));
+  ASSERT_EQ(true,  routeBetweenNodes(&nodes[5], &nodes[4]));
+  ASSERT_EQ(false, routeBetweenNodes(&nodes[6], &nodes[0]));
 }
 
 CTCI_MAIN();
