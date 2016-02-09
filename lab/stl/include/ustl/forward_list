@@ -62,13 +62,16 @@ namespace ustl {
 //
 template<typename T, typename Alloc = std::allocator<T> >
 class forward_list {
- public:
+ private:
+  // Forward declarations of nested class:
+  class __node;
 
-  // Forward declarations of nested classes:
+  using node_type = __node;
+
+ public:
+  // Forward declarations of nested class:
   template<typename PointerT>
   class __iterator;
-
-  class __node;
 
   ///////////////////
   // Member types: //
@@ -95,8 +98,6 @@ class forward_list {
   // typename std::iterator_traits<iterator>::difference_type;
 
   using size_type = size_t;
-
-  using node_type = __node;
 
 
   ///////////////////
@@ -1115,37 +1116,6 @@ class forward_list {
   // Nested Classes: //
   /////////////////////
 
-  class __node {
-   public:
-    __node(__node* next = nullptr)
-        : _data(), _next(next) {}
-
-    explicit __node(const value_type& data,
-                    __node* next = nullptr)
-        : _data(data), _next(next) {}
-
-    explicit __node(const value_type&& data,
-                    __node* next = nullptr)
-        : _data(std::move(data)), _next(next) {}
-
-    reference data() {
-      return _data;
-    }
-
-    node_type* next() {
-      return _next;
-    }
-
-    node_type* next(node_type* newnext) {
-      return _next = newnext;
-    }
-
-   private:
-    value_type _data;
-    node_type* _next;
-  };  // class __node
-
-
   template<typename PointerT>
   class __iterator
       : std::iterator<std::forward_iterator_tag, value_type> {
@@ -1229,6 +1199,36 @@ class forward_list {
   //////////////
   // Private: //
   //////////////
+
+  class __node {
+   public:
+    __node(__node* next = nullptr)
+        : _data(), _next(next) {}
+
+    explicit __node(const value_type& data,
+                    __node* next = nullptr)
+        : _data(data), _next(next) {}
+
+    explicit __node(const value_type&& data,
+                    __node* next = nullptr)
+        : _data(std::move(data)), _next(next) {}
+
+    reference data() {
+      return _data;
+    }
+
+    node_type* next() {
+      return _next;
+    }
+
+    node_type* next(node_type* newnext) {
+      return _next = newnext;
+    }
+
+   private:
+    value_type _data;
+    node_type* _next;
+  };  // class __node
 
   allocator_type _alloc;
   node_type* _tail;
