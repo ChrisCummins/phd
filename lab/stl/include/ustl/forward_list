@@ -1202,10 +1202,6 @@ class forward_list {
       return _node->data();
     }
 
-    node_type* node() { return _node; }
-
-    const node_type* node() const { return _node; }
-
     // relational ops:
     friend bool operator==(const __iterator& lhs,
                            const __iterator& rhs) {
@@ -1217,7 +1213,14 @@ class forward_list {
       return !(lhs == rhs);
     }
 
+    // Let outer class access private members:
+    friend class forward_list;
+
    private:
+    node_type* node() { return _node; }
+
+    const node_type* node() const { return _node; }
+
     node_type* _node;
   };  // class __iterator
 
