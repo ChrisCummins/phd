@@ -25,19 +25,23 @@ freq_map get_freqcounts(std::string s) {
   return freq;
 }
 
+//
+// First solution. Map strings to frequency counts, then sort these
+// mapped values so that equal frequency counts are contiguous.
+//
+// O(n log (n)) time, O(n) space.
+//
 void sort_anagrams(std::vector<std::string>& arr) {
-  std::vector<std::pair<std::string, freq_map>> vals;
+  using pair_type = std::pair<std::string, freq_map>;
+  std::vector<pair_type> vals;
 
   for (auto str : arr)
-    vals.push_back(std::pair<std::string, freq_map>(
-      str, get_freqcounts(str)));
+    vals.push_back(pair_type(str, get_freqcounts(str)));
 
-  auto pred = [](const std::pair<std::string, freq_map>& a,
-                 const std::pair<std::string, freq_map>& b) -> bool{
-    return a.second != b.second;
-  };
-
-  std::sort(vals.begin(), vals.end(), pred);
+  std::sort(vals.begin(), vals.end(),
+            [](const pair_type& a, const pair_type& b) {
+      return a.second != b.second;
+    });
 
   for (size_t i = 0; i < vals.size(); i++)
     arr[i] = vals[i].first;
@@ -47,6 +51,11 @@ void sort_anagrams(std::vector<std::string>& arr) {
 bool is_anagram(std::string left, std::string right) {
   return get_freqcounts(left) == get_freqcounts(right);
 }
+
+
+///////////
+// Tests //
+///////////
 
 TEST(anagrams, is_anagram) {
   ASSERT_TRUE(is_anagram("abc", "cab"));
@@ -60,7 +69,9 @@ TEST(anagrams, basic) {
   sort_anagrams(a);
 
   ASSERT_TRUE(is_anagram(a[0], a[1]));
+  ASSERT_FALSE(is_anagram(a[1], a[2]));
   ASSERT_TRUE(is_anagram(a[2], a[3]));
+  ASSERT_FALSE(is_anagram(a[3], a[4]));
   ASSERT_TRUE(is_anagram(a[4], a[5]));
 }
 
