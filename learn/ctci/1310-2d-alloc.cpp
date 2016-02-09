@@ -8,8 +8,16 @@
 #include <cstdlib>
 
 //
+// IMPLEMENTATION NOTE: The challenge requires a C implementation, so
+// my solutions use C-style casts, rather than reinterpretive_casts.
+//
+
+//
 // First implementation. Allocate an array of pointers, and then
 // allocate each row. Requires n+1 calls to malloc.
+//
+// O(n) time, O(1) space (in the sense that the memory overhead is
+// determined solely by nrows and rowsize).
 //
 void** my2DAlloc1(size_t nrows, size_t rowsize) {
   void** rows = (void**)malloc(nrows * sizeof(void*));
@@ -33,6 +41,9 @@ void my2DFree1(void** matrix, size_t nrows) {
 // block. Requires 2 calls to malloc. Note that this is specialized to
 // int type.
 //
+// O(n) time, O(1) space (in the sense that the memory overhead is
+// determined solely by nrows and rowsize).
+//
 int** my2DAlloc2(size_t nrows, size_t ncols) {
   int** rows = (int**)malloc(nrows * sizeof(int*));
   int* data = (int*)malloc(nrows * ncols * sizeof(int));
@@ -54,13 +65,15 @@ void my2DFree2(int** matrix) {
 // Third implementation. Allocate as a single contiguous block of
 // memory.
 //
+// O(n) time, O(1) space (in the sense that the memory overhead is
+// determined solely by nrows and rowsize).
+//
 int** my2DAlloc3(size_t nrows, size_t ncols) {
   const size_t header_s = nrows * sizeof(int*);
   const size_t payload_s = nrows * ncols * sizeof(int);
   const size_t row_s = ncols * sizeof(int);
 
   int** data = (int**)malloc(header_s + payload_s);
-
 
   while (nrows--)
     data[nrows] = (int*)&((char*)data)[header_s + nrows * row_s];
@@ -72,6 +85,10 @@ void my2DFree3(int **matrix) {
   free(matrix);
 }
 
+
+///////////
+// Tests //
+///////////
 
 TEST(my2DAlloc1, tests) {
   int** matrix = (int**)my2DAlloc1(3, 4 * sizeof(int));
@@ -109,20 +126,6 @@ TEST(my2DAlloc1, tests) {
   my2DFree1((void**)matrix, 4 * sizeof(int));
 }
 
-static const size_t size_min = 8;
-static const size_t size_max = 10 << 10;
-
-void BM_my2DAlloc1(benchmark::State& state) {
-  const size_t size = static_cast<size_t>(state.range_x());
-
-  while (state.KeepRunning()) {
-    int** matrix = (int**)my2DAlloc1(size, size * sizeof(int));
-    benchmark::DoNotOptimize(matrix[0][0]);
-    my2DFree1((void**)matrix, size);
-  }
-}
-BENCHMARK(BM_my2DAlloc1)->Range(size_min, size_max);
-
 TEST(my2DAlloc2, tests) {
   int** matrix = my2DAlloc2(3, 4);
 
@@ -158,17 +161,6 @@ TEST(my2DAlloc2, tests) {
 
   my2DFree2(matrix);
 }
-
-void BM_my2DAlloc2(benchmark::State& state) {
-  const size_t size = static_cast<size_t>(state.range_x());
-
-  while (state.KeepRunning()) {
-    int** matrix = my2DAlloc2(size, size);
-    benchmark::DoNotOptimize(matrix[0][0]);
-    my2DFree2(matrix);
-  }
-}
-BENCHMARK(BM_my2DAlloc2)->Range(size_min, size_max);
 
 TEST(my2DAlloc3, tests) {
   int** matrix = my2DAlloc3(3, 4);
@@ -206,6 +198,36 @@ TEST(my2DAlloc3, tests) {
   my2DFree3(matrix);
 }
 
+
+////////////////
+// Benchmarks //
+////////////////
+
+static const size_t BM_size_min = 8;
+static const size_t BM_size_max = 10 << 10;
+
+void BM_my2DAlloc1(benchmark::State& state) {
+  const size_t size = static_cast<size_t>(state.range_x());
+
+  while (state.KeepRunning()) {
+    int** matrix = (int**)my2DAlloc1(size, size * sizeof(int));
+    benchmark::DoNotOptimize(matrix[0][0]);
+    my2DFree1((void**)matrix, size);
+  }
+}
+BENCHMARK(BM_my2DAlloc1)->Range(BM_size_min, BM_size_max);
+
+void BM_my2DAlloc2(benchmark::State& state) {
+  const size_t size = static_cast<size_t>(state.range_x());
+
+  while (state.KeepRunning()) {
+    int** matrix = my2DAlloc2(size, size);
+    benchmark::DoNotOptimize(matrix[0][0]);
+    my2DFree2(matrix);
+  }
+}
+BENCHMARK(BM_my2DAlloc2)->Range(BM_size_min, BM_size_max);
+
 void BM_my2DAlloc3(benchmark::State& state) {
   const size_t size = static_cast<size_t>(state.range_x());
 
@@ -215,6 +237,6 @@ void BM_my2DAlloc3(benchmark::State& state) {
     my2DFree3(matrix);
   }
 }
-BENCHMARK(BM_my2DAlloc3)->Range(size_min, size_max);
+BENCHMARK(BM_my2DAlloc3)->Range(BM_size_min, BM_size_max);
 
 CTCI_MAIN();
