@@ -13,3 +13,6 @@
 [submodule "extern/benchmark"]
 	path = extern/benchmark
 	url = https://github.com/google/benchmark.git
+[submodule "extern/triSYCL"]
+	path = extern/triSYCL
+	url = https://github.com/amd/triSYCL.git

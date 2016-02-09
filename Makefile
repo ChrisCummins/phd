@@ -218,6 +218,12 @@ DistcleanTargets += distclean-googletest
 
 
 #
+# extern/triSYCL
+#
+TriSYCL_CxxFlags = -I$(extern)/triSYCL/include
+TriSYCL_LdFlags =
+
+#
 # lab/
 #
 lab := $(root)/lab
