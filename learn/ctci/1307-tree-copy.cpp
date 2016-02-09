@@ -19,18 +19,27 @@ class Node {
   ~Node() {}
 };
 
-Node *copyNodes1(Node *node) {
+
+//
+// First solution. Allocate new node and recursively assign children.
+//
+// O(n) time, O(n) space.
+//
+Node *deep_copy(Node *node) {
   auto* newNode = new Node(node->data);
 
   if (node->left)
-    newNode->left = copyNodes1(node->left);
+    newNode->left = deep_copy(node->left);
   if (node->right)
-    newNode->right = copyNodes1(node->right);
+    newNode->right = deep_copy(node->right);
 
   return newNode;
 }
 
-// Unit tests
+
+///////////
+// Tests //
+///////////
 
 TEST(TreeCopy, tests) {
   std::array<Node*, 6> nodes = {
@@ -49,7 +58,7 @@ TEST(TreeCopy, tests) {
   nodes[3]->left = nodes[4];
   nodes[2]->left = nodes[5];
 
-  auto* _newnodes = copyNodes1(nodes[0]);
+  auto* _newnodes = deep_copy(nodes[0]);
 
   std::array<Node*, 6> newnodes = {
     _newnodes,
