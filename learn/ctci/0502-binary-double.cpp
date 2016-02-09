@@ -17,10 +17,11 @@
  */
 template<typename T>
 std::ostream& print_bits(std::ostream &out, const T &d,
-                         std::set<size_t> spaces = std::set<size_t>()) {
+                         std::initializer_list<size_t> il = {}) {
   const std::size_t size = sizeof(T);
   const char *const data = reinterpret_cast<const char *>(&d);
   const size_t nbits = size * 8;
+  std::set<size_t> spaces{il.begin(), il.end()};
 
   for (int j = size - 1; j >= 0; j--) {
     for (int i = 7; i >= 0; i--) {
@@ -36,18 +37,25 @@ std::ostream& print_bits(std::ostream &out, const T &d,
   return out;
 }
 
-
+//
 // Template specialisation to add separator spaces between sign bit,
 // exponent, and fraction.
+//
 std::ostream& print_bits(std::ostream &out, const double &d) {
-  return print_bits(out, d, std::set<size_t>({1, 11}));
+  return print_bits(out, d, {1, 11});
 }
 
+//
 // Template specialisation to add separator spaces between bytes.
+//
 std::ostream& print_bits(std::ostream &out, const int &d) {
-  return print_bits(out, d, std::set<size_t>({8, 16, 24}));
+  return print_bits(out, d, {8, 16, 24});
 }
 
+
+///////////
+// Tests //
+///////////
 
 TEST(challenge, tests) {
   std::ostringstream stream;
