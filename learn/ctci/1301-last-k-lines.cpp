@@ -8,19 +8,17 @@
 #include <string>
 
 
-/*
- * Read backwards from end of file.
- */
+//
+// Optimised solution. Read characters backwards from end of file,
+// stopping after k newlines.
+//
 void printLastKLines1(std::ifstream &file, size_t k,
                       std::ostream &out = std::cout) {
-  // Sanity checks.
-  if (!file.is_open() || !k)
-    return;
+  if (!file.is_open() || !k) return;  // Sanity checks.
 
-  // Keep track of lines left to read.
+  // Num. of lines read, and num. of lines left to read:
   int linesremaining = k;
-  // Keep track of lines read (where # of lines in file < k).
-  int readlines = 0;
+  int linesread = 0;
 
   // Skip to last character of file:
   file.seekg(-1, std::ios_base::end);
@@ -34,12 +32,12 @@ void printLastKLines1(std::ifstream &file, size_t k,
       // If we have reached the end of the file, quit.
       file.seekg(0);
       linesremaining = 0;
-      readlines++;
+      linesread++;
     } else {
-      // If we have reached a new line, take note.
+      // If we have reached a new line, record it.
       if (ch == '\n') {
         linesremaining--;
-        readlines++;
+        linesread++;
       }
 
       // Move back one character if there's still stuff to read.
@@ -50,27 +48,28 @@ void printLastKLines1(std::ifstream &file, size_t k,
 
   // Print last k lines.
   std::string line;
-  for (auto j = 0; j < readlines; j++) {
+  for (auto j = 0; j < linesread; j++) {
     getline(file, line);
     out << line << std::endl;
   }
 }
 
 
-// Unit tests
+///////////
+// Tests //
+///////////
 
 TEST(LastKLines, tests) {
   std::string filename("1301-last-k-lines-test.txt");
   std::ifstream in;
-
   size_t num_lines = 0;
 
   for (num_lines = 0; num_lines <= 10; num_lines++) {
-  std::cout << "Last " << num_lines << " lines:\n";
-  in.open(filename);
-  printLastKLines1(in, num_lines);
-  in.close();
-  std::cout << '\n';
+    std::cout << "Last " << num_lines << " lines:\n";
+    in.open(filename);
+    printLastKLines1(in, num_lines);
+    in.close();
+    std::cout << '\n';
   }
 }
 
