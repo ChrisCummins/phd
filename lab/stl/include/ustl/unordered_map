@@ -3,12 +3,15 @@
 #ifndef __USTL_UNORDERED_MAP__
 #define __USTL_UNORDERED_MAP__
 
-#include <forward_list>
 #include <iterator>
 #include <memory>
 #include <utility>
 
+#include <vector>
 #include <ustl/vector>
+
+#include <forward_list>
+#include <ustl/forward_list>
 
 namespace ustl {
 
@@ -51,8 +54,10 @@ template<typename Key,
          typename Pred = std::equal_to<Key>,
          typename Alloc = std::allocator<std::pair<const Key,T> >
          > class unordered_map {
-
  public:
+  // Forward declaration of nested class:
+  template<typename PointerT>
+  class __iterator;
 
   ///////////////////
   // Member Types: //
@@ -80,10 +85,10 @@ template<typename Key,
       = typename std::allocator_traits<allocator_type>::const_pointer;
 
   // TODO:
-  using iterator = value_type*;
+  using iterator = __iterator<value_type>;
 
   // TODO:
-  using const_iterator = const iterator;
+  using const_iterator = __iterator<const value_type>;
 
   // TODO:
   using local_iterator = mapped_type*;
@@ -93,12 +98,13 @@ template<typename Key,
 
   using size_type = size_t;
 
-  using difference_type =
-      typename std::iterator_traits<iterator>::difference_type;
+  using difference_type = size_type;
+  // TODO: = typename std::iterator_traits<iterator>::difference_type;
 
-  // TODO: Replace with ustl::forward_list, when implemented.
-  using _bucket_type = std::forward_list<value_type>;
+ private:
+  using _bucket_type = ustl::forward_list<value_type>;
 
+ public:
 
   ///////////////////
   // Constructors: //
@@ -211,7 +217,7 @@ template<typename Key,
                 const allocator_type& alloc = allocator_type())
       : unordered_map(n, hf, eql, alloc) {
     for (auto& v : il)
-      this->operator[](v.first, v.second);
+      this->operator[](v.first) = v.second;
   }
 
   unordered_map(std::initializer_list<value_type> il,
@@ -304,7 +310,7 @@ template<typename Key,
   // unordered_map::clear exists.
   //
   bool empty() const noexcept {
-    // TODO: implement
+    return !size();
   }
 
 
@@ -314,7 +320,7 @@ template<typename Key,
   // Returns the number of elements in the unordered_map container.
   //
   size_type size() const noexcept {
-    // TODO: implement
+    return _size;
   }
 
 
@@ -329,7 +335,7 @@ template<typename Key,
   // implementation.
   //
   size_type max_size() const noexcept {
-    // TODO: implement
+    return _buckets.max_size();
   }
 
 
@@ -477,11 +483,38 @@ template<typename Key,
   // exception when it does not.
   //
   mapped_type& operator[](const key_type& k) {
-    // TODO: implement
+    const auto key = _hasher(k) % _buckets.size();
+    auto& bucket = _buckets[key];
+
+    // Search in the bucket for the mapped value.
+    auto it = bucket.begin();
+    while (it != bucket.end()) {
+      if (_key_equal((*it).first, k))
+        return (*it).second;
+      it++;
+    }
+
+    // If not found, create a new mapped value.
+    bucket.emplace_front(k, mapped_type{});
+    _size++;
+    return bucket.front().second;
   }
 
   mapped_type& operator[](key_type&& k) {
-    // TODO: implement
+    // const auto key = _hasher(std::move(k)) % _buckets.size();
+    // auto& bucket = _buckets[key];
+
+    // // Search in the bucket for the mapped value.
+    // auto it = bucket.begin();
+    // while (it != bucket.end()) {
+    //   if (_key_equal(*it, k))
+    //     return *it;
+    //   it++;
+    // }
+
+    // // If not found, create a new mapped value.
+    // bucket.empace_front();
+    // return bucket.front();
   }
 
 
@@ -969,19 +1002,97 @@ template<typename Key,
     return _buckets.get_allocator();
   }
 
- private:
+  template<typename PointerT>
+  class __iterator : std::iterator<std::forward_iterator_tag, value_type> {
+   public:
+    using pointer_type = PointerT;
 
+    using deref_type = pointer_type&;
+
+    __iterator(
+        const std::vector<ustl::forward_list<value_type>>*const vec,
+        const ustl::forward_list<value_type>*const list,
+        const typename std::vector<ustl::forward_list<value_type>>::iterator&
+        vec_pos,
+        const typename ustl::forward_list<value_type>::iterator& list_pos
+               )
+        : _vec(vec), _list(list), _vec_pos(vec_pos), _list_pos(list_pos) {}
+
+    // construct from const iterator
+    // TODO:
+    template<typename U>
+    __iterator(const __iterator<U>& x,
+               typename std::enable_if<!std::is_const<U>()>::type* = nullptr) {}
+
+    // copy construct:
+    // TODO:
+    __iterator(const __iterator &x) {}
+
+    // move construct:
+    // TODO:
+    __iterator(__iterator &&x) {}
+
+    // copy assignment:
+    __iterator& operator=(
+        const __iterator &x) {
+      // TODO:
+    }
+
+    // move assignment:
+    __iterator& operator=(
+        __iterator &&x) {
+      // TODO:
+    }
+
+    // prefix increment
+    __iterator operator++() {
+      // TODO:
+    };
+
+    // postfix increment
+    __iterator operator++(int) {
+      // TODO:
+    };
+
+    // dereference
+    deref_type operator*() const {
+      // TODO:
+    }
+
+    // relational ops:
+    friend bool operator==(const __iterator& lhs,
+                           const __iterator& rhs) {
+      // TODO:
+    }
+
+    friend bool operator!=(const __iterator& lhs,
+                           const __iterator& rhs) {
+      return !(lhs == rhs);
+    }
+
+    // Let outer class access private members:
+    friend class unordered_map;
+
+   private:
+    std::vector<ustl::forward_list<value_type>>*const _vec;
+    ustl::forward_list<value_type>*const _list;
+
+    typename std::vector<ustl::forward_list<value_type>>::iterator _vec_pos;
+    typename ustl::forward_list<value_type>::iterator _list_pos;
+
+  };  // class __iterator
+
+ private:
   static const size_type __min_initial_buckets = 10;
 
   ///////////////////////////////
   // Private member variables: //
   ///////////////////////////////
 
-  ustl::vector<_bucket_type> _buckets;
+  std::vector<_bucket_type> _buckets;
   hasher _hasher;
   key_equal _key_equal;
   size_type _size;
-
 };  // unordered_map class
 
 #pragma GCC diagnostic pop  // -Wpadded
@@ -1011,12 +1122,14 @@ template<typename Key,
 // behavior in both lhs and rhs.
 //
 template<typename Key, typename T, typename Hash, typename Pred, typename Alloc>
-bool operator== ( const unordered_map<Key,T,Hash,Pred,Alloc>& lhs,
-                  const unordered_map<Key,T,Hash,Pred,Alloc>& rhs );
+bool operator==(const unordered_map<Key,T,Hash,Pred,Alloc>& lhs,
+                const unordered_map<Key,T,Hash,Pred,Alloc>& rhs );
 
 template<typename Key, typename T, typename Hash, typename Pred, typename Alloc>
-bool operator!= ( const unordered_map<Key,T,Hash,Pred,Alloc>& lhs,
-                  const unordered_map<Key,T,Hash,Pred,Alloc>& rhs );
+bool operator!=(const unordered_map<Key,T,Hash,Pred,Alloc>& lhs,
+                const unordered_map<Key,T,Hash,Pred,Alloc>& rhs) {
+  return !(lhs == rhs);
+}
 
 
 //
@@ -1038,9 +1151,9 @@ bool operator!= ( const unordered_map<Key,T,Hash,Pred,Alloc>& lhs,
 // elements.
 //
 template<typename Key, typename T, typename Hash, typename Pred, typename Alloc>
-void swap ( unordered_map<Key,T,Hash,Pred,Alloc>& lhs,
-            unordered_map<Key,T,Hash,Pred,Alloc>& rhs ) {
-  // TODO: implement
+void swap(unordered_map<Key, T, Hash, Pred, Alloc>& lhs,
+          unordered_map<Key, T, Hash, Pred, Alloc>& rhs) {
+  lhs.swap(rhs);
 }
 
 
