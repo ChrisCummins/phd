@@ -3,98 +3,81 @@
  */
 #include "./ctci.h"
 
-#include <algorithm>
-#include <limits>
-#include <cstdlib>
-#include <iostream>
-#include <vector>
+//
+// First solution. Iterate backwards over the string, inserting escape
+// characters as required.
+//
+// O(n^2) time, O(1) space.
+//
+void escape_space(char *s, size_t len) {
+  for (int i = len - 1; i >= 0; i--) {
+    if (s[i] == ' ') {
+      // Make room for escape characters:
+      for (int j = len - 1; j > i; j--)
+        s[j + 2] = s[j];
 
-void escapeSpace1(char *s, const size_t len) {
-    std::vector<size_t> idxs;
-
-    // Create a list of space indices:
-    for (size_t i = 0; i < len; i++)
-        if (s[i] == ' ')
-            idxs.push_back(i);
-    std::reverse(idxs.begin(), idxs.end());
-
-    for (size_t i = 0; i < idxs.size(); i++) {
-        auto idx = idxs[i];
-
-        for (size_t j = len - 1 + 2 * i; j > idx; j--)
-            s[j + 2] = s[j];
-
-        s[idx] = '%';
-        s[idx + 1] = '2';
-        s[idx + 2] = '0';
+      s[i] = '%';
+      s[i + 1] = '2';
+      s[i + 2] = '0';
+      len += 2;  // Increase length by escaped size
     }
+  }
 }
 
-// Unit tests
 
-TEST(Permutation, escapeSpace1) {
-    char a[] = "abcde";
-    escapeSpace1(a, 5);
-    ASSERT_STREQ("abcde", a);
+///////////
+// Tests //
+///////////
 
-    char b[] = "abc de  ";
-    escapeSpace1(b, 6);
-    ASSERT_STREQ("abc%20de", b);
+TEST(Escape, escape_space) {
+  char a[] = "abcde";
+  escape_space(a, 5);
+  ASSERT_STREQ("abcde", a);
 
-    char c[] = "a bc de    ";
-    escapeSpace1(c, 7);
-    ASSERT_STREQ("a%20bc%20de", c);
+  char b[] = "abc de  ";
+  escape_space(b, 6);
+  ASSERT_STREQ("abc%20de", b);
+
+  char c[] = "a bc de    ";
+  escape_space(c, 7);
+  ASSERT_STREQ("a%20bc%20de", c);
 }
 
-// Benchmarks
 
-static const size_t lengthMin = 8;
-static const size_t lengthMax = 10 << 10;
+////////////////
+// Benchmarks //
+////////////////
+
+static const size_t BM_length_min = 8;
+static const size_t BM_length_max = 10 << 10;
 
 void populateString(char *const t, const size_t strlen, size_t *len) {
-    for (size_t i = 0; i < strlen; i++) {
-        if (!arc4random() % 4)
-            t[i] = ' ';
-        else
-            t[i] = static_cast<char>(arc4random()
-                                     % std::numeric_limits<char>::max());
-    }
+  for (size_t i = 0; i < strlen; i++) {
+    if (!arc4random() % 4)
+      t[i] = ' ';
+    else
+      t[i] = static_cast<char>(arc4random());
+  }
 
-    *len = strlen;
-    for (size_t i = 0; i < strlen; i++)
-        if (t[i] == ' ')
-            *len -= 2;
+  *len = strlen;
+  for (size_t i = 0; i < strlen; i++)
+    if (t[i] == ' ')
+      *len -= 2;
 }
 
-void BM_baseline(benchmark::State& state) {
-    const auto strlen = static_cast<size_t>(state.range_x());
-    char *const t = new char[strlen];
-    size_t len = 0;
+void BM_escape_space(benchmark::State& state) {
+  const auto strlen = static_cast<size_t>(state.range_x());
+  char *const t = new char[strlen];
+  size_t len = 0;
 
+  while (state.KeepRunning()) {
+    populateString(t, strlen, &len);
+    escape_space(t, len);
+    benchmark::DoNotOptimize(*t);
+  }
 
-    while (state.KeepRunning()) {
-        populateString(t, strlen, &len);
-        benchmark::DoNotOptimize(*t);
-    }
-
-    delete[] t;
+  delete[] t;
 }
-BENCHMARK(BM_baseline)->Range(lengthMin, lengthMax);
-
-void BM_escapeSpace1(benchmark::State& state) {
-    const auto strlen = static_cast<size_t>(state.range_x());
-    char *const t = new char[strlen];
-    size_t len = 0;
-
-
-    while (state.KeepRunning()) {
-        populateString(t, strlen, &len);
-        escapeSpace1(t, len);
-        benchmark::DoNotOptimize(*t);
-    }
-
-    delete[] t;
-}
-BENCHMARK(BM_escapeSpace1)->Range(lengthMin, lengthMax);
+BENCHMARK(BM_escape_space)->Range(BM_length_min, BM_length_max);
 
 CTCI_MAIN();
