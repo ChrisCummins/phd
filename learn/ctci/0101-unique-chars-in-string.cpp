@@ -11,8 +11,8 @@
 
 //
 // First solution. Generic solution which works for all container
-// types. Use a set store whether an element has already appeared in
-// the container.
+// types. Use a set to store whether an element has already appeared
+// in the container.
 //
 // O(n) time, O(n) space.
 //
@@ -32,10 +32,10 @@ bool unique(const Container &cont) {
 
 //
 // Second solution. By specializing to strings, we can remove the
-// expensive heap allocated unordered_map and replace it with a
-// bitset, one bit for every possible character value. To check
-// whether a string is unique we then iterate over the characters and
-// index into this bitset.
+// expensive heap allocated set and replace it with a bitset, one bit
+// for every possible character value. To check whether a string is
+// unique we then iterate over the characters and index into this
+// bitset.
 //
 // O(n) time, O(n) space.
 //
