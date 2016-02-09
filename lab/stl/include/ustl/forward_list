@@ -11,124 +11,6 @@
 
 namespace ustl {
 
-namespace {  // anonymous
-
-//
-// List nodes.
-//
-template<typename T>
-class __node {
- public:
-  using value_type = T;
-
-  using reference = value_type&;
-
-  __node(__node* next = nullptr)
-      : _data(), _next(next) {}
-
-  explicit __node(const value_type& data,
-                  __node* next = nullptr)
-      : _data(data), _next(next) {}
-
-  explicit __node(const value_type&& data,
-                  __node* next = nullptr)
-      : _data(std::move(data)), _next(next) {}
-
-  reference data() {
-    return _data;
-  }
-
-  __node* next() {
-    return _next;
-  }
-
-  __node* next(__node* newnext) {
-    return _next = newnext;
-  }
-
- private:
-  value_type _data;
-  __node<value_type>* _next;
-};
-
-
-//
-// List iterator.
-//
-template<typename T, typename PointerT>
-class __iterator
-    : std::iterator<std::forward_iterator_tag, T> {
- public:
-  using value_type = T;
-
-  using pointer_type = PointerT;
-
-  using reference = pointer_type&;
-
-  using node_type = __node<value_type>;
-
-  explicit __iterator(node_type* node)
-      : _node(node) {}
-
-  // copy construct:
-  __iterator(const __iterator &x)
-      : _node(x._node) {}
-
-  // move construct:
-  __iterator(__iterator &&x)
-      : _node(std::move(x._node)) {}
-
-  // copy assignment:
-  __iterator& operator=(
-      const __iterator &x) {
-    _node = x._node;
-    return *this;
-  }
-
-  // move assignment:
-  __iterator& operator=(
-      __iterator &&x) {
-    _node = x._node;
-    return *this;
-  }
-
-  // prefix increment
-  __iterator operator++() {
-    _node = _node->next();
-    return *this;
-  };
-
-  // postfix increment
-  __iterator operator++(int) {
-    auto prev = _node;
-    _node = _node->next();
-    return __iterator(prev);
-  };
-
-  // dereference
-  reference operator*() const {
-    return _node->data();
-  }
-
-  node_type* node() { return _node; }
-
-  // relational ops:
-  friend bool operator==(const __iterator& lhs,
-                         const __iterator& rhs) {
-    return lhs._node == rhs._node;
-  }
-
-  friend bool operator!=(const __iterator& lhs,
-                         const __iterator& rhs) {
-    return !(lhs == rhs);
-  }
-
- private:
-  node_type* _node;
-};
-
-}  // anonymous namespace
-
 
 // forward list
 //
@@ -182,6 +64,12 @@ template<typename T, typename Alloc = std::allocator<T> >
 class forward_list {
  public:
 
+  // Forward declarations of nested classes:
+  template<typename PointerT>
+  class __iterator;
+
+  class __node;
+
   ///////////////////
   // Member types: //
   ///////////////////
@@ -198,11 +86,9 @@ class forward_list {
   using const_pointer =
       typename std::allocator_traits<allocator_type>::const_pointer;
 
-  using iterator = __iterator<value_type, value_type>;
+  using iterator = __iterator<value_type>;
 
-  // TODO: fix second argument.
-  using const_iterator =
-      __iterator<value_type, value_type>;
+  using const_iterator = __iterator<const value_type>;
 
   // TODO: set difference type.
   using difference_type = size_t;
@@ -210,7 +96,7 @@ class forward_list {
 
   using size_type = size_t;
 
-  using node_type = __node<value_type>;
+  using node_type = __node;
 
 
   ///////////////////
@@ -776,7 +662,7 @@ class forward_list {
     auto curr = position;
     while (n--)
       curr = insert_after(curr, val);
-    return curr;
+    return iterator(curr.node());
   }
 
 
@@ -786,7 +672,7 @@ class forward_list {
     auto curr = position;
     while (first != last)
       curr = insert_after(curr, *first++);
-    return curr;
+    return iterator(curr.node());
   };
 
 
@@ -798,7 +684,7 @@ class forward_list {
     while (first != il.end())
       curr = insert_after(curr, *first++);
 
-    return curr;
+    return iterator(curr.node());
   }
 
 
@@ -1225,7 +1111,122 @@ class forward_list {
   }
 
 
+  /////////////////////
+  // Nested Classes: //
+  /////////////////////
+
+  class __node {
+   public:
+    __node(__node* next = nullptr)
+        : _data(), _next(next) {}
+
+    explicit __node(const value_type& data,
+                    __node* next = nullptr)
+        : _data(data), _next(next) {}
+
+    explicit __node(const value_type&& data,
+                    __node* next = nullptr)
+        : _data(std::move(data)), _next(next) {}
+
+    reference data() {
+      return _data;
+    }
+
+    node_type* next() {
+      return _next;
+    }
+
+    node_type* next(node_type* newnext) {
+      return _next = newnext;
+    }
+
+   private:
+    value_type _data;
+    node_type* _next;
+  };  // class __node
+
+
+  template<typename PointerT>
+  class __iterator
+      : std::iterator<std::forward_iterator_tag, value_type> {
+   public:
+    using pointer_type = PointerT;
+
+    using deref_type = pointer_type&;
+
+    explicit __iterator(node_type* node) : _node(node) {}
+
+    // construct from const iterator
+    template<typename U>
+    __iterator(const __iterator<U>& x,
+               typename std::enable_if<!std::is_const<U>()>::type* = nullptr)
+        : _node(const_cast<node_type*>(x.node())) {}
+
+    // copy construct:
+    __iterator(const __iterator &x)
+        : _node(x._node) {}
+
+    // move construct:
+    __iterator(__iterator &&x)
+        : _node(std::move(x._node)) {}
+
+    // copy assignment:
+    __iterator& operator=(
+        const __iterator &x) {
+      _node = x._node;
+      return *this;
+    }
+
+    // move assignment:
+    __iterator& operator=(
+        __iterator &&x) {
+      _node = x._node;
+      return *this;
+    }
+
+    // prefix increment
+    __iterator operator++() {
+      _node = _node->next();
+      return *this;
+    };
+
+    // postfix increment
+    __iterator operator++(int) {
+      auto prev = _node;
+      _node = _node->next();
+      return __iterator(prev);
+    };
+
+    // dereference
+    deref_type operator*() const {
+      return _node->data();
+    }
+
+    node_type* node() { return _node; }
+
+    const node_type* node() const { return _node; }
+
+    // relational ops:
+    friend bool operator==(const __iterator& lhs,
+                           const __iterator& rhs) {
+      return lhs._node == rhs._node;
+    }
+
+    friend bool operator!=(const __iterator& lhs,
+                           const __iterator& rhs) {
+      return !(lhs == rhs);
+    }
+
+   private:
+    node_type* _node;
+  };  // class __iterator
+
  private:
+
+  //////////////
+  // Private: //
+  //////////////
+
   allocator_type _alloc;
   node_type* _tail;
   node_type* _head;
