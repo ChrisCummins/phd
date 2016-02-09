@@ -5,7 +5,6 @@
 
 #include <algorithm>
 
-// vector constructors:
 
 TEST(std_vector, constructors) {
   std::vector<int> a(3);
@@ -54,7 +53,9 @@ TEST(ustl_vector, constructors) {
 }
 
 
-// vector capacity tests
+//////////////
+// Capacity //
+//////////////
 
 TEST(std_vector_capacity, size) {
   std::vector<int> a;
@@ -79,6 +80,7 @@ TEST(ustl_vector_capacity, size) {
   ASSERT_EQ(6u, c.size());
   ASSERT_EQ(3u, d.size());
 }
+
 
 TEST(std_vector_capacity, max_size) {
   std::vector<int> a;
@@ -105,6 +107,7 @@ TEST(ustl_vector_capacity, max_size) {
 
   ASSERT_EQ(a.max_size(), b.max_size());
 }
+
 
 TEST(std_vector_capacity, resize) {
   std::vector<int> a{1, 2, 3, 4, 5};
@@ -158,6 +161,7 @@ TEST(ustl_vector_capacity, resize) {
   ASSERT_EQ(-1, a.back());
 }
 
+
 TEST(std_vector_capacity, capacity) {
   std::vector<int> a;
   std::vector<int> b(5);
@@ -182,6 +186,7 @@ TEST(ustl_vector_capacity, capacity) {
   ASSERT_TRUE(d.capacity() >= d.size());
 }
 
+
 TEST(std_vector_capacity, empty) {
   std::vector<int> a;
   std::vector<int> b(0);
@@ -201,6 +206,7 @@ TEST(ustl_vector_capacity, empty) {
   ASSERT_TRUE(b.empty());
   ASSERT_FALSE(c.empty());
 }
+
 
 TEST(std_vector_capacity, reserve) {
   std::vector<int> a(100);
@@ -223,6 +229,7 @@ TEST(ustl_vector_capacity, reserve) {
   a.reserve(10000);
   ASSERT_TRUE(a.capacity() > original_capacity);
 }
+
 
 TEST(std_vector_capacity, shrink_to_fit) {
   std::vector<int> a(1000);
@@ -267,7 +274,9 @@ TEST(ustl_vector_capacity, shrink_to_fit) {
 }
 
 
-// vector_iterators:
+///////////////
+// Iterators //
+///////////////
 
 TEST(std_vector_iterators, begin) {
   std::vector<int> a{1, 2, 3, 4, 5};
@@ -295,6 +304,7 @@ TEST(ustl_vector_iterators, begin) {
   ASSERT_EQ(1, *cit);
 }
 
+
 TEST(std_vector_iterators, rbegin) {
   std::vector<int> a{1, 2, 3, 4, 5};
 
@@ -314,6 +324,7 @@ TEST(ustl_vector_iterators, rbegin) {
   ASSERT_EQ(3, *it);
   ASSERT_EQ(2, it[1]);
 }
+
 
 TEST(std_vector_iterators, cbegin) {
   std::vector<int> a{1, 2, 3, 4, 5};
@@ -335,6 +346,7 @@ TEST(ustl_vector_iterators, cbegin) {
   ASSERT_EQ(4, it[1]);
 }
 
+
 TEST(std_vector_iterators, crbegin) {
   std::vector<int> a{1, 2, 3, 4, 5};
 
@@ -354,6 +366,7 @@ TEST(ustl_vector_iterators, crbegin) {
   ASSERT_EQ(3, *it);
   ASSERT_EQ(2, it[1]);
 }
+
 
 TEST(std_vector_iterators, end) {
   std::vector<int> a{1, 2, 3, 4, 5};
@@ -380,6 +393,7 @@ TEST(ustl_vector_iterators, end) {
   for (size_t i = 0; i < 5; i++)
     ASSERT_EQ(b[i], a[i]);
 }
+
 
 TEST(std_vector_iterators, rend) {
   std::vector<int> a{1, 2, 3, 4, 5};
@@ -409,6 +423,7 @@ TEST(ustl_vector_iterators, rend) {
     ASSERT_EQ(rev[i], b[i]);
 }
 
+
 TEST(std_vector_iterators, cend) {
   std::vector<int> a{1, 2, 3, 4, 5};
   std::vector<int> b;
@@ -434,6 +449,7 @@ TEST(ustl_vector_iterators, cend) {
   for (size_t i = 0; i < 5; i++)
     ASSERT_EQ(b[i], a[i]);
 }
+
 
 TEST(std_vector_iterators, crend) {
   std::vector<int> a{1, 2, 3, 4, 5};
@@ -464,7 +480,9 @@ TEST(ustl_vector_iterators, crend) {
 }
 
 
-// vector element access:
+////////////////////
+// Element access //
+////////////////////
 
 TEST(std_vector_access, front) {
   std::vector<int> a(3);
@@ -486,6 +504,7 @@ TEST(ustl_vector_access, front) {
   ASSERT_EQ('a', c.front());
 }
 
+
 TEST(std_vector_access, back) {
   std::vector<int> a(3);
   std::vector<double> b(3, 3.5f);
@@ -505,6 +524,7 @@ TEST(ustl_vector_access, back) {
   ASSERT_EQ(3.5, b.back());
   ASSERT_EQ('c', c.back());
 }
+
 
 TEST(std_vector_access, at) {
   std::vector<int> a(3);
@@ -571,7 +591,9 @@ TEST(ustl_vector_access, at) {
 }
 
 
-// vector modifiers:
+///////////////
+// Modifiers //
+///////////////
 
 TEST(std_vector_modifiers, assign) {
   std::vector<int> a;
@@ -611,6 +633,7 @@ TEST(ustl_vector_modifiers, assign) {
   ASSERT_EQ(a.size(), ustl::vector<int>::size_type(4));
 }
 
+
 TEST(std_vector_modifiers, push_back) {
   std::vector<int> a;
 
@@ -633,6 +656,7 @@ TEST(ustl_vector_modifiers, push_back) {
   ASSERT_EQ(a[1], 2);
 }
 
+
 TEST(std_vector_modifiers, pop_back) {
   std::vector<int> a{1, 2, 3};
 
@@ -650,6 +674,7 @@ TEST(ustl_vector_modifiers, pop_back) {
   ASSERT_EQ(a.size(), ustl::vector<int>::size_type(1));
   ASSERT_EQ(a[0], 1);
 }
+
 
 TEST(std_vector_modifiers, insert) {
   std::vector<int> a{1, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -713,6 +738,34 @@ TEST(ustl_vector_modifiers, insert) {
     ASSERT_EQ(a[i], e[i]);
 }
 
+
+TEST(std_vector_modifiers, erase) {
+  std::vector<int> v1{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const std::vector<int> v1a{1, 3, 4, 5, 6, 8, 9, 10};
+  v1.erase(v1.begin() + 6);
+  v1.erase(v1.begin() + 1);
+  ASSERT_TRUE(v1 == v1a);
+
+  std::vector<int> v2{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const std::vector<int> v2a{1, 10};
+  v2.erase(v2.begin() + 1, v2.end() - 1);
+  ASSERT_TRUE(v2 == v2a);
+}
+
+TEST(ustl_vector_modifiers, erase) {
+  ustl::vector<int> v1{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const ustl::vector<int> v1a{1, 3, 4, 5, 6, 8, 9, 10};
+  v1.erase(v1.begin() + 6);
+  v1.erase(v1.begin() + 1);
+  ASSERT_TRUE(v1 == v1a);
+
+  ustl::vector<int> v2{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  const ustl::vector<int> v2a{1, 10};
+  v2.erase(v2.begin() + 1, v2.end() - 1);
+  ASSERT_TRUE(v2 == v2a);
+}
+
+
 TEST(std_vector_modifiers, swap) {
   std::vector<int> a{1, 2, 3};
   std::vector<int> b{4, 5};
@@ -737,29 +790,55 @@ TEST(ustl_vector_modifiers, swap) {
   vector_equal(b, {1, 2, 3});
 }
 
-TEST(std_vector_modifiers, swap_overload) {
-  std::vector<int> a{1, 2, 3};
-  std::vector<int> b{4, 5};
 
-  std::swap(a, b);
-
-  ASSERT_EQ(std::vector<int>::size_type(2), a.size());
-  ASSERT_EQ(std::vector<int>::size_type(3), b.size());
-  vector_equal(a, {4, 5});
-  vector_equal(b, {1, 2, 3});
+TEST(std_vector_modifiers, clear) {
+  std::vector<int> v1{1, 2, 3};
+  v1.clear();
+  ASSERT_TRUE(v1.empty());
 }
 
-TEST(ustl_vector_modifiers, swap_overload) {
-  ustl::vector<int> a{1, 2, 3};
-  ustl::vector<int> b{4, 5};
-
-  ustl::swap(a, b);
-
-  ASSERT_EQ(ustl::vector<int>::size_type(2), a.size());
-  ASSERT_EQ(ustl::vector<int>::size_type(3), b.size());
-  vector_equal(a, {4, 5});
-  vector_equal(b, {1, 2, 3});
+TEST(ustl_vector_modifiers, clear) {
+  ustl::vector<int> v1{1, 2, 3};
+  v1.clear();
+  ASSERT_TRUE(v1.empty());
 }
+
+
+TEST(std_vector_modifiers, emplace) {
+  std::vector<int> v1{2, 3};
+  const std::vector<int> v1a{1, 2, 3};
+  v1.emplace(v1.begin(), 1);
+  ASSERT_TRUE(v1 == v1a);
+}
+
+TEST(ustl_vector_modifiers, emplace) {
+  ustl::vector<int> v1{2, 3};
+  const ustl::vector<int> v1a{1, 2, 3};
+  v1.emplace(v1.begin(), 1);
+  ASSERT_TRUE(v1 == v1a);
+}
+
+
+TEST(std_vector_modifiers, emplace_back) {
+  std::vector<int> v1{1, 2};
+  const std::vector<int> v1a{1, 2, 3, 4};
+  v1.emplace_back(3);
+  v1.emplace_back(4);
+  ASSERT_TRUE(v1 == v1a);
+}
+
+TEST(ustl_vector_modifiers, emplace_back) {
+  ustl::vector<int> v1{1, 2};
+  const ustl::vector<int> v1a{1, 2, 3, 4};
+  v1.emplace_back(3);
+  v1.emplace_back(4);
+  ASSERT_TRUE(v1 == v1a);
+}
+
+
+////////////////////////////////////
+// Non-member function overloads: //
+////////////////////////////////////
 
 // relational operators
 
@@ -811,4 +890,29 @@ TEST(ustl_vector, relational_ops) {
   ASSERT_FALSE(d >= b);
   ASSERT_TRUE(d >= a);
   ASSERT_TRUE(d > a);
+}
+
+
+TEST(std_vector_modifiers, swap_overload) {
+  std::vector<int> a{1, 2, 3};
+  std::vector<int> b{4, 5};
+
+  std::swap(a, b);
+
+  ASSERT_EQ(std::vector<int>::size_type(2), a.size());
+  ASSERT_EQ(std::vector<int>::size_type(3), b.size());
+  vector_equal(a, {4, 5});
+  vector_equal(b, {1, 2, 3});
+}
+
+TEST(ustl_vector_modifiers, swap_overload) {
+  ustl::vector<int> a{1, 2, 3};
+  ustl::vector<int> b{4, 5};
+
+  ustl::swap(a, b);
+
+  ASSERT_EQ(ustl::vector<int>::size_type(2), a.size());
+  ASSERT_EQ(ustl::vector<int>::size_type(3), b.size());
+  vector_equal(a, {4, 5});
+  vector_equal(b, {1, 2, 3});
 }

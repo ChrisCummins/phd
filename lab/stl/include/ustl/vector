@@ -195,14 +195,14 @@ class vector {
   }
 
   vector(const vector&& x, const allocator_type& alloc) {
-    if (alloc == x._alloc) {
-      _buffer = x._buffer;
-      _capacity = x._capacity;
-      _size = x._size;
-      _alloc = x._alloc;
-    } else {
-      // TODO: Different allocator.
-    }
+    // if (alloc == x._alloc) {
+    _buffer = x._buffer;
+    _capacity = x._capacity;
+    _size = x._size;
+    _alloc = x._alloc;
+    // } else {
+    //   TODO: Different allocator.
+    // }
   }
 
   //
@@ -265,7 +265,12 @@ class vector {
   // unspecified but valid state).
   //
   vector& operator=(vector&& x) {
-    // TODO: implement
+    clear();
+    _buffer = x._buffer;
+    _capacity = x._capacity;
+    _size = x._size;
+    _alloc = x._alloc;
+    return *this;
   }
 
   //
@@ -877,11 +882,21 @@ class vector {
   // forward_list).
   //
   iterator erase(const_iterator position) {
-    // TODO: implement
+    auto idx = size_type(position - begin());
+    _destroy_element(idx);
+    _shrink_n_elem_space(idx, 1);
+    return iterator(&_buffer[idx]);
   }
 
   iterator erase(const_iterator first, const_iterator last) {
-    // TODO: implement
+    auto start_idx = size_type(first - begin());
+    auto end_idx = size_type(last - begin());
+
+    for (size_type i = start_idx; i < end_idx; i++)
+      _destroy_element(i);
+
+    _shrink_n_elem_space(start_idx, end_idx - start_idx);
+    return iterator(&_buffer[start_idx]);
   }
 
 
@@ -965,7 +980,7 @@ class vector {
   //
   template<typename... Args>
   iterator emplace(const_iterator position, Args&&... args) {
-    // TODO: implement
+    return insert(position, value_type(args...));
   }
 
 
@@ -989,7 +1004,7 @@ class vector {
   //
   template<typename... Args>
   void emplace_back(Args&&... args) {
-    // TODO: implement
+    push_back(value_type(args...));
   }
 
 
@@ -1058,6 +1073,15 @@ class vector {
 
     // Increase size.
     _size += n;
+  }
+
+  void _shrink_n_elem_space(const size_type idx, const size_type n) {
+    // Move elements to shrink.
+    for (size_type i = idx; i < size() - n; i++)
+      _buffer[i] = _buffer[i + n];
+
+    // Decrease size.
+    _size -= n;
   }
 
   // Resize if smaller than.
