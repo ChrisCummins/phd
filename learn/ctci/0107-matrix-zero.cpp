@@ -95,11 +95,11 @@ TEST(Permutation, matrix_zero) {
 ////////////////
 
 static const size_t BM_length_min = 8;
-static const size_t BM_length_max = 10 << 10;
+static const size_t BM_length_max = 10 << 5;
 
 void BM_matrix_zero(benchmark::State& state) {
   const auto n = static_cast<size_t>(state.range_x());
-  int *m = new int[n];
+  int *m = new int[n * n];
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < n * n; i++)
