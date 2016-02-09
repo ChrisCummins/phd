@@ -241,9 +241,10 @@ Stl_CxxFlags = -I$(lab)/stl/include
 StlTestsSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/tests/,$(StlComponents)))
 StlTestsObjects = $(patsubst %.cpp,%.o,$(StlTestsSources))
-$(StlTestsObjects): $(StlTestsSources) $(StlHeaders) $(GoogleBenchmark)
-$(lab)/stl/tests/tests: $(StlTestsObjects)
+$(StlTestsObjects): $(StlHeaders) $(GoogleBenchmark)
+$(lab)/stl/tests/%.o: $(lab)/stl/tests/%.cpp
 
+$(lab)/stl/tests/tests: $(StlTestsObjects)
 CxxTargets += $(lab)/stl/tests/tests
 $(lab)/stl/tests_CxxFlags = $(Stl_CxxFlags) $(GoogleTest_CxxFlags)
 $(lab)/stl/tests_LdFlags = $(GoogleTest_LdFlags)
@@ -252,9 +253,10 @@ $(lab)/stl/tests_LdFlags = $(GoogleTest_LdFlags)
 StlBenchmarksSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/benchmarks/,$(StlComponents)))
 StlBenchmarksObjects = $(patsubst %.cpp,%.o,$(StlBenchmarksSources))
-$(StlBenchmarksObjects): $(StlBenchmarksSources) $(StlHeaders) $(GoogleBenchmark)
-$(lab)/stl/benchmarks/benchmarks: $(StlBenchmarksObjects)
+$(StlBenchmarksObjects): $(StlHeaders) $(GoogleBenchmark)
+$(lab)/stl/benchmarks/%.o: $(lab)/stl/benchmarks/%.cpp
 
+$(lab)/stl/benchmarks/benchmarks: $(StlBenchmarksObjects)
 CxxTargets += $(lab)/stl/benchmarks/benchmarks
 $(lab)/stl/benchmarks_CxxFlags = $(Stl_CxxFlags) $(GoogleBenchmark_CxxFlags)
 $(lab)/stl/benchmarks_LdFlags = $(GoogleBenchmark_LdFlags)
