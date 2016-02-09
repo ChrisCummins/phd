@@ -6,7 +6,6 @@
  */
 #include "./ctci.h"
 
-#include <algorithm>
 #include <string>
 
 //
@@ -19,7 +18,9 @@ bool isSubstring(const std::string a, const std::string b) {
 //
 // Return whether a is a rotation of b.
 //
-bool isRotation(const std::string a, const std::string b) {
+// O(n) time, O(n) space.
+//
+bool isRotation(const std::string& a, const std::string& b) {
   // Strings must be the same size.
   if (a.size() != b.size())
     return false;
@@ -27,7 +28,12 @@ bool isRotation(const std::string a, const std::string b) {
   return isSubstring(a, b + b);
 }
 
-TEST(isSubstring, tests) {
+
+///////////
+// Tests //
+///////////
+
+TEST(Rotation, isSubstring) {
   ASSERT_TRUE(isSubstring("abc", "abc"));
   ASSERT_TRUE(isSubstring("ab", "abc"));
   ASSERT_TRUE(isSubstring("b", "abc"));
@@ -37,7 +43,7 @@ TEST(isSubstring, tests) {
   ASSERT_FALSE(isSubstring("d", "abc"));
 }
 
-TEST(isRotation, tests) {
+TEST(Rotation, isRotation) {
   ASSERT_TRUE(isRotation("erbottlewat", "waterbottle"));
   ASSERT_TRUE(isRotation("mat the cat sat on the ", "the cat sat on the mat "));
   ASSERT_TRUE(isRotation("a", "a"));
