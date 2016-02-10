@@ -359,6 +359,7 @@ CxxTargets += \
 	$(learn)/triSYCL/001-dot-product \
 	$(learn)/triSYCL/002-saxpy \
 	$(learn)/triSYCL/003-parallel-matrix \
+	$(learn)/triSYCL/004-gaussian-blur \
 	$(NULL)
 
 $(learn)/triSYCL_CxxFlags = $(TriSYCL_CxxFlags) $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
