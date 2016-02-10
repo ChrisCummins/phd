@@ -21,6 +21,11 @@ bool is_palindrone(const std::list<T>& list) {
   return true;
 }
 
+
+///////////
+// Tests //
+///////////
+
 TEST(ListPalindrone, is_palindrone) {
   const std::list<int> l1{1, 2, 3, 4, 5};
   ASSERT_FALSE(is_palindrone(l1));
@@ -31,5 +36,33 @@ TEST(ListPalindrone, is_palindrone) {
   const std::list<int> l3{1, 2, 3, 2, 1};
   ASSERT_TRUE(is_palindrone(l3));
 }
+
+
+////////////////
+// Benchmarks //
+////////////////
+
+static const size_t BM_length_min = 8;
+static const size_t BM_length_max = 10 << 10;
+
+void BM_is_palindrone(benchmark::State& state) {
+  const auto len = static_cast<size_t>(state.range_x());
+  const auto half = len / 2;
+
+  std::list<int> list;
+
+  // Create palindrone.
+  for (size_t i = 0; i < half; i++)
+    list.push_back(i);
+  auto it = list.crbegin();
+  while (it != list.crend())
+    list.push_back(*it++);
+
+  while (state.KeepRunning()) {
+    auto c = is_palindrone(list);
+    benchmark::DoNotOptimize(c);
+  }
+}
+BENCHMARK(BM_is_palindrone)->Range(BM_length_min, BM_length_max);
 
 CTCI_MAIN();
