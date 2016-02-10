@@ -84,27 +84,22 @@ template<typename Key,
   using const_pointer
       = typename std::allocator_traits<allocator_type>::const_pointer;
 
-  // TODO:
   using iterator = __iterator<value_type>;
 
-  // TODO:
   using const_iterator = __iterator<const value_type>;
 
-  // TODO:
-  using local_iterator = mapped_type*;
+ private:
+  using _bucket_type = ustl::forward_list<value_type>;
+ public:
 
-  // TODO:
-  using const_local_iterator = const local_iterator;
+  using local_iterator = typename _bucket_type::iterator;
+
+  using const_local_iterator = typename _bucket_type::const_iterator;
 
   using size_type = size_t;
 
   using difference_type = size_type;
-  // TODO: = typename std::iterator_traits<iterator>::difference_type;
 
- private:
-  using _bucket_type = ustl::forward_list<value_type>;
-
- public:
 
   ///////////////////
   // Constructors: //
@@ -1122,8 +1117,13 @@ template<typename Key,
 // behavior in both lhs and rhs.
 //
 template<typename Key, typename T, typename Hash, typename Pred, typename Alloc>
-bool operator==(const unordered_map<Key,T,Hash,Pred,Alloc>& lhs,
-                const unordered_map<Key,T,Hash,Pred,Alloc>& rhs );
+bool operator==(const unordered_map<Key, T, Hash, Pred, Alloc>& lhs,
+                const unordered_map<Key, T, Hash, Pred, Alloc>& rhs) {
+  if (lhs.size() != rhs.size())
+    return false;
+
+  // TODO: Compare buckets.
+}
 
 template<typename Key, typename T, typename Hash, typename Pred, typename Alloc>
 bool operator!=(const unordered_map<Key,T,Hash,Pred,Alloc>& lhs,
