@@ -1,4 +1,4 @@
-# OmniTune - an Extensible, Distributed Autotuning Framework
+# OmniTune - an extensible autotuning framework
 
 This is the source code for OmniTune, in pre-alpha state. Please
 report bugs to [c.cummins@ed.ac.uk](c.cummins@ed.ac.uk).
@@ -26,15 +26,13 @@ $ sudo python2 ./setup.py test
 
 ## License
 
-Released under the terms of the
-[GPL v3](http://www.gnu.org/licenses/gpl-3.0.en.html) license.
-
 Copyright (C) 2015-2016  Chris Cummins <c.cummins@ed.ac.uk>.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or (at
-your option) any later version.
+the Free Software Foundation, either
+[version 3](http://www.gnu.org/licenses/gpl-3.0.en.html) of the
+License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
