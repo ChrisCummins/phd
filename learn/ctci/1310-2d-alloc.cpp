@@ -11,6 +11,9 @@
 // IMPLEMENTATION NOTE: The challenge requires a C implementation, so
 // my solutions use C-style casts, rather than reinterpretive_casts.
 //
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wcast-align"
 
 //
 // First implementation. Allocate an array of pointers, and then
@@ -238,5 +241,8 @@ void BM_my2DAlloc3(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_my2DAlloc3)->Range(BM_size_min, BM_size_max);
+
+
+#pragma GCC diagnostic pop
 
 CTCI_MAIN();
