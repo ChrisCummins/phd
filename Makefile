@@ -235,6 +235,7 @@ StlComponents = \
 	algorithm \
 	array \
 	forward_list \
+	list \
 	map \
 	unordered_map \
 	vector \
