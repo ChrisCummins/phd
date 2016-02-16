@@ -6,12 +6,13 @@
 #include <iterator>
 #include <memory>
 #include <utility>
+#include <ostream>
 
 #include <vector>
 #include <ustl/vector>
 
-#include <forward_list>
-#include <ustl/forward_list>
+#include <list>
+#include <ustl/list>
 
 namespace ustl {
 
@@ -54,11 +55,12 @@ template<typename Key,
          typename Pred = std::equal_to<Key>,
          typename Alloc = std::allocator<std::pair<const Key,T> >
          > class unordered_map {
- public:
+ private:
   // Forward declaration of nested class:
-  template<typename PointerT>
   class __iterator;
+  class __const_iterator;
 
+ public:
   ///////////////////
   // Member Types: //
   ///////////////////
@@ -84,17 +86,29 @@ template<typename Key,
   using const_pointer
       = typename std::allocator_traits<allocator_type>::const_pointer;
 
-  using iterator = __iterator<value_type>;
+  using iterator = __iterator;
 
-  using const_iterator = __iterator<const value_type>;
+  using const_iterator = __const_iterator;
 
  private:
-  using _bucket_type = ustl::forward_list<value_type>;
+  // Private member types
+  using bucket_type = std::list<value_type>;
+
+  using table_type = std::vector<bucket_type>;
+
+  using bucket_iterator = typename bucket_type::iterator;
+
+  using const_bucket_iterator = typename bucket_type::const_iterator;
+
+  using table_iterator = typename table_type::iterator;
+
+  using const_table_iterator = typename table_type::const_iterator;
+  // End private member types
+
  public:
+  using local_iterator = bucket_iterator;
 
-  using local_iterator = typename _bucket_type::iterator;
-
-  using const_local_iterator = typename _bucket_type::const_iterator;
+  using const_local_iterator = const_bucket_iterator;
 
   using size_type = size_t;
 
@@ -121,26 +135,26 @@ template<typename Key,
   // buckets.
   //
   unordered_map()
-      : _buckets(__min_initial_buckets, allocator_type()),
+      : _table(__min_initial_buckets, allocator_type()),
         _hasher(hasher()), _key_equal(key_equal()), _size(0) {}
 
   explicit unordered_map(size_type n,
                          const hasher& hf = hasher(),
                          const key_equal& eql = key_equal(),
                          const allocator_type& alloc = allocator_type())
-      : _buckets(__min_initial_buckets, alloc), _hasher(hf),
+      : _table(__min_initial_buckets, alloc), _hasher(hf),
         _key_equal(eql), _size(0) {}
 
   explicit unordered_map(const allocator_type& alloc)
-      : _buckets(__min_initial_buckets, alloc), _hasher(hasher()),
+      : _table(__min_initial_buckets, alloc), _hasher(hasher()),
         _key_equal(key_equal()), _size(0) {}
 
   unordered_map(size_type n, const allocator_type& alloc)
-      : _buckets(n, alloc), _hasher(hasher()), _key_equal(key_equal()),
+      : _table(n, alloc), _hasher(hasher()), _key_equal(key_equal()),
         _size(0) {}
 
   unordered_map(size_type n, const hasher& hf, const allocator_type& alloc)
-      : _buckets(n, alloc), _hasher(hf), _key_equal(key_equal()), _size(0) {}
+      : _table(n, alloc), _hasher(hf), _key_equal(key_equal()), _size(0) {}
 
 
   //
@@ -154,20 +168,32 @@ template<typename Key,
                 size_type n = __min_initial_buckets,
                 const hasher& hf = hasher(),
                 const key_equal& eql = key_equal(),
-                const allocator_type& alloc = allocator_type()) {
-    // TODO: implement
+                const allocator_type& alloc = allocator_type())
+      : unordered_map(n, hf, eql, alloc) {
+    while (first != last) {
+      this->operator[]((*first).first) = (*first).second;
+      first++;
+    }
   }
 
   template<typename InputIterator>
   unordered_map(InputIterator first, InputIterator last,
-                size_type n, const allocator_type& alloc) {
-    // TODO: implement
+                size_type n, const allocator_type& alloc)
+      : unordered_map(n, alloc) {
+    while (first != last) {
+      this->operator[]((*first).first) = (*first).second;
+      first++;
+    }
   }
 
   template<typename InputIterator>
   unordered_map(InputIterator first, InputIterator last,
-                size_type n, const hasher& hf, const allocator_type& alloc) {
-    // TODO: implement
+                size_type n, const hasher& hf, const allocator_type& alloc)
+      : unordered_map(n, hf, alloc) {
+    while (first != last) {
+      this->operator[]((*first).first) = (*first).second;
+      first++;
+    }
   }
 
 
@@ -177,12 +203,13 @@ template<typename Key,
   // The object is initialized to have the same contents and
   // properties as the ump unordered_map object.
   //
-  unordered_map(const unordered_map& ump) {
-    // TODO: implement
-  }
+  unordered_map(const unordered_map& ump)
+      : unordered_map(ump, allocator_type()) {}
 
-  unordered_map(const unordered_map& ump, const allocator_type& alloc) {
-    // TODO: implement
+  unordered_map(const unordered_map& ump, const allocator_type& alloc)
+      : unordered_map() {
+    for (auto& pair : ump)
+      operator[](pair.first) = pair.second;
   }
 
 
@@ -191,12 +218,21 @@ template<typename Key,
   //
   // The object acquires the contents of the rvalue ump.
   //
-  unordered_map(unordered_map&& ump) {
-    // TODO: implement
+  unordered_map(unordered_map&& ump)
+      : unordered_map() {
+    _table = std::move(ump._table);
+    _hasher = std::move(ump._hasher);
+    _key_equal = std::move(ump._key_equal);
+    _size = std::move(ump._size);
   }
 
   unordered_map(unordered_map&& ump, const allocator_type& alloc) {
-    // TODO: implement
+    // TODO: different alloc?
+    clear();
+    _table = std::move(ump._table);
+    _hasher = std::move(ump._hasher);
+    _key_equal = std::move(ump._key_equal);
+    _size = std::move(ump._size);
   }
 
 
@@ -219,14 +255,14 @@ template<typename Key,
                 size_type n, const allocator_type& alloc)
       : unordered_map(n, alloc) {
     for (auto& v : il)
-      this->operator[](v.first, v.second);
+      this->operator[](v.first) = v.second;
   }
 
   unordered_map(std::initializer_list<value_type> il,
                 size_type n, const hasher& hf, const allocator_type& alloc)
       : unordered_map(n, hf, alloc) {
     for (auto& v : il)
-      this->operator[](v.first, v.second);
+      this->operator[](v.first) = v.second;
   }
 
 
@@ -249,7 +285,11 @@ template<typename Key,
   // ump preserving its contents).
   //
   unordered_map& operator=(const unordered_map& ump) {
-    // TODO: implement
+    clear();
+    for (auto& pair : ump)
+      operator[](pair.first) = pair.second;
+
+    return *this;
   }
 
 
@@ -260,7 +300,11 @@ template<typename Key,
   // copies occur: the content is lost by ump.
   //
   unordered_map& operator=(unordered_map&& ump) {
-    // TODO: implement
+    clear();
+    for (auto& pair : ump)
+      operator[](std::move(pair.first)) = std::move(pair.second);
+
+    return *this;
   }
 
 
@@ -271,7 +315,11 @@ template<typename Key,
   // of the container object.
   //
   unordered_map& operator=(std::initializer_list<value_type> il) {
-    // TODO: implement
+    clear();
+    for (auto& pair : il)
+      operator[](il.first) = il.second;
+
+    return *this;
   }
 
 
@@ -284,9 +332,7 @@ template<typename Key,
   // allocated by the unordered_map container.
   //
 
-  ~unordered_map() {
-    // TODO: implement
-  }
+  ~unordered_map() {}
 
 
   ///////////////
@@ -330,7 +376,7 @@ template<typename Key,
   // implementation.
   //
   size_type max_size() const noexcept {
-    return _buckets.max_size();
+    return _table.max_size();
   }
 
 
@@ -351,19 +397,33 @@ template<typename Key,
   // the elements in the container (or the bucket), until invalidated.
   //
   iterator begin() noexcept {
-    // TODO: implement
+    auto it = _table.begin();
+    while (it != _table.end() && (*it).empty())
+      it++;
+
+    if (it == _table.end())
+      return iterator{&_table, _table.end()};
+    else
+      return iterator{&_table, it, &(*it), (*it).begin()};
   }
 
   const_iterator begin() const noexcept {
-    // TODO: implement
+    auto it = _table.cbegin();
+    while (it != _table.cend() && (*it).empty())
+      it++;
+
+    if (it == _table.cend())
+      return const_iterator{&_table, _table.cend()};
+    else
+      return const_iterator{&_table, it, &(*it), (*it).begin()};
   }
 
   local_iterator begin(size_type n) {
-    // TODO: implement
+    return _table[n % bucket_count()].begin();
   }
 
   const_local_iterator begin(size_type n) const {
-    // TODO: implement
+    return _table[n % bucket_count()].begin();
   }
 
 
@@ -385,19 +445,19 @@ template<typename Key,
   // container (or the bucket), until invalidated.
   //
   iterator end() noexcept {
-    // TODO: implement
+    return iterator{&_table, _table.end()};
   }
 
   const_iterator end() const noexcept {
-    // TODO: implement
+    return const_iterator{&_table, _table.end()};
   }
 
   local_iterator end(size_type n) {
-    // TODO: implement
+    return _table[n % bucket_count()].end();
   }
 
   const_local_iterator end(size_type n) const {
-    // TODO: implement
+    return _table[n % bucket_count()].end();
   }
 
 
@@ -414,11 +474,11 @@ template<typename Key,
   // contents it points to.
   //
   const_iterator cbegin() const noexcept {
-    // TODO: implement
+    return begin();
   }
 
   const_local_iterator cbegin(size_type n) const {
-    // TODO: implement
+    return begin(n);
   }
 
 
@@ -447,11 +507,11 @@ template<typename Key,
   // it points to.
   //
   const_iterator cend() const noexcept {
-    // TODO: implement
+    return end();
   }
 
   const_local_iterator cend(size_type n) const {
-    // TODO: implement
+    return end(n);
   }
 
 
@@ -478,38 +538,39 @@ template<typename Key,
   // exception when it does not.
   //
   mapped_type& operator[](const key_type& k) {
-    const auto key = _hasher(k) % _buckets.size();
-    auto& bucket = _buckets[key];
+    bucket_type& b = _table[bucket(k)];
 
-    // Search in the bucket for the mapped value.
-    auto it = bucket.begin();
-    while (it != bucket.end()) {
+    // Search in the bucket for the value.
+    auto it = b.begin();
+    while (it != b.end()) {
       if (_key_equal((*it).first, k))
         return (*it).second;
       it++;
     }
 
-    // If not found, create a new mapped value.
-    bucket.emplace_front(k, mapped_type{});
+    // If not found, create a new value.
+    b.emplace_front(k, mapped_type{});
+
     _size++;
-    return bucket.front().second;
+
+    return b.front().second;
   }
 
   mapped_type& operator[](key_type&& k) {
-    // const auto key = _hasher(std::move(k)) % _buckets.size();
-    // auto& bucket = _buckets[key];
+    bucket_type& b = _table[bucket(k)];
 
-    // // Search in the bucket for the mapped value.
-    // auto it = bucket.begin();
-    // while (it != bucket.end()) {
-    //   if (_key_equal(*it, k))
-    //     return *it;
-    //   it++;
-    // }
+    // Search in the bucket for the value.
+    auto it = b.begin();
+    while (it != b.end()) {
+      if (_key_equal((*it).first, k))
+        return (*it).second;
+      it++;
+    }
 
-    // // If not found, create a new mapped value.
-    // bucket.empace_front();
-    // return bucket.front();
+    // If not found, create a new value.
+    b.emplace_front(std::move(k), mapped_type{});
+    _size++;
+    return b.front().second;
   }
 
 
@@ -523,11 +584,31 @@ template<typename Key,
   // function throws an out_of_range exception.
   //
   mapped_type& at(const key_type& k) {
-    // TODO: implement
+    bucket_type& b = _table[bucket(k)];
+
+    // Search in the bucket for the value.
+    auto it = b.begin();
+    while (it != b.end()) {
+      if (_key_equal((*it).first, k))
+        return (*it).second;
+      it++;
+    }
+
+    throw std::out_of_range("unordered_map.at()");
   }
 
   const mapped_type& at(const key_type& k) const {
-    // TODO: implement
+    bucket_type& b = _table[bucket(k)];
+
+    // Search in the bucket for the value.
+    auto it = b.begin();
+    while (it != b.end()) {
+      if (_key_equal((*it).first, k))
+        return (*it).second;
+      it++;
+    }
+
+    throw std::out_of_range("unordered_map.at()");
   }
 
 
@@ -702,15 +783,40 @@ template<typename Key,
   // elements removed, calling each element's destructor.
   //
   iterator erase(const_iterator position) {
-    // TODO: implement
+    iterator ret = iterator{position};
+    bucket_type& b = ret.bucket();
+
+    ret++;
+    b.erase(position.bucket_it());
+    _size--;
+
+    return iterator{ret};
   }
 
   size_type erase(const key_type& k) {
-    // TODO: implement
+    bucket_type& b = _table[bucket(k)];
+    size_type n = 0;
+
+    for (auto& pair : b) {
+      if (_key_equal(pair.first, k)) {
+        erase(pair);
+        n++;
+      }
+    }
+
+    return n;
   }
 
   iterator erase(const_iterator first, const_iterator last) {
-    // TODO: implement
+    while (first != last) {
+      auto next = first;
+      next++;
+
+      erase(first);
+      first = next;
+    }
+
+    return iterator{first};
   }
 
 
@@ -722,7 +828,8 @@ template<typename Key,
   // container, leaving it with a size of 0.
   //
   void clear() noexcept {
-    // TODO: implement
+    while (!empty())
+      erase(cbegin());
   }
 
 
@@ -775,7 +882,7 @@ template<typename Key,
   // buckets needs to be increased.
   //
   size_type bucket_count() const noexcept {
-    // TODO: implement
+    return _table.size();
   }
 
 
@@ -790,7 +897,7 @@ template<typename Key,
   // implementation.
   //
   size_type max_bucket_count() const noexcept {
-    // TODO: implement
+    return _table.max_size();
   }
 
 
@@ -809,7 +916,7 @@ template<typename Key,
   // max_load_factor.
   //
   size_type bucket_size(size_type n)const {
-    // TODO: implement
+    return _table[n % bucket_count()].size();
   }
 
 
@@ -828,7 +935,7 @@ template<typename Key,
   // unordered_map::end.
   //
   size_type bucket(const key_type& k) const {
-    // TODO: implement
+    return _hasher(k) % bucket_count();
   }
 
 
@@ -859,7 +966,7 @@ template<typename Key,
   // max_load_factor.
   //
   float load_factor() const noexcept {
-    // TODO: implement
+    return size() / static_cast<float>(bucket_count);
   }
 
 
@@ -994,70 +1101,115 @@ template<typename Key,
   // Returns the allocator object used to construct the container.
   //
   allocator_type get_allocator() const noexcept {
-    return _buckets.get_allocator();
+    return _table.get_allocator();
   }
 
-  template<typename PointerT>
+
+  // NOT IN SPEC:
+  friend std::ostream& operator<<(std::ostream& out, const unordered_map& ump) {
+    auto started = false;
+    auto it = ump.cbegin();
+    out << "{ ";
+    while (it != ump.cend()) {
+      if (started)
+        out << ", ";
+      started = true;
+      out << (*it).first << ":" << (*it++).second;
+    }
+    out << " }";
+
+    return out;
+  }
+
+ private:
   class __iterator : std::iterator<std::forward_iterator_tag, value_type> {
    public:
-    using pointer_type = PointerT;
+    __iterator(table_type* table,
+               table_iterator table_it,
+               bucket_type* bucket,
+               bucket_iterator bucket_it)
+        : _table(table), _table_it(table_it),
+          _bucket(bucket), _bucket_it(bucket_it) {}
 
-    using deref_type = pointer_type&;
+    __iterator(table_type* table,
+               table_iterator table_it)
+        : _table(table), _table_it(table_it),
+          _bucket(nullptr), _bucket_it(bucket_iterator{}) {}
 
-    __iterator(
-        const std::vector<ustl::forward_list<value_type>>*const vec,
-        const ustl::forward_list<value_type>*const list,
-        const typename std::vector<ustl::forward_list<value_type>>::iterator&
-        vec_pos,
-        const typename ustl::forward_list<value_type>::iterator& list_pos
-               )
-        : _vec(vec), _list(list), _vec_pos(vec_pos), _list_pos(list_pos) {}
+    //
+    // FIXME: This constructor breaks const correctness, and uses,
+    // linear time methods for casting const_iterators to iterators.
+    //
+    explicit __iterator(const_iterator& it)
+        : _table(const_cast<table_type*>(it._table)),
+          _table_it(_table->begin()),
+          _bucket(const_cast<bucket_type*>(it._bucket)),
+          _bucket_it(_bucket ? _bucket->begin() : bucket_iterator{}) {
+      std::advance(_table_it,
+                   std::distance<const_table_iterator>(_table_it,
+                                                       it._table_it));
 
-    // construct from const iterator
-    // TODO:
-    template<typename U>
-    __iterator(const __iterator<U>& x,
-               typename std::enable_if<!std::is_const<U>()>::type* = nullptr) {}
-
-    // copy construct:
-    // TODO:
-    __iterator(const __iterator &x) {}
-
-    // move construct:
-    // TODO:
-    __iterator(__iterator &&x) {}
-
-    // copy assignment:
-    __iterator& operator=(
-        const __iterator &x) {
-      // TODO:
-    }
-
-    // move assignment:
-    __iterator& operator=(
-        __iterator &&x) {
-      // TODO:
+      if (_bucket) {
+        std::advance(_bucket_it,
+                     std::distance<const_bucket_iterator>(_bucket_it,
+                                                          it._bucket_it));
+      }
     }
 
     // prefix increment
-    __iterator operator++() {
-      // TODO:
+    __iterator& operator++() {
+      // No increment at the end of the table
+      if (_table_it == _table->end()) return *this;
+
+      _bucket_it++;
+
+      // If we're at the end of a bucket, move to the next bucket in
+      // the table.
+      while (_bucket_it == _bucket->end()) {
+        _table_it++;
+
+        if (_table_it == _table->end()) {
+          // We've reached the end of the table.
+          _bucket = nullptr;
+          _bucket_it = local_iterator{};
+          break;
+        } else {
+          _bucket = &(*_table_it);
+          _bucket_it = _bucket->begin();
+        }
+      }
+
+      return *this;
     };
 
     // postfix increment
     __iterator operator++(int) {
-      // TODO:
+      auto bucket_it = _bucket_it;
+      auto bucket = _bucket;
+      auto table_it = _table_it;
+
+      ++*this;
+
+      return iterator(_table, table_it, bucket, bucket_it);
     };
 
     // dereference
-    deref_type operator*() const {
-      // TODO:
+    value_type& operator*() const {
+      return *_bucket_it;
     }
 
     // relational ops:
     friend bool operator==(const __iterator& lhs,
                            const __iterator& rhs) {
-      // TODO:
+      if (lhs._bucket && rhs._bucket) {
+        return lhs._table_it == rhs._table_it
+            && lhs._table == rhs._table
+            && lhs._bucket_it == rhs._bucket_it
+            && lhs._bucket == rhs._bucket;
+      } else {
+        return lhs._table_it == rhs._table_it
+            && lhs._table == rhs._table;
+      }
     }
 
     friend bool operator!=(const __iterator& lhs,
@@ -1065,26 +1217,127 @@ template<typename Key,
       return !(lhs == rhs);
     }
 
-    // Let outer class access private members:
-    friend class unordered_map;
+    // Accessors:
+    bucket_type& bucket() { return *_bucket; }
+    const bucket_type& bucket() const { return *_bucket; }
+
+    bucket_iterator bucket_it() { return _bucket_it; }
+    const bucket_iterator bucket_it() const { return _bucket_it; }
 
    private:
-    std::vector<ustl::forward_list<value_type>>*const _vec;
-    ustl::forward_list<value_type>*const _list;
+    table_type* _table;
+    table_iterator _table_it;
 
-    typename std::vector<ustl::forward_list<value_type>>::iterator _vec_pos;
-    typename ustl::forward_list<value_type>::iterator _list_pos;
-
+    bucket_type* _bucket;
+    bucket_iterator _bucket_it;
   };  // class __iterator
 
- private:
-  static const size_type __min_initial_buckets = 10;
+
+  class __const_iterator
+      : std::iterator<std::forward_iterator_tag, const value_type> {
+   public:
+    friend class __iterator;
+
+    __const_iterator(const table_type* table,
+                     const_table_iterator table_it,
+                     const bucket_type* bucket,
+                     const_bucket_iterator bucket_it)
+        : _table(table), _table_it(table_it),
+          _bucket(bucket), _bucket_it(bucket_it) {}
+
+    __const_iterator(const table_type* table,
+                     const_table_iterator table_it)
+        : _table(table), _table_it(table_it),
+          _bucket(nullptr), _bucket_it(const_bucket_iterator{}) {}
+
+    // prefix increment
+    __const_iterator& operator++() {
+      // No increment at the end of the table
+      if (_table_it == _table->end()) return *this;
+
+      _bucket_it++;
+
+      // If we're at the end of a bucket, move to the next bucket in
+      // the table.
+      while (_bucket_it == _bucket->end()) {
+        _table_it++;
+
+        if (_table_it == _table->end()) {
+          // We've reached the end of the table.
+          _bucket = nullptr;
+          _bucket_it = local_iterator{};
+          break;
+        } else {
+          _bucket = &(*_table_it);
+          _bucket_it = _bucket->begin();
+        }
+      }
+
+      return *this;
+    };
+
+    // postfix increment
+    __const_iterator operator++(int) {
+      const_bucket_iterator bucket_it = _bucket_it;
+      const bucket_type* bucket = _bucket;
+      const_table_iterator table_it = _table_it;
+
+      ++*this;
+
+      return const_iterator{_table, table_it, bucket, bucket_it};
+    };
+
+    // dereference
+    const value_type& operator*() const {
+      return *_bucket_it;
+    }
+
+    // relational ops:
+    friend bool operator==(const __const_iterator& lhs,
+                           const __const_iterator& rhs) {
+      if (lhs._bucket && rhs._bucket) {
+        return lhs._table_it == rhs._table_it
+            && lhs._table == rhs._table
+            && lhs._bucket_it == rhs._bucket_it
+            && lhs._bucket == rhs._bucket;
+      } else {
+        return lhs._table_it == rhs._table_it
+            && lhs._table == rhs._table;
+      }
+    }
+
+    friend bool operator!=(const __const_iterator& lhs,
+                           const __const_iterator& rhs) {
+      return !(lhs == rhs);
+    }
+
+    friend std::ostream& operator<<(std::ostream& out,
+                                    const const_iterator& it) {
+      out << "const_iterator{"
+          << " table = " << it._table
+          << ", bucket = " << it._bucket
+          << " }";
+      return out;
+    }
+
+    // Accessors:
+    const bucket_type& bucket() const { return *_bucket; }
+    const const_bucket_iterator bucket_it() const { return _bucket_it; }
+
+   private:
+    const table_type* _table;
+    const_table_iterator _table_it;
+
+    const bucket_type* _bucket;
+    const_bucket_iterator _bucket_it;
+  };  // class __const_iterator
 
   ///////////////////////////////
   // Private member variables: //
   ///////////////////////////////
+  static const size_type __min_initial_buckets = 10;
 
-  std::vector<_bucket_type> _buckets;
+  table_type _table;
   hasher _hasher;
   key_equal _key_equal;
   size_type _size;
@@ -1122,7 +1375,14 @@ bool operator==(const unordered_map<Key, T, Hash, Pred, Alloc>& lhs,
   if (lhs.size() != rhs.size())
     return false;
 
-  // TODO: Compare buckets.
+  auto lit = lhs.begin();
+  auto rit = rhs.begin();
+
+  while (lit != lhs.end())
+    if (*lit++ != *rit++)
+      return false;
+
+  return true;
 }
 
 template<typename Key, typename T, typename Hash, typename Pred, typename Alloc>
