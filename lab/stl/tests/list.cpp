@@ -99,14 +99,14 @@ TEST(ustl_list, assignment) {
 ///////////////
 
 
-TEST(std_list, empty) {
+TEST(std_list_capacity, empty) {
   std::list<int> l1;
   ASSERT_TRUE(l1.empty());
   l1.push_front(1);
   ASSERT_FALSE(l1.empty());
 }
 
-TEST(ustl_list, empty) {
+TEST(ustl_list_capacity, empty) {
   ustl::list<int> l1;
   ASSERT_TRUE(l1.empty());
   l1.push_front(1);

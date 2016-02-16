@@ -112,7 +112,7 @@ template<typename Key,
 
   using size_type = size_t;
 
-  using difference_type = size_type;
+  using difference_type = long;
 
 
   ///////////////////
@@ -631,11 +631,29 @@ template<typename Key,
   // functions at or operator[].
   //
   iterator find(const key_type& k) {
-    // TODO: implement
+    auto table_it = _table.begin() + difference_type(bucket(k));
+    auto local_it = (*table_it).begin();
+
+    while (local_it != (*table_it).end()) {
+      if (_key_equal(k, (*local_it).first))
+        return iterator{&_table, table_it, &(*table_it), local_it};
+      local_it++;
+    }
+
+    return end();
   }
 
   const_iterator find(const key_type& k) const {
-    // TODO: implement
+    auto table_it = _table.cbegin() + difference_type(bucket(k));
+    auto local_it = (*table_it).cbegin();
+
+    while (local_it != (*table_it).cend()) {
+      if (_key_equal(k, (*local_it).first))
+        return iterator{&_table, table_it, &(*table_it), local_it};
+      local_it++;
+    }
+
+    return end();
   }
 
 
@@ -649,7 +667,7 @@ template<typename Key,
   // container, and zero otherwise.
   //
   size_type count(const key_type& k) const {
-    // TODO: implement
+    return (find(k) == end()) ? 0u : 1u;
   }
 
 
@@ -666,12 +684,26 @@ template<typename Key,
   //
   std::pair<iterator,iterator>
   equal_range(const key_type& k) {
-    // TODO: implement
+    auto first = find(k);
+
+    if (first == end())
+      return {end(), end()};
+
+    auto last = first;
+    last++;
+    return {first, last};
   }
 
   std::pair<const_iterator, const_iterator>
   equal_range(const key_type& k) const {
-    // TODO: implement
+    auto first = find(k);
+
+    if (first == end())
+      return {end(), end()};
+
+    auto last = first;
+    last++;
+    return {first, last};
   }
 
 
@@ -699,7 +731,7 @@ template<typename Key,
   //
   template<typename... Args>
   std::pair<iterator, bool> emplace(Args&&... args) {
-    // TODO: implement
+    return insert(std::pair<key_type, mapped_type>{args...});
   }
 
 
@@ -746,12 +778,26 @@ template<typename Key,
   // which values they are initialized:
   //
   std::pair<iterator,bool> insert(const value_type& val) {
-    // TODO: implement
+    auto res = find(val);
+
+    if (res == end()) {
+      operator[](val.first) = val.second;
+      return {find(val), true};
+    }
+
+    return {res, false};
   }
 
   template<typename P>
   std::pair<iterator,bool> insert(P&& val) {
-    // TODO: implement
+    auto res = find(val);
+
+    if (res == end()) {
+      operator[](val.first) = val.second;
+      return {find(std::move(val)), true};
+    }
+
+    return {res, false};
   }
 
   iterator insert(const_iterator hint, const value_type& val) {
