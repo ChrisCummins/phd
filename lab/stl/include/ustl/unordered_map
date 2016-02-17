@@ -172,7 +172,7 @@ template<typename Key,
       : unordered_map(n, hf, eql, alloc) {
     while (first != last) {
       this->operator[]((*first).first) = (*first).second;
-      first++;
+      ++first;
     }
   }
 
@@ -182,7 +182,7 @@ template<typename Key,
       : unordered_map(n, alloc) {
     while (first != last) {
       this->operator[]((*first).first) = (*first).second;
-      first++;
+      ++first;
     }
   }
 
@@ -192,7 +192,7 @@ template<typename Key,
       : unordered_map(n, hf, alloc) {
     while (first != last) {
       this->operator[]((*first).first) = (*first).second;
-      first++;
+      ++first;
     }
   }
 
@@ -399,7 +399,7 @@ template<typename Key,
   iterator begin() noexcept {
     auto it = _table.begin();
     while (it != _table.end() && (*it).empty())
-      it++;
+      ++it;
 
     if (it == _table.end())
       return iterator{&_table, _table.end()};
@@ -410,7 +410,7 @@ template<typename Key,
   const_iterator begin() const noexcept {
     auto it = _table.cbegin();
     while (it != _table.cend() && (*it).empty())
-      it++;
+      ++it;
 
     if (it == _table.cend())
       return const_iterator{&_table, _table.cend()};
@@ -545,13 +545,13 @@ template<typename Key,
     while (it != b.end()) {
       if (_key_equal((*it).first, k))
         return (*it).second;
-      it++;
+      ++it;
     }
 
     // If not found, create a new value.
     b.emplace_front(k, mapped_type{});
 
-    _size++;
+    ++_size;
 
     return b.front().second;
   }
@@ -564,12 +564,12 @@ template<typename Key,
     while (it != b.end()) {
       if (_key_equal((*it).first, k))
         return (*it).second;
-      it++;
+      ++it;
     }
 
     // If not found, create a new value.
     b.emplace_front(std::move(k), mapped_type{});
-    _size++;
+    ++_size;
     return b.front().second;
   }
 
@@ -591,7 +591,7 @@ template<typename Key,
     while (it != b.end()) {
       if (_key_equal((*it).first, k))
         return (*it).second;
-      it++;
+      ++it;
     }
 
     throw std::out_of_range("unordered_map.at()");
@@ -605,7 +605,7 @@ template<typename Key,
     while (it != b.end()) {
       if (_key_equal((*it).first, k))
         return (*it).second;
-      it++;
+      ++it;
     }
 
     throw std::out_of_range("unordered_map.at()");
@@ -637,7 +637,7 @@ template<typename Key,
     while (local_it != (*table_it).end()) {
       if (_key_equal(k, (*local_it).first))
         return iterator{&_table, table_it, &(*table_it), local_it};
-      local_it++;
+      ++local_it;
     }
 
     return end();
@@ -650,7 +650,7 @@ template<typename Key,
     while (local_it != (*table_it).cend()) {
       if (_key_equal(k, (*local_it).first))
         return iterator{&_table, table_it, &(*table_it), local_it};
-      local_it++;
+      ++local_it;
     }
 
     return end();
@@ -690,7 +690,7 @@ template<typename Key,
       return {end(), end()};
 
     auto last = first;
-    last++;
+    ++last;
     return {first, last};
   }
 
@@ -702,7 +702,7 @@ template<typename Key,
       return {end(), end()};
 
     auto last = first;
-    last++;
+    ++last;
     return {first, last};
   }
 
@@ -832,9 +832,9 @@ template<typename Key,
     iterator ret = iterator{position};
     bucket_type& b = ret.bucket();
 
-    ret++;
+    ++ret;
     b.erase(position.bucket_it());
-    _size--;
+    --_size;
 
     return iterator{ret};
   }
@@ -846,7 +846,7 @@ template<typename Key,
     for (auto& pair : b) {
       if (_key_equal(pair.first, k)) {
         erase(pair);
-        n++;
+        ++n;
       }
     }
 
@@ -856,7 +856,7 @@ template<typename Key,
   iterator erase(const_iterator first, const_iterator last) {
     while (first != last) {
       auto next = first;
-      next++;
+      ++next;
 
       erase(first);
       first = next;
@@ -1207,12 +1207,12 @@ template<typename Key,
       // No increment at the end of the table
       if (_table_it == _table->end()) return *this;
 
-      _bucket_it++;
+      ++_bucket_it;
 
       // If we're at the end of a bucket, move to the next bucket in
       // the table.
       while (_bucket_it == _bucket->end()) {
-        _table_it++;
+        ++_table_it;
 
         if (_table_it == _table->end()) {
           // We've reached the end of the table.
@@ -1301,12 +1301,12 @@ template<typename Key,
       // No increment at the end of the table
       if (_table_it == _table->end()) return *this;
 
-      _bucket_it++;
+      ++_bucket_it;
 
       // If we're at the end of a bucket, move to the next bucket in
       // the table.
       while (_bucket_it == _bucket->end()) {
-        _table_it++;
+        ++_table_it;
 
         if (_table_it == _table->end()) {
           // We've reached the end of the table.

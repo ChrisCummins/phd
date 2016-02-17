@@ -500,8 +500,8 @@ bool operator<(const array<T, N>& lhs, const array<T, N>& rhs) {
       return true;
     else if (*lit > *rit)
       return false;
-    lit++;
-    rit++;
+    ++lit;
+    ++rit;
   }
 
   return false;

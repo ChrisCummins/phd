@@ -1067,7 +1067,7 @@ class forward_list {
                });
 
     // Update list order based on sorted vector.
-    for (size_t i = 1; i < idxs.size(); i++)
+    for (size_t i = 1; i < idxs.size(); ++i)
       idxs[i-1]->next(idxs[i]);
 
     _head->next(idxs[0]);
@@ -1285,8 +1285,8 @@ bool operator<(const forward_list<T,Alloc>& lhs,
       return false;
     else if (*lit < *rit)
       return true;
-    lit++;
-    rit++;
+    ++lit;
+    ++rit;
   }
 
   return lit == lhs.end() && rit != rhs.end();

@@ -711,7 +711,7 @@ class list {
 
     while (first != last) {
       auto node = first.node();
-      first++;
+      ++first;
       delete node;
     }
 
@@ -1055,7 +1055,7 @@ class list {
                });
 
     // Update list order based on sorted vector.
-    for (size_t i = 1; i < idxs.size(); i++) {
+    for (size_t i = 1; i < idxs.size(); ++i) {
       idxs[i]->prev(idxs[i-1]);
       idxs[i-1]->next(idxs[i]);
     }
@@ -1308,8 +1308,8 @@ bool operator<(const list<T,Alloc>& lhs,
       return false;
     else if (*lit < *rit)
       return true;
-    lit++;
-    rit++;
+    ++lit;
+    ++rit;
   }
 
   return lit == lhs.end() && rit != rhs.end();

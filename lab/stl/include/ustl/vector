@@ -140,7 +140,7 @@ class vector {
     reserve(n);
 
     // Populate.
-    for (size_type i = 0; i < n; i++)
+    for (size_type i = 0; i < n; ++i)
       push_back(val);
   }
 
@@ -495,7 +495,7 @@ class vector {
       reserve(n);
     } else {
       // Destroy elements between size() and n.
-      for (size_type i = size(); i < n; i++)
+      for (size_type i = size(); i < n; ++i)
         _destroy_element(i);
     }
 
@@ -507,7 +507,7 @@ class vector {
     resize(n);
 
     // Fill value for new elements.
-    for (size_type i = old_size; i < n; i++)
+    for (size_type i = old_size; i < n; ++i)
       _buffer[i] = val;
   }
 
@@ -568,7 +568,7 @@ class vector {
 
     if (_buffer) {
       // Copy elements from old buffer.
-      for (size_type i = 0; i < size(); i++)
+      for (size_type i = 0; i < size(); ++i)
         newbuf[i] = _buffer[i];
       // Deallocate old buffer.
       _alloc.deallocate(_buffer, _capacity);
@@ -595,7 +595,7 @@ class vector {
     if (capacity() && capacity() > size() * _capacity_multiplier) {
       // Allocate and copy new buffer.
       value_type*const newbuf = _alloc.allocate(size());
-      for (size_type i = 0; i < size(); i++)
+      for (size_type i = 0; i < size(); ++i)
         newbuf[i] = _buffer[i];
 
       // Deallocate old buffer.
@@ -732,7 +732,7 @@ class vector {
     clear();
     reserve(n);
 
-    for (size_type i = 0; i < n; i++)
+    for (size_type i = 0; i < n; ++i)
       _buffer[i] = val;
   }
 
@@ -779,7 +779,7 @@ class vector {
   // This destroys the removed element.
   //
   void pop_back() {
-    _size--;
+    --_size;
     _destroy_element(size());
   }
 
@@ -819,7 +819,7 @@ class vector {
     auto start_idx = size_type(position - begin());
     _make_n_elem_space(start_idx, n);
 
-    for (size_type i = start_idx; i < start_idx + n; i++)
+    for (size_type i = start_idx; i < start_idx + n; ++i)
       _buffer[i] = val;
 
     return position;
@@ -833,7 +833,7 @@ class vector {
     auto n = size_type(last - first);
     _make_n_elem_space(start_idx, n);
 
-    for (size_type i = start_idx; i < start_idx + n; i++)
+    for (size_type i = start_idx; i < start_idx + n; ++i)
       _buffer[i] = *first++;
 
     return position;
@@ -892,7 +892,7 @@ class vector {
     auto start_idx = size_type(first - begin());
     auto end_idx = size_type(last - begin());
 
-    for (size_type i = start_idx; i < end_idx; i++)
+    for (size_type i = start_idx; i < end_idx; ++i)
       _destroy_element(i);
 
     _shrink_n_elem_space(start_idx, end_idx - start_idx);
@@ -1068,7 +1068,7 @@ class vector {
     auto end_idx = idx + n;
 
     // Move elements along to make room.
-    for (size_type i = size() - 1 + n; i >= end_idx; i--)
+    for (size_type i = size() - 1 + n; i >= end_idx; --i)
       _buffer[i] = _buffer[i - n];
 
     // Increase size.
@@ -1077,7 +1077,7 @@ class vector {
 
   void _shrink_n_elem_space(const size_type idx, const size_type n) {
     // Move elements to shrink.
-    for (size_type i = idx; i < size() - n; i++)
+    for (size_type i = idx; i < size() - n; ++i)
       _buffer[i] = _buffer[i + n];
 
     // Decrease size.
@@ -1097,7 +1097,7 @@ class vector {
 
   // Destroy all elements.
   void _destroy_elements() {
-    for (size_type i = 0; i < size(); i++)
+    for (size_type i = 0; i < size(); ++i)
       _destroy_element(i);
   }
 
@@ -1162,8 +1162,8 @@ bool operator<(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
       return true;
     else if (*lit > *rit)
       return false;
-    lit++;
-    rit++;
+    ++lit;
+    ++rit;
   }
 
   return lhs.size() < rhs.size();
