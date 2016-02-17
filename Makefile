@@ -282,6 +282,7 @@ CxxTargets += \
 	$(learn)/atc++/constructors \
 	$(learn)/atc++/hash_map \
 	$(learn)/atc++/myvector \
+	$(learn)/atc++/size-of \
 	$(learn)/atc++/strings \
 	$(learn)/atc++/user-input \
 	$(NULL)
