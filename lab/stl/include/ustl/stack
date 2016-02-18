@@ -1,0 +1,132 @@
+// -*-c++-*-
+//
+#ifndef __USTL_ARRAY_H__
+#define __USTL_ARRAY_H__
+
+#include <deque>
+
+//
+// LIFO stack
+//
+// Stacks are a type of container adaptor, specifically designed to
+// operate in a LIFO context (last-in first-out), where elements are
+// inserted and extracted only from one end of the container.
+//
+// stacks are implemented as containers adaptors, which are classes
+// that use an encapsulated object of a specific container class as
+// its underlying container, providing a specific set of member
+// functions to access its elements. Elements are pushed/popped from
+// the "back" of the specific container, which is known as the top of
+// the stack.
+//
+// The underlying container may be any of the standard container class
+// templates or some other specifically designed container class. The
+// container shall support the following operations:
+//
+//        empty
+//        size
+//        back
+//        push_back
+//        pop_back
+//
+// The standard container classes vector, deque and list fulfill these
+// requirements. By default, if no container class is specified for a
+// particular stack class instantiation, the standard container deque
+// is used.
+//
+template<typename T, typename Container = std::deque<T> >
+class stack {
+ public:
+
+  ///////////////////
+  // Member types: //
+  ///////////////////
+
+  using value_type = T;
+
+  using container_type = Container;
+
+  using reference = typename container_type::reference;
+
+  using const_reference = typename container_type::const_reference;
+
+  using size_type = size_t;
+
+
+  ///////////////////
+  // Constructors: //
+  ///////////////////
+
+  //
+  // Constructs a container adaptor whose internal container is
+  // initialized to a copy of ctnr:
+  //
+  explicit stack(const container_type& ctnr) {
+    // TODO:
+  }
+
+
+  //
+  // Constructs a container adaptor whose internal container acquires
+  // the value of ctnr by move-constructing it:
+  //
+  explicit stack(container_type&& ctnr = container_type()) {
+    // TODO:
+  }
+
+
+  //
+  // Constructs a container adaptor whose internal container is
+  // constructed with alloc as argument:
+  //
+  template<typename Alloc>
+  explicit stack(const Alloc& alloc) {
+    // TODO:
+  };
+
+
+  //
+  // Constructs a container adaptor whose internal container is
+  // constructed with cntr and alloc as arguments:
+  //
+  template<typename Alloc>
+  stack(const container_type& ctnr, const Alloc& alloc) {
+    // TODO:
+  }
+
+
+  //
+  // Constructs a container adaptor whose internal container is
+  // constructed with std::move(cntr) and alloc as arguments:
+  //
+  template<typename Alloc>
+  stack(container_type&& ctnr, const Alloc& alloc) {
+    // TODO:
+  }
+
+
+  //
+  // Constructs a container adaptor whose internal container is
+  // constructed with x's internal container as first argument and
+  // alloc as second.
+  //
+  template<typename Alloc>
+  stack(const stack& x, const Alloc& alloc) {
+    // TODO:
+  }
+
+
+  //
+  // Constructs a container adaptor whose internal container is
+  // constructed by moving x's internal container as first argument
+  // and passing alloc as second.
+  //
+  template<typename Alloc>
+  stack(stack&& x, const Alloc& alloc) {
+    // TODO:
+  }
+
+
+};
+
+#endif  // __USTL_ARRAY_H__

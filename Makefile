@@ -237,6 +237,7 @@ StlComponents = \
 	forward_list \
 	list \
 	map \
+	stack \
 	unordered_map \
 	vector \
 	$(NULL)
