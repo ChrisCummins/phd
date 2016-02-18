@@ -46,6 +46,11 @@ tree_lists<T> tree_to_lists(const node<T>*const tree) {
   return lists;
 }
 
+
+///////////
+// Tests //
+///////////
+
 TEST(BinaryTreeToList, tree_to_list) {
   node<int> _nodes[] = {
     node<int>(0),
