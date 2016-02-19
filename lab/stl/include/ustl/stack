@@ -1,9 +1,12 @@
 // -*-c++-*-
 //
-#ifndef __USTL_ARRAY_H__
-#define __USTL_ARRAY_H__
+#ifndef __USTL_STACK_H__
+#define __USTL_STACK_H__
 
 #include <deque>
+
+namespace ustl {
+
 
 //
 // LIFO stack
@@ -61,18 +64,15 @@ class stack {
   // Constructs a container adaptor whose internal container is
   // initialized to a copy of ctnr:
   //
-  explicit stack(const container_type& ctnr) {
-    // TODO:
-  }
+  explicit stack(const container_type& ctnr) : _container(ctnr) {}
 
 
   //
   // Constructs a container adaptor whose internal container acquires
   // the value of ctnr by move-constructing it:
   //
-  explicit stack(container_type&& ctnr = container_type()) {
-    // TODO:
-  }
+  explicit stack(container_type&& ctnr = container_type())
+      : _container(ctnr) {}
 
 
   //
@@ -80,29 +80,26 @@ class stack {
   // constructed with alloc as argument:
   //
   template<typename Alloc>
-  explicit stack(const Alloc& alloc) {
-    // TODO:
-  };
+  explicit stack(const Alloc& alloc)
+      : _container(alloc) {}
 
 
   //
   // Constructs a container adaptor whose internal container is
-  // constructed with cntr and alloc as arguments:
+  // constructed with ctnr and alloc as arguments:
   //
   template<typename Alloc>
-  stack(const container_type& ctnr, const Alloc& alloc) {
-    // TODO:
-  }
+  stack(const container_type& ctnr, const Alloc& alloc)
+      : _container(ctnr, alloc) {}
 
 
   //
   // Constructs a container adaptor whose internal container is
-  // constructed with std::move(cntr) and alloc as arguments:
+  // constructed with std::move(ctnr) and alloc as arguments:
   //
   template<typename Alloc>
-  stack(container_type&& ctnr, const Alloc& alloc) {
-    // TODO:
-  }
+  stack(container_type&& ctnr, const Alloc& alloc)
+      : _container(std::move(ctnr), alloc) {}
 
 
   //
@@ -111,9 +108,8 @@ class stack {
   // alloc as second.
   //
   template<typename Alloc>
-  stack(const stack& x, const Alloc& alloc) {
-    // TODO:
-  }
+  stack(const stack& x, const Alloc& alloc)
+      : _container(x._container, alloc) {}
 
 
   //
@@ -122,11 +118,200 @@ class stack {
   // and passing alloc as second.
   //
   template<typename Alloc>
-  stack(stack&& x, const Alloc& alloc) {
-    // TODO:
+  stack(stack&& x, const Alloc& alloc)
+      : _container(x._container, alloc) {}
+
+
+  ///////////////////////
+  // Member functions: //
+  ///////////////////////
+
+
+  //
+  // empty():
+  //
+  // Returns whether the stack is empty: i.e. whether its size is
+  // zero.
+  //
+  // This member function effectively calls member empty of the
+  // underlying container object.
+  //
+  bool empty() const {
+    return _container.empty();
   }
 
 
+  //
+  // size():
+  //
+  // Returns the number of elements in the stack.
+  //
+  // This member function effectively calls member size of the
+  // underlying container object
+  //
+  size_type size() const {
+    return _container.size();
+  }
+
+
+  //
+  // top():
+  //
+  // Returns a reference to the top element in the stack.
+  //
+  // Since stacks are last-in first-out containers, the top element is
+  // the last element inserted into the stack.
+  //
+  // This member function effectively calls member back of the
+  // underlying container object.
+  //
+  reference& top() {
+    return _container.back();
+  }
+
+
+  const_reference& top() const {
+    return _container.back();
+  }
+
+
+  //
+  // push():
+  //
+  // Inserts a new element at the top of the stack, above its current
+  // top element. The content of this new element is initialized to a
+  // copy of val.
+  //
+  // This member function effectively calls the member function
+  // push_back of the underlying container object.
+  //
+  void push(const value_type& val) {
+    _container.push_back(val);
+  }
+
+
+  void push(value_type&& val) {
+    _container.push_back(val);
+  }
+
+
+  //
+  // emplace():
+  //
+  // Adds a new element at the top of the stack, above its current top
+  // element. This new element is constructed in place passing args as
+  // the arguments for its constructor.
+  //
+  // This member function effectively calls the member function
+  // emplace_back of the underlying container, forwarding args.
+  //
+  template<typename... Args>
+  void emplace(Args&&... args) {
+    _container.push_back(value_type{std::forward<Args>(args)...});
+  }
+
+
+  //
+  // pop():
+  //
+  // Removes the element on top of the stack, effectively reducing its
+  // size by one.
+  //
+  // The element removed is the latest element inserted into the
+  // stack, whose value can be retrieved by calling member stack::top.
+  //
+  // This calls the removed element's destructor.
+  //
+  // This member function effectively calls the member function
+  // pop_back of the underlying container object.
+  //
+  void pop() {
+    _container.pop_back();
+  }
+
+
+  //
+  // swap():
+  //
+  // Exchanges the contents of the container adaptor (*this) by those
+  // of x.
+  //
+  // This member function calls the non-member function swap
+  // (unqualified) to swap the underlying containers.
+  //
+  // The noexcept specifier matches the swap operation on the
+  // underlying container.
+  //
+  void swap(stack& x) noexcept(noexcept(std::swap(_container, x._container))) {
+    std::swap(_container, x._container);
+  }
+
+
+  ////////////////////////////////////
+  // Non-member function overloads: //
+  ////////////////////////////////////
+
+
+  //
+  // Relational operators:
+  //
+  // Performs the appropriate comparison operation between lhs and rhs.
+  //
+  // Each of these operator overloads calls the same operator on the
+  // underlying container objects.
+  //
+  friend bool operator==(const stack& lhs, const stack& rhs) {
+    return lhs._container == rhs._container;
+  }
+
+
+  friend bool operator!=(const stack& lhs, const stack& rhs) {
+    return lhs._container != rhs._container;
+  }
+
+
+  friend bool operator<(const stack& lhs, const stack& rhs) {
+    return lhs._container < rhs._container;
+  }
+
+
+  friend bool operator<=(const stack& lhs, const stack& rhs) {
+    return lhs._container <= rhs._container;
+  }
+
+
+  friend bool operator>(const stack& lhs, const stack& rhs) {
+    return lhs._container > rhs._container;
+  }
+
+
+  friend bool operator>=(const stack& lhs, const stack& rhs) {
+    return lhs._container >= rhs._container;
+  }
+
+
+ private:
+
+  ///////////////////////////////
+  // Private member variables: //
+  ///////////////////////////////
+
+  container_type _container;
+
 };
 
-#endif  // __USTL_ARRAY_H__
+
+//
+// swap():
+//
+// Exchanges the contents of x and y.
+template<typename T, typename Container>
+void swap(stack<T, Container>& x, stack<T, Container>& y)
+    noexcept(noexcept(x.swap(y))) {
+  x.swap(y);
+}
+
+
+}  // namespace ustl
+
+#endif  // __USTL_STACK_H__

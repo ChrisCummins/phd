@@ -10,6 +10,7 @@ included in 'include/ustl'. Unit tests in 'tests/', and benchmarks in
   include/ustl/forward_list     Mostly implemented (75% functional).
   include/ustl/list             Mostly implemented (75% functional).
   include/ustl/map              Work in progress.
+  include/ustl/stack            Fully implemented.
   include/ustl/unordered_map    Partly implemented (50% functional).
   include/ustl/vector           Mostly implemented (95% functional).
 
