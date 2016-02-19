@@ -537,7 +537,7 @@ CleanFiles += $(CxxTargets) $(CxxObjects)
 # Compiler flags:
 CxxFlags = \
 	-O2 \
-	-std=c++14 \
+	-std=c++1z \
 	-stdlib=libc++ \
 	-pedantic \
 	-Wall \
