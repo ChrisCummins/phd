@@ -1,19 +1,20 @@
 #include <algorithm>
 #include <vector>
 #include <iostream>
+#include <type_traits>
 
 template<typename T, typename Alloc>
 std::ostream& operator<<(std::ostream& out, const std::vector<T, Alloc>& vec) {
-  for (auto &val : vec)
-    out << val << ' ';
+  std::for_each(vec.begin(), vec.end(),
+                [& out](auto& val) { out << val << ' '; });
   return out;
 }
 
 template<typename Container, typename T>
-void map_multiply(Container &cont, const T& factor) {
+void map_multiply(Container& cont, const T& factor) {
+  static_assert(std::is_same<typename Container::value_type, T>::value);
   std::transform(cont.begin(), cont.end(), cont.begin(),
-                 [&, factor](const auto& a)
-                 { return typename Container::value_type{a * factor}; });
+                 [& factor](const auto& a){ return a * factor; });
 }
 
 template<typename Container>
