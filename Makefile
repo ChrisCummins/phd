@@ -281,6 +281,7 @@ learn := $(root)/learn
 CxxTargets += \
 	$(learn)/atc++/benchmark-argument-type \
 	$(learn)/atc++/constructors \
+	$(learn)/atc++/functional \
 	$(learn)/atc++/hash_map \
 	$(learn)/atc++/myvector \
 	$(learn)/atc++/size-of \
