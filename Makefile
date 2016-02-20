@@ -287,6 +287,7 @@ CxxTargets += \
 	$(learn)/atc++/myvector \
 	$(learn)/atc++/size-of \
 	$(learn)/atc++/strings \
+	$(learn)/atc++/templates \
 	$(learn)/atc++/user-input \
 	$(NULL)
 
