@@ -57,35 +57,29 @@ void walk_files(const fs::path& root, UnaryOp op,
   if (fs::is_symlink(root) && !follow_symlinks)
     return;
 
-  if (fs::exists(root)) {
-    if (fs::is_regular_file(root)) {
-      op(root);
-    } else if (fs::is_directory(root)) {
-      for (const auto& entry : fs::directory_iterator(root))
-        if (fs::is_directory(entry.path())) {
-          std::async(std::launch::async, [&]() {
-              // std::cerr << "New thread!" << std::endl;
-              walk_files(entry.path(), op);
-          });
-        } else {
-          walk_files(entry.path(), op);
-        }
-    }
-  } else {
+  if (!fs::exists(root)) {
     std::cerr << "warning: " << root << " not found.\n";
+    return;
+  }
+
+  if (fs::is_regular_file(root)) {
+    op(root);
+  } else if (fs::is_directory(root)) {
+    for (const auto& entry : fs::directory_iterator(root))
+      // Recurse into directories in a new thread.
+      if (fs::is_directory(entry.path())) {
+        std::async(std::launch::async, [&]() {
+            walk_files(entry.path(), op);
+          });
+      } else {
+        walk_files(entry.path(), op);
+      }
+  } else {
+    std::cerr << "I don't know what type of file " << root << " is.\n";
   }
 }
 
 }  // namespace file
-
-
-#include <mutex>
-
-// std::mutex cout_lock;
-
-std::ostream& get_cout() {
-  return std::cout;
-}
 
 
 int main(int argc, char** argv) {
@@ -94,7 +88,7 @@ int main(int argc, char** argv) {
   //
   auto op = [](const auto& path) {
     try {
-      get_cout() << file::md5sum(path) << ' ' << path.string() << std::endl;
+      std::cout << file::md5sum(path) << ' ' << path.string() << std::endl;
     } catch (std::runtime_error& e) {
       std::cerr << "error: failed to open " << path.string() << std::endl;
     }
