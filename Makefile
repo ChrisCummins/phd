@@ -334,6 +334,22 @@ $(learn)/atc++/constructors.o: $(GoogleTest)
 
 
 #
+# learn/boost/
+#
+LearnBoostTargets = \
+	$(learn)/boost/fs \
+	$(NULL)
+
+CxxTargets += $(LearnBoostTargets)
+
+LearnBoostObjects = $(addsuffix .o,$(LearnBoostTargets))
+$(LearnBoostObjects): $(Boost)
+
+$(learn)/boost_CxxFlags = $(Boost_filesystem_CxxFlags)
+$(learn)/boost_LdFlags = $(Boost_filesystem_LdFlags) -lcrypto -lssl
+
+
+#
 # learn/challenges/
 #
 CxxTargets += \
