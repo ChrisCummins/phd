@@ -45,9 +45,25 @@ constexpr auto compile_time_fib() {
 }
 
 
+//
+// A contrived "template template" parameters example.
+//
+template<template<typename, typename> class vector, typename T, typename A>
+void print_vec(const vector<T, A> &vec) {
+  for (typename vector<T, A>::size_type i = 0; i < vec.size(); ++i) {
+    const T& val = vec[i];
+    std::cout << val << ' ';
+  }
+  std::cout << std::endl;
+}
+
+
 int main() {
   auto seq = compile_time_fib<uint64_t, 46>();
 
   for (decltype(seq)::size_type i = 0; i < seq.size(); ++i)
     std::cout << "fib(" << (i + 1) << ") = " << seq[i] << std::endl;
+
+  std::vector<int> v{1, 2, 3, 4, 5};
+  print_vec(v);
 }
