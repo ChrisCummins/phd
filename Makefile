@@ -322,6 +322,7 @@ CxxTargets += \
 	$(learn)/atc++/strings \
 	$(learn)/atc++/templates \
 	$(learn)/atc++/user-input \
+	$(learn)/atc++/value-categories \
 	$(NULL)
 
 $(learn)/atc++/benchmark-argument-type.o_CxxFlags = $(GoogleBenchmark_CxxFlags)
