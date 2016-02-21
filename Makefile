@@ -197,6 +197,39 @@ DistcleanTargets += distclean-googlebenchmark
 
 
 #
+# extern/boost
+#
+Boost = $(extern)/boost/boost/system
+BoostDir = $(extern)/boost
+BoostConfigDir = $(tools)
+
+Boost_CxxFlags = -I$(extern)/boost/boost
+Boost_LdFlags = -L$(BoostDir)/stage/lib
+
+Boost_filesystem_CxxFlags = $(Boost_CxxFlags)
+Boost_filesystem_LdFlags = $(Boost_LdFlags) -lboost_filesystem -lboost_system
+
+$(Boost):
+	@echo '  BUILD    boost'
+	$(QUIET)mkdir -pv $(BoostBuild)
+	$(QUIET)cd $(BoostDir) \
+		&& ./bootstrap.sh --prefix=$(BoostBuild) \
+			cxxflags="-stdlib=libc++" stage \
+		&& BOOST_BUILD_PATH=$(BoostConfigDir) ./b2 \
+			--prefix=$(BoostBuild) threading=multi \
+			link=static runtime-link=static \
+			cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++"
+
+.PHONY: distclean-boost
+distclean-boost:
+	$(QUIET)cd $(BoostDir) \
+		&& ./b2 clean \
+		&& find . -name '*.a' -o -name '*.o' -exec rm {} \;
+
+DistcleanTargets += distclean-boost
+
+
+#
 # extern/googletest
 #
 GoogleTest = $(extern)/googletest-build/libgtest.a
@@ -298,6 +331,22 @@ $(learn)/atc++/benchmark-argument-type.o: $(GoogleBenchmark)
 $(learn)/atc++/constructors.o_CxxFlags = $(GoogleTest_CxxFlags)
 $(learn)/atc++/constructors_LdFlags = $(GoogleTest_LdFlags)
 $(learn)/atc++/constructors.o: $(GoogleTest)
+
+
+#
+# learn/boost/
+#
+LearnBoostTargets = \
+	$(learn)/boost/fs \
+	$(NULL)
+
+CxxTargets += $(LearnBoostTargets)
+
+LearnBoostObjects = $(addsuffix .o,$(LearnBoostTargets))
+$(LearnBoostObjects): $(Boost)
+
+$(learn)/boost_CxxFlags = $(Boost_filesystem_CxxFlags)
+$(learn)/boost_LdFlags = $(Boost_filesystem_LdFlags) -lcrypto -lssl
 
 
 #
