@@ -40,6 +40,41 @@ class X {
   X operator+(const X &x) { return X(*x.data + *data); }
 };
 
+class Y {
+ public:
+  int data;
+
+  explicit Y(const int n) : data(n) { std::cout << "-> Y(const int n)\n"; }
+
+  Y() : data(0) { std::cout << "-> Y()\n"; }
+
+  ~Y() { std::cout << "-> ~Y()\n"; }
+
+  Y(const Y& y) { data = y.data; std::cout << "-> Y(const Y&y)\n"; }
+
+  Y(Y&& y) { data = y.data; std::cout << "-> Y(Y&&y)\n"; }
+
+  Y& operator=(const Y& y) {
+    std::cout << "-> Y& operator=(const Y& y)\n";
+    data = y.data; return *this;
+  }
+
+  Y& operator=(Y&& y) {
+    std::cout << "-> Y& operator=(Y&& y)\n";
+    data = y.data; return *this;
+  }
+
+  Y& operator+(const Y& y) {
+    std::cout << "-> Y& operator+(const Y& y)\n";
+    data += y.data; return *this;
+  }
+
+  Y& operator+(const Y&& y) {
+    std::cout << "-> Y& operator+(const Y&& y)\n";
+    data += y.data; return *this;
+  }
+};
+
 
 TEST(Constructors, normal) {
   X x1(10, 5);
@@ -102,6 +137,24 @@ TEST(Constructors, moveAssignment) {
 }
 
 int main(int argc, char **argv) {
+  Y y1(5);
+  Y y2(10);
+  Y y3(y2);
+  y3 = y2;
+  y2 = Y(12) + Y(15);
+  y1 = std::move(y3);
+
+  for (int i = 0; i < 3; i++) {
+    Y tmp;
+    y2 = tmp;
+  }
+
+  std::cout << "entering scope\n";
+  {
+    Y tmp(5);
+  }
+  std::cout << "left scope\n";
+
   // Run unit tests:
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

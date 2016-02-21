@@ -312,11 +312,13 @@ learn := $(root)/learn
 # learn/atc++/
 #
 CxxTargets += \
+	$(learn)/atc++/arrays \
 	$(learn)/atc++/benchmark-argument-type \
 	$(learn)/atc++/constructors \
 	$(learn)/atc++/functional \
 	$(learn)/atc++/hash_map \
 	$(learn)/atc++/inheritance \
+	$(learn)/atc++/lambdas \
 	$(learn)/atc++/myvector \
 	$(learn)/atc++/size-of \
 	$(learn)/atc++/strings \
@@ -325,13 +327,9 @@ CxxTargets += \
 	$(learn)/atc++/value-categories \
 	$(NULL)
 
-$(learn)/atc++/benchmark-argument-type.o_CxxFlags = $(GoogleBenchmark_CxxFlags)
-$(learn)/atc++/benchmark-argument-type_LdFlags = $(GoogleBenchmark_LdFlags)
-$(learn)/atc++/benchmark-argument-type.o: $(GoogleBenchmark)
-
-$(learn)/atc++/constructors.o_CxxFlags = $(GoogleTest_CxxFlags)
-$(learn)/atc++/constructors_LdFlags = $(GoogleTest_LdFlags)
-$(learn)/atc++/constructors.o: $(GoogleTest)
+$(learn)/atc++_CxxFlags = $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
+$(learn)/atc++_LdFlags = $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
+$(wildcard $(learn)/atc++/%.o): $(GoogleTest)
 
 
 #
