@@ -1,5 +1,6 @@
 #include <array>
 #include <iostream>
+#include <string>
 #include <vector>
 
 template<typename Container, unsigned int n>
@@ -58,6 +59,18 @@ void print_vec(const vector<T, A> &vec) {
 }
 
 
+//
+// A contrived "enable_if" example. Typename T must be "int" type.
+//
+template<typename T,
+         typename = typename std::enable_if<std::is_same<T, int>::value>::type>
+void _print_int(const std::string name, const T& val) {
+  std::cout << name << " = " << val << std::endl;
+}
+
+#define print_int(x) _print_int((#x), (x));
+
+
 int main() {
   auto seq = compile_time_fib<uint64_t, 46>();
 
@@ -66,4 +79,9 @@ int main() {
 
   std::vector<int> v{1, 2, 3, 4, 5};
   print_vec(v);
+
+  auto a = 5, b = 3;
+  print_int(a);
+  print_int(b);
+  print_int(a + b);
 }
