@@ -321,6 +321,7 @@ CxxTargets += \
 	$(learn)/atc++/lambdas \
 	$(learn)/atc++/myvector \
 	$(learn)/atc++/size-of \
+	$(learn)/atc++/smart-ptr \
 	$(learn)/atc++/strings \
 	$(learn)/atc++/templates \
 	$(learn)/atc++/user-input \
