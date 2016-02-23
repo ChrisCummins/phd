@@ -1,33 +1,56 @@
+#
+# phd Makefile
+#
+# This repo uses a single monolithic build system to prepare the
+# toolchain, compile all executables, documents, etc. This Makefile
+# makes **no** guarantee of portability, although in theory it should
+# be.
+#
+
 # The default goal is...
 .DEFAULT_GOAL = all
 
-# Use V=1 argument for verbose builds
+
+########################################################################
+#                           Configuration
+
+#
+# The number of threads to use:
+#
+WorkerThreads := 4
+
+SHELL := /bin/bash
+
+AWK := awk
+EGREP := egrep
+GREP := grep
+PYTHON2 := python2
+PYTHON3 := python3
+RM := rm -fv
+SED := sed
+
+
+# Set number of worker threads.
+MAKEFLAGS := -j$(WorkerThreads)
+
+
+##################### END OF CONFIGURATION
+
+
+########################################################################
+#                             Variables
+
+# Pass 'V=1' argument for verbose builds
 QUIET_  = @
 QUIET   = $(QUIET_$(V))
 
 # Assume no out-of-tree builds:
 root := $(PWD)
 
-SHELL := /bin/bash
-NPROC := 4
-
 comma := ,
 space :=
 space +=
 
-#
-# Configuration
-#
-AWK := awk
-EGREP := egrep
-GREP := grep
-MAKEFLAGS := -j$(NPROC)
-PYTHON2 := python2
-PYTHON3 := python3
-RM := rm -fv
-SED := sed
-
-# Targets:
 AutotexTargets =
 BuildTargets =
 CleanFiles =
@@ -49,6 +72,7 @@ TestTargets =
 ########################################################################
 #                             Functions
 
+
 # Joins elements of a list
 #
 # Arguments:
@@ -57,6 +81,7 @@ TestTargets =
 define join-with
 	$(subst $(space),$1,$(strip $2))
 endef
+
 
 # Compile C sources to object file
 #
@@ -68,6 +93,7 @@ define c-compile-o
 	@echo '  CC       $1'
 	$(QUIET)$(CC) $(CFlags) $3 $2 -c -o $1
 endef
+
 
 # Compile C++ sources to object file
 #
@@ -82,6 +108,7 @@ define cxx-compile-o
 	$(call cpplint,$2)
 endef
 
+
 # Link object files to executable
 #
 # Arguments:
@@ -92,6 +119,7 @@ define o-link
 	@echo '  LD       $1'
 	$(QUIET)$(LD) $(CxxFlags) $(LdFlags) $3 $2 -o $1
 endef
+
 
 # Run cpplint on input, generating a .lint file.
 #
@@ -105,6 +133,7 @@ define cpplint
 		fi
 endef
 
+
 # Run clang-tidy on input.
 #
 # Arguments:
@@ -115,6 +144,7 @@ define clang-tidy
 		$(CLANGTIDY) $1 -- $(CxxFlags) $2; \
 	fi
 endef
+
 
 # Run python setup.py test
 #
@@ -131,6 +161,7 @@ define python-setup-test
 		grep -v '... ok'
 endef
 
+
 # Run python setup.py install
 #
 # Arguments:
@@ -142,6 +173,7 @@ define python-setup-install
 		&> $2/.$(strip $1).install.log \
 		|| cat $2/.$(strip $1).install.log
 endef
+
 
 # Run python setup.py clean
 #
@@ -157,6 +189,7 @@ endef
 
 ########################################################################
 #                             Targets
+
 
 #
 # docs/
@@ -174,6 +207,7 @@ AutotexTargets += \
 # extern/
 #
 extern := $(root)/extern
+
 
 #
 # extern/benchmark
@@ -256,10 +290,12 @@ DistcleanTargets += distclean-googletest
 TriSYCL_CxxFlags = -I$(extern)/triSYCL/include
 TriSYCL_LdFlags =
 
+
 #
 # lab/
 #
 lab := $(root)/lab
+
 
 #
 # lab/stl/
@@ -301,6 +337,7 @@ $(lab)/stl/benchmarks/benchmarks: $(StlBenchmarksObjects)
 CxxTargets += $(lab)/stl/benchmarks/benchmarks
 $(lab)/stl/benchmarks_CxxFlags = $(Stl_CxxFlags) $(GoogleBenchmark_CxxFlags)
 $(lab)/stl/benchmarks_LdFlags = $(GoogleBenchmark_LdFlags)
+
 
 #
 # learn/
@@ -426,9 +463,11 @@ CxxTargets += \
 $(learn)/triSYCL_CxxFlags = $(TriSYCL_CxxFlags) $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
 $(learn)/triSYCL_LdFlags = $(TriSYCL_CxxFlags) $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
 
+
 #
 # playground/
 #
+
 
 #
 # playground/rt/
@@ -489,6 +528,7 @@ $(RayTracerLib): $(RayTracerObjects)
 
 CleanFiles += $(RayTracerObjects) $(RayTracerLib)
 
+
 #
 # playground/sc/
 #
@@ -499,15 +539,21 @@ CxxTargets += $(root)/playground/sc/sc
 # src/
 #
 
+#
 # src/labm8
+#
 Python2SetupTestDirs += $(root)/src/labm8
 Python2SetupInstallDirs += $(root)/src/labm8
 Python3SetupTestDirs += $(root)/src/labm8
 Python3SetupInstallDirs += $(root)/src/labm8
 
+
+#
 # src/omnitune
+#
 Python2SetupTestDirs += $(root)/src/omnitune
 Python2SetupInstallDirs += $(root)/src/omnitune
+
 
 #
 # thesis/
@@ -517,6 +563,7 @@ AutotexTargets += $(root)/thesis/thesis.pdf
 
 ########################################################################
 #                         Build rules
+
 
 #
 # C
@@ -624,6 +671,7 @@ CxxFlags = \
 		$($(patsubst %/,%,$@)_CxxFlags) \
 		$($(patsubst %/,%,$(dir $@))_CxxFlags))
 
+
 #
 # Cpplint
 #
@@ -650,6 +698,7 @@ CleanFiles += $(CppLintTargets)
 %.h.lint: %.h
 	@echo '  LINT     $@'
 	$(call cpplint,$<)
+
 
 #
 # Linker
@@ -737,7 +786,7 @@ CleanFiles += \
 
 
 #
-# Python
+# Python (2 and 3)
 #
 Python2SetupTestLogs = $(addsuffix /.python2.test.log, \
 	$(Python2SetupTestDirs))
@@ -857,6 +906,7 @@ clean: $(CleanTargets)
 distclean: clean $(DistcleanTargets)
 	$(QUIET)$(RM) $(sort $(DistcleanFiles))
 
+
 #
 # Watch
 #
@@ -880,6 +930,3 @@ help:
 		| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
 		| sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' \
 		| sed 's/^/    /'
-
-foo:
-	@echo "$(lab)/stl/include/ustl/$(patsubst %.o,%,$(notdir $(lab)/stl/test/algorithm.o))"
