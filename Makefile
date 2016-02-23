@@ -626,6 +626,9 @@ CFlags = \
 		$($(patsubst %/,%,$@)_CFlags) \
 		$($(patsubst %/,%,$(dir $@))_CFlags))
 
+c: $(CTargets)
+DocStrings += "c: build all C targets"
+
 
 #
 # C++
@@ -681,6 +684,9 @@ CxxFlags = \
 		$($(patsubst %/,%,$@)_CxxFlags) \
 		$($(patsubst %/,%,$(dir $@))_CxxFlags))
 
+cpp: $(CxxTargets)
+DocStrings += "cpp: build all C++ targets"
+
 
 #
 # Cpplint
@@ -708,6 +714,9 @@ CleanFiles += $(CppLintTargets)
 %.h.lint: %.h
 	@echo '  LINT     $@'
 	$(call cpplint,$<)
+
+lint: $(CppLintTargets)
+DocStrings += "lint: build all lint files"
 
 
 #
@@ -793,6 +802,9 @@ CleanFiles += \
 	$(AutotexLogFiles) \
 	$(LatexCleanFiles) \
 	$(NULL)
+
+tex: $(AutotexTargets)
+DocStrings += "tex: build all LaTeX targets"
 
 
 #
@@ -896,16 +908,23 @@ distclean-toolchain:
 
 DistcleanTargets += distclean-toolchain
 
+toolchain: $(toolchain)
+DocStrings += "toolchain: build toolchain"
+
 
 #
 # Git
 #
-BuildTargets += $(root)/.git/hooks/pre-push
+GitTargets = $(root)/.git/hooks/pre-push
+BuildTargets += $(GitTargets)
 
 # Install pre-commit hook:
 $(root)/.git/hooks/pre-push: $(root)/tools/pre-push
 	@echo '  GIT     $@'
 	$(QUIET)cp $< $@
+
+git: $(GitTargets)
+DocStrings += "git: configure version control"
 
 
 #
