@@ -68,6 +68,16 @@ Python3SetupInstallDirs =
 Python3SetupTestDirs =
 TestTargets =
 
+#
+# Self-documentation. For every user-visible target, add a doc string
+# using the following format:
+#
+#   DocStrings += "<target>: <description>"
+#
+# These doc strings are printed by 'make help'.
+#
+DocStrings =
+
 
 ########################################################################
 #                             Functions
@@ -845,12 +855,14 @@ CleanFiles += \
 # Testing
 #
 test: $(TestTargets)
+DocStrings += "test: run all tests"
 
 
 #
 # Install
 #
 install: $(InstallTargets)
+DocStrings += "install: install files"
 
 
 #
@@ -902,31 +914,30 @@ $(root)/.git/hooks/pre-push: $(root)/tools/pre-push
 .PHONY: clean distclean
 clean: $(CleanTargets)
 	$(QUIET)$(RM) $(sort $(CleanFiles))
+DocStrings += "clean: remove generated files"
 
 distclean: clean $(DistcleanTargets)
 	$(QUIET)$(RM) $(sort $(DistcleanFiles))
+DocStrings += "distclean: remove *all* generated files and toolchain"
 
 
 #
-# Watch
-#
-WATCH := $(root)/tools/watchr/watchr.js
-
-.PHONY: watch
-watch:
-	$(QUIET)$(WATCH)
-
-
-#
-# All
+# All.
 #
 all: $(BuildTargets)
+DocStrings += "all: build everything"
+
+
+#
+# Help & documentation
+#
 
 .PHONY: help
 help:
-	@echo "Build targets:"
+	@echo "make targets:"
 	@echo
-	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
-		| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
-		| sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' \
-		| sed 's/^/    /'
+	@(for var in $(DocStrings); do echo $$var; done) \
+		| sort --ignore-case | while read var; do \
+		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
+		echo $$var | cut -d':' -f2-; \
+	done
