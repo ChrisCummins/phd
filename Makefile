@@ -38,6 +38,67 @@ MAKEFLAGS := -j$(WorkerThreads)
 
 
 ########################################################################
+#                         Output & Messages
+
+Interactive := $(shell [ -t 0 ] && echo 1)
+
+#
+# Output formatting strings
+#
+ifdef Interactive
+TTYreset = $(shell tput sgr0)
+TTYbold = $(shell tput bold)
+TTYstandout = $(shell tput smso)
+TTYunderline = $(shell tput smul)
+
+TTYblack = $(shell tput setaf 0)
+TTYblue = $(shell tput setaf 4)
+TTYcyan = $(shell tput setaf 6)
+TTYgreen = $(shell tput setaf 2)
+TTYmagenta = $(shell tput setaf 5)
+TTYred = $(shell tput setaf 1)
+TTYwhite = $(shell tput setaf 7)
+TTYyellow = $(shell tput setaf 3)
+endif  # Interactive
+
+#
+# Task types.
+#
+TaskCompile = $(TTYred)
+TaskAux = $(TTYyellow)
+TaskLink = $(TTYgreen)
+TaskMisc = $(TTYblue)
+TaskInstall = $(TTYcyan)
+
+TaskNameLength := 8
+
+#
+# Print message.
+#
+# Arguments:
+#   $1 (str) Message body
+#   $2       TTY format string (optional)
+define print
+	@echo '$2$1$(TTYreset)'
+endef
+
+# Print task message.
+#
+# Arguments:
+#   $1 (str) Task name (in uppercase)
+#   $2 (str) Target path
+#   $3       TTY format string (optional)
+#
+# Example usage:
+#
+#   $(call print-task,CC,foo.c,$(TaskCompile))
+#   $(call print-task,SCRIPT,script.sh)
+define print-task
+	@printf '  $(TTYbold)$3%-$(TaskNameLength)s$(TTYreset) %s\n' '$1' '$2'
+endef
+
+
+########################################################################
 #                             Variables
 
 # Pass 'V=1' argument for verbose builds
@@ -100,7 +161,7 @@ endef
 #   $2 (str[]) C sources
 #   $3 (str[]) Flags for compiler
 define c-compile-o
-	@echo '  CC       $1'
+	$(call print-task,CC,$1,$(TaskCompile))
 	$(QUIET)$(CC) $(CFlags) $3 $2 -c -o $1
 endef
 
@@ -112,7 +173,7 @@ endef
 #   $2 (str[]) C++ sources
 #   $3 (str[]) Flags for compiler
 define cxx-compile-o
-	@echo '  CXX      $1'
+	$(call print-task,CXX,$1,$(TaskCompile))
 	$(QUIET)$(CXX) $(CxxFlags) $3 $2 -c -o $1
 	$(call clang-tidy,$2,$3)
 	$(call cpplint,$2)
@@ -126,7 +187,7 @@ endef
 #   $2 (str[]) Object files
 #   $3 (str[]) Flags for linker
 define o-link
-	@echo '  LD       $1'
+	$(call print-task,LD,$1,$(TaskLink))
 	$(QUIET)$(LD) $(CxxFlags) $(LdFlags) $3 $2 -o $1
 endef
 
@@ -162,7 +223,7 @@ endef
 #   $1 (str) Python executable
 #   $2 (str) Source directory
 define python-setup-test
-	@echo '  TEST    $(strip $1) $(strip $2)'
+	$(call print-task,TEST,$(strip $1) $(strip $2),$(TaskMisc))
 	$(QUIET)cd $2 && $(strip $1) ./setup.py test \
 		&> $2/.$(strip $1).test.log \
 		&& $(GREP) -E '^Ran [0-9]+ tests in' \
@@ -178,7 +239,7 @@ endef
 #   $1 (str) Python executable
 #   $2 (str) Source directory
 define python-setup-install
-	@echo '  INSTALL $2'
+	$(call print-task,INSTALL,$2,$(TaskInstall))
 	$(QUIET)cd $2 && $(strip $1) ./setup.py install \
 		&> $2/.$(strip $1).install.log \
 		|| cat $2/.$(strip $1).install.log
@@ -227,7 +288,7 @@ GoogleBenchmark_CxxFlags = -I$(extern)/benchmark/include
 GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
 
 $(GoogleBenchmark):
-	@echo '  BUILD    $@'
+	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(QUIET)mkdir -pv $(extern)/benchmark/build
 	$(QUIET)cd $(extern)/benchmark/build \
 		&& cmake .. \
@@ -254,7 +315,7 @@ Boost_filesystem_CxxFlags = $(Boost_CxxFlags)
 Boost_filesystem_LdFlags = $(Boost_LdFlags) -lboost_filesystem -lboost_system
 
 $(Boost):
-	@echo '  BUILD    boost'
+	$(call print-task,BUILD,boost,$(TaskMisc))
 	$(QUIET)mkdir -pv $(BoostBuild)
 	$(QUIET)cd $(BoostDir) \
 		&& ./bootstrap.sh --prefix=$(BoostBuild) \
@@ -281,7 +342,7 @@ GoogleTest_CxxFlags = -I$(extern)/googletest/googletest/include
 GoogleTest_LdFlags = -L$(extern)/googletest-build -lgtest
 
 $(GoogleTest):
-	@echo '  BUILD    $@'
+	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(QUIET)mkdir -pv $(extern)/googletest-build
 	$(QUIET)cd $(extern)/googletest-build \
 		&& cmake ../googletest/googletest \
@@ -500,7 +561,7 @@ $(RayTracerDir)/examples/example2: \
 $(RayTracerDir)/examples/example2.cpp: \
 		$(RayTracerDir)/examples/example2.rt \
 		$(RayTracerDir)/scripts/mkscene.py
-	@echo "  MKSCENE  $@"
+	$(call print-task,MKSCENE,$@,$(TaskAux))
 	$(QUIET)$(RayTracerDir)/scripts/mkscene.py $< $@ >/dev/null
 
 # Don't run linter on generated file:
@@ -712,7 +773,7 @@ BuildTargets += $(CppLintTargets)
 CleanFiles += $(CppLintTargets)
 
 %.h.lint: %.h
-	@echo '  LINT     $@'
+	$(call print-task,LINT,$@,$(TaskAux))
 	$(call cpplint,$<)
 
 lint: $(CppLintTargets)
@@ -745,10 +806,10 @@ AutotexDirs = $(dir $(AutotexTargets))
 AutotexDepFiles = $(addsuffix .autotex.deps, $(AutotexDirs))
 AutotexLogFiles = $(addsuffix .autotex.log, $(AutotexDirs))
 
+# Autotex does it's own dependency analysis, so always run it:
 .PHONY: $(AutotexTargets)
 $(AutotexTargets):
 	@$(AUTOTEX) make $(patsubst %.pdf,%,$@)
-# Autotex does it's own dependency analysis, so always run it:
 
 # File extensions to remove in LaTeX build directories:
 LatexBuildfileExtensions = \
@@ -894,7 +955,7 @@ $(CxxTargets): $(CXX)
 $(CxxObjects): $(CXX)
 
 $(toolchain):
-	@echo "Bootstrapping! Go enjoy a coffee, this will take a while."
+	$(call print,Bootstrapping! Go enjoy a coffee, this will take a while.)
 	$(QUIET)mkdir -vp $(LlvmBuild)
 	$(QUIET)cd $(LlvmBuild) \
 		&& cmake $(LlvmSrc) -DCMAKE_BUILD_TYPE=Release \
@@ -920,7 +981,7 @@ BuildTargets += $(GitTargets)
 
 # Install pre-commit hook:
 $(root)/.git/hooks/pre-push: $(root)/tools/pre-push
-	@echo '  GIT     $@'
+	$(call print-task,GIT,$@,$(TaskMisc))
 	$(QUIET)cp $< $@
 
 git: $(GitTargets)
