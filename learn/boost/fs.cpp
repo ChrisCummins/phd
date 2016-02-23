@@ -4,6 +4,7 @@
 #include <iostream>
 #include <set>
 #include <sstream>
+#include <stack>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -27,6 +28,65 @@
 namespace fs = boost::filesystem;
 
 namespace file {
+
+
+//
+// My implementation of boost::filesystem::recursive_diretory_iterator.
+//
+class recursive_directory_iterator {
+ private:
+  std::stack<fs::directory_iterator> _stack;
+  fs::directory_iterator _end{};
+  fs::path _base;
+
+ public:
+  recursive_directory_iterator() : _stack({fs::directory_iterator{}}) {}
+
+  explicit recursive_directory_iterator(const fs::path& root)
+      : _stack({decltype(_stack)::value_type{root}}), _base(root) {}
+
+  explicit recursive_directory_iterator(fs::path&& root)
+      : _stack({decltype(_stack)::value_type{std::move(root)}}),
+        _base(*_stack.top()) {}
+
+  explicit recursive_directory_iterator(const decltype(_stack)& stack)
+      : _stack(stack) {}
+
+  auto& operator++() {
+    if (!(_stack.size() == 1 && _stack.top() == _end)) {
+      if (fs::is_directory(*_stack.top())) {
+        auto tmp = *_stack.top();
+        ++_stack.top();
+        _stack.push(decltype(_stack)::value_type{std::move(tmp)});
+      } else {
+        ++_stack.top();
+        while (_stack.size() > 1 && _stack.top() == _end) {
+          _stack.pop();
+        }
+      }
+    }
+
+    return *this;
+  }
+
+  auto operator*() const {
+    return *_stack.top();
+  }
+
+  auto operator==(const recursive_directory_iterator& rhs) const {
+    return _stack.top() == rhs._stack.top();
+  }
+
+  auto operator!=(const recursive_directory_iterator& rhs) const {
+    return !(operator==(rhs));
+  }
+
+  auto operator<(const recursive_directory_iterator& rhs) const {
+    return operator*() < *rhs;
+  }
+};
+
+
 
 std::string md5sum(const fs::path& path) {
   auto file_descript = open(path.string().c_str(), O_RDONLY);
@@ -127,33 +187,30 @@ bool files_are_identical(const fs::path& lhs, const fs::path& rhs) {
 //   both directories, print "M <filename>".
 //
 void dir_diff(const fs::path& lhs, const fs::path& rhs) {
-  const auto leftfiles = get_files_in_dir(lhs),
-            rightfiles = get_files_in_dir(rhs);
-  auto left = leftfiles.begin(),
-      right = rightfiles.begin();
+  fs::recursive_directory_iterator left{lhs}, right{rhs}, end{};
 
-  while (left != leftfiles.end() && right != rightfiles.end()) {
+  while (left != end && right != end) {
     if (*left == *right) {
       if (files_are_identical(lhs / *left, rhs / *right)) {
-        std::cout << "= " << (*left).string() << '\n';
+        std::cout << "= " << (*left).path() << '\n';
       } else {
         //
         // Files are different. Copy left -> right.
         //
-        std::cout << "M " << (*left).string() << '\n';
+        std::cout << "M " << (*left).path() << '\n';
       }
       ++left; ++right;
-    } else if (left < right) {
+    } else if (*left < *right) {
       //
       // File only exists on left. Copy left -> right.
       //
-      std::cout << "+ " << (*left).string() << '\n';
+      std::cout << "+ " << (*left).path() << '\n';
       ++left;
     } else {
       //
       // File only exists on right. Delete right.
       //
-      std::cout << "- " << (*right).string() << '\n';
+      std::cout << "- " << (*right).path() << '\n';
       ++right;
     }
   }
@@ -161,14 +218,18 @@ void dir_diff(const fs::path& lhs, const fs::path& rhs) {
   //
   // Files which only exist on left. Copy left -> right.
   //
-  while (left != leftfiles.end())
-    std::cout << "+ " << (*left++).string() << '\n';
+  while (left != end) {
+    std::cout << "+ " << (*left).path() << '\n';
+    ++left;
+  }
 
   //
   // Files which only exist on right. Delete right.
   //
-  while (right != rightfiles.end())
-    std::cout << "- " << (*right++).string() << '\n';
+  while (right != end) {
+    std::cout << "- " << (*right).path() << '\n';
+    ++right;
+  }
 }
 
 
@@ -193,6 +254,8 @@ void print_dir_md5sums(const fs::path& root) {
 
 
 int main(int argc, char** argv) {
+  file::recursive_directory_iterator first{argv[1]}, last{};
+
   if (argc == 1) {
     print_dir_md5sums(".");
   } else if (argc == 3) {
