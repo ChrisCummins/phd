@@ -951,6 +951,27 @@ DocStrings += "all: build everything"
 # Help & documentation
 #
 
+# List all build files:
+.PHONY: ls-files
+ls-files:
+	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
+		| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
+		| sort --ignore-case \
+		| grep '^/'
+DocStrings += "ls-files: show all files which are built by Makefile"
+
+
+# List all build targets:
+.PHONY: ls-targets
+ls-targets:
+	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
+		| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
+		| sort --ignore-case \
+		| egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
+DocStrings += "ls-targets: show all build targets"
+
+
+# Print doc strings:
 .PHONY: help
 help:
 	@echo "make targets:"
