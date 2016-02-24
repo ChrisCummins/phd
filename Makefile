@@ -40,11 +40,37 @@ MAKEFLAGS := -j$(WorkerThreads)
 ########################################################################
 #                         Output & Messages
 
-Interactive := $(shell [ -t 0 ] && echo 1)
+#
+# Verbosity controls. There are three levels of verbosity 0-2, set by
+# passing the desired V value to Make:
+#
+#   V=0 (default) print summary messages
+#   V=1 same as V=0, but print build commands
+#   V=2 same as V=1, but print all build-related commands
+#   V=3 same as V=2, but print all commands for debugging purposes
+#
+__verbosity_1_ = @
+__verbosity_1_0 = @
+
+__verbosity_2_ = @
+__verbosity_2_0 = @
+__verbosity_2_1 = @
+
+__verbosity_3_ = @
+__verbosity_3_0 = @
+__verbosity_3_1 = @
+__verbosity_3_2 = @
+
+V1 = $(__verbosity_1_$(V))
+V2 = $(__verbosity_2_$(V))
+V3 = $(__verbosity_3_$(V))
+
 
 #
-# Output formatting strings
+# Output formatting
 #
+Interactive := $(shell [ -t 0 ] && echo 1)
+
 ifdef Interactive
 TTYreset = $(shell tput sgr0)
 TTYbold = $(shell tput bold)
@@ -100,10 +126,6 @@ endef
 
 ########################################################################
 #                             Variables
-
-# Pass 'V=1' argument for verbose builds
-QUIET_  = @
-QUIET   = $(QUIET_$(V))
 
 # Assume no out-of-tree builds:
 root := $(PWD)
@@ -162,7 +184,7 @@ endef
 #   $3 (str[]) Flags for compiler
 define c-compile-o
 	$(call print-task,CC,$1,$(TaskCompile))
-	$(QUIET)$(CC) $(CFlags) $3 $2 -c -o $1
+	$(V1)$(CC) $(CFlags) $3 $2 -c -o $1
 endef
 
 
@@ -174,7 +196,7 @@ endef
 #   $3 (str[]) Flags for compiler
 define cxx-compile-o
 	$(call print-task,CXX,$1,$(TaskCompile))
-	$(QUIET)$(CXX) $(CxxFlags) $3 $2 -c -o $1
+	$(V1)$(CXX) $(CxxFlags) $3 $2 -c -o $1
 	$(call clang-tidy,$2,$3)
 	$(call cpplint,$2)
 endef
@@ -188,22 +210,27 @@ endef
 #   $3 (str[]) Flags for linker
 define o-link
 	$(call print-task,LD,$1,$(TaskLink))
-	$(QUIET)$(LD) $(CxxFlags) $(LdFlags) $3 $2 -o $1
+	$(V1)$(LD) $(CxxFlags) $(LdFlags) $3 $2 -o $1
 endef
 
+
+cpplint-cmd = $(CPPLINT) $(CxxLintFlags) $1 2>&1 \
+	| grep -v '^Done processing\|^Total errors found: ' \
+	| tee $1.lint
 
 # Run cpplint on input, generating a .lint file.
 #
 # Arguments:
 #   $1 (str) C++ source/header
 define cpplint
-	$(QUIET)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
-		$(CPPLINT) $(CxxLintFlags) $1 2>&1 \
-			| grep -v '^Done processing\|^Total errors found: ' \
-			| tee $1.lint; \
-		fi
+	$(V3)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
+		test -z "$(V2)" && echo "$(cpplint-cmd)"; \
+		$(cpplint-cmd); \
+	fi
 endef
 
+
+clang-tidy-cmd = $(CLANGTIDY) $1 -- $(CxxFlags) $2
 
 # Run clang-tidy on input.
 #
@@ -211,11 +238,18 @@ endef
 #  $1 (str) source file
 #  $2 (str[]) Compilation flags
 define clang-tidy
-	$(QUIET)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
-		$(CLANGTIDY) $1 -- $(CxxFlags) $2; \
+	$(V3)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
+		test -z "$(V2)" && echo "$(clang-tidy-cmd)"; \
+		$(clang-tidy-cmd); \
 	fi
 endef
 
+
+python-setup-test-cmd = \
+	cd $2 && $(strip $1) ./setup.py test &> $2/.$(strip $1).test.log \
+	&& $(GREP) -E '^Ran [0-9]+ tests in' $2/.$(strip $1).test.log \
+	|| sed -n -e '/ \.\.\. /,$${p}' $2/.$(strip $1).test.log | \
+	grep -v '... ok'
 
 # Run python setup.py test
 #
@@ -224,14 +258,13 @@ endef
 #   $2 (str) Source directory
 define python-setup-test
 	$(call print-task,TEST,$(strip $1) $(strip $2),$(TaskMisc))
-	$(QUIET)cd $2 && $(strip $1) ./setup.py test \
-		&> $2/.$(strip $1).test.log \
-		&& $(GREP) -E '^Ran [0-9]+ tests in' \
-		$2/.$(strip $1).test.log \
-		|| sed -n -e '/ \.\.\. /,$${p}' $2/.$(strip $1).test.log | \
-		grep -v '... ok'
+	$(V2)$(python-setup-test-cmd)
 endef
 
+
+python-setup-install-cmd = \
+	cd $2 && $(strip $1) ./setup.py install &> $2/.$(strip $1).install.log \
+	|| cat $2/.$(strip $1).install.log
 
 # Run python setup.py install
 #
@@ -240,11 +273,11 @@ endef
 #   $2 (str) Source directory
 define python-setup-install
 	$(call print-task,INSTALL,$2,$(TaskInstall))
-	$(QUIET)cd $2 && $(strip $1) ./setup.py install \
-		&> $2/.$(strip $1).install.log \
-		|| cat $2/.$(strip $1).install.log
+	$(V2)$(python-setup-install-cmd)
 endef
 
+
+python-setup-clean-cmd = cd $$dir && $1 ./setup.py clean >/dev/null
 
 # Run python setup.py clean
 #
@@ -252,8 +285,9 @@ endef
 #   $1 (str) Python executable
 #   $2 (str) Source directory
 define python-setup-clean
-	for dir in $2; do \
-		cd $$dir && $1 ./setup.py clean >/dev/null; \
+	$(V3)for dir in $2; do \
+		test -z "$(V2)" && echo "$(python-setup-clean-cmd)"; \
+		$(python-setup-clean-cmd); \
 	done
 endef
 
@@ -289,14 +323,12 @@ GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
 
 $(GoogleBenchmark):
 	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(QUIET)mkdir -pv $(extern)/benchmark/build
-	$(QUIET)cd $(extern)/benchmark/build \
-		&& cmake .. \
-		&& $(MAKE)
+	$(V2)mkdir -pv $(extern)/benchmark/build
+	$(V1)cd $(extern)/benchmark/build && cmake .. && $(MAKE)
 
 .PHONY: distclean-googlebenchmark
 distclean-googlebenchmark:
-	$(QUIET)$(RM) -r $(extern)/benchmark/build
+	$(V1)$(RM) -r $(extern)/benchmark/build
 
 DistcleanTargets += distclean-googlebenchmark
 
@@ -314,22 +346,26 @@ Boost_LdFlags = -L$(BoostDir)/stage/lib
 Boost_filesystem_CxxFlags = $(Boost_CxxFlags)
 Boost_filesystem_LdFlags = $(Boost_LdFlags) -lboost_filesystem -lboost_system
 
+$(Boost)-cmd = \
+	cd $(BoostDir) && \
+	./bootstrap.sh --prefix=$(BoostBuild) cxxflags="-stdlib=libc++" stage \
+	&& BOOST_BUILD_PATH=$(BoostConfigDir) \
+	./b2 --prefix=$(BoostBuild) threading=multi \
+	link=static runtime-link=static \
+	cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++"
+
 $(Boost):
 	$(call print-task,BUILD,boost,$(TaskMisc))
-	$(QUIET)mkdir -pv $(BoostBuild)
-	$(QUIET)cd $(BoostDir) \
-		&& ./bootstrap.sh --prefix=$(BoostBuild) \
-			cxxflags="-stdlib=libc++" stage \
-		&& BOOST_BUILD_PATH=$(BoostConfigDir) ./b2 \
-			--prefix=$(BoostBuild) threading=multi \
-			link=static runtime-link=static \
-			cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++"
+	$(V2)mkdir -pv $(BoostBuild)
+	$(V1)$($(Boost)-cmd)
+
+distclean-boost-cmd = \
+	cd $(BoostDir) && ./b2 clean \
+	&& find . -name '*.a' -o -name '*.o' -exec rm {} \;
 
 .PHONY: distclean-boost
 distclean-boost:
-	$(QUIET)cd $(BoostDir) \
-		&& ./b2 clean \
-		&& find . -name '*.a' -o -name '*.o' -exec rm {} \;
+	$(V1)$(distclean-boost-cmd)
 
 DistcleanTargets += distclean-boost
 
@@ -341,16 +377,18 @@ GoogleTest = $(extern)/googletest-build/libgtest.a
 GoogleTest_CxxFlags = -I$(extern)/googletest/googletest/include
 GoogleTest_LdFlags = -L$(extern)/googletest-build -lgtest
 
+$(GoogleTest)-cmd = \
+	cd $(extern)/googletest-build \
+	&& cmake ../googletest/googletest && $(MAKE)
+
 $(GoogleTest):
 	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(QUIET)mkdir -pv $(extern)/googletest-build
-	$(QUIET)cd $(extern)/googletest-build \
-		&& cmake ../googletest/googletest \
-		&& $(MAKE)
+	$(V2)mkdir -pv $(extern)/googletest-build
+	$(V1)$($(GoogleTest)-cmd)
 
 .PHONY: distclean-googletest
 distclean-googletest:
-	$(QUIET)$(RM) -r $(extern)/googletest-build
+	$(V1)$(RM) -r $(extern)/googletest-build
 
 DistcleanTargets += distclean-googletest
 
@@ -359,7 +397,6 @@ DistcleanTargets += distclean-googletest
 # extern/triSYCL
 #
 TriSYCL_CxxFlags = -I$(extern)/triSYCL/include
-TriSYCL_LdFlags =
 
 
 #
@@ -531,8 +568,10 @@ CxxTargets += \
 	$(learn)/triSYCL/004-gaussian-blur \
 	$(NULL)
 
-$(learn)/triSYCL_CxxFlags = $(TriSYCL_CxxFlags) $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
-$(learn)/triSYCL_LdFlags = $(TriSYCL_CxxFlags) $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
+$(learn)/triSYCL_CxxFlags = \
+	$(TriSYCL_CxxFlags) $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
+$(learn)/triSYCL_LdFlags = \
+	$(TriSYCL_CxxFlags) $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
 
 
 #
@@ -562,7 +601,7 @@ $(RayTracerDir)/examples/example2.cpp: \
 		$(RayTracerDir)/examples/example2.rt \
 		$(RayTracerDir)/scripts/mkscene.py
 	$(call print-task,MKSCENE,$@,$(TaskAux))
-	$(QUIET)$(RayTracerDir)/scripts/mkscene.py $< $@ >/dev/null
+	$(V1)$(RayTracerDir)/scripts/mkscene.py $< $@ >/dev/null
 
 # Don't run linter on generated file:
 DontLint += $(RayTracerDir)/examples/example2.cpp
@@ -809,7 +848,7 @@ AutotexLogFiles = $(addsuffix .autotex.log, $(AutotexDirs))
 # Autotex does it's own dependency analysis, so always run it:
 .PHONY: $(AutotexTargets)
 $(AutotexTargets):
-	@$(AUTOTEX) make $(patsubst %.pdf,%,$@)
+	$(V3)$(AUTOTEX) make $(patsubst %.pdf,%,$@)
 
 # File extensions to remove in LaTeX build directories:
 LatexBuildfileExtensions = \
@@ -911,8 +950,8 @@ Python3CleanDirs = $(sort $(Python3SetupTestDirs) $(Python3SetupInstallDirs))
 
 .PHONY: clean-python
 clean-python:
-	$(QUIET)$(call python-setup-clean,$(PYTHON2),$(Python2CleanDirs))
-	$(QUIET)$(call python-setup-clean,$(PYTHON3),$(Python3CleanDirs))
+	$(V1)$(call python-setup-clean,$(PYTHON2),$(Python2CleanDirs))
+	$(V1)$(call python-setup-clean,$(PYTHON3),$(Python3CleanDirs))
 
 CleanTargets += clean-python
 
@@ -954,18 +993,21 @@ $(CXX): $(toolchain)
 $(CxxTargets): $(CXX)
 $(CxxObjects): $(CXX)
 
+$(toolchain)-cmd = \
+	cd $(LlvmBuild) \
+	&& cmake $(LlvmSrc) -DCMAKE_BUILD_TYPE=Release \
+	&& $(MAKE)
+
 $(toolchain):
 	$(call print,Bootstrapping! Go enjoy a coffee, this will take a while.)
-	$(QUIET)mkdir -vp $(LlvmBuild)
-	$(QUIET)cd $(LlvmBuild) \
-		&& cmake $(LlvmSrc) -DCMAKE_BUILD_TYPE=Release \
-		&& $(MAKE)
-	$(QUIET)date > $(toolchain)
+	$(V2)mkdir -vp $(LlvmBuild)
+	$(V1)$($(toolchain)-cmd)
+	$(V1)date > $(toolchain)
 
 .PHONY: distclean-toolchain
 distclean-toolchain:
-	$(QUIET)$(RM) $(toolchain)
-	$(QUIET)$(RM) -r $(LlvmBuild)
+	$(V1)$(RM) $(toolchain)
+	$(V1)$(RM) -r $(LlvmBuild)
 
 DistcleanTargets += distclean-toolchain
 
@@ -982,7 +1024,7 @@ BuildTargets += $(GitTargets)
 # Install pre-commit hook:
 $(root)/.git/hooks/pre-push: $(root)/tools/pre-push
 	$(call print-task,GIT,$@,$(TaskMisc))
-	$(QUIET)cp $< $@
+	$(V1)cp $< $@
 
 git: $(GitTargets)
 DocStrings += "git: configure version control"
@@ -993,11 +1035,11 @@ DocStrings += "git: configure version control"
 #
 .PHONY: clean distclean
 clean: $(CleanTargets)
-	$(QUIET)$(RM) $(sort $(CleanFiles))
+	$(V1)$(RM) $(sort $(CleanFiles))
 DocStrings += "clean: remove generated files"
 
 distclean: clean $(DistcleanTargets)
-	$(QUIET)$(RM) $(sort $(DistcleanFiles))
+	$(V1)$(RM) $(sort $(DistcleanFiles))
 DocStrings += "distclean: remove *all* generated files and toolchain"
 
 
@@ -1015,17 +1057,17 @@ DocStrings += "all: build everything"
 # List all build files:
 .PHONY: ls-files
 ls-files:
-	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
-		| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
-		| sort --ignore-case \
-		| grep '^/'
+	$(V3)$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
+	| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
+	| sort --ignore-case \
+	| grep '^/'
 DocStrings += "ls-files: show all files which are built by Makefile"
 
 
 # List all build targets:
 .PHONY: ls-targets
 ls-targets:
-	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
+	$(V3)$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
 		| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
 		| sort --ignore-case \
 		| egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
@@ -1035,9 +1077,9 @@ DocStrings += "ls-targets: show all build targets"
 # Print doc strings:
 .PHONY: help
 help:
-	@echo "make targets:"
-	@echo
-	@(for var in $(DocStrings); do echo $$var; done) \
+	$(V3)echo "make targets:"
+	$(V3)echo
+	$(V3)(for var in $(DocStrings); do echo $$var; done) \
 		| sort --ignore-case | while read var; do \
 		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
 		echo $$var | cut -d':' -f2-; \
