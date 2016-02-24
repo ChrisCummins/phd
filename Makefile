@@ -12,7 +12,71 @@
 
 
 ########################################################################
-#                           Configuration
+#                       Runtime configuration
+
+#
+# Verbosity controls. There are three levels of verbosity 0-2, set by
+# passing the desired V value to Make:
+#
+#   V=0 (default) print summary messages
+#   V=1 same as V=0, but print build commands
+#   V=2 same as V=1, but print all build-related commands
+#   V=3 same as V=2, but print all commands for debugging purposes
+#
+ifndef V
+V = 0
+endif
+
+#
+# Colour controls:
+#
+#   C=0 disable colour formatting of messages
+#   C=1 (default) enable fancy message formatting
+#
+ifndef C
+C = 1
+endif
+
+#
+# Debug controls:
+#
+#   D=0 (default) disable debugging support in compiled executables
+#   D=1 enable debugging support in compiled executables
+#
+ifndef D
+D = 0
+endif
+
+#
+# Optimisation controls:
+#
+#   O=0 disable optimisations in compiled executables
+#   O=1 (default) enable optimisations in compiled executables
+#
+ifndef O
+O = 1
+endif
+
+
+__verbosity_1_ = @
+__verbosity_1_0 = @
+
+__verbosity_2_ = @
+__verbosity_2_0 = @
+__verbosity_2_1 = @
+
+__verbosity_3_ = @
+__verbosity_3_0 = @
+__verbosity_3_1 = @
+__verbosity_3_2 = @
+
+V1 = $(__verbosity_1_$(V))
+V2 = $(__verbosity_2_$(V))
+V3 = $(__verbosity_3_$(V))
+
+
+########################################################################
+#                        Static Configuration
 
 #
 # The number of threads to use:
@@ -34,44 +98,13 @@ SED := sed
 MAKEFLAGS := -j$(WorkerThreads)
 
 
-##################### END OF CONFIGURATION
-
-
 ########################################################################
 #                         Output & Messages
 
 #
-# Verbosity controls. There are three levels of verbosity 0-2, set by
-# passing the desired V value to Make:
-#
-#   V=0 (default) print summary messages
-#   V=1 same as V=0, but print build commands
-#   V=2 same as V=1, but print all build-related commands
-#   V=3 same as V=2, but print all commands for debugging purposes
-#
-__verbosity_1_ = @
-__verbosity_1_0 = @
-
-__verbosity_2_ = @
-__verbosity_2_0 = @
-__verbosity_2_1 = @
-
-__verbosity_3_ = @
-__verbosity_3_0 = @
-__verbosity_3_1 = @
-__verbosity_3_2 = @
-
-V1 = $(__verbosity_1_$(V))
-V2 = $(__verbosity_2_$(V))
-V3 = $(__verbosity_3_$(V))
-
-
-#
 # Output formatting
 #
-Interactive := $(shell [ -t 0 ] && echo 1)
-
-ifdef Interactive
+ifeq ($(C),1)
 TTYreset = $(shell tput sgr0)
 TTYbold = $(shell tput bold)
 TTYstandout = $(shell tput smso)
@@ -85,7 +118,7 @@ TTYmagenta = $(shell tput setaf 5)
 TTYred = $(shell tput setaf 1)
 TTYwhite = $(shell tput setaf 7)
 TTYyellow = $(shell tput setaf 3)
-endif  # Interactive
+endif  # $(C)
 
 #
 # Task types.
@@ -690,8 +723,18 @@ CObjects: $(CSources)
 
 CleanFiles += $(CTargets) $(CObjects)
 
+# Compiler flags:
+COptimisationFlags_0 = -O0
+COptimisationFlags_1 = -O2
+COptimisationFlags = $(COptimisationFlags_$(O))
+
+# Debug flags:
+CDebugFlags_1 = -g
+CDebugFlags = $(CDebugFlags_$(D))
+
 CFlags = \
-	-O2 \
+	$(COptimisationFlags) \
+	$(CDebugFlags) \
 	-std=c11 \
 	-pedantic \
 	-Wall \
@@ -747,8 +790,17 @@ CxxObjects: $(CxxSources)
 CleanFiles += $(CxxTargets) $(CxxObjects)
 
 # Compiler flags:
+
+# Inherit optimisation/debug flags from C config:
+CxxOptimisationFlags_$(O) = $(COptimisationFlags_$(O))
+CxxOptimisationFlags = $(CxxOptimisationFlags_$(O))
+
+CxxDebugFlags_$(D) = $(CDebugFlags_$(D))
+CxxDebugFlags = $(CxxDebugFlags_$(D))
+
 CxxFlags = \
-	-O2 \
+	$(CxxOptimisationFlags) \
+	$(CxxDebugFlags) \
 	-std=c++1z \
 	-stdlib=libc++ \
 	-pedantic \
