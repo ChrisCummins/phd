@@ -20,14 +20,13 @@ ArgStrings =
 # passing the desired V value to Make:
 #
 #   V=0 (default) print summary messages
-#   V=1 same as V=0, but print build commands
-#   V=2 same as V=1, but print all build-related commands
-#   V=3 same as V=2, but print all commands for debugging purposes
+#   V=1 same as V=0, but print executed commands
+#   V=3 same as V=2, but with extra verbosity for build system debugging
 #
 ifndef V
 V = 0
 endif
-ArgStrings += "V=[0,1,2,3]: set verbosity level (default=0)"
+ArgStrings += "V=[0,1,2]: set verbosity level (default=0)"
 
 #
 # Colour controls:
@@ -38,7 +37,7 @@ ArgStrings += "V=[0,1,2,3]: set verbosity level (default=0)"
 ifndef C
 C = 1
 endif
-ArgStrings += "C=[0,1]: enable colour message formatting level (default=1)"
+ArgStrings += "C=[0,1]: enable colour message formatting (default=1)"
 
 #
 # Debug controls:
@@ -70,14 +69,8 @@ __verbosity_2_ = @
 __verbosity_2_0 = @
 __verbosity_2_1 = @
 
-__verbosity_3_ = @
-__verbosity_3_0 = @
-__verbosity_3_1 = @
-__verbosity_3_2 = @
-
 V1 = $(__verbosity_1_$(V))
 V2 = $(__verbosity_2_$(V))
-V3 = $(__verbosity_3_$(V))
 
 
 ########################################################################
@@ -261,8 +254,8 @@ cpplint-cmd = $(CPPLINT) $(CxxLintFlags) $1 2>&1 \
 # Arguments:
 #   $1 (str) C++ source/header
 define cpplint
-	$(V3)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
-		test -z "$(V2)" && echo "$(cpplint-cmd)"; \
+	$(V2)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
+		test -z "$(V1)" && echo "$(cpplint-cmd)"; \
 		$(cpplint-cmd); \
 	fi
 endef
@@ -276,8 +269,8 @@ clang-tidy-cmd = $(CLANGTIDY) $1 -- $(CxxFlags) $2
 #  $1 (str) source file
 #  $2 (str[]) Compilation flags
 define clang-tidy
-	$(V3)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
-		test -z "$(V2)" && echo "$(clang-tidy-cmd)"; \
+	$(V2)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
+		test -z "$(V1)" && echo "$(clang-tidy-cmd)"; \
 		$(clang-tidy-cmd); \
 	fi
 endef
@@ -296,7 +289,7 @@ python-setup-test-cmd = \
 #   $2 (str) Source directory
 define python-setup-test
 	$(call print-task,TEST,$(strip $1) $(strip $2),$(TaskMisc))
-	$(V2)$(python-setup-test-cmd)
+	$(V1)$(python-setup-test-cmd)
 endef
 
 
@@ -311,7 +304,7 @@ python-setup-install-cmd = \
 #   $2 (str) Source directory
 define python-setup-install
 	$(call print-task,INSTALL,$2,$(TaskInstall))
-	$(V2)$(python-setup-install-cmd)
+	$(V1)$(python-setup-install-cmd)
 endef
 
 
@@ -323,8 +316,8 @@ python-setup-clean-cmd = cd $$dir && $1 ./setup.py clean >/dev/null
 #   $1 (str) Python executable
 #   $2 (str) Source directory
 define python-setup-clean
-	$(V3)for dir in $2; do \
-		test -z "$(V2)" && echo "$(python-setup-clean-cmd)"; \
+	$(V2)for dir in $2; do \
+		test -z "$(V1)" && echo "$(python-setup-clean-cmd)"; \
 		$(python-setup-clean-cmd); \
 	done
 endef
@@ -361,7 +354,7 @@ GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
 
 $(GoogleBenchmark):
 	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(V2)mkdir -pv $(extern)/benchmark/build
+	$(V1)mkdir -pv $(extern)/benchmark/build
 	$(V1)cd $(extern)/benchmark/build && cmake .. && $(MAKE)
 
 .PHONY: distclean-googlebenchmark
@@ -394,7 +387,7 @@ $(Boost)-cmd = \
 
 $(Boost):
 	$(call print-task,BUILD,boost,$(TaskMisc))
-	$(V2)mkdir -pv $(BoostBuild)
+	$(V1)mkdir -pv $(BoostBuild)
 	$(V1)$($(Boost)-cmd)
 
 distclean-boost-cmd = \
@@ -421,7 +414,7 @@ $(GoogleTest)-cmd = \
 
 $(GoogleTest):
 	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(V2)mkdir -pv $(extern)/googletest-build
+	$(V1)mkdir -pv $(extern)/googletest-build
 	$(V1)$($(GoogleTest)-cmd)
 
 .PHONY: distclean-googletest
@@ -905,7 +898,7 @@ AutotexLogFiles = $(addsuffix .autotex.log, $(AutotexDirs))
 # Autotex does it's own dependency analysis, so always run it:
 .PHONY: $(AutotexTargets)
 $(AutotexTargets):
-	$(V3)$(AUTOTEX) make $(patsubst %.pdf,%,$@)
+	$(V2)$(AUTOTEX) make $(patsubst %.pdf,%,$@)
 
 # File extensions to remove in LaTeX build directories:
 LatexBuildfileExtensions = \
@@ -1057,7 +1050,7 @@ $(toolchain)-cmd = \
 
 $(toolchain):
 	$(call print,Bootstrapping! Go enjoy a coffee, this will take a while.)
-	$(V2)mkdir -vp $(LlvmBuild)
+	$(V1)mkdir -vp $(LlvmBuild)
 	$(V1)$($(toolchain)-cmd)
 	$(V1)date > $(toolchain)
 
@@ -1114,7 +1107,7 @@ DocStrings += "all: build everything"
 # List all build files:
 .PHONY: ls-files
 ls-files:
-	$(V3)$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
+	$(V2)$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
 	| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
 	| sort --ignore-case \
 	| grep '^/'
@@ -1124,7 +1117,7 @@ DocStrings += "ls-files: show all files which are built by Makefile"
 # List all build targets:
 .PHONY: ls-targets
 ls-targets:
-	$(V3)$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
+	$(V2)$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
 		| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
 		| sort --ignore-case \
 		| egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
@@ -1134,19 +1127,19 @@ DocStrings += "ls-targets: show all build targets"
 # Print doc strings:
 .PHONY: help
 help:
-	$(V3)echo "make targets:"
-	$(V3)echo
-	$(V3)(for var in $(DocStrings); do echo $$var; done) \
+	$(V2)echo "make targets:"
+	$(V2)echo
+	$(V2)(for var in $(DocStrings); do echo $$var; done) \
 		| sort --ignore-case | while read var; do \
 		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
 		echo $$var | cut -d':' -f2-; \
 	done
-	$(V3)echo
-	$(V3)echo "make arguments:"
-	$(V3)echo
-	$(V3)(for var in $(ArgStrings); do echo $$var; done) \
+	$(V2)echo
+	$(V2)echo "make arguments:"
+	$(V2)echo
+	$(V2)(for var in $(ArgStrings); do echo $$var; done) \
 		| sort --ignore-case | while read var; do \
 		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
 		echo $$var | cut -d':' -f2-; \
 	done
-	$(V3)echo
+	$(V2)echo
