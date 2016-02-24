@@ -71,6 +71,71 @@
 \section{Literature Review}
 
 
+\subsection{Skeleton-aware compilation}
+
+% * What are the limits of compiler optimisations for parallel code?
+
+%   * How does dependency analysis cope?
+
+% * Compiler optimisations for parallel programs
+
+% * Optimisations for skeletons
+%   * “skeletons" - Intel TBB, std::algorithm, FastFlow, MapReduce
+%   * Composition and nesting.
+%   * Rewrite rules:
+
+%     Patterns and Rewrite Rules for Systematic Code Generation From
+%     High-Level Functional Patterns to High-Performance OpenCL Code
+
+%       A
+
+\subsubsection{Autotuning for parallel programs}
+
+%   * Autotuning for skeletons
+
+
+\subsection{Skeleton-aware debugging}
+
+General purpose, platform-specific debuggers: Intel Debugger for
+Linux~\cite{Blair-chappell}, Microsoft Windows Debugger.
+
+
+\subsubsection{Debugging Parallel Frameworks and Libraries}
+
+Allinea DDT~\cite{K2010}, a scalable parallel debugger.
+
+TotalView~\cite{Cownie2000}, an OpenMP debugger.
+
+Jumbune~\cite{ImpetusTechnologies}, an open source debugger for
+Hadoop.
+
+
+\subsubsection{Debugging GPGPU programs}
+
+CUDA-GDB~\cite{NVIDIA2016}, Intel OpenCL Debugger for Linux
+OS~\cite{IntelCorporation2016}.
+
+Oclgrind~\cite{Price2015}.
+
+
+\subsubsection{Debugging Algorithmic Skeletons}
+
+SkIE~\cite{Bacci1999} is based on a coordination language, but
+provides advanced features such as debugging tools, performance
+analysis, visualization, and graphical user interface. Instead of
+directly using the coordination language, programmers interact with a
+graphical tool, where parallel modules based on skeletons can be
+composed
+
+SKiPPER~\cite{Cezeaux1999} supports sequential execution for
+debugging.
+
+
+\subsection{Skeleton-aware profiling}
+
+% * Profiling parallel applications
+
+
 \section{Conclusions}
 
 
