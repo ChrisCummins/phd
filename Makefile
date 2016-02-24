@@ -13,6 +13,7 @@
 
 ########################################################################
 #                       Runtime configuration
+ArgStrings =
 
 #
 # Verbosity controls. There are three levels of verbosity 0-2, set by
@@ -26,6 +27,7 @@
 ifndef V
 V = 0
 endif
+ArgStrings += "V=[0,1,2,3]: set verbosity level (default=0)"
 
 #
 # Colour controls:
@@ -36,6 +38,7 @@ endif
 ifndef C
 C = 1
 endif
+ArgStrings += "C=[0,1]: enable colour message formatting level (default=1)"
 
 #
 # Debug controls:
@@ -46,6 +49,7 @@ endif
 ifndef D
 D = 0
 endif
+ArgStrings += "D=[0,1]: enable debugging in generated files (default=0)"
 
 #
 # Optimisation controls:
@@ -56,6 +60,7 @@ endif
 ifndef O
 O = 1
 endif
+ArgStrings += "O=[0,1]: enable optimisations in generated files (default=1)"
 
 
 __verbosity_1_ = @
@@ -1136,3 +1141,12 @@ help:
 		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
 		echo $$var | cut -d':' -f2-; \
 	done
+	$(V3)echo
+	$(V3)echo "make arguments:"
+	$(V3)echo
+	$(V3)(for var in $(ArgStrings); do echo $$var; done) \
+		| sort --ignore-case | while read var; do \
+		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
+		echo $$var | cut -d':' -f2-; \
+	done
+	$(V3)echo
