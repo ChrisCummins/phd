@@ -160,6 +160,8 @@ class vector {
   vector(InputIterator first, const InputIterator last,
          const allocator_type& alloc = allocator_type())
       : vector(alloc) {
+    reserve(static_cast<size_type>(last - first));
+
     while (first != last)
       push_back(*first++);
   }
@@ -171,8 +173,7 @@ class vector {
   // Constructs a container with a copy of each of the elements in x,
   // in the same order.
   //
-  vector(const vector& x) :
-      vector(x.begin(), x.end()) {}
+  vector(const vector& x) : vector(x.begin(), x.end()) {}
 
   vector(const vector& x, const allocator_type& alloc) :
       vector(x.begin(), x.end(), alloc) {}
@@ -187,22 +188,14 @@ class vector {
   // ownership is directly transferred).  x is left in an unspecified
   // but valid state.
   //
-  vector(const vector&& x) {
-    _buffer = x._buffer;
-    _capacity = x._capacity;
-    _size = x._size;
-    _alloc = x._alloc;
-  }
+  vector(const vector&& x) : vector(x, x._alloc) {}
 
   vector(const vector&& x, const allocator_type& alloc) {
-    // if (alloc == x._alloc) {
+    // TODO: If alloc != x._alloc, copy.
     _buffer = x._buffer;
     _capacity = x._capacity;
     _size = x._size;
     _alloc = x._alloc;
-    // } else {
-    //   TODO: Different allocator.
-    // }
   }
 
   //
@@ -230,11 +223,11 @@ class vector {
   // elements, and deallocates all the storage capacity allocated by
   // the vector using its allocator.
   //
-
   ~vector() {
-    _destroy_elements();
+    clear();
     _alloc.deallocate(_buffer, _capacity);
   }
+
 
   /////////////////
   // Assignment: //
@@ -303,12 +296,12 @@ class vector {
   // If the container is empty, the returned iterator value shall not
   // be dereferenced.
   //
-  iterator begin() noexcept {
-    return iterator(_buffer);
+  inline iterator begin() noexcept {
+    return iterator{_buffer};
   }
 
-  const_iterator begin() const noexcept {
-    return iterator(_buffer);
+  inline const_iterator begin() const noexcept {
+    return iterator{_buffer};
   }
 
   //
@@ -329,9 +322,11 @@ class vector {
   // If the container is empty, this function returns the same as
   // vector::begin.
   //
-  iterator end() noexcept { return iterator(&_buffer[size()]); }
+  inline iterator end() noexcept { return iterator{&_buffer[size()]}; }
 
-  const_iterator end() const noexcept { return iterator(&_buffer[size()]); }
+  inline const_iterator end() const noexcept {
+    return iterator{&_buffer[size()]};
+  }
 
 
   //
@@ -350,12 +345,12 @@ class vector {
   // to this same element, this function returns a reverse random
   // access iterator.
   //
-  reverse_iterator rbegin() noexcept {
-    return std::reverse_iterator<iterator>(end());
+  inline reverse_iterator rbegin() noexcept {
+    return reverse_iterator{end()};
   }
 
-  const_reverse_iterator rbegin() const noexcept {
-    return std::reverse_iterator<const_iterator>(end());
+  inline const_reverse_iterator rbegin() const noexcept {
+    return const_reverse_iterator{end()};
   }
 
 
@@ -369,11 +364,11 @@ class vector {
   // The range between vector::rbegin and vector::rend contains all
   // the elements of the vector (in reverse order).
   //
-  reverse_iterator rend() noexcept {
+  inline reverse_iterator rend() noexcept {
     return std::reverse_iterator<iterator>(begin() - 1);
   }
 
-  const_reverse_iterator rend() const noexcept {
+  inline const_reverse_iterator rend() const noexcept {
     return std::reverse_iterator<iterator>(begin() - 1);
   }
 
@@ -392,8 +387,8 @@ class vector {
   // If the container is empty, the returned iterator value shall not
   // be dereferenced.
   //
-  const_iterator cbegin() const noexcept {
-    return const_iterator(begin());
+  inline const_iterator cbegin() const noexcept {
+    return const_iterator{begin()};
   }
 
 
@@ -413,8 +408,8 @@ class vector {
   //
   // The value returned shall not be dereferenced.
   //
-  const_iterator cend() const noexcept {
-    return const_iterator(end());
+  inline const_iterator cend() const noexcept {
+    return const_iterator{end()};
   }
 
 
@@ -424,8 +419,8 @@ class vector {
   // Returns a const_reverse_iterator pointing to the last element in
   // the container (i.e., its reverse beginning).
   //
-  const_reverse_iterator crbegin() const noexcept {
-    return const_reverse_iterator(end());
+  inline const_reverse_iterator crbegin() const noexcept {
+    return const_reverse_iterator{end()};
   }
 
 
@@ -436,8 +431,8 @@ class vector {
   // element preceding the first element in the container (which is
   // considered its reverse end).
   //
-  const_reverse_iterator crend() const noexcept {
-    return const_reverse_iterator(begin());
+  inline const_reverse_iterator crend() const noexcept {
+    return const_reverse_iterator{begin()};
   }
 
 
@@ -453,7 +448,7 @@ class vector {
   // This is the number of actual objects held in the vector, which is
   // not necessarily equal to its storage capacity.
   //
-  size_type size() const noexcept { return _size; };
+  inline size_type size() const noexcept { return _size; };
 
   //
   // max_size():
@@ -466,7 +461,7 @@ class vector {
   // size: it can still fail to allocate storage at any point before
   // that size is reached.
   //
-  size_type max_size() const noexcept { return _alloc.max_size(); };
+  inline size_type max_size() const noexcept { return _alloc.max_size(); };
 
   //
   // resize():
@@ -496,7 +491,7 @@ class vector {
     } else {
       // Destroy elements between size() and n.
       for (size_type i = size(); i < n; ++i)
-        _destroy_element(i);
+        std::allocator_traits<allocator_type>::destroy(_alloc, &_buffer[i]);
     }
 
     _size = n;
@@ -530,7 +525,7 @@ class vector {
   // The capacity of a vector can be explicitly altered by calling
   // member vector::reserve.
   //
-  size_type capacity() const noexcept { return _capacity; };
+  inline size_type capacity() const noexcept { return _capacity; };
 
   //
   // empty():
@@ -540,7 +535,7 @@ class vector {
   // This function does not modify the container in any way. To clear
   // the content of a vector, see vector::clear.
   //
-  bool empty() const noexcept { return !_size; };
+  inline bool empty() const noexcept { return !_size; };
 
   //
   // reserve():
@@ -578,6 +573,7 @@ class vector {
     _buffer = newbuf;
   }
 
+
   //
   // shrink_to_fit():
   //
@@ -605,6 +601,7 @@ class vector {
     }
   }
 
+
   /////////////////////
   // Element access: //
   /////////////////////
@@ -624,12 +621,14 @@ class vector {
   // argument n that is out of range, since this causes undefined
   // behavior.
   //
-  value_type& operator[](const size_type index) {
+  inline const value_type& operator[](const size_type index) const {
     return _buffer[index];
   }
 
-  const value_type& operator[](const size_type index) const {
-    return _buffer[index];
+  inline value_type& operator[](const size_type index) {
+    // Call the const version and strip constness of result:
+    return const_cast<value_type&>(
+        const_cast<const vector*>(this)->operator[](index));
   }
 
   //
@@ -643,15 +642,16 @@ class vector {
   // size). This is in contrast with member operator[], that does not
   // check against bounds.
   //
-  value_type& at(const size_type index) {
+  inline const value_type& at(const size_type index) const {
     if (index >= size())
       throw std::out_of_range("vector::at()");
     else
       return this->operator[](index);
   }
 
-  const value_type& at(const size_type index) const {
-    return at(index);
+  inline value_type& at(const size_type index) {
+    // Call the const version and strip constness of result:
+    return const_cast<value_type&>(const_cast<const vector*>(this)->at(index));
   }
 
   //
@@ -665,9 +665,12 @@ class vector {
   // Calling this function on an empty container causes undefined
   // behavior.
   //
-  value_type& front() { return _buffer[0]; }
+  inline const value_type& front() const { return _buffer[0]; }
 
-  const value_type& front() const { return _buffer[0]; }
+  inline value_type& front() {
+    // Call the const version and strip constness of result:
+    return const_cast<value_type&>(const_cast<const vector*>(this)->front());
+  }
 
   //
   // back():
@@ -680,9 +683,12 @@ class vector {
   // Calling this function on an empty container causes undefined
   // behavior.
   //
-  value_type& back() { return _buffer[size() - 1]; }
+  inline const value_type& back() const { return _buffer[size() - 1]; }
 
-  const value_type& back() const { return _buffer[size() - 1]; }
+  inline value_type& back() {
+    // Call the const version and strip constness of result:
+    return const_cast<value_type&>(const_cast<const vector*>(this)->back());
+  }
 
   //
   // data():
@@ -695,9 +701,12 @@ class vector {
   // the vector, the pointer retrieved can be offset to access any
   // element in the array.
   //
-  value_type* data() noexcept { return _buffer; };
+  inline const value_type* data() const noexcept { return _buffer; };
 
-  const value_type* data() const noexcept { return _buffer; };
+  inline value_type* data() noexcept {
+    // Call the const version and strip constness of result:
+    return const_cast<value_type*>(const_cast<const vector*>(this)->data());
+  };
 
 
   ////////////////
@@ -757,14 +766,16 @@ class vector {
   // capacity.
   //
   void push_back(const value_type &val) {
-    _resize_if_smaller_than(size() + 1);
+    if (capacity() < size() + 1)
+      reserve(!size() ? _default_capacity : size() * _capacity_multiplier);
 
     // Assign and increment.
     _buffer[_size++] = val;
   }
 
   void push_back(value_type &&val) {
-    _resize_if_smaller_than(size() + 1);
+    if (capacity() < size() + 1)
+      reserve(!size() ? _default_capacity : size() * _capacity_multiplier);
 
     // Assign and increment.
     _buffer[_size++] = std::move(val);
@@ -778,9 +789,8 @@ class vector {
   //
   // This destroys the removed element.
   //
-  void pop_back() {
-    --_size;
-    _destroy_element(size());
+  inline void pop_back() {
+    std::allocator_traits<allocator_type>::destroy(_alloc, &_buffer[--_size]);
   }
 
   //
@@ -883,20 +893,30 @@ class vector {
   //
   iterator erase(const_iterator position) {
     auto idx = size_type(position - begin());
-    _destroy_element(idx);
-    _shrink_n_elem_space(idx, 1);
-    return iterator(&_buffer[idx]);
+    std::allocator_traits<allocator_type>::destroy(_alloc, position);
+
+    // Move elements to shrink.
+    for (size_type i = idx; i < size() - 1; ++i)
+      _buffer[i] = _buffer[i + 1];
+    --_size;
+
+    return iterator{&_buffer[idx]};
   }
 
   iterator erase(const_iterator first, const_iterator last) {
-    auto start_idx = size_type(first - begin());
-    auto end_idx = size_type(last - begin());
+    const auto start_idx = size_type(first - begin());
+    const auto end_idx = size_type(last - begin());
+    const auto range = end_idx - start_idx;
 
     for (size_type i = start_idx; i < end_idx; ++i)
-      _destroy_element(i);
+      std::allocator_traits<allocator_type>::destroy(_alloc, &_buffer[i]);
 
-    _shrink_n_elem_space(start_idx, end_idx - start_idx);
-    return iterator(&_buffer[start_idx]);
+    // Move elements to shrink.
+    for (size_type i = start_idx; i < size() - range; ++i)
+      _buffer[i] = _buffer[i + range];
+    _size -= range;
+
+    return iterator{&_buffer[start_idx]};
   }
 
 
@@ -945,8 +965,14 @@ class vector {
   // function.
   //
   void clear() noexcept {
-    _destroy_elements();
-    _size = 0;
+    // Do nothing on an empty vector:
+    if (empty()) return;
+
+    // Delete (begin,end):
+    while (--_size)
+      std::allocator_traits<allocator_type>::destroy(_alloc, &_buffer[_size]);
+    // Delete begin:
+    std::allocator_traits<allocator_type>::destroy(_alloc, _buffer);
   }
 
 
@@ -980,7 +1006,7 @@ class vector {
   //
   template<typename... Args>
   iterator emplace(const_iterator position, Args&&... args) {
-    return insert(position, value_type(args...));
+    return insert(position, value_type{std::forward<Args>(args)...});
   }
 
 
@@ -1004,7 +1030,7 @@ class vector {
   //
   template<typename... Args>
   void emplace_back(Args&&... args) {
-    push_back(value_type(args...));
+    push_back(value_type{std::forward<Args>(args)...});
   }
 
 
@@ -1063,42 +1089,22 @@ class vector {
   // [idx, idx + n) uninitialised.
   //
   void _make_n_elem_space(const size_type idx, const size_type n) {
-    _resize_if_smaller_than(size() + n);
+    const auto min_new_size = size() + n;
+    const auto end_idx = idx + n;
 
-    auto end_idx = idx + n;
+    // Reserve more space as needed:
+    //
+    // TODO: Optimise this so that the operation completes in at most
+    // 1 reserve() call.
+    while (capacity() < min_new_size)
+      reserve(!size() ? _default_capacity : size() * _capacity_multiplier);
 
     // Move elements along to make room.
     for (size_type i = size() - 1 + n; i >= end_idx; --i)
-      _buffer[i] = _buffer[i - n];
+      _buffer[i] = std::move(_buffer[i - n]);
 
     // Increase size.
     _size += n;
-  }
-
-  void _shrink_n_elem_space(const size_type idx, const size_type n) {
-    // Move elements to shrink.
-    for (size_type i = idx; i < size() - n; ++i)
-      _buffer[i] = _buffer[i + n];
-
-    // Decrease size.
-    _size -= n;
-  }
-
-  // Resize if smaller than.
-  void _resize_if_smaller_than(const size_type n) {
-    if (capacity() < n)
-      reserve(!size() ? _default_capacity : size() * _capacity_multiplier);
-  }
-
-  // Destroy element at idx.
-  void _destroy_element(const size_type n) {
-    std::allocator_traits<allocator_type>::destroy(_alloc, &_buffer[n]);
-  }
-
-  // Destroy all elements.
-  void _destroy_elements() {
-    for (size_type i = 0; i < size(); ++i)
-      _destroy_element(i);
   }
 
 };  // vector class
@@ -1133,7 +1139,6 @@ class vector {
 template<typename T, typename Alloc>
 bool operator==(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
   if (lhs.size() == rhs.size()) {
-
     auto lit = lhs.begin();
     auto rit = rhs.begin();
 
