@@ -17,8 +17,9 @@ included in 'include/ustl'. Unit tests in 'tests/', and benchmarks in
 The implementations are a drop in replace for the standard library,
 using the 'ustl' namespace. Example program:
 
-    #include <ustl/vector>
     #include <ustl/algorithm>
+    #include <ustl/forward_list>
+    #include <ustl/vector>
 
     int main(int argc, char **argv) {
       ustl::vector<int> vec{1, 5, 4, 3, 2};
