@@ -19,6 +19,3 @@
 [submodule "extern/boost"]
 	path = extern/boost
 	url = https://github.com/boostorg/boost.git
-[submodule "extern/SyclParallelSTL"]
-	path = extern/SyclParallelSTL
-	url = https://github.com/KhronosGroup/SyclParallelSTL.git
