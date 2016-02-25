@@ -512,97 +512,64 @@ $(wildcard $(learn)/atc++/%.o): $(GoogleTest)
 #
 # learn/boost/
 #
-LearnBoostTargets = \
-	$(learn)/boost/fs \
-	$(NULL)
-
-CxxTargets += $(LearnBoostTargets)
-
-LearnBoostObjects = $(addsuffix .o,$(LearnBoostTargets))
-$(LearnBoostObjects): $(Boost)
+LearnBoostCxxSources = $(wildcard $(learn)/boost/*.cpp)
+LearnBoostCxxObjects = $(patsubst %.cpp,%.o,$(LearnBoostCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(LearnBoostCxxSources))
 
 $(learn)/boost_CxxFlags = $(Boost_filesystem_CxxFlags)
 $(learn)/boost_LdFlags = $(Boost_filesystem_LdFlags) -lcrypto -lssl
+$(LearnBoostCxxObjects): $(Boost)
 
 
 #
 # learn/challenges/
 #
-CxxTargets += \
-	$(learn)/challenges/001-int-average \
-	$(learn)/challenges/006-gray-code \
-	$(learn)/challenges/008-linked-list \
-	$(NULL)
+
+# C++ solutions:
+ChallengesCxxSources = $(wildcard $(learn)/challenges/*.cpp)
+ChallengesCxxObjects = $(patsubst %.cpp,%.o,$(ChallengesCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(ChallengesCxxSources))
 
 $(learn)/challenges_CxxFlags = \
 	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags)
 $(learn)/challenges_LdFlags = \
 	$(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
-$(learn)/challenges/01-int-average.o: $(GoogleBenchmark) $(GoogleTest)
+$(ChallengesCxxObjects): $(GoogleBenchmark) $(GoogleTest)
 
 
 #
 # learn/ctci/
 #
-CtCiTargets = \
-	$(learn)/ctci/0101-unique-chars-in-string \
-	$(learn)/ctci/0102-reverse-string \
-	$(learn)/ctci/0103-permutations \
-	$(learn)/ctci/0104-escape-string \
-	$(learn)/ctci/0105-string-compression \
-	$(learn)/ctci/0107-matrix-zero \
-	$(learn)/ctci/0108-string-rotation \
-	$(learn)/ctci/0201-list-remove-dups \
-	$(learn)/ctci/0202-linked-list-k-last \
-	$(learn)/ctci/0207-list-palindrone \
-	$(learn)/ctci/0302-stack-min \
-	$(learn)/ctci/0303-set-of-stacks \
-	$(learn)/ctci/0305-stack-queue \
-	$(learn)/ctci/0402-directed-graph-routefinder \
-	$(learn)/ctci/0404-binary-tree-list \
-	$(learn)/ctci/0502-binary-double \
-	$(learn)/ctci/0505-int-bitdiff \
-	$(learn)/ctci/0508-horiz-line \
-	$(learn)/ctci/1101-merge-arrays \
-	$(learn)/ctci/1102-sort-anagrams \
-	$(learn)/ctci/1301-last-k-lines \
-	$(learn)/ctci/1307-tree-copy \
-	$(learn)/ctci/1310-2d-alloc \
-	$(learn)/ctci/1701-num-swap \
-	$(learn)/ctci/1702-tic-tac-toe \
-	$(NULL)
 
-CxxTargets += $(CtCiTargets)
+# C++ solutions:
+CtCiCxxSources = $(wildcard $(learn)/ctci/*.cpp)
+CtCiCxxObjects = $(patsubst %.cpp,%.o,$(CtCiCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(CtCiCxxSources))
 
 $(learn)/ctci_CxxFlags = $(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags)
 $(learn)/ctci_LdFlags = $(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
-CtCiObjects = $(addsuffix .o,$(CtCiTargets))
-$(CtCiObjects): $(GoogleBenchmark) $(GoogleTest)
+$(CtCiCxxObjects): $(GoogleBenchmark) $(GoogleTest)
 
 
 #
 # learn/expert_c/
 #
-CTargets += \
-	$(learn)/expert_c/cdecl \
-	$(learn)/expert_c/computer_dating \
-	$(NULL)
+ExpertCSources = $(wildcard $(learn)/expert_c/*.c)
+CTargets += $(patsubst %.c,%,$(ExpertCSources))
 
 
 #
 # learn/triSYCL/
 #
-CxxTargets += \
-	$(learn)/triSYCL/001-dot-product \
-	$(learn)/triSYCL/002-saxpy \
-	$(learn)/triSYCL/003-parallel-matrix \
-	$(learn)/triSYCL/004-gaussian-blur \
-	$(NULL)
+LearnTriSYCLCxxSources = $(wildcard $(learn)/triSYCL/*.cpp)
+LearnTriSYCLCxxObjects = $(patsubst %.cpp,%.o,$(LearnTriSYCLCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(LearnTriSYCLCxxSources))
 
 $(learn)/triSYCL_CxxFlags = \
 	$(TriSYCL_CxxFlags) $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
 $(learn)/triSYCL_LdFlags = \
 	$(TriSYCL_CxxFlags) $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
+$(LearnTriSYCLCxxObjects): $(GoogleBenchmark) $(GoogleTest)
 
 
 #
@@ -653,7 +620,7 @@ RayTracerHeaders = \
 CppLintSources += $(RayTracerHeaders)
 
 RayTracerSources = $(wildcard $(RayTracerDir)/src/*.cpp)
-RayTracerObjects = $(patsubst %.cpp, %.o, $(RayTracerSources))
+RayTracerObjects = $(patsubst %.cpp,%.o,$(RayTracerSources))
 
 $(RayTracerObjects): $(RayTracerHeaders) $(toolchain)
 
