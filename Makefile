@@ -573,6 +573,20 @@ $(LearnTriSYCLCxxObjects): $(GoogleBenchmark) $(GoogleTest)
 
 
 #
+# learn/pc
+#
+
+# C++ solutions:
+LearnPcCxxSources = $(wildcard $(learn)/pc/*.cpp)
+LearnPcCxxObjects = $(patsubt %.cpp,%.o,$(LearnPcCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(LearnPcCxxSources))
+
+$(learn)/pc_CxxFlags = $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
+$(learn)/pc_LdFlags = $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
+$(LearnPcCxxObjects): $(GoogleBenchmark) $(GoogleTest)
+
+
+#
 # playground/
 #
 
