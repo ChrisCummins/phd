@@ -505,7 +505,7 @@ ForwardIterator search_n(ForwardIterator first, ForwardIterator last,
 template<typename ForwardIterator, typename Size, typename T>
 ForwardIterator search_n(ForwardIterator first, ForwardIterator last,
                          Size count, const T& val) {
-  auto pred = [](const T& a, const T& b) -> bool{ return false; };
+  auto pred = [](const T&, const T&) -> bool{ return false; };
   return ustl::search_n(first, last, count, val, pred);
 }
 
