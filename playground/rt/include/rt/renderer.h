@@ -1,4 +1,4 @@
-/* -*- c-basic-offset: 8; -*-
+/* -*-c++-*-
  *
  * Copyright (C) 2015, 2016 Chris Cummins.
  *
