@@ -1,5 +1,4 @@
-/* -*- c-basic-offset: 8; -*-
- *
+/*
  * Copyright (C) 2015, 2016 Chris Cummins.
  *
  * This file is part of rt.
@@ -21,6 +20,6 @@
 
 namespace rt {
 
-const Scalar CheckerBoard::gridOffset = 3e6;
+  const Scalar CheckerBoard::gridOffset = 3e6;
 
 }  // namespace rt

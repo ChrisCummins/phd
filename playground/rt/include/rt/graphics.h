@@ -36,27 +36,27 @@ namespace rt {
 // A pixel is a trio of R,G,B components.
 class Pixel {
  public:
-        // The output type of a single R,G,B colour component.
-        typedef uint8_t Component;
-        // The maximum value of a single R,G,B colour component.
-        static const Component ComponentMax = 255;
+  // The output type of a single R,G,B colour component.
+  typedef uint8_t Component;
+  // The maximum value of a single R,G,B colour component.
+  static const Component ComponentMax = 255;
 
-        Component r, g, b;
+  Component r, g, b;
 
-        // Output stream formatter.
-        friend auto& operator<<(std::ostream& os, const Pixel &pixel) {
-                os << unsigned(pixel.r) << " "
-                   << unsigned(pixel.g) << " "
-                   << unsigned(pixel.b);
-                return os;
-        }
+  // Output stream formatter.
+  friend auto& operator<<(std::ostream& os, const Pixel &pixel) {
+    os << unsigned(pixel.r) << " "
+       << unsigned(pixel.g) << " "
+       << unsigned(pixel.b);
+    return os;
+  }
 };
 
 // Transform a scalar from the range [0,1] to [0,Pixel::ComponentMax]. Note
 // that this transformation may be non-linear.
 Pixel::Component inline scale(const Scalar x) {
-        return static_cast<Pixel::Component>(
-            x * static_cast<Scalar>(Pixel::ComponentMax));
+  return static_cast<Pixel::Component>(
+      x * static_cast<Scalar>(Pixel::ComponentMax));
 }
 
 // Forward declaration of HSL colour type (defined below Colour).
@@ -66,94 +66,94 @@ class HSL;
 // the += and /= operators. They behave identically to Vectors.
 class Colour {
  public:
-        Scalar r, g, b;
+  Scalar r, g, b;
 
-        // Constructor for specifying colours as 32 bit hex
-        // string. E.g. 0xff00aa.
-        explicit inline Colour(const int hex)
-                        : r((hex >> 16) / 255.),
-                        g(((hex >> 8) & 0xff) / 255.),
-                        b((hex & 0xff) / 255.) {}
+  // Constructor for specifying colours as 32 bit hex
+  // string. E.g. 0xff00aa.
+  explicit inline Colour(const int hex)
+      : r((hex >> 16) / 255.),
+        g(((hex >> 8) & 0xff) / 255.),
+        b((hex & 0xff) / 255.) {}
 
-        // Contructor: C = (r,g,b)
-        explicit inline Colour(const float _r = 0,
-                               const float _g = 0,
-                               const float _b = 0)
-                        : r(_r), g(_g), b(_b) {}
+  // Contructor: C = (r,g,b)
+  explicit inline Colour(const float _r = 0,
+                         const float _g = 0,
+                         const float _b = 0)
+      : r(_r), g(_g), b(_b) {}
 
-        // Constructor from (h,s,l) definition.
-        explicit Colour(const HSL &hsl);
+  // Constructor from (h,s,l) definition.
+  explicit Colour(const HSL &hsl);
 
-        // Colour addition.
-        auto operator+=(const Colour &c) {
-                r += c.r;
-                g += c.g;
-                b += c.b;
-        }
+  // Colour addition.
+  auto operator+=(const Colour &c) {
+    r += c.r;
+    g += c.g;
+    b += c.b;
+  }
 
-        // Colour subtraction.
-        auto operator-=(const Colour &c) {
-                r -= c.r;
-                g -= c.g;
-                b -= c.b;
-        }
+  // Colour subtraction.
+  auto operator-=(const Colour &c) {
+    r -= c.r;
+    g -= c.g;
+    b -= c.b;
+  }
 
-        // Scalar division.
-        auto operator/=(const Scalar x) {
-                r /= x;
-                g /= x;
-                b /= x;
-        }
+  // Scalar division.
+  auto operator/=(const Scalar x) {
+    r /= x;
+    g /= x;
+    b /= x;
+  }
 
-        // Scalar colour multiplication.
-        auto operator*(const Scalar x) const {
-                return Colour(r * x, g * x, b * x);
-        }
+  // Scalar colour multiplication.
+  auto operator*(const Scalar x) const {
+    return Colour(r * x, g * x, b * x);
+  }
 
-        // Scalar colour divison.
-        auto operator/(const Scalar x) const {
-                return Colour(r / x, g / x, b / x);
-        }
+  // Scalar colour divison.
+  auto operator/(const Scalar x) const {
+    return Colour(r / x, g / x, b / x);
+  }
 
-        // Combination of two colours: A' = (Ar * Br, Ag * Bg, Ab * Bb)
-        auto operator*(const Colour &rhs) const {
-                return Colour(r * rhs.r, g * rhs.g, b * rhs.b);
-        }
+  // Combination of two colours: A' = (Ar * Br, Ag * Bg, Ab * Bb)
+  auto operator*(const Colour &rhs) const {
+    return Colour(r * rhs.r, g * rhs.g, b * rhs.b);
+  }
 
-        // Explicit cast operation from Colour -> Pixel.
-        explicit operator Pixel() const {
-                return {scale(clamp(r)), scale(clamp(g)), scale(clamp(b))};
-        }
+  // Explicit cast operation from Colour -> Pixel.
+  explicit operator Pixel() const {
+    return {scale(clamp(r)), scale(clamp(g)), scale(clamp(b))};
+  }
 
-        auto max() const {
-                return std::max(r, std::max(g, b));
-        }
+  auto max() const {
+    return std::max(r, std::max(g, b));
+  }
 
-        auto min() const {
-                return std::min(r, std::min(g, b));
-        }
+  auto min() const {
+    return std::min(r, std::min(g, b));
+  }
 
-        auto clampRange() const {
-                return Colour(clamp(r), clamp(g), clamp(b));
-        }
+  auto clampRange() const {
+    return Colour(clamp(r), clamp(g), clamp(b));
+  }
 
-        auto delta() const {
-                return max() - min();
-        }
+  auto delta() const {
+    return max() - min();
+  }
 
-        // Return the sum difference between the r,g,b colour
-        // components.
-        auto inline diff(const Colour &rhs) const {
-                return fabs(rhs.r - r) + fabs(rhs.g - g) + fabs(rhs.b - b);
-        }
+  // Return the sum difference between the r,g,b colour
+  // components.
+  auto inline diff(const Colour &rhs) const {
+    return fabs(rhs.r - r) + fabs(rhs.g - g) + fabs(rhs.b - b);
+  }
 };
 
 // Colour as a Hue, Saturation, Luminance set.
 class HSL {
  public:
-        Scalar h, s, l;
+  Scalar h, s, l;
 
-        explicit HSL(const Colour &c);
+  explicit HSL(const Colour &c);
 };
 
 }  // namespace rt

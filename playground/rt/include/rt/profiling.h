@@ -32,20 +32,20 @@ namespace profiling {
 // A profiling timer.
 class Timer {
  public:
-        // Create and start timer.
-        inline Timer() : start(std::chrono::high_resolution_clock::now()) {}
+  // Create and start timer.
+  inline Timer() : start(std::chrono::high_resolution_clock::now()) {}
 
-        // Return the number of milliseconds.
-        auto inline elapsed() {
-                const std::chrono::high_resolution_clock::time_point end =
-                                std::chrono::high_resolution_clock::now();
-                return static_cast<Scalar>(
-                    std::chrono::duration_cast<std::chrono::microseconds>(
-                        end - start).count() / 1e6);
-        }
+  // Return the number of milliseconds.
+  auto inline elapsed() {
+    const std::chrono::high_resolution_clock::time_point end =
+        std::chrono::high_resolution_clock::now();
+    return static_cast<Scalar>(
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            end - start).count() / 1e6);
+  }
 
  private:
-        const std::chrono::high_resolution_clock::time_point start;
+  const std::chrono::high_resolution_clock::time_point start;
 };
 
 // Counter data type.

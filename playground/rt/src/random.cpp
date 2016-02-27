@@ -1,5 +1,4 @@
-/* -*- c-basic-offset: 8; -*-
- *
+/*
  * Copyright (C) 2015, 2016 Chris Cummins.
  *
  * This file is part of rt.
@@ -21,11 +20,11 @@
 
 namespace rt {
 
-// Set static member values:
+  // Set static member values:
 
-const uint64_t UniformDistribution::rngMax    = 4294967295ULL;
-const uint64_t UniformDistribution::longMax   = rngMax;
-const Scalar   UniformDistribution::scalarMax = rngMax;
-const uint64_t UniformDistribution::mult      = 62089911ULL;
+  const uint64_t UniformDistribution::rngMax    = 4294967295ULL;
+  const uint64_t UniformDistribution::longMax   = rngMax;
+  const Scalar   UniformDistribution::scalarMax = rngMax;
+  const uint64_t UniformDistribution::mult      = 62089911ULL;
 
 }  // namespace rt

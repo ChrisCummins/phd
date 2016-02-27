@@ -31,20 +31,20 @@ namespace rt {
 // lights).
 class Scene {
  public:
-        const Objects objects;
-        const Lights lights;
+  const Objects objects;
+  const Lights lights;
 
-        // Constructor.
-        inline Scene(const Objects &_objects,
-                     const Lights &_lights)
-                : objects(_objects), lights(_lights) {}
+  // Constructor.
+  inline Scene(const Objects &_objects,
+               const Lights &_lights)
+      : objects(_objects), lights(_lights) {}
 
-        inline ~Scene() {
-                for (auto object : objects)
-                        delete object;
-                for (auto light : lights)
-                        delete light;
-        }
+  inline ~Scene() {
+    for (auto object : objects)
+      delete object;
+    for (auto light : lights)
+      delete light;
+  }
 };
 
 }  // namespace rt
