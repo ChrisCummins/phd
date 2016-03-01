@@ -62,18 +62,18 @@ algorithmic skeletons at runtime. OmniTune enables a collaborative
 approach to performance tuning, in which machine learning training
 data is shared across a network of cooperating systems, amortizing the
 cost of exploring the optimization space. We demonstrate the
-practicality of OmniTune by autotuning OpenCL workgroup sizes for
-stencil patterns in SkelCL. SkelCL is an Algorithmic Skeleton
+practicality of OmniTune by autotuning the OpenCL workgroup size of
+stencil skeletons in SkelCL. SkelCL is an Algorithmic Skeleton
 framework which abstracts the complexities of OpenCL programming,
 exposing a set of data parallel skeletons for high level heterogeneous
 programming in C++. Selecting an appropriate OpenCL workgroup size is
 critical for the performance of programs, and requires knowledge of
 the underlying hardware, the data being operated on, and the program
-implementation. Our autotuning approach uses the novel application of
-linear regressors for classification of workgroup size, extracting 102
-features describing the program, device, and dataset at runtime, and
-predicting optimal workgroup sizes based on training data collected
-using synthetically generated stencil benchmarks.
+implementation. Our autotuning approach employs the novel application
+of linear regressors for classification of workgroup size, extracting
+102 features at runtime describing the program, device, and dataset,
+and predicting optimal workgroup sizes based on training data
+collected using synthetically generated stencil benchmarks.
 
 In an empirical study of 429 combinations of programs, architectures,
 and datasets, we find that OmniTune provides a median $3.79\times$
@@ -93,7 +93,7 @@ systems.
 
 \newpage
 
-\section*{Letter of Support from PhD Supervisor}
+\includepdf{hugh-letter.pdf}
 
 
 \end{document}
