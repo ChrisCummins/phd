@@ -94,8 +94,8 @@ namespace rt {
     // Iterate over each subregion.
     sample = &samples[0];
     for (size_t index = 0; index < 4; index ++) {
-      const size_t i = image::x(index, 2);
-      const size_t j = image::y(index, 2);
+      const size_t i = image::x<size_t>(index, 2);
+      const size_t j = image::y<size_t>(index, 2);
 
       // Determine subregion origin.
       const Scalar x = regionX + i * subregionSize;

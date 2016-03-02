@@ -20,6 +20,7 @@
 #ifndef RT_IMAGE_H_
 #define RT_IMAGE_H_
 
+#include <limits>
 #include <vector>
 
 #include "rt/graphics.h"
@@ -32,15 +33,18 @@ namespace image {
 // Helper functions to convert 2D to 1D flat array co-ordinates, and
 // vice versa.
 
-inline size_t index(const size_t x, const size_t y, const size_t width) {
+template<typename T>
+inline T index(const T& x, const T& y, const T& width) {
   return y * width + x;
 }
 
-inline size_t x(const size_t index, const size_t width) {
+template<typename T>
+inline T x(const T& index, const T& width) {
   return index % width;
 }
 
-inline size_t y(const size_t index, const size_t width) {
+template<typename T>
+inline T y(const T& index, const T& width) {
   return index / width;
 }
 
@@ -104,7 +108,8 @@ class Image {
     // Image dimensions:
     out << image.width << " " << image.height << std::endl;
     // Max colour value:
-    out << unsigned(Pixel::ComponentMax) << std::endl;
+    out << unsigned(std::numeric_limits<Pixel::value_type>::max())
+        << std::endl;
 
     // Iterate over each point in the image, writing pixel data.
     for (size_t i = 0; i < image.size; i++) {
