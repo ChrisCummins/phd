@@ -68,17 +68,38 @@
 \section{Background}
 
 
-\section{Methodology}
-
-
 \section{Literature Review}
 
 
 \subsection{Skeleton-aware compilation}
 
-% * What are the limits of compiler optimisations for parallel code?
+What are the limits of compiler optimisations for parallel code?
 
-%   * How does dependency analysis cope?
+\paragraph{Limits of static analysis} Sequential consistency in
+shared-memory parallel
+programming~\cite{Krishnamurthy1995,Shasha1988,Sura2005}. Sequential
+consistency and caches~\cite{Goodman}.
+
+\paragraph{Parallelism in programming languages} Programming languages
+have taken a variety of approaches in adopting parallelism. In C, a
+threading model was retrofitted using the \textit{POSIX pthreads}
+standard~\cite{Sura2005}. \citeauthor{Boehm2005} contend this approach
+in~\cite{Boehm2005}, describing issues in which a compiler developed
+independently of threading issues cannot be guaranteed to produce
+correct code. These issues were circumvented in C++ by the
+introduction of a concurrency model~\cite{Boehm2008}, based off the
+success of the Java Memory Model~\cite{Bash2015a}. C++ and Java are
+two of the most popular imperative programming languages, and in both
+cases, .
+
+In both C++ and Java,
+
+Deterministic Parallel Java~\cite{Bocchino2009}.
+
+Go
+
+Functional: Clojure, Haskell, Scala
+
 
 % * Compiler optimisations for parallel programs
 
@@ -92,9 +113,35 @@
 
 %       A
 
-\subsubsection{Autotuning for parallel programs}
+% \subsubsection{Autotuning for parallel programs}
 
 %   * Autotuning for skeletons
+
+\paragraph{Optimising MapReduce} Optimisations for multi-core
+processors~\cite{Kaashoek2010}.
+
+
+\paragraph{Autotuning Algorithmic Skeletons}
+\citeauthor{Dastgeer2011} developed a machine learning based autotuner
+for the SkePU skeleton library in~\cite{Dastgeer2011}. Training data
+is used to predict the optimal execution device (i.e.\ CPU, GPU) for a
+given program by predicting execution time and memory copy overhead
+based on problem size. The autotuner only supports vector operations,
+and there is limited cross-architecture
+evaluation. In~\cite{Dastgeer2015a}, the authors extend SkePU to
+improve the data consistency and transfer overhead of container types,
+reporting up to a $33.4\times$ speedup over the previous
+implementation.
+
+\citeauthor{Contreras2008} enumerated the optimisation space of Intel
+Thread Building Blocks in~\cite{Contreras2008}, showing that runtime
+knowledge of the available parallel hardware can have a significant
+impact on program performance. \citeauthor{Collins2012} exploit this
+in~\cite{Collins2012}, using Principle Components Analysis to reduce
+the dimensionality of the parameter optimisation space and then search
+across it. In~\cite{Collins2013} they extend this using static feature
+extraction and nearest neighbour classification to further prune the
+search space.
 
 
 \subsection{Skeleton-aware debugging}
@@ -141,7 +188,57 @@ debugging.
 
 \subsection{Skeleton-aware profiling}
 
-% * Profiling parallel applications
+Profiling sequential programs~\cite{Ball1994}.
+
+\paragraph{Profiling parallel programs} Profiling parallel programs
+using KOJAK~\cite{Mohr2003}.
+
+
+\section{Methodology}
+
+Use geometric mean for speedups~\cite{Fleming1986}. Statistical
+rigour\cite{Georges2007}.
+
+
+\subsection{Skeleton-aware compiler optimizations}
+
+First steps:
+%
+\begin{enumerate}
+\item Write a test case program
+\item Compile to bytecode and check optimisation is not applied
+\item Implement optimisation by hand to source code
+\item Measure performance improvement
+\item Implement compiler pass to apply optimisation to bytecode
+\item Test on real world benchmarks
+\end{enumerate}
+%
+Example: constant propagation across muscle functions in pipe:
+%
+\begin{enumerate}
+\item Write a pipeline of 100 "+1” functions.
+\item Compile to bytecode and check that pipeline isn’t collapsed.
+\item Collapse pipeline to single stage.
+\item Measure performance improvement.
+\item Implement compiler pass to apply optimisation to bytecode.
+\item Test on real world benchmarks.
+\end{enumerate}
+%
+Next step: load balancing across pipelines - stream partitioning?
+
+Related work: dataflow analysis across skeletons for scheduling, what
+kind of optimisations are applied in TLB/actor frameworks, actors in
+scala
+
+
+\subsection{Skeleton-aware debugging}
+debugging+profiling for checkpointing
+
+TBB debugging
+
+exoskeleton
+
+SkePU related workx
 
 
 \section{Conclusions}
