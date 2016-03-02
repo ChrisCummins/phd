@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstdint>
 #include <fstream>
+#include <limits>
 
 #include "rt/math.h"
 
@@ -36,12 +37,9 @@ namespace rt {
 // A pixel is a trio of R,G,B components.
 class Pixel {
  public:
-  // The output type of a single R,G,B colour component.
-  typedef uint8_t Component;
-  // The maximum value of a single R,G,B colour component.
-  static const Component ComponentMax = 255;
+  using value_type = uint8_t;
 
-  Component r, g, b;
+  value_type r, g, b;
 
   // Output stream formatter.
   friend auto& operator<<(std::ostream& os, const Pixel &pixel) {
@@ -54,9 +52,9 @@ class Pixel {
 
 // Transform a scalar from the range [0,1] to [0,Pixel::ComponentMax]. Note
 // that this transformation may be non-linear.
-Pixel::Component inline scale(const Scalar x) {
-  return static_cast<Pixel::Component>(
-      x * static_cast<Scalar>(Pixel::ComponentMax));
+Pixel::value_type inline scale(const Scalar x) {
+  auto mult = Scalar{std::numeric_limits<Pixel::value_type>::max()};
+  return Pixel::value_type(x * mult);
 }
 
 // Forward declaration of HSL colour type (defined below Colour).
