@@ -86,19 +86,19 @@ threading model was retrofitted using the \textit{POSIX pthreads}
 standard~\cite{Sura2005}. \citeauthor{Boehm2005} contend this approach
 in~\cite{Boehm2005}, describing issues in which a compiler developed
 independently of threading issues cannot be guaranteed to produce
-correct code. These issues were circumvented in C++ by the
+correct code. These issues were circumvented in C++11 by the
 introduction of a concurrency model~\cite{Boehm2008}, based off the
-success of the Java Memory Model~\cite{Bash2015a}. C++ and Java are
+success of the Java memory model~\cite{Bash2015a}. C++ and Java are
 two of the most popular imperative programming languages, and in both
-cases, .
-
-In both C++ and Java,
+cases, the languages specify memory models which guarantee sequential
+consistency across threads, subject to some restrictions.
 
 Deterministic Parallel Java~\cite{Bocchino2009}.
 
-Go
+Parallelism in the modern functional languages Haskell, Clojure and
+Erlang~\cite{Pierro2012}.
 
-Functional: Clojure, Haskell, Scala
+% TODO: Go, Scala.
 
 
 % * Compiler optimisations for parallel programs
