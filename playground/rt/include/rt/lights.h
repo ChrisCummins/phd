@@ -47,7 +47,7 @@ class Light {
                        const Objects objects) const = 0;
 };
 
-typedef const std::vector<const Light *const> Lights;
+using Lights = const std::vector<const Light *const>;
 
 // A round light source.
 class SoftLight : public Light {

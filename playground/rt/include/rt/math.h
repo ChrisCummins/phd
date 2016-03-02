@@ -33,7 +33,7 @@ namespace rt {
 
 // Changing between different floating point sizes for scalar values
 // will affect the system's performance.
-typedef double Scalar;
+using Scalar = double;
 
 // The "rounding error" to accomodate for when approximate infinite
 // precision real numbers.

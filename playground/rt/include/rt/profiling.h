@@ -49,7 +49,7 @@ class Timer {
 };
 
 // Counter data type.
-typedef uint64_t Counter;
+using Counter = uint64_t;
 
 namespace counters {
 
