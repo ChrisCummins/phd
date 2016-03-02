@@ -31,14 +31,12 @@ class Lens {
  public:
   const Scalar focalLength;
   const Scalar focus;
-  mutable UniformDiskDistribution aperture;
+  mutable UniformDiskDistribution<Scalar> aperture;
 
   inline Lens(const Scalar _focalLength,
               const Scalar _aperture = 1,
               const Scalar _focus = 1)
-      : focalLength(_focalLength),
-        focus(_focus),
-        aperture(UniformDiskDistribution(_aperture)) {}
+      : focalLength(_focalLength), focus(_focus), aperture(_aperture) {}
 };
 
 // A camera has a position, a target that it is pointed at, a film

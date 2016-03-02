@@ -55,15 +55,17 @@ class SoftLight : public Light {
   const Vector position;
   const Colour colour;
   const size_t samples;
-  mutable UniformDistribution sampler;
+  mutable UniformDistribution<Scalar> sampler;
 
   // Constructor.
   inline SoftLight(const Vector &_position,
                    const Colour &_colour = Colour(0xff, 0xff, 0xff),
                    const Scalar _radius = 0,
                    const size_t _samples = 1)
-      : position(_position), colour(_colour), samples(_samples),
-        sampler(UniformDistribution(-_radius, _radius)) {
+      : position(_position),
+        colour(_colour),
+        samples(_samples),
+        sampler(-_radius, _radius) {
     // Register lights with profiling counter.
     profiling::counters::incLightsCount(_samples);
   }

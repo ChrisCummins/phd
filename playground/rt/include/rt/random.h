@@ -21,73 +21,64 @@
 #define RT_RANDOM_H_
 
 #include <cstdint>
-#include <cstddef>
+#include <limits>
 
 #include "rt/math.h"
 
 namespace rt {
 
-// Data type for seeding random number generators.
-typedef uint64_t Seed;
+// Random number seed:
+using seed = uint64_t;
 
 // A random number generator for sampling a uniform distribution
 // within a specific range.
+template<typename T>
 class UniformDistribution {
  public:
-  inline UniformDistribution(const Scalar _min, const Scalar _max,
-                             const Seed _seed = 7564231ULL)
-      : divisor(scalarMax / (_max - _min)),
-        min(_min),  // NOLINT(build/include_what_you_use)
-        seed(_seed) {}
+  UniformDistribution(const T& min, const T& max,
+                      const seed seedval = seed{7564231})
+      : _divisor(std::numeric_limits<T>::max() / (max - min)),
+        _min(min), _seed(seedval) {}  // NOLINT(build/include_what_you_use)
 
-  // Return a new random number.
-  auto inline operator()() {
-    seed *= mult;
-
-    // Generate a new random value in the range [0,max - min].
-    const double r = seed % longMax / divisor;
-    // Apply "-min" offset to value.
-    return r + min;
+  // Generate a new random value in the range [0,max - min].
+  auto operator()() {
+    _seed *= 62089911ULL;  // magic value
+    return (_seed % std::numeric_limits<seed>::max() / _divisor) + _min;
   }
 
-  const Scalar divisor;
-  const Scalar min;
-  uint64_t seed;
-
- private:
-  // Constant values for random number generators.
-  static const uint64_t rngMax;
-  static const uint64_t longMax;
-  static const Scalar scalarMax;
-  static const uint64_t mult;
+  const T _divisor;
+  const T _min;
+  seed _seed;
 };
 
 // A generator for sampling random points over a disk.
+template<typename T>
 class UniformDiskDistribution {
  public:
-  inline UniformDiskDistribution(const Scalar _radius,
-                                 const Seed _seed = 7564231ULL)
-      : angle(UniformDistribution(0, 2 * M_PI, _seed)),
-        rand01(UniformDistribution(0, 1, _seed)),
-        radius(_radius) {}
+  UniformDiskDistribution(const T radius,
+                          const seed seed1 = seed{7564231},
+                          const seed seed2 = seed{7564231})
+      : angle(0, 2 * M_PI, seed1),
+        rand01(0, 1, seed2),
+        _radius(radius) {}
 
   // Return a random point on the disk, with the vector x and y
   // components corresponding to the x and y coordinates of the
   // point within the disk.
-  auto inline operator()() {
-    const Scalar theta = angle();
-    const Scalar distance = radius * sqrt(rand01());
+  auto operator()() {
+    const T theta = angle();
+    const T distance = _radius * sqrt(rand01());
 
-    const Scalar x = distance * cos(theta);
-    const Scalar y = distance * sin(theta);
+    const T x = distance * cos(theta);
+    const T y = distance * sin(theta);
 
-    return Vector(x, y, 0);
+    return Vector(x, y);
   }
 
  private:
-  UniformDistribution angle;
-  UniformDistribution rand01;
-  const Scalar radius;
+  UniformDistribution<T> angle;
+  UniformDistribution<T> rand01;
+  const T _radius;
 };
 
 }  // namespace rt

@@ -115,7 +115,6 @@ RayTracerSources =		\
 	lights.cc		\
 	objects.cc		\
 	profiling.cc		\
-	random.cc		\
 	renderer.cc		\
 	$(NULL)
 
