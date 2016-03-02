@@ -19,25 +19,18 @@ static const size_t nchars = 255;
 
 
 std::string longest_substr(const std::string& s, const size_t n) {
-  size_t start = 0, maxlen = 1, i = 0, j = 0, len = 0;
+  size_t start = 0, maxlen = 1, j = 0, len = 0;
 
-  while (i < s.length() - maxlen) {
+  for (size_t i = 0; i < s.length() - maxlen; i++) {
     std::bitset<nchars> uniq{0};
 
-    for (j = i; j < s.length(); j++) {
+    for (j = i; j < s.length(), uniq.count() <= n; j++)
       uniq[static_cast<size_t>(s[j])] = true;
-      if (uniq.count() > n)
-        break;
-    }
 
-    len = j - i;
-
-    if (len > maxlen) {
+    if ((len = j - i) > maxlen) {
       start = i;
       maxlen = len;
     }
-
-    i++;
   }
 
   return s.substr(start, maxlen);
