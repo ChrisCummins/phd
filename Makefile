@@ -565,6 +565,19 @@ $(CtCiCxxObjects): $(GoogleBenchmark) $(GoogleTest)
 ExpertCSources = $(wildcard $(learn)/expert_c/*.c)
 CTargets += $(patsubst %.c,%,$(ExpertCSources))
 
+#
+# learn/hoocl/
+#
+
+# C++ solutions:
+HooclCxxSources = $(wildcard $(learn)/hoocl/*.cpp)
+HooclCxxObjects = $(patsubst %.cpp,%.o,$(HooclCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(HooclCxxSources))
+
+$(learn)/hoocl_CxxFlags = $(OpenCL_CxxFlags) -I$(learn)/hoocl/include
+$(learn)/hoocl_LdFlags = $(OpenCL_LdFlags)
+$(HooclCxxObjects): $(OpenCL)
+
 
 #
 # learn/triSYCL/
