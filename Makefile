@@ -425,6 +425,14 @@ DistcleanTargets += distclean-googletest
 
 
 #
+# extern/opencl
+#
+OpenCL_CxxFlags = -I$(extern)/opencl/include
+OpenCL_LdFlags = -framework OpenCL
+OpenCL = $(extern)/opencl/include/cl.hpp
+
+
+#
 # extern/triSYCL
 #
 TriSYCL_CxxFlags = -I$(extern)/triSYCL/include
