@@ -428,7 +428,8 @@ DistcleanTargets += distclean-googletest
 #
 # extern/opencl
 #
-OpenCL_CxxFlags = -I$(extern)/opencl/include
+OpenCL_CFlags = -I$(extern)/opencl/include
+OpenCL_CxxFlags = $(OpenCL_CFlags)
 OpenCL_LdFlags = -framework OpenCL
 OpenCL = $(extern)/opencl/include/cl.hpp
 
@@ -570,13 +571,21 @@ CTargets += $(patsubst %.c,%,$(ExpertCSources))
 # learn/hoocl/
 #
 
+# Common files:
+HooclCommonHeaders = $(wildcard $(learn)/hoocl/include/*.h)
+HooclCCommonSources = $(wildcard $(learn)/hoocl/src/*.c)
+HooclCCommonObjects = $(patsubst %.c,%.o,$(HooclCCommonSources))
+$(learn)/hoocl/src_CFlags = $(OpenCL_CFlags)
+$(HooclCCommonObjects): $(OpenCL) $(HooclCommonHeaders)
+
 # C++ solutions:
 HooclCxxSources = $(wildcard $(learn)/hoocl/*.cpp)
 HooclCxxObjects = $(patsubst %.cpp,%.o,$(HooclCxxSources))
 CxxTargets += $(patsubst %.cpp,%,$(HooclCxxSources))
 
+$(learn)/hoocl_CFlags = $(OpenCL_CFlags) -I$(learn)/hoocl/include
 $(learn)/hoocl_CxxFlags = $(OpenCL_CxxFlags) -I$(learn)/hoocl/include
-$(learn)/hoocl_LdFlags = $(OpenCL_LdFlags)
+$(learn)/hoocl_LdFlags = $(OpenCL_LdFlags) $(HooclCCommonObjects)
 $(HooclCxxObjects): $(OpenCL)
 
 
