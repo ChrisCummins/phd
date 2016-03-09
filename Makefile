@@ -578,6 +578,12 @@ HooclCCommonObjects = $(patsubst %.c,%.o,$(HooclCCommonSources))
 $(learn)/hoocl/src_CFlags = $(OpenCL_CFlags)
 $(HooclCCommonObjects): $(OpenCL) $(HooclCommonHeaders)
 
+# C solutions:
+HooclCSources = $(wildcard $(learn)/hoocl/*.c)
+HooclCObjects = $(patsubst %.c,%.o,$(HooclCSources))
+CTargets += $(patsubst %.c,%,$(HooclCSources))
+$(HooclCObjects): $(OpenCL) $(HooclCCommonObjects) $(HooclCommonHeaders)
+
 # C++ solutions:
 HooclCxxSources = $(wildcard $(learn)/hoocl/*.cpp)
 HooclCxxObjects = $(patsubst %.cpp,%.o,$(HooclCxxSources))
