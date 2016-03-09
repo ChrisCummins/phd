@@ -789,6 +789,7 @@ CxxFlags = \
 	-Weverything \
 	-Wno-c++98-compat \
 	-Wno-c++98-compat-pedantic \
+	-Wno-documentation \
 	-Wno-double-promotion \
 	-Wno-exit-time-destructors \
 	-Wno-global-constructors \
