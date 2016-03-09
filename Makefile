@@ -349,7 +349,8 @@ extern := $(root)/extern
 # extern/benchmark
 #
 GoogleBenchmark = $(extern)/benchmark/build/src/libbenchmark.a
-GoogleBenchmark_CxxFlags = -I$(extern)/benchmark/include
+GoogleBenchmark_CxxFlags = \
+	-I$(extern)/benchmark/include -Wno-global-constructors
 GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
 
 $(GoogleBenchmark):
