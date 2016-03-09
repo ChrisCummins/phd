@@ -36,7 +36,13 @@ class X {
   X &operator=(const X &x) { *data = *x.data; return *this; }
 
   // Move assignment:
-  X &operator=(X &&x) { data = x.data; x.data = nullptr; return *this; }
+  X &operator=(X &&x) {
+    if (data != x.data) {
+      delete data;
+      data = std::move(x.data);
+    }
+    return *this;
+  }
 
   // Destructor:
   ~X() { delete data; }
