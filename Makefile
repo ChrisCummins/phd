@@ -737,31 +737,12 @@ CFlags = \
 	$(CDebugFlags) \
 	-std=c11 \
 	-pedantic \
-	-Wall \
-	-Wextra \
-	-Wcast-align \
-	-Wcast-qual \
-	-Wctor-dtor-privacy \
-	-Wdisabled-optimization \
-	-Wformat=2 \
-	-Winit-self \
-	-Winline \
-	-Wmissing-declarations \
-	-Wmissing-include-dirs \
-	-Wno-div-by-zero \
-	-Wno-main \
-	-Wno-missing-braces \
+	-Weverything \
+	-Wno-bad-function-cast \
+	-Wno-double-promotion \
+	-Wno-missing-prototypes \
+	-Wno-missing-variable-declarations \
 	-Wno-unused-parameter \
-	-Wold-style-cast \
-	-Woverloaded-virtual \
-	-Wredundant-decls \
-	-Wshadow \
-	-Wsign-conversion \
-	-Wsign-promo \
-	-Wstrict-overflow=5 \
-	-Wswitch-default \
-	-Wundef \
-	-Wwrite-strings \
 	$(NULL)
 
 %.o: %.c
@@ -804,31 +785,18 @@ CxxFlags = \
 	-std=c++1z \
 	-stdlib=libc++ \
 	-pedantic \
-	-Wall \
-	-Wextra \
-	-Wcast-align \
-	-Wcast-qual \
-	-Wctor-dtor-privacy \
-	-Wdisabled-optimization \
-	-Wformat=2 \
-	-Winit-self \
-	-Winline \
-	-Wmissing-declarations \
-	-Wmissing-include-dirs \
-	-Wno-div-by-zero \
-	-Wno-main \
-	-Wno-missing-braces \
+	-Weverything \
+	-Wno-c++98-compat \
+	-Wno-c++98-compat-pedantic \
+	-Wno-double-promotion \
+	-Wno-exit-time-destructors \
+	-Wno-global-constructors \
+	-Wno-missing-prototypes \
+	-Wno-missing-variable-declarations \
+	-Wno-padded \
+	-Wno-switch-enum \
 	-Wno-unused-parameter \
-	-Wold-style-cast \
-	-Woverloaded-virtual \
-	-Wredundant-decls \
-	-Wshadow \
-	-Wsign-conversion \
-	-Wsign-promo \
-	-Wstrict-overflow=5 \
-	-Wswitch-default \
-	-Wundef \
-	-Wwrite-strings \
+	-Wno-weak-vtables \
 	$(NULL)
 
 %.o: %.cpp
