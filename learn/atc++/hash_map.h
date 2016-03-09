@@ -1,5 +1,5 @@
-#ifndef __HASH_MAP_H__
-#define __HASH_MAP_H__
+#ifndef HASH_MAP_H
+#define HASH_MAP_H
 
 #include <forward_list>
 #include <vector>
@@ -147,4 +147,4 @@ std::ostream& operator<<(std::ostream& out, hashmap<Key, T>& map) {
 }
 
 
-#endif  // __HASH_MAP_H__
+#endif  // HASH_MAP_H

@@ -1,5 +1,6 @@
 #pragma GCC diagnostic push  // Chris edit
 #pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wcast-qual"
 
 #pragma once
 /*----------------------------------------------------------------------------

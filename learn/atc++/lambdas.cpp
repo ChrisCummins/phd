@@ -10,7 +10,7 @@ static void lambda_loop(benchmark::State& state) {
     static const size_t n = 1000;
     std::vector<int> v(n);
     for (auto &i : v)
-        i = static_cast<size_t>(arc4random());
+        i = static_cast<int>(arc4random());
     auto sum = 0;
 
     auto op = [&](const int& x) { sum += x; };
@@ -25,7 +25,7 @@ static void lambda_in_loop(benchmark::State& state) {
     static const size_t n = 1000;
     std::vector<int> v(n);
     for (auto &i : v)
-        i = static_cast<size_t>(arc4random());
+        i = static_cast<int>(arc4random());
     auto sum = 0;
 
     while (state.KeepRunning()) {
@@ -40,7 +40,7 @@ static void lambda_val(benchmark::State& state) {
     static const size_t n = 1000;
     std::vector<int> v(n);
     for (auto &i : v)
-        i = static_cast<size_t>(arc4random());
+        i = static_cast<int>(arc4random());
 
     const auto m = 2;
     while (state.KeepRunning()) {
@@ -55,7 +55,7 @@ static void lambda_ref(benchmark::State& state) {
     static const size_t n = 1000;
     std::vector<int> v(n);
     for (auto &i : v)
-        i = static_cast<size_t>(arc4random());
+        i = static_cast<int>(arc4random());
 
     const auto m = 2;
     while (state.KeepRunning()) {

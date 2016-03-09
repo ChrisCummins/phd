@@ -1,8 +1,10 @@
-#ifndef __TRISYCL_H__
-#define __TRISYCL_H__
+#ifndef TRISYCL_H
+#define TRISYCL_H
 
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdocumentation-unknown-command"
 #pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wreserved-id-macro"
 #pragma GCC diagnostic ignored "-Wshadow"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #include <CL/sycl.hpp>
@@ -24,4 +26,4 @@
     return ret; \
   }
 
-#endif  // __TRISYCL_H__
+#endif  // TRISYCL_H

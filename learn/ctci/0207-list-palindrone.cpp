@@ -52,7 +52,7 @@ void BM_is_palindrone(benchmark::State& state) {
   std::list<int> list;
 
   // Create palindrone.
-  for (size_t i = 0; i < half; i++)
+  for (int i = 0; i < static_cast<int>(half); i++)
     list.push_back(i);
   auto it = list.crbegin();
   while (it != list.crend())

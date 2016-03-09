@@ -13,8 +13,13 @@
 #include <vector>
 
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated"
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
 #pragma GCC diagnostic ignored "-Wpadded"
+#pragma GCC diagnostic ignored "-Wshift-sign-overflow"
 #pragma GCC diagnostic ignored "-Wundef"
+#pragma GCC diagnostic ignored "-Wused-but-marked-unused"
+#pragma GCC diagnostic ignored "-Wweak-vtables"
 #include <benchmark/benchmark.h>
 #include <gtest/gtest.h>
 #pragma GCC diagnostic pop
@@ -49,6 +54,9 @@ std::string maxnsubstr_chris(const std::string& s, const size_t n) {
   return s.substr(start, maxlen);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wsign-compare"
 
 // Adam's implementation: use a btree to store the "last" seen index
 // of each character, and use that to calculate where to trim the
@@ -144,6 +152,8 @@ bool check_string(std::string s, int N){
   }
   return bits.count() <= N;
 }
+
+#pragma GCC diagnostic pop
 
 
 ///////////

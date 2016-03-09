@@ -19,8 +19,8 @@ bool is_permutation(const std::string &a, const std::string &b) {
     return false;  // Permutations must be the same length.
 
   // Create char-frequency tables:
-  std::array<size_t, std::numeric_limits<char>::max()> a_freq = {0};
-  std::array<size_t, std::numeric_limits<char>::max()> b_freq = {0};
+  std::array<size_t, std::numeric_limits<char>::max()> a_freq = {{ 0 }};
+  std::array<size_t, std::numeric_limits<char>::max()> b_freq = {{ 0 }};
 
   for (auto &c : a)
     a_freq[static_cast<size_t>(c)] += 1;

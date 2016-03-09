@@ -45,7 +45,7 @@ class recursive_directory_iterator {
   explicit recursive_directory_iterator(const fs::path& root)
       : _stack({decltype(_stack)::value_type{root}}), _base(root) {}
 
-  explicit recursive_directory_iterator(fs::path&& root)
+  explicit recursive_directory_iterator(fs::path&& root)  // NOLINT
       : _stack({decltype(_stack)::value_type{std::move(root)}}),
         _base(*_stack.top()) {}
 
@@ -244,7 +244,7 @@ void print_dir_md5sums(const fs::path& root) {
   auto op = [](const auto& path) {
     try {
       std::cout << file::md5sum(path) << ' ' << path.string() << std::endl;
-    } catch (std::runtime_error& e) {
+    } catch (std::runtime_error&) {
       std::cerr << "error: failed to open " << path.string() << std::endl;
     }
   };

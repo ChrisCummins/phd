@@ -31,6 +31,7 @@ void doOrDoNotThereIsNoTry() {
         switch (decode(input)) {
             case UsingTheForce::yes:
                 useTheForce = true;
+                [[clang::fallthrough]];
             case UsingTheForce::no:
                 done = true;
                 break;
@@ -64,7 +65,6 @@ void okTry() {
             break;
         default:
             throw ex;
-            break;
     }
 }
 
@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
 
     try {
         okTry();
-    } catch (InputException &e) {
+    } catch (InputException &) {
         std::cout << "You had one shot!" << std::endl;
         return 1;
     }

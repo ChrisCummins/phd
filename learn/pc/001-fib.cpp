@@ -1,5 +1,10 @@
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated"
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+#pragma GCC diagnostic ignored "-Wpadded"
+#pragma GCC diagnostic ignored "-Wshift-sign-overflow"
 #pragma GCC diagnostic ignored "-Wundef"
+#pragma GCC diagnostic ignored "-Wused-but-marked-unused"
 #include <benchmark/benchmark.h>
 #include <gtest/gtest.h>
 #pragma GCC diagnostic pop
@@ -301,8 +306,6 @@ BENCHMARK(BM_fib_iter)->Range(1, 25);
 
 
 int main(int argc, char **argv) {
-  auto i{42};
-
   testing::InitGoogleTest(&argc, argv);
   const auto ret = RUN_ALL_TESTS();
   benchmark::Initialize(&argc, argv);

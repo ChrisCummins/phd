@@ -17,7 +17,7 @@ void printLastKLines1(std::ifstream &file, size_t k,
   if (!file.is_open() || !k) return;  // Sanity checks.
 
   // Num. of lines read, and num. of lines left to read:
-  int linesremaining = k;
+  unsigned int linesremaining = k;
   int linesread = 0;
 
   // Skip to last character of file:

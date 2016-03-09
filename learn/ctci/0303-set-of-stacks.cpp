@@ -60,7 +60,7 @@ class SetOfStacks {
     if (_stacks.empty())
       _stacks.push_back(stack_type{});
 
-    return popAt(_stacks.size() - 1);
+    return popAt(static_cast<int>(_stacks.size() - 1u));
   }
 
   T popAt(int index) {

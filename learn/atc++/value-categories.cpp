@@ -7,9 +7,12 @@ int rvalue_ret() {
   return 17;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-stack-address"
 int&& rrvalue_ret() {
   return 17;
 }
+#pragma GCC diagnostic pop
 
 int main() {
   int x;

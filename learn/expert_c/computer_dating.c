@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
 
         for (i = 0; i < 60; i++) {
                 time(&now);
-                remaining = difftime(end, now);
+                remaining = (time_t)difftime(end, now);
                 printf("Hurry, you only have %lu seconds left!\r", remaining);
                 sleep(1);
         }

@@ -2,12 +2,17 @@
 //
 // Common test header.
 //
-#ifndef __USTL_TESTS_H__
-#define __USTL_TESTS_H__
+#ifndef USTL_TESTS_H
+#define USTL_TESTS_H
 
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated"
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
 #pragma GCC diagnostic ignored "-Wpadded"
+#pragma GCC diagnostic ignored "-Wshift-sign-overflow"
 #pragma GCC diagnostic ignored "-Wundef"
+#pragma GCC diagnostic ignored "-Wused-but-marked-unused"
+#pragma GCC diagnostic ignored "-Wweak-vtables"
 #include <gtest/gtest.h>
 #pragma GCC diagnostic pop
 
@@ -53,4 +58,4 @@ bool vector_equal(const VectorType &v, std::initializer_list<T> il) {
   return true;
 }
 
-#endif  // __USTL_TESTS_H__
+#endif  // USTL_TESTS_H

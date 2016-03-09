@@ -9,8 +9,13 @@
 #include <cstdint>
 
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated"
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
 #pragma GCC diagnostic ignored "-Wpadded"
+#pragma GCC diagnostic ignored "-Wshift-sign-overflow"
 #pragma GCC diagnostic ignored "-Wundef"
+#pragma GCC diagnostic ignored "-Wused-but-marked-unused"
+#pragma GCC diagnostic ignored "-Wweak-vtables"
 #include <benchmark/benchmark.h>
 #include <gtest/gtest.h>
 #pragma GCC diagnostic pop
@@ -72,7 +77,7 @@ TEST(Correctness, averageIntList1) {
     ASSERT_FLOAT_EQ(5, averageIntList1(t1, 9));
 
     int32_t t2[] = {-3, -2, 0};
-    ASSERT_FLOAT_EQ(-1.6666666, averageIntList1(t2, 3));
+    ASSERT_FLOAT_EQ(-1.6666666f, averageIntList1(t2, 3));
 
     ASSERT_FLOAT_EQ(0, averageIntList1(nullptr, 0));
 }
@@ -82,7 +87,7 @@ TEST(Correctness, averageIntList2) {
     ASSERT_FLOAT_EQ(averageIntList2(t1, 9), 5);
 
     int32_t t2[] = {-3, -2, 0};
-    ASSERT_FLOAT_EQ(averageIntList2(t2, 3), -1.6666666);
+    ASSERT_FLOAT_EQ(averageIntList2(t2, 3), -1.6666666f);
 
     ASSERT_FLOAT_EQ(averageIntList2(nullptr, 0), 0);
 }

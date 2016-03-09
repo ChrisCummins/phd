@@ -10,10 +10,10 @@
 // O(n^2) time, O(1) space.
 //
 void escape_space(char *s, size_t len) {
-  for (int i = len - 1; i >= 0; i--) {
+  for (int i = static_cast<int>(len) - 1; i >= 0; i--) {
     if (s[i] == ' ') {
       // Make room for escape characters:
-      for (int j = len - 1; j > i; j--)
+      for (int j = static_cast<int>(len) - 1; j > i; j--)
         s[j + 2] = s[j];
 
       s[i] = '%';

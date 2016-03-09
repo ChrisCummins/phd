@@ -1,9 +1,14 @@
-#ifndef __CTCI_H__
-#define __CTCI_H__
+#ifndef CTCI_H
+#define CTCI_H
 
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated"
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
 #pragma GCC diagnostic ignored "-Wpadded"
+#pragma GCC diagnostic ignored "-Wshift-sign-overflow"
 #pragma GCC diagnostic ignored "-Wundef"
+#pragma GCC diagnostic ignored "-Wused-but-marked-unused"
 #include <benchmark/benchmark.h>
 #include <gtest/gtest.h>
 #pragma GCC diagnostic pop
@@ -17,4 +22,4 @@
     return ret; \
   }
 
-#endif  // __CTCI_H__
+#endif  // CTCI_H

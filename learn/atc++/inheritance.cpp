@@ -4,6 +4,7 @@
 
 class Base {
  public:
+  virtual ~Base() {}
   virtual void foo() const { std::cout << '0'; }
   virtual void bar() const {
     throw std::runtime_error("nothing should call this");
