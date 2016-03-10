@@ -821,6 +821,7 @@ CxxFlags = \
 	-Wno-double-promotion \
 	-Wno-exit-time-destructors \
 	-Wno-global-constructors \
+	-Wno-missing-braces \
 	-Wno-missing-prototypes \
 	-Wno-missing-variable-declarations \
 	-Wno-padded \
