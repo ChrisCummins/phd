@@ -23,7 +23,16 @@ class Comparable {
   Comparable() : data() {}
   explicit Comparable(const T &_data) : Comparable(_data, 0) {}
   Comparable(const T &_data, const T &_nc) : data(_data), nc(_nc) {}
+  Comparable(const Comparable& rhs) : data(rhs.data), nc(rhs.nc) {}
+  Comparable(Comparable&& rhs)
+      : data(std::move(rhs.data)), nc(std::move(rhs.nc)) {}
   ~Comparable() {}
+
+  Comparable& operator=(const Comparable& rhs) {
+    data = rhs.data;
+    nc = rhs.nc;
+    return *this;
+  }
 
   bool operator<(const Comparable &rhs) const { return data < rhs.data; }
   bool operator==(const Comparable &rhs) const { return data == rhs.data; }

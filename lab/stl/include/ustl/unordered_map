@@ -1,12 +1,13 @@
 // -*-c++-*-
 //
-#ifndef __USTL_UNORDERED_MAP__
-#define __USTL_UNORDERED_MAP__
+#ifndef USTL_UNORDERED_MAP_H
+#define USTL_UNORDERED_MAP_H
 
+#include <functional>
 #include <iterator>
 #include <memory>
-#include <utility>
 #include <ostream>
+#include <utility>
 
 #include <vector>
 #include <ustl/vector>
@@ -53,7 +54,7 @@ template<typename Key,
          typename T,
          typename Hash = std::hash<Key>,
          typename Pred = std::equal_to<Key>,
-         typename Alloc = std::allocator<std::pair<const Key,T> >
+         typename Alloc = std::allocator<std::pair<const Key, T>>
          > class unordered_map {
  private:
   // Forward declaration of nested class:
@@ -112,7 +113,7 @@ template<typename Key,
 
   using size_type = size_t;
 
-  using difference_type = long;
+  using difference_type = long;  // NOLINT
 
 
   ///////////////////
@@ -218,7 +219,7 @@ template<typename Key,
   //
   // The object acquires the contents of the rvalue ump.
   //
-  unordered_map(unordered_map&& ump)
+  unordered_map(unordered_map&& ump)  // NOLINT
       : unordered_map() {
     _table = std::move(ump._table);
     _hasher = std::move(ump._hasher);
@@ -226,7 +227,7 @@ template<typename Key,
     _size = std::move(ump._size);
   }
 
-  unordered_map(unordered_map&& ump, const allocator_type& alloc) {
+  unordered_map(unordered_map&& ump, const allocator_type& alloc) {  // NOLINT
     // TODO: different alloc?
     clear();
     _table = std::move(ump._table);
@@ -682,7 +683,7 @@ template<typename Key,
   // If k does not match any key in the container, the range returned
   // has end as both its lower and upper range bounds.
   //
-  std::pair<iterator,iterator>
+  std::pair<iterator, iterator>
   equal_range(const key_type& k) {
     auto first = find(k);
 
@@ -777,7 +778,7 @@ template<typename Key,
   // The parameters determine how many elements are inserted and to
   // which values they are initialized:
   //
-  std::pair<iterator,bool> insert(const value_type& val) {
+  std::pair<iterator, bool> insert(const value_type& val) {
     auto res = find(val);
 
     if (res == end()) {
@@ -789,7 +790,7 @@ template<typename Key,
   }
 
   template<typename P>
-  std::pair<iterator,bool> insert(P&& val) {
+  std::pair<iterator, bool> insert(P&& val) {
     auto res = find(val);
 
     if (res == end()) {
@@ -1226,7 +1227,7 @@ template<typename Key,
       }
 
       return *this;
-    };
+    }
 
     // postfix increment
     __iterator operator++(int) {
@@ -1237,7 +1238,7 @@ template<typename Key,
       ++*this;
 
       return iterator(_table, table_it, bucket, bucket_it);
-    };
+    }
 
     // dereference
     value_type& operator*() const {
@@ -1320,7 +1321,7 @@ template<typename Key,
       }
 
       return *this;
-    };
+    }
 
     // postfix increment
     __const_iterator operator++(int) {
@@ -1331,7 +1332,7 @@ template<typename Key,
       ++*this;
 
       return const_iterator{_table, table_it, bucket, bucket_it};
-    };
+    }
 
     // dereference
     const value_type& operator*() const {
@@ -1432,8 +1433,8 @@ bool operator==(const unordered_map<Key, T, Hash, Pred, Alloc>& lhs,
 }
 
 template<typename Key, typename T, typename Hash, typename Pred, typename Alloc>
-bool operator!=(const unordered_map<Key,T,Hash,Pred,Alloc>& lhs,
-                const unordered_map<Key,T,Hash,Pred,Alloc>& rhs) {
+bool operator!=(const unordered_map<Key, T, Hash, Pred, Alloc>& lhs,
+                const unordered_map<Key, T, Hash, Pred, Alloc>& rhs) {
   return !(lhs == rhs);
 }
 
@@ -1457,7 +1458,7 @@ bool operator!=(const unordered_map<Key,T,Hash,Pred,Alloc>& lhs,
 // elements.
 //
 template<typename Key, typename T, typename Hash, typename Pred, typename Alloc>
-void swap(unordered_map<Key, T, Hash, Pred, Alloc>& lhs,
+void swap(unordered_map<Key, T, Hash, Pred, Alloc>& lhs,  // NOLINT
           unordered_map<Key, T, Hash, Pred, Alloc>& rhs) {
   lhs.swap(rhs);
 }
@@ -1465,4 +1466,4 @@ void swap(unordered_map<Key, T, Hash, Pred, Alloc>& lhs,
 
 }  // namespace ustl
 
-#endif  // __USTL_UNORDERED_MAP__
+#endif  // USTL_UNORDERED_MAP_H

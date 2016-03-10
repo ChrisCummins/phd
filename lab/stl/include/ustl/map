@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef __USTL_MAP__
-#define __USTL_MAP__
+#ifndef USTL_MAP_H
+#define USTL_MAP_H
 
 #include <iterator>
 #include <functional>
@@ -139,16 +139,16 @@ template<typename Key,
   //
   map() {
     // TODO: implement
-  };
+  }
 
   explicit map(const key_compare& comp,
                const allocator_type& alloc = allocator_type()) {
     // TODO: implement
-  };
+  }
 
   explicit map(const allocator_type& alloc) {
     // TODO: implement
-  };
+  }
 
 
   // range constructors:
@@ -911,4 +911,4 @@ template<typename Key,
 
 }  // namespace ustl
 
-#endif  // __USTL_MAP__
+#endif  // USTL_MAP_H

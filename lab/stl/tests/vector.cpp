@@ -538,7 +538,7 @@ TEST(std_vector_access, at) {
   try {
     a.at(3);
     FAIL();
-  } catch (std::out_of_range &e) {}
+  } catch (std::out_of_range&) {}
 
   for (size_t i = 0; i < 3; i++) {
     ASSERT_EQ(3.5f, b.at(i));
@@ -547,7 +547,7 @@ TEST(std_vector_access, at) {
   try {
     b.at(3);
     FAIL();
-  } catch (std::out_of_range &e) {}
+  } catch (std::out_of_range&) {}
 
   ASSERT_EQ('a', c.at(0));
   ASSERT_EQ('b', c.at(1));
@@ -555,7 +555,7 @@ TEST(std_vector_access, at) {
   try {
     c.at(3);
     FAIL();
-  } catch (std::out_of_range &e) {}
+  } catch (std::out_of_range&) {}
 }
 
 TEST(ustl_vector_access, at) {
@@ -570,7 +570,7 @@ TEST(ustl_vector_access, at) {
   try {
     a.at(3);
     FAIL();
-  } catch (std::out_of_range &e) {}
+  } catch (std::out_of_range&) {}
 
   for (size_t i = 0; i < 3; i++) {
     ASSERT_EQ(3.5f, b.at(i));
@@ -579,7 +579,7 @@ TEST(ustl_vector_access, at) {
   try {
     b.at(3);
     FAIL();
-  } catch (std::out_of_range &e) {}
+  } catch (std::out_of_range&) {}
 
   ASSERT_EQ('a', c.at(0));
   ASSERT_EQ('b', c.at(1));
@@ -587,7 +587,7 @@ TEST(ustl_vector_access, at) {
   try {
     c.at(3);
     FAIL();
-  } catch (std::out_of_range &e) {}
+  } catch (std::out_of_range&) {}
 }
 
 

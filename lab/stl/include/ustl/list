@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef __USTL_LIST__
-#define __USTL_LIST__
+#ifndef USTL_LIST_H
+#define USTL_LIST_H
 
 #include <ustl/algorithm>
 #include <ustl/vector>
@@ -308,7 +308,7 @@ class list {
 
   const_iterator before_begin() const noexcept {
     return const_iterator(_head);
-  };
+  }
 
 
   //
@@ -326,11 +326,11 @@ class list {
   //
   iterator begin() noexcept {
     return iterator(_head->next());
-  };
+  }
 
   const_iterator begin() const noexcept {
     return const_iterator(_head->next());
-  };
+  }
 
 
   //
@@ -353,11 +353,11 @@ class list {
   //
   iterator end() noexcept {
     return iterator(_tail);
-  };
+  }
 
   const_iterator end() const noexcept {
     return const_iterator(_tail);
-  };
+  }
 
 
   //
@@ -376,7 +376,7 @@ class list {
   //
   const_iterator cbefore_begin() const noexcept {
     return const_iterator(_head);
-  };
+  }
 
 
   //
@@ -397,7 +397,7 @@ class list {
   //
   const_iterator cbegin() const noexcept {
     return const_iterator(_head->next());
-  };
+  }
 
 
   //
@@ -417,7 +417,7 @@ class list {
   //
   const_iterator cend () const noexcept {
     return const_iterator(_tail);
-  };
+  }
 
 
   ///////////////
@@ -480,7 +480,7 @@ class list {
 
   const_reference front() const {
     return _head->next()->data();
-  };
+  }
 
 
   ////////////////
@@ -1156,27 +1156,27 @@ class list {
     __iterator operator++() {
       _node = _node->next();
       return *this;
-    };
+    }
 
     // postfix increment
     __iterator operator++(int) {
       auto curr = _node;
       _node = _node->next();
       return __iterator(curr);
-    };
+    }
 
     // prefix decrement
     __iterator operator--() {
       _node = _node->prev();
       return *this;
-    };
+    }
 
     // postfix decrement
     __iterator operator--(int) {
       auto curr = _node;
       _node = _node->prev();
       return __iterator(curr);
-    };
+    }
 
     // dereference
     deref_type operator*() const {
@@ -1361,4 +1361,4 @@ void swap(list<T, Alloc>& x, list<T, Alloc>& y) {
 
 }  // namespace ustl
 
-#endif  // __USTL_LIST__
+#endif  // USTL_LIST_H

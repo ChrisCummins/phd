@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef __USTL_FORWARD_LIST__
-#define __USTL_FORWARD_LIST__
+#ifndef USTL_FORWARD_LIST_H
+#define USTL_FORWARD_LIST_H
 
 #include <ustl/algorithm>
 #include <ustl/vector>
@@ -316,7 +316,7 @@ class forward_list {
 
   const_iterator before_begin() const noexcept {
     return const_iterator(_head);
-  };
+  }
 
 
   //
@@ -334,11 +334,11 @@ class forward_list {
   //
   iterator begin() noexcept {
     return iterator(_head->next());
-  };
+  }
 
   const_iterator begin() const noexcept {
     return const_iterator(_head->next());
-  };
+  }
 
 
   //
@@ -361,11 +361,11 @@ class forward_list {
   //
   iterator end() noexcept {
     return iterator(_tail);
-  };
+  }
 
   const_iterator end() const noexcept {
     return const_iterator(_tail);
-  };
+  }
 
 
   //
@@ -384,7 +384,7 @@ class forward_list {
   //
   const_iterator cbefore_begin() const noexcept {
     return const_iterator(_head);
-  };
+  }
 
 
   //
@@ -405,7 +405,7 @@ class forward_list {
   //
   const_iterator cbegin() const noexcept {
     return const_iterator(_head->next());
-  };
+  }
 
 
   //
@@ -425,7 +425,7 @@ class forward_list {
   //
   const_iterator cend () const noexcept {
     return const_iterator(_tail);
-  };
+  }
 
 
   ///////////////
@@ -488,7 +488,7 @@ class forward_list {
 
   const_reference front() const {
     return _head->next()->data();
-  };
+  }
 
 
   ////////////////
@@ -674,7 +674,7 @@ class forward_list {
     while (first != last)
       curr = insert_after(curr, *first++);
     return iterator(curr.node());
-  };
+  }
 
 
   iterator insert_after(const_iterator position,
@@ -726,7 +726,7 @@ class forward_list {
     }
 
     return last;
-  };
+  }
 
 
   //
@@ -1157,14 +1157,14 @@ class forward_list {
     __iterator operator++() {
       _node = _node->next();
       return *this;
-    };
+    }
 
     // postfix increment
     __iterator operator++(int) {
       auto prev = _node;
       _node = _node->next();
       return __iterator(prev);
-    };
+    }
 
     // dereference
     deref_type operator*() const {
@@ -1338,4 +1338,4 @@ void swap(forward_list<T, Alloc>& x, forward_list<T, Alloc>& y) {
 
 }  // namespace ustl
 
-#endif  // __USTL_FORWARD_LIST__
+#endif  // USTL_FORWARD_LIST_H

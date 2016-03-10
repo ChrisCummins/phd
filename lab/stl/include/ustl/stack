@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef __USTL_STACK_H__
-#define __USTL_STACK_H__
+#ifndef USTL_STACK_H
+#define USTL_STACK_H
 
 #include <deque>
 
@@ -40,7 +40,6 @@ namespace ustl {
 template<typename T, typename Container = std::deque<T> >
 class stack {
  public:
-
   ///////////////////
   // Member types: //
   ///////////////////
@@ -291,13 +290,11 @@ class stack {
 
 
  private:
-
   ///////////////////////////////
   // Private member variables: //
   ///////////////////////////////
 
   container_type _container;
-
 };
 
 
@@ -306,7 +303,7 @@ class stack {
 //
 // Exchanges the contents of x and y.
 template<typename T, typename Container>
-void swap(stack<T, Container>& x, stack<T, Container>& y)
+void swap(stack<T, Container>& x, stack<T, Container>& y)  // NOLINT
     noexcept(noexcept(x.swap(y))) {
   x.swap(y);
 }
@@ -314,4 +311,4 @@ void swap(stack<T, Container>& x, stack<T, Container>& y)
 
 }  // namespace ustl
 
-#endif  // __USTL_STACK_H__
+#endif  // USTL_STACK_H

@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef __USTL_VECTOR__
-#define __USTL_VECTOR__
+#ifndef USTL_VECTOR_H
+#define USTL_VECTOR_H
 
 #include <cstddef>
 #include <iterator>
@@ -448,7 +448,7 @@ class vector {
   // This is the number of actual objects held in the vector, which is
   // not necessarily equal to its storage capacity.
   //
-  inline size_type size() const noexcept { return _size; };
+  inline size_type size() const noexcept { return _size; }
 
   //
   // max_size():
@@ -461,7 +461,7 @@ class vector {
   // size: it can still fail to allocate storage at any point before
   // that size is reached.
   //
-  inline size_type max_size() const noexcept { return _alloc.max_size(); };
+  inline size_type max_size() const noexcept { return _alloc.max_size(); }
 
   //
   // resize():
@@ -525,7 +525,7 @@ class vector {
   // The capacity of a vector can be explicitly altered by calling
   // member vector::reserve.
   //
-  inline size_type capacity() const noexcept { return _capacity; };
+  inline size_type capacity() const noexcept { return _capacity; }
 
   //
   // empty():
@@ -535,7 +535,7 @@ class vector {
   // This function does not modify the container in any way. To clear
   // the content of a vector, see vector::clear.
   //
-  inline bool empty() const noexcept { return !_size; };
+  inline bool empty() const noexcept { return !_size; }
 
   //
   // reserve():
@@ -701,12 +701,12 @@ class vector {
   // the vector, the pointer retrieved can be offset to access any
   // element in the array.
   //
-  inline const value_type* data() const noexcept { return _buffer; };
+  inline const value_type* data() const noexcept { return _buffer; }
 
   inline value_type* data() noexcept {
     // Call the const version and strip constness of result:
     return const_cast<value_type*>(const_cast<const vector*>(this)->data());
-  };
+  }
 
 
   ////////////////
@@ -1217,4 +1217,4 @@ void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) {
 
 }  // namespace ustl
 
-#endif  // __USTL_VECTOR__
+#endif  // USTL_VECTOR_H
