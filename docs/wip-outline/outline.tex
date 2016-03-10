@@ -32,7 +32,7 @@
 % Document starts
 \begin{document}
 
-\title{Outline}
+\title{Proposal}
 
 \author{Chris Cummins}
 
@@ -42,8 +42,8 @@
   The physical limitations of microprocessor design have forced the
   industry towards increasingly heterogeneous designs to extract
   performance. This trend has not been matched with adequate software
-  tools, leading to a growing disparity between the availability of
-  parallelism and the ability for application developers to exploit
+  tools which has lead to a growing disparity between the availability
+  of parallelism and the ability for application developers to exploit
   it. Algorithmic skeletons simplify parallel programming by providing
   high-level, reusable patterns of computation. Achieving performant
   skeleton implementations is a difficult task; skeleton authors must
@@ -58,14 +58,34 @@
   the skeleton library can overcome these issues.
 \end{abstract}
 
+\tableofcontents
+
 
 \section{Introduction}
+
+Tuning parallel programs is hard, and consumes untold man-hours of
+labor. The automation of this task is a much sought after goal, but
+current approaches are ad-hoc, impractical, and unable to generalize
+across the broad space of hardware and software. Developers are no
+longer able to rely on increasing clock speeds to increase the
+performance of their programs, and must instead rely on
+paralellization using an increasingly exotic range of heterogeneous
+architectures and accelerators. The shape of this landscape is
+changing faster than developers ability to tune for it. A more robust
+technique that is capable of automatically tuning parallel programs is
+required in order to
+
+the application of machine learning to
+
+interesting because of the implications of ``cloud computing'' meets
+autotuning
+
 
 \subsection{Motivation}
 
 % Applicable to everything from smartphones to big data processors.
 
-\section{Background}
+\subsection{Contributions}
 
 
 \section{Literature Review}
@@ -98,7 +118,9 @@ Deterministic Parallel Java~\cite{Bocchino2009}.
 Parallelism in the modern functional languages Haskell, Clojure and
 Erlang~\cite{Pierro2012}.
 
-% TODO: Go, Scala.
+% TODO: Go
+
+Scala actors~\cite{Haller2009a}, and~\cite{Haller2012}.
 
 
 % * Compiler optimisations for parallel programs
@@ -142,6 +164,11 @@ the dimensionality of the parameter optimisation space and then search
 across it. In~\cite{Collins2013} they extend this using static feature
 extraction and nearest neighbour classification to further prune the
 search space.
+
+Autotuning Stencils on GPUs using synthetically generated
+kernels~\cite{Garvey2015b}.
+
+Automated GPU kernel transformations~\cite{Wahib2015a}.
 
 
 \subsection{Skeleton-aware debugging}
@@ -196,10 +223,17 @@ Profiling sequential programs~\cite{Ball1994}.
 using KOJAK~\cite{Mohr2003}.
 
 
+\section{Summary of Progress}
+
+ADAPT~\cite{Cummins2015a}, HLPGPU~\cite{Cummins2016}.
+
+
 \section{Methodology}
 
 Use geometric mean for speedups~\cite{Fleming1986}. Statistical
-rigour\cite{Georges2007}.
+rigour\cite{Georges2007}. Execution times and
+variance~\cite{Box}. Benchmarking parallel computing
+systems~\cite{Belli2015}.
 
 
 \subsection{Skeleton-aware compiler optimizations}
@@ -243,9 +277,15 @@ exoskeleton
 SkePU related workx
 
 
+\section{Work Plan}
+
+Paper 1, Paper 2, Paper 3.
+
+
 \section{Conclusions}
 
 
+\newpage
 \label{bibliography}
 \printbibliography
 
