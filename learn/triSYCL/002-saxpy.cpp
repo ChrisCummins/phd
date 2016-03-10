@@ -117,4 +117,4 @@ void BM_sycl_saxpy(benchmark::State& state) {
 }
 BENCHMARK(BM_sycl_saxpy)->Range(BM_length_min, BM_length_max);
 
-MAIN();
+PHD_MAIN();

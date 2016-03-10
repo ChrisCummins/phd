@@ -4,7 +4,7 @@
 #include <limits>
 #include <vector>
 
-#include <phd/test.hpp>
+#include <phd/test>
 
 class Pixel {
  public:

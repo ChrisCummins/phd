@@ -1,11 +1,7 @@
 /*
  * Mixed based arithmetic.
  */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wundef"
-#include <benchmark/benchmark.h>
-#include <gtest/gtest.h>
-#pragma GCC diagnostic pop
+#include <phd/test>
 
 #include <string>
 

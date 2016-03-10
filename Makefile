@@ -540,11 +540,11 @@ ChallengesCxxSources = $(wildcard $(learn)/challenges/*.cpp)
 ChallengesCxxObjects = $(patsubst %.cpp,%.o,$(ChallengesCxxSources))
 CxxTargets += $(patsubst %.cpp,%,$(ChallengesCxxSources))
 
-$(learn)/challenges_CxxFlags = \
-	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags)
-$(learn)/challenges_LdFlags = \
-	$(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
-$(ChallengesCxxObjects): $(GoogleBenchmark) $(GoogleTest)
+DontLint += $(learn)/challenges/009-longest-substr.cpp
+
+$(learn)/challenges_CxxFlags = $(phd_CxxFlags)
+$(learn)/challenges_LdFlags = $(phd_LdFlags)
+$(ChallengesCxxObjects): $(phd)
 
 
 #
@@ -602,11 +602,9 @@ LearnTriSYCLCxxSources = $(wildcard $(learn)/triSYCL/*.cpp)
 LearnTriSYCLCxxObjects = $(patsubst %.cpp,%.o,$(LearnTriSYCLCxxSources))
 CxxTargets += $(patsubst %.cpp,%,$(LearnTriSYCLCxxSources))
 
-$(learn)/triSYCL_CxxFlags = \
-	$(TriSYCL_CxxFlags) $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
-$(learn)/triSYCL_LdFlags = \
-	$(TriSYCL_CxxFlags) $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
-$(LearnTriSYCLCxxObjects): $(GoogleBenchmark) $(GoogleTest)
+$(learn)/triSYCL_CxxFlags = $(TriSYCL_CxxFlags) $(phd_CxxFlags)
+$(learn)/triSYCL_LdFlags = $(TriSYCL_CxxFlags) $(phd_LdFlags)
+$(LearnTriSYCLCxxObjects): $(TriSYCL) $(phd)
 
 
 #
@@ -618,9 +616,9 @@ LearnPcCxxSources = $(wildcard $(learn)/pc/*.cpp)
 LearnPcCxxObjects = $(patsubt %.cpp,%.o,$(LearnPcCxxSources))
 CxxTargets += $(patsubst %.cpp,%,$(LearnPcCxxSources))
 
-$(learn)/pc_CxxFlags = $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
-$(learn)/pc_LdFlags = $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
-$(LearnPcCxxObjects): $(GoogleBenchmark) $(GoogleTest)
+$(learn)/pc_CxxFlags = $(phd_CxxFlags)
+$(learn)/pc_LdFlags = $(phd_LdFlags)
+$(LearnPcCxxObjects): $(phd)
 
 
 #
@@ -697,21 +695,33 @@ CxxTargets += $(root)/playground/sc/sc
 #
 # src/
 #
+src = $(root)/src
 
 #
 # src/labm8
 #
-Python2SetupTestDirs += $(root)/src/labm8
-Python2SetupInstallDirs += $(root)/src/labm8
-Python3SetupTestDirs += $(root)/src/labm8
-Python3SetupInstallDirs += $(root)/src/labm8
+Python2SetupTestDirs += $(src)/labm8
+Python2SetupInstallDirs += $(src)/labm8
+Python3SetupTestDirs += $(src)/labm8
+Python3SetupInstallDirs += $(src)/labm8
 
 
 #
 # src/omnitune
 #
-Python2SetupTestDirs += $(root)/src/omnitune
-Python2SetupInstallDirs += $(root)/src/omnitune
+Python2SetupTestDirs += $(src)/omnitune
+Python2SetupInstallDirs += $(src)/omnitune
+
+
+#
+# src/phd
+#
+phdHeaders = $(wildcard $(src)/phd/include/*)
+phd_CxxFlags = \
+	-I$(src)/phd/include $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
+phd_LdFlags = $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
+phd = $(phdHeaders)
+$(phd): $(GoogleBenchmark) $(GoogleTest)
 
 
 #

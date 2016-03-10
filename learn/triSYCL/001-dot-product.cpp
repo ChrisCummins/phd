@@ -200,4 +200,4 @@ void BM_sycl_dot_product_int(benchmark::State& state) {
 }
 BENCHMARK(BM_sycl_dot_product_int)->Range(BM_length_min, BM_length_max);
 
-MAIN();
+PHD_MAIN();

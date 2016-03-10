@@ -213,4 +213,4 @@ TEST(GaussianBlur, sycl_gaussian_blur) {
   test_main<sycl_gaussian_blur>("in.pgm", "out-sycl.pgm");
 }
 
-MAIN();
+PHD_MAIN();

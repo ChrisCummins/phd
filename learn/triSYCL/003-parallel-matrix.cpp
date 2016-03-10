@@ -22,4 +22,4 @@ TEST(matrix, subtraction) {
   ASSERT_TRUE(test_a - test_b == test_sub);
 }
 
-MAIN();
+PHD_MAIN();
