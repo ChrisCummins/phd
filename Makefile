@@ -438,6 +438,7 @@ OpenCL = $(extern)/opencl/include/cl.hpp
 # extern/triSYCL
 #
 TriSYCL_CxxFlags = -I$(extern)/triSYCL/include
+TriSYCL = $(extern)/triSYCL/include/CL/sycl.hpp
 
 
 #
