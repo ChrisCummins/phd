@@ -1,5 +1,5 @@
-#ifndef __003_PARALLEL_MATRIX_H__
-#define __003_PARALLEL_MATRIX_H__
+#ifndef PARALLEL_MATRIX_H
+#define PARALLEL_MATRIX_H
 
 #include "./trisycl.h"
 
@@ -127,4 +127,4 @@ private:
   size_t _ncols;
 };
 
-#endif  // __003_PARALLEL_MATRIX_H__
+#endif  // PARALLEL_MATRIX_H

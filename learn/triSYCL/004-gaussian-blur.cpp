@@ -74,12 +74,12 @@ matrix gaussian_blur(const matrix& input,
           if (ly < 0)
             ly = 0;
           else if (ly >= static_cast<int>(input.nrows()))
-            ly = input.nrows() - 1;
+            ly = static_cast<int>(input.nrows() - 1);
 
           if (lx < 0)
             lx = 0;
           else if (lx >= static_cast<int>(input.ncols()))
-            lx = input.ncols() - 1;
+            lx = static_cast<int>(input.ncols() - 1);
 
           auto wi = static_cast<size_t>((j + i) / 2
                                         + static_cast<int>(radius));

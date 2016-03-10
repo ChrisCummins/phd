@@ -13,10 +13,10 @@
 void drawHorizontalLine(unsigned char *screen, unsigned int width,
                         unsigned int x1, unsigned int x2, unsigned int y) {
   const auto start_idx = x1 / 8;
-  const auto start_offset = x1 % 8;
+  // const auto start_offset = x1 % 8;
 
   const auto last_idx = x2 / 8;
-  const auto last_offset = x2 % 8;
+  // const auto last_offset = x2 % 8;
 
   if (x2 - x1 < 8) {
     // TODO: single-byte mask.

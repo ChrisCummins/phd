@@ -74,9 +74,9 @@ class Colour {
         b((hex & 0xff) / 255.) {}
 
   // Contructor: C = (r,g,b)
-  explicit inline Colour(const float _r = 0,
-                         const float _g = 0,
-                         const float _b = 0)
+  explicit inline Colour(const Scalar _r = 0,
+                         const Scalar _g = 0,
+                         const Scalar _b = 0)
       : r(_r), g(_g), b(_b) {}
 
   // Constructor from (h,s,l) definition.

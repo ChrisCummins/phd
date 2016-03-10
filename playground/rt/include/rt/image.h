@@ -145,9 +145,7 @@ Image<_width, _height>::Image(const Scalar _saturation,
       height(_height),
       size(_width * _height),
       saturation(_saturation),
-      gamma(Colour(1 / _gamma.r,
-                   1 / _gamma.g,
-                   1 / _gamma.b)),
+      gamma(1 / _gamma.r, 1 / _gamma.g, 1 / _gamma.b),
       inverted(_inverted) {}
 
 template<size_t width, size_t height>

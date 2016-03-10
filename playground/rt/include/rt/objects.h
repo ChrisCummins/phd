@@ -144,8 +144,8 @@ namespace rt {
       const Vector relative = Vector(point.x + gridOffset,
                                      point.z + gridOffset, 0);
 
-      const int x = relative.x;
-      const int y = relative.y;
+      const int x = static_cast<int>(relative.x);
+      const int y = static_cast<int>(relative.y);
       const int half = static_cast<int>(checkerWidth * 2);
       const int mod = half * 2;
 
