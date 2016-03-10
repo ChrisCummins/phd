@@ -462,6 +462,7 @@ StlComponents = \
 	$(NULL)
 
 StlHeaders = $(addprefix $(lab)/stl/include/ustl/,$(StlComponents))
+CppLintSources += $(StlHeaders)
 Stl_CxxFlags = -I$(lab)/stl/include
 
 # Stl unit tests:
@@ -862,7 +863,7 @@ CppLintTargets = $(addsuffix .lint, $(CppLintSources))
 BuildTargets += $(CppLintTargets)
 CleanFiles += $(CppLintTargets)
 
-%.h.lint: %.h
+%.lint: %
 	$(call print-task,LINT,$@,$(TaskAux))
 	$(call cpplint,$<)
 
