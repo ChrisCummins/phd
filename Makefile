@@ -815,6 +815,7 @@ CxxFlags = \
 	-Wno-c++98-compat \
 	-Wno-c++98-compat-pedantic \
 	-Wno-documentation \
+	-Wno-documentation-unknown-command \
 	-Wno-double-promotion \
 	-Wno-exit-time-destructors \
 	-Wno-global-constructors \
