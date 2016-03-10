@@ -644,9 +644,10 @@ $(RayTracerDir)/examples/example2: \
 		$(RayTracerLib) \
 		$(NULL)
 
-$(RayTracerDir)/examples/example2.cpp: \
-		$(RayTracerDir)/examples/example2.rt \
-		$(RayTracerDir)/scripts/mkscene.py
+$(RayTracerDir)/examples/example2.cpp: $(RayTracerDir)/examples/example2.rt
+
+# Generate scene files using mkscene script.
+%.cpp: %.rt $(RayTracerDir)/scripts/mkscene.py
 	$(call print-task,MKSCENE,$@,$(TaskAux))
 	$(V1)$(RayTracerDir)/scripts/mkscene.py $< $@ >/dev/null
 
