@@ -41,21 +41,33 @@
 \begin{abstract}
   The physical limitations of microprocessor design have forced the
   industry towards increasingly heterogeneous designs to extract
-  performance. This trend has not been matched with adequate software
-  tools which has lead to a growing disparity between the availability
-  of parallelism and the ability for application developers to exploit
-  it. Algorithmic skeletons simplify parallel programming by providing
-  high-level, reusable patterns of computation. Achieving performant
+  performance, with an an increasing pressure to offload traditionally
+  CPU based workloads to the GPU. This trend has not been matched with
+  adequate software tools; the popular languages OpenCL and CUDA
+  provide a very low level model with little abstraction above the
+  hardware. Programming at this level requires expert knowledge of
+  both the domain and the target hardware, and achieving performance
+  requires laborious hand tuning of each program. This has led to a
+  growing disparity between the availability of parallelism in modern
+  hardware, and the ability for application developers to exploit it.
+
+  The goal of this work is to bring the performance of hand tuned
+  heterogeneous code to high level programming, by incorporating
+  autotuning into \textit{Algorithmic Skeletons}. Algorithmic
+  Skeletons simplify parallel programming by providing reusable,
+  high-level, patterns of computation. However, achieving performant
   skeleton implementations is a difficult task; skeleton authors must
   attempt to anticipate and tune for a wide range of architectures and
   use cases. This results in implementations that target the general
   case and cannot provide the performance advantages that are gained
-  from tuning low level optimization parameters. Autotuning combined
-  with machine learning offers promising performance benefits in these
-  situations, but the high cost of training and lack of available
-  tools limits the practicality of autotuning for real world
-  programming. We believe that performing autotuning at the level of
-  the skeleton library can overcome these issues.
+  from tuning low level optimization parameters for individual
+  programs and architectures. Autotuning combined with machine
+  learning offers promising performance benefits by tailoring
+  parameter values to individual cases, but the high cost of training
+  and the ad-hoc nature of autotuning tools limits the practicality of
+  autotuning for real world programming. We believe that performing
+  autotuning at the level of the skeleton library can overcome these
+  issues.
 \end{abstract}
 
 \tableofcontents
@@ -87,6 +99,53 @@ autotuning
 
 \subsection{Contributions}
 
+\subsection{Algorithmic Skeletons}
+
+Introduced by \citeauthor{Cole1989} in \citeyear{Cole1989},
+algorithmic skeletons simplify the task of parallel programming by
+abstracting common patterns of communication, providing parallel
+implementations of higher order functions~\cite{Cole1989}. The
+interfaces to generic parallel algorithms exposed by algorithmic
+skeletons are parameterised by the user with \emph{muscle functions}
+that implement problem specific logic. The idea is that this allows
+the user to focus on solving the problem at hand, affording greater
+ease of use by automating the coordination of parallel resources.
+
+Algorithmic skeletons are categorised as either \emph{data} parallel
+or \emph{task} parallel. In data parallel skeletons, data are
+distributed across nodes for parallel processing, where each parallel
+node executes the same code on a unique subset of the data. Examples
+of data parallel algorithmic skeletons include \emph{map}, \emph{zip},
+and \emph{reduce}.
+
+Task parallel skeletons treat the data as a singular object and
+instead parallelise the execution of multiple tasks. Tasks are
+assigned to threads, which can communicate with each other by passing
+data between threads. Examples of task parallel algorithmic skeletons
+include \emph{pipe}, \emph{task farm}, and \emph{for loops}.
+
+Algorithmic Skeleton Frameworks (ASkFs) provide concrete parallel
+implementations of parallel patterns, which are parameterised by the
+user to generate specific problem solving programs. The interfaces
+exposed by frameworks must be sufficiently generic to allow users to
+express a range of problems.
+
+Implementations of algorithmic skeletons abound, targeting a range of
+different use cases and host languages. Notable examples include:
+eSkel~\cite{Benoit2005a}, Skandium~\cite{Leyton2010}, and
+FastFlow~\cite{Aldinucci2011}. The most prevalent form of ASkF is that
+of the standalone library which exposes a set of public APIs, shown in
+Figure~\ref{fig:askf}. See~\cite{Gonzalez2010} for a more exhaustive
+review of ASkFs in the research literature.
+
+In industry, Google's MapReduce~\cite{Dean2008} and Intel's Thread
+Building Blocks~\cite{IntelTBB} have utilised a similar approach to
+abstracting the coordination of parallel resources as in algorithmic
+skeletons, to great commercial success, although they do not advertise
+themselves as such.
+
+The Orléans Skeleton Library for C++ has exceptions~\cite{Legaux2013}.
+
 
 \section{Literature Review}
 
@@ -103,27 +162,41 @@ consistency and caches~\cite{Goodman}.
 \paragraph{Parallelism in programming languages} Programming languages
 have taken a variety of approaches in adopting parallelism. In C, a
 threading model was retrofitted using the \textit{POSIX pthreads}
-standard~\cite{Sura2005}. \citeauthor{Boehm2005} contend this approach
-in~\cite{Boehm2005}, describing issues in which a compiler developed
-independently of threading issues cannot be guaranteed to produce
-correct code. These issues were circumvented in C++11 by the
+standard~\cite{Sura2005}. \citeauthor{Boehm2005} contends this
+approach in~\cite{Boehm2005}, describing issues in which a compiler
+developed independently of threading issues cannot be guaranteed to
+produce correct code. These issues were circumvented in C++11 by the
 introduction of a concurrency model~\cite{Boehm2008}, based off the
 success of the Java memory model~\cite{Bash2015a}. C++ and Java are
 two of the most popular imperative programming languages, and in both
 cases, the languages specify memory models which guarantee sequential
 consistency across threads, subject to some restrictions.
 
-Deterministic Parallel Java~\cite{Bocchino2009}.
+Sequential consistency for Java incurs a 10\%
+slowdown~\cite{Sura2005}.
 
-Parallelism in the modern functional languages Haskell, Clojure and
+Titanium is a dialect of Java targeting scientific computing. It
+extends the Java feature set, adding multidimensional arrays,
+immutable classes, and a PGAS programming model~\cite{Yelick1998}. In
+contrast, Deterministic Parallel Java adds a type and effect system to
+in order to provide a provably sound language
+core~\cite{Bocchino2009}.
+
+Parallelism in the modern functional languages: Haskell, Clojure and
 Erlang~\cite{Pierro2012}.
-
-% TODO: Go
 
 Scala actors~\cite{Haller2009a}, and~\cite{Haller2012}.
 
+% TODO: Go, Fortran
 
-% * Compiler optimisations for parallel programs
+
+\paragraph{Library level parallelism}
+
+Optimising MapReduce for multi-core processors~\cite{Kaashoek2010}.
+
+% OpenMP, MPI
+
+% Compiler optimisations for parallel programs
 
 % * Optimisations for skeletons
 %   * “skeletons" - Intel TBB, std::algorithm, FastFlow, MapReduce
@@ -138,9 +211,6 @@ Scala actors~\cite{Haller2009a}, and~\cite{Haller2012}.
 % \subsubsection{Autotuning for parallel programs}
 
 %   * Autotuning for skeletons
-
-\paragraph{Optimising MapReduce} Optimisations for multi-core
-processors~\cite{Kaashoek2010}.
 
 
 \paragraph{Autotuning Algorithmic Skeletons}
