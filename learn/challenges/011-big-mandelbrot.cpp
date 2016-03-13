@@ -77,7 +77,7 @@ int main() {
 
     std::ofstream file;
     file.open("011-big-mandelbrot.ppm");
-    file << "P3" << std::endl;
+    file << "P6" << std::endl;
     file << width << " " << height << std::endl;
     file << "255" << std::endl;
 
@@ -148,7 +148,7 @@ int main() {
       const auto io_begin = std::clock();
       unsigned char *it = buf;
       while (it != buf + std::min(bsize, size - i) * 3) {
-        file << static_cast<unsigned int>(*it++) << ' ';
+        file << *it++;
       }
       io_time += (std::clock() - io_begin)
                  / static_cast<double>(CLOCKS_PER_SEC);
