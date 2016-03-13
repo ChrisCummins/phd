@@ -35,7 +35,7 @@
 #endif  // use_opencl
 
 // output image dimensions:
-static const size_t scale = 2500;
+static const size_t scale = 5000;
 static const auto width = static_cast<size_t>(1.5 * scale),
   height = static_cast<size_t>(1.3 * scale),
   size = width * height;
@@ -62,18 +62,19 @@ __kernel void mandelbrot(__global unsigned char* out,
                          const unsigned int nmax) {
   const unsigned int i = get_global_id(0);
   if (offset + i < size) {
-    int n = 0;
     float r = 0, s = 0, next = 0;
     const unsigned int local_x = (offset + i) % width;
     const unsigned int local_y = (offset + i) / width;
     const float x = start_x + local_x * dx;
     const float y = start_y + local_y * dy;
+    int n;
 
-    while (r * r + s * s <= 4 && n < nmax) {
+    for (n = 0; n < nmax; ++n) {
+      if (r * r + s * s > 4.0)
+        break;
       next = r * r - s * s + x;
       s = 2 * r * s + y;
       r = next;
-      ++n;
     }
 
     const float scaled = max(n / (float)nmax, 0.1);
