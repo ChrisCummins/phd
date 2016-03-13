@@ -16,6 +16,7 @@
 #include <cmath>
 #include <ctime>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -85,6 +86,18 @@ __kernel void mandelbrot(__global unsigned char* out,
 })";
 #endif  // use_opencl
 
+template<typename T,
+         typename Y = int,
+         typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
+auto ndigits(T number) {
+  Y digits = 0;
+  while (number) {
+    number /= 10;
+    ++digits;
+  }
+  return digits;
+}
+
 int main() {
   int fd{-1}, ret{0};
 
@@ -146,12 +159,22 @@ int main() {
 
     auto timer = std::clock();
 
+    std::cout << '\n';
+
+    const auto nblocks = static_cast<size_t>(std::ceil(size / bsize) + 1u);
+    const auto ndig = ndigits(nblocks);
+
     for (size_t i = 0; i < size; i += bsize) {
       // print
-      std::cout << " block " << i / bsize + 1 << " of "
-                << std::ceil(size / bsize) + 1
-                << ", " << std::min(bsize, size - i)
-                << " pixels" << std::endl;
+      const auto blocknum = i / bsize + 1;
+      std::cout << "\r[" << std::setw(3)
+                << static_cast<int>((blocknum / static_cast<double>(nblocks))
+                                    * 100) << "%] block "
+                << std::setw(ndig) << blocknum
+                << " of " << nblocks << ", "
+                << std::min(bsize, size - i) << " pixels"
+                << std::flush;
+
 
 #ifdef use_opencl
       // OpenCL:
@@ -212,8 +235,8 @@ int main() {
                     / static_cast<double>(CLOCKS_PER_SEC);
     auto px_per_sec = size / (duration - io_time);
 
-    std::cout << std::endl
-              << "total = " << duration << " s, "
+    std::cout << "\r[100%] processed " << std::ceil(size / bsize) + 1
+              << " blocks in " << duration << 's' << std::endl
               << "render rate = " << px_per_sec / 1e6 << " million pixels / s"
               << std::endl;
 
