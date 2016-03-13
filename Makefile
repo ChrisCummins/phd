@@ -544,6 +544,10 @@ CxxTargets += $(patsubst %.cpp,%,$(ChallengesCxxSources))
 
 DontLint += $(learn)/challenges/009-longest-substr.cpp
 
+$(learn)/challenges/011-big-mandelbrot.o_CxxFlags = $(OpenCL_CxxFlags)
+$(learn)/challenges/011-big-mandelbrot_LdFlags = $(OpenCL_LdFlags)
+$(learn)/challenges/011-big-mandelbrot.o: $(OpenCL)
+
 $(learn)/challenges_CxxFlags = $(phd_CxxFlags)
 $(learn)/challenges_LdFlags = $(phd_LdFlags)
 $(ChallengesCxxObjects): $(phd)
