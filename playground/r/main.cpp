@@ -10,11 +10,67 @@
 #include <string>
 #include <vector>
 
-template<typename T>
-struct vec3 {
-  T x, y, z;
 
-  T& operator[](const size_t i) {
+template<typename T>
+class vec2 {
+ public:
+  using value_type = T;
+
+  value_type x, y;
+
+  value_type& operator[](const size_t i) {
+    switch (i) {
+      case 1: return y;
+      default: return x;
+    }
+  }
+
+  explicit vec2(const value_type& fill = value_type{}) : x(fill), y(fill) {}
+
+  vec2(const value_type& _x, const value_type& _y) : x(_x), y(_y) {}
+
+  inline vec2 operator +(const vec2& rhs) const {
+    return vec2(x + rhs.x, y + rhs.y);
+  }
+
+  inline vec2 operator -(const vec2& rhs) const {
+    return vec2(x - rhs.x, y - rhs.y);
+  }
+
+  inline vec2 operator *(const float f) const {
+    return vec2(x * f, y * f);
+  }
+
+  inline value_type operator *(const vec2& rhs) const {
+    return x * rhs.x + y * rhs.y;
+  }
+
+  float norm() const {
+    return std::sqrt(x * x + y * y);
+  }
+
+  vec2& normalize(const value_type& l = value_type{1}) {
+    *this = *this * (l / norm());
+    return *this;
+  }
+
+  friend std::ostream& operator<<(std::ostream& out, const vec2& v) {
+    out << "(" << v.x << ", " << v.y << ", " << v.z << ")\n";
+    return out;
+  }
+};
+
+using vec2f = vec2<float>;
+
+
+template<typename T>
+class vec3 {
+ public:
+  using value_type = T;
+
+  value_type x, y, z;
+
+  value_type& operator[](const size_t i) {
     switch (i) {
       case 1: return y;
       case 2: return z;
