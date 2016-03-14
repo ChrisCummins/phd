@@ -630,12 +630,17 @@ $(LearnPcCxxObjects): $(phd)
 #
 # playground/
 #
+playground := $(root)/playground
 
+#
+# playground/r/
+#
+CxxTargets += $(playground)/r/main
 
 #
 # playground/rt/
 #
-RayTracerDir = $(root)/playground/rt
+RayTracerDir = $(playground)/rt
 RayTracerLib = $(RayTracerDir)/src/librt.so
 
 CxxTargets += \
