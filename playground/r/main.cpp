@@ -29,19 +29,19 @@ class vec2 {
 
   vec2(const value_type& _x, const value_type& _y) : x(_x), y(_y) {}
 
-  inline vec2 operator +(const vec2& rhs) const {
+  inline vec2 operator+(const vec2& rhs) const {
     return vec2(x + rhs.x, y + rhs.y);
   }
 
-  inline vec2 operator -(const vec2& rhs) const {
+  inline vec2 operator-(const vec2& rhs) const {
     return vec2(x - rhs.x, y - rhs.y);
   }
 
-  inline vec2 operator *(const float f) const {
+  inline vec2 operator*(const float f) const {
     return vec2(x * f, y * f);
   }
 
-  inline value_type operator *(const vec2& rhs) const {
+  inline value_type operator*(const vec2& rhs) const {
     return x * rhs.x + y * rhs.y;
   }
 
@@ -84,25 +84,25 @@ class vec3 {
   vec3(const value_type& _x, const value_type& _y, const value_type& _z)
       : x(_x), y(_y), z(_z) {}
 
-  inline vec3 operator ^(const vec3& rhs) const {
+  inline vec3 operator^(const vec3& rhs) const {
     return vec3(y * rhs.z - z * rhs.y,
                 z * rhs.x - x * rhs.z,
                 x * rhs.y - y * rhs.x);
   }
 
-  inline vec3 operator +(const vec3& rhs) const {
+  inline vec3 operator+(const vec3& rhs) const {
     return vec3(x + rhs.x, y + rhs.y, z + rhs.z);
   }
 
-  inline vec3 operator -(const vec3& rhs) const {
+  inline vec3 operator-(const vec3& rhs) const {
     return vec3(x - rhs.x, y - rhs.y, z - rhs.z);
   }
 
-  inline vec3 operator *(const float f) const {
+  inline vec3 operator*(const float f) const {
     return vec3(x * f, y * f, z * f);
   }
 
-  inline value_type operator *(const vec3& rhs) const {
+  inline value_type operator*(const vec3& rhs) const {
     return x * rhs.x + y * rhs.y + z * rhs.z;
   }
 
