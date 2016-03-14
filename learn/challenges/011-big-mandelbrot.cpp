@@ -237,7 +237,8 @@ int main() {
 
     std::cout << "\r[100%] processed " << std::ceil(size / bsize) + 1
               << " blocks in " << duration << 's' << std::endl
-              << "render rate = " << px_per_sec / 1e6 << " million pixels / s"
+              << "render rate = " << px_per_sec / 1e6 << " million pixels / s, "
+              << int(std::floor(1 / duration)) << " fps"
               << std::endl;
 
 #ifdef use_mmap
