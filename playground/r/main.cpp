@@ -38,7 +38,7 @@ class vec2 {
   }
 
   inline vec2 operator*(const float f) const {
-    return vec2(x * f, y * f);
+    return vec2(static_cast<int>(x * f), static_cast<int>(y * f));
   }
 
   inline value_type operator*(const vec2& rhs) const {
@@ -61,6 +61,7 @@ class vec2 {
 };
 
 using vec2f = vec2<float>;
+using vec2i = vec2<int>;
 
 
 template<typename T>
@@ -196,6 +197,14 @@ class pixel {
   }
 };
 
+namespace colors {
+static const pixel black;
+static const pixel white{255};
+static const pixel red{255, 0, 0};
+static const pixel blue{0, 255, 0};
+static const pixel green{0, 0, 255};
+}  // namespace colors
+
 
 template<typename T>
 class subscriptable_t {
@@ -247,7 +256,7 @@ class Image {
 };
 
 
-void line(Image& img, int x0, int y0, int x1, int y1, pixel color) {
+void line(Image& img, int x0, int y0, int x1, int y1, const pixel& color) {
   bool steep = false;
 
   if (std::abs(x0 - x1) < std::abs(y0 - y1)) {
@@ -282,21 +291,61 @@ void line(Image& img, int x0, int y0, int x1, int y1, pixel color) {
 }
 
 
+void triangle(Image& img, vec2i t0, vec2i t1, vec2i t2,
+              const pixel& color) {
+  // order bottom to top
+  if (t0.y > t1.y) std::swap(t0, t1);
+  if (t0.y > t2.y) std::swap(t0, t2);
+  if (t1.y > t2.y) std::swap(t1, t2);
+
+  int total_height = t2.y - t0.y;
+
+  // bottom segment
+  for (int y = t0.y; y <= t1.y; y++) {
+    const auto segment_height = t1.y - t0.y + 1;
+    const auto alpha = (y - t0.y) / static_cast<float>(total_height);
+    const auto beta = (y - t0.y) / static_cast<float>(segment_height);
+    vec2i a = t0 + (t2 - t0) * alpha;
+    vec2i b = t0 + (t1 - t0) * beta;
+    if (a.x > b.x)
+      std::swap(a, b);
+    for (int j = a.x; j<= b.x; j++) {
+      img[static_cast<size_t>(y)][static_cast<size_t>(j)] = color;
+    }
+  }
+
+  // top segment
+  for (int y = t1.y; y <= t2.y; y++) {
+    const auto segment_height =  t2.y - t1.y+1;
+    const auto alpha = (y - t0.y) / static_cast<float>(total_height);
+    const auto beta = (y - t1.y) / static_cast<float>(segment_height);
+    vec2i a = t0 + (t2-t0)*alpha;
+    vec2i b = t1 + (t2-t1)*beta;
+    if (a.x > b.x)
+      std::swap(a, b);
+    for (int j = a.x; j <= b.x; j++) {
+      img[static_cast<size_t>(y)][static_cast<size_t>(j)] = color;
+    }
+  }
+}
+
+
 void wireframe(Image& img, Model& model) {
   for (auto& face : model.faces()) {
     for (size_t j = 0; j < 3; ++j) {
       vec3f v0 = model.verts()[size_t(face[size_t(j)])];
       vec3f v1 = model.verts()[size_t(face[(j + 1) % 3])];
 
-      int x0 = static_cast<int>((v0.x + 1.) * img.width() / 2);
-      int y0 = static_cast<int>((v0.y + 1.) * img.height() / 2);
-      int x1 = static_cast<int>((v1.x + 1.) * img.width() / 2);
-      int y1 = static_cast<int>((v1.y + 1.) * img.height() / 2);
+      int x0 = static_cast<int>((v0.x + 1) * img.width() / 2);
+      int y0 = static_cast<int>((v0.y + 1) * img.height() / 2);
+      int x1 = static_cast<int>((v1.x + 1) * img.width() / 2);
+      int y1 = static_cast<int>((v1.y + 1) * img.height() / 2);
 
       line(img, x0, y0, x1, y1, pixel{255, 255, 255});
     }
   }
 }
+
 
 int main() {
   static const size_t width = 2048, height = 2048;
