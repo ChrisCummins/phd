@@ -78,8 +78,11 @@ class vec3 {
     }
   }
 
-  explicit vec3(const T& fill = T{}) : x(fill), y(fill), z(fill) {}
-  vec3(const T& _x, const T& _y, const T& _z) : x(_x), y(_y), z(_z) {}
+  explicit vec3(const value_type& fill = value_type{})
+      : x(fill), y(fill), z(fill) {}
+
+  vec3(const value_type& _x, const value_type& _y, const value_type& _z)
+      : x(_x), y(_y), z(_z) {}
 
   inline vec3 operator ^(const vec3& rhs) const {
     return vec3(y * rhs.z - z * rhs.y,
@@ -99,7 +102,7 @@ class vec3 {
     return vec3(x * f, y * f, z * f);
   }
 
-  inline T operator *(const vec3& rhs) const {
+  inline value_type operator *(const vec3& rhs) const {
     return x * rhs.x + y * rhs.y + z * rhs.z;
   }
 
@@ -107,7 +110,7 @@ class vec3 {
     return std::sqrt(x * x + y * y + z * z);
   }
 
-  vec3& normalize(const T& l = T{1}) {
+  vec3& normalize(const value_type& l = value_type{1}) {
     *this = *this * (l / norm());
     return *this;
   }
@@ -123,17 +126,10 @@ using vec3f = vec3<float>;
 
 class Model {
  public:
-  using vertex_type = vec3f;
-  using vertices_type = std::vector<vertex_type>;
-  using face_type = std::vector<int>;
-  using faces_type = std::vector<face_type>;
+  using vertices_type = std::vector<vec3f>;
+  using faces_type = std::vector<std::vector<int>>;
 
- private:
-  vertices_type _verts;
-  faces_type _faces;
-
- public:
-  explicit Model(const std::string& filename) : _verts(), _faces() {
+  explicit Model(const std::string& filename) {
     std::ifstream in{filename, std::ifstream::in};
     if (in.fail())
       throw std::runtime_error{"loading model"};
@@ -175,6 +171,10 @@ class Model {
 
   auto faces() { return _faces; }
   auto faces() const { return _faces; }
+
+ private:
+  vertices_type _verts;
+  faces_type _faces;
 };
 
 
@@ -229,12 +229,11 @@ class Image {
       return subscriptable_t<pixel>{_data.data() + y * width()};
   }
 
+  // P6 file format:
   friend auto& operator<<(std::ostream& out, const Image& img) {
-    // header:
     out << "P6\n" << img.width() << ' ' << img.height() << '\n'
         << int(std::numeric_limits<pixel::value_type>::max()) << '\n';
 
-    // data:
     for (const auto& pixel : img._data)
       out << pixel.r << pixel.g << pixel.b;
 
