@@ -220,10 +220,10 @@ class subscriptable_t {
 };
 
 
-class Image {
+class Canvas {
  public:
-  Image(const size_t width, const size_t height,
-        bool inverted = true, const pixel& fill = pixel{})
+  Canvas(const size_t width, const size_t height,
+         bool inverted = true, const pixel& fill = pixel{})
       : _width(width), _height(height), _inverted(inverted),
         _data(width * height, fill) {}
 
@@ -231,12 +231,130 @@ class Image {
   size_t height() const { return _height; }
   size_t size() const { return width() * height(); }
 
-  auto operator[](const size_t y) {
+  // Pixel accessor
+  subscriptable_t<pixel> operator[](const size_t y) {
     if (_inverted)
       return subscriptable_t<pixel>{_data.data() + (height() - y) * width()};
     else
       return subscriptable_t<pixel>{_data.data() + y * width()};
   }
+
+  void line(int x0, int y0, int x1, int y1, const pixel& color) {
+    bool steep = false;
+
+    if (std::abs(x0 - x1) < std::abs(y0 - y1)) {
+      std::swap(x0, y0);
+      std::swap(x1, y1);
+      steep = true;
+    }
+
+    if (x0 > x1) {
+      std::swap(x0, x1);
+      std::swap(y0, y1);
+    }
+
+    int dx = x1 - x0;
+    int dy = y1 - y0;
+    int derror2 = std::abs(dy) * 2;
+    int error2 = 0;
+    int y = y0;
+
+    for (int x = x0; x <= x1; ++x) {
+      if (steep)
+        (*this)[size_t(x)][size_t(y)] = color;
+      else
+        (*this)[size_t(y)][size_t(x)] = color;
+
+      error2 += derror2;
+      if (error2 > dx) {
+        y += (y1 > y0 ? 1 : -1);
+        error2 -= dx * 2;
+      }
+    }
+  }
+
+  void triangle(vec2i t0, vec2i t1, vec2i t2, const pixel& color) {
+    // order bottom to top
+    if (t0.y > t1.y) std::swap(t0, t1);
+    if (t0.y > t2.y) std::swap(t0, t2);
+    if (t1.y > t2.y) std::swap(t1, t2);
+
+    int total_height = t2.y - t0.y;
+
+    // bottom segment
+    for (int y = t0.y; y <= t1.y; y++) {
+      const auto segment_height = t1.y - t0.y + 1;
+      const auto alpha = (y - t0.y) / static_cast<float>(total_height);
+      const auto beta = (y - t0.y) / static_cast<float>(segment_height);
+      vec2i a = t0 + (t2 - t0) * alpha;
+      vec2i b = t0 + (t1 - t0) * beta;
+      if (a.x > b.x)
+        std::swap(a, b);
+      for (int j = a.x; j<= b.x; j++) {
+        (*this)[static_cast<size_t>(y)][static_cast<size_t>(j)] = color;
+      }
+    }
+
+    // top segment
+    for (int y = t1.y; y <= t2.y; y++) {
+      const auto segment_height =  t2.y - t1.y+1;
+      const auto alpha = (y - t0.y) / static_cast<float>(total_height);
+      const auto beta = (y - t1.y) / static_cast<float>(segment_height);
+      vec2i a = t0 + (t2-t0)*alpha;
+      vec2i b = t1 + (t2-t1)*beta;
+      if (a.x > b.x)
+        std::swap(a, b);
+      for (int j = a.x; j <= b.x; j++) {
+        (*this)[static_cast<size_t>(y)][static_cast<size_t>(j)] = color;
+      }
+    }
+  }
+
+  void wireframe(const Model& model) {
+    for (const auto& face : model.faces()) {
+      for (size_t j = 0; j < 3; ++j) {
+        vec3f v0 = model.verts()[size_t(face[size_t(j)])];
+        vec3f v1 = model.verts()[size_t(face[(j + 1) % 3])];
+
+        const auto x0 = static_cast<int>((v0.x + 1) * width() / 2);
+        const auto y0 = static_cast<int>((v0.y + 1) * height() / 2);
+        const auto x1 = static_cast<int>((v1.x + 1) * width() / 2);
+        const auto y1 = static_cast<int>((v1.y + 1) * height() / 2);
+
+        line(x0, y0, x1, y1, pixel{255, 255, 255});
+      }
+    }
+  }
+
+  void solid(const Model& model) {
+    for (const auto& face : model.faces()) {
+      vec2i screen_coords[3];
+      for (size_t j = 0; j < 3; j++) {
+        const auto& world_coords = model.verts()[size_t(face[j])];
+        const auto x = static_cast<int>((world_coords.x + 1) * width() / 2);
+        const auto y = static_cast<int>((world_coords.y + 1) * height() / 2);
+
+        screen_coords[j] = vec2i(x, y);
+      }
+
+      unsigned char luminosity = (arc4random() % 150) + 55;
+      pixel color{luminosity, luminosity, luminosity};
+      triangle(screen_coords[0], screen_coords[1], screen_coords[2], color);
+    }
+  }
+
+ protected:
+  const size_t _width, _height;
+  const bool _inverted;
+  std::vector<pixel> _data;
+};
+
+
+class Image : public Canvas {
+ public:
+  Image(const size_t width, const size_t height,
+        bool inverted = true, const pixel& fill = pixel{})
+      : Canvas(width, height, inverted, fill) {}
 
   // P6 file format:
   friend auto& operator<<(std::ostream& out, const Image& img) {
@@ -248,103 +366,7 @@ class Image {
 
     return out;
   }
-
- private:
-  const size_t _width, _height;
-  const bool _inverted;
-  std::vector<pixel> _data;
 };
-
-
-void line(Image& img, int x0, int y0, int x1, int y1, const pixel& color) {
-  bool steep = false;
-
-  if (std::abs(x0 - x1) < std::abs(y0 - y1)) {
-    std::swap(x0, y0);
-    std::swap(x1, y1);
-    steep = true;
-  }
-
-  if (x0 > x1) {
-    std::swap(x0, x1);
-    std::swap(y0, y1);
-  }
-
-  int dx = x1 - x0;
-  int dy = y1 - y0;
-  int derror2 = std::abs(dy) * 2;
-  int error2 = 0;
-  int y = y0;
-
-  for (int x = x0; x <= x1; ++x) {
-    if (steep)
-      img[size_t(x)][size_t(y)] = color;
-    else
-      img[size_t(y)][size_t(x)] = color;
-
-    error2 += derror2;
-    if (error2 > dx) {
-      y += (y1 > y0 ? 1 : -1);
-      error2 -= dx * 2;
-    }
-  }
-}
-
-
-void triangle(Image& img, vec2i t0, vec2i t1, vec2i t2,
-              const pixel& color) {
-  // order bottom to top
-  if (t0.y > t1.y) std::swap(t0, t1);
-  if (t0.y > t2.y) std::swap(t0, t2);
-  if (t1.y > t2.y) std::swap(t1, t2);
-
-  int total_height = t2.y - t0.y;
-
-  // bottom segment
-  for (int y = t0.y; y <= t1.y; y++) {
-    const auto segment_height = t1.y - t0.y + 1;
-    const auto alpha = (y - t0.y) / static_cast<float>(total_height);
-    const auto beta = (y - t0.y) / static_cast<float>(segment_height);
-    vec2i a = t0 + (t2 - t0) * alpha;
-    vec2i b = t0 + (t1 - t0) * beta;
-    if (a.x > b.x)
-      std::swap(a, b);
-    for (int j = a.x; j<= b.x; j++) {
-      img[static_cast<size_t>(y)][static_cast<size_t>(j)] = color;
-    }
-  }
-
-  // top segment
-  for (int y = t1.y; y <= t2.y; y++) {
-    const auto segment_height =  t2.y - t1.y+1;
-    const auto alpha = (y - t0.y) / static_cast<float>(total_height);
-    const auto beta = (y - t1.y) / static_cast<float>(segment_height);
-    vec2i a = t0 + (t2-t0)*alpha;
-    vec2i b = t1 + (t2-t1)*beta;
-    if (a.x > b.x)
-      std::swap(a, b);
-    for (int j = a.x; j <= b.x; j++) {
-      img[static_cast<size_t>(y)][static_cast<size_t>(j)] = color;
-    }
-  }
-}
-
-
-void wireframe(Image& img, Model& model) {
-  for (auto& face : model.faces()) {
-    for (size_t j = 0; j < 3; ++j) {
-      vec3f v0 = model.verts()[size_t(face[size_t(j)])];
-      vec3f v1 = model.verts()[size_t(face[(j + 1) % 3])];
-
-      int x0 = static_cast<int>((v0.x + 1) * img.width() / 2);
-      int y0 = static_cast<int>((v0.y + 1) * img.height() / 2);
-      int x1 = static_cast<int>((v1.x + 1) * img.width() / 2);
-      int y1 = static_cast<int>((v1.y + 1) * img.height() / 2);
-
-      line(img, x0, y0, x1, y1, pixel{255, 255, 255});
-    }
-  }
-}
 
 
 int main() {
@@ -355,7 +377,7 @@ int main() {
   Image img{width, height};
   Model model{"african_head.obj"};
 
-  wireframe(img, model);
+  img.wireframe(model);
 
   std::ofstream file{"render.ppm"};
   file << img;
