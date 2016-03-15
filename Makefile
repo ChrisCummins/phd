@@ -831,6 +831,7 @@ CxxFlags = \
 	-Wno-documentation-unknown-command \
 	-Wno-double-promotion \
 	-Wno-exit-time-destructors \
+	-Wno-float-equal \
 	-Wno-global-constructors \
 	-Wno-missing-braces \
 	-Wno-missing-prototypes \
