@@ -188,6 +188,12 @@ class pixel {
   pixel(const value_type _r, const value_type _g, const value_type _b)
       : r(_r), g(_g), b(_b) {}
 
+  inline pixel operator*(const float f) const {
+    return pixel{static_cast<value_type>(r * f),
+          static_cast<value_type>(g * f),
+          static_cast<value_type>(b * f)};
+  }
+
   // human-readable:
   friend std::ostream& operator<<(std::ostream& out, const pixel& pixel) {
     out << static_cast<int>(pixel.r)
@@ -326,20 +332,32 @@ class Canvas {
     }
   }
 
-  void solid(const Model& model) {
+  void solid(const Model& model, const vec3f& light_direction,
+             const pixel& surface_color) {
     for (const auto& face : model.faces()) {
       vec2i screen_coords[3];
-      for (size_t j = 0; j < 3; j++) {
-        const auto& world_coords = model.verts()[size_t(face[j])];
-        const auto x = static_cast<int>((world_coords.x + 1) * width() / 2);
-        const auto y = static_cast<int>((world_coords.y + 1) * height() / 2);
+      vec3f world_coords[3];
 
-        screen_coords[j] = vec2i(x, y);
+      for (size_t j = 0; j < 3; ++j) {
+        vec3f v = model.verts()[size_t(face[j])];
+        const auto x = static_cast<int>((v.x + 1) * width() / 2);
+        const auto y = static_cast<int>((v.y + 1) * height() / 2);
+        screen_coords[j] = vec2i{x, y};
+        world_coords[j] = v;
       }
 
-      unsigned char luminosity = (arc4random() % 150) + 55;
-      pixel color{luminosity, luminosity, luminosity};
-      triangle(screen_coords[0], screen_coords[1], screen_coords[2], color);
+      // normal to face
+      vec3f n = (world_coords[2] - world_coords[0]) ^
+                (world_coords[1] - world_coords[0]);
+      n.normalize();
+
+      float intensity = n * light_direction;
+
+      // back-face culling
+      if (intensity > 0) {
+        triangle(screen_coords[0], screen_coords[1], screen_coords[2],
+                 surface_color * intensity);
+      }
     }
   }
 
@@ -377,7 +395,7 @@ int main() {
   Image img{width, height};
   Model model{"african_head.obj"};
 
-  img.wireframe(model);
+  img.solid(model, {0, 0, -1}, {255, 180, 140});
 
   std::ofstream file{"render.ppm"};
   file << img;
