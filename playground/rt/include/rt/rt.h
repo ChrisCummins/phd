@@ -75,9 +75,12 @@ namespace rt {
     // Calculate performance information.
     profiling::Counter traceCount = profiling::counters::getTraceCount();
     profiling::Counter rayCount   = profiling::counters::getRayCount();
-    profiling::Counter traceRate  = traceCount / runTime;
-    profiling::Counter rayRate    = rayCount / runTime;
-    profiling::Counter pixelRate  = image->size / runTime;
+    profiling::Counter traceRate  = static_cast<profiling::Counter>(
+        traceCount / runTime);
+    profiling::Counter rayRate    = static_cast<profiling::Counter>(
+        rayCount / runTime);
+    profiling::Counter pixelRate  = static_cast<profiling::Counter>(
+        image->size / runTime);
     Scalar tracePerPixel = static_cast<Scalar>(traceCount)
       / static_cast<Scalar>(image->size);
 

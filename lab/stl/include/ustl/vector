@@ -59,7 +59,6 @@ namespace ustl {
 template<typename T, class Alloc = std::allocator<T>>
 class vector {
  public:
-
   ///////////////////
   // Member types: //
   ///////////////////
@@ -395,7 +394,8 @@ class vector {
   //
   // cend():
   //
-  // Returns a const_iterator pointing to the past-the-end element in the container.
+  // Returns a const_iterator pointing to the past-the-end element in
+  // the container.
   //
   // A const_iterator is an iterator that points to const
   // content. This iterator can be increased and decreased (unless it
@@ -1066,7 +1066,6 @@ class vector {
   }
 
  private:
-
   static const size_type _default_capacity = 8;
   static const int _capacity_multiplier = 2;
 
@@ -1106,7 +1105,6 @@ class vector {
     // Increase size.
     _size += n;
   }
-
 };  // vector class
 
 #pragma GCC diagnostic pop  // -Wpadded
@@ -1209,8 +1207,8 @@ bool operator>=(const vector<T, Alloc>& lhs, const vector<T, Alloc>& rhs) {
 // movement): It behaves as if x.swap(y) was called.
 //
 template<typename T, typename Alloc>
-void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) {
-  x.swap(y);
+void swap(vector<T, Alloc>& x, vector<T, Alloc>& y) {  // NOLINT
+  x.swap(y);  // NOLINT(build/include_what_you_use)
 }
 
 // TODO: vector<bool> specialisation.

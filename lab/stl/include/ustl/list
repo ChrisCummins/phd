@@ -415,7 +415,7 @@ class list {
   //
   // The value returned shall not be dereferenced.
   //
-  const_iterator cend () const noexcept {
+  const_iterator cend() const noexcept {
     return const_iterator(_tail);
   }
 
@@ -452,7 +452,7 @@ class list {
   // able to reach that size: it can still fail to allocate storage at
   // any point before that size is reached.
   //
-  size_type max_size () const noexcept {
+  size_type max_size() const noexcept {
     return _alloc.max_size();
   }
 
@@ -1041,7 +1041,7 @@ class list {
     //
 
     // Create a vector of node pointers.
-    ustl::vector<node_type*> idxs;
+    ustl::vector<node_type*> idxs;  // NOLINT(build/include_what_you_use)
     node_type *node = _head->next();
     while (node != _tail) {
       idxs.push_back(node);
@@ -1206,14 +1206,13 @@ class list {
   };  // class __iterator
 
  private:
-
   //////////////
   // Private: //
   //////////////
 
   class __node {
    public:
-    __node(__node* prev = nullptr, __node* next = nullptr)
+    explicit __node(__node* prev = nullptr, __node* next = nullptr)
         : _data(), _prev(prev), _next(next) {}
 
     explicit __node(const value_type& data,
@@ -1279,8 +1278,7 @@ class list {
 // b<a) and stopping at the first occurrence.
 //
 template<typename T, typename Alloc>
-bool operator==(const list<T,Alloc>& lhs,
-                const list<T,Alloc>& rhs) {
+bool operator==(const list<T, Alloc>& lhs, const list<T, Alloc>& rhs) {
   auto lit = lhs.begin();
   auto rit = rhs.begin();
 
@@ -1292,14 +1290,12 @@ bool operator==(const list<T,Alloc>& lhs,
 }
 
 template<typename T, typename Alloc>
-bool operator!=(const list<T,Alloc>& lhs,
-                const list<T,Alloc>& rhs) {
+bool operator!=(const list<T, Alloc>& lhs, const list<T, Alloc>& rhs) {
   return !(lhs == rhs);
 }
 
 template<typename T, typename Alloc>
-bool operator<(const list<T,Alloc>& lhs,
-               const list<T,Alloc>& rhs) {
+bool operator<(const list<T, Alloc>& lhs, const list<T, Alloc>& rhs) {
   auto lit = lhs.begin();
   auto rit = rhs.begin();
 
@@ -1316,20 +1312,17 @@ bool operator<(const list<T,Alloc>& lhs,
 }
 
 template<typename T, typename Alloc>
-bool operator<=(const list<T,Alloc>& lhs,
-                const list<T,Alloc>& rhs) {
+bool operator<=(const list<T, Alloc>& lhs, const list<T, Alloc>& rhs) {
   return !(lhs > rhs);
 }
 
 template<typename T, typename Alloc>
-bool operator>(const list<T,Alloc>& lhs,
-               const list<T,Alloc>& rhs) {
+bool operator>(const list<T, Alloc>& lhs, const list<T, Alloc>& rhs) {
   return rhs < lhs;
 }
 
 template<typename T, typename Alloc>
-bool operator>=(const list<T,Alloc>& lhs,
-                const list<T,Alloc>& rhs) {
+bool operator>=(const list<T, Alloc>& lhs, const list<T, Alloc>& rhs) {
   return !(lhs < rhs);
 }
 
@@ -1354,8 +1347,8 @@ bool operator>=(const list<T,Alloc>& lhs,
 // movement): It behaves as if x.swap(y) was called.
 //
 template<typename T, typename Alloc>
-void swap(list<T, Alloc>& x, list<T, Alloc>& y) {
-  x.swap(y);
+void swap(list<T, Alloc>& x, list<T, Alloc>& y) {  // NOLINT
+  x.swap(y);  // NOLINT(build/include_what_you_use)
 }
 
 

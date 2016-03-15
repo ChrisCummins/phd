@@ -48,13 +48,15 @@ void my2DFree1(void** matrix, size_t nrows) {
 // determined solely by nrows and rowsize).
 //
 int** my2DAlloc2(size_t nrows, size_t ncols) {
+  assert(ncols);
+
   int** rows = (int**)malloc(nrows * sizeof(int*));  // NOLINT
   int* data = (int*)malloc(nrows * ncols * sizeof(int));  // NOLINT
 
   while (nrows--)
     rows[nrows] = &data[nrows * ncols];
 
-  return rows;
+  return rows;  // NOLINT
 }
 
 
@@ -211,6 +213,7 @@ static const size_t BM_size_max = 10 << 10;
 
 void BM_my2DAlloc1(benchmark::State& state) {
   const size_t size = static_cast<size_t>(state.range_x());
+  assert(size);
 
   while (state.KeepRunning()) {
     int** matrix = (int**)my2DAlloc1(size, size * sizeof(int));  // NOLINT
@@ -222,6 +225,7 @@ BENCHMARK(BM_my2DAlloc1)->Range(BM_size_min, BM_size_max);
 
 void BM_my2DAlloc2(benchmark::State& state) {
   const size_t size = static_cast<size_t>(state.range_x());
+  assert(size);
 
   while (state.KeepRunning()) {
     int** matrix = my2DAlloc2(size, size);
@@ -233,6 +237,7 @@ BENCHMARK(BM_my2DAlloc2)->Range(BM_size_min, BM_size_max);
 
 void BM_my2DAlloc3(benchmark::State& state) {
   const size_t size = static_cast<size_t>(state.range_x());
+  assert(size);
 
   while (state.KeepRunning()) {
     int** matrix = my2DAlloc3(size, size);
