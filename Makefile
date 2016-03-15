@@ -481,6 +481,7 @@ StlComponents = \
 	list \
 	map \
 	stack \
+	type_traits \
 	unordered_map \
 	vector \
 	$(NULL)
