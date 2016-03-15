@@ -140,6 +140,24 @@ class vec3 {
 using vec3f = vec3<float>;
 
 
+vec3f barycentric(vec3f a, vec3f b, vec3f c, vec3f p) {
+  vec3f s[2];
+  for (unsigned int i = 2; i--; ) {
+    s[i][0] = c[i] - a[i];
+    s[i][1] = b[i] - a[i];
+    s[i][2] = a[i] - p[i];
+  }
+  vec3f u = s[0] ^ s[1];
+
+  // dont forget that u[2] is integer. If it is zero then triangle ABC
+  // is degenerate:
+  if (std::abs(u[2]) > 1e-2)
+    return vec3f(1.0f - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z);
+  // in this case generate negative coordinates, it will be thrown
+  // away by the rasterizer:
+  return vec3f(-1, 1, 1);
+}
+
 vec3f barycentric(vec2f a, vec2f b, vec2f c, vec2f p) {
   vec3f u = vec3f{c[0] - a[0], b[0] - a[0], a[0] - p[0]}  // NOLINT
             ^ vec3f{c[1] - a[1], b[1] - a[1], a[1] - p[1]};
@@ -257,7 +275,14 @@ class Canvas {
   Canvas(const size_t width, const size_t height,
          bool inverted = true, const pixel& fill = pixel{})
       : _width(width), _height(height), _inverted(inverted),
-        _data(width * height, fill) {}
+        _data(width * height, fill),
+        _zbuffer(width * height, -std::numeric_limits<float>::max()) {}
+
+  Canvas(const size_t width, const size_t height,
+         const pixel& fill, bool inverted = true)
+      : _width(width), _height(height), _inverted(inverted),
+        _data(width * height, fill),
+        _zbuffer(width * height, -std::numeric_limits<float>::max()) {}
 
   size_t width() const { return _width; }
   size_t height() const { return _height; }
@@ -305,35 +330,42 @@ class Canvas {
     }
   }
 
-  void triangle(vec2i t0, vec2i t1, vec2i t2, const pixel& color) {
-    vec2i bboxmin(static_cast<int>(width() - 1),
-                  static_cast<int>(height() - 1));
-    vec2i bboxmax(0, 0);
-    vec2i clamp(static_cast<int>(width() - 1),
-                static_cast<int>(height() - 1));
+  void triangle(vec3f t0, vec3f t1, vec3f t2, const pixel& color) {
+    vec2f bboxmin(std::numeric_limits<float>::max(),
+                  std::numeric_limits<float>::max());
+    vec2f bboxmax(-std::numeric_limits<float>::max(),
+                  -std::numeric_limits<float>::max());
+    vec2f clamp(static_cast<float>(width() - 1),
+                static_cast<float>(height() - 1));
 
-    // define bounding box
     for (unsigned int j = 0; j < 2; ++j) {
-      bboxmin[j] = std::max(0, std::min(bboxmin[j], t0[j]));
+      bboxmin[j] = std::max(0.0f, std::min(bboxmin[j], t0[j]));
       bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], t0[j]));
     }
-    for (unsigned int j = 0; j < 2; j++) {
-      bboxmin[j] = std::max(0, std::min(bboxmin[j], t1[j]));
+    for (unsigned int j = 0; j < 2; ++j) {
+      bboxmin[j] = std::max(0.0f, std::min(bboxmin[j], t1[j]));
       bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], t1[j]));
     }
-    for (unsigned int j = 0; j < 2; j++) {
-      bboxmin[j] = std::max(0, std::min(bboxmin[j], t2[j]));
+    for (unsigned int j = 0; j < 2; ++j) {
+      bboxmin[j] = std::max(0.0f, std::min(bboxmin[j], t2[j]));
       bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], t2[j]));
     }
 
-    // fill bounding box
-    vec2i p;
+    vec3f p;
     for (p.x = bboxmin.x; p.x <= bboxmax.x; ++p.x) {
       for (p.y = bboxmin.y; p.y <= bboxmax.y; ++p.y) {
         vec3f bc_screen  = barycentric(t0, t1, t2, p);
         if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
           continue;
-        (*this)[size_t(p.y)][size_t(p.x)] = color;
+
+        p.z = t0[2] * bc_screen[0];
+        p.z += t1[2] * bc_screen[1];
+        p.z += t2[2] * bc_screen[2];
+
+        if (_zbuffer[size_t(p.x + p.y * width())] < p.z) {
+          _zbuffer[size_t(p.x + p.y * width())] = static_cast<int>(p.z);
+          (*this)[size_t(p.y)][size_t(p.x)] = color;
+        }
       }
     }
   }
@@ -354,21 +386,24 @@ class Canvas {
     }
   }
 
+  vec3f world2screen(vec3f v) {
+    return vec3f{static_cast<int>((v.x + 1) * width() / 2 + 0.5),
+          static_cast<int>((v.y + 1.) * height() / 2 + 0.5), v.z};
+  }
+
   void solid(const Model& model, const vec3f& light_direction,
              const pixel& surface_color) {
     for (const auto& face : model.faces()) {
-      vec2i screen_coords[3];
+      vec3f screen_coords[3];
       vec3f world_coords[3];
 
-      for (size_t j = 0; j < 3; ++j) {
-        vec3f v = model.verts()[size_t(face[j])];
-        const auto x = static_cast<int>((v.x + 1) * width() / 2);
-        const auto y = static_cast<int>((v.y + 1) * height() / 2);
-        screen_coords[j] = vec2i{x, y};
-        world_coords[j] = v;
+      for (unsigned int i = 0; i < 3; ++i) {
+        vec3f v = model.verts()[size_t(face[i])];
+        world_coords[i] = v;
+        screen_coords[i] = world2screen(v);
       }
 
-      // normal to face
+      // normal of face:
       vec3f n = (world_coords[2] - world_coords[0]) ^
                 (world_coords[1] - world_coords[0]);
       n.normalize();
@@ -387,6 +422,7 @@ class Canvas {
   const size_t _width, _height;
   const bool _inverted;
   std::vector<pixel> _data;
+  std::vector<float> _zbuffer;
 };
 
 
@@ -394,6 +430,9 @@ class Image : public Canvas {
  public:
   Image(const size_t width, const size_t height,
         bool inverted = true, const pixel& fill = pixel{})
+      : Canvas(width, height, inverted, fill) {}
+  Image(const size_t width, const size_t height,
+        const pixel& fill, bool inverted = true)
       : Canvas(width, height, inverted, fill) {}
 
   // P6 file format:
@@ -414,7 +453,7 @@ int main() {
 
   auto start = std::clock(); double timer;
 
-  Image img{width, height};
+  Image img{width, height, pixel{255}};
   Model model{"african_head.obj"};
 
   img.solid(model, {0, 0, -1}, {255, 180, 140});
