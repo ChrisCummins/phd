@@ -1,4 +1,4 @@
-stl - A toy implementation of the C++14 Standard Template Library
+stl - A toy implementation of the C++17 Standard Template Library
 
 These are my own implementations of the C++14 template library,
 intended for educational rather than production use. Headers files are
