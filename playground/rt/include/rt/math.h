@@ -128,10 +128,7 @@ class Vector {
 
   // Equality: A == B
   auto inline operator==(const Vector &b) const {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wfloat-equal"
     return x == b.x && y == b.y && z == b.z;
-#pragma GCC diagnostic pop
   }
 
   // Inequality: A != B
