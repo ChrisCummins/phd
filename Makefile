@@ -16,6 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+# TODO: Make a list of all the files for which the compilation process
+# spat somehting out to stderr. Then implement an 'all-warn' target
+# which rebuilds these files.
+#
 
 # The default goal is...
 .DEFAULT_GOAL = all
