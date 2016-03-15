@@ -19,7 +19,7 @@
 % Page heads
 \markboth{C. Cummins et al.}{Autotuning Stencils Codes with Algorithmic Skeletons}
 
-\title{Collaborative Autotuning of Algorithmic Skeletons for OpenCL}
+\title{Collaborative Autotuning of Algorithmic Skeletons}
 
 \author{CHRIS CUMMINS, PAVLOS PETOUMENOS, MICHEL STEUWER, and HUGH LEATHER
 \affil{University of Edinburgh}}
@@ -27,43 +27,48 @@
 \begin{abstract}
   The physical limitations of microprocessor design have forced the
   industry towards increasingly heterogeneous designs to extract
-  performance. This trend has not been matched with adequate software
-  tools, leading to a growing disparity between the availability of
-  parallelism and the ability for application developers to exploit
-  it. Algorithmic offer a solution to this problem through reusable
-  patterns of computation, though creating performant skeleton
-  implementations is a difficult task; algorithmic skeleton authors
-  must attempt to anticipate and tune for a wide range of
-  architectures and use cases. This results in implementations that
-  target the general case and cannot provide the performance
-  advantages that are gained from tuning low level optimization
-  parameters. Autotuning combined with machine learning offers
-  promising performance benefits in these situations, but the high
-  cost of training and lack of available tools limits the practicality
-  of autotuning for real world programming. We believe that performing
-  autotuning at the level of the skeleton library can overcome these
-  issues.
+  performance, with an an increasing pressure to offload traditionally
+  CPU based workloads to the GPU. This trend has not been matched with
+  adequate software tools; the popular languages OpenCL and CUDA
+  provide a very low level model with little abstraction above the
+  hardware. Programming at this level requires expert knowledge of
+  both the domain and the target hardware, and achieving performance
+  requires laborious hand tuning of each program. This has led to a
+  growing disparity between the availability of parallelism in modern
+  hardware, and the ability for application developers to exploit it.
 
-  In this work, we present OmniTune --- an extensible open source
-  framework for dynamically autotuning optimization parameters at
-  runtime. OmniTune offers a flexible API and client-server model to
-  support machine learning across devices. Training data is
-  distributed between systems, allowing a collaborative approach to
-  performance tuning. We demonstrate the practicality of OmniTune in a
-  case study using the open source Algorithmic Skeleton library
-  SkelCL. We present three methodologies for predicting workgroup
-  sizes. The first, using classifiers to select the optimal workgroup
-  size. The second and third proposed methodologies employ the novel
-  use of regressors for performing classification by predicting the
-  runtime of kernels and the relative performance of different
-  workgroup sizes, respectively. We evaluate the effectiveness of each
-  technique in an empirical study of 429 combinations of architecture,
-  kernel, and dataset, comparing an average of 629 different workgroup
-  sizes for each. We find that autotuning provides a median
-  $3.79\times$ speedup over the best possible fixed workgroup size,
-  achieving 94\% of the maximum performance. OmniTune achieves this
-  without introducing a significant runtime overhead, and enables
-  portable, cross-device and cross-program tuning.
+  The goal of this work is to bring the performance of hand tuned
+  heterogeneous code to high level programming, by incorporating
+  autotuning into \textit{Algorithmic Skeletons}. Algorithmic
+  Skeletons simplify parallel programming by providing reusable,
+  high-level, patterns of computation. However, achieving performant
+  skeleton implementations is a difficult task; skeleton authors must
+  attempt to anticipate and tune for a wide range of architectures and
+  use cases. This results in implementations that target the general
+  case and cannot provide the performance advantages that are gained
+  from tuning low level optimization parameters for individual
+  programs and architectures. Autotuning combined with machine
+  learning offers promising performance benefits by tailoring
+  parameter values to individual cases, but the high cost of training
+  and the ad-hoc nature of autotuning tools limits the practicality of
+  autotuning for real world programming.
+
+  To address these issues we introduce \textit{OmniTune}, an
+  extensible and open source framework for dynamically autotuning the
+  optimization parameters of algorithmic skeletons. OmniTune provides
+  a lightweight runtime for performing this machine learning-based
+  autotuning during the program runtime, using machine learning
+  classification and training data distributed across devices. We
+  provide a demonstration of OmniTune by auotuning OpenCL workgroup
+  sizes in the Algorithmic Skeleton library \textit{SkelCL}. We
+  evaluate three methodologies for predicting workgroup sizes in an
+  empirical study of 429 combinations of architecture, kernel, and
+  dataset, comparing an average of 629 different workgroup sizes for
+  each. We find that autotuning provides a median $3.79\times$ speedup
+  over the best possible fixed workgroup size, achieving 94\% of the
+  maximum performance. OmniTune achieves this without requiring any
+  modifications to user code and with as little as 2.5ms overhead.
+  % TODO: how does it improve over the state-of-the-art?
 \end{abstract}
 
 
@@ -117,7 +122,7 @@
 
 \acmformat{%
   Chris Cummins, Pavlos Petoumenos, Michel Steuwer, and Hugh Leather,
-  2015. Autotuning Stencils Codes with Algorithmic Skeletons.%
+  2015. Collaborative Autotuning of Algorithmic Skeletons.%
 }
 
 \begin{bottomstuff}
