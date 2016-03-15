@@ -259,8 +259,9 @@ static const pixel green{0, 0, 255};
 template<typename T>
 class subscriptable_t {
  public:
-  using pointer = T*;
-  using reference = T&;
+  using value_type = T;
+  using pointer = value_type*;
+  using reference = value_type&;
 
   explicit subscriptable_t(pointer root) : _root(root) {}
   reference operator[](const size_t x) { return _root[x]; }
@@ -269,9 +270,90 @@ class subscriptable_t {
   pointer _root;
 };
 
+template<typename T>
+class col_iterator {
+ public:
+  using value_type = T;
+
+  explicit col_iterator(value_type* data) : _data(data) {}
+
+  col_iterator& operator++() {
+    ++_data;
+    return *this;
+  }
+
+  col_iterator operator++(int) {
+    auto tmp = col_iterator{_data};
+    operator++();
+    return tmp;
+  }
+
+  value_type& operator*() {
+    return *_data;
+  }
+
+  friend bool operator==(const col_iterator& lhs, const col_iterator& rhs) {
+    return lhs._data == rhs._data;
+  }
+
+  friend bool operator!=(const col_iterator& lhs, const col_iterator& rhs) {
+    return !(lhs == rhs);
+  }
+
+ private:
+  pixel* _data;
+};
+
+template<typename T>
+class row_iterator {
+ public:
+  using value_type = T;
+
+  row_iterator(value_type* data, size_t stride)
+      : _data(data), _stride(stride) {}
+  explicit row_iterator(value_type* data) : _data(data), _stride(0) {}
+
+  row_iterator& operator++() {
+    _data += _stride;
+    return *this;
+  }
+
+  row_iterator operator++(int) {
+    auto tmp = row_iterator(_data, _stride);
+    operator++();
+    return tmp;
+  }
+
+  col_iterator<value_type> begin() {
+    return col_iterator<value_type>{_data};
+  }
+
+  col_iterator<value_type> end() {
+    return col_iterator<value_type>{_data + _stride};
+  }
+
+  col_iterator<value_type> operator*() {
+    return col_iterator<value_type>{_data};
+  }
+
+  friend bool operator==(const row_iterator& lhs, const row_iterator& rhs) {
+    return lhs._data == rhs._data;
+  }
+
+  friend bool operator!=(const row_iterator& lhs, const row_iterator& rhs) {
+    return !(lhs == rhs);
+  }
+
+ private:
+  pixel* _data;
+  size_t _stride;
+};
+
 
 class Canvas {
  public:
+  using iterator = row_iterator<pixel>;
+
   Canvas(const size_t width, const size_t height,
          bool inverted = true, const pixel& fill = pixel{})
       : _width(width), _height(height), _inverted(inverted),
@@ -294,6 +376,14 @@ class Canvas {
       return subscriptable_t<pixel>{_data.data() + (height() - y) * width()};
     else
       return subscriptable_t<pixel>{_data.data() + y * width()};
+  }
+
+  iterator begin() {
+    return iterator{_data.data(), width()};
+  }
+
+  iterator end() {
+    return iterator{_data.data() + _data.size()};
   }
 
   void line(int x0, int y0, int x1, int y1, const pixel& color) {
