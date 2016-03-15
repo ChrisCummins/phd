@@ -70,22 +70,16 @@ V2 = $(__verbosity_2_$(V))
 
 
 ########################################################################
-#                        Static Configuration
+#                         User Configuration
 
-#
-# The number of threads to use:
-#
-WorkerThreads := 4
-
-SHELL := /bin/bash
-
-AWK := awk
-EGREP := egrep
-GREP := grep
-PYTHON2 := python2
-PYTHON3 := python3
-RM := rm -fv
-SED := sed
+AWK ?= awk
+EGREP ?= egrep
+GREP ?= grep
+PYTHON2 ?= python2
+PYTHON3 ?= python3
+RM ?= rm -fv
+SED ?= sed
+SHELL ?= /bin/bash
 
 
 # Set number of worker threads.
