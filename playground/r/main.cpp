@@ -45,6 +45,12 @@ class vec2 {
     return x * rhs.x + y * rhs.y;
   }
 
+  // implicit conversion between types
+  template<typename U>
+  operator vec2<U>() const {
+    return vec2<U>{ static_cast<U>(x), static_cast<U>(y) };
+  }
+
   float norm() const {
     return std::sqrt(x * x + y * y);
   }
@@ -85,6 +91,7 @@ class vec3 {
   vec3(const value_type& _x, const value_type& _y, const value_type& _z)
       : x(_x), y(_y), z(_z) {}
 
+  // cross product
   inline vec3 operator^(const vec3& rhs) const {
     return vec3(y * rhs.z - z * rhs.y,
                 z * rhs.x - x * rhs.z,
@@ -107,6 +114,14 @@ class vec3 {
     return x * rhs.x + y * rhs.y + z * rhs.z;
   }
 
+  // implicit conversion between types
+  template<typename U>
+  operator vec3<U>() const {
+    return vec3<U>{
+      static_cast<U>(x), static_cast<U>(y), static_cast<U>(z)
+    };
+  }
+
   float norm() const {
     return std::sqrt(x * x + y * y + z * z);
   }
@@ -123,6 +138,17 @@ class vec3 {
 };
 
 using vec3f = vec3<float>;
+
+
+vec3f barycentric(vec2f a, vec2f b, vec2f c, vec2f p) {
+  vec3f u = vec3f{c[0] - a[0], b[0] - a[0], a[0] - p[0]}  // NOLINT
+            ^ vec3f{c[1] - a[1], b[1] - a[1], a[1] - p[1]};
+  // triangle is degenerate, in this case return smth with negative
+  // coordinates:
+  if (std::abs(u[2]) < 1)
+    return vec3f(-1, 1, 1);
+  return vec3f(1.0f - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z);
+}
 
 
 class Model {
@@ -280,38 +306,34 @@ class Canvas {
   }
 
   void triangle(vec2i t0, vec2i t1, vec2i t2, const pixel& color) {
-    // order bottom to top
-    if (t0.y > t1.y) std::swap(t0, t1);
-    if (t0.y > t2.y) std::swap(t0, t2);
-    if (t1.y > t2.y) std::swap(t1, t2);
+    vec2i bboxmin(static_cast<int>(width() - 1),
+                  static_cast<int>(height() - 1));
+    vec2i bboxmax(0, 0);
+    vec2i clamp(static_cast<int>(width() - 1),
+                static_cast<int>(height() - 1));
 
-    int total_height = t2.y - t0.y;
-
-    // bottom segment
-    for (int y = t0.y; y <= t1.y; y++) {
-      const auto segment_height = t1.y - t0.y + 1;
-      const auto alpha = (y - t0.y) / static_cast<float>(total_height);
-      const auto beta = (y - t0.y) / static_cast<float>(segment_height);
-      vec2i a = t0 + (t2 - t0) * alpha;
-      vec2i b = t0 + (t1 - t0) * beta;
-      if (a.x > b.x)
-        std::swap(a, b);
-      for (int j = a.x; j<= b.x; j++) {
-        (*this)[static_cast<size_t>(y)][static_cast<size_t>(j)] = color;
-      }
+    // define bounding box
+    for (unsigned int j = 0; j < 2; ++j) {
+      bboxmin[j] = std::max(0, std::min(bboxmin[j], t0[j]));
+      bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], t0[j]));
+    }
+    for (unsigned int j = 0; j < 2; j++) {
+      bboxmin[j] = std::max(0, std::min(bboxmin[j], t1[j]));
+      bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], t1[j]));
+    }
+    for (unsigned int j = 0; j < 2; j++) {
+      bboxmin[j] = std::max(0, std::min(bboxmin[j], t2[j]));
+      bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], t2[j]));
     }
 
-    // top segment
-    for (int y = t1.y; y <= t2.y; y++) {
-      const auto segment_height =  t2.y - t1.y+1;
-      const auto alpha = (y - t0.y) / static_cast<float>(total_height);
-      const auto beta = (y - t1.y) / static_cast<float>(segment_height);
-      vec2i a = t0 + (t2-t0)*alpha;
-      vec2i b = t1 + (t2-t1)*beta;
-      if (a.x > b.x)
-        std::swap(a, b);
-      for (int j = a.x; j <= b.x; j++) {
-        (*this)[static_cast<size_t>(y)][static_cast<size_t>(j)] = color;
+    // fill bounding box
+    vec2i p;
+    for (p.x = bboxmin.x; p.x <= bboxmax.x; ++p.x) {
+      for (p.y = bboxmin.y; p.y <= bboxmax.y; ++p.y) {
+        vec3f bc_screen  = barycentric(t0, t1, t2, p);
+        if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
+          continue;
+        (*this)[size_t(p.y)][size_t(p.x)] = color;
       }
     }
   }
