@@ -520,22 +520,9 @@ learn := $(root)/learn
 #
 # learn/atc++/
 #
-CxxTargets += \
-	$(learn)/atc++/arrays \
-	$(learn)/atc++/benchmark-argument-type \
-	$(learn)/atc++/constructors \
-	$(learn)/atc++/functional \
-	$(learn)/atc++/hash_map \
-	$(learn)/atc++/inheritance \
-	$(learn)/atc++/lambdas \
-	$(learn)/atc++/myvector \
-	$(learn)/atc++/size-of \
-	$(learn)/atc++/smart-ptr \
-	$(learn)/atc++/strings \
-	$(learn)/atc++/templates \
-	$(learn)/atc++/user-input \
-	$(learn)/atc++/value-categories \
-	$(NULL)
+AtcppCxxSources = $(wildcard $(learn)/atc++/*.cpp)
+AtcppCxxObjects = $(patsubst %.cpp,%.o,$(AtcppCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(AtcppCxxSources))
 
 $(learn)/atc++_CxxFlags = $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
 $(learn)/atc++_LdFlags = $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
