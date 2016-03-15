@@ -6,6 +6,7 @@
 template<typename T>
 class Container {
  public:
+  virtual ~Container() {}
   virtual size_t size() const = 0;
 };
 
@@ -32,7 +33,7 @@ class MyVector : Container<T> {
     }
   }
 
-  ~MyVector() {
+  virtual ~MyVector() {
     delete[] _data;
   }
 

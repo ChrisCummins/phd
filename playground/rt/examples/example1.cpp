@@ -1,6 +1,5 @@
-/* -*- c-basic-offset: 8; -*-
- *
- * Copyright (C) 2015 Chris Cummins.
+/*
+ * Copyright (C) 2015, 2016 Chris Cummins.
  *
  * This file is part of rt.
  *
@@ -27,57 +26,57 @@ static const size_t width = 512;
 static const size_t height = 512;
 
 int main() {
-        // Create colours.
-        static const rt::Colour red   = rt::Colour(0xff0000);
-        static const rt::Colour green = rt::Colour(0x00ff00);
-        static const rt::Colour blue  = rt::Colour(0x0000ff);
+  // Create colours.
+  static const rt::Colour red   = rt::Colour(0xff0000);
+  static const rt::Colour green = rt::Colour(0x00ff00);
+  static const rt::Colour blue  = rt::Colour(0x0000ff);
 
-        // Create materials.
-        const std::array<const rt::Material *const, 3> materials = {
-                new rt::Material(red, 0, 1, .2, 10, 0),
-                new rt::Material(green, 0, 1, .2, 10, 0),
-                new rt::Material(blue, 0, 1, .2, 10, 0)
-        };
+  // Create materials.
+  const std::array<const rt::Material *const, 3> materials = {
+    new rt::Material(red, 0, 1, .2, 10, 0),
+    new rt::Material(green, 0, 1, .2, 10, 0),
+    new rt::Material(blue, 0, 1, .2, 10, 0)
+  };
 
-        // Create objects.
-        const std::array<const rt::Sphere *const, 3> _objects = {
-                new rt::Sphere(rt::Vector(0,    50, 0), 50,
-                               materials[0]),
-                new rt::Sphere(rt::Vector(50,  -50, 0), 50,
-                               materials[1]),
-                new rt::Sphere(rt::Vector(-50, -50, 0), 50,
-                               materials[2])
-        };
+  // Create objects.
+  const std::array<const rt::Sphere *const, 3> _objects = {
+    new rt::Sphere(rt::Vector(0,    50, 0), 50,
+                   materials[0]),
+    new rt::Sphere(rt::Vector(50,  -50, 0), 50,
+                   materials[1]),
+    new rt::Sphere(rt::Vector(-50, -50, 0), 50,
+                   materials[2])
+  };
 
-        // Create lights.
-        const std::array<const rt::Light *const, 2> _lights = {
-                new rt::SoftLight(rt::Vector(-300,  400, -400),
-                                  rt::Colour(0xffffff)),
-                new rt::SoftLight(rt::Vector( 300, -200,  100),
-                                  rt::Colour(0x505050))
-        };
+  // Create lights.
+  const std::array<const rt::Light *const, 2> _lights = {
+    new rt::SoftLight(rt::Vector(-300,  400, -400),
+                      rt::Colour(0xffffff)),
+    new rt::SoftLight(rt::Vector( 300, -200,  100),
+                      rt::Colour(0x505050))
+  };
 
-        // Create camera.
-        const rt::Camera *const restrict camera =
-                        new rt::Camera(rt::Vector(0, 0, -200),  // position
-                                       rt::Vector(0, 0, 0),     // look at
-                                       50, 50,         // film width & height
-                                       rt::Lens(50));  // focal length
+  // Create camera.
+  const rt::Camera *const restrict camera =
+    new rt::Camera(rt::Vector(0, 0, -200),  // position
+                   rt::Vector(0, 0, 0),     // look at
+                   50, 50,         // film width & height
+                   rt::Lens(50));  // focal length
 
-        // Create collections.
-        const rt::Objects objects(_objects.begin(), _objects.end());
-        const rt::Lights  lights(_lights.begin(),  _lights.end());
+  // Create collections.
+  const rt::Objects objects(_objects.begin(), _objects.end());
+  const rt::Lights  lights(_lights.begin(),  _lights.end());
 
-        // Create scene and renderer.
-        const rt::Scene scene(objects, lights);
-        const rt::Renderer renderer(scene, camera);
+  // Create scene and renderer.
+  const rt::Scene scene(objects, lights);
+  const rt::Renderer renderer(scene, camera);
 
-        rt::Image<width, height> *const image = new rt::Image<width, height>();
+  rt::Image<width, height> *const image = new rt::Image<width, height>();
 
-        // Run ray tracer.
-        rt::render<rt::Image<width, height>>(renderer, "render1.ppm", image);
+  // Run ray tracer.
+  rt::render<rt::Image<width, height>>(renderer, "render1.ppm", image);
 
-        delete image;
+  delete image;
 
-        return 0;
+  return 0;
 }

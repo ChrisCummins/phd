@@ -4,79 +4,95 @@
  */
 #include "./ctci.h"
 
+//
+// Requires a temporary, not a solution.
+//
 template<typename T>
-void numSwapBaseline(T *const x, T *const y) {
-  /*
-   * Requires a temporary, not a solution.
-   */
+void num_swap(T *const x, T *const y) {
   T tmp = *x;
 
   *x = *y;
   *y = tmp;
 }
 
+//
+// Solution: XOR trick.
+//
 template<typename T>
-void numSwap1(T *const x, T *const y) {
-  /*
-   * Solution: XOR trick.
-   */
+void inplace_num_swap(T *const x, T *const y) {
   *x ^= *y;
   *y ^= *x;
   *x ^= *y;
 }
 
-// Unit tests
 
-TEST(NumSwap, numSwap1int) {
+///////////
+// Tests //
+///////////
+
+TEST(NumSwap, inplace_num_swap_int) {
   int x = 5, y = 10;
 
-  numSwap1(&x, &y);
+  inplace_num_swap(&x, &y);
 
   ASSERT_EQ(10, x);
   ASSERT_EQ(5, y);
 
-  numSwap1(&x, &y);
+  inplace_num_swap(&x, &y);
 
   ASSERT_EQ(5, x);
   ASSERT_EQ(10, y);
 }
 
-TEST(NumSwap, numSwap1float) {
-  std::uint64_t x = 5, y = 10;
+TEST(NumSwap, inplace_num_swap_char) {
+  char x = 'a', y = 'b';
 
-  numSwap1(&x, &y);
+  inplace_num_swap(&x, &y);
 
-  ASSERT_EQ(10u, x);
-  ASSERT_EQ(5u, y);
+  ASSERT_EQ('b', x);
+  ASSERT_EQ('a', y);
 
-  numSwap1(&x, &y);
+  inplace_num_swap(&x, &y);
 
-  ASSERT_EQ(5u, x);
-  ASSERT_EQ(10u, y);
+  ASSERT_EQ('a', x);
+  ASSERT_EQ('b', y);
 }
 
-// Benchmarks
+////////////////
+// Benchmarks //
+////////////////
 
-void BM_numSwapBaseline(benchmark::State& state) {
+void BM_num_swap(benchmark::State& state) {
   int x = 5, y = 10;
 
   while (state.KeepRunning()) {
-    numSwapBaseline(&x, &y);
+    num_swap(&x, &y);
     benchmark::DoNotOptimize(x);
     benchmark::DoNotOptimize(y);
   }
 }
-BENCHMARK(BM_numSwapBaseline);
+BENCHMARK(BM_num_swap);
 
-void BM_numSwap1(benchmark::State& state) {
+void BM_inplace_num_swap_int(benchmark::State& state) {
   int x = 5, y = 10;
 
   while (state.KeepRunning()) {
-    numSwapBaseline(&x, &y);
+    inplace_num_swap(&x, &y);
     benchmark::DoNotOptimize(x);
     benchmark::DoNotOptimize(y);
   }
 }
-BENCHMARK(BM_numSwap1);
+BENCHMARK(BM_inplace_num_swap_int);
+
+void BM_inplace_num_swap_char(benchmark::State& state) {
+  int x = 'a', y = 'b';
+
+  while (state.KeepRunning()) {
+    inplace_num_swap(&x, &y);
+    benchmark::DoNotOptimize(x);
+    benchmark::DoNotOptimize(y);
+  }
+}
+BENCHMARK(BM_inplace_num_swap_char);
 
 CTCI_MAIN();

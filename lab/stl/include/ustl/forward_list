@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef __USTL_FORWARD_LIST__
-#define __USTL_FORWARD_LIST__
+#ifndef USTL_FORWARD_LIST_H
+#define USTL_FORWARD_LIST_H
 
 #include <ustl/algorithm>
 #include <ustl/vector>
@@ -10,124 +10,6 @@
 #include <memory>
 
 namespace ustl {
-
-namespace {  // anonymous
-
-//
-// List nodes.
-//
-template<typename T>
-class __node {
- public:
-  using value_type = T;
-
-  using reference = value_type&;
-
-  __node(__node* next = nullptr)
-      : _data(), _next(next) {}
-
-  explicit __node(const value_type& data,
-                  __node* next = nullptr)
-      : _data(data), _next(next) {}
-
-  explicit __node(const value_type&& data,
-                  __node* next = nullptr)
-      : _data(std::move(data)), _next(next) {}
-
-  reference data() {
-    return _data;
-  }
-
-  __node* next() {
-    return _next;
-  }
-
-  __node* next(__node* newnext) {
-    return _next = newnext;
-  }
-
- private:
-  value_type _data;
-  __node<value_type>* _next;
-};
-
-
-//
-// List iterator.
-//
-template<typename T, typename PointerT>
-class __iterator
-    : std::iterator<std::forward_iterator_tag, T> {
- public:
-  using value_type = T;
-
-  using pointer_type = PointerT;
-
-  using reference = pointer_type&;
-
-  using node_type = __node<value_type>;
-
-  explicit __iterator(node_type* node)
-      : _node(node) {}
-
-  // copy construct:
-  __iterator(const __iterator &x)
-      : _node(x._node) {}
-
-  // move construct:
-  __iterator(__iterator &&x)
-      : _node(std::move(x._node)) {}
-
-  // copy assignment:
-  __iterator& operator=(
-      const __iterator &x) {
-    _node = x._node;
-    return *this;
-  }
-
-  // move assignment:
-  __iterator& operator=(
-      __iterator &&x) {
-    _node = x._node;
-    return *this;
-  }
-
-  // prefix increment
-  __iterator operator++() {
-    _node = _node->next();
-    return *this;
-  };
-
-  // postfix increment
-  __iterator operator++(int) {
-    auto prev = _node;
-    _node = _node->next();
-    return __iterator(prev);
-  };
-
-  // dereference
-  reference operator*() const {
-    return _node->data();
-  }
-
-  node_type* node() { return _node; }
-
-  // relational ops:
-  friend bool operator==(const __iterator& lhs,
-                         const __iterator& rhs) {
-    return lhs._node == rhs._node;
-  }
-
-  friend bool operator!=(const __iterator& lhs,
-                         const __iterator& rhs) {
-    return !(lhs == rhs);
-  }
-
- private:
-  node_type* _node;
-};
-
-}  // anonymous namespace
 
 
 // forward list
@@ -180,7 +62,16 @@ class __iterator
 //
 template<typename T, typename Alloc = std::allocator<T> >
 class forward_list {
+ private:
+  // Forward declarations of nested class:
+  class __node;
+
+  using node_type = __node;
+
  public:
+  // Forward declarations of nested class:
+  template<typename PointerT>
+  class __iterator;
 
   ///////////////////
   // Member types: //
@@ -198,19 +89,15 @@ class forward_list {
   using const_pointer =
       typename std::allocator_traits<allocator_type>::const_pointer;
 
-  using iterator = __iterator<value_type, value_type>;
+  using iterator = __iterator<value_type>;
 
-  // TODO: fix second argument.
-  using const_iterator =
-      __iterator<value_type, value_type>;
+  using const_iterator = __iterator<const value_type>;
 
   // TODO: set difference type.
   using difference_type = size_t;
   // typename std::iterator_traits<iterator>::difference_type;
 
   using size_type = size_t;
-
-  using node_type = __node<value_type>;
 
 
   ///////////////////
@@ -429,7 +316,7 @@ class forward_list {
 
   const_iterator before_begin() const noexcept {
     return const_iterator(_head);
-  };
+  }
 
 
   //
@@ -447,11 +334,11 @@ class forward_list {
   //
   iterator begin() noexcept {
     return iterator(_head->next());
-  };
+  }
 
   const_iterator begin() const noexcept {
     return const_iterator(_head->next());
-  };
+  }
 
 
   //
@@ -474,11 +361,11 @@ class forward_list {
   //
   iterator end() noexcept {
     return iterator(_tail);
-  };
+  }
 
   const_iterator end() const noexcept {
     return const_iterator(_tail);
-  };
+  }
 
 
   //
@@ -497,7 +384,7 @@ class forward_list {
   //
   const_iterator cbefore_begin() const noexcept {
     return const_iterator(_head);
-  };
+  }
 
 
   //
@@ -518,7 +405,7 @@ class forward_list {
   //
   const_iterator cbegin() const noexcept {
     return const_iterator(_head->next());
-  };
+  }
 
 
   //
@@ -538,7 +425,7 @@ class forward_list {
   //
   const_iterator cend () const noexcept {
     return const_iterator(_tail);
-  };
+  }
 
 
   ///////////////
@@ -601,7 +488,7 @@ class forward_list {
 
   const_reference front() const {
     return _head->next()->data();
-  };
+  }
 
 
   ////////////////
@@ -776,7 +663,7 @@ class forward_list {
     auto curr = position;
     while (n--)
       curr = insert_after(curr, val);
-    return curr;
+    return iterator(curr.node());
   }
 
 
@@ -786,8 +673,8 @@ class forward_list {
     auto curr = position;
     while (first != last)
       curr = insert_after(curr, *first++);
-    return curr;
-  };
+    return iterator(curr.node());
+  }
 
 
   iterator insert_after(const_iterator position,
@@ -798,7 +685,7 @@ class forward_list {
     while (first != il.end())
       curr = insert_after(curr, *first++);
 
-    return curr;
+    return iterator(curr.node());
   }
 
 
@@ -839,7 +726,7 @@ class forward_list {
     }
 
     return last;
-  };
+  }
 
 
   //
@@ -1180,7 +1067,7 @@ class forward_list {
                });
 
     // Update list order based on sorted vector.
-    for (size_t i = 1; i < idxs.size(); i++)
+    for (size_t i = 1; i < idxs.size(); ++i)
       idxs[i-1]->next(idxs[i]);
 
     _head->next(idxs[0]);
@@ -1225,7 +1112,123 @@ class forward_list {
   }
 
 
+  /////////////////////
+  // Nested Classes: //
+  /////////////////////
+
+  template<typename PointerT>
+  class __iterator : std::iterator<std::forward_iterator_tag, value_type> {
+   public:
+    using pointer_type = PointerT;
+
+    using deref_type = pointer_type&;
+
+    explicit __iterator(node_type* node) : _node(node) {}
+
+    // construct from const iterator
+    template<typename U>
+    __iterator(const __iterator<U>& x,
+               typename std::enable_if<!std::is_const<U>()>::type* = nullptr)
+        : _node(const_cast<node_type*>(x.node())) {}
+
+    // copy construct:
+    __iterator(const __iterator &x)
+        : _node(x._node) {}
+
+    // move construct:
+    __iterator(__iterator &&x)
+        : _node(std::move(x._node)) {}
+
+    // copy assignment:
+    __iterator& operator=(
+        const __iterator &x) {
+      _node = x._node;
+      return *this;
+    }
+
+    // move assignment:
+    __iterator& operator=(
+        __iterator &&x) {
+      _node = x._node;
+      return *this;
+    }
+
+    // prefix increment
+    __iterator operator++() {
+      _node = _node->next();
+      return *this;
+    }
+
+    // postfix increment
+    __iterator operator++(int) {
+      auto prev = _node;
+      _node = _node->next();
+      return __iterator(prev);
+    }
+
+    // dereference
+    deref_type operator*() const {
+      return _node->data();
+    }
+
+    // relational ops:
+    friend bool operator==(const __iterator& lhs,
+                           const __iterator& rhs) {
+      return lhs._node == rhs._node;
+    }
+
+    friend bool operator!=(const __iterator& lhs,
+                           const __iterator& rhs) {
+      return !(lhs == rhs);
+    }
+
+    // Let outer class access private members:
+    friend class forward_list;
+
+   private:
+    node_type* node() { return _node; }
+
+    const node_type* node() const { return _node; }
+
+    node_type* _node;
+  };  // class __iterator
+
  private:
+
+  //////////////
+  // Private: //
+  //////////////
+
+  class __node {
+   public:
+    __node(__node* next = nullptr)
+        : _data(), _next(next) {}
+
+    explicit __node(const value_type& data,
+                    __node* next = nullptr)
+        : _data(data), _next(next) {}
+
+    explicit __node(const value_type&& data,
+                    __node* next = nullptr)
+        : _data(std::move(data)), _next(next) {}
+
+    reference data() {
+      return _data;
+    }
+
+    node_type* next() {
+      return _next;
+    }
+
+    node_type* next(node_type* newnext) {
+      return _next = newnext;
+    }
+
+   private:
+    value_type _data;
+    node_type* _next;
+  };  // class __node
+
   allocator_type _alloc;
   node_type* _tail;
   node_type* _head;
@@ -1282,8 +1285,8 @@ bool operator<(const forward_list<T,Alloc>& lhs,
       return false;
     else if (*lit < *rit)
       return true;
-    lit++;
-    rit++;
+    ++lit;
+    ++rit;
   }
 
   return lit == lhs.end() && rit != rhs.end();
@@ -1335,4 +1338,4 @@ void swap(forward_list<T, Alloc>& x, forward_list<T, Alloc>& y) {
 
 }  // namespace ustl
 
-#endif  // __USTL_FORWARD_LIST__
+#endif  // USTL_FORWARD_LIST_H

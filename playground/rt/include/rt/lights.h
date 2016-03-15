@@ -1,6 +1,6 @@
-/* -*- c-basic-offset: 8; -*-
+/* -*-c++-*-
  *
- * Copyright (C) 2015 Chris Cummins.
+ * Copyright (C) 2015, 2016 Chris Cummins.
  *
  * This file is part of rt.
  *
@@ -35,44 +35,46 @@ namespace rt {
 // Base class light source.
 class Light {
  public:
-    // Virtual destructor.
-    virtual ~Light() {}
+  // Virtual destructor.
+  virtual ~Light() {}
 
-    // Calculate the shading colour at `point' for a given surface
-    // material, surface normal, and direction to the ray.
-    virtual Colour shade(const Vector &point,
-                         const Vector &normal,
-                         const Vector &toRay,
-                         const Material *const restrict material,
-                         const Objects objects) const = 0;
+  // Calculate the shading colour at `point' for a given surface
+  // material, surface normal, and direction to the ray.
+  virtual Colour shade(const Vector &point,
+                       const Vector &normal,
+                       const Vector &toRay,
+                       const Material *const restrict material,
+                       const Objects objects) const = 0;
 };
 
-typedef const std::vector<const Light *const> Lights;
+using Lights = const std::vector<const Light *const>;
 
 // A round light source.
 class SoftLight : public Light {
  public:
-        const Vector position;
-        const Colour colour;
-        const size_t samples;
-        mutable UniformDistribution sampler;
+  const Vector position;
+  const Colour colour;
+  const size_t samples;
+  mutable UniformDistribution<Scalar> sampler;
 
-        // Constructor.
-        inline SoftLight(const Vector &_position,
-                         const Colour &_colour = Colour(0xff, 0xff, 0xff),
-                         const Scalar _radius = 0,
-                         const size_t _samples = 1)
-                : position(_position), colour(_colour), samples(_samples),
-                           sampler(UniformDistribution(-_radius, _radius)) {
-                // Register lights with profiling counter.
-                profiling::counters::incLightsCount(_samples);
-        }
+  // Constructor.
+  inline SoftLight(const Vector &_position,
+                   const Colour &_colour = Colour(0xff, 0xff, 0xff),
+                   const Scalar _radius = 0,
+                   const size_t _samples = 1)
+      : position(_position),
+        colour(_colour),
+        samples(_samples),
+        sampler(-_radius, _radius) {
+    // Register lights with profiling counter.
+    profiling::counters::incLightsCount(_samples);
+  }
 
-        virtual Colour shade(const Vector &point,
-                             const Vector &normal,
-                             const Vector &toRay,
-                             const Material *const restrict material,
-                             const Objects objects) const;
+  virtual Colour shade(const Vector &point,
+                       const Vector &normal,
+                       const Vector &toRay,
+                       const Material *const restrict material,
+                       const Objects objects) const;
 };
 
 }  // namespace rt

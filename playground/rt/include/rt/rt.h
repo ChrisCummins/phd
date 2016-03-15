@@ -1,6 +1,6 @@
-/* -*- c-basic-offset: 8; -*-
+/* -*-c++-*-
  *
- * Copyright (C) 2015 Chris Cummins.
+ * Copyright (C) 2015, 2016 Chris Cummins.
  *
  * This file is part of rt.
  *
@@ -37,59 +37,59 @@
 //   * Anti-aliasing: Stochastic supersampling.
 namespace rt {
 
-// Render the target image and write output to path. Prints
-// profiling information.
-template<typename Image>
-void render(const Renderer &renderer,
-            const std::string path,
-            Image *const image) {
-        // Print start message.
-        printf("Rendering %lu pixels, with "
-               "%llu objects, and %llu light sources ...\n",
-               image->size,
-               profiling::counters::getObjectsCount(),
-               profiling::counters::getLightsCount());
+  // Render the target image and write output to path. Prints
+  // profiling information.
+  template<typename Image>
+  void render(const Renderer &renderer,
+              const std::string path,
+              Image *const image) {
+    // Print start message.
+    printf("Rendering %lu pixels, with "
+           "%llu objects, and %llu light sources ...\n",
+           image->size,
+           profiling::counters::getObjectsCount(),
+           profiling::counters::getLightsCount());
 
-        // Start timer.
-        profiling::Timer t = profiling::Timer();
+    // Start timer.
+    profiling::Timer t = profiling::Timer();
 
-        // Render the scene to the output file.
-        renderer.render<Image>(image);
+    // Render the scene to the output file.
+    renderer.render<Image>(image);
 
-        // Get elapsed time.
-        Scalar runTime = t.elapsed();
+    // Get elapsed time.
+    Scalar runTime = t.elapsed();
 
-        // Open the output file.
-        std::cout << "Opening file '" << path << "'..." << std::endl;
-        std::ofstream out;
-        out.open(path);
+    // Open the output file.
+    std::cout << "Opening file '" << path << "'..." << std::endl;
+    std::ofstream out;
+    out.open(path);
 
-        // Write image to output file.
-        out << *image;
+    // Write image to output file.
+    out << *image;
 
-        // Close the output file.
-        std::cout << "Closing file '" << path << "'..." << std::endl;
-        std::cout << std::endl;
-        out.close();
+    // Close the output file.
+    std::cout << "Closing file '" << path << "'..." << std::endl;
+    std::cout << std::endl;
+    out.close();
 
-        // Calculate performance information.
-        profiling::Counter traceCount = profiling::counters::getTraceCount();
-        profiling::Counter rayCount   = profiling::counters::getRayCount();
-        profiling::Counter traceRate  = traceCount / runTime;
-        profiling::Counter rayRate    = rayCount / runTime;
-        profiling::Counter pixelRate  = image->size / runTime;
-        Scalar tracePerPixel = static_cast<Scalar>(traceCount)
-                        / static_cast<Scalar>(image->size);
+    // Calculate performance information.
+    profiling::Counter traceCount = profiling::counters::getTraceCount();
+    profiling::Counter rayCount   = profiling::counters::getRayCount();
+    profiling::Counter traceRate  = traceCount / runTime;
+    profiling::Counter rayRate    = rayCount / runTime;
+    profiling::Counter pixelRate  = image->size / runTime;
+    Scalar tracePerPixel = static_cast<Scalar>(traceCount)
+      / static_cast<Scalar>(image->size);
 
-        // Print performance summary.
-        printf("Rendered %lu pixels from %llu traces in %.3f seconds.\n\n",
-               image->size, traceCount, runTime);
-        printf("Render performance:\n");
-        printf("\tRays per second:\t%llu\n", rayRate);
-        printf("\tTraces per second:\t%llu\n", traceRate);
-        printf("\tPixels per second:\t%llu\n", pixelRate);
-        printf("\tTraces per pixel:\t%.2f\n", tracePerPixel);
-}
+    // Print performance summary.
+    printf("Rendered %lu pixels from %llu traces in %.3f seconds.\n\n",
+           image->size, traceCount, runTime);
+    printf("Render performance:\n");
+    printf("\tRays per second:\t%llu\n", rayRate);
+    printf("\tTraces per second:\t%llu\n", traceRate);
+    printf("\tPixels per second:\t%llu\n", pixelRate);
+    printf("\tTraces per pixel:\t%.2f\n", tracePerPixel);
+  }
 
 
 

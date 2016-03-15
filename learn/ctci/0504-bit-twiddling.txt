@@ -1,0 +1,34 @@
+Explain what the following code does: ((n & (n-1)) == 0).
+
+A bitwise AND operation between n and the value of n-1 is compared
+against zero.
+
+Example 1:
+
+  n = 5 (101)
+  (n-1) = 4 (100)
+  n & (n-1) = 4 (100)
+  ((n & (n-1)) == 0) = false
+
+Example 2:
+
+  n = 2 (10)
+  (n-1) = 1 (01)
+  n & (n-1) = 0 (00)
+  ((n & (n-1)) == 0) = true
+
+Example 3:
+
+  n = 1 (1)
+  (n-1) = 0 (0)
+  n & (n-1) = 0 (0)
+  ((n & (n-1)) == 0) = true
+
+Example 4:
+
+  n = 3 (11)
+  (n-1) = 2 (10)
+  n & (n-1) = (10)
+  ((n & (n-1)) == 0) = false
+
+This is equivalent to a bitwise NOR operation, i.e. ~(n | (n-1)).

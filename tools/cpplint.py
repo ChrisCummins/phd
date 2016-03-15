@@ -71,8 +71,6 @@ Syntax: cpplint.py [--verbose=#] [--output=vs7] [--filter=-x,+y,...]
   suppresses errors of all categories on that line.
 
   The files passed in will be linted; at least one file must be provided.
-  Default linted extensions are .cc, .cpp, .cu, .cuh and .h.  Change the
-  extensions with the --extensions flag.
 
   Flags:
 
@@ -127,12 +125,6 @@ Syntax: cpplint.py [--verbose=#] [--output=vs7] [--filter=-x,+y,...]
 
       Examples:
         --linelength=120
-
-    extensions=extension,extension,...
-      The allowed file extensions that cpplint will check
-
-      Examples:
-        --extensions=hpp,cpp
 
     cpplint.py supports per-directory configurations specified in CPPLINT.cfg
     files. CPPLINT.cfg file can contain a number of key=value pairs.
@@ -496,10 +488,6 @@ _root = None
 # The allowed line length of files.
 # This is set by --linelength flag.
 _line_length = 80
-
-# The allowed extensions for file names
-# This is set by --extensions flag.
-_valid_extensions = set(['cc', 'h', 'cpp', 'cu', 'cuh'])
 
 def ParseNolintSuppressions(filename, raw_line, linenum, error):
   """Updates the global list of error-suppressions.
@@ -6178,32 +6166,26 @@ def ProcessFile(filename, vlevel, extra_check_functions=[]):
   # Note, if no dot is found, this will give the entire filename as the ext.
   file_extension = filename[filename.rfind('.') + 1:]
 
-  # When reading from stdin, the extension is unknown, so no cpplint tests
-  # should rely on the extension.
-  if filename != '-' and file_extension not in _valid_extensions:
-    sys.stderr.write('Ignoring %s; not a valid file name '
-                     '(%s)\n' % (filename, ', '.join(_valid_extensions)))
-  else:
-    ProcessFileData(filename, file_extension, lines, Error,
-                    extra_check_functions)
+  ProcessFileData(filename, file_extension, lines, Error,
+                  extra_check_functions)
 
-    # If end-of-line sequences are a mix of LF and CR-LF, issue
-    # warnings on the lines with CR.
-    #
-    # Don't issue any warnings if all lines are uniformly LF or CR-LF,
-    # since critique can handle these just fine, and the style guide
-    # doesn't dictate a particular end of line sequence.
-    #
-    # We can't depend on os.linesep to determine what the desired
-    # end-of-line sequence should be, since that will return the
-    # server-side end-of-line sequence.
-    if lf_lines and crlf_lines:
-      # Warn on every line with CR.  An alternative approach might be to
-      # check whether the file is mostly CRLF or just LF, and warn on the
-      # minority, we bias toward LF here since most tools prefer LF.
-      for linenum in crlf_lines:
-        Error(filename, linenum, 'whitespace/newline', 1,
-              'Unexpected \\r (^M) found; better to use only \\n')
+  # If end-of-line sequences are a mix of LF and CR-LF, issue
+  # warnings on the lines with CR.
+  #
+  # Don't issue any warnings if all lines are uniformly LF or CR-LF,
+  # since critique can handle these just fine, and the style guide
+  # doesn't dictate a particular end of line sequence.
+  #
+  # We can't depend on os.linesep to determine what the desired
+  # end-of-line sequence should be, since that will return the
+  # server-side end-of-line sequence.
+  if lf_lines and crlf_lines:
+    # Warn on every line with CR.  An alternative approach might be to
+    # check whether the file is mostly CRLF or just LF, and warn on the
+    # minority, we bias toward LF here since most tools prefer LF.
+    for linenum in crlf_lines:
+      Error(filename, linenum, 'whitespace/newline', 1,
+            'Unexpected \\r (^M) found; better to use only \\n')
 
   sys.stderr.write('Done processing %s\n' % filename)
   _RestoreFilters()
@@ -6283,12 +6265,6 @@ def ParseArguments(args):
           _line_length = int(val)
       except ValueError:
           PrintUsage('Line length must be digits.')
-    elif opt == '--extensions':
-      global _valid_extensions
-      try:
-          _valid_extensions = set(val.split(','))
-      except ValueError:
-          PrintUsage('Extensions must be comma seperated list.')
 
   if not filenames:
     PrintUsage('No files were specified.')

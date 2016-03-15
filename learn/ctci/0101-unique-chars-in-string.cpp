@@ -4,143 +4,149 @@
  */
 #include "./ctci.h"
 
-#include <cstdlib>
+#include <bitset>
 #include <limits>
-#include <array>
-#include <iostream>
-#include <unordered_map>
 #include <string>
+#include <unordered_set>
 
-bool unique1(const std::string &s) {
-    // First implementation. Uses a hash map to store whether a
-    // character has already appeared before in a the string. O(n)
-    // time.
+//
+// First solution. Generic solution which works for all container
+// types. Use a set to store whether an element has already appeared
+// in the container.
+//
+// O(n) time, O(n) space.
+//
+template<typename Container>
+bool unique(const Container &cont) {
+  std::unordered_set<typename Container::value_type> set;
 
-    std::unordered_map<char, bool> map;
+  for (auto &elem : cont)
+    if (set.find(elem) != set.end())
+      return false;
+    else
+      set.insert(elem);
 
-    for (auto &c : s) {
-        if (map[c])
-            return false;
-        map[c] = true;
-    }
-
-    return true;
+  return true;
 }
 
-bool unique2(const std::string &s) {
-    // Second implementation. Since the total number of possible
-    // unique characters is pretty small (the size of a word), we can
-    // replace the hash map with a array, and index into it by casting
-    // character values to indexes.
-    //
-    // Requires a bit mask of size n, where n is the number of unique
-    // character values. O(n) time.
-    std::array<bool, std::numeric_limits<char>::max()> a = {};
 
-    for (auto &c : s) {
-        // Cast character to array index:
-        const auto i = static_cast<size_t>(c);
+//
+// Second solution. By specializing to strings, we can remove the
+// expensive heap allocated set and replace it with a bitset, one bit
+// for every possible character value. To check whether a string is
+// unique we then iterate over the characters and index into this
+// bitset.
+//
+// O(n) time, O(n) space.
+//
+bool str_unique(const std::string &str) {
+  std::bitset<std::numeric_limits<char>::max()> chars = {0};
 
-        if (a[i])
-            return false;
+  for (auto &c : str)
+    if (chars[static_cast<size_t>(c)])
+      return false;
+    else
+      chars[static_cast<size_t>(c)] = true;
 
-        a[i] = true;
-    }
-
-    // delete[] a;
-
-    return true;
+  return true;
 }
 
-bool unique3(const std::string &s) {
-    // Additional constraint: no extra data structures.
-    //
-    // No additional data structures. O(n^2) time.
 
-    for (size_t i = 0; i < s.size() - 1; i++) {
-        for (size_t j = 0; j < s.size(); j++) {
-            if (i != j && s[i] == s[j])
-                return false;
-        }
-    }
+//
+// Additional constraint: no extra data structures. This requires us
+// to iterate over every the remaining element of the container,
+// comparing equality with each. E.g.:
+//
+//   [0]  1  2  3  4  5  ...
+//   [1]     2  3  4  5  ...
+//   [2]        3  4  5  ...
+//   [3]           4  5  ...
+//
+// O(n^2) time, O(1) space.
+//
+template<typename Container>
+bool inplace_unique(const Container &cont) {
+  auto left = cont.begin();
 
-    return true;
+  while (left != cont.end()) {
+    auto right = left + 1;
+    while (right != cont.end())
+      if (*left == *right++)
+        return false;
+    left++;
+  }
+
+  return true;
 }
 
-// Unit tests
 
-static const std::string isUnique("abcdefg ");
-static const std::string notUnique("abcdefga");
+////////////////
+// Unit tests //
+////////////////
 
-TEST(Unique, unique1) {
-    ASSERT_TRUE(unique1(isUnique));
-    ASSERT_FALSE(unique1(notUnique));
+static const std::string TEST_is_unique("abcdefg ");
+static const std::string TEST_not_unique("abcdefga");
+
+TEST(Unique, unique) {
+  ASSERT_TRUE(unique(TEST_is_unique));
+  ASSERT_FALSE(unique(TEST_not_unique));
 }
 
-TEST(Unique, unique2) {
-    ASSERT_TRUE(unique2(isUnique));
-    ASSERT_FALSE(unique2(notUnique));
+TEST(Unique, str_unique) {
+  ASSERT_TRUE(str_unique(TEST_is_unique));
+  ASSERT_FALSE(str_unique(TEST_not_unique));
 }
 
-TEST(Unique, unique3) {
-    ASSERT_TRUE(unique3(isUnique));
-    ASSERT_FALSE(unique3(notUnique));
+TEST(Unique, inplace_unique) {
+  ASSERT_TRUE(inplace_unique(TEST_is_unique));
+  ASSERT_FALSE(inplace_unique(TEST_not_unique));
 }
 
-// Benchmarks
 
-static const size_t lengthMin = 8;
-static const size_t lengthMax = 10 << 10;
+////////////////
+// Benchmarks //
+////////////////
 
-void BM_baseline(benchmark::State& state) {
-    std::string t(static_cast<size_t>(state.range_x()), 'a');
+static const size_t BM_length_min = 8;
+static const size_t BM_length_max = 10 << 10;
 
-    while (state.KeepRunning()) {
-        for (auto &c : t)
-            c = arc4random() % std::numeric_limits<char>::max();
+void BM_unique(benchmark::State& state) {
+  std::string t(static_cast<size_t>(state.range_x()), 'a');
 
-        benchmark::DoNotOptimize(t.data());
-    }
+  while (state.KeepRunning()) {
+    for (auto &c : t)
+      c = arc4random() % std::numeric_limits<char>::max();
+
+    unique(t);
+    benchmark::DoNotOptimize(t.data());
+  }
 }
-BENCHMARK(BM_baseline)->Range(lengthMin, lengthMax);
+BENCHMARK(BM_unique)->Range(BM_length_min, BM_length_max);
 
-void BM_unique1(benchmark::State& state) {
-    std::string t(static_cast<size_t>(state.range_x()), 'a');
+void BM_str_unique(benchmark::State& state) {
+  std::string t(static_cast<size_t>(state.range_x()), 'a');
 
-    while (state.KeepRunning()) {
-        for (auto &c : t)
-            c = arc4random() % std::numeric_limits<char>::max();
+  while (state.KeepRunning()) {
+    for (auto &c : t)
+      c = arc4random() % std::numeric_limits<char>::max();
 
-        unique1(t);
-        benchmark::DoNotOptimize(t.data());
-    }
+    str_unique(t);
+    benchmark::DoNotOptimize(t.data());
+  }
 }
-BENCHMARK(BM_unique1)->Range(lengthMin, lengthMax);
+BENCHMARK(BM_str_unique)->Range(BM_length_min, BM_length_max);
 
-void BM_unique2(benchmark::State& state) {
-    std::string t(static_cast<size_t>(state.range_x()), 'a');
+void BM_inplace_unique(benchmark::State& state) {
+  std::string t(static_cast<size_t>(state.range_x()), 'a');
 
-    while (state.KeepRunning()) {
-        for (auto &c : t)
-            c = arc4random() % std::numeric_limits<char>::max();
+  while (state.KeepRunning()) {
+    for (auto &c : t)
+      c = arc4random() % std::numeric_limits<char>::max();
 
-        unique2(t);
-        benchmark::DoNotOptimize(t.data());
-    }
+    inplace_unique(t);
+    benchmark::DoNotOptimize(t.data());
+  }
 }
-BENCHMARK(BM_unique2)->Range(lengthMin, lengthMax);
-
-void BM_unique3(benchmark::State& state) {
-    std::string t(static_cast<size_t>(state.range_x()), 'a');
-
-    while (state.KeepRunning()) {
-        for (auto &c : t)
-            c = arc4random() % std::numeric_limits<char>::max();
-
-        unique3(t);
-        benchmark::DoNotOptimize(t.data());
-    }
-}
-BENCHMARK(BM_unique3)->Range(lengthMin, lengthMax);
+BENCHMARK(BM_inplace_unique)->Range(BM_length_min, BM_length_max);
 
 CTCI_MAIN();

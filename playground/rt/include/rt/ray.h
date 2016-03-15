@@ -1,6 +1,6 @@
-/* -*- c-basic-offset: 8; -*-
+/* -*-c++-*-
  *
- * Copyright (C) 2015 Chris Cummins.
+ * Copyright (C) 2015, 2016 Chris Cummins.
  *
  * This file is part of rt.
  *
@@ -24,15 +24,15 @@
 
 namespace rt {
 
-// A ray abstraction.
-class Ray {
-public:
-        const Vector position, direction;
+  // A ray abstraction.
+  class Ray {
+  public:
+    const Vector position, direction;
 
-        // Construct a ray at starting position and in direction.
-        inline Ray(const Vector &_position, const Vector &_direction)
-                        : position(_position), direction(_direction) {}
-};
+    // Construct a ray at starting position and in direction.
+    inline Ray(const Vector &_position, const Vector &_direction)
+      : position(_position), direction(_direction) {}
+  };
 
 }  // namespace rt
 

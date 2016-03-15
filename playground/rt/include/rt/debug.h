@@ -1,6 +1,6 @@
-/* -*- c-basic-offset: 8; -*-
+/* -*-c++-*-
  *
- * Copyright (C) 2015 Chris Cummins.
+ * Copyright (C) 2015, 2016 Chris Cummins.
  *
  * This file is part of rt.
  *
@@ -24,13 +24,13 @@
 
 namespace debug {
 
-// Highlight pixels which are flagged for recursive super-sampling
-// beyond a certain depth. Useful for debugging the anti-aliasing
-// logic.
-//
-// A value of '0' disables highlighting.
-const size_t RECURSIVE_HIGHLIGHT_DEPTH  = 0;
-const int    RECURSIVE_HIGHLIGHT_COLOUR = 0xffffff;
+  // Highlight pixels which are flagged for recursive super-sampling
+  // beyond a certain depth. Useful for debugging the anti-aliasing
+  // logic.
+  //
+  // A value of '0' disables highlighting.
+  const size_t RECURSIVE_HIGHLIGHT_DEPTH  = 0;
+  const int    RECURSIVE_HIGHLIGHT_COLOUR = 0xffffff;
 
 }  // namespace debug
 

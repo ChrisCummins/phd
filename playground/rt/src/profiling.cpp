@@ -1,6 +1,5 @@
-/* -*- c-basic-offset: 8; -*-
- *
- * Copyright (C) 2015 Chris Cummins.
+/*
+ * Copyright (C) 2015, 2016 Chris Cummins.
  *
  * This file is part of rt.
  *
@@ -31,35 +30,35 @@ static std::atomic<Counter> traceCounter;
 static std::atomic<Counter> rayCounter;
 
 void incObjectsCount(const size_t n) {
-    objectsCount += n;
+  objectsCount += n;
 }
 
 Counter getObjectsCount() {
-    return static_cast<Counter>(objectsCount);
+  return static_cast<Counter>(objectsCount);
 }
 
 void incLightsCount(const size_t n) {
-    lightsCount += n;
+  lightsCount += n;
 }
 
 Counter getLightsCount() {
-    return static_cast<Counter>(lightsCount);
+  return static_cast<Counter>(lightsCount);
 }
 
 void incTraceCount(const size_t n) {
-    traceCounter += n;
+  traceCounter += n;
 }
 
 Counter getTraceCount() {
-    return static_cast<Counter>(traceCounter);
+  return static_cast<Counter>(traceCounter);
 }
 
 void incRayCount(const size_t n) {
-    rayCounter += n;
+  rayCounter += n;
 }
 
 Counter getRayCount() {
-    return static_cast<Counter>(rayCounter);
+  return static_cast<Counter>(rayCounter);
 }
 
 }  // namespace counters

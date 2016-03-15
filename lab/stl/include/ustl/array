@@ -1,7 +1,7 @@
 // -*-c++-*-
 //
-#ifndef __USTL_ARRAY__
-#define __USTL_ARRAY__
+#ifndef USTL_ARRAY_H
+#define USTL_ARRAY_H
 
 #include <cstddef>
 #include <iterator>
@@ -49,7 +49,6 @@ namespace ustl {
 template<typename T, std::size_t _size>
 class array {
  public:
-
   ///////////////////
   // Member types: //
   ///////////////////
@@ -383,8 +382,8 @@ class array {
   //
   // Sets val as the value for all the elements in the array object.
   //
-  void fill (const value_type& val) {
-    for (auto &v: this)
+  void fill(const value_type& val) {
+    for (auto& v : this)
       v = val;
   }
 
@@ -404,7 +403,7 @@ class array {
   // many individual swap operations between the individual elements
   // as their size (see swap).
   //
-  void swap(array& x) {
+  void swap(array& x) {  // NOLINT
     auto lhs = begin();
     auto rhs = x.begin();
 
@@ -418,7 +417,6 @@ class array {
 
 
  private:
-
   //
   // Note that in case of a zero sized array, we default construct a
   // single element.
@@ -500,8 +498,8 @@ bool operator<(const array<T, N>& lhs, const array<T, N>& rhs) {
       return true;
     else if (*lit > *rit)
       return false;
-    lit++;
-    rit++;
+    ++lit;
+    ++rit;
   }
 
   return false;
@@ -527,4 +525,4 @@ bool operator>=(const array<T, N>& lhs, const array<T, N>& rhs) {
 
 }  // namespace ustl
 
-#endif  // __USTL_ARRAY__
+#endif  // USTL_ARRAY_H

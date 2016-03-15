@@ -25,7 +25,7 @@ reflections.
 
 ## License
 
-Copyright 2015 Chris Cummins.
+Copyright 2015, 2016 Chris Cummins.
 
 Released under the terms of the
 [GNU General Public License, Version 3](http://www.gnu.org/copyleft/gpl.html).

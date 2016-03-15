@@ -1,0 +1,314 @@
+// -*-c++-*-
+//
+#ifndef USTL_STACK_H
+#define USTL_STACK_H
+
+#include <deque>
+
+namespace ustl {
+
+
+//
+// LIFO stack
+//
+// Stacks are a type of container adaptor, specifically designed to
+// operate in a LIFO context (last-in first-out), where elements are
+// inserted and extracted only from one end of the container.
+//
+// stacks are implemented as containers adaptors, which are classes
+// that use an encapsulated object of a specific container class as
+// its underlying container, providing a specific set of member
+// functions to access its elements. Elements are pushed/popped from
+// the "back" of the specific container, which is known as the top of
+// the stack.
+//
+// The underlying container may be any of the standard container class
+// templates or some other specifically designed container class. The
+// container shall support the following operations:
+//
+//        empty
+//        size
+//        back
+//        push_back
+//        pop_back
+//
+// The standard container classes vector, deque and list fulfill these
+// requirements. By default, if no container class is specified for a
+// particular stack class instantiation, the standard container deque
+// is used.
+//
+template<typename T, typename Container = std::deque<T> >
+class stack {
+ public:
+  ///////////////////
+  // Member types: //
+  ///////////////////
+
+  using value_type = T;
+
+  using container_type = Container;
+
+  using reference = typename container_type::reference;
+
+  using const_reference = typename container_type::const_reference;
+
+  using size_type = size_t;
+
+
+  ///////////////////
+  // Constructors: //
+  ///////////////////
+
+  //
+  // Constructs a container adaptor whose internal container is
+  // initialized to a copy of ctnr:
+  //
+  explicit stack(const container_type& ctnr) : _container(ctnr) {}
+
+
+  //
+  // Constructs a container adaptor whose internal container acquires
+  // the value of ctnr by move-constructing it:
+  //
+  explicit stack(container_type&& ctnr = container_type())
+      : _container(ctnr) {}
+
+
+  //
+  // Constructs a container adaptor whose internal container is
+  // constructed with alloc as argument:
+  //
+  template<typename Alloc>
+  explicit stack(const Alloc& alloc)
+      : _container(alloc) {}
+
+
+  //
+  // Constructs a container adaptor whose internal container is
+  // constructed with ctnr and alloc as arguments:
+  //
+  template<typename Alloc>
+  stack(const container_type& ctnr, const Alloc& alloc)
+      : _container(ctnr, alloc) {}
+
+
+  //
+  // Constructs a container adaptor whose internal container is
+  // constructed with std::move(ctnr) and alloc as arguments:
+  //
+  template<typename Alloc>
+  stack(container_type&& ctnr, const Alloc& alloc)
+      : _container(std::move(ctnr), alloc) {}
+
+
+  //
+  // Constructs a container adaptor whose internal container is
+  // constructed with x's internal container as first argument and
+  // alloc as second.
+  //
+  template<typename Alloc>
+  stack(const stack& x, const Alloc& alloc)
+      : _container(x._container, alloc) {}
+
+
+  //
+  // Constructs a container adaptor whose internal container is
+  // constructed by moving x's internal container as first argument
+  // and passing alloc as second.
+  //
+  template<typename Alloc>
+  stack(stack&& x, const Alloc& alloc)
+      : _container(x._container, alloc) {}
+
+
+  ///////////////////////
+  // Member functions: //
+  ///////////////////////
+
+
+  //
+  // empty():
+  //
+  // Returns whether the stack is empty: i.e. whether its size is
+  // zero.
+  //
+  // This member function effectively calls member empty of the
+  // underlying container object.
+  //
+  bool empty() const {
+    return _container.empty();
+  }
+
+
+  //
+  // size():
+  //
+  // Returns the number of elements in the stack.
+  //
+  // This member function effectively calls member size of the
+  // underlying container object
+  //
+  size_type size() const {
+    return _container.size();
+  }
+
+
+  //
+  // top():
+  //
+  // Returns a reference to the top element in the stack.
+  //
+  // Since stacks are last-in first-out containers, the top element is
+  // the last element inserted into the stack.
+  //
+  // This member function effectively calls member back of the
+  // underlying container object.
+  //
+  reference& top() {
+    return _container.back();
+  }
+
+
+  const_reference& top() const {
+    return _container.back();
+  }
+
+
+  //
+  // push():
+  //
+  // Inserts a new element at the top of the stack, above its current
+  // top element. The content of this new element is initialized to a
+  // copy of val.
+  //
+  // This member function effectively calls the member function
+  // push_back of the underlying container object.
+  //
+  void push(const value_type& val) {
+    _container.push_back(val);
+  }
+
+
+  void push(value_type&& val) {
+    _container.push_back(val);
+  }
+
+
+  //
+  // emplace():
+  //
+  // Adds a new element at the top of the stack, above its current top
+  // element. This new element is constructed in place passing args as
+  // the arguments for its constructor.
+  //
+  // This member function effectively calls the member function
+  // emplace_back of the underlying container, forwarding args.
+  //
+  template<typename... Args>
+  void emplace(Args&&... args) {
+    _container.push_back(value_type{std::forward<Args>(args)...});
+  }
+
+
+  //
+  // pop():
+  //
+  // Removes the element on top of the stack, effectively reducing its
+  // size by one.
+  //
+  // The element removed is the latest element inserted into the
+  // stack, whose value can be retrieved by calling member stack::top.
+  //
+  // This calls the removed element's destructor.
+  //
+  // This member function effectively calls the member function
+  // pop_back of the underlying container object.
+  //
+  void pop() {
+    _container.pop_back();
+  }
+
+
+  //
+  // swap():
+  //
+  // Exchanges the contents of the container adaptor (*this) by those
+  // of x.
+  //
+  // This member function calls the non-member function swap
+  // (unqualified) to swap the underlying containers.
+  //
+  // The noexcept specifier matches the swap operation on the
+  // underlying container.
+  //
+  void swap(stack& x) noexcept(noexcept(std::swap(_container, x._container))) {
+    std::swap(_container, x._container);
+  }
+
+
+  ////////////////////////////////////
+  // Non-member function overloads: //
+  ////////////////////////////////////
+
+
+  //
+  // Relational operators:
+  //
+  // Performs the appropriate comparison operation between lhs and rhs.
+  //
+  // Each of these operator overloads calls the same operator on the
+  // underlying container objects.
+  //
+  friend bool operator==(const stack& lhs, const stack& rhs) {
+    return lhs._container == rhs._container;
+  }
+
+
+  friend bool operator!=(const stack& lhs, const stack& rhs) {
+    return lhs._container != rhs._container;
+  }
+
+
+  friend bool operator<(const stack& lhs, const stack& rhs) {
+    return lhs._container < rhs._container;
+  }
+
+
+  friend bool operator<=(const stack& lhs, const stack& rhs) {
+    return lhs._container <= rhs._container;
+  }
+
+
+  friend bool operator>(const stack& lhs, const stack& rhs) {
+    return lhs._container > rhs._container;
+  }
+
+
+  friend bool operator>=(const stack& lhs, const stack& rhs) {
+    return lhs._container >= rhs._container;
+  }
+
+
+ private:
+  ///////////////////////////////
+  // Private member variables: //
+  ///////////////////////////////
+
+  container_type _container;
+};
+
+
+//
+// swap():
+//
+// Exchanges the contents of x and y.
+template<typename T, typename Container>
+void swap(stack<T, Container>& x, stack<T, Container>& y)  // NOLINT
+    noexcept(noexcept(x.swap(y))) {
+  x.swap(y);
+}
+
+
+}  // namespace ustl
+
+#endif  // USTL_STACK_H

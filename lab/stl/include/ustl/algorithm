@@ -12,8 +12,8 @@
 // structure of any possible container (it never affects the size or
 // storage allocation of the container).
 //
-#ifndef __USTL_ALGORITHM__
-#define __USTL_ALGORITHM__
+#ifndef USTL_ALGORITHM_H
+#define USTL_ALGORITHM_H
 
 #include <cstddef>
 #include <memory>
@@ -107,7 +107,7 @@ InputIterator find(InputIterator first, InputIterator last, const T& val) {
   while (first != last) {
     if (*first == val)
       return first;
-    first++;
+    ++first;
   }
 
   return last;
@@ -127,7 +127,7 @@ InputIterator find_if(InputIterator first,
   while (first != last) {
     if (pred(*first))
       return first;
-    first++;
+    ++first;
   }
 
   return last;
@@ -147,7 +147,7 @@ InputIterator find_if_not(InputIterator first,
   while (first != last) {
     if (!pred(*first))
       return first;
-    first++;
+    ++first;
   }
 
   return last;
@@ -173,7 +173,7 @@ template<typename ForwardIterator1, typename ForwardIterator2,
 bool __is_subseq(ForwardIterator1 first1, ForwardIterator1 last1,
                  ForwardIterator2 first2, ForwardIterator2 last2,
                  BinaryPredicate pred) {
-  while(first1 != last1 && first2 != last2) {
+  while (first1 != last1 && first2 != last2) {
     if (!pred(*first1++, *first2++))
       return false;
   }
@@ -192,7 +192,7 @@ ForwardIterator1 find_end(ForwardIterator1 first1, ForwardIterator1 last1,
     if (__is_subseq(first1, last1, first2, last2, pred))
       last_subseq = first1;
 
-    first1++;
+    ++first1;
   }
 
   return last_subseq;
@@ -226,7 +226,7 @@ InputIterator find_first_of(InputIterator first1, InputIterator last1,
   while (first1 != last1) {
     if (ustl::find(first2, last2, *first1) != last2)
       return first1;
-    first1++;
+    ++first1;
   }
 
   return last1;
@@ -236,7 +236,8 @@ template<typename InputIterator, typename ForwardIterator>
 InputIterator find_first_of(InputIterator first1, InputIterator last1,
                             ForwardIterator first2, ForwardIterator last2) {
   using InputType = typename std::iterator_traits<InputIterator>::value_type;
-  using ForwardType = typename std::iterator_traits<ForwardIterator>::value_type;
+  using ForwardType =
+      typename std::iterator_traits<ForwardIterator>::value_type;
   auto pred = [](const InputType &a, const ForwardType &b) -> bool{
     return a == b;
   };
@@ -265,8 +266,8 @@ ForwardIterator adjacent_find(ForwardIterator first, ForwardIterator last,
     if (pred(*prev, *first))
       return prev;
 
-    prev++;
-    first++;
+    ++prev;
+    ++first;
   }
 
   return last;
@@ -292,7 +293,7 @@ count_if(InputIterator first, InputIterator last, UnaryPredicate pred) {
 
   while (first != last) {
     if (pred(*first++))
-      count++;
+      ++count;
   }
 
   return count;
@@ -336,8 +337,8 @@ mismatch(InputIterator1 first1, InputIterator1 last1,
       return std::pair<InputIterator1, InputIterator2>(first1, first2);
     }
 
-    first1++;
-    first2++;
+    ++first1;
+    ++first2;
   }
 
   return std::pair<InputIterator1, InputIterator2>(first1, first2);
@@ -408,15 +409,15 @@ bool is_permutation(ForwardIterator1 first1, ForwardIterator1 last1,
     if (in1.find(*first1) == in1.end())
       in1.insert(*first1, 0);
     else
-      in1[first1]++;
+      ++in1[first1];
 
     if (in2.find(*first2) == in2.end())
       in2.insert(*first2, 0);
     else
-      in2[first2]++;
+      ++in2[first2];
 
-    first1++;
-    first2++;
+    ++first1;
+    ++first2;
   }
 
   // If they are permutations, then the frequency tables will match.
@@ -455,7 +456,7 @@ ForwardIterator1 search(ForwardIterator1 first1, ForwardIterator1 last1,
   while (first1 != last1) {
     if (__is_subseq(first1, last1, first2, last2, pred))
       return first1;
-    first1++;
+    ++first1;
   }
 
   return last1;
@@ -489,14 +490,15 @@ ForwardIterator search_n(ForwardIterator first, ForwardIterator last,
     if (*first == val || pred(*first, val)) {
       if (!_count)
         _seq = first;
-      _count++;
-    } else
+      ++_count;
+    } else {
       _count = 0;
+    }
 
     if (_count == count)
       return _seq;
 
-    first++;
+    ++first;
   }
 
   return last;
@@ -505,7 +507,7 @@ ForwardIterator search_n(ForwardIterator first, ForwardIterator last,
 template<typename ForwardIterator, typename Size, typename T>
 ForwardIterator search_n(ForwardIterator first, ForwardIterator last,
                          Size count, const T& val) {
-  auto pred = [](const T& a, const T& b) -> bool{ return false; };
+  auto pred = [](const T&, const T&) -> bool{ return false; };
   return ustl::search_n(first, last, count, val, pred);
 }
 
@@ -535,12 +537,12 @@ OutputIterator merge(InputIterator1 first1, InputIterator1 last1,
   while (first1 != last1 && first2 != last2) {
     if (comp(*first1, *first2)) {
       *result = *first1;
-      first1++;
+      ++first1;
     } else {
       *result = *first2;
-      first2++;
+      ++first2;
     }
-    result++;
+    ++result;
   }
 
   while (first1 != last1)
@@ -578,7 +580,7 @@ void __bubble_sort(RandomAccessIterator first,
   do {
     changed = false;
 
-    for (RandomAccessIterator i = first + 1; i != last; i++) {
+    for (RandomAccessIterator i = first + 1; i != last; ++i) {
       if (comp(*i, *(i - 1))) {
         auto tmp = *(i-1);
         *(i-1) = *i;
@@ -594,21 +596,20 @@ template<typename RandomAccessIterator, typename Compare>
 void __insertion_sort(RandomAccessIterator first,
                       RandomAccessIterator last,
                       Compare comp) {
-
-  for (auto i = first; i != last; i++) {
+  for (auto i = first; i != last; ++i) {
     auto j = i;
 
     while (j != first && comp(*j, *(j - 1))) {
       auto temp = *j;
       *j = *(j - 1);
       *(j - 1) = temp;
-      j--;
+      --j;
     }
   }
 }
 
 // Merge sort.
-#define __merge_sort_bottom_out_sort __bubble_sort
+#define ustl_merge_sort_bottom_out_sort __bubble_sort
 static const size_t __merge_sort_bottom_out_threshold = 8;
 
 
@@ -619,19 +620,19 @@ void __merge_sort(RandomAccessIterator first,
   const size_t len = static_cast<size_t>(last - first);
 
   if (len <= __merge_sort_bottom_out_threshold) {
-    __merge_sort_bottom_out_sort(first, last, comp);
+    ustl_merge_sort_bottom_out_sort(first, last, comp);
   } else {
     // Split midway:
     const RandomAccessIterator mid = first + len / 2;
     using ElementType =
         typename std::pointer_traits<RandomAccessIterator>::element_type;
 
-    ustl::vector<ElementType> left(0);
-    ustl::vector<ElementType> right(0);
+    ustl::vector<ElementType> left(0);  // NOLINT
+    ustl::vector<ElementType> right(0);  // NOLINT
 
-    for (auto i = first; i != mid; i++)
+    for (auto i = first; i != mid; ++i)
       left.push_back(*i);
-    for (auto i = mid; i != last; i++)
+    for (auto i = mid; i != last; ++i)
       right.push_back(*i);
 
     __merge_sort(left.begin(), left.end(), comp);
@@ -641,6 +642,8 @@ void __merge_sort(RandomAccessIterator first,
     merge(left.begin(), left.end(), right.begin(), right.end(), first, comp);
   }
 }
+
+#undef ustl_merge_sort_bottom_out_sort
 
 
 //
@@ -698,13 +701,13 @@ void stable_sort(RandomAccessIterator first, RandomAccessIterator last) {
 template<typename ForwardIterator, typename Compare>
 bool is_sorted(ForwardIterator first, ForwardIterator last, Compare comp) {
   auto prev = first;
-  first++;
+  ++first;
 
   while (first != last) {
     if (comp(*first, *prev))
       return false;
     prev = first;
-    first++;
+    ++first;
   }
 
   return true;
@@ -753,7 +756,7 @@ constexpr T min(std::initializer_list<T> il, Compare comp) {
   while (i != il.end()) {
     if (comp(*i, _min))
       _min = *i;
-    i++;
+    ++i;
   }
 
   return _min;
@@ -795,7 +798,7 @@ constexpr T max(std::initializer_list<T> il, Compare comp) {
   while (i != il.end()) {
     if (comp(_max, *i))
       _max = *i;
-    i++;
+    ++i;
   }
 
   return _max;
@@ -824,8 +827,8 @@ constexpr T max(std::initializer_list<T> il) {
 template<typename T, typename Compare>
 constexpr std::pair<const T&, const T&> minmax(const T& a, const T& b,
                                                Compare comp) {
-  return std::pair<const T&, const T&>(ustl::min(a, b, comp),
-                                       ustl::max(a, b, comp));
+  return std::pair<const T&, const T&>(ustl::min(a, b, comp),  // NOLINT
+                                       ustl::max(a, b, comp));  // NOLINT
 }
 
 template<typename T>
@@ -846,7 +849,7 @@ constexpr std::pair<T, T> minmax(std::initializer_list<T> il, Compare comp) {
       _min = *i;
     else if (comp(_max, *i))
       _max = *i;
-    i++;
+    ++i;
   }
 
   return std::pair<const T&, const T&>(_min, _max);
@@ -860,4 +863,4 @@ constexpr std::pair<T, T> minmax(std::initializer_list<T> il) {
 
 }  // namespace ustl
 
-#endif  // __USTL_ALGORITHM__
+#endif  // USTL_ALGORITHM_H

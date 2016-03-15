@@ -4,55 +4,59 @@
  */
 #include "./ctci.h"
 
-#include <cmath>
-#include <cstdlib>
 #include <limits>
-#include <array>
-#include <iostream>
-#include <unordered_map>
-#include <string>
+#include <utility>
 
-void reverse1(char *str) {
-    // First implementation. O(n) time.
-    auto len = strlen(str) - 1;
-
-    for (size_t i = 0; i <= len / 2; i++) {
-        char c = str[i];
-        str[i] = str[len - i];
-        str[len - i] = c;
-    }
+//
+// First solution. Get the length of the string, then iterate over the
+// first half, swapping with the second half.
+//
+// O(n) time, O(1) space.
+//
+void reverse(char *str) {
+  const auto len = strlen(str) - 1;
+  for (size_t i = 0; i <= len / 2; i++)
+    std::swap(str[i], str[len - i]);  // NOLINT(build/include_what_you_use)
 }
 
 
-TEST(Reverse, reverse1) {
-    char test1[] = "abcdefg";
-    char test2[] = "abcdefg ";
+///////////
+// Tests //
+///////////
 
-    reverse1(&test1[0]);
-    reverse1(&test2[0]);
+TEST(Reverse, reverse) {
+  char test1[] = "abcdefg";
+  char test2[] = "abcdefg ";
 
-    ASSERT_STREQ("gfedcba", test1);
-    ASSERT_STREQ(" gfedcba", test2);
+  reverse(test1);
+  reverse(test2);
+
+  ASSERT_STREQ("gfedcba", test1);
+  ASSERT_STREQ(" gfedcba", test2);
 }
 
 
-static const size_t lengthMin = 8;
-static const size_t lengthMax = 10 << 10;
+////////////////
+// Benchmarks //
+////////////////
 
-void BM_reverse1(benchmark::State& state) {
-    auto len = static_cast<size_t>(state.range_x());
-    auto *t = new char[len];
+static const size_t BM_length_min = 8;
+static const size_t BM_length_max = 10 << 10;
 
-    for (size_t i = 0; i < len; i++)
-        t[i] = arc4random() % std::numeric_limits<char>::max();
+void BM_reverse(benchmark::State& state) {
+  const auto len = static_cast<size_t>(state.range_x());
+  char *t = new char[len];
 
-    while (state.KeepRunning()) {
-        reverse1(t);
-        benchmark::DoNotOptimize(t);
-    }
+  for (size_t i = 0; i < len; i++)
+    t[i] = arc4random() % std::numeric_limits<char>::max();
 
-    delete[] t;
+  while (state.KeepRunning()) {
+    reverse(t);
+    benchmark::DoNotOptimize(t[0]);
+  }
+
+  delete[] t;
 }
-BENCHMARK(BM_reverse1)->Range(lengthMin, lengthMax);
+BENCHMARK(BM_reverse)->Range(BM_length_min, BM_length_max);
 
 CTCI_MAIN();

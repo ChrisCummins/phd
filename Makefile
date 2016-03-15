@@ -1,33 +1,170 @@
+#
+# phd Makefile
+#
+# This repo uses a single monolithic build system to prepare the
+# toolchain, compile all executables, documents, etc. This Makefile
+# makes **no** guarantee of portability, although in theory it should
+# be.
+#
+
 # The default goal is...
 .DEFAULT_GOAL = all
 
-# Use V=1 argument for verbose builds
-QUIET_  = @
-QUIET   = $(QUIET_$(V))
 
-# Assume no out-of-tree builds:
-root := $(PWD)
+########################################################################
+#                       Runtime configuration
+ArgStrings =
+
+#
+# Verbosity controls. There are three levels of verbosity 0-2, set by
+# passing the desired V value to Make:
+#
+#   V=0 (default) print summary messages
+#   V=1 same as V=0, but print executed commands
+#   V=3 same as V=2, but with extra verbosity for build system debugging
+#
+ifndef V
+V = 0
+endif
+ArgStrings += "V=[0,1,2]: set verbosity level (default=0)"
+
+#
+# Colour controls:
+#
+#   C=0 disable colour formatting of messages
+#   C=1 (default) enable fancy message formatting
+#
+ifndef C
+C = 1
+endif
+ArgStrings += "C=[0,1]: enable colour message formatting (default=1)"
+
+#
+# Debug controls:
+#
+#   D=0 (default) disable debugging support in compiled executables
+#   D=1 enable debugging support in compiled executables
+#
+ifndef D
+D = 0
+endif
+ArgStrings += "D=[0,1]: enable debugging in generated files (default=0)"
+
+#
+# Optimisation controls:
+#
+#   O=0 disable optimisations in compiled executables
+#   O=1 (default) enable optimisations in compiled executables
+#
+ifndef O
+O = 1
+endif
+ArgStrings += "O=[0,1]: enable optimisations in generated files (default=1)"
+
+
+__verbosity_1_ = @
+__verbosity_1_0 = @
+
+__verbosity_2_ = @
+__verbosity_2_0 = @
+__verbosity_2_1 = @
+
+V1 = $(__verbosity_1_$(V))
+V2 = $(__verbosity_2_$(V))
+
+
+########################################################################
+#                        Static Configuration
+
+#
+# The number of threads to use:
+#
+WorkerThreads := 4
 
 SHELL := /bin/bash
-NPROC := 4
 
-comma := ,
-space :=
-space +=
-
-#
-# Configuration
-#
 AWK := awk
 EGREP := egrep
 GREP := grep
-MAKEFLAGS := -j$(NPROC)
 PYTHON2 := python2
 PYTHON3 := python3
 RM := rm -fv
 SED := sed
 
-# Targets:
+
+# Set number of worker threads.
+MAKEFLAGS := -j$(WorkerThreads)
+
+
+########################################################################
+#                         Output & Messages
+
+#
+# Output formatting
+#
+ifeq ($(C),1)
+TTYreset = $(shell tput sgr0)
+TTYbold = $(shell tput bold)
+TTYstandout = $(shell tput smso)
+TTYunderline = $(shell tput smul)
+
+TTYblack = $(shell tput setaf 0)
+TTYblue = $(shell tput setaf 4)
+TTYcyan = $(shell tput setaf 6)
+TTYgreen = $(shell tput setaf 2)
+TTYmagenta = $(shell tput setaf 5)
+TTYred = $(shell tput setaf 1)
+TTYwhite = $(shell tput setaf 7)
+TTYyellow = $(shell tput setaf 3)
+endif  # $(C)
+
+#
+# Task types.
+#
+TaskCompile = $(TTYred)
+TaskAux = $(TTYyellow)
+TaskLink = $(TTYgreen)
+TaskMisc = $(TTYblue)
+TaskInstall = $(TTYcyan)
+
+TaskNameLength := 8
+
+#
+# Print message.
+#
+# Arguments:
+#   $1 (str) Message body
+#   $2       TTY format string (optional)
+define print
+	@echo '$2$1$(TTYreset)'
+endef
+
+# Print task message.
+#
+# Arguments:
+#   $1 (str) Task name (in uppercase)
+#   $2 (str) Target path
+#   $3       TTY format string (optional)
+#
+# Example usage:
+#
+#   $(call print-task,CC,foo.c,$(TaskCompile))
+#   $(call print-task,SCRIPT,script.sh)
+define print-task
+	@printf '  $(TTYbold)$3%-$(TaskNameLength)s$(TTYreset) %s\n' '$1' '$2'
+endef
+
+
+########################################################################
+#                             Variables
+
+# Assume no out-of-tree builds:
+root := $(PWD)
+
+comma := ,
+space :=
+space +=
+
 AutotexTargets =
 BuildTargets =
 CleanFiles =
@@ -45,9 +182,20 @@ Python3SetupInstallDirs =
 Python3SetupTestDirs =
 TestTargets =
 
+#
+# Self-documentation. For every user-visible target, add a doc string
+# using the following format:
+#
+#   DocStrings += "<target>: <description>"
+#
+# These doc strings are printed by 'make help'.
+#
+DocStrings =
+
 
 ########################################################################
 #                             Functions
+
 
 # Joins elements of a list
 #
@@ -58,6 +206,7 @@ define join-with
 	$(subst $(space),$1,$(strip $2))
 endef
 
+
 # Compile C sources to object file
 #
 # Arguments:
@@ -65,9 +214,10 @@ endef
 #   $2 (str[]) C sources
 #   $3 (str[]) Flags for compiler
 define c-compile-o
-	@echo '  CC       $1'
-	$(QUIET)$(CC) $(CFlags) $3 $2 -c -o $1
+	$(call print-task,CC,$1,$(TaskCompile))
+	$(V1)$(CC) $(CFlags) $3 $2 -c -o $1
 endef
+
 
 # Compile C++ sources to object file
 #
@@ -76,11 +226,12 @@ endef
 #   $2 (str[]) C++ sources
 #   $3 (str[]) Flags for compiler
 define cxx-compile-o
-	@echo '  CXX      $1'
-	$(QUIET)$(CXX) $(CxxFlags) $3 $2 -c -o $1
+	$(call print-task,CXX,$1,$(TaskCompile))
+	$(V1)$(CXX) $(CxxFlags) $3 $2 -c -o $1
 	$(call clang-tidy,$2,$3)
 	$(call cpplint,$2)
 endef
+
 
 # Link object files to executable
 #
@@ -89,21 +240,28 @@ endef
 #   $2 (str[]) Object files
 #   $3 (str[]) Flags for linker
 define o-link
-	@echo '  LD       $1'
-	$(QUIET)$(LD) $(CxxFlags) $(LdFlags) $3 $2 -o $1
+	$(call print-task,LD,$1,$(TaskLink))
+	$(V1)$(LD) $(CxxFlags) $(LdFlags) $3 $2 -o $1
 endef
+
+
+cpplint-cmd = $(CPPLINT) $(CxxLintFlags) $1 2>&1 \
+	| grep -v '^Done processing\|^Total errors found: ' \
+	| tee $1.lint
 
 # Run cpplint on input, generating a .lint file.
 #
 # Arguments:
 #   $1 (str) C++ source/header
 define cpplint
-	$(QUIET)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
-		$(CPPLINT) $(CxxLintFlags) $1 2>&1 \
-			| grep -v '^Done processing\|^Total errors found: ' \
-			| tee $1.lint; \
-		fi
+	$(V2)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
+		test -z "$(V1)" && echo "$(cpplint-cmd)"; \
+		$(cpplint-cmd); \
+	fi
 endef
+
+
+clang-tidy-cmd = $(CLANGTIDY) $1 -- $(CxxFlags) $2
 
 # Run clang-tidy on input.
 #
@@ -111,10 +269,18 @@ endef
 #  $1 (str) source file
 #  $2 (str[]) Compilation flags
 define clang-tidy
-	$(QUIET)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
-		$(CLANGTIDY) $1 -- $(CxxFlags) $2; \
+	$(V2)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
+		test -z "$(V1)" && echo "$(clang-tidy-cmd)"; \
+		$(clang-tidy-cmd); \
 	fi
 endef
+
+
+python-setup-test-cmd = \
+	cd $2 && $(strip $1) ./setup.py test &> $2/.$(strip $1).test.log \
+	&& $(GREP) -E '^Ran [0-9]+ tests in' $2/.$(strip $1).test.log \
+	|| sed -n -e '/ \.\.\. /,$${p}' $2/.$(strip $1).test.log | \
+	grep -v '... ok'
 
 # Run python setup.py test
 #
@@ -122,14 +288,14 @@ endef
 #   $1 (str) Python executable
 #   $2 (str) Source directory
 define python-setup-test
-	@echo '  TEST    $(strip $1) $(strip $2)'
-	$(QUIET)cd $2 && $(strip $1) ./setup.py test \
-		&> $2/.$(strip $1).test.log \
-		&& $(GREP) -E '^Ran [0-9]+ tests in' \
-		$2/.$(strip $1).test.log \
-		|| sed -n -e '/ \.\.\. /,$${p}' $2/.$(strip $1).test.log | \
-		grep -v '... ok'
+	$(call print-task,TEST,$(strip $1) $(strip $2),$(TaskMisc))
+	$(V1)$(python-setup-test-cmd)
 endef
+
+
+python-setup-install-cmd = \
+	cd $2 && $(strip $1) ./setup.py install &> $2/.$(strip $1).install.log \
+	|| cat $2/.$(strip $1).install.log
 
 # Run python setup.py install
 #
@@ -137,11 +303,12 @@ endef
 #   $1 (str) Python executable
 #   $2 (str) Source directory
 define python-setup-install
-	@echo '  INSTALL $2'
-	$(QUIET)cd $2 && $(strip $1) ./setup.py install \
-		&> $2/.$(strip $1).install.log \
-		|| cat $2/.$(strip $1).install.log
+	$(call print-task,INSTALL,$2,$(TaskInstall))
+	$(V1)$(python-setup-install-cmd)
 endef
+
+
+python-setup-clean-cmd = cd $$dir && $1 ./setup.py clean >/dev/null
 
 # Run python setup.py clean
 #
@@ -149,14 +316,16 @@ endef
 #   $1 (str) Python executable
 #   $2 (str) Source directory
 define python-setup-clean
-	for dir in $2; do \
-		cd $$dir && $1 ./setup.py clean >/dev/null; \
+	$(V2)for dir in $2; do \
+		test -z "$(V1)" && echo "$(python-setup-clean-cmd)"; \
+		$(python-setup-clean-cmd); \
 	done
 endef
 
 
 ########################################################################
 #                             Targets
+
 
 #
 # docs/
@@ -176,25 +345,62 @@ AutotexTargets += \
 #
 extern := $(root)/extern
 
+
 #
 # extern/benchmark
 #
 GoogleBenchmark = $(extern)/benchmark/build/src/libbenchmark.a
-GoogleBenchmark_CxxFlags = -I$(extern)/benchmark/include
+GoogleBenchmark_CxxFlags = \
+	-I$(extern)/benchmark/include -Wno-global-constructors
 GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
 
 $(GoogleBenchmark):
-	@echo '  BUILD    $@'
-	$(QUIET)mkdir -pv $(extern)/benchmark/build
-	$(QUIET)cd $(extern)/benchmark/build \
-		&& cmake .. \
-		&& $(MAKE)
+	$(call print-task,BUILD,$@,$(TaskMisc))
+	$(V1)mkdir -pv $(extern)/benchmark/build
+	$(V1)cd $(extern)/benchmark/build && cmake .. && $(MAKE)
 
 .PHONY: distclean-googlebenchmark
 distclean-googlebenchmark:
-	$(QUIET)$(RM) -r $(extern)/benchmark/build
+	$(V1)$(RM) -r $(extern)/benchmark/build
 
 DistcleanTargets += distclean-googlebenchmark
+
+
+#
+# extern/boost
+#
+Boost = $(extern)/boost/boost/system
+BoostDir = $(extern)/boost
+BoostConfigDir = $(tools)
+
+Boost_CxxFlags = -I$(extern)/boost/boost
+Boost_LdFlags = -L$(BoostDir)/stage/lib
+
+Boost_filesystem_CxxFlags = $(Boost_CxxFlags)
+Boost_filesystem_LdFlags = $(Boost_LdFlags) -lboost_filesystem -lboost_system
+
+$(Boost)-cmd = \
+	cd $(BoostDir) && \
+	./bootstrap.sh --prefix=$(BoostBuild) cxxflags="-stdlib=libc++" stage \
+	&& BOOST_BUILD_PATH=$(BoostConfigDir) \
+	./b2 --prefix=$(BoostBuild) threading=multi \
+	link=static runtime-link=static \
+	cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++"
+
+$(Boost):
+	$(call print-task,BUILD,boost,$(TaskMisc))
+	$(V1)mkdir -pv $(BoostBuild)
+	$(V1)$($(Boost)-cmd)
+
+distclean-boost-cmd = \
+	cd $(BoostDir) && ./b2 clean \
+	&& find . -name '*.a' -o -name '*.o' -exec rm {} \;
+
+.PHONY: distclean-boost
+distclean-boost:
+	$(V1)$(distclean-boost-cmd)
+
+DistcleanTargets += distclean-boost
 
 
 #
@@ -204,24 +410,43 @@ GoogleTest = $(extern)/googletest-build/libgtest.a
 GoogleTest_CxxFlags = -I$(extern)/googletest/googletest/include
 GoogleTest_LdFlags = -L$(extern)/googletest-build -lgtest
 
+$(GoogleTest)-cmd = \
+	cd $(extern)/googletest-build \
+	&& cmake ../googletest/googletest && $(MAKE)
+
 $(GoogleTest):
-	@echo '  BUILD    $@'
-	$(QUIET)mkdir -pv $(extern)/googletest-build
-	$(QUIET)cd $(extern)/googletest-build \
-		&& cmake ../googletest/googletest \
-		&& $(MAKE)
+	$(call print-task,BUILD,$@,$(TaskMisc))
+	$(V1)mkdir -pv $(extern)/googletest-build
+	$(V1)$($(GoogleTest)-cmd)
 
 .PHONY: distclean-googletest
 distclean-googletest:
-	$(QUIET)$(RM) -r $(extern)/googletest-build
+	$(V1)$(RM) -r $(extern)/googletest-build
 
 DistcleanTargets += distclean-googletest
+
+
+#
+# extern/opencl
+#
+OpenCL_CFlags = -I$(extern)/opencl/include
+OpenCL_CxxFlags = $(OpenCL_CFlags)
+OpenCL_LdFlags = -framework OpenCL
+OpenCL = $(extern)/opencl/include/cl.hpp
+
+
+#
+# extern/triSYCL
+#
+TriSYCL_CxxFlags = -I$(extern)/triSYCL/include
+TriSYCL = $(extern)/triSYCL/include/CL/sycl.hpp
 
 
 #
 # lab/
 #
 lab := $(root)/lab
+
 
 #
 # lab/stl/
@@ -230,35 +455,41 @@ StlComponents = \
 	algorithm \
 	array \
 	forward_list \
+	list \
 	map \
+	stack \
 	unordered_map \
 	vector \
 	$(NULL)
 
 StlHeaders = $(addprefix $(lab)/stl/include/ustl/,$(StlComponents))
+CppLintSources += $(StlHeaders)
 Stl_CxxFlags = -I$(lab)/stl/include
 
 # Stl unit tests:
 StlTestsSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/tests/,$(StlComponents)))
 StlTestsObjects = $(patsubst %.cpp,%.o,$(StlTestsSources))
-$(StlTestsObjects): $(StlTestsSources) $(StlHeaders) $(GoogleBenchmark)
-$(lab)/stl/tests/tests: $(StlTestsObjects)
+$(StlTestsObjects): $(StlHeaders) $(phd)
+$(lab)/stl/tests/%.o: $(lab)/stl/tests/%.cpp
 
+$(lab)/stl/tests/tests: $(StlTestsObjects)
 CxxTargets += $(lab)/stl/tests/tests
-$(lab)/stl/tests_CxxFlags = $(Stl_CxxFlags) $(GoogleTest_CxxFlags)
-$(lab)/stl/tests_LdFlags = $(GoogleTest_LdFlags)
+$(lab)/stl/tests_CxxFlags = $(Stl_CxxFlags) $(phd_CxxFlags)
+$(lab)/stl/tests_LdFlags = $(phd_LdFlags)
 
 # Stl benchmarks:
 StlBenchmarksSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/benchmarks/,$(StlComponents)))
 StlBenchmarksObjects = $(patsubst %.cpp,%.o,$(StlBenchmarksSources))
-$(StlBenchmarksObjects): $(StlBenchmarksSources) $(StlHeaders) $(GoogleBenchmark)
-$(lab)/stl/benchmarks/benchmarks: $(StlBenchmarksObjects)
+$(StlBenchmarksObjects): $(StlHeaders) $(phd)
+$(lab)/stl/benchmarks/%.o: $(lab)/stl/benchmarks/%.cpp
 
+$(lab)/stl/benchmarks/benchmarks: $(StlBenchmarksObjects)
 CxxTargets += $(lab)/stl/benchmarks/benchmarks
-$(lab)/stl/benchmarks_CxxFlags = $(Stl_CxxFlags) $(GoogleBenchmark_CxxFlags)
-$(lab)/stl/benchmarks_LdFlags = $(GoogleBenchmark_LdFlags)
+$(lab)/stl/benchmarks_CxxFlags = $(Stl_CxxFlags) $(phd_CxxFlags)
+$(lab)/stl/benchmarks_LdFlags = $(phd_LdFlags)
+
 
 #
 # learn/
@@ -270,88 +501,147 @@ learn := $(root)/learn
 # learn/atc++/
 #
 CxxTargets += \
+	$(learn)/atc++/arrays \
 	$(learn)/atc++/benchmark-argument-type \
 	$(learn)/atc++/constructors \
+	$(learn)/atc++/functional \
+	$(learn)/atc++/hash_map \
+	$(learn)/atc++/inheritance \
+	$(learn)/atc++/lambdas \
 	$(learn)/atc++/myvector \
+	$(learn)/atc++/size-of \
+	$(learn)/atc++/smart-ptr \
 	$(learn)/atc++/strings \
+	$(learn)/atc++/templates \
 	$(learn)/atc++/user-input \
+	$(learn)/atc++/value-categories \
 	$(NULL)
 
-$(learn)/atc++/benchmark-argument-type.o_CxxFlags = $(GoogleBenchmark_CxxFlags)
-$(learn)/atc++/benchmark-argument-type_LdFlags = $(GoogleBenchmark_LdFlags)
-$(learn)/atc++/benchmark-argument-type.o: $(GoogleBenchmark)
+$(learn)/atc++_CxxFlags = $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
+$(learn)/atc++_LdFlags = $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
+$(wildcard $(learn)/atc++/%.o): $(GoogleTest)
 
-$(learn)/atc++/constructors.o_CxxFlags = $(GoogleTest_CxxFlags)
-$(learn)/atc++/constructors_LdFlags = $(GoogleTest_LdFlags)
-$(learn)/atc++/constructors.o: $(GoogleTest)
+
+#
+# learn/boost/
+#
+LearnBoostCxxSources = $(wildcard $(learn)/boost/*.cpp)
+LearnBoostCxxObjects = $(patsubst %.cpp,%.o,$(LearnBoostCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(LearnBoostCxxSources))
+
+$(learn)/boost_CxxFlags = $(Boost_filesystem_CxxFlags)
+$(learn)/boost_LdFlags = $(Boost_filesystem_LdFlags) -lcrypto -lssl
+$(LearnBoostCxxObjects): $(Boost)
 
 
 #
 # learn/challenges/
 #
-CxxTargets += \
-	$(learn)/challenges/001-int-average \
-	$(learn)/challenges/006-gray-code \
-	$(learn)/challenges/008-linked-list \
-	$(NULL)
 
-$(learn)/challenges_CxxFlags = \
-	$(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags)
-$(learn)/challenges_LdFlags = \
-	$(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
-$(learn)/challenges/01-int-average.o: $(GoogleBenchmark) $(GoogleTest)
+# C++ solutions:
+ChallengesCxxSources = $(wildcard $(learn)/challenges/*.cpp)
+ChallengesCxxObjects = $(patsubst %.cpp,%.o,$(ChallengesCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(ChallengesCxxSources))
+
+DontLint += $(learn)/challenges/009-longest-substr.cpp
+
+$(learn)/challenges/011-big-mandelbrot.o_CxxFlags = $(OpenCL_CxxFlags)
+$(learn)/challenges/011-big-mandelbrot_LdFlags = $(OpenCL_LdFlags)
+$(learn)/challenges/011-big-mandelbrot.o: $(OpenCL)
+
+$(learn)/challenges_CxxFlags = $(phd_CxxFlags)
+$(learn)/challenges_LdFlags = $(phd_LdFlags)
+$(ChallengesCxxObjects): $(phd)
 
 
 #
 # learn/ctci/
 #
-CtCiTargets = \
-	$(learn)/ctci/0101-unique-chars-in-string \
-	$(learn)/ctci/0102-reverse-string \
-	$(learn)/ctci/0103-permutations \
-	$(learn)/ctci/0104-escape-string \
-	$(learn)/ctci/0105-string-compression \
-	$(learn)/ctci/0107-matrix-zero \
-	$(learn)/ctci/0108-string-rotation \
-	$(learn)/ctci/0201-list-remove-dups \
-	$(learn)/ctci/0202-linked-list-k-last \
-	$(learn)/ctci/0302-stack-min \
-	$(learn)/ctci/0402-directed-graph-routefinder \
-	$(learn)/ctci/0502-binary-double \
-	$(learn)/ctci/1101-merge-arrays \
-	$(learn)/ctci/1102-sort-anagrams \
-	$(learn)/ctci/1301-last-k-lines \
-	$(learn)/ctci/1307-tree-copy \
-	$(learn)/ctci/1310-2d-alloc \
-	$(learn)/ctci/1701-num-swap \
-	$(learn)/ctci/1702-tic-tac-toe \
-	$(NULL)
 
-CxxTargets += $(CtCiTargets)
+# C++ solutions:
+CtCiCxxSources = $(wildcard $(learn)/ctci/*.cpp)
+CtCiCxxObjects = $(patsubst %.cpp,%.o,$(CtCiCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(CtCiCxxSources))
 
 $(learn)/ctci_CxxFlags = $(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags)
 $(learn)/ctci_LdFlags = $(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
-CtCiObjects = $(addsuffix .o,$(CtCiTargets))
-$(CtCiObjects): $(GoogleBenchmark) $(GoogleTest)
+$(CtCiCxxObjects): $(GoogleBenchmark) $(GoogleTest)
 
 
 #
 # learn/expert_c/
 #
-CTargets += \
-	$(learn)/expert_c/cdecl \
-	$(learn)/expert_c/computer_dating \
-	$(NULL)
+ExpertCSources = $(wildcard $(learn)/expert_c/*.c)
+CTargets += $(patsubst %.c,%,$(ExpertCSources))
+
+#
+# learn/hoocl/
+#
+
+# Common files:
+HooclCommonHeaders = $(wildcard $(learn)/hoocl/include/*.h)
+HooclCCommonSources = $(wildcard $(learn)/hoocl/src/*.c)
+HooclCCommonObjects = $(patsubst %.c,%.o,$(HooclCCommonSources))
+$(learn)/hoocl/src_CFlags = $(OpenCL_CFlags)
+$(HooclCCommonObjects): $(OpenCL) $(HooclCommonHeaders)
+
+# C solutions:
+HooclCSources = $(wildcard $(learn)/hoocl/*.c)
+HooclCObjects = $(patsubst %.c,%.o,$(HooclCSources))
+CTargets += $(patsubst %.c,%,$(HooclCSources))
+$(HooclCObjects): $(OpenCL) $(HooclCCommonObjects) $(HooclCommonHeaders)
+
+# C++ solutions:
+HooclCxxSources = $(wildcard $(learn)/hoocl/*.cpp)
+HooclCxxObjects = $(patsubst %.cpp,%.o,$(HooclCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(HooclCxxSources))
+
+$(learn)/hoocl_CFlags = $(OpenCL_CFlags) -I$(learn)/hoocl/include
+$(learn)/hoocl_CxxFlags = $(OpenCL_CxxFlags) -I$(learn)/hoocl/include
+$(learn)/hoocl_LdFlags = $(OpenCL_LdFlags) $(HooclCCommonObjects)
+$(HooclCxxObjects): $(OpenCL)
+
+
+#
+# learn/triSYCL/
+#
+LearnTriSYCLCxxSources = $(wildcard $(learn)/triSYCL/*.cpp)
+LearnTriSYCLCxxObjects = $(patsubst %.cpp,%.o,$(LearnTriSYCLCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(LearnTriSYCLCxxSources))
+
+$(learn)/triSYCL_CxxFlags = $(TriSYCL_CxxFlags) $(phd_CxxFlags)
+$(learn)/triSYCL_LdFlags = $(TriSYCL_CxxFlags) $(phd_LdFlags)
+$(LearnTriSYCLCxxObjects): $(TriSYCL) $(phd)
+
+
+#
+# learn/pc
+#
+
+# C++ solutions:
+LearnPcCxxSources = $(wildcard $(learn)/pc/*.cpp)
+LearnPcCxxObjects = $(patsubt %.cpp,%.o,$(LearnPcCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(LearnPcCxxSources))
+
+$(learn)/pc_CxxFlags = $(phd_CxxFlags)
+$(learn)/pc_LdFlags = $(phd_LdFlags)
+$(LearnPcCxxObjects): $(phd)
 
 
 #
 # playground/
 #
+playground := $(root)/playground
+
+#
+# playground/r/
+#
+CxxTargets += $(playground)/r/main
 
 #
 # playground/rt/
 #
-RayTracerDir = $(root)/playground/rt
+RayTracerDir = $(playground)/rt
 RayTracerLib = $(RayTracerDir)/src/librt.so
 
 CxxTargets += \
@@ -366,11 +656,12 @@ $(RayTracerDir)/examples/example2: \
 		$(RayTracerLib) \
 		$(NULL)
 
-$(RayTracerDir)/examples/example2.cpp: \
-		$(RayTracerDir)/examples/example2.rt \
-		$(RayTracerDir)/scripts/mkscene.py
-	@echo "  MKSCENE  $@"
-	$(QUIET)$(RayTracerDir)/scripts/mkscene.py $< $@ >/dev/null
+$(RayTracerDir)/examples/example2.cpp: $(RayTracerDir)/examples/example2.rt
+
+# Generate scene files using mkscene script.
+%.cpp: %.rt $(RayTracerDir)/scripts/mkscene.py
+	$(call print-task,MKSCENE,$@,$(TaskAux))
+	$(V1)$(RayTracerDir)/scripts/mkscene.py $< $@ >/dev/null
 
 # Don't run linter on generated file:
 DontLint += $(RayTracerDir)/examples/example2.cpp
@@ -391,7 +682,7 @@ RayTracerHeaders = \
 CppLintSources += $(RayTracerHeaders)
 
 RayTracerSources = $(wildcard $(RayTracerDir)/src/*.cpp)
-RayTracerObjects = $(patsubst %.cpp, %.o, $(RayTracerSources))
+RayTracerObjects = $(patsubst %.cpp,%.o,$(RayTracerSources))
 
 $(RayTracerObjects): $(RayTracerHeaders) $(toolchain)
 
@@ -407,6 +698,7 @@ $(RayTracerLib): $(RayTracerObjects)
 
 CleanFiles += $(RayTracerObjects) $(RayTracerLib)
 
+
 #
 # playground/sc/
 #
@@ -416,16 +708,34 @@ CxxTargets += $(root)/playground/sc/sc
 #
 # src/
 #
+src = $(root)/src
 
+#
 # src/labm8
-Python2SetupTestDirs += $(root)/src/labm8
-Python2SetupInstallDirs += $(root)/src/labm8
-Python3SetupTestDirs += $(root)/src/labm8
-Python3SetupInstallDirs += $(root)/src/labm8
+#
+Python2SetupTestDirs += $(src)/labm8
+Python2SetupInstallDirs += $(src)/labm8
+Python3SetupTestDirs += $(src)/labm8
+Python3SetupInstallDirs += $(src)/labm8
 
+
+#
 # src/omnitune
-Python2SetupTestDirs += $(root)/src/omnitune
-Python2SetupInstallDirs += $(root)/src/omnitune
+#
+Python2SetupTestDirs += $(src)/omnitune
+Python2SetupInstallDirs += $(src)/omnitune
+
+
+#
+# src/phd
+#
+phdHeaders = $(wildcard $(src)/phd/include/*)
+phd_CxxFlags = \
+	-I$(src)/phd/include $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
+phd_LdFlags = $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
+phd = $(phdHeaders)
+$(phd): $(GoogleBenchmark) $(GoogleTest)
+
 
 #
 # thesis/
@@ -435,6 +745,7 @@ AutotexTargets += $(root)/thesis/thesis.pdf
 
 ########################################################################
 #                         Build rules
+
 
 #
 # C
@@ -451,41 +762,35 @@ CObjects: $(CSources)
 
 CleanFiles += $(CTargets) $(CObjects)
 
+# Compiler flags:
+COptimisationFlags_0 = -O0
+COptimisationFlags_1 = -O2
+COptimisationFlags = $(COptimisationFlags_$(O))
+
+# Debug flags:
+CDebugFlags_1 = -g
+CDebugFlags = $(CDebugFlags_$(D))
+
 CFlags = \
-	-O2 \
+	$(COptimisationFlags) \
+	$(CDebugFlags) \
 	-std=c11 \
 	-pedantic \
-	-Wall \
-	-Wextra \
-	-Wcast-align \
-	-Wcast-qual \
-	-Wctor-dtor-privacy \
-	-Wdisabled-optimization \
-	-Wformat=2 \
-	-Winit-self \
-	-Winline \
-	-Wmissing-declarations \
-	-Wmissing-include-dirs \
-	-Wno-div-by-zero \
-	-Wno-main \
-	-Wno-missing-braces \
+	-Weverything \
+	-Wno-bad-function-cast \
+	-Wno-double-promotion \
+	-Wno-missing-prototypes \
+	-Wno-missing-variable-declarations \
 	-Wno-unused-parameter \
-	-Wold-style-cast \
-	-Woverloaded-virtual \
-	-Wredundant-decls \
-	-Wshadow \
-	-Wsign-conversion \
-	-Wsign-promo \
-	-Wstrict-overflow=5 \
-	-Wswitch-default \
-	-Wundef \
-	-Wwrite-strings \
 	$(NULL)
 
 %.o: %.c
 	$(call c-compile-o,$@,$<,\
 		$($(patsubst %/,%,$@)_CFlags) \
 		$($(patsubst %/,%,$(dir $@))_CFlags))
+
+c: $(CTargets)
+DocStrings += "c: build all C targets"
 
 
 #
@@ -505,42 +810,45 @@ CxxObjects: $(CxxSources)
 CleanFiles += $(CxxTargets) $(CxxObjects)
 
 # Compiler flags:
+
+# Inherit optimisation/debug flags from C config:
+CxxOptimisationFlags_$(O) = $(COptimisationFlags_$(O))
+CxxOptimisationFlags = $(CxxOptimisationFlags_$(O))
+
+CxxDebugFlags_$(D) = $(CDebugFlags_$(D))
+CxxDebugFlags = $(CxxDebugFlags_$(D))
+
 CxxFlags = \
-	-O2 \
-	-std=c++14 \
+	$(CxxOptimisationFlags) \
+	$(CxxDebugFlags) \
+	-std=c++1z \
 	-stdlib=libc++ \
 	-pedantic \
-	-Wall \
-	-Wextra \
-	-Wcast-align \
-	-Wcast-qual \
-	-Wctor-dtor-privacy \
-	-Wdisabled-optimization \
-	-Wformat=2 \
-	-Winit-self \
-	-Winline \
-	-Wmissing-declarations \
-	-Wmissing-include-dirs \
-	-Wno-div-by-zero \
-	-Wno-main \
+	-Weverything \
+	-Wno-c++98-compat \
+	-Wno-c++98-compat-pedantic \
+	-Wno-documentation \
+	-Wno-documentation-unknown-command \
+	-Wno-double-promotion \
+	-Wno-exit-time-destructors \
+	-Wno-global-constructors \
 	-Wno-missing-braces \
+	-Wno-missing-prototypes \
+	-Wno-missing-variable-declarations \
+	-Wno-padded \
+	-Wno-switch-enum \
 	-Wno-unused-parameter \
-	-Wold-style-cast \
-	-Woverloaded-virtual \
-	-Wredundant-decls \
-	-Wshadow \
-	-Wsign-conversion \
-	-Wsign-promo \
-	-Wstrict-overflow=5 \
-	-Wswitch-default \
-	-Wundef \
-	-Wwrite-strings \
+	-Wno-weak-vtables \
 	$(NULL)
 
 %.o: %.cpp
 	$(call cxx-compile-o,$@,$<,\
 		$($(patsubst %/,%,$@)_CxxFlags) \
 		$($(patsubst %/,%,$(dir $@))_CxxFlags))
+
+cpp: $(CxxTargets)
+DocStrings += "cpp: build all C++ targets"
+
 
 #
 # Cpplint
@@ -565,9 +873,13 @@ CppLintTargets = $(addsuffix .lint, $(CppLintSources))
 BuildTargets += $(CppLintTargets)
 CleanFiles += $(CppLintTargets)
 
-%.h.lint: %.h
-	@echo '  LINT     $@'
+%.lint: %
+	$(call print-task,LINT,$@,$(TaskAux))
 	$(call cpplint,$<)
+
+lint: $(CppLintTargets)
+DocStrings += "lint: build all lint files"
+
 
 #
 # Linker
@@ -595,10 +907,10 @@ AutotexDirs = $(dir $(AutotexTargets))
 AutotexDepFiles = $(addsuffix .autotex.deps, $(AutotexDirs))
 AutotexLogFiles = $(addsuffix .autotex.log, $(AutotexDirs))
 
+# Autotex does it's own dependency analysis, so always run it:
 .PHONY: $(AutotexTargets)
 $(AutotexTargets):
-	@$(AUTOTEX) make $(patsubst %.pdf,%,$@)
-# Autotex does it's own dependency analysis, so always run it:
+	$(V2)$(AUTOTEX) make $(patsubst %.pdf,%,$@)
 
 # File extensions to remove in LaTeX build directories:
 LatexBuildfileExtensions = \
@@ -653,9 +965,12 @@ CleanFiles += \
 	$(LatexCleanFiles) \
 	$(NULL)
 
+tex: $(AutotexTargets)
+DocStrings += "tex: build all LaTeX targets"
+
 
 #
-# Python
+# Python (2 and 3)
 #
 Python2SetupTestLogs = $(addsuffix /.python2.test.log, \
 	$(Python2SetupTestDirs))
@@ -697,8 +1012,8 @@ Python3CleanDirs = $(sort $(Python3SetupTestDirs) $(Python3SetupInstallDirs))
 
 .PHONY: clean-python
 clean-python:
-	$(QUIET)$(call python-setup-clean,$(PYTHON2),$(Python2CleanDirs))
-	$(QUIET)$(call python-setup-clean,$(PYTHON3),$(Python3CleanDirs))
+	$(V1)$(call python-setup-clean,$(PYTHON2),$(Python2CleanDirs))
+	$(V1)$(call python-setup-clean,$(PYTHON3),$(Python3CleanDirs))
 
 CleanTargets += clean-python
 
@@ -714,12 +1029,14 @@ CleanFiles += \
 # Testing
 #
 test: $(TestTargets)
+DocStrings += "test: run all tests"
 
 
 #
 # Install
 #
 install: $(InstallTargets)
+DocStrings += "install: install files"
 
 
 #
@@ -738,31 +1055,41 @@ $(CXX): $(toolchain)
 $(CxxTargets): $(CXX)
 $(CxxObjects): $(CXX)
 
+$(toolchain)-cmd = \
+	cd $(LlvmBuild) \
+	&& cmake $(LlvmSrc) -DCMAKE_BUILD_TYPE=Release \
+	&& $(MAKE)
+
 $(toolchain):
-	@echo "Bootstrapping! Go enjoy a coffee, this will take a while."
-	$(QUIET)mkdir -vp $(LlvmBuild)
-	$(QUIET)cd $(LlvmBuild) \
-		&& cmake $(LlvmSrc) -DCMAKE_BUILD_TYPE=Release \
-		&& $(MAKE)
-	$(QUIET)date > $(toolchain)
+	$(call print,Bootstrapping! Go enjoy a coffee, this will take a while.)
+	$(V1)mkdir -vp $(LlvmBuild)
+	$(V1)$($(toolchain)-cmd)
+	$(V1)date > $(toolchain)
 
 .PHONY: distclean-toolchain
 distclean-toolchain:
-	$(QUIET)$(RM) $(toolchain)
-	$(QUIET)$(RM) -r $(LlvmBuild)
+	$(V1)$(RM) $(toolchain)
+	$(V1)$(RM) -r $(LlvmBuild)
 
 DistcleanTargets += distclean-toolchain
+
+toolchain: $(toolchain)
+DocStrings += "toolchain: build toolchain"
 
 
 #
 # Git
 #
-BuildTargets += $(root)/.git/hooks/pre-push
+GitTargets = $(root)/.git/hooks/pre-push
+BuildTargets += $(GitTargets)
 
 # Install pre-commit hook:
 $(root)/.git/hooks/pre-push: $(root)/tools/pre-push
-	@echo '  GIT     $@'
-	$(QUIET)cp $< $@
+	$(call print-task,GIT,$@,$(TaskMisc))
+	$(V1)cp $< $@
+
+git: $(GitTargets)
+DocStrings += "git: configure version control"
 
 
 #
@@ -770,34 +1097,61 @@ $(root)/.git/hooks/pre-push: $(root)/tools/pre-push
 #
 .PHONY: clean distclean
 clean: $(CleanTargets)
-	$(QUIET)$(RM) $(sort $(CleanFiles))
+	$(V1)$(RM) $(sort $(CleanFiles))
+DocStrings += "clean: remove generated files"
 
 distclean: clean $(DistcleanTargets)
-	$(QUIET)$(RM) $(sort $(DistcleanFiles))
-
-#
-# Watch
-#
-WATCH := $(root)/tools/watchr/watchr.js
-
-.PHONY: watch
-watch:
-	$(QUIET)$(WATCH)
+	$(V1)$(RM) $(sort $(DistcleanFiles))
+DocStrings += "distclean: remove *all* generated files and toolchain"
 
 
 #
-# All
+# All.
 #
 all: $(BuildTargets)
+DocStrings += "all: build everything"
 
+
+#
+# Help & documentation
+#
+
+# List all build files:
+.PHONY: ls-files
+ls-files:
+	$(V2)$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
+	| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
+	| sort --ignore-case \
+	| grep '^/'
+DocStrings += "ls-files: show all files which are built by Makefile"
+
+
+# List all build targets:
+.PHONY: ls-targets
+ls-targets:
+	$(V2)$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
+		| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
+		| sort --ignore-case \
+		| egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
+DocStrings += "ls-targets: show all build targets"
+
+
+# Print doc strings:
 .PHONY: help
 help:
-	@echo "Build targets:"
-	@echo
-	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
-		| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
-		| sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' \
-		| sed 's/^/    /'
-
-foo:
-	@echo "$(lab)/stl/include/ustl/$(patsubst %.o,%,$(notdir $(lab)/stl/test/algorithm.o))"
+	$(V2)echo "make targets:"
+	$(V2)echo
+	$(V2)(for var in $(DocStrings); do echo $$var; done) \
+		| sort --ignore-case | while read var; do \
+		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
+		echo $$var | cut -d':' -f2-; \
+	done
+	$(V2)echo
+	$(V2)echo "make arguments:"
+	$(V2)echo
+	$(V2)(for var in $(ArgStrings); do echo $$var; done) \
+		| sort --ignore-case | while read var; do \
+		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
+		echo $$var | cut -d':' -f2-; \
+	done
+	$(V2)echo

@@ -2,14 +2,10 @@
 //
 // Common test header.
 //
-#ifndef __USTL_TESTS_H__
-#define __USTL_TESTS_H__
+#ifndef USTL_TESTS_H
+#define USTL_TESTS_H
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wundef"
-#include <gtest/gtest.h>
-#pragma GCC diagnostic pop
+#include <phd/test>
 
 //
 // Helper functions & objects.
@@ -27,7 +23,16 @@ class Comparable {
   Comparable() : data() {}
   explicit Comparable(const T &_data) : Comparable(_data, 0) {}
   Comparable(const T &_data, const T &_nc) : data(_data), nc(_nc) {}
+  Comparable(const Comparable& rhs) : data(rhs.data), nc(rhs.nc) {}
+  Comparable(Comparable&& rhs)
+      : data(std::move(rhs.data)), nc(std::move(rhs.nc)) {}
   ~Comparable() {}
+
+  Comparable& operator=(const Comparable& rhs) {
+    data = rhs.data;
+    nc = rhs.nc;
+    return *this;
+  }
 
   bool operator<(const Comparable &rhs) const { return data < rhs.data; }
   bool operator==(const Comparable &rhs) const { return data == rhs.data; }
@@ -53,4 +58,4 @@ bool vector_equal(const VectorType &v, std::initializer_list<T> il) {
   return true;
 }
 
-#endif  // __USTL_TESTS_H__
+#endif  // USTL_TESTS_H
