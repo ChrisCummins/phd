@@ -57,6 +57,13 @@ O_default := 1
 O ?= $(O_default)
 ArgStrings += "O=[0,1]: enable optimisations in generated files (default=$(O_default))"
 
+#
+# Threading controls:
+#
+threads_default := 4
+threads ?= $(threads_default)
+ArgStrings += "threads=[1+]: set number of build threads (default=$(threads_default))"
+
 
 __verbosity_1_ = @
 __verbosity_1_0 = @
@@ -82,8 +89,8 @@ SED ?= sed
 SHELL ?= /bin/bash
 
 
-# Set number of worker threads.
-MAKEFLAGS := -j$(WorkerThreads)
+# Non-configurable;
+MAKEFLAGS := -j$(threads)
 
 
 ########################################################################
