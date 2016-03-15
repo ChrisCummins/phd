@@ -18,8 +18,7 @@
 #
 
 # The default goal is...
-default_target := all
-.DEFAULT_GOAL = $(default_target)
+.DEFAULT_GOAL = all
 
 
 ########################################################################
@@ -1182,7 +1181,7 @@ help:
 		echo $$var | cut -d':' -f2-; \
 	done
 	$(V2)echo
-	$(V2)echo "values for targets (default=$(default_target)):"
+	$(V2)echo "values for targets (default=all):"
 	$(V2)echo
 	$(V2)(for var in $(DocStrings); do echo $$var; done) \
 		| sort --ignore-case | while read var; do \
