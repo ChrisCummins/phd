@@ -19,36 +19,33 @@ ArgStrings =
 # Verbosity controls. There are three levels of verbosity 0-2, set by
 # passing the desired V value to Make:
 #
-#   V=0 (default) print summary messages
-#   V=1 same as V=0, but print executed commands
+#   V=0 print summary messages
+#   V=1 same as V=0, but also print executed commands
 #   V=3 same as V=2, but with extra verbosity for build system debugging
 #
-ifndef V
-V = 0
-endif
-ArgStrings += "V=[0,1,2]: set verbosity level (default=0)"
+V_default := 0
+V ?= $(V_default)
+ArgStrings += "V=[0,1,2]: set verbosity level (default=$(V_default))"
 
 #
 # Colour controls:
 #
 #   C=0 disable colour formatting of messages
-#   C=1 (default) enable fancy message formatting
+#   C=1 enable fancy message formatting
 #
-ifndef C
-C = 1
-endif
-ArgStrings += "C=[0,1]: enable colour message formatting (default=1)"
+C_default := 1
+C ?= $(C_default)
+ArgStrings += "C=[0,1]: enable colour message formatting (default=$(C_default))"
 
 #
 # Debug controls:
 #
-#   D=0 (default) disable debugging support in compiled executables
+#   D=0 disable debugging support in compiled executables
 #   D=1 enable debugging support in compiled executables
 #
-ifndef D
-D = 0
-endif
-ArgStrings += "D=[0,1]: enable debugging in generated files (default=0)"
+D_default := 0
+D ?= $(D_default)
+ArgStrings += "D=[0,1]: enable debugging in generated files (default=$(D_default))"
 
 #
 # Optimisation controls:
@@ -56,10 +53,9 @@ ArgStrings += "D=[0,1]: enable debugging in generated files (default=0)"
 #   O=0 disable optimisations in compiled executables
 #   O=1 (default) enable optimisations in compiled executables
 #
-ifndef O
-O = 1
-endif
-ArgStrings += "O=[0,1]: enable optimisations in generated files (default=1)"
+O_default := 1
+O ?= $(O_default)
+ArgStrings += "O=[0,1]: enable optimisations in generated files (default=$(O_default))"
 
 
 __verbosity_1_ = @
