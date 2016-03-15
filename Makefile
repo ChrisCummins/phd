@@ -1,18 +1,38 @@
 #
-# phd Makefile
+# GNU Makefile - For usage, run 'make help'.
 #
-# This repo uses a single monolithic build system to prepare the
-# toolchain, compile all executables, documents, etc. This Makefile
-# makes **no** guarantee of portability, although in theory it should
-# be.
+# Copyright (C) 2016  Chris Cummins <chrisc.101@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
 # The default goal is...
-.DEFAULT_GOAL = all
+default_target := all
+.DEFAULT_GOAL = $(default_target)
 
 
 ########################################################################
 #                       Runtime configuration
+
+#
+# Self-documentation for runtime "arguments". For every configurable
+# variable, add a doc string using the following format:
+#
+#   ArgStrings += "<var>=<values>: <description> (default=<default-val>)"
+#
+# These arg strings are printed by 'make help'. See also $(DocStrings).
+#
 ArgStrings =
 
 #
@@ -81,6 +101,7 @@ V2 = $(__verbosity_2_$(V))
 
 AWK ?= awk
 EGREP ?= egrep
+GIT ?= git
 GREP ?= grep
 PYTHON2 ?= python2
 PYTHON3 ?= python3
@@ -185,7 +206,7 @@ TestTargets =
 #
 #   DocStrings += "<target>: <description>"
 #
-# These doc strings are printed by 'make help'.
+# These doc strings are printed by 'make help'. See also $(ArgStrings)
 #
 DocStrings =
 
@@ -1150,21 +1171,32 @@ ls-targets:
 		| egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
 DocStrings += "ls-targets: show all build targets"
 
+# Repo version information:
+git-shorthead-cmd := git rev-parse --short --verify HEAD
+git-dirty-cmd := git diff-index --quiet HEAD || echo "*"
+version-str = phd-$(shell $(git-shorthead-cmd))$(shell $(git-dirty-cmd))
+
+.PHONY: version
+version:
+	$(V2)echo 'phd version $(version-str)'
+DocStrings += "version: show version information"
 
 # Print doc strings:
 .PHONY: help
 help:
-	$(V2)echo "make targets:"
+	$(V2)echo "usage: make [runtime-argument...] [target...]"
 	$(V2)echo
-	$(V2)(for var in $(DocStrings); do echo $$var; done) \
+	$(V2)echo "values for runtime-arguments:"
+	$(V2)echo
+	$(V2)(for var in $(ArgStrings); do echo $$var; done) \
 		| sort --ignore-case | while read var; do \
 		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
 		echo $$var | cut -d':' -f2-; \
 	done
 	$(V2)echo
-	$(V2)echo "make arguments:"
+	$(V2)echo "values for targets (default=$(default_target)):"
 	$(V2)echo
-	$(V2)(for var in $(ArgStrings); do echo $$var; done) \
+	$(V2)(for var in $(DocStrings); do echo $$var; done) \
 		| sort --ignore-case | while read var; do \
 		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
 		echo $$var | cut -d':' -f2-; \
