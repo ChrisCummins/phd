@@ -209,9 +209,10 @@ endef
 #   $1 (str)   Object file
 #   $2 (str[]) C sources
 #   $3 (str[]) Flags for compiler
+c-compile-o-cmd = $(CC) $(CFlags)
 define c-compile-o
 	$(call print-task,CC,$1,$(TaskCompile))
-	$(V1)$(CC) $(CFlags) $3 $2 -c -o $1
+	$(V1)$(c-compile-o-cmd) $3 $2 -c -o $1
 endef
 
 
@@ -221,9 +222,10 @@ endef
 #   $1 (str)   Object file
 #   $2 (str[]) C++ sources
 #   $3 (str[]) Flags for compiler
+cxx-compile-o-cmd = $(CXX) $(CxxFlags)
 define cxx-compile-o
 	$(call print-task,CXX,$1,$(TaskCompile))
-	$(V1)$(CXX) $(CxxFlags) $3 $2 -c -o $1
+	$(V1)$(cxx-compile-o-cmd) $3 $2 -c -o $1
 	$(call clang-tidy,$2,$3)
 	$(call cpplint,$2)
 endef
@@ -235,9 +237,10 @@ endef
 #   $1 (str)   Executable
 #   $2 (str[]) Object files
 #   $3 (str[]) Flags for linker
+o-link-cmd = $(LD) $(CxxFlags) $(LdFlags)
 define o-link
 	$(call print-task,LD,$1,$(TaskLink))
-	$(V1)$(LD) $(CxxFlags) $(LdFlags) $3 $2 -o $1
+	$(V1)$(o-link-cmd) $3 $2 -o $1
 endef
 
 
@@ -785,7 +788,12 @@ CFlags = \
 		$($(patsubst %/,%,$(dir $@))_CFlags))
 
 c: $(CTargets)
-DocStrings += "c: build all C targets"
+DocStrings += "c: build C targets"
+
+.PHONY: print-cc
+print-cc:
+	$(V2)echo $(c-compile-o-cmd) $($(PMAKE_INVOC_DIR)_CxxFlags)
+DocStrings += "print-cc: print cc compiler invocation"
 
 
 #
@@ -842,7 +850,12 @@ CxxFlags = \
 		$($(patsubst %/,%,$(dir $@))_CxxFlags))
 
 cpp: $(CxxTargets)
-DocStrings += "cpp: build all C++ targets"
+DocStrings += "cpp: build C++ targets"
+
+.PHONY: print-cxx
+print-cxx:
+	$(V2)echo $(cxx-compile-o-cmd) $($(PMAKE_INVOC_DIR)_CxxFlags)
+DocStrings += "print-cxx: print cxx compiler invocation"
 
 
 #
@@ -873,7 +886,7 @@ CleanFiles += $(CppLintTargets)
 	$(call cpplint,$<)
 
 lint: $(CppLintTargets)
-DocStrings += "lint: build all lint files"
+DocStrings += "lint: build lint files"
 
 
 #
@@ -889,6 +902,12 @@ LdFlags =
 		$($(patsubst %/,%,$(dir $@))_CxxFlags) \
 		$($(patsubst %/,%,$@)_LdFlags) \
 		$($(patsubst %/,%,$(dir $@))_LdFlags))
+
+.PHONY: print-ld
+print-ld:
+	$(V2)echo $(o-link-cmd) $($(PMAKE_INVOC_DIR)_CxxFlags) \
+		$($(PMAKE_INVOC_DIR)_LdFlags)
+DocStrings += "print-ld: print linker invocation"
 
 
 #
@@ -1118,7 +1137,7 @@ ls-files:
 	| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
 	| sort --ignore-case \
 	| grep '^/'
-DocStrings += "ls-files: show all files which are built by Makefile"
+DocStrings += "ls-files: lists files which are built by Makefile"
 
 
 # List all build targets:
