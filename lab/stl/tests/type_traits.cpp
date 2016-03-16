@@ -274,3 +274,37 @@ TEST(ustl_type_traits, add_rvalue_reference) {
   static_assert(ustl::is_same<const int&,
                 ustl::add_rvalue_reference<const int&>::type>::value);
 }
+
+
+//////////////
+// Pointers //
+//////////////
+
+
+TEST(std_type_traits, remove_pointer) {
+  static_assert(std::is_same<int, std::remove_pointer<int>::type>::value);
+  static_assert(std::is_same<int, std::remove_pointer<int*>::type>::value);
+  static_assert(std::is_same<int*, std::remove_pointer<int**>::type>::value);
+  static_assert(std::is_same<const int,
+                std::remove_pointer<const int*>::type>::value);
+  static_assert(std::is_same<int,
+                std::remove_pointer<int*const>::type>::value);
+  static_assert(std::is_same<int,
+                std::remove_pointer<int*const volatile>::type>::value);
+  static_assert(std::is_same<int&,
+                std::remove_pointer<int&>::type>::value);
+}
+
+TEST(ustl_type_traits, remove_pointer) {
+  static_assert(ustl::is_same<int, ustl::remove_pointer<int>::type>::value);
+  static_assert(ustl::is_same<int, ustl::remove_pointer<int*>::type>::value);
+  static_assert(ustl::is_same<int*, ustl::remove_pointer<int**>::type>::value);
+  static_assert(ustl::is_same<const int,
+                ustl::remove_pointer<const int*>::type>::value);
+  static_assert(ustl::is_same<int,
+                ustl::remove_pointer<int*const>::type>::value);
+  static_assert(ustl::is_same<int,
+                ustl::remove_pointer<int*const volatile>::type>::value);
+  static_assert(ustl::is_same<int&,
+                ustl::remove_pointer<int&>::type>::value);
+}

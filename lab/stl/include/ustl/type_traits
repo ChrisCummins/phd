@@ -328,6 +328,38 @@ struct add_rvalue_reference<T&&> {  // rvalue reference
 //////////////
 
 
+//
+// struct remove_pointer<T>:
+//
+// Provides the member typedef type which is the type pointed to by T,
+// or, if T is not a pointer, then type is the same as T.
+//
+template<typename T>
+struct remove_pointer {
+  using type = T;
+};
+
+template<typename T>
+struct remove_pointer<T*> {
+  using type = T;
+};
+
+template<typename T>
+struct remove_pointer<T*const> {
+  using type = T;
+};
+
+template<typename T>
+struct remove_pointer<T*volatile> {
+  using type = T;
+};
+
+template<typename T>
+struct remove_pointer<T*const volatile> {
+  using type = T;
+};
+
+
 ////////////////////
 // Sign modifiers //
 ////////////////////
