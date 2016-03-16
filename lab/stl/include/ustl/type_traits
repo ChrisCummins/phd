@@ -130,6 +130,53 @@ constexpr bool is_same_v = is_same<T, U>::value;
 /////////////////////////////////
 
 
+//
+// struct remove_const<T>:
+//
+// Removes the topmost const.
+//
+template<typename T>
+struct remove_const {
+  using type = T;
+};
+
+// specialisation for const type:
+template<typename T>
+struct remove_const<const T> {
+  using type = T;
+};
+
+
+//
+// struct remove_volatile<T>:
+//
+// Removes the topmost volatile.
+//
+template<typename T>
+struct remove_volatile {
+  using type = T;
+};
+
+// specialisation for volatile type:
+template<typename T>
+struct remove_volatile<volatile T> {
+  using type = T;
+};
+
+
+//
+// struct remove_cv<T>:
+//
+// Removes the topmost const, the topmost volatile, or both, if
+// present.
+//
+template<typename T>
+struct remove_cv {
+  using type =
+      typename remove_volatile<typename std::remove_const<T>::type>::type;
+};
+
+
 ////////////////
 // References //
 ////////////////
