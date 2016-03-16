@@ -45,6 +45,11 @@ template<> struct is_void<const void> : true_type {};
 template<> struct is_void<volatile void> : true_type {};
 template<> struct is_void<const volatile void> : true_type {};
 
+// Helper variable template:
+template<typename T>
+constexpr bool is_void_v = is_void<T>::value;
+
+
 //
 // struct is_integral<T>:
 //

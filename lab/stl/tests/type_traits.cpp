@@ -27,11 +27,20 @@ TEST(ustl_type_traits, helper_classes) {
   static_assert(!ustl::false_type());
 }
 
+
+/////////////////////////////
+// Primary type categories //
+/////////////////////////////
+
 TEST(std_type_traits, is_void) {
   static_assert(std::is_void<void>::value);
   static_assert(!std::is_void<int>::value);
   static_assert(std::is_void<const void>::value);
   static_assert(std::is_void<const volatile void>::value);
+
+  // c++17 usage:
+  static_assert(std::is_void_v<void>);
+  static_assert(!std::is_void_v<int>);
 }
 
 TEST(ustl_type_traits, is_void) {
