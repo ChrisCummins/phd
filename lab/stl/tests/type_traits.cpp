@@ -3,11 +3,16 @@
 #include <type_traits>
 #include <ustl/type_traits>
 
+
+////////////////////
+// Helper Classes //
+////////////////////
+
 TEST(std_type_traits, helper_classes) {
   static_assert(std::true_type::value);
   static_assert(!std::false_type::value);
   const bool t = std::true_type();
-  const bool f = std::true_type();
+  const bool f = std::false_type();
   ASSERT_TRUE(t);
   ASSERT_FALSE(f);
 
@@ -19,7 +24,7 @@ TEST(ustl_type_traits, helper_classes) {
   static_assert(ustl::true_type::value);
   static_assert(!ustl::false_type::value);
   const bool t = ustl::true_type();
-  const bool f = ustl::true_type();
+  const bool f = ustl::false_type();
   ASSERT_TRUE(t);
   ASSERT_FALSE(f);
 
