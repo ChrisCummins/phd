@@ -53,6 +53,10 @@ TEST(ustl_type_traits, is_void) {
   static_assert(!ustl::is_void<int>::value);
   static_assert(ustl::is_void<const void>::value);
   static_assert(ustl::is_void<const volatile void>::value);
+
+  // c++17 usage:
+  static_assert(ustl::is_void_v<void>);
+  static_assert(!ustl::is_void_v<int>);
 }
 
 
@@ -65,6 +69,10 @@ TEST(std_type_traits, is_integral) {
   static_assert(std::is_integral<const int>::value);
   static_assert(std::is_integral<unsigned int>::value);
   static_assert(std::is_integral<const unsigned long long>::value);  // NOLINT
+
+  // c++17 usage:
+  static_assert(std::is_integral_v<int>);
+  static_assert(!std::is_integral_v<float>);
 }
 
 TEST(ustl_type_traits, is_integral) {
@@ -76,8 +84,47 @@ TEST(ustl_type_traits, is_integral) {
   static_assert(ustl::is_integral<const int>::value);
   static_assert(ustl::is_integral<unsigned int>::value);
   static_assert(ustl::is_integral<const unsigned long long>::value);  // NOLINT
+
+  // c++17 usage:
+  static_assert(ustl::is_integral_v<int>);
+  static_assert(!ustl::is_integral_v<float>);
 }
 
+
+TEST(std_type_traits, is_pointer) {
+  int x;
+  int *px;
+
+  static_assert(!std::is_pointer<decltype(x)>::value);
+  static_assert(std::is_pointer<decltype(px)>::value);
+  static_assert(std::is_pointer<decltype(px)*>::value);
+  static_assert(!std::is_pointer<float>::value);
+  static_assert(std::is_pointer<const float*>::value);
+
+  // c++17 usage:
+  static_assert(std::is_pointer_v<int*>);
+  static_assert(!std::is_pointer_v<int>);
+}
+
+TEST(ustl_type_traits, is_pointer) {
+  int x;
+  int *px;
+
+  static_assert(!ustl::is_pointer<decltype(x)>::value);
+  static_assert(ustl::is_pointer<decltype(px)>::value);
+  static_assert(ustl::is_pointer<decltype(px)*>::value);
+  static_assert(!ustl::is_pointer<float>::value);
+  static_assert(ustl::is_pointer<const float*>::value);
+
+  // c++17 usage:
+  static_assert(ustl::is_pointer_v<int*>);
+  static_assert(!ustl::is_pointer_v<int>);
+}
+
+
+////////////////////////
+// Type relationships //
+////////////////////////
 
 TEST(std_type_traits, is_same) {
   int x;
@@ -87,6 +134,10 @@ TEST(std_type_traits, is_same) {
   static_assert(std::is_same<int, decltype(x)>::value);
   // cv qualifiers count:
   static_assert(!std::is_same<const int, decltype(x)>::value);
+
+  // c++17 usage:
+  static_assert(std::is_same_v<int, int>);
+  static_assert(!std::is_same_v<int, float>);
 }
 
 
@@ -98,6 +149,10 @@ TEST(ustl_type_traits, is_same) {
   static_assert(ustl::is_same<int, decltype(x)>::value);
   // cv qualifiers count:
   static_assert(!ustl::is_same<const int, decltype(x)>::value);
+
+  // c++17 usage:
+  static_assert(ustl::is_same_v<int, int>);
+  static_assert(!ustl::is_same_v<int, float>);
 }
 
 

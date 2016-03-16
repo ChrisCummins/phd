@@ -3,7 +3,17 @@
 #ifndef USTL_TYPE_TRAITS_H
 #define USTL_TYPE_TRAITS_H
 
+//
+// This is only a partial implementation of some of the code which
+// doesn't require compiler magic (e.g. std::is_enum<T> and that
+// ilk). For everything we don't implement, we'll use the standard library.
+//
+#include <type_traits>
+
 namespace ustl {
+
+// Forward declaration of helpers:
+template<typename T> struct remove_cv;
 
 ////////////////////
 // Helper Classes //
@@ -60,34 +70,87 @@ constexpr bool is_void_v = is_void<T>::value;
 // signed, unsigned, and cv-qualified variants. Otherwise, value is
 // equal to false.
 //
-template<typename T> struct is_integral : false_type {};
+namespace {  // anonymous namespace
+// helper structs since we need to use non cv-qualified types:
+template<typename T> struct is_integral_impl : false_type {};
 
-// Specialisations for integral types:
-#define cv_is_integral(x) \
-    template<> struct is_integral<x> : true_type {}; \
-    template<> struct is_integral<const x> : true_type {}; \
-    template<> struct is_integral<volatile x> : true_type {}; \
-    template<> struct is_integral<const volatile x> : true_type {};
+template<> struct is_integral_impl<bool> : true_type {};
+template<> struct is_integral_impl<char16_t> : true_type {};
+template<> struct is_integral_impl<char32_t> : true_type {};
+template<> struct is_integral_impl<wchar_t> : true_type {};
+template<> struct is_integral_impl<short>  // NOLINT(runtime/int)
+    : true_type {};
+template<> struct is_integral_impl<unsigned short>  // NOLINT(runtime/int)
+    : true_type {};
+template<> struct is_integral_impl<int> : true_type {};
+template<> struct is_integral_impl<unsigned int> : true_type {};
+template<> struct is_integral_impl<long>  // NOLINT(runtime/int)
+    : true_type {};
+template<> struct is_integral_impl<unsigned long>  // NOLINT(runtime/int)
+    : true_type {};
+template<> struct is_integral_impl<long long>  // NOLINT(runtime/int)
+    : true_type {};
+template<> struct is_integral_impl<unsigned long long>  // NOLINT(runtime/int)
+    : true_type {};
+}  // namespace
 
-#define cvu_is_integral(x) \
-    cv_is_integral(x); \
-    cv_is_integral(unsigned x);
-
-cv_is_integral(bool);
-cv_is_integral(char16_t);
-cv_is_integral(char32_t);
-cv_is_integral(wchar_t);
-cvu_is_integral(short);  // NOLINT(runtime/int)
-cvu_is_integral(int);
-cvu_is_integral(long);  // NOLINT(runtime/int)
-cvu_is_integral(long long);  // NOLINT(runtime/int)
-
-#undef cv_is_integral
-#undef cvu_is_integral
+template<typename T> struct is_integral
+    : is_integral_impl<typename remove_cv<T>::type> {};
 
 // Helper variable template:
 template<typename T>
 constexpr bool is_integral_v = is_integral<T>::value;
+
+
+//
+// struct is_class<T>:
+//
+// Checks whether T is a class or struct type. Provides the member
+// constant value which is equal to true, if T is an class or struct
+// type (but not union). Otherwise, value is equal to false.
+//
+namespace {  // private namespace for helpers
+template<typename T>
+char test(int T::*);
+
+struct two { char c[2]; };
+
+template<typename T>
+two test(...);
+}  // namespace
+
+template<typename T>
+struct is_class : std::integral_constant<bool, sizeof(test<T>(0)) == 1
+    && !std::is_union<T>::value> {};
+
+// Helper variable template:
+template<typename T>
+constexpr bool is_class_v = is_class<T>::value;
+
+
+//
+// struct is_pointer<T>
+//
+// Checks whether T is a pointer to object or a pointer to function
+// (but not a pointer to member/member function). Provides the member
+// constant value which is equal to true, if T is a object/function
+// pointer type. Otherwise, value is equal to false.
+//
+namespace {  // anonymous namespace
+// helper structs since we need to use non cv-qualified types:
+template<typename T>
+struct is_pointer_impl : false_type {};
+
+template<typename T>
+struct is_pointer_impl<T*> : true_type {};
+}  // namespace
+
+template<typename T>
+struct is_pointer : is_pointer_impl<typename remove_cv<T>::type> {};
+
+// Helper variable template:
+template<typename T>
+constexpr bool is_pointer_v = is_pointer<T>::value;
 
 
 ///////////////////////////////
