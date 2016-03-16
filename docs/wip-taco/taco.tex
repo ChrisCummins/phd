@@ -142,29 +142,41 @@
 
 General purpose programming with GPUs has been shown to provide huge
 parallel throughput, but poses a significant programming challenge,
-requiring application developers to master an unfamiliar programming
+requiring application developers to master a low level programming
 model (such as provided by CUDA or OpenCL) and architecture (SIMD with
 a multi-level memory hierarchy). As a result, GPGPU programming is
-often considered beyond the realm of everyday development. If steps
-are not taken to increase the accessibility of such parallelism, the
-gap between potential and utilized performance will continue to widen
-as hardware core counts increases.
+often beyond the scope of everyday development. If steps are not taken
+to increase the accessibility of such parallelism, the gap between
+potential and utilized performance will continue to widen as hardware
+core counts increases~\cite{Fuller2011}.
 
-Algorithmic skeletons offer a solution to this this
+\textit{Algorithmic Skeletons} offer a solution to this this
 \emph{programmability challenge} by raising the level of
 abstraction. This simplifies parallel programming, allowing developers
 to focus on solving problems rather than coordinating parallel
-resources. Skeleton frameworks provide robust parallel implementations
-of common patterns of computation which developers parameterise with
-their application-specific code~\cite{Gonzalez2010}. This greatly
-reduces the challenge of parallel programming, allowing users to
-structure their problem-solving logic sequentially, while offloading
-the cognitive cost of parallel coordination to the skeleton library
-author. The rising number of skeleton frameworks supporting graphics
-hardware illustrates the demand for high level abstractions for GPGPU
-programming~\cite{Enmyren2010,Marques2013}. The challenge is in
-maintaining portable performance across the breadth of devices in the
-rapidly developing GPU and heterogeneous architecture landscape.
+resources~\cite{Cole2004}. Skeleton frameworks provide robust parallel
+implementations of common patterns of computation which developers
+parameterise with their application-specific
+code~\cite{Gonzalez2010}. This greatly reduces the challenge of
+parallel programming, allowing users to structure their
+problem-solving logic sequentially, while offloading the cognitive
+cost of parallel coordination to the skeleton library author. The
+complexity of heterogeneous programming and the simplicity of high
+level pattern programming has led to GPGPU support in a rising number
+of skeleton frameworks~\cite{%
+  Enmyren2010,% SkePU
+  Ernsting2012,% Muesli
+  Marques2013,%
+  Aldinucci2014% FastFlow
+} and pattern libraries~\cite{%
+  Stuart2011,% MapReduce on GPUs
+  Sander2012% AMD Bolt C++
+}. However these efforts necessarily abstract many of the low level
+programming details which are critical for maximising performance on a
+per-program basis. %
+% TODO: Rewrite this nonsense.
+Maintaining portable performance across the breadth of devices and
+programs in a rapidly architecture landscape is an ongoing challenge.
 
 
 \subsection{The Performance Portability Challenge}
@@ -194,6 +206,9 @@ modification to the skeleton implementation rather than to every user
 program; and second, by targeting a library, it enables a broader and
 more substantive range of performance data to be gathered than with
 ad-hoc tuning of individual programs.
+
+
+\subsection{TODO: intro to autotuning}
 
 
 \subsection{Contributions}
@@ -1574,8 +1589,16 @@ devices. This will be combined with the use of adaptive sampling plans
 to minimize the number of observations required to distinguish bad
 from good parameter values.
 
+% TODO: High level patterns as core language features.
+% \cite{%
+% Stuart2011,% MapReduce on GPUs
+% Sander2012,% AMD Bolt C++
+% JaredHoberock2014a% ParallelSTL for C++
+% }
+
 
 % Bibliography
+\newpage % TODO: remove this page break for the final version.
 \bibliographystyle{ACM-Reference-Format-Journals}
 \bibliography{../../../library}
 
