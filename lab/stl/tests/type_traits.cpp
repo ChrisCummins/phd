@@ -202,3 +202,75 @@ TEST(ustl_type_traits, remove_cv) {
   static_assert(ustl::is_same<int, ustl::remove_cv<const int>::type>::value);
   static_assert(ustl::is_same<int, ustl::remove_cv<int>::type>::value);
 }
+
+
+////////////////
+// References //
+////////////////
+
+
+TEST(std_type_traits, remove_reference) {
+  static_assert(std::is_same<int, std::remove_reference<int>::type>::value);
+  static_assert(std::is_same<int, std::remove_reference<int&>::type>::value);
+  static_assert(std::is_same<int, std::remove_reference<int&&>::type>::value);
+  static_assert(std::is_same<const int,
+                std::remove_reference<const int&&>::type>::value);
+}
+
+TEST(ustl_type_traits, remove_reference) {
+  static_assert(ustl::is_same<int, ustl::remove_reference<int>::type>::value);
+  static_assert(ustl::is_same<int, ustl::remove_reference<int&>::type>::value);
+  static_assert(ustl::is_same<int, ustl::remove_reference<int&&>::type>::value);
+  static_assert(ustl::is_same<const int,
+                ustl::remove_reference<const int&&>::type>::value);
+}
+
+
+TEST(std_type_traits, add_lvalue_reference) {
+  static_assert(std::is_same<int&,
+                std::add_lvalue_reference<int>::type>::value);
+  static_assert(std::is_same<int&,
+                std::add_lvalue_reference<int&>::type>::value);
+  static_assert(std::is_same<int&,
+                std::add_lvalue_reference<int&&>::type>::value);
+  static_assert(std::is_same<const int&,
+                std::add_lvalue_reference<const int&>::type>::value);
+}
+
+TEST(ustl_type_traits, add_lvalue_reference) {
+  static_assert(ustl::is_same<int&,
+                ustl::add_lvalue_reference<int>::type>::value);
+  static_assert(ustl::is_same<int&,
+                ustl::add_lvalue_reference<int&>::type>::value);
+  static_assert(ustl::is_same<int&,
+                ustl::add_lvalue_reference<int&&>::type>::value);
+  static_assert(ustl::is_same<const int&,
+                ustl::add_lvalue_reference<const int&>::type>::value);
+}
+
+
+TEST(std_type_traits, add_rvalue_reference) {
+  static_assert(std::is_same<int&&,
+                std::add_rvalue_reference<int>::type>::value);
+  static_assert(std::is_same<int&,
+                std::add_rvalue_reference<int&>::type>::value);
+  static_assert(std::is_same<int&&,
+                std::add_rvalue_reference<int&&>::type>::value);
+  static_assert(std::is_same<const int&&,
+                std::add_rvalue_reference<const int>::type>::value);
+  static_assert(std::is_same<const int&,
+                std::add_rvalue_reference<const int&>::type>::value);
+}
+
+TEST(ustl_type_traits, add_rvalue_reference) {
+  static_assert(ustl::is_same<int&&,
+                ustl::add_rvalue_reference<int>::type>::value);
+  static_assert(ustl::is_same<int&,
+                ustl::add_rvalue_reference<int&>::type>::value);
+  static_assert(ustl::is_same<int&&,
+                ustl::add_rvalue_reference<int&&>::type>::value);
+  static_assert(ustl::is_same<const int&&,
+                ustl::add_rvalue_reference<const int>::type>::value);
+  static_assert(ustl::is_same<const int&,
+                ustl::add_rvalue_reference<const int&>::type>::value);
+}

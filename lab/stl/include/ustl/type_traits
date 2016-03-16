@@ -14,6 +14,8 @@ namespace ustl {
 
 // Forward declaration of helpers:
 template<typename T> struct remove_cv;
+template<bool b, typename T = void> struct enable_if;
+template<typename T, typename U> struct is_same;
 
 ////////////////////
 // Helper Classes //
@@ -249,6 +251,77 @@ struct remove_cv {
 // References //
 ////////////////
 
+//
+// struct remove_reference<T>:
+//
+// If the type T is a reference type, provides the member typedef type
+// which is the type referred to by T. Otherwise type is T.
+//
+template<typename T>
+struct remove_reference {
+  using type = T;
+};
+
+template<typename T>
+struct remove_reference<T&> {
+  using type = T;
+};
+
+template<typename T>
+struct remove_reference<T&&> {
+  using type = T;
+};
+
+
+//
+// struct add_lvalue_reference<T>:
+//
+// Provides a member typedef type which is T&. If T is an rvalue
+// reference to some type U, then type is U&. Otherwise, type is T.
+//
+template<typename T>
+struct add_lvalue_reference {
+  using type = T&;
+};
+
+template<typename T>
+struct add_lvalue_reference<T&> {  // lvalue reference
+  using type = T&;
+};
+
+template<typename T>
+struct add_lvalue_reference<T&&> {  // rvalue reference
+  using type = T&;
+};
+
+
+//
+// struct add_rvalue_reference<T>:
+//
+// Provides a member typedef type which is T&&.
+//
+template<typename T>
+struct add_rvalue_reference {
+  using type = T&&;  // NOLINT(whitespace/operators)
+};
+
+// template<typename T,
+//          typename enable_if<is_same<T, typename remove_reference<T>::type
+//                                      >::value>::type* = nullptr>
+// struct add_rvalue_reference {
+//   using type = T&&;
+// };
+
+template<typename T>
+struct add_rvalue_reference<T&> {  // lvalue reference
+  using type = T&;
+};
+
+template<typename T>
+struct add_rvalue_reference<T&&> {  // rvalue reference
+  using type = T&&;  // NOLINT(whitespace/operators)
+};
+
 
 //////////////
 // Pointers //
@@ -295,7 +368,7 @@ struct remove_cv {
 //
 
 // Base case. No "type" member, so usage will fail.
-template<bool B, typename T = void> struct enable_if {};
+template<bool B, typename T> struct enable_if {};
 
 // Specialisation for true case.
 template<typename T> struct enable_if<true, T> { using type = T; };
