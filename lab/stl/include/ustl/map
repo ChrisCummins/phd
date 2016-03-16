@@ -44,7 +44,6 @@ template<typename Key,
          typename Compare = std::less<Key>,
          typename Alloc = std::allocator<std::pair<const Key, T> >
          > class map {
-
   ///////////////////
   // Member Types: //
   ///////////////////
@@ -93,11 +92,11 @@ template<typename Key,
     friend class map;
    protected:
     Compare comp;
-    value_compare(Compare c) : comp(c) {}
+    explicit value_compare(Compare c) : comp(c) {}
    public:
-    typedef bool result_type;
-    typedef value_type first_argument_type;
-    typedef value_type second_argument_type;
+    using result_type = bool;
+    using first_argument_type = value_type;
+    using second_argument_type = value_type;
     bool operator()(const value_type& x, const value_type& y) const {
       return comp(x.first, y.first);
     }
@@ -194,11 +193,11 @@ template<typename Key,
   // ownership is directly transferred). x is left in an unspecified
   // but valid state.
   //
-  map(map&& x) {
+  map(map&& x) {  // NOLINT(whitespace/operators)
     // TODO: implement
   }
 
-  map(map&& x, const allocator_type& alloc) {
+  map(map&& x, const allocator_type& alloc) {  // NOLINT(whitespace/operators)
     // TODO: implement
   }
 
@@ -564,7 +563,7 @@ template<typename Key,
   }
 
   template<typename P>
-  std::pair<iterator,bool> insert(P&& val) {
+  std::pair<iterator, bool> insert(P&& val) {
     // TODO: implement
   }
 
@@ -627,7 +626,7 @@ template<typename Key,
   // swap, overloading that algorithm with an optimization that
   // behaves like this member function.
   //
-  void swap(map& x) {
+  void swap(map& x) {  // NOLINT(build/include_what_you_use)
     // TODO: implement
   }
 
@@ -799,7 +798,7 @@ template<typename Key,
   // object returns false reflexively (i.e., no matter the order in
   // which the keys are passed as arguments).
   //
-  size_type count (const key_type& k) const {
+  size_type count(const key_type& k) const {
     // TODO: implement
   }
 
@@ -905,7 +904,6 @@ template<typename Key,
   allocator_type get_allocator() const noexcept {
     // TODO: implement
   }
-
 };  // map class
 
 

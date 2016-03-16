@@ -45,7 +45,7 @@ class X {
   }
 
   // Destructor:
-  ~X() { delete data; }
+  ~X() { delete data; }  // NOLINT
 
   // Some operator.
   X operator+(const X &x) { return X(*x.data + *data); }

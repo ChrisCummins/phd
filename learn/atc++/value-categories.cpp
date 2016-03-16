@@ -10,7 +10,7 @@ int rvalue_ret() {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wreturn-stack-address"
 int&& rrvalue_ret() {
-  return 17;
+  return 17;  // NOLINT
 }
 #pragma GCC diagnostic pop
 

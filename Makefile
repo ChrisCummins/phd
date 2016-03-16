@@ -1,10 +1,24 @@
 #
-# phd Makefile
+# GNU Makefile - For usage, run 'make help'.
 #
-# This repo uses a single monolithic build system to prepare the
-# toolchain, compile all executables, documents, etc. This Makefile
-# makes **no** guarantee of portability, although in theory it should
-# be.
+# Copyright (C) 2016  Chris Cummins <chrisc.101@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# TODO: Make a list of all the files for which the compilation process
+# spat somehting out to stderr. Then implement an 'all-warn' target
+# which rebuilds these files.
 #
 
 # The default goal is...
@@ -13,42 +27,48 @@
 
 ########################################################################
 #                       Runtime configuration
+
+#
+# Self-documentation for runtime "arguments". For every configurable
+# variable, add a doc string using the following format:
+#
+#   ArgStrings += "<var>=<values>: <description> (default=<default-val>)"
+#
+# These arg strings are printed by 'make help'. See also $(DocStrings).
+#
 ArgStrings =
 
 #
 # Verbosity controls. There are three levels of verbosity 0-2, set by
 # passing the desired V value to Make:
 #
-#   V=0 (default) print summary messages
-#   V=1 same as V=0, but print executed commands
+#   V=0 print summary messages
+#   V=1 same as V=0, but also print executed commands
 #   V=3 same as V=2, but with extra verbosity for build system debugging
 #
-ifndef V
-V = 0
-endif
-ArgStrings += "V=[0,1,2]: set verbosity level (default=0)"
+V_default := 0
+V ?= $(V_default)
+ArgStrings += "V=[0,1,2]: set verbosity level (default=$(V_default))"
 
 #
 # Colour controls:
 #
 #   C=0 disable colour formatting of messages
-#   C=1 (default) enable fancy message formatting
+#   C=1 enable fancy message formatting
 #
-ifndef C
-C = 1
-endif
-ArgStrings += "C=[0,1]: enable colour message formatting (default=1)"
+C_default := 1
+C ?= $(C_default)
+ArgStrings += "C=[0,1]: enable colour message formatting (default=$(C_default))"
 
 #
 # Debug controls:
 #
-#   D=0 (default) disable debugging support in compiled executables
+#   D=0 disable debugging support in compiled executables
 #   D=1 enable debugging support in compiled executables
 #
-ifndef D
-D = 0
-endif
-ArgStrings += "D=[0,1]: enable debugging in generated files (default=0)"
+D_default := 0
+D ?= $(D_default)
+ArgStrings += "D=[0,1]: enable debugging in generated files (default=$(D_default))"
 
 #
 # Optimisation controls:
@@ -56,10 +76,16 @@ ArgStrings += "D=[0,1]: enable debugging in generated files (default=0)"
 #   O=0 disable optimisations in compiled executables
 #   O=1 (default) enable optimisations in compiled executables
 #
-ifndef O
-O = 1
-endif
-ArgStrings += "O=[0,1]: enable optimisations in generated files (default=1)"
+O_default := 1
+O ?= $(O_default)
+ArgStrings += "O=[0,1]: enable optimisations in generated files (default=$(O_default))"
+
+#
+# Threading controls:
+#
+threads_default := 4
+threads ?= $(threads_default)
+ArgStrings += "threads=[1+]: set number of build threads (default=$(threads_default))"
 
 
 __verbosity_1_ = @
@@ -74,26 +100,21 @@ V2 = $(__verbosity_2_$(V))
 
 
 ########################################################################
-#                        Static Configuration
+#                         User Configuration
 
-#
-# The number of threads to use:
-#
-WorkerThreads := 4
-
-SHELL := /bin/bash
-
-AWK := awk
-EGREP := egrep
-GREP := grep
-PYTHON2 := python2
-PYTHON3 := python3
-RM := rm -fv
-SED := sed
+AWK ?= awk
+EGREP ?= egrep
+GIT ?= git
+GREP ?= grep
+PYTHON2 ?= python2
+PYTHON3 ?= python3
+RM ?= rm -fv
+SED ?= sed
+SHELL ?= /bin/bash
 
 
-# Set number of worker threads.
-MAKEFLAGS := -j$(WorkerThreads)
+# Non-configurable;
+MAKEFLAGS := -j$(threads)
 
 
 ########################################################################
@@ -188,7 +209,7 @@ TestTargets =
 #
 #   DocStrings += "<target>: <description>"
 #
-# These doc strings are printed by 'make help'.
+# These doc strings are printed by 'make help'. See also $(ArgStrings)
 #
 DocStrings =
 
@@ -213,9 +234,10 @@ endef
 #   $1 (str)   Object file
 #   $2 (str[]) C sources
 #   $3 (str[]) Flags for compiler
+c-compile-o-cmd = $(CC) $(CFlags)
 define c-compile-o
 	$(call print-task,CC,$1,$(TaskCompile))
-	$(V1)$(CC) $(CFlags) $3 $2 -c -o $1
+	$(V1)$(c-compile-o-cmd) $3 $2 -c -o $1
 endef
 
 
@@ -225,9 +247,10 @@ endef
 #   $1 (str)   Object file
 #   $2 (str[]) C++ sources
 #   $3 (str[]) Flags for compiler
+cxx-compile-o-cmd = $(CXX) $(CxxFlags)
 define cxx-compile-o
 	$(call print-task,CXX,$1,$(TaskCompile))
-	$(V1)$(CXX) $(CxxFlags) $3 $2 -c -o $1
+	$(V1)$(cxx-compile-o-cmd) $3 $2 -c -o $1
 	$(call clang-tidy,$2,$3)
 	$(call cpplint,$2)
 endef
@@ -239,9 +262,10 @@ endef
 #   $1 (str)   Executable
 #   $2 (str[]) Object files
 #   $3 (str[]) Flags for linker
+o-link-cmd = $(LD) $(CxxFlags) $(LdFlags)
 define o-link
 	$(call print-task,LD,$1,$(TaskLink))
-	$(V1)$(LD) $(CxxFlags) $(LdFlags) $3 $2 -o $1
+	$(V1)$(o-link-cmd) $3 $2 -o $1
 endef
 
 
@@ -458,6 +482,7 @@ StlComponents = \
 	list \
 	map \
 	stack \
+	type_traits \
 	unordered_map \
 	vector \
 	$(NULL)
@@ -500,22 +525,9 @@ learn := $(root)/learn
 #
 # learn/atc++/
 #
-CxxTargets += \
-	$(learn)/atc++/arrays \
-	$(learn)/atc++/benchmark-argument-type \
-	$(learn)/atc++/constructors \
-	$(learn)/atc++/functional \
-	$(learn)/atc++/hash_map \
-	$(learn)/atc++/inheritance \
-	$(learn)/atc++/lambdas \
-	$(learn)/atc++/myvector \
-	$(learn)/atc++/size-of \
-	$(learn)/atc++/smart-ptr \
-	$(learn)/atc++/strings \
-	$(learn)/atc++/templates \
-	$(learn)/atc++/user-input \
-	$(learn)/atc++/value-categories \
-	$(NULL)
+AtcppCxxSources = $(wildcard $(learn)/atc++/*.cpp)
+AtcppCxxObjects = $(patsubst %.cpp,%.o,$(AtcppCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(AtcppCxxSources))
 
 $(learn)/atc++_CxxFlags = $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
 $(learn)/atc++_LdFlags = $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
@@ -790,7 +802,12 @@ CFlags = \
 		$($(patsubst %/,%,$(dir $@))_CFlags))
 
 c: $(CTargets)
-DocStrings += "c: build all C targets"
+DocStrings += "c: build C targets"
+
+.PHONY: print-cc
+print-cc:
+	$(V2)echo $(c-compile-o-cmd) $($(PMAKE_INVOC_DIR)_CxxFlags)
+DocStrings += "print-cc: print cc compiler invocation"
 
 
 #
@@ -848,7 +865,12 @@ CxxFlags = \
 		$($(patsubst %/,%,$(dir $@))_CxxFlags))
 
 cpp: $(CxxTargets)
-DocStrings += "cpp: build all C++ targets"
+DocStrings += "cpp: build C++ targets"
+
+.PHONY: print-cxx
+print-cxx:
+	$(V2)echo $(cxx-compile-o-cmd) $($(PMAKE_INVOC_DIR)_CxxFlags)
+DocStrings += "print-cxx: print cxx compiler invocation"
 
 
 #
@@ -879,7 +901,7 @@ CleanFiles += $(CppLintTargets)
 	$(call cpplint,$<)
 
 lint: $(CppLintTargets)
-DocStrings += "lint: build all lint files"
+DocStrings += "lint: build lint files"
 
 
 #
@@ -895,6 +917,12 @@ LdFlags =
 		$($(patsubst %/,%,$(dir $@))_CxxFlags) \
 		$($(patsubst %/,%,$@)_LdFlags) \
 		$($(patsubst %/,%,$(dir $@))_LdFlags))
+
+.PHONY: print-ld
+print-ld:
+	$(V2)echo $(o-link-cmd) $($(PMAKE_INVOC_DIR)_CxxFlags) \
+		$($(PMAKE_INVOC_DIR)_LdFlags)
+DocStrings += "print-ld: print linker invocation"
 
 
 #
@@ -1124,7 +1152,7 @@ ls-files:
 	| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
 	| sort --ignore-case \
 	| grep '^/'
-DocStrings += "ls-files: show all files which are built by Makefile"
+DocStrings += "ls-files: lists files which are built by Makefile"
 
 
 # List all build targets:
@@ -1136,21 +1164,32 @@ ls-targets:
 		| egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
 DocStrings += "ls-targets: show all build targets"
 
+# Repo version information:
+git-shorthead-cmd := git rev-parse --short --verify HEAD
+git-dirty-cmd := git diff-index --quiet HEAD || echo "*"
+version-str = phd-$(shell $(git-shorthead-cmd))$(shell $(git-dirty-cmd))
+
+.PHONY: version
+version:
+	$(V2)echo 'phd version $(version-str)'
+DocStrings += "version: show version information"
 
 # Print doc strings:
 .PHONY: help
 help:
-	$(V2)echo "make targets:"
+	$(V2)echo "usage: make [runtime-argument...] [target...]"
 	$(V2)echo
-	$(V2)(for var in $(DocStrings); do echo $$var; done) \
+	$(V2)echo "values for runtime-arguments:"
+	$(V2)echo
+	$(V2)(for var in $(ArgStrings); do echo $$var; done) \
 		| sort --ignore-case | while read var; do \
 		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
 		echo $$var | cut -d':' -f2-; \
 	done
 	$(V2)echo
-	$(V2)echo "make arguments:"
+	$(V2)echo "values for targets (default=all):"
 	$(V2)echo
-	$(V2)(for var in $(ArgStrings); do echo $$var; done) \
+	$(V2)(for var in $(DocStrings); do echo $$var; done) \
 		| sort --ignore-case | while read var; do \
 		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
 		echo $$var | cut -d':' -f2-; \

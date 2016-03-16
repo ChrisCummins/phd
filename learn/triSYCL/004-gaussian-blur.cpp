@@ -146,12 +146,12 @@ matrix sycl_gaussian_blur(const matrix& input,
                   if (ly < 0)
                     ly = 0;
                   else if (ly >= static_cast<int>(input.nrows()))
-                    ly = input.nrows() - 1;
+                    ly = static_cast<int>(input.nrows()) - 1;
 
                   if (lx < 0)
                     lx = 0;
                   else if (lx >= static_cast<int>(input.ncols()))
-                    lx = input.ncols() - 1;
+                    lx = static_cast<int>(input.ncols()) - 1;
 
                   auto wi = static_cast<size_t>((j + i) / 2
                                                 + static_cast<int>(kradius[0]));
@@ -175,7 +175,7 @@ matrix sycl_gaussian_blur(const matrix& input,
 std::vector<float> get_weights(const size_t& radius) {
   const int fwhm = 5;
   const size_t diameter = 2 * radius + 1;
-  const float a = (fwhm / 2.354);
+  const float a = (fwhm / 2.354f);
 
   std::vector<float> weights(diameter);
   for (int i = -static_cast<int>(radius); i <= static_cast<int>(radius); i++)
