@@ -272,6 +272,9 @@ struct remove_reference<T&&> {
   using type = T;
 };
 
+template<typename T>
+using remove_reference_t = typename remove_reference<T>::type;
+
 
 //
 // struct add_lvalue_reference<T>:
@@ -294,6 +297,9 @@ struct add_lvalue_reference<T&&> {  // rvalue reference
   using type = T&;
 };
 
+template<typename T>
+using add_lvalue_reference_t = typename add_lvalue_reference<T>::type;
+
 
 //
 // struct add_rvalue_reference<T>:
@@ -305,13 +311,6 @@ struct add_rvalue_reference {
   using type = T&&;  // NOLINT(whitespace/operators)
 };
 
-// template<typename T,
-//          typename enable_if<is_same<T, typename remove_reference<T>::type
-//                                      >::value>::type* = nullptr>
-// struct add_rvalue_reference {
-//   using type = T&&;
-// };
-
 template<typename T>
 struct add_rvalue_reference<T&> {  // lvalue reference
   using type = T&;
@@ -321,6 +320,9 @@ template<typename T>
 struct add_rvalue_reference<T&&> {  // rvalue reference
   using type = T&&;  // NOLINT(whitespace/operators)
 };
+
+template<typename T>
+using add_rvalue_reference_t = typename add_rvalue_reference<T>::type;
 
 
 //////////////
@@ -358,6 +360,9 @@ template<typename T>
 struct remove_pointer<T*const volatile> {
   using type = T;
 };
+
+template<typename T>
+using remove_pointer_t = typename remove_pointer<T>::type;
 
 
 ////////////////////
