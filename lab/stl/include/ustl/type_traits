@@ -17,9 +17,11 @@ template<typename T> struct remove_cv;
 template<bool b, typename T = void> struct enable_if;
 template<typename T, typename U> struct is_same;
 
+
 ////////////////////
 // Helper Classes //
 ////////////////////
+
 
 //
 // struct integral_constant<T, v>:
@@ -43,6 +45,7 @@ using false_type = std::integral_constant<bool, false>;
 /////////////////////////////
 // Primary type categories //
 /////////////////////////////
+
 
 //
 // struct is_void<T>:
@@ -179,6 +182,7 @@ constexpr bool is_pointer_v = is_pointer<T>::value;
 // Type relationships //
 ////////////////////////
 
+
 //
 // If T and U name the same type with the same const-volatile
 // qualifications, provides the member constant value equal to
@@ -250,6 +254,7 @@ struct remove_cv {
 ////////////////
 // References //
 ////////////////
+
 
 //
 // struct remove_reference<T>:
@@ -374,13 +379,50 @@ using remove_pointer_t = typename remove_pointer<T>::type;
 // Arrays //
 ////////////
 
-//
-// remove_extent:
-//
 
 //
-// remove_all_extents
+// struct remove_extent<T>:
 //
+// If T is an array of some type X, provides the member typedef type
+// equal to X, otherwise type is T. Note that if T is a
+// multidimensional array, only the first dimension is removed.
+//
+template<typename T>
+struct remove_extent {
+  using type = T;
+};
+
+template<typename T>
+struct remove_extent<T[]> {
+  using type = T;
+};
+
+template<typename T, size_t n>
+struct remove_extent<T[n]> {
+  using type = T;
+};
+
+template<typename T>
+using remove_extent_t = typename remove_extent<T>::type;
+
+
+//
+// struct remove_all_extents<T>:
+//
+// If T is a multidimensional array of some type X, provides the
+// member typedef type equal to X, otherwise type is T.
+//
+template<typename T>
+struct remove_all_extents : remove_extent<T> {};
+
+template<typename T>
+struct remove_all_extents<T[]> : remove_all_extents<T> {};
+
+template<typename T, size_t n>
+struct remove_all_extents<T[n]> : remove_all_extents<T> {};
+
+template<typename T>
+using remove_all_extents_t = typename remove_all_extents<T>::type;
 
 
 ///////////////////////////////////

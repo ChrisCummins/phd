@@ -308,3 +308,25 @@ TEST(ustl_type_traits, remove_pointer) {
   static_assert(ustl::is_same<int&,
                 ustl::remove_pointer_t<int&>>::value);
 }
+
+
+////////////
+// Arrays //
+////////////
+
+
+TEST(std_type_traits, remove_extent) {
+  static_assert(std::is_same_v<int, std::remove_extent_t<int>>);
+  static_assert(std::is_same_v<int, std::remove_extent_t<int[]>>);
+  static_assert(std::is_same_v<int, std::remove_extent_t<int[10]>>);
+  static_assert(std::is_same_v<int[10][15],
+                std::remove_extent<int[5][10][15]>::type>);
+}
+
+TEST(ustl_type_traits, remove_extent) {
+  static_assert(ustl::is_same_v<int, ustl::remove_extent_t<int>>);
+  static_assert(ustl::is_same_v<int, ustl::remove_extent_t<int[]>>);
+  static_assert(ustl::is_same_v<int, ustl::remove_extent_t<int[10]>>);
+  static_assert(ustl::is_same_v<int[10][15],
+                ustl::remove_extent<int[5][10][15]>::type>);
+}
