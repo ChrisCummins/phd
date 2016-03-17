@@ -1,25 +1,13 @@
-% v2-acmsmall-sample.tex, dated March 6 2012
-% This is a sample file for ACM small trim journals
-%
-% Compilation using 'acmsmall.cls' - version 1.3 (March 2012), Aptara Inc.
-% (c) 2010 Association for Computing Machinery (ACM)
-%
-% Questions/Suggestions/Feedback should be addressed to => "acmtexsupport@aptaracorp.com".
-% Users can also go through the FAQs available on the journal's submission webpage.
-%
-% Steps to compile: latex, bibtex, latex latex
-%
-% For tracking purposes => this is v1.3 - March 2012
-
+% -*- ispell-local-dictionary: "en_US" -*-
 \input{preamble}
 
-% Document starts
 \begin{document}
 
 % Page heads
 \markboth{C. Cummins et al.}{Autotuning Stencils Codes with Algorithmic Skeletons}
 
-\title{Collaborative Autotuning of Algorithmic Skeletons}
+\title{Collaborative Autotuning of Algorithmic Skeletons for
+  Heterogeneous Parallelism}
 
 \author{CHRIS CUMMINS, PAVLOS PETOUMENOS, MICHEL STEUWER, and HUGH LEATHER
 \affil{University of Edinburgh}}
@@ -30,36 +18,36 @@
   performance, with an an increasing pressure to offload traditionally
   CPU based workloads to the GPU. This trend has not been matched with
   adequate software tools; the popular languages OpenCL and CUDA
-  provide a very low level model with little abstraction above the
+  provide a low level model with little abstraction above the
   hardware. Programming at this level requires expert knowledge of
-  both the domain and the target hardware, and achieving performance
-  requires laborious hand tuning of each program. This has led to a
-  growing disparity between the availability of parallelism in modern
-  hardware, and the ability for application developers to exploit it.
+  both the domain and the target hardware, and achieving high
+  performance requires laborious hand tuning of each program. This has
+  led to a growing disparity between the availability of parallelism
+  in modern hardware and the ability for application developers to
+  exploit it.
 
   The goal of this work is to bring the performance of hand tuned
-  heterogeneous code to high level programming, by incorporating
+  heterogeneous code to high level programming by incorporating
   autotuning into \textit{Algorithmic Skeletons}. Algorithmic
   Skeletons simplify parallel programming by providing reusable,
   high-level, patterns of computation. However, achieving performant
   skeleton implementations is a difficult task; skeleton authors must
   attempt to anticipate and tune for a wide range of architectures and
   use cases. This results in implementations that target the general
-  case and cannot provide the performance advantages that are gained
-  from tuning low level optimization parameters for individual
-  programs and architectures. Autotuning combined with machine
-  learning offers promising performance benefits by tailoring
-  parameter values to individual cases, but the high cost of training
-  and the ad-hoc nature of autotuning tools limits the practicality of
-  autotuning for real world programming.
+  case and cannot provide the performance advantages to be gained from
+  tuning low level optimization parameters for individual programs and
+  architectures. Autotuning combined with machine learning offers
+  promising performance benefits by tailoring parameter values to
+  individual cases, but the high cost of training and the ad-hoc
+  nature of existing autotuners limits the practicality of autotuning
+  for real world programming.
 
-  To address these issues we introduce \textit{OmniTune}, an
-  extensible and open source framework for dynamically autotuning the
-  optimization parameters of algorithmic skeletons. OmniTune provides
-  a lightweight runtime for performing this machine learning-based
-  autotuning during the program runtime, using machine learning
+  To address these issues we introduce \textit{OmniTune} --- an
+  extensible and open source framework for dynamically autotuning
+  Algorithmic Skeletons at program runtime. OmniTune provides a
+  lightweight autotuning interface using machine learning
   classification and training data distributed across devices. We
-  provide a demonstration of OmniTune by auotuning OpenCL workgroup
+  provide a demonstration of OmniTune by autotuning OpenCL workgroup
   sizes in the Algorithmic Skeleton library \textit{SkelCL}. We
   evaluate three methodologies for predicting workgroup sizes in an
   empirical study of 429 combinations of architecture, kernel, and
@@ -67,7 +55,7 @@
   each. We find that autotuning provides a median $3.79\times$ speedup
   over the best possible fixed workgroup size, achieving 94\% of the
   maximum performance. OmniTune achieves this without requiring any
-  modifications to user code and with as little as 2.5ms overhead.
+  modifications to user code and with a 2.5ms overhead.
   % TODO: how does it improve over the state-of-the-art?
 \end{abstract}
 
@@ -105,28 +93,26 @@
 % End generated code
 %
 
-% We no longer use \terms command
-%\terms{Design, Algorithms, Performance}
-
 \keywords{%
+  Adaptive Optimization,
+  Algorithmic Skeletons,
   Autotuning,
-  algorithmic skeletons,
-  stencils,
-  machine learning,
-  collective tuning,
-  adaptive optimization,
   GPGPU,
+  Machine Learning,
   OpenCL,
-  workgroup size%
+  Stencils,
+  Workgroup Size%
 }
 
 \acmformat{%
   Chris Cummins, Pavlos Petoumenos, Michel Steuwer, and Hugh Leather,
-  2015. Collaborative Autotuning of Algorithmic Skeletons.%
+  2015. Collaborative Autotuning of Algorithmic Skeletons for
+  Heterogeneous Parallelism.%
 }
 
 \begin{bottomstuff}
-  Corresponding Author: C. Cummins, University of Edinburgh; email: \url{c.cummins@ed.ac.uk}.\\*
+  Corresponding Author: C. Cummins, University of Edinburgh;
+  email: \url{c.cummins@ed.ac.uk}.\\*
   This work was supported by the UK Engineering and Physical Sciences
   Research Council under grants EP/L01503X/1 for the University of
   Edinburgh School of Informatics Centre for Doctoral Training in
@@ -140,97 +126,88 @@
 
 \section{Introduction}\label{sec:introduction}
 
-General purpose programming with GPUs has been shown to provide huge
-parallel throughput, but poses a significant programming challenge,
-requiring application developers to master a low level programming
-model (such as provided by CUDA or OpenCL) and architecture (SIMD with
-a multi-level memory hierarchy). As a result, GPGPU programming is
-often beyond the scope of everyday development. If steps are not taken
-to increase the accessibility of such parallelism, the gap between
-potential and utilized performance will continue to widen as hardware
-core counts increases~\cite{Fuller2011}.
+General purpose programming with GPUs offers huge throughput for data
+parallel workloads, but this comes at the cost of increased code
+complexity. Programming for GPUs requires application developers to
+master a low level programming model (such as provided by CUDA or
+OpenCL) and architecture (SIMD with a multi-level memory
+hierarchy). As a result, GPGPU programming is often beyond the scope
+of everyday development, requiring a committed approach and a much
+greater investment of a developer's time than traditional parallel
+programming~\cite{Fuller2011}.
 
-\textit{Algorithmic Skeletons} offer a solution to this this
-\emph{programmability challenge} by raising the level of
-abstraction. This simplifies parallel programming, allowing developers
-to focus on solving problems rather than coordinating parallel
-resources~\cite{Cole2004}. Skeleton frameworks provide robust parallel
-implementations of common patterns of computation which developers
-parameterise with their application-specific
-code~\cite{Gonzalez2010}. This greatly reduces the challenge of
-parallel programming, allowing users to structure their
-problem-solving logic sequentially, while offloading the cognitive
-cost of parallel coordination to the skeleton library author. The
-complexity of heterogeneous programming and the simplicity of high
-level pattern programming has led to GPGPU support in a rising number
-of skeleton frameworks~\cite{%
+\textit{Algorithmic Skeletons} offer a solution to problem by raising
+the level of abstraction above that of coordinating parallel
+resources. When applied to GPGPU parallelism, Algorithmic Skeletons
+allow application developers to structure their problem-solving logic
+sequentially, which frees programmers from the challenges of
+coordinating parallel resources~\cite{Cole2004,Gonzalez2010}. This has
+proven to be a promising solution to the \textit{programmability
+  challenge} of GPGPU parallelism, and has led to a rising number of
+Algorithmic Skeleton frameworks which support GPU hardware~\cite{%
   Enmyren2010,% SkePU
   Ernsting2012,% Muesli
   Marques2013,%
   Aldinucci2014% FastFlow
-} and pattern libraries~\cite{%
-  Stuart2011,% MapReduce on GPUs
-  Sander2012% AMD Bolt C++
-}. However these efforts necessarily abstract many of the low level
-programming details which are critical for maximising performance on a
-per-program basis. %
-% TODO: Rewrite this nonsense.
-Maintaining portable performance across the breadth of devices and
-programs in a rapidly architecture landscape is an ongoing challenge.
+}.
 
+The challenge facing Algorithmic Skeletons is that of
+\textit{performance portability}. By raising the level of abstraction,
+Algorithmic Skeletons necessarily hide low level optimization
+parameters which influence the behavior of parallel programs; for
+example, setting the number of threads to launch for a particular
+algorithm. The performance of parallel programs is sensitive to the
+values of these parameters, and when tuning to maximize performance,
+one size does not fit all. The suitability of parameter values depends
+on the program implementation, the target hardware, and even the
+dataset that is operated upon.
 
-\subsection{The Performance Portability Challenge}
+Iterative compilation and autotuning have been shown to help in these
+cases by automating the selection of parameter values to match
+individual execution environments~\cite{%
+  Bodin1998,% Iterative compilation in a non-linear optimisation space
+  Chen,% Evaluating Iterative Optimization Across 1000 Data Sets
+  Choi2010% Model-driven autotuning of sparse matrix-vector multiply on GPUs
+}. However, these approaches are typically ad-hoc and require a
+lengthy exploration phase to converge on good parameter values.
 
-There are many factors --- or \emph{parameters} --- which influence
-the behavior of parallel programs. For example, setting the number of
-threads to launch for a particular algorithm. The performance of
-parallel programs is sensitive to the values of these parameters, and
-when tuning to maximize performance, one size does not fit all. The
-suitability of parameter values depends on the program implementation,
-the target hardware, and the dataset that is operated upon. Iterative
-compilation and autotuning have been shown to help in these cases by
-automating the process of tuning parameter values to match individual
-execution environments~\cite{Kisuki}. However, there have been few
-attempts to develop general mechanisms for these techniques, and the
-time taken to develop ad-hoc autotuning solutions and gather
-performance data is often prohibitively expensive.
-
-We believe that by embedding autotuning at the skeletal level, it is
-possible to achieve performance with algorithmic skeletons that is
-competitive with --- and in some cases, exceeds --- that of hand tuned
-parallel implementations which traditionally came at the cost of many
-man hours of work from expert programmers to develop. Incorporating
-autotuning into algorithmic skeleton libraries has two key benefits:
-first, it minimizes development effort by requiring only a
-modification to the skeleton implementation rather than to every user
-program; and second, by targeting a library, it enables a broader and
-more substantive range of performance data to be gathered than with
-ad-hoc tuning of individual programs.
-
-
-\subsection{TODO: intro to autotuning}
-
-
-\subsection{Contributions}
-
-The key contributions of this work are:
-
+We believe that by embedding autotuning at the \textit{skeletal}
+level, it is possible to achieve performance with algorithmic
+skeletons that is competitive with --- and in some cases, exceeds ---
+that of hand tuned parallel implementations, whilst not requiring any
+modifications to user code. There are two key motivations for our
+hypothesis: first, autotuning at the skeletal level provides implicit
+information about the nature of the computation being tuned, as each
+skeleton has a well defined interface and pattern of execution;
+secondly, the autotuning logic can be entirely encapsulated within the
+skeleton implementation, allowing training data to be shared across
+multiple systems. In this work, we implement and evaluate this
+proposed approach to autotuning. Our key contributions are:
+%
 \begin{itemize}
 \item The design and implementation of a generic toolset for
   autotuning: \emph{OmniTune} is a novel and extensible framework for
-  collaborative autotuning of optimization parameters across the life
-  cycle of programs.
-\item The integration of OmniTune with an established skeleton library
-  for CPU and multi-GPU parallelism, SkelCL~\cite{Steuwer2011}. We
-  extend SkelCL to provide autotuning for the selection of OpenCL
-  workgroup size for Stencil skeletons, achieving 94\% of the maximum
-  performance in an evaluation of 429 combinations of architectures
-  and stencil programs.
-\item A comparison of multiple approaches for runtime autotuning:
-  using classifiers to predict optimal parameter values, using
-  regressors to predict the absolute runtime of programs, and using
-  regressors to predict the relative performance of different
-  parameter values.
+  collaboratively autotuning Algorithmic Skeletons across the life
+  cycle of programs. OmniTune abstracts autotuning logic, requiring
+  minimal modifications to Algorithmic Skeleton
+  implementations. Training data for machine learning is distributed
+  across systems to allow the collaborative training of optimization
+  spaces.
+\item A practical demonstration of OmniTune using \textit{SkelCL}, an
+  established Algorithmic Skeleton library for CPU and multi-GPU
+  parallelism. We implement three methodologies for selecting OpenCL
+  workgroup sizes for the SkelCL Stencil skeleton --- the first, using
+  classifiers to predict optimal workgroup sizes. The second and third
+  methodologies employ the novel use of regressors for performing
+  classification by predicting the runtime of kernels and the relative
+  performance of different workgroup sizes, respectively.
+\item An exhaustive evaluation of the OpenCL workgroup size
+  optimization across 429 combinations of stencil programs, devices,
+  and datasets. We combine procedurally generated and real world
+  stencil benchmarks to evaluate the effectiveness of our autotuning
+  technique, demonstrating that OmniTune provides a meedian
+  $3.79\times$ speedup over the best statically selected workgroup
+  size, achieving 94\% of the maximum performance.
 \end{itemize}
 
 \section{Motivation}
@@ -293,24 +270,23 @@ The key contributions of this work are:
 }
 \end{figure}
 
-In this section we will briefly examine the performance impact of
-selecting workgroup size for the SkelCL Stencil skeleton. A full
-explanation of SkelCL and the workgroup size parameter space is given
-Section~\ref{sec:omnitune-skelcl}.
-
-SkelCL uses OpenCL to parallelise skeleton operations across many
-threads. In OpenCL, multiple threads are grouped into
-\emph{workgroups}. The shape and size of these groups is known to have
-a big impact on performance. For the SkelCL stencil skeleton, the
-selection of workgroup size presents a two dimensional parameter
-space, consisting of a number of rows and columns ($w_r \times w_c$).
-Measuring and plotting the runtime of stencil programs using different
-workgroup sizes allows us to compare the performance of different
-workgroup sizes for different combinations of architecture and
-program. Figure~\ref{fig:motivation-arch} shows this performance
+By way of motivating the development of autotuning for Algorithmic
+Skeletons, we provide a brief examination of the performance impact
+the OpenCL workgroup size parameter on the performance of Stencil
+skeletons in SkelCL (see Section~\ref{sec:omnitune-skelcl} for a full
+explanation). SkelCL uses OpenCL to parallelise skeleton operations
+across many threads~\cite{Steuwer2011}. In OpenCL, multiple threads
+are grouped into \emph{workgroups}. The shape and size of these
+workgroups is known to have a big impact on performance. For the
+SkelCL stencil skeleton, the selection of workgroup size presents a
+two dimensional parameter space rows ($w_r$) and columns ($w_c$).
+Measuring and plotting the runtime of SkelCL stencil kernels using
+different workgroup sizes allows us to compare the performance of
+different workgroup sizes for different combinations of architecture
+and program. Figure~\ref{fig:motivation-arch} shows this performance
 comparison for a single stencil program on two different devices,
 demonstrating that a good choice of workgroup size is device
-dependent. The optimization space of the same stencil benchmark on
+dependent. The optimization space of the same stencil kernel on
 different devices is radically different: not only does the optimal
 workgroup size change between devices, but the performance of
 suboptimal workgroup sizes is also dissimilar. The optimization space
@@ -332,12 +308,10 @@ is only 63\% of the maximum.
 
 SkelCL uses a fixed workgroup size by default. Since both the
 execution device and the user-provided stencil code are not known
-until runtime, selection of workgroup size should be made
-dynamically. To the best of our knowledge, there is currently no such
-generic system which meets our requirements for lightweight runtime
-machine learning autotuning with distributed training sets, and as a
-result, a variety of autotuners have been developed ad-hoc and on a
-per-case basis.
+until runtime, dynamic selection of workgroup size can provide clear
+performance benefits. To the best of our knowledge, there is currently
+no such generic system which meets our requirements for lightweight
+runtime machine learning autotuning with distributed training sets.
 
 
 \section{The OmniTune Framework}\label{sec:autotune}
@@ -347,20 +321,22 @@ per-case basis.
 \includegraphics[width=.6\columnwidth]{img/omnitune-system-overview.pdf}
 \caption{%
   OmniTune system architecture, showing the separate components and
-  the one to many relationship between servers to client applications,
-  and remotes to servers.%
+  the many to one relationship between client applications and
+  servers, and servers to remotes.%
   % \vspace{-2em}%
 }
 \label{fig:omnitune-system-overview}
 \end{figure}
 
-OmniTune is a novel framework for extensible, distributed autotuning
-of parameter values at runtime using machine learning. It serves as a
-generic platform for developing autotuning solutions, aiming to reduce
-both the engineering time required to target new optimization
-parameters, and the time to deploy on new systems.
+OmniTune is our open source\footnote{OmniTune source code available
+  at: \url{http://chriscummins.cc/s/omnitune}.}, novel framework for
+distributed autotuning of Algorithmic Skeletons using machine
+learning. It is an extensible, generic platform for developing
+autotuning solutions, aiming to reduce both the engineering effort
+required to target new optimization parameters, and the time to
+deployment on new systems.
 
-It emphasizes collaborative, online learning of optimization spaces. A
+OmniTune emphasizes collaborative learning of optimization spaces. A
 client-server architecture with clearly delineated separation of
 concerns minimizes the code footprint in client applications, enabling
 quick re-purposing for autotuning targets. OmniTune provides a
@@ -370,75 +346,75 @@ featured environment for quickly implementing autotuning, while
 providing enough flexibility to cater to a wide range of use
 cases. First, we describe the overall structure of OmniTune and the
 rationale for the design, followed by the interfaces and steps
-necessary to apply OmniTune.
+necessary to apply OmniTune to a Skeleton library.
 
 
 \subsection{System Architecture}
 
+OmniTune is built around a three tier client-server architecture,
+shown in Figure~\ref{fig:omnitune-system-overview}. The applications
+which are to be autotuned are the \emph{clients}. These clients
+communicate with a system-wide \emph{server}, which handles autotuning
+requests. The server communicates and caches data sourced from a
+\emph{remote} server, which maintains a global store of all autotuning
+data. There is a many to one relationship between clients, servers,
+and remotes, such that a single remote may handle connections to
+multiple servers, which in turn may accept connections from multiple
+clients. This design has two primary advantages: the first is that it
+decouples the autotuning logic from that of the client program,
+allowing developers to easily repurpose the autotuning framework to
+target additional optimization parameters without a significant
+development overhead for the target applications; the second advantage
+is that this enables collective tuning, in which training data
+gathered from a range of devices can be accessed and added to by any
+OmniTune server.
+
 Common implementations of autotuning in the literature either embed
 the autotuning logic within each target application
 (e.g.~\cite{Chen2014}), or take a standalone approach in which the
-autotuner is a program which must be externally invoked by the user to
-tune a target application (e.g.~\cite{Lutz2013}). Embedding the
-autotuner within each target application has the advantage of
-providing ``always-on'' behavior, but is infeasible for complex
-systems in which the cost of building machine learning models must be
-added to each program run. The standalone approach separates the
-autotuning logic, at the expense of adding one additional step to the
-build process. The approach taken in OmniTune aims to combine the
+autotuner is a separate program which must be externally invoked by
+the user (e.g.~\cite{Lutz2013}). Embedding the autotuner within each
+target application has the advantage of providing ``always-on''
+behavior, but is infeasible for complex systems in which the cost of
+building machine learning models must be added to each program
+run. The standalone approach separates the autotuning logic, at the
+expense of adding one additional step to the build process. The
+client-server approach taken in OmniTune aims to combine the
 advantages of both techniques by implementing autotuning \emph{as a
   service}, in which a standalone autotuning server performs the heavy
 lifting of managing training data and machine learning models, with a
 minimal set of lightweight communication logic to be embedded in
 target applications.
 
-OmniTune is built around a three tier client-server model, shown in
-Figure~\ref{fig:omnitune-system-overview}. The applications which are
-to be autotuned are the \emph{clients}. These clients communicate with
-a system-wide \emph{server}, which handles autotuning requests. The
-server communicates and caches data sourced from a \emph{remote}
-server, which maintains a global store of all autotuning data. There
-is a many to one relationship between clients, servers, and remotes,
-such that a single remote may handle connections to multiple servers,
-which in turn may accept connections from multiple clients. This
-design has two primary advantages: the first is that it decouples the
-autotuning logic from that of the client program, allowing developers
-to easily repurpose the autotuning framework to target additional
-optimization parameters without a significant development overhead for
-the target applications; the second advantage is that this enables
-collective tuning, in which training data gathered from a range of
-devices can be accessed and added to by any OmniTune server.
-
 The OmniTune framework is implemented as a set of Python classes which
 are extended to target specific parameters. The generic implementation
 of OmniTune's server and remote components consists of 8987 lines of
 Python and MySQL code. No client logic is provided, since that is use
-case dependent (See Section~\ref{sec:omnitune-skelcl} for an example
-implementation for SkelCL). Inter-process communication between client
-programs and the server uses the D-Bus protocol. D-Bus is
-cross-platform, and bindings are available for most major programming
-languages, allowing flexibility for use with a range of
+case dependent (see Section~\ref{sec:omnitune-skelcl} for details of a
+concrete implementation for SkelCL). Inter-process communication
+between client programs and the server uses the D-Bus protocol. D-Bus
+is cross-platform, and bindings are available for most major
+programming languages, allowing flexibility for use with a range of
 clients. Communication between servers and remotes uses TCP/IP (we
-used an Amazon Web Services database instance for development).
+used an Amazon Web Services instance for testing).
 
 
 \subsection{Autotuning Behavior}
 
 The goal of machine learning enabled autotuning is to build models
 from empirical performance data of past programs to select parameter
-values for new \emph{unseen} programs. Instead of an iterative process
-of trial and improvement, parameter values are \emph{predicted}, by
-building correlations between performance, and \emph{features}
-(explanatory variables). The data used to build such models is called
-training data. OmniTune supports autotuning using a separate offline
-training phase, online training, or a mixture of both. For each
-autotuning-capable machine, an OmniTune server acts as an intermediary
-between training data and the client application, and hosts the
-autotuning logic. On launch, a server requests the latest training
-data from the remote, which it uses to build the relevant models for
-performing prediction of optimization parameter values. If additional
-training data is gathered by the server, this can be uploaded to the
-remote.
+values for new \emph{unseen} programs. Instead of an iterative search
+for good parameters, parameter values are \emph{predicted} based on
+models built from measured performance and \emph{features}
+(explanatory variables) of past values. The data used to build such
+models is called training data. OmniTune supports autotuning using a
+separate offline training phase, online training, or a mixture of
+both. For each autotuning-capable machine, an OmniTune server hosts
+the autotuning logic. On launch, the server requests the latest
+training data from the remote, which it uses to build the relevant
+models for performing parameter value prediction. If additional
+training data is gathered by the server, this can be uploaded and
+synchronized with the remote.
 
 While the data types of the autotuning interface are
 application-specific (e.g. a binary flag or one or more numeric
@@ -449,13 +425,14 @@ models to form a prediction for the optimal parameter values and
 return these. Crucially, there is a mechanism provided for the client
 to \emph{refuse} parameter values. This functionality is provided for
 cases where the predicted parameter values are in some way invalid and
-do not lead to a valid program. % TODO: citation
+do not lead to a valid program.
 
 The server contains a library of machine learning tools to perform
 parameter prediction, interfacing with the popular datamining software
-suite Weka\footnote{\url{http://www.cs.waikato.ac.nz/ml/weka/}} using
-its Java Native Interface. The provided tools include classifiers,
-regressors, and a selection of meta-learning algorithms.
+suite Weka\footnote{Weka 3 available at:
+  \url{http://www.cs.waikato.ac.nz/ml/weka/}} using its Java Native
+Interface. The provided tools include classifiers, regressors, and a
+selection of meta-learning algorithms.
 
 OmniTune servers may perform additional feature extraction of
 explanatory variables supplied by incoming client requests. The reason
@@ -505,9 +482,9 @@ observations, and refuse suggested parameters:
   explanatory variables $x$.
 \end{itemize}
 %
-% This set of operations enables the core functionality of an autotuner,
-% while providing flexibility for the client to control how and when
-% training data is collected.
+% This set of operations enables the core functionality of an
+% autotuner, while providing flexibility for the client to control how
+% and when training data is collected.
 
 \paragraph{Server-Remote} The role of the remote is to provide
 bookkeeping of training data for machine learning. Remotes allow
@@ -542,7 +519,9 @@ apply OmniTune to SkelCL.
 \section{Integration of OmniTune with SkelCL}\label{sec:omnitune-skelcl}
 
 In this section we demonstrate the practicality of OmniTune by
-integrating the framework into an established algorithmic skeleton
+integrating the framework into an established open
+source\footnote{SkelCL source code available at:
+  \url{https://github.com/skelcl/skelcl}} Algorithmic Skeleton
 library. Introduced in~\cite{Steuwer2011}, SkelCL enables users to
 easily harness the power of GPUs and CPUs for data parallel computing,
 offering a set of OpenCL implementations of data parallel skeletons in
@@ -573,7 +552,6 @@ device hardware.
   }
   \label{fig:stencil-img}
 \end{figure}
-
 
 Stencils are patterns of computation which operate on uniform grids of
 data, where the value of each grid element (cell) is updated based on
@@ -1534,12 +1512,15 @@ other users, which reduces the time to deployment.
 % optimal parameters on a per-case basis, rather than \emph{learning}
 % parameter spaces.
 
+% TODO: more complimentary. ``this work complements the ideology of
+% reproducible crowdsourced benchmarking, and applies this approach to
+% autotuning ...'''
 A ``big data'' driven approach to autotuning is presented
-in~\cite{Fursin2014}. The authors propose the use of ``Collective
-optimization'' to leverage training experience across devices, by
-sharing performance data, datasets and additional metadata about
-experimental setups. In addition to the mechanism for sharing training
-datasets, our system provides the capabilities of performing
+in~\cite{Fursin2014,Fursin2015}. The authors propose the use of
+``Collective optimization'' to leverage training experience across
+devices, by sharing performance data, datasets and additional metadata
+about experimental setups. In addition to the mechanism for sharing
+training datasets, our system provides the capabilities of performing
 autotuning at runtime using a lightweight inter-process communication
 interface. Additionally, Collective Mind uses a NoSQL JSON format for
 storing datasets. The relational schema used in OmniTune offers
