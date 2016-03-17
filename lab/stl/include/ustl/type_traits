@@ -3,11 +3,25 @@
 #ifndef USTL_TYPE_TRAITS_H
 #define USTL_TYPE_TRAITS_H
 
+//
+// This is only a partial implementation of some of the code which
+// doesn't require compiler magic (e.g. std::is_enum<T> and that
+// ilk). For everything we don't implement, we'll use the standard library.
+//
+#include <type_traits>
+
 namespace ustl {
+
+// Forward declaration of helpers:
+template<typename T> struct remove_cv;
+template<bool b, typename T = void> struct enable_if;
+template<typename T, typename U> struct is_same;
+
 
 ////////////////////
 // Helper Classes //
 ////////////////////
+
 
 //
 // struct integral_constant<T, v>:
@@ -32,6 +46,7 @@ using false_type = std::integral_constant<bool, false>;
 // Primary type categories //
 /////////////////////////////
 
+
 //
 // struct is_void<T>:
 //
@@ -45,6 +60,11 @@ template<> struct is_void<const void> : true_type {};
 template<> struct is_void<volatile void> : true_type {};
 template<> struct is_void<const volatile void> : true_type {};
 
+// Helper variable template:
+template<typename T>
+constexpr bool is_void_v = is_void<T>::value;
+
+
 //
 // struct is_integral<T>:
 //
@@ -55,34 +75,87 @@ template<> struct is_void<const volatile void> : true_type {};
 // signed, unsigned, and cv-qualified variants. Otherwise, value is
 // equal to false.
 //
-template<typename T> struct is_integral : false_type {};
+namespace {  // anonymous namespace
+// helper structs since we need to use non cv-qualified types:
+template<typename T> struct is_integral_impl : false_type {};
 
-// Specialisations for integral types:
-#define cv_is_integral(x) \
-    template<> struct is_integral<x> : true_type {}; \
-    template<> struct is_integral<const x> : true_type {}; \
-    template<> struct is_integral<volatile x> : true_type {}; \
-    template<> struct is_integral<const volatile x> : true_type {};
+template<> struct is_integral_impl<bool> : true_type {};
+template<> struct is_integral_impl<char16_t> : true_type {};
+template<> struct is_integral_impl<char32_t> : true_type {};
+template<> struct is_integral_impl<wchar_t> : true_type {};
+template<> struct is_integral_impl<short>  // NOLINT(runtime/int)
+    : true_type {};
+template<> struct is_integral_impl<unsigned short>  // NOLINT(runtime/int)
+    : true_type {};
+template<> struct is_integral_impl<int> : true_type {};
+template<> struct is_integral_impl<unsigned int> : true_type {};
+template<> struct is_integral_impl<long>  // NOLINT(runtime/int)
+    : true_type {};
+template<> struct is_integral_impl<unsigned long>  // NOLINT(runtime/int)
+    : true_type {};
+template<> struct is_integral_impl<long long>  // NOLINT(runtime/int)
+    : true_type {};
+template<> struct is_integral_impl<unsigned long long>  // NOLINT(runtime/int)
+    : true_type {};
+}  // namespace
 
-#define cvu_is_integral(x) \
-    cv_is_integral(x); \
-    cv_is_integral(unsigned x);
-
-cv_is_integral(bool);
-cv_is_integral(char16_t);
-cv_is_integral(char32_t);
-cv_is_integral(wchar_t);
-cvu_is_integral(short);  // NOLINT(runtime/int)
-cvu_is_integral(int);
-cvu_is_integral(long);  // NOLINT(runtime/int)
-cvu_is_integral(long long);  // NOLINT(runtime/int)
-
-#undef cv_is_integral
-#undef cvu_is_integral
+template<typename T> struct is_integral
+    : is_integral_impl<typename remove_cv<T>::type> {};
 
 // Helper variable template:
 template<typename T>
 constexpr bool is_integral_v = is_integral<T>::value;
+
+
+//
+// struct is_class<T>:
+//
+// Checks whether T is a class or struct type. Provides the member
+// constant value which is equal to true, if T is an class or struct
+// type (but not union). Otherwise, value is equal to false.
+//
+namespace {  // private namespace for helpers
+template<typename T>
+char test(int T::*);
+
+struct two { char c[2]; };
+
+template<typename T>
+two test(...);
+}  // namespace
+
+template<typename T>
+struct is_class : std::integral_constant<bool, sizeof(test<T>(0)) == 1
+    && !std::is_union<T>::value> {};
+
+// Helper variable template:
+template<typename T>
+constexpr bool is_class_v = is_class<T>::value;
+
+
+//
+// struct is_pointer<T>
+//
+// Checks whether T is a pointer to object or a pointer to function
+// (but not a pointer to member/member function). Provides the member
+// constant value which is equal to true, if T is a object/function
+// pointer type. Otherwise, value is equal to false.
+//
+namespace {  // anonymous namespace
+// helper structs since we need to use non cv-qualified types:
+template<typename T>
+struct is_pointer_impl : false_type {};
+
+template<typename T>
+struct is_pointer_impl<T*> : true_type {};
+}  // namespace
+
+template<typename T>
+struct is_pointer : is_pointer_impl<typename remove_cv<T>::type> {};
+
+// Helper variable template:
+template<typename T>
+constexpr bool is_pointer_v = is_pointer<T>::value;
 
 
 ///////////////////////////////
@@ -109,6 +182,7 @@ constexpr bool is_integral_v = is_integral<T>::value;
 // Type relationships //
 ////////////////////////
 
+
 //
 // If T and U name the same type with the same const-volatile
 // qualifications, provides the member constant value equal to
@@ -130,14 +204,170 @@ constexpr bool is_same_v = is_same<T, U>::value;
 /////////////////////////////////
 
 
+//
+// struct remove_const<T>:
+//
+// Removes the topmost const.
+//
+template<typename T>
+struct remove_const {
+  using type = T;
+};
+
+// specialisation for const type:
+template<typename T>
+struct remove_const<const T> {
+  using type = T;
+};
+
+
+//
+// struct remove_volatile<T>:
+//
+// Removes the topmost volatile.
+//
+template<typename T>
+struct remove_volatile {
+  using type = T;
+};
+
+// specialisation for volatile type:
+template<typename T>
+struct remove_volatile<volatile T> {
+  using type = T;
+};
+
+
+//
+// struct remove_cv<T>:
+//
+// Removes the topmost const, the topmost volatile, or both, if
+// present.
+//
+template<typename T>
+struct remove_cv {
+  using type =
+      typename remove_volatile<typename std::remove_const<T>::type>::type;
+};
+
+
 ////////////////
 // References //
 ////////////////
 
 
+//
+// struct remove_reference<T>:
+//
+// If the type T is a reference type, provides the member typedef type
+// which is the type referred to by T. Otherwise type is T.
+//
+template<typename T>
+struct remove_reference {
+  using type = T;
+};
+
+template<typename T>
+struct remove_reference<T&> {
+  using type = T;
+};
+
+template<typename T>
+struct remove_reference<T&&> {
+  using type = T;
+};
+
+template<typename T>
+using remove_reference_t = typename remove_reference<T>::type;
+
+
+//
+// struct add_lvalue_reference<T>:
+//
+// Provides a member typedef type which is T&. If T is an rvalue
+// reference to some type U, then type is U&. Otherwise, type is T.
+//
+template<typename T>
+struct add_lvalue_reference {
+  using type = T&;
+};
+
+template<typename T>
+struct add_lvalue_reference<T&> {  // lvalue reference
+  using type = T&;
+};
+
+template<typename T>
+struct add_lvalue_reference<T&&> {  // rvalue reference
+  using type = T&;
+};
+
+template<typename T>
+using add_lvalue_reference_t = typename add_lvalue_reference<T>::type;
+
+
+//
+// struct add_rvalue_reference<T>:
+//
+// Provides a member typedef type which is T&&.
+//
+template<typename T>
+struct add_rvalue_reference {
+  using type = T&&;  // NOLINT(whitespace/operators)
+};
+
+template<typename T>
+struct add_rvalue_reference<T&> {  // lvalue reference
+  using type = T&;
+};
+
+template<typename T>
+struct add_rvalue_reference<T&&> {  // rvalue reference
+  using type = T&&;  // NOLINT(whitespace/operators)
+};
+
+template<typename T>
+using add_rvalue_reference_t = typename add_rvalue_reference<T>::type;
+
+
 //////////////
 // Pointers //
 //////////////
+
+
+//
+// struct remove_pointer<T>:
+//
+// Provides the member typedef type which is the type pointed to by T,
+// or, if T is not a pointer, then type is the same as T.
+//
+template<typename T>
+struct remove_pointer {
+  using type = T;
+};
+
+template<typename T>
+struct remove_pointer<T*> {
+  using type = T;
+};
+
+template<typename T>
+struct remove_pointer<T*const> {
+  using type = T;
+};
+
+template<typename T>
+struct remove_pointer<T*volatile> {
+  using type = T;
+};
+
+template<typename T>
+struct remove_pointer<T*const volatile> {
+  using type = T;
+};
+
+template<typename T>
+using remove_pointer_t = typename remove_pointer<T>::type;
 
 
 ////////////////////
@@ -149,13 +379,50 @@ constexpr bool is_same_v = is_same<T, U>::value;
 // Arrays //
 ////////////
 
-//
-// remove_extent:
-//
 
 //
-// remove_all_extents
+// struct remove_extent<T>:
 //
+// If T is an array of some type X, provides the member typedef type
+// equal to X, otherwise type is T. Note that if T is a
+// multidimensional array, only the first dimension is removed.
+//
+template<typename T>
+struct remove_extent {
+  using type = T;
+};
+
+template<typename T>
+struct remove_extent<T[]> {
+  using type = T;
+};
+
+template<typename T, size_t n>
+struct remove_extent<T[n]> {
+  using type = T;
+};
+
+template<typename T>
+using remove_extent_t = typename remove_extent<T>::type;
+
+
+//
+// struct remove_all_extents<T>:
+//
+// If T is a multidimensional array of some type X, provides the
+// member typedef type equal to X, otherwise type is T.
+//
+template<typename T>
+struct remove_all_extents : remove_extent<T> {};
+
+template<typename T>
+struct remove_all_extents<T[]> : remove_all_extents<T> {};
+
+template<typename T, size_t n>
+struct remove_all_extents<T[n]> : remove_all_extents<T> {};
+
+template<typename T>
+using remove_all_extents_t = typename remove_all_extents<T>::type;
 
 
 ///////////////////////////////////
@@ -180,7 +447,7 @@ constexpr bool is_same_v = is_same<T, U>::value;
 //
 
 // Base case. No "type" member, so usage will fail.
-template<bool B, typename T = void> struct enable_if {};
+template<bool B, typename T> struct enable_if {};
 
 // Specialisation for true case.
 template<typename T> struct enable_if<true, T> { using type = T; };
