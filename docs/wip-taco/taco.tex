@@ -3,6 +3,8 @@
 
 \begin{document}
 
+% TODO: workshop extension
+
 % Page heads
 \markboth{C. Cummins et al.}{Autotuning Stencils Codes with Algorithmic Skeletons}
 
@@ -1460,17 +1462,18 @@ space of compiler optimisations~\cite{Bodin1998,Kisuki}. Since then,
 machine learning techniques have been successfully employed to reduce
 the cost of iterative
 compilation~\cite{Agakov,Stephenson2003,Fursin2011}. However,
-optimizing GPGPU programs presents different challenges to that of
-traditional CPU programming. Speedups of up to $432\times$ for matrix
-multiplication in CUDA were demonstrated in~\cite{Ryoo2008a} through
-the appropriate use of zero-overhead thread scheduling, memory
-bandwidth, and thread grouping. The importance of proper exploitation
-of local shared memory and synchronization costs is explored
+optimizing for GPU hardware presents different challenges to that of
+CPUs.
+zero-overhead thread scheduling, memory bandwidth, and thread
+grouping Speedups of up to $432\times$ for matrix multiplication in CUDA
+were demonstrated in~\cite{Ryoo2008a} through . The importance of proper exploitation of local shared memory
+and synchronization costs is explored
 in~\cite{Lee2010}. In~\cite{Chen2014}, data locality optimisations are
 automated using a description of the hardware and a
-memory-placement-agnostic compiler. \cite{Magni2014} use a machine
-learning model to predict optimal thread coarsening factors of OpenCL
-kernels, demonstrating speedups between $1.11\times$ and $1.33\times$.
+memory-placement-agnostic compiler. A machine learning model to
+predict optimal thread coarsening factors of OpenCL kernels is
+presented in~\cite{Magni2014}, demonstrating speedups between
+$1.11\times$ and $1.33\times$.
 
 \cite{Ganapathi2009} demonstrated early attempts at autotuning
 multicore stencil codes, drawing upon the successes of statistical
@@ -1501,8 +1504,8 @@ to explore optimization spaces. In OpenTuner, using ensemble search
 techniques; in CLTune, using simulated annealing or particle
 swarms. Since OpenTuner and CLTune do not \emph{learn} optimization
 spaces as OmniTune does, performance data is not shared across
-devices. This means that the search for performant parameter values
-must be performed by each new device to be autotuned. Our approach
+devices. This means that the search for good parameter values must be
+repeated for each new device and program to be autotuned. Our approach
 combines machine learning with distributed training sets so that new
 users automatically benefit from the collective tuning experience of
 other users, which reduces the time to deployment.
@@ -1532,7 +1535,7 @@ evaluation of their technique.
 \section{Conclusions and Future Work}\label{sec:conclusions}
 
 As the trend towards increasingly programmable heterogeneous
-architectures continues, the need for high level, accessible
+architectures continues, the need for industrial quality, high level
 abstractions to manage such parallelism will continue to
 grow. Autotuning proves to be a valuable aid for achieving these
 goals, provided that the burden of development and collecting
@@ -1549,26 +1552,24 @@ of OpenCL kernels for SkelCL stencil codes. This optimization space is
 complex, non linear, and critical for the performance of stencil
 kernels.  Selecting the correct workgroup size is difficult ---
 requiring a knowledge of the kernel, dataset, and underlying
-architecture. To the best of our knowledge, this work constitutes the
-first attempt to autotune the workgroup size of high-level stencil
-patterns. The autotuning techniques proposed in this paper achieve up
-to 94\% of the maximum performance, providing average speedups of
-$5.57\times$ over static tuning, while providing robust fallbacks in
+architecture. The autotuning techniques proposed in this paper achieve
+up to 94\% of the maximum performance, providing median speedups of
+$3.79\times$ over static tuning, while providing robust fallbacks in
 the presence of unexpected behavior of OpenCL driver
-implementations. Of the three techniques proposed, predicting the
-relative performances of workgroup sizes using regressors provides the
-highest median speedup, whilst predicting the oracle workgroup size
-using decision tree classifiers adds the lowest runtime overhead. This
-presents a trade-off between classification time and training time,
-which could be explored in future work using a hybrid of the
-classifier and regressor techniques presented in this paper.
+implementations.
+
+Of the three techniques proposed, predicting the relative performances
+of workgroup sizes using regressors provides the greatest performance
+improvements, whilst predicting the oracle workgroup size using
+decision tree classifiers adds the lowest runtime overhead. This
+presents a trade-off between classification time and training time
+which could be explored in future work using a hybrid technique.
 
 In future work we will further explore the transition towards online
-machine learning, developing methods for the collaborative exploration
-of optimization spaces in parallel across multiple cooperating
-devices. This will be combined with the use of adaptive sampling plans
-to minimize the number of observations required to distinguish bad
-from good parameter values.
+machine learning, developing methods for the parallel exploration of
+optimization spaces across multiple devices. This will be combined
+with the use of adaptive sampling plans to minimize the number of
+observations required to distinguish bad from good parameter values.
 
 % TODO: High level patterns as core language features.
 % \cite{%
