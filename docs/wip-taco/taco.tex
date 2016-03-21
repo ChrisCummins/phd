@@ -1455,19 +1455,17 @@ following conclusions can be drawn:
 
 \section{Related Work}\label{sec:related}
 
-\subsection{Comparison against State of the Art}
-
 Early work in autotuning applied iterative search techniques to the
 space of compiler optimisations~\cite{Bodin1998,Kisuki}. Since then,
 machine learning techniques have been successfully employed to reduce
 the cost of iterative
 compilation~\cite{Agakov,Stephenson2003,Fursin2011}. However,
 optimizing for GPU hardware presents different challenges to that of
-CPUs.
-zero-overhead thread scheduling, memory bandwidth, and thread
-grouping Speedups of up to $432\times$ for matrix multiplication in CUDA
-were demonstrated in~\cite{Ryoo2008a} through . The importance of proper exploitation of local shared memory
-and synchronization costs is explored
+CPUs. Zero-overhead thread scheduling, memory bandwidth, and thread
+grouping optimisations were applied to CUDA matrix multiplication
+in~\cite{Ryoo2008a}, enabling speedups of up to $432\times$. The
+importance of proper exploitation of local shared memory and
+synchronization costs is explored
 in~\cite{Lee2010}. In~\cite{Chen2014}, data locality optimisations are
 automated using a description of the hardware and a
 memory-placement-agnostic compiler. A machine learning model to
@@ -1475,61 +1473,57 @@ predict optimal thread coarsening factors of OpenCL kernels is
 presented in~\cite{Magni2014}, demonstrating speedups between
 $1.11\times$ and $1.33\times$.
 
-\cite{Ganapathi2009} demonstrated early attempts at autotuning
-multicore stencil codes, drawing upon the successes of statistical
-machine learning techniques in the compiler community. They use Kernel
-Canonical Correlation Analysis to build correlations between stencil
-features and optimization parameters. Their use of KCCA restricts the
-scalability of their system, as the complexity of model building grows
-exponentially with the number of features. A code generator and
-autotuner for 3D Jacobi stencil codes is presented
-in~\cite{Zhang2013a}, although their approach requires a full
-enumeration of the parameter space for each new program, and has no
-cross-program learning. A DSL and CUDA code generator for stencils is
-presented in~\cite{Kamil2010}. Unlike the SkelCL stencil pattern, the
-generated stencil codes do not exploit fast local device
+The autotuning frameworks OpenTuner~\cite{Ansel2013} and
+CLTune~\cite{Nugteren2015} use iterative search techniques to explore
+optimization spaces. In OpenTuner, using ensemble search techniques;
+in CLTune, using simulated annealing or particle swarms. Since
+OpenTuner and CLTune do not \emph{learn} optimization spaces as
+OmniTune does, performance data is not shared across devices. This
+means that the search for good parameter values must be repeated for
+each new device and program to be autotuned. Our approach combines
+machine learning with distributed training sets so that these repeated
+explorations are avoided. \cite{Fursin2015} advocate a ``big data''
+driven approach to compiler optimization, where datasets, benchmarks,
+and metadata about experimental setups are shared in a global
+repository. This work is complementary to our own, where we have
+demonstrated the utility of sharing training data for cross-device
+autotuning. The design of OmniTune is highly optimised for minimal
+latency autotuning, requiring us to use the client-server architecture
+to cache local copies of training data, keeping autotuning latency at
+2.5ms.
+
+For autotuning stencil codes, \cite{Ganapathi2009} drew upon the
+successes of statistical machine learning techniques in the compiler
+community, using Kernel Canonical Correlation Analysis to build
+correlations between stencil features and optimization
+parameters. Their use of KCCA restricts the scalability of their
+system, as the complexity of model building grows exponentially with
+the number of features. In~\cite{Garvey2015b}, synthetically generated
+OpenCL stencils are autotuned for a single GPU using a random forest
+classifier to predict memory loading strategy, followed by a heuristic
+and an exhaustive search of additional parameter spaces. They evaluate
+their system on a single GPU, cross-device performance.
+
+A code generator and autotuner for 3D Jacobi stencil codes is
+presented in~\cite{Zhang2013a}, although their approach requires a
+full enumeration of the parameter space for each new program, and has
+no cross-program learning. A DSL and CUDA code generator for stencils
+is presented in~\cite{Kamil2010}. Unlike the SkelCL stencil pattern,
+the generated stencil codes do not exploit fast local device
 memory. Autotuning memory transfers for multi-GPU stencils is explored
 in~\cite{Lutz2013} using a combination of offline tuning and runtime
 parameter search. A comparison of tuning for CPU and GPU architectures
-is made in~\cite{Christen2011}, although the authors did not compare
-differences between GPUs. The automatic generation of synthetic
-benchmarks using parameterised template substitution is presented
-in~\cite{Chiu2015}. The authors describe an application of their tool
-for generating OpenCL stencil kernels for machine learning, but do not
-report any performance results.
+is made in~\cite{Christen2011}, although the authors do not compare
+differences between GPUs. \cite{Falch2015} use Neural Networks to
+autotune three hand-parameter OpenCL benchmarks. Their approach does
+not account for invalid parameter values, which causes their autotuner
+to predict invalid configurations for some benchmarks.
 
-OpenTuner~\cite{Ansel2013} and CLTune~\cite{Nugteren2015} are examples
-of generic autotuning frameworks which use iterative search techniques
-to explore optimization spaces. In OpenTuner, using ensemble search
-techniques; in CLTune, using simulated annealing or particle
-swarms. Since OpenTuner and CLTune do not \emph{learn} optimization
-spaces as OmniTune does, performance data is not shared across
-devices. This means that the search for good parameter values must be
-repeated for each new device and program to be autotuned. Our approach
-combines machine learning with distributed training sets so that new
-users automatically benefit from the collective tuning experience of
-other users, which reduces the time to deployment.
-
-% A generic autotuner for OpenCL kernels is presented
-% in~\cite{Nugteren2015}, using iterative search techniques to find
-% optimal parameters on a per-case basis, rather than \emph{learning}
-% parameter spaces.
-
-% TODO: more complimentary. ``this work complements the ideology of
-% reproducible crowdsourced benchmarking, and applies this approach to
-% autotuning ...'''
-A ``big data'' driven approach to autotuning is presented
-in~\cite{Fursin2014,Fursin2015}. The authors propose the use of
-``Collective optimization'' to leverage training experience across
-devices, by sharing performance data, datasets and additional metadata
-about experimental setups. In addition to the mechanism for sharing
-training datasets, our system provides the capabilities of performing
-autotuning at runtime using a lightweight inter-process communication
-interface. Additionally, Collective Mind uses a NoSQL JSON format for
-storing datasets. The relational schema used in OmniTune offers
-greater scaling performance and lower storage overhead as the amount
-of performance data grows. The authors do not provide an empirical
-evaluation of their technique.
+The automatic generation of synthetic benchmarks using parameterised
+template substitution is presented in~\cite{Chiu2015}. The authors
+describe an application of their tool for generating OpenCL stencil
+kernels for machine learning, but do not report any performance
+results.
 
 
 \section{Conclusions and Future Work}\label{sec:conclusions}
