@@ -44,7 +44,6 @@ def main():
 
     # Read cache
     cache_path = __file__ + ".cache"
-    print("cache path", cache_path)
     if os.path.exists(cache_path):
         with open(cache_path, 'r') as infile:
             cache = json.load(infile)
@@ -87,18 +86,10 @@ def main():
             if len(lc):
                 stats.append(data)
 
-    # Write cache
-    with open(cache_path, 'w') as outfile:
-        json.dump(cache, outfile)
-
-    # Ignore stats
-    stats = [x for x in stats if x['wc']]
-
-    print(stats)
-    # sns.distplot(stats[0]['wc'])
-    # grid = sns.distplot(stats[1]['wc'])
-    # grid.set(xscale="log")
-    # plt.show()
+    for stat in stats:
+        grid = sns.distplot(stat['wc'])
+    grid.set(xscale='log')
+    plt.show()
 
 
 if __name__ == '__main__':
