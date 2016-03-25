@@ -3,14 +3,20 @@
 # Challenge: Plot the distribution of commit message lengths in each
 # of my public GitHub repos.
 #
+import json
 import os
 import sys
 
+from collections import defaultdict
+
 from github import Github
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set(color_codes=True)
 
 
 def get_github_token(username, password):
-    import json
     import requests
     response = requests.post(
         'https://api.github.com/authorizations',
@@ -36,28 +42,63 @@ def main():
              if not x.fork and not x.private]
     repos.sort(key=lambda x: x.name.lower())
 
-    repo_count = 0
+    # Read cache
+    cache_path = __file__ + ".cache"
+    print("cache path", cache_path)
+    if os.path.exists(cache_path):
+        with open(cache_path, 'r') as infile:
+            cache = json.load(infile)
+    else:
+        cache = {}
+
+    # Get repo stats.
+    stats = []
     for repo in repos:
-        lc = 0
-        wc = 0
-        commit_count = 0
-        for commit in repo.get_commits():
-            # Only count commits that I wrote
-            if commit.commit.author.email == github_username:
-                message = commit.commit.message
-                lc += len(message.split('\n'))
-                wc += len(message.split())
-                commit_count += 1
+        # Check cache first. Use last-updated timestamp to check for
+        # updates.
+        if (repo.name in cache and
+            cache[repo.name]['updated_at'] == str(repo.updated_at)):
+            print('Loading', repo.name, 'from cache')
+            if len(cache[repo.name]['lc']):
+                stats.append(cache[repo.name])
+        else:
+            print("Fetching", repo.name)
+            lc = []
+            wc = []
 
-        # Check that there was at least one commit:
-        if commit_count:
-            lc_mean = lc / commit_count * 1.0
-            wc_mean = wc / commit_count * 1.0
+            for commit in repo.get_commits():
+                # Only count commits that I wrote
+                if commit.commit.author.email == github_username:
+                    message = commit.commit.message
+                    lc.append(len(message.split('\n')))
+                    wc.append(len(message.split()))
 
-            print(repo.name, commit_count, round(lc_mean), round(wc_mean))
-            repo_count += 1
+            data = {
+                'name': repo.name,
+                'updated_at': str(repo.updated_at),
+                'lc': lc, 'wc': wc
+            }
+            # update cache
+            cache[repo.name] = data
+            with open(cache_path, 'w') as outfile:
+                json.dump(cache, outfile)
 
-    print(repo_count, 'repos')
+            # Check that there was at least one commit:
+            if len(lc):
+                stats.append(data)
+
+    # Write cache
+    with open(cache_path, 'w') as outfile:
+        json.dump(cache, outfile)
+
+    # Ignore stats
+    stats = [x for x in stats if x['wc']]
+
+    print(stats)
+    # sns.distplot(stats[0]['wc'])
+    # grid = sns.distplot(stats[1]['wc'])
+    # grid.set(xscale="log")
+    # plt.show()
 
 
 if __name__ == '__main__':
