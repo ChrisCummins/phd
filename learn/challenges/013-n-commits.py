@@ -43,7 +43,7 @@ def main():
     repos.sort(key=lambda x: x.name.lower())
 
     # Read cache
-    cache_path = __file__ + ".cache"
+    cache_path = __file__ + ".cache.json"
     if os.path.exists(cache_path):
         with open(cache_path, 'r') as infile:
             cache = json.load(infile)
