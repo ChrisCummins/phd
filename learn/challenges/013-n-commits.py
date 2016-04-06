@@ -53,6 +53,8 @@ def main():
     # Get repo stats.
     stats = []
     for repo in repos:
+        if repo.name == "clutter-android": # FIXME: remove this hack!
+            continue
         # Check cache first. Use last-updated timestamp to check for
         # updates.
         if (repo.name in cache and
