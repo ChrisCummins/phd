@@ -54,7 +54,7 @@ def print_counters():
           '. files: new ', files_new_counter,
           ', modified ', files_modified_counter,
           ', unchanged ', files_unchanged_counter,
-          '. current: ', status_string,
+          '. current: ', status_string[0:25],
           sep='', end='')
     sys.stdout.flush()
 
