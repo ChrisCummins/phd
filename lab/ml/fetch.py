@@ -2,6 +2,10 @@
 #
 # Download all of the OpenCL on GitHub (!)
 #
+# Shortcomings of this appraoch:
+#
+#   Only includes 'actual' OpenCL files, no inline strings
+#
 import json
 import os
 import sys

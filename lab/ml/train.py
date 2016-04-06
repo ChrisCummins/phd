@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
 #
-# Train a
+# Train machine learning models on dataset.
 #
+# TODO:
+#
+# ML:
+#
+#   Train char-rnn on raw text
+#   Train char-rnn on files which compiled
+#   Train char-rnn on "cleaned" text (no comments, etc)
+#   Train char-rnn on bytecode
+#   Train char-rnn on AST(?)
+
 import os
 from collections import defaultdict
 
@@ -11,7 +21,6 @@ except ImportError:
     import pickle
 
 from pymarkovchain import MarkovChain
-
 
 db = 'markov.db'
 src = 'cl.txt'
