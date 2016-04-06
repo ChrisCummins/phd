@@ -73,7 +73,7 @@ def process_repo(g, db, repo):
     global repos_new_counter,repos_modified_counter,repos_unchanged_counter
     global status_string
 
-    rate_limit(g)
+    # rate_limit(g)
     url = repo.url
     updated_at = str(repo.updated_at)
     name = repo.name
@@ -128,7 +128,7 @@ def process_file(g, github_token, db, repo, file):
     global files_new_counter,files_modified_counter,files_unchanged_counter
     global status_string
 
-    rate_limit(g)
+    # rate_limit(g)
 
     # We're only interested in OpenCL files.
     if not is_opencl_path(file.path):
