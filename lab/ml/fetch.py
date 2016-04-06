@@ -62,7 +62,7 @@ def print_counters():
 def rate_limit(g):
     global status_string
     remaining = g.get_rate_limit().rate.remaining
-    while remaining < 50:
+    while remaining < 100:
         sleep(1)
         status_string = 'WAITING ON RATE LIMIT'
         print_counters()
@@ -73,7 +73,7 @@ def process_repo(g, db, repo):
     global repos_new_counter,repos_modified_counter,repos_unchanged_counter
     global status_string
 
-    # rate_limit(g)
+    rate_limit(g)
     url = repo.url
     updated_at = str(repo.updated_at)
     name = repo.name
@@ -193,30 +193,31 @@ def main():
     # 'language=' keyword for queries, so instead we through a much
     # wider net and filter the results afterwards.
     #
-    query = g.search_repositories('cl')
+    queries = ['opencl', 'cl', 'khronos', 'gpu']
+    for query in queries:
+        repos = g.search_repositories('cl')
 
-    print()
-    for repo in query:
-        repo_modified = handle_repo(repo)
+        for repo in repos:
+            repo_modified = handle_repo(repo)
 
-        # Do nothing unless the repo is new / modified
-        if not repo_modified:
-            continue
+            # Do nothing unless the repo is new / modified
+            if not repo_modified:
+                continue
 
-        handle_file = partial(process_file, g, github_token, db, repo)
+            handle_file = partial(process_file, g, github_token, db, repo)
 
-        # Iterate over the entire git tree of the repo's default
-        # branch (usually 'master'). If a file ends with the .cl
-        # extension, check to see if we already have it, else download
-        # it.
-        #
-        try:
-            branch = repo.default_branch
-            tree_iterator = repo.get_git_tree(branch, recursive=True).tree
-            [handle_file(x) for x in tree_iterator]
-        except GithubException as e:
-            # Do nothing in case of error (such as an empty repo)
-            pass
+            # Iterate over the entire git tree of the repo's default
+            # branch (usually 'master'). If a file ends with the .cl
+            # extension, check to see if we already have it, else download
+            # it.
+            #
+            try:
+                branch = repo.default_branch
+                tree_iterator = repo.get_git_tree(branch, recursive=True).tree
+                [handle_file(x) for x in tree_iterator]
+            except GithubException as e:
+                # Do nothing in case of error (such as an empty repo)
+                pass
 
     print_counters()
     print("\n\ndone.")
