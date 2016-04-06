@@ -190,10 +190,10 @@ def main():
 
     # Fetch the repositories to iterate over. Since opencl isn't
     # treated as a first-class language by GitHub, we can't use the
-    # 'language=' keyword for queries, so instead just look for the
-    # keyword 'opencl'.
+    # 'language=' keyword for queries, so instead we through a much
+    # wider net and filter the results afterwards.
     #
-    query = g.search_repositories('opencl', sort='stars')
+    query = g.search_repositories('cl')
 
     print()
     for repo in query:
