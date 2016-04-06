@@ -51,38 +51,40 @@ def median(sorted_arr):
         return (sorted_vals[midpoint - 1] + sorted_vals[midpoint]) / 2.0
 
 def bigint(n):
-    return locale.format('%d', n, grouping=True)
+    return locale.format('%d', round(n), grouping=True)
 
 
 def print_db_summary(db):
     c = db.cursor()
-    stats = OrderedDict()
+    stats = []
 
     c.execute("SELECT Count(*) from Repositories")
     nb_repos = c.fetchone()[0]
-    stats['Number of repositories visited'] = bigint(nb_repos)
+    stats.append(('Number of repositories visited', bigint(nb_repos)))
+    stats.append(('',''))
 
     c.execute("SELECT Count(DISTINCT repo_url) from OpenCLFiles")
     nb_ocl_repos = c.fetchone()[0]
-    stats['Number of OpenCL repositories'] = bigint(nb_ocl_repos)
+    stats.append(('Number of OpenCL repositories', bigint(nb_ocl_repos)))
 
     c.execute("SELECT Count(*) from OpenCLFiles")
     nb_ocl_files = c.fetchone()[0]
-    stats['Number of OpenCL files'] = bigint(nb_ocl_files)
+    stats.append(('Number of OpenCL files', bigint(nb_ocl_files)))
+
+    c.execute("SELECT Count(*) from Repositories WHERE fork=1")
+    nb_forks = c.fetchone()[0]
+    stats.append(('Number of forked repositories', bigint(nb_forks)))
+    stats.append(('',''))
 
     c.execute("SELECT contents FROM OpenCLFiles")
     code = c.fetchall()
     code_lcs = [len(decode(x[0]).split('\n')) for x in code]
     code_lcs.sort()
-    stats['Total OpenCL line count'] = bigint(sum(code_lcs))
-
-    c.execute("SELECT Count(*) from Repositories WHERE fork=1")
-    nb_forks = c.fetchone()[0]
-    stats['Number of forked repositories'] = bigint(nb_forks)
+    stats.append(('Total OpenCL line count', bigint(sum(code_lcs))))
 
     avg_nb_ocl_files_per_repo = nb_ocl_files / nb_ocl_repos
-    stats['OpenCL files per repository'] = (
-        'avg: {:.2f}'.format(avg_nb_ocl_files_per_repo))
+    stats.append(('OpenCL files per repository',
+                  'avg: {:.2f}'.format(avg_nb_ocl_files_per_repo)))
 
     avg_code_lcs = sum(code_lcs) / len(code_lcs)
     midpoint = int(len(code_lcs) / 2)
@@ -90,19 +92,25 @@ def print_db_summary(db):
         med_code_lcs = code_lcs[midpoint]
     else:
         med_code_lcs = (code_lcs[midpoint - 1] + code_lcs[midpoint]) / 2.0
-    stats['OpenCL line counts'] = (
-        'min: {}, med: {}, avg: {:.0f}, max: {}'.format(
-            code_lcs[0], med_code_lcs, avg_code_lcs,
-            code_lcs[len(code_lcs) - 1])
-    )
+    stats.append(('OpenCL line counts',
+                  'min: {}, med: {}, avg: {}, max: {}'.format(
+                      bigint(code_lcs[0]), bigint(med_code_lcs),
+                      bigint(avg_code_lcs),
+                      bigint(code_lcs[len(code_lcs) - 1]))))
 
-    maxlen = max([len(x) for x in stats.keys()])
-    for k,v in stats.items():
-        print(k, ':', ' ' * (maxlen - len(k) + 2), v, sep='')
+    maxlen = max([len(x[0]) for x in stats])
+    for stat in stats:
+        k,v = stat
+        if k:
+            print(k, ':', ' ' * (maxlen - len(k) + 2), v, sep='')
+        elif v == '':
+            print(k)
+        else:
+            print()
 
 
 def main():
-    locale.setlocale(locale.LC_ALL, 'en_US')
+    locale.setlocale(locale.LC_ALL, 'en_GB')
 
     if len(sys.argv) != 2:
         usage()
