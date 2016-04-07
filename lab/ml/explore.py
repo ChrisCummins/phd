@@ -7,7 +7,6 @@
 #   Number of OpenCL repos over time
 #   Distribution of stars and OpenCL file counts
 #   Distribution of repo star counts
-#   Distribution of file star counts
 #   Distribution of repo forks
 #   Distribution of times since last changed
 #   Distribution of file sizes
@@ -21,9 +20,7 @@ import sys
 
 from multiprocessing import Pool
 
-import matplotlib.pyplot as plt
-import seaborn as sns
-sns.set(color_codes=True)
+img_dir = 'img'
 
 
 def usage():
@@ -51,14 +48,28 @@ def bigint(n):
     return locale.format('%d', round(n), grouping=True)
 
 
+def seq_stats(sorted_arr):
+    avg = sum(sorted_arr) / len(sorted_arr)
+    midpoint = int(len(sorted_arr) / 2)
+    if len(sorted_arr) % 2 == 1:
+        median = sorted_arr[midpoint]
+    else:
+        median = (sorted_arr[midpoint - 1] + sorted_arr[midpoint]) / 2.0
+    return (
+        'min: {}, med: {}, avg: {}, max: {}'.format(
+            bigint(sorted_arr[0]), bigint(median), bigint(avg),
+            bigint(sorted_arr[len(sorted_arr) - 1])))
+
+
 # Generate dataset stats.
 #
 def stats_worker(db_path):
     print("stats worker ...")
-    db = sqlite3.connect(sys.argv[1])
+    db = sqlite3.connect(db_path)
     c = db.cursor()
     stats = []
 
+    # Repositories
     c.execute("SELECT Count(*) from Repositories")
     nb_repos = c.fetchone()[0]
     stats.append(('Number of repositories visited', bigint(nb_repos)))
@@ -68,18 +79,21 @@ def stats_worker(db_path):
     nb_ocl_repos = c.fetchone()[0]
     stats.append(('Number of OpenCL repositories', bigint(nb_ocl_repos)))
 
-    c.execute("SELECT Count(*) from OpenCLFiles")
-    nb_ocl_files = c.fetchone()[0]
-    stats.append(('Number of OpenCL files', bigint(nb_ocl_files)))
-
-    c.execute("SELECT Count(*) from Repositories WHERE fork=1")
+    # FIXME: Number of forks
+    c.execute('SELECT Count(DISTINCT repo_url) FROM OpenCLFiles LEFT JOIN '
+              'Repositories WHERE fork=1')
     nb_forks = c.fetchone()[0]
-    ratio_forks = nb_forks / nb_repos
+    ratio_forks = nb_forks / nb_ocl_repos
     stats.append(('Number of forked repositories',
                   bigint(nb_forks) +
                   ' ({:.0f}%)'.format(ratio_forks * 100)))
+
+    c.execute("SELECT Count(*) from OpenCLFiles")
+    nb_ocl_files = c.fetchone()[0]
+    stats.append(('Number of OpenCL files', bigint(nb_ocl_files)))
     stats.append(('',''))
 
+    # OpenCLFiles
     c.execute("SELECT Count(DISTINCT sha) from OpenCLFiles")
     nb_uniq_ocl_files = c.fetchone()[0]
     ratio_uniq_ocl_files = nb_uniq_ocl_files / nb_ocl_files
@@ -87,30 +101,38 @@ def stats_worker(db_path):
                   bigint(nb_uniq_ocl_files) +
                   ' ({:.0f}%)'.format(ratio_uniq_ocl_files * 100)))
 
+    avg_nb_ocl_files_per_repo = nb_ocl_files / nb_ocl_repos
+    stats.append(('OpenCL files per repository',
+                  'avg: {:.2f}'.format(avg_nb_ocl_files_per_repo)))
+
     c.execute("SELECT contents FROM OpenCLFiles")
     code = c.fetchall()
     code_lcs = [len(decode(x[0]).split('\n')) for x in code]
     code_lcs.sort()
     stats.append(('Total OpenCL line count', bigint(sum(code_lcs))))
 
-    avg_nb_ocl_files_per_repo = nb_ocl_files / nb_ocl_repos
-    stats.append(('OpenCL files per repository',
-                  'avg: {:.2f}'.format(avg_nb_ocl_files_per_repo)))
-
-    avg_code_lcs = sum(code_lcs) / len(code_lcs)
-    midpoint = int(len(code_lcs) / 2)
-    if len(code_lcs) % 2 == 1:
-        med_code_lcs = code_lcs[midpoint]
-    else:
-        med_code_lcs = (code_lcs[midpoint - 1] + code_lcs[midpoint]) / 2.0
-    stats.append(('OpenCL line counts',
-                  'min: {}, med: {}, avg: {}, max: {}'.format(
-                      bigint(code_lcs[0]), bigint(med_code_lcs),
-                      bigint(avg_code_lcs),
-                      bigint(code_lcs[len(code_lcs) - 1]))))
-
+    stats.append(('OpenCL line counts', seq_stats(code_lcs)))
     stats.append(('',''))
 
+    # Preprocessed
+    c.execute("SELECT Count(*) from Preprocessed")
+    nb_pp_files = c.fetchone()[0]
+    ratio_pp_files = nb_pp_files / nb_uniq_ocl_files
+    stats.append(('Number of Preprocessed files',
+                  bigint(nb_pp_files) +
+                  ' ({:.0f}%)'.format(ratio_pp_files * 100)))
+
+    c.execute('SELECT contents FROM Preprocessed')
+    bc = c.fetchall()
+    pp_lcs = [len(decode(x[0]).split('\n')) for x in bc]
+    pp_lcs.sort()
+    stats.append(('Total line count of Preprocessed', bigint(sum(pp_lcs))))
+
+    stats.append(('Preprocessed line counts',
+                  seq_stats(pp_lcs)))
+    stats.append(('',''))
+
+    # Bytecodes
     c.execute("SELECT Count(*) from Bytecodes")
     nb_bc_files = c.fetchone()[0]
     ratio_bc_files = nb_bc_files / nb_uniq_ocl_files
@@ -118,8 +140,106 @@ def stats_worker(db_path):
                   bigint(nb_bc_files) +
                   ' ({:.0f}%)'.format(ratio_bc_files * 100)))
 
+    c.execute('SELECT OpenCLFiles.contents FROM Bytecodes '
+              'LEFT JOIN OpenCLFiles ON Bytecodes.sha=OpenCLFiles.sha '
+              'GROUP BY OpenCLFiles.sha')
+    bc_ocl = c.fetchall()
+    bc_ocl_lcs = [len(decode(x[0]).split('\n')) for x in bc_ocl]
+    bc_ocl_lcs.sort()
+    stats.append(('Total line count of Bytecode OpenCL sources',
+                  bigint(sum(bc_ocl_lcs))))
+
+    c.execute('SELECT contents FROM Bytecodes')
+    bc = c.fetchall()
+    bc_lcs = [len(decode(x[0]).split('\n')) for x in bc]
+    bc_lcs.sort()
+    stats.append(('Total line count of Bytecodes', bigint(sum(bc_lcs))))
+
+    stats.append(('Bytecode OpenCL source line counts',
+                  seq_stats(bc_ocl_lcs)))
+    stats.append(('Bytecode line counts',
+                  seq_stats(bc_lcs)))
+
 
     return stats
+
+
+# Plot distribution of OpenCL file line counts.
+#
+def graph_ocl_lc(db_path):
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    sns.set(color_codes=True)
+
+    out_path = img_dir + '/ocl_lcs.png'
+    print('graph', out_path, '...')
+    db = sqlite3.connect(db_path)
+    c = db.cursor()
+
+    c.execute("SELECT contents FROM OpenCLFiles")
+    ocl = c.fetchall()
+    ocl_lcs = [len(decode(x[0]).split('\n')) for x in ocl]
+
+    # Filter range
+    data = [x for x in ocl_lcs if x < 500]
+
+    sns.distplot(data, bins=20, kde=False)
+    plt.xlabel('Line count')
+    plt.ylabel('Number of OpenCL files')
+    plt.title('Distribution of OpenCL file lengths')
+    plt.savefig(out_path)
+
+
+# Plot distribution of Bytecode line counts.
+#
+def graph_bc_lc(db_path):
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    sns.set(color_codes=True)
+
+    out_path = img_dir + '/bc_lcs.png'
+    print('graph', out_path, '...')
+    db = sqlite3.connect(db_path)
+    c = db.cursor()
+
+    c.execute("SELECT contents FROM Bytecodes")
+    ocl = c.fetchall()
+    ocl_lcs = [len(decode(x[0]).split('\n')) for x in ocl]
+
+    # Filter range
+    data = [x for x in ocl_lcs if x < 500]
+
+    sns.distplot(data, bins=20, kde=False)
+    plt.xlabel('Line count')
+    plt.ylabel('Number of Bytecode files')
+    plt.title('Distribution of Bytecode lengths')
+    plt.savefig(out_path)
+
+
+# Plot distribution of stargazers per file.
+#
+def graph_ocl_stars(db_path):
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    sns.set(color_codes=True)
+
+    out_path = img_dir + '/ocl_stars.png'
+    print('graph', out_path, '...')
+    db = sqlite3.connect(db_path)
+    c = db.cursor()
+
+    c.execute('SELECT stars FROM OpenCLFiles LEFT JOIN Repositories '
+              'ON OpenCLFiles.repo_url=Repositories.url')
+    stars = [x[0] for x in c.fetchall()]
+
+    # Filter range
+    data = [x for x in stars if x < 100]
+
+    sns.distplot(data, bins=20, kde=False)
+    plt.xlabel('GitHub Stargazer count')
+    plt.ylabel('Number of files')
+    plt.title('Stargazers per file')
+    plt.savefig(out_path)
 
 
 def main():
@@ -131,8 +251,14 @@ def main():
 
     db_path = sys.argv[1]
 
+    if not os.path.exists(img_dir):
+        os.makedirs(img_dir)
+
     # Worker process pool
     pool, jobs = Pool(processes=4), []
+    jobs.append(pool.apply_async(graph_ocl_lc, (db_path,)))
+    jobs.append(pool.apply_async(graph_bc_lc, (db_path,)))
+    jobs.append(pool.apply_async(graph_ocl_stars, (db_path,)))
 
     future_stats = pool.apply_async(stats_worker, (db_path,))
 
