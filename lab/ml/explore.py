@@ -2,14 +2,8 @@
 #
 # Exploratory analysis of preprocessed dataset.
 #
-# TODO:
+# TODO: Graphs
 #
-# High level summary:
-#   Number of files
-#   Number of repositories
-#   Total line count
-#
-# Graphs:
 #   Number of OpenCL repos over time
 #   Distribution of stars and OpenCL file counts
 #   Distribution of repo star counts
@@ -20,10 +14,12 @@
 #   Distribution of files per repo
 #
 import locale
+import os
+import shutil
 import sqlite3
 import sys
 
-from collections import OrderedDict
+from multiprocessing import Pool
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -50,11 +46,16 @@ def median(sorted_arr):
     else:
         return (sorted_vals[midpoint - 1] + sorted_vals[midpoint]) / 2.0
 
+
 def bigint(n):
     return locale.format('%d', round(n), grouping=True)
 
 
-def print_db_summary(db):
+# Generate dataset stats.
+#
+def stats_worker(db_path):
+    print("stats worker ...")
+    db = sqlite3.connect(sys.argv[1])
     c = db.cursor()
     stats = []
 
@@ -71,9 +72,19 @@ def print_db_summary(db):
     nb_ocl_files = c.fetchone()[0]
     stats.append(('Number of OpenCL files', bigint(nb_ocl_files)))
 
+    c.execute("SELECT Count(DISTINCT sha) from OpenCLFiles")
+    nb_uniq_ocl_files = c.fetchone()[0]
+    ratio_uniq_ocl_files = nb_uniq_ocl_files / nb_ocl_files
+    stats.append(('Number of unique OpenCL files',
+                  bigint(nb_uniq_ocl_files) +
+                  ' ({:.0f}%)'.format(ratio_uniq_ocl_files * 100)))
+
     c.execute("SELECT Count(*) from Repositories WHERE fork=1")
     nb_forks = c.fetchone()[0]
-    stats.append(('Number of forked repositories', bigint(nb_forks)))
+    ratio_forks = nb_forks / nb_repos
+    stats.append(('Number of forked repositories',
+                  bigint(nb_forks) +
+                  ' ({:.0f}%)'.format(ratio_forks * 100)))
     stats.append(('',''))
 
     c.execute("SELECT contents FROM OpenCLFiles")
@@ -98,15 +109,84 @@ def print_db_summary(db):
                       bigint(avg_code_lcs),
                       bigint(code_lcs[len(code_lcs) - 1]))))
 
-    maxlen = max([len(x[0]) for x in stats])
-    for stat in stats:
-        k,v = stat
-        if k:
-            print(k, ':', ' ' * (maxlen - len(k) + 2), v, sep='')
-        elif v == '':
-            print(k)
-        else:
-            print()
+    return stats
+
+
+# Write OpenCL files.
+#
+def ocl_writer_worker(db_path):
+    print("ocl writer worker ...")
+
+    out_dir = 'cl'
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    db = sqlite3.connect(db_path)
+    c = db.cursor()
+
+    c.execute("SELECT sha,path,contents FROM OpenCLFiles GROUP BY sha")
+    query = c.fetchall()
+
+    files_added_counter = 0
+    files_skipped_counter = 0
+    files_error_counter = 0
+    for row in query:
+        sha, path, contents = row
+        try:
+            _, extension = os.path.splitext(path)
+            out_path = out_dir + '/' + sha + extension
+            if os.path.exists(out_path):
+                files_skipped_counter += 1
+            else:
+                with open(out_path, 'wb') as out:
+                    out.write(contents)
+                files_added_counter += 1
+        except Exception as e:
+            files_error_counter += 1
+            print(e)
+    print('ocl files stats:',
+          files_added_counter, 'added,',
+          files_skipped_counter, 'skipped,',
+          files_error_counter, 'errors.')
+
+
+# Compiler OpenCL files into bytecode.
+#
+def ocl_builder_worker(db_path):
+    print('ocl builder worker ...')
+
+    out_dir = 'bc'
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    db = sqlite3.connect(db_path)
+    c = db.cursor()
+
+    c.execute("SELECT sha,path,contents FROM OpenCLFiles GROUP BY sha")
+    query = c.fetchall()
+
+    files_added_counter = 0
+    files_skipped_counter = 0
+    files_error_counter = 0
+    for row in query:
+        sha, path, contents = row
+        try:
+            _, extension = os.path.splitext(path)
+            out_path = out_dir + '/' + sha + extension
+            if os.path.exists(out_path):
+                files_skipped_counter += 1
+            else:
+                # with open(out_path, 'wb') as out:
+                #     out.write(contents)
+                files_added_counter += 1
+        except Exception as e:
+            files_error_counter += 1
+            print(e)
+    print('ocl bytecode stats:',
+          files_added_counter, 'added,',
+          files_skipped_counter, 'skipped,',
+          files_error_counter, 'errors.')
+
 
 
 def main():
@@ -116,9 +196,31 @@ def main():
         usage()
         sys.exit(1)
 
-    db = sqlite3.connect(sys.argv[1])
+    db_path = sys.argv[1]
 
-    print_db_summary(db)
+    # Worker process pool
+    pool, jobs = Pool(processes=4), []
+    jobs.append(pool.apply_async(ocl_writer_worker, (db_path,)))
+    jobs.append(pool.apply_async(ocl_builder_worker, (db_path,)))
+
+    future_stats = pool.apply_async(stats_worker, (db_path,))
+
+    # Wait for jobs to finish
+    print()
+    [job.wait() for job in jobs]
+    print()
+
+    # Print stats
+    stats = future_stats.get()
+    maxlen = max([len(x[0]) for x in stats])
+    for stat in stats:
+        k,v = stat
+        if k:
+            print(k, ':', ' ' * (maxlen - len(k) + 2), v, sep='')
+        elif v == '':
+            print(k)
+        else:
+            print()
 
 
 if __name__ == '__main__':
