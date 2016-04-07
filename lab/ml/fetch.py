@@ -48,7 +48,7 @@ def print_file_details(file):
 
 
 def print_counters():
-    print('\rrepos: new ', repos_new_counter,
+    print('\r\033[Krepos: new ', repos_new_counter,
           ', modified ', repos_modified_counter,
           ', unchanged ', repos_unchanged_counter,
           '. files: new ', files_new_counter,
