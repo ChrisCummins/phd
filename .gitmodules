@@ -19,3 +19,6 @@
 [submodule "extern/boost"]
 	path = extern/boost
 	url = https://github.com/boostorg/boost.git
+[submodule "extern/libclc"]
+	path = extern/libclc
+	url = https://github.com/llvm-mirror/libclc.git

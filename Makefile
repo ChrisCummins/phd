@@ -450,6 +450,32 @@ DistcleanTargets += distclean-googletest
 
 
 #
+# extern/libclc
+#
+LibclcDir = $(extern)/libclc
+Libclc = $(LibclcDir)/utils/prepare-builtins.o
+
+Libclc_CxxFlags = -Dcl_clang_storage_class_specifiers \
+	-I$(LibclcDir)/generic/include \
+	-include $(LibclcDir)/generic/include/clc/clc.h \
+	-target nvptx64-nvidia-nvcl -x cl
+
+$(Libclc)-cmd = \
+	cd $(LibclcDir) && ./configure.py \
+	--with-llvm-config=$(LlvmBuild)/bin/llvm-config && $(MAKE)
+
+$(Libclc): $(toolchain)
+	$(call print-task,BUILD,$@,$(TaskMisc))
+	$(V1)$($(Libclc)-cmd)
+
+.PHONY: distclean-libclc
+distclean-libclc:
+	$(V1)cd $(LibclcDir) && $(MAKE) clean
+
+DistcleanTargets += distclean-libclc
+
+
+#
 # extern/opencl
 #
 OpenCL_CFlags = -I$(extern)/opencl/include
