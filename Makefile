@@ -472,7 +472,7 @@ $(Libclc): $(toolchain)
 
 .PHONY: distclean-libclc
 distclean-libclc:
-	$(V1)cd $(LibclcDir) && $(MAKE) clean
+	$(V1)cd $(LibclcDir) && if [ -f Makefile ]; then $(MAKE) clean; fi
 
 DistcleanTargets += distclean-libclc
 
