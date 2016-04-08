@@ -110,11 +110,11 @@ PYTHON2 ?= python2
 PYTHON3 ?= python3
 RM ?= rm -fv
 SED ?= sed
-SHELL ?= /bin/bash
 
 
 # Non-configurable;
 MAKEFLAGS := -j$(threads)
+SHELL = /bin/bash
 
 
 ########################################################################
