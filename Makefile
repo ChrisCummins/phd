@@ -181,6 +181,7 @@ endef
 
 # Assume no out-of-tree builds:
 root := $(PWD)
+toolchain := $(root)/.bootstrapped
 
 comma := ,
 space :=
@@ -377,7 +378,7 @@ GoogleBenchmark_CxxFlags = \
 	-I$(extern)/benchmark/include -Wno-global-constructors
 GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
 
-$(GoogleBenchmark):
+$(GoogleBenchmark): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)mkdir -pv $(extern)/benchmark/build
 	$(V1)cd $(extern)/benchmark/build && cmake .. && $(MAKE)
@@ -410,7 +411,7 @@ $(Boost)-cmd = \
 	link=static runtime-link=static \
 	cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++"
 
-$(Boost):
+$(Boost): $(toolchain)
 	$(call print-task,BUILD,boost,$(TaskMisc))
 	$(V1)mkdir -pv $(BoostBuild)
 	$(V1)$($(Boost)-cmd)
@@ -434,7 +435,7 @@ $(GoogleTest)-cmd = \
 	cd $(extern)/googletest-build \
 	&& cmake ../googletest/googletest && $(MAKE)
 
-$(GoogleTest):
+$(GoogleTest): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)mkdir -pv $(extern)/googletest-build
 	$(V1)$($(GoogleTest)-cmd)
@@ -479,6 +480,7 @@ OpenCL_CFlags = -I$(extern)/opencl/include
 OpenCL_CxxFlags = $(OpenCL_CFlags)
 OpenCL_LdFlags = -framework OpenCL
 OpenCL = $(extern)/opencl/include/cl.hpp
+$(OpenCL): $(toolchain)
 
 
 #
@@ -517,8 +519,8 @@ Stl_CxxFlags = -I$(lab)/stl/include
 StlTestsSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/tests/,$(StlComponents)))
 StlTestsObjects = $(patsubst %.cpp,%.o,$(StlTestsSources))
-$(StlTestsObjects): $(StlHeaders) $(phd)
-$(lab)/stl/tests/%.o: $(lab)/stl/tests/%.cpp
+$(StlTestsObjects): $(StlHeaders) $(phd) $(toolchain)
+$(lab)/stl/tests/%.o: $(lab)/stl/tests/%.cpp $(toolchain)
 
 $(lab)/stl/tests/tests: $(StlTestsObjects)
 CxxTargets += $(lab)/stl/tests/tests
@@ -529,7 +531,7 @@ $(lab)/stl/tests_LdFlags = $(phd_LdFlags)
 StlBenchmarksSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/benchmarks/,$(StlComponents)))
 StlBenchmarksObjects = $(patsubst %.cpp,%.o,$(StlBenchmarksSources))
-$(StlBenchmarksObjects): $(StlHeaders) $(phd)
+$(StlBenchmarksObjects): $(StlHeaders) $(phd) $(toolchain)
 $(lab)/stl/benchmarks/%.o: $(lab)/stl/benchmarks/%.cpp
 
 $(lab)/stl/benchmarks/benchmarks: $(StlBenchmarksObjects)
@@ -768,7 +770,7 @@ phd_CxxFlags = \
 	-I$(src)/phd/include $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
 phd_LdFlags = $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
 phd = $(phdHeaders)
-$(phd): $(GoogleBenchmark) $(GoogleTest)
+$(phd): $(GoogleBenchmark) $(GoogleTest) $(toolchain)
 
 
 #
@@ -1093,8 +1095,6 @@ DocStrings += "install: install files"
 #
 # Bootstrapping
 #
-toolchain := $(root)/.bootstrapped
-
 LlvmSrc := $(root)/tools/llvm
 LlvmBuild := $(root)/tools/llvm/build
 
