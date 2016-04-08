@@ -415,13 +415,10 @@ $(Boost):
 	$(V1)mkdir -pv $(BoostBuild)
 	$(V1)$($(Boost)-cmd)
 
-distclean-boost-cmd = \
-	cd $(BoostDir) && ./b2 clean \
-	&& find . -name '*.a' -o -name '*.o' -exec rm {} \;
-
 .PHONY: distclean-boost
 distclean-boost:
-	$(V1)$(distclean-boost-cmd)
+	$(V1)cd $(BoostDir) && if [ -f b2 ]; then ./b2 clean; fi
+	$(V1)find $(BoostDir) -name '*.a' -o -name '*.o' -exec rm {} \;
 
 DistcleanTargets += distclean-boost
 
