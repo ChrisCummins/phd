@@ -501,6 +501,36 @@ lab := $(root)/lab
 
 
 #
+# lab/lm
+#
+LmHeaders = $(filter-out $(wildcard $(lab)/lm/include/lm/*.lint),$(wildcard $(lab)/lm/include/lm/*))
+CppLintSources += $(LmHeaders)
+Lm_CxxFlags = -I$(lab)/lm/include
+
+# Lm unit tests:
+LmTestsSources = $(wildcard $(lab)/lm/tests/*.cpp)
+LmTestsObjects = $(patsubst %.cpp,%.o,$(LmTestsSources))
+$(LmTestsObjects): $(LmHeaders) $(phd)
+$(lab)/lm/tests/%.o: $(lab)/lm/tests/%.cpp
+
+$(lab)/lm/tests/tests: $(LmTestsObjects)
+CxxTargets += $(lab)/lm/tests/tests
+$(lab)/lm/tests_CxxFlags = $(Lm_CxxFlags) $(phd_CxxFlags)
+$(lab)/lm/tests_LdFlags = $(phd_LdFlags)
+
+# Lm benchmarks:
+LmBenchmarksSources = $(wildcard $(lab)/lm/benchmarks/*.cpp)
+LmBenchmarksObjects = $(patsubst %.cpp,%.o,$(LmBenchmarksSources))
+$(LmBenchmarksObjects): $(LmHeaders) $(phd)
+$(lab)/lm/benchmarks/%.o: $(lab)/lm/benchmarks/%.cpp
+
+$(lab)/lm/benchmarks/benchmarks: $(LmBenchmarksObjects)
+CxxTargets += $(lab)/lm/benchmarks/benchmarks
+$(lab)/lm/benchmarks_CxxFlags = $(Lm_CxxFlags) $(phd_CxxFlags)
+$(lab)/lm/benchmarks_LdFlags = $(phd_LdFlags)
+
+
+#
 # lab/stl/
 #
 StlComponents = \
