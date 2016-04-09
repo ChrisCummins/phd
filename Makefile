@@ -569,7 +569,7 @@ LearnBoostCxxSources = $(wildcard $(learn)/boost/*.cpp)
 LearnBoostCxxObjects = $(patsubst %.cpp,%.o,$(LearnBoostCxxSources))
 CxxTargets += $(patsubst %.cpp,%,$(LearnBoostCxxSources))
 
-$(learn)/boost_CxxFlags = $(Boost_filesystem_CxxFlags)
+$(learn)/boost_CxxFlags = $(Boost_filesystem_CxxFlags) -I/opt/local/include
 $(learn)/boost_LdFlags = $(Boost_filesystem_LdFlags) -lcrypto -lssl
 $(LearnBoostCxxObjects): $(Boost)
 
