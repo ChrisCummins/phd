@@ -1101,6 +1101,7 @@ DocStrings += "install: install files"
 #
 LlvmSrc := $(root)/tools/llvm
 LlvmBuild := $(root)/tools/llvm/build
+LlvmCMakeFlags = -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true
 
 # Compilers depend on boostrapping:
 $(CC): $(toolchain)
@@ -1112,7 +1113,7 @@ $(CxxObjects): $(CXX)
 
 $(toolchain)-cmd = \
 	cd $(LlvmBuild) \
-	&& cmake $(LlvmSrc) -DCMAKE_BUILD_TYPE=Release \
+	&& cmake $(LlvmSrc) $(LlvmCmakeFlags)\
 	&& $(MAKE)
 
 $(toolchain):
