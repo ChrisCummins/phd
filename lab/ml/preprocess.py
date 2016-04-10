@@ -19,11 +19,12 @@
 #
 import locale
 import os
+import re
 import shutil
 import sqlite3
 import sys
 
-from subprocess import Popen,PIPE
+from subprocess import Popen,PIPE,STDOUT
 from multiprocessing import Pool
 
 
@@ -228,6 +229,130 @@ def ocl_preprocessor_worker(db_path):
                 files_error_counter))
 
 
+_instcount_re = re.compile("^(?P<count>\d+) instcount - Number of (?P<type>.+)")
+
+
+def parse_instcounts(txt):
+    lines = [x.strip() for x in txt.split("\n")]
+    counts = {}
+
+    # Build a list of counts for each type.
+    for line in lines:
+        match = re.search(_instcount_re, line)
+        if match:
+            count = int(match.group("count"))
+            key = match.group("type")
+            if key in counts:
+                counts[key].append(count)
+            else:
+                counts[key] = [count]
+
+    # Sum all counts.
+    for key in counts:
+        counts[key] = sum(counts[key])
+
+    return counts
+
+
+_sql_rm_chars = re.compile('[\(\)]')
+_sql_sub_chars = re.compile('-')
+
+
+def escape_sql_key(key):
+    return re.sub(_sql_sub_chars, '_',
+                  re.sub(_sql_rm_chars, '', '_'.join(key.split(' '))))
+
+
+def instcounts2ratios(counts):
+    if not len(counts):
+        return {}
+
+    ratios = {}
+    total_key = "instructions (of all types)"
+    non_ratio_keys = [
+        total_key
+    ]
+    total = float(counts[total_key])
+
+    for key in non_ratio_keys:
+        ratios[escape_sql_key(key)] = counts[key]
+
+    for key in counts:
+        if key not in non_ratio_keys:
+            # Copy count
+            ratios[escape_sql_key(key)] = counts[key]
+            # Insert ratio
+            ratios[escape_sql_key('ratio_' + key)] = float(counts[key]) / total
+
+    return ratios
+
+
+def sql_insert_dict(c, table, data):
+    cmd = ("INSERT INTO {table}({cols}) VALUES({vals})"
+           .format(table=table,
+                   cols=','.join(data.keys()),
+                   vals=','.join(['?'] * len(data))))
+
+    vals = tuple(data.values())
+    c.execute(cmd, tuple(data.values()))
+
+
+def bytecode_features(bc):
+    opt = os.path.expanduser('~/phd/tools/llvm/build/bin/opt')
+
+    cmd = [
+        opt, '-analyze', '-stats', '-instcount', '-'
+    ]
+
+    # LLVM pass output pritns to stderr, so we'll pipe stderr to
+    # stdout.
+    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+    stdout, _ = process.communicate(bc)
+
+    if process.returncode != 0:
+        raise Exception(stderr)
+
+    instcounts = parse_instcounts(stdout.decode('utf-8'))
+    instratios = instcounts2ratios(instcounts)
+
+    return instratios
+
+
+def bytecode_features_worker(db_path):
+    print('bc features worker ...')
+
+    db = sqlite3.connect(db_path)
+    c = db.cursor()
+
+    c.execute('SELECT sha,contents FROM Bytecodes')
+    query = c.fetchall()
+
+    features_added_counter = 0
+    features_skipped_counter = 0
+
+    for row in query:
+        sha, contents = row
+
+        # Check to see if we've already compiled it.
+        c = db.cursor()
+        c.execute('SELECT sha FROM BytecodeFeatures WHERE sha=?', (sha,))
+        is_cached = c.fetchone()
+
+        if is_cached:
+            features_skipped_counter += 1
+        else:
+            features = bytecode_features(contents)
+            # Add the table key
+            features['sha'] = sha
+            sql_insert_dict(c, 'BytecodeFeatures', features)
+            db.commit()
+            features_added_counter += 1
+
+    return (
+        'bc features stats: {} added, {} skipped.'
+        .format(features_added_counter, features_skipped_counter))
+
+
 def main():
     locale.setlocale(locale.LC_ALL, 'en_GB')
 
@@ -251,6 +376,12 @@ def main():
     [print(job.get()) for job in jobs]
     print()
 
+    # Second batch of workers
+    jobs = []
+    jobs.append(pool.apply_async(bytecode_features_worker, (db_path,)))
+    [job.wait() for job in jobs]  # Wait for jobs to finish
+    print()  # Print job output
+    [print(job.get()) for job in jobs]
 
 if __name__ == '__main__':
     main()
