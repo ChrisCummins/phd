@@ -77,6 +77,7 @@ def preprocess_cl(src):
         '-I', '{}/generic/include'.format(libclc),
         '-include', '{}/generic/include/clc/clc.h'.format(libclc),
         '-target', 'nvptx64-nvidia-nvcl',
+        '-DM_PI=3.14'
         '-x', 'cl', '-E',
         '-c', '-', '-o', '-'
     ]
@@ -439,8 +440,6 @@ def main():
     if len(sys.argv) != 2:
         usage()
         sys.exit(1)
-
-    db_path = sys.argv[1]
 
     db_path = sys.argv[1]
 
