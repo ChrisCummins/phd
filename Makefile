@@ -378,10 +378,18 @@ GoogleBenchmark_CxxFlags = \
 	-I$(extern)/benchmark/include -Wno-global-constructors
 GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
 
+# Build flags
+GoogleBenchmarkCMakeFlags = \
+	-DCMAKE_BUILD_TYPE=Release -DBENCHMARK_ENABLE_LTO=true
+$(GoogleBenchmark)-cmd = \
+	cd $(extern)/benchmark/build \
+	&& cmake $(GoogleBenchmarkCMakeFlags) .. \
+	&& $(MAKE)
+
 $(GoogleBenchmark): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)mkdir -pv $(extern)/benchmark/build
-	$(V1)cd $(extern)/benchmark/build && cmake .. && $(MAKE)
+	$(V1)$($(GoogleBenchmark)-cmd)
 
 .PHONY: distclean-googlebenchmark
 distclean-googlebenchmark:
