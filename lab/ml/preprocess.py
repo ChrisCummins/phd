@@ -153,7 +153,6 @@ def ocl_builder_worker(db_path):
                 c = db.cursor()
                 c.execute('INSERT INTO Bytecodes VALUES(?,?)',
                           (sha,bc))
-                db.commit()
 
                 # Write file.
                 with open(out_path, 'wb') as out:
@@ -164,12 +163,13 @@ def ocl_builder_worker(db_path):
                 c = db.cursor()
                 c.execute('INSERT INTO BytecodeErrors VALUES(?,?)',
                           (sha, str(e)))
-                db.commit()
 
                 out_path = out_dir + '/' + sha + '.error'
                 with open(out_path, 'w') as out:
                     out.write(str(e) + '\n')
                 files_error_counter += 1
+
+            db.commit()
 
     # Clear output
     print('\r\033[K', end='')
@@ -239,20 +239,17 @@ def main():
 
     db_path = sys.argv[1]
 
+    pool = Pool(processes=4)
+
     # Worker process pool
-    pool, jobs = Pool(processes=4), []
+    jobs = []
     jobs.append(pool.apply_async(ocl_writer_worker, (db_path,)))
     jobs.append(pool.apply_async(ocl_preprocessor_worker, (db_path,)))
     jobs.append(pool.apply_async(ocl_builder_worker, (db_path,)))
-
-    # Wait for jobs to finish
-    [job.wait() for job in jobs]
-
-    # Print job output
+    [job.wait() for job in jobs]  # Wait for jobs to finish
+    print()  # Print job output
+    [print(job.get()) for job in jobs]
     print()
-    for job in jobs:
-        output = job.get()
-        print(output)
 
 
 if __name__ == '__main__':
