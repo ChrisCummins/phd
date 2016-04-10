@@ -11,8 +11,10 @@
 #   Train char-rnn on "cleaned" text (no comments, etc)
 #   Train char-rnn on bytecode
 #   Train char-rnn on AST(?)
-
+import sys
 import os
+import sqlite3
+
 from collections import defaultdict
 
 try:
@@ -22,11 +24,13 @@ except ImportError:
 
 from pymarkovchain import MarkovChain
 
-db = 'markov.db'
-src = 'cl.txt'
+markov_db = 'markov.db'
 dst = 'gen.txt'
 
 num_lines = 10000
+
+def usage():
+    print('Usage: {} <db>'.format(sys.argv[0]))
 
 
 def _db_factory():
@@ -38,17 +42,45 @@ def _one():
 def _one_dict():
     return defaultdict(_one)
 
+
+def dump_training_data(db):
+    print('dump training data ...')
+    out_path = 'input.txt'
+
+    c = db.cursor()
+    c.execute('SELECT contents FROM OpenCLTidy')
+    query = c.fetchall()
+
+    with open(out_path, 'w') as out:
+        for row in query:
+            src = row[0]
+            out.write(src)
+            out.write('\n')
+
+    return out_path
+
+
 def main():
 
+    if len(sys.argv) != 2:
+        usage()
+        sys.exit(1)
+
+    db_path = sys.argv[1]
+
+    db = sqlite3.connect(db_path)
+
+    data_path = dump_training_data(db)
+
     # Hack to get MarkovChain to run:
-    if not os.path.exists(db):
-        with open(db, 'wb') as out:
+    if not os.path.exists(markov_db):
+        with open(markov_db, 'wb') as out:
             pickle.dump(_db_factory(), out)
 
-    mc = MarkovChain(db)
+    mc = MarkovChain(markov_db)
 
     print('training model ...')
-    with open(src, 'r') as infile:
+    with open(data_path, 'r') as infile:
         mc.generateDatabase(infile.read())
 
     # To let the markov chain generate some text, execute:
