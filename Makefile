@@ -395,6 +395,7 @@ DistcleanTargets += distclean-googlebenchmark
 #
 Boost = $(extern)/boost/boost/system
 BoostDir = $(extern)/boost
+BoostBuild = $(BoostDir)/build
 BoostConfigDir = $(tools)
 
 Boost_CxxFlags = -I$(extern)/boost/boost
@@ -411,7 +412,7 @@ $(Boost)-cmd = \
 	link=static runtime-link=static \
 	cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++"
 
-$(Boost): $(toolchain)
+$(Boost):
 	$(call print-task,BUILD,boost,$(TaskMisc))
 	$(V1)mkdir -pv $(BoostBuild)
 	$(V1)$($(Boost)-cmd)
@@ -439,7 +440,7 @@ $(GoogleTest)-cmd = \
 	cd $(extern)/googletest-build \
 	&& cmake ../googletest/googletest && $(MAKE)
 
-$(GoogleTest): $(toolchain)
+$(GoogleTest):
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)mkdir -pv $(extern)/googletest-build
 	$(V1)$($(GoogleTest)-cmd)
