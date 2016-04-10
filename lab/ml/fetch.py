@@ -8,6 +8,7 @@
 #
 import json
 import os
+import re
 import sys
 import sqlite3
 
@@ -26,6 +27,7 @@ repos_unchanged_counter = 0
 files_new_counter = 0
 files_modified_counter = 0
 files_unchanged_counter = 0
+errors_counter = 0
 status_string = ''
 
 def print_repo_details(repo):
@@ -48,12 +50,13 @@ def print_file_details(file):
 
 
 def print_counters():
-    print('\r\033[Krepos: new ', repos_new_counter,
-          ', modified ', repos_modified_counter,
-          ', unchanged ', repos_unchanged_counter,
-          '. files: new ', files_new_counter,
+    print('\r\033[Kfiles: new ', files_new_counter,
           ', modified ', files_modified_counter,
           ', unchanged ', files_unchanged_counter,
+          '. repos: new ', repos_new_counter,
+          ', modified ', repos_modified_counter,
+          ', unchanged ', repos_unchanged_counter,
+          '. errors ', errors_counter,
           '. current: ', status_string[0:25],
           sep='', end='')
     sys.stdout.flush()
@@ -113,15 +116,52 @@ def process_repo(g, db, repo):
 def is_opencl_path(path):
     return path.endswith('.cl') or path.endswith('.ocl')
 
+_include_re = re.compile('\w*#include ["<](.*)[">]')
 
-def download_file(github_token, url):
+def download_file(github_token, repo, url, stack):
+    # Recursion stack
+    stack.append(url)
+
     response = json.loads(requests.get(
         url,
         headers = {
             'Authorization': 'token ' + str(github_token)
         }
     ).content.decode('utf-8'))
-    return b64decode(response['content'])
+    src = b64decode(response['content']).decode('utf-8')
+
+    outlines = []
+    for line in src.split('\n'):
+        match = re.match(_include_re, line)
+        if match:
+            include_name = match.group(1)
+
+            # Try and resolve relative paths
+            include_name = include_name.replace('../', '')
+
+            branch = repo.default_branch
+            tree_iterator = repo.get_git_tree(branch, recursive=True).tree
+            include_url = ''
+            for f in tree_iterator:
+                if f.path.endswith(include_name):
+                    print('include', include_name)
+                    include_url = f.url
+                    break
+
+            if include_url and include_url not in stack:
+                include_src = download_file(github_token, repo, include_url)
+                outlines.append(include_src)
+            else:
+                if not include_url:
+                    print('couldnt find', include_name)
+                    outlines.append('// fetch.py didnt find: ' + line)
+                else:
+                    print('skipped', include_name)
+                    outlines.append('// fetch.py skipped: ' + line)
+        else:
+            outlines.append(line)
+
+    return '\n'.join(outlines)
 
 
 def process_file(g, github_token, db, repo, file):
@@ -150,7 +190,7 @@ def process_file(g, github_token, db, repo, file):
         return False
 
     repo_url = repo.url
-    contents = download_file(github_token, file.url)
+    contents = download_file(github_token, repo, file.url, [])
     size = file.size
 
     c.execute("DELETE FROM OpenCLFiles WHERE url=?", (url,))
@@ -171,6 +211,8 @@ def usage():
 
 
 def main():
+    global errors_counter
+
     if len(sys.argv) != 2:
         usage()
         sys.exit(1)
@@ -214,7 +256,11 @@ def main():
             try:
                 branch = repo.default_branch
                 tree_iterator = repo.get_git_tree(branch, recursive=True).tree
-                [handle_file(x) for x in tree_iterator]
+                for f in tree_iterator:
+                    try:
+                        handle_file(f)
+                    except Exception as e:
+                        errors_counter += 1
             except GithubException as e:
                 # Do nothing in case of error (such as an empty repo)
                 pass
