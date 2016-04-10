@@ -164,3 +164,10 @@ CREATE TABLE IF NOT EXISTS BytecodeFeatures (
         ratio_ZExt_insts           REAL DEFAULT 0.0,
         UNIQUE(sha)
 );
+
+
+CREATE TABLE IF NOT EXISTS OpenCLTidy (
+        sha                        TEXT NOT NULL,
+        contents                   TEXT NOT NULL,
+        UNIQUE(sha)
+);

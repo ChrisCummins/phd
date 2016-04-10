@@ -133,7 +133,7 @@ def stats_worker(db_path):
     stats.append(('',''))
 
     # Bytecodes
-    c.execute("SELECT Count(*) from Bytecodes")
+    c.execute('SELECT Count(*) from Bytecodes')
     nb_bc_files = c.fetchone()[0]
     ratio_bc_files = nb_bc_files / nb_uniq_ocl_files
     stats.append(('Number of Bytecode files',
@@ -159,8 +159,25 @@ def stats_worker(db_path):
                   seq_stats(bc_ocl_lcs)))
     stats.append(('Bytecode line counts',
                   seq_stats(bc_lcs)))
+    stats.append(('',''))
 
+    # CL tidy
+    c.execute('SELECT contents FROM OpenCLTidy')
+    cltidy = c.fetchall()
 
+    nb_cltidy_files = len(cltidy)
+    ratio_cltidy_files = nb_cltidy_files / nb_uniq_ocl_files
+    stats.append(('Number of tidy OpenCL files',
+                  bigint(nb_cltidy_files) +
+                  ' ({:.0f}%)'.format(ratio_cltidy_files * 100)))
+
+    cltidy_lcs = [len(x[0].split('\n')) for x in cltidy]
+    cltidy_lcs.sort()
+    stats.append(('Total line count of tidy OpenCL sources',
+                  bigint(sum(cltidy_lcs))))
+
+    stats.append(('Tidy OpenCL line counts',
+                  seq_stats(cltidy_lcs)))
     return stats
 
 
