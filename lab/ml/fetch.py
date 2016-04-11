@@ -237,7 +237,7 @@ def main():
     #
     queries = ['opencl', 'cl', 'khronos', 'gpu']
     for query in queries:
-        repos = g.search_repositories(query + ' fork:true')
+        repos = g.search_repositories(query + ' fork:true sort:stars')
 
         for repo in repos:
             repo_modified = handle_repo(repo)
