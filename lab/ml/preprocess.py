@@ -40,7 +40,7 @@ def ocl_writer_worker(db_path):
     db = sqlite3.connect(db_path)
     c = db.cursor()
 
-    c.execute('SELECT sha,path,contents FROM OpenCLFiles GROUP BY sha')
+    c.execute('SELECT sha,path,contents FROM ContentFiles GROUP BY sha')
     query = c.fetchall()
 
     files_added_counter = 0
@@ -123,7 +123,7 @@ def ocl_builder_worker(db_path):
     db = sqlite3.connect(db_path)
     c = db.cursor()
 
-    c.execute('SELECT sha,path,contents FROM OpenCLFiles GROUP BY sha')
+    c.execute('SELECT sha,path,contents FROM ContentFiles GROUP BY sha')
     query = c.fetchall()
 
     counter = 0
@@ -186,7 +186,7 @@ def ocl_preprocessor_worker(db_path):
     db = sqlite3.connect(db_path)
     c = db.cursor()
 
-    c.execute('SELECT sha,path,contents FROM OpenCLFiles GROUP BY sha')
+    c.execute('SELECT sha,path,contents FROM ContentFiles GROUP BY sha')
     query = c.fetchall()
 
     files_added_counter = 0

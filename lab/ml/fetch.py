@@ -181,7 +181,7 @@ def process_file(g, github_token, db, repo, file):
     print_counters()
 
     c = db.cursor()
-    c.execute("SELECT sha FROM OpenCLFiles WHERE url=?", (url,))
+    c.execute("SELECT sha FROM ContentFiles WHERE url=?", (url,))
     cached_sha = c.fetchone()
 
     # Do nothing unless checksums don't match
@@ -193,8 +193,8 @@ def process_file(g, github_token, db, repo, file):
     contents = download_file(github_token, repo, file.url, [])
     size = file.size
 
-    c.execute("DELETE FROM OpenCLFiles WHERE url=?", (url,))
-    c.execute("INSERT INTO OpenCLFiles VALUES(?,?,?,?,?,?)",
+    c.execute("DELETE FROM ContentFiles WHERE url=?", (url,))
+    c.execute("INSERT INTO ContentFiles VALUES(?,?,?,?,?,?)",
               (url, path, repo_url, contents, sha, size))
 
     if cached_sha:

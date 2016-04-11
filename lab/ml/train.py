@@ -51,8 +51,8 @@ def dump_training_data(db):
     # Get all of the OpenCL tidy files, ordered by the number of stars
     # in the containing repo.
     c.execute('SELECT OpenCLTidy.contents FROM OpenCLTidy '
-              'LEFT JOIN OpenCLFiles ON OpenCLTidy.sha=OpenCLFiles.sha '
-              'LEFT JOIN Repositories ON OpenCLFiles.repo_url=Repositories.url '
+              'LEFT JOIN ContentFiles ON OpenCLTidy.sha=ContentFiles.sha '
+              'LEFT JOIN Repositories ON ContentFiles.repo_url=Repositories.url '
               'ORDER BY Repositories.stars DESC')
     query = c.fetchall()
 

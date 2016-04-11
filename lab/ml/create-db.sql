@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS Repositories (
        UNIQUE(url)
 );
 
-CREATE TABLE IF NOT EXISTS OpenCLFiles (
+CREATE TABLE IF NOT EXISTS ContentFiles (
        url                 TEXT NOT NULL,       -- GitHub URL
        path                TEXT NOT NULL,       -- File path within repo
        repo_url            TEXT NOT NULL,       -- Repositories.url

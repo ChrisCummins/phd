@@ -75,43 +75,42 @@ def stats_worker(db_path):
     stats.append(('Number of repositories visited', bigint(nb_repos)))
     stats.append(('',''))
 
-    c.execute("SELECT Count(DISTINCT repo_url) from OpenCLFiles")
+    c.execute("SELECT Count(DISTINCT repo_url) from ContentFiles")
     nb_ocl_repos = c.fetchone()[0]
-    stats.append(('Number of OpenCL repositories', bigint(nb_ocl_repos)))
+    stats.append(('Number of content file repositories', bigint(nb_ocl_repos)))
 
-    # FIXME: Number of forks
-    c.execute('SELECT Count(DISTINCT repo_url) FROM OpenCLFiles LEFT JOIN '
-              'Repositories WHERE fork=1')
+    c.execute('SELECT Count(*) FROM Repositories WHERE fork=1 AND url IN '
+              '(SELECT repo_url FROM ContentFiles)')
     nb_forks = c.fetchone()[0]
     ratio_forks = nb_forks / nb_ocl_repos
     stats.append(('Number of forked repositories',
                   bigint(nb_forks) +
                   ' ({:.0f}%)'.format(ratio_forks * 100)))
 
-    c.execute("SELECT Count(*) from OpenCLFiles")
+    c.execute("SELECT Count(*) from ContentFiles")
     nb_ocl_files = c.fetchone()[0]
-    stats.append(('Number of OpenCL files', bigint(nb_ocl_files)))
+    stats.append(('Number of content files', bigint(nb_ocl_files)))
     stats.append(('',''))
 
-    # OpenCLFiles
-    c.execute("SELECT Count(DISTINCT sha) from OpenCLFiles")
+    # ContentFiles
+    c.execute("SELECT Count(DISTINCT sha) from ContentFiles")
     nb_uniq_ocl_files = c.fetchone()[0]
     ratio_uniq_ocl_files = nb_uniq_ocl_files / nb_ocl_files
-    stats.append(('Number of unique OpenCL files',
+    stats.append(('Number of unique content files',
                   bigint(nb_uniq_ocl_files) +
                   ' ({:.0f}%)'.format(ratio_uniq_ocl_files * 100)))
 
     avg_nb_ocl_files_per_repo = nb_ocl_files / nb_ocl_repos
-    stats.append(('OpenCL files per repository',
+    stats.append(('Content files per repository',
                   'avg: {:.2f}'.format(avg_nb_ocl_files_per_repo)))
 
-    c.execute("SELECT contents FROM OpenCLFiles")
+    c.execute("SELECT contents FROM ContentFiles")
     code = c.fetchall()
     code_lcs = [len(decode(x[0]).split('\n')) for x in code]
     code_lcs.sort()
-    stats.append(('Total OpenCL line count', bigint(sum(code_lcs))))
+    stats.append(('Total content line count', bigint(sum(code_lcs))))
 
-    stats.append(('OpenCL line counts', seq_stats(code_lcs)))
+    stats.append(('Content file line counts', seq_stats(code_lcs)))
     stats.append(('',''))
 
     # Preprocessed
@@ -140,9 +139,9 @@ def stats_worker(db_path):
                   bigint(nb_bc_files) +
                   ' ({:.0f}%)'.format(ratio_bc_files * 100)))
 
-    c.execute('SELECT OpenCLFiles.contents FROM Bytecodes '
-              'LEFT JOIN OpenCLFiles ON Bytecodes.sha=OpenCLFiles.sha '
-              'GROUP BY OpenCLFiles.sha')
+    c.execute('SELECT ContentFiles.contents FROM Bytecodes '
+              'LEFT JOIN ContentFiles ON Bytecodes.sha=ContentFiles.sha '
+              'GROUP BY ContentFiles.sha')
     bc_ocl = c.fetchall()
     bc_ocl_lcs = [len(decode(x[0]).split('\n')) for x in bc_ocl]
     bc_ocl_lcs.sort()
@@ -193,7 +192,7 @@ def graph_ocl_lc(db_path):
     db = sqlite3.connect(db_path)
     c = db.cursor()
 
-    c.execute("SELECT contents FROM OpenCLFiles")
+    c.execute("SELECT contents FROM ContentFiles")
     ocl = c.fetchall()
     ocl_lcs = [len(decode(x[0]).split('\n')) for x in ocl]
 
@@ -245,8 +244,8 @@ def graph_ocl_stars(db_path):
     db = sqlite3.connect(db_path)
     c = db.cursor()
 
-    c.execute('SELECT stars FROM OpenCLFiles LEFT JOIN Repositories '
-              'ON OpenCLFiles.repo_url=Repositories.url')
+    c.execute('SELECT stars FROM ContentFiles LEFT JOIN Repositories '
+              'ON ContentFiles.repo_url=Repositories.url')
     stars = [x[0] for x in c.fetchall()]
 
     # Filter range
