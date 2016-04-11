@@ -540,6 +540,15 @@ $(lab)/lm/benchmarks_LdFlags = $(phd_LdFlags)
 
 
 #
+# lab/ml
+#
+CxxTargets += $(lab)/ml/rewriter
+
+$(lab)/ml/rewriter.o_CxxFlags = $(ClangLlvm_CxxFlags)
+$(lab)/ml/rewriter_LdFlags = $(ClangLlvm_LdFlags)
+
+
+#
 # lab/stl/
 #
 StlComponents = \
@@ -1141,6 +1150,48 @@ DocStrings += "install: install files"
 LlvmSrc := $(root)/tools/llvm
 LlvmBuild := $(root)/tools/llvm/build
 LlvmCMakeFlags = -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true
+
+# Flags to build against LLVM + Clang toolchain
+ClangLlvm_CxxFlags = \
+	$(shell $(LlvmBuild)/bin/llvm-config --cxxflags) \
+	-I$(LlvmSrc)/tools/clang/include \
+	-I$(LlvmBuild)/tools/clang/include \
+	$(NULL)
+
+ClangLlvm_LdFlags = \
+	$(shell $(LlvmBuild)/bin/llvm-config --system-libs) \
+	-L$(shell $(LlvmBuild)/bin/llvm-config --libdir) \
+	-ldl \
+	-lclangTooling \
+	-lclangToolingCore \
+	-lclangFrontend \
+	-lclangDriver \
+	-lclangSerialization \
+	-lclangCodeGen \
+	-lclangParse \
+	-lclangSema \
+	-lclangStaticAnalyzerFrontend \
+	-lclangStaticAnalyzerCheckers \
+	-lclangStaticAnalyzerCore \
+	-lclangAnalysis \
+	-lclangARCMigrate \
+	-lclangRewriteFrontend \
+	-lclangRewrite \
+	-lclangEdit \
+	-lclangAST \
+	-lclangLex \
+	-lclangBasic \
+	-lclang \
+	-ldl \
+	$(shell $(LlvmBuild)/bin/llvm-config --libs) \
+	-pthread \
+	-lLLVMCppBackendCodeGen -lLLVMTarget -lLLVMMC \
+	-lLLVMObject -lLLVMCore -lLLVMCppBackendInfo \
+	-ldl -lcurses \
+	-lLLVMSupport \
+	-lcurses \
+	-ldl \
+	$(NULL)
 
 # Compilers depend on boostrapping:
 $(CC): $(toolchain)
