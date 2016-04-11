@@ -48,7 +48,12 @@ def dump_training_data(db):
     out_path = 'input.txt'
 
     c = db.cursor()
-    c.execute('SELECT contents FROM OpenCLTidy')
+    # Get all of the OpenCL tidy files, ordered by the number of stars
+    # in the containing repo.
+    c.execute('SELECT OpenCLTidy.contents FROM OpenCLTidy '
+              'LEFT JOIN OpenCLFiles ON OpenCLTidy.sha=OpenCLFiles.sha '
+              'LEFT JOIN Repositories ON OpenCLFiles.repo_url=Repositories.url '
+              'ORDER BY Repositories.stars DESC')
     query = c.fetchall()
 
     with open(out_path, 'w') as out:
