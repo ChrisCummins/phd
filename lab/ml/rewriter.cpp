@@ -2,6 +2,11 @@
 //
 //     LD_LIBRARY_PATH=~/phd/tools/llvm/build/lib ./rewriter <file> --
 //
+// TODO:
+//
+//   Rewrite variable names.
+//   Rewrite function parameters.
+//
 #include <memory>
 #include <string>
 #include <map>
@@ -190,7 +195,7 @@ int main(int argc, const char **argv) {
         rewriter::RewriterFrontendAction>().get());
 
   const auto& id = rewriter::rewriter.getSourceMgr().getMainFileID();
-  rewriter::rewriter.getEditBuffer(id).write(llvm::errs());
+  rewriter::rewriter.getEditBuffer(id).write(llvm::outs());
 
   llvm::errs() << "\nRewrote " << rewriter::_fn_decl_rewrites_counter
                << " function declarations\n"
