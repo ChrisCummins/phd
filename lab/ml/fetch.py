@@ -235,8 +235,17 @@ def main():
     # 'language=' keyword for queries, so instead we through a much
     # wider net and filter the results afterwards.
     #
-    queries = ['opencl', 'cl', 'khronos', 'gpu']
-    for query in queries:
+    query_terms = [
+        'opencl',
+        'cl',
+        'khronos',
+        'gpu',
+        'cuda',
+        'amd',
+        'nvidia',
+        'heterogeneous'
+    ]
+    for query in query_terms:
         repos = g.search_repositories(query + ' fork:true sort:stars')
 
         for repo in repos:
