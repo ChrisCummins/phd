@@ -4,6 +4,7 @@
 //
 #include <memory>
 #include <string>
+#include <map>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weverything"
@@ -23,8 +24,76 @@
 namespace rewriter {
 
 static clang::Rewriter rewriter;
-static int numFunctions = 0;
 static llvm::cl::OptionCategory _tool_category("phd");
+
+static std::map<std::string, std::string> _fns;
+static std::string _last_fn = "";
+
+static unsigned int _fn_decl_rewrites_counter = 0;
+static unsigned int _fn_call_rewrites_counter = 0;
+
+enum ctype { AZ, az };
+
+std::string get_next_name(const std::string& current) {
+  auto c = current;
+  char *cc = &c[c.length() - 1];
+  ctype type;
+
+  while (true) {
+    // determine type
+    if (*cc >= 'A' && *cc <= 'Z')
+      type = ctype::AZ;
+    else
+      type = ctype::az;
+
+    ++*cc;
+
+    // If the value has overflowed, reset and move to next char.
+    if (*cc == 'Z' + 1 || *cc == 'z' + 1) {
+      // reset char
+      if (type == ctype::AZ)
+        *cc = 'A';
+      else
+        *cc = 'a';
+
+
+      // If we're at the last character, insert a new one, otherwise
+      // just move to the next character to increment.
+      if (cc == &c[0]) {
+        if (type == ctype::AZ)
+          c.insert(c.begin(), 'A');
+        else
+          c.insert(c.begin(), 'a');
+        break;
+      } else {
+        --cc;
+      }
+    } else {
+      break;
+    }
+  }
+
+  return c;
+}
+
+std::string get_fn_rewrite(const std::string& name) {
+  if (_fns.empty()) {
+    // First function
+    _fns[name] = "A";
+    _last_fn = "A";
+    return "A";
+  } else if (_fns.find(name) == _fns.end()) {
+    // New function
+    auto replacement = get_next_name(_last_fn);
+    _last_fn = replacement;
+    _fns[name] = replacement;
+    return replacement;
+  } else {
+    // Previously visited function
+    return (*_fns.find(name)).second;
+  }
+}
+
 
 class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
  private:
@@ -39,43 +108,44 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
                           astContext->getLangOpts());
   }
 
+  // Rewrite function definitions:
   virtual bool VisitFunctionDecl(clang::FunctionDecl *func) {
-    numFunctions++;
-    std::string funcName = func->getNameInfo().getName().getAsString();
-    if (funcName == "do_math") {
-      rewriter.ReplaceText(
-          func->getLocation(),
-          static_cast<unsigned int>(funcName.length()),
-          "add5");
-      llvm::errs() << "** Rewrote function def: " << funcName << "\n";
-    }
+    const auto funcName = func->getNameInfo().getName().getAsString();
+    const auto replacement = get_fn_rewrite(funcName);
+
+    rewriter.ReplaceText(
+        func->getLocation(),
+        static_cast<unsigned int>(funcName.length()),
+        replacement);
+    ++_fn_decl_rewrites_counter;
+
     return true;
   }
 
   virtual bool VisitStmt(clang::Stmt *st) {
-    if (clang::ReturnStmt *ret = clang::dyn_cast<clang::ReturnStmt>(st)) {
-      rewriter.ReplaceText(ret->getRetValue()->getLocStart(), 6, "val");
-      llvm::errs() << "** Rewrote ReturnStmt\n";
-    }
+    // Rewrite function calls:
     if (clang::CallExpr *call = clang::dyn_cast<clang::CallExpr>(st)) {
-      rewriter.ReplaceText(call->getLocStart(), 7, "add5");
-      llvm::errs() << "** Rewrote function call\n";
-    }
-    return true;
-  }
-  /*
-    virtual bool VisitReturnStmt(ReturnStmt *ret) {
-    rewriter.ReplaceText(ret->getRetValue()->getLocStart(), 6, "val");
-    llvm::errs() << "** Rewrote ReturnStmt\n";
-    return true;
+      const auto callee = call->getDirectCallee();
+      if (callee) {
+        const auto funcName = callee->getNameInfo().getName().getAsString();
+        if (_fns.find(funcName) != _fns.end()) {
+          const auto replacement = (*_fns.find(funcName)).second;
+
+          rewriter.ReplaceText(
+              call->getLocStart(),
+              static_cast<unsigned int>(funcName.length()),
+              replacement);
+          ++_fn_call_rewrites_counter;
+        } else {
+          llvm::errs() << "REFUSING TO REWRITE " << funcName << "\n";
+        }
+      } else {
+        llvm::errs() << "unable to get direct callee\n";
+      }
     }
 
-    virtual bool VisitCallExpr(CallExpr *call) {
-    rewriter.ReplaceText(call->getLocStart(), 7, "add5");
-    llvm::errs() << "** Rewrote function call\n";
     return true;
-    }
-  */
+  }
 };
 
 
@@ -95,18 +165,6 @@ class RewriterASTConsumer : public clang::ASTConsumer {
        a single Decl that collectively represents the entire source file */
     visitor->TraverseDecl(Context.getTranslationUnitDecl());
   }
-
-  /*
-  // override this to call our RewriterVisitor on each top-level Decl
-  virtual bool HandleTopLevelDecl(DeclGroupRef DG) {
-  // a DeclGroupRef may have multiple Decls, so we iterate through each one
-  for (DeclGroupRef::iterator i = DG.begin(), e = DG.end(); i != e; i++) {
-  Decl *D = *i;
-  visitor->TraverseDecl(D); // recursively visit each AST node in Decl "D"
-  }
-  return true;
-  }
-  */
 };
 
 
@@ -131,8 +189,13 @@ int main(int argc, const char **argv) {
       clang::tooling::newFrontendActionFactory<
         rewriter::RewriterFrontendAction>().get());
 
-  llvm::errs() << "\nFound " << rewriter::numFunctions << " functions.\n\n";
   const auto& id = rewriter::rewriter.getSourceMgr().getMainFileID();
   rewriter::rewriter.getEditBuffer(id).write(llvm::errs());
+
+  llvm::errs() << "\nRewrote " << rewriter::_fn_decl_rewrites_counter
+               << " function declarations\n"
+               << "Rewrote " << rewriter::_fn_call_rewrites_counter
+               << " function calls\n";
+
   return result;
 }
