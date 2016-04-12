@@ -329,6 +329,28 @@ def clangformat_ocl(src):
     return stdout
 
 
+def print_bytecode_features(db_path):
+    db = sqlite3.connect(db_path)
+    c = db.cursor()
+
+    c.execute('SELECT sha,contents FROM Bytecodes')
+    query = c.fetchall()
+
+    uniq_features = set()
+    for row in query:
+        sha, contents = row
+
+        features = bytecode_features(contents)
+        # Add the table key
+        features['sha'] = sha
+        for key in features.keys():
+            uniq_features.add(key)
+
+    print('Features:')
+    for feature in uniq_features:
+        print('        ', feature)
+
+
 def bytecode_features_worker(db_path):
     print('bc features worker ...')
 

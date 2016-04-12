@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS BytecodeErrors (
 --
 
 CREATE TABLE IF NOT EXISTS BytecodeFeatures (
-        sha                        TEXT NOT NULL, -- OpenCLFile.sha
+        sha                        TEXT NOT NULL, -- ContentFiles.sha
         instructions_of_all_types  INTEGER DEFAULT 0,
         basic_blocks               INTEGER DEFAULT 0,
         memory_instructions        INTEGER DEFAULT 0,
@@ -108,6 +108,7 @@ CREATE TABLE IF NOT EXISTS BytecodeFeatures (
         Trunc_insts                INTEGER DEFAULT 0,
         UDiv_insts                 INTEGER DEFAULT 0,
         UIToFP_insts               INTEGER DEFAULT 0,
+        Unreachable_insts          INTEGER DEFAULT 0,
         URem_insts                 INTEGER DEFAULT 0,
         Xor_insts                  INTEGER DEFAULT 0,
         ZExt_insts                 INTEGER DEFAULT 0,
@@ -159,6 +160,7 @@ CREATE TABLE IF NOT EXISTS BytecodeFeatures (
         ratio_Trunc_insts          REAL DEFAULT 0.0,
         ratio_UDiv_insts           REAL DEFAULT 0.0,
         ratio_UIToFP_insts         REAL DEFAULT 0.0,
+        ratio_Unreachable_insts    REAL DEFAULT 0.0,
         ratio_URem_insts           REAL DEFAULT 0.0,
         ratio_Xor_insts            REAL DEFAULT 0.0,
         ratio_ZExt_insts           REAL DEFAULT 0.0,
