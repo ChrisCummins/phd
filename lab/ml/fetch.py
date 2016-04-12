@@ -95,7 +95,10 @@ def process_repo(g, db, repo):
     owner = repo.owner.email
     fork = 1 if repo.fork else 0
     stars = repo.stargazers_count
-    contributors = len([x for x in repo.get_contributors()])
+    try:
+        contributors = len([x for x in repo.get_contributors()])
+    except GithubException as e:
+        contributors = -1
     forks = repo.forks
     created_at = repo.created_at
     updated_at = repo.updated_at
