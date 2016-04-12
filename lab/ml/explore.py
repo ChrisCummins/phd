@@ -259,7 +259,7 @@ def graph_ocl_stars(db_path):
 
 
 def main():
-    locale.setlocale(locale.LC_ALL, 'en_GB')
+    locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
 
     if len(sys.argv) != 2:
         usage()
