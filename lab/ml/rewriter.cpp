@@ -20,83 +20,75 @@
 #include "clang/Tooling/Tooling.h"
 #pragma GCC diagnostic pop
 
-using namespace clang;  // NOLINT
-using namespace clang::driver;  // NOLINT
-using namespace clang::tooling;  // NOLINT
-using namespace llvm;  // NOLINT
-
-using namespace clang::tooling;  // NOLINT
-using namespace llvm;  // NOLINT
-
-Rewriter rewriter;
-int numFunctions = 0;
-
+static clang::Rewriter rewriter;
+static int numFunctions = 0;
 static llvm::cl::OptionCategory _tool_category("phd");
 
-class RewriterVisitor : public RecursiveASTVisitor<RewriterVisitor> {
+class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
  private:
-  std::unique_ptr<ASTContext> astContext;  // additional AST info
+  std::unique_ptr<clang::ASTContext> astContext;  // additional AST info
 
   virtual ~RewriterVisitor() {}
 
  public:
-  explicit RewriterVisitor(CompilerInstance *CI)
+  explicit RewriterVisitor(clang::CompilerInstance *CI)
       : astContext(&(CI->getASTContext())) {
     rewriter.setSourceMgr(astContext->getSourceManager(),
                           astContext->getLangOpts());
   }
 
-  virtual bool VisitFunctionDecl(FunctionDecl *func) {
+  virtual bool VisitFunctionDecl(clang::FunctionDecl *func) {
     numFunctions++;
     std::string funcName = func->getNameInfo().getName().getAsString();
     if (funcName == "do_math") {
-      rewriter.ReplaceText(func->getLocation(),
-                           static_cast<unsigned int>(funcName.length()),
-                           "add5");
-      errs() << "** Rewrote function def: " << funcName << "\n";
+      rewriter.ReplaceText(
+          func->getLocation(),
+          static_cast<unsigned int>(funcName.length()),
+          "add5");
+      llvm::errs() << "** Rewrote function def: " << funcName << "\n";
     }
     return true;
   }
 
-  virtual bool VisitStmt(Stmt *st) {
-    if (ReturnStmt *ret = dyn_cast<ReturnStmt>(st)) {
+  virtual bool VisitStmt(clang::Stmt *st) {
+    if (clang::ReturnStmt *ret = clang::dyn_cast<clang::ReturnStmt>(st)) {
       rewriter.ReplaceText(ret->getRetValue()->getLocStart(), 6, "val");
-      errs() << "** Rewrote ReturnStmt\n";
+      llvm::errs() << "** Rewrote ReturnStmt\n";
     }
-    if (CallExpr *call = dyn_cast<CallExpr>(st)) {
+    if (clang::CallExpr *call = clang::dyn_cast<clang::CallExpr>(st)) {
       rewriter.ReplaceText(call->getLocStart(), 7, "add5");
-      errs() << "** Rewrote function call\n";
+      llvm::errs() << "** Rewrote function call\n";
     }
     return true;
   }
   /*
     virtual bool VisitReturnStmt(ReturnStmt *ret) {
     rewriter.ReplaceText(ret->getRetValue()->getLocStart(), 6, "val");
-    errs() << "** Rewrote ReturnStmt\n";
+    llvm::errs() << "** Rewrote ReturnStmt\n";
     return true;
     }
 
     virtual bool VisitCallExpr(CallExpr *call) {
     rewriter.ReplaceText(call->getLocStart(), 7, "add5");
-    errs() << "** Rewrote function call\n";
+    llvm::errs() << "** Rewrote function call\n";
     return true;
     }
   */
 };
 
 
-class ExampleASTConsumer : public ASTConsumer {
+class ExampleASTConsumer : public clang::ASTConsumer {
  private:
   RewriterVisitor *visitor;
 
  public:
   // override the constructor in order to pass CI
-  explicit ExampleASTConsumer(CompilerInstance *CI)
+  explicit ExampleASTConsumer(clang::CompilerInstance *CI)
       : visitor(new RewriterVisitor(CI))
   { }
 
   // override this to call our RewriterVisitor on the entire source file
-  virtual void HandleTranslationUnit(ASTContext &Context) {
+  virtual void HandleTranslationUnit(clang::ASTContext &Context) {
     /* we can use ASTContext to get the TranslationUnitDecl, which is
        a single Decl that collectively represents the entire source file */
     visitor->TraverseDecl(Context.getTranslationUnitDecl());
@@ -116,22 +108,24 @@ class ExampleASTConsumer : public ASTConsumer {
 };
 
 
-class RewriterFrontendAction : public ASTFrontendAction {
+class RewriterFrontendAction : public clang::ASTFrontendAction {
  public:
-  virtual std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
-                                                         StringRef file) {
-    return make_unique<ExampleASTConsumer>(&CI);
+  virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
+      clang::CompilerInstance &CI,
+      StringRef file) {
+    return llvm::make_unique<ExampleASTConsumer>(&CI);
   }
 };
 
 
 int main(int argc, const char **argv) {
-  CommonOptionsParser op(argc, argv, _tool_category);
-  ClangTool tool(op.getCompilations(), op.getSourcePathList());
-  int result = tool.run(
-      newFrontendActionFactory<RewriterFrontendAction>().get());
+  clang::tooling::CommonOptionsParser op(argc, argv, _tool_category);
+  clang::tooling::ClangTool tool(op.getCompilations(), op.getSourcePathList());
+  auto result = tool.run(
+      clang::tooling::newFrontendActionFactory<RewriterFrontendAction>().get());
 
-  errs() << "\nFound " << numFunctions << " functions.\n\n";
-  rewriter.getEditBuffer(rewriter.getSourceMgr().getMainFileID()).write(errs());
+  llvm::errs() << "\nFound " << numFunctions << " functions.\n\n";
+  const auto& id = rewriter.getSourceMgr().getMainFileID();
+  rewriter.getEditBuffer(id).write(llvm::errs());
   return result;
 }
