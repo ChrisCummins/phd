@@ -13,7 +13,6 @@
 # Try compiling each source to LLVM bytecode
 # For those that build, run static analysis to generate feature vectors
 #
-import locale
 import os
 import re
 import shutil
@@ -457,8 +456,6 @@ def ocl_tidy_worker(db_path):
 
 
 def main():
-    locale.setlocale(locale.LC_ALL, 'en_GB')
-
     if len(sys.argv) != 2:
         usage()
         sys.exit(1)
