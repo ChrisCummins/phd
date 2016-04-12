@@ -54,7 +54,7 @@ def ocl_writer_worker(db_path):
             if os.path.exists(out_path):
                 files_skipped_counter += 1
             else:
-                with open(out_path, 'wb') as out:
+                with open(out_path, 'w') as out:
                     out.write(contents)
                 files_added_counter += 1
         except Exception as e:
@@ -145,7 +145,7 @@ def ocl_builder_worker(db_path):
             files_skipped_counter += 1
         else:
             try:
-                bc = compile_cl_bytecode(contents)
+                bc = compile_cl_bytecode(contents.encode('utf-8'))
 
                 # Add to database.
                 c = db.cursor()
@@ -206,7 +206,7 @@ def ocl_preprocessor_worker(db_path):
             files_skipped_counter += 1
         else:
             try:
-                cl = preprocess_cl(contents)
+                cl = preprocess_cl(contents.encode('utf-8'))
 
                 # Add to database.
                 c.execute('INSERT INTO Preprocessed VALUES(?,?)',

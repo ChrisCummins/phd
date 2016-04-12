@@ -106,7 +106,7 @@ def stats_worker(db_path):
 
     c.execute("SELECT contents FROM ContentFiles")
     code = c.fetchall()
-    code_lcs = [len(decode(x[0]).split('\n')) for x in code]
+    code_lcs = [len(x[0].split('\n')) for x in code]
     code_lcs.sort()
     stats.append(('Total content line count', bigint(sum(code_lcs))))
 
@@ -143,7 +143,7 @@ def stats_worker(db_path):
               'LEFT JOIN ContentFiles ON Bytecodes.sha=ContentFiles.sha '
               'GROUP BY ContentFiles.sha')
     bc_ocl = c.fetchall()
-    bc_ocl_lcs = [len(decode(x[0]).split('\n')) for x in bc_ocl]
+    bc_ocl_lcs = [len(x[0].split('\n')) for x in bc_ocl]
     bc_ocl_lcs.sort()
     stats.append(('Total line count of Bytecode OpenCL sources',
                   bigint(sum(bc_ocl_lcs))))
@@ -194,7 +194,7 @@ def graph_ocl_lc(db_path):
 
     c.execute("SELECT contents FROM ContentFiles")
     ocl = c.fetchall()
-    ocl_lcs = [len(decode(x[0]).split('\n')) for x in ocl]
+    ocl_lcs = [len(x[0].split('\n')) for x in ocl]
 
     # Filter range
     data = [x for x in ocl_lcs if x < 500]
