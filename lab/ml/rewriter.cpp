@@ -20,6 +20,8 @@
 #include "clang/Tooling/Tooling.h"
 #pragma GCC diagnostic pop
 
+namespace rewriter {
+
 static clang::Rewriter rewriter;
 static int numFunctions = 0;
 static llvm::cl::OptionCategory _tool_category("phd");
@@ -77,13 +79,13 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
 };
 
 
-class ExampleASTConsumer : public clang::ASTConsumer {
+class RewriterASTConsumer : public clang::ASTConsumer {
  private:
   RewriterVisitor *visitor;
 
  public:
   // override the constructor in order to pass CI
-  explicit ExampleASTConsumer(clang::CompilerInstance *CI)
+  explicit RewriterASTConsumer(clang::CompilerInstance *CI)
       : visitor(new RewriterVisitor(CI))
   { }
 
@@ -113,19 +115,24 @@ class RewriterFrontendAction : public clang::ASTFrontendAction {
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
       clang::CompilerInstance &CI,
       StringRef file) {
-    return llvm::make_unique<ExampleASTConsumer>(&CI);
+    return llvm::make_unique<RewriterASTConsumer>(&CI);
   }
 };
 
 
-int main(int argc, const char **argv) {
-  clang::tooling::CommonOptionsParser op(argc, argv, _tool_category);
-  clang::tooling::ClangTool tool(op.getCompilations(), op.getSourcePathList());
-  auto result = tool.run(
-      clang::tooling::newFrontendActionFactory<RewriterFrontendAction>().get());
+}  // namespace rewriter
 
-  llvm::errs() << "\nFound " << numFunctions << " functions.\n\n";
-  const auto& id = rewriter.getSourceMgr().getMainFileID();
-  rewriter.getEditBuffer(id).write(llvm::errs());
+
+int main(int argc, const char **argv) {
+  clang::tooling::CommonOptionsParser op(argc, argv, rewriter::_tool_category);
+  clang::tooling::ClangTool tool(op.getCompilations(), op.getSourcePathList());
+
+  auto result = tool.run(
+      clang::tooling::newFrontendActionFactory<
+        rewriter::RewriterFrontendAction>().get());
+
+  llvm::errs() << "\nFound " << rewriter::numFunctions << " functions.\n\n";
+  const auto& id = rewriter::rewriter.getSourceMgr().getMainFileID();
+  rewriter::rewriter.getEditBuffer(id).write(llvm::errs());
   return result;
 }
