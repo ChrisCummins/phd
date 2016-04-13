@@ -129,7 +129,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
 
   virtual bool VisitStmt(clang::Stmt *st) {
     // Rewrite function calls:
-    if (clang::CallExpr *call = clang::dyn_cast<clang::CallExpr>(st)) {
+    if (auto call = clang::dyn_cast<clang::CallExpr>(st)) {
       const auto callee = call->getDirectCallee();
       if (callee) {
         const auto funcName = callee->getNameInfo().getName().getAsString();
@@ -141,14 +141,21 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
               static_cast<unsigned int>(funcName.length()),
               replacement);
           ++_fn_call_rewrites_counter;
-        } else {
-          llvm::errs() << "REFUSING TO REWRITE " << funcName << "\n";
-        }
-      } else {
-        llvm::errs() << "unable to get direct callee\n";
-      }
+        }  // else funcName is externally defined
+      }  // else not a direct callee (what does that mean?)
     }
 
+    if (auto *ret = clang::dyn_cast<clang::ReturnStmt>(st)) {
+      auto val = ret->getRetValue();
+      // TODO: Rewrite return statement names
+      (void)val;
+    }
+
+    return true;
+  }
+
+  virtual bool VisistDecl(clang::Decl *decl) {
+    // TODO: Is this the right place to rewrite variable declarations?
     return true;
   }
 };
