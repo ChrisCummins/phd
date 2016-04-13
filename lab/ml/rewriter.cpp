@@ -31,14 +31,14 @@ namespace rewriter {
 static clang::Rewriter rewriter;
 static llvm::cl::OptionCategory _tool_category("phd");
 
-static std::map<std::string, std::string> _fns;
-static std::string _last_fn = "";
-
 static unsigned int _fn_decl_rewrites_counter = 0;
 static unsigned int _fn_call_rewrites_counter = 0;
 
 enum ctype { AZ, az };
 
+// Increment a single character name. E.G. 'A' -> 'B', 'B' -> 'C',
+// 'az' -> 'ba'.
+//
 std::string get_next_name(const std::string& current) {
   auto c = current;
   char *cc = &c[c.length() - 1];
@@ -81,37 +81,43 @@ std::string get_next_name(const std::string& current) {
   return c;
 }
 
-std::string get_fn_rewrite(const std::string& name) {
-  if (_fns.empty()) {
-    // First function
-    _fns[name] = "A";
-    _last_fn = "A";
-    return "A";
-  } else if (_fns.find(name) == _fns.end()) {
-    // New function
-    auto replacement = get_next_name(_last_fn);
-    _last_fn = replacement;
-    _fns[name] = replacement;
-    return replacement;
-  } else {
-    // Previously visited function
-    return (*_fns.find(name)).second;
-  }
-}
-
 
 class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
  private:
-  std::unique_ptr<clang::ASTContext> astContext;  // additional AST info
+  std::unique_ptr<clang::ASTContext> _context;  // additional AST info
 
-  virtual ~RewriterVisitor() {}
+  // Function rewriting:
+  std::map<std::string, std::string> _fns;
+  std::string _last_fn;
+
+  // Accepts a function name, and returns the rewritten function name.
+  //
+  std::string get_fn_rewrite(const std::string& name) {
+    if (_fns.empty()) {
+      // First function, seed the rewrite process
+      _fns[name] = "A";
+      _last_fn = "A";
+      return "A";
+    } else if (_fns.find(name) == _fns.end()) {
+      // New function
+      auto replacement = get_next_name(_last_fn);
+      _last_fn = replacement;
+      _fns[name] = replacement;
+      return replacement;
+    } else {
+      // Previously visited function
+      return (*_fns.find(name)).second;
+    }
+  }
 
  public:
   explicit RewriterVisitor(clang::CompilerInstance *CI)
-      : astContext(&(CI->getASTContext())) {
-    rewriter.setSourceMgr(astContext->getSourceManager(),
-                          astContext->getLangOpts());
+      : _context(&(CI->getASTContext())) {
+    rewriter.setSourceMgr(_context->getSourceManager(),
+                          _context->getLangOpts());
   }
+
+  virtual ~RewriterVisitor() {}
 
   // Rewrite function definitions:
   virtual bool VisitFunctionDecl(clang::FunctionDecl *func) {
