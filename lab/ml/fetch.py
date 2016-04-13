@@ -243,6 +243,7 @@ def main():
         'cl',
         'khronos',
         'gpu',
+        'gpgpu',
         'cuda',
         'amd',
         'nvidia',
