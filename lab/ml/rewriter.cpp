@@ -1,11 +1,17 @@
 // Usage:
 //
-//     LD_LIBRARY_PATH=~/phd/tools/llvm/build/lib ./rewriter <file> --
+//     LD_LIBRARY_PATH=~/phd/tools/llvm/build/lib ./rewriter foo.cl \
+//         -extra-arg=-Dcl_clang_storage_class_specifiers \
+//         -extra-arg=-I/Users/cec/phd/extern/libclc/generic/include \
+//         -extra-arg=-include \
+//         -extra-arg=/Users/cec/phd/extern/libclc/generic/include/clc/clc.h \
+//         -extra-arg=-target -extra-arg=nvptx64-nvidia-nvcl \
+//         -extra-arg=-DM_PI=3.14 -extra-arg=-xcl --
 //
 // TODO:
 //
-//   Rewrite variable names.
-//   Rewrite function parameters.
+//   Read from stdin.
+//   Don't rewrite any includes.
 //
 #include <memory>
 #include <string>
