@@ -94,18 +94,19 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
   //
   std::string get_fn_rewrite(const std::string& name) {
     if (_fns.empty()) {
-      // First function, seed the rewrite process
-      _fns[name] = "A";
-      _last_fn = "A";
-      return "A";
+      // First function, seed the rewrite process:
+      const auto seed = "A";
+      _last_fn = seed;
+      _fns[name] = seed;
+      return seed;
     } else if (_fns.find(name) == _fns.end()) {
-      // New function
+      // New function:
       auto replacement = get_next_name(_last_fn);
       _last_fn = replacement;
       _fns[name] = replacement;
       return replacement;
     } else {
-      // Previously visited function
+      // Previously declared function:
       return (*_fns.find(name)).second;
     }
   }
@@ -119,14 +120,14 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
 
   virtual ~RewriterVisitor() {}
 
-  // Rewrite function definitions:
-  virtual bool VisitFunctionDecl(clang::FunctionDecl *func) {
-    const auto funcName = func->getNameInfo().getName().getAsString();
-    const auto replacement = get_fn_rewrite(funcName);
+  // Rewrite function declarations:
+  bool VisitFunctionDecl(clang::FunctionDecl *func) {
+    const auto name = func->getNameInfo().getName().getAsString();
+    const auto replacement = get_fn_rewrite(name);
 
     rewriter.ReplaceText(
         func->getLocation(),
-        static_cast<unsigned int>(funcName.length()),
+        static_cast<unsigned int>(name.length()),
         replacement);
     ++_fn_decl_rewrites_counter;
 
