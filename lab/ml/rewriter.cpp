@@ -183,30 +183,34 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
     if (auto call = clang::dyn_cast<clang::CallExpr>(st)) {
       const auto callee = call->getDirectCallee();
       if (callee) {
-        const auto funcName = callee->getNameInfo().getName().getAsString();
-        if (_fns.find(funcName) != _fns.end()) {
-          const auto replacement = (*_fns.find(funcName)).second;
+        const auto name = callee->getNameInfo().getName().getAsString();
+        const auto it = _fns.find(name)
+        if (it != _fns.end()) {
+          const auto replacement = (*it).second;
 
           rewriter.ReplaceText(
               call->getLocStart(),
-              static_cast<unsigned int>(funcName.length()),
+              static_cast<unsigned int>(name.length()),
               replacement);
           ++_fn_call_rewrites_counter;
-        }  // else funcName is externally defined
+        }  // else function name is externally defined
       }  // else not a direct callee (what does that mean?)
     }
 
-    if (auto *ret = clang::dyn_cast<clang::ReturnStmt>(st)) {
-      auto val = ret->getRetValue();
-      // TODO: Rewrite return statement names
-      (void)val;
+    // Rewrite variable names:
+    if (auto *ref = clang::dyn_cast<clang::DeclRefExpr>(st)) {
+      const auto name = ref->getNameInfo().getName().getAsString();
+      const auto it = _vars.find(name);
+      if (it != _vars.end()) {
+        const auto replacement = (*it).second;
+        rewriter.ReplaceText(
+            ref->getLocStart(),
+            static_cast<unsigned int>(name.length()),
+            replacement);
+        ++_var_use_rewrites_counter;
+      }  // else variable name is externally defined
     }
 
-    return true;
-  }
-
-  virtual bool VisistDecl(clang::Decl *decl) {
-    // TODO: Is this the right place to rewrite variable declarations?
     return true;
   }
 };
