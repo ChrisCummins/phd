@@ -34,6 +34,9 @@ static llvm::cl::OptionCategory _tool_category("phd");
 static unsigned int _fn_decl_rewrites_counter = 0;
 static unsigned int _fn_call_rewrites_counter = 0;
 
+static unsigned int _var_decl_rewrites_counter = 0;
+static unsigned int _var_use_rewrites_counter = 0;
+
 enum ctype { AZ, az };
 
 // Increment a single character name. E.G. 'A' -> 'B', 'B' -> 'C',
@@ -86,11 +89,15 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
  private:
   std::unique_ptr<clang::ASTContext> _context;  // additional AST info
 
-  // Function rewriting:
+  // Function name rewriting:
   std::map<std::string, std::string> _fns;
   std::string _last_fn;
 
-  // Accepts a function name, and returns the rewritten function name.
+  // Variable name rewriting:
+  std::map<std::string, std::string> _vars;
+  std::string _last_var;
+
+  // Accepts a function name, and returns the rewritten name.
   //
   std::string get_fn_rewrite(const std::string& name) {
     if (_fns.empty()) {
@@ -108,6 +115,27 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
     } else {
       // Previously declared function:
       return (*_fns.find(name)).second;
+    }
+  }
+
+  // Accepts a variable name, and returns the rewritten name.
+  //
+  std::string get_var_rewrite(const std::string& name) {
+    if (_vars.empty()) {
+      // First variable, seed the rewrite process:
+      const auto seed = "a";
+      _last_var = seed;
+      _vars[name] = seed;
+      return seed;
+    } else if (_vars.find(name) == _vars.end()) {
+      // New variable:
+      auto replacement = get_next_name(_last_var);
+      _last_var = replacement;
+      _vars[name] = replacement;
+      return replacement;
+    } else {
+      // Previously declared variable:
+      return (*_vars.find(name)).second;
     }
   }
 
@@ -134,7 +162,23 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
     return true;
   }
 
-  virtual bool VisitStmt(clang::Stmt *st) {
+  // Rewrite variable declarations:
+  bool VisitVarDecl(clang::VarDecl *decl) {
+    if (auto d = clang::dyn_cast<clang::NamedDecl>(decl)) {
+      const auto name = d->getNameAsString();
+      const auto replacement = get_var_rewrite(name);
+
+      rewriter.ReplaceText(
+          decl->getLocation(),
+          static_cast<unsigned int>(name.length()),
+          replacement);
+      ++_var_decl_rewrites_counter;
+    }
+
+    return true;
+  }
+
+  bool VisitStmt(clang::Stmt *st) {
     // Rewrite function calls:
     if (auto call = clang::dyn_cast<clang::CallExpr>(st)) {
       const auto callee = call->getDirectCallee();
@@ -214,7 +258,11 @@ int main(int argc, const char **argv) {
   llvm::errs() << "\nRewrote " << rewriter::_fn_decl_rewrites_counter
                << " function declarations\n"
                << "Rewrote " << rewriter::_fn_call_rewrites_counter
-               << " function calls\n";
+               << " function calls\n\n"
+               << "Rewrote " << rewriter::_var_decl_rewrites_counter
+               << " variable declarations\n"
+               << "Rewrote " << rewriter::_var_use_rewrites_counter
+               << " variable uses\n";
 
   return result;
 }
