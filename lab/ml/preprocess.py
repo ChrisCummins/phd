@@ -4,9 +4,6 @@
 #
 # TODO:
 #
-# Possible ways to clean source code:
-#
-# Rewrite with single-char variable names
 #
 # Extrapolated data:
 #

@@ -151,6 +151,14 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
     }
   }
 
+  // Return true if a location is in the main source file.
+  bool isMainFile(const clang::SourceLocation& location) {
+    auto& srcMgr = _context->getSourceManager();
+    const auto file_id = srcMgr.getFileID(location).getHashValue();
+
+    return file_id == 1;
+  }
+
  public:
   explicit RewriterVisitor(clang::CompilerInstance *ci)
       : _context(&(ci->getASTContext())) {
@@ -162,6 +170,9 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
 
   // Rewrite function declarations:
   bool VisitFunctionDecl(clang::FunctionDecl *func) {
+    if (!isMainFile(func->getLocation()))
+      return true;
+
     const auto name = func->getNameInfo().getName().getAsString();
     const auto replacement = get_fn_rewrite(name);
 
@@ -176,6 +187,9 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
 
   // Rewrite variable declarations:
   bool VisitVarDecl(clang::VarDecl *decl) {
+    if (!isMainFile(decl->getLocation()))
+      return true;
+
     if (auto d = clang::dyn_cast<clang::NamedDecl>(decl)) {
       const auto name = d->getNameAsString();
       const auto replacement = get_var_rewrite(name);
@@ -191,6 +205,9 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
   }
 
   bool VisitStmt(clang::Stmt *st) {
+    if (!isMainFile(st->getLocStart()))
+      return true;
+
     // Rewrite function calls:
     if (auto call = clang::dyn_cast<clang::CallExpr>(st)) {
       const auto callee = call->getDirectCallee();
