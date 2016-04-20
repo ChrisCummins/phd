@@ -4,6 +4,8 @@
 #
 # TODO:
 #
+#   Use a fixed file preprocessing pipeline, not a bunch of different
+#   map operations.
 #
 # Extrapolated data:
 #
@@ -84,6 +86,65 @@ def preprocess_cl(src):
     if process.returncode != 0:
         raise Exception(stderr)
     return stdout
+
+
+def rewrite_cl(in_path, out_path):
+    ld_path = os.path.expanduser('~/phd/tools/llvm/build/lib/')
+    libclc = os.path.expanduser('~/phd/extern/libclc')
+    rewriter = os.path.expanduser('~/phd/lab/ml/rewriter')
+
+    extra_args = [
+        '-Dcl_clang_storage_class_specifiers',
+        '-I{}/generic/include'.format(libclc),
+        '-include', '{}/generic/include/clc/clc.h'.format(libclc),
+        '-target', 'nvptx64-nvidia-nvcl',
+        '-DM_PI=3.14',
+        '-xcl'
+    ]
+
+    cmd = ([rewriter, in_path ]
+           + ['-extra-arg=' + x for x in extra_args] + ['--'])
+
+    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                    env = {'LD_LIBRARY_PATH': ld_path})
+    stdout, stderr = process.communicate()
+
+    if process.returncode != 0:
+        raise Exception(stderr)
+
+    formatted = clangformat_ocl(stdout)
+
+    with open(out_path, 'wb') as out:
+        out.write(formatted)
+
+
+def rewrite_cl_worker(*args, **kwargs):
+    print('rewrite cl worker ...')
+
+    in_dir = 'cl-tidy'
+    out_dir = 'cl-rewrite'
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    files_added_counter = 0
+    files_skipped_counter = 0
+    errors_counter = 0
+
+    for f in os.listdir(in_dir):
+        in_path = in_dir + '/' + f
+        out_path = out_dir + '/' + f
+
+        if os.path.exists(out_path):
+            files_skipped_counter += 1
+        else:
+            try:
+                rewrite_cl(in_path, out_path)
+                files_added_counter += 1
+            except Exception as e:
+                errors_counter += 1
+
+    return ('rewrite cl stats: {} added, {} skipped, {} errors.'
+            .format(files_added_counter, files_skipped_counter, errors_counter))
 
 
 def compile_cl_bytecode(src):
@@ -482,6 +543,12 @@ def main():
     # Third batch of workers
     jobs = []
     jobs.append(pool.apply_async(ocl_tidy_worker, (db_path,)))
+    [job.wait() for job in jobs]  # Wait for jobs to finish
+    print()  # Print job output
+    [print(job.get()) for job in jobs]
+
+    jobs = []
+    jobs.append(pool.apply_async(rewrite_cl_worker, (db_path,)))
     [job.wait() for job in jobs]  # Wait for jobs to finish
     print()  # Print job output
     [print(job.get()) for job in jobs]
