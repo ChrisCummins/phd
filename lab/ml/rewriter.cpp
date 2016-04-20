@@ -1,3 +1,7 @@
+//
+// Rewrite all the names of names of variables and functions declared
+// in an input source to be as short as possible.
+//
 // Usage:
 //
 //     LD_LIBRARY_PATH=~/phd/tools/llvm/build/lib ./rewriter foo.cl \
@@ -12,6 +16,8 @@
 //
 //   Read from stdin.
 //   Don't rewrite any includes.
+//   Consider removing "pointless" code:
+//     Function declarations (without definitions)
 //
 #include <memory>
 #include <string>
