@@ -196,7 +196,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
       const auto callee = call->getDirectCallee();
       if (callee) {
         const auto name = callee->getNameInfo().getName().getAsString();
-        const auto it = _fns.find(name)
+        const auto it = _fns.find(name);
         if (it != _fns.end()) {
           const auto replacement = (*it).second;
 
