@@ -15,7 +15,7 @@
 // TODO:
 //
 //   Read from stdin.
-//   Don't rewrite any includes.
+//   Rewrite user defined types.
 //   Consider removing "pointless" code:
 //     Function declarations (without definitions)
 //
