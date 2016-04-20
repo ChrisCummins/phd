@@ -152,8 +152,8 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
   }
 
  public:
-  explicit RewriterVisitor(clang::CompilerInstance *CI)
-      : _context(&(CI->getASTContext())) {
+  explicit RewriterVisitor(clang::CompilerInstance *ci)
+      : _context(&(ci->getASTContext())) {
     rewriter.setSourceMgr(_context->getSourceManager(),
                           _context->getLangOpts());
   }
@@ -234,8 +234,8 @@ class RewriterASTConsumer : public clang::ASTConsumer {
 
  public:
   // override the constructor in order to pass CI
-  explicit RewriterASTConsumer(clang::CompilerInstance *CI)
-      : visitor(new RewriterVisitor(CI))
+  explicit RewriterASTConsumer(clang::CompilerInstance *ci)
+      : visitor(new RewriterVisitor(ci))
   { }
 
   // override this to call our RewriterVisitor on the entire source file
@@ -250,9 +250,8 @@ class RewriterASTConsumer : public clang::ASTConsumer {
 class RewriterFrontendAction : public clang::ASTFrontendAction {
  public:
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
-      clang::CompilerInstance &CI,
-      StringRef file) {
-    return llvm::make_unique<RewriterASTConsumer>(&CI);
+      clang::CompilerInstance &ci, StringRef file) {
+    return llvm::make_unique<RewriterASTConsumer>(&ci);
   }
 };
 
