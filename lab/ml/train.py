@@ -48,19 +48,26 @@ def dump_training_data(db):
     out_path = 'input.txt'
 
     c = db.cursor()
-    # Get all of the OpenCL tidy files, ordered by the number of stars
-    # in the containing repo.
-    c.execute('SELECT OpenCLTidy.contents FROM OpenCLTidy '
+    # Get all of the rewritten OpenCL files, ordered by the number of
+    # stars in the containing repo.
+    c.execute('SELECT OpenCLTidy.sha FROM OpenCLTidy '
               'LEFT JOIN ContentFiles ON OpenCLTidy.sha=ContentFiles.sha '
               'LEFT JOIN Repositories ON ContentFiles.repo_url=Repositories.url '
               'ORDER BY Repositories.stars DESC')
     query = c.fetchall()
 
+    src_dir = 'cl-rewrite/'
+
     with open(out_path, 'w') as out:
         for row in query:
-            src = row[0]
-            out.write(src)
-            out.write('\n')
+            sha = row[0]
+            src_path = src_dir + sha + '.cl'
+            # Read from input source file, write to output file:
+            if os.path.exists(src_path):
+                with open(src_path) as srcfile:
+                    src = srcfile.read()
+                    out.write(src)
+                    out.write('\n')
 
     return out_path
 
