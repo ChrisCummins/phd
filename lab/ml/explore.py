@@ -2,15 +2,18 @@
 #
 # Exploratory analysis of preprocessed dataset.
 #
-# TODO: Graphs
+# TODO:
 #
-#   Number of OpenCL repos over time
-#   Distribution of stars and OpenCL file counts
-#   Distribution of repo star counts
-#   Distribution of repo forks
-#   Distribution of times since last changed
-#   Distribution of file sizes
-#   Distribution of files per repo
+#   Rewrite for new preprocessed pipeline
+#   Graphs:
+#
+#     Number of OpenCL repos over time
+#     Distribution of stars and OpenCL file counts
+#     Distribution of repo star counts
+#     Distribution of repo forks
+#     Distribution of times since last changed
+#     Distribution of file sizes
+#     Distribution of files per repo
 #
 import locale
 import os

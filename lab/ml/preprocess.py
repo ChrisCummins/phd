@@ -7,6 +7,10 @@
 #   Use a fixed file preprocessing pipeline, not a bunch of different
 #   map operations.
 #
+#   More strict formatting, which enforces things like one blank line
+#   between each top level {} block, one parameter per line in
+#   function declaration, etc.
+#
 # Extrapolated data:
 #
 # Try compiling each source to LLVM bytecode
@@ -17,53 +21,36 @@ import re
 import shutil
 import sqlite3
 import sys
+import math
 
+from functools import partial
+from hashlib import md5
+from multiprocessing import cpu_count,Pool
 from subprocess import Popen,PIPE,STDOUT
-from multiprocessing import Pool
+from tempfile import NamedTemporaryFile
 
 
 def usage():
     print('Usage: {} <db>'.format(sys.argv[0]))
 
 
-# Write OpenCL files.
 #
-def ocl_writer_worker(db_path):
-    print('ocl writer worker ...')
+# Custom exceptions:
+#
+class RewriterException(Exception): pass
 
-    out_dir = 'cl'
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+# LLVM exceptions:
+class LlvmException(Exception): pass
+class ClangException(LlvmException): pass
+class OptException(LlvmException): pass
 
-    db = sqlite3.connect(db_path)
-    c = db.cursor()
+# Good, bad, ugly exceptions:
+class BadCodeException(Exception): pass
+class CodeCompilationException(BadCodeException): pass
+class CodeAnalysisException(BadCodeException): pass
 
-    c.execute('SELECT sha,path,contents FROM ContentFiles GROUP BY sha')
-    query = c.fetchall()
-
-    files_added_counter = 0
-    files_skipped_counter = 0
-    files_error_counter = 0
-    for row in query:
-        sha, path, contents = row
-        _, extension = os.path.splitext(path)
-        try:
-            out_path = out_dir + '/' + sha + extension
-            if os.path.exists(out_path):
-                files_skipped_counter += 1
-            else:
-                with open(out_path, 'w') as out:
-                    out.write(contents)
-                files_added_counter += 1
-        except Exception as e:
-            out_path = out_dir + '/' + sha + '.error'
-            with open(out_path, 'w') as out:
-                out.write(str(e) + '\n')
-            files_error_counter += 1
-    return (
-        'ocl files stats: {} added, {} skipped, {} errors.'
-        .format(files_added_counter, files_skipped_counter,
-                files_error_counter))
+class UglyCodeException(Exception): pass
+class InstructionCountException(BadCodeException): pass
 
 
 def preprocess_cl(src):
@@ -84,11 +71,26 @@ def preprocess_cl(src):
     stdout, stderr = process.communicate(src)
 
     if process.returncode != 0:
-        raise Exception(stderr.decode('utf-8'))
-    return stdout
+        raise ClangException(stderr.decode('utf-8'))
+
+    src = stdout.decode('utf-8')
+    lines = src.split('\n')
+
+    # Strip all the includes:
+    for i,line in enumerate(lines):
+        if line == '# 1 "<stdin>" 2':
+            break
+    src = '\n'.join(lines[i+1:]).strip()
+
+    # Strip lines beginning with '#' (that's preprocessor
+    # stuff):
+    src = '\n'.join([line for line in src.split('\n')
+                     if not line.startswith('#')])
+
+    return src
 
 
-def rewrite_cl(in_path, out_path):
+def rewrite_cl(in_path):
     ld_path = os.path.expanduser('~/phd/tools/llvm/build/lib/')
     libclc = os.path.expanduser('~/phd/extern/libclc')
     rewriter = os.path.expanduser('~/phd/lab/ml/rewriter')
@@ -110,41 +112,11 @@ def rewrite_cl(in_path, out_path):
     stdout, stderr = process.communicate()
 
     if process.returncode != 0:
-        raise Exception(stderr.decode('utf-8'))
+        raise RewriterException(stderr.decode('utf-8'))
 
     formatted = clangformat_ocl(stdout)
 
-    with open(out_path, 'wb') as out:
-        out.write(formatted)
-
-
-def rewrite_cl_worker(*args, **kwargs):
-    print('rewrite cl worker ...')
-
-    in_dir = 'cl-tidy'
-    out_dir = 'cl-rewrite'
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-
-    files_added_counter = 0
-    files_skipped_counter = 0
-    errors_counter = 0
-
-    for f in os.listdir(in_dir):
-        in_path = in_dir + '/' + f
-        out_path = out_dir + '/' + f
-
-        if os.path.exists(out_path):
-            files_skipped_counter += 1
-        else:
-            try:
-                rewrite_cl(in_path, out_path)
-                files_added_counter += 1
-            except Exception as e:
-                errors_counter += 1
-
-    return ('rewrite cl stats: {} added, {} skipped, {} errors.'
-            .format(files_added_counter, files_skipped_counter, errors_counter))
+    return formatted.decode('utf-8')
 
 
 def compile_cl_bytecode(src):
@@ -164,123 +136,8 @@ def compile_cl_bytecode(src):
     stdout, stderr = process.communicate(src)
 
     if process.returncode != 0:
-        raise Exception(stderr.decode('utf-8'))
+        raise ClangException(stderr.decode('utf-8'))
     return stdout
-
-
-# Compile OpenCL files into bytecode.
-#
-def ocl_builder_worker(db_path):
-    print('ocl builder worker ...')
-
-    out_dir = 'bc'
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-
-    db = sqlite3.connect(db_path)
-    c = db.cursor()
-
-    c.execute('SELECT sha,path,contents FROM ContentFiles GROUP BY sha')
-    query = c.fetchall()
-
-    counter = 0
-    files_added_counter = 0
-    files_skipped_counter = 0
-    files_error_counter = 0
-    for row in query:
-        counter += 1
-        sha, path, contents = row
-        print('\r\033[K', counter, path, end='')
-        sys.stdout.flush()
-
-        out_path = out_dir + '/' + sha + '.bc'
-        err_path = out_dir + '/' + sha + '.error'
-
-        # Check to see if we've already compiled it.
-        if (os.path.exists(out_path) or
-            os.path.exists(err_path)):
-            files_skipped_counter += 1
-        else:
-            try:
-                bc = compile_cl_bytecode(contents.encode('utf-8'))
-
-                # Add to database.
-                c = db.cursor()
-                c.execute('INSERT INTO Bytecodes VALUES(?,?)',
-                          (sha,bc))
-
-                # Write file.
-                with open(out_path, 'wb') as out:
-                    out.write(bc)
-                files_added_counter += 1
-            except Exception as e:
-                # Add to database.
-                c = db.cursor()
-                c.execute('INSERT INTO BytecodeErrors VALUES(?,?)',
-                          (sha, str(e)))
-
-                out_path = out_dir + '/' + sha + '.error'
-                with open(out_path, 'w') as out:
-                    out.write(str(e) + '\n')
-                files_error_counter += 1
-
-            db.commit()
-
-    # Clear output
-    print('\r\033[K', end='')
-    sys.stdout.flush()
-    return (
-        'ocl bytecode stats: {} added, {} skipped, {} errors.'
-        .format(files_added_counter, files_skipped_counter,
-                files_error_counter))
-
-
-# Preprocess OpenCL files.
-#
-def ocl_preprocessor_worker(db_path):
-    print('ocl preprocessor worker ...')
-
-    db = sqlite3.connect(db_path)
-    c = db.cursor()
-
-    c.execute('SELECT sha,path,contents FROM ContentFiles GROUP BY sha')
-    query = c.fetchall()
-
-    files_added_counter = 0
-    files_skipped_counter = 0
-    files_error_counter = 0
-    for row in query:
-        sha, path, contents = row
-
-        # Check to see if we've already compiled it.
-        c = db.cursor()
-        c.execute('SELECT sha FROM Preprocessed WHERE sha=?', (sha,))
-        is_preprocessed = c.fetchone()
-        c.execute('SELECT sha FROM PreprocessedErrors WHERE sha=?', (sha,))
-        is_preprocessed_error = c.fetchone()
-
-        if (is_preprocessed or is_preprocessed_error):
-            files_skipped_counter += 1
-        else:
-            try:
-                cl = preprocess_cl(contents.encode('utf-8'))
-
-                # Add to database.
-                c.execute('INSERT INTO Preprocessed VALUES(?,?)',
-                          (sha,cl))
-                files_added_counter += 1
-            except Exception as e:
-                # Add to database.
-                c = db.cursor()
-                c.execute('INSERT INTO PreprocessedErrors VALUES(?,?)',
-                          (sha, str(e)))
-                files_error_counter += 1
-            db.commit()
-
-    return (
-        'ocl preprocessor stats: {} added, {} skipped, {} errors.'
-        .format(files_added_counter, files_skipped_counter,
-                files_error_counter))
 
 
 _instcount_re = re.compile("^(?P<count>\d+) instcount - Number of (?P<type>.+)")
@@ -364,7 +221,7 @@ def bytecode_features(bc):
     stdout, _ = process.communicate(bc)
 
     if process.returncode != 0:
-        raise Exception(stdout.decode('utf-8'))
+        raise OptException(stdout.decode('utf-8'))
 
     instcounts = parse_instcounts(stdout.decode('utf-8'))
     instratios = instcounts2ratios(instcounts)
@@ -408,109 +265,158 @@ def print_bytecode_features(db_path):
         print('        ', feature)
 
 
-def bytecode_features_worker(db_path):
-    print('bc features worker ...')
+# 3 possible outcomes:
+#
+#   1. Good. Code is preprocessed and ready to be put into a training set.
+#   2. Bad. Code can't be preprocessed.
+#   3. Ugly. Code can be preprocessed, but isn't useful for training.
+#
+def preprocess(src):
+    srcbuf = src.encode('utf-8')
 
-    db = sqlite3.connect(db_path)
+    # Check that code compiles:
+    try:
+        bc = compile_cl_bytecode(srcbuf)
+    except ClangException as e:
+        raise CodeCompilationException(e)
+
+    # Check that feature extraction works:
+    try:
+        bc_features = bytecode_features(bc)
+    except OptException as e:
+        raise CodeAnalysisException(e)
+
+    # Check that code contains more than a minimum number of instructions:
+    try:
+        num_instructions = bc_features['instructions_of_all_types']
+    except KeyError:
+        num_instructions = 0
+
+    min_num_instructions = 2
+    if num_instructions < min_num_instructions:
+        raise InstructionCountException(
+            'Code contains {} instructions. The minimum allowed is {})'
+            .format(num_instructions, min_num_instructions))
+
+    # Run source through preprocesor:
+    try:
+        src = preprocess_cl(srcbuf)
+    except ClangException as e:
+        raise CodeCompilationException(e)
+
+    # Rewrite source:
+    with NamedTemporaryFile('w', suffix='.cl') as tmp:
+        # Write to file:
+        tmp.write(src)
+        tmp.flush()
+
+        # Perform rewrite:
+        try:
+            src = rewrite_cl(tmp.name)
+        except RewriterException as e:
+            raise CodeCompilationException(e)
+
+    return src
+
+def md5sum(t):
+    return md5(t).hexdigest()
+
+class md5sum_aggregator:
+    def __init__(self):
+        self.md5 = md5()
+
+    def step(self, value):
+        self.md5.update(str(value).encode('utf-8'))
+
+    def finalize(self):
+        return self.md5.hexdigest()
+
+
+def is_modified(db):
     c = db.cursor()
 
-    c.execute('SELECT sha,contents FROM Bytecodes')
-    query = c.fetchall()
+    c.execute("SELECT value FROM Meta WHERE key='repo_checksum'")
+    result = c.fetchone()
+    cached_checksum = result[0] if result else None
 
-    features_added_counter = 0
-    features_skipped_counter = 0
+    c.execute('SELECT MD5SUM(updated_at) FROM Repositories')
+    repo_checksum = c.fetchone()[0]
+    c.close()
 
-    for row in query:
-        sha, contents = row
+    return False if cached_checksum == repo_checksum else repo_checksum
 
-        # Check to see if we've already compiled it.
+
+def set_modified_status(db, checksum):
+    c = db.cursor()
+    c.execute("INSERT OR REPLACE INTO Meta VALUES (?,?)",
+              ('repo_checksum', checksum))
+    db.commit()
+    c.close()
+
+
+def preprocess_split(db_path, split):
+    db = sqlite3.connect(db_path)
+    c = db.cursor()
+    split_start, split_end = split
+    split_size = split_end - split_start
+
+    c.execute('SELECT url,sha,contents FROM ContentFiles LIMIT {} OFFSET {}'
+              .format(split_size, split_start))
+    rows = c.fetchall()
+    c.close()
+
+    for row in rows:
+        url, sha, contents = row
         c = db.cursor()
-        c.execute('SELECT sha FROM BytecodeFeatures WHERE sha=?', (sha,))
-        is_cached = c.fetchone()
 
-        if is_cached:
-            features_skipped_counter += 1
-        else:
-            features = bytecode_features(contents)
-            # Add the table key
-            features['sha'] = sha
-            sql_insert_dict(c, 'BytecodeFeatures', features)
+        # Get checksum of cached file:
+        c.execute('SELECT sha FROM PreprocessedFiles WHERE url=?', (url,))
+        result = c.fetchone()
+        cached_sha = result[0] if result else None
+
+        # Check that file is modified:
+        if sha != cached_sha:
+            # Print file URL:
+            print('\r\033[K', url, sep='', end='')
+            sys.stdout.flush()
+
+            try:
+                contents = preprocess(contents)
+                status = 0
+            except BadCodeException as e:
+                contents = str(e)
+                status = 1
+            except UglyCodeException as e:
+                contents = str(e)
+                status = 2
+            c.execute('INSERT OR REPLACE INTO PreprocessedFiles '
+                      'VALUES(?,?,?,?)',
+                      (url,sha,status,contents))
             db.commit()
-            features_added_counter += 1
-
-    return (
-        'bc features stats: {} added, {} skipped.'
-        .format(features_added_counter, features_skipped_counter))
+        c.close()
 
 
-def ocl_tidy_worker(db_path):
-    print('ocl tidy worker ...')
-
-    out_dir = 'cl-tidy'
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-
+def preprocess_contentfiles(db_path):
     db = sqlite3.connect(db_path)
     c = db.cursor()
+    c.execute('SELECT Count(*) FROM ContentFiles')
+    num_contentfiles = c.fetchone()[0]
+    c.close()
+    db.close()
 
-    c.execute('SELECT Preprocessed.sha,Preprocessed.contents '
-              'FROM BytecodeFeatures '
-              'LEFT JOIN Preprocessed ON BytecodeFeatures.sha=Preprocessed.sha '
-              'WHERE instructions_of_all_types > 0')
-    query = c.fetchall()
+    num_workers = round(cpu_count() * 1.5)
 
-    files_added_counter = 0
-    files_skipped_counter = 0
+    files_per_worker = math.ceil(num_contentfiles / num_workers)
 
-    debug = 0
-    for row in query:
-        sha, contents = row
+    splits = [(i * files_per_worker,
+               i * files_per_worker + files_per_worker)
+              for i in range(num_workers)]
 
-        out_path = out_dir + '/' + sha + '.cl'
-
-        # Check to see if we've already tidied it.
-        c = db.cursor()
-        c.execute('SELECT sha FROM OpenCLTidy WHERE sha=?', (sha,))
-        is_cached = c.fetchone()
-        is_file = os.path.exists(out_path)
-
-        if is_cached and is_file:
-            files_skipped_counter += 1
-        else:
-            src = contents.decode('utf-8')
-            lines = src.split('\n')
-
-            # Strip all the includes:
-            for i,line in enumerate(lines):
-                if line == '# 1 "<stdin>" 2':
-                    break
-            src = '\n'.join(lines[i+1:]).strip()
-
-            # Strip lines beginning with '#' (that's preprocessor
-            # stuff):
-            src = '\n'.join([line for line in src.split('\n')
-                             if not line.startswith('#')])
-
-            # Run clang-format on the source:
-            src = clangformat_ocl(src.encode('utf-8')).decode('utf-8')
-
-            # Add the trailing newline:
-            src += '\n'
-
-            # Write to file:
-            if not is_file:
-                with open(out_path, 'w') as out:
-                    out.write(src)
-
-            # Insert into database:
-            if not is_cached:
-                c.execute('INSERT INTO OpenCLTidy VALUES(?,?)',
-                          (sha,src))
-                db.commit()
-            files_added_counter += 1
-
-    return ('ocl tidy stats: {} added, {} skipped.'
-            .format(files_added_counter, files_skipped_counter))
+    with Pool(num_workers) as pool:
+        print('spawning', num_workers, 'worker threads to process',
+              num_contentfiles, 'files ...')
+        worker = partial(preprocess_split, db_path)
+        pool.map(worker, splits)
 
 
 def main():
@@ -520,38 +426,16 @@ def main():
 
     db_path = sys.argv[1]
 
-    pool = Pool(processes=4)
+    db = sqlite3.connect(db_path)
+    db.create_aggregate("MD5SUM", 1, md5sum_aggregator)
 
-    # Worker process pool
-    jobs = []
-    jobs.append(pool.apply_async(ocl_writer_worker, (db_path,)))
-    jobs.append(pool.apply_async(ocl_preprocessor_worker, (db_path,)))
-    jobs.append(pool.apply_async(ocl_builder_worker, (db_path,)))
-    [job.wait() for job in jobs]  # Wait for jobs to finish
-    print()  # Print job output
-    [print(job.get()) for job in jobs]
-    print()
-
-    # Second batch of workers
-    jobs = []
-    jobs.append(pool.apply_async(bytecode_features_worker, (db_path,)))
-    [job.wait() for job in jobs]  # Wait for jobs to finish
-    print()  # Print job output
-    [print(job.get()) for job in jobs]
-    print()
-
-    # Third batch of workers
-    jobs = []
-    jobs.append(pool.apply_async(ocl_tidy_worker, (db_path,)))
-    [job.wait() for job in jobs]  # Wait for jobs to finish
-    print()  # Print job output
-    [print(job.get()) for job in jobs]
-
-    jobs = []
-    jobs.append(pool.apply_async(rewrite_cl_worker, (db_path,)))
-    [job.wait() for job in jobs]  # Wait for jobs to finish
-    print()  # Print job output
-    [print(job.get()) for job in jobs]
+    modified = is_modified(db)
+    if modified:
+        preprocess_contentfiles(db_path)
+        set_modified_status(db, modified)
+        print('done.')
+    else:
+        print('nothing to be done.')
 
 
 if __name__ == '__main__':

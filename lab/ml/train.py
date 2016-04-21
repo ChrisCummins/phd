@@ -4,13 +4,15 @@
 #
 # TODO:
 #
-# ML:
+#   Rewrite for new preprocess pipeline
 #
-#   Train char-rnn on raw text
-#   Train char-rnn on files which compiled
-#   Train char-rnn on "cleaned" text (no comments, etc)
-#   Train char-rnn on bytecode
-#   Train char-rnn on AST(?)
+#   ML:
+#
+#     Train char-rnn on raw text
+#     Train char-rnn on files which compiled
+#     Train char-rnn on "cleaned" text (no comments, etc)
+#     Train char-rnn on bytecode
+#     Train char-rnn on AST(?)
 import sys
 import os
 import sqlite3
