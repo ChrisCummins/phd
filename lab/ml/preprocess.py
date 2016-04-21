@@ -84,7 +84,7 @@ def preprocess_cl(src):
     stdout, stderr = process.communicate(src)
 
     if process.returncode != 0:
-        raise Exception(stderr)
+        raise Exception(stderr.decode('utf-8'))
     return stdout
 
 
@@ -110,7 +110,7 @@ def rewrite_cl(in_path, out_path):
     stdout, stderr = process.communicate()
 
     if process.returncode != 0:
-        raise Exception(stderr)
+        raise Exception(stderr.decode('utf-8'))
 
     formatted = clangformat_ocl(stdout)
 
@@ -164,7 +164,7 @@ def compile_cl_bytecode(src):
     stdout, stderr = process.communicate(src)
 
     if process.returncode != 0:
-        raise Exception(stderr)
+        raise Exception(stderr.decode('utf-8'))
     return stdout
 
 
@@ -364,7 +364,7 @@ def bytecode_features(bc):
     stdout, _ = process.communicate(bc)
 
     if process.returncode != 0:
-        raise Exception(stderr)
+        raise Exception(stdout.decode('utf-8'))
 
     instcounts = parse_instcounts(stdout.decode('utf-8'))
     instratios = instcounts2ratios(instcounts)
@@ -381,7 +381,7 @@ def clangformat_ocl(src):
     stdout, stderr = process.communicate(src)
 
     if process.returncode != 0:
-        raise Exception(stderr)
+        raise Exception(stderr.decode('utf-8'))
 
     return stdout
 
