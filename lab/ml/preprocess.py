@@ -4,9 +4,6 @@
 #
 # TODO:
 #
-#   Use a fixed file preprocessing pipeline, not a bunch of different
-#   map operations.
-#
 #   More strict formatting, which enforces things like one blank line
 #   between each top level {} block, one parameter per line in
 #   function declaration, etc.
