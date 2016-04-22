@@ -52,6 +52,76 @@ class CodeAnalysisException(BadCodeException): pass
 class UglyCodeException(Exception): pass
 class InstructionCountException(BadCodeException): pass
 
+clang_defines = [
+    '__CL_VERSION_1_1__'
+]
+clang_define_vals = {
+    '__OPENCL_VERSION__': 1,
+    'BLK_X': 8,
+    'BLK_Y': 8,
+    'BLOCK_DIM': 2,
+    'BLOCK_SIZE': 64,
+    'BLOCK_X': 8,
+    'BLOCK_Y': 8,
+    'BUCKETS': 8,
+    'CONCURRENT_THREADS': 128,
+    'CUTOFF_VAL': 0.5,
+    'DATA_TYPE': 'float',
+    'DATATYPE': 'float',
+    'ELEMENTS': 1024,
+    'ELEMENTS': 16,
+    'FLOAT_T': 'float',
+    'FLOAT_TYPE': 'float',
+    'FORCE_WORK_GROUP_SIZE': 32,
+    'GAUSS_RADIUS': 5,
+    'GLOBALSIZE_LOG2': 10,
+    'HEIGHT': 128,
+    'INPUT_WIDTH': 256,
+    'ITERATIONS': 1000,
+    'LOCAL_MEM_SIZE': 2048,
+    'LOCAL_MEMORY_BANKS': 16,
+    'LOCAL_SIZE': 128,
+    'LOCAL_SIZE_LIMIT': 1024,
+    'LOCAL_W': 128,
+    'LOCALSIZE_LOG2': 5,
+    'LOG2_WARP_SIZE': 5,
+    'M_PI': 3.14,
+    'Pixel': 'float3',
+    'SCREENHEIGHT': 1920,
+    'SCREENWIDTH': 1080,
+    'SIMD_WIDTH': 32,
+    'static': '',
+    'THRESHOLD': 0.5,
+    'TILE_COLS': 16,
+    'TILE_COLS': 16,
+    'TILE_DIM': 16,
+    'TILE_HEIGHT': 16,
+    'TILE_M': 16,
+    'TILE_N': 16,
+    'TILE_ROWS': 16,
+    'TILE_SIZE': 16,
+    'TILE_TB_HEIGHT': 16,
+    'TILE_WIDTH': 16,
+    'TILEH': 16,
+    'TILESW': 16,
+    'TILEW': 16,
+    'TREE_DEPTH': 3,
+    'TYPE': 'float',
+    'WARPS_PER_GROUP': 8,
+    'WORK_GROUP_SIZE': 256,
+    'WORK_ITEMS': 128,
+    'WORKGROUP_SIZE': 256,
+    'WORKGROUPSIZE': 256,
+    'WORKSIZE': 128,
+    'WORKSIZE': 256,
+    'WSIZE': 128,
+    'zero': 0,
+    'zeroVal': 0,
+}
+clang_define_args = ['-D{}'.format(d) for d in clang_defines] + [
+    '-D{}={}'.format(k,v) for k,v in clang_define_vals.items()
+]
+
 
 def preprocess_cl(src):
     clang = os.path.expanduser('~/phd/tools/llvm/build/bin/clang')
@@ -61,8 +131,8 @@ def preprocess_cl(src):
         clang, '-Dcl_clang_storage_class_specifiers',
         '-I', '{}/generic/include'.format(libclc),
         '-include', '{}/generic/include/clc/clc.h'.format(libclc),
-        '-target', 'nvptx64-nvidia-nvcl',
-        '-DM_PI=3.14'
+        '-target', 'nvptx64-nvidia-nvcl'
+    ] + clang_define_args + [
         '-x', 'cl', '-E',
         '-c', '-', '-o', '-'
     ]
@@ -127,7 +197,8 @@ def compile_cl_bytecode(src):
         clang, '-Dcl_clang_storage_class_specifiers',
         '-I', '{}/generic/include'.format(libclc),
         '-include', '{}/generic/include/clc/clc.h'.format(libclc),
-        '-target', 'nvptx64-nvidia-nvcl',
+        '-target', 'nvptx64-nvidia-nvcl'
+    ] + clang_define_args + [
         '-x', 'cl', '-emit-llvm', '-S',
         '-c', '-', '-o', '-'
     ]
