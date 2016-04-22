@@ -447,11 +447,8 @@ def preprocess_split(db_path, split):
 
         # Check that file is modified:
         if sha != cached_sha:
-            # Print file URL:
-            print('\r\033[K', url, sep='', end='')
-            sys.stdout.flush()
-
             try:
+                # Try and preprocess it:
                 contents = preprocess(contents)
                 status = 0
             except BadCodeException as e:
