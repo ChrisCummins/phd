@@ -400,6 +400,28 @@ class md5sum_aggregator:
         return self.md5.hexdigest()
 
 
+class linecount_aggregator:
+    def __init__(self):
+        self.count = 0
+
+    def step(self, value):
+        self.count += len(value.split('\n'))
+
+    def finalize(self):
+        return self.count
+
+
+class charcount_aggregator:
+    def __init__(self):
+        self.count = 0
+
+    def step(self, value):
+        self.count += len(value)
+
+    def finalize(self):
+        return self.count
+
+
 def is_modified(db):
     c = db.cursor()
 
@@ -493,6 +515,8 @@ def main():
 
     db = sqlite3.connect(db_path)
     db.create_aggregate("MD5SUM", 1, md5sum_aggregator)
+    db.create_aggregate("LC", 1, linecount_aggregator)
+    db.create_aggregate("CC", 1, charcount_aggregator)
 
     modified = is_modified(db)
     if modified:
