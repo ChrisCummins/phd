@@ -2,9 +2,7 @@
 #
 # Train machine learning models on dataset.
 #
-# TODO:
-#
-#   Rewrite for new preprocess pipeline
+#   Include only preprocessed files in training set with unique md5s
 #
 #   ML:
 #
@@ -52,24 +50,17 @@ def dump_training_data(db):
     c = db.cursor()
     # Get all of the rewritten OpenCL files, ordered by the number of
     # stars in the containing repo.
-    c.execute('SELECT OpenCLTidy.sha FROM OpenCLTidy '
-              'LEFT JOIN ContentFiles ON OpenCLTidy.sha=ContentFiles.sha '
+    c.execute('SELECT PreprocessedFiles.contents FROM PreprocessedFiles '
+              'LEFT JOIN ContentFiles ON PreprocessedFiles.url=ContentFiles.url '
               'LEFT JOIN Repositories ON ContentFiles.repo_url=Repositories.url '
               'ORDER BY Repositories.stars DESC')
     query = c.fetchall()
 
-    src_dir = 'cl-rewrite/'
-
     with open(out_path, 'w') as out:
         for row in query:
-            sha = row[0]
-            src_path = src_dir + sha + '.cl'
-            # Read from input source file, write to output file:
-            if os.path.exists(src_path):
-                with open(src_path) as srcfile:
-                    src = srcfile.read()
-                    out.write(src)
-                    out.write('\n')
+            contents = row[0]
+            out.write(contents)
+            out.write('\n')
 
     return out_path
 

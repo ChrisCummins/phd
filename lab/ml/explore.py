@@ -4,7 +4,6 @@
 #
 # TODO:
 #
-#   Rewrite for new preprocessed pipeline
 #   Graphs:
 #
 #     Number of OpenCL repos over time
@@ -117,69 +116,24 @@ def stats_worker(db_path):
     stats.append(('',''))
 
     # Preprocessed
-    c.execute("SELECT Count(*) from Preprocessed")
+    c.execute("SELECT Count(*) FROM PreprocessedFiles WHERE status=0")
     nb_pp_files = c.fetchone()[0]
-    ratio_pp_files = nb_pp_files / nb_uniq_ocl_files
-    stats.append(('Number of Preprocessed files',
+    ratio_pp_files = nb_pp_files / nb_ocl_files
+    stats.append(('Number of good preprocessed files',
                   bigint(nb_pp_files) +
                   ' ({:.0f}%)'.format(ratio_pp_files * 100)))
 
-    c.execute('SELECT contents FROM Preprocessed')
+    c.execute('SELECT contents FROM PreprocessedFiles WHERE status=0')
     bc = c.fetchall()
-    pp_lcs = [len(decode(x[0]).split('\n')) for x in bc]
+    pp_lcs = [len(x[0].split('\n')) for x in bc]
     pp_lcs.sort()
-    stats.append(('Total line count of Preprocessed', bigint(sum(pp_lcs))))
+    stats.append(('Lines of good preprocessed code',
+                  bigint(sum(pp_lcs))))
 
-    stats.append(('Preprocessed line counts',
+    stats.append(('Good preprocessed line counts',
                   seq_stats(pp_lcs)))
     stats.append(('',''))
 
-    # Bytecodes
-    c.execute('SELECT Count(*) from Bytecodes')
-    nb_bc_files = c.fetchone()[0]
-    ratio_bc_files = nb_bc_files / nb_uniq_ocl_files
-    stats.append(('Number of Bytecode files',
-                  bigint(nb_bc_files) +
-                  ' ({:.0f}%)'.format(ratio_bc_files * 100)))
-
-    c.execute('SELECT ContentFiles.contents FROM Bytecodes '
-              'LEFT JOIN ContentFiles ON Bytecodes.sha=ContentFiles.sha '
-              'GROUP BY ContentFiles.sha')
-    bc_ocl = c.fetchall()
-    bc_ocl_lcs = [len(x[0].split('\n')) for x in bc_ocl]
-    bc_ocl_lcs.sort()
-    stats.append(('Total line count of Bytecode OpenCL sources',
-                  bigint(sum(bc_ocl_lcs))))
-
-    c.execute('SELECT contents FROM Bytecodes')
-    bc = c.fetchall()
-    bc_lcs = [len(decode(x[0]).split('\n')) for x in bc]
-    bc_lcs.sort()
-    stats.append(('Total line count of Bytecodes', bigint(sum(bc_lcs))))
-
-    stats.append(('Bytecode OpenCL source line counts',
-                  seq_stats(bc_ocl_lcs)))
-    stats.append(('Bytecode line counts',
-                  seq_stats(bc_lcs)))
-    stats.append(('',''))
-
-    # CL tidy
-    c.execute('SELECT contents FROM OpenCLTidy')
-    cltidy = c.fetchall()
-
-    nb_cltidy_files = len(cltidy)
-    ratio_cltidy_files = nb_cltidy_files / nb_uniq_ocl_files
-    stats.append(('Number of tidy OpenCL files',
-                  bigint(nb_cltidy_files) +
-                  ' ({:.0f}%)'.format(ratio_cltidy_files * 100)))
-
-    cltidy_lcs = [len(x[0].split('\n')) for x in cltidy]
-    cltidy_lcs.sort()
-    stats.append(('Total line count of tidy OpenCL sources',
-                  bigint(sum(cltidy_lcs))))
-
-    stats.append(('Tidy OpenCL line counts',
-                  seq_stats(cltidy_lcs)))
     return stats
 
 
