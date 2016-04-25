@@ -22,3 +22,6 @@
 [submodule "extern/libclc"]
 	path = extern/libclc
 	url = https://github.com/llvm-mirror/libclc.git
+[submodule "lab/humanorrobot.uk"]
+	path = lab/humanorrobot.uk
+	url = git@github.com:ChrisCummins/humanorrobot.uk.git
