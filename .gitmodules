@@ -25,3 +25,6 @@
 [submodule "lab/humanorrobot.uk"]
 	path = lab/humanorrobot.uk
 	url = git@github.com:ChrisCummins/humanorrobot.uk.git
+[submodule "extern/torch-rnn"]
+	path = extern/torch-rnn
+	url = git@github.com:ChrisCummins/torch-rnn.git
