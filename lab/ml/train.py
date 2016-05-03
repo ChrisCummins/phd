@@ -15,6 +15,7 @@ import sys
 import os
 import sqlite3
 
+from argparse import ArgumentParser
 from collections import defaultdict
 
 try:
@@ -66,15 +67,13 @@ def dump_training_data(db):
 
 
 def main():
+    parser = ArgumentParser()
+    parser.add_argument('input', help='path to SQL input dataset')
+    args = parser.parse_args()
 
-    if len(sys.argv) != 2:
-        usage()
-        sys.exit(1)
-
-    db_path = sys.argv[1]
+    db_path = args.input
 
     db = sqlite3.connect(db_path)
-
     data_path = dump_training_data(db)
 
     # Hack to get MarkovChain to run:

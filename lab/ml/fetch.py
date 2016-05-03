@@ -17,6 +17,7 @@ from functools import partial
 
 import requests
 
+from argparse import ArgumentParser
 from base64 import b64decode
 from github import Github,GithubException
 
@@ -216,9 +217,10 @@ def usage():
 def main():
     global errors_counter
 
-    if len(sys.argv) != 2:
-        usage()
-        sys.exit(1)
+    parser = ArgumentParser()
+    parser.add_argument('input', help='path to SQL input dataset')
+    args = parser.parse_args()
+    db_path = args.input
 
     try:
         github_username = os.environ['GITHUB_USERNAME']
@@ -229,7 +231,7 @@ def main():
         sys.exit(1)
 
     g = Github(github_username, github_pw)
-    db = sqlite3.connect(sys.argv[1])
+    db = sqlite3.connect(db_path)
     handle_repo = partial(process_repo, g, db)
     # TODO: Verify tables have been created
 

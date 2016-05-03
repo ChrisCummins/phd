@@ -20,6 +20,7 @@ import shutil
 import sqlite3
 import sys
 
+from argparse import ArgumentParser
 from multiprocessing import Pool
 
 img_dir = 'img'
@@ -218,11 +219,13 @@ def graph_ocl_stars(db_path):
 def main():
     locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
 
-    if len(sys.argv) != 2:
-        usage()
-        sys.exit(1)
+    parser = ArgumentParser()
+    parser.add_argument('input', help='path to SQL input dataset')
+    args = parser.parse_args()
 
-    db_path = sys.argv[1]
+    db_path = args.input
+
+    db = sqlite3.connect(db_path)
 
     if not os.path.exists(img_dir):
         os.makedirs(img_dir)

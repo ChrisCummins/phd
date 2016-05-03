@@ -13,13 +13,14 @@
 # Try compiling each source to LLVM bytecode
 # For those that build, run static analysis to generate feature vectors
 #
+import math
 import os
 import re
 import shutil
 import sqlite3
 import sys
-import math
 
+from argparse import ArgumentParser
 from functools import partial
 from hashlib import md5
 from multiprocessing import cpu_count,Pool
@@ -507,11 +508,11 @@ def preprocess_contentfiles(db_path):
 
 
 def main():
-    if len(sys.argv) != 2:
-        usage()
-        sys.exit(1)
+    parser = ArgumentParser()
+    parser.add_argument('input', help='path to SQL input dataset')
+    args = parser.parse_args()
 
-    db_path = sys.argv[1]
+    db_path = args.input
 
     db = sqlite3.connect(db_path)
     db.create_aggregate("MD5SUM", 1, md5sum_aggregator)
