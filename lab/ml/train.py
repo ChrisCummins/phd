@@ -54,7 +54,7 @@ def dump_training_data(db):
     c.execute('SELECT PreprocessedFiles.contents FROM PreprocessedFiles '
               'LEFT JOIN ContentFiles ON PreprocessedFiles.url=ContentFiles.url '
               'LEFT JOIN Repositories ON ContentFiles.repo_url=Repositories.url '
-              'ORDER BY Repositories.stars DESC')
+              'WHERE PreprocessedFiles.status=0 ORDER BY Repositories.stars DESC')
     query = c.fetchall()
 
     with open(out_path, 'w') as out:
