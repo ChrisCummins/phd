@@ -26,10 +26,6 @@ from multiprocessing import Pool
 img_dir = 'img'
 
 
-def usage():
-    print('Usage: {} <db>'.format(sys.argv[0]))
-
-
 def decode(code):
     try:
         return code.decode('utf-8')
@@ -78,12 +74,12 @@ def stats_worker(db_path):
     stats.append(('Number of repositories visited', bigint(nb_repos)))
     stats.append(('',''))
 
-    c.execute("SELECT Count(DISTINCT repo_url) from ContentFiles")
+    c.execute("SELECT Count(DISTINCT repo_url) from ContentMeta")
     nb_ocl_repos = c.fetchone()[0]
     stats.append(('Number of content file repositories', bigint(nb_ocl_repos)))
 
     c.execute('SELECT Count(*) FROM Repositories WHERE fork=1 AND url IN '
-              '(SELECT repo_url FROM ContentFiles)')
+              '(SELECT repo_url FROM ContentMeta)')
     nb_forks = c.fetchone()[0]
     ratio_forks = nb_forks / nb_ocl_repos
     stats.append(('Number of forked repositories',
@@ -96,7 +92,7 @@ def stats_worker(db_path):
     stats.append(('',''))
 
     # ContentFiles
-    c.execute("SELECT Count(DISTINCT sha) from ContentFiles")
+    c.execute("SELECT Count(DISTINCT id) from ContentFiles")
     nb_uniq_ocl_files = c.fetchone()[0]
     ratio_uniq_ocl_files = nb_uniq_ocl_files / nb_ocl_files
     stats.append(('Number of unique content files',
@@ -202,8 +198,8 @@ def graph_ocl_stars(db_path):
     db = sqlite3.connect(db_path)
     c = db.cursor()
 
-    c.execute('SELECT stars FROM ContentFiles LEFT JOIN Repositories '
-              'ON ContentFiles.repo_url=Repositories.url')
+    c.execute('SELECT stars FROM ContentMeta LEFT JOIN Repositories '
+              'ON ContentMeta.repo_url=Repositories.url')
     stars = [x[0] for x in c.fetchall()]
 
     # Filter range
@@ -233,7 +229,6 @@ def main():
     # Worker process pool
     pool, jobs = Pool(processes=4), []
     jobs.append(pool.apply_async(graph_ocl_lc, (db_path,)))
-    jobs.append(pool.apply_async(graph_bc_lc, (db_path,)))
     jobs.append(pool.apply_async(graph_ocl_stars, (db_path,)))
 
     future_stats = pool.apply_async(stats_worker, (db_path,))

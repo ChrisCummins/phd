@@ -158,10 +158,10 @@ def download_file(github_token, repo, url, stack):
             else:
                 if not include_url:
                     print('couldnt find', include_name)
-                    outlines.append('// fetch.py didnt find: ' + line)
+                    outlines.append('// [FETCH] didnt find: ' + line)
                 else:
                     print('skipped', include_name)
-                    outlines.append('// fetch.py skipped: ' + line)
+                    outlines.append('// [FETCH] skipped: ' + line)
         else:
             outlines.append(line)
 
@@ -185,7 +185,7 @@ def process_file(g, github_token, db, repo, file):
     print_counters()
 
     c = db.cursor()
-    c.execute("SELECT sha FROM ContentFiles WHERE url=?", (url,))
+    c.execute("SELECT sha FROM ContentMeta WHERE id=?", (url,))
     cached_sha = c.fetchone()
 
     # Do nothing unless checksums don't match
@@ -197,9 +197,12 @@ def process_file(g, github_token, db, repo, file):
     contents = download_file(github_token, repo, file.url, [])
     size = file.size
 
-    c.execute("DELETE FROM ContentFiles WHERE url=?", (url,))
-    c.execute("INSERT INTO ContentFiles VALUES(?,?,?,?,?,?)",
-              (url, path, repo_url, contents, sha, size))
+    c.execute("DELETE FROM ContentFiles WHERE id=?", (url,))
+    c.execute("DELETE FROM ContentMeta WHERE id=?", (url,))
+    c.execute("INSERT INTO ContentFiles VALUES(?,?)",
+              (url, contents))
+    c.execute("INSERT INTO ContentMeta VALUES(?,?,?,?,?)",
+              (url, path, repo_url, sha, size))
 
     if cached_sha:
         files_modified_counter += 1
@@ -208,11 +211,6 @@ def process_file(g, github_token, db, repo, file):
 
     db.commit()
     return True
-
-def usage():
-    print("Usage: GITHUB_TOKEN=? GITHUB_USERNAME=? GITHUB_PW=? "
-          "./fetch.py <db>")
-
 
 def main():
     global errors_counter

@@ -426,21 +426,21 @@ class charcount_aggregator:
 def is_modified(db):
     c = db.cursor()
 
-    c.execute("SELECT value FROM Meta WHERE key='repo_checksum'")
+    c.execute("SELECT value FROM Meta WHERE key='preprocessed_checksum'")
     result = c.fetchone()
     cached_checksum = result[0] if result else None
 
-    c.execute('SELECT MD5SUM(updated_at) FROM Repositories')
-    repo_checksum = c.fetchone()[0]
+    c.execute('SELECT MD5SUM(id) FROM ContentFiles')
+    checksum = c.fetchone()[0]
     c.close()
 
-    return False if cached_checksum == repo_checksum else repo_checksum
+    return False if cached_checksum == checksum else checksum
 
 
 def set_modified_status(db, checksum):
     c = db.cursor()
     c.execute("INSERT OR REPLACE INTO Meta VALUES (?,?)",
-              ('repo_checksum', checksum))
+              ('preprocessed_checksum', checksum))
     db.commit()
     c.close()
 
@@ -451,22 +451,22 @@ def preprocess_split(db_path, split):
     split_start, split_end = split
     split_size = split_end - split_start
 
-    c.execute('SELECT url,sha,contents FROM ContentFiles LIMIT {} OFFSET {}'
+    c.execute('SELECT id,contents FROM ContentFiles LIMIT {} OFFSET {}'
               .format(split_size, split_start))
     rows = c.fetchall()
     c.close()
 
     for row in rows:
-        url, sha, contents = row
+        id, contents = row
         c = db.cursor()
 
         # Get checksum of cached file:
-        c.execute('SELECT sha FROM PreprocessedFiles WHERE url=?', (url,))
+        c.execute('SELECT id FROM PreprocessedFiles WHERE id=?', (id,))
         result = c.fetchone()
-        cached_sha = result[0] if result else None
+        cached_id = result[0] if result else None
 
         # Check that file is modified:
-        if sha != cached_sha:
+        if id != cached_id:
             try:
                 # Try and preprocess it:
                 contents = preprocess(contents)
@@ -478,8 +478,8 @@ def preprocess_split(db_path, split):
                 contents = str(e)
                 status = 2
             c.execute('INSERT OR REPLACE INTO PreprocessedFiles '
-                      'VALUES(?,?,?,?)',
-                      (url,sha,status,contents))
+                      'VALUES(?,?,?)',
+                      (id,status,contents))
             db.commit()
         c.close()
 
@@ -522,28 +522,22 @@ def preprocess_file(path):
 def main():
     parser = ArgumentParser()
     parser.add_argument('input', help='path to input')
-    parser.add_argument('-f', action='store_true',
-                        help='treat input as file')
     args = parser.parse_args()
 
-    if args.f:
-        in_path = args.input
-        print(preprocess_file(in_path))
+    db_path = args.input
+
+    db = sqlite3.connect(db_path)
+    db.create_aggregate("MD5SUM", 1, md5sum_aggregator)
+    db.create_aggregate("LC", 1, linecount_aggregator)
+    db.create_aggregate("CC", 1, charcount_aggregator)
+
+    modified = is_modified(db)
+    if modified:
+        preprocess_contentfiles(db_path)
+        set_modified_status(db, modified)
+        print('done.')
     else:
-        db_path = args.input
-
-        db = sqlite3.connect(db_path)
-        db.create_aggregate("MD5SUM", 1, md5sum_aggregator)
-        db.create_aggregate("LC", 1, linecount_aggregator)
-        db.create_aggregate("CC", 1, charcount_aggregator)
-
-        modified = is_modified(db)
-        if modified:
-            preprocess_contentfiles(db_path)
-            set_modified_status(db, modified)
-            print('done.')
-        else:
-            print('nothing to be done.')
+        print('nothing to be done.')
 
 
 if __name__ == '__main__':
