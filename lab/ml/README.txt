@@ -13,10 +13,20 @@ Files:
 
         Usage: GITHUB_TOKEN=? GITHUB_USERNAME=? GITHUB_PW=? ./fetch.py <db>
 
+  fetch-clsmith.py
+        Generate kernels using clsmith.
+
+        Usage: ./fetch-clsmith.py <db> [-n <num-kernels>]
+
   preprocess.py
         Preprocess the fetched data.
 
         Usage: ./preprocess.py <db>
+
+  preprocess-clsmith.py
+        Preprocess the fetched data (clsmith kernels).
+
+        Usage: ./preprocess-clsmith.py <db>
 
   explore.py
         Perform initial dataset exploration.
