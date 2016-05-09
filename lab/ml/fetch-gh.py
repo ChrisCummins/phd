@@ -148,7 +148,6 @@ def download_file(github_token, repo, url, stack):
             include_url = ''
             for f in tree_iterator:
                 if f.path.endswith(include_name):
-                    print('include', include_name)
                     include_url = f.url
                     break
 
@@ -157,10 +156,8 @@ def download_file(github_token, repo, url, stack):
                 outlines.append(include_src)
             else:
                 if not include_url:
-                    print('couldnt find', include_name)
                     outlines.append('// [FETCH] didnt find: ' + line)
                 else:
-                    print('skipped', include_name)
                     outlines.append('// [FETCH] skipped: ' + line)
         else:
             outlines.append(line)
