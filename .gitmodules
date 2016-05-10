@@ -28,3 +28,6 @@
 [submodule "extern/torch-rnn"]
 	path = extern/torch-rnn
 	url = git@github.com:ChrisCummins/torch-rnn.git
+[submodule "extern/clsmith"]
+	path = extern/clsmith
+	url = git@github.com:ChrisCummins/CLSmith.git
