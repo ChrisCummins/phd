@@ -33,11 +33,13 @@ _include_re = re.compile('\w*#include ["<](.*)[">]')
 
 
 def include_path(name):
-    runtime = os.path.expanduser('~/src/clsmith/runtime')
-    path = os.path.join(runtime, name)
-    if not os.path.exists(path):
-        raise HeaderNotFoundException(path)
-    return path
+    dirs = ('~/phd/extern/clsmith/runtime',
+            '~/phd/extern/clsmith/build')
+    for dir in dirs:
+        path = os.path.join(os.path.expanduser(dir), name)
+        if os.path.exists(path):
+            return path
+    raise HeaderNotFoundException(name)
 
 
 def inline_headers(src):
@@ -60,7 +62,7 @@ def inline_headers(src):
 def get_new_program(db_path):
     global files_new_counter
 
-    clsmith = os.path.expanduser('~/src/clsmith/build/CLSmith')
+    clsmith = os.path.expanduser('~/phd/extern/clsmith/build/CLSmith')
     outputpath = 'CLProg.c'
 
     db = sqlite3.connect(db_path)
