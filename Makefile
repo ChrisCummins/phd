@@ -438,6 +438,27 @@ DistcleanTargets += distclean-boost
 
 
 #
+# extern/clsmith
+#
+CLSmith = $(extern)/clsmith/build/CLSmith
+
+$(CLSmith)-cmd = \
+	cd $(extern)/clsmith/build \
+	&& cmake .. && $(MAKE)
+
+$(CLSmith):
+	$(call print-task,BUILD,$@,$(TaskMisc))
+	$(V1)mkdir -pv $(extern)/clsmith/build
+	$(V1)$($(CLSmith)-cmd)
+
+.PHONY: distclean-clsmith
+distclean-clsmith:
+	$(V1)$(RM) -r $(extern)/clsmith/build
+
+DistcleanTargets += distclean-clsmith
+
+
+#
 # extern/googletest
 #
 GoogleTest = $(extern)/googletest-build/libgtest.a
