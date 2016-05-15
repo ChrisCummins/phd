@@ -48,8 +48,8 @@ def dump_training_data(db):
     # Get all of the rewritten OpenCL files, ordered by the number of
     # stars in the containing repo.
     c.execute('SELECT PreprocessedFiles.contents FROM PreprocessedFiles '
-              'LEFT JOIN ContentFiles ON PreprocessedFiles.url=ContentFiles.url '
-              'LEFT JOIN Repositories ON ContentFiles.repo_url=Repositories.url '
+              'LEFT JOIN ContentMeta ON PreprocessedFiles.id=ContentMeta.id '
+              'LEFT JOIN Repositories ON ContentMeta.repo_url=Repositories.url '
               'WHERE PreprocessedFiles.status=0 ORDER BY Repositories.stars DESC')
     query = c.fetchall()
 
