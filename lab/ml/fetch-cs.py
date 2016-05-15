@@ -95,7 +95,7 @@ def main():
     global errors_counter
 
     parser = ArgumentParser()
-    parser.add_argument('input', help='path to SQL input dataset')
+    parser.add_argument('input', help='path to SQL dataset')
     parser.add_argument('-n', type=int, default=5000,
                         help='number of OpenCL kernels to generate')
     args = parser.parse_args()
