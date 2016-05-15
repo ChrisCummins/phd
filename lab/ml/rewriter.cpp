@@ -16,6 +16,7 @@
 //
 //   Read from stdin.
 //   Rewrite user defined types.
+//   Rewrite typedefs.
 //   Consider removing "pointless" code:
 //     Function declarations (without definitions)
 //
