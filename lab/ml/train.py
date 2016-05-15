@@ -30,10 +30,6 @@ dst = 'gen.txt'
 
 num_lines = 10000
 
-def usage():
-    print('Usage: {} <db>'.format(sys.argv[0]))
-
-
 def _db_factory():
     return defaultdict(_one_dict)
 

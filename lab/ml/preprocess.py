@@ -28,9 +28,6 @@ from subprocess import Popen,PIPE,STDOUT
 from tempfile import NamedTemporaryFile
 
 
-def usage():
-    print('Usage: {} <db>'.format(sys.argv[0]))
-
 
 #
 # Custom exceptions:
