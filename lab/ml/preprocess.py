@@ -504,37 +504,42 @@ def preprocess_contentfiles(db_path):
         pool.map(worker, splits)
 
 
-def preprocess_file(path):
-    with open(path) as infile:
-        try:
-            return preprocess(infile.read())
-        except BadCodeException as e:
-            print(e, file=sys.stderr)
-            sys.exit(1)
-        except UglyCodeException as e:
-            print(e, file=sys.stderr)
-            sys.exit(2)
+def preprocess_and_print(contents):
+    try:
+        print(preprocess(contents))
+    except BadCodeException as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
+    except UglyCodeException as e:
+        print(e, file=sys.stderr)
+        sys.exit(2)
 
 
 def main():
     parser = ArgumentParser()
     parser.add_argument('input', help='path to input')
+    parser.add_argument('-f', action='store_true', help='treat input as file')
     args = parser.parse_args()
 
-    db_path = args.input
+    input_path = args.input
+    file_mode = args.f
 
-    db = sqlite3.connect(db_path)
-    db.create_aggregate("MD5SUM", 1, md5sum_aggregator)
-    db.create_aggregate("LC", 1, linecount_aggregator)
-    db.create_aggregate("CC", 1, charcount_aggregator)
-
-    modified = is_modified(db)
-    if modified:
-        preprocess_contentfiles(db_path)
-        set_modified_status(db, modified)
-        print('done.')
+    if file_mode:
+        with open(input_path) as infile:
+            preprocess_and_print(infile.read())
     else:
-        print('nothing to be done.')
+        db = sqlite3.connect(input_path)
+        db.create_aggregate("MD5SUM", 1, md5sum_aggregator)
+        db.create_aggregate("LC", 1, linecount_aggregator)
+        db.create_aggregate("CC", 1, charcount_aggregator)
+
+        modified = is_modified(db)
+        if modified:
+            preprocess_contentfiles(input_path)
+            set_modified_status(db, modified)
+            print('done.')
+        else:
+            print('nothing to be done.')
 
 
 if __name__ == '__main__':
