@@ -118,6 +118,14 @@ clang_define_args = ['-D{}'.format(d) for d in clang_defines] + [
 ]
 
 
+def num_rows_in(db, table):
+    c = db.cursor()
+    c.execute('SELECT Count(*) FROM ' + str(table))
+    num_rows = c.fetchone()[0]
+    c.close()
+    return num_rows
+
+
 def preprocess_cl(src):
     clang = os.path.expanduser('~/phd/tools/llvm/build/bin/clang')
     libclc = os.path.expanduser('~/phd/extern/libclc')
@@ -483,10 +491,8 @@ def preprocess_split(db_path, split):
 
 def preprocess_contentfiles(db_path):
     db = sqlite3.connect(db_path)
-    c = db.cursor()
-    c.execute('SELECT Count(*) FROM ContentFiles')
-    num_contentfiles = c.fetchone()[0]
-    c.close()
+    num_contentfiles = num_rows_in(db, 'ContentFiles')
+    num_preprocessedfiles = num_rows_in(db, 'PreprocessedFiles')
     db.close()
 
     num_workers = round(cpu_count() * 1.5)
@@ -499,7 +505,7 @@ def preprocess_contentfiles(db_path):
 
     with Pool(num_workers) as pool:
         print('spawning', num_workers, 'worker threads to process',
-              num_contentfiles, 'files ...')
+              num_contentfiles - num_preprocessedfiles, 'files ...')
         worker = partial(preprocess_split, db_path)
         pool.map(worker, splits)
 
