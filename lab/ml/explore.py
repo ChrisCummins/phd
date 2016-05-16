@@ -132,7 +132,7 @@ def graph_ocl_lc(db_path):
     sns.distplot(data, bins=20, kde=False)
     plt.xlabel('Line count')
     plt.ylabel('Number of OpenCL files')
-    plt.title('Distribution of OpenCL file lengths')
+    plt.title('Distribution of source code lengths')
     plt.savefig(out_path)
 
 
@@ -179,7 +179,7 @@ def graph_ocl_stars(db_path):
     stars = [x[0] for x in c.fetchall()]
 
     # Filter range
-    data = [x for x in stars if x < 100]
+    data = [x for x in stars if x < 50]
 
     sns.distplot(data, bins=20, kde=False)
     plt.xlabel('GitHub Stargazer count')
@@ -204,6 +204,9 @@ def main():
 
     # Worker process pool
     pool, jobs = Pool(processes=4), []
+    jobs.append(pool.apply_async(graph_ocl_lc, (db_path,)))
+    # TODO: If GH dataset:
+    # jobs.append(pool.apply_async(graph_ocl_stars, (db_path,)))
     future_stats = pool.apply_async(stats_worker, (db_path,))
 
     # Wait for jobs to finish
