@@ -1170,7 +1170,11 @@ DocStrings += "install: install files"
 #
 LlvmSrc := $(root)/tools/llvm
 LlvmBuild := $(root)/tools/llvm/build
-LlvmCMakeFlags = -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true
+LlvmCMakeFlags = \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DLLVM_ENABLE_ASSERTIONS=true \
+	-DLLVM_TARGETS_TO_BUILD=X86 \
+	$(NULL)
 
 # Flags to build against LLVM + Clang toolchain
 ClangLlvm_CxxFlags = \
@@ -1224,7 +1228,7 @@ $(CxxObjects): $(CXX)
 
 $(toolchain)-cmd = \
 	cd $(LlvmBuild) \
-	&& cmake $(LlvmSrc) $(LlvmCmakeFlags)\
+	&& cmake $(LlvmSrc) $(LlvmCMakeFlags)\
 	&& $(MAKE)
 
 $(toolchain):
