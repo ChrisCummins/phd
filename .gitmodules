@@ -31,3 +31,6 @@
 [submodule "extern/clsmith"]
 	path = extern/clsmith
 	url = git@github.com:ChrisCummins/CLSmith.git
+[submodule "extern/oclgrind"]
+	path = extern/oclgrind
+	url = https://github.com/jrprice/Oclgrind.git
