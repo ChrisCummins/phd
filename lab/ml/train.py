@@ -28,7 +28,7 @@ def table_exists(db, table_name):
 
 
 def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
-                  status=0):
+                  status=0, eof=False):
     # Dump all the preprocessed OpenCL files
     print('creating DNN corpus', out_path, '...')
 
@@ -54,10 +54,14 @@ def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
     with open(out_path, 'w') as out:
         for row in rows:
             id,contents = row
-            if fileid:
-                out.write('// ID: ' + id + '\n\n')
+            if fileid: # Print file ID
+                out.write('/* ID: ' + id + '*/\n\n')
             out.write(contents)
-            out.write('\n\n')
+            if eof: # Print EOF token
+                out.write('\n/* EOF */\n\n')
+            else:
+                out.write('\n\n')
+
 
 
 def linecount(t):
@@ -70,6 +74,8 @@ def main():
     parser.add_argument('output', help='path to output file')
     parser.add_argument('-i', action='store_true', default=False,
                         help='include file separators')
+    parser.add_argument('--eof', action='store_true', default=False,
+                        help='print end of file')
     parser.add_argument('-r', action='store_true', default=False,
                         help='use reverse order')
     parser.add_argument('-s', '--status', type=int, default=0,
@@ -81,7 +87,8 @@ def main():
     opts = {
         "fileid": args.i,
         "reverse": args.r,
-        "status": args.status
+        "status": args.status,
+        "eof": args.eof
     }
 
     db = sqlite3.connect(db_path)
