@@ -15,13 +15,14 @@
 % warning. NOTE: Include after inputenc.
 %
 \usepackage{csquotes}
-
 \usepackage{booktabs}
 
 % Required for full page-width tables.
 \usepackage{tabularx}
 
 \usepackage{wrapfig}
+
+\usepackage{adjustbox}
 
 % Define column types L, C, R with known text justification and fixed
 % widths:
@@ -65,6 +66,9 @@
 
 % Reduce the font size of the bibliography:
 \renewcommand{\bibfont}{\normalfont\scriptsize}
+
+\usepackage{setspace}
+\onehalfspacing
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -181,27 +185,24 @@ UK
 
 
 \begin{abstract}
-  Selecting an appropriate workgroup size is critical for OpenCL
-  performance, and requires knowledge of the underlying hardware, the
-  data being operated on, and the behaviour of the kernel. This makes
-  portable performance of OpenCL programs challenging, since simple
-  heuristics and statically chosen values fail to exploit the
-  available performance. To address this, we propose the use of
-  machine learning-enabled autotuning to automatically predict
-  workgroup sizes for stencil patterns on CPUs and multi-GPUs. We
-  present three methodologies for predicting workgroup sizes. The
-  first, using classifiers to select the optimal workgroup size. The
-  second and third proposed methodologies employ the novel use of
-  regressors for performing classification by predicting the runtime
-  of kernels and the relative performance of different workgroup
-  sizes, respectively. We evaluate the effectiveness of each technique
-  in an empirical study of 429 combinations of architecture, kernel,
-  and dataset, comparing an average of 629 different workgroup sizes
-  for each. We find that autotuning provides a median $3.79\times$
-  speedup over the best possible fixed workgroup size, achieving 94\%
-  of the maximum performance.
+  Selecting appropriate workgroup sizes for OpenCL programs is
+  critical for performance, and requires knowledge of the underlying
+  hardware, the data being operated on, and the behaviour of the
+  kernel. Ensuring performance portability of OpenCL programs is
+  challenging, since simple heuristics and statically chosen values
+  fail to exploit the available performance. To address this, we
+  propose the use of machine learning-enabled autotuning to
+  automatically predict workgroup sizes for stencil patterns on CPUs
+  and multi-GPUs. We present three methodologies for predicting OpenCL
+  workgroup sizes, and evaluate the effectiveness of each in a study
+  of 429 combinations of architecture, kernel, and dataset. We compare
+  an average of 629 different workgroup sizes for each case, finding
+  that autotuning provides a median $3.79\times$ speedup over the best
+  possible fixed workgroup size, achieving 94\% of the maximum
+  performance.
 \end{abstract}
 
+\vspace{-.5em}
 \keywords{%
   OpenCL; %
   Autotuning; %
@@ -211,46 +212,29 @@ UK
   Synthetic benchmarking%
 }
 
+\vspace{-2em}
 \section{Introduction}
 
-Stencil codes have a variety of computationally demanding uses from
-fluid dynamics to quantum mechanics. Efficient, tuned stencil
-implementations are highly sought after, with early work in 2003 by
-Bolz et al.\ demonstrating the capability of GPUs for massively
-parallel stencil operations~\cite{Bolz2003}. Since then, the
-introduction of the OpenCL standard has introduced greater
-programmability of heterogeneous devices by providing a
-vendor-independent layer of abstraction for data parallel programming
-of CPUs, GPUs, DSPs, and other devices~\cite{Stone2010}. However,
-achieving portable performance of OpenCL programs is a hard task ---
-OpenCL kernels are sensitive to properties of the underlying hardware,
-to the implementation, and even to the \emph{dataset} that is operated
-upon. This forces developers to laboriously hand tune performance on a
-case-by-case basis, since simple heuristics fail to exploit the
-available performance. In this paper, we demonstrate how machine
-learning-enabled autotuning can address this issue for one such
-optimisation parameter --- OpenCL workgroup size. The 2D optimisation
-space of OpenCL kernel workgroup sizes is complex and non-linear,
-making it resistant to analytical modelling. Successfully applying
-machine learning to such a space requires plentiful training data, the
-careful selection of features, and an appropriate classification
-approach. The approaches presented in this paper use features
-extracted from the architecture and kernel, and training data
-collected from synthetic benchmarks to predict workgroup sizes for
-unseen programs.
+Efficient, tuned implementations of stencil codes are highly sought
+after, with a variety of applications from fluid dynamics to quantum
+mechanics. OpenCL enables the application of a range of heterogeneous
+devices to parallelise stencils; however, achieving portable
+performance is a hard task --- OpenCL kernels are sensitive to
+properties of the underlying hardware, to the implementation, and even
+to the dataset that is operated upon. This forces developers to
+laboriously hand tune performance on a case-by-case basis, since
+simple heuristics fail to exploit the available performance. In this
+work we demonstrate how machine learning-enabled autotuning can be
+applied to Algorithmic Skeletons to achieve near optimal performance
+of stencils operations, without requiring hand tuning.
 
-
-% \section{The SkelCL Stencil Pattern}
-
-\begin{wrapfigure}{r}{0.4\textwidth}
-\includegraphics[width=.4\textwidth]{stencil}
+\begin{wrapfigure}{r}{0.38\textwidth}
+\includegraphics[width=.38\textwidth]{stencil}
 \caption[Stencil border region]{%
   The components of a stencil: an input matrix is decomposed into
-  workgroups, consisting of $w_r \times w_c$ elements. Each element is
-  mapped to a work-item. Each work-item operates on its corresponding
-  element and a surrounding border region.%
-  \vspace{-.75em}
-}
+  workgroups, and elements within workgroups are mapped to work-items.
+  The values used by workgroups are mapped to local memory.%
+  \vspace{-.75em} }
 \label{fig:stencil-shape}
 \end{wrapfigure}
 
@@ -264,68 +248,105 @@ matrix. The value of each element is updated based on its current
 value and the value of one or more neighbouring elements, called the
 \emph{border region}. The border region describes a rectangular region
 about each cell, and is defined in terms of the number of cells in the
-border region to the north, east, south, and west of each cell. Where
-elements of a border region fall outside of the matrix bounds, values
-are substituted from either a predefined padding value, or the value
-of the nearest cell within the matrix, determined by the user.
-
-When a SkelCL stencil pattern is executed, each of the matrix elements
-are mapped to OpenCL work-items; and this collection of work-items is
+border region to the north, east, south, and west of each cell. When a
+SkelCL stencil pattern is executed, each of the matrix elements are
+mapped to OpenCL work-items; and this collection of work-items is
 divided into \emph{workgroups} for execution on the target hardware. A
 work-item reads the value of its corresponding matrix element and the
 surrounding elements defined by the border region. Since the border
 regions of neighbouring elements overlap, each element in the matrix
-is read multiple times. Because of this, a \emph{tile} of elements of
-the size of the workgroup and the perimeter border region is allocated
-as a contiguous block in local memory. This greatly reduces the
-latency of repeated memory accesses performed by the work-items. As a
-result, changing the workgroup size affects both the number of
-workgroups which can be active simultaneously, and the amount of local
-memory required for each workgroup. While the user defines the size,
-type, and border region of the matrix being operated upon, it is the
-responsibility of the SkelCL stencil implementation to select an
-appropriate workgroup size to use.
+is read multiple times. Because of this, a \emph{tile} of elements the
+size of the workgroup and the perimeter border region is allocated in
+local memory. This greatly reduces the latency of repeated memory
+accesses performed by the work-items. Changing the workgroup size
+affects both the number of workgroups which can be active
+simultaneously, and the amount of local memory required for each
+workgroup. While the user defines the size, type, and border region of
+the matrix being operated upon, it is the responsibility of the SkelCL
+implementation to select an appropriate workgroup size to use.
 
 
 \section{Autotuning OpenCL Workgroup Size}
 
+
+\begin{figure}
+\centering
+\adjustbox{valign=t}{%
+  \begin{minipage}{.48\textwidth}
+    \centering
+    \begin{subfigure}[h]{.48\columnwidth}
+      \centering
+      \includegraphics[width=1.0\columnwidth]{motivation_1}
+      \vspace{-1.5em} % Shrink vertical padding
+      \caption{}
+      \label{fig:motivation-1}
+    \end{subfigure}
+    ~%
+    \begin{subfigure}[h]{.48\columnwidth}
+      \centering
+      \includegraphics[width=1.0\columnwidth]{motivation_2}
+      \vspace{-1.5em} % Shrink vertical padding
+      \caption{}
+      \label{fig:motivation-2}
+    \end{subfigure}
+    \caption{%
+      The performance of different workgroup sizes for the same stencil
+      program on two different devices: (\subref{fig:motivation-1})
+      Intel CPU, (\subref{fig:motivation-2}) NVIDIA GPU. Selecting an
+      appropriate workgroup size depends on the execution device.%
+    }
+    \label{fig:motivation-arch}
+  \end{minipage}%
+}%
+\hspace{2.5mm}
+\adjustbox{valign=t}{%
+  \begin{minipage}{.48\textwidth}
+    \centering
+    \begin{subfigure}[h]{.48\columnwidth}
+      \centering
+      \includegraphics[width=1.0\columnwidth]{motivation_3}
+      \vspace{-1.5em} % Shrink vertical padding
+      \caption{}
+      \label{fig:motivation-3}
+    \end{subfigure}
+    ~%
+    \begin{subfigure}[h]{.48\columnwidth}
+      \centering
+      \includegraphics[width=1.0\columnwidth]{motivation_4}
+      \vspace{-1.5em} % Shrink vertical padding
+      \caption{}
+      \label{fig:motivation-4}
+    \end{subfigure}
+    \caption{%
+      The performance of different workgroup sizes for the same device
+      executing two different stencil programs. Selecting an appropriate
+      workgroup size depends on the program.%
+    }
+    \label{fig:motivation-prog}
+  \end{minipage}%
+}
+\end{figure}
+
+
 Selecting the appropriate workgroup size for an OpenCL kernel depends
 on the properties of the kernel itself, underlying architecture, and
 dataset. For a given \emph{scenario} (that is, a combination of
-kernel, architecture, and dataset), the goal of this work is to
-harness machine learning to \emph{predict} a performant workgroup size
-to use, based on some prior knowledge of the performance of workgroup
-sizes for other scenarios. In this section, we describe the
-optimisation space and the steps required to apply machine
-learning. The autotuning algorithms are described in
-Section~\ref{sec:ml}.
+kernel, architecture, and dataset), the goal of autotuning is to use
+train a machine learning model to \emph{predict} a good workgroup size
+based on prior knowledge of the performance of workgroup sizes for
+other scenarios.
 
-\subsection{Constraints}
-
-The space of possible workgroup sizes $W$ is constrained by properties
-of both the architecture and kernel. Each OpenCL device imposes a
-maximum workgroup size which can be statically checked through the
-OpenCL Device API. This constraint reflects architectural limitations
-of how code is mapped to the underlying execution hardware. Typical
-values are powers of two, e.g.\ 1024, 4096, 8192. Additionally, the
-OpenCL runtime enforces a maximum workgroup size on a per-kernel
-basis. This value can be queried at runtime once a program has been
-compiled for a specific execution device. Factors which affect a
-kernel's maximum workgroup size include the number of registers
-required, and the available number of SIMD execution units for each
-type of executable instruction.
-
-While in theory, any workgroup size which satisfies the device and
-kernel workgroup size constraints should provide a valid program, in
-practice we find that some combinations of scenario and workgroup size
-cause a \texttt{CL\_OUT\_OF\_RESOURCES} error to be thrown when the
-kernel is launched. We refer to these workgroup sizes as \emph{refused
-  parameters}. Note that in many OpenCL implementations, this error
-type acts as a generic placeholder and may not necessarily indicate
-that the underlying cause of the error was due to finite resources
-constraints. We define the space of \emph{legal} workgroup sizes for a
-given scenario $s$ as those which satisfy the architectural and kernel
-constraints, and are not refused:
+\paragraph{Constraints} The space of possible workgroup sizes $W$ is
+constrained by properties of both the architecture and kernel. Each
+OpenCL device and kernel imposes a maximum workgroup size, reflecting
+architectural limitations of the hardware and the resource
+requirements of a kernel. In practice we find that some combinations
+of scenario and workgroup size cause a \texttt{CL\_OUT\_OF\_RESOURCES}
+error when the kernel is launched even if they satisfy the device and
+kernel constraints. We refer to these workgroup sizes as \emph{refused
+  parameters}. We define the space of \emph{legal} workgroup sizes for
+a given scenario $s$ as those which satisfy the architectural and
+kernel constraints, and are not refused:
 %
 \begin{equation}
   \footnotesize
@@ -343,223 +364,135 @@ legal for all scenarios:
 \end{equation}
 
 
-\subsection{Stencil and Architectural Features}
-
-Since properties of the architecture, program, and dataset all
-contribute to the performance of a workgroup size for a particular
-scenario, the success of a machine learning system depends on the
-ability to translate these properties into meaningful explanatory
-variables --- \emph{features}. For each scenario, 102 features are
-extracted describing the architecture, kernel, and dataset.
-
-Architecture features are extracted using the OpenCL Device API to
-query properties such as the size of local memory, maximum work group
-size, and number of compute units. Kernel features are extracted from
-the source code stencil kernels by compiling first to LLVM IR bitcode,
-and using statistics passes to obtain static instruction counts for
-each type of instruction present in the kernel, as well as the total
-number of instructions. These instruction counts are divided by the
-total number of instructions to produce instruction
-\emph{densities}. Dataset features include the input and output data
-types, and the 2D matrix dimensions.
+\paragraph{Stencil and Architectural Features} Since properties of the
+architecture, program, and dataset all contribute to the performance
+of a workgroup size for a particular scenario, the success of a
+machine learning system depends on the ability to translate these
+properties into meaningful explanatory variables ---
+\emph{features}. For each scenario, 102 features are extracted
+describing the architecture, kernel, and dataset. Architecture
+features are extracted using the OpenCL Device API to query properties
+such as the size of local memory, maximum work group size, and number
+of compute units. Kernel features are extracted from a stencil
+kernel's source code by compiling to LLVM IR bitcode and obtaining
+static instruction densities for each type of instruction present in
+the kernel, and the total number of instructions. Dataset features
+include the input and output data types, and the 2D matrix dimensions.
 
 
-\subsection{Training Data}\label{subsec:training}
-
-Training data is collected by measuring the runtimes of stencil
-programs using different workgroup sizes. These stencil programs are
-generated synthetically using a statistical template substitution
-engine, which allows a larger exploration of the program space than is
-possible using solely hand-written benchmarks. A stencil template is
-parameterised first by stencil shape (one parameter for each of the
-four directions), input and output data types (either integers, or
-single or double precision floating points), and \emph{complexity} ---
-a simple boolean metric for indicating the desired number of memory
-accesses and instructions per iteration, reflecting the relatively
-bi-modal nature of stencil codes, either compute intensive (e.g.\
-finite difference time domain and other PDE solvers), or lightweight
-(e.g.\ Game of Life and Gaussian blur).
-
-
-\section{Machine Learning Methods}\label{sec:ml}
-
-The aim of this work is to design a system which predicts performant
-workgroup sizes for \emph{unseen} scenarios, given a set of prior
-performance observations. This section presents three contrasting
-methods for achieving this goal.
+\paragraph{Training Data} Training data is collected by measuring the
+runtimes of stencil programs using different workgroup sizes. These
+stencil programs are generated synthetically using a statistical
+template substitution engine, which allows a larger exploration of the
+program space than is possible using solely hand-written benchmarks. A
+stencil template is parameterised first by stencil shape (one
+parameter for each of the four directions), input and output data
+types (either integers, or single or double precision floating
+points), and \emph{complexity} --- a simple boolean metric for
+indicating the desired number of memory accesses and instructions per
+iteration, reflecting the relatively bi-modal nature of stencil codes,
+either compute intensive (e.g.\ finite difference time domain and
+other PDE solvers), or lightweight (e.g.\ Game of Life and Gaussian
+blur).
 
 
-\subsection{Predicting Oracle Workgroup Sizes}
+\subsection{Machine Learning Methods}\label{sec:ml}
 
-% \begin{algorithm}[t]
-% \begin{algorithmic}[1]
-% \Require scenario $s$
-% \Ensure workgroup size $w$
+In this work we contrast three methodologies for predicing OpenCL
+workgroup sizes:
 
-% \Procedure{Baseline}{s}
-% \State $w \leftarrow \text{classify}(f(s))$
-% \If{$w \in W_{legal}(s)$}
-%     \State \textbf{return} $w$
-% \Else
-%   \State \textbf{return} $\underset{w \in W_{safe}}{\argmax}
-% \left(
-%   \prod_{s \in S_{training}} p(s, w)
-% \right)^{1/|S_{training}|}$
-% \EndIf
-% \EndProcedure
-% \item[] % line break
-
-% \Procedure{Random}{s}
-% \State $w \leftarrow \text{classify}(f(s))$
-% \While{$w \not\in W_{legal}(s)$}
-%   \State $W \leftarrow \left\{ w | w < W_{max}(s), w \not\in W_{refused}(s) \right\}$
-%   \State $w \leftarrow $ random selection $w \in W$
-% \EndWhile
-% \State \textbf{return} $w$
-% \EndProcedure
-% \item[] % line break
-
-% \Procedure{NearestNeighbour}{s}
-% \State $w \leftarrow \text{classify}(f(s))$
-% \While{$w \not\in W_{legal}(s)$}
-%   \State $d_{min} \leftarrow \infty$
-%   \State $w_{closest} \leftarrow \text{null}$
-%   \For{$c \in \left\{ w | w < W_{\max}(s), w \not\in W_{refused}(s) \right\}$}
-%     \State $d \leftarrow \sqrt{\left(c_r - w_r\right)^2 + \left(c_c - w_c\right)^2}$
-%     \If{$d < d_{min}$}
-%       \State $d_{min} \leftarrow d$
-%       \State $w_{closest} \leftarrow c$
-%     \EndIf
-%   \EndFor
-%   \State $w \leftarrow w_{closest}$
-% \EndWhile
-% \State \textbf{return} $w$
-% \EndProcedure
-% \end{algorithmic}
-% \caption{Prediction using classifiers}
-% \label{alg:autotune-classification}
-% \end{algorithm}
-
-The first approach is detailed in
-Algorithm~\ref{alg:autotune-classification}. By considering the set of
-possible workgroup sizes as a hypothesis space, we train a classifier
-to predict, for a given set of features, the \emph{oracle} workgroup
-size. The oracle workgroup size $\Omega(s)$ is the workgroup size
-which provides the lowest mean runtime $t(s,w)$ for a scenario $s$:
-%
-\begin{equation}
-  \Omega(s) = \argmin_{w \in W_{legal}(s)} t(s,w)
-\end{equation}
-%
-Training a classifier for this purpose requires pairs of stencil
-features $f(s)$ to be labelled with their oracle workgroup size for a
-set of training scenarios $S_{training}$:
-%
-\begin{equation}
-  D_{training} = \left\{ \left(f(s), \Omega(s)\right) | s \in S_{training} \right\}
-\end{equation}
-%
-After training, the classifier predicts workgroup sizes for unseen
-scenarios from the set of oracle workgroup sizes from the training
-set. This is a common and intuitive approach to autotuning, in that a
-classifier predicts the best parameter value based on what worked well
-for the training data. However, given the constrained space of
-workgroup sizes, this presents the problem that future scenarios may
-have different sets of legal workgroup sizes to that of the training
-data, i.e.:
-%
-\begin{equation}
-  \bigcup_{\forall s \in S_{future}} W_{legal}(s) \nsubseteq \left\{ \Omega(s) | s \in S_{training} \right\}
-\end{equation}
-%
-This results in an autotuner which may predict workgroup sizes that
-are not legal for all scenarios, either because they exceed
-$W_{\max}(s)$, or because parameters are refused,
-$w \in W_{refused}(s)$. For these cases, we evaluate the effectiveness
-of three \emph{fallback handlers}, which will iteratively select new
-workgroup sizes until a legal one is found:
-%
 \begin{enumerate}
-\item \emph{Baseline} --- select the workgroup size which provides the
-  highest average case performance from the set of safe workgroup sizes.
-\item \emph{Random} --- select a random workgroup size which is
-  expected from prior observations to be legal.
-\item \emph{Nearest Neighbour} --- select the workgroup size which
-  from prior observations is expected to be legal, and has the lowest
-  Euclidian distance to the prediction.
+\item \textbf{Predicting Oracle Workgroup Sizes} By considering the
+  set of possible workgroup sizes as a hypothesis space, train a
+  classifier to predict, for a given set of features, the
+  \emph{oracle} workgroup size. The oracle workgroup size $\Omega(s)$
+  is the workgroup size which provides the lowest mean runtime
+  $t(s,w)$ for a scenario $s$:
+  %
+  \begin{equation}
+    \Omega(s) = \argmin_{w \in W_{legal}(s)} t(s,w)
+  \end{equation}
+  %
+  Training a classifier for this purpose requires pairs of stencil
+  features $f(s)$ to be labelled with their oracle workgroup size for a
+  set of training scenarios $S_{training}$:
+  %
+  \begin{equation}
+    D_{training} = \left\{ \left(f(s), \Omega(s)\right) | s \in S_{training} \right\}
+  \end{equation}
+  %
+  After training, the classifier predicts workgroup sizes for unseen
+  scenarios from the set of oracle workgroup sizes from the training
+  set. This is a common and intuitive approach to autotuning, in that a
+  classifier predicts the best parameter value based on what worked well
+  for the training data. However, given the constrained space of
+  workgroup sizes, this presents the problem that future scenarios may
+  have different sets of legal workgroup sizes to that of the training
+  data, i.e.:
+  %
+  \begin{equation}
+    \bigcup_{\forall s \in S_{future}} W_{legal}(s) \nsubseteq \left\{ \Omega(s) | s \in S_{training} \right\}
+  \end{equation}
+  %
+  This results in an autotuner which may predict workgroup sizes that
+  are not legal for all scenarios, either because they exceed
+  $W_{\max}(s)$, or because parameters are refused,
+  $w \in W_{refused}(s)$. For these cases, we evaluate the effectiveness
+  of three \emph{fallback handlers}, which will iteratively select new
+  workgroup sizes until a legal one is found:
+  %
+  \begin{enumerate}
+  \item \emph{Baseline} --- select the workgroup size which provides the
+    highest average case performance from the set of safe workgroup sizes.
+  \item \emph{Random} --- select a random workgroup size which is
+    expected from prior observations to be legal.
+  \item \emph{Nearest Neighbour} --- select the workgroup size which
+    from prior observations is expected to be legal, and has the lowest
+    Euclidian distance to the prediction.
+  \end{enumerate}
+\item \textbf{Predicting Kernel Runtimes} A problem of predicting
+  oracle workgroup sizes is that, for each training instance, an
+  exhaustive search of the optimisation space must be performed in
+  order to find the oracle workgroup size. An alternative approach is
+  to instead predict the expected \emph{runtime} of a kernel given a
+  specific workgroup size. Given training data consisting of
+  $(f(s),w,t)$ tuples, where $f(s)$ are scenario features, $w$ is the
+  workgroup size, and $t$ is the observed runtime, we train a
+  regressor $R(f(s), w)$ to predict the runtime of scenario and
+  workgroup size combinations. The selected workgroup size
+  $\bar{\Omega}(s)$ is then the workgroup size from a pool of
+  candidates which minimises the output of the
+  regressor. Algorithm~\ref{alg:autotune-regression} formalises this
+  approach of autotuning with regressors. A fitness function
+  $\Delta(x)$ computes the reciprocal of the predicted runtime so as
+  to favour shorter over longer runtimes. Note that the algorithm is
+  self correcting in the presence of refused parameters --- if a
+  workgroup size is refused, it is removed from the candidate pool,
+  and the next best candidate is chosen. This removes the need for
+  fallback handlers. Importantly, this technique allows for training
+  on data for which the oracle workgroup size is unknown, meaning that
+  a full exploration of the space is not required in order to gather a
+  training instance, as is the case with classifiers.
+\item \textbf{Predicting Relative Performance} Accurately predicting
+  the runtime of arbitrary code is a difficult problem. It may instead
+  be more effective to predict the relative performance of two
+  different workgroup sizes for the same kernel. To do this, we
+  predict the \emph{speedup} of a workgroup size over a baseline. This
+  baseline is the workgroup size which provides the best average case
+  performance across all scenarios and is known to be safe. Such a
+  baseline value represents the \emph{best} possible performance which
+  can be achieved using a single, fixed workgroup size. As when
+  predicting runtimes, this approach performs classification using
+  regressors (Algorithm~\ref{alg:autotune-regression}). We train a
+  regressor $R(f(s), w)$ to predict the relative performance of
+  workgroup size $w$ over a baseline parameter for scenario $s$. The
+  fitness function returns the output of the regressor, so the
+  selected workgroup size $\bar{\Omega}(s)$ is the workgroup size from
+  a pool of candidates which is predicted to provide the best relative
+  performance. This has the same advantageous properties as predicting
+  runtimes, but by training using relative performance, we negate the
+  challenges of predicting dynamic code behaviour.
 \end{enumerate}
-
-\subsection{Predicting Kernel Runtimes}
-
-% \begin{algorithm}[t]
-% \begin{algorithmic}[1]
-% \Require scenario $s$, regressor $R(x, w)$, fitness function $\Delta(x)$
-% \Ensure workgroup size $w$
-
-% \State $W \leftarrow \left\{ w | w < W_{\max}(s) \right\} -
-% W_{refused}(s)$
-% \Comment Candidates.
-% \State $w \leftarrow \underset{w \in W}{\argmax} \Delta(R(f(s), w))$
-% \Comment Select best candidate.
-% \While{$w \not\in W_{legal}(s)$}
-%   \State $W_{refused}(s) = W_{refused}(s) + \{w\}$
-%   \State $W \leftarrow W - \left\{ w \right\}$
-%   \Comment Remove candidate from selection.
-%   \State $w \leftarrow \underset{w \in W}{\argmax} \Delta(R(f(s), w))$
-%   \Comment Select best candidate.
-% \EndWhile
-% \State \textbf{return} $w$
-% \end{algorithmic}
-% \caption{Prediction using regressors}
-% \label{alg:autotune-regression}
-% \end{algorithm}
-
-A problem of predicting oracle workgroup sizes is that, for each
-training instance, an exhaustive search of the optimisation space must
-be performed in order to find the oracle workgroup size. An
-alternative approach is to instead predict the expected \emph{runtime}
-of a kernel given a specific workgroup size. Given training data
-consisting of $(f(s),w,t)$ tuples, where $f(s)$ are scenario features,
-$w$ is the workgroup size, and $t$ is the observed runtime, we train a
-regressor $R(f(s), w)$ to predict the runtime of scenario and
-workgroup size combinations. The selected workgroup size
-$\bar{\Omega}(s)$ is then the workgroup size from a pool of candidates
-which minimises the output of the
-regressor. Algorithm~\ref{alg:autotune-regression} formalises this
-approach of autotuning with regressors. A fitness function $\Delta(x)$
-computes the reciprocal of the predicted runtime so as to favour
-shorter over longer runtimes. Note that the algorithm is self
-correcting in the presence of refused parameters --- if a workgroup
-size is refused, it is removed from the candidate pool, and the next
-best candidate is chosen. This removes the need for fallback
-handlers. Importantly, this technique allows for training on data for
-which the oracle workgroup size is unknown, meaning that a full
-exploration of the space is not required in order to gather a training
-instance, as is the case with classifiers.
-
-
-\subsection{Predicting Relative Performance}
-
-Accurately predicting the runtime of arbitrary code is a difficult
-problem. It may instead be more effective to predict the relative
-performance of two different workgroup sizes for the same kernel. To
-do this, we predict the \emph{speedup} of a workgroup size over a
-baseline. This baseline is the workgroup size which provides the best
-average case performance across all scenarios and is known to be
-safe. Such a baseline value represents the \emph{best} possible
-performance which can be achieved using a single, fixed workgroup
-size. As when predicting runtimes, this approach performs
-classification using regressors
-(Algorithm~\ref{alg:autotune-regression}). We train a regressor
-$R(f(s), w)$ to predict the relative performance of workgroup size $w$
-over a baseline parameter for scenario $s$. The fitness function
-returns the output of the regressor, so the selected workgroup size
-$\bar{\Omega}(s)$ is the workgroup size from a pool of candidates
-which is predicted to provide the best relative performance. This has
-the same advantageous properties as predicting runtimes, but by
-training using relative performance, we negate the challenges of
-predicting dynamic code behaviour.
-
 
 \section{Experimental Setup}
 
@@ -598,12 +531,11 @@ $w_r$ and $w_c$ values in multiples of 2, up to the maximum workgroup
 size. For each combination of scenario and workgroup size, a minimum
 of 30 runtimes were recorded.
 
-In addition to the synthetic stencil benchmarks described in
-Section~\ref{subsec:training}, six stencil kernels taken from four
-reference implementations of standard stencil applications from the
-fields of image processing, cellular automata, and partial
-differential equation solvers are used: Canny Edge Detection, Conway's
-Game of Life, Heat Equation, and Gaussian
+In addition to the synthetic stencil benchmarks described earlier, six
+stencil kernels taken from four reference implementations of standard
+stencil applications from the fields of image processing, cellular
+automata, and partial differential equation solvers are used: Canny
+Edge Detection, Conway's Game of Life, Heat Equation, and Gaussian
 Blur. Table~\ref{tab:kernels} shows details of the stencil kernels for
 these reference applications and the synthetic training benchmarks
 used. Dataset sizes of size $512\times512$, $1024\times1024$,
@@ -984,6 +916,11 @@ perform a directed search through the program space.
 
 
 \label{bibliography}
+
+\begingroup
+\setstretch{0.8}
+\setlength\bibitemsep{1pt}
 \printbibliography
+\endgroup
 
 \end{document}
