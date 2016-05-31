@@ -13,16 +13,22 @@ set -eu
 # Configurable
 #
 
-# GNU coreutils:
-MAKETEMP=/usr/local/opt/coreutils/libexec/gnubin/mktemp
-READLINK=/usr/local/opt/coreutils/libexec/gnubin/readlink
-STAT=/usr/local/opt/coreutils/libexec/gnubin/stat
-
 # LaTeX tools:
 PDFLATEX=pdflatex
 BIBER=biber
 BIBTEX=bibtex
 PDFLATEX_ARGS="-recorder -output-format pdf -progname pdflatex -file-line-error -interaction=nonstopmode --shell-escape"
+
+# GNU coreutils:
+if [ "$(uname)" == "Darwin" ]; then
+    MAKETEMP=/usr/local/opt/coreutils/libexec/gnubin/mktemp
+    READLINK=/usr/local/opt/coreutils/libexec/gnubin/readlink
+    STAT=/usr/local/opt/coreutils/libexec/gnubin/stat
+else
+    MAKETEMP=mktemp
+    READLINK=readlink
+    STAT=stat
+fi
 
 # Included tools:
 ROOT=~/phd
