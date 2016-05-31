@@ -15,3 +15,12 @@ Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh
 Leather. "Towards Collaborative Performance Tuning of Algorithmic
 Skeletons". HLPGPU '16, HiPEAC.
   Files: docs/2016-01-hlpgpu
+
+
+                             Miscellaneous
+                             =============
+
+Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh
+Leather. "Autotuning OpenCL Workgroup Sizes". Submission for PLDI'16
+Student Poster Session.
+  Files: docs/2016-06-pldi
