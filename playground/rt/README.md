@@ -5,11 +5,6 @@
 A fast parallelised ray tracer written in pure C++, with support for
 soft lighting, adaptive anti-aliasing, perspective and depth of field.
 
-## Installation
-
-Build with `make`. Requires a C++11 capable compiler
-(e.g. [g++](http://www.cprogramming.com/g++.html).
-
 ## Usage
 
 Include the `rt/rt.h` header and link against the compiled
