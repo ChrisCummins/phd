@@ -40,6 +40,43 @@ DEPFILE=.autotex.deps
 LOGFILE=.autotex.log
 HOOKS_DIRECTORY=scripts
 
+# Output formatting
+TTYreset="$(tput sgr0)"
+TTYbold="$(tput bold)"
+TTYstandout="$(tput smso)"
+TTYunderline="$(tput smul)"
+
+TTYblack="$(tput setaf 0)"
+TTYblue="$(tput setaf 4)"
+TTYcyan="$(tput setaf 6)"
+TTYgreen="$(tput setaf 2)"
+TTYmagenta="$(tput setaf 5)"
+TTYred="$(tput setaf 1)"
+TTYwhite="$(tput setaf 7)"
+TTYyellow="$(tput setaf 3)"
+
+TaskNameLength=8
+
+# Print a message.
+#
+print() {
+    local body="$1"
+    local format="$2"
+
+    echo "$format$body$TTYreset"
+}
+
+# Print a formatted task message.
+#
+print_task() {
+    local name="$1"
+    local path="$2"
+    local format="$3"
+
+    printf "  $TTYbold$format%-${TaskNameLength}s$TTYreset %s\n" "$name" "$path"
+}
+
+
 # Return whether a dependency list can be computed.
 #
 # Parameters:
@@ -227,7 +264,7 @@ exec_hooks() {
 
     if [[ -n "$hooks" ]]; then
         for hook in $hooks; do
-            echo "  HOOK     $PWD/$hook"
+            print_task "HOOK" "$PWD/$hook" "$TaskMisc"
             silent_unless_fail $LOGFILE $hook
         done
     fi
@@ -236,10 +273,12 @@ exec_hooks() {
 # Run pdflatex on document.
 #
 # $1 (str) Document name, without extension
+# $2 (str) Format string
 run_pdflatex() {
     local document=$1
+    local format=$2
 
-    echo "  LATEX    $PWD/$document.pdf"
+    print_task "LATEX" "$PWD/$document.pdf" "$format"
     silent_unless_fail $LOGFILE $PDFLATEX $PDFLATEX_ARGS $document.tex
 }
 
@@ -281,17 +320,19 @@ get_citation_backend() {
 #
 # $1 (str) Backend command name
 # $2 (str) Document name, without extension
+# $3 (str) Format string
 run_citation_backend() {
     local backend=$1
     local document=$2
+    local format=$3
 
     case $backend in
         "biber")
-            echo "  BIBER    $PWD/$document"
+            print_task "BIBER" "$PWD/$document" "$format"
             silent_unless_fail $LOGFILE $BIBER $document
             ;;
         "bibtex")
-            echo "  BIBTEX   $PWD/$document"
+            print_task "BIBTEX" "$PWD/$document" "$format"
             silent_unless_fail $LOGFILE $BIBTEX $document
             ;;
         *)
@@ -311,16 +352,16 @@ build() {
 
     setup_env
     exec_hooks ".pre"
-    run_pdflatex $document
+    run_pdflatex $document "$TTYred"
 
     local backend=$(get_citation_backend $document)
     if [[ -n $backend ]]; then
-        run_citation_backend $backend $document
-        run_pdflatex $document
+        run_citation_backend $backend $document "$TTYblue"
+        run_pdflatex $document "$TTYyellow"
         # TODO: run bibtool and cleanbib
     fi
 
-    run_pdflatex $document
+    run_pdflatex $document "$TTYgreen"
     exec_hooks ".post"
 
     # Build successful, Update depfile.
