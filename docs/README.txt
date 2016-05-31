@@ -20,6 +20,10 @@ Skeletons". HLPGPU '16, HiPEAC.
                              Miscellaneous
                              =============
 
+Chris Cummins. "Autotuning and Skeleton-aware Compilation". PhD
+Progression Review, 2015.
+  Files: docs/2015-09-progression-review
+
 Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh
 Leather. "Autotuning OpenCL Workgroup Sizes". Submission for PLDI'16
 Student Poster Session.
