@@ -652,6 +652,10 @@ ChallengesCxxSources = $(wildcard $(learn)/challenges/*.cpp)
 ChallengesCxxObjects = $(patsubst %.cpp,%.o,$(ChallengesCxxSources))
 CxxTargets += $(patsubst %.cpp,%,$(ChallengesCxxSources))
 
+ChallengesCSources = $(wildcard $(learn)/challenges/*.c)
+ChallengesCObjects = $(patsubst %.c,%.o,$(ChallengesCSources))
+CTargets += $(patsubst %.c,%,$(ChallengesCSources))
+
 DontLint += $(learn)/challenges/009-longest-substr.cpp
 
 $(learn)/challenges/011-big-mandelbrot.o_CxxFlags = $(OpenCL_CxxFlags)
@@ -661,6 +665,10 @@ $(learn)/challenges/011-big-mandelbrot.o: $(OpenCL)
 $(learn)/challenges_CxxFlags = $(phd_CxxFlags)
 $(learn)/challenges_LdFlags = $(phd_LdFlags)
 $(ChallengesCxxObjects): $(phd)
+
+$(learn)/challenges_CFlags = $(phd_CFlags)
+$(learn)/challenges_LdFlags = $(phd_LdFlags)
+$(ChallengesCObjects): $(phd)
 
 
 #
