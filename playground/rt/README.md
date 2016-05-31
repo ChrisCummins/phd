@@ -1,6 +1,8 @@
 # Ray Tracer
 
-A fast parallelised ray tracer written in pure C++11, with support for
+![Render](render.jpg)
+
+A fast parallelised ray tracer written in pure C++, with support for
 soft lighting, adaptive anti-aliasing, perspective and depth of field.
 
 ## Installation
