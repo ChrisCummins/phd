@@ -360,8 +360,8 @@ AutotexTargets += \
 	$(root)/docs/2015-09-progression-review/document.pdf \
 	$(root)/docs/2016-01-adapt/adapt.pdf \
 	$(root)/docs/2016-01-hlpgpu/hlpgpu.pdf \
+	$(root)/docs/2016-06-pldi/abstract.pdf \
 	$(root)/docs/wip-outline/outline.pdf \
-	$(root)/docs/wip-pldi/abstract.pdf \
 	$(NULL)
 
 
