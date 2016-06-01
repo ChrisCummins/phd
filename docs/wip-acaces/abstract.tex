@@ -188,18 +188,15 @@ UK
   Selecting appropriate workgroup sizes for OpenCL is critical for
   program performance, and requires knowledge of the underlying
   hardware, the data being operated on, and the kernel
-  implementation. Ensuring performance portability of workgroup sizes
-  is challenging, since simple heuristics and statically chosen values
-  fail to exploit the available performance. To address this, we
-  propose the use of machine learning-enabled autotuning to
-  automatically predict workgroup sizes for stencil patterns on CPUs
-  and multi-GPUs. Using the Algorithmic Skeleton library SkelCL, we
-  show that static tuning of workgroup size achieves only $26\%$ of
-  the optimal performance across 429 combinations of architecture,
-  kernel, and dataset. Using machine learning and synthetically
-  generated stencil programs, we achieve $92\%$ of this maximum,
-  demonstrating a median $3.79\times$ speedup over the best possible
-  fixed workgroup size.
+  implementation. We propose the use of machine learning-enabled
+  autotuning to automatically predict workgroup sizes for stencil
+  patterns on CPUs and multi-GPUs. Using the Algorithmic Skeleton
+  library SkelCL, we show that static tuning of workgroup size
+  achieves only $26\%$ of the optimal performance across 429
+  combinations of architecture, kernel, and dataset. Using machine
+  learning and synthetically generated stencil programs, we achieve
+  $92\%$ of this maximum, demonstrating a median $3.79\times$ speedup
+  over the best possible fixed workgroup size.
 \end{abstract}
 
 \vspace{-.5em}
@@ -223,10 +220,13 @@ performance is a hard task --- OpenCL kernels are sensitive to
 properties of the underlying hardware, to the implementation, and even
 to the dataset that is operated upon. This forces developers to
 laboriously hand tune performance on a case-by-case basis, since
-simple heuristics fail to exploit the available performance. In this
-work we demonstrate how machine learning-enabled autotuning can be
-applied to Algorithmic Skeletons to achieve near optimal performance
-of stencils operations, without requiring hand tuning.
+simple heuristics fail to exploit the available performance. Iterative
+search approaches can be used to select good
+values~\cite{Nugteren2015,Ansel2013,Zhang2013a}, but this process is
+expensive and must be repeated for every new program. In this work we
+demonstrate how machine learning-enabled autotuning can be applied to
+Algorithmic Skeletons to achieve near optimal performance of stencils
+operations, without requiring hand tuning.
 
 \section{The SkelCL Stencil Pattern}
 
@@ -344,10 +344,10 @@ given scenario $W_{legal}(s) \subset W$ is then:
 \end{figure}
 
 
-\section{Machine Learning Method}
+\section{Autotuning Methodology}
 
-The goal of machine learning enabled autotuning is to predict, for a
-given scenario, the workgroup size that will provide the shortest
+The goal of our machine learning-enabled autotuner is to predict, for
+a given scenario, the workgroup size that will provide the shortest
 runtime.
 %
 % The goal of machine learning enabled autotuning is to predict, for a
@@ -362,58 +362,85 @@ The OpenCL workgroup size optimization space is large, complex, and
 non-linear. Successfully applying machine learning to this problem
 requires plentiful training data, the careful selection of explanatory
 variables, and appropriate machine learning methods:
-\begin{itemize}
-\item \textbf{Explanatory variables} 102 variables are extracted to
-  capture information about the device, program, and dataset of a
-  scenario. Device variables information about the host and execution
-  device (e.g.\ number of compute units, local memory size, global
-  caches). Program variables include static instruction densities, the
-  total number of basic blocks, and the total instruction
-  count. Dataset variables include the data types (input and output),
-  and dimensions of the input matrix and stencil region.
-\item \textbf{Training Data} A parameterised template substitution
-  engine is used to generate synthetic stencil programs. To generate
-  training data, these synthetically generated programs are executed
-  on a range of different execution devices, using different datasets,
-  and exhaustively enumerating the legal workgroup sizes. The
-  workgroup size which gives the best performance for each particular
-  device, program, and dataset is combined with the explanatory
-  variables to create training data.
-\item \textbf{Classification} Our approach uses a J48 Decision Tree
-  classifier~\cite{Han2011} to correlate patterns between explanatory
-  variables and the workgroup sizes which provide optimal
-  performance. The classifier is chosen due to its low runtime cost
-  and ability to efficiently handle large dimensionality training
-  data. The classifier predicts optimal workgroup sizes based on the
-  extracted explanatory variables. If the predicted workgroup size is
-  not legal for that scenario, the \emph{nearest neighbor} workgroup
-  size is iteratively selected based on Euclidian distance to the
-  predicted value.
-\end{itemize}
+%
+\vspace{-1.2em}
+\paragraph{Explanatory variables} 102 variables are extracted to
+capture information about the device, program, and dataset of a
+scenario. Device variables information about the host and execution
+device (e.g.\ number of compute units, local memory size, global
+caches). Program variables include static instruction densities, the
+total number of basic blocks, and the total instruction count. Dataset
+variables include the data types (input and output), and dimensions of
+the input matrix and stencil region.
+%
+\vspace{-1.2em}
+\paragraph{Training Data} A parameterised template substitution engine
+is used to generate synthetic stencil programs. To generate training
+data, these synthetically generated programs are executed on a range
+of different execution devices, using different datasets, and
+exhaustively enumerating the legal workgroup sizes. The workgroup size
+which gives the best performance for each particular device, program,
+and dataset is combined with the explanatory variables to create
+training data.
+%
+\vspace{-1.2em}
+\paragraph{Classification} Our approach uses a J48 Decision Tree
+classifier~\cite{Han2011} to correlate patterns between explanatory
+variables and the workgroup sizes which provide optimal
+performance. The classifier is chosen due to its low runtime cost and
+ability to efficiently handle large dimensionality training data. The
+classifier predicts optimal workgroup sizes based on the extracted
+explanatory variables. If the predicted workgroup size is not legal
+for that scenario, the \emph{nearest neighbor} workgroup size is
+iteratively selected based on Euclidian distance to the predicted
+value.
 
 \section{Evaluation}
 
-An exhaustive enumeration of the workgroup size optimisation space for
-429 combinations of architecture, program, and dataset was performed.
-Seven architectures were used (3 NVIDIA GPUs, 3 Intel CPUs, and 1 AMD
-GPU). Synthetically generated stencil programs and six reference
-kernels taken from image processing, cellular automata, and partial
-differential equation solving were used. Dataset sizes used were
+To evaluate the efficacy of our approach we perform an exhaustive
+enumeration of the workgroup size optimisation space for 429
+combinations of architecture, program, and dataset. Seven
+architectures are used (3 NVIDIA GPUs, 3 Intel CPUs, and 1 AMD
+GPU). Synthetically generated stencil programs are combined with six
+reference kernels taken from image processing, cellular automata, and
+partial differential equation solving were used. Datasets of sizes
 $512\times512$, $1024\times1024$, $2048\times2048$, and
-$4096\times4096$. The workgroup size space was enumerated for each
-combination of $w_r$ and $w_c$ values in multiples of 2, up to the
-maximum workgroup size. A minimum of 30 runtimes were recorded for
-each scenario and the average execution time taken.
+$4096\times4096$ are used. We perform 10-fold cross validation to
+evaluate the prediction quality of the classifier, comparing the
+runtimes from predicted workgroup size against the workgroup size
+which provides the best average case performance across all scenarios
+(static tuning), and human expert selected workgroup size.
+
+% A minimum of 30 runtimes were recorded for each scenario and the
+% average execution time taken.
+
+From our experimental results, we find an average $15.14\times$
+performance gap between the best and workgroup sizes for each
+scenario. Statically tuning the workgroup size fails to extract the
+potential performance across a range of programs, architectures, and
+datasets, achieving only 26\% of the optimal performance. Our
+autotuner achieves good performance, with a median $3.79\times$
+speedup of predicted workgroup sizes over static tuning in 10-fold
+cross-validation. Classification using decision trees is a lightweight
+process (they can be implemented using a chain of
+\texttt{if}/\texttt{else} statements). The measured overhead of our
+autotuner is 2.5ms, of which only 0.3ms is required for
+classification, with the remaining time required for feature
+extraction.
 
 \section{Conclusions}
 
-We present a novel methodology for autotuning the workgroup size of
-stencil patterns using the established open source library
-SkelCL. This technique achieves 94\% of the maximum performance, while
-providing robust fallbacks in the presence of unexpected behaviour in
-OpenCL driver implementations. In future work we will use machine
-learning to perform a directed search through the program space by
-guiding the generation of synthetic benchmark programs.
+We present an machine learning-enabled autotuner for predicting the
+OpenCL workgroup size of stencil patterns. Our implementation is
+extensible and open source\footnote{Source code available at:
+  \url{https://github.com/ChrisCummins/phd/tree/master/src/omnitune}},
+and provides near-optimal selection of workgroup sizes for unseen
+programs, devices, and datasets. By performing autotuning at the
+skeletal level, the system is able to exploit underlying similarities
+between pattern implementations which are not shared in unstructured
+code~\cite{Hu2015}. In future work we will use machine learning to
+perform a directed search through the program space by guiding the
+generation of synthetic benchmark programs.
 
 
 \label{bibliography}
