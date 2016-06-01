@@ -17,3 +17,8 @@ Algorithmic Skeletons", Tues 19th Jan, 2016. HLPGPU, HiPEAC, Prague.
 Chris Cummins. "Autotuning and Algorithmic Skeletons", Wed 10th Feb,
 2016. The University of Edinburgh, Scotland.
   Files: talks/2016-02-ppar
+
+Chris Cummins. "All the OpenCL on GitHub: Teaching an AI to code, one
+character at a time", 19th May, 2016. Amazon Development Centre,
+Edinburgh, Scotland.
+  Files: talks/2016-05-amazon
