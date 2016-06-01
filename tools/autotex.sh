@@ -378,11 +378,27 @@ build_wc() {
         | $PARSE_TEXCOUNT > $abspath/$document.wc
 }
 
+usage() {
+    echo "Usage: $0 <command> <path>"
+    echo
+    echo "Valid commands:"
+    echo ""
+    echo "  make   build document"
+    echo "  wc     count the number of words"
+}
+
 main() {
+    if [ "$#" -ne 2 ]; then
+        usage
+        exit 1
+    fi
+
+    set +u
     local command=$1
     local input=$2
     local document=$(basename $input)
     local abspath=$($READLINK -f $(dirname $input))
+    set -u
 
     # Check that directory exists.
     if ! [[ -d "$abspath" ]]; then
