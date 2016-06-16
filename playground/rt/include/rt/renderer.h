@@ -135,7 +135,7 @@ void Renderer::render(Image *const image) const {
     }
 #ifdef USE_TBB
   );  // NOLINT
-#else  // USE_TBB
+#endif  // USE_TBB
 
   // Allocate memory for super-sampled image.
   std::vector<Colour> superSampled(image->size);
