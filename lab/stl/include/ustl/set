@@ -1,0 +1,345 @@
+// -*-c++-*-
+//
+#ifndef USTL_SET_H
+#define USTL_SET_H
+
+#include <algorithm>
+#include <functional>
+#include <memory>
+#include <utility>
+
+namespace ustl {
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+
+//
+// multiset
+//
+// Multiset is an associative container that contains a sorted set of
+// objects of type Key. Unlike set, multiple keys with equivalent
+// values are allowed. Sorting is done using the key comparison
+// function Compare. Search, insertion, and removal operations have
+// logarithmic complexity.
+//
+// Everywhere the standard library uses the Compare concept,
+// equivalence is determined by using the equivalence relation as
+// described on Compare. In imprecise terms, two objects a and b are
+// considered equivalent if neither compares less than the other:
+// !comp(a, b) && !comp(b, a).
+//
+// The order of the elements that compare equivalent is the order of
+// insertion and does not change. (since C++11)
+//
+// std::multiset meets the requirements of Container,
+// AllocatorAwareContainer, AssociativeContainer and
+// ReversibleContainer.
+//
+template<typename Key,
+         typename Compare = std::less<Key>,
+         typename Allocator = std::allocator<Key>>
+class multiset {
+ public:
+  // Forward declarations of nested class:
+  template<typename PointerT>
+  class __iterator;
+
+  ///////////////////
+  // Member types: //
+  ///////////////////
+
+  using key_type = Key;
+
+  using value_type = Key;
+
+  using size_type = size_t;
+
+  // using difference_type = Signed integer type (usually std::ptrdiff_t);
+
+  using key_compare = Compare;
+
+  using value_compare = Compare;
+
+  using allocator_type = Allocator;
+
+  using reference = value_type&;
+
+  using const_reference = const value_type&;
+
+  // using pointer = std::allocator_traits<Allocator>::pointer;
+
+  // using const_pointer = std::allocator_traits<Allocator>::const_pointer;
+
+  using iterator = __iterator<value_type>;
+
+  using const_iterator = __iterator<const value_type>;
+
+  using reverse_iterator = std::reverse_iterator<iterator>;
+
+  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+
+  ///////////////////
+  // Constructors: //
+  ///////////////////
+  //
+  // Constructs new container from a variety of data sources and
+  // optionally using user supplied allocator alloc or comparison
+  // function object comp.
+  //
+  explicit multiset(const Compare& comp, const Allocator& alloc = Allocator());
+
+  explicit multiset(const Allocator& alloc);
+
+  template<typename InputIterator>
+  multiset(InputIterator first, InputIterator last,
+           const Compare& comp = Compare(),
+           const Allocator& alloc = Allocator());
+
+  template<typename InputIterator>
+  multiset(InputIterator first, InputIterator last,
+           const Allocator& alloc);
+
+  multiset(const multiset& other);
+
+  multiset(const multiset& other, const Allocator& alloc);
+
+  multiset(multiset&& other);
+
+  multiset(multiset&& other, const Allocator& alloc);
+
+  multiset(std::initializer_list<value_type> init,
+           const Compare& comp = Compare(),
+           const Allocator& alloc = Allocator());
+
+  multiset(std::initializer_list<value_type> init,
+           const Allocator&);
+
+
+  /////////////////
+  // Destructor: //
+  /////////////////
+  //
+  // Destructs the container. The destructors of the elements are
+  // called and the used storage is deallocated. Note, that if the
+  // elements are pointers, the pointed-to objects are not destroyed.
+  //
+  ~multiset();
+
+
+  /////////////////
+  // Assignments //
+  /////////////////
+  //
+  // Replaces the contents of the container.
+  //
+  multiset& operator=(const multiset& other);
+
+  multiset& operator=(multiset&& other);
+
+  multiset& operator=(std::initializer_list<value_type> ilist);
+
+
+  ////////////////
+  // Allocator: //
+  ////////////////
+
+  //
+  // get_allocator():
+  //
+  //   Returns the allocator associated with the container.
+  //
+  allocator_type get_allocator() const;
+
+
+  //////////////////////
+  // Member functions //
+  //////////////////////
+
+
+  ///////////////
+  // Iterators //
+  ///////////////
+
+
+  iterator begin();
+  const_iterator begin() const;
+  const_iterator cbegin() const;
+
+
+  iterator end();
+  const_iterator end() const;
+  const_iterator cend() const;
+
+
+  reverse_iterator rbegin();
+  const_reverse_iterator rbegin() const;
+  const_reverse_iterator crbegin() const;
+
+
+  reverse_iterator rend();
+  const_reverse_iterator rend() const;
+  const_reverse_iterator crend() const;
+
+
+  //////////////
+  // Capacity //
+  //////////////
+
+
+  bool empty() const;
+
+
+  size_type size() const;
+
+
+  size_type max_size() const;
+
+
+  ///////////////
+  // Modifiers //
+  ///////////////
+
+
+  void clear();
+
+
+  iterator insert(const value_type& value);
+
+  iterator insert(value_type&& value);
+
+  iterator insert(const_iterator hint, const value_type& value);
+
+  iterator insert(const_iterator hint, value_type&& value);
+
+  template<typename InputIt>
+  void insert(InputIt first, InputIt last);
+
+  void insert(std::initializer_list<value_type> ilist);
+
+
+  template<typename... Args>
+  iterator emplace(Args&&... args);
+
+
+  template<typename... Args>
+  iterator emplace_hint(const_iterator hint, Args&&... args);
+
+
+  iterator erase(const_iterator pos);
+
+  iterator erase(iterator pos);
+
+  iterator erase(const_iterator first, const_iterator last);
+
+  size_type erase(const key_type& key);
+
+
+  void swap(multiset& other);
+
+
+  ////////////
+  // Lookup //
+  ////////////
+
+
+  size_type count(const Key& key) const;
+
+  template<typename K>
+  size_type count(const K& x) const;
+
+
+  iterator find(const Key& key);
+
+  const_iterator find(const Key& key) const;
+
+  template<typename K>
+  iterator find(const K& x);
+
+  template<typename K>
+  const_iterator find(const K& x) const;
+
+
+  std::pair<iterator, iterator> equal_range(const Key& key);
+
+  std::pair<const_iterator, const_iterator> equal_range(const Key& key) const;
+
+  template<typename K>
+  std::pair<iterator, iterator> equal_range(const K& x);
+
+  template<typename K>
+  std::pair<const_iterator, const_iterator> equal_range(const K& x) const;
+
+
+  iterator lower_bound(const Key& key);
+
+  const_iterator lower_bound(const Key& key) const;
+
+  template<typename K>
+  iterator lower_bound(const K& x);
+
+  template<typename K>
+  const_iterator lower_bound(const K& x) const;
+
+
+  iterator upper_bound(const Key& key);
+
+  const_iterator upper_bound(const Key& key) const;
+
+  template<typename K>
+  iterator upper_bound(const K& x);
+
+  template<typename K>
+  const_iterator upper_bound(const K& x) const;
+
+
+  ///////////////
+  // Observers //
+  ///////////////
+
+
+  key_compare key_comp() const;
+
+
+  value_compare value_comp() const;
+};  // class multiset
+
+#pragma GCC diagnostic pop  // -Wpadded
+
+
+//////////////////////////
+// Non-member functions //
+//////////////////////////
+
+template<typename Key, typename Compare, typename Alloc>
+bool operator==(const multiset<Key, Compare, Alloc>& lhs,
+                const multiset<Key, Compare, Alloc>& rhs);
+
+template<typename Key, typename Compare, typename Alloc>
+bool operator!=(const multiset<Key, Compare, Alloc>& lhs,
+                const multiset<Key, Compare, Alloc>& rhs);
+
+template<typename Key, typename Compare, typename Alloc>
+bool operator<(const multiset<Key, Compare, Alloc>& lhs,
+               const multiset<Key, Compare, Alloc>& rhs);
+
+template<typename Key, typename Compare, typename Alloc>
+bool operator<=(const multiset<Key, Compare, Alloc>& lhs,
+                const multiset<Key, Compare, Alloc>& rhs);
+
+template<typename Key, typename Compare, typename Alloc>
+bool operator>(const multiset<Key, Compare, Alloc>& lhs,
+               const multiset<Key, Compare, Alloc>& rhs);
+
+template<typename Key, typename Compare, typename Alloc>
+bool operator>=(const multiset<Key, Compare, Alloc>& lhs,
+                const multiset<Key, Compare, Alloc>& rhs);
+
+
+template<typename Key, typename Compare, typename Alloc>
+void swap(multiset<Key, Compare, Alloc>& lhs,
+          multiset<Key, Compare, Alloc>& rhs);
+
+}  // namespace ustl
+
+#endif  // USTL_SET_H

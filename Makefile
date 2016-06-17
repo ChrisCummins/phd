@@ -579,6 +579,7 @@ StlComponents = \
 	forward_list \
 	list \
 	map \
+	set \
 	stack \
 	type_traits \
 	unordered_map \
