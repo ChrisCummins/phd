@@ -28,3 +28,8 @@ Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh
 Leather. "Autotuning OpenCL Workgroup Sizes". Submission for PLDI'16
 Student Poster Session.
   Files: docs/2016-06-pldi
+
+Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh
+Leather. "Autotuning OpenCL Workgroup Sizes". Submission for ACACES'17
+Poster Abstract.
+  Files: docs/2016-07-acaces
