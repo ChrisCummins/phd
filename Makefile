@@ -362,6 +362,7 @@ AutotexTargets += \
 	$(root)/docs/2016-01-hlpgpu/hlpgpu.pdf \
 	$(root)/docs/2016-06-pldi/abstract.pdf \
 	$(root)/docs/wip-outline/outline.pdf \
+	$(root)/docs/wip-pact/main.pdf \
 	$(NULL)
 
 
