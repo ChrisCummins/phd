@@ -35,14 +35,21 @@
 
 \addbibresource{\BibResource}
 
+\usepackage{adjustbox}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+
+\usepackage{subcaption}
+\expandafter\def\csname ver@subfig.sty\endcsname{}
+
 %-------------------------------------------------------------------------
 \begin{document}
 \title{
 \vspace{-0.8in}
-Poster Title
+Autotuning OpenCL Workgroup Sizes
 \vspace{-0.2in}
 }
-\author{Author Names, Faculty Advisor, University Name
+\author{Chris Cummins, Hugh Leather, University of Edinburgh
 }
 
 \maketitle
@@ -68,11 +75,11 @@ learning-enabled autotuning can be applied to Algorithmic Skeletons to
 achieve near optimal performance of unseen stencils operations,
 without requiring hand tuning or iterative searches.
 
-\section{The SkelCL Stencil Pattern}
+\section{Background}
 
-% \begin{wrapfigure}{r}{0.38\textwidth}
+% \begin{wrapfigure}{r}{0.3\textwidth}
 % % \vspace{-3em}
-% \includegraphics[width=.38\textwidth]{stencil}
+% \includegraphics[width=.3\textwidth]{stencil}
 % \caption[Stencil border region]{%
 %   The execution of a stencil: an input matrix is decomposed into
 %   workgroups, and elements within workgroups are mapped to work-items.
@@ -126,62 +133,62 @@ given scenario $W_{legal}(s) \subset W$ is then:
 \end{equation}
 
 
-% \begin{figure}
-% \centering
-% \adjustbox{valign=t}{%
-%   \begin{minipage}{.48\textwidth}
-%     \centering
-%     \begin{subfigure}[h]{.48\columnwidth}
-%       \centering
-%       \includegraphics[width=1.0\columnwidth]{motivation_1}
-%       \vspace{-1.5em} % Shrink vertical padding
-%       \caption{}
-%       \label{fig:motivation-1}
-%     \end{subfigure}
-%     ~%
-%     \begin{subfigure}[h]{.48\columnwidth}
-%       \centering
-%       \includegraphics[width=1.0\columnwidth]{motivation_2}
-%       \vspace{-1.5em} % Shrink vertical padding
-%       \caption{}
-%       \label{fig:motivation-2}
-%     \end{subfigure}
-%     \caption{%
-%       The performance of different workgroup sizes for the same
-%       stencil program on two different devices:
-%       (\subref{fig:motivation-1}) Intel CPU,
-%       (\subref{fig:motivation-2}) NVIDIA GPU.%
-%     }
-%     \label{fig:motivation-arch}
-%   \end{minipage}%
-% }%
-% \hspace{2.5mm}
-% \adjustbox{valign=t}{%
-%   \begin{minipage}{.48\textwidth}
-%     \centering
-%     \begin{subfigure}[h]{.48\columnwidth}
-%       \centering
-%       \includegraphics[width=1.0\columnwidth]{motivation_3}
-%       \vspace{-1.5em} % Shrink vertical padding
-%       \caption{}
-%       \label{fig:motivation-3}
-%     \end{subfigure}
-%     ~%
-%     \begin{subfigure}[h]{.48\columnwidth}
-%       \centering
-%       \includegraphics[width=1.0\columnwidth]{motivation_4}
-%       \vspace{-1.5em} % Shrink vertical padding
-%       \caption{}
-%       \label{fig:motivation-4}
-%     \end{subfigure}
-%     \caption{%
-%       The performance of different workgroup sizes for the same device
-%       executing two different stencil programs.%
-%     }
-%     \label{fig:motivation-prog}
-%   \end{minipage}%
-% }
-% \end{figure}
+\begin{figure}
+\centering
+\adjustbox{valign=t}{%
+  \begin{minipage}{.48\textwidth}
+    \centering
+    \begin{subfigure}[h]{.48\columnwidth}
+      \centering
+      \includegraphics[width=1.0\columnwidth]{motivation_1}
+      \vspace{-1.5em} % Shrink vertical padding
+      \caption{}
+      \label{fig:motivation-1}
+    \end{subfigure}
+    ~%
+    \begin{subfigure}[h]{.48\columnwidth}
+      \centering
+      \includegraphics[width=1.0\columnwidth]{motivation_2}
+      \vspace{-1.5em} % Shrink vertical padding
+      \caption{}
+      \label{fig:motivation-2}
+    \end{subfigure}
+    \caption{%
+      The performance of different workgroup sizes for the same
+      stencil program on two different devices:
+      (\subref{fig:motivation-1}) Intel CPU,
+      (\subref{fig:motivation-2}) NVIDIA GPU.%
+    }
+    \label{fig:motivation-arch}
+  \end{minipage}%
+}%
+\hspace{2.5mm}
+\adjustbox{valign=t}{%
+  \begin{minipage}{.48\textwidth}
+    \centering
+    \begin{subfigure}[h]{.48\columnwidth}
+      \centering
+      \includegraphics[width=1.0\columnwidth]{motivation_3}
+      \vspace{-1.5em} % Shrink vertical padding
+      \caption{}
+      \label{fig:motivation-3}
+    \end{subfigure}
+    ~%
+    \begin{subfigure}[h]{.48\columnwidth}
+      \centering
+      \includegraphics[width=1.0\columnwidth]{motivation_4}
+      \vspace{-1.5em} % Shrink vertical padding
+      \caption{}
+      \label{fig:motivation-4}
+    \end{subfigure}
+    \caption{%
+      The performance of different workgroup sizes for the same device
+      executing two different stencil programs.%
+    }
+    \label{fig:motivation-prog}
+  \end{minipage}%
+}
+\end{figure}
 
 
 \section{Autotuning Methodology}
