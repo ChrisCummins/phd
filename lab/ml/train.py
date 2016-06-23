@@ -28,7 +28,7 @@ def table_exists(db, table_name):
 
 
 def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
-                  status=0, eof=False):
+                  status=0, eof=False, dir=False):
     # Dump all the preprocessed OpenCL files
     print('creating DNN corpus', out_path, '...')
 
@@ -51,17 +51,32 @@ def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
                   + order)
     rows = c.fetchall()
 
-    with open(out_path, 'w') as out:
-        for row in rows:
-            id,contents = row
-            if fileid: # Print file ID
-                out.write('/* ID: ' + id + '*/\n\n')
-            out.write(contents)
-            if eof: # Print EOF token
-                out.write('\n/* EOF */\n\n')
-            else:
-                out.write('\n\n')
-
+    if dir:
+        print('writing to directory ', out_path, '/', sep='')
+        if os.path.exists(out_path):
+            print('fatal: directory already exists!', file=sys.stderr)
+            return 1
+        else:
+            os.makedirs(out_path)
+            for row in rows:
+                id,contents = row
+                path = os.path.join(out_path, id + '.txt')
+                with open(path, 'w') as out:
+                    out.write(contents)
+            return 0
+    else:
+        print('writing file', out_path)
+        with open(out_path, 'w') as out:
+            for row in rows:
+                id,contents = row
+                if fileid: # Print file ID
+                    out.write('/* ID: ' + id + '*/\n\n')
+                out.write(contents)
+                if eof: # Print EOF token
+                    out.write('\n/* EOF */\n\n')
+                else:
+                    out.write('\n\n')
+        return 0
 
 
 def linecount(t):
@@ -71,7 +86,9 @@ def linecount(t):
 def main():
     parser = ArgumentParser()
     parser.add_argument('input', help='path to SQL input dataset')
-    parser.add_argument('output', help='path to output file')
+    parser.add_argument('output', help='path to output file or directory')
+    parser.add_argument('-d', action='store_true', default=False,
+                        help='output to directory (overrides -i, --eof, -r)')
     parser.add_argument('-i', action='store_true', default=False,
                         help='include file separators')
     parser.add_argument('--eof', action='store_true', default=False,
@@ -85,10 +102,11 @@ def main():
     db_path = args.input
     out_path = args.output
     opts = {
+        "dir": args.d,
+        "eof": args.eof,
         "fileid": args.i,
         "reverse": args.r,
-        "status": args.status,
-        "eof": args.eof
+        "status": args.status
     }
 
     db = sqlite3.connect(db_path)
@@ -97,7 +115,9 @@ def main():
     # auto-detect whether it's a GitHub repo
     opts['gh'] = table_exists(db, 'Repositories')
 
-    create_corpus(db, out_path, **opts)
+    ret = create_corpus(db, out_path, **opts)
+    if ret:
+        sys.exit(ret)
 
 
 if __name__ == '__main__':
