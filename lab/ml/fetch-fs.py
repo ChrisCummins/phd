@@ -10,6 +10,14 @@ import os
 from argparse import ArgumentParser
 
 _include_re = re.compile('\w*#include ["<](.*)[">]')
+_parboil_re = re.compile('.+/benchmarks/parboil/benchmarks/(.+)/src/opencl_base/(.+\.cl)')
+
+def get_path_id(path):
+    match = re.match(_parboil_re, path)
+    if match:
+        return match.group(1) + '-' + match.group(2)
+    else:
+        return path
 
 def inline_headers(path, stack):
     stack.append(path)
@@ -49,32 +57,32 @@ def process_cl_file(db_path, path):
     c = db.cursor()
 
     contents = inline_headers(path, [])
-    c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)', (path,contents))
+    id = get_path_id(path)
+    print(id)
+    c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)', (id,contents))
 
     db.commit()
     c.close()
 
+def flatten(l):
+    return [item for sublist in l for item in sublist]
 
 def is_opencl_path(path):
     return path.endswith('.cl') or path.endswith('.ocl')
-
-
-def get_cl_paths(root):
-    return [os.path.join(root, f) for root, dn, fn in
-            os.walk(root) for f in fn if is_opencl_path(os.path.join(root, f))]
 
 def main():
     global errors_counter
 
     parser = ArgumentParser()
     parser.add_argument('input', help='path to SQL dataset')
-    parser.add_argument('path', help='path to directory with OpenCL kernels')
+    parser.add_argument('paths', type=str, nargs='+',
+                        help='path to OpenCL files or directories')
+    # parser.add_argument('path', help='path to directory with OpenCL kernels')
     args = parser.parse_args()
     db_path = os.path.expanduser(args.input)
-    dir_path = os.path.expanduser(args.path)
+    paths = args.paths
 
-    files = get_cl_paths(dir_path)
-    for path in files:
+    for path in paths:
         process_cl_file(db_path, path)
 
     print("\r\033[K\ndone.")
