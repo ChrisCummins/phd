@@ -1,0 +1,57 @@
+#!/usr/bin/env python
+
+# (c) Copyright 2007 The Board of Trustees of the University of Illinois.
+
+import sys
+import itertools
+
+import filecompare as fc
+import textfilecompare as tfc
+
+charge_err = "Computed theta values in bins does not match the expected values\n"
+
+def compare_histograms(ref, cmp):
+	# Compare two histograms for consistency modulo fp precision issues 
+	# causing a few entries to end up in the wrong bin
+
+
+	# Compare a set of histogram bin pairs for a certain tolerance
+	def compare_bins(bin_pairs, rtol, atol):
+		for rval, cval in bin_pairs:
+			diff = abs(rval - cval)
+			if (diff > rtol*rval):
+				if ( diff > atol ):
+					return True
+		return False
+		
+
+	if (compare_bins(zip(ref[0:3],cmp[0:3]), 0.10, 3)):
+		return False
+	#These bins are particularly sensitive to precision issues.  
+	#Going from DP to SP likely causes underflow for a large sample portion
+	if (compare_bins(zip(ref[3:6],cmp[3:6]), 0.35, 20)):
+		return False
+	#Bins get progressively less sensitive to precision, and 
+	#  generally contain many more entries as well
+	if (compare_bins(zip(ref[6:9],cmp[6:9]), 0.05, 10)):
+		return False
+	if (compare_bins(zip(ref[9:12],cmp[9:12]), 0.02, 10)):
+		return False
+	if (compare_bins(zip(ref[12:21],cmp[12:21]), 0.01, 10)):
+		return False
+	if (compare_bins(zip(ref[21:32],cmp[21:32]), 0.001, 10)):
+		return False
+	if (compare_bins(zip(ref[32:],cmp[32:]), 0.001, 10000)):
+		return False
+	
+	fulldiff = sum(ref) - sum(cmp)
+	if ( fulldiff > 0.0001 * sum(ref) ):
+		print fulldiff
+		return False
+	return True
+		
+
+comparison = fc.Compare(tfc.array_of_floats, compare_histograms, message=charge_err)
+
+fc.default_main(comparison)
+

@@ -1,0 +1,78 @@
+
+(c) 2007-2011 The Board of Trustees of the University of Illinois.
+
+This software is distributed under the Illinois Open Source License agreement.
+The LICENSE file contains a copy of the license agreement.
+
+
+Introduction
+------------
+
+The Parboil suite was developed from a collection of benchmarks used at the
+University of Illinois to measure and compare the performance of
+computation-intensive algorithms executing on either a CPU or a GPU.  Each 
+implementation of a GPU algorithm is either in CUDA or OpenCL, and requires 
+a system capable of executing applications using those APIs.  
+
+
+Quick setup guide
+-----------------
+
+To use the parboil benchmark suite:
+
+Create a 'benchmarks' subdirectory (you can also use a symbolic link) and put
+benchmarks in it.  There should be one subdirectory for each benchmark.  We
+distribute some benchmarks as a separate archive file.  See the 
+README.benchmarks file for information about the expected format of each 
+benchmark directory.
+
+Create a 'datasets' subdirectory (you can also use a symbolic link) and put
+datasets in it.  There should be one subdirectory for each benchmark.  We
+distribute some datasets as a separate archive file.
+
+There are a number of files that may not be automatically marked executable
+after unpacking.  Ensure that they are executable by running 'chmod u+x'
+with the filename as its argument.  If your shell is bash, the following
+will work:
+
+  chmod u+x ./parboil
+  chmod u+x benchmarks/*/tools/compare-output
+
+Create a Makefile.conf file in parboil/common to set a few system-specific 
+paths.  You can use some of the examples in that directory as a place to start.
+
+Type './parboil help' to display the driver commands.  You can get help on
+a particular comand X with './parboil help X'.
+
+Run './parboil' with options to do stuff.
+
+
+Running a benchmark
+-------------------
+
+You can see a list of benchmarks, and the available versions of each
+benchmark, with the command
+
+  ./parboil list
+
+Suppose you want to compile and run the CUDA version of the benchmark
+"cutcp".  Then the following commands will do this:
+
+  ./parboil compile cutcp cuda
+  ./parboil run     cutcp cuda default
+
+Timing information is recorded with a combination of standard system timers 
+and CUDA API event timers.  Each benchmark should display timer values 
+following this format:
+
+IO:	 (seconds spent interacting with the file system)
+Kernel:	 (seconds spent doing device computation, measured asynchronously)
+Copy:	 (seconds CPU spent synchronously copying data to/from the device memory)
+Driver:	 (seconds of CPU time spent sending commands to the device driver)
+Compute: (seconds of CPU time spent in computation)
+Copy Async:	 (seconds duration of asynchronous copies to/from the device memory)
+CPU/Kernel Overlap: (seconds double-counted by asynchronous and CPU timers)
+
+The driver prints "Pass" if the benchmark's output appears to be correct (i.e. 
+  the compare-output script has an exit code of zero)
+

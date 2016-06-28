@@ -1,0 +1,62 @@
+
+common/
+    Shared files
+  include/
+      Shared include files
+  mk/
+      Shared makefiles for specific languages
+  python/
+      Shared python code
+  src/
+      Source code of shared libraries
+  platform/
+      Shared makefiles for different execution platforms
+
+driver/
+    Code of the driver program
+
+benchmarks/
+    Benchmark directories.
+    Each benchmark has its own directory.  Different benchmark versions may be
+    found in different subdirectories.
+  benchmarkname/
+    DESCRIPTION
+        Optional description of the benchmark
+    src/
+        Source code of the benchmark
+      base/
+          Readable, reference single-threaded CPU-only implementation
+      cpu/
+          Optimized single-threaded CPU-only implementation
+      cuda/
+          Optimized CUDA implementation
+      cuda_base/
+          Slower but more readable CUDA implementation
+
+    tools/
+        Benchmark-specific utilities
+      compare-output
+          Tool to verify that the output of a benchmark is correct
+
+datasets/
+    Benchmark datasets.
+    Each benchmark has its own directory.  Different datasets may be found in 
+    different subdirectories.  
+
+  benchmarkname/
+    datasetname/
+        Directory for a single dataset
+      input/
+          Benchmark input files for this dataset. 
+        DESCRIPTION
+            Optional description of the data set.  See README.benchmarks for 
+            using this file to control the passing of command-line parameters 
+            to the benchmark executable.
+
+      output/
+          Reference output for this dataset.  The driver only supports a 
+          single file in this directory, which is compared with generated 
+          benchmark output to validate it.
+
+parboil
+    The driver program for inspecting, compiling, and running benchmarks.
