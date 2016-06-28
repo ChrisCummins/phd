@@ -10,6 +10,7 @@ import sys
 
 from argparse import ArgumentParser
 from hashlib import sha1
+from socket import gethostname
 
 torch_dir = '~/src/torch-rnn'
 
@@ -29,14 +30,21 @@ def checksum(s):
     return sha1(s.encode('utf-8')).hexdigest()
 
 
+def is_host():
+    return gethostname() != "whz4"
+
+
 class task(object):
-    def __init__(self, db, benchmark, seed, oracle, target_num_samples=10000):
+    def __init__(self, db, db_path, benchmark, seed, oracle,
+                 target_num_samples=10000):
         self.db = db
         self.benchmark = benchmark
         self.seed = seed
         self.oracle = oracle
+        self.db_path = db_path
         self.db = db
         self.target_num_samples=target_num_samples
+        self.preprocessed = False
 
     def samples_remaining(self):
         c = self.db.cursor()
@@ -46,12 +54,29 @@ class task(object):
         return max(self.target_num_samples - num_samples, 0)
 
     def complete(self):
-        return self.samples_remaining() == 0
+        if is_host():
+            return self.preprocessed
+        else:
+            return self.samples_remaining() == 0
 
     def next_step(self):
+        if is_host():
+            self.next_host_step()
+        else:
+            self.next_device_step()
+
+    def next_host_step(self):
+        subprocess.call('./preprocess.py {}'.format(self.db_path), shell=True)
+        self.preprocessed = True
+
+    def next_device_step(self):
+        os.chdir(os.path.expanduser(torch_dir))
         print("next step:", str(self))
-        subprocess.call("./give-me-kernels '{}' > /tmp/sample.txt"
-                        .format(self.seed), shell=True)
+        cmd = "./give-me-kernels '{}' > /tmp/sample.txt".format(self.seed)
+        print('\r\033[K  -> exec:', cmd, end='')
+        subprocess.call(cmd, shell=True)
+
+        print('\r\033[K  -> adding samples to database', end='')
         samples = fetch_samples('/tmp/sample.txt')
         ids = [checksum(sample) for sample in samples]
 
@@ -60,6 +85,7 @@ class task(object):
             c.execute('INSERT INTO ContentFiles VALUES(?,?)', (id,sample))
         self.db.commit()
         c.close()
+        print('\r\033[K', end='')
 
 
     def __repr__(self):
@@ -77,7 +103,6 @@ def run_tasks(tasks):
 
     while len(tasks):
         tasks = [task for task in tasks if not task.complete()]
-        os.chdir(os.path.expanduser(torch_dir))
         for task in tasks:
             task.next_step()
 
@@ -100,7 +125,7 @@ def create_task(job, target):
     with open(oracle_path) as infile:
         oracle = infile.read().strip()
 
-    return task(db, benchmark, seed, oracle)
+    return task(db, db_path, benchmark, seed, oracle)
 
 
 def main():
