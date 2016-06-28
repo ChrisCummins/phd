@@ -572,6 +572,18 @@ $(lab)/ml/rewriter_LdFlags = $(ClangLlvm_LdFlags)
 
 
 #
+# lab/patterns
+#
+PatternsCxxSources = $(wildcard $(lab)/patterns/*.cpp)
+PatternsCxxObjects = $(patsubst %.cpp,%.o,$(PatternsCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(PatternsCxxSources))
+
+$(lab)/patterns_CxxFlags = $(phd_CxxFlags)
+$(lab)/patterns_LdFlags = $(phd_LdFlags)
+$(wildcard $(lab)/patterns/%.o): $(phd)
+
+
+#
 # lab/stl/
 #
 StlComponents = \
