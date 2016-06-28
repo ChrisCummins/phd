@@ -36,7 +36,7 @@ def is_host():
 
 class task(object):
     def __init__(self, db, db_path, benchmark, seed, oracle,
-                 target_num_samples=10000):
+                 target_num_samples=50000):
         self.db = db
         self.benchmark = benchmark
         self.seed = seed
