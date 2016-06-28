@@ -10,6 +10,7 @@ import sys
 
 from argparse import ArgumentParser
 from hashlib import sha1
+from random import shuffle
 from socket import gethostname
 
 torch_dir = '~/src/torch-rnn'
@@ -103,6 +104,7 @@ def run_tasks(tasks):
 
     while len(tasks):
         tasks = [task for task in tasks if not task.complete()]
+        shuffle(tasks)  # work balance
         for task in tasks:
             task.next_step()
 
