@@ -11,6 +11,7 @@ import sys
 from argparse import ArgumentParser
 from hashlib import sha1
 
+torch_dir = '~/src/torch-rnn'
 
 def database_path(db_name):
     db_path_base = 'data'
@@ -76,6 +77,7 @@ def run_tasks(tasks):
 
     while len(tasks):
         tasks = [task for task in tasks if not task.complete()]
+        os.chdir(os.path.expanduser(torch_dir))
         for task in tasks:
             task.next_step()
 
