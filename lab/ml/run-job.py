@@ -73,7 +73,7 @@ class task(object):
         os.chdir(os.path.expanduser(torch_dir))
         print("next step:", str(self))
         cmd = "./give-me-kernels '{}' > /tmp/sample.txt".format(self.seed)
-        print('\r\033[K  -> exec:', cmd, end='')
+        print('\r\033[K  -> seed:'.format(self.seed), end='')
         subprocess.call(cmd, shell=True)
 
         print('\r\033[K  -> adding samples to database', end='')
