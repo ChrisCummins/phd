@@ -23,4 +23,19 @@
     return ret;                                 \
   }
 
+namespace phd {
+namespace debug {
+// Debug aids:
+struct debug_t {};
+debug_t nulltype;
+}  // debug namespace
+}  // phd namespace
+
+// Macros for debugging types:
+//
+// Fatally crash the compiler, printing the name of the argument type.
+#define PRINT_TYPENAME(type) type _____{phd::debug::debug_t};
+// Fatally crash the compiler, printing the type of the argument variable.
+#define PRINT_TYPE(variable) static_cast<phd::debug::debug_t>(variable);
+
 #endif  // PHD_TEST_H
