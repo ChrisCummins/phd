@@ -67,7 +67,15 @@ class task(object):
             self.next_device_step()
 
     def next_host_step(self):
+        out_path = os.path.join(
+            os.path.dirname(self.db_path),
+            os.path.splitext(os.path.basename(self.db_path))[0] + '.txt')
+        print(out_path)
+
         subprocess.call('./preprocess.py {}'.format(self.db_path), shell=True)
+        subprocess.call('./train.py {} {} -i'.format(self.db_path, out_path),
+                        shell=True)
+        subprocess.call('./explore.py {}'.format(self.db_path), shell=True)
         self.preprocessed = True
 
     def next_device_step(self):
