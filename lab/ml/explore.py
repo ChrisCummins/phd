@@ -42,6 +42,7 @@ def bigint(n):
 
 
 def seq_stats(sorted_arr):
+    sorted_arr = sorted_arr or [0]
     avg = sum(sorted_arr) / len(sorted_arr)
     midpoint = int(len(sorted_arr) / 2)
     if len(sorted_arr) % 2 == 1:
