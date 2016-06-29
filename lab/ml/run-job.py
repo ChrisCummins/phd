@@ -83,7 +83,8 @@ class task(object):
 
         c = self.db.cursor()
         for id,sample in zip(ids, samples):
-            c.execute('INSERT INTO ContentFiles VALUES(?,?)', (id,sample))
+            c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
+                      (id,sample))
         self.db.commit()
         c.close()
         print('\r\033[K', end='')
