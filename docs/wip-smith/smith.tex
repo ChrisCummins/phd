@@ -230,12 +230,12 @@ lacking~\cite{Belli2015}.
 
 The key contributions of this work are as follows:%
 \begin{itemize}
-\item a novel methodology for generating synthetic compute kernels to
-  aid machine-learning performance tuning;
-\item large scale source code evaluation and re-writing for
+\item a novel methodology for generating synthetic compute kernels for
+  machine learning-based performance tuning;
+\item a large scale source code evaluation and re-writing for
   character-level language modelling using deep learning;
-\item improves the tuning performance of [CGO'13] on hand written
-  OpenCL kernels.
+\item improved tuning performance of [CGO'13] on hand written OpenCL
+  kernels.
 \end{itemize}
 
 
@@ -244,14 +244,18 @@ The key contributions of this work are as follows:%
 
 \section{Generating Compute Kernels}\label{sec:}
 
+Overview of methodology.
 
-\paragraph{Assembling the Language Corpus}
+\paragraph{Assembling the Language Corpus} Mining GitHub, noisy
+dataset.
 
 
-\paragraph{Learning the Implementation Space}
+\paragraph{Learning the Implementation Space} Program rewriting, LSTM,
+character-level language model.
 
 
-\paragraph{Synthesising Compute Kernels}
+\paragraph{Synthesising Compute Kernels} Sampling learned model using
+function prototypes, rejection sampler, program checker.
 
 
 \section{Learning the Implementation Space}\label{sec:ml}
@@ -264,7 +268,16 @@ Clang-based rewriting.
 
 Long Short-Term Memory~\cite{Hochreiter1997}.
 
+
 \section{Sampling Implementation Space}\label{sec:}
+
+Given a function prototype.
+
+Rejection sampler.
+
+Undefined behaviour.
+
+Driver program (and dataset).
 
 
 \section{Experimental Methodology}\label{sec:evaluation}
@@ -272,35 +285,51 @@ Long Short-Term Memory~\cite{Hochreiter1997}.
 
 \subsection{Experimental Setup}\label{subsec:}
 
-
-\subsection{Methodology}\label{subsec:}
-
-Followed the methodology of~\cite{Grewe2013}.
+\paragraph{Platforms} 2x GPUs, 1x CPU.
 
 
-\paragraph{Platforms}\label{subsec:}
-
-
-\paragraph{Benchmarks}\label{subsec:}
+\paragraph{Benchmarks}
 
 Parboil~\cite{Stratton2012}.
 
 
-\paragraph{Datasets}\label{subsec:}
+\paragraph{Datasets}
+
+From Parboil.
+
+
+\subsection{Methodology}
+
+Followed the methodology of~\cite{Grewe2013}.
+
+Statistical soundness.
+
+Leave-one-out cross validation.
 
 
 \section{Experimental Results}\label{sec:evaluation}
 
+
 \subsection{Generated Compute Kernels}\label{subsec:}
 
-\subsection{Qualitative Evaluation of Compute Kernels}\label{subsec:}
+What's the ratio of ``good'' code? How long did it take to sample?
+
+
+\subsection{Qualitatively Evaluating Generated Code}\label{subsec:}
 
 Human or Robot. Related works which have used Non-Interactive Turing
 Tests~\cite{Gao2015a,Zhang2016}.
 
-\subsection{Comparison with State-of-the-Art}\label{subsec:}
 
 \subsection{Predicting Execution Device}\label{subsec:}
+
+Classification accuracy.
+
+
+\subsection{Comparison with State-of-the-Art}\label{subsec:}
+
+Compare prediction performance with and without additional synthetic
+benchmarks.
 
 
 \section{Related Work}\label{sec:related-work}
@@ -312,7 +341,9 @@ Machine Learning-based Performance Tuning:~\cite{Wen2015},
 \cite{Magni2014}, \cite{Falch2015}. Domain specific:
 Stencils~\cite{Garvey2015b}, \cite{Cummins2015a}.
 
+
 \subsection{Program Generation}
+
 
 \paragraph{Template-based} GENESIS~\cite{Chiu2015}.
 
@@ -334,10 +365,9 @@ implementations~\cite{Loncaric2016}.
 
 Neural Networks for representing programs~\cite{Bunel}.
 
-\paragraph{Machine Learning for Software Engineering} Mining source
-code repositories at large
-scale~\cite{Allamanis2013a,White2015a}. Machine learning for
-understanding code~\cite{Allamanis2014a,Raychev}. Aiding software
+Mining source code repositories at large
+scale~\cite{Allamanis2013a,White2015a}. Machine learning for analysing
+code~\cite{Allamanis2014a,Raychev}. Aiding software
 engineering~\cite{Allamanis2014,Bird2015}.
 
 
@@ -349,7 +379,7 @@ engineering~\cite{Allamanis2014,Bird2015}.
 
 This work was supported by the UK Engineering and Physical Sciences
 Research Council under grants EP/L01503X/1 (CDT in Pervasive
-Parallelism), EP/H044752/1 (ALEA), and EP/M015793/1 (DIVIDEND).
+Parallelism),\\* EP/H044752/1 (ALEA), and\\* EP/M015793/1 (DIVIDEND).
 
 
 \label{bibliography}
