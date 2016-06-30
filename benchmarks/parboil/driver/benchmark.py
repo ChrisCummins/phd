@@ -464,6 +464,7 @@ def find_benchmarks():
             db[bmkdir.getName()] = bmk
     except OSError, e:
         sys.stdout.write("Benchmark directory not found!\n\n")
+        sys.stdout.write(str(e) + '\n')
         return {}
 
     return db
