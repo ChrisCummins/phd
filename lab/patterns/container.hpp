@@ -26,20 +26,22 @@ struct product<v1, v2> {
  *
  * Implementation class. Use the container<> class.
  *
- * \tparam size_ The number of elements in the container.
  * \tparam T The element type.
+ * \tparam size_ The number of elements in the container.
+ * \tparam storage_class_ The type used to store elements.
  * \tparam d1 The number of elements in the top dimension.
  * \tparam dimensions... The number of elements in subsequent dimensions.
  */
-template<size_t size_, typename T, size_t d1, size_t... dimensions>
+template<typename T, size_t size_, typename storage_class_,
+         size_t d1, size_t... dimensions>
 class container_impl {
  private:
-  using parent_type = container_impl<size_, T, dimensions...>;
+  using parent_type = container_impl<T, size_, storage_class_, dimensions...>;
 
  public:
   using value_type = typename parent_type::value_type;
+  using storage_class = storage_class_;
   using size_type = typename parent_type::size_type;
-  using storage_class = typename parent_type::storage_class;
 
   container_impl() {}
   explicit container_impl(const value_type& fill) : _parent(fill) {}
@@ -166,16 +168,17 @@ class container_impl {
  *
  * Implementation class for 1D container. Use the container<> class.
  *
- * \tparam size_ The number of elements in the container.
  * \tparam T The element type.
+ * \tparam size_ The number of elements in the container.
+ * \tparam storage_class_ The type used to store elements.
  * \tparam dn The number of elements in the final dimension.
  */
-template<size_t size_, typename T, size_t dn>
-class container_impl<size_, T, dn> {
+template<typename T, size_t size_, typename storage_class_, size_t dn>
+class container_impl<T, size_, storage_class_, dn> {
  public:
   using value_type = T;
+  using storage_class = storage_class_;
   using size_type = size_t;
-  using storage_class = std::array<T, size_>;
 
   container_impl() {}
   explicit container_impl(const value_type& fill) { _data.fill(fill); }
@@ -223,10 +226,13 @@ class container_impl<size_, T, dn> {
  */
 template<typename T, size_t d1, size_t... dimensions>
 class container : public container_impl<
-  detail::product<d1, dimensions...>::call(), T, d1, dimensions...> {
+  T, detail::product<d1, dimensions...>::call(),
+  std::array<T, detail::product<d1, dimensions...>::call()>,
+  d1, dimensions...> {
  public:
-  using container_impl<detail::product<d1, dimensions...>::call(),
-                       T, d1, dimensions...>::container_impl;
+  using container_impl<T, detail::product<d1, dimensions...>::call(),
+                       std::array<T, detail::product<d1, dimensions...>::call()>,
+                       d1, dimensions...>::container_impl;
 };
 
 /**
@@ -239,9 +245,10 @@ class container : public container_impl<
  * \tparam size The number of elements in the container.
  */
 template<typename T, size_t size>
-class container<T, size> : public container_impl<size, T, size> {
+class container<T, size> : public container_impl<
+  T, size, std::array<T, size>, size> {
  public:
-  using container_impl<size, T, size>::container_impl;
+  using container_impl<T, size, std::array<T, size>, size>::container_impl;
 };
 
 }  // namespace pat
