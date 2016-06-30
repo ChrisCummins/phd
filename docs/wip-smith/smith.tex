@@ -1,0 +1,359 @@
+% The following \documentclass options may be useful:
+%
+% preprint      Remove this option only once the paper is in final form.
+% 10pt          To set in 10-point type instead of 9-point.
+% 11pt          To set in 11-point type instead of 9-point.
+% authoryear    To obtain author/year citation style instead of numeric.
+\documentclass[preprint,nonatbib,10pt,nocopyrightspace]{sigplanconf}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Document and Layout %%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Fix for multiple "No room for a new \dimen" errors.
+%
+% See: http://tex.stackexchange.com/questions/38607/no-room-for-a-new-dimen
+%
+\usepackage{etex}
+
+\usepackage[utf8]{inputenc}
+
+% Fix for "'babel/polyglossia' detected but 'csquotes' missing"
+% warning. NOTE: Include after inputenc.
+%
+\usepackage{csquotes}
+
+\usepackage{booktabs}
+
+% Required for full page-width tables.
+\usepackage{tabularx}
+
+% Define column types L, C, R with known text justification and fixed
+% widths:
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+% Make internal macro definitions accessible,
+% e.g. \@title, \@date \@author.
+\makeatletter
+
+% Uncomment the following line to remove column separation:
+%
+%\setlength{\columnsep}{5mm}
+
+\usepackage{color}
+\newcommand{\fix}[1]{\textcolor{red}{\em\footnotesize#1}}
+
+
+%%%%%%%%%%%%%%%%
+% Bibliography %
+%%%%%%%%%%%%%%%%
+\usepackage[%
+    backend=biber,%bibtex,
+    style=numeric-comp,
+    % style=numeric-comp,  % numerical-compressed
+    sorting=none,        % nty,nyt,nyvt,anyt,anyvt,ynt,ydnt,none
+    sortcites=true,      % sort \cite{b a d c}: true,false
+    block=none,          % space between blocks: none,space,par,nbpar,ragged
+    indexing=false,      % indexing options: true,false,cite,bib
+    citereset=none,      % don't reset cites
+    isbn=false,          % print ISBN?
+    url=true,            % print URL?
+    doi=false,           % print DOI?
+    natbib=true,         % natbib compatability
+    maxbibnames=99       % no 'et-al' in the bibliography pls
+  ]{biblatex}
+
+\addbibresource{../../../library.bib}
+
+% Reduce the font size of the bibliography:
+\renewcommand{\bibfont}{\normalfont\scriptsize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Figures, footnotes and listings %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Pre-requisites for rendering upquotes in listings package.
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+
+% Pseudo-code listings.
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\newcommand{\Break}{\State \textbf{break} }
+\algblockdefx[Loop]{Loop}{EndLoop}[1][]{\textbf{Loop} #1}{\textbf{End
+    Loop}}
+
+\algrenewcommand\ALG@beginalgorithmic{\footnotesize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%% Graphics and maths %%
+%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amsmath}
+
+% Vector notation, e.g. \vv{x}:
+%
+\usepackage{esvect}
+
+% Additional amsmath symbols, see:
+%
+% http://texblog.org/2007/08/27/number-sets-prime-natural-integer-rational-real-and-complex-in-latex/
+%
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+\usepackage{graphicx}
+\usepackage{mathtools}
+
+% Provide bold font face in maths.
+\usepackage{bm}
+
+\usepackage{subcaption}
+\expandafter\def\csname ver@subfig.sty\endcsname{}
+
+% Define an 'myalignat' command which behave as 'alignat' without the
+% vertical top and bottom padding. See:
+%     http://www.latex-community.org/forum/viewtopic.php?f=5&t=1890
+\newenvironment{myalignat}[1]{%
+  \setlength{\abovedisplayskip}{-.7\baselineskip}%
+  \setlength{\abovedisplayshortskip}{\abovedisplayskip}%
+  \start@align\z@\st@rredtrue#1
+}%
+{\endalign}
+
+% Define additional operators:
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\DeclareMathOperator*{\gain}{Gain}
+
+% Skeleton operators.
+\DeclareMathOperator*{\map}{Map}
+\DeclareMathOperator*{\reduce}{Reduce}
+\DeclareMathOperator*{\scan}{Scan}
+\DeclareMathOperator*{\stencil}{Stencil}
+\DeclareMathOperator*{\zip}{Zip}
+\DeclareMathOperator*{\allpairs}{All\,Pairs}
+
+% Define a command to allow word breaking.
+\newcommand*\wrapletters[1]{\wr@pletters#1\@nil}
+\def\wr@pletters#1#2\@nil{#1\allowbreak\if&#2&\else\wr@pletters#2\@nil\fi}
+
+% Define a command to create centred page titles.
+\newcommand{\centredtitle}[1]{
+  \begin{center}
+    \large
+    \vspace{0.9cm}
+    \textbf{#1}
+  \end{center}}
+
+% Provide generic commands \degree, \celsius, \perthousand, \micro
+% and \ohm which work both in text and maths mode.
+\usepackage{gensymb}
+
+\begin{document}
+
+\special{papersize=8.5in,11in}
+\setlength{\pdfpageheight}{\paperheight}
+\setlength{\pdfpagewidth}{\paperwidth}
+
+\conferenceinfo{Work in progress}{Month d--d, 20yy, City, ST, Country}
+\copyrightyear{2016}
+\copyrightdata{978-1-nnnn-nnnn-n/yy/mm}
+\doi{nnnnnnn.nnnnnnn}
+
+% Uncomment one of the following two, if you are not going for the
+% traditional copyright transfer agreement.
+
+%\exclusivelicense                % ACM gets exclusive license to publish,
+                                  % you retain copyright
+
+%\permissiontopublish             % ACM gets nonexclusive license to publish
+                                  % (paid open-access papers,
+                                  % short abstracts)
+
+% \titlebanner{banner above paper title}        % These are ignored unless
+% \preprintfooter{}   % 'preprint' option specified.
+
+\title{Generating Synthetic Compute Kernels with Deep Learning}
+
+% \subtitle{Subtitle Text, if any}
+
+\authorinfo{Chris Cummins}
+           {University of Edinburgh}
+           {c.cummins@ed.ac.uk}
+\authorinfo{Pavlos Petoumenos}
+           {University of Edinburgh}
+           {ppetoume@inf.ed.ac.uk}
+\authorinfo{Zheng Wang}
+           {Lancaster Univeristy}
+           {z.wang@lancaster.ac.uk}
+\authorinfo{Hugh Leather}
+           {University of Edinburgh}
+           {hleather@inf.ed.ac.uk}
+
+\maketitle
+
+\begin{abstract}
+  We present a novel methodology for generating compute kernels. Given
+  a corpus of example programs and a program checker, we TODO.%
+  %
+  We demonstrate the practicality of our approach using a
+  state-of-the-art machine learning OpenCL autotuner. By incorporating
+  synthetically generated compute kernels, we improve the accuracy of
+  machine learning predictions from XXX\% to XXX\%, demonstrating up
+  to $X\times$ speedup over the hand-selected benchmarks.
+\end{abstract}
+
+% \category{CR-number}{subcategory}{third-level}
+
+% % general terms are not compulsory anymore,
+% % you may leave them out
+% \terms
+% term1, term2
+
+\keywords
+Synthetic program generation, %
+OpenCL, %
+Deep Learning, %
+GPUs
+
+\section{Introduction}\label{sec:introduction}
+
+Benchmarking parallel applications is hard. State of the practice is
+lacking~\cite{Belli2015}.
+
+The key contributions of this work are as follows:%
+\begin{itemize}
+\item a novel methodology for generating synthetic compute kernels to
+  aid machine-learning performance tuning;
+\item large scale source code evaluation and re-writing for
+  character-level language modelling using deep learning;
+\item improves the tuning performance of [CGO'13] on hand written
+  OpenCL kernels.
+\end{itemize}
+
+
+\section{Motivation}\label{sec:motivation}
+
+
+\section{Generating Compute Kernels}\label{sec:}
+
+
+\paragraph{Assembling the Language Corpus}
+
+
+\paragraph{Learning the Implementation Space}
+
+
+\paragraph{Synthesising Compute Kernels}
+
+
+\section{Learning the Implementation Space}\label{sec:ml}
+
+Mine GitHub.
+
+Rejection sampling.
+
+Clang-based rewriting.
+
+Long Short-Term Memory~\cite{Hochreiter1997}.
+
+\section{Sampling Implementation Space}\label{sec:}
+
+
+\section{Experimental Methodology}\label{sec:evaluation}
+
+
+\subsection{Experimental Setup}\label{subsec:}
+
+
+\subsection{Methodology}\label{subsec:}
+
+Followed the methodology of~\cite{Grewe2013}.
+
+
+\paragraph{Platforms}\label{subsec:}
+
+
+\paragraph{Benchmarks}\label{subsec:}
+
+Parboil~\cite{Stratton2012}.
+
+
+\paragraph{Datasets}\label{subsec:}
+
+
+\section{Experimental Results}\label{sec:evaluation}
+
+\subsection{Generated Compute Kernels}\label{subsec:}
+
+\subsection{Qualitative Evaluation of Compute Kernels}\label{subsec:}
+
+Human or Robot. Related works which have used Non-Interactive Turing
+Tests~\cite{Gao2015a,Zhang2016}.
+
+\subsection{Comparison with State-of-the-Art}\label{subsec:}
+
+\subsection{Predicting Execution Device}\label{subsec:}
+
+
+\section{Related Work}\label{sec:related-work}
+
+Misc: Verifying GPU kernels~\cite{Betts2012}. Simulating OpenCL
+kernels~\cite{Price2015}.
+
+Machine Learning-based Performance Tuning:~\cite{Wen2015},
+\cite{Magni2014}, \cite{Falch2015}. Domain specific:
+Stencils~\cite{Garvey2015b}, \cite{Cummins2015a}.
+
+\subsection{Program Generation}
+
+\paragraph{Template-based} GENESIS~\cite{Chiu2015}.
+
+
+\paragraph{Grammar-based} Fuzzers:
+Csmith~\cite{Yang2012}, CLsmith~\cite{Pflanzer2016}.
+
+
+\paragraph{Mutation-based} JVM fuzzing~\cite{Chena}.
+
+
+\paragraph{Goal-oriented} Generating linear
+transforms~\cite{Voronenko2009}, synthesising MapReduce
+programs~\cite{Smith}, genearting data structure
+implementations~\cite{Loncaric2016}.
+
+
+\subsection{Deep Learning \& Mining Source Code}
+
+Neural Networks for representing programs~\cite{Bunel}.
+
+\paragraph{Machine Learning for Software Engineering} Mining source
+code repositories at large
+scale~\cite{Allamanis2013a,White2015a}. Machine learning for
+understanding code~\cite{Allamanis2014a,Raychev}. Aiding software
+engineering~\cite{Allamanis2014,Bird2015}.
+
+
+\section{Conclusion}\label{sec:conclusion}
+
+
+
+\acks
+
+This work was supported by the UK Engineering and Physical Sciences
+Research Council under grants EP/L01503X/1 (CDT in Pervasive
+Parallelism), EP/H044752/1 (ALEA), and EP/M015793/1 (DIVIDEND).
+
+
+\label{bibliography}
+\printbibliography
+
+
+\end{document}
