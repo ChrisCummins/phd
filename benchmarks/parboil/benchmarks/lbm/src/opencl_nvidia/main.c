@@ -8,7 +8,7 @@
 
 /*############################################################################*/
 
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 #include <parboil.h>
 #include <stdio.h>
 #include <stdlib.h>

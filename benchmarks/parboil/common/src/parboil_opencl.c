@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 
 #if _POSIX_VERSION >= 200112L
 # include <sys/time.h>

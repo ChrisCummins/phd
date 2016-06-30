@@ -6,6 +6,6 @@
  *
  ***************************************************************************/
 
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 
 void scanLargeArray( unsigned int gridNumElements, cl_mem data_d, cl_context clContext, cl_command_queue clCommandQueue, const cl_device_id clDevice, size_t *workItemSizes);

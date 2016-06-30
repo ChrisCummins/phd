@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <parboil.h>
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 
 #include "ocl.h"
 #include "file.h"

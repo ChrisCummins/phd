@@ -9,7 +9,7 @@
 /*############################################################################*/
 
 // includes, system
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>

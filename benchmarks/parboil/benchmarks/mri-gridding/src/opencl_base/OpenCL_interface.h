@@ -6,7 +6,7 @@
  *
  ***************************************************************************/
 
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 
 void OpenCL_interface (
   struct pb_TimerSet* timers,

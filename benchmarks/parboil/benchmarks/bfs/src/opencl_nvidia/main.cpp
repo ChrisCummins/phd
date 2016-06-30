@@ -23,7 +23,7 @@
   Author: Lijiuan Luo (lluo3@uiuc.edu)
   Revised for Parboil 2.5 Benchmark Suite by: Geng Daniel Liu (gengliu2@illinois.edu)
 */
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 
 #include "util.h"
 #include "OpenCL_common.h"

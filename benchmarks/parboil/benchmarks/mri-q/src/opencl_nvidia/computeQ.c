@@ -7,8 +7,8 @@
  ***************************************************************************/
 
 #include <stdio.h>
-#include <malloc.h>
-#include <CL/cl.h>
+#include <stdlib.h>
+#include <OpenCL/opencl.h>
 #include "ocl.h"
 #include "macros.h"
 #include "computeQ.h"

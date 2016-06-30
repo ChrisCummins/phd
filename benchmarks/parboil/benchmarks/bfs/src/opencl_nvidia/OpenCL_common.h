@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 
 int getOpenCLDevice(cl_platform_id *platform, cl_device_id *device, cl_device_type *reqDeviceType, int numRequests, ...);
 const char* oclErrorString(cl_int error);

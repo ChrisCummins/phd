@@ -10,7 +10,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 #include "parboil.h"
 
 #include "UDTypes.h"

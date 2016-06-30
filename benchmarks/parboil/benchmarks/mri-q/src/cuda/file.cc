@@ -8,7 +8,7 @@
 
 #include <endian.h>
 #include <stdlib.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <inttypes.h>
 

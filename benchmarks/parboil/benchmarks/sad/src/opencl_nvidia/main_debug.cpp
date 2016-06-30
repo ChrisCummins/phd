@@ -12,7 +12,7 @@
 #include <sys/time.h>
 #include <inttypes.h>
 #include <parboil.h>
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 
 #include "sad.h"
 #include "sad_kernel.h"

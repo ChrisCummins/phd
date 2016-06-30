@@ -28,7 +28,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include <malloc.h>
+#include <stdlib.h>
 
 #include <parboil.h>
 

@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 #include "parboil.h"
 #include "OpenCL_common.h"
 #include "config.h"

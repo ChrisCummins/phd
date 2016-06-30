@@ -7,7 +7,7 @@
  *cr
  ***************************************************************************/
 
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 #include <stdio.h>
 #include <stdlib.h>i
 #include <string.h>

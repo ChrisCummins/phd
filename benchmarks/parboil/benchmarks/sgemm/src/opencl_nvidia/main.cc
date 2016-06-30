@@ -15,12 +15,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <vector>
 #include <parboil.h>
 #include <iostream>
 
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 
 // I/O routines
 extern bool readColMajorMatrixFile(const char *fn, int &nr_row, int &nr_col, std::vector<float>&v);

@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <vector>
 #include <parboil.h>
 #include <iostream>

@@ -5,7 +5,7 @@
  *cr                         All Rights Reserved
  *cr
  ***************************************************************************/
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 #include <sys/time.h>
 #include <stdio.h>
 #include <math.h>

@@ -1,7 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <CL/cl.h>
+#include <OpenCL/opencl.h>
 #include "OpenCL_common.h"
 
 #define GRID_SIZE 65535

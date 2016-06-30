@@ -6,8 +6,8 @@
  *cr
  ***************************************************************************/
 
-#include <CL/cl.h>
-#include <CL/cl_ext.h>
+#include <OpenCL/opencl.h>
+#include <OpenCL/cl_ext.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <parboil.h>
