@@ -172,6 +172,11 @@ class container_impl {
     return view_type(index * stride(), _parent);
   }
 
+  auto operator[](const size_t index) const {
+    using view_type = array_view<parent_type, storage_class, dimen() - 1>;
+    return view_type(index * stride(), _parent);
+  }
+
   value_type* data() { return _parent.data(); }
   const value_type* data() const { return _parent.data(); }
 
@@ -211,6 +216,15 @@ class container_impl {
           flat_index, parent());
     }
 
+    auto operator[](const size_t index) const {
+      const auto flat_index = _offset + index * stride();
+      assert(flat_index < size());
+      DEBUG("_data<" << size() << ">::array_view<" << dimen()
+            << ":" << stride() << ">[" << _offset << " + " << index << "]");
+      return array_view<decltype(parent()), storage_class, ndim - 1>(
+          flat_index, parent());
+    }
+
     constexpr size_t size() const { return _parent.size(); }
     constexpr size_type dimen_size() const { return _parent.dimen_size(); }
     static constexpr size_type dimen() { return ndim; }
@@ -238,6 +252,12 @@ class container_impl {
       assert(flat_index < size());
       // DEBUG("_data<" << size() << ">::array_view<" << dimen()
       //       << ":" << stride() << ">[" << _offset << " + " << index << "]");
+      return _parent[flat_index];
+    }
+
+    const value_type& operator[](const size_t index) const {
+      const auto flat_index = _offset + index * stride();
+      assert(flat_index < size());
       return _parent[flat_index];
     }
 
