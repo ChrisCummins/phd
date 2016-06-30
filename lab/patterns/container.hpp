@@ -176,6 +176,8 @@ class container_impl {
  */
 template<typename T, size_t size_, typename storage_class_, unsigned int dn>
 class container_impl<T, size_, storage_class_, dn> {
+  static_assert(size_ > 0, "zero size container_impl");
+
  public:
   using value_type = T;
   using storage_class = storage_class_;
