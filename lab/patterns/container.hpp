@@ -33,7 +33,7 @@ struct product<v1, v2> {
  * \tparam dimensions... The number of elements in subsequent dimensions.
  */
 template<typename T, size_t size_, typename storage_class_,
-         size_t d1, size_t... dimensions>
+         unsigned int d1, unsigned int... dimensions>
 class container_impl {
  private:
   using parent_type = container_impl<T, size_, storage_class_, dimensions...>;
@@ -42,13 +42,14 @@ class container_impl {
   using value_type = typename parent_type::value_type;
   using storage_class = storage_class_;
   using size_type = typename parent_type::size_type;
+  using dimen_size_type = unsigned int;
 
   container_impl() {}
   explicit container_impl(const value_type& fill) : _parent(fill) {}
   explicit container_impl(storage_class&& data) : _parent(std::move(data)) {}
 
   static constexpr size_type size() { return size_; }
-  static constexpr size_type dimen_size() { return d1; }
+  static constexpr dimen_size_type dimen_size() { return d1; }
   static constexpr size_type dimen() { return sizeof...(dimensions) + 1u; }
   constexpr size_type stride() const { return _parent.volume(); }
   constexpr size_t volume() const { return _parent.volume() * dimen_size(); }
@@ -173,19 +174,20 @@ class container_impl {
  * \tparam storage_class_ The type used to store elements.
  * \tparam dn The number of elements in the final dimension.
  */
-template<typename T, size_t size_, typename storage_class_, size_t dn>
+template<typename T, size_t size_, typename storage_class_, unsigned int dn>
 class container_impl<T, size_, storage_class_, dn> {
  public:
   using value_type = T;
   using storage_class = storage_class_;
   using size_type = size_t;
+  using dimen_size_type = unsigned int;
 
   container_impl() {}
   explicit container_impl(const value_type& fill) { _data.fill(fill); }
   explicit container_impl(storage_class&& data) : _data(std::move(data)) {}
 
   static constexpr size_type size() { return size_; }
-  static constexpr size_type dimen_size() { return dn; }
+  static constexpr dimen_size_type dimen_size() { return dn; }
   static constexpr size_type dimen() { return 1u; }
   constexpr size_type stride() const { return 1u; }
   constexpr size_t volume() const { return dimen_size(); }
