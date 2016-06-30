@@ -145,9 +145,17 @@ auto reduce(const Kernel& kernel) {
 }
 
 
-//
-// Container class
-//
+/**
+ * \class container_impl
+ * \brief A statically sized, n-dimensional container.
+ *
+ * Implementation class. Use the container<> class.
+ *
+ * \tparam size_ The number of elements in the container.
+ * \tparam T The element type.
+ * \tparam d1 The number of elements in the top dimension.
+ * \tparam dimensions... The number of elements in subsequent dimensions.
+ */
 template<size_t size_, typename T, size_t d1, size_t... dimensions>
 class container_impl {
  private:
@@ -276,6 +284,16 @@ class container_impl {
 };
 
 
+/**
+ * \class container_impl
+ * \brief A statically sized, n-dimensional container.
+ *
+ * Implementation class for 1D container. Use the container<> class.
+ *
+ * \tparam size_ The number of elements in the container.
+ * \tparam T The element type.
+ * \tparam dn The number of elements in the final dimension.
+ */
 template<size_t size_, typename T, size_t dn>
 class container_impl<size_, T, dn> {
  public:
@@ -315,6 +333,17 @@ class container_impl<size_, T, dn> {
   storage_class _data;
 };
 
+
+/**
+ * \class container
+ * \brief A statically sized, n-dimensional container.
+ *
+ * Container class.
+ *
+ * \tparam T The element type.
+ * \tparam d1 The number of elements in the top dimension.
+ * \tparam dimensions... The number of elements in subsequent dimensions.
+ */
 template<typename T, size_t d1, size_t... dimensions>
 class container : public container_impl<
   detail::product<d1, dimensions...>::call(), T, d1, dimensions...> {
@@ -323,6 +352,15 @@ class container : public container_impl<
                        T, d1, dimensions...>::container_impl;
 };
 
+/**
+ * \class container
+ * \brief A statically sized, n-dimensional container.
+ *
+ * 1D container class.
+ *
+ * \tparam T The element type.
+ * \tparam size The number of elements in the container.
+ */
 template<typename T, size_t size>
 class container<T, size> : public container_impl<size, T, size> {
  public:
