@@ -1,0 +1,10 @@
+import sys
+
+import smith
+
+def main(argv):
+   print(argv[0])
+   print(smith.foo())
+
+if __name__ == "__main__":
+   main(sys.argv)
