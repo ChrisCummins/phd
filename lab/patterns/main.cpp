@@ -129,7 +129,7 @@ class reduce : public skeleton<Kernel> {
 
 template<typename Kernel>
 auto map(const Kernel& kernel) {
-  return detail::map<Kernel>(kernel);
+  return detail::map<Kernel>(kernel);  // NOLINT
 }
 
 
@@ -152,22 +152,24 @@ template<size_t size_, typename T, size_t d1, size_t... dimensions>
 class container_impl {
  private:
   using parent_type = container_impl<size_, T, dimensions...>;
+
  public:
   using value_type = typename parent_type::value_type;
   using size_type = typename parent_type::size_type;
   using storage_class = typename parent_type::storage_class;
- public:
+
   container_impl() {}
   explicit container_impl(const value_type& fill) : _parent(fill) {}
 
   static constexpr size_type size() { return size_; }
   static constexpr size_type dimen_size() { return d1; }
   static constexpr size_type dimen() { return sizeof...(dimensions) + 1u; }
-  constexpr size_type stride() const { return d1 * _parent.stride(); }
+  constexpr size_type stride() const { return _parent.volume(); }
+  constexpr size_t volume() const { return _parent.volume() * dimen_size(); }
 
   auto operator[](const size_t index) {
-    using view_type = array_view<storage_class, dimen() - 1>;
-    return view_type(index * _parent.stride(), _parent);
+    using view_type = array_view<parent_type, storage_class, dimen() - 1>;
+    return view_type(index * stride(), _parent);
   }
 
   value_type* data() { return _parent.data(); }
@@ -179,56 +181,63 @@ class container_impl {
   auto begin() const { return _parent.begin(); }
   auto end() const { return _parent.end(); }
 
+  auto& parent() { return _parent; }
+
  private:
   //
   template<typename storage_class>
   class view_base {};
 
+  template<typename, size_t>
+  friend class array_view;
+
   /**
    * View where n >= 3 dimensions
    */
-  template<typename storage_class, size_t ndim>
+  template<typename parent_type_, typename storage_class, size_t ndim>
   class array_view : view_base<storage_class> {
    public:
-    array_view(size_t offset, parent_type& parent)
+    array_view(size_t offset, parent_type_& parent)
         : _offset(offset), _parent(parent) {
       DEBUG("array_view<" << ndim << ">(" << offset << ")");
     }
 
     auto operator[](const size_t index) {
-      const auto flat_index = _offset + _parent.stride() * index;
+      const auto flat_index = _offset + index * stride();
       assert(flat_index < size());
       DEBUG("_data<" << size() << ">::array_view<" << dimen()
             << ":" << stride() << ">[" << _offset << " + " << index << "]");
-      return _parent[flat_index];
+      return array_view<decltype(parent()), storage_class, ndim - 1>(
+          flat_index, parent());
     }
 
     constexpr size_t size() const { return _parent.size(); }
     constexpr size_type dimen_size() const { return _parent.dimen_size(); }
     static constexpr size_type dimen() { return ndim; }
     constexpr size_t stride() const { return _parent.stride(); }
+    auto& parent() { return _parent.parent(); }
 
    private:
     const size_t _offset;
-    parent_type& _parent;
+    parent_type_& _parent;
   };
 
   /**
    * View for 2 dimensions
    */
-  template<typename storage_class>
-  class array_view<storage_class, 1> {
+  template<typename parent_type_, typename storage_class>
+  class array_view<parent_type_, storage_class, 1> {
    public:
-    array_view(size_t offset, parent_type& parent)
+    array_view(size_t offset, parent_type_& parent)
         : _offset(offset), _parent(parent) {
-      DEBUG("array_view<1>(" << offset << ")");
+      // DEBUG("array_view<1>(" << offset << ")");
     }
 
     value_type& operator[](const size_t index) {
-      const auto flat_index = _offset + index;
+      const auto flat_index = _offset + index * stride();
       assert(flat_index < size());
-      DEBUG("_data<" << size() << ">::array_view<" << dimen()
-            << ":" << stride() << ">[" << _offset << " + " << index << "]");
+      // DEBUG("_data<" << size() << ">::array_view<" << dimen()
+      //       << ":" << stride() << ">[" << _offset << " + " << index << "]");
       return _parent[flat_index];
     }
 
@@ -239,9 +248,10 @@ class container_impl {
 
    private:
     const size_t _offset;
-    parent_type& _parent;
+    parent_type_& _parent;
   };
 
+ private:
   parent_type _parent;
 };
 
@@ -260,14 +270,15 @@ class container_impl<size_, T, dn> {
   static constexpr size_type dimen_size() { return dn; }
   static constexpr size_type dimen() { return 1u; }
   constexpr size_type stride() const { return 1u; }
+  constexpr size_t volume() const { return dimen_size(); }
 
   value_type& operator[](const size_t index) {
-    // DEBUG("_data<" << size() << ">[" << index << "]");
+    DEBUG("container_impl<" << size() << ">[" << index << "]");
     return _data[index];
   }
 
   const value_type& operator[](const size_t index) const {
-    DEBUG("_data<" << size() << ">[" << index << "]");
+    DEBUG("container_impl<" << size() << ">[" << index << "]");
     return _data[index];
   }
 
@@ -316,6 +327,9 @@ TEST(patterns, container_1d) {
   pat::container<int, 10> a{0};
 
   ASSERT_EQ(10u, a.size());
+  ASSERT_EQ(10u, a.dimen_size());
+  ASSERT_EQ(1u, a.stride());
+  ASSERT_EQ(a.dimen_size(), a.volume());
 
   for (auto& val : a)
     ASSERT_EQ(0, val);
@@ -328,6 +342,7 @@ TEST(patterns, container_2d) {
   pat::container<int, 10, 10> a{2};
 
   ASSERT_EQ(100u, a.size());
+  ASSERT_EQ(10u, a.stride());
 
   for (auto& val : a)
     ASSERT_EQ(2, val);
@@ -347,12 +362,6 @@ TEST(patterns, container_3d) {
   ASSERT_EQ(3u, a[0][0].dimen_size());
   ASSERT_EQ(3u, a[1][2].dimen_size());
 
-  ASSERT_EQ(20u, a.stride());
-  ASSERT_EQ(4u, a[0].stride());
-  ASSERT_EQ(4u, a[1].stride());
-  ASSERT_EQ(1u, a[0][0].stride());
-  ASSERT_EQ(1u, a[1][2].stride());
-
   for (auto& val : a)
     ASSERT_EQ(0xCEC, val);
 
@@ -361,21 +370,26 @@ TEST(patterns, container_3d) {
       for (size_t i = 0; i < a[k][j].dimen_size(); ++i)
         ASSERT_EQ(0xCEC, a[k][j][i]);
 
-  a[8][5][3] = 10;
-  ASSERT_EQ(10, a[8][5][3]);
+  a[3][3][2] = 10;
+  ASSERT_EQ(10, a[3][3][2]);
 }
 
 TEST(patterns, container_4d) {
-  pat::container<int, 5, 20, 10, 10> a(5);
+  pat::container<int, 5, 4, 3, 2> a(5);
 
-  ASSERT_EQ(10000u, a.size());
+  ASSERT_EQ(120u, a.size());
 
   for (auto& val : a)
     ASSERT_EQ(5, val);
 
-  // FIXME:
-  // a[1][8][5][3] = 10;
-  // ASSERT_EQ(10, a[1][8][5][3]);
+  for (size_t l = 0; l < a.dimen_size(); ++l)
+    for (size_t k = 0; k < a[l].dimen_size(); ++k)
+      for (size_t j = 0; j < a[l][k].dimen_size(); ++j)
+        for (size_t i = 0; i < a[l][k][j].dimen_size(); ++i)
+          ASSERT_EQ(5, a[l][k][j][i]);
+
+  a[1][8][5][3] = 10;
+  ASSERT_EQ(10, a[1][8][5][3]);
 }
 
 TEST(patterns, map1) {
