@@ -38,6 +38,12 @@ class container_impl {
  private:
   using parent_type = container_impl<T, size_, storage_class_, dimensions...>;
 
+  template<typename storage_class>
+  class view_base {};
+
+  template<typename parent_type_, typename storage_class, size_t ndim>
+  class array_view;
+
  public:
   using value_type = typename parent_type::value_type;
   using storage_class = storage_class_;
@@ -52,14 +58,14 @@ class container_impl {
   static constexpr dimen_size_type dimen_size() { return d1; }
   static constexpr size_type dimen() { return sizeof...(dimensions) + 1u; }
   constexpr size_type stride() const { return _parent.volume(); }
-  constexpr size_t volume() const { return _parent.volume() * dimen_size(); }
+  constexpr size_type volume() const { return _parent.volume() * dimen_size(); }
 
-  auto operator[](const size_t index) {
+  auto operator[](const dimen_size_type index) {
     using view_type = array_view<parent_type, storage_class, dimen() - 1>;
     return view_type(index * stride(), _parent);
   }
 
-  auto operator[](const size_t index) const {
+  auto operator[](const dimen_size_type index) const {
     using view_type = array_view<parent_type, storage_class, dimen() - 1>;
     return view_type(index * stride(), _parent);
   }
@@ -67,22 +73,20 @@ class container_impl {
   value_type* data() { return _parent.data(); }
   const value_type* data() const { return _parent.data(); }
 
-  auto begin() { return _parent.begin(); }
-  auto end() { return _parent.end(); }
+  typename storage_class::iterator begin() { return _parent.begin(); }
+  typename storage_class::iterator end() { return _parent.end(); }
 
-  auto begin() const { return _parent.begin(); }
-  auto end() const { return _parent.end(); }
+  typename storage_class::const_iterator begin() const {
+    return _parent.begin();
+  }
+
+  typename storage_class::const_iterator end() const {
+    return _parent.end();
+  }
 
   auto& parent() { return _parent; }
 
  private:
-  //
-  template<typename storage_class>
-  class view_base {};
-
-  template<typename, size_t>
-  friend class array_view;
-
   /**
    * View where n >= 3 dimensions
    */
@@ -90,36 +94,30 @@ class container_impl {
   class array_view : view_base<storage_class> {
    public:
     array_view(size_t offset, parent_type_& parent)
-        : _offset(offset), _parent(parent) {
-      DEBUG("array_view<" << ndim << ">(" << offset << ")");
-    }
+        : _offset(offset), _parent(parent) {}
 
-    auto operator[](const size_t index) {
+    auto operator[](const dimen_size_type index) {
+      using view_type = array_view<decltype(parent()), storage_class, ndim - 1>;
       const auto flat_index = _offset + index * stride();
       assert(flat_index < size());
-      DEBUG("_data<" << size() << ">::array_view<" << dimen()
-            << ":" << stride() << ">[" << _offset << " + " << index << "]");
-      return array_view<decltype(parent()), storage_class, ndim - 1>(
-          flat_index, parent());
+      return view_type(flat_index, parent());
     }
 
-    auto operator[](const size_t index) const {
+    auto operator[](const dimen_size_type index) const {
+      using view_type = array_view<decltype(parent()), storage_class, ndim - 1>;
       const auto flat_index = _offset + index * stride();
       assert(flat_index < size());
-      DEBUG("_data<" << size() << ">::array_view<" << dimen()
-            << ":" << stride() << ">[" << _offset << " + " << index << "]");
-      return array_view<decltype(parent()), storage_class, ndim - 1>(
-          flat_index, parent());
+      return view_type(flat_index, parent());
     }
 
-    constexpr size_t size() const { return _parent.size(); }
-    constexpr size_type dimen_size() const { return _parent.dimen_size(); }
+    constexpr size_type size() const { return _parent.size(); }
+    constexpr dimen_size_type dimen_size() const { return _parent.dimen_size(); }
     static constexpr size_type dimen() { return ndim; }
-    constexpr size_t stride() const { return _parent.stride(); }
+    constexpr size_type stride() const { return _parent.stride(); }
     auto& parent() { return _parent.parent(); }
 
    private:
-    const size_t _offset;
+    const size_type _offset;
     parent_type_& _parent;
   };
 
@@ -129,32 +127,28 @@ class container_impl {
   template<typename parent_type_, typename storage_class>
   class array_view<parent_type_, storage_class, 1> {
    public:
-    array_view(size_t offset, parent_type_& parent)
-        : _offset(offset), _parent(parent) {
-      // DEBUG("array_view<1>(" << offset << ")");
-    }
+    array_view(size_type offset, parent_type_& parent)
+        : _offset(offset), _parent(parent) {}
 
-    value_type& operator[](const size_t index) {
-      const auto flat_index = _offset + index * stride();
-      assert(flat_index < size());
-      // DEBUG("_data<" << size() << ">::array_view<" << dimen()
-      //       << ":" << stride() << ">[" << _offset << " + " << index << "]");
-      return _parent[flat_index];
-    }
-
-    const value_type& operator[](const size_t index) const {
+    value_type& operator[](const dimen_size_type index) {
       const auto flat_index = _offset + index * stride();
       assert(flat_index < size());
       return _parent[flat_index];
     }
 
-    constexpr size_t size() const { return _parent.size(); }
+    const value_type& operator[](const dimen_size_type index) const {
+      const auto flat_index = _offset + index * stride();
+      assert(flat_index < size());
+      return _parent[flat_index];
+    }
+
+    constexpr size_type size() const { return _parent.size(); }
     constexpr size_type dimen_size() const { return _parent.dimen_size(); }
     static constexpr size_type dimen() { return 1u; }
-    constexpr size_t stride() const { return _parent.stride(); }
+    constexpr size_type stride() const { return _parent.stride(); }
 
    private:
-    const size_t _offset;
+    const size_type _offset;
     parent_type_& _parent;
   };
 
@@ -192,26 +186,26 @@ class container_impl<T, size_, storage_class_, dn> {
   static constexpr dimen_size_type dimen_size() { return dn; }
   static constexpr size_type dimen() { return 1u; }
   constexpr size_type stride() const { return 1u; }
-  constexpr size_t volume() const { return dimen_size(); }
+  constexpr size_type volume() const { return dimen_size(); }
 
-  value_type& operator[](const size_t index) {
-    DEBUG("container_impl<" << size() << ">[" << index << "]");
+  value_type& operator[](const dimen_size_type index) {
+    assert(index < size());
     return _data[index];
   }
 
-  const value_type& operator[](const size_t index) const {
-    DEBUG("container_impl<" << size() << ">[" << index << "]");
+  const value_type& operator[](const dimen_size_type index) const {
+    assert(index < size());
     return _data[index];
   }
 
   value_type* data() { return _data.data(); }
   const value_type* data() const { return _data.data(); }
 
-  auto begin() { return _data.begin(); }
-  auto end() { return _data.end(); }
+  typename storage_class::iterator begin() { return _data.begin(); }
+  typename storage_class::iterator end() { return _data.end(); }
 
-  auto begin() const { return _data.begin(); }
-  auto end() const { return _data.end(); }
+  typename storage_class::const_iterator begin() const { return _data.begin(); }
+  typename storage_class::const_iterator end() const { return _data.end(); }
 
  private:
   storage_class _data;
@@ -228,7 +222,7 @@ class container_impl<T, size_, storage_class_, dn> {
  * \tparam d1 The number of elements in the top dimension.
  * \tparam dimensions... The number of elements in subsequent dimensions.
  */
-template<typename T, size_t d1, size_t... dimensions>
+template<typename T, size_t d1, unsigned int... dimensions>
 class container : public container_impl<
   T, detail::product<d1, dimensions...>::call(),
   std::array<T, detail::product<d1, dimensions...>::call()>,
@@ -248,7 +242,7 @@ class container : public container_impl<
  * \tparam T The element type.
  * \tparam size The number of elements in the container.
  */
-template<typename T, size_t size>
+template<typename T, unsigned int size>
 class container<T, size> : public container_impl<
   T, size, std::array<T, size>, size> {
  public:
