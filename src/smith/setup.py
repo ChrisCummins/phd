@@ -16,7 +16,12 @@ setup(name='smith',
       license='',
       packages=[ 'smith' ],
       package_data={ 'smith': [ 'share/sql/*.sql' ] },
-      scripts=[ 'bin/smith' ],
+      scripts=[
+          'bin/fetch-dnn',
+          'bin/fetch-fs',
+          'bin/fetch-gh',
+          'bin/smith'
+      ],
       test_suite='nose.collector',
       tests_require=[ 'nose' ],
       install_requires=deps,

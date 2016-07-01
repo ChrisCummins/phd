@@ -19,8 +19,8 @@
 #include "ocl.h"
 #include "convert_dataset.h"
 
-static int generate_vector(float *x_vector, int dim) 
-{	
+static int generate_vector(float *x_vector, int dim)
+{
 	srand(54321);
 	int i;
 	for(i=0;i<dim;i++)
@@ -33,7 +33,7 @@ static int generate_vector(float *x_vector, int dim)
 int main(int argc, char** argv) {
 	struct pb_TimerSet timers;
 	struct pb_Parameters *parameters;
-	
+
 	printf("CUDA accelerated sparse matrix vector multiplication****\n");
 	printf("Original version by Li-Wen Chang <lchang20@illinois.edu> and Shengzhao Wu<wu14@illinois.edu>\n");
 	printf("This version maintained by Chris Rodrigues  ***********\n");
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 
 	pb_InitializeTimerSet(&timers);
 	pb_SwitchToTimer(&timers, pb_TimerID_COMPUTE);
-	
+
 	//parameters declaration
 	cl_int clStatus;
 	cl_platform_id clPlatform;
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 	CHECK_ERROR("clGetPlatformIDs")
 
 	cl_context_properties clCps[3] = {CL_CONTEXT_PLATFORM,(cl_context_properties)clPlatform,0};
-	
+
 	cl_device_id clDevice;
 	clStatus = clGetDeviceIDs(clPlatform,CL_DEVICE_TYPE_GPU,1,&clDevice,NULL);
 	CHECK_ERROR("clGetDeviceIDs")
@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
 	CHECK_ERROR("clCreateCommandQueue")
 
   	pb_SetOpenCL(&clContext, &clCommandQueue);
-	
+
 	const char* clSource[] = {readFile("src/opencl_base/kernel.cl")};
 	cl_program clProgram = clCreateProgramWithSource(clContext,1,clSource,NULL,&clStatus);
 	CHECK_ERROR("clCreateProgramWithSource")
@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
 	clStatus = clBuildProgram(clProgram,1,&clDevice,clOptions,NULL,NULL);
 	CHECK_ERROR("clBuildProgram")
 
-	cl_kernel clKernel = clCreateKernel(clProgram,"spmv_jds_naive",&clStatus);
+	cl_kernel clKernel = clCreateKernel(clProgram,"A",&clStatus);
 	CHECK_ERROR("clCreateKernel")
 
 	int len;
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
 	int dim;
 	int pad=32;
 	int nzcnt_len;
-	
+
 	//host memory allocation
 	//matrix
 	float *h_data;
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 	//vector
 	float *h_Ax_vector;
 	float *h_x_vector;
-	
+
 	//device memory allocation
 	//matrix
 	cl_mem d_data;
@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
 	//vector
 	cl_mem d_Ax_vector;
 	cl_mem d_x_vector;
-	
+
 	cl_mem jds_ptr_int;
 	cl_mem sh_zcnt_int;
 
@@ -128,11 +128,11 @@ int main(int argc, char** argv) {
 		&h_data, &h_ptr, &h_nzcnt, &h_indices, &h_perm,
 		&col_count, &dim, &len, &nzcnt_len, &depth
 	);
-	
+
 //	pb_SwitchToTimer(&timers, pb_TimerID_COMPUTE);
-	h_Ax_vector=(float*)malloc(sizeof(float)*dim);	
-	h_x_vector=(float*)malloc(sizeof(float)*dim);	
-	
+	h_Ax_vector=(float*)malloc(sizeof(float)*dim);
+	h_x_vector=(float*)malloc(sizeof(float)*dim);
+
   input_vec( parameters->inpFiles[1],h_x_vector,dim);
 
 	 pb_SwitchToTimer(&timers, pb_TimerID_COMPUTE);
@@ -143,7 +143,7 @@ int main(int argc, char** argv) {
   //      CHECK_ERROR("clGetDeviceInfo")
 	clStatus = clGetDeviceInfo(clDevice,CL_DEVICE_MAX_COMPUTE_UNITS,sizeof(cl_uint),&(clDeviceProp.multiProcessorCount),NULL);
         CHECK_ERROR("clGetDeviceInfo")
-	
+
 	pb_SwitchToTimer(&timers, pb_TimerID_COPY);
 	//memory allocation
 	d_data = clCreateBuffer(clContext,CL_MEM_READ_ONLY,len*sizeof(float),NULL,&clStatus);
@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
 	CHECK_ERROR("clCreateBuffer")
 
 	clMemSet(clCommandQueue,d_Ax_vector,0,dim*sizeof(float));
-	
+
 	//memory copy
 	clStatus = clEnqueueWriteBuffer(clCommandQueue,d_data,CL_FALSE,0,len*sizeof(float),h_data,0,NULL,NULL);
 	CHECK_ERROR("clEnqueueWriteBuffer")
@@ -178,9 +178,9 @@ int main(int argc, char** argv) {
 	CHECK_ERROR("clEnqueueWriteBuffer")
 	clStatus = clEnqueueWriteBuffer(clCommandQueue,sh_zcnt_int,CL_TRUE,0,nzcnt_len*sizeof(int),h_nzcnt,0,NULL,NULL);
 	CHECK_ERROR("clEnqueueWriteBuffer")
-	
+
 	pb_SwitchToTimer(&timers, pb_TimerID_COMPUTE);
-	
+
 	size_t grid;
 	size_t block;
 
@@ -218,11 +218,11 @@ int main(int argc, char** argv) {
 
 	clStatus = clFinish(clCommandQueue);
 	CHECK_ERROR("clFinish")
-	
+
 	pb_SwitchToTimer(&timers, pb_TimerID_COPY);
 	//HtoD memory copy
 	clStatus = clEnqueueReadBuffer(clCommandQueue,d_Ax_vector,CL_TRUE,0,dim*sizeof(float),h_Ax_vector,0,NULL,NULL);
-	CHECK_ERROR("clEnqueueReadBuffer")	
+	CHECK_ERROR("clEnqueueReadBuffer")
 
 	clStatus = clReleaseKernel(clKernel);
 	clStatus = clReleaseProgram(clProgram);
@@ -236,17 +236,17 @@ int main(int argc, char** argv) {
 	CHECK_ERROR("clReleaseMemObject")
 
 	clStatus = clReleaseCommandQueue(clCommandQueue);
-	clStatus = clReleaseContext(clContext);	
-	
+	clStatus = clReleaseContext(clContext);
+
 	if (parameters->outFile) {
 		pb_SwitchToTimer(&timers, pb_TimerID_IO);
 		outputData(parameters->outFile,h_Ax_vector,dim);
 	}
 
 	pb_SwitchToTimer(&timers, pb_TimerID_COMPUTE);
-	
+
 	free((void*)clSource[0]);
-	
+
 	free (h_data);
 	free (h_indices);
 	free (h_ptr);
