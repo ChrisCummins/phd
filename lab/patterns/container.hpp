@@ -43,6 +43,7 @@ class container_impl {
 
   container_impl() {}
   explicit container_impl(const value_type& fill) : _parent(fill) {}
+  explicit container_impl(storage_class&& data) : _parent(std::move(data)) {}
 
   static constexpr size_type size() { return size_; }
   static constexpr size_type dimen_size() { return d1; }
@@ -178,6 +179,7 @@ class container_impl<size_, T, dn> {
 
   container_impl() {}
   explicit container_impl(const value_type& fill) { _data.fill(fill); }
+  explicit container_impl(storage_class&& data) : _data(std::move(data)) {}
 
   static constexpr size_type size() { return size_; }
   static constexpr size_type dimen_size() { return dn; }

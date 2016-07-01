@@ -162,6 +162,22 @@ TEST(patterns, container_1d) {
   ASSERT_EQ(10, a[5]);
 }
 
+TEST(patterns, container_1d_data) {
+  std::array<int, 10> d;
+  d.fill(15);
+  d[5] = 10;
+
+  pat::container<int, d.size()> a{std::move(d)};
+
+  ASSERT_EQ(10u, a.size());
+  ASSERT_EQ(10u, a.dimen_size());
+  ASSERT_EQ(1u, a.stride());
+  ASSERT_EQ(a.dimen_size(), a.volume());
+
+  ASSERT_EQ(15, a[0]);
+  ASSERT_EQ(10, a[5]);
+}
+
 TEST(patterns, container_2d) {
   pat::container<int, 10, 10> a{2};
 
@@ -173,6 +189,19 @@ TEST(patterns, container_2d) {
 
   a[5][3] = 10;
   ASSERT_EQ(10, a[5][3]);
+}
+
+TEST(patterns, container_2d_data) {
+  std::array<int, 10 * 10> d;
+  d.fill(15);
+
+  pat::container<int, 10, 10> a{std::move(d)};
+
+  ASSERT_EQ(100u, a.size());
+  ASSERT_EQ(10u, a.dimen_size());
+
+  for (auto& val : a)
+    ASSERT_EQ(15, val);
 }
 
 TEST(patterns, container_3d) {
