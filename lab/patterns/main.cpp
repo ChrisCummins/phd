@@ -3,13 +3,7 @@
 #include <utility>
 #include <vector>
 
-#include <phd/test>
-
-#if 0
-# define DEBUG(x) std::cerr << x << "\n";
-#else
-# define DEBUG(x)
-#endif
+#include <phd/phd>
 
 #include "./container.hpp"
 
