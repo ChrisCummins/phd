@@ -1,10 +1,22 @@
-import sys
+#!/usr/bin/env python3
+#
+import os
+
+from argparse import ArgumentParser
 
 import smith
+from smith import scheduler
 
-def main(argv):
-   print(argv[0])
-   print(smith.foo())
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('input', help='path to job description')
+    args = parser.parse_args()
+
+    job_path = os.path.expanduser(args.input)
+
+    scheduler.run(job_path)
+
 
 if __name__ == "__main__":
-   main(sys.argv)
+    main()

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 # Preprocess the raw dataset.
 #
@@ -26,7 +25,6 @@ from hashlib import md5
 from multiprocessing import cpu_count,Pool
 from subprocess import Popen,PIPE,STDOUT
 from tempfile import NamedTemporaryFile
-
 
 
 #
@@ -521,32 +519,21 @@ def preprocess_and_print(contents):
         sys.exit(2)
 
 
-def main():
-    parser = ArgumentParser()
-    parser.add_argument('input', help='path to input')
-    parser.add_argument('-f', action='store_true', help='treat input as file')
-    args = parser.parse_args()
+def preprocess_file(path):
+    with open(input_path) as infile:
+        preprocess_and_print(infile.read())
 
-    input_path = args.input
-    file_mode = args.f
 
-    if file_mode:
-        with open(input_path) as infile:
-            preprocess_and_print(infile.read())
+def preprocess_db(db_path):
+    db = sqlite3.connect(db_path)
+    db.create_aggregate("MD5SUM", 1, md5sum_aggregator)
+    db.create_aggregate("LC", 1, linecount_aggregator)
+    db.create_aggregate("CC", 1, charcount_aggregator)
+
+    modified = is_modified(db)
+    if modified:
+        preprocess_contentfiles(db_path)
+        set_modified_status(db, modified)
+        print('done.')
     else:
-        db = sqlite3.connect(input_path)
-        db.create_aggregate("MD5SUM", 1, md5sum_aggregator)
-        db.create_aggregate("LC", 1, linecount_aggregator)
-        db.create_aggregate("CC", 1, charcount_aggregator)
-
-        modified = is_modified(db)
-        if modified:
-            preprocess_contentfiles(input_path)
-            set_modified_status(db, modified)
-            print('done.')
-        else:
-            print('nothing to be done.')
-
-
-if __name__ == '__main__':
-    main()
+        print('nothing to be done.')

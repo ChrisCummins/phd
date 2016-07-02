@@ -21,7 +21,10 @@ setup(name='smith',
           'bin/fetch-dnn',
           'bin/fetch-fs',
           'bin/fetch-gh',
-          'bin/smith'
+          'bin/smith',
+          'bin/smith-explore',
+          'bin/smith-explore-gh',
+          'bin/smith-train'
       ],
       test_suite='nose.collector',
       tests_require=[ 'nose' ],

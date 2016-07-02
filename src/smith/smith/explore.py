@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 # Exploratory analysis of preprocessed dataset.
 #
@@ -6,13 +5,7 @@
 #
 #   Graphs:
 #
-#     Number of OpenCL repos over time
-#     Distribution of stars and OpenCL file counts
-#     Distribution of repo star counts
-#     Distribution of repo forks
-#     Distribution of times since last changed
 #     Distribution of file sizes
-#     Distribution of files per repo
 #
 import locale
 import os
@@ -48,6 +41,7 @@ def bigint(n):
 
 
 def seq_stats(sorted_arr):
+    sorted_arr = sorted_arr or [0]
     avg = sum(sorted_arr) / len(sorted_arr)
     midpoint = int(len(sorted_arr) / 2)
     if len(sorted_arr) % 2 == 1:
@@ -63,6 +57,62 @@ def seq_stats(sorted_arr):
 # Generate dataset stats.
 #
 def stats_worker(db_path):
+    print("stats worker ...")
+    db = sqlite3.connect(db_path)
+    c = db.cursor()
+    stats = []
+
+    c.execute("SELECT Count(*) from ContentFiles")
+    nb_ocl_files = c.fetchone()[0]
+    stats.append(('Number of content files', bigint(nb_ocl_files)))
+    stats.append(('',''))
+
+    # ContentFiles
+    c.execute("SELECT Count(DISTINCT id) from ContentFiles")
+    nb_uniq_ocl_files = c.fetchone()[0]
+    ratio_uniq_ocl_files = nb_uniq_ocl_files / nb_ocl_files
+    stats.append(('Number of unique content files',
+                  bigint(nb_uniq_ocl_files) +
+                  ' ({:.0f}%)'.format(ratio_uniq_ocl_files * 100)))
+
+    c.execute("SELECT contents FROM ContentFiles")
+    code = c.fetchall()
+    code_lcs = [len(x[0].split('\n')) for x in code]
+    code_lcs.sort()
+    code_lc = sum(code_lcs)
+    stats.append(('Total content line count', bigint(code_lc)))
+
+    stats.append(('Content file line counts', seq_stats(code_lcs)))
+    stats.append(('',''))
+
+    # Preprocessed
+    c.execute("SELECT Count(*) FROM PreprocessedFiles WHERE status=0")
+    nb_pp_files = c.fetchone()[0]
+    ratio_pp_files = nb_pp_files / nb_ocl_files
+    stats.append(('Number of good preprocessed files',
+                  bigint(nb_pp_files) +
+                  ' ({:.0f}%)'.format(ratio_pp_files * 100)))
+
+    c.execute('SELECT contents FROM PreprocessedFiles WHERE status=0')
+    bc = c.fetchall()
+    pp_lcs = [len(x[0].split('\n')) for x in bc]
+    pp_lcs.sort()
+    pp_lc = sum(pp_lcs)
+    ratio_pp_lcs = pp_lc / code_lc
+    stats.append(('Lines of good preprocessed code',
+                  bigint(pp_lc) +
+                  ' ({:.0f}%)'.format(ratio_pp_lcs * 100)))
+
+    stats.append(('Good preprocessed line counts',
+                  seq_stats(pp_lcs)))
+    stats.append(('',''))
+
+    return stats
+
+
+# Generate dataset stats.
+#
+def gh_stats_worker(db_path):
     print("stats worker ...")
     db = sqlite3.connect(db_path)
     c = db.cursor()
@@ -156,7 +206,7 @@ def graph_ocl_lc(db_path):
     sns.distplot(data, bins=20, kde=False)
     plt.xlabel('Line count')
     plt.ylabel('Number of OpenCL files')
-    plt.title('Distribution of OpenCL file lengths')
+    plt.title('Distribution of source code lengths')
     plt.savefig(out_path)
 
 
@@ -203,7 +253,7 @@ def graph_ocl_stars(db_path):
     stars = [x[0] for x in c.fetchall()]
 
     # Filter range
-    data = [x for x in stars if x < 100]
+    data = [x for x in stars if x < 50]
 
     sns.distplot(data, bins=20, kde=False)
     plt.xlabel('GitHub Stargazer count')
@@ -212,14 +262,8 @@ def graph_ocl_stars(db_path):
     plt.savefig(out_path)
 
 
-def main():
+def explore(db_path):
     locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
-
-    parser = ArgumentParser()
-    parser.add_argument('input', help='path to SQL input dataset')
-    args = parser.parse_args()
-
-    db_path = args.input
 
     db = sqlite3.connect(db_path)
 
@@ -229,8 +273,8 @@ def main():
     # Worker process pool
     pool, jobs = Pool(processes=4), []
     jobs.append(pool.apply_async(graph_ocl_lc, (db_path,)))
-    jobs.append(pool.apply_async(graph_ocl_stars, (db_path,)))
-
+    # TODO: If GH dataset:
+    # jobs.append(pool.apply_async(graph_ocl_stars, (db_path,)))
     future_stats = pool.apply_async(stats_worker, (db_path,))
 
     # Wait for jobs to finish
@@ -249,5 +293,34 @@ def main():
         else:
             print()
 
-if __name__ == '__main__':
-    main()
+
+def explore_gh(db_path):
+    locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
+
+    db = sqlite3.connect(db_path)
+
+    if not os.path.exists(img_dir):
+        os.makedirs(img_dir)
+
+    # Worker process pool
+    pool, jobs = Pool(processes=4), []
+    jobs.append(pool.apply_async(graph_ocl_lc, (db_path,)))
+    jobs.append(pool.apply_async(graph_ocl_stars, (db_path,)))
+
+    future_stats = pool.apply_async(gh_stats_worker, (db_path,))
+
+    # Wait for jobs to finish
+    [job.wait() for job in jobs]
+
+    # Print stats
+    print()
+    stats = future_stats.get()
+    maxlen = max([len(x[0]) for x in stats])
+    for stat in stats:
+        k,v = stat
+        if k:
+            print(k, ':', ' ' * (maxlen - len(k) + 2), v, sep='')
+        elif v == '':
+            print(k)
+        else:
+            print()

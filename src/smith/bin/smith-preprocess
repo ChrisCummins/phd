@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+#
+# Preprocess the raw dataset.
+#
+from argparse import ArgumentParser
+
+import smith
+from smith import preprocess
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('input', help='path to input')
+    parser.add_argument('-f', action='store_true', help='treat input as file')
+    args = parser.parse_args()
+
+    input_path = args.input
+    file_mode = args.f
+
+    if file_mode:
+        preprocess.preprocess_file(input_path)
+    else:
+        preprocess.preprocess_db(input_path)
+
+
+if __name__ == '__main__':
+    main()

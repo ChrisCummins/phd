@@ -13,6 +13,11 @@ from hashlib import sha1
 from random import shuffle
 from socket import gethostname
 
+import smith
+from smith import explore
+from smith import preprocess
+from smith import train
+
 torch_dir = '~/src/torch-rnn'
 
 def database_path(db_name):
@@ -72,10 +77,9 @@ class task(object):
             os.path.splitext(os.path.basename(self.db_path))[0] + '.txt')
         print(out_path)
 
-        subprocess.call('./preprocess.py {}'.format(self.db_path), shell=True)
-        subprocess.call('./train.py {} {} -i'.format(self.db_path, out_path),
-                        shell=True)
-        subprocess.call('./explore.py {}'.format(self.db_path), shell=True)
+        preprocess.preprocess_db(self.db_path)
+        train.train(self.db_path, out_path, fileid=True)
+        explore.explore(self.db_path)
         self.preprocessed = True
 
     def next_device_step(self):
@@ -139,15 +143,7 @@ def create_task(job, target):
     return task(db, db_path, benchmark, seed, oracle)
 
 
-def main():
-    locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
-
-    parser = ArgumentParser()
-    parser.add_argument('input', help='path to job description')
-    args = parser.parse_args()
-
-    job_path = os.path.expanduser(args.input)
-
+def run(job_path):
     if not os.path.exists(job_path):
         print("fatal: file", job_path, "not found")
         sys.exit(1)
@@ -157,7 +153,3 @@ def main():
 
         tasks = [create_task(job, target) for target in job['targets']]
         run_tasks(tasks)
-
-
-if __name__ == '__main__':
-    main()

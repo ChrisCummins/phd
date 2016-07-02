@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 # Train machine learning models on dataset.
 #
@@ -83,42 +82,13 @@ def linecount(t):
     return len(t.split('\n'))
 
 
-def main():
-    parser = ArgumentParser()
-    parser.add_argument('input', help='path to SQL input dataset')
-    parser.add_argument('output', help='path to output file or directory')
-    parser.add_argument('-d', action='store_true', default=False,
-                        help='output to directory (overrides -i, --eof, -r)')
-    parser.add_argument('-i', action='store_true', default=False,
-                        help='include file separators')
-    parser.add_argument('--eof', action='store_true', default=False,
-                        help='print end of file')
-    parser.add_argument('-r', action='store_true', default=False,
-                        help='use reverse order')
-    parser.add_argument('-s', '--status', type=int, default=0,
-                        help='status code to use')
-    args = parser.parse_args()
-
-    db_path = args.input
-    out_path = args.output
-    opts = {
-        "dir": args.d,
-        "eof": args.eof,
-        "fileid": args.i,
-        "reverse": args.r,
-        "status": args.status
-    }
-
+def train(db_path, out_path, **kwargs):
     db = sqlite3.connect(db_path)
     db.create_function("LC", 1, linecount)
 
     # auto-detect whether it's a GitHub repo
-    opts['gh'] = table_exists(db, 'Repositories')
+    kwargs['gh'] = table_exists(db, 'Repositories')
 
-    ret = create_corpus(db, out_path, **opts)
+    ret = create_corpus(db, out_path, **kwargs)
     if ret:
         sys.exit(ret)
-
-
-if __name__ == '__main__':
-    main()
