@@ -17,6 +17,7 @@ setup(name='smith',
       packages=[ 'smith' ],
       package_data={ 'smith': [ 'share/sql/*.sql' ] },
       scripts=[
+          'bin/fetch-clsmith',
           'bin/fetch-dnn',
           'bin/fetch-fs',
           'bin/fetch-gh',
