@@ -11,18 +11,14 @@ import sys
 from argparse import ArgumentParser
 from hashlib import sha1
 from random import shuffle
-from socket import gethostname
 
 import smith
 from smith import explore
 from smith import preprocess
 from smith import train
+from smith import config
 
 torch_dir = '~/src/torch-rnn'
-
-def database_path(db_name):
-    db_path_base = 'data'
-    return os.path.join(db_path_base, str(db_name) + '.db')
 
 
 def fetch_samples(sample_path):
@@ -36,37 +32,45 @@ def checksum(s):
     return sha1(s.encode('utf-8')).hexdigest()
 
 
-def is_host():
-    return gethostname() != "whz4"
+def load_oracle(path):
+    path = os.path.expanduser(path)
+
+    if not os.path.exists(path):
+        print("fatal: oracle file '", path, "' not found",
+              sep='', file=sys.stderr)
+        sys.exit(1)
+
+    with open(path) as infile:
+        oracle = infile.read().strip()
 
 
 class task(object):
-    def __init__(self, db, db_path, benchmark, seed, oracle,
+    def __init__(self, db_path, benchmark, seed, oracle,
                  target_num_samples=50000):
-        self.db = db
         self.benchmark = benchmark
         self.seed = seed
         self.oracle = oracle
         self.db_path = db_path
-        self.db = db
         self.target_num_samples=target_num_samples
         self.preprocessed = False
 
     def samples_remaining(self):
-        c = self.db.cursor()
+        db = sqlite3.connect(self.db_path)
+        c = db.cursor()
         c.execute('SELECT Count(*) FROM ContentFiles')
         num_samples = c.fetchone()[0]
         c.close()
+        db.close()
         return max(self.target_num_samples - num_samples, 0)
 
     def complete(self):
-        if is_host():
+        if config.is_host():
             return self.preprocessed
         else:
             return self.samples_remaining() == 0
 
     def next_step(self):
-        if is_host():
+        if config.is_host():
             self.next_host_step()
         else:
             self.next_device_step()
@@ -93,13 +97,26 @@ class task(object):
         samples = fetch_samples('/tmp/sample.txt')
         ids = [checksum(sample) for sample in samples]
 
-        c = self.db.cursor()
+        db = sqlite3.connect(self.db_path)
+        c = db.cursor()
         for id,sample in zip(ids, samples):
             c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
                       (id,sample))
         self.db.commit()
         c.close()
+        db.close()
         print('\r\033[K', end='')
+
+    @staticmethod
+    def from_json(db_path, data):
+        benchmark = data['benchmark']
+        seed = data['seed']
+        oracle_path = data['oracle']
+
+        db = connect_to_database(db_path)
+        oracle = load_oracle(oracle_path)
+
+        return task(db_path, benchmark, seed, oracle)
 
 
     def __repr__(self):
@@ -129,27 +146,34 @@ def connect_to_database(db_path):
     return sqlite3.connect(db_path)
 
 
-def create_task(job, target):
-    data = job['targets'][target]
-    benchmark = data['benchmark']
-    seed = data['seed']
-    db_path = database_path(target)
-    oracle_path = data['oracle']
+def task_db_path(root, task_name):
+    return os.path.expanduser(os.path.join(root, str(task_name) + '.db'))
 
-    db = connect_to_database(db_path)
-    with open(oracle_path) as infile:
-        oracle = infile.read().strip()
 
-    return task(db, db_path, benchmark, seed, oracle)
+def load_json(path):
+    path = os.path.expanduser(path)
+
+    if not os.path.exists(path):
+        print("fatal: JSON file '", path, "' not found",
+              sep='', file=sys.stderr)
+        sys.exit(1)
+
+    with open(path) as infile:
+        try:
+            return json.load(infile)
+        except ValueError as e:
+            print("fatal: malformed JSON file '", path, "'. Error:",
+                  sep='', file=sys.stderr)
+            print("   ", e, file=sys.stderr)
+            sys.exit(1)
+
 
 
 def run(job_path):
-    if not os.path.exists(job_path):
-        print("fatal: file", job_path, "not found")
-        sys.exit(1)
+    job = load_json(job_path)
+    data_path = job['data']['path']
 
-    with open(job_path) as infile:
-        job = json.load(infile)
-
-        tasks = [create_task(job, target) for target in job['targets']]
-        run_tasks(tasks)
+    tasks = [task.from_json(task_db_path(data_path, target),
+                            job['targets'][target])
+             for target in job['targets']]
+    run_tasks(tasks)
