@@ -2,9 +2,10 @@ import os
 import re
 import subprocess
 
-from tempfile import mkstemp
-from shutil import move
 from os import remove, close
+from shutil import move
+from subprocess import CalledProcessError
+from tempfile import mkstemp
 
 # Number of Platforms found: 1
 #   Number of Devices found for Platform 0: 1
@@ -135,8 +136,12 @@ class benchmark(object):
         for i in range(n):
             cmd = ("./parboil run {} {} {}"
                    .format(benchmark, self.implementation, dataset))
-            ret = subprocess.call(cmd, shell=True)
-            if ret:
+            try:
+                out = subprocess.call(cmd, shell=True)
+                print('NUM LINES OUTPUT:', len(out.split('\n')))
+                print(out)
+            except CalledProcessError as e:
+                print(e, file=sys.stderr)
                 raise BenchmarkException("Benchmark execution failed")
 
 
