@@ -4,7 +4,6 @@ import os
 from tempfile import mkstemp
 from shutil import move
 from os import remove, close
-from enum import Enum
 
 # parboil compile [benchmark] opencl_base
 # parboil run [benchmark] [dataset]
@@ -32,7 +31,7 @@ from enum import Enum
 
 class BenchmarkException(Exception): pass
 
-class Device(Enum):
+class Device(object):
     GPU = "CL_DEVICE_TYPE_GPU"
     CPU = "CL_DEVICE_TYPE_CPU"
 
@@ -83,7 +82,7 @@ class implementation_file(object):
     def set_device_type(self, devtype):
         replace(self.path,
                 re.compile('#define MY_DEVICE_TYPE .+'),
-                '#define MY_DEVICE_TYPE ' + str(devtype.value))
+                '#define MY_DEVICE_TYPE ' + str(devtype))
 
 
 class benchmark(object):
