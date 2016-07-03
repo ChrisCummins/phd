@@ -18,8 +18,6 @@ from smith import preprocess
 from smith import train
 from smith import config
 
-torch_dir = '~/src/torch-rnn'
-
 
 def fetch_samples(sample_path):
     with open(sample_path) as infile:
@@ -45,37 +43,51 @@ def load_oracle(path):
 
 
 class task(object):
-    def __init__(self, db_path, benchmark, seed, oracle,
-                 target_num_samples=50000):
+    def __init__(self, db_path, benchmark, seed, oracle):
         self.benchmark = benchmark
         self.seed = seed
         self.oracle = oracle
         self.db_path = db_path
-        self.target_num_samples=target_num_samples
-        self.preprocessed = False
-
-    def samples_remaining(self):
-        db = sqlite3.connect(self.db_path)
-        c = db.cursor()
-        c.execute('SELECT Count(*) FROM ContentFiles')
-        num_samples = c.fetchone()[0]
-        c.close()
-        db.close()
-        return max(self.target_num_samples - num_samples, 0)
 
     def complete(self):
-        if config.is_host():
-            return self.preprocessed
-        else:
-            return self.samples_remaining() == 0
+        raise NotImplementedError("Abstract class")
 
     def next_step(self):
-        if config.is_host():
-            self.next_host_step()
-        else:
-            self.next_device_step()
+        raise NotImplementedError("Abstract class")
 
-    def next_host_step(self):
+    def __repr__(self):
+        return "task"
+
+    @staticmethod
+    def from_json(db_path, job, target):
+        """
+        Task factory.
+        """
+        data = job['targets'][target]
+        benchmark = data['benchmark']
+        seed = data['seed']
+        oracle_path = data['oracle']
+
+        db = connect_to_database(db_path)
+        oracle = load_oracle(oracle_path)
+
+        task_args = [db_path, benchmark, seed, oracle]
+        if config.is_host():
+            return host_task(*task_args)
+        else:
+            task_args += [job['torch-rnn']['path']]
+            return device_task(*task_args)
+
+
+class host_task(task):
+    def __init__(self, *args, **kwargs):
+        super(host_task, self).__init__(*args, **kwargs)
+        self.preprocessed = False
+
+    def complete(self):
+        return self.preprocessed
+
+    def next_step(self):
         out_path = os.path.join(
             os.path.dirname(self.db_path),
             os.path.splitext(os.path.basename(self.db_path))[0] + '.txt')
@@ -86,8 +98,19 @@ class task(object):
         explore.explore(self.db_path)
         self.preprocessed = True
 
-    def next_device_step(self):
-        os.chdir(os.path.expanduser(torch_dir))
+
+class device_task(task):
+    def __init__(self, *args, torch_rnn_path,
+                 target_num_samples=50000, **kwargs):
+        super(host_task, self).__init__(*args, **kwargs)
+        self.torch_rnn_path = torch_rnn_paths
+        self.target_num_samples = target_num_samples
+
+    def complete(self):
+        return self._samples_remaining() == 0
+
+    def next_step(self):
+        os.chdir(os.path.expanduser(self.torch_rnn_path))
         print("next step:", str(self))
         cmd = "./give-me-kernels '{}' > /tmp/sample.txt".format(self.seed)
         print('\r\033[K  -> seed:'.format(self.seed), end='')
@@ -107,25 +130,18 @@ class task(object):
         db.close()
         print('\r\033[K', end='')
 
-    @staticmethod
-    def from_json(db_path, data):
-        benchmark = data['benchmark']
-        seed = data['seed']
-        oracle_path = data['oracle']
-
-        db = connect_to_database(db_path)
-        oracle = load_oracle(oracle_path)
-
-        return task(db_path, benchmark, seed, oracle)
-
+    def _samples_remaining(self):
+        db = sqlite3.connect(self.db_path)
+        c = db.cursor()
+        c.execute('SELECT Count(*) FROM ContentFiles')
+        num_samples = c.fetchone()[0]
+        c.close()
+        db.close()
+        return max(self.target_num_samples - num_samples, 0)
 
     def __repr__(self):
         return ('{} samples from {} seed'
-                .format(self.samples_remaining(), self.benchmark))
-
-
-def run_task(task):
-    print(task)
+                .format(self._samples_remaining(), self.benchmark))
 
 
 def run_tasks(tasks):
@@ -168,12 +184,10 @@ def load_json(path):
             sys.exit(1)
 
 
-
 def run(job_path):
     job = load_json(job_path)
     data_path = job['data']['path']
 
-    tasks = [task.from_json(task_db_path(data_path, target),
-                            job['targets'][target])
+    tasks = [task.from_json(task_db_path(data_path, target), job, target)
              for target in job['targets']]
     run_tasks(tasks)
