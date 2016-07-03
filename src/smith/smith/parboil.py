@@ -75,6 +75,20 @@ class implementation_file(object):
                 re.compile('#define MY_DEVICE_TYPE .+'),
                 '#define MY_DEVICE_TYPE ' + str(devtype))
 
+class Result(object):
+    def __init__(self, benchmark_id, kernel_id, dataset_id, output):
+        self.benchmark = benchmark_id
+        self.kernel = kernel_id
+        self.dataset = dataset_id
+        self.output = output
+
+    def __repr__(self):
+        return "{} {} {}".format(self.benchmark, self.kernel, self.dataset)
+
+    @staticmethod
+    def from_stdout(benchmark_id, kernel_id, dataset_id, stdout):
+        return Result(benchmark_id, kernel_id, dataset_id, stdout)
+
 
 class benchmark(object):
     def __init__(self, parboil_root, name):
@@ -133,16 +147,19 @@ class benchmark(object):
         if ret:
             raise BenchmarkException("Benchmark compilation failed")
 
+        kernel_id = "XXX"
+
+        results = []
         for i in range(n):
             cmd = ("./parboil run {} {} {}"
                    .format(self.name, self.implementation, dataset))
             try:
-                out = subprocess.call(cmd, shell=True)
-                print('NUM LINES OUTPUT:', len(out.split('\n')))
-                print(out)
+                out = subprocess.check_output(cmd, shell=True).decode()
+                result = Result.from_stdout(self.name, kernel_id, dataset, out)
             except CalledProcessError as e:
                 print(e, file=sys.stderr)
                 raise BenchmarkException("Benchmark execution failed")
+        return results
 
 
     def __repr__(self):

@@ -11,9 +11,11 @@ def main():
     for benchmark in benchmarks:
         for dataset in benchmark.datasets:
             for device in [parboil.Device.GPU]:
-                iterations = 10
+                n_iter = 3
+                results = benchmark.run('small', device_type=device, n=n_iter)
                 print(benchmark.name, dataset, device, iterations)
-                benchmark.run('small', device_type=device, n=iterations)
+                for result in results:
+                    print('   ', result)
 
 
 if __name__ == "__main__":
