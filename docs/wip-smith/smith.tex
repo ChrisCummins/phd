@@ -201,13 +201,16 @@
 
 \begin{abstract}
   We present a novel methodology for generating compute kernels. Given
-  a corpus of example programs and a program checker, we TODO.%
+  a corpus of example programs, we apply deep learning across the
+  implementation space. We construct a language model for the popular
+  compute language OpenCL, from which we obtain new kernels through a
+  process of rejection sampling. %
   %
-  We demonstrate the practicality of our approach using a
-  state-of-the-art machine learning OpenCL autotuner. By incorporating
-  synthetically generated compute kernels, we improve the accuracy of
-  machine learning predictions from XXX\% to XXX\%, demonstrating up
-  to $X\times$ speedup over the hand-selected benchmarks.
+  We demonstrate the benefits of our approach for a state-of-the-art
+  machine learning OpenCL autotuner. By incorporating synthesised
+  compute kernels, we improve the accuracy of machine learning
+  predictions from XXX\% to XXX\%, demonstrating up to $X\times$
+  speedup over the hand-selected benchmarks.
 \end{abstract}
 
 % \category{CR-number}{subcategory}{third-level}
