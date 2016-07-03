@@ -128,14 +128,14 @@ class benchmark(object):
 
         os.chdir(self.parboil_root)
         cmd = ("./parboil compile {} {}"
-               .format(benchmark, self.implementation))
+               .format(self.name, self.implementation))
         ret = subprocess.call(cmd, shell=True)
         if ret:
             raise BenchmarkException("Benchmark compilation failed")
 
         for i in range(n):
             cmd = ("./parboil run {} {} {}"
-                   .format(benchmark, self.implementation, dataset))
+                   .format(self.name, self.implementation, dataset))
             try:
                 out = subprocess.call(cmd, shell=True)
                 print('NUM LINES OUTPUT:', len(out.split('\n')))
