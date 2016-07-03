@@ -75,7 +75,7 @@ class task(object):
         if config.is_host():
             return host_task(*task_args)
         else:
-            task_args += [job['torch-rnn']['path']]
+            task_args = [job['torch-rnn']['path']] + task_args
             return device_task(*task_args)
 
 
@@ -100,10 +100,10 @@ class host_task(task):
 
 
 class device_task(task):
-    def __init__(self, *args, torch_rnn_path,
+    def __init__(self, torch_rnn_path, *args,
                  target_num_samples=50000, **kwargs):
-        super(host_task, self).__init__(*args, **kwargs)
-        self.torch_rnn_path = torch_rnn_paths
+        super(device_task, self).__init__(*args, **kwargs)
+        self.torch_rnn_path = torch_rnn_path
         self.target_num_samples = target_num_samples
 
     def complete(self):
