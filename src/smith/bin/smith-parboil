@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import smith
+import smith.parboil
 from smith import parboil
 
 def main():
-    benchmarks = [parboil.benchmark("~/phd/benchmarks/parboil", x) for x in [
+    benchmarks = [parboil.benchmark("~/src/parboil", x) for x in [
         'spmv'
     ]]
 

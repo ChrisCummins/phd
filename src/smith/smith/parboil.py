@@ -156,6 +156,7 @@ class benchmark(object):
             try:
                 out = subprocess.check_output(cmd, shell=True).decode()
                 result = Result.from_stdout(self.name, kernel_id, dataset, out)
+                results.append(result)
             except CalledProcessError as e:
                 print(e, file=sys.stderr)
                 raise BenchmarkException("Benchmark execution failed")
