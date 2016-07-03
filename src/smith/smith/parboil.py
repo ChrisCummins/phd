@@ -1,17 +1,11 @@
-import re
 import os
+import re
+import subprocess
 
 from tempfile import mkstemp
 from shutil import move
 from os import remove, close
 
-# parboil compile [benchmark] opencl_base
-# parboil run [benchmark] [dataset]
-
-# Parboil parallel benchmark suite, version 0.2
-
-# Resolving OpenCL library...
-#         libOpenCL.so.1 => /usr/lib64/libOpenCL.so.1 (0x00007f2e2adfd000)
 # Number of Platforms found: 1
 #   Number of Devices found for Platform 0: 1
 # Chose Device Type: GPU
@@ -24,10 +18,6 @@ from os import remove, close
 # CPU/Kernel Overlap: 0.174211
 # Timer Wall Time: 1.768981
 # Pass
-
-# ./parboil run spmv opencl_base small
-# ./parboil run spmv opencl_base medium
-# ./parboil run spmv opencl_base large
 
 class BenchmarkException(Exception): pass
 
@@ -135,12 +125,19 @@ class benchmark(object):
 
         self.src_file.set_device_type(device_type)
 
+        os.chdir(self.parboil_root)
         cmd = ("./parboil compile {} {}"
                .format(benchmark, self.implementation))
+        ret = subprocess.call(cmd, shell=True)
+        if ret:
+            raise BenchmarkException("Benchmark compilation failed")
 
-        cmd = ("./parboil run {} {} {}"
-               .format(benchmark, self.implementation, dataset))
-        # TODO: Process output, insert into db
+        for i in range(n):
+            cmd = ("./parboil run {} {} {}"
+                   .format(benchmark, self.implementation, dataset))
+            ret = subprocess.call(cmd, shell=True)
+            if ret:
+                raise BenchmarkException("Benchmark execution failed")
 
 
     def __repr__(self):
