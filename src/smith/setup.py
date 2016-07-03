@@ -1,10 +1,6 @@
 from setuptools import setup
 
 deps = [
-    'labm8',
-    'matplotlib',
-    'numpy',
-    'seaborn'
 ]
 
 setup(name='smith',
