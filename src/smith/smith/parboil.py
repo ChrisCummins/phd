@@ -13,6 +13,7 @@ from os import remove, close
 from shutil import move
 from subprocess import CalledProcessError
 from tempfile import mkstemp
+from socket import gethostname
 
 # Number of Platforms found: 1
 #   Number of Devices found for Platform 0: 1
@@ -161,7 +162,7 @@ class Benchmark(object):
         :throws: BenchmarkException in case of error during
                  compilation or execution
         """
-        if dataset not in self.datasets:
+        if dataset.id not in [x.id for x in self.datasets]:
             raise BenchmarkException("No such dataset '{}'".format(dataset))
 
         # Set the execution device
@@ -172,7 +173,8 @@ class Benchmark(object):
 
         # Build the benchmark
         os.chdir(self.parboil_root)
-        cmd = ("./parboil compile {} {}"
+        print("building", self.id, self.implementation, "...")
+        cmd = ("./parboil compile {} {} >/dev/null"
                .format(self.id, self.implementation))
         ret = subprocess.call(cmd, shell=True)
         if ret:
@@ -186,7 +188,8 @@ class Benchmark(object):
                 out = subprocess.check_output(cmd, shell=True).decode()
                 runtime = Runtime.from_stdout(
                     self, kernel, dataset, device, out)
-                results.append(result)
+                print("runtime", runtime)
+                runtimes.append(runtime)
             except CalledProcessError as e:
                 print(e, file=sys.stderr)
                 raise BenchmarkException("Benchmark execution failed")
@@ -198,19 +201,19 @@ class Benchmark(object):
 
 
 class Runtime(object):
-    def __init__(self, scenario, io, kernel, copy, driver, copmute, overlap,
+    def __init__(self, scenario, io, kernel, copy, driver, compute, overlap,
                        wall):
-        self.scenario
-        self.io
-        self.kernel
-        self.copy
-        self.driver
-        self.copmute
-        self.overlap
-        self.wall
+        self.scenario = scenario
+        self.io = io
+        self.kernel = kernel
+        self.copy = copy
+        self.driver = driver
+        self.compute = compute
+        self.overlap = overlap
+        self.wall = wall
 
     def __repr__(self):
-        return "{} {} {}".format(self.scenario)
+        return repr(self.scenario)
 
     @staticmethod
     def from_stdout(benchmark, kernel, dataset, device, stdout):
@@ -225,7 +228,7 @@ class Runtime(object):
         overlap = 2
         wall = 2
 
-        return Runtime(scenario, io, kernel, copy, driver, copmute, overlap,
+        return Runtime(scenario, io, kernel, copy, driver, compute, overlap,
                        wall)
 
 
@@ -339,13 +342,20 @@ class Database(object):
 
         :param runtime: Runtime class instance.
         """
+        db = self.db()
+        c = db.cursor()
         scenario = runtime.scenario
-        c.execute("INSERT OR IGNORE INTO Scenarios VALUES(?,?,?,?,?,?)",
-                  (scenario.id, host, device, benchmark, kernel))
+        host = gethostname()
+        # c.execute("INSERT OR IGNORE INTO Scenarios VALUES(?,?,?,?,?,?)",
+        #           (scenario.id, host, scenario.device, 
+        #            scenario.benchmark.id, scenario.kernel.id))
 
         c.execute("INSERT INTO Runtimes VALUES(?,?,?,?,?,?,?,?)",
-                  (scenario_id,
-                   io, kernel, copy, driver, compute, overlap, wall))
+                  (scenario.id,
+                   runtime.io, runtime.kernel, runtime.copy, runtime.driver, 
+                   runtime.compute, runtime.overlap, runtime.wall))
+        c.close()
+        db.commit()
 
     def add_runtimes(self, runtimes):
         for runtime in runtimes:

@@ -15,13 +15,14 @@ def main():
             for kernel in db.kernels(benchmark,
                                      status=parboil.KernelStatus.UNKNOWN):
                 for device in [parboil.Device.GPU]:
-                    n_iter = 3
+                    n_iter = 2
                     print(benchmark, dataset, kernel, device, n_iter)
                     try:
                         runtimes = benchmark.run(
-                            kernel, 'small', device=device, n=n_iter)
-                        db.add_runtimes(results)
-                    except BenchmarkException:
+                            kernel, dataset, device=device, n=n_iter)
+                        db.add_runtimes(runtimes)
+                    except BenchmarkException as e:
+                        print(e)
                         db.mark_kernel_bad(kernel)
 
 
