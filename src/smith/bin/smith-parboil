@@ -4,19 +4,25 @@ import smith
 import smith.parboil
 from smith import parboil
 
-def main():
-    benchmarks = [parboil.benchmark("~/src/parboil", x) for x in [
-        'spmv'
-    ]]
+from smith.parboil import BenchmarkException
 
-    for benchmark in benchmarks:
+def main():
+    db_path = 'test.db'
+    db = parboil.Database(db_path)
+
+    for benchmark in db.benchmarks():
         for dataset in benchmark.datasets:
-            for device in [parboil.Device.GPU]:
-                n_iter = 3
-                results = benchmark.run('small', device_type=device, n=n_iter)
-                print(benchmark.name, dataset, device, iterations)
-                for result in results:
-                    print('   ', result)
+            for kernel in db.kernels(benchmark,
+                                     status=parboil.KernelStatus.UNKNOWN):
+                for device in [parboil.Device.GPU]:
+                    n_iter = 3
+                    print(benchmark, dataset, kernel, device, n_iter)
+                    try:
+                        runtimes = benchmark.run(
+                            kernel, 'small', device=device, n=n_iter)
+                        db.add_runtimes(results)
+                    except BenchmarkException:
+                        db.mark_kernel_bad(kernel)
 
 
 if __name__ == "__main__":
