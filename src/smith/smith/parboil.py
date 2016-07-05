@@ -201,9 +201,24 @@ class Benchmark(object):
 
 
 class Runtime(object):
+    """
+    Runtime result.
+    """
     def __init__(self, scenario, io, kernel, copy, driver, compute, overlap,
                        wall):
-        self.scenario = scenario
+        """
+        Create a new Runtime instance.
+
+        :param scenario: Scenario class instance.
+        :param io: IO time, as reported by Parboil.
+        :param kernel: Kernel execution time, as reported by Parboil.
+        :param copy: Copy time, as reported by Parboil.
+        :param driver: Driver time, as reported by Parboil.
+        :param compute: Compute ratio, as reported by Parboil.
+        :param overlap: CPU/GPU overlap, as reported by Parboil.
+        :param wall: Wall clock runtime, as reported by Parboil.
+        """
+        self.scenario = xscenario
         self.io = io
         self.kernel = kernel
         self.copy = copy
@@ -217,6 +232,16 @@ class Runtime(object):
 
     @staticmethod
     def from_stdout(benchmark, kernel, dataset, device, stdout):
+        """
+        Create a new Runtime instance.
+
+        :param benchmark: Benchmark class instance.
+        :param kernel: Kernel class instance.
+        :param dataset: Dataset class instance.
+        :param device: Device class instance.
+        :param stdout: str of Parboil benchmark output.
+        :return: Runtime instance.
+        """
         scenario = Scenario(device, benchmark, kernel, dataset)
 
         # TODO: extract from stdout
@@ -233,6 +258,9 @@ class Runtime(object):
 
 
 class Database(object):
+    """
+    Database abstraction for Parboil experiment results.
+    """
     VERSION = 1
 
     def __init__(self, db_path):
@@ -358,6 +386,11 @@ class Database(object):
         db.commit()
 
     def add_runtimes(self, runtimes):
+        """
+        Record new runtimes.
+
+        :param runtimes: Iterable sequence of Runtime class instances.
+        """
         for runtime in runtimes:
             self.add_runtime(runtime)
 
@@ -378,6 +411,11 @@ class ImplementationFile(object):
         self.path = path
 
     def set_device_type(self, devtype):
+        """
+        Modify the underlying implementation to use the given device type.
+
+        :param devtype: Device enum
+        """
         replace(self.path,
                 re.compile('#define MY_DEVICE_TYPE .+'),
                 '#define MY_DEVICE_TYPE ' + str(devtype))
