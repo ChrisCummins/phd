@@ -104,7 +104,7 @@ class Scenario(object):
 class Benchmark(object):
     def __init__(self, parboil_root, benchmark_id):
         # Check that parboil exists
-        parboil_root = os.path.expanduser(parboil_root)
+        parboil_root = os.path.abspath(os.path.expanduser(parboil_root))
         if not os.path.exists(parboil_root):
             raise BenchmarkException("Parboil root '{}' not found"
                                      .format(parboil_root))
@@ -236,7 +236,7 @@ class Database(object):
     VERSION = 1
 
     def __init__(self, db_path):
-        db_path = os.path.expanduser(db_path)
+        db_path = os.path.abspath(os.path.expanduser(db_path))
         if not os.path.exists(db_path):
             raise DatabaseException("Database '{}' not found".format(db_path))
 
