@@ -361,8 +361,8 @@ class Database(object):
         for runtime in runtimes:
             self.add_runtime(runtime)
 
-    def mark_kernel_bad(self, kernel_id):
-        print("Naughty kernel", kernel_id)
+    def mark_kernel_bad(self, kernel):
+        print("Naughty kernel", kernel.id)
 
 
 class ImplementationFile(object):
