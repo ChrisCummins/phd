@@ -347,12 +347,12 @@ class Database(object):
         scenario = runtime.scenario
         host = gethostname()
         # c.execute("INSERT OR IGNORE INTO Scenarios VALUES(?,?,?,?,?,?)",
-        #           (scenario.id, host, scenario.device, 
+        #           (scenario.id, host, scenario.device,
         #            scenario.benchmark.id, scenario.kernel.id))
 
         c.execute("INSERT INTO Runtimes VALUES(?,?,?,?,?,?,?,?)",
                   (scenario.id,
-                   runtime.io, runtime.kernel, runtime.copy, runtime.driver, 
+                   runtime.io, runtime.kernel, runtime.copy, runtime.driver,
                    runtime.compute, runtime.overlap, runtime.wall))
         c.close()
         db.commit()
