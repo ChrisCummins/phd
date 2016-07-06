@@ -8,7 +8,7 @@ from smith.parboil import BenchmarkException
 
 def main():
     db_path = 'test.db'
-    db = parboil.Database(db_path)
+    db = parboil.Database.init(db_path)
 
     for benchmark in db.benchmarks():
         for dataset in benchmark.datasets:

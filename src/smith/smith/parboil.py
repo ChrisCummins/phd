@@ -1,6 +1,7 @@
 """
 Module for Parboil experiments.
 """
+import smith
 
 import os
 import re
@@ -11,9 +12,9 @@ import sys
 from hashlib import sha1
 from os import remove, close
 from shutil import move
+from socket import gethostname
 from subprocess import CalledProcessError
 from tempfile import mkstemp
-from socket import gethostname
 
 # Number of Platforms found: 1
 #   Number of Devices found for Platform 0: 1
@@ -396,6 +397,45 @@ class Database(object):
 
     def mark_kernel_bad(self, kernel):
         print("Naughty kernel", kernel.id)
+
+    @staticmethod
+    def create_new(path):
+        """
+        Create a new Parboil database.
+
+        :param path: Path to database to create.
+        :return: Parboil class instance of newly created database.
+        :throws DatabaseException: If file already exists.
+        """
+        path = os.path.expanduser(path)
+
+        if os.path.exists(path):
+            raise DatabaseException("Database '{}' already exists"
+                                    .format(path))
+
+        print("creating database '{}' ...".format(path))
+        db = sqlite3.connect(path)
+        c = db.cursor()
+        script = smith.sql_script('create-parboil-db')
+        c.executescript(script)
+        c.close()
+        return Database(path)
+
+    @staticmethod
+    def init(path):
+        """
+        Load an existing Parboil database, or create a new one.
+
+        :param path: Path to database.
+        :return: Parboil class instance.
+        :throws DatabaseException: In case of error.
+        """
+        path = os.path.expanduser(path)
+
+        if os.path.exists(path):
+            return Database(path)
+        else:
+            return Database.create_new(path)
 
 
 class ImplementationFile(object):
