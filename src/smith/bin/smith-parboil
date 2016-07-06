@@ -12,8 +12,7 @@ def main():
 
     for benchmark in db.benchmarks():
         for dataset in benchmark.datasets:
-            for kernel in db.kernels(benchmark,
-                                     status=parboil.KernelStatus.UNKNOWN):
+            for kernel in db.kernels(benchmark):
                 for device in [parboil.Device.GPU]:
                     n_iter = 2
                     print(benchmark, dataset, kernel, device, n_iter)

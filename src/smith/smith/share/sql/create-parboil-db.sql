@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS Kernels (
         benchmark           TEXT NO NULL,        -- Benchmarks.id
         oracle              INT NOT NULL,        -- {0:false, 1:true}
         contents            TEXT NOT NULL,       -- Contents
-        status              INT NOT NULL,        -- {0:good, 1:bad, 2:unknown}
         UNIQUE(id)
 );
 
@@ -30,6 +29,7 @@ CREATE TABLE IF NOT EXISTS Scenarios (
         benchmark           TEXT NOT NULL,       -- Benchmarks.id
         kernel              TEXT NOT NULL,       -- Kernels.id
         dataset             TEXT NOT NULL,       -- Dataset ID
+        status              INT NOT NULL,        -- {0:good, 1:bad, 2:unknown}
         UNIQUE(id)
 );
 

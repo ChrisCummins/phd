@@ -40,10 +40,22 @@ class Device(object):
     GPU = "CL_DEVICE_TYPE_GPU"
     CPU = "CL_DEVICE_TYPE_CPU"
 
-class KernelStatus(object):
+class ScenarioStatus(object):
     GOOD = 0
     BAD = 1
     UNKNOWN = 2
+
+    @staticmethod
+    def to_str(status):
+        if status == 0:
+            return "GOOD"
+        elif status == 1:
+            return "BAD"
+        elif status == 2:
+            return "UNKNOWN"
+        else:
+            raise DatabaseException("Invalid ScenarioStatus '{}'"
+                                    .format(status))
 
 
 def checksum(s):
@@ -86,15 +98,17 @@ class Dataset(object):
 
 
 class Scenario(object):
-    def __init__(self, device, benchmark, kernel, dataset):
+    def __init__(self, device, benchmark, kernel, dataset,
+                 status=ScenarioStatus.UNKNOWN):
         self.id = Scenario.get_id(device, benchmark, kernel, dataset)
         self.device = device
         self.benchmark = benchmark
         self.kernel = kernel
         self.dataset = dataset
+        self.status = status
 
     def __repr__(self):
-        return str(self.id)
+        return "{}:{}".format(self.id, ScenarioStatus.to_str(self.status))
 
     @staticmethod
     def get_id(device, benchmark, kernel, dataset):
@@ -317,27 +331,23 @@ class Database(object):
         c.close()
         return [Benchmark(self.parboil_root, x) for x in benchmark_ids]
 
-    def add_kernel(self, benchmark, contents, oracle=False,
-                   status=KernelStatus.UNKNOWN):
+    def add_kernel(self, benchmark, contents, oracle=False):
         """
         Add a kernel to the database.
 
         :param benchmark: Benchmark class instance.
         :param contents: OpenCL source code
         :param oracle: True if oracle implementation, else false
-        :param status: KernelStatus enum
         """
         contents = contents.strip()
         kernel_id = checksum(contents)
         benchmark_id = benchmark.id
         oracle = 1 if oracle else 0
-        if status > 2 or status < 0:
-            raise DatabaseException("Invalid kernel status '{}'".format(status))
 
         db = self.db()
         c = db.cursor()
-        c.execute("INSERT OR IGNORE INTO Kernels VALUES(?,?,?,?,?)",
-                  (kernel_id, benchmark_id, oracle, contents, status))
+        c.execute("INSERT OR IGNORE INTO Kernels VALUES(?,?,?,?)",
+                  (kernel_id, benchmark_id, oracle, contents))
         db.commit()
 
     def _add_oracle_kernels(self):
@@ -350,15 +360,14 @@ class Database(object):
                 contents = infile.read().strip()
                 self.add_kernel(benchmark, contents, oracle=True)
 
-    def kernels(self, benchmark, status=0):
+    def kernels(self, benchmark):
         """
         Return the kernels which match the given status.
 
         :param benchmark: Benchmark class instance.
         """
         c = self.cursor()
-        c.execute('SELECT id FROM Kernels WHERE benchmark=? AND status=?',
-                  (benchmark.id, status))
+        c.execute('SELECT id FROM Kernels WHERE benchmark=?', (benchmark.id,))
         kernel_ids = [x[0] for x in c.fetchall()]
         kernels = [Kernel(x) for x in kernel_ids]
         c.close()
@@ -375,9 +384,10 @@ class Database(object):
         c = db.cursor()
         scenario = runtime.scenario
         host = gethostname()
-        # c.execute("INSERT OR IGNORE INTO Scenarios VALUES(?,?,?,?,?,?)",
-        #           (scenario.id, host, scenario.device,
-        #            scenario.benchmark.id, scenario.kernel.id))
+        c.execute("INSERT OR IGNORE INTO Scenarios VALUES(?,?,?,?,?,?)",
+                  (scenario.id, host, scenario.device,
+                   scenario.benchmark.id, scenario.kernel.id,
+                   scenario.status))
 
         c.execute("INSERT INTO Runtimes VALUES(?,?,?,?,?,?,?,?)",
                   (scenario.id,
@@ -385,6 +395,12 @@ class Database(object):
                    runtime.compute, runtime.overlap, runtime.wall))
         c.close()
         db.commit()
+
+    def add_scenario(self, status=ScenarioStatus.UNKNOWN):
+        """
+        :param status: ScenarioStatus enum
+        """
+        pass
 
     def add_runtimes(self, runtimes):
         """
@@ -413,7 +429,7 @@ class Database(object):
             raise DatabaseException("Database '{}' already exists"
                                     .format(path))
 
-        print("creating database '{}' ...".format(path))
+        print("creating database ...".format(path))
         db = sqlite3.connect(path)
         c = db.cursor()
         script = smith.sql_script('create-parboil-db')
