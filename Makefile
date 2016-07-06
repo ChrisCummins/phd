@@ -110,6 +110,7 @@ PYTHON2 ?= python2
 PYTHON3 ?= python3
 RM ?= rm -fv
 SED ?= sed
+SUDO ?= sudo
 
 
 # Non-configurable;
@@ -319,7 +320,8 @@ endef
 
 
 python-setup-install-cmd = \
-	cd $2 && $(strip $1) ./setup.py install &> $2/.$(strip $1).install.log \
+	cd $2 && $(SUDO) $(strip $1) ./setup.py install &> \
+	$2/.$(strip $1).install.log \
 	|| cat $2/.$(strip $1).install.log
 
 # Run python setup.py install
