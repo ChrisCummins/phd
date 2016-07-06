@@ -261,20 +261,34 @@ character-level language model.
 function prototypes, rejection sampler, program checker.
 
 
+\section{Assembling Representative Benchmarks}\label{sec:}
+
+We collect a large code corpus from
+GitHub~\footnote{\url{https://github.com/}}.
+
+Alternative source of data: \emph{GHTorrent}~\cite{Gousios2014a}.
+
+Rejection sampling to remove noise from dataset. Check that compiles.
+
+Minimising non-functional variance using clang libraries and tools:
+\begin{itemize}
+\item Pre-process source to remove macros and conditional
+  compilation. Probabilistic defines.
+\item Lossless vocabulary size reduction with AST rewriting of
+  identifiers.
+\item Automatically enforcing code style with formatting tools.
+\end{itemize}
+
 \section{Learning the Implementation Space}\label{sec:ml}
 
-Mine GitHub.
-
-Rejection sampling.
-
-Clang-based rewriting.
-
-Long Short-Term Memory~\cite{Hochreiter1997}.
+Long Short-Term Memory~\cite{Hochreiter1997}. No features.
 
 
 \section{Sampling Implementation Space}\label{sec:}
 
 Given a function prototype.
+
+Sample kernels with balanced brackets.
 
 Rejection sampler.
 
@@ -364,14 +378,34 @@ programs~\cite{Smith}, genearting data structure
 implementations~\cite{Loncaric2016}.
 
 
-\subsection{Deep Learning \& Mining Source Code}
+\subsection{Mining Source Codes}
 
 Neural Networks for representing programs~\cite{Bunel}.
+
+Promises and perils of mining GitHub~\cite{Bird2009}.
 
 Mining source code repositories at large
 scale~\cite{Allamanis2013a,White2015a}. Machine learning for analysing
 code~\cite{Allamanis2014a,Raychev}. Aiding software
 engineering~\cite{Allamanis2014,Bird2015}.
+
+Previous studies have involved data mining of GitHub for analysis of
+software engineering
+practises~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}.
+
+
+\subsection{Deep Learning}
+
+This is the first application of deep learning for synthesising
+programs.
+
+Deep Learning has been successful for synthesising graphics
+textures~\cite{Gatys2015a}, image captions~\cite{Vinyals}, colors for
+black and white photographs~\cite{Zhang2016}, and artistic
+style~\cite{Gatys2015}.
+
+DeepAPI learns API usage from annotated snippets from
+GitHub~\cite{Zhang2015a}.
 
 
 \section{Conclusion}\label{sec:conclusion}
