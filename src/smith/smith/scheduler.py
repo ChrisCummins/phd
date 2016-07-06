@@ -101,7 +101,7 @@ class host_task(task):
 
 class device_task(task):
     def __init__(self, torch_rnn_path, *args,
-                 target_num_samples=50000, **kwargs):
+                 target_num_samples=1000000, **kwargs):
         super(device_task, self).__init__(*args, **kwargs)
         self.torch_rnn_path = torch_rnn_path
         self.target_num_samples = target_num_samples

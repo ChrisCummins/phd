@@ -245,7 +245,7 @@ class Runtime(object):
         :param overlap: CPU/GPU overlap, as reported by Parboil.
         :param wall: Wall clock runtime, as reported by Parboil.
         """
-        self.scenario = xscenario
+        self.scenario = scenario
         self.io = io
         self.kernel = kernel
         self.copy = copy
@@ -269,7 +269,8 @@ class Runtime(object):
         :param stdout: str of Parboil benchmark output.
         :return: Runtime instance.
         """
-        scenario = Scenario(device, benchmark, kernel, dataset)
+        scenario = Scenario(device, benchmark, kernel, dataset,
+                            ScenarioStatus.GOOD)
 
         # TODO: extract from stdout
         io = 2
@@ -396,10 +397,10 @@ class Database(object):
         c = db.cursor()
         scenario = runtime.scenario
         host = gethostname()
-        c.execute("INSERT OR IGNORE INTO Scenarios VALUES(?,?,?,?,?,?)",
+        c.execute("INSERT OR IGNORE INTO Scenarios VALUES(?,?,?,?,?,?,?)",
                   (scenario.id, host, scenario.device,
                    scenario.benchmark.id, scenario.kernel.id,
-                   scenario.status))
+                   scenario.dataset.id, scenario.status))
 
         c.execute("INSERT INTO Runtimes VALUES(?,?,?,?,?,?,?,?)",
                   (scenario.id,
