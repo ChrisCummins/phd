@@ -341,7 +341,7 @@ class Database(object):
         c.execute("SELECT id FROM Benchmarks")
         benchmark_ids = [x[0] for x in c.fetchall()]
         c.close()
-        return [Benchmark(self.parboil_root, x) for x in benchmark_ids]
+        return [Benchmark(x) for x in benchmark_ids]
 
     def add_kernel(self, benchmark, contents, oracle=False):
         """
