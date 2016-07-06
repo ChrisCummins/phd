@@ -851,14 +851,14 @@ src = $(root)/src
 #
 Python2SetupTestDirs += $(src)/labm8
 Python2SetupInstallDirs += $(src)/labm8
-Python3SetupTestDirs += $(src)/labm8
+# Python3SetupTestDirs += $(src)/labm8
 Python3SetupInstallDirs += $(src)/labm8
 
 
 #
 # src/omnitune
 #
-Python2SetupTestDirs += $(src)/omnitune
+# Python2SetupTestDirs += $(src)/omnitune
 Python2SetupInstallDirs += $(src)/omnitune
 
 
