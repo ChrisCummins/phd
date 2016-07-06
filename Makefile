@@ -874,6 +874,13 @@ $(phd): $(GoogleBenchmark) $(GoogleTest) $(toolchain)
 
 
 #
+# src/smith
+#
+Python3SetupTestDirs += $(src)/smith
+Python3SetupInstallDirs += $(src)/smith
+
+
+#
 # thesis/
 #
 AutotexTargets += $(root)/thesis/thesis.pdf

@@ -3,6 +3,7 @@ import os
 from pkg_resources import resource_filename,resource_string
 
 class InternalException(Exception): pass
+class Data404Exception(InternalException): pass
 
 def package_data(path):
     """
@@ -14,8 +15,8 @@ def package_data(path):
     """
     abspath = resource_filename(__name__, path)
     if not os.path.exists(abspath):
-        raise InternalException("package data '{}' does not exist"
-                                .format(path))
+        raise Data404Exception("package data '{}' does not exist"
+                               .format(path))
 
     try:
         return resource_string(__name__, path)
