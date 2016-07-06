@@ -3,13 +3,15 @@ Module for Parboil experiments.
 """
 import smith
 
+from smith import config
+from smith import InternalException
+
 import os
 import re
 import sqlite3
 import subprocess
 import sys
 
-from hashlib import sha1
 from os import remove, close
 from shutil import move
 from socket import gethostname
@@ -32,13 +34,24 @@ from tempfile import mkstemp
 #
 # Exception types
 #
-class ParboilException(Exception): pass
+class ParboilException(smith.SmithException): pass
 class DatabaseException(ParboilException): pass
 class BenchmarkException(ParboilException): pass
 
-class Device(object):
+class OpenCLDeviceType(object):
     GPU = "CL_DEVICE_TYPE_GPU"
     CPU = "CL_DEVICE_TYPE_CPU"
+
+    @staticmethod
+    def to_str(devtype):
+        if devtype == "CL_DEVICE_TYPE_GPU":
+            return "GPU"
+        elif devtype == "CL_DEVICE_TYPE_CPU":
+            return "CPU"
+        else:
+            raise InternalException("Invalid OpenCLDeviceType '{}'"
+                                    .format(devtype))
+
 
 class ScenarioStatus(object):
     GOOD = 0
@@ -54,54 +67,57 @@ class ScenarioStatus(object):
         elif status == 2:
             return "UNKNOWN"
         else:
-            raise DatabaseException("Invalid ScenarioStatus '{}'"
+            raise InternalException("Invalid ScenarioStatus '{}'"
                                     .format(status))
 
 
-def checksum(s):
-    return sha1(s.encode('utf-8')).hexdigest()
+def replace(path, pattern, subst):
+    path = os.path.expanduser(path)
 
-
-def checksum_file(path):
-    with open(path) as infile:
-        return checksum(infile.read())
-
-
-def replace(file_path, pattern, subst):
-    #Create temp file
-    fh, abs_path = mkstemp()
-    with open(abs_path,'w') as new_file:
-        with open(file_path) as old_file:
+    # Create temp file:
+    fh, out_path = mkstemp()
+    # Write file line by line:
+    with open(out_path,'w') as new_file:
+        with open(path) as old_file:
             for line in old_file:
                 new_file.write(re.sub(pattern, subst, line))
     close(fh)
-    #Remove original file
-    remove(file_path)
-    #Move new file
-    move(abs_path, file_path)
+    # Remove original file:
+    remove(path)
+    # Move new file:
+    move(out_path, path)
 
 
 class Kernel(object):
     def __init__(self, kernel_id):
-        self.id = kernel_id
+        self.id = str(kernel_id)
 
     def __repr__(self):
-        return str(self.id)
+        return self.id
 
 
 class Dataset(object):
     def __init__(self, dataset_id):
-        self.id = dataset_id
+        self.id = str(dataset_id)
 
     def __repr__(self):
-        return str(self.id)
+        return self.id
 
 
 class Scenario(object):
-    def __init__(self, device, benchmark, kernel, dataset,
+    def __init__(self, device_name, benchmark, kernel, dataset,
                  status=ScenarioStatus.UNKNOWN):
-        self.id = Scenario.get_id(device, benchmark, kernel, dataset)
-        self.device = device
+        """
+        Create Scenario.
+
+        :param device_name: Device name as a string.
+        :param benchmark: Benchmark class instance
+        :param kernel: Kernel class instance
+        :param dataset: Dataset class instance
+        :param status (optional): Scenario enum
+        """
+        self.id = Scenario.get_id(device_name, benchmark, kernel, dataset)
+        self.device = device_name
         self.benchmark = benchmark
         self.kernel = kernel
         self.dataset = dataset
@@ -117,12 +133,8 @@ class Scenario(object):
 
 
 class Benchmark(object):
-    def __init__(self, parboil_root, benchmark_id):
-        # Check that parboil exists
-        parboil_root = os.path.abspath(os.path.expanduser(parboil_root))
-        if not os.path.exists(parboil_root):
-            raise BenchmarkException("Parboil root '{}' not found"
-                                     .format(parboil_root))
+    def __init__(self, benchmark_id):
+        parboil_root = config.parboil_root()
 
         # Check that benchmark exists
         if not os.path.exists(os.path.join(parboil_root, 'benchmarks',
@@ -165,13 +177,13 @@ class Benchmark(object):
     def __repr__(self):
         return str(self.id)
 
-    def run(self, kernel, dataset, device=Device.GPU, n=30):
+    def run(self, kernel, dataset, device=OpenCLDeviceType.GPU, n=30):
         """
         Run a benchmark for a number of iterations, returning the runtimes.
 
         :param kernel: Kernel class instance
         :param dataset: Dataset class instance
-        :param device: Device enum
+        :param device: OpenCLDeviceType enum
         :param n: Number of iterations to run for
         :return: List of 'n' Runtime class instances
         :throws: BenchmarkException in case of error during
@@ -253,7 +265,7 @@ class Runtime(object):
         :param benchmark: Benchmark class instance.
         :param kernel: Kernel class instance.
         :param dataset: Dataset class instance.
-        :param device: Device class instance.
+        :param device: OpenCLDeviceType class instance.
         :param stdout: str of Parboil benchmark output.
         :return: Runtime instance.
         """
@@ -340,7 +352,7 @@ class Database(object):
         :param oracle: True if oracle implementation, else false
         """
         contents = contents.strip()
-        kernel_id = checksum(contents)
+        kernel_id = smith.checksum_str(contents)
         benchmark_id = benchmark.id
         oracle = 1 if oracle else 0
 
@@ -470,7 +482,7 @@ class ImplementationFile(object):
         """
         Modify the underlying implementation to use the given device type.
 
-        :param devtype: Device enum
+        :param devtype: OpenCLDeviceType enum
         """
         replace(self.path,
                 re.compile('#define MY_DEVICE_TYPE .+'),

@@ -1,9 +1,36 @@
 import os
 
+from hashlib import sha1
+
 from pkg_resources import resource_filename,resource_string
 
-class InternalException(Exception): pass
+class SmithException(Exception): pass
+class InternalException(SmithException): pass
 class Data404Exception(InternalException): pass
+
+
+def checksum(data):
+    try:
+        return sha1(data).hexdigest()
+    except Exception:
+        raise InternalException("failed to hash '{}'".format(data[:100]))
+
+
+def checksum_str(string):
+    try:
+        return checksum(str(string).encode('utf-8'))
+    except UnicodeEncodeError:
+        raise InternalException("failed to encode '{}'".format(string[:100]))
+
+
+def checksum_file(path):
+    path = os.path.expanduser(path)
+    try:
+        with open(path) as infile:
+            return checksum(infile.read())
+    except Exception:
+        raise InternalException("failed to read '{}'".format(path))
+
 
 def package_data(path):
     """
