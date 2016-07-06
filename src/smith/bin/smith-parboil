@@ -13,7 +13,7 @@ def main():
     for benchmark in db.benchmarks():
         for dataset in benchmark.datasets:
             for kernel in db.kernels(benchmark):
-                for device in [parboil.Device.GPU]:
+                for device in [parboil.OpenCLDeviceType.GPU]:
                     n_iter = 2
                     print(benchmark, dataset, kernel, device, n_iter)
                     try:
