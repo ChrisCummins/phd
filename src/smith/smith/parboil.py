@@ -124,12 +124,15 @@ class Scenario(object):
         self.status = status
 
     def __repr__(self):
-        return "{}:{}".format(self.id, ScenarioStatus.to_str(self.status))
+        return ("{}:{}:{}: {}-{}"
+                .format(self.benchmark, self.kernel, self.dataset, 
+                        OpenCLDeviceType.to_str(self.device),
+                        ScenarioStatus.to_str(self.status)))
 
     @staticmethod
     def get_id(device, benchmark, kernel, dataset):
-        return hash(repr(device) + repr(benchmark) + repr(kernel) +
-                    repr(dataset))
+        return smith.checksum_str(repr(device) + repr(benchmark) + 
+                                  repr(kernel) + repr(dataset))
 
 
 class Benchmark(object):
@@ -473,8 +476,8 @@ class ImplementationFile(object):
 
         # Check that file exists
         if not os.path.exists(path):
-            raise KernelException("Parboil implementation file '{}' not found"
-                                  .format(path))
+            raise Exception("Parboil implementation file '{}' not found"
+                            .format(path))
 
         # Set member variables
         self.path = path
