@@ -12,7 +12,17 @@ CREATE TABLE IF NOT EXISTS Benchmarks (
         UNIQUE(id)
 );
 
+INSERT INTO Benchmarks VALUES("bfs");
+INSERT INTO Benchmarks VALUES("cutcp");
+INSERT INTO Benchmarks VALUES("histo");
+INSERT INTO Benchmarks VALUES("lbm");
+INSERT INTO Benchmarks VALUES("mri-gridding");
+INSERT INTO Benchmarks VALUES("mri-q");
+INSERT INTO Benchmarks VALUES("sad");
+INSERT INTO Benchmarks VALUES("sgemm");
 INSERT INTO Benchmarks VALUES("spmv");
+INSERT INTO Benchmarks VALUES("stencil");
+INSERT INTO Benchmarks VALUES("tpacf");
 
 CREATE TABLE IF NOT EXISTS Kernels (
         id                  TEXT NOT NULL,       -- Kernel ID
