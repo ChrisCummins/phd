@@ -52,6 +52,14 @@ class OpenCLDeviceType(object):
             raise InternalException("Invalid OpenCLDeviceType '{}'"
                                     .format(devtype))
 
+class OpenCLDevice(object):
+    def __init__(self, name, devtype=OpenCLDeviceType.GPU):
+        self.name = name
+        self.type = devtype
+
+    def __repr__(self):
+        return str(self.name)[:20]
+
 
 class ScenarioStatus(object):
     GOOD = 0
