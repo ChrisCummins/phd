@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+#
+# Create a database.
+#
+import smith
+import os
+import sys
+import sqlite3
+
+from argparse import ArgumentParser
+
+class DatabaseException(smith.SmithException): pass
+
+def create_db(path, github=False):
+        path = os.path.expanduser(path)
+
+        if os.path.exists(path):
+            raise DatabaseException("Database '{}' already exists"
+                                    .format(path))
+
+        print("creating database ...".format(path))
+        db = sqlite3.connect(path)
+        c = db.cursor()
+        if github:
+            script = smith.sql_script('create-gh-samples-db')
+        else:
+            script = smith.sql_script('create-samples-db')
+        c.executescript(script)
+        c.close()
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('input', help='path to SQL input dataset')
+    parser.add_argument('-g', action='store_true', help='generate dataset with GitHub metadata')
+    args = parser.parse_args()
+
+    db_path = args.input
+    github = args.g
+
+    try:
+        create_db(db_path, github)
+    except Exception as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
