@@ -1150,13 +1150,13 @@ $(Python2SetupInstallLogs):
 	$(call python-setup-install,$(PYTHON2),$(patsubst %/,%,$(dir $@)))
 
 $(Python3SetupTestLogs):
-	$(call python-setup-test, $(PYTHON3),$(patsubst %/,%,$(dir $@)))
+	$(call python-setup-test,$(PYTHON3),$(patsubst %/,%,$(dir $@)))
 
 $(Python3SetupInstallLogs):
 	$(call python-setup-install,$(PYTHON3),$(patsubst %/,%,$(dir $@)))
 
 TestTargets += $(Python2SetupTestLogs) $(Python3SetupTestLogs)
-InstallTargets += $(Python2SetupInstallLogs) $(Python3SetupInstalLogs)
+InstallTargets += $(Python2SetupInstallLogs) $(Python3SetupInstallLogs)
 
 # Clean-up:
 Python2CleanDirs = $(sort $(Python2SetupTestDirs) $(Python2SetupInstallDirs))
