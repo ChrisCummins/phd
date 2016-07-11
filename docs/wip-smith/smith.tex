@@ -180,7 +180,8 @@
 % \titlebanner{banner above paper title}        % These are ignored unless
 % \preprintfooter{}   % 'preprint' option specified.
 
-\title{Synthesising Many-core Compute Kernels with Deep Learning}
+\title{Curing the Benchmark Deficit: Synthesising Many-core Compute
+  Kernels on Demand using Deep Learning}
 
 % \subtitle{Subtitle Text, if any}
 
@@ -200,6 +201,8 @@
 \maketitle
 
 \begin{abstract}
+  % TODO: optimising requires benchmarks. These are hard to come by,
+  % and we don't use enough. This leads to overfitting.
   We present a novel methodology for generating OpenCL compute
   kernels. Given a corpus of example programs, we apply deep learning
   across the implementation space, constructing a language model. From
@@ -334,10 +337,10 @@ Driver program (and dataset).
 
 \subsection{Experimental Setup}\label{subsec:}
 
-\paragraph{Platforms} 2x GPUs, 1x CPU.
+\paragraph{Platforms} 2x GPUs, 1x CPU. Table~\ref{tab:platforms}
 
 
-\begin{table}
+\begin{table}% tab:platforms
 \scriptsize
 \centering
 \begin{tabular}{l l l l}
@@ -352,13 +355,13 @@ Driver program (and dataset).
   \bottomrule
 \end{tabular}
 \caption{Experimental platforms.}
-\label{tab:hw}
+\label{tab:platforms}
 \end{table}
 
 
 \paragraph{Benchmarks}
 
-\begin{table}
+\begin{table}% tab:benchmarks
 \scriptsize
 \centering
 \begin{tabular}{lrrr}
@@ -376,11 +379,11 @@ Driver program (and dataset).
 \caption{%
   Benchmarks used.
 }
-\label{tab:kernels}
+\label{tab:benchmarks}
 \end{table}
 
-Limitation of system: can't use kernels with struct arguments as
-seeds.
+Table~\ref{tab:benchmarks}. Limitation of system: can't use kernels
+with struct arguments as seeds.
 
 Notes: Parboil: opencl\_base implementation. Parboil mri-q contains
 two benchmarks, only used one (the other took a struct). Rewrote
