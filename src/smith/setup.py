@@ -1,6 +1,8 @@
 from setuptools import setup
 
 deps = [
+  'PyGithub',
+  'requests'
 ]
 
 setup(name='smith',
