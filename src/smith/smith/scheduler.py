@@ -112,7 +112,8 @@ class device_task(task):
     def next_step(self):
         os.chdir(os.path.expanduser(self.torch_rnn_path))
         print("next step:", str(self))
-        cmd = "./give-me-kernels '{}' > /tmp/sample.txt".format(self.seed)
+        # TODO: Invoke torch-rnn wrapper
+        cmd = 'th sample.lua -checkpoint $(ls -t cv/*.t7 | head -n1) -temperature .75 -length 5000 -opencl 1 -start_text "$1" -n 1000'
         print('\r\033[K  -> seed:'.format(self.seed), end='')
         subprocess.call(cmd, shell=True)
 
