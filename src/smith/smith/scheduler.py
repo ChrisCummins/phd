@@ -177,7 +177,7 @@ def load_json(path):
 
     with open(path) as infile:
         try:
-            return json.load(infile)
+            return json.loads(smith.json_minify(infile.read()))
         except ValueError as e:
             print("fatal: malformed JSON file '", path, "'. Error:",
                   sep='', file=sys.stderr)
