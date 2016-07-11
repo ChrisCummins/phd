@@ -508,20 +508,28 @@ def preprocess_contentfiles(db_path):
         pool.map(worker, splits)
 
 
-def preprocess_and_print(contents):
+def preprocess_file(path, inplace=False):
+    """
+    Preprocess a file.
+
+    :param path: String path to file.
+    :param inplace (optional): If True, overwrite input file.
+    """
+    with open(path) as infile:
+        contents = infile.read()
     try:
-        print(preprocess(contents))
+        out = preprocess(contents)
+        if inplace:
+            with open(path, 'w') as outfile:
+                outfile.write(out)
+        else:
+            print(out)
     except BadCodeException as e:
         print(e, file=sys.stderr)
         sys.exit(1)
     except UglyCodeException as e:
         print(e, file=sys.stderr)
         sys.exit(2)
-
-
-def preprocess_file(path):
-    with open(path) as infile:
-        preprocess_and_print(infile.read())
 
 
 def preprocess_db(db_path):
