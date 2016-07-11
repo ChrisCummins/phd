@@ -520,7 +520,7 @@ def preprocess_and_print(contents):
 
 
 def preprocess_file(path):
-    with open(input_path) as infile:
+    with open(path) as infile:
         preprocess_and_print(infile.read())
 
 
