@@ -1,34 +1,3 @@
-typedef enum {
-  C = 0,
-  N,
-  S,
-  E,
-  W,
-  T,
-  B,
-  NE,
-  NW,
-  SE,
-  SW,
-  NT,
-  NB,
-  ST,
-  SB,
-  ET,
-  EB,
-  WT,
-  WB,
-  FLAGS,
-  N_CELL_ENTRIES
-} CELL_ENTRIES;
-
-typedef enum {
-  OBSTACLE = 1 << 0,
-  ACCEL = 1 << 1,
-  IN_OUT_FLOW = 1 << 2
-} CELL_FLAGS;
-typedef float* LBM_Grid;
-typedef LBM_Grid* LBM_GridPtr;
 __kernel void A(__global float* a, __global float* b) {
   a +=
       ((0 +

@@ -1,13 +1,11 @@
-typedef int4 xyz;
-
 __kernel void A(int a, int b, __global float4 *c, int d, float e, float f,
                 float g, __global float *h, int i, __constant int *j,
-                __constant xyz *k) {
+                __constant int4 *k) {
   __global float4 *l = c + d;
 
   __local float m[32 * 8 * 4];
   __global float *n;
-  __local xyz o;
+  __local int4 o;
 
   const int p = (get_local_id(2) * 8 + get_local_id(1)) * 8 + get_local_id(0);
 

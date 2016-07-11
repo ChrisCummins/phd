@@ -1,0 +1,1 @@
+__kernel void A(

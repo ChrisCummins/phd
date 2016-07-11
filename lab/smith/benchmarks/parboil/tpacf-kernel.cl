@@ -1,19 +1,5 @@
-typedef unsigned long hist_t;
-
-struct spherical {
-  float ra, dec;
-};
-
-struct cartesian {
-  float x, y, z;
-};
-
-int A(char* a, struct cartesian* b, int c);
-
-char* B(const char* d);
-
-__kernel void C(__global hist_t* e, __global float* f, __constant float* g,
-                int h, int i) {
+__kernel void C(__global unsigned long* e, __global float* f,
+                __constant float* g, int h, int i) {
   __global float* j = f + i * (h + 1);
   __global float* k = j + i * (h + 1);
 
@@ -107,7 +93,7 @@ __kernel void C(__global hist_t* e, __global float* f, __constant float* g,
 
   barrier(1 | 2);
 
-  __global hist_t* al = e + 20 * l;
+  __global unsigned long* al = e + 20 * l;
   if (m < 20) {
     al[m] = u[m][0];
   }
