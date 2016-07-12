@@ -110,6 +110,7 @@ PYTHON2 ?= python2
 PYTHON3 ?= python3
 RM ?= rm -fv
 SED ?= sed
+SUDO ?= sudo
 
 
 # Non-configurable;
@@ -319,7 +320,8 @@ endef
 
 
 python-setup-install-cmd = \
-	cd $2 && $(strip $1) ./setup.py install &> $2/.$(strip $1).install.log \
+	cd $2 && $(SUDO) $(strip $1) ./setup.py install &> \
+	$2/.$(strip $1).install.log \
 	|| cat $2/.$(strip $1).install.log
 
 # Run python setup.py install
@@ -570,6 +572,19 @@ CxxTargets += $(lab)/ml/rewriter
 
 $(lab)/ml/rewriter.o_CxxFlags = $(ClangLlvm_CxxFlags)
 $(lab)/ml/rewriter_LdFlags = $(ClangLlvm_LdFlags)
+
+
+#
+# lab/patterns
+#
+PatternsHeaders = $(wildcard $(lab)/patterns/*.hpp)
+PatternsCxxSources = $(wildcard $(lab)/patterns/*.cpp)
+PatternsCxxObjects = $(patsubst %.cpp,%.o,$(PatternsCxxSources))
+CxxTargets += $(patsubst %.cpp,%,$(PatternsCxxSources))
+
+$(lab)/patterns_CxxFlags = $(phd_CxxFlags)
+$(lab)/patterns_LdFlags = $(phd_LdFlags)
+$(PatternsCxxObjects): $(phd) $(PatternsHeaders)
 
 
 #
@@ -836,14 +851,14 @@ src = $(root)/src
 #
 Python2SetupTestDirs += $(src)/labm8
 Python2SetupInstallDirs += $(src)/labm8
-Python3SetupTestDirs += $(src)/labm8
+# Python3SetupTestDirs += $(src)/labm8
 Python3SetupInstallDirs += $(src)/labm8
 
 
 #
 # src/omnitune
 #
-Python2SetupTestDirs += $(src)/omnitune
+# Python2SetupTestDirs += $(src)/omnitune
 Python2SetupInstallDirs += $(src)/omnitune
 
 
@@ -1136,13 +1151,13 @@ $(Python2SetupInstallLogs):
 	$(call python-setup-install,$(PYTHON2),$(patsubst %/,%,$(dir $@)))
 
 $(Python3SetupTestLogs):
-	$(call python-setup-test, $(PYTHON3),$(patsubst %/,%,$(dir $@)))
+	$(call python-setup-test,$(PYTHON3),$(patsubst %/,%,$(dir $@)))
 
 $(Python3SetupInstallLogs):
 	$(call python-setup-install,$(PYTHON3),$(patsubst %/,%,$(dir $@)))
 
 TestTargets += $(Python2SetupTestLogs) $(Python3SetupTestLogs)
-InstallTargets += $(Python2SetupInstallLogs) $(Python3SetupInstalLogs)
+InstallTargets += $(Python2SetupInstallLogs) $(Python3SetupInstallLogs)
 
 # Clean-up:
 Python2CleanDirs = $(sort $(Python2SetupTestDirs) $(Python2SetupInstallDirs))

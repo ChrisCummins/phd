@@ -40,7 +40,11 @@ DEPFILE=.autotex.deps
 LOGFILE=.autotex.log
 HOOKS_DIRECTORY=scripts
 
-# Output formatting
+# Output formatting:
+#
+# Note: tput can return with non-zero status in some TTY environments,
+# so we disable errors.
+set +e
 TTYreset="$(tput sgr0)"
 TTYbold="$(tput bold)"
 TTYstandout="$(tput smso)"
@@ -54,6 +58,7 @@ TTYmagenta="$(tput setaf 5)"
 TTYred="$(tput setaf 1)"
 TTYwhite="$(tput setaf 7)"
 TTYyellow="$(tput setaf 3)"
+set -e
 
 TaskNameLength=8
 
