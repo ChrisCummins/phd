@@ -10,19 +10,22 @@ from smith import preprocess
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('input', help='path to input')
+    parser.add_argument('inputs', nargs='+', help='path to input')
     parser.add_argument('-f', action='store_true', help='treat input as file')
     parser.add_argument('-i', action='store_true', help='inplace file rewrite')
     args = parser.parse_args()
 
-    input_path = args.input
+    input_paths = args.inputs
     file_mode = args.f
     inplace_mode = args.i
 
-    if file_mode:
-        preprocess.preprocess_file(input_path, inplace=inplace_mode)
-    else:
-        preprocess.preprocess_db(input_path)
+    for input_path in input_paths:
+        if file_mode:
+            if inplace_mode:
+                print(input_path)
+            preprocess.preprocess_file(input_path, inplace=inplace_mode)
+        else:
+            preprocess.preprocess_db(input_path)
 
 
 if __name__ == '__main__':
