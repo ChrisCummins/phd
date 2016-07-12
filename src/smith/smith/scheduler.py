@@ -41,13 +41,13 @@ def extract_prototype(implementation):
     :return: Kernel prototype.
     """
     if not implementation.startswith("__kernel void A"):
-        raise PrototypeException("malformed seed '{}'".format(path))
+        raise PrototypeException("malformed seed")
 
     try:
         index = implementation.index('{') + 1
         prototype = implementation[:index]
     except ValueError:
-        raise PrototypeException("malformed seed '{}'".format(path))
+        raise PrototypeException("malformed seed")
 
     return prototype
 
@@ -81,7 +81,10 @@ class task(object):
         try:
             seed = data['seed']
         except KeyError:
-            seed = extract_prototype(oracle)
+            try:
+                seed = extract_prototype(oracle)
+            except PrototypeException as e:
+                raise PrototypeException(str(e) + " '{}'".format(oracle_path))
 
         task_args = [db_path, benchmark, seed, oracle]
         if config.is_host():

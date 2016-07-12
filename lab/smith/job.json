@@ -10,33 +10,33 @@
     /*
      * PARBOIL
      */
-    "parboil-cutcp": {
+    "parboil-0.2-cutcp": {
       "benchmark": "Parboil v0.2: Distance-Cutoff Coulombic Potential",
-      "path": "~/phd/lab/smith/benchmarks/parboil/cutcp.cl"
+      "path": "~/phd/lab/smith/benchmarks/parboil-0.2-cutcp.cl"
     },
-    "parboil-lbm": {
+    "parboil-0.2-lbm": {
       "benchmark": "Parboil v0.2: Lattice-Boltzmann Method Fluid Dynamics",
-      "path": "~/phd/lab/smith/benchmarks/parboil/lbm.cl"
+      "path": "~/phd/lab/smith/benchmarks/parboil-0.2-lbm.cl"
     },
-    "parboil-mri-q1": {
+    "parboil-0.2-mri-q1": {
       "benchmark": "Parboil v0.2: Magnetic Resonance Imaging - Q",
-      "path": "~/phd/lab/smith/benchmarks/parboil/mri-q1.cl"
+      "path": "~/phd/lab/smith/benchmarks/parboil-0.2-mri-q1.cl"
     },
-    "parboil-sgemm": {
+    "parboil-0.2-sgemm": {
       "benchmark": "Parboil v0.2: Dense Matrix-Matrix Multiply",
-      "path": "~/phd/lab/smith/benchmarks/parboil/sgemm.cl"
+      "path": "~/phd/lab/smith/benchmarks/parboil-0.2-sgemm.cl"
     },
-    "parboil-spmv": {
+    "parboil-0.2-spmv": {
       "benchmark": "Parboil v0.2: Sparse-Matrix Dense-Vector Multiplication",
-      "path": "~/phd/lab/smith/benchmarks/parboil/spmv.cl"
+      "path": "~/phd/lab/smith/benchmarks/parboil-0.2-spmv.cl"
     },
-    "parboil-stencil": {
+    "parboil-0.2-stencil": {
       "benchmark": "Parboil v0.2: 3-D Stencil Operation",
-      "path": "~/phd/lab/smith/benchmarks/parboil/stencil.cl"
+      "path": "~/phd/lab/smith/benchmarks/parboil-0.2-stencil.cl"
     },
-    "parboil-tpacf": {
+    "parboil-0.2-tpacf": {
       "benchmark": "Parboil v0.2: Two Point Angular Correlation Function",
-      "path": "~/phd/lab/smith/benchmarks/parboil/tpacf.cl"
+      "path": "~/phd/lab/smith/benchmarks/parboil-0.2-tpacf.cl"
     },
 
     /*
@@ -44,267 +44,260 @@
      */
     "nvidia-4.2-black-scholes": {
       "benchmark": "NVIDIA SDK v4.2: Black Scholes",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/black-scholes.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-black-scholes.cl"
+    },
+    "nvidia-4.2-convolution": {
+      "benchmark": "NVIDIA SDK v4.2: Convolution Separable",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-convolution.cl"
     },
     "nvidia-4.2-dct-1": {
       "benchmark": "NVIDIA SDK v4.2: DCT 8x8 1",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/dct-1.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-dct-1.cl"
     },
     "nvidia-4.2-dct-2": {
       "benchmark": "NVIDIA SDK v4.2: DCT 8x8 2",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/dct-2.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-dct-2.cl"
     },
     "nvidia-4.2-dot-product": {
       "benchmark": "NVIDIA SDK v4.2: Dot Product",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/dot-product.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-dot-product.cl"
     },
     "nvidia-4.2-dxtc": {
       "benchmark": "NVIDIA SDK v4.2: DirectX Texture Compressor",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/dxtc.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-dxtc.cl"
+    },
+    "nvidia-4.2-fdtd-3d": {
+      "benchmark": "NVIDIA SDK v4.2: 3D FDTD",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-fdtd-3d.cl"
+    },
+    "nvidia-4.2-histogram-256": {
+      "benchmark": "NVIDIA SDK v4.2: Histogram 256",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-histogram-256.cl"
+    },
+    "nvidia-4.2-histogram-64": {
+      "benchmark": "NVIDIA SDK v4.2: Histogram 64",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-histogram-64.cl"
     },
     "nvidia-4.2-markov-1": {
       "benchmark": "NVIDIA SDK v4.2: Hidden Markov Model ViterbiOneStep()",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/markov-1.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-markov-1.cl"
     },
     "nvidia-4.2-markov-2": {
       "benchmark": "NVIDIA SDK v4.2: Hidden Markov Model ViterbiPath()",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/markov-2.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-markov-2.cl"
     },
     "nvidia-4.2-matrix-vector-multiply-1": {
       "benchmark": "NVIDIA SDK v4.2: Matrix Vector Multiplication 1",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/matrix-vector-multiply-1.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-matrix-vector-multiply-1.cl"
     },
     "nvidia-4.2-matrix-vector-multiply-2": {
       "benchmark": "NVIDIA SDK v4.2: Matrix Vector Multiplication 2",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/matrix-vector-multiply-2.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-matrix-vector-multiply-2.cl"
     },
     "nvidia-4.2-matrix-vector-multiply-3": {
       "benchmark": "NVIDIA SDK v4.2: Matrix Vector Multiplication 3",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/matrix-vector-multiply-3.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-matrix-vector-multiply-3.cl"
     },
     "nvidia-4.2-matrix-vector-multiply-4": {
       "benchmark": "NVIDIA SDK v4.2: Matrix Vector Multiplication 4",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/matrix-vector-multiply-4.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-matrix-vector-multiply-4.cl"
     },
     "nvidia-4.2-matrix-vector-multiply-5": {
       "benchmark": "NVIDIA SDK v4.2: Matrix Vector Multiplication 5",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/matrix-vector-multiply-5.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-matrix-vector-multiply-5.cl"
     },
     "nvidia-4.2-matrix-vector-multiply-6": {
       "benchmark": "NVIDIA SDK v4.2: Matrix Vector Multiplication 6",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/matrix-vector-multiply-6.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-matrix-vector-multiply-6.cl"
     },
     "nvidia-4.2-radix-sort-1": {
       "benchmark": "NVIDIA SDK v4.2: Radix Sort radixSortBlocksKeysOnly()",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/radix-sort-1.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-radix-sort-1.cl"
     },
     "nvidia-4.2-radix-sort-2": {
       "benchmark": "NVIDIA SDK v4.2: Radix Sort findRadixOffsets()",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/radix-sort-2.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-radix-sort-2.cl"
     },
     "nvidia-4.2-radix-sort-3": {
       "benchmark": "NVIDIA SDK v4.2: Radix Sort scanNaive()",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/radix-sort-3.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-radix-sort-3.cl"
     },
     "nvidia-4.2-radix-sort-4": {
       "benchmark": "NVIDIA SDK v4.2: Radix Sort reorderDataKeysOnly()",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/radix-sort-4.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-radix-sort-4.cl"
+    },
+    "nvidia-4.2-reduction": {
+      "benchmark": "NVIDIA SDK v4.2: Parallel Reduction",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-reduction.cl"
     },
     "nvidia-4.2-scan-1": {
       "benchmark": "NVIDIA SDK v4.2: Scan scanExclusiveLocal1()",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/scan-1.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-scan-1.cl"
     },
     "nvidia-4.2-scan-2": {
       "benchmark": "NVIDIA SDK v4.2: Scan scanExclusiveLocal1()",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/scan-2.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-scan-2.cl"
     },
     "nvidia-4.2-scan-3": {
       "benchmark": "NVIDIA SDK v4.2: Scan uniformUpdate()",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/scan-3.cl"
-    },
-    "nvidia-4.2-transpose-1": {
-      "benchmark": "NVIDIA SDK v4.2: Matrix Transpose 1",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/transpose-1.cl"
-    },
-    "nvidia-4.2-transpose-2": {
-      "benchmark": "NVIDIA SDK v4.2: Matrix Transpose 2",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/transpose-2.cl"
-    },
-    "nvidia-4.2-transpose-3": {
-      "benchmark": "NVIDIA SDK v4.2: Matrix Transpose 3",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/transpose-3.cl"
-    },
-    "nvidia-4.2-transpose-4": {
-      "benchmark": "NVIDIA SDK v4.2: Matrix Transpose 4",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/transpose-4.cl"
-    },
-    "nvidia-4.2-transpose-5": {
-      "benchmark": "NVIDIA SDK v4.2: Matrix Transpose 5",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/transpose-5.cl"
-    },
-    "nvidia-4.2-vector-addition": {
-      "benchmark": "NVIDIA SDK v4.2: Vector Addition",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/vector-addition.cl"
-    },
-    "nvidia-4.2-hypotenuse": {
-      "benchmark": "NVIDIA SDK v4.2: Vector Hypotenuse",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/vector-hypotenuse.cl"
-    },
-
-    /*
-     * FIXME: These benchmarks didn't preprocess:
-    "nvidia-4.2-fdtd": {
-      "benchmark": "NVIDIA SDK v4.2: 3D FDTD",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/fdtd.cl"
-    },
-    "nvidia-4.2-histogram": {
-      "benchmark": "NVIDIA SDK v4.2: Histogram",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/histogram.cl"
-    },
-    "nvidia-4.2-convolution": {
-      "benchmark": "NVIDIA SDK v4.2: Separable Convolution",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/convolution.cl"
-    },
-    "nvidia-4.2-reduce": {
-      "benchmark": "NVIDIA SDK v4.2: Parallel Reduction",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/reduce.cl"
-    },
-    "nvidia-4.2-matrix-transpose": {
-      "benchmark": "NVIDIA SDK v4.2: Matrix Transpose",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/matrix-transpose.cl"
-    },
-    "nvidia-4.2-matrix-multiplication": {
-      "benchmark": "NVIDIA SDK v4.2: Matrix Multiplication",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/matrix-multiplication.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-scan-3.cl"
     },
     "nvidia-4.2-sobel-filter": {
       "benchmark": "NVIDIA SDK v4.2: Sobel Filter",
-      "path": "~/phd/lab/smith/benchmarks/nvidia/sobel-filter.cl"
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-sobel-filter.cl"
     },
-    */
+    "nvidia-4.2-transpose-1": {
+      "benchmark": "NVIDIA SDK v4.2: Matrix Transpose 1",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-transpose-1.cl"
+    },
+    "nvidia-4.2-transpose-2": {
+      "benchmark": "NVIDIA SDK v4.2: Matrix Transpose 2",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-transpose-2.cl"
+    },
+    "nvidia-4.2-transpose-3": {
+      "benchmark": "NVIDIA SDK v4.2: Matrix Transpose 3",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-transpose-3.cl"
+    },
+    "nvidia-4.2-transpose-4": {
+      "benchmark": "NVIDIA SDK v4.2: Matrix Transpose 4",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-transpose-4.cl"
+    },
+    "nvidia-4.2-transpose-5": {
+      "benchmark": "NVIDIA SDK v4.2: Matrix Transpose 5",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-transpose-5.cl"
+    },
+    "nvidia-4.2-vector-addition": {
+      "benchmark": "NVIDIA SDK v4.2: Vector Addition",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-vector-addition.cl"
+    },
+    "nvidia-4.2-hypotenuse": {
+      "benchmark": "NVIDIA SDK v4.2: Vector Hypotenuse",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-vector-hypotenuse.cl"
+    },
+
 
     /*
      * Polybench
      */
     "polybench-1.0-2mm-1": {
       "benchmark": "Polybench v1.0: 2MM 1",
-      "path": "~/phd/lab/smith/benchmarks/polybench/2mm-1.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-2mm-1.cl"
     },
     "polybench-1.0-2mm-2": {
       "benchmark": "Polybench v1.0: 2MM 2",
-      "path": "~/phd/lab/smith/benchmarks/polybench/2mm-2.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-2mm-2.cl"
     },
     "polybench-1.0-3mm-1": {
       "benchmark": "Polybench v1.0: 3MM 1",
-      "path": "~/phd/lab/smith/benchmarks/polybench/3mm-1.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-3mm-1.cl"
     },
     "polybench-1.0-3mm-2": {
       "benchmark": "Polybench v1.0: 3MM 2",
-      "path": "~/phd/lab/smith/benchmarks/polybench/3mm-2.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-3mm-2.cl"
     },
     "polybench-1.0-3mm-3": {
       "benchmark": "Polybench v1.0: 3MM 3",
-      "path": "~/phd/lab/smith/benchmarks/polybench/3mm-3.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-3mm-3.cl"
     },
     "polybench-1.0-atax-1": {
       "benchmark": "Polybench v1.0: ATAX 1",
-      "path": "~/phd/lab/smith/benchmarks/polybench/atax-1.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-atax-1.cl"
     },
     "polybench-1.0-atax-2": {
       "benchmark": "Polybench v1.0: ATAX 2",
-      "path": "~/phd/lab/smith/benchmarks/polybench/atax-2.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-atax-2.cl"
     },
     "polybench-1.0-bigcg-1": {
       "benchmark": "Polybench v1.0: BIGCG 1",
-      "path": "~/phd/lab/smith/benchmarks/polybench/bigcg-1.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-bigcg-1.cl"
     },
     "polybench-1.0-bigcg-2": {
       "benchmark": "Polybench v1.0: BIGCG 2",
-      "path": "~/phd/lab/smith/benchmarks/polybench/bigcg-2.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-bigcg-2.cl"
     },
     "polybench-1.0-convolution-2d": {
       "benchmark": "Polybench v1.0: 2D Convolution",
-      "path": "~/phd/lab/smith/benchmarks/polybench/convolution-2d.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-convolution-2d.cl"
     },
     "polybench-1.0-convolution-3d": {
       "benchmark": "Polybench v1.0: 3D Convolution",
-      "path": "~/phd/lab/smith/benchmarks/polybench/convolution-3d.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-convolution-3d.cl"
     },
     "polybench-1.0-correlation-mean": {
       "benchmark": "Polybench v1.0: Correlation mean",
-      "path": "~/phd/lab/smith/benchmarks/polybench/correlation-mean.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-correlation-mean.cl"
     },
     "polybench-1.0-correlation-reduce": {
       "benchmark": "Polybench v1.0: Correlation reduce",
-      "path": "~/phd/lab/smith/benchmarks/polybench/correlation-reduce.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-correlation-reduce.cl"
     },
     "polybench-1.0-correlation-std": {
       "benchmark": "Polybench v1.0: Correlation std",
-      "path": "~/phd/lab/smith/benchmarks/polybench/correlation-std.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-correlation-std.cl"
     },
     "polybench-1.0-correlation": {
       "benchmark": "Polybench v1.0: Correlation",
-      "path": "~/phd/lab/smith/benchmarks/polybench/correlation.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-correlation.cl"
     },
     "polybench-1.0-covariance-mean": {
       "benchmark": "Polybench v1.0: Covariance mean",
-      "path": "~/phd/lab/smith/benchmarks/polybench/covariance-mean.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-covariance-mean.cl"
     },
     "polybench-1.0-covariance-reduce": {
       "benchmark": "Polybench v1.0: Covariance reduce",
-      "path": "~/phd/lab/smith/benchmarks/polybench/covariance-reduce.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-covariance-reduce.cl"
     },
     "polybench-1.0-covariance": {
       "benchmark": "Polybench v1.0: Covariance",
-      "path": "~/phd/lab/smith/benchmarks/polybench/covariance.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-covariance.cl"
     },
     "polybench-1.0-fdtd-1": {
       "benchmark": "Polybench v1.0: FDTD 1",
-      "path": "~/phd/lab/smith/benchmarks/polybench/fdtd-1.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-fdtd-1.cl"
     },
     "polybench-1.0-fdtd-2": {
       "benchmark": "Polybench v1.0: FDTD 2",
-      "path": "~/phd/lab/smith/benchmarks/polybench/fdtd-2.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-fdtd-2.cl"
     },
     "polybench-1.0-fdtd-3": {
       "benchmark": "Polybench v1.0: FDTD 3",
-      "path": "~/phd/lab/smith/benchmarks/polybench/fdtd-3.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-fdtd-3.cl"
     },
     "polybench-1.0-gemm": {
       "benchmark": "Polybench v1.0: GEMM",
-      "path": "~/phd/lab/smith/benchmarks/polybench/gemm.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-gemm.cl"
     },
     "polybench-1.0-gesummv": {
       "benchmark": "Polybench v1.0: GESUMMV",
-      "path": "~/phd/lab/smith/benchmarks/polybench/gesummv.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-gesummv.cl"
     },
     "polybench-1.0-gramschmidt-1": {
       "benchmark": "Polybench v1.0: Gramschmidt 1",
-      "path": "~/phd/lab/smith/benchmarks/polybench/gramschmidt-1.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-gramschmidt-1.cl"
     },
     "polybench-1.0-gramschmidt-2": {
       "benchmark": "Polybench v1.0: Gramschmidt 2",
-      "path": "~/phd/lab/smith/benchmarks/polybench/gramschmidt-2.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-gramschmidt-2.cl"
     },
     "polybench-1.0-gramschmidt-3": {
       "benchmark": "Polybench v1.0: Gramschmidt 3",
-      "path": "~/phd/lab/smith/benchmarks/polybench/gramschmidt-3.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-gramschmidt-3.cl"
     },
     "polybench-1.0-mvt-1": {
       "benchmark": "Polybench v1.0: MVT 1",
-      "path": "~/phd/lab/smith/benchmarks/polybench/mvt-1.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-mvt-1.cl"
     },
     "polybench-1.0-mvt-2": {
       "benchmark": "Polybench v1.0: MVT 2",
-      "path": "~/phd/lab/smith/benchmarks/polybench/mvt-2.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-mvt-2.cl"
     },
     "polybench-1.0-syr2k": {
       "benchmark": "Polybench v1.0: SYR2K",
-      "path": "~/phd/lab/smith/benchmarks/polybench/syr2k.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-syr2k.cl"
     },
     "polybench-1.0-syrk": {
       "benchmark": "Polybench v1.0: SYRK",
-      "path": "~/phd/lab/smith/benchmarks/polybench/syrk.cl"
+      "path": "~/phd/lab/smith/benchmarks/polybench-1.0-syrk.cl"
     },
 
     /*
