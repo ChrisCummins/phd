@@ -1,19 +1,19 @@
-__kernel void C(__global const float* restrict a,
+__kernel void A(__global const float* restrict a,
 
                 __global const float* restrict b,
 
-                __global const int* restrict c, __global const int* restrict u,
+                __global const int* restrict c, __global const int* restrict d,
                 const int e, __global float* restrict f) {
-  int h = get_global_id(0);
+  int g = get_global_id(0);
 
-  if (h < e) {
-    float v = 0.0;
-    int w = u[h];
-    for (int x = 0; x < w; x++) {
-      int y = x * e + h;
+  if (g < e) {
+    float h = 0.0;
+    int i = d[g];
+    for (int j = 0; j < i; j++) {
+      int k = j * e + g;
 
-      v += a[y] * b[c[y]];
+      h += a[k] * b[c[k]];
     }
-    f[h] = v;
+    f[g] = h;
   }
 }

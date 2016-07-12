@@ -1,7 +1,7 @@
-__kernel void B(__global float *a, __global float *b, unsigned int d) {
-  float j = 0.0f;
-  for (int f = 0; f < d; f++) {
-    j += a[f];
+__kernel void A(__global float *a, __global float *b, unsigned int c) {
+  float d = 0.0f;
+  for (int e = 0; e < c; e++) {
+    d += a[e];
   }
-  b[0] = j;
+  b[0] = d;
 }

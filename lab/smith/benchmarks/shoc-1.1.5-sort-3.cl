@@ -1,83 +1,83 @@
-__kernel void D(__global const uint *a, __global const uint *b,
-                __global uint *u, const int c, __local uint *d, const int e) {
-  __local uint v[16];
+__kernel void A(__global const uint *a, __global const uint *b,
+                __global uint *c, const int d, __local uint *e, const int f) {
+  __local uint g[16];
 
-  __local uint w[16];
+  __local uint h[16];
 
-  __private int x[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  __private int i[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-  __global uint4 *y = (__global uint4 *)a;
-  __global uint4 *z = (__global uint4 *)u;
-  int aa = c / 4;
+  __global uint4 *j = (__global uint4 *)a;
+  __global uint4 *k = (__global uint4 *)c;
+  int l = d / 4;
 
-  int f = aa / get_num_groups(0);
-  int g = get_group_id(0) * f;
+  int m = l / get_num_groups(0);
+  int n = get_group_id(0) * m;
 
-  int h = (get_group_id(0) == get_num_groups(0) - 1) ? aa : g + f;
+  int o = (get_group_id(0) == get_num_groups(0) - 1) ? l : n + m;
 
-  int j = g + get_local_id(0);
-  int ab = g;
+  int p = n + get_local_id(0);
+  int q = n;
 
   if (get_local_id(0) < 16) {
-    w[get_local_id(0)] = 0;
-    v[get_local_id(0)] =
+    h[get_local_id(0)] = 0;
+    g[get_local_id(0)] =
         b[(get_local_id(0) * get_num_groups(0)) + get_group_id(0)];
   }
   barrier(1);
 
-  while (ab < h) {
-    for (int ac = 0; ac < 16; ac++) x[ac] = 0;
-    uint4 ad;
-    uint4 ae;
+  while (q < o) {
+    for (int r = 0; r < 16; r++) i[r] = 0;
+    uint4 s;
+    uint4 t;
 
-    if (j < h) {
-      ad = y[j];
+    if (p < o) {
+      s = j[p];
 
-      ae.x = (ad.x >> e) & 0xFU;
-      ae.y = (ad.y >> e) & 0xFU;
-      ae.z = (ad.z >> e) & 0xFU;
-      ae.w = (ad.w >> e) & 0xFU;
+      t.x = (s.x >> f) & 0xFU;
+      t.y = (s.y >> f) & 0xFU;
+      t.z = (s.z >> f) & 0xFU;
+      t.w = (s.w >> f) & 0xFU;
 
-      x[ae.x]++;
-      x[ae.y]++;
-      x[ae.z]++;
-      x[ae.w]++;
+      i[t.x]++;
+      i[t.y]++;
+      i[t.z]++;
+      i[t.w]++;
     }
 
-    for (int af = 0; af < 16; af++) {
-      x[af] = B(x[af], d, 1);
+    for (int u = 0; u < 16; u++) {
+      i[u] = B(i[u], e, 1);
       barrier(1);
     }
 
-    if (j < h) {
-      int ag;
-      ag = x[ae.x] + v[ae.x] + w[ae.x];
-      u[ag] = ad.x;
-      x[ae.x]++;
+    if (p < o) {
+      int v;
+      v = i[t.x] + g[t.x] + h[t.x];
+      c[v] = s.x;
+      i[t.x]++;
 
-      ag = x[ae.y] + v[ae.y] + w[ae.y];
-      u[ag] = ad.y;
-      x[ae.y]++;
+      v = i[t.y] + g[t.y] + h[t.y];
+      c[v] = s.y;
+      i[t.y]++;
 
-      ag = x[ae.z] + v[ae.z] + w[ae.z];
-      u[ag] = ad.z;
-      x[ae.z]++;
+      v = i[t.z] + g[t.z] + h[t.z];
+      c[v] = s.z;
+      i[t.z]++;
 
-      ag = x[ae.w] + v[ae.w] + w[ae.w];
-      u[ag] = ad.w;
-      x[ae.w]++;
+      v = i[t.w] + g[t.w] + h[t.w];
+      c[v] = s.w;
+      i[t.w]++;
     }
 
     barrier(1);
 
     if (get_local_id(0) == get_local_size(0) - 1) {
-      for (int ac = 0; ac < 16; ac++) {
-        w[ac] += x[ac];
+      for (int r = 0; r < 16; r++) {
+        h[r] += i[r];
       }
     }
     barrier(1);
 
-    ab += get_local_size(0);
-    j += get_local_size(0);
+    q += get_local_size(0);
+    p += get_local_size(0);
   }
 }

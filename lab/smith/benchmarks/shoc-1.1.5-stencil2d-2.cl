@@ -1,59 +1,59 @@
-__kernel void F(__global float* y, __global float* z, const int aa, float ab,
-                float ac, float ad, __local float* ae) {
-  int a = get_group_id(0);
-  int d = get_group_id(1);
-  int af = get_num_groups(0);
-  int ag = get_num_groups(1);
-  int c = get_local_id(0);
-  int f = get_local_id(1);
-  int b = 16;
-  int e = get_local_size(1);
+__kernel void A(__global float* a, __global float* b, const int c, float d,
+                float e, float f, __local float* g) {
+  int h = get_group_id(0);
+  int i = get_group_id(1);
+  int j = get_num_groups(0);
+  int k = get_num_groups(1);
+  int l = get_local_id(0);
+  int m = get_local_id(1);
+  int n = 16;
+  int o = get_local_size(1);
 
-  int ah = A(a, b, c);
-  int ai = B(d, e, f);
+  int p = FOOBAR(h, n, l);
+  int q = B(i, o, m);
 
-  int aj = ag * e + 2;
-  int ak = aj + (((aj % aa) == 0) ? 0 : (aa - (aj % aa)));
-  int al = ak - 2;
+  int r = k * o + 2;
+  int s = r + (((r % c) == 0) ? 0 : (c - (r % c)));
+  int t = s - 2;
 
-  int am = e;
-  for (int an = 0; an < (b + 2); an++) {
-    int ao = C(c - 1 + an, f, am);
-    int ap = C(ah - 1 + an, ai, al);
-    ae[ao] = y[ap];
+  int u = o;
+  for (int v = 0; v < (n + 2); v++) {
+    int w = C(l - 1 + v, m, u);
+    int x = C(p - 1 + v, q, t);
+    g[w] = a[x];
   }
 
-  if (f == 0) {
-    for (int an = 0; an < (b + 2); an++) {
-      int ao = C(c - 1 + an, f - 1, am);
-      int ap = C(ah - 1 + an, ai - 1, al);
-      ae[ao] = y[ap];
+  if (m == 0) {
+    for (int v = 0; v < (n + 2); v++) {
+      int w = C(l - 1 + v, m - 1, u);
+      int x = C(p - 1 + v, q - 1, t);
+      g[w] = a[x];
     }
-  } else if (f == (e - 1)) {
-    for (int an = 0; an < (b + 2); an++) {
-      int ao = C(c - 1 + an, f + 1, am);
-      int ap = C(ah - 1 + an, ai + 1, al);
-      ae[ao] = y[ap];
+  } else if (m == (o - 1)) {
+    for (int v = 0; v < (n + 2); v++) {
+      int w = C(l - 1 + v, m + 1, u);
+      int x = C(p - 1 + v, q + 1, t);
+      g[w] = a[x];
     }
   }
 
   barrier(1);
 
-  for (int an = 0; an < b; an++) {
-    int aq = C(c + an, f, am);
-    int ar = C(c - 1 + an, f, am);
-    int as = C(c + 1 + an, f, am);
-    int at = C(c + an, f + 1, am);
-    int au = C(c + an, f - 1, am);
-    int av = C(c - 1 + an, f + 1, am);
-    int aw = C(c + 1 + an, f + 1, am);
-    int ax = C(c - 1 + an, f - 1, am);
-    int ay = C(c + 1 + an, f - 1, am);
+  for (int v = 0; v < n; v++) {
+    int y = C(l + v, m, u);
+    int z = C(l - 1 + v, m, u);
+    int aa = C(l + 1 + v, m, u);
+    int ab = C(l + v, m + 1, u);
+    int ac = C(l + v, m - 1, u);
+    int ad = C(l - 1 + v, m + 1, u);
+    int ae = C(l + 1 + v, m + 1, u);
+    int af = C(l - 1 + v, m - 1, u);
+    int ag = C(l + 1 + v, m - 1, u);
 
-    float az = ae[aq];
-    float ba = ae[ar] + ae[as] + ae[at] + ae[au];
-    float bb = ae[av] + ae[aw] + ae[ax] + ae[ay];
+    float ah = g[y];
+    float ai = g[z] + g[aa] + g[ab] + g[ac];
+    float aj = g[ad] + g[ae] + g[af] + g[ag];
 
-    z[C(ah + an, ai, al)] = ab * az + ac * ba + ad * bb;
+    b[C(p + v, q, t)] = d * ah + e * ai + f * aj;
   }
 }

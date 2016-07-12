@@ -1,26 +1,26 @@
-__kernel void C(__global uint *b, const int c, __local uint *d) {
-  __local int r;
-  r = 0;
+__kernel void A(__global uint *a, const int b, __local uint *c) {
+  __local int d;
+  d = 0;
   barrier(1);
 
-  int s = (get_local_id(0) < c && (get_local_id(0) + 1) == c) ? 1 : 0;
+  int e = (get_local_id(0) < b && (get_local_id(0) + 1) == b) ? 1 : 0;
 
-  for (int l = 0; l < 16; l++) {
-    uint n = 0;
+  for (int f = 0; f < 16; f++) {
+    uint g = 0;
 
-    if (get_local_id(0) < c) {
-      n = b[(c * l) + get_local_id(0)];
+    if (get_local_id(0) < b) {
+      g = a[(b * f) + get_local_id(0)];
     }
 
-    uint t = B(n, d, 1);
+    uint h = B(g, c, 1);
 
-    if (get_local_id(0) < c) {
-      b[(c * l) + get_local_id(0)] = t + r;
+    if (get_local_id(0) < b) {
+      a[(b * f) + get_local_id(0)] = h + d;
     }
     barrier(1);
 
-    if (s) {
-      r += t + n;
+    if (e) {
+      d += h + g;
     }
     barrier(1);
   }

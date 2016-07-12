@@ -46,9 +46,13 @@
       "benchmark": "NVIDIA SDK v4.2: Black Scholes",
       "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-black-scholes.cl"
     },
-    "nvidia-4.2-convolution": {
-      "benchmark": "NVIDIA SDK v4.2: Convolution Separable",
-      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-convolution.cl"
+    "nvidia-4.2-convolution-1": {
+      "benchmark": "NVIDIA SDK v4.2: Convolution Separable 1",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-convolution-1.cl"
+    },
+    "nvidia-4.2-convolution-2": {
+      "benchmark": "NVIDIA SDK v4.2: Convolution Separable 2",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-convolution-2.cl"
     },
     "nvidia-4.2-dct-1": {
       "benchmark": "NVIDIA SDK v4.2: DCT 8x8 1",
@@ -70,9 +74,13 @@
       "benchmark": "NVIDIA SDK v4.2: 3D FDTD",
       "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-fdtd-3d.cl"
     },
-    "nvidia-4.2-histogram-256": {
-      "benchmark": "NVIDIA SDK v4.2: Histogram 256",
-      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-histogram-256.cl"
+    "nvidia-4.2-histogram-256-1": {
+      "benchmark": "NVIDIA SDK v4.2: Histogram 256 1",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-histogram-256-1.cl"
+    },
+    "nvidia-4.2-histogram-256-2": {
+      "benchmark": "NVIDIA SDK v4.2: Histogram 256 2",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-histogram-256-2.cl"
     },
     "nvidia-4.2-histogram-64": {
       "benchmark": "NVIDIA SDK v4.2: Histogram 64",

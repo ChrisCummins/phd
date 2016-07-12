@@ -1,14 +1,14 @@
-__kernel void E(__global float* k, int l, int m, __global float* n, int o,
-                int p, int q, int r) {
-  int s = get_group_id(0);
-  int t = get_local_id(0);
-  int u = get_global_size(0);
-  int v = get_local_size(0);
-  int w = s * v + t;
+__kernel void A(__global float* a, int b, int c, __global float* d, int e,
+                int f, int g, int h) {
+  int i = get_group_id(0);
+  int j = get_local_id(0);
+  int k = get_global_size(0);
+  int l = get_local_size(0);
+  int m = i * l + j;
 
-  if (w < r) {
-    for (int x = 0; x < q; x++) {
-      (k + l)[D(w, x, m)] = (n + o)[D(w, x, p)];
+  if (m < h) {
+    for (int n = 0; n < g; n++) {
+      (a + b)[D(m, n, c)] = (d + e)[D(m, n, f)];
     }
   }
 }

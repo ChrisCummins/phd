@@ -1,57 +1,57 @@
-__kernel void D(__global const float *a, __global const float *b,
-                __global float *p, const int c, __local float *d) {
-  __local float q;
-  q = 0;
+__kernel void A(__global const float *a, __global const float *b,
+                __global float *c, const int d, __local float *e) {
+  __local float f;
+  f = 0;
 
-  __global float4 *r = (__global float4 *)a;
-  __global float4 *s = (__global float4 *)p;
-  int t = c / 4;
+  __global float4 *g = (__global float4 *)a;
+  __global float4 *h = (__global float4 *)c;
+  int i = d / 4;
 
-  int e = t / get_num_groups(0);
-  int f = get_group_id(0) * e;
+  int j = i / get_num_groups(0);
+  int k = get_group_id(0) * j;
 
-  int g = (get_group_id(0) == get_num_groups(0) - 1) ? t : f + e;
+  int l = (get_group_id(0) == get_num_groups(0) - 1) ? i : k + j;
 
-  int i = f + get_local_id(0);
-  unsigned int u = f;
+  int m = k + get_local_id(0);
+  unsigned int n = k;
 
-  float v = b[get_group_id(0)];
+  float o = b[get_group_id(0)];
 
-  while (u < g) {
-    float4 w;
-    if (i < g) {
-      w = r[i];
+  while (n < l) {
+    float4 p;
+    if (m < l) {
+      p = g[m];
     } else {
-      w.x = 0.0f;
-      w.y = 0.0f;
-      w.z = 0.0f;
-      w.w = 0.0f;
+      p.x = 0.0f;
+      p.y = 0.0f;
+      p.z = 0.0f;
+      p.w = 0.0f;
     }
 
-    w.y += w.x;
-    w.z += w.y;
-    w.w += w.z;
+    p.y += p.x;
+    p.z += p.y;
+    p.w += p.z;
 
-    float x = B(w.w, d, 1);
+    float q = B(p.w, e, 1);
 
-    w.x += x + v;
-    w.y += x + v;
-    w.z += x + v;
-    w.w += x + v;
+    p.x += q + o;
+    p.y += q + o;
+    p.z += q + o;
+    p.w += q + o;
 
-    if (i < g) {
-      s[i] = w;
+    if (m < l) {
+      h[m] = p;
     }
 
     barrier(1);
     if (get_local_id(0) == get_local_size(0) - 1) {
-      q = w.w;
+      f = p.w;
     }
     barrier(1);
 
-    v = q;
+    o = f;
 
-    u += get_local_size(0);
-    i += get_local_size(0);
+    n += get_local_size(0);
+    m += get_local_size(0);
   }
 }
