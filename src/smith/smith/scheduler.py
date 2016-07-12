@@ -184,10 +184,21 @@ def run_tasks(tasks):
 
 
 def connect_to_database(db_path):
+    """
+    Connect to database. If database does not exist, create it.
+
+    :param db_path: Path to database file
+    :return: Connection to database.
+    """
     if not os.path.exists(db_path):
-        # TODO: run create-dabatase.sql
+        db = sqlite3.connect(db_path)
+        c = db.cursor()
+        script = smith.sql_script('create-samples-db')
+        c.executescript(script)
+        c.close()
+        return db
+    else:
         return sqlite3.connect(db_path)
-    return sqlite3.connect(db_path)
 
 
 def task_db_path(root, task_name):
