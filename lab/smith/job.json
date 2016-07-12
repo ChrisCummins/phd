@@ -300,6 +300,224 @@
       "path": "~/phd/lab/smith/benchmarks/polybench-1.0-syrk.cl"
     },
 
+
+    /*
+     * SHOC
+     */
+    "shoc-1.1.5-bfs-1": {
+      "benchmark": "SHOC v1.1.5: BFS",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-bfs-1.cl"
+    },
+    "shoc-1.1.5-bfs-2": {
+      "benchmark": "SHOC v1.1.5: BFS one block",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-bfs-2.cl"
+    },
+    "shoc-1.1.5-bfs-3": {
+      "benchmark": "SHOC v1.1.5: BFS SM block",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-bfs-3.cl"
+    },
+    "shoc-1.1.5-bfs-4": {
+      "benchmark": "SHOC v1.1.5: BFS multi block",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-bfs-4.cl"
+    },
+    "shoc-1.1.5-bfs-5": {
+      "benchmark": "SHOC v1.1.5: BFS reset",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-bfs-5.cl"
+    },
+    "shoc-1.1.5-bfs-6": {
+      "benchmark": "SHOC v1.1.5: BFS Frontier copy",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-bfs-6.cl"
+    },
+    "shoc-1.1.5-fft-1": {
+      "benchmark": "SHOC v1.1.5: FFT 1D 512",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-fft-1.cl"
+    },
+    "shoc-1.1.5-fft-2": {
+      "benchmark": "SHOC v1.1.5: iFFFT 1D 512",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-fft-2.cl"
+    },
+    "shoc-1.1.5-fft-3": {
+      "benchmark": "SHOC v1.1.5: chk FFT 1D 512",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-fft-3.cl"
+    },
+    "shoc-1.1.5-gr": {
+      "benchmark": "SHOC v1.1.5: GR",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-gr.cl"
+    },
+    "shoc-1.1.5-md": {
+      "benchmark": "SHOC v1.1.5: SGEMM NN",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-md.cl"
+    },
+    "shoc-1.1.5-md5": {
+      "benchmark": "SHOC v1.1.5: MD5",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-md5.cl"
+    },
+    "shoc-1.1.5-qssa-1": {
+      "benchmark": "SHOC v1.1.5: QSSA 1",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-qssa-1.cl"
+    },
+    "shoc-1.1.5-qssa-2": {
+      "benchmark": "SHOC v1.1.5: QSSA 2",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-qssa-2.cl"
+    },
+    "shoc-1.1.5-qssa-3": {
+      "benchmark": "SHOC v1.1.5: QSSA 3",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-qssa-3.cl"
+    },
+    "shoc-1.1.5-ratt": {
+      "benchmark": "SHOC v1.1.5: RATT",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-ratt.cl"
+    },
+    "shoc-1.1.5-ratt10": {
+      "benchmark": "SHOC v1.1.5: RATT 10",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-ratt10.cl"
+    },
+    "shoc-1.1.5-ratt2": {
+      "benchmark": "SHOC v1.1.5: RATT 2",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-ratt2.cl"
+    },
+    "shoc-1.1.5-ratt3": {
+      "benchmark": "SHOC v1.1.5: RATT3",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-ratt3.cl"
+    },
+    "shoc-1.1.5-ratt4": {
+      "benchmark": "SHOC v1.1.5: RATT4",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-ratt4.cl"
+    },
+    "shoc-1.1.5-ratt5": {
+      "benchmark": "SHOC v1.1.5: RATT5",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-ratt5.cl"
+    },
+    "shoc-1.1.5-ratt6": {
+      "benchmark": "SHOC v1.1.5: RATT6",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-ratt6.cl"
+    },
+    "shoc-1.1.5-ratt7": {
+      "benchmark": "SHOC v1.1.5: RATT7",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-ratt7.cl"
+    },
+    "shoc-1.1.5-ratt8": {
+      "benchmark": "SHOC v1.1.5: RATT8",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-ratt8.cl"
+    },
+    "shoc-1.1.5-ratt9": {
+      "benchmark": "SHOC v1.1.5: RATT9",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-ratt9.cl"
+    },
+    "shoc-1.1.5-ratx": {
+      "benchmark": "SHOC v1.1.5: RATX",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-ratx.cl"
+    },
+    "shoc-1.1.5-ratx2": {
+      "benchmark": "SHOC v1.1.5: RATX2",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-ratx2.cl"
+    },
+    "shoc-1.1.5-ratx4": {
+      "benchmark": "SHOC v1.1.5: RATX4",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-ratx4.cl"
+    },
+    "shoc-1.1.5-ratxb": {
+      "benchmark": "SHOC v1.1.5: RATXB",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-ratxb.cl"
+    },
+    "shoc-1.1.5-rdsmh": {
+      "benchmark": "SHOC v1.1.5: RDSMH",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-rdsmh.cl"
+    },
+    "shoc-1.1.5-rdwdot": {
+      "benchmark": "SHOC v1.1.5: RDWDOT",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-rdwdot.cl"
+    },
+    "shoc-1.1.5-rdwdot10": {
+      "benchmark": "SHOC v1.1.5: RDWDOT10",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-rdwdot10.cl"
+    },
+    "shoc-1.1.5-rdwdot2": {
+      "benchmark": "SHOC v1.1.5: RDWDOT2",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-rdwdot2.cl"
+    },
+    "shoc-1.1.5-rdwdot3": {
+      "benchmark": "SHOC v1.1.5: RDWDOT3",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-rdwdot3.cl"
+    },
+    "shoc-1.1.5-rdwdot6": {
+      "benchmark": "SHOC v1.1.5: RDWDOT6",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-rdwdot6.cl"
+    },
+    "shoc-1.1.5-rdwdot7": {
+      "benchmark": "SHOC v1.1.5: RDWDOT7",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-rdwdot7.cl"
+    },
+    "shoc-1.1.5-rdwdot8": {
+      "benchmark": "SHOC v1.1.5: RDWDOT8",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-rdwdot8.cl"
+    },
+    "shoc-1.1.5-rdwdot9": {
+      "benchmark": "SHOC v1.1.5: RDWDOT9",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-rdwdot9.cl"
+    },
+    "shoc-1.1.5-reduction-1": {
+      "benchmark": "SHOC v1.1.5: Reduction 1",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-reduction-1.cl"
+    },
+    "shoc-1.1.5-reduction-2": {
+      "benchmark": "SHOC v1.1.5: Reduction 2",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-reduction-2.cl"
+    },
+    "shoc-1.1.5-scan-1": {
+      "benchmark": "SHOC v1.1.5: Scan 1",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-scan-1.cl"
+    },
+    "shoc-1.1.5-scan-2": {
+      "benchmark": "SHOC v1.1.5: Scan 2",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-scan-2.cl"
+    },
+    "shoc-1.1.5-scan-3": {
+      "benchmark": "SHOC v1.1.5: Scan 3",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-scan-3.cl"
+    },
+    "shoc-1.1.5-sgemm-1": {
+      "benchmark": "SHOC v1.1.5: SGEMM NT",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-sgemm-1.cl"
+    },
+    "shoc-1.1.5-sgemm-2": {
+      "benchmark": "SHOC v1.1.5: SGEMM NN",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-sgemm-2.cl"
+    },
+    "shoc-1.1.5-sort-1": {
+      "benchmark": "SHOC v1.1.5: Sort 1",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-sort-1.cl"
+    },
+    "shoc-1.1.5-sort-2": {
+      "benchmark": "SHOC v1.1.5: Sort 2",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-sort-2.cl"
+    },
+    "shoc-1.1.5-sort-3": {
+      "benchmark": "SHOC v1.1.5: Sort 3",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-sort-3.cl"
+    },
+    "shoc-1.1.5-spmv-1": {
+      "benchmark": "SHOC v1.1.5: SPMV 1",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-spmv-1.cl"
+    },
+    "shoc-1.1.5-spmv-2": {
+      "benchmark": "SHOC v1.1.5: SPMV 2",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-spmv-2.cl"
+    },
+    "shoc-1.1.5-spmv-3": {
+      "benchmark": "SHOC v1.1.5: SPMV 3",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-spmv-3.cl"
+    },
+    "shoc-1.1.5-stencil2d-1": {
+      "benchmark": "SHOC v1.1.5: Stencil 2D 1",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-stencil2d-1.cl"
+    },
+    "shoc-1.1.5-stencil2d-2": {
+      "benchmark": "SHOC v1.1.5: Stencil 2D 2",
+      "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-stencil2d-2.cl"
+    },
+
+
     /*
      * Synthetically generated. Seed doesn't specify parameters.
      */
