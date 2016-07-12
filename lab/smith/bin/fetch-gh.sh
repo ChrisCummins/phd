@@ -4,7 +4,7 @@
 #
 # Requires env variables: $GITHUB_TOKEN $GITHUB_USERNAME $GITHUB_PW
 #
-set -eu
+set -u
 
 main() {
     local db_path="$1"
