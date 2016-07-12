@@ -1,0 +1,107 @@
+----------------------- REVIEW 1 ---------------------
+PAPER: 17
+TITLE: Autotuning OpenCL Workgroup Sizes
+AUTHORS: Chris Cummins
+
+
+----------- Review -----------
+The paper describes the usage of a autotuning framework named Omnitune
+to help predict the appropriate working group size for opencl skeleton
+code.
+
+The novelty of the work is unclear. There have been many autotuning
+papers and some of them have already covered the prediction of working
+group size. The paper did not make it clear what unique strengths this
+work has compared to prior studies. The paper briefly mentioned the
+sharing of tuning results across systems, which could involve some
+interesting elements. But the paper fails to expand on it. It instead
+puts focus on the group size autotuning results.
+
+
+----------------------- REVIEW 2 ---------------------
+PAPER: 17
+TITLE: Autotuning OpenCL Workgroup Sizes
+AUTHORS: Chris Cummins
+
+
+----------- Review -----------
+This work describes the use of ML techniques to guide the search-space
+when auto-tuning OpenCL workgroup sizes. This is interesting work, but
+has been presented before in:
+
+Autotuning OpenCL Workgroup Size for Stencil Patterns. / Cummins,
+Chris; Petoumenos, Pavlos; Steuwer, Michel; Leather, Hugh.
+International Workshop on Adaptive Self-tuning Computing Systems
+(ADAPT) 2016 @ HiPEAC, Prague, Czech Republic, January 18, 2016. 2016.
+
+
+----------------------- REVIEW 3 ---------------------
+PAPER: 17
+TITLE: Autotuning OpenCL Workgroup Sizes
+AUTHORS: Chris Cummins
+
+
+----------- Review -----------
+This poster abstract proposes incorporating autotuning of workgroup
+sizes into OpenCL code derived from algorithmic skeletons, implemented
+for the stencil skeleton in SkelCL.  A linear regression approach is
+used to construct a predictor for workgroup sizes, based on 102
+features extracted at runtime.  Significant speedups are achieved over
+non-tuned fixed workgroup sizes.
+
+Related work: If I remember properly, the earliest use of autotuning
+of workgroup sizes in a skeleton programming framework (supporting
+OpenCL but also other target platforms) was done by Dastgeer:
+
+@inproceedings{Dastgeer:2011:ASM:1984693.1984697,
+ author = {Dastgeer, Usman and Enmyren, Johan and Kessler, Christoph W.},
+ title = {Auto-tuning SkePU: A Multi-backend Skeleton Programming Framework for multi-GPU Systems},
+ booktitle = {Proceedings of the 4th International Workshop on Multicore Software Engineering},
+ series = {IWMSE '11},
+ year = {2011},
+ isbn = {978-1-4503-0577-8},
+ location = {Waikiki, Honolulu, HI, USA},
+ pages = {25--32},
+ numpages = {8},
+ url = {http://doi.acm.org/10.1145/1984693.1984697},
+ doi = {10.1145/1984693.1984697},
+ acmid = {1984697},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {auto-tuning, cuda, data parallelism, gpu, opencl, skeleton programming},
+}
+
+Minor issues:
+
+- with an an -> with an
+
+- level of the can -> level can
+
+- Figures: the blue color is too dark, and the axis inscriptions are
+  unreadably small.
+
+
+----------------------- REVIEW 4 ---------------------
+PAPER: 17
+TITLE: Autotuning OpenCL Workgroup Sizes
+AUTHORS: Chris Cummins
+
+
+----------- Review -----------
+This paper proposes using autotuning techniques to optimize the
+workgroup size of OpenCL codes that are the stencil skeletons of
+SkelCL ("A Portable Skeleton Library for High-Level GPU
+Programming"). Autotuning data is accumulated across a network of
+cooperating systems and machine learning is used to tune the workgroup
+size parameter.
+
+This is an important practical problem, and the results presented are
+convincing. However, I am surprised that a single parameter (workgroup
+size) is presented as the main target for autotuning. What about using
+OpenCL async_prefetch, async_copy and working in local memory, as
+advised for CPU-based and DSP-based platforms (eg TI KeyStone II
+OpenCL optimization manual)? In my experience of optimizing stencils
+on another multicore platform, this is where large performance gains
+can be found, rather than workgroup size.
+
+The figures are so reduced it is impossible to read text on the axis.
