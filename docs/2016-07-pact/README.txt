@@ -1,5 +1,5 @@
 Title:      Autotuning OpenCL Workgroup Sizes
-Authors:    Chris Cummins
+Authors:    Chris Cummins, Hugh Leather
 
 Abstract:
 

@@ -34,4 +34,4 @@ Student Poster Session.
 
 Chris Cummins, Hugh Leather. "Autotuning OpenCL Workgroup
 Sizes". Rejected submission for PACT'16 Student Research Competition.
-  Files: docs/2016-09-pact
+  Files: docs/2016-07-pact
