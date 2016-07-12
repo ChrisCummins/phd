@@ -131,7 +131,7 @@ class device_task(task):
         for id,sample in zip(ids, samples):
             c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
                       (id,sample))
-        self.db.commit()
+        db.commit()
         c.close()
         db.close()
 
