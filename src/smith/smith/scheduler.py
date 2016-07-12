@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 import json
 import locale
 import os
@@ -8,29 +6,17 @@ import sqlite3
 import subprocess
 import sys
 
-from argparse import ArgumentParser
-from hashlib import sha1
 from random import shuffle
 
 import smith
+from smith import config
 from smith import explore
 from smith import preprocess
+from smith import torch_rnn
 from smith import train
-from smith import config
 
 
 class PrototypeException(smith.SmithException): pass
-
-
-def fetch_samples(sample_path):
-    with open(sample_path) as infile:
-        contents = infile.read()
-        samples = re.split(r'=== SAMPLE [0-9]+ ===', contents)
-        return [sample.strip() for sample in samples if sample.strip()]
-
-
-def checksum(s):
-    return sha1(s.encode('utf-8')).hexdigest()
 
 
 def load_oracle(path):
@@ -44,22 +30,22 @@ def load_oracle(path):
     with open(path) as infile:
         oracle = infile.read().strip()
 
+    return oracle
 
-def extract_prototype(path):
+
+def extract_prototype(implementation):
     """
     Extract OpenCL kernel prototype from rewritten file.
 
-    :param path: Path to kernel implementation.
+    :param implementation: OpenCL kernel implementation.
+    :return: Kernel prototype.
     """
-    with open(path) as infile:
-        contents = infile.read().strip()
-
-    if not contents.startswith("__kernel void A"):
+    if not implementation.startswith("__kernel void A"):
         raise PrototypeException("malformed seed '{}'".format(path))
 
     try:
-        index = contents.index('{') + 1
-        prototype = contents[:index]
+        index = implementation.index('{') + 1
+        prototype = implementation[:index]
     except ValueError:
         raise PrototypeException("malformed seed '{}'".format(path))
 
@@ -90,19 +76,17 @@ class task(object):
         data = job['targets'][target]
         benchmark = data['benchmark']
         oracle_path = os.path.expanduser(data['path'])
+        db = connect_to_database(db_path)
+        oracle = load_oracle(oracle_path)
         try:
             seed = data['seed']
         except KeyError:
-            seed = extract_prototype(oracle_path)
-
-        db = connect_to_database(db_path)
-        oracle = load_oracle(oracle_path)
+            seed = extract_prototype(oracle)
 
         task_args = [db_path, benchmark, seed, oracle]
         if config.is_host():
             return host_task(*task_args)
         else:
-            task_args = [job['torch-rnn']['path']] + task_args
             return device_task(*task_args)
 
 
@@ -127,26 +111,20 @@ class host_task(task):
 
 
 class device_task(task):
-    def __init__(self, torch_rnn_path, *args,
-                 target_num_samples=1000000, **kwargs):
+    def __init__(self, *args, target_num_samples=1000000, **kwargs):
         super(device_task, self).__init__(*args, **kwargs)
-        self.torch_rnn_path = torch_rnn_path
         self.target_num_samples = target_num_samples
 
     def complete(self):
         return self._samples_remaining() == 0
 
     def next_step(self):
-        os.chdir(os.path.expanduser(self.torch_rnn_path))
+        os.chdir(os.path.expanduser(config.torch_rnn_path()))
         print("next step:", str(self))
-        # TODO: Invoke torch-rnn wrapper
-        cmd = 'th sample.lua -checkpoint $(ls -t cv/*.t7 | head -n1) -temperature .75 -length 5000 -opencl 1 -start_text "$1" -n 1000'
-        print('\r\033[K  -> seed:'.format(self.seed), end='')
-        subprocess.call(cmd, shell=True)
 
-        print('\r\033[K  -> adding samples to database', end='')
-        samples = fetch_samples('/tmp/sample.txt')
-        ids = [checksum(sample) for sample in samples]
+        num_samples = min(1000, self._samples_remaining())
+        samples = torch_rnn.opencl_samples(self.seed, num_samples=num_samples)
+        ids = [smith.checksum_str(sample) for sample in samples]
 
         db = sqlite3.connect(self.db_path)
         c = db.cursor()
@@ -156,7 +134,6 @@ class device_task(task):
         self.db.commit()
         c.close()
         db.close()
-        print('\r\033[K', end='')
 
     def _samples_remaining(self):
         db = sqlite3.connect(self.db_path)
