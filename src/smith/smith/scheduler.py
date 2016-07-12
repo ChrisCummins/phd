@@ -19,6 +19,9 @@ from smith import train
 from smith import config
 
 
+class PrototypeException(smith.SmithException): pass
+
+
 def fetch_samples(sample_path):
     with open(sample_path) as infile:
         contents = infile.read()
@@ -40,6 +43,27 @@ def load_oracle(path):
 
     with open(path) as infile:
         oracle = infile.read().strip()
+
+
+def extract_prototype(path):
+    """
+    Extract OpenCL kernel prototype from rewritten file.
+
+    :param path: Path to kernel implementation.
+    """
+    with open(path) as infile:
+        contents = infile.read().strip()
+
+    if not contents.startswith("__kernel void A"):
+        raise PrototypeException("malformed seed '{}'".format(path))
+
+    try:
+        index = contents.index('{') + 1
+        prototype = contents[:index]
+    except ValueError:
+        raise PrototypeException("malformed seed '{}'".format(path))
+
+    return prototype
 
 
 class task(object):
@@ -65,8 +89,11 @@ class task(object):
         """
         data = job['targets'][target]
         benchmark = data['benchmark']
-        seed = data['seed']
-        oracle_path = data['oracle']
+        oracle_path = os.path.expanduser(data['path'])
+        try:
+            seed = data['seed']
+        except KeyError:
+            seed = extract_prototype(oracle_path)
 
         db = connect_to_database(db_path)
         oracle = load_oracle(oracle_path)

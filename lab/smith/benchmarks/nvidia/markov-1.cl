@@ -21,8 +21,6 @@ __kernel void A(__global float *a, __global int *b, __global float *c,
   g[l] = p;
   barrier(1);
 
-  A(f, g);
-
   if (l == 0) {
     a[n] = f[0] + e[i * h + n];
     b[(j - 1) * h + n] = g[0];

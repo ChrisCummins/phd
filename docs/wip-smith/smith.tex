@@ -180,8 +180,8 @@
 % \titlebanner{banner above paper title}        % These are ignored unless
 % \preprintfooter{}   % 'preprint' option specified.
 
-\title{Curing the Benchmark Deficit: Synthesising Many-core Compute
-  Kernels on Demand using Deep Learning}
+\title{Curing the Benchmark Deficit: On-Demand Compute Kernel
+  Synthesis using Deep Learning}
 
 % \subtitle{Subtitle Text, if any}
 
@@ -203,10 +203,11 @@
 \begin{abstract}
   % TODO: optimising requires benchmarks. These are hard to come by,
   % and we don't use enough. This leads to overfitting.
+
   We present a novel methodology for generating OpenCL compute
   kernels. Given a corpus of example programs, we apply deep learning
-  across the implementation space, constructing a language model. From
-  this we obtain new kernels through a process of rejection
+  across the implementation space, learning a language model from
+  which we obtain new kernels through a process of rejection
   sampling. %
   %
   We demonstrate the benefits of our approach for a state-of-the-art
@@ -364,7 +365,7 @@ Driver program (and dataset).
 \begin{table}% tab:benchmarks
 \scriptsize
 \centering
-\begin{tabular}{lrrr}
+\begin{tabular}{l r R{2cm} R{2cm}}
   \toprule
   & \textbf{Version} & \textbf{\#. seed kernels} & \textbf{\#. generated kernels}\\
   \midrule
