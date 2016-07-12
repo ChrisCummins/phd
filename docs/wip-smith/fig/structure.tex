@@ -1,0 +1,44 @@
+\begin{tikzpicture}[%
+  auto,
+  thick,
+  scale=1,
+  every node/.style={scale=0.65},
+  node distance = 3cm,
+  % Database shape:
+  database/.style={%
+    draw,
+    cylinder,
+    cylinder uses custom fill,
+    shape border rotate=90,
+    aspect=0.25
+  }
+  ]
+
+  % Nodes:
+  \node (t-start3) [block, fill=red!10, xshift=-.2cm, yshift=.2cm] {};
+  \node (t-start2) [block, fill=red!10, xshift=-.1cm, yshift=.1cm] {};
+  \node (t-start) [block, fill=red!10] {\textbf{Source repositories}};
+
+  \node (t-scraper) [block, right of=t-start] {Scraper};
+  \node (t-preprocess) [block, right of=t-scraper] {Preprocess pipeline};
+  \node (t-input-sampler) [block, right of=t-preprocess] {Input sampler};
+  \node (t-corpus) [database, right of=t-input-sampler, yshift=-.3cm] {\textbf{\begin{tabular}{c}Language\\Corpus\end{tabular}}};
+  \node (t-network) [block, right of=t-corpus, fill=orange!10, yshift=.5cm] {LSTM Network};
+  \node (t-output-sampler) [block, right of=t-network] {Output sampler};
+  \node (t-postprocess) [block, right of=t-output-sampler] {Postprocess pipeline};
+  \node (t-end3) [block, fill=green!10, right of=t-postprocess, xshift=-.2cm, yshift=.2cm] {};
+  \node (t-end2) [block, fill=green!10, right of=t-postprocess, xshift=-.1cm, yshift=.1cm] {};
+  \node (t-end) [block, fill=green!10, right of=t-postprocess] {Synthesised kernels};
+
+  \node (github) [draw, dashed, color=gray, yshift=.5cm, xshift=-.15cm, inner ysep=1cm, inner xsep=.75cm, label={[yshift=-.7cm]\textbf{GitHub}}, fit=(t-start)] {};
+
+  % Connectors:
+  \draw[->] (t-start) -- (t-scraper);
+  \draw[->] (t-scraper) -- (t-preprocess);
+  \draw[->] (t-preprocess) -- (t-input-sampler);
+  \draw[->] (t-input-sampler) -- (t-corpus);
+  \draw[->] (t-corpus) -- (t-network);
+  \draw[->] (t-network) -- (t-output-sampler);
+  \draw[->] (t-output-sampler) -- (t-postprocess);
+  \draw[->] (t-postprocess) -- (t-end);
+\end{tikzpicture}

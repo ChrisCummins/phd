@@ -81,6 +81,37 @@
 \usepackage{lmodern}
 \usepackage{textcomp}
 
+% Source code listings.
+\usepackage{listings}
+\lstset{%
+  basicstyle=\scriptsize,%
+  breaklines=true,%
+  postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{red}\hookrightarrow\space}},% red arrow at line breaks
+  captionpos=b%
+}
+
+% OpenCL listings
+%
+% From: http://gpumodeling.blogspot.com/2011/06/opencl-programs-in-latex-listings.html
+ \lstdefinelanguage[OpenCL]{C}[ANSI]{C}
+{morekeywords={__kernel,kernel,__local,local,__global,global,%
+__constant,constant,__private,private,%
+char2,char3,char4,char8,char16,%
+uchar2,uchar3,uchar4,uchar8,uchar16,%
+short2,short3,short4,short8,short16,%
+ushort2,ushort3,ushort4,ushort8,ushort16,%
+int2,int3,int4,int8,int16,%
+uint2,uint3,uint4,uint8,uint16,%
+long2,long3,long4,long8,long16,%
+ulong2,ulong3,ulong4,ulong8,ulong16,%
+float2,float3,float4,float8,float16,%
+image2d_t,image3d_t,sampler_t,event_t,%
+bool2,bool3,bool4,bool8,bool16,%
+half2,half3,half4,half8,half16,%
+quad,quad2,quad3,quad4,quad8,quad16,%
+complex,imaginary},%
+}%
+
 % Pseudo-code listings.
 \usepackage{algorithm}
 \usepackage{algpseudocode}
@@ -95,6 +126,24 @@
 %% Graphics and maths %%
 %%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{amsmath}
+\usepackage{tikz}
+
+% Tikz flowchart configuration.
+\usetikzlibrary{shapes,arrows,shadows,fit,backgrounds}
+\tikzstyle{decision} = [diamond,
+                        draw,
+                        text width=4.5em,
+                        text badly centered,
+                        node distance=3cm,
+                        inner sep=0pt]
+\tikzstyle{block}    = [rectangle,
+                        draw,
+                        text width=5em,
+                        text centered,
+                        node distance=3cm,
+                        minimum height=4em,
+                        inner sep=.2cm]
+\tikzstyle{line}     = [draw, -latex']
 
 % Vector notation, e.g. \vv{x}:
 %
@@ -201,8 +250,9 @@
 \maketitle
 
 \begin{abstract}
-  % TODO: optimising requires benchmarks. These are hard to come by,
-  % and we don't use enough. This leads to overfitting.
+  The quality of performance tuning is bound by the quantity and
+  quality of benchmarks used. Too few benchmarks leads to overfitting;
+  non-representative benchmarks lead to invalid predictions.
 
   We present a novel methodology for generating OpenCL compute
   kernels. Given a corpus of example programs, we apply deep learning
@@ -210,11 +260,11 @@
   which we obtain new kernels through a process of rejection
   sampling. %
   %
-  We demonstrate the benefits of our approach for a state-of-the-art
-  machine learning OpenCL autotuner. By incorporating synthesised
-  compute kernels, we improve the accuracy of machine learning
-  predictions from XXX\% to XXX\%, demonstrating up to $X\times$
-  speedup over the hand-selected benchmarks.
+  We demonstrate our approach for a state-of-the-art machine learning
+  OpenCL autotuner. With the addition of synthesised compute kernels,
+  we improve the accuracy of machine learning predictions from XXX\%
+  to XXX\%, demonstrating up to $X\times$ speedup over the
+  hand-selected benchmarks.
 \end{abstract}
 
 % \category{CR-number}{subcategory}{third-level}
@@ -235,12 +285,16 @@ GPUs
 Benchmarking parallel applications is hard. State of the practice is
 lacking~\cite{Belli2015}.
 
-OpenCL benchmark suites: Parsec~\cite{Bienia2009},
-Rodinia~\cite{Che2009}, Parboil~\cite{Stratton2012}, AMD
-SDK~\footnote{\url{http://developer.amd.com/}} and NVIDIA
-SDK~\footnote{\url{https://developer.nvidia.com/opencl/}}.
+OpenCL benchmark suites: %Parsec~\cite{Bienia2009},
+Rodinia~\cite{Che2009}, %
+Parboil~\cite{Stratton2012}, %
+Polybench~\cite{Grauer-Gray2012}, %
+AMD SDK~\footnote{\url{http://developer.amd.com/}} %
+and NVIDIA SDK~\footnote{\url{https://developer.nvidia.com/opencl/}}.
 
 TODO: Breakdown of number of benchmarks used in ML autotuning papers.
+
+Benchmarking OpenCL~\cite{Tobergte2013a}.
 
 Are benchmarks suites representative? Exploring the full performance
 spectrum~\cite{Ryoo2015}. Characterising workloads of Rodinia and
@@ -253,7 +307,6 @@ approach is not general purpose, requires laborious human effort, and
 does not guarantee to generate representative benchmarks.
 
 \begin{quote}
-  % TODO: reword
   \emph{RQ1: Can the quality of machine learning predictions be
     improved with the addition of representative benchmarks?}
 \end{quote}
@@ -280,10 +333,24 @@ The key contributions of this work are as follows:%
 
 \section{Motivation}\label{sec:motivation}
 
+We surveyed the benchmarking methodologies of XXX publications in the
+field of GPU optimisation, finding that only XXX benchmarks account
+for XXX\% of all results.
+% Conferences:
+%
+% CGO 2016
+% CGO 2015
+% PLDI 2016
+% PLDI 2015 - done
+% PACT 2015 - done
+% IWOCL 2016 - done
+% IWOCL 2015 - done
+% HiPC 2016
+% HiPC 2015
 
 \section{Generating Compute Kernels}\label{sec:}
 
-Overview of methodology.
+Overview of methodology. Figure~\ref{fig:structure}.
 
 \paragraph{Assembling the Language Corpus} Mining GitHub, noisy
 dataset.
@@ -295,6 +362,16 @@ character-level language model.
 
 \paragraph{Synthesising Compute Kernels} Sampling learned model using
 function prototypes, rejection sampler, program checker.
+
+
+\begin{figure*}[t]
+  \centering
+  \input{fig/structure}
+  \caption{%
+    The kernel synthesis pipeline.%
+  }
+\label{fig:structure}
+\end{figure*}
 
 
 \section{Assembling Representative Benchmarks}\label{sec:}
@@ -315,9 +392,13 @@ Minimising non-functional variance using clang libraries and tools:
 \item Automatically enforcing code style with formatting tools.
 \end{itemize}
 
+
 \section{Learning the Implementation Space}\label{sec:ml}
 
 Long Short-Term Memory~\cite{Hochreiter1997}. No features.
+
+TODO: Plot distribution of representativeness from benchmark suites to
+GitHub language model.
 
 
 \section{Sampling Implementation Space}\label{sec:}
@@ -331,6 +412,56 @@ Rejection sampler.
 Undefined behaviour.
 
 Driver program (and dataset).
+
+\lstset{language=[OpenCL]C}
+\begin{lstlisting}[%
+  frame=single,%
+  caption=Parboil SGEMM benchmark.
+]
+__kernel void mysgemmNT( __global const float *A, int lda, __global const float *B, int ldb, __global float* C, int ldc, int k, float alpha, float beta )
+{
+    float c = 0.0f;
+    int m = get_global_id(0);
+    int n = get_global_id(1);
+
+    for (int i = 0; i < k; ++i) {
+	float a = A[m + i * lda];
+	float b = B[n + i * ldb];
+	c += a * b;
+    }
+    C[m+n*ldc] = C[m+n*ldc] * beta + alpha * c;
+}
+\end{lstlisting}
+
+
+\lstset{language=[OpenCL]C}
+\begin{lstlisting}[%
+  frame=single,%
+  caption=Transformed SGEMM implementation from preprocessing pipeline.
+]
+__kernel void A(__global const float *a, int b, __global const float *c, int d,
+                __global float *e, int f, int g, float h, float i) {
+  float j = 0.0f;
+  int k = get_global_id(0);
+  int l = get_global_id(1);
+
+  for (int m = 0; m < g; ++m) {
+    float n = a[k + m * b];
+    float o = c[l + m * d];
+    j += n * o;
+  }
+  e[k + l * f] = e[k + l * f] * i + h * j;
+}
+\end{lstlisting}
+
+
+\lstset{language=[OpenCL]C}
+\begin{lstlisting}[%
+  frame=single,%
+  caption=Example kernel synthesised from SGEMM function prototype.
+]
+TODO
+\end{lstlisting}
 
 
 \section{Experimental Methodology}\label{sec:evaluation}
@@ -370,10 +501,11 @@ Driver program (and dataset).
   & \textbf{Version} & \textbf{\#. seed kernels} & \textbf{\#. generated kernels}\\
   \midrule
   \textbf{Parboil} & 0.2 & 7 & x \\
+  \textbf{PolyBench} & 1.0 & 30 & x \\
   \textbf{Rodinia} & 3.1 & x & x \\
-  % Parsec & x & x \\
   \textbf{AMD SDK} & 3.0 & x & x \\
-  \textbf{NVIDIA SDK} & 4.2 & 15 & x \\
+  \textbf{NVIDIA SDK} & 4.2 & 35 & x \\
+  \textbf{SHOC} & 1.1.5 & 53 & x \\
   \textbf{Synthetic} & - & - & x \\
   \bottomrule
 \end{tabular}
