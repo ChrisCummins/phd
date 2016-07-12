@@ -111,7 +111,7 @@ class host_task(task):
 
 
 class device_task(task):
-    def __init__(self, *args, target_num_samples=1000000, **kwargs):
+    def __init__(self, *args, target_num_samples=10000, **kwargs):
         super(device_task, self).__init__(*args, **kwargs)
         self.target_num_samples = target_num_samples
 
