@@ -1,3 +1,4 @@
+import json
 import re
 import os
 
@@ -81,7 +82,16 @@ def sql_script(name):
     return package_str(path)
 
 
-def json_minify(string, strip_space=True):
+def print_json(data):
+    """
+    Pretty print JSON.
+
+    :param data: JSON blob.
+    """
+    print(json.dumps(data, sort_keys=True, indent=2, separators=(',', ': ')))
+
+
+def minify_json(string, strip_space=True):
     """A port of the `JSON-minify` utility to the Python language.
 
     Based on JSON.minify.js: https://github.com/getify/JSON.minify
