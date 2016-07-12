@@ -5,9 +5,6 @@
   "data": {
     "path": "~/phd/lab/smith/data"
   },
-  "torch-rnn": {
-    "path": "~/src/torch-rnn"
-  },
   "targets": {
 
     /*
