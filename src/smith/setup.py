@@ -13,7 +13,10 @@ setup(name='smith',
       author_email='chrisc.101@gmail.com',
       license='',
       packages=[ 'smith' ],
-      package_data={ 'smith': [ 'share/sql/*.sql' ] },
+      package_data={ 'smith': [
+          'share/include/*.h',
+          'share/sql/*.sql'
+      ] },
       scripts=[
           'bin/fetch-clsmith',
           'bin/fetch-dnn',

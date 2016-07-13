@@ -26,6 +26,8 @@ from multiprocessing import cpu_count,Pool
 from subprocess import Popen,PIPE,STDOUT
 from tempfile import NamedTemporaryFile
 
+import smith
+
 
 #
 # Custom exceptions:
@@ -147,11 +149,13 @@ def num_rows_in(db, table):
 def preprocess_cl(src):
     clang = os.path.expanduser('~/phd/tools/llvm/build/bin/clang')
     libclc = os.path.expanduser('~/phd/extern/libclc')
+    header = smith.package_path(os.path.join('share', 'include', 'opencl.h'))
 
     cmd = [
         clang, '-Dcl_clang_storage_class_specifiers',
         '-I', '{}/generic/include'.format(libclc),
         '-include', '{}/generic/include/clc/clc.h'.format(libclc),
+        '-include', header,
         '-target', 'nvptx64-nvidia-nvcl'
     ] + clang_define_args + [
         '-x', 'cl', '-E',
@@ -185,13 +189,14 @@ def rewrite_cl(in_path):
     ld_path = os.path.expanduser('~/phd/tools/llvm/build/lib/')
     libclc = os.path.expanduser('~/phd/extern/libclc')
     rewriter = os.path.expanduser('~/phd/lab/ml/rewriter')
+    header = smith.package_path(os.path.join('share', 'include', 'opencl.h'))
 
     extra_args = [
         '-Dcl_clang_storage_class_specifiers',
         '-I{}/generic/include'.format(libclc),
         '-include', '{}/generic/include/clc/clc.h'.format(libclc),
+        '-include', header,
         '-target', 'nvptx64-nvidia-nvcl',
-        '-DM_PI=3.14',
         '-xcl'
     ]
 
@@ -213,11 +218,13 @@ def rewrite_cl(in_path):
 def compile_cl_bytecode(src):
     clang = os.path.expanduser('~/phd/tools/llvm/build/bin/clang')
     libclc = os.path.expanduser('~/phd/extern/libclc')
+    header = smith.package_path(os.path.join('share', 'include', 'opencl.h'))
 
     cmd = [
         clang, '-Dcl_clang_storage_class_specifiers',
         '-I', '{}/generic/include'.format(libclc),
         '-include', '{}/generic/include/clc/clc.h'.format(libclc),
+        '-include', header,
         '-target', 'nvptx64-nvidia-nvcl'
     ] + clang_define_args + [
         '-x', 'cl', '-emit-llvm', '-S',

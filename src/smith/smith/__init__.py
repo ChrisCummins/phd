@@ -34,6 +34,14 @@ def checksum_file(path):
         raise InternalException("failed to read '{}'".format(path))
 
 
+def package_path(path):
+    abspath = resource_filename(__name__, path)
+    if not os.path.exists(abspath):
+        raise Data404Exception("package data '{}' does not exist"
+                               .format(path))
+    return abspath
+
+
 def package_data(path):
     """
     Read package data file.
@@ -42,10 +50,7 @@ def package_data(path):
     :return: File contents as byte string.
     :throws InternalException: in case of error.
     """
-    abspath = resource_filename(__name__, path)
-    if not os.path.exists(abspath):
-        raise Data404Exception("package data '{}' does not exist"
-                               .format(path))
+    package_path(path)
 
     try:
         return resource_string(__name__, path)
