@@ -289,6 +289,7 @@ OpenCL benchmark suites: %Parsec~\cite{Bienia2009},
 Rodinia~\cite{Che2009}, %
 Parboil~\cite{Stratton2012}, %
 Polybench~\cite{Grauer-Gray2012}, %
+SHOC~\cite{Danalis2010}, %
 AMD SDK~\footnote{\url{http://developer.amd.com/}} %
 and NVIDIA SDK~\footnote{\url{https://developer.nvidia.com/opencl/}}.
 
@@ -333,20 +334,33 @@ The key contributions of this work are as follows:%
 
 \section{Motivation}\label{sec:motivation}
 
-We surveyed the benchmarking methodologies of XXX publications in the
-field of GPU optimisation, finding that only XXX benchmarks account
-for XXX\% of all results.
+We surveyed the benchmarking methodologies of GPU research papers,
+from XXX publications across XXX conferences. We find that only XXX
+benchmarks account for XXX\% of all results~\footnote{Raw data
+  available at: \url{http://bit.ly/foo}}.
 % Conferences:
 %
-% CGO 2016
-% CGO 2015
-% PLDI 2016
+% CGO 2016 - done
+% CGO 2015 - done
+% CGO 2014 - done
+% CGO 2013 - done
+% PLDI 2016 - done
 % PLDI 2015 - done
 % PACT 2015 - done
+% PACT 2014 - done
+% PACT 2013 -
 % IWOCL 2016 - done
 % IWOCL 2015 - done
-% HiPC 2016
-% HiPC 2015
+% IWOCL 2014 -
+% IWOCL 2013 -
+% HiPC 2016 -
+% HiPC 2015 -
+% HiPC 2014 -
+% HiPC 2013 -
+% PPoPP 2016 -
+% PPoPP 2015 -
+% PPoPP 2014 -
+% PPoPP 2013 -
 
 \section{Generating Compute Kernels}\label{sec:}
 
@@ -501,12 +515,12 @@ TODO
   \toprule
   & \textbf{Version} & \textbf{\#. seed kernels} & \textbf{\#. generated kernels}\\
   \midrule
-  \textbf{Parboil} & 0.2 & 7 & x \\
-  \textbf{PolyBench} & 1.0 & 30 & x \\
-  \textbf{Rodinia} & 3.1 & x & x \\
+  \textbf{Parboil~\cite{Stratton2012}} & 0.2 & 7 & x \\
+  \textbf{PolyBench~\cite{Grauer-Gray2012}} & 1.0 & 30 & x \\
+  \textbf{Rodinia~\cite{Che2009}} & 3.1 & 50 & x \\
+  \textbf{SHOC~\cite{Danalis2010}} & 1.1.5 & 53 & x \\
   \textbf{AMD SDK} & 3.0 & x & x \\
-  \textbf{NVIDIA SDK} & 4.2 & 35 & x \\
-  \textbf{SHOC} & 1.1.5 & 53 & x \\
+  \textbf{NVIDIA SDK} & 4.2 & 36 & x \\
   \textbf{Synthetic} & - & - & x \\
   \bottomrule
 \end{tabular}
@@ -519,9 +533,16 @@ TODO
 Table~\ref{tab:benchmarks}. Limitation of system: can't use kernels
 with struct arguments as seeds.
 
-Notes: Parboil: opencl\_base implementation. Parboil mri-q contains
-two benchmarks, only used one (the other took a struct). Rewrote
-typedefs. Ignored parboil-bfs (contains a struct).
+Notes: Parboil: opencl\_base implementation. Rewrote typedefs.
+
+Ignored kernels with structs: %
+parboil-bfs, %
+parboil-mri-q, %
+rodinia-b-tree, %
+rodinia-dwt2d, %
+rodinia-heartwall, %
+rodinia-lavamd, %
+rodinia nearest neighour.
 
 
 \paragraph{Datasets}
@@ -570,7 +591,8 @@ kernels~\cite{Price2015}.
 
 Machine Learning-based Performance Tuning:~\cite{Wen2015},
 \cite{Magni2014}, \cite{Falch2015}. Domain specific:
-Stencils~\cite{Garvey2015b}, \cite{Cummins2015a}.
+Stencils~\cite{Garvey2015b}, \cite{Cummins2015a}. Input sensitive
+autotuning~\cite{Ding2015}. Benchmark reduction~\cite{Castro2014}.
 
 
 \subsection{Program Generation}
