@@ -133,13 +133,13 @@ class Scenario(object):
 
     def __repr__(self):
         return ("{}:{}:{}: {}-{}"
-                .format(self.benchmark, self.kernel, self.dataset, 
+                .format(self.benchmark, self.kernel, self.dataset,
                         OpenCLDeviceType.to_str(self.device),
                         ScenarioStatus.to_str(self.status)))
 
     @staticmethod
     def get_id(device, benchmark, kernel, dataset):
-        return smith.checksum_str(repr(device) + repr(benchmark) + 
+        return smith.checksum_str(repr(device) + repr(benchmark) +
                                   repr(kernel) + repr(dataset))
 
 
@@ -161,9 +161,7 @@ class Benchmark(object):
             raise BenchmarkException("Parboil implementation '{}' not found"
                                      .format(implementation))
 
-        src_file = ImplementationFile(
-            os.path.join(parboil_root, 'benchmarks', benchmark_id,
-                         'src', implementation, 'main.c'))
+        src_file = ImplementationFile.from_benchmark(parboil_root, benchmark_id)
 
         # Get datasets
         datasets_path = os.path.join(parboil_root, 'datasets', benchmark_id)
@@ -499,3 +497,15 @@ class ImplementationFile(object):
         replace(self.path,
                 re.compile('#define MY_DEVICE_TYPE .+'),
                 '#define MY_DEVICE_TYPE ' + str(devtype))
+
+    @staticmethod
+    def from_benchmark(parboil_root, benchmark_id):
+        src_dir = os.path.join(parboil_root, 'benchmarks', benchmark_id, 'src',
+                               'opencl_base')
+        c_file = os.path.join(src_dir, 'main.c')
+        if os.path.exists(c_file):
+            return ImplementationFile(c_file)
+
+        cpp_file = os.path.join(src_dir, 'main.cpp')
+        if os.path.exists(cpp_file):
+            return ImplementationFile(cpp_file)
