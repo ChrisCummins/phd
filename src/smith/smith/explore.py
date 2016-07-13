@@ -278,7 +278,7 @@ def graph_ocl_stars(db_path):
     plt.savefig(out_path)
 
 
-def explore(db_path):
+def explore(db_path, graph=False):
     locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
 
     db = sqlite3.connect(db_path)
@@ -288,9 +288,10 @@ def explore(db_path):
 
     # Worker process pool
     pool, jobs = Pool(processes=4), []
-    jobs.append(pool.apply_async(graph_ocl_lc, (db_path,)))
-    # TODO: If GH dataset:
-    # jobs.append(pool.apply_async(graph_ocl_stars, (db_path,)))
+    if graph:
+        jobs.append(pool.apply_async(graph_ocl_lc, (db_path,)))
+        # TODO: If GH dataset:
+        # jobs.append(pool.apply_async(graph_ocl_stars, (db_path,)))
     future_stats = pool.apply_async(stats_worker, (db_path,))
 
     # Wait for jobs to finish
@@ -310,7 +311,7 @@ def explore(db_path):
             print()
 
 
-def explore_gh(db_path):
+def explore_gh(db_path, graph=False):
     locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
 
     db = sqlite3.connect(db_path)
@@ -320,8 +321,9 @@ def explore_gh(db_path):
 
     # Worker process pool
     pool, jobs = Pool(processes=4), []
-    jobs.append(pool.apply_async(graph_ocl_lc, (db_path,)))
-    jobs.append(pool.apply_async(graph_ocl_stars, (db_path,)))
+    if graph:
+        jobs.append(pool.apply_async(graph_ocl_lc, (db_path,)))
+        jobs.append(pool.apply_async(graph_ocl_stars, (db_path,)))
 
     future_stats = pool.apply_async(gh_stats_worker, (db_path,))
 
