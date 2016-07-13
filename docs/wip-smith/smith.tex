@@ -76,6 +76,8 @@
 %% Figures, footnotes and listings %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\usepackage[perpage]{footmisc}
+
 % Pre-requisites for rendering upquotes in listings package.
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
@@ -285,15 +287,16 @@ GPUs
 Benchmarking parallel applications is hard. State of the practice is
 lacking~\cite{Belli2015}.
 
-OpenCL benchmark suites: %Parsec~\cite{Bienia2009},
+OpenCL benchmark suites:
+% Parsec~\cite{Bienia2009},
 Rodinia~\cite{Che2009}, %
 Parboil~\cite{Stratton2012}, %
 Polybench~\cite{Grauer-Gray2012}, %
 SHOC~\cite{Danalis2010}, %
 AMD SDK~\footnote{\url{http://developer.amd.com/}} %
-and NVIDIA SDK~\footnote{\url{https://developer.nvidia.com/opencl/}}.
-
-TODO: Breakdown of number of benchmarks used in ML autotuning papers.
+and NVIDIA
+SDK~\footnote{\url{https://developer.nvidia.com/opencl/}}. %
+TODO: Tease the small number of benchmarks used.
 
 Benchmarking OpenCL~\cite{Tobergte2013a}.
 
@@ -569,7 +572,9 @@ What's the ratio of ``good'' code? How long did it take to sample?
 
 \subsection{Qualitatively Evaluating Generated Code}\label{subsec:}
 
-Human or Robot. Related works which have used Non-Interactive Turing
+Human or
+Robot~\footnote{\url{http://humanorrobot.uk/game?g=opencl&m=nitt}}. Related
+works which have used Non-Interactive Turing
 Tests~\cite{Gao2015a,Zhang2016}.
 
 
