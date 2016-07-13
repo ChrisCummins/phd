@@ -82,9 +82,13 @@
       "benchmark": "NVIDIA SDK v4.2: Histogram 256 2",
       "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-histogram-256-2.cl"
     },
-    "nvidia-4.2-histogram-64": {
-      "benchmark": "NVIDIA SDK v4.2: Histogram 64",
-      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-histogram-64.cl"
+    "nvidia-4.2-histogram-64-1": {
+      "benchmark": "NVIDIA SDK v4.2: Histogram 64 1",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-histogram-64-1.cl"
+    },
+    "nvidia-4.2-histogram-64-2": {
+      "benchmark": "NVIDIA SDK v4.2: Histogram 64 2",
+      "path": "~/phd/lab/smith/benchmarks/nvidia-4.2-histogram-64-2.cl"
     },
     "nvidia-4.2-markov-1": {
       "benchmark": "NVIDIA SDK v4.2: Hidden Markov Model ViterbiOneStep()",
@@ -523,6 +527,211 @@
     "shoc-1.1.5-stencil2d-2": {
       "benchmark": "SHOC v1.1.5: Stencil 2D 2",
       "path": "~/phd/lab/smith/benchmarks/shoc-1.1.5-stencil2d-2.cl"
+    },
+
+
+    /*
+     * Rodinia v3.1.
+     */
+    "rodinia-3.1-backprop-1": {
+      "benchmark": "Rodinia v3.1: Backprop 1",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-backprop-1.cl"
+    },
+    "rodinia-3.1-backprop-2": {
+      "benchmark": "Rodinia v3.1: Backprop 2",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-backprop-2.cl"
+    },
+    "rodinia-3.1-bfs": {
+      "benchmark": "Rodinia v3.1: BFS",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-bfs.cl"
+    },
+    "rodinia-3.1-bucketsort-1": {
+      "benchmark": "Rodinia v3.1: Bucketsort 1",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-bucketsort-1.cl"
+    },
+    "rodinia-3.1-bucketsort-2": {
+      "benchmark": "Rodinia v3.1: Bucketsort 2",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-bucketsort-2.cl"
+    },
+    "rodinia-3.1-bucketsort-3": {
+      "benchmark": "Rodinia v3.1: Bucketsort 3",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-bucketsort-3.cl"
+    },
+    "rodinia-3.1-cfd-1": {
+      "benchmark": "Rodinia v3.1: CFD 1",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-cfd-1.cl"
+    },
+    "rodinia-3.1-cfd-2": {
+      "benchmark": "Rodinia v3.1: CFD 2",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-cfd-2.cl"
+    },
+    "rodinia-3.1-cfd-3": {
+      "benchmark": "Rodinia v3.1: CFD 3",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-cfd-3.cl"
+    },
+    "rodinia-3.1-cfd-4": {
+      "benchmark": "Rodinia v3.1: CFD 4",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-cfd-4.cl"
+    },
+    "rodinia-3.1-cfd-5": {
+      "benchmark": "Rodinia v3.1: CFD 5",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-cfd-5.cl"
+    },
+    "rodinia-3.1-dwt2d-1": {
+      "benchmark": "Rodinia v3.1: DWT2D 1",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-dwt2d-1.cl"
+    },
+    "rodinia-3.1-dwt2d-2": {
+      "benchmark": "Rodinia v3.1: DWT2D 2",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-dwt2d-2.cl"
+    },
+    "rodinia-3.1-gaussian-1": {
+      "benchmark": "Rodinia v3.1: Gaussian 1",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-gaussian-1.cl"
+    },
+    "rodinia-3.1-guassian-2": {
+      "benchmark": "Rodinia v3.1: Guassian 2",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-guassian-2.cl"
+    },
+    "rodinia-3.1-histogram-1024": {
+      "benchmark": "Rodinia v3.1: Histogram 1024",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-histogram-1024.cl"
+    },
+    "rodinia-3.1-hotspot-3d": {
+      "benchmark": "Rodinia v3.1: Hotspot 3d",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-hotspot-3d.cl"
+    },
+    "rodinia-3.1-hotspot": {
+      "benchmark": "Rodinia v3.1: Hotspot",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-hotspot.cl"
+    },
+    "rodinia-3.1-kmeans-1": {
+      "benchmark": "Rodinia v3.1: K means 1",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-kmeans-1.cl"
+    },
+    "rodinia-3.1-kmeans-2": {
+      "benchmark": "Rodinia v3.1: K means 2",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-kmeans-2.cl"
+    },
+    "rodinia-3.1-leukocyte-find-ellipse-1": {
+      "benchmark": "Rodinia v3.1: Leukocyte find ellipse 1",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-leukocyte-find-ellipse-1.cl"
+    },
+    "rodinia-3.1-leukocyte-find-ellipse-2": {
+      "benchmark": "Rodinia v3.1: Leukocyte find ellipse 2",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-leukocyte-find-ellipse-2.cl"
+    },
+    "rodinia-3.1-leukocyte-track-ellipse-1": {
+      "benchmark": "Rodinia v3.1: Leukocyte track ellipse 1",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-leukocyte-track-ellipse-1.cl"
+    },
+    "rodinia-3.1-leukocyte-track-ellipse-2": {
+      "benchmark": "Rodinia v3.1: Leukocyte track ellipse 2",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-leukocyte-track-ellipse-2.cl"
+    },
+    "rodinia-3.1-lud-1": {
+      "benchmark": "Rodinia v3.1: LUD 1",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-lud-1.cl"
+    },
+    "rodinia-3.1-lud-2": {
+      "benchmark": "Rodinia v3.1: LUD 2",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-lud-2.cl"
+    },
+    "rodinia-3.1-lud-3": {
+      "benchmark": "Rodinia v3.1: LUD 3",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-lud-3.cl"
+    },
+    "rodinia-3.1-mergesort-1": {
+      "benchmark": "Rodinia v3.1: Mergesort 1",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-mergesort-1.cl"
+    },
+    "rodinia-3.1-mergesort-2": {
+      "benchmark": "Rodinia v3.1: Mergesort 2",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-mergesort-2.cl"
+    },
+    "rodinia-3.1-mergesort-3": {
+      "benchmark": "Rodinia v3.1: Mergesort 3",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-mergesort-3.cl"
+    },
+    "rodinia-3.1-myocyte": {
+      "benchmark": "Rodinia v3.1: Myocyte",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-myocyte.cl"
+    },
+    "rodinia-3.1-nw-1": {
+      "benchmark": "Rodinia v3.1: NW 1",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-nw-1.cl"
+    },
+    "rodinia-3.1-nw-2": {
+      "benchmark": "Rodinia v3.1: NW 2",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-nw-2.cl"
+    },
+    "rodinia-3.1-particlefilter-double-1": {
+      "benchmark": "Rodinia v3.1: Particlefilter double 1",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-particlefilter-double-1.cl"
+    },
+    "rodinia-3.1-particlefilter-double-2": {
+      "benchmark": "Rodinia v3.1: Particlefilter double 2",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-particlefilter-double-2.cl"
+    },
+    "rodinia-3.1-particlefilter-double-3": {
+      "benchmark": "Rodinia v3.1: Particlefilter double 3",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-particlefilter-double-3.cl"
+    },
+    "rodinia-3.1-particlefilter-double-4": {
+      "benchmark": "Rodinia v3.1: Particlefilter double 4",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-particlefilter-double-4.cl"
+    },
+    "rodinia-3.1-particlefilter-naive": {
+      "benchmark": "Rodinia v3.1: Particlefilter naive",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-particlefilter-naive.cl"
+    },
+    "rodinia-3.1-particlefilter-single-1": {
+      "benchmark": "Rodinia v3.1: Particlefilter single 1",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-particlefilter-single-1.cl"
+    },
+    "rodinia-3.1-particlefilter-single-2": {
+      "benchmark": "Rodinia v3.1: Particlefilter single 2",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-particlefilter-single-2.cl"
+    },
+    "rodinia-3.1-particlefilter-single-3": {
+      "benchmark": "Rodinia v3.1: Particlefilter single 3",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-particlefilter-single-3.cl"
+    },
+    "rodinia-3.1-particlefilter-single-4": {
+      "benchmark": "Rodinia v3.1: Particlefilter single 4",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-particlefilter-single-4.cl"
+    },
+    "rodinia-3.1-pathfinder": {
+      "benchmark": "Rodinia v3.1: Pathfinder",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-pathfinder.cl"
+    },
+    "rodinia-3.1-srad-1": {
+      "benchmark": "Rodinia v3.1: SRAD 1",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-srad-1.cl"
+    },
+    "rodinia-3.1-srad-2": {
+      "benchmark": "Rodinia v3.1: SRAD 2",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-srad-2.cl"
+    },
+    "rodinia-3.1-srad-3": {
+      "benchmark": "Rodinia v3.1: SRAD 3",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-srad-3.cl"
+    },
+    "rodinia-3.1-srad-4": {
+      "benchmark": "Rodinia v3.1: SRAD 4",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-srad-4.cl"
+    },
+    "rodinia-3.1-srad-5": {
+      "benchmark": "Rodinia v3.1: SRAD 5",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-srad-5.cl"
+    },
+    "rodinia-3.1-srad-6": {
+      "benchmark": "Rodinia v3.1: SRAD 6",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-srad-6.cl"
+    },
+    "rodinia-3.1-streamcluster": {
+      "benchmark": "Rodinia v3.1: Streamcluster",
+      "path": "~/phd/lab/smith/benchmarks/rodinia-3.1-streamcluster.cl"
     },
 
 

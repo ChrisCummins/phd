@@ -18,19 +18,6 @@ from socket import gethostname
 from subprocess import CalledProcessError
 from tempfile import mkstemp
 
-# Number of Platforms found: 1
-#   Number of Devices found for Platform 0: 1
-# Chose Device Type: GPU
-# Starting GPU kernel
-# GPU kernel done
-# IO        : 0.870675
-# Kernel    : 0.174193
-# Copy      : 0.724049
-# Driver    : 0.174197
-# CPU/Kernel Overlap: 0.174211
-# Timer Wall Time: 1.768981
-# Pass
-
 #
 # Exception types
 #
@@ -265,6 +252,19 @@ class Runtime(object):
 
     def __repr__(self):
         return repr(self.scenario)
+
+# Number of Platforms found: 1
+#   Number of Devices found for Platform 0: 1
+# Chose Device Type: GPU
+# Starting GPU kernel
+# GPU kernel done
+# IO        : 0.870675
+# Kernel    : 0.174193
+# Copy      : 0.724049
+# Driver    : 0.174197
+# CPU/Kernel Overlap: 0.174211
+# Timer Wall Time: 1.768981
+# Pass
 
     @staticmethod
     def from_stdout(benchmark, kernel, dataset, device, stdout):
