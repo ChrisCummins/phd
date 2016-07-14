@@ -6,18 +6,18 @@ from smith import config
 
 class TestOpenCLDeviceType(TestCase):
     def test_gpu(self):
-        self.assertEquals("CL_DEVICE_TYPE_GPU", parboil.OpenCLDeviceType.GPU)
+        self.assertEqual("CL_DEVICE_TYPE_GPU", parboil.OpenCLDeviceType.GPU)
 
     def test_cpu(self):
-        self.assertEquals("CL_DEVICE_TYPE_CPU", parboil.OpenCLDeviceType.CPU)
+        self.assertEqual("CL_DEVICE_TYPE_CPU", parboil.OpenCLDeviceType.CPU)
 
     def test_to_str_gpu(self):
         d = parboil.OpenCLDeviceType.GPU
-        self.assertEquals("GPU", parboil.OpenCLDeviceType.to_str(d))
+        self.assertEqual("GPU", parboil.OpenCLDeviceType.to_str(d))
 
     def test_to_str_cpu(self):
         d = parboil.OpenCLDeviceType.CPU
-        self.assertEquals("CPU", parboil.OpenCLDeviceType.to_str(d))
+        self.assertEqual("CPU", parboil.OpenCLDeviceType.to_str(d))
 
     def test_to_str_exception(self):
         with self.assertRaises(parboil.InternalException):
@@ -26,25 +26,25 @@ class TestOpenCLDeviceType(TestCase):
 
 class TestScenarioStatus(TestCase):
     def test_good(self):
-        self.assertEquals(0, parboil.ScenarioStatus.GOOD)
+        self.assertEqual(0, parboil.ScenarioStatus.GOOD)
 
     def test_bad(self):
-        self.assertEquals(1, parboil.ScenarioStatus.BAD)
+        self.assertEqual(1, parboil.ScenarioStatus.BAD)
 
     def test_unknown(self):
-        self.assertEquals(2, parboil.ScenarioStatus.UNKNOWN)
+        self.assertEqual(2, parboil.ScenarioStatus.UNKNOWN)
 
     def test_to_str_good(self):
         g = parboil.ScenarioStatus.GOOD
-        self.assertEquals("GOOD", parboil.ScenarioStatus.to_str(g))
+        self.assertEqual("GOOD", parboil.ScenarioStatus.to_str(g))
 
     def test_to_str_bad(self):
         b = parboil.ScenarioStatus.BAD
-        self.assertEquals("BAD", parboil.ScenarioStatus.to_str(b))
+        self.assertEqual("BAD", parboil.ScenarioStatus.to_str(b))
 
     def test_to_str_unknown(self):
         u = parboil.ScenarioStatus.UNKNOWN
-        self.assertEquals("UNKNOWN", parboil.ScenarioStatus.to_str(u))
+        self.assertEqual("UNKNOWN", parboil.ScenarioStatus.to_str(u))
 
     def test_to_str_exception(self):
         with self.assertRaises(parboil.InternalException):
@@ -56,8 +56,8 @@ class TestBenchmark(TestCase):
         benchmark = parboil.Benchmark("spmv")
 
         # scenario = Scenario.get_id()
-        self.assertEquals(config.parboil_root(), benchmark.parboil_root)
-        self.assertEquals("spmv", benchmark.id)
+        self.assertEqual(config.parboil_root(), benchmark.parboil_root)
+        self.assertEqual("spmv", benchmark.id)
         self.assertTrue(len(benchmark.datasets))
 
 
