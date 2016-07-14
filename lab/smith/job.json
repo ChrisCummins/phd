@@ -1,9 +1,6 @@
-//
-// Sample driver
-//
 {
   "data": {
-    "path": "~/phd/lab/smith/data"
+    "path": "~/phd/lab/smith/data/db"
   },
   "targets": {
 
