@@ -2,6 +2,8 @@ import os
 import re
 import subprocess
 
+from subprocess import Popen
+
 import smith
 from smith import config
 
@@ -70,6 +72,39 @@ def opencl_sample_command(checkpoint, seed, dest='/tmp/samples.txt',
                     dest=dest))
 
 
+def train_cmd(input_h5, input_json, rnn_size=1024, num_layers=3,
+              model_type="lstm", seq_length=250, max_epochs=100,
+              init_from=None):
+    """
+    Get torch_rnn command.
+
+    :param input_h5: .
+    :param input_json: .
+    :param rnn_size: RNN size.
+    :param num_layers: The number of layers.
+    :param model_type: The model type.
+    :param seq_length: The sequence length.
+    :param max_epochs: The number of training epochs.
+    :param init_from: The checkpoint path.
+    """
+    cmd = [
+        'th', 'train.lua',
+        '-input_h5', input_h5,
+        '-input_json', input_json,
+        '-reset_iterations', '0'
+        '-rnn_size', rnn_size,
+        '-num_layers', num_layers,
+        '-model_type', model_type,
+        '-seq_length', seq_length,
+        '-print_every', 100,
+        '-checkpoint_every', 1000,
+        '-max_expochs', max_epochs
+    ]
+    if init_from:
+        cmd += ['-init_from', init_from]
+    return cmd
+
+
 def sanitise_seed(seed):
     """
     Sanitise OpenCL seed. For torch-rnn, this means removing any line
@@ -106,3 +141,32 @@ def opencl_samples(seed, num_samples=1000):
 
     print('\r\033[K', end='')
     return samples
+
+
+def train(input_h5, input_json, rnn_size=1024, num_layers=3, model_type="lstm",
+          seq_length=250, max_epochs=100, max_num_attempts=1000):
+    """
+    Run torch-rnn train for the specified number of attempts.
+
+    :param input_h5: .
+    :param input_json: .
+    :param rnn_size: RNN size.
+    :param num_layers: The number of layers.
+    :param model_type: The model type.
+    :param seq_length: The sequence length.
+    :param max_epochs: The number of training epochs.
+    :param max_num_attempts: The maximum number of attempts.
+    """
+    cmd = train_cmd(input_h5, input_json, rnn_size=rnn_size,
+                    num_layers=num_layers, model_type=model_type,
+                    seq_length=seq_length, max_epochs=max_epochs)
+
+    os.chdir(path())
+    i = 0
+    while i < max_num_attempts:
+        print('  -> training attempt {}'.format(i))
+        process = Popen(cmd)
+        if process.returncode == 0:
+            break
+        else:
+            i += 1
