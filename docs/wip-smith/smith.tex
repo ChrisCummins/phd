@@ -337,12 +337,13 @@ The key contributions of this work are as follows:%
 
 \section{Motivation}\label{sec:motivation}
 
-We surveyed the benchmarking methodologies of GPU research papers,
-from XXX publications across XXX conferences. We find that only XXX
-benchmarks account for XXX\% of all results~\footnote{Raw data
-  available at: \url{http://bit.ly/foo}}.
-% Conferences:
-%
+We surveyed the benchmarking methodologies of GPU research papers from
+four top tier conferences between 2013--2016: CGO, HiPC, PACT, and
+PPoPP. By aggregating the sources and quantities of benchmark kernels
+from 27 papers, we find that XXX of benchmark kernels account for
+XXX\% of all results~\footnote{Raw data available at:
+  \url{http://bit.ly/foo}}.
+
 % CGO 2016 - done
 % CGO 2015 - done
 % CGO 2014 - done
@@ -351,19 +352,23 @@ benchmarks account for XXX\% of all results~\footnote{Raw data
 % PLDI 2015 - done
 % PACT 2015 - done
 % PACT 2014 - done
-% PACT 2013 -
+% PACT 2013 - done
 % IWOCL 2016 - done
 % IWOCL 2015 - done
-% IWOCL 2014 -
-% IWOCL 2013 -
-% HiPC 2016 -
-% HiPC 2015 -
-% HiPC 2014 -
-% HiPC 2013 -
-% PPoPP 2016 -
-% PPoPP 2015 -
-% PPoPP 2014 -
-% PPoPP 2013 -
+% IWOCL 2014 - done
+% IWOCL 2013 - done
+% HiPC 2016 - done
+% HiPC 2015 - done
+% HiPC 2014 - done
+% HiPC 2013 - done
+% PPoPP 2016 - done
+% PPoPP 2015 - done
+% PPoPP 2014 - done
+% PPoPP 2013 - done
+% LCPC 2016 -
+% LCPC 2015 -
+% LCPC 2014 -
+% LCPC 2013 -
 
 \section{Generating Compute Kernels}\label{sec:}
 
@@ -404,11 +409,21 @@ Rejection sampling to remove noise from dataset. Check that compiles.
 Minimising non-functional variance using clang libraries and tools:
 \begin{itemize}
 \item Pre-process source to remove macros and conditional
-  compilation. Probabilistic defines.
+  compilation.
 \item Lossless vocabulary size reduction with AST rewriting of
   identifiers.
 \item Automatically enforcing code style with formatting tools.
 \end{itemize}
+
+Proprocessing pipeline: Implemented on
+LLVM\footnote{\url{http://llvm.org/}},
+clang\footnote{\url{http://clang.llvm.org/}}, and
+libclc\footnote{\url{http://libclc.llvm.org/}}.
+
+ Compile to LLVM bytecode using libclc. Include
+shim header which adds inferred values for common typedefs
+(e.g. FLOAT_T to float), and best guesses for common constants
+(e.g. WGSIZE).
 
 
 \section{Learning the Implementation Space}\label{sec:ml}
@@ -598,6 +613,11 @@ Machine Learning-based Performance Tuning:~\cite{Wen2015},
 \cite{Magni2014}, \cite{Falch2015}. Domain specific:
 Stencils~\cite{Garvey2015b}, \cite{Cummins2015a}. Input sensitive
 autotuning~\cite{Ding2015}. Benchmark reduction~\cite{Castro2014}.
+
+
+\subsection{Representative Benchmarking}
+
+Designing worklaods~\cite{Eeckhout2002}.
 
 
 \subsection{Program Generation}
