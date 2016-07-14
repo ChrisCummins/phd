@@ -177,7 +177,8 @@ def gh_stats_worker(db_path):
     code = c.fetchall()
     code_lcs = [len(x[0].split('\n')) for x in code]
     code_lcs.sort()
-    stats.append(('Total content line count', bigint(sum(code_lcs))))
+    code_lc = sum(code_lcs)
+    stats.append(('Total content line count', bigint(code_lc)))
 
     stats.append(('Content file line counts', seq_stats(code_lcs)))
     stats.append(('',''))
@@ -194,8 +195,11 @@ def gh_stats_worker(db_path):
     bc = c.fetchall()
     pp_lcs = [len(x[0].split('\n')) for x in bc]
     pp_lcs.sort()
+    pp_lc = sum(pp_lcs)
+    ratio_pp_lcs = div(pp_lc, code_lc)
     stats.append(('Lines of good preprocessed code',
-                  bigint(sum(pp_lcs))))
+                  bigint(pp_lc) +
+                  ' ({:.0f}%)'.format(ratio_pp_lcs * 100)))
 
     stats.append(('Good preprocessed line counts',
                   seq_stats(pp_lcs)))
@@ -290,6 +294,7 @@ def explore(db_path, graph=False):
     if dbutil.is_github(db):
         db.close()
         explore_gh(db_path)
+        return
 
     if not os.path.exists(img_dir):
         os.makedirs(img_dir)
