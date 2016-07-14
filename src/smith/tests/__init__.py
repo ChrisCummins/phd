@@ -66,23 +66,27 @@ class TestSmith(TestCase):
         self.assertEqual("ac3478d69a3c81fa62e60f5c3696165a4e5e6ac4",
                           smith.checksum_str(5))
 
-    def test_checksum_file_exception(self):
+    def test_checksum_file(self):
         with self.assertRaises(smith.InternalException):
-            smith.checksum_file("NOT A PATH")
+            smith.checksum("NOT A PATH")
 
-    def test_pacakge_data_404(self):
+    def test_get_substring_idxs(self):
+        self.assertEqual([0, 2], smith.get_substring_idxs('a', 'aba'))
+        self.assertEqual([], smith.get_substring_idxs('a', 'bb'))
+
+    def test_pacakge_data(self):
         with self.assertRaises(smith.InternalException):
             smith.package_data("This definitely isn't a real path")
         with self.assertRaises(smith.Data404Exception):
             smith.package_data("This definitely isn't a real path")
 
-    def test_pacakge_str_404(self):
+    def test_pacakge_str(self):
         with self.assertRaises(smith.InternalException):
             smith.package_str("This definitely isn't a real path")
         with self.assertRaises(smith.Data404Exception):
             smith.package_str("This definitely isn't a real path")
 
-    def test_sql_script_404(self):
+    def test_sql_script(self):
         with self.assertRaises(smith.InternalException):
             smith.sql_script("This definitely isn't a real path")
         with self.assertRaises(smith.Data404Exception):
