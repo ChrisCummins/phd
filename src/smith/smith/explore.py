@@ -16,6 +16,10 @@ import sys
 from argparse import ArgumentParser
 from multiprocessing import Pool
 
+import smith
+from smith import dbutil
+
+
 img_dir = 'img'
 
 
@@ -282,6 +286,10 @@ def explore(db_path, graph=False):
     locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
 
     db = sqlite3.connect(db_path)
+
+    if dbutil.is_github(db):
+        db.close()
+        explore_gh(db_path)
 
     if not os.path.exists(img_dir):
         os.makedirs(img_dir)

@@ -25,7 +25,6 @@ setup(name='smith',
           'bin/smith',
           'bin/smith-create-db',
           'bin/smith-explore',
-          'bin/smith-explore-gh',
           'bin/smith-parboil',
           'bin/smith-preprocess',
           'bin/smith-train'

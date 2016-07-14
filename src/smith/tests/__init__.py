@@ -1,5 +1,8 @@
 from unittest import TestCase
 
+import sqlite3
+import os
+
 import smith
 
 def print_val(obj, **kwargs):
@@ -10,6 +13,42 @@ def print_val(obj, **kwargs):
             print([str(x) for x in obj], **kwargs)
     else:
         print(str(obj), **kwargs)
+
+class TestDataNotFoundException(Exception): pass
+
+
+def data_path(path, exists=True):
+    """
+    Return path to unittest data file. Data files are located in
+    tests/data.
+
+    :param path: Relative path (without 'data/path')
+    :return: String path.
+    :throws TestDataNotFoundException: If file doesn't exist.
+    """
+    abspath = os.path.join(os.path.dirname(__file__), 'data', path)
+    if exists and not os.path.exists(abspath):
+        raise TestDataNotFoundException(abspath)
+    return abspath
+
+
+def data_str(path):
+    """
+    Return contents of unittest data file as a string.
+
+    :param path: Path to data file.
+    :return: File contents as string.
+    """
+    with open(data_path(path)) as infile:
+        contents = infile.read()
+    return contents
+
+
+def db(name, **kwargs):
+    """
+    """
+    path = data_path(os.path.join('db', str(name) + '.db'), **kwargs)
+    return sqlite3.connect(path)
 
 
 class TestSmith(TestCase):

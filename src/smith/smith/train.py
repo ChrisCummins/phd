@@ -16,14 +16,8 @@ import sqlite3
 
 from argparse import ArgumentParser
 
-
-def table_exists(db, table_name):
-    c = db.cursor()
-    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='"
-              + table_name + "'")
-    res = c.fetchone()
-    c.close()
-    return res and res[0]
+import smith
+from smith import dbutil
 
 
 def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
@@ -87,7 +81,7 @@ def train(db_path, out_path, **kwargs):
     db.create_function("LC", 1, linecount)
 
     # auto-detect whether it's a GitHub repo
-    kwargs['gh'] = table_exists(db, 'Repositories')
+    kwargs['gh'] = dbutil.is_github(db)
 
     ret = create_corpus(db, out_path, **kwargs)
     if ret:
