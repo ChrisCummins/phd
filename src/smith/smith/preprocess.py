@@ -45,97 +45,32 @@ class CodeCompilationException(BadCodeException): pass
 class CodeAnalysisException(BadCodeException): pass
 
 class UglyCodeException(Exception): pass
-class InstructionCountException(BadCodeException): pass
+class InstructionCountException(UglyCodeException): pass
 
-clang_defines = [
-    '__CL_VERSION_1_1__'
-]
-clang_define_vals = {
-    '__OPENCL_VERSION__': 1,
-    'BLK_X': 8,
-    'BLK_Y': 8,
-    'BLOCK_DIM': 2,
-    'BLOCK_SIZE': 64,
-    'BLOCK_X': 8,
-    'BLOCK_Y': 8,
-    'BUCKETS': 8,
-    'COLUMNS_BLOCKDIM_X': 16,
-    'COLUMNS_BLOCKDIM_Y': 8,
-    'COLUMNS_HALO_STEPS': 1,
-    'COLUMNS_RESULT_STEPS': 4,
-    'CONCURRENT_THREADS': 128,
-    'CUTOFF_VAL': 0.5,
-    'DATA_TYPE': 'float',
-    'DATATYPE': 'float',
-    'ELEMENTS': 1024,
-    'ELEMENTS': 16,
-    'FLOAT_T': 'float',
-    'FLOAT_TYPE': 'float',
-    'FORCE_WORK_GROUP_SIZE': 32,
-    'FPTYPE': 'float',
-    'FPVECTYPE': 'float4',
-    'GAUSS_RADIUS': 5,
-    'GLOBALSIZE_LOG2': 10,
-    'HEIGHT': 128,
-    'INPUT_WIDTH': 256,
-    'ITERATIONS': 1000,
-    'KERNEL_RADIUS': 8,
-    'LOCAL_MEM_SIZE': 2048,
-    'LOCAL_MEMORY_BANKS': 16,
-    'LOCAL_SIZE': 128,
-    'LOCAL_SIZE_LIMIT': 1024,
-    'LOCAL_W': 128,
-    'LOCALSIZE_LOG2': 5,
-    'LOG2_WARP_SIZE': 5,
-    'LROWS': 16,
-    'M_PI': 3.14,
-    'MAXWORKX': 8,
-    'MAXWORKY': 8,
-    'N_CELL_ENTRIES': 128,
-    'N_GP': 8,
-    'Pixel': 'float3',
-    'RADIUS': 8,
-    'ROWS_BLOCKDIM_X': 16,
-    'ROWS_BLOCKDIM_Y': 4,
-    'ROWS_HALO_STEPS': 1,
-    'ROWS_RESULT_STEPS': 4,
-    'SCREENHEIGHT': 1920,
-    'SCREENWIDTH': 1080,
-    'SIMD_WIDTH': 32,
-    'SINGLE_PRECISION': 1,
-    'static': '',
-    'THRESHOLD': 0.5,
-    'TILE_COLS': 16,
-    'TILE_COLS': 16,
-    'TILE_DIM': 16,
-    'TILE_HEIGHT': 16,
-    'TILE_M': 16,
-    'TILE_N': 16,
-    'TILE_ROWS': 16,
-    'TILE_SIZE': 16,
-    'TILE_TB_HEIGHT': 16,
-    'TILE_WIDTH': 16,
-    'TILEH': 16,
-    'TILESW': 16,
-    'TILEW': 16,
-    'TREE_DEPTH': 3,
-    'TYPE': 'float',
-    'VALTYPE': 'float',
-    'WARP_COUNT': 8,
-    'WARPS_PER_GROUP': 8,
-    'WORK_GROUP_SIZE': 256,
-    'WORK_ITEMS': 128,
-    'WORKGROUP_SIZE': 256,
-    'WORKGROUPSIZE': 256,
-    'WORKSIZE': 128,
-    'WORKSIZE': 256,
-    'WSIZE': 128,
-    'zero': 0,
-    'zeroVal': 0,
-}
-clang_define_args = ['-D{}'.format(d) for d in clang_defines] + [
-    '-D{}={}'.format(k,v) for k,v in clang_define_vals.items()
-]
+
+def clang_cl_args():
+    """
+    Get the Clang args to compile OpenCL.
+
+    :return: Array of args.
+    """
+    libclc = os.path.expanduser('~/phd/extern/libclc')
+    libclc_include = os.path.join(libclc, 'generic', 'include')
+    libclc_header = os.path.join(libclc_include, 'clc', 'clc.h')
+
+    pre_shim_header = smith.package_path(
+        os.path.join('share', 'include', 'opencl-pre-shim.h'))
+    post_shim_header = smith.package_path(
+        os.path.join('share', 'include', 'opencl-post-shim.h'))
+
+    return [
+        '-I' + libclc_include,
+        '-include', pre_shim_header,
+        '-include', libclc_header,
+        '-include', post_shim_header,
+        '-target', 'nvptx64-nvidia-nvcl',
+        '-xcl'
+    ]
 
 
 def num_rows_in(db, table):
@@ -146,24 +81,14 @@ def num_rows_in(db, table):
     return num_rows
 
 
-def preprocess_cl(src):
+def compiler_preprocess_cl(src):
     clang = os.path.expanduser('~/phd/tools/llvm/build/bin/clang')
-    libclc = os.path.expanduser('~/phd/extern/libclc')
-    header = smith.package_path(os.path.join('share', 'include', 'opencl.h'))
-
-    cmd = [
-        clang, '-Dcl_clang_storage_class_specifiers',
-        '-I', '{}/generic/include'.format(libclc),
-        '-include', '{}/generic/include/clc/clc.h'.format(libclc),
-        '-include', header,
-        '-target', 'nvptx64-nvidia-nvcl'
-    ] + clang_define_args + [
-        '-x', 'cl', '-E',
-        '-c', '-', '-o', '-'
+    cmd = [ clang ] + clang_cl_args() + [
+        '-E', '-c', '-', '-o', '-'
     ]
 
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate(src)
+    stdout, stderr = process.communicate(src.encode('utf-8'))
 
     if process.returncode != 0:
         raise ClangException(stderr.decode('utf-8'))
@@ -185,54 +110,40 @@ def preprocess_cl(src):
     return src
 
 
-def rewrite_cl(in_path):
-    ld_path = os.path.expanduser('~/phd/tools/llvm/build/lib/')
-    libclc = os.path.expanduser('~/phd/extern/libclc')
+def rewrite_cl(src):
     rewriter = os.path.expanduser('~/phd/lab/ml/rewriter')
-    header = smith.package_path(os.path.join('share', 'include', 'opencl.h'))
 
-    extra_args = [
-        '-Dcl_clang_storage_class_specifiers',
-        '-I{}/generic/include'.format(libclc),
-        '-include', '{}/generic/include/clc/clc.h'.format(libclc),
-        '-include', header,
-        '-target', 'nvptx64-nvidia-nvcl',
-        '-xcl'
-    ]
+    # Rewriter can't read from stdin.
+    with NamedTemporaryFile('w', suffix='.cl') as tmp:
+        tmp.write(src)
+        tmp.flush()
+        cmd = ([rewriter, tmp.name]
+               + ['-extra-arg=' + x for x in clang_cl_args()] + ['--'])
 
-    cmd = ([rewriter, in_path ]
-           + ['-extra-arg=' + x for x in extra_args] + ['--'])
-
-    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                    env = {'LD_LIBRARY_PATH': ld_path})
-    stdout, stderr = process.communicate()
+        process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                        env = {'LD_LIBRARY_PATH': ld_path})
+        stdout, stderr = process.communicate()
 
     if process.returncode != 0:
         raise RewriterException(stderr.decode('utf-8'))
 
-    formatted = clangformat_ocl(stdout)
+    # Remove __attribute__ qualifiers
+    stripped = strip_attributes(stdout.decode('utf-8'))
+
+    # Run through formatter
+    formatted = clangformat_ocl(stripped.encode('utf-8'))
 
     return formatted.decode('utf-8')
 
 
 def compile_cl_bytecode(src):
     clang = os.path.expanduser('~/phd/tools/llvm/build/bin/clang')
-    libclc = os.path.expanduser('~/phd/extern/libclc')
-    header = smith.package_path(os.path.join('share', 'include', 'opencl.h'))
-
-    cmd = [
-        clang, '-Dcl_clang_storage_class_specifiers',
-        '-I', '{}/generic/include'.format(libclc),
-        '-include', '{}/generic/include/clc/clc.h'.format(libclc),
-        '-include', header,
-        '-target', 'nvptx64-nvidia-nvcl'
-    ] + clang_define_args + [
-        '-x', 'cl', '-emit-llvm', '-S',
-        '-c', '-', '-o', '-'
+    cmd = [clang] + clang_cl_args() + [
+        '-emit-llvm', '-S', '-c', '-', '-o', '-'
     ]
 
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate(src)
+    stdout, stderr = process.communicate(src.encode('utf-8'))
 
     if process.returncode != 0:
         raise ClangException(stderr.decode('utf-8'))
@@ -329,9 +240,7 @@ def bytecode_features(bc):
 
 def clangformat_ocl(src):
     clangformat = os.path.expanduser('~/phd/tools/llvm/build/bin/clang-format')
-    cmd = [
-        clangformat, '-style=google'
-    ]
+    cmd = [ clangformat, '-style=google' ]
 
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate(src)
@@ -364,24 +273,40 @@ def print_bytecode_features(db_path):
         print('        ', feature)
 
 
+def get_attribute_range(s, start_idx):
+    i = s.find('(', start_idx) + 1
+    d = 1
+    while i < len(s) and d > 0:
+        if s[i] == '(':
+            d += 1
+        elif s[i] == ')':
+            d -= 1
+        i +=1
+
+    return (start_idx, i)
+
+
+def strip_attributes(src):
+    idxs = sorted(smith.get_substring_idxs('__attribute__', src))
+    ranges = [get_attribute_range(src, i) for i in idxs]
+    for r in reversed(ranges):
+        src = src[:r[0]] + src[r[1]:]
+    return src
+
+
 # 3 possible outcomes:
 #
 #   1. Good. Code is preprocessed and ready to be put into a training set.
 #   2. Bad. Code can't be preprocessed.
 #   3. Ugly. Code can be preprocessed, but isn't useful for training.
 #
-def preprocess(src):
-    srcbuf = src.encode('utf-8')
-
-    # Check that code compiles:
+def preprocess(src, min_num_instructions=0):
+    # Compile to bytecode and extract features:
     try:
-        bc = compile_cl_bytecode(srcbuf)
+        bc = compile_cl_bytecode(src)
+        bc_features = bytecode_features(bc)
     except ClangException as e:
         raise CodeCompilationException(e)
-
-    # Check that feature extraction works:
-    try:
-        bc_features = bytecode_features(bc)
     except OptException as e:
         raise CodeAnalysisException(e)
 
@@ -391,31 +316,22 @@ def preprocess(src):
     except KeyError:
         num_instructions = 0
 
-    min_num_instructions = 2
     if num_instructions < min_num_instructions:
         raise InstructionCountException(
-            'Code contains {} instructions. The minimum allowed is {})'
+            'Code contains {} instructions. The minimum allowed is {}'
             .format(num_instructions, min_num_instructions))
 
-    # Run source through preprocesor:
+    # Run source through compiler preprocesor:
     try:
-        src = preprocess_cl(srcbuf)
+        src = compiler_preprocess_cl(src)
     except ClangException as e:
         raise CodeCompilationException(e)
 
     # Rewrite source:
-    with NamedTemporaryFile('w', suffix='.cl') as tmp:
-        # Write to file:
-        tmp.write(src)
-        tmp.flush()
-
-        # Perform rewrite:
-        try:
-            src = rewrite_cl(tmp.name)
-        except RewriterException as e:
-            raise CodeCompilationException(e)
+    # src = rewrite_cl(src)
 
     return src
+
 
 def md5sum(t):
     return md5(t).hexdigest()
