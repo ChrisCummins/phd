@@ -342,10 +342,6 @@ def fs(db_path, paths=[]):
 kernel_counter = 0
 
 
-def get_substring_idxs(substr, s):
-    return [m.start() for m in re.finditer(substr, s)]
-
-
 def get_cl_kernel(s, start_idx):
     global kernel_counter
     kernel_counter += 1
@@ -365,7 +361,7 @@ def get_cl_kernel(s, start_idx):
 
 
 def get_cl_kernels(s):
-    idxs = get_substring_idxs('__kernel void ', s)
+    idxs = smith.get_substring_idxs('__kernel void ', s)
     print('extracting', len(idxs), 'kernels ...')
     kernels = [get_cl_kernel(s, i) for i in idxs]
     print()

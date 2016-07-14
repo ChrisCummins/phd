@@ -34,6 +34,18 @@ def checksum_file(path):
         raise InternalException("failed to read '{}'".format(path))
 
 
+def get_substring_idxs(substr, s):
+    """
+    Return a list of indexes of substr. If substr not found, list is
+    empty.
+
+    :param substr: Substring to match.
+    :param s: String to match in.
+    :param: List of integer substring start indices.
+    """
+    return [m.start() for m in re.finditer(substr, s)]
+
+
 def package_path(path):
     abspath = resource_filename(__name__, path)
     if not os.path.exists(abspath):
