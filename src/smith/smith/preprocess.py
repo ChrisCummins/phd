@@ -12,6 +12,7 @@
 # Try compiling each source to LLVM bytecode
 # For those that build, run static analysis to generate feature vectors
 #
+import json
 import math
 import os
 import re
@@ -233,9 +234,20 @@ def bytecode_features(bc):
 
     return instratios
 
+# Options to pass to clang-format.
+#
+# See: http://clang.llvm.org/docs/ClangFormatStyleOptions.html
+#
+clangformat_config = {
+    'BasedOnStyle': 'Google',
+    'ColumnLimit': 500,
+    'IndentWidth': 2,
+    'AllowShortIfStatementsOnASingleLine': False
+}
+
 def clangformat_ocl(src):
     clangformat = os.path.expanduser('~/phd/tools/llvm/build/bin/clang-format')
-    cmd = [ clangformat, '-style=google' ]
+    cmd = [ clangformat, '-style={}'.format(json.dumps(clangformat_config)) ]
 
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate(src)
