@@ -62,6 +62,7 @@ def clang_cl_args():
 
     # List of clang warnings to disable.
     disabled_warnings = [
+        'implicit-function-declaration',
         'macro-redefined'
     ]
 
