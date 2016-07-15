@@ -60,12 +60,17 @@ def clang_cl_args():
     shim = smith.package_path(
         os.path.join('share', 'include', 'opencl-shim.h'))
 
+    # List of clang warnings to disable.
+    disabled_warnings = [
+        'macro-redefined'
+    ]
+
     return [
         '-I' + libclc_include,
         '-include', shim,
         '-target', 'nvptx64-nvidia-nvcl',
         '-xcl'
-    ]
+    ] + ['-Wno-{}'.format(x) for x in disabled_warnings]
 
 
 def num_rows_in(db, table):
