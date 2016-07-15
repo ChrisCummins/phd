@@ -3,9 +3,9 @@
 #
 # TODO:
 #
-#   More strict formatting, which enforces things like one blank line
-#   between each top level {} block, one parameter per line in
-#   function declaration, etc.
+#   More strict formatting:
+#     * single parameter line
+#     * Force braces around single line if{} blocks
 #
 # Extrapolated data:
 #
