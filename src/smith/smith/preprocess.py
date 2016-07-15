@@ -131,10 +131,7 @@ def rewrite_cl(src):
     # Remove __attribute__ qualifiers
     stripped = strip_attributes(stdout.decode('utf-8'))
 
-    # Run through formatter
-    formatted = clangformat_ocl(stripped.encode('utf-8'))
-
-    return formatted.decode('utf-8')
+    return stripped
 
 
 def compile_cl_bytecode(src):
@@ -255,12 +252,12 @@ def clangformat_ocl(src):
     cmd = [ clangformat, '-style={}'.format(json.dumps(clangformat_config)) ]
 
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate(src)
+    stdout, stderr = process.communicate(src.encode('utf-8'))
 
     if process.returncode != 0:
         raise Exception(stderr.decode('utf-8'))
 
-    return stdout
+    return stdout.decode('utf-8')
 
 
 def print_bytecode_features(db_path):
@@ -340,7 +337,10 @@ def preprocess(src, min_num_instructions=0):
         raise CodeCompilationException(e)
 
     # Rewrite source:
-    # src = rewrite_cl(src)
+    src = rewrite_cl(src)
+
+    # Format source:
+    src = clangformat_ocl(src)
 
     return src
 
