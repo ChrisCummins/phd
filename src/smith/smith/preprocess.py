@@ -56,18 +56,12 @@ def clang_cl_args():
     """
     libclc = os.path.expanduser('~/phd/extern/libclc')
     libclc_include = os.path.join(libclc, 'generic', 'include')
-    libclc_header = os.path.join(libclc_include, 'clc', 'clc.h')
-
-    pre_shim_header = smith.package_path(
-        os.path.join('share', 'include', 'opencl-pre-shim.h'))
-    post_shim_header = smith.package_path(
-        os.path.join('share', 'include', 'opencl-post-shim.h'))
+    shim = smith.package_path(
+        os.path.join('share', 'include', 'opencl-shim.h'))
 
     return [
         '-I' + libclc_include,
-        '-include', pre_shim_header,
-        '-include', libclc_header,
-        '-include', post_shim_header,
+        '-include', shim,
         '-target', 'nvptx64-nvidia-nvcl',
         '-xcl'
     ]
