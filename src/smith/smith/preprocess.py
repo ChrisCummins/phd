@@ -106,6 +106,7 @@ def compiler_preprocess_cl(src):
 
 def rewrite_cl(src):
     rewriter = os.path.expanduser('~/phd/lab/ml/rewriter')
+    ld_path = os.path.expanduser('~/phd/tools/llvm/build/lib/')
 
     # Rewriter can't read from stdin.
     with NamedTemporaryFile('w', suffix='.cl') as tmp:
