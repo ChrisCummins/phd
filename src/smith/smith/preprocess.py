@@ -49,7 +49,13 @@ class UglyCodeException(Exception): pass
 class InstructionCountException(UglyCodeException): pass
 
 
-def clang_cl_args():
+CLANG_CL_TARGETS = [
+    'nvptx64-nvidia-nvcl',
+    'spir64'
+]
+
+def clang_cl_args(target=CLANG_CL_TARGETS[0],
+                  error_limit=0):
     """
     Get the Clang args to compile OpenCL.
 
@@ -62,6 +68,7 @@ def clang_cl_args():
 
     # List of clang warnings to disable.
     disabled_warnings = [
+        'ignored-pragmas',
         'implicit-function-declaration',
         'macro-redefined'
     ]
@@ -69,7 +76,8 @@ def clang_cl_args():
     return [
         '-I' + libclc_include,
         '-include', shim,
-        '-target', 'nvptx64-nvidia-nvcl',
+        '-target', target,
+        '-ferror-limit={}'.format(error_limit),
         '-xcl'
     ] + ['-Wno-{}'.format(x) for x in disabled_warnings]
 
