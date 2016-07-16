@@ -38,6 +38,9 @@
 #include "clang/Tooling/Tooling.h"
 #pragma GCC diagnostic pop
 
+// Error code which is returned if there was nothing to rewrite:
+#define EUGLY_CODE 204
+
 namespace rewriter {
 
 static clang::Rewriter rewriter;
@@ -48,6 +51,13 @@ static unsigned int _fn_call_rewrites_counter = 0;
 
 static unsigned int _var_decl_rewrites_counter = 0;
 static unsigned int _var_use_rewrites_counter = 0;
+
+static bool isRewritten() {
+  return (rewriter::_fn_decl_rewrites_counter ||
+          rewriter::_fn_call_rewrites_counter ||
+          rewriter::_var_decl_rewrites_counter ||
+          rewriter::_var_use_rewrites_counter);
+}
 
 enum ctype { AZ, az };
 
@@ -280,12 +290,16 @@ int main(int argc, const char **argv) {
   clang::tooling::CommonOptionsParser op(argc, argv, rewriter::_tool_category);
   clang::tooling::ClangTool tool(op.getCompilations(), op.getSourcePathList());
 
-  auto result = tool.run(
+  const auto result = tool.run(
       clang::tooling::newFrontendActionFactory<
         rewriter::RewriterFrontendAction>().get());
 
   const auto& id = rewriter::rewriter.getSourceMgr().getMainFileID();
-  rewriter::rewriter.getEditBuffer(id).write(llvm::outs());
+
+  if (!rewriter::isRewritten()) {
+    llvm::errs() << "fatal: nothing to rewrite!";
+    return EUGLY_CODE;
+  }
 
   llvm::errs() << "\nRewrote " << rewriter::_fn_decl_rewrites_counter
                << " function declarations\n"
@@ -296,5 +310,6 @@ int main(int argc, const char **argv) {
                << "Rewrote " << rewriter::_var_use_rewrites_counter
                << " variable uses\n";
 
+  rewriter::rewriter.getEditBuffer(id).write(llvm::outs());
   return result;
 }
