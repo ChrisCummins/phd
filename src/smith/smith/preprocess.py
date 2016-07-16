@@ -34,19 +34,19 @@ import smith
 # Custom exceptions:
 #
 
-# LLVM exceptions:
-class LlvmException(Exception): pass
-class ClangException(LlvmException): pass
+# Internal exceptions:
+class LlvmException(smith.SmithException): pass
+class ClangFormatException(LlvmException): pass
 class OptException(LlvmException): pass
 
 # Good, bad, ugly exceptions:
-class BadCodeException(Exception): pass
-class CodeCompilationException(BadCodeException): pass
+class BadCodeException(smith.SmithException): pass
+class ClangException(BadCodeException): pass
 class CodeAnalysisException(BadCodeException): pass
 
-class UglyCodeException(Exception): pass
-class RewriterException(UglyCodeException): pass
+class UglyCodeException(smith.SmithException): pass
 class InstructionCountException(UglyCodeException): pass
+class RewriterException(UglyCodeException): pass
 
 
 CLANG_CL_TARGETS = [
@@ -90,7 +90,7 @@ def num_rows_in(db, table):
     return num_rows
 
 
-def compiler_preprocess_cl(src):
+def compiler_preprocess_cl(src, id='anon'):
     clang = os.path.expanduser('~/phd/tools/llvm/build/bin/clang')
     cmd = [ clang ] + clang_cl_args() + [
         '-E', '-c', '-', '-o', '-'
@@ -119,7 +119,7 @@ def compiler_preprocess_cl(src):
     return src
 
 
-def rewrite_cl(src):
+def rewrite_cl(src, id='anon'):
     rewriter = os.path.expanduser('~/phd/lab/ml/rewriter')
     ld_path = os.path.expanduser('~/phd/tools/llvm/build/lib/')
 
@@ -153,7 +153,7 @@ def rewrite_cl(src):
     return stripped
 
 
-def compile_cl_bytecode(src):
+def compile_cl_bytecode(src, id='anon'):
     clang = os.path.expanduser('~/phd/tools/llvm/build/bin/clang')
     cmd = [clang] + clang_cl_args() + [
         '-emit-llvm', '-S', '-c', '-', '-o', '-'
@@ -235,7 +235,7 @@ def sql_insert_dict(c, table, data):
     c.execute(cmd, tuple(data.values()))
 
 
-def bytecode_features(bc):
+def bytecode_features(bc, id='anon'):
     opt = os.path.expanduser('~/phd/tools/llvm/build/bin/opt')
 
     cmd = [
@@ -266,7 +266,7 @@ clangformat_config = {
     'AllowShortIfStatementsOnASingleLine': False
 }
 
-def clangformat_ocl(src):
+def clangformat_ocl(src, id='anon'):
     clangformat = os.path.expanduser('~/phd/tools/llvm/build/bin/clang-format')
     cmd = [ clangformat, '-style={}'.format(json.dumps(clangformat_config)) ]
 
@@ -274,7 +274,7 @@ def clangformat_ocl(src):
     stdout, stderr = process.communicate(src.encode('utf-8'))
 
     if process.returncode != 0:
-        raise Exception(stderr.decode('utf-8'))
+        raise ClangFormatException(stderr.decode('utf-8'))
 
     return stdout.decode('utf-8')
 
@@ -322,23 +322,10 @@ def strip_attributes(src):
     return src
 
 
-# 3 possible outcomes:
-#
-#   1. Good. Code is preprocessed and ready to be put into a training set.
-#   2. Bad. Code can't be preprocessed.
-#   3. Ugly. Code can be preprocessed, but isn't useful for training.
-#
-def preprocess(src, min_num_instructions=0):
-    # Compile to bytecode and extract features:
-    try:
-        bc = compile_cl_bytecode(src)
-        bc_features = bytecode_features(bc)
-    except ClangException as e:
-        raise CodeCompilationException(e)
-    except OptException as e:
-        raise CodeAnalysisException(e)
-
-    # Check that code contains more than a minimum number of instructions:
+def verify_bytecode_features(bc_features, id='anon'):
+    # The minimum number of instructions before a kernel is discarded
+    # as ugly.
+    min_num_instructions=0
     try:
         num_instructions = bc_features['instructions_of_all_types']
     except KeyError:
@@ -349,23 +336,41 @@ def preprocess(src, min_num_instructions=0):
             'Code contains {} instructions. The minimum allowed is {}'
             .format(num_instructions, min_num_instructions))
 
-    # Run source through compiler preprocesor:
-    try:
-        src = compiler_preprocess_cl(src)
-    except ClangException as e:
-        raise CodeCompilationException(e)
 
-    # Rewrite source:
-    src = rewrite_cl(src)
+# 3 possible outcomes:
+#
+#   1. Good. Code is preprocessed and ready to be put into a training set.
+#   2. Bad. Code can't be preprocessed.
+#   3. Ugly. Code can be preprocessed, but isn't useful for training.
+#
+def preprocess(src, id='anon'):
+    """
+    Preprocess an OpenCL source. There are three possible outcomes:
 
-    # Format source:
-    src = clangformat_ocl(src)
+    1. Good. Code is preprocessed and ready to be put into a training set.
+    2. Bad. Code can't be preprocessed (i.e. it's "bad" OpenCL).
+    3. Ugly. Code can be preprocessed but isn't useful for training
+       (e.g. it's an empty file).
+
+    :param src: The source code as a string.
+    :param id (optional): An identifying name for the source code
+      (used in exception messages).
+    :return: Preprocessed source code as a string.
+    :throws BadCodeException: If code is bad (see above).
+    :throws UglyCodeException: If code is ugly (see above).
+    :throws smith.InternalException: In case of some other error.
+    """
+    # Compile to bytecode and verify features:
+    bc = compile_cl_bytecode(src, id)
+    bc_features = bytecode_features(bc, id)
+    verify_bytecode_features(bc_features, id)
+
+    # Rewrite and format source:
+    src = compiler_preprocess_cl(src, id)
+    src = rewrite_cl(src, id)
+    src = clangformat_ocl(src, id)
 
     return src
-
-
-def md5sum(t):
-    return md5(t).hexdigest()
 
 
 class md5sum_aggregator:
@@ -447,7 +452,7 @@ def preprocess_split(db_path, split):
         if id != cached_id:
             try:
                 # Try and preprocess it:
-                contents = preprocess(contents)
+                contents = preprocess(contents, id)
                 status = 0
             except BadCodeException as e:
                 contents = str(e)
