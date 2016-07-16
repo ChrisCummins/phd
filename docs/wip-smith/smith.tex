@@ -342,7 +342,8 @@ four top tier conferences between 2013--2016: CGO, HiPC, PACT, and
 PPoPP. By aggregating the sources and quantities of benchmark kernels
 from 27 papers, we find that XXX of benchmark kernels account for
 XXX\% of all results~\footnote{Raw data available at:
-  \url{http://bit.ly/foo}}.
+  \url{http://bit.ly/foo}}. Figure~\ref{fig:benchmark-quantity-distribution}
+and Figure~\ref{fig:benchmark-suite-distribution}.
 
 % CGO 2016 - done
 % CGO 2015 - done
@@ -369,6 +370,24 @@ XXX\% of all results~\footnote{Raw data available at:
 % LCPC 2015 -
 % LCPC 2014 -
 % LCPC 2013 -
+
+\begin{figure}[t]
+  \includegraphics[width=\columnwidth]{img/benchmark-quantitiy-distribution}
+  \caption{%
+    Number of benchmark kernels used in research papers. The median
+    number of benchmark kernels used is XX.%
+  }
+  \label{fig:benchmark-quantity-distribution}
+\end{figure}
+
+\begin{figure}[t]
+  \includegraphics[width=\columnwidth]{img/benchmark-suite-distribution}
+  \caption{%
+    Origins of benchmark kernels used in research papers. XX benchmark
+    suites account for XXX\% of benchmark results.%
+  }
+  \label{fig:benchmark-suite-distribution}
+\end{figure}
 
 \section{Generating Compute Kernels}\label{sec:}
 
@@ -420,10 +439,46 @@ LLVM\footnote{\url{http://llvm.org/}},
 clang\footnote{\url{http://clang.llvm.org/}}, and
 libclc\footnote{\url{http://libclc.llvm.org/}}.
 
- Compile to LLVM bytecode using libclc. Include
-shim header which adds inferred values for common typedefs
-(e.g. FLOAT_T to float), and best guesses for common constants
-(e.g. WGSIZE).
+\begin{figure}[t]
+\includegraphics[width=\columnwidth]{img/undeclared-identifiers.png}
+\caption{%
+  Distribution of undeclared identifier errors. 1023 unique
+  identifiers. The 3 most frequently undeclared identifiers account
+  for 50\% of errors.%
+}
+\end{figure}
+
+Compile to LLVM bytecode using libclc. Through analysing 148k lines of
+compilation erros, we created a shim header to include common missing
+things. Include shim header which adds inferred values for common
+typedefs (e.g. FLOAT\_T to float), and best guesses for common
+constants (e.g. WGSIZE). Listing~\ref{lst:shim}
+
+Preprocessor is a unique challenge to C family of languages. Shim
+decreases the discard rate from 40\% to 32\% (responsible for an
+additional 88k lines of code in the language corpus). These macros may
+be harmlessly redefined within files.
+
+\lstset{language=[OpenCL]C}
+\begin{lstlisting}[%
+  frame=single,%
+  caption=The shim header file.
+]
+// Enable OpenCL features
+#define cl_clang_storage_class_specifiers
+#define cl_khr_fp64
+#include <clc/clc.h>
+
+// Inferred types
+typedef float FLOAT_T;
+typedef unsigned int INDEX_TYPE;
+... (36 more)
+
+// Inferred constants
+#define M_PI 3.14025
+#define WG_SIZE 128
+... (185 more)
+\end{lstlisting}
 
 
 \section{Learning the Implementation Space}\label{sec:ml}
@@ -583,6 +638,9 @@ Leave-one-out cross validation.
 \subsection{Generated Compute Kernels}\label{subsec:}
 
 What's the ratio of ``good'' code? How long did it take to sample?
+
+TODO: Plot distribution of static features from benchmark suites,
+GitHub, and generated synthesis.
 
 
 \subsection{Qualitatively Evaluating Generated Code}\label{subsec:}
