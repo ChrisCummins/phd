@@ -33,7 +33,6 @@ import smith
 #
 # Custom exceptions:
 #
-class RewriterException(Exception): pass
 
 # LLVM exceptions:
 class LlvmException(Exception): pass
@@ -46,6 +45,7 @@ class CodeCompilationException(BadCodeException): pass
 class CodeAnalysisException(BadCodeException): pass
 
 class UglyCodeException(Exception): pass
+class RewriterException(UglyCodeException): pass
 class InstructionCountException(UglyCodeException): pass
 
 
@@ -134,11 +134,21 @@ def rewrite_cl(src):
                         env = {'LD_LIBRARY_PATH': ld_path})
         stdout, stderr = process.communicate()
 
-    if process.returncode != 0:
-        raise RewriterException(stderr.decode('utf-8'))
+    # If there was nothing to rewrite, rewriter exits with error code:
+    EUGLY_CODE = 204
+    if process.returncode == EUGLY_CODE:
+        # Propagate the error:
+        raise RewriterException(src)
+    # NOTE: the rewriter process can still fail because of some other
+    # compilation problem, e.g. for some reason the 'enable 64bit
+    # support' pragma which should be included in the shim isn't being
+    # propogated correctly to the rewriter. However, the rewriter will
+    # still correctly process the input, so we ignore all error codes
+    # except the one we care about (EUGLY_CODE).
+    rewritten = stdout.decode('utf-8')
 
     # Remove __attribute__ qualifiers
-    stripped = strip_attributes(stdout.decode('utf-8'))
+    stripped = strip_attributes(rewritten)
 
     return stripped
 
@@ -356,6 +366,7 @@ def preprocess(src, min_num_instructions=0):
 
 def md5sum(t):
     return md5(t).hexdigest()
+
 
 class md5sum_aggregator:
     def __init__(self):
