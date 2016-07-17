@@ -19,6 +19,7 @@ setup(name='smith',
       ] },
       scripts=[
           'bin/fetch-clsmith',
+          'bin/fetch-db',
           'bin/fetch-dnn',
           'bin/fetch-fs',
           'bin/fetch-gh',

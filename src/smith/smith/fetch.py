@@ -337,6 +337,25 @@ def process_cl_file(db_path, path):
     c.close()
 
 
+def content_db(db_path, in_db_path, table='PreprocessedFiles'):
+    odb = sqlite3.connect(db_path)
+    idb = sqlite3.connect(in_db_path)
+    ic = idb.cursor()
+
+    ic.execute('SELECT id,contents FROM {}'.format(table))
+    rows = ic.fetchall()
+
+    for id,contents in rows:
+        kernels = get_cl_kernels(contents)
+        ids = [smith.checksum_str(kernel) for kernel in kernels]
+        # print("{} kernels in {}".format(len(kernels), id))
+        for kid,kernel in zip(ids, kernels):
+            oc = odb.cursor()
+            oc.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
+                       (kid,kernel))
+            odb.commit()
+
+
 def fs(db_path, paths=[]):
     for path in paths:
         process_cl_file(db_path, path)
