@@ -15,6 +15,9 @@ def main():
                         help='output to directory (overrides -i, --eof, -r)')
     parser.add_argument('-i', action='store_true', default=False,
                         help='include file separators')
+    parser.add_argument('--input-samples', action='store_true',
+                        default=False,
+                        help='use input contents, not preprocessed')
     parser.add_argument('--eof', action='store_true', default=False,
                         help='print end of file')
     parser.add_argument('-r', action='store_true', default=False,
@@ -29,6 +32,7 @@ def main():
         "dir": args.d,
         "eof": args.eof,
         "fileid": args.i,
+        "input_samples": args.input_samples,
         "reverse": args.r,
         "status": args.status
     }

@@ -21,27 +21,38 @@ from smith import dbutil
 
 
 def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
-                  status=0, eof=False, dir=False):
+                  input_samples=False, status=0, eof=False, dir=False):
     # Dump all the preprocessed OpenCL files
     print('creating DNN corpus', out_path, '...')
 
     order = 'ASC' if reverse else 'DESC'
 
     c = db.cursor()
-    if gh:
-        print('ordering by number of GitHub stargazers')
-        c.execute('SELECT PreprocessedFiles.id,PreprocessedFiles.contents FROM PreprocessedFiles '
-                  'LEFT JOIN ContentMeta ON PreprocessedFiles.id=ContentMeta.id '
-                  'LEFT JOIN Repositories ON ContentMeta.repo_url=Repositories.url '
-                  'WHERE PreprocessedFiles.status=' + str(status) + ' '
-                  'ORDER BY Repositories.stars '
-                  + order)
+
+    # Query components
+    table = 'ContentFiles' if input_samples else 'PreprocessedFiles'
+    select = 'SELECT {}.id,{}.contents'.format(table, table, table)
+
+    if input_samples:
+        qualifier = ''
     else:
-        print('ordering by line count')
-        c.execute('SELECT id,contents FROM PreprocessedFiles '
-                  'WHERE PreprocessedFiles.status=' + str(status) + ' '
-                  'ORDER BY LC(contents) '
-                  + order)
+        qualifier = 'WHERE {}.status={}'.format(table, status)
+
+    if gh:
+        table += (' LEFT JOIN ContentMeta ON {}.id=ContentMeta.id'
+                  ' LEFT JOIN Repositories ON '
+                  'ContentMeta.repo_url=Repositories.url'
+                  .format(table))
+        orderby = 'Repositories.stars'
+    else:
+        orderby = 'LC(contents)'
+
+    query = ('{select} FROM {table} {qualifier} ORDER BY {orderby} {order}'
+             .format(select=select, table=table, qualifier=qualifier,
+                     orderby=orderby, order=order))
+
+    print(query)
+    c.execute(query)
     rows = c.fetchall()
 
     if dir:
