@@ -14,6 +14,8 @@ from github import Github,GithubException
 from hashlib import sha1
 from subprocess import Popen,PIPE,STDOUT
 
+import smith
+
 # Counters
 repos_new_counter = 0
 repos_modified_counter = 0
@@ -319,6 +321,10 @@ def flatten(l):
 
 
 def process_cl_file(db_path, path):
+    """
+    :param db_path: Path to output database.
+    :param path: Path to input file.
+    """
     db = sqlite3.connect(db_path)
     c = db.cursor()
 
@@ -368,10 +374,6 @@ def get_cl_kernels(s):
     return kernels
 
 
-def checksum(s):
-    return sha1(s.encode('utf-8')).hexdigest()
-
-
 def process_sample_file(db_path, sample_path, first_only=False):
     db = sqlite3.connect(db_path)
     c = db.cursor()
@@ -386,7 +388,7 @@ def process_sample_file(db_path, sample_path, first_only=False):
         else:
             kernels = get_cl_kernels(sample)
 
-    ids = [checksum(kernel) for kernel in kernels]
+    ids = [smith.checksum_str(kernel) for kernel in kernels]
 
     for id,kernel in zip(ids, kernels):
         c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
@@ -412,9 +414,8 @@ files_new_counter = 0
 errors_counter = 0
 
 
-class CLSmithException(Exception): pass
-class ShaException(Exception): pass
-class HeaderNotFoundException(Exception): pass
+class CLSmithException(smith.SmithException): pass
+class HeaderNotFoundException(smith.SmithException): pass
 
 
 def print_counters():
