@@ -559,6 +559,7 @@ TODO
 
 \paragraph{Platforms} 2x GPUs, 1x CPU. Table~\ref{tab:platforms}
 
+whz4: OpenCL 1.2.
 
 \begin{table}% tab:platforms
 \scriptsize
@@ -603,12 +604,15 @@ TODO
 \label{tab:benchmarks}
 \end{table}
 
-Table~\ref{tab:benchmarks}. Limitation of system: can't use kernels
-with struct arguments as seeds.
+Table~\ref{tab:benchmarks}. Notes: Parboil: opencl\_base
+implementation. Ignored benchmarks from the SDKs which were
+inappropriate (e.g. testing multi-GPU support, or some
+platform-specific extension).
 
-Notes: Parboil: opencl\_base implementation. Rewrote typedefs.
+Rewrote typedefs.
 
-Ignored kernels with structs: %
+Limitation of system: can't use synthesise kernels with struct
+arguments. Ignored kernels with struct args: %
 parboil-bfs, %
 parboil-mri-q, %
 rodinia-b-tree, %
