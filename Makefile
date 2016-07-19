@@ -106,12 +106,15 @@ AWK ?= awk
 EGREP ?= egrep
 GIT ?= git
 GREP ?= grep
+INSTALL ?= install
 PYTHON2 ?= python2
 PYTHON3 ?= python3
 RM ?= rm -fv
 SED ?= sed
 SUDO ?= sudo
 
+# Install prefix:
+PREFIX ?= $(HOME)/.local
 
 # Non-configurable;
 MAKEFLAGS := -j$(threads)
@@ -878,6 +881,14 @@ $(phd): $(GoogleBenchmark) $(GoogleTest) $(toolchain)
 #
 AutotexTargets += $(root)/thesis/thesis.pdf
 
+#
+# tools/
+#
+pmake = $(PREFIX)/bin/pmake
+$(pmake): $(root)/tools/pmake
+	$(call print-task,INSTALL,$@,$(TaskInstall))
+	$(V1)install -m 755 -D $< $(pmake)
+InstallTargets += $(pmake)
 
 ########################################################################
 #                         Build rules
