@@ -907,10 +907,19 @@ AutotexTargets += $(root)/thesis/thesis.pdf
 #
 # tools/
 #
+tools = $(root)/tools
+
+pgit = $(PREFIX)/bin/pgit
 pmake = $(PREFIX)/bin/pmake
-$(pmake): $(root)/tools/pmake
+
+$(pgit): $(tools)/pgit
 	$(call install,$@,$<,0755)
-InstallTargets += $(pmake)
+
+$(pmake): $(tools)/pmake
+	$(call install,$@,$<,0755)
+
+InstallTargets += $(pmake) $(pgit)
+
 
 ########################################################################
 #                         Build rules
