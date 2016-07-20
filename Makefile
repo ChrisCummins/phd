@@ -233,6 +233,21 @@ define join-with
 endef
 
 
+# Install a file to a location and set mode. Provides a subset of the
+# functionality of GNU install, which Mac OS X doesn't provide.
+#
+# Arguments:
+#   $1 (str) Destination
+#   $2 (str) Source
+#   $3 (str) Mode
+define install
+	$(call print-task,INSTALL,$1,$(TaskInstall))
+	$(V1)mkdir -p $(dir $1)
+	$(V1)cp $2 $1
+	$(V1)chmod $3 $1
+endef
+
+
 # Compile C sources to object file
 #
 # Arguments:
@@ -886,8 +901,7 @@ AutotexTargets += $(root)/thesis/thesis.pdf
 #
 pmake = $(PREFIX)/bin/pmake
 $(pmake): $(root)/tools/pmake
-	$(call print-task,INSTALL,$@,$(TaskInstall))
-	$(V1)install -m 755 -D $< $(pmake)
+	$(call install,$@,$<,0755)
 InstallTargets += $(pmake)
 
 ########################################################################
