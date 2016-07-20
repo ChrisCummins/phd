@@ -114,7 +114,7 @@ SED ?= sed
 SUDO ?= sudo
 
 # Install prefix:
-PREFIX ?= $(HOME)/.local
+PREFIX ?= /usr/local
 
 # Non-configurable;
 MAKEFLAGS := -j$(threads)
@@ -242,9 +242,9 @@ endef
 #   $3 (str) Mode
 define install
 	$(call print-task,INSTALL,$1,$(TaskInstall))
-	$(V1)mkdir -p $(dir $1)
-	$(V1)cp $2 $1
-	$(V1)chmod $3 $1
+	$(V1)$(SUDO) mkdir -p $(dir $1)
+	$(V1)$(SUDO) cp $2 $1
+	$(V1)$(SUDO) chmod $3 $1
 endef
 
 
