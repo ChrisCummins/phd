@@ -114,7 +114,7 @@ SED ?= sed
 SUDO ?= sudo
 
 # Install prefix:
-PREFIX ?= $(HOME)/.local
+PREFIX ?= /usr/local
 
 # Non-configurable;
 MAKEFLAGS := -j$(threads)
@@ -242,9 +242,9 @@ endef
 #   $3 (str) Mode
 define install
 	$(call print-task,INSTALL,$1,$(TaskInstall))
-	$(V1)mkdir -p $(dir $1)
-	$(V1)cp $2 $1
-	$(V1)chmod $3 $1
+	$(V1)$(SUDO) mkdir -p $(dir $1)
+	$(V1)$(SUDO) cp $2 $1
+	$(V1)$(SUDO) chmod $3 $1
 endef
 
 
@@ -338,7 +338,7 @@ endef
 
 
 python-setup-install-cmd = \
-	cd $2 && $(SUDO) $(strip $1) ./setup.py install &> \
+	cd $2 && $(SUDO) $(strip $1) ./setup.py install --prefix=$(PREFIX) &> \
 	$2/.$(strip $1).install.log \
 	|| cat $2/.$(strip $1).install.log
 
@@ -348,7 +348,7 @@ python-setup-install-cmd = \
 #   $1 (str) Python executable
 #   $2 (str) Source directory
 define python-setup-install
-	$(call print-task,INSTALL,$2,$(TaskInstall))
+	$(call print-task,INSTALL,$1: $2,$(TaskInstall))
 	$(V1)$(python-setup-install-cmd)
 endef
 

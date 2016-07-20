@@ -22,3 +22,7 @@ Chris Cummins. "All the OpenCL on GitHub: Teaching an AI to code, one
 character at a time", 19th May, 2016. Amazon Development Centre,
 Edinburgh, Scotland.
   Files: talks/2016-05-amazon
+
+Chris Cummins. "Building an AI that Codes", 22nd July, 2016.  Ocado
+Technology, Hatfield, England.
+  Files: talks/2016-07-ocado
