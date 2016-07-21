@@ -51,7 +51,6 @@ def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
              .format(select=select, table=table, qualifier=qualifier,
                      orderby=orderby, order=order))
 
-    print(query)
     c.execute(query)
     rows = c.fetchall()
 
