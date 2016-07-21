@@ -1,5 +1,4 @@
-__kernel void A(__global const float *a, int b, __global const float *c, int d,
-                __global float *e, int f, int g, float h, float i) {
+__kernel void A(__global const float *a, int b, __global const float *c, int d, __global float *e, int f, int g, float h, float i) {
   const int j = get_local_id(0);
   const int k = get_local_id(1);
   const int l = get_group_id(0) * 64;

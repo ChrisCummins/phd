@@ -1,6 +1,4 @@
-__kernel void A(__global unsigned int *a, __global unsigned int *b,
-                __global unsigned int *c, int d, int e, unsigned int f, int g,
-                __global int *h) {
+__kernel void A(__global unsigned int *a, __global unsigned int *b, __global unsigned int *c, int d, int e, unsigned int f, int g, __global int *h) {
   int i = get_global_id(0);
   int j = i % d;
   int k = i / d;
@@ -9,7 +7,8 @@ __kernel void A(__global unsigned int *a, __global unsigned int *b,
 
   if ((l + e) >= f) {
     m = f - l + 1;
-    if (m < 0) m = 0;
+    if (m < 0)
+      m = 0;
   }
 
   for (int n = l; n < m - 1 + l; n++) {

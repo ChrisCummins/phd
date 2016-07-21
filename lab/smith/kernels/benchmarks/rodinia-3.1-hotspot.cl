@@ -1,6 +1,4 @@
-__kernel void A(int a, global float *b, global float *c, global float *d, int e,
-                int f, int g, int h, float i, float j, float k, float l,
-                float m) {
+__kernel void A(int a, global float *b, global float *c, global float *d, int e, int f, int g, int h, float i, float j, float k, float l, float m) {
   local float n[64][64];
   local float o[64][64];
   local float p[64][64];
@@ -59,19 +57,16 @@ __kernel void A(int a, global float *b, global float *c, global float *d, int e,
   bool as;
   for (int at = 0; at < a; at++) {
     as = false;
-    if (((x) >= (at + 1) && (x) <= (64 - at - 2)) &&
-        ((y) >= (at + 1) && (y) <= (64 - at - 2)) &&
-        ((x) >= (am) && (x) <= (an)) && ((y) >= (ak) && (y) <= (al))) {
+    if (((x) >= (at + 1) && (x) <= (64 - at - 2)) && ((y) >= (at + 1) && (y) <= (64 - at - 2)) && ((x) >= (am) && (x) <= (an)) && ((y) >= (ak) && (y) <= (al))) {
       as = true;
-      p[y][x] =
-          n[y][x] +
-          r * (o[y][x] + (n[ap][x] + n[ao][x] - 2.0f * n[y][x]) * t +
-               (n[y][ar] + n[y][aq] - 2.0f * n[y][x]) * s + (q - n[y][x]) * u);
+      p[y][x] = n[y][x] + r * (o[y][x] + (n[ap][x] + n[ao][x] - 2.0f * n[y][x]) * t + (n[y][ar] + n[y][aq] - 2.0f * n[y][x]) * s + (q - n[y][x]) * u);
     }
     barrier(1);
 
-    if (at == a - 1) break;
-    if (as) n[y][x] = p[y][x];
+    if (at == a - 1)
+      break;
+    if (as)
+      n[y][x] = p[y][x];
 
     barrier(1);
   }

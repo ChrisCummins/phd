@@ -3,7 +3,8 @@ __kernel void A(__global uint4 *a, __global uint *b) {
 
   uint4 d = a[get_global_id(0)];
 
-  if (get_local_id(0) == 0) c[0] = b[get_group_id(0)];
+  if (get_local_id(0) == 0)
+    c[0] = b[get_group_id(0)];
 
   barrier(1);
   d += (uint4)c[0];

@@ -1,5 +1,4 @@
-__kernel void A(global float *a, global int *b, __global float *c, const int d,
-                global uint *e, global uint *f) {
+__kernel void A(global float *a, global int *b, __global float *c, const int d, global uint *e, global uint *f) {
   volatile __local unsigned int g[((1 << 10) * (1))];
 
   int h = get_group_id(0) * ((1 << 10) * (1));

@@ -1,9 +1,4 @@
-__kernel void A(__global const float* restrict a,
-
-                __global const float* restrict b,
-
-                __global const int* restrict c, __global const int* restrict d,
-                const int e, const int f, __global float* restrict g) {
+__kernel void A(__global const float* restrict a, __global const float* restrict b, __global const int* restrict c, __global const int* restrict d, const int e, const int f, __global float* restrict g) {
   int h = get_local_id(0);
 
   int i = h & (f - 1);
@@ -29,7 +24,8 @@ __kernel void A(__global const float* restrict a,
 
     int r = f / 2;
     while (r > 0) {
-      if (i < r) l[h] += l[h + r];
+      if (i < r)
+        l[h] += l[h + r];
       barrier(1);
       r = r / 2;
     }

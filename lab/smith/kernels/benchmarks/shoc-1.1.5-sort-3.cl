@@ -1,5 +1,4 @@
-__kernel void A(__global const uint *a, __global const uint *b,
-                __global uint *c, const int d, __local uint *e, const int f) {
+__kernel void A(__global const uint *a, __global const uint *b, __global uint *c, const int d, __local uint *e, const int f) {
   __local uint g[16];
 
   __local uint h[16];
@@ -20,8 +19,7 @@ __kernel void A(__global const uint *a, __global const uint *b,
 
   if (get_local_id(0) < 16) {
     h[get_local_id(0)] = 0;
-    g[get_local_id(0)] =
-        b[(get_local_id(0) * get_num_groups(0)) + get_group_id(0)];
+    g[get_local_id(0)] = b[(get_local_id(0) * get_num_groups(0)) + get_group_id(0)];
   }
   barrier(1);
 

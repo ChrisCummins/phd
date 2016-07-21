@@ -1,6 +1,4 @@
-__kernel void A(__global const uint* a, __global const uint* b,
-                __global uint2* c, __constant float* d, __constant int* e,
-                __constant float* f, __constant int* g, int h) {
+__kernel void A(__global const uint* a, __global const uint* b, __global uint2* c, __constant float* d, __constant int* e, __constant float* f, __constant int* g, int h) {
   __local float4 i[16];
   __local float4 j[16];
   __local int k[64];

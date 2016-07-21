@@ -1,9 +1,8 @@
-__kernel void A(int a, __global float *b, __global float *c,
-                __constant float *d, __constant float *e, __constant int *f,
-                __constant int *g, __global float *h, int i, int j) {
+__kernel void A(int a, __global float *b, __global float *c, __constant float *d, __constant float *e, __constant int *f, __constant int *g, __global float *h, int i, int j) {
   int k, l, m, n, o, p;
   int q = get_global_id(0);
-  if (q >= i * j) return;
+  if (q >= i * j)
+    return;
 
   k = q / i + 20 + 2;
   l = q % i + 20 + 2;
@@ -31,7 +30,8 @@ __kernel void A(int a, __global float *b, __global float *c,
 
     float y = t / ((float)(150 - 1));
 
-    if (((u * u) / y) > r) r = (u * u) / y;
+    if (((u * u) / y) > r)
+      r = (u * u) / y;
   }
 
   h[(k * a) + l] = r;

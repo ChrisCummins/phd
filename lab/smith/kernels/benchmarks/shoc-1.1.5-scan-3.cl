@@ -1,5 +1,4 @@
-__kernel void A(__global const float *a, __global const float *b,
-                __global float *c, const int d, __local float *e) {
+__kernel void A(__global const float *a, __global const float *b, __global float *c, const int d, __local float *e) {
   __local float f;
   f = 0;
 

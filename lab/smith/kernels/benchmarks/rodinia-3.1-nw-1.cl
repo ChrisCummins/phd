@@ -38,7 +38,7 @@ __kernel void A(__global int* a, __global int* b, __global int* c,
       int x = n + 1;
       int y = w - n + 1;
 
-      d[x + y * (64 + 1)] = A(
+      d[x + y * (64 + 1)] = An(
           d[(x - 1) + (y - 1) * (64 + 1)] + e[(x - 1) + (y - 1) * 64],
           d[(x - 1) + (y) * (64 + 1)] - (g), d[(x) + (y - 1) * (64 + 1)] - (g));
     }
@@ -52,7 +52,7 @@ __kernel void A(__global int* a, __global int* b, __global int* c,
       int x = n + 64 - w;
       int y = 64 - n;
 
-      d[x + y * (64 + 1)] = A(
+      d[x + y * (64 + 1)] = An(
           d[(x - 1) + (y - 1) * (64 + 1)] + e[(x - 1) + (y - 1) * 64],
           d[(x - 1) + (y) * (64 + 1)] - (g), d[(x) + (y - 1) * (64 + 1)] - (g));
     }

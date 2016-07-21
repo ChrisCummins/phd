@@ -2,8 +2,7 @@ __kernel void A(__global uint *a, __global uint *b, uint c) {
   __local uint d[8 * 256];
   __local uint *e = d + (get_local_id(0) >> 5) * 256;
 
-  for (uint f = 0; f < (256 / (1U << 5)); f++)
-    d[get_local_id(0) + f * (8 * (1U << 5))] = 0;
+  for (uint f = 0; f < (256 / (1U << 5)); f++) d[get_local_id(0) + f * (8 * (1U << 5))] = 0;
 
   const uint g = get_local_id(0) << (32 - 5);
 

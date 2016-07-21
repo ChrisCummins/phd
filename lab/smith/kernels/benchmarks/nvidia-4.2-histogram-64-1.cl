@@ -1,7 +1,5 @@
 __kernel void A(__global uint *a, __global float4 *b, uint c) {
-  const uint d = ((get_local_id(0) & ~(16 * 4 - 1)) << 0) |
-                 ((get_local_id(0) & (16 - 1)) << 2) |
-                 ((get_local_id(0) & (16 * 3)) >> 4);
+  const uint d = ((get_local_id(0) & ~(16 * 4 - 1)) << 0) | ((get_local_id(0) & (16 - 1)) << 2) | ((get_local_id(0) & (16 * 3)) >> 4);
 
   __local uchar e[32 * 64];
   __local uchar *f = e + d;

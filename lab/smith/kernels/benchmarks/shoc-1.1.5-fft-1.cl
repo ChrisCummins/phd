@@ -88,13 +88,17 @@ __kernel void A(__global float2 *a) {
   };
   {
     C(f, &g[d * 8 + e], 66);
-    if ((0xf) & 8) barrier(1);
+    if ((0xf) & 8)
+      barrier(1);
     E(f, &g[e * 66 + d], 8);
-    if ((0xf) & 4) barrier(1);
+    if ((0xf) & 4)
+      barrier(1);
     D(f, &g[d * 8 + e], 66);
-    if ((0xf) & 2) barrier(1);
+    if ((0xf) & 2)
+      barrier(1);
     F(f, &g[e * 66 + d], 8);
-    if ((0xf) & 1) barrier(1);
+    if ((0xf) & 1)
+      barrier(1);
   };
 
   {
@@ -177,13 +181,17 @@ __kernel void A(__global float2 *a) {
   };
   {
     C(f, &g[d * 8 + e], 8 * 9);
-    if ((0xE) & 8) barrier(1);
+    if ((0xE) & 8)
+      barrier(1);
     E(f, &g[d * 8 * 9 + e], 8);
-    if ((0xE) & 4) barrier(1);
+    if ((0xE) & 4)
+      barrier(1);
     D(f, &g[d * 8 + e], 8 * 9);
-    if ((0xE) & 2) barrier(1);
+    if ((0xE) & 2)
+      barrier(1);
     F(f, &g[d * 8 * 9 + e], 8);
-    if ((0xE) & 1) barrier(1);
+    if ((0xE) & 1)
+      barrier(1);
   };
 
   {

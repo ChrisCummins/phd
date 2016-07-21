@@ -1,9 +1,4 @@
-__kernel void A(__global float* a, __global float* b, __global float* c,
-                __global float* d, __global float* e, __global int* f,
-                __global int* g, __global float* h, __global unsigned char* i,
-                __global float* j, __global float* k, const int l, const int m,
-                const int n, int o, const int p, const int q, __global int* r,
-                __global float* s, __local float* t) {
+__kernel void A(__global float* a, __global float* b, __global float* c, __global float* d, __global float* e, __global int* f, __global int* g, __global float* h, __global unsigned char* i, __global float* j, __global float* k, const int l, const int m, const int n, int o, const int p, const int q, __global int* r, __global float* s, __local float* t) {
   int u = get_group_id(0);
   int v = get_local_id(0);
   int w = get_global_id(0);
@@ -25,11 +20,12 @@ __kernel void A(__global float* a, __global float* b, __global float* c,
 
   if (w < l) {
     for (y = 0; y < m; y++) {
-      z = A(a[w]) + g[y * 2 + 1];
-      aa = A(b[w]) + g[y * 2];
+      z = An(a[w]) + g[y * 2 + 1];
+      aa = An(b[w]) + g[y * 2];
 
       f[w * m + y] = abs(z * p * q + aa * q + o);
-      if (f[w * m + y] >= n) f[w * m + y] = 0;
+      if (f[w * m + y] >= n)
+        f[w * m + y] = 0;
     }
     h[w] = B(i, f, m, w);
 

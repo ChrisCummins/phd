@@ -18,8 +18,7 @@ __kernel void A(__global float *a, __local float *b, int c, int d) {
 
     barrier(1);
     if (g > e) {
-      for (f = 0; f < e + 1; f++)
-        b[(e + 1) * 64 + g] -= b[(e + 1) * 64 + f] * b[f * 64 + g];
+      for (f = 0; f < e + 1; f++) b[(e + 1) * 64 + g] -= b[(e + 1) * 64 + f] * b[f * 64 + g];
     }
 
     barrier(1);

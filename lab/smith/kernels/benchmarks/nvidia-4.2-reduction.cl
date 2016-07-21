@@ -1,5 +1,4 @@
-__kernel void A(__global float *a, __global float *b, unsigned int c,
-                __local float *d) {
+__kernel void A(__global float *a, __global float *b, unsigned int c, __local float *d) {
   unsigned int e = get_local_id(0);
   unsigned int f = get_global_id(0);
 
@@ -14,11 +13,11 @@ __kernel void A(__global float *a, __global float *b, unsigned int c,
     barrier(1);
   }
 
-  if (e == 0) b[get_group_id(0)] = d[0];
+  if (e == 0)
+    b[get_group_id(0)] = d[0];
 }
 
-__kernel void B(__global float *a, __global float *b, unsigned int c,
-                __local float *d) {
+__kernel void B(__global float *a, __global float *b, unsigned int c, __local float *d) {
   unsigned int e = get_local_id(0);
   unsigned int f = get_global_id(0);
 
@@ -36,11 +35,11 @@ __kernel void B(__global float *a, __global float *b, unsigned int c,
     barrier(1);
   }
 
-  if (e == 0) b[get_group_id(0)] = d[0];
+  if (e == 0)
+    b[get_group_id(0)] = d[0];
 }
 
-__kernel void C(__global float *a, __global float *b, unsigned int c,
-                __local float *d) {
+__kernel void C(__global float *a, __global float *b, unsigned int c, __local float *d) {
   unsigned int e = get_local_id(0);
   unsigned int f = get_global_id(0);
 
@@ -55,16 +54,17 @@ __kernel void C(__global float *a, __global float *b, unsigned int c,
     barrier(1);
   }
 
-  if (e == 0) b[get_group_id(0)] = d[0];
+  if (e == 0)
+    b[get_group_id(0)] = d[0];
 }
 
-__kernel void D(__global float *a, __global float *b, unsigned int c,
-                __local float *d) {
+__kernel void D(__global float *a, __global float *b, unsigned int c, __local float *d) {
   unsigned int e = get_local_id(0);
   unsigned int f = get_group_id(0) * (get_local_size(0) * 2) + get_local_id(0);
 
   d[e] = (f < c) ? a[f] : 0;
-  if (f + get_local_size(0) < c) d[e] += a[f + get_local_size(0)];
+  if (f + get_local_size(0) < c)
+    d[e] += a[f + get_local_size(0)];
 
   barrier(1);
 
@@ -75,16 +75,17 @@ __kernel void D(__global float *a, __global float *b, unsigned int c,
     barrier(1);
   }
 
-  if (e == 0) b[get_group_id(0)] = d[0];
+  if (e == 0)
+    b[get_group_id(0)] = d[0];
 }
 
-__kernel void E(__global float *a, __global float *b, unsigned int c,
-                __local volatile float *d) {
+__kernel void E(__global float *a, __global float *b, unsigned int c, __local volatile float *d) {
   unsigned int e = get_local_id(0);
   unsigned int f = get_group_id(0) * (get_local_size(0) * 2) + get_local_id(0);
 
   d[e] = (f < c) ? a[f] : 0;
-  if (f + get_local_size(0) < c) d[e] += a[f + get_local_size(0)];
+  if (f + get_local_size(0) < c)
+    d[e] += a[f + get_local_size(0)];
 
   barrier(1);
 
@@ -116,16 +117,17 @@ __kernel void E(__global float *a, __global float *b, unsigned int c,
     }
   }
 
-  if (e == 0) b[get_group_id(0)] = d[0];
+  if (e == 0)
+    b[get_group_id(0)] = d[0];
 }
 
-__kernel void F(__global float *a, __global float *b, unsigned int c,
-                __local volatile float *d) {
+__kernel void F(__global float *a, __global float *b, unsigned int c, __local volatile float *d) {
   unsigned int e = get_local_id(0);
   unsigned int f = get_group_id(0) * (get_local_size(0) * 2) + get_local_id(0);
 
   d[e] = (f < c) ? a[f] : 0;
-  if (f + 128 < c) d[e] += a[f + 128];
+  if (f + 128 < c)
+    d[e] += a[f + 128];
 
   barrier(1);
 
@@ -169,11 +171,11 @@ __kernel void F(__global float *a, __global float *b, unsigned int c,
     }
   }
 
-  if (e == 0) b[get_group_id(0)] = d[0];
+  if (e == 0)
+    b[get_group_id(0)] = d[0];
 }
 
-__kernel void G(__global float *a, __global float *b, unsigned int c,
-                __local volatile float *d) {
+__kernel void G(__global float *a, __global float *b, unsigned int c, __local volatile float *d) {
   unsigned int e = get_local_id(0);
   unsigned int f = get_group_id(0) * (get_local_size(0) * 2) + get_local_id(0);
   unsigned int i = 128 * 2 * get_num_groups(0);
@@ -182,7 +184,8 @@ __kernel void G(__global float *a, __global float *b, unsigned int c,
   while (f < c) {
     d[e] += a[f];
 
-    if (1 || f + 128 < c) d[e] += a[f + 128];
+    if (1 || f + 128 < c)
+      d[e] += a[f + 128];
     f += i;
   }
 
@@ -228,5 +231,6 @@ __kernel void G(__global float *a, __global float *b, unsigned int c,
     }
   }
 
-  if (e == 0) b[get_group_id(0)] = d[0];
+  if (e == 0)
+    b[get_group_id(0)] = d[0];
 }

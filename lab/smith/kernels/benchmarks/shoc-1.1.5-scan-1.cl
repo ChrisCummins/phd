@@ -1,5 +1,4 @@
-__kernel void A(__global const float *a, __global float *b, const int c,
-                __local float *d) {
+__kernel void A(__global const float *a, __global float *b, const int c, __local float *d) {
   int e = ((c / 4) / get_num_groups(0)) * 4;
   int f = get_group_id(0) * e;
 

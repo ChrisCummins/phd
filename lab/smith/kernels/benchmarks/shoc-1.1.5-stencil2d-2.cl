@@ -1,5 +1,4 @@
-__kernel void A(__global float* a, __global float* b, const int c, float d,
-                float e, float f, __local float* g) {
+__kernel void A(__global float* a, __global float* b, const int c, float d, float e, float f, __local float* g) {
   int h = get_group_id(0);
   int i = get_group_id(1);
   int j = get_num_groups(0);

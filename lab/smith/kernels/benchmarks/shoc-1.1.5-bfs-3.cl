@@ -1,12 +1,6 @@
 __kernel void A(
 
-    volatile __global unsigned int *a, unsigned int b,
-    volatile __global unsigned int *c, volatile __global int *d,
-    volatile __global unsigned int *e, __global unsigned int *f,
-    __global unsigned int *g, unsigned int h, unsigned int i,
-    volatile __global unsigned int *j, volatile __global unsigned int *k,
-    volatile __global unsigned int *l, volatile __global unsigned int *m,
-    volatile __global unsigned int *n, const unsigned int o,
+    volatile __global unsigned int *a, unsigned int b, volatile __global unsigned int *c, volatile __global int *d, volatile __global unsigned int *e, __global unsigned int *f, __global unsigned int *g, unsigned int h, unsigned int i, volatile __global unsigned int *j, volatile __global unsigned int *k, volatile __global unsigned int *l, volatile __global unsigned int *m, volatile __global unsigned int *n, const unsigned int o,
 
     volatile __local unsigned int *p) {
   volatile __local unsigned int q[1];
@@ -91,8 +85,7 @@ __kernel void A(
 
     v += get_num_groups(0);
 
-    if (n[0] < get_local_size(0) ||
-        n[0] > get_local_size(0) * get_num_groups(0))
+    if (n[0] < get_local_size(0) || n[0] > get_local_size(0) * get_num_groups(0))
       break;
 
     u = (u + 1) % 2;

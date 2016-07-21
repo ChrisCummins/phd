@@ -1,5 +1,4 @@
-__kernel void A(__global float *a, __global float *b, __global int *c, int d,
-                int e, int f, int g, int h) {
+__kernel void A(__global float *a, __global float *b, __global int *c, int d, int e, int f, int g, int h) {
   unsigned int i = get_global_id(0);
   int j = 0;
 

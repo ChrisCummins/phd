@@ -1,5 +1,4 @@
-__kernel void A(__global float *a, __global float *b, __global float *c,
-                float d, float e, int f, int g) {
+__kernel void A(__global float *a, __global float *b, __global float *c, float d, float e, int f, int g) {
   int h = get_global_id(0) + 1;
 
   if ((h >= 1) && (h < (f + 1))) {

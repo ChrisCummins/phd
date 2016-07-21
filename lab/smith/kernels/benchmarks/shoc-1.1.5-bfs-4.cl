@@ -1,10 +1,6 @@
 __kernel void A(
 
-    volatile __global unsigned int *a, unsigned int b,
-    volatile __global unsigned int *c, volatile __global int *d,
-    volatile __global unsigned int *e, __global unsigned int *f,
-    __global unsigned int *g, unsigned int h, unsigned int i,
-    volatile __global unsigned int *j, const unsigned int k,
+    volatile __global unsigned int *a, unsigned int b, volatile __global unsigned int *c, volatile __global int *d, volatile __global unsigned int *e, __global unsigned int *f, __global unsigned int *g, unsigned int h, unsigned int i, volatile __global unsigned int *j, const unsigned int k,
 
     volatile __local unsigned int *l) {
   volatile __local unsigned int m[1];
@@ -60,5 +56,6 @@ __kernel void A(
 
   barrier(1 | 2);
 
-  if (p < m[0]) c[p + n[0]] = l[p];
+  if (p < m[0])
+    c[p + n[0]] = l[p];
 }

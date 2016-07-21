@@ -83,18 +83,21 @@ __kernel void A(__global float2 *a) {
 
   {
     int j[] = {0, 4, 2, 6, 1, 5, 3, 7};
-    for (int k = 1; k < 8; k++)
-      g[k] = H(g[k], G((2 * 3.14 * j[k] / (512)) * (c)));
+    for (int k = 1; k < 8; k++) g[k] = H(g[k], G((2 * 3.14 * j[k] / (512)) * (c)));
   };
   {
     C(g, &h[e * 8 + f], 66);
-    if ((0xf) & 8) barrier(1);
+    if ((0xf) & 8)
+      barrier(1);
     E(g, &h[f * 66 + e], 8);
-    if ((0xf) & 4) barrier(1);
+    if ((0xf) & 4)
+      barrier(1);
     D(g, &h[e * 8 + f], 66);
-    if ((0xf) & 2) barrier(1);
+    if ((0xf) & 2)
+      barrier(1);
     F(g, &h[f * 66 + e], 8);
-    if ((0xf) & 1) barrier(1);
+    if ((0xf) & 1)
+      barrier(1);
   };
 
   {
@@ -171,18 +174,21 @@ __kernel void A(__global float2 *a) {
 
   {
     int j[] = {0, 4, 2, 6, 1, 5, 3, 7};
-    for (int k = 1; k < 8; k++)
-      g[k] = H(g[k], G((2 * 3.14 * j[k] / (64)) * (e)));
+    for (int k = 1; k < 8; k++) g[k] = H(g[k], G((2 * 3.14 * j[k] / (64)) * (e)));
   };
   {
     C(g, &h[e * 8 + f], 8 * 9);
-    if ((0xE) & 8) barrier(1);
+    if ((0xE) & 8)
+      barrier(1);
     E(g, &h[e * 8 * 9 + f], 8);
-    if ((0xE) & 4) barrier(1);
+    if ((0xE) & 4)
+      barrier(1);
     D(g, &h[e * 8 + f], 8 * 9);
-    if ((0xE) & 2) barrier(1);
+    if ((0xE) & 2)
+      barrier(1);
     F(g, &h[e * 8 * 9 + f], 8);
-    if ((0xE) & 1) barrier(1);
+    if ((0xE) & 1)
+      barrier(1);
   };
 
   {

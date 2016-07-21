@@ -1,5 +1,4 @@
-__kernel void A(int a, int b, int c, int d, __constant float *e,
-                __global float *f, __global float *g) {
+__kernel void A(int a, int b, int c, int d, __constant float *e, __global float *f, __global float *g) {
   int h = c / 2;
   int i = d / 2;
 
@@ -7,7 +6,8 @@ __kernel void A(int a, int b, int c, int d, __constant float *e,
   int k = j % a;
   int l = j / a;
 
-  if (l > b) return;
+  if (l > b)
+    return;
 
   float m = 0.0f;
 
@@ -25,7 +25,8 @@ __kernel void A(int a, int b, int c, int d, __constant float *e,
             int r = (p * a) + q;
             float s = f[r];
 
-            if (s > m) m = s;
+            if (s > m)
+              m = s;
           }
         }
       }

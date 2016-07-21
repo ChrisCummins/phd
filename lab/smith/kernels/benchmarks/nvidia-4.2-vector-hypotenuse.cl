@@ -1,5 +1,4 @@
-__kernel void A(__global float4* a, __global float4* b, __global float4* c,
-                unsigned int d, int e, unsigned int f) {
+__kernel void A(__global float4* a, __global float4* b, __global float4* c, unsigned int d, int e, unsigned int f) {
   size_t g = get_global_id(0) + d;
 
   if (g >= f) {

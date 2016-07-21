@@ -1,11 +1,9 @@
-__kernel void A(__global int* a, __global float* b, __global float* c,
-                __constant float* d, __global float* e, __constant float3* f,
-                __constant float3* g, __constant float3* h,
-                __constant float3* i, int j) {
+__kernel void A(__global int* a, __global float* b, __global float* c, __constant float* d, __global float* e, __constant float3* f, __constant float3* g, __constant float3* h, __constant float3* i, int j) {
   const float k = (float)(0.2f);
 
   const int l = get_global_id(0);
-  if (l >= j) return;
+  if (l >= j)
+    return;
   int m, n;
   float3 o;
   float p;

@@ -1,9 +1,9 @@
-__kernel void A(__global float4 *a, __global float4 *b, const int c, int d,
-                __global int *e) {
+__kernel void A(__global float4 *a, __global float4 *b, const int c, int d, __global int *e) {
   int f = get_global_id(0);
 
   int g = f / d;
-  if (g >= (1024)) return;
+  if (g >= (1024))
+    return;
 
   int h = f - g * d;
   int i = e[g] + h * c;
@@ -12,7 +12,8 @@ __kernel void A(__global float4 *a, __global float4 *b, const int c, int d,
   global float4 *k;
   k = &(b[i]);
 
-  if (i >= e[g + 1]) return;
+  if (i >= e[g + 1])
+    return;
   if (j >= e[g + 1]) {
     for (int l = 0; l < (e[g + 1] - i); l++) {
       k[l] = a[i + l];
@@ -33,8 +34,8 @@ __kernel void A(__global float4 *a, __global float4 *b, const int c, int d,
 
     float4 t = B(p, q);
     float4 u = C(p, q);
-    p = A(t);
-    q = A(u);
+    p = An(t);
+    q = An(u);
 
     k[o++] = p;
 

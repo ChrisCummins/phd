@@ -16,7 +16,7 @@ __kernel void A(__global uint *a, __global float *b, float c, float d, uint e) {
   barrier(1 | 2);
   for (int n = get_global_id(0); n < e; n += get_global_size(0)) {
     uint o = ((b[n] - c) / (d - c)) * (1024);
-    A(j + i, o & 0x3FFU, l);
+    Foo(j + i, o & 0x3FFU, l);
   }
 
   barrier(1 | 2);

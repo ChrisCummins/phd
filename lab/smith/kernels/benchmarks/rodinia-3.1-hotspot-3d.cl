@@ -1,6 +1,4 @@
-__kernel void A(__global float *a, __global float *b, __global float *c,
-                float d, int e, int f, int g, float h, float i, float j,
-                float k, float l, float m, float n) {
+__kernel void A(__global float *a, __global float *b, __global float *c, float d, int e, int f, int g, float h, float i, float j, float k, float l, float m, float n) {
   float o = 80.0;
 
   int p = get_global_id(0);
@@ -16,8 +14,7 @@ __kernel void A(__global float *a, __global float *b, __global float *c,
   float x, y, z;
   x = y = b[r];
   z = b[r + s];
-  c[r] = n * y + i * b[t] + h * b[u] + k * b[w] + j * b[v] + m * x + l * z +
-         d * a[r] + l * o;
+  c[r] = n * y + i * b[t] + h * b[u] + k * b[w] + j * b[v] + m * x + l * z + d * a[r] + l * o;
   r += s;
   t += s;
   u += s;
@@ -28,8 +25,7 @@ __kernel void A(__global float *a, __global float *b, __global float *c,
     x = y;
     y = z;
     z = b[r + s];
-    c[r] = n * y + i * b[t] + h * b[u] + k * b[w] + j * b[v] + m * x + l * z +
-           d * a[r] + l * o;
+    c[r] = n * y + i * b[t] + h * b[u] + k * b[w] + j * b[v] + m * x + l * z + d * a[r] + l * o;
     r += s;
     t += s;
     u += s;
@@ -38,7 +34,6 @@ __kernel void A(__global float *a, __global float *b, __global float *c,
   }
   x = y;
   y = z;
-  c[r] = n * y + i * b[t] + h * b[u] + k * b[w] + j * b[v] + m * x + l * z +
-         d * a[r] + l * o;
+  c[r] = n * y + i * b[t] + h * b[u] + k * b[w] + j * b[v] + m * x + l * z + d * a[r] + l * o;
   return;
 }

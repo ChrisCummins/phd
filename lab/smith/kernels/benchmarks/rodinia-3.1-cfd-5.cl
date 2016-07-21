@@ -1,7 +1,7 @@
-__kernel void A(int a, int b, __global float* c, __global float* d,
-                __global float* e, __global float* f) {
+__kernel void A(int a, int b, __global float* c, __global float* d, __global float* e, __global float* f) {
   const int g = get_global_id(0);
-  if (g >= b) return;
+  if (g >= b)
+    return;
 
   float h = e[g] / (float)(3 + 1 - a);
 

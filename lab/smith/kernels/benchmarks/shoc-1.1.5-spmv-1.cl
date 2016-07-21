@@ -1,9 +1,4 @@
-__kernel void A(__global const float* restrict a,
-
-                __global const float* restrict b,
-
-                __global const int* restrict c, __global const int* restrict d,
-                const int e, __global float* restrict f) {
+__kernel void A(__global const float* restrict a, __global const float* restrict b, __global const int* restrict c, __global const int* restrict d, const int e, __global float* restrict f) {
   int g = get_global_id(0);
 
   if (g < e) {

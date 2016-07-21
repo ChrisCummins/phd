@@ -1,6 +1,4 @@
-__kernel void A(__global float* const a, __global const float* const b,
-                __constant float* const c, const int d, const int e,
-                const int f, const int g) {
+__kernel void A(__global float* const a, __global const float* const b, __constant float* const c, const int d, const int e, const int f, const int g) {
   bool h = true;
   const int i = get_global_id(0);
   const int j = get_global_id(1);
@@ -27,8 +25,10 @@ __kernel void A(__global float* const a, __global const float* const b,
   const int w = k + 8;
   const int x = l + 8;
 
-  if (i >= d) h = false;
-  if (j >= e) h = false;
+  if (i >= d)
+    h = false;
+  if (j >= e)
+    h = false;
 
   for (int y = 8 - 2; y >= 0; y--) {
     u[y] = b[r];
@@ -68,10 +68,10 @@ __kernel void A(__global float* const a, __global const float* const b,
 
     float aa = c[0] * v;
     for (int y = 1; y <= 8; y++) {
-      aa += c[y] * (t[y - 1] + u[y - 1] + o[x - y][w] + o[x + y][w] +
-                    o[x][w - y] + o[x][w + y]);
+      aa += c[y] * (t[y - 1] + u[y - 1] + o[x - y][w] + o[x + y][w] + o[x][w - y] + o[x][w + y]);
     }
 
-    if (h) a[s] = aa;
+    if (h)
+      a[s] = aa;
   }
 }

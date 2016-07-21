@@ -1,5 +1,4 @@
-__kernel void A(__global unsigned long* a, __global float* b,
-                __constant float* c, int d, int e) {
+__kernel void A(__global unsigned long* a, __global float* b, __constant float* c, int d, int e) {
   __global float* f = b + e * (d + 1);
   __global float* g = f + e * (d + 1);
 

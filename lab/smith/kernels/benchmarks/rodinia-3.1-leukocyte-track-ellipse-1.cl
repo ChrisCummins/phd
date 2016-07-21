@@ -1,6 +1,4 @@
-__kernel void A(__global float *a, __global float *b, __constant int *c,
-                int __constant *d, __constant int *e, float f, float g, float h,
-                int i, float j) {
+__kernel void A(__global float *a, __global float *b, __constant int *c, int __constant *d, __constant int *e, float f, float g, float h, int i, float j) {
   __local float k[41 * 81];
 
   __local float l[256];
@@ -22,12 +20,14 @@ __kernel void A(__global float *a, __global float *b, __constant int *c,
     int x = u * 256;
     v = (t + x) / r;
     w = (t + x) % r;
-    if (v < q) k[(v * r) + w] = o[(v * r) + w];
+    if (v < q)
+      k[(v * r) + w] = o[(v * r) + w];
   }
   barrier(1);
 
   __local int y;
-  if (t == 0) y = 0;
+  if (t == 0)
+    y = 0;
   barrier(1);
 
   const float z = 1.0f / (float)r;
@@ -50,7 +50,8 @@ __kernel void A(__global float *a, __global float *b, __constant int *c,
       int x = u * 256;
       v = (t + x) * z;
       w += ab;
-      if (w >= r) w -= r;
+      if (w >= r)
+        w -= r;
 
       float ah = 0.0f, ai = 0.0f;
 
@@ -70,19 +71,16 @@ __kernel void A(__global float *a, __global float *b, __constant int *c,
         float at = k[(aj * r) + al] - ai;
         float au = k[(ak * r) + al] - ai;
 
-        float av = A((an * -g) * ac);
-        float aw = A((ao * g) * ac);
-        float ax = A((ap * -f) * ac);
-        float ay = A((aq * f) * ac);
-        float az = A((ar * (f - g)) * ac);
-        float ba = A((as * (f + g)) * ac);
-        float bb = A((at * (-f - g)) * ac);
-        float bc = A((au * (-f + g)) * ac);
+        float av = An((an * -g) * ac);
+        float aw = An((ao * g) * ac);
+        float ax = An((ap * -f) * ac);
+        float ay = An((aq * f) * ac);
+        float az = An((ar * (f - g)) * ac);
+        float ba = An((as * (f + g)) * ac);
+        float bb = An((at * (-f - g)) * ac);
+        float bc = An((au * (-f + g)) * ac);
 
-        ah = ai +
-             (0.5f / (8.0f * 0.5f + 1.0f)) *
-                 (av * an + aw * ao + ax * ap + ay * aq + az * ar + ba * as +
-                  bb * at + bc * au);
+        ah = ai + (0.5f / (8.0f * 0.5f + 1.0f)) * (av * an + aw * ao + ax * ap + ay * aq + az * ar + ba * as + bb * at + bc * au);
 
         float bd = p[(v * r) + w];
         ah -= ((1.0f / (8.0f * 0.5f + 1.0f)) * bd * (ah - bd));
@@ -90,12 +88,14 @@ __kernel void A(__global float *a, __global float *b, __constant int *c,
 
       if (u > 0) {
         x = (u - 1) * 256;
-        if (af < q) k[(af * r) + ag] = l[t];
+        if (af < q)
+          k[(af * r) + ag] = l[t];
       }
       if (u < s - 1) {
         l[t] = ah;
       } else {
-        if (v < q) k[(v * r) + w] = ah;
+        if (v < q)
+          k[(v * r) + w] = ah;
       }
 
       ae += __clc_fabs(ah - ai);
@@ -135,6 +135,7 @@ __kernel void A(__global float *a, __global float *b, __constant int *c,
     int x = u * 256;
     v = (t + x) / r;
     w = (t + x) % r;
-    if (v < q) o[(v * r) + w] = k[(v * r) + w];
+    if (v < q)
+      o[(v * r) + w] = k[(v * r) + w];
   }
 }

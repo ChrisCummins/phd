@@ -1,11 +1,11 @@
-__kernel void A(__global float* a, int b, __global float* c, __global float* d,
-                __global float* e, __global int* f) {
+__kernel void A(__global float* a, int b, __global float* c, __global float* d, __global float* e, __global int* f) {
   int g = get_global_id(0);
   int h = get_local_id(0);
   __local float i;
   __local float j;
 
-  if (0 == h) j = c[0];
+  if (0 == h)
+    j = c[0];
 
   barrier(1);
 
@@ -22,7 +22,8 @@ __kernel void A(__global float* a, int b, __global float* c, __global float* d,
 
   barrier(2);
 
-  if (0 == h) i = e[0];
+  if (0 == h)
+    i = e[0];
 
   barrier(1);
 

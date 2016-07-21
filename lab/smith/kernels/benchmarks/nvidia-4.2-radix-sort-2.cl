@@ -1,5 +1,4 @@
-__kernel void A(__global uint2* a, __global uint* b, __global uint* c, uint d,
-                uint e, uint f, __local uint* g) {
+__kernel void A(__global uint2* a, __global uint* b, __global uint* c, uint d, uint e, uint f, __local uint* g) {
   __local uint h[16];
 
   uint i = get_group_id(0);

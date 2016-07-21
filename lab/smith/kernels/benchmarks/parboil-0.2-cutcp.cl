@@ -1,6 +1,4 @@
-__kernel void A(int a, int b, __global float4 *c, int d, float e, float f,
-                float g, __global float *h, int i, __constant int *j,
-                __constant int4 *k) {
+__kernel void A(int a, int b, __global float4 *c, int d, float e, float f, float g, __global float *h, int i, __constant int *j, __constant int4 *k) {
   __global float4 *l = c + d;
 
   __local float m[32 * 8 * 4];
@@ -11,11 +9,7 @@ __kernel void A(int a, int b, __global float4 *c, int d, float e, float f,
 
   int q;
 
-  n = h +
-      ((i * get_num_groups(1) + get_group_id(1)) * (get_num_groups(0) >> 2) +
-       (get_group_id(0) >> 2)) *
-          512 +
-      (get_group_id(0) & 3) * 128;
+  n = h + ((i * get_num_groups(1) + get_group_id(1)) * (get_num_groups(0) >> 2) + (get_group_id(0) >> 2)) * 512 + (get_group_id(0) & 3) * 128;
 
   float r = (8 * (get_group_id(0) >> 2) + get_local_id(0)) * e;
   float s = (8 * get_group_id(1) + get_local_id(1)) * e;
@@ -43,8 +37,7 @@ __kernel void A(int a, int b, __global float4 *c, int d, float e, float f,
       int aa = o.y + k[q].y;
       int ab = o.z + k[q].z;
 
-      __global float *ac =
-          ((__global float *)l) + (((ab * b) + aa) * a + z) * 32;
+      __global float *ac = ((__global float *)l) + (((ab * b) + aa) * a + z) * 32;
 
       int ad = p & 15;
       int ae = y + x * 8 * 32;
@@ -67,7 +60,8 @@ __kernel void A(int a, int b, __global float4 *c, int d, float e, float f,
         float ah = m[x * 32 + z * 4 + 1];
         float ai = m[x * 32 + z * 4 + 2];
         float aj = m[x * 32 + z * 4 + 3];
-        if (0.f == aj) break;
+        if (0.f == aj)
+          break;
         af = (ag - r) * (ag - r) + (ah - s) * (ah - s) + (ai - t) * (ai - t);
         if (af < f) {
           float ak = (1.f - af * g);

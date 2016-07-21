@@ -1,12 +1,10 @@
-__kernel void A(global float *a, global int *b, global uint *c, const int d,
-                global float *e) {
+__kernel void A(global float *a, global int *b, global uint *c, const int d, global float *e) {
   volatile __local uint f[((1 << 10) * (1))];
 
   const uint g = get_local_id(0) << (32 - (5));
   const int h = (get_local_id(0) >> (5)) * (1 << 10);
   const int i = get_global_size(0);
-  for (int j = get_local_id(0); j < ((1 << 10) * (1)); j += get_local_size(0))
-    f[j] = 0;
+  for (int j = get_local_id(0); j < ((1 << 10) * (1)); j += get_local_size(0)) f[j] = 0;
 
   barrier(1 | 2);
 
@@ -31,6 +29,5 @@ __kernel void A(global float *a, global int *b, global uint *c, const int d,
 
   int p = get_group_id(0) * ((1 << 10) * (1));
 
-  for (int j = get_local_id(0); j < ((1 << 10) * (1)); j += get_local_size(0))
-    c[p + j] = f[j] & 0x07FFFFFFU;
+  for (int j = get_local_id(0); j < ((1 << 10) * (1)); j += get_local_size(0)) c[p + j] = f[j] & 0x07FFFFFFU;
 }

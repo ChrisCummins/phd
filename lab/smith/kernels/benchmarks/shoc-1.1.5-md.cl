@@ -1,6 +1,4 @@
-__kernel void A(__global float4 *a, __global float4 *b, const int c,
-                __global int *d, const float e, const float f, const float g,
-                const int h) {
+__kernel void A(__global float4 *a, __global float4 *b, const int c, __global int *d, const float e, const float f, const float g, const int h) {
   uint i = get_global_id(0);
 
   float4 j = b[i];

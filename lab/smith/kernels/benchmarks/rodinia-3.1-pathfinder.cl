@@ -1,6 +1,4 @@
-__kernel void A(int a, __global int* b, __global int* c, __global int* d, int e,
-                int f, int g, int h, int i, __local int* j, __local int* k,
-                __global int* l) {
+__kernel void A(int a, __global int* b, __global int* c, __global int* d, int e, int f, int g, int h, int i, __local int* j, __local int* k, __global int* l) {
   int m = get_local_size(0);
   int n = get_group_id(0);
   int o = get_local_id(0);

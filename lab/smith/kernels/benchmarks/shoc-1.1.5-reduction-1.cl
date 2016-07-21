@@ -1,5 +1,4 @@
-__kernel void A(__global const float *a, __global float *b, __local float *c,
-                const unsigned int d) {
+__kernel void A(__global const float *a, __global float *b, __local float *c, const unsigned int d) {
   const unsigned int e = get_local_id(0);
   unsigned int f = (get_group_id(0) * (get_local_size(0) * 2)) + e;
   const unsigned int g = get_local_size(0) * 2 * get_num_groups(0);

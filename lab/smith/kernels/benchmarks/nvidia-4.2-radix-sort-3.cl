@@ -13,7 +13,8 @@ __kernel void A(__global uint* a, __global uint* b, uint c, __local uint* d) {
 
     d[f * c + e] = d[g * c + e];
 
-    if (e >= h) d[f * c + e] += d[g * c + e - h];
+    if (e >= h)
+      d[f * c + e] += d[g * c + e - h];
   }
 
   barrier(1);
