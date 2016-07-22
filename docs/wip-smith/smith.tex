@@ -245,7 +245,7 @@ complex,imaginary},%
            {University of Edinburgh}
            {ppetoume@inf.ed.ac.uk}
 \authorinfo{Zheng Wang}
-           {Lancaster Univeristy}
+           {Lancaster University}
            {z.wang@lancaster.ac.uk}
 \authorinfo{Hugh Leather}
            {University of Edinburgh}
@@ -254,19 +254,18 @@ complex,imaginary},%
 \maketitle
 
 \begin{abstract}
-  The quality of performance tuning is bound by the quantity and
-  quality of benchmarks used. Too few benchmarks leads to overfitting;
-  non-representative benchmarks lead to invalid predictions.
+  The quality of predictive performance tuning is bound by the
+  quantity and quality of benchmarks used as training data. Too few
+  benchmarks leads to overfitting; non-representative benchmarks leads
+  to poor heuristics.
 
-  We present a novel methodology for generating OpenCL compute
-  kernels. Given a corpus of example programs, we apply deep learning
-  across the implementation space, learning a language model from
-  which we obtain new kernels through a process of rejection
-  sampling. %
-  %
-  We demonstrate our approach for a state-of-the-art machine learning
-  OpenCL autotuner. With the addition of synthesised compute kernels,
-  we improve the accuracy of machine learning predictions from XXX\%
+  We present a novel methodology for generating representative compute
+  kernels on-demand. Given a corpus of example programs, we apply deep
+  learning across the implementation space, learning a language model
+  from which we obtain new kernels through a process of rejection
+  sampling. We demonstrate our approach for a state-of-the-art machine
+  learning OpenCL autotuner. With the addition of synthesized OpenCL
+  kernels, we improve the accuracy of learned predictions from XXX\%
   to XXX\%, demonstrating up to $X\times$ speedup over the
   hand-selected benchmarks.
 \end{abstract}
@@ -286,6 +285,26 @@ GPUs
 
 \section{Introduction}\label{sec:introduction}
 
+Predictive modeling is a promising method for building effective
+optimization heuristics over large optimization spaces. Whereas
+traditionally optimization heuristics are crafted at the expense of
+months of developer effort, the optimization space is empirically and
+automatically explored to generate a set of training data over which
+machine learning is applied. The learned optimizations often
+outperform human experts~\cite{Ding2015,Hu2015}.
+
+The challenge of predictive modeling is to be explore a sufficiently
+large subset of a given optimization spaces so as to be able to make
+meaning predictions, using some finite combination of programs,
+datasets, and optimizations. In the program space, this means the
+curation and selection of a number of programs to act as
+``representative benchmarks''. The curation of programs is time
+consuming, and as such, suites of pre-packaged benchmarks are in
+widespread use.
+
+% two approaches to selecting benchmarks: benchmark suites and
+% template substitution.
+
 Benchmarking parallel applications is hard. State of the practice is
 lacking~\cite{Belli2015}.
 
@@ -295,15 +314,15 @@ Rodinia~\cite{Che2009}, %
 Parboil~\cite{Stratton2012}, %
 Polybench~\cite{Grauer-Gray2012}, %
 SHOC~\cite{Danalis2010}, %
-AMD SDK~\footnote{\url{http://developer.amd.com/}} %
+AMD SDK\footnote{\url{http://developer.amd.com/}} %
 and NVIDIA
-SDK~\footnote{\url{https://developer.nvidia.com/opencl/}}. %
+SDK\footnote{\url{https://developer.nvidia.com/opencl/}}. %
 TODO: Tease the small number of benchmarks used.
 
 Benchmarking OpenCL~\cite{Tobergte2013a}.
 
 Are benchmarks suites representative? Exploring the full performance
-spectrum~\cite{Ryoo2015}. Characterising workloads of Rodinia and
+spectrum~\cite{Ryoo2015}. Characterizing workloads of Rodinia and
 Parsec~\cite{Che2010}.
 
 In previous works we used stochastic template substitution to generate
@@ -313,25 +332,26 @@ approach is not general purpose, requires laborious human effort, and
 does not guarantee to generate representative benchmarks.
 
 \begin{quote}
-  \emph{RQ1: Can the quality of machine learning predictions be
-    improved with the addition of representative benchmarks?}
+  \emph{RQ1: Does the addition of representative benchmarks aid the
+    quality of machine learning predictions?}
 \end{quote}
 
+\noindent
 For this, we need a methodology for generating novel source
 codes. This leads to the subsequent research question:
 
 \begin{quote}
   \emph{RQ2: Given a program checker and a corpus of example programs,
-    can a language model learn to generate new programs?}
+    can deep learning be used to generate new programs?}
 \end{quote}
 
 \noindent
 The key contributions of this work are as follows:%
 \begin{itemize}
-\item a novel methodology for generating synthetic compute kernels for
-  machine learning-based performance tuning;
+\item a novel methodology for synthesizing compute kernels for machine
+  learning-based performance tuning;
 \item a large scale source code evaluation and re-writing for
-  character-level language modelling using deep learning;
+  character-level language modeling using deep learning;
 \item improved tuning performance of [CGO'13] on hand written OpenCL
   kernels.
 \end{itemize}
@@ -339,45 +359,26 @@ The key contributions of this work are as follows:%
 
 \section{Motivation}\label{sec:motivation}
 
-We surveyed the benchmarking methodologies of GPU research papers from
-top tier conferences between 2013--2016: CGO, HiPC, PACT, and
-PPoPP. By aggregating the sources and quantities of benchmark kernels
-from 27 papers, we find that 79\% of benchmark kernels come from four
-benchmark suites~\footnote{Raw data available at:
-  \url{http://bit.ly/foo}}. Figure~\ref{fig:benchmark-quantity-distribution}
-and Figure~\ref{fig:benchmark-suite-distribution}.
-
-% CGO 2016 - done
-% CGO 2015 - done
-% CGO 2014 - done
-% CGO 2013 - done
-% PLDI 2016 - done
-% PLDI 2015 - done
-% PACT 2015 - done
-% PACT 2014 - done
-% PACT 2013 - done
-% IWOCL 2016 - done
-% IWOCL 2015 - done
-% IWOCL 2014 - done
-% IWOCL 2013 - done
-% HiPC 2016 - done
-% HiPC 2015 - done
-% HiPC 2014 - done
-% HiPC 2013 - done
-% PPoPP 2016 - done
-% PPoPP 2015 - done
-% PPoPP 2014 - done
-% PPoPP 2013 - done
-% LCPC 2016 -
-% LCPC 2015 -
-% LCPC 2014 -
-% LCPC 2013 -
+We surveyed the benchmarking methodologies of research papers in the
+field of GPU performance tuning from top tier conferences between
+2013--2016: CGO, HiPC, PACT, and PPoPP. For each of the 27 papers, we
+noted the quantity and sources of all kernels they used as
+benchmarks\footnote{Anonymized raw data available at:
+  \url{http://bit.ly/XXX}}. %
+Figure~\ref{fig:benchmark-quantity-distribution} shows the
+distribution of kernel quantities. The median number of kernels used
+is 14. Of those, the majority (74\%) come from four benchmark suites:
+Rodinia~\cite{Che2009}, the NVIDIA
+SDK\footnote{\url{https://developer.nvidia.com/opencl/}},
+Parboil~\cite{Stratton2012}, and the AMD
+SDK\footnote{\url{http://developer.amd.com/}}. Figure~\ref{fig:benchmark-suite-distribution}
+shows the breakdown of kernel sources.
 
 \begin{figure}[t]
   \includegraphics[width=\columnwidth]{img/benchmark-quantitiy-distribution}
   \caption{%
     Number of benchmark kernels used in research papers. The median
-    number of benchmark kernels used is XX.%
+    value is 14.%
   }
   \label{fig:benchmark-quantity-distribution}
 \end{figure}
@@ -385,8 +386,8 @@ and Figure~\ref{fig:benchmark-suite-distribution}.
 \begin{figure}[t]
   \includegraphics[width=\columnwidth]{img/benchmark-suite-distribution}
   \caption{%
-    Origins of benchmark kernels used in research papers. 4 benchmark
-    suites account for 79\% of benchmark results.%
+    Origins of benchmark kernels used in research papers. The 4 most
+    frequently used benchmark suites account for 74\% of all kernels.%
   }
   \label{fig:benchmark-suite-distribution}
 \end{figure}
@@ -403,7 +404,7 @@ dataset.
 character-level language model.
 
 
-\paragraph{Synthesising Compute Kernels} Sampling learned model using
+\paragraph{Synthesizing Compute Kernels} Sampling learned model using
 function prototypes, rejection sampler, program checker.
 
 
@@ -420,23 +421,23 @@ function prototypes, rejection sampler, program checker.
 \section{Assembling Representative Benchmarks}\label{sec:}
 
 We collect a large code corpus from
-GitHub~\footnote{\url{https://github.com/}}. This took 2 days on a
+GitHub\footnote{\url{https://github.com/}}. This took 2 days on a
 single machine.
 
 Alternative source of data: \emph{GHTorrent}~\cite{Gousios2014a}.
 
 Rejection sampling to remove noise from dataset. Check that compiles.
 
-Minimising non-functional variance using clang libraries and tools:
+Minimizing non-functional variance using clang libraries and tools:
 \begin{itemize}
 \item Pre-process source to remove macros and conditional
   compilation.
-\item Lossless vocabulary size reduction with AST rewriting of
+\item Loss-less vocabulary size reduction with AST rewriting of
   identifiers.
 \item Automatically enforcing code style with formatting tools.
 \end{itemize}
 
-Proprocessing pipeline: Implemented on
+Pre-processing pipeline: Implemented on
 LLVM\footnote{\url{http://llvm.org/}},
 clang\footnote{\url{http://clang.llvm.org/}}, and
 libclc\footnote{\url{http://libclc.llvm.org/}}.
@@ -561,56 +562,65 @@ TODO
 
 \section{Experimental Methodology}\label{sec:evaluation}
 
+To evaluate the effectiveness
+
+we reproduce from \citeauthor{Grewe2013}~\cite{Grewe2013}.
 
 \subsection{Experimental Setup}\label{subsec:}
 
-\paragraph{Platforms} 2x GPUs, 1x CPU. Table~\ref{tab:platforms}
+\paragraph{Platforms} We evaluate our approach on two 64-bit CPU-GPU
+systems, detailed in Table~\ref{tab:platforms}. Platform A uses
+OpenSUSE 12.3 and GCC 4.7.2; Platform B uses Ubuntu 14.04 and GCC
+x. The AMD implementation of OpenCL 1.2 is used for both.
 
-whz4: OpenSUSE 12.3, GCC 4.7.2, NVIDIA OpenCL 1.2.
-codeplay: Ubuntu 14.04, GCC ???, AMD OpenCL ???.
 
-\begin{table}% tab:platforms
-\scriptsize
-\centering
-\begin{tabular}{l l l l}
-  \toprule
-  & \textbf{Intel CPU} & \textbf{NVIDIA GPU} & \textbf{AMD GPU} \\
-  \midrule
-  \textbf{Model} & Core i7-2600 & GTX TITAN & Radeon 7970 \\
-  \textbf{Frequency} & 3.6 GHz & 980 MHz & 1000 MHz \\
-  \textbf{\#. Cores} & 8 & 2688 & 2048 \\
-  \textbf{Memory} & 8 GB & 6 GB & 3 GB \\
-  \textbf{Throughput} & 100 GFLOPS & 4494 GFLOPS & 3789 GFLOPS \\
-  \bottomrule
-\end{tabular}
-\caption{Experimental platforms.}
-\label{tab:platforms}
-\end{table}
+\begin{table*}% tab:platforms
+  \scriptsize
+  \centering
+  \begin{tabular}{l c c c c}%C{1.65cm} C{1.65cm} C{1.65cm} C{1.65cm}}
+    \toprule
+    & \multicolumn{2}{c}{Platform A} & \multicolumn{2}{c}{Platform B} \\
+    % & \textbf{CPU} & \textbf{GPU} & \textbf{CPU} & \textbf{GPU} \\
+    & \textbf{Intel x} & \textbf{AMD Tahiti 7970} & \textbf{Intel x} & \textbf{AMD HD 5450} \\
+    \midrule
+    \textbf{Frequency} & x GHz & 1000 MHz & x GHz & 650 MHz \\
+    \textbf{\#. Cores} & x & x & 8 & 80 \\
+    \textbf{Memory} & 8 GB & 3 GB & x & x \\
+    \textbf{Throughput} & x GFLOPS & x GFLOPS & x GFLOPS & 104 GFLOPS
+    \\
+    % \midrule
+    % \textbf{Operating System} & \multicolumn{2}{c}{OpenSUSE 12.3} & \multicolumn{2}{c}{Ubuntu 14.04} \\
+    % \textbf{Compiler} & \multicolumn{2}{c}{GCC 4.7.2} & \multicolumn{2}{c}{GCC x} \\
+    \bottomrule
+  \end{tabular}
+  \caption{Experimental platforms.}
+  \label{tab:platforms}
+\end{table*}
 
 
 \paragraph{Benchmarks}
 
-\begin{table}% tab:benchmarks
-\scriptsize
-\centering
-\begin{tabular}{l r R{2cm} R{2cm}}
-  \toprule
-  & \textbf{Version} & \textbf{\#. seed kernels} & \textbf{\#. generated kernels}\\
-  \midrule
-  \textbf{NPB~\cite{Seo2011}} & 1.0.3 & x & x \\
-  \textbf{Parboil~\cite{Stratton2012}} & 0.2 & 7 & x \\
-  \textbf{PolyBench~\cite{Grauer-Gray2012}} & 1.0 & 30 & x \\
-  \textbf{Rodinia~\cite{Che2009}} & 3.1 & 50 & x \\
-  \textbf{SHOC~\cite{Danalis2010}} & 1.1.5 & 53 & x \\
-  \textbf{AMD SDK} & 3.0 & x & x \\
-  \textbf{NVIDIA SDK} & 4.2 & 36 & x \\
-  \textbf{Synthetic} & - & - & x \\
-  \bottomrule
-\end{tabular}
-\caption{%
-  Benchmark kernels used.
-}
-\label{tab:benchmarks}
+\begin{table}% tab:%benchmarks
+  \scriptsize
+  \centering
+  \begin{tabular}{l r R{2cm} R{2cm}}
+    \toprule
+    & \textbf{Version} & \textbf{\#. seed kernels} & \textbf{\#. generated kernels}\\
+    \midrule
+    % \textbf{NPB~\cite{Seo2011}} & 1.0.3 & x & x \\
+    \textbf{Parboil~\cite{Stratton2012}} & 0.2 & 7 & x \\
+    % \textbf{PolyBench~\cite{Grauer-Gray2012}} & 1.0 & 30 & x \\
+    \textbf{Rodinia~\cite{Che2009}} & 3.1 & 50 & x \\
+    % \textbf{SHOC~\cite{Danalis2010}} & 1.1.5 & 53 & x \\
+    \textbf{AMD SDK} & 3.0 & x & x \\
+    \textbf{NVIDIA SDK} & 4.2 & 36 & x \\
+    \textbf{Synthetic} & - & - & x \\
+    \bottomrule
+  \end{tabular}
+  \caption{%
+    Benchmark kernels used.
+  }
+  \label{tab:benchmarks}
 \end{table}
 
 Table~\ref{tab:benchmarks}. Notes: Parboil: opencl\_base
@@ -632,8 +642,6 @@ rodinia nearest neighour.
 
 
 \paragraph{Datasets}
-
-From Parboil.
 
 
 \subsection{Methodology}
@@ -659,7 +667,7 @@ GitHub, and generated synthesis.
 \subsection{Qualitatively Evaluating Generated Code}\label{subsec:}
 
 Human or
-Robot~\footnote{\url{http://humanorrobot.uk/game?g=opencl&m=nitt}}. Related
+Robot\footnote{\url{http://humanorrobot.uk/game?g=opencl&m=nitt}}. Related
 works which have used Non-Interactive Turing
 Tests~\cite{Gao2015a,Zhang2016}.
 
