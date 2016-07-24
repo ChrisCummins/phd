@@ -266,20 +266,21 @@ complex,imaginary},%
 \maketitle
 
 \begin{abstract}
-  The quality of predictive performance tuning is bound by the
+  The quality of predictive performance modeling is bound by the
   quantity and quality of benchmarks used as training data. Too few
   benchmarks leads to overfitting; non-representative benchmarks leads
-  to poor heuristics.
-
-  We present a novel methodology for generating representative compute
-  kernels on-demand. Given a corpus of example programs, we apply deep
-  learning across the implementation space, learning a language model
-  from which we obtain new kernels through a process of rejection
-  sampling. We demonstrate our approach for a state-of-the-art machine
-  learning OpenCL autotuner. With the addition of synthesized OpenCL
-  kernels, we improve the accuracy of learned predictions from XXX\%
-  to XXX\%, demonstrating up to $X\times$ speedup over the
-  hand-selected benchmarks.
+  to poor heuristics. This paper presents a novel methodology for
+  generating representative benchmarks which solves two open issues
+  for predictive modeling: the limited quantity of benchmarks
+  available, and the need to behavior that is representative of common
+  use cases. The new approach applies deep learning across the
+  implementation space of a corpus of example programs, learning a
+  language model from which we obtain new programs through a process
+  of rejection sampling. We demonstrate this approach for a
+  state-of-the-art machine learning OpenCL autotuner. With the
+  addition of synthesized compute kernels, we improve the accuracy of
+  learned predictions from XXX\% to XXX\%, demonstrating up to
+  $X\times$ speedup over the hand-selected benchmarks.
 \end{abstract}
 
 % \category{CR-number}{subcategory}{third-level}
@@ -297,94 +298,126 @@ GPUs
 
 \section{Introduction}\label{sec:introduction}
 
-Predictive modeling is a promising method for building effective
-optimization heuristics over large optimization spaces. Whereas
+Predictive modeling is an effective method for building heuristics
+over large optimization spaces which often exceeds human experts and
+reduces development
+time~\cite{Micolet2016,Wen2015,Magni2014,Falch2015,Cummins2016}. Whereas
 traditionally optimization heuristics are crafted at the expense of
-months of developer effort, the optimization space is empirically and
-automatically explored to generate a set of training data over which
-machine learning is applied. The learned optimizations often
-outperform human experts~\cite{Ding2015,Hu2015}.
+months of developer effort, with predictive modeling, the optimization
+space is empirically and automatically explored to generate a set of
+training data over which machine learning is applied.
 
-The challenge of predictive modeling is to be explore a sufficiently
-large subset of a given optimization spaces so as to be able to make
-meaning predictions, using some finite combination of programs,
-datasets, and optimizations. In the program space, this means the
-curation and selection of a number of programs to act as
-``representative benchmarks''. The curation of programs is time
-consuming, and as such, suites of pre-packaged benchmarks are in
-widespread use.
+The challenge of predictive modeling is to explore a sufficiently
+large subset of a given optimization space so as to be able to make
+meaningful predictions. This is achieved by collecting performance
+data from some finite combination of programs, datasets, and
+optimizations. In the program space, this means the curation and
+selection of a number of programs to act as ``representative
+benchmarks.'' The curation of representative benchmarks is challenging
+and time consuming. As such, suites of of pre-packaged benchmarks are
+in widespread use. The quality and quantity of these benchmark suites
+provides an upper bound on the quality of the learned
+heuristics. Using too few benchmarks leads to heuristics which overfit
+the properties of specific programs; using unsuitable benchmarks leads
+to heuristics which generalize poorly over other points in the program
+space. In this paper we propose a new technique which aims to address
+shortcomings of the current state-of-practice by allowing
+representative benchmarks to be synthesized on-demand.
+
+Our idea is to apply deep learning over a large corpus of compute
+kernels mined from GitHub in order to learn a language distribution
+over the implementation space. We then sample from this learned
+distribution to generate new kernels on-demand, validating the
+synthesized kernels using a process of rejection sampling.
+%
+% \paragraph{Research Questions}
+We frame our work in terms of two research questions. The first
+question addressed is:
+
+\begin{quote}
+  \emph{RQ1: Given a program checker and a corpus of example programs,
+    can deep learning be used to synthesize new programs?}
+\end{quote}
+
+\noindent
+Where a \emph{program checker} accepts as input a source code in the
+language of the example programs, and returns whether or not it is
+well formed (i.e. syntactically correct and free from undefined
+behavior). This second question addressed in this paper is:
+
+\begin{quote}
+  \emph{RQ2: Can the performance of predictive modeling be improved
+    with the addition of synthesized programs?}
+\end{quote}
+
+\noindent
+To answer this question we use synthesized compute kernels to the
+augment the training set of a state-of-the-art autotuner for OpenCL
+kernels, in order to test the change in predictive modeling accuracy.
+
+% For predictive modeling, we are interested not just in fully
+% exploring the performance spectrum (this has been addressed in the
+% literature~\cite{Ryoo2015}), but in weighting the exploration of the
+% performance space towards the most frequently used patterns in
 
 % two approaches to selecting benchmarks: benchmark suites and
 % template substitution.
 
-Benchmarking parallel applications is hard. State of the practice is
-lacking~\cite{Belli2015}.
-
-OpenCL benchmark suites:
-% Parsec~\cite{Bienia2009},
-Rodinia~\cite{Che2009}, %
-Parboil~\cite{Stratton2012}, %
-Polybench~\cite{Grauer-Gray2012}, %
-SHOC~\cite{Danalis2010}, %
-AMD SDK\footnote{\url{http://developer.amd.com/}} %
-and NVIDIA
-SDK\footnote{\url{https://developer.nvidia.com/opencl/}}. %
-TODO: Tease the small number of benchmarks used.
-
-Benchmarking OpenCL~\cite{Tobergte2013a}.
-
-Are benchmarks suites representative? Exploring the full performance
-spectrum~\cite{Ryoo2015}. Characterizing workloads of Rodinia and
-Parsec~\cite{Che2010}.
-
-In previous works we used stochastic template substitution to generate
-stencil benchmarks for
-autotuning~\cite{Cummins2015a,Cummins2016}. This template based
-approach is not general purpose, requires laborious human effort, and
-does not guarantee to generate representative benchmarks.
-
-\begin{quote}
-  \emph{RQ1: Does the addition of representative benchmarks aid the
-    quality of machine learning predictions?}
-\end{quote}
+% NOCITE: Benchmarking OpenCL~\cite{Tobergte2013a}.
 
 \noindent
-For this, we need a methodology for generating novel source
-codes. This leads to the subsequent research question:
-
-\begin{quote}
-  \emph{RQ2: Given a program checker and a corpus of example programs,
-    can deep learning be used to generate new programs?}
-\end{quote}
-
-\noindent
-The key contributions of this work are as follows:%
+\paragraph{Contributions} This paper makes the following
+contributions:%
 \begin{itemize}
-\item a novel methodology for synthesizing compute kernels for machine
-  learning-based performance tuning;
-\item a large scale source code evaluation and re-writing for
-  character-level language modeling using deep learning;
-\item improved tuning performance of [CGO'13] on hand written OpenCL
-  kernels.
+\item To the best of our knowledge, we are the first to apply machine
+  learning over open source repositories in order to model the
+  patterns of usage in a programming language.
+\item Our novel system for synthesizing representative compute kernels
+  using deep learning solves two issues for representative
+  benchmarking: the limited quantity of benchmarks available, and the
+  need to behavior that is representative of common use cases.
+\item Experimental results show that the performance of a
+  state-of-the-art autotuner is improved by XXX\% with the addition of
+  benchmarks generated using our system.
 \end{itemize}
 
 
 \section{Motivation}\label{sec:motivation}
 
-We surveyed the benchmarking methodologies of research papers in the
-field of GPU performance tuning from top tier conferences between
-2013--2016: CGO, HiPC, PACT, and PPoPP. For each of the 27 papers, we
-noted the quantity and sources of all kernels they used as
-benchmarks\footnote{Anonymized raw data available at:
-  \url{http://bit.ly/XXX}}. %
+% OpenCL benchmark suites:
+% % Parsec~\cite{Bienia2009},
+% Rodinia~\cite{Che2009}, %
+% Parboil~\cite{Stratton2012}, %
+% Polybench~\cite{Grauer-Gray2012}, %
+% SHOC~\cite{Danalis2010}, %
+% AMD SDK\footnote{\url{http://developer.amd.com/}} %
+% and NVIDIA
+% SDK\footnote{\url{https://developer.nvidia.com/opencl/}}. %
+
+To motivate the need for compute kernel synthesis we surveyed the
+benchmarking methodologies of research papers in the field of GPGPU
+performance tuning from top tier conferences between 2013--2016: CGO,
+HiPC, PACT, and PPoPP. We selected 27 papers, and noted the quantity
+and sources of all kernels used as benchmarks for
+each\footnote{Anonymized raw data available at:
+  \url{http://bit.ly/TODO}}. %
+
 Figure~\ref{fig:benchmark-quantity-distribution} shows the
 distribution of kernel quantities. The median number of kernels used
 is 14. Of those, four benchmark suites account for 74\% of all kernels
-used: Rodinia~\cite{Che2009}, the NVIDIA
+used. In descending order of popularity, they are:
+Rodinia~\cite{Che2009}, the NVIDIA
 SDK\footnote{\url{https://developer.nvidia.com/opencl/}},
 Parboil~\cite{Stratton2012}, and the AMD
 SDK\footnote{\url{http://developer.amd.com/}}. Figure~\ref{fig:benchmark-suite-distribution}
 shows the breakdown of kernel sources.
+
+TODO: state-of-the-art is laborious and error prone stochastic
+template substitution.
+
+Note that our survey was directed only at the selection of programs
+used as benchmarks. For an excellent review of state of practice in
+reporting benchmark results, see~\cite{Belli2015}.
 
 \begin{figure}%[t]
   \includegraphics[width=\columnwidth]{img/benchmark-quantitiy-distribution}
@@ -408,7 +441,7 @@ shows the breakdown of kernel sources.
   %   \end{axis}
   % \end{tikzpicture}
   \caption{%
-    Number of benchmark kernels used in GPU research papers. The
+    Number of benchmark kernels used in GPGPU research papers. The
     median value is 14.%
   }
   \label{fig:benchmark-quantity-distribution}
@@ -417,14 +450,14 @@ shows the breakdown of kernel sources.
 \begin{figure}%[t]
   \includegraphics[width=\columnwidth]{img/benchmark-suite-distribution}
   \caption{%
-    Origins of benchmark kernels used in GPU research papers. The 4
+    Origins of benchmark kernels used in GPGPU research papers. The 4
     most frequently used benchmark suites account for 74\% of all
-    kernels.%
+    kernels used.%
   }
   \label{fig:benchmark-suite-distribution}
 \end{figure}
 
-\section{Generating Compute Kernels}\label{sec:}
+\section{Synthesizing Compute Kernels}\label{sec:}
 
 Overview of methodology. Figure~\ref{fig:structure}.
 
@@ -450,7 +483,7 @@ function prototypes, rejection sampler, program checker.
 \end{figure*}
 
 
-\section{Assembling Representative Benchmarks}\label{sec:}
+\section{Training Corpus Selection}\label{sec:}
 
 We collect a large code corpus from
 GitHub\footnote{\url{https://github.com/}}. This took 2 days on a
@@ -527,7 +560,8 @@ applications from speech recognition to image captioning. No features.
 
 LSTM
 implementation\footnote{\url{https://github.com/jcjohnson/torch-rnn}}. LSTM
-network: 2048 nodes, 3 layers, sequence length 200, batch size 50.
+network: 2048 nodes, 3 layers, sequence length 200, batch size
+50. Approximately 1 week training on single machine.
 
 TODO: Plot distribution of representativeness from benchmark suites to
 GitHub language model.
@@ -544,6 +578,8 @@ Rejection sampler.
 Undefined behavior.
 
 Driver program (and dataset).
+
+Approximately XX days on single machine.
 
 \lstset{language=[OpenCL]C}
 \begin{lstlisting}[%
@@ -700,7 +736,8 @@ Leave-one-out cross validation.
 
 \subsection{Generated Compute Kernels}\label{subsec:}
 
-What's the ratio of ``good'' code? How long did it take to sample?
+Evaluating \emph{RQ1}. What's the ratio of ``good'' code? How long did
+it take to sample?
 
 TODO: Plot distribution of static features from benchmark suites,
 GitHub, and generated synthesis.
@@ -716,7 +753,7 @@ Tests~\cite{Gao2015a,Zhang2016}.
 
 \subsection{Predicting Execution Device}\label{subsec:}
 
-Classification accuracy.
+Evaluating \emph{RQ2}. Classification accuracy.
 
 
 \subsection{Comparison with State-of-the-Art}\label{subsec:}
@@ -727,6 +764,15 @@ benchmarks.
 
 \section{Related Work}\label{sec:related-work}
 
+Are benchmarks suites representative? Exploring the full performance
+spectrum~\cite{Ryoo2015}. Characterizing workloads of Rodinia and
+Parsec~\cite{Che2010}.
+
+In previous work we used stochastic template substitution to generate
+stencil benchmarks for autotuning~\cite{Cummins2015a}. This template
+based approach is not general purpose, requires laborious human
+effort, and does not guarantee to generate representative benchmarks.
+
 Misc: Verifying GPU kernels~\cite{Betts2012}. Simulating OpenCL
 kernels~\cite{Price2015}.
 
@@ -736,35 +782,23 @@ Stencils~\cite{Garvey2015b}, \cite{Cummins2015a}. Input sensitive
 autotuning~\cite{Ding2015}. Benchmark reduction~\cite{Castro2014}.
 
 
-\subsection{Representative Benchmarking}
-
-Designing workloads~\cite{Eeckhout2002}. Characterization of NAS
+\paragraph{Representative Benchmarking} Designing
+workloads~\cite{Eeckhout2002}. Characterization of NAS
 Opencl~\cite{Seo2011}. Characterization of
 Rodinia~\cite{Che2010,Ryoo2015}.
 
 
-\subsection{Program Generation}
-
-
-\paragraph{Template-based} GENESIS~\cite{Chiu2015}.
-
-
-\paragraph{Grammar-based} Fuzzers:
-Csmith~\cite{Yang2012}, CLsmith~\cite{Pflanzer2016}.
-
-
-\paragraph{Mutation-based} JVM fuzzing~\cite{Chena}.
-
-
-\paragraph{Goal-oriented} Generating linear
+\paragraph{Program Generation} Template-based:
+GENESIS~\cite{Chiu2015}.  Grammar-based: Csmith~\cite{Yang2012},
+CLsmith~\cite{Pflanzer2016}. Mutation-based: JVM
+fuzzing~\cite{Chena}. Goal-oriented: Generating linear
 transforms~\cite{Voronenko2009}, synthesizing MapReduce
 programs~\cite{Smith}, generating data structure
 implementations~\cite{Loncaric2016}.
 
 
-\subsection{Mining Source Codes}
-
-Neural Networks for representing programs~\cite{Bunel}.
+\paragraph{Mining Source Codes} Neural Networks for representing
+programs~\cite{Bunel}.
 
 Promises and perils of mining GitHub~\cite{Bird2009}.
 
@@ -778,10 +812,8 @@ software engineering
 practices~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}.
 
 
-\subsection{Deep Learning}
-
-This is the first application of deep learning for synthesizing
-programs.
+\paragraph{Deep Learning} This is the first application of deep
+learning for synthesizing programs.
 
 Deep Learning has been successful for synthesizing graphics
 textures~\cite{Gatys2015a}, image captions~\cite{Vinyals}, colors for
