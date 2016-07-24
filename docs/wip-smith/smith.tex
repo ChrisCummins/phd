@@ -73,6 +73,10 @@
 % Reduce the font size of the bibliography:
 \renewcommand{\bibfont}{\normalfont\scriptsize}
 
+% No italics in \paragraph{title} style:
+\usepackage{titlesec}
+\titleformat*{\paragraph}{\bfseries}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Figures, footnotes and listings %%
@@ -125,6 +129,11 @@ complex,imaginary},%
 
 \algrenewcommand\ALG@beginalgorithmic{\footnotesize}
 
+% Plots:
+\usepackage{filecontents}
+\usepackage{pgfplots, pgfplotstable}
+\usepgfplotslibrary{statistics}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 %% Graphics and maths %%
@@ -148,6 +157,9 @@ complex,imaginary},%
                         minimum height=4em,
                         inner sep=.2cm]
 \tikzstyle{line}     = [draw, -latex']
+
+% Smaller font:
+\pgfplotsset{every tick label/.append style={font=\scriptsize}}
 
 % Vector notation, e.g. \vv{x}:
 %
@@ -367,27 +379,47 @@ benchmarks\footnote{Anonymized raw data available at:
   \url{http://bit.ly/XXX}}. %
 Figure~\ref{fig:benchmark-quantity-distribution} shows the
 distribution of kernel quantities. The median number of kernels used
-is 14. Of those, the majority (74\%) come from four benchmark suites:
-Rodinia~\cite{Che2009}, the NVIDIA
+is 14. Of those, four benchmark suites account for 74\% of all kernels
+used: Rodinia~\cite{Che2009}, the NVIDIA
 SDK\footnote{\url{https://developer.nvidia.com/opencl/}},
 Parboil~\cite{Stratton2012}, and the AMD
 SDK\footnote{\url{http://developer.amd.com/}}. Figure~\ref{fig:benchmark-suite-distribution}
 shows the breakdown of kernel sources.
 
-\begin{figure}[t]
+\begin{figure}%[t]
   \includegraphics[width=\columnwidth]{img/benchmark-quantitiy-distribution}
+  % \begin{tikzpicture}
+  %   \tikzstyle{every node}=[font=\scriptsize]
+  %   \begin{axis}[
+  %     width=\columnwidth,
+  %     height=4cm,
+  %     ybar,
+  %     ymin=0,
+  %     xlabel={\#. benchmark kernels},
+  %     ylabel={\#. papers},
+  %     ],
+  %     \addplot +[
+  %     hist={
+  %       bins=5,
+  %       data min=0,
+  %       data max=50
+  %     }
+  %     ] table [y index=0] {data/benchmark-quantities.csv};
+  %   \end{axis}
+  % \end{tikzpicture}
   \caption{%
-    Number of benchmark kernels used in research papers. The median
-    value is 14.%
+    Number of benchmark kernels used in GPU research papers. The
+    median value is 14.%
   }
   \label{fig:benchmark-quantity-distribution}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}%[t]
   \includegraphics[width=\columnwidth]{img/benchmark-suite-distribution}
   \caption{%
-    Origins of benchmark kernels used in research papers. The 4 most
-    frequently used benchmark suites account for 74\% of all kernels.%
+    Origins of benchmark kernels used in GPU research papers. The 4
+    most frequently used benchmark suites account for 74\% of all
+    kernels.%
   }
   \label{fig:benchmark-suite-distribution}
 \end{figure}
@@ -408,7 +440,7 @@ character-level language model.
 function prototypes, rejection sampler, program checker.
 
 
-\begin{figure*}[t]
+\begin{figure*}%[t]
   \centering
   \input{fig/structure}
   \caption{%
@@ -439,20 +471,23 @@ Minimizing non-functional variance using clang libraries and tools:
 
 Pre-processing pipeline: Implemented on
 LLVM\footnote{\url{http://llvm.org/}},
-clang\footnote{\url{http://clang.llvm.org/}}, and
-libclc\footnote{\url{http://libclc.llvm.org/}}.
+clang%\footnote{\url{http://clang.llvm.org/}}
+, and libclc%\footnote{\url{http://libclc.llvm.org/}}
+.
 
-\begin{figure}[t]
+\begin{figure}%[t]
 \includegraphics[width=\columnwidth]{img/undeclared-identifiers.png}
 \caption{%
-  Distribution of undeclared identifier errors. 1023 unique
-  identifiers. The 60 most frequent of these account for 50\% of
-  errors.%
+  Undeclared identifier occurrences in OpenCL sources.
+  % all 1023 unique identifiers in the OpenCL source codes set. The most
+  % frequently used undeclared identifier is \texttt{LOCAL\_SIZE\_LIMIT}
+  % (462 occurrences). The 60 most used identifiers account for 50\% of
+  % errors.%
 }
 \end{figure}
 
-Compile to LLVM bytecode using libclc. Through analysing 148k lines of
-compilation erros, we created a shim header to include common missing
+Compile to LLVM byte code using libclc. Through analyzing 148k lines of
+compilation errors, we created a shim header to include common missing
 things. Include shim header which adds inferred values for common
 typedefs (e.g. FLOAT\_T to float), and best guesses for common
 constants (e.g. WGSIZE). Listing~\ref{lst:shim}
@@ -464,6 +499,8 @@ be harmlessly redefined within files.
 
 \lstset{language=[OpenCL]C}
 \begin{lstlisting}[%
+  float,%
+%  floatplacement=t,%
   frame=single,%
   caption=The shim header file.
 ]
@@ -482,7 +519,6 @@ typedef unsigned int INDEX_TYPE;
 #define WG_SIZE 128
 ... (185 more)
 \end{lstlisting}
-
 
 \section{Learning the Implementation Space}\label{sec:ml}
 
@@ -505,12 +541,14 @@ Sample kernels with balanced brackets.
 
 Rejection sampler.
 
-Undefined behaviour.
+Undefined behavior.
 
 Driver program (and dataset).
 
 \lstset{language=[OpenCL]C}
 \begin{lstlisting}[%
+  float,%
+%  floatplacement=t,%
   frame=single,%
   caption=Parboil SGEMM benchmark.
 ]
@@ -532,6 +570,8 @@ __kernel void mysgemmNT( __global const float *A, int lda, __global const float 
 
 \lstset{language=[OpenCL]C}
 \begin{lstlisting}[%
+  float,%
+%  floatplacement=t,%
   frame=single,%
   caption=Transformed SGEMM implementation from preprocessing pipeline.
 ]
@@ -553,6 +593,8 @@ __kernel void A(__global const float *a, int b, __global const float *c, int d,
 
 \lstset{language=[OpenCL]C}
 \begin{lstlisting}[%
+  float,%
+%  floatplacement=t,%
   frame=single,%
   caption=Example kernel synthesised from SGEMM function prototype.
 ]
@@ -630,7 +672,7 @@ platform-specific extension).
 
 Rewrote typedefs.
 
-Limitation of system: can't use synthesise kernels with struct
+Limitation of system: can't use synthesize kernels with struct
 arguments. Ignored kernels with struct args: %
 parboil-bfs, %
 parboil-mri-q, %
@@ -638,7 +680,7 @@ rodinia-b-tree, %
 rodinia-dwt2d, %
 rodinia-heartwall, %
 rodinia-lavamd, %
-rodinia nearest neighour.
+rodinia nearest neighbor.
 
 
 \paragraph{Datasets}
@@ -696,8 +738,8 @@ autotuning~\cite{Ding2015}. Benchmark reduction~\cite{Castro2014}.
 
 \subsection{Representative Benchmarking}
 
-Designing worklaods~\cite{Eeckhout2002}. Characterisation of NAS
-Opencl~\cite{Seo2011}. Characterisation of
+Designing workloads~\cite{Eeckhout2002}. Characterization of NAS
+Opencl~\cite{Seo2011}. Characterization of
 Rodinia~\cite{Che2010,Ryoo2015}.
 
 
@@ -715,8 +757,8 @@ Csmith~\cite{Yang2012}, CLsmith~\cite{Pflanzer2016}.
 
 
 \paragraph{Goal-oriented} Generating linear
-transforms~\cite{Voronenko2009}, synthesising MapReduce
-programs~\cite{Smith}, genearting data structure
+transforms~\cite{Voronenko2009}, synthesizing MapReduce
+programs~\cite{Smith}, generating data structure
 implementations~\cite{Loncaric2016}.
 
 
@@ -727,21 +769,21 @@ Neural Networks for representing programs~\cite{Bunel}.
 Promises and perils of mining GitHub~\cite{Bird2009}.
 
 Mining source code repositories at large
-scale~\cite{Allamanis2013a,White2015a}. Machine learning for analysing
+scale~\cite{Allamanis2013a,White2015a}. Machine learning for analyzing
 code~\cite{Allamanis2014a,Raychev}. Aiding software
 engineering~\cite{Allamanis2014,Bird2015}.
 
 Previous studies have involved data mining of GitHub for analysis of
 software engineering
-practises~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}.
+practices~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}.
 
 
 \subsection{Deep Learning}
 
-This is the first application of deep learning for synthesising
+This is the first application of deep learning for synthesizing
 programs.
 
-Deep Learning has been successful for synthesising graphics
+Deep Learning has been successful for synthesizing graphics
 textures~\cite{Gatys2015a}, image captions~\cite{Vinyals}, colors for
 black and white photographs~\cite{Zhang2016}, and artistic
 style~\cite{Gatys2015}.
@@ -759,8 +801,7 @@ Future work: probabilistic grammar.
 
 This work was supported by the UK Engineering and Physical Sciences
 Research Council under grants EP/L01503X/1 (CDT in Pervasive
-Parallelism),\\* EP/H044752/1 (ALEA), and\\* EP/M015793/1 (DIVIDEND).
-
+Parallelism), EP/H044752/1 (ALEA), and EP/M015793/1 (DIVIDEND).
 
 \label{bibliography}
 \printbibliography
