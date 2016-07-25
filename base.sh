@@ -14,6 +14,6 @@ benchmarks=(
 for benchmark in ${benchmarks[@]}; do
     echo "$(tput bold)$benchmark$(tput sgr0) ..."
     cd $benchmark
-    $0
+    $0 $@
     cd ..
 done

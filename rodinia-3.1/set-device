@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -e
+
+device=$1
+
+usage_and_fail() {
+    echo "$0 <CPU|GPU>" >&2
+    exit 1
+}
+
+if [[ -z "$1" ]]; then
+    usage_and_fail
+fi
+
+if [[ $device != "GPU" ]] && [[ $device != "CPU" ]]; then
+    echo "$0: unrecognised device type '$device'!" >&2
+    usage_and_fail
+fi
+
+for f in $(find opencl -type f); do
+    grep CL_DEVICE_TYPE $f &>/dev/null && {
+        sed -E -i 's/CL_DEVICE_TYPE_[A-Z]+/CL_DEVICE_TYPE_'$device'/g' $f
+        echo modified $f ...
+    }
+done
+
+./compile
