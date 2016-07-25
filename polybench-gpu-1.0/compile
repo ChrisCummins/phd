@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -eu
+
+benchmarks=(
+    2DCONV
+    2MM
+    3DCONV
+    3MM
+    ATAX
+    BICG
+    CORR
+    COVAR
+    # BAD: FDTD-2D
+    GEMM
+    GESUMMV
+    GRAMSCHM
+    MVT
+    SYR2K
+    SYRK
+)
+
+cd OpenCL
+
+for benchmark in ${benchmarks[@]}; do
+    echo "$(tput bold)$benchmark$(tput sgr0) ..."
+    cd $benchmark
+    make
+    cd ..
+done

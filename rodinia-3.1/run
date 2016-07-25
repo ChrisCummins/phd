@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -u
+
+ROOT=$(pwd)
+
+rm -rf logs
+mkdir -pv logs/bad logs/good
+
+cd opencl
+
+for dir in $(ls | sort); do
+  echo -n "$(tput bold)rodinia-3.1 $dir$(tput sgr0) ... "
+  cd $dir
+  $SHELL run &> $ROOT/log.txt
+  ret=$?
+
+  if [[ $ret -ne 0 ]]; then
+      echo fail
+      mv $ROOT/log.txt $ROOT/logs/bad/$dir
+  else
+    echo ok
+    mv $ROOT/log.txt $ROOT/logs/good/$dir
+  fi
+  cd ..
+done

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -eu
+
+cd samples/opencl/cl/1.x
+./run-good.sh

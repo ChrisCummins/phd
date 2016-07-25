@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -eu
+
+./bin/shocdriver -opencl

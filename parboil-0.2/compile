@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -eux
+
+find . -name '*.o' -exec rm -v {} \;
+
+./parboil compile bfs opencl_base
+./parboil compile cutcp opencl_base
+./parboil compile histo opencl_base
+./parboil compile lbm opencl_base
+./parboil compile mri-gridding opencl_base
+./parboil compile mri-q opencl_base
+./parboil compile sad opencl_base
+./parboil compile sgemm opencl_base
+./parboil compile spmv opencl_base
+./parboil compile stencil opencl_base
+./parboil compile tpacf opencl_base

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+./configure --with-opencl --without-cuda --without-mpi
+make
+make install

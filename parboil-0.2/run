@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -eu
+
+run() {
+    local benchmark=$1
+    local dataset=$2
+
+    echo "$(tput bold)parboil $benchmark $dataset$(tput sgr0) ..."
+    set +e
+    ./parboil run $benchmark opencl_base $dataset
+    ret=$?
+    set -e
+
+    if [[ $ret -ne 0 ]]; then
+        echo "EXIT: $ret" >&2
+    fi
+}
+
+run bfs 1M
+run bfs NY
+run bfs SF
+run bfs UT
+run cutcp large
+run cutcp small
+run histo default
+run histo large
+run lbm long
+run lbm short
+run mri-gridding small
+run mri-q large
+run mri-q small
+run sad default
+run sad large
+run sgemm medium
+run sgemm small
+run spmv large
+run spmv medium
+run spmv small
+run stencil default
+run stencil small
+run tpacf large
+run tpacf medium
+run tpacf small
