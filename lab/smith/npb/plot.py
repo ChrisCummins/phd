@@ -64,7 +64,10 @@ def plottable(data):
 
 
 path = sys.argv[1]
-dst = sys.argv[2]
+if len(sys.argv) == 3:
+    dst = sys.argv[2]
+else:
+    dst = None
 benchmark, dataset, cpu, gpu = get_data_from_file(path)
 
 data = condense_data(dataset, cpu, gpu)
@@ -87,16 +90,19 @@ ax.set_xticklabels(labels)
 
 ax.legend((rects1[0], rects2[0]), ('CPU', 'GPU'))
 
-
-def autolabel(rects):
+def autolabel(rects, speedups):
     # attach some text labels
-    for rect in rects:
-        height = rect.get_height()
-        ax.text(rect.get_x() + rect.get_width()/2., 1.07*height,
-                '%d' % int(height),
+    for rect, speedup in zip(rects, speedups):
+        ax.text(rect.get_x() + rect.get_width() / 2.,
+                1.07 * rect.get_height(),
+                '{:.2f}'.format(speedup),
                 ha='center', va='bottom')
 
-autolabel(rects1)
-autolabel(rects2)
 
-plt.savefig(dst)
+speedups = [c / g for c,g in zip(cpu,gpu)]
+autolabel(rects2, speedups)
+
+if dst:
+    plt.savefig(dst)
+else:
+    plt.show()
