@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -eu
+
+#
+# Usage: time_to_seconds "3m28.975s"
+#        3 28 975
+#
+time_to_seconds() {
+    local time="$1"
+
+    echo "$time" | sed 's/[ms\.]/ /g' | awk '{ print ($1 * 60) + $2, $3 }' | sed 's/ /\./'
+}
+
+get_time_from_file() {
+    local path="$1"
+
+    local time=$(tail -n3 "$path" | head -n1 | sed 's/^real\t//')
+    echo $(time_to_seconds "$time")
+}
+
+summarize_results() {
+    local root="$1"
+
+    local benchmark=$(basename $root | cut -d '.' -f 1)
+    local dataset=$(basename $root | cut -d '.' -f 2)
+
+    local cpu="$1.cpu.out"
+    local gpu="$1.gpu.out"
+
+    local cpu_time=$(get_time_from_file $cpu)
+    local gpu_time=$(get_time_from_file $gpu)
+
+    echo "$benchmark,$dataset,$cpu_time,$gpu_time"
+}
+
+rm -rf ../data/npb/summary
+mkdir -pv ../data/npb/summary/img/
+for f in $(find ../data/npb/results -name '*.cpu.out' | sort); do
+    root=$(echo $f | sed 's/\.cpu\.out//')
+
+    benchmark=$(basename $root | cut -d '.' -f 1)
+    dataset=$(basename $root | cut -d '.' -f 2)
+
+    summary="$(summarize_results $root)"
+    echo $summary >> ../data/npb/summary/$benchmark.csv
+    echo $summary >> ../data/npb/summary/data.csv
+done
+
+for f in $(ls ../data/npb/summary/*.csv | grep -v data.csv); do
+    dst=../data/npb/summary/img/$(basename $f).png
+    echo "plot $dst"
+    ./plot.py $f $dst 2>/dev/null
+done
