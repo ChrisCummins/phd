@@ -8,6 +8,14 @@ mkdir -pv logs/bad logs/good
 
 cd opencl
 
+# Run single benchmark by name:
+if [[ -n "$1" ]]; then
+    cd "$1"
+    $SHELL run
+    exit $?
+fi
+
+# Run all benchmarks:
 for dir in $(ls | sort); do
   echo -n "$(tput bold)rodinia-3.1 $dir$(tput sgr0) ... "
   cd $dir
