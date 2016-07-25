@@ -3,12 +3,12 @@ set -eu
 
 benchmarks=(
     amd-app-sdk-3.0
-    npb-3.3
+    # npb-3.3
     nvidia-4.2
     parboil-0.2
-    polybench-gpu-1.0
+    # polybench-gpu-1.0
     rodinia-3.1
-    shoc-1.1.5
+    # shoc-1.1.5
 )
 
 for benchmark in ${benchmarks[@]}; do
