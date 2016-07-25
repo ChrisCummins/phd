@@ -2,6 +2,8 @@
 #define cl_clang_storage_class_specifiers
 #define cl_khr_fp64
 #include <clc/clc.h>
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+
 #define __CL_VERSION_1_0__
 #define __CL_VERSION_1_1__
 #define __CL_VERSION_1_2__
@@ -72,6 +74,7 @@ typedef unsigned int uint32_t;
 #define BLOCKSNUM 64
 #define BUCKETS 8
 #define CHARS 16
+#define CLASS 'A'  // Used in npb-3.3
 #define COLS 64
 #define COLUMNS_BLOCKDIM_X 16
 #define COLUMNS_BLOCKDIM_Y 8
