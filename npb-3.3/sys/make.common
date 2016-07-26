@@ -1,5 +1,10 @@
+# CEC Profiling
+CECPROFILE=../../common
+CECOBJS = $(CECPROFILE)/cec-profile.o
+$(CECPROFILE)/cec-profile.o: $(CECPROFILE)/cec-profile.c $(CECPROFILE)/cec-profile.h
+
 PROGRAM  = $(BINDIR)/$(BENCHMARK).$(CLASS).x
-CCOMPILE = $(CC)  -c $(C_INC) $(CFLAGS)
+CCOMPILE = $(CC)  -c $(C_INC) $(CFLAGS) -I$(CECPROFILE)
 CCOMPILE_pp = $(CC_pp)  -c $(C_INC_pp) $(CFLAGS_pp)
 
 # Class "U" is used internally by the setparams program to mean
@@ -19,12 +24,6 @@ default:: ${PROGRAM}
 config:
 	@cd ../sys; ${MAKE} all
 	../sys/setparams ${BENCHMARK} ${CLASS}
-
-CECPROFILE=../../common
-
-# CEC Profiling
-CECOBJS = $(CECPROFILE)/cec-profile.o
-$(CECPROFILE)/cec-profile.o: $(CECPROFILE)/cec-profile.c $(CECPROFILE)/cec-profile.h
 
 COMMON=../common
 ${COMMON}/${RAND}.o: ${COMMON}/${RAND}.c ../config/make.def
