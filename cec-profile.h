@@ -8,3 +8,5 @@ cl_event* cec_event();
 
 // Print profiling info for event.
 void cec_profile(const char* name);
+
+#endif  // CEC_PROFILE
