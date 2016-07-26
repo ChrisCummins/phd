@@ -2,9 +2,10 @@
 
 set -eu
 
+rm -rf results
 mkdir -pv results
 
-./compile
+./compile &>/dev/null
 
 for i in $(seq 1 30); do
     echo "run $i ..."

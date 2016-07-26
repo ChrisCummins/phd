@@ -22,7 +22,7 @@
             size_t cec_lws = 1; \
             cl_uint cec_i; \
             for (cec_i = 0; cec_i < work_dim; ++cec_i) \
-                cec_lws *= local_work_size[cec_i]; \
+                cec_lws *= (local_work_size)[cec_i]; \
             cec_profile("clEnqueueNDRangeKernel " #kernel, cec_lws); \
         }
 

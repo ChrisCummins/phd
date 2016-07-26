@@ -51,7 +51,7 @@ void z_solve()
                         Z_SOLVE_DIM, NULL,
                         z_solve_gws,
                         z_solve_lws,
-                        0, NULL, NULL);
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 
