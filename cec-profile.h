@@ -3,6 +3,22 @@
 
 #include <CL/cl.h>
 
+#define CEC_ND_KERNEL(command_queue, \
+                      kernel, \
+                      work_dim, \
+                      global_work_offset, \
+                      global_work_size, \
+                      local_work_size, \
+                      num_events_in_wait_list, \
+                      event_wait_list) \
+    { \
+        clEnqueueNDRangeKernel(command_queue, kernel, work_dim, \
+                               global_work_offset, global_work_size, \
+                               local_work_size, num_events_in_wait_list, \
+                               event_wait_list, cec_event()); \
+        cec_profile(#kernel);
+    }
+
 // Get OpenCL event pointer.
 cl_event* cec_event();
 
