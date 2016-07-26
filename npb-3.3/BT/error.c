@@ -36,38 +36,6 @@
 #include <math.h>
 #include "header.h"
 
-/* CEC profiling. */
-#include <stdio.h>
-#include <stdlib.h>
-static cl_event cec_event;
-static void cec_profile(cl_event event, const char* name) {
-  clWaitForEvents(1, &event);
-  cl_int err;
-  cl_ulong start_time, end_time;
-
-  err = clGetEventProfilingInfo(event,
-                                CL_PROFILING_COMMAND_QUEUED,
-                                sizeof(start_time), &start_time,
-                                NULL);
-  if (err != CL_SUCCESS) {
-    printf("[CEC] fatal: Kernel timer 1!");
-    exit(104);
-  }
-
-  err = clGetEventProfilingInfo(event,
-                                CL_PROFILING_COMMAND_END,
-                                sizeof(end_time), &end_time,
-                                NULL);
-  if (err != CL_SUCCESS) {
-    printf("[CEC] fatal: Kernel timer 2!");
-    exit(105);
-  }
-
-  float elapsed_ms = (float)(end_time - start_time) / 1000;
-  printf("\n[CEC] %s %.3f\n", name, elapsed_ms);
-}
-/* END CEC profiling. */
-
 //---------------------------------------------------------------------
 // this function computes the norm of the difference between the
 // computed solution and the exact solution
@@ -119,9 +87,9 @@ void error_norm(double rms[5])
                                  1, NULL,
                                  &global_ws,
                                  &local_ws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, cec_event());
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "error_norm");
+  cec_profile("error_norm");
 
   g_rms = (double (*)[5])malloc(buf_size);
 
@@ -130,7 +98,7 @@ void error_norm(double rms[5])
                               CL_TRUE,
                               0, buf_size,
                               g_rms,
-                              0, NULL, &cec_event);
+                              0, NULL, cec_event());
   clu_CheckError(ecode, "clReadBuffer()");
 
   // reduction
@@ -199,9 +167,9 @@ void rhs_norm(double rms[5])
                                  1, NULL,
                                  &global_ws,
                                  &local_ws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, cec_event());
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "rhs_norm");
+  cec_profile("rhs_norm");
 
   g_rms = (double (*)[5])malloc(buf_size);
 
@@ -210,9 +178,9 @@ void rhs_norm(double rms[5])
                               CL_TRUE,
                               0, buf_size,
                               g_rms,
-                              0, NULL, &cec_event);
+                              0, NULL, cec_event());
   clu_CheckError(ecode, "clReadBuffer()");
-  cec_profile(cec_event, "initialize");
+  cec_profile("initialize");
 
   // reduction
   for (i = 0; i < wg_num; i++) {

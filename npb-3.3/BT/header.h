@@ -39,10 +39,10 @@
 //
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
- 
+
 //---------------------------------------------------------------------
 // The following include file is generated automatically by the
-// "setparams" utility. It defines 
+// "setparams" utility. It defines
 //      maxcells:      the square root of the maximum number of processors
 //      problem_size:  12, 64, 102, 162 (for class T, A, B, C)
 //      dt_default:    default time step for this problem size if no
@@ -113,6 +113,7 @@ void verify(int no_time_steps, char *class, logical *verified);
 
 
 #include <CL/cl.h>
+#include <cec-profile.h>
 #include "cl_util.h"
 
 #define TIMER_OPENCL    20
@@ -214,4 +215,3 @@ extern int INITIALIZE2_DIM;
 extern int COMPUTE_RHS1_DIM, COMPUTE_RHS2_DIM, COMPUTE_RHS6_DIM;
 extern int X_SOLVE_DIM, Y_SOLVE_DIM, Z_SOLVE_DIM;
 extern int ADD_DIM;
-

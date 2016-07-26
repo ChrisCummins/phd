@@ -62,7 +62,7 @@ static void cec_profile(cl_event event, const char* name) {
     exit(105);
   }
 
-  float elapsed_ms = (float)(end_time - start_time) / 1000;
+  double elapsed_ms = (double)(end_time - start_time) / 1000000.0;
   printf("\n[CEC] %s %.3f\n", name, elapsed_ms);
 }
 /* END CEC profiling. */

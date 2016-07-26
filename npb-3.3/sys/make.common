@@ -6,19 +6,25 @@ CCOMPILE_pp = $(CC_pp)  -c $(C_INC_pp) $(CFLAGS_pp)
 # "unknown". This means that if you don't specify CLASS=
 # on the command line, you'll get an error. It would be nice
 # to be able to avoid this, but we'd have to get information
-# from the setparams back to the make program, which isn't easy. 
+# from the setparams back to the make program, which isn't easy.
 CLASS=U
 
 default:: ${PROGRAM}
 
-# This makes sure the configuration utility setparams 
-# is up to date. 
+# This makes sure the configuration utility setparams
+# is up to date.
 # Note that this must be run every time, which is why the
-# target does not exist and is not created. 
-# If you create a file called "config" you will break things. 
+# target does not exist and is not created.
+# If you create a file called "config" you will break things.
 config:
 	@cd ../sys; ${MAKE} all
 	../sys/setparams ${BENCHMARK} ${CLASS}
+
+CECPROFILE=../../common
+
+# CEC Profiling
+CECOBJS = $(CECPROFILE)/cec-profile.o
+$(CECPROFILE)/cec-profile.o: $(CECPROFILE)/cec-profile.c $(CECPROFILE)/cec-profile.h
 
 COMMON=../common
 ${COMMON}/${RAND}.o: ${COMMON}/${RAND}.c ../config/make.def
@@ -48,7 +54,7 @@ ${COMMON}/cl_util.o: ${COMMON}/cl_util.c ../config/make.def
 
 # Normally setparams updates npbparams.h only if the settings (CLASS)
 # have changed. However, we also want to update if the compile options
-# may have changed (set in ../config/make.def). 
+# may have changed (set in ../config/make.def).
 npbparams.h: ../config/make.def
 	@ echo make.def modified. Rebuilding npbparams.h just in case
 	rm -f npbparams.h
@@ -57,5 +63,3 @@ npbparams.h: ../config/make.def
 # So that "make benchmark-name" works
 ${BENCHMARK}:  default
 ${BENCHMARKU}: default
-
-
