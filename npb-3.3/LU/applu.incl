@@ -1,0 +1,225 @@
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+//---  applu.incl   
+//---------------------------------------------------------------------
+//---------------------------------------------------------------------
+
+//---------------------------------------------------------------------
+// npbparams.h defines parameters that depend on the class and 
+// number of nodes
+//---------------------------------------------------------------------
+
+#include "npbparams.h"
+#include "type.h"
+
+//---------------------------------------------------------------------
+// parameters which can be overridden in runtime config file
+// isiz1,isiz2,isiz3 give the maximum size
+// ipr = 1 to print out verbose information
+// omega = 2.0 is correct for all classes
+// tolrsd is tolerance levels for steady state residuals
+//---------------------------------------------------------------------
+#define IPR_DEFAULT     1
+#define OMEGA_DEFAULT   1.2
+#define TOLRSD1_DEF     1.0e-08
+#define TOLRSD2_DEF     1.0e-08
+#define TOLRSD3_DEF     1.0e-08
+#define TOLRSD4_DEF     1.0e-08
+#define TOLRSD5_DEF     1.0e-08
+
+#define C1              1.40e+00
+#define C2              0.40e+00
+#define C3              1.00e-01
+#define C4              1.00e+00
+#define C5              1.40e+00
+
+//---------------------------------------------------------------------
+// grid
+//---------------------------------------------------------------------
+/* common/cgcon/ */
+extern double dxi, deta, dzeta;
+extern double tx1, tx2, tx3;
+extern double ty1, ty2, ty3;
+extern double tz1, tz2, tz3;
+extern int nx, ny, nz;
+extern int nx0, ny0, nz0;
+extern int ist, iend;
+extern int jst, jend;
+extern int ii1, ii2;
+extern int ji1, ji2;
+extern int ki1, ki2;
+
+//---------------------------------------------------------------------
+// dissipation
+//---------------------------------------------------------------------
+/* common/disp/ */
+extern double dx1, dx2, dx3, dx4, dx5;
+extern double dy1, dy2, dy3, dy4, dy5;
+extern double dz1, dz2, dz3, dz4, dz5;
+extern double dssp;
+
+//---------------------------------------------------------------------
+// output control parameters
+//---------------------------------------------------------------------
+/* common/cprcon/ */
+extern int ipr, inorm;
+
+//---------------------------------------------------------------------
+// newton-raphson iteration control parameters
+//---------------------------------------------------------------------
+/* common/ctscon/ */
+extern double dt, omega, tolrsd[5], rsdnm[5], errnm[5], frc, ttotal;
+extern int itmax, invert;
+
+//---------------------------------------------------------------------
+// coefficients of the exact solution
+//---------------------------------------------------------------------
+/* common/cexact/ */
+extern double ce[5][13];
+
+//---------------------------------------------------------------------
+// Thread synchronization for pipeline operation
+//---------------------------------------------------------------------
+/* common /threadinfo1/ */
+extern int isync[ISIZ2+1];
+/* common /threadinfo2/ */
+extern int mthreadnum, iam;
+
+
+//---------------------------------------------------------------------
+// timers
+//---------------------------------------------------------------------
+/* common/timer/ */
+extern double maxtime;
+extern logical timeron;
+#define t_total   1
+#define t_rhsx    2
+#define t_rhsy    3
+#define t_rhsz    4
+#define t_rhs     5
+#define t_jacld   6
+#define t_blts1   7
+#define t_blts    8
+#define t_jacu    9
+#define t_buts1   10
+#define t_buts    11
+#define t_add     12
+#define t_l2norm  13
+#define t_setbv   14
+#define t_setiv   15
+#define t_erhs    16
+#define t_error   17
+#define t_pintgr  18
+#define t_last    18
+
+
+//-----------------------------------------------------------------------
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+
+#include "timers.h"
+
+#include <CL/cl.h>
+#include "cl_util.h"
+
+#define TIMER_OPENCL    20
+#define TIMER_BUILD     21
+#define TIMER_BUFFER    22
+#define TIMER_RELEASE   23
+
+#define USE_CHECK_FINISH
+//#define TIMER_DETAIL
+
+#ifdef TIMER_DETAIL
+#define DTIMER_START(id)    if (timeron) timer_start(id)
+#define DTIMER_STOP(id)     if (timeron) timer_stop(id)
+#else
+#define DTIMER_START(id)
+#define DTIMER_STOP(id)
+#endif
+
+#ifdef USE_CHECK_FINISH
+#define CHECK_FINISH()      ecode = clFinish(cmd_queue); \
+                            clu_CheckError(ecode, "clFinish");
+#else
+#define CHECK_FINISH()
+#endif
+
+//---------------------------------------------------------------------
+// OPENCL Variables
+//---------------------------------------------------------------------
+extern cl_device_type   device_type;
+extern cl_device_id     device;
+extern char            *device_name;
+extern cl_context       context;
+extern cl_command_queue cmd_queue;
+extern cl_command_queue *pipe_queue;
+extern cl_program       p_pre;
+extern cl_program       p_main;
+extern cl_program       p_post;
+extern size_t  work_item_sizes[3];
+extern size_t  max_work_group_size;
+extern cl_uint max_compute_units;
+extern size_t  max_pipeline;
+
+extern cl_mem m_ce;
+extern cl_mem m_u;
+extern cl_mem m_rsd;
+extern cl_mem m_frct;
+extern cl_mem m_flux;
+extern cl_mem m_qs;
+extern cl_mem m_rho_i;
+extern cl_mem m_sum;
+
+extern cl_kernel k_setbv1, k_setbv2, k_setbv3;
+extern cl_kernel k_setiv;
+extern cl_kernel k_l2norm;
+extern cl_kernel k_rhs, k_rhsx, k_rhsy, k_rhsz;
+extern cl_kernel k_ssor2, k_ssor3;
+extern cl_kernel k_blts;
+extern cl_kernel k_buts;
+
+extern size_t setbv1_lws[3], setbv1_gws[3];
+extern size_t setbv2_lws[3], setbv2_gws[3];
+extern size_t setbv3_lws[3], setbv3_gws[3];
+extern size_t setiv_lws[3], setiv_gws[3];
+extern size_t l2norm_lws[3], l2norm_gws[3], sum_size;
+extern size_t rhs_lws[3], rhs_gws[3];
+extern size_t rhsx_lws[3], rhsx_gws[3];
+extern size_t rhsy_lws[3], rhsy_gws[3];
+extern size_t rhsz_lws[3], rhsz_gws[3];
+extern size_t ssor1_lws[3], ssor1_gws[3];
+extern size_t ssor2_lws[3], ssor2_gws[3];
+extern size_t ssor3_lws[3], ssor3_gws[3];
+extern size_t blts_lws[3], blts_gws[3];
+extern size_t buts_lws[3], buts_gws[3];
+
+extern int SETBV1_DIM, SETBV2_DIM, SETBV3_DIM;
+extern int SETIV_DIM;
+extern int ERHS1_DIM, ERHS2_DIM, ERHS3_DIM, ERHS4_DIM; 
+extern int PINTGR1_DIM, PINTGR2_DIM, PINTGR3_DIM; 
+extern int RHS_DIM, RHSX_DIM, RHSY_DIM, RHSZ_DIM;
+extern int SSOR2_DIM, SSOR3_DIM;
+
+//-----------------------------------------------------------------------
+void read_input();
+void domain();
+void setcoeff();
+void setbv();
+void exact(int i, int j, int k, double u000ijk[]);
+void setiv();
+void erhs();
+void ssor(int niter);
+void rhs();
+void l2norm (int ldx, int ldy, int ldz, int nx0, int ny0, int nz0,
+     int ist, int iend, int jst, int jend,
+     cl_mem *m_v, double sum[5]);
+void error();
+void pintgr();
+void verify(double xcr[5], double xce[5], double xci, 
+            char *Class, logical *verified);
+//-----------------------------------------------------------------------
+//---------------------------------------------------------------------
+//   end of include file
+//---------------------------------------------------------------------
