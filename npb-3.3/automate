@@ -2,15 +2,18 @@
 
 set -eu
 
-mkdir -p results
+mkdir -pv results
+
+./compile
 
 for i in $(seq 1 30); do
     echo "run $i ..."
     cd bin
     rm -rf log
     mkdir -p log
-    ./run_ocl_cpu.sh &> log/cpu.sh
-    ./run_ocl_gpu.sh &> log/gpu.sh
+    # FIXME: Running only one benchmark
+    ./run_ocl_cpu.sh bt &> log/cpu.sh
+    ./run_ocl_gpu.sh bt &> log/gpu.sh
     cd ..
     mv bin/log results/$i
 done
