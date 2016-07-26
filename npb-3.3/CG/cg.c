@@ -1401,7 +1401,7 @@ static void setup_opencl(int argc, char *argv[], char Class)
   clu_CheckError(ecode, "clCreateContext()");
 
   // 3. Create a command queue
-  cmd_queue = clCreateCommandQueue(context, device, 0, &ecode);
+  cmd_queue = CEC_COMMAND_QUEUE(context, device, 0, &ecode);
   clu_CheckError(ecode, "clCreateCommandQueue()");
 
   DTIMER_STOP(T_OPENCL_API);
@@ -1855,8 +1855,7 @@ static void init_mem()
   clu_CheckError(ecode, "clSetKernelArg()");
   ecode = CEC_ND_KERNEL(cmd_queue, k_init[1], 1, NULL,
                         init_gws, init_lws, 0, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel
-()");
+  clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   ecode = clFinish(cmd_queue);
   clu_CheckError(ecode, "clFinish()");

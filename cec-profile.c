@@ -19,7 +19,7 @@ void cec_profile(const char* name) {
                                   sizeof(start_time), &start_time,
                                   NULL);
     if (err != CL_SUCCESS) {
-        fprintf(stderr, "\n[CEC] fatal: Kernel timer 1!\n");
+        fprintf(stderr, "\n[CEC] fatal: Kernel timer 1! Did you use CL_QUEUE_PROFILING_ENABLE ?\n");
         exit(104);
     }
 
