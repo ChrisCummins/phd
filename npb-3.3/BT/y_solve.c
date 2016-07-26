@@ -37,10 +37,10 @@
 
 //---------------------------------------------------------------------
 // Performs line solves in Y direction by first factoring
-// the block-tridiagonal matrix into an upper triangular matrix, 
+// the block-tridiagonal matrix into an upper triangular matrix,
 // and then performing back substitution to solve for the unknow
-// vectors of each line.  
-// 
+// vectors of each line.
+//
 // Make sure we treat elements zero to cell_size in the direction
 // of the sweep.
 //---------------------------------------------------------------------
@@ -51,45 +51,45 @@ void y_solve()
   if (timeron) timer_start(t_ysolve);
 
   if (Y_SOLVE_DIM == 3) {
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_y_solve1,
-                                   Y_SOLVE_DIM, NULL,
-                                   y_solve1_gws,
-                                   y_solve1_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_y_solve1,
+                          Y_SOLVE_DIM, NULL,
+                          y_solve1_gws,
+                          y_solve1_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_y_solve2,
-                                   Y_SOLVE_DIM, NULL,
-                                   y_solve2_gws,
-                                   y_solve2_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_y_solve2,
+                          Y_SOLVE_DIM, NULL,
+                          y_solve2_gws,
+                          y_solve2_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_y_solve3,
-                                   Y_SOLVE_DIM, NULL,
-                                   y_solve3_gws,
-                                   y_solve3_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_y_solve3,
+                          Y_SOLVE_DIM, NULL,
+                          y_solve3_gws,
+                          y_solve3_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_y_solve,
-                                   2, NULL,
-                                   y_solve_gws,
-                                   y_solve_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_y_solve,
+                          2, NULL,
+                          y_solve_gws,
+                          y_solve_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
     CHECK_FINISH();
   } else {
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_y_solve,
-                                   Y_SOLVE_DIM, NULL,
-                                   y_solve_gws,
-                                   y_solve_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_y_solve,
+                          Y_SOLVE_DIM, NULL,
+                          y_solve_gws,
+                          y_solve_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
     CHECK_FINISH();
   }

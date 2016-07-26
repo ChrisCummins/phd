@@ -35,8 +35,8 @@
 #include "header.h"
 
 //---------------------------------------------------------------------
-// This subroutine initializes the field variable u using 
-// tri-linear transfinite interpolation of the boundary values     
+// This subroutine initializes the field variable u using
+// tri-linear transfinite interpolation of the boundary values
 //---------------------------------------------------------------------
 void initialize()
 {
@@ -56,7 +56,7 @@ void initialize()
   //-----------------------------------------------------------------------
   k_initialize1 = clCreateKernel(p_initialize, "initialize1", &ecode);
   clu_CheckError(ecode, "clCreateKernel()");
-  
+
   ecode  = clSetKernelArg(k_initialize1, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_initialize1, 1, sizeof(int), &d0);
   ecode |= clSetKernelArg(k_initialize1, 2, sizeof(int), &d1);
@@ -70,21 +70,21 @@ void initialize()
   global_ws[0] = clu_RoundWorkSize((size_t)d1, local_ws[0]);
   global_ws[1] = clu_RoundWorkSize((size_t)d2, local_ws[1]);
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_initialize1,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_initialize1,
+                        2, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
   //---------------------------------------------------------------------
-  // first store the "interpolated" values everywhere on the grid    
+  // first store the "interpolated" values everywhere on the grid
   //---------------------------------------------------------------------
   k_initialize2 = clCreateKernel(p_initialize, "initialize2", &ecode);
   clu_CheckError(ecode, "clCreateKernel()");
-  
+
   ecode  = clSetKernelArg(k_initialize2, 0, sizeof(cl_mem), &m_u);
   ecode  = clSetKernelArg(k_initialize2, 1, sizeof(cl_mem), &m_ce);
   ecode |= clSetKernelArg(k_initialize2, 2, sizeof(int), &d0);
@@ -110,23 +110,23 @@ void initialize()
     global_ws[0] = clu_RoundWorkSize((size_t)d1, local_ws[0]);
     global_ws[1] = clu_RoundWorkSize((size_t)d2, local_ws[1]);
   }
-  
+
   CHECK_FINISH();
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_initialize2,
-                                 INITIALIZE2_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_initialize2,
+                        INITIALIZE2_DIM, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
   //---------------------------------------------------------------------
-  // now store the exact values on the boundaries        
+  // now store the exact values on the boundaries
   //---------------------------------------------------------------------
   k_initialize3 = clCreateKernel(p_initialize, "initialize3", &ecode);
   clu_CheckError(ecode, "clCreateKernel()");
-  
+
   ecode  = clSetKernelArg(k_initialize3, 0, sizeof(cl_mem), &m_u);
   ecode  = clSetKernelArg(k_initialize3, 1, sizeof(cl_mem), &m_ce);
   ecode |= clSetKernelArg(k_initialize3, 2, sizeof(int), &d0);
@@ -142,18 +142,18 @@ void initialize()
   global_ws[1] = clu_RoundWorkSize((size_t)d2, local_ws[1]);
 
   CHECK_FINISH();
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_initialize3,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_initialize3,
+                        2, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
   k_initialize4 = clCreateKernel(p_initialize, "initialize4", &ecode);
   clu_CheckError(ecode, "clCreateKernel()");
-  
+
   ecode  = clSetKernelArg(k_initialize4, 0, sizeof(cl_mem), &m_u);
   ecode  = clSetKernelArg(k_initialize4, 1, sizeof(cl_mem), &m_ce);
   ecode |= clSetKernelArg(k_initialize4, 2, sizeof(int), &d0);
@@ -169,18 +169,18 @@ void initialize()
   global_ws[1] = clu_RoundWorkSize((size_t)d2, local_ws[1]);
 
   CHECK_FINISH();
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_initialize4,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_initialize4,
+                        2, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
   k_initialize5 = clCreateKernel(p_initialize, "initialize5", &ecode);
   clu_CheckError(ecode, "clCreateKernel()");
-  
+
   ecode  = clSetKernelArg(k_initialize5, 0, sizeof(cl_mem), &m_u);
   ecode  = clSetKernelArg(k_initialize5, 1, sizeof(cl_mem), &m_ce);
   ecode |= clSetKernelArg(k_initialize5, 2, sizeof(int), &d0);
@@ -196,12 +196,12 @@ void initialize()
   global_ws[1] = clu_RoundWorkSize((size_t)d1, local_ws[1]);
 
   CHECK_FINISH();
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_initialize5,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_initialize5,
+                        2, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
@@ -212,4 +212,3 @@ void initialize()
   CHECK_FINISH();
   clReleaseKernel(k_initialize5);
 }
-

@@ -43,6 +43,7 @@
 //
 //---------------------------------------------------------------------
 
+#include <cec-profile.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -105,8 +106,8 @@ size_t buts_lws[3], buts_gws[3];
 
 int SETBV1_DIM, SETBV2_DIM, SETBV3_DIM;
 int SETIV_DIM;
-int ERHS1_DIM, ERHS2_DIM, ERHS3_DIM, ERHS4_DIM; 
-int PINTGR1_DIM, PINTGR2_DIM, PINTGR3_DIM; 
+int ERHS1_DIM, ERHS2_DIM, ERHS3_DIM, ERHS4_DIM;
+int PINTGR1_DIM, PINTGR2_DIM, PINTGR3_DIM;
 int RHS_DIM, RHSX_DIM, RHSY_DIM, RHSZ_DIM;
 int SSOR2_DIM, SSOR3_DIM;
 
@@ -281,15 +282,15 @@ int main(int argc, char *argv[])
   mflops = (double)itmax * (1984.77 * (double)nx0
       * (double)ny0
       * (double)nz0
-      - 10923.3 * pow(((double)(nx0+ny0+nz0)/3.0), 2.0) 
+      - 10923.3 * pow(((double)(nx0+ny0+nz0)/3.0), 2.0)
       + 27770.9 * (double)(nx0+ny0+nz0)/3.0
       - 144010.0)
     / (maxtime*1000000.0);
 
   c_print_results("LU", Class, nx0,
                   ny0, nz0, itmax,
-                  maxtime, mflops, "          floating point", verified, 
-                  NPBVERSION, COMPILETIME, CS1, CS2, CS3, CS4, CS5, CS6, 
+                  maxtime, mflops, "          floating point", verified,
+                  NPBVERSION, COMPILETIME, CS1, CS2, CS3, CS4, CS5, CS6,
                   "(none)",
                   clu_GetDeviceTypeName(device_type),
                   device_name);
@@ -440,13 +441,13 @@ static void setup_opencl(int argc, char *argv[])
   //-----------------------------------------------------------------------
   // 3. Create command queues
   //-----------------------------------------------------------------------
-  cmd_queue = clCreateCommandQueue(context, device, 0, &ecode);
+  cmd_queue = CEC_COMMAND_QUEUE(context, device, 0, &ecode);
   clu_CheckError(ecode, "clCreateCommandQueue()");
 
   max_pipeline = (jend-jst) < max_compute_units ? (jend-jst) : max_compute_units;
   pipe_queue = (cl_command_queue *)malloc(sizeof(cl_command_queue) * max_pipeline);
   for (i = 0; i < max_pipeline; i++) {
-    pipe_queue[i] = clCreateCommandQueue(context, device, 0, &ecode);
+    pipe_queue[i] = CL_COMMAND_QUEUE(context, device, 0, &ecode);
     clu_CheckError(ecode, "clCreateCommandQueue()");
   }
 
@@ -555,7 +556,7 @@ static void setup_opencl(int argc, char *argv[])
   sum_size = sizeof(double) * 5 * wg_num;
   m_sum = clCreateBuffer(context,
                          CL_MEM_READ_WRITE,
-                         sum_size, 
+                         sum_size,
                          NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer()");
 

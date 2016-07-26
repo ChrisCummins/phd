@@ -46,12 +46,12 @@ void y_solve()
 
   if (timeron) timer_start(t_ysolve);
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_y_solve,
-                                 Y_SOLVE_DIM, NULL,
-                                 y_solve_gws,
-                                 y_solve_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_y_solve,
+                        Y_SOLVE_DIM, NULL,
+                        y_solve_gws,
+                        y_solve_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 
@@ -59,4 +59,3 @@ void y_solve()
 
   pinvr();
 }
-

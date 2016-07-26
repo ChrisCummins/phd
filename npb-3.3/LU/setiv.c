@@ -32,6 +32,7 @@
 //          and Jaejin Lee                                                 //
 //-------------------------------------------------------------------------//
 
+#include <cec-profile.h>
 #include "applu.incl"
 
 //---------------------------------------------------------------------
@@ -46,15 +47,14 @@ void setiv()
 
   cl_int ecode;
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_setiv,
-                                 SETIV_DIM, NULL,
-                                 setiv_gws,
-                                 setiv_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_setiv,
+                        SETIV_DIM, NULL,
+                        setiv_gws,
+                        setiv_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 
   DTIMER_STOP(t_setiv);
 }
-

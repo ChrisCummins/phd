@@ -35,7 +35,7 @@
 #include "header.h"
 
 //---------------------------------------------------------------------
-// block-diagonal matrix-vector multiplication                       
+// block-diagonal matrix-vector multiplication
 //---------------------------------------------------------------------
 void tzetar()
 {
@@ -43,15 +43,14 @@ void tzetar()
 
   if (timeron) timer_start(t_tzetar);
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_tzetar,
-                                 TZETAR_DIM, NULL,
-                                 tzetar_gws,
-                                 tzetar_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_tzetar,
+                        TZETAR_DIM, NULL,
+                        tzetar_gws,
+                        tzetar_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 
   if (timeron) timer_stop(t_tzetar);
 }
-

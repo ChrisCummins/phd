@@ -57,19 +57,19 @@ void exact_rhs()
                         buf_size1,
                         NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer() for m_cuf");
-  
+
   m_q = clCreateBuffer(context,
                         CL_MEM_READ_WRITE,
                         buf_size1,
                         NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer() for m_q");
-  
+
   m_ue = clCreateBuffer(context,
                         CL_MEM_READ_WRITE,
                         buf_size2,
                         NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer() for m_ue");
-  
+
   m_buf = clCreateBuffer(context,
                         CL_MEM_READ_WRITE,
                         buf_size2,
@@ -79,7 +79,7 @@ void exact_rhs()
   //-----------------------------------------------------------------------
   k_exact_rhs1 = clCreateKernel(p_exact_rhs, "exact_rhs1", &ecode);
   clu_CheckError(ecode, "clCreateKernel() for exact_rhs1");
-  
+
   ecode  = clSetKernelArg(k_exact_rhs1, 0, sizeof(cl_mem), &m_forcing);
   ecode |= clSetKernelArg(k_exact_rhs1, 1, sizeof(int), &d0);
   ecode |= clSetKernelArg(k_exact_rhs1, 2, sizeof(int), &d1);
@@ -109,12 +109,12 @@ void exact_rhs()
     global_ws[0] = clu_RoundWorkSize((size_t)d2, local_ws[0]);
   }
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_exact_rhs1,
-                                 EXACT_RHS1_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_exact_rhs1,
+                        EXACT_RHS1_DIM, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
@@ -132,7 +132,7 @@ void exact_rhs()
   ecode |= clSetKernelArg(k_exact_rhs2, 7, sizeof(int), &d1);
   ecode |= clSetKernelArg(k_exact_rhs2, 8, sizeof(int), &d2);
   clu_CheckError(ecode, "clSetKernelArg()");
- 
+
   local_ws[0] = (d1-2) < work_item_sizes[0] ? (d1-2) : work_item_sizes[0];
   temp = max_work_group_size / local_ws[0];
   local_ws[1] = (d2-2) < temp ? (d2-1) : temp;
@@ -141,12 +141,12 @@ void exact_rhs()
   global_ws[1] = clu_RoundWorkSize((size_t)(d2-2), local_ws[1]);
 
   CHECK_FINISH();
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_exact_rhs2,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_exact_rhs2,
+                        2, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
@@ -164,7 +164,7 @@ void exact_rhs()
   ecode |= clSetKernelArg(k_exact_rhs3, 7, sizeof(int), &d1);
   ecode |= clSetKernelArg(k_exact_rhs3, 8, sizeof(int), &d2);
   clu_CheckError(ecode, "clSetKernelArg()");
- 
+
   local_ws[0] = (d0-2) < work_item_sizes[0] ? (d0-2) : work_item_sizes[0];
   temp = max_work_group_size / local_ws[0];
   local_ws[1] = (d2-2) < temp ? (d2-2) : temp;
@@ -173,12 +173,12 @@ void exact_rhs()
   global_ws[1] = clu_RoundWorkSize((size_t)(d2-2), local_ws[1]);
 
   CHECK_FINISH();
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_exact_rhs3,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_exact_rhs3,
+                        2, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
@@ -196,7 +196,7 @@ void exact_rhs()
   ecode |= clSetKernelArg(k_exact_rhs4, 7, sizeof(int), &d1);
   ecode |= clSetKernelArg(k_exact_rhs4, 8, sizeof(int), &d2);
   clu_CheckError(ecode, "clSetKernelArg()");
- 
+
   local_ws[0] = (d0-2) < work_item_sizes[0] ? (d0-2) : work_item_sizes[0];
   temp = max_work_group_size / local_ws[0];
   local_ws[1] = (d1-2) < temp ? (d1-2) : temp;
@@ -205,12 +205,12 @@ void exact_rhs()
   global_ws[1] = clu_RoundWorkSize((size_t)(d1-2), local_ws[1]);
 
   CHECK_FINISH();
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_exact_rhs4,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_exact_rhs4,
+                        2, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
@@ -218,7 +218,7 @@ void exact_rhs()
   //-----------------------------------------------------------------------
   k_exact_rhs5 = clCreateKernel(p_exact_rhs, "exact_rhs5", &ecode);
   clu_CheckError(ecode, "clCreateKernel() for exact_rhs5");
-  
+
   ecode  = clSetKernelArg(k_exact_rhs5, 0, sizeof(cl_mem), &m_forcing);
   ecode |= clSetKernelArg(k_exact_rhs5, 1, sizeof(int), &d0);
   ecode |= clSetKernelArg(k_exact_rhs5, 2, sizeof(int), &d1);
@@ -249,12 +249,12 @@ void exact_rhs()
   }
 
   CHECK_FINISH();
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_exact_rhs5,
-                                 EXACT_RHS5_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_exact_rhs5,
+                        EXACT_RHS5_DIM, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
@@ -270,4 +270,3 @@ void exact_rhs()
   CHECK_FINISH();
   clReleaseKernel(k_exact_rhs5);
 }
-

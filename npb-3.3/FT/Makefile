@@ -8,7 +8,7 @@ include ../sys/make.common
 
 OBJS = ft.o ${COMMON}/${RAND}.o ${COMMON}/c_print_results.o \
        ${COMMON}/c_timers.o ${COMMON}/wtime.o \
-       ${COMMON}/cl_util.o
+       ${COMMON}/cl_util.o $(CECOBJS)
 
 ${PROGRAM}: config ${OBJS}
 	${CLINK} ${CLINKFLAGS} -o ${PROGRAM} ${OBJS} ${C_LIB}

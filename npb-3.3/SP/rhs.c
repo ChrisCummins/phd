@@ -42,79 +42,79 @@ void compute_rhs()
   if (timeron) timer_start(t_rhs);
 
   //-----------------------------------------------------------------------
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_compute_rhs1,
-                                 COMPUTE_RHS1_DIM, NULL,
-                                 compute_rhs1_gws,
-                                 compute_rhs1_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_compute_rhs1,
+                        COMPUTE_RHS1_DIM, NULL,
+                        compute_rhs1_gws,
+                        compute_rhs1_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
   //-----------------------------------------------------------------------
 
   //-----------------------------------------------------------------------
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_compute_rhs2,
-                                 COMPUTE_RHS2_DIM, NULL,
-                                 compute_rhs2_gws,
-                                 compute_rhs2_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_compute_rhs2,
+                        COMPUTE_RHS2_DIM, NULL,
+                        compute_rhs2_gws,
+                        compute_rhs2_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
   //-----------------------------------------------------------------------
 
   //---------------------------------------------------------------------
-  // compute xi-direction fluxes 
+  // compute xi-direction fluxes
   //---------------------------------------------------------------------
   if (timeron) timer_start(t_rhsx);
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_compute_rhs3,
-                                 2, NULL,
-                                 compute_rhs3_gws,
-                                 compute_rhs3_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_compute_rhs3,
+                        2, NULL,
+                        compute_rhs3_gws,
+                        compute_rhs3_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
   if (timeron) timer_stop(t_rhsx);
   //---------------------------------------------------------------------
 
   //---------------------------------------------------------------------
-  // compute eta-direction fluxes 
+  // compute eta-direction fluxes
   //---------------------------------------------------------------------
   if (timeron) timer_start(t_rhsy);
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_compute_rhs4,
-                                 COMPUTE_RHS4_DIM, NULL,
-                                 compute_rhs4_gws,
-                                 compute_rhs4_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_compute_rhs4,
+                        COMPUTE_RHS4_DIM, NULL,
+                        compute_rhs4_gws,
+                        compute_rhs4_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
   if (timeron) timer_stop(t_rhsy);
   //---------------------------------------------------------------------
 
   //---------------------------------------------------------------------
-  // compute zeta-direction fluxes 
+  // compute zeta-direction fluxes
   //---------------------------------------------------------------------
   if (timeron) timer_start(t_rhsz);
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_compute_rhs5,
-                                 2, NULL,
-                                 compute_rhs5_gws,
-                                 compute_rhs5_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_compute_rhs5,
+                        2, NULL,
+                        compute_rhs5_gws,
+                        compute_rhs5_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
   if (timeron) timer_stop(t_rhsz);
   //---------------------------------------------------------------------
 
   //---------------------------------------------------------------------
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_compute_rhs6,
-                                 COMPUTE_RHS6_DIM, NULL,
-                                 compute_rhs6_gws,
-                                 compute_rhs6_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_compute_rhs6,
+                        COMPUTE_RHS6_DIM, NULL,
+                        compute_rhs6_gws,
+                        compute_rhs6_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
   //---------------------------------------------------------------------

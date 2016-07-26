@@ -35,7 +35,7 @@
 #include "header.h"
 
 //---------------------------------------------------------------------
-// block-diagonal matrix-vector multiplication                  
+// block-diagonal matrix-vector multiplication
 //---------------------------------------------------------------------
 void txinvr()
 {
@@ -43,15 +43,14 @@ void txinvr()
 
   if (timeron) timer_start(t_txinvr);
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_txinvr,
-                                 TXINVR_DIM, NULL,
-                                 txinvr_gws,
-                                 txinvr_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_txinvr,
+                        TXINVR_DIM, NULL,
+                        txinvr_gws,
+                        txinvr_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 
   if (timeron) timer_stop(t_txinvr);
 }
-

@@ -34,13 +34,14 @@
 
 //---------------------------------------------------------------------
 // The following include file is generated automatically by the
-// "setparams" utility. It defines 
+// "setparams" utility. It defines
 //      problem_size:  12, 64, 102, 162 (for class T, A, B, C)
 //      dt_default:    default time step for this problem size if no
 //                     config file
 //      niter_default: default number of iterations for this problem size
 //---------------------------------------------------------------------
 
+#include <cec-profile.h>
 #include "npbparams.h"
 #include "type.h"
 
@@ -201,4 +202,3 @@ extern int COMPUTE_RHS1_DIM, COMPUTE_RHS2_DIM, COMPUTE_RHS4_DIM;
 extern int COMPUTE_RHS6_DIM;
 extern int TXINVR_DIM, NINVR_DIM, PINVR_DIM, TZETAR_DIM, ADD_DIM;
 extern int X_SOLVE_DIM, Y_SOLVE_DIM, Z_SOLVE_DIM;
-

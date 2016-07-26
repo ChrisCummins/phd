@@ -32,6 +32,7 @@
 //          and Jaejin Lee                                                 //
 //-------------------------------------------------------------------------//
 
+#include <cec-profile.h>
 #include <math.h>
 #include "applu.incl"
 
@@ -39,7 +40,7 @@
 // to compute the l2-norm of vector v.
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-// To improve cache performance, second two dimensions padded by 1 
+// To improve cache performance, second two dimensions padded by 1
 // for even number sizes only.  Only needed in v.
 //---------------------------------------------------------------------
 void l2norm (int ldx, int ldy, int ldz, int nx0, int ny0, int nz0,
@@ -65,13 +66,13 @@ void l2norm (int ldx, int ldy, int ldz, int nx0, int ny0, int nz0,
   ecode |= clSetKernelArg(k_l2norm, 6, sizeof(int), &jst);
   ecode |= clSetKernelArg(k_l2norm, 7, sizeof(int), &jend);
   clu_CheckError(ecode, "clSetKernelArg()");
-  
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+
+  ecode = CEC_ND_KERNEL(cmd_queue,
                                  k_l2norm,
                                  1, NULL,
                                  l2norm_gws,
                                  l2norm_lws,
-                                 0, NULL, NULL);
+                                 0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   wg_num = l2norm_gws[0] / l2norm_lws[0];
@@ -98,4 +99,3 @@ void l2norm (int ldx, int ldy, int ldz, int nx0, int ny0, int nz0,
 
   free(g_sum);
 }
-

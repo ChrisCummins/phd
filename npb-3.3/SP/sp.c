@@ -36,6 +36,7 @@
 //       program SP
 //---------------------------------------------------------------------
 
+#include <cec-profile.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -191,7 +192,7 @@ int main(int argc, char *argv[])
     grid_points[2] = PROBLEM_SIZE;
   }
 
-  printf(" Size: %4dx%4dx%4d\n", 
+  printf(" Size: %4dx%4dx%4d\n",
       grid_points[0], grid_points[1], grid_points[2]);
   printf(" Iterations: %4d    dt:  %11.7f\n", niter, dt);
   printf("\n");
@@ -254,10 +255,10 @@ int main(int argc, char *argv[])
     mflops = 0.0;
   }
 
-  c_print_results("SP", Class, grid_points[0], 
-                  grid_points[1], grid_points[2], niter, 
-                  tmax, mflops, "          floating point", 
-                  verified, NPBVERSION,COMPILETIME, CS1, CS2, CS3, CS4, CS5, 
+  c_print_results("SP", Class, grid_points[0],
+                  grid_points[1], grid_points[2], niter,
+                  tmax, mflops, "          floating point",
+                  verified, NPBVERSION,COMPILETIME, CS1, CS2, CS3, CS4, CS5,
                   CS6, "(none)",
                   clu_GetDeviceTypeName(device_type),
                   device_name);
@@ -273,7 +274,7 @@ int main(int argc, char *argv[])
 
     printf("  SECTION   Time (secs)\n");
     for (i = 1; i <= t_last; i++) {
-      printf("  %-8s:%9.3f  (%6.2f%%)\n", 
+      printf("  %-8s:%9.3f  (%6.2f%%)\n",
           t_names[i], trecs[i], trecs[i]*100./tmax);
       if (i == t_rhs) {
         t = trecs[t_rhsx] + trecs[t_rhsy] + trecs[t_rhsz];
@@ -408,7 +409,7 @@ static void setup_opencl(int argc, char *argv[])
   //-----------------------------------------------------------------------
   // 3. Create a command queue
   //-----------------------------------------------------------------------
-  cmd_queue = clCreateCommandQueue(context, device, 0, &ecode);
+  cmd_queue = CEC_COMMAND_QUEUE(context, device, 0, &ecode);
   clu_CheckError(ecode, "clCreateCommandQueue()");
 
   //-----------------------------------------------------------------------
@@ -533,37 +534,37 @@ static void setup_opencl(int argc, char *argv[])
                         buf_size1,
                         NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer() for m_cv");
-  
+
   m_rhon = clCreateBuffer(context,
                         CL_MEM_READ_WRITE,
                         buf_size1,
                         NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer() for m_rhon");
-  
+
   m_rhos = clCreateBuffer(context,
                         CL_MEM_READ_WRITE,
                         buf_size1,
                         NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer() for m_rhos");
-  
+
   m_rhoq = clCreateBuffer(context,
                         CL_MEM_READ_WRITE,
                         buf_size1,
                         NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer() for m_rhoq");
-  
+
   m_lhs = clCreateBuffer(context,
                         CL_MEM_READ_WRITE,
                         buf_size3,
                         NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer() for m_lhs");
-  
+
   m_lhsp = clCreateBuffer(context,
                         CL_MEM_READ_WRITE,
                         buf_size3,
                         NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer() for m_lhsp");
-  
+
   m_lhsm = clCreateBuffer(context,
                         CL_MEM_READ_WRITE,
                         buf_size3,

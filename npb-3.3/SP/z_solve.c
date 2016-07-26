@@ -46,12 +46,12 @@ void z_solve()
 
   if (timeron) timer_start(t_zsolve);
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_z_solve,
-                                 Z_SOLVE_DIM, NULL,
-                                 z_solve_gws,
-                                 z_solve_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_z_solve,
+                        Z_SOLVE_DIM, NULL,
+                        z_solve_gws,
+                        z_solve_lws,
+                        0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 

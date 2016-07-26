@@ -32,6 +32,7 @@
 //          and Jaejin Lee                                                 //
 //-------------------------------------------------------------------------//
 
+#include <cec-profile.h>
 #include <stdio.h>
 #include <math.h>
 #include "applu.incl"
@@ -63,7 +64,7 @@ void error()
   buf_size = sizeof(double) * 5 * wg_num;
   m_errnm = clCreateBuffer(context,
                            CL_MEM_READ_WRITE,
-                           buf_size, 
+                           buf_size,
                            NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer()");
 
@@ -78,13 +79,13 @@ void error()
   ecode |= clSetKernelArg(k_error, 5, sizeof(int), &ny);
   ecode |= clSetKernelArg(k_error, 6, sizeof(int), &nz);
   clu_CheckError(ecode, "clSetKernelArg()");
-  
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_error,
-                                 1, NULL,
-                                 &global_ws,
-                                 &local_ws,
-                                 0, NULL, NULL);
+
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_error,
+                        1, NULL,
+                        &global_ws,
+                        &local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   g_errnm = (double (*)[5])malloc(buf_size);
@@ -114,4 +115,3 @@ void error()
 
   DTIMER_STOP(t_error);
 }
-

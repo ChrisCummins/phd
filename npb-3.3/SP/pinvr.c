@@ -35,7 +35,7 @@
 #include "header.h"
 
 //---------------------------------------------------------------------
-// block-diagonal matrix-vector multiplication                       
+// block-diagonal matrix-vector multiplication
 //---------------------------------------------------------------------
 void pinvr()
 {
@@ -43,15 +43,14 @@ void pinvr()
 
   if (timeron) timer_start(t_pinvr);
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_pinvr,
-                                 PINVR_DIM, NULL,
-                                 pinvr_gws,
-                                 pinvr_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_pinvr,
+                        PINVR_DIM, NULL,
+                        pinvr_gws,
+                        pinvr_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 
   if (timeron) timer_stop(t_pinvr);
 }
-

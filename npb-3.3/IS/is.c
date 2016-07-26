@@ -32,6 +32,7 @@
 //          and Jaejin Lee                                                 //
 //-------------------------------------------------------------------------//
 
+#include <cec-profile.h>
 #include "npbparams.h"
 #include "is.h"
 #include <stdlib.h>
@@ -137,34 +138,34 @@ int      timer_on;
 INT_TYPE test_index_array[TEST_ARRAY_SIZE],
          test_rank_array[TEST_ARRAY_SIZE],
 
-         S_test_index_array[TEST_ARRAY_SIZE] = 
+         S_test_index_array[TEST_ARRAY_SIZE] =
                              {48427,17148,23627,62548,4431},
-         S_test_rank_array[TEST_ARRAY_SIZE] = 
+         S_test_rank_array[TEST_ARRAY_SIZE] =
                              {0,18,346,64917,65463},
 
-         W_test_index_array[TEST_ARRAY_SIZE] = 
+         W_test_index_array[TEST_ARRAY_SIZE] =
                              {357773,934767,875723,898999,404505},
-         W_test_rank_array[TEST_ARRAY_SIZE] = 
+         W_test_rank_array[TEST_ARRAY_SIZE] =
                              {1249,11698,1039987,1043896,1048018},
 
-         A_test_index_array[TEST_ARRAY_SIZE] = 
+         A_test_index_array[TEST_ARRAY_SIZE] =
                              {2112377,662041,5336171,3642833,4250760},
-         A_test_rank_array[TEST_ARRAY_SIZE] = 
+         A_test_rank_array[TEST_ARRAY_SIZE] =
                              {104,17523,123928,8288932,8388264},
 
-         B_test_index_array[TEST_ARRAY_SIZE] = 
+         B_test_index_array[TEST_ARRAY_SIZE] =
                              {41869,812306,5102857,18232239,26860214},
-         B_test_rank_array[TEST_ARRAY_SIZE] = 
-                             {33422937,10244,59149,33135281,99}, 
+         B_test_rank_array[TEST_ARRAY_SIZE] =
+                             {33422937,10244,59149,33135281,99},
 
-         C_test_index_array[TEST_ARRAY_SIZE] = 
+         C_test_index_array[TEST_ARRAY_SIZE] =
                              {44172927,72999161,74326391,129606274,21736814},
-         C_test_rank_array[TEST_ARRAY_SIZE] = 
+         C_test_rank_array[TEST_ARRAY_SIZE] =
                              {61147,882988,266290,133997595,133525895},
 
-         D_test_index_array[TEST_ARRAY_SIZE] = 
+         D_test_index_array[TEST_ARRAY_SIZE] =
                              {1317351170,995930646,1157283250,1503301535,1453734525},
-         D_test_rank_array[TEST_ARRAY_SIZE] = 
+         D_test_rank_array[TEST_ARRAY_SIZE] =
                              {1,36538729,1978098519,2145192618,2147425337};
 
 
@@ -195,10 +196,10 @@ void create_seq( double seed, double a )
   // Launch the kernel
   cs_lws[0] = CREATE_SEQ_GROUP_SIZE;
   cs_gws[0] = CREATE_SEQ_GLOBAL_SIZE;
-  ecode = clEnqueueNDRangeKernel(cmd_queue, k_cs, 1, NULL,
-                                 cs_gws, 
-                                 cs_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue, k_cs, 1, NULL,
+                        cs_gws,
+                        cs_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for create_seq");
 
   ecode = clFinish(cmd_queue);
@@ -263,12 +264,12 @@ void full_verify( void )
 
     fv0_lws[0] = work_item_sizes[0];
     fv0_gws[0] = NUM_KEYS;
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_fv0,
-                                   1, NULL,
-                                   fv0_gws, 
-                                   fv0_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_fv0,
+                          1, NULL,
+                          fv0_gws,
+                          fv0_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel() for full_verify0");
     CHECK_FINISH();
     DTIMER_STOP(T_KERNEL_FV0);
@@ -281,12 +282,12 @@ void full_verify( void )
 
     fv1_lws[0] = work_item_sizes[0];
     fv1_gws[0] = NUM_KEYS;
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_fv1,
-                                   1, NULL,
-                                   fv1_gws, 
-                                   fv1_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_fv1,
+                          1, NULL,
+                          fv1_gws,
+                          fv1_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel() for full_verify1");
     CHECK_FINISH();
     DTIMER_STOP(T_KERNEL_FV1);
@@ -299,12 +300,12 @@ void full_verify( void )
 
     fv2_lws[0] = FV2_GROUP_SIZE;
     fv2_gws[0] = FV2_GLOBAL_SIZE;
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_fv2,
-                                   1, NULL,
-                                   fv2_gws, 
-                                   fv2_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_fv2,
+                          1, NULL,
+                          fv2_gws,
+                          fv2_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel() for full_verify2");
     CHECK_FINISH();
     DTIMER_STOP(T_KERNEL_FV2);
@@ -343,12 +344,12 @@ void full_verify( void )
 
     fv1_lws[0] = RANK_GROUP_SIZE;
     fv1_gws[0] = RANK_GLOBAL_SIZE;
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_fv1,
-                                   1, NULL,
-                                   fv1_gws, 
-                                   fv1_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_fv1,
+                          1, NULL,
+                          fv1_gws,
+                          fv1_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel() for full_verify1");
     CHECK_FINISH();
     DTIMER_STOP(T_KERNEL_FV1);
@@ -361,12 +362,12 @@ void full_verify( void )
 
     fv2_lws[0] = FV2_GROUP_SIZE;
     fv2_gws[0] = FV2_GLOBAL_SIZE;
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_fv2,
-                                   1, NULL,
-                                   fv2_gws, 
-                                   fv2_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_fv2,
+                          1, NULL,
+                          fv2_gws,
+                          fv2_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel() for full_verify2");
     CHECK_FINISH();
     DTIMER_STOP(T_KERNEL_FV2);
@@ -431,12 +432,12 @@ void rank( int iteration )
   // rank1
   r1_lws[0] = RANK1_GROUP_SIZE;
   r1_gws[0] = RANK1_GLOBAL_SIZE;
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_rank1,
-                                 1, NULL,
-                                 r1_gws, 
-                                 r1_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_rank1,
+                        1, NULL,
+                        r1_gws,
+                        r1_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank1");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_RANK1);
@@ -445,12 +446,12 @@ void rank( int iteration )
   // rank2
   r2_lws[0] = RANK2_GROUP_SIZE;
   r2_gws[0] = RANK2_GLOBAL_SIZE;
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_rank2,
-                                 1, NULL,
-                                 r2_gws, 
-                                 r2_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_rank2,
+                        1, NULL,
+                        r2_gws,
+                        r2_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank2");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_RANK2);
@@ -461,43 +462,43 @@ void rank( int iteration )
     r3_lws[0] = work_item_sizes[0];
     r3_gws[0] = work_item_sizes[0] * work_item_sizes[0];
     if (r3_gws[0] > MAX_KEY) r3_gws[0] = MAX_KEY;
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_rank3_0,
-                                   1, NULL,
-                                   r3_gws, 
-                                   r3_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_rank3_0,
+                          1, NULL,
+                          r3_gws,
+                          r3_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank3_0");
 
     r3_lws[0] = work_item_sizes[0];
     r3_gws[0] = work_item_sizes[0];
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_rank3_1,
-                                   1, NULL,
-                                   r3_gws, 
-                                   r3_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_rank3_1,
+                          1, NULL,
+                          r3_gws,
+                          r3_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank3_1");
 
     r3_lws[0] = work_item_sizes[0];
     r3_gws[0] = work_item_sizes[0] * work_item_sizes[0];
     if (r3_gws[0] > MAX_KEY) r3_gws[0] = MAX_KEY;
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_rank3_2,
-                                   1, NULL,
-                                   r3_gws, 
-                                   r3_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_rank3_2,
+                          1, NULL,
+                          r3_gws,
+                          r3_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank3_2");
   } else {
     r3_lws[0] = RANK_GROUP_SIZE;
     r3_gws[0] = RANK_GLOBAL_SIZE;
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_rank3,
-                                   1, NULL,
-                                   r3_gws, 
-                                   r3_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_rank3,
+                          1, NULL,
+                          r3_gws,
+                          r3_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank3");
   }
   CHECK_FINISH();
@@ -538,7 +539,7 @@ int main( int argc, char **argv )
   }
 
   /*  Initialize timers  */
-  timer_on = 0;            
+  timer_on = 0;
   if ((fp = fopen("timer.flag", "r")) != NULL) {
     fclose(fp);
     timer_on = 1;
@@ -597,9 +598,9 @@ int main( int argc, char **argv )
               1220703125.00 );                 /* Random number gen mult */
   if (timer_on) timer_stop( 1 );
 
-  /*  Do one interation for free (i.e., untimed) to guarantee initialization of  
+  /*  Do one interation for free (i.e., untimed) to guarantee initialization of
       all data and code pages and respective tables */
-  rank( 1 );  
+  rank( 1 );
 
   /*  Start verification counter */
   passed_verification = 0;
@@ -617,7 +618,7 @@ int main( int argc, char **argv )
 
   if( CLASS != 'S' ) printf( "\n   iteration\n" );
 
-  /*  Start timer  */             
+  /*  Start timer  */
   timer_start( 0 );
 
 
@@ -665,7 +666,7 @@ int main( int argc, char **argv )
                    timecounter,
                    ((double) (MAX_ITERATIONS*TOTAL_KEYS))
                               /timecounter/1000000.,
-                   "keys ranked", 
+                   "keys ranked",
                    passed_verification,
                    NPBVERSION,
                    COMPILETIME,
@@ -699,7 +700,7 @@ int main( int argc, char **argv )
   }
 
   release_opencl();
-  
+
   fflush(stdout);
 
   return 0;
@@ -762,7 +763,7 @@ static void setup_opencl(int argc, char *argv[])
   clu_CheckError(ecode, "clCreateContext()");
 
   // 3. Create a command queue
-  cmd_queue = clCreateCommandQueue(context, device, 0, &ecode);
+  cmd_queue = CEC_COMMAND_QUEUE(context, device, 0, &ecode);
   clu_CheckError(ecode, "clCreateCommandQueue()");
 
   DTIMER_STOP(T_OPENCL_API);
@@ -904,7 +905,7 @@ static void setup_opencl(int argc, char *argv[])
     ecode  = clSetKernelArg(k_rank3_0, 0, sizeof(cl_mem),(void*)&m_key_buff1);
     ecode |= clSetKernelArg(k_rank3_0, 1, sizeof(cl_mem),(void*)&m_key_buff1);
     ecode |= clSetKernelArg(k_rank3_0, 2, sizeof(cl_mem),(void*)&m_sum);
-    ecode |= clSetKernelArg(k_rank3_0, 3, 
+    ecode |= clSetKernelArg(k_rank3_0, 3,
                             sizeof(INT_TYPE) * work_item_sizes[0] * 2,
                             NULL);
     clu_CheckError(ecode, "clSetKernelArg() for rank3_0");
@@ -913,7 +914,7 @@ static void setup_opencl(int argc, char *argv[])
     clu_CheckError(ecode, "clCreateKernel() for rank3_1");
     ecode  = clSetKernelArg(k_rank3_1, 0, sizeof(cl_mem), (void*)&m_sum);
     ecode  = clSetKernelArg(k_rank3_1, 1, sizeof(cl_mem), (void*)&m_sum);
-    ecode |= clSetKernelArg(k_rank3_1, 2, 
+    ecode |= clSetKernelArg(k_rank3_1, 2,
                             sizeof(INT_TYPE) * work_item_sizes[0] * 2,
                             NULL);
     clu_CheckError(ecode, "clSetKernelArg() for rank3_1");
@@ -1013,7 +1014,7 @@ static void release_opencl()
       t_kernel += timer_read(i);
 
     printf("\nOpenCL timers -\n");
-    printf("Kernel      : %9.3f (%.2f%%)\n", 
+    printf("Kernel      : %9.3f (%.2f%%)\n",
         t_kernel, t_kernel/t_opencl * 100.0);
 
     cnt = timer_count(T_KERNEL_CREATE_SEQ);
@@ -1080,4 +1081,3 @@ static void release_opencl()
   }
 #endif
 }
-

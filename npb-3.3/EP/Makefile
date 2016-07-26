@@ -11,7 +11,7 @@ OBJS = ep.o \
 			 ${COMMON}/${RAND}.o \
        ${COMMON}/c_timers.o \
 			 ${COMMON}/wtime.o \
-       ${COMMON}/cl_util.o
+       ${COMMON}/cl_util.o $(CECOBJS)
 
 
 ${PROGRAM}: config ${OBJS}
@@ -25,4 +25,3 @@ ep.o: ep.c npbparams.h
 clean:
 	- rm -f *.o *~ *.bin
 	- rm -f npbparams.h core
-

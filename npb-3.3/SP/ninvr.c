@@ -35,7 +35,7 @@
 #include "header.h"
 
 //---------------------------------------------------------------------
-// block-diagonal matrix-vector multiplication              
+// block-diagonal matrix-vector multiplication
 //---------------------------------------------------------------------
 void ninvr()
 {
@@ -43,15 +43,14 @@ void ninvr()
 
   if (timeron) timer_start(t_ninvr);
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_ninvr,
-                                 NINVR_DIM, NULL,
-                                 ninvr_gws,
-                                 ninvr_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_ninvr,
+                        NINVR_DIM, NULL,
+                        ninvr_gws,
+                        ninvr_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 
   if (timeron) timer_stop(t_ninvr);
 }
-

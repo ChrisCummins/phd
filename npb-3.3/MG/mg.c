@@ -36,6 +36,7 @@
 //      program mg
 //---------------------------------------------------------------------
 
+#include <cec-profile.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -620,7 +621,7 @@ static void psinv(double *ou, int n1, int n2, int n3,
   if (timeron) timer_start(T_psinv);
 
   DTIMER_START(T_BUFFER_CREATE);
-	cl_mem m_c = clCreateBuffer(context, 
+        cl_mem m_c = clCreateBuffer(context,
                               CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                               4 * sizeof(double),
                               c, &ecode);
@@ -664,12 +665,12 @@ static void psinv(double *ou, int n1, int n2, int n3,
 	ecode |= clSetKernelArg(kernel_psinv, 6, sizeof(int), &offset);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 kernel_psinv,
-                                 PSINV_DIM, NULL,
-                                 psinv_gws,
-                                 psinv_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        kernel_psinv,
+                        PSINV_DIM, NULL,
+                        psinv_gws,
+                        psinv_lws,
+                        0, NULL);
 	clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_PSINV);
@@ -777,12 +778,12 @@ static void resid(double *or, int n1, int n2, int n3, double a[4], int k,
   printf("}\n");
 #endif
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 kernel_resid,
-                                 RESID_DIM, NULL,
-                                 resid_gws,
-                                 resid_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        kernel_resid,
+                        RESID_DIM, NULL,
+                        resid_gws,
+                        resid_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_RESID);
@@ -880,12 +881,12 @@ static void rprj3(double *or, int m1k, int m2k, int m3k,
 	ecode |= clSetKernelArg(kernel_rprj3, 11, sizeof(int), &d3);
   clu_CheckError(ecode, "clSetKernelSetArg()");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 kernel_rprj3, 
-                                 RPRJ3_DIM, NULL,
-                                 rprj3_gws,
-                                 rprj3_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        kernel_rprj3,
+                        RPRJ3_DIM, NULL,
+                        rprj3_gws,
+                        rprj3_lws,
+                        0, NULL);
 	clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_RPRJ3);
@@ -968,11 +969,11 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
     ecode |= clSetKernelArg(kernel_interp_1, 8, sizeof(int), &offset_u2);
     clu_CheckError(ecode, "clSetKernelArg()");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   kernel_interp_1,
-                                   INTERP_1_DIM, NULL,
-                                   global, local,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          kernel_interp_1,
+                          INTERP_1_DIM, NULL,
+                          global, local,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
     CHECK_FINISH();
     DTIMER_STOP(T_KERNEL_INTERP_1);
@@ -1026,11 +1027,11 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
     ecode |= clSetKernelArg(kernel_interp_2, 14, sizeof(int), &t3);
     clu_CheckError(ecode, "clSetKernelArg()");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   kernel_interp_2,
-                                   2, NULL,
-                                   global, local,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          kernel_interp_2,
+                          2, NULL,
+                          global, local,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
     clFinish(cmd_queue);
     DTIMER_STOP(T_KERNEL_INTERP_2);
@@ -1070,11 +1071,11 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
     ecode |= clSetKernelArg(kernel_interp_3, 14, sizeof(int), &t3);
     clu_CheckError(ecode, "clSetKernelArg()");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   kernel_interp_3,
-                                   2, NULL,
-                                   global, local,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          kernel_interp_3,
+                          2, NULL,
+                          global, local,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
     clFinish(cmd_queue);
     DTIMER_STOP(T_KERNEL_INTERP_3);
@@ -1114,11 +1115,11 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
     ecode |= clSetKernelArg(kernel_interp_4, 14, sizeof(int), &t3);
     clu_CheckError(ecode, "clSetKernelArg()");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   kernel_interp_4,
-                                   2, NULL,
-                                   global, local,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          kernel_interp_4,
+                          2, NULL,
+                          global, local,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
     clFinish(cmd_queue);
     DTIMER_STOP(T_KERNEL_INTERP_4);
@@ -1158,11 +1159,11 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
     ecode |= clSetKernelArg(kernel_interp_5, 14, sizeof(int), &t3);
     clu_CheckError(ecode, "clSetKernelArg()");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   kernel_interp_5,
-                                   2, NULL,
-                                   global, local,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          kernel_interp_5,
+                          2, NULL,
+                          global, local,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
     clFinish(cmd_queue);
     DTIMER_STOP(T_KERNEL_INTERP_5);
@@ -1285,12 +1286,12 @@ static void norm2u3(int n1, int n2, int n3, double *rnm2, double *rnmu,
   }
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 kernel_norm2u3,
-                                 NORM2U3_DIM, NULL,
-                                 norm2_gws,
-                                 norm2_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        kernel_norm2u3,
+                        NORM2U3_DIM, NULL,
+                        norm2_gws,
+                        norm2_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   if (device_type == CL_DEVICE_TYPE_GPU) {
@@ -1384,12 +1385,12 @@ static void comm3(int n1, int n2, int n3, int kk, cl_mem m_buff, int offset)
   ecode |= clSetKernelArg(kernel_comm3_1, 4, sizeof(int), &offset);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 kernel_comm3_1,
-                                 COMM3_1_DIM, NULL,
-                                 comm3_gws,
-                                 comm3_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        kernel_comm3_1,
+                        COMM3_1_DIM, NULL,
+                        comm3_gws,
+                        comm3_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_COMM3_1);
@@ -1413,12 +1414,12 @@ static void comm3(int n1, int n2, int n3, int kk, cl_mem m_buff, int offset)
     ecode |= clSetKernelArg(kernel_comm3_2, 4, sizeof(int), &offset);
     clu_CheckError(ecode, "clSetKernelArg()");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   kernel_comm3_2,
-                                   COMM3_2_DIM, NULL,
-                                   comm3_gws,
-                                   comm3_lws,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          kernel_comm3_2,
+                          COMM3_2_DIM, NULL,
+                          comm3_gws,
+                          comm3_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
     CHECK_FINISH();
     DTIMER_STOP(T_KERNEL_COMM3_2);
@@ -1453,12 +1454,12 @@ static void comm3(int n1, int n2, int n3, int kk, cl_mem m_buff, int offset)
   ecode |= clSetKernelArg(kernel_comm3_3, 4, sizeof(int), &offset);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 kernel_comm3_3,
-                                 COMM3_3_DIM, NULL,
-                                 comm3_gws,
-                                 comm3_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        kernel_comm3_3,
+                        COMM3_3_DIM, NULL,
+                        comm3_gws,
+                        comm3_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_COMM3_3);
@@ -1540,7 +1541,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
                                  m_starts,
                                  CL_TRUE,
                                  0,
-                                 (NM) * sizeof(double), 
+                                 (NM) * sizeof(double),
                                  starts,
                                  0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueWriteBuffer()");
@@ -1562,7 +1563,8 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
   ecode |= clSetKernelArg(kernel_zran3_1, 9, sizeof(double), &a1);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue, kernel_zran3_1, 1, NULL, global, local, 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue, kernel_zran3_1, 1, NULL, global, local, 0,
+                        NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   clFinish(cmd_queue);
   DTIMER_STOP(T_KERNEL_ZRAN3_1);
@@ -1675,11 +1677,11 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
   ecode |= clSetKernelArg(kernel_zran3_2, 8, sizeof(int), &offset);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 kernel_zran3_2,
-                                 1, NULL,
-                                 global, local,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        kernel_zran3_2,
+                        1, NULL,
+                        global, local,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   clFinish(cmd_queue);
   DTIMER_STOP(T_KERNEL_ZRAN3_2);
@@ -1811,17 +1813,17 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
   clu_CheckError(ecode, "clSetKernelArg()");
 
   if (device_type == CL_DEVICE_TYPE_GPU) {
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   kernel_zran3_3,
-                                   3, NULL,
-                                   global, local,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          kernel_zran3_3,
+                          3, NULL,
+                          global, local,
+                          0, NULL);
   } else {
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   kernel_zran3_3,
-                                   2, NULL,
-                                   global, local,
-                                   0, NULL, NULL);
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          kernel_zran3_3,
+                          2, NULL,
+                          global, local,
+                          0, NULL);
   }
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
@@ -1979,12 +1981,12 @@ static void zero3(int n1, int n2, int n3, cl_mem m_buff, int offset)
   ecode |= clSetKernelArg(kernel_zero3, 4, sizeof(int), &offset);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 kernel_zero3,
-                                 ZERO3_DIM, NULL,
-                                 zero3_gws,
-                                 zero3_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        kernel_zero3,
+                        ZERO3_DIM, NULL,
+                        zero3_gws,
+                        zero3_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_ZERO3);
@@ -2033,7 +2035,7 @@ static void setup_opencl(int argc, char *argv[])
   //-----------------------------------------------------------------------
   // 3. Create a command queue
   //-----------------------------------------------------------------------
-  cmd_queue = clCreateCommandQueue(context, device, 0, &ecode);
+  cmd_queue = CEC_COMMAND_QUEUE(context, device, 0, &ecode);
   clu_CheckError(ecode, "clCreateCommandQueue()");
 
   DTIMER_STOP(T_OPENCL_API);
@@ -2255,7 +2257,7 @@ static void print_opencl_timers()
       t_kernel += timer_read(i);
 
     printf("\nOpenCL timers -\n");
-    printf("Kernel       : %9.3f (%.2f%%)\n", 
+    printf("Kernel       : %9.3f (%.2f%%)\n",
         t_kernel, t_kernel/t_opencl * 100.0);
     for (i = T_KERNEL_PSINV; i <= T_KERNEL_ZERO3; i++)
       print_kernel_time(t_kernel, i);
@@ -2279,4 +2281,3 @@ static void print_opencl_timers()
   }
 }
 #endif
-

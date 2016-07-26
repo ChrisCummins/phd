@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <cec-profile.h>
 
 #include "npbparams.h"
 #include "ep.h"
@@ -109,7 +110,7 @@ static double q[NQ];
 static logical timers_enabled;
 
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
   double Mops, t1, t2;
   double tsx, tsy, tm, an, tt, gc;
@@ -151,12 +152,12 @@ int main(int argc, char *argv[])
   verified = false;
 
   //--------------------------------------------------------------------
-  //  Compute the number of "batches" of random number pairs generated 
-  //  per processor. Adjust if the number of processors does not evenly 
+  //  Compute the number of "batches" of random number pairs generated
+  //  per processor. Adjust if the number of processors does not evenly
   //  divide the total number
   //--------------------------------------------------------------------
 
-  np = NN; 
+  np = NN;
 
   setup_opencl(argc, argv);
 
@@ -199,13 +200,13 @@ int main(int argc, char *argv[])
   err_code |= clSetKernelArg(kernel, 6, sizeof(cl_int), (void*)&k_offset);
   err_code |= clSetKernelArg(kernel, 7, sizeof(cl_double), (void*)&an);
   clu_CheckError(err_code, "clSetKernelArg()");
-  
+
   size_t localWorkSize[] = { GROUP_SIZE };
   size_t globalWorkSize[] = { np };
-  err_code = clEnqueueNDRangeKernel(cmd_queue, kernel, 1, NULL,
-                                    globalWorkSize, 
-                                    localWorkSize,
-                                    0, NULL, NULL);
+  err_code = CEC_ND_KERNEL(cmd_queue, kernel, 1, NULL,
+                           globalWorkSize,
+                           localWorkSize,
+                           0, NULL);
   clu_CheckError(err_code, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_EMBAR);
@@ -224,15 +225,15 @@ int main(int argc, char *argv[])
 
   // 9. Get the result
   DTIMER_START(T_BUFFER_READ);
-  err_code = clEnqueueReadBuffer(cmd_queue, pgq, CL_FALSE, 0, gq_size, 
+  err_code = clEnqueueReadBuffer(cmd_queue, pgq, CL_FALSE, 0, gq_size,
                                  gq, 0, NULL, NULL);
   clu_CheckError(err_code, "clEnqueueReadbuffer()");
 
-  err_code = clEnqueueReadBuffer(cmd_queue, pgsx, CL_FALSE, 0, gsx_size, 
+  err_code = clEnqueueReadBuffer(cmd_queue, pgsx, CL_FALSE, 0, gsx_size,
                                  gsx, 0, NULL, NULL);
   clu_CheckError(err_code, "clEnqueueReadbuffer()");
 
-  err_code = clEnqueueReadBuffer(cmd_queue, pgsy, CL_TRUE, 0, gsy_size, 
+  err_code = clEnqueueReadBuffer(cmd_queue, pgsy, CL_TRUE, 0, gsy_size,
                                  gsy, 0, NULL, NULL);
   clu_CheckError(err_code, "clEnqueueReadbuffer()");
   DTIMER_STOP(T_BUFFER_READ);
@@ -298,9 +299,9 @@ int main(int argc, char *argv[])
   }
 
   c_print_results("EP", CLASS, M+1, 0, 0, nit,
-      tm, Mops, 
+      tm, Mops,
       "Random numbers generated",
-      verified, NPBVERSION, COMPILETIME, 
+      verified, NPBVERSION, COMPILETIME,
       CS1, CS2, CS3, CS4, CS5, CS6, CS7,
       clu_GetDeviceTypeName(device_type), device_name);
 
@@ -349,7 +350,7 @@ void setup_opencl(int argc, char *argv[])
   clu_CheckError(err_code, "clCreateContext()");
 
   // 3. Create a command queue
-  cmd_queue = clCreateCommandQueue(context, device, 0, &err_code);
+  cmd_queue = CEC_COMMAND_QUEUE(context, device, 0, &err_code);
   clu_CheckError(err_code, "clCreateCommandQueue()");
 
   DTIMER_STOP(T_OPENCL_API);
@@ -428,7 +429,7 @@ void release_opencl()
       t_kernel += timer_read(i);
 
     printf("\nOpenCL timers -\n");
-    printf("Kernel    : %9.3f (%.2f%%)\n", 
+    printf("Kernel    : %9.3f (%.2f%%)\n",
         t_kernel, t_kernel/t_opencl * 100.0);
 
     cnt = timer_count(T_KERNEL_EMBAR);
@@ -455,4 +456,3 @@ void release_opencl()
   }
 #endif
 }
-

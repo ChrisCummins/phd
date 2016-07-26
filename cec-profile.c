@@ -9,7 +9,7 @@ cl_event* cec_event() {
     return &cec_event_v;
 }
 
-void cec_profile(const char* name) {
+void cec_profile(const char* name, const size_t wgsize) {
     clWaitForEvents(1, cec_event());
     cl_int err;
     cl_ulong start_time, end_time;
@@ -33,5 +33,5 @@ void cec_profile(const char* name) {
     }
 
     double elapsed_ms = (double)(end_time - start_time) / 1000000.0;
-    fprintf(stderr, "\n[CEC] %s %.3f\n", name, elapsed_ms);
+    fprintf(stderr, "\n[CEC] %s %zu %.3f\n", name, wgsize, elapsed_ms);
 }

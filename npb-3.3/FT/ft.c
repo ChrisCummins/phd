@@ -36,6 +36,8 @@
 // FT benchmark
 //---------------------------------------------------------------------
 
+#include <cec-profile.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -105,19 +107,19 @@ static cl_kernel k_evolve;
 static cl_kernel k_checksum;
 
 //---------------------------------------------------------------------
-// u0, u1, u2 are the main arrays in the problem. 
-// Depending on the decomposition, these arrays will have different 
-// dimensions. To accomodate all possibilities, we allocate them as 
-// one-dimensional arrays and pass them to subroutines for different 
+// u0, u1, u2 are the main arrays in the problem.
+// Depending on the decomposition, these arrays will have different
+// dimensions. To accomodate all possibilities, we allocate them as
+// one-dimensional arrays and pass them to subroutines for different
 // views
 //  - u0 contains the initial (transformed) initial condition
 //  - u1 and u2 are working arrays
-//  - twiddle contains exponents for the time evolution operator. 
+//  - twiddle contains exponents for the time evolution operator.
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 // Large arrays are in common so that they are allocated on the
 // heap rather than the stack. This common block is not
-// referenced directly anywhere else. Padding is to avoid accidental 
+// referenced directly anywhere else. Padding is to avoid accidental
 // cache problems, since all array sizes are powers of two.
 //---------------------------------------------------------------------
 static cl_mem m_u;
@@ -155,7 +157,7 @@ static void cffts2(int is, int d1, int d2, int d3, cl_mem *x, cl_mem *xout);
 static void cffts3(int is, int d1, int d2, int d3, cl_mem *x, cl_mem *xout);
 static int ilog2(int n);
 static void checksum(int i, cl_mem *u1, int d1, int d2, int d3);
-static void verify(int d1, int d2, int d3, int nt, 
+static void verify(int d1, int d2, int d3, int nt,
                    logical *verified, char *Class);
 static void setup_opencl(int argc, char *argv[]);
 static void release_opencl();
@@ -176,9 +178,9 @@ int main(int argc, char *argv[])
   }
 
   //---------------------------------------------------------------------
-  // Run the entire problem once to make sure all data is touched. 
-  // This reduces variable startup costs, which is important for such a 
-  // short benchmark. The other NPB 2 implementations are similar. 
+  // Run the entire problem once to make sure all data is touched.
+  // This reduces variable startup costs, which is important for such a
+  // short benchmark. The other NPB 2 implementations are similar.
   //---------------------------------------------------------------------
   for (i = 1; i <= T_max; i++) {
     timer_clear(i);
@@ -193,7 +195,7 @@ int main(int argc, char *argv[])
 
   //---------------------------------------------------------------------
   // Start over from the beginning. Note that all operations must
-  // be timed, in contrast to other benchmarks. 
+  // be timed, in contrast to other benchmarks.
   //---------------------------------------------------------------------
   for (i = 1; i <= T_max; i++) {
     timer_clear(i);
@@ -245,7 +247,7 @@ int main(int argc, char *argv[])
     mflops = 0.0;
   }
   c_print_results("FT", Class, NX, NY, NZ, niter,
-                  total_time, mflops, "          floating point", verified, 
+                  total_time, mflops, "          floating point", verified,
                   NPBVERSION, COMPILETIME, CS1, CS2, CS3, CS4, CS5, CS6, CS7,
                   clu_GetDeviceTypeName(device_type),
                   device_name);
@@ -283,12 +285,12 @@ static void init_ui(cl_mem *u0, cl_mem *u1, cl_mem *twiddle,
 
   size_t local_ws = work_item_sizes[0];
   size_t global_ws = clu_RoundWorkSize((size_t)n, local_ws);
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_init_ui,
-                                 1, NULL,
-                                 &global_ws,
-                                 &local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_init_ui,
+                        1, NULL,
+                        &global_ws,
+                        &local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for init_ui");
 
   ecode = clFinish(cmd_queue);
@@ -340,20 +342,20 @@ static void evolve(cl_mem *u0, cl_mem *u1, cl_mem *twiddle,
     global_ws[0] = clu_RoundWorkSize((size_t)d3, local_ws[0]);
   }
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_evolve,
-                                 EVOLVE_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_evolve,
+                        EVOLVE_DIM, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for evolve");
   CHECK_FINISH();
 }
 
 
 //---------------------------------------------------------------------
-// Fill in array u0 with initial conditions from 
-// random number generator 
+// Fill in array u0 with initial conditions from
+// random number generator
 //---------------------------------------------------------------------
 static void compute_initial_conditions(cl_mem *u0, int d1, int d2, int d3)
 {
@@ -395,7 +397,7 @@ static void compute_initial_conditions(cl_mem *u0, int d1, int d2, int d3)
     clu_CheckError(ecode, "clCreateBuffer() for m_starts");
 
     temp = d2 / max_compute_units;
-    local_ws  = temp == 0 ? 
+    local_ws  = temp == 0 ?
                 1 : ((temp > work_item_sizes[0]) ? work_item_sizes[0] : temp);
     global_ws = clu_RoundWorkSize((size_t)d2, local_ws);
   }
@@ -404,12 +406,12 @@ static void compute_initial_conditions(cl_mem *u0, int d1, int d2, int d3)
   ecode |= clSetKernelArg(k_compute_ics, 1, sizeof(cl_mem), &m_starts);
   clu_CheckError(ecode, "clSetKernelArg() for compute_initial_conditions");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_compute_ics,
-                                 1, NULL,
-                                 &global_ws,
-                                 &local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_compute_ics,
+                        1, NULL,
+                        &global_ws,
+                        &local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   ecode = clFinish(cmd_queue);
@@ -483,15 +485,15 @@ static void setup()
   // Set up info for blocking of ffts and transposes.  This improves
   // performance on cache-based systems. Blocking involves
   // working on a chunk of the problem at a time, taking chunks
-  // along the first, second, or third dimension. 
+  // along the first, second, or third dimension.
   //
   // - In cffts1 blocking is on 2nd dimension (with fft on 1st dim)
   // - In cffts2/3 blocking is on 1st dimension (with fft on 2nd and 3rd dims)
 
-  // Since 1st dim is always in processor, we'll assume it's long enough 
+  // Since 1st dim is always in processor, we'll assume it's long enough
   // (default blocking factor is 16 so min size for 1st dim is 16)
-  // The only case we have to worry about is cffts1 in a 2d decomposition. 
-  // so the blocking factor should not be larger than the 2nd dimension. 
+  // The only case we have to worry about is cffts1 in a 2d decomposition.
+  // so the blocking factor should not be larger than the 2nd dimension.
   //---------------------------------------------------------------------
 
 //  fftblock = FFTBLOCK_DEFAULT;
@@ -502,18 +504,18 @@ static void setup()
 
 
 //---------------------------------------------------------------------
-// compute function from local (i,j,k) to ibar^2+jbar^2+kbar^2 
-// for time evolution exponent. 
+// compute function from local (i,j,k) to ibar^2+jbar^2+kbar^2
+// for time evolution exponent.
 //---------------------------------------------------------------------
 static void compute_indexmap(cl_mem *twiddle, int d1, int d2, int d3)
 {
   cl_int ecode;
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_compute_indexmap,
-                                 COMPUTE_IMAP_DIM, NULL,
-                                 cimap_gws,
-                                 cimap_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_compute_indexmap,
+                        COMPUTE_IMAP_DIM, NULL,
+                        cimap_gws,
+                        cimap_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for compute_indexmap");
   CHECK_FINISH();
 }
@@ -524,13 +526,13 @@ static void print_timers()
   int i;
   double t, t_m;
   char *tstrings[T_max+1];
-  tstrings[1] = "          total "; 
-  tstrings[2] = "          setup "; 
-  tstrings[3] = "            fft "; 
-  tstrings[4] = "         evolve "; 
-  tstrings[5] = "       checksum "; 
-  tstrings[6] = "           fftx "; 
-  tstrings[7] = "           ffty "; 
+  tstrings[1] = "          total ";
+  tstrings[2] = "          setup ";
+  tstrings[3] = "            fft ";
+  tstrings[4] = "         evolve ";
+  tstrings[5] = "       checksum ";
+  tstrings[6] = "           fftx ";
+  tstrings[7] = "           ffty ";
   tstrings[8] = "           fftz ";
   tstrings[9] = "   compute_imap ";
   tstrings[10]= "    compute_ics ";
@@ -540,14 +542,14 @@ static void print_timers()
   if (t_m <= 0.0) t_m = 1.00;
   for (i = 1; i <= T_max; i++) {
     t = timer_read(i);
-    printf(" timer %2d(%16s) :%9.4f (%6.2f%%)\n", 
+    printf(" timer %2d(%16s) :%9.4f (%6.2f%%)\n",
         i, tstrings[i], t, t*100.0/t_m);
   }
 }
 
 
 //---------------------------------------------------------------------
-// compute the roots-of-unity array that will be used for subsequent FFTs. 
+// compute the roots-of-unity array that will be used for subsequent FFTs.
 //---------------------------------------------------------------------
 static void fft_init(int n)
 {
@@ -643,12 +645,12 @@ static void cffts1(int is, int d1, int d2, int d3, cl_mem *x, cl_mem *xout)
     }
   }
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_cffts1,
-                                 CFFTS_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_cffts1,
+                        CFFTS_DIM, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for cffts1");
   CHECK_FINISH();
 
@@ -692,12 +694,12 @@ static void cffts2(int is, int d1, int d2, int d3, cl_mem *x, cl_mem *xout)
     }
   }
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_cffts2,
-                                 CFFTS_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_cffts2,
+                        CFFTS_DIM, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for cffts2");
   CHECK_FINISH();
 
@@ -741,12 +743,12 @@ static void cffts3(int is, int d1, int d2, int d3, cl_mem *x, cl_mem *xout)
     }
   }
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_cffts3,
-                                 CFFTS_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_cffts3,
+                        CFFTS_DIM, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for cffts3");
   CHECK_FINISH();
 
@@ -777,12 +779,12 @@ static void checksum(int i, cl_mem *u1, int d1, int d2, int d3)
   ecode = clSetKernelArg(k_checksum, 0, sizeof(cl_mem), u1);
   clu_CheckError(ecode, "clSetKernelArg() for checksum");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_checksum,
-                                 1, NULL,
-                                 &checksum_global_ws,
-                                 &checksum_local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_checksum,
+                        1, NULL,
+                        &checksum_global_ws,
+                        &checksum_local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 
@@ -806,7 +808,7 @@ static void checksum(int i, cl_mem *u1, int d1, int d2, int d3)
 }
 
 
-static void verify(int d1, int d2, int d3, int nt, 
+static void verify(int d1, int d2, int d3, int nt,
                    logical *verified, char *Class)
 {
   int i;
@@ -1058,7 +1060,7 @@ static void setup_opencl(int argc, char *argv[])
   clu_CheckError(ecode, "clCreateContext()");
 
   // 3. Create a command queue
-  cmd_queue = clCreateCommandQueue(context, device, 0, &ecode);
+  cmd_queue = CEC_COMMAND_QUEUE(context, device, 0, &ecode);
   clu_CheckError(ecode, "clCreateCommandQueue()");
 
   DTIMER_STOP(T_OPENCL_API);

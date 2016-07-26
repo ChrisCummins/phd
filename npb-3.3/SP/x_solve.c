@@ -46,20 +46,19 @@ void x_solve()
 
   if (timeron) timer_start(t_xsolve);
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_x_solve,
-                                 X_SOLVE_DIM, NULL,
-                                 x_solve_gws,
-                                 x_solve_lws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_x_solve,
+                        X_SOLVE_DIM, NULL,
+                        x_solve_gws,
+                        x_solve_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 
   if (timeron) timer_stop(t_xsolve);
 
   //---------------------------------------------------------------------
-  // Do the block-diagonal inversion          
+  // Do the block-diagonal inversion
   //---------------------------------------------------------------------
   ninvr();
 }
-

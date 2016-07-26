@@ -32,6 +32,7 @@
 //          and Jaejin Lee                                                 //
 //-------------------------------------------------------------------------//
 
+#include <cec-profile.h>
 #include <stdio.h>
 #include "applu.incl"
 
@@ -50,7 +51,7 @@ void pintgr()
   cl_kernel k_pintgr1, k_pintgr2, k_pintgr3, k_pintgr_reduce;
   cl_mem m_phi1, m_phi2, m_frc;
   double *g_frc;
-  size_t local_ws[2], global_ws[2], temp; 
+  size_t local_ws[2], global_ws[2], temp;
   size_t frc_lws, frc_gws, wg_num, buf_size;
   cl_int ecode;
 
@@ -75,7 +76,7 @@ void pintgr()
   buf_size = sizeof(double) * wg_num;
   m_frc = clCreateBuffer(context,
                          CL_MEM_READ_WRITE,
-                         buf_size, 
+                         buf_size,
                          NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer() for m_frc");
 
@@ -115,12 +116,12 @@ void pintgr()
     global_ws[0] = clu_RoundWorkSize((size_t)(jfin-jbeg), local_ws[0]);
   }
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_pintgr1,
-                                 PINTGR1_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_pintgr1,
+                        PINTGR1_DIM, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
 
@@ -137,13 +138,13 @@ void pintgr()
   ecode |= clSetKernelArg(k_pintgr_reduce, 6, sizeof(int), &jbeg);
   ecode |= clSetKernelArg(k_pintgr_reduce, 7, sizeof(int), &jfin1);
   clu_CheckError(ecode, "clSetKernelArg()");
-  
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_pintgr_reduce,
-                                 1, NULL,
-                                 &frc_gws,
-                                 &frc_lws,
-                                 0, NULL, NULL);
+
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_pintgr_reduce,
+                        1, NULL,
+                        &frc_gws,
+                        &frc_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   g_frc = (double (*))malloc(buf_size);
@@ -190,12 +191,12 @@ void pintgr()
     global_ws[0] = clu_RoundWorkSize((size_t)(ki2-ki1), local_ws[0]);
   }
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_pintgr2,
-                                 PINTGR2_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_pintgr2,
+                        PINTGR2_DIM, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   // k_pintgr_reduce: frc2
@@ -205,13 +206,13 @@ void pintgr()
   ecode |= clSetKernelArg(k_pintgr_reduce, 6, sizeof(int), &ki1);
   ecode |= clSetKernelArg(k_pintgr_reduce, 7, sizeof(int), &ki2m1);
   clu_CheckError(ecode, "clSetKernelArg()");
-  
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_pintgr_reduce,
-                                 1, NULL,
-                                 &frc_gws,
-                                 &frc_lws,
-                                 0, NULL, NULL);
+
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_pintgr_reduce,
+                        1, NULL,
+                        &frc_gws,
+                        &frc_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   ecode = clEnqueueReadBuffer(cmd_queue,
@@ -256,12 +257,12 @@ void pintgr()
     global_ws[0] = clu_RoundWorkSize((size_t)(ki2-ki1), local_ws[0]);
   }
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_pintgr3,
-                                 PINTGR3_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, NULL);
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_pintgr3,
+                        PINTGR3_DIM, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   // k_pintgr_reduce: frc3
@@ -270,13 +271,13 @@ void pintgr()
   ecode |= clSetKernelArg(k_pintgr_reduce, 6, sizeof(int), &ki1);
   ecode |= clSetKernelArg(k_pintgr_reduce, 7, sizeof(int), &ki2m1);
   clu_CheckError(ecode, "clSetKernelArg()");
-  
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_pintgr_reduce,
-                                 1, NULL,
-                                 &frc_gws,
-                                 &frc_lws,
-                                 0, NULL, NULL);
+
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_pintgr_reduce,
+                        1, NULL,
+                        &frc_gws,
+                        &frc_lws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   ecode = clEnqueueReadBuffer(cmd_queue,
@@ -309,4 +310,3 @@ void pintgr()
 
   DTIMER_STOP(t_pintgr);
 }
-
