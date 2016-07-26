@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -eu
+
+$@ 2>&1 | grep '\[CEC\]' | grep -v '^$' | sed 's/^\[CEC\] //'
