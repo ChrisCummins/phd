@@ -83,7 +83,7 @@ void add()
                                  add_lws,
                                  0, NULL, &cec_event);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "k_add");
+  cec_profile(cec_event, "add");
   CHECK_FINISH();
 
   if (timeron) timer_stop(t_add);
