@@ -56,7 +56,7 @@ void z_solve()
                           Z_SOLVE_DIM, NULL,
                           z_solve1_gws,
                           z_solve1_lws,
-                          0, NULL, NULL);
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
     ecode = CEC_ND_KERNEL(cmd_queue,
@@ -64,7 +64,7 @@ void z_solve()
                           Z_SOLVE_DIM, NULL,
                           z_solve2_gws,
                           z_solve2_lws,
-                          0, NULL, NULL);
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
     ecode = CEC_ND_KERNEL(cmd_queue,
@@ -72,7 +72,7 @@ void z_solve()
                           Z_SOLVE_DIM, NULL,
                           z_solve3_gws,
                           z_solve3_lws,
-                          0, NULL, NULL);
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
     ecode = CEC_ND_KERNEL(cmd_queue,
@@ -80,7 +80,7 @@ void z_solve()
                           2, NULL,
                           z_solve_gws,
                           z_solve_lws,
-                          0, NULL, NULL);
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
     CHECK_FINISH();
   } else {
