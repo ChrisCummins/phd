@@ -34,9 +34,41 @@
 
 #include "header.h"
 
+/* CEC profiling. */
+#include <stdio.h>
+#include <stdlib.h>
+static cl_event cec_event;
+static void cec_profile(cl_event event, const char* name) {
+  clWaitForEvents(1, &event);
+  cl_int err;
+  cl_ulong start_time, end_time;
+
+  err = clGetEventProfilingInfo(event,
+                                CL_PROFILING_COMMAND_QUEUED,
+                                sizeof(start_time), &start_time,
+                                NULL);
+  if (err != CL_SUCCESS) {
+    printf("[CEC] fatal: Kernel timer 1!");
+    exit(104);
+  }
+
+  err = clGetEventProfilingInfo(event,
+                                CL_PROFILING_COMMAND_END,
+                                sizeof(end_time), &end_time,
+                                NULL);
+  if (err != CL_SUCCESS) {
+    printf("[CEC] fatal: Kernel timer 2!");
+    exit(105);
+  }
+
+  float elapsed_ms = (float)(end_time - start_time) / 1000;
+  printf("\n[CEC] %s %.3f\n", name, elapsed_ms);
+}
+/* END CEC profiling. */
+
 //---------------------------------------------------------------------
-// This subroutine initializes the field variable u using 
-// tri-linear transfinite interpolation of the boundary values     
+// This subroutine initializes the field variable u using
+// tri-linear transfinite interpolation of the boundary values
 //---------------------------------------------------------------------
 void initialize()
 {
@@ -56,7 +88,7 @@ void initialize()
   //-----------------------------------------------------------------------
   k_initialize1 = clCreateKernel(p_initialize, "initialize1", &ecode);
   clu_CheckError(ecode, "clCreateKernel()");
-  
+
   ecode  = clSetKernelArg(k_initialize1, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_initialize1, 1, sizeof(int), &d0);
   ecode |= clSetKernelArg(k_initialize1, 2, sizeof(int), &d1);
@@ -75,16 +107,17 @@ void initialize()
                                  2, NULL,
                                  global_ws,
                                  local_ws,
-                                 0, NULL, NULL);
+                                 0, NULL, &cec_event);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  cec_profile(cec_event, "initialize1");
   //-----------------------------------------------------------------------
 
   //---------------------------------------------------------------------
-  // first store the "interpolated" values everywhere on the grid    
+  // first store the "interpolated" values everywhere on the grid
   //---------------------------------------------------------------------
   k_initialize2 = clCreateKernel(p_initialize, "initialize2", &ecode);
   clu_CheckError(ecode, "clCreateKernel()");
-  
+
   ecode  = clSetKernelArg(k_initialize2, 0, sizeof(cl_mem), &m_u);
   ecode  = clSetKernelArg(k_initialize2, 1, sizeof(cl_mem), &m_ce);
   ecode |= clSetKernelArg(k_initialize2, 2, sizeof(int), &d0);
@@ -110,23 +143,24 @@ void initialize()
     global_ws[0] = clu_RoundWorkSize((size_t)d1, local_ws[0]);
     global_ws[1] = clu_RoundWorkSize((size_t)d2, local_ws[1]);
   }
-  
+
   CHECK_FINISH();
   ecode = clEnqueueNDRangeKernel(cmd_queue,
                                  k_initialize2,
                                  INITIALIZE2_DIM, NULL,
                                  global_ws,
                                  local_ws,
-                                 0, NULL, NULL);
+                                 0, NULL, &cec_event);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  cec_profile(cec_event, "initialize2");
   //-----------------------------------------------------------------------
 
   //---------------------------------------------------------------------
-  // now store the exact values on the boundaries        
+  // now store the exact values on the boundaries
   //---------------------------------------------------------------------
   k_initialize3 = clCreateKernel(p_initialize, "initialize3", &ecode);
   clu_CheckError(ecode, "clCreateKernel()");
-  
+
   ecode  = clSetKernelArg(k_initialize3, 0, sizeof(cl_mem), &m_u);
   ecode  = clSetKernelArg(k_initialize3, 1, sizeof(cl_mem), &m_ce);
   ecode |= clSetKernelArg(k_initialize3, 2, sizeof(int), &d0);
@@ -147,13 +181,14 @@ void initialize()
                                  2, NULL,
                                  global_ws,
                                  local_ws,
-                                 0, NULL, NULL);
+                                 0, NULL, &cec_event);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  cec_profile(cec_event, "initialize3");
   //-----------------------------------------------------------------------
 
   k_initialize4 = clCreateKernel(p_initialize, "initialize4", &ecode);
   clu_CheckError(ecode, "clCreateKernel()");
-  
+
   ecode  = clSetKernelArg(k_initialize4, 0, sizeof(cl_mem), &m_u);
   ecode  = clSetKernelArg(k_initialize4, 1, sizeof(cl_mem), &m_ce);
   ecode |= clSetKernelArg(k_initialize4, 2, sizeof(int), &d0);
@@ -174,13 +209,14 @@ void initialize()
                                  2, NULL,
                                  global_ws,
                                  local_ws,
-                                 0, NULL, NULL);
+                                 0, NULL, &cec_event);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  cec_profile(cec_event, "initialize4");
   //-----------------------------------------------------------------------
 
   k_initialize5 = clCreateKernel(p_initialize, "initialize5", &ecode);
   clu_CheckError(ecode, "clCreateKernel()");
-  
+
   ecode  = clSetKernelArg(k_initialize5, 0, sizeof(cl_mem), &m_u);
   ecode  = clSetKernelArg(k_initialize5, 1, sizeof(cl_mem), &m_ce);
   ecode |= clSetKernelArg(k_initialize5, 2, sizeof(int), &d0);
@@ -201,8 +237,9 @@ void initialize()
                                  2, NULL,
                                  global_ws,
                                  local_ws,
-                                 0, NULL, NULL);
+                                 0, NULL, &cec_event);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  cec_profile(cec_event, "initialize5");
   //-----------------------------------------------------------------------
 
   clReleaseKernel(k_initialize1);
