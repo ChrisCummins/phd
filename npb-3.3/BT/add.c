@@ -35,37 +35,7 @@
 #include "header.h"
 #include "timers.h"
 
-/* CEC profiling. */
-#include <stdio.h>
-#include <stdlib.h>
-static cl_event cec_event;
-static void cec_profile(cl_event event, const char* name) {
-  clWaitForEvents(1, &event);
-  cl_int err;
-  cl_ulong start_time, end_time;
-
-  err = clGetEventProfilingInfo(event,
-                                CL_PROFILING_COMMAND_QUEUED,
-                                sizeof(start_time), &start_time,
-                                NULL);
-  if (err != CL_SUCCESS) {
-    printf("[CEC] fatal: Kernel timer 1!");
-    exit(104);
-  }
-
-  err = clGetEventProfilingInfo(event,
-                                CL_PROFILING_COMMAND_END,
-                                sizeof(end_time), &end_time,
-                                NULL);
-  if (err != CL_SUCCESS) {
-    printf("[CEC] fatal: Kernel timer 2!");
-    exit(105);
-  }
-
-  double elapsed_ms = (double)(end_time - start_time) / 1000000.0;
-  printf("\n[CEC] %s %.3f\n", name, elapsed_ms);
-}
-/* END CEC profiling. */
+#include <cec-profile.h>
 
 //---------------------------------------------------------------------
 // addition of update to the vector u
@@ -81,9 +51,9 @@ void add()
                                  ADD_DIM, NULL,
                                  add_gws,
                                  add_lws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, cec_event());
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "add");
+  cec_profile("add");
   CHECK_FINISH();
 
   if (timeron) timer_stop(t_add);

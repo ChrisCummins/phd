@@ -35,37 +35,7 @@
 #include "header.h"
 #include "timers.h"
 
-/* CEC profiling. */
-#include <stdio.h>
-#include <stdlib.h>
-static cl_event cec_event;
-static void cec_profile(cl_event event, const char* name) {
-  clWaitForEvents(1, &event);
-  cl_int err;
-  cl_ulong start_time, end_time;
-
-  err = clGetEventProfilingInfo(event,
-                                CL_PROFILING_COMMAND_QUEUED,
-                                sizeof(start_time), &start_time,
-                                NULL);
-  if (err != CL_SUCCESS) {
-    printf("[CEC] fatal: Kernel timer 1!");
-    exit(104);
-  }
-
-  err = clGetEventProfilingInfo(event,
-                                CL_PROFILING_COMMAND_END,
-                                sizeof(end_time), &end_time,
-                                NULL);
-  if (err != CL_SUCCESS) {
-    printf("[CEC] fatal: Kernel timer 2!");
-    exit(105);
-  }
-
-  float elapsed_ms = (float)(end_time - start_time) / 1000;
-  printf("\n[CEC] %s %.3f\n", name, elapsed_ms);
-}
-/* END CEC profiling. */
+#include <cec-profile.h>
 
 //---------------------------------------------------------------------
 // Performs line solves in X direction by first factoring
@@ -88,36 +58,36 @@ void x_solve()
                                    X_SOLVE_DIM, NULL,
                                    x_solve1_gws,
                                    x_solve1_lws,
-                                   0, NULL, &cec_event);
+                                   0, NULL, cec_event());
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-    cec_profile(cec_event, "x_solve1");
+    cec_profile("x_solve1");
 
     ecode = clEnqueueNDRangeKernel(cmd_queue,
                                    k_x_solve2,
                                    X_SOLVE_DIM, NULL,
                                    x_solve2_gws,
                                    x_solve2_lws,
-                                   0, NULL, &cec_event);
+                                   0, NULL, cec_event());
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-    cec_profile(cec_event, "x_solve2");
+    cec_profile("x_solve2");
 
     ecode = clEnqueueNDRangeKernel(cmd_queue,
                                    k_x_solve3,
                                    X_SOLVE_DIM, NULL,
                                    x_solve3_gws,
                                    x_solve3_lws,
-                                   0, NULL, &cec_event);
+                                   0, NULL, cec_event());
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-    cec_profile(cec_event, "x_solve3");
+    cec_profile("x_solve3");
 
     ecode = clEnqueueNDRangeKernel(cmd_queue,
                                    k_x_solve,
                                    2, NULL,
                                    x_solve_gws,
                                    x_solve_lws,
-                                   0, NULL, &cec_event);
+                                   0, NULL, cec_event());
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-    cec_profile(cec_event, "x_solve");
+    cec_profile("x_solve");
     CHECK_FINISH();
   } else {
     ecode = clEnqueueNDRangeKernel(cmd_queue,
@@ -125,9 +95,9 @@ void x_solve()
                                    X_SOLVE_DIM, NULL,
                                    x_solve_gws,
                                    x_solve_lws,
-                                   0, NULL, &cec_event);
+                                   0, NULL, cec_event());
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-    cec_profile(cec_event, "x_solve");
+    cec_profile("x_solve");
     CHECK_FINISH();
   }
 

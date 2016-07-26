@@ -35,37 +35,7 @@
 #include "header.h"
 #include "timers.h"
 
-/* CEC profiling. */
-#include <stdio.h>
-#include <stdlib.h>
-static cl_event cec_event;
-static void cec_profile(cl_event event, const char* name) {
-  clWaitForEvents(1, &event);
-  cl_int err;
-  cl_ulong start_time, end_time;
-
-  err = clGetEventProfilingInfo(event,
-                                CL_PROFILING_COMMAND_QUEUED,
-                                sizeof(start_time), &start_time,
-                                NULL);
-  if (err != CL_SUCCESS) {
-    printf("[CEC] fatal: Kernel timer 1!");
-    exit(104);
-  }
-
-  err = clGetEventProfilingInfo(event,
-                                CL_PROFILING_COMMAND_END,
-                                sizeof(end_time), &end_time,
-                                NULL);
-  if (err != CL_SUCCESS) {
-    printf("[CEC] fatal: Kernel timer 2!");
-    exit(105);
-  }
-
-  float elapsed_ms = (float)(end_time - start_time) / 1000;
-  printf("\n[CEC] %s %.3f\n", name, elapsed_ms);
-}
-/* END CEC profiling. */
+#include <cec-profile.h>
 
 void compute_rhs()
 {
@@ -79,9 +49,9 @@ void compute_rhs()
                                  COMPUTE_RHS1_DIM, NULL,
                                  compute_rhs1_gws,
                                  compute_rhs1_lws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, cec_event());
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "rhs1");
+  cec_profile("rhs1");
   CHECK_FINISH();
   //-----------------------------------------------------------------------
 
@@ -91,9 +61,9 @@ void compute_rhs()
                                  COMPUTE_RHS2_DIM, NULL,
                                  compute_rhs2_gws,
                                  compute_rhs2_lws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, cec_event());
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "rhs2");
+  cec_profile("rhs2");
   CHECK_FINISH();
   //-----------------------------------------------------------------------
 
@@ -106,9 +76,9 @@ void compute_rhs()
                                  2, NULL,
                                  compute_rhs3_gws,
                                  compute_rhs3_lws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, cec_event());
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "rhs3");
+  cec_profile("rhs3");
   CHECK_FINISH();
   if (timeron) timer_stop(t_rhsx);
   //---------------------------------------------------------------------
@@ -122,9 +92,9 @@ void compute_rhs()
                                  2, NULL,
                                  compute_rhs4_gws,
                                  compute_rhs4_lws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, cec_event());
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "rhs4");
+  cec_profile("rhs4");
   CHECK_FINISH();
   if (timeron) timer_stop(t_rhsy);
   //---------------------------------------------------------------------
@@ -138,9 +108,9 @@ void compute_rhs()
                                  2, NULL,
                                  compute_rhs5_gws,
                                  compute_rhs5_lws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, cec_event());
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "rhs5");
+  cec_profile("rhs5");
   CHECK_FINISH();
   if (timeron) timer_stop(t_rhsz);
   //---------------------------------------------------------------------
@@ -151,9 +121,9 @@ void compute_rhs()
                                  COMPUTE_RHS6_DIM, NULL,
                                  compute_rhs6_gws,
                                  compute_rhs6_lws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, cec_event());
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "rhs6");
+  cec_profile("rhs6");
   CHECK_FINISH();
   //---------------------------------------------------------------------
 

@@ -33,39 +33,7 @@
 //-------------------------------------------------------------------------//
 
 #include "header.h"
-
-/* CEC profiling. */
-#include <stdio.h>
-#include <stdlib.h>
-static cl_event cec_event;
-static void cec_profile(cl_event event, const char* name) {
-  clWaitForEvents(1, &event);
-  cl_int err;
-  cl_ulong start_time, end_time;
-
-  err = clGetEventProfilingInfo(event,
-                                CL_PROFILING_COMMAND_QUEUED,
-                                sizeof(start_time), &start_time,
-                                NULL);
-  if (err != CL_SUCCESS) {
-    printf("[CEC] fatal: Kernel timer 1!");
-    exit(104);
-  }
-
-  err = clGetEventProfilingInfo(event,
-                                CL_PROFILING_COMMAND_END,
-                                sizeof(end_time), &end_time,
-                                NULL);
-  if (err != CL_SUCCESS) {
-    printf("[CEC] fatal: Kernel timer 2!");
-    exit(105);
-  }
-
-  float elapsed_ms = (float)(end_time - start_time) / 1000;
-  printf("\n[CEC] %s %.3f\n", name, elapsed_ms);
-}
-/* END CEC profiling. */
-
+#include <cec-profile.h>
 
 //---------------------------------------------------------------------
 // compute the right hand side based on exact solution
@@ -147,9 +115,9 @@ void exact_rhs()
                                  EXACT_RHS1_DIM, NULL,
                                  global_ws,
                                  local_ws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, cec_event());
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "exact_rhs1");
+  cec_profile("exact_rhs1");
   //-----------------------------------------------------------------------
 
   //-----------------------------------------------------------------------
@@ -180,9 +148,9 @@ void exact_rhs()
                                  2, NULL,
                                  global_ws,
                                  local_ws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, cec_event());
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "exact_rhs2");
+  cec_profile("exact_rhs2");
   //-----------------------------------------------------------------------
 
   //-----------------------------------------------------------------------
@@ -213,9 +181,9 @@ void exact_rhs()
                                  2, NULL,
                                  global_ws,
                                  local_ws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, cec_event());
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "exact_rhs3");
+  cec_profile("exact_rhs3");
   //-----------------------------------------------------------------------
 
   //-----------------------------------------------------------------------
@@ -246,9 +214,9 @@ void exact_rhs()
                                  2, NULL,
                                  global_ws,
                                  local_ws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, cec_event());
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "exact_rhs4");
+  cec_profile("exact_rhs4");
   //-----------------------------------------------------------------------
 
   //-----------------------------------------------------------------------
@@ -291,9 +259,9 @@ void exact_rhs()
                                  EXACT_RHS5_DIM, NULL,
                                  global_ws,
                                  local_ws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, cec_event());
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "exact_rhs5");
+  cec_profile("exact_rhs5");
   //-----------------------------------------------------------------------
 
   clReleaseMemObject(m_cuf);
