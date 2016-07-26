@@ -53,51 +53,46 @@ void x_solve()
   if (timeron) timer_start(t_xsolve);
 
   if (X_SOLVE_DIM == 3) {
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_x_solve1,
-                                   X_SOLVE_DIM, NULL,
-                                   x_solve1_gws,
-                                   x_solve1_lws,
-                                   0, NULL, cec_event());
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_x_solve1,
+                          X_SOLVE_DIM, NULL,
+                          x_solve1_gws,
+                          x_solve1_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-    cec_profile("x_solve1");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_x_solve2,
-                                   X_SOLVE_DIM, NULL,
-                                   x_solve2_gws,
-                                   x_solve2_lws,
-                                   0, NULL, cec_event());
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_x_solve2,
+                          X_SOLVE_DIM, NULL,
+                          x_solve2_gws,
+                          x_solve2_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-    cec_profile("x_solve2");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_x_solve3,
-                                   X_SOLVE_DIM, NULL,
-                                   x_solve3_gws,
-                                   x_solve3_lws,
-                                   0, NULL, cec_event());
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_x_solve3,
+                          X_SOLVE_DIM, NULL,
+                          x_solve3_gws,
+                          x_solve3_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-    cec_profile("x_solve3");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_x_solve,
-                                   2, NULL,
-                                   x_solve_gws,
-                                   x_solve_lws,
-                                   0, NULL, cec_event());
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_x_solve,
+                          2, NULL,
+                          x_solve_gws,
+                          x_solve_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-    cec_profile("x_solve");
     CHECK_FINISH();
   } else {
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                   k_x_solve,
-                                   X_SOLVE_DIM, NULL,
-                                   x_solve_gws,
-                                   x_solve_lws,
-                                   0, NULL, cec_event());
+    ecode = CEC_ND_KERNEL(cmd_queue,
+                          k_x_solve,
+                          X_SOLVE_DIM, NULL,
+                          x_solve_gws,
+                          x_solve_lws,
+                          0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-    cec_profile("x_solve");
     CHECK_FINISH();
   }
 

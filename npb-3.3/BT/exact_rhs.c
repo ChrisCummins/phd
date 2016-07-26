@@ -110,14 +110,13 @@ void exact_rhs()
     global_ws[0] = clu_RoundWorkSize((size_t)d2, local_ws[0]);
   }
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_exact_rhs1,
-                                 EXACT_RHS1_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, cec_event());
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_exact_rhs1,
+                        EXACT_RHS1_DIM, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile("exact_rhs1");
   //-----------------------------------------------------------------------
 
   //-----------------------------------------------------------------------
@@ -143,14 +142,13 @@ void exact_rhs()
   global_ws[1] = clu_RoundWorkSize((size_t)(d2-2), local_ws[1]);
 
   CHECK_FINISH();
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_exact_rhs2,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, cec_event());
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_exact_rhs2,
+                        2, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile("exact_rhs2");
   //-----------------------------------------------------------------------
 
   //-----------------------------------------------------------------------
@@ -176,14 +174,13 @@ void exact_rhs()
   global_ws[1] = clu_RoundWorkSize((size_t)(d2-2), local_ws[1]);
 
   CHECK_FINISH();
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_exact_rhs3,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, cec_event());
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_exact_rhs3,
+                        2, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile("exact_rhs3");
   //-----------------------------------------------------------------------
 
   //-----------------------------------------------------------------------
@@ -209,14 +206,13 @@ void exact_rhs()
   global_ws[1] = clu_RoundWorkSize((size_t)(d1-2), local_ws[1]);
 
   CHECK_FINISH();
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_exact_rhs4,
-                                 2, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, cec_event());
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_exact_rhs4,
+                        2, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile("exact_rhs4");
   //-----------------------------------------------------------------------
 
   //-----------------------------------------------------------------------
@@ -254,14 +250,13 @@ void exact_rhs()
   }
 
   CHECK_FINISH();
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
-                                 k_exact_rhs5,
-                                 EXACT_RHS5_DIM, NULL,
-                                 global_ws,
-                                 local_ws,
-                                 0, NULL, cec_event());
+  ecode = CEC_ND_KERNEL(cmd_queue,
+                        k_exact_rhs5,
+                        EXACT_RHS5_DIM, NULL,
+                        global_ws,
+                        local_ws,
+                        0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile("exact_rhs5");
   //-----------------------------------------------------------------------
 
   clReleaseMemObject(m_cuf);
