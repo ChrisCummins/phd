@@ -414,7 +414,7 @@ int main(int argc, char *argv[])
       DTIMER_STOP(T_KERNEL_MAIN_3);
 
       DTIMER_START(T_BUFFER_READ);
-      ecode = clEnqueueReadBuffer(cmd_queue,
+      ecode = CEC_READ_BUFFER(cmd_queue,
                                   m_norm_temp1,
                                   CL_FALSE,
                                   0,
@@ -423,7 +423,7 @@ int main(int argc, char *argv[])
                                   0, NULL, NULL);
       clu_CheckError(ecode, "clEnqueueReadBuffer()");
 
-      ecode = clEnqueueReadBuffer(cmd_queue,
+      ecode = CEC_READ_BUFFER(cmd_queue,
                                   m_norm_temp2,
                                   CL_TRUE,
                                   0,
@@ -534,7 +534,7 @@ int main(int argc, char *argv[])
       DTIMER_STOP(T_KERNEL_MAIN_3);
 
       DTIMER_START(T_BUFFER_READ);
-      ecode = clEnqueueReadBuffer(cmd_queue,
+      ecode = CEC_READ_BUFFER(cmd_queue,
                                   m_norm_temp1,
                                   CL_FALSE,
                                   0,

@@ -26,10 +26,33 @@
             cec_profile("clEnqueueNDRangeKernel " #kernel, cec_lws); \
         }
 
+#define CEC_READ_BUFFER (command_queue,                 \
+                         buffer,                        \
+                         blocking_read,                 \
+                         offset,                        \
+                         size,                          \
+                         ptr,                           \
+                         num_events_in_wait_list,       \
+                         event_wait_list,               \
+                         __UNUSED__event)               \
+    clEnqueueReadBuffer(command_queue,                  \
+                        buffer,                         \
+                        blocking_read,                  \
+                        offset,                         \
+                        size,                           \
+                        ptr,                            \
+                        num_events_in_wait_list,        \
+                        event_wait_list,                \
+                        cec_event());                   \
+    cec_profile_read("clEnqueueReadBuffer " #buffer, size);
+
+
 // Get OpenCL event pointer.
 cl_event* cec_event();
 
 // Print profiling info for event.
 void cec_profile(const char* name, const size_t wgsize);
+
+void cec_profile_read(const char* name, const size_t size);
 
 #endif  // CEC_PROFILE

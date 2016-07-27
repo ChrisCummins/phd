@@ -93,7 +93,7 @@ void error_norm(double rms[5])
 
   g_rms = (double (*)[5])malloc(buf_size);
 
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CEC_READ_BUFFER(cmd_queue,
                               m_rms,
                               CL_TRUE,
                               0, buf_size,
@@ -172,7 +172,7 @@ void rhs_norm(double rms[5])
 
   g_rms = (double (*)[5])malloc(buf_size);
 
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CEC_READ_BUFFER(cmd_queue,
                               m_rms,
                               CL_TRUE,
                               0, buf_size,
