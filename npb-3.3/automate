@@ -8,7 +8,7 @@ mkdir -pv results
 ./compile &>/dev/null
 
 for i in $(seq 1 30); do
-    echo "run $i ..."
+    echo "$(date)   run $i ..."
     cd bin
     rm -rf log
     mkdir -p log
