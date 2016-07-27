@@ -489,9 +489,11 @@ We collect a large code corpus from
 GitHub\footnote{\url{https://github.com/}}. This took 2 days on a
 single machine.
 
+Rejection sampling to remove noise from dataset. Check that compiles.
+
 Alternative source of data: \emph{GHTorrent}~\cite{Gousios2014a}.
 
-Rejection sampling to remove noise from dataset. Check that compiles.
+\section{Learning the Implementation Space}\label{sec:ml}
 
 Minimizing non-functional variance using clang libraries and tools:
 \begin{itemize}
@@ -553,18 +555,23 @@ typedef unsigned int INDEX_TYPE;
 ... (185 more)
 \end{lstlisting}
 
-\section{Learning the Implementation Space}\label{sec:ml}
+\subsection{Machine Learning Model}
 
-Long Short-Term Memory~\cite{Hochreiter1997}, a powerful tool with
-applications from speech recognition to image captioning. No features.
+We use the Long Short-Term Memory (LSTM)~\cite{Hochreiter1997}
+architecture of Recurrent Neural Network
+(RNN)~\cite{Mikolov2015}. LSTMs are proving to be a powerful learning
+tool with applications from speech recognition to image
+captioning. LSTMs for language modeling~\cite{Sundermeyer2012}. No
+features.
 
 LSTM
 implementation\footnote{\url{https://github.com/jcjohnson/torch-rnn}}. LSTM
-network: 2048 nodes, 3 layers, sequence length 200, batch size
-50. Approximately 1 week training on single machine.
+network: 2048 nodes, 3 layers, sequence length 50, batch size 50, no
+dropout. Trained for 100 epochs using an initial learning rate of
+0.002, decaying by a factor of a half every 5 epochs. Around 10 days
+training on an NVIDIA GTX Titan.
 
-TODO: Plot distribution of representativeness from benchmark suites to
-GitHub language model.
+Vocabulary size XXX. Training set XXX. Learned model XXX MB.
 
 
 \section{Sampling Implementation Space}\label{sec:}
@@ -659,12 +666,12 @@ x. The AMD implementation of OpenCL 1.2 is used for both.
     \toprule
     & \multicolumn{2}{c}{Platform A} & \multicolumn{2}{c}{Platform B} \\
     % & \textbf{CPU} & \textbf{GPU} & \textbf{CPU} & \textbf{GPU} \\
-    & \textbf{Intel i7-3820} & \textbf{AMD Tahiti 7970} & \textbf{Intel x} & \textbf{AMD HD 5450} \\
+    & \textbf{Intel i7-3820} & \textbf{AMD Tahiti 7970} & \textbf{Intel i7-6700K} & \textbf{AMD HD 5450} \\
     \midrule
-    \textbf{Frequency} & 3.6 GHz & 1000 MHz & x GHz & 650 MHz \\
+    \textbf{Frequency} & 3.6 GHz & 1000 MHz & 4.0 GHz & 650 MHz \\
     \textbf{\#. Cores} & 4 & 2048 & 8 & 80 \\
-    \textbf{Memory} & 8 GB & 3 GB & x & 1024 MB \\
-    \textbf{Throughput} & 95 GFLOPS & 3.79 TFLOPS & x GFLOPS & 104 GFLOPS
+    \textbf{Memory} & 8 GB & 3 GB & 32 GB & 1024 MB \\
+    \textbf{Throughput} & 95 GFLOPS & 3.79 TFLOPS & 81 GFLOPS & 104 GFLOPS
     \\
     % \midrule
     % \textbf{Operating System} & \multicolumn{2}{c}{OpenSUSE 12.3} & \multicolumn{2}{c}{Ubuntu 14.04} \\
