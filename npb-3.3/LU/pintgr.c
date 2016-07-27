@@ -149,7 +149,7 @@ void pintgr()
 
   g_frc = (double (*))malloc(buf_size);
 
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CEC_READ_BUFFER(cmd_queue,
                               m_frc,
                               CL_TRUE,
                               0, buf_size,
@@ -215,7 +215,7 @@ void pintgr()
                         0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CEC_READ_BUFFER(cmd_queue,
                               m_frc,
                               CL_TRUE,
                               0, buf_size,
@@ -280,7 +280,7 @@ void pintgr()
                         0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CEC_READ_BUFFER(cmd_queue,
                               m_frc,
                               CL_TRUE,
                               0, buf_size,

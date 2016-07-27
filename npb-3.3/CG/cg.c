@@ -543,7 +543,7 @@ int main(int argc, char *argv[])
                                   0, NULL, NULL);
       clu_CheckError(ecode, "clEnqueueReadBuffer()");
 
-      ecode = clEnqueueReadBuffer(cmd_queue,
+      ecode = CEC_READ_BUFFER(cmd_queue,
                                   m_norm_temp2,
                                   CL_TRUE,
                                   0,
@@ -729,7 +729,7 @@ static void conj_grad(double *rnorm)
     DTIMER_STOP(T_KERNEL_CONJ_GRAD_1);
 
     DTIMER_START(T_BUFFER_READ);
-    ecode = clEnqueueReadBuffer(cmd_queue,
+    ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_rho,
                                 CL_TRUE, 0,
                                 rho_size,
@@ -819,7 +819,7 @@ static void conj_grad(double *rnorm)
       DTIMER_STOP(T_KERNEL_CONJ_GRAD_3);
 
       DTIMER_START(T_BUFFER_READ);
-      ecode = clEnqueueReadBuffer(cmd_queue,
+      ecode = CEC_READ_BUFFER(cmd_queue,
                                   m_d,
                                   CL_TRUE, 0,
                                   d_size,
@@ -868,7 +868,7 @@ static void conj_grad(double *rnorm)
       DTIMER_STOP(T_KERNEL_CONJ_GRAD_4);
 
       DTIMER_START(T_BUFFER_READ);
-      ecode = clEnqueueReadBuffer(cmd_queue,
+      ecode = CEC_READ_BUFFER(cmd_queue,
                                   m_rho,
                                   CL_TRUE, 0,
                                   rho_size,
@@ -969,7 +969,7 @@ static void conj_grad(double *rnorm)
     DTIMER_STOP(T_KERNEL_CONJ_GRAD_7);
 
     DTIMER_START(T_BUFFER_READ);
-    ecode = clEnqueueReadBuffer(cmd_queue,
+    ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_d,
                                 CL_TRUE, 0,
                                 d_size,
@@ -1183,7 +1183,7 @@ static void makea(int n, int nz, int firstrow, int lastrow)
   int nrows = lastrow - firstrow + 1;
   int nza;
   DTIMER_START(T_BUFFER_READ);
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CEC_READ_BUFFER(cmd_queue,
                               m_rowstr,
                               CL_TRUE,
                               nrows * sizeof(int),

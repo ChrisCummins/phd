@@ -788,12 +788,12 @@ static void checksum(int i, cl_mem *u1, int d1, int d2, int d3)
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 
-  ecode = clEnqueueReadBuffer(cmd_queue,
-                              m_chk,
-                              CL_TRUE,
-                              0, checksum_wg_num * sizeof(dcomplex),
-                              g_chk,
-                              0, NULL, NULL);
+  ecode = CEC_READ_BUFFER(cmd_queue,
+                          m_chk,
+                          CL_TRUE,
+                          0, checksum_wg_num * sizeof(dcomplex),
+                          g_chk,
+                          0, NULL, NULL);
   clu_CheckError(ecode, "clReadBuffer()");
 
   // reduction

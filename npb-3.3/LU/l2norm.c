@@ -78,7 +78,7 @@ void l2norm (int ldx, int ldy, int ldz, int nx0, int ny0, int nz0,
   wg_num = l2norm_gws[0] / l2norm_lws[0];
   g_sum = (double (*)[5])malloc(sum_size);
 
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CEC_READ_BUFFER(cmd_queue,
                               m_sum,
                               CL_TRUE,
                               0, sum_size,

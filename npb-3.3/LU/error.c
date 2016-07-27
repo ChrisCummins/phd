@@ -90,7 +90,7 @@ void error()
 
   g_errnm = (double (*)[5])malloc(buf_size);
 
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CEC_READ_BUFFER(cmd_queue,
                               m_errnm,
                               CL_TRUE,
                               0, buf_size,

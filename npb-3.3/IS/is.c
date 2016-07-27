@@ -313,7 +313,7 @@ void full_verify( void )
     g_j = (INT_TYPE *)malloc(j_size);
 
     DTIMER_START(T_BUFFER_READ);
-    ecode = clEnqueueReadBuffer(cmd_queue,
+    ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_j,
                                 CL_TRUE,
                                 0,
@@ -375,7 +375,7 @@ void full_verify( void )
     g_j = (INT_TYPE *)malloc(j_size);
 
     DTIMER_START(T_BUFFER_READ);
-    ecode = clEnqueueReadBuffer(cmd_queue,
+    ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_j,
                                 CL_TRUE,
                                 0,
@@ -630,7 +630,7 @@ int main( int argc, char **argv )
   }
 
   DTIMER_START(T_BUFFER_READ);
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CEC_READ_BUFFER(cmd_queue,
                               m_passed_verification,
                               CL_TRUE,
                               0,

@@ -1038,7 +1038,7 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
 
     if (device_type == CL_DEVICE_TYPE_GPU) {
       DTIMER_START(T_BUFFER_READ);
-      ecode = clEnqueueReadBuffer(cmd_queue,
+      ecode = CEC_READ_BUFFER(cmd_queue,
                                   m_u,
                                   CL_TRUE,
                                   offset_u2 * sizeof(double),
@@ -1082,7 +1082,7 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
 
     if (device_type == CL_DEVICE_TYPE_GPU) {
       DTIMER_START(T_BUFFER_READ);
-      ecode = clEnqueueReadBuffer(cmd_queue,
+      ecode = CEC_READ_BUFFER(cmd_queue,
                                   m_u,
                                   CL_TRUE,
                                   offset_u2 * sizeof(double),
@@ -1126,7 +1126,7 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
 
     if (device_type == CL_DEVICE_TYPE_GPU) {
       DTIMER_START(T_BUFFER_READ);
-      ecode = clEnqueueReadBuffer(cmd_queue,
+      ecode = CEC_READ_BUFFER(cmd_queue,
                                   m_u,
                                   CL_TRUE,
                                   offset_u2 * sizeof(double),
@@ -1170,7 +1170,7 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
 
     if (device_type == CL_DEVICE_TYPE_GPU) {
       DTIMER_START(T_BUFFER_READ);
-      ecode = clEnqueueReadBuffer(cmd_queue,
+      ecode = CEC_READ_BUFFER(cmd_queue,
                                   m_u,
                                   CL_TRUE,
                                   offset_u2 * sizeof(double),
@@ -1299,7 +1299,7 @@ static void norm2u3(int n1, int n2, int n3, double *rnm2, double *rnmu,
     DTIMER_STOP(T_KERNEL_NORM2U3);
 
     DTIMER_START(T_BUFFER_READ);
-    ecode = clEnqueueReadBuffer(cmd_queue,
+    ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_sum,
                                 CL_FALSE, 0,
                                 (temp_size) * sizeof(double),
@@ -1307,7 +1307,7 @@ static void norm2u3(int n1, int n2, int n3, double *rnm2, double *rnmu,
                                 0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueReadBuffer()");
 
-    ecode = clEnqueueReadBuffer(cmd_queue,
+    ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_max,
                                 CL_TRUE, 0,
                                 (temp_size) * sizeof(double),
@@ -1571,7 +1571,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
 
   if (device_type == CL_DEVICE_TYPE_GPU) {
     DTIMER_START(T_BUFFER_READ);
-    ecode = clEnqueueReadBuffer(cmd_queue,
+    ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_buff,
                                 CL_TRUE,
                                 offset * sizeof(double),
@@ -1688,7 +1688,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
 
   if (device_type == CL_DEVICE_TYPE_GPU) {
     DTIMER_START(T_BUFFER_READ);
-    ecode = clEnqueueReadBuffer(cmd_queue,
+    ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_ten,
                                 CL_TRUE,
                                 0,
@@ -1697,7 +1697,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
                                 0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueReadBuffer()");
 
-    ecode = clEnqueueReadBuffer(cmd_queue,
+    ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_j1,
                                 CL_TRUE,
                                 0,
@@ -1706,7 +1706,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
                                 0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueReadBuffer()");
 
-    ecode = clEnqueueReadBuffer(cmd_queue,
+    ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_j2,
                                 CL_TRUE,
                                 0,
@@ -1715,7 +1715,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
                                 0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueReadBuffer()");
 
-    ecode = clEnqueueReadBuffer(cmd_queue,
+    ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_j3,
                                 CL_TRUE,
                                 0,
@@ -1833,7 +1833,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
 
   if (device_type == CL_DEVICE_TYPE_GPU) {
     DTIMER_START(T_BUFFER_READ);
-    ecode = clEnqueueReadBuffer(cmd_queue,
+    ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_buff,
                                 CL_TRUE,
                                 offset * sizeof(double),

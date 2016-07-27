@@ -225,16 +225,16 @@ int main(int argc, char *argv[])
 
   // 9. Get the result
   DTIMER_START(T_BUFFER_READ);
-  err_code = clEnqueueReadBuffer(cmd_queue, pgq, CL_FALSE, 0, gq_size,
-                                 gq, 0, NULL, NULL);
+  err_code = CEC_READ_BUFFER(cmd_queue, pgq, CL_FALSE, 0, gq_size,
+                             gq, 0, NULL, NULL);
   clu_CheckError(err_code, "clEnqueueReadbuffer()");
 
-  err_code = clEnqueueReadBuffer(cmd_queue, pgsx, CL_FALSE, 0, gsx_size,
-                                 gsx, 0, NULL, NULL);
+  err_code = CEC_READ_BUFFER(cmd_queue, pgsx, CL_FALSE, 0, gsx_size,
+                             gsx, 0, NULL, NULL);
   clu_CheckError(err_code, "clEnqueueReadbuffer()");
 
-  err_code = clEnqueueReadBuffer(cmd_queue, pgsy, CL_TRUE, 0, gsy_size,
-                                 gsy, 0, NULL, NULL);
+  err_code = CEC_READ_BUFFER(cmd_queue, pgsy, CL_TRUE, 0, gsy_size,
+                             gsy, 0, NULL, NULL);
   clu_CheckError(err_code, "clEnqueueReadbuffer()");
   DTIMER_STOP(T_BUFFER_READ);
 
