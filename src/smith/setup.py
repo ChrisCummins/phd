@@ -1,8 +1,10 @@
 from setuptools import setup
 
 deps = [
-  'PyGithub',
-  'requests'
+    'numpy',
+    'PyGithub',
+    'pyopencl',
+    'requests'
 ]
 
 setup(name='smith',
@@ -25,6 +27,7 @@ setup(name='smith',
           'bin/fetch-gh',
           'bin/smith',
           'bin/smith-create-db',
+          'bin/smith-drive',
           'bin/smith-explore',
           'bin/smith-parboil',
           'bin/smith-preprocess',
