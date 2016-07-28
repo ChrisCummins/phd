@@ -64,7 +64,7 @@ void cec_profile_read(const char* name, const size_t size) {
     }
 
     double elapsed_ms = (double)(end_time - start_time) / 1000000.0;
-    fprintf(stderr, "\n[CEC] %s %zu %.3f\n", name, wgsize, elapsed_ms);
+    fprintf(stderr, "\n[CEC] %s %zu %.3f\n", name, size, elapsed_ms);
 }
 
 
@@ -93,5 +93,5 @@ void cec_profile_write(const char* name, const size_t size) {
     }
 
     double elapsed_ms = (double)(end_time - start_time) / 1000000.0;
-    fprintf(stderr, "\n[CEC] %s %zu %.3f\n", name, wgsize, elapsed_ms);
+    fprintf(stderr, "\n[CEC] %s %zu %.3f\n", name, size, elapsed_ms);
 }
