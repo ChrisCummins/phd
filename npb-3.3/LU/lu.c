@@ -565,8 +565,8 @@ static void setup_opencl(int argc, char *argv[])
   //-----------------------------------------------------------------------
   // 6. Create kernels
   //-----------------------------------------------------------------------
-  k_setbv1 = clCreateKernel(p_pre, "setbv1", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for setbv1");
+  k_setbv1 = CEC_CREATE_KERNEL(p_pre, "setbv1", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for setbv1");
   ecode  = clSetKernelArg(k_setbv1, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_setbv1, 1, sizeof(cl_mem), &m_ce);
   ecode |= clSetKernelArg(k_setbv1, 2, sizeof(int), &nx);
@@ -594,8 +594,8 @@ static void setup_opencl(int argc, char *argv[])
     setbv1_gws[0] = clu_RoundWorkSize((size_t)ny, setbv1_lws[0]);
   }
 
-  k_setbv2 = clCreateKernel(p_pre, "setbv2", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for setbv2");
+  k_setbv2 = CEC_CREATE_KERNEL(p_pre, "setbv2", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for setbv2");
   ecode  = clSetKernelArg(k_setbv2, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_setbv2, 1, sizeof(cl_mem), &m_ce);
   ecode |= clSetKernelArg(k_setbv2, 2, sizeof(int), &nx);
@@ -623,8 +623,8 @@ static void setup_opencl(int argc, char *argv[])
     setbv2_gws[0] = clu_RoundWorkSize((size_t)nz, setbv2_lws[0]);
   }
 
-  k_setbv3 = clCreateKernel(p_pre, "setbv3", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for setbv3");
+  k_setbv3 = CEC_CREATE_KERNEL(p_pre, "setbv3", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for setbv3");
   ecode  = clSetKernelArg(k_setbv3, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_setbv3, 1, sizeof(cl_mem), &m_ce);
   ecode |= clSetKernelArg(k_setbv3, 2, sizeof(int), &nx);
@@ -652,8 +652,8 @@ static void setup_opencl(int argc, char *argv[])
     setbv3_gws[0] = clu_RoundWorkSize((size_t)nz, setbv3_lws[0]);
   }
 
-  k_setiv = clCreateKernel(p_pre, "setiv", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for setiv");
+  k_setiv = CEC_CREATE_KERNEL(p_pre, "setiv", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for setiv");
   ecode  = clSetKernelArg(k_setiv, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_setiv, 1, sizeof(cl_mem), &m_ce);
   ecode |= clSetKernelArg(k_setiv, 2, sizeof(int), &nx);
@@ -681,14 +681,14 @@ static void setup_opencl(int argc, char *argv[])
     setiv_gws[0] = clu_RoundWorkSize((size_t)(nz-2), setiv_lws[0]);
   }
 
-  k_l2norm = clCreateKernel(p_main, "l2norm", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
+  k_l2norm = CEC_CREATE_KERNEL(p_main, "l2norm", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
   ecode  = clSetKernelArg(k_l2norm, 1, sizeof(cl_mem), &m_sum);
   ecode |= clSetKernelArg(k_l2norm, 2, sizeof(double)*5*l2norm_lws[0], NULL);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  k_rhs = clCreateKernel(p_main, "rhs", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rhs");
+  k_rhs = CEC_CREATE_KERNEL(p_main, "rhs", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for rhs");
   ecode  = clSetKernelArg(k_rhs, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_rhs, 1, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_rhs, 2, sizeof(cl_mem), &m_frct);
@@ -720,8 +720,8 @@ static void setup_opencl(int argc, char *argv[])
     rhs_gws[0] = clu_RoundWorkSize((size_t)nz, rhs_lws[0]);
   }
 
-  k_rhsx = clCreateKernel(p_main, "rhsx", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rhsx");
+  k_rhsx = CEC_CREATE_KERNEL(p_main, "rhsx", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for rhsx");
   ecode  = clSetKernelArg(k_rhsx, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_rhsx, 1, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_rhsx, 2, sizeof(cl_mem), &m_qs);
@@ -750,8 +750,8 @@ static void setup_opencl(int argc, char *argv[])
     rhsx_gws[0] = clu_RoundWorkSize((size_t)(nz-2), rhsx_lws[0]);
   }
 
-  k_rhsy = clCreateKernel(p_main, "rhsy", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rhsy");
+  k_rhsy = CEC_CREATE_KERNEL(p_main, "rhsy", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for rhsy");
   ecode  = clSetKernelArg(k_rhsy, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_rhsy, 1, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_rhsy, 2, sizeof(cl_mem), &m_qs);
@@ -780,8 +780,8 @@ static void setup_opencl(int argc, char *argv[])
     rhsy_gws[0] = clu_RoundWorkSize((size_t)(nz-2), rhsy_lws[0]);
   }
 
-  k_rhsz = clCreateKernel(p_main, "rhsz", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rhsz");
+  k_rhsz = CEC_CREATE_KERNEL(p_main, "rhsz", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for rhsz");
   ecode  = clSetKernelArg(k_rhsz, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_rhsz, 1, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_rhsz, 2, sizeof(cl_mem), &m_qs);
@@ -812,8 +812,8 @@ static void setup_opencl(int argc, char *argv[])
     rhsz_gws[0] = clu_RoundWorkSize((size_t)(jend-jst), rhsz_lws[0]);
   }
 
-  k_ssor2 = clCreateKernel(p_main, "ssor2", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for ssor2");
+  k_ssor2 = CEC_CREATE_KERNEL(p_main, "ssor2", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for ssor2");
   ecode  = clSetKernelArg(k_ssor2, 0, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_ssor2, 2, sizeof(int), &nx);
   ecode |= clSetKernelArg(k_ssor2, 3, sizeof(int), &ny);
@@ -841,8 +841,8 @@ static void setup_opencl(int argc, char *argv[])
     ssor2_gws[0] = clu_RoundWorkSize((size_t)(nz-2), ssor2_lws[0]);
   }
 
-  k_ssor3 = clCreateKernel(p_main, "ssor3", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for ssor3");
+  k_ssor3 = CEC_CREATE_KERNEL(p_main, "ssor3", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for ssor3");
   ecode  = clSetKernelArg(k_ssor3, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_ssor3, 1, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_ssor3, 3, sizeof(int), &nx);
@@ -871,8 +871,8 @@ static void setup_opencl(int argc, char *argv[])
     ssor3_gws[0] = clu_RoundWorkSize((size_t)(nz-2), ssor3_lws[0]);
   }
 
-  k_blts = clCreateKernel(p_main, "blts", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for blts");
+  k_blts = CEC_CREATE_KERNEL(p_main, "blts", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for blts");
   ecode  = clSetKernelArg(k_blts, 0, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_blts, 1, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_blts, 2, sizeof(cl_mem), &m_qs);
@@ -887,8 +887,8 @@ static void setup_opencl(int argc, char *argv[])
   blts_gws[0] = clu_RoundWorkSize((size_t)(jend-jst), blts_lws[0]);
   blts_gws[1] = clu_RoundWorkSize((size_t)(nz-2), blts_lws[1]);
 
-  k_buts = clCreateKernel(p_main, "buts", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for buts");
+  k_buts = CEC_CREATE_KERNEL(p_main, "buts", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for buts");
   ecode  = clSetKernelArg(k_buts, 0, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_buts, 1, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_buts, 2, sizeof(cl_mem), &m_qs);

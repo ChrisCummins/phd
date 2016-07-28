@@ -77,8 +77,8 @@ void exact_rhs()
   clu_CheckError(ecode, "clCreateBuffer() for m_buf");
 
   //-----------------------------------------------------------------------
-  k_exact_rhs1 = clCreateKernel(p_exact_rhs, "exact_rhs1", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for exact_rhs1");
+  k_exact_rhs1 = CEC_CREATE_KERNEL(p_exact_rhs, "exact_rhs1", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for exact_rhs1");
 
   ecode  = clSetKernelArg(k_exact_rhs1, 0, sizeof(cl_mem), &m_forcing);
   ecode |= clSetKernelArg(k_exact_rhs1, 1, sizeof(int), &d0);
@@ -119,8 +119,8 @@ void exact_rhs()
   //-----------------------------------------------------------------------
 
   //-----------------------------------------------------------------------
-  k_exact_rhs2 = clCreateKernel(p_exact_rhs, "exact_rhs2", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for exact_rhs2");
+  k_exact_rhs2 = CEC_CREATE_KERNEL(p_exact_rhs, "exact_rhs2", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for exact_rhs2");
 
   ecode  = clSetKernelArg(k_exact_rhs2, 0, sizeof(cl_mem), &m_forcing);
   ecode |= clSetKernelArg(k_exact_rhs2, 1, sizeof(cl_mem), &m_ue);
@@ -151,8 +151,8 @@ void exact_rhs()
   //-----------------------------------------------------------------------
 
   //-----------------------------------------------------------------------
-  k_exact_rhs3 = clCreateKernel(p_exact_rhs, "exact_rhs3", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for exact_rhs3");
+  k_exact_rhs3 = CEC_CREATE_KERNEL(p_exact_rhs, "exact_rhs3", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for exact_rhs3");
 
   ecode  = clSetKernelArg(k_exact_rhs3, 0, sizeof(cl_mem), &m_forcing);
   ecode |= clSetKernelArg(k_exact_rhs3, 1, sizeof(cl_mem), &m_ue);
@@ -183,8 +183,8 @@ void exact_rhs()
   //-----------------------------------------------------------------------
 
   //-----------------------------------------------------------------------
-  k_exact_rhs4 = clCreateKernel(p_exact_rhs, "exact_rhs4", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for exact_rhs4");
+  k_exact_rhs4 = CEC_CREATE_KERNEL(p_exact_rhs, "exact_rhs4", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for exact_rhs4");
 
   ecode  = clSetKernelArg(k_exact_rhs4, 0, sizeof(cl_mem), &m_forcing);
   ecode |= clSetKernelArg(k_exact_rhs4, 1, sizeof(cl_mem), &m_ue);
@@ -216,8 +216,8 @@ void exact_rhs()
 
   //-----------------------------------------------------------------------
   //-----------------------------------------------------------------------
-  k_exact_rhs5 = clCreateKernel(p_exact_rhs, "exact_rhs5", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for exact_rhs5");
+  k_exact_rhs5 = CEC_CREATE_KERNEL(p_exact_rhs, "exact_rhs5", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for exact_rhs5");
 
   ecode  = clSetKernelArg(k_exact_rhs5, 0, sizeof(cl_mem), &m_forcing);
   ecode |= clSetKernelArg(k_exact_rhs5, 1, sizeof(int), &d0);

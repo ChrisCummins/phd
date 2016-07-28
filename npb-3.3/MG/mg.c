@@ -2084,46 +2084,46 @@ static void setup_opencl(int argc, char *argv[])
   // 5. Create kernels
   //-----------------------------------------------------------------------
   DTIMER_START(T_OPENCL_API);
-  kernel_zero3 = clCreateKernel(program, "kernel_zero3", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
-  kernel_comm3_1 = clCreateKernel(program, "kernel_comm3_1", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
+  kernel_zero3 = CEC_CREATE_KERNEL(program, "kernel_zero3", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  kernel_comm3_1 = CEC_CREATE_KERNEL(program, "kernel_comm3_1", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
   /* if (device_type == CL_DEVICE_TYPE_GPU) { */
-    kernel_comm3_2 = clCreateKernel(program, "kernel_comm3_2", &ecode);
-    clu_CheckError(ecode, "clCreateKernel()");
+    kernel_comm3_2 = CEC_CREATE_KERNEL(program, "kernel_comm3_2", &ecode);
+    clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
   /* } */
-  kernel_comm3_3 = clCreateKernel(program, "kernel_comm3_3", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
+  kernel_comm3_3 = CEC_CREATE_KERNEL(program, "kernel_comm3_3", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
 
-  kernel_zran3_1 = clCreateKernel(program, "kernel_zran3_1", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
-  kernel_zran3_2 = clCreateKernel(program, "kernel_zran3_2", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
-  kernel_zran3_3 = clCreateKernel(program, "kernel_zran3_3", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
+  kernel_zran3_1 = CEC_CREATE_KERNEL(program, "kernel_zran3_1", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  kernel_zran3_2 = CEC_CREATE_KERNEL(program, "kernel_zran3_2", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  kernel_zran3_3 = CEC_CREATE_KERNEL(program, "kernel_zran3_3", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
 
-  kernel_psinv = clCreateKernel(program, "kernel_psinv", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
+  kernel_psinv = CEC_CREATE_KERNEL(program, "kernel_psinv", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
 
-  kernel_resid = clCreateKernel(program, "kernel_resid", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
+  kernel_resid = CEC_CREATE_KERNEL(program, "kernel_resid", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
 
-  kernel_rprj3 = clCreateKernel(program, "kernel_rprj3", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
+  kernel_rprj3 = CEC_CREATE_KERNEL(program, "kernel_rprj3", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
 
-  kernel_interp_1 = clCreateKernel(program, "kernel_interp_1", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
-  kernel_interp_2 = clCreateKernel(program, "kernel_interp_2", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
-  kernel_interp_3 = clCreateKernel(program, "kernel_interp_3", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
-  kernel_interp_4 = clCreateKernel(program, "kernel_interp_4", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
-  kernel_interp_5 = clCreateKernel(program, "kernel_interp_5", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
+  kernel_interp_1 = CEC_CREATE_KERNEL(program, "kernel_interp_1", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  kernel_interp_2 = CEC_CREATE_KERNEL(program, "kernel_interp_2", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  kernel_interp_3 = CEC_CREATE_KERNEL(program, "kernel_interp_3", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  kernel_interp_4 = CEC_CREATE_KERNEL(program, "kernel_interp_4", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  kernel_interp_5 = CEC_CREATE_KERNEL(program, "kernel_interp_5", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
 
-  kernel_norm2u3 = clCreateKernel(program, "kernel_norm2u3", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
+  kernel_norm2u3 = CEC_CREATE_KERNEL(program, "kernel_norm2u3", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
   DTIMER_STOP(T_OPENCL_API);
 
   //-----------------------------------------------------------------------

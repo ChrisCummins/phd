@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <cec-profile.h>
 #include <CL/cl.h>
 
 #include "cl_util.h"

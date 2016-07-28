@@ -68,8 +68,8 @@ void error()
                            NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer()");
 
-  k_error = clCreateKernel(p_post, "error", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
+  k_error = CEC_CREATE_KERNEL(p_post, "error", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
 
   ecode  = clSetKernelArg(k_error, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_error, 1, sizeof(cl_mem), &m_ce);

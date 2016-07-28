@@ -78,6 +78,13 @@
     cec_profile_write("clEnqueueWriteBuffer " #buffer, size);
 
 
+#define CEC_CREATE_KERNEL(program,                                      \
+                          kernel_name,                                  \
+                          errcode)                                      \
+    clCreateKernel(program, kernel_name, errcode);                      \
+    fprintf(stderr, "\n[CEC] clCreateKernel %s\n", kernel_name);
+
+
 // Get OpenCL event pointer.
 cl_event* cec_event();
 
@@ -85,5 +92,6 @@ cl_event* cec_event();
 void cec_profile_kernel(const char* name, const size_t wgsize);
 void cec_profile_read(const char* name, const size_t size);
 void cec_profile_write(const char* name, const size_t size);
+
 
 #endif  // CEC_PROFILE

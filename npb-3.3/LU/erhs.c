@@ -50,8 +50,8 @@ void erhs()
   cl_int ecode;
 
   //------------------------------------------------------------------------
-  k_erhs1 = clCreateKernel(p_pre, "erhs1", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for erhs1");
+  k_erhs1 = CEC_CREATE_KERNEL(p_pre, "erhs1", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for erhs1");
   ecode  = clSetKernelArg(k_erhs1, 0, sizeof(cl_mem), &m_frct);
   ecode |= clSetKernelArg(k_erhs1, 1, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_erhs1, 2, sizeof(cl_mem), &m_ce);
@@ -89,8 +89,8 @@ void erhs()
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   //------------------------------------------------------------------------
-  k_erhs2 = clCreateKernel(p_pre, "erhs2", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for erhs2");
+  k_erhs2 = CEC_CREATE_KERNEL(p_pre, "erhs2", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for erhs2");
   ecode  = clSetKernelArg(k_erhs2, 0, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_erhs2, 1, sizeof(cl_mem), &m_frct);
   ecode |= clSetKernelArg(k_erhs2, 2, sizeof(cl_mem), &m_flux);
@@ -120,8 +120,8 @@ void erhs()
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   //------------------------------------------------------------------------
-  k_erhs3 = clCreateKernel(p_pre, "erhs3", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for erhs3");
+  k_erhs3 = CEC_CREATE_KERNEL(p_pre, "erhs3", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for erhs3");
   ecode  = clSetKernelArg(k_erhs3, 0, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_erhs3, 1, sizeof(cl_mem), &m_frct);
   ecode |= clSetKernelArg(k_erhs3, 2, sizeof(cl_mem), &m_flux);
@@ -151,8 +151,8 @@ void erhs()
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   //------------------------------------------------------------------------
-  k_erhs4 = clCreateKernel(p_pre, "erhs4", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for erhs4");
+  k_erhs4 = CEC_CREATE_KERNEL(p_pre, "erhs4", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for erhs4");
   ecode  = clSetKernelArg(k_erhs4, 0, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_erhs4, 1, sizeof(cl_mem), &m_frct);
   ecode |= clSetKernelArg(k_erhs4, 2, sizeof(cl_mem), &m_flux);

@@ -182,8 +182,8 @@ void create_seq( double seed, double a )
 
   DTIMER_START(T_OPENCL_API);
   // Create a kernel
-  k_cs = clCreateKernel(program, "create_seq", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for create_seq");
+  k_cs = CEC_CREATE_KERNEL(program, "create_seq", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for create_seq");
   DTIMER_STOP(T_OPENCL_API);
 
   DTIMER_START(T_KERNEL_CREATE_SEQ);
@@ -239,11 +239,11 @@ void full_verify( void )
 
   DTIMER_START(T_OPENCL_API);
   // Create kernels
-  k_fv1 = clCreateKernel(program, "full_verify1", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for full_verify1");
+  k_fv1 = CEC_CREATE_KERNEL(program, "full_verify1", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for full_verify1");
 
-  k_fv2 = clCreateKernel(program, "full_verify2", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for full_verify2");
+  k_fv2 = CEC_CREATE_KERNEL(program, "full_verify2", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for full_verify2");
   DTIMER_STOP(T_OPENCL_API);
 
   /* if (device_type == CL_DEVICE_TYPE_GPU) { */
@@ -252,8 +252,8 @@ void full_verify( void )
 
     DTIMER_START(T_OPENCL_API);
     // Create kernels
-    k_fv0 = clCreateKernel(program, "full_verify0", &ecode);
-    clu_CheckError(ecode, "clCreateKernel() for full_verify0");
+    k_fv0 = CEC_CREATE_KERNEL(program, "full_verify0", &ecode);
+    clu_CheckError(ecode, "CEC_CREATE_KERNEL() for full_verify0");
     DTIMER_STOP(T_OPENCL_API);
 
     // Kernel execution
@@ -881,27 +881,27 @@ static void setup_opencl(int argc, char *argv[])
 
   // 6. Create kernels
   DTIMER_START(T_OPENCL_API);
-  k_rank0 = clCreateKernel(program, "rank0", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rank0");
+  k_rank0 = CEC_CREATE_KERNEL(program, "rank0", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for rank0");
   ecode  = clSetKernelArg(k_rank0, 0, sizeof(cl_mem), (void*)&m_key_array);
   ecode |= clSetKernelArg(k_rank0, 1, sizeof(cl_mem), (void*)&m_partial_vals);
   ecode |= clSetKernelArg(k_rank0, 2, sizeof(cl_mem), (void*)&m_index_array);
   clu_CheckError(ecode, "clSetKernelArg() for rank0");
 
   /* if (device_type == CL_DEVICE_TYPE_GPU) { */
-    k_rank1 = clCreateKernel(program, "rank1", &ecode);
-    clu_CheckError(ecode, "clCreateKernel() for rank1");
+    k_rank1 = CEC_CREATE_KERNEL(program, "rank1", &ecode);
+    clu_CheckError(ecode, "CEC_CREATE_KERNEL() for rank1");
     ecode  = clSetKernelArg(k_rank1, 0, sizeof(cl_mem), (void*)&m_key_buff1);
     clu_CheckError(ecode, "clSetKernelArg() for rank1");
 
-    k_rank2 = clCreateKernel(program, "rank2", &ecode);
-    clu_CheckError(ecode, "clCreateKernel() for rank2");
+    k_rank2 = CEC_CREATE_KERNEL(program, "rank2", &ecode);
+    clu_CheckError(ecode, "CEC_CREATE_KERNEL() for rank2");
     ecode  = clSetKernelArg(k_rank2, 0, sizeof(cl_mem), (void*)&m_key_buff1);
     ecode |= clSetKernelArg(k_rank2, 1, sizeof(cl_mem), (void*)&m_key_array);
     clu_CheckError(ecode, "clSetKernelArg() for rank2");
 
-    k_rank3_0 = clCreateKernel(program, "rank3_0", &ecode);
-    clu_CheckError(ecode, "clCreateKernel() for rank3_0");
+    k_rank3_0 = CEC_CREATE_KERNEL(program, "rank3_0", &ecode);
+    clu_CheckError(ecode, "CEC_CREATE_KERNEL() for rank3_0");
     ecode  = clSetKernelArg(k_rank3_0, 0, sizeof(cl_mem),(void*)&m_key_buff1);
     ecode |= clSetKernelArg(k_rank3_0, 1, sizeof(cl_mem),(void*)&m_key_buff1);
     ecode |= clSetKernelArg(k_rank3_0, 2, sizeof(cl_mem),(void*)&m_sum);
@@ -910,8 +910,8 @@ static void setup_opencl(int argc, char *argv[])
                             NULL);
     clu_CheckError(ecode, "clSetKernelArg() for rank3_0");
 
-    k_rank3_1 = clCreateKernel(program, "rank3_1", &ecode);
-    clu_CheckError(ecode, "clCreateKernel() for rank3_1");
+    k_rank3_1 = CEC_CREATE_KERNEL(program, "rank3_1", &ecode);
+    clu_CheckError(ecode, "CEC_CREATE_KERNEL() for rank3_1");
     ecode  = clSetKernelArg(k_rank3_1, 0, sizeof(cl_mem), (void*)&m_sum);
     ecode  = clSetKernelArg(k_rank3_1, 1, sizeof(cl_mem), (void*)&m_sum);
     ecode |= clSetKernelArg(k_rank3_1, 2,
@@ -919,29 +919,29 @@ static void setup_opencl(int argc, char *argv[])
                             NULL);
     clu_CheckError(ecode, "clSetKernelArg() for rank3_1");
 
-    k_rank3_2 = clCreateKernel(program, "rank3_2", &ecode);
-    clu_CheckError(ecode, "clCreateKernel() for rank3_2");
+    k_rank3_2 = CEC_CREATE_KERNEL(program, "rank3_2", &ecode);
+    clu_CheckError(ecode, "CEC_CREATE_KERNEL() for rank3_2");
     ecode  = clSetKernelArg(k_rank3_2, 0, sizeof(cl_mem),(void*)&m_key_buff1);
     ecode  = clSetKernelArg(k_rank3_2, 1, sizeof(cl_mem),(void*)&m_key_buff1);
     ecode |= clSetKernelArg(k_rank3_2, 2, sizeof(cl_mem),(void*)&m_sum);
     clu_CheckError(ecode, "clSetKernelArg() for rank3_2");
   /* } else { */
-  /*   k_rank1 = clCreateKernel(program, "rank1", &ecode); */
-  /*   clu_CheckError(ecode, "clCreateKernel() for rank1"); */
+  /*   k_rank1 = CEC_CREATE_KERNEL(program, "rank1", &ecode); */
+  /*   clu_CheckError(ecode, "CEC_CREATE_KERNEL() for rank1"); */
   /*   ecode  = clSetKernelArg(k_rank1, 0, sizeof(cl_mem),(void*)&m_key_array); */
   /*   ecode |= clSetKernelArg(k_rank1, 1, sizeof(cl_mem),(void*)&m_bucket_size); */
   /*   clu_CheckError(ecode, "clSetKernelArg() for rank1"); */
 
-  /*   k_rank2 = clCreateKernel(program, "rank2", &ecode); */
-  /*   clu_CheckError(ecode, "clCreateKernel() for rank2"); */
+  /*   k_rank2 = CEC_CREATE_KERNEL(program, "rank2", &ecode); */
+  /*   clu_CheckError(ecode, "CEC_CREATE_KERNEL() for rank2"); */
   /*   ecode  = clSetKernelArg(k_rank2, 0, sizeof(cl_mem),(void*)&m_key_array); */
   /*   ecode |= clSetKernelArg(k_rank2, 1, sizeof(cl_mem),(void*)&m_bucket_size); */
   /*   ecode |= clSetKernelArg(k_rank2, 2, sizeof(cl_mem),(void*)&m_bucket_ptrs); */
   /*   ecode |= clSetKernelArg(k_rank2, 3, sizeof(cl_mem),(void*)&m_key_buff2); */
   /*   clu_CheckError(ecode, "clSetKernelArg() for rank2"); */
 
-  /*   k_rank3 = clCreateKernel(program, "rank3", &ecode); */
-  /*   clu_CheckError(ecode, "clCreateKernel() for rank3"); */
+  /*   k_rank3 = CEC_CREATE_KERNEL(program, "rank3", &ecode); */
+  /*   clu_CheckError(ecode, "CEC_CREATE_KERNEL() for rank3"); */
   /*   ecode  = clSetKernelArg(k_rank3, 0, sizeof(cl_mem),(void*)&m_bucket_size); */
   /*   ecode |= clSetKernelArg(k_rank3, 1, sizeof(cl_mem),(void*)&m_bucket_ptrs); */
   /*   ecode |= clSetKernelArg(k_rank3, 2, sizeof(cl_mem),(void*)&m_key_buff1); */
@@ -949,8 +949,8 @@ static void setup_opencl(int argc, char *argv[])
   /*   clu_CheckError(ecode, "clSetKernelArg() for rank3"); */
   /* } */
 
-  k_rank4 = clCreateKernel(program, "rank4", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rank4");
+  k_rank4 = CEC_CREATE_KERNEL(program, "rank4", &ecode);
+  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for rank4");
   ecode  = clSetKernelArg(k_rank4, 0, sizeof(cl_mem), (void*)&m_partial_vals);
   ecode |= clSetKernelArg(k_rank4, 1, sizeof(cl_mem), (void*)&m_key_buff1);
   ecode |= clSetKernelArg(k_rank4, 2, sizeof(cl_mem), (void*)&m_rank_array);
