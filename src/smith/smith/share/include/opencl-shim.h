@@ -131,6 +131,7 @@ typedef unsigned int uint32_t;
 #define LOG2_WARP_SIZE 5
 #define LOOKUP_GAP 16
 #define LROWS 16
+#define LSIZE 64  // Used in npb-3.3
 #define LUTSIZE 1024
 #define LUTSIZE_LOG2 10
 #define LWS 128
