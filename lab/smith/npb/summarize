@@ -1,53 +1,114 @@
 #!/usr/bin/env bash
+#
+# Summarize npb benchmark logs in ../data/npb/results/.
+#
+# Usage: ./summarize <data-dir>
+#
 set -eu
 
-#
-# Usage: time_to_seconds "3m28.975s"
-#        3 28 975
-#
-time_to_seconds() {
-    local time="$1"
-
-    echo "$time" | sed 's/[ms\.]/ /g' | awk '{ print ($1 * 60) + $2, $3 }' | sed 's/ /\./'
+usage() {
+    echo "$0 <data-path>"
+    echo
+    echo "     Summarize and plot NPB benchmark results."
 }
 
-get_time_from_file() {
+get_roots() {
+    local path="$1"
+    ls $path/*.cpu.out | sed 's/\.cpu\.out$//' | xargs -L 1 basename
+}
+
+extract_runtimes() {
     local path="$1"
 
-    local time=$(tail -n3 "$path" | head -n1 | sed 's/^real\t//')
-    echo $(time_to_seconds "$time")
+    root=$(echo "$(basename $path)" | sed 's/\.out$//')
+    benchmark=$(echo $root | cut -d '.' -f 1)
+    dataset=$(echo $root | cut -d '.' -f 2)
+    device=$(echo $root | cut -d '.' -f 3 | tr '[:lower:]' '[:upper:]')
+
+    # output format: benchmark,dataset,device,runtime
+    grep '\[CEC\] clEnqueue' "$path" \
+        | awk '{print $5}' | awk '{print "'$benchmark,$dataset,$device,'" $0}'
 }
 
-summarize_results() {
-    local root="$1"
+extract_wgsizes() {
+    local path="$1"
 
-    local benchmark=$(basename $root | cut -d '.' -f 1)
-    local dataset=$(basename $root | cut -d '.' -f 2)
+    root=$(echo "$(basename $path)" | sed 's/\.out$//')
+    benchmark=$(echo $root | cut -d '.' -f 1)
+    dataset=$(echo $root | cut -d '.' -f 2)
+    device=$(echo $root | cut -d '.' -f 3 | tr '[:lower:]' '[:upper:]')
 
-    local cpu="$1.cpu.out"
-    local gpu="$1.gpu.out"
-
-    local cpu_time=$(get_time_from_file $cpu)
-    local gpu_time=$(get_time_from_file $gpu)
-
-    echo "$benchmark,$dataset,$cpu_time,$gpu_time"
+    # output format: benchmark,dataset,device,wgsize
+    grep '\[CEC\] clEnqueueNDRangeKernel ' "$path" \
+        | awk '{print $4}' | awk '{print "'$benchmark,$dataset,$device,'" $0}'
 }
 
-rm -rf ../data/npb/summary
-mkdir -pv ../data/npb/summary/img/
-for f in $(find ../data/npb/results -name '*.cpu.out' | sort); do
-    root=$(echo $f | sed 's/\.cpu\.out//')
+extract_transfers() {
+    local path="$1"
 
-    benchmark=$(basename $root | cut -d '.' -f 1)
-    dataset=$(basename $root | cut -d '.' -f 2)
+    root=$(echo "$(basename $path)" | sed 's/\.out$//')
+    benchmark=$(echo $root | cut -d '.' -f 1)
+    dataset=$(echo $root | cut -d '.' -f 2)
+    device=$(echo $root | cut -d '.' -f 3 | tr '[:lower:]' '[:upper:]')
 
-    summary="$(summarize_results $root)"
-    echo $summary >> ../data/npb/summary/$benchmark.csv
-    echo $summary >> ../data/npb/summary/data.csv
-done
+    # output format: benchmark,dataset,device,size
+    grep '\[CEC\] clEnqueue[RW]' "$path" \
+        | awk '{print $4}' | awk '{print "'$benchmark,$dataset,$device,'" $0}'
+}
 
-for f in $(ls ../data/npb/summary/*.csv | grep -v data.csv); do
-    dst=../data/npb/summary/img/$(basename $f).png
-    echo "plot $dst"
-    ./plot.py $f $dst 2>/dev/null
-done
+make_csvs() {
+    local data_path="$1"
+    local runtimes_csv_path="$2"
+    local wgsizes_csv_path="$3"
+    local transfers_csv_path="$4"
+
+    local rundirs=($(find "$data_path" -maxdepth 1 -regex '.*[0-9]+' ! -path "$data_path" -type d | sort))
+    local nruns=$(echo ${#rundirs[@]})
+    local dsize=$(du -h -s "$data_path" | awk '{print $1}')
+
+    echo "summarizing $dsize of data from $nruns runs ..."
+
+    roots=($(get_roots "${rundirs[0]}"))
+
+    # CSV HEADERS
+    echo "benchmark,dataset,device,runtime" > "$runtimes_csv_path"
+    echo "benchmark,dataset,device,wgsize" > "$wgsizes_csv_path"
+    echo "benchmark,dataset,device,size" > "$transfers_csv_path"
+
+    for rundir in ${rundirs[@]}; do
+        for root in ${roots[@]}; do
+            cpu_path="$rundir/$root.cpu.out"
+            gpu_path="$rundir/$root.gpu.out"
+
+            extract_runtimes "$cpu_path" >> "$runtimes_csv_path"
+            extract_runtimes "$gpu_path" >> "$runtimes_csv_path"
+
+            extract_wgsizes "$cpu_path" >> "$wgsizes_csv_path"
+            extract_wgsizes "$gpu_path" >> "$wgsizes_csv_path"
+
+            extract_transfers "$cpu_path" >> "$transfers_csv_path"
+            extract_transfers "$gpu_path" >> "$transfers_csv_path"
+        done
+    done
+}
+
+main() {
+    if [[ $# -ne 1 ]] || [[ ! -d "$1" ]]; then
+        usage >&2
+        exit 1
+    fi
+
+    local data_path="$1"
+    local runtimes_csv_path="$1/runtimes.csv"
+    local wgsizes_csv_path="$1/wgsizes.csv"
+    local transfers_csv_path="$1/transfers.csv"
+    local db_path="$1/data.db"
+
+    echo "Extracting raw data ..."
+    make_csvs "$data_path" \
+              "$runtimes_csv_path" "$wgsizes_csv_path" "$transfers_csv_path"
+    echo "Processing data ..."
+    ./analyze "$data_path"
+    xdg-open "$data_path/img"
+}
+main $@
