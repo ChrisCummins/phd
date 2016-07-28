@@ -713,7 +713,7 @@ static void resid(double *or, int n1, int n2, int n3, double a[4], int k,
   if (timeron) timer_start(T_resid);
 
   DTIMER_START(T_BUFFER_WRITE);
-  ecode = clEnqueueWriteBuffer(cmd_queue,
+  ecode = CEC_WRITE_BUFFER(cmd_queue,
                                m_a,
                                CL_FALSE,
                                0,
@@ -1528,7 +1528,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
   //---------------------------------------------------------------------
   if (device_type == CL_DEVICE_TYPE_GPU) {
     DTIMER_START(T_BUFFER_WRITE);
-    ecode = clEnqueueWriteBuffer(cmd_queue,
+    ecode = CEC_WRITE_BUFFER(cmd_queue,
                                  m_buff,
                                  CL_FALSE,
                                  offset * sizeof(double),
@@ -1537,7 +1537,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
                                  0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueWriteBuffer()");
 
-    ecode = clEnqueueWriteBuffer(cmd_queue,
+    ecode = CEC_WRITE_BUFFER(cmd_queue,
                                  m_starts,
                                  CL_TRUE,
                                  0,
@@ -1651,7 +1651,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
 
   if (device_type == CL_DEVICE_TYPE_GPU) {
     DTIMER_START(T_BUFFER_WRITE);
-    ecode = clEnqueueWriteBuffer(cmd_queue,
+    ecode = CEC_WRITE_BUFFER(cmd_queue,
                                  m_buff,
                                  CL_TRUE,
                                  offset * sizeof(double),
@@ -1854,7 +1854,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
 
   if (device_type == CL_DEVICE_TYPE_GPU) {
     DTIMER_START(T_BUFFER_WRITE);
-    ecode = clEnqueueWriteBuffer(cmd_queue,
+    ecode = CEC_WRITE_BUFFER(cmd_queue,
                                  m_buff,
                                  CL_TRUE,
                                  offset * sizeof(double),
