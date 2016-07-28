@@ -108,7 +108,7 @@ void set_constants()
 
   //------------------------------------------------------------------------
   cl_int ecode;
-  ecode = clEnqueueWriteBuffer(cmd_queue,
+  ecode = CEC_WRITE_BUFFER(cmd_queue,
                                m_ce,
                                CL_FALSE,
                                0, sizeof(double)*5*13,

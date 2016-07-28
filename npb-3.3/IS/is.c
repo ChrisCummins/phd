@@ -423,7 +423,7 @@ void rank( int iteration )
   ecode = clSetKernelArg(k_rank0, 3, sizeof(cl_int), (void*)&iteration);
   clu_CheckError(ecode, "clSetKernelArg() for rank0: iteration");
 
-  ecode = clEnqueueTask(cmd_queue, k_rank0, 0, NULL, NULL);
+  ecode = CEC_TASK(cmd_queue, k_rank0, 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueTask() for rank0");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_RANK0);
@@ -509,7 +509,7 @@ void rank( int iteration )
   ecode = clSetKernelArg(k_rank4, 4, sizeof(cl_int), (void*)&iteration);
   clu_CheckError(ecode, "clSetKernelArg() for rank4");
 
-  ecode = clEnqueueTask(cmd_queue, k_rank4, 0, NULL, NULL);
+  ecode = CEC_TASK(cmd_queue, k_rank4, 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueTask() for rank4");
 
   ecode = clFinish(cmd_queue);
@@ -606,7 +606,7 @@ int main( int argc, char **argv )
   passed_verification = 0;
 
   DTIMER_START(T_BUFFER_WRITE);
-  ecode = clEnqueueWriteBuffer(cmd_queue,
+  ecode = CEC_WRITE_BUFFER(cmd_queue,
                                m_passed_verification,
                                CL_TRUE,
                                0,

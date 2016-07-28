@@ -579,7 +579,7 @@ static void fft_init(int n)
   }
 
   int ecode;
-  ecode = clEnqueueWriteBuffer(cmd_queue,
+  ecode = CEC_WRITE_BUFFER(cmd_queue,
                                m_u,
                                CL_FALSE,
                                0, sizeof(dcomplex) * NXP,
