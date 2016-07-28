@@ -9,6 +9,7 @@
 // number of nodes
 //---------------------------------------------------------------------
 
+#include <cec-profile.h>
 #include "npbparams.h"
 #include "type.h"
 
