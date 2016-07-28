@@ -246,7 +246,7 @@ void full_verify( void )
   clu_CheckError(ecode, "clCreateKernel() for full_verify2");
   DTIMER_STOP(T_OPENCL_API);
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     cl_kernel k_fv0;
     size_t fv0_lws[1], fv0_gws[1];
 
@@ -332,65 +332,65 @@ void full_verify( void )
     clReleaseKernel(k_fv0);
     DTIMER_STOP(T_RELEASE);
 
-  } else {
+  /* } else { */
 
-    // Kernel execution
-    DTIMER_START(T_KERNEL_FV1);
-    ecode  = clSetKernelArg(k_fv1, 0, sizeof(cl_mem), (void*)&m_bucket_ptrs);
-    ecode |= clSetKernelArg(k_fv1, 1, sizeof(cl_mem), (void*)&m_key_buff2);
-    ecode |= clSetKernelArg(k_fv1, 2, sizeof(cl_mem), (void*)&m_key_buff1);
-    ecode |= clSetKernelArg(k_fv1, 3, sizeof(cl_mem), (void*)&m_key_array);
-    clu_CheckError(ecode, "clSetKernelArg() for full_verify1");
+  /*   // Kernel execution */
+  /*   DTIMER_START(T_KERNEL_FV1); */
+  /*   ecode  = clSetKernelArg(k_fv1, 0, sizeof(cl_mem), (void*)&m_bucket_ptrs); */
+  /*   ecode |= clSetKernelArg(k_fv1, 1, sizeof(cl_mem), (void*)&m_key_buff2); */
+  /*   ecode |= clSetKernelArg(k_fv1, 2, sizeof(cl_mem), (void*)&m_key_buff1); */
+  /*   ecode |= clSetKernelArg(k_fv1, 3, sizeof(cl_mem), (void*)&m_key_array); */
+  /*   clu_CheckError(ecode, "clSetKernelArg() for full_verify1"); */
 
-    fv1_lws[0] = RANK_GROUP_SIZE;
-    fv1_gws[0] = RANK_GLOBAL_SIZE;
-    ecode = CEC_ND_KERNEL(cmd_queue,
-                          k_fv1,
-                          1, NULL,
-                          fv1_gws,
-                          fv1_lws,
-                          0, NULL);
-    clu_CheckError(ecode, "clEnqueueNDRangeKernel() for full_verify1");
-    CHECK_FINISH();
-    DTIMER_STOP(T_KERNEL_FV1);
+  /*   fv1_lws[0] = RANK_GROUP_SIZE; */
+  /*   fv1_gws[0] = RANK_GLOBAL_SIZE; */
+  /*   ecode = CEC_ND_KERNEL(cmd_queue, */
+  /*                         k_fv1, */
+  /*                         1, NULL, */
+  /*                         fv1_gws, */
+  /*                         fv1_lws, */
+  /*                         0, NULL); */
+  /*   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for full_verify1"); */
+  /*   CHECK_FINISH(); */
+  /*   DTIMER_STOP(T_KERNEL_FV1); */
 
-    DTIMER_START(T_KERNEL_FV2);
-    ecode  = clSetKernelArg(k_fv2, 0, sizeof(cl_mem), (void*)&m_key_array);
-    ecode |= clSetKernelArg(k_fv2, 1, sizeof(cl_mem), (void*)&m_j);
-    ecode |= clSetKernelArg(k_fv2, 2, sizeof(INT_TYPE)*FV2_GROUP_SIZE, NULL);
-    clu_CheckError(ecode, "clSetKernelArg() for full_verify2");
+  /*   DTIMER_START(T_KERNEL_FV2); */
+  /*   ecode  = clSetKernelArg(k_fv2, 0, sizeof(cl_mem), (void*)&m_key_array); */
+  /*   ecode |= clSetKernelArg(k_fv2, 1, sizeof(cl_mem), (void*)&m_j); */
+  /*   ecode |= clSetKernelArg(k_fv2, 2, sizeof(INT_TYPE)*FV2_GROUP_SIZE, NULL); */
+  /*   clu_CheckError(ecode, "clSetKernelArg() for full_verify2"); */
 
-    fv2_lws[0] = FV2_GROUP_SIZE;
-    fv2_gws[0] = FV2_GLOBAL_SIZE;
-    ecode = CEC_ND_KERNEL(cmd_queue,
-                          k_fv2,
-                          1, NULL,
-                          fv2_gws,
-                          fv2_lws,
-                          0, NULL);
-    clu_CheckError(ecode, "clEnqueueNDRangeKernel() for full_verify2");
-    CHECK_FINISH();
-    DTIMER_STOP(T_KERNEL_FV2);
+  /*   fv2_lws[0] = FV2_GROUP_SIZE; */
+  /*   fv2_gws[0] = FV2_GLOBAL_SIZE; */
+  /*   ecode = CEC_ND_KERNEL(cmd_queue, */
+  /*                         k_fv2, */
+  /*                         1, NULL, */
+  /*                         fv2_gws, */
+  /*                         fv2_lws, */
+  /*                         0, NULL); */
+  /*   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for full_verify2"); */
+  /*   CHECK_FINISH(); */
+  /*   DTIMER_STOP(T_KERNEL_FV2); */
 
-    g_j = (INT_TYPE *)malloc(j_size);
+  /*   g_j = (INT_TYPE *)malloc(j_size); */
 
-    DTIMER_START(T_BUFFER_READ);
-    ecode = CEC_READ_BUFFER(cmd_queue,
-                                m_j,
-                                CL_TRUE,
-                                0,
-                                j_size,
-                                g_j,
-                                0, NULL, NULL);
-    clu_CheckError(ecode, "clEnqueueReadBuffer() for m_j");
-    DTIMER_STOP(T_BUFFER_READ);
+  /*   DTIMER_START(T_BUFFER_READ); */
+  /*   ecode = CEC_READ_BUFFER(cmd_queue, */
+  /*                               m_j, */
+  /*                               CL_TRUE, */
+  /*                               0, */
+  /*                               j_size, */
+  /*                               g_j, */
+  /*                               0, NULL, NULL); */
+  /*   clu_CheckError(ecode, "clEnqueueReadBuffer() for m_j"); */
+  /*   DTIMER_STOP(T_BUFFER_READ); */
 
-    // reduction
-    for (i = 0; i < j_size/sizeof(INT_TYPE); i++) {
-      j += g_j[i];
-    }
+  /*   // reduction */
+  /*   for (i = 0; i < j_size/sizeof(INT_TYPE); i++) { */
+  /*     j += g_j[i]; */
+  /*   } */
 
-  }
+  /* } */
 
   DTIMER_START(T_RELEASE);
   free(g_j);
@@ -458,7 +458,7 @@ void rank( int iteration )
 
   DTIMER_START(T_KERNEL_RANK3);
   // rank3
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     r3_lws[0] = work_item_sizes[0];
     r3_gws[0] = work_item_sizes[0] * work_item_sizes[0];
     if (r3_gws[0] > MAX_KEY) r3_gws[0] = MAX_KEY;
@@ -490,17 +490,17 @@ void rank( int iteration )
                           r3_lws,
                           0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank3_2");
-  } else {
-    r3_lws[0] = RANK_GROUP_SIZE;
-    r3_gws[0] = RANK_GLOBAL_SIZE;
-    ecode = CEC_ND_KERNEL(cmd_queue,
-                          k_rank3,
-                          1, NULL,
-                          r3_gws,
-                          r3_lws,
-                          0, NULL);
-    clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank3");
-  }
+  /* } else { */
+  /*   r3_lws[0] = RANK_GROUP_SIZE; */
+  /*   r3_gws[0] = RANK_GLOBAL_SIZE; */
+  /*   ecode = CEC_ND_KERNEL(cmd_queue, */
+  /*                         k_rank3, */
+  /*                         1, NULL, */
+  /*                         r3_gws, */
+  /*                         r3_lws, */
+  /*                         0, NULL); */
+  /*   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank3"); */
+  /* } */
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_RANK3);
 
@@ -772,21 +772,21 @@ static void setup_opencl(int argc, char *argv[])
   DTIMER_START(T_BUILD);
   char *source_file;
   char build_option[30];
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    source_file = "is_cpu.cl";
-    sprintf(build_option, "-DCLASS=%d -I.", CLASS);
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   source_file = "is_cpu.cl"; */
+  /*   sprintf(build_option, "-DCLASS=%d -I.", CLASS); */
 
-    CREATE_SEQ_GROUP_SIZE = 64;
-    CREATE_SEQ_GLOBAL_SIZE = CREATE_SEQ_GROUP_SIZE * 256;
-    RANK_GROUP_SIZE = 1;
-    RANK_GLOBAL_SIZE = RANK_GROUP_SIZE * 128;
-    RANK1_GROUP_SIZE = 1;
-    RANK1_GLOBAL_SIZE = RANK1_GROUP_SIZE * RANK_GLOBAL_SIZE;;
-    RANK2_GROUP_SIZE = RANK_GROUP_SIZE;
-    RANK2_GLOBAL_SIZE = RANK_GLOBAL_SIZE;;
-    FV2_GROUP_SIZE = 64;
-    FV2_GLOBAL_SIZE = FV2_GROUP_SIZE * 256;
-  } else if (device_type == CL_DEVICE_TYPE_GPU) {
+  /*   CREATE_SEQ_GROUP_SIZE = 64; */
+  /*   CREATE_SEQ_GLOBAL_SIZE = CREATE_SEQ_GROUP_SIZE * 256; */
+  /*   RANK_GROUP_SIZE = 1; */
+  /*   RANK_GLOBAL_SIZE = RANK_GROUP_SIZE * 128; */
+  /*   RANK1_GROUP_SIZE = 1; */
+  /*   RANK1_GLOBAL_SIZE = RANK1_GROUP_SIZE * RANK_GLOBAL_SIZE;; */
+  /*   RANK2_GROUP_SIZE = RANK_GROUP_SIZE; */
+  /*   RANK2_GLOBAL_SIZE = RANK_GLOBAL_SIZE;; */
+  /*   FV2_GROUP_SIZE = 64; */
+  /*   FV2_GLOBAL_SIZE = FV2_GROUP_SIZE * 256; */
+  /* } else if (device_type == CL_DEVICE_TYPE_GPU) { */
     source_file = "is_gpu.cl";
     sprintf(build_option, "-DCLASS=\'%c\' -I.", CLASS);
 
@@ -798,10 +798,10 @@ static void setup_opencl(int argc, char *argv[])
     RANK2_GLOBAL_SIZE = NUM_KEYS;
     FV2_GROUP_SIZE = work_item_sizes[0];
     FV2_GLOBAL_SIZE = NUM_KEYS;
-  } else {
-    fprintf(stderr, "%s: not supported.", clu_GetDeviceTypeName(device_type));
-    exit(EXIT_FAILURE);
-  }
+  /* } else { */
+  /*   fprintf(stderr, "%s: not supported.", clu_GetDeviceTypeName(device_type)); */
+  /*   exit(EXIT_FAILURE); */
+  /* } */
   program = clu_MakeProgram(context, device, source_dir, source_file,
                             build_option);
   DTIMER_STOP(T_BUILD);
@@ -851,7 +851,7 @@ static void setup_opencl(int argc, char *argv[])
                                          NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer() for m_passed_verification");
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     m_key_scan = clCreateBuffer(context,
                                 CL_MEM_READ_WRITE,
                                 sizeof(INT_TYPE) * MAX_KEY,
@@ -863,20 +863,20 @@ static void setup_opencl(int argc, char *argv[])
                            sizeof(INT_TYPE) * work_item_sizes[0],
                            NULL, &ecode);
     clu_CheckError(ecode, "clCreateBuffer() for m_sum");
-  } else {
-    size_t bs_size = RANK_GLOBAL_SIZE * sizeof(INT_TYPE) * NUM_BUCKETS;
-    m_bucket_size = clCreateBuffer(context,
-                                   CL_MEM_READ_WRITE,
-                                   bs_size,
-                                   NULL, &ecode);
-    clu_CheckError(ecode, "clCreateBuffer() for m_bucket_size");
+  /* } else { */
+  /*   size_t bs_size = RANK_GLOBAL_SIZE * sizeof(INT_TYPE) * NUM_BUCKETS; */
+  /*   m_bucket_size = clCreateBuffer(context, */
+  /*                                  CL_MEM_READ_WRITE, */
+  /*                                  bs_size, */
+  /*                                  NULL, &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer() for m_bucket_size"); */
 
-    m_bucket_ptrs = clCreateBuffer(context,
-                                   CL_MEM_READ_WRITE,
-                                   bs_size,
-                                   NULL, &ecode);
-    clu_CheckError(ecode, "clCreateBuffer() for m_bucket_ptrs");
-  }
+  /*   m_bucket_ptrs = clCreateBuffer(context, */
+  /*                                  CL_MEM_READ_WRITE, */
+  /*                                  bs_size, */
+  /*                                  NULL, &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer() for m_bucket_ptrs"); */
+  /* } */
   DTIMER_STOP(T_BUFFER_CREATE);
 
   // 6. Create kernels
@@ -888,7 +888,7 @@ static void setup_opencl(int argc, char *argv[])
   ecode |= clSetKernelArg(k_rank0, 2, sizeof(cl_mem), (void*)&m_index_array);
   clu_CheckError(ecode, "clSetKernelArg() for rank0");
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     k_rank1 = clCreateKernel(program, "rank1", &ecode);
     clu_CheckError(ecode, "clCreateKernel() for rank1");
     ecode  = clSetKernelArg(k_rank1, 0, sizeof(cl_mem), (void*)&m_key_buff1);
@@ -925,29 +925,29 @@ static void setup_opencl(int argc, char *argv[])
     ecode  = clSetKernelArg(k_rank3_2, 1, sizeof(cl_mem),(void*)&m_key_buff1);
     ecode |= clSetKernelArg(k_rank3_2, 2, sizeof(cl_mem),(void*)&m_sum);
     clu_CheckError(ecode, "clSetKernelArg() for rank3_2");
-  } else {
-    k_rank1 = clCreateKernel(program, "rank1", &ecode);
-    clu_CheckError(ecode, "clCreateKernel() for rank1");
-    ecode  = clSetKernelArg(k_rank1, 0, sizeof(cl_mem),(void*)&m_key_array);
-    ecode |= clSetKernelArg(k_rank1, 1, sizeof(cl_mem),(void*)&m_bucket_size);
-    clu_CheckError(ecode, "clSetKernelArg() for rank1");
+  /* } else { */
+  /*   k_rank1 = clCreateKernel(program, "rank1", &ecode); */
+  /*   clu_CheckError(ecode, "clCreateKernel() for rank1"); */
+  /*   ecode  = clSetKernelArg(k_rank1, 0, sizeof(cl_mem),(void*)&m_key_array); */
+  /*   ecode |= clSetKernelArg(k_rank1, 1, sizeof(cl_mem),(void*)&m_bucket_size); */
+  /*   clu_CheckError(ecode, "clSetKernelArg() for rank1"); */
 
-    k_rank2 = clCreateKernel(program, "rank2", &ecode);
-    clu_CheckError(ecode, "clCreateKernel() for rank2");
-    ecode  = clSetKernelArg(k_rank2, 0, sizeof(cl_mem),(void*)&m_key_array);
-    ecode |= clSetKernelArg(k_rank2, 1, sizeof(cl_mem),(void*)&m_bucket_size);
-    ecode |= clSetKernelArg(k_rank2, 2, sizeof(cl_mem),(void*)&m_bucket_ptrs);
-    ecode |= clSetKernelArg(k_rank2, 3, sizeof(cl_mem),(void*)&m_key_buff2);
-    clu_CheckError(ecode, "clSetKernelArg() for rank2");
+  /*   k_rank2 = clCreateKernel(program, "rank2", &ecode); */
+  /*   clu_CheckError(ecode, "clCreateKernel() for rank2"); */
+  /*   ecode  = clSetKernelArg(k_rank2, 0, sizeof(cl_mem),(void*)&m_key_array); */
+  /*   ecode |= clSetKernelArg(k_rank2, 1, sizeof(cl_mem),(void*)&m_bucket_size); */
+  /*   ecode |= clSetKernelArg(k_rank2, 2, sizeof(cl_mem),(void*)&m_bucket_ptrs); */
+  /*   ecode |= clSetKernelArg(k_rank2, 3, sizeof(cl_mem),(void*)&m_key_buff2); */
+  /*   clu_CheckError(ecode, "clSetKernelArg() for rank2"); */
 
-    k_rank3 = clCreateKernel(program, "rank3", &ecode);
-    clu_CheckError(ecode, "clCreateKernel() for rank3");
-    ecode  = clSetKernelArg(k_rank3, 0, sizeof(cl_mem),(void*)&m_bucket_size);
-    ecode |= clSetKernelArg(k_rank3, 1, sizeof(cl_mem),(void*)&m_bucket_ptrs);
-    ecode |= clSetKernelArg(k_rank3, 2, sizeof(cl_mem),(void*)&m_key_buff1);
-    ecode |= clSetKernelArg(k_rank3, 3, sizeof(cl_mem),(void*)&m_key_buff2);
-    clu_CheckError(ecode, "clSetKernelArg() for rank3");
-  }
+  /*   k_rank3 = clCreateKernel(program, "rank3", &ecode); */
+  /*   clu_CheckError(ecode, "clCreateKernel() for rank3"); */
+  /*   ecode  = clSetKernelArg(k_rank3, 0, sizeof(cl_mem),(void*)&m_bucket_size); */
+  /*   ecode |= clSetKernelArg(k_rank3, 1, sizeof(cl_mem),(void*)&m_bucket_ptrs); */
+  /*   ecode |= clSetKernelArg(k_rank3, 2, sizeof(cl_mem),(void*)&m_key_buff1); */
+  /*   ecode |= clSetKernelArg(k_rank3, 3, sizeof(cl_mem),(void*)&m_key_buff2); */
+  /*   clu_CheckError(ecode, "clSetKernelArg() for rank3"); */
+  /* } */
 
   k_rank4 = clCreateKernel(program, "rank4", &ecode);
   clu_CheckError(ecode, "clCreateKernel() for rank4");
@@ -971,24 +971,24 @@ static void release_opencl()
   clReleaseMemObject(m_rank_array);
   clReleaseMemObject(m_partial_vals);
   clReleaseMemObject(m_passed_verification);
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     clReleaseMemObject(m_key_scan);
     clReleaseMemObject(m_sum);
-  } else {
-    clReleaseMemObject(m_bucket_ptrs);
-    clReleaseMemObject(m_bucket_size);
-  }
+  /* } else { */
+  /*   clReleaseMemObject(m_bucket_ptrs); */
+  /*   clReleaseMemObject(m_bucket_size); */
+  /* } */
 
   clReleaseKernel(k_rank0);
   clReleaseKernel(k_rank1);
   clReleaseKernel(k_rank2);
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     clReleaseKernel(k_rank3_0);
     clReleaseKernel(k_rank3_1);
     clReleaseKernel(k_rank3_2);
-  } else {
-    clReleaseKernel(k_rank3);
-  }
+  /* } else { */
+  /*   clReleaseKernel(k_rank3); */
+  /* } */
   clReleaseKernel(k_rank4);
 
   clReleaseProgram(program);

@@ -360,13 +360,13 @@ void setup_opencl(int argc, char *argv[])
   char *source_file;
   char build_option[30];
   sprintf(build_option, "-DM=%d -I.", M);
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    source_file = "ep_cpu.cl";
-    GROUP_SIZE = 16;
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   source_file = "ep_cpu.cl"; */
+  /*   GROUP_SIZE = 16; */
+  /* } else { */
     source_file = "ep_gpu.cl";
     GROUP_SIZE = 64;
-  }
+  /* } */
   program = clu_MakeProgram(context, device, source_dir, source_file,
                             build_option);
   DTIMER_STOP(T_BUILD);

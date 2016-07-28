@@ -308,13 +308,13 @@ int main(int argc, char *argv[])
   ecode |= clSetKernelArg(k_main[0], 3, sizeof(int), &gws);
   clu_CheckError(ecode, "clSetKernelArg() for main_0");
 
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    main_lws[0] = CG_LWS;
-    main_gws[0] = CG_GWS;
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   main_lws[0] = CG_LWS; */
+  /*   main_gws[0] = CG_GWS; */
+  /* } else { */
     main_lws[0] = CG_LSIZE;
     main_gws[0] = CG_LSIZE * gws;
-  }
+  /* } */
   ecode = CEC_ND_KERNEL(cmd_queue,
                         k_main[0],
                         1, NULL,
@@ -329,13 +329,13 @@ int main(int argc, char *argv[])
   // set starting vector to (1, 1, .... 1)
   //---------------------------------------------------------------------
   DTIMER_START(T_KERNEL_MAIN_1);
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    main_lws[1] = CG_LWS;
-    main_gws[1] = CG_GWS;
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   main_lws[1] = CG_LWS; */
+  /*   main_gws[1] = CG_GWS; */
+  /* } else { */
     main_lws[1] = work_item_sizes[0];
     main_gws[1] = clu_RoundWorkSize((size_t)(NA+1), main_lws[1]);
-  }
+  /* } */
   ecode = CEC_ND_KERNEL(cmd_queue,
                         k_main[1],
                         1, NULL,
@@ -351,13 +351,13 @@ int main(int argc, char *argv[])
   ecode = clSetKernelArg(k_main[2], 4, sizeof(int), &gws);
   clu_CheckError(ecode, "clSetKernelArg() for main_2");
 
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    main_lws[2] = CG_LWS;
-    main_gws[2] = CG_GWS;
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   main_lws[2] = CG_LWS; */
+  /*   main_gws[2] = CG_GWS; */
+  /* } else { */
     main_lws[2] = work_item_sizes[0];
     main_gws[2] = clu_RoundWorkSize((size_t)gws, main_lws[2]);
-  }
+  /* } */
   ecode = CEC_ND_KERNEL(cmd_queue,
                         k_main[2],
                         1, NULL,
@@ -405,11 +405,11 @@ int main(int argc, char *argv[])
     norm_temp1 = 0.0;
     norm_temp2 = 0.0;
 
-    if (device_type == CL_DEVICE_TYPE_CPU) {
-      ecode = clFinish(cmd_queue);
-      clu_CheckError(ecode, "clFinish()");
-      DTIMER_STOP(T_KERNEL_MAIN_3);
-    } else {
+    /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+    /*   ecode = clFinish(cmd_queue); */
+    /*   clu_CheckError(ecode, "clFinish()"); */
+    /*   DTIMER_STOP(T_KERNEL_MAIN_3); */
+    /* } else { */
       CHECK_FINISH();
       DTIMER_STOP(T_KERNEL_MAIN_3);
 
@@ -432,7 +432,7 @@ int main(int argc, char *argv[])
                                   0, NULL, NULL);
       clu_CheckError(ecode, "clEnqueueReadBuffer()");
       DTIMER_STOP(T_BUFFER_READ);
-    }
+    /* } */
 
     // reduction
     for (j = 0; j < main_gws[3]/main_lws[3]; j++) {
@@ -451,13 +451,13 @@ int main(int argc, char *argv[])
     ecode |= clSetKernelArg(k_main[4], 3, sizeof(int), &gws);
     clu_CheckError(ecode, "clSetKernelArg() for main_4");
 
-    if (device_type == CL_DEVICE_TYPE_CPU) {
-      main_lws[4] = CG_LWS;
-      main_gws[4] = CG_GWS;
-    } else {
+    /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+    /*   main_lws[4] = CG_LWS; */
+    /*   main_gws[4] = CG_GWS; */
+    /* } else { */
       main_lws[4] = work_item_sizes[0];
       main_gws[4] = clu_RoundWorkSize((size_t)gws, main_lws[4]);
-    }
+    /* } */
     ecode = CEC_ND_KERNEL(cmd_queue,
                           k_main[4],
                           1, NULL,
@@ -525,11 +525,11 @@ int main(int argc, char *argv[])
     norm_temp1 = 0.0;
     norm_temp2 = 0.0;
 
-    if (device_type == CL_DEVICE_TYPE_CPU) {
-      ecode = clFinish(cmd_queue);
-      clu_CheckError(ecode, "clFinish()");
-      DTIMER_STOP(T_KERNEL_MAIN_3);
-    } else {
+    /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+    /*   ecode = clFinish(cmd_queue); */
+    /*   clu_CheckError(ecode, "clFinish()"); */
+    /*   DTIMER_STOP(T_KERNEL_MAIN_3); */
+    /* } else { */
       CHECK_FINISH();
       DTIMER_STOP(T_KERNEL_MAIN_3);
 
@@ -552,7 +552,7 @@ int main(int argc, char *argv[])
                                   0, NULL, NULL);
       clu_CheckError(ecode, "clEnqueueReadBuffer()");
       DTIMER_STOP(T_BUFFER_READ);
-    }
+    /* } */
 
     // reduction
     for (j = 0; j < main_gws[3]/main_lws[3]; j++) {
@@ -684,13 +684,13 @@ static void conj_grad(double *rnorm)
   // Initialize the CG algorithm:
   //---------------------------------------------------------------------
   DTIMER_START(T_KERNEL_CONJ_GRAD_0);
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    cg_lws[0] = CG_LWS;
-    cg_gws[0] = CG_GWS;
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   cg_lws[0] = CG_LWS; */
+  /*   cg_gws[0] = CG_GWS; */
+  /* } else { */
     cg_lws[0] = work_item_sizes[0];
     cg_gws[0] = clu_RoundWorkSize((size_t)(naa+1), cg_lws[0]);
-  }
+  /* } */
   ecode = CEC_ND_KERNEL(cmd_queue,
                         k_conj_grad[0],
                         1, NULL,
@@ -720,11 +720,11 @@ static void conj_grad(double *rnorm)
                         0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for conj_grad_1");
 
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    ecode = clFinish(cmd_queue);
-    clu_CheckError(ecode, "clFinish()");
-    DTIMER_STOP(T_KERNEL_CONJ_GRAD_1);
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   ecode = clFinish(cmd_queue); */
+  /*   clu_CheckError(ecode, "clFinish()"); */
+  /*   DTIMER_STOP(T_KERNEL_CONJ_GRAD_1); */
+  /* } else { */
     CHECK_FINISH();
     DTIMER_STOP(T_KERNEL_CONJ_GRAD_1);
 
@@ -737,7 +737,7 @@ static void conj_grad(double *rnorm)
                                 0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueReadBuffer()");
     DTIMER_STOP(T_BUFFER_READ);
-  }
+  /* } */
 
   // reduction
   for (j = 0; j < cg_gws[1]/cg_lws[1]; j++) {
@@ -775,13 +775,13 @@ static void conj_grad(double *rnorm)
     ecode = clSetKernelArg(k_conj_grad[2], 5, sizeof(int), &gws);
     clu_CheckError(ecode, "clSetKernelArg() for conj_grad_2");
 
-    if (device_type == CL_DEVICE_TYPE_CPU) {
-      cg_lws[2] = CG_LWS;
-      cg_gws[2] = CG_GWS;
-    } else {
+    /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+    /*   cg_lws[2] = CG_LWS; */
+    /*   cg_gws[2] = CG_GWS; */
+    /* } else { */
       cg_lws[2] = CG_LSIZE;
       cg_gws[2] = CG_LSIZE * (lastrow - firstrow + 1);
-    }
+    /* } */
     ecode = CEC_ND_KERNEL(cmd_queue,
                           k_conj_grad[2],
                           1, NULL,
@@ -810,11 +810,11 @@ static void conj_grad(double *rnorm)
                           0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel() for conj_grad_3");
 
-    if (device_type == CL_DEVICE_TYPE_CPU) {
-      ecode = clFinish(cmd_queue);
-      clu_CheckError(ecode, "clFinish()");
-      DTIMER_STOP(T_KERNEL_CONJ_GRAD_3);
-    } else {
+    /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+    /*   ecode = clFinish(cmd_queue); */
+    /*   clu_CheckError(ecode, "clFinish()"); */
+    /*   DTIMER_STOP(T_KERNEL_CONJ_GRAD_3); */
+    /* } else { */
       CHECK_FINISH();
       DTIMER_STOP(T_KERNEL_CONJ_GRAD_3);
 
@@ -827,7 +827,7 @@ static void conj_grad(double *rnorm)
                                   0, NULL, NULL);
       clu_CheckError(ecode, "clEnqueueReadBuffer()");
       DTIMER_STOP(T_BUFFER_READ);
-    }
+    /* } */
 
     // reduction
     for (j = 0; j < cg_gws[3]/cg_lws[3]; j++) {
@@ -859,11 +859,11 @@ static void conj_grad(double *rnorm)
                           0, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel() for conj_grad_4");
 
-    if (device_type == CL_DEVICE_TYPE_CPU) {
-      ecode = clFinish(cmd_queue);
-      clu_CheckError(ecode, "clFinish()");
-      DTIMER_STOP(T_KERNEL_CONJ_GRAD_4);
-    } else {
+    /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+    /*   ecode = clFinish(cmd_queue); */
+    /*   clu_CheckError(ecode, "clFinish()"); */
+    /*   DTIMER_STOP(T_KERNEL_CONJ_GRAD_4); */
+    /* } else { */
       CHECK_FINISH();
       DTIMER_STOP(T_KERNEL_CONJ_GRAD_4);
 
@@ -876,7 +876,7 @@ static void conj_grad(double *rnorm)
                                   0, NULL, NULL);
       clu_CheckError(ecode, "clEnqueueReadBuffer()");
       DTIMER_STOP(T_BUFFER_READ);
-    }
+    /* } */
 
     // reduction
     for (j = 0; j < cg_gws[4]/cg_lws[4]; j++) {
@@ -897,13 +897,13 @@ static void conj_grad(double *rnorm)
     ecode |= clSetKernelArg(k_conj_grad[5], 3, sizeof(int), &gws);
     clu_CheckError(ecode, "clSetKernelArg() for conj_grad_5");
 
-    if (device_type == CL_DEVICE_TYPE_CPU) {
-      cg_lws[5] = CG_LWS;
-      cg_gws[5] = CG_GWS;
-    } else {
+    /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+    /*   cg_lws[5] = CG_LWS; */
+    /*   cg_gws[5] = CG_GWS; */
+    /* } else { */
       cg_lws[5] = work_item_sizes[0];
       cg_gws[5] = clu_RoundWorkSize((size_t)gws, cg_lws[5]);
-    }
+    /* } */
     ecode = CEC_ND_KERNEL(cmd_queue,
                           k_conj_grad[5],
                           1, NULL,
@@ -925,13 +925,13 @@ static void conj_grad(double *rnorm)
   ecode = clSetKernelArg(k_conj_grad[6], 5, sizeof(int), &gws);
   clu_CheckError(ecode, "clSetKernelArg() for conj_grad_6");
 
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    cg_lws[6] = CG_LWS;
-    cg_gws[6] = CG_GWS;
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   cg_lws[6] = CG_LWS; */
+  /*   cg_gws[6] = CG_GWS; */
+  /* } else { */
     cg_lws[6] = CG_LSIZE;
     cg_gws[6] = CG_LSIZE * (lastrow - firstrow + 1);
-  }
+  /* } */
   ecode = CEC_ND_KERNEL(cmd_queue,
                         k_conj_grad[6],
                         1, NULL,
@@ -960,11 +960,11 @@ static void conj_grad(double *rnorm)
                         0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for conj_grad_7");
 
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    ecode = clFinish(cmd_queue);
-    clu_CheckError(ecode, "clFinish()");
-    DTIMER_STOP(T_KERNEL_CONJ_GRAD_7);
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   ecode = clFinish(cmd_queue); */
+  /*   clu_CheckError(ecode, "clFinish()"); */
+  /*   DTIMER_STOP(T_KERNEL_CONJ_GRAD_7); */
+  /* } else { */
     CHECK_FINISH();
     DTIMER_STOP(T_KERNEL_CONJ_GRAD_7);
 
@@ -977,7 +977,7 @@ static void conj_grad(double *rnorm)
                                 0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueReadBuffer()");
     DTIMER_STOP(T_BUFFER_READ);
-  }
+  /* } */
 
   // reduction
   for (j = 0; j < cg_gws[7]/cg_lws[7]; j++) {
@@ -1106,13 +1106,13 @@ static void makea(int n, int nz, int firstrow, int lastrow)
   // Generate nonzero positions and save for the use in sparse.
   //---------------------------------------------------------------------
   DTIMER_START(T_KERNEL_MAKEA_0);
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    makea_lws[0] = CG_LWS;
-    makea_gws[0] = CG_GWS;
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   makea_lws[0] = CG_LWS; */
+  /*   makea_gws[0] = CG_GWS; */
+  /* } else { */
     makea_lws[0] = 32;
     makea_gws[0] = MAKEA_GLOBAL_SIZE;
-  }
+  /* } */
 
   ecode  = clSetKernelArg(k_makea[0], 0, sizeof(cl_mem), &m_arow);
   ecode |= clSetKernelArg(k_makea[0], 1, sizeof(cl_mem), &m_acol);
@@ -1224,10 +1224,10 @@ static void makea(int n, int nz, int firstrow, int lastrow)
   ecode |= clSetKernelArg(k_makea[3], 9, sizeof(int), &nz);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     makea_lws[0] = 128;
     makea_gws[0] = clu_RoundWorkSize((size_t)n, makea_lws[0]);
-  }
+  /* } */
   ecode = CEC_ND_KERNEL(cmd_queue,
                         k_makea[3],
                         1, NULL,
@@ -1250,10 +1250,10 @@ static void makea(int n, int nz, int firstrow, int lastrow)
   ecode |= clSetKernelArg(k_makea[4], 5, sizeof(int), &nz);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     makea_lws[0] = 32;
     makea_gws[0] = MAKEA_GLOBAL_SIZE;
-  }
+  /* } */
   ecode = CEC_ND_KERNEL(cmd_queue,
                         k_makea[4],
                         1, NULL,
@@ -1293,7 +1293,7 @@ static void makea(int n, int nz, int firstrow, int lastrow)
   ecode |= clSetKernelArg(k_makea[6], 6, sizeof(int), &nrows);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  makea_lws[0] = (device_type == CL_DEVICE_TYPE_CPU) ? 32 : 128;
+  makea_lws[0] = /* (device_type == CL_DEVICE_TYPE_CPU) ? 32 :  */128;
   makea_gws[0] = clu_RoundWorkSize((size_t)nrows, makea_lws[0]);
   ecode = CEC_ND_KERNEL(cmd_queue,
                         k_makea[6],
@@ -1312,7 +1312,7 @@ static void makea(int n, int nz, int firstrow, int lastrow)
   ecode |= clSetKernelArg(k_makea[7], 3, sizeof(int), &nz);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  makea_lws[0] = (device_type == CL_DEVICE_TYPE_CPU) ? 32 : 128;
+  makea_lws[0] = /* (device_type == CL_DEVICE_TYPE_CPU) ? 32 :  */128;
   makea_gws[0] = clu_RoundWorkSize((size_t)nrows, makea_lws[0]);
   ecode = CEC_ND_KERNEL(cmd_queue,
                         k_makea[7],
@@ -1411,18 +1411,18 @@ static void setup_opencl(int argc, char *argv[], char Class)
   char *source_file_makea;
   char *source_file;
   char build_option[100];
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    MAIN_3_LWS = 1;
-    MAIN_3_GWS = max_compute_units;
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   MAIN_3_LWS = 1; */
+  /*   MAIN_3_GWS = max_compute_units; */
 
-    CG_LWS = 1;
-    CG_GWS = max_compute_units;
+  /*   CG_LWS = 1; */
+  /*   CG_GWS = max_compute_units; */
 
-    source_file_makea = "cg_cpu_makea.cl";
-    source_file = "cg_cpu.cl";
-    sprintf(build_option, "-I. -DCLASS=%d", Class);
+  /*   source_file_makea = "cg_cpu_makea.cl"; */
+  /*   source_file = "cg_cpu.cl"; */
+  /*   sprintf(build_option, "-I. -DCLASS=%d", Class); */
 
-  } else if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* } else if (device_type == CL_DEVICE_TYPE_GPU) { */
     MAIN_3_LWS = work_item_sizes[0];
     MAIN_3_GWS = clu_RoundWorkSize((size_t)NA, MAIN_3_LWS);
     CG_LWS = work_item_sizes[0];
@@ -1435,10 +1435,10 @@ static void setup_opencl(int argc, char *argv[], char Class)
     sprintf(build_option, "-I. -DCLASS=\'%c\' -DLSIZE=%lu -cl-mad-enable",
         Class, CG_LSIZE);
 
-  } else {
-    fprintf(stderr, "%s: not supported.", clu_GetDeviceTypeName(device_type));
-    exit(EXIT_FAILURE);
-  }
+  /* } else { */
+  /*   fprintf(stderr, "%s: not supported.", clu_GetDeviceTypeName(device_type)); */
+  /*   exit(EXIT_FAILURE); */
+  /* } */
   p_makea = clu_MakeProgram(context, device, source_dir, source_file_makea,
                             build_option);
   program = clu_MakeProgram(context, device, source_dir, source_file,
@@ -1507,31 +1507,31 @@ static void setup_opencl(int argc, char *argv[], char Class)
   g_rho = (double *)malloc(rho_size);
   g_d = (double *)malloc(d_size);
 
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    m_norm_temp1 = clCreateBuffer(context,
-                         CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                         norm_temp_size,
-                         g_norm_temp1, &ecode);
-    clu_CheckError(ecode, "clCreateBuffer() for m_norm_temp1");
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   m_norm_temp1 = clCreateBuffer(context, */
+  /*                        CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, */
+  /*                        norm_temp_size, */
+  /*                        g_norm_temp1, &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer() for m_norm_temp1"); */
 
-    m_norm_temp2 = clCreateBuffer(context,
-                         CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                         norm_temp_size,
-                         g_norm_temp2, &ecode);
-    clu_CheckError(ecode, "clCreateBuffer() for m_norm_temp2");
+  /*   m_norm_temp2 = clCreateBuffer(context, */
+  /*                        CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, */
+  /*                        norm_temp_size, */
+  /*                        g_norm_temp2, &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer() for m_norm_temp2"); */
 
-    m_rho = clCreateBuffer(context,
-                         CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                         rho_size,
-                         g_rho, &ecode);
-    clu_CheckError(ecode, "clCreateBuffer() for m_rho");
+  /*   m_rho = clCreateBuffer(context, */
+  /*                        CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, */
+  /*                        rho_size, */
+  /*                        g_rho, &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer() for m_rho"); */
 
-    m_d = clCreateBuffer(context,
-                         CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                         d_size,
-                         g_d, &ecode);
-    clu_CheckError(ecode, "clCreateBuffer() for m_d");
-  } else {
+  /*   m_d = clCreateBuffer(context, */
+  /*                        CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, */
+  /*                        d_size, */
+  /*                        g_d, &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer() for m_d"); */
+  /* } else { */
     m_norm_temp1 = clCreateBuffer(context,
                          CL_MEM_READ_WRITE,
                          norm_temp_size,
@@ -1555,7 +1555,7 @@ static void setup_opencl(int argc, char *argv[], char Class)
                          d_size,
                          0, &ecode);
     clu_CheckError(ecode, "clCreateBuffer() for m_d");
-  }
+  /* } */
   DTIMER_STOP(T_BUFFER_CREATE);
 
   // 6. Create kernels and set arguments
@@ -1614,8 +1614,8 @@ static void setup_opencl(int argc, char *argv[], char Class)
   // arguments for conj_grad_1
   ecode  = clSetKernelArg(k_conj_grad[1], 0, sizeof(cl_mem), &m_r);
   ecode |= clSetKernelArg(k_conj_grad[1], 1, sizeof(cl_mem), &m_rho);
-  if (device_type != CL_DEVICE_TYPE_CPU)
-    ecode |= clSetKernelArg(k_conj_grad[1], 3, sizeof(double)*CG_LWS, NULL);
+  /* if (device_type != CL_DEVICE_TYPE_CPU) */
+  /*   ecode |= clSetKernelArg(k_conj_grad[1], 3, sizeof(double)*CG_LWS, NULL); */
   clu_CheckError(ecode, "clSetKernelArg() for conj_grad_1");
 
   // arguments for conj_grad_2
@@ -1630,8 +1630,8 @@ static void setup_opencl(int argc, char *argv[], char Class)
   ecode  = clSetKernelArg(k_conj_grad[3], 0, sizeof(cl_mem), &m_p);
   ecode |= clSetKernelArg(k_conj_grad[3], 1, sizeof(cl_mem), &m_q);
   ecode |= clSetKernelArg(k_conj_grad[3], 2, sizeof(cl_mem), &m_d);
-  if (device_type != CL_DEVICE_TYPE_CPU)
-    ecode |= clSetKernelArg(k_conj_grad[3], 4, sizeof(double)*CG_LWS, NULL);
+  /* if (device_type != CL_DEVICE_TYPE_CPU) */
+  /*   ecode |= clSetKernelArg(k_conj_grad[3], 4, sizeof(double)*CG_LWS, NULL); */
   clu_CheckError(ecode, "clSetKernelArg() for conj_grad_3");
 
   // arguments for conj_grad_4
@@ -1640,8 +1640,8 @@ static void setup_opencl(int argc, char *argv[], char Class)
   ecode |= clSetKernelArg(k_conj_grad[4], 2, sizeof(cl_mem), &m_r);
   ecode |= clSetKernelArg(k_conj_grad[4], 3, sizeof(cl_mem), &m_z);
   ecode |= clSetKernelArg(k_conj_grad[4], 4, sizeof(cl_mem), &m_rho);
-  if (device_type != CL_DEVICE_TYPE_CPU)
-    ecode |= clSetKernelArg(k_conj_grad[4], 7, sizeof(double)*CG_LWS, NULL);
+  /* if (device_type != CL_DEVICE_TYPE_CPU) */
+  /*   ecode |= clSetKernelArg(k_conj_grad[4], 7, sizeof(double)*CG_LWS, NULL); */
   clu_CheckError(ecode, "clSetKernelArg() for conj_grad_4");
 
   // arguments for conj_grad_5
@@ -1661,8 +1661,8 @@ static void setup_opencl(int argc, char *argv[], char Class)
   ecode  = clSetKernelArg(k_conj_grad[7], 0, sizeof(cl_mem), &m_x);
   ecode |= clSetKernelArg(k_conj_grad[7], 1, sizeof(cl_mem), &m_r);
   ecode |= clSetKernelArg(k_conj_grad[7], 2, sizeof(cl_mem), &m_d);
-  if (device_type != CL_DEVICE_TYPE_CPU)
-    ecode |= clSetKernelArg(k_conj_grad[7], 4, sizeof(double)*CG_LWS, NULL);
+  /* if (device_type != CL_DEVICE_TYPE_CPU) */
+  /*   ecode |= clSetKernelArg(k_conj_grad[7], 4, sizeof(double)*CG_LWS, NULL); */
   clu_CheckError(ecode, "clSetKernelArg() for conj_grad_7");
 
   DTIMER_STOP(T_OPENCL_API);
@@ -1787,7 +1787,7 @@ static void init_mem()
   DTIMER_START(T_KERNEL_INIT_MEM);
 
   //-------------------------------------------------------------------------
-  init_lws[0] = (device_type == CL_DEVICE_TYPE_CPU) ? 512 : 256;
+  init_lws[0] = /* (device_type == CL_DEVICE_TYPE_CPU) ? 512 :  */256;
 
   // int colidx[NZ]
   n = NZ;

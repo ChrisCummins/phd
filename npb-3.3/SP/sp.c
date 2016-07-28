@@ -351,11 +351,11 @@ static void setup_opencl(int argc, char *argv[])
   ////////////////////////////////////////////////////////////////////////
   // FIXME: The below values are experimental.
   size_t default_wg_size = 64;
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    if (CLASS == 'B') default_wg_size = 128;
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   if (CLASS == 'B') default_wg_size = 128; */
+  /* } else { */
     if (CLASS == 'B') default_wg_size = 32;
-  }
+  /* } */
   if (max_work_group_size > default_wg_size) {
     max_work_group_size = default_wg_size;
     int i;
@@ -365,23 +365,23 @@ static void setup_opencl(int argc, char *argv[])
       }
     }
   }
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    EXACT_RHS1_DIM = EXACT_RHS1_DIM_CPU;
-    EXACT_RHS5_DIM = EXACT_RHS5_DIM_CPU;
-    INITIALIZE2_DIM = INITIALIZE2_DIM_CPU;
-    COMPUTE_RHS1_DIM = COMPUTE_RHS1_DIM_CPU;
-    COMPUTE_RHS2_DIM = COMPUTE_RHS2_DIM_CPU;
-    COMPUTE_RHS4_DIM = COMPUTE_RHS4_DIM_CPU;
-    COMPUTE_RHS6_DIM = COMPUTE_RHS6_DIM_CPU;
-    TXINVR_DIM = TXINVR_DIM_CPU;
-    NINVR_DIM = NINVR_DIM_CPU;
-    PINVR_DIM = PINVR_DIM_CPU;
-    TZETAR_DIM = TZETAR_DIM_CPU;
-    ADD_DIM = ADD_DIM_CPU;
-    X_SOLVE_DIM = X_SOLVE_DIM_CPU;
-    Y_SOLVE_DIM = Y_SOLVE_DIM_CPU;
-    Z_SOLVE_DIM = Z_SOLVE_DIM_CPU;
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   EXACT_RHS1_DIM = EXACT_RHS1_DIM_CPU; */
+  /*   EXACT_RHS5_DIM = EXACT_RHS5_DIM_CPU; */
+  /*   INITIALIZE2_DIM = INITIALIZE2_DIM_CPU; */
+  /*   COMPUTE_RHS1_DIM = COMPUTE_RHS1_DIM_CPU; */
+  /*   COMPUTE_RHS2_DIM = COMPUTE_RHS2_DIM_CPU; */
+  /*   COMPUTE_RHS4_DIM = COMPUTE_RHS4_DIM_CPU; */
+  /*   COMPUTE_RHS6_DIM = COMPUTE_RHS6_DIM_CPU; */
+  /*   TXINVR_DIM = TXINVR_DIM_CPU; */
+  /*   NINVR_DIM = NINVR_DIM_CPU; */
+  /*   PINVR_DIM = PINVR_DIM_CPU; */
+  /*   TZETAR_DIM = TZETAR_DIM_CPU; */
+  /*   ADD_DIM = ADD_DIM_CPU; */
+  /*   X_SOLVE_DIM = X_SOLVE_DIM_CPU; */
+  /*   Y_SOLVE_DIM = Y_SOLVE_DIM_CPU; */
+  /*   Z_SOLVE_DIM = Z_SOLVE_DIM_CPU; */
+  /* } else { */
     EXACT_RHS1_DIM = EXACT_RHS1_DIM_GPU;
     EXACT_RHS5_DIM = EXACT_RHS5_DIM_GPU;
     INITIALIZE2_DIM = INITIALIZE2_DIM_GPU;
@@ -397,7 +397,7 @@ static void setup_opencl(int argc, char *argv[])
     X_SOLVE_DIM = X_SOLVE_DIM_GPU;
     Y_SOLVE_DIM = Y_SOLVE_DIM_GPU;
     Z_SOLVE_DIM = Z_SOLVE_DIM_GPU;
-  }
+  /* } */
   ////////////////////////////////////////////////////////////////////////
 
   //-----------------------------------------------------------------------
@@ -418,11 +418,11 @@ static void setup_opencl(int argc, char *argv[])
   if (timeron) timer_start(TIMER_BUILD);
   char build_option[100];
 
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    sprintf(build_option, "-I. -DCLASS=%d -DUSE_CPU", CLASS);
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   sprintf(build_option, "-I. -DCLASS=%d -DUSE_CPU", CLASS); */
+  /* } else { */
     sprintf(build_option, "-I. -DCLASS=\'%c\'", CLASS);
-  }
+  /* } */
 
   // exact_rhs()
   p_exact_rhs = clu_MakeProgram(context, device, source_dir,
@@ -439,13 +439,13 @@ static void setup_opencl(int argc, char *argv[])
                             build_option);
 
   // functions called in adi()
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    p_adi = clu_MakeProgram(context, device, source_dir, "kernel_adi_cpu.cl",
-                            build_option);
-  } else if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   p_adi = clu_MakeProgram(context, device, source_dir, "kernel_adi_cpu.cl", */
+  /*                           build_option); */
+  /* } else if (device_type == CL_DEVICE_TYPE_GPU) { */
     p_adi = clu_MakeProgram(context, device, source_dir, "kernel_adi_gpu.cl",
                             build_option);
-  }
+  /* } */
   if (timeron) timer_stop(TIMER_BUILD);
 
   //-----------------------------------------------------------------------

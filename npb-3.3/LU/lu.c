@@ -379,11 +379,11 @@ static void setup_opencl(int argc, char *argv[])
   ////////////////////////////////////////////////////////////////////////
   // FIXME: The below values are experimental.
   size_t default_wg_size = 64;
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    if (CLASS == 'B') default_wg_size = 128;
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   if (CLASS == 'B') default_wg_size = 128; */
+  /* } else { */
     if (CLASS == 'B') default_wg_size = 32;
-  }
+  /* } */
   if (max_work_group_size > default_wg_size) {
     max_work_group_size = default_wg_size;
     int i;
@@ -393,25 +393,25 @@ static void setup_opencl(int argc, char *argv[])
       }
     }
   }
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    SETBV1_DIM = SETBV1_DIM_CPU;
-    SETBV2_DIM = SETBV2_DIM_CPU;
-    SETBV3_DIM = SETBV3_DIM_CPU;
-    SETIV_DIM = SETIV_DIM_CPU;
-    ERHS1_DIM = ERHS1_DIM_CPU;
-    ERHS2_DIM = ERHS2_DIM_CPU;
-    ERHS3_DIM = ERHS3_DIM_CPU;
-    ERHS4_DIM = ERHS4_DIM_CPU;
-    PINTGR1_DIM = PINTGR1_DIM_CPU;
-    PINTGR2_DIM = PINTGR2_DIM_CPU;
-    PINTGR3_DIM = PINTGR3_DIM_CPU;
-    RHS_DIM  = RHS_DIM_CPU;
-    RHSX_DIM = RHSX_DIM_CPU;
-    RHSY_DIM = RHSY_DIM_CPU;
-    RHSZ_DIM = RHSZ_DIM_CPU;
-    SSOR2_DIM = SSOR2_DIM_CPU;
-    SSOR3_DIM = SSOR3_DIM_CPU;
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   SETBV1_DIM = SETBV1_DIM_CPU; */
+  /*   SETBV2_DIM = SETBV2_DIM_CPU; */
+  /*   SETBV3_DIM = SETBV3_DIM_CPU; */
+  /*   SETIV_DIM = SETIV_DIM_CPU; */
+  /*   ERHS1_DIM = ERHS1_DIM_CPU; */
+  /*   ERHS2_DIM = ERHS2_DIM_CPU; */
+  /*   ERHS3_DIM = ERHS3_DIM_CPU; */
+  /*   ERHS4_DIM = ERHS4_DIM_CPU; */
+  /*   PINTGR1_DIM = PINTGR1_DIM_CPU; */
+  /*   PINTGR2_DIM = PINTGR2_DIM_CPU; */
+  /*   PINTGR3_DIM = PINTGR3_DIM_CPU; */
+  /*   RHS_DIM  = RHS_DIM_CPU; */
+  /*   RHSX_DIM = RHSX_DIM_CPU; */
+  /*   RHSY_DIM = RHSY_DIM_CPU; */
+  /*   RHSZ_DIM = RHSZ_DIM_CPU; */
+  /*   SSOR2_DIM = SSOR2_DIM_CPU; */
+  /*   SSOR3_DIM = SSOR3_DIM_CPU; */
+  /* } else { */
     SETBV1_DIM = SETBV1_DIM_GPU;
     SETBV2_DIM = SETBV2_DIM_GPU;
     SETBV3_DIM = SETBV3_DIM_GPU;
@@ -429,7 +429,7 @@ static void setup_opencl(int argc, char *argv[])
     RHSZ_DIM = RHSZ_DIM_GPU;
     SSOR2_DIM = SSOR2_DIM_GPU;
     SSOR3_DIM = SSOR3_DIM_GPU;
-  }
+  /* } */
   ////////////////////////////////////////////////////////////////////////
 
   //-----------------------------------------------------------------------
@@ -457,18 +457,18 @@ static void setup_opencl(int argc, char *argv[])
   if (timeron) timer_start(TIMER_BUILD);
   char build_option[100];
 
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    sprintf(build_option, "-I. -DCLASS=%d -DUSE_CPU", CLASS);
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   sprintf(build_option, "-I. -DCLASS=%d -DUSE_CPU", CLASS); */
+  /* } else { */
     sprintf(build_option, "-I. -DCLASS=\'%c\'", CLASS);
-  }
+  /* } */
 
   p_pre = clu_MakeProgram(context, device, source_dir,
                           "kernel_pre.cl",
                           build_option);
 
   p_main = clu_MakeProgram(context, device, source_dir,
-                          (device_type == CL_DEVICE_TYPE_CPU ? "kernel_main_cpu.cl" : "kernel_main_gpu.cl"),
+                          (/* device_type == CL_DEVICE_TYPE_CPU ? "kernel_main_cpu.cl" :  */"kernel_main_gpu.cl"),
                           build_option);
 
   p_post = clu_MakeProgram(context, device, source_dir,
@@ -535,19 +535,19 @@ static void setup_opencl(int argc, char *argv[])
     max_work_items = ISIZ2*ISIZ1;
   }
 
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    m_utmp = clCreateBuffer(context,
-                         CL_MEM_READ_WRITE,
-                         sizeof(double)*ISIZ3*6 * max_work_items,
-                         NULL, &ecode);
-    clu_CheckError(ecode, "clCreateBuffer() for m_utmp");
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   m_utmp = clCreateBuffer(context, */
+  /*                        CL_MEM_READ_WRITE, */
+  /*                        sizeof(double)*ISIZ3*6 * max_work_items, */
+  /*                        NULL, &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer() for m_utmp"); */
 
-    m_rtmp = clCreateBuffer(context,
-                         CL_MEM_READ_WRITE,
-                         sizeof(double)*ISIZ3*5 * max_work_items,
-                         NULL, &ecode);
-    clu_CheckError(ecode, "clCreateBuffer() for m_rtmp");
-  }
+  /*   m_rtmp = clCreateBuffer(context, */
+  /*                        CL_MEM_READ_WRITE, */
+  /*                        sizeof(double)*ISIZ3*5 * max_work_items, */
+  /*                        NULL, &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer() for m_rtmp"); */
+  /* } */
 
   temp = (nz0-2) / max_compute_units;
   l2norm_lws[0] = temp == 0 ? 1 : temp;
@@ -726,16 +726,16 @@ static void setup_opencl(int argc, char *argv[])
   ecode |= clSetKernelArg(k_rhsx, 1, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_rhsx, 2, sizeof(cl_mem), &m_qs);
   ecode |= clSetKernelArg(k_rhsx, 3, sizeof(cl_mem), &m_rho_i);
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    ecode |= clSetKernelArg(k_rhsx, 4, sizeof(cl_mem), &m_flux);
-    ecode |= clSetKernelArg(k_rhsx, 5, sizeof(int), &nx);
-    ecode |= clSetKernelArg(k_rhsx, 6, sizeof(int), &ny);
-    ecode |= clSetKernelArg(k_rhsx, 7, sizeof(int), &nz);
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   ecode |= clSetKernelArg(k_rhsx, 4, sizeof(cl_mem), &m_flux); */
+  /*   ecode |= clSetKernelArg(k_rhsx, 5, sizeof(int), &nx); */
+  /*   ecode |= clSetKernelArg(k_rhsx, 6, sizeof(int), &ny); */
+  /*   ecode |= clSetKernelArg(k_rhsx, 7, sizeof(int), &nz); */
+  /* } else { */
     ecode |= clSetKernelArg(k_rhsx, 4, sizeof(int), &nx);
     ecode |= clSetKernelArg(k_rhsx, 5, sizeof(int), &ny);
     ecode |= clSetKernelArg(k_rhsx, 6, sizeof(int), &nz);
-  }
+  /* } */
   clu_CheckError(ecode, "clSetKernelArg()");
   if (RHSX_DIM == 2) {
     rhsx_lws[0] = (jend-jst) < work_item_sizes[0] ? (jend-jst) : work_item_sizes[0];
@@ -756,16 +756,16 @@ static void setup_opencl(int argc, char *argv[])
   ecode |= clSetKernelArg(k_rhsy, 1, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_rhsy, 2, sizeof(cl_mem), &m_qs);
   ecode |= clSetKernelArg(k_rhsy, 3, sizeof(cl_mem), &m_rho_i);
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    ecode |= clSetKernelArg(k_rhsy, 4, sizeof(cl_mem), &m_flux);
-    ecode |= clSetKernelArg(k_rhsy, 5, sizeof(int), &nx);
-    ecode |= clSetKernelArg(k_rhsy, 6, sizeof(int), &ny);
-    ecode |= clSetKernelArg(k_rhsy, 7, sizeof(int), &nz);
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   ecode |= clSetKernelArg(k_rhsy, 4, sizeof(cl_mem), &m_flux); */
+  /*   ecode |= clSetKernelArg(k_rhsy, 5, sizeof(int), &nx); */
+  /*   ecode |= clSetKernelArg(k_rhsy, 6, sizeof(int), &ny); */
+  /*   ecode |= clSetKernelArg(k_rhsy, 7, sizeof(int), &nz); */
+  /* } else { */
     ecode |= clSetKernelArg(k_rhsy, 4, sizeof(int), &nx);
     ecode |= clSetKernelArg(k_rhsy, 5, sizeof(int), &ny);
     ecode |= clSetKernelArg(k_rhsy, 6, sizeof(int), &nz);
-  }
+  /* } */
   clu_CheckError(ecode, "clSetKernelArg()");
   if (RHSY_DIM == 2) {
     rhsy_lws[0] = (iend-ist) < work_item_sizes[0] ? (iend-ist) : work_item_sizes[0];
@@ -786,18 +786,18 @@ static void setup_opencl(int argc, char *argv[])
   ecode |= clSetKernelArg(k_rhsz, 1, sizeof(cl_mem), &m_rsd);
   ecode |= clSetKernelArg(k_rhsz, 2, sizeof(cl_mem), &m_qs);
   ecode |= clSetKernelArg(k_rhsz, 3, sizeof(cl_mem), &m_rho_i);
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    ecode |= clSetKernelArg(k_rhsz, 4, sizeof(cl_mem), &m_flux);
-    ecode |= clSetKernelArg(k_rhsz, 5, sizeof(cl_mem), &m_utmp);
-    ecode |= clSetKernelArg(k_rhsz, 6, sizeof(cl_mem), &m_rtmp);
-    ecode |= clSetKernelArg(k_rhsz, 7, sizeof(int), &nx);
-    ecode |= clSetKernelArg(k_rhsz, 8, sizeof(int), &ny);
-    ecode |= clSetKernelArg(k_rhsz, 9, sizeof(int), &nz);
-  } else {
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   ecode |= clSetKernelArg(k_rhsz, 4, sizeof(cl_mem), &m_flux); */
+  /*   ecode |= clSetKernelArg(k_rhsz, 5, sizeof(cl_mem), &m_utmp); */
+  /*   ecode |= clSetKernelArg(k_rhsz, 6, sizeof(cl_mem), &m_rtmp); */
+  /*   ecode |= clSetKernelArg(k_rhsz, 7, sizeof(int), &nx); */
+  /*   ecode |= clSetKernelArg(k_rhsz, 8, sizeof(int), &ny); */
+  /*   ecode |= clSetKernelArg(k_rhsz, 9, sizeof(int), &nz); */
+  /* } else { */
     ecode |= clSetKernelArg(k_rhsz, 4, sizeof(int), &nx);
     ecode |= clSetKernelArg(k_rhsz, 5, sizeof(int), &ny);
     ecode |= clSetKernelArg(k_rhsz, 6, sizeof(int), &nz);
-  }
+  /* } */
   clu_CheckError(ecode, "clSetKernelArg()");
   if (RHSZ_DIM == 2) {
     rhsz_lws[0] = (iend-ist) < work_item_sizes[0] ? (iend-ist) : work_item_sizes[0];
@@ -938,10 +938,10 @@ static void release_opencl()
   clReleaseMemObject(m_qs);
   clReleaseMemObject(m_rho_i);
   clReleaseMemObject(m_sum);
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    clReleaseMemObject(m_utmp);
-    clReleaseMemObject(m_rtmp);
-  }
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   clReleaseMemObject(m_utmp); */
+  /*   clReleaseMemObject(m_rtmp); */
+  /* } */
 
   clReleaseProgram(p_pre);
   clReleaseProgram(p_main);

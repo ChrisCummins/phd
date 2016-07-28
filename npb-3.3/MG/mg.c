@@ -629,40 +629,40 @@ static void psinv(double *ou, int n1, int n2, int n3,
   DTIMER_STOP(T_BUFFER_CREATE);
 
   DTIMER_START(T_KERNEL_PSINV);
-	if (device_type == CL_DEVICE_TYPE_GPU) {
-    size_t lws0 = n1 > max_work_group_size ? max_work_group_size : n1;
-    if (PSINV_DIM == 2) {
-      psinv_gws[1] = n3-2;
-      psinv_gws[0] = (n2-2) * lws0;
-      psinv_lws[1] = 1;
-      psinv_lws[0] = lws0;
-    } else {
-      psinv_gws[0] = (n3-2) * (n2-2) * lws0;
-      psinv_lws[0] = lws0;
-    }
-	} else {
-    if (PSINV_DIM == 2) {
-      psinv_gws[0] = nextpow(n3-2);
-      psinv_gws[1] = nextpow(n2-2);
-      psinv_lws[0] = 16;
-      psinv_lws[1] = 16;
-      if (psinv_lws[0] > psinv_gws[0]) {
-        psinv_lws[0] = psinv_gws[0];
-        psinv_lws[1] = psinv_gws[1];
-      }
-    } else {
-      psinv_gws[0] = n3-2;
-      psinv_lws[0] = 1;
-    }
-	}
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
+  size_t lws0 = n1 > max_work_group_size ? max_work_group_size : n1;
+  if (PSINV_DIM == 2) {
+    psinv_gws[1] = n3-2;
+    psinv_gws[0] = (n2-2) * lws0;
+    psinv_lws[1] = 1;
+    psinv_lws[0] = lws0;
+  } else {
+    psinv_gws[0] = (n3-2) * (n2-2) * lws0;
+    psinv_lws[0] = lws0;
+  }
+  /*     } else { */
+  /* if (PSINV_DIM == 2) { */
+  /*   psinv_gws[0] = nextpow(n3-2); */
+  /*   psinv_gws[1] = nextpow(n2-2); */
+  /*   psinv_lws[0] = 16; */
+  /*   psinv_lws[1] = 16; */
+  /*   if (psinv_lws[0] > psinv_gws[0]) { */
+  /*     psinv_lws[0] = psinv_gws[0]; */
+  /*     psinv_lws[1] = psinv_gws[1]; */
+  /*   } */
+  /* } else { */
+  /*   psinv_gws[0] = n3-2; */
+  /*   psinv_lws[0] = 1; */
+  /* } */
+  /*     } */
 
-	ecode  = clSetKernelArg(kernel_psinv, 0, sizeof(cl_mem), (void *)&m_r);
-	ecode |= clSetKernelArg(kernel_psinv, 1, sizeof(cl_mem), (void *)&m_u);
-	ecode |= clSetKernelArg(kernel_psinv, 2, sizeof(cl_mem), (void *)&m_c);
-	ecode |= clSetKernelArg(kernel_psinv, 3, sizeof(int), &n1);
-	ecode |= clSetKernelArg(kernel_psinv, 4, sizeof(int), &n2);
-	ecode |= clSetKernelArg(kernel_psinv, 5, sizeof(int), &n3);
-	ecode |= clSetKernelArg(kernel_psinv, 6, sizeof(int), &offset);
+  ecode  = clSetKernelArg(kernel_psinv, 0, sizeof(cl_mem), (void *)&m_r);
+  ecode |= clSetKernelArg(kernel_psinv, 1, sizeof(cl_mem), (void *)&m_u);
+  ecode |= clSetKernelArg(kernel_psinv, 2, sizeof(cl_mem), (void *)&m_c);
+  ecode |= clSetKernelArg(kernel_psinv, 3, sizeof(int), &n1);
+  ecode |= clSetKernelArg(kernel_psinv, 4, sizeof(int), &n2);
+  ecode |= clSetKernelArg(kernel_psinv, 5, sizeof(int), &n3);
+  ecode |= clSetKernelArg(kernel_psinv, 6, sizeof(int), &offset);
   clu_CheckError(ecode, "clSetKernelArg()");
 
   ecode = CEC_ND_KERNEL(cmd_queue,
@@ -723,7 +723,7 @@ static void resid(double *or, int n1, int n2, int n3, double a[4], int k,
   DTIMER_STOP(T_BUFFER_WRITE);
 
   DTIMER_START(T_KERNEL_RESID);
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     size_t lws0 = n1 > max_work_group_size ? max_work_group_size : n1;
     if (RESID_DIM == 2) {
       resid_gws[1] = n3-2;
@@ -734,23 +734,23 @@ static void resid(double *or, int n1, int n2, int n3, double a[4], int k,
       resid_gws[0] = (n3-2) * (n2-2) * lws0;
       resid_lws[0] = lws0;
     }
-  } else {
-    if (RESID_DIM == 2) {
-      resid_gws[0] = n3-2;
-      resid_gws[1] = n2-2;
+  /* } else { */
+  /*   if (RESID_DIM == 2) { */
+  /*     resid_gws[0] = n3-2; */
+  /*     resid_gws[1] = n2-2; */
 
-      resid_lws[0] = 16;
-      resid_lws[1] = 16;
+  /*     resid_lws[0] = 16; */
+  /*     resid_lws[1] = 16; */
 
-      if (resid_lws[0] > resid_gws[0]) {
-        resid_lws[0] = resid_gws[0];
-        resid_lws[1] = resid_gws[1];
-      }
-    } else {
-      resid_gws[0] = n3-2;
-      resid_lws[0] = 1;
-    }
-  }
+  /*     if (resid_lws[0] > resid_gws[0]) { */
+  /*       resid_lws[0] = resid_gws[0]; */
+  /*       resid_lws[1] = resid_gws[1]; */
+  /*     } */
+  /*   } else { */
+  /*     resid_gws[0] = n3-2; */
+  /*     resid_lws[0] = 1; */
+  /*   } */
+  /* } */
 
   ecode  = clSetKernelArg(kernel_resid, 0, sizeof(cl_mem), (void *)&m_br);
   ecode |= clSetKernelArg(kernel_resid, 1, sizeof(cl_mem), (void *)&m_bu);
@@ -840,7 +840,7 @@ static void rprj3(double *or, int m1k, int m2k, int m3k,
   }
 
   DTIMER_START(T_KERNEL_RPRJ3);
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     if (RPRJ3_DIM == 2) {
       rprj3_gws[1] = m3j-2;
       rprj3_gws[0] = (m2j-2) * (m1j-1);
@@ -850,22 +850,22 @@ static void rprj3(double *or, int m1k, int m2k, int m3k,
       rprj3_gws[0] = (m3j-2) * (m2j-2) * (m1j-1);
       rprj3_lws[0] = m1j-1;
     }
-  } else {
-    if (RPRJ3_DIM == 2) {
-      rprj3_gws[0] = nextpow(m3j-2);
-      rprj3_gws[1] = nextpow(m2j-2);
-      rprj3_lws[0] = 8;
-      rprj3_lws[1] = 8;
+  /* } else { */
+  /*   if (RPRJ3_DIM == 2) { */
+  /*     rprj3_gws[0] = nextpow(m3j-2); */
+  /*     rprj3_gws[1] = nextpow(m2j-2); */
+  /*     rprj3_lws[0] = 8; */
+  /*     rprj3_lws[1] = 8; */
 
-      if (rprj3_lws[0] > rprj3_gws[0]) {
-        rprj3_lws[0] = rprj3_gws[0];
-        rprj3_lws[1] = rprj3_gws[1];
-      }
-    } else {
-      rprj3_gws[0] = m3j-2;
-      rprj3_lws[0] = 1;
-    }
-  }
+  /*     if (rprj3_lws[0] > rprj3_gws[0]) { */
+  /*       rprj3_lws[0] = rprj3_gws[0]; */
+  /*       rprj3_lws[1] = rprj3_gws[1]; */
+  /*     } */
+  /*   } else { */
+  /*     rprj3_gws[0] = m3j-2; */
+  /*     rprj3_lws[0] = 1; */
+  /*   } */
+  /* } */
 
 	ecode  = clSetKernelArg(kernel_rprj3, 0, sizeof(cl_mem), (void *)&m_r);
 	ecode |= clSetKernelArg(kernel_rprj3, 1, sizeof(int), &m1k);
@@ -931,7 +931,7 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
   if (n1 != 3 && n2 != 3 && n3 != 3) {
 
     DTIMER_START(T_KERNEL_INTERP_1);
-    if (device_type == CL_DEVICE_TYPE_GPU) {
+    /* if (device_type == CL_DEVICE_TYPE_GPU) { */
       if (INTERP_1_DIM == 2) {
         global[1] = mm3-1;
         global[0] = (mm2-1) * mm1;
@@ -941,22 +941,22 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
         global[0] = (mm3-1) * (mm2-1) * mm1;
         local[0] = mm1;
       }
-    } else {
-      if (INTERP_1_DIM == 2) {
-        global[0] = nextpow(mm3-1);
-        global[1] = nextpow(mm2-1);
-        local[0] = 8;
-        local[1] = 8;
+    /* } else { */
+    /*   if (INTERP_1_DIM == 2) { */
+    /*     global[0] = nextpow(mm3-1); */
+    /*     global[1] = nextpow(mm2-1); */
+    /*     local[0] = 8; */
+    /*     local[1] = 8; */
 
-        if (local[0] > global[0]) {
-          local[0] = global[0];
-          local[1] = global[1];
-        }
-      } else {
-        global[0] = mm3-1;
-        local[0] = 1;
-      }
-    }
+    /*     if (local[0] > global[0]) { */
+    /*       local[0] = global[0]; */
+    /*       local[1] = global[1]; */
+    /*     } */
+    /*   } else { */
+    /*     global[0] = mm3-1; */
+    /*     local[0] = 1; */
+    /*   } */
+    /* } */
 
     ecode  = clSetKernelArg(kernel_interp_1, 0, sizeof(cl_mem), (void *)&m_u);
     ecode |= clSetKernelArg(kernel_interp_1, 1, sizeof(int), &mm1);
@@ -1036,7 +1036,7 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
     clFinish(cmd_queue);
     DTIMER_STOP(T_KERNEL_INTERP_2);
 
-    if (device_type == CL_DEVICE_TYPE_GPU) {
+    /* if (device_type == CL_DEVICE_TYPE_GPU) { */
       DTIMER_START(T_BUFFER_READ);
       ecode = CEC_READ_BUFFER(cmd_queue,
                                   m_u,
@@ -1047,7 +1047,7 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
                                   0, NULL, NULL);
       clu_CheckError(ecode, "clEnqueueReadBuffer()");
       DTIMER_STOP(T_BUFFER_READ);
-    }
+    /* } */
 
     DTIMER_START(T_KERNEL_INTERP_3);
     global[0] = nextpow(mm3);
@@ -1080,7 +1080,7 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
     clFinish(cmd_queue);
     DTIMER_STOP(T_KERNEL_INTERP_3);
 
-    if (device_type == CL_DEVICE_TYPE_GPU) {
+    /* if (device_type == CL_DEVICE_TYPE_GPU) { */
       DTIMER_START(T_BUFFER_READ);
       ecode = CEC_READ_BUFFER(cmd_queue,
                                   m_u,
@@ -1091,7 +1091,7 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
                                   0, NULL, NULL);
       clu_CheckError(ecode, "clEnqueueReadBuffer()");
       DTIMER_STOP(T_BUFFER_READ);
-    }
+    /* } */
 
     DTIMER_START(T_KERNEL_INTERP_4);
     global[0] = nextpow(mm3);
@@ -1124,7 +1124,7 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
     clFinish(cmd_queue);
     DTIMER_STOP(T_KERNEL_INTERP_4);
 
-    if (device_type == CL_DEVICE_TYPE_GPU) {
+    /* if (device_type == CL_DEVICE_TYPE_GPU) { */
       DTIMER_START(T_BUFFER_READ);
       ecode = CEC_READ_BUFFER(cmd_queue,
                                   m_u,
@@ -1135,7 +1135,7 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
                                   0, NULL, NULL);
       clu_CheckError(ecode, "clEnqueueReadBuffer()");
       DTIMER_STOP(T_BUFFER_READ);
-    }
+    /* } */
 
     DTIMER_START(T_KERNEL_INTERP_5);
     global[0] = nextpow(mm3);
@@ -1168,7 +1168,7 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
     clFinish(cmd_queue);
     DTIMER_STOP(T_KERNEL_INTERP_5);
 
-    if (device_type == CL_DEVICE_TYPE_GPU) {
+    /* if (device_type == CL_DEVICE_TYPE_GPU) { */
       DTIMER_START(T_BUFFER_READ);
       ecode = CEC_READ_BUFFER(cmd_queue,
                                   m_u,
@@ -1179,7 +1179,7 @@ static void interp(double *oz, int mm1, int mm2, int mm3,
                                   0, NULL, NULL);
       clu_CheckError(ecode, "clEnqueueReadBuffer()");
       DTIMER_STOP(T_BUFFER_READ);
-    }
+    /* } */
 
   }
   if (timeron) timer_stop(T_interp);
@@ -1222,7 +1222,7 @@ static void norm2u3(int n1, int n2, int n3, double *rnm2, double *rnmu,
   max_rnmu = 0.0;
 
   DTIMER_START(T_BUFFER_CREATE);
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     if (NORM2U3_DIM == 2) {
       norm2_lws[0] = 128;
       norm2_lws[1] = 1;
@@ -1234,16 +1234,16 @@ static void norm2u3(int n1, int n2, int n3, double *rnm2, double *rnmu,
       norm2_gws[0] = norm2_lws[0] * (n2-2) * (n3-2);
       temp_size = norm2_gws[0] / norm2_lws[0];
     }
-  } else {
-    norm2_gws[0] = n3-2;
-    norm2_lws[0] = 1;
-    temp_size = norm2_gws[0] / norm2_lws[0];
-  }
+  /* } else { */
+  /*   norm2_gws[0] = n3-2; */
+  /*   norm2_lws[0] = 1; */
+  /*   temp_size = norm2_gws[0] / norm2_lws[0]; */
+  /* } */
 
   double *res_sum = (double*)malloc(temp_size * sizeof(double));
   double *res_max = (double*)malloc(temp_size * sizeof(double));
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     m_sum = clCreateBuffer(context,
                            CL_MEM_READ_WRITE,
                            temp_size * sizeof(double),
@@ -1255,21 +1255,21 @@ static void norm2u3(int n1, int n2, int n3, double *rnm2, double *rnmu,
                            temp_size * sizeof(double),
                            0, &ecode);
     clu_CheckError(ecode, "clCreateBuffer()");
-  } else {
-    m_sum = clCreateBuffer(context,
-                           CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                           temp_size * sizeof(double),
-                           res_sum,
-                           &ecode);
-    clu_CheckError(ecode, "clCreateBuffer()");
+  /* } else { */
+  /*   m_sum = clCreateBuffer(context, */
+  /*                          CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, */
+  /*                          temp_size * sizeof(double), */
+  /*                          res_sum, */
+  /*                          &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer()"); */
 
-    m_max = clCreateBuffer(context,
-                           CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                           temp_size * sizeof(double),
-                           res_max,
-                           &ecode);
-    clu_CheckError(ecode, "clCreateBuffer()");
-  }
+  /*   m_max = clCreateBuffer(context, */
+  /*                          CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, */
+  /*                          temp_size * sizeof(double), */
+  /*                          res_max, */
+  /*                          &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer()"); */
+  /* } */
   DTIMER_STOP(T_BUFFER_CREATE);
 
   DTIMER_START(T_KERNEL_NORM2U3);
@@ -1279,11 +1279,11 @@ static void norm2u3(int n1, int n2, int n3, double *rnm2, double *rnmu,
   ecode |= clSetKernelArg(kernel_norm2u3, 3, sizeof(int), &n3);
   ecode |= clSetKernelArg(kernel_norm2u3, 4, sizeof(cl_mem), (void *)&m_sum);
   ecode |= clSetKernelArg(kernel_norm2u3, 5, sizeof(cl_mem), (void *)&m_max);
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     size_t lsize = norm2_lws[0] * sizeof(double);
     ecode |= clSetKernelArg(kernel_norm2u3, 6, lsize, NULL);
     ecode |= clSetKernelArg(kernel_norm2u3, 7, lsize, NULL);
-  }
+  /* } */
   clu_CheckError(ecode, "clSetKernelArg()");
 
   ecode = CEC_ND_KERNEL(cmd_queue,
@@ -1294,7 +1294,7 @@ static void norm2u3(int n1, int n2, int n3, double *rnm2, double *rnmu,
                         0, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     CHECK_FINISH();
     DTIMER_STOP(T_KERNEL_NORM2U3);
 
@@ -1315,11 +1315,11 @@ static void norm2u3(int n1, int n2, int n3, double *rnm2, double *rnmu,
                                 0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueReadBuffer()");
     DTIMER_STOP(T_BUFFER_READ);
-  } else {
-    ecode = clFinish(cmd_queue);
-    clu_CheckError(ecode, "clFinish()");
-    DTIMER_STOP(T_KERNEL_NORM2U3);
-  }
+  /* } else { */
+  /*   ecode = clFinish(cmd_queue); */
+  /*   clu_CheckError(ecode, "clFinish()"); */
+  /*   DTIMER_STOP(T_KERNEL_NORM2U3); */
+  /* } */
 
   int j;
   for (j = 0; j < temp_size; j++) {
@@ -1363,7 +1363,7 @@ static void comm3(int n1, int n2, int n3, int kk, cl_mem m_buff, int offset)
   if (timeron) timer_start(T_comm3);
 
   DTIMER_START(T_KERNEL_COMM3_1);
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     if (COMM3_1_DIM == 2) {
       comm3_lws[1] = 1;
       comm3_lws[0] = 32;
@@ -1373,10 +1373,10 @@ static void comm3(int n1, int n2, int n3, int kk, cl_mem m_buff, int offset)
       comm3_lws[0] = 32;
       comm3_gws[0] = (n3-2) * comm3_lws[0];
     }
-  } else {
-    comm3_gws[0] = nextpow(n3-2);
-    comm3_lws[0] = (16 > comm3_gws[0]) ? comm3_gws[0] : 16;
-  }
+  /* } else { */
+  /*   comm3_gws[0] = nextpow(n3-2); */
+  /*   comm3_lws[0] = (16 > comm3_gws[0]) ? comm3_gws[0] : 16; */
+  /* } */
 
   ecode  = clSetKernelArg(kernel_comm3_1, 0, sizeof(cl_mem), (void *)&m_buff);
   ecode |= clSetKernelArg(kernel_comm3_1, 1, sizeof(int), &n1);
@@ -1395,7 +1395,7 @@ static void comm3(int n1, int n2, int n3, int kk, cl_mem m_buff, int offset)
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_COMM3_1);
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     DTIMER_START(T_KERNEL_COMM3_2);
     if (COMM3_2_DIM == 2) {
       comm3_lws[1] = 1;
@@ -1423,10 +1423,10 @@ static void comm3(int n1, int n2, int n3, int kk, cl_mem m_buff, int offset)
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
     CHECK_FINISH();
     DTIMER_STOP(T_KERNEL_COMM3_2);
-  }
+  /* } */
 
   DTIMER_START(T_KERNEL_COMM3_3);
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     if (COMM3_3_DIM == 2) {
       comm3_lws[1] = 1;
       comm3_lws[0] = 32;
@@ -1436,17 +1436,17 @@ static void comm3(int n1, int n2, int n3, int kk, cl_mem m_buff, int offset)
       comm3_lws[0] = 32;
       comm3_gws[0] = n2 * comm3_lws[0];
     }
-  } else {
-    if (COMM3_3_DIM == 2) {
-      comm3_lws[1] = 1;
-      comm3_lws[0] = 64;
-      comm3_gws[1] = n2;
-      comm3_gws[0] = clu_RoundWorkSize((size_t)n1, comm3_lws[0]);
-    } else {
-      comm3_gws[0] = nextpow(n2);
-      comm3_lws[0] = (16 > comm3_gws[0]) ? comm3_gws[0] : 16;
-    }
-  }
+  /* } else { */
+  /*   if (COMM3_3_DIM == 2) { */
+  /*     comm3_lws[1] = 1; */
+  /*     comm3_lws[0] = 64; */
+  /*     comm3_gws[1] = n2; */
+  /*     comm3_gws[0] = clu_RoundWorkSize((size_t)n1, comm3_lws[0]); */
+  /*   } else { */
+  /*     comm3_gws[0] = nextpow(n2); */
+  /*     comm3_lws[0] = (16 > comm3_gws[0]) ? comm3_gws[0] : 16; */
+  /*   } */
+  /* } */
   ecode  = clSetKernelArg(kernel_comm3_3, 0, sizeof(cl_mem), (void *)&m_buff);
   ecode |= clSetKernelArg(kernel_comm3_3, 1, sizeof(int), &n1);
   ecode |= clSetKernelArg(kernel_comm3_3, 2, sizeof(int), &n2);
@@ -1526,7 +1526,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
   //---------------------------------------------------------------------
   // fill array
   //---------------------------------------------------------------------
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     DTIMER_START(T_BUFFER_WRITE);
     ecode = CEC_WRITE_BUFFER(cmd_queue,
                                  m_buff,
@@ -1546,7 +1546,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
                                  0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueWriteBuffer()");
     DTIMER_STOP(T_BUFFER_WRITE);
-  }
+  /* } */
 
   DTIMER_START(T_KERNEL_ZRAN3_1);
   global[0] = nextpow(e3);
@@ -1569,7 +1569,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
   clFinish(cmd_queue);
   DTIMER_STOP(T_KERNEL_ZRAN3_1);
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     DTIMER_START(T_BUFFER_READ);
     ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_buff,
@@ -1580,7 +1580,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
                                 0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueReadBuffer()");
     DTIMER_STOP(T_BUFFER_READ);
-  }
+  /* } */
 
   //---------------------------------------------------------------------
   // comm3(z,n1,n2,n3);
@@ -1594,7 +1594,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
   cl_mem m_ten, m_j1, m_j2, m_j3;
 
   DTIMER_START(T_BUFFER_CREATE);
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     m_ten = clCreateBuffer(context,
                            CL_MEM_READ_WRITE,
                            n3*mm*2 * sizeof(double),
@@ -1618,38 +1618,38 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
                           n3*mm*2 * sizeof(int),
                           0, &ecode);
     clu_CheckError(ecode, "clCreateBuffer()");
-  } else {
-    m_ten = clCreateBuffer(context,
-                           CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                           n3*mm*2 * sizeof(double),
-                           ten,
-                           &ecode);
-    clu_CheckError(ecode, "clCreateBuffer()");
+  /* } else { */
+  /*   m_ten = clCreateBuffer(context, */
+  /*                          CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, */
+  /*                          n3*mm*2 * sizeof(double), */
+  /*                          ten, */
+  /*                          &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer()"); */
 
-    m_j1 = clCreateBuffer(context,
-                          CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                          n3*mm*2 * sizeof(int),
-                          j1,
-                          &ecode);
-    clu_CheckError(ecode, "clCreateBuffer()");
+  /*   m_j1 = clCreateBuffer(context, */
+  /*                         CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, */
+  /*                         n3*mm*2 * sizeof(int), */
+  /*                         j1, */
+  /*                         &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer()"); */
 
-    m_j2 = clCreateBuffer(context,
-                          CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                          n3*mm*2 * sizeof(int),
-                          j2,
-                          &ecode);
-    clu_CheckError(ecode, "clCreateBuffer()");
+  /*   m_j2 = clCreateBuffer(context, */
+  /*                         CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, */
+  /*                         n3*mm*2 * sizeof(int), */
+  /*                         j2, */
+  /*                         &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer()"); */
 
-    m_j3 = clCreateBuffer(context,
-                          CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                          n3*mm*2 * sizeof(int),
-                          j3,
-                          &ecode);
-    clu_CheckError(ecode, "clCreateBuffer()");
-  }
+  /*   m_j3 = clCreateBuffer(context, */
+  /*                         CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, */
+  /*                         n3*mm*2 * sizeof(int), */
+  /*                         j3, */
+  /*                         &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer()"); */
+  /* } */
   DTIMER_STOP(T_BUFFER_CREATE);
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     DTIMER_START(T_BUFFER_WRITE);
     ecode = CEC_WRITE_BUFFER(cmd_queue,
                                  m_buff,
@@ -1660,7 +1660,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
                                  0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueWriteBuffer()");
     DTIMER_STOP(T_BUFFER_WRITE);
-  }
+  /* } */
 
   DTIMER_START(T_KERNEL_ZRAN3_2);
   global[0] = nextpow(n3);
@@ -1686,7 +1686,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
   clFinish(cmd_queue);
   DTIMER_STOP(T_KERNEL_ZRAN3_2);
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     DTIMER_START(T_BUFFER_READ);
     ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_ten,
@@ -1724,7 +1724,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
                                 0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueReadBuffer()");
     DTIMER_STOP(T_BUFFER_READ);
-  }
+  /* } */
 
   //---------------------------------------------------------------------
   // Now which of these are globally best?
@@ -1795,15 +1795,15 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
   global[0] = nextpow(n3);
   global[1] = nextpow(n2);
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     global[2] = nextpow(n1);
     local[0] = 4;
     local[1] = 4;
     local[2] = 4;
-  } else {
-    local[0] = 8;
-    local[1] = 8;
-  }
+  /* } else { */
+  /*   local[0] = 8; */
+  /*   local[1] = 8; */
+  /* } */
 
   ecode  = clSetKernelArg(kernel_zran3_3, 0, sizeof(cl_mem), (void *)&m_buff);
   ecode |= clSetKernelArg(kernel_zran3_3, 1, sizeof(int), &n1);
@@ -1812,26 +1812,26 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
   ecode |= clSetKernelArg(kernel_zran3_3, 4, sizeof(int), &offset);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     ecode = CEC_ND_KERNEL(cmd_queue,
                           kernel_zran3_3,
                           3, NULL,
                           global, local,
                           0, NULL);
-  } else {
-    ecode = CEC_ND_KERNEL(cmd_queue,
-                          kernel_zran3_3,
-                          2, NULL,
-                          global, local,
-                          0, NULL);
-  }
+  /* } else { */
+  /*   ecode = CEC_ND_KERNEL(cmd_queue, */
+  /*                         kernel_zran3_3, */
+  /*                         2, NULL, */
+  /*                         global, local, */
+  /*                         0, NULL); */
+  /* } */
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   ecode = clFinish(cmd_queue);
   clu_CheckError(ecode, "clFinish()");
   DTIMER_STOP(T_KERNEL_ZRAN3_3);
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     DTIMER_START(T_BUFFER_READ);
     ecode = CEC_READ_BUFFER(cmd_queue,
                                 m_buff,
@@ -1842,7 +1842,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
                                 0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueReadBuffer()");
     DTIMER_STOP(T_BUFFER_READ);
-  }
+  /* } */
 
   for (i = mm-1; i >= mm0; i--) {
     oz[(jg[3][i][0])*n2*n1+(jg[2][i][0])*n1+jg[1][i][0]] = -1.0;
@@ -1852,7 +1852,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
     oz[(jg[3][i][1])*n2*n1+(jg[2][i][1])*n1+jg[1][i][1]] = +1.0;
   }
 
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     DTIMER_START(T_BUFFER_WRITE);
     ecode = CEC_WRITE_BUFFER(cmd_queue,
                                  m_buff,
@@ -1863,7 +1863,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
                                  0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueWriteBuffer()");
     DTIMER_STOP(T_BUFFER_WRITE);
-  }
+  /* } */
 
   comm3(n1, n2, n3, k, m_buff, offset);
 #ifndef USE_CHECK_FINISH
@@ -1938,7 +1938,7 @@ static void zero3(int n1, int n2, int n3, cl_mem m_buff, int offset)
   cl_int ecode;
 
   DTIMER_START(T_KERNEL_ZERO3);
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     if (ZERO3_DIM == 3) {
       zero3_lws[2] = 1;
       zero3_lws[1] = 1;
@@ -1955,24 +1955,24 @@ static void zero3(int n1, int n2, int n3, cl_mem m_buff, int offset)
       zero3_lws[0] = 32;
       zero3_gws[0] = clu_RoundWorkSize((size_t)n3, zero3_lws[0]);
     }
-  } else {
-    if (ZERO3_DIM == 3) {
-      zero3_lws[2] = 1;
-      zero3_lws[1] = 1;
-      zero3_lws[0] = NX_DEFAULT;
-      zero3_gws[2] = n3;
-      zero3_gws[1] = n2;
-      zero3_gws[0] = clu_RoundWorkSize((size_t)n1, zero3_lws[0]);
-    } else if (ZERO3_DIM ==2) {
-      zero3_lws[1] = 1;
-      zero3_lws[0] = NY_DEFAULT;
-      zero3_gws[1] = n3;
-      zero3_gws[0] = clu_RoundWorkSize((size_t)n2, zero3_lws[0]);
-    } else {
-      zero3_lws[0] = 32;
-      zero3_gws[0] = clu_RoundWorkSize((size_t)n3, zero3_lws[0]);
-    }
-  }
+  /* } else { */
+  /*   if (ZERO3_DIM == 3) { */
+  /*     zero3_lws[2] = 1; */
+  /*     zero3_lws[1] = 1; */
+  /*     zero3_lws[0] = NX_DEFAULT; */
+  /*     zero3_gws[2] = n3; */
+  /*     zero3_gws[1] = n2; */
+  /*     zero3_gws[0] = clu_RoundWorkSize((size_t)n1, zero3_lws[0]); */
+  /*   } else if (ZERO3_DIM ==2) { */
+  /*     zero3_lws[1] = 1; */
+  /*     zero3_lws[0] = NY_DEFAULT; */
+  /*     zero3_gws[1] = n3; */
+  /*     zero3_gws[0] = clu_RoundWorkSize((size_t)n2, zero3_lws[0]); */
+  /*   } else { */
+  /*     zero3_lws[0] = 32; */
+  /*     zero3_gws[0] = clu_RoundWorkSize((size_t)n3, zero3_lws[0]); */
+  /*   } */
+  /* } */
 
   ecode  = clSetKernelArg(kernel_zero3, 0, sizeof(cl_mem), (void *)&m_buff);
   ecode |= clSetKernelArg(kernel_zero3, 1, sizeof(int), &n1);
@@ -2046,20 +2046,20 @@ static void setup_opencl(int argc, char *argv[])
   DTIMER_START(T_BUILD);
   char *source_file;
   char build_option[30];
-  if (device_type == CL_DEVICE_TYPE_CPU) {
-    source_file = "mg_cpu.cl";
-    sprintf(build_option, "-DM=%d -I.", M);
+  /* if (device_type == CL_DEVICE_TYPE_CPU) { */
+  /*   source_file = "mg_cpu.cl"; */
+  /*   sprintf(build_option, "-DM=%d -I.", M); */
 
-    PSINV_DIM = PSINV_DIM_CPU;
-    RESID_DIM = RESID_DIM_CPU;
-    RPRJ3_DIM = RPRJ3_DIM_CPU;
-    INTERP_1_DIM = INTERP_1_DIM_CPU;
-    NORM2U3_DIM = NORM2U3_DIM_CPU;
-    COMM3_1_DIM = COMM3_1_DIM_CPU;
-    COMM3_2_DIM = COMM3_2_DIM_CPU;
-    COMM3_3_DIM = COMM3_3_DIM_CPU;
-    ZERO3_DIM = ZERO3_DIM_CPU;
-  } else if (device_type == CL_DEVICE_TYPE_GPU) {
+  /*   PSINV_DIM = PSINV_DIM_CPU; */
+  /*   RESID_DIM = RESID_DIM_CPU; */
+  /*   RPRJ3_DIM = RPRJ3_DIM_CPU; */
+  /*   INTERP_1_DIM = INTERP_1_DIM_CPU; */
+  /*   NORM2U3_DIM = NORM2U3_DIM_CPU; */
+  /*   COMM3_1_DIM = COMM3_1_DIM_CPU; */
+  /*   COMM3_2_DIM = COMM3_2_DIM_CPU; */
+  /*   COMM3_3_DIM = COMM3_3_DIM_CPU; */
+  /*   ZERO3_DIM = ZERO3_DIM_CPU; */
+  /* } else if (device_type == CL_DEVICE_TYPE_GPU) { */
     source_file = "mg_gpu.cl";
     sprintf(build_option, "-DM=%d -I.", M);
 
@@ -2072,10 +2072,10 @@ static void setup_opencl(int argc, char *argv[])
     COMM3_2_DIM = COMM3_2_DIM_GPU;
     COMM3_3_DIM = COMM3_3_DIM_GPU;
     ZERO3_DIM = ZERO3_DIM_GPU;
-  } else {
-    fprintf(stderr, "%s: not supported.", clu_GetDeviceTypeName(device_type));
-    exit(EXIT_FAILURE);
-  }
+  /* } else { */
+  /*   fprintf(stderr, "%s: not supported.", clu_GetDeviceTypeName(device_type)); */
+  /*   exit(EXIT_FAILURE); */
+  /* } */
   program = clu_MakeProgram(context, device, source_dir, source_file,
                             build_option);
   DTIMER_STOP(T_BUILD);
@@ -2088,10 +2088,10 @@ static void setup_opencl(int argc, char *argv[])
   clu_CheckError(ecode, "clCreateKernel()");
   kernel_comm3_1 = clCreateKernel(program, "kernel_comm3_1", &ecode);
   clu_CheckError(ecode, "clCreateKernel()");
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     kernel_comm3_2 = clCreateKernel(program, "kernel_comm3_2", &ecode);
     clu_CheckError(ecode, "clCreateKernel()");
-  }
+  /* } */
   kernel_comm3_3 = clCreateKernel(program, "kernel_comm3_3", &ecode);
   clu_CheckError(ecode, "clCreateKernel()");
 
@@ -2130,7 +2130,7 @@ static void setup_opencl(int argc, char *argv[])
   // 6. Creating buffers
   //-----------------------------------------------------------------------
   DTIMER_START(T_BUFFER_CREATE);
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     m_v = clCreateBuffer(context,
                          CL_MEM_READ_WRITE,
                          NR * sizeof(double),
@@ -2154,31 +2154,31 @@ static void setup_opencl(int argc, char *argv[])
                          NM * sizeof(double),
                          0, &ecode);
     clu_CheckError(ecode, "clCreateBuffer()");
-  } else {
-    m_v = clCreateBuffer(context,
-                         CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                         NR * sizeof(double),
-                         v, &ecode);
-    clu_CheckError(ecode, "clCreateBuffer()");
+  /* } else { */
+  /*   m_v = clCreateBuffer(context, */
+  /*                        CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, */
+  /*                        NR * sizeof(double), */
+  /*                        v, &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer()"); */
 
-    m_r = clCreateBuffer(context,
-                         CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                         NR * sizeof(double),
-                         r, &ecode);
-    clu_CheckError(ecode, "clCreateBuffer()");
+  /*   m_r = clCreateBuffer(context, */
+  /*                        CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, */
+  /*                        NR * sizeof(double), */
+  /*                        r, &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer()"); */
 
-    m_u = clCreateBuffer(context,
-                         CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                         NR * sizeof(double),
-                         u, &ecode);
-    clu_CheckError(ecode, "clCreateBuffer()");
+  /*   m_u = clCreateBuffer(context, */
+  /*                        CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, */
+  /*                        NR * sizeof(double), */
+  /*                        u, &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer()"); */
 
-    m_starts = clCreateBuffer(context,
-                         CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-                         NM * sizeof(double),
-                         starts, &ecode);
-    clu_CheckError(ecode, "clCreateBuffer()");
-  }
+  /*   m_starts = clCreateBuffer(context, */
+  /*                        CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, */
+  /*                        NM * sizeof(double), */
+  /*                        starts, &ecode); */
+  /*   clu_CheckError(ecode, "clCreateBuffer()"); */
+  /* } */
 
   m_a = clCreateBuffer(context,
                        CL_MEM_READ_WRITE,
@@ -2201,9 +2201,9 @@ static void release_opencl()
 
 	clReleaseKernel(kernel_zero3);
 	clReleaseKernel(kernel_comm3_1);
-  if (device_type == CL_DEVICE_TYPE_GPU) {
+  /* if (device_type == CL_DEVICE_TYPE_GPU) { */
     clReleaseKernel(kernel_comm3_2);
-  }
+  /* } */
   clReleaseKernel(kernel_comm3_3);
 	clReleaseKernel(kernel_zran3_1);
 	clReleaseKernel(kernel_zran3_2);

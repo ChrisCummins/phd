@@ -122,19 +122,18 @@ void clu_CheckErrorInternal(cl_int err_code, const char *msg,
 
 // Find the default OpenCL device from the environment variable
 cl_device_type clu_GetDefaultDeviceType() {
-  return CL_DEVICE_TYPE_GPU;
-/*   char *device_type = getenv("OPENCL_DEVICE_TYPE"); */
-/*   if (device_type != NULL) { */
-/*     if (strcasecmp(device_type, "cpu") == 0) { */
-/*       return CL_DEVICE_TYPE_CPU; */
-/*     } else if (strcasecmp(device_type, "gpu") == 0) { */
-/*       return CL_DEVICE_TYPE_GPU; */
-/*     } else if (strcasecmp(device_type, "accelerator") == 0) { */
-/*       return CL_DEVICE_TYPE_ACCELERATOR; */
-/*     } */
-/*   } */
-/*   return CL_DEVICE_TYPE_CPU; */
-/* //  return CL_DEVICE_TYPE_DEFAULT; */
+  char *device_type = getenv("OPENCL_DEVICE_TYPE");
+  if (device_type != NULL) {
+    if (strcasecmp(device_type, "cpu") == 0) {
+      return CL_DEVICE_TYPE_CPU;
+    } else if (strcasecmp(device_type, "gpu") == 0) {
+      return CL_DEVICE_TYPE_GPU;
+    } else if (strcasecmp(device_type, "accelerator") == 0) {
+      return CL_DEVICE_TYPE_ACCELERATOR;
+    }
+  }
+  return CL_DEVICE_TYPE_CPU;
+//  return CL_DEVICE_TYPE_DEFAULT;
 }
 
 
