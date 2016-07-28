@@ -65,7 +65,7 @@ extract_kernels() {
     local dataset=$(echo $root | cut -d '.' -f 2)
 
     # output format: benchmark,dataset,kernel
-    grep '\[CEC\] clEnqueueNDRangeKernel ' "$path" \
+    grep '\[CEC\] clCreateKernel ' "$path" \
         | awk '{print $3}' | sort -u | awk '{print "'$benchmark,$dataset,'" $0}'
 }
 
