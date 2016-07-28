@@ -23,7 +23,7 @@
         cl_uint cec_i;                                                  \
         for (cec_i = 0; cec_i < work_dim; ++cec_i)                      \
             cec_lws *= (local_work_size)[cec_i];                        \
-        cec_profile("clEnqueueNDRangeKernel " #kernel, cec_lws);        \
+        cec_profile_kernel("clEnqueueNDRangeKernel " #kernel, cec_lws); \
     }
 
 
@@ -34,7 +34,7 @@
                  __UNUSED__event)                                       \
     clEnqueueTask(command_queue, kernel, num_events_in_wait_list,       \
                   event_wait_list, cec_event());                        \
-    cec_profile("clEnqueueNDRangeKernel " #kernel, 1);
+    cec_profile_kernel("clEnqueueNDRangeKernel " #kernel, 1);
 
 
 #define CEC_READ_BUFFER(command_queue,                                  \
