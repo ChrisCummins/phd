@@ -109,6 +109,16 @@ make_csvs() {
     done
 }
 
+open_stuff() {
+    local args="$@"
+
+    if [[ "$(uname)" == "Darwin" ]]; then
+        open $args
+    else
+        xdg-open $args
+    fi
+}
+
 main() {
     if [[ $# -ne 1 ]] || [[ ! -d "$1" ]]; then
         usage >&2
@@ -128,6 +138,6 @@ main() {
               "$transfers_csv_path" \
               "$kernels_csv_path"
     ./analyze "$data_path"
-    xdg-open "$data_path/img"
+    open_stuff "$data_path/img"
 }
 main $@
