@@ -24,6 +24,7 @@ def create_db(db_path):
        benchmark TEXT NOT NULL, -- benchmark ID
        dataset TEXT NOT NULL, -- dataset ID
        device TEXT NOT NULL, -- <cpu|gpu>
+       run INT NOT NULL, -- run id
        runtime REAL NOT NULL -- (kernel complete - kernel submit) in ms
     );
 
@@ -66,7 +67,7 @@ def create_db(db_path):
 
 
 def csv2db(runtimes_csv_path, wgsizes_csv_path, transfers_csv_path, db_path):
-    print("csv2db ...")
+    print("converting CSV data to SQLite ...")
     if not os.path.exists(runtimes_csv_path):
         raise Exception("file '{}' not found!".format(runtimes_csv_path))
     if not os.path.exists(wgsizes_csv_path):
@@ -79,8 +80,8 @@ def csv2db(runtimes_csv_path, wgsizes_csv_path, transfers_csv_path, db_path):
     with open(runtimes_csv_path) as infile:
         reader = csv.DictReader(infile)
         to_db = [(i['benchmark'], i['dataset'], i['device'],
-                  i['runtime']) for i in reader]
-    c.executemany("INSERT INTO Runtimes VALUES (?,?,?,?)", to_db)
+                  i['run'], i['runtime']) for i in reader]
+    c.executemany("INSERT INTO Runtimes VALUES (?,?,?,?,?)", to_db)
 
     with open(wgsizes_csv_path) as infile:
         reader = csv.DictReader(infile)
@@ -104,6 +105,12 @@ def get_wgsize(db_c, benchmark, dataset):
     return int(val[0]) if val else 0
 
 
+def get_runs(db_c, benchmark, dataset, device):
+    db_c.execute('SELECT DISTINCT run FROM Runtimes WHERE benchmark=? AND '
+                 'dataset=? AND device=?', (benchmark, dataset, device))
+    return [row[0] for row in db_c.fetchall()]
+
+
 def get_transfer(db_c, benchmark, dataset):
     db_c.execute('SELECT transfer FROM TransferStats WHERE benchmark=? '
                  'AND dataset=?', (benchmark, dataset))
@@ -112,11 +119,14 @@ def get_transfer(db_c, benchmark, dataset):
 
 
 def runtime_stats_scenario(db_c, benchmark, dataset, device):
-    db_c.execute("SELECT runtime FROM Runtimes WHERE benchmark=? AND "
-                 "dataset=? AND DEVICE=?",
-                 (benchmark, dataset, device))
-    runtimes = [float(row[0]) for row in db_c.fetchall()]
-    n = len(runtimes)
+    runtimes = []
+    runs = get_runs(db_c, benchmark, dataset, device)
+    for run in runs:
+        db_c.execute("SELECT SUM(runtime) FROM Runtimes WHERE benchmark=? AND "
+                     "dataset=? AND device=? AND run=?",
+                     (benchmark, dataset, device, run))
+        runtimes.append(db_c.fetchone()[0])
+    n = len(runs)
     mean = labmath.mean(runtimes)
     ci = labmath.confinterval(runtimes, array_mean=mean)[1] - mean
     return (benchmark, dataset, device, mean, ci, n)
@@ -135,7 +145,7 @@ def transfer_stats_scenario(db_c, benchmark, dataset):
 
 
 def stats(db):
-    print("runtime stats ...")
+    print("reducing raw data to statistics ...")
     c = db.cursor()
     c.execute('SELECT DISTINCT benchmark,dataset,device FROM Runtimes')
     to_db = [runtime_stats_scenario(c, *row) for row in c.fetchall()]
@@ -198,16 +208,43 @@ def has_data(db_c, benchmark, dataset):
     return len(times) == 2
 
 
-def features(db):
+def get_oracle_stats(db, benchmark, dataset):
+    cpu = get_runtime_stats(db, benchmark, dataset, 'CPU')[0]
+    gpu = get_runtime_stats(db, benchmark, dataset, 'GPU')[0]
+    if cpu <= gpu:
+        oracle = 'CPU'
+        fast = cpu
+        slow = gpu
+    else:
+        oracle = 'GPU'
+        fast = gpu
+        slow = cpu
+    speedup = slow / fast
+    penalty = fast / slow
+    return (oracle, speedup, penalty)
+
+
+
+def features(db, out_path):
+    print("extracting features ...")
     c = db.cursor()
-    for benchmark in get_benchmarks(db):
-        for dataset in get_ordered_datasets(db, benchmark):
-            if has_data(c, benchmark, dataset):
-                wgsize = get_wgsize(c, benchmark, dataset)
-                transfer = get_transfer(c, benchmark, dataset)
-                print(benchmark, dataset, wgsize, transfer, sep=',')
-            else:
-                print("warning: no data for workload:", benchmark, dataset)
+    with open(out_path, 'w') as outfile:
+        print('benchmark', 'dataset', 'transfer', 'work-items',
+              'oracle', 'speedup', 'penalty',
+              sep=',', file=outfile)
+        for benchmark in get_benchmarks(db):
+            for dataset in get_ordered_datasets(db, benchmark):
+                if has_data(c, benchmark, dataset):
+                    wgsize = get_wgsize(c, benchmark, dataset)
+                    transfer = get_transfer(c, benchmark, dataset)
+                    oracle, speedup, penalty = get_oracle_stats(
+                        db, benchmark, dataset)
+                    print(benchmark, dataset, transfer, wgsize,
+                          oracle, speedup, penalty,
+                          sep=',', file=outfile)
+                else:
+                    print("warning: no data for workload:", benchmark, dataset,
+                          file=sys.stderr)
 
 
 def plot_benchmark(db, benchmark, plot_path):
@@ -224,10 +261,10 @@ def plot_benchmark(db, benchmark, plot_path):
             db, benchmark, dataset, 'GPU')
 
         labels.append(label)
-        cpu.append(ctime)
-        cpu_err.append(cerr)
-        gpu.append(gtime)
-        gpu_err.append(gerr)
+        cpu.append(ctime / 1000.0)  # convert ms t s
+        cpu_err.append(cerr / 1000.0)  # convert ms t s
+        gpu.append(gtime / 1000.0)  # convert ms t s
+        gpu_err.append(gerr / 1000.0)  # convert ms t s
 
     N = len(labels)
     ind = np.arange(N)
@@ -238,7 +275,7 @@ def plot_benchmark(db, benchmark, plot_path):
     rects2 = ax.bar(ind + width, gpu, width, color='y', yerr=gpu_err)
 
     # add some text for labels, title and axes ticks
-    ax.set_ylabel('Runtime (ms)')
+    ax.set_ylabel('OpenCL Runtime (s)')
     ax.set_title('npb-3.3 benchmark {}'.format(benchmark))
     ax.set_xticks(ind + width)
     ax.set_xticklabels(labels)
@@ -260,7 +297,7 @@ def plot_benchmark(db, benchmark, plot_path):
         if c and g:
             speedups.append('{:.2f}'.format(c / g))
         else:
-            speedups.append('-')
+            speedups.append('n/a')
     autolabel(rects2, speedups)
 
     plt.savefig(plot_path)
@@ -286,13 +323,14 @@ def main():
     runtimes_csv_path = os.path.join(data_root, 'runtimes.csv')
     wgsizes_csv_path = os.path.join(data_root, 'wgsizes.csv')
     transfers_csv_path = os.path.join(data_root, 'transfers.csv')
+    features_csv_path = os.path.join(data_root, 'features.csv')
     db_path = os.path.join(data_root, 'data.db')
     img_path = os.path.join(data_root, 'img')
 
     # db = sqlite3.connect(db_path)
     db = csv2db(runtimes_csv_path, wgsizes_csv_path, transfers_csv_path, db_path)
     stats(db)
-    features(db)
+    features(db, features_csv_path)
     plots(db, img_path)
 
 

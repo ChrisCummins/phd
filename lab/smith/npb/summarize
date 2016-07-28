@@ -20,23 +20,24 @@ get_roots() {
 extract_runtimes() {
     local path="$1"
 
-    root=$(echo "$(basename $path)" | sed 's/\.out$//')
-    benchmark=$(echo $root | cut -d '.' -f 1)
-    dataset=$(echo $root | cut -d '.' -f 2)
-    device=$(echo $root | cut -d '.' -f 3 | tr '[:lower:]' '[:upper:]')
+    local root=$(basename "$path" | sed 's/\.out$//')
+    local benchmark=$(echo $root | cut -d '.' -f 1)
+    local dataset=$(echo $root | cut -d '.' -f 2)
+    local device=$(echo $root | cut -d '.' -f 3 | tr '[:lower:]' '[:upper:]')
+    local run=$(basename $(dirname "$path"))
 
-    # output format: benchmark,dataset,device,runtime
+    # output format: benchmark,dataset,device,run,runtime
     grep '\[CEC\] clEnqueue' "$path" \
-        | awk '{print $5}' | awk '{print "'$benchmark,$dataset,$device,'" $0}'
+        | awk '{print $5}' | awk '{print "'$benchmark,$dataset,$device,$run,'" $0}'
 }
 
 extract_wgsizes() {
     local path="$1"
 
-    root=$(echo "$(basename $path)" | sed 's/\.out$//')
-    benchmark=$(echo $root | cut -d '.' -f 1)
-    dataset=$(echo $root | cut -d '.' -f 2)
-    device=$(echo $root | cut -d '.' -f 3 | tr '[:lower:]' '[:upper:]')
+    local root=$(echo "$(basename $path)" | sed 's/\.out$//')
+    local benchmark=$(echo $root | cut -d '.' -f 1)
+    local dataset=$(echo $root | cut -d '.' -f 2)
+    local device=$(echo $root | cut -d '.' -f 3 | tr '[:lower:]' '[:upper:]')
 
     # output format: benchmark,dataset,device,wgsize
     grep '\[CEC\] clEnqueueNDRangeKernel ' "$path" \
@@ -46,14 +47,26 @@ extract_wgsizes() {
 extract_transfers() {
     local path="$1"
 
-    root=$(echo "$(basename $path)" | sed 's/\.out$//')
-    benchmark=$(echo $root | cut -d '.' -f 1)
-    dataset=$(echo $root | cut -d '.' -f 2)
-    device=$(echo $root | cut -d '.' -f 3 | tr '[:lower:]' '[:upper:]')
+    local root=$(echo "$(basename $path)" | sed 's/\.out$//')
+    local benchmark=$(echo $root | cut -d '.' -f 1)
+    local dataset=$(echo $root | cut -d '.' -f 2)
+    local device=$(echo $root | cut -d '.' -f 3 | tr '[:lower:]' '[:upper:]')
 
     # output format: benchmark,dataset,device,size
     grep '\[CEC\] clEnqueue[RW]' "$path" \
         | awk '{print $4}' | awk '{print "'$benchmark,$dataset,$device,'" $0}'
+}
+
+extract_kernels() {
+    local path="$1"
+
+    local root=$(echo "$(basename $path)" | sed 's/\.out$//')
+    local benchmark=$(echo $root | cut -d '.' -f 1)
+    local dataset=$(echo $root | cut -d '.' -f 2)
+
+    # output format: benchmark,dataset,kernel
+    grep '\[CEC\] clEnqueueNDRangeKernel ' "$path" \
+        | awk '{print $3}' | sort -u | awk '{print "'$benchmark,$dataset,'" $0}'
 }
 
 make_csvs() {
@@ -61,6 +74,7 @@ make_csvs() {
     local runtimes_csv_path="$2"
     local wgsizes_csv_path="$3"
     local transfers_csv_path="$4"
+    local kernels_csv_path="$5"
 
     local rundirs=($(find "$data_path" -maxdepth 1 -regex '.*[0-9]+' ! -path "$data_path" -type d | sort))
     local nruns=$(echo ${#rundirs[@]})
@@ -71,9 +85,10 @@ make_csvs() {
     roots=($(get_roots "${rundirs[0]}"))
 
     # CSV HEADERS
-    echo "benchmark,dataset,device,runtime" > "$runtimes_csv_path"
+    echo "benchmark,dataset,device,run,runtime" > "$runtimes_csv_path"
     echo "benchmark,dataset,device,wgsize" > "$wgsizes_csv_path"
     echo "benchmark,dataset,device,size" > "$transfers_csv_path"
+    echo "benchmark,dataset,kernel" > "$kernels_csv_path"
 
     for rundir in ${rundirs[@]}; do
         for root in ${roots[@]}; do
@@ -88,6 +103,8 @@ make_csvs() {
 
             extract_transfers "$cpu_path" >> "$transfers_csv_path"
             extract_transfers "$gpu_path" >> "$transfers_csv_path"
+
+            extract_kernels "$cpu_path" >> "$kernels_csv_path"
         done
     done
 }
@@ -102,12 +119,14 @@ main() {
     local runtimes_csv_path="$1/runtimes.csv"
     local wgsizes_csv_path="$1/wgsizes.csv"
     local transfers_csv_path="$1/transfers.csv"
+    local kernels_csv_path="$1/kernels.csv"
     local db_path="$1/data.db"
 
-    echo "Extracting raw data ..."
     make_csvs "$data_path" \
-              "$runtimes_csv_path" "$wgsizes_csv_path" "$transfers_csv_path"
-    echo "Processing data ..."
+              "$runtimes_csv_path" \
+              "$wgsizes_csv_path" \
+              "$transfers_csv_path" \
+              "$kernels_csv_path"
     ./analyze "$data_path"
     xdg-open "$data_path/img"
 }
