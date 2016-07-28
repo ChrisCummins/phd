@@ -1,6 +1,9 @@
 #ifndef CEC_PROFILE
 #define CEC_PROFILE
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <CL/cl.h>
 
 #define CEC_COMMAND_QUEUE(context, device, properties, errorcode) \

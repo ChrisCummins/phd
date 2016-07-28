@@ -1,8 +1,5 @@
 #include "./cec-profile.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
 cl_event cec_event_v;
 
 
