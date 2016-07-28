@@ -6,8 +6,11 @@
 
 #include <CL/cl.h>
 
-#define CEC_COMMAND_QUEUE(context, device, properties, errorcode) \
-	clCreateCommandQueue(context, device, properties | CL_QUEUE_PROFILING_ENABLE, errorcode)
+#define CEC_COMMAND_QUEUE(context, device, properties, errorcode)       \
+    clCreateCommandQueue(context,                                       \
+                         device,                                        \
+                         properties | CL_QUEUE_PROFILING_ENABLE,        \
+                         errorcode)
 
 #define CEC_ND_KERNEL(command_queue,                                    \
                       kernel,                                           \
