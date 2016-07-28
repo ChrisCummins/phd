@@ -134,7 +134,7 @@ def opencl_samples(seed, num_samples=1000):
                                 length=length, num_samples=num_samples)
 
     os.chdir(path())
-    print('\r\033[K  -> seed: {}'.format(seed, end='')
+    print('\r\033[K  -> seed: {}'.format(seed, end=''))
     subprocess.call(cmd, shell=True)
 
     samples = fetch_samples('/tmp/samples.txt')
