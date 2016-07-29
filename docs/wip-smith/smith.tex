@@ -659,28 +659,48 @@ OpenSUSE 12.3 and GCC 4.7.2; Platform B uses Ubuntu 14.04 and GCC
 x. The AMD implementation of OpenCL 1.2 is used for both.
 
 
-\begin{table*}% tab:platforms
+% OLD PLATFORMS: cecplay + monza
+% \begin{table*}% tab:platforms
+%   \scriptsize
+%   \centering
+%   \begin{tabular}{l c c c c}%C{1.65cm} C{1.65cm} C{1.65cm} C{1.65cm}}
+%     \toprule
+%     & \multicolumn{2}{c}{Platform A} & \multicolumn{2}{c}{Platform B} \\
+%     % & \textbf{CPU} & \textbf{GPU} & \textbf{CPU} & \textbf{GPU} \\
+%     & \textbf{Intel i7-3820} & \textbf{AMD Tahiti 7970} & \textbf{Intel i7-6700K} & \textbf{AMD HD 5450} \\
+%     \midrule
+%     \textbf{Frequency} & 3.6 GHz & 1000 MHz & 4.0 GHz & 650 MHz \\
+%     \textbf{\#. Cores} & 4 & 2048 & 8 & 80 \\
+%     \textbf{Memory} & 8 GB & 3 GB & 32 GB & 1024 MB \\
+%     \textbf{Throughput} & 95 GFLOPS & 3.79 TFLOPS & 81 GFLOPS & 104 GFLOPS
+%     \\
+%     % \midrule
+%     % \textbf{Operating System} & \multicolumn{2}{c}{OpenSUSE 12.3} & \multicolumn{2}{c}{Ubuntu 14.04} \\
+%     % \textbf{Compiler} & \multicolumn{2}{c}{GCC 4.7.2} & \multicolumn{2}{c}{GCC x} \\
+%     \bottomrule
+%   \end{tabular}
+%   \caption{Experimental platforms.}
+%   \label{tab:platforms}
+% \end{table*}
+
+% PLATFORMS: monza CPU, monza GPU, diana GPU
+\begin{table}% tab:platforms
   \scriptsize
   \centering
-  \begin{tabular}{l c c c c}%C{1.65cm} C{1.65cm} C{1.65cm} C{1.65cm}}
+  \begin{tabular}{l l l l}
     \toprule
-    & \multicolumn{2}{c}{Platform A} & \multicolumn{2}{c}{Platform B} \\
-    % & \textbf{CPU} & \textbf{GPU} & \textbf{CPU} & \textbf{GPU} \\
-    & \textbf{Intel i7-3820} & \textbf{AMD Tahiti 7970} & \textbf{Intel i7-6700K} & \textbf{AMD HD 5450} \\
+    & \textbf{Intel CPU} & \textbf{AMD GPU} & \textbf{NVIDIA GPU} \\
     \midrule
-    \textbf{Frequency} & 3.6 GHz & 1000 MHz & 4.0 GHz & 650 MHz \\
-    \textbf{\#. Cores} & 4 & 2048 & 8 & 80 \\
-    \textbf{Memory} & 8 GB & 3 GB & 32 GB & 1024 MB \\
-    \textbf{Throughput} & 95 GFLOPS & 3.79 TFLOPS & 81 GFLOPS & 104 GFLOPS
-    \\
-    % \midrule
-    % \textbf{Operating System} & \multicolumn{2}{c}{OpenSUSE 12.3} & \multicolumn{2}{c}{Ubuntu 14.04} \\
-    % \textbf{Compiler} & \multicolumn{2}{c}{GCC 4.7.2} & \multicolumn{2}{c}{GCC x} \\
+    \textbf{Model} & Core i7-3820 & Tahiti 7970 & GTX 970 \\
+    \textbf{Frequency} & 3.6 GHz & 1000 MHz & 1050 MHz \\
+    \textbf{\#. Cores} & 4 & 2048 & 1664 \\
+    \textbf{Memory} & 8 GB & 3 GB & 4 GB \\
+    \textbf{Throughput} & 105 GFLOPS & 3.79 TFLOPS & 3.90 TFLOPS \\
     \bottomrule
   \end{tabular}
   \caption{Experimental platforms.}
   \label{tab:platforms}
-\end{table*}
+\end{table}
 
 
 \paragraph{Benchmarks}
