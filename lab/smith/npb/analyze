@@ -80,8 +80,7 @@ def create_db(db_path):
        glob_acc INT NOT NULL,
        local_acc INT NOT NULL,
        coalesced_acc INT NOT NULL,
-       atomic_op INT NOT NULL,
-       UNIQUE(benchmark)
+       atomic_op INT NOT NULL
     );
 
     CREATE TABLE TrainingData(
@@ -316,7 +315,7 @@ def kernel_features(db, kernel_features_csv_path):
                   i[' #accesses to local memory'],
                   i[' #coalesced memory accesses'], i[' #atomic op'])
                  for i in reader]
-    c.executemany('INSERT OR IGNORE INTO ProgramFeatures '
+    c.executemany('INSERT INTO KernelFeatures '
                   'VALUES (?,?,?,?,?,?,?,?)', to_db)
     db.commit()
 
@@ -329,7 +328,7 @@ def program_features(db):
     for row in c.fetchall():
         benchmark = row[0]
         c.execute('SELECT benchmark,SUM(compute_op),SUM(rational_op),'
-                  'SUM(global_acc),SUM(local_acc),SUM(coalesced_acc),'
+                  'SUM(glob_acc),SUM(local_acc),SUM(coalesced_acc),'
                   'SUM(atomic_op) FROM KernelFeatures '
                   'WHERE benchmark=?', row)
         data = c.fetchone()
@@ -404,6 +403,45 @@ def plots(db, img_path):
         plot_benchmark(db, benchmark, plot_path)
 
 
+def training_data(db, training_csv_path):
+    with open(training_csv_path, 'w') as outfile:
+        print('benchmark','dataset',
+              'F1: transfer/(comp+mem)',
+              'F2: coalesced/mem',
+              'F3: (localmem/mem)*avgws',
+              'F4: comp/mem',
+              'oracle',
+              'runtime',
+              'speedup',
+              'penalty',
+              sep=',', file=outfile)
+
+        c = db.cursor()
+        for benchmark in get_benchmarks(db):
+            c.execute('SELECT compute_op,rational_op,glob_acc,'
+                      'local_acc,coalesced_acc,atomic_op FROM '
+                      'ProgramFeatures WHERE benchmark=?',
+                      (benchmark,))
+            compute_op,rational_op,glob_acc,local_acc,coalesced_acc,atomic_op = c.fetchone()
+            for dataset in get_ordered_datasets(db, benchmark):
+                c.execute('SELECT oracle,runtime,speedup,penalty FROM '
+                          'TrainingData WHERE benchmark=? AND dataset=?',
+                          (benchmark, dataset))
+                oracle,runtime,speedup,penalty = c.fetchone()
+                c.execute('SELECT transfer,wgsize FROM DynamicFeatures WHERE '
+                          'benchmark=? AND dataset=?', (benchmark, dataset))
+                transfer,wgsize = c.fetchone()
+
+                F1 = transfer / (compute_op + glob_acc)
+                F2 = coalesced_acc / glob_acc
+                F3 = (local_acc / glob_acc) * wgsize
+                F4 = (compute_op / glob_acc)
+
+                print(benchmark,dataset,F1,F2,F3,F4,oracle,runtime,
+                      speedup,penalty,
+                      sep=',', file=outfile)
+
+
 def main():
     parser = ArgumentParser()
     parser.add_argument('input', help='path to data directory')
@@ -417,6 +455,7 @@ def main():
     wgsizes_csv_path = os.path.join(results_dir, 'wgsizes.csv')
     transfers_csv_path = os.path.join(results_dir, 'transfers.csv')
     dynamic_features_csv_path = os.path.join(results_dir, 'runtime-features.csv')
+    training_csv_path = os.path.join(results_dir, 'training-data.csv')
     db_path = os.path.join(results_dir, 'data.db')
     img_path = os.path.join(results_dir, 'img')
 
@@ -426,8 +465,8 @@ def main():
     dynamic_features(db, dynamic_features_csv_path)
     kernel_features(db, kernel_features_csv_path)
     program_features(db)
-
     plots(db, img_path)
+    training_data(db, training_csv_path)
 
 
 if __name__ == "__main__":
