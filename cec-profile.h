@@ -20,17 +20,10 @@
                       local_work_size,                                  \
                       num_events_in_wait_list,                          \
                       event_wait_list)                                  \
-    clEnqueueNDRangeKernel(command_queue, kernel, work_dim,             \
-                           global_work_offset, global_work_size,        \
-                           local_work_size, num_events_in_wait_list,    \
-                           event_wait_list, cec_event());               \
-    {                                                                   \
-        size_t cec_lws = 1;                                             \
-        cl_uint cec_i;                                                  \
-        for (cec_i = 0; cec_i < work_dim; ++cec_i)                      \
-            cec_lws *= (local_work_size)[cec_i];                        \
-        cec_profile_kernel("clEnqueueNDRangeKernel " #kernel, cec_lws); \
-    }
+    cec_profile_kernel(command_queue, kernel, work_dim,                 \
+                       global_work_offset, global_work_size,            \
+                       local_work_size, num_events_in_wait_list,        \
+                       event_wait_list, #kernel);
 
 
 #define CEC_TASK(command_queue,                                         \
@@ -95,7 +88,15 @@
 cl_event* cec_event();
 
 // Print profiling info for event.
-void cec_profile_kernel(const char* name, const size_t wgsize);
+cl_int cec_profile_kernel(cl_command_queue command_queue,
+                          cl_kernel kernel,
+                          cl_uint work_dim,
+                          const size_t *global_work_offset,
+                          const size_t *global_work_size,
+                          const size_t *local_work_size,
+                          cl_uint num_events_in_wait_list,
+                          const cl_event *event_wait_list,
+                          const char* name);
 void cec_profile_read(const char* name, const size_t size);
 void cec_profile_write(const char* name, const size_t size);
 
