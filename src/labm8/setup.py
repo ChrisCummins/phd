@@ -56,7 +56,7 @@ setup(name="labm8",
       packages=["labm8"],
       test_suite="nose.collector",
       tests_require=[
-          "coverage",
+          # FIXME: Add coverage support for parent repo: "coverage",
           "nose"
       ],
       install_requires=[
