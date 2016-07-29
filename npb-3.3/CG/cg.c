@@ -1451,7 +1451,7 @@ static void setup_opencl(int argc, char *argv[], char Class)
 
     source_file_makea = "cg_gpu_makea.cl";
     source_file = "cg_gpu.cl";
-    sprintf(build_option, "-I. -DCLASS=\'%c\' -DLSIZE=%lu -cl-mad-enable",
+    sprintf(build_option, "-I. -DCLASS=%d -DLSIZE=%lu -cl-mad-enable",
             classnum, CG_LSIZE);
 
   /* } else { */
