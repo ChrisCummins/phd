@@ -37,12 +37,13 @@ def program_exists(program):
             return True
     return False
 
-# Python weka wrapper required weka (obviously), and only supports
-# Python2.
-if program_exists("weka") and version_info[0] == 2:
-    python_weka_wrapper = "python-weka-wrapper"
-else:
-    python_weka_wrapper = ""
+# There are two separate packages implementing a wrapper around
+# weka. Both require weka to be installed.
+if program_exists("weka"):
+    if version_info[0] == 2:
+        python_weka_wrapper = "python-weka-wrapper"
+    else:
+        python_weka_wrapper = "python-weka-wrapper3"
 
 setup(name="labm8",
       version="0.0.1",

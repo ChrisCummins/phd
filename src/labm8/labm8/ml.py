@@ -15,14 +15,18 @@
 """
 Machine learning module.
 
+REQUIREMENTS: Weka http://www.cs.waikato.ac.nz/ml/weka/
+
 Attributes:
 
     WEKA_IS_INSTALLED (bool): True if weka is installed.
     MODULE_SUPPORTED (bool): True if this module is supported.
 """
 from __future__ import division
+from __future__ import print_function
 
 import atexit
+import sys
 
 from random import randint
 
@@ -33,8 +37,23 @@ from labm8 import math as labmath
 from labm8 import system
 
 
-WEKA_IS_INSTALLED = system.which("weka") or fs.exists("/Applications/Weka.app")
-MODULE_SUPPORTED = WEKA_IS_INSTALLED and not lab.is_python3()
+def _find_weka():
+    """
+    Look for Weka installation in system $PATH or /Applications. If
+    not found, return None.
+    """
+    mac_path = '/Applications/Weka.app'
+    linux_path = system.which('weka')
+    return mac_path if fs.exists(mac_path) else linux_path
+
+WEKA_IS_INSTALLED = _find_weka()
+MODULE_SUPPORTED = WEKA_IS_INSTALLED
+
+
+def assert_supported():
+    if not MODULE_SUPPORTED:
+        print("fatal: labm8.ml module not supported! Please install weka.")
+        sys.exit(1)
 
 
 if MODULE_SUPPORTED:
