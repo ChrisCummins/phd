@@ -1,31 +1,44 @@
+from random import randrange
+
 import numpy as np
 import pyopencl as cl
 import os
+import sys
+
+import smith
+
+class ProgramBuildException(smith.SmithException): pass
 
 
-def build_program(ctx, src):
-    return cl.Program(ctx, src).build()
+def build_program(ctx, src, quiet=True):
+    """
+    Compile an OpenCL program.
+    """
+    if not quiet:
+        os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
+    try:
+        return cl.Program(ctx, src).build()
+    except cl.cffi_cl.RuntimeError as e:
+        raise ProgramBuildException(e)
 
 
-def get_arg_prop(kernel, idx, prop, prop2str):
+def get_arg_prop(kernel, idx, prop, to_string):
     name = cl.kernel_arg_info.to_string(prop)
     try:
-        val = prop2str(kernel.get_arg_info(idx, prop))
+        val = to_string(kernel.get_arg_info(idx, prop))
     except RuntimeError as e:
         val = 'FAIL'
     return (name, val)
 
 
 def get_arg_props(kernel, idx):
+    ki = cl.kernel_arg_info
     props = [
-        (cl.kernel_arg_info.ACCESS_QUALIFIER,
-         cl.kernel_arg_access_qualifier.to_string),
-        (cl.kernel_arg_info.ADDRESS_QUALIFIER,
-         cl.kernel_arg_address_qualifier.to_string),
-        (cl.kernel_arg_info.NAME, str),
-        (cl.kernel_arg_info.TYPE_NAME, str),
-        (cl.kernel_arg_info.TYPE_QUALIFIER,
-         cl.kernel_arg_type_qualifier.to_string)
+        (ki.ACCESS_QUALIFIER, cl.kernel_arg_access_qualifier.to_string),
+        (ki.ADDRESS_QUALIFIER, cl.kernel_arg_address_qualifier.to_string),
+        (ki.NAME, str),
+        (ki.TYPE_NAME, str),
+        (ki.TYPE_QUALIFIER, cl.kernel_arg_type_qualifier.to_string)
     ]
     return dict(get_arg_prop(kernel, idx, *x) for x in props)
 
@@ -51,13 +64,93 @@ def placeholder_from_props(props):
     return props
 
 
-def source(src, devtype=cl.device_type.GPU, quiet=False):
-    a_np = np.random.rand(50000).astype(np.float32)
-    b_np = np.random.rand(50000).astype(np.float32)
+def create_buffer_arg(ctx, dtype, size, read=True, write=True):
+    host_data = np.random.rand(*size).astype(dtype)
 
-    if not quiet:
-        os.environ['PYOPENCL_COMPILER_OUTPUT'] = "1"
+    if read and write:
+        mflags = cl.mem_flags.READ_WRITE
+    elif read:
+        mflags = cl.mem_flags.READ_ONLY
+    elif write:
+        mflags = cl.mem_flags.WRITE_ONLY
+    else:
+        raise smith.InternalException("buffer must allow reads or writes!")
 
+    dev_data = cl.Buffer(ctx, mflags | cl.mem_flags.COPY_HOST_PTR,
+                         hostbuf=host_data)
+    transfer = 2 * host_data.nbytes
+    return dev_data, transfer, host_data
+
+
+def create_const_arg(ctx, dtype, val=None):
+    if val is None: val = np.random.random_sample()
+    dev_data = dtype(val)
+    # TODO: Device whether we want const value args to be considered a
+    # 'transfer'. If not, then transfer=0.
+    transfer = dev_data.nbytes
+    return dev_data, transfer, val
+
+
+def get_params(ctx, kernel, global_size):
+    mf = cl.mem_flags
+
+    arg_a, sz_a, _ = create_buffer_arg(ctx, np.float32, global_size)
+    arg_b, sz_b, _ = create_buffer_arg(ctx, np.float32, global_size)
+    arg_c, sz_c, _ = create_const_arg(ctx, np.int32, 100 * 50 - 1)
+
+    transfer = sz_a + sz_b + sz_c
+
+    args = (arg_a, arg_b, arg_c)
+
+    kernel.set_args(*args)
+
+    device = ctx.get_info(cl.context_info.DEVICES)[0]
+    wgi = cl.kernel_work_group_info
+    wgsize = kernel.get_work_group_info(wgi.WORK_GROUP_SIZE, device)
+
+    return wgsize, transfer, args
+
+
+def kernel_name(kernel):
+    return kernel.get_info(cl.kernel_info.FUNCTION_NAME)
+
+
+def get_elapsed(event):
+    """
+    Time delta between event submission and end, in milliseconds.
+    """
+    tstart = event.get_profiling_info(cl.profiling_info.SUBMIT)
+    tend = event.get_profiling_info(cl.profiling_info.END)
+    return (tend - tstart) / 1000000
+
+
+def flatten_wgsize(wgsize):
+    return np.prod(wgsize)
+
+
+def run_kernel(ctx, queue, kernel):
+    name = kernel_name(kernel)
+    print("executing kernel", name, "... ", end='')
+
+    global_size = (randrange(100, 300), randrange(10, 100))
+    wgsize,transfer,args = get_params(ctx, kernel, global_size)
+
+    # blocking execution while kernel executes.
+    # event = kernel(queue, wgsize, None, *args)
+    event = kernel(queue, global_size, None, *args)
+    event.wait()
+
+    # Get time.
+    elapsed = get_elapsed(event)
+
+    print(wgsize, transfer, elapsed, 'ms')
+
+    # cl.enqueue_copy(queue, a_np, arg_a)
+    # for i in range(arg_c):
+    #     print(i, 'good' if a_np[i] == b_np[i] else 'bad ', a_np[i], b_np[i])
+
+
+def init_opencl():
     platforms = cl.get_platforms()
     try:
         ctx = cl.Context(
@@ -66,33 +159,13 @@ def source(src, devtype=cl.device_type.GPU, quiet=False):
     except Exception as e:
         ctx = cl.create_some_context(interactive=False)
     print("Device:", ctx.get_info(cl.context_info.DEVICES))
-    queue = cl.CommandQueue(ctx)
+    queue = cl.CommandQueue(ctx, properties=cl.command_queue_properties.PROFILING_ENABLE)
 
-    mf = cl.mem_flags
-    a_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=a_np)
-    b_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=b_np)
-    res_g = cl.Buffer(ctx, mf.WRITE_ONLY, a_np.nbytes)
-
-    program = build_program(ctx, src)
-
-    for kernel in program.all_kernels():
-        name = kernel.get_info(cl.kernel_info.FUNCTION_NAME)
-        print("Kernel:", name)
-        args = [placeholder_from_props(x) for x in args_from_kernel(kernel)]
-        for arg in args:
-            print("Argument:", arg)
+    return ctx, queue
 
 
+def source(src, devtype=cl.device_type.GPU, quiet=True):
+    ctx, queue = init_opencl()
+    program = build_program(ctx, src, quiet=quiet)
 
-#     kernels = program.all_kernels()
-#     kernel = kernels[0]
-#     get_args(kernel)
-
-#     program.sum(queue, a_np.shape, None, a_g, b_g, res_g)
-
-#     res_np = np.empty_like(a_np)
-#     cl.enqueue_copy(queue, res_np, res_g)
-
-#     # Check on CPU with Numpy:
-#     print(res_np - (a_np + b_np))
-#     print(np.linalg.norm(res_np - (a_np + b_np)))
+    [run_kernel(ctx, queue, kernel) for kernel in program.all_kernels()]
