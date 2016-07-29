@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
+rm -fv ../cec-profile.o
+
 make -j$(nproc) clean
 make -j$(nproc) suite
