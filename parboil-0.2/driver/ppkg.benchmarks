@@ -1,0 +1,14 @@
+# List of benchmarks to be included in the distributed package
+
+bfs
+cutcp
+histo
+lbm
+sgemm
+mri-gridding
+mri-q
+sad
+spmv
+stencil
+tpacf
+

@@ -1,0 +1,5 @@
+# Write your own ignore list here.
+# The syntax reference: http://docs.python.org/howto/regex.html
+
+build
+run
