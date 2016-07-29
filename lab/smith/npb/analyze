@@ -41,6 +41,7 @@ def create_db(db_path):
        benchmark TEXT NOT NULL, -- benchmark ID
        dataset TEXT NOT NULL, -- dataset ID
        wgsize INT NOT NULL -- scalar wgsize
+       -- UNIQUE(benchmark, dataset)
     );
 
     CREATE TABLE WgsizeStats(
@@ -53,12 +54,54 @@ def create_db(db_path):
        benchmark TEXT NOT NULL, -- benchmark ID
        dataset TEXT NOT NULL, -- dataset ID
        transfer INT NOT NULL -- transfer size (in bytes)
+       -- UNIQUE(benchmark, dataset)
     );
 
     CREATE TABLE TransferStats(
        benchmark TEXT NOT NULL, -- benchmark ID
        dataset TEXT NOT NULL, -- dataset ID
        transfer INT NOT NULL -- transfer size (in bytes)
+       -- UNIQUE(benchmark, dataset)
+    );
+
+    CREATE TABLE DynamicFeatures(
+       benchmark TEXT NOT NULL,
+       dataset TEXT NOT NULL,
+       transfer INT NOT NULL,
+       wgsize INT NOT NULL
+       -- UNIQUE(benchmark, dataset)
+    );
+
+    CREATE TABLE KernelFeatures(
+       benchmark TEXT NOT NULL,
+       kernel TEXT NOT NULL,
+       compute_op INT NOT NULL,
+       rational_op INT NOT NULL,
+       glob_acc INT NOT NULL,
+       local_acc INT NOT NULL,
+       coalesced_acc INT NOT NULL,
+       atomic_op INT NOT NULL,
+       UNIQUE(benchmark)
+    );
+
+    CREATE TABLE TrainingData(
+       benchmark TEXT NOT NULL,
+       dataset TEXT NOT NULL,
+       oracle TEXT NOT NULL,  -- oracle device <CPU|GPU>
+       runtime REAL NOT NULL,
+       speedup REAL NOT NULL,
+       penalty REAL NOT NULL
+    );
+
+    CREATE TABLE ProgramFeatures(
+       benchmark TEXT NOT NULL,
+       compute_op INT NOT NULL,
+       rational_op INT NOT NULL,
+       glob_acc INT NOT NULL,
+       local_acc INT NOT NULL,
+       coalesced_acc INT NOT NULL,
+       atomic_op INT NOT NULL,
+       UNIQUE(benchmark)
     );
     """)
     c.close()
@@ -221,30 +264,78 @@ def get_oracle_stats(db, benchmark, dataset):
         slow = cpu
     speedup = slow / fast
     penalty = fast / slow
-    return (oracle, speedup, penalty)
+    return (oracle, fast / 1000, speedup, penalty)
 
 
 
-def features(db, out_path):
-    print("extracting features ...")
+def dynamic_features(db, out_path):
+    print("extracting dynamic features ...")
     c = db.cursor()
     with open(out_path, 'w') as outfile:
         print('benchmark', 'dataset', 'transfer', 'work-items',
-              'oracle', 'speedup', 'penalty',
+              'oracle', 'runtime', 'speedup', 'penalty',
               sep=',', file=outfile)
         for benchmark in get_benchmarks(db):
             for dataset in get_ordered_datasets(db, benchmark):
                 if has_data(c, benchmark, dataset):
                     wgsize = get_wgsize(c, benchmark, dataset)
                     transfer = get_transfer(c, benchmark, dataset)
-                    oracle, speedup, penalty = get_oracle_stats(
+                    oracle, runtime, speedup, penalty = get_oracle_stats(
                         db, benchmark, dataset)
                     print(benchmark, dataset, transfer, wgsize,
-                          oracle, speedup, penalty,
+                          oracle, runtime, speedup, penalty,
                           sep=',', file=outfile)
+                    c.execute('INSERT INTO DynamicFeatures VALUES '
+                              '(?,?,?,?)',
+                              (benchmark, dataset, transfer, wgsize))
+                    c.execute('INSERT INTO TrainingData VALUES '
+                              '(?,?,?,?,?,?)',
+                              (benchmark, dataset, oracle, runtime,
+                               speedup, penalty))
                 else:
                     print("warning: no data for workload:", benchmark, dataset,
                           file=sys.stderr)
+    db.commit()
+
+
+def file_to_benchmark(path):
+    return os.path.splitext(os.path.basename(path))[0].upper()
+
+
+def kernel_features(db, kernel_features_csv_path):
+    print("importing kernel features ...")
+    c = db.cursor()
+    if not os.path.exists(kernel_features_csv_path):
+        raise Exception("file '{}' not found!".format(kernel_features_csv_path))
+
+    with open(kernel_features_csv_path) as infile:
+        reader = csv.DictReader(infile)
+        to_db = [(file_to_benchmark(i['File']), i['Kernel Name'],
+                  i['#compute operations'], i['#rational operations'],
+                  i['#accesses to global memory'],
+                  i[' #accesses to local memory'],
+                  i[' #coalesced memory accesses'], i[' #atomic op'])
+                 for i in reader]
+    c.executemany('INSERT OR IGNORE INTO ProgramFeatures '
+                  'VALUES (?,?,?,?,?,?,?,?)', to_db)
+    db.commit()
+
+
+def program_features(db):
+    print("computing program features ...")
+    c = db.cursor()
+
+    c.execute('SELECT DISTINCT benchmark FROM KernelFeatures')
+    for row in c.fetchall():
+        benchmark = row[0]
+        c.execute('SELECT benchmark,SUM(compute_op),SUM(rational_op),'
+                  'SUM(global_acc),SUM(local_acc),SUM(coalesced_acc),'
+                  'SUM(atomic_op) FROM KernelFeatures '
+                  'WHERE benchmark=?', row)
+        data = c.fetchone()
+        c.execute('INSERT OR IGNORE INTO ProgramFeatures '
+                  'VALUES (?,?,?,?,?,?,?)', data)
+    db.commit()
 
 
 def plot_benchmark(db, benchmark, plot_path):
@@ -315,22 +406,27 @@ def plots(db, img_path):
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('input', help='path to dataset')
+    parser.add_argument('input', help='path to data directory')
     args = parser.parse_args()
 
     data_root = os.path.expanduser(args.input)
+    results_dir = os.path.join(data_root, 'results')
+    kernel_features_csv_path = os.path.join(data_root, 'kernel-features.csv')
 
-    runtimes_csv_path = os.path.join(data_root, 'runtimes.csv')
-    wgsizes_csv_path = os.path.join(data_root, 'wgsizes.csv')
-    transfers_csv_path = os.path.join(data_root, 'transfers.csv')
-    features_csv_path = os.path.join(data_root, 'features.csv')
-    db_path = os.path.join(data_root, 'data.db')
-    img_path = os.path.join(data_root, 'img')
+    runtimes_csv_path = os.path.join(results_dir, 'runtimes.csv')
+    wgsizes_csv_path = os.path.join(results_dir, 'wgsizes.csv')
+    transfers_csv_path = os.path.join(results_dir, 'transfers.csv')
+    dynamic_features_csv_path = os.path.join(results_dir, 'runtime-features.csv')
+    db_path = os.path.join(results_dir, 'data.db')
+    img_path = os.path.join(results_dir, 'img')
 
     # db = sqlite3.connect(db_path)
     db = csv2db(runtimes_csv_path, wgsizes_csv_path, transfers_csv_path, db_path)
     stats(db)
-    features(db, features_csv_path)
+    dynamic_features(db, dynamic_features_csv_path)
+    kernel_features(db, kernel_features_csv_path)
+    program_features(db)
+
     plots(db, img_path)
 
 

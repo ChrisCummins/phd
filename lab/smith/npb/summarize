@@ -66,7 +66,7 @@ extract_kernels() {
 
     # output format: benchmark,dataset,kernel
     grep '\[CEC\] clCreateKernel ' "$path" \
-        | awk '{print $3}' | sort -u | awk '{print "'$benchmark,$dataset,'" $0}'
+        | awk '{print $3}' | awk '{print "'$benchmark,'" $0}'
 }
 
 make_csvs() {
@@ -88,7 +88,7 @@ make_csvs() {
     echo "benchmark,dataset,device,run,runtime" > "$runtimes_csv_path"
     echo "benchmark,dataset,device,wgsize" > "$wgsizes_csv_path"
     echo "benchmark,dataset,device,size" > "$transfers_csv_path"
-    echo "benchmark,dataset,kernel" > "$kernels_csv_path"
+    rm -f "$kernels_csv_path"
 
     for rundir in ${rundirs[@]}; do
         for root in ${roots[@]}; do
@@ -107,6 +107,12 @@ make_csvs() {
             extract_kernels "$cpu_path" >> "$kernels_csv_path"
         done
     done
+
+    # Make list of kernels (across all benchmarks/datasets)
+    sort -u < "$kernels_csv_path" > /tmp/kernels
+    echo "benchmark,kernel" > "$kernels_csv_path"
+    cat /tmp/kernels >> "$kernels_csv_path"
+    rm -f /tmp/kernels
 }
 
 open_stuff() {
@@ -126,18 +132,19 @@ main() {
     fi
 
     local data_path="$1"
-    local runtimes_csv_path="$1/runtimes.csv"
-    local wgsizes_csv_path="$1/wgsizes.csv"
-    local transfers_csv_path="$1/transfers.csv"
-    local kernels_csv_path="$1/kernels.csv"
-    local db_path="$1/data.db"
+    local results_path="$1/results"
+    local runtimes_csv_path="$results_path/runtimes.csv"
+    local wgsizes_csv_path="$results_path/wgsizes.csv"
+    local transfers_csv_path="$results_path/transfers.csv"
+    local kernels_csv_path="$results_path/kernels.csv"
+    local db_path="$results_path/data.db"
 
-    make_csvs "$data_path" \
+    make_csvs "$results_path" \
               "$runtimes_csv_path" \
               "$wgsizes_csv_path" \
               "$transfers_csv_path" \
               "$kernels_csv_path"
     ./analyze "$data_path"
-    open_stuff "$data_path/img"
+    open_stuff "$results_path/img"
 }
 main $@
