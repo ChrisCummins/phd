@@ -457,10 +457,29 @@ static void setup_opencl(int argc, char *argv[])
   if (timeron) timer_start(TIMER_BUILD);
   char build_option[100];
 
+  int classnum = -1;
+  if (CLASS == 'S')
+    classnum = 0;
+  else if (CLASS == 'W')
+    classnum = 1;
+  else if (CLASS == 'A')
+    classnum = 2;
+  else if (CLASS == 'B')
+    classnum = 3;
+  else if (CLASS == 'C')
+    classnum = 4;
+  else if (CLASS == 'D')
+    classnum = 5;
+  else if (CLASS == 'E')
+    classnum = 6;
+  else {
+    fprintf(stderr, "fatal: unrecognised CLASS '%c'!", CLASS);
+  }
+
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
   /*   sprintf(build_option, "-I. -DCLASS=%d -DUSE_CPU", CLASS); */
   /* } else { */
-    sprintf(build_option, "-I. -DCLASS=\'%c\'", CLASS);
+    sprintf(build_option, "-I. -DCLASS=%d", classnum);
   /* } */
 
   p_pre = clu_MakeProgram(context, device, source_dir,

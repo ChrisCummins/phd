@@ -1078,6 +1078,25 @@ static void setup_opencl(int argc, char *argv[])
   /*   CFFTS_DIM = CFFTS_DIM_CPU; */
 
   /* } else if (device_type == CL_DEVICE_TYPE_GPU) { */
+  int classnum = -1;
+  if (CLASS == 'S')
+    classnum = 0;
+  else if (CLASS == 'W')
+    classnum = 1;
+  else if (CLASS == 'A')
+    classnum = 2;
+  else if (CLASS == 'B')
+    classnum = 3;
+  else if (CLASS == 'C')
+    classnum = 4;
+  else if (CLASS == 'D')
+    classnum = 5;
+  else if (CLASS == 'E')
+    classnum = 6;
+  else {
+    fprintf(stderr, "fatal: unrecognised CLASS '%c'!", CLASS);
+  }
+
     char vendor[50];
     ecode = clGetDeviceInfo(device, CL_DEVICE_VENDOR, 50, vendor, NULL);
     clu_CheckError(ecode, "clGetDeviceInfo()");
@@ -1089,8 +1108,8 @@ static void setup_opencl(int argc, char *argv[])
       CFFTS_LSIZE = 64;
     }
 
-    sprintf(build_option, "-I. -DCLASS=\'%c\' -DLSIZE=%lu",
-            CLASS, CFFTS_LSIZE);
+    sprintf(build_option, "-I. -DCLASS=%d -DLSIZE=%lu",
+            classnum, CFFTS_LSIZE);
 
     COMPUTE_IMAP_DIM = COMPUTE_IMAP_DIM_GPU;
     EVOLVE_DIM = EVOLVE_DIM_GPU;

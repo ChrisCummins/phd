@@ -35,37 +35,55 @@
 #ifndef __SP_H__
 #define __SP_H__
 
-#if CLASS == 'S'
+#ifdef __OPENCL_VERSION__
+#define CLASS_S 0
+#define CLASS_W 1
+#define CLASS_A 2
+#define CLASS_B 3
+#define CLASS_C 4
+#define CLASS_D 5
+#define CLASS_E 6
+#else
+#define CLASS_S 'S'
+#define CLASS_W 'W'
+#define CLASS_A 'A'
+#define CLASS_B 'B'
+#define CLASS_C 'C'
+#define CLASS_D 'D'
+#define CLASS_E 'E'
+#endif
+
+#if CLASS == CLASS_S
 #define PROBLEM_SIZE   12
 #define NITER_DEFAULT  100
 #define DT_DEFAULT     0.015
 
-#elif CLASS == 'W'
+#elif CLASS == CLASS_W
 #define PROBLEM_SIZE   36
 #define NITER_DEFAULT  400
 #define DT_DEFAULT     0.0015
 
-#elif CLASS == 'A'
+#elif CLASS == CLASS_A
 #define PROBLEM_SIZE   64
 #define NITER_DEFAULT  400
 #define DT_DEFAULT     0.0015
 
-#elif CLASS == 'B'
+#elif CLASS == CLASS_B
 #define PROBLEM_SIZE   102
 #define NITER_DEFAULT  400
 #define DT_DEFAULT     0.001
 
-#elif CLASS == 'C'
+#elif CLASS == CLASS_C
 #define PROBLEM_SIZE   162
 #define NITER_DEFAULT  400
 #define DT_DEFAULT     0.00067
 
-#elif CLASS == 'D'
+#elif CLASS == CLASS_D
 #define PROBLEM_SIZE   408
 #define NITER_DEFAULT  500
 #define DT_DEFAULT     0.00030
 
-#elif CLASS == 'E'
+#elif CLASS == CLASS_E
 #define PROBLEM_SIZE   1020
 #define NITER_DEFAULT  500
 #define DT_DEFAULT     0.0001
@@ -260,4 +278,3 @@
 #endif
 
 #endif //__SP_H__
-

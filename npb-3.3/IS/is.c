@@ -787,8 +787,27 @@ static void setup_opencl(int argc, char *argv[])
   /*   FV2_GROUP_SIZE = 64; */
   /*   FV2_GLOBAL_SIZE = FV2_GROUP_SIZE * 256; */
   /* } else if (device_type == CL_DEVICE_TYPE_GPU) { */
+  int classnum = -1;
+  if (CLASS == 'S')
+    classnum = 0;
+  else if (CLASS == 'W')
+    classnum = 1;
+  else if (CLASS == 'A')
+    classnum = 2;
+  else if (CLASS == 'B')
+    classnum = 3;
+  else if (CLASS == 'C')
+    classnum = 4;
+  else if (CLASS == 'D')
+    classnum = 5;
+  else if (CLASS == 'E')
+    classnum = 6;
+  else {
+    fprintf(stderr, "fatal: unrecognised CLASS '%c'!", CLASS);
+  }
+
     source_file = "is_gpu.cl";
-    sprintf(build_option, "-DCLASS=\'%c\' -I.", CLASS);
+    sprintf(build_option, "-DCLASS=\'%d\' -I.", classnum);
 
     CREATE_SEQ_GROUP_SIZE = 64;
     CREATE_SEQ_GLOBAL_SIZE = CREATE_SEQ_GROUP_SIZE * 256;

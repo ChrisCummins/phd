@@ -35,43 +35,59 @@
 #ifndef __BT_H__
 #define __BT_H__
 
-#if CLASS == 'S'
+
+#define CLASS_S 0
+#define CLASS_W 1
+#define CLASS_A 2
+#define CLASS_B 3
+#define CLASS_C 4
+#define CLASS_D 5
+#define CLASS_E 6
+
+#if CLASS == CLASS_S
 #define PROBLEM_SIZE   12
 #define NITER_DEFAULT  60
 #define DT_DEFAULT     0.010
+#endif
 
-#elif CLASS == 'W'
+#if CLASS == CLASS_W
 #define PROBLEM_SIZE   24
 #define NITER_DEFAULT  200
 #define DT_DEFAULT     0.0008
+#endif
 
-#elif CLASS == 'A'
+#if CLASS == CLASS_A
 #define PROBLEM_SIZE   64
 #define NITER_DEFAULT  200
 #define DT_DEFAULT     0.0008
+#endif
 
-#elif CLASS == 'B'
+#if CLASS == CLASS_B
 #define PROBLEM_SIZE   102
 #define NITER_DEFAULT  200
 #define DT_DEFAULT     0.0003
+#endif
 
-#elif CLASS == 'C'
+#if CLASS == CLASS_C
 #define PROBLEM_SIZE   162
 #define NITER_DEFAULT  200
 #define DT_DEFAULT     0.0001
+#endif
 
-#elif CLASS == 'D'
+#if CLASS == CLASS_D
 #define PROBLEM_SIZE   408
 #define NITER_DEFAULT  250
 #define DT_DEFAULT     0.00002
+#endif
 
-#elif CLASS == 'E'
+#if CLASS == CLASS_E
 #define PROBLEM_SIZE   1020
 #define NITER_DEFAULT  250
 #define DT_DEFAULT     0.4e-5
+#endif
 
-#else
-#error "Unknown class!"
+#ifndef PROBLEM_SIZE
+#error "Unknown CLASS!"
 #endif
 
 #define AA            0
@@ -253,4 +269,3 @@
 #endif
 
 #endif //__BT_H__
-

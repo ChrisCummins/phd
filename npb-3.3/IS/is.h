@@ -35,20 +35,38 @@
 #ifndef __IS_H__
 #define __IS_H__
 
+#ifdef __OPENCL_VERSION__
+#define CLASS_S 0
+#define CLASS_W 1
+#define CLASS_A 2
+#define CLASS_B 3
+#define CLASS_C 4
+#define CLASS_D 5
+#define CLASS_E 6
+#else
+#define CLASS_S 'S'
+#define CLASS_W 'W'
+#define CLASS_A 'A'
+#define CLASS_B 'B'
+#define CLASS_C 'C'
+#define CLASS_D 'D'
+#define CLASS_E 'E'
+#endif
+
 //#define USE_ORIGINAL_BUCKET
 
 /******************/
 /* default values */
 /******************/
 #ifndef CLASS
-#define CLASS 'S'
+#define CLASS CLASS_S
 #endif
 
 
 /*************/
 /*  CLASS S  */
 /*************/
-#if CLASS == 'S'
+#if CLASS == CLASS_S
 #define  TOTAL_KEYS_LOG_2    16
 #define  MAX_KEY_LOG_2       11
 #define  NUM_BUCKETS_LOG_2   9
@@ -58,7 +76,7 @@
 /*************/
 /*  CLASS W  */
 /*************/
-#if CLASS == 'W'
+#if CLASS == CLASS_W
 #define  TOTAL_KEYS_LOG_2    20
 #define  MAX_KEY_LOG_2       16
 #ifdef USE_ORIGINAL_BUCKET
@@ -71,7 +89,7 @@
 /*************/
 /*  CLASS A  */
 /*************/
-#if CLASS == 'A'
+#if CLASS == CLASS_A
 #define  TOTAL_KEYS_LOG_2    23
 #define  MAX_KEY_LOG_2       19
 #ifdef USE_ORIGINAL_BUCKET
@@ -85,7 +103,7 @@
 /*************/
 /*  CLASS B  */
 /*************/
-#if CLASS == 'B'
+#if CLASS == CLASS_B
 #define  TOTAL_KEYS_LOG_2    25
 #define  MAX_KEY_LOG_2       21
 #ifdef USE_ORIGINAL_BUCKET
@@ -99,7 +117,7 @@
 /*************/
 /*  CLASS C  */
 /*************/
-#if CLASS == 'C'
+#if CLASS == CLASS_C
 #define  TOTAL_KEYS_LOG_2    27
 #define  MAX_KEY_LOG_2       23
 #ifdef USE_ORIGINAL_BUCKET
@@ -113,7 +131,7 @@
 /*************/
 /*  CLASS D  */
 /*************/
-#if CLASS == 'D'
+#if CLASS == CLASS_D
 #define  TOTAL_KEYS_LOG_2    31
 #define  MAX_KEY_LOG_2       27
 #ifdef USE_ORIGINAL_BUCKET
@@ -124,7 +142,7 @@
 #endif
 
 
-#if CLASS == 'D'
+#if CLASS == CLASS_D
 #define  TOTAL_KEYS          (1L << TOTAL_KEYS_LOG_2)
 #else
 #define  TOTAL_KEYS          (1 << TOTAL_KEYS_LOG_2)
@@ -132,8 +150,8 @@
 #define  MAX_KEY             (1 << MAX_KEY_LOG_2)
 #define  NUM_BUCKETS         (1 << NUM_BUCKETS_LOG_2)
 #define  NUM_KEYS            TOTAL_KEYS
-#define  SIZE_OF_BUFFERS     NUM_KEYS  
-                                           
+#define  SIZE_OF_BUFFERS     NUM_KEYS
+
 
 #define  MAX_ITERATIONS      10
 #define  TEST_ARRAY_SIZE     5
@@ -151,4 +169,3 @@ typedef  int  INT_TYPE;
 #endif
 
 #endif //__IS_H__
-

@@ -35,11 +35,29 @@
 #ifndef __FT_H__
 #define __FT_H__
 
-#ifndef CLASS
-#define CLASS   'S'
+#ifdef __OPENCL_VERSION__
+#define CLASS_S 0
+#define CLASS_W 1
+#define CLASS_A 2
+#define CLASS_B 3
+#define CLASS_C 4
+#define CLASS_D 5
+#define CLASS_E 6
+#else
+#define CLASS_S 'S'
+#define CLASS_W 'W'
+#define CLASS_A 'A'
+#define CLASS_B 'B'
+#define CLASS_C 'C'
+#define CLASS_D 'D'
+#define CLASS_E 'E'
 #endif
 
-#if CLASS == 'S'
+#ifndef CLASS
+#define CLASS   CLASS_S
+#endif
+
+#if CLASS == CLASS_S
 #define NX             64
 #define NY             64
 #define NZ             64
@@ -50,7 +68,7 @@
 #define NTOTAL         262144
 #define NTOTALP        266240
 
-#elif CLASS == 'W'
+#elif CLASS == CLASS_W
 #define NX             128
 #define NY             128
 #define NZ             32
@@ -61,7 +79,7 @@
 #define NTOTAL         524288
 #define NTOTALP        528384
 
-#elif CLASS == 'A'
+#elif CLASS == CLASS_A
 #define NX             256
 #define NY             256
 #define NZ             128
@@ -72,7 +90,7 @@
 #define NTOTAL         8388608
 #define NTOTALP        8421376
 
-#elif CLASS == 'B'
+#elif CLASS == CLASS_B
 #define NX             512
 #define NY             256
 #define NZ             256
@@ -83,7 +101,7 @@
 #define NTOTAL         33554432
 #define NTOTALP        33619968
 
-#elif CLASS == 'C'
+#elif CLASS == CLASS_C
 #define NX             512
 #define NY             512
 #define NZ             512
@@ -94,7 +112,7 @@
 #define NTOTAL         134217728
 #define NTOTALP        134479872
 
-#elif CLASS == 'D'
+#elif CLASS == CLASS_D
 #define NX             2048
 #define NY             1024
 #define NZ             1024
@@ -105,7 +123,7 @@
 #define NTOTAL         2147483648
 #define NTOTALP        2148532224
 
-#elif CLASS == 'E'
+#elif CLASS == CLASS_E
 #define NX             4096
 #define NY             2048
 #define NZ             2048
@@ -143,7 +161,7 @@
 //---------------------------------------------------------------------------
 // double complex
 //---------------------------------------------------------------------------
-typedef struct { 
+typedef struct {
   double real;
   double imag;
 } dcomplex;
@@ -189,4 +207,3 @@ inline dcomplex dcmplx_div(dcomplex z1, dcomplex z2) {
 #endif
 
 #endif //__FT_H__
-

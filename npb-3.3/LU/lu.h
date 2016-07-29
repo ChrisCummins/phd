@@ -35,7 +35,25 @@
 #ifndef __LU_H__
 #define __LU_H__
 
-#if CLASS == 'S'
+#ifdef __OPENCL_VERSION__
+#define CLASS_S 0
+#define CLASS_W 1
+#define CLASS_A 2
+#define CLASS_B 3
+#define CLASS_C 4
+#define CLASS_D 5
+#define CLASS_E 6
+#else
+#define CLASS_S 'S'
+#define CLASS_W 'W'
+#define CLASS_A 'A'
+#define CLASS_B 'B'
+#define CLASS_C 'C'
+#define CLASS_D 'D'
+#define CLASS_E 'E'
+#endif
+
+#if CLASS == CLASS_S
 #define ISIZ1  12
 #define ISIZ2  12
 #define ISIZ3  12
@@ -43,7 +61,7 @@
 #define INORM_DEFAULT  50
 #define DT_DEFAULT     0.5
 
-#elif CLASS == 'W'
+#elif CLASS == CLASS_W
 #define ISIZ1  33
 #define ISIZ2  33
 #define ISIZ3  33
@@ -51,7 +69,7 @@
 #define INORM_DEFAULT  300
 #define DT_DEFAULT     1.5e-3
 
-#elif CLASS == 'A'
+#elif CLASS == CLASS_A
 #define ISIZ1  64
 #define ISIZ2  64
 #define ISIZ3  64
@@ -59,7 +77,7 @@
 #define INORM_DEFAULT  250
 #define DT_DEFAULT     2.0
 
-#elif CLASS == 'B'
+#elif CLASS == CLASS_B
 #define ISIZ1  102
 #define ISIZ2  102
 #define ISIZ3  102
@@ -67,7 +85,7 @@
 #define INORM_DEFAULT  250
 #define DT_DEFAULT     2.0
 
-#elif CLASS == 'C'
+#elif CLASS == CLASS_C
 #define ISIZ1  162
 #define ISIZ2  162
 #define ISIZ3  162
@@ -75,7 +93,7 @@
 #define INORM_DEFAULT  250
 #define DT_DEFAULT     2.0
 
-#elif CLASS == 'D'
+#elif CLASS == CLASS_D
 #define ISIZ1  408
 #define ISIZ2  408
 #define ISIZ3  408
@@ -83,7 +101,7 @@
 #define INORM_DEFAULT  300
 #define DT_DEFAULT     1.0
 
-#elif CLASS == 'E'
+#elif CLASS == CLASS_E
 #define ISIZ1  1020
 #define ISIZ2  1020
 #define ISIZ3  1020
@@ -236,4 +254,3 @@
 
 
 #endif //__LU_H__
-

@@ -1430,10 +1430,29 @@ static void setup_opencl(int argc, char *argv[], char Class)
 
     CG_LSIZE = 64;
 
+    int classnum = -1;
+    if (Class == 'S')
+      classnum = 0;
+    else if (Class == 'W')
+      classnum = 1;
+    else if (Class == 'A')
+      classnum = 2;
+    else if (Class == 'B')
+      classnum = 3;
+    else if (Class == 'C')
+      classnum = 4;
+    else if (Class == 'D')
+      classnum = 5;
+    else if (Class == 'E')
+      classnum = 6;
+    else {
+      fprintf(stderr, "fatal: unrecognised CLASS '%c'!", Class);
+    }
+
     source_file_makea = "cg_gpu_makea.cl";
     source_file = "cg_gpu.cl";
     sprintf(build_option, "-I. -DCLASS=\'%c\' -DLSIZE=%lu -cl-mad-enable",
-        Class, CG_LSIZE);
+            classnum, CG_LSIZE);
 
   /* } else { */
   /*   fprintf(stderr, "%s: not supported.", clu_GetDeviceTypeName(device_type)); */

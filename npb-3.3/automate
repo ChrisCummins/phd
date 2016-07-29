@@ -12,7 +12,7 @@ for i in $(seq 1 10); do
     cd bin
     rm -rf log
     mkdir -p log
-    ./run_ocl_cpu.sh &> log/cpu.sh
+#    ./run_ocl_cpu.sh &> log/cpu.sh
     ./run_ocl_gpu.sh &> log/gpu.sh
     cd ..
     mv bin/log results/$i
