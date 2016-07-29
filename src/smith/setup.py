@@ -20,6 +20,7 @@ setup(name='smith',
           'share/sql/*.sql'
       ] },
       scripts=[
+          'bin/cgo13',
           'bin/fetch-clsmith',
           'bin/fetch-db',
           'bin/fetch-dnn',

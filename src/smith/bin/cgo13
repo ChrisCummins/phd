@@ -1,0 +1,42 @@
+#!/usr/bin/env python2
+#
+# Run CGO13 autotuner on training data.
+#
+from __future__ import print_function
+from __future__ import division
+
+from argparse import ArgumentParser
+import os
+import sys
+
+import labm8
+from labm8 import ml
+
+import smith
+from smith import cgo13
+
+
+def main():
+    # Check that we can run autotuning:
+    ml.assert_supported()
+
+    parser = ArgumentParser()
+    parser.add_argument('input', help='path to training data CSV')
+    args = parser.parse_args()
+    csv_path = args.input
+
+    if not os.path.exists(csv_path):
+        print("fatal: file '{}' not found".format(csv_path))
+        sys.exit(1)
+
+    # try:
+    ml.start()
+    cgo13.from_csv(csv_path)
+    # except Exception as e:
+    #     print(e, file=sys.stderr)
+    ml.stop()
+    #     sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
