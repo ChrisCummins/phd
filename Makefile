@@ -1339,15 +1339,6 @@ CachedLlvmComponents := \
 	libcxx \
 	libcxxabi \
 	$(NONE)
-LlvmTree := \
-	$(LlvmSrc)/README.txt \
-	$(LlvmSrc)/tools/clang/README.txt \
-	$(LlvmSrc)/tools/clang/tools/extra/README.txt \
-	$(LlvmSrc)/projects/compiler-rt/README.txt \
-	$(LlvmSrc)/projects/openmp/README.txt \
-	$(LlvmSrc)/projects/libcxx/README.txt \
-	$(LlvmSrc)/projects/libcxxabi/README.txt \
-	$(NONE)
 LlvmTar := -$(LlvmVersion).src.tar.xz
 
 CachedLlvmTarballs = $(addprefix $(LlvmCache)/,$(addsuffix $(LlvmTar),$(CachedLlvmComponents)))
@@ -1358,7 +1349,7 @@ $(LlvmCache)/%$(LlvmTar):
 	$(V1)mkdir -p $(LlvmCache)
 	$(V1)wget -O $@ $(addprefix $(LlvmUrlBase),$(notdir $@)) &>/dev/null
 
-#
+# Unpack an LLVM Tarball.
 #
 # Arguments:
 #   $1 (str) Target directory
@@ -1366,34 +1357,22 @@ $(LlvmCache)/%$(LlvmTar):
 #
 define unpack-llvm-tar
 	$(call print-task,UNPACK,$2)
-	$(V1)mkdir $1
-	$(V1)tar -xf $2 -C $1 --strip-components=1
+	$(V1)mkdir $(LlvmSrc)/$1
+	$(V1)tar -xf $(LlvmCache)/$2$(LlvmTar) -C $(LlvmSrc)/$1 --strip-components=1
 endef
 
 # Unpack LLVM tree from cached tarballs.
-$(LlvmSrc)/README.txt: $(LlvmCache)/llvm$(LlvmTar)
-	$(call unpack-llvm-tar,$(dir $@),$<)
-
-$(LlvmSrc)/tools/clang/README.txt: $(LlvmCache)/cfe$(LlvmTar) $(LlvmSrc)
-	$(call unpack-llvm-tar,$(dir $@),$<)
-
-$(LlvmSrc)/tools/clang/tools/extra/README.txt: $(LlvmCache)/clang-tools-extra$(LlvmTar) $(LlvmSrc)/tools/clang
-	$(call unpack-llvm-tar,$(dir $@),$<)
-
-$(LlvmSrc)/projects/compiler-rt/README.txt: $(LlvmCache)/compiler-rt$(LlvmTar) $(LlvmSrc)
-	$(call unpack-llvm-tar,$(dir $@),$<)
-
-$(LlvmSrc)/projects/openmp/README.txt: $(LlvmCache)/openmp$(LlvmTar) $(LlvmSrc)
-	$(call unpack-llvm-tar,$(dir $@),$<)
-
-$(LlvmSrc)/projects/libcxx/README.txt: $(LlvmCache)/libcxx$(LlvmTar) $(LlvmSrc)
-	$(call unpack-llvm-tar,$(dir $@),$<)
-
-$(LlvmSrc)/projects/libcxxabi/README.txt: $(LlvmCache)/libcxxabi$(LlvmTar) $(LlvmSrc)
-	$(call unpack-llvm-tar,$(dir $@),$<)
+$(LlvmSrc): $(CachedLlvmTarballs)
+	$(call unpack-llvm-tar,,llvm)
+	$(call unpack-llvm-tar,tools/clang,cfe)
+	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
+	$(call unpack-llvm-tar,projects/compiler-rt,compiler-rt)
+	$(call unpack-llvm-tar,projects/openmp,openmp)
+	$(call unpack-llvm-tar,projects/libcxx,libcxx)
+	$(call unpack-llvm-tar,projects/libcxxabi,libcxxabi)
 
 # Build LLVM.
-$(LlvmBuild)/bin/llvm-config: $(LlvmTree)
+$(LlvmBuild)/bin/llvm-config: $(LlvmSrc)
 	$(V1)rm -rf $(LlvmBuild)
 	$(V1)mkdir -p $(LlvmBuild)
 	$(V1)cd $(LlvmBuild) && cmake .. $(LlvmCMakeFlags)
