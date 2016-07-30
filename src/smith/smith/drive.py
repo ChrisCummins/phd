@@ -137,6 +137,7 @@ def run_kernel(ctx, queue, kernel):
 
     # blocking execution while kernel executes.
     # event = kernel(queue, wgsize, None, *args)
+    # TODO: Execute this in a separate thread with a timeout.
     event = kernel(queue, global_size, None, *args)
     event.wait()
 
