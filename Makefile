@@ -488,7 +488,7 @@ DistcleanTargets += distclean-clsmith
 #
 GoogleTest = $(extern)/googletest-build/libgtest.a
 GoogleTest_CxxFlags = -I$(extern)/googletest/googletest/include
-GoogleTest_LdFlags = -L$(extern)/googletest-build -lgtest
+GoogleTest_LdFlags = -lpthread -L$(extern)/googletest-build -lgtest
 
 $(GoogleTest)-cmd = \
 	cd $(extern)/googletest-build \
