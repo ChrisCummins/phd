@@ -320,7 +320,7 @@ bool MyRecursiveASTVisitor::processArrayIndices(
   // assume it is not colescate accessing
   clang::CallExpr *ce = clang::dyn_cast<clang::CallExpr>(tExpr);
   if (ce) {
-    std::cout << "False becasue the index is determined through a "
+    std::cerr << "False becasue the index is determined through a "
               << "function call"
               << std::endl;
     return false;
@@ -490,37 +490,35 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(clang::FunctionDecl *f) {
 class MyASTConsumer : public clang::ASTConsumer {
  public:
   MyASTConsumer() : rv() {}
-  virtual bool HandleTopLevelDecl(clang::DeclGroupRef d);
+
+  virtual bool HandleTopLevelDecl(clang::DeclGroupRef d) {
+    typedef clang::DeclGroupRef::iterator iter;
+
+    for (iter b = d.begin(), e = d.end(); b != e; ++b) {
+      rv.TraverseDecl(*b);
+    }
+
+    return true;  // keep going
+  }
+
   MyRecursiveASTVisitor rv;
-  void dumpKernelFeatures(std::string fileName, std::ofstream &fout);
-};
 
-void MyASTConsumer::dumpKernelFeatures(
-    std::string fileName, std::ofstream &fout) {
-  std::vector<FuncInfo *> &FuncInfoVec = rv.getFuncInfo();
+  void dumpKernelFeatures(std::string fileName, std::ostream& fout) {
+    std::vector<FuncInfo *> &FuncInfoVec = rv.getFuncInfo();
 
-  for (unsigned i = 0; i < FuncInfoVec.size(); i++) {
-    if (FuncInfoVec[i]->isOclKernel()) {
-      fout << fileName << "," << FuncInfoVec[i]->getFuncName() << ","
-           << FuncInfoVec[i]->getCompInstCount() << ","
-           << FuncInfoVec[i]->getRationalInstCount() << ","
-           << FuncInfoVec[i]->getGlobalMemLSCount() << ","
-           << FuncInfoVec[i]->getLocalMemLSCount() << ","
-           << FuncInfoVec[i]->getColMemAccessCount() << ","
-           << FuncInfoVec[i]->getAtomicOpCount() << ",,\n";
+    for (unsigned i = 0; i < FuncInfoVec.size(); i++) {
+      if (FuncInfoVec[i]->isOclKernel()) {
+        fout << fileName << "," << FuncInfoVec[i]->getFuncName() << ","
+             << FuncInfoVec[i]->getCompInstCount() << ","
+             << FuncInfoVec[i]->getRationalInstCount() << ","
+             << FuncInfoVec[i]->getGlobalMemLSCount() << ","
+             << FuncInfoVec[i]->getLocalMemLSCount() << ","
+             << FuncInfoVec[i]->getColMemAccessCount() << ","
+             << FuncInfoVec[i]->getAtomicOpCount() << "\n";
+      }
     }
   }
-}
-
-bool MyASTConsumer::HandleTopLevelDecl(clang::DeclGroupRef d) {
-  typedef clang::DeclGroupRef::iterator iter;
-
-  for (iter b = d.begin(), e = d.end(); b != e; ++b) {
-    rv.TraverseDecl(*b);
-  }
-
-  return true;  // keep going
-}
+};
 
 std::string retriveFileName(std::string fname) {
   std::string res = "";
@@ -536,7 +534,7 @@ std::string retriveFileName(std::string fname) {
   return res;
 }
 
-int worker(std::string fileName, std::ofstream &fout, int argc, char **argv) {
+int worker(std::string fileName, std::ostream &fout, int argc, char **argv) {
   clang::CompilerInstance compiler;
   clang::DiagnosticOptions diagnosticOptions;
   compiler.createDiagnostics();
@@ -583,7 +581,7 @@ int worker(std::string fileName, std::ofstream &fout, int argc, char **argv) {
   compiler.getDiagnosticClient().EndSourceFile();
 
   std::string pFName = retriveFileName(fileName);
-  astConsumer.dumpKernelFeatures(pFName, fout);
+  astConsumer.dumpKernelFeatures(pFName, std::cout);
 
   return 0;
 }
@@ -594,7 +592,7 @@ std::string addOCLFuncs(std::string fileName) {
   dest = dest + retriveFileName(fileName);
 
   std::ofstream fout(dest.c_str());
-  fout << "#include \"cl_platform.h\" \n";
+  fout << "#include <cl_platform.h>\n";
 
   std::string line;
   while (getline(fin, line)) {
@@ -656,19 +654,22 @@ int main(int argc, char **argv) {
   }
 
   system("mkdir -p tmp");
-  std::ofstream fout("features.csv");
-  fout << "File,Kernel Name,#compute operations,#rational operations,#accesses "
-      "to global memory, #accesses to local memory, #coalesced memory "
-      "accesses, #atomic op, amount of data transfers, #work-items\n";
+  std::cout << "file,"
+            << "kernel,"
+            << "comp,"
+            << "rational,"
+            << "mem,"
+            << "localmem,"
+            << "coalesced,"
+            << "atomic\n";
   for (unsigned i = 0; i < fnl.size(); i++) {
     std::string dest = addOCLFuncs(fnl[i]);
     char *p = new char[dest.length() + 1];
     strncpy(p, dest.c_str(), dest.length() + 1);
     argv[argc - 1] = p;
-    worker(dest, fout, argc, argv);
+    worker(dest, std::cout, argc, argv);
     delete[] p;
   }
 
-  fout.close();
   return 0;
 }
