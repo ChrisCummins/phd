@@ -668,8 +668,6 @@ string retriveFileName(string fname)
 
 int worker(string fileName, ofstream& fout, int argc, char **argv)
 {
-  struct stat sb;
-
   CompilerInstance compiler;
   DiagnosticOptions diagnosticOptions;
   compiler.createDiagnostics();
@@ -742,11 +740,8 @@ int worker(string fileName, ofstream& fout, int argc, char **argv)
   langOpts.OpenCL = 1;
 
 
-  llvm::Triple trip;
-  PreprocessorOptions& ppOpt =  compiler.getPreprocessorOpts();
   Invocation->setLangDefaults(langOpts,
-                              clang::IK_OpenCL,
-                              trip, ppOpt);
+                              clang::IK_OpenCL);
 
   compiler.createPreprocessor(clang::TU_Complete);
   compiler.getPreprocessorOpts().UsePredefines = false;
@@ -854,7 +849,7 @@ int main(int argc, char** argv)
     strcpy(p, dest.c_str());
     argv[argc-1] = p;
     worker(dest, fout, argc, argv);
-    delete p;
+    delete[] p;
   }
 
   fout.close();
