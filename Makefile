@@ -119,6 +119,7 @@ PREFIX ?= /usr/local
 # Non-configurable;
 MAKEFLAGS := -j$(threads)
 SHELL = /bin/bash
+UNAME := $(shell uname)
 
 
 ########################################################################
@@ -536,7 +537,11 @@ DistcleanTargets += distclean-libclc
 #
 OpenCL_CFlags = -I$(extern)/opencl/include
 OpenCL_CxxFlags = $(OpenCL_CFlags)
+ifeq ($(UNAME), Linux)
+OpenCL_LdFlags = -lOpenCL
+else
 OpenCL_LdFlags = -framework OpenCL
+endif
 OpenCL = $(extern)/opencl/include/cl.hpp
 $(OpenCL): $(toolchain)
 
