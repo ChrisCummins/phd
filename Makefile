@@ -1026,6 +1026,7 @@ CxxFlags = \
 	-Wno-switch-enum \
 	-Wno-unused-parameter \
 	-Wno-weak-vtables \
+	-ferror-limit=500 \
 	$(NULL)
 
 %.o: %.cpp
