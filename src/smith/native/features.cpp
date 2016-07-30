@@ -671,7 +671,7 @@ bool file_exists(const std::string& path) {
 }
 
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   if (argc < 2) {
     std::cerr << "Usage: " << argv[0] << " <file> [files ...]\n";
     return 1;

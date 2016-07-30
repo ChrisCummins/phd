@@ -4,7 +4,7 @@
 //
 // Usage:
 //
-//     LD_LIBRARY_PATH=~/phd/tools/llvm/build/lib ./rewriter foo.cl \
+//     ./rewriter foo.cl \
 //         -extra-arg=-Dcl_clang_storage_class_specifiers \
 //         -extra-arg=-I/Users/cec/phd/extern/libclc/generic/include \
 //         -extra-arg=-include \
@@ -17,7 +17,6 @@
 //   Read from stdin.
 //   Rewrite user defined types.
 //   Rewrite typedefs.
-//   Removing "pointless" code: Function declarations (without definitions).
 //
 #include <memory>
 #include <string>
@@ -25,17 +24,17 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weverything"
-#include "clang/AST/AST.h"
-#include "clang/AST/ASTConsumer.h"
-#include "clang/AST/ASTContext.h"
-#include "clang/AST/RecursiveASTVisitor.h"
-#include "clang/Driver/Options.h"
-#include "clang/Frontend/ASTConsumers.h"
-#include "clang/Frontend/CompilerInstance.h"
-#include "clang/Frontend/FrontendActions.h"
-#include "clang/Rewrite/Core/Rewriter.h"
-#include "clang/Tooling/CommonOptionsParser.h"
-#include "clang/Tooling/Tooling.h"
+#include <clang/AST/AST.h>
+#include <clang/AST/ASTConsumer.h>
+#include <clang/AST/ASTContext.h>
+#include <clang/AST/RecursiveASTVisitor.h>
+#include <clang/Driver/Options.h>
+#include <clang/Frontend/ASTConsumers.h>
+#include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/FrontendActions.h>
+#include <clang/Rewrite/Core/Rewriter.h>
+#include <clang/Tooling/CommonOptionsParser.h>
+#include <clang/Tooling/Tooling.h>
 #pragma GCC diagnostic pop
 
 // Error code which is returned if there was nothing to rewrite:
@@ -277,7 +276,7 @@ class RewriterASTConsumer : public clang::ASTConsumer {
 class RewriterFrontendAction : public clang::ASTFrontendAction {
  public:
   virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
-      clang::CompilerInstance &ci, StringRef file) {
+      clang::CompilerInstance& ci, StringRef file) {
     return llvm::make_unique<RewriterASTConsumer>(&ci);
   }
 };
@@ -286,7 +285,7 @@ class RewriterFrontendAction : public clang::ASTFrontendAction {
 }  // namespace rewriter
 
 
-int main(int argc, const char **argv) {
+int main(int argc, const char** argv) {
   clang::tooling::CommonOptionsParser op(argc, argv, rewriter::_tool_category);
   clang::tooling::ClangTool tool(op.getCompilations(), op.getSourcePathList());
 
