@@ -1263,7 +1263,7 @@ LlvmCMakeFlags = \
 
 toolchain_CC := $(LlvmBuild)/bin/clang
 toolchain_CXX := $(LlvmBuild)/bin/clang++
-toolchainEnv := $(toolchain_CC) $(toolchain_Cxx)
+toolchainEnv := CC=$(toolchain_CC) CXX=$(toolchain_Cxx)
 
 # Flags to build against LLVM + Clang toolchain
 ClangLlvm_CxxFlags = \
