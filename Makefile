@@ -898,6 +898,13 @@ $(phd): $(GoogleBenchmark) $(GoogleTest) $(toolchain)
 Python3SetupTestDirs += $(src)/smith
 Python3SetupInstallDirs += $(src)/smith
 
+SmithNativeDir = $(src)/smith/native
+
+SmithFeatures = $(SmithNativeDir)/features
+$(SmithFeatures).o_CxxFlags = $(ClangLlvm_CxxFlags)
+$(SmithFeatures)_LdFlags = $(ClangLlvm_LdFlags)
+CxxTargets += $(SmithFeatures)
+
 
 #
 # thesis/
@@ -1239,6 +1246,7 @@ DocStrings += "install: install files"
 #
 LlvmSrc := $(root)/tools/llvm
 LlvmBuild := $(root)/tools/llvm/build
+LlvmConfig := $(LlvmBuild)/bin/llvm-config
 LlvmCMakeFlags = \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DLLVM_ENABLE_ASSERTIONS=true \
@@ -1247,14 +1255,15 @@ LlvmCMakeFlags = \
 
 # Flags to build against LLVM + Clang toolchain
 ClangLlvm_CxxFlags = \
-	$(shell $(LlvmBuild)/bin/llvm-config --cxxflags) \
-	-I$(LlvmSrc)/tools/clang/include \
-	-I$(LlvmBuild)/tools/clang/include \
+	$(shell $(LlvmConfig) --cxxflags) \
+	-I$(shell $(LlvmConfig) --src-root)/tools/clang/include \
+	-I$(shell $(LlvmConfig) --obj-root)/tools/clang/include \
+	-fno-rtti \
 	$(NULL)
 
 ClangLlvm_LdFlags = \
-	$(shell $(LlvmBuild)/bin/llvm-config --system-libs) \
-	-L$(shell $(LlvmBuild)/bin/llvm-config --libdir) \
+	$(shell $(LlvmConfig) --system-libs) \
+	-L$(shell $(LlvmConfig) --libdir) \
 	-ldl \
 	-lclangTooling \
 	-lclangToolingCore \
@@ -1277,7 +1286,7 @@ ClangLlvm_LdFlags = \
 	-lclangBasic \
 	-lclang \
 	-ldl \
-	$(shell $(LlvmBuild)/bin/llvm-config --libs) \
+	$(shell $(LlvmConfig) --libs) \
 	-pthread \
 	-lLLVMCppBackendCodeGen -lLLVMTarget -lLLVMMC \
 	-lLLVMObject -lLLVMCore -lLLVMCppBackendInfo \

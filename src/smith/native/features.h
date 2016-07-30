@@ -7,8 +7,11 @@
  *
  * Written by Zheng Wang <zh.wang@ed.ac.uk>.
  */
-#ifndef __FEATURE_EXTRACTOR_H__
-#define __FEATURE_EXTRACTOR_H__
+#ifndef SMITH_FEATURES_H
+#define SMITH_FEATURES_H
+
+// Turn of warnings from included files (I'm looking at you, llvm!):
+#pragma GCC system_header
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -17,8 +20,6 @@
 #include <system_error>
 #include <iostream>
 #include <sstream>
-
-#include "llvm/Support/FileSystem.h"
 
 #include "clang/Basic/DiagnosticOptions.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
@@ -39,5 +40,4 @@
 #include "clang/AST/Stmt.h"
 #include "clang/AST/ASTContext.h"
 
-
-#endif
+#endif  // SMITH_FEATURES_H

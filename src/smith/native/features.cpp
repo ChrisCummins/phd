@@ -27,11 +27,9 @@ class ParameterInfo {
   string varName;
   VarType type;
  public:
-  ParameterInfo(string varName, VarType type)
-  {
-    this->varName = varName;
-    this->type = type;
-
+  ParameterInfo(string _varName, VarType _type) {
+    varName = _varName;
+    type = _type;
   }
 
   string getVarName() { return varName; }
@@ -57,9 +55,9 @@ class FuncInfo {
     isOCLKernel = false;
   }
 
-  FuncInfo(string kernelName) : isOCLKernel(false){
+  FuncInfo(string _kernelName) : isOCLKernel(false){
     FuncInfo();
-    this->kernelName = kernelName;
+    kernelName = _kernelName;
   }
 
   void setAsOclKernel()
@@ -111,7 +109,7 @@ class FuncInfo {
 
   unsigned getParameterNum()
   {
-    return vp.size();
+    return static_cast<unsigned>(vp.size());
   }
 
   ParameterInfo& getParameter(unsigned i)
@@ -651,14 +649,15 @@ bool MyASTConsumer::HandleTopLevelDecl(DeclGroupRef d)
   return true; // keep going
 }
 
-string retriveFileName(string fname)
-{
+string retriveFileName(string fname) {
   string res="";
-  for (int i=fname.length()-1; i>=0; i--)
-  {
-    if (fname[i] == '/') break;
+  for (int i = static_cast<int>(fname.length()) - 1; i >= 0; i--) {
+    size_t idx = static_cast<size_t>(i);
 
-    res = fname[i] + res;
+    if (fname[idx] == '/')
+      break;
+
+    res = fname[idx] + res;
   }
 
   return res;
