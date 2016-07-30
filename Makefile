@@ -1356,10 +1356,7 @@ CachedLlvmTarballs = $(addprefix $(LlvmCache)/,$(addsuffix $(LlvmTar),$(CachedLl
 $(LlvmCache)/%$(LlvmTar):
 	$(call print-task,FETCH,$@,$(TaskInstall))
 	$(V1)mkdir -p $(LlvmCache)
-	$(V1)wget -O $@ $(addprefix $(LlvmUrlBase),$(notdir $@))
-
-# def unpack tar
-# leafnodes
+	$(V1)wget -O $@ $(addprefix $(LlvmUrlBase),$(notdir $@)) &>/dev/null
 
 #
 #
