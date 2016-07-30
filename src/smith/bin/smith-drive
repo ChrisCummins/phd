@@ -27,12 +27,12 @@ def main():
 
     devtype = cl.device_type.CPU if use_cpu else cl.device_type.GPU
 
+    kwargs = { 'devtype': devtype, 'quiet': quiet }
+
     if file_mode:
-        with open(os.path.expanduser(input_path)) as infile:
-            src = infile.read()
-            drive.source(src, devtype=devtype, quiet=quiet)
+        drive.file(input_path, **kwargs)
     else:
-        raise smith.NotImplementedException("Non-file mode")
+        drive.directory(input_path, **kwargs)
 
 if __name__ == '__main__':
     main()

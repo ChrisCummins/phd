@@ -5,9 +5,14 @@ import pyopencl as cl
 import os
 import sys
 
+import labm8
+from labm8 import fs
+
 import smith
 
-class ProgramBuildException(smith.SmithException): pass
+class DriveException(smith.SmithException): pass
+class ProgramBuildException(DriveException): pass
+class BadArgsException(DriveException): pass
 
 
 def build_program(ctx, src, quiet=True):
@@ -102,7 +107,12 @@ def get_params(ctx, kernel, global_size):
 
     args = (arg_a, arg_b, arg_c)
 
-    kernel.set_args(*args)
+    try:
+        kernel.set_args(*args)
+    except cl.cffi_cl.LogicError as e:
+        raise BadArgsException(e)
+    except TypeError as e:
+        raise BadArgsException(e)
 
     device = ctx.get_info(cl.context_info.DEVICES)[0]
     wgi = cl.kernel_work_group_info
@@ -165,8 +175,21 @@ def init_opencl():
     return ctx, queue
 
 
-def source(src, devtype=cl.device_type.GPU, quiet=True):
+def drive(src, devtype=cl.device_type.GPU, quiet=True):
     ctx, queue = init_opencl()
     program = build_program(ctx, src, quiet=quiet)
 
     [run_kernel(ctx, queue, kernel) for kernel in program.all_kernels()]
+
+
+def file(path, **kwargs):
+    with open(fs.path(path)) as infile:
+        src = infile.read()
+        try:
+            drive(src, **kwargs)
+        except DriveException as e:
+            print(e, file=sys.stderr)
+
+def directory(path, **kwargs):
+    for path in fs.ls(fs.path(path), abspaths=True, recursive=True):
+        file(path, **kwargs)

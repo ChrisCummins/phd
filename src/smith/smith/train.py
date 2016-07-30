@@ -10,14 +10,19 @@
 #     Train char-rnn on "cleaned" text (no comments, etc)
 #     Train char-rnn on bytecode
 #     Train char-rnn on AST(?)
-import sys
 import os
+import re
 import sqlite3
+import sys
 
 from argparse import ArgumentParser
 
 import smith
 from smith import dbutil
+
+
+def sanitize_id(id):
+    return re.sub('[/:\.]+', '-', id)
 
 
 def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
@@ -63,7 +68,7 @@ def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
             os.makedirs(out_path)
             for row in rows:
                 id,contents = row
-                path = os.path.join(out_path, id + '.txt')
+                path = os.path.join(out_path, sanitize_id(id) + '.cl')
                 with open(path, 'w') as out:
                     out.write(contents)
             return 0
