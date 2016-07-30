@@ -585,15 +585,6 @@ $(lab)/lm/benchmarks_LdFlags = $(phd_LdFlags)
 
 
 #
-# lab/ml
-#
-CxxTargets += $(lab)/ml/rewriter
-
-$(lab)/ml/rewriter.o_CxxFlags = $(ClangLlvm_CxxFlags)
-$(lab)/ml/rewriter_LdFlags = $(ClangLlvm_LdFlags)
-
-
-#
 # lab/patterns
 #
 PatternsHeaders = $(wildcard $(lab)/patterns/*.hpp)
@@ -899,11 +890,11 @@ Python3SetupTestDirs += $(src)/smith
 Python3SetupInstallDirs += $(src)/smith
 
 SmithNativeDir = $(src)/smith/native
-
 SmithFeatures = $(SmithNativeDir)/features
-$(SmithFeatures).o_CxxFlags = $(ClangLlvm_CxxFlags)
-$(SmithFeatures)_LdFlags = $(ClangLlvm_LdFlags)
-CxxTargets += $(SmithFeatures)
+SmithRewriter = $(SmithNativeDir)/rewriter
+$(SmithNativeDir)_CxxFlags = $(ClangLlvm_CxxFlags)
+$(SmithNativeDir)_LdFlags = $(ClangLlvm_LdFlags)
+CxxTargets += $(SmithRewriter) $(SmithFeatures)
 
 
 #
