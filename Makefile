@@ -196,9 +196,11 @@ AutotexTargets =
 BuildTargets =
 CleanFiles =
 CleanTargets =
-CTargets =
-CxxTargets =
+CObjects =
 CppLintSources =
+CTargets =
+CxxObjects =
+CxxTargets =
 DistcleanFiles =
 DistcleanTargets =
 DontLint =
@@ -407,10 +409,10 @@ GoogleBenchmarkCMakeFlags = \
 	-DCMAKE_BUILD_TYPE=Release -DBENCHMARK_ENABLE_LTO=true
 $(GoogleBenchmark)-cmd = \
 	cd $(extern)/benchmark/build \
-	&& cmake $(GoogleBenchmarkCMakeFlags) .. \
+	&& $(toolchainEnv) cmake $(GoogleBenchmarkCMakeFlags) .. \
 	&& $(MAKE)
 
-$(GoogleBenchmark): $(toolchain)
+$(GoogleBenchmark): toolchain
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)mkdir -pv $(extern)/benchmark/build
 	$(V1)$($(GoogleBenchmark)-cmd)
@@ -444,7 +446,7 @@ $(Boost)-cmd = \
 	link=static runtime-link=static \
 	cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++"
 
-$(Boost):
+$(Boost): toolchain
 	$(call print-task,BUILD,boost,$(TaskMisc))
 	$(V1)mkdir -pv $(BoostBuild)
 	$(V1)$($(Boost)-cmd)
@@ -491,9 +493,9 @@ GoogleTest_LdFlags = -lpthread -L$(extern)/googletest-build -lgtest
 
 $(GoogleTest)-cmd = \
 	cd $(extern)/googletest-build \
-	&& cmake ../googletest/googletest && $(MAKE)
+	&& $(toolchainEnv) cmake ../googletest/googletest && $(MAKE)
 
-$(GoogleTest):
+$(GoogleTest): toolchain
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)mkdir -pv $(extern)/googletest-build
 	$(V1)$($(GoogleTest)-cmd)
@@ -520,7 +522,7 @@ $(Libclc)-cmd = \
 	cd $(LibclcDir) && ./configure.py \
 	--with-llvm-config=$(LlvmBuild)/bin/llvm-config && $(MAKE)
 
-$(Libclc): $(toolchain)
+$(Libclc): toolchain
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)$($(Libclc)-cmd)
 
@@ -542,7 +544,7 @@ else
 OpenCL_LdFlags = -framework OpenCL
 endif
 OpenCL = $(extern)/opencl/include/cl.hpp
-$(OpenCL): $(toolchain)
+$(OpenCL): toolchain
 
 
 #
@@ -568,6 +570,7 @@ Lm_CxxFlags = -I$(lab)/lm/include
 # Lm unit tests:
 LmTestsSources = $(wildcard $(lab)/lm/tests/*.cpp)
 LmTestsObjects = $(patsubst %.cpp,%.o,$(LmTestsSources))
+CxxObjects += $(LmTestsObjects)
 $(LmTestsObjects): $(LmHeaders) $(phd)
 $(lab)/lm/tests/%.o: $(lab)/lm/tests/%.cpp
 
@@ -579,6 +582,7 @@ $(lab)/lm/tests_LdFlags = $(phd_LdFlags)
 # Lm benchmarks:
 LmBenchmarksSources = $(wildcard $(lab)/lm/benchmarks/*.cpp)
 LmBenchmarksObjects = $(patsubst %.cpp,%.o,$(LmBenchmarksSources))
+CxxObjects += $(LmBenchmarksObjects)
 $(LmBenchmarksObjects): $(LmHeaders) $(phd)
 $(lab)/lm/benchmarks/%.o: $(lab)/lm/benchmarks/%.cpp
 
@@ -603,6 +607,7 @@ $(lab)/ml/rewriter_LdFlags = $(ClangLlvm_LdFlags)
 PatternsHeaders = $(wildcard $(lab)/patterns/*.hpp)
 PatternsCxxSources = $(wildcard $(lab)/patterns/*.cpp)
 PatternsCxxObjects = $(patsubst %.cpp,%.o,$(PatternsCxxSources))
+CxxObjects += $(PatternsCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(PatternsCxxSources))
 
 $(lab)/patterns_CxxFlags = $(phd_CxxFlags)
@@ -634,8 +639,9 @@ Stl_CxxFlags = -I$(lab)/stl/include
 StlTestsSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/tests/,$(StlComponents)))
 StlTestsObjects = $(patsubst %.cpp,%.o,$(StlTestsSources))
-$(StlTestsObjects): $(StlHeaders) $(phd) $(toolchain)
-$(lab)/stl/tests/%.o: $(lab)/stl/tests/%.cpp $(toolchain)
+CxxObjects += $(StlTestsObjects)
+$(StlTestsObjects): $(StlHeaders) $(phd)
+$(lab)/stl/tests/%.o: $(lab)/stl/tests/%.cpp
 
 $(lab)/stl/tests/tests: $(StlTestsObjects)
 CxxTargets += $(lab)/stl/tests/tests
@@ -646,7 +652,8 @@ $(lab)/stl/tests_LdFlags = $(phd_LdFlags)
 StlBenchmarksSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/benchmarks/,$(StlComponents)))
 StlBenchmarksObjects = $(patsubst %.cpp,%.o,$(StlBenchmarksSources))
-$(StlBenchmarksObjects): $(StlHeaders) $(phd) $(toolchain)
+CxxObjects += $(StlBenchmarksObjects)
+$(StlBenchmarksObjects): $(StlHeaders) $(phd)
 $(lab)/stl/benchmarks/%.o: $(lab)/stl/benchmarks/%.cpp
 
 $(lab)/stl/benchmarks/benchmarks: $(StlBenchmarksObjects)
@@ -666,6 +673,7 @@ learn := $(root)/learn
 #
 AtcppCxxSources = $(wildcard $(learn)/atc++/*.cpp)
 AtcppCxxObjects = $(patsubst %.cpp,%.o,$(AtcppCxxSources))
+CxxObjects += $(AtcppCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(AtcppCxxSources))
 
 $(learn)/atc++_CxxFlags = $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
@@ -678,6 +686,7 @@ $(wildcard $(learn)/atc++/%.o): $(GoogleTest)
 #
 LearnBoostCxxSources = $(wildcard $(learn)/boost/*.cpp)
 LearnBoostCxxObjects = $(patsubst %.cpp,%.o,$(LearnBoostCxxSources))
+CxxObjects += $(LearnBoostCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(LearnBoostCxxSources))
 
 $(learn)/boost_CxxFlags = $(Boost_filesystem_CxxFlags) -I/opt/local/include
@@ -692,10 +701,12 @@ $(LearnBoostCxxObjects): $(Boost)
 # C++ solutions:
 ChallengesCxxSources = $(wildcard $(learn)/challenges/*.cpp)
 ChallengesCxxObjects = $(patsubst %.cpp,%.o,$(ChallengesCxxSources))
+CxxObjects += $(ChallengesCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(ChallengesCxxSources))
 
 ChallengesCSources = $(wildcard $(learn)/challenges/*.c)
 ChallengesCObjects = $(patsubst %.c,%.o,$(ChallengesCSources))
+CObjects += $(ChallengesCObjects)
 CTargets += $(patsubst %.c,%,$(ChallengesCSources))
 
 DontLint += $(learn)/challenges/009-longest-substr.cpp
@@ -720,6 +731,7 @@ $(ChallengesCObjects): $(phd)
 # C++ solutions:
 CtCiCxxSources = $(wildcard $(learn)/ctci/*.cpp)
 CtCiCxxObjects = $(patsubst %.cpp,%.o,$(CtCiCxxSources))
+CxxObjects += $(CtCiCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(CtCiCxxSources))
 
 $(learn)/ctci_CxxFlags = $(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags)
@@ -747,12 +759,14 @@ $(HooclCCommonObjects): $(OpenCL) $(HooclCommonHeaders)
 # C solutions:
 HooclCSources = $(wildcard $(learn)/hoocl/*.c)
 HooclCObjects = $(patsubst %.c,%.o,$(HooclCSources))
+CObjects += $(HooclCObjects)
 CTargets += $(patsubst %.c,%,$(HooclCSources))
 $(HooclCObjects): $(OpenCL) $(HooclCCommonObjects) $(HooclCommonHeaders)
 
 # C++ solutions:
 HooclCxxSources = $(wildcard $(learn)/hoocl/*.cpp)
 HooclCxxObjects = $(patsubst %.cpp,%.o,$(HooclCxxSources))
+CxxObjects += $(HooclCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(HooclCxxSources))
 
 $(learn)/hoocl_CFlags = $(OpenCL_CFlags) -I$(learn)/hoocl/include
@@ -766,6 +780,7 @@ $(HooclCxxObjects): $(OpenCL)
 #
 LearnTriSYCLCxxSources = $(wildcard $(learn)/triSYCL/*.cpp)
 LearnTriSYCLCxxObjects = $(patsubst %.cpp,%.o,$(LearnTriSYCLCxxSources))
+CxxObjects += $(LearnTriSYCLCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(LearnTriSYCLCxxSources))
 
 $(learn)/triSYCL_CxxFlags = $(TriSYCL_CxxFlags) $(phd_CxxFlags)
@@ -780,6 +795,7 @@ $(LearnTriSYCLCxxObjects): $(TriSYCL) $(phd)
 # C++ solutions:
 LearnPcCxxSources = $(wildcard $(learn)/pc/*.cpp)
 LearnPcCxxObjects = $(patsubt %.cpp,%.o,$(LearnPcCxxSources))
+CxxObjects += $(LearnPcCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(LearnPcCxxSources))
 
 $(learn)/pc_CxxFlags = $(phd_CxxFlags)
@@ -842,8 +858,9 @@ CppLintSources += $(RayTracerHeaders)
 
 RayTracerSources = $(wildcard $(RayTracerDir)/src/*.cpp)
 RayTracerObjects = $(patsubst %.cpp,%.o,$(RayTracerSources))
+CxxObjects += $(RayTracerObjects)
 
-$(RayTracerObjects): $(RayTracerHeaders) $(toolchain)
+$(RayTracerObjects): $(RayTracerHeaders)
 
 # Project specific flags:
 RayTracerCxxFlags = -I$(RayTracerDir)/include
@@ -893,7 +910,7 @@ phd_CxxFlags = \
 	-I$(src)/phd/include $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
 phd_LdFlags = $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
 phd = $(phdHeaders)
-$(phd): $(GoogleBenchmark) $(GoogleTest) $(toolchain)
+$(phd): $(GoogleBenchmark) $(GoogleTest)
 
 
 #
@@ -929,11 +946,12 @@ CC := $(root)/tools/llvm/build/bin/clang
 
 BuildTargets += $(CTargets)
 
-CObjects = $(addsuffix .o, $(CTargets))
-CSources = $(addsuffix .c, $(CTargets))
+CTargetsObjects = $(addsuffix .o, $(CTargets))
+CTargetsSources = $(addsuffix .c, $(CTargets))
+CObjects += $(CTargetsObjects)
 
-CTargets: $(CObjects)
-CObjects: $(CSources)
+CTargets: $(CTargetsObjects)
+CTargetsObjects: $(CTargetsSources)
 
 CleanFiles += $(CTargets) $(CObjects)
 
@@ -979,13 +997,14 @@ DocStrings += "print-cc: print cc compiler invocation"
 CXX := $(root)/tools/llvm/build/bin/clang++
 CLANGTIDY := $(root)/tools/llvm/build/bin/clang-tidy
 
-CxxObjects = $(addsuffix .o, $(CxxTargets))
-CxxSources = $(addsuffix .cpp, $(CxxTargets))
+CxxTargetsObjects = $(addsuffix .o, $(CxxTargets))
+CxxTargetsSources = $(addsuffix .cpp, $(CxxTargets))
+CxxObjects += $(CxxTargetsObjects)
 
 # Source -> object -> target
 BuildTargets += $(CxxTargets)
-CxxTargets: $(CxxObjects)
-CxxObjects: $(CxxSources)
+CxxTargets: $(CxxTargetsObjects)
+CxxTargetsObjects: $(CxxTargetsSources)
 
 CleanFiles += $(CxxTargets) $(CxxObjects)
 
@@ -1235,12 +1254,16 @@ DocStrings += "install: install files"
 # Bootstrapping
 #
 LlvmSrc := $(root)/tools/llvm
-LlvmBuild := $(root)/tools/llvm/build
+LlvmBuild := $(LlvmSrc)/build
 LlvmCMakeFlags = \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DLLVM_ENABLE_ASSERTIONS=true \
 	-DLLVM_TARGETS_TO_BUILD=X86 \
 	$(NULL)
+
+toolchain_CC := $(LlvmBuild)/bin/clang
+toolchain_CXX := $(LlvmBuild)/bin/clang++
+toolchainEnv := $(toolchain_CC) $(toolchain_Cxx)
 
 # Flags to build against LLVM + Clang toolchain
 ClangLlvm_CxxFlags = \
@@ -1284,13 +1307,10 @@ ClangLlvm_LdFlags = \
 	-ldl \
 	$(NULL)
 
-# Compilers depend on boostrapping:
-$(CC): $(toolchain)
+# Toolchain dependencies:
+$(CC) $(CXX): toolchain
 $(CTargets) $(CObjects): $(CC)
-
-$(CXX): $(toolchain)
-$(CxxTargets): $(CXX)
-$(CxxObjects): $(CXX)
+$(CxxTargets) $(CxxObjects): $(CXX)
 
 $(toolchain)-cmd = \
 	cd $(LlvmBuild) \
