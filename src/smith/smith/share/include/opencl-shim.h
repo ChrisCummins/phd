@@ -126,7 +126,6 @@ typedef unsigned int uint32_t;
 #define LOCAL_SIZE 128
 #define LOCAL_SIZE_LIMIT 1024
 #define LOCAL_W 128
-#define LOCAL_W 16
 #define LOCALSIZE_LOG2 5
 #define LOG2_WARP_SIZE 5
 #define LOOKUP_GAP 16
@@ -238,7 +237,6 @@ typedef unsigned int uint32_t;
 #define WORKGROUP_SIZE 256
 #define WORKGROUPSIZE 256
 #define WORKSIZE 128
-#define WORKSIZE 256
 #define WSIZE 1024
 #define XDIR 0
 #define XSIZE 128
