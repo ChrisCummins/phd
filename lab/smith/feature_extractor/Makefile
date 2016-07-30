@@ -15,14 +15,14 @@ LLVMCONFIG := $(HOME)/phd/tools/llvm/build/bin/llvm-config
 
 CXXFLAGS := -I$(shell $(LLVMCONFIG) --src-root)/tools/clang/include \
 	-I$(shell $(LLVMCONFIG) --obj-root)/tools/clang/include \
-	$(shell $(LLVMCONFIG) --cxxflags) $(RTTIFLAG) -Iinclude -g
+	$(shell $(LLVMCONFIG) --cxxflags) $(RTTIFLAG) -g
 LLVMLDFLAGS := $(shell $(LLVMCONFIG) --ldflags --libs)
 
-SOURCES = FeatureExtractor.cpp
+SOURCES = features.cpp
 
-HEADERS = include/FeatureExtractor.h
+HEADERS = features.h
 
-EXECUTABLE = featureExtractor
+EXECUTABLE = features
 OBJECTS = $(SOURCES:.cpp=.o)
 CLANGLIBS = \
 				-lclangTooling\

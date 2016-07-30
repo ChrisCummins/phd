@@ -10,7 +10,7 @@
  * Written by Zheng Wang <zh.wang@ed.ac.uk>.
  * Modified by Chris Cummins <chrisc.101@gmail.com>
  */
-#include "FeatureExtractor.h"
+#include "./features.h"
 #include<iostream>
 #include<fstream>
 #include<dirent.h>
