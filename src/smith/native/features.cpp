@@ -10,32 +10,63 @@
  * Written by Zheng Wang <zh.wang@ed.ac.uk>.
  * Modified by Chris Cummins <chrisc.101@gmail.com>
  */
-#include "./features.h"
+#include <string>
+#include <array>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <stdio.h>
+#include <system_error>
+#include <vector>
 
-using namespace clang;
-using namespace std;
+#include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weverything"
+#include <clang/AST/ASTConsumer.h>
+#include <clang/AST/ASTContext.h>
+#include <clang/AST/ParentMap.h>
+#include <clang/AST/RecursiveASTVisitor.h>
+#include <clang/AST/Stmt.h>
+#include <clang/Basic/Diagnostic.h>
+#include <clang/Basic/DiagnosticOptions.h>
+#include <clang/Basic/FileManager.h>
+#include <clang/Basic/SourceManager.h>
+#include <clang/Basic/TargetInfo.h>
+#include <clang/Basic/TargetOptions.h>
+#include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/TextDiagnosticPrinter.h>
+#include <clang/Lex/Lexer.h>
+#include <clang/Lex/Preprocessor.h>
+#include <clang/Parse/ParseAST.h>
+#include <clang/Rewrite/Core/Rewriter.h>
+#include <clang/Rewrite/Frontend/Rewriters.h>
+#pragma GCC diagnostic pop
+
 
 class ParameterInfo {
  public:
   enum VarType { GLOBAL, LOCAL, OTHER };
 
  private:
-  string varName;
+  std::string varName;
   VarType type;
 
  public:
-  ParameterInfo(string _varName, VarType _type) {
+  ParameterInfo(std::string _varName, VarType _type) {
     varName = _varName;
     type = _type;
   }
 
-  string getVarName() { return varName; }
+  std::string getVarName() { return varName; }
   VarType getType() { return type; }
 };
 
 class FuncInfo {
-  string kernelName;
-  vector<ParameterInfo> vp;
+  std::string kernelName;
+  std::vector<ParameterInfo> vp;
   unsigned global_mem_ls;
   unsigned comp_inst_count;
   unsigned rational_inst_count;
@@ -51,7 +82,7 @@ class FuncInfo {
     isOCLKernel = false;
   }
 
-  FuncInfo(string _kernelName) : isOCLKernel(false) {
+  explicit FuncInfo(std::string _kernelName) : isOCLKernel(false) {
     FuncInfo();
     kernelName = _kernelName;
   }
@@ -80,9 +111,9 @@ class FuncInfo {
     this->atomic_op_count += KI->getAtomicOpCount();
   }
 
-  void setFuncName(string name) { this->kernelName = name; }
+  void setFuncName(std::string name) { this->kernelName = name; }
 
-  string getFuncName() { return kernelName; }
+  std::string getFuncName() { return kernelName; }
 
   void addParameter(ParameterInfo p) { vp.push_back(p); }
 
@@ -120,7 +151,7 @@ class FuncInfo {
 
   unsigned getGlobalMemLSCount() { return global_mem_ls; }
 
-  bool isGlobalVar(string var) {
+  bool isGlobalVar(std::string var) {
     for (unsigned i = 0; i < vp.size(); i++) {
       if (vp[i].getVarName() == var)
         return true;
@@ -130,40 +161,49 @@ class FuncInfo {
   }
 };
 
-static string AtomicFuncs[] = {"atomic_add",  "atomic_sub",     "atomic_dec",
-                               "atomic_and",  "atomic_cmpxchg", "atomic_or",
-                               "atomic_xchg", "atomic_min",     "atomic_xor",
-                               "atomic_inc",  "atomic_max",     "END"};
+static const std::array<std::string, 11> AtomicFuncs{{
+    "atomic_add",
+        "atomic_sub",
+        "atomic_dec",
+        "atomic_and",
+        "atomic_cmpxchg",
+        "atomic_or",
+        "atomic_xchg",
+        "atomic_min",
+        "atomic_xor",
+        "atomic_inc",
+        "atomic_max"
+        }};
 
 // RecursiveASTVisitor is is the big-kahuna visitor that traverses
 // everything in the AST.
 class MyRecursiveASTVisitor
-    : public RecursiveASTVisitor<MyRecursiveASTVisitor> {
-  vector<FuncInfo *> FuncInfoVec;
+    : public clang::RecursiveASTVisitor<MyRecursiveASTVisitor> {
+  std::vector<FuncInfo *> FuncInfoVec;
   FuncInfo *pCurKI;
 
-  bool processArrayIndices(ArraySubscriptExpr *Node);
-  bool processArrayIdxBinaryOperator(BinaryOperator *bo);
-  FuncInfo *findFunctionInfo(string funcName);
+  bool processArrayIndices(clang::ArraySubscriptExpr *Node);
+  bool processArrayIdxBinaryOperator(clang::BinaryOperator *bo);
+  FuncInfo *findFunctionInfo(std::string funcName);
   void InitializeOCLRoutines();
-  bool isBuiltInAtomicFunc(string f);
+  bool isBuiltInAtomicFunc(std::string f);
 
  public:
   MyRecursiveASTVisitor() {
     pCurKI = NULL;
     InitializeOCLRoutines();
   }
-  bool VisitStmt(Stmt *s);
-  bool VisitFunctionDecl(FunctionDecl *f);
-  Expr *VisitBinaryOperator(BinaryOperator *op);
-  bool VisitDeclRefExpr(DeclRefExpr *Node);
-  bool VisitVarDecl(VarDecl *D);
-  bool VisitCallExpr(CallExpr *E);
+  bool VisitStmt(clang::Stmt *s);
+  bool VisitFunctionDecl(clang::FunctionDecl *f);
+  clang::Expr *VisitBinaryOperator(clang::BinaryOperator *op);
+  bool VisitDeclRefExpr(clang::DeclRefExpr *Node);
+  bool VisitVarDecl(clang::VarDecl *D);
+  bool VisitCallExpr(clang::CallExpr *E);
 
   // This is use to count coalesced memory accesses
   // This is the most complex function
-  bool VisitArraySubscriptExpr(ArraySubscriptExpr *Node);
-  vector<FuncInfo *> &getFuncInfo() { return FuncInfoVec; }
+  bool VisitArraySubscriptExpr(clang::ArraySubscriptExpr *Node);
+  std::vector<FuncInfo *> &getFuncInfo() { return FuncInfoVec; }
   ~MyRecursiveASTVisitor() {
     for (unsigned i = 0; i < FuncInfoVec.size(); i++) {
       delete FuncInfoVec[i];
@@ -187,19 +227,15 @@ void MyRecursiveASTVisitor::InitializeOCLRoutines() {
   ADD_OCL_ROUTINE_INFO(p, "sqrt");
 }
 
-bool MyRecursiveASTVisitor::isBuiltInAtomicFunc(string f) {
-  int i = 0;
-  while (AtomicFuncs[i] != "END") {
-    if (AtomicFuncs[i] == f) {
+bool MyRecursiveASTVisitor::isBuiltInAtomicFunc(std::string f) {
+  for (const std::string& builtin : AtomicFuncs)
+    if (f == builtin)
       return true;
-    }
-    i++;
-  }
 
   return false;
 }
 
-FuncInfo *MyRecursiveASTVisitor::findFunctionInfo(string funcName) {
+FuncInfo *MyRecursiveASTVisitor::findFunctionInfo(std::string funcName) {
   for (unsigned i = 0; i < FuncInfoVec.size(); i++) {
     if (FuncInfoVec[i]->getFuncName() == funcName)
       return FuncInfoVec[i];
@@ -208,12 +244,12 @@ FuncInfo *MyRecursiveASTVisitor::findFunctionInfo(string funcName) {
   return NULL;
 }
 
-bool MyRecursiveASTVisitor::VisitCallExpr(CallExpr *E) {
-  FunctionDecl *D = E->getDirectCallee();
+bool MyRecursiveASTVisitor::VisitCallExpr(clang::CallExpr *E) {
+  clang::FunctionDecl *D = E->getDirectCallee();
   if (!D)
     return true;
 
-  string varName = D->getNameInfo().getAsString();
+  std::string varName = D->getNameInfo().getAsString();
 
   if (isBuiltInAtomicFunc(varName)) {
     pCurKI->incrAtomicOpCount();
@@ -230,16 +266,17 @@ bool MyRecursiveASTVisitor::VisitCallExpr(CallExpr *E) {
   return true;
 }
 
-bool MyRecursiveASTVisitor::processArrayIdxBinaryOperator(BinaryOperator *bo) {
+bool MyRecursiveASTVisitor::processArrayIdxBinaryOperator(
+    clang::BinaryOperator *bo) {
   if (!(bo->isMultiplicativeOp() || bo->isAdditiveOp())) {
     return false;
   }
 
-  Expr *lhs = bo->getLHS();
-  Expr *rhs = bo->getRHS();
+  clang::Expr *lhs = bo->getLHS();
+  clang::Expr *rhs = bo->getRHS();
 
-  IntegerLiteral *lhsi = dyn_cast<IntegerLiteral>(lhs);
-  IntegerLiteral *rhsi = dyn_cast<IntegerLiteral>(rhs);
+  clang::IntegerLiteral *lhsi = clang::dyn_cast<clang::IntegerLiteral>(lhs);
+  clang::IntegerLiteral *rhsi = clang::dyn_cast<clang::IntegerLiteral>(rhs);
 
   // If the index is a constant value, return true
   if (lhsi && rhsi) {
@@ -247,7 +284,7 @@ bool MyRecursiveASTVisitor::processArrayIdxBinaryOperator(BinaryOperator *bo) {
   }
 
   if (lhsi) {
-    string v = lhsi->getValue().toString(10, /*isSigned*/ false);
+    std::string v = lhsi->getValue().toString(10, /*isSigned*/ false);
 
     // If the step is 1, or zero colescated
     if (v == "1" || v == "0") {
@@ -256,7 +293,7 @@ bool MyRecursiveASTVisitor::processArrayIdxBinaryOperator(BinaryOperator *bo) {
   }
 
   if (rhsi) {
-    string v = rhsi->getValue().toString(10, /*isSigned*/ false);
+    std::string v = rhsi->getValue().toString(10, /*isSigned*/ false);
 
     // If the step is 1, or zero colescated
     if (v == "1" || v == "0") {
@@ -269,27 +306,31 @@ bool MyRecursiveASTVisitor::processArrayIdxBinaryOperator(BinaryOperator *bo) {
 
 //
 // Return a boolean value to indicate if the array acess is colescated
-bool MyRecursiveASTVisitor::processArrayIndices(ArraySubscriptExpr *Node) {
-  Expr *tExpr = Node->getRHS();
+bool MyRecursiveASTVisitor::processArrayIndices(
+    clang::ArraySubscriptExpr *Node) {
+  clang::Expr *tExpr = Node->getRHS();
 
   // Check if this is a binaryoperator
-  BinaryOperator *bo = dyn_cast<BinaryOperator>(tExpr);
+  clang::BinaryOperator *bo = clang::dyn_cast<clang::BinaryOperator>(tExpr);
   if (bo) {
     return processArrayIdxBinaryOperator(bo);
   }
 
   // If the array index is determined by a function call,
   // assume it is not colescate accessing
-  CallExpr *ce = dyn_cast<CallExpr>(tExpr);
+  clang::CallExpr *ce = clang::dyn_cast<clang::CallExpr>(tExpr);
   if (ce) {
-    cout << "False becasue the index is determined through a function call"
-         << endl;
+    std::cout << "False becasue the index is determined through a "
+              << "function call"
+              << std::endl;
     return false;
   }
 
-  ImplicitCastExpr *iCE = dyn_cast<ImplicitCastExpr>(tExpr);
+  clang::ImplicitCastExpr *iCE =
+      clang::dyn_cast<clang::ImplicitCastExpr>(tExpr);
   if (iCE) {
-    DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(iCE->getSubExpr());
+    clang::DeclRefExpr *DRE =
+        clang::dyn_cast<clang::DeclRefExpr>(iCE->getSubExpr());
     // The array is indexed using a variable
     if (DRE) {
       // Assuming this is colescate memory acessing
@@ -297,11 +338,12 @@ bool MyRecursiveASTVisitor::processArrayIndices(ArraySubscriptExpr *Node) {
     }
   }
 
-  IntegerLiteral *IntV = dyn_cast<IntegerLiteral>(tExpr);
+  clang::IntegerLiteral *IntV = clang::dyn_cast<clang::IntegerLiteral>(tExpr);
   if (IntV)
     return true;
 
-  ArraySubscriptExpr *aExpr = dyn_cast<ArraySubscriptExpr>(tExpr);
+  clang::ArraySubscriptExpr *aExpr =
+      clang::dyn_cast<clang::ArraySubscriptExpr>(tExpr);
   if (aExpr) {
     return processArrayIndices(aExpr);
   }
@@ -309,26 +351,29 @@ bool MyRecursiveASTVisitor::processArrayIndices(ArraySubscriptExpr *Node) {
   return true;
 }
 
-bool MyRecursiveASTVisitor::VisitArraySubscriptExpr(ArraySubscriptExpr *Node) {
+bool MyRecursiveASTVisitor::VisitArraySubscriptExpr(
+    clang::ArraySubscriptExpr *Node) {
   if (!pCurKI)
     return true;
 
   ParameterInfo::VarType vT = ParameterInfo::OTHER;
 
   // Retrive array type
-  Expr *tExpr = Node->getLHS();
+  clang::Expr *tExpr = Node->getLHS();
   if (tExpr) {
-    ImplicitCastExpr *iExpr = dyn_cast<ImplicitCastExpr>(tExpr);
+    clang::ImplicitCastExpr *iExpr =
+        clang::dyn_cast<clang::ImplicitCastExpr>(tExpr);
     if (!iExpr)
       return true;
 
-    DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(iExpr->getSubExpr());
+    clang::DeclRefExpr *DRE =
+        clang::dyn_cast<clang::DeclRefExpr>(iExpr->getSubExpr());
     if (DRE) {
-      ValueDecl *D = DRE->getDecl();
-      QualType T = D->getType();
+      clang::ValueDecl *D = DRE->getDecl();
+      clang::QualType T = D->getType();
 
-      string varName = D->getIdentifier()->getName();
-      string tStr = T.getAsString();
+      std::string varName = D->getIdentifier()->getName();
+      std::string tStr = T.getAsString();
 
       // FIXME:Urgly tricks
       if (tStr.find("__global") != std::string::npos) {
@@ -355,9 +400,9 @@ bool MyRecursiveASTVisitor::VisitArraySubscriptExpr(ArraySubscriptExpr *Node) {
  * VISIT Declare Exprs to record load and store to global memory variables
  *
  */
-bool MyRecursiveASTVisitor::VisitDeclRefExpr(DeclRefExpr *Node) {
+bool MyRecursiveASTVisitor::VisitDeclRefExpr(clang::DeclRefExpr *Node) {
   if (pCurKI) {
-    string varName = Node->getNameInfo().getAsString();
+    std::string varName = Node->getNameInfo().getAsString();
     if (pCurKI->isGlobalVar(varName)) {
       pCurKI->incrGlobalMemLSCount();
     }
@@ -366,9 +411,9 @@ bool MyRecursiveASTVisitor::VisitDeclRefExpr(DeclRefExpr *Node) {
 }
 
 // Override Binary Operator expressions
-Expr *MyRecursiveASTVisitor::VisitBinaryOperator(BinaryOperator *E) {
+clang::Expr *MyRecursiveASTVisitor::VisitBinaryOperator(
+    clang::BinaryOperator *E) {
   if (pCurKI) {
-
     if (E->isComparisonOp()) {
       pCurKI->incrRationalInstCount();
     } else if (E->isMultiplicativeOp() || E->isAdditiveOp() || E->isShiftOp() ||
@@ -380,14 +425,14 @@ Expr *MyRecursiveASTVisitor::VisitBinaryOperator(BinaryOperator *E) {
   return E;
 }
 
-bool MyRecursiveASTVisitor::VisitVarDecl(VarDecl *D) {
-  QualType T =
+bool MyRecursiveASTVisitor::VisitVarDecl(clang::VarDecl *D) {
+  clang::QualType T =
       D->getTypeSourceInfo()
       ? D->getTypeSourceInfo()->getType()
       : D->getASTContext().getUnqualifiedObjCPointerType(D->getType());
 
-  string varName = D->getIdentifier()->getName();
-  string tStr = T.getAsString();
+  std::string varName = D->getIdentifier()->getName();
+  std::string tStr = T.getAsString();
 
   if (tStr.find("__local") != std::string::npos) {
     if (pCurKI) {
@@ -400,26 +445,25 @@ bool MyRecursiveASTVisitor::VisitVarDecl(VarDecl *D) {
 }
 
 // Override Statements which includes expressions and more
-bool MyRecursiveASTVisitor::VisitStmt(Stmt *s) {
-  return true; // returning false aborts the traversal
+bool MyRecursiveASTVisitor::VisitStmt(clang::Stmt *s) {
+  return true;  // returning false aborts the traversal
 }
 
-bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f) {
-
-  string Proto = f->getNameInfo().getAsString();
+bool MyRecursiveASTVisitor::VisitFunctionDecl(clang::FunctionDecl *f) {
+  std::string Proto = f->getNameInfo().getAsString();
   pCurKI = new FuncInfo(Proto);
   pCurKI->resetCounters();
 
   unsigned up = f->getNumParams();
   for (unsigned i = 0; i < up; i++) {
-    ParmVarDecl *pD = f->getParamDecl(i);
-    QualType T =
+    clang::ParmVarDecl *pD = f->getParamDecl(i);
+    clang::QualType T =
         pD->getTypeSourceInfo()
         ? pD->getTypeSourceInfo()->getType()
         : pD->getASTContext().getUnqualifiedObjCPointerType(pD->getType());
 
-    string varName = pD->getIdentifier()->getName();
-    string tStr = T.getAsString();
+    std::string varName = pD->getIdentifier()->getName();
+    std::string tStr = T.getAsString();
 
     ParameterInfo::VarType vT = ParameterInfo::OTHER;
     // FIXME:Urgly tricks
@@ -440,19 +484,20 @@ bool MyRecursiveASTVisitor::VisitFunctionDecl(FunctionDecl *f) {
     FuncInfoVec.push_back(pCurKI);
   }
 
-  return true; // returning false aborts the traversal
+  return true;  // returning false aborts the traversal
 }
 
-class MyASTConsumer : public ASTConsumer {
+class MyASTConsumer : public clang::ASTConsumer {
  public:
   MyASTConsumer() : rv() {}
-  virtual bool HandleTopLevelDecl(DeclGroupRef d);
+  virtual bool HandleTopLevelDecl(clang::DeclGroupRef d);
   MyRecursiveASTVisitor rv;
-  void dumpKernelFeatures(string fileName, ofstream &fout);
+  void dumpKernelFeatures(std::string fileName, std::ofstream &fout);
 };
 
-void MyASTConsumer::dumpKernelFeatures(string fileName, ofstream &fout) {
-  vector<FuncInfo *> &FuncInfoVec = rv.getFuncInfo();
+void MyASTConsumer::dumpKernelFeatures(
+    std::string fileName, std::ofstream &fout) {
+  std::vector<FuncInfo *> &FuncInfoVec = rv.getFuncInfo();
 
   for (unsigned i = 0; i < FuncInfoVec.size(); i++) {
     if (FuncInfoVec[i]->isOclKernel()) {
@@ -467,18 +512,18 @@ void MyASTConsumer::dumpKernelFeatures(string fileName, ofstream &fout) {
   }
 }
 
-bool MyASTConsumer::HandleTopLevelDecl(DeclGroupRef d) {
-  typedef DeclGroupRef::iterator iter;
+bool MyASTConsumer::HandleTopLevelDecl(clang::DeclGroupRef d) {
+  typedef clang::DeclGroupRef::iterator iter;
 
   for (iter b = d.begin(), e = d.end(); b != e; ++b) {
     rv.TraverseDecl(*b);
   }
 
-  return true; // keep going
+  return true;  // keep going
 }
 
-string retriveFileName(string fname) {
-  string res = "";
+std::string retriveFileName(std::string fname) {
+  std::string res = "";
   for (int i = static_cast<int>(fname.length()) - 1; i >= 0; i--) {
     size_t idx = static_cast<size_t>(i);
 
@@ -491,15 +536,15 @@ string retriveFileName(string fname) {
   return res;
 }
 
-int worker(string fileName, ofstream &fout, int argc, char **argv) {
-  CompilerInstance compiler;
-  DiagnosticOptions diagnosticOptions;
+int worker(std::string fileName, std::ofstream &fout, int argc, char **argv) {
+  clang::CompilerInstance compiler;
+  clang::DiagnosticOptions diagnosticOptions;
   compiler.createDiagnostics();
 
   // Create an invocation that passes any flags to preprocessor
-  CompilerInvocation *Invocation = new CompilerInvocation;
-  CompilerInvocation::CreateFromArgs(*Invocation, argv, argv + argc,
-                                     compiler.getDiagnostics());
+  clang::CompilerInvocation *Invocation = new clang::CompilerInvocation;
+  clang::CompilerInvocation::CreateFromArgs(*Invocation, argv, argv + argc,
+                                            compiler.getDiagnostics());
 
   compiler.setInvocation(Invocation);
 
@@ -507,45 +552,14 @@ int worker(string fileName, ofstream &fout, int argc, char **argv) {
   std::shared_ptr<clang::TargetOptions> pto =
       std::make_shared<clang::TargetOptions>();
   pto->Triple = llvm::sys::getDefaultTargetTriple();
-  TargetInfo *pti =
-      TargetInfo::CreateTargetInfo(compiler.getDiagnostics(), pto);
+  clang::TargetInfo *pti =
+      clang::TargetInfo::CreateTargetInfo(compiler.getDiagnostics(), pto);
   compiler.setTarget(pti);
 
   compiler.createFileManager();
   compiler.createSourceManager(compiler.getFileManager());
 
-  HeaderSearchOptions &headerSearchOptions = compiler.getHeaderSearchOpts();
-
-  // <Warning!!> -- Platform Specific Code lives here
-  // This depends on A) that you're running linux and
-  // B) that you have the same GCC LIBs installed that
-  // I do.
-  // Search through Clang itself for something like this,
-  // go on, you won't find it. The reason why is Clang
-  // has its own versions of std* which are installed under
-  // /usr/local/lib/clang/<version>/include/
-  // See somewhere around Driver.cpp:77 to see Clang adding
-  // its version of the headers to its include path.
-  // To see what include paths need to be here, try
-  // clang -v -c test.c
-  // or clang++ for C++ paths as used below:
-  headerSearchOptions.AddPath("/usr/include/c++/4.6", clang::frontend::Angled,
-                              false, false);
-  headerSearchOptions.AddPath("/usr/include/c++/4.6/i686-linux-gnu",
-                              clang::frontend::Angled, false, false);
-  headerSearchOptions.AddPath("/usr/include/c++/4.6/backward",
-                              clang::frontend::Angled, false, false);
-  headerSearchOptions.AddPath("/usr/local/include", clang::frontend::Angled,
-                              false, false);
-  headerSearchOptions.AddPath("/usr/local/lib/clang/3.3/include",
-                              clang::frontend::Angled, false, false);
-  headerSearchOptions.AddPath("/usr/include/i386-linux-gnu",
-                              clang::frontend::Angled, false, false);
-  headerSearchOptions.AddPath("/usr/include", clang::frontend::Angled, false,
-                              false);
-  // </Warning!!> -- End of Platform Specific Code
-
-  LangOptions langOpts;
+  clang::LangOptions langOpts;
   langOpts.OpenCL = 1;
 
   Invocation->setLangDefaults(langOpts, clang::IK_OpenCL);
@@ -555,7 +569,7 @@ int worker(string fileName, ofstream &fout, int argc, char **argv) {
 
   compiler.createASTContext();
 
-  const FileEntry *pFile = compiler.getFileManager().getFile(fileName);
+  const clang::FileEntry *pFile = compiler.getFileManager().getFile(fileName);
   compiler.getSourceManager().setMainFileID(
       compiler.getSourceManager().createFileID(pFile, clang::SourceLocation(),
                                                clang::SrcMgr::C_User));
@@ -568,21 +582,21 @@ int worker(string fileName, ofstream &fout, int argc, char **argv) {
   ParseAST(compiler.getPreprocessor(), &astConsumer, compiler.getASTContext());
   compiler.getDiagnosticClient().EndSourceFile();
 
-  string pFName = retriveFileName(fileName);
+  std::string pFName = retriveFileName(fileName);
   astConsumer.dumpKernelFeatures(pFName, fout);
 
   return 0;
 }
 
-string addOCLFuncs(string fileName) {
-  ifstream fin(fileName.c_str());
-  string dest = "tmp/";
+std::string addOCLFuncs(std::string fileName) {
+  std::ifstream fin(fileName.c_str());
+  std::string dest = "tmp/";
   dest = dest + retriveFileName(fileName);
 
-  ofstream fout(dest.c_str());
+  std::ofstream fout(dest.c_str());
   fout << "#include \"cl_platform.h\" \n";
 
-  string line;
+  std::string line;
   while (getline(fin, line)) {
     fout << line << "\n";
   }
@@ -593,8 +607,8 @@ string addOCLFuncs(string fileName) {
   return dest;
 }
 
-vector<string> listFiles(const char *path) {
-  vector<string> fls;
+std::vector<std::string> listFiles(const char *path) {
+  std::vector<std::string> fls;
   DIR *dirFile = opendir(path);
   if (dirFile) {
     struct dirent *hFile;
@@ -612,7 +626,7 @@ vector<string> listFiles(const char *path) {
       // dirFile.name is the name of the file. Do whatever string comparison
       // you want here. Something like:
       if (strstr(hFile->d_name, ".cl")) {
-        string dest = path;
+        std::string dest = path;
         dest = dest + "/";
         dest = dest + hFile->d_name;
         fls.push_back(dest);
@@ -620,7 +634,7 @@ vector<string> listFiles(const char *path) {
     }
     closedir(dirFile);
   } else {
-    cerr << "Failed to open " << path << endl;
+    std::cerr << "Failed to open " << path << std::endl;
     exit(-1);
   }
   return fls;
@@ -628,29 +642,28 @@ vector<string> listFiles(const char *path) {
 
 int main(int argc, char **argv) {
   if (argc < 2) {
-
-    cerr << "Please specific the location (folder) that contains the OpenCL "
-        "kernel"
-         << endl;
+    std::cerr << "Please specific the location (folder) "
+              << "that contains the OpenCL kernels"
+              << std::endl;
     exit(-1);
   }
 
-  strcpy(argv[0], "-I.");
-  vector<string> fnl = listFiles(argv[argc - 1]);
+  snprintf(argv[0], sizeof(argv[0]), "-I.");
+  std::vector<std::string> fnl = listFiles(argv[argc - 1]);
   if (fnl.size() <= 0) {
-    cerr << "Couldn't find any opencl files" << endl;
+    std::cerr << "Couldn't find any opencl files" << std::endl;
     exit(-1);
   }
 
   system("mkdir -p tmp");
-  ofstream fout("features.csv");
+  std::ofstream fout("features.csv");
   fout << "File,Kernel Name,#compute operations,#rational operations,#accesses "
       "to global memory, #accesses to local memory, #coalesced memory "
       "accesses, #atomic op, amount of data transfers, #work-items\n";
   for (unsigned i = 0; i < fnl.size(); i++) {
-    string dest = addOCLFuncs(fnl[i]);
+    std::string dest = addOCLFuncs(fnl[i]);
     char *p = new char[dest.length() + 1];
-    strcpy(p, dest.c_str());
+    strncpy(p, dest.c_str(), dest.length() + 1);
     argv[argc - 1] = p;
     worker(dest, fout, argc, argv);
     delete[] p;
