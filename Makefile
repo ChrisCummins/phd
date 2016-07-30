@@ -286,7 +286,7 @@ endef
 o-link-cmd = $(LD) $(CxxFlags) $(LdFlags)
 define o-link
 	$(call print-task,LD,$1,$(TaskLink))
-	$(V1)$(o-link-cmd) $3 $2 -o $1
+	$(V1)$(o-link-cmd) -o $1 $2 $3
 endef
 
 
