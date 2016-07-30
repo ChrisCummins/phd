@@ -20,6 +20,13 @@
 # spat somehting out to stderr. Then implement an 'all-warn' target
 # which rebuilds these files.
 #
+# Requirements to build project:
+#
+#     cmake
+#     ninja
+#     git
+#     host toolchain (C and C++)
+#
 
 # The default goal is...
 .DEFAULT_GOAL = all
@@ -187,6 +194,7 @@ endef
 # Assume no out-of-tree builds:
 root := $(PWD)
 toolchain := $(root)/.bootstrapped
+cache := $(root)/.cache
 
 comma := ,
 space :=
@@ -1020,6 +1028,8 @@ CxxDebugFlags = $(CxxDebugFlags_$(D))
 CxxFlags = \
 	$(CxxOptimisationFlags) \
 	$(CxxDebugFlags) \
+	-isystem /home/cec/phd/tools/llvm/projects/libcxxabi/include \
+	-isystem /home/cec/phd/tools/llvm/ \
 	-std=c++1z \
 	-stdlib=libc++ \
 	-pedantic \
@@ -1250,15 +1260,21 @@ install: $(InstallTargets)
 DocStrings += "install: install files"
 
 
+########################################################################
+#                            Toolchain
+
 #
-# Bootstrapping
+# LLVM Toolchain
 #
+LlvmVersion := 3.8.1
 LlvmSrc := $(root)/tools/llvm
 LlvmBuild := $(LlvmSrc)/build
-LlvmCMakeFlags = \
+LlvmConfig := $(LlvmBuild)/bin/llvm-config
+LlvmCMakeFlags := \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DLLVM_ENABLE_ASSERTIONS=true \
 	-DLLVM_TARGETS_TO_BUILD=X86 \
+	-G Ninja \
 	$(NULL)
 
 toolchain_CC := $(LlvmBuild)/bin/clang
@@ -1312,16 +1328,85 @@ $(CC) $(CXX): toolchain
 $(CTargets) $(CObjects): $(CC)
 $(CxxTargets) $(CxxObjects): $(CXX)
 
-$(toolchain)-cmd = \
-	cd $(LlvmBuild) \
-	&& cmake $(LlvmSrc) $(LlvmCMakeFlags)\
-	&& $(MAKE)
+LlvmCache := $(cache)/llvm
+LlvmUrlBase := http://llvm.org/releases/$(LlvmVersion)/
+CachedLlvmComponents := \
+	llvm \
+	cfe \
+	clang-tools-extra \
+	compiler-rt \
+	openmp \
+	libcxx \
+	libcxxabi \
+	$(NONE)
+LlvmTree := \
+	$(LlvmSrc) \
+	$(LlvmSrc)/tools/clang \
+	$(LlvmSrc)/tools/clang/tools/extra \
+	$(LlvmSrc)/projects/compiler-rt \
+	$(LlvmSrc)/projects/openmp \
+	$(LlvmSrc)/projects/libcxx \
+	$(LlvmSrc)/projects/libcxxabi \
+	$(NONE)
+LlvmTar := -$(LlvmVersion).src.tar.xz
 
-$(toolchain):
-	$(call print,Bootstrapping! Go enjoy a coffee, this will take a while.)
-	$(V1)mkdir -vp $(LlvmBuild)
-	$(V1)$($(toolchain)-cmd)
+CachedLlvmTarballs = $(addprefix $(LlvmCache)/,$(addsuffix $(LlvmTar),$(CachedLlvmComponents)))
+
+# Fetch LLVM tarballs to local cache.
+$(LlvmCache)/%$(LlvmTar):
+	$(call print-task,FETCH,$@,$(TaskInstall))
+	$(V1)mkdir -p $(LlvmCache)
+	$(V1)wget -O $@ $(addprefix $(LlvmUrlBase),$(notdir $@))
+
+# def unpack tar
+# leafnodes
+
+#
+#
+# Arguments:
+#   $1 (str) Target directory
+#   $2 (str) Source tarball
+#
+define unpack-llvm-tar
+	$(call print-task,UNPACK,$2)
+	$(V1)mkdir $1
+	$(V1)tar -xf $2 -C $1 --strip-components=1
+endef
+
+# Unpack cached tarballs to build LLVM source tree.
+$(LlvmSrc): | $(LlvmCache)/llvm$(LlvmTar)
+	$(call unpack-llvm-tar,$@,$<)
+
+$(LlvmSrc)/tools/clang: | $(LlvmCache)/cfe$(LlvmTar) $(LlvmSrc)
+	$(call unpack-llvm-tar,$@,$<)
+
+$(LlvmSrc)/tools/clang/tools/extra: | $(LlvmCache)/clang-tools-extra$(LlvmTar) $(LlvmSrc)/tools/clang
+	$(call unpack-llvm-tar,$@,$<)
+
+$(LlvmSrc)/projects/compiler-rt: | $(LlvmCache)/compiler-rt$(LlvmTar) $(LlvmSrc)
+	$(call unpack-llvm-tar,$@,$<)
+
+$(LlvmSrc)/projects/openmp: | $(LlvmCache)/openmp$(LlvmTar) $(LlvmSrc)
+	$(call unpack-llvm-tar,$@,$<)
+
+$(LlvmSrc)/projects/libcxx: | $(LlvmCache)/libcxx$(LlvmTar) $(LlvmSrc)
+	$(call unpack-llvm-tar,$@,$<)
+
+$(LlvmSrc)/projects/libcxxabi: | $(LlvmCache)/libcxxabi$(LlvmTar) $(LlvmSrc)
+	$(call unpack-llvm-tar,$@,$<)
+
+# Build LLVM.
+$(LlvmBuild)/bin/llvm-config: $(LlvmTree)
+	$(V1)rm -rf $(LlvmBuild)
+	$(V1)mkdir -p $(LlvmBuild)
+	$(V1)cd $(LlvmBuild) && cmake .. $(LlvmCMakeFlags)
+	$(V1)cd $(LlvmBuild) && ninja
+
+$(toolchain): $(LlvmBuild)/bin/llvm-config
 	$(V1)date > $(toolchain)
+
+toolchain: $(toolchain)
+DocStrings += "toolchain: build toolchain"
 
 .PHONY: distclean-toolchain
 distclean-toolchain:
@@ -1330,8 +1415,15 @@ distclean-toolchain:
 
 DistcleanTargets += distclean-toolchain
 
-toolchain: $(toolchain)
-DocStrings += "toolchain: build toolchain"
+
+#
+# Cache
+#
+.PHONY: distclean-cache
+distclean-cache:
+	$(V1)rm -rf $(cache)
+
+DistcleanTargets += distclean-cache
 
 
 #
@@ -1400,6 +1492,7 @@ version-str = phd-$(shell $(git-shorthead-cmd))$(shell $(git-dirty-cmd))
 .PHONY: version
 version:
 	$(V2)echo 'phd version $(version-str)'
+	$(V2)test -f $(LlvmConfig) && echo 'toolchain version $(shell $(LlvmConfig) --version)'
 DocStrings += "version: show version information"
 
 # Print doc strings:
