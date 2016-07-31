@@ -15,8 +15,6 @@ import re
 import sqlite3
 import sys
 
-from argparse import ArgumentParser
-
 import smith
 from smith import dbutil
 
