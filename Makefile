@@ -1582,7 +1582,6 @@ version-str = phd-$(shell $(git-shorthead-cmd))$(shell $(git-dirty-cmd))
 .PHONY: version
 version:
 	$(V2)echo 'phd version $(version-str)'
-	$(V2)test -f $(LlvmConfig) && echo 'toolchain version $(shell $(LlvmConfig) --version)'
 DocStrings += "version: show version information"
 
 # Print system information:
