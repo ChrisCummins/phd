@@ -90,8 +90,9 @@ ArgStrings += "O=[0,1]: enable optimisations in generated files (default=$(O_def
 #
 # Threading controls:
 #
-threads_default := $(shell echo "$(shell nproc) * 2" | bc -l)
-threads ?= $(threads_default)
+threads_default := 4
+nproc := $(shell which nproc &>/dev/null && nproc || echo 4)
+threads ?= $(shell echo "$(nproc) * 2" | bc -l)
 ArgStrings += "threads=[1+]: set number of build threads (default=$(threads_default))"
 
 
