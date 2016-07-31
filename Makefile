@@ -452,6 +452,9 @@ $(GoogleBenchmark): $(toolchain)
 	$(V1)mkdir -pv $(extern)/benchmark/build
 	$(V1)$($(GoogleBenchmark)-cmd)
 
+googlebenchmark: $(GoogleBenchmark)
+DocStrings += "googlebenchmark: build Google benchmark library"
+
 .PHONY: distclean-googlebenchmark
 distclean-googlebenchmark:
 	$(V1)$(RM) -r $(extern)/benchmark/build
@@ -485,6 +488,9 @@ $(Boost): $(toolchain)
 	$(call print-task,BUILD,boost,$(TaskMisc))
 	$(V1)mkdir -pv $(BoostBuild)
 	$(V1)$($(Boost)-cmd)
+
+boost: $(Boost)
+DocStrings += "boost: build Boost library"
 
 distclean-boost-cmd = \
 	find $(BoostDir) -name '*.a' -o -name '*.o' \
@@ -535,6 +541,9 @@ $(GoogleTest): $(toolchain)
 	$(V1)rm -rf $(extern)/googletest-build
 	$(V1)mkdir -pv $(extern)/googletest-build
 	$(V1)$($(GoogleTest)-cmd)
+
+googletest: $(GoogleTest)
+DocStrings += "googletest: build Google Test library"
 
 .PHONY: distclean-googletest
 distclean-googletest:
