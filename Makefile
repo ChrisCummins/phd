@@ -647,7 +647,7 @@ Lm_CxxFlags = -I$(lab)/lm/include
 LmTestsSources = $(wildcard $(lab)/lm/tests/*.cpp)
 LmTestsObjects = $(patsubst %.cpp,%.o,$(LmTestsSources))
 CxxObjects += $(LmTestsObjects)
-$(LmTestsObjects): $(LmHeaders) $(phd)
+$(LmTestsObjects): $(LmHeaders) $(phd) $(GoogleTest)
 $(lab)/lm/tests/%.o: $(lab)/lm/tests/%.cpp
 
 $(lab)/lm/tests/tests: $(LmTestsObjects)
@@ -659,7 +659,7 @@ $(lab)/lm/tests_LdFlags = $(phd_LdFlags)
 LmBenchmarksSources = $(wildcard $(lab)/lm/benchmarks/*.cpp)
 LmBenchmarksObjects = $(patsubst %.cpp,%.o,$(LmBenchmarksSources))
 CxxObjects += $(LmBenchmarksObjects)
-$(LmBenchmarksObjects): $(LmHeaders) $(phd)
+$(LmBenchmarksObjects): $(LmHeaders) $(phd) $(GoogleBenchmark)
 $(lab)/lm/benchmarks/%.o: $(lab)/lm/benchmarks/%.cpp
 
 $(lab)/lm/benchmarks/benchmarks: $(LmBenchmarksObjects)
@@ -716,7 +716,7 @@ StlTestsSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/tests/,$(StlComponents)))
 StlTestsObjects = $(patsubst %.cpp,%.o,$(StlTestsSources))
 CxxObjects += $(StlTestsObjects)
-$(StlTestsObjects): $(StlHeaders) $(phd)
+$(StlTestsObjects): $(StlHeaders) $(phd) $(GoogleTest)
 $(lab)/stl/tests/%.o: $(lab)/stl/tests/%.cpp
 
 $(lab)/stl/tests/tests: $(StlTestsObjects)
@@ -793,7 +793,8 @@ $(learn)/challenges/011-big-mandelbrot.o: $(OpenCL)
 
 $(learn)/challenges_CxxFlags = $(phd_CxxFlags)
 $(learn)/challenges_LdFlags = $(phd_LdFlags)
-$(ChallengesCObjects) $(ChallengesCxxObjects): $(phd)
+$(ChallengesCObjects) $(ChallengesCxxObjects): \
+	$(phd) $(GoogleBenchmark) $(GoogleTest)
 
 #
 # learn/ctci/
@@ -807,7 +808,7 @@ CxxTargets += $(patsubst %.cpp,%,$(CtCiCxxSources))
 
 $(learn)/ctci_CxxFlags = $(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags)
 $(learn)/ctci_LdFlags = $(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
-$(CtCiCxxObjects): $(GoogleBenchmark) $(GoogleTest)
+$(CtCiCxxObjects): $(phd) $(GoogleBenchmark) $(GoogleTest)
 
 
 #
