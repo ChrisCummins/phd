@@ -869,7 +869,7 @@ CxxTargets += $(patsubst %.cpp,%,$(LearnTriSYCLCxxSources))
 
 $(learn)/triSYCL_CxxFlags = $(TriSYCL_CxxFlags) $(phd_CxxFlags)
 $(learn)/triSYCL_LdFlags = $(TriSYCL_CxxFlags) $(phd_LdFlags)
-$(LearnTriSYCLCxxObjects): $(TriSYCL) $(phd)
+$(LearnTriSYCLCxxObjects): $(TriSYCL) $(phd) $(Boost)
 
 
 #
