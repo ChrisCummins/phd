@@ -1474,6 +1474,7 @@ $(LlvmSrc): $(CachedLlvmTarballs)
 
 # Build LLVM.
 $(LlvmBuild)/bin/llvm-config: $(LlvmSrc)
+	$(call print-task,BUILD,LLVM toolchain,$(TaskMisc))
 	$(V1)rm -rf $(LlvmBuild)
 	$(V1)mkdir -p $(LlvmBuild)
 	$(V1)cd $(LlvmBuild) && cmake .. $(LlvmCMakeFlags) >/dev/null
