@@ -1567,7 +1567,7 @@ help:
 	$(V2)echo
 	$(V2)(for var in $(ArgStrings); do echo $$var; done) \
 		| sort --ignore-case | while read var; do \
-		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
+		echo $$var | cut -f 1 -d':' | xargs printf "    %-20s "; \
 		echo $$var | cut -d':' -f2-; \
 	done
 	$(V2)echo
@@ -1575,7 +1575,7 @@ help:
 	$(V2)echo
 	$(V2)(for var in $(DocStrings); do echo $$var; done) \
 		| sort --ignore-case | while read var; do \
-		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
+		echo $$var | cut -f 1 -d':' | xargs printf "    %-20s "; \
 		echo $$var | cut -d':' -f2-; \
 	done
 	$(V2)echo
