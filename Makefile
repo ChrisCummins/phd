@@ -1448,22 +1448,25 @@ $(toolchain): $(LlvmBuild)/bin/llvm-config
 toolchain: $(toolchain)
 DocStrings += "toolchain: build toolchain"
 
-.PHONY: distclean-toolchain
-distclean-toolchain:
+.PHONY: clean-toolchain
+clean-toolchain:
 	$(V1)$(RM) $(toolchain)
 	$(V1)$(RM) -r $(LlvmBuild)
+DocStrings += "clean-toolchain: remove toolchain build"
 
-DistcleanTargets += distclean-toolchain
+.PHONY: distclean-toolchain
+distclean-toolchain: clean-toolchain
+	$(V1)$(RM) -r $(LlvmSrc)
+DocStrings += "distclean-toolchain: remove *all* toolchain files"
 
 
 #
 # Cache
 #
-.PHONY: distclean-cache
-distclean-cache:
+.PHONY: clean-cache
+clean-cache:
 	$(V1)rm -rf $(cache)
-
-DistcleanTargets += distclean-cache
+DocStrings += "clean-cache: remove local cache in $(cache)"
 
 
 #
