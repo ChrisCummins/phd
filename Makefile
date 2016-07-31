@@ -446,7 +446,7 @@ $(GoogleBenchmark)-cmd = \
 	&& $(toolchainEnv) cmake $(GoogleBenchmarkCMakeFlags) .. \
 	&& $(MAKE)
 
-$(GoogleBenchmark): toolchain
+$(GoogleBenchmark): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)rm -rf $(extern)/benchmark/build
 	$(V1)mkdir -pv $(extern)/benchmark/build
@@ -481,7 +481,7 @@ $(Boost)-cmd = \
 	link=static runtime-link=static \
 	cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++"
 
-$(Boost): toolchain
+$(Boost): $(toolchain)
 	$(call print-task,BUILD,boost,$(TaskMisc))
 	$(V1)mkdir -pv $(BoostBuild)
 	$(V1)$($(Boost)-cmd)
@@ -530,7 +530,7 @@ $(GoogleTest)-cmd = \
 	cd $(extern)/googletest-build \
 	&& $(toolchainEnv) cmake ../googletest/googletest && $(MAKE)
 
-$(GoogleTest): toolchain
+$(GoogleTest): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)rm -rf $(extern)/googletest-build
 	$(V1)mkdir -pv $(extern)/googletest-build
@@ -587,7 +587,7 @@ $(Libclc)-cmd = \
 	cd $(LibclcDir) && ./configure.py \
 	--with-llvm-config=$(LlvmBuild)/bin/llvm-config && $(MAKE)
 
-$(Libclc): toolchain
+$(Libclc): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)$($(Libclc)-cmd)
 
@@ -609,7 +609,7 @@ else
 OpenCL_LdFlags = -framework OpenCL
 endif
 OpenCL = $(extern)/opencl/include/cl.hpp
-$(OpenCL): toolchain
+$(OpenCL): $(toolchain)
 
 
 #
@@ -1383,7 +1383,7 @@ ClangLlvm_LdFlags = \
 	$(NULL)
 
 # Toolchain dependencies:
-$(CC) $(CXX): toolchain
+$(CC) $(CXX): $(toolchain)
 $(CTargets) $(CObjects): $(CC)
 $(CxxTargets) $(CxxObjects): $(CXX)
 
