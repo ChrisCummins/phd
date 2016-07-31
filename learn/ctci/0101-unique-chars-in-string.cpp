@@ -9,6 +9,8 @@
 #include <string>
 #include <unordered_set>
 
+static unsigned int seed = 0xCEC;
+
 //
 // First solution. Generic solution which works for all container
 // types. Use a set to store whether an element has already appeared
@@ -115,7 +117,7 @@ void BM_unique(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (auto &c : t)
-      c = arc4random() % std::numeric_limits<char>::max();
+      c = rand_r(&seed) % std::numeric_limits<char>::max();
 
     unique(t);
     benchmark::DoNotOptimize(t.data());
@@ -128,7 +130,7 @@ void BM_str_unique(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (auto &c : t)
-      c = arc4random() % std::numeric_limits<char>::max();
+      c = rand_r(&seed) % std::numeric_limits<char>::max();
 
     str_unique(t);
     benchmark::DoNotOptimize(t.data());
@@ -141,7 +143,7 @@ void BM_inplace_unique(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (auto &c : t)
-      c = arc4random() % std::numeric_limits<char>::max();
+      c = rand_r(&seed) % std::numeric_limits<char>::max();
 
     inplace_unique(t);
     benchmark::DoNotOptimize(t.data());

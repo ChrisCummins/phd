@@ -20,6 +20,13 @@
 # spat somehting out to stderr. Then implement an 'all-warn' target
 # which rebuilds these files.
 #
+# Requirements to build project:
+#
+#     cmake
+#     ninja
+#     git
+#     host toolchain (C and C++)
+#
 
 # The default goal is...
 .DEFAULT_GOAL = all
@@ -83,7 +90,7 @@ ArgStrings += "O=[0,1]: enable optimisations in generated files (default=$(O_def
 #
 # Threading controls:
 #
-threads_default := 4
+threads_default := $(shell echo "$(shell nproc) * 2" | bc -l)
 threads ?= $(threads_default)
 ArgStrings += "threads=[1+]: set number of build threads (default=$(threads_default))"
 
@@ -187,6 +194,7 @@ endef
 # Assume no out-of-tree builds:
 root := $(PWD)
 toolchain := $(root)/.bootstrapped
+cache := $(root)/.cache
 
 comma := ,
 space :=
@@ -196,9 +204,11 @@ AutotexTargets =
 BuildTargets =
 CleanFiles =
 CleanTargets =
-CTargets =
-CxxTargets =
+CObjects =
 CppLintSources =
+CTargets =
+CxxObjects =
+CxxTargets =
 DistcleanFiles =
 DistcleanTargets =
 DontLint =
@@ -246,6 +256,32 @@ define install
 	$(V1)$(SUDO) mkdir -p $(dir $1)
 	$(V1)$(SUDO) cp $2 $1
 	$(V1)$(SUDO) chmod $3 $1
+endef
+
+
+# Download a remote resource.
+#
+# Arguments:
+#   $1 (str) Target path
+#   $2 (str) Source URL
+#
+define wget
+	$(call print-task,FETCH,$1,$(TaskInstall))
+	$(V1)mkdir -p $(dir $1)
+	$(V1)wget -O $1 $2 &>/dev/null
+endef
+
+# Unpack an LLVM Tarball.
+#
+# Arguments:
+#   $1 (str) Target directory
+#   $2 (str) Source tarball.
+#   $3 (str) Tar arguments.
+#
+define unpack-tar
+	$(call print-task,UNPACK,$2)
+	$(V1)mkdir $1
+	$(V1)tar -xf $2 -C $1 --strip-components=1
 endef
 
 
@@ -400,21 +436,25 @@ extern := $(root)/extern
 #
 GoogleBenchmark = $(extern)/benchmark/build/src/libbenchmark.a
 GoogleBenchmark_CxxFlags = \
-	-I$(extern)/benchmark/include -Wno-global-constructors
+	-isystem $(extern)/benchmark/include -Wno-global-constructors
 GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
 
 # Build flags
 GoogleBenchmarkCMakeFlags = \
-	-DCMAKE_BUILD_TYPE=Release -DBENCHMARK_ENABLE_LTO=true
+	-DCMAKE_BUILD_TYPE=Release
 $(GoogleBenchmark)-cmd = \
 	cd $(extern)/benchmark/build \
-	&& cmake $(GoogleBenchmarkCMakeFlags) .. \
-	&& $(MAKE)
+	&& $(ToolchainCmake) .. -G Ninja >/dev/null \
+	&& ninja
 
 $(GoogleBenchmark): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(V1)mkdir -pv $(extern)/benchmark/build
+	$(V1)rm -rf $(extern)/benchmark/build
+	$(V1)mkdir -p $(extern)/benchmark/build
 	$(V1)$($(GoogleBenchmark)-cmd)
+
+googlebenchmark: $(GoogleBenchmark)
+DocStrings += "googlebenchmark: build Google benchmark library"
 
 .PHONY: distclean-googlebenchmark
 distclean-googlebenchmark:
@@ -426,39 +466,47 @@ DistcleanTargets += distclean-googlebenchmark
 #
 # extern/boost
 #
-Boost = $(extern)/boost/boost/system
-BoostDir = $(extern)/boost
+BoostVersion := 1.46.1
+BoostDir := $(extern)/boost
 BoostBuild = $(BoostDir)/build
-BoostConfigDir = $(tools)
+Boost = $(BoostBuild)/include
 
-Boost_CxxFlags = -I$(extern)/boost/boost
-Boost_LdFlags = -L$(BoostDir)/stage/lib
+CachedBoostTarball = $(cache)/extern/boost/boost_$(subst .,_,$(BoostVersion)).tar.gz
+BoostUrlBase = http://sourceforge.net/projects/boost/files/boost/$(BoostVersion)/
+
+$(CachedBoostTarball):
+	$(call wget,$(CachedBoostTarball),$(BoostUrlBase)$(notdir $(CachedBoostTarball)))
+
+# NOTE: Even if boost build fails, we don't care. We only need it to
+# copy the headers over for us.
+$(Boost)-cmd = \
+	cd $(BoostDir) \
+	&& ./bootstrap.sh --prefix=$(BoostBuild) >/dev/null \
+	&& ./bjam install >/dev/null || true
+
+$(Boost): $(CachedBoostTarball) $(toolchain)
+	$(call unpack-tar,$(BoostDir),$<,-zxf)
+	$(call print-task,BUILD,boost,$(TaskMisc))
+	$(V1)mkdir -p $(BoostBuild)
+	$(V1)$($(Boost)-cmd)
+
+Boost_CxxFlags = -isystem $(BoostBuild)/include
+Boost_LdFlags = -L$(BoostBuild)/lib
 
 Boost_filesystem_CxxFlags = $(Boost_CxxFlags)
 Boost_filesystem_LdFlags = $(Boost_LdFlags) -lboost_filesystem -lboost_system
 
-$(Boost)-cmd = \
-	cd $(BoostDir) && \
-	./bootstrap.sh --prefix=$(BoostBuild) cxxflags="-stdlib=libc++" stage \
-	&& BOOST_BUILD_PATH=$(BoostConfigDir) \
-	./b2 --prefix=$(BoostBuild) threading=multi \
-	link=static runtime-link=static \
-	cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++"
-
-$(Boost):
-	$(call print-task,BUILD,boost,$(TaskMisc))
-	$(V1)mkdir -pv $(BoostBuild)
-	$(V1)$($(Boost)-cmd)
+boost: $(Boost)
+DocStrings += "boost: build Boost library"
 
 distclean-boost-cmd = \
-	find $(BoostDir) -name '*.a' -o -name '*.o' \
+	find $(BoostDir) -name '*.a' -o -name '*.o' 2>/dev/null \
 		| grep -v config_test.o | xargs $(RM)
 
 .PHONY: distclean-boost
 distclean-boost:
-	$(V1)cd $(BoostDir) && if [ -f b2 ]; then ./b2 clean; fi
+	$(V1)if [ -d $(BoostDir) ]; then cd $(BoostDir) && if [ -f bjam ]; then ./bjam clean &>/dev/null; fi fi
 	$(V1)$(distclean-boost-cmd)
-
 DistcleanTargets += distclean-boost
 
 
@@ -469,11 +517,11 @@ CLSmith = $(extern)/clsmith/build/CLSmith
 
 $(CLSmith)-cmd = \
 	cd $(extern)/clsmith/build \
-	&& cmake .. && $(MAKE)
+	&& cmake .. >/dev/null && $(MAKE)
 
 $(CLSmith):
 	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(V1)mkdir -pv $(extern)/clsmith/build
+	$(V1)mkdir -p $(extern)/clsmith/build
 	$(V1)$($(CLSmith)-cmd)
 
 .PHONY: distclean-clsmith
@@ -487,23 +535,57 @@ DistcleanTargets += distclean-clsmith
 # extern/googletest
 #
 GoogleTest = $(extern)/googletest-build/libgtest.a
-GoogleTest_CxxFlags = -I$(extern)/googletest/googletest/include
+GoogleTest_CxxFlags = -isystem $(extern)/googletest/googletest/include
 GoogleTest_LdFlags = -lpthread -L$(extern)/googletest-build -lgtest
 
 $(GoogleTest)-cmd = \
 	cd $(extern)/googletest-build \
-	&& cmake ../googletest/googletest && $(MAKE)
+	&& $(ToolchainCmake) ../googletest/googletest -G Ninja >/dev/null \
+	&& ninja
 
-$(GoogleTest):
+$(GoogleTest): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(V1)mkdir -pv $(extern)/googletest-build
+	$(V1)rm -rf $(extern)/googletest-build
+	$(V1)mkdir -p $(extern)/googletest-build
 	$(V1)$($(GoogleTest)-cmd)
+
+googletest: $(GoogleTest)
+DocStrings += "googletest: build Google Test library"
 
 .PHONY: distclean-googletest
 distclean-googletest:
 	$(V1)$(RM) -r $(extern)/googletest-build
 
 DistcleanTargets += distclean-googletest
+
+
+#
+# extern/intel-tbb
+#
+intelTbbDir = $(extern)/intel-tbb
+intelTbbBuildDir = $(intelTbbDir)/build/build_release
+
+intelTbb = $(intelTbbBuildDir)/tbb_main.o
+
+CachedTbbTarball = $(cache)/extern/intel-tbb/tbb44_20160526oss_src_0.tgz
+intelTbbUrlBase = https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/
+
+$(CachedTbbTarball):
+	$(call wget,$(CachedTbbTarball),$(intelTbbUrlBase)$(notdir $(CachedTbbTarball)))
+
+$(intelTbb): $(CachedTbbTarball) $(toolchain)
+	$(call unpack-tar,$(intelTbbDir),$<,zxf)
+	$(call print-task,BUILD,$@,$(TaskMisc))
+	$(V1)cd $(intelTbbDir) && $(MAKE) clean >/dev/null
+	$(V1)cd $(intelTbbDir) && tbb_build_prefix=build $(MAKE) >/dev/null
+
+intelTbb_CxxFlags = -isystem $(intelTbbDir)/include
+intelTbb_LdFlags = -L$(intelTbbBuildDir) -ltbb
+
+.PHONY: distclean-intel-tbb
+distclean-intel-tbb:
+	$(V1)$(RM) -r $(intelTbbDir)
+DistcleanTargets += distclean-intel-tbb
 
 
 #
@@ -549,7 +631,7 @@ $(OpenCL): $(toolchain)
 #
 # extern/triSYCL
 #
-TriSYCL_CxxFlags = -I$(extern)/triSYCL/include
+TriSYCL_CxxFlags = $(Boost_CxxFlags) -isystem $(extern)/triSYCL/include
 TriSYCL = $(extern)/triSYCL/include/CL/sycl.hpp
 
 
@@ -569,7 +651,8 @@ Lm_CxxFlags = -I$(lab)/lm/include
 # Lm unit tests:
 LmTestsSources = $(wildcard $(lab)/lm/tests/*.cpp)
 LmTestsObjects = $(patsubst %.cpp,%.o,$(LmTestsSources))
-$(LmTestsObjects): $(LmHeaders) $(phd)
+CxxObjects += $(LmTestsObjects)
+$(LmTestsObjects): $(LmHeaders) $(phd) $(GoogleTest)
 $(lab)/lm/tests/%.o: $(lab)/lm/tests/%.cpp
 
 $(lab)/lm/tests/tests: $(LmTestsObjects)
@@ -580,7 +663,8 @@ $(lab)/lm/tests_LdFlags = $(phd_LdFlags)
 # Lm benchmarks:
 LmBenchmarksSources = $(wildcard $(lab)/lm/benchmarks/*.cpp)
 LmBenchmarksObjects = $(patsubst %.cpp,%.o,$(LmBenchmarksSources))
-$(LmBenchmarksObjects): $(LmHeaders) $(phd)
+CxxObjects += $(LmBenchmarksObjects)
+$(LmBenchmarksObjects): $(LmHeaders) $(phd) $(GoogleBenchmark)
 $(lab)/lm/benchmarks/%.o: $(lab)/lm/benchmarks/%.cpp
 
 $(lab)/lm/benchmarks/benchmarks: $(LmBenchmarksObjects)
@@ -595,6 +679,7 @@ $(lab)/lm/benchmarks_LdFlags = $(phd_LdFlags)
 PatternsHeaders = $(wildcard $(lab)/patterns/*.hpp)
 PatternsCxxSources = $(wildcard $(lab)/patterns/*.cpp)
 PatternsCxxObjects = $(patsubst %.cpp,%.o,$(PatternsCxxSources))
+CxxObjects += $(PatternsCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(PatternsCxxSources))
 
 $(lab)/patterns_CxxFlags = $(phd_CxxFlags)
@@ -626,8 +711,9 @@ Stl_CxxFlags = -I$(lab)/stl/include
 StlTestsSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/tests/,$(StlComponents)))
 StlTestsObjects = $(patsubst %.cpp,%.o,$(StlTestsSources))
-$(StlTestsObjects): $(StlHeaders) $(phd) $(toolchain)
-$(lab)/stl/tests/%.o: $(lab)/stl/tests/%.cpp $(toolchain)
+CxxObjects += $(StlTestsObjects)
+$(StlTestsObjects): $(StlHeaders) $(phd) $(GoogleTest)
+$(lab)/stl/tests/%.o: $(lab)/stl/tests/%.cpp
 
 $(lab)/stl/tests/tests: $(StlTestsObjects)
 CxxTargets += $(lab)/stl/tests/tests
@@ -638,7 +724,8 @@ $(lab)/stl/tests_LdFlags = $(phd_LdFlags)
 StlBenchmarksSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/benchmarks/,$(StlComponents)))
 StlBenchmarksObjects = $(patsubst %.cpp,%.o,$(StlBenchmarksSources))
-$(StlBenchmarksObjects): $(StlHeaders) $(phd) $(toolchain)
+CxxObjects += $(StlBenchmarksObjects)
+$(StlBenchmarksObjects): $(StlHeaders) $(phd)
 $(lab)/stl/benchmarks/%.o: $(lab)/stl/benchmarks/%.cpp
 
 $(lab)/stl/benchmarks/benchmarks: $(StlBenchmarksObjects)
@@ -658,6 +745,7 @@ learn := $(root)/learn
 #
 AtcppCxxSources = $(wildcard $(learn)/atc++/*.cpp)
 AtcppCxxObjects = $(patsubst %.cpp,%.o,$(AtcppCxxSources))
+CxxObjects += $(AtcppCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(AtcppCxxSources))
 
 $(learn)/atc++_CxxFlags = $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
@@ -670,6 +758,7 @@ $(wildcard $(learn)/atc++/%.o): $(GoogleTest)
 #
 LearnBoostCxxSources = $(wildcard $(learn)/boost/*.cpp)
 LearnBoostCxxObjects = $(patsubst %.cpp,%.o,$(LearnBoostCxxSources))
+CxxObjects += $(LearnBoostCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(LearnBoostCxxSources))
 
 $(learn)/boost_CxxFlags = $(Boost_filesystem_CxxFlags) -I/opt/local/include
@@ -684,10 +773,12 @@ $(LearnBoostCxxObjects): $(Boost)
 # C++ solutions:
 ChallengesCxxSources = $(wildcard $(learn)/challenges/*.cpp)
 ChallengesCxxObjects = $(patsubst %.cpp,%.o,$(ChallengesCxxSources))
+CxxObjects += $(ChallengesCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(ChallengesCxxSources))
 
 ChallengesCSources = $(wildcard $(learn)/challenges/*.c)
 ChallengesCObjects = $(patsubst %.c,%.o,$(ChallengesCSources))
+CObjects += $(ChallengesCObjects)
 CTargets += $(patsubst %.c,%,$(ChallengesCSources))
 
 DontLint += $(learn)/challenges/009-longest-substr.cpp
@@ -698,12 +789,8 @@ $(learn)/challenges/011-big-mandelbrot.o: $(OpenCL)
 
 $(learn)/challenges_CxxFlags = $(phd_CxxFlags)
 $(learn)/challenges_LdFlags = $(phd_LdFlags)
-$(ChallengesCxxObjects): $(phd)
-
-$(learn)/challenges_CFlags = $(phd_CFlags)
-$(learn)/challenges_LdFlags = $(phd_LdFlags)
-$(ChallengesCObjects): $(phd)
-
+$(ChallengesCObjects) $(ChallengesCxxObjects): \
+	$(phd) $(GoogleBenchmark) $(GoogleTest)
 
 #
 # learn/ctci/
@@ -712,11 +799,12 @@ $(ChallengesCObjects): $(phd)
 # C++ solutions:
 CtCiCxxSources = $(wildcard $(learn)/ctci/*.cpp)
 CtCiCxxObjects = $(patsubst %.cpp,%.o,$(CtCiCxxSources))
+CxxObjects += $(CtCiCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(CtCiCxxSources))
 
 $(learn)/ctci_CxxFlags = $(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags)
 $(learn)/ctci_LdFlags = $(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
-$(CtCiCxxObjects): $(GoogleBenchmark) $(GoogleTest)
+$(CtCiCxxObjects): $(phd) $(GoogleBenchmark) $(GoogleTest)
 
 
 #
@@ -739,12 +827,14 @@ $(HooclCCommonObjects): $(OpenCL) $(HooclCommonHeaders)
 # C solutions:
 HooclCSources = $(wildcard $(learn)/hoocl/*.c)
 HooclCObjects = $(patsubst %.c,%.o,$(HooclCSources))
+CObjects += $(HooclCObjects)
 CTargets += $(patsubst %.c,%,$(HooclCSources))
 $(HooclCObjects): $(OpenCL) $(HooclCCommonObjects) $(HooclCommonHeaders)
 
 # C++ solutions:
 HooclCxxSources = $(wildcard $(learn)/hoocl/*.cpp)
 HooclCxxObjects = $(patsubst %.cpp,%.o,$(HooclCxxSources))
+CxxObjects += $(HooclCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(HooclCxxSources))
 
 $(learn)/hoocl_CFlags = $(OpenCL_CFlags) -I$(learn)/hoocl/include
@@ -758,11 +848,12 @@ $(HooclCxxObjects): $(OpenCL)
 #
 LearnTriSYCLCxxSources = $(wildcard $(learn)/triSYCL/*.cpp)
 LearnTriSYCLCxxObjects = $(patsubst %.cpp,%.o,$(LearnTriSYCLCxxSources))
+CxxObjects += $(LearnTriSYCLCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(LearnTriSYCLCxxSources))
 
 $(learn)/triSYCL_CxxFlags = $(TriSYCL_CxxFlags) $(phd_CxxFlags)
 $(learn)/triSYCL_LdFlags = $(TriSYCL_CxxFlags) $(phd_LdFlags)
-$(LearnTriSYCLCxxObjects): $(TriSYCL) $(phd)
+$(LearnTriSYCLCxxObjects): $(TriSYCL) $(phd) $(Boost) $(GoogleBenchmark)
 
 
 #
@@ -772,6 +863,7 @@ $(LearnTriSYCLCxxObjects): $(TriSYCL) $(phd)
 # C++ solutions:
 LearnPcCxxSources = $(wildcard $(learn)/pc/*.cpp)
 LearnPcCxxObjects = $(patsubt %.cpp,%.o,$(LearnPcCxxSources))
+CxxObjects += $(LearnPcCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(LearnPcCxxSources))
 
 $(learn)/pc_CxxFlags = $(phd_CxxFlags)
@@ -795,10 +887,11 @@ CxxTargets += $(playground)/r/main
 RayTracerDir = $(playground)/rt
 RayTracerLib = $(RayTracerDir)/src/librt.so
 
-CxxTargets += \
+RayTracerBins = \
 	$(RayTracerDir)/examples/example1 \
 	$(RayTracerDir)/examples/example2 \
 	$(NULL)
+CxxTargets += $(RayTracerBins)
 
 $(RayTracerDir)/examples/example1: $(RayTracerLib)
 
@@ -834,14 +927,16 @@ CppLintSources += $(RayTracerHeaders)
 
 RayTracerSources = $(wildcard $(RayTracerDir)/src/*.cpp)
 RayTracerObjects = $(patsubst %.cpp,%.o,$(RayTracerSources))
+CxxObjects += $(RayTracerObjects)
 
-$(RayTracerObjects): $(RayTracerHeaders) $(toolchain)
+$(RayTracerObjects) $(addsuffix .o,$(RayTracerBins)): \
+	$(RayTracerHeaders) $(intelTbb)
 
 # Project specific flags:
-RayTracerCxxFlags = -I$(RayTracerDir)/include
+RayTracerCxxFlags = -fPIC -I$(RayTracerDir)/include
 $(RayTracerDir)/src_CxxFlags = $(RayTracerCxxFlags)
-$(RayTracerDir)/examples_CxxFlags = $(RayTracerCxxFlags)
-$(RayTracerDir)/examples_LdFlags = -ltbb -lrt -L$(dir $(RayTracerLib))
+$(RayTracerDir)/examples_CxxFlags = $(intelTbb_CxxFlags) $(RayTracerCxxFlags)
+$(RayTracerDir)/examples_LdFlags = $(intelTbb_LdFlags) -lrt -L$(dir $(RayTracerLib))
 
 # Link library:
 $(RayTracerLib): $(RayTracerObjects)
@@ -880,12 +975,32 @@ Python2SetupInstallDirs += $(src)/omnitune
 #
 # src/phd
 #
-phdHeaders = $(wildcard $(src)/phd/include/*)
-phd_CxxFlags = \
-	-I$(src)/phd/include $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
-phd_LdFlags = $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
-phd = $(phdHeaders)
-$(phd): $(GoogleBenchmark) $(GoogleTest) $(toolchain)
+phdSrc = $(src)/phd/src
+phdInclude = $(src)/phd/include
+
+phd = $(phdSrc)/libphd.so
+
+phdCxxSources = $(wildcard $(phdSrc)/*.cpp)
+phdCxxObjects = $(patsubst %.cpp,%.o,$(phdCxxSources))
+CxxObjects += $(phdCxxObjects)
+$(phdCxxObjects): $(GoogleBenchmark) $(GoogleTest)
+
+phdCxxHeaders = $(filter-out %.lint,$(wildcard $(phdInclude)/*))
+CppLintSources += $(phdCxxHeaders)
+
+# Flags to build phd.
+$(phdSrc)_CxxFlags = \
+	-I$(phdInclude) $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
+$(phdSrc)_LdFlags = \
+	$(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
+
+# Build phd.
+$(phd): $(phdCxxObjects)
+	$(call o-link,$@,$(phdCxxObjects),-fPIC -shared)
+
+# Flags to build against phd.
+phd_CxxFlags = $($(phdSrc)_CxxFlags)
+phd_LdFlags = $($(phdSrc)_LdFlags)
 
 
 #
@@ -935,11 +1050,12 @@ CC := $(root)/tools/llvm/build/bin/clang
 
 BuildTargets += $(CTargets)
 
-CObjects = $(addsuffix .o, $(CTargets))
-CSources = $(addsuffix .c, $(CTargets))
+CTargetsObjects = $(addsuffix .o, $(CTargets))
+CTargetsSources = $(addsuffix .c, $(CTargets))
+CObjects += $(CTargetsObjects)
 
-CTargets: $(CObjects)
-CObjects: $(CSources)
+CTargets: $(CTargetsObjects)
+CTargetsObjects: $(CTargetsSources)
 
 CleanFiles += $(CTargets) $(CObjects)
 
@@ -985,13 +1101,14 @@ DocStrings += "print-cc: print cc compiler invocation"
 CXX := $(root)/tools/llvm/build/bin/clang++
 CLANGTIDY := $(root)/tools/llvm/build/bin/clang-tidy
 
-CxxObjects = $(addsuffix .o, $(CxxTargets))
-CxxSources = $(addsuffix .cpp, $(CxxTargets))
+CxxTargetsObjects = $(addsuffix .o, $(CxxTargets))
+CxxTargetsSources = $(addsuffix .cpp, $(CxxTargets))
+CxxObjects += $(CxxTargetsObjects)
 
 # Source -> object -> target
 BuildTargets += $(CxxTargets)
-CxxTargets: $(CxxObjects)
-CxxObjects: $(CxxSources)
+CxxTargets: $(CxxTargetsObjects)
+CxxTargetsObjects: $(CxxTargetsSources)
 
 CleanFiles += $(CxxTargets) $(CxxObjects)
 
@@ -1007,6 +1124,8 @@ CxxDebugFlags = $(CxxDebugFlags_$(D))
 CxxFlags = \
 	$(CxxOptimisationFlags) \
 	$(CxxDebugFlags) \
+	-isystem /home/cec/phd/tools/llvm/projects/libcxxabi/include \
+	-isystem /home/cec/phd/tools/llvm/ \
 	-std=c++1z \
 	-stdlib=libc++ \
 	-pedantic \
@@ -1077,6 +1196,10 @@ DocStrings += "lint: build lint files"
 #
 # Linker
 #
+# TODO: Clang picks the linker for us, and will default to using the
+# system linker. I would prefer to use LLVM's lld linker, but in
+# initial tests I found that it wasn't up to the task. Perhaps with a
+# later release I will give this another punt.
 LD := $(CXX)
 
 LdFlags =
@@ -1238,23 +1361,41 @@ install: $(InstallTargets)
 DocStrings += "install: install files"
 
 
+########################################################################
+#                            Toolchain
+
 #
-# Bootstrapping
+# LLVM Toolchain
 #
+LlvmVersion := 3.8.1
 LlvmSrc := $(root)/tools/llvm
-LlvmBuild := $(root)/tools/llvm/build
+LlvmBuild := $(LlvmSrc)/build
+LlvmLibDir := $(LlvmBuild)/lib
 LlvmConfig := $(LlvmBuild)/bin/llvm-config
-LlvmCMakeFlags = \
+LlvmCMakeFlags := \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DLLVM_ENABLE_ASSERTIONS=true \
 	-DLLVM_TARGETS_TO_BUILD=X86 \
+	-G Ninja \
 	$(NULL)
+
+Toolchain_CC := $(LlvmBuild)/bin/clang
+Toolchain_CXX := $(LlvmBuild)/bin/clang++
+ToolchainCxxFlags := \
+	-Wno-unused-command-line-argument \
+	-nostdinc++ \
+	-cxx-isystem $(LlvmSrc)/projects/libcxx/include \
+	-cxx-isystem $(LlvmSrc)/projects/libcxxabi/include \
+	-stdlib=libc++ \
+	$(NULL)
+ToolchainEnv := CC=$(Toolchain_CC) CXX=$(Toolchain_CXX) LD_LIBRARY_PATH=$(LlvmLibDir)
+ToolchainCmake := $(ToolchainEnv) cmake	-DCMAKE_CXX_FLAGS="$(ToolchainCxxFlags)"
 
 # Flags to build against LLVM + Clang toolchain
 ClangLlvm_CxxFlags = \
 	$(shell $(LlvmConfig) --cxxflags) \
-	-I$(shell $(LlvmConfig) --src-root)/tools/clang/include \
-	-I$(shell $(LlvmConfig) --obj-root)/tools/clang/include \
+	-isystem $(shell $(LlvmConfig) --src-root)/tools/clang/include \
+	-isystem $(shell $(LlvmConfig) --obj-root)/tools/clang/include \
 	-fno-rtti \
 	$(NULL)
 
@@ -1293,34 +1434,83 @@ ClangLlvm_LdFlags = \
 	-ldl \
 	$(NULL)
 
-# Compilers depend on boostrapping:
-$(CC): $(toolchain)
+# Toolchain dependencies:
+$(CC) $(CXX): $(toolchain)
 $(CTargets) $(CObjects): $(CC)
+$(CxxTargets) $(CxxObjects): $(CXX)
 
-$(CXX): $(toolchain)
-$(CxxTargets): $(CXX)
-$(CxxObjects): $(CXX)
+LlvmCache := $(cache)/llvm
+LlvmUrlBase := http://llvm.org/releases/$(LlvmVersion)/
+CachedLlvmComponents := \
+	llvm \
+	cfe \
+	clang-tools-extra \
+	compiler-rt \
+	openmp \
+	libcxx \
+	libcxxabi \
+	$(NONE)
+LlvmTar := -$(LlvmVersion).src.tar.xz
 
-$(toolchain)-cmd = \
-	cd $(LlvmBuild) \
-	&& cmake $(LlvmSrc) $(LlvmCMakeFlags)\
-	&& $(MAKE)
+CachedLlvmTarballs = $(addprefix $(LlvmCache)/,$(addsuffix $(LlvmTar),$(CachedLlvmComponents)))
 
-$(toolchain):
-	$(call print,Bootstrapping! Go enjoy a coffee, this will take a while.)
-	$(V1)mkdir -vp $(LlvmBuild)
-	$(V1)$($(toolchain)-cmd)
+# Fetch LLVM tarballs to local cache.
+$(LlvmCache)/%$(LlvmTar):
+	$(call wget,$@,$(LlvmUrlBase)$(notdir $@))
+
+# Unpack an LLVM Tarball.
+#
+# Arguments:
+#   $1 (str) Target directory
+#   $2 (str) Source tarball
+#
+define unpack-llvm-tar
+	$(call unpack-tar,$(LlvmSrc)/$1,$(LlvmCache)/$2$(LlvmTar),-xf)
+endef
+
+# Unpack LLVM tree from cached tarballs.
+$(LlvmSrc): $(CachedLlvmTarballs)
+	$(call unpack-llvm-tar,,llvm)
+	$(call unpack-llvm-tar,tools/clang,cfe)
+	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
+	$(call unpack-llvm-tar,projects/compiler-rt,compiler-rt)
+	$(call unpack-llvm-tar,projects/openmp,openmp)
+	$(call unpack-llvm-tar,projects/libcxx,libcxx)
+	$(call unpack-llvm-tar,projects/libcxxabi,libcxxabi)
+
+# Build LLVM.
+$(LlvmBuild)/bin/llvm-config: $(LlvmSrc)
+	$(call print-task,BUILD,LLVM toolchain,$(TaskMisc))
+	$(V1)rm -rf $(LlvmBuild)
+	$(V1)mkdir -p $(LlvmBuild)
+	$(V1)cd $(LlvmBuild) && cmake .. $(LlvmCMakeFlags) >/dev/null
+	$(V1)cd $(LlvmBuild) && ninja
+
+$(toolchain): $(LlvmBuild)/bin/llvm-config
 	$(V1)date > $(toolchain)
-
-.PHONY: distclean-toolchain
-distclean-toolchain:
-	$(V1)$(RM) $(toolchain)
-	$(V1)$(RM) -r $(LlvmBuild)
-
-DistcleanTargets += distclean-toolchain
 
 toolchain: $(toolchain)
 DocStrings += "toolchain: build toolchain"
+
+.PHONY: clean-toolchain
+clean-toolchain:
+	$(V1)$(RM) $(toolchain)
+	$(V1)$(RM) -r $(LlvmBuild)
+DocStrings += "clean-toolchain: remove toolchain build"
+
+.PHONY: distclean-toolchain
+distclean-toolchain: clean-toolchain
+	$(V1)$(RM) -r $(LlvmSrc)
+DocStrings += "distclean-toolchain: remove *all* toolchain files"
+
+
+#
+# Cache
+#
+.PHONY: clean-cache
+clean-cache:
+	$(V1)rm -rf $(cache)
+DocStrings += "clean-cache: remove local cache in $(cache)"
 
 
 #
@@ -1389,7 +1579,28 @@ version-str = phd-$(shell $(git-shorthead-cmd))$(shell $(git-dirty-cmd))
 .PHONY: version
 version:
 	$(V2)echo 'phd version $(version-str)'
+	$(V2)test -f $(LlvmConfig) && echo 'toolchain version $(shell $(LlvmConfig) --version)'
 DocStrings += "version: show version information"
+
+# Print system information:
+.PHONY: info
+info: version
+	$(V2)echo
+	$(V2)echo "Host:"
+	$(V2)echo "  name      $(shell uname -n)"
+	$(V2)echo "  O/S       $(shell uname -o)"
+	$(V2)echo "  arch      $(shell uname -m)"
+	$(V2)echo "  threads   $(threads)"
+	$(V2)echo
+	$(V2)echo "Build essentials:"
+	$(V2)echo "  c++       $(shell which c++ &>/dev/null && { c++ --version | head -n1; } || { echo not found; })"
+	$(V2)echo "  cmake     $(shell which cmake &>/dev/null && { cmake --version | head -n1; } || { echo not found; })"
+	$(V2)echo "  ninja     $(shell which ninja &>/dev/null && { ninja --version | head -n1; } || { echo not found; })"
+	$(V2)echo "  pdflatex  $(shell which pdflatex &>/dev/null && { pdflatex --version | head -n1; } || { echo not found; })"
+	$(V2)echo "  python2   $(shell which python2 &>/dev/null && { python2 --version | head -n1; } || { echo not found; })"
+	$(V2)echo "  python3   $(shell which python3 &>/dev/null && { python3 --version | head -n1; } || { echo not found; })"
+DocStrings += "info: show versions of system programs"
+
 
 # Print doc strings:
 .PHONY: help
@@ -1400,7 +1611,7 @@ help:
 	$(V2)echo
 	$(V2)(for var in $(ArgStrings); do echo $$var; done) \
 		| sort --ignore-case | while read var; do \
-		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
+		echo $$var | cut -f 1 -d':' | xargs printf "    %-20s "; \
 		echo $$var | cut -d':' -f2-; \
 	done
 	$(V2)echo
@@ -1408,7 +1619,7 @@ help:
 	$(V2)echo
 	$(V2)(for var in $(DocStrings); do echo $$var; done) \
 		| sort --ignore-case | while read var; do \
-		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
+		echo $$var | cut -f 1 -d':' | xargs printf "    %-20s "; \
 		echo $$var | cut -d':' -f2-; \
 	done
 	$(V2)echo

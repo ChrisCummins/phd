@@ -4,18 +4,12 @@
 [submodule "extern/skelcl"]
 	path = extern/skelcl
 	url = git@bitbucket.org:skelcl/skelcl.git
-[submodule "tools/llvm"]
-	path = tools/llvm
-	url = git@github.com:ChrisCummins/llvm.git
 [submodule "extern/benchmark"]
 	path = extern/benchmark
 	url = https://github.com/google/benchmark.git
 [submodule "extern/triSYCL"]
 	path = extern/triSYCL
 	url = https://github.com/amd/triSYCL.git
-[submodule "extern/boost"]
-	path = extern/boost
-	url = https://github.com/boostorg/boost.git
 [submodule "extern/libclc"]
 	path = extern/libclc
 	url = https://github.com/llvm-mirror/libclc.git

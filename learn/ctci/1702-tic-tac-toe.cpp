@@ -6,6 +6,8 @@
 
 #include <array>
 
+static unsigned int seed = 0xCEC;
+
 using Board = std::array<std::array<char, 3>, 3>;
 
 inline void zero_board(Board &b) {
@@ -78,7 +80,7 @@ void BM_player_won(benchmark::State& state) {
   while (state.KeepRunning()) {
     for (size_t x = 0; x < 3; x++)
       for (size_t y = 0; y < 3; y++)
-        b[x][y] = static_cast<char>(arc4random() % 3);
+        b[x][y] = static_cast<char>(rand_r(&seed) % 3);
 
     player_won(b, 0);
     player_won(b, 1);

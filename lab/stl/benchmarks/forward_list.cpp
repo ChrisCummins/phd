@@ -3,6 +3,7 @@
 #include <forward_list>
 #include <ustl/forward_list>
 
+static unsigned int seed = 0xCEC;
 
 static const size_t sort_size_min = 8;
 // FIXME: Change to a larger maximum sort size, and increase the
@@ -14,7 +15,7 @@ static void std_forward_list_sort_int(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (auto& i : list)
-      i = static_cast<int>(arc4random());
+      i = static_cast<int>(rand_r(&seed));
 
     list.sort();
     benchmark::DoNotOptimize(list.front());
@@ -27,7 +28,7 @@ static void ustl_forward_list_sort_int(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (auto& i : list)
-      i = static_cast<int>(arc4random());
+      i = static_cast<int>(rand_r(&seed));
 
     list.sort();
     benchmark::DoNotOptimize(list.front());

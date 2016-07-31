@@ -6,6 +6,8 @@
 
 #include <unordered_set>
 
+static unsigned int seed = 0xCEC;
+
 //
 // Perform two passes. The first, to record the row and column indices
 // to zero. The second, to perform the actual zeroing.
@@ -103,7 +105,7 @@ void BM_matrix_zero(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < n * n; i++)
-      m[i] = static_cast<int>(arc4random() % 25);
+      m[i] = static_cast<int>(rand_r(&seed) % 25);
 
     matrix_zero(m, n, n);
     benchmark::DoNotOptimize(m[0]);
