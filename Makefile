@@ -435,16 +435,16 @@ extern := $(root)/extern
 #
 GoogleBenchmark = $(extern)/benchmark/build/src/libbenchmark.a
 GoogleBenchmark_CxxFlags = \
-	-I$(extern)/benchmark/include -Wno-global-constructors
+	-isystem $(extern)/benchmark/include -Wno-global-constructors
 GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
 
 # Build flags
 GoogleBenchmarkCMakeFlags = \
-	-DCMAKE_BUILD_TYPE=Release -DBENCHMARK_ENABLE_LTO=true
+	-DCMAKE_BUILD_TYPE=Release
 $(GoogleBenchmark)-cmd = \
 	cd $(extern)/benchmark/build \
-	&& cmake $(GoogleBenchmarkCMakeFlags) .. \
-	&& $(MAKE)
+	&& $(ToolchainCmake) .. -G Ninja \
+	&& ninja
 
 $(GoogleBenchmark): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
@@ -530,12 +530,13 @@ DistcleanTargets += distclean-clsmith
 # extern/googletest
 #
 GoogleTest = $(extern)/googletest-build/libgtest.a
-GoogleTest_CxxFlags = -I$(extern)/googletest/googletest/include
+GoogleTest_CxxFlags = -isystem $(extern)/googletest/googletest/include
 GoogleTest_LdFlags = -lpthread -L$(extern)/googletest-build -lgtest
 
 $(GoogleTest)-cmd = \
 	cd $(extern)/googletest-build \
-	&& cmake ../googletest/googletest && $(MAKE)
+	&& $(ToolchainCmake) ../googletest/googletest -G Ninja \
+	&& ninja
 
 $(GoogleTest): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
@@ -1357,6 +1358,7 @@ DocStrings += "install: install files"
 LlvmVersion := 3.8.1
 LlvmSrc := $(root)/tools/llvm
 LlvmBuild := $(LlvmSrc)/build
+LlvmLibDir := $(LlvmBuild)/lib
 LlvmConfig := $(LlvmBuild)/bin/llvm-config
 LlvmCMakeFlags := \
 	-DCMAKE_BUILD_TYPE=Release \
@@ -1365,9 +1367,17 @@ LlvmCMakeFlags := \
 	-G Ninja \
 	$(NULL)
 
-toolchain_CC := $(LlvmBuild)/bin/clang
-toolchain_CXX := $(LlvmBuild)/bin/clang++
-toolchainEnv := CC=$(toolchain_CC) CXX=$(toolchain_Cxx)
+Toolchain_CC := $(LlvmBuild)/bin/clang
+Toolchain_CXX := $(LlvmBuild)/bin/clang++
+ToolchainCxxFlags := \
+	-Wno-unused-command-line-argument \
+	-nostdinc++ \
+	-cxx-isystem $(LlvmSrc)/projects/libcxx/include \
+	-cxx-isystem $(LlvmSrc)/projects/libcxxabi/include \
+	-stdlib=libc++ \
+	$(NULL)
+ToolchainEnv := CC=$(Toolchain_CC) CXX=$(Toolchain_CXX) LD_LIBRARY_PATH=$(LlvmLibDir)
+ToolchainCmake := $(ToolchainEnv) cmake	-DCMAKE_CXX_FLAGS="$(ToolchainCxxFlags)"
 
 # Flags to build against LLVM + Clang toolchain
 ClangLlvm_CxxFlags = \
