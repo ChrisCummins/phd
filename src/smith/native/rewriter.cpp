@@ -22,8 +22,6 @@
 #include <string>
 #include <map>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Weverything"
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
 #include <clang/AST/ASTContext.h>
@@ -35,7 +33,6 @@
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Tooling/CommonOptionsParser.h>
 #include <clang/Tooling/Tooling.h>
-#pragma GCC diagnostic pop
 
 // Error code which is returned if there was nothing to rewrite:
 #define EUGLY_CODE 204

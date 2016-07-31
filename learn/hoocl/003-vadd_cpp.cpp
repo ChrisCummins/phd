@@ -15,7 +15,7 @@
 //------------------------------------------------------------------------------
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Weverything"
+#pragma GCC diagnostic ignored "-Wreserved-id-macro"
 #define __CL_ENABLE_EXCEPTIONS
 #pragma GCC diagnostic pop
 

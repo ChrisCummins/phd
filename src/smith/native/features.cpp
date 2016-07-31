@@ -42,8 +42,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Weverything"
 #include <clang/AST/ASTConsumer.h>
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/ParentMap.h>
@@ -62,7 +60,6 @@
 #include <clang/Parse/ParseAST.h>
 #include <clang/Rewrite/Core/Rewriter.h>
 #include <clang/Rewrite/Frontend/Rewriters.h>
-#pragma GCC diagnostic pop
 
 
 class ParameterInfo {

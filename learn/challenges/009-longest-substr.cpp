@@ -12,11 +12,8 @@
 #include <string>
 #include <vector>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Weverything"
 #include <benchmark/benchmark.h>
 #include <gtest/gtest.h>
-#pragma GCC diagnostic pop
 
 static unsigned int seed = 0xCEC;
 
