@@ -476,6 +476,11 @@ BoostUrlBase = http://sourceforge.net/projects/boost/files/boost/$(BoostVersion)
 $(CachedBoostTarball):
 	$(call wget,$(CachedBoostTarball),$(BoostUrlBase)$(notdir $(CachedBoostTarball)))
 
+$(Boost)-cmd = \
+	cd $(BoostDir) \
+	&& ./bootstrap.sh --prefix=$(BoostBuild) >/dev/null \
+	&& ./bjam install >/dev/null
+
 $(Boost): $(CachedBoostTarball) $(toolchain)
 	$(call unpack-tar,$(BoostDir),$<,-zxf)
 	$(call print-task,BUILD,boost,$(TaskMisc))
@@ -487,20 +492,6 @@ Boost_LdFlags = -L$(BoostBuild)/lib
 
 Boost_filesystem_CxxFlags = $(Boost_CxxFlags)
 Boost_filesystem_LdFlags = $(Boost_LdFlags) -lboost_filesystem -lboost_system
-
-BoostB2Args = \
-	--prefix=$(BoostBuild) \
-	threading=multi \
-	link=static \
-	runtime-link=static \
-	cxxflags="$(ToolchainCxxFlags)" \
-	linkflags="-L$(LlvmLibDir)" \
-	$(NULL)
-
-$(Boost)-cmd = \
-	cd $(BoostDir) \
-	&& ./bootstrap.sh --prefix=$(BoostBuild) >/dev/null \
-	&& ./bjam install >/dev/null
 
 boost: $(Boost)
 DocStrings += "boost: build Boost library"
