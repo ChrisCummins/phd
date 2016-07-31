@@ -443,7 +443,7 @@ GoogleBenchmarkCMakeFlags = \
 	-DCMAKE_BUILD_TYPE=Release
 $(GoogleBenchmark)-cmd = \
 	cd $(extern)/benchmark/build \
-	&& $(ToolchainCmake) .. -G Ninja \
+	&& $(ToolchainCmake) .. -G Ninja >/dev/null \
 	&& ninja
 
 $(GoogleBenchmark): toolchain
@@ -514,7 +514,7 @@ CLSmith = $(extern)/clsmith/build/CLSmith
 
 $(CLSmith)-cmd = \
 	cd $(extern)/clsmith/build \
-	&& cmake .. && $(MAKE)
+	&& cmake .. >/dev/null && $(MAKE)
 
 $(CLSmith):
 	$(call print-task,BUILD,$@,$(TaskMisc))
@@ -537,7 +537,7 @@ GoogleTest_LdFlags = -lpthread -L$(extern)/googletest-build -lgtest
 
 $(GoogleTest)-cmd = \
 	cd $(extern)/googletest-build \
-	&& $(ToolchainCmake) ../googletest/googletest -G Ninja \
+	&& $(ToolchainCmake) ../googletest/googletest -G Ninja >/dev/null \
 	&& ninja
 
 $(GoogleTest): $(toolchain)
@@ -1474,7 +1474,7 @@ $(LlvmSrc): $(CachedLlvmTarballs)
 $(LlvmBuild)/bin/llvm-config: $(LlvmSrc)
 	$(V1)rm -rf $(LlvmBuild)
 	$(V1)mkdir -p $(LlvmBuild)
-	$(V1)cd $(LlvmBuild) && cmake .. $(LlvmCMakeFlags)
+	$(V1)cd $(LlvmBuild) && cmake .. $(LlvmCMakeFlags) >/dev/null
 	$(V1)cd $(LlvmBuild) && ninja
 
 $(toolchain): $(LlvmBuild)/bin/llvm-config
