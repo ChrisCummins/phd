@@ -259,6 +259,32 @@ define install
 endef
 
 
+# Download a remote resource.
+#
+# Arguments:
+#   $1 (str) Target path
+#   $2 (str) Source URL
+#
+define wget
+	$(call print-task,FETCH,$1,$(TaskInstall))
+	$(V1)mkdir -p $(dir $1)
+	$(V1)wget -O $1 $2 &>/dev/null
+endef
+
+# Unpack an LLVM Tarball.
+#
+# Arguments:
+#   $1 (str) Target directory
+#   $2 (str) Source tarball.
+#   $3 (str) Tar arguments.
+#
+define unpack-tar
+	$(call print-task,UNPACK,$2)
+	$(V1)mkdir $1
+	$(V1)tar -xf $2 -C $1 --strip-components=1
+endef
+
+
 # Compile C sources to object file
 #
 # Arguments:
@@ -422,6 +448,7 @@ $(GoogleBenchmark)-cmd = \
 
 $(GoogleBenchmark): toolchain
 	$(call print-task,BUILD,$@,$(TaskMisc))
+	$(V1)rm -rf $(extern)/benchmark/build
 	$(V1)mkdir -pv $(extern)/benchmark/build
 	$(V1)$($(GoogleBenchmark)-cmd)
 
@@ -505,6 +532,7 @@ $(GoogleTest)-cmd = \
 
 $(GoogleTest): toolchain
 	$(call print-task,BUILD,$@,$(TaskMisc))
+	$(V1)rm -rf $(extern)/googletest-build
 	$(V1)mkdir -pv $(extern)/googletest-build
 	$(V1)$($(GoogleTest)-cmd)
 
@@ -513,6 +541,35 @@ distclean-googletest:
 	$(V1)$(RM) -r $(extern)/googletest-build
 
 DistcleanTargets += distclean-googletest
+
+
+#
+# extern/intel-tbb
+#
+intelTbbDir = $(extern)/intel-tbb
+intelTbbBuildDir = $(intelTbbDir)/build/build_release
+
+intelTbb = $(intelTbbBuildDir)/libtbb.so
+
+CachedTbbTarball = $(cache)/extern/intel-tbb/tbb44_20160526oss_src_0.tgz
+intelTbbUrlBase = https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/
+
+$(CachedTbbTarball):
+	$(call wget,$(CachedTbbTarball),$(intelTbbUrlBase)$(notdir $(CachedTbbTarball)))
+
+$(intelTbb): $(CachedTbbTarball) $(toolchain)
+	$(call unpack-tar,$(intelTbbDir),$<,zxf)
+	$(call print-task,BUILD,$@,$(TaskMisc))
+	$(V1)cd $(intelTbbDir) && $(MAKE) clean >/dev/null
+	$(V1)cd $(intelTbbDir) && tbb_build_prefix=build $(MAKE) >/dev/null
+
+intelTbb_CxxFlags = -isystem $(intelTbbDir)/include
+intelTbb_LdFlags = -L$(intelTbbBuildDir) -ltbb
+
+.PHONY: distclean-intel-tbb
+distclean-intel-tbb:
+	$(V1)$(RM) -r $(intelTbbDir)
+DistcleanTargets += distclean-intel-tbb
 
 
 #
@@ -827,10 +884,11 @@ CxxTargets += $(playground)/r/main
 RayTracerDir = $(playground)/rt
 RayTracerLib = $(RayTracerDir)/src/librt.so
 
-CxxTargets += \
+RayTracerBins = \
 	$(RayTracerDir)/examples/example1 \
 	$(RayTracerDir)/examples/example2 \
 	$(NULL)
+CxxTargets += $(RayTracerBins)
 
 $(RayTracerDir)/examples/example1: $(RayTracerLib)
 
@@ -868,13 +926,14 @@ RayTracerSources = $(wildcard $(RayTracerDir)/src/*.cpp)
 RayTracerObjects = $(patsubst %.cpp,%.o,$(RayTracerSources))
 CxxObjects += $(RayTracerObjects)
 
-$(RayTracerObjects): $(RayTracerHeaders)
+$(RayTracerObjects) $(addsuffix .o,$(RayTracerBins)): \
+	$(RayTracerHeaders) $(intelTbb)
 
 # Project specific flags:
-RayTracerCxxFlags = -I$(RayTracerDir)/include
+RayTracerCxxFlags = -fPIC -I$(RayTracerDir)/include
 $(RayTracerDir)/src_CxxFlags = $(RayTracerCxxFlags)
-$(RayTracerDir)/examples_CxxFlags = $(RayTracerCxxFlags)
-$(RayTracerDir)/examples_LdFlags = -ltbb -lrt -L$(dir $(RayTracerLib))
+$(RayTracerDir)/examples_CxxFlags = $(intelTbb_CxxFlags) $(RayTracerCxxFlags)
+$(RayTracerDir)/examples_LdFlags = $(intelTbb_LdFlags) -lrt -L$(dir $(RayTracerLib))
 
 # Link library:
 $(RayTracerLib): $(RayTracerObjects)
@@ -1345,9 +1404,7 @@ CachedLlvmTarballs = $(addprefix $(LlvmCache)/,$(addsuffix $(LlvmTar),$(CachedLl
 
 # Fetch LLVM tarballs to local cache.
 $(LlvmCache)/%$(LlvmTar):
-	$(call print-task,FETCH,$@,$(TaskInstall))
-	$(V1)mkdir -p $(LlvmCache)
-	$(V1)wget -O $@ $(addprefix $(LlvmUrlBase),$(notdir $@)) &>/dev/null
+	$(call wget,$@,$(LlvmUrlBase)$(notdir $@))
 
 # Unpack an LLVM Tarball.
 #
@@ -1356,9 +1413,7 @@ $(LlvmCache)/%$(LlvmTar):
 #   $2 (str) Source tarball
 #
 define unpack-llvm-tar
-	$(call print-task,UNPACK,$2)
-	$(V1)mkdir $(LlvmSrc)/$1
-	$(V1)tar -xf $(LlvmCache)/$2$(LlvmTar) -C $(LlvmSrc)/$1 --strip-components=1
+	$(call unpack-tar,$(LlvmSrc)/$1,$(LlvmCache)/$2$(LlvmTar),-xf)
 endef
 
 # Unpack LLVM tree from cached tarballs.
