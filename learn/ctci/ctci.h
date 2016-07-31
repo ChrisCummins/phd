@@ -1,11 +1,8 @@
 #ifndef CTCI_H
 #define CTCI_H
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Weverything"
 #include <benchmark/benchmark.h>
 #include <gtest/gtest.h>
-#pragma GCC diagnostic pop
 
 #include <stdlib.h>
 
