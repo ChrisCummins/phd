@@ -449,7 +449,7 @@ $(GoogleBenchmark)-cmd = \
 $(GoogleBenchmark): toolchain
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)rm -rf $(extern)/benchmark/build
-	$(V1)mkdir -pv $(extern)/benchmark/build
+	$(V1)mkdir -p $(extern)/benchmark/build
 	$(V1)$($(GoogleBenchmark)-cmd)
 
 googlebenchmark: $(GoogleBenchmark)
@@ -486,7 +486,7 @@ $(Boost)-cmd = \
 $(Boost): $(CachedBoostTarball) $(toolchain)
 	$(call unpack-tar,$(BoostDir),$<,-zxf)
 	$(call print-task,BUILD,boost,$(TaskMisc))
-	$(V1)mkdir -pv $(BoostBuild)
+	$(V1)mkdir -p $(BoostBuild)
 	$(V1)$($(Boost)-cmd)
 
 Boost_CxxFlags = -isystem $(BoostBuild)/include
@@ -520,7 +520,7 @@ $(CLSmith)-cmd = \
 
 $(CLSmith):
 	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(V1)mkdir -pv $(extern)/clsmith/build
+	$(V1)mkdir -p $(extern)/clsmith/build
 	$(V1)$($(CLSmith)-cmd)
 
 .PHONY: distclean-clsmith
@@ -545,7 +545,7 @@ $(GoogleTest)-cmd = \
 $(GoogleTest): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)rm -rf $(extern)/googletest-build
-	$(V1)mkdir -pv $(extern)/googletest-build
+	$(V1)mkdir -p $(extern)/googletest-build
 	$(V1)$($(GoogleTest)-cmd)
 
 googletest: $(GoogleTest)
