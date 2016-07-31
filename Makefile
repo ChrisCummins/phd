@@ -465,29 +465,43 @@ DistcleanTargets += distclean-googlebenchmark
 #
 # extern/boost
 #
-Boost = $(extern)/boost/boost/system
-BoostDir = $(extern)/boost
+BoostVersion := 1.46.1
+BoostDir := $(extern)/boost
 BoostBuild = $(BoostDir)/build
-BoostConfigDir = $(tools)
+Boost = $(BoostBuild)/include
 
-Boost_CxxFlags = -I$(extern)/boost/boost
-Boost_LdFlags = -L$(BoostDir)/stage/lib
+CachedBoostTarball = $(cache)/extern/boost/boost_$(subst .,_,$(BoostVersion)).tar.gz
+BoostUrlBase = http://sourceforge.net/projects/boost/files/boost/$(BoostVersion)/
+
+$(CachedBoostTarball):
+	$(call wget,$(CachedBoostTarball),$(BoostUrlBase)$(notdir $(CachedBoostTarball)))
+
+
+$(Boost): $(CachedBoostTarball) $(toolchain)
+	$(call unpack-tar,$(BoostDir),$<,-zxf)
+	$(call print-task,BUILD,boost,$(TaskMisc))
+	$(V1)mkdir -pv $(BoostBuild)
+	$(V1)$($(Boost)-cmd)
+
+Boost_CxxFlags = -isystem $(BoostBuild)/include
+Boost_LdFlags = -L$(BoostBuild)/lib
 
 Boost_filesystem_CxxFlags = $(Boost_CxxFlags)
 Boost_filesystem_LdFlags = $(Boost_LdFlags) -lboost_filesystem -lboost_system
 
-$(Boost)-cmd = \
-	cd $(BoostDir) && \
-	./bootstrap.sh --prefix=$(BoostBuild) cxxflags="-stdlib=libc++" stage \
-	&& BOOST_BUILD_PATH=$(BoostConfigDir) \
-	./b2 --prefix=$(BoostBuild) threading=multi \
-	link=static runtime-link=static \
-	cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++"
+BoostB2Args = \
+	--prefix=$(BoostBuild) \
+	threading=multi \
+	link=static \
+	runtime-link=static \
+	cxxflags="$(ToolchainCxxFlags)" \
+	linkflags="-L$(LlvmLibDir)" \
+	$(NULL)
 
-$(Boost): $(toolchain)
-	$(call print-task,BUILD,boost,$(TaskMisc))
-	$(V1)mkdir -pv $(BoostBuild)
-	$(V1)$($(Boost)-cmd)
+$(Boost)-cmd = \
+	cd $(BoostDir) \
+	&& ./bootstrap.sh --prefix=$(BoostBuild) \
+	&& ./bjam install
 
 boost: $(Boost)
 DocStrings += "boost: build Boost library"
@@ -496,12 +510,10 @@ distclean-boost-cmd = \
 	find $(BoostDir) -name '*.a' -o -name '*.o' \
 		| grep -v config_test.o | xargs $(RM)
 
-# FIXME: ./b2 clean is noisy if boost hasn't been built.
 .PHONY: distclean-boost
 distclean-boost:
-	$(V1)cd $(BoostDir) && if [ -f b2 ]; then ./b2 clean; fi
+	$(V1)cd $(BoostDir) && if [ -f bjam ]; then ./bjam clean &>/dev/null; fi
 	$(V1)$(distclean-boost-cmd)
-
 DistcleanTargets += distclean-boost
 
 
@@ -626,7 +638,7 @@ $(OpenCL): $(toolchain)
 #
 # extern/triSYCL
 #
-TriSYCL_CxxFlags = -I$(extern)/triSYCL/include
+TriSYCL_CxxFlags = $(Boost_CxxFlags) -isystem $(extern)/triSYCL/include
 TriSYCL = $(extern)/triSYCL/include/CL/sycl.hpp
 
 
