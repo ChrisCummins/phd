@@ -10,7 +10,7 @@
 //         -extra-arg=-include \
 //         -extra-arg=/Users/cec/phd/extern/libclc/generic/include/clc/clc.h \
 //         -extra-arg=-target -extra-arg=nvptx64-nvidia-nvcl \
-//         -extra-arg=-DM_PI=3.14 -extra-arg=-xcl --
+//         -extra-arg=-xcl --
 //
 // TODO:
 //
