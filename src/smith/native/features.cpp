@@ -5,9 +5,9 @@
 //     mapping of data parallel programs to OpenCL for heterogeneous
 //     systems. In CGO. IEEE.
 //
-// Extracts static source code features from OpenCL source files.
+// Extracts static features from OpenCL source files.
 //
-//     Usage: ./features <file> [files ...]
+//     Usage: ./features [-extra-arg=<arg> ...] <file> [files ...]
 //
 // Output is comma separated values in the following format:
 //
@@ -595,12 +595,16 @@ std::string clplatform_header() {
 // @param path Path to OpenCL program.
 // @param out Stream to print features to.
 //
-void extract_features(std::string path, std::ostream &out) {
+void extract_features(std::string path, std::ostream &out,
+                      const std::vector<std::string>& extra_args
+                        = std::vector<std::string>{}) {
   clang::CompilerInstance compiler;
   clang::DiagnosticOptions diagnosticOptions;
   compiler.createDiagnostics();
 
   std::vector<std::string> args{{"-x", "cl", "-include", clplatform_header()}};
+  for (auto& arg : extra_args)
+    args.push_back(arg);
   std::vector<const char*> argv;
   for (auto& arg : args)
     argv.push_back(arg.c_str());
@@ -647,8 +651,8 @@ void extract_features(std::string path, std::ostream &out) {
   ParseAST(compiler.getPreprocessor(), &astConsumer, compiler.getASTContext());
   compiler.getDiagnosticClient().EndSourceFile();
 
-  std::string pFName = basename(path);
-  astConsumer.dumpKernelFeatures(path, out);
+  const std::string base_path = basename(path);
+  astConsumer.dumpKernelFeatures(base_path, out);
 }
 
 
@@ -671,20 +675,48 @@ bool file_exists(const std::string& path) {
 }
 
 
+// Check if argument is of the form '-extra-arg=xxx', and if so,
+// return 'xxx'. If not, return an empty string.
+std::string get_compiler_arg(const std::string& arg) {
+  std::string prefix("-extra-arg=");
+  if (!arg.compare(0, prefix.size(), prefix))
+    return arg.substr(prefix.size());
+  else
+    return {};
+}
+
+
+void usage(const std::string& progname, std::ostream& out = std::cout) {
+  out << "Usage: " << progname << " [-extra-arg=<arg> ...] "
+      << "<file> [files ...]\n\n"
+      << "Extracts static features from OpenCL source files.";
+}
+
+
 int main(int argc, char** argv) {
-  if (argc < 2) {
-    std::cerr << "Usage: " << argv[0] << " <file> [files ...]\n";
+  const std::vector<const std::string> args{argv + 1, argv + argc};
+  std::vector<std::string> paths, compiler_args;
+
+  for (const auto& arg : args) {
+    std::string carg = get_compiler_arg(arg);
+
+    if (carg.size())
+      compiler_args.push_back(carg);
+    else
+      paths.push_back(arg);
+  }
+
+  if (!paths.size()) {
+    usage(basename(argv[0]), std::cerr);
     return 1;
   }
 
-  int ret = 0;
-  std::vector<std::string> paths{argv + 1, argv + argc};
-
   print_csv_header(std::cout);
 
+  int ret = 0;
   for (const std::string& path : paths) {
     if (file_exists(path)) {
-      extract_features(path, std::cout);
+      extract_features(path, std::cout, compiler_args);
     } else {
       std::cerr << "error: file not found: " << path << '\n';
       ret = 1;
