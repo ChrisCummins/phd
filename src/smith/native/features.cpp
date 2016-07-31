@@ -546,7 +546,7 @@ std::string basename(const std::string& path) {
     --i;
   }
 
-  return path.substr(i + 1, path.length());
+  return path[i] == '/' ? path.substr(i + 1, path.length()) : path;
 }
 
 
