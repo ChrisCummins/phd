@@ -7,18 +7,20 @@
 //
 // Extracts static features from OpenCL source files.
 //
-//     Usage: ./features [-extra-arg=<arg> ...] <file> [files ...]
+//     Usage: ./features [-header-only] [-extra-arg=<arg> ...] <file> [files ...]
 //
 // Output is comma separated values in the following format:
 //
-//     file        file path
-//     kernel      name of the kernel
-//     comp        # compute operations
-//     rational    # rational operations
-//     mem         # accesses to global memory
-//     localmem    # accesses to local memory
-//     coalesced   # coalesced memory accesses
-//     atomic      # atomic operations
+//     file              file path
+//     kernel            name of the kernel
+//     comp              # compute operations
+//     rational          # rational operations
+//     mem               # accesses to global memory
+//     localmem          # accesses to local memory
+//     coalesced         # coalesced memory accesses
+//     atomic            # atomic operations
+//     F2:coalesced/mem  derived feature
+//     F4:comp/mem       derived feature
 //
 // Written by Zheng Wang <z.wang@lancaster.ac.uk>.
 // Modified by Chris Cummins <chrisc.101@gmail.com>.
@@ -702,7 +704,8 @@ std::string get_compiler_arg(const std::string& arg) {
 
 
 void usage(const std::string& progname, std::ostream& out = std::cout) {
-  out << "Usage: " << progname << " [-extra-arg=<arg> ...] "
+  out << "Usage: " << progname <<
+      << " [-header-only] [-extra-arg=<arg> ...] "
       << "<file> [files ...]\n\n"
       << "Extracts static features from OpenCL source files.";
 }
@@ -713,6 +716,13 @@ int main(int argc, char** argv) {
   std::vector<std::string> paths, compiler_args;
 
   for (const auto& arg : args) {
+
+    // Only print the CSV header, then quit.
+    if (arg == "-header-only") {
+      print_csv_header(std::cout);
+      return 0;
+    }
+
     std::string carg = get_compiler_arg(arg);
 
     if (carg.size())

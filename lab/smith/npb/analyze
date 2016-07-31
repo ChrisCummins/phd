@@ -5,6 +5,7 @@ import csv
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import re
 import shutil
 import sqlite3
 import sys
@@ -298,7 +299,8 @@ def dynamic_features(db, out_path):
 
 
 def file_to_benchmark(path):
-    return os.path.splitext(os.path.basename(path))[0].upper()
+    m = re.search(r'npb-3.3-([A-Z]+)-', path)
+    return m.group(1)
 
 
 def kernel_features(db, kernel_features_csv_path):
@@ -309,11 +311,11 @@ def kernel_features(db, kernel_features_csv_path):
 
     with open(kernel_features_csv_path) as infile:
         reader = csv.DictReader(infile)
-        to_db = [(file_to_benchmark(i['File']), i['Kernel Name'],
-                  i['#compute operations'], i['#rational operations'],
-                  i['#accesses to global memory'],
-                  i[' #accesses to local memory'],
-                  i[' #coalesced memory accesses'], i[' #atomic op'])
+        to_db = [(file_to_benchmark(i['file']), i['kernel'],
+                  i['comp'], i['rational'],
+                  i['mem'],
+                  i['localmem'],
+                  i['coalesced'], i['atomic'])
                  for i in reader]
     c.executemany('INSERT INTO KernelFeatures '
                   'VALUES (?,?,?,?,?,?,?,?)', to_db)
@@ -449,7 +451,7 @@ def main():
 
     data_root = os.path.expanduser(args.input)
     results_dir = os.path.join(data_root, 'results')
-    kernel_features_csv_path = os.path.join(data_root, 'kernel-features.csv')
+    kernel_features_csv_path = os.path.join(data_root, '../kernels/npb/features.csv')
 
     runtimes_csv_path = os.path.join(results_dir, 'runtimes.csv')
     wgsizes_csv_path = os.path.join(results_dir, 'wgsizes.csv')

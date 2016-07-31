@@ -30,6 +30,7 @@ setup(name='smith',
           'bin/smith-create-db',
           'bin/smith-drive',
           'bin/smith-explore',
+          'bin/smith-features',
           'bin/smith-parboil',
           'bin/smith-preprocess',
           'bin/smith-train'
