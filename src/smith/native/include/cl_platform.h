@@ -29,33 +29,36 @@
 #define CL_HAS_ANON_STRUCT 1
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
+#define CLK_GLOBAL_MEM_FENCE 1
 #define CLK_LOCAL_MEM_FENCE 1
 
 #ifdef cplusplus
 extern "C" {
 #endif
 
-int get_global_size(int i);
-int get_local_size(int i);
-float sqrt(float x);
-int get_global_id(int i);
-int get_local_id(int i);
-int get_group_id(int i);
 float exp(float x);
-int get_num_groups(int i);
+float fabs(float a);
 float log(float x);
-void barrier();
+float pow(float a, float b);
+float sqrt(float x);
 int atomic_add(__global int *p, int val);
-int atomic_dec(__global int *p);
 int atomic_and(__global int *p, int val);
-int atomic_sub(__global int *p, int val);
 int atomic_cmpxchg(__global int *p, int cmp, int val);
-int atomic_or(__global int *p, int val);
-int atomic_xchg(volatile __global int *p, int val);
-int atomic_xor(__global int *p, int val);
+int atomic_dec(__global int *p);
+int atomic_inc(__global int *p);
 int atomic_inc(__global int *p);
 int atomic_ma(__global int *p, int val);
-
+int atomic_or(__global int *p, int val);
+int atomic_sub(__global int *p, int val);
+int atomic_xchg(volatile __global int *p, int val);
+int atomic_xor(__global int *p, int val);
+int get_global_id(int i);
+int get_global_size(int i);
+int get_group_id(int i);
+int get_local_id(int i);
+int get_local_size(int i);
+int get_num_groups(int i);
+void barrier();
 
 /* scalar types  */
 typedef char         uchar;
