@@ -976,12 +976,32 @@ Python2SetupInstallDirs += $(src)/omnitune
 #
 # src/phd
 #
-phdHeaders = $(wildcard $(src)/phd/include/*)
-phd_CxxFlags = \
-	-I$(src)/phd/include $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
-phd_LdFlags = $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
-phd = $(phdHeaders)
-$(phd): $(GoogleBenchmark) $(GoogleTest)
+phdSrc = $(src)/phd/src
+phdInclude = $(src)/phd/include
+
+phd = $(phdSrc)/libphd.so
+
+phdCxxSources = $(wildcard $(phdSrc)/*.cpp)
+phdCxxObjects = $(patsubst %.cpp,%.o,$(phdCxxSources))
+CxxObjects += $(phdCxxObjects)
+$(phdCxxObjects): $(GoogleBenchmark) $(GoogleTest)
+
+phdCxxHeaders = $(filter-out %.lint,$(wildcard $(phdInclude)/*))
+CppLintSources += $(phdCxxHeaders)
+
+# Flags to build phd.
+$(phdSrc)_CxxFlags = \
+	-I$(phdInclude) $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
+$(phdSrc)_LdFlags = \
+	$(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
+
+# Build phd.
+$(phd): $(phdCxxObjects)
+	$(call o-link,$@,$(phdCxxObjects),-fPIC -shared)
+
+# Flags to build against phd.
+phd_CxxFlags = $($(phdSrc)_CxxFlags)
+phd_LdFlags = $($(phdSrc)_LdFlags)
 
 
 #
