@@ -342,7 +342,9 @@ define cpplint
 endef
 
 
-clang-tidy-cmd = $(CLANGTIDY) $1 -- $(CxxFlags) $2
+clang-tidy-cmd = $(CLANGTIDY) $1 \
+	-checks=-clang-analyzer-security.insecureAPI.rand \
+	-- $(CxxFlags) $2
 
 # Run clang-tidy on input.
 #
