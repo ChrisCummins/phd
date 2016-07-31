@@ -683,7 +683,8 @@ $(lab)/lm/benchmarks_LdFlags = $(phd_LdFlags)
 #
 # lab/ml
 #
-CxxTargets += $(lab)/ml/rewriter
+# FIXME: Check link errors for rewriter
+# CxxTargets += $(lab)/ml/rewriter
 
 $(lab)/ml/rewriter.o_CxxFlags = $(ClangLlvm_CxxFlags)
 $(lab)/ml/rewriter_LdFlags = $(ClangLlvm_LdFlags)
