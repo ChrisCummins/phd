@@ -791,12 +791,7 @@ $(learn)/challenges/011-big-mandelbrot.o: $(OpenCL)
 
 $(learn)/challenges_CxxFlags = $(phd_CxxFlags)
 $(learn)/challenges_LdFlags = $(phd_LdFlags)
-$(ChallengesCxxObjects): $(phd)
-
-$(learn)/challenges_CFlags = $(phd_CFlags)
-$(learn)/challenges_LdFlags = $(phd_LdFlags)
-$(ChallengesCObjects): $(phd)
-
+$(ChallengesCObjects) $(ChallengesCxxObjects): $(phd)
 
 #
 # learn/ctci/
