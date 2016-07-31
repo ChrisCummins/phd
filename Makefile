@@ -1382,8 +1382,8 @@ ToolchainCmake := $(ToolchainEnv) cmake	-DCMAKE_CXX_FLAGS="$(ToolchainCxxFlags)"
 # Flags to build against LLVM + Clang toolchain
 ClangLlvm_CxxFlags = \
 	$(shell $(LlvmConfig) --cxxflags) \
-	-I$(shell $(LlvmConfig) --src-root)/tools/clang/include \
-	-I$(shell $(LlvmConfig) --obj-root)/tools/clang/include \
+	-isystem $(shell $(LlvmConfig) --src-root)/tools/clang/include \
+	-isystem $(shell $(LlvmConfig) --obj-root)/tools/clang/include \
 	-fno-rtti \
 	$(NULL)
 
