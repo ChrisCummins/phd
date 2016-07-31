@@ -91,7 +91,7 @@ ArgStrings += "O=[0,1]: enable optimisations in generated files (default=$(O_def
 # Threading controls:
 #
 threads_default := 4
-nproc := $(shell which nproc &>/dev/null && nproc || echo 4)
+nproc := $(shell which nproc 2>&1 >/dev/null && nproc || echo $(threads_default))
 threads ?= $(shell echo "$(nproc) * 2" | bc -l)
 ArgStrings += "threads=[1+]: set number of build threads (default=$(threads_default))"
 
@@ -1600,7 +1600,7 @@ info: version
 	$(V2)echo "  cmake     $(shell which cmake &>/dev/null && { cmake --version | head -n1; } || { echo not found; })"
 	$(V2)echo "  ninja     $(shell which ninja &>/dev/null && { ninja --version | head -n1; } || { echo not found; })"
 	$(V2)echo "  pdflatex  $(shell which pdflatex &>/dev/null && { pdflatex --version | head -n1; } || { echo not found; })"
-	$(V2)echo "  python2   $(shell which python2 &>/dev/null && { python2 --version | head -n1; } || { echo not found; })"
+	$(V2)echo "  python2   $(shell which python2 &>/dev/null && { python2 --version 2>&1 | head -n1; } || { echo not found; })"
 	$(V2)echo "  python3   $(shell which python3 &>/dev/null && { python3 --version | head -n1; } || { echo not found; })"
 DocStrings += "info: show versions of system programs"
 
