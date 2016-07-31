@@ -446,7 +446,7 @@ $(GoogleBenchmark)-cmd = \
 	&& $(ToolchainCmake) .. -G Ninja >/dev/null \
 	&& ninja
 
-$(GoogleBenchmark): toolchain
+$(GoogleBenchmark): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)rm -rf $(extern)/benchmark/build
 	$(V1)mkdir -p $(extern)/benchmark/build
@@ -602,7 +602,7 @@ $(Libclc)-cmd = \
 	cd $(LibclcDir) && ./configure.py \
 	--with-llvm-config=$(LlvmBuild)/bin/llvm-config && $(MAKE)
 
-$(Libclc): toolchain
+$(Libclc): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)$($(Libclc)-cmd)
 
@@ -624,7 +624,7 @@ else
 OpenCL_LdFlags = -framework OpenCL
 endif
 OpenCL = $(extern)/opencl/include/cl.hpp
-$(OpenCL): toolchain
+$(OpenCL): $(toolchain)
 
 
 #
