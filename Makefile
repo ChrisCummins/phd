@@ -476,10 +476,12 @@ BoostUrlBase = http://sourceforge.net/projects/boost/files/boost/$(BoostVersion)
 $(CachedBoostTarball):
 	$(call wget,$(CachedBoostTarball),$(BoostUrlBase)$(notdir $(CachedBoostTarball)))
 
+# NOTE: Even if boost build fails, we don't care. We only need it to
+# copy the headers over for us.
 $(Boost)-cmd = \
 	cd $(BoostDir) \
 	&& ./bootstrap.sh --prefix=$(BoostBuild) >/dev/null \
-	&& ./bjam install >/dev/null
+	&& ./bjam install >/dev/null || true
 
 $(Boost): $(CachedBoostTarball) $(toolchain)
 	$(call unpack-tar,$(BoostDir),$<,-zxf)
