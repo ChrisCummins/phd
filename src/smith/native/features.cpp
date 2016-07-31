@@ -704,7 +704,7 @@ std::string get_compiler_arg(const std::string& arg) {
 
 
 void usage(const std::string& progname, std::ostream& out = std::cout) {
-  out << "Usage: " << progname <<
+  out << "Usage: " << progname
       << " [-header-only] [-extra-arg=<arg> ...] "
       << "<file> [files ...]\n\n"
       << "Extracts static features from OpenCL source files.";
