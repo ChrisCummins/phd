@@ -496,6 +496,7 @@ distclean-boost-cmd = \
 	find $(BoostDir) -name '*.a' -o -name '*.o' \
 		| grep -v config_test.o | xargs $(RM)
 
+# FIXME: ./b2 clean is noisy if boost hasn't been built.
 .PHONY: distclean-boost
 distclean-boost:
 	$(V1)cd $(BoostDir) && if [ -f b2 ]; then ./b2 clean; fi
