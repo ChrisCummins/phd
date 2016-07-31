@@ -1590,6 +1590,7 @@ info: version
 	$(V2)echo "  name      $(shell uname -n)"
 	$(V2)echo "  O/S       $(shell uname -o)"
 	$(V2)echo "  arch      $(shell uname -m)"
+	$(V2)echo "  cores     $(threads)"
 	$(V2)echo
 	$(V2)echo "Build essentials:"
 	$(V2)echo "  c++       $(shell which c++ &>/dev/null && { c++ --version | head -n1; } || { echo not found; })"
