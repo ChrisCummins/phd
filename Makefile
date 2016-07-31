@@ -90,7 +90,7 @@ ArgStrings += "O=[0,1]: enable optimisations in generated files (default=$(O_def
 #
 # Threading controls:
 #
-threads_default := $(shell nproc)
+threads_default := $(shell echo "$(shell nproc) * 2" | bc -l)
 threads ?= $(threads_default)
 ArgStrings += "threads=[1+]: set number of build threads (default=$(threads_default))"
 
@@ -1581,7 +1581,7 @@ info: version
 	$(V2)echo "  name      $(shell uname -n)"
 	$(V2)echo "  O/S       $(shell uname -o)"
 	$(V2)echo "  arch      $(shell uname -m)"
-	$(V2)echo "  cores     $(threads)"
+	$(V2)echo "  threads   $(threads)"
 	$(V2)echo
 	$(V2)echo "Build essentials:"
 	$(V2)echo "  c++       $(shell which c++ &>/dev/null && { c++ --version | head -n1; } || { echo not found; })"
