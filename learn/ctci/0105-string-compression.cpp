@@ -10,6 +10,8 @@
 #include <string>
 #include <ostream>
 
+static unsigned int seed = 0xCEC;
+
 //
 // A stateful solution which iterates over the string, storing the
 // current character and the current character count. If the new
@@ -72,7 +74,7 @@ void BM_compress_str(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < strlen; i++)
-      t += static_cast<char>(arc4random() % 5);
+      t += static_cast<char>(rand_r(&seed) % 5);
 
     std::string o = compress_str(t);
     benchmark::DoNotOptimize(o[0]);

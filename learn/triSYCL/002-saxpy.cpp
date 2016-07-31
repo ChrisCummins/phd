@@ -5,6 +5,10 @@
 
 #include <vector>
 
+#include <stdlib.h>
+
+static unsigned int seed = 0xCEC;
+
 //
 // Baseline, sequential SAXPY.
 //
@@ -84,14 +88,14 @@ static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 10;
 
 void BM_saxpy(benchmark::State& state) {
-  float a = arc4random() / static_cast<float>(UINT32_MAX);
+  float a = rand_r(&seed) / static_cast<float>(UINT32_MAX);
   std::vector<float> x(static_cast<size_t>(state.range_x()));
   std::vector<float> y(static_cast<size_t>(state.range_x()));
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < x.size(); i++) {
-      x[i] = arc4random() / static_cast<float>(UINT32_MAX);
-      y[i] = arc4random() / static_cast<float>(UINT32_MAX);
+      x[i] = rand_r(&seed) / static_cast<float>(UINT32_MAX);
+      y[i] = rand_r(&seed) / static_cast<float>(UINT32_MAX);
     }
 
     auto c = saxpy(a, x, y);
@@ -101,14 +105,14 @@ void BM_saxpy(benchmark::State& state) {
 BENCHMARK(BM_saxpy)->Range(BM_length_min, BM_length_max);
 
 void BM_sycl_saxpy(benchmark::State& state) {
-  float a = arc4random() / static_cast<float>(UINT32_MAX);
+  float a = rand_r(&seed) / static_cast<float>(UINT32_MAX);
   std::vector<float> x(static_cast<size_t>(state.range_x()));
   std::vector<float> y(static_cast<size_t>(state.range_x()));
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < x.size(); i++) {
-      x[i] = arc4random() / static_cast<float>(UINT32_MAX);
-      y[i] = arc4random() / static_cast<float>(UINT32_MAX);
+      x[i] = rand_r(&seed) / static_cast<float>(UINT32_MAX);
+      y[i] = rand_r(&seed) / static_cast<float>(UINT32_MAX);
     }
 
     auto c = sycl_saxpy(a, x, y);

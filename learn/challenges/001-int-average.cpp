@@ -8,18 +8,15 @@
 
 #include <cstdint>
 
+#include <stdlib.h>
+
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated"
-#pragma GCC diagnostic ignored "-Wmissing-noreturn"
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wshift-sign-overflow"
-#pragma GCC diagnostic ignored "-Wundef"
-#pragma GCC diagnostic ignored "-Wused-but-marked-unused"
-#pragma GCC diagnostic ignored "-Wweak-vtables"
+#pragma GCC diagnostic ignored "-Weverything"
 #include <benchmark/benchmark.h>
 #include <gtest/gtest.h>
 #pragma GCC diagnostic pop
 
+static unsigned int seed = 0xCEC;
 
 float averageIntList1(int32_t *l, const size_t n) {
     /*
@@ -103,7 +100,7 @@ void BM_baseline(benchmark::State& state) {
 
     while (state.KeepRunning()) {
         for (size_t i = 0; i < n; i++)
-            m[i] = static_cast<int32_t>(arc4random());
+            m[i] = static_cast<int32_t>(rand_r(&seed));
 
         benchmark::DoNotOptimize(*m);
     }
@@ -118,7 +115,7 @@ void BM_averageIntList1(benchmark::State& state) {
 
     while (state.KeepRunning()) {
         for (size_t i = 0; i < n; i++)
-            m[i] = static_cast<int>(arc4random());
+            m[i] = static_cast<int>(rand_r(&seed));
 
         averageIntList1(m, n);
         benchmark::DoNotOptimize(*m);
@@ -134,7 +131,7 @@ void BM_averageIntList2(benchmark::State& state) {
 
     while (state.KeepRunning()) {
         for (size_t i = 0; i < n; i++)
-            m[i] = static_cast<int>(arc4random());
+            m[i] = static_cast<int>(rand_r(&seed));
 
         averageIntList2(m, n);
         benchmark::DoNotOptimize(*m);

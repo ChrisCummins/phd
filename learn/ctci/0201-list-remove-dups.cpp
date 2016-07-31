@@ -11,6 +11,8 @@
 #include <forward_list>
 #include <unordered_map>
 
+static unsigned int seed = 0xCEC;
+
 //
 // First implementation. Build a frequency table, then iterate through
 // the list, deleting elements whos frequency is > 1.
@@ -144,7 +146,7 @@ void BM_remove_dups(benchmark::State& state) {
     std::forward_list<int> list;
 
     for (auto i = 0; i < state.range_x(); i++)
-      list.push_front(arc4random() % 10);
+      list.push_front(rand_r(&seed) % 10);
 
     remove_dups(list);
     benchmark::DoNotOptimize(list.front());
@@ -157,7 +159,7 @@ void BM_inplace_remove_dups(benchmark::State& state) {
     std::forward_list<int> list;
 
     for (auto i = 0; i < state.range_x(); i++)
-      list.push_front(arc4random() % 10);
+      list.push_front(rand_r(&seed) % 10);
 
     inplace_remove_dups(list);
     benchmark::DoNotOptimize(list.front());

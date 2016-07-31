@@ -8,6 +8,8 @@
 #include <iterator>
 #include <vector>
 
+static unsigned int seed = 0xCEC;
+
 //
 // First implementation. Create temporary buffer to merge into, then
 // copy values over.
@@ -70,7 +72,7 @@ void BM_std_inplace_merge(benchmark::State& state) {
     int aa = 0;
 
     for (size_t i = 0; i < 2 * len; i++) {
-      aa += arc4random() % 10;
+      aa += rand_r(&seed) % 10;
       a[i] = aa;
     }
 
@@ -90,8 +92,8 @@ void BM_std_merge(benchmark::State& state) {
   while (state.KeepRunning()) {
     int aa = 0, bb = 0;
     for (size_t i = 0; i < len; i++) {
-      aa += arc4random() % 10;
-      bb += arc4random() % 10;
+      aa += rand_r(&seed) % 10;
+      bb += rand_r(&seed) % 10;
       a[i] = aa;
       b[i] = bb;
     }
@@ -110,8 +112,8 @@ void BM_merge(benchmark::State& state) {
   while (state.KeepRunning()) {
     int aa = 0, bb = 0;
     for (size_t i = 0; i < len; i++) {
-      aa += arc4random() % 10;
-      bb += arc4random() % 10;
+      aa += rand_r(&seed) % 10;
+      bb += rand_r(&seed) % 10;
 
       a[i] = aa;
       b[i] = bb;

@@ -11,6 +11,10 @@
 #include <iostream>
 #include <vector>
 
+#include <stdlib.h>
+
+static unsigned int seed = 0xCEC;
+
 //
 // Baseline, sequential dot product.
 //
@@ -142,8 +146,8 @@ void BM_dot_product_float(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < a.size(); i++) {
-      a[i] = arc4random() / static_cast<float>(UINT32_MAX);
-      b[i] = arc4random() / static_cast<float>(UINT32_MAX);
+      a[i] = rand_r(&seed) / static_cast<float>(UINT32_MAX);
+      b[i] = rand_r(&seed) / static_cast<float>(UINT32_MAX);
     }
 
     auto c = dot_product(a, b);
@@ -158,8 +162,8 @@ void BM_sycl_dot_product_float(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < a.size(); i++) {
-      a[i] = arc4random() / static_cast<float>(UINT32_MAX);
-      b[i] = arc4random() / static_cast<float>(UINT32_MAX);
+      a[i] = rand_r(&seed) / static_cast<float>(UINT32_MAX);
+      b[i] = rand_r(&seed) / static_cast<float>(UINT32_MAX);
     }
 
     auto c = sycl_dot_product(a, b);
@@ -174,8 +178,8 @@ void BM_dot_product_int(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < a.size(); i++) {
-      a[i] = static_cast<int>(arc4random());
-      b[i] = static_cast<int>(arc4random());
+      a[i] = static_cast<int>(rand_r(&seed));
+      b[i] = static_cast<int>(rand_r(&seed));
     }
 
     auto c = dot_product(a, b);
@@ -190,8 +194,8 @@ void BM_sycl_dot_product_int(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < a.size(); i++) {
-      a[i] = static_cast<int>(arc4random());
-      b[i] = static_cast<int>(arc4random());
+      a[i] = static_cast<int>(rand_r(&seed));
+      b[i] = static_cast<int>(rand_r(&seed));
     }
 
     auto c = sycl_dot_product(a, b);

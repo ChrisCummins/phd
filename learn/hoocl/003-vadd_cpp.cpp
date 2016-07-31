@@ -15,7 +15,7 @@
 //------------------------------------------------------------------------------
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreserved-id-macro"
+#pragma GCC diagnostic ignored "-Weverything"
 #define __CL_ENABLE_EXCEPTIONS
 #pragma GCC diagnostic pop
 
@@ -24,13 +24,16 @@
 #include "./util.hpp"
 #include "./err_code.h"
 
-#include <vector>
 #include <cstdio>
 #include <cstdlib>
-#include <string>
-
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
+
+#include <stdlib.h>
+
+static unsigned int seed = 0xCEC;
 
 #ifndef DEVICE
 #define DEVICE CL_DEVICE_TYPE_DEFAULT
@@ -52,8 +55,8 @@ int main(void) {
 
   // Fill vectors a and b with random float values
   for (size_t i = 0; i < count; i++) {
-    h_a[i] = arc4random() / static_cast<float>(UINT32_MAX);
-    h_b[i] = arc4random() / static_cast<float>(UINT32_MAX);
+    h_a[i] = rand_r(&seed) / static_cast<float>(UINT32_MAX);
+    h_b[i] = rand_r(&seed) / static_cast<float>(UINT32_MAX);
   }
 
   try {
