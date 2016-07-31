@@ -20,7 +20,6 @@ import shutil
 import sqlite3
 import sys
 
-from argparse import ArgumentParser
 from functools import partial
 from hashlib import md5
 from multiprocessing import cpu_count,Pool
@@ -120,7 +119,7 @@ def compiler_preprocess_cl(src, id='anon'):
 
 
 def rewrite_cl(src, id='anon'):
-    rewriter = os.path.expanduser('~/phd/lab/ml/rewriter')
+    rewriter = os.path.expanduser('~/phd/src/smith/native/rewriter')
     ld_path = os.path.expanduser('~/phd/tools/llvm/build/lib/')
 
     # Rewriter can't read from stdin.
