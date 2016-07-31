@@ -506,12 +506,12 @@ boost: $(Boost)
 DocStrings += "boost: build Boost library"
 
 distclean-boost-cmd = \
-	find $(BoostDir) -name '*.a' -o -name '*.o' \
+	find $(BoostDir) -name '*.a' -o -name '*.o' 2>/dev/null \
 		| grep -v config_test.o | xargs $(RM)
 
 .PHONY: distclean-boost
 distclean-boost:
-	$(V1)cd $(BoostDir) && if [ -f bjam ]; then ./bjam clean &>/dev/null; fi
+	$(V1)if [ -d $(BoostDir) ]; then cd $(BoostDir) && if [ -f bjam ]; then ./bjam clean &>/dev/null; fi fi
 	$(V1)$(distclean-boost-cmd)
 DistcleanTargets += distclean-boost
 
