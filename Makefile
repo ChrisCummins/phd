@@ -1558,6 +1558,25 @@ version:
 	$(V2)test -f $(LlvmConfig) && echo 'toolchain version $(shell $(LlvmConfig) --version)'
 DocStrings += "version: show version information"
 
+# Print system information:
+.PHONY: info
+info: version
+	$(V2)echo
+	$(V2)echo "Host:"
+	$(V2)echo "  name      $(shell uname -n)"
+	$(V2)echo "  O/S       $(shell uname -o)"
+	$(V2)echo "  arch      $(shell uname -m)"
+	$(V2)echo
+	$(V2)echo "Build essentials:"
+	$(V2)echo "  c++       $(shell which c++ &>/dev/null && { c++ --version | head -n1; } || { echo not found; })"
+	$(V2)echo "  cmake     $(shell which cmake &>/dev/null && { cmake --version | head -n1; } || { echo not found; })"
+	$(V2)echo "  ninja     $(shell which ninja &>/dev/null && { ninja --version | head -n1; } || { echo not found; })"
+	$(V2)echo "  pdflatex  $(shell which pdflatex &>/dev/null && { pdflatex --version | head -n1; } || { echo not found; })"
+	$(V2)echo "  python2   $(shell which python2 &>/dev/null && { python2 --version | head -n1; } || { echo not found; })"
+	$(V2)echo "  python3   $(shell which python3 &>/dev/null && { python3 --version | head -n1; } || { echo not found; })"
+DocStrings += "info: show versions of system programs"
+
+
 # Print doc strings:
 .PHONY: help
 help:
