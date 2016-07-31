@@ -443,7 +443,7 @@ GoogleBenchmarkCMakeFlags = \
 	-DCMAKE_BUILD_TYPE=Release -DBENCHMARK_ENABLE_LTO=true
 $(GoogleBenchmark)-cmd = \
 	cd $(extern)/benchmark/build \
-	&& $(toolchainEnv) cmake $(GoogleBenchmarkCMakeFlags) .. \
+	&& cmake $(GoogleBenchmarkCMakeFlags) .. \
 	&& $(MAKE)
 
 $(GoogleBenchmark): $(toolchain)
@@ -528,7 +528,7 @@ GoogleTest_LdFlags = -lpthread -L$(extern)/googletest-build -lgtest
 
 $(GoogleTest)-cmd = \
 	cd $(extern)/googletest-build \
-	&& $(toolchainEnv) cmake ../googletest/googletest && $(MAKE)
+	&& cmake ../googletest/googletest && $(MAKE)
 
 $(GoogleTest): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
