@@ -499,8 +499,8 @@ BoostB2Args = \
 
 $(Boost)-cmd = \
 	cd $(BoostDir) \
-	&& ./bootstrap.sh --prefix=$(BoostBuild) \
-	&& ./bjam install
+	&& ./bootstrap.sh --prefix=$(BoostBuild) >/dev/null \
+	&& ./bjam install >/dev/null
 
 boost: $(Boost)
 DocStrings += "boost: build Boost library"
