@@ -23,12 +23,14 @@
 // Written by Zheng Wang <z.wang@lancaster.ac.uk>.
 // Modified by Chris Cummins <chrisc.101@gmail.com>.
 //
-#include <string>
+#include <algorithm>
 #include <array>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
+#include <string>
 #include <system_error>
 #include <vector>
 
@@ -524,13 +526,24 @@ class ASTConsumer : public clang::ASTConsumer {
 
     for (unsigned i = 0; i < FuncInfoVec.size(); i++) {
       if (FuncInfoVec[i]->isOclKernel()) {
+        // Derived features:
+        const auto F2 =
+            FuncInfoVec[i]->getColMemAccessCount() /
+            static_cast<float>(std::max(
+                FuncInfoVec[i]->getGlobalMemLSCount(), 1u));
+        const auto F4 =
+            FuncInfoVec[i]->getCompInstCount() /
+            static_cast<float>(std::max(
+                FuncInfoVec[i]->getGlobalMemLSCount(), 1u));
+
         fout << fileName << "," << FuncInfoVec[i]->getFuncName() << ","
              << FuncInfoVec[i]->getCompInstCount() << ","
              << FuncInfoVec[i]->getRationalInstCount() << ","
              << FuncInfoVec[i]->getGlobalMemLSCount() << ","
              << FuncInfoVec[i]->getLocalMemLSCount() << ","
              << FuncInfoVec[i]->getColMemAccessCount() << ","
-             << FuncInfoVec[i]->getAtomicOpCount() << "\n";
+             << FuncInfoVec[i]->getAtomicOpCount() << ","
+             << std::setprecision(3) << F2 << "," << F4 << "\n";
       }
     }
   }
@@ -665,7 +678,9 @@ void print_csv_header(std::ostream& out) {
       << "mem,"
       << "localmem,"
       << "coalesced,"
-      << "atomic\n";
+      << "atomic,"
+      << "F2:coalesced/mem,"
+      << "F4:comp/mem\n";
 }
 
 
