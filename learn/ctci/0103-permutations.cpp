@@ -8,6 +8,8 @@
 #include <limits>
 #include <string>
 
+static unsigned int seed = 0xCEC;
+
 //
 // First solution. Compare frequency counts for characters in the
 // string.
@@ -58,9 +60,9 @@ void BM_is_permutation(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (auto &c : t1)
-      c = arc4random() % std::numeric_limits<char>::max();
+      c = rand_r(&seed) % std::numeric_limits<char>::max();
     for (auto &c : t2)
-      c = arc4random() % std::numeric_limits<char>::max();
+      c = rand_r(&seed) % std::numeric_limits<char>::max();
 
     auto ret = is_permutation(t1, t2);
     benchmark::DoNotOptimize(ret);

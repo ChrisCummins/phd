@@ -13,17 +13,12 @@
 #include <vector>
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated"
-#pragma GCC diagnostic ignored "-Wmissing-noreturn"
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wshift-sign-overflow"
-#pragma GCC diagnostic ignored "-Wundef"
-#pragma GCC diagnostic ignored "-Wused-but-marked-unused"
-#pragma GCC diagnostic ignored "-Wweak-vtables"
+#pragma GCC diagnostic ignored "-Weverything"
 #include <benchmark/benchmark.h>
 #include <gtest/gtest.h>
 #pragma GCC diagnostic pop
 
+static unsigned int seed = 0xCEC;
 
 // My code
 //
@@ -200,7 +195,7 @@ void baseline(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (auto &c : t)  // generate string
-      c = arc4random() % std::numeric_limits<char>::max();
+      c = rand_r(&seed) % std::numeric_limits<char>::max();
     benchmark::DoNotOptimize(t.data());
   }
 }
@@ -212,9 +207,9 @@ void chris(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (auto &c : t)  // generate string
-      c = arc4random() % std::numeric_limits<char>::max();
+      c = rand_r(&seed) % std::numeric_limits<char>::max();
 
-    maxnsubstr_chris(t, (arc4random() % t.length()) / 2);
+    maxnsubstr_chris(t, (rand_r(&seed) % t.length()) / 2);
     benchmark::DoNotOptimize(t.data());
   }
 }
@@ -226,9 +221,9 @@ void adam(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (auto &c : t)  // generate string
-      c = arc4random() % std::numeric_limits<char>::max();
+      c = rand_r(&seed) % std::numeric_limits<char>::max();
 
-    maxnsubstr_adam(t, (arc4random() % t.length()) / 2);
+    maxnsubstr_adam(t, (rand_r(&seed) % t.length()) / 2);
     benchmark::DoNotOptimize(t.data());
   }
 }
@@ -240,9 +235,9 @@ void christophe(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (auto &c : t)  // generate string
-      c = arc4random() % std::numeric_limits<char>::max();
+      c = rand_r(&seed) % std::numeric_limits<char>::max();
 
-    maxnsubstr_christophe(t, (arc4random() % t.length()) / 2);
+    maxnsubstr_christophe(t, (rand_r(&seed) % t.length()) / 2);
     benchmark::DoNotOptimize(t.data());
   }
 }

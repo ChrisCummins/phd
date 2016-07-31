@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 
+#include <stdlib.h>
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
 #pragma GCC diagnostic ignored "-Wweak-vtables"
@@ -11,6 +13,8 @@
 #pragma GCC diagnostic pop
 
 #include "./memory.h"
+
+static unsigned int seed = 0xCEC;
 
 static const size_t size_min = 8;
 static const size_t size_max = 8 << 10;
@@ -47,7 +51,7 @@ void print(Container &c) {
 static void VectorReference(benchmark::State& state) {
     std::vector<int> v(static_cast<size_t>(state.range_x()));
     for (auto &i : v)
-        i = static_cast<int>(arc4random());
+        i = static_cast<int>(rand_r(&seed));
 
     while (state.KeepRunning()) {
         incrementByReference(v);
@@ -59,7 +63,7 @@ BENCHMARK(VectorReference)->Range(size_min, size_max);
 static void VectorPointer(benchmark::State& state) {
     std::vector<int> v(static_cast<size_t>(state.range_x()));
     for (auto &i : v)
-        i = static_cast<int>(arc4random());
+        i = static_cast<int>(rand_r(&seed));
 
     while (state.KeepRunning()) {
         incrementByPointer(&v);
@@ -71,7 +75,7 @@ BENCHMARK(VectorPointer)->Range(size_min, size_max);
 static void VectorValue(benchmark::State& state) {
     std::vector<int> v(static_cast<size_t>(state.range_x()));
     for (auto &i : v)
-        i = static_cast<int>(arc4random());
+        i = static_cast<int>(rand_r(&seed));
 
     while (state.KeepRunning()) {
         incrementByValue(v);

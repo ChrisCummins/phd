@@ -3,12 +3,13 @@
 #include <vector>
 #include <ustl/vector>
 
+static unsigned int seed = 0xCEC;
 
 static void std_vector_push_back_int(benchmark::State& state) {
   std::vector<int> v(0);
 
   while (state.KeepRunning()) {
-    v.push_back(static_cast<int>(arc4random()));
+    v.push_back(static_cast<int>(rand_r(&seed)));
     benchmark::DoNotOptimize(v.data());
   }
 }
@@ -18,7 +19,7 @@ static void ustl_vector_push_back_int(benchmark::State& state) {
   ustl::vector<int> v(0);
 
   while (state.KeepRunning()) {
-    v.push_back(static_cast<int>(arc4random()));
+    v.push_back(static_cast<int>(rand_r(&seed)));
     benchmark::DoNotOptimize(v.data());
   }
 }

@@ -7,6 +7,8 @@
 #include <limits>
 #include <utility>
 
+static unsigned int seed = 0xCEC;
+
 //
 // First solution. Get the length of the string, then iterate over the
 // first half, swapping with the second half.
@@ -48,7 +50,7 @@ void BM_reverse(benchmark::State& state) {
   char *t = new char[len];
 
   for (size_t i = 0; i < len; i++)
-    t[i] = arc4random() % std::numeric_limits<char>::max();
+    t[i] = rand_r(&seed) % std::numeric_limits<char>::max();
 
   while (state.KeepRunning()) {
     reverse(t);

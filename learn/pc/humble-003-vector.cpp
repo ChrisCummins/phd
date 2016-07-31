@@ -27,7 +27,6 @@ class Vector {
     ++copy_assignments;
 
     if (&rhs != this) {
-
       if (rhs.size() != size()) {
         delete[] _elems;
         _elems = new double[rhs.size()];

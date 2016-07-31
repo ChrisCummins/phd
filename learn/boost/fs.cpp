@@ -1,3 +1,4 @@
+#if 0
 #include <algorithm>
 #include <future>
 #include <iomanip>
@@ -251,9 +252,11 @@ void print_dir_md5sums(const fs::path& root) {
 
   file::walk_files(root, op, false);
 }
+#endif  // 0
 
 
 int main(int argc, char** argv) {
+#if 0
   file::recursive_directory_iterator first{argv[1]}, last{};
 
   if (argc == 1) {
@@ -264,6 +267,5 @@ int main(int argc, char** argv) {
     for (auto i = 1; i < argc; i++)
       print_dir_md5sums(argv[i]);
   }
-
-  return 0;
+#endif  // 0
 }

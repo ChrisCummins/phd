@@ -9,6 +9,7 @@
 #include <vector>
 #include <ustl/vector>
 
+static unsigned int seed = 0xCEC;
 
 static const size_t sort_size_min = 8;
 // FIXME: Change to a larger maximum sort size, and increase the
@@ -20,7 +21,7 @@ static void std_algorithm_sort_int(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (auto& i : v)
-      i = static_cast<int>(arc4random());
+      i = static_cast<int>(rand_r(&seed));
 
     std::sort(v.begin(), v.end());
     benchmark::DoNotOptimize(v.data());
@@ -33,7 +34,7 @@ static void ustl_algorithm_sort_int(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (auto& i : v)
-      i = static_cast<int>(arc4random());
+      i = static_cast<int>(rand_r(&seed));
 
     ustl::sort(v.begin(), v.end());
     benchmark::DoNotOptimize(v.data());
