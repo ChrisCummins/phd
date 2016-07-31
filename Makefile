@@ -564,7 +564,7 @@ DistcleanTargets += distclean-googletest
 intelTbbDir = $(extern)/intel-tbb
 intelTbbBuildDir = $(intelTbbDir)/build/build_release
 
-intelTbb = $(intelTbbBuildDir)/libtbb.so
+intelTbb = $(intelTbbBuildDir)/tbb_main.o
 
 CachedTbbTarball = $(cache)/extern/intel-tbb/tbb44_20160526oss_src_0.tgz
 intelTbbUrlBase = https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/
