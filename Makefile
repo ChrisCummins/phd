@@ -1370,14 +1370,15 @@ toolchainEnv := CC=$(toolchain_CC) CXX=$(toolchain_Cxx)
 
 # Flags to build against LLVM + Clang toolchain
 ClangLlvm_CxxFlags = \
-	$(shell $(LlvmBuild)/bin/llvm-config --cxxflags) \
-	-I$(LlvmSrc)/tools/clang/include \
-	-I$(LlvmBuild)/tools/clang/include \
+	$(shell $(LlvmConfig) --cxxflags) \
+	-I$(shell $(LlvmConfig) --src-root)/tools/clang/include \
+	-I$(shell $(LlvmConfig) --obj-root)/tools/clang/include \
+	-fno-rtti \
 	$(NULL)
 
 ClangLlvm_LdFlags = \
-	$(shell $(LlvmBuild)/bin/llvm-config --system-libs) \
-	-L$(shell $(LlvmBuild)/bin/llvm-config --libdir) \
+	$(shell $(LlvmConfig) --system-libs) \
+	-L$(shell $(LlvmConfig) --libdir) \
 	-ldl \
 	-lclangTooling \
 	-lclangToolingCore \
@@ -1400,7 +1401,7 @@ ClangLlvm_LdFlags = \
 	-lclangBasic \
 	-lclang \
 	-ldl \
-	$(shell $(LlvmBuild)/bin/llvm-config --libs) \
+	$(shell $(LlvmConfig) --libs) \
 	-pthread \
 	-lLLVMCppBackendCodeGen -lLLVMTarget -lLLVMMC \
 	-lLLVMObject -lLLVMCore -lLLVMCppBackendInfo \
