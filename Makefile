@@ -1372,7 +1372,7 @@ LlvmCMakeFlags := \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DLLVM_ENABLE_ASSERTIONS=true \
 	-DLLVM_TARGETS_TO_BUILD=X86 \
-	-G Ninja \
+	-G Ninja -Wno-dev \
 	$(NULL)
 
 Toolchain_CC := $(LlvmBuild)/bin/clang
