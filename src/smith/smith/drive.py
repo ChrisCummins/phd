@@ -138,9 +138,9 @@ def flatten_wgsize(wgsize):
     return np.prod(wgsize)
 
 
-def run_kernel(ctx, queue, kernel):
+def run_kernel(ctx, queue, kernel, filename='none'):
     name = kernel_name(kernel)
-    print("executing kernel", name, "... ", end='')
+    print(filename, name, "... ", end='')
 
     global_size = (randrange(100, 300), randrange(10, 100))
     wgsize,transfer,args = get_params(ctx, kernel, global_size)
@@ -175,18 +175,19 @@ def init_opencl():
     return ctx, queue
 
 
-def drive(src, devtype=cl.device_type.GPU, quiet=True):
+def drive(src, devtype=cl.device_type.GPU, quiet=True, filename='none'):
     ctx, queue = init_opencl()
     program = build_program(ctx, src, quiet=quiet)
 
-    [run_kernel(ctx, queue, kernel) for kernel in program.all_kernels()]
+    [run_kernel(ctx, queue, kernel, filename=filename)
+     for kernel in program.all_kernels()]
 
 
 def file(path, **kwargs):
     with open(fs.path(path)) as infile:
         src = infile.read()
         try:
-            drive(src, **kwargs)
+            drive(src, filename=fs.path(path), **kwargs)
         except DriveException as e:
             print(e, file=sys.stderr)
 
