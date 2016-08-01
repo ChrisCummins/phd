@@ -292,7 +292,7 @@ endef
 #   $1 (str)   Object file
 #   $2 (str[]) C sources
 #   $3 (str[]) Flags for compiler
-c-compile-o-cmd = $(CC) $(CFlags)
+c-compile-o-cmd = $(ToolchainEnv) $(CC) $(CFlags)
 define c-compile-o
 	$(call print-task,CC,$1,$(TaskCompile))
 	$(V1)$(c-compile-o-cmd) $3 $2 -c -o $1
@@ -305,7 +305,7 @@ endef
 #   $1 (str)   Object file
 #   $2 (str[]) C++ sources
 #   $3 (str[]) Flags for compiler
-cxx-compile-o-cmd = $(CXX) $(CxxFlags)
+cxx-compile-o-cmd = $(ToolchainEnv) $(CXX) $(CxxFlags)
 define cxx-compile-o
 	$(call print-task,CXX,$1,$(TaskCompile))
 	$(V1)$(cxx-compile-o-cmd) $3 $2 -c -o $1
@@ -320,7 +320,7 @@ endef
 #   $1 (str)   Executable
 #   $2 (str[]) Object files
 #   $3 (str[]) Flags for linker
-o-link-cmd = $(LD) $(CxxFlags) $(LdFlags)
+o-link-cmd = $(ToolchainEnv) $(LD) $(LdFlags) $(CxxFlags)
 define o-link
 	$(call print-task,LD,$1,$(TaskLink))
 	$(V1)$(o-link-cmd) -o $1 $2 $3
@@ -342,10 +342,21 @@ define cpplint
 	fi
 endef
 
-
-clang-tidy-cmd = $(CLANGTIDY) $1 \
-	-checks=-clang-analyzer-security.insecureAPI.rand \
-	-- $(CxxFlags) $2
+# Clang-tidy configuration. Disabled checks:
+#
+#    insecureAPI.rand - On Mac OS X it suggests using BSD-system's
+#                       arc4random(), which is not available on Linux
+#                       builds.
+#    unused-arg       - It was complaining about how '-std=libc++' was
+#                       unused.
+#
+clang-tidy-disabled-checks = \
+	clang-analyzer-security.insecureAPI.rand \
+	clang-diagnostic-unused-command-line-argument \
+	$(NULL)
+clang-tidy-checks-arg = -checks=-$(strip \
+	$(call join-with,$(comma)-,$(clang-tidy-disabled-checks)))
+clang-tidy-cmd = $(ToolchainEnv) $(CLANGTIDY) $1 $(clang-tidy-checks-arg) -- $(CxxFlags) $2
 
 # Run clang-tidy on input.
 #
@@ -447,7 +458,7 @@ GoogleBenchmarkCMakeFlags = \
 	-DCMAKE_BUILD_TYPE=Release
 $(GoogleBenchmark)-cmd = \
 	cd $(extern)/benchmark/build \
-	&& $(ToolchainCmake) .. -G Ninja >/dev/null \
+	&& $(ToolchainCmake) $(extern)/benchmark -G Ninja >/dev/null \
 	&& $(ToolchainEnv) ninja
 
 $(GoogleBenchmark): $(toolchain)
@@ -520,7 +531,7 @@ CLSmith = $(extern)/clsmith/build/CLSmith
 
 $(CLSmith)-cmd = \
 	cd $(extern)/clsmith/build \
-	&& cmake .. >/dev/null && $(MAKE)
+	&& cmake $(extern)/clsmith >/dev/null && $(MAKE)
 
 $(CLSmith):
 	$(call print-task,BUILD,$@,$(TaskMisc))
@@ -542,11 +553,13 @@ GoogleTest_CxxFlags = \
 	-isystem $(extern)/googletest/googletest/include \
 	-isystem $(LlvmSrc)/projects/libcxxabi/include \
 	$(NULL)
-GoogleTest_LdFlags = -lpthread -L$(extern)/googletest-build -lgtest
+GoogleTest_LdFlags = -lpthread -L$(extern)/googletest-build -lc++ -lgtest -lc++ -lc++abi
 
+GoogleTestCMakeFlags := -DGTEST_HAS_TR1_TUPLE=0
 $(GoogleTest)-cmd = \
 	cd $(extern)/googletest-build \
-	&& $(ToolchainCmake) ../googletest/googletest -G Ninja >/dev/null \
+	&& $(ToolchainCmake) $(extern)/googletest/googletest \
+	   $(GoogleTestCMakeFlags) -G Ninja >/dev/null \
 	&& $(ToolchainEnv) ninja
 
 $(GoogleTest): $(toolchain)
@@ -606,8 +619,8 @@ Libclc_CxxFlags = -Dcl_clang_storage_class_specifiers \
 	-target nvptx64-nvidia-nvcl -x cl
 
 $(Libclc)-cmd = \
-	cd $(LibclcDir) && ./configure.py \
-	--with-llvm-config=$(LlvmBuild)/bin/llvm-config && $(MAKE)
+	cd $(LibclcDir) && $(ToolchainEnv) ./configure.py \
+	--with-llvm-config=$(LlvmConfig) && $(MAKE)
 
 $(Libclc): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
@@ -874,7 +887,7 @@ CxxTargets += $(patsubst %.cpp,%,$(LearnPcCxxSources))
 
 $(learn)/pc_CxxFlags = $(phd_CxxFlags)
 $(learn)/pc_LdFlags = $(phd_LdFlags)
-$(LearnPcCxxObjects): $(phd)
+$(LearnPcCxxObjects): $(phd) $(GoogleBenchmark) $(GoogleTest)
 
 
 #
@@ -1130,10 +1143,8 @@ CxxDebugFlags = $(CxxDebugFlags_$(D))
 CxxFlags = \
 	$(CxxOptimisationFlags) \
 	$(CxxDebugFlags) \
-	-isystem /home/cec/phd/tools/llvm/projects/libcxxabi/include \
-	-isystem /home/cec/phd/tools/llvm/ \
+	$(ToolchainCxxFlags) \
 	-std=c++1z \
-	-stdlib=libc++ \
 	-pedantic \
 	-Weverything \
 	-Wno-c++98-compat \
@@ -1154,6 +1165,15 @@ CxxFlags = \
 	-ferror-limit=500 \
 	$(NULL)
 
+# Compile object file from C++ source. Pull in flags from three
+# variables: Global, directory-local, and file-local.
+#
+# To compile object file /path/foo.o from /path/foo.cpp:
+#
+#     $(CxxFlags)              - Global flags
+#     $(/path_CxxFlags)        - Directory-local flags
+#     $(/path/foo.o_CxxFlags)  - File-local flags
+#
 %.o: %.cpp
 	$(call cxx-compile-o,$@,$<,\
 		$($(patsubst %/,%,$@)_CxxFlags) \
@@ -1208,7 +1228,7 @@ DocStrings += "lint: build lint files"
 # later release I will give this another punt.
 LD := $(CXX)
 
-LdFlags =
+LdFlags = -L$(LlvmLibDir) -lc++
 
 %: %.o
 	$(call o-link,$@,$(filter %.o,$^),\
@@ -1394,20 +1414,38 @@ ToolchainCxxFlags := \
 	-cxx-isystem $(LlvmSrc)/projects/libcxxabi/include \
 	-stdlib=libc++ \
 	$(NULL)
+ToolchainLdFlags := \
+	-L$(LlvmLibDir) \
+	-lc++ \
+	$(NULL)
 ToolchainEnv := CC=$(Toolchain_CC) CXX=$(Toolchain_CXX) LD_LIBRARY_PATH=$(LlvmLibDir)
-ToolchainCmake := $(ToolchainEnv) cmake	-DCMAKE_CXX_FLAGS="$(ToolchainCxxFlags)"
+ToolchainCmake := $(ToolchainEnv) cmake	\
+	-DCMAKE_CXX_FLAGS="$(ToolchainCxxFlags)" \
+	-DCMAKE_EXE_LINKER_FLAGS="$(ToolchainLdFlags)"
+
+# Staged build configuration.
+LlvmStagedBuild = $(cache)/llvm/build
+LlvmStaged_CC := $(LlvmStagedBuild)/bin/clang
+LlvmStaged_CXX := $(LlvmStagedBuild)/bin/clang++
+LlvmStagedCxxFlags := $(ToolchainCxxFlags)
+LlvmStagedEnv := \
+	CC=$(LlvmStagedBuild)/bin/clang \
+	CXX=$(LlvmStagedBuild)/bin/clang++ \
+	LD_LIBRARY_PATH=$(LlvmStagedBuild)/lib \
+	$(NULL)
+LlvmStagedCmake := $(LlvmStagedEnv) cmake -DCMAKE_CXX_FLAGS="$(LlvmStagedCxxFlags)"
 
 # Flags to build against LLVM + Clang toolchain
 ClangLlvm_CxxFlags = \
-	$(shell $(LlvmConfig) --cxxflags) \
-	-isystem $(shell $(LlvmConfig) --src-root)/tools/clang/include \
-	-isystem $(shell $(LlvmConfig) --obj-root)/tools/clang/include \
+	$(shell $(ToolchainEnv) $(LlvmConfig) --cxxflags) \
+	-isystem $(shell $(ToolchainEnv) $(LlvmConfig) --src-root)/tools/clang/include \
+	-isystem $(shell $(ToolchainEnv) $(LlvmConfig) --obj-root)/tools/clang/include \
 	-fno-rtti \
 	$(NULL)
 
 ClangLlvm_LdFlags = \
-	$(shell $(LlvmConfig) --system-libs) \
-	-L$(shell $(LlvmConfig) --libdir) \
+	$(shell $(ToolchainEnv) $(LlvmConfig) --system-libs) \
+	-L$(shell $(ToolchainEnv) $(LlvmConfig) --libdir) \
 	-ldl \
 	-lclangTooling \
 	-lclangToolingCore \
@@ -1430,7 +1468,7 @@ ClangLlvm_LdFlags = \
 	-lclangBasic \
 	-lclang \
 	-ldl \
-	$(shell $(LlvmConfig) --libs) \
+	$(shell $(ToolchainEnv) $(LlvmConfig) --libs) \
 	-pthread \
 	-lLLVMTarget -lLLVMMC \
 	-lLLVMObject -lLLVMCore \
@@ -1455,7 +1493,7 @@ CachedLlvmComponents := \
 	openmp \
 	libcxx \
 	libcxxabi \
-	$(NONE)
+	$(NULL)
 LlvmTar := -$(LlvmVersion).src.tar.xz
 
 CachedLlvmTarballs = $(addprefix $(LlvmCache)/,$(addsuffix $(LlvmTar),$(CachedLlvmComponents)))
@@ -1484,15 +1522,26 @@ $(LlvmSrc): $(CachedLlvmTarballs)
 	$(call unpack-llvm-tar,projects/libcxx,libcxx)
 	$(call unpack-llvm-tar,projects/libcxxabi,libcxxabi)
 
-# Build LLVM.
-$(LlvmBuild)/bin/llvm-config: $(LlvmSrc)
-	$(call print-task,BUILD,LLVM toolchain,$(TaskMisc))
+# Build LLVM toolchain. It actually builds it twice: in the first
+# instance, into a staging area. The staged build is then used to
+# build a second instance, which becomes the "true" build. This
+# two-process process means that the final build is entirely
+# self-hosted, and includes no references to system stdlibs.
+$(LlvmConfig): $(LlvmSrc)
+	$(call print-task,CONFIG,LLVM staging toolchain,$(TaskMisc))
+	$(V1)mkdir -p $(LlvmStagedBuild)
+	$(V1)cd $(LlvmStagedBuild) && cmake $(LlvmSrc) $(LlvmCMakeFlags) >/dev/null
+	$(call print-task,BUILD,LLVM staging toolchain,$(TaskCompile))
+	$(V1)cd $(LlvmStagedBuild) && ninja
+
 	$(V1)rm -rf $(LlvmBuild)
 	$(V1)mkdir -p $(LlvmBuild)
-	$(V1)cd $(LlvmBuild) && cmake .. $(LlvmCMakeFlags) >/dev/null
-	$(V1)cd $(LlvmBuild) && ninja
+	$(call print-task,CONFIG,LLVM toolchain,$(TaskMisc))
+	$(V1)cd $(LlvmBuild) && $(LlvmStagedCmake) $(LlvmSrc) $(LlvmCMakeFlags) >/dev/null
+	$(call print-task,BUILD,LLVM staging toolchain,$(TaskCompile))
+	$(V1)cd $(LlvmBuild) && $(LlvmStagedEnv) ninja
 
-$(toolchain): $(LlvmBuild)/bin/llvm-config
+$(toolchain): $(LlvmConfig)
 	$(V1)date > $(toolchain)
 
 toolchain: $(toolchain)
