@@ -190,16 +190,19 @@ def transfer_stats_scenario(db_c, benchmark, dataset):
 
 
 def stats(db):
-    print("reducing raw data to statistics ...")
     c = db.cursor()
+
+    print("reducing runtime stats ...")
     c.execute('SELECT DISTINCT benchmark,dataset,device FROM Runtimes')
     to_db = [runtime_stats_scenario(c, *row) for row in c.fetchall()]
     c.executemany("INSERT INTO RuntimeStats VALUES (?,?,?,?,?,?)", to_db)
 
+    print("reducing wgsize stats ...")
     c.execute('SELECT DISTINCT benchmark,dataset FROM Wgsizes')
     to_db = [wgsize_stats_scenario(c, *row) for row in c.fetchall()]
     c.executemany("INSERT INTO WgsizeStats VALUES (?,?,?)", to_db)
 
+    print("reducing transfers stats ...")
     c.execute('SELECT DISTINCT benchmark,dataset FROM Transfers')
     to_db = [transfer_stats_scenario(c, *row) for row in c.fetchall()]
     c.executemany("INSERT INTO TransferStats VALUES (?,?,?)", to_db)
@@ -308,12 +311,17 @@ def file_to_benchmark(path):
 def kernel_features(db, kernel_features_csv_path):
     print("importing kernel features ...")
     c = db.cursor()
+
+    # Delete any existing data:
+    c.execute('DELETE FROM KernelFeatures')
+
     if not os.path.exists(kernel_features_csv_path):
         raise Exception("file '{}' not found!".format(kernel_features_csv_path))
 
     with open(kernel_features_csv_path) as infile:
-        reader = csv.DictReader(infile)
-        to_db = [row for row in reader]
+        reader = csv.reader(infile)
+        next(reader)
+        to_db = [[file_to_benchmark(row[0])] + row[1:] for row in reader]
     c.executemany('INSERT INTO KernelFeatures '
                   'VALUES (?,?,?,?,?,?,?,?,?,?)', to_db)
     db.commit()
@@ -323,13 +331,16 @@ def program_features(db):
     print("computing program features ...")
     c = db.cursor()
 
+    # Delete any existing data:
+    c.execute('DELETE FROM ProgramFeatures')
+
     c.execute('SELECT DISTINCT file FROM KernelFeatures')
     for row in c.fetchall():
         benchmark = row[0]
         c.execute('SELECT file,SUM(comp),SUM(rational),'
                   'SUM(mem),SUM(localmem),SUM(coalesced),'
                   'SUM(atomic) FROM KernelFeatures '
-                  'WHERE benchmark=?', row)
+                  'WHERE file=?', row)
         data = c.fetchone()
         c.execute('INSERT OR IGNORE INTO ProgramFeatures '
                   'VALUES (?,?,?,?,?,?,?)', data)
@@ -414,7 +425,7 @@ def training_data(db, training_csv_path):
             'coalesced',
             'atomic',
             'transfer',
-            'wgsize'
+            'wgsize',
             'F1:transfer/(comp+mem)',
             'F2:coalesced/mem',
             'F3:(localmem/mem)*avgws',
