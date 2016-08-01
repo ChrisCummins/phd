@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+#
+devtype=$1
+source=$2
+dest=$3
+
+set -eu
+
+usage() {
+    echo "Usage: $0 <cpu|gpu> <source> <dest>"
+}
+
+main() {
+    local devtype=$1
+    local source=$(realpath $2)
+    local dest=$(realpath $3)
+
+    if [[ $devtype != "cpu" ]] && [[ $devtype != "gpu" ]]; then
+        echo -e "Unrecognised device type '$devtype'\n" >&2
+        usage >&2
+        exit 1
+    fi
+
+    if [[ ! -d "$source" ]]; then
+        echo "Source '$source' not found"
+    fi
+
+    echo "Merging from: $source"
+    echo "Merging into: $dest"
+
+    mkdir -pv "$dest"
+
+    for srcfile in $(find "$source" -type f -name '*.'$devtype'.out'); do
+        root="$(echo $srcfile | sed 's,'"$source"'/,,')"
+        dstfile="$dest/$root"
+        mkdir -pv "$(dirname $dstfile)"
+        cp -v "$srcfile" "$dstfile"
+    done
+}
+main $devtype $source $dest
