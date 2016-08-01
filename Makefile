@@ -446,7 +446,7 @@ GoogleBenchmarkCMakeFlags = \
 $(GoogleBenchmark)-cmd = \
 	cd $(extern)/benchmark/build \
 	&& $(ToolchainCmake) .. -G Ninja >/dev/null \
-	&& ninja
+	&& $(ToolchainEnv) ninja
 
 $(GoogleBenchmark): toolchain
 	$(call print-task,BUILD,$@,$(TaskMisc))
@@ -542,7 +542,7 @@ GoogleTest_LdFlags = -lpthread -L$(extern)/googletest-build -lgtest
 $(GoogleTest)-cmd = \
 	cd $(extern)/googletest-build \
 	&& $(ToolchainCmake) ../googletest/googletest -G Ninja >/dev/null \
-	&& ninja
+	&& $(ToolchainEnv) ninja
 
 $(GoogleTest): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
