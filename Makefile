@@ -1031,6 +1031,10 @@ phd_LdFlags = $($(phdSrc)_LdFlags)
 #
 Python3SetupTestDirs += $(src)/smith
 Python3SetupInstallDirs += $(src)/smith
+PyLintSources += \
+	$(wildcard $(src)/smith/smith/*.py) \
+	$(wildcard $(src)/smith/bin/*.py) \
+	$(NULL)
 
 SmithNativeDir = $(src)/smith/native
 SmithFeatures = $(SmithNativeDir)/features
