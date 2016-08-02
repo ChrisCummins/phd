@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+
 from functools import wraps
 from random import randrange
 from threading import Thread
@@ -50,7 +53,7 @@ def timeout(seconds=30):
 
 
 @timeout(30)
-def run_with_timeout(kernel, *kargs, timeout=1):
+def run_with_timeout(kernel, *kargs):
     try:
         event = kernel(*kargs)
     except Exception as e:
@@ -204,7 +207,7 @@ def run_kernel(ctx, queue, kernel, global_size=None, filename='none'):
         for i in hostd:
             dev_buffer = args[i]
             host_buffer = hostd[i]
-            event = cl.enqueue_copy(queue, dev_buffer, dev_buffer)
+            event = cl.enqueue_copy(queue, host_buffer, dev_buffer)
             elapsed += get_elapsed(event)
         runtimes.append(elapsed)
 
