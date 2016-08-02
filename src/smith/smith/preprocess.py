@@ -340,6 +340,13 @@ def verify_bytecode_features(bc_features, id='anon'):
             .format(num_instructions, min_num_instructions))
 
 
+def sanitize_prototype(src):
+    # Ensure that prototype is well-formed on a single line:
+    prototype_end_idx = src.index('{') + 1
+    prototype = ' '.join(src[:prototype_end_idx].split())
+    return prototype + src[prototype_end_idx:]
+
+
 # 3 possible outcomes:
 #
 #   1. Good. Code is preprocessed and ready to be put into a training set.
@@ -371,7 +378,8 @@ def preprocess(src, id='anon'):
     # Rewrite and format source:
     src = compiler_preprocess_cl(src, id)
     src = rewrite_cl(src, id)
-    src = clangformat_ocl(src, id)
+    src = clangformat_ocl(src, id).strip()
+    src = sanitize_prototype(src)
 
     return src
 

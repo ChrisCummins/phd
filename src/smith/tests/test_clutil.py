@@ -12,7 +12,7 @@ from smith import clutil
 from smith import fetch
 
 source1 = """
-__kernel void A(__global float* a, __global float* b, const int c) {
+__kernel void A(__global float* a,    __global float* b, const int c) {
     int d = get_global_id(0);
 
     if (d < c) {
@@ -33,7 +33,9 @@ __kernel void AB(__global float* a, __global float* b, __local int* c) {
 source2_prototype = "__kernel void AB(__global float* a, __global float* b, __local int* c) {"
 
 source3 = """
-__kernel void C(__global int* a, __global int* b, const int c, const int d) {
+__kernel void C(__global int* a, __global int* b,
+
+                const int c, const int d) {
     int e = get_global_id(0);
     a[e] = b[e] + c * d;
 }

@@ -9,11 +9,6 @@ import sys
 from random import shuffle
 
 import smith
-from smith import config
-from smith import explore
-from smith import preprocess
-from smith import torch_rnn
-from smith import train
 
 
 class OpenCLUtilException(smith.SmithException): pass
@@ -27,7 +22,7 @@ class KernelArg(object):
     """
     def __init__(self, string):
         self._string = string.strip()
-        self._components = self._string.split(' ')
+        self._components = self._string.split()
 
     @property
     def name(self):
@@ -78,7 +73,7 @@ class KernelPrototype(object):
     Requires source code to have been pre-processed.
     """
     def __init__(self, string):
-        self._string = string.strip()
+        self._string = ' '.join(string.split())
         if not self._string.startswith('__kernel void '):
             raise PrototypeException('malformed prototype', self._string)
 
