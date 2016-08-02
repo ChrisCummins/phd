@@ -5,27 +5,41 @@
 from argparse import ArgumentParser
 
 import labm8
+from labm8 import fmt
 from labm8 import fs
 
 import smith
 from smith import features
+
+def features_dir(csv_path):
+    return fs.basename(fs.dirname(csv_path))
 
 def main():
     parser = ArgumentParser()
     parser.add_argument('inputs', nargs='+', help='input path(s)')
     parser.add_argument('-d', '--dir-mode', action='store_true',
                         help='treat inputs as directories')
+    parser.add_argument('-s', '--stats', action='store_true',
+                        help='summarize a features files')
     args = parser.parse_args()
 
     inputs = args.inputs
     dir_mode = args.dir_mode
+    summarise = args.stats
+
+    if summarise:
+        stats = [features.summarize(f) for f in inputs]
+
+        print('dataset', *list(stats[0].keys()), sep=',')
+        for path,stat in zip(inputs,stats):
+            print(features_dir(path), *list(stat.values()), sep=',')
+        return
 
     if dir_mode:
         trees = [fs.ls(d, abspaths=True, recursive=True) for d in inputs]
         paths = [item for sublist in trees for item in sublist]
     else:
         paths = [fs.path(f) for f in inputs]
-
     features.files(paths)
 
 

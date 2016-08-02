@@ -1,8 +1,13 @@
+import csv
 import os
 import re
 import sys
 
+from collections import OrderedDict
 from subprocess import Popen,PIPE,STDOUT
+
+import labm8
+from labm8 import math as labmath
 
 import smith
 
@@ -63,3 +68,18 @@ def files(paths, file=sys.stdout):
     for path in paths:
         # print("\r\033[1Kfile {} of {}".format(i, npaths), end='')
         features(path)
+
+
+def summarize(csv_path):
+    with open(csv_path) as infile:
+        reader = csv.reader(infile)
+        table = [row for row in reader]
+
+    d = OrderedDict()
+    ignored_cols = 2
+    d['datapoints'] = len(table) - 1
+    for i,col in enumerate(table[0][ignored_cols:]):
+        i += ignored_cols
+        d[col] = labmath.mean([float(r[i]) for r in table[1:]])
+
+    return d
