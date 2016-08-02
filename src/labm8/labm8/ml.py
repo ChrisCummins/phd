@@ -338,7 +338,8 @@ class SimpleLogistic(Classifier):
 class RandomForest(Classifier):
     def __init__(self, *args, **kwargs):
         classname = "weka.classifiers.trees.RandomForest"
-        super(RandomForest, self).__init__(classname=classname, *args, **kwargs)
+        super(RandomForest, self).__init__(
+            classname=classname, *args, **kwargs)
 
 
 class LinearRegression(Classifier):

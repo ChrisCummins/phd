@@ -21,6 +21,7 @@ from glob import iglob
 
 import labm8 as lab
 
+
 class Error(Exception):
     pass
 
@@ -88,7 +89,7 @@ def cd(path):
 
     Returns absolute path to new working directory.
     """
-    _cdhist.append(pwd()) # Push to history.
+    _cdhist.append(pwd())  # Push to history.
     path = abspath(path)
     os.chdir(path)
     return path
@@ -101,7 +102,7 @@ def cdpop():
     Returns absolute path to new working directory.
     """
     if len(_cdhist) >= 1:
-        old = _cdhist.pop() # Pop from history.
+        old = _cdhist.pop()  # Pop from history.
         os.chdir(old)
         return old
     else:

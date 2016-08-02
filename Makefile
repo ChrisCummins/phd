@@ -466,7 +466,7 @@ GoogleBenchmarkCMakeFlags = \
 $(GoogleBenchmark)-cmd = \
 	cd $(extern)/benchmark/build \
 	&& $(ToolchainCmake) .. -G Ninja >/dev/null \
-	&& ninja
+	&& $(ToolchainEnv) ninja
 
 $(GoogleBenchmark): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
@@ -556,13 +556,16 @@ DistcleanTargets += distclean-clsmith
 # extern/googletest
 #
 GoogleTest = $(extern)/googletest-build/libgtest.a
-GoogleTest_CxxFlags = -isystem $(extern)/googletest/googletest/include
+GoogleTest_CxxFlags = \
+	-isystem $(extern)/googletest/googletest/include \
+	-isystem $(LlvmSrc)/projects/libcxxabi/include \
+	$(NULL)
 GoogleTest_LdFlags = -lpthread -L$(extern)/googletest-build -lgtest
 
 $(GoogleTest)-cmd = \
 	cd $(extern)/googletest-build \
 	&& $(ToolchainCmake) ../googletest/googletest -G Ninja >/dev/null \
-	&& ninja
+	&& $(ToolchainEnv) ninja
 
 $(GoogleTest): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))

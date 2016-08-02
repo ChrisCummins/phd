@@ -338,7 +338,7 @@ bool operator>=(const multiset<Key, Compare, Alloc>& lhs,
 
 template<typename Key, typename Compare, typename Alloc>
 void swap(multiset<Key, Compare, Alloc>& lhs,
-          multiset<Key, Compare, Alloc>& rhs);
+          multiset<Key, Compare, Alloc>& rhs);  // NOLINT
 
 }  // namespace ustl
 
