@@ -262,7 +262,9 @@ clangformat_config = {
     'AllowShortCaseLabelsOnASingleLine': False,
     'AllowShortFunctionsOnASingleLine': False,
     'AllowShortLoopsOnASingleLine': False,
-    'AllowShortIfStatementsOnASingleLine': False
+    'AllowShortIfStatementsOnASingleLine': False,
+    'DerivePointerAlignment': False,
+    'PointerAlignment': 'Left'
 }
 
 def clangformat_ocl(src, id='anon'):
