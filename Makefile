@@ -1637,6 +1637,7 @@ info: version
 	$(V2)echo "  pdflatex  $(shell which pdflatex &>/dev/null && { pdflatex --version | head -n1; } || { echo not found; })"
 	$(V2)echo "  python2   $(shell which python2 &>/dev/null && { python2 --version 2>&1 | head -n1; } || { echo not found; })"
 	$(V2)echo "  python3   $(shell which python3 &>/dev/null && { python3 --version | head -n1; } || { echo not found; })"
+	$(V2)echo "  pep8      $(shell which pep8 &>/dev/null && { pep8 --version 2>&1 | head -n1; } || { echo not found; })"
 DocStrings += "info: show versions of system programs"
 
 
