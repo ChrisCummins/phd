@@ -58,6 +58,7 @@ DEVINFOS = [
     }
 ]
 
+
 def get_devinfos():
     """
     Return a list of device info dicts for each device on system.

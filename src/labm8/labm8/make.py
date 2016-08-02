@@ -43,6 +43,7 @@ class NoMakefileError(Error):
     """
     pass
 
+
 class NoTargetError(Error):
     """
     Thrown if there is no rule for the requested target.

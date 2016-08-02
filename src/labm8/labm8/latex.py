@@ -72,6 +72,7 @@ def write_table_body(data, output=None, headers=None,
 
     return None if isfile else output.getvalue()
 
+
 def table(rows, columns=None, output=None, data_args={}, **kwargs):
     """
     Return a LaTeX formatted string of "list of list" table data.

@@ -59,7 +59,7 @@ def truncate(string, maxchar):
     if len(string) <= maxchar:
         return string
     else:
-        return string[:maxchar-3] + "..."
+        return string[:maxchar - 3] + "..."
 
 
 def levenshtein(s1, s2):

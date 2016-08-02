@@ -14,14 +14,17 @@
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 import hashlib
 
+
 def _sha1(data):
     return hashlib.sha1(data).hexdigest()
+
 
 def sha1(data):
     """
     Return the sha1 of string "data".
     """
     return _sha1(data.encode("utf-8"))
+
 
 def sha1_file(path):
     """
