@@ -270,11 +270,12 @@ clangformat_config = {
 def clangformat_ocl(src, id='anon'):
     clangformat = fs.path(cfg.llvm_path(), "build", "bin", "clang-format")
     cmd = [ clangformat, '-style={}'.format(json.dumps(clangformat_config)) ]
-
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
                     env=cfg.toolchain_env())
     stdout, stderr = process.communicate(src.encode('utf-8'))
 
+    if stderr:
+        print(stderr.decode('utf-8'))
     if process.returncode != 0:
         raise ClangFormatException(stderr.decode('utf-8'))
 
