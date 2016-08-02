@@ -26,7 +26,11 @@ from multiprocessing import cpu_count,Pool
 from subprocess import Popen,PIPE,STDOUT
 from tempfile import NamedTemporaryFile
 
+import labm8
+from labm8 import fs
+
 import smith
+from smith import config as cfg
 
 
 #
@@ -266,7 +270,7 @@ clangformat_config = {
 }
 
 def clangformat_ocl(src, id='anon'):
-    clangformat = os.path.expanduser('~/phd/tools/llvm/build/bin/clang-format')
+    clangformat = fs.path(cfg.llvm_path(), "build", "bin", "clang-format")
     cmd = [ clangformat, '-style={}'.format(json.dumps(clangformat_config)) ]
 
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)

@@ -19,6 +19,7 @@ def extra_args():
 def is_features(line):
     return len(line) == 10
 
+
 def is_good_features(line, stderr):
     if is_features(line):
         has_err = False if stderr.find(' error: ') == -1 else True

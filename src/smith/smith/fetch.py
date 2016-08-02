@@ -15,6 +15,7 @@ from hashlib import sha1
 from subprocess import Popen,PIPE,STDOUT
 
 import smith
+from smith import config as cfg
 
 # Counters
 repos_new_counter = 0
@@ -477,13 +478,12 @@ def inline_headers(src):
 def get_new_program(db_path):
     global files_new_counter
 
-    clsmith = os.path.expanduser('~/phd/extern/clsmith/build/CLSmith')
     outputpath = 'CLProg.c'
 
     db = sqlite3.connect(db_path)
     c = db.cursor()
 
-    cmd = [clsmith]
+    cmd = [cfg.clsmith()]
 
     process = Popen(cmd)
     process.communicate()
@@ -525,5 +525,3 @@ def clsmith(db_path, target_num_kernels):
     db.close()
 
 
-if __name__ == '__main__':
-    main()
