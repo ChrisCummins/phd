@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+#
+# Drive OpenCL files in a directory.
+#
+
+drive_file() {
+    local in_path=$1
+
+    dsizes=(12 24 64 102 162 408 1020)
+
+    for dsize in ${dsizes[@]}; do
+        # echo $dsize $in_path
+        DSIZE=$dsize smith-drive -f $in_path
+    done
+}
+
+main() {
+    local in_dir=$1
+
+    for f in $(find $in_dir -name '*.cl' -type f); do
+        drive_file $f
+    done
+}
+main $@
