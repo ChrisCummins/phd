@@ -8,8 +8,12 @@ import smith
 from smith import preprocess
 from smith import config
 
-# If true, write gold standard files.
-UPDATE_GS_FILES = True
+# Invoke tests with UPDATE_GS_FILES set to update the gold standard
+# tests. E.g.:
+#
+#   $ UPDATE_GS_FILES=1 python3 ./setup.py test
+#
+UPDATE_GS_FILES = True if 'UPDATE_GS_FILES' in os.environ else False
 
 def preprocess_pair(basename, preprocessor=preprocess.preprocess):
     gs_path = tests.data_path(os.path.join('cl', str(basename) + '.gs'),
