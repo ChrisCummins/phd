@@ -32,7 +32,7 @@ def fetch_samples(sample_path):
     """
     with open(sample_path) as infile:
         contents = infile.read()
-        samples = re.split(r'=== SAMPLE [0-9]+ ===', contents)
+        samples = re.split(r'/* === SAMPLE [0-9]+ === */', contents)
     return [sample.strip() for sample in samples if sample.strip()]
 
 
