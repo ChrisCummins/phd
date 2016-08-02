@@ -48,7 +48,7 @@ class container_impl {
   using value_type = typename parent_type::value_type;
   using storage_class = storage_class_;
   using size_type = typename parent_type::size_type;
-  using dimen_size_type = unsigned int;
+  using dimen_size_type = unsigned long;
 
   container_impl() {}
   explicit container_impl(const value_type& fill) : _parent(fill) {}
@@ -176,7 +176,7 @@ class container_impl<T, size_, storage_class_, dn> {
   using value_type = T;
   using storage_class = storage_class_;
   using size_type = size_t;
-  using dimen_size_type = unsigned int;
+  using dimen_size_type = unsigned long;
 
   container_impl() {}
   explicit container_impl(const value_type& fill) { _data.fill(fill); }
