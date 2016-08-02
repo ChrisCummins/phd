@@ -302,16 +302,46 @@ class RecursiveASTVisitor
 
   bool isBuiltInAtomicFunc(std::string func) {
     if (func == "atomic_add" ||
-        func == "atomic_sub" ||
-        func == "atomic_dec" ||
         func == "atomic_and" ||
         func == "atomic_cmpxchg" ||
-        func == "atomic_or" ||
-        func == "atomic_xchg" ||
-        func == "atomic_min" ||
-        func == "atomic_xor" ||
+        func == "atomic_compare_exchange_strong" ||
+        func == "atomic_compare_exchange_strong_explicit" ||
+        func == "atomic_compare_exchange_weak" ||
+        func == "atomic_compare_exchange_weak_explicit" ||
+        func == "atomic_dec" ||
+        func == "atomic_exchange" ||
+        func == "atomic_exchange_explicit" ||
+        func == "atomic_fetch_add" ||
+        func == "atomic_fetch_add_explicit" ||
+        func == "atomic_fetch_and" ||
+        func == "atomic_fetch_and_explicit" ||
+        func == "atomic_fetch_max" ||
+        func == "atomic_fetch_max_explicit" ||
+        func == "atomic_fetch_min" ||
+        func == "atomic_fetch_min_explicit" ||
+        func == "atomic_fetch_or" ||
+        func == "atomic_fetch_or_explicit" ||
+        func == "atomic_fetch_sub" ||
+        func == "atomic_fetch_sub_explicit" ||
+        func == "atomic_fetch_xor" ||
+        func == "atomic_fetch_xor_explicit" ||
+        func == "atomic_flag_clear" ||
+        func == "atomic_flag_clear_explicit" ||
+        func == "atomic_flag_test_and_set" ||
+        func == "atomic_flag_test_and_set_explicit" ||
         func == "atomic_inc" ||
-        func == "atomic_max") {
+        func == "atomic_init" ||
+        func == "atomic_load" ||
+        func == "atomic_load_explicit" ||
+        func == "atomic_max" ||
+        func == "atomic_min" ||
+        func == "atomic_or" ||
+        func == "atomic_store" ||
+        func == "atomic_store_explicit" ||
+        func == "atomic_sub" ||
+        func == "atomic_work_item_fence" ||
+        func == "atomic_xchg" ||
+        func == "atomic_xor") {
       return true;
     }
 
