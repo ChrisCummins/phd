@@ -94,8 +94,12 @@ class KernelPrototype(object):
         except AttributeError:
             idx_open_brace = self._string.find('(')
             idx_close_brace = self._string.find(')')
-            inner_brace = self._string[idx_open_brace + 1:idx_close_brace]
-            self._args = [KernelArg(x) for x in inner_brace.split(',')]
+            inner_brace = self._string[idx_open_brace + 1:idx_close_brace].strip()
+            # Add special case for prototypes which have no args:
+            if not inner_brace or inner_brace == 'void':
+                self._args = []
+            else:
+                self._args = [KernelArg(x) for x in inner_brace.split(',')]
             return self._args
 
     def __repr__(self):
