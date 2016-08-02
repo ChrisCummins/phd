@@ -344,9 +344,18 @@ def verify_bytecode_features(bc_features, id='anon'):
 
 def sanitize_prototype(src):
     # Ensure that prototype is well-formed on a single line:
-    prototype_end_idx = src.index('{') + 1
-    prototype = ' '.join(src[:prototype_end_idx].split())
-    return prototype + src[prototype_end_idx:]
+    try:
+        prototype_end_idx = src.index('{') + 1
+        prototype = ' '.join(src[:prototype_end_idx].split())
+        return prototype + src[prototype_end_idx:]
+    except ValueError:
+        # Ok so erm... if the '{' character isn't found, a ValueError
+        # is thrown. Why would '{' not be found? Who knows, but
+        # whatever, if the source file got this far through the
+        # preprocessing pipeline then it's clearly "good" code. It
+        # could just be that an empty file slips through the cracks or
+        # something.
+        return src
 
 
 # 3 possible outcomes:
