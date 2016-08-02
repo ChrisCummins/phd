@@ -45,8 +45,22 @@ def clsmith():
 
 
 def llvm_path():
-    return assert_exists(phd_root(), "tools/llvm")
+    return assert_exists(phd_root(), "tools", "llvm")
 
+def libclc():
+    return assert_exists(phd_root(), "extern", "libclc")
+
+def clang():
+    return assert_exists(llvm_path(), "build", "bin", "clang")
+
+def rewriter():
+    return assert_exists(phd_root(), "src", "smith", "native", "rewriter")
+
+def toolchain_env():
+    return {'LD_LIBRARY_PATH': fs.path(llvm_path(), "build", "lib")}
+
+def opt():
+    return assert_exists(llvm_path(), "build", "bin", "opt")
 
 def is_host():
     """

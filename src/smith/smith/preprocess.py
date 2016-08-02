@@ -31,6 +31,7 @@ from labm8 import fs
 
 import smith
 from smith import config as cfg
+from smith import clutil
 
 
 #
@@ -64,10 +65,8 @@ def clang_cl_args(target=CLANG_CL_TARGETS[0],
 
     :return: Array of args.
     """
-    libclc = os.path.expanduser('~/phd/extern/libclc')
-    libclc_include = os.path.join(libclc, 'generic', 'include')
-    shim = smith.package_path(
-        os.path.join('share', 'include', 'opencl-shim.h'))
+    libclc_include = fs.path(cfg.libclc(), 'generic', 'include')
+    shim = smith.package_path(fs.path('share', 'include', 'opencl-shim.h'))
 
     # List of clang warnings to disable.
     disabled_warnings = [
@@ -94,12 +93,11 @@ def num_rows_in(db, table):
 
 
 def compiler_preprocess_cl(src, id='anon'):
-    clang = os.path.expanduser('~/phd/tools/llvm/build/bin/clang')
-    cmd = [ clang ] + clang_cl_args() + [
+    cmd = [cfg.clang()] + clang_cl_args() + [
         '-E', '-c', '-', '-o', '-'
     ]
-
-    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                    env=cfg.toolchain_env())
     stdout, stderr = process.communicate(src.encode('utf-8'))
 
     if process.returncode != 0:
@@ -123,18 +121,15 @@ def compiler_preprocess_cl(src, id='anon'):
 
 
 def rewrite_cl(src, id='anon'):
-    rewriter = os.path.expanduser('~/phd/src/smith/native/rewriter')
-    ld_path = os.path.expanduser('~/phd/tools/llvm/build/lib/')
-
     # Rewriter can't read from stdin.
     with NamedTemporaryFile('w', suffix='.cl') as tmp:
         tmp.write(src)
         tmp.flush()
-        cmd = ([rewriter, tmp.name]
+        cmd = ([cfg.rewriter(), tmp.name]
                + ['-extra-arg=' + x for x in clang_cl_args()] + ['--'])
 
         process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                        env = {'LD_LIBRARY_PATH': ld_path})
+                        env=cfg.toolchain_env())
         stdout, stderr = process.communicate()
 
     # If there was nothing to rewrite, rewriter exits with error code:
@@ -157,12 +152,12 @@ def rewrite_cl(src, id='anon'):
 
 
 def compile_cl_bytecode(src, id='anon'):
-    clang = os.path.expanduser('~/phd/tools/llvm/build/bin/clang')
-    cmd = [clang] + clang_cl_args() + [
+    cmd = [cfg.clang()] + clang_cl_args() + [
         '-emit-llvm', '-S', '-c', '-', '-o', '-'
     ]
 
-    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                    env=cfg.toolchain_env())
     stdout, stderr = process.communicate(src.encode('utf-8'))
 
     if process.returncode != 0:
@@ -239,15 +234,12 @@ def sql_insert_dict(c, table, data):
 
 
 def bytecode_features(bc, id='anon'):
-    opt = os.path.expanduser('~/phd/tools/llvm/build/bin/opt')
-
-    cmd = [
-        opt, '-analyze', '-stats', '-instcount', '-'
-    ]
+    cmd = [cfg.opt(), '-analyze', '-stats', '-instcount', '-']
 
     # LLVM pass output pritns to stderr, so we'll pipe stderr to
     # stdout.
-    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=STDOUT,
+                    env=cfg.toolchain_env())
     stdout, _ = process.communicate(bc)
 
     if process.returncode != 0:
@@ -266,6 +258,10 @@ clangformat_config = {
     'BasedOnStyle': 'Google',
     'ColumnLimit': 500,
     'IndentWidth': 2,
+    'AllowShortBlocksOnASingleLine': False,
+    'AllowShortCaseLabelsOnASingleLine': False,
+    'AllowShortFunctionsOnASingleLine': False,
+    'AllowShortLoopsOnASingleLine': False,
     'AllowShortIfStatementsOnASingleLine': False
 }
 
@@ -273,7 +269,8 @@ def clangformat_ocl(src, id='anon'):
     clangformat = fs.path(cfg.llvm_path(), "build", "bin", "clang-format")
     cmd = [ clangformat, '-style={}'.format(json.dumps(clangformat_config)) ]
 
-    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                    env=cfg.toolchain_env())
     stdout, stderr = process.communicate(src.encode('utf-8'))
 
     if process.returncode != 0:
