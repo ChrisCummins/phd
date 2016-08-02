@@ -34,7 +34,7 @@ def features(path, file=sys.stdout):
     cmd = [features_bin, path] + ['-extra-arg=' + x for x in extra_args()]
 
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                    env = {'LD_LIBRARY_PATH': ld_path})
+                    env={'LD_LIBRARY_PATH': ld_path})
     stdout, stderr = process.communicate()
     stdout, stderr = stdout.decode('utf-8'), stderr.decode('utf-8')
 
@@ -55,7 +55,7 @@ def feature_headers(file=sys.stdout):
 
     cmd = [features_bin, '-header-only']
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                    env = {'LD_LIBRARY_PATH': ld_path})
+                    env={'LD_LIBRARY_PATH': ld_path})
     stdout, _ = process.communicate()
     stdout = stdout.decode('utf-8').strip()
 

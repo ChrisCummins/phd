@@ -58,6 +58,7 @@ CLANG_CL_TARGETS = [
     'spir64'
 ]
 
+
 def clang_cl_args(target=CLANG_CL_TARGETS[0],
                   error_limit=0):
     """
@@ -110,7 +111,7 @@ def compiler_preprocess_cl(src, id='anon'):
     for i, line in enumerate(lines):
         if line == '# 1 "<stdin>" 2':
             break
-    src = '\n'.join(lines[i+1:]).strip()
+    src = '\n'.join(lines[i + 1:]).strip()
 
     # Strip lines beginning with '#' (that's preprocessor
     # stuff):
@@ -125,8 +126,8 @@ def rewrite_cl(src, id='anon'):
     with NamedTemporaryFile('w', suffix='.cl') as tmp:
         tmp.write(src)
         tmp.flush()
-        cmd = ([cfg.rewriter(), tmp.name]
-               + ['-extra-arg=' + x for x in clang_cl_args()] + ['--'])
+        cmd = ([cfg.rewriter(), tmp.name] +
+               ['-extra-arg=' + x for x in clang_cl_args()] + ['--'])
 
         process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
                         env=cfg.toolchain_env())
@@ -266,6 +267,7 @@ clangformat_config = {
     'DerivePointerAlignment': False,
     'PointerAlignment': 'Left'
 }
+
 
 def clangformat_ocl(src, id='anon'):
     clangformat = fs.path(cfg.llvm_path(), "build", "bin", "clang-format")

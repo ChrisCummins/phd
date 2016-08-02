@@ -18,6 +18,7 @@ import smith
 from smith import config as cfg
 from smith import clutil
 
+
 class FetchException(smith.SmithException): pass
 
 # Counters
@@ -29,6 +30,7 @@ files_modified_counter = 0
 files_unchanged_counter = 0
 errors_counter = 0
 status_string = ''
+
 
 def print_repo_details(repo):
     print('url:', repo.url)
@@ -121,13 +123,14 @@ def is_opencl_path(path):
 
 _include_re = re.compile('\w*#include ["<](.*)[">]')
 
+
 def download_file(github_token, repo, url, stack):
     # Recursion stack
     stack.append(url)
 
     response = json.loads(requests.get(
         url,
-        headers = {
+        headers={
             'Authorization': 'token ' + str(github_token)
         }
     ).content.decode('utf-8'))
@@ -208,6 +211,7 @@ def process_file(g, github_token, db, repo, file):
     db.commit()
     return True
 
+
 # Download all of the OpenCL on GitHub (!)
 #
 # Shortcomings of this appraoch:
@@ -271,8 +275,8 @@ def github(db_path, github_username, github_pw, github_token):
     db.close()
 
 
-_include_re = re.compile('\w*#include ["<](.*)[">]')
-_parboil_re = re.compile('.+/benchmarks/parboil/benchmarks/(.+)/src/opencl_base/(.+\.cl)')
+_include_re = re.compile(r'\w*#include ["<](.*)[">]')
+_parboil_re = re.compile(r'.+/benchmarks/parboil/benchmarks/(.+)/src/opencl_base/(.+\.cl)')
 
 
 def get_path_id(path):
@@ -307,9 +311,11 @@ def inline_headers(path, stack):
                 outlines.append('// [FETCH] eof(' + include_path + ')')
             else:
                 if include_path in stack:
-                    outlines.append('// [FETCH] ignored recursive include: ' + include_path)
+                    outlines.append('// [FETCH] ignored recursive include: '
+                                    + include_path)
                 else:
-                    outlines.append('// [FETCH] 404 not found: ' + include_path)
+                    outlines.append('// [FETCH] 404 not found: '
+                                    + include_path)
         else:
             outlines.append(line)
 

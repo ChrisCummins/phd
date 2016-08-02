@@ -6,6 +6,7 @@ from hashlib import sha1
 
 from pkg_resources import resource_filename,resource_string
 
+
 class SmithException(Exception): pass
 class InternalException(SmithException): pass
 class NotImplementedException(InternalException): pass

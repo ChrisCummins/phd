@@ -12,7 +12,9 @@ import smith
 
 
 class OpenCLUtilException(smith.SmithException): pass
+
 class PrototypeException(OpenCLUtilException): pass
+
 
 class KernelArg(object):
     """

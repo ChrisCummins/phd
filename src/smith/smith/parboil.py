@@ -25,6 +25,7 @@ class ParboilException(smith.SmithException): pass
 class DatabaseException(ParboilException): pass
 class BenchmarkException(ParboilException): pass
 
+
 class OpenCLDeviceType(object):
     GPU = "CL_DEVICE_TYPE_GPU"
     CPU = "CL_DEVICE_TYPE_CPU"
@@ -38,6 +39,7 @@ class OpenCLDeviceType(object):
         else:
             raise InternalException("Invalid OpenCLDeviceType '{}'"
                                     .format(devtype))
+
 
 class OpenCLDevice(object):
     def __init__(self, name, devtype=OpenCLDeviceType.GPU):
@@ -148,7 +150,8 @@ class Benchmark(object):
             raise BenchmarkException("Parboil implementation '{}' not found"
                                      .format(implementation))
 
-        src_file = ImplementationFile.from_benchmark(parboil_root, benchmark_id)
+        src_file = ImplementationFile.from_benchmark(parboil_root,
+                                                     benchmark_id)
 
         # Get datasets
         datasets_path = os.path.join(parboil_root, 'datasets', benchmark_id)
@@ -218,7 +221,6 @@ class Benchmark(object):
                 raise BenchmarkException("Benchmark execution failed")
         return runtimes
 
-
     def __repr__(self):
         return str(self.id)
 
@@ -227,8 +229,8 @@ class Runtime(object):
     """
     Runtime result.
     """
-    def __init__(self, scenario, io, kernel, copy, driver, compute, overlap,
-                       wall):
+    def __init__(self, scenario, io, kernel, copy, driver, compute,
+                 overlap, wall):
         """
         Create a new Runtime instance.
 
@@ -394,7 +396,6 @@ class Database(object):
         kernels = [Kernel(x) for x in kernel_ids]
         c.close()
         return kernels
-
 
     def add_runtime(self, runtime):
         """

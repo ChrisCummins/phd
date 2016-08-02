@@ -10,6 +10,7 @@ from labm8 import fs
 
 import smith
 
+
 class DriveException(smith.SmithException): pass
 class ProgramBuildException(DriveException): pass
 class BadArgsException(DriveException): pass
@@ -59,6 +60,7 @@ def args_from_kernel(kernel):
 
 def is_pointer(props):
     return props['TYPE_NAME'].endswith('*')
+
 
 def placeholder_from_props(props):
     if is_pointer(props):
@@ -191,6 +193,7 @@ def file(path, **kwargs):
             drive(src, filename=fs.path(path), **kwargs)
         except DriveException as e:
             print(e, file=sys.stderr)
+
 
 def directory(path, **kwargs):
     for path in fs.ls(fs.path(path), abspaths=True, recursive=True):
