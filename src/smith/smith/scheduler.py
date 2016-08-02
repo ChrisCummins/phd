@@ -9,14 +9,12 @@ import sys
 from random import shuffle
 
 import smith
+from smith import clutil
 from smith import config
 from smith import explore
 from smith import preprocess
 from smith import torch_rnn
 from smith import train
-
-
-class PrototypeException(smith.SmithException): pass
 
 
 def load_oracle(path):
@@ -31,25 +29,6 @@ def load_oracle(path):
         oracle = infile.read().strip()
 
     return oracle
-
-
-def extract_prototype(implementation):
-    """
-    Extract OpenCL kernel prototype from rewritten file.
-
-    :param implementation: OpenCL kernel implementation.
-    :return: Kernel prototype.
-    """
-    if not implementation.startswith("__kernel void A"):
-        raise PrototypeException("malformed seed")
-
-    try:
-        index = implementation.index('{') + 1
-        prototype = implementation[:index]
-    except ValueError:
-        raise PrototypeException("malformed seed")
-
-    return prototype
 
 
 class task(object):
@@ -82,9 +61,10 @@ class task(object):
             seed = data['seed']
         except KeyError:
             try:
-                seed = extract_prototype(oracle)
-            except PrototypeException as e:
-                raise PrototypeException(str(e) + " '{}'".format(oracle_path))
+                seed = clutil.extract_prototype(oracle)
+            except clutil.PrototypeException as e:
+                raise clutil.PrototypeException(
+                    str(e) + " '{}'".format(oracle_path))
 
         task_args = [db_path, benchmark, seed, oracle]
         if config.is_host():

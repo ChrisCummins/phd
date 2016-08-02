@@ -16,6 +16,9 @@ from subprocess import Popen,PIPE,STDOUT
 
 import smith
 from smith import config as cfg
+from smith import clutil
+
+class FetchException(smith.SmithException): pass
 
 # Counters
 repos_new_counter = 0
@@ -347,7 +350,7 @@ def content_db(db_path, in_db_path, table='PreprocessedFiles'):
     rows = ic.fetchall()
 
     for id,contents in rows:
-        kernels = get_cl_kernels(contents)
+        kernels = clutil.get_cl_kernels(contents)
         ids = [smith.checksum_str(kernel) for kernel in kernels]
         # print("{} kernels in {}".format(len(kernels), id))
         for kid,kernel in zip(ids, kernels):
@@ -368,32 +371,6 @@ def fs(db_path, paths=[]):
 kernel_counter = 0
 
 
-def get_cl_kernel(s, start_idx):
-    global kernel_counter
-    kernel_counter += 1
-    print('\r\033[Kkernel:', kernel_counter, end='')
-    sys.stdout.flush()
-
-    i = s.find('{', start_idx) + 1
-    d = 1  # depth
-    while i < len(s) and d > 0:
-        if s[i] == '{':
-            d += 1
-        elif s[i] == '}':
-            d -= 1
-        i += 1
-
-    return s[start_idx:i]
-
-
-def get_cl_kernels(s):
-    idxs = smith.get_substring_idxs('__kernel void ', s)
-    print('extracting', len(idxs), 'kernels ...')
-    kernels = [get_cl_kernel(s, i) for i in idxs]
-    print()
-    return kernels
-
-
 def process_sample_file(db_path, sample_path, first_only=False):
     db = sqlite3.connect(db_path)
     c = db.cursor()
@@ -404,9 +381,9 @@ def process_sample_file(db_path, sample_path, first_only=False):
             # If first_only argument is set, then only extract a
             # kernel starting at the beginning of the file.
             #
-            kernels = [get_cl_kernel(sample, 0)]
+            kernels = [clutil.get_cl_kernel(sample, 0)]
         else:
-            kernels = get_cl_kernels(sample)
+            kernels = clutil.get_cl_kernels(sample)
 
     ids = [smith.checksum_str(kernel) for kernel in kernels]
 
@@ -523,5 +500,3 @@ def clsmith(db_path, target_num_kernels):
     print_counters()
     print("\n\ndone.")
     db.close()
-
-
