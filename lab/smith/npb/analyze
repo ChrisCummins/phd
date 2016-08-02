@@ -447,6 +447,10 @@ def training_data(db, training_csv_path):
                 c.execute('SELECT oracle,runtime,speedup,penalty FROM '
                           'TrainingData WHERE benchmark=? AND dataset=?',
                           (benchmark, dataset))
+                row = c.fetchone()
+                if not row:
+                    print('no training data for', benchmark, dataset)
+                    continue
                 oracle,runtime,speedup,penalty = c.fetchone()
                 c.execute('SELECT transfer,wgsize FROM DynamicFeatures WHERE '
                           'benchmark=? AND dataset=?', (benchmark, dataset))
