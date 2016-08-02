@@ -20,12 +20,7 @@
 # spat somehting out to stderr. Then implement an 'all-warn' target
 # which rebuilds these files.
 #
-# Requirements to build project:
-#
-#     cmake
-#     ninja
-#     git
-#     host toolchain (C and C++)
+# Run 'make info' to see build dependencies.
 #
 
 # The default goal is...
