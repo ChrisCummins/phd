@@ -20,7 +20,9 @@ class ProgramBuildException(DriveException): pass
 
 class KernelException(DriveException): pass
 class E_BAD_CODE(KernelException): pass
-class E_BAD_ARGS(KernelException): pass
+class E_BAD_DRIVER(KernelException): pass
+class E_BAD_ARGS(E_BAD_DRIVER): pass
+class E_BAD_PROFILE(E_BAD_DRIVER): pass
 class E_TIMEOUT(KernelException): pass
 class E_OUTPUTS_UNCHANGED(KernelException): pass
 class E_INPUT_INSENSITIVE(KernelException): pass
@@ -49,8 +51,12 @@ def timeout(seconds=30):
 
 @timeout(30)
 def run_with_timeout(kernel, *kargs, timeout=1):
-    event = kernel(*kargs)
+    try:
+        event = kernel(*kargs)
+    except Exception as e:
+        raise E_BAD_DRIVER
     return get_elapsed(event)
+
 
 
 def build_program(ctx, src, quiet=True):
@@ -168,10 +174,13 @@ def get_elapsed(event):
     """
     Time delta between event submission and end, in milliseconds.
     """
-    event.wait()
-    tstart = event.get_profiling_info(cl.profiling_info.SUBMIT)
-    tend = event.get_profiling_info(cl.profiling_info.END)
-    return (tend - tstart) / 1000000
+    try:
+        event.wait()
+        tstart = event.get_profiling_info(cl.profiling_info.SUBMIT)
+        tend = event.get_profiling_info(cl.profiling_info.END)
+        return (tend - tstart) / 1000000
+    except Exception:
+        raise E_BAD_PROFILE
 
 
 def flatten_wgsize(wgsize):

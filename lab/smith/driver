@@ -2,16 +2,19 @@
 #
 # Drive OpenCL files in a directory.
 #
+set -eu
 
 drive_file() {
     local in_path=$1
 
     dsizes=(12 24 64 102 162 408 1020)
 
+    set +e
     for dsize in ${dsizes[@]}; do
         # echo $dsize $in_path
-        DSIZE=$dsize smith-drive -f $in_path
+        DSIZE=$dsize smith-drive -f $in_path 2>/dev/null
     done
+    set -e
 }
 
 main() {
