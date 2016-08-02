@@ -266,21 +266,24 @@ complex,imaginary},%
 \maketitle
 
 \begin{abstract}
-  The quality of predictive performance modeling is bound by the
-  quantity and quality of benchmarks used as training data. Too few
-  benchmarks leads to overfitting; non-representative benchmarks leads
-  to poor heuristics. This paper presents a novel methodology for
-  generating representative benchmarks which solves two open issues
-  for predictive modeling: the limited quantity of benchmarks
-  available, and the need to behavior that is representative of common
-  use cases. The new approach applies deep learning across the
+  Predictive performance modeling is an effective method for building
+  optimization heuristics, but the quality of models are bound by two
+  factors: the quantity of benchmarks used as training data, and the
+  extent to which those benchmarks are representative of common use
+  cases. We presents a novel methodology for generating representative
+  benchmarks. Our approach applies deep learning across the
   implementation space of a corpus of example programs, learning a
   language model from which we obtain new programs through a process
-  of rejection sampling. We demonstrate this approach for a
-  state-of-the-art machine learning OpenCL autotuner. With the
-  addition of synthesized compute kernels, we improve the accuracy of
-  learned predictions from XXX\% to XXX\%, demonstrating up to
-  $X\times$ speedup over the hand-selected benchmarks.
+  of rejection sampling.%
+  % TODO: tenfold, order of magnitude
+  We demonstrate this approach using a state-of-the-art machine
+  learning autotuner, improving the accuracy of learned predictions
+  from XXX\% to XXX\%, demonstrating up to $X\times$ speedup over the
+  hand-selected benchmarks. This solves two open issues for predictive
+  modeling: overfitting of heuristics from too few benchmarks, and
+  poor heuristics from exploring a non-representative part of the
+  program space.
+
 \end{abstract}
 
 % \category{CR-number}{subcategory}{third-level}
