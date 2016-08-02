@@ -1224,7 +1224,7 @@ PYLINT := pep8
 
 PyLintFlags := \
 	--show-source \
-	--ignore=E701 \
+	--ignore=E231,E701 \
 	$(NULL)
 PyLintTargets = $(addsuffix .pylint, $(PyLintSources))
 BuildTargets += $(PyLintTargets)
