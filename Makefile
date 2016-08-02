@@ -214,6 +214,7 @@ DistcleanFiles =
 DistcleanTargets =
 DontLint =
 InstallTargets =
+PyLintSources =
 Python2SetupInstallDirs =
 Python2SetupTestDirs =
 Python3SetupInstallDirs =
@@ -329,9 +330,9 @@ endef
 
 cpplint-cmd = $(CPPLINT) $(CxxLintFlags) $1 2>&1 \
 	| grep -v '^Done processing\|^Total errors found: ' \
-	| tee $1.lint
+	| tee $1.cpplint
 
-# Run cpplint on input, generating a .lint file.
+# Run cpplint on input, generating a .cpplint file.
 #
 # Arguments:
 #   $1 (str) C++ source/header
@@ -339,6 +340,23 @@ define cpplint
 	$(V2)if [[ -z "$(filter $1, $(DontLint))" ]]; then \
 		test -z "$(V1)" && echo "$(cpplint-cmd)"; \
 		$(cpplint-cmd); \
+	fi
+endef
+
+
+pylint-cmd = $(PYLINT) $(PyLintFlags) $2 2>&1 \
+	| tee $1
+
+# Run pylint on input.
+#
+# Arguments:
+#   $1 (str) Destination output file.
+#   $2 (str) Source python file.
+#
+define pylint
+	$(V2)if [[ -z "$(filter $2, $(DontLint))" ]]; then \
+		test -z "$(V1)" && echo "$(pylint-cmd)"; \
+		$(pylint-cmd); \
 	fi
 endef
 
@@ -647,7 +665,7 @@ lab := $(root)/lab
 #
 # lab/lm
 #
-LmHeaders = $(filter-out $(wildcard $(lab)/lm/include/lm/*.lint),$(wildcard $(lab)/lm/include/lm/*))
+LmHeaders = $(filter-out $(wildcard $(lab)/lm/include/lm/*.cpplint),$(wildcard $(lab)/lm/include/lm/*))
 CppLintSources += $(LmHeaders)
 Lm_CxxFlags = -I$(lab)/lm/include
 
@@ -966,6 +984,7 @@ Python2SetupTestDirs += $(src)/labm8
 Python2SetupInstallDirs += $(src)/labm8
 # Python3SetupTestDirs += $(src)/labm8
 Python3SetupInstallDirs += $(src)/labm8
+PyLintSources += $(wildcard $(src)/labm8/labm8/*.py)
 
 
 #
@@ -973,6 +992,7 @@ Python3SetupInstallDirs += $(src)/labm8
 #
 # Python2SetupTestDirs += $(src)/omnitune
 Python2SetupInstallDirs += $(src)/omnitune
+PyLintSources += $(wildcard $(src)/omnitune/omnitune/*.py)
 
 
 #
@@ -988,7 +1008,7 @@ phdCxxObjects = $(patsubst %.cpp,%.o,$(phdCxxSources))
 CxxObjects += $(phdCxxObjects)
 $(phdCxxObjects): $(GoogleBenchmark) $(GoogleTest)
 
-phdCxxHeaders = $(filter-out %.lint,$(wildcard $(phdInclude)/*))
+phdCxxHeaders = $(filter-out %.cpplint,$(wildcard $(phdInclude)/*))
 CppLintSources += $(phdCxxHeaders)
 
 # Flags to build phd.
@@ -1170,7 +1190,7 @@ DocStrings += "print-cxx: print cxx compiler invocation"
 #
 CPPLINT := $(root)/tools/cpplint.py
 
-CxxLintFilterFlags = \
+CxxLintFilterFlags := \
 	build/c++11 \
 	build/header_guard \
 	build/include_order \
@@ -1184,15 +1204,34 @@ CxxLintFilters = -$(strip $(call join-with,$(comma)-,\
 CxxLintFlags = --root=include --filter=$(CxxLintFilters)
 
 # Deduce:
-CppLintTargets = $(addsuffix .lint, $(CppLintSources))
+CppLintTargets = $(addsuffix .cpplint, $(CppLintSources))
 BuildTargets += $(CppLintTargets)
 CleanFiles += $(CppLintTargets)
 
-%.lint: %
-	$(call print-task,LINT,$@,$(TaskAux))
+%.cpplint: %
+	$(call print-task,CPPLINT,$@,$(TaskAux))
 	$(call cpplint,$<)
 
-lint: $(CppLintTargets)
+
+#
+# Pylint - pep8
+#
+PYLINT := pep8
+
+PyLintFlags := \
+	--show-source \
+	--ignore=E701 \
+	$(NULL)
+PyLintTargets = $(addsuffix .pylint, $(PyLintSources))
+BuildTargets += $(PyLintTargets)
+CleanFiles += $(PyLintTargets)
+
+%.pylint: %
+	$(call print-task,PYLINT,$@,$(TaskAux))
+	$(call pylint,$@,$<)
+
+
+lint: $(CppLintTargets) $(PyLintTargets)
 DocStrings += "lint: build lint files"
 
 
