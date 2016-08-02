@@ -25,9 +25,15 @@ def main():
     use_cpu = args.cpu
     quiet = args.q
 
+    if 'DSIZE' in os.environ:
+        dsize = int(os.environ['DSIZE'])
+        global_size = (dsize,)
+    else:
+        global_size = None
+
     devtype = cl.device_type.CPU if use_cpu else cl.device_type.GPU
 
-    kwargs = { 'devtype': devtype, 'quiet': quiet }
+    kwargs = { 'global_size': global_size, 'devtype': devtype, 'quiet': quiet }
 
     if file_mode:
         drive.file(input_path, **kwargs)
