@@ -41,6 +41,19 @@ class KernelArg(object):
         return self.type[-1] == '*'
 
     @property
+    def is_vector(self):
+        idx = -2 if is_pointer else -1
+        return self.type[idx].isdigit()
+
+    @property
+    def is_const(self):
+        try:
+            return self._is_global
+        except AttributeError:  # set
+            self._is_global = True if 'const' in self.qualifiers else False
+            return self._is_global
+
+    @property
     def is_global(self):
         try:
             return self._is_global
