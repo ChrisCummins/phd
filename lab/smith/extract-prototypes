@@ -63,7 +63,7 @@ def main():
                     print_stats_features(p)
                 else:
                     print(p)
-            except clutil.PrototypeException as e:
+            except clutil.PrototypeException:
                 print('error: ignored bad prototype', file=sys.stderr)
 
 

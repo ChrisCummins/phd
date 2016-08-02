@@ -22,8 +22,8 @@ import sys
 
 from functools import partial
 from hashlib import md5
-from multiprocessing import cpu_count,Pool
-from subprocess import Popen,PIPE,STDOUT
+from multiprocessing import cpu_count, Pool
+from subprocess import Popen, PIPE, STDOUT
 from tempfile import NamedTemporaryFile
 
 import labm8
@@ -107,7 +107,7 @@ def compiler_preprocess_cl(src, id='anon'):
     lines = src.split('\n')
 
     # Strip all the includes:
-    for i,line in enumerate(lines):
+    for i, line in enumerate(lines):
         if line == '# 1 "<stdin>" 2':
             break
     src = '\n'.join(lines[i+1:]).strip()
@@ -165,7 +165,7 @@ def compile_cl_bytecode(src, id='anon'):
     return stdout
 
 
-_instcount_re = re.compile("^(?P<count>\d+) instcount - Number of (?P<type>.+)")
+_instcount_re = re.compile(r"^(?P<count>\d+) instcount - Number of (?P<type>.+)")
 
 
 def parse_instcounts(txt):
@@ -190,8 +190,8 @@ def parse_instcounts(txt):
     return counts
 
 
-_sql_rm_chars = re.compile('[\(\)]')
-_sql_sub_chars = re.compile('-')
+_sql_rm_chars = re.compile(r'[\(\)]')
+_sql_sub_chars = re.compile(r'-')
 
 
 def escape_sql_key(key):
@@ -269,7 +269,7 @@ clangformat_config = {
 
 def clangformat_ocl(src, id='anon'):
     clangformat = fs.path(cfg.llvm_path(), "build", "bin", "clang-format")
-    cmd = [ clangformat, '-style={}'.format(json.dumps(clangformat_config)) ]
+    cmd = [clangformat, '-style={}'.format(json.dumps(clangformat_config))]
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
                     env=cfg.toolchain_env())
     stdout, stderr = process.communicate(src.encode('utf-8'))
@@ -312,7 +312,7 @@ def get_attribute_range(s, start_idx):
             d += 1
         elif s[i] == ')':
             d -= 1
-        i +=1
+        i += 1
 
     return (start_idx, i)
 
@@ -328,7 +328,7 @@ def strip_attributes(src):
 def verify_bytecode_features(bc_features, id='anon'):
     # The minimum number of instructions before a kernel is discarded
     # as ugly.
-    min_num_instructions=0
+    min_num_instructions = 0
     try:
         num_instructions = bc_features['instructions_of_all_types']
     except KeyError:
@@ -473,7 +473,7 @@ def preprocess_split(db_path, split):
                 status = 2
             c.execute('INSERT OR REPLACE INTO PreprocessedFiles '
                       'VALUES(?,?,?)',
-                      (id,status,contents))
+                      (id, status, contents))
             db.commit()
         c.close()
 
