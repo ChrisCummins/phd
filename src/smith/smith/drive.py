@@ -170,7 +170,8 @@ def init_opencl():
     except Exception as e:
         ctx = cl.create_some_context(interactive=False)
     print("Device:", ctx.get_info(cl.context_info.DEVICES))
-    queue = cl.CommandQueue(ctx, properties=cl.command_queue_properties.PROFILING_ENABLE)
+    cqp = cl.command_queue_properties
+    queue = cl.CommandQueue(ctx, properties=cqp.PROFILING_ENABLE)
 
     return ctx, queue
 
