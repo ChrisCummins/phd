@@ -1,10 +1,11 @@
-from unittest import TestCase
+from unittest import TestCase,skip
 
 import smith
 
 from smith import config
 
 class TestConfig(TestCase):
+    @skip("deprecated")
     def test_verify_parboil(self):
         self.assertTrue(config.parboil_root())
 

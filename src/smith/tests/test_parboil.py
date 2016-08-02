@@ -1,9 +1,10 @@
-from unittest import TestCase
+from unittest import TestCase,skip
 
 import smith
 from smith import parboil
 from smith import config
 
+@skip("deprecated")
 class TestOpenCLDeviceType(TestCase):
     def test_gpu(self):
         self.assertEqual("CL_DEVICE_TYPE_GPU", parboil.OpenCLDeviceType.GPU)
@@ -23,7 +24,7 @@ class TestOpenCLDeviceType(TestCase):
         with self.assertRaises(parboil.InternalException):
             parboil.OpenCLDeviceType.to_str("BAD VALUE")
 
-
+@skip("deprecated")
 class TestScenarioStatus(TestCase):
     def test_good(self):
         self.assertEqual(0, parboil.ScenarioStatus.GOOD)
@@ -50,7 +51,7 @@ class TestScenarioStatus(TestCase):
         with self.assertRaises(parboil.InternalException):
             parboil.ScenarioStatus.to_str("BAD VALUE")
 
-
+@skip("deprecated")
 class TestBenchmark(TestCase):
     def test_benchmark(self):
         benchmark = parboil.Benchmark("spmv")
