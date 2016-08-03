@@ -16,6 +16,7 @@ from labm8 import fs
 from labm8 import math as labmath
 
 import smith
+from smith import clutil
 
 
 class DriveException(smith.SmithException): pass
@@ -75,49 +76,6 @@ def build_program(ctx, src, quiet=True):
         raise ProgramBuildException(e)
 
 
-def get_arg_prop(kernel, idx, prop, to_string):
-    name = cl.kernel_arg_info.to_string(prop)
-    try:
-        val = to_string(kernel.get_arg_info(idx, prop))
-    except RuntimeError as e:
-        val = 'FAIL'
-    return (name, val)
-
-
-def get_arg_props(kernel, idx):
-    ki = cl.kernel_arg_info
-    props = [
-        (ki.ACCESS_QUALIFIER, cl.kernel_arg_access_qualifier.to_string),
-        (ki.ADDRESS_QUALIFIER, cl.kernel_arg_address_qualifier.to_string),
-        (ki.NAME, str),
-        (ki.TYPE_NAME, str),
-        (ki.TYPE_QUALIFIER, cl.kernel_arg_type_qualifier.to_string)
-    ]
-    return dict(get_arg_prop(kernel, idx, *x) for x in props)
-
-
-def get_args_props(kernel):
-    nargs = kernel.get_info(cl.kernel_info.NUM_ARGS)
-    return [get_arg_props(kernel, i) for i in range(nargs)]
-
-
-def args_from_kernel(kernel):
-    return get_args_props(kernel)
-
-
-def is_pointer(props):
-    return props['TYPE_NAME'].endswith('*')
-
-
-def placeholder_from_props(props):
-    if is_pointer(props):
-        print('pointer')
-    else:
-        print('value')
-
-    return props
-
-
 def create_buffer_arg(ctx, dtype, size, read=True, write=True):
     host_data = np.random.rand(*size).astype(dtype)
 
@@ -145,7 +103,7 @@ def create_const_arg(ctx, dtype, val=None):
     return dev_data, transfer, val
 
 
-def get_params(ctx, kernel, global_size):
+def get_payload(ctx, kernel, global_size):
     mf = cl.mem_flags
 
     arg_a, sz_a, host_a = create_buffer_arg(ctx, np.float32, global_size)
@@ -163,11 +121,7 @@ def get_params(ctx, kernel, global_size):
     except TypeError as e:
         raise E_BAD_ARGS(e)
 
-    device = ctx.get_info(cl.context_info.DEVICES)[0]
-    wgi = cl.kernel_work_group_info
-    wgsize = kernel.get_work_group_info(wgi.WORK_GROUP_SIZE, device)
-
-    return wgsize, transfer, args, {0: host_a, 1: host_b}
+    return transfer, args, {0: host_a, 1: host_b}
 
 
 def kernel_name(kernel):
@@ -187,16 +141,14 @@ def get_elapsed(event):
         raise E_BAD_PROFILE
 
 
-def flatten_wgsize(wgsize):
-    return np.prod(wgsize)
-
-
-def run_kernel(ctx, queue, kernel, global_size=None, filename='none'):
+def run_kernel(ctx, queue, kernel, global_size, filename='none'):
     name = kernel_name(kernel)
 
-    if global_size is None:
-        global_size = (2 ** randrange(4, 15),)
-    wgsize,transfer,args,hostd = get_params(ctx, kernel, global_size)
+    transfer,args,hostd = get_payload(ctx, kernel, global_size)
+
+    device = ctx.get_info(cl.context_info.DEVICES)[0]
+    wgsize = kernel.get_work_group_info(
+        cl.kernel_work_group_info.WORK_GROUP_SIZE, device)
 
     nruns = 10
     runtimes = []
@@ -215,7 +167,7 @@ def run_kernel(ctx, queue, kernel, global_size=None, filename='none'):
     mean = labmath.mean(runtimes)
     ci = labmath.confinterval(runtimes, array_mean=mean)[1] - mean
     print(fs.basename(filename), name, wgsize, transfer,
-          '{0:.6f}'.format(mean), '{0:.6f}'.format(ci), sep=',')
+          round(mean, 6), round(ci, 6), sep=',')
 
 
 def assert_device_type(device, devtype):
@@ -244,28 +196,44 @@ def init_opencl(devtype=cl.device_type.GPU):
     return ctx, queue
 
 
-def drive(src, devtype=cl.device_type.GPU, quiet=True,
-          global_size=None, filename='none'):
-    ctx, queue = init_opencl(devtype=devtype)
+def drive(ctx, queue, src, global_size, devtype=cl.device_type.GPU,
+          quiet=True, filename='none'):
+    """
+    Execute a single OpenCL kernel.
+    """
     program = build_program(ctx, src, quiet=quiet)
-
-    for kernel in program.all_kernels():
-        try:
-            run_kernel(ctx, queue, kernel, global_size=global_size,
-                       filename=filename)
-        except KernelException as e:
-            pass
+    kernels = program.all_kernels()
+    assert(len(kernels) == 1)
+    run_kernel(ctx, queue, kernels[0], global_size,
+               filename=filename)
 
 
-def file(path, **kwargs):
+def kernel(src, filename='none', devtype=cl.device_type.GPU,
+           global_size=None, **driveopts):
+    # If no size is given, pick one.
+    if global_size is None:
+        global_size = (2 ** randrange(4, 15),)
+
+    try:
+        ctx, queue = init_opencl(devtype=devtype)
+    except Exception as e:
+        raise OpenCLDriverException(e)
+
+    try:
+        drive(ctx, queue, src, global_size,
+              filename=filename, **driveopts)
+    except DriveException as e:
+        print('{}:'.format(fs.basename(filename)), e, file=sys.stderr)
+
+
+def file(path, **driveopts):
     with open(fs.path(path)) as infile:
         src = infile.read()
-        try:
-            drive(src, filename=fs.path(path), **kwargs)
-        except DriveException as e:
-            print(e, file=sys.stderr)
+        for kernelsrc in clutil.get_cl_kernels(src):
+            kernel(kernelsrc, filename=fs.path(path), **driveopts)
 
 
-def directory(path, **kwargs):
-    for path in fs.ls(fs.path(path), abspaths=True, recursive=True):
-        file(path, **kwargs)
+def directory(path, **driveopts):
+    files = fs.ls(fs.path(path), abspaths=True, recursive=True)
+    for path in [f for f in files if f.endswith('.cl')]:
+        file(path, **driveopts)
