@@ -11,54 +11,52 @@ from labm8 import fs
 class ConfigException(smith.SmithException): pass
 
 
-def assert_exists(*path_components):
-    path = fs.path(*path_components)
-    if not os.path.exists(path):
-        raise ConfigException("file '{}' not found".format(path))
-    return path
-
-
 def phd_root():
-    return assert_exists("~/phd")
+    return smith.assert_exists("~/phd", exception=ConfigException)
 
 
 def torch_rnn_path():
-    return assert_exists("~/src/torch-rnn")
+    return smith.assert_exists("~/src/torch-rnn", exception=ConfigException)
 
 
 def parboil_root():
     def verify_parboil(path):
-        assert_exists(path)
-        assert_exists(path, 'benchmarks')
-        assert_exists(path, 'datasets')
-        assert_exists(path, 'parboil')
+        smith.assert_exists(path, exception=ConfigException)
+        smith.assert_exists(path, 'benchmarks', exception=ConfigException)
+        smith.assert_exists(path, 'datasets', exception=ConfigException)
+        smith.assert_exists(path, 'parboil', exception=ConfigException)
         return path
 
     return verify_parboil("~/src/parboil")
 
 
 def clsmith_path():
-    return assert_exists("extern/clsmith")
+    return smith.assert_exists("extern/clsmith", exception=ConfigException)
 
 
 def clsmith():
-    return assert_exists(clsmith_path(), "build", "CLSmith")
+    return smith.assert_exists(clsmith_path(), "build", "CLSmith",
+                               exception=ConfigException)
 
 
 def llvm_path():
-    return assert_exists(phd_root(), "tools", "llvm")
+    return smith.assert_exists(phd_root(), "tools", "llvm",
+                               exception=ConfigException)
 
 
 def libclc():
-    return assert_exists(phd_root(), "extern", "libclc")
+    return smith.assert_exists(phd_root(), "extern", "libclc",
+                               exception=ConfigException)
 
 
 def clang():
-    return assert_exists(llvm_path(), "build", "bin", "clang")
+    return smith.assert_exists(llvm_path(), "build", "bin", "clang",
+                               exception=ConfigException)
 
 
 def rewriter():
-    return assert_exists(phd_root(), "src", "smith", "native", "rewriter")
+    return smith.assert_exists(phd_root(), "src", "smith", "native", "rewriter",
+                               exception=ConfigException)
 
 
 def toolchain_env():
@@ -66,7 +64,8 @@ def toolchain_env():
 
 
 def opt():
-    return assert_exists(llvm_path(), "build", "bin", "opt")
+    return smith.assert_exists(llvm_path(), "build", "bin", "opt",
+                               exception=ConfigException)
 
 
 def is_host():

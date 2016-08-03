@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+#
+# Generate OpenCL programs using clsmith.
+#
+import csv
+import sys
+import os
+
+from argparse import ArgumentParser
+
+import labm8
+from labm8 import fs
+
+import smith
+from smith import features
+
+class MalformedDataException(smith.SmithException): pass
+
+
+def unique(a):
+    return list(set(a))
+
+
+def intersect(a, b):
+    return list(set(a) & set(b))
+
+
+def make_features_file(kernels_dir, kernel_features_path):
+    kernel_paths = fs.ls(kernels_dir, abspaths=True)
+    with open(kernel_features_path, 'w') as outfile:
+        features.files(kernel_paths, file=outfile)
+
+
+def get_features(kernels):
+    kernel_features_path = fs.path(kernels, 'features.csv')
+
+    if not fs.exists(kernel_features_path):
+        make_features_file(kernels, kernel_features_path)
+
+    with open(kernel_features_path) as infile:
+        reader = csv.DictReader(infile)
+        return [row for row in reader]
+
+
+def results_to_dict(row):
+    return {
+        'dataset': row[0],
+        'file': row[1],
+        'kernel': row[2],
+        'wgsize': row[3],
+        'transfer': row[4],
+        'runtime': row[5],
+        'ci': row[6]
+    }
+
+
+def read_results(csv_path):
+    with open(csv_path) as infile:
+        reader = csv.reader(infile)
+        try:
+            return [results_to_dict(row) for row in reader]
+        except Exception as e:
+            raise MalformedDataException(e)
+
+
+def mktraining(kernels, cpu_path, gpu_path):
+    print("loading features ... ", end='')
+    features = get_features(kernels)
+    print(len(features))
+    print("loading cpu results ... ", end='')
+    cpu = read_results(cpu_path)
+    print(len(cpu))
+    print("loading gpu results ... ", end='')
+    gpu = read_results(gpu_path)
+    print(len(gpu))
+
+    print("common results ... ", end='')
+    common = intersect(
+        [(r['file'], r['kernel'], r['dataset']) for r in cpu],
+        [(r['file'], r['kernel'], r['dataset']) for r in gpu])
+    print(len(common))
+
+    print("    # files ... ", end='')
+    files = unique([d[0] for d in common])
+    print(len(files))
+
+    print("    # kernels ... ", end='')
+    kernels = unique([(d[0], d[1]) for d in common])
+    print(len(kernels))
+
+    print("    # datasets ... ", end='')
+    datasets = unique([d[2] for d in common])
+    print(len(datasets))
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('kernels', help='path to kernels directory')
+    parser.add_argument('cpu', help='path to CPU results CSV')
+    parser.add_argument('gpu', help='path to GPU results CSV')
+    args = parser.parse_args()
+
+    try:
+        smith.assert_exists(args.kernels)
+        smith.assert_exists(args.cpu)
+        smith.assert_exists(args.gpu)
+    except Exception as e:
+        print('fatal:', e, file=sys.stderr)
+        sys.exit(1)
+
+    mktraining(args.kernels, args.cpu, args.gpu)
+
+
+if __name__ == '__main__':
+    main()

@@ -65,10 +65,9 @@ def feature_headers(file=sys.stdout):
 def files(paths, file=sys.stdout):
     npaths = len(paths)
 
-    feature_headers()
+    feature_headers(file=file)
     for path in paths:
-        # print("\r\033[1Kfile {} of {}".format(i, npaths), end='')
-        features(path)
+        features(path, file=file)
 
 
 def summarize(csv_path):

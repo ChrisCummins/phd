@@ -3,14 +3,23 @@ import re
 import os
 
 from hashlib import sha1
-
 from pkg_resources import resource_filename,resource_string
+
+import labm8
+from labm8 import fs
 
 
 class SmithException(Exception): pass
 class InternalException(SmithException): pass
 class NotImplementedException(InternalException): pass
 class Data404Exception(InternalException): pass
+
+
+def assert_exists(*path_components, exception=SmithException):
+    path = fs.path(*path_components)
+    if not os.path.exists(path):
+        raise exception("file '{}' not found".format(path))
+    return path
 
 
 def checksum(data):
