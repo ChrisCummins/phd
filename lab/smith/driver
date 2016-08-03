@@ -4,24 +4,40 @@
 #
 set -eu
 
+usage() {
+    echo "Usage: $0 <cpu|gpu> <opencl-dir>"
+}
+
 drive_file() {
     local in_path=$1
+    local devargs=$2
 
     dsizes=(12 24 64 102 162 408 1020)
 
     set +e
     for dsize in ${dsizes[@]}; do
         # echo $dsize $in_path
-        DSIZE=$dsize smith-drive -f $in_path 2>/dev/null
+        DSIZE=$dsize smith-drive -f $devargs $in_path 2>/dev/null
     done
     set -e
 }
 
 main() {
-    local in_dir=$1
+    if [[ $# -ne 2 ]]; then
+        usage >&2
+        exit 1
+    fi
+
+    local devtype=$1
+    local in_dir=$2
+
+    if [[ $devtype != "cpu" ]] && [[ $devtype != "gpu" ]]; then
+        usage >&2
+        exit 1
+    fi
 
     for f in $(find $in_dir -name '*.cl' -type f); do
-        drive_file $f
+        drive_file $f --$devtype
     done
 }
 main $@

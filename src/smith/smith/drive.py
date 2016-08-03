@@ -20,6 +20,7 @@ import smith
 
 class DriveException(smith.SmithException): pass
 class ProgramBuildException(DriveException): pass
+class OpenCLDriverException(DriveException): pass
 
 class KernelException(DriveException): pass
 class E_BAD_CODE(KernelException): pass
@@ -217,7 +218,17 @@ def run_kernel(ctx, queue, kernel, global_size=None, filename='none'):
           '{0:.6f}'.format(mean), '{0:.6f}'.format(ci), sep=',')
 
 
-def init_opencl():
+def assert_device_type(device, devtype):
+    actual = device.get_info(cl.device_info.TYPE)
+    if actual != devtype:
+        requested = cl.device_type.to_string(devtype)
+        received = cl.device_type.to_string(actual)
+        raise OpenCLDriverException("Device type '{}' does not match "
+                                    "requested '{}'"
+                                    .format(received, requested))
+
+
+def init_opencl(devtype=cl.device_type.GPU):
     platforms = cl.get_platforms()
     try:
         ctx = cl.Context(
@@ -225,7 +236,8 @@ def init_opencl():
             properties=[(cl.context_properties.PLATFORM, platforms[0])])
     except Exception as e:
         ctx = cl.create_some_context(interactive=False)
-    # print("Device:", ctx.get_info(cl.context_info.DEVICES))
+    device = ctx.get_info(cl.context_info.DEVICES)[0]
+    assert_device_type(device, devtype)
     cqp = cl.command_queue_properties
     queue = cl.CommandQueue(ctx, properties=cqp.PROFILING_ENABLE)
 
@@ -234,7 +246,7 @@ def init_opencl():
 
 def drive(src, devtype=cl.device_type.GPU, quiet=True,
           global_size=None, filename='none'):
-    ctx, queue = init_opencl()
+    ctx, queue = init_opencl(devtype=devtype)
     program = build_program(ctx, src, quiet=quiet)
 
     for kernel in program.all_kernels():

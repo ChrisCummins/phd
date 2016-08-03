@@ -15,7 +15,9 @@ def main():
     parser.add_argument('input', help='path to input')
     parser.add_argument('-f', action='store_true', help='treat input as file')
     parser.add_argument('--cpu', action='store_true', default=False,
-                        help='execute on CPU (default: GPU)')
+                        help='execute on CPU (default: no)')
+    parser.add_argument('--gpu', action='store_true', default=False,
+                        help='execute on GPU (default: yes)')
     parser.add_argument('-q', action='store_true', default=False,
                         help='quiet mode (no compiler output)')
     args = parser.parse_args()
@@ -23,6 +25,7 @@ def main():
     input_path = args.input
     file_mode = args.f
     use_cpu = args.cpu
+    use_gpu = args.gpu  # ignored (default)
     quiet = args.q
 
     if 'DSIZE' in os.environ:
