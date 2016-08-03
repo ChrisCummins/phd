@@ -62,8 +62,9 @@ main() {
         local dsize=$(echo $job | cut -d',' -f2)
 
         i=$((i+1))
+        local perc_done=$(echo "($i / $num_jobs) * 100" | bc -l | xargs printf '%.2f%%')
 
-        echo "$(tput bold)$(tput setaf 1)$(date)$(tput sgr0) job $i of $nfiles ... $devtype $dsize $file"
+        echo "$(tput bold)$(tput setaf 1)$(date)$(tput sgr0) job [$i/$num_jobs] $perc_done ... $devtype $dsize $(basename $file)"
         ./driver $devtype $dsize $file >> $results_path 2>/dev/null
     done
 }
