@@ -10,6 +10,7 @@ from argparse import ArgumentParser
 
 import labm8
 from labm8 import fs
+from labm8 import math as labmath
 
 import smith
 from smith import features
@@ -25,17 +26,17 @@ def intersect(a, b):
     return list(set(a) & set(b))
 
 
-def make_features_file(kernels_dir, kernel_features_path):
+def make_kernel_features_file(kernels_dir, kernel_features_path):
     kernel_paths = fs.ls(kernels_dir, abspaths=True)
     with open(kernel_features_path, 'w') as outfile:
         features.files(kernel_paths, file=outfile)
 
 
-def get_features(kernels):
+def get_kernel_features(kernels):
     kernel_features_path = fs.path(kernels, 'features.csv')
 
     if not fs.exists(kernel_features_path):
-        make_features_file(kernels, kernel_features_path)
+        make_kernel_features_file(kernels, kernel_features_path)
 
     with open(kernel_features_path) as infile:
         reader = csv.DictReader(infile)
@@ -57,40 +58,148 @@ def results_to_dict(row):
 def read_results(csv_path):
     with open(csv_path) as infile:
         reader = csv.reader(infile)
-        try:
-            return [results_to_dict(row) for row in reader]
-        except Exception as e:
-            raise MalformedDataException(e)
+        results = []
+        for row in reader:
+            try:
+                results.append(results_to_dict(row))
+            except Exception as e:
+                pass
+        return results
 
 
-def mktraining(kernels, cpu_path, gpu_path):
-    print("loading features ... ", end='')
-    features = get_features(kernels)
-    print(len(features))
-    print("loading cpu results ... ", end='')
+def print_header(file=sys.stdout):
+    print(
+        "benchmark",
+        "dataset",
+        "comp",
+        "rational",
+        "mem",
+        "localmem",
+        "coalesced",
+        "atomic",
+        "transfer",
+        "wgsize",
+        "F1:transfer/(comp+mem)",
+        "F2:coalesced/mem",
+        "F3:(localmem/mem)*avgws",
+        "F4:comp/mem",
+        "oracle",
+        "runtime",
+        "speedup",
+        "penalty",
+        sep=',', file=file)
+
+
+def fetch_result(filename, kernel, dataset, results):
+    """
+    Fetch result from results which matches keys.
+    """
+    res = [d for d in results if
+           d['file'] == filename and
+           d['kernel'] == kernel and
+           d['dataset'] == dataset]
+
+    return {
+        'dataset': res[0]['dataset'],
+        'file': res[0]['file'],
+        'kernel': res[0]['kernel'],
+        'wgsize': labmath.mean([int(d['wgsize']) for d in res]),
+        'transfer': labmath.mean([int(d['transfer']) for d in res]),
+        'runtime': labmath.mean([float(d['runtime']) for d in res]),
+        'ci': labmath.mean([float(d['ci']) for d in res])
+    }
+
+def fetch_kernel_features(filename, kernel, kernel_features):
+    res = [r for r in kernel_features if
+           r['file'] == filename and
+           r['kernel'] == kernel]
+    assert(len(res) == 1)
+    return res[0]
+
+
+def print_datapoint(filename, kernel, dataset, kernel_features, cpu, gpu,
+                    file=sys.stdout):
+    cpur = fetch_result(filename, kernel, dataset, cpu)
+    gpur = fetch_result(filename, kernel, dataset, gpu)
+    kfeatures = fetch_kernel_features(filename, kernel, kernel_features)
+
+    if gpur['runtime'] < cpur['runtime']:
+        oracle = gpur
+        fast = gpur['runtime']
+        slow = cpur['runtime']
+    else:
+        oracle = cpur
+        fast = cpur['runtime']
+        slow = gpur['runtime']
+    speedup = slow / fast
+    penalty = fast / slow
+    benchmark = '-'.join((filename, kernel))
+    transfer = int(oracle['transfer'])
+    comp = int(kfeatures['comp'])
+    mem = int(kfeatures['mem'])
+    localmem = int(kfeatures['localmem'])
+    wgsize = oracle['wgsize']
+    F1 = transfer / max((comp + mem), 1)
+    F3 = (localmem / max(mem, 1)) * wgsize
+    print(
+        benchmark,
+        dataset,
+        comp,
+        kfeatures['rational'],
+        mem,
+        localmem,
+        kfeatures['coalesced'],
+        kfeatures['atomic'],
+        transfer,
+        wgsize,
+        round(F1, 6),
+        kfeatures['F2:coalesced/mem'],
+        round(F3, 6),
+        kfeatures['F4:comp/mem'],
+        'GPU' if oracle == gpur else 'CPU',
+        fast,
+        '{0:.2f}'.format(speedup),
+        '{0:.2f}'.format(penalty),
+        sep=',', file=file)
+
+
+
+def mktraining(kernels, cpu_path, gpu_path, out=sys.stdout, metaout=sys.stderr):
+    print("loading kernel features ... ", end='', file=metaout)
+    kernel_features = get_kernel_features(kernels)
+    print(len(kernel_features), file=metaout)
+    print("loading cpu results ... ", end='', file=metaout)
     cpu = read_results(cpu_path)
-    print(len(cpu))
-    print("loading gpu results ... ", end='')
+    print(len(cpu), file=metaout)
+    print("loading gpu results ... ", end='', file=metaout)
     gpu = read_results(gpu_path)
-    print(len(gpu))
+    print(len(gpu), file=metaout)
 
-    print("common results ... ", end='')
+    print("common results ... ", end='', file=metaout)
+    kfiles = [(r['file'], r['kernel']) for r in kernel_features]
     common = intersect(
-        [(r['file'], r['kernel'], r['dataset']) for r in cpu],
-        [(r['file'], r['kernel'], r['dataset']) for r in gpu])
-    print(len(common))
+        [(r['file'], r['kernel'], r['dataset']) for r in cpu
+         if (r['file'], r['kernel']) in kfiles],
+        [(r['file'], r['kernel'], r['dataset']) for r in gpu
+         if (r['file'], r['kernel']) in kfiles])
+    print(len(common), file=metaout)
 
-    print("    # files ... ", end='')
+    print("    # files ... ", end='', file=metaout)
     files = unique([d[0] for d in common])
-    print(len(files))
+    print(len(files), file=metaout)
 
-    print("    # kernels ... ", end='')
+    print("    # kernels ... ", end='', file=metaout)
     kernels = unique([(d[0], d[1]) for d in common])
-    print(len(kernels))
+    print(len(kernels), file=metaout)
 
-    print("    # datasets ... ", end='')
+    print("    # datasets ... ", end='', file=metaout)
     datasets = unique([d[2] for d in common])
-    print(len(datasets))
+    print(len(datasets), file=metaout)
+
+    print_header(file=out)
+    for filename,kernel,dataset in common:
+        print_datapoint(filename, kernel, dataset, kernel_features,
+                        cpu, gpu, file=out)
 
 
 def main():
