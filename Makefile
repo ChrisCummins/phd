@@ -385,7 +385,7 @@ python-setup-test-cmd = \
 #   $1 (str) Python executable
 #   $2 (str) Source directory
 define python-setup-test
-	$(call print-task,TEST,$(strip $1) $(strip $2),$(TaskMisc))
+	$(call print-task,TEST,$(strip $1): $(strip $2),$(TaskMisc))
 	$(V1)$(python-setup-test-cmd)
 endef
 
@@ -401,7 +401,7 @@ python-setup-install-cmd = \
 #   $1 (str) Python executable
 #   $2 (str) Source directory
 define python-setup-install
-	$(call print-task,INSTALL,$1: $2,$(TaskInstall))
+	$(call print-task,INSTALL,$(strip $1): $(strip $2),$(TaskInstall))
 	$(V1)$(python-setup-install-cmd)
 endef
 
