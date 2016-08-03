@@ -1041,6 +1041,12 @@ $(SmithNativeDir)_CxxFlags = $(ClangLlvm_CxxFlags)
 $(SmithNativeDir)_LdFlags = $(ClangLlvm_LdFlags)
 CxxTargets += $(SmithRewriter) $(SmithFeatures)
 
+test-smith: $(addsuffix /.python3.test.log,$(src)/smith)
+DocStrings += "test-smith: run smith tests"
+
+install-smith: $(addsuffix /.python3.install.log,$(src)/smith)
+DocStrings += "test-smith: install tests"
+
 
 #
 # thesis/
