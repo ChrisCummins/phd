@@ -20,21 +20,28 @@ from smith import clutil
 
 
 class DriveException(smith.SmithException): pass
-class ProgramBuildException(DriveException): pass
 class OpenCLDriverException(DriveException): pass
 
-class KernelException(DriveException): pass
-class E_BAD_CODE(KernelException): pass
-class E_BAD_DRIVER(KernelException): pass
+class KernelDriverException(DriveException): pass
+
+class E_BAD_CODE(KernelDriverException): pass
+class E_UGLY_CODE(KernelDriverException): pass
+
+class E_BAD_DRIVER(KernelDriverException): pass
 class E_BAD_ARGS(E_BAD_DRIVER): pass
 class E_BAD_PROFILE(E_BAD_DRIVER): pass
-class E_TIMEOUT(KernelException): pass
-class E_OUTPUTS_UNCHANGED(KernelException): pass
-class E_INPUT_INSENSITIVE(KernelException): pass
-class E_NONDETERMINISTIC(KernelException): pass
+
+class E_TIMEOUT(E_BAD_CODE): pass
+
+class E_INPUT_INSENSITIVE(E_UGLY_CODE): pass
+class E_NO_OUTPUTS(E_UGLY_CODE): pass
+class E_NONDETERMINISTIC(E_UGLY_CODE): pass
 
 
 def timeout(seconds=30):
+    """
+    Returns a decorator for executing a process with a timeout.
+    """
     def decorator(func):
         def _handle_timeout(signum, frame):
             raise E_TIMEOUT("Process didn't terminate after {} seconds"
@@ -48,33 +55,76 @@ def timeout(seconds=30):
             finally:
                 signal.alarm(0)
             return result
-
         return wraps(func)(wrapper)
-
     return decorator
 
 
 @timeout(30)
 def run_with_timeout(kernel, *kargs):
-    try:
-        event = kernel(*kargs)
-    except Exception as e:
-        raise E_BAD_DRIVER
+    """
+    Run an OpenCL kernel, and block until completed.
+
+    Arguments:
+
+        kernel:  A pyopencl.Kernel instance
+        *kargs:  Arguments to invoke kernel with
+
+    Returns:
+
+        Elapsed time (see get_elapsed()).
+
+    Raises:
+
+        E_TIMEOUT: If execution does not complete within given time.
+    """
+    event = kernel(*kargs)
     return get_elapsed(event)
 
 
-
-def build_program(ctx, src, quiet=True):
+class KernelDriver(object):
     """
-    Compile an OpenCL program.
-    """
-    if not quiet:
-        os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
-    try:
-        return cl.Program(ctx, src).build()
-    except cl.cffi_cl.RuntimeError as e:
-        raise ProgramBuildException(e)
+    OpenCL Kernel driver.
 
+    Arguments:
+
+        ctx:  pyopencl context.
+        queue: OpenCL queue for context.
+        source: String kernel source.
+
+    Raises:
+
+        E_BAD_CODE: If program doesn't compile.
+    """
+    def __init__(self, ctx, source, source_path='<stdin>'):
+        self._ctx = ctx
+        self._src = str(source)
+
+        self._program = KernelDriver.build_program(self._ctx, self._src)
+
+
+    def run(queue, payload):
+        output = payload.copy()
+        return output
+
+
+    def __repr__(self):
+        return self._src
+
+    @staticmethod
+    def build_program(ctx, src, quiet=True):
+        """
+        Compile an OpenCL program.
+        """
+        if not quiet:
+            os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
+        try:
+            return cl.Program(ctx, src).build()
+        except cl.cffi_cl.RuntimeError as e:
+            raise E_BAD_CODE(e)
+
+
+class KernelPayload(object):
+    pass
 
 def create_buffer_arg(ctx, dtype, size, read=True, write=True):
     host_data = np.random.rand(*size).astype(dtype)
@@ -141,10 +191,10 @@ def get_elapsed(event):
         raise E_BAD_PROFILE
 
 
-def run_kernel(ctx, queue, kernel, global_size, filename='none'):
+def run_kernel(ctx, queue, kernel, size, filename='none'):
     name = kernel_name(kernel)
 
-    transfer,args,hostd = get_payload(ctx, kernel, global_size)
+    transfer,args,hostd = get_payload(ctx, kernel, size)
 
     device = ctx.get_info(cl.context_info.DEVICES)[0]
     wgsize = kernel.get_work_group_info(
@@ -196,7 +246,7 @@ def init_opencl(devtype=cl.device_type.GPU):
     return ctx, queue
 
 
-def drive(ctx, queue, src, global_size, devtype=cl.device_type.GPU,
+def drive(ctx, queue, src, size, devtype=cl.device_type.GPU,
           quiet=True, filename='none'):
     """
     Execute a single OpenCL kernel.
@@ -208,11 +258,11 @@ def drive(ctx, queue, src, global_size, devtype=cl.device_type.GPU,
                filename=filename)
 
 
-def kernel(src, filename='none', devtype=cl.device_type.GPU,
-           global_size=None, **driveopts):
+def kernel(src, filename='<stdin>', devtype=cl.device_type.GPU,
+           size=None, **driveopts):
     # If no size is given, pick one.
-    if global_size is None:
-        global_size = (2 ** randrange(4, 15),)
+    if size is None:
+        size = 2 ** randrange(4, 15)
 
     try:
         ctx, queue = init_opencl(devtype=devtype)
@@ -220,8 +270,31 @@ def kernel(src, filename='none', devtype=cl.device_type.GPU,
         raise OpenCLDriverException(e)
 
     try:
-        drive(ctx, queue, src, global_size,
-              filename=filename, **driveopts)
+        # Create driver.
+        driver = KernelDriver(ctx, src, source_path=filename)
+
+        # Create payloads.
+        A1in = KernelPayload.create_sequential(driver, size)
+        A2in = A1in.copy()
+
+        B1in = KernelPayload.create_random(driver, size)
+        B2in = B1in.copy()
+
+        # Input constraints.
+        cl_assert(A1in == A2in)
+        cl_assert(B1in == B2in)
+        cl_assert(A1in != B1in)
+
+        A1out = driver(A1in, queue)
+        B1out = driver(B1in, queue)
+        A2out = driver(A2in, queue)
+        B2out = driver(B2in, queue)
+
+        cl_assert(A1in != A1out)   # outputs must be different from inputs
+        cl_assert(B1in != B1out)   # outputs must be different from inputs
+        cl_assert(A1out != B1out)  # outputs must depend on inputs
+        cl_assert(A1out == A2out)  # outputs must be consistent across runs
+        cl_assert(B1out == B2out)  # outputs must be consistent across runs
     except DriveException as e:
         print('{}:'.format(fs.basename(filename)), e, file=sys.stderr)
 
