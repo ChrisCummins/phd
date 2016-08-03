@@ -11,6 +11,23 @@ from labm8 import fs
 class ConfigException(smith.SmithException): pass
 
 
+def host_has_opencl():
+    try:
+        return len(fs.ls('/etc/OpenCL/vendors'))
+    except FileNotFoundError:
+        return False
+
+
+def host_has_gpu():
+    # TODO:
+    return host_has_opencl()
+
+
+def host_has_cpu():
+    # TODO:
+    return host_has_opencl()
+
+
 def phd_root():
     return smith.assert_exists("~/phd", exception=ConfigException)
 
