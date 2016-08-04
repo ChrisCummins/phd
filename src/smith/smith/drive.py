@@ -1,6 +1,7 @@
 from __future__ import division
 from __future__ import print_function
 
+from copy import deepcopy
 from functools import wraps
 from random import randrange
 from threading import Thread
@@ -16,11 +17,13 @@ from labm8 import fs
 from labm8 import math as labmath
 
 import smith
+from smith import config as cfg
 from smith import clutil
 
 
 class DriveException(smith.SmithException): pass
 class OpenCLDriverException(DriveException): pass
+class OpenCLNotSupported(OpenCLDriverException): pass
 
 class KernelDriverException(DriveException): pass
 
@@ -36,6 +39,25 @@ class E_TIMEOUT(E_BAD_CODE): pass
 class E_INPUT_INSENSITIVE(E_UGLY_CODE): pass
 class E_NO_OUTPUTS(E_UGLY_CODE): pass
 class E_NONDETERMINISTIC(E_UGLY_CODE): pass
+
+
+def init_opencl(devtype=cl.device_type.GPU):
+    if not cfg.host_has_opencl():
+        raise OpenCLNotSupported
+
+    platforms = cl.get_platforms()
+    try:
+        ctx = cl.Context(
+            dev_type=devtype,
+            properties=[(cl.context_properties.PLATFORM, platforms[0])])
+    except Exception as e:
+        ctx = cl.create_some_context(interactive=False)
+    device = ctx.get_info(cl.context_info.DEVICES)[0]
+    assert_device_type(device, devtype)
+    cqp = cl.command_queue_properties
+    queue = cl.CommandQueue(ctx, properties=cqp.PROFILING_ENABLE)
+
+    return ctx, queue
 
 
 def timeout(seconds=30):
@@ -83,7 +105,7 @@ def run_with_timeout(kernel, *kargs):
 
 class KernelDriver(object):
     """
-    OpenCL Kernel driver.
+    OpenCL Kernel driver. Drives a single OpenCL kernel.
 
     Arguments:
 
@@ -94,21 +116,63 @@ class KernelDriver(object):
     Raises:
 
         E_BAD_CODE: If program doesn't compile.
+        E_UGLY_CODE: If program contains multiple kernels.
     """
     def __init__(self, ctx, source, source_path='<stdin>'):
         self._ctx = ctx
         self._src = str(source)
-
         self._program = KernelDriver.build_program(self._ctx, self._src)
+        self._prototype = clutil.KernelPrototype.from_source(self._src)
 
+        kernels = self._program.all_kernels()
+        if len(kernels) != 1:
+            raise E_UGLY_CODE
+        self._kernel = kernels[0]
+        self._name = self._kernel.get_info(cl.kernel_info.FUNCTION_NAME)
 
-    def run(queue, payload):
-        output = payload.copy()
+        # Profiling stats
+        self._wgsizes = []
+        self._transfers = []
+        self._runtimes = []
+
+    def __call__(queue, payload):
+        output = deepcopy(payload)
+
+        kargs = output.kargs
+        self.kernel(*kargs)
+        output.device_to_host(queue)
+
         return output
 
-
     def __repr__(self):
-        return self._src
+        return self.source
+
+    @property
+    def context(self): return self._ctx
+
+    @property
+    def source(self): return self._src
+
+    @property
+    def program(self): return self._program
+
+    @property
+    def prototype(self): return self._prototype
+
+    @property
+    def kernel(self): return self._kernel
+
+    @property
+    def name(self): return self._name
+
+    @property
+    def wgsizes(self): return self._wgsizes
+
+    @property
+    def transfers(self): return self._transfers
+
+    @property
+    def runtimes(self): return self._runtimes
 
     @staticmethod
     def build_program(ctx, src, quiet=True):
@@ -124,7 +188,52 @@ class KernelDriver(object):
 
 
 class KernelPayload(object):
-    pass
+    def __init__(self, ctx, args):
+        self._ctx = ctx
+        self._args = args
+
+    def __deepcopy__(self):
+        print('DEEPDEEP', file=sys.stderr)
+
+    def __eq__(self, other):
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def device_to_host(self, queue):
+        elapsed = 0
+        return elapsed
+
+    @property
+    def context(self): return self._ctx
+
+    @property
+    def args(self): return self._args
+
+    @property
+    def kargs(self): return [a.devdata for a in self._args]
+
+    @staticmethod
+    def create_sequential(driver, size):
+        args = [clutil.KernelArg(arg.string) for arg in driver.prototype.args]
+
+        for arg in args:
+            arg.hostdata = None
+            if arg.is_pointer:
+                arg.hostdata = [] # FIXME
+            else:
+                pass
+
+            print(arg, file=sys.stderr)
+
+        return KernelPayload(driver.context, args)
+
+    @staticmethod
+    def create_random(driver, size):
+        payload = KernelPayload()
+        return payload
+
 
 def create_buffer_arg(ctx, dtype, size, read=True, write=True):
     host_data = np.random.rand(*size).astype(dtype)
@@ -230,22 +339,6 @@ def assert_device_type(device, devtype):
                                     .format(received, requested))
 
 
-def init_opencl(devtype=cl.device_type.GPU):
-    platforms = cl.get_platforms()
-    try:
-        ctx = cl.Context(
-            dev_type=devtype,
-            properties=[(cl.context_properties.PLATFORM, platforms[0])])
-    except Exception as e:
-        ctx = cl.create_some_context(interactive=False)
-    device = ctx.get_info(cl.context_info.DEVICES)[0]
-    assert_device_type(device, devtype)
-    cqp = cl.command_queue_properties
-    queue = cl.CommandQueue(ctx, properties=cqp.PROFILING_ENABLE)
-
-    return ctx, queue
-
-
 def drive(ctx, queue, src, size, devtype=cl.device_type.GPU,
           quiet=True, filename='none'):
     """
@@ -259,7 +352,14 @@ def drive(ctx, queue, src, size, devtype=cl.device_type.GPU,
 
 
 def kernel(src, filename='<stdin>', devtype=cl.device_type.GPU,
-           size=None, **driveopts):
+           size=None, file=sys.stdout, metaout=sys.stderr, **driveopts):
+    """
+    Drive a kernel
+    """
+    def assert_constraint(constraint, err=DriveException):
+        if not constraint:
+            raise err
+
     # If no size is given, pick one.
     if size is None:
         size = 2 ** randrange(4, 15)
@@ -269,34 +369,47 @@ def kernel(src, filename='<stdin>', devtype=cl.device_type.GPU,
     except Exception as e:
         raise OpenCLDriverException(e)
 
-    try:
-        # Create driver.
-        driver = KernelDriver(ctx, src, source_path=filename)
+    # Create driver.
+    driver = KernelDriver(ctx, src, source_path=filename)
 
+    try:
         # Create payloads.
         A1in = KernelPayload.create_sequential(driver, size)
-        A2in = A1in.copy()
+        A2in = deepcopy(A1in)
 
         B1in = KernelPayload.create_random(driver, size)
-        B2in = B1in.copy()
+        B2in = deepcopy(B1in)
 
         # Input constraints.
-        cl_assert(A1in == A2in)
-        cl_assert(B1in == B2in)
-        cl_assert(A1in != B1in)
+        assert_constraint(A1in == A2in, E_BAD_DRIVER)
+        assert_constraint(B1in == B2in, E_BAD_DRIVER)
+        assert_constraint(A1in != B1in, E_BAD_DRIVER)
 
         A1out = driver(A1in, queue)
         B1out = driver(B1in, queue)
         A2out = driver(A2in, queue)
         B2out = driver(B2in, queue)
 
-        cl_assert(A1in != A1out)   # outputs must be different from inputs
-        cl_assert(B1in != B1out)   # outputs must be different from inputs
-        cl_assert(A1out != B1out)  # outputs must depend on inputs
-        cl_assert(A1out == A2out)  # outputs must be consistent across runs
-        cl_assert(B1out == B2out)  # outputs must be consistent across runs
+        # outputs must be consistent across runs:
+        assert_constraint(A1out == A2out, E_NONDETERMINISTIC)
+        assert_constraint(B1out == B2out, E_NONDETERMINISTIC)
+
+        # outputs must depend on inputs:
+        assert_constraint(A1out != B1out, E_INPUT_INSENSITIVE)
+
+        # outputs must be different from inputs:
+        assert_constraint(A1in != A1out, E_NO_OUTPUTS)
+        assert_constraint(B1in != B1out, E_NO_OUTPUTS)
+
+        wgsize = round(labmath.mean(driver.wgsizes))
+        transfer = round(labmath.mean(driver.transfers))
+        mean = round(labmath.mean(driver.runtimes), 6)
+        ci = round(labmath.confinternval(driver.runtimes, array_mean=mean), 6)
+
+        print(filename, wgsize, transfer, mean, ci, sep=',', file=file)
     except DriveException as e:
-        print('{}:'.format(fs.basename(filename)), e, file=sys.stderr)
+        print('-'.join((filename, driver.name)), e, sep=',', file=metaout)
+        raise e
 
 
 def file(path, **driveopts):

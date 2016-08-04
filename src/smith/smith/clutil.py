@@ -1,18 +1,9 @@
-import json
-import locale
-import os
-import re
-import sqlite3
-import subprocess
-import sys
-
-from random import shuffle
+import nump as np
 
 import smith
 
 
 class OpenCLUtilException(smith.SmithException): pass
-
 class PrototypeException(OpenCLUtilException): pass
 
 
@@ -25,6 +16,10 @@ class KernelArg(object):
     def __init__(self, string):
         self._string = string.strip()
         self._components = self._string.split()
+
+    @property
+    def string(self):
+        return self._string
 
     @property
     def name(self):
@@ -76,6 +71,10 @@ class KernelArg(object):
                               'local' in self.qualifiers
                               else False)
             return self._is_local
+
+    @property
+    def numpy_type(self):
+        pass
 
     def __repr__(self):
         return self._string
