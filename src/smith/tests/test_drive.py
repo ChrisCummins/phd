@@ -150,18 +150,50 @@ class TestKernelPayload(TestCase):
         self._driver2 = drive.KernelDriver(self._ctx, source2)
         self._driver3 = drive.KernelDriver(self._ctx, source3)
 
-    # def test_create_sequential(self):
-    #     p = drive.KernelPayload.create_sequential(self._driver1, 8)
-    #     self.assertIsInstance(p, drive.KernelPayload)
-    #     self.assertEqual(3, len(p.kargs))
+    def test_create_sequential(self):
+        p = drive.KernelPayload.create_sequential(self._driver1, 8)
+        self.assertIsInstance(p, drive.KernelPayload)
+        self.assertEqual(3, len(p.kargs))
+        self.assertIs(np.float32, p.args[0].numpy_type)
+        self.assertIs(np.float32, p.args[1].numpy_type)
+        self.assertIs(np.int32, p.args[2].numpy_type)
 
-    # def test_comparisons(self):
-    #     p1 = drive.KernelPayload.create_sequential(self._driver1, 8)
-    #     p2 = drive.KernelPayload.create_sequential(self._driver1, 8)
-    #     self.assertEqual(p1, p2)
+        self.assertIs(cl.Buffer, type(p.args[0].devdata))
+        self.assertEqual(8, p.args[0].hostdata.size)
+        self.assertIs(cl.Buffer, type(p.args[1].devdata))
+        self.assertEqual(8, p.args[1].hostdata.size)
+        self.assertIs(np.int32, type(p.args[2].devdata))
+        self.assertEqual(8, p.args[2].devdata)
 
-    #     p3 = drive.KernelPayload.create_random(self._driver1, 8)
-    #     self.assertNotEqual(p1, p3)
+    def test_create_random(self):
+        p = drive.KernelPayload.create_random(self._driver1, 8)
+        self.assertIsInstance(p, drive.KernelPayload)
+        self.assertEqual(3, len(p.kargs))
+        self.assertIs(np.float32, p.args[0].numpy_type)
+        self.assertIs(np.float32, p.args[1].numpy_type)
+        self.assertIs(np.int32, p.args[2].numpy_type)
+
+        self.assertIs(cl.Buffer, type(p.args[0].devdata))
+        self.assertEqual(8, p.args[0].hostdata.size)
+        self.assertIs(cl.Buffer, type(p.args[1].devdata))
+        self.assertEqual(8, p.args[1].hostdata.size)
+        self.assertIs(np.int32, type(p.args[2].devdata))
+        self.assertEqual(8, p.args[2].devdata)
+
+    def test_comparisons(self):
+        p1 = drive.KernelPayload.create_sequential(self._driver1, 8)
+        p2 = drive.KernelPayload.create_sequential(self._driver1, 8)
+        self.assertEqual(p1, p2)
+
+        p3 = drive.KernelPayload.create_sequential(self._driver1, 16)
+        p4 = drive.KernelPayload.create_sequential(self._driver1, 16)
+        self.assertNotEqual(p1, p3)
+        self.assertEqual(p3, p4)
+
+        p5 = drive.KernelPayload.create_random(self._driver1, 8)
+        p6 = drive.KernelPayload.create_random(self._driver1, 8)
+        self.assertNotEqual(p1, p5)
+        self.assertNotEqual(p5, p6)
 
 
 @skipIf(not cfg.host_has_opencl(), "no OpenCL support in host")

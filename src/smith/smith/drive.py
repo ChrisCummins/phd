@@ -135,6 +135,7 @@ class KernelDriver(object):
         self._transfers = []
         self._runtimes = []
 
+    @timeout(30)
     def __call__(queue, payload):
         output = deepcopy(payload)
 
@@ -196,7 +197,24 @@ class KernelPayload(object):
         print('DEEPDEEP', file=sys.stderr)
 
     def __eq__(self, other):
-        return False
+        """
+        """
+        if self.context != other.context:
+            return False
+
+        if len(self.args) != len(other.args):
+            return False
+
+        for x,y in zip(self.args, other.args):
+            if type(x) != type(y):
+                return False
+            if x.hostdata is None:
+                if x.devdata != y.devdata:
+                    return False
+            else:
+                if any([e1 != e2 for e1,e2 in zip(x.hostdata,y.hostdata)]):
+                    return False
+        return True
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -215,24 +233,34 @@ class KernelPayload(object):
     def kargs(self): return [a.devdata for a in self._args]
 
     @staticmethod
-    def create_sequential(driver, size):
+    def _create_payload(nparray, driver, size):
         args = [clutil.KernelArg(arg.string) for arg in driver.prototype.args]
 
         for arg in args:
+            dtype = arg.numpy_type
             arg.hostdata = None
             if arg.is_pointer:
-                arg.hostdata = [] # FIXME
+                veclength = size * arg.vector_width
+                arg.hostdata = nparray(veclength)
+                flags = cl.mem_flags.COPY_HOST_PTR
+                if arg.is_const:
+                    flags |= cl.mem_flags.READ_ONLY
+                else:
+                    flags |= cl.mem_flags.READ_WRITE
+                arg.devdata = cl.Buffer(
+                    driver.context, flags, hostbuf=arg.hostdata)
             else:
-                pass
-
-            print(arg, file=sys.stderr)
+                arg.devdata = dtype(size)
 
         return KernelPayload(driver.context, args)
 
     @staticmethod
-    def create_random(driver, size):
-        payload = KernelPayload()
-        return payload
+    def create_sequential(*args, **kwargs):
+        return KernelPayload._create_payload(np.arange, *args, **kwargs)
+
+    @staticmethod
+    def create_random(*args, **kwargs):
+        return KernelPayload._create_payload(np.random.rand, *args, **kwargs)
 
 
 def create_buffer_arg(ctx, dtype, size, read=True, write=True):

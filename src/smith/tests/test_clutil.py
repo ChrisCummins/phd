@@ -89,6 +89,7 @@ class TestKernelPrototype(TestCase):
             p = clutil.KernelPrototype.from_source(source)
             self.assertEqual(args, [str(x) for x in p.args])
 
+
 class TestKernelArg(TestCase):
     def test_arg_names(self):
         for source,argnames in zip(test_sources, test_arg_names):
@@ -150,6 +151,7 @@ class TestKernelArg(TestCase):
         self.assertTrue(a.is_const)
         self.assertIs(np.uint8, a.numpy_type)
         self.assertEqual(16, a.vector_width)
+
 
 if __name__ == '__main__':
     main()
