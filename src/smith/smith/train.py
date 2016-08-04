@@ -15,6 +15,9 @@ import re
 import sqlite3
 import sys
 
+import labm8
+from labm8 import fs
+
 import smith
 from smith import dbutil
 
@@ -60,16 +63,17 @@ def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
     if dir:
         print('writing to directory ', out_path, '/', sep='')
         if os.path.exists(out_path):
-            print('fatal: directory already exists!', file=sys.stderr)
-            return 1
+            if len(fs.ls(out_path)):
+                print('fatal: directory already exists!', file=sys.stderr)
+                return 1
         else:
             os.makedirs(out_path)
-            for row in rows:
-                id,contents = row
-                path = os.path.join(out_path, sanitize_id(id) + '.cl')
-                with open(path, 'w') as out:
-                    out.write(contents)
-            return 0
+        for row in rows:
+            id,contents = row
+            path = os.path.join(out_path, sanitize_id(id) + '.cl')
+            with open(path, 'w') as out:
+                out.write(contents)
+        return 0
     else:
         print('writing file', out_path)
         with open(out_path, 'w') as out:
