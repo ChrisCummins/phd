@@ -177,6 +177,9 @@ class KernelDriver(object):
         # Record runtime.
         self.runtimes.append(elapsed)
 
+        # Record transfers.
+        self.transfers.append(payload.transfersize)
+
         return output
 
     def __repr__(self):
@@ -223,10 +226,11 @@ class KernelDriver(object):
 
 
 class KernelPayload(object):
-    def __init__(self, ctx, args, ndrange):
+    def __init__(self, ctx, args, ndrange, transfersize):
         self._ctx = ctx
         self._args = args
         self._ndrange = ndrange
+        self._transfersize = transfersize
 
     def __deepcopy__(self, memo={}):
         """
@@ -248,11 +252,9 @@ class KernelPayload(object):
                 newarg.devdata = cl.Buffer(self.context, newarg.flags,
                                            hostbuf=newarg.hostdata)
 
-        return KernelPayload(self.context, args, self.ndrange)
+        return KernelPayload(self.context, args, self.ndrange, self.transfersize)
 
     def __eq__(self, other):
-        """
-        """
         if self.context != other.context:
             return False
 
@@ -311,9 +313,13 @@ class KernelPayload(object):
     @property
     def ndrange(self): return self._ndrange
 
+    @property
+    def transfersize(self): return self._transfersize
+
     @staticmethod
     def _create_payload(nparray, driver, size):
         args = [clutil.KernelArg(arg.string) for arg in driver.prototype.args]
+        transfer = 0
 
         for arg in args:
             dtype = arg.numpy_type
@@ -332,10 +338,17 @@ class KernelPayload(object):
                 arg.flags = flags
                 arg.devdata = cl.Buffer(
                     driver.context, arg.flags, hostbuf=arg.hostdata)
+
+                # Record transfer overhead. If it's a const buffer,
+                # we're not reading back to host.
+                if arg.is_const:
+                    transfer += arg.hostdata.nbytes
+                else:
+                    transfer += 2 * arg.hostdata.nbytes
             else:
                 arg.devdata = dtype(size)
 
-        return KernelPayload(driver.context, args, (size,))
+        return KernelPayload(driver.context, args, (size,), transfer)
 
     @staticmethod
     def create_sequential(*args, **kwargs):
@@ -344,33 +357,6 @@ class KernelPayload(object):
     @staticmethod
     def create_random(*args, **kwargs):
         return KernelPayload._create_payload(np.random.rand, *args, **kwargs)
-
-
-def create_buffer_arg(ctx, dtype, size, read=True, write=True):
-    host_data = np.random.rand(*size).astype(dtype)
-
-    if read and write:
-        mflags = cl.mem_flags.READ_WRITE
-    elif read:
-        mflags = cl.mem_flags.READ_ONLY
-    elif write:
-        mflags = cl.mem_flags.WRITE_ONLY
-    else:
-        raise smith.InternalException("buffer must allow reads or writes!")
-
-    dev_data = cl.Buffer(ctx, mflags | cl.mem_flags.COPY_HOST_PTR,
-                         hostbuf=host_data)
-    transfer = 2 * host_data.nbytes
-    return dev_data, transfer, host_data
-
-
-def create_const_arg(ctx, dtype, val=None):
-    if val is None: val = np.random.random_sample()
-    dev_data = dtype(val)
-    # TODO: Device whether we want const value args to be considered a
-    # 'transfer'. If not, then transfer=0.
-    transfer = dev_data.nbytes
-    return dev_data, transfer, val
 
 
 def get_payload(ctx, kernel, global_size):

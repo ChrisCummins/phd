@@ -161,12 +161,16 @@ class TestKernelDriver(TestCase):
 
         self.assertEqual(1, len(driver.runtimes))
         self.assertEqual(1, len(driver.wgsizes))
+        self.assertEqual(1, len(driver.transfers))
+        self.assertEqual(A.transfersize, driver.transfers[0])
         self.assertTrue(A != B)
 
         C = k(A)
 
         self.assertEqual(2, len(driver.runtimes))
         self.assertEqual(2, len(driver.wgsizes))
+        self.assertEqual(2, len(driver.transfers))
+        self.assertEqual(A.transfersize, driver.transfers[-1])
         self.assertTrue(C != A)
         self.assertTrue(C == B)
 
@@ -174,6 +178,8 @@ class TestKernelDriver(TestCase):
 
         self.assertEqual(3, len(driver.runtimes))
         self.assertEqual(3, len(driver.wgsizes))
+        self.assertEqual(3, len(driver.transfers))
+        self.assertEqual(A.transfersize, driver.transfers[-1])
         self.assertTrue(D != A)
         self.assertTrue(D == C)
 
