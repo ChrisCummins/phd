@@ -34,14 +34,39 @@ class E_BAD_DRIVER(KernelDriverException): pass
 class E_BAD_ARGS(E_BAD_DRIVER): pass
 class E_BAD_PROFILE(E_BAD_DRIVER): pass
 
-class E_TIMEOUT(E_BAD_CODE): pass
+class E_NON_TERMINATING(E_BAD_CODE): pass
 
 class E_INPUT_INSENSITIVE(E_UGLY_CODE): pass
 class E_NO_OUTPUTS(E_UGLY_CODE): pass
 class E_NONDETERMINISTIC(E_UGLY_CODE): pass
 
 
-def init_opencl(devtype=cl.device_type.GPU):
+def assert_device_type(device, devtype):
+    """
+    Check that device type matches.
+
+    Raises:
+
+        OpenCLDriverException: If device type does not match argument.
+    """
+    actual = device.get_info(cl.device_info.TYPE)
+    if actual != devtype:
+        requested = cl.device_type.to_string(devtype)
+        received = cl.device_type.to_string(actual)
+        raise OpenCLDriverException("Device type '{}' does not match "
+                                    "requested '{}'"
+                                    .format(received, requested))
+
+
+def init_opencl(devtype=cl.device_type.GPU, queue_flags=0):
+    """
+    Initialise an OpenCL context with some command queue.
+
+    Raises:
+
+        OpenCLNotSupported: If host does not support OpenCL.
+        OpenCLDriverException: In case of error.
+    """
     if not cfg.host_has_opencl():
         raise OpenCLNotSupported
 
@@ -50,12 +75,17 @@ def init_opencl(devtype=cl.device_type.GPU):
         ctx = cl.Context(
             dev_type=devtype,
             properties=[(cl.context_properties.PLATFORM, platforms[0])])
-    except Exception as e:
-        ctx = cl.create_some_context(interactive=False)
+    except Exception:
+        try:
+            ctx = cl.create_some_context(interactive=False)
+        except Exception as e:
+            raise OpenCLDriverException(e)
+
+    # Check that device type is what we expected:
     device = ctx.get_info(cl.context_info.DEVICES)[0]
     assert_device_type(device, devtype)
-    cqp = cl.command_queue_properties
-    queue = cl.CommandQueue(ctx, properties=cqp.PROFILING_ENABLE)
+    queue_flags |= cl.command_queue_properties.PROFILING_ENABLE
+    queue = cl.CommandQueue(ctx, properties=queue_flags)
 
     return ctx, queue
 
@@ -79,28 +109,6 @@ def timeout(seconds=30):
             return result
         return wraps(func)(wrapper)
     return decorator
-
-
-@timeout(30)
-def run_with_timeout(kernel, *kargs):
-    """
-    Run an OpenCL kernel, and block until completed.
-
-    Arguments:
-
-        kernel:  A pyopencl.Kernel instance
-        *kargs:  Arguments to invoke kernel with
-
-    Returns:
-
-        Elapsed time (see get_elapsed()).
-
-    Raises:
-
-        E_TIMEOUT: If execution does not complete within given time.
-    """
-    event = kernel(*kargs)
-    return get_elapsed(event)
 
 
 class KernelDriver(object):
@@ -136,12 +144,38 @@ class KernelDriver(object):
         self._runtimes = []
 
     @timeout(30)
-    def __call__(queue, payload):
+    def __call__(self, queue, payload, timeout=30):
+        elapsed = 0
         output = deepcopy(payload)
 
         kargs = output.kargs
-        self.kernel(*kargs)
-        output.device_to_host(queue)
+
+        # Run kernel and get time.
+        elapsed += output.host_to_device(queue)
+
+        # Try setting the kernel arguments.
+        try:
+            self.kernel.set_args(*kargs)
+        except cl.cffi_cl.LogicError as e:
+            raise E_BAD_ARGS(e)
+        except TypeError as e:
+            raise E_BAD_ARGS(e)
+
+        # Execute kernel
+        event = self.kernel(queue, output.ndrange, None, *kargs)
+        elapsed += get_elapsed(event)
+
+        # Copy data back to host and get time.
+        elapsed += output.device_to_host(queue)
+
+        # Record workgroup size.
+        device = self.context.get_info(cl.context_info.DEVICES)[0]
+        wgsize = self.kernel.get_work_group_info(
+            cl.kernel_work_group_info.WORK_GROUP_SIZE, device)
+        self.wgsizes.append(wgsize)
+
+        # Record runtime.
+        self.runtimes.append(elapsed)
 
         return output
 
@@ -189,12 +223,32 @@ class KernelDriver(object):
 
 
 class KernelPayload(object):
-    def __init__(self, ctx, args):
+    def __init__(self, ctx, args, ndrange):
         self._ctx = ctx
         self._args = args
+        self._ndrange = ndrange
 
-    def __deepcopy__(self):
-        print('DEEPDEEP', file=sys.stderr)
+    def __deepcopy__(self, memo={}):
+        """
+        Make a deep copy of a payload.
+
+        This means duplicating all host data, and constructing new
+        OpenCL mem objects with pointers to this host data. Note that
+        this DOES NOT copy the OpenCL context associated with the
+        payload.
+        """
+        args = [clutil.KernelArg(a.string) for a in self.args]
+
+        for newarg,arg in zip(args, self.args):
+            newarg.hostdata = deepcopy(arg.hostdata, memo=memo)
+            if newarg.hostdata is None:
+                newarg.devdata = deepcopy(arg.devdata)
+            else:
+                newarg.flags = arg.flags
+                newarg.devdata = cl.Buffer(self.context, newarg.flags,
+                                           hostbuf=newarg.hostdata)
+
+        return KernelPayload(self.context, args, self.ndrange)
 
     def __eq__(self, other):
         """
@@ -221,6 +275,28 @@ class KernelPayload(object):
 
     def device_to_host(self, queue):
         elapsed = 0
+
+        for arg in self.args:
+            if arg.hostdata is None or arg.is_const:
+                continue
+
+            event = cl.enqueue_copy(queue, arg.hostdata, arg.devdata,
+                                    is_blocking=False)
+            elapsed += get_elapsed(event)
+
+        return elapsed
+
+    def host_to_device(self, queue):
+        elapsed = 0
+
+        for arg in self.args:
+            if arg.hostdata is None:
+                continue
+
+            event = cl.enqueue_copy(queue, arg.devdata, arg.hostdata,
+                                    is_blocking=False)
+            elapsed += get_elapsed(event)
+
         return elapsed
 
     @property
@@ -232,6 +308,9 @@ class KernelPayload(object):
     @property
     def kargs(self): return [a.devdata for a in self._args]
 
+    @property
+    def ndrange(self): return self._ndrange
+
     @staticmethod
     def _create_payload(nparray, driver, size):
         args = [clutil.KernelArg(arg.string) for arg in driver.prototype.args]
@@ -241,18 +320,22 @@ class KernelPayload(object):
             arg.hostdata = None
             if arg.is_pointer:
                 veclength = size * arg.vector_width
-                arg.hostdata = nparray(veclength)
+                try:
+                    arg.hostdata = nparray(veclength)
+                except MemoryError:
+                    raise E_BAD_ARGS
                 flags = cl.mem_flags.COPY_HOST_PTR
                 if arg.is_const:
                     flags |= cl.mem_flags.READ_ONLY
                 else:
                     flags |= cl.mem_flags.READ_WRITE
+                arg.flags = flags
                 arg.devdata = cl.Buffer(
-                    driver.context, flags, hostbuf=arg.hostdata)
+                    driver.context, arg.flags, hostbuf=arg.hostdata)
             else:
                 arg.devdata = dtype(size)
 
-        return KernelPayload(driver.context, args)
+        return KernelPayload(driver.context, args, (size,))
 
     @staticmethod
     def create_sequential(*args, **kwargs):
@@ -325,6 +408,10 @@ def get_elapsed(event):
         tend = event.get_profiling_info(cl.profiling_info.END)
         return (tend - tstart) / 1000000
     except Exception:
+        # Possible exceptions:
+        #
+        #  pyopencl.cffi_cl.RuntimeError: clwaitforevents failed: OUT_OF_RESOURCES
+        #
         raise E_BAD_PROFILE
 
 
@@ -341,7 +428,7 @@ def run_kernel(ctx, queue, kernel, size, filename='none'):
     runtimes = []
     for i in range(nruns):
         # Blocking execution while kernel executes.
-        elapsed = run_with_timeout(kernel, queue, global_size, None, *args)
+        elapsed = run_kernel_with_timeout(kernel, queue, global_size, None, *args)
 
         # Copy data back to host.
         for i in hostd:
@@ -357,32 +444,10 @@ def run_kernel(ctx, queue, kernel, size, filename='none'):
           round(mean, 6), round(ci, 6), sep=',')
 
 
-def assert_device_type(device, devtype):
-    actual = device.get_info(cl.device_info.TYPE)
-    if actual != devtype:
-        requested = cl.device_type.to_string(devtype)
-        received = cl.device_type.to_string(actual)
-        raise OpenCLDriverException("Device type '{}' does not match "
-                                    "requested '{}'"
-                                    .format(received, requested))
-
-
-def drive(ctx, queue, src, size, devtype=cl.device_type.GPU,
-          quiet=True, filename='none'):
-    """
-    Execute a single OpenCL kernel.
-    """
-    program = build_program(ctx, src, quiet=quiet)
-    kernels = program.all_kernels()
-    assert(len(kernels) == 1)
-    run_kernel(ctx, queue, kernels[0], global_size,
-               filename=filename)
-
-
 def kernel(src, filename='<stdin>', devtype=cl.device_type.GPU,
            size=None, file=sys.stdout, metaout=sys.stderr, **driveopts):
     """
-    Drive a kernel
+    Drive a kernel.
     """
     def assert_constraint(constraint, err=DriveException):
         if not constraint:

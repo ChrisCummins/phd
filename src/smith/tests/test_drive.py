@@ -1,6 +1,9 @@
 from unittest import TestCase,skip,skipIf
 import tests
 
+from copy import deepcopy
+from functools import partial
+
 import numpy as np
 import os
 import pyopencl as cl
@@ -19,7 +22,7 @@ __kernel void A(__global float* a, __global float* b, const int c) {
     int d = get_global_id(0);
 
     if (d < c) {
-        a[d] = b[d];
+        a[d] = b[d] * 2;
     }
 }
 """
@@ -57,6 +60,15 @@ __kernel void A(__global float* a) {
 
 source2_E_BAD_CODE = """
 __kernel void A(__global float* a) {
+"""
+
+source1_E_NON_TERMINATING = """
+__kernel void A(__global float* a) {
+  int b = get_global_id(0);
+
+  while (1)
+    a[b] += 1;
+}
 """
 
 @skipIf(not cfg.host_has_opencl(), "no OpenCL support in host")
@@ -138,7 +150,52 @@ class TestKernelDriver(TestCase):
         result = np.zeros(sz).astype(np.float32)
         cl.enqueue_copy(self._queue, result, dev[0], is_blocking=True)
         for x,y in zip(host, result):
-            self.assertAlmostEqual(x, y)
+            self.assertAlmostEqual(x * 2, y)
+
+    def test_call(self):
+        driver = drive.KernelDriver(self._ctx, source1)
+        k = partial(driver, self._queue)
+
+        A = drive.KernelPayload.create_sequential(driver, 8)
+        B = k(A)
+
+        self.assertEqual(1, len(driver.runtimes))
+        self.assertEqual(1, len(driver.wgsizes))
+        self.assertTrue(A != B)
+
+        C = k(A)
+
+        self.assertEqual(2, len(driver.runtimes))
+        self.assertEqual(2, len(driver.wgsizes))
+        self.assertTrue(C != A)
+        self.assertTrue(C == B)
+
+        D = k(A)
+
+        self.assertEqual(3, len(driver.runtimes))
+        self.assertEqual(3, len(driver.wgsizes))
+        self.assertTrue(D != A)
+        self.assertTrue(D == C)
+
+        # Workgroup size should be consistent across all three runs.
+        self.assertTrue(all(x == driver.wgsizes[0] for x in driver.wgsizes[1:]))
+
+    @skip("how long you got?")
+    def test_non_terminating(self):
+        driver = drive.KernelDriver(self._ctx, source1_E_NON_TERMINATING)
+        k = partial(driver, self._queue)
+
+        A = drive.KernelPayload.create_sequential(driver, 16)
+        with self.assertRaises(drive.OpenCLDriverException):
+            k(A)
+
+    # @skip("how long you got?")
+    def test_out_of_resources(self):
+        driver = drive.KernelDriver(self._ctx, source1_E_NON_TERMINATING)
+        wayyyyyy_too_big = 2**32
+
+        with self.assertRaises(drive.E_BAD_ARGS):
+            drive.KernelPayload.create_sequential(driver, wayyyyyy_too_big)
 
 
 @skipIf(not cfg.host_has_opencl(), "no OpenCL support in host")
