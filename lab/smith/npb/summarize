@@ -28,7 +28,7 @@ extract_runtimes() {
 
     # output format: benchmark,dataset,device,run,runtime
     grep '\[CEC\] clEnqueue' "$path" \
-        | awk '{print $5}' | awk '{print "'$benchmark,$dataset,$device,$run,'" $0}'
+        | awk '{OFS = ","; print "'$benchmark'-"$3,"'$dataset'","'$device'","'$run'",$5}'
 }
 
 extract_wgsizes() {
@@ -41,7 +41,7 @@ extract_wgsizes() {
 
     # output format: benchmark,dataset,device,wgsize
     grep '\[CEC\] clEnqueueNDRangeKernel ' "$path" \
-        | awk '{print $4}' | awk '{print "'$benchmark,$dataset,$device,'" $0}'
+        | awk '{OFS=","; print "'$benchmark'-"$3,"'$dataset'","'$device'",$4}'
 }
 
 extract_transfers() {
@@ -54,7 +54,7 @@ extract_transfers() {
 
     # output format: benchmark,dataset,device,size
     grep '\[CEC\] clEnqueue[RW]' "$path" \
-        | awk '{print $4}' | awk '{print "'$benchmark,$dataset,$device,'" $0}'
+        | awk '{OFS=","; print "'$benchmark'-"$3,"'$dataset'","'$device'",$4}'
 }
 
 extract_kernels() {
