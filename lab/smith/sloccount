@@ -4,6 +4,7 @@
 #
 cd ../../
 (\
+    find docs/wip-smith -name '*.tex'; \
     find src/smith -name '*.py'; \
     find src/smith -name '*.cpp'; \
     find src/smith/bin -type f; \

@@ -90,6 +90,28 @@ def init_opencl(devtype=cl.device_type.GPU, queue_flags=0):
     return ctx, queue
 
 
+def get_event_time(event):
+    """
+    Block until OpenCL event has completed and return time delta
+    between event submission and end, in milliseconds.
+
+    Raises:
+
+        E_BAD_PROFILE: In case of error.
+    """
+    try:
+        event.wait()
+        tstart = event.get_profiling_info(cl.profiling_info.SUBMIT)
+        tend = event.get_profiling_info(cl.profiling_info.END)
+        return (tend - tstart) / 1000000
+    except Exception:
+        # Possible exceptions:
+        #
+        #  pyopencl.cffi_cl.RuntimeError: clwaitforevents failed: OUT_OF_RESOURCES
+        #
+        raise E_BAD_PROFILE
+
+
 def timeout(seconds=30):
     """
     Returns a decorator for executing a process with a timeout.
@@ -163,7 +185,7 @@ class KernelDriver(object):
 
         # Execute kernel
         event = self.kernel(queue, output.ndrange, None, *kargs)
-        elapsed += get_elapsed(event)
+        elapsed += get_event_time(event)
 
         # Copy data back to host and get time.
         elapsed += output.device_to_host(queue)
@@ -184,6 +206,40 @@ class KernelDriver(object):
 
     def __repr__(self):
         return self.source
+
+    def validate(self, size=16):
+        def assert_constraint(constraint, err=DriveException):
+            if not constraint:
+                raise err
+
+        # TODO:
+        # Create payloads.
+        A1in = KernelPayload.create_sequential(driver, size)
+        A2in = deepcopy(A1in)
+
+        B1in = KernelPayload.create_random(driver, size)
+        B2in = deepcopy(B1in)
+
+        # Input constraints.
+        assert_constraint(A1in == A2in, E_BAD_DRIVER)
+        assert_constraint(B1in == B2in, E_BAD_DRIVER)
+        assert_constraint(A1in != B1in, E_BAD_DRIVER)
+
+        A1out = driver(A1in, queue)
+        B1out = driver(B1in, queue)
+        A2out = driver(A2in, queue)
+        B2out = driver(B2in, queue)
+
+        # outputs must be consistent across runs:
+        assert_constraint(A1out == A2out, E_NONDETERMINISTIC)
+        assert_constraint(B1out == B2out, E_NONDETERMINISTIC)
+
+        # outputs must depend on inputs:
+        assert_constraint(A1out != B1out, E_INPUT_INSENSITIVE)
+
+        # outputs must be different from inputs:
+        assert_constraint(A1in != A1out, E_NO_OUTPUTS)
+        assert_constraint(B1in != B1out, E_NO_OUTPUTS)
 
     @property
     def context(self): return self._ctx
@@ -284,7 +340,7 @@ class KernelPayload(object):
 
             event = cl.enqueue_copy(queue, arg.hostdata, arg.devdata,
                                     is_blocking=False)
-            elapsed += get_elapsed(event)
+            elapsed += get_event_time(event)
 
         return elapsed
 
@@ -297,7 +353,7 @@ class KernelPayload(object):
 
             event = cl.enqueue_copy(queue, arg.devdata, arg.hostdata,
                                     is_blocking=False)
-            elapsed += get_elapsed(event)
+            elapsed += get_event_time(event)
 
         return elapsed
 
@@ -359,48 +415,6 @@ class KernelPayload(object):
         return KernelPayload._create_payload(np.random.rand, *args, **kwargs)
 
 
-def get_payload(ctx, kernel, global_size):
-    mf = cl.mem_flags
-
-    arg_a, sz_a, host_a = create_buffer_arg(ctx, np.float32, global_size)
-    arg_b, sz_b, host_b = create_buffer_arg(ctx, np.float32, global_size)
-    arg_c, sz_c, _ = create_const_arg(ctx, np.int32, 100 * 50 - 1)
-
-    transfer = sz_a + sz_b + sz_c
-
-    args = (arg_a, arg_b, arg_c)
-
-    try:
-        kernel.set_args(*args)
-    except cl.cffi_cl.LogicError as e:
-        raise E_BAD_ARGS(e)
-    except TypeError as e:
-        raise E_BAD_ARGS(e)
-
-    return transfer, args, {0: host_a, 1: host_b}
-
-
-def kernel_name(kernel):
-    return kernel.get_info(cl.kernel_info.FUNCTION_NAME)
-
-
-def get_elapsed(event):
-    """
-    Time delta between event submission and end, in milliseconds.
-    """
-    try:
-        event.wait()
-        tstart = event.get_profiling_info(cl.profiling_info.SUBMIT)
-        tend = event.get_profiling_info(cl.profiling_info.END)
-        return (tend - tstart) / 1000000
-    except Exception:
-        # Possible exceptions:
-        #
-        #  pyopencl.cffi_cl.RuntimeError: clwaitforevents failed: OUT_OF_RESOURCES
-        #
-        raise E_BAD_PROFILE
-
-
 def run_kernel(ctx, queue, kernel, size, filename='none'):
     name = kernel_name(kernel)
 
@@ -421,7 +435,7 @@ def run_kernel(ctx, queue, kernel, size, filename='none'):
             dev_buffer = args[i]
             host_buffer = hostd[i]
             event = cl.enqueue_copy(queue, host_buffer, dev_buffer)
-            elapsed += get_elapsed(event)
+            elapsed += get_event_time(event)
         runtimes.append(elapsed)
 
     mean = labmath.mean(runtimes)

@@ -161,6 +161,7 @@ class TestKernelDriver(TestCase):
 
         self.assertEqual(1, len(driver.runtimes))
         self.assertEqual(1, len(driver.wgsizes))
+        self.assertTrue(driver.wgsizes[0] > 0)
         self.assertEqual(1, len(driver.transfers))
         self.assertEqual(A.transfersize, driver.transfers[0])
         self.assertTrue(A != B)
@@ -202,6 +203,10 @@ class TestKernelDriver(TestCase):
 
         with self.assertRaises(drive.E_BAD_ARGS):
             drive.KernelPayload.create_sequential(driver, wayyyyyy_too_big)
+
+    def test_validate(self):
+        driver = drive.KernelDriver(self._ctx, source1)
+        driver.validate(size=8)
 
 
 @skipIf(not cfg.host_has_opencl(), "no OpenCL support in host")
