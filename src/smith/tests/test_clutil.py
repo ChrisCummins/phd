@@ -1,6 +1,7 @@
 from unittest import TestCase,skip
 import tests
 
+import numpy as np
 import sys
 import os
 
@@ -109,6 +110,46 @@ class TestKernelArg(TestCase):
             p = clutil.KernelPrototype.from_source(source)
             self.assertEqual(islocal, [x.is_local for x in p.args])
 
+    def test_arg(self):
+        a = clutil.KernelArg("__global float* a")
+        self.assertEqual("float*", a.type)
+        self.assertEqual("float", a.bare_type)
+        self.assertTrue(a.is_pointer)
+        self.assertTrue(a.is_global)
+        self.assertFalse(a.is_local)
+        self.assertFalse(a.is_const)
+        self.assertIs(np.float32, a.numpy_type)
+        self.assertEqual(1, a.vector_width)
+
+        a = clutil.KernelArg("__global float4* a")
+        self.assertEqual("float4*", a.type)
+        self.assertEqual("float", a.bare_type)
+        self.assertTrue(a.is_pointer)
+        self.assertTrue(a.is_global)
+        self.assertFalse(a.is_local)
+        self.assertFalse(a.is_const)
+        self.assertIs(np.float32, a.numpy_type)
+        self.assertEqual(4, a.vector_width)
+
+        a = clutil.KernelArg("const unsigned int z")
+        self.assertEqual("unsigned int", a.type)
+        self.assertEqual("unsigned int", a.bare_type)
+        self.assertFalse(a.is_pointer)
+        self.assertFalse(a.is_global)
+        self.assertFalse(a.is_local)
+        self.assertTrue(a.is_const)
+        self.assertIs(np.uint32, a.numpy_type)
+        self.assertEqual(1, a.vector_width)
+
+        a = clutil.KernelArg("const uchar16 z")
+        self.assertEqual("uchar16", a.type)
+        self.assertEqual("uchar", a.bare_type)
+        self.assertFalse(a.is_pointer)
+        self.assertFalse(a.is_global)
+        self.assertFalse(a.is_local)
+        self.assertTrue(a.is_const)
+        self.assertIs(np.uint8, a.numpy_type)
+        self.assertEqual(16, a.vector_width)
 
 if __name__ == '__main__':
     main()

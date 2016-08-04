@@ -1,10 +1,13 @@
-import nump as np
+import numpy as np
+import re
+import sys
 
 import smith
 
 
 class OpenCLUtilException(smith.SmithException): pass
 class PrototypeException(OpenCLUtilException): pass
+class UnknownTypeException(PrototypeException): pass
 
 
 class KernelArg(object):
@@ -17,9 +20,33 @@ class KernelArg(object):
         self._string = string.strip()
         self._components = self._string.split()
 
+        try:
+            if "restrict" in self._components:
+                self._is_restrict = True
+                self._components.remove("restrict")
+            else:
+                self._is_restrict = False
+
+            if "__restrict" in self._components:
+                self._is_restrict = True
+                self._components.remove("__restrict")
+            else:
+                self._is_restrict = False
+
+            if "unsigned" in self._components:
+                self._components.remove("unsigned")
+                self._components[-2] = "unsigned " + self._components[-2]
+        except Exception as e:
+            raise PrototypeException(e)
+
+
     @property
     def string(self):
         return self._string
+
+    @property
+    def components(self):
+        return self._components
 
     @property
     def name(self):
@@ -28,6 +55,10 @@ class KernelArg(object):
     @property
     def type(self):
         return self._components[-2]
+
+    @property
+    def is_restrict(self):
+        return self._is_restrict
 
     @property
     def qualifiers(self):
@@ -39,16 +70,44 @@ class KernelArg(object):
 
     @property
     def is_vector(self):
-        idx = -2 if is_pointer else -1
+        idx = -2 if self.is_pointer else -1
         return self.type[idx].isdigit()
+
+    @property
+    def vector_width(self):
+        try:
+            return self._vector_width
+        except AttributeError:  # set
+            if self.is_vector:
+                m = re.search(r'([0-9]+)\*?$', self.type)
+                self._vector_width = int(m.group(1))
+            else:
+                self._vector_width = 1
+            return self._vector_width
+
+    @property
+    def bare_type(self):
+        """
+        Type name, without vector or pointer qualifiers.
+
+        Examples:
+
+            KernelArg("float4*").bare_type == "float"
+            KernelArg("uchar32").bare_type == "uchar"
+        """
+        try:
+            return self._bare_type
+        except AttributeError:  # set
+            self._bare_type = re.sub(r'([0-9]+)?\*?$', '', self.type)
+            return self._bare_type
 
     @property
     def is_const(self):
         try:
-            return self._is_global
+            return self._is_const
         except AttributeError:  # set
-            self._is_global = True if 'const' in self.qualifiers else False
-            return self._is_global
+            self._is_const = True if 'const' in self.qualifiers else False
+            return self._is_const
 
     @property
     def is_global(self):
@@ -74,7 +133,35 @@ class KernelArg(object):
 
     @property
     def numpy_type(self):
-        pass
+        """
+        Return the numpy data type associated with this argument.
+
+        Raises:
+
+            UnknownTypeException: If type can't be deduced.
+        """
+        np_type = {
+            "bool": np.bool_,
+            "char": np.int8,
+            "double": np.float64,
+            "float": np.float32,
+            "half": np.uint8,
+            "int": np.int32,
+            "long": np.int64,
+            "short": np.int16,
+            "uchar": np.uint8,
+            "uint": np.uint32,
+            "ulong": np.uint64,
+            "unsigned char": np.uint8,
+            "unsigned int": np.uint32,
+            "unsigned long": np.uint64,
+            "unsigned short": np.uint16,
+            "ushort": np.uint16,
+            "void": np.int64,
+        }.get(self.bare_type, None)
+        if np_type is None:
+            raise UnknownTypeException(self.type)
+        return np_type
 
     def __repr__(self):
         return self._string

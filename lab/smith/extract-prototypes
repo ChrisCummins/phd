@@ -36,12 +36,15 @@ def main():
     parser.add_argument('inputs', nargs='+', help='input path(s)')
     parser.add_argument('-d', '--dir-mode', action='store_true',
                         help='treat inputs as directories')
+    parser.add_argument('--arguments-only', action='store_true',
+                        help='Only print argument types')
     parser.add_argument('-s', '--stats', action='store_true',
                         help='Prototype stats')
     args = parser.parse_args()
 
     inputs = args.inputs
     dir_mode = args.dir_mode
+    arguments_only = args.arguments_only
     stats = args.stats
 
     if dir_mode:
@@ -61,6 +64,10 @@ def main():
                 p = clutil.KernelPrototype.from_source(kernel)
                 if stats:
                     print_stats_features(p)
+                elif arguments_only:
+                    for arg in p.args:
+                        t = arg.type[:-1] if arg.is_pointer else arg.type
+                        print(t)
                 else:
                     print(p)
             except clutil.PrototypeException:
