@@ -21,11 +21,11 @@ from smith import config as cfg
 from smith import clutil
 
 
-class DriveException(smith.SmithException): pass
-class OpenCLDriverException(DriveException): pass
+class CLDriveException(smith.SmithException): pass
+class OpenCLDriverException(CLDriveException): pass
 class OpenCLNotSupported(OpenCLDriverException): pass
 
-class KernelDriverException(DriveException): pass
+class KernelDriverException(CLDriveException): pass
 
 class E_BAD_CODE(KernelDriverException): pass
 class E_UGLY_CODE(KernelDriverException): pass
@@ -208,7 +208,7 @@ class KernelDriver(object):
         return self.source
 
     def validate(self, size=16):
-        def assert_constraint(constraint, err=DriveException):
+        def assert_constraint(constraint, err=CLDriveException):
             if not constraint:
                 raise err
 
@@ -449,7 +449,7 @@ def kernel(src, filename='<stdin>', devtype=cl.device_type.GPU,
     """
     Drive a kernel.
     """
-    def assert_constraint(constraint, err=DriveException):
+    def assert_constraint(constraint, err=CLDriveException):
         if not constraint:
             raise err
 
@@ -500,7 +500,7 @@ def kernel(src, filename='<stdin>', devtype=cl.device_type.GPU,
         ci = round(labmath.confinternval(driver.runtimes, array_mean=mean), 6)
 
         print(filename, wgsize, transfer, mean, ci, sep=',', file=file)
-    except DriveException as e:
+    except CLDriveException as e:
         print('-'.join((filename, driver.name)), e, sep=',', file=metaout)
         raise e
 
