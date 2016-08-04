@@ -94,17 +94,6 @@ def create_db(db_path):
        speedup REAL NOT NULL,
        penalty REAL NOT NULL
     );
-
-    CREATE TABLE ProgramFeatures(
-       benchmark TEXT NOT NULL,
-       comp INT NOT NULL,
-       rational INT NOT NULL,
-       mem INT NOT NULL,
-       localmem INT NOT NULL,
-       coalesced INT NOT NULL,
-       atomic INT NOT NULL,
-       UNIQUE(benchmark)
-    );
     """)
     c.close()
     db.commit()
@@ -327,26 +316,6 @@ def kernel_features(db, kernel_features_csv_path):
     db.commit()
 
 
-def program_features(db):
-    print("computing program features ...")
-    c = db.cursor()
-
-    # Delete any existing data:
-    c.execute('DELETE FROM ProgramFeatures')
-
-    c.execute('SELECT DISTINCT file FROM KernelFeatures')
-    for row in c.fetchall():
-        benchmark = row[0]
-        c.execute('SELECT file,SUM(comp),SUM(rational),'
-                  'SUM(mem),SUM(localmem),SUM(coalesced),'
-                  'SUM(atomic) FROM KernelFeatures '
-                  'WHERE file=?', row)
-        data = c.fetchone()
-        c.execute('INSERT OR IGNORE INTO ProgramFeatures '
-                  'VALUES (?,?,?,?,?,?,?)', data)
-    db.commit()
-
-
 def plot_benchmark(db, benchmark, plot_path):
     print("plot {}".format(plot_path))
     c = db.cursor()
@@ -438,20 +407,31 @@ def training_data(db, training_csv_path):
 
         c = db.cursor()
         for benchmark in get_benchmarks(db):
+            # HACK: Try to figure out the kernel name based only on
+            # the name that the kernel object had in the npb source
+            # code.
+            filename, kernel = benchmark.split('-')
+            kernel = re.sub(r'^[km]_', '', kernel)
+            kernel = re.sub(r'\[(.*)\]', r'_\1', kernel)
+
             c.execute('SELECT comp,rational,mem,'
                       'localmem,coalesced,atomic FROM '
-                      'ProgramFeatures WHERE benchmark=?',
-                      (benchmark,))
-            comp,rational,mem,localmem,coalesced,atomic = c.fetchone()
+                      'KernelFeatures WHERE file=? AND kernel=?',
+                      (filename, kernel))
+            row = c.fetchone()
+            if row is None:
+                print('no features for', filename, kernel)
+                continue
+            comp,rational,mem,localmem,coalesced,atomic = row
             for dataset in get_ordered_datasets(db, benchmark):
                 c.execute('SELECT oracle,runtime,speedup,penalty FROM '
                           'TrainingData WHERE benchmark=? AND dataset=?',
                           (benchmark, dataset))
                 row = c.fetchone()
-                if not row:
+                if row is None:
                     print('no training data for', benchmark, dataset)
                     continue
-                oracle,runtime,speedup,penalty = c.fetchone()
+                oracle,runtime,speedup,penalty = row
                 c.execute('SELECT transfer,wgsize FROM DynamicFeatures WHERE '
                           'benchmark=? AND dataset=?', (benchmark, dataset))
                 transfer,wgsize = c.fetchone()
@@ -505,7 +485,6 @@ def main():
     stats(db)
     dynamic_features(db, dynamic_features_csv_path)
     kernel_features(db, kernel_features_csv_path)
-    program_features(db)
     plots(db, img_path)
     training_data(db, training_csv_path)
 
