@@ -155,7 +155,7 @@ class KernelDriver(object):
     def __init__(self, ctx, source, source_path='<stdin>'):
         # Safety first, kids:
         assert(type(ctx) == cl.Context)
-        assert(type(source) == str)
+        assert(type(source) == str or type(source) == unicode)
 
         self._ctx = ctx
         self._src = str(source)
@@ -284,8 +284,8 @@ class KernelDriver(object):
         transfer = round(labmath.mean(self.transfers))
         mean = labmath.mean(self.runtimes)
         ci = labmath.confinterval(self.runtimes, array_mean=mean)[1] - mean
-        print(self.name, wgsize, transfer, round(mean, 6), round(ci, 6),
-              sep=',', file=out)
+        print(unicode(self.name), unicode(wgsize), unicode(transfer), unicode(round(mean, 6)), unicode(round(ci, 6)),
+              sep=unicode(','), file=out)
 
     @property
     def context(self): return self._ctx
