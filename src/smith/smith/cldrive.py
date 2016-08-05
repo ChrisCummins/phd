@@ -194,9 +194,7 @@ class KernelDriver(object):
         # Try setting the kernel arguments.
         try:
             self.kernel.set_args(*kargs)
-        except cl.cffi_cl.LogicError as e:
-            raise E_BAD_ARGS(e)
-        except TypeError as e:
+        except Exception as e:
             raise E_BAD_ARGS(e)
 
         # Execute kernel
