@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -eu
+
+usage() {
+    echo "Usage: $0 <errors-csv>"
+    echo
+    echo "Post-process driver errors output."
+}
+
+main() {
+    if [[ $# -ne 1 ]]; then
+        usage >&2
+        exit
+    fi
+
+    local path=$1
+
+    grep -E ',[a-zA-Z0-9_-]+,E_[A-Z_]+$' $path > $path.tmp || true
+    mv $path.tmp $path
+
+    ( \
+        echo "Error Frequency"; \
+        cut -d',' -f 3 < $path | sort | uniq -c | sort | awk '{print $2,$1}' \
+    ) | column -t
+}
+main $@
