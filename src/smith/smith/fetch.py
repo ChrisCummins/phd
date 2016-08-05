@@ -17,9 +17,12 @@ from subprocess import Popen,PIPE,STDOUT
 import smith
 from smith import config as cfg
 from smith import clutil
+from smith import explore
 
 
 class FetchException(smith.SmithException): pass
+
+MAX_KERNEL_LEN=5000
 
 # Counters
 repos_new_counter = 0
@@ -383,21 +386,41 @@ def process_sample_file(db_path, sample_path, first_only=False):
 
     with open(sample_path) as infile:
         sample = infile.read()
-        if first_only:
-            # If first_only argument is set, then only extract a
-            # kernel starting at the beginning of the file.
-            #
-            kernels = [clutil.get_cl_kernel(sample, 0)]
-        else:
-            kernels = clutil.get_cl_kernels(sample)
 
-    ids = [smith.checksum_str(kernel) for kernel in kernels]
+    i = 0
+    tail = 0
+    offset = len('__kernel void ')
+    while True:
+        print('\r\033[Kkernel', i, end='')
+        sys.stdout.flush()
 
-    for id,kernel in zip(ids, kernels):
+        # Find the starting index of the next kernel.
+        tail = sample.find('__kernel void ', tail)
+
+        # If we didn't find another kernel, stop.
+        if tail == -1:
+            break
+
+        # Find the end index of this kernel.
+        head = clutil.get_cl_kernel_end_idx(sample, start_idx=tail,
+                                            max_len=MAX_KERNEL_LEN)
+
+        # Look for other ends
+        end = sample.find('__kernel void ', tail + offset)
+        head = min(end, head) if end != -1 else head
+
+        kernel = sample[tail:head]
+        id = smith.checksum_str(kernel)
         c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
                   (id,kernel))
+        tail = head
+        i += 1
+        if first_only:
+            break
+    print()
     db.commit()
     c.close()
+    explore.explore(db_path)
 
 
 def dnn(db_path, samples_dir, sample_path, first_only):

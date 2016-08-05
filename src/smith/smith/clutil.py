@@ -210,23 +210,34 @@ class KernelPrototype(object):
     def from_source(src):
         return extract_prototype(src)
 
+def get_cl_kernel_end_idx(src, start_idx=0, max_len=5000):
+    """
+    Return the index of the character after the end of the OpenCL
+    kernel.
 
-def get_cl_kernel(src, start_idx):
+    :param src: OpenCL source.
+    :param start_idx: Start index.
+    :return: Kernel implementation.
+    """
+    i = src.find('{', start_idx) + 1
+    d = 1  # depth
+    while i < min(len(src), start_idx + max_len) and d > 0:
+        if src[i] == '{':
+            d += 1
+        elif src[i] == '}':
+            d -= 1
+        i += 1
+    return i
+
+
+def get_cl_kernel(src, start_idx, max_len=5000):
     """
     Return the OpenCL kernel.
 
     :param src: OpenCL source.
     :return: Kernel implementation.
     """
-    i = src.find('{', start_idx) + 1
-    d = 1  # depth
-    while i < len(src) and d > 0:
-        if src[i] == '{':
-            d += 1
-        elif src[i] == '}':
-            d -= 1
-        i += 1
-    return src[start_idx:i]
+    return src[start_idx:get_cl_kernel_end_idx(src, start_idx)]
 
 
 def get_cl_kernels(src):

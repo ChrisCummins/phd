@@ -296,7 +296,7 @@ def explore(db_path, graph=False):
         explore_gh(db_path)
         return
 
-    if not os.path.exists(img_dir):
+    if graph and not os.path.exists(img_dir):
         os.makedirs(img_dir)
 
     # Worker process pool
@@ -329,7 +329,7 @@ def explore_gh(db_path, graph=False):
 
     db = sqlite3.connect(db_path)
 
-    if not os.path.exists(img_dir):
+    if graph and not os.path.exists(img_dir):
         os.makedirs(img_dir)
 
     # Worker process pool
