@@ -3,10 +3,15 @@ from __future__ import print_function
 from unittest import TestCase
 import tests
 
-import sys
 import os
+import sqlite3
+import sys
+
+import labm8
+from labm8 import fs
 
 import smith
+from smith import dbutil
 from smith import preprocess
 from smith import config
 
@@ -59,6 +64,55 @@ class TestPreprocess(TestCase):
         tin = ("typedef __attribute__  ((ext_vector_type(8))) unsigned char uchar8;\n"
                "typedef __attribute__((reqd_work_group_size(64,1,1))) unsigned char uchar8;")
         self.assertEqual(out, preprocess.strip_attributes(tin))
+
+    def test_vacuum(self):
+        fs.rm("tmp.db")
+        dbutil.create_db("tmp.db")
+        db = sqlite3.connect("tmp.db")
+        c = db.cursor()
+
+        # Create some data to test with:
+        c.execute("DELETE FROM PreprocessedFiles")
+        c.execute("INSERT INTO PreprocessedFiles VALUES(?,?,?)",
+                  ("id1", 0, "good output"))
+        c.execute("INSERT INTO PreprocessedFiles VALUES(?,?,?)",
+                  ("id2", 1, "bad output"))
+        c.execute("INSERT INTO PreprocessedFiles VALUES(?,?,?)",
+                  ("id3", 2, "ugly output"))
+        db.commit()
+        c.close()
+
+        # Check that data was written properly:
+        c = db.cursor()
+        c.execute("SELECT Count(*) FROM PreprocessedFiles")
+        count = c.fetchone()[0]
+        self.assertEqual(3, count)
+        db.close()
+
+        preprocess.vacuum("tmp.db")
+
+        # Check that vacuum worked:
+        db = sqlite3.connect("tmp.db")
+        c = db.cursor()
+        c.execute("SELECT Count(*) FROM PreprocessedFiles")
+        count = c.fetchone()[0]
+        self.assertEqual(3, count)
+        c.execute("SELECT contents FROM PreprocessedFiles WHERE status=1 OR status=2")
+        rows = c.fetchall()
+        print(rows)
+        self.assertTrue(all(not r == "[VACUUMED]" for r in rows))
+
+        # Clean up:
+        c.execute("DELETE FROM PreprocessedFiles")
+        db.commit()
+        c.close()
+
+        # Check that clean-up worked:
+        c = db.cursor()
+        c.execute("SELECT Count(*) FROM PreprocessedFiles")
+        count = c.fetchone()[0]
+        self.assertEqual(0, count)
+        fs.rm("tmp.db")
 
 
 if __name__ == '__main__':

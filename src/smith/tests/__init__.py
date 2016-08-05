@@ -35,10 +35,14 @@ def data_str(path):
     return contents
 
 
+def db_path(name):
+    return data_path(os.path.join('db', str(name) + '.db'))
+
+
 def db(name, **kwargs):
     """
     """
-    path = data_path(os.path.join('db', str(name) + '.db'), **kwargs)
+    path = data_path(db_path(name), **kwargs)
     return sqlite3.connect(path)
 
 

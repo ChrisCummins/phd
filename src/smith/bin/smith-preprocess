@@ -13,6 +13,8 @@ def main():
     parser.add_argument('inputs', nargs='+', help='path to input')
     parser.add_argument('-f', action='store_true', help='treat input as file')
     parser.add_argument('-i', action='store_true', help='inplace file rewrite')
+    parser.add_argument('--vacuum', action='store_true',
+                        help='remove error output and squeeze database')
     args = parser.parse_args()
 
     input_paths = args.inputs
@@ -25,7 +27,10 @@ def main():
                 print(input_path)
             preprocess.preprocess_file(input_path, inplace=inplace_mode)
         else:
-            preprocess.preprocess_db(input_path)
+            if args.vacuum:
+                preprocess.vacuum(input_path)
+            else:
+                preprocess.preprocess_db(input_path)
 
 
 if __name__ == '__main__':
