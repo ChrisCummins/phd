@@ -79,7 +79,8 @@ def clang_cl_args(target=CLANG_CL_TARGETS[0],
     disabled_warnings = [
         'ignored-pragmas',
         'implicit-function-declaration',
-        'macro-redefined'
+        'incompatible-library-redeclaration',
+        'macro-redefined',
     ]
 
     return [
