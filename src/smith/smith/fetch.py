@@ -412,7 +412,8 @@ def process_sample_file(db_path, sample_path, first_only=False):
                                             max_len=MAX_KERNEL_LEN)
 
         # Look for other ends
-        end = sample.find('__kernel void ', tail + offset)
+        end = sample.find('__kernel void ',
+                          tail + offset, tail + offset + MAX_KERNEL_LEN)
         head = min(end, head) if end != -1 else head
 
         kernel = sample[tail:head]
