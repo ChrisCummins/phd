@@ -1646,11 +1646,11 @@ info: version
 	$(V2)echo
 	$(V2)echo "Build essentials:"
 	$(V2)echo "  c++       $(shell which c++ &>/dev/null && { c++ --version 2>&1 | head -n1; } || { echo not found; })"
-	$(V2)echo "  cmake     $(shell which cmake &>/dev/null && { cmake --version 2>&1 | head -n1; } || { echo not found; })"
+	$(V2)echo "  cmake     $(shell which $(CMAKE) &>/dev/null && { $(CMAKE) --version 2>&1 | head -n1; } || { echo not found; })"
 	$(V2)echo "  ninja     $(shell which ninja &>/dev/null && { ninja --version 2>&1 | head -n1; } || { echo not found; })"
 	$(V2)echo "  pdflatex  $(shell which pdflatex &>/dev/null && { pdflatex --version 2>&1 | head -n1; } || { echo not found; })"
-	$(V2)echo "  python2   $(shell which python2 &>/dev/null && { python2 --version 2>&1 | head -n1; } || { echo not found; })"
-	$(V2)echo "  python3   $(shell which python3 &>/dev/null && { python3 --version 2>&1 | head -n1; } || { echo not found; })"
+	$(V2)echo "  python2   $(shell which $(PYTHON2) &>/dev/null && { $(PYTHON2) --version 2>&1 | head -n1; } || { echo not found; })"
+	$(V2)echo "  python3   $(shell which $(PYTHON3) &>/dev/null && { $(PYTHON3) --version 2>&1 | head -n1; } || { echo not found; })"
 	$(V2)echo "  pep8      $(shell which pep8 &>/dev/null && { pep8 --version 2>&1 | head -n1; } || { echo not found; })"
 DocStrings += "info: show versions of system programs"
 
