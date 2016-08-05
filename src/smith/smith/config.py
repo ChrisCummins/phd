@@ -6,6 +6,7 @@ from socket import gethostname
 
 import labm8
 from labm8 import fs
+from labm8 import system
 
 
 class ConfigException(smith.SmithException): pass
@@ -13,7 +14,7 @@ class ConfigException(smith.SmithException): pass
 
 def host_has_opencl():
     try:
-        return len(fs.ls('/etc/OpenCL/vendors'))
+        return system.is_mac() or len(fs.ls('/etc/OpenCL/vendors'))
     except FileNotFoundError:
         return False
 
