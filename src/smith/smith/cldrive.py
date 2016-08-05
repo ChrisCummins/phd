@@ -5,6 +5,7 @@ from copy import deepcopy
 from functools import partial,wraps
 from random import randrange
 from threading import Thread
+from io import StringIO
 
 import numpy as np
 import pyopencl as cl
@@ -223,6 +224,8 @@ class KernelDriver(object):
         return self.source
 
     def validate(self, queue, size=16):
+        assert(type(queue) == cl.CommandQueue)
+
         def assert_constraint(constraint, err=CLDriveException):
             if not constraint:
                 raise err
@@ -256,6 +259,30 @@ class KernelDriver(object):
         # outputs must be different from inputs:
         assert_constraint(A1in != A1out, E_NO_OUTPUTS)
         assert_constraint(B1in != B1out, E_NO_OUTPUTS)
+
+    def profile(self, queue, size=16, must_validate=False,
+                out=sys.stdout, metaout=sys.stderr):
+        assert(type(queue) == cl.CommandQueue)
+
+        try:
+            self.validate(queue, size)
+        except CLDriveException as e:
+            print(self.name, type(e).__name__, sep=',', file=metaout)
+            if must_validate:
+                return
+
+        P = KernelPayload.create_random(self, size)
+        k = partial(self, queue)
+
+        while len(self.runtimes) < 10:
+            k(P)
+
+        wgsize = round(labmath.mean(self.wgsizes))
+        transfer = round(labmath.mean(self.transfers))
+        mean = labmath.mean(self.runtimes)
+        ci = labmath.confinterval(self.runtimes, array_mean=mean)[1] - mean
+        print(self.name, wgsize, transfer, round(mean, 6), round(ci, 6),
+              sep=',', file=out)
 
     @property
     def context(self): return self._ctx
@@ -446,104 +473,41 @@ class KernelPayload(object):
         return KernelPayload._create_payload(np.random.rand, *args, **kwargs)
 
 
-def run_kernel(ctx, queue, kernel, size, filename='none'):
-    name = kernel_name(kernel)
-
-    transfer,args,hostd = get_payload(ctx, kernel, size)
-
-    device = ctx.get_info(cl.context_info.DEVICES)[0]
-    wgsize = kernel.get_work_group_info(
-        cl.kernel_work_group_info.WORK_GROUP_SIZE, device)
-
-    nruns = 10
-    runtimes = []
-    for i in range(nruns):
-        # Blocking execution while kernel executes.
-        elapsed = run_kernel_with_timeout(kernel, queue, global_size, None, *args)
-
-        # Copy data back to host.
-        for i in hostd:
-            dev_buffer = args[i]
-            host_buffer = hostd[i]
-            event = cl.enqueue_copy(queue, host_buffer, dev_buffer)
-            elapsed += get_event_time(event)
-        runtimes.append(elapsed)
-
-    mean = labmath.mean(runtimes)
-    ci = labmath.confinterval(runtimes, array_mean=mean)[1] - mean
-    print(fs.basename(filename), name, wgsize, transfer,
-          round(mean, 6), round(ci, 6), sep=',')
-
-
 def kernel(src, filename='<stdin>', devtype=cl.device_type.GPU,
-           size=None, file=sys.stdout, metaout=sys.stderr, **driveopts):
+           size=None, must_validate=False):
     """
     Drive a kernel.
     """
-    def assert_constraint(constraint, err=CLDriveException):
-        if not constraint:
-            raise err
+    ctx, queue = init_opencl(devtype=devtype)
+    driver = KernelDriver(ctx, src)
 
     # If no size is given, pick one.
     if size is None:
         size = 2 ** randrange(4, 15)
 
-    try:
-        ctx, queue = init_opencl(devtype=devtype)
-    except Exception as e:
-        raise OpenCLDriverException(e)
+    out = StringIO()
+    metaout = StringIO()
+    driver.profile(queue, size=size, must_validate=must_validate,
+                   out=out, metaout=metaout)
 
-    # Create driver.
-    driver = KernelDriver(ctx, src, source_path=filename)
+    stdout = out.getvalue()
+    stderr = metaout.getvalue()
 
-    try:
-        # Create payloads.
-        A1in = KernelPayload.create_sequential(driver, size)
-        A2in = deepcopy(A1in)
-
-        B1in = KernelPayload.create_random(driver, size)
-        B2in = deepcopy(B1in)
-
-        # Input constraints.
-        assert_constraint(A1in == A2in, E_BAD_DRIVER)
-        assert_constraint(B1in == B2in, E_BAD_DRIVER)
-        assert_constraint(A1in != B1in, E_BAD_DRIVER)
-
-        A1out = driver(A1in, queue)
-        B1out = driver(B1in, queue)
-        A2out = driver(A2in, queue)
-        B2out = driver(B2in, queue)
-
-        # outputs must be consistent across runs:
-        assert_constraint(A1out == A2out, E_NONDETERMINISTIC)
-        assert_constraint(B1out == B2out, E_NONDETERMINISTIC)
-
-        # outputs must depend on inputs:
-        assert_constraint(A1out != B1out, E_INPUT_INSENSITIVE)
-
-        # outputs must be different from inputs:
-        assert_constraint(A1in != A1out, E_NO_OUTPUTS)
-        assert_constraint(B1in != B1out, E_NO_OUTPUTS)
-
-        wgsize = round(labmath.mean(driver.wgsizes))
-        transfer = round(labmath.mean(driver.transfers))
-        mean = round(labmath.mean(driver.runtimes), 6)
-        ci = round(labmath.confinternval(driver.runtimes, array_mean=mean), 6)
-
-        print(filename, wgsize, transfer, mean, ci, sep=',', file=file)
-    except CLDriveException as e:
-        print('-'.join((filename, driver.name)), e, sep=',', file=metaout)
-        raise e
+    # Print results:
+    [print(filename, x, sep=',')
+     for x in stdout.split('\n') if x]
+    [print(filename, x, sep=',', file=sys.stderr)
+     for x in stderr.split('\n') if x]
 
 
-def file(path, **driveopts):
+def file(path, **kwargs):
     with open(fs.path(path)) as infile:
         src = infile.read()
         for kernelsrc in clutil.get_cl_kernels(src):
-            kernel(kernelsrc, filename=fs.path(path), **driveopts)
+            kernel(kernelsrc, filename=fs.path(path), **kwargs)
 
 
-def directory(path, **driveopts):
+def directory(path, **kwargs):
     files = fs.ls(fs.path(path), abspaths=True, recursive=True)
     for path in [f for f in files if f.endswith('.cl')]:
-        file(path, **driveopts)
+        file(path, **kwargs)

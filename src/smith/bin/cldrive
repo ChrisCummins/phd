@@ -8,40 +8,40 @@ import os
 import pyopencl as cl
 
 import smith
-from smith import drive
+from smith import cldrive
 
 def main():
     parser = ArgumentParser()
     parser.add_argument('input', help='path to input')
     parser.add_argument('-f', action='store_true', help='treat input as file')
+    parser.add_argument('-s', '--strict', action='store_true', default=False,
+                        help='reject any kernels which do not validate')
     parser.add_argument('--cpu', action='store_true', default=False,
                         help='execute on CPU (default: no)')
     parser.add_argument('--gpu', action='store_true', default=False,
                         help='execute on GPU (default: yes)')
-    parser.add_argument('-q', action='store_true', default=False,
-                        help='quiet mode (no compiler output)')
     args = parser.parse_args()
 
     input_path = args.input
     file_mode = args.f
     use_cpu = args.cpu
     use_gpu = args.gpu  # ignored (default)
-    quiet = args.q
+    strict = args.strict
 
     if 'DSIZE' in os.environ:
         dsize = int(os.environ['DSIZE'])
-        global_size = (dsize,)
+        size = dsize
     else:
-        global_size = None
+        size = None
 
     devtype = cl.device_type.CPU if use_cpu else cl.device_type.GPU
 
-    kwargs = { 'global_size': global_size, 'devtype': devtype, 'quiet': quiet }
+    kwargs = { 'size': size, 'devtype': devtype, 'must_validate': strict }
 
     if file_mode:
-        drive.file(input_path, **kwargs)
+        cldrive.file(input_path, **kwargs)
     else:
-        drive.directory(input_path, **kwargs)
+        cldrive.directory(input_path, **kwargs)
 
 if __name__ == '__main__':
     main()

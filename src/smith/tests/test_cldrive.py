@@ -246,6 +246,10 @@ class TestKernelDriver(TestCase):
         with self.assertRaises(cldrive.E_NO_OUTPUTS):
             driver.validate(self._queue, size=8)
 
+    def test_profile(self):
+        driver = cldrive.KernelDriver(self._ctx, source1)
+        driver.profile(self._queue)
+
 
 @skipIf(not cfg.host_has_opencl(), "no OpenCL support in host")
 class TestKernelPayload(TestCase):
