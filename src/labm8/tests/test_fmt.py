@@ -22,28 +22,13 @@ class TestFmt(TestCase):
 
     # table()
     def test_table(self):
-        if lab.is_python3():
-            self._test("foo  1\n"
-                       "bar  2",
-                       fmt.table((("foo", 1), ("bar", 2))))
-        else:
-            self._test(" foo  1\n"
-                       " bar  2",
-                       fmt.table((("foo", 1), ("bar", 2))))
+        self._test(["foo","1", "bar", "2"],
+                   fmt.table((("foo", 1), ("bar", 2))).split())
 
     def test_table_columns(self):
-        if lab.is_python3():
-            self._test("type  value\n"
-                       "foo      1\n"
-                       "bar      2",
-                       fmt.table((("foo", 1), ("bar", 2)),
-                                 columns=("type", "value")))
-        else:
-            self._test("type  value\n"
-                       " foo      1\n"
-                       " bar      2",
-                       fmt.table((("foo", 1), ("bar", 2)),
-                                 columns=("type", "value")))
+        self._test((["type", "value", "foo", "1", "bar", "2"]),
+                   fmt.table((("foo", 1), ("bar", 2)),
+                             columns=("type", "value")).split())
 
     def test_table_bad_columns(self):
         with self.assertRaises(fmt.Error):
