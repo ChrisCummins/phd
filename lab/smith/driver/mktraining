@@ -46,7 +46,7 @@ def get_kernel_features(kernels):
 def results_to_dict(row):
     return {
         'dataset': row[0],
-        'file': row[1],
+        'file': fs.basename(row[1]),
         'kernel': row[2],
         'wgsize': row[3],
         'transfer': row[4],
@@ -103,8 +103,8 @@ def fetch_result(filename, kernel, dataset, results):
         'dataset': res[0]['dataset'],
         'file': res[0]['file'],
         'kernel': res[0]['kernel'],
-        'wgsize': labmath.mean([int(d['wgsize']) for d in res]),
-        'transfer': labmath.mean([int(d['transfer']) for d in res]),
+        'wgsize': labmath.mean([round(float(d['wgsize'])) for d in res]),
+        'transfer': labmath.mean([round(float(d['transfer'])) for d in res]),
         'runtime': labmath.mean([float(d['runtime']) for d in res]),
         'ci': labmath.mean([float(d['ci']) for d in res])
     }
@@ -176,7 +176,7 @@ def mktraining(kernels, cpu_path, gpu_path, out=sys.stdout, metaout=sys.stderr):
     print(len(gpu), file=metaout)
 
     print("common results ... ", end='', file=metaout)
-    kfiles = [(r['file'], r['kernel']) for r in kernel_features]
+    kfiles = [(fs.basename(r['file']), r['kernel']) for r in kernel_features]
     common = intersect(
         [(r['file'], r['kernel'], r['dataset']) for r in cpu
          if (r['file'], r['kernel']) in kfiles],

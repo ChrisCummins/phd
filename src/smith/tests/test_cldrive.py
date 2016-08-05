@@ -249,6 +249,15 @@ class TestKernelDriver(TestCase):
     def test_profile(self):
         driver = cldrive.KernelDriver(self._ctx, source1)
         driver.profile(self._queue)
+        self.assertEqual(10, len(driver.runtimes))
+
+        driver = cldrive.KernelDriver(self._ctx, source2)
+        driver.profile(self._queue)
+        self.assertEqual(10, len(driver.runtimes))
+
+        driver = cldrive.KernelDriver(self._ctx, source3)
+        driver.profile(self._queue)
+        self.assertEqual(10, len(driver.runtimes))
 
 
 @skipIf(not cfg.host_has_opencl(), "no OpenCL support in host")
