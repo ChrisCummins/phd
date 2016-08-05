@@ -8,7 +8,6 @@ from copy import deepcopy
 from functools import partial,wraps
 from random import randrange
 from threading import Thread
-from io import StringIO
 from io import open
 
 import numpy as np
@@ -24,6 +23,13 @@ from labm8 import math as labmath
 import smith
 from smith import config as cfg
 from smith import clutil
+
+# Python 2 and Python 3 have different StringIO classes.
+# See: http://stackoverflow.com/a/19243243
+if labm8.is_python3():
+    from io import StringIO
+else:
+    from StringIO import StringIO
 
 
 class CLDriveException(smith.SmithException): pass
