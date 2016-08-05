@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 from __future__ import with_statement
 
 from copy import deepcopy
@@ -282,8 +283,8 @@ class KernelDriver(object):
         transfer = round(labmath.mean(self.transfers))
         mean = labmath.mean(self.runtimes)
         ci = labmath.confinterval(self.runtimes, array_mean=mean)[1] - mean
-        print(unicode(self.name), unicode(wgsize), unicode(transfer), unicode(round(mean, 6)), unicode(round(ci, 6)),
-              sep=unicode(','), file=out)
+        print(self.name, wgsize, transfer, round(mean, 6), round(ci, 6),
+              sep=',', file=out)
 
     @property
     def context(self): return self._ctx
