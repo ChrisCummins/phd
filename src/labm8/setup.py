@@ -67,6 +67,7 @@ setup(name="labm8",
           "nose"
       ],
       install_requires=[
+          "humanize",
           "numpy",
           "pandas",
           "scipy",

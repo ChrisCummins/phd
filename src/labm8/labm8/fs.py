@@ -13,11 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 import os
-import re
 import os.path
+import re
 import shutil
 
 from glob import iglob
+from humanize import naturalsize
 
 import labm8 as lab
 
@@ -384,3 +385,21 @@ def read(path, rstrip=True, comment_char=None):
     else:
         # Just a good old-fashioned read!
         return lines
+
+
+def du(path, human_readable=True):
+    """
+    Get the size of a file in bytes or as a human-readable string.
+
+    Arguments:
+
+        path: Path to file.
+        human_readable: If True, return a formatted string, e.g. "976.6 KiB"
+    """
+    if not exists(path):
+        raise Error("file '{}' not found".format(path))
+    size = os.stat(path).st_size
+    if human_readable:
+        return naturalsize(size)
+    else:
+        return size
