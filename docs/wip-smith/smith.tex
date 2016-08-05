@@ -570,7 +570,9 @@ features.
 LSTM
 implementation\footnote{\url{https://github.com/jcjohnson/torch-rnn}}. LSTM
 network: 2048 nodes, 3 layers, sequence length 50, batch size 50, no
-dropout. Trained for 100 epochs using an initial learning rate of
+dropout, 33 million parameters%
+% FIXME: Verify the input size and re-compute # parameters: http://stackoverflow.com/questions/38080035/how-to-calculate-the-number-of-parameters-of-an-lstm-network
+. Trained for 100 epochs using an initial learning rate of
 0.002, decaying by a factor of a half every 5 epochs. Around 10 days
 training on an NVIDIA GTX Titan.
 
