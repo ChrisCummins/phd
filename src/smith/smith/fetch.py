@@ -1,3 +1,8 @@
+from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import json
 import os
 import re
@@ -18,6 +23,8 @@ import smith
 from smith import config as cfg
 from smith import clutil
 from smith import explore
+from io import open
+from itertools import izip
 
 
 class FetchException(smith.SmithException): pass

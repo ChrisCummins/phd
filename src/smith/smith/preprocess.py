@@ -12,6 +12,11 @@
 # Try compiling each source to LLVM bytecode
 # For those that build, run static analysis to generate feature vectors
 #
+from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import json
 import math
 import os
@@ -32,6 +37,7 @@ from labm8 import fs
 import smith
 from smith import config as cfg
 from smith import clutil
+from io import open
 
 
 #

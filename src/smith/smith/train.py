@@ -10,6 +10,11 @@
 #     Train char-rnn on "cleaned" text (no comments, etc)
 #     Train char-rnn on bytecode
 #     Train char-rnn on AST(?)
+from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import os
 import re
 import sqlite3
@@ -20,6 +25,7 @@ from labm8 import fs
 
 import smith
 from smith import dbutil
+from io import open
 
 
 def sanitize_id(id):

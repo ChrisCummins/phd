@@ -1,3 +1,8 @@
+from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import csv
 import os
 import re
@@ -10,6 +15,7 @@ import labm8
 from labm8 import math as labmath
 
 import smith
+from io import open
 
 
 def extra_args():

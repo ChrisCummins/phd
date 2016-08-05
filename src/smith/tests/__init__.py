@@ -5,15 +5,6 @@ import os
 
 import smith
 
-def print_val(obj, **kwargs):
-    if hasattr(obj, "__iter__"):
-        if isinstance(obj, dict):
-            print(obj, **kwargs)
-        elif not isinstance(obj, str):
-            print([str(x) for x in obj], **kwargs)
-    else:
-        print(str(obj), **kwargs)
-
 class TestDataNotFoundException(Exception): pass
 
 
@@ -68,7 +59,7 @@ class TestSmith(TestCase):
 
     def test_checksum_file(self):
         with self.assertRaises(smith.InternalException):
-            smith.checksum("NOT A PATH")
+            smith.checksum_file("NOT A PATH")
 
     def test_get_substring_idxs(self):
         self.assertEqual([0, 2], smith.get_substring_idxs('a', 'aba'))

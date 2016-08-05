@@ -1,11 +1,14 @@
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import with_statement
 
 from copy import deepcopy
 from functools import partial,wraps
 from random import randrange
 from threading import Thread
 from io import StringIO
+from io import open
 
 import numpy as np
 import pyopencl as cl
@@ -320,7 +323,7 @@ class KernelDriver(object):
             os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
         try:
             return cl.Program(ctx, src).build()
-        except cl.cffi_cl.RuntimeError as e:
+        except Exception as e:
             raise E_BAD_CODE(e)
 
 
@@ -450,7 +453,7 @@ class KernelPayload(object):
                 try:
                     arg.devdata = cl.Buffer(
                         driver.context, arg.flags, hostbuf=arg.hostdata)
-                except cl.cffi_cl.LogicError as e:
+                except Exception as e:
                     raise E_BAD_ARGS(e)
 
                 # Record transfer overhead. If it's a const buffer,

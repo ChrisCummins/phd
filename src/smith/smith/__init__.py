@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import with_statement
+
 import json
 import re
 import os
@@ -7,6 +11,7 @@ from pkg_resources import resource_filename,resource_string
 
 import labm8
 from labm8 import fs
+from io import open
 
 
 class SmithException(Exception): pass
@@ -15,9 +20,10 @@ class NotImplementedException(InternalException): pass
 class Data404Exception(InternalException): pass
 
 
-def assert_exists(*path_components, exception=SmithException):
+def assert_exists(*path_components, **kwargs):
     path = fs.path(*path_components)
     if not os.path.exists(path):
+        exception = kwargs.get("exception", SmithException)
         raise exception("file '{}' not found".format(path))
     return path
 

@@ -1,6 +1,11 @@
 """
 Module for Parboil experiments.
 """
+from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import smith
 
 from smith import config
@@ -17,6 +22,7 @@ from shutil import move
 from socket import gethostname
 from subprocess import CalledProcessError
 from tempfile import mkstemp
+from io import open
 
 #
 # Exception types
@@ -207,7 +213,7 @@ class Benchmark(object):
             raise BenchmarkException("Benchmark compilation failed")
 
         runtimes = []
-        for i in range(n):
+        for i in xrange(n):
             cmd = ("./parboil run {} {} {}"
                    .format(self.id, self.implementation, dataset))
             try:
