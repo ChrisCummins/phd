@@ -1027,6 +1027,8 @@ phd_LdFlags = $($(phdSrc)_LdFlags)
 #
 # src/smith
 #
+Python2SetupTestDirs += $(src)/smith
+Python2SetupInstallDirs += $(src)/smith
 Python3SetupTestDirs += $(src)/smith
 Python3SetupInstallDirs += $(src)/smith
 PyLintSources += \

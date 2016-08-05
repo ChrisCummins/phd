@@ -24,7 +24,6 @@ from smith import config as cfg
 from smith import clutil
 from smith import explore
 from io import open
-from itertools import izip
 
 
 class FetchException(smith.SmithException): pass
