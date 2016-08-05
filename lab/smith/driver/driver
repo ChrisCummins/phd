@@ -13,7 +13,7 @@ drive_file() {
     local devargs=$2
     local dsize=$3
 
-    DSIZE=$dsize timeout 30 cldrive -f $devargs $in_path 2>/dev/null | sed 's/^/'$dsize',/'
+    DSIZE=$dsize timeout 30 cldrive --strict -f $devargs $in_path | sed 's/^/'$dsize',/'
     set -e
 }
 

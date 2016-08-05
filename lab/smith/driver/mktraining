@@ -123,7 +123,7 @@ def print_datapoint(filename, kernel, dataset, kernel_features, cpu, gpu,
     gpur = fetch_result(filename, kernel, dataset, gpu)
     kfeatures = fetch_kernel_features(filename, kernel, kernel_features)
 
-    if gpur['runtime'] < cpur['runtime']:
+    if gpur['runtime'] <= cpur['runtime']:
         oracle = gpur
         fast = gpur['runtime']
         slow = cpur['runtime']

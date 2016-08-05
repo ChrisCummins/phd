@@ -2,10 +2,16 @@
 set -eu
 
 usage() {
-    echo "Usage: $0 <cpu|gpu> <opencl-dir> <results-base>"
+    echo "Usage: $0 <cpu|gpu> <devname> <benchmarks-dir>"
+    echo
+    echo "Run cldrive over benchmarks directory. Arguments:"
+    echo
+    echo "  <cpu|gpu>         OpenCL device type"
+    echo "  <devname>         Device name (e.g. 'intel', 'nvidia')"
+    echo "  <benchmarks-dir>  Root of benchmarks directory"
 }
 
-DSIZES=(12 24 64 102 162 408 1020)
+DSIZES=(12 24 64 102 162 408 1020, 2048, 4096)
 
 
 drive_file_dsize() {
@@ -21,11 +27,11 @@ drive_file_dsize() {
 
 
 get_joblist() {
-    local in_dir=$1
+    local kernels_dir=$1
     local results_path=$2
 
     set +e
-    for f in $(find $in_dir -name '*.cl' -type f); do
+    for f in $(find $kernels_dir -name '*.cl' -type f); do
         base=$(basename $f)
         for dsize in ${DSIZES[@]}; do
             has_result=$(awk -F "," '{print $1,$2}' < $results_path | grep "$dsize $base")
@@ -44,12 +50,29 @@ main() {
     fi
 
     local devtype=$1
-    local in_dir=$2
-    local results_path=$3
-    local nfiles=$(find $in_dir -name '*.cl' -type f | wc -l)
+    local devname=$2
+    local benchmarks_dir=$3
+
+    local kernels_dir=$benchmarks_dir/kernels
+    local results_path=$benchmarks_dir/$devname.csv
+    local errors_path=$benchmarks_dir/$devname-errors.csv
+
+    if [ ! -d $benchmarks_dir ]; then
+        echo "fatal: '$benchmarks_dir' not found!" >&2
+        exit 1
+    fi
+    if [ ! -d $kernels_dir ]; then
+        echo "fatal: '$kernels_dir' not found!" >&2
+        exit 1
+    fi
+
+    touch $results_path
+    touch $errors_path
+
+    local nfiles=$(find $kernels_dir -name '*.cl' -type f | wc -l)
 
     echo -n "building job list for $results_path ... "
-    jobslist=$(get_joblist $in_dir $results_path)
+    jobslist=$(get_joblist $kernels_dir $results_path)
     num_jobs=$(echo "$jobslist" | wc -l)
     echo "$num_jobs jobs"
 
@@ -65,7 +88,7 @@ main() {
         local perc_done=$(echo "($i / $num_jobs) * 100" | bc -l | xargs printf '%.2f%%')
 
         echo "$(tput bold)$(tput setaf 1)$(date)$(tput sgr0) job [$i/$num_jobs] $perc_done ... $devtype $dsize $(basename $file)"
-        ./driver $devtype $dsize $file >> $results_path 2>/dev/null
+        ./driver $devtype $dsize $file >> $results_path 2>> $errors_path
     done
 }
 main $@
