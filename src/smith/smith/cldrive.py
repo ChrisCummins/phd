@@ -2,7 +2,7 @@ from __future__ import division
 from __future__ import print_function
 
 from copy import deepcopy
-from functools import wraps
+from functools import partial,wraps
 from random import randrange
 from threading import Thread
 
@@ -149,6 +149,10 @@ class KernelDriver(object):
         E_UGLY_CODE: If program contains multiple kernels.
     """
     def __init__(self, ctx, source, source_path='<stdin>'):
+        # Safety first, kids:
+        assert(type(ctx) == cl.Context)
+        assert(type(source) == str)
+
         self._ctx = ctx
         self._src = str(source)
         self._program = KernelDriver.build_program(self._ctx, self._src)
@@ -166,7 +170,15 @@ class KernelDriver(object):
         self._runtimes = []
 
     @timeout(30)
-    def __call__(self, queue, payload, timeout=30):
+    def __call__(self, queue, payload):
+        # Safety first, kids:
+        assert(type(queue) == cl.CommandQueue)
+        assert(type(payload) == KernelPayload)
+
+        # First off, let's clear any existing tasks in the command
+        # queue:
+        queue.flush()
+
         elapsed = 0
         output = deepcopy(payload)
 
@@ -202,22 +214,24 @@ class KernelDriver(object):
         # Record transfers.
         self.transfers.append(payload.transfersize)
 
+        # Check that everything is done before we finish:
+        queue.flush()
+
         return output
 
     def __repr__(self):
         return self.source
 
-    def validate(self, size=16):
+    def validate(self, queue, size=16):
         def assert_constraint(constraint, err=CLDriveException):
             if not constraint:
                 raise err
 
-        # TODO:
         # Create payloads.
-        A1in = KernelPayload.create_sequential(driver, size)
+        A1in = KernelPayload.create_sequential(self, size)
         A2in = deepcopy(A1in)
 
-        B1in = KernelPayload.create_random(driver, size)
+        B1in = KernelPayload.create_random(self, size)
         B2in = deepcopy(B1in)
 
         # Input constraints.
@@ -225,17 +239,19 @@ class KernelDriver(object):
         assert_constraint(B1in == B2in, E_BAD_DRIVER)
         assert_constraint(A1in != B1in, E_BAD_DRIVER)
 
-        A1out = driver(A1in, queue)
-        B1out = driver(B1in, queue)
-        A2out = driver(A2in, queue)
-        B2out = driver(B2in, queue)
+        k = partial(self, queue)
+        A1out = k(A1in)
+        B1out = k(B1in)
+        A2out = k(A2in)
+        B2out = k(B2in)
 
         # outputs must be consistent across runs:
         assert_constraint(A1out == A2out, E_NONDETERMINISTIC)
         assert_constraint(B1out == B2out, E_NONDETERMINISTIC)
 
         # outputs must depend on inputs:
-        assert_constraint(A1out != B1out, E_INPUT_INSENSITIVE)
+        if any(not x.is_const for x in self.prototype.args):
+            assert_constraint(A1out != B1out, E_INPUT_INSENSITIVE)
 
         # outputs must be different from inputs:
         assert_constraint(A1in != A1out, E_NO_OUTPUTS)
@@ -300,10 +316,11 @@ class KernelPayload(object):
         args = [clutil.KernelArg(a.string) for a in self.args]
 
         for newarg,arg in zip(args, self.args):
-            newarg.hostdata = deepcopy(arg.hostdata, memo=memo)
-            if newarg.hostdata is None:
+            if arg.hostdata is None:
+                newarg.hostdata = None
                 newarg.devdata = deepcopy(arg.devdata)
             else:
+                newarg.hostdata = deepcopy(arg.hostdata, memo=memo)
                 newarg.flags = arg.flags
                 newarg.devdata = cl.Buffer(self.context, newarg.flags,
                                            hostbuf=newarg.hostdata)
@@ -324,7 +341,9 @@ class KernelPayload(object):
                 if x.devdata != y.devdata:
                     return False
             else:
-                if any([e1 != e2 for e1,e2 in zip(x.hostdata,y.hostdata)]):
+                if len(x.hostdata) != len(y.hostdata):
+                    return False
+                if any(e1 != e2 for e1,e2 in zip(x.hostdata,y.hostdata)):
                     return False
         return True
 
@@ -364,13 +383,16 @@ class KernelPayload(object):
     def args(self): return self._args
 
     @property
-    def kargs(self): return [a.devdata for a in self._args]
+    def kargs(self): return [a.devdata for a in self.args]
 
     @property
     def ndrange(self): return self._ndrange
 
     @property
     def transfersize(self): return self._transfersize
+
+    def __repr__(self):
+        return ('\n'.join([repr(x.hostdata) for x in self.args]))
 
     @staticmethod
     def _create_payload(nparray, driver, size):
@@ -382,18 +404,27 @@ class KernelPayload(object):
             arg.hostdata = None
             if arg.is_pointer:
                 veclength = size * arg.vector_width
+
+                # Allocate host memory and populate with values:
                 try:
                     arg.hostdata = nparray(veclength)
-                except MemoryError:
-                    raise E_BAD_ARGS
+                except MemoryError as e:
+                    raise E_BAD_ARGS(e)
+
+                # Determine flags to pass to OpenCL buffer creation:
                 flags = cl.mem_flags.COPY_HOST_PTR
                 if arg.is_const:
                     flags |= cl.mem_flags.READ_ONLY
                 else:
                     flags |= cl.mem_flags.READ_WRITE
                 arg.flags = flags
-                arg.devdata = cl.Buffer(
-                    driver.context, arg.flags, hostbuf=arg.hostdata)
+
+                # Allocate device memory:
+                try:
+                    arg.devdata = cl.Buffer(
+                        driver.context, arg.flags, hostbuf=arg.hostdata)
+                except cl.cffi_cl.LogicError as e:
+                    raise E_BAD_ARGS(e)
 
                 # Record transfer overhead. If it's a const buffer,
                 # we're not reading back to host.

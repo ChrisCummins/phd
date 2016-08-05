@@ -71,6 +71,27 @@ __kernel void A(__global float* a) {
 }
 """
 
+#
+source1_E_NONDETERMINISTIC = """
+__kernel void A(__global float* a) {
+  int b = get_global_id(0);
+
+  a[b] = a[b-1] + a[b+1];
+}
+"""
+
+# This kernel always writes the same value to argument 'a'.
+source1_E_INPUT_INSENSITIVE = """
+__kernel void A(__global int* a) {
+  int b = get_global_id(0);
+  a[b] = 0;
+}
+"""
+
+source1_E_NO_OUTPUTS = """
+__kernel void A(__global int* a) {}
+"""
+
 @skipIf(not cfg.host_has_opencl(), "no OpenCL support in host")
 class TestKernelDriver(TestCase):
     def setUp(self):
@@ -196,17 +217,34 @@ class TestKernelDriver(TestCase):
         with self.assertRaises(cldrive.OpenCLDriverException):
             k(A)
 
-    # @skip("how long you got?")
     def test_out_of_resources(self):
         driver = cldrive.KernelDriver(self._ctx, source1_E_NON_TERMINATING)
-        wayyyyyy_too_big = 2**32
+        wayyyyyy_too_big = 2**63
 
         with self.assertRaises(cldrive.E_BAD_ARGS):
             cldrive.KernelPayload.create_sequential(driver, wayyyyyy_too_big)
 
     def test_validate(self):
         driver = cldrive.KernelDriver(self._ctx, source1)
-        driver.validate(size=8)
+        driver.validate(self._queue, size=8)
+
+    @skip("device-dependent")
+    def test_validate_nondeterministic(self):
+        driver = cldrive.KernelDriver(self._ctx, source1_E_NONDETERMINISTIC)
+        with self.assertRaises(cldrive.E_NONDETERMINISTIC):
+            for i in range(1000):
+                driver.validate(self._queue, size=1024)
+
+    @skip("FIXME: doesn't pass")
+    def test_validate_input_insensitive(self):
+        driver = cldrive.KernelDriver(self._ctx, source1_E_INPUT_INSENSITIVE)
+        with self.assertRaises(cldrive.E_INPUT_INSENSITIVE):
+            driver.validate(self._queue, size=8)
+
+    def test_validate_no_outputs(self):
+        driver = cldrive.KernelDriver(self._ctx, source1_E_NO_OUTPUTS)
+        with self.assertRaises(cldrive.E_NO_OUTPUTS):
+            driver.validate(self._queue, size=8)
 
 
 @skipIf(not cfg.host_has_opencl(), "no OpenCL support in host")
