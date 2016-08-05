@@ -344,10 +344,17 @@ class KernelPayload(object):
         args = [clutil.KernelArg(a.string) for a in self.args]
 
         for newarg,arg in zip(args, self.args):
-            if arg.hostdata is None:
+            if arg.hostdata is None and arg.is_local:
+                # Copy a local memory buffer.
+                newarg.hostdata = None
+                newarg.bufsize = arg.bufsize
+                newarg.devdata = cl.LocalMemory(newarg.bufsize)
+            elif arg.hostdata is None:
+                # Copy a scalar value.
                 newarg.hostdata = None
                 newarg.devdata = deepcopy(arg.devdata)
             else:
+                # Copy a global memory buffer.
                 newarg.hostdata = deepcopy(arg.hostdata, memo=memo)
                 newarg.flags = arg.flags
                 newarg.devdata = cl.Buffer(self.context, newarg.flags,
@@ -427,41 +434,46 @@ class KernelPayload(object):
         args = [clutil.KernelArg(arg.string) for arg in driver.prototype.args]
         transfer = 0
 
-        for arg in args:
-            dtype = arg.numpy_type
-            arg.hostdata = None
-            if arg.is_pointer:
+        try:
+            for arg in args:
+                arg.hostdata = None
+
+                dtype = arg.numpy_type
                 veclength = size * arg.vector_width
 
-                # Allocate host memory and populate with values:
-                try:
-                    arg.hostdata = nparray(veclength)
-                except MemoryError as e:
-                    raise E_BAD_ARGS(e)
+                if arg.is_pointer and arg.is_local:
+                    # If arg is a pointer to local memory, then we
+                    # create a read/write buffer:
+                    nonbuf = nparray(veclength)
+                    arg.bufsize = nonbuf.nbytes
+                    arg.devdata = cl.LocalMemory(arg.bufsize)
+                elif arg.is_pointer:
+                    # If arg is a pointer to global memory, then we
+                    # allocate host memory and populate with values:
+                    arg.hostdata = nparray(veclength).astype(dtype)
 
-                # Determine flags to pass to OpenCL buffer creation:
-                flags = cl.mem_flags.COPY_HOST_PTR
-                if arg.is_const:
-                    flags |= cl.mem_flags.READ_ONLY
-                else:
-                    flags |= cl.mem_flags.READ_WRITE
-                arg.flags = flags
+                    # Determine flags to pass to OpenCL buffer creation:
+                    arg.flags = cl.mem_flags.COPY_HOST_PTR
+                    if arg.is_const:
+                        arg.flags |= cl.mem_flags.READ_ONLY
+                    else:
+                        arg.flags |= cl.mem_flags.READ_WRITE
 
-                # Allocate device memory:
-                try:
+                    # Allocate device memory:
                     arg.devdata = cl.Buffer(
                         driver.context, arg.flags, hostbuf=arg.hostdata)
-                except Exception as e:
-                    raise E_BAD_ARGS(e)
 
-                # Record transfer overhead. If it's a const buffer,
-                # we're not reading back to host.
-                if arg.is_const:
-                    transfer += arg.hostdata.nbytes
+                    # Record transfer overhead. If it's a const buffer,
+                    # we're not reading back to host.
+                    if arg.is_const:
+                        transfer += arg.hostdata.nbytes
+                    else:
+                        transfer += 2 * arg.hostdata.nbytes
                 else:
-                    transfer += 2 * arg.hostdata.nbytes
-            else:
-                arg.devdata = dtype(size)
+                    # If arg is not a pointer, then it's a scalar value:
+                    arg.devdata = dtype(size)
+        except Exception as e:
+            raise E_BAD_ARGS(e)
 
         return KernelPayload(driver.context, args, (size,), transfer)
 
