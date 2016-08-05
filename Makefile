@@ -106,6 +106,7 @@ V2 = $(__verbosity_2_$(V))
 #                         User Configuration
 
 AWK ?= awk
+CMAKE ?= cmake
 EGREP ?= egrep
 GIT ?= git
 GREP ?= grep
@@ -533,7 +534,7 @@ CLSmith = $(extern)/clsmith/build/CLSmith
 
 $(CLSmith)-cmd = \
 	cd $(extern)/clsmith/build \
-	&& cmake .. >/dev/null && $(MAKE)
+	&& $(CMAKE) .. >/dev/null && $(MAKE)
 
 $(CLSmith):
 	$(call print-task,BUILD,$@,$(TaskMisc))
@@ -1441,7 +1442,7 @@ ToolchainCxxFlags := \
 	-stdlib=libc++ \
 	$(NULL)
 ToolchainEnv := CC=$(Toolchain_CC) CXX=$(Toolchain_CXX) LD_LIBRARY_PATH=$(LlvmLibDir)
-ToolchainCmake := $(ToolchainEnv) cmake	-DCMAKE_CXX_FLAGS="$(ToolchainCxxFlags)"
+ToolchainCmake := $(ToolchainEnv) $(CMAKE) -DCMAKE_CXX_FLAGS="$(ToolchainCxxFlags)"
 
 # Flags to build against LLVM + Clang toolchain
 ClangLlvm_CxxFlags = \
@@ -1535,7 +1536,7 @@ $(LlvmBuild)/bin/llvm-config: $(LlvmSrc)
 	$(call print-task,BUILD,LLVM toolchain,$(TaskMisc))
 	$(V1)rm -rf $(LlvmBuild)
 	$(V1)mkdir -p $(LlvmBuild)
-	$(V1)cd $(LlvmBuild) && cmake .. $(LlvmCMakeFlags) >/dev/null
+	$(V1)cd $(LlvmBuild) && $(CMAKE) .. $(LlvmCMakeFlags) >/dev/null
 	$(V1)cd $(LlvmBuild) && ninja
 
 $(toolchain): $(LlvmBuild)/bin/llvm-config
