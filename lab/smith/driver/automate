@@ -47,7 +47,7 @@ main() {
 
     local i=0
     for job in ${jobslist[@]}; do
-        local file=$(echo $job | cut -d',' -f1)
+        local file=$kernels_dir/$(echo $job | cut -d',' -f1)
         local dsize=$(echo $job | cut -d',' -f2)
 
         i=$((i+1))
