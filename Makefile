@@ -1482,7 +1482,7 @@ LlvmStagedEnv := \
 	CXX=$(LlvmStagedBuild)/bin/clang++ \
 	LD_LIBRARY_PATH=$(LlvmStagedBuild)/lib \
 	$(NULL)
-LlvmStagedCmake := $(LlvmStagedEnv) cmake -DCMAKE_CXX_FLAGS="$(LlvmStagedCxxFlags)"
+LlvmStagedCmake := $(LlvmStagedEnv) $(CMAKE) -DCMAKE_CXX_FLAGS="$(LlvmStagedCxxFlags)"
 
 # Flags to build against LLVM + Clang toolchain
 ClangLlvm_CxxFlags = \
@@ -1579,7 +1579,7 @@ $(LlvmSrc): $(CachedLlvmTarballs)
 $(LlvmConfig): $(LlvmSrc)
 	$(call print-task,CONFIG,LLVM staging toolchain,$(TaskMisc))
 	$(V1)mkdir -p $(LlvmStagedBuild)
-	$(V1)cd $(LlvmStagedBuild) && cmake $(LlvmSrc) $(LlvmCMakeFlags) >/dev/null
+	$(V1)cd $(LlvmStagedBuild) && $(CMAKE) $(LlvmSrc) $(LlvmCMakeFlags) >/dev/null
 	$(call print-task,BUILD,LLVM staging toolchain,$(TaskCompile))
 	$(V1)cd $(LlvmStagedBuild) && ninja
 
