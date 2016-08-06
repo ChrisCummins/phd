@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 #
-# Generate OpenCL programs using clsmith.
+# Generate training data files from results.
 #
+# TODO: Add .arff generation, with different features.
 import csv
 import sys
 import os

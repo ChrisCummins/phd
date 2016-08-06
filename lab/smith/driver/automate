@@ -11,37 +11,6 @@ usage() {
     echo "  <benchmarks-dir>  Root of benchmarks directory"
 }
 
-DSIZES=(12 24 64 102 162 408 1020, 2048, 4096)
-
-
-drive_file_dsize() {
-    if [[ $HOSTNAME == "monza" ]]; then
-        echo "monza"
-    elif grep "diana" /etc/hosts &>/dev/null ; then
-        echo "diana"
-    else
-        echo "fatal: unknown host!" >&2
-        exit 1
-    fi
-}
-
-
-get_joblist() {
-    local kernels_dir=$1
-    local results_path=$2
-
-    set +e
-    for f in $(find $kernels_dir -name '*.cl' -type f); do
-        base=$(basename $f)
-        for dsize in ${DSIZES[@]}; do
-            has_result=$(awk -F "," '{print $1,$2}' < $results_path | grep "$dsize $base")
-            if [[ "$has_result" == "" ]]; then
-                echo "$f,$dsize"
-            fi
-        done
-    done
-    set -e
-}
 
 main() {
     if [[ $# -ne 3 ]]; then
@@ -72,12 +41,9 @@ main() {
     local nfiles=$(find $kernels_dir -name '*.cl' -type f | wc -l)
 
     echo -n "building job list for $results_path ... "
-    jobslist=$(get_joblist $kernels_dir $results_path)
+    jobslist=$(./mkjoblist $kernels_dir $results_path $errors_path)
     num_jobs=$(echo "$jobslist" | wc -l)
     echo "$num_jobs jobs"
-
-    # shuffle job list
-    jobslist=$(echo "$jobslist" | perl -MList::Util -e 'print List::Util::shuffle <>')
 
     local i=0
     for job in ${jobslist[@]}; do
