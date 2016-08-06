@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -u
 
 ROOT=$(pwd)
 
@@ -11,6 +10,8 @@ if [[ -n "$1" ]]; then
     $SHELL run
     exit $?
 fi
+
+set -u
 
 # Run all benchmarks:
 rm -rf "$ROOT/logs"
