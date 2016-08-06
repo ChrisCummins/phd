@@ -82,7 +82,7 @@ def main():
 
         jobs = mkjoblist(args.kernels, args.results, args.errors)
         for job in jobs:
-            print(' '.join(job))
+            print(','.join(job))
     except Exception as e:
         print('fatal:', e, file=sys.stderr)
         sys.exit(1)
