@@ -270,12 +270,18 @@ class KernelDriver(object):
 
     def profile(self, queue, size=16, must_validate=False,
                 out=sys.stdout, metaout=sys.stderr):
+        """
+        Output format (CSV):
+
+            out:      <kernel> <wgsize> <transfer> <runtime> <ci>
+            metaout:  <error> <kernel>
+        """
         assert(type(queue) == cl.CommandQueue)
 
         try:
             self.validate(queue, size)
         except CLDriveException as e:
-            print(self.name, size, type(e).__name__, sep=',', file=metaout)
+            print(type(e).__name__, self.name, sep=',', file=metaout)
             if must_validate:
                 return
 
@@ -289,7 +295,7 @@ class KernelDriver(object):
         transfer = round(labmath.mean(self.transfers))
         mean = labmath.mean(self.runtimes)
         ci = labmath.confinterval(self.runtimes, array_mean=mean)[1] - mean
-        print(self.name, size, wgsize, transfer, round(mean, 6), round(ci, 6),
+        print(self.name, wgsize, transfer, round(mean, 6), round(ci, 6),
               sep=',', file=out)
 
     @property
@@ -497,9 +503,18 @@ def kernel(src, filename='<stdin>', devtype=cl.device_type.GPU,
            size=None, must_validate=False):
     """
     Drive a kernel.
+
+    Output format (CSV):
+
+        out:      <file> <size> <kernel> <wgsize> <transfer> <runtime> <ci>
+        metaout:  <file> <size> <error> <kernel>
     """
-    ctx, queue = init_opencl(devtype=devtype)
-    driver = KernelDriver(ctx, src)
+    try:
+        ctx, queue = init_opencl(devtype=devtype)
+        driver = KernelDriver(ctx, src)
+    except Exception as e:
+        print(filename, size, type(e).__name__, '-', sep=',', file=sys.stderr)
+        return
 
     # If no size is given, pick one.
     if size is None:
@@ -514,10 +529,10 @@ def kernel(src, filename='<stdin>', devtype=cl.device_type.GPU,
     stderr = metaout.getvalue()
 
     # Print results:
-    [print(filename, line, sep=',')
-     for line in stdout.split('\n') if x]
-    [print(filename, line, sep=',', file=sys.stderr)
-     for line in stderr.split('\n') if x]
+    [print(filename, size, line, sep=',')
+     for line in stdout.split('\n') if line]
+    [print(filename, size, line, sep=',', file=sys.stderr)
+     for line in stderr.split('\n') if line]
 
 
 def file(path, **kwargs):
