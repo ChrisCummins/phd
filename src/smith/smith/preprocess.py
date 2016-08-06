@@ -555,10 +555,9 @@ def preprocess_db(db_path):
     else:
         print('nothing to be done.')
 
-def vacuum(db_path):
+def remove_bad_preprocessed(db_path):
     """
-    Shrink a database. Remove all ugly and bad contents from
-    PreprocessedFiles table.
+    Remove all ugly and bad contents from PreprocessedFiles table.
     """
     original_size = fs.du(db_path, human_readable=False)
     original_size_human_readable = fs.du(db_path, human_readable=True)
@@ -568,7 +567,7 @@ def vacuum(db_path):
     # Remove contents from bad or ugly preprocessed files.
     db = sqlite3.connect(db_path)
     c = db.cursor()
-    c.execute("UPDATE PreprocessedFiles SET contents='[VACUUMED]' WHERE status=1 OR status=2")
+    c.execute("UPDATE PreprocessedFiles SET contents='[DELETED]' WHERE status=1 OR status=2")
     db.commit()
     c.close()
 

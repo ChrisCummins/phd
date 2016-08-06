@@ -65,7 +65,7 @@ class TestPreprocess(TestCase):
                "typedef __attribute__((reqd_work_group_size(64,1,1))) unsigned char uchar8;")
         self.assertEqual(out, preprocess.strip_attributes(tin))
 
-    def test_vacuum(self):
+    def test_remove_bad_preprocessed(self):
         fs.rm("tmp.db")
         dbutil.create_db("tmp.db")
         db = sqlite3.connect("tmp.db")
@@ -89,9 +89,9 @@ class TestPreprocess(TestCase):
         self.assertEqual(3, count)
         db.close()
 
-        preprocess.vacuum("tmp.db")
+        preprocess.remove_bad_preprocessed("tmp.db")
 
-        # Check that vacuum worked:
+        # Check that clean worked:
         db = sqlite3.connect("tmp.db")
         c = db.cursor()
         c.execute("SELECT Count(*) FROM PreprocessedFiles")
@@ -100,7 +100,7 @@ class TestPreprocess(TestCase):
         c.execute("SELECT contents FROM PreprocessedFiles WHERE status=1 OR status=2")
         rows = c.fetchall()
         print(rows)
-        self.assertTrue(all(not r == "[VACUUMED]" for r in rows))
+        self.assertTrue(all(not r == "[DELETED]" for r in rows))
 
         # Clean up:
         c.execute("DELETE FROM PreprocessedFiles")
