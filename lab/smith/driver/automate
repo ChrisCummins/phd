@@ -45,7 +45,6 @@ main() {
     # Pattern patch the error file schema. This will strip any gumpf
     # that made it in there.
     tr < $errors_path -d '\000' > $errors_path.tmp
-    mv $errors_path.tmp $errors_path
     grep -E '^[a-zA-Z0-9_\.-]+\.cl,[0-9]+,E_[A-Z_]+,[a-zA-Z0-9_\.-]+$' \
          $errors_path.tmp > $path || true
 
