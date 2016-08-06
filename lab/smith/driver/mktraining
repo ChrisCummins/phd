@@ -45,9 +45,9 @@ def get_kernel_features(kernels):
 
 def results_to_dict(row):
     return {
-        'dataset': row[0],
-        'file': fs.basename(row[1]),
-        'kernel': row[2],
+        'file': row[0],
+        'kernel': row[1],
+        'dataset': row[2],
         'wgsize': row[3],
         'transfer': row[4],
         'runtime': row[5],
@@ -100,9 +100,9 @@ def fetch_result(filename, kernel, dataset, results):
            d['dataset'] == dataset]
 
     return {
-        'dataset': res[0]['dataset'],
         'file': res[0]['file'],
         'kernel': res[0]['kernel'],
+        'dataset': res[0]['dataset'],
         'wgsize': labmath.mean([round(float(d['wgsize'])) for d in res]),
         'transfer': labmath.mean([round(float(d['transfer'])) for d in res]),
         'runtime': labmath.mean([float(d['runtime']) for d in res]),

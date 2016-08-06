@@ -275,7 +275,7 @@ class KernelDriver(object):
         try:
             self.validate(queue, size)
         except CLDriveException as e:
-            print(self.name, type(e).__name__, sep=',', file=metaout)
+            print(self.name, size, type(e).__name__, sep=',', file=metaout)
             if must_validate:
                 return
 
@@ -289,7 +289,7 @@ class KernelDriver(object):
         transfer = round(labmath.mean(self.transfers))
         mean = labmath.mean(self.runtimes)
         ci = labmath.confinterval(self.runtimes, array_mean=mean)[1] - mean
-        print(self.name, wgsize, transfer, round(mean, 6), round(ci, 6),
+        print(self.name, size, wgsize, transfer, round(mean, 6), round(ci, 6),
               sep=',', file=out)
 
     @property
@@ -514,17 +514,17 @@ def kernel(src, filename='<stdin>', devtype=cl.device_type.GPU,
     stderr = metaout.getvalue()
 
     # Print results:
-    [print(filename, x, sep=',')
-     for x in stdout.split('\n') if x]
-    [print(filename, x, sep=',', file=sys.stderr)
-     for x in stderr.split('\n') if x]
+    [print(filename, line, sep=',')
+     for line in stdout.split('\n') if x]
+    [print(filename, line, sep=',', file=sys.stderr)
+     for line in stderr.split('\n') if x]
 
 
 def file(path, **kwargs):
     with open(fs.path(path)) as infile:
         src = infile.read()
         for kernelsrc in clutil.get_cl_kernels(src):
-            kernel(kernelsrc, filename=fs.path(path), **kwargs)
+            kernel(kernelsrc, filename=fs.basename(path), **kwargs)
 
 
 def directory(path, **kwargs):
