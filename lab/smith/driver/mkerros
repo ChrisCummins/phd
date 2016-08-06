@@ -15,7 +15,10 @@ main() {
 
     local path=$1
 
-    grep -E ',[a-zA-Z0-9_-]+,E_[A-Z_]+$' $path > $path.tmp || true
+    # Pattern patch the error file schema. This will strip any gumpf
+    # that made it in there.
+    grep -E '^[a-zA-Z0-9_\.-]+\.cl,[0-9]+,E_[A-Z_]+,[a-zA-Z0-9_\.-]+$' \
+         $path > $path.tmp || true
     mv $path.tmp $path
 
     ( \
