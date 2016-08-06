@@ -1,0 +1,1 @@
+cd ocl && $(cat run) && cd ..
