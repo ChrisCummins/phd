@@ -31,7 +31,7 @@ def read_file_dataset(path):
                 results.append(str(row[0] + row[1]))
             except Exception:
                 print("error: can't read '{}' line: ".format(path),
-                      ','.join(row), file=sys.stderr)
+                      ','.join(row)[:30], file=sys.stderr)
     return results
 
 
