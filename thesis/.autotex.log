@@ -1,0 +1,50 @@
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/TeX Live for SUSE Linux)
+ \write18 enabled.
+entering extended mode
+(./thesis.tex
+LaTeX2e <2011/06/27>
+Babel <v3.8m> and hyphenation patterns for english, dumylang, nohyphenation, ge
+rman-x-2011-07-01, ngerman-x-2011-07-01, afrikaans, ancientgreek, ibycus, arabi
+c, armenian, basque, bulgarian, catalan, pinyin, coptic, croatian, czech, danis
+h, dutch, ukenglish, usenglishmax, esperanto, estonian, ethiopic, farsi, finnis
+h, french, friulan, galician, german, ngerman, swissgerman, monogreek, greek, h
+ungarian, icelandic, assamese, bengali, gujarati, hindi, kannada, malayalam, ma
+rathi, oriya, panjabi, tamil, telugu, indonesian, interlingua, irish, italian, 
+kurmanji, lao, latin, latvian, lithuanian, mongolian, mongolianlmc, bokmal, nyn
+orsk, polish, portuguese, romanian, romansh, russian, sanskrit, serbian, serbia
+nc, slovak, slovenian, spanish, swedish, turkish, turkmen, ukrainian, uppersorb
+ian, welsh, loaded.
+(./lib/infthesis.cls
+Document Class: infthesis 2013/02/07 v3.7 School of Informatics Thesis Class
+(/usr/share/texmf/tex/latex/geometry/geometry.sty
+(/usr/share/texmf/tex/latex/graphics/keyval.sty)
+(/usr/share/texmf/tex/generic/oberdiek/ifpdf.sty)
+(/usr/share/texmf/tex/generic/oberdiek/ifvtex.sty)
+(/usr/share/texmf/tex/generic/ifxetex/ifxetex.sty))
+(/usr/share/texmf/tex/latex/base/ifthen.sty)
+(/usr/share/texmf/tex/latex/graphics/graphics.sty
+(/usr/share/texmf/tex/latex/graphics/trig.sty)
+(/usr/share/texmf/tex/latex/latexconfig/graphics.cfg)
+(/usr/share/texmf/tex/latex/pdftex-def/pdftex.def
+(/usr/share/texmf/tex/generic/oberdiek/infwarerr.sty)
+(/usr/share/texmf/tex/generic/oberdiek/ltxcmds.sty)))
+(/usr/share/texmf/tex/latex/tools/xspace.sty) (./lib/eushield.sty)
+(/usr/share/texmf/tex/latex/base/report.cls
+Document Class: report 2007/10/19 v1.4h Standard LaTeX document class
+(/usr/share/texmf/tex/latex/base/size12.clo))
+(/usr/share/texmf/tex/latex/pslatex/pslatex.sty)
+
+! LaTeX Error: File `sectsty.sty' not found.
+
+Type X to quit or <RETURN> to proceed,
+or enter new name. (Default extension: sty)
+
+Enter file name: 
+./lib/infthesis.cls:679: Emergency stop.
+<read *> 
+         
+l.679 \ifthenelse
+                 {\boolean{sansheadings}}^^M
+./lib/infthesis.cls:679:  ==> Fatal error occurred, no output PDF file produced
+!
+Transcript written on thesis.log.

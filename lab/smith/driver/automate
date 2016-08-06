@@ -54,7 +54,7 @@ main() {
         local perc_done=$(echo "($i / $num_jobs) * 100" | bc -l | xargs printf '%.2f%%')
 
         echo "$(tput bold)$(tput setaf 1)$(date)$(tput sgr0) job [$i/$num_jobs] $perc_done ... $devtype $dsize $(basename $file)"
-        ./driver $devtype $dsize $file >> $results_path 2>> $errors_path
+        ./driver $devtype $dsize $file >> $results_path 2>> $errors_path || true
     done
 }
 main $@
