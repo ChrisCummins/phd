@@ -4,8 +4,11 @@ include ../../common/make.config
 CC = g++
 CC_FLAGS = -g -O2
 
-backprop: backprop.o imagenet.o facetrain.o $(CECOBJS)
-	$(CC) $(CC_FLAGS) backprop_ocl.cpp backprop.o $(CECOBJS) imagenet.o facetrain.o -o backprop -I$(OPENCL_INC) -L$(OPENCL_LIB) -lOpenCL
+backprop: backprop.o imagenet.o facetrain.o backprop_ocl.o
+	$(CC) $(CC_FLAGS) backprop_ocl.o backprop.o imagenet.o facetrain.o -o backprop -I$(OPENCL_INC) -L$(OPENCL_LIB) -lOpenCL -lcecl
+
+backprop_ocl.o: backprop_ocl.cpp
+	$(CC) $(CC_FLAGS) $< -c
 
 %.o: %.[ch]
 	$(CC) $(CC_FLAGS) $< -c

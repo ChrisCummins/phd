@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -e
+
+device=$1
+
+usage_and_fail() {
+    echo "$0 <CPU|GPU>" >&2
+    exit 1
+}
+
+if [[ -z "$1" ]]; then
+    usage_and_fail
+fi
+
+if [[ $device != "GPU" ]] && [[ $device != "CPU" ]]; then
+    echo "$0: unrecognised device type '$device'!" >&2
+    usage_and_fail
+fi
+
+source=common/cl_util.c
+sed -E -i 's/CEC_DEVICE_TYPE CL_DEVICE_TYPE_[A-Z]+/CEC_DEVICE_TYPE CL_DEVICE_TYPE_'$device'/g' $source
+echo modified $source ...
+
+./compile

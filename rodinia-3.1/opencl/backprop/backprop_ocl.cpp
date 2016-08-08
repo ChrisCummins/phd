@@ -1,3 +1,4 @@
+#include <cecl.h>
 // includes, system
 #include <stdlib.h>
 #include <stdio.h>
@@ -48,8 +49,8 @@ static int initialize(int use_gpu)
 	if( result != CL_SUCCESS ) { printf("ERROR: clGetContextInfo() failed\n"); return -1; }
 
 	// create command queue for the first device
-	cmd_queue = clCreateCommandQueue( context, device_list[0], 0, NULL );
-	if( !cmd_queue ) { printf("ERROR: clCreateCommandQueue() failed\n"); return -1; }
+	cmd_queue = CECL_CREATE_COMMAND_QUEUE( context, device_list[0], 0, NULL );
+	if( !cmd_queue ) { printf("ERROR: CECL_CREATE_COMMAND_QUEUE() failed\n"); return -1; }
 	return 0;
 }
 
@@ -118,9 +119,9 @@ int bpnn_train_kernel(BPNN *net, float *eo, float *eh)
 	// compile kernel
 	cl_int err = 0;
 	const char * slist[2] = { source, 0 };
-	cl_program prog = clCreateProgramWithSource(context, 1, slist, NULL, &err);
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateProgramWithSource() => %d\n", err); return -1; }
-	err = clBuildProgram(prog, 0, NULL, NULL, NULL, NULL);
+	cl_program prog = CECL_PROGRAM_WITH_SOURCE(context, 1, slist, NULL, &err);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_PROGRAM_WITH_SOURCE() => %d\n", err); return -1; }
+	err = CECL_PROGRAM(prog, 0, NULL, NULL, NULL, NULL);
 	{ // show warnings/errors
 		//static char log[65536]; memset(log, 0, sizeof(log));
 		//cl_device_id device_id = 0;
@@ -128,13 +129,13 @@ int bpnn_train_kernel(BPNN *net, float *eo, float *eh)
 		//clGetProgramBuildInfo(prog, device_id, CL_PROGRAM_BUILD_LOG, sizeof(log)-1, log, NULL);
 		//if(err || strstr(log,"warning:") || strstr(log, "error:")) printf("<<<<\n%s\n>>>>\n", log);
 	}
-	if(err != CL_SUCCESS) { printf("ERROR: clBuildProgram() => %d\n", err); return -1; }
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_PROGRAM() => %d\n", err); return -1; }
 
 	cl_kernel kernel1;
 	cl_kernel kernel2;
-	kernel1 = clCreateKernel(prog, kernel_bp1, &err);
-	kernel2 = clCreateKernel(prog, kernel_bp2, &err);
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateKernel() 0 => %d\n", err); return -1; }
+	kernel1 = CECL_KERNEL(prog, kernel_bp1, &err);
+	kernel2 = CECL_KERNEL(prog, kernel_bp2, &err);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_KERNEL() 0 => %d\n", err); return -1; }
 	clReleaseProgram(prog);
 
 	float *input_weights_one_dim;
@@ -169,41 +170,41 @@ int bpnn_train_kernel(BPNN *net, float *eo, float *eh)
 	cl_mem hidden_delta_ocl;
 	cl_mem input_prev_weights_ocl;
 
-	input_ocl = clCreateBuffer(context, CL_MEM_READ_WRITE, (in + 1) * sizeof(float), NULL, &err );
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer input_ocl\n"); return -1;}
-	input_hidden_ocl = clCreateBuffer(context, CL_MEM_READ_WRITE, (in + 1) * (hid + 1) * sizeof(float), NULL, &err );
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer input_hidden_ocl\n"); return -1;}
-	output_hidden_ocl = clCreateBuffer(context, CL_MEM_READ_WRITE, (hid + 1) * sizeof(float), NULL, &err );
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer output_hidden_ocl\n"); return -1;}
-	hidden_partial_sum = clCreateBuffer(context, CL_MEM_READ_WRITE, num_blocks * WIDTH * sizeof(float), NULL, &err );
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer hidden_partial_sum\n"); return -1;}
-	hidden_delta_ocl = clCreateBuffer(context, CL_MEM_READ_WRITE, (hid + 1) * sizeof(float), NULL, &err );
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer hidden_delta_ocl\n"); return -1;}
-	input_prev_weights_ocl = clCreateBuffer(context, CL_MEM_READ_WRITE, (in + 1) * (hid + 1) * sizeof(float), NULL, &err );
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer input_prev_weights_ocl\n"); return -1;}
+	input_ocl = CECL_BUFFER(context, CL_MEM_READ_WRITE, (in + 1) * sizeof(float), NULL, &err );
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER input_ocl\n"); return -1;}
+	input_hidden_ocl = CECL_BUFFER(context, CL_MEM_READ_WRITE, (in + 1) * (hid + 1) * sizeof(float), NULL, &err );
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER input_hidden_ocl\n"); return -1;}
+	output_hidden_ocl = CECL_BUFFER(context, CL_MEM_READ_WRITE, (hid + 1) * sizeof(float), NULL, &err );
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER output_hidden_ocl\n"); return -1;}
+	hidden_partial_sum = CECL_BUFFER(context, CL_MEM_READ_WRITE, num_blocks * WIDTH * sizeof(float), NULL, &err );
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER hidden_partial_sum\n"); return -1;}
+	hidden_delta_ocl = CECL_BUFFER(context, CL_MEM_READ_WRITE, (hid + 1) * sizeof(float), NULL, &err );
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER hidden_delta_ocl\n"); return -1;}
+	input_prev_weights_ocl = CECL_BUFFER(context, CL_MEM_READ_WRITE, (in + 1) * (hid + 1) * sizeof(float), NULL, &err );
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER input_prev_weights_ocl\n"); return -1;}
 
 	printf("Performing GPU computation\n");
 
 	//write buffers
-	err = clEnqueueWriteBuffer(cmd_queue, input_ocl, 1, 0, (in + 1) * sizeof(float), net->input_units, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer input_ocl\n"); return -1; }
-	err = clEnqueueWriteBuffer(cmd_queue, input_hidden_ocl, 1, 0, (in + 1) * (hid + 1) * sizeof(float), input_weights_one_dim, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer input_hidden_ocl\n"); return -1; }
+	err = CECL_WRITE_BUFFER(cmd_queue, input_ocl, 1, 0, (in + 1) * sizeof(float), net->input_units, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_WRITE_BUFFER input_ocl\n"); return -1; }
+	err = CECL_WRITE_BUFFER(cmd_queue, input_hidden_ocl, 1, 0, (in + 1) * (hid + 1) * sizeof(float), input_weights_one_dim, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_WRITE_BUFFER input_hidden_ocl\n"); return -1; }
 
-	clSetKernelArg(kernel1, 0, sizeof(void *), (void*) &input_ocl);
-	clSetKernelArg(kernel1, 1, sizeof(void *), (void*) &output_hidden_ocl);
-	clSetKernelArg(kernel1, 2, sizeof(void *), (void*) &input_hidden_ocl);
-	clSetKernelArg(kernel1, 3, sizeof(void *), (void*) &hidden_partial_sum );
-	clSetKernelArg(kernel1, 4, sizeof(float) *  HEIGHT, (void*)NULL );
-	clSetKernelArg(kernel1, 5, sizeof(float ) *  HEIGHT * WIDTH, (void*)NULL );
-	clSetKernelArg(kernel1, 6, sizeof(cl_int), (void*) &in);
-	clSetKernelArg(kernel1, 7, sizeof(cl_int), (void*) &hid);
+	CECL_SET_KERNEL_ARG(kernel1, 0, sizeof(void *), (void*) &input_ocl);
+	CECL_SET_KERNEL_ARG(kernel1, 1, sizeof(void *), (void*) &output_hidden_ocl);
+	CECL_SET_KERNEL_ARG(kernel1, 2, sizeof(void *), (void*) &input_hidden_ocl);
+	CECL_SET_KERNEL_ARG(kernel1, 3, sizeof(void *), (void*) &hidden_partial_sum );
+	CECL_SET_KERNEL_ARG(kernel1, 4, sizeof(float) *  HEIGHT, (void*)NULL );
+	CECL_SET_KERNEL_ARG(kernel1, 5, sizeof(float ) *  HEIGHT * WIDTH, (void*)NULL );
+	CECL_SET_KERNEL_ARG(kernel1, 6, sizeof(cl_int), (void*) &in);
+	CECL_SET_KERNEL_ARG(kernel1, 7, sizeof(cl_int), (void*) &hid);
 
-	err = clEnqueueNDRangeKernel(cmd_queue, kernel1, 2, NULL, global_work, local_work, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: 1  clEnqueueNDRangeKernel()=>%d failed\n", err); return -1; }
+	err = CECL_ND_RANGE_KERNEL(cmd_queue, kernel1, 2, NULL, global_work, local_work, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: 1  CECL_ND_RANGE_KERNEL()=>%d failed\n", err); return -1; }
 
-	err = clEnqueueReadBuffer(cmd_queue, hidden_partial_sum, 1, 0, num_blocks * WIDTH * sizeof(float), partial_sum, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: 1  clEnqueueReadBuffer: partial sum\n"); return -1; }
+	err = CECL_READ_BUFFER(cmd_queue, hidden_partial_sum, 1, 0, num_blocks * WIDTH * sizeof(float), partial_sum, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: 1  CECL_READ_BUFFER: partial sum\n"); return -1; }
 
 	for (int j = 1; j <= hid; j++) {
 		sum = 0.0;
@@ -220,27 +221,27 @@ int bpnn_train_kernel(BPNN *net, float *eo, float *eh)
 	bpnn_hidden_error(net->hidden_delta, hid, net->output_delta, out, net->hidden_weights, net->hidden_units, &hid_err);
 	bpnn_adjust_weights(net->output_delta, out, net->hidden_units, hid, net->hidden_weights, net->hidden_prev_weights);
 
-	err = clEnqueueWriteBuffer(cmd_queue, hidden_delta_ocl,       1, 0, (hid + 1) * sizeof(float), net->hidden_delta, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer hidden_delta_ocl\n"); return -1; }
-	err = clEnqueueWriteBuffer(cmd_queue, input_prev_weights_ocl, 1, 0, (in + 1) * (hid + 1) * sizeof(float), input_weights_prev_one_dim, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer input_prev_weights_ocl\n"); return -1; }
-	err = clEnqueueWriteBuffer(cmd_queue, input_hidden_ocl,       1, 0, (in + 1) * (hid + 1) * sizeof(float), input_weights_one_dim, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer input_hidden_ocl\n"); return -1; }
+	err = CECL_WRITE_BUFFER(cmd_queue, hidden_delta_ocl,       1, 0, (hid + 1) * sizeof(float), net->hidden_delta, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_WRITE_BUFFER hidden_delta_ocl\n"); return -1; }
+	err = CECL_WRITE_BUFFER(cmd_queue, input_prev_weights_ocl, 1, 0, (in + 1) * (hid + 1) * sizeof(float), input_weights_prev_one_dim, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_WRITE_BUFFER input_prev_weights_ocl\n"); return -1; }
+	err = CECL_WRITE_BUFFER(cmd_queue, input_hidden_ocl,       1, 0, (in + 1) * (hid + 1) * sizeof(float), input_weights_one_dim, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_WRITE_BUFFER input_hidden_ocl\n"); return -1; }
 
-	clSetKernelArg(kernel2, 0, sizeof(void *), (void*) &hidden_delta_ocl);
-	clSetKernelArg(kernel2, 1, sizeof(cl_int), (void*) &hid);
-	clSetKernelArg(kernel2, 2, sizeof(void *), (void*) &input_ocl);
-	clSetKernelArg(kernel2, 3, sizeof(cl_int), (void*) &in);
-	clSetKernelArg(kernel2, 4, sizeof(void *), (void*) &input_hidden_ocl);
-	clSetKernelArg(kernel2, 5, sizeof(void *), (void*) &input_prev_weights_ocl );
+	CECL_SET_KERNEL_ARG(kernel2, 0, sizeof(void *), (void*) &hidden_delta_ocl);
+	CECL_SET_KERNEL_ARG(kernel2, 1, sizeof(cl_int), (void*) &hid);
+	CECL_SET_KERNEL_ARG(kernel2, 2, sizeof(void *), (void*) &input_ocl);
+	CECL_SET_KERNEL_ARG(kernel2, 3, sizeof(cl_int), (void*) &in);
+	CECL_SET_KERNEL_ARG(kernel2, 4, sizeof(void *), (void*) &input_hidden_ocl);
+	CECL_SET_KERNEL_ARG(kernel2, 5, sizeof(void *), (void*) &input_prev_weights_ocl );
 
-	err = clEnqueueNDRangeKernel(cmd_queue, kernel2, 2, NULL, global_work, local_work, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: 1  clEnqueueNDRangeKernel()=>%d failed\n", err); return -1; }
+	err = CECL_ND_RANGE_KERNEL(cmd_queue, kernel2, 2, NULL, global_work, local_work, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: 1  CECL_ND_RANGE_KERNEL()=>%d failed\n", err); return -1; }
 
-	err = clEnqueueReadBuffer(cmd_queue, input_ocl, 1, 0, (in + 1) * sizeof(float), net->input_units, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: 1  clEnqueueReadBuffer: input_ocl\n"); return -1; }
-	err = clEnqueueReadBuffer(cmd_queue, input_hidden_ocl, 1, 0, (in + 1) * (hid + 1) * sizeof(float), input_weights_one_dim, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: 1  clEnqueueReadBuffer: input_hidden_ocl\n"); return -1; }
+	err = CECL_READ_BUFFER(cmd_queue, input_ocl, 1, 0, (in + 1) * sizeof(float), net->input_units, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: 1  CECL_READ_BUFFER: input_ocl\n"); return -1; }
+	err = CECL_READ_BUFFER(cmd_queue, input_hidden_ocl, 1, 0, (in + 1) * (hid + 1) * sizeof(float), input_weights_one_dim, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: 1  CECL_READ_BUFFER: input_hidden_ocl\n"); return -1; }
 
 	clReleaseMemObject(input_ocl);
 	clReleaseMemObject(output_hidden_ocl);
