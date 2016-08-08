@@ -1,3 +1,4 @@
+#include <cecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB SP code. This OpenCL    //
@@ -43,13 +44,13 @@ void tzetar()
 
   if (timeron) timer_start(t_tzetar);
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_tzetar,
                                  TZETAR_DIM, NULL,
                                  tzetar_gws,
                                  tzetar_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
 
   if (timeron) timer_stop(t_tzetar);

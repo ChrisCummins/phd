@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -363,16 +364,16 @@ cl_program clu_MakeProgram(cl_context context,
   // Create a program with the source code
   size_t source_len;
   char *source_code = clu_LoadProgSource(source_path, &source_len);
-  program = clCreateProgramWithSource(context,
+  program = CECL_PROGRAM_WITH_SOURCE(context,
                                       1, 
                                       (const char **)&source_code,
                                       &source_len,
                                       &err_code);
   free(source_code);
-  clu_CheckError(err_code, "clCreateProgramWithSource()");
+  clu_CheckError(err_code, "CECL_PROGRAM_WITH_SOURCE()");
 
   // Build the program
-  err_code = clBuildProgram(program, 1, &device, build_opts, NULL, NULL);
+  err_code = CECL_PROGRAM(program, 1, &device, build_opts, NULL, NULL);
   if (err_code != CL_SUCCESS) {
     clu_PrintBuildLog(program, device);
     clu_CheckError(err_code, "clBuldProgram()");

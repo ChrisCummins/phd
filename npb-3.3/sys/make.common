@@ -1,4 +1,3 @@
-
 PROGRAM  = $(BINDIR)/$(BENCHMARK).$(CLASS).x
 CCOMPILE = $(CC)  -c $(C_INC) $(CFLAGS)
 CCOMPILE_pp = $(CC_pp)  -c $(C_INC_pp) $(CFLAGS_pp)

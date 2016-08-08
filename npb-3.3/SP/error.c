@@ -1,3 +1,4 @@
+#include <cecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB SP code. This OpenCL    //
@@ -64,35 +65,35 @@ void error_norm(double rms[5])
   wg_num = global_ws / local_ws;
 
   buf_size = sizeof(double) * 5 * wg_num;
-  m_rms = clCreateBuffer(context,
+  m_rms = CECL_BUFFER(context,
                          CL_MEM_READ_WRITE,
                          buf_size,
                          NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer()");
+  clu_CheckError(ecode, "CECL_BUFFER()");
 
-  k_error_norm = clCreateKernel(p_error, "error_norm", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
+  k_error_norm = CECL_KERNEL(p_error, "error_norm", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL()");
 
-  ecode  = clSetKernelArg(k_error_norm, 0, sizeof(cl_mem), &m_u);
-  ecode |= clSetKernelArg(k_error_norm, 1, sizeof(cl_mem), &m_ce);
-  ecode |= clSetKernelArg(k_error_norm, 2, sizeof(cl_mem), &m_rms);
-  ecode |= clSetKernelArg(k_error_norm, 3, sizeof(double)*5*local_ws, NULL);
-  ecode |= clSetKernelArg(k_error_norm, 4, sizeof(int), &d0);
-  ecode |= clSetKernelArg(k_error_norm, 5, sizeof(int), &d1);
-  ecode |= clSetKernelArg(k_error_norm, 6, sizeof(int), &d2);
-  clu_CheckError(ecode, "clSetKernelArg()");
+  ecode  = CECL_SET_KERNEL_ARG(k_error_norm, 0, sizeof(cl_mem), &m_u);
+  ecode |= CECL_SET_KERNEL_ARG(k_error_norm, 1, sizeof(cl_mem), &m_ce);
+  ecode |= CECL_SET_KERNEL_ARG(k_error_norm, 2, sizeof(cl_mem), &m_rms);
+  ecode |= CECL_SET_KERNEL_ARG(k_error_norm, 3, sizeof(double)*5*local_ws, NULL);
+  ecode |= CECL_SET_KERNEL_ARG(k_error_norm, 4, sizeof(int), &d0);
+  ecode |= CECL_SET_KERNEL_ARG(k_error_norm, 5, sizeof(int), &d1);
+  ecode |= CECL_SET_KERNEL_ARG(k_error_norm, 6, sizeof(int), &d2);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_error_norm,
                                  1, NULL,
                                  &global_ws,
                                  &local_ws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
   g_rms = (double (*)[5])malloc(buf_size);
 
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CECL_READ_BUFFER(cmd_queue,
                               m_rms,
                               CL_TRUE,
                               0, buf_size,
@@ -140,34 +141,34 @@ void rhs_norm(double rms[5])
   wg_num = global_ws / local_ws;
 
   buf_size = sizeof(double) * 5 * wg_num;
-  m_rms = clCreateBuffer(context,
+  m_rms = CECL_BUFFER(context,
                          CL_MEM_READ_WRITE,
                          buf_size,
                          NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer()");
+  clu_CheckError(ecode, "CECL_BUFFER()");
 
-  k_rhs_norm = clCreateKernel(p_error, "rhs_norm", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
+  k_rhs_norm = CECL_KERNEL(p_error, "rhs_norm", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL()");
 
-  ecode  = clSetKernelArg(k_rhs_norm, 0, sizeof(cl_mem), &m_rhs);
-  ecode |= clSetKernelArg(k_rhs_norm, 1, sizeof(cl_mem), &m_rms);
-  ecode |= clSetKernelArg(k_rhs_norm, 2, sizeof(double)*5*local_ws, NULL);
-  ecode |= clSetKernelArg(k_rhs_norm, 3, sizeof(int), &nx2);
-  ecode |= clSetKernelArg(k_rhs_norm, 4, sizeof(int), &ny2);
-  ecode |= clSetKernelArg(k_rhs_norm, 5, sizeof(int), &nz2);
-  clu_CheckError(ecode, "clSetKernelArg()");
+  ecode  = CECL_SET_KERNEL_ARG(k_rhs_norm, 0, sizeof(cl_mem), &m_rhs);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhs_norm, 1, sizeof(cl_mem), &m_rms);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhs_norm, 2, sizeof(double)*5*local_ws, NULL);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhs_norm, 3, sizeof(int), &nx2);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhs_norm, 4, sizeof(int), &ny2);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhs_norm, 5, sizeof(int), &nz2);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_rhs_norm,
                                  1, NULL,
                                  &global_ws,
                                  &local_ws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
   g_rms = (double (*)[5])malloc(buf_size);
 
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CECL_READ_BUFFER(cmd_queue,
                               m_rms,
                               CL_TRUE,
                               0, buf_size,

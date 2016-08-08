@@ -1,3 +1,4 @@
+#include <cecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB LU code. This OpenCL    //
@@ -440,14 +441,14 @@ static void setup_opencl(int argc, char *argv[])
   //-----------------------------------------------------------------------
   // 3. Create command queues
   //-----------------------------------------------------------------------
-  cmd_queue = clCreateCommandQueue(context, device, 0, &ecode);
-  clu_CheckError(ecode, "clCreateCommandQueue()");
+  cmd_queue = CECL_CREATE_COMMAND_QUEUE(context, device, 0, &ecode);
+  clu_CheckError(ecode, "CECL_CREATE_COMMAND_QUEUE()");
 
   max_pipeline = (jend-jst) < max_compute_units ? (jend-jst) : max_compute_units;
   pipe_queue = (cl_command_queue *)malloc(sizeof(cl_command_queue) * max_pipeline);
   for (i = 0; i < max_pipeline; i++) {
-    pipe_queue[i] = clCreateCommandQueue(context, device, 0, &ecode);
-    clu_CheckError(ecode, "clCreateCommandQueue()");
+    pipe_queue[i] = CECL_CREATE_COMMAND_QUEUE(context, device, 0, &ecode);
+    clu_CheckError(ecode, "CECL_CREATE_COMMAND_QUEUE()");
   }
 
   //-----------------------------------------------------------------------
@@ -498,41 +499,41 @@ static void setup_opencl(int argc, char *argv[])
   // 5. Create buffers
   //-----------------------------------------------------------------------
   if (timeron) timer_start(TIMER_BUFFER);
-  m_ce = clCreateBuffer(context,
+  m_ce = CECL_BUFFER(context,
                         CL_MEM_READ_ONLY,
                         sizeof(double)*5*13,
                         NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_ce");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_ce");
 
-  m_u = clCreateBuffer(context,
+  m_u = CECL_BUFFER(context,
                        CL_MEM_READ_WRITE,
                        sizeof(double)*(ISIZ3)*(ISIZ2/2*2+1)*(ISIZ1/2*2+1)*5,
                        NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_u");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_u");
 
-  m_rsd = clCreateBuffer(context,
+  m_rsd = CECL_BUFFER(context,
                        CL_MEM_READ_WRITE,
                        sizeof(double)*(ISIZ3)*(ISIZ2/2*2+1)*(ISIZ1/2*2+1)*5,
                        NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_rsd");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_rsd");
 
-  m_frct = clCreateBuffer(context,
+  m_frct = CECL_BUFFER(context,
                        CL_MEM_READ_WRITE,
                        sizeof(double)*(ISIZ3)*(ISIZ2/2*2+1)*(ISIZ1/2*2+1)*5,
                        NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_frct");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_frct");
 
-  m_qs = clCreateBuffer(context,
+  m_qs = CECL_BUFFER(context,
                        CL_MEM_READ_WRITE,
                        sizeof(double)*(ISIZ3)*(ISIZ2/2*2+1)*(ISIZ1/2*2+1),
                        NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_qs");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_qs");
 
-  m_rho_i = clCreateBuffer(context,
+  m_rho_i = CECL_BUFFER(context,
                        CL_MEM_READ_WRITE,
                        sizeof(double)*(ISIZ3)*(ISIZ2/2*2+1)*(ISIZ1/2*2+1),
                        NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_rho_i");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_rho_i");
 
   // workspace for work-items
   size_t max_work_items;
@@ -541,11 +542,11 @@ static void setup_opencl(int argc, char *argv[])
   } else {
     max_work_items = ISIZ3*ISIZ2;
   }
-  m_flux = clCreateBuffer(context,
+  m_flux = CECL_BUFFER(context,
                        CL_MEM_READ_WRITE,
                        sizeof(double)*ISIZ1*5 * max_work_items,
                        NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_flux");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_flux");
 
   if (RHSZ_DIM == 1) {
     max_work_items = ISIZ2;
@@ -554,17 +555,17 @@ static void setup_opencl(int argc, char *argv[])
   }
 
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
-  /*   m_utmp = clCreateBuffer(context, */
+  /*   m_utmp = CECL_BUFFER(context, */
   /*                        CL_MEM_READ_WRITE, */
   /*                        sizeof(double)*ISIZ3*6 * max_work_items, */
   /*                        NULL, &ecode); */
-  /*   clu_CheckError(ecode, "clCreateBuffer() for m_utmp"); */
+  /*   clu_CheckError(ecode, "CECL_BUFFER() for m_utmp"); */
 
-  /*   m_rtmp = clCreateBuffer(context, */
+  /*   m_rtmp = CECL_BUFFER(context, */
   /*                        CL_MEM_READ_WRITE, */
   /*                        sizeof(double)*ISIZ3*5 * max_work_items, */
   /*                        NULL, &ecode); */
-  /*   clu_CheckError(ecode, "clCreateBuffer() for m_rtmp"); */
+  /*   clu_CheckError(ecode, "CECL_BUFFER() for m_rtmp"); */
   /* } */
 
   temp = (nz0-2) / max_compute_units;
@@ -572,25 +573,25 @@ static void setup_opencl(int argc, char *argv[])
   l2norm_gws[0] = clu_RoundWorkSize((size_t)(nz0-2), l2norm_lws[0]);
   wg_num = l2norm_gws[0] / l2norm_lws[0];
   sum_size = sizeof(double) * 5 * wg_num;
-  m_sum = clCreateBuffer(context,
+  m_sum = CECL_BUFFER(context,
                          CL_MEM_READ_WRITE,
                          sum_size,
                          NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer()");
+  clu_CheckError(ecode, "CECL_BUFFER()");
 
   if (timeron) timer_stop(TIMER_BUFFER);
 
   //-----------------------------------------------------------------------
   // 6. Create kernels
   //-----------------------------------------------------------------------
-  k_setbv1 = clCreateKernel(p_pre, "setbv1", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for setbv1");
-  ecode  = clSetKernelArg(k_setbv1, 0, sizeof(cl_mem), &m_u);
-  ecode |= clSetKernelArg(k_setbv1, 1, sizeof(cl_mem), &m_ce);
-  ecode |= clSetKernelArg(k_setbv1, 2, sizeof(int), &nx);
-  ecode |= clSetKernelArg(k_setbv1, 3, sizeof(int), &ny);
-  ecode |= clSetKernelArg(k_setbv1, 4, sizeof(int), &nz);
-  clu_CheckError(ecode, "clSetKernelArg()");
+  k_setbv1 = CECL_KERNEL(p_pre, "setbv1", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for setbv1");
+  ecode  = CECL_SET_KERNEL_ARG(k_setbv1, 0, sizeof(cl_mem), &m_u);
+  ecode |= CECL_SET_KERNEL_ARG(k_setbv1, 1, sizeof(cl_mem), &m_ce);
+  ecode |= CECL_SET_KERNEL_ARG(k_setbv1, 2, sizeof(int), &nx);
+  ecode |= CECL_SET_KERNEL_ARG(k_setbv1, 3, sizeof(int), &ny);
+  ecode |= CECL_SET_KERNEL_ARG(k_setbv1, 4, sizeof(int), &nz);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   if (SETBV1_DIM == 3) {
     setbv1_lws[0] = 5;
     temp = max_work_group_size / setbv1_lws[0];
@@ -612,14 +613,14 @@ static void setup_opencl(int argc, char *argv[])
     setbv1_gws[0] = clu_RoundWorkSize((size_t)ny, setbv1_lws[0]);
   }
 
-  k_setbv2 = clCreateKernel(p_pre, "setbv2", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for setbv2");
-  ecode  = clSetKernelArg(k_setbv2, 0, sizeof(cl_mem), &m_u);
-  ecode |= clSetKernelArg(k_setbv2, 1, sizeof(cl_mem), &m_ce);
-  ecode |= clSetKernelArg(k_setbv2, 2, sizeof(int), &nx);
-  ecode |= clSetKernelArg(k_setbv2, 3, sizeof(int), &ny);
-  ecode |= clSetKernelArg(k_setbv2, 4, sizeof(int), &nz);
-  clu_CheckError(ecode, "clSetKernelArg()");
+  k_setbv2 = CECL_KERNEL(p_pre, "setbv2", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for setbv2");
+  ecode  = CECL_SET_KERNEL_ARG(k_setbv2, 0, sizeof(cl_mem), &m_u);
+  ecode |= CECL_SET_KERNEL_ARG(k_setbv2, 1, sizeof(cl_mem), &m_ce);
+  ecode |= CECL_SET_KERNEL_ARG(k_setbv2, 2, sizeof(int), &nx);
+  ecode |= CECL_SET_KERNEL_ARG(k_setbv2, 3, sizeof(int), &ny);
+  ecode |= CECL_SET_KERNEL_ARG(k_setbv2, 4, sizeof(int), &nz);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   if (SETBV2_DIM == 3) {
     setbv2_lws[0] = 5;
     temp = max_work_group_size / setbv2_lws[0];
@@ -641,14 +642,14 @@ static void setup_opencl(int argc, char *argv[])
     setbv2_gws[0] = clu_RoundWorkSize((size_t)nz, setbv2_lws[0]);
   }
 
-  k_setbv3 = clCreateKernel(p_pre, "setbv3", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for setbv3");
-  ecode  = clSetKernelArg(k_setbv3, 0, sizeof(cl_mem), &m_u);
-  ecode |= clSetKernelArg(k_setbv3, 1, sizeof(cl_mem), &m_ce);
-  ecode |= clSetKernelArg(k_setbv3, 2, sizeof(int), &nx);
-  ecode |= clSetKernelArg(k_setbv3, 3, sizeof(int), &ny);
-  ecode |= clSetKernelArg(k_setbv3, 4, sizeof(int), &nz);
-  clu_CheckError(ecode, "clSetKernelArg()");
+  k_setbv3 = CECL_KERNEL(p_pre, "setbv3", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for setbv3");
+  ecode  = CECL_SET_KERNEL_ARG(k_setbv3, 0, sizeof(cl_mem), &m_u);
+  ecode |= CECL_SET_KERNEL_ARG(k_setbv3, 1, sizeof(cl_mem), &m_ce);
+  ecode |= CECL_SET_KERNEL_ARG(k_setbv3, 2, sizeof(int), &nx);
+  ecode |= CECL_SET_KERNEL_ARG(k_setbv3, 3, sizeof(int), &ny);
+  ecode |= CECL_SET_KERNEL_ARG(k_setbv3, 4, sizeof(int), &nz);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   if (SETBV3_DIM == 3) {
     setbv3_lws[0] = 5;
     temp = max_work_group_size / setbv3_lws[0];
@@ -670,14 +671,14 @@ static void setup_opencl(int argc, char *argv[])
     setbv3_gws[0] = clu_RoundWorkSize((size_t)nz, setbv3_lws[0]);
   }
 
-  k_setiv = clCreateKernel(p_pre, "setiv", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for setiv");
-  ecode  = clSetKernelArg(k_setiv, 0, sizeof(cl_mem), &m_u);
-  ecode |= clSetKernelArg(k_setiv, 1, sizeof(cl_mem), &m_ce);
-  ecode |= clSetKernelArg(k_setiv, 2, sizeof(int), &nx);
-  ecode |= clSetKernelArg(k_setiv, 3, sizeof(int), &ny);
-  ecode |= clSetKernelArg(k_setiv, 4, sizeof(int), &nz);
-  clu_CheckError(ecode, "clSetKernelArg()");
+  k_setiv = CECL_KERNEL(p_pre, "setiv", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for setiv");
+  ecode  = CECL_SET_KERNEL_ARG(k_setiv, 0, sizeof(cl_mem), &m_u);
+  ecode |= CECL_SET_KERNEL_ARG(k_setiv, 1, sizeof(cl_mem), &m_ce);
+  ecode |= CECL_SET_KERNEL_ARG(k_setiv, 2, sizeof(int), &nx);
+  ecode |= CECL_SET_KERNEL_ARG(k_setiv, 3, sizeof(int), &ny);
+  ecode |= CECL_SET_KERNEL_ARG(k_setiv, 4, sizeof(int), &nz);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   if (SETIV_DIM == 3) {
     setiv_lws[0] = (nx-2) < work_item_sizes[0] ? (nx-2) : work_item_sizes[0];
     temp = max_work_group_size / setiv_lws[0];
@@ -699,23 +700,23 @@ static void setup_opencl(int argc, char *argv[])
     setiv_gws[0] = clu_RoundWorkSize((size_t)(nz-2), setiv_lws[0]);
   }
 
-  k_l2norm = clCreateKernel(p_main, "l2norm", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
-  ecode  = clSetKernelArg(k_l2norm, 1, sizeof(cl_mem), &m_sum);
-  ecode |= clSetKernelArg(k_l2norm, 2, sizeof(double)*5*l2norm_lws[0], NULL);
-  clu_CheckError(ecode, "clSetKernelArg()");
+  k_l2norm = CECL_KERNEL(p_main, "l2norm", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL()");
+  ecode  = CECL_SET_KERNEL_ARG(k_l2norm, 1, sizeof(cl_mem), &m_sum);
+  ecode |= CECL_SET_KERNEL_ARG(k_l2norm, 2, sizeof(double)*5*l2norm_lws[0], NULL);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-  k_rhs = clCreateKernel(p_main, "rhs", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rhs");
-  ecode  = clSetKernelArg(k_rhs, 0, sizeof(cl_mem), &m_u);
-  ecode |= clSetKernelArg(k_rhs, 1, sizeof(cl_mem), &m_rsd);
-  ecode |= clSetKernelArg(k_rhs, 2, sizeof(cl_mem), &m_frct);
-  ecode |= clSetKernelArg(k_rhs, 3, sizeof(cl_mem), &m_qs);
-  ecode |= clSetKernelArg(k_rhs, 4, sizeof(cl_mem), &m_rho_i);
-  ecode |= clSetKernelArg(k_rhs, 5, sizeof(int), &nx);
-  ecode |= clSetKernelArg(k_rhs, 6, sizeof(int), &ny);
-  ecode |= clSetKernelArg(k_rhs, 7, sizeof(int), &nz);
-  clu_CheckError(ecode, "clSetKernelArg()");
+  k_rhs = CECL_KERNEL(p_main, "rhs", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for rhs");
+  ecode  = CECL_SET_KERNEL_ARG(k_rhs, 0, sizeof(cl_mem), &m_u);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhs, 1, sizeof(cl_mem), &m_rsd);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhs, 2, sizeof(cl_mem), &m_frct);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhs, 3, sizeof(cl_mem), &m_qs);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhs, 4, sizeof(cl_mem), &m_rho_i);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhs, 5, sizeof(int), &nx);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhs, 6, sizeof(int), &ny);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhs, 7, sizeof(int), &nz);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   if (RHS_DIM == 3) {
     rhs_lws[0] = nx < work_item_sizes[0] ? nx : work_item_sizes[0];
     temp = max_work_group_size / rhs_lws[0];
@@ -738,23 +739,23 @@ static void setup_opencl(int argc, char *argv[])
     rhs_gws[0] = clu_RoundWorkSize((size_t)nz, rhs_lws[0]);
   }
 
-  k_rhsx = clCreateKernel(p_main, "rhsx", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rhsx");
-  ecode  = clSetKernelArg(k_rhsx, 0, sizeof(cl_mem), &m_u);
-  ecode |= clSetKernelArg(k_rhsx, 1, sizeof(cl_mem), &m_rsd);
-  ecode |= clSetKernelArg(k_rhsx, 2, sizeof(cl_mem), &m_qs);
-  ecode |= clSetKernelArg(k_rhsx, 3, sizeof(cl_mem), &m_rho_i);
+  k_rhsx = CECL_KERNEL(p_main, "rhsx", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for rhsx");
+  ecode  = CECL_SET_KERNEL_ARG(k_rhsx, 0, sizeof(cl_mem), &m_u);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhsx, 1, sizeof(cl_mem), &m_rsd);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhsx, 2, sizeof(cl_mem), &m_qs);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhsx, 3, sizeof(cl_mem), &m_rho_i);
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
-  /*   ecode |= clSetKernelArg(k_rhsx, 4, sizeof(cl_mem), &m_flux); */
-  /*   ecode |= clSetKernelArg(k_rhsx, 5, sizeof(int), &nx); */
-  /*   ecode |= clSetKernelArg(k_rhsx, 6, sizeof(int), &ny); */
-  /*   ecode |= clSetKernelArg(k_rhsx, 7, sizeof(int), &nz); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rhsx, 4, sizeof(cl_mem), &m_flux); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rhsx, 5, sizeof(int), &nx); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rhsx, 6, sizeof(int), &ny); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rhsx, 7, sizeof(int), &nz); */
   /* } else { */
-    ecode |= clSetKernelArg(k_rhsx, 4, sizeof(int), &nx);
-    ecode |= clSetKernelArg(k_rhsx, 5, sizeof(int), &ny);
-    ecode |= clSetKernelArg(k_rhsx, 6, sizeof(int), &nz);
+    ecode |= CECL_SET_KERNEL_ARG(k_rhsx, 4, sizeof(int), &nx);
+    ecode |= CECL_SET_KERNEL_ARG(k_rhsx, 5, sizeof(int), &ny);
+    ecode |= CECL_SET_KERNEL_ARG(k_rhsx, 6, sizeof(int), &nz);
   /* } */
-  clu_CheckError(ecode, "clSetKernelArg()");
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   if (RHSX_DIM == 2) {
     rhsx_lws[0] = (jend-jst) < work_item_sizes[0] ? (jend-jst) : work_item_sizes[0];
     temp = max_work_group_size / rhsx_lws[0];
@@ -768,23 +769,23 @@ static void setup_opencl(int argc, char *argv[])
     rhsx_gws[0] = clu_RoundWorkSize((size_t)(nz-2), rhsx_lws[0]);
   }
 
-  k_rhsy = clCreateKernel(p_main, "rhsy", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rhsy");
-  ecode  = clSetKernelArg(k_rhsy, 0, sizeof(cl_mem), &m_u);
-  ecode |= clSetKernelArg(k_rhsy, 1, sizeof(cl_mem), &m_rsd);
-  ecode |= clSetKernelArg(k_rhsy, 2, sizeof(cl_mem), &m_qs);
-  ecode |= clSetKernelArg(k_rhsy, 3, sizeof(cl_mem), &m_rho_i);
+  k_rhsy = CECL_KERNEL(p_main, "rhsy", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for rhsy");
+  ecode  = CECL_SET_KERNEL_ARG(k_rhsy, 0, sizeof(cl_mem), &m_u);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhsy, 1, sizeof(cl_mem), &m_rsd);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhsy, 2, sizeof(cl_mem), &m_qs);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhsy, 3, sizeof(cl_mem), &m_rho_i);
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
-  /*   ecode |= clSetKernelArg(k_rhsy, 4, sizeof(cl_mem), &m_flux); */
-  /*   ecode |= clSetKernelArg(k_rhsy, 5, sizeof(int), &nx); */
-  /*   ecode |= clSetKernelArg(k_rhsy, 6, sizeof(int), &ny); */
-  /*   ecode |= clSetKernelArg(k_rhsy, 7, sizeof(int), &nz); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rhsy, 4, sizeof(cl_mem), &m_flux); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rhsy, 5, sizeof(int), &nx); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rhsy, 6, sizeof(int), &ny); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rhsy, 7, sizeof(int), &nz); */
   /* } else { */
-    ecode |= clSetKernelArg(k_rhsy, 4, sizeof(int), &nx);
-    ecode |= clSetKernelArg(k_rhsy, 5, sizeof(int), &ny);
-    ecode |= clSetKernelArg(k_rhsy, 6, sizeof(int), &nz);
+    ecode |= CECL_SET_KERNEL_ARG(k_rhsy, 4, sizeof(int), &nx);
+    ecode |= CECL_SET_KERNEL_ARG(k_rhsy, 5, sizeof(int), &ny);
+    ecode |= CECL_SET_KERNEL_ARG(k_rhsy, 6, sizeof(int), &nz);
   /* } */
-  clu_CheckError(ecode, "clSetKernelArg()");
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   if (RHSY_DIM == 2) {
     rhsy_lws[0] = (iend-ist) < work_item_sizes[0] ? (iend-ist) : work_item_sizes[0];
     temp = max_work_group_size / rhsy_lws[0];
@@ -798,25 +799,25 @@ static void setup_opencl(int argc, char *argv[])
     rhsy_gws[0] = clu_RoundWorkSize((size_t)(nz-2), rhsy_lws[0]);
   }
 
-  k_rhsz = clCreateKernel(p_main, "rhsz", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rhsz");
-  ecode  = clSetKernelArg(k_rhsz, 0, sizeof(cl_mem), &m_u);
-  ecode |= clSetKernelArg(k_rhsz, 1, sizeof(cl_mem), &m_rsd);
-  ecode |= clSetKernelArg(k_rhsz, 2, sizeof(cl_mem), &m_qs);
-  ecode |= clSetKernelArg(k_rhsz, 3, sizeof(cl_mem), &m_rho_i);
+  k_rhsz = CECL_KERNEL(p_main, "rhsz", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for rhsz");
+  ecode  = CECL_SET_KERNEL_ARG(k_rhsz, 0, sizeof(cl_mem), &m_u);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhsz, 1, sizeof(cl_mem), &m_rsd);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhsz, 2, sizeof(cl_mem), &m_qs);
+  ecode |= CECL_SET_KERNEL_ARG(k_rhsz, 3, sizeof(cl_mem), &m_rho_i);
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
-  /*   ecode |= clSetKernelArg(k_rhsz, 4, sizeof(cl_mem), &m_flux); */
-  /*   ecode |= clSetKernelArg(k_rhsz, 5, sizeof(cl_mem), &m_utmp); */
-  /*   ecode |= clSetKernelArg(k_rhsz, 6, sizeof(cl_mem), &m_rtmp); */
-  /*   ecode |= clSetKernelArg(k_rhsz, 7, sizeof(int), &nx); */
-  /*   ecode |= clSetKernelArg(k_rhsz, 8, sizeof(int), &ny); */
-  /*   ecode |= clSetKernelArg(k_rhsz, 9, sizeof(int), &nz); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rhsz, 4, sizeof(cl_mem), &m_flux); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rhsz, 5, sizeof(cl_mem), &m_utmp); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rhsz, 6, sizeof(cl_mem), &m_rtmp); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rhsz, 7, sizeof(int), &nx); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rhsz, 8, sizeof(int), &ny); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rhsz, 9, sizeof(int), &nz); */
   /* } else { */
-    ecode |= clSetKernelArg(k_rhsz, 4, sizeof(int), &nx);
-    ecode |= clSetKernelArg(k_rhsz, 5, sizeof(int), &ny);
-    ecode |= clSetKernelArg(k_rhsz, 6, sizeof(int), &nz);
+    ecode |= CECL_SET_KERNEL_ARG(k_rhsz, 4, sizeof(int), &nx);
+    ecode |= CECL_SET_KERNEL_ARG(k_rhsz, 5, sizeof(int), &ny);
+    ecode |= CECL_SET_KERNEL_ARG(k_rhsz, 6, sizeof(int), &nz);
   /* } */
-  clu_CheckError(ecode, "clSetKernelArg()");
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   if (RHSZ_DIM == 2) {
     rhsz_lws[0] = (iend-ist) < work_item_sizes[0] ? (iend-ist) : work_item_sizes[0];
     temp = max_work_group_size / rhsz_lws[0];
@@ -830,13 +831,13 @@ static void setup_opencl(int argc, char *argv[])
     rhsz_gws[0] = clu_RoundWorkSize((size_t)(jend-jst), rhsz_lws[0]);
   }
 
-  k_ssor2 = clCreateKernel(p_main, "ssor2", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for ssor2");
-  ecode  = clSetKernelArg(k_ssor2, 0, sizeof(cl_mem), &m_rsd);
-  ecode |= clSetKernelArg(k_ssor2, 2, sizeof(int), &nx);
-  ecode |= clSetKernelArg(k_ssor2, 3, sizeof(int), &ny);
-  ecode |= clSetKernelArg(k_ssor2, 4, sizeof(int), &nz);
-  clu_CheckError(ecode, "clSetKernelArg()");
+  k_ssor2 = CECL_KERNEL(p_main, "ssor2", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for ssor2");
+  ecode  = CECL_SET_KERNEL_ARG(k_ssor2, 0, sizeof(cl_mem), &m_rsd);
+  ecode |= CECL_SET_KERNEL_ARG(k_ssor2, 2, sizeof(int), &nx);
+  ecode |= CECL_SET_KERNEL_ARG(k_ssor2, 3, sizeof(int), &ny);
+  ecode |= CECL_SET_KERNEL_ARG(k_ssor2, 4, sizeof(int), &nz);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   if (SSOR2_DIM == 3) {
     ssor2_lws[0] = (iend-ist) < work_item_sizes[0] ? (iend-ist) : work_item_sizes[0];
     temp = max_work_group_size / ssor2_lws[0];
@@ -859,14 +860,14 @@ static void setup_opencl(int argc, char *argv[])
     ssor2_gws[0] = clu_RoundWorkSize((size_t)(nz-2), ssor2_lws[0]);
   }
 
-  k_ssor3 = clCreateKernel(p_main, "ssor3", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for ssor3");
-  ecode  = clSetKernelArg(k_ssor3, 0, sizeof(cl_mem), &m_u);
-  ecode |= clSetKernelArg(k_ssor3, 1, sizeof(cl_mem), &m_rsd);
-  ecode |= clSetKernelArg(k_ssor3, 3, sizeof(int), &nx);
-  ecode |= clSetKernelArg(k_ssor3, 4, sizeof(int), &ny);
-  ecode |= clSetKernelArg(k_ssor3, 5, sizeof(int), &nz);
-  clu_CheckError(ecode, "clSetKernelArg()");
+  k_ssor3 = CECL_KERNEL(p_main, "ssor3", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for ssor3");
+  ecode  = CECL_SET_KERNEL_ARG(k_ssor3, 0, sizeof(cl_mem), &m_u);
+  ecode |= CECL_SET_KERNEL_ARG(k_ssor3, 1, sizeof(cl_mem), &m_rsd);
+  ecode |= CECL_SET_KERNEL_ARG(k_ssor3, 3, sizeof(int), &nx);
+  ecode |= CECL_SET_KERNEL_ARG(k_ssor3, 4, sizeof(int), &ny);
+  ecode |= CECL_SET_KERNEL_ARG(k_ssor3, 5, sizeof(int), &nz);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   if (SSOR3_DIM == 3) {
     ssor3_lws[0] = (iend-ist) < work_item_sizes[0] ? (iend-ist) : work_item_sizes[0];
     temp = max_work_group_size / ssor3_lws[0];
@@ -889,32 +890,32 @@ static void setup_opencl(int argc, char *argv[])
     ssor3_gws[0] = clu_RoundWorkSize((size_t)(nz-2), ssor3_lws[0]);
   }
 
-  k_blts = clCreateKernel(p_main, "blts", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for blts");
-  ecode  = clSetKernelArg(k_blts, 0, sizeof(cl_mem), &m_rsd);
-  ecode |= clSetKernelArg(k_blts, 1, sizeof(cl_mem), &m_u);
-  ecode |= clSetKernelArg(k_blts, 2, sizeof(cl_mem), &m_qs);
-  ecode |= clSetKernelArg(k_blts, 3, sizeof(cl_mem), &m_rho_i);
-  ecode |= clSetKernelArg(k_blts, 4, sizeof(int), &nz);
-  ecode |= clSetKernelArg(k_blts, 5, sizeof(int), &ny);
-  ecode |= clSetKernelArg(k_blts, 6, sizeof(int), &nx);
-  clu_CheckError(ecode, "clSetKernelArg()");
+  k_blts = CECL_KERNEL(p_main, "blts", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for blts");
+  ecode  = CECL_SET_KERNEL_ARG(k_blts, 0, sizeof(cl_mem), &m_rsd);
+  ecode |= CECL_SET_KERNEL_ARG(k_blts, 1, sizeof(cl_mem), &m_u);
+  ecode |= CECL_SET_KERNEL_ARG(k_blts, 2, sizeof(cl_mem), &m_qs);
+  ecode |= CECL_SET_KERNEL_ARG(k_blts, 3, sizeof(cl_mem), &m_rho_i);
+  ecode |= CECL_SET_KERNEL_ARG(k_blts, 4, sizeof(int), &nz);
+  ecode |= CECL_SET_KERNEL_ARG(k_blts, 5, sizeof(int), &ny);
+  ecode |= CECL_SET_KERNEL_ARG(k_blts, 6, sizeof(int), &nx);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   blts_lws[0] = (jend-jst) < work_item_sizes[0] ? (jend-jst) : work_item_sizes[0];
   temp = max_work_group_size / blts_lws[0];
   blts_lws[1] = (nz-2) < temp ? (nz-2) : temp;
   blts_gws[0] = clu_RoundWorkSize((size_t)(jend-jst), blts_lws[0]);
   blts_gws[1] = clu_RoundWorkSize((size_t)(nz-2), blts_lws[1]);
 
-  k_buts = clCreateKernel(p_main, "buts", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for buts");
-  ecode  = clSetKernelArg(k_buts, 0, sizeof(cl_mem), &m_rsd);
-  ecode |= clSetKernelArg(k_buts, 1, sizeof(cl_mem), &m_u);
-  ecode |= clSetKernelArg(k_buts, 2, sizeof(cl_mem), &m_qs);
-  ecode |= clSetKernelArg(k_buts, 3, sizeof(cl_mem), &m_rho_i);
-  ecode |= clSetKernelArg(k_buts, 4, sizeof(int), &nz);
-  ecode |= clSetKernelArg(k_buts, 5, sizeof(int), &ny);
-  ecode |= clSetKernelArg(k_buts, 6, sizeof(int), &nx);
-  clu_CheckError(ecode, "clSetKernelArg()");
+  k_buts = CECL_KERNEL(p_main, "buts", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for buts");
+  ecode  = CECL_SET_KERNEL_ARG(k_buts, 0, sizeof(cl_mem), &m_rsd);
+  ecode |= CECL_SET_KERNEL_ARG(k_buts, 1, sizeof(cl_mem), &m_u);
+  ecode |= CECL_SET_KERNEL_ARG(k_buts, 2, sizeof(cl_mem), &m_qs);
+  ecode |= CECL_SET_KERNEL_ARG(k_buts, 3, sizeof(cl_mem), &m_rho_i);
+  ecode |= CECL_SET_KERNEL_ARG(k_buts, 4, sizeof(int), &nz);
+  ecode |= CECL_SET_KERNEL_ARG(k_buts, 5, sizeof(int), &ny);
+  ecode |= CECL_SET_KERNEL_ARG(k_buts, 6, sizeof(int), &nx);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
   buts_lws[0] = (jend-jst) < work_item_sizes[0] ? (jend-jst) : work_item_sizes[0];
   temp = max_work_group_size / buts_lws[0];
   buts_lws[1] = (nz-2) < temp ? (nz-2) : temp;

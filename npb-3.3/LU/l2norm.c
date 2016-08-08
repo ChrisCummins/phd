@@ -1,3 +1,4 @@
+#include <cecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB LU code. This OpenCL    //
@@ -58,26 +59,26 @@ void l2norm (int ldx, int ldy, int ldz, int nx0, int ny0, int nz0,
     sum[m] = 0.0;
   }
 
-  ecode  = clSetKernelArg(k_l2norm, 0, sizeof(cl_mem), m_v);
-  ecode |= clSetKernelArg(k_l2norm, 3, sizeof(int), &nz0);
-  ecode |= clSetKernelArg(k_l2norm, 4, sizeof(int), &ist);
-  ecode |= clSetKernelArg(k_l2norm, 5, sizeof(int), &iend);
-  ecode |= clSetKernelArg(k_l2norm, 6, sizeof(int), &jst);
-  ecode |= clSetKernelArg(k_l2norm, 7, sizeof(int), &jend);
-  clu_CheckError(ecode, "clSetKernelArg()");
+  ecode  = CECL_SET_KERNEL_ARG(k_l2norm, 0, sizeof(cl_mem), m_v);
+  ecode |= CECL_SET_KERNEL_ARG(k_l2norm, 3, sizeof(int), &nz0);
+  ecode |= CECL_SET_KERNEL_ARG(k_l2norm, 4, sizeof(int), &ist);
+  ecode |= CECL_SET_KERNEL_ARG(k_l2norm, 5, sizeof(int), &iend);
+  ecode |= CECL_SET_KERNEL_ARG(k_l2norm, 6, sizeof(int), &jst);
+  ecode |= CECL_SET_KERNEL_ARG(k_l2norm, 7, sizeof(int), &jend);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_l2norm,
                                  1, NULL,
                                  l2norm_gws,
                                  l2norm_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
   wg_num = l2norm_gws[0] / l2norm_lws[0];
   g_sum = (double (*)[5])malloc(sum_size);
 
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CECL_READ_BUFFER(cmd_queue,
                               m_sum,
                               CL_TRUE,
                               0, sum_size,

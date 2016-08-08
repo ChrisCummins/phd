@@ -1,3 +1,4 @@
+#include <cecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB EP code. This OpenCL    //
@@ -190,23 +191,23 @@ int main(int argc, char *argv[])
   int q_size  = GROUP_SIZE * NQ * sizeof(cl_double);
   int sx_size = GROUP_SIZE * sizeof(cl_double);
   int sy_size = GROUP_SIZE * sizeof(cl_double);
-  err_code  = clSetKernelArg(kernel, 0, q_size, NULL);
-  err_code |= clSetKernelArg(kernel, 1, sx_size, NULL);
-  err_code |= clSetKernelArg(kernel, 2, sy_size, NULL);
-  err_code |= clSetKernelArg(kernel, 3, sizeof(cl_mem), (void*)&pgq);
-  err_code |= clSetKernelArg(kernel, 4, sizeof(cl_mem), (void*)&pgsx);
-  err_code |= clSetKernelArg(kernel, 5, sizeof(cl_mem), (void*)&pgsy);
-  err_code |= clSetKernelArg(kernel, 6, sizeof(cl_int), (void*)&k_offset);
-  err_code |= clSetKernelArg(kernel, 7, sizeof(cl_double), (void*)&an);
-  clu_CheckError(err_code, "clSetKernelArg()");
+  err_code  = CECL_SET_KERNEL_ARG(kernel, 0, q_size, NULL);
+  err_code |= CECL_SET_KERNEL_ARG(kernel, 1, sx_size, NULL);
+  err_code |= CECL_SET_KERNEL_ARG(kernel, 2, sy_size, NULL);
+  err_code |= CECL_SET_KERNEL_ARG(kernel, 3, sizeof(cl_mem), (void*)&pgq);
+  err_code |= CECL_SET_KERNEL_ARG(kernel, 4, sizeof(cl_mem), (void*)&pgsx);
+  err_code |= CECL_SET_KERNEL_ARG(kernel, 5, sizeof(cl_mem), (void*)&pgsy);
+  err_code |= CECL_SET_KERNEL_ARG(kernel, 6, sizeof(cl_int), (void*)&k_offset);
+  err_code |= CECL_SET_KERNEL_ARG(kernel, 7, sizeof(cl_double), (void*)&an);
+  clu_CheckError(err_code, "CECL_SET_KERNEL_ARG()");
 
   size_t localWorkSize[] = { GROUP_SIZE };
   size_t globalWorkSize[] = { np };
-  err_code = clEnqueueNDRangeKernel(cmd_queue, kernel, 1, NULL,
+  err_code = CECL_ND_RANGE_KERNEL(cmd_queue, kernel, 1, NULL,
                                     globalWorkSize,
                                     localWorkSize,
                                     0, NULL, NULL);
-  clu_CheckError(err_code, "clEnqueueNDRangeKernel()");
+  clu_CheckError(err_code, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_EMBAR);
 
@@ -224,15 +225,15 @@ int main(int argc, char *argv[])
 
   // 9. Get the result
   DTIMER_START(T_BUFFER_READ);
-  err_code = clEnqueueReadBuffer(cmd_queue, pgq, CL_FALSE, 0, gq_size,
+  err_code = CECL_READ_BUFFER(cmd_queue, pgq, CL_FALSE, 0, gq_size,
                              gq, 0, NULL, NULL);
   clu_CheckError(err_code, "clEnqueueReadbuffer()");
 
-  err_code = clEnqueueReadBuffer(cmd_queue, pgsx, CL_FALSE, 0, gsx_size,
+  err_code = CECL_READ_BUFFER(cmd_queue, pgsx, CL_FALSE, 0, gsx_size,
                              gsx, 0, NULL, NULL);
   clu_CheckError(err_code, "clEnqueueReadbuffer()");
 
-  err_code = clEnqueueReadBuffer(cmd_queue, pgsy, CL_TRUE, 0, gsy_size,
+  err_code = CECL_READ_BUFFER(cmd_queue, pgsy, CL_TRUE, 0, gsy_size,
                              gsy, 0, NULL, NULL);
   clu_CheckError(err_code, "clEnqueueReadbuffer()");
   DTIMER_STOP(T_BUFFER_READ);
@@ -349,8 +350,8 @@ void setup_opencl(int argc, char *argv[])
   clu_CheckError(err_code, "clCreateContext()");
 
   // 3. Create a command queue
-  cmd_queue = clCreateCommandQueue(context, device, 0, &err_code);
-  clu_CheckError(err_code, "clCreateCommandQueue()");
+  cmd_queue = CECL_CREATE_COMMAND_QUEUE(context, device, 0, &err_code);
+  clu_CheckError(err_code, "CECL_CREATE_COMMAND_QUEUE()");
 
   DTIMER_STOP(T_OPENCL_API);
 
@@ -377,21 +378,21 @@ void setup_opencl(int argc, char *argv[])
   gsx_size = np / GROUP_SIZE * sizeof(double);
   gsy_size = np / GROUP_SIZE * sizeof(double);
 
-  pgq = clCreateBuffer(context, CL_MEM_READ_WRITE, gq_size, NULL, &err_code);
-  clu_CheckError(err_code, "clCreateBuffer() for pgq");
+  pgq = CECL_BUFFER(context, CL_MEM_READ_WRITE, gq_size, NULL, &err_code);
+  clu_CheckError(err_code, "CECL_BUFFER() for pgq");
 
-  pgsx = clCreateBuffer(context, CL_MEM_READ_WRITE, gsx_size,NULL, &err_code);
-  clu_CheckError(err_code, "clCreateBuffer() for pgsx");
+  pgsx = CECL_BUFFER(context, CL_MEM_READ_WRITE, gsx_size,NULL, &err_code);
+  clu_CheckError(err_code, "CECL_BUFFER() for pgsx");
 
-  pgsy = clCreateBuffer(context, CL_MEM_READ_WRITE, gsy_size,NULL, &err_code);
-  clu_CheckError(err_code, "clCreateBuffer() for pgsy");
+  pgsy = CECL_BUFFER(context, CL_MEM_READ_WRITE, gsy_size,NULL, &err_code);
+  clu_CheckError(err_code, "CECL_BUFFER() for pgsy");
 
   DTIMER_STOP(T_BUFFER_CREATE);
 
   // 6. Create a kernel
   DTIMER_START(T_OPENCL_API);
-  kernel = clCreateKernel(program, "embar", &err_code);
-  clu_CheckError(err_code, "clCreateKernel()");
+  kernel = CECL_KERNEL(program, "embar", &err_code);
+  clu_CheckError(err_code, "CECL_KERNEL()");
   DTIMER_STOP(T_OPENCL_API);
 }
 

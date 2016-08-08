@@ -1,3 +1,4 @@
+#include <cecl.h>
 #//-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB LU code. This OpenCL    //
@@ -61,35 +62,35 @@ void error()
   wg_num = global_ws / local_ws;
 
   buf_size = sizeof(double) * 5 * wg_num;
-  m_errnm = clCreateBuffer(context,
+  m_errnm = CECL_BUFFER(context,
                            CL_MEM_READ_WRITE,
                            buf_size,
                            NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer()");
+  clu_CheckError(ecode, "CECL_BUFFER()");
 
-  k_error = clCreateKernel(p_post, "error", &ecode);
-  clu_CheckError(ecode, "clCreateKernel()");
+  k_error = CECL_KERNEL(p_post, "error", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL()");
 
-  ecode  = clSetKernelArg(k_error, 0, sizeof(cl_mem), &m_u);
-  ecode |= clSetKernelArg(k_error, 1, sizeof(cl_mem), &m_ce);
-  ecode |= clSetKernelArg(k_error, 2, sizeof(cl_mem), &m_errnm);
-  ecode |= clSetKernelArg(k_error, 3, sizeof(double)*5*local_ws, NULL);
-  ecode |= clSetKernelArg(k_error, 4, sizeof(int), &nx);
-  ecode |= clSetKernelArg(k_error, 5, sizeof(int), &ny);
-  ecode |= clSetKernelArg(k_error, 6, sizeof(int), &nz);
-  clu_CheckError(ecode, "clSetKernelArg()");
+  ecode  = CECL_SET_KERNEL_ARG(k_error, 0, sizeof(cl_mem), &m_u);
+  ecode |= CECL_SET_KERNEL_ARG(k_error, 1, sizeof(cl_mem), &m_ce);
+  ecode |= CECL_SET_KERNEL_ARG(k_error, 2, sizeof(cl_mem), &m_errnm);
+  ecode |= CECL_SET_KERNEL_ARG(k_error, 3, sizeof(double)*5*local_ws, NULL);
+  ecode |= CECL_SET_KERNEL_ARG(k_error, 4, sizeof(int), &nx);
+  ecode |= CECL_SET_KERNEL_ARG(k_error, 5, sizeof(int), &ny);
+  ecode |= CECL_SET_KERNEL_ARG(k_error, 6, sizeof(int), &nz);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_error,
                                  1, NULL,
                                  &global_ws,
                                  &local_ws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
   g_errnm = (double (*)[5])malloc(buf_size);
 
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CECL_READ_BUFFER(cmd_queue,
                               m_errnm,
                               CL_TRUE,
                               0, buf_size,

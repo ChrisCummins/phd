@@ -1,3 +1,4 @@
+#include <cecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB IS code. This OpenCL    //
@@ -181,25 +182,25 @@ void create_seq( double seed, double a )
 
   DTIMER_START(T_OPENCL_API);
   // Create a kernel
-  k_cs = clCreateKernel(program, "create_seq", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for create_seq");
+  k_cs = CECL_KERNEL(program, "create_seq", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for create_seq");
   DTIMER_STOP(T_OPENCL_API);
 
   DTIMER_START(T_KERNEL_CREATE_SEQ);
   // Set kernel arguments
-  ecode  = clSetKernelArg(k_cs, 0, sizeof(cl_mem), (void*)&m_key_array);
-  ecode |= clSetKernelArg(k_cs, 1, sizeof(cl_double), (void*)&seed);
-  ecode |= clSetKernelArg(k_cs, 2, sizeof(cl_double), (void*)&a);
-  clu_CheckError(ecode, "clSetKernelArg() for create_seq");
+  ecode  = CECL_SET_KERNEL_ARG(k_cs, 0, sizeof(cl_mem), (void*)&m_key_array);
+  ecode |= CECL_SET_KERNEL_ARG(k_cs, 1, sizeof(cl_double), (void*)&seed);
+  ecode |= CECL_SET_KERNEL_ARG(k_cs, 2, sizeof(cl_double), (void*)&a);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for create_seq");
 
   // Launch the kernel
   cs_lws[0] = CREATE_SEQ_GROUP_SIZE;
   cs_gws[0] = CREATE_SEQ_GLOBAL_SIZE;
-  ecode = clEnqueueNDRangeKernel(cmd_queue, k_cs, 1, NULL,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_cs, 1, NULL,
                                  cs_gws,
                                  cs_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for create_seq");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for create_seq");
 
   ecode = clFinish(cmd_queue);
   clu_CheckError(ecode, "clFinish");
@@ -229,20 +230,20 @@ void full_verify( void )
   DTIMER_START(T_BUFFER_CREATE);
   // Create buffers
   j_size = sizeof(INT_TYPE) * (FV2_GLOBAL_SIZE / FV2_GROUP_SIZE);
-  m_j = clCreateBuffer(context,
+  m_j = CECL_BUFFER(context,
                        CL_MEM_READ_WRITE,
                        j_size,
                        NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer for m_j");
+  clu_CheckError(ecode, "CECL_BUFFER for m_j");
   DTIMER_STOP(T_BUFFER_CREATE);
 
   DTIMER_START(T_OPENCL_API);
   // Create kernels
-  k_fv1 = clCreateKernel(program, "full_verify1", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for full_verify1");
+  k_fv1 = CECL_KERNEL(program, "full_verify1", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for full_verify1");
 
-  k_fv2 = clCreateKernel(program, "full_verify2", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for full_verify2");
+  k_fv2 = CECL_KERNEL(program, "full_verify2", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for full_verify2");
   DTIMER_STOP(T_OPENCL_API);
 
   /* if (device_type == CL_DEVICE_TYPE_GPU) { */
@@ -251,75 +252,75 @@ void full_verify( void )
 
   DTIMER_START(T_OPENCL_API);
   // Create kernels
-  k_fv0 = clCreateKernel(program, "full_verify0", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for full_verify0");
+  k_fv0 = CECL_KERNEL(program, "full_verify0", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for full_verify0");
   DTIMER_STOP(T_OPENCL_API);
 
   // Kernel execution
   DTIMER_START(T_KERNEL_FV0);
-  ecode  = clSetKernelArg(k_fv0, 0, sizeof(cl_mem), (void*)&m_key_array);
-  ecode |= clSetKernelArg(k_fv0, 1, sizeof(cl_mem), (void*)&m_key_buff2);
-  clu_CheckError(ecode, "clSetKernelArg() for full_verify0");
+  ecode  = CECL_SET_KERNEL_ARG(k_fv0, 0, sizeof(cl_mem), (void*)&m_key_array);
+  ecode |= CECL_SET_KERNEL_ARG(k_fv0, 1, sizeof(cl_mem), (void*)&m_key_buff2);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for full_verify0");
 
   fv0_lws[0] = work_item_sizes[0];
   fv0_gws[0] = NUM_KEYS;
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_fv0,
                                  1, NULL,
                                  fv0_gws,
                                  fv0_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for full_verify0");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for full_verify0");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_FV0);
 
   DTIMER_START(T_KERNEL_FV1);
-  ecode  = clSetKernelArg(k_fv1, 0, sizeof(cl_mem), (void*)&m_key_buff2);
-  ecode |= clSetKernelArg(k_fv1, 1, sizeof(cl_mem), (void*)&m_key_buff1);
-  ecode |= clSetKernelArg(k_fv1, 2, sizeof(cl_mem), (void*)&m_key_array);
-  clu_CheckError(ecode, "clSetKernelArg() for full_verify1");
+  ecode  = CECL_SET_KERNEL_ARG(k_fv1, 0, sizeof(cl_mem), (void*)&m_key_buff2);
+  ecode |= CECL_SET_KERNEL_ARG(k_fv1, 1, sizeof(cl_mem), (void*)&m_key_buff1);
+  ecode |= CECL_SET_KERNEL_ARG(k_fv1, 2, sizeof(cl_mem), (void*)&m_key_array);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for full_verify1");
 
   fv1_lws[0] = work_item_sizes[0];
   fv1_gws[0] = NUM_KEYS;
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_fv1,
                                  1, NULL,
                                  fv1_gws,
                                  fv1_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for full_verify1");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for full_verify1");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_FV1);
 
   DTIMER_START(T_KERNEL_FV2);
-  ecode  = clSetKernelArg(k_fv2, 0, sizeof(cl_mem), (void*)&m_key_array);
-  ecode |= clSetKernelArg(k_fv2, 1, sizeof(cl_mem), (void*)&m_j);
-  ecode |= clSetKernelArg(k_fv2, 2, sizeof(INT_TYPE)*FV2_GROUP_SIZE, NULL);
-  clu_CheckError(ecode, "clSetKernelArg() for full_verify2");
+  ecode  = CECL_SET_KERNEL_ARG(k_fv2, 0, sizeof(cl_mem), (void*)&m_key_array);
+  ecode |= CECL_SET_KERNEL_ARG(k_fv2, 1, sizeof(cl_mem), (void*)&m_j);
+  ecode |= CECL_SET_KERNEL_ARG(k_fv2, 2, sizeof(INT_TYPE)*FV2_GROUP_SIZE, NULL);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for full_verify2");
 
   fv2_lws[0] = FV2_GROUP_SIZE;
   fv2_gws[0] = FV2_GLOBAL_SIZE;
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_fv2,
                                  1, NULL,
                                  fv2_gws,
                                  fv2_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for full_verify2");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for full_verify2");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_FV2);
 
   g_j = (INT_TYPE *)malloc(j_size);
 
   DTIMER_START(T_BUFFER_READ);
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CECL_READ_BUFFER(cmd_queue,
                               m_j,
                               CL_TRUE,
                               0,
                               j_size,
                               g_j,
                               0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueReadBuffer() for m_j");
+  clu_CheckError(ecode, "CECL_READ_BUFFER() for m_j");
   DTIMER_STOP(T_BUFFER_READ);
 
   // reduction
@@ -335,53 +336,53 @@ void full_verify( void )
 
   /*   // Kernel execution */
   /*   DTIMER_START(T_KERNEL_FV1); */
-  /*   ecode  = clSetKernelArg(k_fv1, 0, sizeof(cl_mem), (void*)&m_bucket_ptrs); */
-  /*   ecode |= clSetKernelArg(k_fv1, 1, sizeof(cl_mem), (void*)&m_key_buff2); */
-  /*   ecode |= clSetKernelArg(k_fv1, 2, sizeof(cl_mem), (void*)&m_key_buff1); */
-  /*   ecode |= clSetKernelArg(k_fv1, 3, sizeof(cl_mem), (void*)&m_key_array); */
-  /*   clu_CheckError(ecode, "clSetKernelArg() for full_verify1"); */
+  /*   ecode  = CECL_SET_KERNEL_ARG(k_fv1, 0, sizeof(cl_mem), (void*)&m_bucket_ptrs); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_fv1, 1, sizeof(cl_mem), (void*)&m_key_buff2); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_fv1, 2, sizeof(cl_mem), (void*)&m_key_buff1); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_fv1, 3, sizeof(cl_mem), (void*)&m_key_array); */
+  /*   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for full_verify1"); */
 
   /*   fv1_lws[0] = RANK_GROUP_SIZE; */
   /*   fv1_gws[0] = RANK_GLOBAL_SIZE; */
-  /*   ecode = clEnqueueNDRangeKernel(cmd_queue, */
+  /*   ecode = CECL_ND_RANGE_KERNEL(cmd_queue, */
   /*                         k_fv1, */
   /*                         1, NULL, */
   /*                         fv1_gws, */
   /*                         fv1_lws, */
   /*                         0, NULL, NULL); */
-  /*   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for full_verify1"); */
+  /*   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for full_verify1"); */
   /*   CHECK_FINISH(); */
   /*   DTIMER_STOP(T_KERNEL_FV1); */
 
   /*   DTIMER_START(T_KERNEL_FV2); */
-  /*   ecode  = clSetKernelArg(k_fv2, 0, sizeof(cl_mem), (void*)&m_key_array); */
-  /*   ecode |= clSetKernelArg(k_fv2, 1, sizeof(cl_mem), (void*)&m_j); */
-  /*   ecode |= clSetKernelArg(k_fv2, 2, sizeof(INT_TYPE)*FV2_GROUP_SIZE, NULL); */
-  /*   clu_CheckError(ecode, "clSetKernelArg() for full_verify2"); */
+  /*   ecode  = CECL_SET_KERNEL_ARG(k_fv2, 0, sizeof(cl_mem), (void*)&m_key_array); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_fv2, 1, sizeof(cl_mem), (void*)&m_j); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_fv2, 2, sizeof(INT_TYPE)*FV2_GROUP_SIZE, NULL); */
+  /*   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for full_verify2"); */
 
   /*   fv2_lws[0] = FV2_GROUP_SIZE; */
   /*   fv2_gws[0] = FV2_GLOBAL_SIZE; */
-  /*   ecode = clEnqueueNDRangeKernel(cmd_queue, */
+  /*   ecode = CECL_ND_RANGE_KERNEL(cmd_queue, */
   /*                         k_fv2, */
   /*                         1, NULL, */
   /*                         fv2_gws, */
   /*                         fv2_lws, */
   /*                         0, NULL, NULL); */
-  /*   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for full_verify2"); */
+  /*   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for full_verify2"); */
   /*   CHECK_FINISH(); */
   /*   DTIMER_STOP(T_KERNEL_FV2); */
 
   /*   g_j = (INT_TYPE *)malloc(j_size); */
 
   /*   DTIMER_START(T_BUFFER_READ); */
-  /*   ecode = clEnqueueReadBuffer(cmd_queue, */
+  /*   ecode = CECL_READ_BUFFER(cmd_queue, */
   /*                               m_j, */
   /*                               CL_TRUE, */
   /*                               0, */
   /*                               j_size, */
   /*                               g_j, */
   /*                               0, NULL, NULL); */
-  /*   clu_CheckError(ecode, "clEnqueueReadBuffer() for m_j"); */
+  /*   clu_CheckError(ecode, "CECL_READ_BUFFER() for m_j"); */
   /*   DTIMER_STOP(T_BUFFER_READ); */
 
   /*   // reduction */
@@ -419,8 +420,8 @@ void rank( int iteration )
 
   DTIMER_START(T_KERNEL_RANK0);
   // rank0
-  ecode = clSetKernelArg(k_rank0, 3, sizeof(cl_int), (void*)&iteration);
-  clu_CheckError(ecode, "clSetKernelArg() for rank0: iteration");
+  ecode = CECL_SET_KERNEL_ARG(k_rank0, 3, sizeof(cl_int), (void*)&iteration);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for rank0: iteration");
 
   ecode = clEnqueueTask(cmd_queue, k_rank0, 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueTask() for rank0");
@@ -431,13 +432,13 @@ void rank( int iteration )
   // rank1
   r1_lws[0] = RANK1_GROUP_SIZE;
   r1_gws[0] = RANK1_GLOBAL_SIZE;
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_rank1,
                                  1, NULL,
                                  r1_gws,
                                  r1_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank1");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for rank1");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_RANK1);
 
@@ -445,13 +446,13 @@ void rank( int iteration )
   // rank2
   r2_lws[0] = RANK2_GROUP_SIZE;
   r2_gws[0] = RANK2_GLOBAL_SIZE;
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_rank2,
                                  1, NULL,
                                  r2_gws,
                                  r2_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank2");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for rank2");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_RANK2);
 
@@ -461,52 +462,52 @@ void rank( int iteration )
   r3_lws[0] = work_item_sizes[0];
   r3_gws[0] = work_item_sizes[0] * work_item_sizes[0];
   if (r3_gws[0] > MAX_KEY) r3_gws[0] = MAX_KEY;
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_rank3_0,
                                  1, NULL,
                                  r3_gws,
                                  r3_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank3_0");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for rank3_0");
 
   r3_lws[0] = work_item_sizes[0];
   r3_gws[0] = work_item_sizes[0];
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_rank3_1,
                                  1, NULL,
                                  r3_gws,
                                  r3_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank3_1");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for rank3_1");
 
   r3_lws[0] = work_item_sizes[0];
   r3_gws[0] = work_item_sizes[0] * work_item_sizes[0];
   if (r3_gws[0] > MAX_KEY) r3_gws[0] = MAX_KEY;
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_rank3_2,
                                  1, NULL,
                                  r3_gws,
                                  r3_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank3_2");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for rank3_2");
   /* } else { */
   /*   r3_lws[0] = RANK_GROUP_SIZE; */
   /*   r3_gws[0] = RANK_GLOBAL_SIZE; */
-  /*   ecode = clEnqueueNDRangeKernel(cmd_queue, */
+  /*   ecode = CECL_ND_RANGE_KERNEL(cmd_queue, */
   /*                         k_rank3, */
   /*                         1, NULL, */
   /*                         r3_gws, */
   /*                         r3_lws, */
   /*                         0, NULL, NULL); */
-  /*   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for rank3"); */
+  /*   clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for rank3"); */
   /* } */
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_RANK3);
 
   // rank4 - partial verification
   DTIMER_START(T_KERNEL_RANK4);
-  ecode = clSetKernelArg(k_rank4, 4, sizeof(cl_int), (void*)&iteration);
-  clu_CheckError(ecode, "clSetKernelArg() for rank4");
+  ecode = CECL_SET_KERNEL_ARG(k_rank4, 4, sizeof(cl_int), (void*)&iteration);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for rank4");
 
   ecode = clEnqueueTask(cmd_queue, k_rank4, 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueTask() for rank4");
@@ -605,14 +606,14 @@ int main( int argc, char **argv )
   passed_verification = 0;
 
   DTIMER_START(T_BUFFER_WRITE);
-  ecode = clEnqueueWriteBuffer(cmd_queue,
+  ecode = CECL_WRITE_BUFFER(cmd_queue,
                                m_passed_verification,
                                CL_TRUE,
                                0,
                                sizeof(cl_int),
                                &passed_verification,
                                0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueWriteBuffer() for m_passed_verification");
+  clu_CheckError(ecode, "CECL_WRITE_BUFFER() for m_passed_verification");
   DTIMER_STOP(T_BUFFER_WRITE);
 
   if( CLASS != 'S' ) printf( "\n   iteration\n" );
@@ -629,14 +630,14 @@ int main( int argc, char **argv )
   }
 
   DTIMER_START(T_BUFFER_READ);
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CECL_READ_BUFFER(cmd_queue,
                               m_passed_verification,
                               CL_TRUE,
                               0,
                               sizeof(cl_int),
                               &passed_verification,
                               0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueReadBuffer() for m_passed_verification");
+  clu_CheckError(ecode, "CECL_READ_BUFFER() for m_passed_verification");
   DTIMER_STOP(T_BUFFER_READ);
 
   /*  End of timing, obtain maximum time of all processors */
@@ -762,8 +763,8 @@ static void setup_opencl(int argc, char *argv[])
   clu_CheckError(ecode, "clCreateContext()");
 
   // 3. Create a command queue
-  cmd_queue = clCreateCommandQueue(context, device, 0, &ecode);
-  clu_CheckError(ecode, "clCreateCommandQueue()");
+  cmd_queue = CECL_CREATE_COMMAND_QUEUE(context, device, 0, &ecode);
+  clu_CheckError(ecode, "CECL_CREATE_COMMAND_QUEUE()");
 
   DTIMER_STOP(T_OPENCL_API);
 
@@ -826,155 +827,155 @@ static void setup_opencl(int argc, char *argv[])
 
   // 5. Create buffers
   DTIMER_START(T_BUFFER_CREATE);
-  m_key_array = clCreateBuffer(context,
+  m_key_array = CECL_BUFFER(context,
                                CL_MEM_READ_WRITE,
                                sizeof(INT_TYPE) * SIZE_OF_BUFFERS,
                                NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_key_array");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_key_array");
 
-  m_key_buff1 = clCreateBuffer(context,
+  m_key_buff1 = CECL_BUFFER(context,
                                CL_MEM_READ_WRITE,
                                sizeof(INT_TYPE) * MAX_KEY,
                                NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_key_buff1");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_key_buff1");
 
-  m_key_buff2 = clCreateBuffer(context,
+  m_key_buff2 = CECL_BUFFER(context,
                                CL_MEM_READ_WRITE,
                                sizeof(INT_TYPE) * SIZE_OF_BUFFERS,
                                NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_key_buff2");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_key_buff2");
 
   size_t test_array_size = sizeof(INT_TYPE) * TEST_ARRAY_SIZE;
-  m_index_array = clCreateBuffer(context,
+  m_index_array = CECL_BUFFER(context,
                                  CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                  test_array_size,
                                  test_index_array, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_index_array");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_index_array");
 
-  m_rank_array = clCreateBuffer(context,
+  m_rank_array = CECL_BUFFER(context,
                                 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                 test_array_size,
                                 test_rank_array, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_rank_array");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_rank_array");
 
-  m_partial_vals = clCreateBuffer(context,
+  m_partial_vals = CECL_BUFFER(context,
                                   CL_MEM_WRITE_ONLY,
                                   test_array_size,
                                   NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_partial_vals");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_partial_vals");
 
-  m_passed_verification = clCreateBuffer(context,
+  m_passed_verification = CECL_BUFFER(context,
                                          CL_MEM_READ_WRITE,
                                          sizeof(cl_int),
                                          NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_passed_verification");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_passed_verification");
 
   /* if (device_type == CL_DEVICE_TYPE_GPU) { */
-  m_key_scan = clCreateBuffer(context,
+  m_key_scan = CECL_BUFFER(context,
                               CL_MEM_READ_WRITE,
                               sizeof(INT_TYPE) * MAX_KEY,
                               NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_key_buff1_scan");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_key_buff1_scan");
 
-  m_sum = clCreateBuffer(context,
+  m_sum = CECL_BUFFER(context,
                          CL_MEM_READ_WRITE,
                          sizeof(INT_TYPE) * work_item_sizes[0],
                          NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_sum");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_sum");
   /* } else { */
   /*   size_t bs_size = RANK_GLOBAL_SIZE * sizeof(INT_TYPE) * NUM_BUCKETS; */
-  /*   m_bucket_size = clCreateBuffer(context, */
+  /*   m_bucket_size = CECL_BUFFER(context, */
   /*                                  CL_MEM_READ_WRITE, */
   /*                                  bs_size, */
   /*                                  NULL, &ecode); */
-  /*   clu_CheckError(ecode, "clCreateBuffer() for m_bucket_size"); */
+  /*   clu_CheckError(ecode, "CECL_BUFFER() for m_bucket_size"); */
 
-  /*   m_bucket_ptrs = clCreateBuffer(context, */
+  /*   m_bucket_ptrs = CECL_BUFFER(context, */
   /*                                  CL_MEM_READ_WRITE, */
   /*                                  bs_size, */
   /*                                  NULL, &ecode); */
-  /*   clu_CheckError(ecode, "clCreateBuffer() for m_bucket_ptrs"); */
+  /*   clu_CheckError(ecode, "CECL_BUFFER() for m_bucket_ptrs"); */
   /* } */
   DTIMER_STOP(T_BUFFER_CREATE);
 
   // 6. Create kernels
   DTIMER_START(T_OPENCL_API);
-  k_rank0 = clCreateKernel(program, "rank0", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rank0");
-  ecode  = clSetKernelArg(k_rank0, 0, sizeof(cl_mem), (void*)&m_key_array);
-  ecode |= clSetKernelArg(k_rank0, 1, sizeof(cl_mem), (void*)&m_partial_vals);
-  ecode |= clSetKernelArg(k_rank0, 2, sizeof(cl_mem), (void*)&m_index_array);
-  clu_CheckError(ecode, "clSetKernelArg() for rank0");
+  k_rank0 = CECL_KERNEL(program, "rank0", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for rank0");
+  ecode  = CECL_SET_KERNEL_ARG(k_rank0, 0, sizeof(cl_mem), (void*)&m_key_array);
+  ecode |= CECL_SET_KERNEL_ARG(k_rank0, 1, sizeof(cl_mem), (void*)&m_partial_vals);
+  ecode |= CECL_SET_KERNEL_ARG(k_rank0, 2, sizeof(cl_mem), (void*)&m_index_array);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for rank0");
 
   /* if (device_type == CL_DEVICE_TYPE_GPU) { */
-  k_rank1 = clCreateKernel(program, "rank1", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rank1");
-  ecode  = clSetKernelArg(k_rank1, 0, sizeof(cl_mem), (void*)&m_key_buff1);
-  clu_CheckError(ecode, "clSetKernelArg() for rank1");
+  k_rank1 = CECL_KERNEL(program, "rank1", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for rank1");
+  ecode  = CECL_SET_KERNEL_ARG(k_rank1, 0, sizeof(cl_mem), (void*)&m_key_buff1);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for rank1");
 
-  k_rank2 = clCreateKernel(program, "rank2", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rank2");
-  ecode  = clSetKernelArg(k_rank2, 0, sizeof(cl_mem), (void*)&m_key_buff1);
-  ecode |= clSetKernelArg(k_rank2, 1, sizeof(cl_mem), (void*)&m_key_array);
-  clu_CheckError(ecode, "clSetKernelArg() for rank2");
+  k_rank2 = CECL_KERNEL(program, "rank2", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for rank2");
+  ecode  = CECL_SET_KERNEL_ARG(k_rank2, 0, sizeof(cl_mem), (void*)&m_key_buff1);
+  ecode |= CECL_SET_KERNEL_ARG(k_rank2, 1, sizeof(cl_mem), (void*)&m_key_array);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for rank2");
 
-  k_rank3_0 = clCreateKernel(program, "rank3_0", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rank3_0");
-  ecode  = clSetKernelArg(k_rank3_0, 0, sizeof(cl_mem),(void*)&m_key_buff1);
-  ecode |= clSetKernelArg(k_rank3_0, 1, sizeof(cl_mem),(void*)&m_key_buff1);
-  ecode |= clSetKernelArg(k_rank3_0, 2, sizeof(cl_mem),(void*)&m_sum);
-  ecode |= clSetKernelArg(k_rank3_0, 3,
+  k_rank3_0 = CECL_KERNEL(program, "rank3_0", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for rank3_0");
+  ecode  = CECL_SET_KERNEL_ARG(k_rank3_0, 0, sizeof(cl_mem),(void*)&m_key_buff1);
+  ecode |= CECL_SET_KERNEL_ARG(k_rank3_0, 1, sizeof(cl_mem),(void*)&m_key_buff1);
+  ecode |= CECL_SET_KERNEL_ARG(k_rank3_0, 2, sizeof(cl_mem),(void*)&m_sum);
+  ecode |= CECL_SET_KERNEL_ARG(k_rank3_0, 3,
                           sizeof(INT_TYPE) * work_item_sizes[0] * 2,
                           NULL);
-  clu_CheckError(ecode, "clSetKernelArg() for rank3_0");
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for rank3_0");
 
-  k_rank3_1 = clCreateKernel(program, "rank3_1", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rank3_1");
-  ecode  = clSetKernelArg(k_rank3_1, 0, sizeof(cl_mem), (void*)&m_sum);
-  ecode  = clSetKernelArg(k_rank3_1, 1, sizeof(cl_mem), (void*)&m_sum);
-  ecode |= clSetKernelArg(k_rank3_1, 2,
+  k_rank3_1 = CECL_KERNEL(program, "rank3_1", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for rank3_1");
+  ecode  = CECL_SET_KERNEL_ARG(k_rank3_1, 0, sizeof(cl_mem), (void*)&m_sum);
+  ecode  = CECL_SET_KERNEL_ARG(k_rank3_1, 1, sizeof(cl_mem), (void*)&m_sum);
+  ecode |= CECL_SET_KERNEL_ARG(k_rank3_1, 2,
                           sizeof(INT_TYPE) * work_item_sizes[0] * 2,
                           NULL);
-  clu_CheckError(ecode, "clSetKernelArg() for rank3_1");
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for rank3_1");
 
-  k_rank3_2 = clCreateKernel(program, "rank3_2", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rank3_2");
-  ecode  = clSetKernelArg(k_rank3_2, 0, sizeof(cl_mem),(void*)&m_key_buff1);
-  ecode  = clSetKernelArg(k_rank3_2, 1, sizeof(cl_mem),(void*)&m_key_buff1);
-  ecode |= clSetKernelArg(k_rank3_2, 2, sizeof(cl_mem),(void*)&m_sum);
-  clu_CheckError(ecode, "clSetKernelArg() for rank3_2");
+  k_rank3_2 = CECL_KERNEL(program, "rank3_2", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for rank3_2");
+  ecode  = CECL_SET_KERNEL_ARG(k_rank3_2, 0, sizeof(cl_mem),(void*)&m_key_buff1);
+  ecode  = CECL_SET_KERNEL_ARG(k_rank3_2, 1, sizeof(cl_mem),(void*)&m_key_buff1);
+  ecode |= CECL_SET_KERNEL_ARG(k_rank3_2, 2, sizeof(cl_mem),(void*)&m_sum);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for rank3_2");
   /* } else { */
-  /*   k_rank1 = clCreateKernel(program, "rank1", &ecode); */
-  /*   clu_CheckError(ecode, "clCreateKernel() for rank1"); */
-  /*   ecode  = clSetKernelArg(k_rank1, 0, sizeof(cl_mem),(void*)&m_key_array); */
-  /*   ecode |= clSetKernelArg(k_rank1, 1, sizeof(cl_mem),(void*)&m_bucket_size); */
-  /*   clu_CheckError(ecode, "clSetKernelArg() for rank1"); */
+  /*   k_rank1 = CECL_KERNEL(program, "rank1", &ecode); */
+  /*   clu_CheckError(ecode, "CECL_KERNEL() for rank1"); */
+  /*   ecode  = CECL_SET_KERNEL_ARG(k_rank1, 0, sizeof(cl_mem),(void*)&m_key_array); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rank1, 1, sizeof(cl_mem),(void*)&m_bucket_size); */
+  /*   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for rank1"); */
 
-  /*   k_rank2 = clCreateKernel(program, "rank2", &ecode); */
-  /*   clu_CheckError(ecode, "clCreateKernel() for rank2"); */
-  /*   ecode  = clSetKernelArg(k_rank2, 0, sizeof(cl_mem),(void*)&m_key_array); */
-  /*   ecode |= clSetKernelArg(k_rank2, 1, sizeof(cl_mem),(void*)&m_bucket_size); */
-  /*   ecode |= clSetKernelArg(k_rank2, 2, sizeof(cl_mem),(void*)&m_bucket_ptrs); */
-  /*   ecode |= clSetKernelArg(k_rank2, 3, sizeof(cl_mem),(void*)&m_key_buff2); */
-  /*   clu_CheckError(ecode, "clSetKernelArg() for rank2"); */
+  /*   k_rank2 = CECL_KERNEL(program, "rank2", &ecode); */
+  /*   clu_CheckError(ecode, "CECL_KERNEL() for rank2"); */
+  /*   ecode  = CECL_SET_KERNEL_ARG(k_rank2, 0, sizeof(cl_mem),(void*)&m_key_array); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rank2, 1, sizeof(cl_mem),(void*)&m_bucket_size); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rank2, 2, sizeof(cl_mem),(void*)&m_bucket_ptrs); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rank2, 3, sizeof(cl_mem),(void*)&m_key_buff2); */
+  /*   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for rank2"); */
 
-  /*   k_rank3 = clCreateKernel(program, "rank3", &ecode); */
-  /*   clu_CheckError(ecode, "clCreateKernel() for rank3"); */
-  /*   ecode  = clSetKernelArg(k_rank3, 0, sizeof(cl_mem),(void*)&m_bucket_size); */
-  /*   ecode |= clSetKernelArg(k_rank3, 1, sizeof(cl_mem),(void*)&m_bucket_ptrs); */
-  /*   ecode |= clSetKernelArg(k_rank3, 2, sizeof(cl_mem),(void*)&m_key_buff1); */
-  /*   ecode |= clSetKernelArg(k_rank3, 3, sizeof(cl_mem),(void*)&m_key_buff2); */
-  /*   clu_CheckError(ecode, "clSetKernelArg() for rank3"); */
+  /*   k_rank3 = CECL_KERNEL(program, "rank3", &ecode); */
+  /*   clu_CheckError(ecode, "CECL_KERNEL() for rank3"); */
+  /*   ecode  = CECL_SET_KERNEL_ARG(k_rank3, 0, sizeof(cl_mem),(void*)&m_bucket_size); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rank3, 1, sizeof(cl_mem),(void*)&m_bucket_ptrs); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rank3, 2, sizeof(cl_mem),(void*)&m_key_buff1); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_rank3, 3, sizeof(cl_mem),(void*)&m_key_buff2); */
+  /*   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for rank3"); */
   /* } */
 
-  k_rank4 = clCreateKernel(program, "rank4", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for rank4");
-  ecode  = clSetKernelArg(k_rank4, 0, sizeof(cl_mem), (void*)&m_partial_vals);
-  ecode |= clSetKernelArg(k_rank4, 1, sizeof(cl_mem), (void*)&m_key_buff1);
-  ecode |= clSetKernelArg(k_rank4, 2, sizeof(cl_mem), (void*)&m_rank_array);
-  ecode |= clSetKernelArg(k_rank4, 3, sizeof(cl_mem),
+  k_rank4 = CECL_KERNEL(program, "rank4", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for rank4");
+  ecode  = CECL_SET_KERNEL_ARG(k_rank4, 0, sizeof(cl_mem), (void*)&m_partial_vals);
+  ecode |= CECL_SET_KERNEL_ARG(k_rank4, 1, sizeof(cl_mem), (void*)&m_key_buff1);
+  ecode |= CECL_SET_KERNEL_ARG(k_rank4, 2, sizeof(cl_mem), (void*)&m_rank_array);
+  ecode |= CECL_SET_KERNEL_ARG(k_rank4, 3, sizeof(cl_mem),
                           (void*)&m_passed_verification);
-  clu_CheckError(ecode, "clSetKernelArg() for rank4");
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for rank4");
   DTIMER_STOP(T_OPENCL_API);
 }
 

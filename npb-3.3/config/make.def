@@ -1,6 +1,6 @@
 #---------------------------------------------------------------------------
 #
-#                SITE- AND/OR PLATFORM-SPECIFIC DEFINITIONS. 
+#                SITE- AND/OR PLATFORM-SPECIFIC DEFINITIONS.
 #
 #---------------------------------------------------------------------------
 
@@ -11,16 +11,16 @@
 #---------------------------------------------------------------------------
 # Parallel Fortran:
 #
-# For CG, EP, FT, MG, LU, SP, BT and UA, which are in Fortran, the following 
+# For CG, EP, FT, MG, LU, SP, BT and UA, which are in Fortran, the following
 # must be defined:
 #
 # F77        - Fortran compiler
 # FFLAGS     - Fortran compilation arguments
-# F_INC      - any -I arguments required for compiling Fortran 
+# F_INC      - any -I arguments required for compiling Fortran
 # FLINK      - Fortran linker
 # FLINKFLAGS - Fortran linker arguments
-# F_LIB      - any -L and -l arguments required for linking Fortran 
-# 
+# F_LIB      - any -L and -l arguments required for linking Fortran
+#
 # compilations are done with $(F77) $(F_INC) $(FFLAGS) or
 #                            $(F77) $(FFLAGS)
 # linking is done with       $(FLINK) $(F_LIB) $(FLINKFLAGS)
@@ -37,12 +37,12 @@ F77 = gfortran
 FLINK	= $(F77)
 
 #---------------------------------------------------------------------------
-# These macros are passed to the linker 
+# These macros are passed to the linker
 #---------------------------------------------------------------------------
 F_LIB  =
 
 #---------------------------------------------------------------------------
-# These macros are passed to the compiler 
+# These macros are passed to the compiler
 #---------------------------------------------------------------------------
 F_INC =
 
@@ -52,8 +52,8 @@ F_INC =
 FFLAGS	= -O3 -mcmodel=medium
 
 #---------------------------------------------------------------------------
-# Global *link time* flags. Flags for increasing maximum executable 
-# size usually go here. 
+# Global *link time* flags. Flags for increasing maximum executable
+# size usually go here.
 #---------------------------------------------------------------------------
 FLINKFLAGS = -O3 -mcmodel=medium
 
@@ -63,12 +63,12 @@ FLINKFLAGS = -O3 -mcmodel=medium
 #
 # For IS and DC, which are in C, the following must be defined:
 #
-# CC         - C compiler 
+# CC         - C compiler
 # CFLAGS     - C compilation arguments
-# C_INC      - any -I arguments required for compiling C 
+# C_INC      - any -I arguments required for compiling C
 # CLINK      - C linker
 # CLINKFLAGS - C linker flags
-# C_LIB      - any -L and -l arguments required for linking C 
+# C_LIB      - any -L and -l arguments required for linking C
 #
 # compilations are done with $(CC) $(C_INC) $(CFLAGS) or
 #                            $(CC) $(CFLAGS)
@@ -86,12 +86,12 @@ CC = gcc
 CLINK	= $(CC)
 
 #---------------------------------------------------------------------------
-# These macros are passed to the linker 
+# These macros are passed to the linker
 #---------------------------------------------------------------------------
-C_LIB  = -lm -lOpenCL
+C_LIB  = -lm -lOpenCL -lcecl
 
 #---------------------------------------------------------------------------
-# These macros are passed to the compiler 
+# These macros are passed to the compiler
 #---------------------------------------------------------------------------
 C_INC = -I../common
 
@@ -99,22 +99,22 @@ C_INC = -I../common
 # Global *compile time* flags for C programs
 # DC inspects the following flags (preceded by "-D"):
 #
-# IN_CORE - computes all views and checksums in main memory (if there is 
+# IN_CORE - computes all views and checksums in main memory (if there is
 # enough memory)
 #
 # VIEW_FILE_OUTPUT - forces DC to write the generated views to disk
 #
 # OPTIMIZATION - turns on some nonstandard DC optimizations
 #
-# _FILE_OFFSET_BITS=64 
-# _LARGEFILE64_SOURCE - are standard compiler flags which allow to work with 
+# _FILE_OFFSET_BITS=64
+# _LARGEFILE64_SOURCE - are standard compiler flags which allow to work with
 # files larger than 2GB.
 #---------------------------------------------------------------------------
-CFLAGS	= -g -Wall -O3 -mcmodel=medium
+CFLAGS	= -g -Wall -O3 -mcmodel=medium -I/usr/local/include
 
 #---------------------------------------------------------------------------
-# Global *link time* flags. Flags for increasing maximum executable 
-# size usually go here. 
+# Global *link time* flags. Flags for increasing maximum executable
+# size usually go here.
 #---------------------------------------------------------------------------
 CLINKFLAGS = -O3 -mcmodel=medium
 
@@ -122,23 +122,23 @@ CLINKFLAGS = -O3 -mcmodel=medium
 #---------------------------------------------------------------------------
 # Utilities C:
 #
-# This is the C compiler used to compile C utilities.  Flags required by 
-# this compiler go here also; typically there are few flags required; hence 
+# This is the C compiler used to compile C utilities.  Flags required by
+# this compiler go here also; typically there are few flags required; hence
 # there are no separate macros provided for such flags.
 #---------------------------------------------------------------------------
 UCC	= gcc
 
 
 #---------------------------------------------------------------------------
-# Destination of executables, relative to subdirs of the main directory. . 
+# Destination of executables, relative to subdirs of the main directory. .
 #---------------------------------------------------------------------------
 BINDIR	= ../bin
 
 
 #---------------------------------------------------------------------------
-# The variable RAND controls which random number generator 
-# is used. It is described in detail in README.install. 
-# Use "randi8" unless there is a reason to use another one. 
+# The variable RAND controls which random number generator
+# is used. It is described in detail in README.install.
+# Use "randi8" unless there is a reason to use another one.
 # Other allowed values are "randi8_safe", "randdp" and "randdpvec"
 #---------------------------------------------------------------------------
 #RAND   = randi8
@@ -148,7 +148,7 @@ RAND   = randdp
 
 #---------------------------------------------------------------------------
 # The variable WTIME is the name of the wtime source code module in the
-# common directory.  
+# common directory.
 # For most machines,       use wtime.c
 # For SGI power challenge: use wtime_sgi64.c
 #---------------------------------------------------------------------------
@@ -156,12 +156,10 @@ WTIME  = wtime.c
 
 
 #---------------------------------------------------------------------------
-# Enable if either Cray or IBM: 
+# Enable if either Cray or IBM:
 # (no such flag for most machines: see common/wtime.h)
 # This is used by the C compiler to pass the machine name to common/wtime.h,
 # where the C/Fortran binding interface format is determined
 #---------------------------------------------------------------------------
 # MACHINE	=	-DCRAY
 # MACHINE	=	-DIBM
-
-

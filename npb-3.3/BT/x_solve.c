@@ -1,3 +1,4 @@
+#include <cecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB BT code. This OpenCL    //
@@ -51,46 +52,46 @@ void x_solve()
   if (timeron) timer_start(t_xsolve);
 
   if (X_SOLVE_DIM == 3) {
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                    k_x_solve1,
                                    X_SOLVE_DIM, NULL,
                                    x_solve1_gws,
                                    x_solve1_lws,
                                    0, NULL, NULL);
-    clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+    clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                    k_x_solve2,
                                    X_SOLVE_DIM, NULL,
                                    x_solve2_gws,
                                    x_solve2_lws,
                                    0, NULL, NULL);
-    clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+    clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                    k_x_solve3,
                                    X_SOLVE_DIM, NULL,
                                    x_solve3_gws,
                                    x_solve3_lws,
                                    0, NULL, NULL);
-    clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+    clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                    k_x_solve,
                                    2, NULL,
                                    x_solve_gws,
                                    x_solve_lws,
                                    0, NULL, NULL);
-    clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+    clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
     CHECK_FINISH();
   } else {
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                    k_x_solve,
                                    X_SOLVE_DIM, NULL,
                                    x_solve_gws,
                                    x_solve_lws,
                                    0, NULL, NULL);
-    clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+    clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
     CHECK_FINISH();
   }
 

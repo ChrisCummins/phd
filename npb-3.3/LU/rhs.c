@@ -1,3 +1,4 @@
+#include <cecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB LU code. This OpenCL    //
@@ -44,45 +45,45 @@ void rhs()
 
   if (timeron) timer_start(t_rhs);
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_rhs,
                                  RHS_DIM, NULL,
                                  rhs_gws,
                                  rhs_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
 
   if (timeron) timer_start(t_rhsx);
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_rhsx,
                                  RHSX_DIM, NULL,
                                  rhsx_gws,
                                  rhsx_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
   if (timeron) timer_stop(t_rhsx);
 
   if (timeron) timer_start(t_rhsy);
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_rhsy,
                                  RHSY_DIM, NULL,
                                  rhsy_gws,
                                  rhsy_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
   if (timeron) timer_stop(t_rhsy);
 
   if (timeron) timer_start(t_rhsz);
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_rhsz,
                                  RHSZ_DIM, NULL,
                                  rhsz_gws,
                                  rhsz_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
   if (timeron) timer_stop(t_rhsz);
 

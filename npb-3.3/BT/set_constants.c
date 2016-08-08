@@ -1,3 +1,4 @@
+#include <cecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB BT code. This OpenCL    //
@@ -108,12 +109,12 @@ void set_constants()
 
   //------------------------------------------------------------------------
   cl_int ecode;
-  ecode = clEnqueueWriteBuffer(cmd_queue,
+  ecode = CECL_WRITE_BUFFER(cmd_queue,
                                m_ce,
                                CL_FALSE,
                                0, sizeof(double)*5*13,
                                ce,
                                0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueWriteBuffer() for m_ce");
+  clu_CheckError(ecode, "CECL_WRITE_BUFFER() for m_ce");
   //------------------------------------------------------------------------
 }

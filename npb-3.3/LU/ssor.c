@@ -1,3 +1,4 @@
+#include <cecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB LU code. This OpenCL    //
@@ -96,16 +97,16 @@ void ssor(int niter)
     if (timeron) timer_start(t_rhs);
     tmp2 = dt;
 
-    ecode = clSetKernelArg(k_ssor2, 1, sizeof(double), &tmp2);
-    clu_CheckError(ecode, "clSetKernelArg()");
+    ecode = CECL_SET_KERNEL_ARG(k_ssor2, 1, sizeof(double), &tmp2);
+    clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                    k_ssor2,
                                    SSOR2_DIM, NULL,
                                    ssor2_gws,
                                    ssor2_lws,
                                    0, NULL, NULL);
-    clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+    clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
     CHECK_FINISH();
 
     if (timeron) timer_stop(t_rhs);
@@ -118,19 +119,19 @@ void ssor(int niter)
       lbj = (k-(iend-ist-1)-(nz-3)) >= 0 ? (k-(iend-ist-1)-(nz-3)) : 0;
       ubj = k < (jend-jst-1) ? k : (jend-jst-1);
 
-      ecode  = clSetKernelArg(k_blts, 7, sizeof(int), &k);
-      ecode |= clSetKernelArg(k_blts, 8, sizeof(int), &lbk);
-      ecode |= clSetKernelArg(k_blts, 9, sizeof(int), &lbj);
-      clu_CheckError(ecode, "clSetKernelArg()");
+      ecode  = CECL_SET_KERNEL_ARG(k_blts, 7, sizeof(int), &k);
+      ecode |= CECL_SET_KERNEL_ARG(k_blts, 8, sizeof(int), &lbk);
+      ecode |= CECL_SET_KERNEL_ARG(k_blts, 9, sizeof(int), &lbj);
+      clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
       blts_lws[0] = (ubj-lbj+1) < work_item_sizes[0] ? (ubj-lbj+1) : work_item_sizes[0];
       temp = max_work_group_size / blts_lws[0];
       blts_lws[1] = (ubk-lbk+1) < temp ? (ubk-lbk+1) : temp;
       blts_gws[0] = clu_RoundWorkSize((size_t)(ubj-lbj+1), blts_lws[0]);
       blts_gws[1] = clu_RoundWorkSize((size_t)(ubk-lbk+1), blts_lws[1]);
-      ecode = clEnqueueNDRangeKernel(cmd_queue, k_blts, 2, NULL,
+      ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_blts, 2, NULL,
                                      blts_gws, blts_lws,
                                      0, NULL, NULL);
-      clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+      clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
     }
 
     if (timeron) timer_stop(t_blts);
@@ -143,19 +144,19 @@ void ssor(int niter)
       lbj = (k-(iend-ist-1)-(nz-3)) >= 0 ? (k-(iend-ist-1)-(nz-3)) : 0;
       ubj = k < (jend-jst-1) ? k : (jend-jst-1);
 
-      ecode  = clSetKernelArg(k_buts, 7, sizeof(int), &k);
-      ecode |= clSetKernelArg(k_buts, 8, sizeof(int), &lbk);
-      ecode |= clSetKernelArg(k_buts, 9, sizeof(int), &lbj);
-      clu_CheckError(ecode, "clSetKernelArg()");
+      ecode  = CECL_SET_KERNEL_ARG(k_buts, 7, sizeof(int), &k);
+      ecode |= CECL_SET_KERNEL_ARG(k_buts, 8, sizeof(int), &lbk);
+      ecode |= CECL_SET_KERNEL_ARG(k_buts, 9, sizeof(int), &lbj);
+      clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
       buts_lws[0] = (ubj-lbj+1) < work_item_sizes[0] ? (ubj-lbj+1) : work_item_sizes[0];
       temp = max_work_group_size / buts_lws[0];
       buts_lws[1] = (ubk-lbk+1) < temp ? (ubk-lbk+1) : temp;
       buts_gws[0] = clu_RoundWorkSize((size_t)(ubj-lbj+1), buts_lws[0]);
       buts_gws[1] = clu_RoundWorkSize((size_t)(ubk-lbk+1), buts_lws[1]);
-      ecode = clEnqueueNDRangeKernel(cmd_queue, k_buts, 2, NULL,
+      ecode = CECL_ND_RANGE_KERNEL(cmd_queue, k_buts, 2, NULL,
                                      buts_gws, buts_lws,
                                      0, NULL, NULL);
-      clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+      clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
     }
 
     if (timeron) timer_stop(t_buts);
@@ -166,16 +167,16 @@ void ssor(int niter)
     if (timeron) timer_start(t_add);
     tmp2 = tmp;
 
-    ecode = clSetKernelArg(k_ssor3, 2, sizeof(double), &tmp2);
-    clu_CheckError(ecode, "clSetKernelArg()");
+    ecode = CECL_SET_KERNEL_ARG(k_ssor3, 2, sizeof(double), &tmp2);
+    clu_CheckError(ecode, "CECL_SET_KERNEL_ARG()");
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                    k_ssor3,
                                    SSOR3_DIM, NULL,
                                    ssor3_gws,
                                    ssor3_lws,
                                    0, NULL, NULL);
-    clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+    clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
     CHECK_FINISH();
     if (timeron) timer_stop(t_add);
 

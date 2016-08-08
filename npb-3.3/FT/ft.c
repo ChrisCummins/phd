@@ -1,3 +1,4 @@
+#include <cecl.h>
 //-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB FT code. This OpenCL    //
@@ -270,26 +271,26 @@ static void init_ui(cl_mem *u0, cl_mem *u1, cl_mem *twiddle,
 
   DTIMER_START(T_OPENCL_API);
   // Create a kernel
-  k_init_ui = clCreateKernel(program, "init_ui", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for init_ui");
+  k_init_ui = CECL_KERNEL(program, "init_ui", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for init_ui");
   DTIMER_STOP(T_OPENCL_API);
 
   int n = d3 * d2 * (d1+1);
-  ecode  = clSetKernelArg(k_init_ui, 0, sizeof(cl_mem), (void*)u0);
-  ecode |= clSetKernelArg(k_init_ui, 1, sizeof(cl_mem), (void*)u1);
-  ecode |= clSetKernelArg(k_init_ui, 2, sizeof(cl_mem), (void*)twiddle);
-  ecode |= clSetKernelArg(k_init_ui, 3, sizeof(int), (void*)&n);
-  clu_CheckError(ecode, "clSetKernelArg() for init_ui");
+  ecode  = CECL_SET_KERNEL_ARG(k_init_ui, 0, sizeof(cl_mem), (void*)u0);
+  ecode |= CECL_SET_KERNEL_ARG(k_init_ui, 1, sizeof(cl_mem), (void*)u1);
+  ecode |= CECL_SET_KERNEL_ARG(k_init_ui, 2, sizeof(cl_mem), (void*)twiddle);
+  ecode |= CECL_SET_KERNEL_ARG(k_init_ui, 3, sizeof(int), (void*)&n);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for init_ui");
 
   size_t local_ws = work_item_sizes[0];
   size_t global_ws = clu_RoundWorkSize((size_t)n, local_ws);
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_init_ui,
                                  1, NULL,
                                  &global_ws,
                                  &local_ws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for init_ui");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for init_ui");
 
   ecode = clFinish(cmd_queue);
   clu_CheckError(ecode, "clFinish()");
@@ -309,13 +310,13 @@ static void evolve(cl_mem *u0, cl_mem *u1, cl_mem *twiddle,
   cl_int ecode;
   size_t local_ws[3], global_ws[3];
 
-  ecode  = clSetKernelArg(k_evolve, 0, sizeof(cl_mem), u0);
-  ecode |= clSetKernelArg(k_evolve, 1, sizeof(cl_mem), u1);
-  ecode |= clSetKernelArg(k_evolve, 2, sizeof(cl_mem), twiddle);
-  ecode |= clSetKernelArg(k_evolve, 3, sizeof(int), &d1);
-  ecode |= clSetKernelArg(k_evolve, 4, sizeof(int), &d2);
-  ecode |= clSetKernelArg(k_evolve, 5, sizeof(int), &d3);
-  clu_CheckError(ecode, "clSetKernelArg() for evolve");
+  ecode  = CECL_SET_KERNEL_ARG(k_evolve, 0, sizeof(cl_mem), u0);
+  ecode |= CECL_SET_KERNEL_ARG(k_evolve, 1, sizeof(cl_mem), u1);
+  ecode |= CECL_SET_KERNEL_ARG(k_evolve, 2, sizeof(cl_mem), twiddle);
+  ecode |= CECL_SET_KERNEL_ARG(k_evolve, 3, sizeof(int), &d1);
+  ecode |= CECL_SET_KERNEL_ARG(k_evolve, 4, sizeof(int), &d2);
+  ecode |= CECL_SET_KERNEL_ARG(k_evolve, 5, sizeof(int), &d3);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for evolve");
 
   if (EVOLVE_DIM == 3) {
     local_ws[0] = d1 < work_item_sizes[0] ? d1 : work_item_sizes[0];
@@ -340,13 +341,13 @@ static void evolve(cl_mem *u0, cl_mem *u1, cl_mem *twiddle,
     global_ws[0] = clu_RoundWorkSize((size_t)d3, local_ws[0]);
   }
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_evolve,
                                  EVOLVE_DIM, NULL,
                                  global_ws,
                                  local_ws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for evolve");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for evolve");
   CHECK_FINISH();
 }
 
@@ -378,21 +379,21 @@ static void compute_initial_conditions(cl_mem *u0, int d1, int d2, int d3)
   }
 
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
-  /*   m_starts = clCreateBuffer(context, */
+  /*   m_starts = CECL_BUFFER(context, */
   /*                             CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, */
   /*                             sizeof(double) * NZ, */
   /*                             starts, &ecode); */
-  /*   clu_CheckError(ecode, "clCreateBuffer() for m_starts"); */
+  /*   clu_CheckError(ecode, "CECL_BUFFER() for m_starts"); */
 
   /*   local_ws  = 1; */
   /*   global_ws = clu_RoundWorkSize((size_t)d2, local_ws); */
   /* } else { //GPU */
-    m_starts = clCreateBuffer(context,
+    m_starts = CECL_BUFFER(context,
                               CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                               sizeof(double) * NZ,
                               starts,
                               &ecode);
-    clu_CheckError(ecode, "clCreateBuffer() for m_starts");
+    clu_CheckError(ecode, "CECL_BUFFER() for m_starts");
 
     temp = d2 / max_compute_units;
     local_ws  = temp == 0 ?
@@ -400,17 +401,17 @@ static void compute_initial_conditions(cl_mem *u0, int d1, int d2, int d3)
     global_ws = clu_RoundWorkSize((size_t)d2, local_ws);
   /* } */
 
-  ecode  = clSetKernelArg(k_compute_ics, 0, sizeof(cl_mem), u0);
-  ecode |= clSetKernelArg(k_compute_ics, 1, sizeof(cl_mem), &m_starts);
-  clu_CheckError(ecode, "clSetKernelArg() for compute_initial_conditions");
+  ecode  = CECL_SET_KERNEL_ARG(k_compute_ics, 0, sizeof(cl_mem), u0);
+  ecode |= CECL_SET_KERNEL_ARG(k_compute_ics, 1, sizeof(cl_mem), &m_starts);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for compute_initial_conditions");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_compute_ics,
                                  1, NULL,
                                  &global_ws,
                                  &local_ws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
 
   ecode = clFinish(cmd_queue);
   clu_CheckError(ecode, "clFinish()");
@@ -508,13 +509,13 @@ static void setup()
 static void compute_indexmap(cl_mem *twiddle, int d1, int d2, int d3)
 {
   cl_int ecode;
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_compute_indexmap,
                                  COMPUTE_IMAP_DIM, NULL,
                                  cimap_gws,
                                  cimap_lws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for compute_indexmap");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for compute_indexmap");
   CHECK_FINISH();
 }
 
@@ -577,13 +578,13 @@ static void fft_init(int n)
   }
 
   int ecode;
-  ecode = clEnqueueWriteBuffer(cmd_queue,
+  ecode = CECL_WRITE_BUFFER(cmd_queue,
                                m_u,
                                CL_FALSE,
                                0, sizeof(dcomplex) * NXP,
                                u,
                                0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueWriteBuffer() for m_u");
+  clu_CheckError(ecode, "CECL_WRITE_BUFFER() for m_u");
 }
 
 
@@ -615,14 +616,14 @@ static void cffts1(int is, int d1, int d2, int d3, cl_mem *x, cl_mem *xout)
 
   if (timers_enabled) timer_start(T_fftx);
 
-  ecode  = clSetKernelArg(k_cffts1, 0, sizeof(cl_mem), x);
-  ecode |= clSetKernelArg(k_cffts1, 1, sizeof(cl_mem), xout);
-  ecode |= clSetKernelArg(k_cffts1, 3, sizeof(int), &is);
-  ecode |= clSetKernelArg(k_cffts1, 4, sizeof(int), &d1);
-  ecode |= clSetKernelArg(k_cffts1, 5, sizeof(int), &d2);
-  ecode |= clSetKernelArg(k_cffts1, 6, sizeof(int), &d3);
-  ecode |= clSetKernelArg(k_cffts1, 7, sizeof(int), &logd1);
-  clu_CheckError(ecode, "clSetKernelArg() for k_cffts1");
+  ecode  = CECL_SET_KERNEL_ARG(k_cffts1, 0, sizeof(cl_mem), x);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts1, 1, sizeof(cl_mem), xout);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts1, 3, sizeof(int), &is);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts1, 4, sizeof(int), &d1);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts1, 5, sizeof(int), &d2);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts1, 6, sizeof(int), &d3);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts1, 7, sizeof(int), &logd1);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for k_cffts1");
 
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
   /*   local_ws[0] = d2 < work_item_sizes[0] ? d2 : work_item_sizes[0]; */
@@ -643,13 +644,13 @@ static void cffts1(int is, int d1, int d2, int d3, cl_mem *x, cl_mem *xout)
     }
   /* } */
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                         k_cffts1,
                         CFFTS_DIM, NULL,
                         global_ws,
                         local_ws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for cffts1");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for cffts1");
   CHECK_FINISH();
 
   if (timers_enabled) timer_stop(T_fftx);
@@ -664,14 +665,14 @@ static void cffts2(int is, int d1, int d2, int d3, cl_mem *x, cl_mem *xout)
 
   if (timers_enabled) timer_start(T_ffty);
 
-  ecode  = clSetKernelArg(k_cffts2, 0, sizeof(cl_mem), x);
-  ecode |= clSetKernelArg(k_cffts2, 1, sizeof(cl_mem), xout);
-  ecode |= clSetKernelArg(k_cffts2, 3, sizeof(int), &is);
-  ecode |= clSetKernelArg(k_cffts2, 4, sizeof(int), &d1);
-  ecode |= clSetKernelArg(k_cffts2, 5, sizeof(int), &d2);
-  ecode |= clSetKernelArg(k_cffts2, 6, sizeof(int), &d3);
-  ecode |= clSetKernelArg(k_cffts2, 7, sizeof(int), &logd2);
-  clu_CheckError(ecode, "clSetKernelArg() for k_cffts2");
+  ecode  = CECL_SET_KERNEL_ARG(k_cffts2, 0, sizeof(cl_mem), x);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts2, 1, sizeof(cl_mem), xout);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts2, 3, sizeof(int), &is);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts2, 4, sizeof(int), &d1);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts2, 5, sizeof(int), &d2);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts2, 6, sizeof(int), &d3);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts2, 7, sizeof(int), &logd2);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for k_cffts2");
 
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
   /*   local_ws[0] = d1 < work_item_sizes[0] ? d1 : work_item_sizes[0]; */
@@ -692,13 +693,13 @@ static void cffts2(int is, int d1, int d2, int d3, cl_mem *x, cl_mem *xout)
     }
   /* } */
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                         k_cffts2,
                         CFFTS_DIM, NULL,
                         global_ws,
                         local_ws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for cffts2");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for cffts2");
   CHECK_FINISH();
 
   if (timers_enabled) timer_stop(T_ffty);
@@ -713,14 +714,14 @@ static void cffts3(int is, int d1, int d2, int d3, cl_mem *x, cl_mem *xout)
 
   if (timers_enabled) timer_start(T_fftz);
 
-  ecode  = clSetKernelArg(k_cffts3, 0, sizeof(cl_mem), x);
-  ecode |= clSetKernelArg(k_cffts3, 1, sizeof(cl_mem), xout);
-  ecode |= clSetKernelArg(k_cffts3, 3, sizeof(int), &is);
-  ecode |= clSetKernelArg(k_cffts3, 4, sizeof(int), &d1);
-  ecode |= clSetKernelArg(k_cffts3, 5, sizeof(int), &d2);
-  ecode |= clSetKernelArg(k_cffts3, 6, sizeof(int), &d3);
-  ecode |= clSetKernelArg(k_cffts3, 7, sizeof(int), &logd3);
-  clu_CheckError(ecode, "clSetKernelArg() for k_cffts3");
+  ecode  = CECL_SET_KERNEL_ARG(k_cffts3, 0, sizeof(cl_mem), x);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts3, 1, sizeof(cl_mem), xout);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts3, 3, sizeof(int), &is);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts3, 4, sizeof(int), &d1);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts3, 5, sizeof(int), &d2);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts3, 6, sizeof(int), &d3);
+  ecode |= CECL_SET_KERNEL_ARG(k_cffts3, 7, sizeof(int), &logd3);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for k_cffts3");
 
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
   /*   local_ws[0] = d1 < work_item_sizes[0] ? d1 : work_item_sizes[0]; */
@@ -741,13 +742,13 @@ static void cffts3(int is, int d1, int d2, int d3, cl_mem *x, cl_mem *xout)
     }
   /* } */
 
-    ecode = clEnqueueNDRangeKernel(cmd_queue,
+    ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                    k_cffts3,
                                    CFFTS_DIM, NULL,
                                    global_ws,
                                    local_ws,
                                    0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel() for cffts3");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL() for cffts3");
   CHECK_FINISH();
 
   if (timers_enabled) timer_stop(T_fftz);
@@ -774,19 +775,19 @@ static void checksum(int i, cl_mem *u1, int d1, int d2, int d3)
   int k;
   cl_int ecode;
 
-  ecode = clSetKernelArg(k_checksum, 0, sizeof(cl_mem), u1);
-  clu_CheckError(ecode, "clSetKernelArg() for checksum");
+  ecode = CECL_SET_KERNEL_ARG(k_checksum, 0, sizeof(cl_mem), u1);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for checksum");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue,
+  ecode = CECL_ND_RANGE_KERNEL(cmd_queue,
                                  k_checksum,
                                  1, NULL,
                                  &checksum_global_ws,
                                  &checksum_local_ws,
                                  0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
+  clu_CheckError(ecode, "CECL_ND_RANGE_KERNEL()");
   CHECK_FINISH();
 
-  ecode = clEnqueueReadBuffer(cmd_queue,
+  ecode = CECL_READ_BUFFER(cmd_queue,
                               m_chk,
                               CL_TRUE,
                               0, checksum_wg_num * sizeof(dcomplex),
@@ -1058,8 +1059,8 @@ static void setup_opencl(int argc, char *argv[])
   clu_CheckError(ecode, "clCreateContext()");
 
   // 3. Create a command queue
-  cmd_queue = clCreateCommandQueue(context, device, 0, &ecode);
-  clu_CheckError(ecode, "clCreateCommandQueue()");
+  cmd_queue = CECL_CREATE_COMMAND_QUEUE(context, device, 0, &ecode);
+  clu_CheckError(ecode, "CECL_CREATE_COMMAND_QUEUE()");
 
   DTIMER_STOP(T_OPENCL_API);
 
@@ -1123,29 +1124,29 @@ static void setup_opencl(int argc, char *argv[])
 
   // 5. Create buffers
   DTIMER_START(T_BUFFER_CREATE);
-  m_u = clCreateBuffer(context,
+  m_u = CECL_BUFFER(context,
                        CL_MEM_READ_ONLY,
                        sizeof(dcomplex) * NXP,
                        NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_u");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_u");
 
-  m_u0 = clCreateBuffer(context,
+  m_u0 = CECL_BUFFER(context,
                         CL_MEM_READ_WRITE,
                         sizeof(dcomplex) * NTOTALP,
                         NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_u0");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_u0");
 
-  m_u1 = clCreateBuffer(context,
+  m_u1 = CECL_BUFFER(context,
                         CL_MEM_READ_WRITE,
                         sizeof(dcomplex) * NTOTALP,
                         NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_u1");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_u1");
 
-  m_twiddle = clCreateBuffer(context,
+  m_twiddle = CECL_BUFFER(context,
                              CL_MEM_READ_WRITE,
                              sizeof(double) * NTOTALP,
                              NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_twiddle");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_twiddle");
 
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
   /*   size_t ty1_size, ty2_size; */
@@ -1157,17 +1158,17 @@ static void setup_opencl(int argc, char *argv[])
   /*     exit(EXIT_FAILURE); */
   /*   } */
 
-  /*   m_ty1 = clCreateBuffer(context, */
+  /*   m_ty1 = CECL_BUFFER(context, */
   /*                          CL_MEM_READ_WRITE, */
   /*                          ty1_size, */
   /*                          NULL, &ecode); */
-  /*   clu_CheckError(ecode, "clCreateBuffer() for m_ty1"); */
+  /*   clu_CheckError(ecode, "CECL_BUFFER() for m_ty1"); */
 
-  /*   m_ty2 = clCreateBuffer(context, */
+  /*   m_ty2 = CECL_BUFFER(context, */
   /*                          CL_MEM_READ_WRITE, */
   /*                          ty2_size, */
   /*                          NULL, &ecode); */
-  /*   clu_CheckError(ecode, "clCreateBuffer() for m_ty2"); */
+  /*   clu_CheckError(ecode, "CECL_BUFFER() for m_ty2"); */
   /* } */
 
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
@@ -1179,11 +1180,11 @@ static void setup_opencl(int argc, char *argv[])
     checksum_global_ws = clu_RoundWorkSize((size_t)1024, checksum_local_ws);
   /* } */
   checksum_wg_num = checksum_global_ws / checksum_local_ws;
-  m_chk = clCreateBuffer(context,
+  m_chk = CECL_BUFFER(context,
                          CL_MEM_READ_WRITE,
                          sizeof(dcomplex) * checksum_wg_num,
                          NULL, &ecode);
-  clu_CheckError(ecode, "clCreateBuffer() for m_chk");
+  clu_CheckError(ecode, "CECL_BUFFER() for m_chk");
   g_chk = (dcomplex *)malloc(sizeof(dcomplex) * checksum_wg_num);
   DTIMER_STOP(T_BUFFER_CREATE);
 
@@ -1194,14 +1195,14 @@ static void setup_opencl(int argc, char *argv[])
   int d2 = dims[1];
   int d3 = dims[2];
 
-  k_compute_indexmap = clCreateKernel(program, "compute_indexmap", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for compute_indexmap");
-  ecode  = clSetKernelArg(k_compute_indexmap, 0, sizeof(cl_mem), &m_twiddle);
-  ecode |= clSetKernelArg(k_compute_indexmap, 1, sizeof(int), &d1);
-  ecode |= clSetKernelArg(k_compute_indexmap, 2, sizeof(int), &d2);
-  ecode |= clSetKernelArg(k_compute_indexmap, 3, sizeof(int), &d3);
-  ecode |= clSetKernelArg(k_compute_indexmap, 4, sizeof(double), &ap);
-  clu_CheckError(ecode, "clSetKernelArg() for compute_indexmap");
+  k_compute_indexmap = CECL_KERNEL(program, "compute_indexmap", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for compute_indexmap");
+  ecode  = CECL_SET_KERNEL_ARG(k_compute_indexmap, 0, sizeof(cl_mem), &m_twiddle);
+  ecode |= CECL_SET_KERNEL_ARG(k_compute_indexmap, 1, sizeof(int), &d1);
+  ecode |= CECL_SET_KERNEL_ARG(k_compute_indexmap, 2, sizeof(int), &d2);
+  ecode |= CECL_SET_KERNEL_ARG(k_compute_indexmap, 3, sizeof(int), &d3);
+  ecode |= CECL_SET_KERNEL_ARG(k_compute_indexmap, 4, sizeof(double), &ap);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for compute_indexmap");
   if (COMPUTE_IMAP_DIM == 3) {
     cimap_lws[0] = d1 < work_item_sizes[0] ? d1 : work_item_sizes[0];
     temp = max_work_group_size / cimap_lws[0];
@@ -1226,52 +1227,52 @@ static void setup_opencl(int argc, char *argv[])
     cimap_gws[0] = clu_RoundWorkSize((size_t)d3, cimap_lws[0]);
   }
 
-  k_compute_ics = clCreateKernel(program,
+  k_compute_ics = CECL_KERNEL(program,
                                  "compute_initial_conditions", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for compute_initial_conditions");
-  ecode  = clSetKernelArg(k_compute_ics, 2, sizeof(int), &d1);
-  ecode |= clSetKernelArg(k_compute_ics, 3, sizeof(int), &d2);
-  ecode |= clSetKernelArg(k_compute_ics, 4, sizeof(int), &d3);
-  clu_CheckError(ecode, "clSetKernelArg() for compute_initial_conditions");
+  clu_CheckError(ecode, "CECL_KERNEL() for compute_initial_conditions");
+  ecode  = CECL_SET_KERNEL_ARG(k_compute_ics, 2, sizeof(int), &d1);
+  ecode |= CECL_SET_KERNEL_ARG(k_compute_ics, 3, sizeof(int), &d2);
+  ecode |= CECL_SET_KERNEL_ARG(k_compute_ics, 4, sizeof(int), &d3);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for compute_initial_conditions");
 
-  k_cffts1 = clCreateKernel(program, "cffts1", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for cffts1");
-  ecode  = clSetKernelArg(k_cffts1, 2, sizeof(cl_mem), &m_u);
+  k_cffts1 = CECL_KERNEL(program, "cffts1", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for cffts1");
+  ecode  = CECL_SET_KERNEL_ARG(k_cffts1, 2, sizeof(cl_mem), &m_u);
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
-  /*   ecode |= clSetKernelArg(k_cffts1, 8, sizeof(cl_mem), &m_ty1); */
-  /*   ecode |= clSetKernelArg(k_cffts1, 9, sizeof(cl_mem), &m_ty2); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_cffts1, 8, sizeof(cl_mem), &m_ty1); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_cffts1, 9, sizeof(cl_mem), &m_ty2); */
   /* } */
-  clu_CheckError(ecode, "clSetKernelArg() for k_cffts1");
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for k_cffts1");
 
-  k_cffts2 = clCreateKernel(program, "cffts2", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for cffts2");
-  ecode  = clSetKernelArg(k_cffts2, 2, sizeof(cl_mem), &m_u);
+  k_cffts2 = CECL_KERNEL(program, "cffts2", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for cffts2");
+  ecode  = CECL_SET_KERNEL_ARG(k_cffts2, 2, sizeof(cl_mem), &m_u);
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
-  /*   ecode |= clSetKernelArg(k_cffts2, 8, sizeof(cl_mem), &m_ty1); */
-  /*   ecode |= clSetKernelArg(k_cffts2, 9, sizeof(cl_mem), &m_ty2); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_cffts2, 8, sizeof(cl_mem), &m_ty1); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_cffts2, 9, sizeof(cl_mem), &m_ty2); */
   /* } */
-  clu_CheckError(ecode, "clSetKernelArg() for k_cffts2");
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for k_cffts2");
 
-  k_cffts3 = clCreateKernel(program, "cffts3", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for cffts3");
-  ecode  = clSetKernelArg(k_cffts3, 2, sizeof(cl_mem), &m_u);
+  k_cffts3 = CECL_KERNEL(program, "cffts3", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for cffts3");
+  ecode  = CECL_SET_KERNEL_ARG(k_cffts3, 2, sizeof(cl_mem), &m_u);
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
-  /*   ecode |= clSetKernelArg(k_cffts3, 8, sizeof(cl_mem), &m_ty1); */
-  /*   ecode |= clSetKernelArg(k_cffts3, 9, sizeof(cl_mem), &m_ty2); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_cffts3, 8, sizeof(cl_mem), &m_ty1); */
+  /*   ecode |= CECL_SET_KERNEL_ARG(k_cffts3, 9, sizeof(cl_mem), &m_ty2); */
   /* } */
-  clu_CheckError(ecode, "clSetKernelArg() for k_cffts3");
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for k_cffts3");
 
-  k_evolve = clCreateKernel(program, "evolve", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for evolve");
+  k_evolve = CECL_KERNEL(program, "evolve", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for evolve");
 
-  k_checksum = clCreateKernel(program, "checksum", &ecode);
-  clu_CheckError(ecode, "clCreateKernel() for checksum");
-  ecode  = clSetKernelArg(k_checksum, 1, sizeof(cl_mem), &m_chk);
-  ecode |= clSetKernelArg(k_checksum, 2, sizeof(dcomplex)*checksum_local_ws,
+  k_checksum = CECL_KERNEL(program, "checksum", &ecode);
+  clu_CheckError(ecode, "CECL_KERNEL() for checksum");
+  ecode  = CECL_SET_KERNEL_ARG(k_checksum, 1, sizeof(cl_mem), &m_chk);
+  ecode |= CECL_SET_KERNEL_ARG(k_checksum, 2, sizeof(dcomplex)*checksum_local_ws,
                           NULL);
-  ecode |= clSetKernelArg(k_checksum, 3, sizeof(int), &dims[0]);
-  ecode |= clSetKernelArg(k_checksum, 4, sizeof(int), &dims[1]);
-  clu_CheckError(ecode, "clSetKernelArg() for checksum");
+  ecode |= CECL_SET_KERNEL_ARG(k_checksum, 3, sizeof(int), &dims[0]);
+  ecode |= CECL_SET_KERNEL_ARG(k_checksum, 4, sizeof(int), &dims[1]);
+  clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for checksum");
   DTIMER_STOP(T_OPENCL_API);
 }
 
