@@ -4,46 +4,23 @@ set -eu
 ROOT=$(pwd)
 
 benchmarks=(
-     AtomicCounters
-     BasicDebug
+     AdvancedConvolution
      BinomialOption
-     BinomialOptionMultiGPU
      BitonicSort
-     BlackScholesDP
      BlackScholes
-     DCT
-     DeviceFission11Ext
-     DeviceFission
-     DwtHaar1D
-     DynamicOpenCLDetection
      FastWalshTransform
      FloydWarshall
-     # FluidSimulation2D # requires display
-     HelloWorld
-     HistogramAtomics
      Histogram
-     ImageOverlap
-     KernelLaunch
      MatrixMulImage
      MatrixMultiplication
      MatrixTranspose
-     MemoryModel
      MonteCarloAsian
-     MonteCarloAsianMultiGPU
      NBody
      PrefixSum
-     QuasiRandomSequence
-     RecursiveGaussian
      Reduction
      ScanLargeArrays
      SimpleConvolution
-     SimpleImage
-     SimpleMultiDevice
      SobelFilter
-     StringSearch
-     Template
-     TransferOverlap
-     URNG
 )
 
 for f in ${benchmarks[@]}; do
