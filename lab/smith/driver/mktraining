@@ -47,8 +47,8 @@ def get_kernel_features(kernels):
 def results_to_dict(row):
     return {
         'file': row[0],
-        'kernel': row[1],
-        'dataset': row[2],
+        'dataset': row[1],
+        'kernel': row[2],
         'wgsize': row[3],
         'transfer': row[4],
         'runtime': row[5],
@@ -97,13 +97,13 @@ def fetch_result(filename, kernel, dataset, results):
     """
     res = [d for d in results if
            d['file'] == filename and
-           d['kernel'] == kernel and
-           d['dataset'] == dataset]
+           d['dataset'] == dataset and
+           d['kernel'] == kernel]
 
     return {
         'file': res[0]['file'],
-        'kernel': res[0]['kernel'],
         'dataset': res[0]['dataset'],
+        'kernel': res[0]['kernel'],
         'wgsize': labmath.mean([round(float(d['wgsize'])) for d in res]),
         'transfer': labmath.mean([round(float(d['transfer'])) for d in res]),
         'runtime': labmath.mean([float(d['runtime']) for d in res]),
@@ -201,6 +201,7 @@ def mktraining(kernels, cpu_path, gpu_path, out=sys.stdout, metaout=sys.stderr):
     for filename,kernel,dataset in common:
         print_datapoint(filename, kernel, dataset, kernel_features,
                         cpu, gpu, file=out)
+    print('done', file=sys.stderr)
 
 
 def main():
