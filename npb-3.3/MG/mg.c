@@ -1562,8 +1562,7 @@ static void zran3(double *oz, int n1, int n2, int n3, int nx1, int ny1, int k, c
   ecode |= clSetKernelArg(kernel_zran3_1, 9, sizeof(double), &a1);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  ecode = clEnqueueNDRangeKernel(cmd_queue, kernel_zran3_1, 1, NULL, global, local, 0,
-                                 NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue, kernel_zran3_1, 1, NULL, global, local, 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   clFinish(cmd_queue);
   DTIMER_STOP(T_KERNEL_ZRAN3_1);
