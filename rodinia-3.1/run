@@ -20,6 +20,14 @@ mkdir -pv "$ROOT/logs/bad" "$ROOT/logs/good"
 for dir in $(ls | sort); do
   echo -n "$(tput bold)rodinia-3.1 $dir$(tput sgr0) ... "
   cd $dir
-  runcecl $SHELL run
+  runcecl $SHELL run > "$ROOT/log.txt"
+  ret=$?
+  if [[ $ret -eq 0 ]]; then
+    mv "$ROOT/log.txt" "$ROOT/logs/good"
+    echo ok
+  else
+    mv "$ROOT/log.txt" "$ROOT/logs/bad"
+    echo bad
+  fi
   cd ..
 done
