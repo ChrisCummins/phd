@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -u
+
+ROOT="$(pwd)"
+
+mvlogs() {
+    local i=$1
+    local devname=$2
+    local prefix=$3
+
+    for f in $(ls logs/good/*); do
+        mv -v $f "$ROOT/logs/$i/$devname/$prefix-$f"
+    done
+}
+
+runsuite() {
+    local i=$1
+    local suite=$2
+
+    cd "$2"
+
+    if [[ $HOSTNAME == "monza" ]]; then
+        mkdir -v "$ROOT/logs/$i/amd"
+        mkdir -v "$ROOT/logs/$i/intel"
+        ./set-device CPU
+        DEVTYPE=CPU ./run
+        mvlogs $i "intel" "$suite"
+        DEVTYPE=GPU ./set-device GPU
+        ./run
+        mvlogs $i "amd" "$suite"
+    elif [[ $HOSTNAME == "diana-dev" ]]; then
+        mkdir -v "$ROOT/logs/$i/nvidia"
+        ./set-device GPU
+        DEVTYPE=GPU ./run
+        mvlogs $i "nvidia" "$suite"
+    else
+        echo "fatal: Unknown hostname '$HOSTNAME'" >&2
+        exit 1
+    fi
+
+    cd ../
+}
+
+
+iteration() {
+    local i=$1
+
+    mkdir -v "$ROOT/logs/$i"
+
+    # runsuite $i amd-app-sdk-3.0
+    # runsuite $i npb-3.3
+    # runsuite $i nvidia-4.2
+    # runsuite $i parboil-0.2
+    # runsuite $i polybench-gpu-1.0
+    runsuite $i rodinia-3.1
+    # runsuite $i shoc-1.1.5
+}
+
+
+main() {
+    rm -rf "$ROOT/logs"
+    mkdir -v "$ROOT/logs"
+
+    for i in $(seq 1 5); do
+        iteration i
+    done
+
+    zip -r logs-$HOSTNAME.zip logs
+}
+main $@

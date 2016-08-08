@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 set -eu
 
+ROOT="$(pwd)"
+
+rm -rf "$ROOT/logs"
+mkdir -pv "$ROOT/logs/good"
+
 cd bin
-./run_ocl_gpu.sh
+if [[ $DEVTYPE == "CPU" ]];then
+    ./run_ocl_cpu.sh
+    mv logs/*.cpu.out "$ROOT/logs/good"
+else
+    ./run_ocl_gpu.sh
+    mv logs/*.gpu.out "$ROOT/logs/good"
+fi
