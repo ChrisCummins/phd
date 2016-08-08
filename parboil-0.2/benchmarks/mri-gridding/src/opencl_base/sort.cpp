@@ -1,3 +1,4 @@
+#include <cecl.h>
 /***************************************************************************
  *
  *            (C) Copyright 2010 The Board of Trustees of the
@@ -42,7 +43,7 @@ void sort (int numElems, unsigned int max_value, cl_mem* &dkeysPtr, cl_mem* &dva
   zeroData = (unsigned int *) calloc( (1<<BITS)*grid[0], sizeof(unsigned int) );
   if (zeroData == NULL) { fprintf(stderr, "Could not allocate host memory! (%s: %d)\n", __FILE__, __LINE__); exit(1); }
 
-  dhisto = clCreateBuffer(clContext, CL_MEM_COPY_HOST_PTR, (1<<BITS)*((numElems+4*SORT_BS-1)/(4*SORT_BS))*sizeof(unsigned int), zeroData, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
+  dhisto = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, (1<<BITS)*((numElems+4*SORT_BS-1)/(4*SORT_BS))*sizeof(unsigned int), zeroData, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
   
   free(zeroData);
   
@@ -68,12 +69,12 @@ void sort (int numElems, unsigned int max_value, cl_mem* &dkeysPtr, cl_mem* &dva
     fprintf(stderr, "Could not load program source (%s)\n", __FILE__); exit(1);
   }
   	
-  sort_program = clCreateProgramWithSource(clContext, 1, (const char **)&source, &program_length, &ciErrNum);
+  sort_program = CECL_PROGRAM_WITH_SOURCE(clContext, 1, (const char **)&source, &program_length, &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
   	  	
   free(source);
   
-  OCL_ERRCK_RETVAL ( clBuildProgram(sort_program, 1, &clDevice, NULL /*compileOptions*/, NULL, NULL) );  
+  OCL_ERRCK_RETVAL ( CECL_PROGRAM(sort_program, 1, &clDevice, NULL /*compileOptions*/, NULL, NULL) );  
   
   
   // Uncomment to get build log from compiler for debugging
@@ -92,41 +93,41 @@ void sort (int numElems, unsigned int max_value, cl_mem* &dkeysPtr, cl_mem* &dva
        fprintf(stderr, "%s\n", build_log );
   
   
-  splitSort = clCreateKernel(sort_program, "splitSort", &ciErrNum);
+  splitSort = CECL_KERNEL(sort_program, "splitSort", &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
-  splitRearrange = clCreateKernel(sort_program, "splitRearrange", &ciErrNum);
+  splitRearrange = CECL_KERNEL(sort_program, "splitRearrange", &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);      
   
-  OCL_ERRCK_RETVAL( clSetKernelArg(splitSort, 0, sizeof(int), &numElems) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(splitSort, 2, sizeof(cl_mem), (void *)dkeysPtr) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(splitSort, 3, sizeof(cl_mem), (void *)dvaluesPtr) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(splitSort, 4, sizeof(cl_mem), (void *)&dhisto) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitSort, 0, sizeof(int), &numElems) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitSort, 2, sizeof(cl_mem), (void *)dkeysPtr) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitSort, 3, sizeof(cl_mem), (void *)dvaluesPtr) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitSort, 4, sizeof(cl_mem), (void *)&dhisto) );
   
-  OCL_ERRCK_RETVAL( clSetKernelArg(splitRearrange, 0, sizeof(int), &numElems) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitRearrange, 0, sizeof(int), &numElems) );
   
-  OCL_ERRCK_RETVAL( clSetKernelArg(splitRearrange, 2, sizeof(cl_mem), (void *)dkeysPtr) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(splitRearrange, 3, sizeof(cl_mem), (void *)dkeys_oPtr) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(splitRearrange, 4, sizeof(cl_mem), (void *)dvaluesPtr) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(splitRearrange, 5, sizeof(cl_mem), (void *)dvalues_oPtr) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(splitRearrange, 6, sizeof(cl_mem), (void *)&dhisto) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitRearrange, 2, sizeof(cl_mem), (void *)dkeysPtr) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitRearrange, 3, sizeof(cl_mem), (void *)dkeys_oPtr) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitRearrange, 4, sizeof(cl_mem), (void *)dvaluesPtr) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitRearrange, 5, sizeof(cl_mem), (void *)dvalues_oPtr) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitRearrange, 6, sizeof(cl_mem), (void *)&dhisto) );
 
   for (int i=0; i<iterations; i++){
   
-    OCL_ERRCK_RETVAL( clSetKernelArg(splitSort, 1, sizeof(int), &i) );
-    OCL_ERRCK_RETVAL( clSetKernelArg(splitSort, 2, sizeof(cl_mem), (void *)dkeysPtr) );
-    OCL_ERRCK_RETVAL( clSetKernelArg(splitSort, 3, sizeof(cl_mem), (void *)dvaluesPtr) );    
-    OCL_ERRCK_RETVAL ( clEnqueueNDRangeKernel(clCommandQueue, splitSort, 1, 0,
+    OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitSort, 1, sizeof(int), &i) );
+    OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitSort, 2, sizeof(cl_mem), (void *)dkeysPtr) );
+    OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitSort, 3, sizeof(cl_mem), (void *)dvaluesPtr) );    
+    OCL_ERRCK_RETVAL ( CECL_ND_RANGE_KERNEL(clCommandQueue, splitSort, 1, 0,
                             grid, block, 0, 0, 0) );
     
     scanLargeArray(((numElems+4*SORT_BS-1)/(4*SORT_BS))*(1<<BITS), dhisto, clContext, clCommandQueue, clDevice, workItemSizes);
 
-    OCL_ERRCK_RETVAL( clSetKernelArg(splitRearrange, 1, sizeof(int), &i ) );
-    OCL_ERRCK_RETVAL( clSetKernelArg(splitRearrange, 2, sizeof(cl_mem), (void *)dkeysPtr) );
-    OCL_ERRCK_RETVAL( clSetKernelArg(splitRearrange, 3, sizeof(cl_mem), (void *)dkeys_oPtr) );
-    OCL_ERRCK_RETVAL( clSetKernelArg(splitRearrange, 4, sizeof(cl_mem), (void *)dvaluesPtr) );
-    OCL_ERRCK_RETVAL( clSetKernelArg(splitRearrange, 5, sizeof(cl_mem), (void *)dvalues_oPtr) );
+    OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitRearrange, 1, sizeof(int), &i ) );
+    OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitRearrange, 2, sizeof(cl_mem), (void *)dkeysPtr) );
+    OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitRearrange, 3, sizeof(cl_mem), (void *)dkeys_oPtr) );
+    OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitRearrange, 4, sizeof(cl_mem), (void *)dvaluesPtr) );
+    OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(splitRearrange, 5, sizeof(cl_mem), (void *)dvalues_oPtr) );
 
-    OCL_ERRCK_RETVAL ( clEnqueueNDRangeKernel(clCommandQueue, splitRearrange, 1, 0,
+    OCL_ERRCK_RETVAL ( CECL_ND_RANGE_KERNEL(clCommandQueue, splitRearrange, 1, 0,
                             grid, block, 0, 0, 0) );
 
     cl_mem* temp = dkeysPtr;

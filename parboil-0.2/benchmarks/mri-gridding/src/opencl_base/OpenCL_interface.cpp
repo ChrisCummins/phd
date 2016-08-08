@@ -1,3 +1,4 @@
+#include <cecl.h>
 /***************************************************************************
  *
  *            (C) Copyright 2010 The Board of Trustees of the
@@ -129,11 +130,11 @@ void OpenCL_interface (
   // these elements get pushed to the end of the array.
   memset(maxIntData+n, 0xFF, (((n+3)&~(3))-n)*sizeof(unsigned int));
 
-  sortedSample_d = clCreateBuffer(clContext, CL_MEM_COPY_HOST_PTR, n*sizeof(ReconstructionSample), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
-  binStartAddr_d = clCreateBuffer(clContext, CL_MEM_COPY_HOST_PTR, (gridNumElems+1)*sizeof(unsigned int), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
-  sample_d = clCreateBuffer(clContext, CL_MEM_COPY_HOST_PTR, n*sizeof(ReconstructionSample), sample, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
-  idxKey_d = clCreateBuffer(clContext, CL_MEM_COPY_HOST_PTR, (((n+3)/4)*4)*sizeof(unsigned int), maxIntData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum); //Pad to nearest multiple of 4 to 
-  idxValue_d = clCreateBuffer(clContext, CL_MEM_COPY_HOST_PTR, (((n+3)/4)*4)*sizeof(unsigned int), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum); //satisfy a property of the sorting kernel.
+  sortedSample_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, n*sizeof(ReconstructionSample), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
+  binStartAddr_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, (gridNumElems+1)*sizeof(unsigned int), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
+  sample_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, n*sizeof(ReconstructionSample), sample, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
+  idxKey_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, (((n+3)/4)*4)*sizeof(unsigned int), maxIntData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum); //Pad to nearest multiple of 4 to 
+  idxValue_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, (((n+3)/4)*4)*sizeof(unsigned int), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum); //satisfy a property of the sorting kernel.
   
   idxKey_dPtr = &idxKey_d;
   idxValue_dPtr = &idxValue_d;
@@ -162,12 +163,12 @@ void OpenCL_interface (
     fprintf(stderr, "Could not load program source (%s) \n", __FILE__); exit(1);
   }
   	
-  gpu_kernels = clCreateProgramWithSource(clContext, 1, (const char **)&source, &program_length, &ciErrNum);
+  gpu_kernels = CECL_PROGRAM_WITH_SOURCE(clContext, 1, (const char **)&source, &program_length, &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
   	  	
   free(source);
   
-  OCL_ERRCK_RETVAL ( clBuildProgram(gpu_kernels, 1, &clDevice, compileOptions, NULL, NULL) );
+  OCL_ERRCK_RETVAL ( CECL_PROGRAM(gpu_kernels, 1, &clDevice, compileOptions, NULL, NULL) );
   
   /*
   // Uncomment to view build log from compiler for debugging
@@ -186,13 +187,13 @@ void OpenCL_interface (
   */
   
   
-  binning_kernel = clCreateKernel(gpu_kernels, "binning_kernel", &ciErrNum);
+  binning_kernel = CECL_KERNEL(gpu_kernels, "binning_kernel", &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
   
-  reorder_kernel = clCreateKernel(gpu_kernels, "reorder_kernel", &ciErrNum);
+  reorder_kernel = CECL_KERNEL(gpu_kernels, "reorder_kernel", &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
   
-  gridding_GPU = clCreateKernel(gpu_kernels, "gridding_GPU", &ciErrNum);
+  gridding_GPU = CECL_KERNEL(gpu_kernels, "gridding_GPU", &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
   
   pb_SwitchToTimer(timers, pb_TimerID_COPY);
@@ -204,29 +205,29 @@ void OpenCL_interface (
   size_t block1[1] = { blockSize };
   size_t grid1[1] = { ((n+blockSize-1)/blockSize)*block1[0] };
   
-  OCL_ERRCK_RETVAL( clSetKernelArg(binning_kernel, 0, sizeof(unsigned int), &n) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(binning_kernel, 1, sizeof(cl_mem), (void *)&sample_d) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(binning_kernel, 2, sizeof(cl_mem), (void *)idxKey_dPtr) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(binning_kernel, 3, sizeof(cl_mem), (void *)idxValue_dPtr) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(binning_kernel, 4, sizeof(cl_mem), (void *)&binStartAddr_d) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(binning_kernel, 5, sizeof(int), &(params.binsize)) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(binning_kernel, 6, sizeof(unsigned int), &gridNumElems) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(binning_kernel, 0, sizeof(unsigned int), &n) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(binning_kernel, 1, sizeof(cl_mem), (void *)&sample_d) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(binning_kernel, 2, sizeof(cl_mem), (void *)idxKey_dPtr) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(binning_kernel, 3, sizeof(cl_mem), (void *)idxValue_dPtr) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(binning_kernel, 4, sizeof(cl_mem), (void *)&binStartAddr_d) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(binning_kernel, 5, sizeof(int), &(params.binsize)) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(binning_kernel, 6, sizeof(unsigned int), &gridNumElems) );
   
-  OCL_ERRCK_RETVAL( clSetKernelArg(reorder_kernel, 0, sizeof(unsigned int), &n) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(reorder_kernel, 2, sizeof(cl_mem), (void *)&sample_d) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(reorder_kernel, 3, sizeof(cl_mem), (void *)&sortedSample_d) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(reorder_kernel, 0, sizeof(unsigned int), &n) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(reorder_kernel, 2, sizeof(cl_mem), (void *)&sample_d) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(reorder_kernel, 3, sizeof(cl_mem), (void *)&sortedSample_d) );
   
   pb_SwitchToTimer(timers, pb_TimerID_KERNEL);
 
   /* STEP 1: Perform binning. This kernel determines which output bin each input element
    * goes into. Any excess (beyond binsize) is put in the CPU bin
    */
-  OCL_ERRCK_RETVAL ( clEnqueueNDRangeKernel(clCommandQueue, binning_kernel, 1, 0,
+  OCL_ERRCK_RETVAL ( CECL_ND_RANGE_KERNEL(clCommandQueue, binning_kernel, 1, 0,
                             grid1, block1, 0, 0, 0) );
 
   /* STEP 2: Sort the index-value pair generate in the binning kernel */
-  cl_mem dkeys_o = clCreateBuffer(clContext, CL_MEM_READ_WRITE, n*sizeof(unsigned int), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
-  cl_mem dvalues_o = clCreateBuffer(clContext, CL_MEM_READ_WRITE, n*sizeof(unsigned int), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
+  cl_mem dkeys_o = CECL_BUFFER(clContext, CL_MEM_READ_WRITE, n*sizeof(unsigned int), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
+  cl_mem dvalues_o = CECL_BUFFER(clContext, CL_MEM_READ_WRITE, n*sizeof(unsigned int), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
   
   cl_mem *dkeys_oPtr = &dkeys_o;
   cl_mem *dvalues_oPtr = &dvalues_o;
@@ -243,8 +244,8 @@ void OpenCL_interface (
    * At the end of this step, we copy the start address and list of input elements
    * that will be computed on the CPU.
    */
-  OCL_ERRCK_RETVAL( clSetKernelArg(reorder_kernel, 1, sizeof(cl_mem), (void *)idxValue_dPtr) );
-  OCL_ERRCK_RETVAL ( clEnqueueNDRangeKernel(clCommandQueue, reorder_kernel, 1, 0,
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(reorder_kernel, 1, sizeof(cl_mem), (void *)idxValue_dPtr) );
+  OCL_ERRCK_RETVAL ( CECL_ND_RANGE_KERNEL(clCommandQueue, reorder_kernel, 1, 0,
                             grid1, block1, 0, 0, 0) );
 
   pb_SwitchToTimer(timers, pb_TimerID_COPY);
@@ -265,7 +266,7 @@ void OpenCL_interface (
 
   // Copy back to the CPU the indices of the input elements that will be processed on the CPU
   unsigned int cpuStart;
-  OCL_ERRCK_RETVAL( clEnqueueReadBuffer(clCommandQueue, binStartAddr_d, CL_TRUE, 
+  OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, binStartAddr_d, CL_TRUE, 
                           gridNumElems*sizeof(unsigned int), // Offset in bytes
                           sizeof(unsigned int), // Size of data to read
                           &cpuStart, // Host Source
@@ -278,7 +279,7 @@ void OpenCL_interface (
   CPUbin = (ReconstructionSample *) malloc ( CPUbin_size*sizeof(ReconstructionSample) );
   if (CPUbin == NULL) { fprintf(stderr, "Could not allocate memory on host! (%s: %d)\n", __FILE__, __LINE__); exit(1); }
   
-  OCL_ERRCK_RETVAL( clEnqueueReadBuffer(clCommandQueue, sortedSample_d, CL_TRUE, 
+  OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, sortedSample_d, CL_TRUE, 
                           cpuStart*sizeof(ReconstructionSample), // Offset in bytes
                           CPUbin_size*sizeof(ReconstructionSample), // Size of data to read
                           CPUbin, // Host Source
@@ -288,8 +289,8 @@ void OpenCL_interface (
    * where each thread computes the value of one output element by reading the relevant
    * bins.
    */
-  gridData_d = clCreateBuffer(clContext, CL_MEM_COPY_HOST_PTR, gridNumElems*sizeof(cmplx), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
-  sampleDensity_d = clCreateBuffer(clContext, CL_MEM_COPY_HOST_PTR, gridNumElems*sizeof(float), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
+  gridData_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, gridNumElems*sizeof(cmplx), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
+  sampleDensity_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, gridNumElems*sizeof(float), zeroData, &ciErrNum);  OCL_ERRCK_VAR(ciErrNum);
   
   free(zeroData);
 
@@ -298,13 +299,13 @@ void OpenCL_interface (
   size_t block2[3] = {dims[0], dims[1], dims[2]};
   size_t grid2[3] = { (size_x/dims[0]) * block2[0], ((size_y*size_z)/(dims[1]*dims[2])) * block2[1], 1 * block2[2] };
 
-  OCL_ERRCK_RETVAL( clSetKernelArg(gridding_GPU, 0, sizeof(cl_mem), (void *)&sortedSample_d) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(gridding_GPU, 1, sizeof(cl_mem), (void *)&binStartAddr_d) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(gridding_GPU, 2, sizeof(cl_mem), (void *)&gridData_d) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(gridding_GPU, 3, sizeof(cl_mem), (void *)&sampleDensity_d) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(gridding_GPU, 4, sizeof(float), &beta) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(gridding_GPU, 0, sizeof(cl_mem), (void *)&sortedSample_d) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(gridding_GPU, 1, sizeof(cl_mem), (void *)&binStartAddr_d) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(gridding_GPU, 2, sizeof(cl_mem), (void *)&gridData_d) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(gridding_GPU, 3, sizeof(cl_mem), (void *)&sampleDensity_d) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(gridding_GPU, 4, sizeof(float), &beta) );
   
-  OCL_ERRCK_RETVAL ( clEnqueueNDRangeKernel(clCommandQueue, gridding_GPU, 3, 0,
+  OCL_ERRCK_RETVAL ( CECL_ND_RANGE_KERNEL(clCommandQueue, gridding_GPU, 3, 0,
                             grid2, block2, 0, 0, 0) );
                                 
   OCL_ERRCK_RETVAL ( clReleaseMemObject(binStartAddr_d) );
@@ -312,13 +313,13 @@ void OpenCL_interface (
   pb_SwitchToTimer(timers, pb_TimerID_COPY);
                        
   /* Copying the results from the Device to the Host */
-  OCL_ERRCK_RETVAL( clEnqueueReadBuffer(clCommandQueue, sampleDensity_d, CL_FALSE, 
+  OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, sampleDensity_d, CL_FALSE, 
                           0, // Offset in bytes
                           gridNumElems*sizeof(float), // Size of data to write
                           sampleDensity, // Host Source
                           0, NULL, NULL) );
                           
-  OCL_ERRCK_RETVAL( clEnqueueReadBuffer(clCommandQueue, gridData_d, CL_TRUE, 
+  OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, gridData_d, CL_TRUE, 
                           0, // Offset in bytes
                           gridNumElems*sizeof(cmplx), // Size of data to write
                           gridData, // Host Source

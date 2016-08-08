@@ -1,3 +1,4 @@
+#include <cecl.h>
 
 /***************************************************************************
  *cr
@@ -97,22 +98,22 @@ int main(int argc, char** argv) {
 	cl_context clContext = clCreateContextFromType(clCps,CL_DEVICE_TYPE_CPU,NULL,NULL,&clStatus);
 	CHECK_ERROR("clCreateContextFromType")
 
-	cl_command_queue clCommandQueue = clCreateCommandQueue(clContext,clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
-	CHECK_ERROR("clCreateCommandQueue")
+	cl_command_queue clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clContext,clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
+	CHECK_ERROR("CECL_CREATE_COMMAND_QUEUE")
 
   	pb_SetOpenCL(&clContext, &clCommandQueue);
 
 	const char* clSource[] = {readFile("src/opencl_base/kernel.cl")};
-	cl_program clProgram = clCreateProgramWithSource(clContext,1,clSource,NULL,&clStatus);
-	CHECK_ERROR("clCreateProgramWithSource")
+	cl_program clProgram = CECL_PROGRAM_WITH_SOURCE(clContext,1,clSource,NULL,&clStatus);
+	CHECK_ERROR("CECL_PROGRAM_WITH_SOURCE")
 
 	char clOptions[50];
 	sprintf(clOptions,"-I src/opencl_base");
-	clStatus = clBuildProgram(clProgram,1,&clDevice,clOptions,NULL,NULL);
-	CHECK_ERROR("clBuildProgram")
+	clStatus = CECL_PROGRAM(clProgram,1,&clDevice,clOptions,NULL,NULL);
+	CHECK_ERROR("CECL_PROGRAM")
 
-	cl_kernel clKernel = clCreateKernel(clProgram,"naive_kernel",&clStatus);
-	CHECK_ERROR("clCreateKernel") 			
+	cl_kernel clKernel = CECL_KERNEL(clProgram,"naive_kernel",&clStatus);
+	CHECK_ERROR("CECL_KERNEL") 			
 
 	//host data
 	float *h_A0;
@@ -137,16 +138,16 @@ int main(int argc, char** argv) {
 	pb_SwitchToTimer(&timers, pb_TimerID_COPY);
 	
 	//memory allocation
-	d_A0 = clCreateBuffer(clContext,CL_MEM_READ_WRITE,size*sizeof(float),NULL,&clStatus);
-	CHECK_ERROR("clCreateBuffer")
-	d_Anext = clCreateBuffer(clContext,CL_MEM_READ_WRITE,size*sizeof(float),NULL,&clStatus);
-	CHECK_ERROR("clCreateBuffer")	
+	d_A0 = CECL_BUFFER(clContext,CL_MEM_READ_WRITE,size*sizeof(float),NULL,&clStatus);
+	CHECK_ERROR("CECL_BUFFER")
+	d_Anext = CECL_BUFFER(clContext,CL_MEM_READ_WRITE,size*sizeof(float),NULL,&clStatus);
+	CHECK_ERROR("CECL_BUFFER")	
 	
 	//memory copy
-	clStatus = clEnqueueWriteBuffer(clCommandQueue,d_A0,CL_FALSE,0,size*sizeof(float),h_A0,0,NULL,NULL);
-	CHECK_ERROR("clEnqueueWriteBuffer")
-	clStatus = clEnqueueWriteBuffer(clCommandQueue,d_Anext,CL_TRUE,0,size*sizeof(float),h_Anext,0,NULL,NULL);
-	CHECK_ERROR("clEnqueueWriteBuffer")
+	clStatus = CECL_WRITE_BUFFER(clCommandQueue,d_A0,CL_FALSE,0,size*sizeof(float),h_A0,0,NULL,NULL);
+	CHECK_ERROR("CECL_WRITE_BUFFER")
+	clStatus = CECL_WRITE_BUFFER(clCommandQueue,d_Anext,CL_TRUE,0,size*sizeof(float),h_Anext,0,NULL,NULL);
+	CHECK_ERROR("CECL_WRITE_BUFFER")
 
 	pb_SwitchToTimer(&timers, pb_TimerID_COMPUTE);
 
@@ -159,14 +160,14 @@ int main(int argc, char** argv) {
 //  printf("block x is %d and y is %d z \n",block[0],block[1]);
 //  printf("grid x is %d and y is %d\n",grid[0],grid[1]);
 
-	clStatus = clSetKernelArg(clKernel,0,sizeof(float),(void*)&c0);
-	clStatus = clSetKernelArg(clKernel,1,sizeof(float),(void*)&c1);
-	clStatus = clSetKernelArg(clKernel,2,sizeof(cl_mem),(void*)&d_A0);
-	clStatus = clSetKernelArg(clKernel,3,sizeof(cl_mem),(void*)&d_Anext);
-	clStatus = clSetKernelArg(clKernel,4,sizeof(int),(void*)&nx);
-	clStatus = clSetKernelArg(clKernel,5,sizeof(int),(void*)&ny);
-	clStatus = clSetKernelArg(clKernel,6,sizeof(int),(void*)&nz);
-	CHECK_ERROR("clSetKernelArg")
+	clStatus = CECL_SET_KERNEL_ARG(clKernel,0,sizeof(float),(void*)&c0);
+	clStatus = CECL_SET_KERNEL_ARG(clKernel,1,sizeof(float),(void*)&c1);
+	clStatus = CECL_SET_KERNEL_ARG(clKernel,2,sizeof(cl_mem),(void*)&d_A0);
+	clStatus = CECL_SET_KERNEL_ARG(clKernel,3,sizeof(cl_mem),(void*)&d_Anext);
+	clStatus = CECL_SET_KERNEL_ARG(clKernel,4,sizeof(int),(void*)&nx);
+	clStatus = CECL_SET_KERNEL_ARG(clKernel,5,sizeof(int),(void*)&ny);
+	clStatus = CECL_SET_KERNEL_ARG(clKernel,6,sizeof(int),(void*)&nz);
+	CHECK_ERROR("CECL_SET_KERNEL_ARG")
 
 	//main execution
 	pb_SwitchToTimer(&timers, pb_TimerID_KERNEL);
@@ -174,15 +175,15 @@ int main(int argc, char** argv) {
 	int t;
 	for(t=0;t<iteration;t++)
 	{
-		clStatus = clEnqueueNDRangeKernel(clCommandQueue,clKernel,3,NULL,grid,block,0,NULL,NULL);
+		clStatus = CECL_ND_RANGE_KERNEL(clCommandQueue,clKernel,3,NULL,grid,block,0,NULL,NULL);
     //printf("iteration %d\n",t)
-		CHECK_ERROR("clEnqueueNDRangeKernel")
+		CHECK_ERROR("CECL_ND_RANGE_KERNEL")
     
     cl_mem d_temp = d_A0;
     d_A0 = d_Anext;
     d_Anext = d_temp; 
-    clStatus = clSetKernelArg(clKernel,2,sizeof(cl_mem),(void*)&d_A0);
-    clStatus = clSetKernelArg(clKernel,3,sizeof(cl_mem),(void*)&d_Anext);
+    clStatus = CECL_SET_KERNEL_ARG(clKernel,2,sizeof(cl_mem),(void*)&d_A0);
+    clStatus = CECL_SET_KERNEL_ARG(clKernel,3,sizeof(cl_mem),(void*)&d_Anext);
 
 	}
 
@@ -195,8 +196,8 @@ int main(int argc, char** argv) {
 	CHECK_ERROR("clFinish")
 
 	pb_SwitchToTimer(&timers, pb_TimerID_COPY);
-	clStatus = clEnqueueReadBuffer(clCommandQueue,d_Anext,CL_TRUE,0,size*sizeof(float),h_Anext,0,NULL,NULL);
-	CHECK_ERROR("clEnqueueReadBuffer")
+	clStatus = CECL_READ_BUFFER(clCommandQueue,d_Anext,CL_TRUE,0,size*sizeof(float),h_Anext,0,NULL,NULL);
+	CHECK_ERROR("CECL_READ_BUFFER")
 
     	clStatus = clReleaseMemObject(d_A0);
 	clStatus = clReleaseMemObject(d_Anext);

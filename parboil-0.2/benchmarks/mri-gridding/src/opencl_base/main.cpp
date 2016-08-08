@@ -1,3 +1,4 @@
+#include <cecl.h>
 /***************************************************************************
  *
  *            (C) Copyright 2010 The Board of Trustees of the
@@ -189,7 +190,7 @@ int main (int argc, char* argv[]){
   clContext = clCreateContextFromType(cps, deviceType, NULL, NULL, &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
 
-  cl_command_queue clCommandQueue = clCreateCommandQueue(clContext, clDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+  cl_command_queue clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clContext, clDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
   
   cl_uint workItemDimensions;
@@ -201,7 +202,7 @@ int main (int argc, char* argv[]){
   pb_SetOpenCL(&clContext, &clCommandQueue);
     
     /*
-  samplesPin = clCreateBuffer(clContext, CL_MEM_ALLOC_HOST_PTR, 
+  samplesPin = CECL_BUFFER(clContext, CL_MEM_ALLOC_HOST_PTR, 
       params.numSamples*sizeof(ReconstructionSample),
       NULL, &ciErrNum);
 */
@@ -252,7 +253,7 @@ int main (int argc, char* argv[]){
   pb_SwitchToTimer(&timers, pb_TimerID_COPY);
 
 /*
-  OCL_ERRCK_RETVAL( clEnqueueWriteBuffer(clCommandQueue, samplesPin, CL_TRUE, 
+  OCL_ERRCK_RETVAL( CECL_WRITE_BUFFER(clCommandQueue, samplesPin, CL_TRUE, 
                           0, // Offset in bytes
                           n*sizeof(ReconstructionSample), // Size of data to write
                           samples, // Host Source
@@ -261,7 +262,7 @@ int main (int argc, char* argv[]){
  // OCL_ERRCK_RETVAL ( clFinish(clCommandQueue) );
  
  /*
-  gridDataPin = clCreateBuffer(clContext, CL_MEM_ALLOC_HOST_PTR, 
+  gridDataPin = CECL_BUFFER(clContext, CL_MEM_ALLOC_HOST_PTR, 
       gridNumElems*sizeof(cmplx), NULL, &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
   */
@@ -273,7 +274,7 @@ int main (int argc, char* argv[]){
   */
   
   /*
-  sampleDensityPin = clCreateBuffer(clContext, CL_MEM_ALLOC_HOST_PTR, 
+  sampleDensityPin = CECL_BUFFER(clContext, CL_MEM_ALLOC_HOST_PTR, 
       gridNumElems*sizeof(float), NULL, &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
   */

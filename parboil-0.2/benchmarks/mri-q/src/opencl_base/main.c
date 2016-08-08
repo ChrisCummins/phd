@@ -1,3 +1,4 @@
+#include <cecl.h>
 /***************************************************************************
  *cr
  *cr            (C) Copyright 2007 The Board of Trustees of the
@@ -38,9 +39,9 @@ static void
 setupMemoryGPU(int num, int size, cl_mem* dev_ptr, float* host_ptr,clPrmtr* clPrm)
 {
   cl_int clStatus;
-  *dev_ptr = clCreateBuffer(clPrm->clContext,CL_MEM_READ_ONLY,num*size,NULL,&clStatus);
-  CHECK_ERROR("clCreateBuffer");
-  clStatus = clEnqueueWriteBuffer(clPrm->clCommandQueue,*dev_ptr,CL_TRUE,0,num*size,host_ptr,0,NULL,NULL);
+  *dev_ptr = CECL_BUFFER(clPrm->clContext,CL_MEM_READ_ONLY,num*size,NULL,&clStatus);
+  CHECK_ERROR("CECL_BUFFER");
+  clStatus = CECL_WRITE_BUFFER(clPrm->clCommandQueue,*dev_ptr,CL_TRUE,0,num*size,host_ptr,0,NULL,NULL);
   CHECK_ERROR("clEnequeueWriteBuffer");
 }
 
@@ -48,8 +49,8 @@ static void
 cleanupMemoryGPU(int num, int size, cl_mem* dev_ptr, float* host_ptr, clPrmtr* clPrm)
 {
   cl_int clStatus;
-  clStatus = clEnqueueReadBuffer(clPrm->clCommandQueue,*dev_ptr,CL_TRUE,0,num*size,host_ptr,0,NULL,NULL);
-  CHECK_ERROR("clEnqueueReadBuffer")
+  clStatus = CECL_READ_BUFFER(clPrm->clCommandQueue,*dev_ptr,CL_TRUE,0,num*size,host_ptr,0,NULL,NULL);
+  CHECK_ERROR("CECL_READ_BUFFER")
   clStatus = clReleaseMemObject(*dev_ptr);
   CHECK_ERROR("clReleaseMemObject")
 }
@@ -126,23 +127,23 @@ main (int argc, char *argv[]) {
   clPrm.clContext = clCreateContextFromType(cps,CL_DEVICE_TYPE_CPU,NULL,NULL,&clStatus);
   CHECK_ERROR("clCreateContextFromType")
 
-  clPrm.clCommandQueue = clCreateCommandQueue(clPrm.clContext,cdDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
-  CHECK_ERROR("clCreateCommandQueue")
+  clPrm.clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clPrm.clContext,cdDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
+  CHECK_ERROR("CECL_CREATE_COMMAND_QUEUE")
 
   pb_SetOpenCL(&(clPrm.clContext), &(clPrm.clCommandQueue));
 
   const char* clSource[] = {readFile("src/opencl/kernels.cl")};
-  cl_program clProgram = clCreateProgramWithSource(clPrm.clContext,1,clSource,NULL,&clStatus);
-  CHECK_ERROR("clCreateProgramWithSource")
+  cl_program clProgram = CECL_PROGRAM_WITH_SOURCE(clPrm.clContext,1,clSource,NULL,&clStatus);
+  CHECK_ERROR("CECL_PROGRAM_WITH_SOURCE")
 
   char options[50];
   sprintf(options,"-I src/opencl_nvidia");
-  clStatus = clBuildProgram(clProgram,0,NULL,options,NULL,NULL);
+  clStatus = CECL_PROGRAM(clProgram,0,NULL,options,NULL,NULL);
   if (clStatus != CL_SUCCESS) {
     char buf[4096];
     clGetProgramBuildInfo(clProgram, cdDevice, CL_PROGRAM_BUILD_LOG, 4096, buf, NULL);
     printf ("%s\n", buf);
-    CHECK_ERROR("clBuildProgram")
+    CHECK_ERROR("CECL_PROGRAM")
   }
 
   /* Create CPU data structures */
@@ -150,8 +151,8 @@ main (int argc, char *argv[]) {
 
   /* GPU section 1 (precompute PhiMag) */
   {
-    clPrm.clKernel = clCreateKernel(clProgram,"ComputePhiMag_GPU",&clStatus);
-    CHECK_ERROR("clCreateKernel")    
+    clPrm.clKernel = CECL_KERNEL(clProgram,"ComputePhiMag_GPU",&clStatus);
+    CHECK_ERROR("CECL_KERNEL")    
 
     /* Mirror several data structures on the device */
     cl_mem phiR_d;
@@ -162,8 +163,8 @@ main (int argc, char *argv[]) {
     
     setupMemoryGPU(numK,sizeof(float),&phiR_d,phiR,&clPrm);
     setupMemoryGPU(numK,sizeof(float),&phiI_d,phiI,&clPrm);
-    phiMag_d = clCreateBuffer(clPrm.clContext,CL_MEM_WRITE_ONLY,numK*sizeof(float),NULL,&clStatus);
-    CHECK_ERROR("clCreateBuffer")
+    phiMag_d = CECL_BUFFER(clPrm.clContext,CL_MEM_WRITE_ONLY,numK*sizeof(float),NULL,&clStatus);
+    CHECK_ERROR("CECL_BUFFER")
 
     clStatus = clFinish(clPrm.clCommandQueue);
     CHECK_ERROR("clFinish")
@@ -203,8 +204,8 @@ main (int argc, char *argv[]) {
 
   /* GPU section 2 */
   {
-    clPrm.clKernel = clCreateKernel(clProgram,"ComputeQ_GPU",&clStatus);
-    CHECK_ERROR("clCreateKernel")
+    clPrm.clKernel = CECL_KERNEL(clProgram,"ComputeQ_GPU",&clStatus);
+    CHECK_ERROR("CECL_KERNEL")
 
     cl_mem x_d;
     cl_mem y_d;
@@ -218,11 +219,11 @@ main (int argc, char *argv[]) {
     setupMemoryGPU(numX,sizeof(float),&y_d,y,&clPrm);
     setupMemoryGPU(numX,sizeof(float),&z_d,z,&clPrm);
 
-    Qr_d = clCreateBuffer(clPrm.clContext,CL_MEM_READ_WRITE,numX*sizeof(float),NULL,&clStatus);
-    CHECK_ERROR("clCreateBuffer")
+    Qr_d = CECL_BUFFER(clPrm.clContext,CL_MEM_READ_WRITE,numX*sizeof(float),NULL,&clStatus);
+    CHECK_ERROR("CECL_BUFFER")
     clMemSet(&clPrm,Qr_d,0,numX*sizeof(float));
-    Qi_d = clCreateBuffer(clPrm.clContext,CL_MEM_READ_WRITE,numX*sizeof(float),NULL,&clStatus);
-    CHECK_ERROR("clCreateBuffer")
+    Qi_d = CECL_BUFFER(clPrm.clContext,CL_MEM_READ_WRITE,numX*sizeof(float),NULL,&clStatus);
+    CHECK_ERROR("CECL_BUFFER")
     clMemSet(&clPrm,Qi_d,0,numX*sizeof(float));
 
     clStatus = clFinish(clPrm.clCommandQueue);

@@ -1,3 +1,4 @@
+#include <cecl.h>
 /***************************************************************************
  *cr
  *cr            (C) Copyright 2010 The Board of Trustees of the
@@ -161,7 +162,7 @@ int main( int argc, char** argv)
 
   cl_context clContext = clCreateContextFromType(clCps,CL_DEVICE_TYPE_CPU,NULL,NULL,&clStatus);
   OCL_ERRCK_VAR(clStatus);
-  cl_command_queue clCommandQueue = clCreateCommandQueue(clContext,clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
+  cl_command_queue clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clContext,clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
   OCL_ERRCK_VAR(clStatus);
 
   pb_SetOpenCL(&clContext, &clCommandQueue);
@@ -170,12 +171,12 @@ int main( int argc, char** argv)
   size_t program_length;
   const char *clSource_path = "src/opencl_base/kernel.cl";
   clSource = oclLoadProgSource(clSource_path, "", &program_length);
-  cl_program clProgram = clCreateProgramWithSource(clContext, 1, (const char **)&clSource, &program_length, &clStatus);
+  cl_program clProgram = CECL_PROGRAM_WITH_SOURCE(clContext, 1, (const char **)&clSource, &program_length, &clStatus);
   OCL_ERRCK_VAR(clStatus);
 
   char clOptions[50];
   sprintf(clOptions,"-I src/opencl_base");
-  OCL_ERRCK_RETVAL(clBuildProgram(clProgram,1,&clDevice,clOptions,NULL,NULL));
+  OCL_ERRCK_RETVAL(CECL_PROGRAM(clProgram,1,&clDevice,clOptions,NULL,NULL));
 
   // Uncomment to view build log from compiler for debugging
   /*
@@ -189,52 +190,52 @@ int main( int argc, char** argv)
   printf("%s\n", build_log );
   */
 
-  cl_kernel BFS_kernel = clCreateKernel(clProgram,"BFS_kernel",&clStatus);
+  cl_kernel BFS_kernel = CECL_KERNEL(clProgram,"BFS_kernel",&clStatus);
   OCL_ERRCK_VAR(clStatus);
 
   //Copy the Node list to device memory
   cl_mem d_graph_nodes;
-  d_graph_nodes = clCreateBuffer(clContext,CL_MEM_READ_ONLY,num_of_nodes*sizeof(struct Node),NULL,&clStatus);
+  d_graph_nodes = CECL_BUFFER(clContext,CL_MEM_READ_ONLY,num_of_nodes*sizeof(struct Node),NULL,&clStatus);
   OCL_ERRCK_VAR(clStatus);
-  OCL_ERRCK_RETVAL(clEnqueueWriteBuffer(clCommandQueue,d_graph_nodes,CL_TRUE,0,num_of_nodes*sizeof(struct Node),h_graph_nodes,0,NULL,NULL));
+  OCL_ERRCK_RETVAL(CECL_WRITE_BUFFER(clCommandQueue,d_graph_nodes,CL_TRUE,0,num_of_nodes*sizeof(struct Node),h_graph_nodes,0,NULL,NULL));
   //Copy the Edge List to device Memory
   cl_mem d_graph_edges;
-  d_graph_edges = clCreateBuffer(clContext,CL_MEM_READ_ONLY,num_of_edges*sizeof(struct Edge),NULL,&clStatus);
+  d_graph_edges = CECL_BUFFER(clContext,CL_MEM_READ_ONLY,num_of_edges*sizeof(struct Edge),NULL,&clStatus);
   OCL_ERRCK_VAR(clStatus);
-  OCL_ERRCK_RETVAL(clEnqueueWriteBuffer(clCommandQueue,d_graph_edges,CL_TRUE,0,num_of_edges*sizeof(struct Edge),h_graph_edges,0,NULL,NULL));
+  OCL_ERRCK_RETVAL(CECL_WRITE_BUFFER(clCommandQueue,d_graph_edges,CL_TRUE,0,num_of_edges*sizeof(struct Edge),h_graph_edges,0,NULL,NULL));
 
   cl_mem d_color, d_cost, d_q1, d_q2, tail;
-  d_color = clCreateBuffer(clContext,CL_MEM_READ_WRITE,num_of_nodes*sizeof(int),NULL,&clStatus);
-  d_cost = clCreateBuffer(clContext,CL_MEM_READ_WRITE,num_of_nodes*sizeof(int),NULL,&clStatus);
-  d_q1 = clCreateBuffer(clContext,CL_MEM_READ_WRITE,num_of_nodes*sizeof(int),NULL,&clStatus);
-  d_q2 = clCreateBuffer(clContext,CL_MEM_READ_WRITE,num_of_nodes*sizeof(int),NULL,&clStatus);
-  tail = clCreateBuffer(clContext,CL_MEM_READ_WRITE,sizeof(int),NULL,&clStatus);
+  d_color = CECL_BUFFER(clContext,CL_MEM_READ_WRITE,num_of_nodes*sizeof(int),NULL,&clStatus);
+  d_cost = CECL_BUFFER(clContext,CL_MEM_READ_WRITE,num_of_nodes*sizeof(int),NULL,&clStatus);
+  d_q1 = CECL_BUFFER(clContext,CL_MEM_READ_WRITE,num_of_nodes*sizeof(int),NULL,&clStatus);
+  d_q2 = CECL_BUFFER(clContext,CL_MEM_READ_WRITE,num_of_nodes*sizeof(int),NULL,&clStatus);
+  tail = CECL_BUFFER(clContext,CL_MEM_READ_WRITE,sizeof(int),NULL,&clStatus);
   OCL_ERRCK_VAR(clStatus);
-  OCL_ERRCK_RETVAL(clEnqueueWriteBuffer(clCommandQueue,d_color,CL_TRUE,0,num_of_nodes*sizeof(int),color,0,NULL,NULL));
-  OCL_ERRCK_RETVAL(clEnqueueWriteBuffer(clCommandQueue,d_cost,CL_TRUE,0,num_of_nodes*sizeof(int),h_cost,0,NULL,NULL));
+  OCL_ERRCK_RETVAL(CECL_WRITE_BUFFER(clCommandQueue,d_color,CL_TRUE,0,num_of_nodes*sizeof(int),color,0,NULL,NULL));
+  OCL_ERRCK_RETVAL(CECL_WRITE_BUFFER(clCommandQueue,d_cost,CL_TRUE,0,num_of_nodes*sizeof(int),h_cost,0,NULL,NULL));
 
   printf("Starting GPU kernel\n");
   pb_SwitchToTimer(&timers, pb_TimerID_KERNEL);
   int num_of_blocks;
   int num_of_threads_per_block;
 
-  OCL_ERRCK_RETVAL(clEnqueueWriteBuffer(clCommandQueue,tail,CL_TRUE,0,sizeof(int),&h_top,0,NULL,NULL));
-  OCL_ERRCK_RETVAL(clEnqueueWriteBuffer(clCommandQueue,d_cost,CL_TRUE,0,sizeof(int),&zero,0,NULL,NULL));
-  OCL_ERRCK_RETVAL(clEnqueueWriteBuffer(clCommandQueue,d_q1,CL_TRUE,0,sizeof(int),&source,0,NULL,NULL));
+  OCL_ERRCK_RETVAL(CECL_WRITE_BUFFER(clCommandQueue,tail,CL_TRUE,0,sizeof(int),&h_top,0,NULL,NULL));
+  OCL_ERRCK_RETVAL(CECL_WRITE_BUFFER(clCommandQueue,d_cost,CL_TRUE,0,sizeof(int),&zero,0,NULL,NULL));
+  OCL_ERRCK_RETVAL(CECL_WRITE_BUFFER(clCommandQueue,d_q1,CL_TRUE,0,sizeof(int),&source,0,NULL,NULL));
 
   int num_t;//number of threads
   int k=0;//BFS level index
 
-  OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,2,sizeof(cl_mem),(void*)&d_graph_nodes));
-  OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,3,sizeof(cl_mem),(void*)&d_graph_edges));
-  OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,4,sizeof(cl_mem),(void*)&d_color));
-  OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,5,sizeof(cl_mem),(void*)&d_cost));
-  OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,6,sizeof(cl_mem),(void*)&tail));
+  OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,2,sizeof(cl_mem),(void*)&d_graph_nodes));
+  OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,3,sizeof(cl_mem),(void*)&d_graph_edges));
+  OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,4,sizeof(cl_mem),(void*)&d_color));
+  OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,5,sizeof(cl_mem),(void*)&d_cost));
+  OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,6,sizeof(cl_mem),(void*)&tail));
 
   do
   {
-    OCL_ERRCK_RETVAL(clEnqueueReadBuffer(clCommandQueue,tail,CL_TRUE,0,sizeof(int),&num_t,0,NULL,NULL));
-    OCL_ERRCK_RETVAL(clEnqueueWriteBuffer(clCommandQueue,tail,CL_TRUE,0,sizeof(int),&zero,0,NULL,NULL));
+    OCL_ERRCK_RETVAL(CECL_READ_BUFFER(clCommandQueue,tail,CL_TRUE,0,sizeof(int),&num_t,0,NULL,NULL));
+    OCL_ERRCK_RETVAL(CECL_WRITE_BUFFER(clCommandQueue,tail,CL_TRUE,0,sizeof(int),&zero,0,NULL,NULL));
 
     if(num_t == 0){//frontier is empty
       break;
@@ -247,24 +248,24 @@ int main( int argc, char** argv)
     size_t block[1] = {num_of_threads_per_block};
 
 
-    OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,7,sizeof(int),(void*)&num_t));
-    OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,9,sizeof(int),(void*)&k));
-    OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,10,sizeof(int),NULL));
-    OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,11,LOCAL_MEM_SIZE*sizeof(int),NULL));
-    OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,12,sizeof(int),NULL));
+    OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,7,sizeof(int),(void*)&num_t));
+    OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,9,sizeof(int),(void*)&k));
+    OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,10,sizeof(int),NULL));
+    OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,11,LOCAL_MEM_SIZE*sizeof(int),NULL));
+    OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,12,sizeof(int),NULL));
     if(k%2 == 0){
       int gray = GRAY0;
-      OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,0,sizeof(cl_mem),(void*)&d_q1));
-      OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,1,sizeof(cl_mem),(void*)&d_q2));
-      OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,8,sizeof(int),(void*)&gray));
+      OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,0,sizeof(cl_mem),(void*)&d_q1));
+      OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,1,sizeof(cl_mem),(void*)&d_q2));
+      OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,8,sizeof(int),(void*)&gray));
     }
     else{
       int gray = GRAY1;
-      OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,0,sizeof(cl_mem),(void*)&d_q2));
-      OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,1,sizeof(cl_mem),(void*)&d_q1));
-      OCL_ERRCK_RETVAL(clSetKernelArg(BFS_kernel,8,sizeof(int),(void*)&gray));
+      OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,0,sizeof(cl_mem),(void*)&d_q2));
+      OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,1,sizeof(cl_mem),(void*)&d_q1));
+      OCL_ERRCK_RETVAL(CECL_SET_KERNEL_ARG(BFS_kernel,8,sizeof(int),(void*)&gray));
     }
-    OCL_ERRCK_RETVAL(clEnqueueNDRangeKernel(clCommandQueue,BFS_kernel,1,0,grid,block,0,0,0));
+    OCL_ERRCK_RETVAL(CECL_ND_RANGE_KERNEL(clCommandQueue,BFS_kernel,1,0,grid,block,0,0,0));
     OCL_ERRCK_RETVAL(clFinish(clCommandQueue));
     k++;
   } while(1);
@@ -272,8 +273,8 @@ int main( int argc, char** argv)
   printf("GPU kernel done\n");
 
   // copy result from device to host
-  OCL_ERRCK_RETVAL(clEnqueueReadBuffer(clCommandQueue,d_cost,CL_TRUE,0,num_of_nodes*sizeof(int),h_cost,0,NULL,NULL));
-  OCL_ERRCK_RETVAL(clEnqueueReadBuffer(clCommandQueue,d_color,CL_TRUE,0,num_of_nodes*sizeof(int),color,0,NULL,NULL));
+  OCL_ERRCK_RETVAL(CECL_READ_BUFFER(clCommandQueue,d_cost,CL_TRUE,0,num_of_nodes*sizeof(int),h_cost,0,NULL,NULL));
+  OCL_ERRCK_RETVAL(CECL_READ_BUFFER(clCommandQueue,d_color,CL_TRUE,0,num_of_nodes*sizeof(int),color,0,NULL,NULL));
 
   OCL_ERRCK_RETVAL(clReleaseMemObject(d_graph_nodes));
   OCL_ERRCK_RETVAL(clReleaseMemObject(d_graph_edges));

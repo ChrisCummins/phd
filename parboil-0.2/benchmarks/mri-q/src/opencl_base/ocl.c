@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <CL/cl.h>
 #include <stdio.h>
 #include <string.h>
@@ -43,7 +44,7 @@ void clMemSet(clPrmtr* clPrm, cl_mem buf, int val, size_t size)
 	cl_int clStatus;
 	char* temp = (char*)malloc(size);
 	memset(temp,val,size);
-	clStatus = clEnqueueWriteBuffer(clPrm->clCommandQueue,buf,CL_TRUE,0,size,temp,0,NULL,NULL);
-	CHECK_ERROR("clEnqueueWriteBuffer")
+	clStatus = CECL_WRITE_BUFFER(clPrm->clCommandQueue,buf,CL_TRUE,0,size,temp,0,NULL,NULL);
+	CHECK_ERROR("CECL_WRITE_BUFFER")
 	free(temp);
 }

@@ -1,3 +1,4 @@
+#include <cecl.h>
 /***************************************************************************
  *cr
  *cr            (C) Copyright 2010 The Board of Trustees of the
@@ -206,23 +207,23 @@ void OpenCL_initialize(OpenCL_Param* prm)
 	prm->clContext = clCreateContextFromType(prm->clCps,CL_DEVICE_TYPE_CPU,NULL,NULL,&clStatus);
 	CHECK_ERROR("clCreateContextFromType")
 
-	prm->clCommandQueue = clCreateCommandQueue(prm->clContext,prm->clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
-	CHECK_ERROR("clCreateCommandQueue")
+	prm->clCommandQueue = CECL_CREATE_COMMAND_QUEUE(prm->clContext,prm->clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
+	CHECK_ERROR("CECL_CREATE_COMMAND_QUEUE")
 
   	pb_SetOpenCL(&(prm->clContext), &(prm->clCommandQueue));
 
 	const char* clSource[] = {readFile("src/opencl_base/kernel.cl")};
-	prm->clProgram = clCreateProgramWithSource(prm->clContext,1,clSource,NULL,&clStatus);
-	CHECK_ERROR("clCreateProgramWithSource")
+	prm->clProgram = CECL_PROGRAM_WITH_SOURCE(prm->clContext,1,clSource,NULL,&clStatus);
+	CHECK_ERROR("CECL_PROGRAM_WITH_SOURCE")
 
 	char clOptions[100];
 	sprintf(clOptions,"-I src/opencl_base");
 		
-	clStatus = clBuildProgram(prm->clProgram,1,&(prm->clDevice),clOptions,NULL,NULL);
-	CHECK_ERROR("clBuildProgram")
+	clStatus = CECL_PROGRAM(prm->clProgram,1,&(prm->clDevice),clOptions,NULL,NULL);
+	CHECK_ERROR("CECL_PROGRAM")
 
-	prm->clKernel = clCreateKernel(prm->clProgram,"performStreamCollide_kernel",&clStatus);
-	CHECK_ERROR("clCreateKernel")
+	prm->clKernel = CECL_KERNEL(prm->clProgram,"performStreamCollide_kernel",&clStatus);
+	CHECK_ERROR("CECL_KERNEL")
 
 	free((void*)clSource[0]);
 }

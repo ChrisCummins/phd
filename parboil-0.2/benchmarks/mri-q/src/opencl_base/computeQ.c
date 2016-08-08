@@ -1,3 +1,4 @@
+#include <cecl.h>
 /***************************************************************************
  *cr
  *cr            (C) Copyright 2007 The Board of Trustees of the
@@ -25,14 +26,14 @@ void computePhiMag_GPU(int numK,cl_mem phiR_d,cl_mem phiI_d,cl_mem phiMag_d,clPr
   size_t DimPhiMagGrid = phiMagBlocks*KERNEL_PHI_MAG_THREADS_PER_BLOCK;
 
   cl_int clStatus;
-  clStatus = clSetKernelArg(clPrm->clKernel,0,sizeof(cl_mem),&phiR_d);
-  clStatus = clSetKernelArg(clPrm->clKernel,1,sizeof(cl_mem),&phiI_d);
-  clStatus = clSetKernelArg(clPrm->clKernel,2,sizeof(cl_mem),&phiMag_d);
-  clStatus = clSetKernelArg(clPrm->clKernel,3,sizeof(int),&numK);
-  CHECK_ERROR("clSetKernelArg")
+  clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,0,sizeof(cl_mem),&phiR_d);
+  clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,1,sizeof(cl_mem),&phiI_d);
+  clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,2,sizeof(cl_mem),&phiMag_d);
+  clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,3,sizeof(int),&numK);
+  CHECK_ERROR("CECL_SET_KERNEL_ARG")
 
-  clStatus = clEnqueueNDRangeKernel(clPrm->clCommandQueue,clPrm->clKernel,1,NULL,&DimPhiMagGrid,&DimPhiMagBlock,0,NULL,NULL);
-  CHECK_ERROR("clEnqueueNDRangeKernel")
+  clStatus = CECL_ND_RANGE_KERNEL(clPrm->clCommandQueue,clPrm->clKernel,1,NULL,&DimPhiMagGrid,&DimPhiMagBlock,0,NULL,NULL);
+  CHECK_ERROR("CECL_ND_RANGE_KERNEL")
 }
 
 static
@@ -69,7 +70,7 @@ void computeQ_GPU (int numK,int numX,
 
   cl_int clStatus;
   cl_mem ck;
-  ck = clCreateBuffer(clPrm->clContext,CL_MEM_READ_WRITE,KERNEL_Q_K_ELEMS_PER_GRID*sizeof(struct kValues),NULL,&clStatus);
+  ck = CECL_BUFFER(clPrm->clContext,CL_MEM_READ_WRITE,KERNEL_Q_K_ELEMS_PER_GRID*sizeof(struct kValues),NULL,&clStatus);
 
   int QGrid;
   for (QGrid = 0; QGrid < QGrids; QGrid++) {
@@ -78,31 +79,31 @@ void computeQ_GPU (int numK,int numX,
     struct kValues* kValsTile = kVals + QGridBase;
     int numElems = MIN(KERNEL_Q_K_ELEMS_PER_GRID, numK - QGridBase);
 
-    clStatus = clEnqueueWriteBuffer(clPrm->clCommandQueue,ck,CL_TRUE,0,numElems*sizeof(struct kValues),kValsTile,0,NULL,NULL);
-    CHECK_ERROR("clEnqueueWriteBuffer")
+    clStatus = CECL_WRITE_BUFFER(clPrm->clCommandQueue,ck,CL_TRUE,0,numElems*sizeof(struct kValues),kValsTile,0,NULL,NULL);
+    CHECK_ERROR("CECL_WRITE_BUFFER")
     
-    clStatus = clSetKernelArg(clPrm->clKernel,0,sizeof(int),&numK);
-    clStatus = clSetKernelArg(clPrm->clKernel,1,sizeof(int),&QGridBase);
-    clStatus = clSetKernelArg(clPrm->clKernel,2,sizeof(cl_mem),&x_d);
-    clStatus = clSetKernelArg(clPrm->clKernel,3,sizeof(cl_mem),&y_d);
-    clStatus = clSetKernelArg(clPrm->clKernel,4,sizeof(cl_mem),&z_d);
-    clStatus = clSetKernelArg(clPrm->clKernel,5,sizeof(cl_mem),&Qr_d);
-    clStatus = clSetKernelArg(clPrm->clKernel,6,sizeof(cl_mem),&Qi_d);
-    clStatus = clSetKernelArg(clPrm->clKernel,7,sizeof(cl_mem),&ck);
-    CHECK_ERROR("clSetKernelArg")
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,0,sizeof(int),&numK);
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,1,sizeof(int),&QGridBase);
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,2,sizeof(cl_mem),&x_d);
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,3,sizeof(cl_mem),&y_d);
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,4,sizeof(cl_mem),&z_d);
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,5,sizeof(cl_mem),&Qr_d);
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,6,sizeof(cl_mem),&Qi_d);
+    clStatus = CECL_SET_KERNEL_ARG(clPrm->clKernel,7,sizeof(cl_mem),&ck);
+    CHECK_ERROR("CECL_SET_KERNEL_ARG")
 
     printf ("Grid: %d, Block: %d\n", DimQGrid, DimQBlock);
 
     #define TIMED_EXECUTION
     #ifdef TIMED_EXECUTION
     cl_event e;
-    clStatus = clEnqueueNDRangeKernel(clPrm->clCommandQueue,clPrm->clKernel,1,NULL,&DimQGrid,&DimQBlock,0,NULL,&e);
-    CHECK_ERROR("clEnqueueNDRangeKernel")
+    clStatus = CECL_ND_RANGE_KERNEL(clPrm->clCommandQueue,clPrm->clKernel,1,NULL,&DimQGrid,&DimQBlock,0,NULL,&e);
+    CHECK_ERROR("CECL_ND_RANGE_KERNEL")
     clWaitForEvents(1, &e);
     printf ("%llu\n", readElapsedTime(e));
     #else
-    clStatus = clEnqueueNDRangeKernel(clPrm->clCommandQueue,clPrm->clKernel,1,NULL,&DimQGrid,&DimQBlock,0,NULL,NULL);
-    CHECK_ERROR("clEnqueueNDRangeKernel")
+    clStatus = CECL_ND_RANGE_KERNEL(clPrm->clCommandQueue,clPrm->clKernel,1,NULL,&DimQGrid,&DimQBlock,0,NULL,NULL);
+    CHECK_ERROR("CECL_ND_RANGE_KERNEL")
     #endif
   }
 }

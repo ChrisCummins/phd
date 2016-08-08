@@ -1,3 +1,4 @@
+#include <cecl.h>
 /***************************************************************************
  *cr
  *cr            (C) Copyright 2007 The Board of Trustees of the
@@ -319,7 +320,7 @@ main(int argc, char **argv)
     clContext = clCreateContextFromType(cps, deviceType, NULL, NULL, &ciErrNum);
   	OCL_ERRCK_VAR(ciErrNum);
   	
-  	clCommandQueue = clCreateCommandQueue(clContext, clDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+  	clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clContext, clDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
   	OCL_ERRCK_VAR(ciErrNum);
   	
     pb_SetOpenCL(&clContext, &clCommandQueue);
@@ -333,7 +334,7 @@ main(int argc, char **argv)
         fprintf(stderr, "Could not load program source\n"); exit(1);
     }
   	
-  	cl_program clProgram = clCreateProgramWithSource(clContext, 1, (const char **)&source, &program_length, &ciErrNum);
+  	cl_program clProgram = CECL_PROGRAM_WITH_SOURCE(clContext, 1, (const char **)&source, &program_length, &ciErrNum);
   	OCL_ERRCK_VAR(ciErrNum);
   	
   	free(source);
@@ -353,7 +354,7 @@ main(int argc, char **argv)
                 SEARCH_RANGE, SEARCH_DIMENSION
             ); 
     
-    OCL_ERRCK_RETVAL( clBuildProgram(clProgram, 1, &clDevice, compileOptions, NULL, NULL) );
+    OCL_ERRCK_RETVAL( CECL_PROGRAM(clProgram, 1, &clDevice, compileOptions, NULL, NULL) );
  	
    /*	
    char *build_log;
@@ -368,11 +369,11 @@ main(int argc, char **argv)
        fprintf(stderr, "%s\n", build_log );
    */  
 
-    mb_sad_calc = clCreateKernel(clProgram, "mb_sad_calc", &ciErrNum);
+    mb_sad_calc = CECL_KERNEL(clProgram, "mb_sad_calc", &ciErrNum);
    	OCL_ERRCK_VAR(ciErrNum);    
-   	larger_sad_calc_8 = clCreateKernel(clProgram, "larger_sad_calc_8", &ciErrNum);
+   	larger_sad_calc_8 = CECL_KERNEL(clProgram, "larger_sad_calc_8", &ciErrNum);
    	OCL_ERRCK_VAR(ciErrNum);
-   	larger_sad_calc_16 = clCreateKernel(clProgram, "larger_sad_calc_16", &ciErrNum);
+   	larger_sad_calc_16 = CECL_KERNEL(clProgram, "larger_sad_calc_16", &ciErrNum);
    	OCL_ERRCK_VAR(ciErrNum);
 
     size_t wgSize;
@@ -410,29 +411,29 @@ main(int argc, char **argv)
       exit(-1);
     }
     
-    d_sads = clCreateBuffer(clContext, CL_MEM_COPY_HOST_PTR, 41 * MAX_POS_PADDED * image_size_macroblocks * sizeof(unsigned short), tmpZero, &ciErrNum);
+    d_sads = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, 41 * MAX_POS_PADDED * image_size_macroblocks * sizeof(unsigned short), tmpZero, &ciErrNum);
     OCL_ERRCK_VAR(ciErrNum);
     free(tmpZero);
     
-    d_cur_image = clCreateBuffer(clContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, image_size_bytes, cur_image->data, &ciErrNum);
+    d_cur_image = CECL_BUFFER(clContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, image_size_bytes, cur_image->data, &ciErrNum);
     OCL_ERRCK_VAR(ciErrNum);
 
 	/* Set Kernel Parameters */	
-	OCL_ERRCK_RETVAL( clSetKernelArg(mb_sad_calc, 0, sizeof(cl_mem), (void *)&d_sads) );
-	OCL_ERRCK_RETVAL( clSetKernelArg(larger_sad_calc_8, 0, sizeof(cl_mem), (void *)&d_sads) );
-	OCL_ERRCK_RETVAL( clSetKernelArg(larger_sad_calc_16, 0, sizeof(cl_mem), (void *)&d_sads) );
+	OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(mb_sad_calc, 0, sizeof(cl_mem), (void *)&d_sads) );
+	OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(larger_sad_calc_8, 0, sizeof(cl_mem), (void *)&d_sads) );
+	OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(larger_sad_calc_16, 0, sizeof(cl_mem), (void *)&d_sads) );
 	
-	OCL_ERRCK_RETVAL( clSetKernelArg(mb_sad_calc, 1, sizeof(cl_mem), (void *)&d_cur_image) );
+	OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(mb_sad_calc, 1, sizeof(cl_mem), (void *)&d_cur_image) );
 	
-	OCL_ERRCK_RETVAL( clSetKernelArg(mb_sad_calc, 2, sizeof(int), &image_width_macroblocks) );
-	OCL_ERRCK_RETVAL( clSetKernelArg(larger_sad_calc_8, 1, sizeof(int), &image_width_macroblocks) );
-	OCL_ERRCK_RETVAL( clSetKernelArg(larger_sad_calc_16, 1, sizeof(int), &image_width_macroblocks) );
+	OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(mb_sad_calc, 2, sizeof(int), &image_width_macroblocks) );
+	OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(larger_sad_calc_8, 1, sizeof(int), &image_width_macroblocks) );
+	OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(larger_sad_calc_16, 1, sizeof(int), &image_width_macroblocks) );
 	
-	OCL_ERRCK_RETVAL( clSetKernelArg(mb_sad_calc, 3, sizeof(int), &image_height_macroblocks) );
-	OCL_ERRCK_RETVAL( clSetKernelArg(larger_sad_calc_8, 2, sizeof(int), &image_height_macroblocks) );
-	OCL_ERRCK_RETVAL( clSetKernelArg(larger_sad_calc_16, 2, sizeof(int), &image_height_macroblocks) );
+	OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(mb_sad_calc, 3, sizeof(int), &image_height_macroblocks) );
+	OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(larger_sad_calc_8, 2, sizeof(int), &image_height_macroblocks) );
+	OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(larger_sad_calc_16, 2, sizeof(int), &image_height_macroblocks) );
 	
-	OCL_ERRCK_RETVAL( clSetKernelArg(mb_sad_calc, 4, sizeof(cl_mem), (void *)&imgRef) );	
+	OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(mb_sad_calc, 4, sizeof(cl_mem), (void *)&imgRef) );	
 	
 	size_t mb_sad_calc_localWorkSize[2] = {
 	    CEIL(MAX_POS, POS_PER_THREAD) * THREADS_W * THREADS_H,
@@ -452,18 +453,18 @@ main(int argc, char **argv)
     pb_SwitchToTimer(&timers, pb_TimerID_KERNEL);
 	
     /* Run the 4x4 kernel */	
-	OCL_ERRCK_RETVAL( clEnqueueNDRangeKernel(clCommandQueue, mb_sad_calc, 2, 0, mb_sad_calc_globalWorkSize, mb_sad_calc_localWorkSize, 0, 0, 0) );
+	OCL_ERRCK_RETVAL( CECL_ND_RANGE_KERNEL(clCommandQueue, mb_sad_calc, 2, 0, mb_sad_calc_globalWorkSize, mb_sad_calc_localWorkSize, 0, 0, 0) );
 		
 	/* Run the larger-blocks kernels */
-	OCL_ERRCK_RETVAL( clEnqueueNDRangeKernel(clCommandQueue, larger_sad_calc_8, 2, 0, larger_sad_calc_8_globalWorkSize, larger_sad_calc_8_localWorkSize, 0, 0, 0) );
+	OCL_ERRCK_RETVAL( CECL_ND_RANGE_KERNEL(clCommandQueue, larger_sad_calc_8, 2, 0, larger_sad_calc_8_globalWorkSize, larger_sad_calc_8_localWorkSize, 0, 0, 0) );
 		
-	OCL_ERRCK_RETVAL( clEnqueueNDRangeKernel(clCommandQueue, larger_sad_calc_16, 2, 0, larger_sad_calc_16_globalWorkSize, larger_sad_calc_16_localWorkSize, 0, 0, 0) );
+	OCL_ERRCK_RETVAL( CECL_ND_RANGE_KERNEL(clCommandQueue, larger_sad_calc_16, 2, 0, larger_sad_calc_16_globalWorkSize, larger_sad_calc_16_localWorkSize, 0, 0, 0) );
 
     OCL_ERRCK_RETVAL( clFinish(clCommandQueue) );
     pb_SwitchToTimer(&timers, pb_TimerID_COPY);
 
     /* Transfer SAD data to the host */    
-    OCL_ERRCK_RETVAL( clEnqueueReadBuffer(clCommandQueue, d_sads, CL_TRUE, 
+    OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, d_sads, CL_TRUE, 
         0, 
         41 * MAX_POS_PADDED * image_size_macroblocks * sizeof(unsigned short), 
         sads_computed, 0, NULL, NULL) );

@@ -1,3 +1,4 @@
+#include <cecl.h>
 /***************************************************************************
  *cr
  *cr            (C) Copyright 2010 The Board of Trustees of the
@@ -28,16 +29,16 @@ void OpenCL_LBM_performStreamCollide( const OpenCL_Param* prm, cl_mem srcGrid, c
 	 
 	cl_int clStatus;
 
-	clStatus = clSetKernelArg(prm->clKernel,0,sizeof(cl_mem),(void*)&srcGrid);
-	CHECK_ERROR("clSetKernelArg")
+	clStatus = CECL_SET_KERNEL_ARG(prm->clKernel,0,sizeof(cl_mem),(void*)&srcGrid);
+	CHECK_ERROR("CECL_SET_KERNEL_ARG")
 
-	clStatus = clSetKernelArg(prm->clKernel,1,sizeof(cl_mem),(void*)&dstGrid);
-	CHECK_ERROR("clSetKernelArg")
+	clStatus = CECL_SET_KERNEL_ARG(prm->clKernel,1,sizeof(cl_mem),(void*)&dstGrid);
+	CHECK_ERROR("CECL_SET_KERNEL_ARG")
 
 	size_t dimBlock[3] = {SIZE_X,1,1};
 	size_t dimGrid[3] = {SIZE_X*SIZE_Y,SIZE_Z,1};
-	clStatus = clEnqueueNDRangeKernel(prm->clCommandQueue,prm->clKernel,3,NULL,dimGrid,dimBlock,0,NULL,NULL); 
-	CHECK_ERROR("clEnqueueNDRangeKernel") 	
+	clStatus = CECL_ND_RANGE_KERNEL(prm->clCommandQueue,prm->clKernel,3,NULL,dimGrid,dimBlock,0,NULL,NULL); 
+	CHECK_ERROR("CECL_ND_RANGE_KERNEL") 	
 	
 	clStatus = clFinish(prm->clCommandQueue);
 	CHECK_ERROR("clFinish")
@@ -75,8 +76,8 @@ void OpenCL_LBM_allocateGrid( const OpenCL_Param* prm, cl_mem* ptr ) {
             (int) (max_alloc_size >> 20));
     exit(-1);
   }
-	*ptr = clCreateBuffer(prm->clContext,CL_MEM_READ_WRITE,size,NULL,&clStatus);
-	CHECK_ERROR("clCreateBuffer")
+	*ptr = CECL_BUFFER(prm->clContext,CL_MEM_READ_WRITE,size,NULL,&clStatus);
+	CHECK_ERROR("CECL_BUFFER")
 }
 
 /*############################################################################*/
@@ -127,15 +128,15 @@ void LBM_initializeGrid( LBM_Grid grid ) {
 void OpenCL_LBM_initializeGrid( const OpenCL_Param* prm, cl_mem d_grid, LBM_Grid h_grid ) {
 	const size_t size = TOTAL_PADDED_CELLS*N_CELL_ENTRIES*sizeof( float ); 
 	cl_int clStatus;
-	clStatus = clEnqueueWriteBuffer(prm->clCommandQueue,d_grid,CL_TRUE,0,size,h_grid-MARGIN,0,NULL,NULL);
-	CHECK_ERROR("clEnqueueWriteBuffer")
+	clStatus = CECL_WRITE_BUFFER(prm->clCommandQueue,d_grid,CL_TRUE,0,size,h_grid-MARGIN,0,NULL,NULL);
+	CHECK_ERROR("CECL_WRITE_BUFFER")
 }
 
 void OpenCL_LBM_getDeviceGrid( const OpenCL_Param* prm, cl_mem d_grid, LBM_Grid h_grid ) {
 	const size_t size = TOTAL_PADDED_CELLS*N_CELL_ENTRIES*sizeof( float );
         cl_int clStatus;
-        clStatus = clEnqueueReadBuffer(prm->clCommandQueue,d_grid,CL_TRUE,0,size,h_grid-MARGIN,0,NULL,NULL);
-	CHECK_ERROR("clEnqueueReadBuffer")
+        clStatus = CECL_READ_BUFFER(prm->clCommandQueue,d_grid,CL_TRUE,0,size,h_grid-MARGIN,0,NULL,NULL);
+	CHECK_ERROR("CECL_READ_BUFFER")
 }
 
 /*############################################################################*/

@@ -1,3 +1,4 @@
+#include <cecl.h>
 /***************************************************************************
  *
  *            (C) Copyright 2010 The Board of Trustees of the
@@ -146,7 +147,7 @@ int main(int argc, char* argv[]) {
   clContext = clCreateContextFromType(cps, deviceType, NULL, NULL, &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
   
-  clCommandQueue = clCreateCommandQueue(clContext, clDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+  clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clContext, clDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
   
   pb_SetOpenCL(&clContext, &clCommandQueue);
@@ -201,7 +202,7 @@ int main(int argc, char* argv[]) {
       fprintf(stderr, "Could not load program source\n"); exit(1);
     }
   	
-  	clProgram[i] = clCreateProgramWithSource(clContext, 1, (const char **)&source[i], &program_length[i], &ciErrNum);
+  	clProgram[i] = CECL_PROGRAM_WITH_SOURCE(clContext, 1, (const char **)&source[i], &program_length[i], &ciErrNum);
   	OCL_ERRCK_VAR(ciErrNum);
   	  	
   	free(source[i]);
@@ -223,7 +224,7 @@ int main(int argc, char* argv[]) {
   
   for (int i = 0; i < 4; ++i) {
     //fprintf(stderr, "Building Program #%d...\n", i);
-    OCL_ERRCK_RETVAL ( clBuildProgram(clProgram[i], 1, &clDevice, compileOptions, NULL, NULL) );
+    OCL_ERRCK_RETVAL ( CECL_PROGRAM(clProgram[i], 1, &clDevice, compileOptions, NULL, NULL) );
        
           /*
        char *build_log;
@@ -242,27 +243,27 @@ int main(int argc, char* argv[]) {
        */
   }
   	
-  histo_prescan_kernel = clCreateKernel(clProgram[0], "histo_prescan_kernel", &ciErrNum);
+  histo_prescan_kernel = CECL_KERNEL(clProgram[0], "histo_prescan_kernel", &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
-  histo_intermediates_kernel = clCreateKernel(clProgram[1], "histo_intermediates_kernel", &ciErrNum);
+  histo_intermediates_kernel = CECL_KERNEL(clProgram[1], "histo_intermediates_kernel", &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
-  histo_intermediates_kernel_compat = clCreateKernel(clProgram[1], "histo_intermediates_kernel_compat", &ciErrNum);
+  histo_intermediates_kernel_compat = CECL_KERNEL(clProgram[1], "histo_intermediates_kernel_compat", &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
-  histo_main_kernel = clCreateKernel(clProgram[2], "histo_main_kernel", &ciErrNum);
+  histo_main_kernel = CECL_KERNEL(clProgram[2], "histo_main_kernel", &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
-  histo_final_kernel = clCreateKernel(clProgram[3], "histo_final_kernel", &ciErrNum);
+  histo_final_kernel = CECL_KERNEL(clProgram[3], "histo_final_kernel", &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
   
   pb_SwitchToTimer(&timers, pb_TimerID_COPY);  
 
-  input =           clCreateBuffer(clContext, CL_MEM_READ_WRITE, 
+  input =           CECL_BUFFER(clContext, CL_MEM_READ_WRITE, 
       even_width*(((img_height+UNROLL-1)/UNROLL)*UNROLL)*sizeof(unsigned int), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
-  ranges =          clCreateBuffer(clContext, CL_MEM_READ_WRITE, 2*sizeof(unsigned int), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);  
-  sm_mappings =     clCreateBuffer(clContext, CL_MEM_READ_WRITE, img_width*img_height*4*sizeof(unsigned char), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
-  global_subhisto = clCreateBuffer(clContext, CL_MEM_READ_WRITE, img_width*histo_height*sizeof(unsigned int), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
-  global_histo =    clCreateBuffer(clContext, CL_MEM_READ_WRITE, img_width*histo_height*sizeof(unsigned short), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
-  global_overflow = clCreateBuffer(clContext, CL_MEM_READ_WRITE, img_width*histo_height*sizeof(unsigned int), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
-  final_histo =     clCreateBuffer(clContext, CL_MEM_READ_WRITE, img_width*histo_height*sizeof(unsigned char), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
+  ranges =          CECL_BUFFER(clContext, CL_MEM_READ_WRITE, 2*sizeof(unsigned int), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);  
+  sm_mappings =     CECL_BUFFER(clContext, CL_MEM_READ_WRITE, img_width*img_height*4*sizeof(unsigned char), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
+  global_subhisto = CECL_BUFFER(clContext, CL_MEM_READ_WRITE, img_width*histo_height*sizeof(unsigned int), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
+  global_histo =    CECL_BUFFER(clContext, CL_MEM_READ_WRITE, img_width*histo_height*sizeof(unsigned short), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
+  global_overflow = CECL_BUFFER(clContext, CL_MEM_READ_WRITE, img_width*histo_height*sizeof(unsigned int), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
+  final_histo =     CECL_BUFFER(clContext, CL_MEM_READ_WRITE, img_width*histo_height*sizeof(unsigned char), NULL, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
 
   // Must dynamically allocate. Too large for stack
   unsigned int *zeroData;
@@ -273,7 +274,7 @@ int main(int argc, char* argv[]) {
   }
    
   for (int y=0; y < img_height; y++){
-    OCL_ERRCK_RETVAL( clEnqueueWriteBuffer(clCommandQueue, input, CL_TRUE, 
+    OCL_ERRCK_RETVAL( CECL_WRITE_BUFFER(clCommandQueue, input, CL_TRUE, 
                           y*even_width*sizeof(unsigned int), // Offset in bytes
                           img_width*sizeof(unsigned int), // Size of data to write
                           &img[y*img_width], // Host Source
@@ -284,41 +285,41 @@ int main(int argc, char* argv[]) {
   pb_SwitchToSubTimer(&timers, oclOverhead, pb_TimerID_KERNEL);
 
   unsigned int img_dim = img_height*img_width;
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_prescan_kernel, 0, sizeof(cl_mem), (void *)&input) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_prescan_kernel, 1, sizeof(unsigned int), &img_dim) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_prescan_kernel, 2, sizeof(cl_mem), (void *)&ranges) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_prescan_kernel, 0, sizeof(cl_mem), (void *)&input) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_prescan_kernel, 1, sizeof(unsigned int), &img_dim) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_prescan_kernel, 2, sizeof(cl_mem), (void *)&ranges) );
 
   unsigned int half_width = (img_width+1)/2;
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_intermediates_kernel, 0, sizeof(cl_mem), (void *)&input) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_intermediates_kernel, 1, sizeof(unsigned int), &img_height) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_intermediates_kernel, 2, sizeof(unsigned int), &img_width) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_intermediates_kernel, 3, sizeof(unsigned int), &half_width) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_intermediates_kernel, 4, sizeof(cl_mem), (void *)&sm_mappings) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_intermediates_kernel, 0, sizeof(cl_mem), (void *)&input) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_intermediates_kernel, 1, sizeof(unsigned int), &img_height) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_intermediates_kernel, 2, sizeof(unsigned int), &img_width) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_intermediates_kernel, 3, sizeof(unsigned int), &half_width) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_intermediates_kernel, 4, sizeof(cl_mem), (void *)&sm_mappings) );
   
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_intermediates_kernel_compat, 0, sizeof(cl_mem), (void *)&input) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_intermediates_kernel_compat, 1, sizeof(unsigned int), &img_height) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_intermediates_kernel_compat, 2, sizeof(unsigned int), &img_width) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_intermediates_kernel_compat, 3, sizeof(unsigned int), &half_width) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_intermediates_kernel_compat, 4, sizeof(cl_mem), (void *)&sm_mappings) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_intermediates_kernel_compat, 0, sizeof(cl_mem), (void *)&input) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_intermediates_kernel_compat, 1, sizeof(unsigned int), &img_height) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_intermediates_kernel_compat, 2, sizeof(unsigned int), &img_width) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_intermediates_kernel_compat, 3, sizeof(unsigned int), &half_width) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_intermediates_kernel_compat, 4, sizeof(cl_mem), (void *)&sm_mappings) );
   
-  
-
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_main_kernel, 0, sizeof(cl_mem), (void *)&sm_mappings) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_main_kernel, 1, sizeof(unsigned int), &img_dim) );
-
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_main_kernel, 4, sizeof(unsigned int), &histo_height) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_main_kernel, 5, sizeof(unsigned int), &histo_width) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_main_kernel, 6, sizeof(cl_mem), (void *)&global_subhisto) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_main_kernel, 7, sizeof(cl_mem), (void *)&global_histo) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_main_kernel, 8, sizeof(cl_mem), (void *)&global_overflow) );
   
 
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_final_kernel, 2, sizeof(unsigned int), &histo_height) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_final_kernel, 3, sizeof(unsigned int), &histo_width) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_final_kernel, 4, sizeof(cl_mem), (void *)&global_subhisto) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_final_kernel, 5, sizeof(cl_mem), (void *)&global_histo) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_final_kernel, 6, sizeof(cl_mem), (void *)&global_overflow) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_final_kernel, 7, sizeof(cl_mem), (void *)&final_histo) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_main_kernel, 0, sizeof(cl_mem), (void *)&sm_mappings) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_main_kernel, 1, sizeof(unsigned int), &img_dim) );
+
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_main_kernel, 4, sizeof(unsigned int), &histo_height) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_main_kernel, 5, sizeof(unsigned int), &histo_width) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_main_kernel, 6, sizeof(cl_mem), (void *)&global_subhisto) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_main_kernel, 7, sizeof(cl_mem), (void *)&global_histo) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_main_kernel, 8, sizeof(cl_mem), (void *)&global_overflow) );
+  
+
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_final_kernel, 2, sizeof(unsigned int), &histo_height) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_final_kernel, 3, sizeof(unsigned int), &histo_width) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_final_kernel, 4, sizeof(cl_mem), (void *)&global_subhisto) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_final_kernel, 5, sizeof(cl_mem), (void *)&global_histo) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_final_kernel, 6, sizeof(cl_mem), (void *)&global_overflow) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_final_kernel, 7, sizeof(cl_mem), (void *)&final_histo) );
 
   size_t prescan_localWS[1] = {prescanThreads};
   size_t prescan_globalWS[1] = {prescanBlockX*prescan_localWS[0]};
@@ -359,7 +360,7 @@ int main(int argc, char* argv[]) {
     // If kernel launches are synchronous, then how can 2 kernels run concurrently? different host threads?
 
 
-  OCL_ERRCK_RETVAL( clEnqueueWriteBuffer(clCommandQueue, ranges, CL_TRUE, 
+  OCL_ERRCK_RETVAL( CECL_WRITE_BUFFER(clCommandQueue, ranges, CL_TRUE, 
                           0, // Offset in bytes
                           2*sizeof(unsigned int), // Size of data to write
                           ranges_h, // Host Source
@@ -368,18 +369,18 @@ int main(int argc, char* argv[]) {
 
   pb_SwitchToSubTimer(&timers, prescans , pb_TimerID_KERNEL);                          
                          
-  OCL_ERRCK_RETVAL ( clEnqueueNDRangeKernel(clCommandQueue, histo_prescan_kernel, 1, 0,
+  OCL_ERRCK_RETVAL ( CECL_ND_RANGE_KERNEL(clCommandQueue, histo_prescan_kernel, 1, 0,
                             prescan_globalWS, prescan_localWS, 0, 0, 0) );
                             
   pb_SwitchToSubTimer(&timers, postpremems , pb_TimerID_KERNEL);                            
     
-  OCL_ERRCK_RETVAL( clEnqueueReadBuffer(clCommandQueue, ranges, CL_FALSE, 
+  OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, ranges, CL_FALSE, 
                           0, // Offset in bytes
                           2*sizeof(unsigned int), // Size of data to read
                           ranges_h, // Host Source
                           0, NULL, NULL) );
 
-  OCL_ERRCK_RETVAL( clEnqueueWriteBuffer(clCommandQueue, global_subhisto, CL_TRUE, 
+  OCL_ERRCK_RETVAL( CECL_WRITE_BUFFER(clCommandQueue, global_subhisto, CL_TRUE, 
                           0, // Offset in bytes
                           img_width*histo_height*sizeof(unsigned int), // Size of data to write
                           zeroData, // Host Source
@@ -387,29 +388,29 @@ int main(int argc, char* argv[]) {
                           
   pb_SwitchToSubTimer(&timers, intermediates, pb_TimerID_KERNEL);
 
-  OCL_ERRCK_RETVAL ( clEnqueueNDRangeKernel(clCommandQueue, chosenInterKernel /*histo_intermediates_kernel*/, 1, 0,
+  OCL_ERRCK_RETVAL ( CECL_ND_RANGE_KERNEL(clCommandQueue, chosenInterKernel /*histo_intermediates_kernel*/, 1, 0,
                             inter_globalWS, inter_localWS, 0, 0, 0) );              
 
   main_globalWS[1] = ranges_h[1]-ranges_h[0]+1;
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_main_kernel, 2, sizeof(unsigned int), &ranges_h[0]) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_main_kernel, 3, sizeof(unsigned int), &ranges_h[1]) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_final_kernel, 0, sizeof(unsigned int), &ranges_h[0]) );
-  OCL_ERRCK_RETVAL( clSetKernelArg(histo_final_kernel, 1, sizeof(unsigned int), &ranges_h[1]) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_main_kernel, 2, sizeof(unsigned int), &ranges_h[0]) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_main_kernel, 3, sizeof(unsigned int), &ranges_h[1]) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_final_kernel, 0, sizeof(unsigned int), &ranges_h[0]) );
+  OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(histo_final_kernel, 1, sizeof(unsigned int), &ranges_h[1]) );
 
   pb_SwitchToSubTimer(&timers, mains, pb_TimerID_KERNEL);
 
-  OCL_ERRCK_RETVAL ( clEnqueueNDRangeKernel(clCommandQueue, histo_main_kernel, 2, 0,
+  OCL_ERRCK_RETVAL ( CECL_ND_RANGE_KERNEL(clCommandQueue, histo_main_kernel, 2, 0,
                             main_globalWS, main_localWS, 0, 0, 0) );
                             
   pb_SwitchToSubTimer(&timers, finals, pb_TimerID_KERNEL);                            
 
-  OCL_ERRCK_RETVAL ( clEnqueueNDRangeKernel(clCommandQueue, histo_final_kernel, 1, 0,
+  OCL_ERRCK_RETVAL ( CECL_ND_RANGE_KERNEL(clCommandQueue, histo_final_kernel, 1, 0,
                             final_globalWS, final_localWS, 0, 0, 0) );                           
   }
 
   pb_SwitchToTimer(&timers, pb_TimerID_IO);
 
-  OCL_ERRCK_RETVAL( clEnqueueReadBuffer(clCommandQueue, final_histo, CL_TRUE, 
+  OCL_ERRCK_RETVAL( CECL_READ_BUFFER(clCommandQueue, final_histo, CL_TRUE, 
                           0, // Offset in bytes
                           histo_height*histo_width*sizeof(unsigned char), // Size of data to read
                           histo, // Host Source

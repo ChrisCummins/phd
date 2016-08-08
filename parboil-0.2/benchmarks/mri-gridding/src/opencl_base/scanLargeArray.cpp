@@ -1,3 +1,4 @@
+#include <cecl.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,7 +45,7 @@ void scanLargeArray( unsigned int gridNumElems, cl_mem data_d, cl_context clCont
     zeroData = (unsigned int *)calloc( current_max, sizeof(unsigned int) );
     if (zeroData == NULL) { fprintf(stderr, "Could not allocate host memory! (%s)\n", __FILE__); exit(1); }
 
-    inter_d = clCreateBuffer(clContext, CL_MEM_COPY_HOST_PTR, current_max*sizeof(unsigned int), zeroData, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
+    inter_d = CECL_BUFFER(clContext, CL_MEM_COPY_HOST_PTR, current_max*sizeof(unsigned int), zeroData, &ciErrNum); OCL_ERRCK_VAR(ciErrNum);
     
     free(zeroData);
     
@@ -66,11 +67,11 @@ void scanLargeArray( unsigned int gridNumElems, cl_mem data_d, cl_context clCont
       fprintf(stderr, "Could not load program source! (%s)\n", __FILE__); exit(1);
     }
   	
-    scanLargeArray_program = clCreateProgramWithSource(clContext, 1, (const char **)&source, &program_length, &ciErrNum);
+    scanLargeArray_program = CECL_PROGRAM_WITH_SOURCE(clContext, 1, (const char **)&source, &program_length, &ciErrNum);
     OCL_ERRCK_VAR(ciErrNum);
 
     free(source);
-    OCL_ERRCK_RETVAL ( clBuildProgram(scanLargeArray_program, 1, &clDevice, compileOptions, NULL, NULL) ); 
+    OCL_ERRCK_RETVAL ( CECL_PROGRAM(scanLargeArray_program, 1, &clDevice, compileOptions, NULL, NULL) ); 
       
   /*
     // Uncomment for build log from compiler for debugging
@@ -88,25 +89,25 @@ void scanLargeArray( unsigned int gridNumElems, cl_mem data_d, cl_context clCont
     fprintf(stderr, "%s\n", build_log );
     */   
         
-    scan_L1_kernel = clCreateKernel(scanLargeArray_program, "scan_L1_kernel", &ciErrNum);
+    scan_L1_kernel = CECL_KERNEL(scanLargeArray_program, "scan_L1_kernel", &ciErrNum);
     OCL_ERRCK_VAR(ciErrNum);
       
-    scan_inter1_kernel = clCreateKernel(scanLargeArray_program, "scan_inter1_kernel", &ciErrNum);
+    scan_inter1_kernel = CECL_KERNEL(scanLargeArray_program, "scan_inter1_kernel", &ciErrNum);
     OCL_ERRCK_VAR(ciErrNum);
-    scan_inter2_kernel = clCreateKernel(scanLargeArray_program, "scan_inter2_kernel", &ciErrNum);
+    scan_inter2_kernel = CECL_KERNEL(scanLargeArray_program, "scan_inter2_kernel", &ciErrNum);
     OCL_ERRCK_VAR(ciErrNum);  
       
-    uniformAdd = clCreateKernel(scanLargeArray_program, "uniformAdd", &ciErrNum);
+    uniformAdd = CECL_KERNEL(scanLargeArray_program, "uniformAdd", &ciErrNum);
     OCL_ERRCK_VAR(ciErrNum);
     
-    OCL_ERRCK_RETVAL( clSetKernelArg(scan_L1_kernel, 1, sizeof(cl_mem), (void *)&data_d) );
-    OCL_ERRCK_RETVAL( clSetKernelArg(scan_L1_kernel, 3, sizeof(cl_mem), (void *)&inter_d) );
+    OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(scan_L1_kernel, 1, sizeof(cl_mem), (void *)&data_d) );
+    OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(scan_L1_kernel, 3, sizeof(cl_mem), (void *)&inter_d) );
     
-    OCL_ERRCK_RETVAL( clSetKernelArg(scan_inter1_kernel, 0, sizeof(cl_mem), (void *)&inter_d) );
-    OCL_ERRCK_RETVAL( clSetKernelArg(scan_inter2_kernel, 0, sizeof(cl_mem), (void *)&inter_d) );
+    OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(scan_inter1_kernel, 0, sizeof(cl_mem), (void *)&inter_d) );
+    OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(scan_inter2_kernel, 0, sizeof(cl_mem), (void *)&inter_d) );
     
-    OCL_ERRCK_RETVAL( clSetKernelArg(uniformAdd, 1, sizeof(cl_mem), (void *)&data_d) );
-    OCL_ERRCK_RETVAL( clSetKernelArg(uniformAdd, 3, sizeof(cl_mem), (void *)&inter_d) );
+    OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(uniformAdd, 1, sizeof(cl_mem), (void *)&data_d) );
+    OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(uniformAdd, 3, sizeof(cl_mem), (void *)&inter_d) );
 
     for (unsigned int i=0; i < (size+GRID_SIZE-1)/GRID_SIZE; i++) {
         unsigned int gridSize = ((size-(i*GRID_SIZE)) > GRID_SIZE) ? GRID_SIZE : (size-i*GRID_SIZE);
@@ -114,14 +115,14 @@ void scanLargeArray( unsigned int gridNumElems, cl_mem data_d, cl_context clCont
         
         unsigned int data_offset = i*GRID_SIZE*blockSize;
         unsigned int inter_offset = i*GRID_SIZE;
-        OCL_ERRCK_RETVAL( clSetKernelArg(scan_L1_kernel, 0, sizeof(unsigned int), &numElems) );
-        OCL_ERRCK_RETVAL( clSetKernelArg(scan_L1_kernel, 2, sizeof(unsigned int), &data_offset) );
-        OCL_ERRCK_RETVAL( clSetKernelArg(scan_L1_kernel, 4, sizeof(unsigned int), &inter_offset) );
+        OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(scan_L1_kernel, 0, sizeof(unsigned int), &numElems) );
+        OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(scan_L1_kernel, 2, sizeof(unsigned int), &data_offset) );
+        OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(scan_L1_kernel, 4, sizeof(unsigned int), &inter_offset) );
                
         size_t block[1] = { blockSize/2 };
         size_t grid[1] = { gridSize * block[0] };
         
-        OCL_ERRCK_RETVAL ( clEnqueueNDRangeKernel(clCommandQueue, scan_L1_kernel, 1, 0,
+        OCL_ERRCK_RETVAL ( CECL_ND_RANGE_KERNEL(clCommandQueue, scan_L1_kernel, 1, 0,
                             grid, block, 0, 0, 0) );
     }
 
@@ -130,15 +131,15 @@ void scanLargeArray( unsigned int gridNumElems, cl_mem data_d, cl_context clCont
         size_t block[1] = { dim_block/2 };
         size_t grid[1] = { (d/dim_block) * block[0] };
         
-        OCL_ERRCK_RETVAL( clSetKernelArg(scan_inter1_kernel, 1, sizeof(unsigned int), &stride) );
-        OCL_ERRCK_RETVAL ( clEnqueueNDRangeKernel(clCommandQueue, scan_inter1_kernel, 1, 0,
+        OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(scan_inter1_kernel, 1, sizeof(unsigned int), &stride) );
+        OCL_ERRCK_RETVAL ( CECL_ND_RANGE_KERNEL(clCommandQueue, scan_inter1_kernel, 1, 0,
                             grid, block, 0, 0, 0) );
         
         stride *= dim_block;
     }
     
     unsigned int singleZero = 0;
-    OCL_ERRCK_RETVAL( clEnqueueWriteBuffer(clCommandQueue, inter_d, CL_TRUE, 
+    OCL_ERRCK_RETVAL( CECL_WRITE_BUFFER(clCommandQueue, inter_d, CL_TRUE, 
                           (current_max-1)*sizeof(unsigned int), // Offset in bytes
                           sizeof(unsigned int), // Size of data to write
                           &singleZero, // Host Source
@@ -150,9 +151,9 @@ void scanLargeArray( unsigned int gridNumElems, cl_mem data_d, cl_context clCont
         size_t block[1] = { dim_block/2 };
         size_t grid[1] = { (d/dim_block) * block[0] };
         
-        OCL_ERRCK_RETVAL( clSetKernelArg(scan_inter2_kernel, 1, sizeof(unsigned int), &stride) );
+        OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(scan_inter2_kernel, 1, sizeof(unsigned int), &stride) );
         
-        OCL_ERRCK_RETVAL ( clEnqueueNDRangeKernel(clCommandQueue, scan_inter2_kernel, 1, 0,
+        OCL_ERRCK_RETVAL ( CECL_ND_RANGE_KERNEL(clCommandQueue, scan_inter2_kernel, 1, 0,
                             grid, block, 0, 0, 0) );                       
     }
 
@@ -162,14 +163,14 @@ void scanLargeArray( unsigned int gridNumElems, cl_mem data_d, cl_context clCont
         
         unsigned int data_offset = i*GRID_SIZE*blockSize;
         unsigned int inter_offset = i*GRID_SIZE;
-        OCL_ERRCK_RETVAL( clSetKernelArg(uniformAdd, 0, sizeof(unsigned int), &numElems) );
-        OCL_ERRCK_RETVAL( clSetKernelArg(uniformAdd, 2, sizeof(unsigned int), &data_offset) );
-        OCL_ERRCK_RETVAL( clSetKernelArg(uniformAdd, 4, sizeof(unsigned int), &inter_offset) );
+        OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(uniformAdd, 0, sizeof(unsigned int), &numElems) );
+        OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(uniformAdd, 2, sizeof(unsigned int), &data_offset) );
+        OCL_ERRCK_RETVAL( CECL_SET_KERNEL_ARG(uniformAdd, 4, sizeof(unsigned int), &inter_offset) );
         
         size_t block[1] = { blockSize/2 };
         size_t grid[1] = { gridSize * block[0] };
         
-        OCL_ERRCK_RETVAL ( clEnqueueNDRangeKernel(clCommandQueue, uniformAdd, 1, 0,
+        OCL_ERRCK_RETVAL ( CECL_ND_RANGE_KERNEL(clCommandQueue, uniformAdd, 1, 0,
                             grid, block, 0, 0, 0) ); 
     }
 

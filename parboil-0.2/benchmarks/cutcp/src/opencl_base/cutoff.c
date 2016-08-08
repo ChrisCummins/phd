@@ -1,3 +1,4 @@
+#include <cecl.h>
 /***************************************************************************
  *cr
  *cr            (C) Copyright 2008-2010 The Board of Trustees of the
@@ -307,23 +308,23 @@ int gpu_compute_cutoff_potential_lattice(
   cl_context clContext = clCreateContextFromType(clCps,CL_DEVICE_TYPE_CPU,NULL,NULL,&clStatus);
   CHECK_ERROR("clCreateContextFromType")
 
-  cl_command_queue clCommandQueue = clCreateCommandQueue(clContext,clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
-  CHECK_ERROR("clCreateCommandQueue")
+  cl_command_queue clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clContext,clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
+  CHECK_ERROR("CECL_CREATE_COMMAND_QUEUE")
 
   pb_SetOpenCL(&clContext, &clCommandQueue);
   
   const char* clSource[] = {readFile("src/opencl_base/kernel.cl")};
-  cl_program clProgram = clCreateProgramWithSource(clContext,1,clSource,NULL,&clStatus);
-  CHECK_ERROR("clCreateProgramWithSource")
+  cl_program clProgram = CECL_PROGRAM_WITH_SOURCE(clContext,1,clSource,NULL,&clStatus);
+  CHECK_ERROR("CECL_PROGRAM_WITH_SOURCE")
 
   char clOptions[50];
   sprintf(clOptions,"-I src/opencl_base");  //-cl-nv-verbose
 
-  clStatus = clBuildProgram(clProgram,1,&clDevice,clOptions,NULL,NULL);
-  CHECK_ERROR("clBuildProgram")
+  clStatus = CECL_PROGRAM(clProgram,1,&clDevice,clOptions,NULL,NULL);
+  CHECK_ERROR("CECL_PROGRAM")
 
-  cl_kernel clKernel = clCreateKernel(clProgram,"opencl_cutoff_potential_lattice",&clStatus);
-  CHECK_ERROR("clCreateKernel")
+  cl_kernel clKernel = CECL_KERNEL(clProgram,"opencl_cutoff_potential_lattice",&clStatus);
+  CHECK_ERROR("CECL_KERNEL")
 
   /* setup OpenCL kernel parameters */
   blockDim[0] = 8;
@@ -340,8 +341,8 @@ int gpu_compute_cutoff_potential_lattice(
            lnall * sizeof(float) / (double) (1024*1024));
   }
 
-  regionZeroCl = clCreateBuffer(clContext,CL_MEM_WRITE_ONLY,lnall*sizeof(float),NULL,&clStatus);
-  CHECK_ERROR("clCreateBuffer")
+  regionZeroCl = CECL_BUFFER(clContext,CL_MEM_WRITE_ONLY,lnall*sizeof(float),NULL,&clStatus);
+  CHECK_ERROR("CECL_BUFFER")
 
   clMemSet(clCommandQueue,regionZeroCl,0,lnall*sizeof(float));
 
@@ -350,40 +351,40 @@ int gpu_compute_cutoff_potential_lattice(
            nbins * BIN_DEPTH * sizeof(cl_float4) / (double) (1024*1024));
   }
 
-  binBaseCl = clCreateBuffer(clContext,CL_MEM_READ_ONLY,nbins*BIN_DEPTH*sizeof(cl_float4),NULL,&clStatus);
-  CHECK_ERROR("clCreateBuffer")
+  binBaseCl = CECL_BUFFER(clContext,CL_MEM_READ_ONLY,nbins*BIN_DEPTH*sizeof(cl_float4),NULL,&clStatus);
+  CHECK_ERROR("CECL_BUFFER")
  
-  clStatus = clEnqueueWriteBuffer(clCommandQueue,binBaseCl,CL_TRUE,0,nbins*BIN_DEPTH*sizeof(cl_float4),binBaseAddr,0,NULL,NULL);
-  CHECK_ERROR("clEnqueueWriteBuffer")
+  clStatus = CECL_WRITE_BUFFER(clCommandQueue,binBaseCl,CL_TRUE,0,nbins*BIN_DEPTH*sizeof(cl_float4),binBaseAddr,0,NULL,NULL);
+  CHECK_ERROR("CECL_WRITE_BUFFER")
 
   //Sub buffers are not supported in OpenCL v1.0
   int offset = ((c * binDim.y + c) * binDim.x + c) * BIN_DEPTH;  
 
-  NbrListLen = clCreateBuffer(clContext,CL_MEM_READ_ONLY,sizeof(int),NULL,&clStatus);
-  CHECK_ERROR("clCreateBuffer")
-  clStatus = clEnqueueWriteBuffer(clCommandQueue,NbrListLen,CL_TRUE,0,sizeof(int),&nbrlistlen,0,NULL,NULL);
-  CHECK_ERROR("clEnqueueWriteBuffer")
+  NbrListLen = CECL_BUFFER(clContext,CL_MEM_READ_ONLY,sizeof(int),NULL,&clStatus);
+  CHECK_ERROR("CECL_BUFFER")
+  clStatus = CECL_WRITE_BUFFER(clCommandQueue,NbrListLen,CL_TRUE,0,sizeof(int),&nbrlistlen,0,NULL,NULL);
+  CHECK_ERROR("CECL_WRITE_BUFFER")
 
-  NbrList = clCreateBuffer(clContext,CL_MEM_READ_ONLY,NBRLIST_MAXLEN*sizeof(xyz),NULL,&clStatus);
-  CHECK_ERROR("clCreateBuffer")
-  clStatus = clEnqueueWriteBuffer(clCommandQueue,NbrList,CL_TRUE,0,nbrlistlen*sizeof(xyz),nbrlist,0,NULL,NULL);
-  CHECK_ERROR("clEnqueueWriteBuffer")
+  NbrList = CECL_BUFFER(clContext,CL_MEM_READ_ONLY,NBRLIST_MAXLEN*sizeof(xyz),NULL,&clStatus);
+  CHECK_ERROR("CECL_BUFFER")
+  clStatus = CECL_WRITE_BUFFER(clCommandQueue,NbrList,CL_TRUE,0,nbrlistlen*sizeof(xyz),nbrlist,0,NULL,NULL);
+  CHECK_ERROR("CECL_WRITE_BUFFER")
 
   if (verbose) 
     printf("\n");
 
 
-  clStatus = clSetKernelArg(clKernel,0,sizeof(int),&(binDim.x));
-  clStatus = clSetKernelArg(clKernel,1,sizeof(int),&(binDim.y));
-  clStatus = clSetKernelArg(clKernel,2,sizeof(cl_mem),&binBaseCl);
-  clStatus = clSetKernelArg(clKernel,3,sizeof(int),&offset);
-  clStatus = clSetKernelArg(clKernel,4,sizeof(float),&h);
-  clStatus = clSetKernelArg(clKernel,5,sizeof(float),&cutoff2);
-  clStatus = clSetKernelArg(clKernel,6,sizeof(float),&inv_cutoff2);
-  clStatus = clSetKernelArg(clKernel,7,sizeof(cl_mem),&regionZeroCl);
-  clStatus = clSetKernelArg(clKernel,9,sizeof(cl_mem),&NbrListLen);
-  clStatus = clSetKernelArg(clKernel,10,sizeof(cl_mem),&NbrList);
-  CHECK_ERROR("clSetKernelArg")
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,0,sizeof(int),&(binDim.x));
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,1,sizeof(int),&(binDim.y));
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,2,sizeof(cl_mem),&binBaseCl);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,3,sizeof(int),&offset);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,4,sizeof(float),&h);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,5,sizeof(float),&cutoff2);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,6,sizeof(float),&inv_cutoff2);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,7,sizeof(cl_mem),&regionZeroCl);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,9,sizeof(cl_mem),&NbrListLen);
+  clStatus = CECL_SET_KERNEL_ARG(clKernel,10,sizeof(cl_mem),&NbrList);
+  CHECK_ERROR("CECL_SET_KERNEL_ARG")
 
 
   /* loop over z-dimension, invoke OpenCL kernel for each x-y plane */
@@ -393,11 +394,11 @@ int gpu_compute_cutoff_potential_lattice(
     printf("  computing plane %d\r", zRegionIndex);
     fflush(stdout);
 
-    clStatus = clSetKernelArg(clKernel,8,sizeof(int),&zRegionIndex);
-    CHECK_ERROR("clSetKernelArg")
+    clStatus = CECL_SET_KERNEL_ARG(clKernel,8,sizeof(int),&zRegionIndex);
+    CHECK_ERROR("CECL_SET_KERNEL_ARG")
 
-    clStatus = clEnqueueNDRangeKernel(clCommandQueue,clKernel,3,NULL,gridDim,blockDim,0,NULL,NULL);
-    CHECK_ERROR("clEnqueueNDRangeKernel")
+    clStatus = CECL_ND_RANGE_KERNEL(clCommandQueue,clKernel,3,NULL,gridDim,blockDim,0,NULL,NULL);
+    CHECK_ERROR("CECL_ND_RANGE_KERNEL")
     clStatus = clFinish(clCommandQueue);
     CHECK_ERROR("clFinish")
   }
@@ -406,8 +407,8 @@ int gpu_compute_cutoff_potential_lattice(
 
   /* copy result regions from OpenCL device */
   pb_SwitchToTimer(timers, pb_TimerID_COPY);
-  clStatus = clEnqueueReadBuffer(clCommandQueue,regionZeroCl,CL_TRUE,0,lnall*sizeof(float),regionZeroAddr,0,NULL,NULL);
-  CHECK_ERROR("clEnqueueReadBuffer")
+  clStatus = CECL_READ_BUFFER(clCommandQueue,regionZeroCl,CL_TRUE,0,lnall*sizeof(float),regionZeroAddr,0,NULL,NULL);
+  CHECK_ERROR("CECL_READ_BUFFER")
 
   /* free OpenCL memory allocations */
   clStatus = clReleaseMemObject(regionZeroCl);
