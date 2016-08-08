@@ -251,7 +251,7 @@ def get_cl_kernels(src):
     :param src: OpenCL source.
     :return: Kernel implementations.
     """
-    idxs = smith.get_substring_idxs('__kernel void ', src)
+    idxs = smith.get_substring_idxs('__kernel', src)
     kernels = [get_cl_kernel(src, i) for i in idxs]
     return kernels
 
