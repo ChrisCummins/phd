@@ -2,28 +2,53 @@
 set -eu
 
 usage() {
-    echo "Usage: $0 <errors-csv>"
+    echo "Usage: $0 <devname> <benchmarks-dir>"
     echo
     echo "Post-process driver errors output."
 }
 
 main() {
-    if [[ $# -ne 1 ]]; then
+    if [[ $# -ne 2 ]]; then
         usage >&2
         exit
     fi
 
-    local path=$1
+    local devname=$1
+    local benchmarks=$2
+
+    local results_path=$benchmarks/$devname.csv
+    local errors_path=$benchmarks/$devname-errors.csv
+
+    if [ ! -f $results_path ]; then
+        echo "fatal: file '$results_path' not found" >&2
+        exit 1
+    fi
+
+    if [ ! -f $errors_path ]; then
+        echo "fatal: file '$erros_path' not found" >&2
+        exit 1
+    fi
+
+    local nresults=$(wc -l $results_path | awk '{print $1}')
 
     # Pattern patch the error file schema. This will strip any gumpf
     # that made it in there.
     grep -E '^[a-zA-Z0-9_\.-]+\.cl,[0-9]+,E_[A-Z_]+,[a-zA-Z0-9_\.-]+$' \
-         $path > $path.tmp || true
-    mv $path.tmp $path
+         $errors_path > $errors_path.tmp || true
+    mv $errors_path.tmp $errors_path
 
+    local errors=$(cut -d',' -f 3 < $errors_path | sort | uniq -c \
+                          | sort -rn | awk '{OFS=","; print $2,$1}')
     ( \
-        echo "Error Frequency"; \
-        cut -d',' -f 3 < $path | sort | uniq -c | sort | awk '{print $2,$1}' \
+        echo "Error Frequency Ratio"; \
+        for error in $errors; do
+            local type=$(echo $error | cut -d',' -f1)
+            local count=$(echo $error | cut -d',' -f2)
+            local ratio=$(echo "($count / $nresults) * 100" | bc -l \
+                                 | xargs printf "%.1f%%")
+
+            echo "$type $count $ratio"
+        done
     ) | column -t
 }
 main $@
