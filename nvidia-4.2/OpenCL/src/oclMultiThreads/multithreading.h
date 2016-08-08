@@ -1,0 +1,88 @@
+/*
+ * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
+ *
+ * Please refer to the NVIDIA end user license agreement (EULA) associated
+ * with this source code for terms and conditions that govern your use of
+ * this software. Any use, reproduction, disclosure, or distribution of
+ * this software and related documentation outside the terms of the EULA
+ * is strictly prohibited.
+ *
+ */
+
+#ifndef MULTITHREADING_H
+#define MULTITHREADING_H
+
+
+//Simple portable thread library.
+
+#if _WIN32
+    //Windows threads.
+    #include <windows.h>
+
+    typedef HANDLE CUTThread;
+    typedef unsigned (WINAPI *CUT_THREADROUTINE)(void *);
+
+	struct CUTBarrier {
+		CRITICAL_SECTION criticalSection;
+		HANDLE barrierEvent;
+		int releaseCount;
+		int count;
+	};
+
+    #define CUT_THREADPROC unsigned WINAPI
+    #define  CUT_THREADEND return 0
+
+#else
+    //POSIX threads.
+    #include <pthread.h>
+
+    typedef pthread_t CUTThread;
+    typedef void *(*CUT_THREADROUTINE)(void *);
+
+    #define CUT_THREADPROC void*
+    #define  CUT_THREADEND 
+
+	struct CUTBarrier {
+		pthread_mutex_t mutex;
+		pthread_cond_t conditionVariable;
+		int releaseCount;
+		int count;
+	};
+
+#endif
+
+
+#ifdef __cplusplus
+    extern "C" {
+#endif
+
+//Create thread.
+CUTThread cutStartThread(CUT_THREADROUTINE, void *data);
+
+//Wait for thread to finish.
+void cutEndThread(CUTThread thread);
+
+//Destroy thread.
+void cutDestroyThread(CUTThread thread);
+
+//Wait for multiple threads.
+void cutWaitForThreads(const CUTThread *threads, int num);
+
+//Create barrier.
+CUTBarrier cutCreateBarrier(int releaseCount);
+
+//Increment barrier. (excution continues)
+void cutIncrementBarrier(CUTBarrier *barrier);
+
+//Wait for barrier release.
+void cutWaitForBarrier(CUTBarrier *barrier);
+
+//Destory barrier
+void cutDestroyBarrier(CUTBarrier *barrier);
+
+
+#ifdef __cplusplus
+} //extern "C"
+#endif
+
+#endif //MULTITHREADING_H

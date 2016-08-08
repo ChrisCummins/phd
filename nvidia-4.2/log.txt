@@ -1,0 +1,28 @@
+[oclInlinePTX] starting...
+
+OpenCL inline PTX assembler sample
+================================
+Self-test started
+oclLoadProgSource (inlinePTX.cl)...
+Error in clBuildProgram, Line 184 in file oclInlinePTX.cpp !!!
+
+
+-----------------------------------------------------------
+
+Build Log:
+"/tmp/OCLmseMkJ.cl", line 9: error: an "asm" declaration is not allowed here
+          asm("mov.u32 %0, %%laneid;" : "=r"(laneid));
+          ^
+
+1 error detected in the compilation of "/tmp/OCLmseMkJ.cl".
+Frontend phase failed compilation.
+
+-----------------------------------------------------------
+
+[oclInlinePTX] test results...
+FAILED
+> exiting in 3 seconds: 3...2...1...done!
+
+(null) Exiting...
+Press <Enter> to Quit
+-----------------------------------------------------------

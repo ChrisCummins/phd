@@ -1,0 +1,86 @@
+[oclHiddenMarkovModel] starting...
+
+WARNING: NVIDIA OpenCL platform not found - defaulting to first platform!
+
+clGetPlatformID...
+Get the Device info and select Device...
+  # of Devices Available = 1
+  Using Device 0: Cedar
+  # of Compute Units = 2
+./oclHiddenMarkovModel Starting...
+
+Get platform...
+WARNING: NVIDIA OpenCL platform not found - defaulting to first platform!
+
+Get devices...
+clCreateContext
+clCreateCommandQueue
+  CL_DEVICE_NAME: 			Cedar
+  CL_DEVICE_VENDOR: 			Advanced Micro Devices, Inc.
+  CL_DRIVER_VERSION: 			1800.11
+  CL_DEVICE_VERSION: 			OpenCL 1.2 AMD-APP (1800.11)
+  CL_DEVICE_OPENCL_C_VERSION: 		OpenCL C 1.2 
+  CL_DEVICE_TYPE:			CL_DEVICE_TYPE_GPU
+  CL_DEVICE_MAX_COMPUTE_UNITS:		2
+  CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS:	3
+  CL_DEVICE_MAX_WORK_ITEM_SIZES:	128 / 128 / 128 
+  CL_DEVICE_MAX_WORK_GROUP_SIZE:	128
+  CL_DEVICE_MAX_CLOCK_FREQUENCY:	650 MHz
+  CL_DEVICE_ADDRESS_BITS:		32
+  CL_DEVICE_MAX_MEM_ALLOC_SIZE:		128 MByte
+  CL_DEVICE_GLOBAL_MEM_SIZE:		512 MByte
+  CL_DEVICE_ERROR_CORRECTION_SUPPORT:	no
+  CL_DEVICE_LOCAL_MEM_TYPE:		local
+  CL_DEVICE_LOCAL_MEM_SIZE:		32 KByte
+  CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE:	64 KByte
+  CL_DEVICE_QUEUE_PROPERTIES:		CL_QUEUE_PROFILING_ENABLE
+  CL_DEVICE_IMAGE_SUPPORT:		1
+  CL_DEVICE_MAX_READ_IMAGE_ARGS:	128
+  CL_DEVICE_MAX_WRITE_IMAGE_ARGS:	8
+  CL_DEVICE_SINGLE_FP_CONFIG:		INF-quietNaNs round-to-nearest round-to-zero round-to-inf fma 
+
+  CL_DEVICE_IMAGE <dim>			2D_MAX_WIDTH	 16384
+					2D_MAX_HEIGHT	 16384
+					3D_MAX_WIDTH	 2048
+					3D_MAX_HEIGHT	 2048
+					3D_MAX_DEPTH	 2048
+
+  CL_DEVICE_EXTENSIONS:			cl_khr_global_int32_base_atomics
+					cl_khr_global_int32_extended_atomics
+					cl_khr_local_int32_base_atomics
+					cl_khr_local_int32_extended_atomics
+					cl_khr_3d_image_writes
+					cl_khr_byte_addressable_store
+					cl_khr_gl_sharing
+					cl_ext_atomic_counters_32
+					cl_amd_device_attribute_query
+					cl_amd_vec3
+					cl_amd_printf
+					cl_amd_media_ops
+					cl_amd_media_ops2
+					cl_amd_popcnt
+					cl_amd_image2d_from_buffer_read_only
+					cl_khr_spir
+					cl_khr_gl_event
+
+  CL_DEVICE_PREFERRED_VECTOR_WIDTH_<t>	CHAR 16, SHORT 8, INT 4, LONG 2, FLOAT 4, DOUBLE 0
+
+
+
+Using 1 GPU(s)...
+
+Init Hidden Markov Model parameters
+# of states = 4096
+# of possible observations = 128 
+Size of observational sequence = 100
+
+Compute Viterbi path on GPU
+
+
+Compute Viterbi path on CPU
+Release CPU buffers and OpenCL objects...
+[oclHiddenMarkovModel] test results...
+FAILED
+
+> exiting in 3 seconds: 3...2...1...done!
+

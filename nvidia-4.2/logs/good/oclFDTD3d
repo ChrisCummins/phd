@@ -1,0 +1,69 @@
+[oclFDTD3d] starting...
+
+./oclFDTD3d Starting...
+
+Set-up, based upon target device GMEM size...
+ getTargetDeviceGlobalMemSize
+ oclGetPlatformID
+WARNING: NVIDIA OpenCL platform not found - defaulting to first platform!
+
+ clGetDeviceIDs
+ clCreateContext
+ clGetDeviceInfo
+ calloc host_output
+ malloc input
+ malloc coeff
+ generateRandomData
+
+FDTD on 312 x 312 x 312 volume with symmetric filter radius 4 for 5 timesteps...
+
+fdtdReference...
+ calloc intermediate
+ Host FDTD loop
+	t = 0
+	t = 1
+	t = 2
+	t = 3
+	t = 4
+
+fdtdReference complete
+ calloc device_output
+fdtdGPU...
+ oclGetPlatformID...
+WARNING: NVIDIA OpenCL platform not found - defaulting to first platform!
+
+ clGetDeviceIDs clCreateContext...
+ clCreateCommandQueue
+ clCreateBuffer bufferOut
+ clCreateBuffer bufferIn
+ clCreateBuffer bufferCoeff
+ shrFindFilePath
+ oclLoadProgSource
+ clCreateProgramWithSource
+ clBuildProgram (-DRADIUS=4 -DMAXWORKX=32 -DMAXWORKY=8 -cl-fast-relaxed-math)
+ clCreateKernel
+ clGetKernelWorkGroupInfo
+ set local work group size to 32x4
+ set total work size to 320x312
+ clEnqueueWriteBuffer bufferIn
+ clEnqueueWriteBuffer bufferOut
+ clEnqueueWriteBuffer bufferCoeff
+ calloc events
+ clSetKernelArg 2-6
+ GPU FDTD loop
+	t = 0  clSetKernelArg 0-1, clEnqueueNDRangeKernel
+	t = 1  clSetKernelArg 0-1, clEnqueueNDRangeKernel
+	t = 2  clSetKernelArg 0-1, clEnqueueNDRangeKernel
+	t = 3  clSetKernelArg 0-1, clEnqueueNDRangeKernel
+	t = 4  clSetKernelArg 0-1, clEnqueueNDRangeKernel
+
+ clWaitForEvents
+ clEnqueueReadBuffer
+fdtdGPU complete
+
+CompareData (tolerance 0.000100)...
+[oclFDTD3d] test results...
+PASSED
+
+> exiting in 3 seconds: 3...2...1...done!
+
