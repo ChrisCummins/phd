@@ -1,3 +1,4 @@
+#include <cecl.h>
 //========================================================================================================================================================================================================200
 //	DEFINE/INCLUDE
 //========================================================================================================================================================================================================200
@@ -191,7 +192,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// Create a command queue
 	cl_command_queue command_queue;
-	command_queue = clCreateCommandQueue(	context, 
+	command_queue = CECL_CREATE_COMMAND_QUEUE(	context, 
 											device, 
 											0, 
 											&error);
@@ -207,7 +208,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	size_t sourceSize = strlen(source);
 
 	// Create the program
-	cl_program program = clCreateProgramWithSource(	context, 
+	cl_program program = CECL_PROGRAM_WITH_SOURCE(	context, 
 													1, 
 													&source, 
 													&sourceSize, 
@@ -229,7 +230,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
   sprintf(clOptions + strlen(clOptions), " -DRD_WG_SIZE_0_0=%d", RD_WG_SIZE_0_0);
 #endif
 	// Compile the program
-	error = clBuildProgram(	program, 
+	error = CECL_PROGRAM(	program, 
 							1, 
 							&device, 
 							clOptions, 
@@ -253,7 +254,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// Create kernel
 	cl_kernel kernel;
-	kernel = clCreateKernel(program, 
+	kernel = CECL_KERNEL(program, 
 							"kernel_gpu_opencl", 
 							&error);
 	if (error != CL_SUCCESS) 
@@ -274,7 +275,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	//====================================================================================================100
 
 	cl_mem d_common;
-	d_common = clCreateBuffer(	context, 
+	d_common = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								common.common_mem,
 								NULL, 
@@ -288,7 +289,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// common
 	cl_mem d_frame;
-	d_frame = clCreateBuffer(	context, 
+	d_frame = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								common.frame_mem, 
 								NULL, 
@@ -306,7 +307,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// common
 	cl_mem d_endoRow;
-	d_endoRow = clCreateBuffer(	context, 
+	d_endoRow = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								common.endo_mem, 
 								NULL, 
@@ -315,7 +316,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 		fatal_CL(error, __LINE__);
 
 	cl_mem d_endoCol;
-	d_endoCol = clCreateBuffer(	context, 
+	d_endoCol = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								common.endo_mem, 
 								NULL, 
@@ -324,7 +325,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 		fatal_CL(error, __LINE__);
 
 	cl_mem d_tEndoRowLoc;
-	d_tEndoRowLoc = clCreateBuffer(	context, 
+	d_tEndoRowLoc = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								common.endo_mem * common.no_frames, 
 								NULL, 
@@ -333,7 +334,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 		fatal_CL(error, __LINE__);
 
 	cl_mem d_tEndoColLoc;
-	d_tEndoColLoc = clCreateBuffer(	context, 
+	d_tEndoColLoc = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								common.endo_mem * common.no_frames, 
 								NULL, 
@@ -347,7 +348,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// common
 	cl_mem d_epiRow;
-	d_epiRow = clCreateBuffer(	context, 
+	d_epiRow = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								common.epi_mem, 
 								NULL, 
@@ -356,7 +357,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 		fatal_CL(error, __LINE__);
 
 	cl_mem d_epiCol;
-	d_epiCol = clCreateBuffer(	context, 
+	d_epiCol = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								common.epi_mem, 
 								NULL, 
@@ -365,7 +366,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 		fatal_CL(error, __LINE__);
 
 	cl_mem d_tEpiRowLoc;
-	d_tEpiRowLoc = clCreateBuffer(	context, 
+	d_tEpiRowLoc = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								common.epi_mem * common.no_frames, 
 								NULL, 
@@ -374,7 +375,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 		fatal_CL(error, __LINE__);
 
 	cl_mem d_tEpiColLoc;
-	d_tEpiColLoc = clCreateBuffer(	context, 
+	d_tEpiColLoc = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								common.epi_mem * common.no_frames, 
 								NULL, 
@@ -403,7 +404,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// common
 	cl_mem d_endoT;
-	d_endoT = clCreateBuffer(	context, 
+	d_endoT = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								common.in_mem * common.endoPoints, 
 								NULL, 
@@ -417,7 +418,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// common
 	cl_mem d_epiT;
-	d_epiT = clCreateBuffer(	context, 
+	d_epiT = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								common.in_mem * common.epiPoints, 
 								NULL, 
@@ -437,7 +438,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// unique
 	cl_mem d_in2;
-	d_in2 = clCreateBuffer(	context, 
+	d_in2 = CECL_BUFFER(	context, 
 							CL_MEM_READ_WRITE, 
 							common.in2_mem * common.allPoints, 
 							NULL, 
@@ -459,7 +460,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// unique
 	cl_mem d_conv;
-	d_conv = clCreateBuffer(context, 
+	d_conv = CECL_BUFFER(context, 
 							CL_MEM_READ_WRITE, 
 							common.conv_mem * common.allPoints, 
 							NULL, 
@@ -486,7 +487,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// unique
 	cl_mem d_in2_pad_cumv;
-	d_in2_pad_cumv = clCreateBuffer(context, 
+	d_in2_pad_cumv = CECL_BUFFER(context, 
 									CL_MEM_READ_WRITE, 
 									common.in2_pad_cumv_mem * common.allPoints, 
 									NULL, 
@@ -510,7 +511,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// unique
 	cl_mem d_in2_pad_cumv_sel;
-	d_in2_pad_cumv_sel = clCreateBuffer(context, 
+	d_in2_pad_cumv_sel = CECL_BUFFER(context, 
 										CL_MEM_READ_WRITE, 
 										common.in2_pad_cumv_sel_mem * common.allPoints, 
 										NULL, 
@@ -534,7 +535,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// unique
 	cl_mem d_in2_sub_cumh;
-	d_in2_sub_cumh = clCreateBuffer(context, 
+	d_in2_sub_cumh = CECL_BUFFER(context, 
 									CL_MEM_READ_WRITE, 
 									common.in2_sub_cumh_mem * common.allPoints, 
 									NULL, 
@@ -558,7 +559,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// unique
 	cl_mem d_in2_sub_cumh_sel;
-	d_in2_sub_cumh_sel = clCreateBuffer(context, 
+	d_in2_sub_cumh_sel = CECL_BUFFER(context, 
 										CL_MEM_READ_WRITE, 
 										common.in2_sub_cumh_sel_mem * common.allPoints, 
 										NULL, 
@@ -582,7 +583,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// unique
 	cl_mem d_in2_sub2;
-	d_in2_sub2 = clCreateBuffer(context, 
+	d_in2_sub2 = CECL_BUFFER(context, 
 								CL_MEM_READ_WRITE, 
 								common.in2_sub2_mem * common.allPoints, 
 								NULL, 
@@ -606,7 +607,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// unique
 	cl_mem d_in2_sqr;
-	d_in2_sqr = clCreateBuffer(context, 
+	d_in2_sqr = CECL_BUFFER(context, 
 								CL_MEM_READ_WRITE, 
 								common.in2_sqr_mem * common.allPoints, 
 								NULL, 
@@ -626,7 +627,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// unique
 	cl_mem d_in2_sqr_sub2;
-	d_in2_sqr_sub2 = clCreateBuffer(context, 
+	d_in2_sqr_sub2 = CECL_BUFFER(context, 
 									CL_MEM_READ_WRITE, 
 									common.in2_sqr_sub2_mem * common.allPoints, 
 									NULL, 
@@ -646,7 +647,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// unique
 	cl_mem d_in_sqr;
-	d_in_sqr = clCreateBuffer(	context, 
+	d_in_sqr = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								common.in_sqr_mem * common.allPoints, 
 								NULL, 
@@ -666,7 +667,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// unique
 	cl_mem d_tMask;
-	d_tMask = clCreateBuffer(	context, 
+	d_tMask = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								common.tMask_mem * common.allPoints, 
 								NULL, 
@@ -704,7 +705,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 	// unique
 	cl_mem d_mask_conv;
-	d_mask_conv = clCreateBuffer(	context, 
+	d_mask_conv = CECL_BUFFER(	context, 
 									CL_MEM_READ_WRITE, 
 									common.mask_conv_mem * common.allPoints, 
 									NULL, 
@@ -728,7 +729,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	// endo points
 	//==================================================50
 
-	error = clEnqueueWriteBuffer(	command_queue, 
+	error = CECL_WRITE_BUFFER(	command_queue, 
 									d_endoRow, 
 									1, 
 									0, 
@@ -740,7 +741,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 
-	error = clEnqueueWriteBuffer(	command_queue, 
+	error = CECL_WRITE_BUFFER(	command_queue, 
 									d_endoCol, 
 									1, 
 									0, 
@@ -756,7 +757,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	// epi points
 	//==================================================50
 
-	error = clEnqueueWriteBuffer(	command_queue, 
+	error = CECL_WRITE_BUFFER(	command_queue, 
 									d_epiRow, 
 									1, 
 									0, 
@@ -768,7 +769,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 
-	error = clEnqueueWriteBuffer(	command_queue, 
+	error = CECL_WRITE_BUFFER(	command_queue, 
 									d_epiCol, 
 									1, 
 									0, 
@@ -808,7 +809,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	//	COPY ARGUMENTS
 	//====================================================================================================100
 
-	error = clEnqueueWriteBuffer(	command_queue, 
+	error = CECL_WRITE_BUFFER(	command_queue, 
 									d_common, 
 									1, 
 									0, 
@@ -825,7 +826,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	//====================================================================================================100
 
 	// structures
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							0, 
 							sizeof(params_common), 
 							(void *) &common);
@@ -833,49 +834,49 @@ kernel_gpu_opencl_wrapper(	params_common common,
 		fatal_CL(error, __LINE__);
 
 	// common
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							3, 
 							sizeof(cl_mem), 
 							(void *) &d_endoRow);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							4, 
 							sizeof(cl_mem), 
 							(void *) &d_endoCol);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							5, 
 							sizeof(cl_mem), 
 							(void *) &d_tEndoRowLoc);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							6, 
 							sizeof(cl_mem), 
 							(void *) &d_tEndoColLoc);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							7, 
 							sizeof(cl_mem), 
 							(void *) &d_epiRow);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							8, 
 							sizeof(cl_mem), 
 							(void *) &d_epiCol);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							9, 
 							sizeof(cl_mem), 
 							(void *) &d_tEpiRowLoc);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							10, 
 							sizeof(cl_mem), 
 							(void *) &d_tEpiColLoc);
@@ -883,85 +884,85 @@ kernel_gpu_opencl_wrapper(	params_common common,
 		fatal_CL(error, __LINE__);
 
 	// common_unique
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							11, 
 							sizeof(cl_mem), 
 							(void *) &d_endoT);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							12, 
 							sizeof(cl_mem), 
 							(void *) &d_epiT);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							13, 
 							sizeof(cl_mem), 
 							(void *) &d_in2);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							14, 
 							sizeof(cl_mem), 
 							(void *) &d_conv);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							15, 
 							sizeof(cl_mem), 
 							(void *) &d_in2_pad_cumv);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							16, 
 							sizeof(cl_mem), 
 							(void *) &d_in2_pad_cumv_sel);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							17, 
 							sizeof(cl_mem), 
 							(void *) &d_in2_sub_cumh);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							18, 
 							sizeof(cl_mem), 
 							(void *) &d_in2_sub_cumh_sel);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							19, 
 							sizeof(cl_mem), 
 							(void *) &d_in2_sub2);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							20, 
 							sizeof(cl_mem), 
 							(void *) &d_in2_sqr);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							21, 
 							sizeof(cl_mem), 
 							(void *) &d_in2_sqr_sub2);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							22, 
 							sizeof(cl_mem), 
 							(void *) &d_in_sqr);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							23, 
 							sizeof(cl_mem), 
 							(void *) &d_tMask);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							24, 
 							sizeof(cl_mem), 
 							(void *) &d_mask_conv);
@@ -971,14 +972,14 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	// // local
 	// // int local_size_one;
 	// // local_size_one = common.in_rows;
-	// error = clSetKernelArg(	kernel, 
+	// error = CECL_SET_KERNEL_ARG(	kernel, 
 							// 25, 
 							// // sizeof(fp) * local_size_one, 	// size 51
 							// sizeof(fp) * common.in_elem,
 							// NULL);
 	// if (error != CL_SUCCESS) 
 		// fatal_CL(error, __LINE__);
-	// error = clSetKernelArg(	kernel, 
+	// error = CECL_SET_KERNEL_ARG(	kernel, 
 							// 26, 
 							// // sizeof(fp) * local_size_one, 	// size 51
 							// sizeof(fp) * common.in_cols,
@@ -987,14 +988,14 @@ kernel_gpu_opencl_wrapper(	params_common common,
 		// fatal_CL(error, __LINE__);
 	// // int local_size_two;
 	// // local_size_two = common.in_rows + common.in2_rows - 1;
-	// error = clSetKernelArg(	kernel, 
+	// error = CECL_SET_KERNEL_ARG(	kernel, 
 							// 27, 
 							// // sizeof(fp) * local_size_two, 	// size 51+81-1=131
 							// sizeof(fp) * common.in_sqr_rows,
 							// NULL);
 	// if (error != CL_SUCCESS) 
 		// fatal_CL(error, __LINE__);
-	// error = clSetKernelArg(	kernel, 
+	// error = CECL_SET_KERNEL_ARG(	kernel, 
 							// 28, 
 							// // sizeof(fp) * local_size_two, 	// size 51+81-1=131
 							// sizeof(fp) * common.mask_conv_rows,
@@ -1003,7 +1004,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 		// fatal_CL(error, __LINE__);
 	// // int local_size_three;
 	// // local_size_three = common.in_rows * common.in_rows;
-	// error = clSetKernelArg(	kernel, 
+	// error = CECL_SET_KERNEL_ARG(	kernel, 
 							// 29, 
 							// // sizeof(fp) * local_size_three, 	// size 51*51=2601
 							// sizeof(int) * common.mask_conv_rows,
@@ -1016,7 +1017,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	// printf("size of used local memory/workgroup = %dB (ensure that device can handle)\n", local_size);
 
 	cl_mem d_in_mod_temp;
-	d_in_mod_temp = clCreateBuffer(	context, 
+	d_in_mod_temp = CECL_BUFFER(	context, 
 									CL_MEM_READ_WRITE, 
 									sizeof(fp) * common.in_elem * common.allPoints, 
 									NULL, 
@@ -1024,7 +1025,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 	cl_mem in_partial_sum;
-	in_partial_sum = clCreateBuffer(context, 
+	in_partial_sum = CECL_BUFFER(context, 
 										CL_MEM_READ_WRITE, 
 										sizeof(fp) * common.in_cols * common.allPoints, 
 										NULL, 
@@ -1032,7 +1033,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 	cl_mem in_sqr_partial_sum;
-	in_sqr_partial_sum = clCreateBuffer(context, 
+	in_sqr_partial_sum = CECL_BUFFER(context, 
 										CL_MEM_READ_WRITE, 
 										sizeof(fp) * common.in_sqr_rows * common.allPoints, 
 										NULL, 
@@ -1040,7 +1041,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 	cl_mem par_max_val;
-	par_max_val = clCreateBuffer(	context, 
+	par_max_val = CECL_BUFFER(	context, 
 									CL_MEM_READ_WRITE, 
 									sizeof(fp) * common.mask_conv_rows * common.allPoints, 
 									NULL, 
@@ -1048,7 +1049,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 	cl_mem par_max_coo;
-	par_max_coo = clCreateBuffer(	context, 
+	par_max_coo = CECL_BUFFER(	context, 
 									CL_MEM_READ_WRITE, 
 									sizeof(int) * common.mask_conv_rows * common.allPoints, 
 									NULL, 
@@ -1056,7 +1057,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 	cl_mem in_final_sum;
-	in_final_sum = clCreateBuffer(	context, 
+	in_final_sum = CECL_BUFFER(	context, 
 									CL_MEM_READ_WRITE, 
 									sizeof(fp) * common.allPoints, 
 									NULL, 
@@ -1064,7 +1065,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 	cl_mem in_sqr_final_sum;
-	in_sqr_final_sum = clCreateBuffer(	context, 
+	in_sqr_final_sum = CECL_BUFFER(	context, 
 										CL_MEM_READ_WRITE, 
 										sizeof(fp) * common.allPoints, 
 										NULL, 
@@ -1072,7 +1073,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 	cl_mem denomT;
-	denomT = clCreateBuffer(context, 
+	denomT = CECL_BUFFER(context, 
 							CL_MEM_READ_WRITE, 
 							sizeof(fp) * common.allPoints, 
 							NULL, 
@@ -1082,49 +1083,49 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 
 
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							25, 
 							sizeof(cl_mem),
 							(void *) &d_in_mod_temp);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							26, 
 							sizeof(cl_mem),
 							(void *) &in_partial_sum);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							27, 
 							sizeof(cl_mem),
 							(void *) &in_sqr_partial_sum);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							28, 
 							sizeof(cl_mem),
 							(void *) &par_max_val);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							29, 
 							sizeof(cl_mem),
 							(void *) &par_max_coo);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							30, 
 							sizeof(cl_mem),
 							(void *) &in_final_sum);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							31, 
 							sizeof(cl_mem),
 							(void *) &in_sqr_final_sum);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							32, 
 							sizeof(cl_mem),
 							(void *) &denomT);
@@ -1134,7 +1135,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 
 
 	cl_mem d_checksum;
-	d_checksum = clCreateBuffer(context, 
+	d_checksum = CECL_BUFFER(context, 
 								CL_MEM_READ_WRITE, 
 								sizeof(fp) * CHECK, 
 								NULL, 
@@ -1142,7 +1143,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 
-	error = clSetKernelArg(	kernel, 
+	error = CECL_SET_KERNEL_ARG(	kernel, 
 							33, 
 							sizeof(cl_mem),
 							(void *) &d_checksum);
@@ -1178,7 +1179,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 							1);									// converted
 
 		// copy frame to GPU memory
-		error = clEnqueueWriteBuffer(	command_queue, 
+		error = CECL_WRITE_BUFFER(	command_queue, 
 										d_frame, 
 										1, 
 										0, 
@@ -1195,13 +1196,13 @@ kernel_gpu_opencl_wrapper(	params_common common,
 		//==================================================50
 
 		// common_change
-		error = clSetKernelArg(	kernel, 
+		error = CECL_SET_KERNEL_ARG(	kernel, 
 								1, 
 								sizeof(cl_mem), 
 								(void *) &d_frame);
 		if (error != CL_SUCCESS) 
 			fatal_CL(error, __LINE__);
-		error = clSetKernelArg(	kernel, 
+		error = CECL_SET_KERNEL_ARG(	kernel, 
 								2, 
 								sizeof(int), 
 								(void *) &frame_no);
@@ -1212,7 +1213,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 		//	launch kernel
 		//==================================================50
 
-		error = clEnqueueNDRangeKernel(	command_queue, 
+		error = CECL_ND_RANGE_KERNEL(	command_queue, 
 										kernel, 
 										1, 
 										NULL, 
@@ -1251,7 +1252,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 #ifdef TEST_CHECKSUM
 		fp* checksum;
 		checksum = (fp*)malloc(sizeof(fp) * CHECK);
-		error = clEnqueueReadBuffer(command_queue,
+		error = CECL_READ_BUFFER(command_queue,
 									d_checksum,
 									CL_TRUE,
 									0,
@@ -1290,7 +1291,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	// endo points
 	//====================================================================================================100
 
-	error = clEnqueueReadBuffer(command_queue,
+	error = CECL_READ_BUFFER(command_queue,
 								d_tEndoRowLoc,
 								CL_TRUE,
 								0,
@@ -1314,7 +1315,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	}
 #endif
 
-	error = clEnqueueReadBuffer(command_queue,
+	error = CECL_READ_BUFFER(command_queue,
 								d_tEndoColLoc,
 								CL_TRUE,
 								0,
@@ -1330,7 +1331,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	// epi points
 	//====================================================================================================100
 
-	error = clEnqueueReadBuffer(command_queue,
+	error = CECL_READ_BUFFER(command_queue,
 								d_tEpiRowLoc,
 								CL_TRUE,
 								0,
@@ -1342,7 +1343,7 @@ kernel_gpu_opencl_wrapper(	params_common common,
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);;
 
-	error = clEnqueueReadBuffer(command_queue,
+	error = CECL_READ_BUFFER(command_queue,
 								d_tEpiColLoc,
 								CL_TRUE,
 								0,

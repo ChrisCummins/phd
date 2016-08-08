@@ -1,3 +1,4 @@
+#include <cecl.h>
 /****************************************************************************\ 
  * Copyright (c) 2011, Advanced Micro Devices, Inc.                           *
  * All rights reserved.                                                       *
@@ -220,11 +221,11 @@ cl_context cl_init(char devicePreference)
     cl_errChk(status, "Creating context", true);
  
     // Create the command queue
-    commandQueueProf = clCreateCommandQueue(context, device, 
+    commandQueueProf = CECL_CREATE_COMMAND_QUEUE(context, device, 
                             CL_QUEUE_PROFILING_ENABLE, &status);
     cl_errChk(status, "creating command queue", true);
 
-    commandQueueNoProf = clCreateCommandQueue(context, device, 0, &status);
+    commandQueueNoProf = CECL_CREATE_COMMAND_QUEUE(context, device, 0, &status);
     cl_errChk(status, "creating command queue", true);
 
     if(eventsEnabled) {
@@ -376,12 +377,12 @@ cl_context cl_init_context(int platform, int dev,int quiet) {
 
 #ifdef PROFILING
 
-	commandQueue = clCreateCommandQueue(context,
+	commandQueue = CECL_CREATE_COMMAND_QUEUE(context,
 						devices[device_touse], CL_QUEUE_PROFILING_ENABLE, &status);
 
 #else
 
-	clCommandQueue = clCreateCommandQueue(clGPUContext,
+	clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clGPUContext,
 						devices[device_touse], NULL, &status);
 
 #endif // PROFILING
@@ -502,7 +503,7 @@ cl_mem cl_allocBuffer(size_t mem_size, cl_mem_flags flags)
     allocationCount++;
     allocationSize += mem_size;
     
-    mem = clCreateBuffer(context, flags, mem_size, NULL, &status);
+    mem = CECL_BUFFER(context, flags, mem_size, NULL, &status);
 
     cl_errChk(status, "creating buffer", true);
 
@@ -520,7 +521,7 @@ cl_mem cl_allocBufferConst(size_t mem_size, void* host_ptr)
     cl_mem mem;
     cl_int status;          
 
-    mem = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+    mem = CECL_BUFFER(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                          mem_size, host_ptr, &status);
     cl_errChk(status, "Error creating const mem buffer", true);
     
@@ -537,7 +538,7 @@ cl_mem cl_allocBufferPinned(size_t mem_size)
     cl_mem mem;
     cl_int status;
 
-    mem = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+    mem = CECL_BUFFER(context, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                          mem_size, NULL, &status);
     cl_errChk(status, "Error allocating pinned memory", true);
     
@@ -637,7 +638,7 @@ void cl_copyBufferToBuffer(cl_mem dst, cl_mem src, size_t size)
 void cl_copyBufferToDevice(cl_mem dst, void* src, size_t mem_size, cl_bool blocking)
 {
     cl_int status;     
-    status = clEnqueueWriteBuffer(commandQueue, dst, blocking, 0, 
+    status = CECL_WRITE_BUFFER(commandQueue, dst, blocking, 0, 
         mem_size, src, 0, NULL, NULL); 
     cl_errChk(status, "Writing buffer", true);
 
@@ -653,7 +654,7 @@ void cl_copyBufferToDevice(cl_mem dst, void* src, size_t mem_size, cl_bool block
 void cl_copyBufferToHost(void* dst, cl_mem src, size_t mem_size, cl_bool blocking) 
 {
     cl_int status;          
-    status = clEnqueueReadBuffer(commandQueue, src, blocking, 0, 
+    status = CECL_READ_BUFFER(commandQueue, src, blocking, 0, 
         mem_size, dst, 0, NULL, NULL);
     cl_errChk(status, "Reading buffer", true);
 
@@ -819,7 +820,7 @@ cl_program cl_compileProgram(char* kernelPath, char* compileoptions, bool verbos
     source[size] = '\0';
 
     // Create the program object
-    cl_program clProgramReturn = clCreateProgramWithSource(context, 1, 
+    cl_program clProgramReturn = CECL_PROGRAM_WITH_SOURCE(context, 1, 
         (const char **)&source, NULL, &status);
     cl_errChk(status, "Creating program", true);
 
@@ -827,7 +828,7 @@ cl_program cl_compileProgram(char* kernelPath, char* compileoptions, bool verbos
     fclose(fp);
 
     // Try to compile the program
-    status = clBuildProgram(clProgramReturn, 0, NULL, compileoptions, NULL, NULL);
+    status = CECL_PROGRAM(clProgramReturn, 0, NULL, compileoptions, NULL, NULL);
     if(cl_errChk(status, "Building program", false) || verbosebuild == 1) 
     {
 
@@ -884,7 +885,7 @@ cl_kernel cl_createKernel(cl_program program, const char* kernel_name) {
     cl_kernel kernel;
     cl_int status;
 
-    kernel = clCreateKernel(program, kernel_name, &status);
+    kernel = CECL_KERNEL(program, kernel_name, &status);
     cl_errChk(status, "Creating kernel", true);
 
     return kernel;
@@ -903,7 +904,7 @@ void cl_setKernelArg(cl_kernel kernel, unsigned int index, size_t size,
                      void* data)
 {
     cl_int status;
-    status = clSetKernelArg(kernel, index, size, data);
+    status = CECL_SET_KERNEL_ARG(kernel, index, size, data);
 
     cl_errChk(status, "Setting kernel arg", true);
 }

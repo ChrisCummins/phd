@@ -1,3 +1,4 @@
+#include <cecl.h>
 // #ifdef __cplusplus
 // extern "C" {
 // #endif
@@ -88,7 +89,7 @@ master(	fp timeinst,
 
 	int d_initvalu_mem;
 	d_initvalu_mem = EQUATIONS * sizeof(fp);
-	error = clEnqueueWriteBuffer(	command_queue,			// command queue
+	error = CECL_WRITE_BUFFER(	command_queue,			// command queue
 									d_initvalu,				// destination
 									1,						// block the source from access until this copy operation complates (1=yes, 0=no)
 									0,						// offset in destination to write to
@@ -106,7 +107,7 @@ master(	fp timeinst,
 
 	int d_params_mem;
 	d_params_mem = PARAMETERS * sizeof(fp);
-	error = clEnqueueWriteBuffer(	command_queue,
+	error = CECL_WRITE_BUFFER(	command_queue,
 									d_params,
 									1,
 									0,
@@ -143,23 +144,23 @@ master(	fp timeinst,
 	//	KERNEL ARGUMENTS
 	//====================================================================================================100
 
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					0, 
 					sizeof(int), 
 					(void *) &timeinst);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					1, 
 					sizeof(cl_mem), 
 					(void *) &d_initvalu);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					2, 
 					sizeof(cl_mem), 
 					(void *) &d_finavalu);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					3, 
 					sizeof(cl_mem), 
 					(void *) &d_params);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					4, 
 					sizeof(cl_mem), 
 					(void *) &d_com);
@@ -168,7 +169,7 @@ master(	fp timeinst,
 	//	KERNEL
 	//====================================================================================================100
 
-	error = clEnqueueNDRangeKernel(	command_queue, 
+	error = CECL_ND_RANGE_KERNEL(	command_queue, 
 									kernel, 
 									1, 
 									NULL, 
@@ -197,7 +198,7 @@ master(	fp timeinst,
 
 	int d_finavalu_mem;
 	d_finavalu_mem = EQUATIONS * sizeof(fp);
-	error = clEnqueueReadBuffer(command_queue,               // The command queue.
+	error = CECL_READ_BUFFER(command_queue,               // The command queue.
 								d_finavalu,                  // The image on the device.
 								CL_TRUE,                     // Blocking? (ie. Wait at this line until read has finished?)
 								0,                           // Offset. None in this case.
@@ -215,7 +216,7 @@ master(	fp timeinst,
 
 	int d_com_mem;
 	d_com_mem = 3 * sizeof(fp);
-	error = clEnqueueReadBuffer(command_queue,
+	error = CECL_READ_BUFFER(command_queue,
 								d_com,
 								CL_TRUE,
 								0,

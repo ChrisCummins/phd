@@ -1,3 +1,4 @@
+#include <cecl.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -168,7 +169,7 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 
 	// Create a command queue
 	cl_command_queue command_queue;
-	command_queue = clCreateCommandQueue(	context, 
+	command_queue = CECL_CREATE_COMMAND_QUEUE(	context, 
 											device, 
 											0, 
 											&error);
@@ -184,7 +185,7 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 	size_t sourceSize = strlen(source);
 
 	// Create the program
-	cl_program program = clCreateProgramWithSource(	context, 
+	cl_program program = CECL_PROGRAM_WITH_SOURCE(	context, 
 													1, 
 													&source, 
 													&sourceSize, 
@@ -208,7 +209,7 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 
 
 	// Compile the program
-	error = clBuildProgram(	program, 
+	error = CECL_PROGRAM(	program, 
 							1, 
 							&device, 
 							clOptions, 
@@ -230,7 +231,7 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 
 	// Create kernel
 	cl_kernel kernel;
-	kernel = clCreateKernel(program, 
+	kernel = CECL_KERNEL(program, 
 							"kernel_gpu_opencl", 
 							&error);
 	if (error != CL_SUCCESS) 
@@ -268,7 +269,7 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 	//==================================================50
 
 	cl_mem d_box_gpu;
-	d_box_gpu = clCreateBuffer(	context, 
+	d_box_gpu = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								dim_cpu.box_mem, 
 								NULL, 
@@ -281,7 +282,7 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 	//==================================================50
 
 	cl_mem d_rv_gpu;
-	d_rv_gpu = clCreateBuffer(	context, 
+	d_rv_gpu = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								dim_cpu.space_mem, 
 								NULL, 
@@ -294,7 +295,7 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 	//==================================================50
 
 	cl_mem d_qv_gpu;
-	d_qv_gpu = clCreateBuffer(	context, 
+	d_qv_gpu = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								dim_cpu.space_mem2, 
 								NULL, 
@@ -311,7 +312,7 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 	//==================================================50
 
 	cl_mem d_fv_gpu;
-	d_fv_gpu = clCreateBuffer(	context, 
+	d_fv_gpu = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								dim_cpu.space_mem, 
 								NULL, 
@@ -333,7 +334,7 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 	//	boxes
 	//==================================================50
 
-	error = clEnqueueWriteBuffer(	command_queue,			// command queue
+	error = CECL_WRITE_BUFFER(	command_queue,			// command queue
 									d_box_gpu,				// destination
 									1,						// block the source from access until this copy operation complates (1=yes, 0=no)
 									0,						// offset in destination to write to
@@ -349,7 +350,7 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 	//	rv
 	//==================================================50
 
-	error = clEnqueueWriteBuffer(	command_queue, 
+	error = CECL_WRITE_BUFFER(	command_queue, 
 									d_rv_gpu, 
 									1, 
 									0, 
@@ -365,7 +366,7 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 	//	qv
 	//==================================================50
 
-	error = clEnqueueWriteBuffer(	command_queue, 
+	error = CECL_WRITE_BUFFER(	command_queue, 
 									d_qv_gpu, 
 									1, 
 									0, 
@@ -385,7 +386,7 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 	//	fv
 	//==================================================50
 
-	error = clEnqueueWriteBuffer(	command_queue, 
+	error = CECL_WRITE_BUFFER(	command_queue, 
 									d_fv_gpu, 
 									1,
 									0, 
@@ -404,33 +405,33 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 	//======================================================================================================================================================150
 
 	// ???
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					0, 
 					sizeof(par_str), 
 					(void *) &par_cpu);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					1, 
 					sizeof(dim_str), 
 					(void *) &dim_cpu);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					2, 
 					sizeof(cl_mem), 
 					(void *) &d_box_gpu);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					3, 
 					sizeof(cl_mem), 
 					(void *) &d_rv_gpu);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					4, 
 					sizeof(cl_mem), 
 					(void *) &d_qv_gpu);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					5, 
 					sizeof(cl_mem), 
 					(void *) &d_fv_gpu);
 
 	// launch kernel - all boxes
-	error = clEnqueueNDRangeKernel(	command_queue, 
+	error = CECL_ND_RANGE_KERNEL(	command_queue, 
 									kernel, 
 									1, 
 									NULL, 
@@ -461,7 +462,7 @@ kernel_gpu_opencl_wrapper(	par_str par_cpu,
 	//	fv
 	//==================================================50
 
-	error = clEnqueueReadBuffer(command_queue,               // The command queue.
+	error = CECL_READ_BUFFER(command_queue,               // The command queue.
 								d_fv_gpu,                         // The image on the device.
 								CL_TRUE,                     // Blocking? (ie. Wait at this line until read has finished?)
 								0,                           // Offset. None in this case.

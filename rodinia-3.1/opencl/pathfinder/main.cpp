@@ -1,3 +1,4 @@
+#include <cecl.h>
 /***********************************************************************
  * PathFinder uses dynamic programming to find a path on a 2-D grid from
  * the bottom row to the top row with the smallest accumulated weights,
@@ -111,7 +112,7 @@ int main(int argc, char** argv)
 	cl.createKernel(kn);
 
 	// Allocate device memory.
-	cl_mem d_gpuWall = clCreateBuffer(cl.ctxt(),
+	cl_mem d_gpuWall = CECL_BUFFER(cl.ctxt(),
 	                                  CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
 	                                  sizeof(cl_int)*(size-cols),
 	                                  (data + cols),
@@ -119,13 +120,13 @@ int main(int argc, char** argv)
 
 	cl_mem d_gpuResult[2];
 
-	d_gpuResult[0] = clCreateBuffer(cl.ctxt(),
+	d_gpuResult[0] = CECL_BUFFER(cl.ctxt(),
 	                                CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
 	                                sizeof(cl_int)*cols,
 	                                data,
 	                                NULL);
 
-	d_gpuResult[1] = clCreateBuffer(cl.ctxt(),
+	d_gpuResult[1] = CECL_BUFFER(cl.ctxt(),
 	                                CL_MEM_READ_WRITE,
 	                                sizeof(cl_int)*cols,
 	                                NULL,
@@ -136,7 +137,7 @@ int main(int argc, char** argv)
 	{
 		h_outputBuffer[i] = 0;
 	}
-	cl_mem d_outputBuffer = clCreateBuffer(cl.ctxt(),
+	cl_mem d_outputBuffer = CECL_BUFFER(cl.ctxt(),
 	                                       CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
 	                                       sizeof(cl_int)*16384,
 	                                       h_outputBuffer,
@@ -154,23 +155,23 @@ int main(int argc, char** argv)
 		int theHalo = HALO;
 
 		// Set the kernel arguments.
-		clSetKernelArg(cl.kernel(kn), 0,  sizeof(cl_int), (void*) &arg0);
-		clSetKernelArg(cl.kernel(kn), 1,  sizeof(cl_mem), (void*) &d_gpuWall);
-		clSetKernelArg(cl.kernel(kn), 2,  sizeof(cl_mem), (void*) &d_gpuResult[src]);
-		clSetKernelArg(cl.kernel(kn), 3,  sizeof(cl_mem), (void*) &d_gpuResult[final_ret]);
-		clSetKernelArg(cl.kernel(kn), 4,  sizeof(cl_int), (void*) &cols);
-		clSetKernelArg(cl.kernel(kn), 5,  sizeof(cl_int), (void*) &rows);
-		clSetKernelArg(cl.kernel(kn), 6,  sizeof(cl_int), (void*) &t);
-		clSetKernelArg(cl.kernel(kn), 7,  sizeof(cl_int), (void*) &borderCols);
-		clSetKernelArg(cl.kernel(kn), 8,  sizeof(cl_int), (void*) &theHalo);
-		clSetKernelArg(cl.kernel(kn), 9,  sizeof(cl_int) * (cl.localSize()), 0);
-		clSetKernelArg(cl.kernel(kn), 10, sizeof(cl_int) * (cl.localSize()), 0);
-		clSetKernelArg(cl.kernel(kn), 11, sizeof(cl_mem), (void*) &d_outputBuffer);
+		CECL_SET_KERNEL_ARG(cl.kernel(kn), 0,  sizeof(cl_int), (void*) &arg0);
+		CECL_SET_KERNEL_ARG(cl.kernel(kn), 1,  sizeof(cl_mem), (void*) &d_gpuWall);
+		CECL_SET_KERNEL_ARG(cl.kernel(kn), 2,  sizeof(cl_mem), (void*) &d_gpuResult[src]);
+		CECL_SET_KERNEL_ARG(cl.kernel(kn), 3,  sizeof(cl_mem), (void*) &d_gpuResult[final_ret]);
+		CECL_SET_KERNEL_ARG(cl.kernel(kn), 4,  sizeof(cl_int), (void*) &cols);
+		CECL_SET_KERNEL_ARG(cl.kernel(kn), 5,  sizeof(cl_int), (void*) &rows);
+		CECL_SET_KERNEL_ARG(cl.kernel(kn), 6,  sizeof(cl_int), (void*) &t);
+		CECL_SET_KERNEL_ARG(cl.kernel(kn), 7,  sizeof(cl_int), (void*) &borderCols);
+		CECL_SET_KERNEL_ARG(cl.kernel(kn), 8,  sizeof(cl_int), (void*) &theHalo);
+		CECL_SET_KERNEL_ARG(cl.kernel(kn), 9,  sizeof(cl_int) * (cl.localSize()), 0);
+		CECL_SET_KERNEL_ARG(cl.kernel(kn), 10, sizeof(cl_int) * (cl.localSize()), 0);
+		CECL_SET_KERNEL_ARG(cl.kernel(kn), 11, sizeof(cl_mem), (void*) &d_outputBuffer);
 		cl.launch(kn);
 	}
 
 	// Copy results back to host.
-	clEnqueueReadBuffer(cl.q(),                   // The command queue.
+	CECL_READ_BUFFER(cl.q(),                   // The command queue.
 	                    d_gpuResult[final_ret],   // The result on the device.
 	                    CL_TRUE,                  // Blocking? (ie. Wait at this line until read has finished?)
 	                    0,                        // Offset. None in this case.
@@ -182,7 +183,7 @@ int main(int argc, char** argv)
 
 
 	// Copy string buffer used for debugging from device to host.
-	clEnqueueReadBuffer(cl.q(),                   // The command queue.
+	CECL_READ_BUFFER(cl.q(),                   // The command queue.
 	                    d_outputBuffer,           // Debug buffer on the device.
 	                    CL_TRUE,                  // Blocking? (ie. Wait at this line until read has finished?)
 	                    0,                        // Offset. None in this case.

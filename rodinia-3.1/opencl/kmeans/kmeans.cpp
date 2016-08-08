@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -82,8 +83,8 @@ static int initialize(int use_gpu)
 	if( result != CL_SUCCESS ) { printf("ERROR: clGetContextInfo() failed\n"); return -1; }
 
 	// create command queue for the first device
-	cmd_queue = clCreateCommandQueue( context, device_list[0], 0, NULL );
-	if( !cmd_queue ) { printf("ERROR: clCreateCommandQueue() failed\n"); return -1; }
+	cmd_queue = CECL_CREATE_COMMAND_QUEUE( context, device_list[0], 0, NULL );
+	if( !cmd_queue ) { printf("ERROR: CECL_CREATE_COMMAND_QUEUE() failed\n"); return -1; }
 
 	return 0;
 }
@@ -141,9 +142,9 @@ int allocate(int n_points, int n_features, int n_clusters, float **feature)
 	// compile kernel
 	cl_int err = 0;
 	const char * slist[2] = { source, 0 };
-	cl_program prog = clCreateProgramWithSource(context, 1, slist, NULL, &err);
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateProgramWithSource() => %d\n", err); return -1; }
-	err = clBuildProgram(prog, 0, NULL, NULL, NULL, NULL);
+	cl_program prog = CECL_PROGRAM_WITH_SOURCE(context, 1, slist, NULL, &err);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_PROGRAM_WITH_SOURCE() => %d\n", err); return -1; }
+	err = CECL_PROGRAM(prog, 0, NULL, NULL, NULL, NULL);
 	{ // show warnings/errors
 	//	static char log[65536]; memset(log, 0, sizeof(log));
 	//	cl_device_id device_id = 0;
@@ -151,35 +152,35 @@ int allocate(int n_points, int n_features, int n_clusters, float **feature)
 	//	clGetProgramBuildInfo(prog, device_id, CL_PROGRAM_BUILD_LOG, sizeof(log)-1, log, NULL);
 	//	if(err || strstr(log,"warning:") || strstr(log, "error:")) printf("<<<<\n%s\n>>>>\n", log);
 	}
-	if(err != CL_SUCCESS) { printf("ERROR: clBuildProgram() => %d\n", err); return -1; }
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_PROGRAM() => %d\n", err); return -1; }
 	
 	char * kernel_kmeans_c  = "kmeans_kernel_c";
 	char * kernel_swap  = "kmeans_swap";	
 		
-	kernel_s = clCreateKernel(prog, kernel_kmeans_c, &err);  
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateKernel() 0 => %d\n", err); return -1; }
-	kernel2 = clCreateKernel(prog, kernel_swap, &err);  
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateKernel() 0 => %d\n", err); return -1; }
+	kernel_s = CECL_KERNEL(prog, kernel_kmeans_c, &err);  
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_KERNEL() 0 => %d\n", err); return -1; }
+	kernel2 = CECL_KERNEL(prog, kernel_swap, &err);  
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_KERNEL() 0 => %d\n", err); return -1; }
 		
 	clReleaseProgram(prog);	
 	
-	d_feature = clCreateBuffer(context, CL_MEM_READ_WRITE, n_points * n_features * sizeof(float), NULL, &err );
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer d_feature (size:%d) => %d\n", n_points * n_features, err); return -1;}
-	d_feature_swap = clCreateBuffer(context, CL_MEM_READ_WRITE, n_points * n_features * sizeof(float), NULL, &err );
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer d_feature_swap (size:%d) => %d\n", n_points * n_features, err); return -1;}
-	d_cluster = clCreateBuffer(context, CL_MEM_READ_WRITE, n_clusters * n_features  * sizeof(float), NULL, &err );
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer d_cluster (size:%d) => %d\n", n_clusters * n_features, err); return -1;}
-	d_membership = clCreateBuffer(context, CL_MEM_READ_WRITE, n_points * sizeof(int), NULL, &err );
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer d_membership (size:%d) => %d\n", n_points, err); return -1;}
+	d_feature = CECL_BUFFER(context, CL_MEM_READ_WRITE, n_points * n_features * sizeof(float), NULL, &err );
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER d_feature (size:%d) => %d\n", n_points * n_features, err); return -1;}
+	d_feature_swap = CECL_BUFFER(context, CL_MEM_READ_WRITE, n_points * n_features * sizeof(float), NULL, &err );
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER d_feature_swap (size:%d) => %d\n", n_points * n_features, err); return -1;}
+	d_cluster = CECL_BUFFER(context, CL_MEM_READ_WRITE, n_clusters * n_features  * sizeof(float), NULL, &err );
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER d_cluster (size:%d) => %d\n", n_clusters * n_features, err); return -1;}
+	d_membership = CECL_BUFFER(context, CL_MEM_READ_WRITE, n_points * sizeof(int), NULL, &err );
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER d_membership (size:%d) => %d\n", n_points, err); return -1;}
 		
 	//write buffers
-	err = clEnqueueWriteBuffer(cmd_queue, d_feature, 1, 0, n_points * n_features * sizeof(float), feature[0], 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer d_feature (size:%d) => %d\n", n_points * n_features, err); return -1; }
+	err = CECL_WRITE_BUFFER(cmd_queue, d_feature, 1, 0, n_points * n_features * sizeof(float), feature[0], 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_WRITE_BUFFER d_feature (size:%d) => %d\n", n_points * n_features, err); return -1; }
 	
-	clSetKernelArg(kernel2, 0, sizeof(void *), (void*) &d_feature);
-	clSetKernelArg(kernel2, 1, sizeof(void *), (void*) &d_feature_swap);
-	clSetKernelArg(kernel2, 2, sizeof(cl_int), (void*) &n_points);
-	clSetKernelArg(kernel2, 3, sizeof(cl_int), (void*) &n_features);
+	CECL_SET_KERNEL_ARG(kernel2, 0, sizeof(void *), (void*) &d_feature);
+	CECL_SET_KERNEL_ARG(kernel2, 1, sizeof(void *), (void*) &d_feature_swap);
+	CECL_SET_KERNEL_ARG(kernel2, 2, sizeof(cl_int), (void*) &n_points);
+	CECL_SET_KERNEL_ARG(kernel2, 3, sizeof(cl_int), (void*) &n_features);
 	
 	size_t global_work[3] = { n_points, 1, 1 };
 	/// Ke Wang adjustable local group size 2013/08/07 10:37:33
@@ -187,8 +188,8 @@ int allocate(int n_points, int n_features, int n_clusters, float **feature)
 	if(global_work[0]%local_work_size !=0)
 	  global_work[0]=(global_work[0]/local_work_size+1)*local_work_size;
 
-	err = clEnqueueNDRangeKernel(cmd_queue, kernel2, 1, NULL, global_work, &local_work_size, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueNDRangeKernel()=>%d failed\n", err); return -1; }
+	err = CECL_ND_RANGE_KERNEL(cmd_queue, kernel2, 1, NULL, global_work, &local_work_size, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_ND_RANGE_KERNEL()=>%d failed\n", err); return -1; }
 	
 	membership_OCL = (int*) malloc(n_points * sizeof(int));
 }
@@ -233,24 +234,24 @@ int	kmeansOCL(float **feature,    /* in: [npoints][nfeatures] */
 	if(global_work[0]%local_work_size !=0)
 	  global_work[0]=(global_work[0]/local_work_size+1)*local_work_size;
 	
-	err = clEnqueueWriteBuffer(cmd_queue, d_cluster, 1, 0, n_clusters * n_features * sizeof(float), clusters[0], 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer d_cluster (size:%d) => %d\n", n_points, err); return -1; }
+	err = CECL_WRITE_BUFFER(cmd_queue, d_cluster, 1, 0, n_clusters * n_features * sizeof(float), clusters[0], 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_WRITE_BUFFER d_cluster (size:%d) => %d\n", n_points, err); return -1; }
 
 	int size = 0; int offset = 0;
 					
-	clSetKernelArg(kernel_s, 0, sizeof(void *), (void*) &d_feature_swap);
-	clSetKernelArg(kernel_s, 1, sizeof(void *), (void*) &d_cluster);
-	clSetKernelArg(kernel_s, 2, sizeof(void *), (void*) &d_membership);
-	clSetKernelArg(kernel_s, 3, sizeof(cl_int), (void*) &n_points);
-	clSetKernelArg(kernel_s, 4, sizeof(cl_int), (void*) &n_clusters);
-	clSetKernelArg(kernel_s, 5, sizeof(cl_int), (void*) &n_features);
-	clSetKernelArg(kernel_s, 6, sizeof(cl_int), (void*) &offset);
-	clSetKernelArg(kernel_s, 7, sizeof(cl_int), (void*) &size);
+	CECL_SET_KERNEL_ARG(kernel_s, 0, sizeof(void *), (void*) &d_feature_swap);
+	CECL_SET_KERNEL_ARG(kernel_s, 1, sizeof(void *), (void*) &d_cluster);
+	CECL_SET_KERNEL_ARG(kernel_s, 2, sizeof(void *), (void*) &d_membership);
+	CECL_SET_KERNEL_ARG(kernel_s, 3, sizeof(cl_int), (void*) &n_points);
+	CECL_SET_KERNEL_ARG(kernel_s, 4, sizeof(cl_int), (void*) &n_clusters);
+	CECL_SET_KERNEL_ARG(kernel_s, 5, sizeof(cl_int), (void*) &n_features);
+	CECL_SET_KERNEL_ARG(kernel_s, 6, sizeof(cl_int), (void*) &offset);
+	CECL_SET_KERNEL_ARG(kernel_s, 7, sizeof(cl_int), (void*) &size);
 
-	err = clEnqueueNDRangeKernel(cmd_queue, kernel_s, 1, NULL, global_work, &local_work_size, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueNDRangeKernel()=>%d failed\n", err); return -1; }
+	err = CECL_ND_RANGE_KERNEL(cmd_queue, kernel_s, 1, NULL, global_work, &local_work_size, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_ND_RANGE_KERNEL()=>%d failed\n", err); return -1; }
 	clFinish(cmd_queue);
-	err = clEnqueueReadBuffer(cmd_queue, d_membership, 1, 0, n_points * sizeof(int), membership_OCL, 0, 0, 0);
+	err = CECL_READ_BUFFER(cmd_queue, d_membership, 1, 0, n_points * sizeof(int), membership_OCL, 0, 0, 0);
 	if(err != CL_SUCCESS) { printf("ERROR: Memcopy Out\n"); return -1; }
 	
 	delta = 0;

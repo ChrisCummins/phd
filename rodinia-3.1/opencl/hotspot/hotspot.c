@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include "hotspot.h"
 
 
@@ -92,22 +93,22 @@ int compute_tran_temp(cl_mem MatrixPower, cl_mem MatrixTemp[2], int col, int row
 		
 		// Specify kernel arguments
 		int iter = MIN(num_iterations, total_iterations - t);
-		clSetKernelArg(kernel, 0, sizeof(int), (void *) &iter);
-		clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *) &MatrixPower);
-		clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *) &MatrixTemp[src]);
-		clSetKernelArg(kernel, 3, sizeof(cl_mem), (void *) &MatrixTemp[dst]);
-		clSetKernelArg(kernel, 4, sizeof(int), (void *) &col);
-		clSetKernelArg(kernel, 5, sizeof(int), (void *) &row);
-		clSetKernelArg(kernel, 6, sizeof(int), (void *) &borderCols);
-		clSetKernelArg(kernel, 7, sizeof(int), (void *) &borderRows);
-		clSetKernelArg(kernel, 8, sizeof(float), (void *) &Cap);
-		clSetKernelArg(kernel, 9, sizeof(float), (void *) &Rx);
-		clSetKernelArg(kernel, 10, sizeof(float), (void *) &Ry);
-		clSetKernelArg(kernel, 11, sizeof(float), (void *) &Rz);
-		clSetKernelArg(kernel, 12, sizeof(float), (void *) &step);
+		CECL_SET_KERNEL_ARG(kernel, 0, sizeof(int), (void *) &iter);
+		CECL_SET_KERNEL_ARG(kernel, 1, sizeof(cl_mem), (void *) &MatrixPower);
+		CECL_SET_KERNEL_ARG(kernel, 2, sizeof(cl_mem), (void *) &MatrixTemp[src]);
+		CECL_SET_KERNEL_ARG(kernel, 3, sizeof(cl_mem), (void *) &MatrixTemp[dst]);
+		CECL_SET_KERNEL_ARG(kernel, 4, sizeof(int), (void *) &col);
+		CECL_SET_KERNEL_ARG(kernel, 5, sizeof(int), (void *) &row);
+		CECL_SET_KERNEL_ARG(kernel, 6, sizeof(int), (void *) &borderCols);
+		CECL_SET_KERNEL_ARG(kernel, 7, sizeof(int), (void *) &borderRows);
+		CECL_SET_KERNEL_ARG(kernel, 8, sizeof(float), (void *) &Cap);
+		CECL_SET_KERNEL_ARG(kernel, 9, sizeof(float), (void *) &Rx);
+		CECL_SET_KERNEL_ARG(kernel, 10, sizeof(float), (void *) &Ry);
+		CECL_SET_KERNEL_ARG(kernel, 11, sizeof(float), (void *) &Rz);
+		CECL_SET_KERNEL_ARG(kernel, 12, sizeof(float), (void *) &step);
 		
 		// Launch kernel
-		error = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL, global_work_size, local_work_size, 0, NULL, NULL);
+		error = CECL_ND_RANGE_KERNEL(command_queue, kernel, 2, NULL, global_work_size, local_work_size, 0, NULL, NULL);
 		if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 		
 		// Flush the queue
@@ -182,7 +183,7 @@ int main(int argc, char** argv) {
 	printf("Device: %s\n", pbuf);
 	
 	// Create a command queue
-	command_queue = clCreateCommandQueue(context, device, 0, &error);
+	command_queue = CECL_CREATE_COMMAND_QUEUE(context, device, 0, &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 	
 	
@@ -233,7 +234,7 @@ int main(int argc, char** argv) {
 	size_t sourceSize = strlen(source);
 	
 	// Compile the kernel
-    cl_program program = clCreateProgramWithSource(context, 1, &source, &sourceSize, &error);
+    cl_program program = CECL_PROGRAM_WITH_SOURCE(context, 1, &source, &sourceSize, &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 	
 	char clOptions[110];
@@ -244,13 +245,13 @@ int main(int argc, char** argv) {
 #endif
 
     // Create an executable from the kernel
-	error = clBuildProgram(program, 1, &device, clOptions, NULL, NULL);
+	error = CECL_PROGRAM(program, 1, &device, clOptions, NULL, NULL);
 	// Show compiler warnings/errors
 	static char log[65536]; memset(log, 0, sizeof(log));
 	clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, sizeof(log)-1, log, NULL);
 	if (strstr(log,"warning:") || strstr(log, "error:")) printf("<<<<\n%s\n>>>>\n", log);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
-    kernel = clCreateKernel(program, "hotspot", &error);
+    kernel = CECL_KERNEL(program, "hotspot", &error);
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 	
 		
@@ -259,18 +260,18 @@ int main(int argc, char** argv) {
 	// Create two temperature matrices and copy the temperature input data
 	cl_mem MatrixTemp[2];
 	// Create input memory buffers on device
-	MatrixTemp[0] = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, sizeof(float) * size, FilesavingTemp, &error);
+	MatrixTemp[0] = CECL_BUFFER(context, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, sizeof(float) * size, FilesavingTemp, &error);
 	if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
     
     // Lingjie Zhang modifited at Nov 1, 2015
-    //MatrixTemp[1] = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float) * size, NULL, &error);
-    MatrixTemp[1] = clCreateBuffer(context, CL_MEM_READ_WRITE , sizeof(float) * size, NULL, &error);
+    //MatrixTemp[1] = CECL_BUFFER(context, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(float) * size, NULL, &error);
+    MatrixTemp[1] = CECL_BUFFER(context, CL_MEM_READ_WRITE , sizeof(float) * size, NULL, &error);
     // end Lingjie Zhang modification
     
     if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 	
 	// Copy the power input data
-	cl_mem MatrixPower = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * size, FilesavingPower, &error);
+	cl_mem MatrixPower = CECL_BUFFER(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, sizeof(float) * size, FilesavingPower, &error);
 	if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 	
 	// Perform the computation

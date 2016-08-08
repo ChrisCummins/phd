@@ -1,3 +1,4 @@
+#include <cecl.h>
 #ifndef __GAUSSIAN_ELIMINATION__
 #define __GAUSSIAN_ELIMINATION__
 
@@ -183,12 +184,12 @@ void ForwardSub(cl_context context, float *a, float *b, float *m, int size,int t
     gaussianElim_program = cl_compileProgram(
         (char *)"gaussianElim_kernels.cl",NULL);
    
-    fan1_kernel = clCreateKernel(
+    fan1_kernel = CECL_KERNEL(
         gaussianElim_program, "Fan1", &status);
     status = cl_errChk(status, (char *)"Error Creating Fan1 kernel",true);
     if(status)exit(1);
    
-    fan2_kernel = clCreateKernel(
+    fan2_kernel = CECL_KERNEL(
         gaussianElim_program, "Fan2", &status);
     status = cl_errChk(status, (char *)"Error Creating Fan2 kernel",true);
     if(status)exit(1);
@@ -199,18 +200,18 @@ void ForwardSub(cl_context context, float *a, float *b, float *m, int size,int t
 
     cl_int error=0;
 
-    a_dev = clCreateBuffer(context, CL_MEM_READ_WRITE,
+    a_dev = CECL_BUFFER(context, CL_MEM_READ_WRITE,
         sizeof(float)*size*size, NULL, &error);
         
-    b_dev = clCreateBuffer(context, CL_MEM_READ_WRITE,
+    b_dev = CECL_BUFFER(context, CL_MEM_READ_WRITE,
         sizeof(float)*size, NULL, &error);
 
-    m_dev = clCreateBuffer(context, CL_MEM_READ_WRITE,
+    m_dev = CECL_BUFFER(context, CL_MEM_READ_WRITE,
         sizeof(float) * size * size, NULL, &error);
 
     cl_command_queue command_queue = cl_getCommandQueue();
     
-    error = clEnqueueWriteBuffer(command_queue,
+    error = CECL_WRITE_BUFFER(command_queue,
                a_dev,
                1, // change to 0 for nonblocking write
                0, // offset
@@ -223,7 +224,7 @@ void ForwardSub(cl_context context, float *a, float *b, float *m, int size,int t
     if (timing) writeTime+=eventTime(writeEvent,command_queue);
     clReleaseEvent(writeEvent);
     
-    error = clEnqueueWriteBuffer(command_queue,
+    error = CECL_WRITE_BUFFER(command_queue,
                b_dev,
                1, // change to 0 for nonblocking write
                0, // offset
@@ -235,7 +236,7 @@ void ForwardSub(cl_context context, float *a, float *b, float *m, int size,int t
     if (timing) writeTime+=eventTime(writeEvent,command_queue);
     clReleaseEvent(writeEvent);
                
-    error = clEnqueueWriteBuffer(command_queue,
+    error = CECL_WRITE_BUFFER(command_queue,
                m_dev,
                1, // change to 0 for nonblocking write
                0, // offset
@@ -278,16 +279,16 @@ izeFan2Buf[1])*localWorksizeFan2Buf[1];
 	for (t=0; t<(size-1); t++) {
         // kernel args
         cl_int argchk;
-        argchk  = clSetKernelArg(fan1_kernel, 0, sizeof(cl_mem), (void *)&m_dev);
-        argchk |= clSetKernelArg(fan1_kernel, 1, sizeof(cl_mem), (void *)&a_dev);
-        argchk |= clSetKernelArg(fan1_kernel, 2, sizeof(cl_mem), (void *)&b_dev);
-        argchk |= clSetKernelArg(fan1_kernel, 3, sizeof(int), (void *)&size);
-        argchk |= clSetKernelArg(fan1_kernel, 4, sizeof(int), (void *)&t);
+        argchk  = CECL_SET_KERNEL_ARG(fan1_kernel, 0, sizeof(cl_mem), (void *)&m_dev);
+        argchk |= CECL_SET_KERNEL_ARG(fan1_kernel, 1, sizeof(cl_mem), (void *)&a_dev);
+        argchk |= CECL_SET_KERNEL_ARG(fan1_kernel, 2, sizeof(cl_mem), (void *)&b_dev);
+        argchk |= CECL_SET_KERNEL_ARG(fan1_kernel, 3, sizeof(int), (void *)&size);
+        argchk |= CECL_SET_KERNEL_ARG(fan1_kernel, 4, sizeof(int), (void *)&t);
     
         cl_errChk(argchk,"ERROR in Setting Fan1 kernel args",true);
         
         // launch kernel
-        error = clEnqueueNDRangeKernel(
+        error = CECL_ND_RANGE_KERNEL(
                   command_queue,  fan1_kernel, 1, 0,
                   globalWorksizeFan1,localWorksizeFan1,
                   0, NULL, &kernelEvent);
@@ -303,16 +304,16 @@ izeFan2Buf[1])*localWorksizeFan2Buf[1];
 		//cudaThreadSynchronize();
 		
 		// kernel args
-		argchk  = clSetKernelArg(fan2_kernel, 0, sizeof(cl_mem), (void *)&m_dev);
-        argchk |= clSetKernelArg(fan2_kernel, 1, sizeof(cl_mem), (void *)&a_dev);
-        argchk |= clSetKernelArg(fan2_kernel, 2, sizeof(cl_mem), (void *)&b_dev);
-        argchk |= clSetKernelArg(fan2_kernel, 3, sizeof(int), (void *)&size);
-        argchk |= clSetKernelArg(fan2_kernel, 4, sizeof(int), (void *)&t);
+		argchk  = CECL_SET_KERNEL_ARG(fan2_kernel, 0, sizeof(cl_mem), (void *)&m_dev);
+        argchk |= CECL_SET_KERNEL_ARG(fan2_kernel, 1, sizeof(cl_mem), (void *)&a_dev);
+        argchk |= CECL_SET_KERNEL_ARG(fan2_kernel, 2, sizeof(cl_mem), (void *)&b_dev);
+        argchk |= CECL_SET_KERNEL_ARG(fan2_kernel, 3, sizeof(int), (void *)&size);
+        argchk |= CECL_SET_KERNEL_ARG(fan2_kernel, 4, sizeof(int), (void *)&t);
     
         cl_errChk(argchk,"ERROR in Setting Fan2 kernel args",true);
         
         // launch kernel
-        error = clEnqueueNDRangeKernel(
+        error = CECL_ND_RANGE_KERNEL(
                   command_queue,  fan2_kernel, 2, 0,
                   globalWorksizeFan2,NULL,
                   0, NULL, &kernelEvent);
@@ -328,7 +329,7 @@ izeFan2Buf[1])*localWorksizeFan2Buf[1];
 		//cudaThreadSynchronize();
 	}
     // 5. transfer data off of device
-    error = clEnqueueReadBuffer(command_queue,
+    error = CECL_READ_BUFFER(command_queue,
         a_dev,
         1, // change to 0 for nonblocking write
         0, // offset
@@ -338,11 +339,11 @@ izeFan2Buf[1])*localWorksizeFan2Buf[1];
         NULL,
         &readEvent);
 
-    cl_errChk(error,"ERROR with clEnqueueReadBuffer",true);
+    cl_errChk(error,"ERROR with CECL_READ_BUFFER",true);
     if (timing) readTime+=eventTime(readEvent,command_queue);
     clReleaseEvent(readEvent);
     
-    error = clEnqueueReadBuffer(command_queue,
+    error = CECL_READ_BUFFER(command_queue,
         b_dev,
         1, // change to 0 for nonblocking write
         0, // offset
@@ -351,11 +352,11 @@ izeFan2Buf[1])*localWorksizeFan2Buf[1];
         0,
         NULL,
         &readEvent);
-    cl_errChk(error,"ERROR with clEnqueueReadBuffer",true);
+    cl_errChk(error,"ERROR with CECL_READ_BUFFER",true);
     if (timing) readTime+=eventTime(readEvent,command_queue);
     clReleaseEvent(readEvent);
     
-    error = clEnqueueReadBuffer(command_queue,
+    error = CECL_READ_BUFFER(command_queue,
         m_dev,
         1, // change to 0 for nonblocking write
         0, // offset
@@ -365,7 +366,7 @@ izeFan2Buf[1])*localWorksizeFan2Buf[1];
         NULL,
         &readEvent);
 
-    cl_errChk(error,"ERROR with clEnqueueReadBuffer",true);
+    cl_errChk(error,"ERROR with CECL_READ_BUFFER",true);
     if (timing) readTime+=eventTime(readEvent,command_queue);
     clReleaseEvent(readEvent);
     readMB = (float)(sizeof(float) * size * (size + size + 1) / 1e6);

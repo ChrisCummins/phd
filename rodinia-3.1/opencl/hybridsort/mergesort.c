@@ -1,3 +1,4 @@
+#include <cecl.h>
 ////////////////////////////////////////////////////////////////////////////////
 // Includes
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,14 +70,14 @@ void init_mergesort(int listsize){
     
     mergeContext = clCreateContext(0, 1, &devices[0], NULL, NULL, &err);
     
-    mergeCommands = clCreateCommandQueue(mergeContext, devices[0], CL_QUEUE_PROFILING_ENABLE, &err);
+    mergeCommands = CECL_CREATE_COMMAND_QUEUE(mergeContext, devices[0], CL_QUEUE_PROFILING_ENABLE, &err);
     
     d_resultList_first_altered = (cl_float4 *)malloc(listsize*sizeof(float));
-    d_resultList_first_buff = clCreateBuffer(mergeContext,CL_MEM_READ_WRITE, listsize * sizeof(float),NULL,NULL);
-    d_origList_first_buff = clCreateBuffer(mergeContext,CL_MEM_READ_WRITE, listsize * sizeof(float),NULL,NULL);
+    d_resultList_first_buff = CECL_BUFFER(mergeContext,CL_MEM_READ_WRITE, listsize * sizeof(float),NULL,NULL);
+    d_origList_first_buff = CECL_BUFFER(mergeContext,CL_MEM_READ_WRITE, listsize * sizeof(float),NULL,NULL);
     
-    d_orig = clCreateBuffer(mergeContext,CL_MEM_READ_WRITE, listsize * sizeof(float),NULL,NULL);
-    d_res = clCreateBuffer(mergeContext,CL_MEM_READ_WRITE, listsize * sizeof(float),NULL,NULL);
+    d_orig = CECL_BUFFER(mergeContext,CL_MEM_READ_WRITE, listsize * sizeof(float),NULL,NULL);
+    d_res = CECL_BUFFER(mergeContext,CL_MEM_READ_WRITE, listsize * sizeof(float),NULL,NULL);
     
     FILE *fp;
     const char fileName[]="./mergesort.cl";
@@ -94,14 +95,14 @@ void init_mergesort(int listsize){
 	source_size = fread(source_str, 1, MAX_SOURCE_SIZE, fp);
 
 	fclose(fp);
-    mergeProgram = clCreateProgramWithSource(mergeContext, 1, (const char **) &source_str, (const size_t)&source_size, &err);
+    mergeProgram = CECL_PROGRAM_WITH_SOURCE(mergeContext, 1, (const char **) &source_str, (const size_t)&source_size, &err);
     if (!mergeProgram)
     {
         printf("Error: Failed to create merge compute program!\n");
         exit(1);
     }
     
-    err = clBuildProgram(mergeProgram, 0, NULL, NULL, NULL, NULL);
+    err = CECL_PROGRAM(mergeProgram, 0, NULL, NULL, NULL, NULL);
     if (err != CL_SUCCESS)
     {
         size_t len;
@@ -142,20 +143,20 @@ cl_float4* runMergeSort(int listsize, int divisions,
 	}
 	largestSize *= 4;
     
-    mergeFirstKernel = clCreateKernel(mergeProgram, "mergeSortFirst", &err);
+    mergeFirstKernel = CECL_KERNEL(mergeProgram, "mergeSortFirst", &err);
     if (!mergeFirstKernel || err != CL_SUCCESS)
     {
         printf("Error: Failed to create merge sort first compute kernel!\n");
         exit(1);
     }
     
-    err = clEnqueueWriteBuffer(mergeCommands, d_resultList_first_buff, CL_TRUE, 0, listsize*sizeof(float), d_resultList, 0, NULL, NULL);
+    err = CECL_WRITE_BUFFER(mergeCommands, d_resultList_first_buff, CL_TRUE, 0, listsize*sizeof(float), d_resultList, 0, NULL, NULL);
     if (err != CL_SUCCESS)
     {
         printf("Error: Failed to write to d_resultList_first_buff source array!\n");
         exit(1);
     }
-    err = clEnqueueWriteBuffer(mergeCommands, d_origList_first_buff, CL_TRUE, 0, listsize*sizeof(float), d_origList, 0, NULL, NULL);
+    err = CECL_WRITE_BUFFER(mergeCommands, d_origList_first_buff, CL_TRUE, 0, listsize*sizeof(float), d_origList, 0, NULL, NULL);
     if (err != CL_SUCCESS)
     {
         printf("Error: Failed to write to d_origList_first_buff source array!\n");
@@ -163,9 +164,9 @@ cl_float4* runMergeSort(int listsize, int divisions,
     }
     
     err = 0;
-    err  = clSetKernelArg(mergeFirstKernel, 0, sizeof(cl_mem), &d_origList_first_buff);
-    err  = clSetKernelArg(mergeFirstKernel, 1, sizeof(cl_mem), &d_resultList_first_buff);
-    err  = clSetKernelArg(mergeFirstKernel, 2, sizeof(cl_int), &listsize);
+    err  = CECL_SET_KERNEL_ARG(mergeFirstKernel, 0, sizeof(cl_mem), &d_origList_first_buff);
+    err  = CECL_SET_KERNEL_ARG(mergeFirstKernel, 1, sizeof(cl_mem), &d_resultList_first_buff);
+    err  = CECL_SET_KERNEL_ARG(mergeFirstKernel, 2, sizeof(cl_int), &listsize);
     if (err != CL_SUCCESS)
     {
         printf("Error: Failed to set merge first kernel arguments! %d\n", err);
@@ -181,7 +182,7 @@ cl_float4* runMergeSort(int listsize, int divisions,
 	size_t global[] = {blocks*THREADS,1,1};
     size_t grid[] = {blocks,1,1,1};
     
-    err = clEnqueueNDRangeKernel(mergeCommands, mergeFirstKernel, 3, NULL, global, local, 0, NULL, &mergeFirstEvent);
+    err = CECL_ND_RANGE_KERNEL(mergeCommands, mergeFirstKernel, 3, NULL, global, local, 0, NULL, &mergeFirstEvent);
     if (err)
     {
         printf("Error: Failed to execute mergeFirst kernel!\n");
@@ -190,7 +191,7 @@ cl_float4* runMergeSort(int listsize, int divisions,
     clWaitForEvents(1 , &mergeFirstEvent);
     clFinish(mergeCommands);
     
-    err = clEnqueueReadBuffer( mergeCommands, d_resultList_first_buff, CL_TRUE, 0, listsize*sizeof(float), d_resultList, 0, NULL, NULL );
+    err = CECL_READ_BUFFER( mergeCommands, d_resultList_first_buff, CL_TRUE, 0, listsize*sizeof(float), d_resultList, 0, NULL, NULL );
     if (err != CL_SUCCESS)
     {
         printf("Error: Failed to read prefix output array! %d\n", err);
@@ -216,9 +217,9 @@ cl_float4* runMergeSort(int listsize, int divisions,
 //        printf("TEST %f \n", d_resultList[i].s[2]);
 //        printf("TEST %f \n", d_resultList[i].s[3]);
 //    }
-    constStartAddr = clCreateBuffer(mergeContext,CL_MEM_READ_WRITE, (divisions+1)*sizeof(int),NULL,NULL);
+    constStartAddr = CECL_BUFFER(mergeContext,CL_MEM_READ_WRITE, (divisions+1)*sizeof(int),NULL,NULL);
     
-    err = clEnqueueWriteBuffer(mergeCommands, constStartAddr, CL_TRUE, 0, (divisions+1)*sizeof(int), startaddr, 0, NULL, NULL);
+    err = CECL_WRITE_BUFFER(mergeCommands, constStartAddr, CL_TRUE, 0, (divisions+1)*sizeof(int), startaddr, 0, NULL, NULL);
     if (err != CL_SUCCESS)
     {
         printf("Error: Failed to write to constStartAddr source array!\n");
@@ -226,7 +227,7 @@ cl_float4* runMergeSort(int listsize, int divisions,
     }
     
     
-    mergePassKernel = clCreateKernel(mergeProgram, "mergeSortPass", &err);
+    mergePassKernel = CECL_KERNEL(mergeProgram, "mergeSortPass", &err);
     if (!mergePassKernel || err != CL_SUCCESS)
     {
         printf("Error: Failed to create merge sort pass compute kernel!\n");
@@ -262,25 +263,25 @@ cl_float4* runMergeSort(int listsize, int divisions,
 		d_origList = d_resultList;
 		d_resultList = tempList;
       
-        err = clEnqueueWriteBuffer(mergeCommands, d_resultList_first_buff, CL_TRUE, 0, listsize*sizeof(float), d_resultList, 0, NULL, NULL);
+        err = CECL_WRITE_BUFFER(mergeCommands, d_resultList_first_buff, CL_TRUE, 0, listsize*sizeof(float), d_resultList, 0, NULL, NULL);
         if (err != CL_SUCCESS)
         {
             printf("Error: Failed to write to d_resultList_first_buff source array!\n");
             exit(1);
         }
 
-        err = clEnqueueWriteBuffer(mergeCommands, d_origList_first_buff, CL_TRUE, 0, listsize*sizeof(float), d_origList, 0, NULL, NULL);
+        err = CECL_WRITE_BUFFER(mergeCommands, d_origList_first_buff, CL_TRUE, 0, listsize*sizeof(float), d_origList, 0, NULL, NULL);
         if (err != CL_SUCCESS)
         {
             printf("Error: Failed to write to d_origList_first_buff source array!\n");
             exit(1);
         }
         err = 0;
-        err  = clSetKernelArg(mergePassKernel, 0, sizeof(cl_mem), &d_origList_first_buff);
-        err  = clSetKernelArg(mergePassKernel, 1, sizeof(cl_mem), &d_resultList_first_buff);
-        err  = clSetKernelArg(mergePassKernel, 2, sizeof(cl_int), &nrElems);
-        err  = clSetKernelArg(mergePassKernel, 3, sizeof(int), &threadsPerDiv);
-        err  = clSetKernelArg(mergePassKernel, 4, sizeof(cl_mem), &constStartAddr);
+        err  = CECL_SET_KERNEL_ARG(mergePassKernel, 0, sizeof(cl_mem), &d_origList_first_buff);
+        err  = CECL_SET_KERNEL_ARG(mergePassKernel, 1, sizeof(cl_mem), &d_resultList_first_buff);
+        err  = CECL_SET_KERNEL_ARG(mergePassKernel, 2, sizeof(cl_int), &nrElems);
+        err  = CECL_SET_KERNEL_ARG(mergePassKernel, 3, sizeof(int), &threadsPerDiv);
+        err  = CECL_SET_KERNEL_ARG(mergePassKernel, 4, sizeof(cl_mem), &constStartAddr);
         if (err != CL_SUCCESS)
         {
             printf("Error: Failed to set merge pass kernel arguments! %d\n", err);
@@ -288,7 +289,7 @@ cl_float4* runMergeSort(int listsize, int divisions,
         }
 		
         global[0] = grid[0]*local[0];
-        err = clEnqueueNDRangeKernel(mergeCommands, mergePassKernel, 3, NULL, global, local, 0, NULL, &mergePassEvent);
+        err = CECL_ND_RANGE_KERNEL(mergeCommands, mergePassKernel, 3, NULL, global, local, 0, NULL, &mergePassEvent);
         if (err)
         {
             printf("Error: Failed to execute mergePass kernel!\n");
@@ -296,7 +297,7 @@ cl_float4* runMergeSort(int listsize, int divisions,
         }
         
         clFinish(mergeCommands);
-        err = clEnqueueReadBuffer( mergeCommands, d_resultList_first_buff, CL_TRUE, 0, listsize*sizeof(float), d_resultList, 0, NULL, NULL );
+        err = CECL_READ_BUFFER( mergeCommands, d_resultList_first_buff, CL_TRUE, 0, listsize*sizeof(float), d_resultList, 0, NULL, NULL );
         if (err != CL_SUCCESS)
         {
             printf("Error: Failed to read prefix output array! %d\n", err);
@@ -316,18 +317,18 @@ cl_float4* runMergeSort(int listsize, int divisions,
 	}
     printf("Merge Pass Kernel Time: %0.3f \n", mergePassTime);
 
-    finalStartAddr = clCreateBuffer(mergeContext,CL_MEM_READ_WRITE, (divisions+1)*sizeof(int),NULL,NULL);
+    finalStartAddr = CECL_BUFFER(mergeContext,CL_MEM_READ_WRITE, (divisions+1)*sizeof(int),NULL,NULL);
     
-    err = clEnqueueWriteBuffer(mergeCommands, finalStartAddr, CL_TRUE, 0, (divisions+1)*sizeof(int), origOffsets, 0, NULL, NULL);
+    err = CECL_WRITE_BUFFER(mergeCommands, finalStartAddr, CL_TRUE, 0, (divisions+1)*sizeof(int), origOffsets, 0, NULL, NULL);
     if (err != CL_SUCCESS)
     {
         printf("Error: Failed to write to finalStartAddr source array!\n");
         exit(1);
     }
     
-    nullElems = clCreateBuffer(mergeContext,CL_MEM_READ_WRITE, (divisions)*sizeof(int),NULL,NULL);
+    nullElems = CECL_BUFFER(mergeContext,CL_MEM_READ_WRITE, (divisions)*sizeof(int),NULL,NULL);
     
-    err = clEnqueueWriteBuffer(mergeCommands, nullElems, CL_TRUE, 0, (divisions)*sizeof(int), nullElements, 0, NULL, NULL);
+    err = CECL_WRITE_BUFFER(mergeCommands, nullElems, CL_TRUE, 0, (divisions)*sizeof(int), nullElements, 0, NULL, NULL);
     if (err != CL_SUCCESS)
     {
         printf("Error: Failed to write to nullElements source array!\n");
@@ -346,37 +347,37 @@ cl_float4* runMergeSort(int listsize, int divisions,
     global[0] = grid[0]*local[0];
     global[1] = grid[1]*local[1];
     
-    mergePackKernel = clCreateKernel(mergeProgram, "mergepack", &err);
+    mergePackKernel = CECL_KERNEL(mergeProgram, "mergepack", &err);
     if (!mergePackKernel || err != CL_SUCCESS)
     {
         printf("Error: Failed to create merge sort pack compute kernel!\n");
         exit(1);
     }
-    err = clEnqueueWriteBuffer(mergeCommands, d_res, CL_TRUE, 0, listsize*sizeof(float), d_resultList, 0, NULL, NULL);
+    err = CECL_WRITE_BUFFER(mergeCommands, d_res, CL_TRUE, 0, listsize*sizeof(float), d_resultList, 0, NULL, NULL);
     if (err != CL_SUCCESS)
     {
         printf("Error: Failed to write to d_resultList_first_buff source array!\n");
         exit(1);
     }
     
-    err = clEnqueueWriteBuffer(mergeCommands, d_orig, CL_TRUE, 0, listsize*sizeof(float), d_origList, 0, NULL, NULL);
+    err = CECL_WRITE_BUFFER(mergeCommands, d_orig, CL_TRUE, 0, listsize*sizeof(float), d_origList, 0, NULL, NULL);
     if (err != CL_SUCCESS)
     {
         printf("Error: Failed to write to d_origList_first_buff source array!\n");
         exit(1);
     }
     err = 0;
-    err  = clSetKernelArg(mergePackKernel, 0, sizeof(cl_mem), &d_res);
-    err  = clSetKernelArg(mergePackKernel, 1, sizeof(cl_mem), &d_orig);
-    err  = clSetKernelArg(mergePackKernel, 2, sizeof(cl_mem), &constStartAddr);
-    err  = clSetKernelArg(mergePackKernel, 3, sizeof(cl_mem), &nullElems);
-    err  = clSetKernelArg(mergePackKernel, 4, sizeof(cl_mem), &finalStartAddr);
+    err  = CECL_SET_KERNEL_ARG(mergePackKernel, 0, sizeof(cl_mem), &d_res);
+    err  = CECL_SET_KERNEL_ARG(mergePackKernel, 1, sizeof(cl_mem), &d_orig);
+    err  = CECL_SET_KERNEL_ARG(mergePackKernel, 2, sizeof(cl_mem), &constStartAddr);
+    err  = CECL_SET_KERNEL_ARG(mergePackKernel, 3, sizeof(cl_mem), &nullElems);
+    err  = CECL_SET_KERNEL_ARG(mergePackKernel, 4, sizeof(cl_mem), &finalStartAddr);
     if (err != CL_SUCCESS)
     {
         printf("Error: Failed to set merge pack kernel arguments! %d\n", err);
         exit(1);
     }
-    err = clEnqueueNDRangeKernel(mergeCommands, mergePackKernel, 3, NULL, global, local, 0, NULL, &mergePackEvent);
+    err = CECL_ND_RANGE_KERNEL(mergeCommands, mergePackKernel, 3, NULL, global, local, 0, NULL, &mergePackEvent);
     if (err)
     {
         printf("Error: Failed to execute merge pack kernel!\n");
@@ -388,7 +389,7 @@ cl_float4* runMergeSort(int listsize, int divisions,
     total_time = time_end - time_start;
     mergesum+= total_time / 1000000;
     printf("Merge Pack Kernel Time: %0.3f \n", total_time/1000000);
-    err = clEnqueueReadBuffer( mergeCommands, d_orig, CL_TRUE, 0, listsize*sizeof(float), d_origList, 0, NULL, NULL );
+    err = CECL_READ_BUFFER( mergeCommands, d_orig, CL_TRUE, 0, listsize*sizeof(float), d_origList, 0, NULL, NULL );
     if (err != CL_SUCCESS)
     {
         printf("Error: Failed to read origList array! %d\n", err);

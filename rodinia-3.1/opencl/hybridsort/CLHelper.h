@@ -1,3 +1,4 @@
+#include <cecl.h>
 //------------------------------------------
 //--cambine:helper function for OpenCL
 //--programmer:	Jianbin Fang
@@ -216,20 +217,20 @@ void _clInit()
    }
    //-----------------------------------------------
    //--cambine-4: Create an OpenCL command queue    
-    oclHandles.queue = clCreateCommandQueue(oclHandles.context, 
+    oclHandles.queue = CECL_CREATE_COMMAND_QUEUE(oclHandles.context, 
                                             oclHandles.devices[DEVICE_ID_INUSED], 
                                             0, 
                                             &resultCL);
 
     if ((resultCL != CL_SUCCESS) || (oclHandles.queue == NULL))
-        throw(string("InitCL()::Creating Command Queue. (clCreateCommandQueue)"));
+        throw(string("InitCL()::Creating Command Queue. (CECL_CREATE_COMMAND_QUEUE)"));
     //-----------------------------------------------
     //--cambine-5: Load CL file, build CL program object, create CL kernel object
     std::string  source_str = FileToString(kernel_file);
     const char * source    = source_str.c_str();
     size_t sourceSize[]    = { source_str.length() };
 
-    oclHandles.program = clCreateProgramWithSource(oclHandles.context, 
+    oclHandles.program = CECL_PROGRAM_WITH_SOURCE(oclHandles.context, 
                                                     1, 
                                                     &source,
                                                     sourceSize,
@@ -240,11 +241,11 @@ void _clInit()
     //insert debug information
     //std::string options= "-cl-nv-verbose"; //Doesn't work on AMD machines
     //options += " -cl-nv-opt-level=3";
-    resultCL = clBuildProgram(oclHandles.program, deviceListSize, oclHandles.devices, NULL, NULL,NULL);
+    resultCL = CECL_PROGRAM(oclHandles.program, deviceListSize, oclHandles.devices, NULL, NULL,NULL);
 
     if ((resultCL != CL_SUCCESS) || (oclHandles.program == NULL))
     {
-        cerr << "InitCL()::Error: In clBuildProgram" << endl;
+        cerr << "InitCL()::Error: In CECL_PROGRAM" << endl;
 
 		size_t length;
         resultCL = clGetProgramBuildInfo(oclHandles.program, 
@@ -269,7 +270,7 @@ void _clInit()
 		cerr << buffer << endl;
         free(buffer);
 
-        throw(string("InitCL()::Error: Building Program (clBuildProgram)"));
+        throw(string("InitCL()::Error: Building Program (CECL_PROGRAM)"));
     } 
 
     //get program information in intermediate representation
@@ -307,13 +308,13 @@ void _clInit()
     for (int nKernel = 0; nKernel < total_kernels; nKernel++)
     {
         /* get a kernel object handle for a kernel with the given name */
-        cl_kernel kernel = clCreateKernel(oclHandles.program,
+        cl_kernel kernel = CECL_KERNEL(oclHandles.program,
                                             (kernel_names[nKernel]).c_str(),
                                             &resultCL);
 
         if ((resultCL != CL_SUCCESS) || (kernel == NULL))
         {
-            string errorMsg = "InitCL()::Error: Creating Kernel (clCreateKernel) \"" + kernel_names[nKernel] + "\"";
+            string errorMsg = "InitCL()::Error: Creating Kernel (CECL_KERNEL) \"" + kernel_names[nKernel] + "\"";
             throw(errorMsg);
         }
 
@@ -401,7 +402,7 @@ void _clRelease()
 //--cambine:create buffer and then copy data from host to device
 cl_mem _clCreateAndCpyMem(int size, void * h_mem_source) throw(string){
 	cl_mem d_mem;
-	d_mem = clCreateBuffer(oclHandles.context,	CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR,  \
+	d_mem = CECL_BUFFER(oclHandles.context,	CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR,  \
 									size, h_mem_source, &oclHandles.cl_status);
 	#ifdef ERRMSG
 	if(oclHandles.cl_status != CL_SUCCESS)
@@ -414,7 +415,7 @@ cl_mem _clCreateAndCpyMem(int size, void * h_mem_source) throw(string){
 //--date:	17/01/2011	
 cl_mem _clMallocRW(int size, void * h_mem_ptr) throw(string){
  	cl_mem d_mem;
-	d_mem = clCreateBuffer(oclHandles.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size, h_mem_ptr, &oclHandles.cl_status);
+	d_mem = CECL_BUFFER(oclHandles.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size, h_mem_ptr, &oclHandles.cl_status);
 	#ifdef ERRMSG
 	if(oclHandles.cl_status != CL_SUCCESS)
 		throw(string("excpetion in _clMallocRW"));
@@ -426,7 +427,7 @@ cl_mem _clMallocRW(int size, void * h_mem_ptr) throw(string){
 //--date:	17/01/2011	
 cl_mem _clMalloc(int size, void * h_mem_ptr) throw(string){
  	cl_mem d_mem;
-	d_mem = clCreateBuffer(oclHandles.context, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, size, h_mem_ptr, &oclHandles.cl_status);
+	d_mem = CECL_BUFFER(oclHandles.context, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, size, h_mem_ptr, &oclHandles.cl_status);
 	#ifdef ERRMSG
 	if(oclHandles.cl_status != CL_SUCCESS)
 		throw(string("excpetion in _clMalloc"));
@@ -438,7 +439,7 @@ cl_mem _clMalloc(int size, void * h_mem_ptr) throw(string){
 //--cambine:	transfer data from host to device
 //--date:	17/01/2011
 void _clMemcpyH2D(cl_mem d_mem, int size, const void *h_mem_ptr) throw(string){
-	oclHandles.cl_status = clEnqueueWriteBuffer(oclHandles.queue, d_mem, CL_TRUE, 0, size, h_mem_ptr, 0, NULL, NULL);
+	oclHandles.cl_status = CECL_WRITE_BUFFER(oclHandles.queue, d_mem, CL_TRUE, 0, size, h_mem_ptr, 0, NULL, NULL);
 	#ifdef ERRMSG
 	if(oclHandles.cl_status != CL_SUCCESS)
 		throw(string("excpetion in _clMemcpyH2D"));
@@ -450,14 +451,14 @@ void _clMemcpyH2D(cl_mem d_mem, int size, const void *h_mem_ptr) throw(string){
 cl_mem _clCreateAndCpyPinnedMem(int size, float* h_mem_source) throw(string){
 	cl_mem d_mem, d_mem_pinned;
 	float * h_mem_pinned = NULL;
-	d_mem_pinned = clCreateBuffer(oclHandles.context,	CL_MEM_READ_ONLY|CL_MEM_ALLOC_HOST_PTR,  \
+	d_mem_pinned = CECL_BUFFER(oclHandles.context,	CL_MEM_READ_ONLY|CL_MEM_ALLOC_HOST_PTR,  \
 									size, NULL, &oclHandles.cl_status);
 	#ifdef ERRMSG
 	if(oclHandles.cl_status != CL_SUCCESS)
 		throw(string("excpetion in _clCreateAndCpyMem()->d_mem_pinned"));
 	#endif
 	//------------
-	d_mem = clCreateBuffer(oclHandles.context,	CL_MEM_READ_ONLY,  \
+	d_mem = CECL_BUFFER(oclHandles.context,	CL_MEM_READ_ONLY,  \
 									size, NULL, &oclHandles.cl_status);
 	#ifdef ERRMSG
 	if(oclHandles.cl_status != CL_SUCCESS)
@@ -477,12 +478,12 @@ cl_mem _clCreateAndCpyPinnedMem(int size, float* h_mem_source) throw(string){
 		h_mem_pinned[i] = h_mem_source[i];
 	}
 	//----------
-	oclHandles.cl_status = clEnqueueWriteBuffer(oclHandles.queue, d_mem, 	\
+	oclHandles.cl_status = CECL_WRITE_BUFFER(oclHandles.queue, d_mem, 	\
 									CL_TRUE, 0, size, h_mem_pinned,  \
 									0, NULL, NULL);
 	#ifdef ERRMSG
 	if(oclHandles.cl_status != CL_SUCCESS)
-		throw(string("excpetion in _clCreateAndCpyMem() -> clEnqueueWriteBuffer"));
+		throw(string("excpetion in _clCreateAndCpyMem() -> CECL_WRITE_BUFFER"));
 	#endif
 	
 	return d_mem;
@@ -493,7 +494,7 @@ cl_mem _clCreateAndCpyPinnedMem(int size, float* h_mem_source) throw(string){
 //--cambine:create write only buffer on device
 cl_mem _clMallocWO(int size) throw(string){
 	cl_mem d_mem;
-	d_mem = clCreateBuffer(oclHandles.context, CL_MEM_WRITE_ONLY, size, 0, &oclHandles.cl_status);
+	d_mem = CECL_BUFFER(oclHandles.context, CL_MEM_WRITE_ONLY, size, 0, &oclHandles.cl_status);
 	#ifdef ERRMSG
 	if(oclHandles.cl_status != CL_SUCCESS)
 		throw(string("excpetion in _clCreateMem()"));
@@ -504,7 +505,7 @@ cl_mem _clMallocWO(int size) throw(string){
 //--------------------------------------------------------
 //transfer data from device to host
 void _clMemcpyD2H(cl_mem d_mem, int size, void * h_mem) throw(string){
-	oclHandles.cl_status = clEnqueueReadBuffer(oclHandles.queue, d_mem, CL_TRUE, 0, size, h_mem, 0,0,0);
+	oclHandles.cl_status = CECL_READ_BUFFER(oclHandles.queue, d_mem, CL_TRUE, 0, size, h_mem, 0,0,0);
 	#ifdef ERRMSG
 		oclHandles.error_str = "excpetion in _clCpyMemD2H -> ";
 		switch(oclHandles.cl_status){
@@ -542,9 +543,9 @@ void _clMemcpyD2H(cl_mem d_mem, int size, void * h_mem) throw(string){
 //set kernel arguments
 void _clSetArgs(int kernel_id, int arg_idx, void * d_mem, int size = 0) throw(string){
 	if(!size){
-		oclHandles.cl_status = clSetKernelArg(oclHandles.kernel[kernel_id], arg_idx, sizeof(d_mem), &d_mem);
+		oclHandles.cl_status = CECL_SET_KERNEL_ARG(oclHandles.kernel[kernel_id], arg_idx, sizeof(d_mem), &d_mem);
 		#ifdef ERRMSG
-		oclHandles.error_str = "excpetion in _clSetKernelArg() ";
+		oclHandles.error_str = "excpetion in _CECL_SET_KERNEL_ARG() ";
 		switch(oclHandles.cl_status){
 			case CL_INVALID_KERNEL:
 				oclHandles.error_str += "CL_INVALID_KERNEL";
@@ -579,9 +580,9 @@ void _clSetArgs(int kernel_id, int arg_idx, void * d_mem, int size = 0) throw(st
 		#endif
 	}
 	else{
-		oclHandles.cl_status = clSetKernelArg(oclHandles.kernel[kernel_id], arg_idx, size, d_mem);
+		oclHandles.cl_status = CECL_SET_KERNEL_ARG(oclHandles.kernel[kernel_id], arg_idx, size, d_mem);
 		#ifdef ERRMSG
-		oclHandles.error_str = "excpetion in _clSetKernelArg() ";
+		oclHandles.error_str = "excpetion in _CECL_SET_KERNEL_ARG() ";
 		switch(oclHandles.cl_status){
 			case CL_INVALID_KERNEL:
 				oclHandles.error_str += "CL_INVALID_KERNEL";
@@ -649,7 +650,7 @@ void _clInvokeKernel(int kernel_id, int work_items, int work_group_size) throw(s
 	  work_items = work_items + (work_group_size-(work_items%work_group_size));
   	size_t local_work_size[] = {work_group_size, 1};
 	size_t global_work_size[] = {work_items, 1};
-	oclHandles.cl_status = clEnqueueNDRangeKernel(oclHandles.queue, oclHandles.kernel[kernel_id], work_dim, 0, \
+	oclHandles.cl_status = CECL_ND_RANGE_KERNEL(oclHandles.queue, oclHandles.kernel[kernel_id], work_dim, 0, \
 											global_work_size, local_work_size, 0 , 0, &(e[0]) );	
 	#ifdef ERRMSG
 	oclHandles.error_str = "excpetion in _clInvokeKernel() -> ";
@@ -718,7 +719,7 @@ void _clInvokeKernel2D(int kernel_id, int range_x, int range_y, int group_x, int
 	cl_event e[1];
 	/*if(work_items%work_group_size != 0)	//process situations that work_items cannot be divided by work_group_size
 	  work_items = work_items + (work_group_size-(work_items%work_group_size));*/
-	oclHandles.cl_status = clEnqueueNDRangeKernel(oclHandles.queue, oclHandles.kernel[kernel_id], work_dim, 0, \
+	oclHandles.cl_status = CECL_ND_RANGE_KERNEL(oclHandles.queue, oclHandles.kernel[kernel_id], work_dim, 0, \
 											global_work_size, local_work_size, 0 , 0, &(e[0]) );	
 	#ifdef ERRMSG
 	oclHandles.error_str = "excpetion in _clInvokeKernel() -> ";

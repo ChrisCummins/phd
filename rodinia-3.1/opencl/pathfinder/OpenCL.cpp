@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <cstdlib>
 #include "OpenCL.h"
 
@@ -38,7 +39,7 @@ cl_command_queue OpenCL::q()
 void OpenCL::launch(string toLaunch)
 {
 	// Launch the kernel (or at least enqueue it).
-	ret = clEnqueueNDRangeKernel(command_queue, 
+	ret = CECL_ND_RANGE_KERNEL(command_queue, 
 	                             kernelArray[toLaunch],
 	                             1,
 	                             NULL,
@@ -50,7 +51,7 @@ void OpenCL::launch(string toLaunch)
 	
 	if (ret != CL_SUCCESS)
 	{
-		printf("\nError attempting to launch %s. Error in clCreateProgramWithSource with error code %i\n\n", toLaunch.c_str(), ret);
+		printf("\nError attempting to launch %s. Error in CECL_PROGRAM_WITH_SOURCE with error code %i\n\n", toLaunch.c_str(), ret);
 		exit(1);
 	}
 }
@@ -72,7 +73,7 @@ cl_kernel OpenCL::kernel(string kernelName)
 
 void OpenCL::createKernel(string kernelName)
 {
-	cl_kernel kernel = clCreateKernel(this->program, kernelName.c_str(), NULL);
+	cl_kernel kernel = CECL_KERNEL(this->program, kernelName.c_str(), NULL);
 	kernelArray[kernelName] = kernel;
 	
 	// Get the kernel work group size.
@@ -127,7 +128,7 @@ void OpenCL::buildKernel()
 	source_str[source_size] = '\0';
 
 	// Create a program from the kernel source.
-	program = clCreateProgramWithSource(context,
+	program = CECL_PROGRAM_WITH_SOURCE(context,
 	                                    1,
 	                                    (const char **) &source_str,
 	                                    NULL,           // Number of chars in kernel src. NULL means src is null-terminated.
@@ -135,7 +136,7 @@ void OpenCL::buildKernel()
 
 	if (ret != CL_SUCCESS)
 	{
-		printf("\nError at clCreateProgramWithSource! Error code %i\n\n", ret);
+		printf("\nError at CECL_PROGRAM_WITH_SOURCE! Error code %i\n\n", ret);
 		exit(1);
 	}
 
@@ -143,11 +144,11 @@ void OpenCL::buildKernel()
 	free(source_str);
 	
 	// Build (compile) the program.
-	ret = clBuildProgram(program, NULL, NULL, NULL, NULL, NULL);
+	ret = CECL_PROGRAM(program, NULL, NULL, NULL, NULL, NULL);
 	
 	if (ret != CL_SUCCESS)
 	{
-		printf("\nError at clBuildProgram! Error code %i\n\n", ret);
+		printf("\nError at CECL_PROGRAM! Error code %i\n\n", ret);
 		cout << "\n*************************************************" << endl;
 		cout << "***   OUTPUT FROM COMPILING THE KERNEL FILE   ***" << endl;
 		cout << "*************************************************" << endl;
@@ -274,10 +275,10 @@ void OpenCL::getDevices(cl_device_type deviceType)
 	}
  
 	// Create a command queue.
-	command_queue = clCreateCommandQueue(context, device_id[0], 0, &ret);
+	command_queue = CECL_CREATE_COMMAND_QUEUE(context, device_id[0], 0, &ret);
 	if (ret != CL_SUCCESS)
 	{
-		printf("\nError at clCreateCommandQueue! Error code %i\n\n", ret);
+		printf("\nError at CECL_CREATE_COMMAND_QUEUE! Error code %i\n\n", ret);
 		exit(1);
 	}
 }

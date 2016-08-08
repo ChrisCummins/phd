@@ -1,3 +1,4 @@
+#include <cecl.h>
 //========================================================================================================================================================================================================200
 //	DEFINE/INCLUDE
 //========================================================================================================================================================================================================200
@@ -166,7 +167,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 
 	// Create a command queue
 	cl_command_queue command_queue;
-	command_queue = clCreateCommandQueue(	context, 
+	command_queue = CECL_CREATE_COMMAND_QUEUE(	context, 
 											device, 
 											0, 
 											&error);
@@ -182,7 +183,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	size_t sourceSize = strlen(source);
 
 	// Create the program
-	cl_program program = clCreateProgramWithSource(	context, 
+	cl_program program = CECL_PROGRAM_WITH_SOURCE(	context, 
 													1, 
 													&source, 
 													&sourceSize, 
@@ -204,7 +205,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 #endif
 
 	// Compile the program
-	error = clBuildProgram(	program, 
+	error = CECL_PROGRAM(	program, 
 							1, 
 							&device, 
 							clOptions, 
@@ -232,7 +233,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 
 	// Extract kernel
 	cl_kernel extract_kernel;
-	extract_kernel = clCreateKernel(program, 
+	extract_kernel = CECL_KERNEL(program, 
 									"extract_kernel", 
 									&error);
 	if (error != CL_SUCCESS) 
@@ -240,7 +241,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 
 	// Prepare kernel
 	cl_kernel prepare_kernel;
-	prepare_kernel = clCreateKernel(program, 
+	prepare_kernel = CECL_KERNEL(program, 
 									"prepare_kernel", 
 									&error);
 	if (error != CL_SUCCESS) 
@@ -248,7 +249,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 
 	// Reduce kernel
 	cl_kernel reduce_kernel;
-	reduce_kernel = clCreateKernel(	program, 
+	reduce_kernel = CECL_KERNEL(	program, 
 									"reduce_kernel", 
 									&error);
 	if (error != CL_SUCCESS) 
@@ -256,7 +257,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 
 	// SRAD kernel
 	cl_kernel srad_kernel;
-	srad_kernel = clCreateKernel(	program, 
+	srad_kernel = CECL_KERNEL(	program, 
 									"srad_kernel", 
 									&error);
 	if (error != CL_SUCCESS) 
@@ -264,7 +265,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 
 	// SRAD2 kernel
 	cl_kernel srad2_kernel;
-	srad2_kernel = clCreateKernel(	program, 
+	srad2_kernel = CECL_KERNEL(	program, 
 									"srad2_kernel", 
 									&error);
 	if (error != CL_SUCCESS) 
@@ -272,7 +273,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 
 	// Compress kernel
 	cl_kernel compress_kernel;
-	compress_kernel = clCreateKernel(	program, 
+	compress_kernel = CECL_KERNEL(	program, 
 										"compress_kernel", 
 										&error);
 	if (error != CL_SUCCESS) 
@@ -307,7 +308,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	//====================================================================================================100
 
 	cl_mem d_I;
-	d_I = clCreateBuffer(	context, 
+	d_I = CECL_BUFFER(	context, 
 							CL_MEM_READ_WRITE, 
 							mem_size,
 							NULL, 
@@ -320,7 +321,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	//====================================================================================================100
 
 	cl_mem d_iN;
-	d_iN = clCreateBuffer(	context, 
+	d_iN = CECL_BUFFER(	context, 
 							CL_MEM_READ_WRITE, 
 							mem_size_i,
 							NULL, 
@@ -329,7 +330,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 		fatal_CL(error, __LINE__);
 
 	cl_mem d_iS;
-	d_iS = clCreateBuffer(	context, 
+	d_iS = CECL_BUFFER(	context, 
 							CL_MEM_READ_WRITE, 
 							mem_size_i,
 							NULL, 
@@ -338,7 +339,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 		fatal_CL(error, __LINE__);
 
 	cl_mem d_jE;
-	d_jE = clCreateBuffer(	context, 
+	d_jE = CECL_BUFFER(	context, 
 							CL_MEM_READ_WRITE, 
 							mem_size_j,
 							NULL, 
@@ -347,7 +348,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 		fatal_CL(error, __LINE__);
 
 	cl_mem d_jW;
-	d_jW = clCreateBuffer(	context, 
+	d_jW = CECL_BUFFER(	context, 
 							CL_MEM_READ_WRITE, 
 							mem_size_j,
 							NULL, 
@@ -360,7 +361,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	//====================================================================================================100
 
 	cl_mem d_dN;
-	d_dN = clCreateBuffer(	context, 
+	d_dN = CECL_BUFFER(	context, 
 							CL_MEM_READ_WRITE, 
 							mem_size,
 							NULL, 
@@ -369,7 +370,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 		fatal_CL(error, __LINE__);
 
 	cl_mem d_dS;
-	d_dS = clCreateBuffer(	context, 
+	d_dS = CECL_BUFFER(	context, 
 							CL_MEM_READ_WRITE, 
 							mem_size,
 							NULL, 
@@ -378,7 +379,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 		fatal_CL(error, __LINE__);
 
 	cl_mem d_dW;
-	d_dW = clCreateBuffer(	context, 
+	d_dW = CECL_BUFFER(	context, 
 							CL_MEM_READ_WRITE, 
 							mem_size,
 							NULL, 
@@ -387,7 +388,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 		fatal_CL(error, __LINE__);
 
 	cl_mem d_dE;
-	d_dE = clCreateBuffer(	context, 
+	d_dE = CECL_BUFFER(	context, 
 							CL_MEM_READ_WRITE, 
 							mem_size,
 							NULL, 
@@ -400,7 +401,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	//====================================================================================================100
 
 	cl_mem d_c;
-	d_c = clCreateBuffer(	context, 
+	d_c = CECL_BUFFER(	context, 
 							CL_MEM_READ_WRITE, 
 							mem_size,
 							NULL, 
@@ -413,7 +414,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	//====================================================================================================100
 
 	cl_mem d_sums;
-	d_sums = clCreateBuffer(	context, 
+	d_sums = CECL_BUFFER(	context, 
 							CL_MEM_READ_WRITE, 
 							mem_size,
 							NULL, 
@@ -422,7 +423,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 		fatal_CL(error, __LINE__);
 
 	cl_mem d_sums2;
-	d_sums2 = clCreateBuffer(	context, 
+	d_sums2 = CECL_BUFFER(	context, 
 							CL_MEM_READ_WRITE, 
 							mem_size,
 							NULL, 
@@ -442,7 +443,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	// Image
 	//====================================================================================================100
 
-	error = clEnqueueWriteBuffer(	command_queue, 
+	error = CECL_WRITE_BUFFER(	command_queue, 
 									d_I, 
 									1, 
 									0, 
@@ -458,7 +459,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	// coordinates
 	//====================================================================================================100
 
-	error = clEnqueueWriteBuffer(	command_queue, 
+	error = CECL_WRITE_BUFFER(	command_queue, 
 									d_iN, 
 									1, 
 									0, 
@@ -470,7 +471,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 
-	error = clEnqueueWriteBuffer(	command_queue, 
+	error = CECL_WRITE_BUFFER(	command_queue, 
 									d_iS, 
 									1, 
 									0, 
@@ -482,7 +483,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 
-	error = clEnqueueWriteBuffer(	command_queue, 
+	error = CECL_WRITE_BUFFER(	command_queue, 
 									d_jE, 
 									1, 
 									0, 
@@ -494,7 +495,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
 
-	error = clEnqueueWriteBuffer(	command_queue, 
+	error = CECL_WRITE_BUFFER(	command_queue, 
 									d_jW, 
 									1, 
 									0, 
@@ -538,13 +539,13 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	//	set arguments
 	//====================================================================================================100
 
-	error = clSetKernelArg(	extract_kernel, 
+	error = CECL_SET_KERNEL_ARG(	extract_kernel, 
 							0, 
 							sizeof(long), 
 							(void *) &Ne);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	extract_kernel, 
+	error = CECL_SET_KERNEL_ARG(	extract_kernel, 
 							1, 
 							sizeof(cl_mem), 
 							(void *) &d_I);
@@ -555,7 +556,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	//	launch kernel
 	//====================================================================================================100
 
-	error = clEnqueueNDRangeKernel(	command_queue, 
+	error = CECL_ND_RANGE_KERNEL(	command_queue, 
 									extract_kernel, 
 									1, 
 									NULL, 
@@ -587,25 +588,25 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	//	Prepare Kernel
 	//====================================================================================================100
 
-	error = clSetKernelArg(	prepare_kernel, 
+	error = CECL_SET_KERNEL_ARG(	prepare_kernel, 
 							0, 
 							sizeof(long), 
 							(void *) &Ne);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	prepare_kernel, 
+	error = CECL_SET_KERNEL_ARG(	prepare_kernel, 
 							1, 
 							sizeof(cl_mem), 
 							(void *) &d_I);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	prepare_kernel, 
+	error = CECL_SET_KERNEL_ARG(	prepare_kernel, 
 							2, 
 							sizeof(cl_mem), 
 							(void *) &d_sums);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	prepare_kernel, 
+	error = CECL_SET_KERNEL_ARG(	prepare_kernel, 
 							3, 
 							sizeof(cl_mem), 
 							(void *) &d_sums2);
@@ -629,19 +630,19 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	fp varROI;
 	fp q0sqr;
 
-	error = clSetKernelArg(	reduce_kernel, 
+	error = CECL_SET_KERNEL_ARG(	reduce_kernel, 
 							0, 
 							sizeof(long), 
 							(void *) &Ne);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	reduce_kernel, 
+	error = CECL_SET_KERNEL_ARG(	reduce_kernel, 
 							3, 
 							sizeof(cl_mem), 
 							(void *) &d_sums);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	reduce_kernel, 
+	error = CECL_SET_KERNEL_ARG(	reduce_kernel, 
 							4, 
 							sizeof(cl_mem), 
 							(void *) &d_sums2);
@@ -652,85 +653,85 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	//	SRAD Kernel
 	//====================================================================================================100
 
-	error = clSetKernelArg(	srad_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							0, 
 							sizeof(fp), 
 							(void *) &lambda);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							1, 
 							sizeof(int), 
 							(void *) &Nr);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							2, 
 							sizeof(int), 
 							(void *) &Nc);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							3, 
 							sizeof(long), 
 							(void *) &Ne);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							4, 
 							sizeof(cl_mem), 
 							(void *) &d_iN);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							5, 
 							sizeof(cl_mem), 
 							(void *) &d_iS);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							6, 
 							sizeof(cl_mem), 
 							(void *) &d_jE);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							7, 
 							sizeof(cl_mem), 
 							(void *) &d_jW);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							8, 
 							sizeof(cl_mem), 
 							(void *) &d_dN);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							9, 
 							sizeof(cl_mem), 
 							(void *) &d_dS);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							10, 
 							sizeof(cl_mem), 
 							(void *) &d_dW);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							11, 
 							sizeof(cl_mem), 
 							(void *) &d_dE);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							13, 
 							sizeof(cl_mem), 
 							(void *) &d_c);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							14, 
 							sizeof(cl_mem), 
 							(void *) &d_I);
@@ -741,85 +742,85 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	//	SRAD2 Kernel
 	//====================================================================================================100
 
-	error = clSetKernelArg(	srad2_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad2_kernel, 
 							0, 
 							sizeof(fp), 
 							(void *) &lambda);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad2_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad2_kernel, 
 							1, 
 							sizeof(int), 
 							(void *) &Nr);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad2_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad2_kernel, 
 							2, 
 							sizeof(int), 
 							(void *) &Nc);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad2_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad2_kernel, 
 							3, 
 							sizeof(long), 
 							(void *) &Ne);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad2_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad2_kernel, 
 							4, 
 							sizeof(cl_mem), 
 							(void *) &d_iN);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad2_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad2_kernel, 
 							5, 
 							sizeof(cl_mem), 
 							(void *) &d_iS);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad2_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad2_kernel, 
 							6, 
 							sizeof(cl_mem), 
 							(void *) &d_jE);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad2_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad2_kernel, 
 							7, 
 							sizeof(cl_mem), 
 							(void *) &d_jW);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad2_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad2_kernel, 
 							8, 
 							sizeof(cl_mem), 
 							(void *) &d_dN);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad2_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad2_kernel, 
 							9, 
 							sizeof(cl_mem), 
 							(void *) &d_dS);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad2_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad2_kernel, 
 							10, 
 							sizeof(cl_mem), 
 							(void *) &d_dW);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad2_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad2_kernel, 
 							11, 
 							sizeof(cl_mem), 
 							(void *) &d_dE);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad2_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad2_kernel, 
 							12, 
 							sizeof(cl_mem), 
 							(void *) &d_c);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	srad2_kernel, 
+	error = CECL_SET_KERNEL_ARG(	srad2_kernel, 
 							13, 
 							sizeof(cl_mem), 
 							(void *) &d_I);
@@ -847,7 +848,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 		//====================================================================================================100
 
 		// launch kernel
-		error = clEnqueueNDRangeKernel(	command_queue, 
+		error = CECL_ND_RANGE_KERNEL(	command_queue, 
 										prepare_kernel, 
 										1, 
 										NULL, 
@@ -878,20 +879,20 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 		while(blocks2_work_size != 0){
 
 			// set arguments that were uptaded in this loop
-			error = clSetKernelArg(	reduce_kernel, 
+			error = CECL_SET_KERNEL_ARG(	reduce_kernel, 
 									1, 
 									sizeof(long), 
 									(void *) &no);
 			if (error != CL_SUCCESS) 
 				fatal_CL(error, __LINE__);
-			error = clSetKernelArg(	reduce_kernel, 
+			error = CECL_SET_KERNEL_ARG(	reduce_kernel, 
 									2, 
 									sizeof(int), 
 									(void *) &mul);
 			if (error != CL_SUCCESS) 
 				fatal_CL(error, __LINE__);
 
-			error = clSetKernelArg(	reduce_kernel, 
+			error = CECL_SET_KERNEL_ARG(	reduce_kernel, 
 									5, 
 									sizeof(int), 
 									(void *) &blocks2_work_size);
@@ -899,7 +900,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 				fatal_CL(error, __LINE__);
 
 			// launch kernel
-			error = clEnqueueNDRangeKernel(	command_queue, 
+			error = CECL_ND_RANGE_KERNEL(	command_queue, 
 											reduce_kernel, 
 											1, 
 											NULL, 
@@ -934,7 +935,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 		}
 
 		// copy total sums to device
-		error = clEnqueueReadBuffer(command_queue,
+		error = CECL_READ_BUFFER(command_queue,
 									d_sums,
 									CL_TRUE,
 									0,
@@ -946,7 +947,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 		if (error != CL_SUCCESS) 
 			fatal_CL(error, __LINE__);
 
-		error = clEnqueueReadBuffer(command_queue,
+		error = CECL_READ_BUFFER(command_queue,
 									d_sums2,
 									CL_TRUE,
 									0,
@@ -972,7 +973,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 		//====================================================================================================100
 
 		// set arguments that were uptaded in this loop
-		error = clSetKernelArg(	srad_kernel, 
+		error = CECL_SET_KERNEL_ARG(	srad_kernel, 
 							12, 
 							sizeof(fp), 
 							(void *) &q0sqr);
@@ -980,7 +981,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 			fatal_CL(error, __LINE__);
 
 		// launch kernel
-		error = clEnqueueNDRangeKernel(	command_queue, 
+		error = CECL_ND_RANGE_KERNEL(	command_queue, 
 										srad_kernel, 
 										1, 
 										NULL, 
@@ -1002,7 +1003,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 		//====================================================================================================100
 
 		// launch kernel
-		error = clEnqueueNDRangeKernel(	command_queue, 
+		error = CECL_ND_RANGE_KERNEL(	command_queue, 
 										srad2_kernel, 
 										1, 
 										NULL, 
@@ -1035,13 +1036,13 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	// set parameters
 	//====================================================================================================100
 
-	error = clSetKernelArg(	compress_kernel, 
+	error = CECL_SET_KERNEL_ARG(	compress_kernel, 
 							0, 
 							sizeof(long), 
 							(void *) &Ne);
 	if (error != CL_SUCCESS) 
 		fatal_CL(error, __LINE__);
-	error = clSetKernelArg(	compress_kernel, 
+	error = CECL_SET_KERNEL_ARG(	compress_kernel, 
 							1, 
 							sizeof(cl_mem), 
 							(void *) &d_I);
@@ -1052,7 +1053,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	// launch kernel
 	//====================================================================================================100
 
-	error = clEnqueueNDRangeKernel(	command_queue, 
+	error = CECL_ND_RANGE_KERNEL(	command_queue, 
 									compress_kernel, 
 									1, 
 									NULL, 
@@ -1080,7 +1081,7 @@ kernel_gpu_opencl_wrapper(	fp* image,											// input image
 	// 	COPY RESULTS BACK TO CPU
 	//======================================================================================================================================================150
 
-	error = clEnqueueReadBuffer(command_queue,
+	error = CECL_READ_BUFFER(command_queue,
 								d_I,
 								CL_TRUE,
 								0,

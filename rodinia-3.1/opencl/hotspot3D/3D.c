@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -148,21 +149,21 @@ int main(int argc, char** argv)
       return EXIT_FAILURE;
     }
 
-  commands = clCreateCommandQueue(context, device_id, 0, &err);
+  commands = CECL_CREATE_COMMAND_QUEUE(context, device_id, 0, &err);
   if (!commands)
     {
       printf("Error: Failed to create a command commands!\n%s\n", err_code(err));
       return EXIT_FAILURE;
     }
 
-  program = clCreateProgramWithSource(context, 1, (const char **) & KernelSource, NULL, &err);
+  program = CECL_PROGRAM_WITH_SOURCE(context, 1, (const char **) & KernelSource, NULL, &err);
   if (!program)
     {
       printf("Error: Failed to create compute program!\n%s\n", err_code(err));
       return EXIT_FAILURE;
     }
 
-  err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
+  err = CECL_PROGRAM(program, 0, NULL, NULL, NULL, NULL);
   if (err != CL_SUCCESS)
     {
       size_t len;
@@ -174,16 +175,16 @@ int main(int argc, char** argv)
       return EXIT_FAILURE;
     }
 
-  ko_vadd = clCreateKernel(program, "hotspotOpt1", &err);
+  ko_vadd = CECL_KERNEL(program, "hotspotOpt1", &err);
   if (!ko_vadd || err != CL_SUCCESS)
     {
       printf("Error: Failed to create compute kernel!\n%s\n", err_code(err));
       return EXIT_FAILURE;
     }
 
-  d_a  = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(float) * count, NULL, NULL);
-  d_b  = clCreateBuffer(context, CL_MEM_READ_ONLY , sizeof(float) * count, NULL, NULL);
-  d_c  = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(float) * count, NULL, NULL);
+  d_a  = CECL_BUFFER(context, CL_MEM_READ_WRITE, sizeof(float) * count, NULL, NULL);
+  d_b  = CECL_BUFFER(context, CL_MEM_READ_ONLY , sizeof(float) * count, NULL, NULL);
+  d_c  = CECL_BUFFER(context, CL_MEM_READ_WRITE, sizeof(float) * count, NULL, NULL);
 
   if (!d_a || !d_b || !d_c) 
     {
@@ -191,21 +192,21 @@ int main(int argc, char** argv)
       exit(1);
     }    
 
-  err = clEnqueueWriteBuffer(commands, d_a, CL_TRUE, 0, sizeof(float) * count, tIn, 0, NULL, NULL);
+  err = CECL_WRITE_BUFFER(commands, d_a, CL_TRUE, 0, sizeof(float) * count, tIn, 0, NULL, NULL);
   if (err != CL_SUCCESS)
     {
       printf("Error: Failed to write tIn to source array!\n%s\n", err_code(err));
       exit(1);
     }
 
-  err = clEnqueueWriteBuffer(commands, d_b, CL_TRUE, 0, sizeof(float) * count, pIn, 0, NULL, NULL);
+  err = CECL_WRITE_BUFFER(commands, d_b, CL_TRUE, 0, sizeof(float) * count, pIn, 0, NULL, NULL);
   if (err != CL_SUCCESS)
     {
       printf("Error: Failed to write pIn to source array!\n%s\n", err_code(err));
       exit(1);
     }
 
-  err = clEnqueueWriteBuffer(commands, d_c, CL_TRUE, 0, sizeof(float) * count, tempOut, 0, NULL, NULL);
+  err = CECL_WRITE_BUFFER(commands, d_c, CL_TRUE, 0, sizeof(float) * count, tempOut, 0, NULL, NULL);
   if (err != CL_SUCCESS)
     {
       printf("Error: Failed to write tempOut to source array!\n%s\n", err_code(err));
@@ -215,20 +216,20 @@ int main(int argc, char** argv)
   int j;
   for(j = 0; j < iterations; j++)
     {
-      err  = clSetKernelArg(ko_vadd, 0, sizeof(cl_mem), &d_b);
-      err |= clSetKernelArg(ko_vadd, 1, sizeof(cl_mem), &d_a);
-      err |= clSetKernelArg(ko_vadd, 2, sizeof(cl_mem), &d_c);
-      err |= clSetKernelArg(ko_vadd, 3, sizeof(float), &stepDivCap);
-      err |= clSetKernelArg(ko_vadd, 4, sizeof(int), &numCols);
-      err |= clSetKernelArg(ko_vadd, 5, sizeof(int), &numRows);
-      err |= clSetKernelArg(ko_vadd, 6, sizeof(int), &layers);
-      err |= clSetKernelArg(ko_vadd, 7, sizeof(float), &ce);
-      err |= clSetKernelArg(ko_vadd, 8, sizeof(float), &cw);
-      err |= clSetKernelArg(ko_vadd, 9, sizeof(float), &cn);
-      err |= clSetKernelArg(ko_vadd, 10, sizeof(float), &cs);
-      err |= clSetKernelArg(ko_vadd, 11, sizeof(float), &ct);
-      err |= clSetKernelArg(ko_vadd, 12, sizeof(float), &cb);      
-      err |= clSetKernelArg(ko_vadd, 13, sizeof(float), &cc);
+      err  = CECL_SET_KERNEL_ARG(ko_vadd, 0, sizeof(cl_mem), &d_b);
+      err |= CECL_SET_KERNEL_ARG(ko_vadd, 1, sizeof(cl_mem), &d_a);
+      err |= CECL_SET_KERNEL_ARG(ko_vadd, 2, sizeof(cl_mem), &d_c);
+      err |= CECL_SET_KERNEL_ARG(ko_vadd, 3, sizeof(float), &stepDivCap);
+      err |= CECL_SET_KERNEL_ARG(ko_vadd, 4, sizeof(int), &numCols);
+      err |= CECL_SET_KERNEL_ARG(ko_vadd, 5, sizeof(int), &numRows);
+      err |= CECL_SET_KERNEL_ARG(ko_vadd, 6, sizeof(int), &layers);
+      err |= CECL_SET_KERNEL_ARG(ko_vadd, 7, sizeof(float), &ce);
+      err |= CECL_SET_KERNEL_ARG(ko_vadd, 8, sizeof(float), &cw);
+      err |= CECL_SET_KERNEL_ARG(ko_vadd, 9, sizeof(float), &cn);
+      err |= CECL_SET_KERNEL_ARG(ko_vadd, 10, sizeof(float), &cs);
+      err |= CECL_SET_KERNEL_ARG(ko_vadd, 11, sizeof(float), &ct);
+      err |= CECL_SET_KERNEL_ARG(ko_vadd, 12, sizeof(float), &cb);      
+      err |= CECL_SET_KERNEL_ARG(ko_vadd, 13, sizeof(float), &cc);
       if (err != CL_SUCCESS)
         {
           printf("Error: Failed to set kernel arguments!\n");
@@ -241,7 +242,7 @@ int main(int argc, char** argv)
       local[0] = WG_SIZE_X;
       local[1] = WG_SIZE_Y;
 
-      err = clEnqueueNDRangeKernel(commands, ko_vadd, 2, NULL, global, local, 0, NULL, NULL);
+      err = CECL_ND_RANGE_KERNEL(commands, ko_vadd, 2, NULL, global, local, 0, NULL, NULL);
       if (err)
         {
           printf("Error: Failed to execute kernel!\n%s\n", err_code(err));
@@ -255,7 +256,7 @@ int main(int argc, char** argv)
 
   clFinish(commands);
   long long stop = get_time();
-  err = clEnqueueReadBuffer( commands, d_c, CL_TRUE, 0, sizeof(float) * count, tempOut, 0, NULL, NULL );  
+  err = CECL_READ_BUFFER( commands, d_c, CL_TRUE, 0, sizeof(float) * count, tempOut, 0, NULL, NULL );  
   if (err != CL_SUCCESS)
     {
       printf("Error: Failed to read output array!\n%s\n", err_code(err));

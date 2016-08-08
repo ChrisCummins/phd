@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <unistd.h>
 #include <error.h>
 #include <stdio.h>
@@ -125,7 +126,7 @@ cl_command_queue CreateCommandQueue(cl_context context, cl_device_id *cldevice)
         return NULL;
     }
 
-    commandQueue = clCreateCommandQueue(context, cldevices[0], 0, NULL);
+    commandQueue = CECL_CREATE_COMMAND_QUEUE(context, cldevices[0], 0, NULL);
     if (commandQueue == NULL)
     {
         delete [] cldevices;
@@ -158,7 +159,7 @@ cl_program CreateProgram(cl_context context, cl_device_id cldevice, const char* 
 
     std::string srcStdStr = oss.str();
     const char *srcStr = srcStdStr.c_str();
-    program = clCreateProgramWithSource(context, 1,
+    program = CECL_PROGRAM_WITH_SOURCE(context, 1,
                                         (const char**)&srcStr,
                                         NULL, NULL);
     if (program == NULL)
@@ -167,7 +168,7 @@ cl_program CreateProgram(cl_context context, cl_device_id cldevice, const char* 
         return NULL;
     }
 
-    errNum = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
+    errNum = CECL_PROGRAM(program, 0, NULL, NULL, NULL, NULL);
     if (errNum != CL_SUCCESS)
     {
         // Determine the reason for the error
@@ -333,20 +334,20 @@ void rgbToComponents(cl_mem d_r, cl_mem d_g, cl_mem d_b, unsigned char * h_src, 
     int alignedSize =  DIVANDRND(width*height, THREADS) * THREADS * 3; //aligned to thread block size -- THREADS
 	
 	cl_mem cl_d_src;
-	cl_d_src = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, pixels*3, h_src, &errNum);
+	cl_d_src = CECL_BUFFER(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, pixels*3, h_src, &errNum);
 	// fatal_CL(errNum, __LINE__);
 
 	size_t globalWorkSize[1] = { alignedSize/3};
     size_t localWorkSize[1] = { THREADS };
 
-	errNum  = clSetKernelArg(c_CopySrcToComponents, 0, sizeof(cl_mem), &d_r);
-	errNum |= clSetKernelArg(c_CopySrcToComponents, 1, sizeof(cl_mem), &d_g);
-	errNum |= clSetKernelArg(c_CopySrcToComponents, 2, sizeof(cl_mem), &d_b);
-	errNum |= clSetKernelArg(c_CopySrcToComponents, 3, sizeof(cl_mem), &cl_d_src);
-	errNum |= clSetKernelArg(c_CopySrcToComponents, 4, sizeof(int), &pixels);
+	errNum  = CECL_SET_KERNEL_ARG(c_CopySrcToComponents, 0, sizeof(cl_mem), &d_r);
+	errNum |= CECL_SET_KERNEL_ARG(c_CopySrcToComponents, 1, sizeof(cl_mem), &d_g);
+	errNum |= CECL_SET_KERNEL_ARG(c_CopySrcToComponents, 2, sizeof(cl_mem), &d_b);
+	errNum |= CECL_SET_KERNEL_ARG(c_CopySrcToComponents, 3, sizeof(cl_mem), &cl_d_src);
+	errNum |= CECL_SET_KERNEL_ARG(c_CopySrcToComponents, 4, sizeof(int), &pixels);
 	// fatal_CL(errNum, __LINE__);	
 	
-	errNum = clEnqueueNDRangeKernel(commandQueue, c_CopySrcToComponents, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+	errNum = CECL_ND_RANGE_KERNEL(commandQueue, c_CopySrcToComponents, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
 	// fatal_CL(errNum, __LINE__);
 	
     // Free Memory 
@@ -365,19 +366,19 @@ void bwToComponent(cl_mem d_c, unsigned char * h_src, int width, int height)
     int pixels      = width*height;
     int alignedSize =  DIVANDRND(pixels, THREADS) * THREADS;
 	
-	cl_d_src = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, pixels, h_src, NULL);
+	cl_d_src = CECL_BUFFER(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, pixels, h_src, NULL);
 	// fatal_CL(errNum, __LINE__);
 	
 	size_t globalWorkSize[1] = { alignedSize/9};
     size_t localWorkSize[1] = { THREADS };
 	assert(alignedSize%(THREADS*3) == 0);
 	
-	errNum  = clSetKernelArg(c_CopySrcToComponent, 0, sizeof(cl_mem), &d_c);
-	errNum |= clSetKernelArg(c_CopySrcToComponent, 1, sizeof(cl_mem), &cl_d_src);
-	errNum |= clSetKernelArg(c_CopySrcToComponent, 2, sizeof(int), &pixels);
+	errNum  = CECL_SET_KERNEL_ARG(c_CopySrcToComponent, 0, sizeof(cl_mem), &d_c);
+	errNum |= CECL_SET_KERNEL_ARG(c_CopySrcToComponent, 1, sizeof(cl_mem), &cl_d_src);
+	errNum |= CECL_SET_KERNEL_ARG(c_CopySrcToComponent, 2, sizeof(int), &pixels);
 	// fatal_CL(errNum, __LINE__);	
 	
-	errNum = clEnqueueNDRangeKernel(commandQueue, c_CopySrcToComponent, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+	errNum = CECL_ND_RANGE_KERNEL(commandQueue, c_CopySrcToComponent, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
 	std::cout<<"in function bwToComponent errNum= "<<errNum<<"\n"; 
 	// fatal_CL(errNum, __LINE__);
 	std::cout<<"bwToComponent has finished\n";
@@ -416,16 +417,16 @@ void launchFDWT53Kernel (int WIN_SX, int WIN_SY, cl_mem in, cl_mem out, int sx, 
     size_t localWorkSize[2]  = { WIN_SX , 1};
     // printf("\n globalx=%d, globaly=%d, blocksize=%d\n", gx, gy, WIN_SX);
 	
-	errNum  = clSetKernelArg(kl_fdwt53Kernel, 0, sizeof(cl_mem), &in);
-	errNum |= clSetKernelArg(kl_fdwt53Kernel, 1, sizeof(cl_mem), &out);
-	errNum |= clSetKernelArg(kl_fdwt53Kernel, 2, sizeof(int), &sx);
-	errNum |= clSetKernelArg(kl_fdwt53Kernel, 3, sizeof(int), &sy);
-	errNum |= clSetKernelArg(kl_fdwt53Kernel, 4, sizeof(int), &steps);
-	errNum |= clSetKernelArg(kl_fdwt53Kernel, 5, sizeof(int), &WIN_SX);
-	errNum |= clSetKernelArg(kl_fdwt53Kernel, 6, sizeof(int), &WIN_SY);
+	errNum  = CECL_SET_KERNEL_ARG(kl_fdwt53Kernel, 0, sizeof(cl_mem), &in);
+	errNum |= CECL_SET_KERNEL_ARG(kl_fdwt53Kernel, 1, sizeof(cl_mem), &out);
+	errNum |= CECL_SET_KERNEL_ARG(kl_fdwt53Kernel, 2, sizeof(int), &sx);
+	errNum |= CECL_SET_KERNEL_ARG(kl_fdwt53Kernel, 3, sizeof(int), &sy);
+	errNum |= CECL_SET_KERNEL_ARG(kl_fdwt53Kernel, 4, sizeof(int), &steps);
+	errNum |= CECL_SET_KERNEL_ARG(kl_fdwt53Kernel, 5, sizeof(int), &WIN_SX);
+	errNum |= CECL_SET_KERNEL_ARG(kl_fdwt53Kernel, 6, sizeof(int), &WIN_SY);
 	// fatal_CL(errNum, __LINE__);
 	
-	errNum = clEnqueueNDRangeKernel(commandQueue, kl_fdwt53Kernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+	errNum = CECL_ND_RANGE_KERNEL(commandQueue, kl_fdwt53Kernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
 	// fatal_CL(errNum, __LINE__);
 	printf("kl_fdwt53Kernel in launchFDW53Kernel has finished\n");
 	
@@ -542,7 +543,7 @@ int writeLinear(cl_mem component, int pixWidth, int pixHeight, const char * file
     memset(gpu_output, 0, size);
 	result = (unsigned char *)malloc(samplesNum);
 	
-	errNum = clEnqueueReadBuffer(commandQueue, component, CL_TRUE, 0, size, gpu_output, 0, NULL, NULL);
+	errNum = CECL_READ_BUFFER(commandQueue, component, CL_TRUE, 0, size, gpu_output, 0, NULL, NULL);
 	// fatal_CL(errNum, __LINE__);	
 	
 	// T to char 
@@ -639,7 +640,7 @@ int writeNStage2DDWT(cl_mem component, int pixWidth, int pixHeight, int stages, 
     memset(dst, 0, size);
 	result = (unsigned char *)malloc(samplesNum);
 
-	errNum = clEnqueueReadBuffer(commandQueue, component, CL_TRUE, 0, size, src, 0, NULL, NULL);
+	errNum = CECL_READ_BUFFER(commandQueue, component, CL_TRUE, 0, size, src, 0, NULL, NULL);
 	// fatal_CL(errNum, __LINE__);	
 	
 
@@ -729,32 +730,32 @@ void processDWT(struct dwt *d, int forward, int writeVisual)
 	memset(temp, 0, componentSize);
 	
 	cl_mem cl_c_r_out;
-	cl_c_r_out = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, componentSize, temp, &errNum);
+	cl_c_r_out = CECL_BUFFER(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, componentSize, temp, &errNum);
 	// fatal_CL(errNum, __LINE__);
 	
 	
 	
 	cl_mem cl_backup;
-	cl_backup  = clCreateBuffer(context, CL_MEM_READ_WRITE |CL_MEM_COPY_HOST_PTR, componentSize, temp, &errNum);  
+	cl_backup  = CECL_BUFFER(context, CL_MEM_READ_WRITE |CL_MEM_COPY_HOST_PTR, componentSize, temp, &errNum);  
 	// fatal_CL(errNum, __LINE__);
 	
 	if (d->components == 3) {
 		// Alloc two more buffers for G and B 
 		cl_mem cl_c_g_out;
-		cl_c_g_out = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, componentSize, temp, &errNum);  
+		cl_c_g_out = CECL_BUFFER(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, componentSize, temp, &errNum);  
 		// fatal_CL(errNum, __LINE__);
 		
 		cl_mem cl_c_b_out;
-		cl_c_b_out = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, componentSize, temp, &errNum);
+		cl_c_b_out = CECL_BUFFER(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, componentSize, temp, &errNum);
         // fatal_CL(errNum, __LINE__);	
         
         // Load components 
         cl_mem cl_c_r, cl_c_g, cl_c_b;
-		cl_c_r = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,componentSize, temp, &errNum);
+		cl_c_r = CECL_BUFFER(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,componentSize, temp, &errNum);
 		// fatal_CL(errNum, __LINE__); 		
-		cl_c_g = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,componentSize, temp, &errNum);
+		cl_c_g = CECL_BUFFER(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,componentSize, temp, &errNum);
 		// fatal_CL(errNum, __LINE__);		
-		cl_c_b = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,componentSize, temp, &errNum); 
+		cl_c_b = CECL_BUFFER(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,componentSize, temp, &errNum); 
 		// fatal_CL(errNum, __LINE__);
 		
 		
@@ -770,7 +771,7 @@ void processDWT(struct dwt *d, int forward, int writeVisual)
         
         // ---------test----------
 /*      T *h_r_out=(T*)malloc(componentSize);
-		errNum = clEnqueueReadBuffer(commandQueue, cl_c_g_out, CL_TRUE, 0, componentSize, h_r_out, 0, NULL, NULL); 
+		errNum = CECL_READ_BUFFER(commandQueue, cl_c_g_out, CL_TRUE, 0, componentSize, h_r_out, 0, NULL, NULL); 
 		fatal_CL(errNum, __LINE__);
         int ii;
 		for(ii=0;ii<componentSize/sizeof(T);ii++) {
@@ -802,7 +803,7 @@ void processDWT(struct dwt *d, int forward, int writeVisual)
 	} else if(d->components == 1) { 
         // Load components 
         cl_mem cl_c_r;
-		cl_c_r = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,componentSize, temp, &errNum);
+		cl_c_r = CECL_BUFFER(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,componentSize, temp, &errNum);
 		// fatal_CL(errNum, __LINE__); 		
         
         bwToComponent(cl_c_r, d->srcImg, d->pixWidth, d->pixHeight);
@@ -959,19 +960,19 @@ int main(int argc, char **argv)
     }
 
 	// Create OpenCL kernel
-	c_CopySrcToComponents = clCreateKernel(program, "c_CopySrcToComponents", NULL); 
+	c_CopySrcToComponents = CECL_KERNEL(program, "c_CopySrcToComponents", NULL); 
 	if (c_CopySrcToComponents == NULL)
     {
         std::cerr << "Failed to create kernel" << std::endl;
     }
 
-	c_CopySrcToComponent = clCreateKernel(program, "c_CopySrcToComponent", NULL); 
+	c_CopySrcToComponent = CECL_KERNEL(program, "c_CopySrcToComponent", NULL); 
 	if (c_CopySrcToComponent == NULL)
     {
         std::cerr << "Failed to create kernel" << std::endl;
     }
 	
-	kl_fdwt53Kernel = clCreateKernel(program, "cl_fdwt53Kernel", NULL); 
+	kl_fdwt53Kernel = CECL_KERNEL(program, "cl_fdwt53Kernel", NULL); 
     if (kl_fdwt53Kernel == NULL)
 	{
 		std::cerr<<"Failed to create kernel\n";

@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * =====================================================================================
  *
@@ -75,8 +76,8 @@ static int initialize(int use_gpu)
 	if( result != CL_SUCCESS ) { printf("ERROR: clGetContextInfo() failed\n"); return -1; }
 
 	// create command queue for the first device
-	cmd_queue = clCreateCommandQueue( context, device_list[0], 0, NULL );
-	if( !cmd_queue ) { printf("ERROR: clCreateCommandQueue() failed\n"); return -1; }
+	cmd_queue = CECL_CREATE_COMMAND_QUEUE( context, device_list[0], 0, NULL );
+	if( !cmd_queue ) { printf("ERROR: CECL_CREATE_COMMAND_QUEUE() failed\n"); return -1; }
 	return 0;
 }
 
@@ -203,8 +204,8 @@ main ( int argc, char *argv[] )
 	// compile kernel
 	cl_int err = 0;
 	const char * slist[2] = { source, 0 };
-	cl_program prog = clCreateProgramWithSource(context, 1, slist, NULL, &err);
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateProgramWithSource() => %d\n", err); return -1; }
+	cl_program prog = CECL_PROGRAM_WITH_SOURCE(context, 1, slist, NULL, &err);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_PROGRAM_WITH_SOURCE() => %d\n", err); return -1; }
 	char clOptions[110];
 	//  sprintf(clOptions,"-I../../src"); 
 	sprintf(clOptions," ");
@@ -212,7 +213,7 @@ main ( int argc, char *argv[] )
 	sprintf(clOptions + strlen(clOptions), " -DBLOCK_SIZE=%d", BLOCK_SIZE);
 #endif
 
-	err = clBuildProgram(prog, 0, NULL, clOptions, NULL, NULL);
+	err = CECL_PROGRAM(prog, 0, NULL, clOptions, NULL, NULL);
 	{ // show warnings/errors
 		//static char log[65536]; memset(log, 0, sizeof(log));
 		//cl_device_id device_id = 0;
@@ -220,80 +221,80 @@ main ( int argc, char *argv[] )
 		//clGetProgramBuildInfo(prog, device_id, CL_PROGRAM_BUILD_LOG, sizeof(log)-1, log, NULL);
 		//if(err || strstr(log,"warning:") || strstr(log, "error:")) printf("<<<<\n%s\n>>>>\n", log);
 	}
-	if(err != CL_SUCCESS) { printf("ERROR: clBuildProgram() => %d\n", err); return -1; }
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_PROGRAM() => %d\n", err); return -1; }
     
 	cl_kernel diagnal;
 	cl_kernel perimeter;
 	cl_kernel internal;
-	diagnal   = clCreateKernel(prog, kernel_lud_diag, &err);  
-	perimeter = clCreateKernel(prog, kernel_lud_peri, &err);  
-	internal  = clCreateKernel(prog, kernel_lud_inter, &err);  
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateKernel() 0 => %d\n", err); return -1; }
+	diagnal   = CECL_KERNEL(prog, kernel_lud_diag, &err);  
+	perimeter = CECL_KERNEL(prog, kernel_lud_peri, &err);  
+	internal  = CECL_KERNEL(prog, kernel_lud_inter, &err);  
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_KERNEL() 0 => %d\n", err); return -1; }
 	clReleaseProgram(prog);
   
 	//size_t local_work[3] = { 1, 1, 1 };
 	//size_t global_work[3] = {1, 1, 1 }; 
   
 	cl_mem d_m;
-	d_m = clCreateBuffer(context, CL_MEM_READ_WRITE, matrix_dim*matrix_dim * sizeof(float), NULL, &err );
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer d_m (size:%d) => %d\n", matrix_dim*matrix_dim, err); return -1;} 
+	d_m = CECL_BUFFER(context, CL_MEM_READ_WRITE, matrix_dim*matrix_dim * sizeof(float), NULL, &err );
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER d_m (size:%d) => %d\n", matrix_dim*matrix_dim, err); return -1;} 
 
 	/* beginning of timing point */
 	stopwatch_start(&sw);
-	err = clEnqueueWriteBuffer(cmd_queue, d_m, 1, 0, matrix_dim*matrix_dim*sizeof(float), m, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer d_m (size:%d) => %d\n", matrix_dim*matrix_dim, err); return -1; }
+	err = CECL_WRITE_BUFFER(cmd_queue, d_m, 1, 0, matrix_dim*matrix_dim*sizeof(float), m, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_WRITE_BUFFER d_m (size:%d) => %d\n", matrix_dim*matrix_dim, err); return -1; }
 	
 	int i=0;
 	for (i=0; i < matrix_dim-BLOCK_SIZE; i += BLOCK_SIZE) {
 	 
-	  clSetKernelArg(diagnal, 0, sizeof(void *), (void*) &d_m);
-	  clSetKernelArg(diagnal, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
-	  clSetKernelArg(diagnal, 2, sizeof(cl_int), (void*) &matrix_dim);
-	  clSetKernelArg(diagnal, 3, sizeof(cl_int), (void*) &i);
+	  CECL_SET_KERNEL_ARG(diagnal, 0, sizeof(void *), (void*) &d_m);
+	  CECL_SET_KERNEL_ARG(diagnal, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
+	  CECL_SET_KERNEL_ARG(diagnal, 2, sizeof(cl_int), (void*) &matrix_dim);
+	  CECL_SET_KERNEL_ARG(diagnal, 3, sizeof(cl_int), (void*) &i);
       
 	  size_t global_work1[3]  = {BLOCK_SIZE, 1, 1};
 	  size_t local_work1[3]  = {BLOCK_SIZE, 1, 1};
 	   
-	  err = clEnqueueNDRangeKernel(cmd_queue, diagnal, 2, NULL, global_work1, local_work1, 0, 0, 0);
-	  if(err != CL_SUCCESS) { printf("ERROR:  diagnal clEnqueueNDRangeKernel()=>%d failed\n", err); return -1; }	
+	  err = CECL_ND_RANGE_KERNEL(cmd_queue, diagnal, 2, NULL, global_work1, local_work1, 0, 0, 0);
+	  if(err != CL_SUCCESS) { printf("ERROR:  diagnal CECL_ND_RANGE_KERNEL()=>%d failed\n", err); return -1; }	
 	  
-	  clSetKernelArg(perimeter, 0, sizeof(void *), (void*) &d_m);
-	  clSetKernelArg(perimeter, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
-	  clSetKernelArg(perimeter, 2, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
-	  clSetKernelArg(perimeter, 3, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
-	  clSetKernelArg(perimeter, 4, sizeof(cl_int), (void*) &matrix_dim);
-	  clSetKernelArg(perimeter, 5, sizeof(cl_int), (void*) &i);
+	  CECL_SET_KERNEL_ARG(perimeter, 0, sizeof(void *), (void*) &d_m);
+	  CECL_SET_KERNEL_ARG(perimeter, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
+	  CECL_SET_KERNEL_ARG(perimeter, 2, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
+	  CECL_SET_KERNEL_ARG(perimeter, 3, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
+	  CECL_SET_KERNEL_ARG(perimeter, 4, sizeof(cl_int), (void*) &matrix_dim);
+	  CECL_SET_KERNEL_ARG(perimeter, 5, sizeof(cl_int), (void*) &i);
 	  
 	  size_t global_work2[3] = {BLOCK_SIZE * 2 * ((matrix_dim-i)/BLOCK_SIZE-1), 1, 1};
 	  size_t local_work2[3]  = {BLOCK_SIZE * 2, 1, 1};
 	  
-	  err = clEnqueueNDRangeKernel(cmd_queue, perimeter, 2, NULL, global_work2, local_work2, 0, 0, 0);
-	  if(err != CL_SUCCESS) { printf("ERROR:  perimeter clEnqueueNDRangeKernel()=>%d failed\n", err); return -1; }	
+	  err = CECL_ND_RANGE_KERNEL(cmd_queue, perimeter, 2, NULL, global_work2, local_work2, 0, 0, 0);
+	  if(err != CL_SUCCESS) { printf("ERROR:  perimeter CECL_ND_RANGE_KERNEL()=>%d failed\n", err); return -1; }	
 	  
-	  clSetKernelArg(internal, 0, sizeof(void *), (void*) &d_m);
-	  clSetKernelArg(internal, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
-	  clSetKernelArg(internal, 2, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
-	  clSetKernelArg(internal, 3, sizeof(cl_int), (void*) &matrix_dim);
-	  clSetKernelArg(internal, 4, sizeof(cl_int), (void*) &i);
+	  CECL_SET_KERNEL_ARG(internal, 0, sizeof(void *), (void*) &d_m);
+	  CECL_SET_KERNEL_ARG(internal, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
+	  CECL_SET_KERNEL_ARG(internal, 2, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
+	  CECL_SET_KERNEL_ARG(internal, 3, sizeof(cl_int), (void*) &matrix_dim);
+	  CECL_SET_KERNEL_ARG(internal, 4, sizeof(cl_int), (void*) &i);
       
 	  size_t global_work3[3] = {BLOCK_SIZE * ((matrix_dim-i)/BLOCK_SIZE-1), BLOCK_SIZE * ((matrix_dim-i)/BLOCK_SIZE-1), 1};
 	  size_t local_work3[3] = {BLOCK_SIZE, BLOCK_SIZE, 1};
 
-	  err = clEnqueueNDRangeKernel(cmd_queue, internal, 2, NULL, global_work3, local_work3, 0, 0, 0);
-	  if(err != CL_SUCCESS) { printf("ERROR:  internal clEnqueueNDRangeKernel()=>%d failed\n", err); return -1; }	
+	  err = CECL_ND_RANGE_KERNEL(cmd_queue, internal, 2, NULL, global_work3, local_work3, 0, 0, 0);
+	  if(err != CL_SUCCESS) { printf("ERROR:  internal CECL_ND_RANGE_KERNEL()=>%d failed\n", err); return -1; }	
 	}
-	clSetKernelArg(diagnal, 0, sizeof(void *), (void*) &d_m);
-	clSetKernelArg(diagnal, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
-	clSetKernelArg(diagnal, 2, sizeof(cl_int), (void*) &matrix_dim);
-	clSetKernelArg(diagnal, 3, sizeof(cl_int), (void*) &i);
+	CECL_SET_KERNEL_ARG(diagnal, 0, sizeof(void *), (void*) &d_m);
+	CECL_SET_KERNEL_ARG(diagnal, 1, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
+	CECL_SET_KERNEL_ARG(diagnal, 2, sizeof(cl_int), (void*) &matrix_dim);
+	CECL_SET_KERNEL_ARG(diagnal, 3, sizeof(cl_int), (void*) &i);
       
 	size_t global_work1[3]  = {BLOCK_SIZE, 1, 1};
 	size_t local_work1[3]  = {BLOCK_SIZE, 1, 1};
-	err = clEnqueueNDRangeKernel(cmd_queue, diagnal, 2, NULL, global_work1, local_work1, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR:  diagnal clEnqueueNDRangeKernel()=>%d failed\n", err); return -1; }	
+	err = CECL_ND_RANGE_KERNEL(cmd_queue, diagnal, 2, NULL, global_work1, local_work1, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR:  diagnal CECL_ND_RANGE_KERNEL()=>%d failed\n", err); return -1; }	
 	
-	err = clEnqueueReadBuffer(cmd_queue, d_m, 1, 0, matrix_dim*matrix_dim*sizeof(float), m, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueReadBuffer  d_m (size:%d) => %d\n", matrix_dim*matrix_dim, err); return -1; }
+	err = CECL_READ_BUFFER(cmd_queue, d_m, 1, 0, matrix_dim*matrix_dim*sizeof(float), m, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_READ_BUFFER  d_m (size:%d) => %d\n", matrix_dim*matrix_dim, err); return -1; }
 	clFinish(cmd_queue);
 	/* end of timing point */
 	stopwatch_stop(&sw);

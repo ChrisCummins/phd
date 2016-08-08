@@ -1,3 +1,4 @@
+#include <cecl.h>
 #ifndef __NEAREST_NEIGHBOR__
 #define __NEAREST_NEIGHBOR__
 
@@ -65,7 +66,7 @@ float *OpenClFindNearestNeighbors(
         cl_NN_program = cl_compileProgram(
             (char *)"nearestNeighbor_kernel.cl",NULL);
        
-        NN_kernel = clCreateKernel(
+        NN_kernel = CECL_KERNEL(
             cl_NN_program, "NearestNeighbor", &status);
         status = cl_errChk(status, (char *)"Error Creating Nearest Neighbor kernel",true);
         if(status)exit(1);
@@ -77,15 +78,15 @@ float *OpenClFindNearestNeighbors(
 
     cl_int error=0;
 
-    d_locations = clCreateBuffer(context, CL_MEM_READ_ONLY,
+    d_locations = CECL_BUFFER(context, CL_MEM_READ_ONLY,
         sizeof(LatLong) * numRecords, NULL, &error);
 
-    d_distances = clCreateBuffer(context, CL_MEM_READ_WRITE,
+    d_distances = CECL_BUFFER(context, CL_MEM_READ_WRITE,
         sizeof(float) * numRecords, NULL, &error);
 
     cl_command_queue command_queue = cl_getCommandQueue();
     cl_event writeEvent,kernelEvent,readEvent;
-    error = clEnqueueWriteBuffer(command_queue,
+    error = CECL_WRITE_BUFFER(command_queue,
                d_locations,
                1, // change to 0 for nonblocking write
                0, // offset
@@ -97,11 +98,11 @@ float *OpenClFindNearestNeighbors(
 
     // 3. send arguments to device
     cl_int argchk;
-    argchk  = clSetKernelArg(NN_kernel, 0, sizeof(cl_mem), (void *)&d_locations);
-    argchk |= clSetKernelArg(NN_kernel, 1, sizeof(cl_mem), (void *)&d_distances);
-    argchk |= clSetKernelArg(NN_kernel, 2, sizeof(int), (void *)&numRecords);
-    argchk |= clSetKernelArg(NN_kernel, 3, sizeof(float), (void *)&lat);
-    argchk |= clSetKernelArg(NN_kernel, 4, sizeof(float), (void *)&lng);
+    argchk  = CECL_SET_KERNEL_ARG(NN_kernel, 0, sizeof(cl_mem), (void *)&d_locations);
+    argchk |= CECL_SET_KERNEL_ARG(NN_kernel, 1, sizeof(cl_mem), (void *)&d_distances);
+    argchk |= CECL_SET_KERNEL_ARG(NN_kernel, 2, sizeof(int), (void *)&numRecords);
+    argchk |= CECL_SET_KERNEL_ARG(NN_kernel, 3, sizeof(float), (void *)&lat);
+    argchk |= CECL_SET_KERNEL_ARG(NN_kernel, 4, sizeof(float), (void *)&lng);
 
     cl_errChk(argchk,"ERROR in Setting Nearest Neighbor kernel args",true);
 
@@ -111,7 +112,7 @@ float *OpenClFindNearestNeighbors(
     if (numRecords % 64) globalWorkSize[0] += 64 - (numRecords % 64);
     //printf("Global Work Size: %zu\n",globalWorkSize[0]);      
 
-    error = clEnqueueNDRangeKernel(
+    error = CECL_ND_RANGE_KERNEL(
         command_queue,  NN_kernel, 1, 0,
         globalWorkSize,NULL,
         0, NULL, &kernelEvent);
@@ -123,7 +124,7 @@ float *OpenClFindNearestNeighbors(
     // create distances std::vector
     float *distances = (float *)malloc(sizeof(float) * numRecords);
 
-    error = clEnqueueReadBuffer(command_queue,
+    error = CECL_READ_BUFFER(command_queue,
         d_distances,
         1, // change to 0 for nonblocking write
         0, // offset
@@ -133,7 +134,7 @@ float *OpenClFindNearestNeighbors(
         NULL,
         &readEvent);
 
-    cl_errChk(error,"ERROR with clEnqueueReadBuffer",true);
+    cl_errChk(error,"ERROR with CECL_READ_BUFFER",true);
     if (timing) {
         clFinish(command_queue);
         cl_ulong eventStart,eventEnd,totalTime=0;

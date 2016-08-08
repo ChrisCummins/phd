@@ -1,3 +1,4 @@
+#include <cecl.h>
 #ifdef RD_WG_SIZE_0_0
 	#define BLOCK_SIZE RD_WG_SIZE_0_0
 #elif defined(RD_WG_SIZE_0)
@@ -84,8 +85,8 @@ static int initialize(int use_gpu)
 	if( result != CL_SUCCESS ) { printf("ERROR: clGetContextInfo() failed\n"); return -1; }
 
 	// create command queue for the first device
-	cmd_queue = clCreateCommandQueue( context, device_list[0], 0, NULL );
-	if( !cmd_queue ) { printf("ERROR: clCreateCommandQueue() failed\n"); return -1; }
+	cmd_queue = CECL_CREATE_COMMAND_QUEUE( context, device_list[0], 0, NULL );
+	if( !cmd_queue ) { printf("ERROR: CECL_CREATE_COMMAND_QUEUE() failed\n"); return -1; }
 	return 0;
 }
 
@@ -230,8 +231,8 @@ int main(int argc, char **argv){
 	// compile kernel
 	cl_int err = 0;
 	const char * slist[2] = { source, 0 };
-	cl_program prog = clCreateProgramWithSource(context, 1, slist, NULL, &err);
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateProgramWithSource() => %d\n", err); return -1; }
+	cl_program prog = CECL_PROGRAM_WITH_SOURCE(context, 1, slist, NULL, &err);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_PROGRAM_WITH_SOURCE() => %d\n", err); return -1; }
 
 	char clOptions[110];
 	//  sprintf(clOptions,"-I../../src");                                                                                 
@@ -241,7 +242,7 @@ int main(int argc, char **argv){
 	sprintf(clOptions + strlen(clOptions), " -DBLOCK_SIZE=%d", BLOCK_SIZE);
 #endif
 
-	err = clBuildProgram(prog, 0, NULL, clOptions, NULL, NULL);
+	err = CECL_PROGRAM(prog, 0, NULL, clOptions, NULL, NULL);
 	/*{ // show warnings/errors
 		static char log[65536]; memset(log, 0, sizeof(log));
 		cl_device_id device_id = 0;
@@ -249,13 +250,13 @@ int main(int argc, char **argv){
 		clGetProgramBuildInfo(prog, device_id, CL_PROGRAM_BUILD_LOG, sizeof(log)-1, log, NULL);
 		if(err || strstr(log,"warning:") || strstr(log, "error:")) printf("<<<<\n%s\n>>>>\n", log);
 	}*/
-	if(err != CL_SUCCESS) { printf("ERROR: clBuildProgram() => %d\n", err); return -1; }
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_PROGRAM() => %d\n", err); return -1; }
     	
 	cl_kernel kernel1;
 	cl_kernel kernel2;
-	kernel1 = clCreateKernel(prog, kernel_nw1, &err);  
-	kernel2 = clCreateKernel(prog, kernel_nw2, &err);  
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateKernel() 0 => %d\n", err); return -1; }
+	kernel1 = CECL_KERNEL(prog, kernel_nw1, &err);  
+	kernel2 = CECL_KERNEL(prog, kernel_nw2, &err);  
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_KERNEL() 0 => %d\n", err); return -1; }
 	clReleaseProgram(prog);
 	
 		
@@ -265,18 +266,18 @@ int main(int argc, char **argv){
 	cl_mem output_itemsets_d;
 	cl_mem reference_d;
 	
-	input_itemsets_d = clCreateBuffer(context, CL_MEM_READ_WRITE, max_cols * max_rows * sizeof(int), NULL, &err );
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer input_item_set (size:%d) => %d\n", max_cols * max_rows, err); return -1;}
-	reference_d		 = clCreateBuffer(context, CL_MEM_READ_WRITE, max_cols * max_rows * sizeof(int), NULL, &err );
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer reference (size:%d) => %d\n", max_cols * max_rows, err); return -1;}
-	output_itemsets_d = clCreateBuffer(context, CL_MEM_READ_WRITE, max_cols * max_rows * sizeof(int), NULL, &err );
-	if(err != CL_SUCCESS) { printf("ERROR: clCreateBuffer output_item_set (size:%d) => %d\n", max_cols * max_rows, err); return -1;}
+	input_itemsets_d = CECL_BUFFER(context, CL_MEM_READ_WRITE, max_cols * max_rows * sizeof(int), NULL, &err );
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER input_item_set (size:%d) => %d\n", max_cols * max_rows, err); return -1;}
+	reference_d		 = CECL_BUFFER(context, CL_MEM_READ_WRITE, max_cols * max_rows * sizeof(int), NULL, &err );
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER reference (size:%d) => %d\n", max_cols * max_rows, err); return -1;}
+	output_itemsets_d = CECL_BUFFER(context, CL_MEM_READ_WRITE, max_cols * max_rows * sizeof(int), NULL, &err );
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER output_item_set (size:%d) => %d\n", max_cols * max_rows, err); return -1;}
 	
 	//write buffers
-	err = clEnqueueWriteBuffer(cmd_queue, input_itemsets_d, 1, 0, max_cols * max_rows * sizeof(int), input_itemsets, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer bufIn1 (size:%d) => %d\n", max_cols * max_rows, err); return -1; }
-	err = clEnqueueWriteBuffer(cmd_queue, reference_d, 1, 0, max_cols * max_rows * sizeof(int), reference, 0, 0, 0);
-	if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer bufIn2 (size:%d) => %d\n", max_cols * max_rows, err); return -1; }
+	err = CECL_WRITE_BUFFER(cmd_queue, input_itemsets_d, 1, 0, max_cols * max_rows * sizeof(int), input_itemsets, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_WRITE_BUFFER bufIn1 (size:%d) => %d\n", max_cols * max_rows, err); return -1; }
+	err = CECL_WRITE_BUFFER(cmd_queue, reference_d, 1, 0, max_cols * max_rows * sizeof(int), reference, 0, 0, 0);
+	if(err != CL_SUCCESS) { printf("ERROR: CECL_WRITE_BUFFER bufIn2 (size:%d) => %d\n", max_cols * max_rows, err); return -1; }
 		
 	int worksize = max_cols - 1;
 	printf("worksize = %d\n", worksize);
@@ -284,38 +285,38 @@ int main(int argc, char **argv){
 	int offset_r = 0, offset_c = 0;
 	int block_width = worksize/BLOCK_SIZE ;
 	
-	clSetKernelArg(kernel1, 0, sizeof(void *), (void*) &reference_d);
-	clSetKernelArg(kernel1, 1, sizeof(void *), (void*) &input_itemsets_d);
-	clSetKernelArg(kernel1, 2, sizeof(void *), (void*) &output_itemsets_d);
-	clSetKernelArg(kernel1, 3, sizeof(cl_int) * (BLOCK_SIZE + 1) *(BLOCK_SIZE+1), (void*)NULL );
-	clSetKernelArg(kernel1, 4, sizeof(cl_int) *  BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
-	clSetKernelArg(kernel1, 5, sizeof(cl_int), (void*) &max_cols);
-	clSetKernelArg(kernel1, 6, sizeof(cl_int), (void*) &penalty);
-	clSetKernelArg(kernel1, 8, sizeof(cl_int), (void*) &block_width);
-	clSetKernelArg(kernel1, 9, sizeof(cl_int), (void*) &worksize);
-	clSetKernelArg(kernel1, 10, sizeof(cl_int), (void*) &offset_r);
-	clSetKernelArg(kernel1, 11, sizeof(cl_int), (void*) &offset_c);
+	CECL_SET_KERNEL_ARG(kernel1, 0, sizeof(void *), (void*) &reference_d);
+	CECL_SET_KERNEL_ARG(kernel1, 1, sizeof(void *), (void*) &input_itemsets_d);
+	CECL_SET_KERNEL_ARG(kernel1, 2, sizeof(void *), (void*) &output_itemsets_d);
+	CECL_SET_KERNEL_ARG(kernel1, 3, sizeof(cl_int) * (BLOCK_SIZE + 1) *(BLOCK_SIZE+1), (void*)NULL );
+	CECL_SET_KERNEL_ARG(kernel1, 4, sizeof(cl_int) *  BLOCK_SIZE * BLOCK_SIZE, (void*)NULL );
+	CECL_SET_KERNEL_ARG(kernel1, 5, sizeof(cl_int), (void*) &max_cols);
+	CECL_SET_KERNEL_ARG(kernel1, 6, sizeof(cl_int), (void*) &penalty);
+	CECL_SET_KERNEL_ARG(kernel1, 8, sizeof(cl_int), (void*) &block_width);
+	CECL_SET_KERNEL_ARG(kernel1, 9, sizeof(cl_int), (void*) &worksize);
+	CECL_SET_KERNEL_ARG(kernel1, 10, sizeof(cl_int), (void*) &offset_r);
+	CECL_SET_KERNEL_ARG(kernel1, 11, sizeof(cl_int), (void*) &offset_c);
 
-	clSetKernelArg(kernel2, 0, sizeof(void *), (void*) &reference_d);
-	clSetKernelArg(kernel2, 1, sizeof(void *), (void*) &input_itemsets_d);
-	clSetKernelArg(kernel2, 2, sizeof(void *), (void*) &output_itemsets_d);
-	clSetKernelArg(kernel2, 3, sizeof(cl_int) * (BLOCK_SIZE + 1) *(BLOCK_SIZE+1), (void*)NULL );
-	clSetKernelArg(kernel2, 4, sizeof(cl_int) * BLOCK_SIZE *BLOCK_SIZE, (void*)NULL );
-	clSetKernelArg(kernel2, 5, sizeof(cl_int), (void*) &max_cols);
-	clSetKernelArg(kernel2, 6, sizeof(cl_int), (void*) &penalty);
-	clSetKernelArg(kernel2, 8, sizeof(cl_int), (void*) &block_width);
-	clSetKernelArg(kernel2, 9, sizeof(cl_int), (void*) &worksize);
-	clSetKernelArg(kernel2, 10, sizeof(cl_int), (void*) &offset_r);
-	clSetKernelArg(kernel2, 11, sizeof(cl_int), (void*) &offset_c);
+	CECL_SET_KERNEL_ARG(kernel2, 0, sizeof(void *), (void*) &reference_d);
+	CECL_SET_KERNEL_ARG(kernel2, 1, sizeof(void *), (void*) &input_itemsets_d);
+	CECL_SET_KERNEL_ARG(kernel2, 2, sizeof(void *), (void*) &output_itemsets_d);
+	CECL_SET_KERNEL_ARG(kernel2, 3, sizeof(cl_int) * (BLOCK_SIZE + 1) *(BLOCK_SIZE+1), (void*)NULL );
+	CECL_SET_KERNEL_ARG(kernel2, 4, sizeof(cl_int) * BLOCK_SIZE *BLOCK_SIZE, (void*)NULL );
+	CECL_SET_KERNEL_ARG(kernel2, 5, sizeof(cl_int), (void*) &max_cols);
+	CECL_SET_KERNEL_ARG(kernel2, 6, sizeof(cl_int), (void*) &penalty);
+	CECL_SET_KERNEL_ARG(kernel2, 8, sizeof(cl_int), (void*) &block_width);
+	CECL_SET_KERNEL_ARG(kernel2, 9, sizeof(cl_int), (void*) &worksize);
+	CECL_SET_KERNEL_ARG(kernel2, 10, sizeof(cl_int), (void*) &offset_r);
+	CECL_SET_KERNEL_ARG(kernel2, 11, sizeof(cl_int), (void*) &offset_c);
 	
 	printf("Processing upper-left matrix\n");
 	for( int blk = 1 ; blk <= worksize/BLOCK_SIZE ; blk++){
 	
 		global_work[0] = BLOCK_SIZE * blk;
 		local_work[0]  = BLOCK_SIZE;
-		clSetKernelArg(kernel1, 7, sizeof(cl_int), (void*) &blk);
-		err = clEnqueueNDRangeKernel(cmd_queue, kernel1, 2, NULL, global_work, local_work, 0, 0, 0);
-		if(err != CL_SUCCESS) { printf("ERROR: 1  clEnqueueNDRangeKernel()=>%d failed\n", err); return -1; }			
+		CECL_SET_KERNEL_ARG(kernel1, 7, sizeof(cl_int), (void*) &blk);
+		err = CECL_ND_RANGE_KERNEL(cmd_queue, kernel1, 2, NULL, global_work, local_work, 0, 0, 0);
+		if(err != CL_SUCCESS) { printf("ERROR: 1  CECL_ND_RANGE_KERNEL()=>%d failed\n", err); return -1; }			
 	}
 	clFinish(cmd_queue);
 	
@@ -323,9 +324,9 @@ int main(int argc, char **argv){
 	for( int blk =  worksize/BLOCK_SIZE - 1  ; blk >= 1 ; blk--){	   
 		global_work[0] = BLOCK_SIZE * blk;
 		local_work[0] =  BLOCK_SIZE;
-		clSetKernelArg(kernel2, 7, sizeof(cl_int), (void*) &blk);
-        err = clEnqueueNDRangeKernel(cmd_queue, kernel2, 2, NULL, global_work, local_work, 0, 0, 0);
-		if(err != CL_SUCCESS) { printf("ERROR: 2 clEnqueueNDRangeKernel()=>%d failed\n", err); return -1; }
+		CECL_SET_KERNEL_ARG(kernel2, 7, sizeof(cl_int), (void*) &blk);
+        err = CECL_ND_RANGE_KERNEL(cmd_queue, kernel2, 2, NULL, global_work, local_work, 0, 0, 0);
+		if(err != CL_SUCCESS) { printf("ERROR: 2 CECL_ND_RANGE_KERNEL()=>%d failed\n", err); return -1; }
 	}
     
     // Lingjie Zhang modified at Nov 1, 2015
@@ -333,7 +334,7 @@ int main(int argc, char **argv){
     //	fflush(stdout);
 	//end Lingjie Zhang modification
 
-    err = clEnqueueReadBuffer(cmd_queue, input_itemsets_d, 1, 0, max_cols * max_rows * sizeof(int), output_itemsets, 0, 0, 0);
+    err = CECL_READ_BUFFER(cmd_queue, input_itemsets_d, 1, 0, max_cols * max_rows * sizeof(int), output_itemsets, 0, 0, 0);
 	clFinish(cmd_queue);
 
 //#define TRACEBACK	

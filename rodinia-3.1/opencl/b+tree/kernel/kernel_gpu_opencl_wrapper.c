@@ -1,3 +1,4 @@
+#include <cecl.h>
 // #ifdef __cplusplus
 // extern "C" {
 // #endif
@@ -182,7 +183,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 
 	// Create a command queue
 	cl_command_queue command_queue;
-	command_queue = clCreateCommandQueue(	context, 
+	command_queue = CECL_CREATE_COMMAND_QUEUE(	context, 
 											device, 
 											0, 
 											&error);
@@ -198,7 +199,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	size_t sourceSize = strlen(source);
 
 	// Create the program
-	cl_program program = clCreateProgramWithSource(	context, 
+	cl_program program = CECL_PROGRAM_WITH_SOURCE(	context, 
 													1, 
 													&source, 
 													&sourceSize, 
@@ -216,7 +217,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 
 
 	// Compile the program
-	error = clBuildProgram(	program, 
+	error = CECL_PROGRAM(	program, 
 							1, 
 							&device, 
 							clOptions, 
@@ -240,7 +241,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 
 	// Create kernel
 	cl_kernel kernel;
-	kernel = clCreateKernel(program, 
+	kernel = CECL_KERNEL(program, 
 							"findK", 
 							&error);
 	if (error != CL_SUCCESS) 
@@ -265,7 +266,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//==================================================50
 
 	cl_mem recordsD;
-	recordsD = clCreateBuffer(	context, 
+	recordsD = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								records_mem, 
 								NULL, 
@@ -278,7 +279,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//==================================================50
 
 	cl_mem knodesD;
-	knodesD = clCreateBuffer(	context, 
+	knodesD = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								knodes_mem, 
 								NULL, 
@@ -291,7 +292,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//==================================================50
 
 	cl_mem currKnodeD;
-	currKnodeD = clCreateBuffer(	context, 
+	currKnodeD = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								count*sizeof(long), 
 								NULL, 
@@ -304,7 +305,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//==================================================50
 
 	cl_mem offsetD;
-	offsetD = clCreateBuffer(	context, 
+	offsetD = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								count*sizeof(long), 
 								NULL, 
@@ -317,7 +318,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//==================================================50
 
 	cl_mem keysD;
-	keysD = clCreateBuffer(	context, 
+	keysD = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								count*sizeof(long), 
 								NULL, 
@@ -338,7 +339,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//==================================================50
 
 	cl_mem ansD;
-	ansD = clCreateBuffer(	context, 
+	ansD = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								count*sizeof(record), 
 								NULL, 
@@ -368,7 +369,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//	recordsD
 	//==================================================50
 
-	error = clEnqueueWriteBuffer(	command_queue,			// command queue
+	error = CECL_WRITE_BUFFER(	command_queue,			// command queue
 									recordsD,				// destination
 									1,						// block the source from access until this copy operation complates (1=yes, 0=no)
 									0,						// offset in destination to write to
@@ -384,7 +385,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//	knodesD
 	//==================================================50
 
-	error = clEnqueueWriteBuffer(	command_queue,			// command queue
+	error = CECL_WRITE_BUFFER(	command_queue,			// command queue
 									knodesD,				// destination
 									1,						// block the source from access until this copy operation complates (1=yes, 0=no)
 									0,						// offset in destination to write to
@@ -400,7 +401,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//	currKnodeD
 	//==================================================50
 
-	error = clEnqueueWriteBuffer(	command_queue,			// command queue
+	error = CECL_WRITE_BUFFER(	command_queue,			// command queue
 									currKnodeD,				// destination
 									1,						// block the source from access until this copy operation complates (1=yes, 0=no)
 									0,						// offset in destination to write to
@@ -416,7 +417,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//	offsetD
 	//==================================================50
 
-	error = clEnqueueWriteBuffer(	command_queue,			// command queue
+	error = CECL_WRITE_BUFFER(	command_queue,			// command queue
 									offsetD,				// destination
 									1,						// block the source from access until this copy operation complates (1=yes, 0=no)
 									0,						// offset in destination to write to
@@ -432,7 +433,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//	keysD
 	//==================================================50
 
-	error = clEnqueueWriteBuffer(	command_queue,			// command queue
+	error = CECL_WRITE_BUFFER(	command_queue,			// command queue
 									keysD,					// destination
 									1,						// block the source from access until this copy operation complates (1=yes, 0=no)
 									0,						// offset in destination to write to
@@ -456,7 +457,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//	ansD
 	//==================================================50
 
-	error = clEnqueueWriteBuffer(	command_queue,			// command queue
+	error = CECL_WRITE_BUFFER(	command_queue,			// command queue
 									ansD,					// destination
 									1,						// block the source from access until this copy operation complates (1=yes, 0=no)
 									0,						// offset in destination to write to
@@ -497,36 +498,36 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//	Kernel Arguments
 	//====================================================================================================100
 
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					0, 
 					sizeof(long), 
 					(void *) &maxheight);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					1, 
 					sizeof(cl_mem), 
 					(void *) &knodesD);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					2, 
 					sizeof(long), 
 					(void *) &knodes_elem);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					3, 
 					sizeof(cl_mem), 
 					(void *) &recordsD);
 
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					4, 
 					sizeof(cl_mem), 
 					(void *) &currKnodeD);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					5, 
 					sizeof(cl_mem), 
 					(void *) &offsetD);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					6, 
 					sizeof(cl_mem), 
 					(void *) &keysD);
-	clSetKernelArg(	kernel, 
+	CECL_SET_KERNEL_ARG(	kernel, 
 					7, 
 					sizeof(cl_mem), 
 					(void *) &ansD);
@@ -535,7 +536,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//	Kernel
 	//====================================================================================================100
 
-	error = clEnqueueNDRangeKernel(	command_queue, 
+	error = CECL_ND_RANGE_KERNEL(	command_queue, 
 									kernel, 
 									1, 
 									NULL, 
@@ -570,7 +571,7 @@ kernel_gpu_opencl_wrapper(	record *records,
 	//	ansD
 	//==================================================50
 
-	error = clEnqueueReadBuffer(command_queue,				// The command queue.
+	error = CECL_READ_BUFFER(command_queue,				// The command queue.
 								ansD,						// The image on the device.
 								CL_TRUE,					// Blocking? (ie. Wait at this line until read has finished?)
 								0,							// Offset. None in this case.

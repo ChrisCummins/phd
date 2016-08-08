@@ -1,3 +1,4 @@
+#include <cecl.h>
 /**
  * @file ex_particle_OPENMP_seq.c
  * @author Michael Trotter & Matt Goodrum
@@ -118,9 +119,9 @@ static int initialize(int use_gpu) {
     }
 
     // create command queue for the first device
-    cmd_queue = clCreateCommandQueue(context, device_list[0], 0, NULL);
+    cmd_queue = CECL_CREATE_COMMAND_QUEUE(context, device_list[0], 0, NULL);
     if (!cmd_queue) {
-        printf("ERROR: clCreateCommandQueue() failed\n");
+        printf("ERROR: CECL_CREATE_COMMAND_QUEUE() failed\n");
         return -1;
     }
 
@@ -459,12 +460,12 @@ static int allocate(int Nparticles, int countOnes){
 	// compile kernel
 	cl_int err = 0;
 	const char * slist[2] = {source, 0};
-	cl_program prog = clCreateProgramWithSource(context, 1, slist, NULL, &err);
+	cl_program prog = CECL_PROGRAM_WITH_SOURCE(context, 1, slist, NULL, &err);
 	if (err != CL_SUCCESS) {
-		printf("ERROR: clCreateProgramWithSource() => %d\n", err);
+		printf("ERROR: CECL_PROGRAM_WITH_SOURCE() => %d\n", err);
 		return -1;
 	}
-	err = clBuildProgram(prog, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
+	err = CECL_PROGRAM(prog, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
 	{ // show warnings/errors
 		static char log[65536];
 		memset(log, 0, sizeof (log));
@@ -483,15 +484,15 @@ static int allocate(int Nparticles, int countOnes){
 		if (err || strstr(log, "warning:") || strstr(log, "error:")) printf("<<<<\n%s\n>>>>\n", log);
 	}//*/
 	if (err != CL_SUCCESS) {
-		printf("ERROR: clBuildProgram() => %d\n", err);
+		printf("ERROR: CECL_PROGRAM() => %d\n", err);
 		return -1;
 	}
 
 	char * particle_kernel = "particle_kernel";
 
-	kernel_s = clCreateKernel(prog, particle_kernel, &err);
+	kernel_s = CECL_KERNEL(prog, particle_kernel, &err);
 	if (err != CL_SUCCESS) {
-		printf("ERROR: clCreateKernel() 0 => %d\n", err);
+		printf("ERROR: CECL_KERNEL() 0 => %d\n", err);
 		return -1;
 	}
 
@@ -509,33 +510,33 @@ static int allocate(int Nparticles, int countOnes){
 	u = (double *) malloc(sizeof (double) *Nparticles);
 
 	//OpenCL memory allocation
-	arrayX_GPU = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof (double) *Nparticles, NULL, &err);
+	arrayX_GPU = CECL_BUFFER(context, CL_MEM_READ_WRITE, sizeof (double) *Nparticles, NULL, &err);
 	if (err != CL_SUCCESS) {
-		printf("ERROR: clCreateBuffer arrayX_GPU (size:%d) => %d\n", Nparticles, err);
+		printf("ERROR: CECL_BUFFER arrayX_GPU (size:%d) => %d\n", Nparticles, err);
 		return -1;
 	}
-	arrayY_GPU = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof (double) *Nparticles, NULL, &err);
+	arrayY_GPU = CECL_BUFFER(context, CL_MEM_READ_WRITE, sizeof (double) *Nparticles, NULL, &err);
 	if (err != CL_SUCCESS) {
-		printf("ERROR: clCreateBuffer arrayY_GPU (size:%d) => %d\n", Nparticles, err);
+		printf("ERROR: CECL_BUFFER arrayY_GPU (size:%d) => %d\n", Nparticles, err);
 		return -1;
 	}
-	xj_GPU = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof (double) *Nparticles, NULL, &err);
+	xj_GPU = CECL_BUFFER(context, CL_MEM_READ_WRITE, sizeof (double) *Nparticles, NULL, &err);
 	if (err != CL_SUCCESS) {
-		printf("ERROR: clCreateBuffer xj_GPU (size:%d) => %d\n", Nparticles, err);
+		printf("ERROR: CECL_BUFFER xj_GPU (size:%d) => %d\n", Nparticles, err);
 		return -1;
 	}
-	yj_GPU = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof (double) *Nparticles, NULL, &err);
+	yj_GPU = CECL_BUFFER(context, CL_MEM_READ_WRITE, sizeof (double) *Nparticles, NULL, &err);
 	if (err != CL_SUCCESS) {
-		printf("ERROR: clCreateBuffer yj_GPU (size:%d) => %d\n", Nparticles, err);
+		printf("ERROR: CECL_BUFFER yj_GPU (size:%d) => %d\n", Nparticles, err);
 		return -1;
 	}
-	CDF_GPU = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof (double) *Nparticles, NULL, &err);
+	CDF_GPU = CECL_BUFFER(context, CL_MEM_READ_WRITE, sizeof (double) *Nparticles, NULL, &err);
 	if (err != CL_SUCCESS) {
-		printf("ERROR: clCreateBuffer CDF_GPU (size:%d) => %d\n", Nparticles, err);
+		printf("ERROR: CECL_BUFFER CDF_GPU (size:%d) => %d\n", Nparticles, err);
 		return -1;
 	}
-	u_GPU = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof (double) *Nparticles, NULL, &err);
-	if (err != CL_SUCCESS) { printf("ERROR: clCreateBuffer u_GPU (size:%d) => %d\n", Nparticles, err); return -1; }
+	u_GPU = CECL_BUFFER(context, CL_MEM_READ_WRITE, sizeof (double) *Nparticles, NULL, &err);
+	if (err != CL_SUCCESS) { printf("ERROR: CECL_BUFFER u_GPU (size:%d) => %d\n", Nparticles, err); return -1; }
 
   
 
@@ -681,46 +682,46 @@ int particleFilter(int * I, int IszX, int IszY, int Nfr, int * seed, int Npartic
 		long long start_copy = get_time();
 
 		//OpenCL memory allocation
-		cl_int err = clEnqueueWriteBuffer(cmd_queue, arrayX_GPU, 1, 0, sizeof (double) *Nparticles, arrayX, 0, 0, 0);
-		if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer arrayX_GPU (size:%d) => %d\n", Nparticles, err); return -1; }
-		err = clEnqueueWriteBuffer(cmd_queue, arrayY_GPU, 1, 0, sizeof (double) *Nparticles, arrayY, 0, 0, 0);
-		if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer arrayY_GPU (size:%d) => %d\n", Nparticles, err); return -1; }
-		err = clEnqueueWriteBuffer(cmd_queue, CDF_GPU, 1, 0, sizeof (double) *Nparticles, CDF, 0, 0, 0);
-		if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer CDF_GPU (size:%d) => %d\n", Nparticles, err); return -1; }
-		err = clEnqueueWriteBuffer(cmd_queue, u_GPU, 1, 0, sizeof (double) *Nparticles, u, 0, 0, 0);
-		if(err != CL_SUCCESS) { printf("ERROR: clEnqueueWriteBuffer u_GPU (size:%d) => %d\n", Nparticles, err); return -1; }
+		cl_int err = CECL_WRITE_BUFFER(cmd_queue, arrayX_GPU, 1, 0, sizeof (double) *Nparticles, arrayX, 0, 0, 0);
+		if(err != CL_SUCCESS) { printf("ERROR: CECL_WRITE_BUFFER arrayX_GPU (size:%d) => %d\n", Nparticles, err); return -1; }
+		err = CECL_WRITE_BUFFER(cmd_queue, arrayY_GPU, 1, 0, sizeof (double) *Nparticles, arrayY, 0, 0, 0);
+		if(err != CL_SUCCESS) { printf("ERROR: CECL_WRITE_BUFFER arrayY_GPU (size:%d) => %d\n", Nparticles, err); return -1; }
+		err = CECL_WRITE_BUFFER(cmd_queue, CDF_GPU, 1, 0, sizeof (double) *Nparticles, CDF, 0, 0, 0);
+		if(err != CL_SUCCESS) { printf("ERROR: CECL_WRITE_BUFFER CDF_GPU (size:%d) => %d\n", Nparticles, err); return -1; }
+		err = CECL_WRITE_BUFFER(cmd_queue, u_GPU, 1, 0, sizeof (double) *Nparticles, u, 0, 0, 0);
+		if(err != CL_SUCCESS) { printf("ERROR: CECL_WRITE_BUFFER u_GPU (size:%d) => %d\n", Nparticles, err); return -1; }
 
 
 		long long end_copy = get_time();
 		//Set number of threads
 		int num_blocks = ceil((double) Nparticles / (double) threads_per_block);
 
-		clSetKernelArg(kernel_s, 0, sizeof (void *), (void*) &arrayX_GPU);
-		clSetKernelArg(kernel_s, 1, sizeof (void *), (void*) &arrayY_GPU);
-		clSetKernelArg(kernel_s, 2, sizeof (void *), (void*) &CDF_GPU);
-		clSetKernelArg(kernel_s, 3, sizeof (void *), (void*) &u_GPU);
-		clSetKernelArg(kernel_s, 4, sizeof (void *), (void*) &xj_GPU);
-		clSetKernelArg(kernel_s, 5, sizeof (void *), (void*) &yj_GPU);
-		clSetKernelArg(kernel_s, 6, sizeof (cl_int), (void*) &Nparticles);
+		CECL_SET_KERNEL_ARG(kernel_s, 0, sizeof (void *), (void*) &arrayX_GPU);
+		CECL_SET_KERNEL_ARG(kernel_s, 1, sizeof (void *), (void*) &arrayY_GPU);
+		CECL_SET_KERNEL_ARG(kernel_s, 2, sizeof (void *), (void*) &CDF_GPU);
+		CECL_SET_KERNEL_ARG(kernel_s, 3, sizeof (void *), (void*) &u_GPU);
+		CECL_SET_KERNEL_ARG(kernel_s, 4, sizeof (void *), (void*) &xj_GPU);
+		CECL_SET_KERNEL_ARG(kernel_s, 5, sizeof (void *), (void*) &yj_GPU);
+		CECL_SET_KERNEL_ARG(kernel_s, 6, sizeof (cl_int), (void*) &Nparticles);
 
 
 		//KERNEL FUNCTION CALL
 		size_t global_work[3] = {num_blocks*threads_per_block, 1, 1};
-		err = clEnqueueNDRangeKernel(cmd_queue, kernel_s, 1, NULL, global_work, NULL, 0, 0, 0);
+		err = CECL_ND_RANGE_KERNEL(cmd_queue, kernel_s, 1, NULL, global_work, NULL, 0, 0, 0);
 		clFinish(cmd_queue);
 		long long start_copy_back = get_time();
                 
                 if (err != CL_SUCCESS) {
-			printf("ERROR: clEnqueueNDRangeKernel()=>%d failed\n", err);
+			printf("ERROR: CECL_ND_RANGE_KERNEL()=>%d failed\n", err);
 			return -1;
 		}
 		//OpenCL memory copying back from GPU to CPU memory
-		err = clEnqueueReadBuffer(cmd_queue, yj_GPU, 1, 0, sizeof (double) *Nparticles, yj, 0, 0, 0);
+		err = CECL_READ_BUFFER(cmd_queue, yj_GPU, 1, 0, sizeof (double) *Nparticles, yj, 0, 0, 0);
 		if (err != CL_SUCCESS) {
 			printf("ERROR: Memcopy Out\n");
 			return -1;
 		}
-		err = clEnqueueReadBuffer(cmd_queue, xj_GPU, 1, 0, sizeof (double) *Nparticles, xj, 0, 0, 0);
+		err = CECL_READ_BUFFER(cmd_queue, xj_GPU, 1, 0, sizeof (double) *Nparticles, xj, 0, 0, 0);
 		if (err != CL_SUCCESS) {
 			printf("ERROR: Memcopy Out\n");
 			return -1;

@@ -1,3 +1,4 @@
+#include <cecl.h>
 // #ifdef __cplusplus
 // extern "C" {
 // #endif
@@ -184,7 +185,7 @@ kernel_gpu_opencl_wrapper(	int xmax,
 
 	// Create a command queue
 	cl_command_queue command_queue;
-	command_queue = clCreateCommandQueue(	context, 
+	command_queue = CECL_CREATE_COMMAND_QUEUE(	context, 
 											device, 
 											0, 
 											&error);
@@ -200,7 +201,7 @@ kernel_gpu_opencl_wrapper(	int xmax,
 	size_t sourceSize = strlen(source);
 
 	// Create the program
-	cl_program program = clCreateProgramWithSource(	context, 
+	cl_program program = CECL_PROGRAM_WITH_SOURCE(	context, 
 													1, 
 													&source, 
 													&sourceSize, 
@@ -209,7 +210,7 @@ kernel_gpu_opencl_wrapper(	int xmax,
 		fatal_CL(error, __LINE__);
 
 	// Compile the program
-	error = clBuildProgram(	program, 
+	error = CECL_PROGRAM(	program, 
 							1, 
 							&device, 
 							"-I./../", 
@@ -233,7 +234,7 @@ kernel_gpu_opencl_wrapper(	int xmax,
 
 	// Create kernel
 	cl_kernel kernel;
-	kernel = clCreateKernel(program, 
+	kernel = CECL_KERNEL(program, 
 							"kernel_gpu_opencl", 
 							&error);
 	if (error != CL_SUCCESS) 
@@ -258,7 +259,7 @@ kernel_gpu_opencl_wrapper(	int xmax,
 	int d_initvalu_mem;
 	d_initvalu_mem = EQUATIONS * sizeof(fp);
 	cl_mem d_initvalu;
-	d_initvalu = clCreateBuffer(context,					// context
+	d_initvalu = CECL_BUFFER(context,					// context
 								CL_MEM_READ_WRITE,			// flags
 								d_initvalu_mem,				// size of buffer
 								NULL,						// host pointer (optional)
@@ -273,7 +274,7 @@ kernel_gpu_opencl_wrapper(	int xmax,
 	int d_finavalu_mem;
 	d_finavalu_mem = EQUATIONS * sizeof(fp);
 	cl_mem d_finavalu;
-	d_finavalu = clCreateBuffer(context, 
+	d_finavalu = CECL_BUFFER(context, 
 								CL_MEM_READ_WRITE, 
 								d_finavalu_mem, 
 								NULL, 
@@ -288,7 +289,7 @@ kernel_gpu_opencl_wrapper(	int xmax,
 	int d_params_mem;
 	d_params_mem = PARAMETERS * sizeof(fp);
 	cl_mem d_params;
-	d_params = clCreateBuffer(	context, 
+	d_params = CECL_BUFFER(	context, 
 								CL_MEM_READ_WRITE, 
 								d_params_mem, 
 								NULL, 
@@ -303,7 +304,7 @@ kernel_gpu_opencl_wrapper(	int xmax,
 	int d_com_mem;
 	d_com_mem = 3 * sizeof(fp);
 	cl_mem d_com;
-	d_com = clCreateBuffer(	context, 
+	d_com = CECL_BUFFER(	context, 
 							CL_MEM_READ_WRITE, 
 							d_com_mem, 
 							NULL, 
