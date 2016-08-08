@@ -36,8 +36,8 @@ for PROG in ${PROGS[@]}; do
     touch $LOG_FILE
 
     for i in `seq 1 $COUNT`; do
-      echo "#$i: OPENCL_DEVICE_TYPE=$DEV ./$PROG.$CLASS.x > $LOG_FILE"
-      bash -c "time OPENCL_DEVICE_TYPE=$DEV ./$PROG.$CLASS.x ../$PROGI/ >> $LOG_FILE" 2>> $LOG_FILE
+      echo "#$i: OPENCL_DEVICE_TYPE=$DEV runcecl ./$PROG.$CLASS.x > $LOG_FILE"
+      bash -c "time OPENCL_DEVICE_TYPE=$DEV runcecl ./$PROG.$CLASS.x ../$PROGI/ >> $LOG_FILE" 2>> $LOG_FILE
       cat $LOG_FILE
     done
   done
