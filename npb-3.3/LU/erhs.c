@@ -31,7 +31,6 @@
 // Authors: Sangmin Seo, Gangwon Jo, Jungwon Kim, Jun Lee, Jeongho Nah,    //
 //          and Jaejin Lee                                                 //
 //-------------------------------------------------------------------------//
-#include <cec-profile.h>
 #include "applu.incl"
 
 //---------------------------------------------------------------------
@@ -80,12 +79,12 @@ void erhs()
     erhs1_gws[0] = clu_RoundWorkSize((size_t)nz, erhs1_lws[0]);
   }
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_erhs1,
-                        ERHS1_DIM, NULL,
-                        erhs1_gws,
-                        erhs1_lws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_erhs1,
+                                 ERHS1_DIM, NULL,
+                                 erhs1_gws,
+                                 erhs1_lws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   //------------------------------------------------------------------------
@@ -111,12 +110,12 @@ void erhs()
     erhs2_gws[0] = clu_RoundWorkSize((size_t)(nz-2), erhs2_lws[0]);
   }
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_erhs2,
-                        ERHS2_DIM, NULL,
-                        erhs2_gws,
-                        erhs2_lws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_erhs2,
+                                 ERHS2_DIM, NULL,
+                                 erhs2_gws,
+                                 erhs2_lws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   //------------------------------------------------------------------------
@@ -142,12 +141,12 @@ void erhs()
     erhs3_gws[0] = clu_RoundWorkSize((size_t)(nz-2), erhs3_lws[0]);
   }
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_erhs3,
-                        ERHS3_DIM, NULL,
-                        erhs3_gws,
-                        erhs3_lws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_erhs3,
+                                 ERHS3_DIM, NULL,
+                                 erhs3_gws,
+                                 erhs3_lws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   //------------------------------------------------------------------------
@@ -173,12 +172,12 @@ void erhs()
     erhs4_gws[0] = clu_RoundWorkSize((size_t)(jend-jst), erhs4_lws[0]);
   }
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_erhs4,
-                        ERHS4_DIM, NULL,
-                        erhs4_gws,
-                        erhs4_lws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_erhs4,
+                                 ERHS4_DIM, NULL,
+                                 erhs4_gws,
+                                 erhs4_lws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 

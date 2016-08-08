@@ -43,7 +43,6 @@
 //
 //---------------------------------------------------------------------
 
-#include <cec-profile.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -441,13 +440,13 @@ static void setup_opencl(int argc, char *argv[])
   //-----------------------------------------------------------------------
   // 3. Create command queues
   //-----------------------------------------------------------------------
-  cmd_queue = CEC_COMMAND_QUEUE(context, device, 0, &ecode);
+  cmd_queue = clCreateCommandQueue(context, device, 0, &ecode);
   clu_CheckError(ecode, "clCreateCommandQueue()");
 
   max_pipeline = (jend-jst) < max_compute_units ? (jend-jst) : max_compute_units;
   pipe_queue = (cl_command_queue *)malloc(sizeof(cl_command_queue) * max_pipeline);
   for (i = 0; i < max_pipeline; i++) {
-    pipe_queue[i] = CEC_COMMAND_QUEUE(context, device, 0, &ecode);
+    pipe_queue[i] = clCreateCommandQueue(context, device, 0, &ecode);
     clu_CheckError(ecode, "clCreateCommandQueue()");
   }
 

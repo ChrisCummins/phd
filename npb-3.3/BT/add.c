@@ -44,12 +44,12 @@ void add()
 
   if (timeron) timer_start(t_add);
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_add,
-                        ADD_DIM, NULL,
-                        add_gws,
-                        add_lws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_add,
+                                 ADD_DIM, NULL,
+                                 add_gws,
+                                 add_lws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 

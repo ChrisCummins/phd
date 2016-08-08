@@ -1,15 +1,14 @@
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-//---  applu.incl   
+//---  applu.incl
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 
 //---------------------------------------------------------------------
-// npbparams.h defines parameters that depend on the class and 
+// npbparams.h defines parameters that depend on the class and
 // number of nodes
 //---------------------------------------------------------------------
 
-#include <cec-profile.h>
 #include "npbparams.h"
 #include "type.h"
 
@@ -198,8 +197,8 @@ extern size_t buts_lws[3], buts_gws[3];
 
 extern int SETBV1_DIM, SETBV2_DIM, SETBV3_DIM;
 extern int SETIV_DIM;
-extern int ERHS1_DIM, ERHS2_DIM, ERHS3_DIM, ERHS4_DIM; 
-extern int PINTGR1_DIM, PINTGR2_DIM, PINTGR3_DIM; 
+extern int ERHS1_DIM, ERHS2_DIM, ERHS3_DIM, ERHS4_DIM;
+extern int PINTGR1_DIM, PINTGR2_DIM, PINTGR3_DIM;
 extern int RHS_DIM, RHSX_DIM, RHSY_DIM, RHSZ_DIM;
 extern int SSOR2_DIM, SSOR3_DIM;
 
@@ -218,7 +217,7 @@ void l2norm (int ldx, int ldy, int ldz, int nx0, int ny0, int nz0,
      cl_mem *m_v, double sum[5]);
 void error();
 void pintgr();
-void verify(double xcr[5], double xce[5], double xci, 
+void verify(double xcr[5], double xce[5], double xci,
             char *Class, logical *verified);
 //-----------------------------------------------------------------------
 //---------------------------------------------------------------------

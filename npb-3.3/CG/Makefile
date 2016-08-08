@@ -11,8 +11,7 @@ OBJS = cg.o \
         ${COMMON}/${RAND}.o \
         ${COMMON}/c_timers.o \
         ${COMMON}/wtime.o \
-        ${COMMON}/cl_util.o \
-	$(CECOBJS)
+        ${COMMON}/cl_util.o
 
 
 ${PROGRAM}: config ${OBJS}

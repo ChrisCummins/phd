@@ -43,12 +43,12 @@ void txinvr()
 
   if (timeron) timer_start(t_txinvr);
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_txinvr,
-                        TXINVR_DIM, NULL,
-                        txinvr_gws,
-                        txinvr_lws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_txinvr,
+                                 TXINVR_DIM, NULL,
+                                 txinvr_gws,
+                                 txinvr_lws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 

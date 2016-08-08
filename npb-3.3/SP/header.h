@@ -41,7 +41,6 @@
 //      niter_default: default number of iterations for this problem size
 //---------------------------------------------------------------------
 
-#include <cec-profile.h>
 #include "npbparams.h"
 #include "type.h"
 

@@ -87,13 +87,12 @@ void error_norm(double rms[5])
                                  1, NULL,
                                  &global_ws,
                                  &local_ws,
-                                 0, NULL, &cec_event);
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
-  cec_profile(cec_event, "error_norm");
 
   g_rms = (double (*)[5])malloc(buf_size);
 
-  ecode = CEC_READ_BUFFER(cmd_queue,
+  ecode = clEnqueueReadBuffer(cmd_queue,
                               m_rms,
                               CL_TRUE,
                               0, buf_size,
@@ -172,7 +171,7 @@ void rhs_norm(double rms[5])
 
   g_rms = (double (*)[5])malloc(buf_size);
 
-  ecode = CEC_READ_BUFFER(cmd_queue,
+  ecode = clEnqueueReadBuffer(cmd_queue,
                               m_rms,
                               CL_TRUE,
                               0, buf_size,

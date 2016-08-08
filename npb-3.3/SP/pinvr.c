@@ -43,12 +43,12 @@ void pinvr()
 
   if (timeron) timer_start(t_pinvr);
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_pinvr,
-                        PINVR_DIM, NULL,
-                        pinvr_gws,
-                        pinvr_lws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_pinvr,
+                                 PINVR_DIM, NULL,
+                                 pinvr_gws,
+                                 pinvr_lws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 

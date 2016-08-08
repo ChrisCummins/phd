@@ -172,7 +172,7 @@ void setcoeff()
 
   //------------------------------------------------------------------------
   cl_int ecode;
-  ecode = CEC_WRITE_BUFFER(cmd_queue,
+  ecode = clEnqueueWriteBuffer(cmd_queue,
                                m_ce,
                                CL_FALSE,
                                0, sizeof(double)*5*13,

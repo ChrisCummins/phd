@@ -32,7 +32,6 @@
 //          and Jaejin Lee                                                 //
 //-------------------------------------------------------------------------//
 
-#include <cec-profile.h>
 #include <math.h>
 #include "applu.incl"
 
@@ -44,8 +43,8 @@
 // for even number sizes only.  Only needed in v.
 //---------------------------------------------------------------------
 void l2norm (int ldx, int ldy, int ldz, int nx0, int ny0, int nz0,
-     int ist, int iend, int jst, int jend,
-     cl_mem *m_v, double sum[5])
+             int ist, int iend, int jst, int jend,
+             cl_mem *m_v, double sum[5])
 {
   //---------------------------------------------------------------------
   // local variables
@@ -67,18 +66,18 @@ void l2norm (int ldx, int ldy, int ldz, int nx0, int ny0, int nz0,
   ecode |= clSetKernelArg(k_l2norm, 7, sizeof(int), &jend);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
                                  k_l2norm,
                                  1, NULL,
                                  l2norm_gws,
                                  l2norm_lws,
-                                 0, NULL);
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   wg_num = l2norm_gws[0] / l2norm_lws[0];
   g_sum = (double (*)[5])malloc(sum_size);
 
-  ecode = CEC_READ_BUFFER(cmd_queue,
+  ecode = clEnqueueReadBuffer(cmd_queue,
                               m_sum,
                               CL_TRUE,
                               0, sum_size,

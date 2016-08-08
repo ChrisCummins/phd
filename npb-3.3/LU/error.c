@@ -1,4 +1,4 @@
-//-------------------------------------------------------------------------//
+#//-------------------------------------------------------------------------//
 //                                                                         //
 //  This benchmark is an OpenCL version of the NPB LU code. This OpenCL    //
 //  version is developed by the Center for Manycore Programming at Seoul   //
@@ -32,7 +32,6 @@
 //          and Jaejin Lee                                                 //
 //-------------------------------------------------------------------------//
 
-#include <cec-profile.h>
 #include <stdio.h>
 #include <math.h>
 #include "applu.incl"
@@ -80,17 +79,17 @@ void error()
   ecode |= clSetKernelArg(k_error, 6, sizeof(int), &nz);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_error,
-                        1, NULL,
-                        &global_ws,
-                        &local_ws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_error,
+                                 1, NULL,
+                                 &global_ws,
+                                 &local_ws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   g_errnm = (double (*)[5])malloc(buf_size);
 
-  ecode = CEC_READ_BUFFER(cmd_queue,
+  ecode = clEnqueueReadBuffer(cmd_queue,
                               m_errnm,
                               CL_TRUE,
                               0, buf_size,

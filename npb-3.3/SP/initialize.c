@@ -70,12 +70,12 @@ void initialize()
   global_ws[0] = clu_RoundWorkSize((size_t)d1, local_ws[0]);
   global_ws[1] = clu_RoundWorkSize((size_t)d2, local_ws[1]);
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_initialize1,
-                        2, NULL,
-                        global_ws,
-                        local_ws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_initialize1,
+                                 2, NULL,
+                                 global_ws,
+                                 local_ws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
@@ -112,12 +112,12 @@ void initialize()
   }
 
   CHECK_FINISH();
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_initialize2,
-                        INITIALIZE2_DIM, NULL,
-                        global_ws,
-                        local_ws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_initialize2,
+                                 INITIALIZE2_DIM, NULL,
+                                 global_ws,
+                                 local_ws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
@@ -142,12 +142,12 @@ void initialize()
   global_ws[1] = clu_RoundWorkSize((size_t)d2, local_ws[1]);
 
   CHECK_FINISH();
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_initialize3,
-                        2, NULL,
-                        global_ws,
-                        local_ws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_initialize3,
+                                 2, NULL,
+                                 global_ws,
+                                 local_ws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
@@ -169,12 +169,12 @@ void initialize()
   global_ws[1] = clu_RoundWorkSize((size_t)d2, local_ws[1]);
 
   CHECK_FINISH();
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_initialize4,
-                        2, NULL,
-                        global_ws,
-                        local_ws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_initialize4,
+                                 2, NULL,
+                                 global_ws,
+                                 local_ws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
@@ -196,12 +196,12 @@ void initialize()
   global_ws[1] = clu_RoundWorkSize((size_t)d1, local_ws[1]);
 
   CHECK_FINISH();
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_initialize5,
-                        2, NULL,
-                        global_ws,
-                        local_ws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_initialize5,
+                                 2, NULL,
+                                 global_ws,
+                                 local_ws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 

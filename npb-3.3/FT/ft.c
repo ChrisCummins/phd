@@ -36,8 +36,6 @@
 // FT benchmark
 //---------------------------------------------------------------------
 
-#include <cec-profile.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -285,12 +283,12 @@ static void init_ui(cl_mem *u0, cl_mem *u1, cl_mem *twiddle,
 
   size_t local_ws = work_item_sizes[0];
   size_t global_ws = clu_RoundWorkSize((size_t)n, local_ws);
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_init_ui,
-                        1, NULL,
-                        &global_ws,
-                        &local_ws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_init_ui,
+                                 1, NULL,
+                                 &global_ws,
+                                 &local_ws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for init_ui");
 
   ecode = clFinish(cmd_queue);
@@ -342,12 +340,12 @@ static void evolve(cl_mem *u0, cl_mem *u1, cl_mem *twiddle,
     global_ws[0] = clu_RoundWorkSize((size_t)d3, local_ws[0]);
   }
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_evolve,
-                        EVOLVE_DIM, NULL,
-                        global_ws,
-                        local_ws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_evolve,
+                                 EVOLVE_DIM, NULL,
+                                 global_ws,
+                                 local_ws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for evolve");
   CHECK_FINISH();
 }
@@ -406,12 +404,12 @@ static void compute_initial_conditions(cl_mem *u0, int d1, int d2, int d3)
   ecode |= clSetKernelArg(k_compute_ics, 1, sizeof(cl_mem), &m_starts);
   clu_CheckError(ecode, "clSetKernelArg() for compute_initial_conditions");
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_compute_ics,
-                        1, NULL,
-                        &global_ws,
-                        &local_ws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_compute_ics,
+                                 1, NULL,
+                                 &global_ws,
+                                 &local_ws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   ecode = clFinish(cmd_queue);
@@ -510,12 +508,12 @@ static void setup()
 static void compute_indexmap(cl_mem *twiddle, int d1, int d2, int d3)
 {
   cl_int ecode;
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_compute_indexmap,
-                        COMPUTE_IMAP_DIM, NULL,
-                        cimap_gws,
-                        cimap_lws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_compute_indexmap,
+                                 COMPUTE_IMAP_DIM, NULL,
+                                 cimap_gws,
+                                 cimap_lws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for compute_indexmap");
   CHECK_FINISH();
 }
@@ -579,7 +577,7 @@ static void fft_init(int n)
   }
 
   int ecode;
-  ecode = CEC_WRITE_BUFFER(cmd_queue,
+  ecode = clEnqueueWriteBuffer(cmd_queue,
                                m_u,
                                CL_FALSE,
                                0, sizeof(dcomplex) * NXP,
@@ -645,12 +643,12 @@ static void cffts1(int is, int d1, int d2, int d3, cl_mem *x, cl_mem *xout)
     }
   /* } */
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
                         k_cffts1,
                         CFFTS_DIM, NULL,
                         global_ws,
                         local_ws,
-                        0, NULL);
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for cffts1");
   CHECK_FINISH();
 
@@ -694,12 +692,12 @@ static void cffts2(int is, int d1, int d2, int d3, cl_mem *x, cl_mem *xout)
     }
   /* } */
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
                         k_cffts2,
                         CFFTS_DIM, NULL,
                         global_ws,
                         local_ws,
-                        0, NULL);
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for cffts2");
   CHECK_FINISH();
 
@@ -743,12 +741,12 @@ static void cffts3(int is, int d1, int d2, int d3, cl_mem *x, cl_mem *xout)
     }
   /* } */
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_cffts3,
-                        CFFTS_DIM, NULL,
-                        global_ws,
-                        local_ws,
-                        0, NULL);
+    ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                   k_cffts3,
+                                   CFFTS_DIM, NULL,
+                                   global_ws,
+                                   local_ws,
+                                   0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel() for cffts3");
   CHECK_FINISH();
 
@@ -779,21 +777,21 @@ static void checksum(int i, cl_mem *u1, int d1, int d2, int d3)
   ecode = clSetKernelArg(k_checksum, 0, sizeof(cl_mem), u1);
   clu_CheckError(ecode, "clSetKernelArg() for checksum");
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_checksum,
-                        1, NULL,
-                        &checksum_global_ws,
-                        &checksum_local_ws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_checksum,
+                                 1, NULL,
+                                 &checksum_global_ws,
+                                 &checksum_local_ws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 
-  ecode = CEC_READ_BUFFER(cmd_queue,
-                          m_chk,
-                          CL_TRUE,
-                          0, checksum_wg_num * sizeof(dcomplex),
-                          g_chk,
-                          0, NULL, NULL);
+  ecode = clEnqueueReadBuffer(cmd_queue,
+                              m_chk,
+                              CL_TRUE,
+                              0, checksum_wg_num * sizeof(dcomplex),
+                              g_chk,
+                              0, NULL, NULL);
   clu_CheckError(ecode, "clReadBuffer()");
 
   // reduction
@@ -1060,7 +1058,7 @@ static void setup_opencl(int argc, char *argv[])
   clu_CheckError(ecode, "clCreateContext()");
 
   // 3. Create a command queue
-  cmd_queue = CEC_COMMAND_QUEUE(context, device, 0, &ecode);
+  cmd_queue = clCreateCommandQueue(context, device, 0, &ecode);
   clu_CheckError(ecode, "clCreateCommandQueue()");
 
   DTIMER_STOP(T_OPENCL_API);

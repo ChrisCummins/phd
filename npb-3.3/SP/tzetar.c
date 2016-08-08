@@ -43,12 +43,12 @@ void tzetar()
 
   if (timeron) timer_start(t_tzetar);
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_tzetar,
-                        TZETAR_DIM, NULL,
-                        tzetar_gws,
-                        tzetar_lws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_tzetar,
+                                 TZETAR_DIM, NULL,
+                                 tzetar_gws,
+                                 tzetar_lws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 

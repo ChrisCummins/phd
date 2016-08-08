@@ -82,17 +82,17 @@ void error_norm(double rms[5])
   ecode |= clSetKernelArg(k_error_norm, 6, sizeof(int), &d2);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_error_norm,
-                        1, NULL,
-                        &global_ws,
-                        &local_ws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_error_norm,
+                                 1, NULL,
+                                 &global_ws,
+                                 &local_ws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   g_rms = (double (*)[5])malloc(buf_size);
 
-  ecode = CEC_READ_BUFFER(cmd_queue,
+  ecode = clEnqueueReadBuffer(cmd_queue,
                               m_rms,
                               CL_TRUE,
                               0, buf_size,
@@ -157,17 +157,17 @@ void rhs_norm(double rms[5])
   ecode |= clSetKernelArg(k_rhs_norm, 5, sizeof(int), &nz2);
   clu_CheckError(ecode, "clSetKernelArg()");
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_rhs_norm,
-                        1, NULL,
-                        &global_ws,
-                        &local_ws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_rhs_norm,
+                                 1, NULL,
+                                 &global_ws,
+                                 &local_ws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
   g_rms = (double (*)[5])malloc(buf_size);
 
-  ecode = CEC_READ_BUFFER(cmd_queue,
+  ecode = clEnqueueReadBuffer(cmd_queue,
                               m_rms,
                               CL_TRUE,
                               0, buf_size,

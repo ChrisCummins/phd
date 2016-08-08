@@ -32,7 +32,6 @@
 //          and Jaejin Lee                                                 //
 //-------------------------------------------------------------------------//
 
-#include <cec-profile.h>
 #include "applu.incl"
 
 //---------------------------------------------------------------------
@@ -44,28 +43,28 @@ void setbv()
 
   cl_int ecode;
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_setbv1,
-                        SETBV1_DIM, NULL,
-                        setbv1_gws,
-                        setbv1_lws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_setbv1,
+                                 SETBV1_DIM, NULL,
+                                 setbv1_gws,
+                                 setbv1_lws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_setbv2,
-                        SETBV2_DIM, NULL,
-                        setbv2_gws,
-                        setbv2_lws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_setbv2,
+                                 SETBV2_DIM, NULL,
+                                 setbv2_gws,
+                                 setbv2_lws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_setbv3,
-                        SETBV3_DIM, NULL,
-                        setbv3_gws,
-                        setbv3_lws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_setbv3,
+                                 SETBV3_DIM, NULL,
+                                 setbv3_gws,
+                                 setbv3_lws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 

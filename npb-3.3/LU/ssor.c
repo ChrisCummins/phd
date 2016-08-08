@@ -32,7 +32,6 @@
 //          and Jaejin Lee                                                 //
 //-------------------------------------------------------------------------//
 
-#include <cec-profile.h>
 #include <stdio.h>
 #include "applu.incl"
 #include "timers.h"
@@ -100,12 +99,12 @@ void ssor(int niter)
     ecode = clSetKernelArg(k_ssor2, 1, sizeof(double), &tmp2);
     clu_CheckError(ecode, "clSetKernelArg()");
 
-    ecode = CEC_ND_KERNEL(cmd_queue,
-                          k_ssor2,
-                          SSOR2_DIM, NULL,
-                          ssor2_gws,
-                          ssor2_lws,
-                          0, NULL);
+    ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                   k_ssor2,
+                                   SSOR2_DIM, NULL,
+                                   ssor2_gws,
+                                   ssor2_lws,
+                                   0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
     CHECK_FINISH();
 
@@ -128,9 +127,9 @@ void ssor(int niter)
       blts_lws[1] = (ubk-lbk+1) < temp ? (ubk-lbk+1) : temp;
       blts_gws[0] = clu_RoundWorkSize((size_t)(ubj-lbj+1), blts_lws[0]);
       blts_gws[1] = clu_RoundWorkSize((size_t)(ubk-lbk+1), blts_lws[1]);
-      ecode = CEC_ND_KERNEL(cmd_queue, k_blts, 2, NULL,
-                            blts_gws, blts_lws,
-                            0, NULL);
+      ecode = clEnqueueNDRangeKernel(cmd_queue, k_blts, 2, NULL,
+                                     blts_gws, blts_lws,
+                                     0, NULL, NULL);
       clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
     }
 
@@ -153,9 +152,9 @@ void ssor(int niter)
       buts_lws[1] = (ubk-lbk+1) < temp ? (ubk-lbk+1) : temp;
       buts_gws[0] = clu_RoundWorkSize((size_t)(ubj-lbj+1), buts_lws[0]);
       buts_gws[1] = clu_RoundWorkSize((size_t)(ubk-lbk+1), buts_lws[1]);
-      ecode = CEC_ND_KERNEL(cmd_queue, k_buts, 2, NULL,
-                            buts_gws, buts_lws,
-                            0, NULL);
+      ecode = clEnqueueNDRangeKernel(cmd_queue, k_buts, 2, NULL,
+                                     buts_gws, buts_lws,
+                                     0, NULL, NULL);
       clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
     }
 
@@ -170,12 +169,12 @@ void ssor(int niter)
     ecode = clSetKernelArg(k_ssor3, 2, sizeof(double), &tmp2);
     clu_CheckError(ecode, "clSetKernelArg()");
 
-    ecode = CEC_ND_KERNEL(cmd_queue,
-                          k_ssor3,
-                          SSOR3_DIM, NULL,
-                          ssor3_gws,
-                          ssor3_lws,
-                          0, NULL);
+    ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                   k_ssor3,
+                                   SSOR3_DIM, NULL,
+                                   ssor3_gws,
+                                   ssor3_lws,
+                                   0, NULL, NULL);
     clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
     CHECK_FINISH();
     if (timeron) timer_stop(t_add);
@@ -190,21 +189,21 @@ void ssor(int niter)
               &m_rsd, delunm );
       if (timeron) timer_stop(t_l2norm);
       /*
-      if ( ipr == 1 ) {
+        if ( ipr == 1 ) {
         printf(" \n RMS-norm of SSOR-iteration correction "
-               "for first pde  = %12.5E\n"
-               " RMS-norm of SSOR-iteration correction "
-               "for second pde = %12.5E\n"
-               " RMS-norm of SSOR-iteration correction "
-               "for third pde  = %12.5E\n"
-               " RMS-norm of SSOR-iteration correction "
-               "for fourth pde = %12.5E\n",
-               " RMS-norm of SSOR-iteration correction "
-               "for fifth pde  = %12.5E\n",
-               delunm[0], delunm[1], delunm[2], delunm[3], delunm[4]);
-      } else if ( ipr == 2 ) {
+        "for first pde  = %12.5E\n"
+        " RMS-norm of SSOR-iteration correction "
+        "for second pde = %12.5E\n"
+        " RMS-norm of SSOR-iteration correction "
+        "for third pde  = %12.5E\n"
+        " RMS-norm of SSOR-iteration correction "
+        "for fourth pde = %12.5E\n",
+        " RMS-norm of SSOR-iteration correction "
+        "for fifth pde  = %12.5E\n",
+        delunm[0], delunm[1], delunm[2], delunm[3], delunm[4]);
+        } else if ( ipr == 2 ) {
         printf("(%5d,%15.6f)\n", istep, delunm[4]);
-      }
+        }
       */
     }
 
@@ -222,19 +221,19 @@ void ssor(int niter)
               ist, iend, jst, jend, &m_rsd, rsdnm );
       if (timeron) timer_stop(t_l2norm);
       /*
-      if ( ipr == 1 ) {
+        if ( ipr == 1 ) {
         printf(" \n RMS-norm of steady-state residual for "
-               "first pde  = %12.5E\n"
-               " RMS-norm of steady-state residual for "
-               "second pde = %12.5E\n"
-               " RMS-norm of steady-state residual for "
-               "third pde  = %12.5E\n"
-               " RMS-norm of steady-state residual for "
-               "fourth pde = %12.5E\n"
-               " RMS-norm of steady-state residual for "
-               "fifth pde  = %12.5E\n",
-               rsdnm[0], rsdnm[1], rsdnm[2], rsdnm[3], rsdnm[4]);
-      }
+        "first pde  = %12.5E\n"
+        " RMS-norm of steady-state residual for "
+        "second pde = %12.5E\n"
+        " RMS-norm of steady-state residual for "
+        "third pde  = %12.5E\n"
+        " RMS-norm of steady-state residual for "
+        "fourth pde = %12.5E\n"
+        " RMS-norm of steady-state residual for "
+        "fifth pde  = %12.5E\n",
+        rsdnm[0], rsdnm[1], rsdnm[2], rsdnm[3], rsdnm[4]);
+        }
       */
     }
 
@@ -246,7 +245,7 @@ void ssor(int niter)
          ( rsdnm[4] < tolrsd[4] ) ) {
       //if (ipr == 1 ) {
       printf(" \n convergence was achieved after %4d pseudo-time steps\n",
-          istep);
+             istep);
       //}
       break;
     }

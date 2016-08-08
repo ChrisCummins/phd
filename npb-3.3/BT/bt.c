@@ -397,7 +397,7 @@ static void setup_opencl(int argc, char *argv[])
   //-----------------------------------------------------------------------
   // 3. Create a command queue
   //-----------------------------------------------------------------------
-  cmd_queue = CEC_COMMAND_QUEUE(context, device, 0, &ecode);
+  cmd_queue = clCreateCommandQueue(context, device, 0, &ecode);
   clu_CheckError(ecode, "clCreateCommandQueue()");
 
   //-----------------------------------------------------------------------

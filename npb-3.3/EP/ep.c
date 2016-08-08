@@ -45,7 +45,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <cec-profile.h>
 
 #include "npbparams.h"
 #include "ep.h"
@@ -203,10 +202,10 @@ int main(int argc, char *argv[])
 
   size_t localWorkSize[] = { GROUP_SIZE };
   size_t globalWorkSize[] = { np };
-  err_code = CEC_ND_KERNEL(cmd_queue, kernel, 1, NULL,
-                           globalWorkSize,
-                           localWorkSize,
-                           0, NULL);
+  err_code = clEnqueueNDRangeKernel(cmd_queue, kernel, 1, NULL,
+                                    globalWorkSize,
+                                    localWorkSize,
+                                    0, NULL, NULL);
   clu_CheckError(err_code, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_EMBAR);
@@ -225,15 +224,15 @@ int main(int argc, char *argv[])
 
   // 9. Get the result
   DTIMER_START(T_BUFFER_READ);
-  err_code = CEC_READ_BUFFER(cmd_queue, pgq, CL_FALSE, 0, gq_size,
+  err_code = clEnqueueReadBuffer(cmd_queue, pgq, CL_FALSE, 0, gq_size,
                              gq, 0, NULL, NULL);
   clu_CheckError(err_code, "clEnqueueReadbuffer()");
 
-  err_code = CEC_READ_BUFFER(cmd_queue, pgsx, CL_FALSE, 0, gsx_size,
+  err_code = clEnqueueReadBuffer(cmd_queue, pgsx, CL_FALSE, 0, gsx_size,
                              gsx, 0, NULL, NULL);
   clu_CheckError(err_code, "clEnqueueReadbuffer()");
 
-  err_code = CEC_READ_BUFFER(cmd_queue, pgsy, CL_TRUE, 0, gsy_size,
+  err_code = clEnqueueReadBuffer(cmd_queue, pgsy, CL_TRUE, 0, gsy_size,
                              gsy, 0, NULL, NULL);
   clu_CheckError(err_code, "clEnqueueReadbuffer()");
   DTIMER_STOP(T_BUFFER_READ);
@@ -350,7 +349,7 @@ void setup_opencl(int argc, char *argv[])
   clu_CheckError(err_code, "clCreateContext()");
 
   // 3. Create a command queue
-  cmd_queue = CEC_COMMAND_QUEUE(context, device, 0, &err_code);
+  cmd_queue = clCreateCommandQueue(context, device, 0, &err_code);
   clu_CheckError(err_code, "clCreateCommandQueue()");
 
   DTIMER_STOP(T_OPENCL_API);

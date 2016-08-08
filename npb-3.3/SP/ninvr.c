@@ -43,12 +43,12 @@ void ninvr()
 
   if (timeron) timer_start(t_ninvr);
 
-  ecode = CEC_ND_KERNEL(cmd_queue,
-                        k_ninvr,
-                        NINVR_DIM, NULL,
-                        ninvr_gws,
-                        ninvr_lws,
-                        0, NULL);
+  ecode = clEnqueueNDRangeKernel(cmd_queue,
+                                 k_ninvr,
+                                 NINVR_DIM, NULL,
+                                 ninvr_gws,
+                                 ninvr_lws,
+                                 0, NULL, NULL);
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   CHECK_FINISH();
 
