@@ -24,9 +24,6 @@ config:
 	@cd ../sys; ${MAKE} all
 	../sys/setparams ${BENCHMARK} ${CLASS}
 
-$(CECPROFILE)/cec-profile.o: $(CECPROFILE)/cec-profile.c $(CECPROFILE)/cec-profile.h
-	$(CC) $(CFLAGS) -I$(CECPROFILE) -c $< -o $@
-
 COMMON=../common
 ${COMMON}/${RAND}.o: ${COMMON}/${RAND}.c ../config/make.def
 	cd ${COMMON}; ${CCOMPILE} ${RAND}.c

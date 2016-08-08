@@ -391,8 +391,8 @@ void setup_opencl(int argc, char *argv[])
 
   // 6. Create a kernel
   DTIMER_START(T_OPENCL_API);
-  kernel = CEC_CREATE_KERNEL(program, "embar", &err_code);
-  clu_CheckError(err_code, "CEC_CREATE_KERNEL()");
+  kernel = clCreateKernel(program, "embar", &err_code);
+  clu_CheckError(err_code, "clCreateKernel()");
   DTIMER_STOP(T_OPENCL_API);
 }
 

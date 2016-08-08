@@ -1089,8 +1089,8 @@ static void makea(int n, int nz, int firstrow, int lastrow)
   DTIMER_START(T_OPENCL_API);
   for (i = 0; i < NUM_K_MAKEA; i++) {
     sprintf(kname, "makea_%d", i);
-    k_makea[i] = CEC_CREATE_KERNEL(p_makea, kname, &ecode);
-    clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+    k_makea[i] = clCreateKernel(p_makea, kname, &ecode);
+    clu_CheckError(ecode, "clCreateKernel()");
   }
   DTIMER_STOP(T_OPENCL_API);
 
@@ -1582,14 +1582,14 @@ static void setup_opencl(int argc, char *argv[], char Class)
   char kname[15];
   for (i = 0; i < NUM_K_MAIN; i++) {
     sprintf(kname, "main_%d", i);
-    k_main[i] = CEC_CREATE_KERNEL(program, kname, &ecode);
-    clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+    k_main[i] = clCreateKernel(program, kname, &ecode);
+    clu_CheckError(ecode, "clCreateKernel()");
   }
 
   for (i = 0; i < NUM_K_CONJ_GRAD; i++) {
     sprintf(kname, "conj_grad_%d", i);
-    k_conj_grad[i] = CEC_CREATE_KERNEL(program, kname, &ecode);
-    clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+    k_conj_grad[i] = clCreateKernel(program, kname, &ecode);
+    clu_CheckError(ecode, "clCreateKernel()");
   }
 
   // arguments for main_0
@@ -1798,8 +1798,8 @@ static void init_mem()
   DTIMER_START(T_OPENCL_API);
   for (i = 0; i < NUM_K_INIT; i++) {
     sprintf(kname, "init_mem_%d", i);
-    k_init[i] = CEC_CREATE_KERNEL(p_makea, kname, &ecode);
-    clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+    k_init[i] = clCreateKernel(p_makea, kname, &ecode);
+    clu_CheckError(ecode, "clCreateKernel()");
   }
   DTIMER_STOP(T_OPENCL_API);
 

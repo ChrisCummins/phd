@@ -597,8 +597,8 @@ static void setup_opencl(int argc, char *argv[])
   int d1 = grid_points[1];
   int d2 = grid_points[2];
 
-  k_compute_rhs1 = CEC_CREATE_KERNEL(p_adi, "compute_rhs1", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for compute_rhs1");
+  k_compute_rhs1 = clCreateKernel(p_adi, "compute_rhs1", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for compute_rhs1");
   ecode  = clSetKernelArg(k_compute_rhs1, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_compute_rhs1, 1, sizeof(cl_mem), &m_us);
   ecode |= clSetKernelArg(k_compute_rhs1, 2, sizeof(cl_mem), &m_vs);
@@ -634,8 +634,8 @@ static void setup_opencl(int argc, char *argv[])
     compute_rhs1_gws[0] = clu_RoundWorkSize((size_t)d2, compute_rhs1_lws[0]);
   }
 
-  k_compute_rhs2 = CEC_CREATE_KERNEL(p_adi, "compute_rhs2", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for compute_rhs2");
+  k_compute_rhs2 = clCreateKernel(p_adi, "compute_rhs2", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for compute_rhs2");
   ecode  = clSetKernelArg(k_compute_rhs2, 0, sizeof(cl_mem), &m_forcing);
   ecode |= clSetKernelArg(k_compute_rhs2, 1, sizeof(cl_mem), &m_rhs);
   ecode |= clSetKernelArg(k_compute_rhs2, 2, sizeof(int), &nx2);
@@ -666,8 +666,8 @@ static void setup_opencl(int argc, char *argv[])
   }
 
 
-  k_compute_rhs3 = CEC_CREATE_KERNEL(p_adi, "compute_rhs3", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for compute_rhs3");
+  k_compute_rhs3 = clCreateKernel(p_adi, "compute_rhs3", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for compute_rhs3");
   ecode  = clSetKernelArg(k_compute_rhs3, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_compute_rhs3, 1, sizeof(cl_mem), &m_us);
   ecode |= clSetKernelArg(k_compute_rhs3, 2, sizeof(cl_mem), &m_vs);
@@ -686,8 +686,8 @@ static void setup_opencl(int argc, char *argv[])
   compute_rhs3_gws[0] = clu_RoundWorkSize((size_t)ny2, compute_rhs3_lws[0]);
   compute_rhs3_gws[1] = clu_RoundWorkSize((size_t)nz2, compute_rhs3_lws[1]);
 
-  k_compute_rhs4 = CEC_CREATE_KERNEL(p_adi, "compute_rhs4", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for compute_rhs4");
+  k_compute_rhs4 = clCreateKernel(p_adi, "compute_rhs4", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for compute_rhs4");
   ecode  = clSetKernelArg(k_compute_rhs4, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_compute_rhs4, 1, sizeof(cl_mem), &m_us);
   ecode |= clSetKernelArg(k_compute_rhs4, 2, sizeof(cl_mem), &m_vs);
@@ -713,8 +713,8 @@ static void setup_opencl(int argc, char *argv[])
     compute_rhs4_gws[0] = clu_RoundWorkSize((size_t)nz2, compute_rhs4_lws[0]);
   }
 
-  k_compute_rhs5 = CEC_CREATE_KERNEL(p_adi, "compute_rhs5", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for compute_rhs5");
+  k_compute_rhs5 = clCreateKernel(p_adi, "compute_rhs5", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for compute_rhs5");
   ecode  = clSetKernelArg(k_compute_rhs5, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_compute_rhs5, 1, sizeof(cl_mem), &m_us);
   ecode |= clSetKernelArg(k_compute_rhs5, 2, sizeof(cl_mem), &m_vs);
@@ -733,8 +733,8 @@ static void setup_opencl(int argc, char *argv[])
   compute_rhs5_gws[0] = clu_RoundWorkSize((size_t)(d0-2), compute_rhs5_lws[0]);
   compute_rhs5_gws[1] = clu_RoundWorkSize((size_t)(d1-2), compute_rhs5_lws[1]);
 
-  k_compute_rhs6 = CEC_CREATE_KERNEL(p_adi, "compute_rhs6", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for compute_rhs6");
+  k_compute_rhs6 = clCreateKernel(p_adi, "compute_rhs6", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for compute_rhs6");
   ecode  = clSetKernelArg(k_compute_rhs6, 0, sizeof(cl_mem), &m_rhs);
   ecode |= clSetKernelArg(k_compute_rhs6, 1, sizeof(int), &nx2);
   ecode |= clSetKernelArg(k_compute_rhs6, 2, sizeof(int), &ny2);
@@ -763,8 +763,8 @@ static void setup_opencl(int argc, char *argv[])
     compute_rhs6_gws[0] = clu_RoundWorkSize((size_t)nz2, compute_rhs6_lws[0]);
   }
 
-  k_txinvr = CEC_CREATE_KERNEL(p_adi, "txinvr", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for txinvr");
+  k_txinvr = clCreateKernel(p_adi, "txinvr", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for txinvr");
   ecode  = clSetKernelArg(k_txinvr, 0, sizeof(cl_mem), &m_us);
   ecode |= clSetKernelArg(k_txinvr, 1, sizeof(cl_mem), &m_vs);
   ecode |= clSetKernelArg(k_txinvr, 2, sizeof(cl_mem), &m_ws);
@@ -797,8 +797,8 @@ static void setup_opencl(int argc, char *argv[])
     txinvr_gws[0] = clu_RoundWorkSize((size_t)nz2, txinvr_lws[0]);
   }
 
-  k_x_solve = CEC_CREATE_KERNEL(p_adi, "x_solve", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for x_solve");
+  k_x_solve = clCreateKernel(p_adi, "x_solve", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for x_solve");
   ecode  = clSetKernelArg(k_x_solve, 0, sizeof(cl_mem), &m_us);
   ecode |= clSetKernelArg(k_x_solve, 1, sizeof(cl_mem), &m_rho_i);
   ecode |= clSetKernelArg(k_x_solve, 2, sizeof(cl_mem), &m_speed);
@@ -826,8 +826,8 @@ static void setup_opencl(int argc, char *argv[])
     x_solve_gws[0] = clu_RoundWorkSize((size_t)nz2, x_solve_lws[0]);
   }
 
-  k_ninvr = CEC_CREATE_KERNEL(p_adi, "ninvr", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for ninvr");
+  k_ninvr = clCreateKernel(p_adi, "ninvr", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for ninvr");
   ecode  = clSetKernelArg(k_ninvr, 0, sizeof(cl_mem), &m_rhs);
   ecode |= clSetKernelArg(k_ninvr, 1, sizeof(int), &nx2);
   ecode |= clSetKernelArg(k_ninvr, 2, sizeof(int), &ny2);
@@ -854,8 +854,8 @@ static void setup_opencl(int argc, char *argv[])
     ninvr_gws[0] = clu_RoundWorkSize((size_t)nz2, ninvr_lws[0]);
   }
 
-  k_y_solve = CEC_CREATE_KERNEL(p_adi, "y_solve", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for y_solve");
+  k_y_solve = clCreateKernel(p_adi, "y_solve", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for y_solve");
   ecode  = clSetKernelArg(k_y_solve, 0, sizeof(cl_mem), &m_vs);
   ecode |= clSetKernelArg(k_y_solve, 1, sizeof(cl_mem), &m_rho_i);
   ecode |= clSetKernelArg(k_y_solve, 2, sizeof(cl_mem), &m_speed);
@@ -882,8 +882,8 @@ static void setup_opencl(int argc, char *argv[])
     y_solve_gws[0] = clu_RoundWorkSize((size_t)nz2, y_solve_lws[0]);
   }
 
-  k_pinvr = CEC_CREATE_KERNEL(p_adi, "pinvr", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for pinvr");
+  k_pinvr = clCreateKernel(p_adi, "pinvr", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for pinvr");
   ecode  = clSetKernelArg(k_pinvr, 0, sizeof(cl_mem), &m_rhs);
   ecode |= clSetKernelArg(k_pinvr, 1, sizeof(int), &nx2);
   ecode |= clSetKernelArg(k_pinvr, 2, sizeof(int), &ny2);
@@ -910,8 +910,8 @@ static void setup_opencl(int argc, char *argv[])
     pinvr_gws[0] = clu_RoundWorkSize((size_t)nz2, pinvr_lws[0]);
   }
 
-  k_z_solve = CEC_CREATE_KERNEL(p_adi, "z_solve", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for z_solve");
+  k_z_solve = clCreateKernel(p_adi, "z_solve", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for z_solve");
   ecode  = clSetKernelArg(k_z_solve, 0, sizeof(cl_mem), &m_ws);
   ecode |= clSetKernelArg(k_z_solve, 1, sizeof(cl_mem), &m_rho_i);
   ecode |= clSetKernelArg(k_z_solve, 2, sizeof(cl_mem), &m_speed);
@@ -938,8 +938,8 @@ static void setup_opencl(int argc, char *argv[])
     z_solve_gws[0] = clu_RoundWorkSize((size_t)ny2, z_solve_lws[0]);
   }
 
-  k_tzetar = CEC_CREATE_KERNEL(p_adi, "tzetar", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for tzetar");
+  k_tzetar = clCreateKernel(p_adi, "tzetar", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for tzetar");
   ecode  = clSetKernelArg(k_tzetar, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_tzetar, 1, sizeof(cl_mem), &m_us);
   ecode |= clSetKernelArg(k_tzetar, 2, sizeof(cl_mem), &m_vs);
@@ -972,8 +972,8 @@ static void setup_opencl(int argc, char *argv[])
     tzetar_gws[0] = clu_RoundWorkSize((size_t)nz2, tzetar_lws[0]);
   }
 
-  k_add = CEC_CREATE_KERNEL(p_adi, "add", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for add");
+  k_add = clCreateKernel(p_adi, "add", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for add");
   ecode  = clSetKernelArg(k_add, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_add, 1, sizeof(cl_mem), &m_rhs);
   ecode |= clSetKernelArg(k_add, 2, sizeof(int), &nx2);

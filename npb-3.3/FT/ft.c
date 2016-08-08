@@ -272,8 +272,8 @@ static void init_ui(cl_mem *u0, cl_mem *u1, cl_mem *twiddle,
 
   DTIMER_START(T_OPENCL_API);
   // Create a kernel
-  k_init_ui = CEC_CREATE_KERNEL(program, "init_ui", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for init_ui");
+  k_init_ui = clCreateKernel(program, "init_ui", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for init_ui");
   DTIMER_STOP(T_OPENCL_API);
 
   int n = d3 * d2 * (d1+1);
@@ -1196,8 +1196,8 @@ static void setup_opencl(int argc, char *argv[])
   int d2 = dims[1];
   int d3 = dims[2];
 
-  k_compute_indexmap = CEC_CREATE_KERNEL(program, "compute_indexmap", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for compute_indexmap");
+  k_compute_indexmap = clCreateKernel(program, "compute_indexmap", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for compute_indexmap");
   ecode  = clSetKernelArg(k_compute_indexmap, 0, sizeof(cl_mem), &m_twiddle);
   ecode |= clSetKernelArg(k_compute_indexmap, 1, sizeof(int), &d1);
   ecode |= clSetKernelArg(k_compute_indexmap, 2, sizeof(int), &d2);
@@ -1228,16 +1228,16 @@ static void setup_opencl(int argc, char *argv[])
     cimap_gws[0] = clu_RoundWorkSize((size_t)d3, cimap_lws[0]);
   }
 
-  k_compute_ics = CEC_CREATE_KERNEL(program,
+  k_compute_ics = clCreateKernel(program,
                                  "compute_initial_conditions", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for compute_initial_conditions");
+  clu_CheckError(ecode, "clCreateKernel() for compute_initial_conditions");
   ecode  = clSetKernelArg(k_compute_ics, 2, sizeof(int), &d1);
   ecode |= clSetKernelArg(k_compute_ics, 3, sizeof(int), &d2);
   ecode |= clSetKernelArg(k_compute_ics, 4, sizeof(int), &d3);
   clu_CheckError(ecode, "clSetKernelArg() for compute_initial_conditions");
 
-  k_cffts1 = CEC_CREATE_KERNEL(program, "cffts1", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for cffts1");
+  k_cffts1 = clCreateKernel(program, "cffts1", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for cffts1");
   ecode  = clSetKernelArg(k_cffts1, 2, sizeof(cl_mem), &m_u);
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
   /*   ecode |= clSetKernelArg(k_cffts1, 8, sizeof(cl_mem), &m_ty1); */
@@ -1245,8 +1245,8 @@ static void setup_opencl(int argc, char *argv[])
   /* } */
   clu_CheckError(ecode, "clSetKernelArg() for k_cffts1");
 
-  k_cffts2 = CEC_CREATE_KERNEL(program, "cffts2", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for cffts2");
+  k_cffts2 = clCreateKernel(program, "cffts2", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for cffts2");
   ecode  = clSetKernelArg(k_cffts2, 2, sizeof(cl_mem), &m_u);
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
   /*   ecode |= clSetKernelArg(k_cffts2, 8, sizeof(cl_mem), &m_ty1); */
@@ -1254,8 +1254,8 @@ static void setup_opencl(int argc, char *argv[])
   /* } */
   clu_CheckError(ecode, "clSetKernelArg() for k_cffts2");
 
-  k_cffts3 = CEC_CREATE_KERNEL(program, "cffts3", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for cffts3");
+  k_cffts3 = clCreateKernel(program, "cffts3", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for cffts3");
   ecode  = clSetKernelArg(k_cffts3, 2, sizeof(cl_mem), &m_u);
   /* if (device_type == CL_DEVICE_TYPE_CPU) { */
   /*   ecode |= clSetKernelArg(k_cffts3, 8, sizeof(cl_mem), &m_ty1); */
@@ -1263,11 +1263,11 @@ static void setup_opencl(int argc, char *argv[])
   /* } */
   clu_CheckError(ecode, "clSetKernelArg() for k_cffts3");
 
-  k_evolve = CEC_CREATE_KERNEL(program, "evolve", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for evolve");
+  k_evolve = clCreateKernel(program, "evolve", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for evolve");
 
-  k_checksum = CEC_CREATE_KERNEL(program, "checksum", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for checksum");
+  k_checksum = clCreateKernel(program, "checksum", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for checksum");
   ecode  = clSetKernelArg(k_checksum, 1, sizeof(cl_mem), &m_chk);
   ecode |= clSetKernelArg(k_checksum, 2, sizeof(dcomplex)*checksum_local_ws,
                           NULL);

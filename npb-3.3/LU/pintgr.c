@@ -91,8 +91,8 @@ void pintgr()
   jfin1 = jfin - 1;
 
   //---------------------------------------------------------------------
-  k_pintgr1 = CEC_CREATE_KERNEL(p_post, "pintgr1", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for pintgr1");
+  k_pintgr1 = clCreateKernel(p_post, "pintgr1", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for pintgr1");
   ecode  = clSetKernelArg(k_pintgr1, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_pintgr1, 1, sizeof(cl_mem), &m_phi1);
   ecode |= clSetKernelArg(k_pintgr1, 2, sizeof(cl_mem), &m_phi2);
@@ -127,8 +127,8 @@ void pintgr()
 
   //---------------------------------------------------------------------
   // k_pintgr_reduce: frc1
-  k_pintgr_reduce = CEC_CREATE_KERNEL(p_post, "pintgr_reduce", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  k_pintgr_reduce = clCreateKernel(p_post, "pintgr_reduce", &ecode);
+  clu_CheckError(ecode, "clCreateKernel()");
   ecode  = clSetKernelArg(k_pintgr_reduce, 0, sizeof(cl_mem), &m_phi1);
   ecode |= clSetKernelArg(k_pintgr_reduce, 1, sizeof(cl_mem), &m_phi2);
   ecode |= clSetKernelArg(k_pintgr_reduce, 2, sizeof(cl_mem), &m_frc);
@@ -166,8 +166,8 @@ void pintgr()
 
 
   //---------------------------------------------------------------------
-  k_pintgr2 = CEC_CREATE_KERNEL(p_post, "pintgr2", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for pintgr2");
+  k_pintgr2 = clCreateKernel(p_post, "pintgr2", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for pintgr2");
   ecode  = clSetKernelArg(k_pintgr2, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_pintgr2, 1, sizeof(cl_mem), &m_phi1);
   ecode |= clSetKernelArg(k_pintgr2, 2, sizeof(cl_mem), &m_phi2);
@@ -232,8 +232,8 @@ void pintgr()
 
 
   //---------------------------------------------------------------------
-  k_pintgr3 = CEC_CREATE_KERNEL(p_post, "pintgr3", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL() for pintgr3");
+  k_pintgr3 = clCreateKernel(p_post, "pintgr3", &ecode);
+  clu_CheckError(ecode, "clCreateKernel() for pintgr3");
   ecode  = clSetKernelArg(k_pintgr3, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_pintgr3, 1, sizeof(cl_mem), &m_phi1);
   ecode |= clSetKernelArg(k_pintgr3, 2, sizeof(cl_mem), &m_phi2);

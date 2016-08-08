@@ -56,8 +56,8 @@ void initialize()
   int d2 = grid_points[2];
 
   //-----------------------------------------------------------------------
-  k_initialize1 = CEC_CREATE_KERNEL(p_initialize, "initialize1", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  k_initialize1 = clCreateKernel(p_initialize, "initialize1", &ecode);
+  clu_CheckError(ecode, "clCreateKernel()");
 
   ecode  = clSetKernelArg(k_initialize1, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_initialize1, 1, sizeof(int), &d0);
@@ -84,8 +84,8 @@ void initialize()
   //---------------------------------------------------------------------
   // first store the "interpolated" values everywhere on the grid
   //---------------------------------------------------------------------
-  k_initialize2 = CEC_CREATE_KERNEL(p_initialize, "initialize2", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  k_initialize2 = clCreateKernel(p_initialize, "initialize2", &ecode);
+  clu_CheckError(ecode, "clCreateKernel()");
 
   ecode  = clSetKernelArg(k_initialize2, 0, sizeof(cl_mem), &m_u);
   ecode  = clSetKernelArg(k_initialize2, 1, sizeof(cl_mem), &m_ce);
@@ -126,8 +126,8 @@ void initialize()
   //---------------------------------------------------------------------
   // now store the exact values on the boundaries
   //---------------------------------------------------------------------
-  k_initialize3 = CEC_CREATE_KERNEL(p_initialize, "initialize3", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  k_initialize3 = clCreateKernel(p_initialize, "initialize3", &ecode);
+  clu_CheckError(ecode, "clCreateKernel()");
 
   ecode  = clSetKernelArg(k_initialize3, 0, sizeof(cl_mem), &m_u);
   ecode  = clSetKernelArg(k_initialize3, 1, sizeof(cl_mem), &m_ce);
@@ -153,8 +153,8 @@ void initialize()
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
-  k_initialize4 = CEC_CREATE_KERNEL(p_initialize, "initialize4", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  k_initialize4 = clCreateKernel(p_initialize, "initialize4", &ecode);
+  clu_CheckError(ecode, "clCreateKernel()");
 
   ecode  = clSetKernelArg(k_initialize4, 0, sizeof(cl_mem), &m_u);
   ecode  = clSetKernelArg(k_initialize4, 1, sizeof(cl_mem), &m_ce);
@@ -180,8 +180,8 @@ void initialize()
   clu_CheckError(ecode, "clEnqueueNDRangeKernel()");
   //-----------------------------------------------------------------------
 
-  k_initialize5 = CEC_CREATE_KERNEL(p_initialize, "initialize5", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  k_initialize5 = clCreateKernel(p_initialize, "initialize5", &ecode);
+  clu_CheckError(ecode, "clCreateKernel()");
 
   ecode  = clSetKernelArg(k_initialize5, 0, sizeof(cl_mem), &m_u);
   ecode  = clSetKernelArg(k_initialize5, 1, sizeof(cl_mem), &m_ce);

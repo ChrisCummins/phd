@@ -70,8 +70,8 @@ void error_norm(double rms[5])
                          NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer()");
 
-  k_error_norm = CEC_CREATE_KERNEL(p_error, "error_norm", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  k_error_norm = clCreateKernel(p_error, "error_norm", &ecode);
+  clu_CheckError(ecode, "clCreateKernel()");
 
   ecode  = clSetKernelArg(k_error_norm, 0, sizeof(cl_mem), &m_u);
   ecode |= clSetKernelArg(k_error_norm, 1, sizeof(cl_mem), &m_ce);
@@ -146,8 +146,8 @@ void rhs_norm(double rms[5])
                          NULL, &ecode);
   clu_CheckError(ecode, "clCreateBuffer()");
 
-  k_rhs_norm = CEC_CREATE_KERNEL(p_error, "rhs_norm", &ecode);
-  clu_CheckError(ecode, "CEC_CREATE_KERNEL()");
+  k_rhs_norm = clCreateKernel(p_error, "rhs_norm", &ecode);
+  clu_CheckError(ecode, "clCreateKernel()");
 
   ecode  = clSetKernelArg(k_rhs_norm, 0, sizeof(cl_mem), &m_rhs);
   ecode |= clSetKernelArg(k_rhs_norm, 1, sizeof(cl_mem), &m_rms);
