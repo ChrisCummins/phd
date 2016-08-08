@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -eu
+set -o pipefail
 
 run() {
     local benchmark=$1
@@ -7,7 +8,7 @@ run() {
 
     echo "$(tput bold)parboil-0.2 $benchmark $dataset$(tput sgr0) ..."
     set +e
-    ./parboil run $benchmark opencl_base $dataset
+    ./parboil run $benchmark opencl_base $dataset 2>&1 | runcecl
     ret=$?
     set -e
 
