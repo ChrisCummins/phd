@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -75,7 +76,7 @@ int run(const char** argv, int system_size, int num_systems, int devCount)
         oclPrintDevName(LOGBOTH, cdDevices[i]);
 		shrLog("\n");
 
-		cqCommandQue[i] = clCreateCommandQueue(cxGPUContext, cdDevices[i], CL_QUEUE_PROFILING_ENABLE, &errcode);
+		cqCommandQue[i] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[i], CL_QUEUE_PROFILING_ENABLE, &errcode);
 		oclCheckError(errcode, CL_SUCCESS);
 	}
 	shrLog("\n");

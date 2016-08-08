@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -239,32 +240,32 @@ int main(int argc, const char **argv)
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     
     // Create 2 command-queues
-    cqCommandQueue[0] = clCreateCommandQueue(cxGPUContext, cdDevices[uiTargetDevice], 0, &ciErrNum);
+    cqCommandQueue[0] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[uiTargetDevice], 0, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateCommandQueue [0]...\n"); 
-    cqCommandQueue[1] = clCreateCommandQueue(cxGPUContext, cdDevices[uiTargetDevice], 0, &ciErrNum);
+    shrLog("CECL_CREATE_COMMAND_QUEUE [0]...\n"); 
+    cqCommandQueue[1] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[uiTargetDevice], 0, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateCommandQueue [1]...\n"); 
+    shrLog("CECL_CREATE_COMMAND_QUEUE [1]...\n"); 
 
     // Allocate the OpenCL source and result buffer memory objects on GPU device GMEM
     szBuffBytes = sizeof(cl_float) * uiNumElements;
-    cmDevSrcA = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, szBuffBytes, NULL, &ciErrNum);
+    cmDevSrcA = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, szBuffBytes, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    cmDevSrcB = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, szBuffBytes, NULL, &ciErrNum);
+    cmDevSrcB = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, szBuffBytes, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    cmDevResult = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, szBuffBytes, NULL, &ciErrNum);
+    cmDevResult = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, szBuffBytes, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateBuffer (Src A, Src B and Result GPU Device GMEM, 3 x %u floats) ...\n", uiNumElements); 
+    shrLog("CECL_BUFFER (Src A, Src B and Result GPU Device GMEM, 3 x %u floats) ...\n", uiNumElements); 
 
     // Allocate pinned source and result host buffers:  
     //   Note: Pinned (Page Locked) memory is needed for async host<->GPU memory copy operations ***
-    cmPinnedSrcA = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytes, NULL, &ciErrNum);
+    cmPinnedSrcA = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytes, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    cmPinnedSrcB = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytes, NULL, &ciErrNum);
+    cmPinnedSrcB = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytes, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    cmPinnedResult = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytes, NULL, &ciErrNum);
+    cmPinnedResult = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytes, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateBuffer (Src A, Src B and Result Pinned Host buffers, 3 x %u floats)...\n\n", uiNumElements); 
+    shrLog("CECL_BUFFER (Src A, Src B and Result Pinned Host buffers, 3 x %u floats)...\n\n", uiNumElements); 
 
     // Get mapped pointers to pinned input host buffers
     //   Note:  This allows general (non-OpenCL) host functions to access pinned buffers using standard pointers
@@ -288,15 +289,15 @@ int main(int argc, const char **argv)
     shrLog("oclLoadProgSource (%s)...\n", cSourceFile); 
 
     // Create the program object
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cSourceCL, &szKernelLength, &ciErrNum);
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cSourceCL, &szKernelLength, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateProgramWithSource...\n"); 
+    shrLog("CECL_PROGRAM_WITH_SOURCE...\n"); 
 
     // Build the program for the target device
     clFinish(cqCommandQueue[0]);
     shrDeltaT(0);
-    ciErrNum = clBuildProgram(cpProgram, uiNumDevsUsed, &cdDevices[uiTargetDevice], "-cl-fast-relaxed-math", NULL, NULL);
-    shrLog("clBuildProgram..."); 
+    ciErrNum = CECL_PROGRAM(cpProgram, uiNumDevsUsed, &cdDevices[uiTargetDevice], "-cl-fast-relaxed-math", NULL, NULL);
+    shrLog("CECL_PROGRAM..."); 
     if (ciErrNum != CL_SUCCESS)
     {
         // write out standard error, Build Log and PTX, then cleanup and exit
@@ -308,33 +309,33 @@ int main(int argc, const char **argv)
     dBuildTime = shrDeltaT(0);
 
     // Create the kernel
-    ckKernel[0] = clCreateKernel(cpProgram, "VectorHypot", &ciErrNum);
+    ckKernel[0] = CECL_KERNEL(cpProgram, "VectorHypot", &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ckKernel[1] = clCreateKernel(cpProgram, "VectorHypot", &ciErrNum);
+    ckKernel[1] = CECL_KERNEL(cpProgram, "VectorHypot", &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateKernel (ckKernel[2])...\n"); 
+    shrLog("CECL_KERNEL (ckKernel[2])...\n"); 
 
     // Offsets for 2 queues
     cl_uint uiOffset[2] = {0, uiNumElements / (2 * 4)};
 
     // Set the Argument values for the 1st kernel instance (queue 0)
-    ciErrNum = clSetKernelArg(ckKernel[0], 0, sizeof(cl_mem), (void*)&cmDevSrcA);
-    ciErrNum |= clSetKernelArg(ckKernel[0], 1, sizeof(cl_mem), (void*)&cmDevSrcB);
-    ciErrNum |= clSetKernelArg(ckKernel[0], 2, sizeof(cl_mem), (void*)&cmDevResult);
-    ciErrNum |= clSetKernelArg(ckKernel[0], 3, sizeof(cl_uint), (void*)&uiOffset[0]);
-    ciErrNum |= clSetKernelArg(ckKernel[0], 4, sizeof(cl_int), (void*)&iInnerLoopCount);
-    ciErrNum |= clSetKernelArg(ckKernel[0], 5, sizeof(cl_uint), (void*)&uiNumElements);
-    shrLog("clSetKernelArg ckKernel[0] args 0 - 5...\n"); 
+    ciErrNum = CECL_SET_KERNEL_ARG(ckKernel[0], 0, sizeof(cl_mem), (void*)&cmDevSrcA);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[0], 1, sizeof(cl_mem), (void*)&cmDevSrcB);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[0], 2, sizeof(cl_mem), (void*)&cmDevResult);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[0], 3, sizeof(cl_uint), (void*)&uiOffset[0]);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[0], 4, sizeof(cl_int), (void*)&iInnerLoopCount);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[0], 5, sizeof(cl_uint), (void*)&uiNumElements);
+    shrLog("CECL_SET_KERNEL_ARG ckKernel[0] args 0 - 5...\n"); 
 
     // Set the Argument values for the 2d kernel instance (queue 1)
-    ciErrNum |= clSetKernelArg(ckKernel[1], 0, sizeof(cl_mem), (void*)&cmDevSrcA);
-    ciErrNum |= clSetKernelArg(ckKernel[1], 1, sizeof(cl_mem), (void*)&cmDevSrcB);
-    ciErrNum |= clSetKernelArg(ckKernel[1], 2, sizeof(cl_mem), (void*)&cmDevResult);
-    ciErrNum |= clSetKernelArg(ckKernel[1], 3, sizeof(cl_uint), (void*)&uiOffset[1]);
-    ciErrNum |= clSetKernelArg(ckKernel[1], 4, sizeof(cl_int), (void*)&iInnerLoopCount);
-    ciErrNum |= clSetKernelArg(ckKernel[1], 5, sizeof(cl_uint), (void*)&uiNumElements);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[1], 0, sizeof(cl_mem), (void*)&cmDevSrcA);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[1], 1, sizeof(cl_mem), (void*)&cmDevSrcB);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[1], 2, sizeof(cl_mem), (void*)&cmDevResult);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[1], 3, sizeof(cl_uint), (void*)&uiOffset[1]);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[1], 4, sizeof(cl_int), (void*)&iInnerLoopCount);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[1], 5, sizeof(cl_uint), (void*)&uiNumElements);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clSetKernelArg ckKernel[1] args 0 - 5...\n\n"); 
+    shrLog("CECL_SET_KERNEL_ARG ckKernel[1] args 0 - 5...\n\n"); 
 
     //*******************************************
     // Warmup the driver with dual queue sequence
@@ -452,16 +453,16 @@ double OneQueueSequence(int iCycles, unsigned int uiNumElements, bool bShowConfi
     for (int i = 0; i < iCycles; i++)
     {
         // Nonblocking Write of all of input data from host to device in command-queue 0 
-        ciErrNum = clEnqueueWriteBuffer(cqCommandQueue[0], cmDevSrcA, CL_FALSE, 0, szBuffBytes, (void*)&fSourceA[0], 0, NULL, NULL);
-        ciErrNum |= clEnqueueWriteBuffer(cqCommandQueue[0], cmDevSrcB, CL_FALSE, 0, szBuffBytes, (void*)&fSourceB[0], 0, NULL, NULL);
+        ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue[0], cmDevSrcA, CL_FALSE, 0, szBuffBytes, (void*)&fSourceA[0], 0, NULL, NULL);
+        ciErrNum |= CECL_WRITE_BUFFER(cqCommandQueue[0], cmDevSrcB, CL_FALSE, 0, szBuffBytes, (void*)&fSourceB[0], 0, NULL, NULL);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
         // Launch kernel computation, command-queue 0 
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue[0], ckKernel[0], 1, NULL, &szGlobalWorkSize, &szLocalWorkSize, 0, NULL, NULL);
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue[0], ckKernel[0], 1, NULL, &szGlobalWorkSize, &szLocalWorkSize, 0, NULL, NULL);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
         // Non Blocking Read of output data from device to host, command-queue 0 
-        ciErrNum = clEnqueueReadBuffer(cqCommandQueue[0], cmDevResult, CL_FALSE, 0, szBuffBytes, (void*)&fResult[0], 0, NULL, NULL);
+        ciErrNum = CECL_READ_BUFFER(cqCommandQueue[0], cmDevResult, CL_FALSE, 0, szBuffBytes, (void*)&fResult[0], 0, NULL, NULL);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
         // Flush sequence to device (may not be necessary on Linux or WinXP or when using the NVIDIA Tesla Computing Cluster driver)
@@ -507,8 +508,8 @@ double DualQueueSequence(int iCycles, unsigned int uiNumElements, bool bShowConf
     {
         // Mid Phase 0 
         // Nonblocking Write of 1st half of input data from host to device in command-queue 0 
-        ciErrNum = clEnqueueWriteBuffer(cqCommandQueue[0], cmDevSrcA, CL_FALSE, 0, szHalfBuffer, (void*)&fSourceA[0], 0, NULL, NULL);
-        ciErrNum |= clEnqueueWriteBuffer(cqCommandQueue[0], cmDevSrcB, CL_FALSE, 0, szHalfBuffer, (void*)&fSourceB[0], 0, NULL, NULL);
+        ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue[0], cmDevSrcA, CL_FALSE, 0, szHalfBuffer, (void*)&fSourceA[0], 0, NULL, NULL);
+        ciErrNum |= CECL_WRITE_BUFFER(cqCommandQueue[0], cmDevSrcB, CL_FALSE, 0, szHalfBuffer, (void*)&fSourceB[0], 0, NULL, NULL);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
         // Push out the write for queue 0 (and prior read from queue 1 at end of loop) to the driver 
@@ -520,13 +521,13 @@ double DualQueueSequence(int iCycles, unsigned int uiNumElements, bool bShowConf
 
         // Launch kernel computation, command-queue 0
         // (Note:  The order MATTERS here on Fermi !  THE KERNEL IN THIS PHASE SHOULD BE LAUNCHED BEFORE THE WRITE)
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue[0], ckKernel[0], 1, NULL, &szGlobalWorkSize, &szLocalWorkSize, 0, NULL, NULL);
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue[0], ckKernel[0], 1, NULL, &szGlobalWorkSize, &szLocalWorkSize, 0, NULL, NULL);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
         // Nonblocking Write of 2nd half of input data from host to device in command-queue 1 
         // (Note:  The order MATTERS here on Fermi !  THE KERNEL IN THIS PHASE SHOULD BE LAUNCHED BEFORE THE WRITE)
-        ciErrNum = clEnqueueWriteBuffer(cqCommandQueue[1], cmDevSrcA, CL_FALSE, szHalfBuffer, szHalfBuffer, (void*)&fSourceA[szHalfOffset], 0, NULL, NULL);
-        ciErrNum |= clEnqueueWriteBuffer(cqCommandQueue[1], cmDevSrcB, CL_FALSE, szHalfBuffer, szHalfBuffer, (void*)&fSourceB[szHalfOffset], 0, NULL, NULL);
+        ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue[1], cmDevSrcA, CL_FALSE, szHalfBuffer, szHalfBuffer, (void*)&fSourceA[szHalfOffset], 0, NULL, NULL);
+        ciErrNum |= CECL_WRITE_BUFFER(cqCommandQueue[1], cmDevSrcB, CL_FALSE, szHalfBuffer, szHalfBuffer, (void*)&fSourceB[szHalfOffset], 0, NULL, NULL);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
         // Push out the compute for queue 0 and write for queue 1 to the driver
@@ -537,11 +538,11 @@ double DualQueueSequence(int iCycles, unsigned int uiNumElements, bool bShowConf
         // Start Phase 2 ***********************************
 
         // Launch kernel computation, command-queue 1 
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue[1], ckKernel[1], 1, NULL, &szGlobalWorkSize, &szLocalWorkSize, 0, NULL, NULL);
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue[1], ckKernel[1], 1, NULL, &szGlobalWorkSize, &szLocalWorkSize, 0, NULL, NULL);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
         // Non Blocking Read of 1st half of output data from device to host, command-queue 0 
-        ciErrNum = clEnqueueReadBuffer(cqCommandQueue[0], cmDevResult, CL_FALSE, 0, szHalfBuffer, (void*)&fResult[0], 0, NULL, NULL);
+        ciErrNum = CECL_READ_BUFFER(cqCommandQueue[0], cmDevResult, CL_FALSE, 0, szHalfBuffer, (void*)&fResult[0], 0, NULL, NULL);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
         // Push out the compute for queue 1 and the read for queue 0 to the driver 
@@ -552,7 +553,7 @@ double DualQueueSequence(int iCycles, unsigned int uiNumElements, bool bShowConf
         // Start Phase 0 (Rolls over) ***********************************
 
         // Non Blocking Read of 2nd half of output data from device to host, command-queue 1 
-        ciErrNum = clEnqueueReadBuffer(cqCommandQueue[1], cmDevResult, CL_FALSE, szHalfBuffer, szHalfBuffer, (void*)&fResult[szHalfOffset], 0, NULL, NULL);
+        ciErrNum = CECL_READ_BUFFER(cqCommandQueue[1], cmDevResult, CL_FALSE, szHalfBuffer, szHalfBuffer, (void*)&fResult[szHalfOffset], 0, NULL, NULL);
         shrCheckError(ciErrNum, CL_SUCCESS);
     }
 
@@ -598,8 +599,8 @@ int AdjustCompute(cl_device_id cdTargetDevice, unsigned int uiNumElements, int i
     for (int i = 0; i < iCycles; i++)
     {
         // Nonblocking Write of all of input data from host to device in command-queue 0 
-        ciErrNum = clEnqueueWriteBuffer(cqCommandQueue[0], cmDevSrcA, CL_FALSE, 0, szBuffBytes, (void*)&fSourceA[0], 0, NULL, NULL);
-        ciErrNum |= clEnqueueWriteBuffer(cqCommandQueue[0], cmDevSrcB, CL_FALSE, 0, szBuffBytes, (void*)&fSourceB[0], 0, NULL, NULL);
+        ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue[0], cmDevSrcA, CL_FALSE, 0, szBuffBytes, (void*)&fSourceA[0], 0, NULL, NULL);
+        ciErrNum |= CECL_WRITE_BUFFER(cqCommandQueue[0], cmDevSrcB, CL_FALSE, 0, szBuffBytes, (void*)&fSourceB[0], 0, NULL, NULL);
         ciErrNum |= clFlush(cqCommandQueue[0]);
         shrCheckError(ciErrNum, CL_SUCCESS);
     }
@@ -610,7 +611,7 @@ int AdjustCompute(cl_device_id cdTargetDevice, unsigned int uiNumElements, int i
     for (int i = 0; i < iCycles; i++)
     {
         // Launch kernel computation, command-queue 0 
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue[0], ckKernel[0], 1, NULL, &szGlobalWorkSize, &szLocalWorkSize, 0, NULL, NULL);
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue[0], ckKernel[0], 1, NULL, &szGlobalWorkSize, &szLocalWorkSize, 0, NULL, NULL);
         ciErrNum |= clFlush(cqCommandQueue[0]);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     }
@@ -620,8 +621,8 @@ int AdjustCompute(cl_device_id cdTargetDevice, unsigned int uiNumElements, int i
     // Determine number of core loop cycles proportional to copy/compute time ratio
     dComputeTime = MAX(dComputeTime, 1.0e-6);
     iComputedLoopCount = CLAMP(2, (int)((dCopyTime/dComputeTime) * (double)iInitLoopCount), (iInitLoopCount * 4));
-    ciErrNum |= clSetKernelArg(ckKernel[0], 4, sizeof(cl_int), (void*)&iComputedLoopCount);
-    ciErrNum |= clSetKernelArg(ckKernel[1], 4, sizeof(cl_int), (void*)&iComputedLoopCount);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[0], 4, sizeof(cl_int), (void*)&iComputedLoopCount);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[1], 4, sizeof(cl_int), (void*)&iComputedLoopCount);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     return (iComputedLoopCount);
 } 

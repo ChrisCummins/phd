@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -214,7 +215,7 @@ void dumpImage()
 {
     unsigned char* h_dump = (unsigned char*) malloc(sizeof(unsigned int) * image_height * image_width);
     
-    clEnqueueReadBuffer(cqCommandQueue, cl_pbos[1], CL_TRUE, 0, sizeof(unsigned int) * image_height * image_width, 
+    CECL_READ_BUFFER(cqCommandQueue, cl_pbos[1], CL_TRUE, 0, sizeof(unsigned int) * image_height * image_width, 
                         h_dump, 0, NULL, NULL);
     
     shrSavePPM4ub( "dump.ppm", h_dump, image_width, image_height);
@@ -459,15 +460,15 @@ void Reshape(int w, int h)
 		  cl_pbos[0] = clCreateFromGLBuffer(cxGPUContext, CL_MEM_READ_ONLY, pbo_source, &ciErrNum);
 		  cl_pbos[1] = clCreateFromGLBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, pbo_dest, &ciErrNum);
 	  } else {
-		  cl_pbos[0] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, 4 * image_width * image_height, NULL, &ciErrNum);
-		  cl_pbos[1] = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, 4 * image_width * image_height, NULL, &ciErrNum);
+		  cl_pbos[0] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, 4 * image_width * image_height, NULL, &ciErrNum);
+		  cl_pbos[1] = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, 4 * image_width * image_height, NULL, &ciErrNum);
 	  }
 
 	  // update kernel arguments
-	  clSetKernelArg(ckKernel, 0, sizeof(cl_mem), (void *) &(cl_pbos[0]));
-	  clSetKernelArg(ckKernel, 1, sizeof(cl_mem), (void *) &(cl_pbos[1]));
-      clSetKernelArg(ckKernel, 2, sizeof(cl_int), &image_width);
-      clSetKernelArg(ckKernel, 3, sizeof(cl_int), &image_height);	
+	  CECL_SET_KERNEL_ARG(ckKernel, 0, sizeof(cl_mem), (void *) &(cl_pbos[0]));
+	  CECL_SET_KERNEL_ARG(ckKernel, 1, sizeof(cl_mem), (void *) &(cl_pbos[1]));
+      CECL_SET_KERNEL_ARG(ckKernel, 2, sizeof(cl_int), &image_width);
+      CECL_SET_KERNEL_ARG(ckKernel, 3, sizeof(cl_int), &image_height);	
     }
 
     glutPostRedisplay();
@@ -520,7 +521,7 @@ void pboRegister()
         GLubyte* ptr = (GLubyte*)glMapBufferARB(GL_PIXEL_PACK_BUFFER_ARB,
                                             GL_READ_ONLY_ARB);
 
-        clEnqueueWriteBuffer(cqCommandQueue, cl_pbos[0], CL_TRUE, 0, 
+        CECL_WRITE_BUFFER(cqCommandQueue, cl_pbos[0], CL_TRUE, 0, 
                             sizeof(unsigned int) * image_height * image_width, ptr, 0, NULL, NULL);
         glUnmapBufferARB(GL_PIXEL_PACK_BUFFER_ARB);
         glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
@@ -542,7 +543,7 @@ void pboUnregister()
         // map the buffer object into client's memory
         GLubyte* ptr = (GLubyte*)glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,
                                             GL_WRITE_ONLY_ARB);
-        clEnqueueReadBuffer(cqCommandQueue, cl_pbos[1], CL_TRUE, 0, 
+        CECL_READ_BUFFER(cqCommandQueue, cl_pbos[1], CL_TRUE, 0, 
                             sizeof(unsigned int) * image_height * image_width, ptr, 0, NULL, NULL);        
         glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB); 
         glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
@@ -782,7 +783,7 @@ int initCL(int argc, const char** argv)
     shrLog("\n");
 
     // create a command-queue
-    cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevices[uiDeviceUsed], 0, &ciErrNum);
+    cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[uiDeviceUsed], 0, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Memory Setup
@@ -790,8 +791,8 @@ int initCL(int argc, const char** argv)
         cl_pbos[0] = clCreateFromGLBuffer(cxGPUContext, CL_MEM_READ_ONLY, pbo_source, &ciErrNum);
         cl_pbos[1] = clCreateFromGLBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, pbo_dest, &ciErrNum);
 	} else {
-        cl_pbos[0] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, 4 * image_width * image_height, NULL, &ciErrNum);
-        cl_pbos[1] = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, 4 * image_width * image_height, NULL, &ciErrNum);
+        cl_pbos[0] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, 4 * image_width * image_height, NULL, &ciErrNum);
+        cl_pbos[1] = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, 4 * image_width * image_height, NULL, &ciErrNum);
 	}
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
@@ -802,12 +803,12 @@ int initCL(int argc, const char** argv)
     oclCheckErrorEX(source != NULL, shrTRUE, pCleanup);
 
     // create the program
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1,(const char **) &source, &program_length, &ciErrNum);
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1,(const char **) &source, &program_length, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     free(source);
 
     // build the program
-    ciErrNum = clBuildProgram(cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
+    ciErrNum = CECL_PROGRAM(cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // write out standard error, Build Log and PTX, then cleanup and exit
@@ -818,13 +819,13 @@ int initCL(int argc, const char** argv)
     }
 
     // create the kernel
-    ckKernel = clCreateKernel(cpProgram, "postprocess", &ciErrNum);
+    ckKernel = CECL_KERNEL(cpProgram, "postprocess", &ciErrNum);
 
     // set the args values
-    ciErrNum |= clSetKernelArg(ckKernel, 0, sizeof(cl_mem), (void *) &(cl_pbos[0]));
-    ciErrNum |= clSetKernelArg(ckKernel, 1, sizeof(cl_mem), (void *) &(cl_pbos[1]));
-    ciErrNum |= clSetKernelArg(ckKernel, 2, sizeof(image_width), &image_width);
-    ciErrNum |= clSetKernelArg(ckKernel, 3, sizeof(image_width), &image_height);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 0, sizeof(cl_mem), (void *) &(cl_pbos[0]));
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 1, sizeof(cl_mem), (void *) &(cl_pbos[1]));
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 2, sizeof(image_width), &image_width);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 3, sizeof(image_width), &image_height);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     
     return 0;
@@ -843,15 +844,15 @@ int executeKernel(cl_int radius)
 
     // set the args values
     cl_int tilew =  (cl_int)szLocalWorkSize[0]+(2*radius);
-    ciErrNum = clSetKernelArg(ckKernel, 4, sizeof(tilew), &tilew);
-    ciErrNum |= clSetKernelArg(ckKernel, 5, sizeof(radius), &radius);    
+    ciErrNum = CECL_SET_KERNEL_ARG(ckKernel, 4, sizeof(tilew), &tilew);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 5, sizeof(radius), &radius);    
     cl_float threshold = 0.8f;
-    ciErrNum |= clSetKernelArg(ckKernel, 6, sizeof(threshold), &threshold);        
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 6, sizeof(threshold), &threshold);        
     cl_float highlight = 4.0f;
-    ciErrNum |= clSetKernelArg(ckKernel, 7, sizeof(highlight), &highlight);            
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 7, sizeof(highlight), &highlight);            
     
     // Local memory
-    ciErrNum |= clSetKernelArg(ckKernel, 8, (szLocalWorkSize[0]+(2*16))*(szLocalWorkSize[1]+(2*16))*sizeof(int), NULL);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 8, (szLocalWorkSize[0]+(2*16))*(szLocalWorkSize[1]+(2*16))*sizeof(int), NULL);
 
     // launch computation kernel
 #ifdef GPU_PROFILING
@@ -860,7 +861,7 @@ int executeKernel(cl_int radius)
         if( i ==0 )
             shrDeltaT(0);
 #endif        
-    ciErrNum |= clEnqueueNDRangeKernel(cqCommandQueue, ckKernel, 2, NULL,
+    ciErrNum |= CECL_ND_RANGE_KERNEL(cqCommandQueue, ckKernel, 2, NULL,
                                       szGlobalWorkSize, szLocalWorkSize, 
                                      0, NULL, NULL);
 #ifdef GPU_PROFILING
@@ -954,14 +955,14 @@ void TriggerFPSUpdate()
 void TestNoGL()
 {
     // execute OpenCL kernel without GL interaction
-    cl_pbos[0] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, 4 * image_width * image_height, NULL, &ciErrNum);
-    cl_pbos[1] = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, 4 * image_width * image_height, NULL, &ciErrNum);
+    cl_pbos[0] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, 4 * image_width * image_height, NULL, &ciErrNum);
+    cl_pbos[1] = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, 4 * image_width * image_height, NULL, &ciErrNum);
 
     // set the args values
-    ciErrNum |= clSetKernelArg(ckKernel, 0, sizeof(cl_mem), (void *) &(cl_pbos[0]));
-    ciErrNum |= clSetKernelArg(ckKernel, 1, sizeof(cl_mem), (void *) &(cl_pbos[1]));
-    ciErrNum |= clSetKernelArg(ckKernel, 2, sizeof(image_width), &image_width);
-    ciErrNum |= clSetKernelArg(ckKernel, 3, sizeof(image_width), &image_height);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 0, sizeof(cl_mem), (void *) &(cl_pbos[0]));
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 1, sizeof(cl_mem), (void *) &(cl_pbos[1]));
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 2, sizeof(image_width), &image_width);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 3, sizeof(image_width), &image_height);
     
     // Start timer 0 and process n loops on the GPU 
     executeKernel(blur_radius);

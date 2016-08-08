@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -57,16 +58,16 @@ int main(int argc, const char **argv)
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         //Create a command-queue
-        cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevice, 0, &ciErrNum);
+        cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevice, 0, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Initializing OpenCL scan...\n");
         initScan(cxGPUContext, cqCommandQueue, argv);
 
     shrLog("Creating OpenCL memory objects...\n\n");
-        d_Input = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, N * sizeof(uint), h_Input, &ciErrNum);
+        d_Input = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, N * sizeof(uint), h_Input, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        d_Output = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, N * sizeof(uint), NULL, &ciErrNum);
+        d_Output = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, N * sizeof(uint), NULL, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     int globalFlag = 1; // init pass/fail flag to pass
@@ -93,7 +94,7 @@ int main(int argc, const char **argv)
 
         shrLog("Validating the results...\n"); 
             shrLog(" ...reading back OpenCL memory\n");
-                ciErrNum = clEnqueueReadBuffer(cqCommandQueue, d_Output, CL_TRUE, 0, N * sizeof(uint), h_OutputGPU, 0, NULL, NULL);
+                ciErrNum = CECL_READ_BUFFER(cqCommandQueue, d_Output, CL_TRUE, 0, N * sizeof(uint), h_OutputGPU, 0, NULL, NULL);
                 oclCheckError(ciErrNum, CL_SUCCESS);
 
             shrLog(" ...scanExclusiveHost()\n");
@@ -152,7 +153,7 @@ int main(int argc, const char **argv)
 
         shrLog("Validating the results...\n"); 
             shrLog(" ...reading back OpenCL memory\n");
-                ciErrNum = clEnqueueReadBuffer(cqCommandQueue, d_Output, CL_TRUE, 0, N * sizeof(uint), h_OutputGPU, 0, NULL, NULL);
+                ciErrNum = CECL_READ_BUFFER(cqCommandQueue, d_Output, CL_TRUE, 0, N * sizeof(uint), h_OutputGPU, 0, NULL, NULL);
                 oclCheckError(ciErrNum, CL_SUCCESS);
 
             shrLog(" ...scanExclusiveHost()\n");

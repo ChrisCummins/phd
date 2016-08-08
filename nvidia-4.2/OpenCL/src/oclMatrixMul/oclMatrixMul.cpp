@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -110,7 +111,7 @@ void matrixMulGPU(cl_uint ciDeviceCount, cl_mem h_A, float* h_B_data, unsigned i
         // Input buffer
         workSize[i] = (i != (ciDeviceCount - 1)) ? sizePerGPU : (uiHA - workOffset[i]);        
 
-        d_A[i] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, workSize[i] * sizeof(float) * uiWA, NULL,NULL);
+        d_A[i] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, workSize[i] * sizeof(float) * uiWA, NULL,NULL);
 
         // Copy only assigned rows from host to device
         clEnqueueCopyBuffer(commandQueue[i], h_A, d_A[i], workOffset[i] * sizeof(float) * uiWA, 
@@ -118,21 +119,21 @@ void matrixMulGPU(cl_uint ciDeviceCount, cl_mem h_A, float* h_B_data, unsigned i
         
         // create OpenCL buffer on device that will be initiatlize from the host memory on first use
         // on device
-        d_B[i] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        d_B[i] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                 mem_size_B, h_B_data, NULL);
 
         // Output buffer
-        d_C[i] = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY,  workSize[i] * uiWC * sizeof(float), NULL,NULL);
+        d_C[i] = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY,  workSize[i] * uiWC * sizeof(float), NULL,NULL);
               
         // set the args values
-        clSetKernelArg(multiplicationKernel[i], 0, sizeof(cl_mem), (void *) &d_C[i]);
-        clSetKernelArg(multiplicationKernel[i], 1, sizeof(cl_mem), (void *) &d_A[i]);
-        clSetKernelArg(multiplicationKernel[i], 2, sizeof(cl_mem), (void *) &d_B[i]);
-        clSetKernelArg(multiplicationKernel[i], 3, sizeof(float) * BLOCK_SIZE *BLOCK_SIZE, 0 );
-        clSetKernelArg(multiplicationKernel[i], 4, sizeof(float) * BLOCK_SIZE *BLOCK_SIZE, 0 );
-        clSetKernelArg(multiplicationKernel[i], 5, sizeof(cl_int), (void *) &uiWA);
-        clSetKernelArg(multiplicationKernel[i], 6, sizeof(cl_int), (void *) &uiWB);
-        clSetKernelArg(multiplicationKernel[i], 7, sizeof(cl_int), (void *) &workSize[i]);
+        CECL_SET_KERNEL_ARG(multiplicationKernel[i], 0, sizeof(cl_mem), (void *) &d_C[i]);
+        CECL_SET_KERNEL_ARG(multiplicationKernel[i], 1, sizeof(cl_mem), (void *) &d_A[i]);
+        CECL_SET_KERNEL_ARG(multiplicationKernel[i], 2, sizeof(cl_mem), (void *) &d_B[i]);
+        CECL_SET_KERNEL_ARG(multiplicationKernel[i], 3, sizeof(float) * BLOCK_SIZE *BLOCK_SIZE, 0 );
+        CECL_SET_KERNEL_ARG(multiplicationKernel[i], 4, sizeof(float) * BLOCK_SIZE *BLOCK_SIZE, 0 );
+        CECL_SET_KERNEL_ARG(multiplicationKernel[i], 5, sizeof(cl_int), (void *) &uiWA);
+        CECL_SET_KERNEL_ARG(multiplicationKernel[i], 6, sizeof(cl_int), (void *) &uiWB);
+        CECL_SET_KERNEL_ARG(multiplicationKernel[i], 7, sizeof(cl_int), (void *) &workSize[i]);
 
         if(i+1 < ciDeviceCount)
             workOffset[i + 1] = workOffset[i] + workSize[i];
@@ -163,7 +164,7 @@ void matrixMulGPU(cl_uint ciDeviceCount, cl_mem h_A, float* h_B_data, unsigned i
         {
 			// Multiplication - non-blocking execution:  launch and push to device(s)
 			globalWorkSize[1] = shrRoundUp(BLOCK_SIZE, workSize[i]);
-			clEnqueueNDRangeKernel(commandQueue[i], multiplicationKernel[i], 2, 0, globalWorkSize, localWorkSize,
+			CECL_ND_RANGE_KERNEL(commandQueue[i], multiplicationKernel[i], 2, 0, globalWorkSize, localWorkSize,
 				                   0, NULL, &GPUExecution[i]);
             clFlush(commandQueue[i]);
 		}
@@ -199,7 +200,7 @@ void matrixMulGPU(cl_uint ciDeviceCount, cl_mem h_A, float* h_B_data, unsigned i
     for(unsigned int i = 0; i < ciDeviceCount; i++) 
     {    
         // Non-blocking copy of result from device to host
-        clEnqueueReadBuffer(commandQueue[i], d_C[i], CL_FALSE, 0, uiWC * sizeof(float) * workSize[i], 
+        CECL_READ_BUFFER(commandQueue[i], d_C[i], CL_FALSE, 0, uiWC * sizeof(float) * workSize[i], 
                             h_C + workOffset[i] * uiWC, 0, NULL, &GPUDone[i]);
     }
 
@@ -282,10 +283,10 @@ int runTest(int argc, const char** argv)
             shrLog("\n");
            
             // create command queue
-            commandQueue[ciDeviceCount] = clCreateCommandQueue(cxGPUContext, device, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+            commandQueue[ciDeviceCount] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, device, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
             if (ciErrNum != CL_SUCCESS)
             {
-                shrLog(" Error %i in clCreateCommandQueue call !!!\n\n", ciErrNum);
+                shrLog(" Error %i in CECL_CREATE_COMMAND_QUEUE call !!!\n\n", ciErrNum);
                 return ciErrNum;
             }
                 
@@ -328,10 +329,10 @@ int runTest(int argc, const char** argv)
             shrLog("\n");
 
             // create command queue
-            commandQueue[i] = clCreateCommandQueue(cxGPUContext, device, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+            commandQueue[i] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, device, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
             if (ciErrNum != CL_SUCCESS)
             {
-                shrLog(" Error %i in clCreateCommandQueue call !!!\n\n", ciErrNum);
+                shrLog(" Error %i in CECL_CREATE_COMMAND_QUEUE call !!!\n\n", ciErrNum);
                 return ciErrNum;
             }
         }
@@ -368,11 +369,11 @@ int runTest(int argc, const char** argv)
     float* h_C = (float*) malloc(mem_size_C);
 
     // create OpenCL buffer pointing to the host memory
-    cl_mem h_A = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
+    cl_mem h_A = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
 				    mem_size_A, h_A_data, &ciErrNum);
     if (ciErrNum != CL_SUCCESS)
     {
-        shrLog("Error: clCreateBuffer\n");
+        shrLog("Error: CECL_BUFFER\n");
         return ciErrNum;
     }
 
@@ -396,7 +397,7 @@ int runTest(int argc, const char** argv)
     }
 
     // create the program
-    cl_program cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&source, 
+    cl_program cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&source, 
                                                     &program_length, &ciErrNum);
     if (ciErrNum != CL_SUCCESS)
     {
@@ -407,7 +408,7 @@ int runTest(int argc, const char** argv)
     free(source);
     
     // build the program
-    ciErrNum = clBuildProgram(cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
+    ciErrNum = CECL_PROGRAM(cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // write out standard error, Build Log and PTX, then return error
@@ -425,7 +426,7 @@ int runTest(int argc, const char** argv)
 
     // Create Kernel
     for(unsigned int i = 0; i < ciDeviceCount; ++i) {
-        multiplicationKernel[i] = clCreateKernel(cpProgram, "matrixMul", &ciErrNum);
+        multiplicationKernel[i] = CECL_KERNEL(cpProgram, "matrixMul", &ciErrNum);
         if (ciErrNum != CL_SUCCESS)
         {
             shrLog("Error: Failed to create kernel\n");

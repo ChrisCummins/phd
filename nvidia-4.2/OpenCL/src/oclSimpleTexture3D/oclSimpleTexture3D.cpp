@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -175,7 +176,7 @@ int main(int argc, char** argv)
     oclPrintDevInfo(LOGBOTH, cdDevice);
 
     // create a command-queue
-    cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevice, 0, &ciErrNum);
+    cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevice, 0, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Program Setup
@@ -186,12 +187,12 @@ int main(int argc, char** argv)
     oclCheckErrorEX(cSourceCL != NULL, shrTRUE, pCleanup);
 
     // create the program
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1,
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1,
 					  (const char **) &cSourceCL , &program_length, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     
     // build the program
-    ciErrNum = clBuildProgram(cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
+    ciErrNum = CECL_PROGRAM(cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // write out standard error, Build Log and PTX, then cleanup and exit
@@ -202,7 +203,7 @@ int main(int argc, char** argv)
     }
 
     // create the kernel
-    ckKernel = clCreateKernel(cpProgram, "render", &ciErrNum);
+    ckKernel = CECL_KERNEL(cpProgram, "render", &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Load the data
@@ -271,10 +272,10 @@ void render()
 #endif    
 
     // set kernel argumanets 
-    ciErrNum |= clSetKernelArg(ckKernel, 5, sizeof(float), &w);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 5, sizeof(float), &w);
 
     // execute OpenCL kernel, writing results to PBO
-    ciErrNum |= clEnqueueNDRangeKernel(cqCommandQueue, ckKernel, 2, NULL, globalWorkSize, localWorkSize, 0, 0, 0);
+    ciErrNum |= CECL_ND_RANGE_KERNEL(cqCommandQueue, ckKernel, 2, NULL, globalWorkSize, localWorkSize, 0, 0, 0);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
 #ifdef GL_INTEROP
@@ -289,7 +290,7 @@ void render()
     // map the buffer object into client's memory
     GLubyte* ptr = (GLubyte*)glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,
                                         GL_WRITE_ONLY_ARB);
-    ciErrNum |= clEnqueueReadBuffer(cqCommandQueue, pbo_cl, CL_TRUE, 0, sizeof(unsigned int) * height * width, ptr, 0, NULL, NULL);        
+    ciErrNum |= CECL_READ_BUFFER(cqCommandQueue, pbo_cl, CL_TRUE, 0, sizeof(unsigned int) * height * width, ptr, 0, NULL, NULL);        
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB); 
@@ -411,7 +412,7 @@ void KeyboardGL(unsigned char key, int /*x*/, int /*y*/)
         case 'F':
         case 'f':
             linearFiltering = !linearFiltering;
-            ciErrNum = clSetKernelArg(ckKernel, 1, sizeof(cl_sampler), linearFiltering ? &volumeSamplerLinear : &volumeSamplerNearest);
+            ciErrNum = CECL_SET_KERNEL_ARG(ckKernel, 1, sizeof(cl_sampler), linearFiltering ? &volumeSamplerLinear : &volumeSamplerNearest);
             shrLog("\nLinear Filtering Toggled %s...\n", linearFiltering ? "ON" : "OFF");
             oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
             break;
@@ -442,12 +443,12 @@ void initGLBuffers()
     // create OpenCL buffer from GL PBO
     pbo_cl = clCreateFromGLBuffer(cxGPUContext,CL_MEM_WRITE_ONLY, pbo, &ciErrNum);
 #else            
-    pbo_cl = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY,  width*height*sizeof(GLubyte)*4, NULL, &ciErrNum);
+    pbo_cl = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY,  width*height*sizeof(GLubyte)*4, NULL, &ciErrNum);
 #endif
 
-    ciErrNum |= clSetKernelArg(ckKernel, 2, sizeof(cl_mem), (void *) &pbo_cl);
-    ciErrNum |= clSetKernelArg(ckKernel, 3, sizeof(unsigned int), &width);
-    ciErrNum |= clSetKernelArg(ckKernel, 4, sizeof(unsigned int), &height);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 2, sizeof(cl_mem), (void *) &pbo_cl);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 3, sizeof(unsigned int), &width);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 4, sizeof(unsigned int), &height);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 }
 
@@ -488,14 +489,14 @@ void loadVolumeData(const char *exec_path)
 
     // setup 3D image
     d_volume = initTexture3D(h_volume, volumeSize);
-    ciErrNum = clSetKernelArg(ckKernel, 0, sizeof(cl_mem), &d_volume);
+    ciErrNum = CECL_SET_KERNEL_ARG(ckKernel, 0, sizeof(cl_mem), &d_volume);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Create samplers for linear and nearest interpolation
     volumeSamplerLinear = clCreateSampler(cxGPUContext, true, CL_ADDRESS_REPEAT, CL_FILTER_LINEAR, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     volumeSamplerNearest = clCreateSampler(cxGPUContext, true, CL_ADDRESS_REPEAT, CL_FILTER_NEAREST, &ciErrNum);
-    ciErrNum |= clSetKernelArg(ckKernel, 1, sizeof(cl_sampler), &volumeSamplerLinear);        
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 1, sizeof(cl_sampler), &volumeSamplerLinear);        
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     free(h_volume);
@@ -507,17 +508,17 @@ void TestNoGL()
 {
     // execute OpenCL kernel without GL interaction
 
-    pbo_cl = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, width * height * sizeof(GLubyte) * 4, NULL, &ciErrNum);
-    ciErrNum |= clSetKernelArg(ckKernel, 2, sizeof(cl_mem), (void *)&pbo_cl);
-    ciErrNum |= clSetKernelArg(ckKernel, 3, sizeof(unsigned int), &width);
-    ciErrNum |= clSetKernelArg(ckKernel, 4, sizeof(unsigned int), &height);   
-    ciErrNum |= clSetKernelArg(ckKernel, 5, sizeof(float), &w);
+    pbo_cl = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, width * height * sizeof(GLubyte) * 4, NULL, &ciErrNum);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 2, sizeof(cl_mem), (void *)&pbo_cl);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 3, sizeof(unsigned int), &width);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 4, sizeof(unsigned int), &height);   
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 5, sizeof(float), &w);
 
     // warm up
     int iCycles = 20;
     for (int i = 0; i < iCycles; i++)
     {
-        ciErrNum |= clEnqueueNDRangeKernel(cqCommandQueue, ckKernel, 2, NULL, globalWorkSize, localWorkSize, 0,0,0 );
+        ciErrNum |= CECL_ND_RANGE_KERNEL(cqCommandQueue, ckKernel, 2, NULL, globalWorkSize, localWorkSize, 0,0,0 );
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);	
     }
     clFinish(cqCommandQueue);
@@ -526,7 +527,7 @@ void TestNoGL()
 	shrDeltaT(0); 
     for (int i = 0; i < iCycles; i++)
     {
-        ciErrNum |= clEnqueueNDRangeKernel(cqCommandQueue, ckKernel, 2, NULL, globalWorkSize, localWorkSize, 0,0,0 );
+        ciErrNum |= CECL_ND_RANGE_KERNEL(cqCommandQueue, ckKernel, 2, NULL, globalWorkSize, localWorkSize, 0,0,0 );
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);	
     }
     clFinish(cqCommandQueue);

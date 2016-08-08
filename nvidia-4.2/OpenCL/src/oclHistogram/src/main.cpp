@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -94,13 +95,13 @@ int main(int argc, char **argv)
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         //Create a command-queue
-        cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevices[uiTargetDevice], CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+        cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[uiTargetDevice], CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Allocating OpenCL memory...\n\n\n");
-        d_Data = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, byteCount * sizeof(cl_char), h_Data, &ciErrNum);
+        d_Data = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, byteCount * sizeof(cl_char), h_Data, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        d_Histogram = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, HISTOGRAM256_BIN_COUNT * sizeof(uint), NULL, &ciErrNum);
+        d_Histogram = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, HISTOGRAM256_BIN_COUNT * sizeof(uint), NULL, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
 
@@ -143,7 +144,7 @@ int main(int argc, char **argv)
 
         shrLog("Validating 64-bin histogram OpenCL results...\n");
             shrLog(" ...reading back OpenCL results\n");
-                ciErrNum = clEnqueueReadBuffer(cqCommandQueue, d_Histogram, CL_TRUE, 0, HISTOGRAM64_BIN_COUNT * sizeof(uint), h_HistogramGPU, 0, NULL, NULL);
+                ciErrNum = CECL_READ_BUFFER(cqCommandQueue, d_Histogram, CL_TRUE, 0, HISTOGRAM64_BIN_COUNT * sizeof(uint), h_HistogramGPU, 0, NULL, NULL);
                 shrCheckError(ciErrNum, CL_SUCCESS);
 
             shrLog(" ...histogram64CPU()\n");
@@ -198,7 +199,7 @@ int main(int argc, char **argv)
 
         shrLog("Validating 256-bin histogram OpenCL results...\n");
             shrLog(" ...reading back OpenCL results\n");
-                ciErrNum = clEnqueueReadBuffer(cqCommandQueue, d_Histogram, CL_TRUE, 0, HISTOGRAM256_BIN_COUNT * sizeof(uint), h_HistogramGPU, 0, NULL, NULL);
+                ciErrNum = CECL_READ_BUFFER(cqCommandQueue, d_Histogram, CL_TRUE, 0, HISTOGRAM256_BIN_COUNT * sizeof(uint), h_HistogramGPU, 0, NULL, NULL);
                 shrCheckError(ciErrNum, CL_SUCCESS);
 
             shrLog(" ...histogram256CPU()\n");

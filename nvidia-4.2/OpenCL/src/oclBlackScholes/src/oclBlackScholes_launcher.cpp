@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -29,11 +30,11 @@ extern "C" void initBlackScholes(cl_context cxGPUContext, cl_command_queue cqPar
         shrCheckError(cBlackScholes != NULL, shrTRUE);
 
     shrLog("...creating BlackScholes program\n");
-        cpBlackScholes = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cBlackScholes, &kernelLength, &ciErrNum);
+        cpBlackScholes = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cBlackScholes, &kernelLength, &ciErrNum);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("...building BlackScholes program\n");
-        ciErrNum = clBuildProgram(cpBlackScholes, 0, NULL, "-cl-fast-relaxed-math -Werror", NULL, NULL);
+        ciErrNum = CECL_PROGRAM(cpBlackScholes, 0, NULL, "-cl-fast-relaxed-math -Werror", NULL, NULL);
 
         if(ciErrNum != CL_BUILD_SUCCESS){
             shrLog("*** Compilation failure ***\n");
@@ -72,7 +73,7 @@ extern "C" void initBlackScholes(cl_context cxGPUContext, cl_command_queue cqPar
     oclLogPtx(cpBlackScholes, oclGetFirstDev(cxGPUContext), "BlackScholes.ptx");
 
     shrLog("...creating BlackScholes kernels\n");
-        ckBlackScholes = clCreateKernel(cpBlackScholes, "BlackScholes", &ciErrNum);
+        ckBlackScholes = CECL_KERNEL(cpBlackScholes, "BlackScholes", &ciErrNum);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
     cqDefaultCommandQueue = cqParamCommandQueue;
@@ -106,19 +107,19 @@ extern "C" void BlackScholes(
     if(!cqCommandQueue)
         cqCommandQueue = cqDefaultCommandQueue;
 
-    ciErrNum  = clSetKernelArg(ckBlackScholes, 0, sizeof(cl_mem),   (void *)&d_Call);
-    ciErrNum |= clSetKernelArg(ckBlackScholes, 1, sizeof(cl_mem),   (void *)&d_Put);
-    ciErrNum |= clSetKernelArg(ckBlackScholes, 2, sizeof(cl_mem),   (void *)&d_S);
-    ciErrNum |= clSetKernelArg(ckBlackScholes, 3, sizeof(cl_mem),   (void *)&d_X);
-    ciErrNum |= clSetKernelArg(ckBlackScholes, 4, sizeof(cl_mem),   (void *)&d_T);
-    ciErrNum |= clSetKernelArg(ckBlackScholes, 5, sizeof(cl_float), (void *)&R);
-    ciErrNum |= clSetKernelArg(ckBlackScholes, 6, sizeof(cl_float), (void *)&V);
-    ciErrNum |= clSetKernelArg(ckBlackScholes, 7, sizeof(cl_uint),  (void *)&optionCount);
+    ciErrNum  = CECL_SET_KERNEL_ARG(ckBlackScholes, 0, sizeof(cl_mem),   (void *)&d_Call);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckBlackScholes, 1, sizeof(cl_mem),   (void *)&d_Put);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckBlackScholes, 2, sizeof(cl_mem),   (void *)&d_S);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckBlackScholes, 3, sizeof(cl_mem),   (void *)&d_X);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckBlackScholes, 4, sizeof(cl_mem),   (void *)&d_T);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckBlackScholes, 5, sizeof(cl_float), (void *)&R);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckBlackScholes, 6, sizeof(cl_float), (void *)&V);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckBlackScholes, 7, sizeof(cl_uint),  (void *)&optionCount);
     shrCheckError(ciErrNum, CL_SUCCESS);
 
     //Run the kernel
     size_t globalWorkSize = 60 * 1024;
 	size_t localWorkSize = 128;
-    ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckBlackScholes, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckBlackScholes, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
     shrCheckError(ciErrNum, CL_SUCCESS);
 }

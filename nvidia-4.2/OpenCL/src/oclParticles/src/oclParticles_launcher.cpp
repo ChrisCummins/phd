@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -62,11 +63,11 @@ extern "C" void initParticles(cl_context cxGPUContext, cl_command_queue cqParamC
         oclCheckError(cParticles != NULL, shrTRUE);
 
     shrLog("Creating particles program...\n");
-        cpParticles = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cParticles, &kernelLength, &ciErrNum);
+        cpParticles = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cParticles, &kernelLength, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Building particles program...\n");
-        ciErrNum = clBuildProgram(cpParticles, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
+        ciErrNum = CECL_PROGRAM(cpParticles, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
 		if (ciErrNum != CL_SUCCESS)
 		{
 			// write out standard error, Build Log and PTX, then cleanup and exit
@@ -77,15 +78,15 @@ extern "C" void initParticles(cl_context cxGPUContext, cl_command_queue cqParamC
 		}
 
     shrLog("Creating particles kernels...\n\n");
-        ckIntegrate = clCreateKernel(cpParticles, "integrate", &ciErrNum);
+        ckIntegrate = CECL_KERNEL(cpParticles, "integrate", &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        ckCalcHash = clCreateKernel(cpParticles, "calcHash", &ciErrNum);
+        ckCalcHash = CECL_KERNEL(cpParticles, "calcHash", &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        ckMemset = clCreateKernel(cpParticles, "Memset", &ciErrNum);
+        ckMemset = CECL_KERNEL(cpParticles, "Memset", &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        ckFindCellBoundsAndReorder = clCreateKernel(cpParticles, "findCellBoundsAndReorder", &ciErrNum);
+        ckFindCellBoundsAndReorder = CECL_KERNEL(cpParticles, "findCellBoundsAndReorder", &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        ckCollide = clCreateKernel(cpParticles, "collide", &ciErrNum);
+        ckCollide = CECL_KERNEL(cpParticles, "collide", &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Creating parameter GPU buffer...\n\n");
@@ -130,14 +131,14 @@ extern "C" void integrateSystem(
     cl_int ciErrNum;
     size_t globalWorkSize = uSnap(numParticles, wgSize);
 
-    ciErrNum  = clSetKernelArg(ckIntegrate, 0, sizeof(cl_mem), (void *)&d_Pos);
-    ciErrNum |= clSetKernelArg(ckIntegrate, 1, sizeof(cl_mem), (void *)&d_Vel);
-    ciErrNum |= clSetKernelArg(ckIntegrate, 2, sizeof(cl_mem), (void *)&params);
-    ciErrNum |= clSetKernelArg(ckIntegrate, 3, sizeof(float), (void *)&deltaTime);
-    ciErrNum |= clSetKernelArg(ckIntegrate, 4, sizeof(uint), (void *)&numParticles);
+    ciErrNum  = CECL_SET_KERNEL_ARG(ckIntegrate, 0, sizeof(cl_mem), (void *)&d_Pos);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckIntegrate, 1, sizeof(cl_mem), (void *)&d_Vel);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckIntegrate, 2, sizeof(cl_mem), (void *)&params);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckIntegrate, 3, sizeof(float), (void *)&deltaTime);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckIntegrate, 4, sizeof(uint), (void *)&numParticles);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
-    ciErrNum = clEnqueueNDRangeKernel(cqDefaultCommandQue, ckIntegrate, 1, NULL, &globalWorkSize, &wgSize, 0, NULL, NULL);
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqDefaultCommandQue, ckIntegrate, 1, NULL, &globalWorkSize, &wgSize, 0, NULL, NULL);
     oclCheckError(ciErrNum, CL_SUCCESS);
 }
 
@@ -150,14 +151,14 @@ extern "C" void calcHash(
     cl_int ciErrNum;
     size_t globalWorkSize = uSnap(numParticles, wgSize);
 
-    ciErrNum  = clSetKernelArg(ckCalcHash, 0, sizeof(cl_mem), (void *)&d_Hash);
-    ciErrNum |= clSetKernelArg(ckCalcHash, 1, sizeof(cl_mem), (void *)&d_Index);
-    ciErrNum |= clSetKernelArg(ckCalcHash, 2, sizeof(cl_mem), (void *)&d_Pos);
-    ciErrNum |= clSetKernelArg(ckCalcHash, 3, sizeof(cl_mem), (void *)&params);
-    ciErrNum |= clSetKernelArg(ckCalcHash, 4,  sizeof(uint), (void *)&numParticles);
+    ciErrNum  = CECL_SET_KERNEL_ARG(ckCalcHash, 0, sizeof(cl_mem), (void *)&d_Hash);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckCalcHash, 1, sizeof(cl_mem), (void *)&d_Index);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckCalcHash, 2, sizeof(cl_mem), (void *)&d_Pos);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckCalcHash, 3, sizeof(cl_mem), (void *)&params);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckCalcHash, 4,  sizeof(uint), (void *)&numParticles);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
-    ciErrNum = clEnqueueNDRangeKernel(cqDefaultCommandQue, ckCalcHash, 1, NULL, &globalWorkSize, &wgSize, 0, NULL, NULL);
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqDefaultCommandQue, ckCalcHash, 1, NULL, &globalWorkSize, &wgSize, 0, NULL, NULL);
     oclCheckError(ciErrNum, CL_SUCCESS);
 }
 
@@ -169,12 +170,12 @@ static void memsetOCL(
     cl_int ciErrNum;
     size_t globalWorkSize = uSnap(N, wgSize);
 
-    ciErrNum  = clSetKernelArg(ckMemset, 0, sizeof(cl_mem), (void *)&d_Data);
-    ciErrNum |= clSetKernelArg(ckMemset, 1, sizeof(cl_uint), (void *)&val);
-    ciErrNum |= clSetKernelArg(ckMemset, 2, sizeof(cl_uint), (void *)&N);
+    ciErrNum  = CECL_SET_KERNEL_ARG(ckMemset, 0, sizeof(cl_mem), (void *)&d_Data);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckMemset, 1, sizeof(cl_uint), (void *)&val);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckMemset, 2, sizeof(cl_uint), (void *)&N);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
-    ciErrNum = clEnqueueNDRangeKernel(cqDefaultCommandQue, ckMemset, 1, NULL, &globalWorkSize, &wgSize, 0, NULL, NULL);
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqDefaultCommandQue, ckMemset, 1, NULL, &globalWorkSize, &wgSize, 0, NULL, NULL);
     oclCheckError(ciErrNum, CL_SUCCESS);
 }
 
@@ -195,19 +196,19 @@ extern "C" void findCellBoundsAndReorder(
     //memsetOCL(d_CellEnd, 0xFFFFFFFFU, numCells);
     size_t globalWorkSize = uSnap(numParticles, wgSize);
 
-    ciErrNum  = clSetKernelArg(ckFindCellBoundsAndReorder, 0, sizeof(cl_mem), (void *)&d_CellStart);
-    ciErrNum |= clSetKernelArg(ckFindCellBoundsAndReorder, 1, sizeof(cl_mem), (void *)&d_CellEnd);
-    ciErrNum |= clSetKernelArg(ckFindCellBoundsAndReorder, 2, sizeof(cl_mem), (void *)&d_ReorderedPos);
-    ciErrNum |= clSetKernelArg(ckFindCellBoundsAndReorder, 3, sizeof(cl_mem), (void *)&d_ReorderedVel);
-    ciErrNum |= clSetKernelArg(ckFindCellBoundsAndReorder, 4, sizeof(cl_mem), (void *)&d_Hash);
-    ciErrNum |= clSetKernelArg(ckFindCellBoundsAndReorder, 5, sizeof(cl_mem), (void *)&d_Index);
-    ciErrNum |= clSetKernelArg(ckFindCellBoundsAndReorder, 6, sizeof(cl_mem), (void *)&d_Pos);
-    ciErrNum |= clSetKernelArg(ckFindCellBoundsAndReorder, 7, sizeof(cl_mem), (void *)&d_Vel);
-    ciErrNum |= clSetKernelArg(ckFindCellBoundsAndReorder, 8, (wgSize + 1) * sizeof(cl_uint), NULL);
-    ciErrNum |= clSetKernelArg(ckFindCellBoundsAndReorder, 9, sizeof(cl_uint), (void *)&numParticles);
+    ciErrNum  = CECL_SET_KERNEL_ARG(ckFindCellBoundsAndReorder, 0, sizeof(cl_mem), (void *)&d_CellStart);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckFindCellBoundsAndReorder, 1, sizeof(cl_mem), (void *)&d_CellEnd);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckFindCellBoundsAndReorder, 2, sizeof(cl_mem), (void *)&d_ReorderedPos);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckFindCellBoundsAndReorder, 3, sizeof(cl_mem), (void *)&d_ReorderedVel);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckFindCellBoundsAndReorder, 4, sizeof(cl_mem), (void *)&d_Hash);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckFindCellBoundsAndReorder, 5, sizeof(cl_mem), (void *)&d_Index);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckFindCellBoundsAndReorder, 6, sizeof(cl_mem), (void *)&d_Pos);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckFindCellBoundsAndReorder, 7, sizeof(cl_mem), (void *)&d_Vel);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckFindCellBoundsAndReorder, 8, (wgSize + 1) * sizeof(cl_uint), NULL);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckFindCellBoundsAndReorder, 9, sizeof(cl_uint), (void *)&numParticles);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
-    ciErrNum = clEnqueueNDRangeKernel(cqDefaultCommandQue, ckFindCellBoundsAndReorder, 1, NULL, &globalWorkSize, &wgSize, 0, NULL, NULL);
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqDefaultCommandQue, ckFindCellBoundsAndReorder, 1, NULL, &globalWorkSize, &wgSize, 0, NULL, NULL);
     oclCheckError(ciErrNum, CL_SUCCESS);
 }
 
@@ -224,16 +225,16 @@ extern "C" void collide(
     cl_int ciErrNum;
     size_t globalWorkSize = uSnap(numParticles, wgSize);
 
-    ciErrNum  = clSetKernelArg(ckCollide, 0, sizeof(cl_mem), (void *)&d_Vel);
-    ciErrNum |= clSetKernelArg(ckCollide, 1, sizeof(cl_mem), (void *)&d_ReorderedPos);
-    ciErrNum |= clSetKernelArg(ckCollide, 2, sizeof(cl_mem), (void *)&d_ReorderedVel);
-    ciErrNum |= clSetKernelArg(ckCollide, 3, sizeof(cl_mem), (void *)&d_Index);
-    ciErrNum |= clSetKernelArg(ckCollide, 4, sizeof(cl_mem), (void *)&d_CellStart);
-    ciErrNum |= clSetKernelArg(ckCollide, 5, sizeof(cl_mem), (void *)&d_CellEnd);
-    ciErrNum |= clSetKernelArg(ckCollide, 6, sizeof(cl_mem), (void *)&params);
-    ciErrNum |= clSetKernelArg(ckCollide, 7, sizeof(uint),   (void *)&numParticles);
+    ciErrNum  = CECL_SET_KERNEL_ARG(ckCollide, 0, sizeof(cl_mem), (void *)&d_Vel);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckCollide, 1, sizeof(cl_mem), (void *)&d_ReorderedPos);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckCollide, 2, sizeof(cl_mem), (void *)&d_ReorderedVel);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckCollide, 3, sizeof(cl_mem), (void *)&d_Index);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckCollide, 4, sizeof(cl_mem), (void *)&d_CellStart);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckCollide, 5, sizeof(cl_mem), (void *)&d_CellEnd);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckCollide, 6, sizeof(cl_mem), (void *)&params);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckCollide, 7, sizeof(uint),   (void *)&numParticles);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
-    ciErrNum = clEnqueueNDRangeKernel(cqDefaultCommandQue, ckCollide, 1, NULL, &globalWorkSize, &wgSize, 0, NULL, NULL);
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqDefaultCommandQue, ckCollide, 1, NULL, &globalWorkSize, &wgSize, 0, NULL, NULL);
     oclCheckError(ciErrNum, CL_SUCCESS);
 }

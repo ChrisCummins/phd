@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -53,14 +54,14 @@ double runReorderKernel(int devCount, cl_mem *dev_a, cl_mem *dev_t, int *width, 
 		szGlobalWorkSize[i][1] = shrRoundUp(TRANSPOSE_BLOCK_DIM, height[i]);
 
 		// set transpose kernel arguments
-		errcode  = clSetKernelArg(reorderKernel[i], 0, sizeof(cl_mem), (void *) &dev_t[i]);
-		errcode |= clSetKernelArg(reorderKernel[i], 1, sizeof(cl_mem), (void *) &dev_a[i]);
-		errcode |= clSetKernelArg(reorderKernel[i], 2, sizeof(int), &width[i]);
-		errcode |= clSetKernelArg(reorderKernel[i], 3, sizeof(int), &height[i]);
-		errcode |= clSetKernelArg(reorderKernel[i], 4, TRANSPOSE_BLOCK_DIM * (TRANSPOSE_BLOCK_DIM+1) * sizeof(float), NULL);
+		errcode  = CECL_SET_KERNEL_ARG(reorderKernel[i], 0, sizeof(cl_mem), (void *) &dev_t[i]);
+		errcode |= CECL_SET_KERNEL_ARG(reorderKernel[i], 1, sizeof(cl_mem), (void *) &dev_a[i]);
+		errcode |= CECL_SET_KERNEL_ARG(reorderKernel[i], 2, sizeof(int), &width[i]);
+		errcode |= CECL_SET_KERNEL_ARG(reorderKernel[i], 3, sizeof(int), &height[i]);
+		errcode |= CECL_SET_KERNEL_ARG(reorderKernel[i], 4, TRANSPOSE_BLOCK_DIM * (TRANSPOSE_BLOCK_DIM+1) * sizeof(float), NULL);
 		oclCheckError(errcode, CL_SUCCESS);
 
-		errcode = clEnqueueNDRangeKernel(cqCommandQue[i], reorderKernel[i], 2, NULL, szGlobalWorkSize[i], szLocalWorkSize[i], 0, NULL, &GPUExecution[i]);
+		errcode = CECL_ND_RANGE_KERNEL(cqCommandQue[i], reorderKernel[i], 2, NULL, szGlobalWorkSize[i], szLocalWorkSize[i], 0, NULL, &GPUExecution[i]);
 		clFlush(cqCommandQue[i]);
 		oclCheckError(errcode, CL_SUCCESS);
 	}
@@ -73,7 +74,7 @@ double runReorderKernel(int devCount, cl_mem *dev_a, cl_mem *dev_t, int *width, 
 		shrDeltaT(0);
 		for (int i = 0; i < devCount; i++)
 		{
-			errcode = clEnqueueNDRangeKernel(cqCommandQue[i], reorderKernel[i], 2, NULL, szGlobalWorkSize[i], szLocalWorkSize[i], 0, NULL, &GPUExecution[i]);
+			errcode = CECL_ND_RANGE_KERNEL(cqCommandQue[i], reorderKernel[i], 2, NULL, szGlobalWorkSize[i], szLocalWorkSize[i], 0, NULL, &GPUExecution[i]);
 			clFlush(cqCommandQue[i]);
 			oclCheckError(errcode, CL_SUCCESS);
 		}
@@ -110,17 +111,17 @@ double runSweepKernel(int devCount, cl_mem *dev_a, cl_mem *dev_b, cl_mem *dev_c,
 		szGlobalWorkSize[i] = shrRoundUp(SWEEP_BLOCK_SIZE, num_systems);
 	
 		// set main kernel arguments
-		errcode  = clSetKernelArg(sweepKernel[i], 0, sizeof(cl_mem), (void *) &dev_a[i]);
-		errcode |= clSetKernelArg(sweepKernel[i], 1, sizeof(cl_mem), (void *) &dev_b[i]);
-		errcode |= clSetKernelArg(sweepKernel[i], 2, sizeof(cl_mem), (void *) &dev_c[i]);
-		errcode |= clSetKernelArg(sweepKernel[i], 3, sizeof(cl_mem), (void *) &dev_d[i]);
-		errcode |= clSetKernelArg(sweepKernel[i], 4, sizeof(cl_mem), (void *) &dev_x[i]);
-		errcode |= clSetKernelArg(sweepKernel[i], 5, sizeof(int), &num_systems);
-		if (!useLmem) errcode |= clSetKernelArg(sweepKernel[i], 6, sizeof(cl_mem), (void *) &dev_w[i]);
+		errcode  = CECL_SET_KERNEL_ARG(sweepKernel[i], 0, sizeof(cl_mem), (void *) &dev_a[i]);
+		errcode |= CECL_SET_KERNEL_ARG(sweepKernel[i], 1, sizeof(cl_mem), (void *) &dev_b[i]);
+		errcode |= CECL_SET_KERNEL_ARG(sweepKernel[i], 2, sizeof(cl_mem), (void *) &dev_c[i]);
+		errcode |= CECL_SET_KERNEL_ARG(sweepKernel[i], 3, sizeof(cl_mem), (void *) &dev_d[i]);
+		errcode |= CECL_SET_KERNEL_ARG(sweepKernel[i], 4, sizeof(cl_mem), (void *) &dev_x[i]);
+		errcode |= CECL_SET_KERNEL_ARG(sweepKernel[i], 5, sizeof(int), &num_systems);
+		if (!useLmem) errcode |= CECL_SET_KERNEL_ARG(sweepKernel[i], 6, sizeof(cl_mem), (void *) &dev_w[i]);
 		oclCheckError(errcode, CL_SUCCESS);
 
 		// warm up
-		errcode = clEnqueueNDRangeKernel(cqCommandQue[i], sweepKernel[i], 1, NULL, &szGlobalWorkSize[i], &szLocalWorkSize[i], 0, NULL, &GPUExecution[i]);
+		errcode = CECL_ND_RANGE_KERNEL(cqCommandQue[i], sweepKernel[i], 1, NULL, &szGlobalWorkSize[i], &szLocalWorkSize[i], 0, NULL, &GPUExecution[i]);
 		clFlush(cqCommandQue[i]);
 		oclCheckError(errcode, CL_SUCCESS);
 	}
@@ -135,7 +136,7 @@ double runSweepKernel(int devCount, cl_mem *dev_a, cl_mem *dev_b, cl_mem *dev_c,
 		shrDeltaT(0);
 		for (int i = 0; i < devCount; i++)
 		{
-			errcode = clEnqueueNDRangeKernel(cqCommandQue[i], sweepKernel[i], 1, NULL, &szGlobalWorkSize[i], &szLocalWorkSize[i], 0, NULL, &GPUExecution[i]);
+			errcode = CECL_ND_RANGE_KERNEL(cqCommandQue[i], sweepKernel[i], 1, NULL, &szGlobalWorkSize[i], &szLocalWorkSize[i], 0, NULL, &GPUExecution[i]);
 			clFlush(cqCommandQue[i]);
 			oclCheckError(errcode, CL_SUCCESS);
 		}
@@ -191,10 +192,10 @@ double sweep_small_systems(int devCount, const char** argv, float *a, float *b, 
 	double reorderKernelTime[MAX_GPU_COUNT];
 
 	// create host pointers (TEMPORARY here)
-	cl_mem host_a = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, mem_size, a, NULL);
-	cl_mem host_b = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, mem_size, b, NULL);
-	cl_mem host_c = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, mem_size, c, NULL);
-	cl_mem host_d = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, mem_size, d, NULL);
+	cl_mem host_a = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, mem_size, a, NULL);
+	cl_mem host_b = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, mem_size, b, NULL);
+	cl_mem host_c = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, mem_size, c, NULL);
+	cl_mem host_d = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, mem_size, d, NULL);
 
     // allocate device memory and copy host to device arrays
 	workOffset[0] = 0;
@@ -207,31 +208,31 @@ double sweep_small_systems(int devCount, const char** argv, float *a, float *b, 
 		int workSizeB = workSize[i] * system_size * sizeof(float);
 		int workOffsetB = workOffset[i] * system_size * sizeof(float);
 
-		device_a[i] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, workSizeB, NULL, &errcode);
+		device_a[i] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, workSizeB, NULL, &errcode);
 		oclCheckError(errcode, CL_SUCCESS);
 		clEnqueueCopyBuffer(cqCommandQue[i], host_a, device_a[i], workOffsetB, 0, workSizeB, 0, NULL, NULL); 
 
-		device_b[i] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, workSizeB, NULL, &errcode);
+		device_b[i] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, workSizeB, NULL, &errcode);
 		oclCheckError(errcode, CL_SUCCESS);
 		clEnqueueCopyBuffer(cqCommandQue[i], host_b, device_b[i], workOffsetB, 0, workSizeB, 0, NULL, NULL);  
 
-		device_c[i] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, workSizeB, NULL, &errcode);
+		device_c[i] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, workSizeB, NULL, &errcode);
 		oclCheckError(errcode, CL_SUCCESS);
 		clEnqueueCopyBuffer(cqCommandQue[i], host_c, device_c[i], workOffsetB, 0, workSizeB, 0, NULL, NULL);  
 
-		device_d[i] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, workSizeB, NULL, &errcode);
+		device_d[i] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, workSizeB, NULL, &errcode);
 		oclCheckError(errcode, CL_SUCCESS);
 		clEnqueueCopyBuffer(cqCommandQue[i], host_d, device_d[i], workOffsetB, 0, workSizeB, 0, NULL, NULL);  
 
-		device_x[i] = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, workSizeB, NULL, &errcode);
+		device_x[i] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, workSizeB, NULL, &errcode);
 		oclCheckError(errcode, CL_SUCCESS);
 
-		device_t[i] = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, workSizeB, NULL, &errcode);
+		device_t[i] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, workSizeB, NULL, &errcode);
 		oclCheckError(errcode, CL_SUCCESS);
 
 		if (!useLmem)
 		{
-			device_w[i] = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, workSizeB, NULL, &errcode);
+			device_w[i] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, workSizeB, NULL, &errcode);
 			oclCheckError(errcode, CL_SUCCESS);
 		}
 		
@@ -250,7 +251,7 @@ double sweep_small_systems(int devCount, const char** argv, float *a, float *b, 
     oclCheckError(source != NULL, shrTRUE);
 
     // create program
-    cl_program cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&source, &program_length, &errcode);
+    cl_program cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&source, &program_length, &errcode);
     oclCheckError(errcode, CL_SUCCESS);
 
 	// set preprocessor options
@@ -264,7 +265,7 @@ double sweep_small_systems(int devCount, const char** argv, float *a, float *b, 
     #endif
     
 	// build program
-	errcode = clBuildProgram(cpProgram, 0, NULL, options, NULL, NULL);
+	errcode = CECL_PROGRAM(cpProgram, 0, NULL, options, NULL, NULL);
 	if (errcode != CL_SUCCESS)
     {
         // write out standard error, output build log
@@ -283,9 +284,9 @@ double sweep_small_systems(int devCount, const char** argv, float *a, float *b, 
 		else if (useVec4) kernelIdx = 2;
 		else kernelIdx = 1;
 		
-		sweepKernel[i] = clCreateKernel(cpProgram, sweepKernelNames[kernelIdx], &errcode);
+		sweepKernel[i] = CECL_KERNEL(cpProgram, sweepKernelNames[kernelIdx], &errcode);
         oclCheckError(errcode, CL_SUCCESS);
-		reorderKernel[i] = clCreateKernel(cpProgram, sweepKernelNames[3], &errcode);
+		reorderKernel[i] = CECL_KERNEL(cpProgram, sweepKernelNames[3], &errcode);
         oclCheckError(errcode, CL_SUCCESS);
 		reorderKernelTime[i] = 0.0;
 	}
@@ -336,7 +337,7 @@ double sweep_small_systems(int devCount, const char** argv, float *a, float *b, 
 	for (int i = 0; i < devCount; i++) 
 	{
 		int workSizeB = workSize[i] * system_size * sizeof(float);
-		errcode = clEnqueueReadBuffer(cqCommandQue[i], device_x[i], CL_FALSE, 0, workSizeB, x + workOffset[i] * system_size, 0, NULL, &GPUDone[i]);
+		errcode = CECL_READ_BUFFER(cqCommandQue[i], device_x[i], CL_FALSE, 0, workSizeB, x + workOffset[i] * system_size, 0, NULL, &GPUDone[i]);
 		oclCheckError(errcode, CL_SUCCESS);
 	}
 	clWaitForEvents(devCount, GPUDone);

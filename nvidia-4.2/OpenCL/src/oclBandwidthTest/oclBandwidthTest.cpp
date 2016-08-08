@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -366,7 +367,7 @@ createQueue(unsigned int device)
         clReleaseCommandQueue(cqCommandQueue);
     }
   
-    cqCommandQueue = clCreateCommandQueue(cxGPUContext, devices[device], CL_QUEUE_PROFILING_ENABLE, NULL);
+    cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, devices[device], CL_QUEUE_PROFILING_ENABLE, NULL);
 }
   
 ///////////////////////////////////////////////////////////////////////////////
@@ -566,7 +567,7 @@ double testDeviceToHostTransfer(unsigned int memSize, accessMode accMode, memory
     if(memMode == PINNED)
     {
         // Create a host buffer
-        cmPinnedData = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, memSize, NULL, &ciErrNum);
+        cmPinnedData = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, memSize, NULL, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         // Get a mapped pointer
@@ -596,7 +597,7 @@ double testDeviceToHostTransfer(unsigned int memSize, accessMode accMode, memory
     }
 
     // allocate device memory 
-    cmDevData = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
+    cmDevData = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     // initialize device memory 
@@ -605,12 +606,12 @@ double testDeviceToHostTransfer(unsigned int memSize, accessMode accMode, memory
 	    // Get a mapped pointer
         h_data = (unsigned char*)clEnqueueMapBuffer(cqCommandQueue, cmPinnedData, CL_TRUE, CL_MAP_WRITE, 0, memSize, 0, NULL, NULL, &ciErrNum);	        
 
-        ciErrNum = clEnqueueWriteBuffer(cqCommandQueue, cmDevData, CL_FALSE, 0, memSize, h_data, 0, NULL, NULL);
+        ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue, cmDevData, CL_FALSE, 0, memSize, h_data, 0, NULL, NULL);
         oclCheckError(ciErrNum, CL_SUCCESS);
     }
     else
     {
-        ciErrNum = clEnqueueWriteBuffer(cqCommandQueue, cmDevData, CL_FALSE, 0, memSize, h_data, 0, NULL, NULL);
+        ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue, cmDevData, CL_FALSE, 0, memSize, h_data, 0, NULL, NULL);
         oclCheckError(ciErrNum, CL_SUCCESS);
     }
     oclCheckError(ciErrNum, CL_SUCCESS);
@@ -623,7 +624,7 @@ double testDeviceToHostTransfer(unsigned int memSize, accessMode accMode, memory
         // DIRECT:  API access to device buffer 
         for(unsigned int i = 0; i < MEMCOPY_ITERATIONS; i++)
         {
-            ciErrNum = clEnqueueReadBuffer(cqCommandQueue, cmDevData, CL_FALSE, 0, memSize, h_data, 0, NULL, NULL);
+            ciErrNum = CECL_READ_BUFFER(cqCommandQueue, cmDevData, CL_FALSE, 0, memSize, h_data, 0, NULL, NULL);
             oclCheckError(ciErrNum, CL_SUCCESS);
         }
         ciErrNum = clFinish(cqCommandQueue);
@@ -675,7 +676,7 @@ double testHostToDeviceTransfer(unsigned int memSize, accessMode accMode, memory
     if(memMode == PINNED)
    { 
         // Create a host buffer
-        cmPinnedData = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, memSize, NULL, &ciErrNum);
+        cmPinnedData = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, memSize, NULL, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         // Get a mapped pointer
@@ -706,7 +707,7 @@ double testHostToDeviceTransfer(unsigned int memSize, accessMode accMode, memory
     }
 
     // allocate device memory 
-    cmDevData = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
+    cmDevData = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     // Sync queue to host, start timer 0, and copy data from Host to GPU
@@ -724,7 +725,7 @@ double testHostToDeviceTransfer(unsigned int memSize, accessMode accMode, memory
         // DIRECT:  API access to device buffer 
         for(unsigned int i = 0; i < MEMCOPY_ITERATIONS; i++)
         {
-                ciErrNum = clEnqueueWriteBuffer(cqCommandQueue, cmDevData, CL_FALSE, 0, memSize, h_data, 0, NULL, NULL);
+                ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue, cmDevData, CL_FALSE, 0, memSize, h_data, 0, NULL, NULL);
                 oclCheckError(ciErrNum, CL_SUCCESS);
         }
         ciErrNum = clFinish(cqCommandQueue);
@@ -785,11 +786,11 @@ double testDeviceToDeviceTransfer(unsigned int memSize)
     }
 
     // allocate device input and output memory and initialize the device input memory
-    cl_mem d_idata = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, memSize, NULL, &ciErrNum);
+    cl_mem d_idata = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, memSize, NULL, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
-    cl_mem d_odata = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, memSize, NULL, &ciErrNum);         
+    cl_mem d_odata = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, memSize, NULL, &ciErrNum);         
     oclCheckError(ciErrNum, CL_SUCCESS);
-    ciErrNum = clEnqueueWriteBuffer(cqCommandQueue, d_idata, CL_TRUE, 0, memSize, h_idata, 0, NULL, NULL);
+    ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue, d_idata, CL_TRUE, 0, memSize, h_idata, 0, NULL, NULL);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     // Sync queue to host, start timer 0, and copy data from one GPU buffer to another GPU bufffer

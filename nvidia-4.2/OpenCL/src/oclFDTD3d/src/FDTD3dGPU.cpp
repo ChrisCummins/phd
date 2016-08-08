@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -233,12 +234,12 @@ bool fdtdGPU(float *output, const float *input, const float *coeff, const int di
     // Create a command-queue
     if (ok)
     {
-        shrLog(" clCreateCommandQueue\n"); 
-        commandQueue = clCreateCommandQueue(context, devices[targetDevice], CL_QUEUE_PROFILING_ENABLE, &errnum);
+        shrLog(" CECL_CREATE_COMMAND_QUEUE\n"); 
+        commandQueue = CECL_CREATE_COMMAND_QUEUE(context, devices[targetDevice], CL_QUEUE_PROFILING_ENABLE, &errnum);
         if (errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clCreateCommandQueue (returned %d).\n", errnum);
+            shrLog("CECL_CREATE_COMMAND_QUEUE (returned %d).\n", errnum);
             ok = false;
         }
     }
@@ -246,34 +247,34 @@ bool fdtdGPU(float *output, const float *input, const float *coeff, const int di
     // Create memory buffer objects
     if (ok)
     {
-        shrLog(" clCreateBuffer bufferOut\n"); 
-        bufferOut = clCreateBuffer(context, CL_MEM_READ_WRITE, paddedVolumeSize * sizeof(float), NULL, &errnum);
+        shrLog(" CECL_BUFFER bufferOut\n"); 
+        bufferOut = CECL_BUFFER(context, CL_MEM_READ_WRITE, paddedVolumeSize * sizeof(float), NULL, &errnum);
         if (errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clCreateBuffer (returned %d).\n", errnum);
+            shrLog("CECL_BUFFER (returned %d).\n", errnum);
             ok = false;
         }
     }
     if (ok)
     {
-        shrLog(" clCreateBuffer bufferIn\n"); 
-        bufferIn = clCreateBuffer(context, CL_MEM_READ_WRITE, paddedVolumeSize * sizeof(float), NULL, &errnum);
+        shrLog(" CECL_BUFFER bufferIn\n"); 
+        bufferIn = CECL_BUFFER(context, CL_MEM_READ_WRITE, paddedVolumeSize * sizeof(float), NULL, &errnum);
         if (errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clCreateBuffer (returned %d).\n", errnum);
+            shrLog("CECL_BUFFER (returned %d).\n", errnum);
             ok = false;
         }
     }
     if (ok)
     {
-        shrLog(" clCreateBuffer bufferCoeff\n"); 
-        bufferCoeff = clCreateBuffer(context, CL_MEM_READ_ONLY, (radius + 1) * sizeof(float), NULL, &errnum);
+        shrLog(" CECL_BUFFER bufferCoeff\n"); 
+        bufferCoeff = CECL_BUFFER(context, CL_MEM_READ_ONLY, (radius + 1) * sizeof(float), NULL, &errnum);
         if (errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clCreateBuffer (returned %d).\n", errnum);
+            shrLog("CECL_BUFFER (returned %d).\n", errnum);
             ok = false;
         }
     }
@@ -305,12 +306,12 @@ bool fdtdGPU(float *output, const float *input, const float *coeff, const int di
     // Create the program
     if (ok)
     {
-        shrLog(" clCreateProgramWithSource\n");
-        program = clCreateProgramWithSource(context, 1, (const char **)&cSourceCL, &szKernelLength, &errnum);
+        shrLog(" CECL_PROGRAM_WITH_SOURCE\n");
+        program = CECL_PROGRAM_WITH_SOURCE(context, 1, (const char **)&cSourceCL, &szKernelLength, &errnum);
         if (errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clCreateProgramWithSource (returned %d).\n", errnum);
+            shrLog("CECL_PROGRAM_WITH_SOURCE (returned %d).\n", errnum);
             ok = false;
         }
     }
@@ -364,14 +365,14 @@ bool fdtdGPU(float *output, const float *input, const float *coeff, const int di
     }
     if (ok)
     {
-        shrLog(" clBuildProgram (%s)\n", buildOptions);
-        errnum = clBuildProgram(program, 0, NULL, buildOptions, NULL, NULL);
+        shrLog(" CECL_PROGRAM (%s)\n", buildOptions);
+        errnum = CECL_PROGRAM(program, 0, NULL, buildOptions, NULL, NULL);
         if (errnum != CL_SUCCESS)
         {
             char buildLog[10240];
             clGetProgramBuildInfo(program, devices[0], CL_PROGRAM_BUILD_LOG, sizeof(buildLog), buildLog, NULL);
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clBuildProgram (returned %d).\n", errnum);
+            shrLog("CECL_PROGRAM (returned %d).\n", errnum);
             shrLog("Log:\n%s\n", buildLog);
             ok = false;
         }
@@ -380,12 +381,12 @@ bool fdtdGPU(float *output, const float *input, const float *coeff, const int di
     // Create the kernel
     if (ok)
     {
-        shrLog(" clCreateKernel\n");
-        kernel = clCreateKernel(program, "FiniteDifferences", &errnum);
+        shrLog(" CECL_KERNEL\n");
+        kernel = CECL_KERNEL(program, "FiniteDifferences", &errnum);
         if (kernel == (cl_kernel)NULL || errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clCreateKernel (returned %d).\n", errnum);
+            shrLog("CECL_KERNEL (returned %d).\n", errnum);
             ok = false;
         }
     }
@@ -419,36 +420,36 @@ bool fdtdGPU(float *output, const float *input, const float *coeff, const int di
     // Copy the input to the device input buffer
     if (ok)
     {
-        shrLog(" clEnqueueWriteBuffer bufferIn\n");
-        errnum = clEnqueueWriteBuffer(commandQueue, bufferIn, CL_TRUE, padding * sizeof(float), volumeSize * sizeof(float), input, 0, NULL, NULL);
+        shrLog(" CECL_WRITE_BUFFER bufferIn\n");
+        errnum = CECL_WRITE_BUFFER(commandQueue, bufferIn, CL_TRUE, padding * sizeof(float), volumeSize * sizeof(float), input, 0, NULL, NULL);
         if (errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clEnqueueWriteBuffer bufferIn (returned %d).\n", errnum);
+            shrLog("CECL_WRITE_BUFFER bufferIn (returned %d).\n", errnum);
             ok = false;
         }
     }
     // Copy the input to the device output buffer (actually only need the halo)
     if (ok)
     {
-        shrLog(" clEnqueueWriteBuffer bufferOut\n");
-        errnum = clEnqueueWriteBuffer(commandQueue, bufferOut, CL_TRUE, padding * sizeof(float), volumeSize * sizeof(float), input, 0, NULL, NULL);
+        shrLog(" CECL_WRITE_BUFFER bufferOut\n");
+        errnum = CECL_WRITE_BUFFER(commandQueue, bufferOut, CL_TRUE, padding * sizeof(float), volumeSize * sizeof(float), input, 0, NULL, NULL);
         if (errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clEnqueueWriteBuffer bufferOut (returned %d).\n", errnum);
+            shrLog("CECL_WRITE_BUFFER bufferOut (returned %d).\n", errnum);
             ok = false;
         }
     }
     // Copy the coefficients to the device coefficient buffer
     if (ok)
     {
-        shrLog(" clEnqueueWriteBuffer bufferCoeff\n");
-        errnum = clEnqueueWriteBuffer(commandQueue, bufferCoeff, CL_TRUE, 0, (radius + 1) * sizeof(float), coeff, 0, NULL, NULL);
+        shrLog(" CECL_WRITE_BUFFER bufferCoeff\n");
+        errnum = CECL_WRITE_BUFFER(commandQueue, bufferCoeff, CL_TRUE, 0, (radius + 1) * sizeof(float), coeff, 0, NULL, NULL);
         if (errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clEnqueueWriteBuffer bufferCoeff (returned %d).\n", errnum);
+            shrLog("CECL_WRITE_BUFFER bufferCoeff (returned %d).\n", errnum);
             ok = false;
         }
     }
@@ -471,16 +472,16 @@ bool fdtdGPU(float *output, const float *input, const float *coeff, const int di
     // Set the constant arguments
     if (ok)
     {
-        shrLog(" clSetKernelArg 2-6\n");
-        errnum = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&bufferCoeff);
-        errnum |= clSetKernelArg(kernel, 3, sizeof(int), &dimx);
-        errnum |= clSetKernelArg(kernel, 4, sizeof(int), &dimy);
-        errnum |= clSetKernelArg(kernel, 5, sizeof(int), &dimz);
-        errnum |= clSetKernelArg(kernel, 6, sizeof(int), &padding);
+        shrLog(" CECL_SET_KERNEL_ARG 2-6\n");
+        errnum = CECL_SET_KERNEL_ARG(kernel, 2, sizeof(cl_mem), (void *)&bufferCoeff);
+        errnum |= CECL_SET_KERNEL_ARG(kernel, 3, sizeof(int), &dimx);
+        errnum |= CECL_SET_KERNEL_ARG(kernel, 4, sizeof(int), &dimy);
+        errnum |= CECL_SET_KERNEL_ARG(kernel, 5, sizeof(int), &dimz);
+        errnum |= CECL_SET_KERNEL_ARG(kernel, 6, sizeof(int), &padding);
         if (errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clSetKernelArg 2-6 (returned %d).\n", errnum);
+            shrLog("CECL_SET_KERNEL_ARG 2-6 (returned %d).\n", errnum);
             ok = false;     
         }
     }
@@ -499,13 +500,13 @@ bool fdtdGPU(float *output, const float *input, const float *coeff, const int di
         // Set the dynamic arguments
         if (ok)
         {
-            shrLog(" clSetKernelArg 0-1,");
-            errnum = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&bufferDst);
-            errnum |= clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&bufferSrc);
+            shrLog(" CECL_SET_KERNEL_ARG 0-1,");
+            errnum = CECL_SET_KERNEL_ARG(kernel, 0, sizeof(cl_mem), (void *)&bufferDst);
+            errnum |= CECL_SET_KERNEL_ARG(kernel, 1, sizeof(cl_mem), (void *)&bufferSrc);
             if (errnum != CL_SUCCESS)
             {
                 shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-                shrLog("clSetKernelArg 0-1 (returned %d).\n", errnum);
+                shrLog("CECL_SET_KERNEL_ARG 0-1 (returned %d).\n", errnum);
                 ok = false;               
             }
         }
@@ -513,12 +514,12 @@ bool fdtdGPU(float *output, const float *input, const float *coeff, const int di
         // Launch the kernel
         if (ok)
         {
-            shrLog(" clEnqueueNDRangeKernel\n");
-            errnum = clEnqueueNDRangeKernel(commandQueue, kernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, &kernelEvents[it]);
+            shrLog(" CECL_ND_RANGE_KERNEL\n");
+            errnum = CECL_ND_RANGE_KERNEL(commandQueue, kernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, &kernelEvents[it]);
             if (errnum != CL_SUCCESS)
             {
                 shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-                shrLog("clEnqueueNDRangeKernel (returned %d).\n", errnum);
+                shrLog("CECL_ND_RANGE_KERNEL (returned %d).\n", errnum);
                 ok = false;   
             }
         }
@@ -549,12 +550,12 @@ bool fdtdGPU(float *output, const float *input, const float *coeff, const int di
     // Read the result back, result is in bufferSrc (after final toggle)
     if (ok)
     {
-        shrLog(" clEnqueueReadBuffer\n");
-        errnum = clEnqueueReadBuffer(commandQueue, bufferSrc, CL_TRUE, padding * sizeof(float), volumeSize * sizeof(float), output, 0, NULL, NULL);
+        shrLog(" CECL_READ_BUFFER\n");
+        errnum = CECL_READ_BUFFER(commandQueue, bufferSrc, CL_TRUE, padding * sizeof(float), volumeSize * sizeof(float), output, 0, NULL, NULL);
         if (errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, STDERROR);
-            shrLog("clEnqueueReadBuffer bufferSrc (returned %d).\n", errnum);
+            shrLog("CECL_READ_BUFFER bufferSrc (returned %d).\n", errnum);
             ok = false;  
         }
     }

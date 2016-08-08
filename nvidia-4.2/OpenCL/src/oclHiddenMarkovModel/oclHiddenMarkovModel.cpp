@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -87,12 +88,12 @@ int main(int argc, const char **argv)
     cxGPUContext = clCreateContext(0, nDevice, cdDevices, NULL, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, NULL);
 
-    shrLog("clCreateCommandQueue\n"); 
+    shrLog("CECL_CREATE_COMMAND_QUEUE\n"); 
     int id_device;
     if(shrGetCmdLineArgumenti(argc, argv, "device", &id_device)) // Set up command queue(s) for GPU specified on the command line
     {
         // create a command que
-        cqCommandQue[0] = clCreateCommandQueue(cxGPUContext, cdDevices[id_device], 0, &ciErrNum);
+        cqCommandQue[0] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[id_device], 0, &ciErrNum);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, NULL);
         oclPrintDevInfo(LOGBOTH, cdDevices[id_device]);
         nDevice = 1;   
@@ -101,7 +102,7 @@ int main(int argc, const char **argv)
     { // create command queues for all available devices        
         for (cl_uint i = 0; i < nDevice; i++) 
         {
-            cqCommandQue[i] = clCreateCommandQueue(cxGPUContext, cdDevices[i], CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+            cqCommandQue[i] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[i], CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
             oclCheckErrorEX(ciErrNum, CL_SUCCESS, NULL);
         }
         for (cl_uint i = 0; i < nDevice; i++) oclPrintDevInfo(LOGBOTH, cdDevices[i]);
@@ -153,8 +154,8 @@ int main(int argc, const char **argv)
     cl_mem *vPath = (cl_mem*)malloc(sizeof(cl_mem)*nDevice);
     for (cl_uint iDevice = 0; iDevice < nDevice; iDevice++)
     {
-        vProb[iDevice] = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, sizeof(float), NULL, &ciErrNum);
-        vPath[iDevice] = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, sizeof(int)*nObs, NULL, &ciErrNum);
+        vProb[iDevice] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, sizeof(float), NULL, &ciErrNum);
+        vPath[iDevice] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, sizeof(int)*nObs, NULL, &ciErrNum);
     }
 
 #ifdef GPU_PROFILING
@@ -185,7 +186,7 @@ int main(int argc, const char **argv)
 
     for (cl_uint iDevice = 0; iDevice < nDevice; iDevice++)
     {
-        ciErrNum = clEnqueueReadBuffer(cqCommandQue[iDevice], vPath[iDevice], CL_TRUE, 0, sizeof(int)*nObs, viterbiPathGPU[iDevice], 0, NULL, NULL);
+        ciErrNum = CECL_READ_BUFFER(cqCommandQue[iDevice], vPath[iDevice], CL_TRUE, 0, sizeof(int)*nObs, viterbiPathGPU[iDevice], 0, NULL, NULL);
     }
 
     shrLog("\nCompute Viterbi path on CPU\n");

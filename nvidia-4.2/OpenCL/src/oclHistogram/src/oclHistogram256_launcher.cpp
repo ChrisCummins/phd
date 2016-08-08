@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -42,21 +43,21 @@ extern "C" void initHistogram256(cl_context cxGPUContext, cl_command_queue cqPar
         shrCheckError(cHistogram256 != NULL, shrTRUE);
 
     shrLog("...creating histogram256 program\n");
-        cpHistogram256 = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cHistogram256, &kernelLength, &ciErrNum);
+        cpHistogram256 = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cHistogram256, &kernelLength, &ciErrNum);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("...building histogram256 program\n");
-        ciErrNum = clBuildProgram(cpHistogram256, 0, NULL, compileOptions, NULL, NULL);
+        ciErrNum = CECL_PROGRAM(cpHistogram256, 0, NULL, compileOptions, NULL, NULL);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("...creating histogram256 kernels\n");
-        ckHistogram256 = clCreateKernel(cpHistogram256, "histogram256", &ciErrNum);
+        ckHistogram256 = CECL_KERNEL(cpHistogram256, "histogram256", &ciErrNum);
         shrCheckError(ciErrNum, CL_SUCCESS);
-        ckMergeHistogram256 = clCreateKernel(cpHistogram256, "mergeHistogram256", &ciErrNum);
+        ckMergeHistogram256 = CECL_KERNEL(cpHistogram256, "mergeHistogram256", &ciErrNum);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("...allocating internal histogram256 buffer\n");
-        d_PartialHistograms = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, PARTIAL_HISTOGRAM256_COUNT * HISTOGRAM256_BIN_COUNT * sizeof(cl_uint), NULL, &ciErrNum);
+        d_PartialHistograms = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, PARTIAL_HISTOGRAM256_COUNT * HISTOGRAM256_BIN_COUNT * sizeof(cl_uint), NULL, &ciErrNum);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
     //Save default command queue
@@ -89,28 +90,28 @@ extern "C" size_t histogram256(cl_command_queue cqCommandQueue, cl_mem d_Histogr
     {
         shrCheckError( ((byteCount % 4) == 0), shrTRUE );
         uint dataCount = byteCount / 4;
-        ciErrNum  = clSetKernelArg(ckHistogram256, 0, sizeof(cl_mem),  (void *)&d_PartialHistograms);
-        ciErrNum |= clSetKernelArg(ckHistogram256, 1, sizeof(cl_mem),  (void *)&d_Data);
-        ciErrNum |= clSetKernelArg(ckHistogram256, 2, sizeof(cl_uint), (void *)&dataCount);
+        ciErrNum  = CECL_SET_KERNEL_ARG(ckHistogram256, 0, sizeof(cl_mem),  (void *)&d_PartialHistograms);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckHistogram256, 1, sizeof(cl_mem),  (void *)&d_Data);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckHistogram256, 2, sizeof(cl_uint), (void *)&dataCount);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
         localWorkSize  = WARP_SIZE * WARP_COUNT;
         globalWorkSize = PARTIAL_HISTOGRAM256_COUNT * localWorkSize;
 
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckHistogram256, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckHistogram256, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
         shrCheckError(ciErrNum, CL_SUCCESS);
     }
 
     {
-        ciErrNum  = clSetKernelArg(ckMergeHistogram256, 0, sizeof(cl_mem),  (void *)&d_Histogram);
-        ciErrNum |= clSetKernelArg(ckMergeHistogram256, 1, sizeof(cl_mem),  (void *)&d_PartialHistograms);
-        ciErrNum |= clSetKernelArg(ckMergeHistogram256, 2, sizeof(cl_uint), (void *)&PARTIAL_HISTOGRAM256_COUNT);
+        ciErrNum  = CECL_SET_KERNEL_ARG(ckMergeHistogram256, 0, sizeof(cl_mem),  (void *)&d_Histogram);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckMergeHistogram256, 1, sizeof(cl_mem),  (void *)&d_PartialHistograms);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckMergeHistogram256, 2, sizeof(cl_uint), (void *)&PARTIAL_HISTOGRAM256_COUNT);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
         localWorkSize  = MERGE_WORKGROUP_SIZE;
         globalWorkSize = HISTOGRAM256_BIN_COUNT * localWorkSize;
 
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckMergeHistogram256, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckMergeHistogram256, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
         return (WARP_SIZE * WARP_COUNT);

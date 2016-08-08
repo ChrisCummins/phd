@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -91,20 +92,20 @@ int main(int argc, char **argv)
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         //Create a command-queue
-        cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevices[uiTargetDevice], CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+        cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[uiTargetDevice], CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Initializing OpenCL separable convolution...\n");
         initConvolutionSeparable(cxGPUContext, cqCommandQueue, (const char **)argv);
 
     shrLog("Creating OpenCL memory objects...\n");
-        c_Kernel = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, KERNEL_LENGTH * sizeof(cl_float), h_Kernel, &ciErrNum);
+        c_Kernel = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, KERNEL_LENGTH * sizeof(cl_float), h_Kernel, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        d_Input = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, imageW * imageH * sizeof(cl_float), h_Input, &ciErrNum);
+        d_Input = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, imageW * imageH * sizeof(cl_float), h_Input, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        d_Buffer = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, imageW * imageH * sizeof(cl_float), NULL, &ciErrNum);
+        d_Buffer = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, imageW * imageH * sizeof(cl_float), NULL, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        d_Output = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, imageW * imageH * sizeof(cl_float), NULL, &ciErrNum);
+        d_Output = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, imageW * imageH * sizeof(cl_float), NULL, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Applying separable convolution to %u x %u image...\n\n", imageW, imageH);
@@ -172,7 +173,7 @@ int main(int argc, char **argv)
 #endif
 
     shrLog("Reading back OpenCL results...\n\n");
-        ciErrNum = clEnqueueReadBuffer(cqCommandQueue, d_Output, CL_TRUE, 0, imageW * imageH * sizeof(cl_float), h_OutputGPU, 0, NULL, NULL);
+        ciErrNum = CECL_READ_BUFFER(cqCommandQueue, d_Output, CL_TRUE, 0, imageW * imageH * sizeof(cl_float), h_OutputGPU, 0, NULL, NULL);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Comparing against Host/C++ computation...\n"); 

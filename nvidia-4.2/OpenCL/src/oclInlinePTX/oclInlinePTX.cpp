@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2011 NVIDIA Corporation.  All rights reserved.
  *
@@ -150,18 +151,18 @@ int main(int argc, char **argv)
     }
 
     // Create a command-queue
-    cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevices[0], 0, &ciErr1);
+    cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[0], 0, &ciErr1);
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clCreateCommandQueue, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_CREATE_COMMAND_QUEUE, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(EXIT_FAILURE);
     }
 
     // Allocate the OpenCL buffer memory objects for source and result on the device GMEM
-    cmDevBuffer = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, sizeof(int) * N, NULL, &ciErr1);
+    cmDevBuffer = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, sizeof(int) * N, NULL, &ciErr1);
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clCreateBuffer, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_BUFFER, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(EXIT_FAILURE);
     }
     
@@ -171,35 +172,35 @@ int main(int argc, char **argv)
     cSourceCL = oclLoadProgSource(cPathAndName, "", &szKernelLength);
 
     // Create the program
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cSourceCL, &szKernelLength, &ciErr1);
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cSourceCL, &szKernelLength, &ciErr1);
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clCreateProgramWithSource, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_PROGRAM_WITH_SOURCE, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(EXIT_FAILURE);
     }
 
-    ciErr1 = clBuildProgram(cpProgram, 0, NULL, NULL, NULL, NULL);
+    ciErr1 = CECL_PROGRAM(cpProgram, 0, NULL, NULL, NULL, NULL);
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clBuildProgram, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_PROGRAM, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
 	oclLogBuildInfo(cpProgram, cdDevices[0]);
         Cleanup(EXIT_FAILURE);
     }
 
     // Create the kernel
-    ckKernel = clCreateKernel(cpProgram, "sequence_gpu", &ciErr1);
+    ckKernel = CECL_KERNEL(cpProgram, "sequence_gpu", &ciErr1);
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clCreateKernel, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_KERNEL, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(EXIT_FAILURE);
     }
 
     // Set the Argument values
-    ciErr1 = clSetKernelArg(ckKernel, 0, sizeof(cl_mem), (void*)&cmDevBuffer);
-    ciErr1 |= clSetKernelArg(ckKernel, 1, sizeof(cl_int), (void*)&N);
+    ciErr1 = CECL_SET_KERNEL_ARG(ckKernel, 0, sizeof(cl_mem), (void*)&cmDevBuffer);
+    ciErr1 |= CECL_SET_KERNEL_ARG(ckKernel, 1, sizeof(cl_int), (void*)&N);
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clSetKernelArg, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_SET_KERNEL_ARG, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(EXIT_FAILURE);
     }
 
@@ -211,10 +212,10 @@ int main(int argc, char **argv)
     szGlobalWorkSize = shrRoundUp(szLocalWorkSize, N);
 
     // Launch kernel
-    ciErr1 = clEnqueueNDRangeKernel(cqCommandQueue, ckKernel, 1, NULL, &szGlobalWorkSize, &szLocalWorkSize, 0, NULL, NULL);
+    ciErr1 = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckKernel, 1, NULL, &szGlobalWorkSize, &szLocalWorkSize, 0, NULL, NULL);
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clEnqueueNDRangeKernel, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_ND_RANGE_KERNEL, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(EXIT_FAILURE);
     }
 
@@ -227,11 +228,11 @@ int main(int argc, char **argv)
 	h_d_ptr = (int*) malloc(N * sizeof(int));
 
     // Synchronous/blocking read of results, and check accumulated errors
-    ciErr1 = clEnqueueReadBuffer(cqCommandQueue, cmDevBuffer, CL_TRUE, 0, sizeof(int) * N, h_d_ptr, 0, NULL, NULL);
-    shrLog("clEnqueueReadBuffer (Dst)...\n\n"); 
+    ciErr1 = CECL_READ_BUFFER(cqCommandQueue, cmDevBuffer, CL_TRUE, 0, sizeof(int) * N, h_d_ptr, 0, NULL, NULL);
+    shrLog("CECL_READ_BUFFER (Dst)...\n\n"); 
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clEnqueueReadBuffer, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_READ_BUFFER, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(EXIT_FAILURE);
     }
 

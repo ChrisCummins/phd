@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
 * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
 *
@@ -176,7 +177,7 @@ int main(int argc, char** argv)
     oclPrintDevInfo(LOGBOTH, cdDevices[uiDeviceUsed]);
 
     // create a command-queue
-    cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevices[uiDeviceUsed], 0, &ciErrNum);
+    cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[uiDeviceUsed], 0, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Program Setup
@@ -187,14 +188,14 @@ int main(int argc, char** argv)
     oclCheckErrorEX(cSourceCL != NULL, shrTRUE, pCleanup);
 
     // create the program
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1,
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1,
 					  (const char **)&cSourceCL, &program_length, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     
     // build the program
     std::string buildOpts = "-cl-fast-relaxed-math";
     buildOpts += g_bImageSupport ? " -DIMAGE_SUPPORT" : "";
-    ciErrNum = clBuildProgram(cpProgram, 0, NULL, buildOpts.c_str(), NULL, NULL);
+    ciErrNum = CECL_PROGRAM(cpProgram, 0, NULL, buildOpts.c_str(), NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // write out standard error, Build Log and PTX, then cleanup and return error
@@ -205,7 +206,7 @@ int main(int argc, char** argv)
     }
 
     // create the kernel
-    ckKernel = clCreateKernel(cpProgram, "d_render", &ciErrNum);
+    ckKernel = CECL_KERNEL(cpProgram, "d_render", &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // parse arguments
@@ -274,16 +275,16 @@ void render()
 		ciErrNum |= clEnqueueAcquireGLObjects(cqCommandQueue, 1, &pbo_cl, 0, 0, 0);
 	}
 
-	ciErrNum |= clEnqueueWriteBuffer(cqCommandQueue,d_invViewMatrix,CL_FALSE, 0,12*sizeof(float), invViewMatrix, 0, 0, 0);	
+	ciErrNum |= CECL_WRITE_BUFFER(cqCommandQueue,d_invViewMatrix,CL_FALSE, 0,12*sizeof(float), invViewMatrix, 0, 0, 0);	
 
     // execute OpenCL kernel, writing results to PBO
     size_t localSize[] = {LOCAL_SIZE_X,LOCAL_SIZE_Y};
 
-    ciErrNum |= clSetKernelArg(ckKernel, 3, sizeof(float), &density);
-    ciErrNum |= clSetKernelArg(ckKernel, 4, sizeof(float), &brightness);
-    ciErrNum |= clSetKernelArg(ckKernel, 5, sizeof(float), &transferOffset);
-    ciErrNum |= clSetKernelArg(ckKernel, 6, sizeof(float), &transferScale);
-    ciErrNum |= clEnqueueNDRangeKernel(cqCommandQueue, ckKernel, 2, NULL, gridSize, localSize, 0, 0, 0);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 3, sizeof(float), &density);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 4, sizeof(float), &brightness);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 5, sizeof(float), &transferOffset);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 6, sizeof(float), &transferScale);
+    ciErrNum |= CECL_ND_RANGE_KERNEL(cqCommandQueue, ckKernel, 2, NULL, gridSize, localSize, 0, 0, 0);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
 	if( g_glInterop ) {
@@ -299,7 +300,7 @@ void render()
 		// map the buffer object into client's memory
 		GLubyte* ptr = (GLubyte*)glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB,
 			GL_WRITE_ONLY_ARB);
-		clEnqueueReadBuffer(cqCommandQueue, pbo_cl, CL_TRUE, 0, sizeof(unsigned int) * height * width, ptr, 0, NULL, NULL);        
+		CECL_READ_BUFFER(cqCommandQueue, pbo_cl, CL_TRUE, 0, sizeof(unsigned int) * height * width, ptr, 0, NULL, NULL);        
 		oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB); 
 	}
@@ -446,7 +447,7 @@ void KeyboardGL(unsigned char key, int /*x*/, int /*y*/)
         case 'F':
         case 'f':
                     linearFiltering = !linearFiltering;
-                    ciErrNum = clSetKernelArg(ckKernel, 10, sizeof(cl_sampler), linearFiltering ? &volumeSamplerLinear : &volumeSamplerNearest);
+                    ciErrNum = CECL_SET_KERNEL_ARG(ckKernel, 10, sizeof(cl_sampler), linearFiltering ? &volumeSamplerLinear : &volumeSamplerNearest);
                     shrLog("\nLinear Filtering Toggled %s...\n", linearFiltering ? "ON" : "OFF");
                     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
                     break;
@@ -673,16 +674,16 @@ void initCLVolume(uchar *h_volume)
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
         // set image and sampler args
-        ciErrNum = clSetKernelArg(ckKernel, 8, sizeof(cl_mem), (void *) &d_volumeArray);
-		ciErrNum |= clSetKernelArg(ckKernel, 9, sizeof(cl_mem), (void *) &d_transferFuncArray);
-        ciErrNum |= clSetKernelArg(ckKernel, 10, sizeof(cl_sampler), linearFiltering ? &volumeSamplerLinear : &volumeSamplerNearest);
-        ciErrNum |= clSetKernelArg(ckKernel, 11, sizeof(cl_sampler), &transferFuncSampler);
+        ciErrNum = CECL_SET_KERNEL_ARG(ckKernel, 8, sizeof(cl_mem), (void *) &d_volumeArray);
+		ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 9, sizeof(cl_mem), (void *) &d_transferFuncArray);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 10, sizeof(cl_sampler), linearFiltering ? &volumeSamplerLinear : &volumeSamplerNearest);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 11, sizeof(cl_sampler), &transferFuncSampler);
 		oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 	}
 
     // init invViewMatrix
-    d_invViewMatrix = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, 12 * sizeof(float), 0, &ciErrNum);
-    ciErrNum |= clSetKernelArg(ckKernel, 7, sizeof(cl_mem), (void *) &d_invViewMatrix);
+    d_invViewMatrix = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, 12 * sizeof(float), 0, &ciErrNum);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 7, sizeof(cl_mem), (void *) &d_invViewMatrix);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 }
 
@@ -741,16 +742,16 @@ void initPixelBuffer()
 		pbo_cl = clCreateFromGLBuffer(cxGPUContext,CL_MEM_WRITE_ONLY, pbo, &ciErrNum);
 		oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 	} else {
-		pbo_cl = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, width * height * sizeof(GLubyte) * 4, NULL, &ciErrNum);
+		pbo_cl = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, width * height * sizeof(GLubyte) * 4, NULL, &ciErrNum);
 	}
 
     // calculate new grid size
 	gridSize[0] = shrRoundUp(LOCAL_SIZE_X,width);
 	gridSize[1] = shrRoundUp(LOCAL_SIZE_Y,height);
 
-    ciErrNum |= clSetKernelArg(ckKernel, 0, sizeof(cl_mem), (void *) &pbo_cl);
-    ciErrNum |= clSetKernelArg(ckKernel, 1, sizeof(unsigned int), &width);
-    ciErrNum |= clSetKernelArg(ckKernel, 2, sizeof(unsigned int), &height);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 0, sizeof(cl_mem), (void *) &pbo_cl);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 1, sizeof(unsigned int), &width);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 2, sizeof(unsigned int), &height);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 }
 
@@ -771,26 +772,26 @@ void TestNoGL()
     invViewMatrix[4] = modelView[1]; invViewMatrix[5] = modelView[5]; invViewMatrix[6] = modelView[9]; invViewMatrix[7] = modelView[13];
     invViewMatrix[8] = modelView[2]; invViewMatrix[9] = modelView[6]; invViewMatrix[10] = modelView[10]; invViewMatrix[11] = modelView[14];
     
-    pbo_cl = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY,  width*height*sizeof(GLubyte)*4, NULL, &ciErrNum);
-    ciErrNum |= clEnqueueWriteBuffer(cqCommandQueue,d_invViewMatrix,CL_FALSE, 0,12*sizeof(float), invViewMatrix, 0, 0, 0);
+    pbo_cl = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY,  width*height*sizeof(GLubyte)*4, NULL, &ciErrNum);
+    ciErrNum |= CECL_WRITE_BUFFER(cqCommandQueue,d_invViewMatrix,CL_FALSE, 0,12*sizeof(float), invViewMatrix, 0, 0, 0);
 
     gridSize[0] = width;
     gridSize[1] = height;
 
-    ciErrNum |= clSetKernelArg(ckKernel, 0, sizeof(cl_mem), (void *) &pbo_cl);
-    ciErrNum |= clSetKernelArg(ckKernel, 1, sizeof(unsigned int), &width);
-    ciErrNum |= clSetKernelArg(ckKernel, 2, sizeof(unsigned int), &height);
-    ciErrNum |= clSetKernelArg(ckKernel, 3, sizeof(float), &density);
-    ciErrNum |= clSetKernelArg(ckKernel, 4, sizeof(float), &brightness);
-    ciErrNum |= clSetKernelArg(ckKernel, 5, sizeof(float), &transferOffset);
-    ciErrNum |= clSetKernelArg(ckKernel, 6, sizeof(float), &transferScale);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 0, sizeof(cl_mem), (void *) &pbo_cl);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 1, sizeof(unsigned int), &width);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 2, sizeof(unsigned int), &height);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 3, sizeof(float), &density);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 4, sizeof(float), &brightness);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 5, sizeof(float), &transferOffset);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 6, sizeof(float), &transferScale);
     
     // Warmup
     int iCycles = 20;
     size_t localSize[] = {LOCAL_SIZE_X,LOCAL_SIZE_Y};
     for (int i = 0; i < iCycles ; i++)
     {
-        ciErrNum |= clEnqueueNDRangeKernel(cqCommandQueue, ckKernel, 2, NULL, gridSize, localSize, 0, 0, 0);
+        ciErrNum |= CECL_ND_RANGE_KERNEL(cqCommandQueue, ckKernel, 2, NULL, gridSize, localSize, 0, 0, 0);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     }
     clFinish(cqCommandQueue);
@@ -799,7 +800,7 @@ void TestNoGL()
     shrDeltaT(0); 
     for (int i = 0; i < iCycles ; i++)
     {
-        ciErrNum |= clEnqueueNDRangeKernel(cqCommandQueue, ckKernel, 2, NULL, gridSize, localSize, 0, 0, 0);
+        ciErrNum |= CECL_ND_RANGE_KERNEL(cqCommandQueue, ckKernel, 2, NULL, gridSize, localSize, 0, 0, 0);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     }
     clFinish(cqCommandQueue);

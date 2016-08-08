@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -124,19 +125,19 @@ int main(int argc, char** argv)
     shrLog("\n");
 
     // create a command-queue
-    cqCommandQueue = clCreateCommandQueue(cxGPUContext, device, 0, &ciErrNum);
+    cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, device, 0, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     // Memory Setup
 
     // Constants
-    cmAlphaTable4 = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 4 * sizeof(cl_float), (void*)&alphaTable4[0], &ciErrNum);
+    cmAlphaTable4 = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 4 * sizeof(cl_float), (void*)&alphaTable4[0], &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
-    cmProds4 = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 4 * sizeof(cl_int), (void*)&prods4[0], &ciErrNum);
+    cmProds4 = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 4 * sizeof(cl_int), (void*)&prods4[0], &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
-    cmAlphaTable3 = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 4 * sizeof(cl_float), (void*)&alphaTable3[0], &ciErrNum);
+    cmAlphaTable3 = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 4 * sizeof(cl_float), (void*)&alphaTable3[0], &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
-    cmProds3 = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 4 * sizeof(cl_int), (void*)&prods3[0], &ciErrNum);
+    cmProds3 = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 4 * sizeof(cl_int), (void*)&prods3[0], &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     // Compute permutations.
@@ -144,17 +145,17 @@ int main(int argc, char** argv)
     computePermutations(permutations);
 
     // Upload permutations.
-    cmMemObjs[0] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+    cmMemObjs[0] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                   sizeof(cl_uint) * 1024, permutations, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     // Image
-    cmMemObjs[1] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, memSize, NULL, &ciErrNum);
+    cmMemObjs[1] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, memSize, NULL, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
     
     // Result
     const uint compressedSize = (width / 4) * (height / 4) * 8;
-    cmMemObjs[2] = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, compressedSize, NULL , &ciErrNum);
+    cmMemObjs[2] = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, compressedSize, NULL , &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
     
     unsigned int * h_result = (uint*)malloc(compressedSize);
@@ -167,12 +168,12 @@ int main(int argc, char** argv)
     oclCheckError(source != NULL, shrTRUE);
 
     // create the program
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1,
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1,
         (const char **) &source, &program_length, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     // build the program
-    ciErrNum = clBuildProgram(cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
+    ciErrNum = CECL_PROGRAM(cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // write out standard error, Build Log and PTX, then cleanup and exit
@@ -183,21 +184,21 @@ int main(int argc, char** argv)
     }
 
     // create the kernel
-    ckKernel = clCreateKernel(cpProgram, "compress", &ciErrNum);
+    ckKernel = CECL_KERNEL(cpProgram, "compress", &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     // set the args values
-    ciErrNum  = clSetKernelArg(ckKernel, 0, sizeof(cl_mem), (void *) &cmMemObjs[0]);
-    ciErrNum |= clSetKernelArg(ckKernel, 1, sizeof(cl_mem), (void *) &cmMemObjs[1]);
-    ciErrNum |= clSetKernelArg(ckKernel, 2, sizeof(cl_mem), (void *) &cmMemObjs[2]);
-    ciErrNum |= clSetKernelArg(ckKernel, 3, sizeof(cl_mem), (void*)&cmAlphaTable4);
-    ciErrNum |= clSetKernelArg(ckKernel, 4, sizeof(cl_mem), (void*)&cmProds4);
-    ciErrNum |= clSetKernelArg(ckKernel, 5, sizeof(cl_mem), (void*)&cmAlphaTable3);
-    ciErrNum |= clSetKernelArg(ckKernel, 6, sizeof(cl_mem), (void*)&cmProds3);
+    ciErrNum  = CECL_SET_KERNEL_ARG(ckKernel, 0, sizeof(cl_mem), (void *) &cmMemObjs[0]);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 1, sizeof(cl_mem), (void *) &cmMemObjs[1]);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 2, sizeof(cl_mem), (void *) &cmMemObjs[2]);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 3, sizeof(cl_mem), (void*)&cmAlphaTable4);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 4, sizeof(cl_mem), (void*)&cmProds4);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 5, sizeof(cl_mem), (void*)&cmAlphaTable3);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, 6, sizeof(cl_mem), (void*)&cmProds3);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     // Copy input data host to device
-    clEnqueueWriteBuffer(cqCommandQueue, cmMemObjs[1], CL_FALSE, 0, sizeof(cl_uint) * width * height, block_image, 0,0,0);
+    CECL_WRITE_BUFFER(cqCommandQueue, cmMemObjs[1], CL_FALSE, 0, sizeof(cl_uint) * width * height, block_image, 0,0,0);
 
     // Determine launch configuration and run timed computation numIterations times
 	int blocks = ((width + 3) / 4) * ((height + 3) / 4); // rounds up by 1 block in each dim if %4 != 0
@@ -225,9 +226,9 @@ int main(int argc, char** argv)
 #endif
         // execute kernel
 		for( int j=0; j<blocks; j+= blocksPerLaunch ) {
-			clSetKernelArg(ckKernel, 7, sizeof(int), &j);
+			CECL_SET_KERNEL_ARG(ckKernel, 7, sizeof(int), &j);
 			szGlobalWorkSize[0] = MIN( blocksPerLaunch, blocks-j ) * NUM_THREADS;
-			ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckKernel, 1, NULL,
+			ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckKernel, 1, NULL,
 				                              szGlobalWorkSize, szLocalWorkSize, 
 					                          0, NULL, NULL);
 			oclCheckError(ciErrNum, CL_SUCCESS);
@@ -242,7 +243,7 @@ int main(int argc, char** argv)
 #endif
 
     // blocking read output
-    ciErrNum = clEnqueueReadBuffer(cqCommandQueue, cmMemObjs[2], CL_TRUE, 0,
+    ciErrNum = CECL_READ_BUFFER(cqCommandQueue, cmMemObjs[2], CL_TRUE, 0,
                                    compressedSize, h_result, 0, NULL, NULL);
     oclCheckError(ciErrNum, CL_SUCCESS);
 

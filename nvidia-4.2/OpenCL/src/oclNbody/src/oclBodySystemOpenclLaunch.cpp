@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -36,8 +37,8 @@ extern "C"
 		{
 			memSize = sizeof( double) * 4 * numBodies;
 		}
-		vel[0] = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, memSize, NULL, NULL);
-		vel[1] = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, memSize, NULL, NULL);
+		vel[0] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, memSize, NULL, NULL);
+		vel[1] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, memSize, NULL, NULL);
     }
 
     void DeleteNBodyArrays(cl_mem vel[2])
@@ -61,7 +62,7 @@ extern "C"
 		{
 			size = numBodies * 4 * sizeof(double);
 			double *dHost = (double *)malloc(size);
-			ciErrNum = clEnqueueReadBuffer(cqCommandQueue, device, CL_TRUE, 0, size, dHost, 0, NULL, NULL);
+			ciErrNum = CECL_READ_BUFFER(cqCommandQueue, device, CL_TRUE, 0, size, dHost, 0, NULL, NULL);
 			for (int i = 0; i < numBodies * 4; i++)
 			{
 				host[i] = (float)(dHost[i]);
@@ -71,7 +72,7 @@ extern "C"
 		else
 		{
         	size = numBodies * 4 * sizeof(float);
-        	ciErrNum = clEnqueueReadBuffer(cqCommandQueue, device, CL_TRUE, 0, size, host, 0, NULL, NULL);
+        	ciErrNum = CECL_READ_BUFFER(cqCommandQueue, device, CL_TRUE, 0, size, host, 0, NULL, NULL);
         }
 		oclCheckError(ciErrNum, CL_SUCCESS);
 		
@@ -94,13 +95,13 @@ extern "C"
 			{
 				cdHost[i] = (double)host[i];
 			}
-			ciErrNum = clEnqueueWriteBuffer(cqCommandQueue, device, CL_TRUE, 0, size, cdHost, 0, NULL, NULL);
+			ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue, device, CL_TRUE, 0, size, cdHost, 0, NULL, NULL);
 			free(cdHost);
 		}
 		else
 		{
         	size = numBodies*4*sizeof(float);
-        	ciErrNum = clEnqueueWriteBuffer(cqCommandQueue, device, CL_TRUE, 0, size, host, 0, NULL, NULL);
+        	ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue, device, CL_TRUE, 0, size, host, 0, NULL, NULL);
         }
 		oclCheckError(ciErrNum, CL_SUCCESS);
     }
@@ -175,27 +176,27 @@ extern "C"
             oclCheckError(ciErrNum, CL_SUCCESS);
         }
 
-	    ciErrNum |= clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&newPos);
-        ciErrNum |= clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&newVel);
-        ciErrNum |= clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&oldPos);
-        ciErrNum |= clSetKernelArg(kernel, 3, sizeof(cl_mem), (void *)&oldVel);
+	    ciErrNum |= CECL_SET_KERNEL_ARG(kernel, 0, sizeof(cl_mem), (void *)&newPos);
+        ciErrNum |= CECL_SET_KERNEL_ARG(kernel, 1, sizeof(cl_mem), (void *)&newVel);
+        ciErrNum |= CECL_SET_KERNEL_ARG(kernel, 2, sizeof(cl_mem), (void *)&oldPos);
+        ciErrNum |= CECL_SET_KERNEL_ARG(kernel, 3, sizeof(cl_mem), (void *)&oldVel);
 		if (bDouble)
 		{
 			double ddeltaTime = (double)deltaTime;
 			double ddamping = (double)damping;
 			double dsoftSq = (double)softSq;
-			ciErrNum |= clSetKernelArg(kernel, 4, sizeof(cl_double), (void *)&ddeltaTime);
-			ciErrNum |= clSetKernelArg(kernel, 5, sizeof(cl_double), (void *)&ddamping);
-			ciErrNum |= clSetKernelArg(kernel, 6, sizeof(cl_double), (void *)&dsoftSq);
+			ciErrNum |= CECL_SET_KERNEL_ARG(kernel, 4, sizeof(cl_double), (void *)&ddeltaTime);
+			ciErrNum |= CECL_SET_KERNEL_ARG(kernel, 5, sizeof(cl_double), (void *)&ddamping);
+			ciErrNum |= CECL_SET_KERNEL_ARG(kernel, 6, sizeof(cl_double), (void *)&dsoftSq);
 		}
 		else
 		{
-			ciErrNum |= clSetKernelArg(kernel, 4, sizeof(cl_float), (void *)&deltaTime);
-			ciErrNum |= clSetKernelArg(kernel, 5, sizeof(cl_float), (void *)&damping);
-			ciErrNum |= clSetKernelArg(kernel, 6, sizeof(cl_float), (void *)&softSq);
+			ciErrNum |= CECL_SET_KERNEL_ARG(kernel, 4, sizeof(cl_float), (void *)&deltaTime);
+			ciErrNum |= CECL_SET_KERNEL_ARG(kernel, 5, sizeof(cl_float), (void *)&damping);
+			ciErrNum |= CECL_SET_KERNEL_ARG(kernel, 6, sizeof(cl_float), (void *)&softSq);
 		}
-        ciErrNum |= clSetKernelArg(kernel, 7, sizeof(cl_int), (void *)&numBodies);
-        ciErrNum |= clSetKernelArg(kernel, 8, sharedMemSize, NULL);
+        ciErrNum |= CECL_SET_KERNEL_ARG(kernel, 7, sizeof(cl_int), (void *)&numBodies);
+        ciErrNum |= CECL_SET_KERNEL_ARG(kernel, 8, sharedMemSize, NULL);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         // set work-item dimensions
@@ -205,7 +206,7 @@ extern "C"
         global_work_size[1]= q;
 
         // execute the kernel:
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, kernel, 2, NULL, global_work_size, local_work_size, 0, NULL, NULL);
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, kernel, 2, NULL, global_work_size, local_work_size, 0, NULL, NULL);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         if (bUsePBO)
@@ -277,9 +278,9 @@ extern "C"
 #endif
 
         // create the program 
-        cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&pcSourceForDouble, &szSourceLen, &ciErrNum);
+        cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&pcSourceForDouble, &szSourceLen, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        shrLog("clCreateProgramWithSource\n"); 
+        shrLog("CECL_PROGRAM_WITH_SOURCE\n"); 
 
         // Build the program with 'mad' Optimization option
 #ifdef MAC
@@ -287,7 +288,7 @@ extern "C"
 #else
 	char *flags = "-cl-fast-relaxed-math";
 #endif
-        ciErrNum = clBuildProgram(cpProgram, 0, NULL, flags, NULL, NULL);
+        ciErrNum = CECL_PROGRAM(cpProgram, 0, NULL, flags, NULL, NULL);
         if (ciErrNum != CL_SUCCESS)
         {
             // write out standard error, Build Log and PTX, then cleanup and exit
@@ -296,12 +297,12 @@ extern "C"
             oclLogPtx(cpProgram, oclGetFirstDev(cxGPUContext), "oclNbody.ptx");
             oclCheckError(ciErrNum, CL_SUCCESS); 
         }
-        shrLog("clBuildProgram\n"); 
+        shrLog("CECL_PROGRAM\n"); 
 
         // create the kernel
-        *kernel = clCreateKernel(cpProgram, kernel_name, &ciErrNum);
+        *kernel = CECL_KERNEL(cpProgram, kernel_name, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS); 
-        shrLog("clCreateKernel\n"); 
+        shrLog("CECL_KERNEL\n"); 
 
 		size_t wgSize;
 		ciErrNum = clGetKernelWorkGroupInfo(*kernel, cdDevices[0], CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &wgSize, NULL);

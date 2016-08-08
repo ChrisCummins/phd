@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -213,18 +214,18 @@ int main(int argc, char** argv)
     shrLog("clCreateContext...\n\n"); 
 
     // Create a command-queue 
-    cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevices[uiTargetDevice], 0, &ciErrNum);
+    cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[uiTargetDevice], 0, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateCommandQueue...\n\n"); 
+    shrLog("CECL_CREATE_COMMAND_QUEUE...\n\n"); 
 
     // Allocate the OpenCL source, intermediate and result buffer memory objects on the device GMEM
-    cmDevBufIn = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, szBuffBytes, NULL, &ciErrNum);
+    cmDevBufIn = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, szBuffBytes, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    cmDevBufTemp = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, szBuffBytes, NULL, &ciErrNum);
+    cmDevBufTemp = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, szBuffBytes, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    cmDevBufOut = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, szBuffBytes, NULL, &ciErrNum);
+    cmDevBufOut = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, szBuffBytes, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateBuffer (Input, Intermediate and Output buffers, device GMEM)...\n"); 
+    shrLog("CECL_BUFFER (Input, Intermediate and Output buffers, device GMEM)...\n"); 
 
     // Read the OpenCL kernel source in from file
     free(cPathAndName);
@@ -235,9 +236,9 @@ int main(int argc, char** argv)
     shrLog("oclLoadProgSource...\n"); 
 
     // Create the program 
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cSourceCL, &szKernelLength, &ciErrNum);
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cSourceCL, &szKernelLength, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateProgramWithSource...\n"); 
+    shrLog("CECL_PROGRAM_WITH_SOURCE...\n"); 
 
     // Setup build options string 
     //--------------------------------
@@ -255,7 +256,7 @@ int main(int argc, char** argv)
     #endif
 
     // Build the program 
-    ciErrNum = clBuildProgram(cpProgram, 0, NULL, sBuildOpts.c_str(), NULL, NULL);
+    ciErrNum = CECL_PROGRAM(cpProgram, 0, NULL, sBuildOpts.c_str(), NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // If build problem, write out standard ciErrNum, Build Log and PTX, then cleanup and exit
@@ -265,16 +266,16 @@ int main(int argc, char** argv)
         shrQAFinish(argc, (const char **)argv, QA_FAILED);
         Cleanup(EXIT_FAILURE);
     }
-    shrLog("clBuildProgram...\n"); 
+    shrLog("CECL_PROGRAM...\n"); 
 
     // Create kernels
-    ckSimpleRecursiveRGBA = clCreateKernel(cpProgram, "SimpleRecursiveRGBA", &ciErrNum);
+    ckSimpleRecursiveRGBA = CECL_KERNEL(cpProgram, "SimpleRecursiveRGBA", &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ckRecursiveGaussianRGBA = clCreateKernel(cpProgram, "RecursiveGaussianRGBA", &ciErrNum);
+    ckRecursiveGaussianRGBA = CECL_KERNEL(cpProgram, "RecursiveGaussianRGBA", &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ckTranspose = clCreateKernel(cpProgram, "Transpose", &ciErrNum);
+    ckTranspose = CECL_KERNEL(cpProgram, "Transpose", &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateKernel (Rows, Columns, Transpose)...\n\n"); 
+    shrLog("CECL_KERNEL (Rows, Columns, Transpose)...\n\n"); 
 
     // check/reset work group size
     size_t wgSize;
@@ -321,25 +322,25 @@ void GPUGaussianSetCommonArgs(GaussParms* pGP)
     // common Gaussian args
     #if USE_SIMPLE_FILTER
         // Set the Common Argument values for the simple Gaussian kernel
-        ciErrNum |= clSetKernelArg(ckSimpleRecursiveRGBA, 4, sizeof(float), (void*)&pGP->ema);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckSimpleRecursiveRGBA, 4, sizeof(float), (void*)&pGP->ema);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     #else
         // Set the Common Argument values for the Gaussian kernel
-        ciErrNum |= clSetKernelArg(ckRecursiveGaussianRGBA, 4, sizeof(float), (void*)&pGP->a0);
-        ciErrNum |= clSetKernelArg(ckRecursiveGaussianRGBA, 5, sizeof(float), (void*)&pGP->a1);
-        ciErrNum |= clSetKernelArg(ckRecursiveGaussianRGBA, 6, sizeof(float), (void*)&pGP->a2);
-        ciErrNum |= clSetKernelArg(ckRecursiveGaussianRGBA, 7, sizeof(float), (void*)&pGP->a3);
-        ciErrNum |= clSetKernelArg(ckRecursiveGaussianRGBA, 8, sizeof(float), (void*)&pGP->b1);
-        ciErrNum |= clSetKernelArg(ckRecursiveGaussianRGBA, 9, sizeof(float), (void*)&pGP->b2);
-        ciErrNum |= clSetKernelArg(ckRecursiveGaussianRGBA, 10, sizeof(float), (void*)&pGP->coefp);
-        ciErrNum |= clSetKernelArg(ckRecursiveGaussianRGBA, 11, sizeof(float), (void*)&pGP->coefn);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 4, sizeof(float), (void*)&pGP->a0);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 5, sizeof(float), (void*)&pGP->a1);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 6, sizeof(float), (void*)&pGP->a2);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 7, sizeof(float), (void*)&pGP->a3);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 8, sizeof(float), (void*)&pGP->b1);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 9, sizeof(float), (void*)&pGP->b2);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 10, sizeof(float), (void*)&pGP->coefp);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 11, sizeof(float), (void*)&pGP->coefn);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
      #endif
 
     // Set common transpose Argument values 
-    ciErrNum |= clSetKernelArg(ckTranspose, 4, sizeof(unsigned int) * iTransposeBlockDim * (iTransposeBlockDim + 1), NULL );
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckTranspose, 4, sizeof(unsigned int) * iTransposeBlockDim * (iTransposeBlockDim + 1), NULL );
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 }
 
@@ -351,7 +352,7 @@ double GPUGaussianFilterRGBA(GaussParms* pGP)
     double dKernelTime = 0.0;
 
     // Copy input data from host to device
-    ciErrNum = clEnqueueWriteBuffer(cqCommandQueue, cmDevBufIn, CL_TRUE, 0, szBuffBytes, uiInput, 0, NULL, NULL);
+    ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue, cmDevBufIn, CL_TRUE, 0, szBuffBytes, uiInput, 0, NULL, NULL);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // sync host and start timer
@@ -362,39 +363,39 @@ double GPUGaussianFilterRGBA(GaussParms* pGP)
     szGaussGlobalWork = shrRoundUp((int)szGaussLocalWork, uiImageWidth); 
     #if USE_SIMPLE_FILTER
         // Set simple Gaussian kernel variable arg values
-        ciErrNum = clSetKernelArg(ckSimpleRecursiveRGBA, 0, sizeof(cl_mem), (void*)&cmDevBufIn);
-        ciErrNum |= clSetKernelArg(ckSimpleRecursiveRGBA, 1, sizeof(cl_mem), (void*)&cmDevBufTemp);
-        ciErrNum |= clSetKernelArg(ckSimpleRecursiveRGBA, 2, sizeof(unsigned int), (void*)&uiImageWidth);
-        ciErrNum |= clSetKernelArg(ckSimpleRecursiveRGBA, 3, sizeof(unsigned int), (void*)&uiImageHeight);
+        ciErrNum = CECL_SET_KERNEL_ARG(ckSimpleRecursiveRGBA, 0, sizeof(cl_mem), (void*)&cmDevBufIn);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckSimpleRecursiveRGBA, 1, sizeof(cl_mem), (void*)&cmDevBufTemp);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckSimpleRecursiveRGBA, 2, sizeof(unsigned int), (void*)&uiImageWidth);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckSimpleRecursiveRGBA, 3, sizeof(unsigned int), (void*)&uiImageHeight);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
         // Launch simple Gaussian kernel on the data in one dimension
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckSimpleRecursiveRGBA, 1, NULL, &szGaussGlobalWork, &szGaussLocalWork, 0, NULL, NULL);
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckSimpleRecursiveRGBA, 1, NULL, &szGaussGlobalWork, &szGaussLocalWork, 0, NULL, NULL);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     #else
         // Set full Gaussian kernel variable arg values
-        ciErrNum = clSetKernelArg(ckRecursiveGaussianRGBA, 0, sizeof(cl_mem), (void*)&cmDevBufIn);
-        ciErrNum |= clSetKernelArg(ckRecursiveGaussianRGBA, 1, sizeof(cl_mem), (void*)&cmDevBufTemp);
-        ciErrNum |= clSetKernelArg(ckRecursiveGaussianRGBA, 2, sizeof(unsigned int), (void*)&uiImageWidth);
-        ciErrNum |= clSetKernelArg(ckRecursiveGaussianRGBA, 3, sizeof(unsigned int), (void*)&uiImageHeight);
+        ciErrNum = CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 0, sizeof(cl_mem), (void*)&cmDevBufIn);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 1, sizeof(cl_mem), (void*)&cmDevBufTemp);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 2, sizeof(unsigned int), (void*)&uiImageWidth);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 3, sizeof(unsigned int), (void*)&uiImageHeight);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
         // Launch full Gaussian kernel on the data in one dimension
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckRecursiveGaussianRGBA, 1, NULL, &szGaussGlobalWork, &szGaussLocalWork, 0, NULL, NULL);
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckRecursiveGaussianRGBA, 1, NULL, &szGaussGlobalWork, &szGaussLocalWork, 0, NULL, NULL);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
      #endif
 
     // Set transpose global work dimensions and variable args 
     szTransposeGlobalWork[0] = shrRoundUp((int)szTransposeLocalWork[0], uiImageWidth); 
     szTransposeGlobalWork[1] = shrRoundUp((int)szTransposeLocalWork[1], uiImageHeight); 
-    ciErrNum = clSetKernelArg(ckTranspose, 0, sizeof(cl_mem), (void*)&cmDevBufTemp);
-    ciErrNum |= clSetKernelArg(ckTranspose, 1, sizeof(cl_mem), (void*)&cmDevBufOut);
-    ciErrNum |= clSetKernelArg(ckTranspose, 2, sizeof(unsigned int), (void*)&uiImageWidth);
-    ciErrNum |= clSetKernelArg(ckTranspose, 3, sizeof(unsigned int), (void*)&uiImageHeight);
+    ciErrNum = CECL_SET_KERNEL_ARG(ckTranspose, 0, sizeof(cl_mem), (void*)&cmDevBufTemp);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckTranspose, 1, sizeof(cl_mem), (void*)&cmDevBufOut);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckTranspose, 2, sizeof(unsigned int), (void*)&uiImageWidth);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckTranspose, 3, sizeof(unsigned int), (void*)&uiImageHeight);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Launch transpose kernel in 1st direction
-    ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckTranspose, 2, NULL, szTransposeGlobalWork, szTransposeLocalWork, 0, NULL, NULL);
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckTranspose, 2, NULL, szTransposeGlobalWork, szTransposeLocalWork, 0, NULL, NULL);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Reset Gaussian global work dimensions and variable args, then process in 2nd dimension
@@ -402,25 +403,25 @@ double GPUGaussianFilterRGBA(GaussParms* pGP)
     szGaussGlobalWork = shrRoundUp((int)szGaussLocalWork, uiImageHeight); 
     #if USE_SIMPLE_FILTER
         // set simple Gaussian kernel arg values
-        ciErrNum = clSetKernelArg(ckSimpleRecursiveRGBA, 0, sizeof(cl_mem), (void*)&cmDevBufOut);
-        ciErrNum |= clSetKernelArg(ckSimpleRecursiveRGBA, 1, sizeof(cl_mem), (void*)&cmDevBufTemp);
-        ciErrNum |= clSetKernelArg(ckSimpleRecursiveRGBA, 2, sizeof(unsigned int), (void*)&uiImageHeight);
-        ciErrNum |= clSetKernelArg(ckSimpleRecursiveRGBA, 3, sizeof(unsigned int), (void*)&uiImageWidth);
+        ciErrNum = CECL_SET_KERNEL_ARG(ckSimpleRecursiveRGBA, 0, sizeof(cl_mem), (void*)&cmDevBufOut);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckSimpleRecursiveRGBA, 1, sizeof(cl_mem), (void*)&cmDevBufTemp);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckSimpleRecursiveRGBA, 2, sizeof(unsigned int), (void*)&uiImageHeight);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckSimpleRecursiveRGBA, 3, sizeof(unsigned int), (void*)&uiImageWidth);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
         // Launch simple Gaussian kernel on the data in the other dimension
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckSimpleRecursiveRGBA, 1, NULL, &szGaussGlobalWork, &szGaussLocalWork, 0, NULL, NULL);
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckSimpleRecursiveRGBA, 1, NULL, &szGaussGlobalWork, &szGaussLocalWork, 0, NULL, NULL);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     #else
         // Set full Gaussian kernel arg values
-        ciErrNum = clSetKernelArg(ckRecursiveGaussianRGBA, 0, sizeof(cl_mem), (void*)&cmDevBufOut);
-        ciErrNum |= clSetKernelArg(ckRecursiveGaussianRGBA, 1, sizeof(cl_mem), (void*)&cmDevBufTemp);
-        ciErrNum |= clSetKernelArg(ckRecursiveGaussianRGBA, 2, sizeof(unsigned int), (void*)&uiImageHeight);
-        ciErrNum |= clSetKernelArg(ckRecursiveGaussianRGBA, 3, sizeof(unsigned int), (void*)&uiImageWidth);
+        ciErrNum = CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 0, sizeof(cl_mem), (void*)&cmDevBufOut);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 1, sizeof(cl_mem), (void*)&cmDevBufTemp);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 2, sizeof(unsigned int), (void*)&uiImageHeight);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckRecursiveGaussianRGBA, 3, sizeof(unsigned int), (void*)&uiImageWidth);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
  
         // Launch full Gaussian kernel on the data in the other dimension
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckRecursiveGaussianRGBA, 1, NULL, &szGaussGlobalWork, &szGaussLocalWork, 0, NULL, NULL);
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckRecursiveGaussianRGBA, 1, NULL, &szGaussGlobalWork, &szGaussLocalWork, 0, NULL, NULL);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
      #endif
 
@@ -428,14 +429,14 @@ double GPUGaussianFilterRGBA(GaussParms* pGP)
     // note width and height parameters flipped due to 1st transpose
     szTransposeGlobalWork[0] = shrRoundUp((int)szTransposeLocalWork[0], uiImageHeight); 
     szTransposeGlobalWork[1] = shrRoundUp((int)szTransposeLocalWork[1], uiImageWidth); 
-    ciErrNum = clSetKernelArg(ckTranspose, 0, sizeof(cl_mem), (void*)&cmDevBufTemp);
-    ciErrNum |= clSetKernelArg(ckTranspose, 1, sizeof(cl_mem), (void*)&cmDevBufOut);
-    ciErrNum |= clSetKernelArg(ckTranspose, 2, sizeof(unsigned int), (void*)&uiImageHeight);
-    ciErrNum |= clSetKernelArg(ckTranspose, 3, sizeof(unsigned int), (void*)&uiImageWidth);
+    ciErrNum = CECL_SET_KERNEL_ARG(ckTranspose, 0, sizeof(cl_mem), (void*)&cmDevBufTemp);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckTranspose, 1, sizeof(cl_mem), (void*)&cmDevBufOut);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckTranspose, 2, sizeof(unsigned int), (void*)&uiImageHeight);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckTranspose, 3, sizeof(unsigned int), (void*)&uiImageWidth);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Launch transpose kernel in 2nd direction
-    ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckTranspose, 2, NULL, szTransposeGlobalWork, szTransposeLocalWork, 0, NULL, NULL);
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckTranspose, 2, NULL, szTransposeGlobalWork, szTransposeLocalWork, 0, NULL, NULL);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
    // sync host and stop timer
@@ -443,7 +444,7 @@ double GPUGaussianFilterRGBA(GaussParms* pGP)
     dKernelTime = shrDeltaT(0);
 
     // Copy results back to host, block until complete
-    ciErrNum = clEnqueueReadBuffer(cqCommandQueue, cmDevBufOut, CL_TRUE, 0, szBuffBytes, uiOutput, 0, NULL, NULL);
+    ciErrNum = CECL_READ_BUFFER(cqCommandQueue, cmDevBufOut, CL_TRUE, 0, szBuffBytes, uiOutput, 0, NULL, NULL);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     return dKernelTime;

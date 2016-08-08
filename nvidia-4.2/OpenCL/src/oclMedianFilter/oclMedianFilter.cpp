@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -249,10 +250,10 @@ int main(int argc, char** argv)
     uiDevImageHeight = new cl_uint[GpuDevMngr->uiUsefulDevCt];
 
     // Create command queue(s) for device(s)     
-    shrLog("clCreateCommandQueue...\n");
+    shrLog("CECL_CREATE_COMMAND_QUEUE...\n");
     for (cl_uint i = 0; i < GpuDevMngr->uiUsefulDevCt; i++) 
     {
-        cqCommandQueue[i] = clCreateCommandQueue(cxGPUContext, GpuDevMngr->cdDevices[GpuDevMngr->uiUsefulDevs[i]], 0, &ciErrNum);
+        cqCommandQueue[i] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, GpuDevMngr->cdDevices[GpuDevMngr->uiUsefulDevs[i]], 0, &ciErrNum);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
         shrLog("  CommandQueue %u, Device %u, Device Load Proportion = %.2f, ", i, GpuDevMngr->uiUsefulDevs[i], GpuDevMngr->fLoadProportions[i]); 
         oclPrintDevName(LOGBOTH, GpuDevMngr->cdDevices[GpuDevMngr->uiUsefulDevs[i]]);  
@@ -261,11 +262,11 @@ int main(int argc, char** argv)
 
     // Allocate pinned input and output host image buffers:  mem copy operations to/from pinned memory is much faster than paged memory
     szBuffBytes = uiImageWidth * uiImageHeight * sizeof (unsigned int);
-    cmPinnedBufIn = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytes, NULL, &ciErrNum);
+    cmPinnedBufIn = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytes, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    cmPinnedBufOut = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytes, NULL, &ciErrNum);
+    cmPinnedBufOut = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytes, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("\nclCreateBuffer (Input and Output Pinned Host buffers)...\n"); 
+    shrLog("\nCECL_BUFFER (Input and Output Pinned Host buffers)...\n"); 
 
     // Get mapped pointers for writing to pinned input and output host image pointers 
     uiInput = (cl_uint*)clEnqueueMapBuffer(cqCommandQueue[0], cmPinnedBufIn, CL_TRUE, CL_MAP_WRITE, 0, szBuffBytes, 0, NULL, NULL, &ciErrNum);
@@ -288,9 +289,9 @@ int main(int argc, char** argv)
     shrLog("Load OpenCL Prog Source from File...\n"); 
 
     // Create the program object
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cSourceCL, &szKernelLength, &ciErrNum);
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cSourceCL, &szKernelLength, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateProgramWithSource...\n"); 
+    shrLog("CECL_PROGRAM_WITH_SOURCE...\n"); 
 
     // Build the program with 'mad' Optimization option
 #ifdef MAC
@@ -299,7 +300,7 @@ int main(int argc, char** argv)
     const char *flags = "-cl-fast-relaxed-math";
 #endif
 
-    ciErrNum = clBuildProgram(cpProgram, 0, NULL, flags, NULL, NULL);
+    ciErrNum = CECL_PROGRAM(cpProgram, 0, NULL, flags, NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // On error: write out standard error, Build Log and PTX, then cleanup and exit
@@ -308,16 +309,16 @@ int main(int argc, char** argv)
         oclLogPtx(cpProgram, oclGetFirstDev(cxGPUContext), "oclMedianFilter.ptx");
         Cleanup(EXIT_FAILURE);
     }
-    shrLog("clBuildProgram...\n\n"); 
+    shrLog("CECL_PROGRAM...\n\n"); 
 
     // Determine, the size/shape of the image portions for each dev and create the device buffers
     unsigned uiSumHeight = 0;
     for (cl_uint i = 0; i < GpuDevMngr->uiUsefulDevCt; i++)
     {
         // Create kernel instance
-        ckMedian[i] = clCreateKernel(cpProgram, "ckMedian", &ciErrNum);
+        ckMedian[i] = CECL_KERNEL(cpProgram, "ckMedian", &ciErrNum);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-        shrLog("clCreateKernel (ckMedian), Device %u...\n", i); 
+        shrLog("CECL_KERNEL (ckMedian), Device %u...\n", i); 
 
         // Allocations and offsets for the portion of the image worked on by each device
         if (GpuDevMngr->uiUsefulDevCt == 1)
@@ -370,21 +371,21 @@ int main(int argc, char** argv)
         shrLog("Image Height (rows) for Device %u = %u...\n", i, uiDevImageHeight[i]); 
 
         // Create the device buffers in GMEM on each device
-        cmDevBufIn[i] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, szAllocDevBytes[i], NULL, &ciErrNum);
+        cmDevBufIn[i] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, szAllocDevBytes[i], NULL, &ciErrNum);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-        cmDevBufOut[i] = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, szAllocDevBytes[i], NULL, &ciErrNum);
+        cmDevBufOut[i] = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, szAllocDevBytes[i], NULL, &ciErrNum);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-        shrLog("clCreateBuffer (Input and Output GMEM buffers, Device %u)...\n", i); 
+        shrLog("CECL_BUFFER (Input and Output GMEM buffers, Device %u)...\n", i); 
 
         // Set the common argument values for the Median kernel instance for each device
         int iLocalPixPitch = iBlockDimX + 2;
-        ciErrNum = clSetKernelArg(ckMedian[i], 0, sizeof(cl_mem), (void*)&cmDevBufIn[i]);
-        ciErrNum |= clSetKernelArg(ckMedian[i], 1, sizeof(cl_mem), (void*)&cmDevBufOut[i]);
-        ciErrNum |= clSetKernelArg(ckMedian[i], 2, (iLocalPixPitch * (iBlockDimY + 2) * sizeof(cl_uchar4)), NULL);
-        ciErrNum |= clSetKernelArg(ckMedian[i], 3, sizeof(cl_int), (void*)&iLocalPixPitch);
-        ciErrNum |= clSetKernelArg(ckMedian[i], 4, sizeof(cl_uint), (void*)&uiImageWidth);
+        ciErrNum = CECL_SET_KERNEL_ARG(ckMedian[i], 0, sizeof(cl_mem), (void*)&cmDevBufIn[i]);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckMedian[i], 1, sizeof(cl_mem), (void*)&cmDevBufOut[i]);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckMedian[i], 2, (iLocalPixPitch * (iBlockDimY + 2) * sizeof(cl_uchar4)), NULL);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckMedian[i], 3, sizeof(cl_int), (void*)&iLocalPixPitch);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckMedian[i], 4, sizeof(cl_uint), (void*)&uiImageWidth);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-        shrLog("clSetKernelArg (0-4), Device %u...\n\n", i); 
+        shrLog("CECL_SET_KERNEL_ARG (0-4), Device %u...\n\n", i); 
     }
 
     // Set common global and local work sizes for Median kernel
@@ -426,7 +427,7 @@ double MedianFilterGPU(cl_uint* uiInputImage, cl_uint* uiOutputImage)
     for (cl_uint i = 0; i < GpuDevMngr->uiUsefulDevCt; i++)
     {
         // Nonblocking Write of input image data from host to device
-        ciErrNum |= clEnqueueWriteBuffer(cqCommandQueue[i], cmDevBufIn[i], CL_FALSE, 0, szAllocDevBytes[i], 
+        ciErrNum |= CECL_WRITE_BUFFER(cqCommandQueue[i], cmDevBufIn[i], CL_FALSE, 0, szAllocDevBytes[i], 
                                         (void*)&uiInputImage[uiInHostPixOffsets[i]], 0, NULL, NULL);
     }
 
@@ -471,10 +472,10 @@ double MedianFilterGPU(cl_uint* uiInputImage, cl_uint* uiOutputImage)
         }
 
         // Pass in dev image height (# of rows worked on) for this device
-        ciErrNum |= clSetKernelArg(ckMedian[i], 5, sizeof(cl_uint), (void*)&uiDevImageHeight[i]);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckMedian[i], 5, sizeof(cl_uint), (void*)&uiDevImageHeight[i]);
 
         // Launch Median kernel(s) into queue(s) 
-        ciErrNum |= clEnqueueNDRangeKernel(cqCommandQueue[i], ckMedian[i], 2, NULL, szGlobalWorkSize, szLocalWorkSize, 0, NULL, NULL);
+        ciErrNum |= CECL_ND_RANGE_KERNEL(cqCommandQueue[i], ckMedian[i], 2, NULL, szGlobalWorkSize, szLocalWorkSize, 0, NULL, NULL);
 
         // Push to device(s) so subsequent clFinish in queue 0 doesn't block driver from issuing enqueue command for higher queues
         ciErrNum |= clFlush(cqCommandQueue[i]);
@@ -527,7 +528,7 @@ double MedianFilterGPU(cl_uint* uiInputImage, cl_uint* uiOutputImage)
         }        
         
         // Non Blocking Read of output image data from device to host
-        ciErrNum |= clEnqueueReadBuffer(cqCommandQueue[i], cmDevBufOut[i], CL_FALSE, uiOutDevByteOffset, szReturnBytes, 
+        ciErrNum |= CECL_READ_BUFFER(cqCommandQueue[i], cmDevBufOut[i], CL_FALSE, uiOutDevByteOffset, szReturnBytes, 
                                        (void*)&uiOutputImage[uiOutHostPixOffsets[i]], 0, NULL, NULL);
     }
 

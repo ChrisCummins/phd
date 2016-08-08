@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -62,20 +63,20 @@ int main(int argc, const char **argv){
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         //Create a command-queue
-        cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+        cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Initializing OpenCL bitonic sorter...\n");
         initBitonicSort(cxGPUContext, cqCommandQueue, argv);
 
     shrLog("Creating OpenCL memory objects...\n\n");
-        d_InputKey = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, N * sizeof(cl_uint), h_InputKey, &ciErrNum);
+        d_InputKey = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, N * sizeof(cl_uint), h_InputKey, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        d_InputVal = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, N * sizeof(cl_uint), h_InputVal, &ciErrNum);
+        d_InputVal = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, N * sizeof(cl_uint), h_InputVal, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        d_OutputKey = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, N * sizeof(cl_uint), NULL, &ciErrNum);
+        d_OutputKey = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, N * sizeof(cl_uint), NULL, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        d_OutputVal = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, N * sizeof(cl_uint), NULL, &ciErrNum);
+        d_OutputVal = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, N * sizeof(cl_uint), NULL, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     //Temp storage for key array validation routine
@@ -141,9 +142,9 @@ int main(int argc, const char **argv){
 #endif
 
         //Reading back results from device to host
-        ciErrNum = clEnqueueReadBuffer(cqCommandQueue, d_OutputKey, CL_TRUE, 0, N * sizeof(cl_uint), h_OutputKeyGPU, 0, NULL, NULL);
+        ciErrNum = CECL_READ_BUFFER(cqCommandQueue, d_OutputKey, CL_TRUE, 0, N * sizeof(cl_uint), h_OutputKeyGPU, 0, NULL, NULL);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        ciErrNum = clEnqueueReadBuffer(cqCommandQueue, d_OutputVal, CL_TRUE, 0, N * sizeof(cl_uint), h_OutputValGPU, 0, NULL, NULL);
+        ciErrNum = CECL_READ_BUFFER(cqCommandQueue, d_OutputVal, CL_TRUE, 0, N * sizeof(cl_uint), h_OutputValGPU, 0, NULL, NULL);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         //Check if keys array is not corrupted and properly ordered

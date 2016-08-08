@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -141,17 +142,17 @@ int main(int argc, char** argv)
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Create a command-queue
-    shrLog("clCreateCommandQueue...\n"); 
-    cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevices[targetDevice], CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+    shrLog("CECL_CREATE_COMMAND_QUEUE...\n"); 
+    cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[targetDevice], CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Allocate the OpenCL buffer memory objects for source and result on the device GMEM
-    shrLog("clCreateBuffer (M, V and W in device global memory, mem_size_m = %u)...\n", mem_size_M); 
-    cmM = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, mem_size_M, NULL, &ciErrNum);
+    shrLog("CECL_BUFFER (M, V and W in device global memory, mem_size_m = %u)...\n", mem_size_M); 
+    cmM = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, mem_size_M, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    cmV = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, mem_size_V, NULL, &ciErrNum);
+    cmV = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, mem_size_V, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    cmW = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, mem_size_W, NULL, &ciErrNum);
+    cmW = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, mem_size_W, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Read the OpenCL kernel in from source file
@@ -162,12 +163,12 @@ int main(int argc, char** argv)
     oclCheckErrorEX(cSourceCL != NULL, shrTRUE, pCleanup);
 
     // Create the program
-    shrLog("clCreateProgramWithSource...\n"); 
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cSourceCL, &szKernelLength, &ciErrNum);
+    shrLog("CECL_PROGRAM_WITH_SOURCE...\n"); 
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cSourceCL, &szKernelLength, &ciErrNum);
 
     // Build the program
-    shrLog("clBuildProgram...\n"); 
-    ciErrNum = clBuildProgram(cpProgram, uiNumDevsUsed, &cdDevices[targetDevice], "-cl-fast-relaxed-math", NULL, NULL);
+    shrLog("CECL_PROGRAM...\n"); 
+    ciErrNum = CECL_PROGRAM(cpProgram, uiNumDevsUsed, &cdDevices[targetDevice], "-cl-fast-relaxed-math", NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // write out standard error, Build Log and PTX, then cleanup and exit
@@ -182,9 +183,9 @@ int main(int argc, char** argv)
     // Core sequence... copy input data to GPU, compute, copy results back
 
     // Asynchronous write of data to GPU device
-    shrLog("clEnqueueWriteBuffer (M and V)...\n\n"); 
-    ciErrNum = clEnqueueWriteBuffer(cqCommandQueue, cmM, CL_FALSE, 0, mem_size_M, M, 0, NULL, NULL);
-    ciErrNum |= clEnqueueWriteBuffer(cqCommandQueue, cmV, CL_FALSE, 0, mem_size_V, V, 0, NULL, NULL);
+    shrLog("CECL_WRITE_BUFFER (M and V)...\n\n"); 
+    ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue, cmM, CL_FALSE, 0, mem_size_M, M, 0, NULL, NULL);
+    ciErrNum |= CECL_WRITE_BUFFER(cqCommandQueue, cmV, CL_FALSE, 0, mem_size_V, V, 0, NULL, NULL);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Kernels
@@ -200,18 +201,18 @@ int main(int argc, char** argv)
         shrLog("Running with Kernel %s...\n\n", kernels[k]); 
 
         // Clear result
-        shrLog("  Clear result with clEnqueueWriteBuffer (W)...\n"); 
+        shrLog("  Clear result with CECL_WRITE_BUFFER (W)...\n"); 
         memset(W, 0, mem_size_W);
-        ciErrNum = clEnqueueWriteBuffer(cqCommandQueue, cmW, CL_FALSE, 0, mem_size_W, W, 0, NULL, NULL);
+        ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue, cmW, CL_FALSE, 0, mem_size_W, W, 0, NULL, NULL);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
         // Create the kernel
-        shrLog("  clCreateKernel...\n"); 
+        shrLog("  CECL_KERNEL...\n"); 
         if (ckKernel) {
             clReleaseKernel(ckKernel);
             ckKernel = 0;
         }
-        ckKernel = clCreateKernel(cpProgram, kernels[k], &ciErrNum);
+        ckKernel = CECL_KERNEL(cpProgram, kernels[k], &ciErrNum);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
         // Set and log Global and Local work size dimensions
@@ -226,25 +227,25 @@ int main(int argc, char** argv)
                szGlobalWorkSize, szLocalWorkSize, (szGlobalWorkSize % szLocalWorkSize + szGlobalWorkSize/szLocalWorkSize)); 
 
         // Set the Argument values
-        shrLog("  clSetKernelArg...\n\n");
+        shrLog("  CECL_SET_KERNEL_ARG...\n\n");
         int n = 0;
-        ciErrNum = clSetKernelArg(ckKernel,  n++, sizeof(cl_mem), (void*)&cmM);
-        ciErrNum |= clSetKernelArg(ckKernel, n++, sizeof(cl_mem), (void*)&cmV);
-        ciErrNum |= clSetKernelArg(ckKernel, n++, sizeof(cl_int), (void*)&width);
-        ciErrNum |= clSetKernelArg(ckKernel, n++, sizeof(cl_int), (void*)&height);
-        ciErrNum |= clSetKernelArg(ckKernel, n++, sizeof(cl_mem), (void*)&cmW);
+        ciErrNum = CECL_SET_KERNEL_ARG(ckKernel,  n++, sizeof(cl_mem), (void*)&cmM);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, n++, sizeof(cl_mem), (void*)&cmV);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, n++, sizeof(cl_int), (void*)&width);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, n++, sizeof(cl_int), (void*)&height);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, n++, sizeof(cl_mem), (void*)&cmW);
         if (k > 1)
-            ciErrNum |= clSetKernelArg(ckKernel, n++, szLocalWorkSize * sizeof(float), 0);    
+            ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel, n++, szLocalWorkSize * sizeof(float), 0);    
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
         // Launch kernel
-        shrLog("  clEnqueueNDRangeKernel (%s)...\n", kernels[k]); 
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckKernel, 1, NULL, &szGlobalWorkSize, &szLocalWorkSize, 0, NULL, &ceEvent);
+        shrLog("  CECL_ND_RANGE_KERNEL (%s)...\n", kernels[k]); 
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckKernel, 1, NULL, &szGlobalWorkSize, &szLocalWorkSize, 0, NULL, &ceEvent);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
         // Read back results and check accumulated errors
-        shrLog("  clEnqueueReadBuffer (W)...\n"); 
-        ciErrNum = clEnqueueReadBuffer(cqCommandQueue, cmW, CL_TRUE, 0, mem_size_W, W, 0, NULL, NULL);
+        shrLog("  CECL_READ_BUFFER (W)...\n"); 
+        ciErrNum = CECL_READ_BUFFER(cqCommandQueue, cmW, CL_TRUE, 0, mem_size_W, W, 0, NULL, NULL);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     #ifdef GPU_PROFILING

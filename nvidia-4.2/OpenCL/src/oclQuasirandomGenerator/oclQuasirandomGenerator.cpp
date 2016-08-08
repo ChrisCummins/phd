@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -101,7 +102,7 @@ int main(int argc, const char **argv)
         cdDevices[0] = cdDevices[id_device];
 
         // create a command que
-        cqCommandQueue[0] = clCreateCommandQueue(cxGPUContext, cdDevices[0], 0, &ciErr);
+        cqCommandQueue[0] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[0], 0, &ciErr);
         oclCheckErrorEX(ciErr, CL_SUCCESS, NULL);
         oclPrintDevInfo(LOGBOTH, cdDevices[0]);
         nDevice = 1;   
@@ -110,7 +111,7 @@ int main(int argc, const char **argv)
     { // create command queues for all available devices        
         for (cl_uint i = 0; i < nDevice; i++) 
         {
-            cqCommandQueue[i] = clCreateCommandQueue(cxGPUContext, cdDevices[i], 0, &ciErr);
+            cqCommandQueue[i] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[i], 0, &ciErr);
             oclCheckErrorEX(ciErr, CL_SUCCESS, NULL);
         }
         for (cl_uint i = 0; i < nDevice; i++) oclPrintDevInfo(LOGBOTH, cdDevices[i]);
@@ -126,7 +127,7 @@ int main(int argc, const char **argv)
     c_Table = (cl_mem*)malloc(nDevice*sizeof(cl_mem));
     for (cl_uint i = 0; i < nDevice; i++)
     {
-        d_Output[i] = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, QRNG_DIMENSIONS * N / nDevice * sizeof(cl_float), NULL, &ciErr);
+        d_Output[i] = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, QRNG_DIMENSIONS * N / nDevice * sizeof(cl_float), NULL, &ciErr);
         oclCheckErrorEX(ciErr, CL_SUCCESS, NULL);
     }
     h_OutputGPU = (float *)malloc(QRNG_DIMENSIONS * N * sizeof(cl_float));
@@ -135,10 +136,10 @@ int main(int argc, const char **argv)
     initQuasirandomGenerator(tableCPU);
     for (cl_uint i = 0; i < nDevice; i++)
     {
-        c_Table[i] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, QRNG_DIMENSIONS * QRNG_RESOLUTION * sizeof(unsigned int), 
+        c_Table[i] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, QRNG_DIMENSIONS * QRNG_RESOLUTION * sizeof(unsigned int), 
     		     NULL, &ciErr);
         ciErr |= ciErr;
-        ciErr |= clEnqueueWriteBuffer(cqCommandQueue[i], c_Table[i], CL_TRUE, 0, 
+        ciErr |= CECL_WRITE_BUFFER(cqCommandQueue[i], c_Table[i], CL_TRUE, 0, 
             QRNG_DIMENSIONS * QRNG_RESOLUTION * sizeof(unsigned int), tableCPU, 0, NULL, NULL);
     }
     oclCheckErrorEX(ciErr, CL_SUCCESS, NULL);
@@ -148,8 +149,8 @@ int main(int argc, const char **argv)
     char *progSource = oclLoadProgSource(shrFindFilePath("QuasirandomGenerator.cl", argv[0]), "// My comment\n", &szKernelLength);
 	oclCheckErrorEX(progSource == NULL, false, NULL);
 
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&progSource, &szKernelLength, &ciErr);
-    ciErr |= clBuildProgram(cpProgram, 0, NULL, NULL, NULL, NULL);
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&progSource, &szKernelLength, &ciErr);
+    ciErr |= CECL_PROGRAM(cpProgram, 0, NULL, NULL, NULL, NULL);
     if (ciErr != CL_SUCCESS)
     {
         // write out standard error, Build Log and PTX, then cleanup and exit
@@ -160,11 +161,11 @@ int main(int argc, const char **argv)
     }
 
     shrLog("Create QuasirandomGenerator kernel...\n"); 
-    ckQuasirandomGenerator = clCreateKernel(cpProgram, "QuasirandomGenerator", &ciErr);
+    ckQuasirandomGenerator = CECL_KERNEL(cpProgram, "QuasirandomGenerator", &ciErr);
     oclCheckErrorEX(ciErr, CL_SUCCESS, NULL); 
 
     shrLog("Create InverseCND kernel...\n\n"); 
-    ckInverseCNDGPU = clCreateKernel(cpProgram, "InverseCND", &ciErr);
+    ckInverseCNDGPU = CECL_KERNEL(cpProgram, "InverseCND", &ciErr);
     oclCheckErrorEX(ciErr, CL_SUCCESS, NULL); 
 
     shrLog(">>>Launch QuasirandomGenerator kernel...\n\n"); 
@@ -214,7 +215,7 @@ int main(int argc, const char **argv)
     int offset = 0;
     for (cl_uint i = 0; i < nDevice; i++)
     {
-        ciErr |= clEnqueueReadBuffer(cqCommandQueue[i], d_Output[i], CL_TRUE, 0, sizeof(cl_float) * QRNG_DIMENSIONS * N / nDevice, 
+        ciErr |= CECL_READ_BUFFER(cqCommandQueue[i], d_Output[i], CL_TRUE, 0, sizeof(cl_float) * QRNG_DIMENSIONS * N / nDevice, 
             h_OutputGPU + offset, 0, NULL, NULL);
         offset += QRNG_DIMENSIONS * N / nDevice;
     }
@@ -291,7 +292,7 @@ int main(int argc, const char **argv)
     offset = 0;
     for (cl_uint i = 0; i < nDevice; i++)
     {
-        ciErr |= clEnqueueReadBuffer(cqCommandQueue[i], d_Output[i], CL_TRUE, 0, 
+        ciErr |= CECL_READ_BUFFER(cqCommandQueue[i], d_Output[i], CL_TRUE, 0, 
             sizeof(cl_float) * QRNG_DIMENSIONS * N / nDevice, h_OutputGPU + offset, 0, NULL, NULL);
         offset += QRNG_DIMENSIONS * N / nDevice;
         oclCheckErrorEX(ciErr, CL_SUCCESS, NULL); 
@@ -351,11 +352,11 @@ void QuasirandomGeneratorGPU(cl_command_queue cqCommandQueue,
     size_t globalWorkSize[2] = {shrRoundUp(szWgXDim, 128*128), QRNG_DIMENSIONS};
     size_t localWorkSize[2] = {szWgXDim, QRNG_DIMENSIONS};
     
-    ciErr  = clSetKernelArg(ckQuasirandomGenerator, 0, sizeof(cl_mem),       (void*)&d_Output);
-    ciErr |= clSetKernelArg(ckQuasirandomGenerator, 1, sizeof(cl_mem),       (void*)&c_Table );
-    ciErr |= clSetKernelArg(ckQuasirandomGenerator, 2, sizeof(unsigned int), (void*)&seed    );
-    ciErr |= clSetKernelArg(ckQuasirandomGenerator, 3, sizeof(unsigned int), (void*)&N       );
-    ciErr |= clEnqueueNDRangeKernel(cqCommandQueue, ckQuasirandomGenerator, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);  
+    ciErr  = CECL_SET_KERNEL_ARG(ckQuasirandomGenerator, 0, sizeof(cl_mem),       (void*)&d_Output);
+    ciErr |= CECL_SET_KERNEL_ARG(ckQuasirandomGenerator, 1, sizeof(cl_mem),       (void*)&c_Table );
+    ciErr |= CECL_SET_KERNEL_ARG(ckQuasirandomGenerator, 2, sizeof(unsigned int), (void*)&seed    );
+    ciErr |= CECL_SET_KERNEL_ARG(ckQuasirandomGenerator, 3, sizeof(unsigned int), (void*)&N       );
+    ciErr |= CECL_ND_RANGE_KERNEL(cqCommandQueue, ckQuasirandomGenerator, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);  
     oclCheckErrorEX(ciErr, CL_SUCCESS, NULL); 
 }
 
@@ -374,10 +375,10 @@ void InverseCNDGPU(cl_command_queue cqCommandQueue,
     size_t globalWorkSize[1] = {shrRoundUp(szWgXDim, 128*128)};
     size_t localWorkSize[1] = {szWgXDim};
 
-    ciErr  = clSetKernelArg(ckInverseCNDGPU, 0, sizeof(cl_mem),       (void*)&d_Output);
-    ciErr |= clSetKernelArg(ckInverseCNDGPU, 1, sizeof(unsigned int), (void*)&pathN   );
-    ciErr |= clSetKernelArg(ckInverseCNDGPU, 2, sizeof(unsigned int), (void*)&iDevice );
-    ciErr |= clSetKernelArg(ckInverseCNDGPU, 3, sizeof(unsigned int), (void*)&nDevice );
-    ciErr |= clEnqueueNDRangeKernel(cqCommandQueue, ckInverseCNDGPU, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+    ciErr  = CECL_SET_KERNEL_ARG(ckInverseCNDGPU, 0, sizeof(cl_mem),       (void*)&d_Output);
+    ciErr |= CECL_SET_KERNEL_ARG(ckInverseCNDGPU, 1, sizeof(unsigned int), (void*)&pathN   );
+    ciErr |= CECL_SET_KERNEL_ARG(ckInverseCNDGPU, 2, sizeof(unsigned int), (void*)&iDevice );
+    ciErr |= CECL_SET_KERNEL_ARG(ckInverseCNDGPU, 3, sizeof(unsigned int), (void*)&nDevice );
+    ciErr |= CECL_ND_RANGE_KERNEL(cqCommandQueue, ckInverseCNDGPU, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
     oclCheckErrorEX(ciErr, CL_SUCCESS, NULL); 
 }

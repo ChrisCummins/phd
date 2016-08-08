@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -278,46 +279,46 @@ launch_classifyVoxel( dim3 grid, dim3 threads, cl_mem voxelVerts, cl_mem voxelOc
 					  cl_uint gridSize[4], cl_uint gridSizeShift[4], cl_uint gridSizeMask[4], uint numVoxels,
 					  cl_float voxelSize[4], float isoValue)
 {
-    ciErrNum = clSetKernelArg(classifyVoxelKernel, 0, sizeof(cl_mem), &voxelVerts);
+    ciErrNum = CECL_SET_KERNEL_ARG(classifyVoxelKernel, 0, sizeof(cl_mem), &voxelVerts);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(classifyVoxelKernel, 1, sizeof(cl_mem), &voxelOccupied);
+    ciErrNum = CECL_SET_KERNEL_ARG(classifyVoxelKernel, 1, sizeof(cl_mem), &voxelOccupied);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(classifyVoxelKernel, 2, sizeof(cl_mem), &volume);
+    ciErrNum = CECL_SET_KERNEL_ARG(classifyVoxelKernel, 2, sizeof(cl_mem), &volume);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(classifyVoxelKernel, 3, 4 * sizeof(cl_uint), gridSize);
+    ciErrNum = CECL_SET_KERNEL_ARG(classifyVoxelKernel, 3, 4 * sizeof(cl_uint), gridSize);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(classifyVoxelKernel, 4, 4 * sizeof(cl_uint), gridSizeShift);
+    ciErrNum = CECL_SET_KERNEL_ARG(classifyVoxelKernel, 4, 4 * sizeof(cl_uint), gridSizeShift);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(classifyVoxelKernel, 5, 4 * sizeof(cl_uint), gridSizeMask);
+    ciErrNum = CECL_SET_KERNEL_ARG(classifyVoxelKernel, 5, 4 * sizeof(cl_uint), gridSizeMask);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(classifyVoxelKernel, 6, sizeof(uint), &numVoxels);
+    ciErrNum = CECL_SET_KERNEL_ARG(classifyVoxelKernel, 6, sizeof(uint), &numVoxels);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(classifyVoxelKernel, 7, 4 * sizeof(cl_float), voxelSize);
+    ciErrNum = CECL_SET_KERNEL_ARG(classifyVoxelKernel, 7, 4 * sizeof(cl_float), voxelSize);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(classifyVoxelKernel, 8, sizeof(float), &isoValue);
+    ciErrNum = CECL_SET_KERNEL_ARG(classifyVoxelKernel, 8, sizeof(float), &isoValue);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(classifyVoxelKernel, 9, sizeof(cl_mem), &d_numVertsTable);
+    ciErrNum = CECL_SET_KERNEL_ARG(classifyVoxelKernel, 9, sizeof(cl_mem), &d_numVertsTable);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     grid.x *= threads.x;
-    ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, classifyVoxelKernel, 1, NULL, (size_t*) &grid, (size_t*) &threads, 0, 0, 0);
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, classifyVoxelKernel, 1, NULL, (size_t*) &grid, (size_t*) &threads, 0, 0, 0);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 }
 
 void
 launch_compactVoxels(dim3 grid, dim3 threads, cl_mem compVoxelArray, cl_mem voxelOccupied, cl_mem voxelOccupiedScan, uint numVoxels)
 {
-    ciErrNum = clSetKernelArg(compactVoxelsKernel, 0, sizeof(cl_mem), &compVoxelArray);
+    ciErrNum = CECL_SET_KERNEL_ARG(compactVoxelsKernel, 0, sizeof(cl_mem), &compVoxelArray);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(compactVoxelsKernel, 1, sizeof(cl_mem), &voxelOccupied);
+    ciErrNum = CECL_SET_KERNEL_ARG(compactVoxelsKernel, 1, sizeof(cl_mem), &voxelOccupied);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(compactVoxelsKernel, 2, sizeof(cl_mem), &voxelOccupiedScan);
+    ciErrNum = CECL_SET_KERNEL_ARG(compactVoxelsKernel, 2, sizeof(cl_mem), &voxelOccupiedScan);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(compactVoxelsKernel, 3, sizeof(cl_uint), &numVoxels);
+    ciErrNum = CECL_SET_KERNEL_ARG(compactVoxelsKernel, 3, sizeof(cl_uint), &numVoxels);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     
     grid.x *= threads.x;
-    ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, compactVoxelsKernel, 1, NULL, (size_t*) &grid, (size_t*) &threads, 0, 0, 0);
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, compactVoxelsKernel, 1, NULL, (size_t*) &grid, (size_t*) &threads, 0, 0, 0);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 }
 
@@ -327,38 +328,38 @@ launch_generateTriangles2(dim3 grid, dim3 threads,
                           cl_uint gridSize[4], cl_uint gridSizeShift[4], cl_uint gridSizeMask[4],
                           cl_float voxelSize[4], float isoValue, uint activeVoxels, uint maxVerts)
 {
-    ciErrNum = clSetKernelArg(generateTriangles2Kernel, 0, sizeof(cl_mem), &pos);
+    ciErrNum = CECL_SET_KERNEL_ARG(generateTriangles2Kernel, 0, sizeof(cl_mem), &pos);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(generateTriangles2Kernel, 1, sizeof(cl_mem), &norm);
+    ciErrNum = CECL_SET_KERNEL_ARG(generateTriangles2Kernel, 1, sizeof(cl_mem), &norm);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(generateTriangles2Kernel, 2, sizeof(cl_mem), &compactedVoxelArray);
+    ciErrNum = CECL_SET_KERNEL_ARG(generateTriangles2Kernel, 2, sizeof(cl_mem), &compactedVoxelArray);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(generateTriangles2Kernel, 3, sizeof(cl_mem), &numVertsScanned);
+    ciErrNum = CECL_SET_KERNEL_ARG(generateTriangles2Kernel, 3, sizeof(cl_mem), &numVertsScanned);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(generateTriangles2Kernel, 4, sizeof(cl_mem), &volume);
+    ciErrNum = CECL_SET_KERNEL_ARG(generateTriangles2Kernel, 4, sizeof(cl_mem), &volume);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS,  pCleanup); 
-    ciErrNum = clSetKernelArg(generateTriangles2Kernel, 5, 4 * sizeof(cl_uint), gridSize);
+    ciErrNum = CECL_SET_KERNEL_ARG(generateTriangles2Kernel, 5, 4 * sizeof(cl_uint), gridSize);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(generateTriangles2Kernel, 6, 4 * sizeof(cl_uint), gridSizeShift);
+    ciErrNum = CECL_SET_KERNEL_ARG(generateTriangles2Kernel, 6, 4 * sizeof(cl_uint), gridSizeShift);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(generateTriangles2Kernel, 7, 4 * sizeof(cl_uint), gridSizeMask);
+    ciErrNum = CECL_SET_KERNEL_ARG(generateTriangles2Kernel, 7, 4 * sizeof(cl_uint), gridSizeMask);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(generateTriangles2Kernel, 8, 4 * sizeof(cl_float), voxelSize);
+    ciErrNum = CECL_SET_KERNEL_ARG(generateTriangles2Kernel, 8, 4 * sizeof(cl_float), voxelSize);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(generateTriangles2Kernel, 9, sizeof(float), &isoValue);
+    ciErrNum = CECL_SET_KERNEL_ARG(generateTriangles2Kernel, 9, sizeof(float), &isoValue);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(generateTriangles2Kernel, 10, sizeof(uint), &activeVoxels);
+    ciErrNum = CECL_SET_KERNEL_ARG(generateTriangles2Kernel, 10, sizeof(uint), &activeVoxels);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(generateTriangles2Kernel, 11, sizeof(uint), &maxVerts);
+    ciErrNum = CECL_SET_KERNEL_ARG(generateTriangles2Kernel, 11, sizeof(uint), &maxVerts);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
-    ciErrNum = clSetKernelArg(generateTriangles2Kernel, 12, sizeof(cl_mem), &d_numVertsTable);
+    ciErrNum = CECL_SET_KERNEL_ARG(generateTriangles2Kernel, 12, sizeof(cl_mem), &d_numVertsTable);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    ciErrNum = clSetKernelArg(generateTriangles2Kernel, 13, sizeof(cl_mem), &d_triTable);
+    ciErrNum = CECL_SET_KERNEL_ARG(generateTriangles2Kernel, 13, sizeof(cl_mem), &d_triTable);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     grid.x *= threads.x;
-    ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, generateTriangles2Kernel, 1, NULL, (size_t*) &grid, (size_t*) &threads, 0, 0, 0);
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, generateTriangles2Kernel, 1, NULL, (size_t*) &grid, (size_t*) &threads, 0, 0, 0);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
 }
@@ -532,7 +533,7 @@ void initCL(int argc, char** argv) {
     oclPrintDevInfo(LOGBOTH, cdDevices[uiDeviceUsed]);
 
     // create a command-queue
-    cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevices[uiDeviceUsed], 0, &ciErrNum);
+    cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[uiDeviceUsed], 0, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Program Setup
@@ -543,13 +544,13 @@ void initCL(int argc, char** argv) {
     oclCheckErrorEX(cSourceCL != NULL, shrTRUE, pCleanup);
 
     // create the program
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1,
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1,
 					  (const char **)&cSourceCL, &program_length, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     
     // build the program
     std::string buildOpts = "-cl-mad-enable";
-    ciErrNum = clBuildProgram(cpProgram, 0, NULL, buildOpts.c_str(), NULL, NULL);
+    ciErrNum = CECL_PROGRAM(cpProgram, 0, NULL, buildOpts.c_str(), NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // write out standard error, Build Log and PTX, then cleanup and return error
@@ -560,13 +561,13 @@ void initCL(int argc, char** argv) {
     }
 
     // create the kernel
-    classifyVoxelKernel = clCreateKernel(cpProgram, "classifyVoxel", &ciErrNum);
+    classifyVoxelKernel = CECL_KERNEL(cpProgram, "classifyVoxel", &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
-    compactVoxelsKernel = clCreateKernel(cpProgram, "compactVoxels", &ciErrNum);
+    compactVoxelsKernel = CECL_KERNEL(cpProgram, "compactVoxels", &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
-    generateTriangles2Kernel = clCreateKernel(cpProgram, "generateTriangles2", &ciErrNum);
+    generateTriangles2Kernel = CECL_KERNEL(cpProgram, "generateTriangles2", &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Setup Scan
@@ -686,15 +687,15 @@ initMC(int argc, char** argv)
 
     // allocate device memory
     unsigned int memSize = sizeof(uint) * numVoxels;
-    d_voxelVerts = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, memSize, 0, &ciErrNum);
+    d_voxelVerts = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, memSize, 0, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    d_voxelVertsScan = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, memSize, 0, &ciErrNum);
+    d_voxelVertsScan = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, memSize, 0, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    d_voxelOccupied = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, memSize, 0, &ciErrNum);
+    d_voxelOccupied = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, memSize, 0, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    d_voxelOccupiedScan = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, memSize, 0, &ciErrNum);
+    d_voxelOccupiedScan = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, memSize, 0, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    d_compVoxelArray = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, memSize, 0, &ciErrNum);
+    d_compVoxelArray = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, memSize, 0, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 }
 
@@ -820,8 +821,8 @@ computeIsosurface()
     {
         uint lastElement, lastScanElement;
 
-        clEnqueueReadBuffer(cqCommandQueue, d_voxelOccupied,CL_TRUE, (numVoxels-1) * sizeof(uint), sizeof(uint), &lastElement, 0, 0, 0);
-        clEnqueueReadBuffer(cqCommandQueue, d_voxelOccupiedScan,CL_TRUE, (numVoxels-1) * sizeof(uint), sizeof(uint), &lastScanElement, 0, 0, 0);
+        CECL_READ_BUFFER(cqCommandQueue, d_voxelOccupied,CL_TRUE, (numVoxels-1) * sizeof(uint), sizeof(uint), &lastElement, 0, 0, 0);
+        CECL_READ_BUFFER(cqCommandQueue, d_voxelOccupiedScan,CL_TRUE, (numVoxels-1) * sizeof(uint), sizeof(uint), &lastScanElement, 0, 0, 0);
 
         activeVoxels = lastElement + lastScanElement;
     }
@@ -844,8 +845,8 @@ computeIsosurface()
     // readback total number of vertices
     {
         uint lastElement, lastScanElement;
-        clEnqueueReadBuffer(cqCommandQueue, d_voxelVerts,CL_TRUE, (numVoxels-1) * sizeof(uint), sizeof(uint), &lastElement, 0, 0, 0);
-        clEnqueueReadBuffer(cqCommandQueue, d_voxelVertsScan,CL_TRUE, (numVoxels-1) * sizeof(uint), sizeof(uint), &lastScanElement, 0, 0, 0);
+        CECL_READ_BUFFER(cqCommandQueue, d_voxelVerts,CL_TRUE, (numVoxels-1) * sizeof(uint), sizeof(uint), &lastElement, 0, 0, 0);
+        CECL_READ_BUFFER(cqCommandQueue, d_voxelVertsScan,CL_TRUE, (numVoxels-1) * sizeof(uint), sizeof(uint), &lastScanElement, 0, 0, 0);
 
         totalVerts = lastElement + lastScanElement;
     }
@@ -1188,15 +1189,15 @@ void mainMenu(int i)
 
 template <class T>
 void dumpBuffer(cl_mem d_buffer, T *h_buffer, int nelements) {
-    clEnqueueReadBuffer(cqCommandQueue,d_buffer,CL_FALSE, 0,nelements * sizeof(T), h_buffer, 0, 0, 0);
+    CECL_READ_BUFFER(cqCommandQueue,d_buffer,CL_FALSE, 0,nelements * sizeof(T), h_buffer, 0, 0, 0);
 }
 
 // Run a test sequence without any GL 
 //*****************************************************************************
 void TestNoGL()
 {
-    d_normal = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY,  maxVerts*sizeof(float)*4, NULL, &ciErrNum);
-    d_pos = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY,  maxVerts*sizeof(float)*4, NULL, &ciErrNum);
+    d_normal = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY,  maxVerts*sizeof(float)*4, NULL, &ciErrNum);
+    d_pos = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY,  maxVerts*sizeof(float)*4, NULL, &ciErrNum);
         
     
     // Warmup

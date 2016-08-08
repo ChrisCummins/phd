@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -50,21 +51,21 @@ extern "C" void initHistogram64(cl_context cxGPUContext, cl_command_queue cqPara
         shrCheckError(cHistogram64 != NULL, shrTRUE);
 
     shrLog("...creating histogram64 program\n");
-         cpHistogram64 = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cHistogram64, &kernelLength, &ciErrNum);
+         cpHistogram64 = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cHistogram64, &kernelLength, &ciErrNum);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("...building histogram64 program\n");
-        ciErrNum = clBuildProgram(cpHistogram64, 0, NULL, compileOptions, NULL, NULL);
+        ciErrNum = CECL_PROGRAM(cpHistogram64, 0, NULL, compileOptions, NULL, NULL);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("...creating histogram64 kernels\n");
-        ckHistogram64 = clCreateKernel(cpHistogram64, "histogram64", &ciErrNum);
+        ckHistogram64 = CECL_KERNEL(cpHistogram64, "histogram64", &ciErrNum);
         shrCheckError(ciErrNum, CL_SUCCESS);
-        ckMergeHistogram64 = clCreateKernel(cpHistogram64, "mergeHistogram64", &ciErrNum);
+        ckMergeHistogram64 = CECL_KERNEL(cpHistogram64, "mergeHistogram64", &ciErrNum);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("...allocating internal histogram64 buffer\n");
-        d_PartialHistograms = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, MAX_PARTIAL_HISTOGRAM64_COUNT * HISTOGRAM64_BIN_COUNT * sizeof(uint), NULL, &ciErrNum);
+        d_PartialHistograms = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, MAX_PARTIAL_HISTOGRAM64_COUNT * HISTOGRAM64_BIN_COUNT * sizeof(uint), NULL, &ciErrNum);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
     //Save default command queue
@@ -119,28 +120,28 @@ extern "C" size_t histogram64(
         shrCheckError( (histogramCount <= MAX_PARTIAL_HISTOGRAM64_COUNT), shrTRUE );
         cl_uint dataCount = byteCount / 16;
 
-        ciErrNum  = clSetKernelArg(ckHistogram64, 0, sizeof(cl_mem),  (void *)&d_PartialHistograms);
-        ciErrNum |= clSetKernelArg(ckHistogram64, 1, sizeof(cl_mem),  (void *)&d_Data);
-        ciErrNum |= clSetKernelArg(ckHistogram64, 2, sizeof(cl_uint), (void *)&dataCount);
+        ciErrNum  = CECL_SET_KERNEL_ARG(ckHistogram64, 0, sizeof(cl_mem),  (void *)&d_PartialHistograms);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckHistogram64, 1, sizeof(cl_mem),  (void *)&d_Data);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckHistogram64, 2, sizeof(cl_uint), (void *)&dataCount);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
         localWorkSize = HISTOGRAM64_WORKGROUP_SIZE;
         globalWorkSize = histogramCount * HISTOGRAM64_WORKGROUP_SIZE;
 
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckHistogram64, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckHistogram64, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
         shrCheckError(ciErrNum, CL_SUCCESS);
     }
 
     {
-        ciErrNum  = clSetKernelArg(ckMergeHistogram64, 0, sizeof(cl_mem),  (void *)&d_Histogram);
-        ciErrNum |= clSetKernelArg(ckMergeHistogram64, 1, sizeof(cl_mem),  (void *)&d_PartialHistograms);
-        ciErrNum |= clSetKernelArg(ckMergeHistogram64, 2, sizeof(cl_uint), (void *)&histogramCount);
+        ciErrNum  = CECL_SET_KERNEL_ARG(ckMergeHistogram64, 0, sizeof(cl_mem),  (void *)&d_Histogram);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckMergeHistogram64, 1, sizeof(cl_mem),  (void *)&d_PartialHistograms);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckMergeHistogram64, 2, sizeof(cl_uint), (void *)&histogramCount);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
         localWorkSize = MERGE_WORKGROUP_SIZE;
         globalWorkSize = HISTOGRAM64_BIN_COUNT * MERGE_WORKGROUP_SIZE;
 
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckMergeHistogram64, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckMergeHistogram64, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
         shrCheckError(ciErrNum, CL_SUCCESS);
 
         return HISTOGRAM64_WORKGROUP_SIZE;

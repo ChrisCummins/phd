@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -37,17 +38,17 @@ extern "C" void initDCT8x8(cl_context cxGPUContext, cl_command_queue cqParamComm
         shrCheckError(cDCT8x8 != NULL, shrTRUE);
 
     shrLog("Creating DCT8x8 program...\n");
-        cpDCT8x8 = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cDCT8x8, &kernelLength, &ciErrNum);
+        cpDCT8x8 = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cDCT8x8, &kernelLength, &ciErrNum);
         shrCheckError (ciErrNum, CL_SUCCESS);
 
     shrLog("Building DCT8x8 program...\n");
-        ciErrNum = clBuildProgram(cpDCT8x8, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
+        ciErrNum = CECL_PROGRAM(cpDCT8x8, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
         shrCheckError (ciErrNum, CL_SUCCESS);
 
     shrLog("Creating DCT8x8 kernels...\n");
-        ckDCT8x8 = clCreateKernel(cpDCT8x8, "DCT8x8", &ciErrNum);
+        ckDCT8x8 = CECL_KERNEL(cpDCT8x8, "DCT8x8", &ciErrNum);
         shrCheckError (ciErrNum, CL_SUCCESS);
-        ckIDCT8x8= clCreateKernel(cpDCT8x8, "IDCT8x8", &ciErrNum);
+        ckIDCT8x8= CECL_KERNEL(cpDCT8x8, "IDCT8x8", &ciErrNum);
         shrCheckError (ciErrNum, CL_SUCCESS);
 
     //Save default command queue
@@ -90,11 +91,11 @@ extern "C" void DCT8x8(
     size_t localWorkSize[2], globalWorkSize[2];
     cl_uint ciErrNum;
 
-    ciErrNum  = clSetKernelArg(ckDCT, 0, sizeof(cl_mem),  (void*)&d_Dst);
-    ciErrNum |= clSetKernelArg(ckDCT, 1, sizeof(cl_mem),  (void*)&d_Src);
-    ciErrNum |= clSetKernelArg(ckDCT, 2, sizeof(cl_uint), (void*)&stride);
-    ciErrNum |= clSetKernelArg(ckDCT, 3, sizeof(cl_uint), (void*)&imageH);
-    ciErrNum |= clSetKernelArg(ckDCT, 4, sizeof(cl_uint), (void*)&imageW);
+    ciErrNum  = CECL_SET_KERNEL_ARG(ckDCT, 0, sizeof(cl_mem),  (void*)&d_Dst);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckDCT, 1, sizeof(cl_mem),  (void*)&d_Src);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckDCT, 2, sizeof(cl_uint), (void*)&stride);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckDCT, 3, sizeof(cl_uint), (void*)&imageH);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckDCT, 4, sizeof(cl_uint), (void*)&imageW);
     shrCheckError(ciErrNum, CL_SUCCESS);
 
     localWorkSize[0] = BLOCK_X;
@@ -102,6 +103,6 @@ extern "C" void DCT8x8(
     globalWorkSize[0] = iDivUp(imageW, BLOCK_X) * localWorkSize[0];
     globalWorkSize[1] = iDivUp(imageH, BLOCK_Y) * localWorkSize[1];
 
-    ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckDCT, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckDCT, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
     shrCheckError (ciErrNum, CL_SUCCESS);
 }

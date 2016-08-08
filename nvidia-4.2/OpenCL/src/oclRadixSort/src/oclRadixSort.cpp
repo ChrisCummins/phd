@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -62,7 +63,7 @@ int main(int argc, const char **argv)
         cl_device_id cdDevice = cdDevices[id_device];
 
         // create a command que
-        cqCommandQueue[0] = clCreateCommandQueue(cxGPUContext, cdDevice, 0, &ciErrNum);
+        cqCommandQueue[0] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevice, 0, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
         oclPrintDevInfo(LOGBOTH, cdDevice);
         nDevice = 1;   
@@ -71,7 +72,7 @@ int main(int argc, const char **argv)
     { // create command queues for all available devices        
         for (cl_uint i = 0; i < nDevice; i++) 
         {
-            cqCommandQueue[i] = clCreateCommandQueue(cxGPUContext, cdDevices[i], 0, &ciErrNum);
+            cqCommandQueue[i] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[i], 0, &ciErrNum);
             oclCheckError(ciErrNum, CL_SUCCESS);
         }
         for (cl_uint i = 0; i < nDevice; i++) oclPrintDevInfo(LOGBOTH, cdDevices[i]);
@@ -97,9 +98,9 @@ int main(int argc, const char **argv)
 	    h_keysSorted[iDevice] = (unsigned int*)malloc(numElements * sizeof(unsigned int));
         makeRandomUintVector(h_keys[iDevice], numElements, keybits);
 
-        d_keys[iDevice] = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, 
+        d_keys[iDevice] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, 
             sizeof(unsigned int) * numElements, NULL, &ciErrNum);
-        ciErrNum |= clEnqueueWriteBuffer(cqCommandQueue[iDevice], d_keys[iDevice], CL_TRUE, 0, 
+        ciErrNum |= CECL_WRITE_BUFFER(cqCommandQueue[iDevice], d_keys[iDevice], CL_TRUE, 0, 
             sizeof(unsigned int) * numElements, h_keys[iDevice], 0, NULL, NULL);
         oclCheckError(ciErrNum, CL_SUCCESS);
     }
@@ -142,7 +143,7 @@ int main(int argc, const char **argv)
     // copy sorted keys to CPU 
     for (cl_uint iDevice = 0; iDevice < nDevice; iDevice++)
     {
-	    clEnqueueReadBuffer(cqCommandQueue[iDevice], d_keys[iDevice], CL_TRUE, 0, sizeof(unsigned int) * numElements, 
+	    CECL_READ_BUFFER(cqCommandQueue[iDevice], d_keys[iDevice], CL_TRUE, 0, sizeof(unsigned int) * numElements, 
             h_keysSorted[iDevice], 0, NULL, NULL);
     }
 

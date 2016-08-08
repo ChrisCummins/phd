@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2011 NVIDIA Corporation.  All rights reserved.
  *
@@ -146,7 +147,7 @@ CUT_THREADPROC cpu_postprocess(void* void_arg)
 CALLBACK_FUNC event_callback(cl_event event, cl_int event_command_exec_status, void* user_data) 
 {
 	if( event_command_exec_status != CL_COMPLETE ) {
-		shrLog("clEnqueueWriteBuffer() Error: Failed to write buffer!\n");
+		shrLog("CECL_WRITE_BUFFER() Error: Failed to write buffer!\n");
 		cutIncrementBarrier(&barrier);
 		return;		
 	}
@@ -184,10 +185,10 @@ void launch_hybrid_workload(cl_context context, cl_device_id device,
     shrLog("%s: simpleIncrement(), cl_device_id: %d, event_id: %d\n", device_name, device, id);
 
     // Setup GPU command queue with device profiling enabled
-    cl_command_queue queue = clCreateCommandQueue(context, device, (bEnableProfile ? CL_QUEUE_PROFILING_ENABLE : 0), &ciErrNum);
+    cl_command_queue queue = CECL_CREATE_COMMAND_QUEUE(context, device, (bEnableProfile ? CL_QUEUE_PROFILING_ENABLE : 0), &ciErrNum);
     if (ciErrNum != CL_SUCCESS)
     {
-	    shrLog("clCreateCommandQueue() Error %d: Failed to create OpenCL command queue!\n", ciErrNum);
+	    shrLog("CECL_CREATE_COMMAND_QUEUE() Error %d: Failed to create OpenCL command queue!\n", ciErrNum);
 	    cutIncrementBarrier(&barrier);
 		return;
     }
@@ -196,7 +197,7 @@ void launch_hybrid_workload(cl_context context, cl_device_id device,
 	arg->id = id;
 	arg->data_fp = (float*) malloc(buffer_size);
     arg->bEnableProfile = bEnableProfile;
-	cl_mem buffer = clCreateBuffer(context,CL_MEM_READ_WRITE, buffer_size, 0,0);
+	cl_mem buffer = CECL_BUFFER(context,CL_MEM_READ_WRITE, buffer_size, 0,0);
 
 	// Create OpenCL user event and make the first command dependent on its completion.
 	// This means that none of the commands will start until user event has been signaled.
@@ -212,10 +213,10 @@ void launch_hybrid_workload(cl_context context, cl_device_id device,
 	cutStartThread(&cpu_preprocess, (void*) arg);
 
 	// Upload data to GPU.
-	ciErrNum = clEnqueueWriteBuffer(queue, buffer, CL_FALSE, 0, buffer_size, arg->data_fp, 1, &arg->user_event, 0);
+	ciErrNum = CECL_WRITE_BUFFER(queue, buffer, CL_FALSE, 0, buffer_size, arg->data_fp, 1, &arg->user_event, 0);
 	if (ciErrNum != CL_SUCCESS)
 	{
-		shrLog("clEnqueueWriteBuffer() Error %d: Failed to write buffer!\n", ciErrNum);
+		shrLog("CECL_WRITE_BUFFER() Error %d: Failed to write buffer!\n", ciErrNum);
 		cutIncrementBarrier(&barrier);
 		return;
 	}
@@ -225,21 +226,21 @@ void launch_hybrid_workload(cl_context context, cl_device_id device,
 	size_t globalSize[] = {buffer_size/sizeof(int)};
 	size_t localSize[] = {256};
 
-	ciErrNum = clSetKernelArg(kernel, 0, sizeof(cl_mem), &buffer);
-	ciErrNum = clEnqueueNDRangeKernel(queue, kernel, 1, offset, globalSize, localSize,0,0,0);
+	ciErrNum = CECL_SET_KERNEL_ARG(kernel, 0, sizeof(cl_mem), &buffer);
+	ciErrNum = CECL_ND_RANGE_KERNEL(queue, kernel, 1, offset, globalSize, localSize,0,0,0);
 	if (ciErrNum != CL_SUCCESS)
 	{
-		shrLog("clEnqueueNDRangeKernel() Error %d: Failed to launch kernel!\n", ciErrNum);
+		shrLog("CECL_ND_RANGE_KERNEL() Error %d: Failed to launch kernel!\n", ciErrNum);
 		cutIncrementBarrier(&barrier);
 		return;
 	}
 
 	// Download result from GPU.
 	cl_event gpudone_event;
-	ciErrNum = clEnqueueReadBuffer(queue, buffer, CL_FALSE, 0, buffer_size, arg->data_fp, 0, 0, &gpudone_event);
+	ciErrNum = CECL_READ_BUFFER(queue, buffer, CL_FALSE, 0, buffer_size, arg->data_fp, 0, 0, &gpudone_event);
 	if (ciErrNum != CL_SUCCESS)
 	{
-		shrLog("clEnqueueWriteBuffer() Error %d: Failed to write buffer!\n", ciErrNum);
+		shrLog("CECL_WRITE_BUFFER() Error %d: Failed to write buffer!\n", ciErrNum);
 		cutIncrementBarrier(&barrier);
 		return;
 	}
@@ -298,11 +299,11 @@ cl_int launch_hybrid_matrixMultiply(cl_context context,
     float* h_C = (float*) malloc(mem_size_C);
 
     // create OpenCL buffer pointing to the host memory
-    cl_mem h_A = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
+    cl_mem h_A = CECL_BUFFER(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
 				                mem_size_A, h_A_data, &ciErrNum);
     if (ciErrNum != CL_SUCCESS)
     {
-        shrLog("Error: clCreateBuffer\n");
+        shrLog("Error: CECL_BUFFER\n");
         return ciErrNum;
     }
 
@@ -316,24 +317,24 @@ cl_int launch_hybrid_matrixMultiply(cl_context context,
 
     cl_command_queue commandQueue = 0;
 
-    d_A = clCreateBuffer(context, CL_MEM_READ_ONLY, workSize[0] * sizeof(float) * uiWA, NULL,NULL);
+    d_A = CECL_BUFFER(context, CL_MEM_READ_ONLY, workSize[0] * sizeof(float) * uiWA, NULL,NULL);
 
     // create OpenCL buffer on device that will be initiatlize from the host memory on first use
     // on device
-    d_B = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+    d_B = CECL_BUFFER(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                          mem_size_B, h_B_data, NULL);
 
     // Output buffer
-    d_C = clCreateBuffer(context, CL_MEM_WRITE_ONLY,  workSize[0] * uiWC * sizeof(float), NULL,NULL);
+    d_C = CECL_BUFFER(context, CL_MEM_WRITE_ONLY,  workSize[0] * uiWC * sizeof(float), NULL,NULL);
 
     // setup the argument values
-    clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *) &d_C);
-    clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *) &d_A);
-    clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *) &d_B);
-    clSetKernelArg(kernel, 3, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0 );
-    clSetKernelArg(kernel, 4, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0 );
-    clSetKernelArg(kernel, 5, sizeof(cl_int), (void *) &uiWA);
-    clSetKernelArg(kernel, 6, sizeof(cl_int), (void *) &uiWB);
+    CECL_SET_KERNEL_ARG(kernel, 0, sizeof(cl_mem), (void *) &d_C);
+    CECL_SET_KERNEL_ARG(kernel, 1, sizeof(cl_mem), (void *) &d_A);
+    CECL_SET_KERNEL_ARG(kernel, 2, sizeof(cl_mem), (void *) &d_B);
+    CECL_SET_KERNEL_ARG(kernel, 3, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0 );
+    CECL_SET_KERNEL_ARG(kernel, 4, sizeof(float) * BLOCK_SIZE * BLOCK_SIZE, 0 );
+    CECL_SET_KERNEL_ARG(kernel, 5, sizeof(cl_int), (void *) &uiWA);
+    CECL_SET_KERNEL_ARG(kernel, 6, sizeof(cl_int), (void *) &uiWB);
 
     // Execute Multiplication on all GPUs in parallel
     size_t localWorkSize[] = {BLOCK_SIZE, BLOCK_SIZE};
@@ -373,16 +374,16 @@ cl_int launch_hybrid_matrixMultiply(cl_context context,
     // Launch Multiplication - non-blocking execution:  launch and push to device(s)
 	cl_event GPUExecution;
 	globalWorkSize[1] = shrRoundUp(BLOCK_SIZE, workSize[0]);
-	clEnqueueNDRangeKernel(commandQueue, kernel, 2, 0, globalWorkSize, localWorkSize,
+	CECL_ND_RANGE_KERNEL(commandQueue, kernel, 2, 0, globalWorkSize, localWorkSize,
 		                   0, NULL, &GPUExecution);
     clFlush(commandQueue);
 
 	// Download result from GPU.
 	cl_event gpudone_event;
-	ciErrNum = clEnqueueReadBuffer(commandQueue, d_C, CL_FALSE, 0, mem_size_C, arg->data_fp, 0, 0, &gpudone_event);
+	ciErrNum = CECL_READ_BUFFER(commandQueue, d_C, CL_FALSE, 0, mem_size_C, arg->data_fp, 0, 0, &gpudone_event);
 	if (ciErrNum != CL_SUCCESS)
 	{
-		shrLog("clEnqueueReadBuffer() Error: Failed to write buffer!\n");
+		shrLog("CECL_READ_BUFFER() Error: Failed to write buffer!\n");
 		return -1;
 	}
 	// Set callback that will launch another CPU thread to finish the work when the download from GPU has finished
@@ -419,20 +420,20 @@ int compileOCLKernel(cl_context cxGPUContext, cl_device_id cdDevices,
     }
 
 	// create the simple increment OpenCL program
-	*cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&source, 
+	*cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&source, 
                                                     &program_length, &ciErrNum);
 	if (ciErrNum != CL_SUCCESS) {
 		shrLog("Error: Failed to create program\n");
 		return ciErrNum;
     } else {
-        shrLog("clCreateProgramWithSource <%s> succeeded, program_length=%d\n", ocl_source_filename, program_length);
+        shrLog("CECL_PROGRAM_WITH_SOURCE <%s> succeeded, program_length=%d\n", ocl_source_filename, program_length);
     }
 	free(source);
 
 	// build the program
     cl_build_status build_status;
 
-	ciErrNum = clBuildProgram(*cpProgram, 0, NULL, "-cl-fast-relaxed-math -cl-nv-verbose", NULL, NULL);
+	ciErrNum = CECL_PROGRAM(*cpProgram, 0, NULL, "-cl-fast-relaxed-math -cl-nv-verbose", NULL, NULL);
 	if (ciErrNum != CL_SUCCESS)
 	{
 		// write out standard error, Build Log and PTX, then return error
@@ -441,7 +442,7 @@ int compileOCLKernel(cl_context cxGPUContext, cl_device_id cdDevices,
 		oclLogPtx(*cpProgram, oclGetFirstDev(cxGPUContext), "oclMultiThreads.ptx");
 		return ciErrNum;
     } else {
-        shrLog("clBuildProgram <%s> succeeded\n", ocl_source_filename);
+        shrLog("CECL_PROGRAM <%s> succeeded\n", ocl_source_filename);
         ciErrNum = clGetProgramBuildInfo(*cpProgram, cdDevices, CL_PROGRAM_BUILD_STATUS, sizeof(cl_build_status), &build_status, NULL);
         shrLog("clGetProgramBuildInfo returned: ");
         if (build_status == CL_SUCCESS) {
@@ -600,7 +601,7 @@ int main(int argc, char** argv)
     compileOCLKernel(cxGPUContext, cdDevices[0], "matrixMul.cl", &program[0], argv);
 
 	for( int i=0; i < N; ++i ) {
-		kernel[i] = clCreateKernel(program[0], "matrixMul", &ciErrNum);
+		kernel[i] = CECL_KERNEL(program[0], "matrixMul", &ciErrNum);
 		if (ciErrNum != CL_SUCCESS) {
 			shrLog("Error: Failed to create Matrix Multiply kernel\n");
 			return ciErrNum;
@@ -611,7 +612,7 @@ int main(int argc, char** argv)
     compileOCLKernel(cxGPUContext, cdDevices[0], "kernel.cl",    &program[0], argv);
 
 	for( int i=0; i < N; ++i ) {
-		kernel[i]= clCreateKernel(program[0], "simpleIncrement", &ciErrNum);
+		kernel[i]= CECL_KERNEL(program[0], "simpleIncrement", &ciErrNum);
 	
 		if (ciErrNum != CL_SUCCESS) {
 			shrLog("Error: Failed to create Simple Increment kernel\n");

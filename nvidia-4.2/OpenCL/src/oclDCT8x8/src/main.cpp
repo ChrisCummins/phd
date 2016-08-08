@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -66,16 +67,16 @@ int main(int argc, char **argv)
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         //Create a command-queue
-        cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+        cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Initializing OpenCL DCT 8x8...\n");
         initDCT8x8(cxGPUContext, cqCommandQueue, (const char **)argv);
 
     shrLog("Creating OpenCL memory objects...\n");
-        d_Input = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, imageH * stride *  sizeof(cl_float), h_Input, &ciErrNum);
+        d_Input = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, imageH * stride *  sizeof(cl_float), h_Input, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        d_Output = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, imageH * stride * sizeof(cl_float), NULL, &ciErrNum);
+        d_Output = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, imageH * stride * sizeof(cl_float), NULL, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Performing DCT8x8 of %u x %u image...\n\n", imageH, imageW);
@@ -127,7 +128,7 @@ int main(int argc, char **argv)
 #endif
 
     shrLog("Reading back OpenCL results...\n");
-        ciErrNum = clEnqueueReadBuffer(cqCommandQueue, d_Output, CL_TRUE, 0, imageH * stride * sizeof(cl_float), h_OutputGPU, 0, NULL, NULL);
+        ciErrNum = CECL_READ_BUFFER(cqCommandQueue, d_Output, CL_TRUE, 0, imageH * stride * sizeof(cl_float), h_OutputGPU, 0, NULL, NULL);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Comparing against Host/C++ computation...\n"); 

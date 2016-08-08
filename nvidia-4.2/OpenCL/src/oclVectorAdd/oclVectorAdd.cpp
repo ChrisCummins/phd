@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -121,24 +122,24 @@ int main(int argc, char **argv)
     }
 
     // Create a command-queue
-    cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevice, 0, &ciErr1);
-    shrLog("clCreateCommandQueue...\n"); 
+    cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevice, 0, &ciErr1);
+    shrLog("CECL_CREATE_COMMAND_QUEUE...\n"); 
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clCreateCommandQueue, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_CREATE_COMMAND_QUEUE, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(argc, argv, EXIT_FAILURE);
     }
 
     // Allocate the OpenCL buffer memory objects for source and result on the device GMEM
-    cmDevSrcA = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, sizeof(cl_float) * szGlobalWorkSize, NULL, &ciErr1);
-    cmDevSrcB = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, sizeof(cl_float) * szGlobalWorkSize, NULL, &ciErr2);
+    cmDevSrcA = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, sizeof(cl_float) * szGlobalWorkSize, NULL, &ciErr1);
+    cmDevSrcB = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, sizeof(cl_float) * szGlobalWorkSize, NULL, &ciErr2);
     ciErr1 |= ciErr2;
-    cmDevDst = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, sizeof(cl_float) * szGlobalWorkSize, NULL, &ciErr2);
+    cmDevDst = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, sizeof(cl_float) * szGlobalWorkSize, NULL, &ciErr2);
     ciErr1 |= ciErr2;
-    shrLog("clCreateBuffer...\n"); 
+    shrLog("CECL_BUFFER...\n"); 
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clCreateBuffer, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_BUFFER, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(argc, argv, EXIT_FAILURE);
     }
     
@@ -148,11 +149,11 @@ int main(int argc, char **argv)
     cSourceCL = oclLoadProgSource(cPathAndName, "", &szKernelLength);
 
     // Create the program
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cSourceCL, &szKernelLength, &ciErr1);
-    shrLog("clCreateProgramWithSource...\n"); 
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cSourceCL, &szKernelLength, &ciErr1);
+    shrLog("CECL_PROGRAM_WITH_SOURCE...\n"); 
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clCreateProgramWithSource, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_PROGRAM_WITH_SOURCE, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(argc, argv, EXIT_FAILURE);
     }
 
@@ -162,32 +163,32 @@ int main(int argc, char **argv)
     #else
         char* flags = "-cl-fast-relaxed-math";
     #endif
-    ciErr1 = clBuildProgram(cpProgram, 0, NULL, NULL, NULL, NULL);
-    shrLog("clBuildProgram...\n"); 
+    ciErr1 = CECL_PROGRAM(cpProgram, 0, NULL, NULL, NULL, NULL);
+    shrLog("CECL_PROGRAM...\n"); 
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clBuildProgram, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_PROGRAM, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(argc, argv, EXIT_FAILURE);
     }
 
     // Create the kernel
-    ckKernel = clCreateKernel(cpProgram, "VectorAdd", &ciErr1);
-    shrLog("clCreateKernel (VectorAdd)...\n"); 
+    ckKernel = CECL_KERNEL(cpProgram, "VectorAdd", &ciErr1);
+    shrLog("CECL_KERNEL (VectorAdd)...\n"); 
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clCreateKernel, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_KERNEL, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(argc, argv, EXIT_FAILURE);
     }
 
     // Set the Argument values
-    ciErr1 = clSetKernelArg(ckKernel, 0, sizeof(cl_mem), (void*)&cmDevSrcA);
-    ciErr1 |= clSetKernelArg(ckKernel, 1, sizeof(cl_mem), (void*)&cmDevSrcB);
-    ciErr1 |= clSetKernelArg(ckKernel, 2, sizeof(cl_mem), (void*)&cmDevDst);
-    ciErr1 |= clSetKernelArg(ckKernel, 3, sizeof(cl_int), (void*)&iNumElements);
-    shrLog("clSetKernelArg 0 - 3...\n\n"); 
+    ciErr1 = CECL_SET_KERNEL_ARG(ckKernel, 0, sizeof(cl_mem), (void*)&cmDevSrcA);
+    ciErr1 |= CECL_SET_KERNEL_ARG(ckKernel, 1, sizeof(cl_mem), (void*)&cmDevSrcB);
+    ciErr1 |= CECL_SET_KERNEL_ARG(ckKernel, 2, sizeof(cl_mem), (void*)&cmDevDst);
+    ciErr1 |= CECL_SET_KERNEL_ARG(ckKernel, 3, sizeof(cl_int), (void*)&iNumElements);
+    shrLog("CECL_SET_KERNEL_ARG 0 - 3...\n\n"); 
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clSetKernelArg, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_SET_KERNEL_ARG, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(argc, argv, EXIT_FAILURE);
     }
 
@@ -195,30 +196,30 @@ int main(int argc, char **argv)
     // Start Core sequence... copy input data to GPU, compute, copy results back
 
     // Asynchronous write of data to GPU device
-    ciErr1 = clEnqueueWriteBuffer(cqCommandQueue, cmDevSrcA, CL_FALSE, 0, sizeof(cl_float) * szGlobalWorkSize, srcA, 0, NULL, NULL);
-    ciErr1 |= clEnqueueWriteBuffer(cqCommandQueue, cmDevSrcB, CL_FALSE, 0, sizeof(cl_float) * szGlobalWorkSize, srcB, 0, NULL, NULL);
-    shrLog("clEnqueueWriteBuffer (SrcA and SrcB)...\n"); 
+    ciErr1 = CECL_WRITE_BUFFER(cqCommandQueue, cmDevSrcA, CL_FALSE, 0, sizeof(cl_float) * szGlobalWorkSize, srcA, 0, NULL, NULL);
+    ciErr1 |= CECL_WRITE_BUFFER(cqCommandQueue, cmDevSrcB, CL_FALSE, 0, sizeof(cl_float) * szGlobalWorkSize, srcB, 0, NULL, NULL);
+    shrLog("CECL_WRITE_BUFFER (SrcA and SrcB)...\n"); 
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clEnqueueWriteBuffer, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_WRITE_BUFFER, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(argc, argv, EXIT_FAILURE);
     }
 
     // Launch kernel
-    ciErr1 = clEnqueueNDRangeKernel(cqCommandQueue, ckKernel, 1, NULL, &szGlobalWorkSize, &szLocalWorkSize, 0, NULL, NULL);
-    shrLog("clEnqueueNDRangeKernel (VectorAdd)...\n"); 
+    ciErr1 = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckKernel, 1, NULL, &szGlobalWorkSize, &szLocalWorkSize, 0, NULL, NULL);
+    shrLog("CECL_ND_RANGE_KERNEL (VectorAdd)...\n"); 
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clEnqueueNDRangeKernel, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_ND_RANGE_KERNEL, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(argc, argv, EXIT_FAILURE);
     }
 
     // Synchronous/blocking read of results, and check accumulated errors
-    ciErr1 = clEnqueueReadBuffer(cqCommandQueue, cmDevDst, CL_TRUE, 0, sizeof(cl_float) * szGlobalWorkSize, dst, 0, NULL, NULL);
-    shrLog("clEnqueueReadBuffer (Dst)...\n\n"); 
+    ciErr1 = CECL_READ_BUFFER(cqCommandQueue, cmDevDst, CL_TRUE, 0, sizeof(cl_float) * szGlobalWorkSize, dst, 0, NULL, NULL);
+    shrLog("CECL_READ_BUFFER (Dst)...\n\n"); 
     if (ciErr1 != CL_SUCCESS)
     {
-        shrLog("Error in clEnqueueReadBuffer, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
+        shrLog("Error in CECL_READ_BUFFER, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
         Cleanup(argc, argv, EXIT_FAILURE);
     }
     //--------------------------------------------------------

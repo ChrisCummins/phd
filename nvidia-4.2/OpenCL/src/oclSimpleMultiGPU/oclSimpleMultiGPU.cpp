@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -145,9 +146,9 @@ int main(int argc, char **argv)
             shrLog(" Device %i: %s\n\n", deviceNr[ciDeviceCount], cDeviceName);
 
             // create a command que
-            commandQueue[ciDeviceCount] = clCreateCommandQueue(cxGPUContext, cdDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+            commandQueue[ciDeviceCount] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
             oclCheckError(ciErrNum, CL_SUCCESS);
-            shrLog("clCreateCommandQueue\n"); 
+            shrLog("CECL_CREATE_COMMAND_QUEUE\n"); 
 
             ++ciDeviceCount;
 
@@ -178,9 +179,9 @@ int main(int argc, char **argv)
             shrLog(" Device %i: %s\n", i, cDeviceName);
 
             // create a command que
-            commandQueue[i] = clCreateCommandQueue(cxGPUContext, cdDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+            commandQueue[i] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevice, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
             oclCheckError(ciErrNum, CL_SUCCESS);
-            shrLog("clCreateCommandQueue\n\n"); 
+            shrLog("CECL_CREATE_COMMAND_QUEUE\n\n"); 
         }
     }
 
@@ -191,12 +192,12 @@ int main(int argc, char **argv)
     shrLog("oclLoadProgSource\n"); 
 
     // Create the program for all GPUs in the context
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&source, &programLength, &ciErrNum);
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&source, &programLength, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
-    shrLog("clCreateProgramWithSource\n"); 
+    shrLog("CECL_PROGRAM_WITH_SOURCE\n"); 
     
     // build the program
-    ciErrNum = clBuildProgram(cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
+    ciErrNum = CECL_PROGRAM(cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // write out standard error, Build Log and PTX, then cleanup and exit
@@ -205,13 +206,13 @@ int main(int argc, char **argv)
         oclLogPtx(cpProgram, oclGetFirstDev(cxGPUContext), "oclSimpleMultiGPU.ptx");
         oclCheckError(ciErrNum, CL_SUCCESS); 
     }
-    shrLog("clBuildProgram\n"); 
+    shrLog("CECL_PROGRAM\n"); 
 
     // Create host buffer with page-locked memory
-    h_DataBuffer = clCreateBuffer(cxGPUContext, CL_MEM_COPY_HOST_PTR | CL_MEM_ALLOC_HOST_PTR,
+    h_DataBuffer = CECL_BUFFER(cxGPUContext, CL_MEM_COPY_HOST_PTR | CL_MEM_ALLOC_HOST_PTR,
                                   DATA_N * sizeof(float), h_Data, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
-    shrLog("clCreateBuffer (Page-locked Host)\n\n"); 
+    shrLog("CECL_BUFFER (Page-locked Host)\n\n"); 
 
     // Create buffers for each GPU, with data divided evenly among GPU's
     int sizePerGPU = DATA_N / ciDeviceCount;
@@ -223,9 +224,9 @@ int main(int argc, char **argv)
         workSize[i] = (i != (ciDeviceCount - 1)) ? sizePerGPU : (DATA_N - workOffset[i]);        
 
         // Input buffer
-        d_Data[i] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, workSize[i] * sizeof(float), NULL, &ciErrNum);
+        d_Data[i] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, workSize[i] * sizeof(float), NULL, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        shrLog("clCreateBuffer (Input)\t\tDev %i\n", i); 
+        shrLog("CECL_BUFFER (Input)\t\tDev %i\n", i); 
 
         // Copy data from host to device
         ciErrNum = clEnqueueCopyBuffer(commandQueue[i], h_DataBuffer, d_Data[i], workOffset[i] * sizeof(float), 
@@ -233,21 +234,21 @@ int main(int argc, char **argv)
         shrLog("clEnqueueCopyBuffer (Input)\tDev %i\n", i);
 
         // Output buffer
-        d_Result[i] = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, ACCUM_N * sizeof(float), NULL, &ciErrNum);
+        d_Result[i] = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, ACCUM_N * sizeof(float), NULL, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        shrLog("clCreateBuffer (Output)\t\tDev %i\n", i);
+        shrLog("CECL_BUFFER (Output)\t\tDev %i\n", i);
         
         // Create kernel
-        reduceKernel[i] = clCreateKernel(cpProgram, "reduce", &ciErrNum);
+        reduceKernel[i] = CECL_KERNEL(cpProgram, "reduce", &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        shrLog("clCreateKernel\t\t\tDev %i\n", i); 
+        shrLog("CECL_KERNEL\t\t\tDev %i\n", i); 
         
         // Set the args values and check for errors
-        ciErrNum |= clSetKernelArg(reduceKernel[i], 0, sizeof(cl_mem), &d_Result[i]);
-        ciErrNum |= clSetKernelArg(reduceKernel[i], 1, sizeof(cl_mem), &d_Data[i]);
-        ciErrNum |= clSetKernelArg(reduceKernel[i], 2, sizeof(int), &workSize[i]);
+        ciErrNum |= CECL_SET_KERNEL_ARG(reduceKernel[i], 0, sizeof(cl_mem), &d_Result[i]);
+        ciErrNum |= CECL_SET_KERNEL_ARG(reduceKernel[i], 1, sizeof(cl_mem), &d_Data[i]);
+        ciErrNum |= CECL_SET_KERNEL_ARG(reduceKernel[i], 2, sizeof(int), &workSize[i]);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        shrLog("clSetKernelArg\t\t\tDev %i\n\n", i);
+        shrLog("CECL_SET_KERNEL_ARG\t\t\tDev %i\n\n", i);
 
         workOffset[i + 1] = workOffset[i] + workSize[i];
     }
@@ -260,7 +261,7 @@ int main(int argc, char **argv)
     shrLog("Launching Kernels on GPU(s)...\n\n");
     for(unsigned int i = 0; i < ciDeviceCount; i++) 
     {        
-        ciErrNum = clEnqueueNDRangeKernel(commandQueue[i], reduceKernel[i], 1, 0, globalWorkSize, localWorkSize,
+        ciErrNum = CECL_ND_RANGE_KERNEL(commandQueue[i], reduceKernel[i], 1, 0, globalWorkSize, localWorkSize,
                                          0, NULL, &GPUExecution[i]);
         oclCheckError(ciErrNum, CL_SUCCESS);
     }
@@ -268,7 +269,7 @@ int main(int argc, char **argv)
     // Copy result from device to host for each device
     for(unsigned int i = 0; i < ciDeviceCount; i++) 
     {
-        ciErrNum = clEnqueueReadBuffer(commandQueue[i], d_Result[i], CL_FALSE, 0, ACCUM_N * sizeof(float), 
+        ciErrNum = CECL_READ_BUFFER(commandQueue[i], d_Result[i], CL_FALSE, 0, ACCUM_N * sizeof(float), 
                             h_SumGPU + i *  ACCUM_N, 0, NULL, &GPUDone[i]);
         oclCheckError(ciErrNum, CL_SUCCESS);
     }

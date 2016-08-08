@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -291,17 +292,17 @@ int main(int argc, char** argv)
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Create a command-queue 
-    cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevices[uiTargetDevice], 0, &ciErrNum);
+    cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[uiTargetDevice], 0, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateCommandQueue...\n"); 
+    shrLog("CECL_CREATE_COMMAND_QUEUE...\n"); 
 
     // Allocate OpenCL object for the source data
     if (bUseLmem)
     {
         // Buffer in device GMEM
-        cmDevBufIn = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, szBuffBytes, NULL, &ciErrNum);
+        cmDevBufIn = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, szBuffBytes, NULL, &ciErrNum);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-        shrLog("clCreateBuffer (Input buffer, device GMEM)...\n");
+        shrLog("CECL_BUFFER (Input buffer, device GMEM)...\n");
     }
     else 
     {
@@ -320,11 +321,11 @@ int main(int argc, char** argv)
     }
 
     // Allocate the OpenCL intermediate and result buffer memory objects on the device GMEM
-    cmDevBufTemp = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, szBuffBytes, NULL, &ciErrNum);
+    cmDevBufTemp = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, szBuffBytes, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    cmDevBufOut = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY, szBuffBytes, NULL, &ciErrNum);
+    cmDevBufOut = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY, szBuffBytes, NULL, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateBuffer (Intermediate and Output buffers, device GMEM)...\n"); 
+    shrLog("CECL_BUFFER (Intermediate and Output buffers, device GMEM)...\n"); 
 
     // Create OpenCL representation of OpenGL PBO
     if(bGLinteropSupported)
@@ -343,9 +344,9 @@ int main(int argc, char** argv)
     shrLog("oclLoadProgSource...\n"); 
 
     // Create the program 
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cSourceCL, &szKernelLength, &ciErrNum);
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cSourceCL, &szKernelLength, &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateProgramWithSource...\n"); 
+    shrLog("CECL_PROGRAM_WITH_SOURCE...\n"); 
 
     // Setup build options string 
     //--------------------------------
@@ -359,7 +360,7 @@ int main(int argc, char** argv)
     //--------------------------------
 
     // Build the program
-    ciErrNum = clBuildProgram(cpProgram, 0, NULL, sBuildOpts.c_str(), NULL, NULL);
+    ciErrNum = CECL_PROGRAM(cpProgram, 0, NULL, sBuildOpts.c_str(), NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // If build problem, write out standard ciErrNum, Build Log and PTX, then cleanup and exit
@@ -369,14 +370,14 @@ int main(int argc, char** argv)
         shrQAFinish(argc, (const char **)argv, QA_FAILED);
         Cleanup(EXIT_FAILURE);
     }
-    shrLog("clBuildProgram...\n"); 
+    shrLog("CECL_PROGRAM...\n"); 
 
     // Create kernels
     if (bUseLmem)
     {
-        ckBoxRowsLmem = clCreateKernel(cpProgram, "BoxRowsLmem", &ciErrNum);
+        ckBoxRowsLmem = CECL_KERNEL(cpProgram, "BoxRowsLmem", &ciErrNum);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-        shrLog("clCreateKernel (BoxRowsLmem)...\n"); 
+        shrLog("CECL_KERNEL (BoxRowsLmem)...\n"); 
 
         // get max work group size
         ciErrNum = clGetKernelWorkGroupInfo(ckBoxRowsLmem, cdDevices[uiTargetDevice], 
@@ -385,13 +386,13 @@ int main(int argc, char** argv)
     }
     else
     {
-        ckBoxRowsTex = clCreateKernel(cpProgram, "BoxRowsTex", &ciErrNum);
+        ckBoxRowsTex = CECL_KERNEL(cpProgram, "BoxRowsTex", &ciErrNum);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-        shrLog("clCreateKernel (BoxRowsTex)...\n"); 
+        shrLog("CECL_KERNEL (BoxRowsTex)...\n"); 
     }
-    ckBoxColumns = clCreateKernel(cpProgram, "BoxColumns", &ciErrNum);
+    ckBoxColumns = CECL_KERNEL(cpProgram, "BoxColumns", &ciErrNum);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clCreateKernel (BoxColumns)...\n"); 
+    shrLog("CECL_KERNEL (BoxColumns)...\n"); 
 
     // set the kernel args
     ResetKernelArgs(uiImageWidth, uiImageHeight, iRadius, fScale);
@@ -428,41 +429,41 @@ void ResetKernelArgs(unsigned int uiWidth, unsigned int uiHeight, int r, float f
         {
             uiNumOutputPix = (cl_uint)szMaxWorkgroupSize - iRadiusAligned - r;   
         }
-        ciErrNum = clSetKernelArg(ckBoxRowsLmem, 0, sizeof(cl_mem), (void*)&cmDevBufIn);
-        ciErrNum |= clSetKernelArg(ckBoxRowsLmem, 1, sizeof(cl_mem), (void*)&cmDevBufTemp);
-        ciErrNum |= clSetKernelArg(ckBoxRowsLmem, 2, (iRadiusAligned + uiNumOutputPix + r) * sizeof(cl_uchar4), NULL);
-        ciErrNum |= clSetKernelArg(ckBoxRowsLmem, 3, sizeof(unsigned int), (void*)&uiWidth);
-        ciErrNum |= clSetKernelArg(ckBoxRowsLmem, 4, sizeof(unsigned int), (void*)&uiHeight);
-        ciErrNum |= clSetKernelArg(ckBoxRowsLmem, 5, sizeof(int), (void*)&r);
-        ciErrNum |= clSetKernelArg(ckBoxRowsLmem, 6, sizeof(int), (void*)&iRadiusAligned);
-        ciErrNum |= clSetKernelArg(ckBoxRowsLmem, 7, sizeof(float), (void*)&fScale);
-        ciErrNum |= clSetKernelArg(ckBoxRowsLmem, 8, sizeof(unsigned int), (void*)&uiNumOutputPix);
+        ciErrNum = CECL_SET_KERNEL_ARG(ckBoxRowsLmem, 0, sizeof(cl_mem), (void*)&cmDevBufIn);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxRowsLmem, 1, sizeof(cl_mem), (void*)&cmDevBufTemp);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxRowsLmem, 2, (iRadiusAligned + uiNumOutputPix + r) * sizeof(cl_uchar4), NULL);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxRowsLmem, 3, sizeof(unsigned int), (void*)&uiWidth);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxRowsLmem, 4, sizeof(unsigned int), (void*)&uiHeight);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxRowsLmem, 5, sizeof(int), (void*)&r);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxRowsLmem, 6, sizeof(int), (void*)&iRadiusAligned);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxRowsLmem, 7, sizeof(float), (void*)&fScale);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxRowsLmem, 8, sizeof(unsigned int), (void*)&uiNumOutputPix);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-        shrLog("clSetKernelArg (0-8) ckBoxRowsLmem...\n"); 
+        shrLog("CECL_SET_KERNEL_ARG (0-8) ckBoxRowsLmem...\n"); 
     }
     else
     {
         // (Image/texture version)
-        ciErrNum = clSetKernelArg(ckBoxRowsTex, 0, sizeof(cl_mem), (void*)&cmDevBufIn);
-        ciErrNum |= clSetKernelArg(ckBoxRowsTex, 1, sizeof(cl_mem), (void*)&cmDevBufTemp);
-        ciErrNum |= clSetKernelArg(ckBoxRowsTex, 2, sizeof(cl_sampler), &RowSampler); 
-        ciErrNum |= clSetKernelArg(ckBoxRowsTex, 3, sizeof(unsigned int), (void*)&uiWidth);
-        ciErrNum |= clSetKernelArg(ckBoxRowsTex, 4, sizeof(unsigned int), (void*)&uiHeight);
-        ciErrNum |= clSetKernelArg(ckBoxRowsTex, 5, sizeof(int), (void*)&r);
-        ciErrNum |= clSetKernelArg(ckBoxRowsTex, 6, sizeof(float), (void*)&fScale);
+        ciErrNum = CECL_SET_KERNEL_ARG(ckBoxRowsTex, 0, sizeof(cl_mem), (void*)&cmDevBufIn);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxRowsTex, 1, sizeof(cl_mem), (void*)&cmDevBufTemp);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxRowsTex, 2, sizeof(cl_sampler), &RowSampler); 
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxRowsTex, 3, sizeof(unsigned int), (void*)&uiWidth);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxRowsTex, 4, sizeof(unsigned int), (void*)&uiHeight);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxRowsTex, 5, sizeof(int), (void*)&r);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxRowsTex, 6, sizeof(float), (void*)&fScale);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-        shrLog("clSetKernelArg (0-6) ckBoxRowsTex...\n"); 
+        shrLog("CECL_SET_KERNEL_ARG (0-6) ckBoxRowsTex...\n"); 
     }
 
     // Set the Argument values for the column kernel
-    ciErrNum  = clSetKernelArg(ckBoxColumns, 0, sizeof(cl_mem), (void*)&cmDevBufTemp);
-    ciErrNum |= clSetKernelArg(ckBoxColumns, 1, sizeof(cl_mem), (void*)&cmDevBufOut);
-    ciErrNum |= clSetKernelArg(ckBoxColumns, 2, sizeof(unsigned int), (void*)&uiWidth);
-    ciErrNum |= clSetKernelArg(ckBoxColumns, 3, sizeof(unsigned int), (void*)&uiHeight);
-    ciErrNum |= clSetKernelArg(ckBoxColumns, 4, sizeof(int), (void*)&r);
-    ciErrNum |= clSetKernelArg(ckBoxColumns, 5, sizeof(float), (void*)&fScale);
+    ciErrNum  = CECL_SET_KERNEL_ARG(ckBoxColumns, 0, sizeof(cl_mem), (void*)&cmDevBufTemp);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxColumns, 1, sizeof(cl_mem), (void*)&cmDevBufOut);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxColumns, 2, sizeof(unsigned int), (void*)&uiWidth);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxColumns, 3, sizeof(unsigned int), (void*)&uiHeight);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxColumns, 4, sizeof(int), (void*)&r);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckBoxColumns, 5, sizeof(float), (void*)&fScale);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
-    shrLog("clSetKernelArg (0-5) ckBoxColumns...\n\n"); 
+    shrLog("CECL_SET_KERNEL_ARG (0-5) ckBoxColumns...\n\n"); 
 }
 
 // OpenCL computation function for GPU:  
@@ -472,14 +473,14 @@ double BoxFilterGPU(unsigned int* uiInputImage, cl_mem cmOutputBuffer,
                     unsigned int uiWidth, unsigned int uiHeight, int r, float fScale)
 {
     // Setup Kernel Args
-    ciErrNum = clSetKernelArg(ckBoxColumns, 1, sizeof(cl_mem), (void*)&cmOutputBuffer);
+    ciErrNum = CECL_SET_KERNEL_ARG(ckBoxColumns, 1, sizeof(cl_mem), (void*)&cmOutputBuffer);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     
     // Copy input data from host to device 
     if (bUseLmem)
     {
         // lmem version
-        ciErrNum = clEnqueueWriteBuffer(cqCommandQueue, cmDevBufIn, CL_TRUE, 0, szBuffBytes, uiInputImage, 0, NULL, NULL);
+        ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue, cmDevBufIn, CL_TRUE, 0, szBuffBytes, uiInputImage, 0, NULL, NULL);
         oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
         // Set global and local work sizes for row kernel
@@ -512,13 +513,13 @@ double BoxFilterGPU(unsigned int* uiInputImage, cl_mem cmOutputBuffer,
     if (bUseLmem)
     {
         // lmem Version
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckBoxRowsLmem, 2, NULL, 
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckBoxRowsLmem, 2, NULL, 
                                           szGlobalWorkSize, szLocalWorkSize, 0, NULL, NULL);
     }
     else 
     {
         // 2D Image (Texture)
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckBoxRowsTex, 2, NULL, 
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckBoxRowsTex, 2, NULL, 
                                           szGlobalWorkSize, szLocalWorkSize, 0, NULL, NULL);
     }
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
@@ -530,7 +531,7 @@ double BoxFilterGPU(unsigned int* uiInputImage, cl_mem cmOutputBuffer,
     szGlobalWorkSize[1] = 1;
 
     // Launch column kernel
-    ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckBoxColumns, 2, NULL, 
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckBoxColumns, 2, NULL, 
                                       szGlobalWorkSize, szLocalWorkSize, 0, NULL, NULL);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
@@ -677,7 +678,7 @@ void DisplayGL()
                 void* uiOutput = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY_ARB);
 
                 // Copy results back to pbo, block until complete
-                ciErrNum = clEnqueueReadBuffer(cqCommandQueue, cmDevBufOut, CL_TRUE, 0, szBuffBytes, uiOutput, 0, NULL, NULL);
+                ciErrNum = CECL_READ_BUFFER(cqCommandQueue, cmDevBufOut, CL_TRUE, 0, szBuffBytes, uiOutput, 0, NULL, NULL);
                 oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
                 // Unmap and unbind

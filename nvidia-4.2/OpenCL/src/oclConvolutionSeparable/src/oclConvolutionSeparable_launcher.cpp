@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -43,7 +44,7 @@ extern "C" void initConvolutionSeparable(cl_context cxGPUContext, cl_command_que
         oclCheckError(cConvolutionSeparable != NULL, shrTRUE);
 
     shrLog("Creating convolutionSeparable program...\n");
-        cpConvolutionSeparable = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cConvolutionSeparable, &kernelLength, &ciErrNum);
+        cpConvolutionSeparable = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cConvolutionSeparable, &kernelLength, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Building convolutionSeparable program...\n");
@@ -79,11 +80,11 @@ extern "C" void initConvolutionSeparable(cl_context cxGPUContext, cl_command_que
                 ROWS_HALO_STEPS,   COLUMNS_HALO_STEPS
             );
         #endif
-        ciErrNum = clBuildProgram(cpConvolutionSeparable, 0, NULL, compileOptions, NULL, NULL);
+        ciErrNum = CECL_PROGRAM(cpConvolutionSeparable, 0, NULL, compileOptions, NULL, NULL);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        ckConvolutionRows = clCreateKernel(cpConvolutionSeparable, "convolutionRows", &ciErrNum);
+        ckConvolutionRows = CECL_KERNEL(cpConvolutionSeparable, "convolutionRows", &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        ckConvolutionColumns = clCreateKernel(cpConvolutionSeparable, "convolutionColumns", &ciErrNum);
+        ckConvolutionColumns = CECL_KERNEL(cpConvolutionSeparable, "convolutionColumns", &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     cqDefaultCommandQueue = cqParamCommandQueue;
@@ -116,12 +117,12 @@ extern "C" void convolutionRows(
     if(!cqCommandQueue)
         cqCommandQueue = cqDefaultCommandQueue;
 
-    ciErrNum  = clSetKernelArg(ckConvolutionRows, 0, sizeof(cl_mem),       (void*)&d_Dst);
-    ciErrNum |= clSetKernelArg(ckConvolutionRows, 1, sizeof(cl_mem),       (void*)&d_Src);
-    ciErrNum |= clSetKernelArg(ckConvolutionRows, 2, sizeof(cl_mem),       (void*)&c_Kernel);
-    ciErrNum |= clSetKernelArg(ckConvolutionRows, 3, sizeof(unsigned int), (void*)&imageW);
-    ciErrNum |= clSetKernelArg(ckConvolutionRows, 4, sizeof(unsigned int), (void*)&imageH);
-    ciErrNum |= clSetKernelArg(ckConvolutionRows, 5, sizeof(unsigned int), (void*)&imageW);
+    ciErrNum  = CECL_SET_KERNEL_ARG(ckConvolutionRows, 0, sizeof(cl_mem),       (void*)&d_Dst);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckConvolutionRows, 1, sizeof(cl_mem),       (void*)&d_Src);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckConvolutionRows, 2, sizeof(cl_mem),       (void*)&c_Kernel);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckConvolutionRows, 3, sizeof(unsigned int), (void*)&imageW);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckConvolutionRows, 4, sizeof(unsigned int), (void*)&imageH);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckConvolutionRows, 5, sizeof(unsigned int), (void*)&imageW);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     localWorkSize[0] = ROWS_BLOCKDIM_X;
@@ -129,7 +130,7 @@ extern "C" void convolutionRows(
     globalWorkSize[0] = imageW / ROWS_RESULT_STEPS;
     globalWorkSize[1] = imageH;
 
-    ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckConvolutionRows, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckConvolutionRows, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
     oclCheckError(ciErrNum, CL_SUCCESS);
 }
 
@@ -151,12 +152,12 @@ extern "C" void convolutionColumns(
     if(!cqCommandQueue)
         cqCommandQueue = cqDefaultCommandQueue;
 
-    ciErrNum  = clSetKernelArg(ckConvolutionColumns, 0, sizeof(cl_mem),       (void*)&d_Dst);
-    ciErrNum |= clSetKernelArg(ckConvolutionColumns, 1, sizeof(cl_mem),       (void*)&d_Src);
-    ciErrNum |= clSetKernelArg(ckConvolutionColumns, 2, sizeof(cl_mem),       (void*)&c_Kernel);
-    ciErrNum |= clSetKernelArg(ckConvolutionColumns, 3, sizeof(unsigned int), (void*)&imageW);
-    ciErrNum |= clSetKernelArg(ckConvolutionColumns, 4, sizeof(unsigned int), (void*)&imageH);
-    ciErrNum |= clSetKernelArg(ckConvolutionColumns, 5, sizeof(unsigned int), (void*)&imageW);
+    ciErrNum  = CECL_SET_KERNEL_ARG(ckConvolutionColumns, 0, sizeof(cl_mem),       (void*)&d_Dst);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckConvolutionColumns, 1, sizeof(cl_mem),       (void*)&d_Src);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckConvolutionColumns, 2, sizeof(cl_mem),       (void*)&c_Kernel);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckConvolutionColumns, 3, sizeof(unsigned int), (void*)&imageW);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckConvolutionColumns, 4, sizeof(unsigned int), (void*)&imageH);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckConvolutionColumns, 5, sizeof(unsigned int), (void*)&imageW);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     localWorkSize[0] = COLUMNS_BLOCKDIM_X;
@@ -164,6 +165,6 @@ extern "C" void convolutionColumns(
     globalWorkSize[0] = imageW;
     globalWorkSize[1] = imageH / COLUMNS_RESULT_STEPS;
 
-    ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, ckConvolutionColumns, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+    ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, ckConvolutionColumns, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
     oclCheckError(ciErrNum, CL_SUCCESS);
 }

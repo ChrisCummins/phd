@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -105,7 +106,7 @@ int main(int argc, const char **argv)
     cxGPUContext = clCreateContext(0, nDevice, cdDevices, NULL, NULL, &ciErr1);
     oclCheckError(ciErr1, CL_SUCCESS);
     
-    shrLog("clCreateCommandQueue\n"); 
+    shrLog("CECL_CREATE_COMMAND_QUEUE\n"); 
     int id_device;
     if(shrGetCmdLineArgumenti(argc, argv, "device", &id_device)) // Set up command queue(s) for GPU specified on the command line
     {
@@ -113,7 +114,7 @@ int main(int argc, const char **argv)
         cl_device_id cdDevice = cdDevices[id_device];
 
         // create a command que
-        cqCommandQueue[0] = clCreateCommandQueue(cxGPUContext, cdDevice, 0, &ciErr1);
+        cqCommandQueue[0] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevice, 0, &ciErr1);
         oclCheckErrorEX(ciErr1, CL_SUCCESS, NULL);
         oclPrintDevInfo(LOGBOTH, cdDevice);
         nDevice = 1;   
@@ -122,7 +123,7 @@ int main(int argc, const char **argv)
     { // create command queues for all available devices        
         for (cl_uint i = 0; i < nDevice; i++) 
         {
-            cqCommandQueue[i] = clCreateCommandQueue(cxGPUContext, cdDevices[i], 0, &ciErr1);
+            cqCommandQueue[i] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[i], 0, &ciErr1);
             oclCheckErrorEX(ciErr1, CL_SUCCESS, NULL);
         }
         for (cl_uint i = 0; i < nDevice; i++) oclPrintDevInfo(LOGBOTH, cdDevices[i]);
@@ -151,11 +152,11 @@ int main(int argc, const char **argv)
     d_Rand = (cl_mem*)malloc(nDevice*sizeof(cl_mem));
     for (cl_uint iDevice = 0; iDevice < nDevice; iDevice++)
     {
-        d_MT[iDevice] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, sizeof(mt_struct_stripped)*MT_RNG_COUNT, NULL, &ciErr2);
+        d_MT[iDevice] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY, sizeof(mt_struct_stripped)*MT_RNG_COUNT, NULL, &ciErr2);
         ciErr1 |= ciErr2;
-        ciErr1 |= clEnqueueWriteBuffer(cqCommandQueue[iDevice], d_MT[iDevice], CL_TRUE, 0, 
+        ciErr1 |= CECL_WRITE_BUFFER(cqCommandQueue[iDevice], d_MT[iDevice], CL_TRUE, 0, 
             sizeof(mt_struct_stripped)*MT_RNG_COUNT, h_MT, 0, NULL, NULL);
-        d_Rand[iDevice] = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, sizeof(cl_float) * nRand, NULL, &ciErr2);
+        d_Rand[iDevice] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, sizeof(cl_float) * nRand, NULL, &ciErr2);
         ciErr1 |= ciErr2;
         oclCheckError(ciErr1, CL_SUCCESS); 
     }
@@ -166,8 +167,8 @@ int main(int argc, const char **argv)
     shrCheckError(cSourcePath != NULL, shrTRUE);
     char *cMersenneTwister = oclLoadProgSource(cSourcePath, "// My comment\n", &szKernelLength);
     oclCheckError(cMersenneTwister != NULL, shrTRUE);
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cMersenneTwister, &szKernelLength, &ciErr1);
-    ciErr1 |= clBuildProgram(cpProgram, 0, NULL, NULL, NULL, NULL);
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cMersenneTwister, &szKernelLength, &ciErr1);
+    ciErr1 |= CECL_PROGRAM(cpProgram, 0, NULL, NULL, NULL, NULL);
     if (ciErr1 != CL_SUCCESS)
     {
         // write out standard error, Build Log and PTX, then cleanup and exit
@@ -178,9 +179,9 @@ int main(int argc, const char **argv)
     }
 
     shrLog("Call Mersenne Twister kernel on GPU...\n\n"); 
-    ckMersenneTwister = clCreateKernel(cpProgram, "MersenneTwister", &ciErr1);
+    ckMersenneTwister = CECL_KERNEL(cpProgram, "MersenneTwister", &ciErr1);
 #ifdef DO_BOXMULLER
-    ckBoxMuller = clCreateKernel(cpProgram, "BoxMuller", &ciErr1);
+    ckBoxMuller = CECL_KERNEL(cpProgram, "BoxMuller", &ciErr1);
 #endif
 
 #ifdef GPU_PROFILING
@@ -198,10 +199,10 @@ int main(int argc, const char **argv)
 #endif
         for (cl_uint iDevice = 0; iDevice < nDevice; iDevice++)
         {
-            ciErr1 |= clSetKernelArg(ckMersenneTwister, 0, sizeof(cl_mem), (void*)&d_Rand[iDevice]);
-            ciErr1 |= clSetKernelArg(ckMersenneTwister, 1, sizeof(cl_mem), (void*)&d_MT[iDevice]);
-            ciErr1 |= clSetKernelArg(ckMersenneTwister, 2, sizeof(int),    (void*)&nPerRng);
-            ciErr1 |= clEnqueueNDRangeKernel(cqCommandQueue[iDevice], ckMersenneTwister, 1, NULL, 
+            ciErr1 |= CECL_SET_KERNEL_ARG(ckMersenneTwister, 0, sizeof(cl_mem), (void*)&d_Rand[iDevice]);
+            ciErr1 |= CECL_SET_KERNEL_ARG(ckMersenneTwister, 1, sizeof(cl_mem), (void*)&d_MT[iDevice]);
+            ciErr1 |= CECL_SET_KERNEL_ARG(ckMersenneTwister, 2, sizeof(int),    (void*)&nPerRng);
+            ciErr1 |= CECL_ND_RANGE_KERNEL(cqCommandQueue[iDevice], ckMersenneTwister, 1, NULL, 
                 globalWorkSize, localWorkSize, 0, NULL, NULL);
             oclCheckError(ciErr1, CL_SUCCESS); 
         }
@@ -209,9 +210,9 @@ int main(int argc, const char **argv)
     #ifdef DO_BOXMULLER 
         for (cl_uint iDevice = 0; iDevice < nDevice; iDevice++)
         {
-            ciErr1 |= clSetKernelArg(ckBoxMuller, 0, sizeof(cl_mem), (void*)&d_Rand[iDevice]);
-            ciErr1 |= clSetKernelArg(ckBoxMuller, 1, sizeof(int),    (void*)&nPerRng);
-            ciErr1 |= clEnqueueNDRangeKernel(cqCommandQueue[iDevice], ckBoxMuller, 1, NULL, 
+            ciErr1 |= CECL_SET_KERNEL_ARG(ckBoxMuller, 0, sizeof(cl_mem), (void*)&d_Rand[iDevice]);
+            ciErr1 |= CECL_SET_KERNEL_ARG(ckBoxMuller, 1, sizeof(int),    (void*)&nPerRng);
+            ciErr1 |= CECL_ND_RANGE_KERNEL(cqCommandQueue[iDevice], ckBoxMuller, 1, NULL, 
                 globalWorkSize, localWorkSize, 0, NULL, NULL);
             oclCheckError(ciErr1, CL_SUCCESS); 
         }
@@ -230,7 +231,7 @@ int main(int argc, const char **argv)
     shrLog("\nRead back results...\n"); 
     for (cl_uint iDevice = 0; iDevice < nDevice; iDevice++)
     {
-        ciErr1 |= clEnqueueReadBuffer(cqCommandQueue[iDevice], d_Rand[iDevice], CL_TRUE, 0, 
+        ciErr1 |= CECL_READ_BUFFER(cqCommandQueue[iDevice], d_Rand[iDevice], CL_TRUE, 0, 
             sizeof(cl_float) * nRand, h_RandGPU[iDevice], 0, NULL, NULL);
         oclCheckError(ciErr1, CL_SUCCESS); 
     }

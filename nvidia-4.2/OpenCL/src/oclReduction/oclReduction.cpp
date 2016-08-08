@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
 * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
 *
@@ -144,7 +145,7 @@ int main( int argc, const char** argv)
     shrLog("\n");
 
     // create a command-queue
-    cqCommandQueue = clCreateCommandQueue(cxGPUContext, device, 0, &ciErrNum);
+    cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, device, 0, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     source_path = shrFindFilePath("oclReduction_kernel.cl", argv[0]);
@@ -253,10 +254,10 @@ T profileReduce(ReduceType datatype,
     //shrLog("Profile Kernel %d\n", whichKernel);
 
     cl_kernel reductionKernel = getReductionKernel(datatype, whichKernel, numThreads, isPow2(n) );
-    clSetKernelArg(reductionKernel, 0, sizeof(cl_mem), (void *) &d_idata);
-    clSetKernelArg(reductionKernel, 1, sizeof(cl_mem), (void *) &d_odata);
-    clSetKernelArg(reductionKernel, 2, sizeof(cl_int), &n);
-    clSetKernelArg(reductionKernel, 3, sizeof(T) * numThreads, NULL);
+    CECL_SET_KERNEL_ARG(reductionKernel, 0, sizeof(cl_mem), (void *) &d_idata);
+    CECL_SET_KERNEL_ARG(reductionKernel, 1, sizeof(cl_mem), (void *) &d_odata);
+    CECL_SET_KERNEL_ARG(reductionKernel, 2, sizeof(cl_int), &n);
+    CECL_SET_KERNEL_ARG(reductionKernel, 3, sizeof(T) * numThreads, NULL);
 
     if( !cpuFinalReduction ) {
         int s=numBlocks;
@@ -268,10 +269,10 @@ T profileReduce(ReduceType datatype,
             getNumBlocksAndThreads(kernel, s, maxBlocks, maxThreads, blocks, threads);
 
             finalReductionKernel[finalReductionIterations] = getReductionKernel(datatype, kernel, threads, isPow2(s) );
-            clSetKernelArg(finalReductionKernel[finalReductionIterations], 0, sizeof(cl_mem), (void *) &d_odata);
-            clSetKernelArg(finalReductionKernel[finalReductionIterations], 1, sizeof(cl_mem), (void *) &d_odata);
-            clSetKernelArg(finalReductionKernel[finalReductionIterations], 2, sizeof(cl_int), &n);
-            clSetKernelArg(finalReductionKernel[finalReductionIterations], 3, sizeof(T) * numThreads, NULL);
+            CECL_SET_KERNEL_ARG(finalReductionKernel[finalReductionIterations], 0, sizeof(cl_mem), (void *) &d_odata);
+            CECL_SET_KERNEL_ARG(finalReductionKernel[finalReductionIterations], 1, sizeof(cl_mem), (void *) &d_odata);
+            CECL_SET_KERNEL_ARG(finalReductionKernel[finalReductionIterations], 2, sizeof(cl_int), &n);
+            CECL_SET_KERNEL_ARG(finalReductionKernel[finalReductionIterations], 3, sizeof(T) * numThreads, NULL);
             
             if (kernel < 3)
                 s = (s + threads - 1) / threads;
@@ -296,7 +297,7 @@ T profileReduce(ReduceType datatype,
         globalWorkSize[0] = numBlocks * numThreads;
         localWorkSize[0] = numThreads;
 	
-        ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue,reductionKernel, 1, 0, globalWorkSize, localWorkSize,
+        ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue,reductionKernel, 1, 0, globalWorkSize, localWorkSize,
                                           0, NULL, NULL);               
 
         // check if kernel execution generated an error        
@@ -306,7 +307,7 @@ T profileReduce(ReduceType datatype,
         {
             // sum partial sums from each block on CPU        
             // copy result from device to host
-            clEnqueueReadBuffer(cqCommandQueue, d_odata, CL_TRUE, 0, numBlocks * sizeof(T), 
+            CECL_READ_BUFFER(cqCommandQueue, d_odata, CL_TRUE, 0, numBlocks * sizeof(T), 
                                 h_odata, 0, NULL, NULL);
 
             for(int i=0; i<numBlocks; i++) 
@@ -332,7 +333,7 @@ T profileReduce(ReduceType datatype,
                 globalWorkSize[0] = threads * blocks;
                 localWorkSize[0] = threads;
                 
-                ciErrNum = clEnqueueNDRangeKernel(cqCommandQueue, finalReductionKernel[it], 1, 0,
+                ciErrNum = CECL_ND_RANGE_KERNEL(cqCommandQueue, finalReductionKernel[it], 1, 0,
                                                   globalWorkSize, localWorkSize, 0, NULL, NULL);               
                 oclCheckError(ciErrNum, CL_SUCCESS);
                 
@@ -347,7 +348,7 @@ T profileReduce(ReduceType datatype,
             if (s > 1)
             {
                 // copy result from device to host
-                clEnqueueReadBuffer(cqCommandQueue, d_odata, CL_TRUE, 0, s * sizeof(T), 
+                CECL_READ_BUFFER(cqCommandQueue, d_odata, CL_TRUE, 0, s * sizeof(T), 
                                     h_odata, 0, NULL, NULL);
 
                 for(int i=0; i < s; i++) 
@@ -366,7 +367,7 @@ T profileReduce(ReduceType datatype,
     if (needReadBack)
     {
         // copy final sum from device to host
-        clEnqueueReadBuffer(cqCommandQueue, d_odata, CL_TRUE, 0, sizeof(T), 
+        CECL_READ_BUFFER(cqCommandQueue, d_odata, CL_TRUE, 0, sizeof(T), 
                             &gpu_result, 0, NULL, NULL);
     }
 
@@ -410,8 +411,8 @@ void shmoo(int minN, int maxN, int maxThreads, int maxBlocks, ReduceType datatyp
     T* h_odata = (T*) malloc(maxNumBlocks*sizeof(T));
 
     // allocate device memory and data
-    cl_mem d_idata = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, bytes, h_idata, NULL);
-    cl_mem d_odata = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, maxNumBlocks * sizeof(T), NULL, NULL);
+    cl_mem d_idata = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, bytes, h_idata, NULL);
+    cl_mem d_odata = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, maxNumBlocks * sizeof(T), NULL, NULL);
 
     int testIterations = 100;
     double dTotalTime = 0.0;
@@ -522,8 +523,8 @@ runTest( int argc, const char** argv, ReduceType datatype)
         T* h_odata = (T*)malloc(numBlocks * sizeof(T));
 
         // allocate device memory and data
-        cl_mem d_idata = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, bytes, h_idata, NULL);
-        cl_mem d_odata = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, numBlocks * sizeof(T), NULL, NULL);
+        cl_mem d_idata = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, bytes, h_idata, NULL);
+        cl_mem d_odata = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, numBlocks * sizeof(T), NULL, NULL);
       
         int testIterations = 100;
         double dTotalTime = 0.0;
@@ -601,13 +602,13 @@ cl_kernel getReductionKernel(ReduceType datatype, int whichKernel, int blockSize
     source = oclLoadProgSource(source_path, preamble.str().c_str(), &program_length);
     oclCheckError(source != NULL, shrTRUE);
     
-    cl_program cpProgram = clCreateProgramWithSource(cxGPUContext, 1,(const char **) &source, 
+    cl_program cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1,(const char **) &source, 
                                                      &program_length, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
     free(source);
 
     // build the program
-    ciErrNum = clBuildProgram(cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
+    ciErrNum = CECL_PROGRAM(cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // write out standard error, Build Log and PTX, then cleanup and exit
@@ -620,7 +621,7 @@ cl_kernel getReductionKernel(ReduceType datatype, int whichKernel, int blockSize
     // create Kernel    
     std::ostringstream kernelName;
     kernelName << "reduce" << whichKernel;    
-    cl_kernel ckKernel = clCreateKernel(cpProgram, kernelName.str().c_str(), &ciErrNum);
+    cl_kernel ckKernel = CECL_KERNEL(cpProgram, kernelName.str().c_str(), &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     size_t wgSize;

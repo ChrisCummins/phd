@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
 * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
 *
@@ -37,24 +38,24 @@ RadixSort::RadixSort(cl_context GPUContext,
             (maxElements / (CTA_SIZE * 2)) : (maxElements / (CTA_SIZE * 2) + 1);
 
 	cl_int ciErrNum;
-	d_tempKeys = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, sizeof(unsigned int) * maxElements, NULL, &ciErrNum);
-	mCounters = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, WARP_SIZE * numBlocks * sizeof(unsigned int), NULL, &ciErrNum);
-	mCountersSum = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, WARP_SIZE * numBlocks * sizeof(unsigned int), NULL, &ciErrNum);
-	mBlockOffsets = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, WARP_SIZE * numBlocks * sizeof(unsigned int), NULL, &ciErrNum); 
+	d_tempKeys = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, sizeof(unsigned int) * maxElements, NULL, &ciErrNum);
+	mCounters = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, WARP_SIZE * numBlocks * sizeof(unsigned int), NULL, &ciErrNum);
+	mCountersSum = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, WARP_SIZE * numBlocks * sizeof(unsigned int), NULL, &ciErrNum);
+	mBlockOffsets = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, WARP_SIZE * numBlocks * sizeof(unsigned int), NULL, &ciErrNum); 
 
 	size_t szKernelLength; // Byte size of kernel code
     char *cSourcePath = shrFindFilePath("RadixSort.cl", path);
     shrCheckError(cSourcePath != NULL, shrTRUE);
     char *cRadixSort = oclLoadProgSource(cSourcePath, "// My comment\n", &szKernelLength);
     oclCheckError(cRadixSort != NULL, shrTRUE);
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&cRadixSort, &szKernelLength, &ciErrNum);
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1, (const char **)&cRadixSort, &szKernelLength, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
 #ifdef MAC
     char *flags = "-DMAC -cl-fast-relaxed-math";
 #else
     char *flags = "-cl-fast-relaxed-math";
 #endif
-    ciErrNum = clBuildProgram(cpProgram, 0, NULL, flags, NULL, NULL);
+    ciErrNum = CECL_PROGRAM(cpProgram, 0, NULL, flags, NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // write out standard ciErrNumor, Build Log and PTX, then cleanup and exit
@@ -64,13 +65,13 @@ RadixSort::RadixSort(cl_context GPUContext,
         oclCheckError(ciErrNum, CL_SUCCESS); 
     }
 
-	ckRadixSortBlocksKeysOnly = clCreateKernel(cpProgram, "radixSortBlocksKeysOnly", &ciErrNum);
+	ckRadixSortBlocksKeysOnly = CECL_KERNEL(cpProgram, "radixSortBlocksKeysOnly", &ciErrNum);
 	oclCheckError(ciErrNum, CL_SUCCESS);
-	ckFindRadixOffsets        = clCreateKernel(cpProgram, "findRadixOffsets",        &ciErrNum);
+	ckFindRadixOffsets        = CECL_KERNEL(cpProgram, "findRadixOffsets",        &ciErrNum);
 	oclCheckError(ciErrNum, CL_SUCCESS);
-	ckScanNaive               = clCreateKernel(cpProgram, "scanNaive",               &ciErrNum);
+	ckScanNaive               = CECL_KERNEL(cpProgram, "scanNaive",               &ciErrNum);
 	oclCheckError(ciErrNum, CL_SUCCESS);
-	ckReorderDataKeysOnly     = clCreateKernel(cpProgram, "reorderDataKeysOnly",     &ciErrNum);
+	ckReorderDataKeysOnly     = CECL_KERNEL(cpProgram, "reorderDataKeysOnly",     &ciErrNum);
 	oclCheckError(ciErrNum, CL_SUCCESS);
 	free(cRadixSort);
     free(cSourcePath);
@@ -150,14 +151,14 @@ void RadixSort::radixSortBlocksKeysOnlyOCL(cl_mem d_keys, unsigned int nbits, un
 	size_t globalWorkSize[1] = {CTA_SIZE*totalBlocks};
 	size_t localWorkSize[1] = {CTA_SIZE};
 	cl_int ciErrNum;
-	ciErrNum  = clSetKernelArg(ckRadixSortBlocksKeysOnly, 0, sizeof(cl_mem), (void*)&d_keys);
-    ciErrNum |= clSetKernelArg(ckRadixSortBlocksKeysOnly, 1, sizeof(cl_mem), (void*)&d_tempKeys);
-	ciErrNum |= clSetKernelArg(ckRadixSortBlocksKeysOnly, 2, sizeof(unsigned int), (void*)&nbits);
-	ciErrNum |= clSetKernelArg(ckRadixSortBlocksKeysOnly, 3, sizeof(unsigned int), (void*)&startbit);
-    ciErrNum |= clSetKernelArg(ckRadixSortBlocksKeysOnly, 4, sizeof(unsigned int), (void*)&numElements);
-    ciErrNum |= clSetKernelArg(ckRadixSortBlocksKeysOnly, 5, sizeof(unsigned int), (void*)&totalBlocks);
-	ciErrNum |= clSetKernelArg(ckRadixSortBlocksKeysOnly, 6, 4*CTA_SIZE*sizeof(unsigned int), NULL);
-    ciErrNum |= clEnqueueNDRangeKernel(cqCommandQueue, ckRadixSortBlocksKeysOnly, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+	ciErrNum  = CECL_SET_KERNEL_ARG(ckRadixSortBlocksKeysOnly, 0, sizeof(cl_mem), (void*)&d_keys);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckRadixSortBlocksKeysOnly, 1, sizeof(cl_mem), (void*)&d_tempKeys);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckRadixSortBlocksKeysOnly, 2, sizeof(unsigned int), (void*)&nbits);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckRadixSortBlocksKeysOnly, 3, sizeof(unsigned int), (void*)&startbit);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckRadixSortBlocksKeysOnly, 4, sizeof(unsigned int), (void*)&numElements);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckRadixSortBlocksKeysOnly, 5, sizeof(unsigned int), (void*)&totalBlocks);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckRadixSortBlocksKeysOnly, 6, 4*CTA_SIZE*sizeof(unsigned int), NULL);
+    ciErrNum |= CECL_ND_RANGE_KERNEL(cqCommandQueue, ckRadixSortBlocksKeysOnly, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
 	oclCheckError(ciErrNum, CL_SUCCESS);
 }
 
@@ -167,14 +168,14 @@ void RadixSort::findRadixOffsetsOCL(unsigned int startbit, unsigned int numEleme
 	size_t globalWorkSize[1] = {CTA_SIZE*totalBlocks};
 	size_t localWorkSize[1] = {CTA_SIZE};
 	cl_int ciErrNum;
-	ciErrNum  = clSetKernelArg(ckFindRadixOffsets, 0, sizeof(cl_mem), (void*)&d_tempKeys);
-	ciErrNum |= clSetKernelArg(ckFindRadixOffsets, 1, sizeof(cl_mem), (void*)&mCounters);
-    ciErrNum |= clSetKernelArg(ckFindRadixOffsets, 2, sizeof(cl_mem), (void*)&mBlockOffsets);
-	ciErrNum |= clSetKernelArg(ckFindRadixOffsets, 3, sizeof(unsigned int), (void*)&startbit);
-	ciErrNum |= clSetKernelArg(ckFindRadixOffsets, 4, sizeof(unsigned int), (void*)&numElements);
-	ciErrNum |= clSetKernelArg(ckFindRadixOffsets, 5, sizeof(unsigned int), (void*)&totalBlocks);
-	ciErrNum |= clSetKernelArg(ckFindRadixOffsets, 6, 2 * CTA_SIZE *sizeof(unsigned int), NULL);
-	ciErrNum |= clEnqueueNDRangeKernel(cqCommandQueue, ckFindRadixOffsets, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+	ciErrNum  = CECL_SET_KERNEL_ARG(ckFindRadixOffsets, 0, sizeof(cl_mem), (void*)&d_tempKeys);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckFindRadixOffsets, 1, sizeof(cl_mem), (void*)&mCounters);
+    ciErrNum |= CECL_SET_KERNEL_ARG(ckFindRadixOffsets, 2, sizeof(cl_mem), (void*)&mBlockOffsets);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckFindRadixOffsets, 3, sizeof(unsigned int), (void*)&startbit);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckFindRadixOffsets, 4, sizeof(unsigned int), (void*)&numElements);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckFindRadixOffsets, 5, sizeof(unsigned int), (void*)&totalBlocks);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckFindRadixOffsets, 6, 2 * CTA_SIZE *sizeof(unsigned int), NULL);
+	ciErrNum |= CECL_ND_RANGE_KERNEL(cqCommandQueue, ckFindRadixOffsets, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
 	oclCheckError(ciErrNum, CL_SUCCESS);
 }
 
@@ -187,11 +188,11 @@ void RadixSort::scanNaiveOCL(unsigned int numElements)
 	unsigned int extra_space = nHist / NUM_BANKS;
 	unsigned int shared_mem_size = sizeof(unsigned int) * (nHist + extra_space);
 	cl_int ciErrNum;
-	ciErrNum  = clSetKernelArg(ckScanNaive, 0, sizeof(cl_mem), (void*)&mCountersSum);
-	ciErrNum |= clSetKernelArg(ckScanNaive, 1, sizeof(cl_mem), (void*)&mCounters);
-	ciErrNum |= clSetKernelArg(ckScanNaive, 2, sizeof(unsigned int), (void*)&nHist);
-	ciErrNum |= clSetKernelArg(ckScanNaive, 3, 2 * shared_mem_size, NULL);
-	ciErrNum |= clEnqueueNDRangeKernel(cqCommandQueue, ckScanNaive, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+	ciErrNum  = CECL_SET_KERNEL_ARG(ckScanNaive, 0, sizeof(cl_mem), (void*)&mCountersSum);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckScanNaive, 1, sizeof(cl_mem), (void*)&mCounters);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckScanNaive, 2, sizeof(unsigned int), (void*)&nHist);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckScanNaive, 3, 2 * shared_mem_size, NULL);
+	ciErrNum |= CECL_ND_RANGE_KERNEL(cqCommandQueue, ckScanNaive, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
 	oclCheckError(ciErrNum, CL_SUCCESS);
 }
 
@@ -201,15 +202,15 @@ void RadixSort::reorderDataKeysOnlyOCL(cl_mem d_keys, unsigned int startbit, uns
 	size_t globalWorkSize[1] = {CTA_SIZE*totalBlocks};
 	size_t localWorkSize[1] = {CTA_SIZE};
 	cl_int ciErrNum;
-	ciErrNum  = clSetKernelArg(ckReorderDataKeysOnly, 0, sizeof(cl_mem), (void*)&d_keys);
-	ciErrNum |= clSetKernelArg(ckReorderDataKeysOnly, 1, sizeof(cl_mem), (void*)&d_tempKeys);
-	ciErrNum |= clSetKernelArg(ckReorderDataKeysOnly, 2, sizeof(cl_mem), (void*)&mBlockOffsets);
-	ciErrNum |= clSetKernelArg(ckReorderDataKeysOnly, 3, sizeof(cl_mem), (void*)&mCountersSum);
-	ciErrNum |= clSetKernelArg(ckReorderDataKeysOnly, 4, sizeof(cl_mem), (void*)&mCounters);
-	ciErrNum |= clSetKernelArg(ckReorderDataKeysOnly, 5, sizeof(unsigned int), (void*)&startbit);
-	ciErrNum |= clSetKernelArg(ckReorderDataKeysOnly, 6, sizeof(unsigned int), (void*)&numElements);
-	ciErrNum |= clSetKernelArg(ckReorderDataKeysOnly, 7, sizeof(unsigned int), (void*)&totalBlocks);
-	ciErrNum |= clSetKernelArg(ckReorderDataKeysOnly, 8, 2 * CTA_SIZE * sizeof(unsigned int), NULL);
-	ciErrNum |= clEnqueueNDRangeKernel(cqCommandQueue, ckReorderDataKeysOnly, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+	ciErrNum  = CECL_SET_KERNEL_ARG(ckReorderDataKeysOnly, 0, sizeof(cl_mem), (void*)&d_keys);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckReorderDataKeysOnly, 1, sizeof(cl_mem), (void*)&d_tempKeys);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckReorderDataKeysOnly, 2, sizeof(cl_mem), (void*)&mBlockOffsets);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckReorderDataKeysOnly, 3, sizeof(cl_mem), (void*)&mCountersSum);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckReorderDataKeysOnly, 4, sizeof(cl_mem), (void*)&mCounters);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckReorderDataKeysOnly, 5, sizeof(unsigned int), (void*)&startbit);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckReorderDataKeysOnly, 6, sizeof(unsigned int), (void*)&numElements);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckReorderDataKeysOnly, 7, sizeof(unsigned int), (void*)&totalBlocks);
+	ciErrNum |= CECL_SET_KERNEL_ARG(ckReorderDataKeysOnly, 8, 2 * CTA_SIZE * sizeof(unsigned int), NULL);
+	ciErrNum |= CECL_ND_RANGE_KERNEL(cqCommandQueue, ckReorderDataKeysOnly, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
 	oclCheckError(ciErrNum, CL_SUCCESS);
 }

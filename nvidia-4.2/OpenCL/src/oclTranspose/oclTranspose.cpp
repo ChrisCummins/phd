@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -77,29 +78,29 @@ double transposeGPU(const char* kernelName, bool useLocalMem,  cl_uint ciDeviceC
 
     for(unsigned int i = 0; i < ciDeviceCount; ++i){
         // allocate device memory and copy host to device memory
-        d_idata[i] = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        d_idata[i] = CECL_BUFFER(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                     mem_size, h_idata, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         // create buffer to store output
-        d_odata[i] = clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY ,
+        d_odata[i] = CECL_BUFFER(cxGPUContext, CL_MEM_WRITE_ONLY ,
                                     sizePerGPU*size_y*sizeof(float), NULL, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         // create the naive transpose kernel
-        ckKernel[i] = clCreateKernel(cpProgram, kernelName, &ciErrNum);
+        ckKernel[i] = CECL_KERNEL(cpProgram, kernelName, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
         
         // set the args values for the naive kernel
         size_t offset = i * sizePerGPU;
-        ciErrNum  = clSetKernelArg(ckKernel[i], 0, sizeof(cl_mem), (void *) &d_odata[i]);
-        ciErrNum |= clSetKernelArg(ckKernel[i], 1, sizeof(cl_mem), (void *) &d_idata[0]);
-        ciErrNum |= clSetKernelArg(ckKernel[i], 2, sizeof(int), &offset);
-        ciErrNum |= clSetKernelArg(ckKernel[i], 3, sizeof(int), &size_x);
-        ciErrNum |= clSetKernelArg(ckKernel[i], 4, sizeof(int), &size_y);
+        ciErrNum  = CECL_SET_KERNEL_ARG(ckKernel[i], 0, sizeof(cl_mem), (void *) &d_odata[i]);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[i], 1, sizeof(cl_mem), (void *) &d_idata[0]);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[i], 2, sizeof(int), &offset);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[i], 3, sizeof(int), &size_x);
+        ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[i], 4, sizeof(int), &size_y);
         if(useLocalMem)
         {
-            ciErrNum |= clSetKernelArg(ckKernel[i], 5, (BLOCK_DIM + 1) * BLOCK_DIM * sizeof(float), 0 );
+            ciErrNum |= CECL_SET_KERNEL_ARG(ckKernel[i], 5, (BLOCK_DIM + 1) * BLOCK_DIM * sizeof(float), 0 );
         }
     }
     oclCheckError(ciErrNum, CL_SUCCESS);
@@ -119,7 +120,7 @@ double transposeGPU(const char* kernelName, bool useLocalMem,  cl_uint ciDeviceC
         if( i == 0 ) shrDeltaT(0);
 
         for(unsigned int k=0; k < ciDeviceCount; ++k){
-            ciErrNum |= clEnqueueNDRangeKernel(commandQueue[k], ckKernel[k], 2, NULL,                                           
+            ciErrNum |= CECL_ND_RANGE_KERNEL(commandQueue[k], ckKernel[k], 2, NULL,                                           
                                 szGlobalWorkSize, szLocalWorkSize, 0, NULL, NULL);
         }
         oclCheckError(ciErrNum, CL_SUCCESS);
@@ -137,7 +138,7 @@ double transposeGPU(const char* kernelName, bool useLocalMem,  cl_uint ciDeviceC
         size_t offset = i * sizePerGPU;
         size_t size = MIN(size_x - i * sizePerGPU, sizePerGPU);
 
-        ciErrNum |= clEnqueueReadBuffer(commandQueue[i], d_odata[i], CL_TRUE, 0,
+        ciErrNum |= CECL_READ_BUFFER(commandQueue[i], d_odata[i], CL_TRUE, 0,
                                 size * size_y * sizeof(float), &h_odata[offset * size_y], 
                                 0, NULL, NULL);
     }
@@ -219,10 +220,10 @@ int runTest( const int argc, const char** argv)
             shrLog("\n");
            
             // create command queue
-            commandQueue[ciDeviceCount] = clCreateCommandQueue(cxGPUContext, device, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+            commandQueue[ciDeviceCount] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, device, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
             if (ciErrNum != CL_SUCCESS)
             {
-                shrLog(" Error %i in clCreateCommandQueue call !!!\n\n", ciErrNum);
+                shrLog(" Error %i in CECL_CREATE_COMMAND_QUEUE call !!!\n\n", ciErrNum);
                 return ciErrNum;
             }
 
@@ -265,10 +266,10 @@ int runTest( const int argc, const char** argv)
             shrLog("\n");
 
             // create command queue
-            commandQueue[i] = clCreateCommandQueue(cxGPUContext, device, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+            commandQueue[i] = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, device, CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
             if (ciErrNum != CL_SUCCESS)
             {
-                shrLog(" Error %i in clCreateCommandQueue call !!!\n\n", ciErrNum);
+                shrLog(" Error %i in CECL_CREATE_COMMAND_QUEUE call !!!\n\n", ciErrNum);
                 return ciErrNum;
             }
         }
@@ -288,12 +289,12 @@ int runTest( const int argc, const char** argv)
     oclCheckError(source != NULL, shrTRUE);
 
     // create the program
-    cpProgram = clCreateProgramWithSource(cxGPUContext, 1,
+    cpProgram = CECL_PROGRAM_WITH_SOURCE(cxGPUContext, 1,
                       (const char **)&source, &program_length, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
     
     // build the program
-    ciErrNum = clBuildProgram(cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
+    ciErrNum = CECL_PROGRAM(cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // write out standard error, Build Log and PTX, then return error

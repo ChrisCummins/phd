@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -58,8 +59,8 @@ extern "C" void startupOpenCL(int argc, const char **argv){
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     //Create a command-queue
-    shrLog("clCreateCommandQueue...\n\n"); 
-    cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevices[uiTargetDevice], 0, &ciErrNum);
+    shrLog("CECL_CREATE_COMMAND_QUEUE...\n\n"); 
+    cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[uiTargetDevice], 0, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
 	free( cdDevices );
@@ -80,8 +81,8 @@ extern "C" void shutdownOpenCL(void){
 //GPU buffer allocation
 extern "C" void allocateArray(memHandle_t *memObj, size_t size){
     cl_int ciErrNum;
-    shrLog(" clCreateBuffer (GPU GMEM, %u bytes)...\n\n", size); 
-    *memObj = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, size, NULL, &ciErrNum);
+    shrLog(" CECL_BUFFER (GPU GMEM, %u bytes)...\n\n", size); 
+    *memObj = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, size, NULL, &ciErrNum);
     oclCheckError(ciErrNum, CL_SUCCESS);
 }
 
@@ -95,13 +96,13 @@ extern "C" void freeArray(memHandle_t memObj){
 extern "C" void copyArrayFromDevice(void *hostPtr, memHandle_t memObj, unsigned int vbo, size_t size){
     cl_int ciErrNum;
     assert( vbo == 0 );
-    ciErrNum = clEnqueueReadBuffer(cqCommandQueue, memObj, CL_TRUE, 0, size, hostPtr, 0, NULL, NULL);
+    ciErrNum = CECL_READ_BUFFER(cqCommandQueue, memObj, CL_TRUE, 0, size, hostPtr, 0, NULL, NULL);
     oclCheckError(ciErrNum, CL_SUCCESS);
 }
 
 extern "C" void copyArrayToDevice(memHandle_t memObj, const void *hostPtr, size_t offset, size_t size){
     cl_int ciErrNum;
-    ciErrNum = clEnqueueWriteBuffer(cqCommandQueue, memObj, CL_TRUE, 0, size, hostPtr, 0, NULL, NULL);
+    ciErrNum = CECL_WRITE_BUFFER(cqCommandQueue, memObj, CL_TRUE, 0, size, hostPtr, 0, NULL, NULL);
     oclCheckError(ciErrNum, CL_SUCCESS);
 }
 

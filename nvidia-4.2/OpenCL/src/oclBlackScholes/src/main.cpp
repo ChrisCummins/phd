@@ -1,3 +1,4 @@
+#include <cecl.h>
 /*
  * Copyright 1993-2010 NVIDIA Corporation.  All rights reserved.
  *
@@ -131,19 +132,19 @@ int main(int argc, char **argv)
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         //Create a command-queue
-        cqCommandQueue = clCreateCommandQueue(cxGPUContext, cdDevices[uiTargetDevice], CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
+        cqCommandQueue = CECL_CREATE_COMMAND_QUEUE(cxGPUContext, cdDevices[uiTargetDevice], CL_QUEUE_PROFILING_ENABLE, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Creating OpenCL memory objects...\n");
-        d_Call = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, optionCount * sizeof(float), NULL, &ciErrNum);
+        d_Call = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, optionCount * sizeof(float), NULL, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        d_Put  = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE, optionCount * sizeof(float), NULL, &ciErrNum);
+        d_Put  = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE, optionCount * sizeof(float), NULL, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        d_S    = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, optionCount * sizeof(float), h_S, &ciErrNum);
+        d_S    = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, optionCount * sizeof(float), h_S, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        d_X    = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, optionCount * sizeof(float), h_X, &ciErrNum);
+        d_X    = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, optionCount * sizeof(float), h_X, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        d_T    = clCreateBuffer(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, optionCount * sizeof(float), h_T, &ciErrNum);
+        d_T    = CECL_BUFFER(cxGPUContext, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, optionCount * sizeof(float), h_T, &ciErrNum);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Starting up BlackScholes...\n");
@@ -203,9 +204,9 @@ int main(int argc, char **argv)
 #endif
 
     shrLog("\nReading back OpenCL BlackScholes results...\n");
-        ciErrNum = clEnqueueReadBuffer(cqCommandQueue, d_Call, CL_TRUE, 0, optionCount * sizeof(float), h_CallGPU, 0, NULL, NULL);
+        ciErrNum = CECL_READ_BUFFER(cqCommandQueue, d_Call, CL_TRUE, 0, optionCount * sizeof(float), h_CallGPU, 0, NULL, NULL);
         oclCheckError(ciErrNum, CL_SUCCESS);
-        ciErrNum = clEnqueueReadBuffer(cqCommandQueue, d_Put, CL_TRUE, 0, optionCount * sizeof(float), h_PutGPU, 0, NULL, NULL);
+        ciErrNum = CECL_READ_BUFFER(cqCommandQueue, d_Put, CL_TRUE, 0, optionCount * sizeof(float), h_PutGPU, 0, NULL, NULL);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("Comparing against Host/C++ computation...\n"); 
