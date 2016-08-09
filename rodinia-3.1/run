@@ -15,7 +15,7 @@ set -u
 
 # Run all benchmarks:
 rm -rf "$ROOT/logs"
-mkdir -pv "$ROOT/logs/bad" "$ROOT/logs/good"
+mkdir -p "$ROOT/logs/bad" "$ROOT/logs/good"
 
 for dir in $(ls | sort); do
   echo -n "$(tput bold)rodinia-3.1 $dir$(tput sgr0) ... "

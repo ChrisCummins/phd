@@ -23,7 +23,7 @@ run() {
 }
 
 rm -rf "$ROOT/logs"
-mkdir -pv "$ROOT/logs/bad" "$ROOT/logs/good"
+mkdir -p "$ROOT/logs/bad" "$ROOT/logs/good"
 
 run bfs 1M
 run bfs NY
