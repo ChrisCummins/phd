@@ -5,6 +5,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
 import os
 
 import labm8
@@ -16,22 +17,26 @@ import smith
 class InterpretException(smith.SmithException): pass
 
 
-def log2features(log, metaout=sys.stderr):
+def log2features(log, out=sys.stdout, metaout=sys.stderr):
     return {
-        "benchmark": None,
-        "dataset": None,
-        "comp": None,
-        "rational": None,
-        "mem": None,
-        "localmem": None,
-        "coalesced": None,
-        "atomic": None,
-        "transfer": None,
-        "wgsize": None,
-        "F1:transfer/(comp+mem)": None,
-        "F2:coalesced/mem": None,
-        "F3:(localmem/mem)*avgws": None,
-        "F4:comp/mem": None,
-        "runtime": None,
-        "run": None
+        "benchmark": "",
+        "dataset": "",
+        "comp": "",
+        "rational": "",
+        "mem": "",
+        "localmem": "",
+        "coalesced": "",
+        "atomic": "",
+        "transfer": "",
+        "wgsize": "",
+        "F1:transfer/(comp+mem)": "",
+        "F2:coalesced/mem": "",
+        "F3:(localmem/mem)*avgws": "",
+        "F4:comp/mem": "",
+        "runtime": "",
+        "run": ""
     }
+
+
+def dir2features(log, out=sys.stdout, metaout=sys.stderr):
+    pass

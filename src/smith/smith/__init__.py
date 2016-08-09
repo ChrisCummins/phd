@@ -24,7 +24,7 @@ def assert_exists(*path_components, **kwargs):
     path = fs.path(*path_components)
     if not os.path.exists(path):
         exception = kwargs.get("exception", SmithException)
-        raise exception("file '{}' not found".format(path))
+        raise exception("path '{}' does not exist".format(path))
     return path
 
 
