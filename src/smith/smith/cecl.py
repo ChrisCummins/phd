@@ -25,27 +25,6 @@ KNOWN_KERNEL_MAPPINGS = {
 }
 
 
-def log2features(log, out=sys.stdout, metaout=sys.stderr):
-    return {
-        "benchmark": "",
-        "dataset": "",
-        "comp": "",
-        "rational": "",
-        "mem": "",
-        "localmem": "",
-        "coalesced": "",
-        "atomic": "",
-        "transfer": "",
-        "wgsize": "",
-        "F1:transfer/(comp+mem)": "",
-        "F2:coalesced/mem": "",
-        "F3:(localmem/mem)*avgws": "",
-        "F4:comp/mem": "",
-        "runtime": "",
-        "run": ""
-    }
-
-
 def parse_cecl_log(log):
     lines = []
 
@@ -140,15 +119,27 @@ def process_cecl_log(log):
     kernels, kernel_mappings = get_kernels(parsed)
 
 
-def dir2features(log, out=sys.stdout, metaout=sys.stderr):
-    runs = fs.ls(log, abspaths=True)
+def log2features(log, out=sys.stdout, metaout=sys.stderr):
+    process_cecl_log(log)
+
+
+def dir2features(logdir, out=sys.stdout, metaout=sys.stderr):
+    """
+    Directory structure:
+
+      <logdir>
+      <logdir>/<iteration>
+      <logdir>/<iteration>/<device>
+      <logdir>/<iteration>/<device>/<log>
+    """
+    runs = fs.ls(logdir, abspaths=True)
     devices = fs.ls(runs[0])
-    files = [x for x in fs.ls(log, abspaths=True, recursive=True)
+    logs = [x for x in fs.ls(logdir, abspaths=True, recursive=True)
              if fs.isfile(x)]
 
-    print("summarising", len(files), "logs:", file=metaout)
+    print("summarising", len(logs), "logs:", file=metaout)
     print("   # runs:", len(runs), file=metaout)
     print("   # devices:", len(devices), file=metaout)
 
-    for path in files:
+    for path in logs:
         process_cecl_log(path)

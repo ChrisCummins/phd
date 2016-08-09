@@ -26,7 +26,8 @@ def main():
         cecl.dir2features(smith.assert_exists(args.inputs[0]))
     else:
         paths = [smith.assert_exists(x) for x in args.inputs]
-        cecl.log2features(paths)
+        for path in paths:
+            cecl.log2features(path)
     # except Exception as e:
     #     print("fatal:", e, file=sys.stderr)
 
