@@ -5,13 +5,13 @@ set -u
 ROOT=$(pwd)
 
 rm -rf logs
-mkdir -pv logs/bad logs/good
+mkdir -p logs/bad logs/good
 
 cd OpenCL/bin/linux/release
 
 for f in $(find . -type f -executable | sort); do
     echo -n "$(tput bold)nvidia-4.2 $f$(tput sgr0) ... "
-    runcecl $f 2>&1 | tee $ROOT/log.txt
+    runcecl $f > $ROOT/log.txt
     ret=$?
 
     if [[ $ret -ne 0 ]]; then

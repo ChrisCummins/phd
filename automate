@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -u
+set -eu
 
 ROOT="$(pwd)"
 
@@ -9,7 +9,7 @@ mvlogs() {
     local prefix=$3
 
     for f in $(ls logs/good/*); do
-        mv -v $f "$ROOT/logs/$i/$devname/$prefix-$f"
+        mv -v $f "$ROOT/logs/$i/$devname/$prefix-$(basename $f)"
     done
 }
 
@@ -20,17 +20,23 @@ runsuite() {
     cd "$2"
 
     if [[ $HOSTNAME == "monza" ]]; then
-        mkdir -v "$ROOT/logs/$i/amd"
-        mkdir -v "$ROOT/logs/$i/intel"
-        ./set-device CPU > /dev/null
+        mkdir -p "$ROOT/logs/$i/amd"
+        mkdir -p "$ROOT/logs/$i/intel"
+        echo "$(tput setaf 2)Build $suite for CPU$(tput sgr0)"
+        ./set-device CPU &> /dev/null
+        echo "$(tput setaf 2)Execute $suite on CPU$(tput sgr0)"
         DEVTYPE=CPU ./run
         mvlogs $i "intel" "$suite"
-        DEVTYPE=GPU ./set-device GPU > /dev/null
-        ./run
+        echo "$(tput setaf 2)Build $suite for GPU$(tput sgr0)"
+        ./set-device GPU &> /dev/null
+        echo "$(tput setaf 2)Execute $suite on GPU$(tput sgr0)"
+        DEVTYPE=GPU ./run
         mvlogs $i "amd" "$suite"
-    elif [[ $HOSTNAME == "diana-dev" ]]; then
-        mkdir -v "$ROOT/logs/$i/nvidia"
-        ./set-device GPU > /dev/null
+    elif [[ $HOSTNAME == "diana" ]]; then
+        mkdir -p "$ROOT/logs/$i/nvidia"
+        echo "$(tput setaf 2)Build $suite for GPU$(tput sgr0)"
+        ./set-device GPU &> /dev/null
+        echo "$(tput setaf 2)Execute $suite on GPU$(tput sgr0)"
         DEVTYPE=GPU ./run
         mvlogs $i "nvidia" "$suite"
     else
@@ -45,11 +51,11 @@ runsuite() {
 iteration() {
     local i=$1
 
-    mkdir -v "$ROOT/logs/$i"
+    mkdir -p "$ROOT/logs/$i"
 
     # runsuite $i amd-app-sdk-3.0
     runsuite $i npb-3.3
-    # runsuite $i nvidia-4.2
+    runsuite $i nvidia-4.2
     runsuite $i parboil-0.2
     # runsuite $i polybench-gpu-1.0
     runsuite $i rodinia-3.1
@@ -59,12 +65,21 @@ iteration() {
 
 main() {
     rm -rf "$ROOT/logs"
-    mkdir -v "$ROOT/logs"
+    rm -f "$ROOT/logs-$HOSTNAME.zip"
+    mkdir "$ROOT/logs"
 
-    for i in $(seq 1 10); do
-        iteration i
+    local nmax=10
+
+    for i in $(seq 1 $nmax); do
+        echo "$(tput bold)$(tput setaf 1)ITERATION $i of $nmax$(tput sgr0) ..."
+        iteration $i
     done
 
-    zip -r logs-$HOSTNAME.zip logs
+    local zipfile=$(date +"$ROOT/logs-$HOSTNAME-%y-%m-%d.%H:%M.zip")
+    zip -r "$zipfile" logs
+
+    # Copy results to data directory:
+    mkdir -p "~/phd/lab/smith/benchmarks/data/"
+    cp "$zipfile" "~/phd/lab/smith/benchmarks/data/"
 }
 main $@
