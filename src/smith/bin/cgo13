@@ -5,9 +5,10 @@
 from __future__ import print_function
 from __future__ import division
 
-from argparse import ArgumentParser
 import os
 import sys
+
+from argparse import ArgumentParser
 
 import labm8
 from labm8 import ml
@@ -22,20 +23,24 @@ def main():
 
     parser = ArgumentParser()
     parser.add_argument('input', help='path to training data CSV')
+    parser.add_argument('-t', '--test', action="store", dest="test_data",
+                        help='path to training data CSV')
     args = parser.parse_args()
-    csv_path = args.input
 
-    if not os.path.exists(csv_path):
-        print("fatal: file '{}' not found".format(csv_path))
+    try:
+        ml.start()
+        training_data = cgo13.from_csv(smith.assert_exists(args.input))
+
+        if args.test_data:
+            test_data = cgo13.from_csv(smith.assert_exists(args.test_data))
+        else:
+            test_data = None
+        cgo13.classification(training_data, test_arff=test_data)
+        ml.stop()
+    except Exception as e:
+        print("fatal:", e, file=sys.stderr)
+        ml.stop()
         sys.exit(1)
-
-    # try:
-    ml.start()
-    cgo13.from_csv(csv_path)
-    # except Exception as e:
-    #     print(e, file=sys.stderr)
-    ml.stop()
-    #     sys.exit(1)
 
 
 if __name__ == '__main__':
