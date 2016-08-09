@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
-./configure --with-opencl --without-cuda --without-mpi
-make
-make install
+make distclean
+set -eu
+./configure --with-opencl --without-cuda --without-mpi >/dev/null
+make -j$(nproc) >/dev/null
+make install -j$(nproc) >/dev/null
