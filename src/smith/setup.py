@@ -1,6 +1,7 @@
 from setuptools import setup
 
 deps = [
+    'editdistance',
     'numpy',
     'PyGithub',
     'pyopencl',
