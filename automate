@@ -22,15 +22,15 @@ runsuite() {
     if [[ $HOSTNAME == "monza" ]]; then
         mkdir -v "$ROOT/logs/$i/amd"
         mkdir -v "$ROOT/logs/$i/intel"
-        ./set-device CPU
+        ./set-device CPU > /dev/null
         DEVTYPE=CPU ./run
         mvlogs $i "intel" "$suite"
-        DEVTYPE=GPU ./set-device GPU
+        DEVTYPE=GPU ./set-device GPU > /dev/null
         ./run
         mvlogs $i "amd" "$suite"
     elif [[ $HOSTNAME == "diana-dev" ]]; then
         mkdir -v "$ROOT/logs/$i/nvidia"
-        ./set-device GPU
+        ./set-device GPU > /dev/null
         DEVTYPE=GPU ./run
         mvlogs $i "nvidia" "$suite"
     else
