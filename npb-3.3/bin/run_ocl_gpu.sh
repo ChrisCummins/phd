@@ -38,7 +38,6 @@ for PROG in ${PROGS[@]}; do
     for i in `seq 1 $COUNT`; do
       echo "#$i: OPENCL_DEVICE_TYPE=$DEV runcecl ./$PROG.$CLASS.x > $LOG_FILE"
       bash -c "OPENCL_DEVICE_TYPE=$DEV runcecl ./$PROG.$CLASS.x ../$PROGI/ >> $LOG_FILE" 2>> $LOG_FILE
-      cat $LOG_FILE
     done
   done
 done

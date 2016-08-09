@@ -4,7 +4,7 @@ set -eu
 ROOT="$(pwd)"
 
 rm -rf "$ROOT/logs"
-mkdir -pv "$ROOT/logs/good"
+mkdir -p "$ROOT/logs/good"
 
 cd bin
 if [[ $DEVTYPE == "CPU" ]];then
