@@ -154,7 +154,7 @@ def rewrite_cl(src, id='anon'):
     rewritten = stdout.decode('utf-8')
 
     # Remove __attribute__ qualifiers
-    stripped = strip_attributes(rewritten)
+    stripped = clutil.strip_attributes(rewritten)
 
     return stripped
 
@@ -311,27 +311,6 @@ def print_bytecode_features(db_path):
     print('Features:')
     for feature in uniq_features:
         print('        ', feature)
-
-
-def get_attribute_range(s, start_idx):
-    i = s.find('(', start_idx) + 1
-    d = 1
-    while i < len(s) and d > 0:
-        if s[i] == '(':
-            d += 1
-        elif s[i] == ')':
-            d -= 1
-        i += 1
-
-    return (start_idx, i)
-
-
-def strip_attributes(src):
-    idxs = sorted(smith.get_substring_idxs('__attribute__', src))
-    ranges = [get_attribute_range(src, i) for i in idxs]
-    for r in reversed(ranges):
-        src = src[:r[0]] + src[r[1]:]
-    return src
 
 
 def verify_bytecode_features(bc_features, id='anon'):
@@ -554,6 +533,7 @@ def preprocess_db(db_path):
         print('done.')
     else:
         print('nothing to be done.')
+
 
 def remove_bad_preprocessed(db_path):
     """

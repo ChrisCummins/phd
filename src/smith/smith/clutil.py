@@ -214,6 +214,28 @@ class KernelPrototype(object):
     def from_source(src):
         return extract_prototype(src)
 
+
+def get_attribute_range(s, start_idx):
+    i = s.find('(', start_idx) + 1
+    d = 1
+    while i < len(s) and d > 0:
+        if s[i] == '(':
+            d += 1
+        elif s[i] == ')':
+            d -= 1
+        i += 1
+
+    return (start_idx, i)
+
+
+def strip_attributes(src):
+    idxs = sorted(smith.get_substring_idxs('__attribute__', src))
+    ranges = [get_attribute_range(src, i) for i in idxs]
+    for r in reversed(ranges):
+        src = src[:r[0]] + src[r[1]:]
+    return src
+
+
 def get_cl_kernel_end_idx(src, start_idx=0, max_len=5000):
     """
     Return the index of the character after the end of the OpenCL

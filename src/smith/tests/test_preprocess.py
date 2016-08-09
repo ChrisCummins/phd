@@ -47,24 +47,6 @@ class TestPreprocess(TestCase):
     def test_preprocess(self):
         self.assertEqual(*preprocess_pair('sample-1'))
 
-    def test_strip_attributes(self):
-        self.assertEqual("", preprocess.strip_attributes(
-            "__attribute__((reqd_work_group_size(64,1,1)))"))
-
-        out = "foobar"
-        tin = "foo__attribute__((reqd_work_group_size(WG_SIZE,1,1)))bar"
-        self.assertEqual(out, preprocess.strip_attributes(tin))
-
-        out = "typedef  unsigned char uchar8;"
-        tin = "typedef __attribute__((ext_vector_type(8))) unsigned char uchar8;"
-        self.assertEqual(out, preprocess.strip_attributes(tin))
-
-        out = ("typedef  unsigned char uchar8;\n"
-               "typedef  unsigned char uchar8;")
-        tin = ("typedef __attribute__  ((ext_vector_type(8))) unsigned char uchar8;\n"
-               "typedef __attribute__((reqd_work_group_size(64,1,1))) unsigned char uchar8;")
-        self.assertEqual(out, preprocess.strip_attributes(tin))
-
     def test_remove_bad_preprocessed(self):
         fs.rm("tmp.db")
         dbutil.create_db("tmp.db")
