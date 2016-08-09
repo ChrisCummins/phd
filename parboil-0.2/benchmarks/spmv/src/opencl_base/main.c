@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <parboil.h>
 
-#define MY_DEVICE_TYPE CL_DEVICE_TYPE_CPU
+#define MY_DEVICE_TYPE CL_DEVICE_TYPE_GPU
 
 #include "file.h"
 #include "gpu_info.h"

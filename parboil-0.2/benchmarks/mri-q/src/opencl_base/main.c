@@ -121,10 +121,10 @@ main (int argc, char *argv[]) {
   cl_context_properties cps[3] = {CL_CONTEXT_PLATFORM,(cl_context_properties)cpPlatform,0};
 
   cl_device_id cdDevice;
-  clStatus = clGetDeviceIDs(cpPlatform,CL_DEVICE_TYPE_CPU,1,&cdDevice,NULL);
+  clStatus = clGetDeviceIDs(cpPlatform,CL_DEVICE_TYPE_GPU,1,&cdDevice,NULL);
   CHECK_ERROR("clGetDeviceIDs")
 
-  clPrm.clContext = clCreateContextFromType(cps,CL_DEVICE_TYPE_CPU,NULL,NULL,&clStatus);
+  clPrm.clContext = clCreateContextFromType(cps,CL_DEVICE_TYPE_GPU,NULL,NULL,&clStatus);
   CHECK_ERROR("clCreateContextFromType")
 
   clPrm.clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clPrm.clContext,cdDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);

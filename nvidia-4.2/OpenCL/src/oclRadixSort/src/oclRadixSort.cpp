@@ -45,10 +45,10 @@ int main(int argc, const char **argv)
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("clGetDeviceIDs...\n"); 
-    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 0, NULL, &nDevice);
+    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 0, NULL, &nDevice);
     oclCheckError(ciErrNum, CL_SUCCESS);
     cdDevices = (cl_device_id *)malloc(nDevice * sizeof(cl_device_id) );
-    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, nDevice, cdDevices, NULL);
+    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, nDevice, cdDevices, NULL);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     shrLog("clCreateContext...\n"); 

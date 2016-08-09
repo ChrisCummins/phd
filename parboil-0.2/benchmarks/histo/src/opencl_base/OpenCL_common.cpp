@@ -28,7 +28,7 @@ int getOpenCLDevice(cl_platform_id *platform, cl_device_id *device, cl_device_ty
 
     cl_platform_id clPlatform = clPlatforms[ip];
     
-    OCL_ERRCK_RETVAL ( clGetDeviceIDs(clPlatform, CL_DEVICE_TYPE_CPU, numEntries, clDevices, &numDevices) );
+    OCL_ERRCK_RETVAL ( clGetDeviceIDs(clPlatform, CL_DEVICE_TYPE_GPU, numEntries, clDevices, &numDevices) );
     //fprintf(stderr, "  Number of Devices found for Platform %d: %d\n", ip, numDevices);
     
     for (int id = 0; (id < numDevices) && needDevice ; ++id) {
@@ -43,7 +43,7 @@ int getOpenCLDevice(cl_platform_id *platform, cl_device_id *device, cl_device_ty
       
       if (reqDeviceType != NULL) {
         OCL_ERRCK_RETVAL( clGetDeviceInfo(clDevice, CL_DEVICE_TYPE, sizeof(cl_device_type), &clDeviceType, NULL));
-        if (*reqDeviceType != CL_DEVICE_TYPE_CPU) {
+        if (*reqDeviceType != CL_DEVICE_TYPE_GPU) {
           if (*reqDeviceType != clDeviceType) {
             canSatisfy = false;
           }
@@ -69,7 +69,7 @@ int getOpenCLDevice(cl_platform_id *platform, cl_device_id *device, cl_device_ty
         *device = clDevice;
         *platform = clPlatform;
         needDevice = false;
-        if (reqDeviceType != NULL && (*reqDeviceType == CL_DEVICE_TYPE_CPU)) {
+        if (reqDeviceType != NULL && (*reqDeviceType == CL_DEVICE_TYPE_GPU)) {
           *reqDeviceType = clDeviceType;
         }
       }

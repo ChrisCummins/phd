@@ -150,7 +150,7 @@ int main( int argc, char** argv)
 
   cl_int clStatus;
   cl_device_id clDevice;
-  cl_device_type deviceType = CL_DEVICE_TYPE_CPU;
+  cl_device_type deviceType = CL_DEVICE_TYPE_GPU;
   cl_platform_id clPlatform;
   OCL_ERRCK_RETVAL(clGetPlatformIDs(1,&clPlatform,NULL));
   cl_context_properties clCps[3] = {CL_CONTEXT_PLATFORM,(cl_context_properties)clPlatform,0};
@@ -160,7 +160,7 @@ int main( int argc, char** argv)
     exit(1);
   }
 
-  cl_context clContext = clCreateContextFromType(clCps,CL_DEVICE_TYPE_CPU,NULL,NULL,&clStatus);
+  cl_context clContext = clCreateContextFromType(clCps,CL_DEVICE_TYPE_GPU,NULL,NULL,&clStatus);
   OCL_ERRCK_VAR(clStatus);
   cl_command_queue clCommandQueue = CECL_CREATE_COMMAND_QUEUE(clContext,clDevice,CL_QUEUE_PROFILING_ENABLE,&clStatus);
   OCL_ERRCK_VAR(clStatus);

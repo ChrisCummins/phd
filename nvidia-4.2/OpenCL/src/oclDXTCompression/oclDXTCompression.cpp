@@ -96,10 +96,10 @@ int main(int argc, char** argv)
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     // Get the platform's GPU devices
-    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 0, NULL, &uiNumDevices);
+    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 0, NULL, &uiNumDevices);
     oclCheckError(ciErrNum, CL_SUCCESS);
     cdDevices = (cl_device_id *)malloc(uiNumDevices * sizeof(cl_device_id) );
-    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, uiNumDevices, cdDevices, NULL);
+    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, uiNumDevices, cdDevices, NULL);
     oclCheckError(ciErrNum, CL_SUCCESS);
 
     // Create the context

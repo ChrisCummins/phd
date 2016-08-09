@@ -293,7 +293,7 @@ main(int argc, char **argv)
   
   	cl_int ciErrNum;
   	cl_platform_id clPlatform;
-  	cl_device_type deviceType = CL_DEVICE_TYPE_CPU;
+  	cl_device_type deviceType = CL_DEVICE_TYPE_GPU;
 	cl_device_id clDevice;
 	cl_context clContext;
 	cl_command_queue clCommandQueue;

@@ -50,7 +50,7 @@ int main(int argc, const char **argv)
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         //Get a GPU device
-        ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 1, &cdDevice, NULL);
+        ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 1, &cdDevice, NULL);
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         //Create the context

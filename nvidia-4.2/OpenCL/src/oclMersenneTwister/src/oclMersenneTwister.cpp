@@ -96,10 +96,10 @@ int main(int argc, const char **argv)
     oclCheckError(ciErr1, CL_SUCCESS);
 
     shrLog("Get devices...\n");
-    ciErr1 = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 0, NULL, &nDevice);
+    ciErr1 = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 0, NULL, &nDevice);
     oclCheckError(ciErr1, CL_SUCCESS);
     cdDevices = (cl_device_id *)malloc(nDevice * sizeof(cl_device_id) );
-    ciErr1 = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, nDevice, cdDevices, NULL);
+    ciErr1 = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, nDevice, cdDevices, NULL);
     oclCheckError(ciErr1, CL_SUCCESS);
 
     shrLog("Create context...\n");

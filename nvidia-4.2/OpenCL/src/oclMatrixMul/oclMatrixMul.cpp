@@ -238,9 +238,9 @@ int runTest(int argc, const char** argv)
     }
 
     //Get the devices
-    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 0, NULL, &ciDeviceCount);
+    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 0, NULL, &ciDeviceCount);
     cdDevices = (cl_device_id *)malloc(ciDeviceCount * sizeof(cl_device_id) );
-    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, ciDeviceCount, cdDevices, NULL);
+    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, ciDeviceCount, cdDevices, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         shrLog("Error: Failed to create OpenCL context!\n");

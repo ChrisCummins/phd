@@ -43,10 +43,10 @@ int main(int argc, char **argv)
     cl_uint uiTargetDevice = 0;	        // Default Device to compute on
     cl_uint uiNumComputeUnits;          // Number of compute units (SM's on NV GPU)
     shrLog("Get the Device info and select Device...\n");
-    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 0, NULL, &uiNumDevices);
+    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 0, NULL, &uiNumDevices);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, NULL);
     cdDevices = (cl_device_id *)malloc(uiNumDevices * sizeof(cl_device_id) );
-    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, uiNumDevices, cdDevices, NULL);
+    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, uiNumDevices, cdDevices, NULL);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, NULL);
 
     // Get command line device options and config accordingly
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
         oclCheckError(ciErrNum, CL_SUCCESS);
 
         //Get the devices
-        ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 1, &cdDevices[uiTargetDevice], NULL);
+        ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 1, &cdDevices[uiTargetDevice], NULL);
 
         //Create the context
         cxGPUContext = clCreateContext(0, 1, &cdDevices[uiTargetDevice], NULL, NULL, &ciErrNum);

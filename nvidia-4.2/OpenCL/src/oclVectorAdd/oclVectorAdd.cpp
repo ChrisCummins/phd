@@ -104,7 +104,7 @@ int main(int argc, char **argv)
     }
 
     //Get the devices
-    ciErr1 = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 1, &cdDevice, NULL);
+    ciErr1 = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 1, &cdDevice, NULL);
     shrLog("clGetDeviceIDs...\n"); 
     if (ciErr1 != CL_SUCCESS)
     {

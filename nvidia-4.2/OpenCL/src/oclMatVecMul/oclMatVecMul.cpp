@@ -118,10 +118,10 @@ int main(int argc, char** argv)
 
     //Get all the devices
     shrLog("Get the Device info and select Device...\n");
-    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 0, NULL, &uiNumDevices);
+    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 0, NULL, &uiNumDevices);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
     cdDevices = (cl_device_id *)malloc(uiNumDevices * sizeof(cl_device_id) );
-    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, uiNumDevices, cdDevices, NULL);
+    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, uiNumDevices, cdDevices, NULL);
     oclCheckErrorEX(ciErrNum, CL_SUCCESS, pCleanup);
 
     // Set target device and Query number of compute units on targetDevice
@@ -348,9 +348,9 @@ bool getTargetDeviceGlobalMemSize(memsize_t* result, const int argc, const char 
     if (ok)
     {
         shrLog(" clGetDeviceIDs");
-        errnum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 0, NULL, &deviceCount);
+        errnum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 0, NULL, &deviceCount);
         devices = (cl_device_id *)malloc(deviceCount * sizeof(cl_device_id) );
-        errnum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, deviceCount, devices, NULL);
+        errnum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, deviceCount, devices, NULL);
         if (errnum != CL_SUCCESS)
         {
             shrLogEx(LOGBOTH | ERRORMSG, errnum, "clGetDeviceIDs (returned %d).\n", errnum);
