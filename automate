@@ -80,6 +80,7 @@ main() {
 
     # Copy results to data directory:
     mkdir -p "~/phd/lab/smith/benchmarks/data/"
-    cp "$zipfile" "~/phd/lab/smith/benchmarks/data/"
+    cp -v "$zipfile" ~/phd/lab/smith/benchmarks/data/
+    echo "done"
 }
 main $@
