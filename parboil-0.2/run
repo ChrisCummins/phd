@@ -1,21 +1,27 @@
 #!/usr/bin/env bash
 set -eu
-set -o pipefail
+
+ROOT="$(pwd)"
 
 run() {
     local benchmark=$1
     local dataset=$2
 
-    echo "$(tput bold)parboil-0.2 $benchmark $dataset$(tput sgr0) ..."
+    echo -n "$(tput bold)parboil-0.2 $benchmark $dataset$(tput sgr0) ... "
     set +e
-    ./parboil run $benchmark opencl_base $dataset 2>&1 | runcecl
+    runcecl ./parboil run $benchmark opencl_base $dataset > "$ROOT/log.txt"
     ret=$?
     set -e
 
     if [[ $ret -ne 0 ]]; then
-        echo "EXIT: $ret" >&2
+        mv "$ROOT/log.txt" "$ROOT/logs/bad/$benchmark-$dataset"
+    else
+        mv "$ROOT/log.txt" "$ROOT/logs/good/$benchmark-$dataset"
     fi
 }
+
+rm -rf "$ROOT/logs"
+mkdir -pv "$ROOT/logs/bad" "$ROOT/logs/good"
 
 run bfs 1M
 run bfs NY
