@@ -9,8 +9,12 @@ mkdir -p "$ROOT/logs/good"
 cd bin
 if [[ $DEVTYPE == "CPU" ]];then
     ./run_ocl_cpu.sh
-    cp log/*.cpu.out "$ROOT/logs/good"
+    for f in log/*.cpu.out; do
+        cp ${f%.*.*} "$ROOT/logs/good"
+    done
 else
     ./run_ocl_gpu.sh
-    cp log/*.gpu.out "$ROOT/logs/good"
+    for f in log/*.gpu.out; do
+        cp ${f%.*.*} "$ROOT/logs/good"
+    done
 fi
