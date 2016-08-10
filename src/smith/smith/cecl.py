@@ -13,6 +13,7 @@ import six
 import sys
 
 from collections import defaultdict
+from itertools import product
 
 import labm8
 from labm8 import fs
@@ -21,7 +22,10 @@ import smith
 from smith import clutil
 
 
-class NameInferenceException(smith.SmithException): pass
+class CeclException(smith.SmithException): pass
+class LogException(CeclException): pass
+class NameInferenceException(CeclException): pass
+
 
 def parse_cecl_log(log):
     """
@@ -164,9 +168,42 @@ def process_cecl_log(log):
     #     print('-'.join((benchmark, dataset, kernel)))
 
 
-
 def log2features(log, out=sys.stdout, metaout=sys.stderr):
     process_cecl_log(log)
+
+
+def get_device_logs(logdir, metaout=sys.stderr):
+    devlogs = defaultdict(list)
+    rundirs = fs.ls(logdir, abspaths=True)
+    devices = [fs.basename(x) for x in fs.ls(rundirs[0])]
+
+    for rundir,device in product(rundirs, devices):
+        devlogs[device] += [x for x in
+                            fs.ls(fs.path(rundir, device), abspaths=True)
+                            if fs.isfile(x)]
+
+    # The number of files in the logdir:
+    nfiles = len([x for x in fs.ls(logdir, abspaths=True, recursive=True)
+                  if fs.isfile(x)])
+    # The number of logs found:
+    nlogs = sum([len(x) for x in devlogs.values()])
+
+    if nlogs != nfiles:
+        raise LogException("There are {} files in the log directory, "
+                           "but we found {}. Is the layout correct? ({})"
+                           .format(nfiles, nlogs, fs.path(
+                               logdir, "<run>", "<device>", "<logs>")))
+    if nlogs < 1:
+        raise LogException("No logs found! Is the layout correct? ({})"
+                           .format(fs.path(
+                               logdir, "<run>", "<device>", "<logs>")))
+
+    print("libcecl logs:")
+    print("    # files:", nfiles, file=metaout)
+    print("    # runs:", len(rundirs), file=metaout)
+    print("    # devices:", len(devices), file=metaout)
+
+    return devlogs
 
 
 def dir2features(logdir, out=sys.stdout, metaout=sys.stderr):
@@ -180,12 +217,7 @@ def dir2features(logdir, out=sys.stdout, metaout=sys.stderr):
     """
     runs = fs.ls(logdir, abspaths=True)
     devices = fs.ls(runs[0])
-    logs = [x for x in fs.ls(logdir, abspaths=True, recursive=True)
-            if fs.isfile(x)]
+    devlogs = get_device_logs(logdir)
 
-    print("summarising", len(logs), "logs:", file=metaout)
-    print("   # runs:", len(runs), file=metaout)
-    print("   # devices:", len(devices), file=metaout)
-
-    for path in logs[:25]:
+    for device in devlogs:
         process_cecl_log(path)
