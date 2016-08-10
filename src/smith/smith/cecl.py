@@ -6,12 +6,13 @@
 #
 from __future__ import division,absolute_import,print_function,unicode_literals
 
+import editdistance
 import os
 import re
 import six
 import sys
 
-import editdistance
+from collections import defaultdict
 
 import labm8
 from labm8 import fs
@@ -90,12 +91,15 @@ def get_kernels(parsed):
 
 
 def get_transfers(parsed):
-    transfers = {}  # maps buffer names to (size,elapsed) tuples
+    transfers = defaultdict(list) # maps buffer names to (size,elapsed) tuples
 
-    # TODO:
     for line in parsed:
-        if line[0] == 'clEnqueueReadBuffer':
-            pass
+        if (line[0] == 'clEnqueueReadBuffer' or
+            line[0] == 'clEnqueueWriteBuffer'):
+            buf, size, elapsed = line[1:]
+            transfers[buf].append((size, elapsed))
+
+    return transfers
 
 
 def path_to_benchmark_and_dataset(path):
@@ -114,15 +118,22 @@ def path_to_benchmark_and_dataset(path):
     else:
         return basename, "default"
 
+def allequal(iterator):
+   return len(set(iterator)) <= 1
 
 def process_cecl_log(log):
     benchmark, dataset = path_to_benchmark_and_dataset(log)
-    # print(benchmark, dataset)
     parsed = parse_cecl_log(log)
-    kernels = get_kernels(parsed)
 
-    for kernel in kernels.keys():
-        print('-'.join((benchmark, dataset, kernel)))
+    kernels = get_kernels(parsed)
+    transfers = get_transfers(parsed)
+
+    for transfer in transfers.keys():
+        print('-'.join((benchmark, dataset)), transfer,
+              len(transfers[transfer]))
+
+    # for kernel in kernels.keys():
+    #     print('-'.join((benchmark, dataset, kernel)))
 
 
 
