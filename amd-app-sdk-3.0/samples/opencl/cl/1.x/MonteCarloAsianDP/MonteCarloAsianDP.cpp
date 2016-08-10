@@ -407,7 +407,7 @@ MonteCarloAsianDP::runCLKernels(void)
     for(int k = 0; k < steps / 2; k++)
     {
         // Map input buffer for kernel 1
-        inMapPtr1 = clEnqueueMapBuffer(
+        inMapPtr1 = CECL_MAP_BUFFER(
                         commandQueue,
                         randBuf,
                         CL_FALSE,
@@ -418,7 +418,7 @@ MonteCarloAsianDP::runCLKernels(void)
                         NULL,
                         &inMapEvt1,
                         &status);
-        CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(randBuf) failed.");
+        CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(randBuf) failed.");
 
         status = clFlush(commandQueue);
         CHECK_OPENCL_ERROR(status, "clFlush() failed.");
@@ -454,7 +454,7 @@ MonteCarloAsianDP::runCLKernels(void)
             status = waitForEventAndRelease(&ndrEvt);
             CHECK_ERROR(status, SDK_SUCCESS, "WaitForEventAndRelease(ndrEvt) Failed");
 
-            outMapPtr21 = clEnqueueMapBuffer(
+            outMapPtr21 = CECL_MAP_BUFFER(
                               commandQueue,
                               priceBufAsync,
                               CL_FALSE,
@@ -465,8 +465,8 @@ MonteCarloAsianDP::runCLKernels(void)
                               NULL,
                               &outMapEvt21,
                               &status);
-            CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(priceBufAsync) failed.");
-            outMapPtr22 = clEnqueueMapBuffer(
+            CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(priceBufAsync) failed.");
+            outMapPtr22 = CECL_MAP_BUFFER(
                               commandQueue,
                               priceDerivBufAsync,
                               CL_FALSE,
@@ -477,7 +477,7 @@ MonteCarloAsianDP::runCLKernels(void)
                               NULL,
                               &outMapEvt22,
                               &status);
-            CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(priceDerivBufAsync) failed.");
+            CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(priceDerivBufAsync) failed.");
 
             status = clFlush(commandQueue);
             CHECK_OPENCL_ERROR(status, "clFlush() failed.");
@@ -547,7 +547,7 @@ MonteCarloAsianDP::runCLKernels(void)
         if(k <= steps - 1)
         {
             // Map input buffer for kernel 1
-            inMapPtr2 = clEnqueueMapBuffer(
+            inMapPtr2 = CECL_MAP_BUFFER(
                             commandQueue,
                             randBufAsync,
                             CL_FALSE,
@@ -558,7 +558,7 @@ MonteCarloAsianDP::runCLKernels(void)
                             NULL,
                             &inMapEvt2,
                             &status);
-            CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(randBufAsync) failed.");
+            CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(randBufAsync) failed.");
 
             status = clFlush(commandQueue);
             CHECK_OPENCL_ERROR(status, "clFlush() failed.");
@@ -652,7 +652,7 @@ MonteCarloAsianDP::runCLKernels(void)
         CHECK_ERROR(status, SDK_SUCCESS, "WaitForEventAndRelease(ndrEvt) Failed");
 
         // Get data from output buffers of kernel 1
-        outMapPtr11 = clEnqueueMapBuffer(
+        outMapPtr11 = CECL_MAP_BUFFER(
                           commandQueue,
                           priceBuf,
                           CL_FALSE,
@@ -663,8 +663,8 @@ MonteCarloAsianDP::runCLKernels(void)
                           NULL,
                           &outMapEvt11,
                           &status);
-        CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(priceBuf) failed.");
-        outMapPtr12 = clEnqueueMapBuffer(
+        CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(priceBuf) failed.");
+        outMapPtr12 = CECL_MAP_BUFFER(
                           commandQueue,
                           priceDerivBuf,
                           CL_FALSE,
@@ -675,7 +675,7 @@ MonteCarloAsianDP::runCLKernels(void)
                           NULL,
                           &outMapEvt12,
                           &status);
-        CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(priceDerivBuf) failed.");
+        CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(priceDerivBuf) failed.");
 
         status = clFlush(commandQueue);
         CHECK_OPENCL_ERROR(status, "clFlush() failed.");
@@ -798,7 +798,7 @@ MonteCarloAsianDP::runCLKernels(void)
     CHECK_ERROR(status, SDK_SUCCESS, "WaitForEventAndRelease(ndrEvt) Failed");
 
     // Gather last kernel 2 execution here
-    outMapPtr21 = clEnqueueMapBuffer(
+    outMapPtr21 = CECL_MAP_BUFFER(
                       commandQueue,
                       priceBufAsync,
                       CL_FALSE,
@@ -809,9 +809,9 @@ MonteCarloAsianDP::runCLKernels(void)
                       NULL,
                       &outMapEvt21,
                       &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(priceBuf) failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(priceBuf) failed.");
 
-    outMapPtr22 = clEnqueueMapBuffer(
+    outMapPtr22 = CECL_MAP_BUFFER(
                       commandQueue,
                       priceDerivBufAsync,
                       CL_FALSE,
@@ -822,7 +822,7 @@ MonteCarloAsianDP::runCLKernels(void)
                       NULL,
                       &outMapEvt22,
                       &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(priceDerivBuf) failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(priceDerivBuf) failed.");
 
     status = clFlush(commandQueue);
     CHECK_OPENCL_ERROR(status, "clFlush() failed.");

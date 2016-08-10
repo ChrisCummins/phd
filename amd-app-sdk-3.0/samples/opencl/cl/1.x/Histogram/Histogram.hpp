@@ -1,3 +1,4 @@
+#include <cecl.h>
 /**********************************************************************
 Copyright ©2015 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -214,7 +215,7 @@ class Histogram
         int calculateHostBin();
 
         /**
-        * clEnqueueMapBuffer
+        * CECL_MAP_BUFFER
         * @return SDK_SUCCESS on success and SDK_FAILURE on failure
         */
         template<typename T>

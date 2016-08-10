@@ -208,7 +208,7 @@ int main (int argc, char* argv[]){
 */
   samples = (ReconstructionSample *) malloc ( params.numSamples*sizeof(ReconstructionSample) );
   
-  /*(ReconstructionSample *) clEnqueueMapBuffer(clCommandQueue, samplesPin, CL_TRUE, CL_MAP_WRITE, 0, params.numSamples*sizeof(ReconstructionSample), 0, NULL, NULL, &ciErrNum);
+  /*(ReconstructionSample *) CECL_MAP_BUFFER(clCommandQueue, samplesPin, CL_TRUE, CL_MAP_WRITE, 0, params.numSamples*sizeof(ReconstructionSample), 0, NULL, NULL, &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
 */
   if (samples == NULL){
@@ -269,7 +269,7 @@ int main (int argc, char* argv[]){
   gridData = (cmplx *) malloc ( gridNumElems*sizeof(cmplx) );
   if (gridData == NULL) { fprintf(stderr, "Could not allocate memory on host! (%s: %d)\n", __FILE__, __LINE__); exit(1); }
   
-  /*(cmplx *) clEnqueueMapBuffer(clCommandQueue, gridDataPin, CL_TRUE, CL_MAP_READ, 0, gridNumElems*sizeof(cmplx), 0, NULL, NULL, &ciErrNum);
+  /*(cmplx *) CECL_MAP_BUFFER(clCommandQueue, gridDataPin, CL_TRUE, CL_MAP_READ, 0, gridNumElems*sizeof(cmplx), 0, NULL, NULL, &ciErrNum);
   OCL_ERRCK_VAR(ciErrNum);
   */
   
@@ -282,7 +282,7 @@ int main (int argc, char* argv[]){
   sampleDensity = (float *) malloc ( gridNumElems*sizeof(float) );
   if (sampleDensity == NULL) { fprintf(stderr, "Could not allocate memory on host! (%s: %d)\n", __FILE__, __LINE__); exit(1); }
   
-  /*(float *) clEnqueueMapBuffer(clCommandQueue, sampleDensityPin, CL_TRUE, CL_MAP_READ, 0, gridNumElems*sizeof(float), 0, NULL, NULL, &ciErrNum);
+  /*(float *) CECL_MAP_BUFFER(clCommandQueue, sampleDensityPin, CL_TRUE, CL_MAP_READ, 0, gridNumElems*sizeof(float), 0, NULL, NULL, &ciErrNum);
   */
   
   OCL_ERRCK_VAR(ciErrNum);

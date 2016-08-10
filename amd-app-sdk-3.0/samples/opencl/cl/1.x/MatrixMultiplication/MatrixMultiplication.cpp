@@ -309,7 +309,7 @@ MatrixMultiplication::runCLKernels(void)
 
     // Set input data to matrix A and matrix B
     cl_event inMapEvt1, inMapEvt2, inUnmapEvt1, inUnmapEvt2, outMapEvt, outUnmapEvt;
-    void* mapPtr1 = clEnqueueMapBuffer(
+    void* mapPtr1 = CECL_MAP_BUFFER(
                         commandQueue,
                         inputBuffer0,
                         CL_FALSE,
@@ -320,9 +320,9 @@ MatrixMultiplication::runCLKernels(void)
                         NULL,
                         &inMapEvt1,
                         &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer failed. (inputBuffer0)");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER failed. (inputBuffer0)");
 
-    void* mapPtr2 = clEnqueueMapBuffer(
+    void* mapPtr2 = CECL_MAP_BUFFER(
                         commandQueue,
                         inputBuffer1,
                         CL_FALSE,
@@ -333,7 +333,7 @@ MatrixMultiplication::runCLKernels(void)
                         NULL,
                         &inMapEvt2,
                         &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer failed. (inputBuffer1)");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER failed. (inputBuffer1)");
 
     status = clFlush(commandQueue);
     CHECK_OPENCL_ERROR(status, "clFlush failed.");
@@ -481,7 +481,7 @@ MatrixMultiplication::runCLKernels(void)
     status = clReleaseEvent(ndrEvt);
     CHECK_OPENCL_ERROR(status, "clReleaseEvent failed. (ndrEvt)");
 
-    void* outMapPtr = clEnqueueMapBuffer(
+    void* outMapPtr = CECL_MAP_BUFFER(
                           commandQueue,
                           outputBuffer,
                           CL_FALSE,
@@ -492,7 +492,7 @@ MatrixMultiplication::runCLKernels(void)
                           NULL,
                           &outMapEvt,
                           &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer failed. (outputBuffer)");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER failed. (outputBuffer)");
 
     status = clFlush(commandQueue);
     CHECK_OPENCL_ERROR(status, "clFlush failed.");

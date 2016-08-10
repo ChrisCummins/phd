@@ -796,7 +796,7 @@ void* threadFuncPerGPU(void *data1)
     for (int k = startIndex; k < endIndex ; k += 2)
     {
         // Map input buffer for kernel 1
-        inMapPtr1 = clEnqueueMapBuffer(
+        inMapPtr1 = CECL_MAP_BUFFER(
                         mcaObj->commandQueues[deviceNumber],
                         mcaObj->randBufs[deviceNumber],
                         CL_FALSE,
@@ -808,7 +808,7 @@ void* threadFuncPerGPU(void *data1)
                         &inMapEvt1,
                         &status);
         CHECK_OPENCL_ERROR_RETURN_NULL(status,
-                                       "clEnqueueMapBuffer(randBufs[deviceNumber]) failed.");
+                                       "CECL_MAP_BUFFER(randBufs[deviceNumber]) failed.");
 
         status = clFlush(mcaObj->commandQueues[deviceNumber]);
         CHECK_OPENCL_ERROR_RETURN_NULL(status, "clFlush failed.!!");
@@ -865,7 +865,7 @@ void* threadFuncPerGPU(void *data1)
             status = clReleaseEvent(ndrEvt);
             CHECK_OPENCL_ERROR_RETURN_NULL(status, "clReleaseEvent failed.!!");
 
-            outMapPtr21 = clEnqueueMapBuffer(
+            outMapPtr21 = CECL_MAP_BUFFER(
                               mcaObj->commandQueues[deviceNumber],
                               mcaObj->priceBufsAsync[deviceNumber],
                               CL_FALSE,
@@ -877,9 +877,9 @@ void* threadFuncPerGPU(void *data1)
                               &outMapEvt21,
                               &status);
             CHECK_OPENCL_ERROR_RETURN_NULL(status,
-                                           "clEnqueueMapBuffer failed(priceBufsAsync).!!");
+                                           "CECL_MAP_BUFFER failed(priceBufsAsync).!!");
 
-            outMapPtr22 = clEnqueueMapBuffer(
+            outMapPtr22 = CECL_MAP_BUFFER(
                               mcaObj->commandQueues[deviceNumber],
                               mcaObj->priceDerivBufsAsync[deviceNumber],
                               CL_FALSE,
@@ -891,7 +891,7 @@ void* threadFuncPerGPU(void *data1)
                               &outMapEvt22,
                               &status);
             CHECK_OPENCL_ERROR_RETURN_NULL(status,
-                                           "clEnqueueMapBuffer failed.(priceDerivBufAsyncs[deviceNumber])!!");
+                                           "CECL_MAP_BUFFER failed.(priceDerivBufAsyncs[deviceNumber])!!");
 
             status = clFlush(mcaObj->commandQueues[deviceNumber]);
             CHECK_OPENCL_ERROR_RETURN_NULL(status, "clFlush() failed.");
@@ -1005,7 +1005,7 @@ void* threadFuncPerGPU(void *data1)
         if(k <= endIndex - 1)
         {
             // Map input buffer for kernel 1
-            inMapPtr2 = clEnqueueMapBuffer(
+            inMapPtr2 = CECL_MAP_BUFFER(
                             mcaObj->commandQueues[deviceNumber],
                             mcaObj->randBufsAsync[deviceNumber],
                             CL_FALSE,
@@ -1018,7 +1018,7 @@ void* threadFuncPerGPU(void *data1)
                             &status);
 
             CHECK_OPENCL_ERROR_RETURN_NULL(status,
-                                           "clEnqueueMapBuffer(randBufAsyncs[i]) failed.");
+                                           "CECL_MAP_BUFFER(randBufAsyncs[i]) failed.");
 
             status = clFlush(mcaObj->commandQueues[deviceNumber]);
             CHECK_OPENCL_ERROR_RETURN_NULL(status, "clFlush failed.");
@@ -1183,7 +1183,7 @@ void* threadFuncPerGPU(void *data1)
         CHECK_OPENCL_ERROR_RETURN_NULL(status, "clReleaseEvent failed!!");
 
         // Get data from output buffers of kernel 1
-        outMapPtr11 = clEnqueueMapBuffer(
+        outMapPtr11 = CECL_MAP_BUFFER(
                           mcaObj->commandQueues[deviceNumber],
                           mcaObj->priceBufs[deviceNumber],
                           CL_FALSE,
@@ -1194,9 +1194,9 @@ void* threadFuncPerGPU(void *data1)
                           NULL,
                           &outMapEvt11,
                           &status);
-        CHECK_OPENCL_ERROR_RETURN_NULL(status, "clEnqueueMapBuffer failed!!");
+        CHECK_OPENCL_ERROR_RETURN_NULL(status, "CECL_MAP_BUFFER failed!!");
 
-        outMapPtr12 = clEnqueueMapBuffer(
+        outMapPtr12 = CECL_MAP_BUFFER(
                           mcaObj->commandQueues[deviceNumber],
                           mcaObj->priceDerivBufs[deviceNumber],
                           CL_FALSE,
@@ -1207,7 +1207,7 @@ void* threadFuncPerGPU(void *data1)
                           NULL,
                           &outMapEvt12,
                           &status);
-        CHECK_OPENCL_ERROR_RETURN_NULL(status, "clEnqueueMapBuffer failed!!");
+        CHECK_OPENCL_ERROR_RETURN_NULL(status, "CECL_MAP_BUFFER failed!!");
 
         status = clFlush(mcaObj->commandQueues[deviceNumber]);
         CHECK_OPENCL_ERROR_RETURN_NULL(status, "clFlush failed!!");
@@ -1428,7 +1428,7 @@ void* threadFuncPerGPU(void *data1)
         CHECK_OPENCL_ERROR_RETURN_NULL(status, "clReleaseEvent failed!!");
 
         // Gather last kernel 2 execution here
-        outMapPtr21 = clEnqueueMapBuffer(
+        outMapPtr21 = CECL_MAP_BUFFER(
                           mcaObj->commandQueues[deviceNumber],
                           mcaObj->priceBufsAsync[deviceNumber],
                           CL_FALSE,
@@ -1439,9 +1439,9 @@ void* threadFuncPerGPU(void *data1)
                           NULL,
                           &outMapEvt21,
                           &status);
-        CHECK_OPENCL_ERROR_RETURN_NULL(status, "clEnqueueMapBuffer failed!!");
+        CHECK_OPENCL_ERROR_RETURN_NULL(status, "CECL_MAP_BUFFER failed!!");
 
-        outMapPtr22 = clEnqueueMapBuffer(
+        outMapPtr22 = CECL_MAP_BUFFER(
                           mcaObj->commandQueues[deviceNumber],
                           mcaObj->priceDerivBufsAsync[deviceNumber],
                           CL_FALSE,
@@ -1452,7 +1452,7 @@ void* threadFuncPerGPU(void *data1)
                           NULL,
                           &outMapEvt22,
                           &status);
-        CHECK_OPENCL_ERROR_RETURN_NULL(status, "clEnqueueMapBuffer failed!!");
+        CHECK_OPENCL_ERROR_RETURN_NULL(status, "CECL_MAP_BUFFER failed!!");
 
         status = clFlush(mcaObj->commandQueues[deviceNumber]);
         CHECK_OPENCL_ERROR_RETURN_NULL(status, "clFlush failed!!");
@@ -1601,7 +1601,7 @@ MonteCarloAsianMultiGPU::runCLKernels(void)
     for(int k = 0; k < steps / 2; k++)
     {
         // Map input buffer for kernel 1
-        inMapPtr1 = clEnqueueMapBuffer(
+        inMapPtr1 = CECL_MAP_BUFFER(
                         commandQueue,
                         randBuf,
                         CL_FALSE,
@@ -1612,7 +1612,7 @@ MonteCarloAsianMultiGPU::runCLKernels(void)
                         NULL,
                         &inMapEvt1,
                         &status);
-        CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(randBuf) failed.");
+        CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(randBuf) failed.");
 
         status = clFlush(commandQueue);
         CHECK_OPENCL_ERROR(status, "clFlush() failed.");
@@ -1652,7 +1652,7 @@ MonteCarloAsianMultiGPU::runCLKernels(void)
             status = waitForEventAndRelease(&ndrEvt);
             CHECK_ERROR(status, SDK_SUCCESS, "WaitForEventAndRelease(ndrEvt) Failed");
 
-            outMapPtr21 = clEnqueueMapBuffer(
+            outMapPtr21 = CECL_MAP_BUFFER(
                               commandQueue,
                               priceBufAsync,
                               CL_FALSE,
@@ -1663,9 +1663,9 @@ MonteCarloAsianMultiGPU::runCLKernels(void)
                               NULL,
                               &outMapEvt21,
                               &status);
-            CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(priceBufAsync) failed.");
+            CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(priceBufAsync) failed.");
 
-            outMapPtr22 = clEnqueueMapBuffer(
+            outMapPtr22 = CECL_MAP_BUFFER(
                               commandQueue,
                               priceDerivBufAsync,
                               CL_FALSE,
@@ -1676,7 +1676,7 @@ MonteCarloAsianMultiGPU::runCLKernels(void)
                               NULL,
                               &outMapEvt22,
                               &status);
-            CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(priceDerivBufAsync) failed.");
+            CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(priceDerivBufAsync) failed.");
 
             status = clFlush(commandQueue);
             CHECK_OPENCL_ERROR(status, "clFlush() failed.");
@@ -1771,7 +1771,7 @@ MonteCarloAsianMultiGPU::runCLKernels(void)
         if(k <= steps - 1)
         {
             // Map input buffer for kernel 1
-            inMapPtr2 = clEnqueueMapBuffer(
+            inMapPtr2 = CECL_MAP_BUFFER(
                             commandQueue,
                             randBufAsync,
                             CL_FALSE,
@@ -1782,7 +1782,7 @@ MonteCarloAsianMultiGPU::runCLKernels(void)
                             NULL,
                             &inMapEvt2,
                             &status);
-            CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(randBufAsync) failed.");
+            CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(randBufAsync) failed.");
 
             status = clFlush(commandQueue);
             CHECK_OPENCL_ERROR(status, "clFlush() failed.");
@@ -1876,7 +1876,7 @@ MonteCarloAsianMultiGPU::runCLKernels(void)
         CHECK_ERROR(status, SDK_SUCCESS, "WaitForEventAndRelease(ndrEvt) Failed");
 
         // Get data from output buffers of kernel 1
-        outMapPtr11 = clEnqueueMapBuffer(
+        outMapPtr11 = CECL_MAP_BUFFER(
                           commandQueue,
                           priceBuf,
                           CL_FALSE,
@@ -1887,8 +1887,8 @@ MonteCarloAsianMultiGPU::runCLKernels(void)
                           NULL,
                           &outMapEvt11,
                           &status);
-        CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(priceBuf) failed.");
-        outMapPtr12 = clEnqueueMapBuffer(
+        CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(priceBuf) failed.");
+        outMapPtr12 = CECL_MAP_BUFFER(
                           commandQueue,
                           priceDerivBuf,
                           CL_FALSE,
@@ -1899,7 +1899,7 @@ MonteCarloAsianMultiGPU::runCLKernels(void)
                           NULL,
                           &outMapEvt12,
                           &status);
-        CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(priceDerivBuf) failed.");
+        CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(priceDerivBuf) failed.");
 
         status = clFlush(commandQueue);
         CHECK_OPENCL_ERROR(status, "clFlush() failed.");
@@ -2050,7 +2050,7 @@ MonteCarloAsianMultiGPU::runCLKernels(void)
     CHECK_ERROR(status, SDK_SUCCESS, "WaitForEventAndRelease(ndrEvt) Failed");
 
     // Gather last kernel 2 execution here
-    outMapPtr21 = clEnqueueMapBuffer(
+    outMapPtr21 = CECL_MAP_BUFFER(
                       commandQueue,
                       priceBufAsync,
                       CL_FALSE,
@@ -2061,9 +2061,9 @@ MonteCarloAsianMultiGPU::runCLKernels(void)
                       NULL,
                       &outMapEvt21,
                       &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(priceBuf) failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(priceBuf) failed.");
 
-    outMapPtr22 = clEnqueueMapBuffer(
+    outMapPtr22 = CECL_MAP_BUFFER(
                       commandQueue,
                       priceDerivBufAsync,
                       CL_FALSE,
@@ -2074,7 +2074,7 @@ MonteCarloAsianMultiGPU::runCLKernels(void)
                       NULL,
                       &outMapEvt22,
                       &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(priceDerivBuf) failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(priceDerivBuf) failed.");
 
     status = clFlush(commandQueue);
     CHECK_OPENCL_ERROR(status, "clFlush() failed.");

@@ -572,7 +572,7 @@ int PrefixSum::mapBuffer(cl_mem deviceBuffer, T* &hostPointer,
                          size_t sizeInBytes, cl_map_flags flags)
 {
     cl_int status;
-    hostPointer = (T*) clEnqueueMapBuffer(commandQueue,
+    hostPointer = (T*) CECL_MAP_BUFFER(commandQueue,
                                           deviceBuffer,
                                           CL_TRUE,
                                           flags,
@@ -582,7 +582,7 @@ int PrefixSum::mapBuffer(cl_mem deviceBuffer, T* &hostPointer,
                                           NULL,
                                           NULL,
                                           &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer failed");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER failed");
 
     status = clFinish(commandQueue);
     CHECK_OPENCL_ERROR(status, "clFinish failed.");

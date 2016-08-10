@@ -173,7 +173,7 @@ void IMGVF_OpenCL_cleanup(MAT **IMGVF_out_array, int num_cells) {
 	cl_int error;
 	
 	// Copy the result matrices from the device to the host
-	float *host_IMGVF_all = (cl_float *) clEnqueueMapBuffer(command_queue, device_IMGVF_all, CL_TRUE, CL_MAP_READ, 0, total_mem_size, 0, NULL, NULL, &error);
+	float *host_IMGVF_all = (cl_float *) CECL_MAP_BUFFER(command_queue, device_IMGVF_all, CL_TRUE, CL_MAP_READ, 0, total_mem_size, 0, NULL, NULL, &error);
 	check_error(error, __FILE__, __LINE__);
 	
 	// Copy each result matrix into its appropriate host matrix

@@ -424,7 +424,7 @@ void timedBufMap( cl_command_queue queue,
     t1.Reset();
     t1.Start();
 
-    *ptr = (void * ) clEnqueueMapBuffer( queue,
+    *ptr = (void * ) CECL_MAP_BUFFER( queue,
                                          buf,
                                          CL_FALSE,
                                          mapFlag,
@@ -444,9 +444,9 @@ void timedBufMap( cl_command_queue queue,
     const char *msg;
 
     if( mapRW )
-        msg = "clEnqueueMapBuffer(READ|WRITE):";
+        msg = "CECL_MAP_BUFFER(READ|WRITE):";
     else
-        msg = "clEnqueueMapBuffer(READ):";
+        msg = "CECL_MAP_BUFFER(READ):";
 
     if( !quiet )
         tlog->Timer( "%32s  %lf s [ %8.2lf GB/s ]\n", msg, t1.GetElapsedTime(), nBytesRegion, 1 );
@@ -655,7 +655,7 @@ void timedBufMappedRead( cl_command_queue queue,
     if( !mapRW )
         mapFlag = CL_MAP_READ;
 
-    ptr = (void * ) clEnqueueMapBuffer( queue,
+    ptr = (void * ) CECL_MAP_BUFFER( queue,
                                         buf,
                                         CL_FALSE,
                                         mapFlag,
@@ -694,9 +694,9 @@ void timedBufMappedRead( cl_command_queue queue,
     const char *msg;
 
     if( mapRW )
-        msg = "clEnqueueMapBuffer(READ|WRITE):";
+        msg = "CECL_MAP_BUFFER(READ|WRITE):";
     else
-        msg = "clEnqueueMapBuffer(READ):";
+        msg = "CECL_MAP_BUFFER(READ):";
 
     tlog->Timer( "%32s  %lf s [ %8.2lf GB/s ]\n", msg, t1.GetElapsedTime(), nBytesRegion, 1 );
     tlog->Timer( "%32s  %lf s   %8.2lf GB/s\n", "CPU read:", t2.GetElapsedTime(), nBytesRegion, 1 ); 
@@ -731,7 +731,7 @@ void timedBufMappedWrite( cl_command_queue queue,
     if( !mapRW )
         mapFlag = CL_MAP_WRITE;
 
-    ptr = (void * ) clEnqueueMapBuffer( queue,
+    ptr = (void * ) CECL_MAP_BUFFER( queue,
                                         buf,
                                         CL_FALSE,
                                         mapFlag,
@@ -770,9 +770,9 @@ void timedBufMappedWrite( cl_command_queue queue,
     const char *msg;
 
     if( mapRW )
-        msg = "clEnqueueMapBuffer(READ|WRITE):";
+        msg = "CECL_MAP_BUFFER(READ|WRITE):";
     else
-        msg = "clEnqueueMapBuffer(WRITE):";
+        msg = "CECL_MAP_BUFFER(WRITE):";
 
     tlog->Timer( "%32s  %lf s [ %8.2lf GB/s ]\n", msg, t1.GetElapsedTime(), nBytesRegion, 1 );
     tlog->Timer( "%32s  %lf s   %8.2lf GB/s\n", "memset():", t2.GetElapsedTime(), nBytesRegion, 1 );    

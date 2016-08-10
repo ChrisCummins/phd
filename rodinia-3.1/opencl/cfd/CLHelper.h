@@ -752,11 +752,11 @@ void* _clMallocHost(int size)throw(string){
 	}	
 #endif
 
-	mem_h = clEnqueueMapBuffer(oclHandles.queue, oclHandles.pinned_mem_out, CL_TRUE, CL_MAP_READ, 0, size, 0, NULL, NULL, &oclHandles.cl_status);
+	mem_h = CECL_MAP_BUFFER(oclHandles.queue, oclHandles.pinned_mem_out, CL_TRUE, CL_MAP_READ, 0, size, 0, NULL, NULL, &oclHandles.cl_status);
 	
 #ifdef ERRMSG
 	if(oclHandles.cl_status != CL_SUCCESS||mem_h==NULL){
-	  oclHandles.error_str = "excpetion in _clMallocHost -> clEnqueueMapBuffer";
+	  oclHandles.error_str = "excpetion in _clMallocHost -> CECL_MAP_BUFFER";
 	  switch(oclHandles.cl_status){
 	  	case CL_INVALID_COMMAND_QUEUE:
 	  		oclHandles.error_str += "CL_INVALID_COMMAND_QUEUE";

@@ -153,7 +153,7 @@ MatrixTranspose::setupCL(void)
     cl_mem_flags inMemFlags = CL_MEM_READ_ONLY;
     if(sampleArgs->isAmdPlatform())
         // To achieve best performance, use persistent memory together with
-        // clEnqueueMapBuffer (instead of clEnqeueRead/Write).
+        // CECL_MAP_BUFFER (instead of clEnqeueRead/Write).
         // At the same time, in general, the best performance is the function
         // of access pattern and size of the buffer.
     {
@@ -275,7 +275,7 @@ MatrixTranspose::runCLKernels(void)
     void* inMapPtr = NULL;
     void* outMapPtr = NULL;
 
-    inMapPtr = clEnqueueMapBuffer(
+    inMapPtr = CECL_MAP_BUFFER(
                    commandQueue,
                    inputBuffer,
                    CL_TRUE,
@@ -286,7 +286,7 @@ MatrixTranspose::runCLKernels(void)
                    NULL,
                    &inMapEvt,
                    &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer failed. (inputBuffer)");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER failed. (inputBuffer)");
 
 	status = waitForEventAndRelease(&inMapEvt);
     CHECK_ERROR(status, SDK_SUCCESS, "WaitForEventAndRelease(inMapEvt) Failed");
@@ -361,7 +361,7 @@ MatrixTranspose::runCLKernels(void)
     status = clReleaseEvent(ndrEvt);
     CHECK_OPENCL_ERROR(status, "clReleaseEvent failed.(endTime)");
 
-    outMapPtr = clEnqueueMapBuffer(
+    outMapPtr = CECL_MAP_BUFFER(
                     commandQueue,
                     outputBuffer,
                     CL_FALSE,
@@ -372,7 +372,7 @@ MatrixTranspose::runCLKernels(void)
                     NULL,
                     &outMapEvt,
                     &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer failed. (resultBuf)");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER failed. (resultBuf)");
 
     status = clFlush(commandQueue);
     CHECK_OPENCL_ERROR(status, "clFlush failed.");

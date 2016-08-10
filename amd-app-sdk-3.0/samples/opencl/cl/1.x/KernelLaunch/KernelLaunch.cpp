@@ -151,7 +151,7 @@ void timedBufMappedWrite( cl_command_queue queue,
 
     t1.Start();
 
-    ptr = (void * ) clEnqueueMapBuffer( queue,
+    ptr = (void * ) CECL_MAP_BUFFER( queue,
                                         buf,
                                         CL_FALSE,
                                         mapFlag,

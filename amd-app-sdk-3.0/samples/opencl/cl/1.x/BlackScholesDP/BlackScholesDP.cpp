@@ -379,7 +379,7 @@ BlackScholesDP::runCLKernels(void)
     }
 
     cl_event inMapEvt;
-    void* mapPtr = clEnqueueMapBuffer(
+    void* mapPtr = CECL_MAP_BUFFER(
                        commandQueue,
                        randBuf,
                        CL_FALSE,
@@ -390,7 +390,7 @@ BlackScholesDP::runCLKernels(void)
                        NULL,
                        &inMapEvt,
                        &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer failed.(randBuf)");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER failed.(randBuf)");
 
     status = clFlush(commandQueue);
     CHECK_OPENCL_ERROR(status, "clFlush failed.(commandQueue)");

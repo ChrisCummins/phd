@@ -279,7 +279,7 @@ int main(int argc, char** argv) {
 								blockCols, blockRows, borderCols, borderRows, FilesavingTemp, FilesavingPower);
 	
 	// Copy final temperature data back
-	cl_float *MatrixOut = (cl_float *) clEnqueueMapBuffer(command_queue, MatrixTemp[ret], CL_TRUE, CL_MAP_READ, 0, sizeof(float) * size, 0, NULL, NULL, &error);
+	cl_float *MatrixOut = (cl_float *) CECL_MAP_BUFFER(command_queue, MatrixTemp[ret], CL_TRUE, CL_MAP_READ, 0, sizeof(float) * size, 0, NULL, NULL, &error);
 	if (error != CL_SUCCESS) fatal_CL(error, __LINE__);
 	
 	long long end_time = get_time();	

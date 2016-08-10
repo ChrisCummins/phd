@@ -220,7 +220,7 @@ Reduction::runCLKernels()
 
     // Transfer input to device
     cl_event inMapEvt;
-    void* mapPtr = clEnqueueMapBuffer(commandQueue,
+    void* mapPtr = CECL_MAP_BUFFER(commandQueue,
                                       inputBuffer,
                                       CL_FALSE,
                                       CL_MAP_WRITE,
@@ -230,7 +230,7 @@ Reduction::runCLKernels()
                                       NULL,
                                       &inMapEvt,
                                       &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer failed. (inputBuffer)");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER failed. (inputBuffer)");
 
     status = clFlush(commandQueue);
     CHECK_OPENCL_ERROR(status, "clFlush failed.");
@@ -285,7 +285,7 @@ Reduction::runCLKernels()
     CHECK_ERROR(status, SDK_SUCCESS, "WaitForEventAndRelease(ndrEvt) Failed");
 
     cl_event outMapEvt;
-    cl_uint* outMapPtr = (cl_uint*)clEnqueueMapBuffer(commandQueue,
+    cl_uint* outMapPtr = (cl_uint*)CECL_MAP_BUFFER(commandQueue,
                          outputBuffer,
                          CL_FALSE,
                          CL_MAP_READ,
@@ -295,7 +295,7 @@ Reduction::runCLKernels()
                          NULL,
                          &outMapEvt,
                          &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(outputBuffer) failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(outputBuffer) failed.");
 
     status = clFlush(commandQueue);
     CHECK_OPENCL_ERROR(status, "clFlush failed.");

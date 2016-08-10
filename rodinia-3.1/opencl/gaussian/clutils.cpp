@@ -726,7 +726,7 @@ void *cl_mapBuffer(cl_mem mem, size_t mem_size, cl_mem_flags flags)
     cl_int status;          
     void *ptr;
 
-    ptr = (void *)clEnqueueMapBuffer(commandQueue, mem, CL_TRUE, flags, 
+    ptr = (void *)CECL_MAP_BUFFER(commandQueue, mem, CL_TRUE, flags, 
                                              0, mem_size, 0, NULL, NULL, &status);
 
     cl_errChk(status, "Error mapping a buffer", true);

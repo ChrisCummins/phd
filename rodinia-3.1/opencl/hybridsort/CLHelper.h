@@ -465,12 +465,12 @@ cl_mem _clCreateAndCpyPinnedMem(int size, float* h_mem_source) throw(string){
 		throw(string("excpetion in _clCreateAndCpyMem() -> d_mem "));
 	#endif
 	//----------
-	h_mem_pinned = (cl_float *)clEnqueueMapBuffer(oclHandles.queue, d_mem_pinned, CL_TRUE,  \
+	h_mem_pinned = (cl_float *)CECL_MAP_BUFFER(oclHandles.queue, d_mem_pinned, CL_TRUE,  \
 										CL_MAP_WRITE, 0, size, 0, NULL,  \
 										NULL,  &oclHandles.cl_status);
 	#ifdef ERRMSG
 	if(oclHandles.cl_status != CL_SUCCESS)
-		throw(string("excpetion in _clCreateAndCpyMem() -> clEnqueueMapBuffer"));
+		throw(string("excpetion in _clCreateAndCpyMem() -> CECL_MAP_BUFFER"));
 	#endif
 	int element_number = size/sizeof(float);
 	#pragma omp parallel for

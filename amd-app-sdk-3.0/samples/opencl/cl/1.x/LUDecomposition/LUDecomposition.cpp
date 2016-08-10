@@ -261,7 +261,7 @@ int LUD::runCLKernels(void)
     void* inMapPtr = NULL;
     void* outMapPtr = NULL;
 
-    inMapPtr = clEnqueueMapBuffer(
+    inMapPtr = CECL_MAP_BUFFER(
                    commandQueue,
                    inplaceBuffer,
                    CL_FALSE,
@@ -272,7 +272,7 @@ int LUD::runCLKernels(void)
                    NULL,
                    &inMapEvt,
                    &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer failed. (inplaceBuffer)");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER failed. (inplaceBuffer)");
 
     status = clFlush(commandQueue);
     CHECK_OPENCL_ERROR(status, "clFlush failed.");
@@ -468,7 +468,7 @@ int LUD::runCLKernels(void)
     CHECK_OPENCL_ERROR(status, "clFlush failed.");
 
     // Get final matrix data
-    outMapPtr = clEnqueueMapBuffer(
+    outMapPtr = CECL_MAP_BUFFER(
                     commandQueue,
                     inplaceBuffer,
                     CL_FALSE,
@@ -479,7 +479,7 @@ int LUD::runCLKernels(void)
                     NULL,
                     &outMapEvt,
                     &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer failed. (inplaceBuffer)");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER failed. (inplaceBuffer)");
 	 
     status = clFlush(commandQueue);
     CHECK_OPENCL_ERROR(status, "clFlush failed.");

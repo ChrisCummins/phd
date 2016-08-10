@@ -474,7 +474,7 @@ TransferOverlap::verifyResultBuffer(cl_mem resultBuffer, bool firstLoop)
     t.Reset();
     t.Start();
 
-    ptrResult = (void*)clEnqueueMapBuffer(
+    ptrResult = (void*)CECL_MAP_BUFFER(
                     queue,
                     resultBuffer,
                     CL_TRUE,
@@ -485,11 +485,11 @@ TransferOverlap::verifyResultBuffer(cl_mem resultBuffer, bool firstLoop)
                     NULL,
                     NULL,
                     &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer() failed.(resultBuffer)");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER() failed.(resultBuffer)");
 
     t.Stop();
     timeLog->Timer(
-        "%32s  %lf s %8.2lf GB/s\n", "clEnqueueMapBuffer(MAP_WRITE)",
+        "%32s  %lf s %8.2lf GB/s\n", "CECL_MAP_BUFFER(MAP_WRITE)",
         t.GetElapsedTime(),
         nBytesResult,
         1);
@@ -649,7 +649,7 @@ TransferOverlap::launchMapBuffer(cl_mem buffer, cl_event *mapEvent)
     t.Reset();
     t.Start();
 
-    ptr = (void *)clEnqueueMapBuffer(
+    ptr = (void *)CECL_MAP_BUFFER(
               queue,
               buffer,
               CL_FALSE,
@@ -662,7 +662,7 @@ TransferOverlap::launchMapBuffer(cl_mem buffer, cl_event *mapEvent)
               &status);
     if(ptr == NULL)
     {
-        std::cout << "clEnqueueMapBuffer(buffer) failed.";
+        std::cout << "CECL_MAP_BUFFER(buffer) failed.";
         return NULL;
     }
 
@@ -675,7 +675,7 @@ TransferOverlap::launchMapBuffer(cl_mem buffer, cl_event *mapEvent)
 
     t.Stop();
     timeLog->Timer(
-        "%32s  %lf s %8.2lf GB/s\n", "clEnqueueMapBuffer(MAP_WRITE)",
+        "%32s  %lf s %8.2lf GB/s\n", "CECL_MAP_BUFFER(MAP_WRITE)",
         t.GetElapsedTime(),
         nBytes,
         1);
@@ -753,7 +753,7 @@ TransferOverlap::runOverlapTest()
     bool firstLoop = true;
 
     // Start with inputBuffer1 mapped
-    inPtr1 = (void *)clEnqueueMapBuffer(
+    inPtr1 = (void *)CECL_MAP_BUFFER(
                  queue,
                  inputBuffer1,
                  CL_FALSE,
@@ -764,7 +764,7 @@ TransferOverlap::runOverlapTest()
                  NULL,
                  &lastBuf1MapEvent,
                  &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(inputBuffer1) failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(inputBuffer1) failed.");
 
     status = clFlush(queue);
     CHECK_OPENCL_ERROR(status, "clFlush() failed.");

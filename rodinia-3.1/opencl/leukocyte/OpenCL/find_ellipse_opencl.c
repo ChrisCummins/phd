@@ -127,7 +127,7 @@ float *GICOV_OpenCL(int grad_m, int grad_n, float *host_grad_x, float *host_grad
 	check_error(error, __FILE__, __LINE__);
 
 	// Copy the result to the host
-	host_gicov = (cl_float *) clEnqueueMapBuffer(command_queue, device_gicov, CL_TRUE, CL_MAP_READ, 0, grad_mem_size, 0, NULL, NULL, &error);
+	host_gicov = (cl_float *) CECL_MAP_BUFFER(command_queue, device_gicov, CL_TRUE, CL_MAP_READ, 0, grad_mem_size, 0, NULL, NULL, &error);
 	check_error(error, __FILE__, __LINE__);
 
 	// Cleanup memory
@@ -198,7 +198,7 @@ float *dilate_OpenCL(int max_gicov_m, int max_gicov_n, int strel_m, int strel_n)
 	check_error(error, __FILE__, __LINE__);
 
 	// Copy the result to the host
-	// float *host_img_dilated = (cl_float *) clEnqueueMapBuffer(command_queue, device_img_dilated, CL_TRUE, CL_MAP_READ, 0, max_gicov_mem_size, 0, NULL, NULL, &error);
+	// float *host_img_dilated = (cl_float *) CECL_MAP_BUFFER(command_queue, device_img_dilated, CL_TRUE, CL_MAP_READ, 0, max_gicov_mem_size, 0, NULL, NULL, &error);
 	float *host_img_dilated = (float*) malloc(max_gicov_mem_size);
 	error = CECL_READ_BUFFER(command_queue, device_img_dilated, CL_TRUE, 0, max_gicov_mem_size, host_img_dilated, 0, NULL, NULL);
 	check_error(error, __FILE__, __LINE__);

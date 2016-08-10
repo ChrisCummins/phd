@@ -175,10 +175,10 @@ NBody::setupCL()
     CHECK_OPENCL_ERROR(status, "CECL_WRITE_BUFFER failed. ");
 
     // Initialize the velocity buffer to zero
-    float* p = (float*) clEnqueueMapBuffer(commandQueue, particleVel[0], CL_TRUE,
+    float* p = (float*) CECL_MAP_BUFFER(commandQueue, particleVel[0], CL_TRUE,
                                            CL_MAP_WRITE
                                            , 0, bufferSize, 0, NULL, NULL, &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer failed. ");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER failed. ");
     memset(p, 0, bufferSize);
     status = clEnqueueUnmapMemObject(commandQueue, particleVel[0], p, 0, NULL,
                                      NULL);
@@ -299,7 +299,7 @@ float* NBody::getMappedParticlePositions()
 {
     cl_int status;
     mappedPosBufferIndex = currentPosBufferIndex;
-    mappedPosBuffer = (float*) clEnqueueMapBuffer(commandQueue,
+    mappedPosBuffer = (float*) CECL_MAP_BUFFER(commandQueue,
                       particlePos[mappedPosBufferIndex], CL_TRUE, CL_MAP_READ
                       , 0, numBodies*4*sizeof(float), 0, NULL, NULL, &status);
     return mappedPosBuffer;

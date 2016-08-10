@@ -462,7 +462,7 @@ BinomialOptionMultiGPU::runCLKernels()
     cl_int eventStatus = CL_QUEUED;
 
     cl_event inMapEvt;
-    void* mapPtr = clEnqueueMapBuffer(commandQueue,
+    void* mapPtr = CECL_MAP_BUFFER(commandQueue,
                                       randBuffer,
                                       CL_FALSE,
                                       CL_MAP_WRITE,
@@ -472,7 +472,7 @@ BinomialOptionMultiGPU::runCLKernels()
                                       NULL,
                                       &inMapEvt,
                                       &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer failed. (inputBuffer)");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER failed. (inputBuffer)");
 
     status = clFlush(commandQueue);
     CHECK_OPENCL_ERROR(status, "clFlush failed.");
@@ -590,7 +590,7 @@ BinomialOptionMultiGPU::runCLKernels()
     }
 
     cl_event outMapEvt;
-    cl_uint* outMapPtr = (cl_uint*)clEnqueueMapBuffer(commandQueue,
+    cl_uint* outMapPtr = (cl_uint*)CECL_MAP_BUFFER(commandQueue,
                          outBuffer,
                          CL_FALSE,
                          CL_MAP_READ,
@@ -600,7 +600,7 @@ BinomialOptionMultiGPU::runCLKernels()
                          NULL,
                          &outMapEvt,
                          &status);
-    CHECK_OPENCL_ERROR(status, "clEnqueueMapBuffer(outputBuffer) failed.");
+    CHECK_OPENCL_ERROR(status, "CECL_MAP_BUFFER(outputBuffer) failed.");
 
     status = clFlush(commandQueue);
     CHECK_OPENCL_ERROR(status, "clFlush failed.");
@@ -894,7 +894,7 @@ void* threadFuncPerGPU(void *data1)
     cl_int eventStatus = CL_QUEUED;
 
     cl_event inMapEvt;
-    void* mapPtr = clEnqueueMapBuffer(boObj->commandQueues[deviceNumber],
+    void* mapPtr = CECL_MAP_BUFFER(boObj->commandQueues[deviceNumber],
                                       boObj->randBuffers[deviceNumber],
                                       CL_FALSE,
                                       CL_MAP_WRITE,
@@ -905,7 +905,7 @@ void* threadFuncPerGPU(void *data1)
                                       &inMapEvt,
                                       &status);
 
-    CHECK_OPENCL_ERROR_RETURN_NULL(status, "clEnqueueMapBuffer failed !!");
+    CHECK_OPENCL_ERROR_RETURN_NULL(status, "CECL_MAP_BUFFER failed !!");
 
     status = clFlush(boObj->commandQueues[deviceNumber]);
     CHECK_OPENCL_ERROR_RETURN_NULL(status, "clFlush failed !!");
@@ -1054,7 +1054,7 @@ void* threadFuncPerGPU(void *data1)
     }
 
     cl_event outMapEvt;
-    cl_uint* outMapPtr = (cl_uint*)clEnqueueMapBuffer(
+    cl_uint* outMapPtr = (cl_uint*)CECL_MAP_BUFFER(
                              boObj->commandQueues[deviceNumber],
                              boObj->outputBuffers[deviceNumber],
                              CL_FALSE,
@@ -1065,7 +1065,7 @@ void* threadFuncPerGPU(void *data1)
                              NULL,
                              &outMapEvt,
                              &status);
-    CHECK_OPENCL_ERROR_RETURN_NULL(status, "clEnqueueMapBuffer failed !!");
+    CHECK_OPENCL_ERROR_RETURN_NULL(status, "CECL_MAP_BUFFER failed !!");
 
     status = clFlush(boObj->commandQueues[deviceNumber]);
     CHECK_OPENCL_ERROR_RETURN_NULL(status, "clFlush failed !!");
