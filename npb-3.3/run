@@ -10,11 +10,13 @@ cd bin
 if [[ $DEVTYPE == "CPU" ]];then
     ./run_ocl_cpu.sh
     for f in log/*.cpu.out; do
-        cp ${f%.*.*} "$ROOT/logs/good"
+        base=$(basename $f)
+        cp -v $f $ROOT/logs/good/${base%.*.*}
     done
 else
     ./run_ocl_gpu.sh
     for f in log/*.gpu.out; do
-        cp ${f%.*.*} "$ROOT/logs/good"
+        base=$(basename $f)
+        cp -v $f $ROOT/logs/good/${base%.*.*}
     done
 fi
