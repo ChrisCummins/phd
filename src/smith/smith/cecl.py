@@ -14,6 +14,7 @@ import sys
 
 from collections import defaultdict
 from itertools import product
+from multiprocessing import cpu_count, Pool
 
 import labm8
 from labm8 import fs
@@ -27,7 +28,13 @@ class LogException(CeclException): pass
 class NameInferenceException(CeclException): pass
 
 
-def parse_cecl_log(log):
+def assert_device_type(expected, actual):
+    if expected.lower() != actual.lower():
+        raise LogException("expected device type '{}', found device type '{}'"
+                           .format(expected, actual))
+
+
+def parse_cecl_log(log, devtype=None):
     """
     Interpret and parse the output of a libcecl instrument kernel.
     """
@@ -52,7 +59,12 @@ def parse_cecl_log(log):
             srcbuf += line + "\n"
         else:
             components = [x.strip() for x in line.split(';')]
-            if components[0]:
+            if devtype and components[0] == "clCreateCommandQueue":
+                try:
+                    assert_device_type(devtype, components[1])
+                except LogException as e:
+                    raiseLogException(log + ": " + str(e))
+            elif components[0]:
                 lines.append(components)
     return lines
 
@@ -126,19 +138,19 @@ def get_kernel_args(parsed, kernels):
     for line in parsed:
         if line[0] == "clSetKernelArg":
             kernel_name, index, size, name = line[1:]
-            kernel_args[kernel_name].append(name)
+            # Only record the kernel argument if it is actually
+            # enqueued.
+            if kernel_name in kernels:
+                kernel_args[kernel_name].append(name)
 
-    if len(kernel_args.keys()) != len(kernels):
-        print("error: arguments for {} kernels, but there are {} kernels"
-              .format(len(kernel_args.keys()), len(kernels)))
     return kernel_args
 
 
 def path_to_benchmark_and_dataset(path):
     basename = fs.basename(path)
     if basename.startswith("npb-"):
-        m = re.match(r"(npb-3\.3-[A-Z]+)\.([A-Z]+)\.[cg]pu\.out", basename)
-        return (m.group(1), m.group(2))
+        components = basename.split('.')
+        return (".".join(components[:-1]), components[-1])
     elif basename.startswith("nvidia-"):
         return (
             re.sub(r"(nvidia-4\.2-)ocl([a-zA-Z]+)", r"\1\2", basename),
@@ -149,20 +161,18 @@ def path_to_benchmark_and_dataset(path):
     else:
         return basename, "default"
 
-def allequal(iterator):
-   return len(set(iterator)) <= 1
 
-def process_cecl_log(log):
+def process_cecl_log(log, devtype=None):
     benchmark, dataset = path_to_benchmark_and_dataset(log)
-    parsed = parse_cecl_log(log)
+    parsed = parse_cecl_log(log, devtype=devtype)
 
     kernels = get_kernels(parsed)
     transfers = get_transfers(parsed)
     kernel_args = get_kernel_args(parsed, kernels)
 
-    for transfer in transfers.keys():
-        print('-'.join((benchmark, dataset)), transfer,
-              len(transfers[transfer]))
+    # for transfer in transfers.keys():
+    #     print('-'.join((benchmark, dataset)), transfer,
+    #           len(transfers[transfer]))
 
     # for kernel in kernels.keys():
     #     print('-'.join((benchmark, dataset, kernel)))
@@ -172,15 +182,24 @@ def log2features(log, out=sys.stdout, metaout=sys.stderr):
     process_cecl_log(log)
 
 
-def get_device_logs(logdir, metaout=sys.stderr):
+def get_device_logs(logdir):
+    """
+    Walks a directory tree of this structure:
+
+    <logdir>/<run>/<device>/<log>
+
+    and returns a dictionary mapping devices to lists of logs:
+
+    { <device>: [<logs ...>] }
+    """
     devlogs = defaultdict(list)
     rundirs = fs.ls(logdir, abspaths=True)
     devices = [fs.basename(x) for x in fs.ls(rundirs[0])]
 
     for rundir,device in product(rundirs, devices):
-        devlogs[device] += [x for x in
-                            fs.ls(fs.path(rundir, device), abspaths=True)
-                            if fs.isfile(x)]
+        devlogs[device] += sorted(
+            [x for x in fs.ls(fs.path(rundir, device), abspaths=True)
+             if fs.isfile(x)])
 
     # The number of files in the logdir:
     nfiles = len([x for x in fs.ls(logdir, abspaths=True, recursive=True)
@@ -198,12 +217,53 @@ def get_device_logs(logdir, metaout=sys.stderr):
                            .format(fs.path(
                                logdir, "<run>", "<device>", "<logs>")))
 
+    # Print directory:
     print("libcecl logs:")
-    print("    # files:", nfiles, file=metaout)
-    print("    # runs:", len(rundirs), file=metaout)
-    print("    # devices:", len(devices), file=metaout)
+    print("    # files:", nfiles)
+    print("    # runs:", len(rundirs), "({})".format(
+        ", ".join(["{}: {}".format(fs.basename(x),
+                                   len([y for y in fs.ls(x, abspaths=True,
+                                                         recursive=True)
+                                        if fs.isfile(y)]))
+                   for x in fs.ls(logdir, abspaths=True)])))
+    print("    # devices:", len(devices), "({})".format(
+        ", ".join(["{}: {}".format(x, len(devlogs[x])) for x in devlogs])))
+
+
+    # Find the common intersection of logs which exist for all
+    # devices:
+    common = set([fs.basename(x) for x in devlogs[devices[0]]])
+    for device in devices[1:]:
+        common = common.intersection([fs.basename(x) for x in devlogs[device]])
+    # Update devlogs to include only common benchmarks:
+    for device in devices:
+        devlogs[device] = [x for x in devlogs[device]
+                           if fs.basename(x) in common]
+    nlogs = sum([len(x) for x in devlogs.values()])
+
+    print("Common subset:")
+    print("    # files:", nlogs, "({:.1f}%)".format((nlogs / nfiles) * 100))
+    print("    # common:", len(common))
+    print("    # devices:", len(devices), "({})".format(
+        ", ".join(["{}: {}".format(x, len(devlogs[x])) for x in devlogs])))
 
     return devlogs
+
+
+def device_to_device_type(devname):
+    d = {
+        "amd": "GPU",
+        "intel": "CPU",
+        "nvidia": "GPU"
+    }.get(devname, None)
+    if d is None:
+        raise LogException("Unknown device name '{}'"
+                           .format(devname))
+    return d
+
+
+def dir2features_worker(job):
+    process_cecl_log(job["path"], devtype=job["devtype"])
 
 
 def dir2features(logdir, out=sys.stdout, metaout=sys.stderr):
@@ -218,6 +278,16 @@ def dir2features(logdir, out=sys.stdout, metaout=sys.stderr):
     runs = fs.ls(logdir, abspaths=True)
     devices = fs.ls(runs[0])
     devlogs = get_device_logs(logdir)
+    nlogs = sum([len(x) for x in devlogs.values()])
 
+    jobs = []
     for device in devlogs:
-        process_cecl_log(path)
+        devtype = device_to_device_type(device)
+        for path in devlogs[device]:
+            jobs.append({"path": path, "devtype": devtype})
+
+    num_workers = round(cpu_count() * 1.5)
+    with Pool(num_workers) as pool:
+        print('\nspawning', num_workers, 'worker threads to process',
+              len(jobs), 'jobs ...')
+        pool.map(dir2features_worker, jobs)
