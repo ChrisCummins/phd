@@ -15,6 +15,7 @@ import sys
 from collections import defaultdict
 from itertools import product
 from multiprocessing import cpu_count, Pool
+from random import shuffle
 
 import labm8
 from labm8 import fs
@@ -280,11 +281,17 @@ def dir2features(logdir, out=sys.stdout, metaout=sys.stderr):
     devlogs = get_device_logs(logdir)
     nlogs = sum([len(x) for x in devlogs.values()])
 
+    # Build a job list. Pack all the data required to complete a job
+    # into a single object so that a worker thread can operator on it.
     jobs = []
     for device in devlogs:
         devtype = device_to_device_type(device)
         for path in devlogs[device]:
             jobs.append({"path": path, "devtype": devtype})
+    shuffle(jobs)
+
+    # FIXME: Test on a short number of jobs:
+    jobs = jobs[:50]
 
     num_workers = round(cpu_count() * 1.5)
     with Pool(num_workers) as pool:
