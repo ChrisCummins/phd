@@ -1259,23 +1259,23 @@ device_type is a bitfield that identifies the type of OpenCL device. The device_
 to query specific OpenCL devices or all OpenCL devices available. The valid values for
 device_type are specified in table 4.2.
 cl_device_type Description
-CL_DEVICE_TYPE_CPU An OpenCL device that is the host processor. The
+CL_DEVICE_TYPE_GPU An OpenCL device that is the host processor. The
 host processor runs the OpenCL implementations
 and is a single or multi-core CPU.
-CL_DEVICE_TYPE_CPU An OpenCL device that is a GPU. By this we mean
+CL_DEVICE_TYPE_GPU An OpenCL device that is a GPU. By this we mean
 that the device can also be used to accelerate a 3D
 API such as OpenGL or DirectX.
-CL_DEVICE_TYPE_CPU Dedicated OpenCL accelerators (for example the
+CL_DEVICE_TYPE_GPU Dedicated OpenCL accelerators (for example the
 IBM CELL Blade). These devices communicate
 with the host processor using a peripheral
 interconnect such as PCIe.
-CL_DEVICE_TYPE_CPU Dedicated accelerators that do not support programs
+CL_DEVICE_TYPE_GPU Dedicated accelerators that do not support programs
 written in OpenCL C.
-CL_DEVICE_TYPE_CPU The default OpenCL device in the system. The
+CL_DEVICE_TYPE_GPU The default OpenCL device in the system. The
 default device cannot be a
-CL_DEVICE_TYPE_CPU device.
-CL_DEVICE_TYPE_CPU All OpenCL devices available in the system except
-CL_DEVICE_TYPE_CPU devices..
+CL_DEVICE_TYPE_GPU device.
+CL_DEVICE_TYPE_GPU All OpenCL devices available in the system except
+CL_DEVICE_TYPE_GPU devices..
 Table 4.2. List of OpenCL Device Categories
 num_entries is the number of cl_device_id entries that can be added to devices. If devices is not
 NULL, the num_entries must be greater than zero.
@@ -1322,12 +1322,12 @@ Last Revision Date: 11/14/12 Page 38
 cl_device_info Return Type Description
 CL_DEVICE_TYPE cl_device_type The OpenCL device type. Currently
 supported values are:
-CL_DEVICE_TYPE_CPU,
-CL_DEVICE_TYPE_CPU,
-CL_DEVICE_TYPE_CPU,
-CL_DEVICE_TYPE_CPU, a combination
+CL_DEVICE_TYPE_GPU,
+CL_DEVICE_TYPE_GPU,
+CL_DEVICE_TYPE_GPU,
+CL_DEVICE_TYPE_GPU, a combination
 of the above types or
-CL_DEVICE_TYPE_CPU.
+CL_DEVICE_TYPE_GPU.
 CL_DEVICE_VENDOR_ID cl_uint A unique device vendor identifier. An
 example of a unique device identifier could
 be the PCIe ID.
@@ -1342,7 +1342,7 @@ global and local work-item IDs used by the
 data parallel execution model. (Refer to
 clEnqueueNDRangeKernel). The minimum
 value is 3 for devices that are not of type
-CL_DEVICE_TYPE_CPU.
+CL_DEVICE_TYPE_GPU.
 CL_DEVICE_MAX_WORK_ITEM_SIZES size_t [] Maximum number of work-items that can
 be specified in each dimension of the
 work-group to
@@ -1353,7 +1353,7 @@ CL_DEVICE_MAX_WORK_ITEM_DIMEN
 SIONS.
 The minimum value is (1, 1, 1) for devices
 that are not of type
-CL_DEVICE_TYPE_CPU.
+CL_DEVICE_TYPE_GPU.
 CL_DEVICE_MAX_WORK_GROUP_SIZE size_t Maximum number of work-items in a
 work-group executing a kernel on a single
 compute unit, using the data parallel
@@ -1420,7 +1420,7 @@ CL_DEVICE_MAX_MEM_ALLOC_SIZE cl_ulong Max size of memory object allocation in
 bytes. The minimum value is max (1/4th of
 CL_DEVICE_GLOBAL_MEM_SIZE ,
 128*1024*1024) for devices that are not of
-type CL_DEVICE_TYPE_CPU.
+type CL_DEVICE_TYPE_GPU.
 CL_DEVICE_IMAGE_SUPPORT cl_bool Is CL_TRUE if images are supported by the
 OpenCL device and CL_FALSE otherwise.
 CL_DEVICE_MAX_READ_IMAGE_ARGS cl_uint Max number of simultaneous image
@@ -1476,7 +1476,7 @@ CL_DEVICE_MAX_PARAMETER_SIZE size_t Max size in bytes of the arguments that can
 be passed to a kernel.
 The minimum value is 1024 for devices
 that are not of type
-CL_DEVICE_TYPE_CPU. For this
+CL_DEVICE_TYPE_GPU. For this
 minimum value, only a maximum of 128
 arguments can be passed to a kernel.
 CL_DEVICE_MEM_BASE_ADDR_ALIGN cl_uint The minimum value is the size (in bits) of
@@ -1484,7 +1484,7 @@ the largest OpenCL built-in data
 type supported by the device (long16 in
 FULL profile, long16 or int16 in
 EMBEDDED profile) for devices that are
-not of type CL_DEVICE_TYPE_CPU.
+not of type CL_DEVICE_TYPE_GPU.
 CL_DEVICE_SINGLE_FP_CONFIG cl_device_
 fp_config
 Describes single precision floating-point
@@ -1512,7 +1512,7 @@ operations (such as addition, subtraction,
 multiplication) are implemented in software.
 The mandated minimum floating-point
 capability for devices that are not of type
-CL_DEVICE_TYPE_CPU is:
+CL_DEVICE_TYPE_GPU is:
 CL_FP_ROUND_TO_NEAREST |
 CL_FP_INF_NAN.
 CL_DEVICE_DOUBLE_FP_CONFIG cl_device_
@@ -1570,11 +1570,11 @@ BUFFER_SIZE
 cl_ulong Max size in bytes of a constant buffer
 allocation. The minimum value is 64 KB
 for devices that are not of type
-CL_DEVICE_TYPE_CPU.
+CL_DEVICE_TYPE_GPU.
 CL_DEVICE_MAX_CONSTANT_ARGS cl_uint Max number of arguments declared with
 the __constant qualifier in a kernel. The
 minimum value is 8 for devices that are not
-of type CL_DEVICE_TYPE_CPU.
+of type CL_DEVICE_TYPE_GPU.
 CL_DEVICE_LOCAL_MEM_TYPE cl_device_local_
 mem_type
 Type of local memory supported. This can
@@ -1587,7 +1587,7 @@ support.
 CL_DEVICE_LOCAL_MEM_SIZE cl_ulong Size of local memory arena in bytes. The
 minimum value is 32 KB for devices that
 are not of type
-CL_DEVICE_TYPE_CPU.
+CL_DEVICE_TYPE_GPU.
 CL_DEVICE_ERROR_CORRECTION_
 SUPPORT
 cl_bool Is CL_TRUE if the device implements error
@@ -1688,7 +1688,7 @@ returned will be 1.2.
 CL_DEVICE_OPENCL_C_VERSION char[] OpenCL C version string. Returns the
 highest OpenCL C version supported by
 the compiler for this device that is not of
-type CL_DEVICE_TYPE_CPU. This
+type CL_DEVICE_TYPE_GPU. This
 version string has the following format:
 OpenCL<space>C<space><major_versio
 n.minor_version><space><vendorspecific
@@ -12446,12 +12446,12 @@ embedded profile and are:
 cl_device_info Return Type Description
 CL_DEVICE_TYPE cl_device_type The OpenCL device type. Currently
 supported values are:
-CL_DEVICE_TYPE_CPU,
-CL_DEVICE_TYPE_CPU,
-CL_DEVICE_TYPE_CPU,
-CL_DEVICE_TYPE_CPU, a
+CL_DEVICE_TYPE_GPU,
+CL_DEVICE_TYPE_GPU,
+CL_DEVICE_TYPE_GPU,
+CL_DEVICE_TYPE_GPU, a
 combination of the above types or
-CL_DEVICE_TYPE_CPU..
+CL_DEVICE_TYPE_GPU..
 CL_DEVICE_VENDOR_ID cl_uint A unique device vendor identifier. An
 example of a unique device identifier
 could be the PCIe ID.
@@ -12465,7 +12465,7 @@ unsigned int Maximum dimensions that specify the
 global and local work-item IDs. The
 minimum value is 3 for devices that
 are not of type
-CL_DEVICE_TYPE_CPU.
+CL_DEVICE_TYPE_GPU.
 CL_DEVICE_MAX_WORK_ITEM_SIZES size_t [] Maximum number of work-items that
 can be specified in each dimension of
 the work-group to
@@ -12476,7 +12476,7 @@ CL_DEVICE_MAX_WORK_ITEM_DIMENSIO
 NS.
 The minimum value is (1, 1, 1) for
 devices that are not of type
-CL_DEVICE_TYPE_CPU.
+CL_DEVICE_TYPE_GPU.
 CL_DEVICE_MAX_WORK_GROUP_SIZE size_t Maximum number of work-items in a
 work-group executing a kernel using
 the data parallel execution model.
@@ -12556,7 +12556,7 @@ in bytes. The minimum value is max
 (1/4th of
 CL_DEVICE_GLOBAL_MEM_SIZE ,
 1*1024*1024) for devices that are not
-of type CL_DEVICE_TYPE_CPU.
+of type CL_DEVICE_TYPE_GPU.
 CL_DEVICE_IMAGE_SUPPORT cl_bool Is CL_TRUE if images are supported
 by the OpenCL device and CL_FALSE
 otherwise.
@@ -12609,7 +12609,7 @@ CL_DEVICE_MAX_PARAMETER_SIZE size_t Max size in bytes of the arguments
 that can be passed to a kernel. The
 minimum value is 256 bytes for
 devices that are not of type
-CL_DEVICE_TYPE_CPU.
+CL_DEVICE_TYPE_GPU.
 CL_DEVICE_MEM_BASE_ADDR_ALIGN
 cl_uint The minimum value is the size (in
 bits) of the largest OpenCL built-in
@@ -12618,7 +12618,7 @@ type supported by the device
 (long16 in FULL profile, long16
 or int16 in EMBEDDED profile) for
 devices that are not of type
-CL_DEVICE_TYPE_CPU.
+CL_DEVICE_TYPE_GPU.
 Last Revision Date: 11/14/12 Page 352
 CL_DEVICE_SINGLE_FP_CONFIG cl_device_
 fp_config
@@ -12650,7 +12650,7 @@ capability is:
 CL_FP_ROUND_TO_ZERO or
 CL_FP_ROUND_TO_NEAREST
 for devices that are not of type
-CL_DEVICE_TYPE_CPU.
+CL_DEVICE_TYPE_GPU.
 CL_DEVICE_DOUBLE_FP_CONFIG cl_device_
 fp_config
 Describes double precision floatingpoint
@@ -12708,12 +12708,12 @@ long long
 Max size in bytes of a constant buffer
 allocation. The minimum value is 1
 KB for devices that are not of type
-CL_DEVICE_TYPE_CPU.
+CL_DEVICE_TYPE_GPU.
 CL_DEVICE_MAX_CONSTANT_ARGS unsigned int Max number of arguments declared
 with the __constant qualifier in a
 kernel. The minimum value is 4 for
 devices that are not of type
-CL_DEVICE_TYPE_CPU.
+CL_DEVICE_TYPE_GPU.
 CL_DEVICE_LOCAL_MEM_TYPE cl_device_
 local_mem_type
 Type of local memory supported.
@@ -12727,7 +12727,7 @@ memory support.
 CL_DEVICE_LOCAL_MEM_SIZE cl_ulong Size of local memory arena in bytes.
 The minimum value is 1 KB for
 devices that are not of type
-CL_DEVICE_TYPE_CPU.
+CL_DEVICE_TYPE_GPU.
 CL_DEVICE_ERROR_CORRECTION_
 SUPPORT
 cl_bool Is CL_TRUE if the device implements

@@ -183,7 +183,7 @@ initializeCL(void)
     cl_context_properties cps[3] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 0 };
 
     context = clCreateContextFromType(cps, 
-                                      CL_DEVICE_TYPE_CPU, 
+                                      CL_DEVICE_TYPE_GPU, 
                                       NULL, 
                                       NULL, 
                                       &status);

@@ -58,12 +58,12 @@ DeviceFission::setupCLPlatform()
 
 	if (sampleArgs->deviceType.compare("cpu") == 0)
 	{
-		dType = CL_DEVICE_TYPE_CPU;
+		dType = CL_DEVICE_TYPE_GPU;
 	}
 	else //sampleArgs->deviceType = "gpu"
 	{
 		std::cout << "Not supported on GPU. Falling back to CPU device" << std::endl;
-		dType = CL_DEVICE_TYPE_CPU;
+		dType = CL_DEVICE_TYPE_GPU;
 		sampleArgs->deviceId = 0;
 	}
 
@@ -91,7 +91,7 @@ DeviceFission::setupCLPlatform()
     };
 
     rContext = clCreateContextFromType(platform ? cps : NULL,
-                                       CL_DEVICE_TYPE_CPU,
+                                       CL_DEVICE_TYPE_GPU,
                                        NULL,
                                        NULL,
                                        &status);
@@ -110,7 +110,7 @@ DeviceFission::setupCLPlatform()
     {
         retValue = deviceInfo.setDeviceInfo(Devices[i]);
         CHECK_ERROR(retValue, 0, "SDKDeviceInfo::setDeviceInfo() failed");
-        if (deviceInfo.dType == CL_DEVICE_TYPE_CPU)
+        if (deviceInfo.dType == CL_DEVICE_TYPE_GPU)
         {
             cpuDevice = Devices[i];
         }

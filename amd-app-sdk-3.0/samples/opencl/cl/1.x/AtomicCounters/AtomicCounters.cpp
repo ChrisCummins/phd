@@ -62,15 +62,15 @@ AtomicCounters::setupCL(void)
     cl_device_type dType;
     if(sampleArgs->deviceType.compare("cpu") == 0)
     {
-        dType = CL_DEVICE_TYPE_CPU;
+        dType = CL_DEVICE_TYPE_GPU;
     }
     else //deviceType = "gpu"
     {
-        dType = CL_DEVICE_TYPE_CPU;
+        dType = CL_DEVICE_TYPE_GPU;
         if(sampleArgs->isThereGPU() == false)
         {
             std::cout << "GPU not found. Falling back to CPU" << std::endl;
-            dType = CL_DEVICE_TYPE_CPU;
+            dType = CL_DEVICE_TYPE_GPU;
         }
     }
     cl_platform_id platform = NULL;

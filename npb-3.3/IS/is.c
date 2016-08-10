@@ -423,8 +423,8 @@ void rank( int iteration )
   ecode = CECL_SET_KERNEL_ARG(k_rank0, 3, sizeof(cl_int), (void*)&iteration);
   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for rank0: iteration");
 
-  ecode = clEnqueueTask(cmd_queue, k_rank0, 0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueTask() for rank0");
+  ecode = CECL_TASK(cmd_queue, k_rank0, 0, NULL, NULL);
+  clu_CheckError(ecode, "CECL_TASK() for rank0");
   CHECK_FINISH();
   DTIMER_STOP(T_KERNEL_RANK0);
 
@@ -509,8 +509,8 @@ void rank( int iteration )
   ecode = CECL_SET_KERNEL_ARG(k_rank4, 4, sizeof(cl_int), (void*)&iteration);
   clu_CheckError(ecode, "CECL_SET_KERNEL_ARG() for rank4");
 
-  ecode = clEnqueueTask(cmd_queue, k_rank4, 0, NULL, NULL);
-  clu_CheckError(ecode, "clEnqueueTask() for rank4");
+  ecode = CECL_TASK(cmd_queue, k_rank4, 0, NULL, NULL);
+  clu_CheckError(ecode, "CECL_TASK() for rank4");
 
   ecode = clFinish(cmd_queue);
   clu_CheckError(ecode, "clFinish");

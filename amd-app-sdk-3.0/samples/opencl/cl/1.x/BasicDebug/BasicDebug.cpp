@@ -94,14 +94,14 @@ int main(int argc, char* argv[])
 
 	/* Query the context and get the available devices */
 	cl_uint numDevice=0;
-	status=clGetDeviceIDs(platform,CL_DEVICE_TYPE_CPU,0,NULL,&numDevice);
+	status=clGetDeviceIDs(platform,CL_DEVICE_TYPE_GPU,0,NULL,&numDevice);
 	cl_device_id *devices=(cl_device_id*)malloc(numDevice*sizeof(cl_device_id));
 	if (devices == 0) 
 	{
         std::cout << "No device available\n";
         return FAILURE;
     }
-	clGetDeviceIDs(platform,CL_DEVICE_TYPE_CPU,numDevice,devices,NULL);
+	clGetDeviceIDs(platform,CL_DEVICE_TYPE_GPU,numDevice,devices,NULL);
 
 	/* Create Context using the platform selected above */   
 	cl_context context=clCreateContext(NULL,numDevice,devices,NULL,NULL,NULL);

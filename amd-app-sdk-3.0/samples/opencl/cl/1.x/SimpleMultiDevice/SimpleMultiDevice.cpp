@@ -384,7 +384,7 @@ int runMultiGPU()
               sep << std::endl;
 
     cl_context context = clCreateContextFromType(cprops,
-                         CL_DEVICE_TYPE_CPU,
+                         CL_DEVICE_TYPE_GPU,
                          0,
                          0,
                          &status);
@@ -1312,7 +1312,7 @@ initializeCL(void)
 
     // Get Number of CPU devices available
     status = clGetDeviceIDs(platform,
-                            CL_DEVICE_TYPE_CPU,
+                            CL_DEVICE_TYPE_GPU,
                             0,
                             0,
                             (cl_uint*)&numCPUDevices);
@@ -1320,7 +1320,7 @@ initializeCL(void)
 
     // Get Number of CPU devices available
     status = clGetDeviceIDs(platform,
-                            CL_DEVICE_TYPE_CPU,
+                            CL_DEVICE_TYPE_GPU,
                             0,
                             0,
                             (cl_uint*)&numDevices);
@@ -1339,13 +1339,13 @@ initializeCL(void)
     cpu = new Device[numCPUDevices];
     //Get CPU Device IDs
     cl_device_id* cpuDeviceIDs = new cl_device_id[numCPUDevices];
-    status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, numCPUDevices,
+    status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, numCPUDevices,
                             cpuDeviceIDs, 0);
     CHECK_OPENCL_ERROR(status, "clGetDeviceIDs failed.");
 
     for(int i = 0; i < numCPUDevices; i++)
     {
-        cpu[i].dType = CL_DEVICE_TYPE_CPU;
+        cpu[i].dType = CL_DEVICE_TYPE_GPU;
         cpu[i].deviceId = cpuDeviceIDs[i];
     }
 
@@ -1354,13 +1354,13 @@ initializeCL(void)
     gpu = new Device[numGPUDevices];
     //Get GPU Device IDs
     cl_device_id* gpuDeviceIDs = new cl_device_id[numGPUDevices];
-    status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, numGPUDevices,
+    status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, numGPUDevices,
                             gpuDeviceIDs, 0);
     CHECK_OPENCL_ERROR(status, "clGetDeviceIDs failed.");
 
     for(int i = 0; i < numGPUDevices; i++)
     {
-        gpu[i].dType = CL_DEVICE_TYPE_CPU;
+        gpu[i].dType = CL_DEVICE_TYPE_GPU;
         gpu[i].deviceId = gpuDeviceIDs[i];
     }
 

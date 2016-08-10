@@ -86,19 +86,19 @@ int main(int argc, char* argv[])
 	/*Step 2:Query the platform and choose the first GPU device if has one.Otherwise use the CPU as device.*/
 	cl_uint				numDevices = 0;
 	cl_device_id        *devices;
-	status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, 0, NULL, &numDevices);	
+	status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 0, NULL, &numDevices);	
 	if (numDevices == 0)	//no GPU available.
 	{
 		cout << "No GPU device available." << endl;
 		cout << "Choose CPU as default device." << endl;
-		status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, 0, NULL, &numDevices);	
+		status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 0, NULL, &numDevices);	
 		devices = (cl_device_id*)malloc(numDevices * sizeof(cl_device_id));
-		status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, numDevices, devices, NULL);
+		status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, numDevices, devices, NULL);
 	}
 	else
 	{
 		devices = (cl_device_id*)malloc(numDevices * sizeof(cl_device_id));
-		status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, numDevices, devices, NULL);
+		status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, numDevices, devices, NULL);
 	}
 	
 

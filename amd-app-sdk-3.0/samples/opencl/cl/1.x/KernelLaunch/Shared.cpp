@@ -153,8 +153,8 @@ void initCL( char *kernel_file )
     cl_uint          num_devices;
     cl_int           ret;
 
-    cl_device_type   devs[] = { CL_DEVICE_TYPE_CPU,
-                                CL_DEVICE_TYPE_CPU };
+    cl_device_type   devs[] = { CL_DEVICE_TYPE_GPU,
+                                CL_DEVICE_TYPE_GPU };
 
     cl_uint numPlatforms;
     cl_int status = clGetPlatformIDs(0, NULL, &numPlatforms);

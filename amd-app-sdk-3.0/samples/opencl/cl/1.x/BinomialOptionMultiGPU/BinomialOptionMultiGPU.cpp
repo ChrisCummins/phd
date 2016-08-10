@@ -80,20 +80,20 @@ BinomialOptionMultiGPU::setupCL()
 
     if(sampleArgs->deviceType.compare("cpu") == 0)
     {
-        dType = CL_DEVICE_TYPE_CPU;
+        dType = CL_DEVICE_TYPE_GPU;
     }
     else //deviceType = "gpu"
     {
-        dType = CL_DEVICE_TYPE_CPU;
+        dType = CL_DEVICE_TYPE_GPU;
         if(sampleArgs->isThereGPU() == false)
         {
             std::cout << "GPU not found. Falling back to CPU device" << std::endl;
-            dType = CL_DEVICE_TYPE_CPU;
+            dType = CL_DEVICE_TYPE_GPU;
         }
     }
 
     //If -d option is enabled or if device is CPU, make noMultiGPUSupport to true
-    if(sampleArgs->isDeviceIdEnabled() || (dType == CL_DEVICE_TYPE_CPU))
+    if(sampleArgs->isDeviceIdEnabled() || (dType == CL_DEVICE_TYPE_GPU))
     {
         noMultiGPUSupport =true;
     }
@@ -111,11 +111,11 @@ BinomialOptionMultiGPU::setupCL()
     retValue = displayDevices(platform, dType);
     CHECK_ERROR(retValue, SDK_SUCCESS, "displayDevices() failed");
 
-    if(dType == CL_DEVICE_TYPE_CPU)
+    if(dType == CL_DEVICE_TYPE_GPU)
     {
         //Get Number of devices available
         status = clGetDeviceIDs(platform,
-                                CL_DEVICE_TYPE_CPU,
+                                CL_DEVICE_TYPE_GPU,
                                 0,
                                 0,
                                 (cl_uint*)&numGPUDevices);
@@ -127,7 +127,7 @@ BinomialOptionMultiGPU::setupCL()
         CHECK_ALLOCATION(gpuDeviceIDs, "Allocation failed(gpuDeviceIDs)");
 
         status = clGetDeviceIDs(platform,
-                                CL_DEVICE_TYPE_CPU,
+                                CL_DEVICE_TYPE_GPU,
                                 numGPUDevices,
                                 gpuDeviceIDs,
                                 0);

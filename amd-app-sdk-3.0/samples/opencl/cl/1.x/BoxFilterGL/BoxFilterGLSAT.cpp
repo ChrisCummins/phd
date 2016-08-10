@@ -221,15 +221,15 @@ BoxFilterGLSAT::setupCL()
 
     if(sampleArgs->deviceType.compare("cpu") == 0)
     {
-        dType = CL_DEVICE_TYPE_CPU;
+        dType = CL_DEVICE_TYPE_GPU;
     }
     else //sampleArgs->deviceType = "gpu"
     {
-        dType = CL_DEVICE_TYPE_CPU;
+        dType = CL_DEVICE_TYPE_GPU;
         if(sampleArgs->isThereGPU() == false)
         {
             std::cout << "GPU not found. Falling back to CPU device" << std::endl;
-            dType = CL_DEVICE_TYPE_CPU;
+            dType = CL_DEVICE_TYPE_GPU;
         }
     }
 
@@ -286,7 +286,7 @@ BoxFilterGLSAT::setupCL()
                               NULL);
     CHECK_OPENCL_ERROR(status, "clGetGetContextInfo failed.");
 
-    if (dType == CL_DEVICE_TYPE_CPU)
+    if (dType == CL_DEVICE_TYPE_GPU)
     {
         interopDeviceId = devices[sampleArgs->deviceId];
     }
@@ -719,7 +719,7 @@ BoxFilterGLSAT::enableGLAndGetGLContext(HWND hWnd, HDC &hDC, HGLRC &hRC,
     {
         context = clCreateContextFromType(
                       properties,
-                      CL_DEVICE_TYPE_CPU,
+                      CL_DEVICE_TYPE_GPU,
                       NULL,
                       NULL,
                       &status);
@@ -1830,7 +1830,7 @@ int BoxFilterGLSAT::initializeGLAndGetCLContext(cl_platform_id platform,
     else
     {
         context = clCreateContextFromType(cpsGL,
-                                          CL_DEVICE_TYPE_CPU,
+                                          CL_DEVICE_TYPE_GPU,
                                           NULL,
                                           NULL,
                                           &status);

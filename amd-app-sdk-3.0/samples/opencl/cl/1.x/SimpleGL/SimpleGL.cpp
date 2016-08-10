@@ -387,7 +387,7 @@ SimpleGLSample::enableGLAndGetGLContext(HWND hWnd, HDC &hDC, HGLRC &hRC,
     {
         context = clCreateContextFromType(
                       properties,
-                      CL_DEVICE_TYPE_CPU,
+                      CL_DEVICE_TYPE_GPU,
                       NULL,
                       NULL,
                       &status);
@@ -612,7 +612,7 @@ int SimpleGLSample::initializeGLAndGetCLContext(cl_platform_id platform,
     else
     {
         context = clCreateContextFromType(cpsGL,
-                                          CL_DEVICE_TYPE_CPU,
+                                          CL_DEVICE_TYPE_GPU,
                                           NULL,
                                           NULL,
                                           &status);
@@ -653,15 +653,15 @@ SimpleGLSample::setupCL()
     cl_device_type dType;
     if(sampleArgs->deviceType.compare("cpu") == 0)
     {
-        dType = CL_DEVICE_TYPE_CPU;
+        dType = CL_DEVICE_TYPE_GPU;
     }
     else //deviceType = "gpu"
     {
-        dType = CL_DEVICE_TYPE_CPU;
+        dType = CL_DEVICE_TYPE_GPU;
         if(sampleArgs->isThereGPU() == false)
         {
             std::cout << "GPU not found. Falling back to CPU device" << std::endl;
-            dType = CL_DEVICE_TYPE_CPU;
+            dType = CL_DEVICE_TYPE_GPU;
         }
     }
 
@@ -694,7 +694,7 @@ SimpleGLSample::setupCL()
         return retValue;
     }
 #endif
-    if (dType == CL_DEVICE_TYPE_CPU)
+    if (dType == CL_DEVICE_TYPE_GPU)
     {
         // getting device on which to run the sample
         status = getDevices(context, &devices, sampleArgs->deviceId,

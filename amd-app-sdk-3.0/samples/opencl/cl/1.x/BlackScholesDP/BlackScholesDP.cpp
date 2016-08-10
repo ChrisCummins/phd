@@ -177,15 +177,15 @@ BlackScholesDP::setupCL(void)
 
     if(sampleArgs->deviceType.compare("cpu") == 0)
     {
-        dType = CL_DEVICE_TYPE_CPU;
+        dType = CL_DEVICE_TYPE_GPU;
     }
     else //deviceType = "gpu"
     {
-        dType = CL_DEVICE_TYPE_CPU;
+        dType = CL_DEVICE_TYPE_GPU;
         if(sampleArgs->isThereGPU() == false)
         {
             std::cout << "GPU not found. Falling back to CPU device" << std::endl;
-            dType = CL_DEVICE_TYPE_CPU;
+            dType = CL_DEVICE_TYPE_GPU;
         }
     }
 
@@ -262,7 +262,7 @@ BlackScholesDP::setupCL(void)
     size_t vStart = deviceVersionStr.find_last_of("v");
     size_t vEnd = deviceVersionStr.find(" ", vStart);
     std::string vStrVal = deviceVersionStr.substr(vStart + 1, vEnd - vStart - 1);
-    if(vStrVal.compare("2.2") <= 0 && dType == CL_DEVICE_TYPE_CPU)
+    if(vStrVal.compare("2.2") <= 0 && dType == CL_DEVICE_TYPE_GPU)
     {
         OPENCL_EXPECTED_ERROR("Few double math functions are not supported in SDK2.2 or less!");
     }
@@ -271,7 +271,7 @@ BlackScholesDP::setupCL(void)
     vStart = deviceVersionStr.find(" ", 0);
     vEnd = deviceVersionStr.find(" ", vStart + 1);
     vStrVal = deviceVersionStr.substr(vStart + 1, vEnd - vStart - 1);
-    if(vStrVal.compare("1.0") <= 0 && dType == CL_DEVICE_TYPE_CPU)
+    if(vStrVal.compare("1.0") <= 0 && dType == CL_DEVICE_TYPE_GPU)
     {
         OPENCL_EXPECTED_ERROR("Unsupported device!");
     }

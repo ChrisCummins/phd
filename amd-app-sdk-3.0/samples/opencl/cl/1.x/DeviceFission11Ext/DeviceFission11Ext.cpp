@@ -63,12 +63,12 @@ DeviceFission::setupCLPlatform()
 
     if(sampleArgs->deviceType.compare("cpu") == 0)
     {
-        dType = CL_DEVICE_TYPE_CPU;
+        dType = CL_DEVICE_TYPE_GPU;
     }
     else //sampleArgs->deviceType = "gpu"
     {
         std::cout << "Not supported on GPU. Falling back to CPU device" << std::endl;
-        dType = CL_DEVICE_TYPE_CPU;
+        dType = CL_DEVICE_TYPE_GPU;
         sampleArgs->deviceId = 0;
     }
 
