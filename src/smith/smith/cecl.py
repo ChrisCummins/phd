@@ -53,6 +53,20 @@ def parse_cecl_log(log):
     return lines
 
 
+class Kernel(object):
+    def __init__(self, source):
+        self._source = source
+        self._args = []
+        self._transfers = []
+        self._invocations = []
+
+    def __repr__(self):
+        return repr(self._source)
+
+    def __str__(self):
+        return str(self._source)
+
+
 def get_kernels(parsed):
     compiled_k = {}     # maps function names to implementations
     enqueued_k = set()  # store all functions which actually get executed
@@ -97,17 +111,30 @@ def get_transfers(parsed):
         if (line[0] == 'clEnqueueReadBuffer' or
             line[0] == 'clEnqueueWriteBuffer'):
             buf, size, elapsed = line[1:]
-            transfers[buf].append((size, elapsed))
+            transfers[buf].append((int(size), float(elapsed)))
 
     return transfers
+
+
+def get_kernel_args(parsed, kernels):
+    kernel_args = defaultdict(list)
+
+    for line in parsed:
+        if line[0] == "clSetKernelArg":
+            kernel_name, index, size, name = line[1:]
+            kernel_args[kernel_name].append(name)
+
+    if len(kernel_args.keys()) != len(kernels):
+        print("error: arguments for {} kernels, but there are {} kernels"
+              .format(len(kernel_args.keys()), len(kernels)))
+    return kernel_args
 
 
 def path_to_benchmark_and_dataset(path):
     basename = fs.basename(path)
     if basename.startswith("npb-"):
-        return (
-            re.sub(r"(npb-3\.3-[A-Z]+)\.[A-Z]+\.[cg]pu\.out", r"\1", basename),
-            re.sub(r"npb-3\.3-[A-Z]+\.([A-Z]+)\.[cg]pu\.out", r"\1", basename))
+        m = re.match(r"(npb-3\.3-[A-Z]+)\.([A-Z]+)\.[cg]pu\.out", basename)
+        return (m.group(1), m.group(2))
     elif basename.startswith("nvidia-"):
         return (
             re.sub(r"(nvidia-4\.2-)ocl([a-zA-Z]+)", r"\1\2", basename),
@@ -127,6 +154,7 @@ def process_cecl_log(log):
 
     kernels = get_kernels(parsed)
     transfers = get_transfers(parsed)
+    kernel_args = get_kernel_args(parsed, kernels)
 
     for transfer in transfers.keys():
         print('-'.join((benchmark, dataset)), transfer,
@@ -153,11 +181,11 @@ def dir2features(logdir, out=sys.stdout, metaout=sys.stderr):
     runs = fs.ls(logdir, abspaths=True)
     devices = fs.ls(runs[0])
     logs = [x for x in fs.ls(logdir, abspaths=True, recursive=True)
-             if fs.isfile(x)]
+            if fs.isfile(x)]
 
     print("summarising", len(logs), "logs:", file=metaout)
     print("   # runs:", len(runs), file=metaout)
     print("   # devices:", len(devices), file=metaout)
 
-    for path in logs:
+    for path in logs[:25]:
         process_cecl_log(path)
