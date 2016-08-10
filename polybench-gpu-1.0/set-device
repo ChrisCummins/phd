@@ -17,7 +17,7 @@ if [[ $device != "GPU" ]] && [[ $device != "CPU" ]]; then
     usage_and_fail
 fi
 
-for f in $(find OpenCL/ -name '*.o' -type f); do
+for f in $(find OpenCL/ -type f); do
     grep CL_DEVICE_TYPE $f &>/dev/null && {
         sed -E -i 's/CL_DEVICE_TYPE_[A-Z]+/CL_DEVICE_TYPE_'$device'/g' $f
         echo modified $f ...
