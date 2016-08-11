@@ -38,7 +38,6 @@ def assert_device_type(expected, actual):
 class KernelInvocation(object):
     def __init__(self, name, global_size, local_size, runtime,
                  transfer=None, dataset=None):
-        # These are figured out later
         self.name = name
         self.dataset = dataset
         self.transfer = transfer
@@ -49,7 +48,7 @@ class KernelInvocation(object):
 
 def kernel_invocations_from_cecl_log(log, devtype=None):
     """
-    Interpret and parse the output of a libcecl instrument kernel.
+    Interpret and parse the output of a libcecl instrumented application.
 
     Return: list of Kernel Invocation objects.
     """
@@ -133,69 +132,6 @@ class Kernel(object):
 
     def __str__(self):
         return str(self._source)
-
-
-def get_kernels(parsed):
-    compiled_k = {}     # maps function names to implementations
-    enqueued_k = set()  # store all functions which actually get executed
-
-    for line in parsed:
-        if line[0] == 'clCreateProgramWithSource':
-            for function_name,source in six.iteritems(line[1]):
-                compiled_k[function_name] = source
-        elif line[0] == 'clEnqueueNDRangeKernel':
-            function_name = line[1]
-            enqueued_k.add(function_name)
-        elif line[0] == 'clEnqueueTask':
-            function_name = line[1]
-            print("TASK", function_name)
-            enqueued_k.add(function_name)
-
-    # Check that we have source code for all enqueued kernels.
-    undefined = []
-    for kernel in enqueued_k:
-        if kernel not in compiled_k:
-            undefined.append(kernel)
-    if len(undefined):
-        print("undefined kernels:",
-              ", ".join("'{}'".format(x) for x in undefined), file=sys.stderr)
-
-    # Remove any kernels which are not used in the source code.
-    # unused = []
-    for key in list(compiled_k.keys()):
-        if key not in enqueued_k:
-            # unused.append(key)
-            compiled_k.pop(key)
-    # if len(unused):
-    #     print("unused kernels:", ', '.join("'{}'".format(x) for x in unused))
-
-    return compiled_k
-
-
-def get_transfers(parsed):
-    transfers = defaultdict(list) # maps buffer names to (size,elapsed) tuples
-
-    for line in parsed:
-        if (line[0] == 'clEnqueueReadBuffer' or
-            line[0] == 'clEnqueueWriteBuffer'):
-            buf, size, elapsed = line[1:]
-            transfers[buf].append((int(size), float(elapsed)))
-
-    return transfers
-
-
-def get_kernel_args(parsed, kernels):
-    kernel_args = defaultdict(list)
-
-    for line in parsed:
-        if line[0] == "clSetKernelArg":
-            kernel_name, index, size, name = line[1:]
-            # Only record the kernel argument if it is actually
-            # enqueued.
-            if kernel_name in kernels:
-                kernel_args[kernel_name].append(name)
-
-    return kernel_args
 
 
 def path_to_benchmark_and_dataset(path):
@@ -319,6 +255,7 @@ def device_to_device_type(devname):
 def _log_worker(job):
     return kernel_invocations_from_cecl_log(
         job["path"], devtype=job["devtype"])
+
 
 def _log_reducer(job):
     kernel_invocations = job["kernel_invocations"]
