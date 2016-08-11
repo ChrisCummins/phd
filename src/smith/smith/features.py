@@ -33,7 +33,7 @@ def is_good_features(line, stderr):
     return False
 
 
-def features(path, file=sys.stdout):
+def features(path, file=sys.stdout, fatal_errors=False):
     features_bin = os.path.expanduser('~/phd/src/smith/native/features')
     ld_path = os.path.expanduser('~/phd/tools/llvm/build/lib/')
 
@@ -47,8 +47,11 @@ def features(path, file=sys.stdout):
     data = [line.split(',') for line in stdout.split('\n')]
 
     if stderr:
-        print("=== COMPILER OUTPUT FOR", path)
+        print("=== COMPILER OUTPUT FOR", path, file=sys.stderr)
         print(stderr, file=sys.stderr)
+        if fatal_errors:
+            sys.exit(1)
+
 
     if process.returncode != 0:
         print("error: '{}'".format(path), file=sys.stderr)
@@ -72,12 +75,12 @@ def feature_headers(file=sys.stdout):
     print(stdout, file=file)
 
 
-def files(paths, file=sys.stdout):
+def files(paths, file=sys.stdout, **kwargs):
     npaths = len(paths)
 
     feature_headers(file=file)
     for path in paths:
-        features(path, file=file)
+        features(path, file=file, **kwargs)
 
 
 def summarize(csv_path):

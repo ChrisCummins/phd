@@ -21,6 +21,8 @@ def main():
                         help='treat inputs as directories')
     parser.add_argument('-s', '--stats', action='store_true',
                         help='summarize a features files')
+    parser.add_argument('-e', '--fatal-errors', action='store_true',
+                        help="quit on compiler error")
     args = parser.parse_args()
 
     inputs = args.inputs
@@ -40,7 +42,7 @@ def main():
         paths = [item for sublist in trees for item in sublist]
     else:
         paths = [fs.path(f) for f in inputs]
-    features.files(paths)
+    features.files(paths, fatal_errors=args.fatal_errors)
 
 
 if __name__ == '__main__':
