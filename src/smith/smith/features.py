@@ -46,8 +46,12 @@ def features(path, file=sys.stdout):
 
     data = [line.split(',') for line in stdout.split('\n')]
 
-    if not len(data[0]):
-        # Bad output, did it crash?
+    if stderr:
+        print("=== COMPILER OUTPUT FOR", path)
+        print(stderr, file=sys.stderr)
+
+    if process.returncode != 0:
+        print("error: '{}'".format(path), file=sys.stderr)
         return
 
     for line in data[1:]:
