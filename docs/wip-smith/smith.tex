@@ -560,23 +560,37 @@ typedef unsigned int INDEX_TYPE;
 
 \subsection{Machine Learning Model}
 
-We use the Long Short-Term Memory (LSTM)~\cite{Hochreiter1997}
-architecture of Recurrent Neural Network
-(RNN)~\cite{Mikolov2015}. LSTMs are proving to be a powerful learning
-tool with applications from speech recognition to image
-captioning. LSTMs for language modeling~\cite{Sundermeyer2012}. No
-features.
+We use the Long Short-Term Memory (LSTM~\cite{Hochreiter1997})
+architecture of Recurrent Neural Network~\cite{Mikolov2015}. LSTMs are
+proving to be a powerful learning tool with applications from speech
+recognition to image captioning. LSTMs for language
+modeling~\cite{Sundermeyer2012}. No features. LSTM
+implementation\footnote{\url{https://github.com/jcjohnson/torch-rnn}}.
 
-LSTM
-implementation\footnote{\url{https://github.com/jcjohnson/torch-rnn}}. LSTM
-network: 2048 nodes, 3 layers, sequence length 50, batch size 50, no
-dropout, 33 million parameters%
-% FIXME: Verify the input size and re-compute # parameters: http://stackoverflow.com/questions/38080035/how-to-calculate-the-number-of-parameters-of-an-lstm-network
-. Trained for 100 epochs using an initial learning rate of
-0.002, decaying by a factor of a half every 5 epochs. Around 10 days
-training on an NVIDIA GTX Titan.
+%
+% $ python scripts/preprocess.py --input_txt data/github.txt --output_h5 data/deleteme.h5 --output_json data/deleteme.json
+% Total vocabulary size: 94  # input_size
+% Total tokens in file: 33057927  # 33 million tokens
+%  Training size: 26446343  # training / validation / test split
+%  Val size: 3305792
+%  Test size: 3305792
+% Using dtype  <type 'numpy.uint8'>
+%
+% FIXME: Verify the input size and re-compute # parameters:
+% http://stackoverflow.com/questions/38080035/how-to-calculate-the-number-of-parameters-of-an-lstm-network
+%
+% params = 4 * ((size_of_input + 1) * size_of_output + size_of_output^2)
+%
+%   size_of_input = 94
+%   size_of_output = 2048
+Our LSTM model has 17 million parameters, from a network of 3 layers
+of 2048 nodes. We trained the model using backpropagation through time
+gradient-descent for 50 epochs, using an initial learning rate of
+0.002 and decaying by a factor of a half every 5 epochs. Training took
+two weeks on a single machine using an Nvidia GTX Titan.
 
-Vocabulary size XXX. Training set XXX. Learned model XXX MB.
+Vocabulary size 96. Training size 33 million tokens. Learned model 648
+MB.
 
 
 \section{Sampling Implementation Space}\label{sec:}
