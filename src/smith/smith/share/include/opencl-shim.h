@@ -1,4 +1,5 @@
 // Enable OpenCL features and implementation.
+#ifndef SMITH_FEATURES
 #define cl_clang_storage_class_specifiers
 #define cl_khr_fp64
 #include <clc/clc.h>
@@ -11,6 +12,7 @@
 #define __FAST_RELAXED_MATH__
 #define __IMAGE_SUPPORT__
 #define __OPENCL_VERSION__ 1
+#endif  /* SMITH_FEATURES */
 
 // Unsupported OpenCL storage classes and qualifiers.
 #define static
@@ -29,7 +31,7 @@ typedef float inType;
 typedef float outType;
 typedef float real;
 typedef float REAL;
-typedef float T;
+/* typedef float T; */
 typedef float Ty;
 typedef float TyOut;
 typedef float TYPE;
@@ -164,6 +166,7 @@ typedef unsigned int uint32_t;
 #define PADDINGX 4
 #define PADDINGY 2
 #define PI 3.14
+#define PRESCAN_THREADS 128  /* Used in parboil-0.2 histo */
 #define PULSELOCALOFFSET 8
 #define PULSEOFF 16
 #define QPEX 1
@@ -196,6 +199,8 @@ typedef unsigned int uint32_t;
 #define TDIR 1
 #define THREADBUNCH 32
 #define THREADS 2048
+#define THREADS_H 16
+#define THREADS_W 128
 #define THREADS_X 128
 #define THREADS_Y 16
 #define THRESHOLD 0.5
