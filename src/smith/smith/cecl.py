@@ -340,4 +340,5 @@ def dir2features(logdir, out=sys.stdout, metaout=sys.stderr):
             shuffle(jobs)
             kernel_invocations = pool.map(_log_reducer, jobs)
 
-            dump_csv(fs.path(logdir, device + ".csv"), kernel_invocations)
+            dump_csv(fs.path(logdir, device + "-dynamic.csv"),
+                     kernel_invocations)
