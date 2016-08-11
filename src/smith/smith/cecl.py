@@ -6,7 +6,6 @@
 #
 from __future__ import division,absolute_import,print_function,unicode_literals
 
-import editdistance
 import os
 import re
 import six
@@ -19,6 +18,7 @@ from random import shuffle
 
 import labm8
 from labm8 import fs
+from labm8 import math as labmath
 
 import smith
 from smith import clutil
@@ -35,39 +35,90 @@ def assert_device_type(expected, actual):
                            .format(expected, actual))
 
 
-def parse_cecl_log(log, devtype=None):
+class KernelInvocation(object):
+    def __init__(self, name, global_size, local_size, runtime,
+                 transfer=None, dataset=None):
+        # These are figured out later
+        self.name = name
+        self.dataset = dataset
+        self.transfer = transfer
+        self.global_size = global_size
+        self.local_size = local_size
+        self.runtime = runtime
+
+
+def kernel_invocations_from_cecl_log(log, devtype=None):
     """
     Interpret and parse the output of a libcecl instrument kernel.
-    """
-    lines = []
 
-    insrc = False
-    srcbuf = ''
+    Return: list of Kernel Invocation objects.
+    """
+    kernel_invocations = []
+    transferred_bytes = 0
+    transfer_time = 0
+    function_prefix, dataset = path_to_benchmark_and_dataset(log)
+    function_prefix += "-"
+
     with open(log) as infile:
         contents = infile.read()
 
+    # Iterate over each line in the log.
     for line in contents.split('\n'):
-        if line.strip() == 'BEGIN PROGRAM SOURCE':
-            insrc = True
-        elif line.strip() == 'END PROGRAM SOURCE':
-            insrc = False
-            kernels = [clutil.strip_attributes(x)
-                       for x in clutil.get_cl_kernels(srcbuf)]
-            names = [x.split()[2].split('(')[0] for x in kernels]
-            lines[-1].append(dict(zip(names, kernels)))
-            srcbuf = ''
-        elif insrc:
-            srcbuf += line + "\n"
+        # Split line based on ; delimiter into opcode and operands.
+        line = line.strip()
+        components = [x.strip() for x in line.split(';')]
+        opcode, operands = components[0], components[1:]
+
+        # Skip empty lines:
+        if not opcode:
+            continue
+
+        if devtype and opcode == "clCreateCommandQueue":
+            assert_device_type(devtype, operands[0])
+        elif opcode == "clEnqueueNDRangeKernel":
+            function_name, global_size, local_size, elapsed = operands
+            global_size = int(global_size)
+            local_size = int(local_size)
+            elapsed = float(elapsed)
+            ki = KernelInvocation(function_prefix + function_name, global_size,
+                                  local_size, elapsed, dataset=dataset)
+            kernel_invocations.append(ki)
+        elif opcode == "clEnqueueTask":
+            function_name, elapsed = operands
+            elapsed = float(elapsed)
+            ki = KernelInvocation(function_prefix + function_name,
+                                  1, 1, elapsed, dataset=dataset)
+            kernel_invocations.append(ki)
+        elif opcode == "clCreateBuffer":
+            size, host_ptr, flags = operands
+            size = int(size)
+            flags = flags.split("|")
+            if "CL_MEM_COPY_HOST_PTR" in flags:
+                if "CL_MEM_READ_ONLY" in flags:
+                    # host -> device
+                    transferred_bytes += size
+                else:
+                    # device <-> host
+                    transferred_bytes += size * 2
+            else:
+                # device -> host
+                transferred_bytes += size
+        elif (opcode == "clEnqueueReadBuffer" or
+              opcode == "clEnqueueWriteBuffer" or
+              opcode == "clEnqueueMapBuffer"):
+            destination, size, elapsed = operands
+            elapsed = float(elapsed)
+            transfer_time += elapsed
         else:
-            components = [x.strip() for x in line.split(';')]
-            if devtype and components[0] == "clCreateCommandQueue":
-                try:
-                    assert_device_type(devtype, components[1])
-                except LogException as e:
-                    raiseLogException(log + ": " + str(e))
-            elif components[0]:
-                lines.append(components)
-    return lines
+            # Not a line that we're interested in.
+            pass
+
+    # Before returning list
+    for ki in kernel_invocations:
+        ki.transfer = transferred_bytes
+        ki.runtime += transfer_time
+
+    return kernel_invocations
 
 
 class Kernel(object):
@@ -165,18 +216,18 @@ def path_to_benchmark_and_dataset(path):
 
 def process_cecl_log(log, devtype=None):
     benchmark, dataset = path_to_benchmark_and_dataset(log)
-    parsed = parse_cecl_log(log, devtype=devtype)
+    kernel_invocations = parse_cecl_log(log, devtype=devtype)
 
-    kernels = get_kernels(parsed)
-    transfers = get_transfers(parsed)
-    kernel_args = get_kernel_args(parsed, kernels)
-
-    # for transfer in transfers.keys():
-    #     print('-'.join((benchmark, dataset)), transfer,
-    #           len(transfers[transfer]))
-
-    # for kernel in kernels.keys():
-    #     print('-'.join((benchmark, dataset, kernel)))
+    for ki in kernel_invocations:
+        name = benchmark + "-" + ki.name
+        print(
+            name,
+            dataset,
+            ki.transfer,
+            ki.global_size,
+            ki.local_size,
+            ki.runtime,
+            sep=",")
 
 
 def log2features(log, out=sys.stdout, metaout=sys.stderr):
@@ -194,7 +245,7 @@ def get_device_logs(logdir):
     { <device>: [<logs ...>] }
     """
     devlogs = defaultdict(list)
-    rundirs = fs.ls(logdir, abspaths=True)
+    rundirs = [x for x in fs.ls(logdir, abspaths=True) if fs.isdir(x)]
     devices = [fs.basename(x) for x in fs.ls(rundirs[0])]
 
     for rundir,device in product(rundirs, devices):
@@ -203,8 +254,9 @@ def get_device_logs(logdir):
              if fs.isfile(x)])
 
     # The number of files in the logdir:
-    nfiles = len([x for x in fs.ls(logdir, abspaths=True, recursive=True)
-                  if fs.isfile(x)])
+    nfiles = (len([x for x in fs.ls(logdir, abspaths=True, recursive=True)
+                   if fs.isfile(x)]) -
+              len([x for x in fs.ls(logdir, abspaths=True) if fs.isfile(x)]))
     # The number of logs found:
     nlogs = sum([len(x) for x in devlogs.values()])
 
@@ -242,11 +294,12 @@ def get_device_logs(logdir):
                            if fs.basename(x) in common]
     nlogs = sum([len(x) for x in devlogs.values()])
 
-    print("Common subset:")
+    print("common subset:")
     print("    # files:", nlogs, "({:.1f}%)".format((nlogs / nfiles) * 100))
     print("    # common:", len(common))
     print("    # devices:", len(devices), "({})".format(
         ", ".join(["{}: {}".format(x, len(devlogs[x])) for x in devlogs])))
+    print()
 
     return devlogs
 
@@ -263,8 +316,50 @@ def device_to_device_type(devname):
     return d
 
 
-def dir2features_worker(job):
-    process_cecl_log(job["path"], devtype=job["devtype"])
+def _log_worker(job):
+    return kernel_invocations_from_cecl_log(
+        job["path"], devtype=job["devtype"])
+
+def _log_reducer(job):
+    kernel_invocations = job["kernel_invocations"]
+    mean_runtime = labmath.mean([ki.runtime for ki in kernel_invocations])
+
+    avg = KernelInvocation(
+        kernel_invocations[0].name,
+        round(labmath.mean([ki.global_size for ki in kernel_invocations])),
+        round(labmath.mean([ki.local_size for ki in kernel_invocations])),
+        mean_runtime,
+        transfer=round(labmath.mean([ki.transfer for ki in kernel_invocations])),
+        dataset=kernel_invocations[0].dataset)
+    avg.n = len(kernel_invocations)
+    avg.ci = labmath.confinterval([ki.runtime for ki in kernel_invocations],
+                                  array_mean=mean_runtime)[1] - mean_runtime
+    return avg
+
+
+def dump_csv(path, kernel_invocations):
+    print("writing '{}'".format(path))
+    with open(path, "w") as outfile:
+        print(
+            "benchmark",
+            "dataset",
+            "n",
+            "transfer",
+            "global_size",
+            "local_size",
+            "runtime",
+            "ci",
+            sep=",", file=outfile)
+        for ki in kernel_invocations:
+            print(ki.name,
+                  ki.dataset,
+                  ki.n,
+                  ki.transfer,
+                  ki.global_size,
+                  ki.local_size,
+                  "{:.6f}".format(ki.runtime),
+                  "{:.6f}".format(ki.ci),
+                  sep=",", file=outfile)
 
 
 def dir2features(logdir, out=sys.stdout, metaout=sys.stderr):
@@ -280,21 +375,32 @@ def dir2features(logdir, out=sys.stdout, metaout=sys.stderr):
     devices = fs.ls(runs[0])
     devlogs = get_device_logs(logdir)
     nlogs = sum([len(x) for x in devlogs.values()])
+    num_workers = round(cpu_count() * 1.5)
 
     # Build a job list. Pack all the data required to complete a job
     # into a single object so that a worker thread can operator on it.
-    jobs = []
     for device in devlogs:
         devtype = device_to_device_type(device)
-        for path in devlogs[device]:
-            jobs.append({"path": path, "devtype": devtype})
-    shuffle(jobs)
 
-    # FIXME: Test on a short number of jobs:
-    jobs = jobs[:50]
+        jobs = [{"path": path, "device": device, "devtype": devtype}
+                for path in devlogs[device]]
+        print("spawning", num_workers, "worker threads to process",
+              len(jobs), "jobs for", device, "...")
 
-    num_workers = round(cpu_count() * 1.5)
-    with Pool(num_workers) as pool:
-        print('\nspawning', num_workers, 'worker threads to process',
-              len(jobs), 'jobs ...')
-        pool.map(dir2features_worker, jobs)
+        shuffle(jobs)
+        with Pool(num_workers) as pool:
+            results = pool.map(_log_worker, jobs)
+
+            # flatten kernel invocations across files
+            kernel_invocations = [item for sublist in results for item in sublist]
+
+            r = defaultdict(list)
+            for ki in kernel_invocations:
+                key = ki.name + ki.dataset
+                r[key].append(ki)
+
+            jobs = [{"kernel_invocations": r[key]} for key in r.keys()]
+            shuffle(jobs)
+            kernel_invocations = pool.map(_log_reducer, jobs)
+
+            dump_csv(fs.path(logdir, device + ".csv"), kernel_invocations)
