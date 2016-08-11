@@ -16,4 +16,6 @@
 
 * **pc** University of Edinburgh's Programming Club.
 
+* **tensorflow** Learning [TensorFlow](https://www.tensorflow.org/).
+
 * **triSYCL** The open source SYCL implementation.
