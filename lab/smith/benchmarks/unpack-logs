@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -eu
+
+main() {
+    cd data
+    local archive=logs.zip
+
+    rm -fr [123456789]
+    unzip $archive
+}
+main $@
