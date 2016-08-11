@@ -15,6 +15,7 @@ from labm8 import math as labmath
 import smith
 from smith import features
 
+
 class MalformedDataException(smith.SmithException): pass
 
 
