@@ -23,6 +23,8 @@ def main():
                         help='summarize a features files')
     parser.add_argument('-e', '--fatal-errors', action='store_true',
                         help="quit on compiler error")
+    parser.add_argument('--shim', action='store_true',
+                        help="include shim header")
     args = parser.parse_args()
 
     inputs = args.inputs
@@ -42,7 +44,7 @@ def main():
         paths = [item for sublist in trees for item in sublist]
     else:
         paths = [fs.path(f) for f in inputs]
-    features.files(paths, fatal_errors=args.fatal_errors)
+    features.files(paths, fatal_errors=args.fatal_errors, use_shim=args.shim)
 
 
 if __name__ == '__main__':

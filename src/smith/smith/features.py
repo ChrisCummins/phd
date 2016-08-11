@@ -12,14 +12,21 @@ from collections import OrderedDict
 from subprocess import Popen,PIPE,STDOUT
 
 import labm8
+from labm8 import fs
 from labm8 import math as labmath
 
 import smith
 from io import open
 
 
-def extra_args():
-    return []
+def extra_args(use_shim=False):
+    args = []
+    if use_shim:
+        args += [
+            "-DSMITH_FEATURES",
+            "-include",
+            smith.package_path(fs.path('share', 'include', 'opencl-shim.h'))]
+    return args
 
 
 def is_features(line):
@@ -33,11 +40,12 @@ def is_good_features(line, stderr):
     return False
 
 
-def features(path, file=sys.stdout, fatal_errors=False):
+def features(path, file=sys.stdout, fatal_errors=False, use_shim=False):
     features_bin = os.path.expanduser('~/phd/src/smith/native/features')
     ld_path = os.path.expanduser('~/phd/tools/llvm/build/lib/')
 
-    cmd = [features_bin, path] + ['-extra-arg=' + x for x in extra_args()]
+    cmd = [features_bin, path] + ['-extra-arg=' + x for x in
+                                  extra_args(use_shim=use_shim)]
 
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE,
                     env={'LD_LIBRARY_PATH': ld_path})
@@ -47,14 +55,16 @@ def features(path, file=sys.stdout, fatal_errors=False):
     data = [line.split(',') for line in stdout.split('\n')]
 
     if stderr:
-        print("=== COMPILER OUTPUT FOR", path, file=sys.stderr)
-        print(stderr, file=sys.stderr)
-        if fatal_errors:
+        has_error = re.search(" error: ", stderr)
+        if has_error:
+            print("=== COMPILER OUTPUT FOR", path, file=sys.stderr)
+            print(stderr, file=sys.stderr)
+        if fatal_errors and has_error:
             sys.exit(1)
 
 
     if process.returncode != 0:
-        print("error: '{}'".format(path), file=sys.stderr)
+        print("error: compiler crashed on '{}'".format(path), file=sys.stderr)
         return
 
     for line in data[1:]:
