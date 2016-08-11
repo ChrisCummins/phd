@@ -25,9 +25,7 @@ class MalformedDataException(smith.SmithException): pass
 #
 # For example, if you have a benchmark named 'foo', with OpenCL
 # kernels in 'bar.cl', then add an entry "foo": "bar.cl".
-MAPPINGS = {
-    "amd-app-sdk-3.0-FastWalshTransform-fastWalshTransform": "amd-app-sdk-3.0-FastWalshTransform_Kernels.cl"
-}
+MAPPINGS = {}
 
 
 def read_csv(path):
@@ -60,8 +58,11 @@ def get_dynamic_to_static_mapping(static, dynamic, mappings=MAPPINGS):
                 mindistance = min(x[0] for x in distances)
                 mins = [x for x in distances if x[0] == mindistance]
                 if len(mins) > 1:
-                    print("error: multiple plausible candidates for file '{}'"
-                          .format(path), file=sys.stderr)
+                    print("error: multiple candidates for benchmark "
+                          "'{}' kernel '{}': {}"
+                          .format(name, kernel, ", ".join(
+                              ["'{}'".format(x[1]) for x in mins])),
+                          file=sys.stderr)
                     continue
                 mappings[name] = mins[0][1]
                 # If inferred a file path mapping, print it out so
@@ -80,7 +81,9 @@ def lookup_static(static, name, mappings):
         if s["file"] == mapped and s["kernel"] == kernel:
             return s
     # Something has gone seriously wrong.
-    assert(False)
+    print("fatal: could not find mapping for '{}'".format(name),
+          file=sys.stderr)
+    sys.exit(1)
 
 
 def print_header(file=sys.stdout):
