@@ -180,7 +180,7 @@ class KernelDriver(object):
         self._transfers = []
         self._runtimes = []
 
-    @timeout(30)
+    @timeout(10)
     def __call__(self, queue, payload):
         # Safety first, kids:
         assert(type(queue) == cl.CommandQueue)
