@@ -626,8 +626,8 @@ std::string getexepath() {
 
 
 // Return path to OpenCL platform header.
-std::string clplatform_header() {
-  return dirname(getexepath()) + "/include/cl_platform.h";
+std::string cl_header() {
+  return dirname(getexepath()) + "/include/cl.h";
 }
 
 
@@ -644,7 +644,7 @@ void extract_features(std::string path, std::ostream &out,
   clang::DiagnosticOptions diagnosticOptions;
   compiler.createDiagnostics();
 
-  std::vector<std::string> args{{"-x", "cl", "-include", clplatform_header()}};
+  std::vector<std::string> args{{"-x", "cl", "-include", cl_header()}};
   for (auto& arg : extra_args)
     args.push_back(arg);
   std::vector<const char*> argv;
@@ -743,7 +743,6 @@ int main(int argc, char** argv) {
   std::vector<std::string> paths, compiler_args;
 
   for (const auto& arg : args) {
-
     // Only print the CSV header, then quit.
     if (arg == "-header-only") {
       print_csv_header(std::cout);
