@@ -11,7 +11,6 @@ benchmarks=(
      FastWalshTransform
      FloydWarshall
      Histogram
-     MatrixMulImage
      MatrixMultiplication
      MatrixTranspose
      MonteCarloAsian
