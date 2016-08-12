@@ -25,6 +25,8 @@ def main():
                         help="quit on compiler error")
     parser.add_argument('--shim', action='store_true',
                         help="include shim header")
+    parser.add_argument("-q", '--quiet', action='store_true',
+                        help="minimal error output")
     args = parser.parse_args()
 
     inputs = args.inputs
@@ -44,7 +46,8 @@ def main():
         paths = [item for sublist in trees for item in sublist]
     else:
         paths = [fs.path(f) for f in inputs]
-    features.files(paths, fatal_errors=args.fatal_errors, use_shim=args.shim)
+    features.files(paths, fatal_errors=args.fatal_errors, use_shim=args.shim,
+                   quiet=args.quiet)
 
 
 if __name__ == '__main__':

@@ -40,7 +40,8 @@ def is_good_features(line, stderr):
     return False
 
 
-def features(path, file=sys.stdout, fatal_errors=False, use_shim=False):
+def features(path, file=sys.stdout, fatal_errors=False, use_shim=False,
+             quiet=False):
     features_bin = os.path.expanduser('~/phd/src/smith/native/features')
     ld_path = os.path.expanduser('~/phd/tools/llvm/build/lib/')
 
@@ -57,8 +58,11 @@ def features(path, file=sys.stdout, fatal_errors=False, use_shim=False):
     if stderr:
         has_error = re.search(" error: ", stderr)
         if has_error:
-            print("=== COMPILER OUTPUT FOR", path, file=sys.stderr)
-            print(stderr, file=sys.stderr)
+            if quiet:
+                print("error:", path, file=sys.stderr)
+            else:
+                print("=== COMPILER OUTPUT FOR", path, file=sys.stderr)
+                print(stderr, file=sys.stderr)
         if fatal_errors and has_error:
             sys.exit(1)
 
