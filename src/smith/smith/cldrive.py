@@ -289,8 +289,8 @@ class KernelDriver(object):
         while len(self.runtimes) < 10:
             k(P)
 
-        wgsize = round(labmath.mean(self.wgsizes))
-        transfer = round(labmath.mean(self.transfers))
+        wgsize = int(round(labmath.mean(self.wgsizes)))
+        transfer = int(round(labmath.mean(self.transfers)))
         mean = labmath.mean(self.runtimes)
         ci = labmath.confinterval(self.runtimes, array_mean=mean)[1] - mean
         print(self.name, wgsize, transfer, round(mean, 6), round(ci, 6),
