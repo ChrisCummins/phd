@@ -53,7 +53,7 @@
 % Bibliography %
 %%%%%%%%%%%%%%%%
 \usepackage[%
-    backend=biber,%bibtex,
+    backend=biber,
     style=numeric-comp,
     % style=numeric-comp,  % numerical-compressed
     sorting=none,        % nty,nyt,nyvt,anyt,anyvt,ynt,ydnt,none
@@ -68,6 +68,7 @@
     maxbibnames=99       % no 'et-al' in the bibliography pls
   ]{biblatex}
 
+% My system-wide bibtex file:
 \addbibresource{../../../library.bib}
 
 % Reduce the font size of the bibliography:
@@ -129,16 +130,16 @@ complex,imaginary},%
 
 \algrenewcommand\ALG@beginalgorithmic{\footnotesize}
 
+%%%%%%%%%%%%%%%%%%%%%%%%
+%% Graphics and maths %%
+%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amsmath}
+
 % Plots:
 \usepackage{filecontents}
 \usepackage{pgfplots, pgfplotstable}
 \usepgfplotslibrary{statistics}
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%
-%% Graphics and maths %%
-%%%%%%%%%%%%%%%%%%%%%%%%
-\usepackage{amsmath}
 \usepackage{tikz}
 
 % Tikz flowchart configuration.
@@ -243,10 +244,10 @@ complex,imaginary},%
                                   % short abstracts)
 
 % \titlebanner{banner above paper title}        % These are ignored unless
-% \preprintfooter{}   % 'preprint' option specified.
+\preprintfooter{}   % 'preprint' option specified.
 
-\title{Curing the Benchmark Deficit: On-Demand Compute Kernel
-  Synthesis using Deep Learning}
+\title{Curing the Benchmark Deficit:%
+  On-Demand Compute Kernel Synthesis using Deep Learning}
 
 % \subtitle{Subtitle Text, if any}
 
@@ -275,7 +276,7 @@ complex,imaginary},%
   implementation space of a corpus of example programs, learning a
   language model from which we obtain new programs through a process
   of rejection sampling.%
-  % TODO: tenfold, order of magnitude
+  % TODO: tenfold / order of magnitude reduction in training time?
   We demonstrate this approach using a state-of-the-art machine
   learning autotuner, improving the accuracy of learned predictions
   from XXX\% to XXX\%, demonstrating up to $X\times$ speedup over the
@@ -283,7 +284,6 @@ complex,imaginary},%
   modeling: overfitting of heuristics from too few benchmarks, and
   poor heuristics from exploring a non-representative part of the
   program space.
-
 \end{abstract}
 
 % \category{CR-number}{subcategory}{third-level}
@@ -368,34 +368,7 @@ kernels, in order to test the change in predictive modeling accuracy.
 
 % NOCITE: Benchmarking OpenCL~\cite{Tobergte2013a}.
 
-\noindent
-\paragraph{Contributions} This paper makes the following
-contributions:%
-\begin{itemize}
-\item To the best of our knowledge, we are the first to apply machine
-  learning over open source repositories in order to model the
-  patterns of usage in a programming language.
-\item Our novel system for synthesizing representative compute kernels
-  using deep learning solves two issues for representative
-  benchmarking: the limited quantity of benchmarks available, and the
-  need to behavior that is representative of common use cases.
-\item Experimental results show that the performance of a
-  state-of-the-art autotuner is improved by XXX\% with the addition of
-  benchmarks generated using our system.
-\end{itemize}
-
-
-\section{Motivation}\label{sec:motivation}
-
-% OpenCL benchmark suites:
-% % Parsec~\cite{Bienia2009},
-% Rodinia~\cite{Che2009}, %
-% Parboil~\cite{Stratton2012}, %
-% Polybench~\cite{Grauer-Gray2012}, %
-% SHOC~\cite{Danalis2010}, %
-% AMD SDK\footnote{\url{http://developer.amd.com/}} %
-% and NVIDIA
-% SDK\footnote{\url{https://developer.nvidia.com/opencl/}}. %
+\subsection{Motivation}\label{sec:motivation}
 
 To motivate the need for compute kernel synthesis we surveyed the
 benchmarking methodologies of research papers in the field of GPGPU
@@ -403,7 +376,7 @@ performance tuning from top tier conferences between 2013--2016: CGO,
 HiPC, PACT, and PPoPP. We selected 27 papers, and noted the quantity
 and sources of all kernels used as benchmarks for
 each\footnote{Anonymized raw data available at:
-  \url{http://bit.ly/TODO}}. %
+  \url{http://bit.ly/TODO}}.
 
 Figure~\ref{fig:benchmark-quantity-distribution} shows the
 distribution of kernel quantities. The median number of kernels used
@@ -416,7 +389,7 @@ SDK\footnote{\url{http://developer.amd.com/}}. Figure~\ref{fig:benchmark-suite-d
 shows the breakdown of kernel sources.
 
 TODO: state-of-the-art is laborious and error prone stochastic
-template substitution.
+template substitution, doesn't explore space.
 
 Note that our survey was directed only at the selection of programs
 used as benchmarks. For an excellent review of state of practice in
@@ -460,6 +433,24 @@ reporting benchmark results, see~\cite{Belli2015}.
   \label{fig:benchmark-suite-distribution}
 \end{figure}
 
+
+\subsection{Contributions}
+
+This paper makes the following contributions:%
+\begin{itemize}
+\item To the best of our knowledge, we are the first to apply machine
+  learning over open source repositories in order to model the
+  patterns of usage in a programming language.
+\item Our novel system for synthesizing representative compute kernels
+  using deep learning solves two issues for representative
+  benchmarking: the limited quantity of benchmarks available, and the
+  need to behavior that is representative of common use cases.
+\item Experimental results show that the performance of a
+  state-of-the-art autotuner is improved by XXX\% with the addition of
+  benchmarks generated using our system.
+\end{itemize}
+
+
 \section{Synthesizing Compute Kernels}\label{sec:}
 
 Overview of methodology. Figure~\ref{fig:structure}.
@@ -486,17 +477,15 @@ function prototypes, rejection sampler, program checker.
 \end{figure*}
 
 
-\section{Training Corpus Selection}\label{sec:}
+\section{Assembling Language Corpus}\label{sec:}
 
 We collect a large code corpus from
-GitHub\footnote{\url{https://github.com/}}. This took 2 days on a
+GitHub\footnote{\url{https://github.com/}}. This took one day on a
 single machine.
 
 Rejection sampling to remove noise from dataset. Check that compiles.
 
 Alternative source of data: \emph{GHTorrent}~\cite{Gousios2014a}.
-
-\section{Learning the Implementation Space}\label{sec:ml}
 
 Minimizing non-functional variance using clang libraries and tools:
 \begin{itemize}
@@ -558,7 +547,9 @@ typedef unsigned int INDEX_TYPE;
 ... (185 more)
 \end{lstlisting}
 
-\subsection{Machine Learning Model}
+\section{Learning the Implementation Space}\label{sec:ml}
+
+% \subsection{Machine Learning Model}
 
 We use the Long Short-Term Memory (LSTM) architecture of Recurrent
 Neural Network~\cite{Hochreiter1997,Mikolov2015}. LSTMs are proving to
@@ -593,75 +584,76 @@ two weeks on a single machine using an Nvidia GTX Titan.
 % 648 MB.
 
 
-\section{Sampling Implementation Space}\label{sec:}
+\section{Synthesizing Compute Kernels}\label{sec:}
 
 Given a function prototype.
 
 Sample kernels with balanced brackets.
 
-Rejection sampler.
+Rejection sampler (same as preprocess pipeline).
 
 Undefined behavior.
 
-Driver program (and dataset).
+\paragraph{Driving Synthesised kernels}
 
-Approximately XX days on single machine.
+TODO: Short sample kernels of particular error types, e.g. NO\_RESULTS
+and NONTERMINATING.
 
-\lstset{language=[OpenCL]C}
-\begin{lstlisting}[%
-  float,%
-%  floatplacement=t,%
-  frame=single,%
-  caption=Parboil SGEMM benchmark.
-]
-__kernel void mysgemmNT( __global const float *A, int lda, __global const float *B, int ldb, __global float* C, int ldc, int k, float alpha, float beta )
-{
-    float c = 0.0f;
-    int m = get_global_id(0);
-    int n = get_global_id(1);
+% \lstset{language=[OpenCL]C}
+% \begin{lstlisting}[%
+%   float,%
+% %  floatplacement=t,%
+%   frame=single,%
+%   caption=Parboil SGEMM benchmark.
+% ]
+% __kernel void mysgemmNT( __global const float *A, int lda, __global const float *B, int ldb, __global float* C, int ldc, int k, float alpha, float beta )
+% {
+%     float c = 0.0f;
+%     int m = get_global_id(0);
+%     int n = get_global_id(1);
 
-    for (int i = 0; i < k; ++i) {
-	float a = A[m + i * lda];
-	float b = B[n + i * ldb];
-	c += a * b;
-    }
-    C[m+n*ldc] = C[m+n*ldc] * beta + alpha * c;
-}
-\end{lstlisting}
-
-
-\lstset{language=[OpenCL]C}
-\begin{lstlisting}[%
-  float,%
-%  floatplacement=t,%
-  frame=single,%
-  caption=Transformed SGEMM implementation from preprocessing pipeline.
-]
-__kernel void A(__global const float *a, int b, __global const float *c, int d,
-                __global float *e, int f, int g, float h, float i) {
-  float j = 0.0f;
-  int k = get_global_id(0);
-  int l = get_global_id(1);
-
-  for (int m = 0; m < g; ++m) {
-    float n = a[k + m * b];
-    float o = c[l + m * d];
-    j += n * o;
-  }
-  e[k + l * f] = e[k + l * f] * i + h * j;
-}
-\end{lstlisting}
+%     for (int i = 0; i < k; ++i) {
+% 	float a = A[m + i * lda];
+% 	float b = B[n + i * ldb];
+% 	c += a * b;
+%     }
+%     C[m+n*ldc] = C[m+n*ldc] * beta + alpha * c;
+% }
+% \end{lstlisting}
 
 
-\lstset{language=[OpenCL]C}
-\begin{lstlisting}[%
-  float,%
-%  floatplacement=t,%
-  frame=single,%
-  caption=Example kernel synthesised from SGEMM function prototype.
-]
-TODO
-\end{lstlisting}
+% \lstset{language=[OpenCL]C}
+% \begin{lstlisting}[%
+%   float,%
+% %  floatplacement=t,%
+%   frame=single,%
+%   caption=Transformed SGEMM implementation from preprocessing pipeline.
+% ]
+% __kernel void A(__global const float *a, int b, __global const float *c, int d,
+%                 __global float *e, int f, int g, float h, float i) {
+%   float j = 0.0f;
+%   int k = get_global_id(0);
+%   int l = get_global_id(1);
+
+%   for (int m = 0; m < g; ++m) {
+%     float n = a[k + m * b];
+%     float o = c[l + m * d];
+%     j += n * o;
+%   }
+%   e[k + l * f] = e[k + l * f] * i + h * j;
+% }
+% \end{lstlisting}
+
+
+% \lstset{language=[OpenCL]C}
+% \begin{lstlisting}[%
+%   float,%
+% %  floatplacement=t,%
+%   frame=single,%
+%   caption=Example kernel synthesised from SGEMM function prototype.
+% ]
+% TODO
+% \end{lstlisting}
 
 
 \section{Experimental Methodology}\label{sec:evaluation}
@@ -679,7 +671,7 @@ Table~\ref{tab:cgo13-features}.
   \centering
   \begin{tabular}{l L{4.5cm}}
     \toprule
-    \multicolumn{2}{c}{\textbf{Combined code Features}} \\
+    \multicolumn{2}{c}{\textbf{Combined Code Features}} \\
     \midrule
     \texttt{F1: transfer/(comp+mem)} & commun.-computation ratio \\
     \texttt{F2: coalesced/mem} & \% coalesced memory accesses \\
@@ -700,12 +692,12 @@ systems, detailed in Table~\ref{tab:platforms}. Platform A uses
 OpenSUSE 12.3 and GCC 4.7.2; Platform B uses Ubuntu 14.04 and GCC
 x. The AMD implementation of OpenCL 1.2 is used for both.
 
-% PLATFORMS: monza CPU, monza GPU, diana GPU
 \begin{table}% tab:platforms
   \scriptsize
   \centering
   \begin{tabular}{l l l l}
     \toprule
+    %         monza CPU            monza GPU          diana GPU
     & \textbf{Intel CPU} & \textbf{AMD GPU} & \textbf{NVIDIA GPU} \\
     \midrule
     \textbf{Model} & Core i7-3820 & Tahiti 7970 & GTX 970 \\
@@ -731,6 +723,7 @@ x. The AMD implementation of OpenCL 1.2 is used for both.
   \begin{tabular}{l r r r}
     \toprule
     & \textbf{Version} & \textbf{\#. programs} & \textbf{\#. kernels}\\
+    % TODO: \#. datasets
     \midrule
     \textbf{NPB (SNU~\cite{Seo2011})} & 1.0.3 & 7 & 114 \\
     \textbf{Rodinia~\cite{Che2009}} & 3.1 & 14 & 31 \\
@@ -739,7 +732,7 @@ x. The AMD implementation of OpenCL 1.2 is used for both.
     \textbf{Parboil~\cite{Stratton2012}} & 0.2 & 6 & 8 \\
     \textbf{PolyBench~\cite{Grauer-Gray2012}} & 1.0 & 14 & 27 \\
     % \textbf{SHOC~\cite{Danalis2010}} & 1.1.5 & 53 & x \\
-    \textbf{Synthetic} & - & - & 2000 \\
+    \textbf{Synthetic} & - & - & TODO \\
     \bottomrule
   \end{tabular}
   \caption{%
@@ -788,13 +781,20 @@ Median num samples per kernel. Ratio 95\% CI / mean.
 Evaluating \emph{RQ1}. What's the ratio of ``good'' code? How long did
 it take to sample?
 
+Ratio of generated kernels rejected by postprocess pipeline:
+%  echo "100 - $(smith-explore synthetic.db | grep "Number of good preprocessed" | cut -d'(' -f2 | cut -d'%' -f1)" | bc -l | xargs printf '%d\\%%'
+93\%. Ratio of postprocessed kernels which do not pass cldrive
+conformance test:
+% TODO: command to generate this.
+47\%. Total ratio of ``good'' kernels: 3\%.
+
+Two days sampling on a single machine. TODO: Estimate bytes / second
+of generated ``good'' kernels.
+
 TODO: Plot distribution of static features from benchmark suites,
 GitHub, and generated synthesis.
 
 TODO: Table of cldrive rejection categories.
-
-TODO: Short sample kernels of particular error types, e.g. NO\_RESULTS
-and NONTERMINATING.
 
 
 \subsection{Qualitatively Evaluating Generated Code}\label{subsec:}
