@@ -205,17 +205,15 @@ class KernelDriver(object):
             raise E_BAD_ARGS(e)
 
         # Execute kernel
-        event = self.kernel(queue, output.ndrange, None, *kargs)
+        local_size_x = min(output.ndrange[0], 128)
+        event = self.kernel(queue, output.ndrange, (local_size_x,), *kargs)
         elapsed += get_event_time(event)
 
         # Copy data back to host and get time.
         elapsed += output.device_to_host(queue)
 
         # Record workgroup size.
-        device = self.context.get_info(cl.context_info.DEVICES)[0]
-        wgsize = self.kernel.get_work_group_info(
-            cl.kernel_work_group_info.WORK_GROUP_SIZE, device)
-        self.wgsizes.append(wgsize)
+        self.wgsizes.append(local_size_x)
 
         # Record runtime.
         self.runtimes.append(elapsed)
