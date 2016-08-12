@@ -115,26 +115,33 @@ def eval_classifier(base_classifier, arff, test_arff=None,
         speedup = float(speedup)
         penalty = float(penalty[:-1])
 
-        return [actual, predicted, runtime, speedup, penalty]
+        return {
+            "actual": actual,
+            "predicted": predicted,
+            "runtime": runtime,
+            "penalty": penalty,
+            "oracle": speedup,
+            "speedup": speedup if actual == predicted else penalty
+        }
 
     predictions = [parse_line(x) for x in str(pout).split('\n')[1:-1]]
 
-    def get_speedup(x):
-        return x[3] if x[0] == x[1] else x[4]
+    speedups = [x["speedup"] for x in predictions]
+    oracles = [x["oracle"] for x in predictions]
+    runtimes = [x["runtime"] for x in predictions]
 
-    speedups = [get_speedup(x) for x in predictions]
-    oracles = [x[4] for x in predictions]
-
-    runtimes = [x[3] for x in predictions]
     rmean = labmath.mean(runtimes)
 
+    # Speedups of predicted.
     pmean = labmath.mean(speedups)
     pgeo = labmath.geomean(speedups)
     pmin = min(speedups)
     pmax = max(speedups)
     ci = labmath.confinterval(speedups, array_mean=pmean)[1] - pmean
 
+    # Oracle speedups.
     omean = labmath.mean(oracles)
+    ogeo = labmath.geomean(oracles)
     omin = min(oracles)
     omax = max(oracles)
 
@@ -146,7 +153,8 @@ def eval_classifier(base_classifier, arff, test_arff=None,
           "{:.2f}".format(pmin),
           "{:.2f}".format(pmax),
           "{:.2f}".format(ci),
-          "{:.2f}".format((pmean / omean) * 100),
+          "{:.2f}".format(pgeo / ogeo),
+          "{:.2f}".format(ogeo),
           "{:.2f}".format(omean),
           "{:.2f}".format(omin),
           "{:.2f}".format(omax),
@@ -174,7 +182,8 @@ def classification(arff, with_raw_features=False, **kwargs):
         "minspeedup",
         "maxspeedup",
         "ci",
-        "ratio oracle",
+        "oracle",
+        "geooracle",
         "avgoracle",
         "minoracle",
         "maxoracle",
