@@ -747,21 +747,24 @@ x. The AMD implementation of OpenCL 1.2 is used for both.
 
 \paragraph{Benchmarks}
 
-\begin{table}% tab:%benchmarks
+% Generate using:
+%
+% cd ~/phd/lab/smith/benchmarks/ && ./list-benchmarks data/platform-a.csv
+\begin{table}% tab:benchmarks
   \scriptsize
   \centering
   \begin{tabular}{l r r r}
     \toprule
     & \textbf{Version} & \textbf{\#. programs} & \textbf{\#. kernels}\\
     \midrule
-    \textbf{NPB (SNU~\cite{Seo2011})} & 1.0.3 & x & x \\
-    \textbf{Rodinia~\cite{Che2009}} & 3.1 & 50 & x \\
-    \textbf{NVIDIA SDK} & 4.2 & 36 & x \\
-    \textbf{AMD SDK} & 3.0 & x & x \\
-    \textbf{Parboil~\cite{Stratton2012}} & 0.2 & 7 & x \\
-    \textbf{PolyBench~\cite{Grauer-Gray2012}} & 1.0 & 30 & x \\
+    \textbf{NPB (SNU~\cite{Seo2011})} & 1.0.3 & 7 & 114 \\
+    \textbf{Rodinia~\cite{Che2009}} & 3.1 & 14 & 31 \\
+    \textbf{NVIDIA SDK} & 4.2 & 6 & 12 \\
+    \textbf{AMD SDK} & 3.0 & 12 & 16 \\
+    \textbf{Parboil~\cite{Stratton2012}} & 0.2 & 6 & 8 \\
+    \textbf{PolyBench~\cite{Grauer-Gray2012}} & 1.0 & 14 & 27 \\
     % \textbf{SHOC~\cite{Danalis2010}} & 1.1.5 & 53 & x \\
-    \textbf{Synthetic} & - & - & x \\
+    \textbf{Synthetic} & - & - & 2000 \\
     \bottomrule
   \end{tabular}
   \caption{%
