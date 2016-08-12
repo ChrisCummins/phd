@@ -18,7 +18,7 @@ from smith import features
 
 class MalformedDataException(smith.SmithException): pass
 
-DSIZES = [12, 24, 64, 102, 162, 408, 1020, 2048, 4096]
+DSIZES = [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192]
 
 def read_file_dataset(path):
     results = []
