@@ -25,6 +25,8 @@ def main():
     parser.add_argument('input', help='path to training data CSV')
     parser.add_argument('-t', '--test', action="store", dest="test_data",
                         help='path to training data CSV')
+    parser.add_argument("--with-raw-features", action="store_true",
+                        help="if true, use raw features as well as combined")
     args = parser.parse_args()
 
     try:
@@ -35,7 +37,8 @@ def main():
             test_data = cgo13.from_csv(smith.assert_exists(args.test_data))
         else:
             test_data = None
-        cgo13.classification(training_data, test_arff=test_data)
+        cgo13.classification(training_data, test_arff=test_data,
+                             with_raw_features=args.with_raw_features)
         ml.stop()
     except Exception as e:
         print("fatal:", e, file=sys.stderr)

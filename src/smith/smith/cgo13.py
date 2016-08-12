@@ -65,6 +65,7 @@ def eval_classifier(base_classifier, arff, test_arff=None,
     # Additional prediction output. Print the speedup and penalty for
     # all instances.
     extra_attributes = [
+        "runtime",
         "speedup",
         "penalty"
     ]
@@ -109,21 +110,26 @@ def eval_classifier(base_classifier, arff, test_arff=None,
         if len(c) == 6:
             c.remove('+')
 
-        speedup, penalty = c[4].split(',')
-        speedup = float(speedup[1:])
+        runtime, speedup, penalty = c[4].split(',')
+        runtime = float(runtime[1:])
+        speedup = float(speedup)
         penalty = float(penalty[:-1])
 
-        return [actual, predicted, speedup, penalty]
+        return [actual, predicted, runtime, speedup, penalty]
 
     predictions = [parse_line(x) for x in str(pout).split('\n')[1:-1]]
 
     def get_speedup(x):
-        return x[2] if x[0] == x[1] else x[3]
+        return x[3] if x[0] == x[1] else x[4]
 
     speedups = [get_speedup(x) for x in predictions]
-    oracles = [x[2] for x in predictions]
+    oracles = [x[4] for x in predictions]
+
+    runtimes = [x[3] for x in predictions]
+    rmean = labmath.mean(runtimes)
 
     pmean = labmath.mean(speedups)
+    pgeo = labmath.geomean(speedups)
     pmin = min(speedups)
     pmax = max(speedups)
     ci = labmath.confinterval(speedups, array_mean=pmean)[1] - pmean
@@ -134,6 +140,8 @@ def eval_classifier(base_classifier, arff, test_arff=None,
 
     print(basename,
           "{:.2f}".format(evl.percent_correct),
+          "{:.2f}".format(rmean),
+          "{:.2f}".format(pgeo),
           "{:.2f}".format(pmean),
           "{:.2f}".format(pmin),
           "{:.2f}".format(pmax),
@@ -145,7 +153,7 @@ def eval_classifier(base_classifier, arff, test_arff=None,
           sep=",")
 
 
-def classification(arff, **kwargs):
+def classification(arff, with_raw_features=False, **kwargs):
     classifiers = [
         Classifier(classname="weka.classifiers.rules.ZeroR"),
         Classifier(classname="weka.classifiers.trees.J48",
@@ -160,6 +168,8 @@ def classification(arff, **kwargs):
     print(
         "classifier",
         "accuracy",
+        "avgruntime",
+        "geospeedup",
         "avgspeedup",
         "minspeedup",
         "maxspeedup",
@@ -170,6 +180,10 @@ def classification(arff, **kwargs):
         "maxoracle",
         sep=",")
 
+    ignored_attributes = (IGNORED_ATTRIBUTES if with_raw_features else
+                          UNUSED_ATTRIBUTES)
+
+    kwargs["ignored_attributes"] = ignored_attributes
     for classifier in classifiers:
         eval_classifier(classifier, arff, **kwargs)
 
