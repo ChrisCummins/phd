@@ -150,10 +150,10 @@ namespace SHOC {
     };
 
     int typePropertiesList[] = {
-        CL_DEVICE_TYPE_CPU
+        CL_DEVICE_TYPE_GPU
         ,CL_DEVICE_TYPE_GPU
-        ,CL_DEVICE_TYPE_ACCELERATOR
-        ,CL_DEVICE_TYPE_DEFAULT
+        ,CL_DEVICE_TYPE_GPU
+        ,CL_DEVICE_TYPE_GPU
         ,END_ENUMERATION_MARKER
     };
     const char* typePropertiesNames[] = {
@@ -1187,14 +1187,14 @@ ListDevicesAndGetDevice(int platformIdx, int deviceIdx, bool output)
     // query devices
     cl_uint nDevices = 0;
     err = clGetDeviceIDs(platformIDs[platformIdx],
-                        CL_DEVICE_TYPE_ALL,
+                        CL_DEVICE_TYPE_GPU,
                         0,
                         NULL,
                         &nDevices );
     CL_CHECK_ERROR(err);
     cl_device_id* devIDs = new cl_device_id[nDevices];
     err = clGetDeviceIDs(platformIDs[platformIdx],
-                        CL_DEVICE_TYPE_ALL,
+                        CL_DEVICE_TYPE_GPU,
                         nDevices,
                         devIDs,
                         NULL );
@@ -1295,14 +1295,14 @@ GetNumOclDevices(int platformIndex)
     // query devices for the indicated platform
     cl_uint nDevices = 0;
     err = clGetDeviceIDs( platformIDs[platformIndex],
-                            CL_DEVICE_TYPE_ALL,
+                            CL_DEVICE_TYPE_GPU,
                             0,
                             NULL,
                             &nDevices );
     CL_CHECK_ERROR(err);
     cl_device_id* devIDs = new cl_device_id[nDevices];
     err = clGetDeviceIDs( platformIDs[platformIndex],
-                            CL_DEVICE_TYPE_ALL,
+                            CL_DEVICE_TYPE_GPU,
                             nDevices,
                             devIDs,
                             NULL );

@@ -96,7 +96,7 @@ OpenCLPlatform::OpenCLPlatform (cl_platform_id platformID) :
     // query devices
     cl_uint nDevices = 0;
     err = clGetDeviceIDs( platformID,
-                            CL_DEVICE_TYPE_ALL,
+                            CL_DEVICE_TYPE_GPU,
                             0,
                             NULL,
                             &nDevices );
@@ -104,7 +104,7 @@ OpenCLPlatform::OpenCLPlatform (cl_platform_id platformID) :
 
     cl_device_id* devIDs = new cl_device_id[nDevices];
     err = clGetDeviceIDs( platformID,
-                            CL_DEVICE_TYPE_ALL,
+                            CL_DEVICE_TYPE_GPU,
                             nDevices,
                             devIDs,
                             NULL );

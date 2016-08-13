@@ -322,7 +322,7 @@ void RunBenchmark(cl_device_id dev,
     int numSMs = getMaxComputeUnits(dev);
     cl_device_type type;
     clGetDeviceInfo(dev, CL_DEVICE_TYPE, sizeof(type), &type, NULL);
-    if (type == CL_DEVICE_TYPE_CPU)
+    if (type == CL_DEVICE_TYPE_GPU)
     {
        minGroupSize = 256;
     }

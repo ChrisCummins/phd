@@ -110,10 +110,10 @@ inline const char *CLErrorString(cl_int err)
 inline std::string DeviceTypeToString(cl_device_type type)
 {
     struct {int val; const char *name;} mapping[] = {
-        {CL_DEVICE_TYPE_CPU,        "CPU"},
+        {CL_DEVICE_TYPE_GPU,        "CPU"},
         {CL_DEVICE_TYPE_GPU,        "GPU"},
-        {CL_DEVICE_TYPE_ACCELERATOR,"Accelerator"},
-        {CL_DEVICE_TYPE_DEFAULT,    "Default"},
+        {CL_DEVICE_TYPE_GPU,"Accelerator"},
+        {CL_DEVICE_TYPE_GPU,    "Default"},
         {0,NULL}
     };
     std::string retval = "Unknown";
