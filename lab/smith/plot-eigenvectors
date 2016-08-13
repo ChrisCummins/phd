@@ -1,0 +1,119 @@
+#!/usr/bin/env python3
+#
+# Visualise Eigenvectors. Eigenvectors were found by applying
+# PrincipleComponents over combined benchmarks training data in
+# Weka. Results:
+#
+#  V1      V2      V3      V4
+# -0.201  -0.6989 -0.6864  0.0065       F1:transfer/(comp+mem)
+#  0.6807 -0.009  -0.1834  0.7092       F2:coalesced/mem
+# -0.1929  0.7152 -0.6715  0.0206       F3:(localmem/mem)*avgws
+#  0.6775  0.0053 -0.2105 -0.7047       F4:comp/mem
+from argparse import ArgumentParser
+
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import numpy as np
+# import seaborn as sns
+import re
+import sys
+
+from functools import partial
+from random import seed,random
+
+import labm8
+from labm8 import fmt
+from labm8 import fs
+
+import smith
+from smith import clutil
+
+def rand_jitter(arr, factor=0.01):
+    stdev = factor* (max(arr) - min(arr))
+    return arr + np.random.randn(len(arr)) * stdev
+
+
+def eigenvector(d):
+    F1 = float(d["F1:transfer/(comp+mem)"])
+    F2 = float(d["F2:coalesced/mem"])
+    F3 = float(d["F3:(localmem/mem)*avgws"])
+    F4 = float(d["F4:comp/mem"])
+
+    # Eigenvectors: (hardcoded values as returned by Weka)
+    V1 = - .201  * F1 + .6807 * F2 - .1929 * F3 - .6775 * F4
+    V2 = - .6989 * F1 - .009  * F2 + .7152 * F3 + .0053 * F4
+    V3 = - .6864 * F1 - .1834 * F2 - .6715 * F3 - .2105 * F4
+    V4 =   .0065 * F1 + .7092 * F2 + .0205 * F3 - .7047 * F4
+
+    return (V1, V2, V3, V4)
+
+
+def normalize(data, key):
+    f = max([float(d[key]) for d in data])
+    for d in data:
+        d[key] = float(d[key]) / f
+    return data
+
+
+def scatter_with_jitter(plt, x, y, **kwargs):
+    jitter_opts = kwargs.get("jitter_opts", {})
+    if "jitter_opts" in kwargs: kwargs.pop("jitter_opts")
+
+    return plt.scatter(rand_jitter(x, **jitter_opts),
+                       rand_jitter(y, **jitter_opts), **kwargs)
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('input', help='path to input training data CSV')
+    args = parser.parse_args()
+
+    jitter = partial(scatter_with_jitter, plt)
+
+    # Load data from CSV.
+    path = smith.assert_exists(args.input)
+    data = smith.read_csv(path)
+
+    # Normalize data.
+    normalize(data, "F1:transfer/(comp+mem)")
+    normalize(data, "F2:coalesced/mem")
+    normalize(data, "F3:(localmem/mem)*avgws")
+    normalize(data, "F4:comp/mem")
+
+    def isgood(d):
+        return True
+        # return not getgroup(d).startswith("npb")
+
+    def getgroup(d):
+        return re.match(r"^[a-zA-Z-]+-[0-9\.]+", d["benchmark"]).group(0)
+
+    def ingroup(d, group):
+        return getgroup(d) == group
+
+    data = [d for d in data if isgood(d)]
+
+    groups = set([getgroup(d) for d in data])
+    colors = [cm.cool(i / len(groups) * 2) for i in range(len(groups))]
+
+    # Split data into groups.
+    raws = [] * len(groups)
+    for group in groups:
+        raws.append([d for d in data if ingroup(d, group)])
+
+    # Get eigenvalues.
+    eigens = [[eigenvector(x) for x in raw] for raw in raws]
+
+    # Plot
+    opts = { "marker": "+", "jitter_opts": { "factor": 0.01 } }
+
+    for eigen,color in zip(eigens, colors):
+        x, y = zip(*[(e[0], e[1]) for e in eigen])
+        jitter(x, y, color=color, **opts)
+
+    # plt.xlim((-.2,.2))
+    # plt.ylim((-.2,.2))
+    plt.show()
+
+
+if __name__ == '__main__':
+    main()

@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import with_statement
 
+import csv
 import json
 import re
 import os
@@ -123,6 +124,15 @@ def print_json(data):
     :param data: JSON blob.
     """
     print(json.dumps(data, sort_keys=True, indent=2, separators=(',', ': ')))
+
+
+def read_csv(path, asdict=True):
+    with open(path) as infile:
+        if asdict:
+            reader = csv.DictReader(infile)
+        else:
+            reader = csv.reader(infile)
+        return [row for row in reader]
 
 
 def minify_json(string, strip_space=True):
