@@ -53,12 +53,12 @@ iteration() {
 
     mkdir -p "$ROOT/logs/$i"
 
-    # runsuite $i amd-app-sdk-3.0
-    # runsuite $i npb-3.3
-    # runsuite $i nvidia-4.2
-    # runsuite $i parboil-0.2
-    # runsuite $i polybench-gpu-1.0
-    # runsuite $i rodinia-3.1
+    runsuite $i amd-app-sdk-3.0
+    runsuite $i npb-3.3
+    runsuite $i nvidia-4.2
+    runsuite $i parboil-0.2
+    runsuite $i polybench-gpu-1.0
+    runsuite $i rodinia-3.1
     runsuite $i shoc-1.1.5
 }
 
