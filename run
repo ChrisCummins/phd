@@ -7,7 +7,7 @@ rm -rf logs
 mkdir -p logs/bad logs/good
 
 cd src/opencl
-for f in $(find . -type f -executable | sort); do
+for f in $(find . -type f -executable | grep -v level0 | sort); do
     echo -n "$(tput bold)shoc-1.1.5 $(basename $f)$(tput sgr0) ... "
 
     set +e
