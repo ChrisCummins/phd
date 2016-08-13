@@ -129,6 +129,9 @@ def timeout(seconds=30):
     """
     def decorator(func):
         def _handle_timeout(signum, frame):
+            # FIXME: Hack to see if hang can be detected
+            with open("HANG.TXT", w) as outfile:
+                print("This hung", outfile)
             raise E_TIMEOUT("Process didn't terminate after {} seconds"
                             .format(seconds))
 
