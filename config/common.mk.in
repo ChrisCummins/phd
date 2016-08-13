@@ -25,7 +25,7 @@ MPI_CPPFLAGS	= -DPARALLEL
 
 OCL_CPPFLAGS    = -I$(top_srcdir)/src/opencl/common
 OCL_LDFLAGS		= -L$(top_builddir)/src/opencl/common
-OCL_LIBS        = -lSHOCCommonOpenCL -lSHOCCommon @OPENCL_LIBS@
+OCL_LIBS        = -lSHOCCommonOpenCL -lSHOCCommon @OPENCL_LIBS@ -lcecl
 
 NVCC            = @NVCC@
 CUDA_CXX        = @NVCC@
@@ -39,6 +39,3 @@ CUDA_LIBS		:= -lSHOCCommon $(shell $(top_srcdir)/config/find_cuda_libs.sh @NVCC@
 else
 CUDA_LIBS       =
 endif
-
-
-
