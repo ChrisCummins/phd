@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <iostream>
 #include <stdlib.h>
 #include <string.h>
@@ -169,7 +170,7 @@ void RunBenchmark(cl_device_id id,
 
         // Create the program
         int TH_short_create = Timer::Start();
-        cl_program short_prog = clCreateProgramWithSource(ctx, 1,
+        cl_program short_prog = CECL_PROGRAM_WITH_SOURCE(ctx, 1,
                                                           &short_source, NULL,
                                                           &err);
         double len_short_create = Timer::Stop(TH_short_create, "TH_short_create");
@@ -177,13 +178,13 @@ void RunBenchmark(cl_device_id id,
 
         int TH_short_build = Timer::Start();
         // Compile the program
-        err = clBuildProgram (short_prog, 0, NULL, NULL, NULL, NULL);
+        err = CECL_PROGRAM (short_prog, 0, NULL, NULL, NULL, NULL);
         double len_short_build = Timer::Stop(TH_short_build, "TH_short_build");
         CL_CHECK_ERROR(err);
 
         // Extract out kernel
         int TH_short_extract = Timer::Start();
-        cl_kernel short_kernel = clCreateKernel(short_prog, "Triad", &err);
+        cl_kernel short_kernel = CECL_KERNEL(short_prog, "Triad", &err);
         double len_short_extract = Timer::Stop(TH_short_extract, "TH_short_extract");
         CL_CHECK_ERROR(err);
 
@@ -201,7 +202,7 @@ void RunBenchmark(cl_device_id id,
 
         // Create the program
         int TH_long_create = Timer::Start();
-        cl_program long_prog = clCreateProgramWithSource(ctx, 1,
+        cl_program long_prog = CECL_PROGRAM_WITH_SOURCE(ctx, 1,
                                                          &long_source, NULL,
                                                          &err);
         double len_long_create = Timer::Stop(TH_long_create, "TH_long_create");
@@ -209,13 +210,13 @@ void RunBenchmark(cl_device_id id,
 
         // Compile the program
         int TH_long_build = Timer::Start();
-        err = clBuildProgram (long_prog, 0, NULL, NULL, NULL, NULL);
+        err = CECL_PROGRAM (long_prog, 0, NULL, NULL, NULL, NULL);
         double len_long_build = Timer::Stop(TH_long_build, "TH_long_build");
         CL_CHECK_ERROR(err);
 
         // Extract out kernel
         int TH_long_extract = Timer::Start();
-        cl_kernel long_kernel = clCreateKernel(long_prog, "scan", &err);
+        cl_kernel long_kernel = CECL_KERNEL(long_prog, "scan", &err);
         double len_long_extract = Timer::Stop(TH_long_extract, "TH_long_extract");
         CL_CHECK_ERROR(err);
 

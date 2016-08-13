@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -130,7 +131,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     int err = 0;
 
     // Program Setup
-    cl_program prog = clCreateProgramWithSource(ctx,
+    cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx,
                                                 1,
                                                 &cl_source_sort,
                                                 NULL,
@@ -140,7 +141,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     // Before proceeding, make sure the kernel code compiles and
     // all kernels are valid.
     cout << "Compiling sort kernels." << endl;
-    err = clBuildProgram(prog, 1, &dev, compileFlags.c_str(), NULL, NULL);
+    err = CECL_PROGRAM(prog, 1, &dev, compileFlags.c_str(), NULL, NULL);
     CL_CHECK_ERROR(err);
 
     if (err != CL_SUCCESS)
@@ -162,13 +163,13 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     // scan, but have had "visiting" logic added to them
     // as described by Merrill et al. See
     // http://www.cs.virginia.edu/~dgm4d/
-    cl_kernel reduce = clCreateKernel(prog, "reduce", &err);
+    cl_kernel reduce = CECL_KERNEL(prog, "reduce", &err);
     CL_CHECK_ERROR(err);
 
-    cl_kernel top_scan = clCreateKernel(prog, "top_scan", &err);
+    cl_kernel top_scan = CECL_KERNEL(prog, "top_scan", &err);
     CL_CHECK_ERROR(err);
 
-    cl_kernel bottom_scan = clCreateKernel(prog, "bottom_scan", &err);
+    cl_kernel bottom_scan = CECL_KERNEL(prog, "bottom_scan", &err);
     CL_CHECK_ERROR(err);
 
     // If the device doesn't support at least 256 work items in a
@@ -200,18 +201,18 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     unsigned int bytes = size * sizeof(T);
 
     // Allocate pinned host memory for input data (h_idata)
-    cl_mem h_i = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+    cl_mem h_i = CECL_BUFFER(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
             bytes, NULL, &err);
     CL_CHECK_ERROR(err);
-    T* h_idata = (T*)clEnqueueMapBuffer(queue, h_i, true,
+    T* h_idata = (T*)CECL_MAP_BUFFER(queue, h_i, true,
             CL_MAP_READ|CL_MAP_WRITE, 0, bytes, 0, NULL, NULL, &err);
     CL_CHECK_ERROR(err);
 
     // Allocate pinned host memory for output data (h_odata)
-    cl_mem h_o = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+    cl_mem h_o = CECL_BUFFER(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
             bytes, NULL, &err);
     CL_CHECK_ERROR(err);
-    T* h_odata = (T*)clEnqueueMapBuffer(queue, h_o, true,
+    T* h_odata = (T*)CECL_MAP_BUFFER(queue, h_o, true,
             CL_MAP_READ|CL_MAP_WRITE, 0, bytes, 0, NULL, NULL, &err);
     CL_CHECK_ERROR(err);
 
@@ -228,11 +229,11 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     const int num_digits = (int)pow((double)2, radix_width); // n possible digits
 
     // Allocate device memory for input array
-    cl_mem d_idata = clCreateBuffer(ctx, CL_MEM_READ_WRITE, bytes, NULL, &err);
+    cl_mem d_idata = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, bytes, NULL, &err);
     CL_CHECK_ERROR(err);
 
     // Allocate device memory for output array
-    cl_mem d_odata = clCreateBuffer(ctx, CL_MEM_READ_WRITE, bytes, NULL, &err);
+    cl_mem d_odata = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, bytes, NULL, &err);
     CL_CHECK_ERROR(err);
 
     // Number of local work items per group
@@ -243,44 +244,44 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     const size_t num_work_groups = global_wsize / local_wsize;
 
     // Allocate device memory for local work group intermediate sums
-    cl_mem d_isums = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+    cl_mem d_isums = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
             num_work_groups * num_digits * sizeof(T), NULL, &err);
     CL_CHECK_ERROR(err);
 
     // Set the kernel arguments for the reduction kernel
-    err = clSetKernelArg(reduce, 0, sizeof(cl_mem), (void*)&d_idata);
+    err = CECL_SET_KERNEL_ARG(reduce, 0, sizeof(cl_mem), (void*)&d_idata);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(reduce, 1, sizeof(cl_mem), (void*)&d_isums);
+    err = CECL_SET_KERNEL_ARG(reduce, 1, sizeof(cl_mem), (void*)&d_isums);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(reduce, 2, sizeof(cl_int), (void*)&size);
+    err = CECL_SET_KERNEL_ARG(reduce, 2, sizeof(cl_int), (void*)&size);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(reduce, 3, local_wsize * sizeof(T), NULL);
+    err = CECL_SET_KERNEL_ARG(reduce, 3, local_wsize * sizeof(T), NULL);
     CL_CHECK_ERROR(err);
 
     // Set the kernel arguments for the top-level scan
-    err = clSetKernelArg(top_scan, 0, sizeof(cl_mem), (void*)&d_isums);
+    err = CECL_SET_KERNEL_ARG(top_scan, 0, sizeof(cl_mem), (void*)&d_isums);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(top_scan, 1, sizeof(cl_int), (void*)&num_work_groups);
+    err = CECL_SET_KERNEL_ARG(top_scan, 1, sizeof(cl_int), (void*)&num_work_groups);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(top_scan, 2, local_wsize * 2 * sizeof(T), NULL);
+    err = CECL_SET_KERNEL_ARG(top_scan, 2, local_wsize * 2 * sizeof(T), NULL);
     CL_CHECK_ERROR(err);
 
     // Set the kernel arguments for the bottom-level scan
-    err = clSetKernelArg(bottom_scan, 0, sizeof(cl_mem), (void*)&d_idata);
+    err = CECL_SET_KERNEL_ARG(bottom_scan, 0, sizeof(cl_mem), (void*)&d_idata);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(bottom_scan, 1, sizeof(cl_mem), (void*)&d_isums);
+    err = CECL_SET_KERNEL_ARG(bottom_scan, 1, sizeof(cl_mem), (void*)&d_isums);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(bottom_scan, 2, sizeof(cl_mem), (void*)&d_odata);
+    err = CECL_SET_KERNEL_ARG(bottom_scan, 2, sizeof(cl_mem), (void*)&d_odata);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(bottom_scan, 3, sizeof(cl_int), (void*)&size);
+    err = CECL_SET_KERNEL_ARG(bottom_scan, 3, sizeof(cl_int), (void*)&size);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(bottom_scan, 4, local_wsize * 2 * sizeof(T), NULL);
+    err = CECL_SET_KERNEL_ARG(bottom_scan, 4, local_wsize * 2 * sizeof(T), NULL);
     CL_CHECK_ERROR(err);
 
     // Copy data to GPU
     cout << "Copying input data to device." << endl;
     Event evTransfer("PCIe transfer");
-    err = clEnqueueWriteBuffer(queue, d_idata, true, 0, bytes, h_idata, 0,
+    err = CECL_WRITE_BUFFER(queue, d_idata, true, 0, bytes, h_idata, 0,
             NULL, &evTransfer.CLEvent());
     CL_CHECK_ERROR(err);
     err = clFinish(queue);
@@ -303,10 +304,10 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
             // But before proceeding, update the shift appropriately
             // for each kernel. This is how many bits to shift to the
             // right used in binning.
-            err = clSetKernelArg(reduce, 4, sizeof(cl_int), (void*)&shift);
+            err = CECL_SET_KERNEL_ARG(reduce, 4, sizeof(cl_int), (void*)&shift);
             CL_CHECK_ERROR(err);
 
-            err = clSetKernelArg(bottom_scan, 5, sizeof(cl_int), (void*)&shift);
+            err = CECL_SET_KERNEL_ARG(bottom_scan, 5, sizeof(cl_int), (void*)&shift);
             CL_CHECK_ERROR(err);
 
             // Also, the sort is not in place, so swap the input and output
@@ -316,54 +317,54 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
             if (even)
             {
                 // Set the kernel arguments for the reduction kernel
-                err = clSetKernelArg(reduce, 0, sizeof(cl_mem),
+                err = CECL_SET_KERNEL_ARG(reduce, 0, sizeof(cl_mem),
                         (void*)&d_idata);
                 CL_CHECK_ERROR(err);
                 // Set the kernel arguments for the bottom-level scan
-                err = clSetKernelArg(bottom_scan, 0, sizeof(cl_mem),
+                err = CECL_SET_KERNEL_ARG(bottom_scan, 0, sizeof(cl_mem),
                         (void*)&d_idata);
                 CL_CHECK_ERROR(err);
-                err = clSetKernelArg(bottom_scan, 2, sizeof(cl_mem),
+                err = CECL_SET_KERNEL_ARG(bottom_scan, 2, sizeof(cl_mem),
                         (void*)&d_odata);
                 CL_CHECK_ERROR(err);
             }
             else // i.e. odd pass
             {
                 // Set the kernel arguments for the reduction kernel
-                err = clSetKernelArg(reduce, 0, sizeof(cl_mem),
+                err = CECL_SET_KERNEL_ARG(reduce, 0, sizeof(cl_mem),
                         (void*)&d_odata);
                 CL_CHECK_ERROR(err);
                 // Set the kernel arguments for the bottom-level scan
-                err = clSetKernelArg(bottom_scan, 0, sizeof(cl_mem),
+                err = CECL_SET_KERNEL_ARG(bottom_scan, 0, sizeof(cl_mem),
                         (void*)&d_odata);
                 CL_CHECK_ERROR(err);
-                err = clSetKernelArg(bottom_scan, 2, sizeof(cl_mem),
+                err = CECL_SET_KERNEL_ARG(bottom_scan, 2, sizeof(cl_mem),
                         (void*)&d_idata);
                 CL_CHECK_ERROR(err);
             }
 
             // Each thread block gets an equal portion of the
             // input array, and computes occurrences of each digit.
-            err = clEnqueueNDRangeKernel(queue, reduce, 1, NULL,
+            err = CECL_ND_RANGE_KERNEL(queue, reduce, 1, NULL,
                         &global_wsize, &local_wsize, 0, NULL, NULL);
 
             // Next, a top-level exclusive scan is performed on the
             // per block histograms.  This is done by a single
             // work group (note global size here is the same as local).
-            err = clEnqueueNDRangeKernel(queue, top_scan, 1, NULL,
+            err = CECL_ND_RANGE_KERNEL(queue, top_scan, 1, NULL,
                         &local_wsize, &local_wsize, 0, NULL, NULL);
 
             // Finally, a bottom-level scan is performed by each block
             // that is seeded with the scanned histograms which rebins,
             // locally scans, then scatters keys to global memory
-            err = clEnqueueNDRangeKernel(queue, bottom_scan, 1, NULL,
+            err = CECL_ND_RANGE_KERNEL(queue, bottom_scan, 1, NULL,
                         &global_wsize, &local_wsize, 0, NULL, NULL);
         }
         err = clFinish(queue);
         CL_CHECK_ERROR(err);
         double total_sort = Timer::Stop(th, "total sort time");
 
-        err = clEnqueueReadBuffer(queue, d_idata, true, 0, bytes, h_odata,
+        err = CECL_READ_BUFFER(queue, d_idata, true, 0, bytes, h_odata,
                 0, NULL, &evTransfer.CLEvent());
         CL_CHECK_ERROR(err);
         err = clFinish(queue);

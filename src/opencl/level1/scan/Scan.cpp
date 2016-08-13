@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -172,7 +173,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     int err = 0;
 
     // Program Setup
-    cl_program prog = clCreateProgramWithSource(ctx,
+    cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx,
                                                 1,
                                                 &cl_source_scan,
                                                 NULL,
@@ -182,7 +183,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     // Before proceeding, make sure the kernel code compiles and
     // all kernels are valid.
     cout << "Compiling scan kernels." << endl;
-    err = clBuildProgram(prog, 1, &dev, compileFlags.c_str(), NULL, NULL);
+    err = CECL_PROGRAM(prog, 1, &dev, compileFlags.c_str(), NULL, NULL);
     CL_CHECK_ERROR(err);
 
     if (err != CL_SUCCESS)
@@ -200,13 +201,13 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     }
 
     // Extract out the 3 kernels
-    cl_kernel reduce = clCreateKernel(prog, "reduce", &err);
+    cl_kernel reduce = CECL_KERNEL(prog, "reduce", &err);
     CL_CHECK_ERROR(err);
 
-    cl_kernel top_scan = clCreateKernel(prog, "top_scan", &err);
+    cl_kernel top_scan = CECL_KERNEL(prog, "top_scan", &err);
     CL_CHECK_ERROR(err);
 
-    cl_kernel bottom_scan = clCreateKernel(prog, "bottom_scan", &err);
+    cl_kernel bottom_scan = CECL_KERNEL(prog, "bottom_scan", &err);
     CL_CHECK_ERROR(err);
 
     if ( getMaxWorkGroupSize(ctx, reduce)      < 256 ||
@@ -238,18 +239,18 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     T* reference = new T[size];
 
     // Allocate pinned host memory for input data (h_idata)
-    cl_mem h_i = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+    cl_mem h_i = CECL_BUFFER(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
             bytes, NULL, &err);
     CL_CHECK_ERROR(err);
-    T* h_idata = (T*)clEnqueueMapBuffer(queue, h_i, true,
+    T* h_idata = (T*)CECL_MAP_BUFFER(queue, h_i, true,
             CL_MAP_READ|CL_MAP_WRITE, 0, bytes, 0, NULL, NULL, &err);
     CL_CHECK_ERROR(err);
 
     // Allocate pinned host memory for output data (h_odata)
-    cl_mem h_o = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+    cl_mem h_o = CECL_BUFFER(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
             bytes, NULL, &err);
     CL_CHECK_ERROR(err);
-    T* h_odata = (T*)clEnqueueMapBuffer(queue, h_o, true,
+    T* h_odata = (T*)CECL_MAP_BUFFER(queue, h_o, true,
             CL_MAP_READ|CL_MAP_WRITE, 0, bytes, 0, NULL, NULL, &err);
     CL_CHECK_ERROR(err);
 
@@ -262,11 +263,11 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     }
 
     // Allocate device memory for input array
-    cl_mem d_idata = clCreateBuffer(ctx, CL_MEM_READ_WRITE, bytes, NULL, &err);
+    cl_mem d_idata = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, bytes, NULL, &err);
     CL_CHECK_ERROR(err);
 
     // Allocate device memory for output array
-    cl_mem d_odata = clCreateBuffer(ctx, CL_MEM_READ_WRITE, bytes, NULL, &err);
+    cl_mem d_odata = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, bytes, NULL, &err);
     CL_CHECK_ERROR(err);
 
     // Number of local work items per group
@@ -277,44 +278,44 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     const size_t num_work_groups = global_wsize / local_wsize;
 
     // Allocate device memory for local work group intermediate sums
-    cl_mem d_isums = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+    cl_mem d_isums = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
             num_work_groups * sizeof(T), NULL, &err);
     CL_CHECK_ERROR(err);
 
     // Set the kernel arguments for the reduction kernel
-    err = clSetKernelArg(reduce, 0, sizeof(cl_mem), (void*)&d_idata);
+    err = CECL_SET_KERNEL_ARG(reduce, 0, sizeof(cl_mem), (void*)&d_idata);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(reduce, 1, sizeof(cl_mem), (void*)&d_isums);
+    err = CECL_SET_KERNEL_ARG(reduce, 1, sizeof(cl_mem), (void*)&d_isums);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(reduce, 2, sizeof(cl_int), (void*)&size);
+    err = CECL_SET_KERNEL_ARG(reduce, 2, sizeof(cl_int), (void*)&size);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(reduce, 3, local_wsize * sizeof(T), NULL);
+    err = CECL_SET_KERNEL_ARG(reduce, 3, local_wsize * sizeof(T), NULL);
     CL_CHECK_ERROR(err);
 
     // Set the kernel arguments for the top-level scan
-    err = clSetKernelArg(top_scan, 0, sizeof(cl_mem), (void*)&d_isums);
+    err = CECL_SET_KERNEL_ARG(top_scan, 0, sizeof(cl_mem), (void*)&d_isums);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(top_scan, 1, sizeof(cl_int), (void*)&num_work_groups);
+    err = CECL_SET_KERNEL_ARG(top_scan, 1, sizeof(cl_int), (void*)&num_work_groups);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(top_scan, 2, local_wsize * 2 * sizeof(T), NULL);
+    err = CECL_SET_KERNEL_ARG(top_scan, 2, local_wsize * 2 * sizeof(T), NULL);
     CL_CHECK_ERROR(err);
 
     // Set the kernel arguments for the bottom-level scan
-    err = clSetKernelArg(bottom_scan, 0, sizeof(cl_mem), (void*)&d_idata);
+    err = CECL_SET_KERNEL_ARG(bottom_scan, 0, sizeof(cl_mem), (void*)&d_idata);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(bottom_scan, 1, sizeof(cl_mem), (void*)&d_isums);
+    err = CECL_SET_KERNEL_ARG(bottom_scan, 1, sizeof(cl_mem), (void*)&d_isums);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(bottom_scan, 2, sizeof(cl_mem), (void*)&d_odata);
+    err = CECL_SET_KERNEL_ARG(bottom_scan, 2, sizeof(cl_mem), (void*)&d_odata);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(bottom_scan, 3, sizeof(cl_int), (void*)&size);
+    err = CECL_SET_KERNEL_ARG(bottom_scan, 3, sizeof(cl_int), (void*)&size);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(bottom_scan, 4, local_wsize * 2 * sizeof(T), NULL);
+    err = CECL_SET_KERNEL_ARG(bottom_scan, 4, local_wsize * 2 * sizeof(T), NULL);
     CL_CHECK_ERROR(err);
 
     // Copy data to GPU
     cout << "Copying input data to device." << endl;
     Event evTransfer("PCIe transfer");
-    err = clEnqueueWriteBuffer(queue, d_idata, true, 0, bytes, h_idata, 0,
+    err = CECL_WRITE_BUFFER(queue, d_idata, true, 0, bytes, h_idata, 0,
             NULL, &evTransfer.CLEvent());
     CL_CHECK_ERROR(err);
     err = clFinish(queue);
@@ -336,21 +337,21 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
             // Each thread block gets an equal portion of the
             // input array, and computes the sum.
-            err = clEnqueueNDRangeKernel(queue, reduce, 1, NULL,
+            err = CECL_ND_RANGE_KERNEL(queue, reduce, 1, NULL,
                         &global_wsize, &local_wsize, 0, NULL, NULL);
             CL_CHECK_ERROR(err);
 
             // Next, a top-level exclusive scan is performed on the array
             // of block sums
             Event ev_tscan("Top-Level Scan Kernel");
-            err = clEnqueueNDRangeKernel(queue, top_scan, 1, NULL,
+            err = CECL_ND_RANGE_KERNEL(queue, top_scan, 1, NULL,
                         &local_wsize, &local_wsize, 0, NULL, NULL);
 
             CL_CHECK_ERROR(err);
 
             // Finally, a bottom-level scan is performed by each block
             // that is seeded with the scanned value in block sums
-            err = clEnqueueNDRangeKernel(queue, bottom_scan, 1, NULL,
+            err = CECL_ND_RANGE_KERNEL(queue, bottom_scan, 1, NULL,
                         &global_wsize, &local_wsize, 0, NULL, NULL);
             CL_CHECK_ERROR(err);
         }
@@ -358,7 +359,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         CL_CHECK_ERROR(err);
         double totalScanTime = Timer::Stop(th, "total scan time");
 
-        err = clEnqueueReadBuffer(queue, d_odata, true, 0, bytes, h_odata,
+        err = CECL_READ_BUFFER(queue, d_odata, true, 0, bytes, h_odata,
                 0, NULL, &evTransfer.CLEvent());
         CL_CHECK_ERROR(err);
         err = clFinish(queue);

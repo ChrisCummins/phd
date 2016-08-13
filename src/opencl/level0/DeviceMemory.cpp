@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -387,16 +388,16 @@ void RunBenchmark(cl_device_id dev,
                 std::string kernelCode(oss.str());
 
                 const char* progSource[] = {kernelCode.c_str()};
-                cl_program prog = clCreateProgramWithSource(ctx, 1,
+                cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx, 1,
                                   progSource, NULL, &err);
                 CL_CHECK_ERROR(err);
 
                 // Compile the program
-                err = clBuildProgram(prog, 0, NULL, NULL, NULL, NULL);
+                err = CECL_PROGRAM(prog, 0, NULL, NULL, NULL, NULL);
                 CL_CHECK_ERROR(err);
 
                 // Extract out memory kernels
-                cl_kernel kernel_mem = clCreateKernel(prog,
+                cl_kernel kernel_mem = CECL_KERNEL(prog,
                               kName.c_str(), &err);
                 CL_CHECK_ERROR(err);
 
@@ -446,12 +447,12 @@ void RunBenchmark(cl_device_id dev,
                 case INT_TYPE:
                 {
                     elemSize = sizeof(int);
-                    mem1 = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+                    mem1 = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
                                  sizeof(cl_int)*(numWordsInt),
                                  NULL, &err);
                     CL_CHECK_ERROR(err);
                     Event evDownloadPrime("DownloadPrime");
-                    err = clEnqueueWriteBuffer(queue, mem1, false, 0,
+                    err = CECL_WRITE_BUFFER(queue, mem1, false, 0,
                                  (numWordsInt)*sizeof(int),
                                  hostMemInt,
                                  0, NULL,
@@ -460,12 +461,12 @@ void RunBenchmark(cl_device_id dev,
                     err = clWaitForEvents(1, &evDownloadPrime.CLEvent());
                     CL_CHECK_ERROR(err);
 
-                    mem2 = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+                    mem2 = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
                                  sizeof(cl_int)*(numWordsInt),
                                  NULL, &err);
                     CL_CHECK_ERROR(err);
                     Event evDownloadPrime2("DownloadPrime");
-                    err = clEnqueueWriteBuffer(queue, mem2, false, 0,
+                    err = CECL_WRITE_BUFFER(queue, mem2, false, 0,
                                  (numWordsInt)*sizeof(int),
                                  hostMemInt,
                                  0, NULL,
@@ -479,12 +480,12 @@ void RunBenchmark(cl_device_id dev,
                 case FLOAT_TYPE:
                 {
                     elemSize = sizeof(float);
-                    mem1 = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+                    mem1 = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
                                  sizeof(cl_float)*(numWordsFloat),
                                  NULL, &err);
                     CL_CHECK_ERROR(err);
                     Event evDownloadPrime("DownloadPrime");
-                    err = clEnqueueWriteBuffer(queue, mem1, false, 0,
+                    err = CECL_WRITE_BUFFER(queue, mem1, false, 0,
                                  (numWordsFloat)*sizeof(float),
                                  hostMemFloat,
                                  0, NULL,
@@ -493,12 +494,12 @@ void RunBenchmark(cl_device_id dev,
                     err = clWaitForEvents(1, &evDownloadPrime.CLEvent());
                     CL_CHECK_ERROR(err);
 
-                    mem2 = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+                    mem2 = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
                                  sizeof(cl_float)*(numWordsFloat),
                                  NULL, &err);
                     CL_CHECK_ERROR(err);
                     Event evDownloadPrime2("DownloadPrime");
-                    err = clEnqueueWriteBuffer(queue, mem2, false, 0,
+                    err = CECL_WRITE_BUFFER(queue, mem2, false, 0,
                                  (numWordsFloat)*sizeof(float),
                                  hostMemFloat,
                                  0, NULL,
@@ -534,12 +535,12 @@ void RunBenchmark(cl_device_id dev,
                          << ":\n" + kernelCode << endl;
 
                 const char* progSource[] = {kernelCode.c_str()};
-                cl_program prog = clCreateProgramWithSource(ctx, 1,
+                cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx, 1,
                                   progSource, NULL, &err);
                 CL_CHECK_ERROR(err);
 
                 // Compile the program
-                err = clBuildProgram(prog, 0, NULL, NULL, NULL, NULL);
+                err = CECL_PROGRAM(prog, 0, NULL, NULL, NULL, NULL);
                 CL_CHECK_ERROR(err);
 
                 // check if we have to dump the PTX
@@ -549,30 +550,30 @@ void RunBenchmark(cl_device_id dev,
                     dumpPTXCode(ctx, prog, kName.c_str());
 
                 // Extract out memory kernels
-                cl_kernel kernel_mem = clCreateKernel(prog,
+                cl_kernel kernel_mem = CECL_KERNEL(prog,
                               kName.c_str(), &err);
                 CL_CHECK_ERROR(err);
 
                 int argIdx = 0;
                 if (opt == OP_MEM_READ)
                 {
-                    err = clSetKernelArg(kernel_mem, argIdx,
+                    err = CECL_SET_KERNEL_ARG(kernel_mem, argIdx,
                                 sizeof(cl_mem),
                                 (void*)&mem1);
                     CL_CHECK_ERROR(err);
                     ++ argIdx;
                 }
-                err = clSetKernelArg(kernel_mem, argIdx,
+                err = CECL_SET_KERNEL_ARG(kernel_mem, argIdx,
                                 sizeof(cl_mem),
                                 (void*)&mem2);
                 CL_CHECK_ERROR(err);
                 ++ argIdx;
                 if (et == INT_TYPE)
-                   err = clSetKernelArg(kernel_mem, argIdx,
+                   err = CECL_SET_KERNEL_ARG(kernel_mem, argIdx,
                                 sizeof(cl_int),
                                 (void*)&numWordsInt);
                 else
-                   err = clSetKernelArg(kernel_mem, argIdx,
+                   err = CECL_SET_KERNEL_ARG(kernel_mem, argIdx,
                                 sizeof(cl_int),
                                 (void*)&numWordsFloat);
                 CL_CHECK_ERROR(err);
@@ -606,7 +607,7 @@ void RunBenchmark(cl_device_id dev,
                     for (int pas=0 ; pas<npasses ; ++pas)
                     {
                         Event evKernel(kName.c_str());
-                        err = clEnqueueNDRangeKernel(queue,
+                        err = CECL_ND_RANGE_KERNEL(queue,
                                     kernel_mem, 1, NULL,
                                     &globalWorkSize, &localWorkSize,
                                     0, NULL, &evKernel.CLEvent());
@@ -620,12 +621,12 @@ void RunBenchmark(cl_device_id dev,
                         Event evReadback("Readback");
                         if (et == INT_TYPE)
                         {
-                            err = clEnqueueReadBuffer(queue, mem2, false, 0,
+                            err = CECL_READ_BUFFER(queue, mem2, false, 0,
                                      numWordsInt*sizeof(int), outMemInt,
                                      0, NULL, &evReadback.CLEvent());
                         } else
                         {
-                            err = clEnqueueReadBuffer(queue, mem2, false, 0,
+                            err = CECL_READ_BUFFER(queue, mem2, false, 0,
                                      numWordsFloat*sizeof(float), outMemFloat,
                                      0, NULL, &evReadback.CLEvent());
                         }
@@ -852,22 +853,22 @@ void TestImageMemory(cl_context ctx,
             "    d_out[idx] = sum; "
             "} ";
     // Create program option from the source string
-    cl_program prog = clCreateProgramWithSource(ctx, 1,
+    cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx, 1,
             &kernelSource, NULL, &err);
     CL_CHECK_ERROR(err);
 
     // Compile the program
-    err = clBuildProgram(prog, 0, NULL, NULL, NULL, NULL);
+    err = CECL_PROGRAM(prog, 0, NULL, NULL, NULL, NULL);
     CL_CHECK_ERROR(err);
 
     // Extract out kernels
-    cl_kernel linear = clCreateKernel(prog, "readImg", &err);
+    cl_kernel linear = CECL_KERNEL(prog, "readImg", &err);
     CL_CHECK_ERROR(err);
 
-    cl_kernel cache = clCreateKernel(prog, "readInCache", &err);
+    cl_kernel cache = CECL_KERNEL(prog, "readInCache", &err);
     CL_CHECK_ERROR(err);
 
-    cl_kernel rand = clCreateKernel(prog, "readRand", &err);
+    cl_kernel rand = CECL_KERNEL(prog, "readRand", &err);
     CL_CHECK_ERROR(err);
 
     // Current NVIDIA OCL Implementation seems to have a problem with
@@ -919,7 +920,7 @@ void TestImageMemory(cl_context ctx,
         }
 
         // Create dev memory for output
-        cl_mem d_out = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+        cl_mem d_out = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
                 sizeof(float)*numFloat4, NULL, &err);
         CL_CHECK_ERROR(err);
 
@@ -963,42 +964,42 @@ void TestImageMemory(cl_context ctx,
         globalWorkSize[1] = height;
 
         // Set Kernel Arguments
-        err = clSetKernelArg(linear, 0, sizeof(cl_int),
+        err = CECL_SET_KERNEL_ARG(linear, 0, sizeof(cl_int),
                 (void*)&kernelRepFactor);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(linear, 1, sizeof(cl_mem), (void*)&d_out);
+        err = CECL_SET_KERNEL_ARG(linear, 1, sizeof(cl_mem), (void*)&d_out);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(linear, 2, sizeof(cl_mem), (void*)&d_img);
+        err = CECL_SET_KERNEL_ARG(linear, 2, sizeof(cl_mem), (void*)&d_img);
         CL_CHECK_ERROR(err);
-           err = clSetKernelArg(linear, 3, sizeof(cl_sampler), (void*)&sampler);
+           err = CECL_SET_KERNEL_ARG(linear, 3, sizeof(cl_sampler), (void*)&sampler);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(linear, 4, sizeof(cl_int), (void*)&width);
+        err = CECL_SET_KERNEL_ARG(linear, 4, sizeof(cl_int), (void*)&width);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(linear, 5, sizeof(cl_int), (void*)&height);
+        err = CECL_SET_KERNEL_ARG(linear, 5, sizeof(cl_int), (void*)&height);
         CL_CHECK_ERROR(err);
 
-        err = clSetKernelArg(cache, 0, sizeof(cl_int),
+        err = CECL_SET_KERNEL_ARG(cache, 0, sizeof(cl_int),
                 (void*)&kernelRepFactor);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(cache, 1, sizeof(cl_mem), (void*)&d_out);
+        err = CECL_SET_KERNEL_ARG(cache, 1, sizeof(cl_mem), (void*)&d_out);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(cache, 2, sizeof(cl_mem), (void*)&d_img);
+        err = CECL_SET_KERNEL_ARG(cache, 2, sizeof(cl_mem), (void*)&d_img);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(cache, 3, sizeof(cl_sampler), (void*)&sampler);
+        err = CECL_SET_KERNEL_ARG(cache, 3, sizeof(cl_sampler), (void*)&sampler);
         CL_CHECK_ERROR(err);
 
-        err = clSetKernelArg(rand, 0, sizeof(cl_int),
+        err = CECL_SET_KERNEL_ARG(rand, 0, sizeof(cl_int),
                 (void*)&kernelRepFactor);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(rand, 1, sizeof(cl_mem), (void*)&d_out);
+        err = CECL_SET_KERNEL_ARG(rand, 1, sizeof(cl_mem), (void*)&d_out);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(rand, 2, sizeof(cl_mem), (void*)&d_img);
+        err = CECL_SET_KERNEL_ARG(rand, 2, sizeof(cl_mem), (void*)&d_img);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(rand, 3, sizeof(cl_sampler), (void*)&sampler);
+        err = CECL_SET_KERNEL_ARG(rand, 3, sizeof(cl_sampler), (void*)&sampler);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(rand, 4, sizeof(cl_int), (void*)&width);
+        err = CECL_SET_KERNEL_ARG(rand, 4, sizeof(cl_int), (void*)&width);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(rand, 5, sizeof(cl_int), (void*)&height);
+        err = CECL_SET_KERNEL_ARG(rand, 5, sizeof(cl_int), (void*)&height);
         CL_CHECK_ERROR(err);
 
         for (int p = 0; p < passes; p++)
@@ -1007,7 +1008,7 @@ void TestImageMemory(cl_context ctx,
             double t = 0;
 
             // read texels from texture
-            err = clEnqueueNDRangeKernel(queue, linear, 2, NULL, globalWorkSize,
+            err = CECL_ND_RANGE_KERNEL(queue, linear, 2, NULL, globalWorkSize,
                     localWorkSize, 0, NULL, &evKernel.CLEvent());
             clFinish(queue);
             CL_CHECK_ERROR(err);
@@ -1024,12 +1025,12 @@ void TestImageMemory(cl_context ctx,
                     speed);
 
             // Verify results
-            err = clEnqueueReadBuffer(queue, d_out, true, 0,
+            err = CECL_READ_BUFFER(queue, d_out, true, 0,
                     numFloat4 * sizeof(float), h_out, 0, NULL, NULL);
             CL_CHECK_ERROR(err);
 
             // Test 2 Repeated Cache Access
-            err = clEnqueueNDRangeKernel(queue,
+            err = CECL_ND_RANGE_KERNEL(queue,
                     cache, 2, NULL, globalWorkSize,
                     localWorkSize, 0, NULL, &evKernel.CLEvent());
             CL_CHECK_ERROR(err);
@@ -1048,12 +1049,12 @@ void TestImageMemory(cl_context ctx,
                     speed);
 
             // Verify results
-            err = clEnqueueReadBuffer(queue, d_out, true, 0,
+            err = CECL_READ_BUFFER(queue, d_out, true, 0,
                     numFloat4 * sizeof(float), h_out, 0, NULL, NULL);
             CL_CHECK_ERROR(err);
 
             // Test 3 Repeated "Random" Access
-            err = clEnqueueNDRangeKernel(queue,
+            err = CECL_ND_RANGE_KERNEL(queue,
                     rand, 2, NULL, globalWorkSize,
                     localWorkSize, 0, NULL, &evKernel.CLEvent());
             clFinish(queue);

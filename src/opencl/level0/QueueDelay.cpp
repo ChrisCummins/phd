@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <iostream>
 #include "support.h"
 #include "Event.h"
@@ -77,13 +78,13 @@ void RunBenchmark(cl_device_id id,
         "__kernel void three(__global int* c) {int cc;}",
         "__kernel  void four(__global int* d) {int dd;}"
     };
-    cl_program prog = clCreateProgramWithSource(ctx,
+    cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx,
                                                 4, plusOneCLSource, NULL,
                                                 &err);
     CL_CHECK_ERROR(err);
 
     // Compile the program
-    err = clBuildProgram(prog, 0, NULL, NULL, NULL, NULL);
+    err = CECL_PROGRAM(prog, 0, NULL, NULL, NULL, NULL);
     CL_CHECK_ERROR(err);
 
     // If there is a build error, print the output and return
@@ -100,31 +101,31 @@ void RunBenchmark(cl_device_id id,
     }
 
     // Extract out kernel
-    cl_kernel kernel1 = clCreateKernel(prog, "one", &err);
+    cl_kernel kernel1 = CECL_KERNEL(prog, "one", &err);
     CL_CHECK_ERROR(err);
 
     // Extract out "plus-two" kernel
-    cl_kernel kernel2 = clCreateKernel(prog, "two", &err);
+    cl_kernel kernel2 = CECL_KERNEL(prog, "two", &err);
     CL_CHECK_ERROR(err);
 
     // Extract out "plus-three" kernel
-    cl_kernel kernel3 = clCreateKernel(prog, "three", &err);
+    cl_kernel kernel3 = CECL_KERNEL(prog, "three", &err);
     CL_CHECK_ERROR(err);
 
     // Extract out "plus-four" kernel
-    cl_kernel kernel4 = clCreateKernel(prog, "four", &err);
+    cl_kernel kernel4 = CECL_KERNEL(prog, "four", &err);
     CL_CHECK_ERROR(err);
 
-    cl_mem zero = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+    cl_mem zero = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
             sizeof(cl_int), NULL, &err);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(kernel1, 0, sizeof(cl_mem),
+    err = CECL_SET_KERNEL_ARG(kernel1, 0, sizeof(cl_mem),
             (void*) &zero);
-    err = clSetKernelArg(kernel2, 0, sizeof(cl_mem),
+    err = CECL_SET_KERNEL_ARG(kernel2, 0, sizeof(cl_mem),
             (void*) &zero);
-    err = clSetKernelArg(kernel3, 0, sizeof(cl_mem),
+    err = CECL_SET_KERNEL_ARG(kernel3, 0, sizeof(cl_mem),
             (void*) &zero);
-    err = clSetKernelArg(kernel4, 0, sizeof(cl_mem),
+    err = CECL_SET_KERNEL_ARG(kernel4, 0, sizeof(cl_mem),
             (void*) &zero);
 
     size_t maxGroupSize = getMaxWorkGroupSize(ctx, kernel1);
@@ -143,16 +144,16 @@ void RunBenchmark(cl_device_id id,
           Event evKernel3("Run Kernel3");
           Event evKernel4("Run Kernel4");
 
-          err = clEnqueueNDRangeKernel(queue, kernel1, 1, NULL,
+          err = CECL_ND_RANGE_KERNEL(queue, kernel1, 1, NULL,
                                        &globalWorkSize, &localWorkSize,
                                        0, NULL, &evKernel1.CLEvent());
-          err = clEnqueueNDRangeKernel(queue, kernel1, 1, NULL,
+          err = CECL_ND_RANGE_KERNEL(queue, kernel1, 1, NULL,
                                        &globalWorkSize, &localWorkSize,
                                        0, NULL, &evKernel2.CLEvent());
-          err = clEnqueueNDRangeKernel(queue, kernel1, 1, NULL,
+          err = CECL_ND_RANGE_KERNEL(queue, kernel1, 1, NULL,
                                        &globalWorkSize, &localWorkSize,
                                        0, NULL, &evKernel3.CLEvent());
-          err = clEnqueueNDRangeKernel(queue, kernel1, 1, NULL,
+          err = CECL_ND_RANGE_KERNEL(queue, kernel1, 1, NULL,
                                        &globalWorkSize, &localWorkSize,
                                        0, NULL, &evKernel4.CLEvent());
           CL_CHECK_ERROR(err);
@@ -192,22 +193,22 @@ void RunBenchmark(cl_device_id id,
            Event evKernel3("Run Kernel3");
            Event evKernel4("Run Kernel4");
 
-           err = clEnqueueNDRangeKernel(queue, kernel1, 1, NULL,
+           err = CECL_ND_RANGE_KERNEL(queue, kernel1, 1, NULL,
                                        &globalWorkSize, &localWorkSize,
                                        0, NULL, &evKernel1.CLEvent());
           CL_CHECK_ERROR(err);
 
-          err = clEnqueueNDRangeKernel(queue, kernel2, 1, NULL,
+          err = CECL_ND_RANGE_KERNEL(queue, kernel2, 1, NULL,
                                        &globalWorkSize, &localWorkSize,
                                        0, NULL, &evKernel2.CLEvent());
           CL_CHECK_ERROR(err);
 
-          err = clEnqueueNDRangeKernel(queue, kernel1, 1, NULL,
+          err = CECL_ND_RANGE_KERNEL(queue, kernel1, 1, NULL,
                                        &globalWorkSize, &localWorkSize,
                                        0, NULL, &evKernel3.CLEvent());
           CL_CHECK_ERROR(err);
 
-          err = clEnqueueNDRangeKernel(queue, kernel2, 1, NULL,
+          err = CECL_ND_RANGE_KERNEL(queue, kernel2, 1, NULL,
                                        &globalWorkSize, &localWorkSize,
                                        0, NULL, &evKernel4.CLEvent());
           CL_CHECK_ERROR(err);
@@ -247,22 +248,22 @@ void RunBenchmark(cl_device_id id,
           Event evKernel3("Run Kernel3");
           Event evKernel4("Run Kernel4");
 
-          err = clEnqueueNDRangeKernel(queue, kernel1, 1, NULL,
+          err = CECL_ND_RANGE_KERNEL(queue, kernel1, 1, NULL,
                                        &globalWorkSize, &localWorkSize,
                                        0, NULL, &evKernel1.CLEvent());
           CL_CHECK_ERROR(err);
 
-          err = clEnqueueNDRangeKernel(queue, kernel2, 1, NULL,
+          err = CECL_ND_RANGE_KERNEL(queue, kernel2, 1, NULL,
                                        &globalWorkSize, &localWorkSize,
                                        0, NULL, &evKernel2.CLEvent());
           CL_CHECK_ERROR(err);
 
-          err = clEnqueueNDRangeKernel(queue, kernel3, 1, NULL,
+          err = CECL_ND_RANGE_KERNEL(queue, kernel3, 1, NULL,
                                        &globalWorkSize, &localWorkSize,
                                        0, NULL, &evKernel3.CLEvent());
           CL_CHECK_ERROR(err);
 
-          err = clEnqueueNDRangeKernel(queue, kernel4, 1, NULL,
+          err = CECL_ND_RANGE_KERNEL(queue, kernel4, 1, NULL,
                                        &globalWorkSize, &localWorkSize,
                                        0, NULL, &evKernel4.CLEvent());
           CL_CHECK_ERROR(err);

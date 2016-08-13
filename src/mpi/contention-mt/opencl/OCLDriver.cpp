@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <iostream>
 #include <stdlib.h>
 
@@ -83,7 +84,7 @@ int GPUSetup(OptionParser &op, int mympirank, int mynoderank)
     CL_CHECK_ERROR(clErr);
     _mpicontention_ocldriver_ctx = new cl_context(ctx);
 
-    cl_command_queue queue = clCreateCommandQueue(ctx,
+    cl_command_queue queue = CECL_CREATE_COMMAND_QUEUE(ctx,
                                                 *_mpicontention_ocldev,
                                                 CL_QUEUE_PROFILING_ENABLE,
                                                 &clErr);

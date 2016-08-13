@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -321,85 +322,85 @@ void RunTest(const string& testName, cl_device_id dev, cl_context ctx,
         cout.flush();
 
         // GR Base Kernels
-        cl_kernel grBase_kernel = clCreateKernel(gr_prog, "gr_base", &err);
+        cl_kernel grBase_kernel = CECL_KERNEL(gr_prog, "gr_base", &err);
         CL_CHECK_ERROR(err);
 
         // RDSMH Kernels
-        cl_kernel rdsmh_kernel = clCreateKernel(rdsmh_prog, "rdsmh_kernel",
+        cl_kernel rdsmh_kernel = CECL_KERNEL(rdsmh_prog, "rdsmh_kernel",
                 &err);
         CL_CHECK_ERROR(err);
 
         // RATT Kernels
-        cl_kernel ratt_kernel = clCreateKernel(ratt_prog, "ratt_kernel", &err);
+        cl_kernel ratt_kernel = CECL_KERNEL(ratt_prog, "ratt_kernel", &err);
         CL_CHECK_ERROR(err);
-        cl_kernel ratt2_kernel = clCreateKernel(ratt2_prog, "ratt2_kernel",
+        cl_kernel ratt2_kernel = CECL_KERNEL(ratt2_prog, "ratt2_kernel",
                 &err);
         CL_CHECK_ERROR(err);
-        cl_kernel ratt3_kernel = clCreateKernel(ratt3_prog, "ratt3_kernel",
+        cl_kernel ratt3_kernel = CECL_KERNEL(ratt3_prog, "ratt3_kernel",
                 &err);
         CL_CHECK_ERROR(err);
-        cl_kernel ratt4_kernel = clCreateKernel(ratt4_prog, "ratt4_kernel",
+        cl_kernel ratt4_kernel = CECL_KERNEL(ratt4_prog, "ratt4_kernel",
                 &err);
         CL_CHECK_ERROR(err);
-        cl_kernel ratt5_kernel = clCreateKernel(ratt5_prog, "ratt5_kernel",
+        cl_kernel ratt5_kernel = CECL_KERNEL(ratt5_prog, "ratt5_kernel",
                 &err);
         CL_CHECK_ERROR(err);
-        cl_kernel ratt6_kernel = clCreateKernel(ratt6_prog, "ratt6_kernel",
+        cl_kernel ratt6_kernel = CECL_KERNEL(ratt6_prog, "ratt6_kernel",
                 &err);
         CL_CHECK_ERROR(err);
-        cl_kernel ratt7_kernel = clCreateKernel(ratt7_prog, "ratt7_kernel",
+        cl_kernel ratt7_kernel = CECL_KERNEL(ratt7_prog, "ratt7_kernel",
                 &err);
         CL_CHECK_ERROR(err);
-        cl_kernel ratt8_kernel = clCreateKernel(ratt8_prog, "ratt8_kernel",
+        cl_kernel ratt8_kernel = CECL_KERNEL(ratt8_prog, "ratt8_kernel",
                 &err);
         CL_CHECK_ERROR(err);
-        cl_kernel ratt9_kernel = clCreateKernel(ratt9_prog, "ratt9_kernel",
+        cl_kernel ratt9_kernel = CECL_KERNEL(ratt9_prog, "ratt9_kernel",
                 &err);
         CL_CHECK_ERROR(err);
-        cl_kernel ratt10_kernel = clCreateKernel(ratt10_prog, "ratt10_kernel",
+        cl_kernel ratt10_kernel = CECL_KERNEL(ratt10_prog, "ratt10_kernel",
                 &err);
         CL_CHECK_ERROR(err);
 
         // RATX Kernels
-        cl_kernel ratx_kernel = clCreateKernel(ratx_prog, "ratx_kernel", &err);
+        cl_kernel ratx_kernel = CECL_KERNEL(ratx_prog, "ratx_kernel", &err);
         CL_CHECK_ERROR(err);
-        cl_kernel ratxb_kernel = clCreateKernel(ratxb_prog, "ratxb_kernel",
+        cl_kernel ratxb_kernel = CECL_KERNEL(ratxb_prog, "ratxb_kernel",
                 &err);
         CL_CHECK_ERROR(err);
-        cl_kernel ratx2_kernel = clCreateKernel(ratx2_prog, "ratx2_kernel",
+        cl_kernel ratx2_kernel = CECL_KERNEL(ratx2_prog, "ratx2_kernel",
                 &err);
         CL_CHECK_ERROR(err);
-        cl_kernel ratx4_kernel = clCreateKernel(ratx4_prog, "ratx4_kernel",
+        cl_kernel ratx4_kernel = CECL_KERNEL(ratx4_prog, "ratx4_kernel",
                 &err);
         CL_CHECK_ERROR(err);
         cout << "done." << endl;
 
         //Set kernel arguments (phase 1)
-        err = clSetKernelArg(grBase_kernel, 0, sizeof(cl_mem), (void*)&d_p);
+        err = CECL_SET_KERNEL_ARG(grBase_kernel, 0, sizeof(cl_mem), (void*)&d_p);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(grBase_kernel, 1, sizeof(cl_mem), (void*)&d_t);
+        err = CECL_SET_KERNEL_ARG(grBase_kernel, 1, sizeof(cl_mem), (void*)&d_t);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(grBase_kernel, 2, sizeof(cl_mem), (void*)&d_y);
+        err = CECL_SET_KERNEL_ARG(grBase_kernel, 2, sizeof(cl_mem), (void*)&d_y);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(grBase_kernel, 3, sizeof(cl_mem), (void*)&d_c);
+        err = CECL_SET_KERNEL_ARG(grBase_kernel, 3, sizeof(cl_mem), (void*)&d_c);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(grBase_kernel, 4, sizeof(T), (void*)&tconv);
+        err = CECL_SET_KERNEL_ARG(grBase_kernel, 4, sizeof(T), (void*)&tconv);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(grBase_kernel, 5, sizeof(T), (void*)&pconv);
-        CL_CHECK_ERROR(err);
-
-        err = clSetKernelArg(rdsmh_kernel, 0, sizeof(cl_mem), (void*)&d_t);
-        CL_CHECK_ERROR(err);
-        err = clSetKernelArg(rdsmh_kernel, 1, sizeof(cl_mem), (void*)&d_eg);
-        CL_CHECK_ERROR(err);
-        err = clSetKernelArg(rdsmh_kernel, 2, sizeof(T), (void*)&tconv);
+        err = CECL_SET_KERNEL_ARG(grBase_kernel, 5, sizeof(T), (void*)&pconv);
         CL_CHECK_ERROR(err);
 
-        err = clSetKernelArg(ratt_kernel, 0, sizeof(cl_mem), (void*)&d_t);
+        err = CECL_SET_KERNEL_ARG(rdsmh_kernel, 0, sizeof(cl_mem), (void*)&d_t);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(ratt_kernel, 1, sizeof(cl_mem), (void*)&d_rf);
+        err = CECL_SET_KERNEL_ARG(rdsmh_kernel, 1, sizeof(cl_mem), (void*)&d_eg);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(ratt_kernel, 2, sizeof(T), (void*)&tconv);
+        err = CECL_SET_KERNEL_ARG(rdsmh_kernel, 2, sizeof(T), (void*)&tconv);
+        CL_CHECK_ERROR(err);
+
+        err = CECL_SET_KERNEL_ARG(ratt_kernel, 0, sizeof(cl_mem), (void*)&d_t);
+        CL_CHECK_ERROR(err);
+        err = CECL_SET_KERNEL_ARG(ratt_kernel, 1, sizeof(cl_mem), (void*)&d_rf);
+        CL_CHECK_ERROR(err);
+        err = CECL_SET_KERNEL_ARG(ratt_kernel, 2, sizeof(T), (void*)&tconv);
         CL_CHECK_ERROR(err);
         clSetRattArg(ratt2_kernel);
         clSetRattArg(ratt3_kernel);
@@ -409,24 +410,24 @@ void RunTest(const string& testName, cl_device_id dev, cl_context ctx,
         clSetRattArg(ratt7_kernel);
         clSetRattArg(ratt8_kernel);
         clSetRattArg(ratt9_kernel);
-        err = clSetKernelArg(ratt10_kernel, 0, sizeof(cl_mem), (void*)&d_t);
+        err = CECL_SET_KERNEL_ARG(ratt10_kernel, 0, sizeof(cl_mem), (void*)&d_t);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(ratt10_kernel, 1, sizeof(cl_mem), (void*)&d_rklow);
+        err = CECL_SET_KERNEL_ARG(ratt10_kernel, 1, sizeof(cl_mem), (void*)&d_rklow);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(ratt10_kernel, 2, sizeof(T), (void*)&tconv);
+        err = CECL_SET_KERNEL_ARG(ratt10_kernel, 2, sizeof(T), (void*)&tconv);
         CL_CHECK_ERROR(err);
 
         clSetRatxArg(ratx_kernel);
         clSetRatxArg(ratxb_kernel);
 
-        err = clSetKernelArg(ratx2_kernel, 0, sizeof(cl_mem), (void*)&d_c);
+        err = CECL_SET_KERNEL_ARG(ratx2_kernel, 0, sizeof(cl_mem), (void*)&d_c);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(ratx2_kernel, 1, sizeof(cl_mem), (void*)&d_rf);
+        err = CECL_SET_KERNEL_ARG(ratx2_kernel, 1, sizeof(cl_mem), (void*)&d_rf);
         CL_CHECK_ERROR(err);
 
-        err = clSetKernelArg(ratx4_kernel, 0, sizeof(cl_mem), (void*)&d_c);
+        err = CECL_SET_KERNEL_ARG(ratx4_kernel, 0, sizeof(cl_mem), (void*)&d_c);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(ratx4_kernel, 1, sizeof(cl_mem), (void*)&d_rb);
+        err = CECL_SET_KERNEL_ARG(ratx4_kernel, 1, sizeof(cl_mem), (void*)&d_rb);
         CL_CHECK_ERROR(err);
 
         // Execute kernels (phase 1)
@@ -536,38 +537,38 @@ void RunTest(const string& testName, cl_device_id dev, cl_context ctx,
         cout.flush();
 
         // QSSA Kernels
-        cl_kernel qssa_kernel = clCreateKernel(qssa_prog, "qssa_kernel", &err);
+        cl_kernel qssa_kernel = CECL_KERNEL(qssa_prog, "qssa_kernel", &err);
         CL_CHECK_ERROR(err);
-        cl_kernel qssab_kernel = clCreateKernel(qssab_prog, "qssab_kernel",
+        cl_kernel qssab_kernel = CECL_KERNEL(qssab_prog, "qssab_kernel",
                 &err);
         CL_CHECK_ERROR(err);
-        cl_kernel qssa2_kernel = clCreateKernel(qssa2_prog, "qssa2_kernel",
+        cl_kernel qssa2_kernel = CECL_KERNEL(qssa2_prog, "qssa2_kernel",
                 &err);
         CL_CHECK_ERROR(err);
 
         // RDWDOT Kernels
-        cl_kernel rdwdot_kernel = clCreateKernel(rdwdot_prog, "rdwdot_kernel",
+        cl_kernel rdwdot_kernel = CECL_KERNEL(rdwdot_prog, "rdwdot_kernel",
                 &err);
         CL_CHECK_ERROR(err);
-        cl_kernel rdwdot2_kernel = clCreateKernel(rdwdot2_prog,
+        cl_kernel rdwdot2_kernel = CECL_KERNEL(rdwdot2_prog,
                 "rdwdot2_kernel", &err);
         CL_CHECK_ERROR(err);
-        cl_kernel rdwdot3_kernel = clCreateKernel(rdwdot3_prog,
+        cl_kernel rdwdot3_kernel = CECL_KERNEL(rdwdot3_prog,
                 "rdwdot3_kernel", &err);
         CL_CHECK_ERROR(err);
-        cl_kernel rdwdot6_kernel = clCreateKernel(rdwdot6_prog,
+        cl_kernel rdwdot6_kernel = CECL_KERNEL(rdwdot6_prog,
                 "rdwdot6_kernel", &err);
         CL_CHECK_ERROR(err);
-        cl_kernel rdwdot7_kernel = clCreateKernel(rdwdot7_prog,
+        cl_kernel rdwdot7_kernel = CECL_KERNEL(rdwdot7_prog,
                 "rdwdot7_kernel", &err);
         CL_CHECK_ERROR(err);
-        cl_kernel rdwdot8_kernel = clCreateKernel(rdwdot8_prog,
+        cl_kernel rdwdot8_kernel = CECL_KERNEL(rdwdot8_prog,
                 "rdwdot8_kernel", &err);
         CL_CHECK_ERROR(err);
-        cl_kernel rdwdot9_kernel = clCreateKernel(rdwdot9_prog,
+        cl_kernel rdwdot9_kernel = CECL_KERNEL(rdwdot9_prog,
                 "rdwdot9_kernel", &err);
         CL_CHECK_ERROR(err);
-        cl_kernel rdwdot10_kernel = clCreateKernel(rdwdot10_prog,
+        cl_kernel rdwdot10_kernel = CECL_KERNEL(rdwdot10_prog,
                 "rdwdot10_kernel", &err);
         CL_CHECK_ERROR(err);
         cout << "done." << endl;
@@ -646,7 +647,7 @@ void RunTest(const string& testName, cl_device_id dev, cl_context ctx,
         // Estimate GFLOPs (roughly 10k flops / point)
         double gflops = (n*10000.) / total;
         // Copy results back
-        err = clEnqueueReadBuffer(queue, d_wdot, true, 0,
+        err = CECL_READ_BUFFER(queue, d_wdot, true, 0,
                 n*n_species*sizeof(T), h_wdot,
                 0, NULL, &evTransfer.CLEvent());
         CL_CHECK_ERROR(err);

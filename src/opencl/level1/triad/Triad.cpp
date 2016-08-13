@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <iostream>
 #include <stdlib.h>
 #include <string.h>
@@ -91,11 +92,11 @@ RunBenchmark(cl_device_id devid,
 
     if (pinned)
     {
-        hostMemObj = clCreateBuffer(ctx,
+        hostMemObj = CECL_BUFFER(ctx,
                                     CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                                     sizeof(float)*numMaxFloats, NULL, &err);
         CL_CHECK_ERROR(err);
-        hostMem = (float*)clEnqueueMapBuffer(queue, hostMemObj, true,
+        hostMem = (float*)CECL_MAP_BUFFER(queue, hostMemObj, true,
                                              CL_MAP_READ|CL_MAP_WRITE,
                                              0,sizeof(float)*numMaxFloats,0,
                                              NULL,NULL,&err);
@@ -107,12 +108,12 @@ RunBenchmark(cl_device_id devid,
     }
 
     // Allocate some device memory
-    cl_mem memA0 = clCreateBuffer(ctx, CL_MEM_READ_ONLY,
+    cl_mem memA0 = CECL_BUFFER(ctx, CL_MEM_READ_ONLY,
                                  blockSizes[nSizes-1]*1024,
                                  NULL, &err);
     CL_CHECK_ERROR(err);
     Event evDownloadPrimeA0("DownloadPrimeA0");
-    err = clEnqueueWriteBuffer(queue, memA0, false, 0,
+    err = CECL_WRITE_BUFFER(queue, memA0, false, 0,
                                blockSizes[nSizes-1]*1024,
                                hostMem, 0, NULL,
                                &evDownloadPrimeA0.CLEvent());
@@ -120,12 +121,12 @@ RunBenchmark(cl_device_id devid,
     err = clWaitForEvents(1, &evDownloadPrimeA0.CLEvent());
     CL_CHECK_ERROR(err);
 
-    cl_mem memB0 = clCreateBuffer(ctx, CL_MEM_READ_ONLY,
+    cl_mem memB0 = CECL_BUFFER(ctx, CL_MEM_READ_ONLY,
                                  blockSizes[nSizes-1]*1024,
                                  NULL, &err);
     CL_CHECK_ERROR(err);
     Event evDownloadPrimeB0("DownloadPrimeB0");
-    err = clEnqueueWriteBuffer(queue, memB0, false, 0,
+    err = CECL_WRITE_BUFFER(queue, memB0, false, 0,
                                blockSizes[nSizes-1]*1024,
                                hostMem, 0, NULL,
                                &evDownloadPrimeB0.CLEvent());
@@ -133,12 +134,12 @@ RunBenchmark(cl_device_id devid,
     err = clWaitForEvents(1, &evDownloadPrimeB0.CLEvent());
     CL_CHECK_ERROR(err);
 
-    cl_mem memC0 = clCreateBuffer(ctx, CL_MEM_WRITE_ONLY,
+    cl_mem memC0 = CECL_BUFFER(ctx, CL_MEM_WRITE_ONLY,
                                  blockSizes[nSizes-1]*1024,
                                  NULL, &err);
     CL_CHECK_ERROR(err);
     Event evDownloadPrimeC0("DownloadPrimeC0");
-    err = clEnqueueWriteBuffer(queue, memC0, false, 0,
+    err = CECL_WRITE_BUFFER(queue, memC0, false, 0,
                                blockSizes[nSizes-1]*1024,
                                hostMem, 0, NULL,
                                &evDownloadPrimeC0.CLEvent());
@@ -146,12 +147,12 @@ RunBenchmark(cl_device_id devid,
     err = clWaitForEvents(1, &evDownloadPrimeC0.CLEvent());
     CL_CHECK_ERROR(err);
 
-    cl_mem memA1 = clCreateBuffer(ctx, CL_MEM_READ_ONLY,
+    cl_mem memA1 = CECL_BUFFER(ctx, CL_MEM_READ_ONLY,
                                  blockSizes[nSizes-1]*1024,
                                  NULL, &err);
     CL_CHECK_ERROR(err);
     Event evDownloadPrimeA1("DownloadPrimeA1");
-    err = clEnqueueWriteBuffer(queue, memA1, false, 0,
+    err = CECL_WRITE_BUFFER(queue, memA1, false, 0,
                                blockSizes[nSizes-1]*1024,
                                hostMem, 0, NULL,
                                &evDownloadPrimeA1.CLEvent());
@@ -159,12 +160,12 @@ RunBenchmark(cl_device_id devid,
     err = clWaitForEvents(1, &evDownloadPrimeA1.CLEvent());
     CL_CHECK_ERROR(err);
 
-    cl_mem memB1 = clCreateBuffer(ctx, CL_MEM_READ_ONLY,
+    cl_mem memB1 = CECL_BUFFER(ctx, CL_MEM_READ_ONLY,
                                  blockSizes[nSizes-1]*1024,
                                  NULL, &err);
     CL_CHECK_ERROR(err);
     Event evDownloadPrimeB1("DownloadPrimeB1");
-    err = clEnqueueWriteBuffer(queue, memB1, false, 0,
+    err = CECL_WRITE_BUFFER(queue, memB1, false, 0,
                                blockSizes[nSizes-1]*1024,
                                hostMem, 0, NULL,
                                &evDownloadPrimeB1.CLEvent());
@@ -172,12 +173,12 @@ RunBenchmark(cl_device_id devid,
     err = clWaitForEvents(1, &evDownloadPrimeB1.CLEvent());
     CL_CHECK_ERROR(err);
 
-    cl_mem memC1 = clCreateBuffer(ctx, CL_MEM_WRITE_ONLY,
+    cl_mem memC1 = CECL_BUFFER(ctx, CL_MEM_WRITE_ONLY,
                                  blockSizes[nSizes-1]*1024,
                                  NULL, &err);
     CL_CHECK_ERROR(err);
     Event evDownloadPrimeC1("DownloadPrimeC1");
-    err = clEnqueueWriteBuffer(queue, memC1, false, 0,
+    err = CECL_WRITE_BUFFER(queue, memC1, false, 0,
                                blockSizes[nSizes-1]*1024,
                                hostMem, 0, NULL,
                                &evDownloadPrimeC1.CLEvent());
@@ -197,11 +198,11 @@ RunBenchmark(cl_device_id devid,
          "}"
     };
 
-    cl_program prog = clCreateProgramWithSource (ctx, 7, mTriadCLSource, NULL, &err);
+    cl_program prog = CECL_PROGRAM_WITH_SOURCE (ctx, 7, mTriadCLSource, NULL, &err);
     CL_CHECK_ERROR (err);
 
     // Compile the program
-    err = clBuildProgram (prog, 0, NULL, NULL, NULL, NULL);
+    err = CECL_PROGRAM (prog, 0, NULL, NULL, NULL, NULL);
     CL_CHECK_ERROR (err);
 
     // check if we have to dump the PTX
@@ -211,9 +212,9 @@ RunBenchmark(cl_device_id devid,
     }
 
     // Extract out "Triad" kernel
-    cl_kernel kernel_triad_0 = clCreateKernel(prog, "Triad", &err);
+    cl_kernel kernel_triad_0 = CECL_KERNEL(prog, "Triad", &err);
     CL_CHECK_ERROR(err);
-    cl_kernel kernel_triad_1 = clCreateKernel(prog, "Triad", &err);
+    cl_kernel kernel_triad_1 = CECL_KERNEL(prog, "Triad", &err);
     CL_CHECK_ERROR(err);
 
     size_t maxGroupSize = getMaxWorkGroupSize(ctx, kernel_triad_0);
@@ -246,11 +247,11 @@ RunBenchmark(cl_device_id devid,
 
             Event evDownload_0(sizeStr, 3);
             Event evDownload_1(sizeStr, 3);
-            err = clEnqueueWriteBuffer(queue, memA0, false, 0,
+            err = CECL_WRITE_BUFFER(queue, memA0, false, 0,
                                        blockSizes[i]*1024, hostMem,
                                        0, NULL, &evDownload_0.CLEvent(0));
             CL_CHECK_ERROR(err);
-            err = clEnqueueWriteBuffer(queue, memB0, false, 0,
+            err = CECL_WRITE_BUFFER(queue, memB0, false, 0,
                                        blockSizes[i]*1024, hostMem,
                                        0, NULL, &evDownload_0.CLEvent(1));
             CL_CHECK_ERROR(err);
@@ -260,16 +261,16 @@ RunBenchmark(cl_device_id devid,
 
             // Set the arguments
             float scalar = 1.75f;
-            err = clSetKernelArg(kernel_triad_0, 0, sizeof(cl_mem), (void*)&memA0);
+            err = CECL_SET_KERNEL_ARG(kernel_triad_0, 0, sizeof(cl_mem), (void*)&memA0);
             CL_CHECK_ERROR(err);
-            err = clSetKernelArg(kernel_triad_0, 1, sizeof(cl_mem), (void*)&memB0);
+            err = CECL_SET_KERNEL_ARG(kernel_triad_0, 1, sizeof(cl_mem), (void*)&memB0);
             CL_CHECK_ERROR(err);
-            err = clSetKernelArg(kernel_triad_0, 2, sizeof(cl_mem), (void*)&memC0);
+            err = CECL_SET_KERNEL_ARG(kernel_triad_0, 2, sizeof(cl_mem), (void*)&memC0);
             CL_CHECK_ERROR(err);
-            err = clSetKernelArg(kernel_triad_0, 3, sizeof(cl_float), (void*)&scalar);
+            err = CECL_SET_KERNEL_ARG(kernel_triad_0, 3, sizeof(cl_float), (void*)&scalar);
             CL_CHECK_ERROR(err);
 
-            err = clEnqueueNDRangeKernel(queue, kernel_triad_0, 1, NULL,
+            err = CECL_ND_RANGE_KERNEL(queue, kernel_triad_0, 1, NULL,
                                  &globalWorkSize, &localWorkSize,
                                  2, evDownload_0.CLEvents(),
                                  &evKernel_0.CLEvent());
@@ -278,11 +279,11 @@ RunBenchmark(cl_device_id devid,
             if (elemsInBlock < numMaxFloats)
             {
                 // start downloading data for next block
-                err = clEnqueueWriteBuffer(queue, memA1, false, 0,
+                err = CECL_WRITE_BUFFER(queue, memA1, false, 0,
                                        blockSizes[i]*1024, hostMem+elemsInBlock,
                                        0, NULL, &evDownload_1.CLEvent(0));
                 CL_CHECK_ERROR(err);
-                err = clEnqueueWriteBuffer(queue, memB1, false, 0,
+                err = CECL_WRITE_BUFFER(queue, memB1, false, 0,
                                        blockSizes[i]*1024, hostMem+elemsInBlock,
                                        0, NULL, &evDownload_1.CLEvent(1));
                 CL_CHECK_ERROR(err);
@@ -331,7 +332,7 @@ RunBenchmark(cl_device_id devid,
                 {
                     clReleaseEvent(npDownEv->CLEvent(2));
                 }
-                err = clEnqueueReadBuffer(queue, *prevC, false, 0,
+                err = CECL_READ_BUFFER(queue, *prevC, false, 0,
                               elemsInBlock*sizeof(float), hostMem+crtIdx,
                               1, pKernelEv->CLEvents(),
                               &(npDownEv->CLEvent(2)));
@@ -355,16 +356,16 @@ RunBenchmark(cl_device_id devid,
                 if (crtIdx < numMaxFloats)
                 {
                     // Set the arguments
-                    err = clSetKernelArg(*p_kernel, 0,
+                    err = CECL_SET_KERNEL_ARG(*p_kernel, 0,
                                   sizeof(cl_mem), (void*)memA);
                     CL_CHECK_ERROR(err);
-                    err = clSetKernelArg(*p_kernel, 1,
+                    err = CECL_SET_KERNEL_ARG(*p_kernel, 1,
                                   sizeof(cl_mem), (void*)memB);
                     CL_CHECK_ERROR(err);
-                    err = clSetKernelArg(*p_kernel, 2,
+                    err = CECL_SET_KERNEL_ARG(*p_kernel, 2,
                                   sizeof(cl_mem), (void*)memC);
                     CL_CHECK_ERROR(err);
-                    err = clSetKernelArg(*p_kernel, 3,
+                    err = CECL_SET_KERNEL_ARG(*p_kernel, 3,
                                   sizeof(cl_float), (void*)&scalar);
                     CL_CHECK_ERROR(err);
 
@@ -377,7 +378,7 @@ RunBenchmark(cl_device_id devid,
 //                        err = clWaitForEvents (1, &(downEv->CLEvent(2)));
 //                        CL_CHECK_ERROR (err);
                     }
-                    err = clEnqueueNDRangeKernel(queue, *p_kernel,
+                    err = CECL_ND_RANGE_KERNEL(queue, *p_kernel,
                                  1, NULL,
                                  &globalWorkSize, &localWorkSize,
                                  num_depends, downEv->CLEvents(),
@@ -390,13 +391,13 @@ RunBenchmark(cl_device_id devid,
                     clReleaseEvent(npDownEv->CLEvent(0));
                     clReleaseEvent(npDownEv->CLEvent(1));
                     // download data for next block
-                    err = clEnqueueWriteBuffer(queue, *nextA, false, 0,
+                    err = CECL_WRITE_BUFFER(queue, *nextA, false, 0,
                                        blockSizes[i]*1024,
                                        hostMem+crtIdx+elemsInBlock,
                                        1, pKernelEv->CLEvents(),
                                        &(npDownEv->CLEvent(0)));
                     CL_CHECK_ERROR(err);
-                    err = clEnqueueWriteBuffer(queue, *nextB, false, 0,
+                    err = CECL_WRITE_BUFFER(queue, *nextB, false, 0,
                                        blockSizes[i]*1024,
                                        hostMem+crtIdx+elemsInBlock,
                                        1, pKernelEv->CLEvents(),

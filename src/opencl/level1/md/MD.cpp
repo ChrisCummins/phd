@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <cassert>
 #include <cfloat>
 #include <list>
@@ -220,39 +221,39 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     // Allocate and map pinned host memory
     int err = 0;
     // Position
-    h_pos = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+    h_pos = CECL_BUFFER(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
             sizeof(posVecType)*nAtom, NULL, &err);
     CL_CHECK_ERROR(err);
-    position = (posVecType*)clEnqueueMapBuffer(queue, h_pos, true,
+    position = (posVecType*)CECL_MAP_BUFFER(queue, h_pos, true,
             CL_MAP_READ|CL_MAP_WRITE, 0, sizeof(posVecType)*nAtom , 0,
             NULL, NULL, &err);
     CL_CHECK_ERROR(err);
     // Force
-    h_force = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+    h_force = CECL_BUFFER(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
             sizeof(forceVecType)*nAtom, NULL, &err);
     CL_CHECK_ERROR(err);
-    force = (forceVecType*)clEnqueueMapBuffer(queue, h_force, true,
+    force = (forceVecType*)CECL_MAP_BUFFER(queue, h_force, true,
             CL_MAP_READ|CL_MAP_WRITE, 0, sizeof(forceVecType)*nAtom , 0,
             NULL, NULL, &err);
     CL_CHECK_ERROR(err);
     // Neighbor List
-    h_neigh = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+    h_neigh = CECL_BUFFER(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
             sizeof(int) * nAtom * maxNeighbors, NULL, &err);
     CL_CHECK_ERROR(err);
-    neighborList = (int*)clEnqueueMapBuffer(queue, h_neigh, true,
+    neighborList = (int*)CECL_MAP_BUFFER(queue, h_neigh, true,
             CL_MAP_READ|CL_MAP_WRITE, 0, sizeof(int) * nAtom * maxNeighbors, 0,
             NULL, NULL, &err);
     CL_CHECK_ERROR(err);
 
     // Allocate device memory
-    cl_mem d_force = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+    cl_mem d_force = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
             nAtom * sizeof(forceVecType), NULL, &err);
     CL_CHECK_ERROR(err);
-    cl_mem d_position = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+    cl_mem d_position = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
             nAtom * sizeof(posVecType), NULL, &err);
     CL_CHECK_ERROR(err);
     // Allocate device memory neighbor list
-    cl_mem d_neighborList = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+    cl_mem d_neighborList = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
             maxNeighbors * nAtom * sizeof(int), NULL, &err);
     CL_CHECK_ERROR(err);
 
@@ -291,7 +292,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
     // Copy position to GPU
     Event evTransfer("h->d transfer");
-    err = clEnqueueWriteBuffer(queue, d_position, true, 0,
+    err = CECL_WRITE_BUFFER(queue, d_position, true, 0,
             nAtom * sizeof(posVecType), position, 0, NULL,
             &evTransfer.CLEvent());
     CL_CHECK_ERROR(err);
@@ -312,7 +313,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
             100.0 * ((double)totalPairs / (nAtom*maxNeighbors)) << " %" << endl;
 
     // Copy data to GPU
-    err = clEnqueueWriteBuffer(queue, d_neighborList, true, 0,
+    err = CECL_WRITE_BUFFER(queue, d_neighborList, true, 0,
             maxNeighbors * nAtom * sizeof(int), neighborList, 0, NULL,
             &evTransfer.CLEvent());
     CL_CHECK_ERROR(err);
@@ -321,11 +322,11 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     transferTime += evTransfer.StartEndRuntime();
 
     // Build the openCL kernel
-    cl_program prog = clCreateProgramWithSource(ctx, 1, &cl_source_md, NULL,
+    cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx, 1, &cl_source_md, NULL,
             &err);
     CL_CHECK_ERROR(err);
 
-    err = clBuildProgram(prog, 1, &dev, compileFlags.c_str(), NULL, NULL);
+    err = CECL_PROGRAM(prog, 1, &dev, compileFlags.c_str(), NULL, NULL);
     CL_CHECK_ERROR(err);
 
     // If there is a build error, print the output and return
@@ -342,7 +343,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     }
 
     // Extract out the kernels
-    cl_kernel lj_kernel = clCreateKernel(prog, "compute_lj_force",
+    cl_kernel lj_kernel = CECL_KERNEL(prog, "compute_lj_force",
             &err);
     CL_CHECK_ERROR(err);
 
@@ -351,41 +352,41 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     T cutsq_t = (T) cutsq;
 
     // Set kernel arguments
-    err = clSetKernelArg(lj_kernel, 0, sizeof(cl_mem),
+    err = CECL_SET_KERNEL_ARG(lj_kernel, 0, sizeof(cl_mem),
             (void*) &d_force);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(lj_kernel, 1, sizeof(cl_mem),
+    err = CECL_SET_KERNEL_ARG(lj_kernel, 1, sizeof(cl_mem),
             (void*) &d_position);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(lj_kernel, 2, sizeof(cl_int),
+    err = CECL_SET_KERNEL_ARG(lj_kernel, 2, sizeof(cl_int),
             (void*) &maxNeighbors);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(lj_kernel, 3, sizeof(cl_mem),
+    err = CECL_SET_KERNEL_ARG(lj_kernel, 3, sizeof(cl_mem),
             (void*) &d_neighborList);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(lj_kernel, 4, sizeof(T),
+    err = CECL_SET_KERNEL_ARG(lj_kernel, 4, sizeof(T),
             (void*) &cutsq_t);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(lj_kernel, 5, sizeof(T),
+    err = CECL_SET_KERNEL_ARG(lj_kernel, 5, sizeof(T),
             (void*) &lj1_t);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(lj_kernel, 6, sizeof(T),
+    err = CECL_SET_KERNEL_ARG(lj_kernel, 6, sizeof(T),
             (void*) &lj2_t);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(lj_kernel, 7, sizeof(cl_int),
+    err = CECL_SET_KERNEL_ARG(lj_kernel, 7, sizeof(cl_int),
             (void*) &nAtom);
     CL_CHECK_ERROR(err);
 
     Event evLJ("computeLJ");
 
     // Warm up the kernel and check correctness
-    err = clEnqueueNDRangeKernel(queue, lj_kernel, 1, NULL, &globalSize,
+    err = CECL_ND_RANGE_KERNEL(queue, lj_kernel, 1, NULL, &globalSize,
             &localSize, 0, NULL, &evLJ.CLEvent());
     CL_CHECK_ERROR(err);
     err = clFinish(queue);
     CL_CHECK_ERROR(err);
 
-    err = clEnqueueReadBuffer(queue, d_force, true, 0,
+    err = CECL_READ_BUFFER(queue, d_force, true, 0,
             nAtom * sizeof(forceVecType), force, 0, NULL,
             &evTransfer.CLEvent());
     CL_CHECK_ERROR(err);
@@ -411,7 +412,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         for (int j = 0; j < iter; j++)
         {
             //Launch Kernels
-            err = clEnqueueNDRangeKernel(queue, lj_kernel, 1, NULL,
+            err = CECL_ND_RANGE_KERNEL(queue, lj_kernel, 1, NULL,
                     &globalSize, &localSize, 0, NULL,
                     &evLJ.CLEvent());
             CL_CHECK_ERROR(err);

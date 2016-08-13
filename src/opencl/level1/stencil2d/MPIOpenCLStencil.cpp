@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include "mpi.h"
 #include <sstream>
 #include <iomanip>
@@ -125,13 +126,13 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
         // OpenCL 1.0 does not have a strided read, so we need to get
         // the non-contiguous halo sides into contiguous buffers
         // before reading into our host buffers
-        cl_mem contigEBuf = clCreateBuffer( this->GetContext(),
+        cl_mem contigEBuf = CECL_BUFFER( this->GetContext(),
                                             CL_MEM_READ_WRITE,
                                             ewDataSize,
                                             NULL,
                                             &clErr );
         CL_CHECK_ERROR(clErr);
-        cl_mem contigWBuf = clCreateBuffer( this->GetContext(),
+        cl_mem contigWBuf = CECL_BUFFER( this->GetContext(),
                                             CL_MEM_READ_WRITE,
                                             ewDataSize,
                                             NULL,
@@ -141,7 +142,7 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
         if( this->HaveNorthNeighbor() )
         {
             // north data is contiguous - copy directly into matrix
-            clErr = clEnqueueReadBuffer(queue,
+            clErr = CECL_READ_BUFFER(queue,
                                         currBuf,
                                         CL_FALSE,   // is it blocking
                                         haloWidth * nPaddedCols * sizeof(T),    // offset
@@ -157,7 +158,7 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
         if( this->HaveSouthNeighbor() )
         {
             // south data is contiguous - copy directly into matrix
-            clErr = clEnqueueReadBuffer(queue,
+            clErr = CECL_READ_BUFFER(queue,
                                         currBuf,
                                         CL_FALSE,    // is it blocking?
                                         (nRows - 2 * haloWidth) * nPaddedCols * sizeof(T),    //offset
@@ -184,7 +185,7 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
                                     (int)nRows ); // height
 
             cl_event ceEvent;
-            clErr = clEnqueueNDRangeKernel(queue,
+            clErr = CECL_ND_RANGE_KERNEL(queue,
                                             this->copyRectKernel,
                                             1,  // number of work dimensions
                                             NULL,   // global work offset - use all 0s
@@ -198,7 +199,7 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
             // copy data into contiguous array on host
             std::vector<cl_event> ceEvents;
             ceEvents.push_back( ceEvent );
-            clErr = clEnqueueReadBuffer(queue,
+            clErr = CECL_READ_BUFFER(queue,
                                         contigEBuf,
                                         CL_FALSE,   // is it blocking?
                                         0,          // offset
@@ -225,7 +226,7 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
                                     (int)nRows ); // height
 
             cl_event cwEvent;
-            clErr = clEnqueueNDRangeKernel(queue,
+            clErr = CECL_ND_RANGE_KERNEL(queue,
                                             this->copyRectKernel,
                                             1,  // number of work dimensions
                                             NULL,   // global work offset - use all 0s
@@ -239,7 +240,7 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
             // copy into a contiguous array on the host
             std::vector<cl_event> cwEvents;
             cwEvents.push_back( cwEvent );
-            clErr = clEnqueueReadBuffer(queue,
+            clErr = CECL_READ_BUFFER(queue,
                                         contigWBuf,
                                         CL_FALSE,   // is it blocking?
                                         0,          // offset
@@ -303,7 +304,7 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
         // push updated data back onto device in contiguous buffers
         if( this->HaveNorthNeighbor() )
         {
-            clErr = clEnqueueWriteBuffer(queue,
+            clErr = CECL_WRITE_BUFFER(queue,
                                             currBuf,
                                             CL_FALSE,   // is it blocking?
                                             0,          // offset
@@ -317,7 +318,7 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
         }
         if( this->HaveSouthNeighbor() )
         {
-            clErr = clEnqueueWriteBuffer(queue,
+            clErr = CECL_WRITE_BUFFER(queue,
                                             currBuf,
                                             CL_FALSE,   // is it blocking?
                                             (nRows - haloWidth) * nPaddedCols * sizeof(T),    //offset
@@ -344,7 +345,7 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
             }
 
             // push up to device
-            clErr = clEnqueueWriteBuffer(queue,
+            clErr = CECL_WRITE_BUFFER(queue,
                                         contigEBuf,
                                         CL_FALSE,    // is it blocking?
                                         0,          // offset
@@ -370,7 +371,7 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
             }
 
             // push up to device
-            clErr = clEnqueueWriteBuffer(queue,
+            clErr = CECL_WRITE_BUFFER(queue,
                                         contigWBuf,
                                         CL_FALSE,    // is it blocking?
                                         0,          // offset
@@ -401,7 +402,7 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
                                     (int)haloWidth, // width
                                     (int)nRows ); // height
 
-            clErr = clEnqueueNDRangeKernel(queue,
+            clErr = CECL_ND_RANGE_KERNEL(queue,
                                         this->copyRectKernel,
                                         1,  // num work dimensions
                                         NULL,   // global work offset - use all 0s
@@ -424,7 +425,7 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
                                     (int)haloWidth, // width
                                     (int)nRows ); // height
 
-            clErr = clEnqueueNDRangeKernel(queue,
+            clErr = CECL_ND_RANGE_KERNEL(queue,
                                         this->copyRectKernel,
                                         1,  // num work dimensions
                                         NULL,   // global work offset - use all 0s
@@ -487,7 +488,7 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
                                     1, // width
                                     (int)mtx.GetNumRows() ); // height
 
-            clErr = clEnqueueNDRangeKernel(queue,
+            clErr = CECL_ND_RANGE_KERNEL(queue,
                                             this->copyRectKernel,
                                             1,  // num work dims
                                             NULL,   // global work offset - use all 0s
@@ -510,7 +511,7 @@ MPIOpenCLStencil<T>::DoPreIterationWork( cl_mem currBuf,
                                     1, // width
                                     (int)mtx.GetNumRows() ); // height
 
-            clErr = clEnqueueNDRangeKernel(queue,
+            clErr = CECL_ND_RANGE_KERNEL(queue,
                                             this->copyRectKernel,
                                             1,  // num work dims
                                             NULL,   // global work offset - use all 0s

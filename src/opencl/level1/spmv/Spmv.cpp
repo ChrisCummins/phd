@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include "OpenCLDeviceInfo.h"
 #include <iostream>
 #include "OptionParser.h"
@@ -180,12 +181,12 @@ void ellPackTest(cl_device_id dev, cl_context ctx, string compileFlags,
 
     // Set up OpenCL Program Object
     int err = 0;
-    cl_program prog = clCreateProgramWithSource(ctx, 1, &cl_source_spmv, NULL,
+    cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx, 1, &cl_source_spmv, NULL,
             &err);
     CL_CHECK_ERROR(err);
 
     // Build the openCL kernels
-    err = clBuildProgram(prog, 1, &dev, compileFlags.c_str(), NULL, NULL);
+    err = CECL_PROGRAM(prog, 1, &dev, compileFlags.c_str(), NULL, NULL);
     CL_CHECK_ERROR(err);
 
     // If there is a build error, print the output and return
@@ -228,10 +229,10 @@ void ellPackTest(cl_device_id dev, cl_context ctx, string compileFlags,
     cl_mem d_cols, d_rowLengths; // integer
 
     // Allocate device memory
-    d_val = clCreateBuffer(ctx, CL_MEM_READ_WRITE, maxrl * cmSize *
+    d_val = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, maxrl * cmSize *
         sizeof(clFloatType), NULL, &err);
     CL_CHECK_ERROR(err);
-    d_cols = clCreateBuffer(ctx, CL_MEM_READ_WRITE, maxrl * cmSize *
+    d_cols = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, maxrl * cmSize *
         sizeof(int), NULL, &err);
     CL_CHECK_ERROR(err);
     int imgHeight = 0;
@@ -247,14 +248,14 @@ void ellPackTest(cl_device_id dev, cl_context ctx, string compileFlags,
             imgHeight, 0, NULL, &err);
         CL_CHECK_ERROR(err);
     } else {
-        d_vec = clCreateBuffer(ctx, CL_MEM_READ_WRITE, numRows *
+        d_vec = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, numRows *
             sizeof(clFloatType), NULL, &err);
         CL_CHECK_ERROR(err);
     }
-    d_out = clCreateBuffer(ctx, CL_MEM_READ_WRITE, paddedSize *
+    d_out = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, paddedSize *
         sizeof(clFloatType), NULL, &err);
     CL_CHECK_ERROR(err);
-    d_rowLengths = clCreateBuffer(ctx, CL_MEM_READ_WRITE, cmSize *
+    d_rowLengths = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, cmSize *
         sizeof(int), NULL, &err);
     CL_CHECK_ERROR(err);
 
@@ -265,10 +266,10 @@ void ellPackTest(cl_device_id dev, cl_context ctx, string compileFlags,
     Event rowLengthsTransfer("transfer rowLengths data over PCIe bus");
 
     // Transfer data to device
-    err = clEnqueueWriteBuffer(queue, d_val, true, 0, maxrl * cmSize *
+    err = CECL_WRITE_BUFFER(queue, d_val, true, 0, maxrl * cmSize *
         sizeof(clFloatType), h_valcm, 0, NULL, &valTransfer.CLEvent());
     CL_CHECK_ERROR(err);
-    err = clEnqueueWriteBuffer(queue, d_cols, true, 0, maxrl * cmSize *
+    err = CECL_WRITE_BUFFER(queue, d_cols, true, 0, maxrl * cmSize *
         sizeof(cl_int), h_colscm, 0, NULL, &colsTransfer.CLEvent());
     CL_CHECK_ERROR(err);
 
@@ -280,12 +281,12 @@ void ellPackTest(cl_device_id dev, cl_context ctx, string compileFlags,
             0, 0, h_vec, 0, NULL, &vecTransfer.CLEvent());
         CL_CHECK_ERROR(err);
     } else {
-        err = clEnqueueWriteBuffer(queue, d_vec, true, 0, numRows *
+        err = CECL_WRITE_BUFFER(queue, d_vec, true, 0, numRows *
             sizeof(clFloatType), h_vec, 0, NULL, &vecTransfer.CLEvent());
         CL_CHECK_ERROR(err);
     }
 
-    err = clEnqueueWriteBuffer(queue, d_rowLengths, true, 0, cmSize *
+    err = CECL_WRITE_BUFFER(queue, d_rowLengths, true, 0, cmSize *
         sizeof(int), h_rowLengths, 0, NULL, &rowLengthsTransfer.CLEvent());
     CL_CHECK_ERROR(err);
 
@@ -303,19 +304,19 @@ void ellPackTest(cl_device_id dev, cl_context ctx, string compileFlags,
                      rowLengthsTransfer.StartEndRuntime();
 
     // Set up kernel arguments
-    cl_kernel ellpackr = clCreateKernel(prog, "spmv_ellpackr_kernel", &err);
+    cl_kernel ellpackr = CECL_KERNEL(prog, "spmv_ellpackr_kernel", &err);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(ellpackr, 0, sizeof(cl_mem), (void*) &d_val);
+    err = CECL_SET_KERNEL_ARG(ellpackr, 0, sizeof(cl_mem), (void*) &d_val);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(ellpackr, 1, sizeof(cl_mem), (void*) &d_vec);
+    err = CECL_SET_KERNEL_ARG(ellpackr, 1, sizeof(cl_mem), (void*) &d_vec);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(ellpackr, 2, sizeof(cl_mem), (void*) &d_cols);
+    err = CECL_SET_KERNEL_ARG(ellpackr, 2, sizeof(cl_mem), (void*) &d_cols);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(ellpackr, 3, sizeof(cl_mem), (void*) &d_rowLengths);
+    err = CECL_SET_KERNEL_ARG(ellpackr, 3, sizeof(cl_mem), (void*) &d_rowLengths);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(ellpackr, 4, sizeof(cl_int), (void*) &cmSize);
+    err = CECL_SET_KERNEL_ARG(ellpackr, 4, sizeof(cl_int), (void*) &cmSize);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(ellpackr, 5, sizeof(cl_mem), (void*) &d_out);
+    err = CECL_SET_KERNEL_ARG(ellpackr, 5, sizeof(cl_mem), (void*) &d_out);
     CL_CHECK_ERROR(err);
 
     const size_t globalWorkSize = cmSize;
@@ -330,7 +331,7 @@ void ellPackTest(cl_device_id dev, cl_context ctx, string compileFlags,
         double totalKernelTime = 0.0;
         for (int j = 0; j < iters; j++)
         {
-            err = clEnqueueNDRangeKernel(queue, ellpackr, 1, NULL,
+            err = CECL_ND_RANGE_KERNEL(queue, ellpackr, 1, NULL,
                 &globalWorkSize, &localWorkSize, 0, NULL,
                 &kernelExec.CLEvent());
             CL_CHECK_ERROR(err);
@@ -341,7 +342,7 @@ void ellPackTest(cl_device_id dev, cl_context ctx, string compileFlags,
         }
 
          Event outTransfer("d->h data transfer");
-         err = clEnqueueReadBuffer(queue, d_out, true, 0, numRows *
+         err = CECL_READ_BUFFER(queue, d_out, true, 0, numRows *
              sizeof(clFloatType), h_out, 0, NULL, &outTransfer.CLEvent());
          CL_CHECK_ERROR(err);
          err = clFinish(queue);
@@ -434,12 +435,12 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
     // Set up OpenCL Program Object
     int err = 0;
 
-    cl_program prog = clCreateProgramWithSource(ctx, 1, &cl_source_spmv, NULL,
+    cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx, 1, &cl_source_spmv, NULL,
             &err);
     CL_CHECK_ERROR(err);
 
     // Build the openCL kernels
-    err = clBuildProgram(prog, 1, &dev, compileFlags.c_str(), NULL, NULL);
+    err = CECL_PROGRAM(prog, 1, &dev, compileFlags.c_str(), NULL, NULL);
     // CL_CHECK_ERROR(err);  // if we check and fail here, we never get to see
                             // the OpenCL compiler's build log
 
@@ -461,10 +462,10 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
       cl_mem d_cols, d_rowDelimiters;
 
       // Allocate device memory
-      d_val = clCreateBuffer(ctx, CL_MEM_READ_WRITE, numNonZeroes *
+      d_val = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, numNonZeroes *
           sizeof(clFloatType), NULL, &err);
       CL_CHECK_ERROR(err);
-      d_cols = clCreateBuffer(ctx, CL_MEM_READ_WRITE, numNonZeroes *
+      d_cols = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, numNonZeroes *
           sizeof(cl_int), NULL, &err);
       CL_CHECK_ERROR(err);
       int imgHeight = 0;
@@ -480,14 +481,14 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
               imgHeight, 0, NULL, &err);
           CL_CHECK_ERROR(err);
       } else {
-          d_vec = clCreateBuffer(ctx, CL_MEM_READ_WRITE, numRows *
+          d_vec = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, numRows *
               sizeof(clFloatType), NULL, &err);
           CL_CHECK_ERROR(err);
       }
-      d_out = clCreateBuffer(ctx, CL_MEM_READ_WRITE, numRows *
+      d_out = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, numRows *
           sizeof(clFloatType), NULL, &err);
       CL_CHECK_ERROR(err);
-      d_rowDelimiters = clCreateBuffer(ctx, CL_MEM_READ_WRITE, (numRows+1) *
+      d_rowDelimiters = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, (numRows+1) *
           sizeof(cl_int), NULL, &err);
       CL_CHECK_ERROR(err);
 
@@ -498,10 +499,10 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
       Event rowDelimitersTransfer("transfer rowDelimiters data over PCIe bus");
 
       // Transfer data to device
-      err = clEnqueueWriteBuffer(queue, d_val, true, 0, numNonZeroes *
+      err = CECL_WRITE_BUFFER(queue, d_val, true, 0, numNonZeroes *
           sizeof(floatType), h_val, 0, NULL, &valTransfer.CLEvent());
       CL_CHECK_ERROR(err);
-      err = clEnqueueWriteBuffer(queue, d_cols, true, 0, numNonZeroes *
+      err = CECL_WRITE_BUFFER(queue, d_cols, true, 0, numNonZeroes *
           sizeof(int), h_cols, 0, NULL, &colsTransfer.CLEvent());
       CL_CHECK_ERROR(err);
 
@@ -514,12 +515,12 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
           CL_CHECK_ERROR(err);
       } else
       {
-          err = clEnqueueWriteBuffer(queue, d_vec, true, 0, numRows *
+          err = CECL_WRITE_BUFFER(queue, d_vec, true, 0, numRows *
               sizeof(floatType), h_vec, 0, NULL, &vecTransfer.CLEvent());
           CL_CHECK_ERROR(err);
       }
 
-      err = clEnqueueWriteBuffer(queue, d_rowDelimiters, true, 0, (numRows+1) *
+      err = CECL_WRITE_BUFFER(queue, d_rowDelimiters, true, 0, (numRows+1) *
           sizeof(int), h_rowDelimiters, 0, NULL,
           &rowDelimitersTransfer.CLEvent());
       CL_CHECK_ERROR(err);
@@ -550,43 +551,43 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
 
       // Set up CSR Kernels
       cl_kernel csrScalar, csrVector;
-      csrScalar  = clCreateKernel(prog, "spmv_csr_scalar_kernel", &err);
+      csrScalar  = CECL_KERNEL(prog, "spmv_csr_scalar_kernel", &err);
       CL_CHECK_ERROR(err);
-      err = clSetKernelArg(csrScalar, 0, sizeof(cl_mem), (void*) &d_val);
+      err = CECL_SET_KERNEL_ARG(csrScalar, 0, sizeof(cl_mem), (void*) &d_val);
       CL_CHECK_ERROR(err);
-      err = clSetKernelArg(csrScalar, 1, sizeof(cl_mem), (void*) &d_vec);
+      err = CECL_SET_KERNEL_ARG(csrScalar, 1, sizeof(cl_mem), (void*) &d_vec);
       CL_CHECK_ERROR(err);
-      err = clSetKernelArg(csrScalar, 2, sizeof(cl_mem), (void*) &d_cols);
+      err = CECL_SET_KERNEL_ARG(csrScalar, 2, sizeof(cl_mem), (void*) &d_cols);
       CL_CHECK_ERROR(err);
-      err = clSetKernelArg(csrScalar, 3, sizeof(cl_mem),
+      err = CECL_SET_KERNEL_ARG(csrScalar, 3, sizeof(cl_mem),
           (void*) &d_rowDelimiters);
       CL_CHECK_ERROR(err);
-      err = clSetKernelArg(csrScalar, 4, sizeof(cl_int), (void*) &numRows);
+      err = CECL_SET_KERNEL_ARG(csrScalar, 4, sizeof(cl_int), (void*) &numRows);
       CL_CHECK_ERROR(err);
-      err = clSetKernelArg(csrScalar, 5, sizeof(cl_mem), (void*) &d_out);
+      err = CECL_SET_KERNEL_ARG(csrScalar, 5, sizeof(cl_mem), (void*) &d_out);
       CL_CHECK_ERROR(err);
 
-      csrVector = clCreateKernel(prog, "spmv_csr_vector_kernel", &err);
+      csrVector = CECL_KERNEL(prog, "spmv_csr_vector_kernel", &err);
 
       // Get preferred SIMD width
       int vecWidth = getPreferredWorkGroupSizeMultiple(ctx, csrVector);
       CL_CHECK_ERROR(err);
 
       CL_CHECK_ERROR(err);
-      err = clSetKernelArg(csrVector, 0, sizeof(cl_mem), (void*) &d_val);
+      err = CECL_SET_KERNEL_ARG(csrVector, 0, sizeof(cl_mem), (void*) &d_val);
       CL_CHECK_ERROR(err);
-      err = clSetKernelArg(csrVector, 1, sizeof(cl_mem), (void*) &d_vec);
+      err = CECL_SET_KERNEL_ARG(csrVector, 1, sizeof(cl_mem), (void*) &d_vec);
       CL_CHECK_ERROR(err);
-      err = clSetKernelArg(csrVector, 2, sizeof(cl_mem), (void*) &d_cols);
+      err = CECL_SET_KERNEL_ARG(csrVector, 2, sizeof(cl_mem), (void*) &d_cols);
       CL_CHECK_ERROR(err);
-      err = clSetKernelArg(csrVector, 3, sizeof(cl_mem),
+      err = CECL_SET_KERNEL_ARG(csrVector, 3, sizeof(cl_mem),
           (void*) &d_rowDelimiters);
       CL_CHECK_ERROR(err);
-      err = clSetKernelArg(csrVector, 4, sizeof(cl_int), (void*) &numRows);
+      err = CECL_SET_KERNEL_ARG(csrVector, 4, sizeof(cl_int), (void*) &numRows);
       CL_CHECK_ERROR(err);
-      err = clSetKernelArg(csrVector, 5, sizeof(cl_int), (void*) &vecWidth);
+      err = CECL_SET_KERNEL_ARG(csrVector, 5, sizeof(cl_int), (void*) &vecWidth);
       CL_CHECK_ERROR(err);
-      err = clSetKernelArg(csrVector, 6, sizeof(cl_mem), (void*) &d_out);
+      err = CECL_SET_KERNEL_ARG(csrVector, 6, sizeof(cl_mem), (void*) &d_out);
       CL_CHECK_ERROR(err);
 
       // Append correct suffix to resultsDB entry
@@ -609,7 +610,7 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
           // Run Scalar Kernel
           for (int j = 0; j < iters; j++)
           {
-              err = clEnqueueNDRangeKernel(queue, csrScalar, 1, NULL,
+              err = CECL_ND_RANGE_KERNEL(queue, csrScalar, 1, NULL,
                    &scalarGlobalWSize, &localWorkSize, 0, NULL,
                    &kernelExec.CLEvent());
               CL_CHECK_ERROR(err);
@@ -621,7 +622,7 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
 
           // Transfer data back to host
           Event outTransfer("d->h data transfer");
-          err = clEnqueueReadBuffer(queue, d_out, true, 0, numRows *
+          err = CECL_READ_BUFFER(queue, d_out, true, 0, numRows *
               sizeof(floatType), h_out, 0, NULL, &outTransfer.CLEvent());
           CL_CHECK_ERROR(err);
           err = clFinish(queue);
@@ -644,7 +645,7 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
       }
 
       // Clobber correct answer, so we can be sure the vector kernel is correct
-      err = clEnqueueWriteBuffer(queue, d_out, true, 0, numRows *
+      err = CECL_WRITE_BUFFER(queue, d_out, true, 0, numRows *
           sizeof(floatType), h_vec, 0, NULL, NULL);
       CL_CHECK_ERROR(err);
 
@@ -687,7 +688,7 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
           double vectorKernelTime = 0.0;
           for (int j = 0; j < iters; j++)
           {
-             err = clEnqueueNDRangeKernel(queue, csrVector, 1, NULL,
+             err = CECL_ND_RANGE_KERNEL(queue, csrVector, 1, NULL,
                   &vectorGlobalWSize, &localWorkSize, 0, NULL,
                   &kernelExec.CLEvent());
              CL_CHECK_ERROR(err);
@@ -698,7 +699,7 @@ void csrTest(cl_device_id dev, cl_context ctx, string compileFlags,
           }
 
          Event outTransfer("d->h data transfer");
-         err = clEnqueueReadBuffer(queue, d_out, true, 0, numRows *
+         err = CECL_READ_BUFFER(queue, d_out, true, 0, numRows *
              sizeof(floatType), h_out, 0, NULL, &outTransfer.CLEvent());
          CL_CHECK_ERROR(err);
          err = clFinish(queue);

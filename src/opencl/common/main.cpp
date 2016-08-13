@@ -1,3 +1,4 @@
+#include <cecl.h>
 #ifdef PARALLEL
 // When using MPICH and MPICH-derived MPI implementations, there is a
 // naming conflict between stdio.h and MPI's C++ binding.
@@ -202,7 +203,7 @@ int main(int argc, char *argv[])
                                             NULL,
                                             &clErr );
         CL_CHECK_ERROR(clErr);
-        cl_command_queue queue = clCreateCommandQueue( ctx,
+        cl_command_queue queue = CECL_CREATE_COMMAND_QUEUE( ctx,
                                                         devID,
                                                         CL_QUEUE_PROFILING_ENABLE,
                                                         &clErr );

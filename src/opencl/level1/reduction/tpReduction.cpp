@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -198,7 +199,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     int waitForEvents = 1;
 
     // Program Setup
-    cl_program prog = clCreateProgramWithSource(ctx, 1,
+    cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx, 1,
                             &cl_source_reduction, NULL, &err);
     CL_CHECK_ERROR(err);
     if (mpi_rank == 0)
@@ -206,7 +207,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         cout << "Compiling reduction kernel." << endl;
     }
 
-    err = clBuildProgram(prog, 1, &dev, compileFlags.c_str(), NULL, NULL);
+    err = CECL_PROGRAM(prog, 1, &dev, compileFlags.c_str(), NULL, NULL);
     CL_CHECK_ERROR(err);
 
     if (err != 0)
@@ -224,10 +225,10 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     }
 
     // Extract out the kernels
-    cl_kernel reduce = clCreateKernel(prog, "reduce", &err);
+    cl_kernel reduce = CECL_KERNEL(prog, "reduce", &err);
     CL_CHECK_ERROR(err);
 
-    cl_kernel cpureduce = clCreateKernel(prog, "reduceNoLocal", &err);
+    cl_kernel cpureduce = CECL_KERNEL(prog, "reduceNoLocal", &err);
     CL_CHECK_ERROR(err);
 
     size_t localWorkSize = 256;
@@ -246,10 +247,10 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     unsigned int bytes = size * sizeof(T);
 
     // Allocate pinned host memory for input data
-    cl_mem h_i = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+    cl_mem h_i = CECL_BUFFER(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
             bytes, NULL, &err);
     CL_CHECK_ERROR(err);
-    T* h_idata = (T*)clEnqueueMapBuffer(queue, h_i, true,
+    T* h_idata = (T*)CECL_MAP_BUFFER(queue, h_i, true,
             CL_MAP_READ|CL_MAP_WRITE, 0, bytes, 0, NULL, NULL, &err);
     CL_CHECK_ERROR(err);
 
@@ -265,7 +266,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     }
 
     // Allocate device memory for input data
-    cl_mem d_idata = clCreateBuffer(ctx, CL_MEM_READ_WRITE, bytes,
+    cl_mem d_idata = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, bytes,
             NULL, &err);
     CL_CHECK_ERROR(err);
 
@@ -282,43 +283,43 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     }
 
     // Allocate host memory for output
-    cl_mem h_o = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+    cl_mem h_o = CECL_BUFFER(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
             sizeof(T)*num_blocks, NULL, &err);
     CL_CHECK_ERROR(err);
-    T* h_odata = (T*)clEnqueueMapBuffer(queue, h_o, true,
+    T* h_odata = (T*)CECL_MAP_BUFFER(queue, h_o, true,
             CL_MAP_READ | CL_MAP_WRITE, 0, sizeof(T) * num_blocks , 0, NULL, NULL,
             &err);
     CL_CHECK_ERROR(err);
 
     // Allocate device memory for output
-    cl_mem d_odata = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+    cl_mem d_odata = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
             num_blocks * sizeof(T), NULL, &err);
     CL_CHECK_ERROR(err);
 
     // Copy data to GPU
     Event evTransfer("PCIe Transfer");
-    err = clEnqueueWriteBuffer(queue, d_idata, true, 0, bytes, h_idata,
+    err = CECL_WRITE_BUFFER(queue, d_idata, true, 0, bytes, h_idata,
             0, NULL, &evTransfer.CLEvent());
     CL_CHECK_ERROR(err);
     evTransfer.FillTimingInfo();
 
     double inputTransfer = evTransfer.StartEndRuntime();
 
-    err = clSetKernelArg(reduce, 0, sizeof(cl_mem), (void*)&d_idata);
+    err = CECL_SET_KERNEL_ARG(reduce, 0, sizeof(cl_mem), (void*)&d_idata);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(reduce, 1, sizeof(cl_mem), (void*)&d_odata);
+    err = CECL_SET_KERNEL_ARG(reduce, 1, sizeof(cl_mem), (void*)&d_odata);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(reduce, 2,
+    err = CECL_SET_KERNEL_ARG(reduce, 2,
             localWorkSize * sizeof(T), NULL);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(reduce, 3, sizeof(cl_int), (void*)&size);
+    err = CECL_SET_KERNEL_ARG(reduce, 3, sizeof(cl_int), (void*)&size);
     CL_CHECK_ERROR(err);
 
-    err = clSetKernelArg(cpureduce, 0, sizeof(cl_mem), (void*)&d_idata);
+    err = CECL_SET_KERNEL_ARG(cpureduce, 0, sizeof(cl_mem), (void*)&d_idata);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(cpureduce, 1, sizeof(cl_mem), (void*)&d_odata);
+    err = CECL_SET_KERNEL_ARG(cpureduce, 1, sizeof(cl_mem), (void*)&d_odata);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(cpureduce, 2, sizeof(cl_int), (void*)&size);
+    err = CECL_SET_KERNEL_ARG(cpureduce, 2, sizeof(cl_int), (void*)&size);
     CL_CHECK_ERROR(err);
 
     size_t globalWorkSize;
@@ -349,13 +350,13 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         {
             if (nolocal)
             {
-                err = clEnqueueNDRangeKernel(queue, cpureduce, 1, NULL,
+                err = CECL_ND_RANGE_KERNEL(queue, cpureduce, 1, NULL,
                         &globalWorkSize, &localWorkSize, 0,
                         NULL, &evKernel.CLEvent());
             }
             else
             {
-                err = clEnqueueNDRangeKernel(queue, reduce, 1, NULL,
+                err = CECL_ND_RANGE_KERNEL(queue, reduce, 1, NULL,
                         &globalWorkSize, &localWorkSize, 0,
                         NULL, &evKernel.CLEvent());
             }
@@ -366,7 +367,7 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
             totalReduceTime += (evKernel.SubmitEndRuntime() / 1.e9);
         }
 
-        err = clEnqueueReadBuffer(queue, d_odata, true, 0,
+        err = CECL_READ_BUFFER(queue, d_odata, true, 0,
                 num_blocks*sizeof(T), h_odata, 0, NULL, &evTransfer.CLEvent());
         CL_CHECK_ERROR(err);
         evTransfer.FillTimingInfo();

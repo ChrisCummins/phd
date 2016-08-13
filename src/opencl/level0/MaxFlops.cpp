@@ -1,3 +1,4 @@
+#include <cecl.h>
 
 #include <iostream>
 #include <sstream>
@@ -171,34 +172,34 @@ void RunBenchmark(cl_device_id id,
        hostMem2 = new float[numFloatsMax];
 
        // Allocate device memory
-       mem1 = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+       mem1 = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
                                  sizeof(float)*numFloatsMax, NULL, &err);
        CL_CHECK_ERROR(err);
 
-       err = clEnqueueWriteBuffer(queue, mem1, true, 0,
+       err = CECL_WRITE_BUFFER(queue, mem1, true, 0,
                                numFloatsMax*sizeof(float), hostMem,
                                0, NULL, NULL);
        CL_CHECK_ERROR(err);
 
        // Create the kernel program
        const char* progSource[] = {kernelCode.c_str()};
-       cl_program prog = clCreateProgramWithSource(ctx, 1, progSource,
+       cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx, 1, progSource,
                                                    NULL, &err);
        CL_CHECK_ERROR(err);
 
        // Compile the kernel
-       err = clBuildProgram(prog, 0, NULL, opts, NULL, NULL);
+       err = CECL_PROGRAM(prog, 0, NULL, opts, NULL, NULL);
        // Compile the kernel
        CL_CHECK_ERROR(err);
 
        // Extract out madd kernel
-       cl_kernel kernel_madd = clCreateKernel(prog, temp.name, &err);
+       cl_kernel kernel_madd = CECL_KERNEL(prog, temp.name, &err);
        CL_CHECK_ERROR(err);
 
        // Set kernel arguments
-       err = clSetKernelArg (kernel_madd, 0, sizeof(cl_mem), (void*)&mem1);
+       err = CECL_SET_KERNEL_ARG (kernel_madd, 0, sizeof(cl_mem), (void*)&mem1);
        CL_CHECK_ERROR (err);
-       err = clSetKernelArg (kernel_madd, 1, sizeof(cl_int),
+       err = CECL_SET_KERNEL_ARG (kernel_madd, 1, sizeof(cl_int),
                              (void*)&temp.numRepeats);
        CL_CHECK_ERROR (err);
 
@@ -216,7 +217,7 @@ void RunBenchmark(cl_device_id id,
        size_t globalWorkSize = numFloatsMax;
 
        Event evCopyMem("CopyMem");
-       err = clEnqueueWriteBuffer (queue, mem1, true, 0,
+       err = CECL_WRITE_BUFFER (queue, mem1, true, 0,
                                    numFloatsMax*sizeof(float), hostMem,
                                    0, NULL, &evCopyMem.CLEvent());
        CL_CHECK_ERROR (err);
@@ -225,7 +226,7 @@ void RunBenchmark(cl_device_id id,
        CL_CHECK_ERROR (err);
 
        Event evKernel(temp.name);
-       err = clEnqueueNDRangeKernel (queue, kernel_madd, 1, NULL,
+       err = CECL_ND_RANGE_KERNEL (queue, kernel_madd, 1, NULL,
                                  &globalWorkSize, &localWorkSize,
                                  0, NULL, &evKernel.CLEvent());
        CL_CHECK_ERROR (err);
@@ -376,24 +377,24 @@ RunTest(cl_device_id id,
        hostMem2 = new T[numFloatsMax];
 
        // Allocate device memory
-       mem1 = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+       mem1 = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
                                  sizeof(T)*numFloatsMax, NULL, &err);
        CL_CHECK_ERROR(err);
 
        // Issue a copy to force device allocation
-       err = clEnqueueWriteBuffer(queue, mem1, true, 0,
+       err = CECL_WRITE_BUFFER(queue, mem1, true, 0,
                                numFloatsMax*sizeof(T), hostMem,
                                0, NULL, NULL);
        CL_CHECK_ERROR(err);
 
        // Create kernel program object
        const char* progSource[] = {kernelCode.c_str()};
-       cl_program prog = clCreateProgramWithSource(ctx, 1, progSource,
+       cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx, 1, progSource,
            NULL, &err);
        CL_CHECK_ERROR(err);
 
        // Compile the program
-       err = clBuildProgram(prog, 1, &id, opts, NULL, NULL);
+       err = CECL_PROGRAM(prog, 1, &id, opts, NULL, NULL);
        CL_CHECK_ERROR(err);
 
        if (err != 0)
@@ -419,12 +420,12 @@ RunTest(cl_device_id id,
        }
 
        // Extract out kernel
-       cl_kernel kernel_madd = clCreateKernel(prog, temp.name, &err);
+       cl_kernel kernel_madd = CECL_KERNEL(prog, temp.name, &err);
        CL_CHECK_ERROR(err);
 
-       err = clSetKernelArg (kernel_madd, 0, sizeof(cl_mem), (void*)&mem1);
+       err = CECL_SET_KERNEL_ARG (kernel_madd, 0, sizeof(cl_mem), (void*)&mem1);
        CL_CHECK_ERROR (err);
-       err = clSetKernelArg (kernel_madd, 1, sizeof(cl_int),
+       err = CECL_SET_KERNEL_ARG (kernel_madd, 1, sizeof(cl_int),
            (void*)&temp.numRepeats);
        CL_CHECK_ERROR (err);
 
@@ -448,14 +449,14 @@ RunTest(cl_device_id id,
 
           for (int pas=0 ; pas<npasses ; ++pas)
           {
-             err = clEnqueueWriteBuffer (queue, mem1, true, 0,
+             err = CECL_WRITE_BUFFER (queue, mem1, true, 0,
                                    numFloats*sizeof(T), hostMem,
                                    0, NULL, NULL);
              CL_CHECK_ERROR(err);
 
              Event evKernel(temp.name);
 
-             err = clEnqueueNDRangeKernel(queue, kernel_madd, 1, NULL,
+             err = CECL_ND_RANGE_KERNEL(queue, kernel_madd, 1, NULL,
                                  &globalWorkSize, &localWorkSize,
                                  0, NULL, &evKernel.CLEvent());
              CL_CHECK_ERROR(err);
@@ -482,7 +483,7 @@ RunTest(cl_device_id id,
              }
 
              // Read the result device memory back to the host
-             err = clEnqueueReadBuffer(queue, mem1, true, 0,
+             err = CECL_READ_BUFFER(queue, mem1, true, 0,
                                  numFloats*sizeof(T), hostMem2,
                                  0, NULL, NULL);
              CL_CHECK_ERROR(err);
@@ -528,7 +529,7 @@ RunTest(cl_device_id id,
     const int bytes = w * h * sizeof(T);
 
     // Allocate some device memory
-    mem1 = clCreateBuffer(ctx, CL_MEM_READ_WRITE, bytes, NULL, &err);
+    mem1 = CECL_BUFFER(ctx, CL_MEM_READ_WRITE, bytes, NULL, &err);
     CL_CHECK_ERROR(err);
 
     // Get a couple non-zero random numbers
@@ -558,27 +559,27 @@ RunTest(cl_device_id id,
                        typeName, pragmaText);
 
         const char* progSource[] = {kSource.c_str()};
-        cl_program prog = clCreateProgramWithSource(ctx,
+        cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx,
                                  1, progSource, NULL, &err);
         CL_CHECK_ERROR(err);
 
         // Compile kernel
-        err = clBuildProgram(prog, 1, &id, opts, NULL, NULL);
+        err = CECL_PROGRAM(prog, 1, &id, opts, NULL, NULL);
         CL_CHECK_ERROR(err);
 
         // Extract out kernel
-        cl_kernel kernel_madd = clCreateKernel(prog, "peak", &err);
+        cl_kernel kernel_madd = CECL_KERNEL(prog, "peak", &err);
 
         // Calculate kernel launch parameters
         //size_t localWorkSize = maxGroupSize<128?maxGroupSize:128;
         size_t globalWorkSize = w * h;
 
         // Set the arguments
-        err = clSetKernelArg(kernel_madd, 0, sizeof(cl_mem), (void*)&mem1);
+        err = CECL_SET_KERNEL_ARG(kernel_madd, 0, sizeof(cl_mem), (void*)&mem1);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(kernel_madd, 1, sizeof(T), (void*)&val1);
+        err = CECL_SET_KERNEL_ARG(kernel_madd, 1, sizeof(T), (void*)&val1);
         CL_CHECK_ERROR(err);
-        err = clSetKernelArg(kernel_madd, 2, sizeof(T), (void*)&val2);
+        err = CECL_SET_KERNEL_ARG(kernel_madd, 2, sizeof(T), (void*)&val2);
         CL_CHECK_ERROR(err);
 
         for (int passCounter=0; passCounter < npasses; passCounter++)
@@ -586,7 +587,7 @@ RunTest(cl_device_id id,
             // Event object for timing
             Event evKernel_madd("madd");
 
-            err = clEnqueueNDRangeKernel(queue, kernel_madd, 1, NULL,
+            err = CECL_ND_RANGE_KERNEL(queue, kernel_madd, 1, NULL,
                       &globalWorkSize, &localWorkSize,
                       0, NULL, &evKernel_madd.CLEvent());
             CL_CHECK_ERROR(err);

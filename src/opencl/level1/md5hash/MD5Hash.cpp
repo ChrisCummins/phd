@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -402,36 +403,36 @@ double FindKeyWithDigest_GPU(cl_context ctx,
     //
     // find the kernel
     //
-    cl_kernel md5kernel = clCreateKernel(prog, "FindKeyWithDigest_Kernel", &err);
+    cl_kernel md5kernel = CECL_KERNEL(prog, "FindKeyWithDigest_Kernel", &err);
     CL_CHECK_ERROR(err);
 
     //
     // allocate output buffers
     //
-    cl_mem d_foundIndex = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+    cl_mem d_foundIndex = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
                                          sizeof(int)*1, NULL, &err);
     CL_CHECK_ERROR(err);
 
-    cl_mem d_foundKey = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+    cl_mem d_foundKey = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
                                        8, NULL, &err);
     CL_CHECK_ERROR(err);
 
-    cl_mem d_foundDigest = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+    cl_mem d_foundDigest = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
                                           sizeof(unsigned int)*4, NULL, &err);
     CL_CHECK_ERROR(err);
 
     //
     // initialize output buffers to show no found result
     //
-    err = clEnqueueWriteBuffer(queue, d_foundIndex, true, 0,
+    err = CECL_WRITE_BUFFER(queue, d_foundIndex, true, 0,
                                sizeof(int)*1, foundIndex,
                                0, NULL, NULL);
     CL_CHECK_ERROR(err);
-    err = clEnqueueWriteBuffer(queue, d_foundKey, true, 0,
+    err = CECL_WRITE_BUFFER(queue, d_foundKey, true, 0,
                                8, foundKey,
                                0, NULL, NULL);
     CL_CHECK_ERROR(err);
-    err = clEnqueueWriteBuffer(queue, d_foundDigest, true, 0,
+    err = CECL_WRITE_BUFFER(queue, d_foundDigest, true, 0,
                                sizeof(int)*4, foundDigest,
                                0, NULL, NULL);
     CL_CHECK_ERROR(err);
@@ -442,25 +443,25 @@ double FindKeyWithDigest_GPU(cl_context ctx,
     //
     // set arguments for the kernel
     //
-    err = clSetKernelArg(md5kernel, 0, sizeof(unsigned int), (void*)&searchDigest[0]);
+    err = CECL_SET_KERNEL_ARG(md5kernel, 0, sizeof(unsigned int), (void*)&searchDigest[0]);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(md5kernel, 1, sizeof(unsigned int), (void*)&searchDigest[1]);
+    err = CECL_SET_KERNEL_ARG(md5kernel, 1, sizeof(unsigned int), (void*)&searchDigest[1]);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(md5kernel, 2, sizeof(unsigned int), (void*)&searchDigest[2]);
+    err = CECL_SET_KERNEL_ARG(md5kernel, 2, sizeof(unsigned int), (void*)&searchDigest[2]);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(md5kernel, 3, sizeof(unsigned int), (void*)&searchDigest[3]);
+    err = CECL_SET_KERNEL_ARG(md5kernel, 3, sizeof(unsigned int), (void*)&searchDigest[3]);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(md5kernel, 4, sizeof(int), (void*)&keyspace);
+    err = CECL_SET_KERNEL_ARG(md5kernel, 4, sizeof(int), (void*)&keyspace);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(md5kernel, 5, sizeof(int), (void*)&byteLength);
+    err = CECL_SET_KERNEL_ARG(md5kernel, 5, sizeof(int), (void*)&byteLength);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(md5kernel, 6, sizeof(int), (void*)&valsPerByte);
+    err = CECL_SET_KERNEL_ARG(md5kernel, 6, sizeof(int), (void*)&valsPerByte);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(md5kernel, 7, sizeof(cl_mem), (void*)&d_foundIndex);
+    err = CECL_SET_KERNEL_ARG(md5kernel, 7, sizeof(cl_mem), (void*)&d_foundIndex);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(md5kernel, 8, sizeof(cl_mem), (void*)&d_foundKey);
+    err = CECL_SET_KERNEL_ARG(md5kernel, 8, sizeof(cl_mem), (void*)&d_foundKey);
     CL_CHECK_ERROR(err);
-    err = clSetKernelArg(md5kernel, 9, sizeof(cl_mem), (void*)&d_foundDigest);
+    err = CECL_SET_KERNEL_ARG(md5kernel, 9, sizeof(cl_mem), (void*)&d_foundDigest);
     CL_CHECK_ERROR(err);
 
     //
@@ -476,7 +477,7 @@ double FindKeyWithDigest_GPU(cl_context ctx,
     double nanosec = 0;
     Event runtime("md5 kernel");
 
-    err = clEnqueueNDRangeKernel(queue, md5kernel, 1, NULL,
+    err = CECL_ND_RANGE_KERNEL(queue, md5kernel, 1, NULL,
                                  &globalsize, &nthreads, 0, NULL,
                                  &runtime.CLEvent());
     CL_CHECK_ERROR(err);
@@ -496,15 +497,15 @@ double FindKeyWithDigest_GPU(cl_context ctx,
     //
     // read the (presumably) found key
     //
-    err = clEnqueueReadBuffer(queue, d_foundIndex, true, 0,
+    err = CECL_READ_BUFFER(queue, d_foundIndex, true, 0,
                               sizeof(int)*1, foundIndex,
                               0, NULL, NULL);
     CL_CHECK_ERROR(err);
-    err = clEnqueueReadBuffer(queue, d_foundKey, true, 0,
+    err = CECL_READ_BUFFER(queue, d_foundKey, true, 0,
                               8, foundKey,
                               0, NULL, NULL);
     CL_CHECK_ERROR(err);
-    err = clEnqueueReadBuffer(queue, d_foundDigest, true, 0,
+    err = CECL_READ_BUFFER(queue, d_foundDigest, true, 0,
                               sizeof(int)*4, foundDigest,
                               0, NULL, NULL);
     CL_CHECK_ERROR(err);
@@ -570,14 +571,14 @@ RunBenchmark(cl_device_id dev,
     int err;
 
     // Program Setup
-    cl_program prog = clCreateProgramWithSource(ctx, 1,
+    cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx, 1,
                             &cl_source_md5, NULL, &err);
     CL_CHECK_ERROR(err);
 
     if (verbose)
         cout << "Compiling md5 kernel." << endl;
 
-    err = clBuildProgram(prog, 1, &dev, NULL, NULL, NULL);
+    err = CECL_PROGRAM(prog, 1, &dev, NULL, NULL, NULL);
 
     if (err != 0)
     {

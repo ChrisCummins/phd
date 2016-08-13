@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <math.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -183,12 +184,12 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
 
 
     // Create program object
-    cl_program prog = clCreateProgramWithSource(ctx, 1,
+    cl_program prog = CECL_PROGRAM_WITH_SOURCE(ctx, 1,
                                  &cl_source_gemmN, NULL, &err);
     CL_CHECK_ERROR(err);
 
     string flags = compileFlags + " -cl-mad-enable";
-    err = clBuildProgram(prog, 0, NULL, flags.c_str(), NULL,
+    err = CECL_PROGRAM(prog, 0, NULL, flags.c_str(), NULL,
             NULL);
     CL_CHECK_ERROR(err);
 
@@ -206,10 +207,10 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     }
 
     // Generate the kernel objects
-    cl_kernel sgemmNN = clCreateKernel(prog, "sgemmNN", &err);
+    cl_kernel sgemmNN = CECL_KERNEL(prog, "sgemmNN", &err);
     CL_CHECK_ERROR(err);
 
-    cl_kernel sgemmNT = clCreateKernel(prog, "sgemmNT", &err);
+    cl_kernel sgemmNT = CECL_KERNEL(prog, "sgemmNT", &err);
     CL_CHECK_ERROR(err);
 
     // Allocate memory for the matrices
@@ -217,24 +218,24 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     cl_mem Aobj, Bobj, Cobj;
     if (true) // pinned
     {
-        Aobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+        Aobj = CECL_BUFFER(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
 			       sizeof(T)*N*N, NULL, &err);
         CL_CHECK_ERROR(err);
-        A =(T*)clEnqueueMapBuffer(queue,Aobj,true,CL_MAP_READ|CL_MAP_WRITE,
+        A =(T*)CECL_MAP_BUFFER(queue,Aobj,true,CL_MAP_READ|CL_MAP_WRITE,
 				       0,sizeof(T)*N*N,0, NULL,NULL,&err);
         CL_CHECK_ERROR(err);
 
-        Bobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+        Bobj = CECL_BUFFER(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
 			       sizeof(T)*N*N, NULL, &err);
         CL_CHECK_ERROR(err);
-        B =(T*)clEnqueueMapBuffer(queue,Bobj,true,CL_MAP_READ|CL_MAP_WRITE,
+        B =(T*)CECL_MAP_BUFFER(queue,Bobj,true,CL_MAP_READ|CL_MAP_WRITE,
 				       0,sizeof(T)*N*N,0, NULL,NULL,&err);
         CL_CHECK_ERROR(err);
 
-        Cobj = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
+        Cobj = CECL_BUFFER(ctx, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
 			       sizeof(T)*N*N, NULL, &err);
         CL_CHECK_ERROR(err);
-        C =(T*)clEnqueueMapBuffer(queue,Cobj,true,CL_MAP_READ|CL_MAP_WRITE,
+        C =(T*)CECL_MAP_BUFFER(queue,Cobj,true,CL_MAP_READ|CL_MAP_WRITE,
 				       0,sizeof(T)*N*N,0, NULL,NULL,&err);
         CL_CHECK_ERROR(err);
     }
@@ -266,55 +267,55 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
     }
 
     // Pass A and B to the GPU and create a GPU buffer for C
-    cl_mem Agpu = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+    cl_mem Agpu = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
                                  m*k * sizeof(T), NULL, &err);
     CL_BAIL_ON_ERROR(err);
-    cl_mem Bgpu = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+    cl_mem Bgpu = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
                                  k*n * sizeof(T), NULL, &err);
     CL_BAIL_ON_ERROR(err);
-    cl_mem Cgpu = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+    cl_mem Cgpu = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
                                  m*n * sizeof(T), NULL, &err);
     CL_BAIL_ON_ERROR(err);
 
 
     // Set arguments to the sgemmNN kernel
-    err = clSetKernelArg(sgemmNN, 0, sizeof(cl_mem), (void*)&Agpu);
+    err = CECL_SET_KERNEL_ARG(sgemmNN, 0, sizeof(cl_mem), (void*)&Agpu);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNN, 1, sizeof(int), (void*)&lda);
+    err = CECL_SET_KERNEL_ARG(sgemmNN, 1, sizeof(int), (void*)&lda);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNN, 2, sizeof(cl_mem), (void*)&Bgpu);
+    err = CECL_SET_KERNEL_ARG(sgemmNN, 2, sizeof(cl_mem), (void*)&Bgpu);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNN, 3, sizeof(int), (void*)&ldb);
+    err = CECL_SET_KERNEL_ARG(sgemmNN, 3, sizeof(int), (void*)&ldb);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNN, 4, sizeof(cl_mem), (void*)&Cgpu);
+    err = CECL_SET_KERNEL_ARG(sgemmNN, 4, sizeof(cl_mem), (void*)&Cgpu);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNN, 5, sizeof(int), (void*)&ldc);
+    err = CECL_SET_KERNEL_ARG(sgemmNN, 5, sizeof(int), (void*)&ldc);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNN, 6, sizeof(int), (void*)&k);
+    err = CECL_SET_KERNEL_ARG(sgemmNN, 6, sizeof(int), (void*)&k);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNN, 7, sizeof(T), (void*)&alpha);
+    err = CECL_SET_KERNEL_ARG(sgemmNN, 7, sizeof(T), (void*)&alpha);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNN, 8, sizeof(T), (void*)&beta);
+    err = CECL_SET_KERNEL_ARG(sgemmNN, 8, sizeof(T), (void*)&beta);
     CL_BAIL_ON_ERROR(err);
 
     // Pass arguments to the sgemmNT kernel
-    err = clSetKernelArg(sgemmNT, 0, sizeof(cl_mem), (void*)&Agpu);
+    err = CECL_SET_KERNEL_ARG(sgemmNT, 0, sizeof(cl_mem), (void*)&Agpu);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNT, 1, sizeof(int), (void*)&lda);
+    err = CECL_SET_KERNEL_ARG(sgemmNT, 1, sizeof(int), (void*)&lda);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNT, 2, sizeof(cl_mem), (void*)&Bgpu);
+    err = CECL_SET_KERNEL_ARG(sgemmNT, 2, sizeof(cl_mem), (void*)&Bgpu);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNT, 3, sizeof(int), (void*)&ldb);
+    err = CECL_SET_KERNEL_ARG(sgemmNT, 3, sizeof(int), (void*)&ldb);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNT, 4, sizeof(cl_mem), (void*)&Cgpu);
+    err = CECL_SET_KERNEL_ARG(sgemmNT, 4, sizeof(cl_mem), (void*)&Cgpu);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNT, 5, sizeof(int), (void*)&ldc);
+    err = CECL_SET_KERNEL_ARG(sgemmNT, 5, sizeof(int), (void*)&ldc);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNT, 6, sizeof(int), (void*)&k);
+    err = CECL_SET_KERNEL_ARG(sgemmNT, 6, sizeof(int), (void*)&k);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNT, 7, sizeof(T), (void*)&alpha);
+    err = CECL_SET_KERNEL_ARG(sgemmNT, 7, sizeof(T), (void*)&alpha);
     CL_BAIL_ON_ERROR(err);
-    err = clSetKernelArg(sgemmNT, 8, sizeof(T), (void*)&beta);
+    err = CECL_SET_KERNEL_ARG(sgemmNT, 8, sizeof(T), (void*)&beta);
     CL_BAIL_ON_ERROR(err);
 
     const size_t globalWorkSize[2] = {m/4,n/4};
@@ -327,11 +328,11 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         Event evUpload("Upload");
         Event evNN("sgemmNN");
 
-        err = clEnqueueWriteBuffer(queue, Agpu, CL_TRUE, 0, m*n*sizeof(T),
+        err = CECL_WRITE_BUFFER(queue, Agpu, CL_TRUE, 0, m*n*sizeof(T),
                 A, 0, NULL, &evDownload1.CLEvent());
-        err = clEnqueueWriteBuffer(queue, Bgpu, CL_TRUE, 0, m*n*sizeof(T),
+        err = CECL_WRITE_BUFFER(queue, Bgpu, CL_TRUE, 0, m*n*sizeof(T),
                 B, 0, NULL, NULL);
-        err = clEnqueueWriteBuffer(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
+        err = CECL_WRITE_BUFFER(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
                 C, 0, NULL, NULL);
 
         // Wait until data transfers finish
@@ -339,12 +340,12 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         CL_BAIL_ON_ERROR(err);
 
         //Launch Kernels
-        err = clEnqueueNDRangeKernel(queue, sgemmNN, 2, NULL, globalWorkSize,
+        err = CECL_ND_RANGE_KERNEL(queue, sgemmNN, 2, NULL, globalWorkSize,
                                      localWorkSize, 0, NULL, &evNN.CLEvent());
         clFinish(queue);
         CL_BAIL_ON_ERROR(err);
 
-        err = clEnqueueReadBuffer(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
+        err = CECL_READ_BUFFER(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
                 C, 0, NULL, &evUpload.CLEvent());
         clFinish(queue);
         CL_BAIL_ON_ERROR(err);
@@ -374,22 +375,22 @@ void runTest(const string& testName, cl_device_id dev, cl_context ctx,
         Event evUpload("Upload");
         Event evNT("sgemmNT");
 
-        err = clEnqueueWriteBuffer(queue, Agpu, CL_TRUE, 0, m*n*sizeof(T),
+        err = CECL_WRITE_BUFFER(queue, Agpu, CL_TRUE, 0, m*n*sizeof(T),
                 A, 0, NULL, &evDownload1.CLEvent());
-        err = clEnqueueWriteBuffer(queue, Bgpu, CL_TRUE, 0, m*n*sizeof(T),
+        err = CECL_WRITE_BUFFER(queue, Bgpu, CL_TRUE, 0, m*n*sizeof(T),
                 B, 0, NULL, NULL);
-        err = clEnqueueWriteBuffer(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
+        err = CECL_WRITE_BUFFER(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
                 C, 0, NULL, NULL);
         clFinish(queue);
         CL_BAIL_ON_ERROR(err);
 
         //Launch Kernels
-        err = clEnqueueNDRangeKernel(queue, sgemmNT, 2, NULL, globalWorkSize,
+        err = CECL_ND_RANGE_KERNEL(queue, sgemmNT, 2, NULL, globalWorkSize,
                                      localWorkSize, 0, NULL, &evNT.CLEvent());
         clFinish(queue);
         CL_BAIL_ON_ERROR(err);
 
-        err = clEnqueueReadBuffer(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
+        err = CECL_READ_BUFFER(queue, Cgpu, CL_TRUE, 0, m*n*sizeof(T),
                 C, 0, NULL, &evUpload.CLEvent());
         clFinish(queue);
         CL_BAIL_ON_ERROR(err);

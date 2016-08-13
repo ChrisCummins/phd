@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <cassert>
 #include <fstream>
 #include <sstream>
@@ -61,7 +62,7 @@ OpenCLStencil<T>::OpenCLStencil( T wCenter,
 
     // associate our OpenCL kernel source with a Program
     cl_int clErr;
-    cl_program prog = clCreateProgramWithSource( context,
+    cl_program prog = CECL_PROGRAM_WITH_SOURCE( context,
                                                 1,
                                                 &cl_source_stencil2d,
                                                 NULL,
@@ -75,7 +76,7 @@ OpenCLStencil<T>::OpenCLStencil( T wCenter,
 
     try
     {
-        clErr = clBuildProgram( prog,
+        clErr = CECL_PROGRAM( prog,
                                 1,
                                 &device,
                                 buildOptions.str().c_str(),
@@ -117,9 +118,9 @@ OpenCLStencil<T>::OpenCLStencil( T wCenter,
         throw;
     }
 
-    kernel = clCreateKernel( prog, "StencilKernel", &clErr );
+    kernel = CECL_KERNEL( prog, "StencilKernel", &clErr );
     CL_CHECK_ERROR(clErr);
-    copyRectKernel = clCreateKernel( prog, "CopyRect", &clErr );
+    copyRectKernel = CECL_KERNEL( prog, "CopyRect", &clErr );
     CL_CHECK_ERROR(clErr);
 }
 
@@ -138,28 +139,28 @@ OpenCLStencil<T>::SetCopyRectKernelArgs( cl_mem dest,
 {
     int clErr;
 
-    clErr = clSetKernelArg(copyRectKernel, 0, sizeof(cl_mem), &dest );
+    clErr = CECL_SET_KERNEL_ARG(copyRectKernel, 0, sizeof(cl_mem), &dest );
     CL_CHECK_ERROR(clErr);
 
-    clErr = clSetKernelArg(copyRectKernel, 1, sizeof(int), &destOffset );
+    clErr = CECL_SET_KERNEL_ARG(copyRectKernel, 1, sizeof(int), &destOffset );
     CL_CHECK_ERROR(clErr);
 
-    clErr = clSetKernelArg(copyRectKernel, 2, sizeof(int), &destPitch );
+    clErr = CECL_SET_KERNEL_ARG(copyRectKernel, 2, sizeof(int), &destPitch );
     CL_CHECK_ERROR(clErr);
 
-    clErr = clSetKernelArg(copyRectKernel, 3, sizeof(cl_mem), &src );
+    clErr = CECL_SET_KERNEL_ARG(copyRectKernel, 3, sizeof(cl_mem), &src );
     CL_CHECK_ERROR(clErr);
 
-    clErr = clSetKernelArg(copyRectKernel, 4, sizeof(int), &srcOffset );
+    clErr = CECL_SET_KERNEL_ARG(copyRectKernel, 4, sizeof(int), &srcOffset );
     CL_CHECK_ERROR(clErr);
 
-    clErr = clSetKernelArg(copyRectKernel, 5, sizeof(int), &srcPitch );
+    clErr = CECL_SET_KERNEL_ARG(copyRectKernel, 5, sizeof(int), &srcPitch );
     CL_CHECK_ERROR(clErr);
 
-    clErr = clSetKernelArg(copyRectKernel, 6, sizeof(int), &width );
+    clErr = CECL_SET_KERNEL_ARG(copyRectKernel, 6, sizeof(int), &width );
     CL_CHECK_ERROR(clErr);
 
-    clErr = clSetKernelArg(copyRectKernel, 7, sizeof(int), &height );
+    clErr = CECL_SET_KERNEL_ARG(copyRectKernel, 7, sizeof(int), &height );
     CL_CHECK_ERROR(clErr);
 }
 
@@ -176,25 +177,25 @@ OpenCLStencil<T>::SetStencilKernelArgs( cl_mem currData,
 {
     cl_int clErr;
 
-    clErr = clSetKernelArg(kernel, 0, sizeof(cl_mem), &currData );
+    clErr = CECL_SET_KERNEL_ARG(kernel, 0, sizeof(cl_mem), &currData );
     CL_CHECK_ERROR(clErr);
 
-    clErr = clSetKernelArg(kernel, 1, sizeof(cl_mem), &newData );
+    clErr = CECL_SET_KERNEL_ARG(kernel, 1, sizeof(cl_mem), &newData );
     CL_CHECK_ERROR(clErr);
 
-    clErr = clSetKernelArg(kernel, 2, sizeof(int), &alignment );
+    clErr = CECL_SET_KERNEL_ARG(kernel, 2, sizeof(int), &alignment );
     CL_CHECK_ERROR(clErr);
 
-    clErr = clSetKernelArg(kernel, 3, sizeof(T), &wCenter );
+    clErr = CECL_SET_KERNEL_ARG(kernel, 3, sizeof(T), &wCenter );
     CL_CHECK_ERROR(clErr);
 
-    clErr = clSetKernelArg(kernel, 4, sizeof(T), &wCardinal );
+    clErr = CECL_SET_KERNEL_ARG(kernel, 4, sizeof(T), &wCardinal );
     CL_CHECK_ERROR(clErr);
 
-    clErr = clSetKernelArg(kernel, 5, sizeof(T), &wDiagonal );
+    clErr = CECL_SET_KERNEL_ARG(kernel, 5, sizeof(T), &wDiagonal );
     CL_CHECK_ERROR(clErr);
 
-    clErr = clSetKernelArg(kernel, 6, localDataSize, NULL );
+    clErr = CECL_SET_KERNEL_ARG(kernel, 6, localDataSize, NULL );
     CL_CHECK_ERROR(clErr);
 }
 
@@ -230,13 +231,13 @@ OpenCLStencil<T>::operator()( Matrix2D<T>& mtx, unsigned int nIters )
 
     // create buffers for our data on the device
     cl_int clErr = 0;
-    cl_mem dataBuf1 = clCreateBuffer( context,
+    cl_mem dataBuf1 = CECL_BUFFER( context,
                             CL_MEM_READ_WRITE,
                             mtx.GetDataSize(),
                             NULL,
                             &clErr );
     CL_CHECK_ERROR(clErr);
-    cl_mem dataBuf2 = clCreateBuffer( context,
+    cl_mem dataBuf2 = CECL_BUFFER( context,
                             CL_MEM_READ_WRITE,
                             mtx.GetDataSize(),
                             NULL,
@@ -247,7 +248,7 @@ OpenCLStencil<T>::operator()( Matrix2D<T>& mtx, unsigned int nIters )
 
     // copy the initial matrix values onto the device
     cl_event writeEvt;
-    clErr = clEnqueueWriteBuffer( queue,
+    clErr = CECL_WRITE_BUFFER( queue,
                                     *currData,
                                     CL_FALSE,   //blocking
                                     0,          // offset
@@ -305,7 +306,7 @@ OpenCLStencil<T>::operator()( Matrix2D<T>& mtx, unsigned int nIters )
 
     cl_event cwEvent;
     size_t global_work_size = mtx.GetNumRows();
-    clErr = clEnqueueNDRangeKernel( queue,
+    clErr = CECL_ND_RANGE_KERNEL( queue,
                                     copyRectKernel,
                                     1,      // work dimensions
                                     NULL,   // global work offset - use all 0s
@@ -327,7 +328,7 @@ OpenCLStencil<T>::operator()( Matrix2D<T>& mtx, unsigned int nIters )
                             (int)mtx.GetNumRows());  // height
 
     cl_event ceEvent;
-    clErr = clEnqueueNDRangeKernel( queue,
+    clErr = CECL_ND_RANGE_KERNEL( queue,
                                     copyRectKernel,
                                     1,      // work dimensions
                                     NULL,   // global work offset - use all 0s
@@ -383,7 +384,7 @@ OpenCLStencil<T>::operator()( Matrix2D<T>& mtx, unsigned int nIters )
         std::vector<size_t> lWorkDims(2, 0);
         lWorkDims[0] = 1;
         lWorkDims[1] = lCols;
-        clErr = clEnqueueNDRangeKernel( queue,
+        clErr = CECL_ND_RANGE_KERNEL( queue,
                                 kernel,
                                 gWorkDims.size(),   // number of work dimensions
                                 NULL,               // global work offset - use all 0s
@@ -460,7 +461,7 @@ OpenCLStencil<T>::operator()( Matrix2D<T>& mtx, unsigned int nIters )
     }
 
     // read final data off the device
-    clErr = clEnqueueReadBuffer( queue,
+    clErr = CECL_READ_BUFFER( queue,
                                     *currData,
                                     CL_TRUE,    // blocking
                                     0,          // offset

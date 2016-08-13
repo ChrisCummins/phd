@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include<fstream>
 #include<iostream>
 #include<limits.h>
@@ -173,13 +174,13 @@ void RunTest1(cl_device_id device, cl_context context, cl_command_queue queue,
     //variable to get error code
     cl_int err_code;
     //load the kernel code
-    cl_program program=clCreateProgramWithSource(context,1,&cl_source_bfs_iiit,
+    cl_program program=CECL_PROGRAM_WITH_SOURCE(context,1,&cl_source_bfs_iiit,
             NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
     //compile the kernel code
     const char *c_flags="";
-    err_code=clBuildProgram(program,1,&device,c_flags,NULL,NULL);
+    err_code=CECL_PROGRAM(program,1,&device,c_flags,NULL,NULL);
 
     //if error dump the compile error
     if (err_code!=CL_SUCCESS)
@@ -200,12 +201,12 @@ void RunTest1(cl_device_id device, cl_context context, cl_command_queue queue,
 
     //allocate pinned memory
     //pinned memory for frontier array
-    cl_mem h_f=clCreateBuffer(context,
+    cl_mem h_f=CECL_BUFFER(context,
             CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
             sizeof(frontier_type)*numVerts,NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
-    frontier_type *frontier = (frontier_type *)clEnqueueMapBuffer(queue, h_f,
+    frontier_type *frontier = (frontier_type *)CECL_MAP_BUFFER(queue, h_f,
             true, CL_MAP_READ|CL_MAP_WRITE, 0,
             sizeof(frontier_type)*numVerts,
             0, NULL, NULL, &err_code);
@@ -213,13 +214,13 @@ void RunTest1(cl_device_id device, cl_context context, cl_command_queue queue,
 
 
     //pinned memory for cost array
-    cl_mem h_cost=clCreateBuffer(context,
+    cl_mem h_cost=CECL_BUFFER(context,
             CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
             sizeof(cost_type)*numVerts,
             NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
-    cost_type *costArray = (cost_type *)clEnqueueMapBuffer(queue,h_cost,true,
+    cost_type *costArray = (cost_type *)CECL_MAP_BUFFER(queue,h_cost,true,
             CL_MAP_READ|CL_MAP_WRITE, 0,
             sizeof(cost_type)*numVerts,
             0, NULL, NULL, &err_code);
@@ -248,21 +249,21 @@ void RunTest1(cl_device_id device, cl_context context, cl_command_queue queue,
     cl_mem d_flag;
 
     //allocate GPU memory for edge_offsets and edge_list
-    d_edgeArray=clCreateBuffer(context,CL_MEM_READ_ONLY,
+    d_edgeArray=CECL_BUFFER(context,CL_MEM_READ_ONLY,
             (numVerts+1)*sizeof(cl_uint),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
-    d_edgeArrayAux=clCreateBuffer(context,CL_MEM_READ_ONLY,
+    d_edgeArrayAux=CECL_BUFFER(context,CL_MEM_READ_ONLY,
             adj_list_length*sizeof(cl_uint),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
     //allocate GPU memory for frontier
-    d_frontier=clCreateBuffer(context,CL_MEM_READ_WRITE,
+    d_frontier=CECL_BUFFER(context,CL_MEM_READ_WRITE,
             numVerts*sizeof(frontier_type),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
     //allocate GPU memory for flag variable
-    d_flag=clCreateBuffer(context,CL_MEM_READ_WRITE,
+    d_flag=CECL_BUFFER(context,CL_MEM_READ_WRITE,
             sizeof(cl_int),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
@@ -271,7 +272,7 @@ void RunTest1(cl_device_id device, cl_context context, cl_command_queue queue,
     Event evTransfer("PCIe Transfer");
 
     //Transfer edge_offsets and edge_list to GPU
-    err_code = clEnqueueWriteBuffer(queue, d_edgeArray, CL_TRUE, 0,
+    err_code = CECL_WRITE_BUFFER(queue, d_edgeArray, CL_TRUE, 0,
             (numVerts+1)*sizeof(cl_uint), (void *)edgeArray,0, NULL,
             &evTransfer.CLEvent());
     CL_CHECK_ERROR(err_code);
@@ -280,7 +281,7 @@ void RunTest1(cl_device_id device, cl_context context, cl_command_queue queue,
     evTransfer.FillTimingInfo();
     double inputTransferTime = evTransfer.StartEndRuntime();
 
-    err_code = clEnqueueWriteBuffer(queue, d_edgeArrayAux, CL_TRUE, 0,
+    err_code = CECL_WRITE_BUFFER(queue, d_edgeArrayAux, CL_TRUE, 0,
             adj_list_length*sizeof(cl_uint), (void *)edgeArrayAux,0,
             NULL, &evTransfer.CLEvent());
     CL_CHECK_ERROR(err_code);
@@ -290,7 +291,7 @@ void RunTest1(cl_device_id device, cl_context context, cl_command_queue queue,
     inputTransferTime += evTransfer.StartEndRuntime();
 
     //Transfer frontier to GPU
-    err_code = clEnqueueWriteBuffer(queue, d_frontier, CL_TRUE, 0,
+    err_code = CECL_WRITE_BUFFER(queue, d_frontier, CL_TRUE, 0,
             numVerts*sizeof(frontier_type), (void *)frontier,0,
             NULL, &evTransfer.CLEvent());
     CL_CHECK_ERROR(err_code);
@@ -300,7 +301,7 @@ void RunTest1(cl_device_id device, cl_context context, cl_command_queue queue,
     inputTransferTime += evTransfer.StartEndRuntime();
 
     //Create kernel functions
-    cl_kernel kernel1=clCreateKernel(program,"BFS_kernel_warp",&err_code);
+    cl_kernel kernel1=CECL_KERNEL(program,"BFS_kernel_warp",&err_code);
     CL_CHECK_ERROR(err_code)
 
     //Get the kernel configuration
@@ -317,21 +318,21 @@ void RunTest1(cl_device_id device, cl_context context, cl_command_queue queue,
     //index for kernel parameters
     int p=-1;
     //specify  kernel1 parameters
-    err_code=clSetKernelArg(kernel1,++p,sizeof(cl_mem),(void *)&d_frontier);
+    err_code=CECL_SET_KERNEL_ARG(kernel1,++p,sizeof(cl_mem),(void *)&d_frontier);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel1,++p,sizeof(cl_mem),(void *)&d_edgeArray);
+    err_code=CECL_SET_KERNEL_ARG(kernel1,++p,sizeof(cl_mem),(void *)&d_edgeArray);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel1,++p,sizeof(cl_mem),(void *)&d_edgeArrayAux);
+    err_code=CECL_SET_KERNEL_ARG(kernel1,++p,sizeof(cl_mem),(void *)&d_edgeArrayAux);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel1,++p,sizeof(cl_int),(void *)&W_SZ);
+    err_code=CECL_SET_KERNEL_ARG(kernel1,++p,sizeof(cl_int),(void *)&W_SZ);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel1,++p,sizeof(cl_int),(void *)&CHUNK_SZ);
+    err_code=CECL_SET_KERNEL_ARG(kernel1,++p,sizeof(cl_int),(void *)&CHUNK_SZ);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel1,++p,sizeof(cl_uint),(void *)&numVerts);
+    err_code=CECL_SET_KERNEL_ARG(kernel1,++p,sizeof(cl_uint),(void *)&numVerts);
     CL_CHECK_ERROR(err_code);
     //skip for levels
     ++p;
-    err_code=clSetKernelArg(kernel1,++p,sizeof(cl_mem),(void *)&d_flag);
+    err_code=CECL_SET_KERNEL_ARG(kernel1,++p,sizeof(cl_mem),(void *)&d_flag);
     CL_CHECK_ERROR(err_code);
 
     //Perform cpu bfs traversal for verify results
@@ -357,7 +358,7 @@ void RunTest1(cl_device_id device, cl_context context, cl_command_queue queue,
             frontier [source_vertex]=0;
 
             //write the arrays to gpu
-            err_code = clEnqueueWriteBuffer(queue, d_frontier, CL_TRUE, 0,
+            err_code = CECL_WRITE_BUFFER(queue, d_frontier, CL_TRUE, 0,
                     numVerts*sizeof(frontier_type),(void *)frontier,
                     0,NULL,NULL);
             CL_CHECK_ERROR(err_code);
@@ -380,15 +381,15 @@ void RunTest1(cl_device_id device, cl_context context, cl_command_queue queue,
         while (flag)
         {
             flag=0;
-            err_code = clEnqueueWriteBuffer(queue, d_flag, CL_TRUE, 0,
+            err_code = CECL_WRITE_BUFFER(queue, d_flag, CL_TRUE, 0,
                     sizeof(cl_int),(void *)&flag,0,NULL,NULL);
             CL_CHECK_ERROR(err_code);
 
-            err_code=clSetKernelArg(kernel1,6,sizeof(cl_uint),(void *)&iters);
+            err_code=CECL_SET_KERNEL_ARG(kernel1,6,sizeof(cl_uint),(void *)&iters);
             CL_CHECK_ERROR(err_code);
 
             //Call kernel1
-            err_code=clEnqueueNDRangeKernel(queue,kernel1,1,NULL,
+            err_code=CECL_ND_RANGE_KERNEL(queue,kernel1,1,NULL,
                     &global_work_size,&local_work_size,0,NULL,
                     &evKernel.CLEvent());
             CL_CHECK_ERROR(err_code);
@@ -398,7 +399,7 @@ void RunTest1(cl_device_id device, cl_context context, cl_command_queue queue,
             totalKernelTime += evKernel.StartEndRuntime();
 
             //Read the frontier
-            err_code=clEnqueueReadBuffer(queue,d_flag,CL_TRUE,0,
+            err_code=CECL_READ_BUFFER(queue,d_flag,CL_TRUE,0,
                     sizeof(cl_int),&flag,0,NULL,NULL);
             clFinish(queue);
             CL_CHECK_ERROR(err_code);
@@ -409,7 +410,7 @@ void RunTest1(cl_device_id device, cl_context context, cl_command_queue queue,
         double result_time = Timer::Stop(cpu_bfs_timer, "cpu_bfs_timer");
 
         //copy the cost array from GPU to CPU
-        err_code=clEnqueueReadBuffer(queue,d_frontier, CL_TRUE,0,
+        err_code=CECL_READ_BUFFER(queue,d_frontier, CL_TRUE,0,
                 sizeof(frontier_type)*numVerts,costArray,0,NULL,
                 &evTransfer.CLEvent());
         CL_CHECK_ERROR(err_code);
@@ -567,13 +568,13 @@ void RunTest2(
     cl_int err_code;
 
     //load the kernel code
-    cl_program program=clCreateProgramWithSource(context,1,
+    cl_program program=CECL_PROGRAM_WITH_SOURCE(context,1,
             &cl_source_bfs_uiuc_spill,NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
     //compile the kernel code
     const char *compiler_flags="-g -O0";
-    err_code=clBuildProgram(program,1,&device,NULL,NULL,NULL);
+    err_code=CECL_PROGRAM(program,1,&device,NULL,NULL,NULL);
 
     //if error dump the compile error
     if (err_code!=CL_SUCCESS)
@@ -594,38 +595,38 @@ void RunTest2(
 
     //allocate pinned memory on CPU
     //pinned memory for frontier array
-    cl_mem h_f=clCreateBuffer(context,
+    cl_mem h_f=CECL_BUFFER(context,
             CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
             sizeof(frontier_type)*(numVerts),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
-    frontier_type *frontier = (frontier_type *)clEnqueueMapBuffer(queue, h_f,
+    frontier_type *frontier = (frontier_type *)CECL_MAP_BUFFER(queue, h_f,
             true, CL_MAP_READ|CL_MAP_WRITE, 0,
             sizeof(frontier_type)*(numVerts),
             0, NULL, NULL, &err_code);
     CL_CHECK_ERROR(err_code);
 
     //pinned memory for visited array
-    cl_mem h_v=clCreateBuffer(context,
+    cl_mem h_v=CECL_BUFFER(context,
             CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
             sizeof(visited_type)*(numVerts),
             NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
-    visited_type *visited = (visited_type *)clEnqueueMapBuffer(queue, h_v,true,
+    visited_type *visited = (visited_type *)CECL_MAP_BUFFER(queue, h_v,true,
             CL_MAP_READ|CL_MAP_WRITE, 0,
             sizeof(visited_type)*(numVerts),
             0, NULL, NULL, &err_code);
     CL_CHECK_ERROR(err_code);
 
     //pinned memory for cost array
-    cl_mem h_cost=clCreateBuffer(context,
+    cl_mem h_cost=CECL_BUFFER(context,
             CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
             sizeof(cost_type)*(numVerts),
             NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
-    cost_type *costArray = (cost_type *)clEnqueueMapBuffer(queue,h_cost,true,
+    cost_type *costArray = (cost_type *)CECL_MAP_BUFFER(queue,h_cost,true,
             CL_MAP_READ|CL_MAP_WRITE, 0,
             sizeof(cost_type)*(numVerts),
             0, NULL, NULL, &err_code);
@@ -667,53 +668,53 @@ void RunTest2(
     cl_mem d_costArray;
 
     //allocate GPU memory for adjacency list
-    d_edgeArray=clCreateBuffer(context,CL_MEM_READ_ONLY,
+    d_edgeArray=CECL_BUFFER(context,CL_MEM_READ_ONLY,
             (numVerts+1)*sizeof(cl_uint),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
-    d_edgeArrayAux=clCreateBuffer(context,CL_MEM_READ_ONLY,
+    d_edgeArrayAux=CECL_BUFFER(context,CL_MEM_READ_ONLY,
             adj_list_length*sizeof(cl_uint),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
     //allocate GPU memory for frontier and d_t_frontier
-    d_frontier=clCreateBuffer(context,CL_MEM_READ_WRITE,
+    d_frontier=CECL_BUFFER(context,CL_MEM_READ_WRITE,
             numVerts*sizeof(frontier_type),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
-    d_t_frontier=clCreateBuffer(context,CL_MEM_READ_WRITE,
+    d_t_frontier=CECL_BUFFER(context,CL_MEM_READ_WRITE,
             numVerts*sizeof(frontier_type),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
     //allocate GPU memory for visited
-    d_visited=clCreateBuffer(context,CL_MEM_READ_WRITE,
+    d_visited=CECL_BUFFER(context,CL_MEM_READ_WRITE,
             numVerts* sizeof(visited_type),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
     //allocate GPU memory for frontier length
-    d_frontier_length=clCreateBuffer(context,CL_MEM_READ_WRITE,
+    d_frontier_length=CECL_BUFFER(context,CL_MEM_READ_WRITE,
             sizeof(cl_uint),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
     //allocate GPU memory for mutex variables and
     //intermediate frontier length variables
-    d_g_mutex=clCreateBuffer(context,CL_MEM_READ_WRITE,
+    d_g_mutex=CECL_BUFFER(context,CL_MEM_READ_WRITE,
             sizeof(cl_uint),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
-    d_g_mutex2=clCreateBuffer(context,CL_MEM_READ_WRITE,
+    d_g_mutex2=CECL_BUFFER(context,CL_MEM_READ_WRITE,
             sizeof(cl_uint),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
-    d_g_q_offsets=clCreateBuffer(context,CL_MEM_READ_WRITE,
+    d_g_q_offsets=CECL_BUFFER(context,CL_MEM_READ_WRITE,
             sizeof(cl_uint),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
-    d_g_q_size=clCreateBuffer(context,CL_MEM_READ_WRITE,
+    d_g_q_size=CECL_BUFFER(context,CL_MEM_READ_WRITE,
             sizeof(cl_uint),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
     //allocate GPU memory for cost array
-    d_costArray=clCreateBuffer(context,CL_MEM_READ_WRITE,
+    d_costArray=CECL_BUFFER(context,CL_MEM_READ_WRITE,
             numVerts* sizeof(cost_type),NULL,&err_code);
     CL_CHECK_ERROR(err_code);
 
@@ -722,7 +723,7 @@ void RunTest2(
     Event evTransfer("PCIe Transfer");
 
     //Transfer adjacency list to GPU
-    err_code = clEnqueueWriteBuffer(queue, d_edgeArray, CL_TRUE, 0,
+    err_code = CECL_WRITE_BUFFER(queue, d_edgeArray, CL_TRUE, 0,
             (numVerts+1)*sizeof(cl_uint), (void *)edgeArray,0, NULL,
             &evTransfer.CLEvent());
     CL_CHECK_ERROR(err_code);
@@ -731,7 +732,7 @@ void RunTest2(
     evTransfer.FillTimingInfo();
     double inputTransferTime = evTransfer.StartEndRuntime();
 
-    err_code = clEnqueueWriteBuffer(queue, d_edgeArrayAux, CL_TRUE, 0,
+    err_code = CECL_WRITE_BUFFER(queue, d_edgeArrayAux, CL_TRUE, 0,
             adj_list_length*sizeof(cl_uint), (void *)edgeArrayAux,0,
             NULL, &evTransfer.CLEvent());
     CL_CHECK_ERROR(err_code);
@@ -741,7 +742,7 @@ void RunTest2(
     inputTransferTime += evTransfer.StartEndRuntime();
 
     //Transfer frontiers to GPU
-    err_code = clEnqueueWriteBuffer(queue, d_frontier, CL_TRUE, 0,
+    err_code = CECL_WRITE_BUFFER(queue, d_frontier, CL_TRUE, 0,
             numVerts*sizeof(frontier_type), (void *)frontier,0,
             NULL, &evTransfer.CLEvent());
     CL_CHECK_ERROR(err_code);
@@ -750,7 +751,7 @@ void RunTest2(
     evTransfer.FillTimingInfo();
     inputTransferTime += evTransfer.StartEndRuntime();
 
-    err_code = clEnqueueWriteBuffer(queue, d_t_frontier, CL_TRUE, 0,
+    err_code = CECL_WRITE_BUFFER(queue, d_t_frontier, CL_TRUE, 0,
             sizeof(frontier_type)*numVerts, (void *)frontier,0,
             NULL, &evTransfer.CLEvent());
     CL_CHECK_ERROR(err_code);
@@ -760,7 +761,7 @@ void RunTest2(
     inputTransferTime += evTransfer.StartEndRuntime();
 
     //Transfer visited array to GPU
-    err_code = clEnqueueWriteBuffer(queue, d_visited, CL_TRUE, 0,
+    err_code = CECL_WRITE_BUFFER(queue, d_visited, CL_TRUE, 0,
             numVerts*sizeof(visited_type), (void*)visited, 0,
             NULL,&evTransfer.CLEvent());
     CL_CHECK_ERROR(err_code);
@@ -770,7 +771,7 @@ void RunTest2(
     inputTransferTime += evTransfer.StartEndRuntime();
 
     //Transfer cost array to GPU
-    err_code = clEnqueueWriteBuffer(queue, d_costArray, CL_TRUE, 0,
+    err_code = CECL_WRITE_BUFFER(queue, d_costArray, CL_TRUE, 0,
             numVerts*sizeof(cost_type), (void*)costArray, 0,
             NULL,&evTransfer.CLEvent());
     CL_CHECK_ERROR(err_code);
@@ -780,7 +781,7 @@ void RunTest2(
     inputTransferTime += evTransfer.StartEndRuntime();
 
     //Transfer frontier length to GPU
-    err_code = clEnqueueWriteBuffer(queue, d_frontier_length, CL_TRUE, 0,
+    err_code = CECL_WRITE_BUFFER(queue, d_frontier_length, CL_TRUE, 0,
             sizeof(cl_uint), (void*)&frontier_length, 0,NULL,
             &evTransfer.CLEvent());
     CL_CHECK_ERROR(err_code);
@@ -790,18 +791,18 @@ void RunTest2(
     inputTransferTime += evTransfer.StartEndRuntime();
 
     //Create kernel functions
-    cl_kernel kernel_op_1=clCreateKernel(program,"BFS_kernel_one_block",
+    cl_kernel kernel_op_1=CECL_KERNEL(program,"BFS_kernel_one_block",
         &err_code);
     CL_CHECK_ERROR(err_code);
-    cl_kernel kernel_op_2=clCreateKernel(program,"BFS_kernel_SM_block",
+    cl_kernel kernel_op_2=CECL_KERNEL(program,"BFS_kernel_SM_block",
          &err_code);
     CL_CHECK_ERROR(err_code);
-    cl_kernel kernel_op_3=clCreateKernel(program,"BFS_kernel_multi_block",
+    cl_kernel kernel_op_3=CECL_KERNEL(program,"BFS_kernel_multi_block",
         &err_code);
     CL_CHECK_ERROR(err_code);
-    cl_kernel kernel_op_fcopy=clCreateKernel(program,"Frontier_copy",&err_code);
+    cl_kernel kernel_op_fcopy=CECL_KERNEL(program,"Frontier_copy",&err_code);
     CL_CHECK_ERROR(err_code);
-    cl_kernel kernel_op_reset=clCreateKernel(program,"Reset_kernel_parameters",
+    cl_kernel kernel_op_reset=CECL_KERNEL(program,"Reset_kernel_parameters",
         &err_code);
     CL_CHECK_ERROR(err_code);
 
@@ -841,27 +842,27 @@ void RunTest2(
 
 
     //Set kernel parameters for BFS_kernel_one_block
-    err_code=clSetKernelArg(kernel_op_1,++p,sizeof(cl_mem),(void *)&d_frontier);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_1,++p,sizeof(cl_mem),(void *)&d_frontier);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_1,++p,sizeof(cl_uint),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_1,++p,sizeof(cl_uint),
             (void *)&frontier_length);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_1,++p,sizeof(cl_mem),(void *)&d_visited);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_1,++p,sizeof(cl_mem),(void *)&d_visited);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_1,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_1,++p,sizeof(cl_mem),
             (void *)&d_costArray);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_1,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_1,++p,sizeof(cl_mem),
             (void *)&d_edgeArray);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_1,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_1,++p,sizeof(cl_mem),
             (void *)&d_edgeArrayAux);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_1,++p,sizeof(cl_uint),(void *)&numVerts);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_1,++p,sizeof(cl_uint),(void *)&numVerts);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_1,++p,sizeof(cl_uint),(void *)&numEdges);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_1,++p,sizeof(cl_uint),(void *)&numEdges);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_1,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_1,++p,sizeof(cl_mem),
             (void *)&d_frontier_length);
     CL_CHECK_ERROR(err_code);
 
@@ -869,90 +870,90 @@ void RunTest2(
     if(q_size>local_work_size)
         q_size=local_work_size;
 
-    err_code=clSetKernelArg(kernel_op_1,++p,sizeof(cl_uint),(void *)&q_size);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_1,++p,sizeof(cl_uint),(void *)&q_size);
     CL_CHECK_ERROR(err_code);
 
     //shared memory for BFS_kernel_one_block
-    err_code=clSetKernelArg(kernel_op_1,++p,q_size*sizeof(cl_uint), NULL);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_1,++p,q_size*sizeof(cl_uint), NULL);
     CL_CHECK_ERROR(err_code);
 
-    err_code=clSetKernelArg(kernel_op_1,++p,q_size*sizeof(cl_uint), NULL);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_1,++p,q_size*sizeof(cl_uint), NULL);
     CL_CHECK_ERROR(err_code);
 
 
     //Set kernel parameters for BFS_kernel_SM_block
     p=-1;
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_mem),(void *)&d_frontier);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_mem),(void *)&d_frontier);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_uint),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_uint),
             (void *)&frontier_length);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_mem),
             (void *)&d_t_frontier);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_mem),(void *)&d_visited);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_mem),(void *)&d_visited);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_mem),
             (void *)&d_costArray);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_mem),
             (void *)&d_edgeArray);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_mem),
             (void *)&d_edgeArrayAux);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_uint),(void *)&numVerts);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_uint),(void *)&numVerts);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_uint),(void *)&numEdges);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_uint),(void *)&numEdges);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_mem),
             (void *)&d_frontier_length);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_mem),(void *)&d_g_mutex);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_mem),(void *)&d_g_mutex);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_mem),(void *)&d_g_mutex2);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_mem),(void *)&d_g_mutex2);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_mem),
             (void *)&d_g_q_offsets);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_mem),(void *)&d_g_q_size);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_mem),(void *)&d_g_q_size);
     CL_CHECK_ERROR(err_code);
 
     q_size=max_q_size;
     if(q_size>local_work_size)
         q_size=local_work_size;
 
-    err_code=clSetKernelArg(kernel_op_2,++p,sizeof(cl_uint),(void *)&q_size);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p,sizeof(cl_uint),(void *)&q_size);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_2,++p, sizeof(cl_uint)*q_size,NULL);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_2,++p, sizeof(cl_uint)*q_size,NULL);
     CL_CHECK_ERROR(err_code);
 
     //Set kernel parameters for BFS_kernel_multi_block
     p=-1;
-    err_code=clSetKernelArg(kernel_op_3,++p,sizeof(cl_mem),(void *)&d_frontier);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_3,++p,sizeof(cl_mem),(void *)&d_frontier);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_3,++p,sizeof(cl_uint),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_3,++p,sizeof(cl_uint),
             (void *)&frontier_length);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_3,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_3,++p,sizeof(cl_mem),
             (void *)&d_t_frontier);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_3,++p,sizeof(cl_mem),(void *)&d_visited);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_3,++p,sizeof(cl_mem),(void *)&d_visited);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_3,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_3,++p,sizeof(cl_mem),
             (void *)&d_costArray);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_3,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_3,++p,sizeof(cl_mem),
             (void *)&d_edgeArray);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_3,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_3,++p,sizeof(cl_mem),
             (void *)&d_edgeArrayAux);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_3,++p,sizeof(cl_uint),(void *)&numVerts);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_3,++p,sizeof(cl_uint),(void *)&numVerts);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_3,++p,sizeof(cl_uint),(void *)&numEdges);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_3,++p,sizeof(cl_uint),(void *)&numEdges);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_3,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_3,++p,sizeof(cl_mem),
             (void *)&d_frontier_length);
     CL_CHECK_ERROR(err_code);
 
@@ -960,52 +961,52 @@ void RunTest2(
     if(q_size>local_work_size)
         q_size=local_work_size;
 
-    err_code=clSetKernelArg(kernel_op_3,++p,sizeof(cl_uint),(void *)&q_size);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_3,++p,sizeof(cl_uint),(void *)&q_size);
     CL_CHECK_ERROR(err_code);
 
-    err_code=clSetKernelArg(kernel_op_3,++p,sizeof(cl_uint)*q_size,NULL);
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_3,++p,sizeof(cl_uint)*q_size,NULL);
     CL_CHECK_ERROR(err_code);
 
     //Set kernel parameters for Reset_kernel_parameters
     p=-1;
-    err_code=clSetKernelArg(kernel_op_reset,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_reset,++p,sizeof(cl_mem),
             (void *)&d_frontier_length);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_reset,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_reset,++p,sizeof(cl_mem),
             (void *)&d_g_mutex);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_reset,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_reset,++p,sizeof(cl_mem),
             (void *)&d_g_mutex2);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_reset,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_reset,++p,sizeof(cl_mem),
             (void *)&d_g_q_offsets);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_reset,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_reset,++p,sizeof(cl_mem),
             (void *)&d_g_q_size);
     CL_CHECK_ERROR(err_code);
 
     //Set kernel parameters for Frontier_copy
     p=-1;
-    err_code=clSetKernelArg(kernel_op_fcopy,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_fcopy,++p,sizeof(cl_mem),
             (void *)&d_frontier);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_fcopy,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_fcopy,++p,sizeof(cl_mem),
             (void *)&d_t_frontier);
     CL_CHECK_ERROR(err_code);
 
-    err_code=clSetKernelArg(kernel_op_fcopy,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_fcopy,++p,sizeof(cl_mem),
             (void *)&d_frontier_length);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_fcopy,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_fcopy,++p,sizeof(cl_mem),
             (void *)&d_g_mutex);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_fcopy,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_fcopy,++p,sizeof(cl_mem),
             (void *)&d_g_mutex2);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_fcopy,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_fcopy,++p,sizeof(cl_mem),
             (void *)&d_g_q_offsets);
     CL_CHECK_ERROR(err_code);
-    err_code=clSetKernelArg(kernel_op_fcopy,++p,sizeof(cl_mem),
+    err_code=CECL_SET_KERNEL_ARG(kernel_op_fcopy,++p,sizeof(cl_mem),
             (void *)&d_g_q_size);
     CL_CHECK_ERROR(err_code);
 
@@ -1038,25 +1039,25 @@ void RunTest2(
             visited[source_vertex]=1;
             costArray[source_vertex]=0;
             //write buffers to gpu
-            err_code = clEnqueueWriteBuffer(queue, d_frontier, CL_TRUE, 0,
+            err_code = CECL_WRITE_BUFFER(queue, d_frontier, CL_TRUE, 0,
                     numVerts*sizeof(frontier_type),(void *)frontier,
                     0,NULL,NULL);
             CL_CHECK_ERROR(err_code);
 
-            err_code = clEnqueueWriteBuffer(queue, d_visited, CL_TRUE, 0,
+            err_code = CECL_WRITE_BUFFER(queue, d_visited, CL_TRUE, 0,
                     numVerts*sizeof(visited_type), (void *)visited,
                     0,NULL,NULL);
             CL_CHECK_ERROR(err_code);
 
-            err_code = clEnqueueWriteBuffer(queue, d_costArray, CL_TRUE, 0,
+            err_code = CECL_WRITE_BUFFER(queue, d_costArray, CL_TRUE, 0,
                     numVerts*sizeof(cost_type), (void *)costArray, 0,NULL,NULL);
             CL_CHECK_ERROR(err_code);
 
-            err_code = clEnqueueWriteBuffer(queue, d_t_frontier, CL_TRUE, 0,
+            err_code = CECL_WRITE_BUFFER(queue, d_t_frontier, CL_TRUE, 0,
                     sizeof(frontier_type),(void *)frontier,0,NULL,NULL);
             CL_CHECK_ERROR(err_code);
 
-            err_code = clEnqueueWriteBuffer(queue, d_frontier_length, CL_TRUE,0,
+            err_code = CECL_WRITE_BUFFER(queue, d_frontier_length, CL_TRUE,0,
                     sizeof(cl_uint), (void*)&frontier_length, 0,NULL,NULL);
             CL_CHECK_ERROR(err_code);
         }
@@ -1074,7 +1075,7 @@ void RunTest2(
             //call Reset_kernel_parameters
             gws=1;
             lws=1;
-            err_code=clEnqueueNDRangeKernel(queue,kernel_op_reset,1,NULL,
+            err_code=CECL_ND_RANGE_KERNEL(queue,kernel_op_reset,1,NULL,
                     &gws,&lws,0,NULL,&evKernel.CLEvent());
             CL_CHECK_ERROR(err_code);
             clFinish(queue);
@@ -1085,12 +1086,12 @@ void RunTest2(
             //kernel for frontier length within one block
             if (frontier_length<maxWorkItemsPerGroup)
             {
-                err_code=clSetKernelArg(kernel_op_1,1,sizeof(cl_uint),
+                err_code=CECL_SET_KERNEL_ARG(kernel_op_1,1,sizeof(cl_uint),
                         (void *)&frontier_length);
                 gws=maxWorkItemsPerGroup;
                 lws=maxWorkItemsPerGroup;
 
-                err_code=clEnqueueNDRangeKernel(queue,kernel_op_1,1,NULL,
+                err_code=CECL_ND_RANGE_KERNEL(queue,kernel_op_1,1,NULL,
                         &gws,&lws,0,NULL,&evKernel.CLEvent());
                 CL_CHECK_ERROR(err_code);
                 clFinish(queue);
@@ -1102,13 +1103,13 @@ void RunTest2(
             else if (g_barrier &&
                     frontier_length< maxWorkItemsPerGroup * max_compute_units)
             {
-                err_code=clSetKernelArg(kernel_op_2,1,sizeof(cl_uint),
+                err_code=CECL_SET_KERNEL_ARG(kernel_op_2,1,sizeof(cl_uint),
                         (void *)&frontier_length);
 
                 gws=maxWorkItemsPerGroup * max_compute_units;
                 lws=maxWorkItemsPerGroup;
 
-                err_code=clEnqueueNDRangeKernel(queue,kernel_op_2,1,NULL,
+                err_code=CECL_ND_RANGE_KERNEL(queue,kernel_op_2,1,NULL,
                         &gws,&lws,0,NULL,&evKernel.CLEvent());
                 CL_CHECK_ERROR(err_code);
                 clFinish(queue);
@@ -1119,10 +1120,10 @@ void RunTest2(
             //kernel for frontier length greater than SM blocks
             else
             {
-                err_code=clSetKernelArg(kernel_op_3,1,sizeof(cl_uint),
+                err_code=CECL_SET_KERNEL_ARG(kernel_op_3,1,sizeof(cl_uint),
                         (void *)&frontier_length);
 
-                err_code=clEnqueueNDRangeKernel(queue,kernel_op_3,1,NULL,
+                err_code=CECL_ND_RANGE_KERNEL(queue,kernel_op_3,1,NULL,
                         &global_work_size,&local_work_size,0,NULL,
                         &evKernel.CLEvent());
                 CL_CHECK_ERROR(err_code);
@@ -1131,7 +1132,7 @@ void RunTest2(
                 evKernel.FillTimingInfo();
                 totalKernelTime += evKernel.StartEndRuntime();
 
-                err_code=clEnqueueNDRangeKernel(queue,kernel_op_fcopy,1,NULL,
+                err_code=CECL_ND_RANGE_KERNEL(queue,kernel_op_fcopy,1,NULL,
                         &global_work_size,&local_work_size,0,NULL,
                         &evKernel.CLEvent());
                 CL_CHECK_ERROR(err_code);
@@ -1141,14 +1142,14 @@ void RunTest2(
                 totalKernelTime += evKernel.StartEndRuntime();
             }
             //Get the current frontier length
-            err_code=clEnqueueReadBuffer(queue,d_frontier_length,CL_TRUE,0,
+            err_code=CECL_READ_BUFFER(queue,d_frontier_length,CL_TRUE,0,
                     sizeof(cl_uint),&frontier_length,0,NULL,NULL);
             CL_CHECK_ERROR(err_code);
         }
         //stop the CPU timer
         double result_time = Timer::Stop(cpu_bfs_timer, "cpu_bfs_timer");
         //copy the cost array back to CPU
-        err_code=clEnqueueReadBuffer(queue,d_costArray, CL_TRUE,0,
+        err_code=CECL_READ_BUFFER(queue,d_costArray, CL_TRUE,0,
                 sizeof(cost_type)*numVerts,costArray,0,NULL,
                 &evTransfer.CLEvent());
         CL_CHECK_ERROR(err_code);
@@ -1363,24 +1364,24 @@ void RunBenchmark(cl_device_id device,
             avg_degree=1;
 
         //allocate pinned memory for adjacency lists
-        h_edge = clCreateBuffer(context,
+        h_edge = CECL_BUFFER(context,
                 CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                 sizeof(cl_uint)*(numVerts+1),NULL,&err_code);
         CL_CHECK_ERROR(err_code);
 
-        *edge_ptr1 = (cl_uint *)clEnqueueMapBuffer(queue, h_edge, true,
+        *edge_ptr1 = (cl_uint *)CECL_MAP_BUFFER(queue, h_edge, true,
                 CL_MAP_READ|CL_MAP_WRITE, 0,
                 sizeof(cl_uint)*(numVerts+1),
                 0, NULL, NULL, &err_code);
         CL_CHECK_ERROR(err_code);
 
-        h_edgeAux = clCreateBuffer(context,
+        h_edgeAux = CECL_BUFFER(context,
                 CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                 sizeof(cl_uint)*(numVerts*(avg_degree+1)),
                 NULL,&err_code);
         CL_CHECK_ERROR(err_code);
 
-        *edge_ptr2 = (cl_uint *)clEnqueueMapBuffer(queue, h_edgeAux,true,
+        *edge_ptr2 = (cl_uint *)CECL_MAP_BUFFER(queue, h_edgeAux,true,
                 CL_MAP_READ|CL_MAP_WRITE, 0,
                 sizeof(cl_uint)*(numVerts*(avg_degree+1)),
                 0, NULL, NULL, &err_code);
@@ -1414,24 +1415,24 @@ void RunBenchmark(cl_device_id device,
         fclose(fp);
 
         //allocate memory for adjacency lists
-        h_edge=clCreateBuffer(context,
+        h_edge=CECL_BUFFER(context,
                 CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                 sizeof(cl_uint)*(numVerts+1),NULL,&err_code);
         CL_CHECK_ERROR(err_code);
 
-        *edge_ptr1 = (cl_uint *)clEnqueueMapBuffer(queue, h_edge, true,
+        *edge_ptr1 = (cl_uint *)CECL_MAP_BUFFER(queue, h_edge, true,
                 CL_MAP_READ|CL_MAP_WRITE, 0,
                 sizeof(cl_uint)*(numVerts+1),
                 0, NULL, NULL, &err_code);
         CL_CHECK_ERROR(err_code);
 
-        h_edgeAux=clCreateBuffer(context,
+        h_edgeAux=CECL_BUFFER(context,
                 CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                 sizeof(cl_uint)*(numEdges*2),
                 NULL,&err_code);
         CL_CHECK_ERROR(err_code);
 
-        *edge_ptr2 = (cl_uint *)clEnqueueMapBuffer(queue, h_edgeAux,true,
+        *edge_ptr2 = (cl_uint *)CECL_MAP_BUFFER(queue, h_edgeAux,true,
                 CL_MAP_READ|CL_MAP_WRITE, 0,
                 sizeof(cl_uint)*(numEdges*2),
                 0, NULL, NULL, &err_code);

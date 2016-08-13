@@ -1,3 +1,4 @@
+#include <cecl.h>
 #include <iostream>
 #include "support.h"
 #include "Event.h"
@@ -55,12 +56,12 @@ void RunBenchmark(cl_device_id id,
     long long numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
     if (pinned)
     {
-	hostMemObj = clCreateBuffer(ctx,
+	hostMemObj = CECL_BUFFER(ctx,
 				    CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
 				    sizeof(float)*numMaxFloats, NULL, &err);
         if (err == CL_SUCCESS)
         {
-            hostMem = (float*)clEnqueueMapBuffer(queue, hostMemObj, true,
+            hostMem = (float*)CECL_MAP_BUFFER(queue, hostMemObj, true,
                                                  CL_MAP_READ|CL_MAP_WRITE,
                                                  0,sizeof(float)*numMaxFloats,0,
                                                  NULL,NULL,&err);
@@ -76,12 +77,12 @@ void RunBenchmark(cl_device_id id,
 		return;
 	    }
 	    numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
-	    hostMemObj = clCreateBuffer(ctx,
+	    hostMemObj = CECL_BUFFER(ctx,
 					CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
 					sizeof(float)*numMaxFloats, NULL, &err);
             if (err == CL_SUCCESS)
             {
-                hostMem = (float*)clEnqueueMapBuffer(queue, hostMemObj, true,
+                hostMem = (float*)CECL_MAP_BUFFER(queue, hostMemObj, true,
                                                      CL_MAP_READ|CL_MAP_WRITE,
                                                      0,sizeof(float)*numMaxFloats,0,
                                                      NULL,NULL,&err);
@@ -97,7 +98,7 @@ void RunBenchmark(cl_device_id id,
 
     // Allocate some device memory
     if (verbose) cout << ">> allocating device mem\n";
-    cl_mem mem1 = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+    cl_mem mem1 = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
                                  sizeof(float)*numMaxFloats, NULL, &err);
     while (err != CL_SUCCESS)
     {
@@ -110,12 +111,12 @@ void RunBenchmark(cl_device_id id,
 	    return;
 	}
 	numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
-	mem1 = clCreateBuffer(ctx, CL_MEM_READ_WRITE,
+	mem1 = CECL_BUFFER(ctx, CL_MEM_READ_WRITE,
 			      sizeof(float)*numMaxFloats, NULL, &err);
     }
     if (verbose) cout << ">> filling device mem to force allocation\n";
     Event evDownloadPrime("DownloadPrime");
-    err = clEnqueueWriteBuffer(queue, mem1, false, 0,
+    err = CECL_WRITE_BUFFER(queue, mem1, false, 0,
                                numMaxFloats*sizeof(float), hostMem,
                                0, NULL, &evDownloadPrime.CLEvent());
     CL_CHECK_ERROR(err);
@@ -140,7 +141,7 @@ void RunBenchmark(cl_device_id id,
             // Copy input memory to the device
             if (verbose) cout << ">> copying to device "<<sizes[sizeIndex]<<"kB\n";
             Event evDownload("Download");
-            err = clEnqueueWriteBuffer(queue, mem1, false, 0,
+            err = CECL_WRITE_BUFFER(queue, mem1, false, 0,
                                        sizes[sizeIndex]*1024, hostMem,
                                        0, NULL, &evDownload.CLEvent());
             CL_CHECK_ERROR(err);
