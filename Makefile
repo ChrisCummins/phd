@@ -1639,9 +1639,9 @@ DocStrings += "info: show versions of system programs"
 # Print doc strings:
 .PHONY: help
 help:
-	$(V2)echo "usage: make [runtime-argument...] [target...]"
+	$(V2)echo "usage: make [argument...] [target...]"
 	$(V2)echo
-	$(V2)echo "values for runtime-arguments:"
+	$(V2)echo "values for arguments:"
 	$(V2)echo
 	$(V2)(for var in $(ArgStrings); do echo $$var; done) \
 		| sort --ignore-case | while read var; do \
