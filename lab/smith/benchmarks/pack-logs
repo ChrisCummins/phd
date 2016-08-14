@@ -4,10 +4,10 @@ set -eu
 main() {
     cd data
     local logdir=logs
-    local archive=$logdir.zip
+    local archive=$logdir.tar.bz2
 
-    rm -f $archive
-    zip -r $archive $logdir
+    rm -fv $archive
+    tar -cvf $archive --use-compress-program=pbzip2 $logdir
     rm -rv $logdir
     du -h $archive
 }
