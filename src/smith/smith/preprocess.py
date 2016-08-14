@@ -481,7 +481,7 @@ def preprocess_contentfiles(db_path):
     num_preprocessedfiles = num_rows_in(db, 'PreprocessedFiles')
     db.close()
 
-    num_workers = round(cpu_count() * 1.5)
+    num_workers = round(cpu_count() * 4)
 
     files_per_worker = math.ceil(num_contentfiles / num_workers)
 
