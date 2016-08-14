@@ -212,8 +212,6 @@ class KernelDriver(object):
         # Check that everything is done before we finish:
         queue.flush()
 
-        print("<- __call__")
-        sys.stdout.flush()
         return output
 
     def __repr__(self):
