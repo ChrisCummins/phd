@@ -133,36 +133,45 @@ def get_event_time(event):
         raise E_BAD_PROFILE
 
 
-def timeout(seconds=30):
-    """
-    Returns a decorator for executing a process with a timeout.
-    """
-    def decorator(func):
-        def _handle_timeout(signum, frame):
-            if hang_requires_restart():
-                # Oh dear! Looks like this is the end of the road.
-                timestamp = (check_output('date +"%y-%m-%d %H:%M:%S"')
-                             .decode("utf-8").rstrip())
-                # Dump a message to logs.
-                with open("/var/log/cldrive.log", "a") as outfile:
-                    print(timestamp, "reboot on timeout", sep=" | ",
-                          file=outfile)
-                # Goodbye my friend.
-                os.system("reboot")
-            else:
-                raise E_TIMEOUT("Process didn't terminate after {} seconds"
-                                .format(seconds))
+class KernelAsync:
 
-        def wrapper(*args, **kwargs):
-            signal.signal(signal.SIGALRM, _handle_timeout)
-            signal.alarm(seconds)
-            try:
-                result = func(*args, **kwargs)
-            finally:
-                signal.alarm(0)
-            return result
-        return wraps(func)(wrapper)
-    return decorator
+    def __init__(self, result, kernel, *args, **kwargs):
+        self.result = result
+        self.kernel = kernel
+        self.kargs = args
+        timeout = kwargs.get("timeout", 5)
+
+        # Run the kernel
+        thread = Thread(target=self._run)
+        print("START")
+        sys.stdout.flush()
+        thread.start()
+
+        # Wait for it to finish or to timeout
+        print("JOIN")
+        sys.stdout.flush()
+        thread.join(1)
+        print("POST-JOIN, NOT ALIVE")
+        if thread.is_alive():
+            print("CAUGHT: TERMINATE")
+            sys.stdout.flush()
+            self.process.terminate()
+            thread.join(1)
+            if thread.is_alive():
+                print("CAUGHT: KILL")
+                sys.stdout.flush()
+                self.process.kill()
+                thread.join(1)
+                if thread.is_alive():
+                    print("CAUGHT: FUCKUP")
+                    sys.stdout.flush()
+                    return
+            self.timed_out = True
+        self.timeout_out = False
+
+
+    def _run(self):
+        self.result["event"] = self.kernel(*self.kargs)
 
 
 class KernelDriver(object):
@@ -201,8 +210,8 @@ class KernelDriver(object):
         self._transfers = []
         self._runtimes = []
 
-    @timeout(10)
-    def __call__(self, queue, payload):
+
+    def __call__(self, queue, payload, timeout=2):
         # Safety first, kids:
         assert(type(queue) == cl.CommandQueue)
         assert(type(payload) == KernelPayload)
@@ -225,9 +234,19 @@ class KernelDriver(object):
         except Exception as e:
             raise E_BAD_ARGS(e)
 
-        # Execute kernel
+        # Execute kernel asynchronously with timeout.
         local_size_x = min(output.ndrange[0], 128)
-        event = self.kernel(queue, output.ndrange, (local_size_x,), *kargs)
+        result = {}
+        print("-> proc")
+        proc = KernelAsync(result, self.kernel, queue, output.ndrange,
+                           (local_size_x,), *kargs, timeout=timeout)
+        print("<- proc")
+        if proc.timeout_out:
+            # if hang_requires_restart():
+            print("Oh golly")
+            raise E_NON_TERMINATING
+
+        event = result["event"]
         elapsed += get_event_time(event)
 
         # Copy data back to host and get time.
