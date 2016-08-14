@@ -11,6 +11,14 @@ usage() {
     echo "  <benchmarks-dir>  Root of benchmarks directory"
 }
 
+timeout_means_restart() {
+    if [[ $HOSTNAME == "monza" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 
 main() {
     if [[ $# -ne 3 ]]; then
@@ -68,8 +76,15 @@ main() {
         set -e
 
         if [[ $ret == 137 ]]; then
-            echo "TERMINATED A BAD PROCESS. Now what?" >&2
-            exit 0
+            echo "$(basename $file),$dsize,E_TIMEOUT,-" >> $errors_path
+
+            if timeout_means_restart ; then
+                echo "TERMINATED A BAD PROCESS. Now Should be a shutdown?" >&2
+                exit 0
+            else
+                echo "Soldier on!"
+                exit 0
+            fi
         fi
     done
 }
