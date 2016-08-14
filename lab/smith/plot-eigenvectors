@@ -2,22 +2,19 @@
 #
 # Visualise Eigenvectors. Eigenvectors were found by applying
 # PrincipleComponents over combined benchmarks training data in
-# Weka. Results:
+# Weka.
 #
-#  V1      V2      V3      V4
-# -0.201  -0.6989 -0.6864  0.0065       F1:transfer/(comp+mem)
-#  0.6807 -0.009  -0.1834  0.7092       F2:coalesced/mem
-# -0.1929  0.7152 -0.6715  0.0206       F3:(localmem/mem)*avgws
-#  0.6775  0.0053 -0.2105 -0.7047       F4:comp/mem
 from argparse import ArgumentParser
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
-# import seaborn as sns
+import seaborn as sns
 import re
 import sys
+import sklearn
 
+from math import sqrt,ceil
 from functools import partial
 from random import seed,random
 
@@ -27,6 +24,7 @@ from labm8 import fs
 
 import smith
 from smith import clutil
+
 
 def rand_jitter(arr, factor=0.01):
     stdev = factor* (max(arr) - min(arr))
@@ -40,10 +38,10 @@ def eigenvector(d):
     F4 = float(d["F4:comp/mem"])
 
     # Eigenvectors: (hardcoded values as returned by Weka)
-    V1 = - .201  * F1 + .6807 * F2 - .1929 * F3 - .6775 * F4
-    V2 = - .6989 * F1 - .009  * F2 + .7152 * F3 + .0053 * F4
-    V3 = - .6864 * F1 - .1834 * F2 - .6715 * F3 - .2105 * F4
-    V4 =   .0065 * F1 + .7092 * F2 + .0205 * F3 - .7047 * F4
+    V1 = - .1881 * F1 + .6796 * F2 - .2141 * F3 - .6760 * F4
+    V2 = - .7282 * F1 - .0004 * F2 + .6852 * F3 + .0149 * F4
+    V3 = - .6590 * F1 - .1867 * F2 - .6958 * F3 - .2161 * F4
+    V4 =   .0063 * F1 + .7095 * F2 + .0224 * F3 - .7044 * F4
 
     return (V1, V2, V3, V4)
 
@@ -63,16 +61,31 @@ def scatter_with_jitter(plt, x, y, **kwargs):
                        rand_jitter(y, **jitter_opts), **kwargs)
 
 
-def main():
-    parser = ArgumentParser()
-    parser.add_argument('input', help='path to input training data CSV')
-    args = parser.parse_args()
+def ingroup(getgroup, d, group):
+    return getgroup(d) == group
 
+
+def getsuite(d):
+    return re.match(r"^[a-zA-Z-]+-[0-9\.]+", d["benchmark"]).group(0)
+
+
+def getprog(d):
+    return re.match(r"^[a-zA-Z-]+-[0-9\.]+-[^-]+-", d["benchmark"]).group(0)
+
+
+def getclass(d):
+    return d["oracle"]
+
+
+def suite_filter(d):
+    """
+    Groups filter.
+    """
+    return getsuite(d).startswith("rodinia") # or getsuite(d).startswith("parboil")
+
+
+def plot_eigenvectors(data, subplots=False, group_by="class", filter_by="none"):
     jitter = partial(scatter_with_jitter, plt)
-
-    # Load data from CSV.
-    path = smith.assert_exists(args.input)
-    data = smith.read_csv(path)
 
     # Normalize data.
     normalize(data, "F1:transfer/(comp+mem)")
@@ -80,39 +93,77 @@ def main():
     normalize(data, "F3:(localmem/mem)*avgws")
     normalize(data, "F4:comp/mem")
 
-    def isgood(d):
-        return True
-        # return not getgroup(d).startswith("npb")
+    datafilter = {
+        "suite": suite_filter
+    }.get(filter_by, lambda x: True)
 
-    def getgroup(d):
-        return re.match(r"^[a-zA-Z-]+-[0-9\.]+", d["benchmark"]).group(0)
+    data = [d for d in data if datafilter(d)]
 
-    def ingroup(d, group):
-        return getgroup(d) == group
+    getgroup = {
+        "class": getclass,
+        "suite": getsuite,
+        "prog": getprog
+    }.get(group_by, lambda x: "None")
 
-    data = [d for d in data if isgood(d)]
+    groups = sorted(set([getgroup(d) for d in data]))
 
-    groups = set([getgroup(d) for d in data])
-    colors = [cm.cool(i / len(groups) * 2) for i in range(len(groups))]
+    COLORS = [ "k", "r", "g", "b", "m", "y", "c" ]
+    if len(groups) <= len(COLORS):
+        colors = COLORS[:len(groups)]
+    else:
+        colors = [cm.cool(i / len(groups) * 2) for i in range(len(groups))]
 
     # Split data into groups.
     raws = [] * len(groups)
     for group in groups:
-        raws.append([d for d in data if ingroup(d, group)])
+        raws.append([d for d in data if ingroup(getgroup, d, group)])
 
     # Get eigenvalues.
     eigens = [[eigenvector(x) for x in raw] for raw in raws]
 
     # Plot
-    opts = { "marker": "+", "jitter_opts": { "factor": 0.01 } }
+    opts = { "s": 35, "marker": "o", "alpha": ".25", "jitter_opts": { "factor": 0.02 } }
 
-    for eigen,color in zip(eigens, colors):
+    xlim = (min([min(e[0]) for e in eigens]), max([max(e[0]) for e in eigens]))
+    ylim = (min([min(e[1]) for e in eigens]), max([max(e[1]) for e in eigens]))
+
+    for i,row in enumerate(zip(eigens, colors)):
+        if subplots:
+            sz = ceil(sqrt(len(eigens)))
+            plt.subplot(sz, sz, i + 1)
+            plt.title(groups[i])
+
+        eigen, color = row
         x, y = zip(*[(e[0], e[1]) for e in eigen])
+        x, y = np.array(x), np.array(y)
+        # sns.kdeplot(x, y, color=color, bw=.15)
         jitter(x, y, color=color, **opts)
 
-    # plt.xlim((-.2,.2))
-    # plt.ylim((-.2,.2))
+        # Apply axis limits:
+        # plt.xlim((-.2,.2))
+        # plt.ylim((-.2,.2))
+
+        # Turn off ticks:
+        plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
     plt.show()
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('input', help='path to input training data CSV')
+    parser.add_argument("-g", "--group", action="store", default="none",
+                        help='group results by {none,class,suite,prog}')
+    parser.add_argument("--subplots", action="store_true",
+                        help="plot each group in a separate subplot")
+    parser.add_argument("--filter", action="store", default="none",
+                        help="filter data by {none,suite}")
+    args = parser.parse_args()
+
+    data = smith.read_csv(smith.assert_exists(args.input))
+    plot_eigenvectors(data, subplots=args.subplots, group_by=args.group,
+                      filter_by=args.filter)
 
 
 if __name__ == '__main__':
