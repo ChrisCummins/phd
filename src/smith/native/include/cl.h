@@ -3352,3 +3352,34 @@ read_imageui(image2d_t image, sampler_t sampler, float2 coord);
 // typedef unsigned int uint32_t;
 #define CLK_LOCAL_MEM_FENCE 1
 #define CLK_GLOBAL_MEM_FENCE 2
+
+#define CHAR_BIT  8
+#define SCHAR_MAX 127
+#define SCHAR_MIN (-128)
+#define UCHAR_MAX 255
+#define CHAR_MAX  UCHAR_MAX
+#define CHAR_MIN  0
+#define INT_MAX   2147483647
+#define INT_MIN   (-INT_MAX-1)
+#define UINT_MAX  (2U*INT_MAX+1)
+#define LONG_MAX  2147483647
+#define LONG_MIN  (-LONG_MAX-1)
+#define ULONG_MAX (2UL*LONG_MAX+1)
+#define SHRT_MAX  32767
+#define SHRT_MIN  (-SHRT_MAX-1)
+#define USHRT_MAX  65535
+
+#define FLT_RADIX 2
+#define DECIMAL_DIG 37
+#define FLT_MIN 1.175494e-38
+#define FLT_MAX 3.402823e+38
+#define FLT_EPSILON 1.192093e-07
+#define FLT_DIG 6
+#define FLT_MANT_DIG 24
+#define FLT_MIN_EXP -125
+#define FLT_MIN_10_EXP -37
+#define FLT_MAX_EXP 128
+#define FLT_MAX_10_EXP 38
+#define FLT_ROUNDS 1
+#define FLT_EVAL_METHOD 1
+#define FLT_HAS_SUBNORM 1
