@@ -26,6 +26,11 @@ main() {
         exit 1
     fi
 
+    if timeout_means_restart && [[ $UID -ne 0 ]]; then
+        echo "fatal: Must run as root" >&2
+        exit 1
+    fi
+
     local devtype=$1
     local devname=$2
     local benchmarks_dir=$3
@@ -79,11 +84,11 @@ main() {
             echo "$(basename $file),$dsize,E_TIMEOUT,-" >> $errors_path
 
             if timeout_means_restart ; then
-                echo "TERMINATED A BAD PROCESS. Now Should be a shutdown?" >&2
-                exit 0
-            else
-                echo "Soldier on!"
-                exit 0
+                set +e
+                date +"%y-%m-%d %H:%M:%S, SYTEM RESTART" >> /var/log/cldrive.log
+                echo "TERMINATED A BAD PROCESS. Restarting now" >&2
+                # Goodbye, friend.
+                reboot
             fi
         fi
     done
