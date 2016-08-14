@@ -212,6 +212,9 @@ class KernelDriver(object):
 
 
     def __call__(self, queue, payload, timeout=2):
+        print("-> __call__")
+        sys.stdout.flush()
+
         # Safety first, kids:
         assert(type(queue) == cl.CommandQueue)
         assert(type(payload) == KernelPayload)
@@ -238,9 +241,11 @@ class KernelDriver(object):
         local_size_x = min(output.ndrange[0], 128)
         result = {}
         print("-> proc")
+        sys.stdout.flush()
         proc = KernelAsync(result, self.kernel, queue, output.ndrange,
                            (local_size_x,), *kargs, timeout=timeout)
         print("<- proc")
+        sys.stdout.flush()
         if proc.timeout_out:
             # if hang_requires_restart():
             print("Oh golly")
@@ -264,6 +269,8 @@ class KernelDriver(object):
         # Check that everything is done before we finish:
         queue.flush()
 
+        print("<- __call__")
+        sys.stdout.flush()
         return output
 
     def __repr__(self):
