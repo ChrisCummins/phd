@@ -89,7 +89,7 @@ main() {
                 date +"%y-%m-%d %H:%M:%S, $HOSTNAME, SYSTEM RESTART" >> /var/log/cldrive.log
                 echo "TERMINATED A BAD PROCESS. Restarting now" >&2
                 # Goodbye, friend.
-                reboot
+                /sbin/reboot
             fi
         fi
     done
