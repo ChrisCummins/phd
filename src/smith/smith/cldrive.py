@@ -6,13 +6,14 @@ from __future__ import with_statement
 
 from copy import deepcopy
 from functools import partial,wraps
-from random import randrange
-from threading import Thread
 from io import open
+from random import randrange
+from subprocess import check_output
+from threading import Thread
 
 import numpy as np
-import pyopencl as cl
 import os
+import pyopencl as cl
 import signal
 import sys
 
@@ -21,8 +22,8 @@ from labm8 import fs
 from labm8 import math as labmath
 
 import smith
-from smith import config as cfg
 from smith import clutil
+from smith import config as cfg
 
 # Python 2 and Python 3 have different StringIO classes.
 # See: http://stackoverflow.com/a/19243243
@@ -67,6 +68,15 @@ def assert_device_type(device, devtype):
         raise OpenCLDriverException("Device type '{}' does not match "
                                     "requested '{}'"
                                     .format(received, requested))
+
+
+def hang_requires_restart():
+    """
+    Does an OpenCL kernel hang require a system restart?
+    """
+    # FIXME: return gethostname() == "monza"
+    return True
+
 
 
 def init_opencl(devtype=cl.device_type.GPU, queue_flags=0):
@@ -129,11 +139,19 @@ def timeout(seconds=30):
     """
     def decorator(func):
         def _handle_timeout(signum, frame):
-            # FIXME: Hack to see if hang can be detected
-            with open("HANG.TXT", w) as outfile:
-                print("This hung", outfile)
-            raise E_TIMEOUT("Process didn't terminate after {} seconds"
-                            .format(seconds))
+            if hang_requires_restart():
+                # Oh dear! Looks like this is the end of the road.
+                timestamp = (check_output('date +"%y-%m-%d %H:%M:%S"')
+                             .decode("utf-8").rstrip())
+                # Dump a message to logs.
+                with open("/var/log/cldrive.log", "a") as outfile:
+                    print(timestamp, "reboot on timeout", sep=" | ",
+                          file=outfile)
+                # Goodbye my friend.
+                os.system("reboot")
+            else:
+                raise E_TIMEOUT("Process didn't terminate after {} seconds"
+                                .format(seconds))
 
         def wrapper(*args, **kwargs):
             signal.signal(signal.SIGALRM, _handle_timeout)
