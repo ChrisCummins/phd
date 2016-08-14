@@ -113,7 +113,9 @@ def eval_classifier(base_classifier, arff, test_arff=None,
         runtime, speedup, penalty = c[4].split(',')
         runtime = float(runtime[1:])
         speedup = float(speedup)
-        penalty = float(penalty[:-1])
+        # Weka will round values close to 0 down to 0. This drags
+        # geomeans to zero, so enforce a hard min.
+        penalty = max(float(penalty[:-1]), 0.001)
 
         return {
             "actual": actual,
