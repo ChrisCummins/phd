@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -eu
+
+print() {
+    echo $(tput bold)$@$(tput sgr0)
+}
+
+mktab() {
+    $@ 2>/dev/null | column -t -s','
+}
+
+run_cgo13() {
+    local path=$1
+    # extra args allowed
+    shift
+
+    mktab cgo13 $path $@ | sed -e '2d'
+}
+
+
+main() {
+    set -o pipefail
+
+    local dir=data
+    local A=$dir/platform-a.csv
+    local B=$dir/platform-b.csv
+
+
+    print "Platform A:"
+    mktab cgo13 $A | head -n2
+    echo
+
+    print "Platform B:"
+    mktab cgo13 $B | head -n2
+    echo
+
+    print "Platform A | CGO13 features | 10-fold"
+    mktab cgo13 $A | grep -v ZeroR
+    echo
+
+    "print" "Platform B | CGO13 features | 10-fold"
+    mktab cgo13 $B | grep -v ZeroR
+    echo
+
+    print "Platform A | CGO13+raw features | 10-fold"
+    mktab cgo13 $A --with-raw-features | grep -v ZeroR
+    echo
+
+    print "Platform B | CGO13+raw features | 10-fold"
+    mktab cgo13 $B --with-raw-features | grep -v ZeroR
+    echo
+}
+main $@
