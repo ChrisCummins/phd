@@ -3,9 +3,10 @@ set -eu
 
 main() {
     cd data
+    local logdir=logs
     local archive=logs.zip
 
-    rm -fr [123456789]
+    rm -fr $logdir
     unzip $archive
 }
 main $@

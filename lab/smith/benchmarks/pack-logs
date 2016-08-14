@@ -3,11 +3,12 @@ set -eu
 
 main() {
     cd data
-    local archive=logs.zip
+    local logdir=logs
+    local archive=$logdir.zip
 
     rm -f $archive
-    zip -r $archive [123456789]
-    rm -rv [123456789]
+    zip -r $archive $logdir
+    rm -rv $logdir
     du -h $archive
 }
 main $@
