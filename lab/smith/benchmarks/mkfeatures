@@ -148,7 +148,7 @@ def mkfeatures(static_path, dynamic_path, file=sys.stdout):
 def main():
     parser = ArgumentParser()
     parser.add_argument('kernels', help='path to kernels directory')
-    parser.add_argument('dynamic', help='path to logs directory')
+    parser.add_argument('logs', help='path to logs directory')
     args = parser.parse_args()
 
     # try:
@@ -156,7 +156,7 @@ def main():
 
     static = smith.assert_exists(static_path)
 
-    dynamic_dir = smith.assert_exists(args.dynamic)
+    dynamic_dir = smith.assert_exists(args.logs)
     dynamic_paths = [x for x in fs.ls(dynamic_dir, abspaths=True)
                      if fs.isfile(x) and x.endswith("-dynamic.csv")]
 
