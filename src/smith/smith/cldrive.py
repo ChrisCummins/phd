@@ -133,47 +133,6 @@ def get_event_time(event):
         raise E_BAD_PROFILE
 
 
-class KernelAsync:
-
-    def __init__(self, result, kernel, *args, **kwargs):
-        self.result = result
-        self.kernel = kernel
-        self.kargs = args
-        timeout = kwargs.get("timeout", 5)
-
-        # Run the kernel
-        thread = Thread(target=self._run)
-        print("START")
-        sys.stdout.flush()
-        thread.start()
-
-        # Wait for it to finish or to timeout
-        print("JOIN")
-        sys.stdout.flush()
-        thread.join(1)
-        print("POST-JOIN, NOT ALIVE")
-        if thread.is_alive():
-            print("CAUGHT: TERMINATE")
-            sys.stdout.flush()
-            self.process.terminate()
-            thread.join(1)
-            if thread.is_alive():
-                print("CAUGHT: KILL")
-                sys.stdout.flush()
-                self.process.kill()
-                thread.join(1)
-                if thread.is_alive():
-                    print("CAUGHT: FUCKUP")
-                    sys.stdout.flush()
-                    return
-            self.timed_out = True
-        self.timeout_out = False
-
-
-    def _run(self):
-        self.result["event"] = self.kernel(*self.kargs)
-
-
 class KernelDriver(object):
     """
     OpenCL Kernel driver. Drives a single OpenCL kernel.
@@ -210,11 +169,7 @@ class KernelDriver(object):
         self._transfers = []
         self._runtimes = []
 
-
-    def __call__(self, queue, payload, timeout=2):
-        print("-> __call__")
-        sys.stdout.flush()
-
+    def __call__(self, queue, payload):
         # Safety first, kids:
         assert(type(queue) == cl.CommandQueue)
         assert(type(payload) == KernelPayload)
@@ -237,21 +192,9 @@ class KernelDriver(object):
         except Exception as e:
             raise E_BAD_ARGS(e)
 
-        # Execute kernel asynchronously with timeout.
+        # Execute kernel
         local_size_x = min(output.ndrange[0], 128)
-        result = {}
-        print("-> proc")
-        sys.stdout.flush()
-        proc = KernelAsync(result, self.kernel, queue, output.ndrange,
-                           (local_size_x,), *kargs, timeout=timeout)
-        print("<- proc")
-        sys.stdout.flush()
-        if proc.timeout_out:
-            # if hang_requires_restart():
-            print("Oh golly")
-            raise E_NON_TERMINATING
-
-        event = result["event"]
+        event = self.kernel(queue, output.ndrange, (local_size_x,), *kargs)
         elapsed += get_event_time(event)
 
         # Copy data back to host and get time.
