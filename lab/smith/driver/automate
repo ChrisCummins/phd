@@ -62,7 +62,15 @@ main() {
         local perc_done=$(echo "($i / $num_jobs) * 100" | bc -l | xargs printf '%.2f%%')
 
         echo "$(tput bold)$(tput setaf 1)$(date)$(tput sgr0) job [$i/$num_jobs] $perc_done ... $devtype $dsize $(basename $file)"
-        ./driver $devtype $dsize $file >> $results_path 2>> $errors_path || true
+        set +e
+        ./driver $devtype $dsize $file >> $results_path 2>> $errors_path
+        local ret=$?
+        set -e
+
+        if [[ $ret == 137 ]]; then
+            echo "TERMINATED A BAD PROCESS. Now what?" >&2
+            exit 0
+        fi
     done
 }
 main $@

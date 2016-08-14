@@ -13,7 +13,7 @@ drive_file() {
     local devargs=$2
     local dsize=$3
 
-    DSIZE=$dsize timeout 10 cldrive --strict -f $devargs $in_path
+    DSIZE=$dsize timeout --signal=9 10 cldrive --strict -f $devargs $in_path
     set -e
 }
 
