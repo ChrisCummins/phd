@@ -6,6 +6,6 @@ set -eu
 main() {
     local archive=$1
 
-    push $HOME/phd/lab/smith/driver/data/synthetic $archive
+    pull $HOME/phd/lab/smith/driver/data/synthetic $archive
 }
 main $@
