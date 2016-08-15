@@ -8,7 +8,7 @@ push() {
     local archive=$(date +"$HOSTNAME-%y-%m-%d.%H-%M.tar.bz2")
 
     if [[ $HOSTNAME == "monza" ]]; then
-        zip $archive intel.csv intel-errors.csv amd.csv amd-errors.csv
+        tar -cvf $archive intel.csv intel-errors.csv amd.csv amd-errors.csv
     else
         echo "Unkown hostname '$HOSTNAME'" >&2
         exit 1
@@ -26,5 +26,5 @@ pull() {
     cd $dir
 
     scp brendel.inf.ed.ac.uk:$archive .
-    tar -I pbzip2 -xvf $archive
+    tar -xvf $archive
 }
