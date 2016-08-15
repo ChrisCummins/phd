@@ -23,7 +23,7 @@ def main():
                         help='path to training data CSV')
     parser.add_argument("--with-raw-features", action="store_true",
                         help="if true, use raw features as well as combined")
-    parser.add_argument("-g", "--group", action="store", default="none",
+    parser.add_argument("-g", "--group", action="store", default=None,
                         help='group results by {suite}')
     args = parser.parse_args()
 

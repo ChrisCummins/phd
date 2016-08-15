@@ -263,7 +263,7 @@ def classification(train, test=None, with_raw_features=False,
         getgroup = {
             "suite": getsuite
         }.get(group_by, None)
-        if not getgroup:
+        if group_by and not getgroup:
             raise(smith.SmithException("Unkown group type '{}'"
                                        .format(group_by)))
 
