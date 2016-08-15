@@ -6,13 +6,14 @@
 #
 from argparse import ArgumentParser
 
-import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
+import pandas as pd
 import re
-import sys
+import seaborn as sns
 import sklearn
+import sys
 
 from math import sqrt,ceil
 from functools import partial
@@ -114,12 +115,17 @@ def plot_eigenvectors(data, subplots=False, group_by="class", filter_by="none"):
         colors = [cm.cool(i / len(groups) * 2) for i in range(len(groups))]
 
     # Split data into groups.
-    raws = [] * len(groups)
-    for group in groups:
-        raws.append([d for d in data if ingroup(getgroup, d, group)])
+    raw = []
+    for d in data:
+        raw.append(tuple(list(eigenvector(d)) + [getgroup(d)]))
 
-    # Get eigenvalues.
-    eigens = [[eigenvector(x) for x in raw] for raw in raws]
+    s = pd.DataFrame(raw, columns=["V1", "V2", "V3", "V4", "Group"])
+
+    sns.set(style="ticks", color_codes=True)
+    sns.pairplot(s, hue="Group")
+    plt.show()
+
+    sys.exit(0)
 
     # Plot
     opts = { "s": 35, "marker": "o", "alpha": ".25", "jitter_opts": { "factor": 0.02 } }
@@ -142,6 +148,8 @@ def plot_eigenvectors(data, subplots=False, group_by="class", filter_by="none"):
         # Apply axis limits:
         # plt.xlim((-.2,.2))
         # plt.ylim((-.2,.2))
+        plt.xlim((-1,1))
+        plt.ylim((-1,1))
 
         # Turn off ticks:
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
