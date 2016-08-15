@@ -27,27 +27,27 @@ main() {
 
 
     print "Platform A:"
-    mktab cgo13 $A | head -n2
+    mktab cgo13 $A --zeror
     echo
 
     print "Platform B:"
-    mktab cgo13 $B | head -n2
+    mktab cgo13 $B --zeror
     echo
 
     print "Platform A | CGO13 features | 10-fold"
-    mktab cgo13 $A | grep -v ZeroR
+    mktab cgo13 $A
     echo
 
     "print" "Platform B | CGO13 features | 10-fold"
-    mktab cgo13 $B | grep -v ZeroR
+    mktab cgo13 $B
     echo
 
     print "Platform A | CGO13+raw features | 10-fold"
-    mktab cgo13 $A --with-raw-features | grep -v ZeroR
+    mktab cgo13 $A --with-raw-features
     echo
 
     print "Platform B | CGO13+raw features | 10-fold"
-    mktab cgo13 $B --with-raw-features | grep -v ZeroR
+    mktab cgo13 $B --with-raw-features
     echo
 }
 main $@

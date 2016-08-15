@@ -127,6 +127,10 @@ def print_json(data):
 
 
 def read_csv(path, asdict=True):
+    base, extension = os.path.splitext(path)
+    if extension != '.csv':
+        raise SmithException("is file '{}' really a csv?".format(path))
+
     with open(path) as infile:
         if asdict:
             reader = csv.DictReader(infile)

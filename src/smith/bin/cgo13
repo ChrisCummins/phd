@@ -11,16 +11,12 @@ import sys
 from argparse import ArgumentParser
 
 import labm8
-from labm8 import ml
 
 import smith
 from smith import cgo13
 
 
 def main():
-    # Check that we can run autotuning:
-    ml.assert_supported()
-
     parser = ArgumentParser()
     parser.add_argument('input', help='path to training data CSV')
     parser.add_argument('-t', '--test', action="store", dest="test_data",
@@ -29,21 +25,19 @@ def main():
                         help="if true, use raw features as well as combined")
     args = parser.parse_args()
 
-    try:
-        ml.start()
-        training_data = cgo13.from_csv(smith.assert_exists(args.input))
+    # try:
+    training_data = cgo13.from_csv(smith.assert_exists(args.input))
 
-        if args.test_data:
-            test_data = cgo13.from_csv(smith.assert_exists(args.test_data))
-        else:
-            test_data = None
-        cgo13.classification(training_data, test_arff=test_data,
-                             with_raw_features=args.with_raw_features)
-        ml.stop()
-    except Exception as e:
-        print("fatal:", e, file=sys.stderr)
-        ml.stop()
-        sys.exit(1)
+    if args.test_data:
+        test_data = cgo13.from_csv(smith.assert_exists(args.test_data))
+    else:
+        test_data = None
+    cgo13.classification(training_data, test=test_data,
+                         with_raw_features=args.with_raw_features)
+    # except Exception as e:
+    #     print("fatal:", e, file=sys.stderr)
+    #     # ml.stop()
+    #     sys.exit(1)
 
 
 if __name__ == '__main__':

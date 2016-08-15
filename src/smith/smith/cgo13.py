@@ -9,18 +9,17 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import sys
+import numpy as np
 import os
+import sys
 
 from io import StringIO
-
-from weka.filters import Filter
-from weka.classifiers import Classifier,FilteredClassifier,PredictionOutput
-from weka.classifiers import Evaluation
-from weka.core.classes import Random
+from sklearn import cross_validation
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.tree import DecisionTreeClassifier
 
 import labm8
-from labm8 import ml
 from labm8 import math as labmath
 
 import smith
@@ -29,187 +28,203 @@ import smith
 class BadInputException(smith.SmithException): pass
 
 
-IGNORED_ATTRIBUTES = [
-    "benchmark",
-    "dataset",
-    "runtime",
-    "speedup",
-    "penalty"
-]
+# Feature extractors:
 
-UNUSED_ATTRIBUTES = IGNORED_ATTRIBUTES + [
-    "comp",
-    "rational",
-    "mem",
-    "localmem",
-    "coalesced",
-    "atomic",
-    "transfer",
-    "wgsize"
-]
-
-
-def eval_classifier(base_classifier, arff, test_arff=None,
-                    ignored_attributes=UNUSED_ATTRIBUTES,
-                    seed=1):
-    classifier = FilteredClassifier()
-
-    ignored_indices = [arff.attribute_by_name(x).index
-                       for x in ignored_attributes]
-    remove = Filter(classname="weka.filters.unsupervised.attribute.Remove",
-                    options=["-R", ','.join(
-                        [str(x + 1) for x in ignored_indices])])
-    classifier.filter = remove
-    classifier.classifier = base_classifier
-
-    # Additional prediction output. Print the speedup and penalty for
-    # all instances.
-    extra_attributes = [
-        "runtime",
-        "speedup",
-        "penalty"
-    ]
-    extra_indices = [arff.attribute_by_name(x).index for x in extra_attributes]
-    pout = PredictionOutput(
-        classname="weka.classifiers.evaluation.output.prediction.PlainText",
-        options=["-p", ','.join([str(x + 1) for x in extra_indices])])
-
-    evl = Evaluation(arff)
-
-    if test_arff:
-        print("Training on {} instances, testing on {} "
-              "({:.1f}:1.0 train/test ratio)"
-              .format(arff.num_instances,
-                      test_arff.num_instances,
-                      arff.num_instances / test_arff.num_instances),
-              file=sys.stderr)
-        classifier.build_classifier(arff)
-        evl.test_model(classifier, test_arff, pout)
-    else:
-        # Number of splits in training data. For leave-one-out, use
-        # arff.num_instances:
-        nfolds = 10
-        print("Running {}-fold validation on {} instances"
-              .format(nfolds, arff.num_instances), file=sys.stderr)
-        evl.crossvalidate_model(classifier, arff, nfolds, Random(seed), pout)
-
-
-    assert(len(evl.predictions), arff.num_instances)
-
-    basename = ml.classifier_basename(base_classifier.classname)
-    num_attributes = arff.num_attributes - len(ignored_attributes)
-
-    def parse_line(x):
-        """
-        Parse a line of output from Weka PredictionOutput.
-        """
-        c = x.split()
-        actual = c[1]
-        predicted = c[2]
-
-        if len(c) == 6:
-            c.remove('+')
-
-        runtime, speedup, penalty = c[4].split(',')
-        runtime = float(runtime[1:])
-        speedup = float(speedup)
-        # Weka will round values close to 0 down to 0. This drags
-        # geomeans to zero, so enforce a hard min.
-        penalty = max(float(penalty[:-1]), 0.001)
-
-        return {
-            "actual": actual,
-            "predicted": predicted,
-            "runtime": runtime,
-            "penalty": penalty,
-            "oracle": speedup,
-            "speedup": speedup if actual == predicted else penalty
-        }
-
-    predictions = [parse_line(x) for x in str(pout).split('\n')[1:-1]]
-
-    speedups = [x["speedup"] for x in predictions]
-    oracles = [x["oracle"] for x in predictions]
-    runtimes = [x["runtime"] for x in predictions]
-
-    rmean = labmath.mean(runtimes)
-
-    # Speedups of predicted.
-    pmean = labmath.mean(speedups)
-    pgeo = labmath.geomean(speedups)
-    pmin = min(speedups)
-    pmax = max(speedups)
-    ci = labmath.confinterval(speedups, array_mean=pmean)[1] - pmean
-
-    # Oracle speedups.
-    omean = labmath.mean(oracles)
-    ogeo = labmath.geomean(oracles)
-    omin = min(oracles)
-    omax = max(oracles)
-
-    print(basename,
-          "{:.2f}".format(evl.percent_correct),
-          # "{:.2f}".format(rmean),
-          "{:.2f}".format(pgeo),
-          # "{:.2f}".format(pmean),
-          # "{:.2f}".format(pmin),
-          # "{:.2f}".format(pmax),
-          # "{:.2f}".format(ci),
-          "{:.0f}%".format((pgeo / ogeo) * 100),
-          # "{:.2f}".format(ogeo),
-          # "{:.2f}".format(omean),
-          # "{:.2f}".format(omin),
-          # "{:.2f}".format(omax),
-          sep=",")
-
-
-def classification(arff, with_raw_features=False, **kwargs):
-    classifiers = [
-        Classifier(classname="weka.classifiers.rules.ZeroR"),
-        Classifier(classname="weka.classifiers.trees.J48",
-                   options=["-C", "0.5"]),
-        Classifier(classname="weka.classifiers.lazy.IBk",
-                   options=["-K", "3",
-                            "-W", "0",
-                            "-A", "weka.core.neighboursearch.LinearNNSearch"])
+def cgo13_features(d, with_raw_features=False):
+    return [
+        float(d["F1:transfer/(comp+mem)"]),
+        float(d["F2:coalesced/mem"]),
+        float(d["F3:(localmem/mem)*avgws"]),
+        float(d["F4:comp/mem"])
     ]
 
-    # Print header.
-    print(
-        "classifier",
+
+def cgo13_with_raw_features(d, with_raw_features=False):
+    return [
+        int(d["comp"]),
+        int(d["rational"]),
+        int(d["mem"]),
+        int(d["localmem"]),
+        int(d["coalesced"]),
+        int(d["atomic"]),
+        int(d["transfer"]),
+        int(d["wgsize"]),
+        float(d["F1:transfer/(comp+mem)"]),
+        float(d["F2:coalesced/mem"]),
+        float(d["F3:(localmem/mem)*avgws"]),
+        float(d["F4:comp/mem"])
+    ]
+
+
+def raw_features(d, with_raw_features=False):
+    return [
+        int(d["comp"]),
+        int(d["rational"]),
+        int(d["mem"]),
+        int(d["localmem"]),
+        int(d["coalesced"]),
+        int(d["atomic"]),
+        int(d["transfer"]),
+        int(d["wgsize"])
+    ]
+
+
+def labels(d):
+    return d["oracle"]
+
+
+class Metrics(object):
+    def __init__(self, prefix, data, predicted):
+        self._prefix = prefix
+        self._data = data
+        self._predicted = predicted
+
+    @property
+    def prefix(self): return self._prefix
+
+    @property
+    def data(self): return self._data
+
+    @property
+    def predicted(self): return self._predicted
+
+    @property
+    def oracles(self):
+        try:
+            return self._oracles
+        except AttributeError:
+            self._oracles = np.array([float(d["speedup"]) for d in self.data])
+            return self._oracles
+
+    @property
+    def oracle(self):
+        try:
+            return self._oracle
+        except AttributeError:
+            self._oracle = self.speedup / labmath.geomean(self.oracles)
+            return self._oracle
+
+    @property
+    def y_test(self):
+        try:
+            return self._y_test
+        except AttributeError:
+            self._y_test = np.array([d["oracle"] for d in self.data])
+            return self._y_test
+
+    @property
+    def accuracy(self):
+        try:
+            return self._accuracy
+        except AttributeError:
+            self._accuracy = accuracy_score(self.y_test, self.predicted)
+            return self._accuracy
+
+    @property
+    def speedups(self):
+        try:
+            return self._speedups
+        except AttributeError:
+            speedups = []
+            for d,p in zip(self.data, self.predicted):
+                if d["oracle"] == p:
+                    speedups.append(float(d["speedup"]))
+                else:
+                    speedups.append(float(d["penalty"]))
+            self._speedups = np.array(speedups)
+            return self._speedups
+
+    @property
+    def speedup(self):
+        try:
+            return self._speedup
+        except AttributeError:
+            self._speedup = labmath.geomean(self.speedups)
+            return self._speedup
+
+    header = ", ".join([
+        "",
         "accuracy",
-        # "avgruntime",
         "speedup",
-        # "avgspeedup",
-        # "minspeedup",
-        # "maxspeedup",
-        # "ci",
-        "oracle",
-        # "geooracle",
-        # "avgoracle",
-        # "minoracle",
-        # "maxoracle",
-        sep=",")
+        "oracle"
+    ])
 
-    ignored_attributes = (IGNORED_ATTRIBUTES if with_raw_features else
-                          UNUSED_ATTRIBUTES)
-
-    kwargs["ignored_attributes"] = ignored_attributes
-    for classifier in classifiers:
-        eval_classifier(classifier, arff, **kwargs)
+    def __repr__(self):
+        return ", ".join([
+            self.prefix,
+            "{:.2f}%".format(self.accuracy * 100),
+            "{:.2f}".format(self.speedup),
+            "{:.0f}%".format(self.oracle * 100)
+        ])
 
 
-def from_arff(arff_path):
-    data = ml.load(arff_path)
-    data.class_index = data.attribute_by_name("oracle").index
-    return data
+def run_test(prefix, clf, train, test, features=cgo13_features):
+    X_train = np.array([features(d) for d in train])
+    y_train = np.array([labels(d) for d in train])
+
+    clf.fit(X_train, y_train)
+    X_test = np.array([features(d) for d in test])
+    y_test = np.array([labels(d) for d in test])
+
+    predicted = clf.predict(X_test)
+
+    return Metrics(prefix, test, predicted)
+
+
+def run_xval(prefix, clf, data, cv, features=cgo13_features, seed=1):
+    X = np.array([features(d) for d in data])
+    y = np.array([labels(d) for d in data])
+
+    predicted = cross_validation.cross_val_predict(clf, X, y, cv=cv)
+
+    return Metrics("DecisionTree", data, predicted)
+
+
+class ZeroR(object):
+    # TODO:
+    pass
+
+
+def classification(train, test=None, with_raw_features=False, **kwargs):
+    if with_raw_features:
+        features = cgo13_with_raw_features
+    else:
+        features = cgo13_features
+
+    seed = kwargs.get("seed", 0)
+
+    X_train = np.array([features(d, with_raw_features=with_raw_features)
+                        for d in train])
+    y_train = np.array([labels(d) for d in train])
+
+    if zeror:
+        clf = ZeroR()
+    else:
+        clf = DecisionTreeClassifier(
+            criterion="entropy", splitter="best", random_state=seed)
+
+    # folds = cross_validation.KFold(len(X), n_folds=10)
+
+    # for train_index,test_index in folds:
+    #     X_train, X_test = X[train_index], X[test_index]
+    #     y_train, y_test = y[train_index], y[test_index]
+
+    #     # eval_classifier(clf, X_train, X_test, y_train, y_test)
+    #     clf = clf.fit(X_train, y_train)
+    #     predicted = clf.predict(X_test)
+
+    #     print(metrics.accuracy_score(y_test, predicted))
+
+    print(Metrics.header)
+    if test:
+        print(run_test("DecisionTree", clf, train, test,
+                       features=features))
+    else:
+        folds = cross_validation.KFold(len(train), n_folds=10,
+                                       random_state=seed)
+        print(run_xval("DecisionTree", clf, train, folds,
+                       features=features))
 
 
 def from_csv(csv_path):
-    base, extension = os.path.splitext(csv_path)
-    if extension != '.csv':
-        raise BadInputException("is file '{}' really a csv?".format(csv_path))
-
-    arff_path = base + '.arff'
-    ml.csv2arff(csv_path, arff_path)
-    return from_arff(arff_path)
+    return smith.read_csv(smith.assert_exists(csv_path))
