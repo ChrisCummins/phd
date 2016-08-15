@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -eu
+
+. lib/pushpull.sh
+
+main() {
+    local archive=$1
+
+    push $HOME/phd/lab/smith/driver/data/synthetic $archive
+}
+main $@

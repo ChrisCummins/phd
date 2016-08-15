@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -eu
+
+. lib/pushpull.sh
+
+main() {
+    push $HOME/phd/lab/smith/driver/data/synthetic
+}
+main $@
