@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
-. lib/pushpull.sh
+. $HOME/phd/lab/smith/driver/lib/pushpull.sh
 
 main() {
     push $HOME/phd/lab/smith/driver/data/synthetic
