@@ -486,7 +486,7 @@ class KernelPayload(object):
 
 
 def kernel(src, filename='<stdin>', devtype=cl.device_type.GPU,
-           size=None, must_validate=False):
+           size=None, must_validate=False, fatal_errors=False):
     """
     Drive a kernel.
 
@@ -499,6 +499,8 @@ def kernel(src, filename='<stdin>', devtype=cl.device_type.GPU,
         ctx, queue = init_opencl(devtype=devtype)
         driver = KernelDriver(ctx, src)
     except Exception as e:
+        if fatal_errors:
+            raise e
         print(filename, size, type(e).__name__, '-', sep=',', file=sys.stderr)
         return
 

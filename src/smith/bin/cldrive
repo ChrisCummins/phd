@@ -20,6 +20,8 @@ def main():
                         help='execute on CPU (default: no)')
     parser.add_argument('--gpu', action='store_true', default=False,
                         help='execute on GPU (default: yes)')
+    parser.add_argument("--fatal-errors", action="store_true", default=False,
+                        help="exit on failure")
     args = parser.parse_args()
 
     input_path = args.input
@@ -36,7 +38,12 @@ def main():
 
     devtype = cl.device_type.CPU if use_cpu else cl.device_type.GPU
 
-    kwargs = { 'size': size, 'devtype': devtype, 'must_validate': strict }
+    kwargs = {
+        "size": size,
+        "devtype": devtype,
+        "must_validate": strict,
+        "fatal_errors": args.fatal_errors
+    }
 
     if file_mode:
         cldrive.file(input_path, **kwargs)
