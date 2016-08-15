@@ -368,7 +368,7 @@ kernels, in order to test the change in predictive modeling accuracy.
 
 % NOCITE: Benchmarking OpenCL~\cite{Tobergte2013a}.
 
-\subsection{Motivation}\label{sec:motivation}
+\subsection{State of Practice}
 
 To motivate the need for compute kernel synthesis we surveyed the
 benchmarking methodologies of research papers in the field of GPGPU
@@ -388,40 +388,37 @@ Parboil~\cite{Stratton2012}, and the AMD
 SDK\footnote{\url{http://developer.amd.com/}}. Figure~\ref{fig:benchmark-suite-distribution}
 shows the breakdown of kernel sources.
 
-TODO: state-of-the-art is laborious and error prone stochastic
-template substitution, doesn't explore space.
-
 Note that our survey was directed only at the selection of programs
 used as benchmarks. For an excellent review of state of practice in
 reporting benchmark results, see~\cite{Belli2015}.
 
-\begin{figure}%[t]
-  \includegraphics[width=\columnwidth]{img/benchmark-quantitiy-distribution}
-  % \begin{tikzpicture}
-  %   \tikzstyle{every node}=[font=\scriptsize]
-  %   \begin{axis}[
-  %     width=\columnwidth,
-  %     height=4cm,
-  %     ybar,
-  %     ymin=0,
-  %     xlabel={\#. benchmark kernels},
-  %     ylabel={\#. papers},
-  %     ],
-  %     \addplot +[
-  %     hist={
-  %       bins=5,
-  %       data min=0,
-  %       data max=50
-  %     }
-  %     ] table [y index=0] {data/benchmark-quantities.csv};
-  %   \end{axis}
-  % \end{tikzpicture}
-  \caption{%
-    Number of benchmark kernels used in GPGPU research papers. The
-    median value is 14.%
-  }
-  \label{fig:benchmark-quantity-distribution}
-\end{figure}
+% \begin{figure}%[t]
+%   \includegraphics[width=\columnwidth]{img/benchmark-quantitiy-distribution}
+%   % \begin{tikzpicture}
+%   %   \tikzstyle{every node}=[font=\scriptsize]
+%   %   \begin{axis}[
+%   %     width=\columnwidth,
+%   %     height=4cm,
+%   %     ybar,
+%   %     ymin=0,
+%   %     xlabel={\#. benchmark kernels},
+%   %     ylabel={\#. papers},
+%   %     ],
+%   %     \addplot +[
+%   %     hist={
+%   %       bins=5,
+%   %       data min=0,
+%   %       data max=50
+%   %     }
+%   %     ] table [y index=0] {data/benchmark-quantities.csv};
+%   %   \end{axis}
+%   % \end{tikzpicture}
+%   \caption{%
+%     Number of benchmark kernels used in GPGPU research papers. The
+%     median value is 14.%
+%   }
+%   \label{fig:benchmark-quantity-distribution}
+% \end{figure}
 
 \begin{figure}%[t]
   \includegraphics[width=\columnwidth]{img/benchmark-suite-distribution}
@@ -432,6 +429,21 @@ reporting benchmark results, see~\cite{Belli2015}.
   }
   \label{fig:benchmark-suite-distribution}
 \end{figure}
+
+
+\subsection{Motivation}\label{sec:motivation}
+
+\begin{figure}%[t]
+  \includegraphics[width=\columnwidth]{img/pca-suites}
+  \caption{%
+    The benchmark feature space, reduced to 2 dimensions (the two most
+    significant eigenvectors).%
+  }
+  \label{fig:pca-benchmarks}
+\end{figure}
+
+TODO: state-of-the-art is laborious and error prone stochastic
+template substitution, doesn't explore space.
 
 
 \subsection{Contributions}
@@ -596,8 +608,31 @@ Undefined behavior.
 
 \paragraph{Driving Synthesised kernels}
 
-TODO: Short sample kernels of particular error types, e.g. NO\_RESULTS
-and NONTERMINATING.
+The method for determining whether a kernel is interesting or not is:
+
+\begin{itemize}
+\item Create 4 equal size payloads $A_1$, $B_1$, $A_2$, $B_2$.
+  Restrictions: $A_1=A_2$, $B_1=B_2$, $A_1 \ne B_1$, $A_1 =$“known
+  values” (i.e. $\left[0, 1, 2 \ldots n\right]$). $B_1=$random values.
+\item Run kernel $k$ 4 times: $k(A_{1in}) \rightarrow A_{1out}$,
+  $k(B_{1in}) \rightarrow B_{1out}$,
+  $k(A_{2in}) \rightarrow A_{2out}$,
+  $k(B_{2in}) \rightarrow B_{2out}$.
+\item Assert: $A_{1out}=A_{2out}$, $B_{1out}=B_{2out}$,
+  $A_{1out} \ne B_{1out}$.
+\end{itemize}
+
+Outcomes: \texttt{E\_BAD\_CODE} program doesn’t compile;
+\texttt{E\_BAD\_ARGS} driver failed to create payload;
+\texttt{E\_TIMEOUT} execution took longer than $T$ seconds;
+\texttt{E\_OUTPUTS\_UNCHANGED} Xout=Xin code either does nothing, or
+doesn’t write result; \texttt{E\_INPUT\_INSENSITIVE} Xout=Yout code
+does the same thing irrespective of input;
+\texttt{E\_NONDETERMINISTIC} X1out=X2out code has non-deterministic
+behavior.
+
+
+TODO: Post-process, if ratio of CI to mean exceeds threshold.
 
 % \lstset{language=[OpenCL]C}
 % \begin{lstlisting}[%
@@ -658,13 +693,15 @@ and NONTERMINATING.
 
 \section{Experimental Methodology}\label{sec:evaluation}
 
-To evaluate the effectiveness we reproduce
-\citeauthor{Grewe2013}~\cite{Grewe2013}.
+To evaluate the effectiveness we apply to a state-of-the-art autotuner
+for OpenCL kernels.
 
 \subsection{Experimental Setup}\label{subsec:}
 
-\paragraph{Predictive Model} Classifier. Features in
-Table~\ref{tab:cgo13-features}.
+\paragraph{Predictive Model} We reproduce the predictive model from
+\citeauthor{Grewe2013}~\cite{Grewe2013}. Decision Tree
+classifier. Features from static source code and dynamic runtime
+information, summarized in Table~\ref{tab:cgo13-features}.
 
 \begin{table}% tab:cgo13-features
   \scriptsize
@@ -705,6 +742,8 @@ x. The AMD implementation of OpenCL 1.2 is used for both.
     \textbf{\#. Cores} & 4 & 2048 & 1664 \\
     \textbf{Memory} & 8 GB & 3 GB & 4 GB \\
     \textbf{Throughput} & 105 GFLOPS & 3.79 TFLOPS & 3.90 TFLOPS \\
+    \textbf{Driver} & AMD 1526.3 & AMD 1526.3 & NVIDIA 361.42 \\
+    \textbf{Compiler} & GCC 4.7.2 & GCC 4.7.2 & GCC 5.4.0 \\
     \bottomrule
   \end{tabular}
   \caption{Experimental platforms.}
