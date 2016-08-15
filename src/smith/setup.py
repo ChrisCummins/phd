@@ -5,7 +5,9 @@ deps = [
     'numpy',
     'PyGithub',
     'pyopencl',
-    'requests'
+    'requests',
+    'scikit-learn',
+    'seaborn',
 ]
 
 setup(name='smith',
