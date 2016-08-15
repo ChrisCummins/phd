@@ -1008,6 +1008,9 @@ PyLintSources += $(wildcard $(src)/labm8/labm8/*.py)
 Python2SetupInstallDirs += $(src)/omnitune
 PyLintSources += $(wildcard $(src)/omnitune/omnitune/*.py)
 
+# Omnitune depends on labm8:
+$(src)/omnitune/.python2.install.log: $(src)/labm8/.python2.install.log
+
 
 #
 # src/phd
@@ -1050,6 +1053,10 @@ PyLintSources += \
 	$(wildcard $(src)/smith/smith/*.py) \
 	$(wildcard $(src)/smith/bin/*.py) \
 	$(NULL)
+
+# smith depends on lambm8:
+$(src)/smith/.python2.install.log: $(src)/labm8/.python2.install.log
+$(src)/smith/.python3.install.log: $(src)/labm8/.python3.install.log
 
 SmithNativeDir = $(src)/smith/native
 SmithFeatures = $(SmithNativeDir)/features
