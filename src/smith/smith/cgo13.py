@@ -9,8 +9,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from collections import defaultdict
 import numpy as np
 import os
+import re
 import sys
 
 from io import StringIO
@@ -143,7 +145,7 @@ class Metrics(object):
             return self._speedup
 
     header = ", ".join([
-        "",
+        "classifier",
         "accuracy",
         "speedup",
         "oracle"
@@ -156,6 +158,54 @@ class Metrics(object):
             "{:.2f}".format(self.speedup),
             "{:.0f}%".format(self.oracle * 100)
         ])
+
+
+def getsuite(d):
+    return re.match(r"^[a-zA-Z-]+-[0-9\.]+", d["benchmark"]).group(0)
+
+
+def pairwise(iterable):
+    from itertools import tee
+    a, b = tee(iterable)
+    next(b, None)
+    return zip(a, b)
+
+
+def getgroups(data, getgroup):
+    return sorted(list(set([getgroup(d) for d in data])))
+
+
+def group_xval_folds(data, getgroup):
+    groups = getgroups(data, getgroup)
+
+    g = defaultdict(list)
+    for i,d in enumerate(data):
+        g[getgroup(d)].append(i)
+    g = sorted(list(g.values()), key=lambda x: getgroup(data[x[0]]))
+
+    pairs = []
+    for j in range(len(g)):
+        for i in range(len(g)):
+            # Note that we're not excluding cases where j == i, so
+            # train and test data will be identical for # groups of
+            # the folds.
+            pairs.append((g[j], g[i]))
+    return pairs
+
+
+def run_fold(prefix, clf, data, train_index, test_index,
+             features=cgo13_features):
+    X_train = np.array([features(data[i]) for i in train_index])
+    y_train = np.array([labels(data[i]) for i in train_index])
+
+    clf.fit(X_train, y_train)
+    X_test = np.array([features(data[i]) for i in test_index])
+    y_test = np.array([labels(data[i]) for i in test_index])
+
+    predicted = clf.predict(X_test)
+    predicted_data = [d for i,d in enumerate(data) if i in test_index]
+
+    return Metrics(prefix, predicted_data, predicted)
 
 
 def run_test(prefix, clf, train, test, features=cgo13_features):
@@ -185,7 +235,8 @@ class ZeroR(object):
     pass
 
 
-def classification(train, test=None, with_raw_features=False, **kwargs):
+def classification(train, test=None, with_raw_features=False,
+                   group_by=None, zeror=False, **kwargs):
     if with_raw_features:
         features = cgo13_with_raw_features
     else:
@@ -203,23 +254,39 @@ def classification(train, test=None, with_raw_features=False, **kwargs):
         clf = DecisionTreeClassifier(
             criterion="entropy", splitter="best", random_state=seed)
 
-    # folds = cross_validation.KFold(len(X), n_folds=10)
-
-    # for train_index,test_index in folds:
-    #     X_train, X_test = X[train_index], X[test_index]
-    #     y_train, y_test = y[train_index], y[test_index]
-
-    #     # eval_classifier(clf, X_train, X_test, y_train, y_test)
-    #     clf = clf.fit(X_train, y_train)
-    #     predicted = clf.predict(X_test)
-
-    #     print(metrics.accuracy_score(y_test, predicted))
-
-    print(Metrics.header)
     if test:
+        print(Metrics.header)
         print(run_test("DecisionTree", clf, train, test,
                        features=features))
+    elif group_by:
+        # Cross-validation over some grouping
+        getgroup = {
+            "suite": getsuite
+        }.get(group_by, None)
+        if not getgroup:
+            raise(smith.SmithException("Unkown group type '{}'"
+                                       .format(group_by)))
+
+        folds = group_xval_folds(train, getgroup)
+        groups = getgroups(train, getgroup)
+        results = np.zeros((len(groups), len(groups)))
+
+        for train_index, test_index in folds:
+            train_group = getgroup(train[train_index[0]])
+            test_group = getgroup(train[test_index[0]])
+
+            metrics = run_fold("DecisionTree", clf, train,
+                               train_index, test_index,
+                               features=features)
+            results[groups.index(train_group), groups.index(test_group)] = metrics.oracle
+
+        print("-", ",".join(groups), sep=",")
+        for i,row in enumerate(results):
+            print(groups[i], ",".join(["{:.2f}%".format(x * 100) for x in row]), sep=",")
+
     else:
+        # Plain old cross-validation.
+        print(Metrics.header)
         folds = cross_validation.KFold(len(train), n_folds=10,
                                        random_state=seed)
         print(run_xval("DecisionTree", clf, train, folds,

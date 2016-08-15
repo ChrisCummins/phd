@@ -23,6 +23,8 @@ def main():
                         help='path to training data CSV')
     parser.add_argument("--with-raw-features", action="store_true",
                         help="if true, use raw features as well as combined")
+    parser.add_argument("-g", "--group", action="store", default="none",
+                        help='group results by {suite}')
     args = parser.parse_args()
 
     # try:
@@ -33,7 +35,8 @@ def main():
     else:
         test_data = None
     cgo13.classification(training_data, test=test_data,
-                         with_raw_features=args.with_raw_features)
+                         with_raw_features=args.with_raw_features,
+                         group_by=args.group)
     # except Exception as e:
     #     print("fatal:", e, file=sys.stderr)
     #     # ml.stop()
