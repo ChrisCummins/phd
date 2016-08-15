@@ -520,6 +520,25 @@ def preprocess_file(path, inplace=False):
         sys.exit(2)
 
 
+def _preprocess_inplace_worker(path):
+    """
+    Worker function for preprocess_inplace().
+    """
+    print(path)
+    preprocess_file(path, inplace=True)
+
+
+def preprocess_inplace(paths):
+    """
+    Preprocess a list of files inplace.
+    """
+    num_workers = round(cpu_count() * 4)
+    with Pool(num_workers) as pool:
+        print('spawning', num_workers, 'worker threads to process',
+              len(paths), 'files ...')
+        pool.map(_preprocess_inplace_worker, paths)
+
+
 def preprocess_db(db_path):
     db = sqlite3.connect(db_path)
     db.create_aggregate("MD5SUM", 1, md5sum_aggregator)

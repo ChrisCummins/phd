@@ -18,16 +18,17 @@ def main():
         "the entries in the table"))
     args = parser.parse_args()
 
-    for path in args.inputs:
-        if args.file:
-            if args.inplace:
-                print(path)
-            preprocess.preprocess_file(path, inplace=args.inplace)
-        else:
-            if args.remove_bad_preprocessed:
-                preprocess.remove_bad_preprocessed(path)
+    if args.file and args.inplace:
+        preprocess.preprocess_inplace(args.inputs)
+    else:
+        for path in args.inputs:
+            if args.file:
+                preprocess.preprocess_file(path, inplace=False)
             else:
-                preprocess.preprocess_db(path)
+                if args.remove_bad_preprocessed:
+                    preprocess.remove_bad_preprocessed(path)
+                else:
+                    preprocess.preprocess_db(path)
 
 
 if __name__ == '__main__':
