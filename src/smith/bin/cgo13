@@ -28,15 +28,29 @@ def main():
     args = parser.parse_args()
 
     # try:
-    training_data = cgo13.from_csv(smith.assert_exists(args.input))
+    training_data = cgo13.LabelledData.from_csv(smith.assert_exists(args.input),
+                                                group_by=args.group)
 
     if args.test_data:
-        test_data = cgo13.from_csv(smith.assert_exists(args.test_data))
+        test_data = cgo13.LabelledData.from_csv(
+            smith.assert_exists(args.test_data))
     else:
         test_data = None
-    cgo13.classification(training_data, test=test_data,
-                         with_raw_features=args.with_raw_features,
-                         group_by=args.group)
+    m = cgo13.classification(training_data, test=test_data,
+                             with_raw_features=args.with_raw_features,
+                             group_by=args.group)
+
+    groups = sorted(set(training_data["Group"]))
+
+    if len(groups) > 1:
+        print("-", ",".join(groups), sep=",")
+        for i,row in enumerate(m):
+            print(groups[i], ",".join(["{:.2f}%".format(x * 100) for x in row]),
+                  sep=",")
+    else:
+        print(m.header)
+        print(m)
+
     # except Exception as e:
     #     print("fatal:", e, file=sys.stderr)
     #     # ml.stop()

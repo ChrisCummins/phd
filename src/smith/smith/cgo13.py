@@ -122,46 +122,46 @@ class LabelledData(object):
 
 # Feature extractors:
 
-def cgo13_features(d, with_raw_features=False):
+def cgo13_features(d):
+    return np.array([
+        d["F1:transfer/(comp+mem)"],
+        d["F2:coalesced/mem"],
+        d["F3:(localmem/mem)*avgws"],
+        d["F4:comp/mem"]
+    ]).T
+
+
+def cgo13_with_raw_features(d):
     return [
-        float(d["F1:transfer/(comp+mem)"]),
-        float(d["F2:coalesced/mem"]),
-        float(d["F3:(localmem/mem)*avgws"]),
-        float(d["F4:comp/mem"])
+        d["comp"],
+        d["rational"],
+        d["mem"],
+        d["localmem"],
+        d["coalesced"],
+        d["atomic"],
+        d["transfer"],
+        d["wgsize"],
+        d["F1:transfer/(comp+mem)"],
+        d["F2:coalesced/mem"],
+        d["F3:(localmem/mem)*avgws"],
+        d["F4:comp/mem"]
     ]
 
 
-def cgo13_with_raw_features(d, with_raw_features=False):
+def raw_features(d):
     return [
-        int(d["comp"]),
-        int(d["rational"]),
-        int(d["mem"]),
-        int(d["localmem"]),
-        int(d["coalesced"]),
-        int(d["atomic"]),
-        int(d["transfer"]),
-        int(d["wgsize"]),
-        float(d["F1:transfer/(comp+mem)"]),
-        float(d["F2:coalesced/mem"]),
-        float(d["F3:(localmem/mem)*avgws"]),
-        float(d["F4:comp/mem"])
+        d["comp"],
+        d["rational"],
+        d["mem"],
+        d["localmem"],
+        d["coalesced"],
+        d["atomic"],
+        d["transfer"],
+        d["wgsize"]
     ]
 
 
-def raw_features(d, with_raw_features=False):
-    return [
-        int(d["comp"]),
-        int(d["rational"]),
-        int(d["mem"]),
-        int(d["localmem"]),
-        int(d["coalesced"]),
-        int(d["atomic"]),
-        int(d["transfer"]),
-        int(d["wgsize"])
-    ]
-
-
-def labels(d):
+def getlabels(d):
     return d["oracle"]
 
 
@@ -182,11 +182,7 @@ class Metrics(object):
 
     @property
     def oracles(self):
-        try:
-            return self._oracles
-        except AttributeError:
-            self._oracles = np.array([float(d["speedup"]) for d in self.data])
-            return self._oracles
+        return self.data["speedup"]
 
     @property
     def oracle(self):
@@ -198,11 +194,7 @@ class Metrics(object):
 
     @property
     def y_test(self):
-        try:
-            return self._y_test
-        except AttributeError:
-            self._y_test = np.array([d["oracle"] for d in self.data])
-            return self._y_test
+        return self.data["oracle"]
 
     @property
     def accuracy(self):
@@ -218,11 +210,11 @@ class Metrics(object):
             return self._speedups
         except AttributeError:
             speedups = []
-            for d,p in zip(self.data, self.predicted):
+            for d,p in zip(self.data.to_dict(orient="records"), self.predicted):
                 if d["oracle"] == p:
-                    speedups.append(float(d["speedup"]))
+                    speedups.append(d["speedup"])
                 else:
-                    speedups.append(float(d["penalty"]))
+                    speedups.append(d["penalty"])
             self._speedups = np.array(speedups)
             return self._speedups
 
@@ -233,6 +225,14 @@ class Metrics(object):
         except AttributeError:
             self._speedup = labmath.geomean(self.speedups)
             return self._speedup
+
+    @property
+    def groups(self):
+        try:
+            return self._groups
+        except AttributeError:
+            self._groups = sorted(set(self.data["Group"]))
+            return self._groups
 
     header = ", ".join([
         "classifier",
@@ -254,57 +254,53 @@ def getsuite(d):
     return re.match(r"^[a-zA-Z-]+-[0-9\.]+", d["benchmark"]).group(0)
 
 
-def pairwise(iterable):
-    from itertools import tee
-    a, b = tee(iterable)
-    next(b, None)
-    return zip(a, b)
-
 
 def getgroups(data, getgroup):
-    return sorted(list(set([getgroup(d) for d in data])))
+    return sorted(list(set([getgroup(d) for d in data.to_dict(orient="records")])))
 
 
-def group_xval_folds(data, getgroup):
+def pairwise_groups_indices(data, getgroup):
+    """
+    """
     groups = getgroups(data, getgroup)
 
-    g = defaultdict(list)
-    for i,d in enumerate(data):
-        g[getgroup(d)].append(i)
-    g = sorted(list(g.values()), key=lambda x: getgroup(data[x[0]]))
+    group_indices = defaultdict(list)
+    for i,d in enumerate(data.to_dict(orient="records")):
+        group_indices[getgroup(d)].append(i)
 
-    pairs = []
-    for j in range(len(g)):
-        for i in range(len(g)):
-            # Note that we're not excluding cases where j == i, so
-            # train and test data will be identical for # groups of
-            # the folds.
-            pairs.append((g[j], g[i]))
-    return pairs
+    groupnames, pairs = [], []
+    for j in range(len(groups)):
+        for i in range(len(groups)):
+            l, r = groups[j], groups[i]
+            groupnames.append((l, r))
+            li, ri = group_indices[l], group_indices[r]
+            pairs.append((li, ri))
+    return groupnames, pairs
 
 
 def run_fold(prefix, clf, data, train_index, test_index,
              features=cgo13_features):
-    X_train = np.array([features(data[i]) for i in train_index])
-    y_train = np.array([labels(data[i]) for i in train_index])
+    X_train = features(data)[train_index]
+    y_train = getlabels(data)[train_index]
 
     clf.fit(X_train, y_train)
-    X_test = np.array([features(data[i]) for i in test_index])
-    y_test = np.array([labels(data[i]) for i in test_index])
+    X_test = features(data)[test_index]
+    y_test = getlabels(data)[test_index]
 
     predicted = clf.predict(X_test)
-    predicted_data = [d for i,d in enumerate(data) if i in test_index]
+
+    predicted_data = data.ix[test_index]
 
     return Metrics(prefix, predicted_data, predicted)
 
 
 def run_test(prefix, clf, train, test, features=cgo13_features):
     X_train = np.array([features(d) for d in train])
-    y_train = np.array([labels(d) for d in train])
+    y_train = np.array([getlabels(d) for d in train])
 
     clf.fit(X_train, y_train)
     X_test = np.array([features(d) for d in test])
-    y_test = np.array([labels(d) for d in test])
+    y_test = np.array([getlabels(d) for d in test])
 
     predicted = clf.predict(X_test)
 
@@ -312,8 +308,8 @@ def run_test(prefix, clf, train, test, features=cgo13_features):
 
 
 def run_xval(prefix, clf, data, cv, features=cgo13_features, seed=1):
-    X = np.array([features(d) for d in data])
-    y = np.array([labels(d) for d in data])
+    X = features(data)
+    y = getlabels(data)
 
     predicted = cross_validation.cross_val_predict(clf, X, y, cv=cv)
 
@@ -328,15 +324,11 @@ class ZeroR(object):
 def classification(train, test=None, with_raw_features=False,
                    group_by=None, zeror=False, **kwargs):
     if with_raw_features:
-        features = cgo13_with_raw_features
+        getfeatures = cgo13_with_raw_features
     else:
-        features = cgo13_features
+        getfeatures = cgo13_features
 
     seed = kwargs.get("seed", 0)
-
-    X_train = np.array([features(d, with_raw_features=with_raw_features)
-                        for d in train])
-    y_train = np.array([labels(d) for d in train])
 
     if zeror:
         clf = ZeroR()
@@ -345,9 +337,7 @@ def classification(train, test=None, with_raw_features=False,
             criterion="entropy", splitter="best", random_state=seed)
 
     if test:
-        print(Metrics.header)
-        print(run_test("DecisionTree", clf, train, test,
-                       features=features))
+        return run_test("DecisionTree", clf, train, test, features=getfeatures)
     elif group_by:
         # Cross-validation over some grouping
         getgroup = {
@@ -357,31 +347,22 @@ def classification(train, test=None, with_raw_features=False,
             raise(smith.SmithException("Unkown group type '{}'"
                                        .format(group_by)))
 
-        folds = group_xval_folds(train, getgroup)
+        groupnames, folds = pairwise_groups_indices(train, getgroup)
         groups = getgroups(train, getgroup)
         results = np.zeros((len(groups), len(groups)))
 
-        for train_index, test_index in folds:
-            train_group = getgroup(train[train_index[0]])
-            test_group = getgroup(train[test_index[0]])
+        for gpname, fold in zip(groupnames, folds):
+            train_group, test_group = gpname
+            train_index, test_index = fold
 
             metrics = run_fold("DecisionTree", clf, train,
                                train_index, test_index,
-                               features=features)
+                               features=getfeatures)
             results[groups.index(train_group), groups.index(test_group)] = metrics.oracle
 
-        print("-", ",".join(groups), sep=",")
-        for i,row in enumerate(results):
-            print(groups[i], ",".join(["{:.2f}%".format(x * 100) for x in row]), sep=",")
-
+        return results
     else:
         # Plain old cross-validation.
-        print(Metrics.header)
         folds = cross_validation.KFold(len(train), n_folds=10,
                                        random_state=seed)
-        print(run_xval("DecisionTree", clf, train, folds,
-                       features=features))
-
-
-def from_csv(csv_path):
-    return smith.read_csv(smith.assert_exists(csv_path))
+        return run_xval("DecisionTree", clf, train, folds, features=getfeatures)
