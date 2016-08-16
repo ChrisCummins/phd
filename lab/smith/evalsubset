@@ -78,7 +78,7 @@ def _worker(job):
     return {"training": training, "res": res}
 
 
-def eval_random_subsets(training, test):
+def eval_random_subsets(training, test, args):
     best = 0
 
     if fs.exists("best.csv"):
@@ -119,9 +119,11 @@ def eval_random_subsets(training, test):
             train2.to_csv("best.csv")
 
 
-def eval_nn(training, test):
+def eval_nn(training, test, args):
     # Get subset of training on:
-    neighbours = cgo13.nearest_neighbours(test, training, same_class=True)
+    # TODO: Add eigen to args
+    neighbours = cgo13.nearest_neighbours(test, training, same_class=True,
+                                          distance=cgo13.eigens_distance)
     indices = list(set([r[1] for r in neighbours]))
     subset = training.ix[indices]
 
@@ -154,7 +156,7 @@ def main():
     training = cgo13.LabelledData.from_csv(smith.assert_exists(args.training))
     test = cgo13.LabelledData.from_csv(smith.assert_exists(args.test))
 
-    strategy(training, test)
+    strategy(training, test, args)
 
 
 if __name__ == '__main__':
