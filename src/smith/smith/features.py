@@ -42,6 +42,7 @@ def is_good_features(line, stderr):
 
 def features(path, file=sys.stdout, fatal_errors=False, use_shim=False,
              quiet=False):
+    print(path, file=sys.stderr)
     features_bin = os.path.expanduser('~/phd/src/smith/native/features')
     ld_path = os.path.expanduser('~/phd/tools/llvm/build/lib/')
 
