@@ -7,7 +7,7 @@ set -eux
 main() {
     # Make static kernel features.
     cd data/synthetic/kernels
-    ls | grep '.cl' | xargs -L 10000 smith-features > features.csv
+    ls | grep '.cl' | xargs -L 1000 smith-features > features.csv
     cd ../../../
 
     # Make kernels tarball.
