@@ -36,6 +36,7 @@ setup(name='smith',
           'bin/smith-explore',
           'bin/smith-features',
           'bin/smith-parboil',
+          'bin/smith-plot',
           'bin/smith-preprocess',
           'bin/smith-train'
       ],

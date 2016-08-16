@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 #
-# Visualise Eigenvectors. Eigenvectors were found by applying
-# PrincipleComponents over combined benchmarks training data in
-# Weka.
+# Plot labelled training data and unlabelled performance
 #
 from argparse import ArgumentParser
 
@@ -27,10 +25,8 @@ from labm8 import viz
 import smith
 from smith import cgo13
 
-
 # Seaborn configuration:
 sns.set(style="ticks", color_codes=True)
-
 
 def rand_jitter(arr, factor=0.01):
     stdev = factor* (max(arr) - min(arr))
@@ -54,7 +50,7 @@ def plot_eigenvectors(data):
     else:
         s = pd.concat([data["E1"], data["E2"], data["E3"], data["E4"]], axis=1,
                       keys=["E1", "E2", "E3", "E4"])
-        g = sns.pairplot(s)
+        sns.pairplot(s)
 
 
 def plot_features(data):
@@ -68,6 +64,11 @@ def plot_features(data):
             data["F1_norm"], data["F2_norm"], data["F3_norm"], data["F4_norm"]],
                       axis=1, keys=["F1", "F2", "F3", "F4"])
         sns.pairplot(s)
+
+
+def plot_runtimes(data):
+    # TODO:
+    pass
 
 
 def main():
@@ -86,10 +87,13 @@ def main():
                                        group_by=args.group,
                                        filter_by=args.filter)
 
+    target = args.type
     if args.type == "features":
         plot_features(data)
     elif args.type == "eigens":
         plot_eigenvectors(data)
+    elif args.type == "runtimes":
+        plot_runtimes(data)
     else:
         print("fatal: Unknown plot type '{}'".format(args.type))
         sys.exit(1)
