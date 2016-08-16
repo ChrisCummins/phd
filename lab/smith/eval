@@ -73,6 +73,22 @@ main() {
                --group suite -o $dir/bench-xval-bench-B.$fmt \
                --title "Cross-benchmark autotuning on Platform B" &
 
+    # Nearest-neighbour features
+    smith-plot nn $benchmarks/platform-a.csv \
+               -o $dir/bench-nn-A.$fmt \
+               --title "Distance to nearest neighbour of benchmark features on Platform A" &
+    smith-plot nn $benchmarks/platform-b.csv \
+               -o $dir/bench-nn-B.$fmt \
+               --title "Distance to nearest neighbour of benchmark features on Platform B" &
+
+    # Nearest-neighbour eigens
+    smith-plot en $benchmarks/platform-a.csv \
+               -o $dir/bench-en-A.$fmt \
+               --title "Distance to nearest neighbour of benchmark features on Platform A" &
+    smith-plot en $benchmarks/platform-b.csv \
+               -o $dir/bench-en-B.$fmt \
+               --title "Distance to nearest neighbour of benchmark features on Platform B" &
+
 
     wait_for_jobs
     ######################### SYNTHETICS ##############################
