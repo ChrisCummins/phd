@@ -133,7 +133,8 @@ def feature_distance(f1, f2):
     return math.sqrt(d1 * d1 + d2 * d2 + d3 * d3 + d4 * d4)
 
 
-def nearest_neighbours(data1, data2):
+def nearest_neighbours(data1, data2, same_class=False,
+                       distance=feature_distance):
     """
     Find the minimum distances between datapoints.
 
@@ -141,18 +142,23 @@ def nearest_neighbours(data1, data2):
 
        (distance, index_of_closest, same_oracle)
     """
-    res = []
+    dists, indices, sameoracles = [], [], []
+
     for d1 in data1.to_dict(orient="record"):
         mindist, index, sameoracle = float('inf'), None, False
         for i,d2 in enumerate(data2.to_dict(orient="record")):
             if not d1 == d2:
-                dist = feature_distance(d1, d2)
-                if dist < mindist:
-                    mindist = dist
-                    index = i
-                    sameoracle = d1["oracle"] == d2["oracle"]
-        res.append((mindist, index, sameoracle))
-    return res
+                dist = distance(d1, d2)
+                if ((not same_class) or
+                    (same_class and d1["oracle"] == d2["oracle"])):
+                    if dist < mindist and i not in indices:
+                        mindist = dist
+                        index = i
+                        sameoracle = d1["oracle"] == d2["oracle"]
+        dists.append(mindist)
+        indices.append(index)
+        sameoracles.append(sameoracle)
+    return zip(dists, indices, sameoracles)
 
 
 # Feature extractors:
