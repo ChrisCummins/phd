@@ -96,6 +96,16 @@ def main():
         plot_eigenvectors(data)
     elif args.type == "runtimes":
         plot_runtimes(data)
+    elif args.type == "xval":
+        results = cgo13.classification(data, group_by=args.group)
+        groups = sorted(set(data["Group"]))
+
+        def shortlabels(groups):
+            return [re.sub("-.+$", "", x) for x in groups]
+
+        sns.heatmap(results, annot=True, fmt=".2f", linewidths=.5,
+                    xticklabels=shortlabels(groups),
+                    yticklabels=shortlabels(groups))
     else:
         print("fatal: Unknown plot type '{}'".format(args.type))
         sys.exit(1)

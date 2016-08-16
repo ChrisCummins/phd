@@ -4,11 +4,14 @@
 #
 
 main() {
-    local dir=img
+    local dir=data/img
 
     rm -rfv $dir
-    mkdir -p $dir
+    mkdir -pv $dir
 
+    ########################## BENCHMARKS ##############################
+
+    # Benchmarks feature space
     smith-plot features benchmarks/data/platform-b.csv \
                --group class -o $dir/bench-features-class-B.pdf \
                --title "Benchmarks results for Platform B" &
@@ -31,6 +34,19 @@ main() {
                --title "Benchmarks results for both experimental platforms" &
 
 
+    # Cross-benchmark machine learning:
+    smith-plot xval benchmarks/data/platform-a.csv \
+               --group suite -o $dir/bench-xval-bench-A.pdf \
+               --title "Cross-benchmark autotuning for Platform B" &
+
+    smith-plot xval benchmarks/data/platform-b.csv \
+               --group suite -o $dir/bench-xval-bench-B.pdf \
+               --title "Cross-benchmark autotuning for Platform B" &
+
+
+    ######################### SYNTHETICS ##############################
+
+    # Synthetic feature space
     smith-plot features driver/data/synthetic/platform-b.csv \
                --group class -o $dir/syn-features-class-B.pdf \
                --title "Synthetic kernels for Platform B" &
@@ -43,11 +59,16 @@ main() {
                --group class -o $dir/syn-features-class-C.pdf \
                --title "Synthetic kernels for both experimental platforms" &
 
+
     for job in `jobs -p`
     do
         wait $job
     done
 
-    xdg-open $dir
+    if which xdg-open &>/dev/null ; then
+        xdg-open $dir
+    else
+        open $dir
+    fi
 }
 main $@
