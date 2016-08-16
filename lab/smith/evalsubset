@@ -112,27 +112,46 @@ def eval_random_subsets(training, test):
     while True:
         train2 = make_random_subset(training, test)
         res = cgo13.classification(train2, test)
-        print(len(train2), "instances", res, "current best {:.0f}%".format(best * 100))
+        print(len(train2), "instances", res,
+              "current best {:.0f}%".format(best * 100))
         if res.oracle > best:
             best = res.oracle
             train2.to_csv("best.csv")
 
 
 def eval_nn(training, test):
-    pass
+    mindists = cgo13.min_features_distances(test, test)
+    print(len(mindists))
+    # for t in test.to_dict(orient="record"):
+        # pass
 
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('strategy', help='{random,nn}')
+    parser.add_argument('strategy', help='{rand,nn}')
     parser.add_argument('training', help='path to training data CSV')
     parser.add_argument('test', help='path to testing data CSV')
     args = parser.parse_args()
 
+    strategies = {
+        "nearestneighbour": eval_nn,
+        "neighbour": eval_nn,
+        "nn": eval_nn,
+        "r": eval_random_subsets,
+        "rand": eval_random_subsets,
+        "random": eval_random_subsets,
+    }
+    strategy = strategies.get(args.strategy, None)
+    if strategy is None:
+        print("fatal: Unknown strategy '{}'. Possible values: {{{}}}"
+              .format(args.strategy, ",".join(sorted(strategies.keys()))))
+        sys.exit(1)
+
     training = cgo13.LabelledData.from_csv(smith.assert_exists(args.training))
     test = cgo13.LabelledData.from_csv(smith.assert_exists(args.test))
 
-    if args.strategy == "random":
+    strategy(training, test)
+    if args.strategy == "rand":
         eval_random_subsets(training, test)
     elif args.strategy == "nn":
         eval_nn(training, test)

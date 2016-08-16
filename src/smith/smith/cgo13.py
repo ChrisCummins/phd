@@ -13,6 +13,7 @@ import numpy as np
 import os
 import pandas as pd
 import re
+import math
 import sys
 
 from collections import defaultdict
@@ -118,6 +119,40 @@ class LabelledData(object):
         data["E1"], data["E2"], data["E3"], data["E4"] = _eigenvectors(data)
 
         return data
+
+
+def feature_distance(f1, f2):
+    """
+    Distance between two features (as dicts).
+    """
+    d1 = abs(f1["F1_norm"] - f2["F1_norm"])
+    d2 = abs(f1["F2_norm"] - f2["F2_norm"])
+    d3 = abs(f1["F3_norm"] - f2["F3_norm"])
+    d4 = abs(f1["F4_norm"] - f2["F4_norm"])
+
+    return math.sqrt(d1 * d1 + d2 * d2 + d3 * d3 + d4 * d4)
+
+
+def nearest_neighbours(data1, data2):
+    """
+    Find the minimum distances between datapoints.
+
+    Returns list of tuples, where each tuple is in the form:
+
+       (distance, index_of_closest, same_oracle)
+    """
+    res = []
+    for d1 in data1.to_dict(orient="record"):
+        mindist, index, sameoracle = float('inf'), None, False
+        for i,d2 in enumerate(data2.to_dict(orient="record")):
+            if not d1 == d2:
+                dist = feature_distance(d1, d2)
+                if dist < mindist:
+                    mindist = dist
+                    index = i
+                    sameoracle = d1["oracle"] == d2["oracle"]
+        res.append((mindist, index, sameoracle))
+    return res
 
 
 # Feature extractors:
