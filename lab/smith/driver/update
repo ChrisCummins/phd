@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#
+# Rebuild training data. Run pull-results beforehand.
+#
+set -eux
+
+main() {
+    # Make static kernel features.
+    cd data/synthetic/kernels
+    ls | grep '.cl' | xargs -L 10000 smith-features > features.csv
+    cd ../../../
+
+    # Make kernels tarball.
+    cd data/synthetic/
+    local archive=$(date +"kernels-%y.%m.%d-%H.%M.tar.bz2")
+    tar -cf $archive kernels
+    cd ../../
+
+    # Prune kernel files (optional).
+    ./prune-kernels data/synthetic/kernels
+
+    # Make error files.
+    ./mkerros intel data/synthetic/
+    ./mkerros amd data/synthetic/
+    ./mkerros nvidia data/synthetic/
+
+    # Make kernel files.
+    ./mktraining data/synthetic/kernels \
+                 data/synthetic/intel.csv \
+                 data/synthetic/amd.csv \
+                 > data/synthetic/platform-a.csv
+
+    ./mktraining data/synthetic/kernels \
+                 data/synthetic/intel.csv \
+                 data/synthetic/nvidia.csv \
+                 > data/synthetic/platform-b.csv
+}
+main $@
