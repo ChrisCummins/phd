@@ -121,7 +121,7 @@ class LabelledData(object):
         return data
 
 
-def feature_distance(f1, f2):
+def norm_feature_distance(f1, f2):
     """
     Distance between two features (as dicts).
     """
@@ -133,8 +133,20 @@ def feature_distance(f1, f2):
     return math.sqrt(d1 * d1 + d2 * d2 + d3 * d3 + d4 * d4)
 
 
+def eigens_distance(f1, f2):
+    """
+    Distance between two features (as dicts).
+    """
+    d1 = abs(f1["E1"] - f2["E1"])
+    d2 = abs(f1["E2"] - f2["E2"])
+    d3 = abs(f1["E3"] - f2["E3"])
+    d4 = abs(f1["E4"] - f2["E4"])
+
+    return math.sqrt(d1 * d1 + d2 * d2 + d3 * d3 + d4 * d4)
+
+
 def nearest_neighbours(data1, data2, same_class=False,
-                       distance=feature_distance):
+                       distance=norm_feature_distance):
     """
     Find the minimum distances between datapoints.
 

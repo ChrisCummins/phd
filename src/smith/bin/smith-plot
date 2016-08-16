@@ -83,18 +83,25 @@ def plot_xval(data, args):
                 yticklabels=shortlabels(groups))
 
 
-def plot_neghbours(data, args):
+def plot_neighbours(data, args):
     other = cgo13.LabelledData.from_csv(args.other) if args.other else data
 
-    results = cgo13.nearest_neighbours(data, other)
+    if "use_eigens" in args and args.use_eigens:
+        results = cgo13.nearest_neighbours(data, other,
+                                           distance=cgo13.eigens_distance)
+    else:
+        results = cgo13.nearest_neighbours(data, other)
 
+    results = list(results)
     xlim = (min([r[0] for r in results]), max([r[0] for r in results]))
+
+    nbins= 15
 
     x = [r[0] for r in results if r[2]]
     plt.subplot(2, 1, 1)
     ax = sns.distplot(x, kde=False)
     sns.plt.xlim(xlim)
-    if args.log:
+    if "log" in args and args.log:
         ax.set_yscale("log", nonposy='clip')
 
 
@@ -102,16 +109,24 @@ def plot_neghbours(data, args):
     plt.subplot(2, 1, 2)
     ax = sns.distplot(x, kde=False, color="r")
     sns.plt.xlim(xlim)
-    if args.log:
+    if "log" in args and args.log:
         ax.set_yscale("log", nonposy='clip')
+
+
+def plot_eigen_neighbours(data, args):
+    args.use_eigens = True
+    return plot_neighbours(data, args)
 
 
 def main():
     types = {
+        "eigen-neighbours": plot_eigen_neighbours,
         "eigens": plot_eigenvectors,
+        "en": plot_eigen_neighbours,
         "features": plot_features,
         "features": plot_features,
-        "neighbour": plot_neghbours,
+        "neighbours": plot_neighbours,
+        "nn": plot_neighbours,
         "runtimes": plot_runtimes,
         "xval": plot_xval,
     }
