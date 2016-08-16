@@ -28,7 +28,7 @@ from smith import cgo13
 class MalformedDataException(smith.SmithException): pass
 
 
-def mktraining(training, test):
+def make_random_subset(training, test):
     # Ratio of GPU oracle in test data:
     ngpu = sum([x == "GPU" for x in test["oracle"]])
     test_ratio = ngpu / (len(test["oracle"]))
@@ -73,19 +73,12 @@ def mktraining(training, test):
 
 
 def _worker(job):
-    training = mktraining(job["training"], job["test"])
+    training = make_random_subset(job["training"], job["test"])
     res = cgo13.classification(training, job["test"])
     return {"training": training, "res": res}
 
-def main():
-    parser = ArgumentParser()
-    parser.add_argument('training', help='path to training data CSV')
-    parser.add_argument('test', help='path to testing data CSV')
-    args = parser.parse_args()
 
-    training = cgo13.LabelledData.from_csv(smith.assert_exists(args.training))
-    test = cgo13.LabelledData.from_csv(smith.assert_exists(args.test))
-
+def eval_random_subsets(training, test):
     best = 0
 
     if fs.exists("best.csv"):
@@ -117,12 +110,32 @@ def main():
     #             print(", ".join([str(res["res"].oracle) for res in results]))
 
     while True:
-        train2 = mktraining(training, test)
+        train2 = make_random_subset(training, test)
         res = cgo13.classification(train2, test)
         print(len(train2), "instances", res, "current best {:.0f}%".format(best * 100))
         if res.oracle > best:
             best = res.oracle
             train2.to_csv("best.csv")
+
+
+def eval_nn(training, test):
+    pass
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('strategy', help='{random,nn}')
+    parser.add_argument('training', help='path to training data CSV')
+    parser.add_argument('test', help='path to testing data CSV')
+    args = parser.parse_args()
+
+    training = cgo13.LabelledData.from_csv(smith.assert_exists(args.training))
+    test = cgo13.LabelledData.from_csv(smith.assert_exists(args.test))
+
+    if args.strategy == "random":
+        eval_random_subsets(training, test)
+    elif args.strategy == "nn":
+        eval_nn(training, test)
 
 
 if __name__ == '__main__':
