@@ -41,7 +41,7 @@ def scatter_with_jitter(plt, x, y, **kwargs):
                        rand_jitter(y, **jitter_opts), **kwargs)
 
 
-def plot_eigenvectors(data):
+def plot_eigenvectors(data, args):
     if len(set(data["Group"])) > 1:
         s = pd.concat([data["E1"], data["E2"], data["E3"], data["E4"],
                        data["Group"]], axis=1,
@@ -53,7 +53,7 @@ def plot_eigenvectors(data):
         sns.pairplot(s)
 
 
-def plot_features(data):
+def plot_features(data, args):
     if len(set(data["Group"])) > 1:
         s = pd.concat([
             data["F1_norm"], data["F2_norm"], data["F3_norm"], data["F4_norm"],
@@ -66,14 +66,59 @@ def plot_features(data):
         sns.pairplot(s)
 
 
-def plot_runtimes(data):
+def plot_runtimes(data, args):
     # TODO:
     pass
 
 
+def plot_xval(data, args):
+    results = cgo13.classification(data, group_by=args.group)
+    groups = sorted(set(data["Group"]))
+
+    def shortlabels(groups):
+        return [re.sub("-.+$", "", x) for x in groups]
+
+    sns.heatmap(results, annot=True, fmt=".2f", linewidths=.5,
+                xticklabels=shortlabels(groups),
+                yticklabels=shortlabels(groups))
+
+
+def plot_neghbours(data, args):
+    other = cgo13.LabelledData.from_csv(args.other) if args.other else data
+
+    results = cgo13.nearest_neighbours(data, other)
+
+    xlim = (min([r[0] for r in results]), max([r[0] for r in results]))
+
+    x = [r[0] for r in results if r[2]]
+    plt.subplot(2, 1, 1)
+    ax = sns.distplot(x, kde=False)
+    sns.plt.xlim(xlim)
+    if args.log:
+        ax.set_yscale("log", nonposy='clip')
+
+
+    x = [r[0] for r in results if not r[2]]
+    plt.subplot(2, 1, 2)
+    ax = sns.distplot(x, kde=False, color="r")
+    sns.plt.xlim(xlim)
+    if args.log:
+        ax.set_yscale("log", nonposy='clip')
+
+
 def main():
+    types = {
+        "eigens": plot_eigenvectors,
+        "features": plot_features,
+        "features": plot_features,
+        "neighbour": plot_neghbours,
+        "runtimes": plot_runtimes,
+        "xval": plot_xval,
+    }
+
     parser = ArgumentParser()
-    parser.add_argument('type', help='{features,eigens}')
+    parser.add_argument('type', help=('Possible values: {{{}}}'
+                                      .format(",".join(sorted(types.keys())))))
     parser.add_argument('input', help='path to input training data CSV')
     parser.add_argument("-g", "--group", action="store", default="none",
                         help='group results by {none,class,suite,prog}')
@@ -83,32 +128,21 @@ def main():
                         help="Set plot title")
     parser.add_argument("-o", "--output", action="store", default=None,
                         help="Save plot to location")
+    parser.add_argument("-O", "--other", action="store", default=None,
+                        help="Alternative dataset (used for some modes)")
     args = parser.parse_args()
 
     data = cgo13.LabelledData.from_csv(smith.assert_exists(args.input),
                                        group_by=args.group,
                                        filter_by=args.filter)
 
-    target = args.type
-    if args.type == "features":
-        plot_features(data)
-    elif args.type == "eigens":
-        plot_eigenvectors(data)
-    elif args.type == "runtimes":
-        plot_runtimes(data)
-    elif args.type == "xval":
-        results = cgo13.classification(data, group_by=args.group)
-        groups = sorted(set(data["Group"]))
-
-        def shortlabels(groups):
-            return [re.sub("-.+$", "", x) for x in groups]
-
-        sns.heatmap(results, annot=True, fmt=".2f", linewidths=.5,
-                    xticklabels=shortlabels(groups),
-                    yticklabels=shortlabels(groups))
-    else:
-        print("fatal: Unknown plot type '{}'".format(args.type))
+    plot = types.get(args.type, None)
+    if plot is None:
+        print("fatal: Unknown plot type '{}'. Possible values: {{{}}}"
+              .format(args.type, ",".join(sorted(types.keys()))))
         sys.exit(1)
+
+    plot(data, args)
 
     if args.title:
         plt.subplots_adjust(top=0.95)
