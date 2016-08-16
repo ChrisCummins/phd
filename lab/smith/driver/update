@@ -13,11 +13,13 @@ main() {
     # Make kernels tarball.
     cd data/synthetic/
     local archive=$(date +"kernels-%y.%m.%d-%H.%M.tar.bz2")
-    tar -cf $archive kernels
+    tar -cjf $archive kernels
     cd ../../
 
     # Prune kernel files (optional).
-    ./prune-kernels data/synthetic/kernels
+    cd ../
+    ./prune-kernels driver/data/synthetic/kernels
+    cd driver
 
     # Make error files.
     ./mkerros intel data/synthetic/
