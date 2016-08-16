@@ -3,68 +3,105 @@
 # Create plots.
 #
 
+wait_for_jobs() {
+    for job in $(jobs -p); do
+        wait $job;
+    done
+}
+
 main() {
     local dir=data/img
+    local fmt=png
 
     rm -rfv $dir
     mkdir -pv $dir
 
     ########################## BENCHMARKS ##############################
+    local benchmarks=benchmarks/data
 
     # Benchmarks feature space
-    smith-plot features benchmarks/data/platform-b.csv \
-               --group class -o $dir/bench-features-class-B.pdf \
-               --title "Benchmarks results for Platform B" &
-    smith-plot features benchmarks/data/platform-b.csv \
-               --group suite -o $dir/bench-features-suite-B.pdf \
-               --title "Benchmarks results for Platform B" &
+    smith-plot features $benchmarks/platform-b.csv \
+               --group class -o $dir/bench-features-class-B.$fmt \
+               --title "Benchmarks results on Platform B" &
+    smith-plot features $benchmarks/platform-b.csv \
+               --group suite -o $dir/bench-features-suite-B.$fmt \
+               --title "Benchmarks results on Platform B" &
 
-    smith-plot features benchmarks/data/platform-a.csv \
-               --group class -o $dir/bench-features-class-A.pdf \
-               --title "Benchmarks results for Platform A" &
-    smith-plot features benchmarks/data/platform-a.csv \
-               --group suite -o $dir/bench-features-class-A.pdf \
-               --title "Benchmarks results for Platform A" &
+    smith-plot features $benchmarks/platform-a.csv \
+               --group class -o $dir/bench-features-class-A.$fmt \
+               --title "Benchmarks results on Platform A" &
+    smith-plot features $benchmarks/platform-a.csv \
+               --group suite -o $dir/bench-features-suite-A.$fmt \
+               --title "Benchmarks results on Platform A" &
 
-    smith-plot features benchmarks/data/training-combined.csv \
-               --group class -o $dir/bench-features-class-C.pdf \
+    smith-plot features $benchmarks/training-combined.csv \
+               --group class -o $dir/bench-features-class-C.$fmt \
                --title "Benchmarks results for both experimental platforms" &
-    smith-plot features benchmarks/data/training-combined.csv \
-               --group suite -o $dir/bench-features-class-C.pdf \
+    smith-plot features $benchmarks/training-combined.csv \
+               --group suite -o $dir/bench-features-suite-C.$fmt \
+               --title "Benchmarks results for both experimental platforms" &
+
+    # Benchmarks eigen space
+    smith-plot eigens $benchmarks/platform-b.csv \
+               --group class -o $dir/bench-eigens-class-B.$fmt \
+               --title "Benchmarks results on Platform B" &
+    smith-plot eigens $benchmarks/platform-b.csv \
+               --group suite -o $dir/bench-eigens-suite-B.$fmt \
+               --title "Benchmarks results on Platform B" &
+
+    smith-plot eigens $benchmarks/platform-a.csv \
+               --group class -o $dir/bench-eigens-class-A.$fmt \
+               --title "Benchmarks results on Platform A" &
+    smith-plot eigens $benchmarks/platform-a.csv \
+               --group suite -o $dir/bench-eigens-suite-A.$fmt \
+               --title "Benchmarks results on Platform A" &
+
+    smith-plot eigens $benchmarks/training-combined.csv \
+               --group class -o $dir/bench-eigens-class-C.$fmt \
+               --title "Benchmarks results for both experimental platforms" &
+    smith-plot eigens $benchmarks/training-combined.csv \
+               --group suite -o $dir/bench-eigens-suite-C.$fmt \
                --title "Benchmarks results for both experimental platforms" &
 
 
     # Cross-benchmark machine learning:
-    smith-plot xval benchmarks/data/platform-a.csv \
-               --group suite -o $dir/bench-xval-bench-A.pdf \
-               --title "Cross-benchmark autotuning for Platform B" &
+    smith-plot xval $benchmarks/platform-a.csv \
+               --group suite -o $dir/bench-xval-bench-A.$fmt \
+               --title "Cross-benchmark autotuning on Platform A" &
 
-    smith-plot xval benchmarks/data/platform-b.csv \
-               --group suite -o $dir/bench-xval-bench-B.pdf \
-               --title "Cross-benchmark autotuning for Platform B" &
+    smith-plot xval $benchmarks/platform-b.csv \
+               --group suite -o $dir/bench-xval-bench-B.$fmt \
+               --title "Cross-benchmark autotuning on Platform B" &
 
 
+    wait_for_jobs
     ######################### SYNTHETICS ##############################
+    local synthetic=driver/data/synthetic
 
     # Synthetic feature space
-    smith-plot features driver/data/synthetic/platform-b.csv \
-               --group class -o $dir/syn-features-class-B.pdf \
-               --title "Synthetic kernels for Platform B" &
+    smith-plot features $synthetic/platform-a.csv \
+               --group class \-o $dir/syn-features-class-A.$fmt \
+               --title "Synthetic kernels on Platform A" &
+    smith-plot features $synthetic/platform-b.csv \
+               --group class -o $dir/syn-features-class-B.$fmt \
+               --title "Synthetic kernels on Platform B" &
+    smith-plot features $synthetic/training-combined.csv \
+               --group class -o $dir/syn-features-class-C.$fmt \
+               --title "Synthetic kernels for both experimental platforms" &
 
-    smith-plot features driver/data/synthetic/platform-a.csv \
-               --group class \-o $dir/syn-features-class-A.pdf \
-               --title "Synthetic kernels for Platform A" &
-
-    smith-plot features driver/data/synthetic/training-combined.csv \
-               --group class -o $dir/syn-features-class-C.pdf \
+    # Synthetic eigen space
+    smith-plot eigens $synthetic/platform-a.csv \
+               --group class \-o $dir/syn-eigens-class-A.$fmt \
+               --title "Synthetic kernels on Platform A" &
+    smith-plot eigens $synthetic/platform-b.csv \
+               --group class -o $dir/syn-eigens-class-B.$fmt \
+               --title "Synthetic kernels on Platform B" &
+    smith-plot eigens $synthetic/training-combined.csv \
+               --group class -o $dir/syn-eigens-class-C.$fmt \
                --title "Synthetic kernels for both experimental platforms" &
 
 
-    for job in `jobs -p`
-    do
-        wait $job
-    done
-
+    wait_for_jobs
     if which xdg-open &>/dev/null ; then
         xdg-open $dir
     else
