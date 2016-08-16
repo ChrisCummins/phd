@@ -9,12 +9,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from collections import defaultdict
 import numpy as np
 import os
+import pandas as pd
 import re
 import sys
 
+from collections import defaultdict
 from io import StringIO
 from sklearn import cross_validation
 from sklearn.ensemble import RandomForestClassifier
@@ -28,6 +29,95 @@ import smith
 
 
 class BadInputException(smith.SmithException): pass
+
+
+def ingroup(getgroup, d, group):
+    return getgroup(d) == group
+
+
+def getsuite(d):
+    return re.match(r"^[a-zA-Z-]+-[0-9\.]+", d["benchmark"]).group(0)
+
+
+def getprog(d):
+    return re.match(r"^[a-zA-Z-]+-[0-9\.]+-[^-]+-", d["benchmark"]).group(0)
+
+
+def getclass(d):
+    return d["oracle"]
+
+
+def suite_filter(d):
+    """
+    Groups filter.
+    """
+    return getsuite(d).startswith("rodinia") # or getsuite(d).startswith("parboil")
+
+
+class DataFilter(object):
+    @staticmethod
+    def from_str(string):
+        pass
+
+
+class GetGroup(object):
+    @staticmethod
+    def from_str(string):
+        pass
+
+
+def _eigenvectors(data):
+    F1 = data["F1_norm"]
+    F2 = data["F2_norm"]
+    F3 = data["F3_norm"]
+    F4 = data["F4_norm"]
+
+    # Eigenvectors: (hardcoded values as returned by Weka)
+    V1 = - .1881 * F1 + .6796 * F2 - .2141 * F3 - .6760 * F4
+    V2 = - .7282 * F1 - .0004 * F2 + .6852 * F3 + .0149 * F4
+    V3 = - .6590 * F1 - .1867 * F2 - .6958 * F3 - .2161 * F4
+    V4 =   .0063 * F1 + .7095 * F2 + .0224 * F3 - .7044 * F4
+
+    return (V1, V2, V3, V4)
+
+
+def normalize(array):
+    factor = np.amax(array)
+    return np.copy(array) / factor
+
+
+class LabelledData(object):
+    @staticmethod
+    def from_csv(path, group_by=None, filter_by=None):
+        datafilter = {
+            "suite": suite_filter
+        }.get(filter_by, None)
+
+        getgroup = {
+            "class": getclass,
+            "suite": getsuite,
+            "prog": getprog
+        }.get(group_by, lambda x: "None")
+
+        data = pd.read_csv(smith.assert_exists(path))
+
+        if datafilter:
+            # TODO: data filter
+            pass
+
+        # Add group column.
+        data["Group"] = [getgroup(d) for d in data.to_dict(orient='records')]
+
+        # Add normalized feature columns.
+        data["F1_norm"] = normalize(data["F1:transfer/(comp+mem)"])
+        data["F2_norm"] = normalize(data["F2:coalesced/mem"])
+        data["F3_norm"] = normalize(data["F3:(localmem/mem)*avgws"])
+        data["F4_norm"] = normalize(data["F4:comp/mem"])
+
+        # Add eigenvectors.
+        data["E1"], data["E2"], data["E3"], data["E4"] = _eigenvectors(data)
+
+        return data
 
 
 # Feature extractors:
