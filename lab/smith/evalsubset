@@ -120,10 +120,14 @@ def eval_random_subsets(training, test):
 
 
 def eval_nn(training, test):
-    mindists = cgo13.min_features_distances(test, test)
-    print(len(mindists))
-    # for t in test.to_dict(orient="record"):
-        # pass
+    # Get subset of training on:
+    neighbours = cgo13.nearest_neighbours(test, training)
+    indices = list(set([r[1] for r in neighbours]))
+    subset = training.ix[indices]
+
+    res = cgo13.classification(subset, test)
+    subset.to_csv("nn.csv")
+    print(res)
 
 
 def main():
