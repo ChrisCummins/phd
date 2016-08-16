@@ -79,6 +79,8 @@ def main():
                         help='group results by {none,class,suite,prog}')
     parser.add_argument("--filter", action="store", default="none",
                         help="filter data by {none,suite}")
+    parser.add_argument("-t", "--title", action="store", default=None,
+                        help="Set plot title")
     parser.add_argument("-o", "--output", action="store", default=None,
                         help="Save plot to location")
     args = parser.parse_args()
@@ -98,7 +100,11 @@ def main():
         print("fatal: Unknown plot type '{}'".format(args.type))
         sys.exit(1)
 
-    viz.finalise(args.output)
+    if args.title:
+        plt.subplots_adjust(top=0.95)
+        plt.gcf().suptitle(args.title)
+
+    viz.finalise(args.output, tight=False)
 
 
 if __name__ == '__main__':

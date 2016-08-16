@@ -295,12 +295,12 @@ def run_fold(prefix, clf, data, train_index, test_index,
 
 
 def run_test(prefix, clf, train, test, features=cgo13_features):
-    X_train = np.array([features(d) for d in train])
-    y_train = np.array([getlabels(d) for d in train])
+    X_train = features(train)
+    y_train = getlabels(train)
 
     clf.fit(X_train, y_train)
-    X_test = np.array([features(d) for d in test])
-    y_test = np.array([getlabels(d) for d in test])
+    X_test = features(test)
+    y_test = getlabels(test)
 
     predicted = clf.predict(X_test)
 
@@ -336,7 +336,7 @@ def classification(train, test=None, with_raw_features=False,
         clf = DecisionTreeClassifier(
             criterion="entropy", splitter="best", random_state=seed)
 
-    if test:
+    if test is not None:
         return run_test("DecisionTree", clf, train, test, features=getfeatures)
     elif group_by:
         # Cross-validation over some grouping
