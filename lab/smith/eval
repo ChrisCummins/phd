@@ -120,7 +120,7 @@ main() {
     smith-plot ci $synthetic/amd.csv -u -O \
                $synthetic/nvidia.csv $synthetic/intel.csv \
                --title "Runtime vs 95\% CI for synthetic benchmarks" \
-               -o $dir/syn-ci-AMD.$fmt
+               -o $dir/syn-ci.$fmt
 
     wait_for_jobs
     if which xdg-open &>/dev/null ; then
