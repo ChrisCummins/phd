@@ -45,9 +45,17 @@ def main():
             print("error: kernel '{}' not found".format(basename),
                   file=sys.stderr)
 
+    kernels = []
     for index in kernel_indices:
         with open(kernel_paths[index]) as infile:
-            print("/*", kernel_paths[index], "*/\n", infile.read())
+            kernels.append(infile.read().strip())
+
+    # Create an ordered list of benchmarks, by descending line count.
+    ordered = sorted([(kernel_paths[i], k) for k,i in zip(kernels, kernel_indices)],
+                     key=lambda x: len(x[1].split("\n")), reverse=True)
+
+    for path, kernel in ordered:
+        print("/* ", path, " */\n", kernel, "\n\n", sep="")
 
 
 if __name__ == '__main__':
