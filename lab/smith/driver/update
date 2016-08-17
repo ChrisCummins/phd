@@ -36,5 +36,11 @@ main() {
                  data/synthetic/intel.csv \
                  data/synthetic/nvidia.csv \
                  > data/synthetic/platform-b.csv
+
+    cd ../
+    ./merge-training-data driver/data/synthetic/platform-a.csv \
+                          driver/data/synthetic/platform-b.csv \
+                          > driver/data/synthetic/training-combined.csv
+    cd driver
 }
 main $@
