@@ -4,6 +4,12 @@
 #
 set -eux
 
+wait_for_jobs() {
+    for job in $(jobs -p); do
+        wait $job;
+    done
+}
+
 main() {
     # Make static kernel features.
     cd data/synthetic/kernels
@@ -26,7 +32,7 @@ main() {
     ./mkerros amd data/synthetic/
     ./mkerros nvidia data/synthetic/
 
-    # Make kernel files.
+    # Make training data files (one for each platform and combined).
     ./mktraining data/synthetic/kernels \
                  data/synthetic/intel.csv \
                  data/synthetic/amd.csv \
@@ -41,6 +47,21 @@ main() {
     ./merge-training-data driver/data/synthetic/platform-a.csv \
                           driver/data/synthetic/platform-b.csv \
                           > driver/data/synthetic/training-combined.csv
+    cd driver
+
+    # Extract kernels.
+    cd ../
+    ./extract-synthetic-kernels driver/data/synthetic/platform-a.csv \
+                                driver/data/synthetic/kernels \
+                                > driver/data/synthetic/platform-a.cl &
+    ./extract-synthetic-kernels driver/data/synthetic/platform-b.csv \
+                                driver/data/synthetic/kernels \
+                                > driver/data/synthetic/platform-b.cl &
+    ./extract-synthetic-kernels driver/data/synthetic/training-combined.csv \
+                                driver/data/synthetic/kernels \
+                                > driver/data/synthetic/training-combined.cl &
+    wait_for_jobs
+
     cd driver
 }
 main $@
