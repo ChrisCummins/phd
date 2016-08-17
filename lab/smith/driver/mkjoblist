@@ -45,7 +45,7 @@ def match_and_remove(entry, inlist):
 
 
 def mkjoblist(kernels_dir, results_path, errors_path):
-    kernels = fs.ls(kernels_dir)
+    kernels = [x for x in fs.ls(kernels_dir) if x.endswith(".cl")]
 
     results = read_file_dataset(results_path)
     errors = read_file_dataset(errors_path)
