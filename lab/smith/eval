@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# Create plots.
+# Create plots. Use FORMAT=pdf to control output format.
 #
+set -eu
 
 wait_for_jobs() {
     for job in $(jobs -p); do
@@ -11,7 +12,7 @@ wait_for_jobs() {
 
 main() {
     local dir=data/img
-    local fmt=png
+    local fmt=${FORMAT:-png}
 
     rm -rfv $dir
     mkdir -pv $dir
