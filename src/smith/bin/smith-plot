@@ -108,9 +108,12 @@ def plot_xval(data, args):
     def shortlabels(groups):
         return [re.sub("-.+$", "", x) for x in groups]
 
-    sns.heatmap(results, annot=True, fmt=".2f", linewidths=.5,
-                xticklabels=shortlabels(groups),
-                yticklabels=shortlabels(groups))
+    ax = sns.heatmap(results, annot=True, fmt=".2f", linewidths=.5,
+                     xticklabels=shortlabels(groups),
+                     yticklabels=shortlabels(groups), cbar=False,
+                     cmap="RdBu", center=.5, vmin=0, vmax=1)
+    plt.xlabel("Benchmarks for training")
+    plt.ylabel("Benchmarks for testing")
 
 
 def plot_neighbours(data, args):
