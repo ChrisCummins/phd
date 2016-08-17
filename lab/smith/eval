@@ -40,6 +40,32 @@ main() {
     smith-plot features $benchmarks/training-combined.csv \
                --group suite -o $dir/bench-features-suite-C.$fmt \
                --title "Benchmarks results for both experimental platforms" &
+    wait_for_jobs
+
+
+    # Benchmarks normalized feature space
+    smith-plot normfeatures $benchmarks/platform-b.csv \
+               --group class -o $dir/bench-normfeatures-class-B.$fmt \
+               --title "Benchmarks results on Platform B" &
+    smith-plot normfeatures $benchmarks/platform-b.csv \
+               --group suite -o $dir/bench-normfeatures-suite-B.$fmt \
+               --title "Benchmarks results on Platform B" &
+
+    smith-plot normfeatures $benchmarks/platform-a.csv \
+               --group class -o $dir/bench-normfeatures-class-A.$fmt \
+               --title "Benchmarks results on Platform A" &
+    smith-plot normfeatures $benchmarks/platform-a.csv \
+               --group suite -o $dir/bench-normfeatures-suite-A.$fmt \
+               --title "Benchmarks results on Platform A" &
+
+    smith-plot normfeatures $benchmarks/training-combined.csv \
+               --group class -o $dir/bench-normfeatures-class-C.$fmt \
+               --title "Benchmarks results for both experimental platforms" &
+    smith-plot normfeatures $benchmarks/training-combined.csv \
+               --group suite -o $dir/bench-normfeatures-suite-C.$fmt \
+               --title "Benchmarks results for both experimental platforms" &
+    wait_for_jobs
+
 
     # Benchmarks eigen space
     smith-plot eigens $benchmarks/platform-b.csv \
@@ -62,6 +88,7 @@ main() {
     smith-plot eigens $benchmarks/training-combined.csv \
                --group suite -o $dir/bench-eigens-suite-C.$fmt \
                --title "Benchmarks results for both experimental platforms" &
+    wait_for_jobs
 
 
     # Cross-benchmark machine learning:
@@ -88,9 +115,9 @@ main() {
     smith-plot en $benchmarks/platform-b.csv \
                -o $dir/bench-en-B.$fmt \
                --title "Distance to nearest neighbour of benchmark features on Platform B" &
-
-
     wait_for_jobs
+
+
     ######################### SYNTHETICS ##############################
     local synthetic=driver/data/synthetic
 
@@ -104,6 +131,21 @@ main() {
     smith-plot features $synthetic/training-combined.csv \
                --group class -o $dir/syn-features-class-C.$fmt \
                --title "Synthetic kernels for both experimental platforms" &
+    wait_for_jobs
+
+
+    # Synthetic normalised feature space
+    smith-plot normfeatures $synthetic/platform-a.csv \
+               --group class \-o $dir/syn-normfeatures-class-A.$fmt \
+               --title "Synthetic kernels on Platform A" &
+    smith-plot normfeatures $synthetic/platform-b.csv \
+               --group class -o $dir/syn-normfeatures-class-B.$fmt \
+               --title "Synthetic kernels on Platform B" &
+    smith-plot normfeatures $synthetic/training-combined.csv \
+               --group class -o $dir/syn-normfeatures-class-C.$fmt \
+               --title "Synthetic kernels for both experimental platforms" &
+    wait_for_jobs
+
 
     # Synthetic eigen space
     smith-plot eigens $synthetic/platform-a.csv \
@@ -121,8 +163,9 @@ main() {
                $synthetic/nvidia.csv $synthetic/intel.csv \
                --title "Runtime vs 95\% CI for synthetic benchmarks" \
                -o $dir/syn-ci.$fmt
-
     wait_for_jobs
+
+
     if which xdg-open &>/dev/null ; then
         xdg-open $dir
     else

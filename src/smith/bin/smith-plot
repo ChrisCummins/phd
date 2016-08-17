@@ -53,15 +53,32 @@ def plot_eigenvectors(data, args):
         sns.pairplot(s)
 
 
-def plot_features(data, args):
+def plot_norm_features(data, args):
     if len(set(data["Group"])) > 1:
         s = pd.concat([
             data["F1_norm"], data["F2_norm"], data["F3_norm"], data["F4_norm"],
-            data["Group"]], axis=1, keys=["F1", "F2", "F3", "F4", "Group"])
+            data["Group"]], axis=1, keys=[
+                "F1 (norm)", "F2 (norm)", "F3 (norm)", "F4 (norm)", "Group"])
         sns.pairplot(s, hue="Group")
     else:
         s = pd.concat([
             data["F1_norm"], data["F2_norm"], data["F3_norm"], data["F4_norm"]],
+                      axis=1, keys=[
+                          "F1 (norm)", "F2 (norm)", "F3 (norm)", "F4 (norm)"])
+        sns.pairplot(s)
+
+
+def plot_features(data, args):
+    if len(set(data["Group"])) > 1:
+        s = pd.concat([
+            data["F1:transfer/(comp+mem)"], data["F2:coalesced/mem"],
+            data["F3:(localmem/mem)*avgws"], data["F4:comp/mem"],
+            data["Group"]], axis=1, keys=["F1", "F2", "F3", "F4", "Group"])
+        sns.pairplot(s, hue="Group")
+    else:
+        s = pd.concat([
+            data["F1:transfer/(comp+mem)"], data["F2:coalesced/mem"],
+            data["F3:(localmem/mem)*avgws"], data["F4:comp/mem"]],
                       axis=1, keys=["F1", "F2", "F3", "F4"])
         sns.pairplot(s)
 
@@ -136,7 +153,9 @@ def main():
         "eigens": plot_eigenvectors,
         "en": plot_eigen_neighbours,
         "features": plot_features,
-        "features": plot_features,
+        "normfeats": plot_norm_features,
+        "featnorms": plot_norm_features,
+        "normfeatures": plot_norm_features,
         "neighbours": plot_neighbours,
         "ci": plot_noise,
         "nn": plot_neighbours,
