@@ -84,7 +84,7 @@ def plot_features(data, args):
 
 
 def plot_runtimes(data, args):
-    x = data["runtime"][data["runtime"] < 1]
+    x = data["runtime"]
     sns.distplot(x, kde=False)
 
 
