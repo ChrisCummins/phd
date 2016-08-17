@@ -67,8 +67,20 @@ def plot_features(data, args):
 
 
 def plot_runtimes(data, args):
-    # TODO:
-    pass
+    x = data["runtime"][data["runtime"] < 1]
+    sns.distplot(x, kde=False)
+
+
+def plot_noise(data, args):
+    targets = [data] + [cgo13.UnLabelledData.from_csv(x) for x in args.other]
+
+    cp = sns.color_palette()
+    for d,c in zip(targets, cp):
+        x = d["runtime"]
+        y = d["ci"]
+        plt.scatter(x, y, color=c)
+    plt.xlim(0,)
+    plt.ylim(0,)
 
 
 def plot_xval(data, args):
@@ -84,7 +96,7 @@ def plot_xval(data, args):
 
 
 def plot_neighbours(data, args):
-    other = cgo13.LabelledData.from_csv(args.other) if args.other else data
+    other = cgo13.LabelledData.from_csv(args.other[0]) if args.other else data
 
     if "use_eigens" in args and args.use_eigens:
         results = cgo13.nearest_neighbours(data, other,
@@ -126,7 +138,10 @@ def main():
         "features": plot_features,
         "features": plot_features,
         "neighbours": plot_neighbours,
+        "ci": plot_noise,
         "nn": plot_neighbours,
+        "run": plot_runtimes,
+        "runtime": plot_runtimes,
         "runtimes": plot_runtimes,
         "xval": plot_xval,
     }
@@ -143,19 +158,25 @@ def main():
                         help="Set plot title")
     parser.add_argument("-o", "--output", action="store", default=None,
                         help="Save plot to location")
-    parser.add_argument("-O", "--other", action="store", default=None,
+    parser.add_argument("-u", "--unlabelled", action="store_true",
+                        help="If true, data is unlabelled")
+    parser.add_argument("-O", "--other", nargs="+", action="store",
+                        default=[],
                         help="Alternative dataset (used for some modes)")
     args = parser.parse_args()
-
-    data = cgo13.LabelledData.from_csv(smith.assert_exists(args.input),
-                                       group_by=args.group,
-                                       filter_by=args.filter)
 
     plot = types.get(args.type, None)
     if plot is None:
         print("fatal: Unknown plot type '{}'. Possible values: {{{}}}"
               .format(args.type, ",".join(sorted(types.keys()))))
         sys.exit(1)
+
+    if args.unlabelled:
+        data = cgo13.UnLabelledData.from_csv(smith.assert_exists(args.input))
+    else:
+        data = cgo13.LabelledData.from_csv(smith.assert_exists(args.input),
+                                           group_by=args.group,
+                                           filter_by=args.filter)
 
     plot(data, args)
 

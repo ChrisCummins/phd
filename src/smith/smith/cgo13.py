@@ -109,14 +109,26 @@ class LabelledData(object):
         # Add group column.
         data["Group"] = [getgroup(d) for d in data.to_dict(orient='records')]
 
-        # Add normalized feature columns.
-        data["F1_norm"] = normalize(data["F1:transfer/(comp+mem)"])
-        data["F2_norm"] = normalize(data["F2:coalesced/mem"])
-        data["F3_norm"] = normalize(data["F3:(localmem/mem)*avgws"])
-        data["F4_norm"] = normalize(data["F4:comp/mem"])
+        # If data is labelled.
+        if "F1:transfer/(comp+mem)" in data:
+            # Add normalized feature columns.
+            data["F1_norm"] = normalize(data["F1:transfer/(comp+mem)"])
+            data["F2_norm"] = normalize(data["F2:coalesced/mem"])
+            data["F3_norm"] = normalize(data["F3:(localmem/mem)*avgws"])
+            data["F4_norm"] = normalize(data["F4:comp/mem"])
 
-        # Add eigenvectors.
-        data["E1"], data["E2"], data["E3"], data["E4"] = _eigenvectors(data)
+            # Add eigenvectors.
+            data["E1"], data["E2"], data["E3"], data["E4"] = _eigenvectors(data)
+
+        return data
+
+
+class UnLabelledData(object):
+    @staticmethod
+    def from_csv(path):
+        data = pd.read_csv(smith.assert_exists(path),
+                           names=["benchmark", "dataset", "kernel",
+                                  "wgsize", "transfer", "runtime", "ci"])
 
         return data
 
