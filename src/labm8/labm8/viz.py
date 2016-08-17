@@ -46,7 +46,7 @@ def finalise(output=None, figsize=None, tight=True, **kwargs):
 
     # Set figure size.
     if figsize is not None:
-        plt.gcf().set_size_inches(*figsize, dpi=300)
+        plt.gcf().set_size_inches(*figsize)
 
     # Set plot layout.
     if tight:
