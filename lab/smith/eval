@@ -110,23 +110,34 @@ main() {
     wait_for_jobs
 
 
+    ########################## BENCHMARKS ML ##############################
+
     # Cross-benchmark machine learning:
     smith-plot xval $benchmarks/platform-a.csv \
                --group suite -o $dir/bench-xval-bench-A.$fmt \
-               --title "Cross-benchmark autotuning on Platform A" &
+               --title "Cross-benchmark suite autotuning on Platform A" &
 
     smith-plot xval $benchmarks/platform-b.csv \
                --group suite -o $dir/bench-xval-bench-B.$fmt \
-               --title "Cross-benchmark autotuning on Platform B" &
+               --title "Cross-benchmark suite autotuning on Platform B" &
 
-    # Leave-one-out benchmark machine learning:
+    # Leave-one-out suite machine learning:
     smith-plot l1o $benchmarks/platform-a.csv \
                --group suite -o $dir/bench-l1o-bench-A.$fmt \
-               --title "Cross-benchmark autotuning on Platform A" &
+               --title "Leave-one-out benchmark suite autotuning on Platform A" &
 
     smith-plot l1o $benchmarks/platform-b.csv \
                --group suite -o $dir/bench-l1o-bench-B.$fmt \
-               --title "Cross-benchmark autotuning on Platform B" &
+               --title "Leave-one-out benchmark suite autotuning on Platform B" &
+
+    # Leave-one-out benchmark machine learning
+    smith-plot l1o_prog $benchmarks/platform-a.csv \
+               --group benchmark -W 10 -H 8 -o $dir/bench-l10_prog-bench-A.$fmt \
+               --title "Leave-one-out program autotuning on Platform A" &
+
+    smith-plot l1o_prog $benchmarks/platform-b.csv \
+               --group benchmark -W 10 -H 8 -o $dir/bench-l10_prog-bench-B.$fmt \
+               --title "Leave-one-out program autotuning on Platform B" &
     wait_for_jobs
 
 

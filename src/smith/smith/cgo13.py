@@ -41,6 +41,10 @@ def getsuite(d):
     return re.match(r"^[a-zA-Z-]+-[0-9\.]+", d["benchmark"]).group(0)
 
 
+def getbenchmark(d):
+    return re.sub(r"-[^-]+$", "", d["benchmark"])
+
+
 def getprog(d):
     return re.match(r"^[a-zA-Z-]+-[0-9\.]+-[^-]+-", d["benchmark"]).group(0)
 
@@ -98,7 +102,8 @@ class LabelledData(object):
         getgroup = {
             "class": getclass,
             "suite": getsuite,
-            "prog": getprog
+            "prog": getprog,
+            "benchmark": getbenchmark,
         }.get(group_by, lambda x: "None")
 
         data = pd.read_csv(smith.assert_exists(path))
@@ -256,7 +261,7 @@ class Metrics(object):
         try:
             return self._oracle
         except AttributeError:
-            self._oracle = self.speedup / labmath.geomean(self.oracles)
+            self._oracle = self.speedup / labmath.geomean([float(x) for x in self.oracles])
             return self._oracle
 
     @property
@@ -433,7 +438,8 @@ def classification(train, test=None, with_raw_features=False,
     elif group_by:
         # Cross-validation over some grouping
         getgroup = {
-            "suite": getsuite
+            "suite": getsuite,
+            "benchmark": getbenchmark,
         }.get(group_by, None)
         if group_by and not getgroup:
             raise(smith.SmithException("Unkown group type '{}'"
