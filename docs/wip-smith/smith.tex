@@ -179,8 +179,10 @@ complex,imaginary},%
 % Provide bold font face in maths.
 \usepackage{bm}
 
-\usepackage{subcaption}
-\expandafter\def\csname ver@subfig.sty\endcsname{}
+% Use either 'subfig' or 'subcaption', NOT BOTH!
+\usepackage{subfig}
+% \usepackage{subcaption}
+% \expandafter\def\csname ver@subfig.sty\endcsname{}
 
 % Define an 'myalignat' command which behave as 'alignat' without the
 % vertical top and bottom padding. See:
@@ -814,6 +816,23 @@ Leave-one-out cross validation.
 
 Median num samples per kernel. Ratio 95\% CI / mean.
 
+\subsection{Comparison with state-of-the-art}
+
+Autotuner can't learn across benchmark
+suite. Table~\ref{tab:bench-xval-bench}.
+
+\begin{table}%[t]
+  \centering
+  \subfloat[][Platform A]{%
+    \includegraphics[width=\columnwidth]{img/bench-xval-bench-A}%
+    \label{tab:bench-xval-bench-a}}\\
+  \subfloat[][Platform B]{%
+    \includegraphics[width=\columnwidth]{img/bench-xval-bench-B}%
+    \label{tab:bench-xval-bench-b}}
+  \caption{%
+    Cross-benchmark autotuning results.}
+\label{tab:bench-xval-bench}
+\end{table}
 
 \subsection{Generated Compute Kernels}\label{subsec:}
 
