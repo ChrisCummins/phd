@@ -22,6 +22,7 @@ from sklearn import cross_validation
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.tree import DecisionTreeClassifier
+from sklearn import tree
 
 import labm8
 from labm8 import math as labmath
@@ -347,6 +348,26 @@ def pairwise_groups_indices(data, getgroup):
             pairs.append((li, ri))
     return groupnames, pairs
 
+def l1o_groups_indices(data, getgroup):
+    """
+    """
+    groups = getgroups(data, getgroup)
+
+    group_indices = defaultdict(list)
+    for i,d in enumerate(data.to_dict(orient="records")):
+        group_indices[getgroup(d)].append(i)
+
+    groupnames, pairs = [], []
+    for j in range(len(groups)):
+        l = groups[j]
+        r = []
+        groupnames.append((l, ", ".join([x for x in groups if x != l])))
+        pairs.append(([item for sublist in
+                       [group_indices[x] for x in groups if x != l]
+                       for item in sublist],
+                      group_indices[l]))
+    return groupnames, pairs
+
 
 def run_fold(prefix, clf, data, train_index, test_index,
              features=cgo13_features):
@@ -393,7 +414,7 @@ class ZeroR(object):
 
 def classification(train, test=None, with_raw_features=False,
                    group_by=None, samegroup_xval=False,
-                   zeror=False, **kwargs):
+                   zeror=False, l1o=False, **kwargs):
     if with_raw_features:
         getfeatures = cgo13_with_raw_features
     else:
@@ -418,13 +439,19 @@ def classification(train, test=None, with_raw_features=False,
             raise(smith.SmithException("Unkown group type '{}'"
                                        .format(group_by)))
 
-        groupnames, folds = pairwise_groups_indices(train, getgroup)
-        groups = getgroups(train, getgroup)
-        results = np.zeros((len(groups), len(groups)))
+        groups = sorted(getgroups(train, getgroup))
+
+        if l1o:
+            groupnames, folds = l1o_groups_indices(train, getgroup)
+            results = np.zeros(len(groups))
+        else:
+            groupnames, folds = pairwise_groups_indices(train, getgroup)
+            results = np.zeros((len(groups), len(groups)))
 
         for gpname, fold in zip(groupnames, folds):
             train_group, test_group = gpname
             train_index, test_index = fold
+            # print(len(train_index), len(test_index))
 
             # If samegroup_xval option is true, then cross-validate on
             # training data.
@@ -437,7 +464,11 @@ def classification(train, test=None, with_raw_features=False,
                 metrics = run_fold("DecisionTree", clf, train,
                                    train_index, test_index,
                                    features=getfeatures)
-            results[groups.index(train_group), groups.index(test_group)] = metrics.oracle
+            # print(metrics)
+            if l1o:
+                results[groups.index(train_group)] = metrics.oracle
+            else:
+                results[groups.index(train_group), groups.index(test_group)] = metrics.oracle
 
         return results
     else:
@@ -452,5 +483,5 @@ def classification(train, test=None, with_raw_features=False,
             nfolds = int(nfolds)
 
         folds = cross_validation.KFold(len(train), n_folds=nfolds,
-                                       random_state=seed)
+                                       shuffle=True, random_state=seed)
         return run_xval("DecisionTree", clf, train, folds, features=getfeatures)

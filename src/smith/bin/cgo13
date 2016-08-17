@@ -9,8 +9,10 @@ import os
 import sys
 
 from argparse import ArgumentParser
+from sklearn import tree
 
 import labm8
+from labm8 import fs
 
 import smith
 from smith import cgo13
@@ -50,6 +52,15 @@ def main():
     else:
         print(m.header)
         print(m)
+        try:
+            outfile = fs.path("tree.dot")
+            tree.export_graphviz(m.model, max_depth=5, label="none",
+                                 out_file=outfile,
+                                 class_names=["CPU", "GPU"],
+                                 feature_names=["F1", "F2", "F3", "F4"])
+            print("Printed model to '{}'".format(outfile), file=sys.stderr)
+        except AttributeError:
+            pass
 
     # except Exception as e:
     #     print("fatal:", e, file=sys.stderr)

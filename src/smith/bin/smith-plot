@@ -116,6 +116,18 @@ def plot_xval(data, args):
     plt.ylabel("Benchmarks for testing")
 
 
+def plot_l1o(data, args):
+    results = cgo13.classification(data, group_by=args.group, l1o=True).T
+    groups = sorted(set(data["Group"]))
+
+    def shortlabels(groups):
+        return [re.sub("-.+$", "", x) for x in groups]
+
+    sns.barplot(x=shortlabels(groups), y=results)
+    plt.xlabel("Benchmark suite")
+    plt.ylim(0, 1)
+
+
 def plot_neighbours(data, args):
     other = cgo13.LabelledData.from_csv(args.other[0]) if args.other else data
 
@@ -167,6 +179,7 @@ def main():
         "runtime": plot_runtimes,
         "runtimes": plot_runtimes,
         "xval": plot_xval,
+        "l1o": plot_l1o,
     }
 
     parser = ArgumentParser()
