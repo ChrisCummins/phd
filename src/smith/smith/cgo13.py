@@ -197,7 +197,7 @@ def cgo13_features(d):
 
 
 def cgo13_with_raw_features(d):
-    return [
+    return np.array([
         d["comp"],
         d["rational"],
         d["mem"],
@@ -210,11 +210,11 @@ def cgo13_with_raw_features(d):
         d["F2:coalesced/mem"],
         d["F3:(localmem/mem)*avgws"],
         d["F4:comp/mem"]
-    ]
+    ]).T
 
 
 def raw_features(d):
-    return [
+    return np.array([
         d["comp"],
         d["rational"],
         d["mem"],
@@ -223,7 +223,7 @@ def raw_features(d):
         d["atomic"],
         d["transfer"],
         d["wgsize"]
-    ]
+    ]).T
 
 
 def getlabels(d):
@@ -387,7 +387,8 @@ class ZeroR(object):
 
 
 def classification(train, test=None, with_raw_features=False,
-                   group_by=None, zeror=False, **kwargs):
+                   group_by=None, samegroup_xval=False,
+                   zeror=False, **kwargs):
     if with_raw_features:
         getfeatures = cgo13_with_raw_features
     else:
@@ -420,14 +421,31 @@ def classification(train, test=None, with_raw_features=False,
             train_group, test_group = gpname
             train_index, test_index = fold
 
-            metrics = run_fold("DecisionTree", clf, train,
-                               train_index, test_index,
-                               features=getfeatures)
+            # If samegroup_xval option is true, then cross-validate on
+            # training data.
+            if samegroup_xval and train_group == test_group:
+                train2 = train.ix[train_index]
+                metrics = classification(
+                    train2, with_raw_features=with_raw_features,
+                    zeror=zeror, **kwargs)
+            else:
+                metrics = run_fold("DecisionTree", clf, train,
+                                   train_index, test_index,
+                                   features=getfeatures)
             results[groups.index(train_group), groups.index(test_group)] = metrics.oracle
 
         return results
     else:
         # Plain old cross-validation.
-        folds = cross_validation.KFold(len(train), n_folds=10,
+
+        # Get the number of folds to use. If "nfold=n", then perform
+        # leave-one-out cross validation.
+        nfolds = kwargs.get("nfolds", 10)
+        if nfolds == "n":
+            nfolds = len(train)
+        else:
+            nfolds = int(nfolds)
+
+        folds = cross_validation.KFold(len(train), n_folds=nfolds,
                                        random_state=seed)
         return run_xval("DecisionTree", clf, train, folds, features=getfeatures)

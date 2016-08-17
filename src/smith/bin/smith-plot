@@ -101,7 +101,8 @@ def plot_noise(data, args):
 
 
 def plot_xval(data, args):
-    results = cgo13.classification(data, group_by=args.group)
+    results = cgo13.classification(data, group_by=args.group,
+                                   samegroup_xval=True, nfolds="n").T
     groups = sorted(set(data["Group"]))
 
     def shortlabels(groups):
