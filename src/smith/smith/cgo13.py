@@ -231,10 +231,11 @@ def getlabels(d):
 
 
 class Metrics(object):
-    def __init__(self, prefix, data, predicted):
+    def __init__(self, prefix, data, predicted, model=None):
         self._prefix = prefix
         self._data = data
         self._predicted = predicted
+        self._model = model
 
     @property
     def prefix(self): return self._prefix
@@ -299,6 +300,10 @@ class Metrics(object):
             self._groups = sorted(set(self.data["Group"]))
             return self._groups
 
+    @property
+    def model(self):
+        return self._model
+
     header = ", ".join([
         "classifier",
         "accuracy",
@@ -356,7 +361,7 @@ def run_fold(prefix, clf, data, train_index, test_index,
 
     predicted_data = data.ix[test_index]
 
-    return Metrics(prefix, predicted_data, predicted)
+    return Metrics(prefix, predicted_data, predicted, clf)
 
 
 def run_test(prefix, clf, train, test, features=cgo13_features):
@@ -369,7 +374,7 @@ def run_test(prefix, clf, train, test, features=cgo13_features):
 
     predicted = clf.predict(X_test)
 
-    return Metrics(prefix, test, predicted)
+    return Metrics(prefix, test, predicted, clf)
 
 
 def run_xval(prefix, clf, data, cv, features=cgo13_features, seed=1):
@@ -378,7 +383,7 @@ def run_xval(prefix, clf, data, cv, features=cgo13_features, seed=1):
 
     predicted = cross_validation.cross_val_predict(clf, X, y, cv=cv)
 
-    return Metrics("DecisionTree", data, predicted)
+    return Metrics(prefix, data, predicted, clf)
 
 
 class ZeroR(object):
