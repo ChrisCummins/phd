@@ -337,6 +337,7 @@ def mkdir(path, **kwargs):
     """
     if not isdir(path):
         os.makedirs(path, **kwargs)
+    return path
 
 
 def mkopen(p, *args, **kwargs):

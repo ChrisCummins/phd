@@ -23,6 +23,8 @@ from sklearn import cross_validation
 from sklearn import tree
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 
 import labm8
@@ -318,12 +320,15 @@ class Metrics(object):
         return self._model
 
     def export_model(self, out_basename):
-        outfile = fs.path(str(out_basename) + ".dot")
-        tree.export_graphviz(self.model, out_file=outfile, # label="none",
-                             max_depth=5, filled=True, rounded=True,
-                             class_names=["CPU", "GPU"],
-                             feature_names=["F1", "F2", "F3", "F4"])
-        print("export model to '{}'".format(outfile))
+        try:
+            outfile = fs.path(str(out_basename) + ".dot")
+            tree.export_graphviz(self.model, out_file=outfile, # label="none",
+                                 max_depth=5, filled=True, rounded=True,
+                                 class_names=["CPU", "GPU"],
+                                 feature_names=["F1", "F2", "F3", "F4"])
+            print("export model to '{}'".format(outfile))
+        except Exception:
+            pass
 
     header = ", ".join([
         "classifier",
@@ -427,14 +432,9 @@ def run_xval(prefix, clf, data, cv, features=cgo13_features, seed=1):
     return Metrics(prefix, data, predicted, clf)
 
 
-class ZeroR(object):
-    # TODO:
-    pass
-
-
-def classification(train, test=None, with_raw_features=False,
-                   group_by=None, samegroup_xval=False,
-                   zeror=False, l1o=False, **kwargs):
+def classification(train, classifier="DecisionTree", test=None,
+                   with_raw_features=False, group_by=None,
+                   samegroup_xval=False, l1o=False, **kwargs):
     if with_raw_features:
         getfeatures = cgo13_with_raw_features
     else:
@@ -442,27 +442,21 @@ def classification(train, test=None, with_raw_features=False,
 
     seed = kwargs.get("seed", 0)
 
-    if zeror:
-        clf = ZeroR()
-    else:
-        # from sklearn.naive_bayes import GaussianNB
-        # from sklearn.ensemble import VotingClassifier
-        # clf1 = sklearn.linear_model.LogisticRegression(random_state=1)
-        # clf2 = sklearn.ensemble.RandomForestClassifier(random_state=1)
-        # clf3 = GaussianNB()
-        # clf = VotingClassifier(
-        #     estimators=[('lr', clf1), ('rf', clf2), ('gnb', clf3)],
-        #     voting='hard')
-        clf = DecisionTreeClassifier(
-            criterion="entropy", splitter="best", random_state=seed#,
-            # max_depth=4,
-            # min_samples_split=5
-            # min_samples_leaf=3,
-            # max_leaf_nodes=50,
-        )
+    # Get classifier
+    classifiers = {
+        "DecisionTree": DecisionTreeClassifier(
+            random_state=seed, criterion="entropy", splitter="best"),
+        "NaiveBayes": GaussianNB(),
+        "NearestNeighbour": KNeighborsClassifier(n_neighbors=1),
+        "ZeroR": None,  # TODO:
+    }
+    clf = classifiers.get(classifier, None)
+    if clf is None:
+        raise Exception("unkown classifier '{}'. Possible values: {{{}}}"
+                        .format(classifier, ",".join(sorted(classifiers.keys()))))
 
     if test is not None:
-        return run_test("DecisionTree", clf, train, test, features=getfeatures)
+        return run_test(classifier, clf, train, test, features=getfeatures)
     elif group_by:
         # Cross-validation over some grouping
         getgroup = {
@@ -496,7 +490,7 @@ def classification(train, test=None, with_raw_features=False,
                     train2, with_raw_features=with_raw_features,
                     zeror=zeror, **kwargs)
             else:
-                metrics = run_fold("DecisionTree", clf, train,
+                metrics = run_fold(classifier, clf, train,
                                    train_index, test_index,
                                    features=getfeatures)
             # i += 1
@@ -520,4 +514,4 @@ def classification(train, test=None, with_raw_features=False,
 
         folds = cross_validation.KFold(len(train), n_folds=nfolds,
                                        shuffle=True, random_state=seed)
-        return run_xval("DecisionTree", clf, train, folds, features=getfeatures)
+        return run_xval(classifier, clf, train, folds, features=getfeatures)

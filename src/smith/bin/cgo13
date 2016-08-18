@@ -29,6 +29,9 @@ def main():
                         help='group results by {suite}')
     parser.add_argument("-n", "--nfolds", action="store", default="10",
                         help="number of folds to use for cross-validation")
+    parser.add_argument("-C", "--classifier", action="store",
+                        default="DecisionTree",
+                        help="classifier type")
     args = parser.parse_args()
 
     # try:
@@ -41,6 +44,7 @@ def main():
     else:
         test_data = None
     m = cgo13.classification(training_data, test=test_data,
+                             classifier=args.classifier,
                              with_raw_features=args.with_raw_features,
                              group_by=args.group, nfolds=args.nfolds)
 
