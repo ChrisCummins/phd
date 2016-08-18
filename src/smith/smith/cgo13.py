@@ -26,6 +26,7 @@ from sklearn import tree
 
 import labm8
 from labm8 import math as labmath
+from labm8 import fs
 
 import smith
 
@@ -314,6 +315,13 @@ class Metrics(object):
     @property
     def model(self):
         return self._model
+
+    def export_model(self, out_basename):
+        outfile = fs.path(out_basename + ".dot")
+        tree.export_graphviz(self.model, max_depth=5, label="none",
+                             out_file=outfile, class_names=["CPU", "GPU"],
+                             feature_names=["F1", "F2", "F3", "F4"])
+        print("export model to '{}'".format(outfile))
 
     header = ", ".join([
         "classifier",

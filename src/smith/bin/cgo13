@@ -55,12 +55,7 @@ def main():
         print(m.header)
         print(m)
         try:
-            outfile = fs.path("tree.dot")
-            tree.export_graphviz(m.model, max_depth=5, label="none",
-                                 out_file=outfile,
-                                 class_names=["CPU", "GPU"],
-                                 feature_names=["F1", "F2", "F3", "F4"])
-            print("Printed model to '{}'".format(outfile), file=sys.stderr)
+            m.export_model("tree")
         except AttributeError:
             pass
 
