@@ -395,8 +395,24 @@ def l1o_groups_indices(data, getgroup):
     return groupnames, pairs
 
 
-def run_fold(prefix, clf, data, train_index, test_index,
-             features=cgo13_features):
+def run_fold_indices(prefix, clf, data, train_index, test_index,
+                     features=cgo13_features):
+    X_train = features(data)[train_index]
+    y_train = getlabels(data)[train_index]
+
+    clf.fit(X_train, y_train)
+    X_test = features(data)[test_index]
+    y_test = getlabels(data)[test_index]
+
+    predicted = clf.predict(X_test)
+
+    predicted_data = data.ix[test_index]
+
+    return Metrics(prefix, predicted_data, predicted, clf)
+
+
+def run_fold_indices(prefix, clf, data, train_index, test_index,
+                     features=cgo13_features):
     X_train = features(data)[train_index]
     y_train = getlabels(data)[train_index]
 
@@ -480,10 +496,6 @@ def classification(train, classifier="DecisionTree",
             groupnames, folds = pairwise_groups_indices(train, getgroup)
             results = [[None] * len(groups) for x in range(len(groups))]
 
-        # If there's supplementary data, add it here.
-        if l1o and supplementary is not None:
-            train = train.append(supplementary).reset_index()
-
         i = 0
         for gpname, fold in zip(groupnames, folds):
             train_group, test_group = gpname
@@ -499,9 +511,29 @@ def classification(train, classifier="DecisionTree",
                     only_raw_features=only_raw_features,
                     classifier=classifier, **kwargs)
             else:
-                metrics = run_fold(classifier, clf, train,
-                                   train_index, test_index,
-                                   features=getfeatures)
+                if supplementary is not None:
+                    # If we have supplementary data, then copy data
+                    # and append training.
+                    train2 = train.ix[train_index]
+                    train2 = train2.append(supplementary)
+
+                    X_train = getfeatures(train2)
+                    y_train = getlabels(train2)
+
+                    clf.fit(X_train, y_train)
+
+                    X_test = getfeatures(train)[test_index]
+                    y_test = getlabels(train)[test_index]
+
+                    predicted = clf.predict(X_test)
+                    predicted_data = train.ix[test_index]
+
+                    metrics = Metrics(
+                        classifier, predicted_data, predicted, clf)
+                else:
+                    metrics = run_fold_indices(classifier, clf, train,
+                                               train_index, test_index,
+                                               features=getfeatures)
             # i += 1
             # metrics.export_model(i)
             if l1o:
