@@ -9,24 +9,25 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import math
 import numpy as np
 import os
 import pandas as pd
 import re
-import math
+import sklearn
 import sys
 
 from collections import defaultdict
 from io import StringIO
 from sklearn import cross_validation
+from sklearn import tree
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.tree import DecisionTreeClassifier
-from sklearn import tree
 
 import labm8
-from labm8 import math as labmath
 from labm8 import fs
+from labm8 import math as labmath
 
 import smith
 
@@ -317,9 +318,10 @@ class Metrics(object):
         return self._model
 
     def export_model(self, out_basename):
-        outfile = fs.path(out_basename + ".dot")
-        tree.export_graphviz(self.model, max_depth=5, label="none",
-                             out_file=outfile, class_names=["CPU", "GPU"],
+        outfile = fs.path(str(out_basename) + ".dot")
+        tree.export_graphviz(self.model, out_file=outfile, # label="none",
+                             max_depth=5, filled=True, rounded=True,
+                             class_names=["CPU", "GPU"],
                              feature_names=["F1", "F2", "F3", "F4"])
         print("export model to '{}'".format(outfile))
 
@@ -443,8 +445,21 @@ def classification(train, test=None, with_raw_features=False,
     if zeror:
         clf = ZeroR()
     else:
+        # from sklearn.naive_bayes import GaussianNB
+        # from sklearn.ensemble import VotingClassifier
+        # clf1 = sklearn.linear_model.LogisticRegression(random_state=1)
+        # clf2 = sklearn.ensemble.RandomForestClassifier(random_state=1)
+        # clf3 = GaussianNB()
+        # clf = VotingClassifier(
+        #     estimators=[('lr', clf1), ('rf', clf2), ('gnb', clf3)],
+        #     voting='hard')
         clf = DecisionTreeClassifier(
-            criterion="entropy", splitter="best", random_state=seed)
+            criterion="entropy", splitter="best", random_state=seed#,
+            # max_depth=4,
+            # min_samples_split=5
+            # min_samples_leaf=3,
+            # max_leaf_nodes=50,
+        )
 
     if test is not None:
         return run_test("DecisionTree", clf, train, test, features=getfeatures)
@@ -467,6 +482,7 @@ def classification(train, test=None, with_raw_features=False,
             groupnames, folds = pairwise_groups_indices(train, getgroup)
             results = [[None] * len(groups) for x in range(len(groups))]
 
+        i = 0
         for gpname, fold in zip(groupnames, folds):
             train_group, test_group = gpname
             train_index, test_index = fold
@@ -483,6 +499,8 @@ def classification(train, test=None, with_raw_features=False,
                 metrics = run_fold("DecisionTree", clf, train,
                                    train_index, test_index,
                                    features=getfeatures)
+            # i += 1
+            # metrics.export_model(i)
             if l1o:
                 results[groups.index(train_group)] = metrics
             else:

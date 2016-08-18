@@ -145,9 +145,6 @@ def plot_l1o_suites(data, args):
 
     groups = sorted(set(data["Group"]))
 
-    for i,group in enumerate(groups):
-        metrics[i].export_model(group)
-
     def shortlabels(groups):
         return [re.sub("-.+$", "", x) for x in groups]
 
