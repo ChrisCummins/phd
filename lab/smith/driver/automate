@@ -12,7 +12,10 @@ usage() {
 }
 
 timeout_means_restart() {
-    if [[ $HOSTNAME == "monza" ]]; then
+    local devtype=$1
+    local devname=$2
+
+    if [[ $devtype == "GPU" ]] && [[ $devname == "amd" ]] ; then
         return 0
     else
         return 1
@@ -26,11 +29,6 @@ main() {
         exit 1
     fi
 
-    if timeout_means_restart && [[ $UID -ne 0 ]]; then
-        echo "fatal: Must run as root" >&2
-        exit 1
-    fi
-
     local devtype=$1
     local devname=$2
     local benchmarks_dir=$3
@@ -38,6 +36,11 @@ main() {
     local kernels_dir=$benchmarks_dir/kernels
     local results_path=$benchmarks_dir/$devname.csv
     local errors_path=$benchmarks_dir/$devname-errors.csv
+
+    if timeout_means_restart $devtype $devname && [[ $UID -ne 0 ]]; then
+        echo "fatal: Must run as root" >&2
+        exit 1
+    fi
 
     if [ ! -d $benchmarks_dir ]; then
         echo "fatal: '$benchmarks_dir' not found!" >&2
@@ -84,7 +87,7 @@ main() {
         if [[ $ret == 137 ]]; then
             echo "$(basename $file),$dsize,E_TIMEOUT,-" >> $errors_path
 
-            if timeout_means_restart ; then
+            if timeout_means_restart $devtype $devname ; then
                 set +e
                 date +"%y-%m-%d %H:%M:%S, $HOSTNAME, SYSTEM RESTART" >> /var/log/cldrive.log
                 echo "TERMINATED A BAD PROCESS. Restarting now" >&2
