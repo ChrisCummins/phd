@@ -80,6 +80,80 @@ echo
 ) | mktable
 
 
+################### BENCHMARKS + SYNTHETICS ###########################
+echo
+(
+    cgo13 ~/phd/lab/smith/ml/data/a/benchmarks.csv --group suite \
+          --class NearestNeighbour --l1o | \
+        --supplementary ~/phd/lab/smith/ml/data/a/synthetics.csv \
+        sed "s/^/train(B + S), test(suite ⊆ B), cgo13 features, Platform A, /"
+    cgo13 ~/phd/lab/smith/ml/data/b/benchmarks.csv --group suite \
+          --class NearestNeighbour --l1o | \
+        --supplementary ~/phd/lab/smith/ml/data/b/synthetics.csv \
+        sed "s/^/train(B + S), test(suite ⊆ B), cgo13 features, Platform B, /"
+) | mktable
+
+echo
+(
+    cgo13 ~/phd/lab/smith/ml/data/a/benchmarks.csv --group benchmark \
+          --class NearestNeighbour --l1o | \
+        --supplementary ~/phd/lab/smith/ml/data/a/synthetics.csv \
+        sed "s/^/train(B + S), test(benchmark ⊆ B), cgo13 features, Platform A, /"
+    cgo13 ~/phd/lab/smith/ml/data/b/benchmarks.csv --group benchmark \
+          --class NearestNeighbour --l1o | \
+        --supplementary ~/phd/lab/smith/ml/data/b/synthetics.csv \
+        sed "s/^/train(B + S), test(benchmark ⊆ B), cgo13 features, Platform B, /"
+) | mktable
+
+echo
+(
+    cgo13 ~/phd/lab/smith/ml/data/a/benchmarks.csv --group suite \
+          --class NearestNeighbour --l1o --only-raw-features | \
+        --supplementary ~/phd/lab/smith/ml/data/a/synthetics.csv \
+        sed "s/^/train(B + S), test(suite ⊆ B), cgo13 features, Platform A, /"
+    cgo13 ~/phd/lab/smith/ml/data/b/benchmarks.csv --group suite \
+          --class NearestNeighbour --l1o --only-raw-features | \
+        --supplementary ~/phd/lab/smith/ml/data/b/synthetics.csv \
+        sed "s/^/train(B + S), test(suite ⊆ B), cgo13 features, Platform B, /"
+) | mktable
+
+echo
+(
+    cgo13 ~/phd/lab/smith/ml/data/a/benchmarks.csv --group benchmark \
+          --class NearestNeighbour --l1o --only-raw-features | \
+        --supplementary ~/phd/lab/smith/ml/data/a/synthetics.csv \
+        sed "s/^/train(B + S), test(benchmark ⊆ B), cgo13 features, Platform A, /"
+    cgo13 ~/phd/lab/smith/ml/data/b/benchmarks.csv --group benchmark \
+          --class NearestNeighbour --l1o --only-raw-features | \
+        --supplementary ~/phd/lab/smith/ml/data/b/synthetics.csv \
+        sed "s/^/train(B + S), test(benchmark ⊆ B), cgo13 features, Platform B, /"
+) | mktable
+
+echo
+(
+    cgo13 ~/phd/lab/smith/ml/data/a/benchmarks.csv --group suite \
+          --class NearestNeighbour --l1o --with-raw-features | \
+        --supplementary ~/phd/lab/smith/ml/data/a/synthetics.csv \
+        sed "s/^/train(B + S), test(suite ⊆ B), cgo13 features, Platform A, /"
+    cgo13 ~/phd/lab/smith/ml/data/b/benchmarks.csv --group suite \
+          --class NearestNeighbour --l1o --with-raw-features | \
+        --supplementary ~/phd/lab/smith/ml/data/b/synthetics.csv \
+        sed "s/^/train(B + S), test(suite ⊆ B), cgo13 features, Platform B, /"
+) | mktable
+
+echo
+(
+    cgo13 ~/phd/lab/smith/ml/data/a/benchmarks.csv --group benchmark \
+          --class NearestNeighbour --l1o --with-raw-features | \
+        --supplementary ~/phd/lab/smith/ml/data/a/synthetics.csv \
+        sed "s/^/train(B + S), test(benchmark ⊆ B), cgo13 features, Platform A, /"
+    cgo13 ~/phd/lab/smith/ml/data/b/benchmarks.csv --group benchmark \
+          --class NearestNeighbour --l1o --with-raw-features | \
+        --supplementary ~/phd/lab/smith/ml/data/b/synthetics.csv \
+        sed "s/^/train(B + S), test(benchmark ⊆ B), cgo13 features, Platform B, /"
+) | mktable
+
+
 ################### SYNTHETICS ONLY ###########################
 echo
 (
