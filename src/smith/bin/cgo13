@@ -25,6 +25,8 @@ def main():
                         help='path to training data CSV')
     parser.add_argument("--with-raw-features", action="store_true",
                         help="if true, use raw features as well as combined")
+    parser.add_argument("--only-raw-features", action="store_true",
+                        help="if true, use only raw features")
     parser.add_argument("-g", "--group", action="store", default=None,
                         help='group results by {suite}')
     parser.add_argument("-n", "--nfolds", action="store", default="10",
@@ -46,6 +48,7 @@ def main():
     m = cgo13.classification(training_data, test=test_data,
                              classifier=args.classifier,
                              with_raw_features=args.with_raw_features,
+                             only_raw_features=args.only_raw_features,
                              group_by=args.group, nfolds=args.nfolds)
 
     groups = sorted(set(training_data["Group"]))

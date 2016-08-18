@@ -433,10 +433,12 @@ def run_xval(prefix, clf, data, cv, features=cgo13_features, seed=1):
 
 
 def classification(train, classifier="DecisionTree", test=None,
-                   with_raw_features=False, group_by=None,
-                   samegroup_xval=False, l1o=False, **kwargs):
+                   with_raw_features=False, only_raw_features=False,
+                   group_by=None, samegroup_xval=False, l1o=False, **kwargs):
     if with_raw_features:
         getfeatures = cgo13_with_raw_features
+    elif only_raw_features:
+        getfeatures = raw_features
     else:
         getfeatures = cgo13_features
 
