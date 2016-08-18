@@ -22,7 +22,9 @@ def main():
     parser = ArgumentParser()
     parser.add_argument('input', help='path to training data CSV')
     parser.add_argument('-t', '--test', action="store", dest="test_data",
-                        help='path to training data CSV')
+                        help='path to testing data CSV')
+    parser.add_argument("-S", "--supplementary", action="store",
+                        help="path to supplementary training data CSV")
     parser.add_argument("--with-raw-features", action="store_true",
                         help="if true, use raw features as well as combined")
     parser.add_argument("--only-raw-features", action="store_true",
@@ -47,7 +49,15 @@ def main():
             smith.assert_exists(args.test_data))
     else:
         test_data = None
-    m = cgo13.classification(training_data, test=test_data,
+
+    if args.supplementary:
+        sup_data = cgo13.LabelledData.from_csv(
+            smith.assert_exists(args.supplementary))
+    else:
+        sup_data = None
+
+    m = cgo13.classification(training_data,
+                             test=test_data, supplementary=sup_data,
                              classifier=args.classifier, l1o=args.l1o,
                              with_raw_features=args.with_raw_features,
                              only_raw_features=args.only_raw_features,

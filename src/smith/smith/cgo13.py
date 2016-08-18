@@ -373,6 +373,7 @@ def pairwise_groups_indices(data, getgroup):
             pairs.append((li, ri))
     return groupnames, pairs
 
+
 def l1o_groups_indices(data, getgroup):
     """
     """
@@ -432,7 +433,8 @@ def run_xval(prefix, clf, data, cv, features=cgo13_features, seed=1):
     return Metrics(prefix, data, predicted, clf)
 
 
-def classification(train, classifier="DecisionTree", test=None,
+def classification(train, classifier="DecisionTree",
+                   test=None, supplementary=None,
                    with_raw_features=False, only_raw_features=False,
                    group_by=None, samegroup_xval=False, l1o=False, **kwargs):
     if with_raw_features:
@@ -477,6 +479,10 @@ def classification(train, classifier="DecisionTree", test=None,
         else:
             groupnames, folds = pairwise_groups_indices(train, getgroup)
             results = [[None] * len(groups) for x in range(len(groups))]
+
+        # If there's supplementary data, add it here.
+        if l1o and supplementary is not None:
+            train = train.append(supplementary).reset_index()
 
         i = 0
         for gpname, fold in zip(groupnames, folds):
