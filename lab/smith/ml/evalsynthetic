@@ -16,6 +16,7 @@ mktable() {
 }
 
 
+# cgo13 features
 echo "train(S); test(suite ⊆ B); cgo13 features"
 (
     for f in ~/phd/lab/smith/data/a/suite/*.csv; do
@@ -54,6 +55,7 @@ echo "train(S); test(benchmark ⊆ B); cgo13 features"
 ) | mktable
 
 
+# raw features
 echo
 echo "train(S); test(suite ⊆ B); raw features"
 (
@@ -97,6 +99,7 @@ echo "train(S); test(benchmark ⊆ B); raw features"
 ) | mktable
 
 
+# cgo13+features
 echo
 echo "train(S); test(suite ⊆ B); cgo13+raw features"
 (
