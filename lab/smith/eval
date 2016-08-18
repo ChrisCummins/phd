@@ -110,6 +110,26 @@ main() {
     wait_for_jobs
 
 
+    # Noise
+    # smith-plot ci $benchmarks/intel.csv -u \
+    #            --title "Runtime vs 95% CI for benchmarkss on Intel" \
+    #            -o $dir/bench-ci-intel.$fmt
+
+    # smith-plot ci $benchmarks/amd.csv -u \
+    #            --title "Runtime vs 95% CI for benchmarkss on AMD" \
+    #            -o $dir/bench-ci-amd.$fmt
+
+    # smith-plot ci $benchmarks/nvidia.csv -u \
+    #            --title "Runtime vs 95% CI for benchmarkss on NVIDIA" \
+    #            -o $dir/bench-ci-nvidia.$fmt
+
+    # smith-plot ci $benchmarks/intel.csv -u \
+    #            -O $benchmarks/amd.csv $benchmarks/nvidia.csv \
+    #            --title "Runtime vs 95% CI for benchmarkss" \
+    #            -o $dir/bench-ci.$fmt
+    # wait_for_jobs
+
+
     ########################## BENCHMARKS ML ##############################
 
     # Cross-benchmark machine learning:
@@ -182,11 +202,23 @@ main() {
                --title "Synthetic kernels for both experimental platforms" &
 
     # Noise
-    smith-plot ci $synthetic/amd.csv -u -O \
-               $synthetic/nvidia.csv $synthetic/intel.csv \
-               --title "Runtime vs 95\% CI for synthetic benchmarks" \
-               -o $dir/syn-ci.$fmt
-    wait_for_jobs
+    # smith-plot ci $synthetic/intel.csv -u \
+    #            --title "Runtime vs 95% CI for synthetics on Intel" \
+    #            -o $dir/syn-ci-intel.$fmt
+
+    # smith-plot ci $synthetic/amd.csv -u \
+    #            --title "Runtime vs 95% CI for synthetics on AMD" \
+    #            -o $dir/syn-ci-amd.$fmt
+
+    # smith-plot ci $synthetic/nvidia.csv -u \
+    #            --title "Runtime vs 95% CI for synthetics on NVIDIA" \
+    #            -o $dir/syn-ci-nvidia.$fmt
+
+    # smith-plot ci $synthetic/intel.csv -u \
+    #            -O $synthetic/amd.csv $synthetic/nvidia.csv \
+    #            --title "Runtime vs 95% CI for synthetics" \
+    #            -o $dir/syn-ci.$fmt
+    # wait_for_jobs
 
 
     if which xdg-open &>/dev/null ; then

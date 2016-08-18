@@ -91,11 +91,12 @@ def plot_runtimes(data, args):
 def plot_noise(data, args):
     targets = [data] + [cgo13.UnLabelledData.from_csv(x) for x in args.other]
 
+    # FIXME:
     cp = sns.color_palette()
-    for d,c in zip(targets, cp):
-        x = d["runtime"]
-        y = d["ci"]
-        plt.scatter(x, y, color=c)
+    # for d,c in zip(targets, cp):
+    #     x = [float(x) for x in d["runtime"]]
+    #     y = [float(y) for y in d["ci"]]
+    #     plt.scatter(x, y, color=c)
     plt.xlim(0,)
     plt.ylim(0,)
 
