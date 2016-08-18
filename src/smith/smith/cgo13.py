@@ -254,14 +254,15 @@ class Metrics(object):
 
     @property
     def oracles(self):
-        return self.data["speedup"]
+        return [float(x) for x in self.data["speedup"]]
 
     @property
     def oracle(self):
         try:
             return self._oracle
         except AttributeError:
-            self._oracle = self.speedup / labmath.geomean([float(x) for x in self.oracles])
+            assert(len(self.speedups) == len(self.oracles))
+            self._oracle = self.speedup / labmath.geomean(self.oracles)
             return self._oracle
 
     @property
@@ -305,6 +306,10 @@ class Metrics(object):
         except AttributeError:
             self._groups = sorted(set(self.data["Group"]))
             return self._groups
+
+    @property
+    def n(self):
+        return len(self.speedups)
 
     @property
     def model(self):

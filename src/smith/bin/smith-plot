@@ -21,6 +21,7 @@ import labm8
 from labm8 import fmt
 from labm8 import fs
 from labm8 import viz
+from labm8 import math as labmath
 
 import smith
 from smith import cgo13
@@ -101,6 +102,12 @@ def plot_noise(data, args):
     plt.ylim(0,)
 
 
+def print_oracles_summary(results):
+    print("#. results:", len(results))
+    print("Mean:", "{:.2f}".format(labmath.mean(results)))
+    print("Geomean:", "{:.2f}".format(labmath.geomean(results)))
+
+
 def plot_xval(data, args):
     results = cgo13.classification(data, group_by=args.group,
                                    samegroup_xval=True, nfolds="n").T
@@ -109,12 +116,18 @@ def plot_xval(data, args):
     def shortlabels(groups):
         return [re.sub("-.+$", "", x) for x in groups]
 
+    print_oracles_summary([item for sublist in results for item in sublist])
+
     ax = sns.heatmap(results, annot=True, fmt=".2f", linewidths=.5,
                      xticklabels=shortlabels(groups),
                      yticklabels=shortlabels(groups), cbar=False,
                      cmap="RdBu", center=.5, vmin=0, vmax=1)
-    plt.xlabel("Benchmarks for training")
-    plt.ylabel("Benchmarks for testing")
+    # ax = sns.heatmap(results, annot=False, linewidths=.5,
+    #                  xticklabels=shortlabels(groups),
+    #                  yticklabels=shortlabels(groups), cbar=False,
+    #                  cmap="RdBu", center=.5, vmin=0, vmax=1)
+    plt.xlabel("Training set")
+    plt.ylabel("Testing set")
 
 
 def plot_l1o_suites(data, args):
@@ -123,6 +136,8 @@ def plot_l1o_suites(data, args):
 
     def shortlabels(groups):
         return [re.sub("-.+$", "", x) for x in groups]
+
+    print_oracles_summary(results)
 
     sns.barplot(x=shortlabels(groups), y=results)
     plt.ylim(0, 1)
@@ -134,6 +149,8 @@ def plot_l1o_benchmarks(data, args):
 
     def shortlabels(groups):
         return [re.sub("-.+$", "", x) for x in groups]
+
+    print_oracles_summary(results)
 
     g = sns.barplot(x=groups, y=results)
     g.set_xticklabels(groups, rotation=90)
