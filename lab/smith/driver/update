@@ -43,6 +43,10 @@ main() {
                  data/synthetic/nvidia.csv \
                  > data/synthetic/platform-b.csv
 
+    # Copy training data into ML directory.
+    cp -v data/synthetic/platform-a.csv ../ml/data/a/synthetics.csv
+    cp -v data/synthetic/platform-b.csv ../ml/data/b/synthetics.csv
+
     cd ../
     ./merge-training-data driver/data/synthetic/platform-a.csv \
                           driver/data/synthetic/platform-b.csv \
