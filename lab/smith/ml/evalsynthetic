@@ -15,20 +15,23 @@ mktable() {
     set -u
 }
 
+# Header
+echo "Training, Testing, Features, Platform, Group, Classifier, Accuracy, Speedup, Oracle"
 
-# cgo13 features
-echo "train(S); test(suite ⊆ B); cgo13 features"
+echo
 (
     for f in ~/phd/lab/smith/ml/data/a/suite/*.csv; do
         csv=$(basename $f)
-        echo -n "Platform A, ${csv%.*}, "
+        echo -n "train(S), test(suite ⊆ B), cgo13 features, Platform A, ${csv%.*}, "
         cgo13 ~/phd/lab/smith/ml/data/a/synthetics.csv \
               --class NearestNeighbour \
               --test $f | tail -n1
     done
+) | mktable
+(
     for f in ~/phd/lab/smith/ml/data/b/suite/*.csv; do
         csv=$(basename $f)
-        echo -n "Platform B, ${csv%.*}, "
+        echo -n "train(S), test(suite ⊆ B), cgo13 features, Platform B, ${csv%.*}, "
         cgo13 ~/phd/lab/smith/ml/data/b/synthetics.csv \
               --class NearestNeighbour \
               --test $f | tail -n1
@@ -36,32 +39,28 @@ echo "train(S); test(suite ⊆ B); cgo13 features"
 ) | mktable
 
 echo
-echo "train(S); test(benchmark ⊆ B); cgo13 features"
 (
     for f in ~/phd/lab/smith/ml/data/a/benchmark/*.csv; do
         csv=$(basename $f)
-        echo -n "Platform A, ${csv%.*}, "
+        echo -n "train(S), test(benchmark ⊆ B), cgo13 features, Platform A, ${csv%.*}, "
         cgo13 ~/phd/lab/smith/ml/data/a/synthetics.csv \
               --class NearestNeighbour \
               --test $f | tail -n1
     done
     for f in ~/phd/lab/smith/ml/data/b/benchmark/*.csv; do
         csv=$(basename $f)
-        echo -n "Platform B, ${csv%.*}, "
+        echo -n "train(S), test(benchmark ⊆ B), cgo13 features, Platform B, ${csv%.*}, "
         cgo13 ~/phd/lab/smith/ml/data/b/synthetics.csv \
               --class NearestNeighbour \
               --test $f | tail -n1
     done
 ) | mktable
 
-
-# raw features
 echo
-echo "train(S); test(suite ⊆ B); raw features"
 (
     for f in ~/phd/lab/smith/ml/data/a/suite/*.csv; do
         csv=$(basename $f)
-        echo -n "Platform A, ${csv%.*}, "
+        echo -n "train(S), test(suite ⊆ B), raw features, Platform A, ${csv%.*}, "
         cgo13 ~/phd/lab/smith/ml/data/a/synthetics.csv \
               --class NearestNeighbour \
               --only-raw-features \
@@ -69,7 +68,7 @@ echo "train(S); test(suite ⊆ B); raw features"
     done
     for f in ~/phd/lab/smith/ml/data/b/suite/*.csv; do
         csv=$(basename $f)
-        echo -n "Platform B, ${csv%.*}, "
+        echo -n "train(S), test(suite ⊆ B), raw features, Platform B, ${csv%.*}, "
         cgo13 ~/phd/lab/smith/ml/data/b/synthetics.csv \
               --class NearestNeighbour \
               --only-raw-features \
@@ -78,11 +77,10 @@ echo "train(S); test(suite ⊆ B); raw features"
 ) | mktable
 
 echo
-echo "train(S); test(benchmark ⊆ B); raw features"
 (
     for f in ~/phd/lab/smith/ml/data/a/benchmark/*.csv; do
         csv=$(basename $f)
-        echo -n "Platform A, ${csv%.*}, "
+        echo -n "train(S), test(benchmark ⊆ B), raw features, Platform A, ${csv%.*}, "
         cgo13 ~/phd/lab/smith/ml/data/a/synthetics.csv \
               --class NearestNeighbour \
               --only-raw-features \
@@ -90,7 +88,7 @@ echo "train(S); test(benchmark ⊆ B); raw features"
     done
     for f in ~/phd/lab/smith/ml/data/b/benchmark/*.csv; do
         csv=$(basename $f)
-        echo -n "Platform B, ${csv%.*}, "
+        echo -n "train(S), test(benchmark ⊆ B), raw features, Platform B, ${csv%.*}, "
         cgo13 ~/phd/lab/smith/ml/data/b/synthetics.csv \
               --class NearestNeighbour \
               --only-raw-features \
@@ -98,14 +96,11 @@ echo "train(S); test(benchmark ⊆ B); raw features"
     done
 ) | mktable
 
-
-# cgo13+features
 echo
-echo "train(S); test(suite ⊆ B); cgo13+raw features"
 (
     for f in ~/phd/lab/smith/ml/data/a/suite/*.csv; do
         csv=$(basename $f)
-        echo -n "Platform A, ${csv%.*}, "
+        echo -n "train(S), test(suite ⊆ B), cgo13+raw features, Platform A, ${csv%.*}, "
         cgo13 ~/phd/lab/smith/ml/data/a/synthetics.csv \
               --class NearestNeighbour \
               --with-raw-features \
@@ -113,7 +108,7 @@ echo "train(S); test(suite ⊆ B); cgo13+raw features"
     done
     for f in ~/phd/lab/smith/ml/data/b/suite/*.csv; do
         csv=$(basename $f)
-        echo -n "Platform B, ${csv%.*}, "
+        echo -n "train(S), test(suite ⊆ B), cgo13+raw features, Platform B, ${csv%.*}, "
         cgo13 ~/phd/lab/smith/ml/data/b/synthetics.csv \
               --class NearestNeighbour \
               --with-raw-features \
@@ -122,11 +117,10 @@ echo "train(S); test(suite ⊆ B); cgo13+raw features"
 ) | mktable
 
 echo
-echo "train(S); test(benchmark ⊆ B); cgo13+raw features"
 (
     for f in ~/phd/lab/smith/ml/data/a/benchmark/*.csv; do
         csv=$(basename $f)
-        echo -n "Platform A, ${csv%.*}, "
+        echo -n "train(S), test(benchmark ⊆ B), cgo13+raw features, Platform A, ${csv%.*}, "
         cgo13 ~/phd/lab/smith/ml/data/a/synthetics.csv \
               --class NearestNeighbour \
               --with-raw-features \
@@ -134,7 +128,7 @@ echo "train(S); test(benchmark ⊆ B); cgo13+raw features"
     done
     for f in ~/phd/lab/smith/ml/data/b/benchmark/*.csv; do
         csv=$(basename $f)
-        echo -n "Platform B, ${csv%.*}, "
+        echo -n "train(S), test(benchmark ⊆ B), cgo13+raw features, Platform B, ${csv%.*}, "
         cgo13 ~/phd/lab/smith/ml/data/b/synthetics.csv \
               --class NearestNeighbour \
               --with-raw-features \
