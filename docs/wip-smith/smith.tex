@@ -753,9 +753,10 @@ for OpenCL kernels.
 \subsection{Experimental Setup}\label{subsec:}
 
 \paragraph{Predictive Model} We reproduce the predictive model from
-\citeauthor{Grewe2013}~\cite{Grewe2013}. Decision Tree
-classifier. Features from static source code and dynamic runtime
-information, summarized in Table~\ref{tab:cgo13-features}.
+\citeauthor{Grewe2013}~\cite{Grewe2013}. Decision Tree classifier
+implemented in Python~\cite{Pedregosa2012}. Features from static
+source code and dynamic runtime information, summarized in
+Table~\ref{tab:cgo13-features}.
 
 \begin{table}% tab:cgo13-features
   \scriptsize
@@ -934,6 +935,20 @@ Non-Interactive Turing Tests~\cite{Gao2015a,Zhang2016}.
 Evaluating \emph{RQ2}. Classification accuracy and speedups. Compare
 prediction performance with and without additional synthetic
 benchmarks.
+
+\begin{figure}%[t]
+  \subfloat[][]{%
+    \includegraphics[width=\columnwidth]{img/tree}\label{fig:tree-a}%
+  }\\
+  \subfloat[][]{%
+    \includegraphics[width=\columnwidth]{img/tree}\label{fig:tree-b}%
+  }
+  \caption{%
+    The model used for XXX on XXX, \protect\subref{fig:tree-a}~with and
+    \protect\subref{fig:tree-b}~without synthetic kernels.%
+  }
+  \label{fig:trees}
+\end{figure}
 
 
 \section{Related Work}\label{sec:related-work}
