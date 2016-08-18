@@ -490,7 +490,8 @@ def classification(train, classifier="DecisionTree", test=None,
                 train2 = train.ix[train_index]
                 metrics = classification(
                     train2, with_raw_features=with_raw_features,
-                    zeror=zeror, **kwargs)
+                    only_raw_features=only_raw_features,
+                    classifier=classifier, **kwargs)
             else:
                 metrics = run_fold(classifier, clf, train,
                                    train_index, test_index,
