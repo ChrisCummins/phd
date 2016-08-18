@@ -454,10 +454,10 @@ def classification(train, test=None, with_raw_features=False,
 
         if l1o:
             groupnames, folds = l1o_groups_indices(train, getgroup)
-            results = np.zeros(len(groups))
+            results = [None] * len(groups)
         else:
             groupnames, folds = pairwise_groups_indices(train, getgroup)
-            results = np.zeros((len(groups), len(groups)))
+            results = [[None] * len(groups) for x in range(len(groups))]
 
         for gpname, fold in zip(groupnames, folds):
             train_group, test_group = gpname
@@ -475,11 +475,10 @@ def classification(train, test=None, with_raw_features=False,
                 metrics = run_fold("DecisionTree", clf, train,
                                    train_index, test_index,
                                    features=getfeatures)
-            # print(metrics)
             if l1o:
-                results[groups.index(train_group)] = metrics.oracle
+                results[groups.index(train_group)] = metrics
             else:
-                results[groups.index(train_group), groups.index(test_group)] = metrics.oracle
+                results[groups.index(train_group)][groups.index(test_group)] = metrics
 
         return results
     else:

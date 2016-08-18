@@ -109,8 +109,14 @@ def print_oracles_summary(results):
 
 
 def plot_xval(data, args):
-    results = cgo13.classification(data, group_by=args.group,
-                                   samegroup_xval=True, nfolds="n").T
+    metrics = cgo13.classification(data, group_by=args.group,
+                                   samegroup_xval=True, nfolds="n")
+    results = np.zeros((len(metrics), len(metrics[0])))
+    for j in range(len(metrics)):
+        for i in range(len(metrics[j])):
+            results[j,i] = metrics[j][i].oracle
+    results = results.T
+
     groups = sorted(set(data["Group"]))
 
     def shortlabels(groups):
@@ -131,7 +137,12 @@ def plot_xval(data, args):
 
 
 def plot_l1o_suites(data, args):
-    results = cgo13.classification(data, group_by=args.group, l1o=True).T
+    metrics = cgo13.classification(data, group_by=args.group, l1o=True)
+    results = np.zeros((len(metrics),))
+    for i in range(len(metrics)):
+        results[i] = metrics[i].oracle
+    results = results.T
+
     groups = sorted(set(data["Group"]))
 
     def shortlabels(groups):
@@ -144,7 +155,12 @@ def plot_l1o_suites(data, args):
 
 
 def plot_l1o_benchmarks(data, args):
-    results = cgo13.classification(data, group_by=args.group, l1o=True).T
+    metrics = cgo13.classification(data, group_by=args.group, l1o=True)
+    results = np.zeros((len(metrics),))
+    for i in range(len(metrics)):
+        results[i] = metrics[i].oracle
+    results = results.T
+
     groups = sorted(set(data["Group"]))
 
     def shortlabels(groups):
