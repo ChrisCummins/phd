@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import re
+import seaborn as sns
+import sklearn
+import sys
+
+from argparse import ArgumentParser
+from math import sqrt,ceil
+from functools import partial
+from random import seed,random
+
+import labm8
+from labm8 import fmt
+from labm8 import fs
+from labm8 import viz
+from labm8 import math as labmath
+
+import smith
+from smith import cgo13
+
+# Seaborn configuration:
+sns.set(style="ticks", color_codes=True)
+
+data = pd.read_csv(fs.path("data/evalsynthetic.csv"), skipinitialspace=True)
+
+def main():
+    print(data.columns.values)
+    Bmask = ((data["Training"] == "train(B)") &
+            (data["Testing"] == "test(suite ⊆ B)") &
+            (data["Features"] == "raw features") &
+            (data["Classifier"] == "NearestNeighbour"))
+    B = data[Bmask]
+
+    BSmask = ((data["Training"] == "train(B + S)") &
+            (data["Testing"] == "test(suite ⊆ B)") &
+            (data["Features"] == "raw features") &
+            (data["Classifier"] == "NearestNeighbour"))
+    BS = data[BSmask]
+
+
+    crows = []
+    for b,bs in zip(B.iterrows(), BS.iterrows()):
+        b, bs = b[1], bs[1]
+
+        def from_perc(x):
+            return float(x.strip("%"))
+        def toperc(x):
+            return str(x) + "%"
+
+        c = bs
+        c["Accuracy"] = from_perc(c["Accuracy"]) / from_perc(b["Accuracy"])
+        c["Speedup"] /= b["Speedup"]
+        c["Oracle"] = from_perc(c["Oracle"]) / from_perc(b["Oracle"])
+
+        crows.append(c)
+
+    C = pd.DataFrame(crows)
+
+    B.to_csv("B.csv")
+    BS.to_csv("BS.csv")
+    C.to_csv("C.csv")
+
+if __name__ == "__main__":
+    main()
