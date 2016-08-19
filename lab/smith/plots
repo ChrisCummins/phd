@@ -137,12 +137,10 @@ def main():
     plot_wgsize("data/img/wgsize." + ext)
 
     _2x2_scatter_grid("comp", "transfer", "#. Computations", "Transfer (bytes)",
-                      "data/img/scatter1." + ext)
-
+                      "data/img/scatter-comp-transfer." + ext)
     _2x2_scatter_grid("F1:transfer/(comp+mem)", "F2:coalesced/mem",
                       "F1 transfer / (comp + mem)", "F2 coalesced / mem",
-                      #"data/img/scatter-f1." + ext
-    )
+                      "data/img/scatter-f1-f2." + ext)
 
 
 
