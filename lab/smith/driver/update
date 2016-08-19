@@ -36,16 +36,13 @@ main() {
     ./mktraining data/synthetic/kernels \
                  data/synthetic/intel.csv \
                  data/synthetic/amd.csv \
-                 > data/synthetic/platform-a.csv
+                 > data/synthetic/platform-a.csv &
 
     ./mktraining data/synthetic/kernels \
                  data/synthetic/intel.csv \
                  data/synthetic/nvidia.csv \
-                 > data/synthetic/platform-b.csv
-
-    # Copy training data into ML directory.
-    cp -v data/synthetic/platform-a.csv ../ml/data/a/synthetics.csv
-    cp -v data/synthetic/platform-b.csv ../ml/data/b/synthetics.csv
+                 > data/synthetic/platform-b.csv &
+    wait_for_jobs
 
     cd ../
     ./merge-training-data driver/data/synthetic/platform-a.csv \
@@ -57,15 +54,37 @@ main() {
     cd ../
     ./extract-synthetic-kernels driver/data/synthetic/platform-a.csv \
                                 driver/data/synthetic/kernels \
-                                > driver/data/synthetic/platform-a.cl &
+                                driver/data/synthetic/platform-a.cl &
     ./extract-synthetic-kernels driver/data/synthetic/platform-b.csv \
                                 driver/data/synthetic/kernels \
-                                > driver/data/synthetic/platform-b.cl &
+                                driver/data/synthetic/platform-b.cl &
     ./extract-synthetic-kernels driver/data/synthetic/training-combined.csv \
                                 driver/data/synthetic/kernels \
-                                > driver/data/synthetic/training-combined.cl &
+                                driver/data/synthetic/training-combined.cl &
+    cd driver
     wait_for_jobs
 
-    cd driver
+    ### Update ML directory.
+    cp -v ../benchmarks/data/platform-a.csv ../ml/data/a/benchmarks.csv
+    cp -v ../benchmarks/data/platform-b.csv ../ml/data/b/benchmarks.csv
+
+    cp -v data/synthetic/platform-a.csv ../ml/data/a/synthetics.csv
+    cp -v data/synthetic/platform-b.csv ../ml/data/b/synthetics.csv
+
+    ../extract-synthetic-kernels data/synthetic/platform-a.csv \
+                                 ../ml/data/a/ \
+                                 data/synthetic/platform-a.cl --group class &
+    ../extract-synthetic-kernels data/synthetic/platform-b.csv \
+                                 ../ml/data/b/ \
+                                 data/synthetic/platform-b.cl --group class &
+    wait_for_jobs
+
+    cp -v data/synthetic/platform-a.cl ../ml/data/a/synthetics.cl
+    mv -v ../ml/data/a/CPU.cl ../ml/data/a/synthetics-cpu.cl
+    mv -v ../ml/data/a/GPU.cl ../ml/data/a/synthetics-gpu.cl
+
+    cp -v data/synthetic/platform-b.cl ../ml/data/b/synthetics.cl
+    mv -v ../ml/data/b/CPU.cl ../ml/data/b/synthetics-cpu.cl
+    mv -v ../ml/data/b/GPU.cl ../ml/data/b/synthetics-gpu.cl
 }
 main $@
