@@ -88,6 +88,14 @@ def print_header(file=sys.stdout):
         "runtime",
         "speedup",
         "penalty",
+        "runtime_cpu",
+        "ci_cpu",
+        "ci_mean_cpu",
+        "runtime_gpu",
+        "ci_gpu",
+        "ci_mean_gpu",
+        "kernel_nlines",
+        "kernel_size",
         sep=',', file=file)
 
 
@@ -118,8 +126,16 @@ def fetch_kernel_features(filename, kernel, kernel_features):
     return res[0]
 
 
+def get_kernel_size(kernel_path):
+    with open(kernel_path) as infile:
+        contents = infile.read().strip()
+    kernel_nlines = len(contents.split('\n'))
+    kernel_size = len(contents)
+    return kernel_nlines, kernel_size
+
+
 def print_datapoint(filename, kernel, dataset, kernel_features, cpu, gpu,
-                    file=sys.stdout):
+                    kernels_path, file=sys.stdout):
     cpur = fetch_result(filename, kernel, dataset, cpu)
     gpur = fetch_result(filename, kernel, dataset, gpu)
     kfeatures = fetch_kernel_features(filename, kernel, kernel_features)
@@ -142,6 +158,12 @@ def print_datapoint(filename, kernel, dataset, kernel_features, cpu, gpu,
     wgsize = oracle['wgsize']
     F1 = transfer / max((comp + mem), 1)
     F3 = (localmem / max(mem, 1)) * wgsize
+
+    # print("kernels path type:", type(kernels_path).__name__, file=sys.stderr)
+    # print("filename type:", type(filename).__name__, file=sys.stderr)
+    kernel_path = fs.path(kernels_path, filename)
+    kernel_nlines, kernel_size = get_kernel_size(kernel_path)
+
     print(
         benchmark,
         dataset,
@@ -161,13 +183,21 @@ def print_datapoint(filename, kernel, dataset, kernel_features, cpu, gpu,
         fast,
         '{0:.2f}'.format(speedup),
         '{0:.2f}'.format(penalty),
+        cpur['runtime'],
+        cpur['ci'],
+        round(cpur['ci'] / cpur['runtime'], 6),
+        gpur['runtime'],
+        gpur['ci'],
+        round(gpur['ci'] / gpur['runtime'], 6),
+        kernel_nlines,
+        kernel_size,
         sep=',', file=file)
 
 
 
-def mktraining(kernels, cpu_path, gpu_path, out=sys.stdout, metaout=sys.stderr):
+def mktraining(kernels_dir, cpu_path, gpu_path, out=sys.stdout, metaout=sys.stderr):
     print("loading kernel features ... ", end='', file=metaout)
-    kernel_features = get_kernel_features(kernels)
+    kernel_features = get_kernel_features(kernels_dir)
     print(len(kernel_features), file=metaout)
     print("loading cpu results ... ", end='', file=metaout)
     cpu = read_results(cpu_path)
@@ -200,7 +230,7 @@ def mktraining(kernels, cpu_path, gpu_path, out=sys.stdout, metaout=sys.stderr):
     print_header(file=out)
     for filename,kernel,dataset in common:
         print_datapoint(filename, kernel, dataset, kernel_features,
-                        cpu, gpu, file=out)
+                        cpu, gpu, kernels_dir, file=out)
     print('done', file=sys.stderr)
 
 
