@@ -65,25 +65,38 @@ main() {
     wait_for_jobs
 
     ### Update ML directory.
-    cp -v ../benchmarks/data/platform-a.csv ../ml/data/a/benchmarks.csv
-    cp -v ../benchmarks/data/platform-b.csv ../ml/data/b/benchmarks.csv
+    ln -sf ~/phd/lab/smith/benchmarks/data/platform-a.csv ../ml/data/a/benchmarks.csv
+    ln -sf ~/phd/lab/smith/benchmarks/data/platform-b.csv ../ml/data/b/benchmarks.csv
 
-    cp -v data/synthetic/platform-a.csv ../ml/data/a/synthetics.csv
-    cp -v data/synthetic/platform-b.csv ../ml/data/b/synthetics.csv
+    ln -sf ~/phd/lab/smith/driver/data/synthetic/platform-a.csv ../ml/data/a/synthetics.csv
+    ln -sf ~/phd/lab/smith/driver/data/synthetic/platform-b.csv ../ml/data/b/synthetics.csv
+
+    rm -rf ~/phd/lab/smith/ml/data/a/class/
+    rm -rf ~/phd/lab/smith/ml/data/b/class/
+    rm -rf ~/phd/lab/smith/ml/data/a/suite/
+    rm -rf ~/phd/lab/smith/ml/data/a/suite/
+    rm -rf ~/phd/lab/smith/ml/data/a/benchmark/
+    rm -rf ~/phd/lab/smith/ml/data/b/benchmark/
+    ../mksubset ~/phd/lab/smith/benchmarks/data/platform-a.csv class ~/phd/lab/smith/ml/data/a/class/ &
+    ../mksubset ~/phd/lab/smith/benchmarks/data/platform-b.csv class ~/phd/lab/smith/ml/data/b/class/ &
+    ../mksubset ~/phd/lab/smith/benchmarks/data/platform-a.csv suite ~/phd/lab/smith/ml/data/a/suite/ &
+    ../mksubset ~/phd/lab/smith/benchmarks/data/platform-b.csv suite ~/phd/lab/smith/ml/data/b/suite/ &
+    ../mksubset ~/phd/lab/smith/benchmarks/data/platform-a.csv benchmark ~/phd/lab/smith/ml/data/a/benchmark &
+    ../mksubset ~/phd/lab/smith/benchmarks/data/platform-b.csv benchmark ~/phd/lab/smith/ml/data/b/benchmark &
 
     ../extract-synthetic-kernels data/synthetic/platform-a.csv \
-                                 ../ml/data/a/ \
-                                 data/synthetic/platform-a.cl --group class &
+                                 data/synthetic/kernels \
+                                 ../ml/data/a/ --group class &
     ../extract-synthetic-kernels data/synthetic/platform-b.csv \
-                                 ../ml/data/b/ \
-                                 data/synthetic/platform-b.cl --group class &
+                                 data/synthetic/kernels \
+                                 ../ml/data/b/ --group class &
     wait_for_jobs
 
-    cp -v data/synthetic/platform-a.cl ../ml/data/a/synthetics.cl
+    ln -sf ~/phd/lab/smith/driver/data/synthetic/platform-a.cl ../ml/data/a/synthetics.cl
     mv -v ../ml/data/a/CPU.cl ../ml/data/a/synthetics-cpu.cl
     mv -v ../ml/data/a/GPU.cl ../ml/data/a/synthetics-gpu.cl
 
-    cp -v data/synthetic/platform-b.cl ../ml/data/b/synthetics.cl
+    ln -sf ~/phd/lab/smith/driver/data/synthetic/platform-b.cl ../ml/data/b/synthetics.cl
     mv -v ../ml/data/b/CPU.cl ../ml/data/b/synthetics-cpu.cl
     mv -v ../ml/data/b/GPU.cl ../ml/data/b/synthetics-gpu.cl
 }
