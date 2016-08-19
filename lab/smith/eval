@@ -17,6 +17,8 @@ main() {
     rm -rfv $dir
     mkdir -pv $dir
 
+    ./plots &
+
     ########################## BENCHMARKS ##############################
     local benchmarks=benchmarks/data
 

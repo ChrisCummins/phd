@@ -2,8 +2,6 @@
 #
 # Plot labelled training data and unlabelled performance
 #
-from argparse import ArgumentParser
-
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,6 +11,7 @@ import seaborn as sns
 import sklearn
 import sys
 
+from argparse import ArgumentParser
 from math import sqrt,ceil
 from functools import partial
 from random import seed,random
@@ -87,6 +86,12 @@ def plot_features(data, args):
 def plot_runtimes(data, args):
     x = data["runtime"]
     sns.distplot(x, kde=False)
+
+
+def plot_transfers(data, args):
+    x = data["transfer"]
+    sns.distplot(x, kde=False, bins=100)
+    plt.xlabel("Transfer (bytes)")
 
 
 def plot_noise(data, args):
@@ -226,6 +231,7 @@ def main():
         "xval": plot_xval,
         "l1o": plot_l1o_suites,
         "l1o_prog": plot_l1o_benchmarks,
+        "transfer": plot_transfers,
     }
 
     parser = ArgumentParser()
