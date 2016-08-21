@@ -25,3 +25,6 @@
 [submodule "extern/oclgrind"]
 	path = extern/oclgrind
 	url = https://github.com/jrprice/Oclgrind.git
+[submodule "docs/wip-smith"]
+	path = docs/wip-smith
+	url = https://git.overleaf.com/5933348yfhrbn
