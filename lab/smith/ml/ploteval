@@ -27,7 +27,7 @@ sns.set(style="ticks", color_codes=True)
 
 data = pd.read_csv(fs.path("data/evalsynthetic.csv"), skipinitialspace=True)
 
-def runeval(classifier, features, group, plottype="png"):
+def runeval(classifier, features, group, plottype="pdf"):
     def plot(C, outfile=None):
         ax = sns.barplot(x="Group", y="Speedup", hue="Platform", data=C)
         plt.setp(ax.get_xticklabels(), rotation=90)
@@ -99,7 +99,7 @@ def runeval(classifier, features, group, plottype="png"):
     plot_both(D, "Platform A", imgbase + "A." + plottype)
     plot_both(D, "Platform B", imgbase + "B." + plottype)
     if group == "benchmark":
-        plot(C, fs.path("data", "img", "speedup", outbase) + plottype)
+        plot(C, fs.path("data", "img", "speedup", outbase) + "." + plottype)
         print(features, group, classifier,
               labmath.mean(C["Speedup"]), sep=",", file=sys.stderr)
 
