@@ -66,6 +66,7 @@ main() {
     tr < $errors_path -d '\000' > $errors_path.tmp
     grep -E '^[a-zA-Z0-9_\.-]+\.cl,[0-9]+,E_[A-Z_]+,[a-zA-Z0-9_\.-]+$' \
          $errors_path.tmp > $errors_path || true
+    rm $errors_path.tmp
 
     echo -n "building job list for $results_path ... "
     jobslist=$(./mkjoblist $kernels_dir $results_path $errors_path)
