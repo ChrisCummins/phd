@@ -69,6 +69,8 @@ main() {
     rm $errors_path.tmp
 
     echo -n "building job list for $results_path ... "
+    date +"%y-%m-%d %H:%M:%S, $HOSTNAME, mkjoblist" \
+         >> /var/log/cldrive.log
     jobslist=$(./mkjoblist $kernels_dir $results_path $errors_path)
     num_jobs=$(echo "$jobslist" | wc -l)
     echo "$num_jobs jobs"
