@@ -103,6 +103,10 @@ def print_header(file=sys.stdout):
         "F3:(localmem/mem)*avgws",
         "F4:comp/mem",
         "runtime",
+        # Added after-the-fact:
+        "ci",
+        "ci / runtime",
+        "n",
         sep=',', file=file)
 
 
@@ -142,6 +146,10 @@ def mkfeatures(static_path, dynamic_path, file=sys.stdout):
                 F3,
                 s["F4:comp/mem"],
                 d["runtime"],
+                # Added after-the-fact:
+                d["ci"],
+                round(float(d["ci"]) / float(d["runtime"]), 6),
+                d["n"],
                 sep=",", file=file)
 
 
