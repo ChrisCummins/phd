@@ -80,7 +80,6 @@ def mkjoblist(kernels_dir, results_path, errors_path):
                 has_result = False
             if not has_result:
                 jobs.append((file, dsize))
-    shuffle(jobs)
     return jobs
 
 
