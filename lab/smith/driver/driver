@@ -4,6 +4,8 @@
 #
 set -eu
 
+TIMEOUT=30
+
 usage() {
     echo "Usage: $0 <cpu|gpu> <dsize> <opencl-dir>"
 }
@@ -13,7 +15,7 @@ drive_file() {
     local devargs=$2
     local dsize=$3
 
-    DSIZE=$dsize timeout --signal=9 10 cldrive --strict -f $devargs $in_path
+    DSIZE=$dsize timeout --signal=9 $TIMEOUT cldrive --strict -f $devargs $in_path
     set -e
 }
 
