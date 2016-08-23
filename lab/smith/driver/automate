@@ -103,9 +103,11 @@ main() {
         fi
 
         # If we're running low on memory, restart.
+        set +e
         free_mem=$(free -m | head -n2 | tail -n1 \
                           | awk '{print "("$4"/"$2") * 100"}' \
                           | bc -l | xargs printf '%d\n' 2>/dev/null)
+        set -e
 
         if [[ $free_mem < 25 ]]; then
             date +"%y-%m-%d %H:%M:%S, $HOSTNAME, LOW MEMORY RESTART, free: $free_mem%%" \
