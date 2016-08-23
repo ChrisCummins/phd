@@ -23,7 +23,7 @@ timeout_means_restart() {
 }
 
 # Fuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
-RESTART_EVERY=300
+RESTART_EVERY=500
 
 
 main() {
