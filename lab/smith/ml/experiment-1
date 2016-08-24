@@ -1,0 +1,147 @@
+#!/usr/bin/env python3
+#
+#
+#
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import re
+import seaborn as sns
+import sklearn
+import sys
+
+from argparse import ArgumentParser
+from math import sqrt,ceil
+from functools import partial
+from random import seed,random
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+
+import labm8
+from labm8 import fmt
+from labm8 import fs
+from labm8 import viz
+from labm8 import math as labmath
+
+import smith
+from smith import cgo13
+
+# Seaborn configuration:
+sns.set(style="ticks", color_codes=True)
+
+def get_ex1_features(D):
+    return np.array([
+        D["F1:transfer/(comp+mem)"],
+        D["F2:coalesced/mem"],
+        D["F3:(localmem/mem)*avgws"],
+        D["F4:comp/mem"]
+    ]).T
+
+
+def get_labels(D):
+    return D["oracle"]
+
+
+def leave_one_benchmark_out(D, benchmark):
+    seed = 204
+    clf = DecisionTreeClassifier(
+        random_state=seed, criterion="entropy", splitter="best")
+    # clf = KNeighborsClassifier(n_neighbors=1)
+
+    # Create data masks to select specific rows:
+    test_mask = D["benchmark"].str.contains(benchmark)
+    train_mask = ~test_mask
+
+    # Create training and testing data:
+
+    X_train = get_ex1_features(D[train_mask])
+    y_train = get_labels(D[train_mask])
+
+    D_test = D[test_mask]
+    X_test = get_ex1_features(D_test)
+    y_test = get_labels(D_test)
+
+    # Train classifier:
+    clf.fit(X_train, y_train)
+
+    predicted = clf.predict(X_test)
+
+    D_out = []
+    for d,y,p in zip(D_test.to_dict('records'), y_test, predicted):
+        d["p_correct"] = 1 if y == p else 0
+        D_out.append(d)
+
+    return D_out
+
+
+def experiment1(platform_id):
+    # Datasets:
+    #
+    #   B -  benchmarks
+    #   S -  synthetics
+    #   BS - benchmarks + synthetics
+    #
+    B = pd.read_csv("data/{platform_id}/benchmarks.csv"
+                    .format(platform_id=platform_id))
+    B["synthetic"] = np.zeros(len(B))
+
+    S = pd.read_csv("data/{platform_id}/synthetics.csv"
+                    .format(platform_id=platform_id))
+    S["synthetic"] = np.ones(len(S))
+
+    BS = pd.concat((B, S))
+
+    npb_benchmarks = sorted(set([
+        b for b in B["benchmark"] if b.startswith("npb-")
+    ]))
+
+    B_out, BS_out = [], []
+    for benchmark in npb_benchmarks:
+        B_out += leave_one_benchmark_out(B, benchmark)
+        BS_out += leave_one_benchmark_out(BS, benchmark)
+        assert(len(B_out) == len(BS_out))
+
+    R_out = []
+    for b,bs in zip(B_out, BS_out):
+        b["p_speedup"] = b["speedup"] if b["p_correct"] else b["penalty"]
+        bs["p_speedup"] = bs["speedup"] if bs["p_correct"] else bs["penalty"]
+
+        b["npb_benchmark"] = re.sub(r"[^-]+-[0-9\.]+-([^-]+)-.+", r"\1", b["benchmark"])
+        bs["npb_benchmark"] = re.sub(r"[^-]+-[0-9\.]+-([^-]+)-.+", r"\1", bs["benchmark"])
+
+        b["training"] = "Baseline"
+        bs["training"] = "w. Synthesized Kernels"
+
+        R_out.append(b)
+        R_out.append(bs)
+
+    # Is a a dataframe of data, with three columns "b_correct" and
+    # "bs_correct", which record whether classifier correctly
+    # predicted result, and "npb_benchmark" which has NPB application
+    # name.
+    R = pd.DataFrame(R_out)
+
+    b_mask = R["training"] == "Baseline"
+    bs_mask = R["training"] == "w. Synthesized Kernels"
+
+    B_acc = labmath.mean(R[b_mask]["p_correct"])
+    BS_acc = labmath.mean(R[bs_mask]["p_correct"])
+
+    B_speedup = labmath.mean(R[b_mask]["p_speedup"])
+    BS_speedup = labmath.mean(R[bs_mask]["p_speedup"])
+
+    print(B_acc, BS_acc, B_speedup, BS_speedup)
+
+    sns.barplot(x="npb_benchmark", y="p_speedup", hue="training", data=R)
+    plt.title("Platform " + platform_id)
+    plt.show()
+
+
+def main():
+    experiment1("A")
+    experiment1("B")
+
+
+if __name__ == "__main__":
+    main()
