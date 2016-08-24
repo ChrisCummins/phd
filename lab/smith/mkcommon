@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+#
+# Given some training set, generate a random subset and evaluate it's
+# effectiveness against a test set.
+#
+import csv
+import sys
+import os
+
+import numpy as np
+import pandas as pd
+import math
+
+from argparse import ArgumentParser
+from collections import defaultdict
+from random import random
+
+import labm8
+from labm8 import fs
+from labm8 import math as labmath
+from multiprocessing import cpu_count, Pool
+
+import smith
+from smith import features
+from smith import cgo13
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('input1', help='path to 1st training CSV')
+    parser.add_argument("input2", help='path to 2nd training CSV')
+    args = parser.parse_args()
+
+    with open(smith.assert_exists(args.input1)) as in1:
+        left = in1.read()
+    with open(smith.assert_exists(args.input2)) as in2:
+        rogjt = in2.read()
+
+
+if __name__ == '__main__':
+    main()
