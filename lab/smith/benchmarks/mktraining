@@ -53,6 +53,9 @@ def print_header(file=sys.stdout):
         "runtime",
         "speedup",
         "penalty",
+        # Added after-the-fact:
+        "runtime_cpu",
+        "runtime_gpu",
         sep=',', file=file)
 
 
@@ -115,6 +118,9 @@ def print_datapoint(benchmark, dataset, cpu, gpu, file=sys.stdout):
         fast,
         '{0:.2f}'.format(speedup),
         '{0:.2f}'.format(penalty),
+        # Added after-the-fact:
+        cpur['runtime'],
+        gpur['runtime'],
         sep=',', file=file)
 
 
