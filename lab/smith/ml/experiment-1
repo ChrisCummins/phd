@@ -447,9 +447,8 @@ def experiment2():
 
 
 def main():
-    # experiment1("A")
-    # experiment1("B")
-
+    experiment1("A")
+    experiment1("B")
     experiment2()
 
 
