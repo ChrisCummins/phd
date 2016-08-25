@@ -50,22 +50,14 @@ main() {
     ../mkcommon data/synthetic/platform-a.csv data/synthetic/platform-b.csv
 
     cd ../
+    # Make combined training data.
     ./merge-training-data driver/data/synthetic/platform-a.csv \
                           driver/data/synthetic/platform-b.csv \
                           > driver/data/synthetic/training-combined.csv
-    cd driver
-
     # Extract kernels.
-    cd ../
-    ./extract-synthetic-kernels driver/data/synthetic/platform-a.csv \
-                                driver/data/synthetic/kernels \
-                                driver/data/synthetic/platform-a.cl &
-    ./extract-synthetic-kernels driver/data/synthetic/platform-b.csv \
-                                driver/data/synthetic/kernels \
-                                driver/data/synthetic/platform-b.cl &
     ./extract-synthetic-kernels driver/data/synthetic/training-combined.csv \
                                 driver/data/synthetic/kernels \
-                                driver/data/synthetic/training-combined.cl &
+                                driver/data/synthetic/training-combined.cl
     cd driver
     wait_for_jobs
 

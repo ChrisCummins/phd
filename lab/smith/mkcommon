@@ -75,7 +75,7 @@ def main():
         p1.start()
 
     with open(args.input2, "w") as outfile:
-        p2 = Process(target=write_common, args=(left, common, header, outfile))
+        p2 = Process(target=write_common, args=(right, common, header, outfile))
         p2.start()
 
     p1.join()

@@ -25,6 +25,7 @@ main() {
     fi
 
     cat $left
+    echo # Line break
     tail -n+2 $right
 }
 main $@
