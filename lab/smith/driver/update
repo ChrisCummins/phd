@@ -44,6 +44,11 @@ main() {
                  > data/synthetic/platform-b.csv &
     wait_for_jobs
 
+    # Make common subset of synthetic data
+    cp data/synthetic/platform-a.csv data/synthetic/platform-a.csv.orig
+    cp data/synthetic/platform-b.csv data/synthetic/platform-b.csv.orig
+    ../mkcommon data/synthetic/platform-a.csv data/synthetic/platform-b.csv
+
     cd ../
     ./merge-training-data driver/data/synthetic/platform-a.csv \
                           driver/data/synthetic/platform-b.csv \
