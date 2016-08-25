@@ -104,5 +104,17 @@ main() {
     ln -sf ~/phd/lab/smith/driver/data/synthetic/platform-b.cl ../ml/data/b/synthetics.cl
     mv -v ../ml/data/b/CPU.cl ../ml/data/b/synthetics-cpu.cl
     mv -v ../ml/data/b/GPU.cl ../ml/data/b/synthetics-gpu.cl
+
+    # Make plots.
+    cd ..
+    ./eval &
+    cd driver
+
+    # Perform experiments.
+    cd ../ml/
+    ./experiments &
+    cd ../driver/
+
+    wait_for_jobs
 }
 main $@
