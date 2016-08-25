@@ -98,7 +98,7 @@ def experiment1(platform_id):
         y_test = get_labels(D_test)
 
         # Debugging printout:
-        print("leave-one-out on benchmark:", benchmark,
+        print("benchmark:", benchmark,
               "train on:", len(X_train), "test on:", len(X_test))
 
         # Train classifier:
@@ -275,7 +275,7 @@ def experiment2():
         y2_test = get_labels(D2_test)
 
         # Debugging printout:
-        print("leave-one-out on benchmark:", benchmark,
+        print("benchmark:", benchmark,
               "train on:", len(X1_train), "test on:", len(X1_test))
 
         # Train classifiers:
@@ -398,32 +398,32 @@ def experiment2():
 
     improved = R[R["p_speedup"] > 1]
 
-    print("Num Results", len(R))
-    print("Num matched or improved", len(R[R["p_speedup"] >= 1]))
-    print("Num improved", len(R[R["p_speedup"] > 1]))
-    print("Num worse", len(R[R["p_speedup"] < 1]))
+    print("Num Results:            ", len(R))
+    print("Num matched or improved:", len(R[R["p_speedup"] >= 1]))
+    print("Num improved:           ", len(R[R["p_speedup"] > 1]))
+    print("Num worse:              ", len(R[R["p_speedup"] < 1]))
 
     Amask = R["platform"] == "Platform A"
     Bmask = R["platform"] == "Platform B"
     assert(len(R) == len(R[Amask]) + len(R[Bmask]))
 
-    print("Num Instances:  ", len(R))
+    print("Num Instances:          ", len(R))
 
     a_matched_or_improved = R[Amask & R["p_speedup"] >= 1]
     b_matched_or_improved = R[Bmask & R["p_speedup"] >= 1]
-    print("Matched or improved:  {:.1f} %"
+    print("Matched or improved:    {:.1f} %"
           .format(((len(a_matched_or_improved) + len(b_matched_or_improved))
                    / float(len(R))) * 100))
 
     a_improved = R[Amask & R["p_speedup"] > 1]
     b_improved = R[Bmask & R["p_speedup"] > 1]
-    print("Improved:  {:.1f} %"
+    print("Improved:               {:.1f} %"
           .format(((len(a_improved) + len(b_improved)) / float(len(R))) * 100))
 
     a_worsened = R[Amask & R["p_speedup"] < 1]
     b_worsened = R[Amask & R["p_speedup"] < 1]
 
-    print("Worsened:  {:.1f} %"
+    print("Worsened:               {:.1f} %"
           .format(((len(a_worsened) + len(b_worsened)) / float(len(R))) * 100))
 
     ax = sns.barplot(x="benchmark_name", y="p_speedup", hue="platform", data=R,
@@ -447,6 +447,8 @@ def experiment2():
 
 
 def main():
+    # TODO: plot_eigenvalues()
+
     experiment1("A")
     experiment1("B")
     experiment2()
