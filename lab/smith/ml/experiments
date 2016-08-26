@@ -16,15 +16,15 @@ from functools import partial
 from math import sqrt,ceil
 from random import seed,random
 from sklearn.base import clone
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
-from sklearn.naive_bayes import GaussianNB
+from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import normalize
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
 
 
 import labm8
@@ -72,6 +72,89 @@ def get_labels(D):
     return D["oracle"]
 
 
+def leave_one_benchmark_out(clf, get_features, D, benchmark):
+    # Create data masks. For training we exclude all results from
+    # benchmark.
+    test_mask = D["benchmark"].str.contains(r"^" + benchmark)
+    train_mask = ~test_mask
+
+    # Create training and testing data:
+    X_train = get_features(D[train_mask])
+    y_train = get_labels(D[train_mask])
+
+    D_test = D[test_mask]
+    X_test = get_features(D_test)
+    y_test = get_labels(D_test)
+
+    # Debugging printout:
+    print("benchmark:", benchmark,
+          "train on:", len(X_train), "test on:", len(X_test))
+
+    # Train classifier:
+    clf.fit(X_train, y_train)
+
+    # Make predictions
+    predicted = clf.predict(X_test)
+    D_out = []
+    for d,y,p in zip(D_test.to_dict('records'), y_test, predicted):
+        d["p"] = p
+        d["p_correct"] = 1 if y == p else 0
+        D_out.append(d)
+
+    # Return a list of dicts
+    return D_out
+
+
+def motivation():
+    clf = DecisionTreeClassifier(
+        random_state=204, criterion="entropy", splitter="best")
+    features = get_cgo13_features
+    platform = "b"
+    benchmark = "amd"
+
+
+    B = pd.read_csv("data/{}/benchmarks.csv".format(platform))
+    test_mask = B["benchmark"].str.contains(r"^{}-".format(benchmark))
+    B = B[test_mask]
+
+    benchmark_names = sorted(set([
+        re.match(r"^([^0-9]+-[0-9\.]+-[^-]+)-", b).group(1)
+        for b in B["benchmark"] if b.startswith(benchmark)
+    ]))
+    # print(benchmark_names)
+
+    B_out = []
+    for benchmark in benchmark_names:
+        B_out += leave_one_benchmark_out(clf, get_our_features, B, benchmark)
+    B_out = pd.DataFrame(B_out)
+    assert(len(B) == len(B_out))
+
+    pca = PCA(n_components=2)
+    X = pca.fit_transform(get_our_features(B))
+
+    x_correct = [x[0] for x,b in zip(X,B_out.to_dict('records')) if b["p_correct"]]
+    y_correct = [x[1] for x,b in zip(X,B_out.to_dict('records')) if b["p_correct"]]
+
+    x_incorrect = [x[0] for x,b in zip(X,B_out.to_dict('records')) if not b["p_correct"]]
+    y_incorrect = [x[1] for x,b in zip(X,B_out.to_dict('records')) if not b["p_correct"]]
+    labels = [b["benchmark"].split('-')[-1]
+              for b in B_out.to_dict('records')
+              if not b["p_correct"]]
+
+    plt.scatter(x_correct, y_correct, color="b", s=50)
+    plt.scatter(x_incorrect, y_incorrect, color="r", s=50)
+
+    for label, x, y in zip(labels, x_incorrect, y_incorrect):
+        plt.annotate(
+            label,
+            xy = (x, y), xytext = (-20, 20),
+            textcoords = 'offset points', ha = 'right', va = 'bottom',
+            bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
+            arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+
+    plt.show()
+
+
 def experiment1(platform_id):
     #
     # Cross-validate CGO13 model across NPB benchmarks, with and
@@ -83,38 +166,6 @@ def experiment1(platform_id):
     #   S -  synthetics
     #   BS - benchmarks + synthetics
     #
-    def leave_one_benchmark_out(clf, get_features, D, benchmark):
-        # Create data masks. For training we exclude all results from
-        # benchmark.
-        test_mask = D["benchmark"].str.contains(r"^" + benchmark)
-        train_mask = ~test_mask
-
-        # Create training and testing data:
-        X_train = get_features(D[train_mask])
-        y_train = get_labels(D[train_mask])
-
-        D_test = D[test_mask]
-        X_test = get_features(D_test)
-        y_test = get_labels(D_test)
-
-        # Debugging printout:
-        print("benchmark:", benchmark,
-              "train on:", len(X_train), "test on:", len(X_test))
-
-        # Train classifier:
-        clf.fit(X_train, y_train)
-
-        # Make predictions
-        predicted = clf.predict(X_test)
-        D_out = []
-        for d,y,p in zip(D_test.to_dict('records'), y_test, predicted):
-            d["p"] = p
-            d["p_correct"] = 1 if y == p else 0
-            D_out.append(d)
-
-        # Return a list of dicts
-        return D_out
-
     B = pd.read_csv("data/{platform_id}/benchmarks.csv"
                     .format(platform_id=platform_id.lower()))
     B["synthetic"] = np.zeros(len(B))
@@ -447,8 +498,7 @@ def experiment2():
 
 
 def main():
-    # TODO: plot_eigenvalues()
-
+    motivation()
     experiment1("A")
     experiment1("B")
     experiment2()
