@@ -67,6 +67,18 @@ def get_our_features(D):
         (D["comp"].values / D["mem"].values),
     ]).T
 
+def get_raw_features(D):
+    return np.array([
+        D["comp"].values,
+        D["rational"].values,
+        D["mem"].values,
+        D["localmem"].values,
+        D["coalesced"].values,
+        D["atomic"].values,
+        D["transfer"].values,
+        D["wgsize"].values,
+    ]).T
+
 
 def get_labels(D):
     return D["oracle"]
@@ -105,54 +117,85 @@ def leave_one_benchmark_out(clf, get_features, D, benchmark):
     return D_out
 
 
+def rand_jitter(arr, factor=0.01):
+    stdev = factor* (max(arr) - min(arr))
+    return arr + np.random.randn(len(arr)) * stdev
+
+
+def scatter_with_jitter(plt, x, y, **kwargs):
+    jitter_opts = kwargs.get("jitter_opts", {})
+    if "jitter_opts" in kwargs: kwargs.pop("jitter_opts")
+
+    jitter_factor = kwargs.get("jitter", None)
+    if jitter_factor is not None:
+        jitter_opts["factor"] = jitter_factor
+        kwargs.pop("jitter")
+
+    return plt.scatter(rand_jitter(x, **jitter_opts),
+                       rand_jitter(y, **jitter_opts), **kwargs)
+
 def motivation():
+    np.random.seed(204)
     clf = DecisionTreeClassifier(
         random_state=204, criterion="entropy", splitter="best")
-    features = get_cgo13_features
     platform = "b"
-    benchmark = "amd"
+    suite = "parboil"
 
+    def get_2d_projection(D):
+        pca = PCA(n_components=2)
+        return pca.fit_transform(get_raw_features(D))
 
+    # Load data and mask off the benchmark suite in use:
     B = pd.read_csv("data/{}/benchmarks.csv".format(platform))
-    test_mask = B["benchmark"].str.contains(r"^{}-".format(benchmark))
+    test_mask = B["benchmark"].str.contains(r"^{}-".format(suite))
     B = B[test_mask]
 
     benchmark_names = sorted(set([
         re.match(r"^([^0-9]+-[0-9\.]+-[^-]+)-", b).group(1)
-        for b in B["benchmark"] if b.startswith(benchmark)
+        for b in B["benchmark"] if b.startswith(suite)
     ]))
-    # print(benchmark_names)
 
     B_out = []
     for benchmark in benchmark_names:
-        B_out += leave_one_benchmark_out(clf, get_our_features, B, benchmark)
+        B_out += leave_one_benchmark_out(clf, get_cgo13_features, B, benchmark)
     B_out = pd.DataFrame(B_out)
     assert(len(B) == len(B_out))
 
-    pca = PCA(n_components=2)
-    X = pca.fit_transform(get_our_features(B))
+    X = get_2d_projection(B)
 
-    x_correct = [x[0] for x,b in zip(X,B_out.to_dict('records')) if b["p_correct"]]
-    y_correct = [x[1] for x,b in zip(X,B_out.to_dict('records')) if b["p_correct"]]
+    correct = [x for x,b in zip(X,B_out.to_dict('records')) if b["p_correct"]]
+    incorrect = [x for x,b in zip(X,B_out.to_dict('records')) if not b["p_correct"]]
 
-    x_incorrect = [x[0] for x,b in zip(X,B_out.to_dict('records')) if not b["p_correct"]]
-    y_incorrect = [x[1] for x,b in zip(X,B_out.to_dict('records')) if not b["p_correct"]]
-    labels = [b["benchmark"].split('-')[-1]
-              for b in B_out.to_dict('records')
-              if not b["p_correct"]]
+    print("Motivation:")
+    print("  #. correct:  ", len(correct))
+    print("  #. incorrect:", len(incorrect))
 
-    plt.scatter(x_correct, y_correct, color="b", s=50)
-    plt.scatter(x_incorrect, y_incorrect, color="r", s=50)
+    opts = { "s": 85, "alpha": .65, "jitter": 0.08 }
+    scatter = partial(scatter_with_jitter, plt)
+    scatter(*zip(*incorrect), color="r", label='Incorrect', **opts)
+    scatter(*zip(*correct), color="b", label='Correct', **opts)
 
-    for label, x, y in zip(labels, x_incorrect, y_incorrect):
-        plt.annotate(
-            label,
-            xy = (x, y), xytext = (-20, 20),
-            textcoords = 'offset points', ha = 'right', va = 'bottom',
-            bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
-            arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+    ax = plt.gca()
+    # No ticks
+    ax.xaxis.set_major_locator(plt.NullLocator())
+    ax.yaxis.set_major_locator(plt.NullLocator())
 
-    plt.show()
+    # Axis labels
+    plt.xlabel("e1 →", ha="right")
+    plt.ylabel("e2 →", ha="right")
+
+    # Position axis labels at end of axis
+    ax.xaxis.set_label_coords(1, -.025)
+    ax.yaxis.set_label_coords(-.025, 1)
+
+    # Show legend
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles, labels)
+    ax.get_legend().draw_frame(True)
+
+    figsize = (2.5,2.5)
+    viz.finalise("data/img/motivation-a.pdf".format(benchmark, platform),
+                 figsize=figsize, tight=True)
 
 
 def experiment1(platform_id):
