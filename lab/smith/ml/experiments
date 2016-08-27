@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 #
+import matplotlib
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,6 +13,7 @@ import sys
 from argparse import ArgumentParser
 from collections import Counter
 from copy import copy
+from itertools import combinations
 from functools import partial
 from math import sqrt,ceil
 from random import seed,random
@@ -85,7 +87,47 @@ def get_labels(D):
     return D["oracle"]
 
 
-def leave_one_benchmark_out(clf, get_features, D, benchmark):
+def customaxis(ax, c_left='k', c_bottom='k', c_right='none', c_top='none',
+               lw=1, size=12, pad=8):
+    """
+    Credit: http://stackoverflow.com/a/11417222
+    """
+    for c_spine, spine in zip([c_left, c_bottom, c_right, c_top],
+                              ['left', 'bottom', 'right', 'top']):
+        if c_spine != 'none':
+            ax.spines[spine].set_color(c_spine)
+            ax.spines[spine].set_linewidth(lw)
+        else:
+            ax.spines[spine].set_color('none')
+    if (c_bottom == 'none') & (c_top == 'none'): # no bottom and no top
+        ax.xaxis.set_ticks_position('none')
+    elif (c_bottom != 'none') & (c_top != 'none'): # bottom and top
+        ax.tick_params(axis='x', direction='out', width=lw, length=7,
+                       color=c_bottom, labelsize=size, pad=pad)
+    elif (c_bottom != 'none') & (c_top == 'none'): # bottom but not top
+        ax.xaxis.set_ticks_position('bottom')
+        ax.tick_params(axis='x', direction='out', width=lw, length=7,
+                       color=c_bottom, labelsize=size, pad=pad)
+    elif (c_bottom == 'none') & (c_top != 'none'): # no bottom but top
+        ax.xaxis.set_ticks_position('top')
+        ax.tick_params(axis='x', direction='out', width=lw, length=7,
+                       color=c_top, labelsize=size, pad=pad)
+    if (c_left == 'none') & (c_right == 'none'): # no left and no right
+        ax.yaxis.set_ticks_position('none')
+    elif (c_left != 'none') & (c_right != 'none'): # left and right
+        ax.tick_params(axis='y', direction='out', width=lw, length=7,
+                       color=c_left, labelsize=size, pad=pad)
+    elif (c_left != 'none') & (c_right == 'none'): # left but not right
+        ax.yaxis.set_ticks_position('left')
+        ax.tick_params(axis='y', direction='out', width=lw, length=7,
+                       color=c_left, labelsize=size, pad=pad)
+    elif (c_left == 'none') & (c_right != 'none'): # no left but right
+        ax.yaxis.set_ticks_position('right')
+        ax.tick_params(axis='y', direction='out', width=lw, length=7,
+                       color=c_right, labelsize=size, pad=pad)
+
+
+def leave_one_benchmark_out(clf, get_features, D, benchmark, verbose=True):
     # Create data masks. For training we exclude all results from
     # benchmark.
     test_mask = D["benchmark"].str.contains(r"^" + benchmark)
@@ -100,8 +142,9 @@ def leave_one_benchmark_out(clf, get_features, D, benchmark):
     y_test = get_labels(D_test)
 
     # Debugging printout:
-    print("benchmark:", benchmark,
-          "train on:", len(X_train), "test on:", len(X_test))
+    if verbose:
+        print("benchmark:", benchmark,
+              "train on:", len(X_train), "test on:", len(X_test))
 
     # Train classifier:
     clf.fit(X_train, y_train)
@@ -151,7 +194,6 @@ def motivation():
         re.match(r"^([^0-9]+-[0-9\.]+-[^-]+)-", b).group(1)
         for b in B["benchmark"] if b.startswith(suite)
     ]))
-    print(benchmark_names)
 
     B_out = []
     for benchmark in benchmark_names:
@@ -167,7 +209,6 @@ def motivation():
 
     # Apply jitter and repack
     x,y = zip(*X)
-    print("L", len(X), max(x), min(y), max(y), min(y))
     x = rand_jitter(x, jitter, RandomState(204))
     y = rand_jitter(y, jitter, RandomState(205))
     X = list(zip(x, y))
@@ -187,9 +228,10 @@ def motivation():
     plt.scatter(*zip(*correct), color="b", label='Correct', **opts)
 
     ax = plt.gca()
-    # No ticks
-    ax.xaxis.set_major_locator(plt.NullLocator())
-    ax.yaxis.set_major_locator(plt.NullLocator())
+    # No tick labels:
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    # customaxis(ax)
 
     # Axis labels
     plt.xlabel("e1 →", ha="right")
@@ -216,13 +258,12 @@ def motivation():
 
     # Load data and mask off the benchmark suite in use:
     B = pd.read_csv("data/{}/benchmarks.csv".format(platform))
-    train_mask = B["benchmark"].str.contains(r"^({}|{})-".format(suite, other_suite))
+    train_mask = B["benchmark"].str.contains(r"^{}|{}-".format(suite, other_suite))
     test_mask = B["benchmark"].str.contains(r"^{}-".format(suite))
     other_mask = B["benchmark"].str.contains(r"^{}-".format(other_suite))
     Btrain = B[train_mask]
     Btest = B[test_mask]
-    # TODO: Finish finding a minimial subset of extra kernels
-    Bother = B[other_mask][5:10]
+    Bother = B[other_mask]
 
     B_out = []
     for benchmark in benchmark_names:
@@ -234,7 +275,6 @@ def motivation():
 
     # Apply jitter
     x,y = zip(*X)
-    print("L", len(X), max(x), min(y), max(y), min(y))
     x = rand_jitter(x, jitter, RandomState(204))
     y = rand_jitter(y, jitter, RandomState(205))
     X = list(zip(x, y))
@@ -253,9 +293,10 @@ def motivation():
     plt.scatter(*zip(*correct), color="b", label='Correct', **opts)
 
     ax = plt.gca()
-    # No ticks
-    ax.xaxis.set_major_locator(plt.NullLocator())
-    ax.yaxis.set_major_locator(plt.NullLocator())
+    # No tick labels:
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    # customaxis(ax)
 
     # Axis labels
     plt.xlabel("e1 →", ha="right")
@@ -278,6 +319,40 @@ def motivation():
     # plt.show()
     viz.finalise("data/img/motivation-b.pdf".format(benchmark, platform),
                  figsize=figsize, tight=True)
+
+    # Load data from literature review:
+    data = pd.read_csv("data/motivation-survey.csv", delimiter="\t")
+
+    print(data.columns)
+
+    benchmark_counts = [x[1] for x in data.groupby("Paper").size().iteritems()]
+    median_benchmark_counts = labmath.median(benchmark_counts)
+
+    suites = pd.DataFrame(
+        [(x[0], x[1] / median_benchmark_counts)
+         for x in data.groupby(["Benchmark Suite"]).size().iteritems()],
+        columns=["Suite", "#. benchmarks"])
+
+    # To sort by frequency count:
+    suites.sort_values("#. benchmarks", inplace=True, ascending=False)
+    # To sort by alphabetical:
+    # suites.sort_values("Suite", inplace=True)
+
+    ax = sns.barplot(x="Suite", y="#. benchmarks", data=suites)
+
+    # customaxis(ax)
+
+    # Add threshold line:
+    plt.axhline(y=1, color="k", lw=1)
+
+    # Rotate x labels:
+    plt.setp(ax.get_xticklabels(), rotation=90)
+
+    plt.xlabel("")
+    plt.ylabel("#. benchmarks")
+
+    figsize = (4.5, 3)
+    viz.finalise("data/img/motivation-c.pdf", figsize=figsize, tight=True)
 
 
 def experiment1(platform_id):
@@ -398,7 +473,7 @@ def experiment1(platform_id):
     plt.ylabel("Speedup")
     plt.xlabel("")
     # plt.ylim(0, 6)
-    plt.axhline(y=1)
+    plt.axhline(y=1, color="k", lw=1)
 
     # No legend title
     ax.get_legend().set_title("")
@@ -607,7 +682,9 @@ def experiment2():
                      ci=None)
     plt.ylabel("Speedup")
     plt.xlabel("")
-    plt.axhline(y=1)
+    plt.axhline(y=1, color="k", lw=1)
+
+    # Rotate x ticks
     plt.setp(ax.get_xticklabels(), rotation=90)
 
     plt.ylim(0,3)
