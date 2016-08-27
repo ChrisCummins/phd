@@ -25,6 +25,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import normalize
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
+from numpy.random import RandomState
 
 
 import labm8
@@ -117,9 +118,9 @@ def leave_one_benchmark_out(clf, get_features, D, benchmark):
     return D_out
 
 
-def rand_jitter(arr, factor=0.01):
-    stdev = factor* (max(arr) - min(arr))
-    return arr + np.random.randn(len(arr)) * stdev
+def rand_jitter(arr, factor=0.01, randomstate=RandomState(204)):
+    stdev = factor * (max(arr) - min(arr))
+    return arr + randomstate.randn(len(arr)) * stdev
 
 
 def scatter_with_jitter(plt, x, y, **kwargs):
@@ -135,15 +136,11 @@ def scatter_with_jitter(plt, x, y, **kwargs):
                        rand_jitter(y, **jitter_opts), **kwargs)
 
 def motivation():
-    np.random.seed(204)
     clf = DecisionTreeClassifier(
         random_state=204, criterion="entropy", splitter="best")
     platform = "b"
     suite = "parboil"
-
-    def get_2d_projection(D):
-        pca = PCA(n_components=2)
-        return pca.fit_transform(get_raw_features(D))
+    other_suite = "shoc"
 
     # Load data and mask off the benchmark suite in use:
     B = pd.read_csv("data/{}/benchmarks.csv".format(platform))
@@ -154,6 +151,7 @@ def motivation():
         re.match(r"^([^0-9]+-[0-9\.]+-[^-]+)-", b).group(1)
         for b in B["benchmark"] if b.startswith(suite)
     ]))
+    print(benchmark_names)
 
     B_out = []
     for benchmark in benchmark_names:
@@ -161,7 +159,18 @@ def motivation():
     B_out = pd.DataFrame(B_out)
     assert(len(B) == len(B_out))
 
-    X = get_2d_projection(B)
+    pca = PCA(n_components=2)
+    pca.fit(get_raw_features(B))
+
+    X = pca.transform(get_raw_features(B))
+    jitter = .05
+
+    # Apply jitter and repack
+    x,y = zip(*X)
+    print("L", len(X), max(x), min(y), max(y), min(y))
+    x = rand_jitter(x, jitter, RandomState(204))
+    y = rand_jitter(y, jitter, RandomState(205))
+    X = list(zip(x, y))
 
     correct = [x for x,b in zip(X,B_out.to_dict('records')) if b["p_correct"]]
     incorrect = [x for x,b in zip(X,B_out.to_dict('records')) if not b["p_correct"]]
@@ -170,10 +179,12 @@ def motivation():
     print("  #. correct:  ", len(correct))
     print("  #. incorrect:", len(incorrect))
 
-    opts = { "s": 85, "alpha": .65, "jitter": 0.08 }
-    scatter = partial(scatter_with_jitter, plt)
-    scatter(*zip(*incorrect), color="r", label='Incorrect', **opts)
-    scatter(*zip(*correct), color="b", label='Correct', **opts)
+    # Scatter type:
+    opts = { "s": 85, "alpha": .65 }
+
+    print(len(incorrect))
+    plt.scatter(*zip(*incorrect), color="r", label='Incorrect', **opts)
+    plt.scatter(*zip(*correct), color="b", label='Correct', **opts)
 
     ax = plt.gca()
     # No ticks
@@ -189,12 +200,83 @@ def motivation():
     ax.yaxis.set_label_coords(-.025, 1)
 
     # Show legend
-    handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles, labels)
-    ax.get_legend().draw_frame(True)
+    # handles, labels = ax.get_legend_handles_labels()
+    # ax.legend(handles, labels)
+    # ax.get_legend().draw_frame(True)
+
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
 
     figsize = (2.5,2.5)
     viz.finalise("data/img/motivation-a.pdf".format(benchmark, platform),
+                 figsize=figsize, tight=True)
+
+    # Reset classifier
+    clf = clone(clf)
+
+    # Load data and mask off the benchmark suite in use:
+    B = pd.read_csv("data/{}/benchmarks.csv".format(platform))
+    train_mask = B["benchmark"].str.contains(r"^({}|{})-".format(suite, other_suite))
+    test_mask = B["benchmark"].str.contains(r"^{}-".format(suite))
+    other_mask = B["benchmark"].str.contains(r"^{}-".format(other_suite))
+    Btrain = B[train_mask]
+    Btest = B[test_mask]
+    # TODO: Finish finding a minimial subset of extra kernels
+    Bother = B[other_mask][5:10]
+
+    B_out = []
+    for benchmark in benchmark_names:
+        B_out += leave_one_benchmark_out(clf, get_cgo13_features, Btrain, benchmark)
+    B_out = pd.DataFrame(B_out)
+    assert(len(Btest) == len(B_out))
+
+    X = pca.transform(get_raw_features(Btest))
+
+    # Apply jitter
+    x,y = zip(*X)
+    print("L", len(X), max(x), min(y), max(y), min(y))
+    x = rand_jitter(x, jitter, RandomState(204))
+    y = rand_jitter(y, jitter, RandomState(205))
+    X = list(zip(x, y))
+
+    correct = [x for x,b in zip(X,B_out.to_dict('records')) if b["p_correct"]]
+    incorrect = [x for x,b in zip(X,B_out.to_dict('records')) if not b["p_correct"]]
+    other = pca.transform(get_raw_features(Bother))
+
+    print("Motivation w. other suite:")
+    print("  #. correct:  ", len(correct))
+    print("  #. incorrect:", len(incorrect))
+    print("  #. other:    ", len(Bother))
+
+    scatter_with_jitter(plt, *zip(*other), color="g", label='Correct', jitter=jitter, **opts)
+    plt.scatter(*zip(*incorrect), color="r", label='Incorrect', **opts)
+    plt.scatter(*zip(*correct), color="b", label='Correct', **opts)
+
+    ax = plt.gca()
+    # No ticks
+    ax.xaxis.set_major_locator(plt.NullLocator())
+    ax.yaxis.set_major_locator(plt.NullLocator())
+
+    # Axis labels
+    plt.xlabel("e1 →", ha="right")
+    plt.ylabel("e2 →", ha="right")
+
+    # Position axis labels at end of axis
+    ax.xaxis.set_label_coords(1, -.025)
+    ax.yaxis.set_label_coords(-.025, 1)
+
+    # Show legend
+    # handles, labels = ax.get_legend_handles_labels()
+    # ax.legend(handles, labels)
+    # ax.get_legend().draw_frame(True)
+
+    # Set same axis limits as before
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+
+    figsize = (2.5,2.5)
+    # plt.show()
+    viz.finalise("data/img/motivation-b.pdf".format(benchmark, platform),
                  figsize=figsize, tight=True)
 
 
