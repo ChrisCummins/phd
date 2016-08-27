@@ -127,9 +127,9 @@ def customaxis(ax, c_left='k', c_bottom='k', c_right='none', c_top='none',
                        color=c_right, labelsize=size, pad=pad)
 
 
-def leave_one_benchmark_out(clf, get_features, D, benchmark, verbose=True):
+def leave_one_benchmark_out(clf, get_features, D, benchmark, verbose=False):
     # Create data masks. For training we exclude all results from
-    # benchmark.
+    # the test benchmark.
     test_mask = D["benchmark"].str.contains(r"^" + benchmark)
     train_mask = ~test_mask
 
@@ -179,6 +179,9 @@ def scatter_with_jitter(plt, x, y, **kwargs):
                        rand_jitter(y, **jitter_opts), **kwargs)
 
 def motivation():
+    #######################
+    # Motivation Baseline #
+    #######################
     clf = DecisionTreeClassifier(
         random_state=204, criterion="entropy", splitter="best")
     platform = "b"
@@ -216,18 +219,19 @@ def motivation():
     correct = [x for x,b in zip(X,B_out.to_dict('records')) if b["p_correct"]]
     incorrect = [x for x,b in zip(X,B_out.to_dict('records')) if not b["p_correct"]]
 
+    print()
     print("Motivation:")
-    print("  #. correct:  ", len(correct))
-    print("  #. incorrect:", len(incorrect))
+    print("  #. correct:   ", len(correct),
+          "({:.1f}%)".format((len(correct) / len(X)) * 100))
+    print("  #. incorrect: ", len(incorrect))
+    print()
 
     # Scatter type:
-    opts = { "s": 85, "alpha": .65 }
-
-    print(len(incorrect))
+    plot_opts = { "s": 85, "alpha": .65 }
     plt.scatter(*zip(*incorrect),
-                color="r", marker="v", label='Incorrect', **opts)
+                color="r", marker="v", label='Incorrect', **plot_opts)
     plt.scatter(*zip(*correct),
-                color="b", marker="^", label='Correct', **opts)
+                color="b", marker="^", label='Correct', **plot_opts)
 
     ax = plt.gca()
     # No tick labels:
@@ -252,11 +256,16 @@ def motivation():
     ylim = ax.get_ylim()
 
     figsize = (3,3)
-    viz.finalise("data/img/motivation-a.pdf".format(benchmark, platform),
+    viz.finalise(fs.path("~/phd/docs/wip-smith/img/motivation-a.pdf"),
                  figsize=figsize, tight=True)
 
     # Reset classifier
     clf = clone(clf)
+
+
+    ##############################
+    # With additional benchmarks #
+    ##############################
 
     # Load data and mask off the benchmark suite in use:
     B = pd.read_csv("data/{}/benchmarks.csv".format(platform))
@@ -269,7 +278,8 @@ def motivation():
 
     B_out = []
     for benchmark in benchmark_names:
-        B_out += leave_one_benchmark_out(clf, get_cgo13_features, Btrain, benchmark)
+        B_out += leave_one_benchmark_out(
+            clf, get_cgo13_features, Btrain, benchmark)
     B_out = pd.DataFrame(B_out)
     assert(len(Btest) == len(B_out))
 
@@ -281,22 +291,27 @@ def motivation():
     y = rand_jitter(y, jitter, RandomState(205))
     X = list(zip(x, y))
 
-    correct = [x for x,b in zip(X,B_out.to_dict('records')) if b["p_correct"]]
-    incorrect = [x for x,b in zip(X,B_out.to_dict('records')) if not b["p_correct"]]
+    correct = [
+        x for x,b in zip(X,B_out.to_dict('records')) if b["p_correct"]]
+    incorrect = [
+        x for x,b in zip(X,B_out.to_dict('records')) if not b["p_correct"]]
     other = pca.transform(get_raw_features(Bother))
 
+    print()
     print("Motivation w. other suite:")
-    print("  #. correct:  ", len(correct))
-    print("  #. incorrect:", len(incorrect))
-    print("  #. other:    ", len(Bother))
+    print("  #. correct:   ", len(correct),
+          "({:.1f}%)".format((len(correct) / len(X)) * 100))
+    print("  #. incorrect: ", len(incorrect))
+    print("  #. additional:", len(Bother))
+    print()
 
     scatter_with_jitter(plt, *zip(*other),
                         color="g", marker="o", label="Additional",
-                        jitter=jitter, **opts)
+                        jitter=jitter, **plot_opts)
     plt.scatter(*zip(*incorrect),
-                color="r", marker="v", label='Incorrect', **opts)
+                color="r", marker="v", label='Incorrect', **plot_opts)
     plt.scatter(*zip(*correct),
-                color="b", marker="^", label='Correct', **opts)
+                color="b", marker="^", label='Correct', **plot_opts)
 
     ax = plt.gca()
     # No tick labels:
@@ -323,13 +338,16 @@ def motivation():
 
     figsize = (3,3)
     # plt.show()
-    viz.finalise("data/img/motivation-b.pdf".format(benchmark, platform),
+    viz.finalise(fs.path("~/phd/docs/wip-smith/img/motivation-b.pdf"),
                  figsize=figsize, tight=True)
+
+
+    ##########################
+    # Survey of GPGPU papers #
+    ##########################
 
     # Load data from literature review:
     data = pd.read_csv("data/motivation-survey.csv", delimiter="\t")
-
-    print(data.columns)
 
     benchmark_counts = [x[1] for x in data.groupby("Paper").size().iteritems()]
     median_benchmark_counts = labmath.median(benchmark_counts)
@@ -358,7 +376,8 @@ def motivation():
     plt.ylabel("#. benchmarks")
 
     figsize = (4.5, 2.5)
-    viz.finalise("data/img/motivation-c.pdf", figsize=figsize, tight=True)
+    viz.finalise(fs.path("~/phd/docs/wip-smith/img/motivation-c.pdf"),
+                 figsize=figsize, tight=True)
 
 
 def experiment1(platform_id):
@@ -392,8 +411,7 @@ def experiment1(platform_id):
     zeror_runtime = "runtime_" + zeror.lower()
 
     benchmark_names = sorted(set([
-        re.match(r"^([^0-9]+-[0-9\.]+-[^-]+)-", b).group(1)
-        for b in B["benchmark"] if b.startswith("npb-")
+        b for b in B["benchmark"] if b.startswith("npb-")
     ]))
 
     B_out, BS_out = [], []
@@ -459,6 +477,7 @@ def experiment1(platform_id):
     BS_speedup = labmath.mean(R[bs_mask]["p_speedup"])
 
     # Print analytics:
+    print()
     print("Experiment 1 on Platform {}:".format(platform_id.upper()))
     print("  ZeroR device:            {} ({:.1f} %)"
           .format(zeror, zeror_ratio * 100))
@@ -478,28 +497,29 @@ def experiment1(platform_id):
                      data=R, ci=None)
     plt.ylabel("Speedup")
     plt.xlabel("")
-    # plt.ylim(0, 6)
+
+    # Speedup line
     plt.axhline(y=1, color="k", lw=1)
 
     # No legend title
     ax.get_legend().set_title("")
 
     figsize = (4.5, 2)
-    plottype = "pdf"
-    viz.finalise("data/img/ex1-{}.{}".format(platform_id.upper(), plottype),
+    viz.finalise(fs.path("~/phd/docs/wip-smith/img/ex1-{}.pdf"
+                         .format(platform_id.upper())),
                  figsize=figsize, tight=True)
 
 
 def escape_benchmark_name(g):
     c = g.split('-')
     if c[0] == "amd":
-        return "AMD SDK " + c[-2]
+        return "AMD SDK: " + c[-2]
     elif c[0] == "nvidia":
-        return "Nvidia SDK " + c[-2]
+        return "Nvidia SDK: " + c[-2]
     elif c[0] == "shoc" or c[0] == "npb":
-        return c[0].upper() + " " + c[-2]
+        return c[0].upper() + ": " + c[-2]
     else:
-        return c[0].capitalize() + " " + c[-2]
+        return c[0].capitalize() + ": " + c[-2]
 
 
 def experiment2():
@@ -539,6 +559,11 @@ def experiment2():
         clf1.fit(X1_train, y1_train)
         clf2.fit(X2_train, y2_train)
 
+        # FIXME: Why wouldn't there be something to test on?
+        if not len(X1_test) or not len(X2_test):
+            print("error:", len(X1_test), len(X2_test))
+            return []
+
         # Make predictions
         predicted1 = clf1.predict(X1_test)
         predicted2 = clf2.predict(X2_test)
@@ -575,10 +600,7 @@ def experiment2():
     assert(len(S) == len(aS) + len(bS))
     assert(len(BS) == len(aBS) + len(bBS))
 
-    benchmark_names = sorted(set([
-        re.match(r"^([^0-9]+-[0-9\.]+-[^-]+)-", b).group(1)
-        for b in B["benchmark"] # if b.startswith("parboil")
-    ]))
+    benchmark_names = sorted(set(B["benchmark"]))
 
     # Perform cross-validation:
     B_out = []
@@ -668,7 +690,7 @@ def experiment2():
 
     a_matched_or_improved = R[Amask & R["p_speedup"] >= 1]
     b_matched_or_improved = R[Bmask & R["p_speedup"] >= 1]
-    print("Matched or improved:    {:.1f} %"
+    print("Matched or improved:     {:.1f} %"
           .format(((len(a_matched_or_improved) + len(b_matched_or_improved))
                    / float(len(R))) * 100))
 
@@ -693,16 +715,17 @@ def experiment2():
     # Rotate x ticks
     plt.setp(ax.get_xticklabels(), rotation=90)
 
-    plt.ylim(0,3)
+    # Set plot limit:
+    plt.ylim(0,4)
 
     # No legend title
     ax.get_legend().set_title("")
     plt.legend(loc='upper right')
     ax.get_legend().draw_frame(True)
 
-    plottype = "pdf"
     figsize = (10, 5)
-    viz.finalise("data/img/ex2." + plottype, figsize=figsize, tight=True)
+    viz.finalise(fs.path("~/phd/docs/wip-smith/img/ex2.pdf"),
+                 figsize=figsize, tight=True)
 
 
 def main():
