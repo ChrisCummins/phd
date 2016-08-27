@@ -473,6 +473,9 @@ def experiment1(platform_id):
     B_oracle = labmath.mean(R[b_mask]["p_oracle"])
     BS_oracle = labmath.mean(R[bs_mask]["p_oracle"])
 
+    print("B:", ",".join(["{:.2f}".format(x) for x in R[b_mask]["p_speedup"]]))
+    print("BS:", ",".join(["{:.2f}".format(x) for x in R[bs_mask]["p_speedup"]]))
+    # print("BS:", ",".join(R[bs_mask]["p_speedup"]))
     B_speedup = labmath.mean(R[b_mask]["p_speedup"])
     BS_speedup = labmath.mean(R[bs_mask]["p_speedup"])
 
@@ -552,8 +555,8 @@ def experiment2():
         y2_test = get_labels(D2_test)
 
         # Debugging printout:
-        print("benchmark:", benchmark,
-              "train on:", len(X1_train), "test on:", len(X1_test))
+        # print("benchmark:", benchmark,
+        #       "train on:", len(X1_train), "test on:", len(X1_test))
 
         # Train classifiers:
         clf1.fit(X1_train, y1_train)
