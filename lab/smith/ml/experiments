@@ -205,7 +205,7 @@ def motivation():
     pca.fit(get_raw_features(B))
 
     X = pca.transform(get_raw_features(B))
-    jitter = .05
+    jitter = .075
 
     # Apply jitter and repack
     x,y = zip(*X)
@@ -224,8 +224,10 @@ def motivation():
     opts = { "s": 85, "alpha": .65 }
 
     print(len(incorrect))
-    plt.scatter(*zip(*incorrect), color="r", label='Incorrect', **opts)
-    plt.scatter(*zip(*correct), color="b", label='Correct', **opts)
+    plt.scatter(*zip(*incorrect),
+                color="r", marker="v", label='Incorrect', **opts)
+    plt.scatter(*zip(*correct),
+                color="b", marker="^", label='Correct', **opts)
 
     ax = plt.gca()
     # No tick labels:
@@ -242,14 +244,14 @@ def motivation():
     ax.yaxis.set_label_coords(-.025, 1)
 
     # Show legend
-    # handles, labels = ax.get_legend_handles_labels()
-    # ax.legend(handles, labels)
-    # ax.get_legend().draw_frame(True)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1])
+    ax.get_legend().draw_frame(True)
 
     xlim = ax.get_xlim()
     ylim = ax.get_ylim()
 
-    figsize = (2.5,2.5)
+    figsize = (3,3)
     viz.finalise("data/img/motivation-a.pdf".format(benchmark, platform),
                  figsize=figsize, tight=True)
 
@@ -288,9 +290,13 @@ def motivation():
     print("  #. incorrect:", len(incorrect))
     print("  #. other:    ", len(Bother))
 
-    scatter_with_jitter(plt, *zip(*other), color="g", label='Correct', jitter=jitter, **opts)
-    plt.scatter(*zip(*incorrect), color="r", label='Incorrect', **opts)
-    plt.scatter(*zip(*correct), color="b", label='Correct', **opts)
+    scatter_with_jitter(plt, *zip(*other),
+                        color="g", marker="o", label="Additional",
+                        jitter=jitter, **opts)
+    plt.scatter(*zip(*incorrect),
+                color="r", marker="v", label='Incorrect', **opts)
+    plt.scatter(*zip(*correct),
+                color="b", marker="^", label='Correct', **opts)
 
     ax = plt.gca()
     # No tick labels:
@@ -307,15 +313,15 @@ def motivation():
     ax.yaxis.set_label_coords(-.025, 1)
 
     # Show legend
-    # handles, labels = ax.get_legend_handles_labels()
-    # ax.legend(handles, labels)
-    # ax.get_legend().draw_frame(True)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1])
+    ax.get_legend().draw_frame(True)
 
     # Set same axis limits as before
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
 
-    figsize = (2.5,2.5)
+    figsize = (3,3)
     # plt.show()
     viz.finalise("data/img/motivation-b.pdf".format(benchmark, platform),
                  figsize=figsize, tight=True)
@@ -351,7 +357,7 @@ def motivation():
     plt.xlabel("")
     plt.ylabel("#. benchmarks")
 
-    figsize = (4.5, 3)
+    figsize = (4.5, 2.5)
     viz.finalise("data/img/motivation-c.pdf", figsize=figsize, tight=True)
 
 
