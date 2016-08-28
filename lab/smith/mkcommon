@@ -71,15 +71,10 @@ def main():
           "({:.1f} %)".format((len(common) / len(rightb)) * 100))
 
     with open(args.input1, "w") as outfile:
-        p1 = Process(target=write_common, args=(left, common, header, outfile))
-        p1.start()
+        write_common(left, common, header, outfile)
 
     with open(args.input2, "w") as outfile:
-        p2 = Process(target=write_common, args=(right, common, header, outfile))
-        p2.start()
-
-    p1.join()
-    p2.join()
+        write_common(right, common, header, outfile)
 
 
 if __name__ == '__main__':
