@@ -194,7 +194,7 @@ def motivation():
     B = B[test_mask]
 
     benchmark_names = sorted(set([
-        re.match(r"^([^0-9]+-[0-9\.]+-[^-]+)-", b).group(1)
+        re.match(r"^([^0-9]+-[0-9\.]+-[^-]+)", b).group(1)
         for b in B["benchmark"] if b.startswith(suite)
     ]))
 
@@ -488,7 +488,7 @@ def check_for_subset(candidates):
     return len(incorrect)
 
 
-def experiment1(platform_id):
+def speedup_with_synthetic_benchmarks(platform_id):
     #
     # Cross-validate CGO13 model across NPB benchmarks, with and
     # without synthetic benchmarks.
@@ -518,8 +518,10 @@ def experiment1(platform_id):
     zeror_ratio = zeror_freq / len(Bmask)
     zeror_runtime = "runtime_" + zeror.lower()
 
+    # Get the names of the benchmarks, in the form: $suite-$version-$benchmark
     benchmark_names = sorted(set([
-        b for b in B["benchmark"] if b.startswith("npb-")
+        re.match(r"^([^0-9]+-[0-9\.]+-[^-]+)-", b).group(1)
+        for b in B["benchmark"] if b.startswith("npb-")
     ]))
 
     B_out, BS_out = [], []
@@ -558,11 +560,11 @@ def experiment1(platform_id):
         b["p_oracle"] = b["runtime"] / b_p_runtime
         bs["p_oracle"] = bs["runtime"] / bs_p_runtime
 
-        # Get the benchmark name:
-        benchmark_name = re.sub(r"[^-]+-[0-9\.]+-([^-]+)-.+", r"\1",
-                                b["benchmark"])
-        b["benchmark_name"] = benchmark_name
-        bs["benchmark_name"] = benchmark_name
+        # Get the group label, in the form $benchmark.$dataset:
+        group = re.sub(r"[^-]+-[0-9\.]+-([^-]+)-.+", r"\1",
+                       b["benchmark"]) + "." + b["dataset"]
+        b["group"] = group
+        bs["group"] = group
 
         # Set the training data type.
         b["training"] = "Baseline"
@@ -575,17 +577,14 @@ def experiment1(platform_id):
     b_mask = R["training"] == "Baseline"
     bs_mask = R["training"] == "w. Synthesized Kernels"
 
-    B_acc = labmath.mean(R[b_mask]["p_correct"])
-    BS_acc = labmath.mean(R[bs_mask]["p_correct"])
+    B_acc = labmath.mean(R[b_mask].groupby(["group"])["p_correct"].mean())
+    BS_acc = labmath.mean(R[bs_mask].groupby(["group"])["p_correct"].mean())
 
-    B_oracle = labmath.mean(R[b_mask]["p_oracle"])
-    BS_oracle = labmath.mean(R[bs_mask]["p_oracle"])
+    B_oracle = labmath.mean(R[b_mask].groupby(["group"])["p_oracle"].mean())
+    BS_oracle = labmath.mean(R[bs_mask].groupby(["group"])["p_oracle"].mean())
 
-    # print("B:", ",".join(["{:.2f}".format(x) for x in R[b_mask]["p_speedup"]]))
-    # print("BS:", ",".join(["{:.2f}".format(x) for x in R[bs_mask]["p_speedup"]]))
-
-    B_speedup = labmath.mean(R[b_mask]["p_speedup"])
-    BS_speedup = labmath.mean(R[bs_mask]["p_speedup"])
+    B_speedup = labmath.mean(R[b_mask].groupby(["group"])["p_speedup"].mean())
+    BS_speedup = labmath.mean(R[bs_mask].groupby(["group"])["p_speedup"].mean())
 
     # Print analytics:
     print()
@@ -604,7 +603,7 @@ def experiment1(platform_id):
     print()
 
     # Plot summary:
-    ax = sns.barplot(x="benchmark_name", y="p_speedup", hue="training",
+    ax = sns.barplot(x="group", y="p_speedup", hue="training",
                      data=R, ci=None)
     plt.ylabel("Speedup")
     plt.xlabel("")
@@ -615,22 +614,31 @@ def experiment1(platform_id):
     # No legend title
     ax.get_legend().set_title("")
 
-    figsize = (4.5, 2)
-    viz.finalise(fs.path("~/phd/docs/wip-smith/img/ex1-{}.pdf"
+    figsize = (9, 2.2)
+    if platform_id == "B":
+        plt.ylim(0, 15)
+    plt.setp(ax.get_xticklabels(), rotation=90)
+
+    # plt.show()
+    viz.finalise(fs.path("~/phd/docs/wip-smith/img/ex1-{}.png"
                          .format(platform_id.upper())),
                  figsize=figsize, tight=True)
 
 
+def experiment1():
+    speedup_with_synthetic_benchmarks("A")
+    speedup_with_synthetic_benchmarks("B")
+
+
 def escape_benchmark_name(g):
     c = g.split('-')
-    if c[0] == "amd":
-        return "AMD SDK: " + c[-2]
-    elif c[0] == "nvidia":
-        return "Nvidia SDK: " + c[-2]
-    elif c[0] == "shoc" or c[0] == "npb":
-        return c[0].upper() + ": " + c[-2]
+    if (c[0] == "shoc" or
+        c[0] == "npb" or
+        c[0] == "nvidia" or
+        c[0] == "amd"):
+        return c[0].upper() + "." + c[-2]
     else:
-        return c[0].capitalize() + ": " + c[-2]
+        return c[0].capitalize() + "." + c[-2]
 
 
 def experiment2():
@@ -779,7 +787,7 @@ def experiment2():
         b["p_oracle"] = b["runtime"] / p2_runtime
 
         # Get the benchmark name:
-        b["benchmark_name"] = escape_benchmark_name(b["benchmark"])
+        b["group"] = escape_benchmark_name(b["benchmark"])
 
         R_out.append(b)
     R = pd.DataFrame(R_out)
@@ -816,7 +824,7 @@ def experiment2():
     print("Worsened:               {:.1f} %"
           .format(((len(a_worsened) + len(b_worsened)) / float(len(R))) * 100))
 
-    ax = sns.barplot(x="benchmark_name", y="p_speedup", hue="platform", data=R,
+    ax = sns.barplot(x="group", y="p_speedup", hue="platform", data=R,
                      palette=sns.color_palette("Set1", n_colors=2, desat=.8),
                      ci=None)
     plt.ylabel("Speedup")
@@ -834,7 +842,7 @@ def experiment2():
     plt.legend(loc='upper right')
     ax.get_legend().draw_frame(True)
 
-    figsize = (10, 5)
+    figsize = (9, 4.5)
     viz.finalise(fs.path("~/phd/docs/wip-smith/img/ex2.pdf"),
                  figsize=figsize, tight=True)
 
@@ -1515,10 +1523,9 @@ def main():
     # print("Best results:", best, best_combination)
 
 
-    # motivation()
-    experiment1("A")
-    experiment1("B")
-    # experiment2()
+    motivation()
+    experiment1()
+    experiment2()
 
 
 if __name__ == "__main__":
