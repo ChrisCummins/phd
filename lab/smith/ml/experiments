@@ -13,9 +13,11 @@ import sys
 from argparse import ArgumentParser
 from collections import Counter
 from copy import copy
-from itertools import combinations
 from functools import partial
+from itertools import combinations
 from math import sqrt,ceil
+from numpy.random import RandomState
+from os import system
 from random import seed,random
 from sklearn.base import clone
 from sklearn.decomposition import PCA
@@ -26,8 +28,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import normalize
 from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
-from numpy.random import RandomState
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
 
 
 import labm8
@@ -151,7 +152,7 @@ def customaxis(ax, c_left='k', c_bottom='k', c_right='none', c_top='none',
                        color=c_right, labelsize=size, pad=pad)
 
 
-def leave_one_benchmark_out(clf, get_features, D, benchmark, verbose=False):
+def leave_one_benchmark_out(clf, get_features, D, benchmark):
     # Create data masks. For training we exclude all results from
     # the test benchmark.
     test_mask = D["benchmark"].str.contains(r"^" + benchmark)
@@ -164,11 +165,6 @@ def leave_one_benchmark_out(clf, get_features, D, benchmark, verbose=False):
     D_test = D[test_mask]
     X_test = get_features(D_test)
     y_test = get_labels(D_test)
-
-    # Debugging printout:
-    if verbose:
-        print("benchmark:", benchmark,
-              "train on:", len(X_train), "test on:", len(X_test))
 
     # Train classifier:
     clf.fit(X_train, y_train)
@@ -658,11 +654,44 @@ def predictive_models(benchmark, platform_id):
                     .format(platform_id=platform_id.lower()))
     BS = pd.concat((B, S))
 
+    model1 = get_cgo13_model()
+    model2 = get_cgo13_model()
+    features = get_cgo13_features
+
+    Btrain_mask = ~B["benchmark"].str.contains(r"^" + benchmark)
+    BStrain_mask = ~BS["benchmark"].str.contains(r"^" + benchmark)
+
+    BX_train = features(B[Btrain_mask])
+    By_train = get_labels(B[Btrain_mask])
+
+    BSX_train = features(BS[BStrain_mask])
+    BSy_train = get_labels(BS[BStrain_mask])
+
+    print("")
+    model1.fit(BX_train, By_train)
+
+    def visualize_tree(model, path):
+        export_graphviz(model, max_depth=3, label=None, filled=True,
+                        feature_names=["F1", "F2", "F3", "F4"],
+                        impurity=False, proportion=True,
+                        rounded=True)
+        system(r"sed -r 's/\\n[0-9\.]+%\\n\[[0-9\.]+, [0-9\.]+\]//' -i tree.dot")
+        system("dot -Tpng tree.dot -o " + fs.path(path))
+        # system("rm tree.dot")
+
+
+    model1.fit(BX_train, By_train)
+    visualize_tree(model1, "~/phd/docs/wip-smith/img/tree-a.png")
+
+    model2.fit(BSX_train, BSy_train)
+    visualize_tree(model2, "~/phd/docs/wip-smith/img/tree-b.png")
+
+
 
 def experiment1():
     predictive_models("npb-3.3-FT", "B")
-    speedup_with_synthetic_benchmarks("A")
-    speedup_with_synthetic_benchmarks("B")
+    # speedup_with_synthetic_benchmarks("A")
+    # speedup_with_synthetic_benchmarks("B")
 
 
 def escape_benchmark_name(g):
@@ -1531,9 +1560,9 @@ def main():
     #                 print("\n".join(best_combination), file=outfile)
     # print("Best results:", best, best_combination)
 
-    motivation()
+    # motivation()
     experiment1()
-    experiment2()
+    # experiment2()
 
 
 if __name__ == "__main__":
