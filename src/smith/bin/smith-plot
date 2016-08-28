@@ -83,6 +83,32 @@ def plot_features(data, args):
         sns.pairplot(s)
 
 
+def plot_raw_features(data, args):
+    if len(set(data["Group"])) > 1:
+        s = pd.concat([
+            data["comp"],
+            data["mem"],
+            data["localmem"],
+            data["coalesced"],
+            data["transfer"],
+            data["wgsize"],
+            data["Group"]
+        ], axis=1, keys=[
+            "comp", "mem", "localmem", "coalesced", "transfer", "wgsize"])[:500]
+        sns.pairplot(s, hue="Group")
+    else:
+        s = pd.concat([
+            data["comp"],
+            data["mem"],
+            data["localmem"],
+            data["coalesced"],
+            data["transfer"],
+            data["wgsize"]
+        ], axis=1, keys=[
+            "comp", "mem", "localmem", "coalesced", "transfer", "wgsize"])[:500]
+        sns.pairplot(s)
+
+
 def plot_runtimes(data, args):
     x = data["runtime"]
     sns.distplot(x, kde=False)
@@ -215,23 +241,25 @@ def plot_eigen_neighbours(data, args):
 
 def main():
     types = {
+        "ci": plot_noise,
         "eigen-neighbours": plot_eigen_neighbours,
         "eigens": plot_eigenvectors,
         "en": plot_eigen_neighbours,
-        "features": plot_features,
-        "normfeats": plot_norm_features,
         "featnorms": plot_norm_features,
-        "normfeatures": plot_norm_features,
+        "features": plot_features,
+        "l1o": plot_l1o_suites,
+        "l1o_prog": plot_l1o_benchmarks,
         "neighbours": plot_neighbours,
-        "ci": plot_noise,
         "nn": plot_neighbours,
+        "normfeats": plot_norm_features,
+        "normfeatures": plot_norm_features,
+        "rawfeat": plot_raw_features,
+        "rawfeatures": plot_raw_features,
         "run": plot_runtimes,
         "runtime": plot_runtimes,
         "runtimes": plot_runtimes,
-        "xval": plot_xval,
-        "l1o": plot_l1o_suites,
-        "l1o_prog": plot_l1o_benchmarks,
         "transfer": plot_transfers,
+        "xval": plot_xval,
     }
 
     parser = ArgumentParser()
