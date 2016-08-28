@@ -46,6 +46,7 @@ plt.style.use(["seaborn-white", "seaborn-paper"])
 
 
 def get_cgo13_model():
+    # return KNeighborsClassifier(1)
     return DecisionTreeClassifier(
         random_state=204,
         splitter="best",
@@ -647,19 +648,50 @@ def speedup_with_synthetic_benchmarks(platform_id):
                  figsize=figsize, tight=True)
 
 
-def predictive_models(benchmark, platform_id):
-    B = pd.read_csv("data/{platform_id}/benchmarks.csv"
-                    .format(platform_id=platform_id.lower()))
-    S = pd.read_csv("data/{platform_id}/synthetics.csv"
-                    .format(platform_id=platform_id.lower()))
+def eigenspace(platform_id):
+    B = pd.read_csv("data/{}/benchmarks.csv".format(platform_id))
+    S = pd.read_csv("data/{}/synthetics.csv".format(platform_id))
+    BS = pd.concat((B, S))
+
+    features = get_raw_features
+    pca = PCA(n_components=2)
+    pca.fit(features(BS))
+
+    # benchmarks = pd.DataFrame([x for x in pca.transform(features(B))][:100],
+    #                           columns=["E1", "E2"])
+    # benchmarks["synthetic"] = np.zeros(len(benchmarks))
+    # synthetics = pd.DataFrame([x for x in pca.transform(features(S))][:100],
+    #                           columns=["E1", "E2"])
+    # synthetics["synthetic"] = np.ones(len(synthetics))
+    # eigens = pd.concat((benchmarks, synthetics))
+    #
+    # sns.pairplot(eigens, hue="synthetic")
+
+    benchmarks = pca.transform(features(B))
+    synthetics = pca.transform(features(S))[:100]
+
+    plot_opts = { "s": 35, "alpha": .65 }
+    plt.scatter(*zip(*benchmarks),
+                color="r", marker="v", label='Benchmarks', **plot_opts)
+    plt.scatter(*zip(*synthetics),
+                color="b", marker="^", label='Synthetics', **plot_opts)
+    # plt.xlim(3200000, 3700000)
+    plt.ylim(2,5)
+
+    plt.show()
+
+
+def predictive_models():
+    B = pd.read_csv("data/b/benchmarks.csv")
+    S = pd.read_csv("data/b/synthetics.csv")
     BS = pd.concat((B, S))
 
     model1 = get_cgo13_model()
     model2 = get_cgo13_model()
     features = get_cgo13_features
 
-    Btrain_mask = ~B["benchmark"].str.contains(r"^" + benchmark)
-    BStrain_mask = ~BS["benchmark"].str.contains(r"^" + benchmark)
+    Btrain_mask = ~B["benchmark"].str.contains(r"^npb-3.3-CG")
+    BStrain_mask = ~BS["benchmark"].str.contains(r"^npb-3.3-CG")
 
     BX_train = features(B[Btrain_mask])
     By_train = get_labels(B[Btrain_mask])
@@ -670,28 +702,34 @@ def predictive_models(benchmark, platform_id):
     print("")
     model1.fit(BX_train, By_train)
 
-    def visualize_tree(model, path):
-        export_graphviz(model, max_depth=3, label=None, filled=True,
+    def visualize_tree(model, path, max_depth=None):
+        export_graphviz(model, label=None, filled=True,
                         feature_names=["F1", "F2", "F3", "F4"],
                         impurity=False, proportion=True,
-                        rounded=True)
+                        rounded=True, max_depth=max_depth)
+        # Remove the 2nd and 3rd lines from split nodes:
         system(r"sed -r 's/\\n[0-9\.]+%\\n\[[0-9\.]+, [0-9\.]+\]//' -i tree.dot")
+
+        # Convert .dot to .ps:
         system("dot -Tpng tree.dot -o " + fs.path(path))
-        # system("rm tree.dot")
+
+        # Clean up
+        system("rm tree.dot")
 
 
     model1.fit(BX_train, By_train)
-    visualize_tree(model1, "~/phd/docs/wip-smith/img/tree-a.png")
+    visualize_tree(model1, "~/phd/docs/wip-smith/img/tree-a.png", 2)
 
     model2.fit(BSX_train, BSy_train)
-    visualize_tree(model2, "~/phd/docs/wip-smith/img/tree-b.png")
+    visualize_tree(model2, "~/phd/docs/wip-smith/img/tree-b.png", 2)
 
 
 
 def experiment1():
-    predictive_models("npb-3.3-FT", "B")
-    # speedup_with_synthetic_benchmarks("A")
-    # speedup_with_synthetic_benchmarks("B")
+    # eigenspace("B")
+    # predictive_models()
+    speedup_with_synthetic_benchmarks("A")
+    speedup_with_synthetic_benchmarks("B")
 
 
 def escape_benchmark_name(g):
@@ -1562,7 +1600,7 @@ def main():
 
     # motivation()
     experiment1()
-    # experiment2()
+    experiment2()
 
 
 if __name__ == "__main__":
