@@ -41,6 +41,7 @@ from smith import cgo13
 
 # Seaborn configuration:
 sns.set(style="ticks", color_codes=True)
+plt.style.use(["seaborn-white", "seaborn-paper"])
 
 
 def get_cgo13_model():
@@ -55,7 +56,6 @@ def get_cgo13_model():
 
 
 def get_cgo13_features(D):
-    # return np.array([[0] * len(D), [0] * len(D)]).T
     return np.array([
         (D["transfer"].values / (D["comp"].values + D["mem"].values)),
         (D["coalesced"].values / D["mem"].values),
@@ -64,8 +64,20 @@ def get_cgo13_features(D):
     ]).T
 
 
+def get_our_model():
+    # return KNeighborsClassifier(1)
+    # return SVC(kernel="linear", C=0.025)
+    # return SVC(gamma=2, C=1)
+    # return RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1)
+    # return AdaBoostClassifier()
+    # return GaussianNB()
+    # return LinearDiscriminantAnalysis()
+    # return QuadraticDiscriminantAnalysis()
+    return DecisionTreeClassifier(
+        random_state=204, criterion="entropy", splitter="best")
+
+
 def get_our_features(D):
-    # return np.array([[0] * len(D), [0] * len(D)]).T
     return np.array([
         D["comp"].values,
         D["rational"].values,
@@ -80,6 +92,7 @@ def get_our_features(D):
         ((D["localmem"].values / D["mem"].values) * D["wgsize"].values),
         (D["comp"].values / D["mem"].values),
     ]).T
+
 
 def get_raw_features(D):
     return np.array([
@@ -250,8 +263,8 @@ def motivation():
     # customaxis(ax)
 
     # Axis labels
-    plt.xlabel("e1 →", ha="right")
-    plt.ylabel("e2 →", ha="right")
+    plt.xlabel(r"$e_1 \rightarrow$", ha="right")
+    plt.ylabel(r"$e_2 \rightarrow$", ha="right")
 
     # Position axis labels at end of axis
     ax.xaxis.set_label_coords(1, -.025)
@@ -265,7 +278,7 @@ def motivation():
     xlim = ax.get_xlim()
     ylim = ax.get_ylim()
 
-    figsize = (3,3)
+    figsize = (2.5,2.5)
     viz.finalise(fs.path("~/phd/docs/wip-smith/img/motivation-a.pdf"),
                  figsize=figsize, tight=True)
 
@@ -340,8 +353,8 @@ def motivation():
     # customaxis(ax)
 
     # Axis labels
-    plt.xlabel("e1 →", ha="right")
-    plt.ylabel("e2 →", ha="right")
+    plt.xlabel(r"$e_1 \rightarrow$", ha="right")
+    plt.ylabel(r"$e_2 \rightarrow$", ha="right")
 
     # Position axis labels at end of axis
     ax.xaxis.set_label_coords(1, -.025)
@@ -356,7 +369,6 @@ def motivation():
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
 
-    figsize = (3,3)
     # plt.show()
     viz.finalise(fs.path("~/phd/docs/wip-smith/img/motivation-b.pdf"),
                  figsize=figsize, tight=True)
@@ -382,6 +394,8 @@ def motivation():
     # To sort by alphabetical:
     # suites.sort_values("Suite", inplace=True)
 
+    print(suites)
+
     ax = sns.barplot(x="Suite", y="#. benchmarks", data=suites)
 
     # customaxis(ax)
@@ -393,9 +407,9 @@ def motivation():
     plt.setp(ax.get_xticklabels(), rotation=90)
 
     plt.xlabel("")
-    plt.ylabel("#. benchmarks")
+    plt.ylabel(r"\#. benchmarks")
 
-    figsize = (4.5, 2.5)
+    figsize = (4, 2.35)
     viz.finalise(fs.path("~/phd/docs/wip-smith/img/motivation-c.pdf"),
                  figsize=figsize, tight=True)
 
@@ -544,8 +558,7 @@ def speedup_with_synthetic_benchmarks(platform_id):
         B_out += leave_one_benchmark_out(clf, get_cgo13_features, B, benchmark)
 
         # Reset model.
-        tmp = clone(clf)
-        clf = tmp
+        clf = get_cgo13_model()
 
         # Repeate cross-validation with synthetic kernels:
         BS_out += leave_one_benchmark_out(clf, get_cgo13_features, BS, benchmark)
@@ -616,6 +629,11 @@ def speedup_with_synthetic_benchmarks(platform_id):
     plt.ylabel("Speedup")
     plt.xlabel("")
 
+    # FIXME: Apply hatch pattern to alternate bars:
+    # for i,bar in enumerate(ax.patches):
+    #     if not i % 2:
+    #         bar.set_hatch("////")
+
     # Speedup line
     plt.axhline(y=1, color="k", lw=1)
 
@@ -643,8 +661,8 @@ def predictive_models(benchmark, platform_id):
 
 def experiment1():
     predictive_models("npb-3.3-FT", "B")
-    # speedup_with_synthetic_benchmarks("A")
-    # speedup_with_synthetic_benchmarks("B")
+    speedup_with_synthetic_benchmarks("A")
+    speedup_with_synthetic_benchmarks("B")
 
 
 def escape_benchmark_name(g):
@@ -687,18 +705,9 @@ def experiment2():
         y1_test = get_labels(D1_test)
         y2_test = get_labels(D2_test)
 
-        # Debugging printout:
-        # print("benchmark:", benchmark,
-        #       "train on:", len(X1_train), "test on:", len(X1_test))
-
         # Train classifiers:
         clf1.fit(X1_train, y1_train)
         clf2.fit(X2_train, y2_train)
-
-        # FIXME: Why wouldn't there be something to test on?
-        if not len(X1_test) or not len(X2_test):
-            print("error:", len(X1_test), len(X2_test))
-            return []
 
         # Make predictions
         predicted1 = clf1.predict(X1_test)
@@ -742,49 +751,29 @@ def experiment2():
     B_out = []
     for benchmark in benchmark_names:
         cgo13_clf = get_cgo13_model()
-        cgo13_features = get_cgo13_features
+        our_clf = get_our_model()
 
-        # our_clf = KNeighborsClassifier(3)
-        # our_clf = SVC(kernel="linear", C=0.025)
-        # our_clf = SVC(gamma=2, C=1)
-        # our_clf = RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1)
-        # our_clf = AdaBoostClassifier()
-        # our_clf = GaussianNB()
-        # our_clf = LinearDiscriminantAnalysis()
-        # our_clf = QuadraticDiscriminantAnalysis()
-        our_clf = DecisionTreeClassifier(
-            random_state=204, criterion="entropy", splitter="best")
-        # clf = KNeighborsClassifier(n_neighbors=1)
-        # our_features = get_our_features
-        our_features = get_cgo13_features
+        cgo13_features = get_cgo13_features
+        our_features = get_our_features
 
         # Cross validate on baseline:
         tmp = compare_clfs(cgo13_clf, cgo13_features, our_clf, our_features,
-                           aB, aBS, benchmark)
+                           aBS, aBS, benchmark)
         for d in tmp:
             d["platform"] = "Platform A"
         B_out += tmp
 
         # Reset models.
-        tmp = clone(cgo13_clf)
-        cgo13_clf = tmp
-
-        tmp = clone(our_clf)
-        our_clf = tmp
+        cgo13_clf = get_cgo13_model()
+        our_clf = get_our_model()
 
         # Same as before, on other platform:
         tmp = compare_clfs(cgo13_clf, cgo13_features, our_clf, our_features,
-                           bB, bBS, benchmark)
+                           bBS, bBS, benchmark)
         for d in tmp:
             d["platform"] = "Platform B"
         B_out += tmp
 
-        # Reset models.
-        tmp = clone(cgo13_clf)
-        cgo13_clf = tmp
-
-        tmp = clone(our_clf)
-        our_clf = tmp
 
     # Create results frame:
     R_out = []
@@ -841,6 +830,12 @@ def experiment2():
     ax = sns.barplot(x="group", y="p_speedup", hue="platform", data=R,
                      palette=sns.color_palette("Set1", n_colors=2, desat=.8),
                      ci=None)
+
+    # FIXME: Apply hatch pattern to alternate bars:
+    # for i,bar in enumerate(ax.patches):
+    #     if not i % 2:
+    #         bar.set_hatch("////")
+
     plt.ylabel("Speedup")
     plt.xlabel("")
     plt.axhline(y=1, color="k", lw=1)
