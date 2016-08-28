@@ -43,6 +43,17 @@ from smith import cgo13
 sns.set(style="ticks", color_codes=True)
 
 
+def get_cgo13_model():
+    return DecisionTreeClassifier(
+        random_state=204,
+        splitter="best",
+        criterion="entropy",
+        # max_depth=4,
+        # min_samples_split=6,
+        # min_samples_leaf=3
+    )
+
+
 def get_cgo13_features(D):
     # return np.array([[0] * len(D), [0] * len(D)]).T
     return np.array([
@@ -182,8 +193,7 @@ def motivation():
     #######################
     # Motivation Baseline #
     #######################
-    clf = DecisionTreeClassifier(
-        random_state=204, criterion="entropy", splitter="best")
+    clf = get_cgo13_model()
     platform = "b"
     suite = "parboil"
     other_suite = "shoc"
@@ -397,8 +407,7 @@ def check_for_subset(candidates):
     print("\r\033[Ktest #.", counter, end="")
     sys.stdout.flush()
 
-    clf = DecisionTreeClassifier(
-        random_state=204, criterion="entropy", splitter="best")
+    clf = get_cgo13_model()
     platform = "b"
     suite = "parboil"
     other_suite = "shoc"
@@ -527,8 +536,7 @@ def speedup_with_synthetic_benchmarks(platform_id):
     B_out, BS_out = [], []
     for benchmark in benchmark_names:
         # CGO13 predictive model:
-        clf = DecisionTreeClassifier(
-            random_state=204, criterion="entropy", splitter="best")
+        clf = get_cgo13_model()
         features = get_cgo13_features
         # clf = KNeighborsClassifier(n_neighbors=1)
 
@@ -568,14 +576,14 @@ def speedup_with_synthetic_benchmarks(platform_id):
 
         # Set the training data type.
         b["training"] = "Baseline"
-        bs["training"] = "w. Synthesized Kernels"
+        bs["training"] = "w. Synthesized"
 
         R_out.append(b)
         R_out.append(bs)
     R = pd.DataFrame(R_out)
 
     b_mask = R["training"] == "Baseline"
-    bs_mask = R["training"] == "w. Synthesized Kernels"
+    bs_mask = R["training"] == "w. Synthesized"
 
     B_acc = labmath.mean(R[b_mask].groupby(["group"])["p_correct"].mean())
     BS_acc = labmath.mean(R[bs_mask].groupby(["group"])["p_correct"].mean())
@@ -625,9 +633,18 @@ def speedup_with_synthetic_benchmarks(platform_id):
                  figsize=figsize, tight=True)
 
 
+def predictive_models(benchmark, platform_id):
+    B = pd.read_csv("data/{platform_id}/benchmarks.csv"
+                    .format(platform_id=platform_id.lower()))
+    S = pd.read_csv("data/{platform_id}/synthetics.csv"
+                    .format(platform_id=platform_id.lower()))
+    BS = pd.concat((B, S))
+
+
 def experiment1():
-    speedup_with_synthetic_benchmarks("A")
-    speedup_with_synthetic_benchmarks("B")
+    predictive_models("npb-3.3-FT", "B")
+    # speedup_with_synthetic_benchmarks("A")
+    # speedup_with_synthetic_benchmarks("B")
 
 
 def escape_benchmark_name(g):
@@ -724,9 +741,7 @@ def experiment2():
     # Perform cross-validation:
     B_out = []
     for benchmark in benchmark_names:
-        # CGO13 predictive model:
-        cgo13_clf = DecisionTreeClassifier(
-            random_state=204, criterion="entropy", splitter="best")
+        cgo13_clf = get_cgo13_model()
         cgo13_features = get_cgo13_features
 
         # our_clf = KNeighborsClassifier(3)
@@ -792,37 +807,36 @@ def experiment2():
         R_out.append(b)
     R = pd.DataFrame(R_out)
 
-    print("Experiment 2:")
-
     improved = R[R["p_speedup"] > 1]
-
-    print("Num Results:            ", len(R))
-    print("Num matched or improved:", len(R[R["p_speedup"] >= 1]))
-    print("Num improved:           ", len(R[R["p_speedup"] > 1]))
-    print("Num worse:              ", len(R[R["p_speedup"] < 1]))
 
     Amask = R["platform"] == "Platform A"
     Bmask = R["platform"] == "Platform B"
     assert(len(R) == len(R[Amask]) + len(R[Bmask]))
 
-    print("Num Instances:          ", len(R))
-
     a_matched_or_improved = R[Amask & R["p_speedup"] >= 1]
     b_matched_or_improved = R[Bmask & R["p_speedup"] >= 1]
-    print("Matched or improved:     {:.1f} %"
-          .format(((len(a_matched_or_improved) + len(b_matched_or_improved))
-                   / float(len(R))) * 100))
 
     a_improved = R[Amask & R["p_speedup"] > 1]
     b_improved = R[Bmask & R["p_speedup"] > 1]
-    print("Improved:               {:.1f} %"
-          .format(((len(a_improved) + len(b_improved)) / float(len(R))) * 100))
 
     a_worsened = R[Amask & R["p_speedup"] < 1]
     b_worsened = R[Amask & R["p_speedup"] < 1]
 
-    print("Worsened:               {:.1f} %"
+    print()
+    print("Experiment 2:")
+    print("  Num Results:            ", len(R))
+    print("  Num matched or improved:", len(R[R["p_speedup"] >= 1]))
+    print("  Num improved:           ", len(R[R["p_speedup"] > 1]))
+    print("  Num worse:              ", len(R[R["p_speedup"] < 1]))
+    print()
+    print("  Matched or improved:     {:.1f} %"
+          .format(((len(a_matched_or_improved) + len(b_matched_or_improved))
+                   / float(len(R))) * 100))
+    print("  Improved:                {:.1f} %"
+          .format(((len(a_improved) + len(b_improved)) / float(len(R))) * 100))
+    print("  Worsened:                {:.1f} %"
           .format(((len(a_worsened) + len(b_worsened)) / float(len(R))) * 100))
+    print()
 
     ax = sns.barplot(x="group", y="p_speedup", hue="platform", data=R,
                      palette=sns.color_palette("Set1", n_colors=2, desat=.8),
@@ -1521,7 +1535,6 @@ def main():
     #             with open("best-{}-{}.txt".format(best, n), "w") as outfile:
     #                 print("\n".join(best_combination), file=outfile)
     # print("Best results:", best, best_combination)
-
 
     motivation()
     experiment1()
