@@ -67,7 +67,7 @@ def get_cgo13_features(D):
 
 
 def get_our_model():
-    # return KNeighborsClassifier(1)
+    return KNeighborsClassifier(1)
     # return SVC(kernel="linear", C=0.025)
     # return SVC(gamma=2, C=1)
     # return RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1)
@@ -75,8 +75,8 @@ def get_our_model():
     # return GaussianNB()
     # return LinearDiscriminantAnalysis()
     # return QuadraticDiscriminantAnalysis()
-    return DecisionTreeClassifier(
-        random_state=204, criterion="entropy", splitter="best")
+    # return DecisionTreeClassifier(
+    #     random_state=204, criterion="entropy", splitter="best")
 
 
 def get_our_features(D):
