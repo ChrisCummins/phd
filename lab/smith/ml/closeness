@@ -198,34 +198,36 @@ def closeness(platform_id):
 
     def distplot(D):
         opts = {"kde": False, "bins": 25}
-        sns.distplot(D["distance"], **opts)
+        ax = sns.distplot(D["distance"], **opts)
+        ax.set_yscale("log", nonposy='clip')
+        plt.ylim(0, 1000)
         plt.xlabel("")
         plt.ylabel("Count")
 
-    # MAXDIST = 500
-    # benchmarks = pd.DataFrame(
-    #     [(d,b) for d,b in zip(distances1[:,1],behaviour1)
-    #      if d < MAXDIST],
-    #     columns=["distance", "behaviour"])
-    # synthetics = pd.DataFrame(
-    #     [(d,b) for d,b in zip(distances3[:,1],behaviour2) if d < MAXDIST],
-    #     columns=["distance", "behaviour"])
+    MAXDIST = 1000
+    benchmarks = pd.DataFrame(
+        [(d,b) for d,b in zip(distances1[:,1],behaviour1)
+         if d < MAXDIST],
+        columns=["distance", "behaviour"])
+    synthetics = pd.DataFrame(
+        [(d,b) for d,b in zip(distances3[:,1],behaviour2) if d < MAXDIST],
+        columns=["distance", "behaviour"])
 
-    # plt.subplot(2, 2, 1)
-    # distplot(benchmarks[benchmarks["behaviour"] == 1])
-    # plt.title("B, same behaviour")
+    plt.subplot(2, 2, 1)
+    distplot(benchmarks[benchmarks["behaviour"] == 1])
+    plt.title("B, same behaviour")
 
-    # plt.subplot(2, 2, 3)
-    # distplot(benchmarks[benchmarks["behaviour"] == 0])
-    # plt.title("B, different behaviour")
+    plt.subplot(2, 2, 3)
+    distplot(benchmarks[benchmarks["behaviour"] == 0])
+    plt.title("B, different behaviour")
 
-    # plt.subplot(2, 2, 2)
-    # distplot(synthetics[synthetics["behaviour"] == 1])
-    # plt.title("BS, same behaviour")
+    plt.subplot(2, 2, 2)
+    distplot(synthetics[synthetics["behaviour"] == 1])
+    plt.title("BS, same behaviour")
 
-    # plt.subplot(2, 2, 4)
-    # distplot(synthetics[synthetics["behaviour"] == 0])
-    # plt.title("BS, different behaviour")
+    plt.subplot(2, 2, 4)
+    distplot(synthetics[synthetics["behaviour"] == 0])
+    plt.title("BS, different behaviour")
 
     # plt.show()
 
