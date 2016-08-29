@@ -439,7 +439,7 @@ def motivation():
 
 
 counter = 0
-def check_for_subset(candidates, current_best):
+def check_for_subset(candidates):
     global counter
     counter += 1
     print("\r\033[Ktest #.", counter, end="")
@@ -485,8 +485,8 @@ def check_for_subset(candidates, current_best):
     assert(len(Btest) == len(B_out))
 
     num_incorrect = len(B_out) - sum(B_out["p_correct"])
-    if num_incorrect >= current_best:
-        return num_incorrect
+    if num_incorrect > 3:
+        return
 
     jitter = .05
     pca = PCA(n_components=2)
@@ -540,7 +540,6 @@ def check_for_subset(candidates, current_best):
     viz.finalise("motivation-{}-{}-{}.png".format(num_incorrect,
                                                   len(candidates), counter),
                  figsize=figsize)
-    return len(incorrect)
 
 
 def speedup_with_synthetic_benchmarks(platform_id):
@@ -966,14 +965,11 @@ def main():
     Smask = S["benchmark"].str.contains("shoc")
     candidates = sorted(set(S[Smask]["benchmark"]))
 
-    best = 100000000
     for n in range(1, 10):
         print()
         print("Trying all combinations of", n, "additions")
         for combination in combinations(candidates, n):
-            c = check_for_subset(combination, best)
-            if c < best:
-                best = c
+            check_for_subset(combination)
     print("Best results:", best, best_combination)
 
     motivation()
