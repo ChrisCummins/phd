@@ -1,0 +1,239 @@
+#!/usr/bin/env python3
+#
+import matplotlib
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import re
+import seaborn as sns
+import sklearn
+import sys
+import scipy
+
+from argparse import ArgumentParser
+from collections import Counter
+from copy import copy
+from functools import partial
+from itertools import combinations
+from math import sqrt,ceil
+from numpy.random import RandomState
+from os import system
+from random import seed,random
+from sklearn.base import clone
+from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import NearestNeighbors,KNeighborsClassifier
+from sklearn.preprocessing import normalize
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
+
+
+import labm8
+from labm8 import fmt
+from labm8 import fs
+from labm8 import math as labmath
+from labm8 import viz
+
+import smith
+from smith import cgo13
+
+# Seaborn configuration:
+sns.set(style="ticks", color_codes=True)
+plt.style.use(["seaborn-white", "seaborn-paper"])
+
+
+def get_cgo13_features(D):
+    return np.array([
+        (D["transfer"].values / (D["comp"].values + D["mem"].values)),
+        (D["coalesced"].values / D["mem"].values),
+        ((D["localmem"].values / D["mem"].values) * D["wgsize"].values),
+        (D["comp"].values / D["mem"].values),
+    ]).T
+
+
+def get_raw_features(D):
+    return np.array([
+        D["comp"].values,
+        D["rational"].values,
+        D["mem"].values,
+        D["localmem"].values,
+        D["coalesced"].values,
+        D["atomic"].values,
+        D["transfer"].values,
+        D["wgsize"].values,
+    ]).T
+
+
+def get_our_features(D):
+    return np.array([
+        D["comp"].values,
+        D["rational"].values,
+        D["mem"].values,
+        D["localmem"].values,
+        D["coalesced"].values,
+        D["atomic"].values,
+        D["transfer"].values,
+        D["wgsize"].values,
+        (D["transfer"].values / (D["comp"].values + D["mem"].values)),
+        (D["coalesced"].values / D["mem"].values),
+        ((D["localmem"].values / D["mem"].values) * D["wgsize"].values),
+        (D["comp"].values / D["mem"].values),
+    ]).T
+
+
+def get_labels(D):
+    return D["oracle"]
+
+
+def closeness(platform_id):
+    # Load datasets
+    B = pd.read_csv("data/{}/benchmarks.csv".format(platform_id.lower()))
+    B["synthetic"] = np.zeros(len(B))
+    S = pd.read_csv("data/{}/synthetics.csv".format(platform_id.lower()))
+    S["synthetic"] = np.ones(len(S))
+    BS = pd.concat((B, S), ignore_index=True)
+
+    features = get_cgo13_features
+
+    # Transform to feature space:
+    X1 = features(B)
+    X2 = features(S)
+    X3 = features(BS)
+
+    ytest2 = get_labels(S)
+    ytest3 = get_labels(BS)
+
+    # Neighbours to check for:
+    Xtest = features(B)
+    ytest = get_labels(B)
+
+    # Get nearest neighbours for kernels:
+    nbrs = NearestNeighbors(n_neighbors=2, algorithm='brute').fit(X1)
+    distances1, indices1 = nbrs.kneighbors(Xtest)
+
+    nbrs = NearestNeighbors(n_neighbors=1, algorithm='brute').fit(X2)
+    distances2, indices2 = nbrs.kneighbors(Xtest)
+
+    nbrs = NearestNeighbors(n_neighbors=2, algorithm='brute').fit(X3)
+    distances3, indices3 = nbrs.kneighbors(Xtest)
+
+    # Find out whether the nearest neighbours have the same behaviour:
+    behaviour1 = np.ones(len(indices1), dtype=bool)
+    behaviour2 = np.ones(len(indices2), dtype=bool)
+    behaviour3 = np.ones(len(indices3), dtype=bool)
+
+    assert(len(distances1) == len(distances2))
+    assert(len(distances2) == len(distances3))
+
+    for i,index in enumerate(indices1):
+        # index[0] is index of origin, index[1] is nearest neighbour:
+        if index[1] == i:
+            index[0], index[1] = index[1], index[0]
+        if ytest[index[0]] != ytest[index[1]]:
+            behaviour1[i] = False
+
+    for i,index in enumerate(indices2):
+        if ytest[i] != ytest2[int(index)]:
+            behaviour2[i] = False
+
+    for i,index in enumerate(indices3):
+        # index[0] is index of origin, index[1] is nearest neighbour:
+        if index[1] == i:
+            index[0], index[1] = index[1], index[0]
+        if ytest[index[0]] != ytest3[index[1]]:
+            behaviour3[i] = False
+
+    # Sanity-check. neighbours(B) for BS <= neighbours(B) for B:
+    # for d1,d2 in zip(distances1[:,1], distances3[:,1]):
+    #     assert(d1 - d2 > .00001)
+
+    synthetic_neighbours3 = [BS.loc[i[1]]["synthetic"] for i in indices3]
+    synthetic_distances3 = [
+        d[1] for d,s in zip(distances3,synthetic_neighbours3) if s
+    ]
+
+    print()
+    print("Closeness on Platform {}".format(platform_id.upper()))
+    print("  Benchmarks:")
+    print("  Median dist to nearest neighbour:     {:.1f}"
+          .format(labmath.median(distances1[:,1])))
+    print("  Mean dist to nearest neighbour:       {:.1f}"
+          .format(labmath.mean(distances1[:,1])))
+    print("  Nearest Neighbour has same behaviour: {:.1f} %"
+          .format((sum(behaviour1) / len(behaviour1)) * 100))
+    print()
+    print("  Synthetics:")
+    print("  Median dist to nearest neighbour:     {:.1f}"
+          .format(labmath.median(distances2[:,0])))
+    print("  Mean dist to nearest neighbour:       {:.1f}"
+          .format(labmath.mean(distances2[:,0])))
+    print("  Nearest Neighbour has same behaviour: {:.1f} %"
+          .format((sum(behaviour2) / len(behaviour2)) * 100))
+    print("  Closest neighbour:                    {:.1f}"
+          .format(min(distances2[:,0])))
+    print()
+    print("  Benchmarks w. synthetics:")
+    print("  Median dist to nearest neighbour:     {:.1f}"
+          .format(labmath.median(distances3[:,1])))
+    print("  Mean dist to nearest neighbour:       {:.1f}"
+          .format(labmath.mean(distances3[:,1])))
+    print("  Median dist to synthetic neighbour:   {:.1f}"
+          .format(labmath.median(synthetic_distances3)))
+    print("  Nearest Neighbour has same behaviour: {:.1f} %"
+          .format((sum(behaviour3) / len(behaviour3)) * 100))
+    print("  Closer neighbours:                    {} {:.1f} %"
+          .format(int(sum(synthetic_neighbours3)),
+                  (sum(synthetic_neighbours3) / len(B)) * 100))
+    print("  Closest synthetic neighbour:          {:.1f}"
+          .format(min(synthetic_neighbours3)))
+    print("  Median dist to nearest synthetic:     {:.1f}"
+          .format(labmath.median(synthetic_neighbours3)))
+    print("  Farthest synthetic neighbour:         {:.1f}"
+          .format(max(synthetic_neighbours3)))
+    print()
+
+    def distplot(D):
+        opts = {"kde": False, "bins": 25}
+        sns.distplot(D["distance"], **opts)
+        plt.xlabel("")
+        plt.ylabel("Count")
+
+    # MAXDIST = 500
+    # benchmarks = pd.DataFrame(
+    #     [(d,b) for d,b in zip(distances1[:,1],behaviour1)
+    #      if d < MAXDIST],
+    #     columns=["distance", "behaviour"])
+    # synthetics = pd.DataFrame(
+    #     [(d,b) for d,b in zip(distances3[:,1],behaviour2) if d < MAXDIST],
+    #     columns=["distance", "behaviour"])
+
+    # plt.subplot(2, 2, 1)
+    # distplot(benchmarks[benchmarks["behaviour"] == 1])
+    # plt.title("B, same behaviour")
+
+    # plt.subplot(2, 2, 3)
+    # distplot(benchmarks[benchmarks["behaviour"] == 0])
+    # plt.title("B, different behaviour")
+
+    # plt.subplot(2, 2, 2)
+    # distplot(synthetics[synthetics["behaviour"] == 1])
+    # plt.title("BS, same behaviour")
+
+    # plt.subplot(2, 2, 4)
+    # distplot(synthetics[synthetics["behaviour"] == 0])
+    # plt.title("BS, different behaviour")
+
+    # plt.show()
+
+
+def main():
+    closeness("A")
+    closeness("B")
+
+
+if __name__ == "__main__":
+    main()
