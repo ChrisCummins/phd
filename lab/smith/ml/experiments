@@ -182,6 +182,37 @@ def leave_one_benchmark_out(clf, get_features, D, benchmark):
     return D_out
 
 
+def train_on_synthetics(clf, get_features, D, benchmark):
+    # Create data masks. For training we exclude all results from
+    # the test benchmark.
+    test_mask = D["benchmark"].str.contains(r"^" + benchmark)
+    train_mask = D["synthetic"] == 1
+
+    # Create training and testing data:
+    X_train = get_features(D[train_mask])
+    y_train = get_labels(D[train_mask])
+
+    D_test = D[test_mask]
+    X_test = get_features(D_test)
+    y_test = get_labels(D_test)
+
+    print(len(X_train), len(X_test))
+
+    # Train classifier:
+    clf.fit(X_train, y_train)
+
+    # Make predictions
+    predicted = clf.predict(X_test)
+    D_out = []
+    for d,y,p in zip(D_test.to_dict('records'), y_test, predicted):
+        d["p"] = p
+        d["p_correct"] = 1 if y == p else 0
+        D_out.append(d)
+
+    # Return a list of dicts
+    return D_out
+
+
 def rand_jitter(arr, factor=0.01, randomstate=RandomState(204)):
     stdev = factor * (max(arr) - min(arr))
     return arr + randomstate.randn(len(arr)) * stdev
@@ -206,7 +237,6 @@ def motivation():
     clf = get_cgo13_model()
     platform = "b"
     suite = "parboil"
-    other_suite = "shoc"
 
     # Load data and mask off the benchmark suite in use:
     B = pd.read_csv("data/{}/benchmarks.csv".format(platform))
@@ -289,22 +319,19 @@ def motivation():
 
     # Load data and mask off the benchmark suite in use:
     B = pd.read_csv("data/{}/benchmarks.csv".format(platform))
-    train_mask = B["benchmark"].str.contains(r"^{}|{}-".format(suite, other_suite))
-    test_mask = B["benchmark"].str.contains(r"^{}-".format(suite))
-    candidates = [
-        "shoc-1.1.5-S3D-ratx_kernel",
-        "shoc-1.1.5-S3D-ratxb_kernel",
-        "shoc-1.1.5-S3D-rdsmh_kernel",
-        "shoc-1.1.5-S3D-rdwdot10_kernel",
-        "shoc-1.1.5-S3D-rdwdot2_kernel",
-        "shoc-1.1.5-S3D-rdwdot3_kernel",
-        "shoc-1.1.5-S3D-rdwdot6_kernel",
-    ]
-    other_mask = B["benchmark"].str.contains("|".join(candidates))
+    B["synthetic"] = np.zeros(len(B))
+    S = pd.read_csv("data/{}/synthetics.csv".format(platform))
+    S["synthetic"] = np.ones(len(S))
+    BS = pd.concat((B, S))
 
-    Btrain = B[train_mask]
-    Btest = B[test_mask]
-    Bother = B[other_mask]
+    train_mask = (BS["benchmark"].str.contains(r"^" + suite) |
+                  BS["synthetic"] == 1)
+    test_mask = BS["benchmark"].str.contains(r"^" + suite)
+    other_mask = BS["synthetic"] == 1
+
+    Btrain = BS[train_mask]
+    Btest = BS[test_mask]
+    Bother = BS[other_mask]
 
     B_out = []
     for benchmark in benchmark_names:
@@ -412,7 +439,7 @@ def motivation():
 
 
 counter = 0
-def check_for_subset(candidates):
+def check_for_subset(candidates, current_best):
     global counter
     counter += 1
     print("\r\033[Ktest #.", counter, end="")
@@ -421,17 +448,8 @@ def check_for_subset(candidates):
     clf = get_cgo13_model()
     platform = "b"
     suite = "parboil"
-    other_suite = "shoc"
 
     # Load data and mask off the benchmark suite in use:
-    B = pd.read_csv("data/{}/benchmarks.csv".format(platform))
-    test_mask = B["benchmark"].str.contains(r"^{}-".format(suite))
-    B = B[test_mask]
-
-    benchmark_names = sorted(set([
-        re.match(r"^([^0-9]+-[0-9\.]+-[^-]+)-", b).group(1)
-        for b in B["benchmark"] if b.startswith(suite)
-    ]))
 
     # Scatter type:
     opts = { "s": 85, "alpha": .65 }
@@ -441,20 +459,34 @@ def check_for_subset(candidates):
 
     # Load data and mask off the benchmark suite in use:
     B = pd.read_csv("data/{}/benchmarks.csv".format(platform))
-    train_mask = B["benchmark"].str.contains(r"^{}|{}-".format(suite, other_suite))
-    test_mask = B["benchmark"].str.contains(r"^{}-".format(suite))
-    other_mask = B["benchmark"].str.contains("|".join(candidates))
+    S = pd.read_csv("data/{}/synthetics.csv".format(platform))
+    BS = pd.concat((B, S))
 
-    Btrain = B[train_mask]
-    Btest = B[test_mask]
-    Bother = B[other_mask]
+    train_mask = BS["benchmark"].str.contains(r"^" + suite + "|" +
+                                              "|".join(candidates))
+    test_mask = BS["benchmark"].str.contains(r"^" + suite)
+    other_mask = BS["benchmark"].str.contains("|".join(candidates))
+
+    Btrain = BS[train_mask]
+    Btest = BS[test_mask]
+    Bother = BS[other_mask]
+    assert(len(Bother) + len(Btest) == len(Btrain))
+
+    benchmark_names = sorted(set([
+        re.match(r"^([^0-9]+-[0-9\.]+-[^-]+)-", b).group(1)
+        for b in B["benchmark"] if b.startswith(suite)
+    ]))
 
     B_out = []
     for benchmark in benchmark_names:
         B_out += leave_one_benchmark_out(clf, get_cgo13_features, Btrain,
-                                         benchmark, verbose=False)
+                                         benchmark)
     B_out = pd.DataFrame(B_out)
     assert(len(Btest) == len(B_out))
+
+    num_incorrect = len(B_out) - sum(B_out["p_correct"])
+    if num_incorrect >= current_best:
+        return num_incorrect
 
     jitter = .05
     pca = PCA(n_components=2)
@@ -467,10 +499,8 @@ def check_for_subset(candidates):
     y = rand_jitter(y, jitter, RandomState(205))
     X = list(zip(x, y))
 
-    incorrect = [x for x,b in zip(X,B_out.to_dict('records')) if not b["p_correct"]]
-    return len(incorrect)
-    # TODO:
     correct = [x for x,b in zip(X,B_out.to_dict('records')) if b["p_correct"]]
+    incorrect = [x for x,b in zip(X,B_out.to_dict('records')) if not b["p_correct"]]
 
     other = pca.transform(get_raw_features(Bother))
 
@@ -498,12 +528,9 @@ def check_for_subset(candidates):
 
     # Set same axis limits as before
 
-    with open("data/img/motivation-b-{}.txt".format(counter), "w") as outfile:
-        print("\n".join(candidates), file=outfile)
-
     figsize = (2.5,2.5)
     # plt.show()
-    viz.finalise("data/img/motivation-b-{}.pdf".format(counter),
+    viz.finalise("motivation-{}-{}.png".format(num_incorrect, len(candidates)),
                  figsize=figsize)
     return len(incorrect)
 
@@ -558,6 +585,7 @@ def speedup_with_synthetic_benchmarks(platform_id):
         clf = get_cgo13_model()
 
         # Repeate cross-validation with synthetic kernels:
+        # BS_out += train_on_synthetics(clf, get_cgo13_features, BS, benchmark)
         BS_out += leave_one_benchmark_out(clf, get_cgo13_features, BS, benchmark)
         assert len(B_out) == len(BS_out)
 
@@ -925,682 +953,30 @@ def experiment2():
 
 
 def main():
-    candidates = [
-        # "amd-app-sdk-3.0-BinomialOption-binomial_options",
-        # "amd-app-sdk-3.0-BitonicSort-bitonicSort",
-        # "amd-app-sdk-3.0-BlackScholes-blackScholes",
-        # "amd-app-sdk-3.0-FastWalshTransform-fastWalshTransform",
-        # "amd-app-sdk-3.0-FloydWarshall-floydWarshallPass",
-        # "amd-app-sdk-3.0-MatrixMultiplication-mmmKernel",
-        # "amd-app-sdk-3.0-MatrixTranspose-matrixTranspose",
-        # "amd-app-sdk-3.0-PrefixSum-group_prefixSum",
-        # "amd-app-sdk-3.0-Reduction-reduce",
-        # "amd-app-sdk-3.0-ScanLargeArrays-ScanLargeArrays",
-        # "amd-app-sdk-3.0-ScanLargeArrays-blockAddition",
-        # "amd-app-sdk-3.0-ScanLargeArrays-prefixSum",
-        # "amd-app-sdk-3.0-SimpleConvolution-simpleNonSeparableConvolution",
-        # "amd-app-sdk-3.0-SimpleConvolution-simpleSeparableConvolutionPass1",
-        # "amd-app-sdk-3.0-SimpleConvolution-simpleSeparableConvolutionPass2",
-        # "amd-app-sdk-3.0-SobelFilter-sobel_filter",
-        # "npb-3.3-BT-add",
-        # "npb-3.3-BT-add",
-        # "npb-3.3-BT-add",
-        # "npb-3.3-BT-add",
-        # "npb-3.3-BT-compute_rhs1",
-        # "npb-3.3-BT-compute_rhs1",
-        # "npb-3.3-BT-compute_rhs1",
-        # "npb-3.3-BT-compute_rhs1",
-        # "npb-3.3-BT-compute_rhs2",
-        # "npb-3.3-BT-compute_rhs2",
-        # "npb-3.3-BT-compute_rhs2",
-        # "npb-3.3-BT-compute_rhs2",
-        # "npb-3.3-BT-compute_rhs3",
-        # "npb-3.3-BT-compute_rhs3",
-        # "npb-3.3-BT-compute_rhs3",
-        # "npb-3.3-BT-compute_rhs3",
-        # "npb-3.3-BT-compute_rhs4",
-        # "npb-3.3-BT-compute_rhs4",
-        # "npb-3.3-BT-compute_rhs4",
-        # "npb-3.3-BT-compute_rhs4",
-        # "npb-3.3-BT-compute_rhs5",
-        # "npb-3.3-BT-compute_rhs5",
-        # "npb-3.3-BT-compute_rhs5",
-        # "npb-3.3-BT-compute_rhs5",
-        # "npb-3.3-BT-compute_rhs6",
-        # "npb-3.3-BT-compute_rhs6",
-        # "npb-3.3-BT-compute_rhs6",
-        # "npb-3.3-BT-compute_rhs6",
-        # "npb-3.3-BT-error_norm",
-        # "npb-3.3-BT-error_norm",
-        # "npb-3.3-BT-error_norm",
-        # "npb-3.3-BT-error_norm",
-        # "npb-3.3-BT-exact_rhs1",
-        # "npb-3.3-BT-exact_rhs1",
-        # "npb-3.3-BT-exact_rhs1",
-        # "npb-3.3-BT-exact_rhs1",
-        # "npb-3.3-BT-exact_rhs2",
-        # "npb-3.3-BT-exact_rhs2",
-        # "npb-3.3-BT-exact_rhs2",
-        # "npb-3.3-BT-exact_rhs2",
-        # "npb-3.3-BT-exact_rhs3",
-        # "npb-3.3-BT-exact_rhs3",
-        # "npb-3.3-BT-exact_rhs3",
-        # "npb-3.3-BT-exact_rhs3",
-        # "npb-3.3-BT-exact_rhs4",
-        # "npb-3.3-BT-exact_rhs4",
-        # "npb-3.3-BT-exact_rhs4",
-        # "npb-3.3-BT-exact_rhs4",
-        # "npb-3.3-BT-exact_rhs5",
-        # "npb-3.3-BT-exact_rhs5",
-        # "npb-3.3-BT-exact_rhs5",
-        # "npb-3.3-BT-exact_rhs5",
-        # "npb-3.3-BT-initialize1",
-        # "npb-3.3-BT-initialize1",
-        # "npb-3.3-BT-initialize1",
-        # "npb-3.3-BT-initialize1",
-        # "npb-3.3-BT-initialize2",
-        # "npb-3.3-BT-initialize2",
-        # "npb-3.3-BT-initialize2",
-        # "npb-3.3-BT-initialize2",
-        # "npb-3.3-BT-initialize3",
-        # "npb-3.3-BT-initialize3",
-        # "npb-3.3-BT-initialize3",
-        # "npb-3.3-BT-initialize3",
-        # "npb-3.3-BT-initialize4",
-        # "npb-3.3-BT-initialize4",
-        # "npb-3.3-BT-initialize4",
-        # "npb-3.3-BT-initialize4",
-        # "npb-3.3-BT-initialize5",
-        # "npb-3.3-BT-initialize5",
-        # "npb-3.3-BT-initialize5",
-        # "npb-3.3-BT-initialize5",
-        # "npb-3.3-BT-rhs_norm",
-        # "npb-3.3-BT-rhs_norm",
-        # "npb-3.3-BT-rhs_norm",
-        # "npb-3.3-BT-rhs_norm",
-        # "npb-3.3-BT-x_solve",
-        # "npb-3.3-BT-x_solve",
-        # "npb-3.3-BT-x_solve",
-        # "npb-3.3-BT-x_solve",
-        # "npb-3.3-BT-x_solve1",
-        # "npb-3.3-BT-x_solve1",
-        # "npb-3.3-BT-x_solve1",
-        # "npb-3.3-BT-x_solve1",
-        # "npb-3.3-BT-x_solve2",
-        # "npb-3.3-BT-x_solve2",
-        # "npb-3.3-BT-x_solve2",
-        # "npb-3.3-BT-x_solve2",
-        # "npb-3.3-BT-x_solve3",
-        # "npb-3.3-BT-x_solve3",
-        # "npb-3.3-BT-x_solve3",
-        # "npb-3.3-BT-x_solve3",
-        # "npb-3.3-BT-y_solve",
-        # "npb-3.3-BT-y_solve",
-        # "npb-3.3-BT-y_solve",
-        # "npb-3.3-BT-y_solve",
-        # "npb-3.3-BT-y_solve1",
-        # "npb-3.3-BT-y_solve1",
-        # "npb-3.3-BT-y_solve1",
-        # "npb-3.3-BT-y_solve1",
-        # "npb-3.3-BT-y_solve2",
-        # "npb-3.3-BT-y_solve2",
-        # "npb-3.3-BT-y_solve2",
-        # "npb-3.3-BT-y_solve2",
-        # "npb-3.3-BT-y_solve3",
-        # "npb-3.3-BT-y_solve3",
-        # "npb-3.3-BT-y_solve3",
-        # "npb-3.3-BT-y_solve3",
-        # "npb-3.3-BT-z_solve",
-        # "npb-3.3-BT-z_solve",
-        # "npb-3.3-BT-z_solve",
-        # "npb-3.3-BT-z_solve",
-        # "npb-3.3-BT-z_solve1",
-        # "npb-3.3-BT-z_solve1",
-        # "npb-3.3-BT-z_solve1",
-        # "npb-3.3-BT-z_solve1",
-        # "npb-3.3-BT-z_solve2",
-        # "npb-3.3-BT-z_solve2",
-        # "npb-3.3-BT-z_solve2",
-        # "npb-3.3-BT-z_solve2",
-        # "npb-3.3-BT-z_solve3",
-        # "npb-3.3-BT-z_solve3",
-        # "npb-3.3-BT-z_solve3",
-        # "npb-3.3-BT-z_solve3",
-        # "npb-3.3-CG-conj_grad_0",
-        # "npb-3.3-CG-conj_grad_0",
-        # "npb-3.3-CG-conj_grad_0",
-        # "npb-3.3-CG-conj_grad_0",
-        # "npb-3.3-CG-conj_grad_0",
-        # "npb-3.3-CG-init_mem_0",
-        # "npb-3.3-CG-init_mem_0",
-        # "npb-3.3-CG-init_mem_0",
-        # "npb-3.3-CG-init_mem_0",
-        # "npb-3.3-CG-init_mem_0",
-        # "npb-3.3-CG-init_mem_1",
-        # "npb-3.3-CG-init_mem_1",
-        # "npb-3.3-CG-init_mem_1",
-        # "npb-3.3-CG-init_mem_1",
-        # "npb-3.3-CG-init_mem_1",
-        # "npb-3.3-CG-main_0",
-        # "npb-3.3-CG-main_0",
-        # "npb-3.3-CG-main_0",
-        # "npb-3.3-CG-main_0",
-        # "npb-3.3-CG-main_0",
-        # "npb-3.3-CG-main_1",
-        # "npb-3.3-CG-main_1",
-        # "npb-3.3-CG-main_1",
-        # "npb-3.3-CG-main_1",
-        # "npb-3.3-CG-main_1",
-        # "npb-3.3-CG-main_2",
-        # "npb-3.3-CG-main_2",
-        # "npb-3.3-CG-main_2",
-        # "npb-3.3-CG-main_2",
-        # "npb-3.3-CG-main_2",
-        # "npb-3.3-CG-makea_0",
-        # "npb-3.3-CG-makea_0",
-        # "npb-3.3-CG-makea_0",
-        # "npb-3.3-CG-makea_0",
-        # "npb-3.3-CG-makea_0",
-        # "npb-3.3-CG-makea_1",
-        # "npb-3.3-CG-makea_1",
-        # "npb-3.3-CG-makea_1",
-        # "npb-3.3-CG-makea_1",
-        # "npb-3.3-CG-makea_1",
-        # "npb-3.3-CG-makea_2",
-        # "npb-3.3-CG-makea_2",
-        # "npb-3.3-CG-makea_2",
-        # "npb-3.3-CG-makea_2",
-        # "npb-3.3-CG-makea_2",
-        # "npb-3.3-CG-makea_3",
-        # "npb-3.3-CG-makea_3",
-        # "npb-3.3-CG-makea_3",
-        # "npb-3.3-CG-makea_3",
-        # "npb-3.3-CG-makea_3",
-        # "npb-3.3-CG-makea_4",
-        # "npb-3.3-CG-makea_4",
-        # "npb-3.3-CG-makea_4",
-        # "npb-3.3-CG-makea_4",
-        # "npb-3.3-CG-makea_4",
-        # "npb-3.3-CG-makea_5",
-        # "npb-3.3-CG-makea_5",
-        # "npb-3.3-CG-makea_5",
-        # "npb-3.3-CG-makea_5",
-        # "npb-3.3-CG-makea_5",
-        # "npb-3.3-CG-makea_6",
-        # "npb-3.3-CG-makea_6",
-        # "npb-3.3-CG-makea_6",
-        # "npb-3.3-CG-makea_6",
-        # "npb-3.3-CG-makea_6",
-        # "npb-3.3-CG-makea_7",
-        # "npb-3.3-CG-makea_7",
-        # "npb-3.3-CG-makea_7",
-        # "npb-3.3-CG-makea_7",
-        # "npb-3.3-CG-makea_7",
-        # "npb-3.3-EP-embar",
-        # "npb-3.3-EP-embar",
-        # "npb-3.3-EP-embar",
-        # "npb-3.3-EP-embar",
-        # "npb-3.3-FT-cffts1",
-        # "npb-3.3-FT-cffts1",
-        # "npb-3.3-FT-cffts1",
-        # "npb-3.3-FT-cffts1",
-        # "npb-3.3-FT-cffts2",
-        # "npb-3.3-FT-cffts2",
-        # "npb-3.3-FT-cffts2",
-        # "npb-3.3-FT-cffts2",
-        # "npb-3.3-FT-cffts3",
-        # "npb-3.3-FT-cffts3",
-        # "npb-3.3-FT-cffts3",
-        # "npb-3.3-FT-cffts3",
-        # "npb-3.3-FT-checksum",
-        # "npb-3.3-FT-checksum",
-        # "npb-3.3-FT-checksum",
-        # "npb-3.3-FT-checksum",
-        # "npb-3.3-FT-compute_indexmap",
-        # "npb-3.3-FT-compute_indexmap",
-        # "npb-3.3-FT-compute_indexmap",
-        # "npb-3.3-FT-compute_indexmap",
-        # "npb-3.3-FT-compute_initial_conditions",
-        # "npb-3.3-FT-compute_initial_conditions",
-        # "npb-3.3-FT-compute_initial_conditions",
-        # "npb-3.3-FT-compute_initial_conditions",
-        # "npb-3.3-FT-evolve",
-        # "npb-3.3-FT-evolve",
-        # "npb-3.3-FT-evolve",
-        # "npb-3.3-FT-evolve",
-        # "npb-3.3-FT-init_ui",
-        # "npb-3.3-FT-init_ui",
-        # "npb-3.3-FT-init_ui",
-        # "npb-3.3-FT-init_ui",
-        # "npb-3.3-LU-blts",
-        # "npb-3.3-LU-blts",
-        # "npb-3.3-LU-blts",
-        # "npb-3.3-LU-blts",
-        # "npb-3.3-LU-blts",
-        # "npb-3.3-LU-buts",
-        # "npb-3.3-LU-buts",
-        # "npb-3.3-LU-buts",
-        # "npb-3.3-LU-buts",
-        # "npb-3.3-LU-buts",
-        # "npb-3.3-LU-erhs1",
-        # "npb-3.3-LU-erhs1",
-        # "npb-3.3-LU-erhs1",
-        # "npb-3.3-LU-erhs1",
-        # "npb-3.3-LU-erhs1",
-        # "npb-3.3-LU-erhs2",
-        # "npb-3.3-LU-erhs2",
-        # "npb-3.3-LU-erhs2",
-        # "npb-3.3-LU-erhs2",
-        # "npb-3.3-LU-erhs2",
-        # "npb-3.3-LU-erhs3",
-        # "npb-3.3-LU-erhs3",
-        # "npb-3.3-LU-erhs3",
-        # "npb-3.3-LU-erhs3",
-        # "npb-3.3-LU-erhs3",
-        # "npb-3.3-LU-erhs4",
-        # "npb-3.3-LU-erhs4",
-        # "npb-3.3-LU-erhs4",
-        # "npb-3.3-LU-erhs4",
-        # "npb-3.3-LU-erhs4",
-        # "npb-3.3-LU-error",
-        # "npb-3.3-LU-error",
-        # "npb-3.3-LU-error",
-        # "npb-3.3-LU-error",
-        # "npb-3.3-LU-error",
-        # "npb-3.3-LU-l2norm",
-        # "npb-3.3-LU-l2norm",
-        # "npb-3.3-LU-l2norm",
-        # "npb-3.3-LU-l2norm",
-        # "npb-3.3-LU-l2norm",
-        # "npb-3.3-LU-pintgr1",
-        # "npb-3.3-LU-pintgr1",
-        # "npb-3.3-LU-pintgr1",
-        # "npb-3.3-LU-pintgr1",
-        # "npb-3.3-LU-pintgr1",
-        # "npb-3.3-LU-pintgr2",
-        # "npb-3.3-LU-pintgr2",
-        # "npb-3.3-LU-pintgr2",
-        # "npb-3.3-LU-pintgr2",
-        # "npb-3.3-LU-pintgr2",
-        # "npb-3.3-LU-pintgr3",
-        # "npb-3.3-LU-pintgr3",
-        # "npb-3.3-LU-pintgr3",
-        # "npb-3.3-LU-pintgr3",
-        # "npb-3.3-LU-pintgr3",
-        # "npb-3.3-LU-pintgr_reduce",
-        # "npb-3.3-LU-pintgr_reduce",
-        # "npb-3.3-LU-pintgr_reduce",
-        # "npb-3.3-LU-pintgr_reduce",
-        # "npb-3.3-LU-pintgr_reduce",
-        # "npb-3.3-LU-rhs",
-        # "npb-3.3-LU-rhs",
-        # "npb-3.3-LU-rhs",
-        # "npb-3.3-LU-rhs",
-        # "npb-3.3-LU-rhs",
-        # "npb-3.3-LU-rhsx",
-        # "npb-3.3-LU-rhsx",
-        # "npb-3.3-LU-rhsx",
-        # "npb-3.3-LU-rhsx",
-        # "npb-3.3-LU-rhsx",
-        # "npb-3.3-LU-rhsy",
-        # "npb-3.3-LU-rhsy",
-        # "npb-3.3-LU-rhsy",
-        # "npb-3.3-LU-rhsy",
-        # "npb-3.3-LU-rhsy",
-        # "npb-3.3-LU-rhsz",
-        # "npb-3.3-LU-rhsz",
-        # "npb-3.3-LU-rhsz",
-        # "npb-3.3-LU-rhsz",
-        # "npb-3.3-LU-rhsz",
-        # "npb-3.3-LU-setbv1",
-        # "npb-3.3-LU-setbv1",
-        # "npb-3.3-LU-setbv1",
-        # "npb-3.3-LU-setbv1",
-        # "npb-3.3-LU-setbv1",
-        # "npb-3.3-LU-setbv2",
-        # "npb-3.3-LU-setbv2",
-        # "npb-3.3-LU-setbv2",
-        # "npb-3.3-LU-setbv2",
-        # "npb-3.3-LU-setbv2",
-        # "npb-3.3-LU-setbv3",
-        # "npb-3.3-LU-setbv3",
-        # "npb-3.3-LU-setbv3",
-        # "npb-3.3-LU-setbv3",
-        # "npb-3.3-LU-setbv3",
-        # "npb-3.3-LU-setiv",
-        # "npb-3.3-LU-setiv",
-        # "npb-3.3-LU-setiv",
-        # "npb-3.3-LU-setiv",
-        # "npb-3.3-LU-setiv",
-        # "npb-3.3-LU-ssor2",
-        # "npb-3.3-LU-ssor2",
-        # "npb-3.3-LU-ssor2",
-        # "npb-3.3-LU-ssor2",
-        # "npb-3.3-LU-ssor2",
-        # "npb-3.3-LU-ssor3",
-        # "npb-3.3-LU-ssor3",
-        # "npb-3.3-LU-ssor3",
-        # "npb-3.3-LU-ssor3",
-        # "npb-3.3-LU-ssor3",
-        # "npb-3.3-MG-kernel_comm3_1",
-        # "npb-3.3-MG-kernel_comm3_1",
-        # "npb-3.3-MG-kernel_comm3_1",
-        # "npb-3.3-MG-kernel_comm3_1",
-        # "npb-3.3-MG-kernel_comm3_1",
-        # "npb-3.3-MG-kernel_comm3_2",
-        # "npb-3.3-MG-kernel_comm3_2",
-        # "npb-3.3-MG-kernel_comm3_2",
-        # "npb-3.3-MG-kernel_comm3_2",
-        # "npb-3.3-MG-kernel_comm3_2",
-        # "npb-3.3-MG-kernel_comm3_3",
-        # "npb-3.3-MG-kernel_comm3_3",
-        # "npb-3.3-MG-kernel_comm3_3",
-        # "npb-3.3-MG-kernel_comm3_3",
-        # "npb-3.3-MG-kernel_comm3_3",
-        # "npb-3.3-MG-kernel_interp_1",
-        # "npb-3.3-MG-kernel_interp_1",
-        # "npb-3.3-MG-kernel_interp_1",
-        # "npb-3.3-MG-kernel_interp_1",
-        # "npb-3.3-MG-kernel_norm2u3",
-        # "npb-3.3-MG-kernel_norm2u3",
-        # "npb-3.3-MG-kernel_norm2u3",
-        # "npb-3.3-MG-kernel_norm2u3",
-        # "npb-3.3-MG-kernel_norm2u3",
-        # "npb-3.3-MG-kernel_psinv",
-        # "npb-3.3-MG-kernel_psinv",
-        # "npb-3.3-MG-kernel_psinv",
-        # "npb-3.3-MG-kernel_psinv",
-        # "npb-3.3-MG-kernel_resid",
-        # "npb-3.3-MG-kernel_resid",
-        # "npb-3.3-MG-kernel_resid",
-        # "npb-3.3-MG-kernel_resid",
-        # "npb-3.3-MG-kernel_resid",
-        # "npb-3.3-MG-kernel_rprj3",
-        # "npb-3.3-MG-kernel_rprj3",
-        # "npb-3.3-MG-kernel_rprj3",
-        # "npb-3.3-MG-kernel_rprj3",
-        # "npb-3.3-MG-kernel_zero3",
-        # "npb-3.3-MG-kernel_zero3",
-        # "npb-3.3-MG-kernel_zero3",
-        # "npb-3.3-MG-kernel_zero3",
-        # "npb-3.3-MG-kernel_zero3",
-        # "npb-3.3-MG-kernel_zran3_1",
-        # "npb-3.3-MG-kernel_zran3_1",
-        # "npb-3.3-MG-kernel_zran3_1",
-        # "npb-3.3-MG-kernel_zran3_1",
-        # "npb-3.3-MG-kernel_zran3_1",
-        # "npb-3.3-MG-kernel_zran3_2",
-        # "npb-3.3-MG-kernel_zran3_2",
-        # "npb-3.3-MG-kernel_zran3_2",
-        # "npb-3.3-MG-kernel_zran3_2",
-        # "npb-3.3-MG-kernel_zran3_2",
-        # "npb-3.3-MG-kernel_zran3_3",
-        # "npb-3.3-MG-kernel_zran3_3",
-        # "npb-3.3-MG-kernel_zran3_3",
-        # "npb-3.3-MG-kernel_zran3_3",
-        # "npb-3.3-MG-kernel_zran3_3",
-        # "npb-3.3-SP-add",
-        # "npb-3.3-SP-add",
-        # "npb-3.3-SP-add",
-        # "npb-3.3-SP-add",
-        # "npb-3.3-SP-add",
-        # "npb-3.3-SP-compute_rhs1",
-        # "npb-3.3-SP-compute_rhs1",
-        # "npb-3.3-SP-compute_rhs1",
-        # "npb-3.3-SP-compute_rhs1",
-        # "npb-3.3-SP-compute_rhs1",
-        # "npb-3.3-SP-compute_rhs2",
-        # "npb-3.3-SP-compute_rhs2",
-        # "npb-3.3-SP-compute_rhs2",
-        # "npb-3.3-SP-compute_rhs2",
-        # "npb-3.3-SP-compute_rhs2",
-        # "npb-3.3-SP-compute_rhs3",
-        # "npb-3.3-SP-compute_rhs3",
-        # "npb-3.3-SP-compute_rhs3",
-        # "npb-3.3-SP-compute_rhs3",
-        # "npb-3.3-SP-compute_rhs3",
-        # "npb-3.3-SP-compute_rhs4",
-        # "npb-3.3-SP-compute_rhs4",
-        # "npb-3.3-SP-compute_rhs4",
-        # "npb-3.3-SP-compute_rhs4",
-        # "npb-3.3-SP-compute_rhs4",
-        # "npb-3.3-SP-compute_rhs5",
-        # "npb-3.3-SP-compute_rhs5",
-        # "npb-3.3-SP-compute_rhs5",
-        # "npb-3.3-SP-compute_rhs5",
-        # "npb-3.3-SP-compute_rhs5",
-        # "npb-3.3-SP-compute_rhs6",
-        # "npb-3.3-SP-compute_rhs6",
-        # "npb-3.3-SP-compute_rhs6",
-        # "npb-3.3-SP-compute_rhs6",
-        # "npb-3.3-SP-compute_rhs6",
-        # "npb-3.3-SP-error_norm",
-        # "npb-3.3-SP-error_norm",
-        # "npb-3.3-SP-error_norm",
-        # "npb-3.3-SP-error_norm",
-        # "npb-3.3-SP-error_norm",
-        # "npb-3.3-SP-exact_rhs1",
-        # "npb-3.3-SP-exact_rhs1",
-        # "npb-3.3-SP-exact_rhs1",
-        # "npb-3.3-SP-exact_rhs1",
-        # "npb-3.3-SP-exact_rhs1",
-        # "npb-3.3-SP-exact_rhs2",
-        # "npb-3.3-SP-exact_rhs2",
-        # "npb-3.3-SP-exact_rhs2",
-        # "npb-3.3-SP-exact_rhs2",
-        # "npb-3.3-SP-exact_rhs2",
-        # "npb-3.3-SP-exact_rhs3",
-        # "npb-3.3-SP-exact_rhs3",
-        # "npb-3.3-SP-exact_rhs3",
-        # "npb-3.3-SP-exact_rhs3",
-        # "npb-3.3-SP-exact_rhs3",
-        # "npb-3.3-SP-exact_rhs4",
-        # "npb-3.3-SP-exact_rhs4",
-        # "npb-3.3-SP-exact_rhs4",
-        # "npb-3.3-SP-exact_rhs4",
-        # "npb-3.3-SP-exact_rhs4",
-        # "npb-3.3-SP-exact_rhs5",
-        # "npb-3.3-SP-exact_rhs5",
-        # "npb-3.3-SP-exact_rhs5",
-        # "npb-3.3-SP-exact_rhs5",
-        # "npb-3.3-SP-exact_rhs5",
-        # "npb-3.3-SP-initialize1",
-        # "npb-3.3-SP-initialize1",
-        # "npb-3.3-SP-initialize1",
-        # "npb-3.3-SP-initialize1",
-        # "npb-3.3-SP-initialize1",
-        # "npb-3.3-SP-initialize2",
-        # "npb-3.3-SP-initialize2",
-        # "npb-3.3-SP-initialize2",
-        # "npb-3.3-SP-initialize2",
-        # "npb-3.3-SP-initialize2",
-        # "npb-3.3-SP-initialize3",
-        # "npb-3.3-SP-initialize3",
-        # "npb-3.3-SP-initialize3",
-        # "npb-3.3-SP-initialize3",
-        # "npb-3.3-SP-initialize3",
-        # "npb-3.3-SP-initialize4",
-        # "npb-3.3-SP-initialize4",
-        # "npb-3.3-SP-initialize4",
-        # "npb-3.3-SP-initialize4",
-        # "npb-3.3-SP-initialize4",
-        # "npb-3.3-SP-initialize5",
-        # "npb-3.3-SP-initialize5",
-        # "npb-3.3-SP-initialize5",
-        # "npb-3.3-SP-initialize5",
-        # "npb-3.3-SP-initialize5",
-        # "npb-3.3-SP-ninvr",
-        # "npb-3.3-SP-ninvr",
-        # "npb-3.3-SP-ninvr",
-        # "npb-3.3-SP-ninvr",
-        # "npb-3.3-SP-ninvr",
-        # "npb-3.3-SP-pinvr",
-        # "npb-3.3-SP-pinvr",
-        # "npb-3.3-SP-pinvr",
-        # "npb-3.3-SP-pinvr",
-        # "npb-3.3-SP-pinvr",
-        # "npb-3.3-SP-rhs_norm",
-        # "npb-3.3-SP-rhs_norm",
-        # "npb-3.3-SP-rhs_norm",
-        # "npb-3.3-SP-rhs_norm",
-        # "npb-3.3-SP-rhs_norm",
-        # "npb-3.3-SP-txinvr",
-        # "npb-3.3-SP-txinvr",
-        # "npb-3.3-SP-txinvr",
-        # "npb-3.3-SP-txinvr",
-        # "npb-3.3-SP-txinvr",
-        # "npb-3.3-SP-tzetar",
-        # "npb-3.3-SP-tzetar",
-        # "npb-3.3-SP-tzetar",
-        # "npb-3.3-SP-tzetar",
-        # "npb-3.3-SP-tzetar",
-        # "npb-3.3-SP-x_solve",
-        # "npb-3.3-SP-x_solve",
-        # "npb-3.3-SP-x_solve",
-        # "npb-3.3-SP-x_solve",
-        # "npb-3.3-SP-x_solve",
-        # "npb-3.3-SP-y_solve",
-        # "npb-3.3-SP-y_solve",
-        # "npb-3.3-SP-y_solve",
-        # "npb-3.3-SP-y_solve",
-        # "npb-3.3-SP-y_solve",
-        # "npb-3.3-SP-z_solve",
-        # "npb-3.3-SP-z_solve",
-        # "npb-3.3-SP-z_solve",
-        # "npb-3.3-SP-z_solve",
-        # "npb-3.3-SP-z_solve",
-        # "nvidia-4.2-DotProduct-DotProduct",
-        # "nvidia-4.2-FDTD3d-FiniteDifferences",
-        # "nvidia-4.2-MatVecMul-MatVecMulCoalesced0",
-        # "nvidia-4.2-MatVecMul-MatVecMulCoalesced1",
-        # "nvidia-4.2-MatVecMul-MatVecMulCoalesced2",
-        # "nvidia-4.2-MatVecMul-MatVecMulCoalesced3",
-        # "nvidia-4.2-MatVecMul-MatVecMulUncoalesced0",
-        # "nvidia-4.2-MatVecMul-MatVecMulUncoalesced1",
-        # "nvidia-4.2-MatrixMul-matrixMul",
-        # "nvidia-4.2-MersenneTwister-BoxMuller",
-        # "nvidia-4.2-MersenneTwister-MersenneTwister",
-        # "nvidia-4.2-VectorAdd-VectorAdd",
-        # "polybench-gpu-1.0-2DConvolution-Convolution2D_kernel",
-        # "polybench-gpu-1.0-2mm-mm2_kernel1",
-        # "polybench-gpu-1.0-2mm-mm2_kernel2",
-        # "polybench-gpu-1.0-3DConvolution-Convolution3D_kernel",
-        # "polybench-gpu-1.0-3mm-mm3_kernel1",
-        # "polybench-gpu-1.0-3mm-mm3_kernel2",
-        # "polybench-gpu-1.0-3mm-mm3_kernel3",
-        # "polybench-gpu-1.0-atax-atax_kernel1",
-        # "polybench-gpu-1.0-atax-atax_kernel2",
-        # "polybench-gpu-1.0-bicg-bicgKernel1",
-        # "polybench-gpu-1.0-bicg-bicgKernel2",
-        # "polybench-gpu-1.0-correlation-corr_kernel",
-        # "polybench-gpu-1.0-correlation-mean_kernel",
-        # "polybench-gpu-1.0-correlation-reduce_kernel",
-        # "polybench-gpu-1.0-correlation-std_kernel",
-        # "polybench-gpu-1.0-covariance-covar_kernel",
-        # "polybench-gpu-1.0-covariance-mean_kernel",
-        # "polybench-gpu-1.0-covariance-reduce_kernel",
-        # "polybench-gpu-1.0-gemm-gemm",
-        # "polybench-gpu-1.0-gesummv-gesummv_kernel",
-        # "polybench-gpu-1.0-gramschmidt-gramschmidt_kernel1",
-        # "polybench-gpu-1.0-gramschmidt-gramschmidt_kernel2",
-        # "polybench-gpu-1.0-gramschmidt-gramschmidt_kernel3",
-        # "polybench-gpu-1.0-mvt-mvt_kernel1",
-        # "polybench-gpu-1.0-mvt-mvt_kernel2",
-        # "polybench-gpu-1.0-syr2k-syr2k_kernel",
-        # "polybench-gpu-1.0-syrk-syrk_kernel",
-        # "rodinia-3.1-backprop-bpnn_adjust_weights_ocl",
-        # "rodinia-3.1-backprop-bpnn_layerforward_ocl",
-        # "rodinia-3.1-bfs-BFS_1",
-        # "rodinia-3.1-bfs-BFS_2",
-        # "rodinia-3.1-cfd-compute_flux",
-        # "rodinia-3.1-cfd-compute_step_factor",
-        # "rodinia-3.1-cfd-initialize_variables",
-        # "rodinia-3.1-cfd-memset_kernel",
-        # "rodinia-3.1-cfd-time_step",
-        # "rodinia-3.1-gaussian-Fan1",
-        # "rodinia-3.1-gaussian-Fan2",
-        # "rodinia-3.1-hotspot-hotspot",
-        # "rodinia-3.1-kmeans-kmeans_kernel_c",
-        # "rodinia-3.1-kmeans-kmeans_swap",
-        # "rodinia-3.1-lavaMD-kernel_gpu_opencl",
-        # "rodinia-3.1-leukocyte-GICOV_kernel",
-        # "rodinia-3.1-leukocyte-IMGVF_kernel",
-        # "rodinia-3.1-leukocyte-dilate_kernel",
-        # "rodinia-3.1-lud-lud_diagonal",
-        # "rodinia-3.1-lud-lud_internal",
-        # "rodinia-3.1-lud-lud_perimeter",
-        # "rodinia-3.1-nn-NearestNeighbor",
-        # "rodinia-3.1-nw-nw_kernel1",
-        # "rodinia-3.1-nw-nw_kernel2",
-        # "rodinia-3.1-particlefilter-find_index_kernel",
-        # "rodinia-3.1-particlefilter-likelihood_kernel",
-        # "rodinia-3.1-particlefilter-normalize_weights_kernel",
-        # "rodinia-3.1-particlefilter-sum_kernel",
-        # "rodinia-3.1-pathfinder-dynproc_kernel",
-        # "rodinia-3.1-streamcluster-memset_kernel",
-        # "rodinia-3.1-streamcluster-pgain_kernel",
-        "shoc-1.1.5-BFS-BFS_kernel_warp",
-        "shoc-1.1.5-FFT-chk1D_512",
-        "shoc-1.1.5-FFT-fft1D_512",
-        "shoc-1.1.5-FFT-ifft1D_512",
-        "shoc-1.1.5-GEMM-sgemmNN",
-        "shoc-1.1.5-GEMM-sgemmNT",
-        "shoc-1.1.5-MD-compute_lj_force",
-        "shoc-1.1.5-MD5Hash-FindKeyWithDigest_Kernel",
-        "shoc-1.1.5-Reduction-reduce",
-        "shoc-1.1.5-S3D-gr_base",
-        "shoc-1.1.5-S3D-qssa2_kernel",
-        "shoc-1.1.5-S3D-qssa_kernel",
-        "shoc-1.1.5-S3D-qssab_kernel",
-        "shoc-1.1.5-S3D-ratt10_kernel",
-        "shoc-1.1.5-S3D-ratt2_kernel",
-        "shoc-1.1.5-S3D-ratt3_kernel",
-        "shoc-1.1.5-S3D-ratt4_kernel",
-        "shoc-1.1.5-S3D-ratt5_kernel",
-        "shoc-1.1.5-S3D-ratt6_kernel",
-        "shoc-1.1.5-S3D-ratt7_kernel",
-        "shoc-1.1.5-S3D-ratt8_kernel",
-        "shoc-1.1.5-S3D-ratt9_kernel",
-        "shoc-1.1.5-S3D-ratt_kernel",
-        "shoc-1.1.5-S3D-ratx2_kernel",
-        "shoc-1.1.5-S3D-ratx4_kernel",
-        "shoc-1.1.5-S3D-ratx_kernel",
-        "shoc-1.1.5-S3D-ratxb_kernel",
-        "shoc-1.1.5-S3D-rdsmh_kernel",
-        "shoc-1.1.5-S3D-rdwdot10_kernel",
-        "shoc-1.1.5-S3D-rdwdot2_kernel",
-        "shoc-1.1.5-S3D-rdwdot3_kernel",
-        "shoc-1.1.5-S3D-rdwdot6_kernel",
-        "shoc-1.1.5-S3D-rdwdot7_kernel",
-        "shoc-1.1.5-S3D-rdwdot8_kernel",
-        "shoc-1.1.5-S3D-rdwdot9_kernel",
-        "shoc-1.1.5-S3D-rdwdot_kernel",
-        "shoc-1.1.5-Scan-bottom_scan",
-        "shoc-1.1.5-Scan-reduce",
-        "shoc-1.1.5-Scan-top_scan",
-        "shoc-1.1.5-Sort-bottom_scan",
-        "shoc-1.1.5-Sort-reduce",
-    ]
+    S = pd.read_csv("data/b/benchmarks.csv")
+    # Smask = ~S["benchmark"].str.contains("parboil")
+    Smask = S["benchmark"].str.contains("shoc")
+    candidates = sorted(set(S[Smask]["benchmark"]))
 
-    # best = 100000000
-    # best_combination = None
-    # for n in range(1, 10):
-    #     print()
-    #     print("Trying all combinations of", n, "additions")
-    #     for combination in combinations(candidates, n):
-    #         c = check_for_subset(combination)
-    #         if c < best:
-    #             best = c
-    #             best_combination = combination
-    #             print()
-    #             print("Current best:", best, best_combination)
-    #             with open("best-{}-{}.txt".format(best, n), "w") as outfile:
-    #                 print("\n".join(best_combination), file=outfile)
-    # print("Best results:", best, best_combination)
+    best = 100000000
+    best_combination = None
+    for n in range(1, 10):
+        print()
+        print("Trying all combinations of", n, "additions")
+        for combination in combinations(candidates, n):
+            c = check_for_subset(combination, best)
+            if c < best:
+                best = c
+                best_combination = combination
+                print()
+                print("Current best:", best, best_combination)
+                with open("best-{}-{}.txt".format(best, n), "w") as outfile:
+                    print("\n".join(best_combination), file=outfile)
+    print("Best results:", best, best_combination)
 
-    # motivation()
-    experiment1()
-    experiment2()
+    motivation()
+    # experiment1()
+    # experiment2()
 
 
 if __name__ == "__main__":
