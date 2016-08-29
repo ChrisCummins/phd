@@ -431,7 +431,7 @@ def motivation():
     plt.setp(ax.get_xticklabels(), rotation=90)
 
     plt.xlabel("")
-    plt.ylabel(r"\#. benchmarks")
+    plt.ylabel("#. benchmarks")
 
     figsize = (4, 2.35)
     viz.finalise(fs.path("~/phd/docs/wip-smith/img/motivation-c.pdf"),
@@ -499,12 +499,15 @@ def check_for_subset(candidates, current_best):
     y = rand_jitter(y, jitter, RandomState(205))
     X = list(zip(x, y))
 
-    correct = [x for x,b in zip(X,B_out.to_dict('records')) if b["p_correct"]]
-    incorrect = [x for x,b in zip(X,B_out.to_dict('records')) if not b["p_correct"]]
+    correct = [
+        x for x,b in zip(X,B_out.to_dict('records')) if b["p_correct"]]
+    incorrect = [
+        x for x,b in zip(X,B_out.to_dict('records')) if not b["p_correct"]]
 
     other = pca.transform(get_raw_features(Bother))
 
-    scatter_with_jitter(plt, *zip(*other), color="g", label='Correct', jitter=jitter, **opts)
+    scatter_with_jitter(plt, *zip(*other), color="g", label='Correct',
+                        jitter=jitter, **opts)
     plt.scatter(*zip(*incorrect), color="r", label='Incorrect', **opts)
     plt.scatter(*zip(*correct), color="b", label='Correct', **opts)
 
@@ -529,8 +532,13 @@ def check_for_subset(candidates, current_best):
     # Set same axis limits as before
 
     figsize = (2.5,2.5)
-    # plt.show()
-    viz.finalise("motivation-{}-{}.png".format(num_incorrect, len(candidates)),
+
+    with open("motivation-{}-{}-{}.txt".format(num_incorrect, len(candidates),
+                                               counter), "w") as outfile:
+        print("\n".join(candidates), file=outfile)
+
+    viz.finalise("motivation-{}-{}-{}.png".format(num_incorrect,
+                                                  len(candidates), counter),
                  figsize=figsize)
     return len(incorrect)
 
@@ -959,7 +967,6 @@ def main():
     candidates = sorted(set(S[Smask]["benchmark"]))
 
     best = 100000000
-    best_combination = None
     for n in range(1, 10):
         print()
         print("Trying all combinations of", n, "additions")
@@ -967,11 +974,6 @@ def main():
             c = check_for_subset(combination, best)
             if c < best:
                 best = c
-                best_combination = combination
-                print()
-                print("Current best:", best, best_combination)
-                with open("best-{}-{}.txt".format(best, n), "w") as outfile:
-                    print("\n".join(best_combination), file=outfile)
     print("Best results:", best, best_combination)
 
     motivation()
