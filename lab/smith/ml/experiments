@@ -34,6 +34,7 @@ from sklearn.tree import DecisionTreeClassifier, export_graphviz
 import labm8
 from labm8 import fmt
 from labm8 import fs
+from labm8 import io
 from labm8 import math as labmath
 from labm8 import viz
 
@@ -686,6 +687,7 @@ def predictive_models():
     model1.fit(BX_train, By_train)
 
     def visualize_tree(model, path, max_depth=None):
+        path = fs.path(path)
         export_graphviz(model, label=None, filled=True,
                         feature_names=["F1", "F2", "F3", "F4"],
                         impurity=False, proportion=True,
@@ -694,23 +696,24 @@ def predictive_models():
         system(r"sed -r 's/\\n[0-9\.]+%\\n\[[0-9\.]+, [0-9\.]+\]//' -i tree.dot")
 
         # Convert .dot to .ps:
-        system("dot -Tpng tree.dot -o " + fs.path(path))
+        system("dot -Tpdf tree.dot -o " + path)
+        io.info("Wrote", path )
 
         # Clean up
         system("rm tree.dot")
 
 
     model1.fit(BX_train, By_train)
-    visualize_tree(model1, "~/cgo17/img/tree-a.png", 2)
+    visualize_tree(model1, "~/cgo17/img/tree-a.pdf", 2)
 
     model2.fit(BSX_train, BSy_train)
-    visualize_tree(model2, "~/cgo17/img/tree-b.png", 2)
+    visualize_tree(model2, "~/cgo17/img/tree-b.pdf", 2)
 
 
 
 def experiment1():
     # eigenspace("B")
-    # predictive_models()
+    predictive_models()
     speedup_with_synthetic_benchmarks("A")
     speedup_with_synthetic_benchmarks("B")
 
@@ -892,40 +895,34 @@ def experiment2():
 
     print()
     print("Experiment 2 on Platform A:")
-    print("  Num Results:            ", len(a_speedups))
-    print()
     print("  Accuracy of baseline:    {:.1f} %".format(a_p1_accuracy * 100))
     print("  Accuracy of our model:   {:.1f} %".format(a_p2_accuracy * 100))
+    print("  Speedup over cgo13:      {:.2f} x".format(a_speedup))
     print()
     print("  Num matched or improved: {} ({:.1f} %)"
           .format(len(a_matched_or_improved),
-                  (len(a_matched_or_improved) / len(a)) * 100))
+                  (len(a_matched_or_improved) / len(a_speedups)) * 100))
     print("  Num improved:            {} ({:.1f} %)"
           .format(len(a_improved),
-                  (len(a_improved) / len(a)) * 100))
+                  (len(a_improved) / len(a_speedups)) * 100))
     print("  Num worsened:            {} ({:.1f} %)"
           .format(len(a_worsened),
-                  (len(a_worsened) / len(a)) * 100))
-    print()
-    print("  Speedup over cgo13:      {:.2f} x".format(a_speedup))
+                  (len(a_worsened) / len(a_speedups)) * 100))
     print()
     print("Experiment 2 on Platform B:")
-    print("  Num Results:            ", len(b))
-    print()
     print("  Accuracy of baseline:    {:.1f} %".format(b_p1_accuracy * 100))
     print("  Accuracy of our model:   {:.1f} %".format(b_p2_accuracy * 100))
+    print("  Speedup over CGO13:      {:.2f} x".format(b_speedup))
     print()
     print("  Num matched or improved: {} ({:.1f} %)"
           .format(len(b_matched_or_improved),
-                  (len(b_matched_or_improved) / len(b)) * 100))
+                  (len(b_matched_or_improved) / len(b_speedups)) * 100))
     print("  Num improved:            {} ({:.1f} %)"
           .format(len(b_improved),
-                  (len(b_improved) / len(b)) * 100))
+                  (len(b_improved) / len(b_speedups)) * 100))
     print("  Num worsened:            {} ({:.1f} %)"
           .format(len(b_worsened),
-                  (len(b_worsened) / len(b)) * 100))
-    print()
-    print("  Speedup over cgo13:      {:.2f} x".format(b_speedup))
+                  (len(b_worsened) / len(b_speedups)) * 100))
     print()
 
     ax = sns.barplot(x="group", y="p_speedup", hue="platform", data=R,
@@ -945,7 +942,7 @@ def experiment2():
     plt.setp(ax.get_xticklabels(), rotation=90)
 
     # Set plot limit:
-    plt.ylim(0,4)
+    plt.ylim(0,10)
 
     # No legend title
     ax.get_legend().set_title("")
