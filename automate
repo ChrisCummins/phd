@@ -70,7 +70,7 @@ main() {
     rm -f "$ROOT/logs-$HOSTNAME.zip"
     mkdir "$ROOT/logs"
 
-    local nmax=5
+    local nmax=10
 
     for i in $(seq 1 $nmax); do
         echo "$(tput bold)$(tput setaf 1)ITERATION $i of $nmax$(tput sgr0) ..."
