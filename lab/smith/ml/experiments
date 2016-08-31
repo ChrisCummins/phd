@@ -404,10 +404,11 @@ def motivation():
     data = pd.read_csv("data/motivation-survey.csv", delimiter="\t")
 
     benchmark_counts = [x[1] for x in data.groupby("Paper").size().iteritems()]
-    median_benchmark_counts = labmath.median(benchmark_counts)
+    avg_benchmark_count = labmath.mean(benchmark_counts)
+    median_benchmark_count = labmath.median(benchmark_counts)
 
     suites = pd.DataFrame(
-        [(x[0], x[1] / median_benchmark_counts)
+        [(x[0], x[1] / avg_benchmark_count)
          for x in data.groupby(["Benchmark Suite"]).size().iteritems()],
         columns=["Suite", "#. benchmarks"])
 
@@ -416,7 +417,21 @@ def motivation():
     # To sort by alphabetical:
     # suites.sort_values("Suite", inplace=True)
 
+    big4 = suites[:4]
+    big4_suites = [x["Suite"] for x in big4.to_dict('records')]
+    big4_count = sum([x["#. benchmarks"] for x in big4.to_dict('records')])
+    total_count = sum([x["#. benchmarks"] for x in suites.to_dict('records')])
+
+    print()
+    print("Literature review:")
+    print("  Average number of benchmarks:", avg_benchmark_count)
+    print("  Median number of benchmarks: ", median_benchmark_count)
+    print("  Big4:                        ", ",".join(big4_suites))
+    print("  Big4 ratio:                   {:.1f}%"
+          .format((big4_count / total_count) * 100))
+    print()
     print(suites)
+    print()
 
     ax = sns.barplot(x="Suite", y="#. benchmarks", data=suites)
 
@@ -429,9 +444,9 @@ def motivation():
     plt.setp(ax.get_xticklabels(), rotation=90)
 
     plt.xlabel("")
-    plt.ylabel("#. benchmarks")
+    plt.ylabel("#. benchmarks used")
 
-    figsize = (4, 2.35)
+    figsize = (4, 2.25)
     viz.finalise(fs.path("~/phd/docs/wip-smith/img/motivation-c.pdf"),
                  figsize=figsize, tight=True)
 
@@ -855,8 +870,8 @@ def experiment2():
 
 def main():
     motivation()
-    # experiment1()
-    # experiment2()
+    experiment1()
+    experiment2()
 
 
 if __name__ == "__main__":
