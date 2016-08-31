@@ -304,7 +304,7 @@ def motivation():
     ylim = ax.get_ylim()
 
     figsize = (2.5,2.5)
-    viz.finalise(fs.path("~/phd/docs/wip-smith/img/motivation-a.pdf"),
+    viz.finalise(fs.path("~/cgo17/img/motivation-a.pdf"),
                  figsize=figsize, tight=True)
 
     # Reset classifier
@@ -392,7 +392,7 @@ def motivation():
     ax.set_ylim(ylim)
 
     # plt.show()
-    viz.finalise(fs.path("~/phd/docs/wip-smith/img/motivation-b.pdf"),
+    viz.finalise(fs.path("~/cgo17/img/motivation-b.pdf"),
                  figsize=figsize, tight=True)
 
 
@@ -438,7 +438,7 @@ def motivation():
     # customaxis(ax)
 
     # Add threshold line:
-    plt.axhline(y=1, color="k", lw=1)
+    plt.axhline(y=.5, color="k", lw=1)
 
     # Rotate x labels:
     plt.setp(ax.get_xticklabels(), rotation=90)
@@ -447,8 +447,47 @@ def motivation():
     plt.ylabel("#. benchmarks used")
 
     figsize = (4, 2.25)
-    viz.finalise(fs.path("~/phd/docs/wip-smith/img/motivation-c.pdf"),
+    viz.finalise(fs.path("~/cgo17/img/motivation-c.pdf"),
                  figsize=figsize, tight=True)
+
+    with open(fs.path("~/cgo17/tab/motivation-amd.tex"), "w") as outfile:
+        xval_benchmarks("data/a/benchmarks.csv", file=outfile)
+    with open(fs.path("~/cgo17/tab/motivation-nvidia.tex"), "w") as outfile:
+        xval_benchmarks("data/b/benchmarks.csv", file=outfile)
+
+
+def xval_benchmarks(path, file=sys.stdout):
+    # Cross-validate across benchmarks
+    data = cgo13.LabelledData.from_csv(
+        path, group_by="suite")
+    metrics = cgo13.classification(data, group_by="suite")
+    results = np.zeros((len(metrics), len(metrics[0])))
+    for j in range(len(metrics)):
+        for i in range(len(metrics[j])):
+            results[j,i] = metrics[j][i].oracle
+    results = results.T
+
+    groups = sorted(set(data["Group"]))
+
+    def shortlabels(groups):
+        return [re.sub("-.+$", "", x) for x in groups]
+
+    # Print table:
+    print("\\begin{{tabular}}{{ R{{1.5cm}} {} }}"
+          .format(" ".join(["C{1.5cm}"] * len(groups))),
+          file=file)
+    print("\\toprule", file=file)
+    print("& " + " & ".join(["\\textbf{" + escape_suite_name(g) + "}"
+                             for g in groups]) + "\\\\",
+          file=file)
+    print("\\midrule", file=file)
+    for i,row in enumerate(results):
+        print("\\textbf{" + escape_suite_name(groups[i]) + "} & " +
+              " & ".join(["{:.1f}\\%".format(x * 100) if j != i else "-"
+                          for j,x in enumerate(row)]) + "\\\\",
+              file=file)
+    print("\\bottomrule", file=file)
+    print("\\end{tabular}", file=file)
 
 
 def speedup_with_synthetic_benchmarks(platform_id):
@@ -587,7 +626,7 @@ def speedup_with_synthetic_benchmarks(platform_id):
     plt.setp(ax.get_xticklabels(), rotation=90)
 
     # plt.show()
-    viz.finalise(fs.path("~/phd/docs/wip-smith/img/ex1-{}.png"
+    viz.finalise(fs.path("~/cgo17/img/ex1-{}.png"
                          .format(platform_id.upper())),
                  figsize=figsize, tight=True)
 
@@ -662,10 +701,10 @@ def predictive_models():
 
 
     model1.fit(BX_train, By_train)
-    visualize_tree(model1, "~/phd/docs/wip-smith/img/tree-a.png", 2)
+    visualize_tree(model1, "~/cgo17/img/tree-a.png", 2)
 
     model2.fit(BSX_train, BSy_train)
-    visualize_tree(model2, "~/phd/docs/wip-smith/img/tree-b.png", 2)
+    visualize_tree(model2, "~/cgo17/img/tree-b.png", 2)
 
 
 
@@ -676,15 +715,20 @@ def experiment1():
     speedup_with_synthetic_benchmarks("B")
 
 
-def escape_benchmark_name(g):
+def escape_suite_name(g):
     c = g.split('-')
     if (c[0] == "shoc" or
         c[0] == "npb" or
         c[0] == "nvidia" or
         c[0] == "amd"):
-        return c[0].upper() + "." + c[-2]
+        return c[0].upper()
     else:
-        return c[0].capitalize() + "." + c[-2]
+        return c[0].capitalize()
+
+
+def escape_benchmark_name(g):
+    c = g.split('-')
+    return escape_suite_name(g) + "." + c[-2]
 
 
 def experiment2():
@@ -863,14 +907,14 @@ def experiment2():
     ax.get_legend().draw_frame(True)
 
     figsize = (9, 4.5)
-    viz.finalise(fs.path("~/phd/docs/wip-smith/img/ex2.pdf"),
+    viz.finalise(fs.path("~/cgo17/img/ex2.pdf"),
                  figsize=figsize, tight=True)
 
 
 
 def main():
-    motivation()
-    experiment1()
+    # motivation()
+    # experiment1()
     experiment2()
 
 
