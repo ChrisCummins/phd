@@ -8,9 +8,11 @@ mvlogs() {
     local devname=$2
     local prefix=$3
 
+    set +e
     for f in $(ls logs/good/*); do
         mv -v $f "$ROOT/logs/$i/$devname/$prefix-$(basename $f)"
     done
+    set -e
 }
 
 runsuite() {
