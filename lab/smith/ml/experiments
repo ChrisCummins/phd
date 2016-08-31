@@ -800,11 +800,16 @@ def experiment2():
     assert(len(S) == len(aS) + len(bS))
     assert(len(BS) == len(aBS) + len(bBS))
 
-    benchmark_names = sorted(set(B["benchmark"]))
+    # Get benchmark names: <suite>-<benchmark>
+    benchmark_names = sorted(set([
+        re.match(r"^([^0-9]+-[0-9\.]+-[^-]+)", b).group(1)
+        for b in B["benchmark"]
+    ]))
 
     # Perform cross-validation:
     B_out = []
-    for benchmark in benchmark_names:
+    for i,benchmark in enumerate(benchmark_names):
+        print("\r", i + 1, benchmark, end="")
         cgo13_clf = get_cgo13_model()
         our_clf = get_our_model()
 
@@ -828,6 +833,7 @@ def experiment2():
         for d in tmp:
             d["platform"] = "Platform B"
         B_out += tmp
+    print()
 
 
     # Create results frame:
@@ -855,31 +861,71 @@ def experiment2():
 
     Amask = R["platform"] == "Platform A"
     Bmask = R["platform"] == "Platform B"
-    assert(len(R) == len(R[Amask]) + len(R[Bmask]))
+    a = R[Amask]
+    b = R[Bmask]
 
-    a_matched_or_improved = R[Amask & R["p_speedup"] >= 1]
-    b_matched_or_improved = R[Bmask & R["p_speedup"] >= 1]
+    a_p1_accuracy = labmath.mean(a.groupby(["group"])["p1_correct"].mean())
+    b_p1_accuracy = labmath.mean(b.groupby(["group"])["p1_correct"].mean())
 
-    a_improved = R[Amask & R["p_speedup"] > 1]
-    b_improved = R[Bmask & R["p_speedup"] > 1]
+    a_p2_accuracy = labmath.mean(a.groupby(["group"])["p2_correct"].mean())
+    b_p2_accuracy = labmath.mean(b.groupby(["group"])["p2_correct"].mean())
 
-    a_worsened = R[Amask & R["p_speedup"] < 1]
-    b_worsened = R[Amask & R["p_speedup"] < 1]
+    a_speedups = a.groupby(["group"])["p_speedup"].mean()
+    b_speedups = b.groupby(["group"])["p_speedup"].mean()
+
+    a_speedup = labmath.mean(a_speedups)
+    b_speedup = labmath.mean(b_speedups)
+
+    a_matched_or_improved = [x for x in a_speedups if x >= 1]
+    b_matched_or_improved = [x for x in b_speedups if x >= 1]
+
+    a_improved = [x for x in a_speedups if x > 1]
+    b_improved = [x for x in b_speedups if x > 1]
+
+    a_worsened = [x for x in a_speedups if x < 1]
+    b_worsened = [x for x in b_speedups if x < 1]
+
+    # Sanity-checks:
+    assert(len(R) == len(a) + len(b))
+    assert(len(a_matched_or_improved) + len(a_worsened) == len(a_speedups))
+    assert(len(b_matched_or_improved) + len(b_worsened) == len(b_speedups))
 
     print()
-    print("Experiment 2:")
-    print("  Num Results:            ", len(R))
-    print("  Num matched or improved:", len(R[R["p_speedup"] >= 1]))
-    print("  Num improved:           ", len(R[R["p_speedup"] > 1]))
-    print("  Num worse:              ", len(R[R["p_speedup"] < 1]))
+    print("Experiment 2 on Platform A:")
+    print("  Num Results:            ", len(a_speedups))
     print()
-    print("  Matched or improved:     {:.1f} %"
-          .format(((len(a_matched_or_improved) + len(b_matched_or_improved))
-                   / float(len(R))) * 100))
-    print("  Improved:                {:.1f} %"
-          .format(((len(a_improved) + len(b_improved)) / float(len(R))) * 100))
-    print("  Worsened:                {:.1f} %"
-          .format(((len(a_worsened) + len(b_worsened)) / float(len(R))) * 100))
+    print("  Accuracy of baseline:    {:.1f} %".format(a_p1_accuracy * 100))
+    print("  Accuracy of our model:   {:.1f} %".format(a_p2_accuracy * 100))
+    print()
+    print("  Num matched or improved: {} ({:.1f} %)"
+          .format(len(a_matched_or_improved),
+                  (len(a_matched_or_improved) / len(a)) * 100))
+    print("  Num improved:            {} ({:.1f} %)"
+          .format(len(a_improved),
+                  (len(a_improved) / len(a)) * 100))
+    print("  Num worsened:            {} ({:.1f} %)"
+          .format(len(a_worsened),
+                  (len(a_worsened) / len(a)) * 100))
+    print()
+    print("  Speedup over cgo13:      {:.2f} x".format(a_speedup))
+    print()
+    print("Experiment 2 on Platform B:")
+    print("  Num Results:            ", len(b))
+    print()
+    print("  Accuracy of baseline:    {:.1f} %".format(b_p1_accuracy * 100))
+    print("  Accuracy of our model:   {:.1f} %".format(b_p2_accuracy * 100))
+    print()
+    print("  Num matched or improved: {} ({:.1f} %)"
+          .format(len(b_matched_or_improved),
+                  (len(b_matched_or_improved) / len(b)) * 100))
+    print("  Num improved:            {} ({:.1f} %)"
+          .format(len(b_improved),
+                  (len(b_improved) / len(b)) * 100))
+    print("  Num worsened:            {} ({:.1f} %)"
+          .format(len(b_worsened),
+                  (len(b_worsened) / len(b)) * 100))
+    print()
+    print("  Speedup over cgo13:      {:.2f} x".format(b_speedup))
     print()
 
     ax = sns.barplot(x="group", y="p_speedup", hue="platform", data=R,
@@ -913,8 +959,8 @@ def experiment2():
 
 
 def main():
-    # motivation()
-    # experiment1()
+    motivation()
+    experiment1()
     experiment2()
 
 
