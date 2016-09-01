@@ -4,7 +4,7 @@
 #
 set -eu
 
-TIMEOUT=30
+TIMEOUT=180
 
 usage() {
     echo "Usage: $0 <cpu|gpu> <dsize> <opencl-dir>"
