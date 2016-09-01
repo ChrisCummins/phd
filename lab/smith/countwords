@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#
+# Count bag-of-words vocabulary size
+set -eux
+
+# Put any punctuation we want to remove here
+PUNCT=';:,.({})~+-/[]><&!*'
+
+awk '{for(x=1;$x;++x)print $x}' "${1}" \
+    | tr "${PUNCT}" "@" \
+    | sed 's/@//g' \
+    | sort \
+    | uniq -c \
+    | sort -n
