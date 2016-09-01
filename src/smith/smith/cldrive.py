@@ -392,7 +392,7 @@ class KernelPayload(object):
 
             event = cl.enqueue_copy(queue, arg.hostdata, arg.devdata,
                                     is_blocking=False)
-            elapsed += get_event_time(event)
+            get_event_time(event)
 
         return elapsed
 
@@ -405,7 +405,7 @@ class KernelPayload(object):
 
             event = cl.enqueue_copy(queue, arg.devdata, arg.hostdata,
                                     is_blocking=False)
-            elapsed += get_event_time(event)
+            get_event_time(event)
 
         return elapsed
 
