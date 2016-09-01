@@ -122,7 +122,7 @@ def get_event_time(event):
     """
     try:
         event.wait()
-        tstart = event.get_profiling_info(cl.profiling_info.SUBMIT)
+        tstart = event.get_profiling_info(cl.profiling_info.START)
         tend = event.get_profiling_info(cl.profiling_info.END)
         return (tend - tstart) / 1000000
     except Exception:
