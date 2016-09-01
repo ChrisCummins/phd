@@ -125,6 +125,6 @@ main() {
         fi
     done
 
-    ./mkerrors devname $benchmarks_dir
+    ./mkerros devname $benchmarks_dir
 }
 main $@
