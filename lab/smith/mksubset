@@ -1,49 +1,67 @@
 #!/usr/bin/env python3
 #
-# Given some training set, generate a random subset and evaluate it's
-# effectiveness against a test set.
 #
-import csv
-import sys
-import os
-
+import matplotlib
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import math
+import re
+import seaborn as sns
+import sklearn
+import sys
 
 from argparse import ArgumentParser
-from collections import defaultdict
-from random import random
+from collections import Counter
+from copy import copy
+from functools import partial
+from itertools import combinations
+from math import sqrt,ceil
+from numpy.random import RandomState
+from os import system
+from random import seed,random
+from sklearn.base import clone
+from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import normalize
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
 
 import labm8
+from labm8 import fmt
 from labm8 import fs
+from labm8 import io
 from labm8 import math as labmath
-from multiprocessing import cpu_count, Pool
+from labm8 import viz
 
 import smith
-from smith import features
 from smith import cgo13
 
+
 def main():
-    parser = ArgumentParser()
-    parser.add_argument('input', help='path to training data CSV')
-    parser.add_argument("subset", help='subset splitting strategy')
-    parser.add_argument('outdir', help='path to training data CSV')
-    args = parser.parse_args()
+    # A = pd.read_csv("driver/data/synthetic/platform-a.csv.bkp")
+    # B = pd.read_csv("driver/data/synthetic/platform-b.csv.bkp")
 
-    data = cgo13.LabelledData.from_csv(smith.assert_exists(args.input),
-                                       group_by=args.subset)
-    groups = sorted(list(set(data["Group"])))
-    outdir = fs.mkdir(args.outdir)
+    # Apruned = A[A["kernel_nlines"] > 5][:44924]
+    # Bpruned = B[B["kernel_nlines"] > 5][:44924]
 
-    group_indices = defaultdict(list)
-    for i,d in enumerate(data.to_dict(orient="records")):
-        group_indices[d["Group"]].append(i)
+    # print(len(A), len(Apruned), (len(Apruned) / len(A)) * 100)
+    # print("num kernels", len(set(Apruned["benchmark"])))
+    # print()
+    # print(len(B), len(Bpruned), (len(Bpruned) / len(B)) * 100)
+    # print("num kernels", len(set(Bpruned["benchmark"])))
 
-    for group in groups:
-        outpath = fs.path(outdir, str(group) + ".csv")
-        print(outpath)
-        data.ix[np.array(group_indices[group])].to_csv(outpath)
+    # Apruned.to_csv("driver/data/synthetic/platform-a.csv", index=False)
+    # Bpruned.to_csv("driver/data/synthetic/platform-b.csv", index=False)
+
+    A = pd.read_csv("driver/data/synthetic/platform-a.csv")
+    B = pd.read_csv("driver/data/synthetic/platform-b.csv")
+
+
 
 
 if __name__ == '__main__':

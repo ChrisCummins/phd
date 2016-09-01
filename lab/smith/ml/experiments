@@ -30,7 +30,6 @@ from sklearn.preprocessing import normalize
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
 
-
 import labm8
 from labm8 import fmt
 from labm8 import fs
