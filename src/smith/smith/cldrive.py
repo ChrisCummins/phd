@@ -255,7 +255,7 @@ class KernelDriver(object):
         assert_constraint(B1in != B1out, E_NO_OUTPUTS)
 
     def profile(self, queue, size=16, must_validate=False,
-                out=sys.stdout, metaout=sys.stderr, num_iterations=5):
+                out=sys.stdout, metaout=sys.stderr, min_num_iterations=5):
         """
         Output format (CSV):
 
@@ -264,17 +264,16 @@ class KernelDriver(object):
         """
         assert(type(queue) == cl.CommandQueue)
 
-        try:
-            self.validate(queue, size)
-        except CLDriveException as e:
-            print(type(e).__name__, self.name, sep=',', file=metaout)
-            if must_validate:
-                return
+        if must_validate:
+            try:
+                self.validate(queue, size)
+            except CLDriveException as e:
+                print(type(e).__name__, self.name, sep=',', file=metaout)
 
         P = KernelPayload.create_random(self, size)
         k = partial(self, queue)
 
-        while len(self.runtimes) < num_iterations:
+        while len(self.runtimes) < min_num_iterations:
             k(P)
 
         wgsize = int(round(labmath.mean(self.wgsizes)))
