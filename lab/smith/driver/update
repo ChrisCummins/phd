@@ -11,26 +11,26 @@ wait_for_jobs() {
 }
 
 main() {
-    # Make static kernel features.
-    cd data/synthetic/kernels
-    ls | grep '.cl' | xargs -L 1000 smith-features > features.csv
-    cd ../../../
+    # # Make static kernel features.
+    # cd data/synthetic/kernels
+    # ls | grep '.cl' | xargs -L 1000 smith-features > features.csv
+    # cd ../../../
 
-    # Make kernels tarball.
-    cd data/synthetic/
-    local archive=$(date +"kernels-%y.%m.%d-%H.%M.tar.bz2")
-    tar -cjf $archive kernels
-    cd ../../
+    # # Make kernels tarball.
+    # cd data/synthetic/
+    # local archive=$(date +"kernels-%y.%m.%d-%H.%M.tar.bz2")
+    # tar -cjf $archive kernels
+    # cd ../../
 
-    # Prune kernel files (optional).
-    cd ../
-    ./prune-kernels driver/data/synthetic/kernels
-    cd driver
+    # # Prune kernel files (optional).
+    # cd ../
+    # ./prune-kernels driver/data/synthetic/kernels
+    # cd driver
 
-    # Make error files.
-    ./mkerros intel data/synthetic/
-    ./mkerros amd data/synthetic/
-    ./mkerros nvidia data/synthetic/
+    # # Make error files.
+    # ./mkerros intel data/synthetic/
+    # ./mkerros amd data/synthetic/
+    # ./mkerros nvidia data/synthetic/
 
     # Make training data files (one for each platform and combined).
     ./mktraining data/synthetic/kernels \
@@ -67,40 +67,6 @@ main() {
 
     ln -sf ~/phd/lab/smith/driver/data/synthetic/platform-a.csv ../ml/data/a/synthetics.csv
     ln -sf ~/phd/lab/smith/driver/data/synthetic/platform-b.csv ../ml/data/b/synthetics.csv
-
-    rm -rf ~/phd/lab/smith/ml/data/a/class/
-    rm -rf ~/phd/lab/smith/ml/data/b/class/
-    rm -rf ~/phd/lab/smith/ml/data/a/suite/
-    rm -rf ~/phd/lab/smith/ml/data/a/suite/
-    rm -rf ~/phd/lab/smith/ml/data/a/benchmark/
-    rm -rf ~/phd/lab/smith/ml/data/b/benchmark/
-    ../mksubset ~/phd/lab/smith/benchmarks/data/platform-a.csv class ~/phd/lab/smith/ml/data/a/class/ &
-    ../mksubset ~/phd/lab/smith/benchmarks/data/platform-b.csv class ~/phd/lab/smith/ml/data/b/class/ &
-    ../mksubset ~/phd/lab/smith/benchmarks/data/platform-a.csv suite ~/phd/lab/smith/ml/data/a/suite/ &
-    ../mksubset ~/phd/lab/smith/benchmarks/data/platform-b.csv suite ~/phd/lab/smith/ml/data/b/suite/ &
-    ../mksubset ~/phd/lab/smith/benchmarks/data/platform-a.csv benchmark ~/phd/lab/smith/ml/data/a/benchmark &
-    ../mksubset ~/phd/lab/smith/benchmarks/data/platform-b.csv benchmark ~/phd/lab/smith/ml/data/b/benchmark &
-
-    ../extract-synthetic-kernels data/synthetic/platform-a.csv \
-                                 data/synthetic/kernels \
-                                 ../ml/data/a/ --group class &
-    ../extract-synthetic-kernels data/synthetic/platform-b.csv \
-                                 data/synthetic/kernels \
-                                 ../ml/data/b/ --group class &
-    wait_for_jobs
-
-    ln -sf ~/phd/lab/smith/driver/data/synthetic/platform-a.cl ../ml/data/a/synthetics.cl
-    mv -v ../ml/data/a/CPU.cl ../ml/data/a/synthetics-cpu.cl
-    mv -v ../ml/data/a/GPU.cl ../ml/data/a/synthetics-gpu.cl
-
-    ln -sf ~/phd/lab/smith/driver/data/synthetic/platform-b.cl ../ml/data/b/synthetics.cl
-    mv -v ../ml/data/b/CPU.cl ../ml/data/b/synthetics-cpu.cl
-    mv -v ../ml/data/b/GPU.cl ../ml/data/b/synthetics-gpu.cl
-
-    # Make plots.
-    cd ..
-    ./eval &
-    cd driver
 
     # Perform experiments.
     cd ../ml/
