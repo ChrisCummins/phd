@@ -124,5 +124,7 @@ main() {
             /sbin/reboot
         fi
     done
+
+    ./mkerrors devname $benchmarks_dir
 }
 main $@
