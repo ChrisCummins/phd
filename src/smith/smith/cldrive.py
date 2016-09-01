@@ -255,7 +255,7 @@ class KernelDriver(object):
         assert_constraint(B1in != B1out, E_NO_OUTPUTS)
 
     def profile(self, queue, size=16, must_validate=False,
-                out=sys.stdout, metaout=sys.stderr):
+                out=sys.stdout, metaout=sys.stderr, num_iterations=5):
         """
         Output format (CSV):
 
@@ -274,7 +274,7 @@ class KernelDriver(object):
         P = KernelPayload.create_random(self, size)
         k = partial(self, queue)
 
-        while len(self.runtimes) < 10:
+        while len(self.runtimes) < num_iterations:
             k(P)
 
         wgsize = int(round(labmath.mean(self.wgsizes)))
