@@ -53,7 +53,8 @@ def parboil_root():
 
 
 def clsmith_path():
-    return smith.assert_exists("extern/clsmith", exception=ConfigException)
+    return smith.assert_exists("~/phd/extern/clsmith",
+                               exception=ConfigException)
 
 
 def clsmith():

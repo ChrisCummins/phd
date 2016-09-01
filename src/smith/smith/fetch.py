@@ -522,7 +522,7 @@ def get_new_program(db_path):
 def clsmith(db_path, target_num_kernels):
     global errors_counter
 
-    print('generating', args.n, 'kernels to', args.input)
+    print('generating', target_num_kernels, 'kernels to', db_path)
 
     db = sqlite3.connect(db_path)
     c = db.cursor()
