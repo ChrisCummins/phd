@@ -470,10 +470,20 @@ def classification(train, classifier="DecisionTree",
         "NearestNeighbour": KNeighborsClassifier(n_neighbors=1),
         "ZeroR": None,  # TODO:
     }
-    clf = classifiers.get(classifier, None)
+    lookup_table = {
+        "DecisionTree": classifiers["DecisionTree"],
+        "NaiveBayes": classifiers["NaiveBayes"],
+        "NearestNeighbour": classifiers["NearestNeighbour"],
+        "dt": classifiers["DecisionTree"],
+        "nb": classifiers["NaiveBayes"],
+        "nn": classifiers["NearestNeighbour"]
+    }
+    clf = lookup_table.get(classifier, None)
     if clf is None:
-        raise Exception("unkown classifier '{}'. Possible values: {{{}}}"
-                        .format(classifier, ",".join(sorted(classifiers.keys()))))
+        raise Exception(
+            "unkown classifier '{}'. Possible values: {{{}}}"
+            .format(classifier, ",".join(sorted(lookup_table.keys()))))
+
 
     if test is not None:
         return run_test(classifier, clf, train, test, features=getfeatures)
