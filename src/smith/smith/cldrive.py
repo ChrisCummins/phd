@@ -183,7 +183,7 @@ class KernelDriver(object):
 
         kargs = output.kargs
 
-        # Run kernel and get time.
+        # Copy data from host to device.
         elapsed += output.host_to_device(queue)
 
         # Try setting the kernel arguments.
@@ -192,12 +192,12 @@ class KernelDriver(object):
         except Exception as e:
             raise E_BAD_ARGS(e)
 
-        # Execute kernel
-        local_size_x = min(output.ndrange[0], 128)
+        # Execute kernel.
+        local_size_x = min(output.ndrange[0], 256)
         event = self.kernel(queue, output.ndrange, (local_size_x,), *kargs)
         elapsed += get_event_time(event)
 
-        # Copy data back to host and get time.
+        # Copy data from device to host.
         elapsed += output.device_to_host(queue)
 
         # Record workgroup size.

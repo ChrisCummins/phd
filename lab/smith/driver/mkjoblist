@@ -19,20 +19,22 @@ from smith import features
 class MalformedDataException(smith.SmithException): pass
 
 DSIZES = [
-    32,
-    64,
-    128,
-    256,
-    512,
-    1024,
-    2048,
-    4096,
-    8192,
-    16384,
-    65536,
-    131072,
-    262144,
-    524288,
+    #  32-bit float buffer size:
+    64,        # 256 B
+    128,       # 512 B
+    256,       # 1 kB
+    512,       # 2 kB
+    1024,      # 4 kB
+    2048,      # 8 kB
+    4096,      # 16 kB
+    8192,      # 32 kB
+    16384,     # 64 kB
+    65536,     # 256 kB
+    131072,    # 512 kB
+    262144,    # 1 MB
+    524288,    # 2 MB
+    1048576,   # 4 MB
+    2097152,   # 8 MB
     # FIXME: 835584,
     # FIXME: 33554432
 ]
