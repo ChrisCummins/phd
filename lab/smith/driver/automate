@@ -25,6 +25,9 @@ timeout_means_restart() {
 # Fuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu
 RESTART_EVERY=10000
 
+# As a percentage of the system total:
+MIN_FREE_MEM=20
+
 
 main() {
     if [[ $# -ne 3 ]]; then
@@ -109,7 +112,7 @@ main() {
                           | bc -l | xargs printf '%d\n' 2>/dev/null)
         set -e
 
-        if [[ $free_mem < 25 ]]; then
+        if [[ $free_mem < $MIN_FREE_MEM ]]; then
             date +"%y-%m-%d %H:%M:%S, $HOSTNAME, LOW MEMORY RESTART, free: $free_mem%%" \
                  >> /var/log/cldrive.log
             /sbin/reboot
