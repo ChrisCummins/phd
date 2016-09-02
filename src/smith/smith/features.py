@@ -90,10 +90,11 @@ def feature_headers(file=sys.stdout):
     print(stdout, file=file)
 
 
-def files(paths, file=sys.stdout, **kwargs):
+def files(paths, header=True, file=sys.stdout, **kwargs):
     npaths = len(paths)
 
-    feature_headers(file=file)
+    if header:
+        feature_headers(file=file)
     for path in paths:
         features(path, file=file, **kwargs)
 

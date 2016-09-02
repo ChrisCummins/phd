@@ -27,6 +27,8 @@ def main():
                         help="include shim header")
     parser.add_argument("-q", '--quiet', action='store_true',
                         help="minimal error output")
+    parser.add_argument("-H", "--no-header", action="store_true",
+                        help="no features header")
     args = parser.parse_args()
 
     inputs = args.inputs
@@ -47,7 +49,7 @@ def main():
     else:
         paths = [fs.path(f) for f in inputs]
     features.files(paths, fatal_errors=args.fatal_errors, use_shim=args.shim,
-                   quiet=args.quiet)
+                   quiet=args.quiet, header=not args.no_header)
 
 
 if __name__ == '__main__':
