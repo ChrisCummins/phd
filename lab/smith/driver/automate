@@ -76,7 +76,7 @@ main() {
          >> /var/log/cldrive.log
     jobslist=$(./mkjoblist $kernels_dir $results_path $errors_path)
     num_jobs=$(echo "$jobslist" | wc -l)
-    echo "$num_jobs jobs"
+    echo "$((num_jobs-1)) jobs"
 
     local i=0
     for job in ${jobslist[@]}; do
