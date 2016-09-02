@@ -21,7 +21,7 @@ main() {
         exit 1
     fi
 
-    for path in $(ls $dir/*.cl); do
+    for path in $(find $dir -name '*.cl'); do
         local f=$(basename $path)
 
         if ! cut -f1 -d',' < $features | tail -n+2 | grep $f &>/dev/null ; then
