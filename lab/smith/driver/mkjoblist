@@ -36,7 +36,7 @@ DSIZES = [
     1048576,   # 4 MB
     2097152,   # 8 MB
     4194304,   # 16 MB
-    8388608,   # 32 MB
+    # 8388608,   # 32 MB
 ]
 
 def read_file_dataset(path):
