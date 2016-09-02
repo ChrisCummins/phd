@@ -587,6 +587,9 @@ def speedup_with_synthetic_benchmarks(platform_id):
     B_speedup = labmath.mean(R[b_mask].groupby(["group"])["p_speedup"].mean())
     BS_speedup = labmath.mean(R[bs_mask].groupby(["group"])["p_speedup"].mean())
 
+    B_geo = labmath.geomean(R[b_mask].groupby(["group"])["p_speedup"].mean())
+    BS_geo = labmath.geomean(R[bs_mask].groupby(["group"])["p_speedup"].mean())
+
     # Print analytics:
     print()
     print("Experiment 1 on Platform {}:".format(platform_id.upper()))
@@ -601,6 +604,9 @@ def speedup_with_synthetic_benchmarks(platform_id):
     print()
     print("  Speedup of baseline:     {:.2f} x".format(B_speedup))
     print("  Speedup w. synthesized:  {:.2f} x".format(BS_speedup))
+    print()
+    print("  Geomean Speedup of baseline:    {:.2f} x".format(B_geo))
+    print("  Geomean Speedup w. synthesized: {:.2f} x".format(BS_geo))
     print()
 
     # Plot summary:
@@ -619,6 +625,8 @@ def speedup_with_synthetic_benchmarks(platform_id):
 
     # No legend title
     ax.get_legend().set_title("")
+    plt.legend(loc='upper right')
+    ax.get_legend().draw_frame(True)
 
     figsize = (9, 2.2)
     if platform_id == "B":
@@ -941,7 +949,7 @@ def experiment2():
     plt.setp(ax.get_xticklabels(), rotation=90)
 
     # Set plot limit:
-    plt.ylim(0,10)
+    plt.ylim(0,6)
 
     # No legend title
     ax.get_legend().set_title("")
