@@ -22,7 +22,7 @@ drive_file() {
     local dsize=$3
 
     if [[ $STRICT == 1 ]]; then
-        devargs="$dev_args --strict"
+        devargs="$devargs --strict"
     fi
 
     DSIZE=$dsize timeout --signal=9 $TIMEOUT cldrive -f $devargs $in_path
