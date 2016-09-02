@@ -450,6 +450,7 @@ def motivation():
     viz.finalise(fs.path("~/cgo17/img/motivation-c.pdf"),
                  figsize=figsize, tight=True)
 
+    # Train on one benchmark suite, test on another:
     with open(fs.path("~/cgo17/tab/motivation-amd.tex"), "w") as outfile:
         xval_benchmarks("data/a/benchmarks.csv", file=outfile)
     with open(fs.path("~/cgo17/tab/motivation-nvidia.tex"), "w") as outfile:
@@ -886,6 +887,9 @@ def experiment2():
     a_speedup = labmath.mean(a_speedups)
     b_speedup = labmath.mean(b_speedups)
 
+    a_geo = labmath.geomean(a_speedups)
+    b_geo = labmath.geomean(b_speedups)
+
     a_matched_or_improved = [x for x in a_speedups if x >= 1]
     b_matched_or_improved = [x for x in b_speedups if x >= 1]
 
@@ -904,7 +908,8 @@ def experiment2():
     print("Experiment 2 on Platform A:")
     print("  Accuracy of baseline:    {:.1f} %".format(a_p1_accuracy * 100))
     print("  Accuracy of our model:   {:.1f} %".format(a_p2_accuracy * 100))
-    print("  Speedup over cgo13:      {:.2f} x".format(a_speedup))
+    print("  Speedup over CGO13:      {:.2f} x".format(a_speedup))
+    print("  Geomean over CGO13:      {:.2f} x".format(a_geo))
     print()
     print("  Num matched or improved: {} ({:.1f} %)"
           .format(len(a_matched_or_improved),
@@ -920,6 +925,7 @@ def experiment2():
     print("  Accuracy of baseline:    {:.1f} %".format(b_p1_accuracy * 100))
     print("  Accuracy of our model:   {:.1f} %".format(b_p2_accuracy * 100))
     print("  Speedup over CGO13:      {:.2f} x".format(b_speedup))
+    print("  Geomean over CGO13:      {:.2f} x".format(a_geo))
     print()
     print("  Num matched or improved: {} ({:.1f} %)"
           .format(len(b_matched_or_improved),
