@@ -511,7 +511,7 @@ def get_new_program(db_path):
 
     sha = sha1(contents.encode('utf-8')).hexdigest()
 
-    c.execute('INSERT INTO ContentFiles VALUES(?,?)',
+    c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
               (sha, contents))
     db.commit()
     db.close()
