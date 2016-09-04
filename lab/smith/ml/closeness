@@ -71,16 +71,6 @@ def get_raw_features(D):
     ]).T
 
 
-def get_static_features(D):
-    return np.array([
-        D["comp"].values,
-        D["rational"].values,
-        D["mem"].values,
-        D["localmem"].values,
-        D["coalesced"].values,
-    ]).T
-
-
 def get_our_features(D):
     return np.array([
         D["comp"].values,
@@ -98,8 +88,40 @@ def get_our_features(D):
     ]).T
 
 
+def get_static_features(D):
+    return np.array([
+        D["comp"].values,
+        D["rational"].values,
+        D["mem"].values,
+        D["localmem"].values,
+        D["coalesced"].values,
+        # D["F2:coalesced/mem"].values,
+        # D["F4:comp/mem"].values,
+    ], dtype=float).T
+
+
 def get_labels(D):
     return D["oracle"]
+
+
+def normalize(*args):
+    num_features = len(args[0][0])
+    print(num_features, "features")
+    for feature_idx in range(num_features):
+        divisor = max([np.max(arg[:,feature_idx]) for arg in args])
+        print("Feature", feature_idx, "max:", divisor)
+
+        for arg in args:
+            arg[:,feature_idx] /= divisor
+
+    # Sanity-check that normalization worked:
+    for j in range(num_features):
+        for arg in args:
+            for i in arg[:,j]:
+                assert(i <= 1)
+                assert(i >= 0)
+
+    return args
 
 
 def closeness(platform_id):
@@ -271,7 +293,12 @@ def get_nearest_neighbour_distance(F1, F2):
 
 
 def static_kernel_closeness():
+    # TODO: Consider non-linear distance
+
     features = get_static_features
+
+    # Set a seed for reproducible results:
+    np.random.seed(204)
 
     # Load datasets:
     Benchmarks = pd.read_csv("data/a/benchmarks.csv")
@@ -288,14 +315,26 @@ def static_kernel_closeness():
     GitHubFeatures = features(GitHub)
     CLsmithFeatures = features(CLsmith)
 
-    stepsize = 100
+    BenchmarksFeatures, CLgenFeatures, GitHubFeatures, CLsmithFeatures = normalize(
+        BenchmarksFeatures, CLgenFeatures, GitHubFeatures, CLsmithFeatures)
 
-    numCLgenSteps = math.ceil(len(CLgenFeatures) / stepsize)
-    numGitHubSteps = math.ceil(len(GitHubFeatures) / stepsize)
-    numCLsmithSteps = math.ceil(len(CLsmithFeatures) / stepsize)
+    LOG_SCALE = True
 
-    numSteps = max(numCLgenSteps, numGitHubSteps, numCLsmithSteps)
-    numIterations = 10
+    stepMax = max(
+        len(GitHubFeatures), len(CLgenFeatures), len(CLsmithFeatures))
+    stepMin = 10
+    if LOG_SCALE:
+        steps = np.array(list(exp_range(stepMin, stepMax, 1.25)), dtype=np.int32)
+    else:
+        steps = np.array(list(range(stepMin, stepMax, 1000)), dtype=np.int32)
+
+    GitHubSteps = [n for n in steps if n <= len(GitHubFeatures)]
+    CLgenSteps = [n for n  in steps if n <= len(CLgenFeatures)]
+    CLsmithSteps = [n for n in steps if n <= len(CLsmithFeatures)]
+
+    numCLgenSteps = len(CLgenSteps)
+    numGitHubSteps = len(GitHubSteps)
+    numCLsmithSteps = len(CLsmithSteps)
 
     CLgenDistances = np.zeros(numCLgenSteps, dtype=float)
     GitHubDistances = np.zeros(numGitHubSteps, dtype=float)
@@ -309,58 +348,57 @@ def static_kernel_closeness():
     summarize_results = np.mean
     error = np.std
 
-    for n in range(1, numSteps):
-        print("\r", n, "of", numSteps, end="")
+    print("Steps:", steps)
 
-        if n < numCLgenSteps:
+    for i,n in enumerate(steps):
+        print("\r", i + 1, "of", len(steps), end="")
+        numIterations = 30
+
+        if i < numCLgenSteps:
             # TODO Errors:
             r = np.zeros(numIterations, dtype=float)
-            for i in range(numIterations):
+            for j in range(numIterations):
                 np.random.shuffle(CLgenFeatures)
 
-                r[i] = summarize_distance(get_nearest_neighbour_distance(
-                    BenchmarksFeatures, CLgenFeatures[:n * stepsize]
+                r[j] = summarize_distance(get_nearest_neighbour_distance(
+                    BenchmarksFeatures, CLgenFeatures[:n]
                 ))
-            CLgenDistances[n] = summarize_results(r)
-            CLgenErrors[n] = error(r)
+            CLgenDistances[i] = summarize_results(r)
+            CLgenErrors[i] = error(r)
 
-        if n < numGitHubSteps:
+        if i < numGitHubSteps:
             r = np.zeros(numIterations, dtype=float)
-            for i in range(numIterations):
+            for j in range(numIterations):
                 np.random.shuffle(GitHubFeatures)
 
-                r[i] = summarize_distance(get_nearest_neighbour_distance(
-                    BenchmarksFeatures, GitHubFeatures[:n * stepsize]
+                r[j] = summarize_distance(get_nearest_neighbour_distance(
+                    BenchmarksFeatures, GitHubFeatures[:n]
                 ))
-            GitHubDistances[n] = summarize_results(r)
-            GitHubErrors[n] = error(r)
+            GitHubDistances[i] = summarize_results(r)
+            GitHubErrors[i] = error(r)
 
-        if n < numCLsmithSteps:
+        if i < numCLsmithSteps:
             r = np.zeros(numIterations, dtype=float)
-            for i in range(numIterations):
+            for j in range(numIterations):
                 np.random.shuffle(CLsmithFeatures)
 
-                r[i] = summarize_distance(get_nearest_neighbour_distance(
-                    BenchmarksFeatures, CLsmithFeatures[:n * stepsize]
+                r[j] = summarize_distance(get_nearest_neighbour_distance(
+                    BenchmarksFeatures, CLsmithFeatures[:n]
                 ))
-            CLsmithDistances[n] = summarize_results(r)
-            CLsmithErrors[n] = error(r)
+            CLsmithDistances[i] = summarize_results(r)
+            CLsmithErrors[i] = error(r)
 
-    print()
-    x, y = zip(*enumerate(GitHubDistances))
-    x, y = np.array(x), np.array(y)
-    plt.errorbar(x * stepsize, y, yerr=GitHubErrors, c="b", label="GitHub",
-                 ecolor='k', capthick=1)
+    # plt.plot(x * stepsize, y, c="b", label="GitHub")
+    plt.errorbar(GitHubSteps, GitHubDistances, yerr=GitHubErrors, c="b",
+                 label="GitHub", ecolor='k', capthick=1)
 
-    x, y = zip(*enumerate(CLsmithDistances))
-    x, y = np.array(x), np.array(y)
-    plt.errorbar(x * stepsize, y, yerr=CLsmithErrors, c="r", label="CLsmith",
-                 ecolor='k', capthick=1)
+    # plt.plot(x * stepsize, y, c="r", label="CLsmith")
+    plt.errorbar(CLsmithSteps, CLsmithDistances, yerr=CLsmithErrors, c="r",
+                 label="CLsmith", ecolor='k', capthick=1)
 
-    x, y = zip(*enumerate(CLgenDistances))
-    x, y = np.array(x), np.array(y)
-    plt.errorbar(x * stepsize, y, yerr=CLgenErrors, c="g", label="CLgen",
-                 ecolor='k', capthick=1)
+    # plt.plot(x * stepsize, y, c="g", label="CLgen")
+    plt.errorbar(CLgenSteps, CLgenDistances, yerr=CLgenErrors, c="g",
+                 label="CLgen", ecolor='k', capthick=1)
 
     ax = plt.gca()
 
@@ -369,12 +407,23 @@ def static_kernel_closeness():
     ax.get_legend().set_title("")
     ax.get_legend().draw_frame(True)
 
-    plt.xlim(stepsize,)
+    plt.xlim(stepMin, stepMax)
+    plt.ylim(0, )
+
+    if LOG_SCALE:
+        ax.set_xscale("log", nonposy='clip')
 
     plt.xlabel("#. kernels")
     plt.ylabel("Closeness")
 
-    viz.finalise("closeness.png")
+    viz.finalise("closeness.pdf")
+
+
+def exp_range(start, end, mul):
+    while start < end:
+        yield start
+        start *= mul
+    yield end
 
 
 def main():
