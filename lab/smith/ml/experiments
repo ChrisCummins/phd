@@ -504,13 +504,18 @@ def speedup_with_synthetic_benchmarks(platform_id):
     #
     B = pd.read_csv("data/{platform_id}/benchmarks.csv"
                     .format(platform_id=platform_id.lower()))
-    B["synthetic"] = np.zeros(len(B))
+    B["group"] = ["B"] * len(B)
 
-    S = pd.read_csv("data/{platform_id}/synthetics.csv"
+    S = pd.read_csv("~/cldrive/data/clgen/platform-{platform_id}.csv"
                     .format(platform_id=platform_id.lower()))
-    S["synthetic"] = np.ones(len(S))
+    S["group"] = ["S"] * len(S)
+
+    G = pd.read_csv(fs.path("~/cldrive/data/github/platform-{platform_id}.csv")
+                    .format(platform_id=platform_id.lower()))
+    G["group"] = ["G"] * len(G)
 
     BS = pd.concat((B, S))
+    BG = pd.concat((B, G))
 
     # Find the ZeroR. This is the device which is most frequently
     # optimal:
@@ -527,7 +532,7 @@ def speedup_with_synthetic_benchmarks(platform_id):
         for b in B["benchmark"] if b.startswith("npb-")
     ]))
 
-    B_out, BS_out = [], []
+    B_out, BS_out, BG_out = [], [], []
     for benchmark in benchmark_names:
         # CGO13 predictive model:
         clf = get_cgo13_model()
@@ -541,73 +546,106 @@ def speedup_with_synthetic_benchmarks(platform_id):
         clf = get_cgo13_model()
 
         # Repeate cross-validation with synthetic kernels:
-        # BS_out += train_on_synthetics(clf, get_cgo13_features, BS, benchmark)
         BS_out += leave_one_benchmark_out(clf, get_cgo13_features, BS, benchmark)
-        assert len(B_out) == len(BS_out)
+
+        # Reset model.
+        clf = get_cgo13_model()
+
+        # Repeate cross-validation with GitHub kernels:
+        BG_out += leave_one_benchmark_out(clf, get_cgo13_features, BG, benchmark)
+
+        assert(len(B_out) == len(BS_out))
+        assert(len(B_out) == len(BG_out))
 
     # Create results frame:
     R_out = []
-    for b,bs in zip(B_out, BS_out):
+    for b,bs,bg in zip(B_out, BS_out, BG_out):
         # Get runtimes of device using predicted device.
         b_p_runtime = b["runtime_" + b["p"].lower()]
         bs_p_runtime = bs["runtime_" + bs["p"].lower()]
+        bg_p_runtime = bg["runtime_" + bg["p"].lower()]
 
         # Speedup is the ratio of runtime using the predicted device
         # over runtime using ZeroR device.
         b["p_speedup"] = b_p_runtime / b[zeror_runtime]
         bs["p_speedup"] = bs_p_runtime / bs[zeror_runtime]
+        bg["p_speedup"] = bg_p_runtime / bg[zeror_runtime]
 
         # Oracle is the ratio of runtime using the best device vs
         # runtime using predicted device.
         b["p_oracle"] = b["runtime"] / b_p_runtime
         bs["p_oracle"] = bs["runtime"] / bs_p_runtime
+        bg["p_oracle"] = bg["runtime"] / bg_p_runtime
 
         # Get the group label, in the form $benchmark.$dataset:
         group = re.sub(r"[^-]+-[0-9\.]+-([^-]+)-.+", r"\1",
                        b["benchmark"]) + "." + b["dataset"]
         b["group"] = group
+        bg["group"] = group
         bs["group"] = group
 
         # Set the training data type.
         b["training"] = "Baseline"
-        bs["training"] = "w. Synthesized"
+        bg["training"] = "w. GitHub"
+        bs["training"] = "w. CLgen"
 
         R_out.append(b)
+        R_out.append(bg)
         R_out.append(bs)
     R = pd.DataFrame(R_out)
 
     b_mask = R["training"] == "Baseline"
-    bs_mask = R["training"] == "w. Synthesized"
+    bs_mask = R["training"] == "w. CLgen"
+    bg_mask = R["training"] == "w. GitHub"
 
     B_acc = labmath.mean(R[b_mask].groupby(["group"])["p_correct"].mean())
+    BG_acc = labmath.mean(R[bg_mask].groupby(["group"])["p_correct"].mean())
     BS_acc = labmath.mean(R[bs_mask].groupby(["group"])["p_correct"].mean())
 
     B_oracle = labmath.mean(R[b_mask].groupby(["group"])["p_oracle"].mean())
+    BG_oracle = labmath.mean(R[bg_mask].groupby(["group"])["p_oracle"].mean())
     BS_oracle = labmath.mean(R[bs_mask].groupby(["group"])["p_oracle"].mean())
 
     B_speedup = labmath.mean(R[b_mask].groupby(["group"])["p_speedup"].mean())
+    BG_speedup = labmath.mean(R[bg_mask].groupby(["group"])["p_speedup"].mean())
     BS_speedup = labmath.mean(R[bs_mask].groupby(["group"])["p_speedup"].mean())
 
     B_geo = labmath.geomean(R[b_mask].groupby(["group"])["p_speedup"].mean())
+    BG_geo = labmath.geomean(R[bg_mask].groupby(["group"])["p_speedup"].mean())
     BS_geo = labmath.geomean(R[bs_mask].groupby(["group"])["p_speedup"].mean())
+
 
     # Print analytics:
     print()
     print("Experiment 1 on Platform {}:".format(platform_id.upper()))
+    print("  #. benchmarks:          ",
+          len(set(B["benchmark"])), "kernels,",
+          len(B), "observations")
+    print("  #. githubs:             ",
+          len(set(G["benchmark"])), "kernels,",
+          len(G), "observations")
+    print("  #. synthetic:           ",
+          len(set(S["benchmark"])), "kernels,",
+          len(S), "observations")
+    print()
     print("  ZeroR device:            {} ({:.1f} %)"
           .format(zeror, zeror_ratio * 100))
     print()
     print("  Accuracy of baseline:    {:.1f} %".format(B_acc * 100))
-    print("  Accuracy w. synthesized: {:.1f} %".format(BS_acc * 100))
+    print("  Accuracy w. GitHub:      {:.1f} %".format(BG_acc * 100))
+    print("  Accuracy w. CLgen:       {:.1f} %".format(BS_acc * 100))
     print()
     print("  Oracle of baseline:      {:.1f} %".format(B_oracle * 100))
-    print("  Oracle w. synthesized:   {:.1f} %".format(BS_oracle * 100))
+    print("  Oracle w. GitHub:        {:.1f} %".format(BG_oracle * 100))
+    print("  Oracle w. CLgen:         {:.1f} %".format(BS_oracle * 100))
     print()
     print("  Speedup of baseline:     {:.2f} x".format(B_speedup))
-    print("  Speedup w. synthesized:  {:.2f} x".format(BS_speedup))
+    print("  Speedup w. GitHub:       {:.2f} x".format(BG_speedup))
+    print("  Speedup w. CLgen:        {:.2f} x".format(BS_speedup))
     print()
     print("  Geomean Speedup of baseline:    {:.2f} x".format(B_geo))
-    print("  Geomean Speedup w. synthesized: {:.2f} x".format(BS_geo))
+    print("  Geomean Speedup w. GitHub:      {:.2f} x".format(BG_geo))
+    print("  Geomean Speedup w. CLgen:       {:.2f} x".format(BS_geo))
     print()
 
     # Plot summary:
@@ -635,6 +673,7 @@ def speedup_with_synthetic_benchmarks(platform_id):
     figsize = (9, 2.2)
     if platform_id == "B":
         plt.ylim(0, 15)
+        # plt.ylim(0, 4.5)
     plt.setp(ax.get_xticklabels(), rotation=90)
 
     # plt.show()
@@ -952,7 +991,7 @@ def experiment2():
     #     if not i % 2:
     #         bar.set_hatch("////")
 
-    plt.ylabel("Speedup")
+    plt.ylabel("Speedup over Grewe et al.")
     plt.xlabel("")
     plt.axhline(y=1, color="k", lw=1)
 
@@ -974,9 +1013,9 @@ def experiment2():
 
 
 def main():
-    motivation()
+    # motivation()
     experiment1()
-    experiment2()
+    # experiment2()
 
 
 if __name__ == "__main__":
