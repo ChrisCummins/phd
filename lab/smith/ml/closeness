@@ -34,7 +34,6 @@ from sklearn.preprocessing import normalize
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
 
-
 import labm8
 from labm8 import fmt
 from labm8 import fs
@@ -109,6 +108,7 @@ def normalize(*args):
     print(num_features, "features")
     for feature_idx in range(num_features):
         divisor = max([np.max(arg[:,feature_idx]) for arg in args])
+        # divisor = max(max([np.max(arg[:,feature_idx]) for arg in args]), 1)
         print("Feature", feature_idx, "max:", divisor)
 
         for arg in args:
@@ -287,6 +287,9 @@ def closeness(platform_id):
 
 
 def get_nearest_neighbour_distance(F1, F2):
+    """
+    Return nearest-neighbour distances from F1 to F2.
+    """
     nbrs = NearestNeighbors(n_neighbors=1).fit(F2)
     distances, indices = nbrs.kneighbors(F1)
     return distances
@@ -324,81 +327,85 @@ def static_kernel_closeness():
         len(GitHubFeatures), len(CLgenFeatures), len(CLsmithFeatures))
     stepMin = 10
     if LOG_SCALE:
-        steps = np.array(list(exp_range(stepMin, stepMax, 1.25)), dtype=np.int32)
+        steps = np.array(list(exp_range(stepMin, stepMax, 1.5 )), dtype=np.int32)
     else:
         steps = np.array(list(range(stepMin, stepMax, 1000)), dtype=np.int32)
 
     GitHubSteps = [n for n in steps if n <= len(GitHubFeatures)]
-    CLgenSteps = [n for n  in steps if n <= len(CLgenFeatures)]
     CLsmithSteps = [n for n in steps if n <= len(CLsmithFeatures)]
+    CLgenSteps = [n for n  in steps if n <= len(CLgenFeatures)]
 
-    numCLgenSteps = len(CLgenSteps)
     numGitHubSteps = len(GitHubSteps)
     numCLsmithSteps = len(CLsmithSteps)
+    numCLgenSteps = len(CLgenSteps)
 
-    CLgenDistances = np.zeros(numCLgenSteps, dtype=float)
-    GitHubDistances = np.zeros(numGitHubSteps, dtype=float)
-    CLsmithDistances = np.zeros(numCLsmithSteps, dtype=float)
+    print("#. GitHub kernels", GitHubSteps[-1])
+    print("#. CLsmith kernels", CLsmithSteps[-1])
+    print("#. CLgen kernels", CLgenSteps[-1])
 
-    CLgenErrors = np.zeros(numCLgenSteps, dtype=float)
-    GitHubErrors = np.zeros(numGitHubSteps, dtype=float)
-    CLsmithErrors = np.zeros(numCLsmithSteps, dtype=float)
-
+    # summarize_distance = np.max
     summarize_distance = np.median
+    # summarize_distance = np.mean
     summarize_results = np.mean
-    error = np.std
+    # error = np.std
+    def error(x):
+        mean = labmath.mean(x)
+        ci = labmath.confinterval(x, array_mean=mean)
+        return ci[1] - mean
 
     print("Steps:", steps)
 
-    for i,n in enumerate(steps):
-        print("\r", i + 1, "of", len(steps), end="")
-        numIterations = 30
+    datasets = [
+        {
+            "name": "GitHub",
+            "color": "b",
+            "linestyle": ":",
+            "steps": GitHubSteps,
+            "features": GitHubFeatures,
+            "distances": np.zeros(numGitHubSteps, dtype=float),
+            "errors": np.zeros(numGitHubSteps, dtype=float)
+        },
+        {
+            "name": "CLsmith",
+            "color": "r",
+            "linestyle": "--",
+            "steps": CLsmithSteps,
+            "features": CLsmithFeatures,
+            "distances": np.zeros(numCLsmithSteps, dtype=float),
+            "errors": np.zeros(numCLsmithSteps, dtype=float)
+        },
+        {
+            "name": "CLgen",
+            "color": "g",
+            "linestyle": "-",
+            "steps": CLgenSteps,
+            "features": CLgenFeatures,
+            "distances": np.zeros(numCLgenSteps, dtype=float),
+            "errors": np.zeros(numCLgenSteps, dtype=float)
+        },
+    ]
 
-        if i < numCLgenSteps:
-            # TODO Errors:
+    numIterations = 10
+    # numIterations = 30
+
+    for dataset in datasets:
+        for i, n in enumerate(dataset["steps"]):
+            numSteps = len(dataset["steps"])
+            print("\r", dataset["name"], i + 1, "of", numSteps, end="")
             r = np.zeros(numIterations, dtype=float)
             for j in range(numIterations):
-                np.random.shuffle(CLgenFeatures)
-
+                np.random.shuffle(dataset["features"])
                 r[j] = summarize_distance(get_nearest_neighbour_distance(
-                    BenchmarksFeatures, CLgenFeatures[:n]
+                    BenchmarksFeatures, dataset["features"][:n]
                 ))
-            CLgenDistances[i] = summarize_results(r)
-            CLgenErrors[i] = error(r)
-
-        if i < numGitHubSteps:
-            r = np.zeros(numIterations, dtype=float)
-            for j in range(numIterations):
-                np.random.shuffle(GitHubFeatures)
-
-                r[j] = summarize_distance(get_nearest_neighbour_distance(
-                    BenchmarksFeatures, GitHubFeatures[:n]
-                ))
-            GitHubDistances[i] = summarize_results(r)
-            GitHubErrors[i] = error(r)
-
-        if i < numCLsmithSteps:
-            r = np.zeros(numIterations, dtype=float)
-            for j in range(numIterations):
-                np.random.shuffle(CLsmithFeatures)
-
-                r[j] = summarize_distance(get_nearest_neighbour_distance(
-                    BenchmarksFeatures, CLsmithFeatures[:n]
-                ))
-            CLsmithDistances[i] = summarize_results(r)
-            CLsmithErrors[i] = error(r)
-
-    # plt.plot(x * stepsize, y, c="b", label="GitHub")
-    plt.errorbar(GitHubSteps, GitHubDistances, yerr=GitHubErrors, c="b",
-                 label="GitHub", ecolor='k', capthick=1)
-
-    # plt.plot(x * stepsize, y, c="r", label="CLsmith")
-    plt.errorbar(CLsmithSteps, CLsmithDistances, yerr=CLsmithErrors, c="r",
-                 label="CLsmith", ecolor='k', capthick=1)
-
-    # plt.plot(x * stepsize, y, c="g", label="CLgen")
-    plt.errorbar(CLgenSteps, CLgenDistances, yerr=CLgenErrors, c="g",
-                 label="CLgen", ecolor='k', capthick=1)
+            dataset["distances"][i] = summarize_results(r)
+            dataset["errors"][i] = error(r)
+        plt.errorbar(dataset["steps"], dataset["distances"],
+                     yerr=dataset["errors"], c=dataset["color"],
+                     linestyle=dataset["linestyle"],
+                     label=dataset["name"], ecolor="k", capthick=1)
+        # sns.regplot(dataset["steps"], dataset["distances"],
+        #             color=dataset["color"], label=dataset["name"])
 
     ax = plt.gca()
 
@@ -416,7 +423,8 @@ def static_kernel_closeness():
     plt.xlabel("#. kernels")
     plt.ylabel("Closeness")
 
-    viz.finalise("closeness.pdf")
+    figsize = (5, 2.5)
+    viz.finalise(fs.path("~/cgo17/img/closeness.pdf"), figsize=figsize)
 
 
 def exp_range(start, end, mul):
