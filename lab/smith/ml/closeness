@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 #
+# TODO: Line style http://matplotlib.org/examples/lines_bars_and_markers/line_styles_reference.html
+#
 import matplotlib
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt

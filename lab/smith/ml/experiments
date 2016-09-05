@@ -611,8 +611,11 @@ def speedup_with_synthetic_benchmarks(platform_id):
     print()
 
     # Plot summary:
-    ax = sns.barplot(x="group", y="p_speedup", hue="training",
-                     data=R, ci=None)
+    num_hues = len(set(R["training"]))
+    palette = sns.cubehelix_palette(num_hues, start=1, rot=0, light=.8, dark=.3)
+
+    ax = sns.barplot(x="group", y="p_speedup", data=R, ci=None, hue="training",
+                     palette=palette)
     plt.ylabel("Speedup")
     plt.xlabel("")
 
@@ -938,9 +941,11 @@ def experiment2():
                   (len(b_worsened) / len(b_speedups)) * 100))
     print()
 
+    num_hues = len(set(R["platform"]))
+    palette = sns.cubehelix_palette(num_hues, start=4, rot=0, light=.8, dark=.3)
+
     ax = sns.barplot(x="group", y="p_speedup", hue="platform", data=R,
-                     palette=sns.color_palette("Set1", n_colors=2, desat=.8),
-                     ci=None)
+                     palette=palette, ci=None)
 
     # FIXME: Apply hatch pattern to alternate bars:
     # for i,bar in enumerate(ax.patches):
