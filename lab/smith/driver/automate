@@ -26,7 +26,7 @@ timeout_means_restart() {
 RESTART_EVERY=0
 
 # As a percentage of the system total:
-MIN_FREE_MEM=20
+MIN_FREE_MEM=10
 
 
 main() {
