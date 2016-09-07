@@ -104,22 +104,22 @@ def get_labels(D):
 
 
 def normalize(*args):
-    num_features = len(args[0][0])
-    print(num_features, "features")
-    for feature_idx in range(num_features):
-        divisor = max([np.max(arg[:,feature_idx]) for arg in args])
-        # divisor = max(max([np.max(arg[:,feature_idx]) for arg in args]), 1)
-        print("Feature", feature_idx, "max:", divisor)
+    # num_features = len(args[0][0])
+    # print(num_features, "features")
+    # for feature_idx in range(num_features):
+    #     divisor = max([np.max(arg[:,feature_idx]) for arg in args])
+    #     # divisor = max(np.median([np.median(arg[:,feature_idx]) for arg in args]), 1)
+    #     print("Feature", feature_idx, "max:", divisor)
 
-        for arg in args:
-            arg[:,feature_idx] /= divisor
+    #     for arg in args:
+    #         arg[:,feature_idx] /= divisor
 
-    # Sanity-check that normalization worked:
-    for j in range(num_features):
-        for arg in args:
-            for i in arg[:,j]:
-                assert(i <= 1)
-                assert(i >= 0)
+    # # Sanity-check that normalization worked:
+    # for j in range(num_features):
+    #     for arg in args:
+    #         for i in arg[:,j]:
+    #             assert(i <= 1)
+    #             assert(i >= 0)
 
     return args
 
@@ -250,13 +250,13 @@ def closeness(platform_id):
           .format(max(synthetic_neighbours3)))
     print()
 
-    def distplot(D):
-        opts = {"kde": False, "bins": 25}
-        ax = sns.distplot(D["distance"], **opts)
-        ax.set_yscale("log", nonposy='clip')
-        plt.ylim(0, 1000)
-        plt.xlabel("")
-        plt.ylabel("Count")
+    # def distplot(D):
+    #     opts = {"kde": False, "bins": 25}
+    #     ax = sns.distplot(D["distance"], **opts)
+    #     ax.set_yscale("log", nonposy='clip')
+    #     plt.ylim(0, 1000)
+    #     plt.xlabel("")
+    #     plt.ylabel("Count")
 
     MAXDIST = 1000
     benchmarks = pd.DataFrame(
@@ -267,21 +267,21 @@ def closeness(platform_id):
         [(d,b) for d,b in zip(distances3[:,1],behaviour2) if d < MAXDIST],
         columns=["distance", "behaviour"])
 
-    plt.subplot(2, 2, 1)
-    distplot(benchmarks[benchmarks["behaviour"] == 1])
-    plt.title("B, same behaviour")
+    # plt.subplot(2, 2, 1)
+    # distplot(benchmarks[benchmarks["behaviour"] == 1])
+    # plt.title("B, same behaviour")
 
-    plt.subplot(2, 2, 3)
-    distplot(benchmarks[benchmarks["behaviour"] == 0])
-    plt.title("B, different behaviour")
+    # plt.subplot(2, 2, 3)
+    # distplot(benchmarks[benchmarks["behaviour"] == 0])
+    # plt.title("B, different behaviour")
 
-    plt.subplot(2, 2, 2)
-    distplot(synthetics[synthetics["behaviour"] == 1])
-    plt.title("BS, same behaviour")
+    # plt.subplot(2, 2, 2)
+    # distplot(synthetics[synthetics["behaviour"] == 1])
+    # plt.title("BS, same behaviour")
 
-    plt.subplot(2, 2, 4)
-    distplot(synthetics[synthetics["behaviour"] == 0])
-    plt.title("BS, different behaviour")
+    # plt.subplot(2, 2, 4)
+    # distplot(synthetics[synthetics["behaviour"] == 0])
+    # plt.title("BS, different behaviour")
 
     # plt.show()
 
@@ -290,7 +290,7 @@ def get_nearest_neighbour_distance(F1, F2):
     """
     Return nearest-neighbour distances from F1 to F2.
     """
-    nbrs = NearestNeighbors(n_neighbors=1).fit(F2)
+    nbrs = NearestNeighbors(n_neighbors=1, algorithm='brute').fit(F2)
     distances, indices = nbrs.kneighbors(F1)
     return distances
 
@@ -309,70 +309,68 @@ def static_kernel_closeness():
         fs.path("~/kernels/clgen/features.csv"))
     GitHub = pd.read_csv(
         fs.path("~/kernels/github/features.csv"))
-    CLsmith = pd.read_csv(
+    CLSmith = pd.read_csv(
         fs.path("~/kernels/clsmith/features.csv"))
 
     # Extract features:
     BenchmarksFeatures = features(Benchmarks)
     CLgenFeatures = features(CLgen)
     GitHubFeatures = features(GitHub)
-    CLsmithFeatures = features(CLsmith)
+    CLSmithFeatures = features(CLSmith)
 
-    BenchmarksFeatures, CLgenFeatures, GitHubFeatures, CLsmithFeatures = normalize(
-        BenchmarksFeatures, CLgenFeatures, GitHubFeatures, CLsmithFeatures)
-
-    LOG_SCALE = True
+    BenchmarksFeatures, CLgenFeatures, GitHubFeatures, CLSmithFeatures = normalize(
+        BenchmarksFeatures, CLgenFeatures, GitHubFeatures, CLSmithFeatures)
 
     stepMax = max(
-        len(GitHubFeatures), len(CLgenFeatures), len(CLsmithFeatures))
+        len(GitHubFeatures), len(CLgenFeatures), len(CLSmithFeatures))
     stepMin = 10
+
+    LOG_SCALE = False
     if LOG_SCALE:
         steps = np.array(list(exp_range(stepMin, stepMax, 1.5 )), dtype=np.int32)
     else:
-        steps = np.array(list(range(stepMin, stepMax, 1000)), dtype=np.int32)
+        steps = np.array(list(range(stepMin, stepMax, 2000)), dtype=np.int32)
 
     GitHubSteps = [n for n in steps if n <= len(GitHubFeatures)]
-    CLsmithSteps = [n for n in steps if n <= len(CLsmithFeatures)]
+    CLSmithSteps = [n for n in steps if n <= len(CLSmithFeatures)]
     CLgenSteps = [n for n  in steps if n <= len(CLgenFeatures)]
 
     numGitHubSteps = len(GitHubSteps)
-    numCLsmithSteps = len(CLsmithSteps)
+    numCLSmithSteps = len(CLSmithSteps)
     numCLgenSteps = len(CLgenSteps)
 
     print("#. GitHub kernels", GitHubSteps[-1])
-    print("#. CLsmith kernels", CLsmithSteps[-1])
+    print("#. CLSmith kernels", CLSmithSteps[-1])
     print("#. CLgen kernels", CLgenSteps[-1])
 
-    # summarize_distance = np.max
     summarize_distance = np.median
-    # summarize_distance = np.mean
     summarize_results = np.mean
-    # error = np.std
     def error(x):
-        mean = labmath.mean(x)
-        ci = labmath.confinterval(x, array_mean=mean)
+        scale = np.std(x) / sqrt(len(x))
+        mean = np.mean(x)
+        ci = scipy.stats.norm.interval(.95, loc=mean, scale=scale)
         return ci[1] - mean
 
     print("Steps:", steps)
 
     datasets = [
+        # {
+        #     "name": "GitHub",
+        #     "color": "b",
+        #     "linestyle": ":",
+        #     "steps": GitHubSteps,
+        #     "features": GitHubFeatures,
+        #     "distances": np.zeros(numGitHubSteps, dtype=float),
+        #     "errors": np.zeros(numGitHubSteps, dtype=float)
+        # },
         {
-            "name": "GitHub",
-            "color": "b",
-            "linestyle": ":",
-            "steps": GitHubSteps,
-            "features": GitHubFeatures,
-            "distances": np.zeros(numGitHubSteps, dtype=float),
-            "errors": np.zeros(numGitHubSteps, dtype=float)
-        },
-        {
-            "name": "CLsmith",
+            "name": "CLSmith",
             "color": "r",
             "linestyle": "--",
-            "steps": CLsmithSteps,
-            "features": CLsmithFeatures,
-            "distances": np.zeros(numCLsmithSteps, dtype=float),
-            "errors": np.zeros(numCLsmithSteps, dtype=float)
+            "steps": CLSmithSteps,
+            "features": CLSmithFeatures,
+            "distances": np.zeros(numCLSmithSteps, dtype=float),
+            "errors": np.zeros(numCLSmithSteps, dtype=float)
         },
         {
             "name": "CLgen",
@@ -385,7 +383,7 @@ def static_kernel_closeness():
         },
     ]
 
-    numIterations = 10
+    numIterations = 30
     # numIterations = 30
 
     for dataset in datasets:
@@ -400,13 +398,12 @@ def static_kernel_closeness():
                 ))
             dataset["distances"][i] = summarize_results(r)
             dataset["errors"][i] = error(r)
+        print("\nMin value of", dataset["name"], "with", dataset["steps"][-1],
+              "kernels = {:.2f}".format(dataset["distances"][-1]))
         plt.errorbar(dataset["steps"], dataset["distances"],
                      yerr=dataset["errors"], c=dataset["color"],
                      linestyle=dataset["linestyle"],
                      label=dataset["name"], ecolor="k", capthick=1)
-        # sns.regplot(dataset["steps"], dataset["distances"],
-        #             color=dataset["color"], label=dataset["name"])
-
     ax = plt.gca()
 
     # No legend title
@@ -420,8 +417,8 @@ def static_kernel_closeness():
     if LOG_SCALE:
         ax.set_xscale("log", nonposy='clip')
 
-    plt.xlabel("#. kernels")
-    plt.ylabel("Closeness")
+    plt.xlabel("#. OpenCL kernels")
+    plt.ylabel("Distance to Nearest Neighbour")
 
     figsize = (5, 2.5)
     viz.finalise(fs.path("~/cgo17/img/closeness.pdf"), figsize=figsize)

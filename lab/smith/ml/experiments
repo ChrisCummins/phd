@@ -318,8 +318,8 @@ def motivation():
     others = [
         "shoc-1.1.5-FFT-ifft1D_512",
         "shoc-1.1.5-S3D-ratt6_kernel",
-        "shoc-1.1.5-S3D-ratt9_kernel",
         "shoc-1.1.5-S3D-ratx2_kernel",
+        "shoc-1.1.5-S3D-ratt9_kernel",
     ]
 
     train_mask = B["benchmark"].str.contains(r"^{}|{}"
@@ -360,7 +360,7 @@ def motivation():
     print("  #. additional:", len(Bother))
     print()
 
-    scatter_with_jitter(plt, *zip(*other),
+    scatter_with_jitter(plt, *zip(*other[:3]),
                         color="g", marker="o", label="Additional",
                         jitter=jitter, **plot_opts)
     plt.scatter(*zip(*incorrect),
@@ -590,7 +590,7 @@ def speedup_with_synthetic_benchmarks(platform_id):
         bs["training"] = "w. CLgen"
 
         R_out.append(b)
-        R_out.append(bg)
+        # R_out.append(bg)
         R_out.append(bs)
     R = pd.DataFrame(R_out)
 
@@ -606,9 +606,12 @@ def speedup_with_synthetic_benchmarks(platform_id):
     BG_oracle = labmath.mean(R[bg_mask].groupby(["group"])["p_oracle"].mean())
     BS_oracle = labmath.mean(R[bs_mask].groupby(["group"])["p_oracle"].mean())
 
-    B_speedup = labmath.mean(R[b_mask].groupby(["group"])["p_speedup"].mean())
+    B_speedups = R[b_mask].groupby(["group"])["p_speedup"].mean()
+    BS_speedups = R[bs_mask].groupby(["group"])["p_speedup"].mean()
+
+    B_speedup = labmath.mean(B_speedups)
     BG_speedup = labmath.mean(R[bg_mask].groupby(["group"])["p_speedup"].mean())
-    BS_speedup = labmath.mean(R[bs_mask].groupby(["group"])["p_speedup"].mean())
+    BS_speedup = labmath.mean(BS_speedups)
 
     B_geo = labmath.geomean(R[b_mask].groupby(["group"])["p_speedup"].mean())
     BG_geo = labmath.geomean(R[bg_mask].groupby(["group"])["p_speedup"].mean())
@@ -646,11 +649,27 @@ def speedup_with_synthetic_benchmarks(platform_id):
     print("  Geomean Speedup of baseline:    {:.2f} x".format(B_geo))
     print("  Geomean Speedup w. GitHub:      {:.2f} x".format(BG_geo))
     print("  Geomean Speedup w. CLgen:       {:.2f} x".format(BS_geo))
+
+    matched_or_improved = [True for x,y in zip(B_speedups, BS_speedups)
+                           if y >= x]
+    improved = [True for x,y in zip(B_speedups, BS_speedups)
+                if y > x]
+    worsened = [True for x,y in zip(B_speedups, BS_speedups)
+                if y < x - .02]
+
+    print()
+    print("  Improved:                {} ({:.1f} %)"
+          .format(len(improved), (len(improved) / len(B_speedups)) * 100))
+    print("  Num matched or improved: {} ({:.1f} %)"
+          .format(len(matched_or_improved),
+                  (len(matched_or_improved) / len(B_speedups)) * 100))
+    print("  Worsened:                {} ({:.1f} %)"
+          .format(len(worsened), (len(worsened) / len(B_speedups)) * 100))
     print()
 
     # Plot summary:
     num_hues = len(set(R["training"]))
-    palette = sns.cubehelix_palette(num_hues, start=1, rot=0, light=.8, dark=.3)
+    palette = sns.cubehelix_palette(num_hues, rot=-.4, light=.85, dark=.35)
 
     ax = sns.barplot(x="group", y="p_speedup", data=R, ci=None, hue="training",
                      palette=palette)
@@ -950,6 +969,7 @@ def experiment2():
     print("Experiment 2 on Platform A:")
     print("  Accuracy of baseline:    {:.1f} %".format(a_p1_accuracy * 100))
     print("  Accuracy of our model:   {:.1f} %".format(a_p2_accuracy * 100))
+    print()
     print("  Speedup over CGO13:      {:.2f} x".format(a_speedup))
     print("  Geomean over CGO13:      {:.2f} x".format(a_geo))
     print()
@@ -981,7 +1001,7 @@ def experiment2():
     print()
 
     num_hues = len(set(R["platform"]))
-    palette = sns.cubehelix_palette(num_hues, start=4, rot=0, light=.8, dark=.3)
+    palette = sns.cubehelix_palette(num_hues, start=4, rot=.8, light=.8, dark=.3)
 
     ax = sns.barplot(x="group", y="p_speedup", hue="platform", data=R,
                      palette=palette, ci=None)
@@ -999,7 +1019,7 @@ def experiment2():
     plt.setp(ax.get_xticklabels(), rotation=90)
 
     # Set plot limit:
-    plt.ylim(0,6)
+    plt.ylim(0, 10)
 
     # No legend title
     ax.get_legend().set_title("")
