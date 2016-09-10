@@ -67,16 +67,7 @@ def get_cgo13_features(D):
 
 
 def get_our_model():
-    return KNeighborsClassifier(1)
-    # return SVC(kernel="linear", C=0.025)
-    # return SVC(gamma=2, C=1)
-    # return RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1)
-    # return AdaBoostClassifier()
-    # return GaussianNB()
-    # return LinearDiscriminantAnalysis()
-    # return QuadraticDiscriminantAnalysis()
-    # return DecisionTreeClassifier(
-    #     random_state=204, criterion="entropy", splitter="best")
+   return KNeighborsClassifier(1)
 
 
 def get_our_features(D):
@@ -86,7 +77,7 @@ def get_our_features(D):
         D["mem"].values,
         D["localmem"].values,
         D["coalesced"].values,
-        D["atomic"].values,
+        # D["atomic"].values,
         D["transfer"].values,
         D["wgsize"].values,
         (D["transfer"].values / (D["comp"].values + D["mem"].values)),
@@ -585,7 +576,7 @@ def speedup_with_synthetic_benchmarks(platform_id):
         bs["group"] = group
 
         # Set the training data type.
-        b["training"] = "Baseline"
+        b["training"] = "Grewe et al."
         bg["training"] = "w. GitHub"
         bs["training"] = "w. CLgen"
 
@@ -594,7 +585,7 @@ def speedup_with_synthetic_benchmarks(platform_id):
         R_out.append(bs)
     R = pd.DataFrame(R_out)
 
-    b_mask = R["training"] == "Baseline"
+    b_mask = R["training"] == "Grewe et al."
     bs_mask = R["training"] == "w. CLgen"
     bg_mask = R["training"] == "w. GitHub"
 
@@ -671,18 +662,41 @@ def speedup_with_synthetic_benchmarks(platform_id):
     num_hues = len(set(R["training"]))
     palette = sns.cubehelix_palette(num_hues, rot=-.4, light=.85, dark=.35)
 
-    ax = sns.barplot(x="group", y="p_speedup", data=R, ci=None, hue="training",
-                     palette=palette)
+    # average bars:
+    R = R.append({
+        "group": "Average",
+        "p_speedup": B_speedup,
+        "training": "Grewe et al."
+    }, ignore_index=True)
+    R = R.append({
+        "group": "Average",
+        "p_speedup": BS_speedup,
+        "training": "w. CLgen"
+    }, ignore_index=True)
+    # # geomean bars:
+    # R = R.append({
+    #     "group": "Geomean",
+    #     "p_speedup": B_geo,
+    #     "training": "Grewe et al."
+    # }, ignore_index=True)
+    # R = R.append({
+    #     "group": "Geomean",
+    #     "p_speedup": BS_geo,
+    #     "training": "w. CLgen"
+    # }, ignore_index=True)
+
+    # Negative offset so that bars start at 1:
+    R["p_speedup"] -= 1
+
+    ax = sns.barplot(
+        x="group", y="p_speedup", data=R, ci=None, hue="training",
+        palette=palette)
     plt.ylabel("Speedup")
     plt.xlabel("")
 
-    # FIXME: Apply hatch pattern to alternate bars:
-    # for i,bar in enumerate(ax.patches):
-    #     if not i % 2:
-    #         bar.set_hatch("////")
-
     # Speedup line
-    plt.axhline(y=1, color="k", lw=1)
+    plt.axhline(y=0, color="k", lw=1)
+    plt.axvline(x=plt.xlim()[1] - 1, color="k", lw=1, linestyle="--")
 
     # No legend title
     ax.get_legend().set_title("")
@@ -691,12 +705,18 @@ def speedup_with_synthetic_benchmarks(platform_id):
 
     figsize = (9, 2.2)
     if platform_id == "B":
-        plt.ylim(0, 15)
-        # plt.ylim(0, 4.5)
+        plt.ylim(-1, 16)
+        typecast = int
+    else:
+        typecast = float
+
+    # Counter negative offset:
+    ax.set_yticklabels([typecast(i) + 1 for i in ax.get_yticks()])
+
     plt.setp(ax.get_xticklabels(), rotation=90)
 
     # plt.show()
-    viz.finalise(fs.path("~/cgo17/img/ex1-{}.png"
+    viz.finalise(fs.path("~/cgo17/img/ex1-{}.pdf"
                          .format(platform_id.upper())),
                  figsize=figsize, tight=True)
 
@@ -892,7 +912,7 @@ def experiment2():
         tmp = compare_clfs(cgo13_clf, cgo13_features, our_clf, our_features,
                            aBS, aBS, benchmark)
         for d in tmp:
-            d["platform"] = "Platform A"
+            d["platform"] = "AMD Tahiti 7970"
         B_out += tmp
 
         # Reset models.
@@ -903,7 +923,7 @@ def experiment2():
         tmp = compare_clfs(cgo13_clf, cgo13_features, our_clf, our_features,
                            bBS, bBS, benchmark)
         for d in tmp:
-            d["platform"] = "Platform B"
+            d["platform"] = "NVIDIA GTX 970"
         B_out += tmp
     print()
 
@@ -931,8 +951,8 @@ def experiment2():
 
     improved = R[R["p_speedup"] > 1]
 
-    Amask = R["platform"] == "Platform A"
-    Bmask = R["platform"] == "Platform B"
+    Amask = R["platform"] == "AMD Tahiti 7970"
+    Bmask = R["platform"] == "NVIDIA GTX 970"
     a = R[Amask]
     b = R[Bmask]
 
@@ -966,7 +986,7 @@ def experiment2():
     assert(len(b_matched_or_improved) + len(b_worsened) == len(b_speedups))
 
     print()
-    print("Experiment 2 on Platform A:")
+    print("Experiment 2 on AMD Tahiti 7970:")
     print("  Accuracy of baseline:    {:.1f} %".format(a_p1_accuracy * 100))
     print("  Accuracy of our model:   {:.1f} %".format(a_p2_accuracy * 100))
     print()
@@ -983,11 +1003,11 @@ def experiment2():
           .format(len(a_worsened),
                   (len(a_worsened) / len(a_speedups)) * 100))
     print()
-    print("Experiment 2 on Platform B:")
+    print("Experiment 2 on NVIDIA GTX 970:")
     print("  Accuracy of baseline:    {:.1f} %".format(b_p1_accuracy * 100))
     print("  Accuracy of our model:   {:.1f} %".format(b_p2_accuracy * 100))
     print("  Speedup over CGO13:      {:.2f} x".format(b_speedup))
-    print("  Geomean over CGO13:      {:.2f} x".format(a_geo))
+    print("  Geomean over CGO13:      {:.2f} x".format(b_geo))
     print()
     print("  Num matched or improved: {} ({:.1f} %)"
           .format(len(b_matched_or_improved),
@@ -1003,39 +1023,63 @@ def experiment2():
     num_hues = len(set(R["platform"]))
     palette = sns.cubehelix_palette(num_hues, start=4, rot=.8, light=.8, dark=.3)
 
+    # average bars:
+    R = R.append({
+        "group": "Average",
+        "p_speedup": a_speedup,
+        "platform": "AMD Tahiti 7970"
+    }, ignore_index=True)
+    R = R.append({
+        "group": "Average",
+        "p_speedup": b_speedup,
+        "platform": "NVIDIA GTX 970"
+    }, ignore_index=True)
+    # # geomean bars:
+    # R = R.append({
+    #     "group": "Geomean",
+    #     "p_speedup": a_geo,
+    #     "training": "Grewe et al."
+    # }, ignore_index=True)
+    # R = R.append({
+    #     "group": "Geomean",
+    #     "p_speedup": b_geo,
+    #     "training": "w. CLgen"
+    # }, ignore_index=True)
+
+    # Negative offset so that bars start at 1:
+    R["p_speedup"] -= 1
+
     ax = sns.barplot(x="group", y="p_speedup", hue="platform", data=R,
                      palette=palette, ci=None)
 
-    # FIXME: Apply hatch pattern to alternate bars:
-    # for i,bar in enumerate(ax.patches):
-    #     if not i % 2:
-    #         bar.set_hatch("////")
-
     plt.ylabel("Speedup over Grewe et al.")
     plt.xlabel("")
-    plt.axhline(y=1, color="k", lw=1)
+
+    plt.axhline(y=0, color="k", lw=1)
+    plt.axvline(x=plt.xlim()[1] - 1, color="k", lw=1, linestyle="--")
 
     # Rotate x ticks
     plt.setp(ax.get_xticklabels(), rotation=90)
 
     # Set plot limit:
-    plt.ylim(0, 10)
+    plt.ylim(-1, 9)
+
+    # Counter negative offset:
+    ax.set_yticklabels([int(i) + 1 for i in ax.get_yticks()])
 
     # No legend title
     ax.get_legend().set_title("")
     plt.legend(loc='upper right')
     ax.get_legend().draw_frame(True)
 
-    figsize = (9, 4.5)
-    viz.finalise(fs.path("~/cgo17/img/ex2.pdf"),
-                 figsize=figsize, tight=True)
-
+    figsize = (9, 4)
+    viz.finalise(fs.path("~/cgo17/img/ex2.pdf"), figsize=figsize, tight=True)
 
 
 def main():
-    # motivation()
+    motivation()
     experiment1()
-    # experiment2()
+    experiment2()
 
 
 if __name__ == "__main__":
