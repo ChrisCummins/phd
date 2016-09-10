@@ -574,7 +574,7 @@ def zero_distance():
     ax.get_legend().draw_frame(True)
 
     plt.xlim(stepMin, stepMax)
-    plt.ylim(0, )
+    plt.ylim(-50, )
 
     if LOG_SCALE:
         ax.set_xscale("log", nonposy='clip')
