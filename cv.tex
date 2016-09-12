@@ -1,0 +1,319 @@
+% Chris Cummins Curriculum Vitae
+%
+% Based on "Classicthesis-Styled CV" by Alessandro Plasmati,
+% downloaded from: http://www.LaTeXTemplates.com
+%
+% License: CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+\documentclass[a4paper,11pt,hidelinks]{scrartcl}
+
+% Hide the date:
+\date{}
+
+% Move the margin to the left of the page:
+\reversemarginpar
+
+% New command defining the margin text style:
+\newcommand{\MarginText}[1]{\marginpar{\raggedleft\itshape\normalsize#1}}
+
+% Use the classicthesis style for the style of the document:
+\usepackage[nochapters]{classicthesis}
+% Use the currvita style for the layout of the document:
+\usepackage[LabelsAligned]{currvita}
+
+% Font color of your name at the top:
+\definecolor{namecolour}{rgb}{.85,0,0}
+\definecolor{titlecolour}{rgb}{0,0,0}
+
+\renewcommand{\cvheadingfont}{\LARGE\color{namecolour}}
+
+\usepackage{hyperref}
+% Set link colors:
+% \hypersetup{colorlinks, breaklinks, urlcolor=Red, linkcolor=Red}
+
+% Set the width of the date box in each block:
+\newlength{\datebox}\settowidth{\datebox}{Spring 2011}
+
+% Set page margins:
+\usepackage[top=1.4cm, bottom=1cm, left=4.3cm, right=2cm]{geometry}
+
+% New section title:
+\newcommand{\Title}[1]{\noindent\rule{15cm}{0.4pt}\vspace{-.45em}\\
+\noindent\spacedlowsmallcaps{\color{titlecolour}{#1}}
+
+\vspace{-.85em}\noindent\rule{15cm}{0.4pt}\vspace{.2em}}
+
+% Description blocks:
+\newcommand{\Description}[1]{\hangindent=0em\hangafter=0%
+\noindent\normalsize{#1}\vspace{1em}}
+
+\newcommand{\ShortJob}[3]{\Description{\MarginText{#1}\textbf{#2},
+  \textit{#3}}}
+
+\newcommand{\Job}[4]{\Description{\MarginText{#1}\textbf{#2},
+  \textit{#3}\newline\vspace{-.8em}
+
+  \noindent
+  #4}}
+
+
+\newcommand{\Publication}[5]{\Description{\MarginText{#1}#2. \textbf{\href{#5}{#3}}. #4.}}
+
+\newcommand{\Award}[2]{\Description{\MarginText{#1}#2}
+\vspace{-.9em}}
+
+\begin{document}
+
+% Stop the page count at the bottom of the first page:
+\thispagestyle{empty}
+
+
+%%%%%%%%%%
+% HEADER %
+%%%%%%%%%%
+\begin{cv}{\spacedallcaps{Chris Cummins}}\vspace{.5em}
+
+\noindent\href{http://chriscummins.cc/}{http://chriscummins.cc} \hfill
+\noindent\href{mailto:chrisc.101@gmail.com}{chrisc.101@gmail.com}\\
+\vspace{-.5em}
+
+
+%%%%%%%%%%%%%
+% EDUCATION %
+%%%%%%%%%%%%%
+\Title{Education}
+
+\Description{\MarginText{2018\\(expected)}\textbf{Ph.D, Informatics}
+  \newline University of Edinburgh, School of Informatics
+  \newline\vspace{-.8em}
+
+  \noindent Deep learning over programs. My research focuses on
+  developing AI for synthesising source codes, representative
+  benchmarking, and machine learning for optimisation.%
+}
+
+\Description{\MarginText{2015}\textbf{MSc by Research, Pervasive Parallelism}
+  \textit{(Distinction)}
+  \newline University of Edinburgh, School of Informatics
+  \newline Thesis: \textit{Autotuning Stencil Codes with Algorithmic
+    Skeletons}
+  \newline\vspace{-.8em}
+
+  \noindent Runtime adaptive tuning for heterogeneous parallelism,
+  achieving $3.79\times$ speedup of multi-GPU stencil
+  programs. Machine learning over distributed training sets with
+  synthetic benchmark generation. High-level GPGPU programming with
+  OpenCL. Published in \textit{HLPGPU '16} and \textit{ADAPT '16}.%
+}
+
+\Description{\MarginText{2014}\textbf{MEng Electronic Engineering \& Computer Science}
+  \textit{(First Class Honours)}
+  \newline Aston University, School of Engineering \& Applied Science
+  \newline Thesis: \textit{Protein Isoelectric Point Database}
+  \newline\vspace{-.8em}
+
+  \noindent Created a novel search engine and research tool for
+  molecular biochemistry. Developed full integration of BLAST search
+  tools, a publicly accessible API, and tooling to generate synthetic
+  payloads from confidential datasets for whitebox systems
+  testing. Released open source. Published in \textit{Bioinformatics
+    31(2)}.%
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PROFESSIONAL EXPERIENCE %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\Title{Professional Experience}
+% Format: \Job{dates}{employer}{title}{description}
+% Format: \ShortJob{dates}{employer}{title}
+
+\Description{\MarginText{2016}\textbf{Codeplay Software}
+  \newline Software Engineer Intern, Eigen SYCL Interface
+  \newline\vspace{-.8em}
+
+  \noindent Contributed to OpenCL port of Tensorflow. Implemented GPU
+  memory management for Eigen. Compile time scheduling and kernel
+  fusion for expression trees on GPUs. Extensive C++
+  meta-programming.%
+}
+
+\Description{\MarginText{2012--2013}\textbf{Intel Corporation}
+  \newline Open Source Developer intern
+  \newline\vspace{-.8em}
+
+  \noindent Patched \texttt{ioctl} subsystem in Linux
+  kernel. Developed a novel SIMD register visualisation tool for Intel
+  GPU assembly programming. Implemented GTK+ support for Wayland
+  display server. Fixed memory and usability bugs in GNOME desktop
+  applications. Developed particle effects engine for a 3D rendering
+  program. Rapid prototyping of Android applications. Numerous
+  contributions to open source projects.%
+}
+
+\Description{\MarginText{2010--2014}\textbf{Freelance}
+  \newline Web Developer
+  \newline\vspace{-.8em}
+
+  \noindent Full-stack development for small businesses, including
+  graphic design and branding. Frontend experience with JavaScript;
+  backend development using Clojure, Node.js, PHP, MySQL, PostgreSQL,
+  and Jekyll. Clients have included publishing companies, musicians,
+  and a beauty parlour.%
+
+  % Clients:
+  %
+  % The Beauty Rooms
+  % Barthelemy Jusselme
+  % Myrmidon Books
+  % Border Scripts
+  % Greystones Press
+}
+
+\Description{\MarginText{2008}\textbf{Rolls Royce Holdings plc}
+  \newline Work placement in the Design Methods \& Improvements team.%
+}
+
+\newpage
+
+%%%%%%%%%%%%%%%%
+% PUBLICATIONS %
+%%%%%%%%%%%%%%%%
+\Title{Publications}
+% Format: \Publication{year}{authors}{title}{location}{url}
+
+% \Description{\MarginText{2016\\\textit{(preparing)}}C.\
+%   \textsc{Cummins}, P.\ \textsc{Petoumenos}, M.\ \textsc{Steuwer}, H.\
+%   \textsc{Leather}. \textbf{Collaborative Autotuning of Algorithmic
+%     Skeletons for OpenCL}. ACM Transactions on Architecture and Code
+%   Optimization.\@ \newline\vspace{-.8em}
+
+%   \noindent Heterogeneous multi-cores are now the norm, yet we lack
+%   suitable high level models to program them. This paper discusses how
+%   algorithmic skeletons solve this problem, and how to make their
+%   performance competitive with hand written low level code.%
+% }
+
+\Description{\MarginText{2016}C.\ \textsc{Cummins}, P.\
+  \textsc{Petoumenos}, M.\ \textsc{Steuwer}, H.\
+  \textsc{Leather}. \textbf{Towards Collaborative Performance Tuning
+    of Algorithmic Skeletons}. HLPGPU'16, HiPEAC.\@
+  \newline\vspace{-.8em}
+
+  \noindent Presenting an extensible and distributed framework for
+  dynamic prediction of optimisation parameters at
+  runtime. \textit{OmniTune} provides a flexible API to enable
+  predictive autotuning with machine learning, exceeding human experts
+  by $1.22\times$.%
+}
+
+\Description{\MarginText{2016}C.\ \textsc{Cummins}, P.\
+  \textsc{Petoumenos}, M.\ \textsc{Steuwer}, H.\
+  \textsc{Leather}. \textbf{Autotuning OpenCL Workgroup Size for
+    Stencil Patterns}. ADAPT'16, HiPEAC.\@ \newline\vspace{-.8em}
+
+  \noindent Three methodologies to autotune stencil patterns using
+  machine learning classification and regression. We demonstrate a
+  median $3.79\times$ speedup over the best possible fixed workgroup
+  size, achieving 94\% of the maximum performance.%
+}
+
+\Description{\MarginText{2015}E.\ \textsc{Bunkute}, C.\
+  \textsc{Cummins}, F.\ \textsc{Crofts}, G.\ \textsc{Bunce}, I.\ T.\
+  \textsc{Nabney}, D.\ R.\
+  \textsc{Flower}. \textbf{\href{http://bioinformatics.oxfordjournals.org/content/31/2/295.full?etoc}{PIP-DB:
+      The Protein Isoelectric Point Database}}. Bioinformatics, 31(2),
+  295-296. Chicago \newline\vspace{-.8em}
+
+  \noindent PIP-DB provides public access to a unique collation of
+  bioinformatics data from the literature for comparison and
+  benchmarking purposes.%
+}
+
+
+%%%%%%%%%%
+% AWARDS %
+%%%%%%%%%%
+\Title{Awards}
+% Format: \Award{year}{title}
+
+\Description{\MarginText{2015}\textbf{PhD studentship, EPSRC grant
+    EP/L01503X/1} \newline\vspace{-1.8em}}
+
+\Description{\MarginText{2014}\textbf{Institute of Engineering \&
+    Technology Prize}
+  \newline\vspace{-.8em}
+
+  \noindent Annual prize for the top student at Aston University who
+  showed distinction and outstanding merit on an IET accredited
+  course.%
+}
+
+\Description{\MarginText{2009}\textbf{Arkwright Scholarship, Rolls
+    Royce Holdings plc}
+  \newline\vspace{-.8em}
+
+  \noindent A funded industrial scholarship awarded to less than 250
+  students nationwide for demonstrating exceptional skill in design \&
+  technology subjects.%
+}
+
+\Description{\MarginText{2009}\textbf{Engineering Education Scheme of
+    England}
+  \newline\vspace{-.8em}
+
+  \noindent Research \& development of a (now patented) supermarket
+  trolley mounted shopping aid. Responsible for designing the wireless
+  power and charging system.%
+}
+
+\Description{\MarginText{2008}\textbf{AESSEAL Design Innovation Award}
+  \newline\vspace{-.8em}
+
+  \noindent Cash prize for first place in an industrial 3D CAD
+  competition.%
+}
+
+
+%%%%%%%%%%%%%%%%%%%%
+% Technical skills %
+%%%%%%%%%%%%%%%%%%%%
+\Title{Technical Skills}
+
+\Description{\MarginText{\textbf{Expert}}%
+  C++, Python, bash, git, GNU/Linux, GNU Make, Emacs.\vspace{-.8em}%
+}
+
+\Description{\MarginText{\textbf{Advanced}}%
+  Java, C, JavaScript, OpenCL, SYCL, gdb, SQL, \LaTeX, Mac OS
+  X.\vspace{-.8em}%
+}
+
+\Description{\MarginText{\textbf{Competent}}%
+  Clojure LISP, Lua, MATLAB, CMake, PHP, VHDL, x86 assembly.\vspace{-.8em}%
+}
+
+\vspace{.8em}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% ACADEMIC ACTIVITIES %
+%%%%%%%%%%%%%%%%%%%%%%%
+\Title{Academic Activities}
+
+\Description{\MarginText{\textbf{Talks}}Codeplay Software 2016, Ocado
+  Technology 2016, Amazon Development Center 2016, PPar lunch 2016,
+  PPar kickoff 2014.\vspace{-.8em}}
+
+\Description{\MarginText{\textbf{Posters}}ACACES 2016, PLDI 2016,
+  HiPEAC 2016, Google 2015, PPar 2015.\vspace{-.8em}}
+
+\Description{\MarginText{\textbf{Peer reviews}}ACM TACO 2016, LCTES
+  2016, CGO 2016.\vspace{-.8em}}
+
+\Description{\MarginText{\textbf{Volunteering}}ParCo
+  2015.\vspace{-.8em}}
+
+\end{cv}
+
+\end{document}
