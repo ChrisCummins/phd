@@ -1,8 +1,13 @@
-from unittest import TestCase
+from __future__ import absolute_import, print_function, with_statement
 
 import os
+import sqlite3
 
-class TestDataNotFoundException(Exception): pass
+from unittest import TestCase
+
+import clgen
+
+class TestData404(Exception): pass
 
 
 def data_path(path, exists=True):
@@ -17,11 +22,11 @@ def data_path(path, exists=True):
         string: Absolute path.
 
     Raises:
-        TestDataNotFoundException: If path doesn"t exist.
+        TestData404: If path doesn"t exist.
     """
     abspath = os.path.join(os.path.dirname(__file__), "data", path)
     if exists and not os.path.exists(abspath):
-        raise TestDataNotFoundException(abspath)
+        raise TestData404(abspath)
     return abspath
 
 
@@ -36,7 +41,7 @@ def data_str(path):
         string: File contents.
 
     Raises:
-        TestDataNotFoundException: If path doesn't exist.
+        TestData404: If path doesn't exist.
     """
     with open(data_path(path)) as infile:
         return infile.read()
@@ -54,7 +59,7 @@ def db_path(path):
         string: Absolute path.
 
     Raises:
-        TestDataNotFoundException: If path doesn't exist.
+        TestData404: If path doesn't exist.
     """
     return data_path(os.path.join("db", str(path) + ".db"))
 
@@ -71,12 +76,49 @@ def db(name, **kwargs):
         sqlite.Connection: Sqlite connection to database.
 
     Raises:
-        TestDataNotFoundException: If path doesn't exist.
+        TestData404: If path doesn't exist.
     """
-    import sqlite3
     path = data_path(db_path(name), **kwargs)
     return sqlite3.connect(path)
 
+
 class TestCLgen(TestCase):
-    def test_hello_world(self):
-        self.assertEqual(True, True)
+    def test_checksum(self):
+        self.assertEqual("0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33",
+                         clgen.checksum("foo".encode()))
+        self.assertEqual("62cdb7020ff920e5aa642c3d4066950dd1f01f4d",
+                         clgen.checksum("bar".encode()))
+
+    def test_checksum_str(self):
+        self.assertEqual("0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33",
+                         clgen.checksum_str("foo"))
+        self.assertEqual("62cdb7020ff920e5aa642c3d4066950dd1f01f4d",
+                         clgen.checksum_str("bar"))
+        self.assertEqual("ac3478d69a3c81fa62e60f5c3696165a4e5e6ac4",
+                         clgen.checksum_str(5))
+
+    def test_checksum_file(self):
+        with self.assertRaises(clgen.InternalError):
+            clgen.checksum_file("NOT A PATH")
+
+    def test_get_substring_idxs(self):
+        self.assertEqual([0, 2], clgen.get_substring_idxs('a', 'aba'))
+        self.assertEqual([], clgen.get_substring_idxs('a', 'bb'))
+
+    def test_pacakge_data(self):
+        with self.assertRaises(clgen.InternalError):
+            clgen.package_data("This definitely isn't a real path")
+        with self.assertRaises(clgen.File404):
+            clgen.package_data("This definitely isn't a real path")
+
+    def test_pacakge_str(self):
+        with self.assertRaises(clgen.InternalError):
+            clgen.package_str("This definitely isn't a real path")
+        with self.assertRaises(clgen.File404):
+            clgen.package_str("This definitely isn't a real path")
+
+    def test_sql_script(self):
+        with self.assertRaises(clgen.InternalError):
+            clgen.sql_script("This definitely isn't a real path")
+        with self.assertRaises(clgen.File404):
+            clgen.sql_script("This definitely isn't a real path")
