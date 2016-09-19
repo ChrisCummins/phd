@@ -1,0 +1,9 @@
+{
+  "corpus": "data/corpus",
+  "train_opts": {
+    "model_type": "lstm",
+    "rnn_size": 512,
+    "num_layers": 3,
+    "max_epochs": 50
+  }
+}

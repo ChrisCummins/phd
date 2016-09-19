@@ -1,0 +1,6 @@
+{
+  "sample_opts": {
+    "temperature": .9,
+    "length": 10000
+  }
+}
