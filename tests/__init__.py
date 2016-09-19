@@ -47,6 +47,37 @@ def data_str(path):
         return infile.read()
 
 
+def unpack_archive(path, compression="bz2"):
+    """
+    Unpack a compressed archive.
+
+    Arguments:
+        path (str): Path to archive.
+        compression (str, optional): Archive compression type.
+    """
+    import tarfile
+    tar = tarfile.open(path, "r:" + compression)
+    tar.extractall()
+    tar.close()
+
+
+def archive(path):
+    """
+    Returns a text archive, unpacking if necessary.
+
+    Arguments:
+        path (str): Path to archive.
+
+    Returns:
+        str: Path to archive.
+    """
+    path = data_path(path)
+
+    if not os.path.exists(archive):
+        unpack_archive(path + ".tar.bz2")
+    return path
+
+
 def db_path(path):
     """
     Return absolute path to unittest data file. Data files are located in
