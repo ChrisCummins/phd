@@ -4,7 +4,7 @@ import os
 import re
 
 from hashlib import sha1
-from pkg_resources import resource_filename, resource_string
+from pkg_resources import resource_filename, resource_string, require
 
 
 class CLgenError(Exception):
@@ -34,6 +34,20 @@ class File404(InternalError):
     Data not found.
     """
     pass
+
+
+def version():
+    """
+    Get the package version.
+
+    DO NOT try and parse this or derive any special major/minor version
+    information from it, treat it as an opaque char array. The only valid
+    operators for comparing versions are == and !=.
+
+    Returns:
+        str: Version string.
+    """
+    return require("clgen")[0].version
 
 
 def must_exist(*path_components, **kwargs):
