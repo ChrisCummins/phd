@@ -1,6 +1,7 @@
 """
 Command line interface to clgen.
 """
+import json
 import os
 
 from argparse import ArgumentParser
@@ -40,6 +41,18 @@ def getparser():
     return parser
 
 
+def load_json_file(path):
+    try:
+        with open(clgen.must_exist(path)) as infile:
+            return json.loads(infile.read())
+    except ValueError as e:
+        log.fatal("malformed file '{}'. Message from parser: ".format(
+                      os.path.basename(path)),
+                  "    " + str(e),
+                  "Hope that makes sense!", sep="\n")
+    except clgen.File404:
+        log.fatal("could not find file '{}'".format(path))
+
 def main(*argv):
     """
     Main entry point to clgen command line interface.
@@ -63,4 +76,16 @@ def main(*argv):
     # Start the logging engine.
     log.init(args.verbose)
 
-    exit(0)
+    # Read input configuration files.
+    model = load_json_file(args.model_json)
+    arguments = load_json_file(args.arguments_json)
+    sample = load_json_file(
+        args.sample_json or clgen.data_path("default-sample.json"))
+
+    try:
+        clgen.main(model, arguments, sample)
+        exit(0)
+    except Exception as e:
+        log.fatal(
+            type(e).__name__ + ":", e,
+            "\n\nPlease report bugs to Chris Cummins <chrisc.101@gmail.com>")

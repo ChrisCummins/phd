@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, with_statement
 
+import json
 import os
 import re
 
@@ -66,7 +67,9 @@ def must_exist(*path_components, **kwargs):
     path = os.path.expanduser(os.path.join(*path_components))
     if not os.path.exists(path):
         Error = kwargs.get("Error", File404)
-        raise Error("path '{}' does not exist".format(path))
+        e = Error("path '{}' does not exist".format(path))
+        e.path = path
+        raise e
     return path
 
 
@@ -136,15 +139,23 @@ def get_substring_idxs(substr, s):
     return [m.start() for m in re.finditer(substr, s)]
 
 
-def package_path(path):
+def package_path(*path):
     """
     Path to package file.
     """
+    path = os.path.expanduser(os.path.join(*path))
     abspath = resource_filename(__name__, path)
     return must_exist(abspath)
 
 
-def package_data(path):
+def data_path(*path):
+    """
+    Path to package file.
+    """
+    return package_path("data", *path)
+
+
+def package_data(*path):
     """
     Read package data file.
 
@@ -157,7 +168,7 @@ def package_data(path):
     Raises:
         InternalError: In case of IO error.
     """
-    path = package_path(path)
+    path = package_path(*path)
 
     try:
         return resource_string(__name__, path)
@@ -165,7 +176,7 @@ def package_data(path):
         raise InternalError("failed to read package data '{}'".format(path))
 
 
-def package_str(path):
+def package_str(*path):
     """
     Read package data file as a string.
 
@@ -179,7 +190,7 @@ def package_str(path):
         InternalError: In case of IO error.
     """
     try:
-        return package_data(path).decode('utf-8')
+        return package_data(*path).decode('utf-8')
     except UnicodeDecodeError:
         raise InternalError("failed to decode package data '{}'".format(path))
 
@@ -194,16 +205,27 @@ def sql_script(name):
     Returns:
         str: SQL script.
     """
-    path = must_exist('share', 'sql', str(name) + ".sql")
+    path = must_exist('data', 'sql', str(name) + ".sql")
     return package_str(path)
 
 
-def print_json(data, **print_opts):
+def format_json(data):
     """
     Pretty print JSON.
 
     Arguments:
         data (dict): JSON blob.
     """
-    print(json.dumps(data, sort_keys=True, indent=2, separators=(',', ': ')),
-          **print_opts)
+    return json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
+
+
+def main(model_json, arguments_json, sample_json):
+    """
+    Main entry point for clgen.
+
+    Arguments:
+        model_json (dict): Model specification.
+        arguments_json (dict): Arguments specification.
+        sample_json (dict): Sample specification.
+    """
+    raise NotImplementedError("coming soon!")
