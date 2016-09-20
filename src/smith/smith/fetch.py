@@ -296,7 +296,7 @@ def get_path_id(path):
         return path
 
 
-def inline_headers(path, stack):
+def inline_fs_headers(path, stack):
     stack.append(path)
 
     with open(path) as infile:
@@ -347,7 +347,7 @@ def process_cl_file(db_path, path):
     db = sqlite3.connect(db_path)
     c = db.cursor()
 
-    contents = inline_headers(path, [])
+    contents = inline_fs_headers(path, [])
     id = get_path_id(path)
     print(id)
     c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)', (id,contents))
