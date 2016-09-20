@@ -10,7 +10,7 @@ setup(
     license='GNU General Public License, Version 3',
     packages=['clgen'],
     package_data={'clgen': []},
-    scripts=[],
+    scripts=["bin/clgen"],
     test_suite='nose.collector',
     tests_require=['nose'],
     install_requires=[],
