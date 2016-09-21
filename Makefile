@@ -104,16 +104,6 @@ V2 = $(__verbosity_2_$(V))
 
 ########################################################################
 #                         User Configuration
-
-AWK ?= awk
-EGREP ?= egrep
-GIT ?= git
-GREP ?= grep
-INSTALL ?= install
-PYTHON2 ?= python2
-PYTHON3 ?= python3
-RM ?= rm -fv
-SED ?= sed
 SUDO ?= sudo
 
 # Install prefix:
@@ -375,7 +365,7 @@ endef
 
 python-setup-test-cmd = \
 	cd $2 && $(strip $1) ./setup.py test &> $2/.$(strip $1).test.log \
-	&& $(GREP) -E '^Ran [0-9]+ tests in' $2/.$(strip $1).test.log \
+	&& grep -E '^Ran [0-9]+ tests in' $2/.$(strip $1).test.log \
 	|| sed -n -e '/ \.\.\. /,$${p}' $2/.$(strip $1).test.log | \
 	grep -v '... ok'
 
@@ -473,7 +463,7 @@ DocStrings += "googlebenchmark: build Google benchmark library"
 
 .PHONY: distclean-googlebenchmark
 distclean-googlebenchmark:
-	$(V1)$(RM) -r $(extern)/benchmark/build
+	$(V1)rm -fv -r $(extern)/benchmark/build
 
 DistcleanTargets += distclean-googlebenchmark
 
@@ -516,7 +506,7 @@ DocStrings += "boost: build Boost library"
 
 distclean-boost-cmd = \
 	find $(BoostDir) -name '*.a' -o -name '*.o' 2>/dev/null \
-		| grep -v config_test.o | xargs $(RM)
+		| grep -v config_test.o | xargs rm -fv
 
 .PHONY: distclean-boost
 distclean-boost:
@@ -541,7 +531,7 @@ $(CLSmith):
 
 .PHONY: distclean-clsmith
 distclean-clsmith:
-	$(V1)$(RM) -r $(extern)/clsmith/build
+	$(V1)rm -fv -r $(extern)/clsmith/build
 
 DistcleanTargets += distclean-clsmith
 
@@ -572,7 +562,7 @@ DocStrings += "googletest: build Google Test library"
 
 .PHONY: distclean-googletest
 distclean-googletest:
-	$(V1)$(RM) -r $(extern)/googletest-build
+	$(V1)rm -fv -r $(extern)/googletest-build
 
 DistcleanTargets += distclean-googletest
 
@@ -602,7 +592,7 @@ intelTbb_LdFlags = -L$(intelTbbBuildDir) -ltbb
 
 .PHONY: distclean-intel-tbb
 distclean-intel-tbb:
-	$(V1)$(RM) -r $(intelTbbDir)
+	$(V1)rm -fv -r $(intelTbbDir)
 DistcleanTargets += distclean-intel-tbb
 
 
@@ -1348,16 +1338,16 @@ Python3SetupInstallLogs = $(addsuffix /.python3.install.log, \
 	$(NULL)
 
 $(Python2SetupTestLogs):
-	$(call python-setup-test,$(PYTHON2),$(patsubst %/,%,$(dir $@)))
+	$(call python-setup-test,python2,$(patsubst %/,%,$(dir $@)))
 
 $(Python2SetupInstallLogs):
-	$(call python-setup-install,$(PYTHON2),$(patsubst %/,%,$(dir $@)))
+	$(call python-setup-install,python2,$(patsubst %/,%,$(dir $@)))
 
 $(Python3SetupTestLogs):
-	$(call python-setup-test,$(PYTHON3),$(patsubst %/,%,$(dir $@)))
+	$(call python-setup-test,python3,$(patsubst %/,%,$(dir $@)))
 
 $(Python3SetupInstallLogs):
-	$(call python-setup-install,$(PYTHON3),$(patsubst %/,%,$(dir $@)))
+	$(call python-setup-install,python3,$(patsubst %/,%,$(dir $@)))
 
 TestTargets += $(Python2SetupTestLogs) $(Python3SetupTestLogs)
 InstallTargets += $(Python2SetupInstallLogs) $(Python3SetupInstallLogs)
@@ -1368,8 +1358,8 @@ Python3CleanDirs = $(sort $(Python3SetupTestDirs) $(Python3SetupInstallDirs))
 
 .PHONY: clean-python
 clean-python:
-	$(V1)$(call python-setup-clean,$(PYTHON2),$(Python2CleanDirs))
-	$(V1)$(call python-setup-clean,$(PYTHON3),$(Python3CleanDirs))
+	$(V1)$(call python-setup-clean,python2,$(Python2CleanDirs))
+	$(V1)$(call python-setup-clean,python3,$(Python3CleanDirs))
 
 CleanTargets += clean-python
 
@@ -1528,13 +1518,13 @@ DocStrings += "toolchain: build toolchain"
 
 .PHONY: clean-toolchain
 clean-toolchain:
-	$(V1)$(RM) $(toolchain)
-	$(V1)$(RM) -r $(LlvmBuild)
+	$(V1)rm -fv $(toolchain)
+	$(V1)rm -fv -r $(LlvmBuild)
 DocStrings += "clean-toolchain: remove toolchain build"
 
 .PHONY: distclean-toolchain
 distclean-toolchain: clean-toolchain
-	$(V1)$(RM) -r $(LlvmSrc)
+	$(V1)rm -fv -r $(LlvmSrc)
 DocStrings += "distclean-toolchain: remove *all* toolchain files"
 
 
@@ -1567,11 +1557,11 @@ DocStrings += "git: configure version control"
 #
 .PHONY: clean distclean
 clean: $(CleanTargets)
-	$(V1)$(RM) $(sort $(CleanFiles))
+	$(V1)rm -fv $(sort $(CleanFiles))
 DocStrings += "clean: remove generated files"
 
 distclean: clean $(DistcleanTargets)
-	$(V1)$(RM) $(sort $(DistcleanFiles))
+	$(V1)rm -fv $(sort $(DistcleanFiles))
 DocStrings += "distclean: remove *all* generated files and toolchain"
 
 
