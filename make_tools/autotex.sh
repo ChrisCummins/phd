@@ -32,8 +32,8 @@ fi
 
 # Included tools:
 ROOT=~/phd
-PARSE_TEXCOUNT=$ROOT/tools/parse_texcount.py
-TEXCOUNT=$ROOT/tools/texcount.pl
+PARSE_TEXCOUNT=$ROOT/make_tools/parse_texcount.py
+TEXCOUNT=$ROOT/make_tools/texcount.pl
 
 # Filename locations
 DEPFILE=.autotex.deps

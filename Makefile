@@ -179,8 +179,9 @@ endef
 
 # Assume no out-of-tree builds:
 root := $(PWD)
-toolchain := $(root)/.bootstrapped
+build := $(root)/.build
 cache := $(root)/.cache
+toolchain := $(build)/toolchain
 
 comma := ,
 space :=
@@ -267,7 +268,7 @@ endef
 #
 define unpack-tar
 	$(call print-task,UNPACK,$2)
-	$(V1)mkdir $1
+	$(V1)mkdir -p $1
 	$(V1)tar -xf $2 -C $1 --strip-components=1
 endef
 
@@ -472,11 +473,11 @@ DistcleanTargets += distclean-googlebenchmark
 # extern/boost
 #
 BoostVersion := 1.46.1
-BoostDir := $(extern)/boost
+BoostDir := $(build)/boost
 BoostBuild = $(BoostDir)/build
 Boost = $(BoostBuild)/include
 
-CachedBoostTarball = $(cache)/extern/boost/boost_$(subst .,_,$(BoostVersion)).tar.gz
+CachedBoostTarball = $(cache)/boost_$(subst .,_,$(BoostVersion)).tar.gz
 BoostUrlBase = http://sourceforge.net/projects/boost/files/boost/$(BoostVersion)/
 
 $(CachedBoostTarball):
@@ -570,12 +571,12 @@ DistcleanTargets += distclean-googletest
 #
 # extern/intel-tbb
 #
-intelTbbDir = $(extern)/intel-tbb
+intelTbbDir = $(build)/intel-tbb
 intelTbbBuildDir = $(intelTbbDir)/build/build_release
 
 intelTbb = $(intelTbbBuildDir)/libtbb.so
 
-CachedTbbTarball = $(cache)/extern/intel-tbb/tbb44_20160526oss_src_0.tgz
+CachedTbbTarball = $(cache)/tbb44_20160526oss_src_0.tgz
 intelTbbUrlBase = https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/
 
 $(CachedTbbTarball):
@@ -1023,26 +1024,26 @@ phd_CxxFlags = $($(phdSrc)_CxxFlags)
 phd_LdFlags = $($(phdSrc)_LdFlags)
 
 
-#
 # thesis/
-#
 AutotexTargets += $(root)/thesis/thesis.pdf
 
-#
 # tools/
-#
 tools = $(root)/tools
 
 pgit = $(PREFIX)/bin/pgit
+
+$(pgit): $(root)/tools/pgit
+	$(call install,$@,$<,0755)
+
+InstallTargets += $(pgit)
+
+# make_tools/
 pmake = $(PREFIX)/bin/pmake
 
-$(pgit): $(tools)/pgit
+$(pmake): $(tools)/make_tools/pmake
 	$(call install,$@,$<,0755)
 
-$(pmake): $(tools)/pmake
-	$(call install,$@,$<,0755)
-
-InstallTargets += $(pmake) $(pgit)
+InstallTargets += $(pmake)
 
 
 ########################################################################
@@ -1052,7 +1053,7 @@ InstallTargets += $(pmake) $(pgit)
 #
 # C
 #
-CC := $(root)/tools/llvm/build/bin/clang
+CC := $(build)/llvm/build/bin/clang
 
 BuildTargets += $(CTargets)
 
@@ -1104,8 +1105,8 @@ DocStrings += "print-cc: print cc compiler invocation"
 #
 # C++
 #
-CXX := $(root)/tools/llvm/build/bin/clang++
-CLANGTIDY := $(root)/tools/llvm/build/bin/clang-tidy
+CXX := $(build)/llvm/build/bin/clang++
+CLANGTIDY := $(build)/llvm/build/bin/clang-tidy
 
 CxxTargetsObjects = $(addsuffix .o, $(CxxTargets))
 CxxTargetsSources = $(addsuffix .cpp, $(CxxTargets))
@@ -1130,8 +1131,8 @@ CxxDebugFlags = $(CxxDebugFlags_$(D))
 CxxFlags = \
 	$(CxxOptimisationFlags) \
 	$(CxxDebugFlags) \
-	-isystem /home/cec/phd/tools/llvm/projects/libcxxabi/include \
-	-isystem /home/cec/phd/tools/llvm/ \
+	-isystem $(build)/llvm/projects/libcxxabi/include \
+	-isystem $(build)/llvm/ \
 	-std=c++1z \
 	-stdlib=libc++ \
 	-pedantic \
@@ -1170,7 +1171,7 @@ DocStrings += "print-cxx: print cxx compiler invocation"
 #
 # Cpplint
 #
-CPPLINT := $(root)/tools/cpplint.py
+CPPLINT := $(root)/make_tools/cpplint.py
 
 CxxLintFilterFlags := \
 	build/c++11 \
@@ -1245,8 +1246,6 @@ DocStrings += "print-ld: print linker invocation"
 #
 # LaTeX
 #
-AUTOTEX := $(root)/tools/autotex.sh
-
 BuildTargets += $(AutotexTargets)
 
 AutotexDirs = $(dir $(AutotexTargets))
@@ -1256,7 +1255,7 @@ AutotexLogFiles = $(addsuffix .autotex.log, $(AutotexDirs))
 # Autotex does it's own dependency analysis, so always run it:
 .PHONY: $(AutotexTargets)
 $(AutotexTargets):
-	$(V2)$(AUTOTEX) make $(patsubst %.pdf,%,$@)
+	$(V2)$(root)/make_tools/autotex.sh make $(patsubst %.pdf,%,$@)
 
 # File extensions to remove in LaTeX build directories:
 LatexBuildfileExtensions = \
@@ -1392,7 +1391,7 @@ DocStrings += "install: install files"
 # LLVM Toolchain
 #
 LlvmVersion := 3.8.1
-LlvmSrc := $(root)/tools/llvm
+LlvmSrc := $(build)/llvm
 LlvmBuild := $(LlvmSrc)/build
 LlvmLibDir := $(LlvmBuild)/lib
 LlvmConfig := $(LlvmBuild)/bin/llvm-config
@@ -1463,7 +1462,6 @@ $(CC) $(CXX): $(toolchain)
 $(CTargets) $(CObjects): $(CC)
 $(CxxTargets) $(CxxObjects): $(CXX)
 
-LlvmCache := $(cache)/llvm
 LlvmUrlBase := http://llvm.org/releases/$(LlvmVersion)/
 CachedLlvmComponents := \
 	llvm \
@@ -1476,10 +1474,10 @@ CachedLlvmComponents := \
 	$(NONE)
 LlvmTar := -$(LlvmVersion).src.tar.xz
 
-CachedLlvmTarballs = $(addprefix $(LlvmCache)/,$(addsuffix $(LlvmTar),$(CachedLlvmComponents)))
+CachedLlvmTarballs = $(addprefix $(cache)/,$(addsuffix $(LlvmTar),$(CachedLlvmComponents)))
 
 # Fetch LLVM tarballs to local cache.
-$(LlvmCache)/%$(LlvmTar):
+$(cache)/%$(LlvmTar):
 	$(call wget,$@,$(LlvmUrlBase)$(notdir $@))
 
 # Unpack an LLVM Tarball.
@@ -1489,7 +1487,7 @@ $(LlvmCache)/%$(LlvmTar):
 #   $2 (str) Source tarball
 #
 define unpack-llvm-tar
-	$(call unpack-tar,$(LlvmSrc)/$1,$(LlvmCache)/$2$(LlvmTar),-xf)
+	$(call unpack-tar,$(LlvmSrc)/$1,$(cache)/$2$(LlvmTar),-xf)
 endef
 
 # Unpack LLVM tree from cached tarballs.
