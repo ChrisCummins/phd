@@ -181,7 +181,7 @@ endef
 root := $(PWD)
 build := $(root)/.build
 cache := $(root)/.cache
-toolchain := $(build)/toolchain
+toolchain := $(build)/toolchain.build
 
 comma := ,
 space :=
