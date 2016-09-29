@@ -9,7 +9,9 @@ Pyton >= 2.7.
 
 ## Installation
 
-Install with `sudo python ./setup.py install`.
+```sh
+sudo python ./setup.py install
+```
 
 
 ## License
