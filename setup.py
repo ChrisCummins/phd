@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Chris Cummins.
+# Copyright (C) 2015, 2016 Chris Cummins.
 #
 # This file is part of labm8.
 #

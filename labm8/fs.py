@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Chris Cummins.
+# Copyright (C) 2015, 2016 Chris Cummins.
 #
 # Labm8 is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -20,6 +20,7 @@ import shutil
 from glob import iglob
 
 import labm8 as lab
+
 
 class Error(Exception):
     pass
