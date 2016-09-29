@@ -7,8 +7,6 @@ python:
 
 install:
   - pip install numpy scipy scikit-learn pandas coveralls matplotlib
-  # Coverage packages are on a binstar channel:
-  - conda install --yes -c dan_blanchard python-coveralls nose-cov
   - python ./setup.py install
 
 script:
