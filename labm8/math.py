@@ -35,6 +35,7 @@ from labm8 import modules
 if lab.is_python3():
     from functools import reduce
 
+
 def ceil(number):
     """
     Return the ceiling of a number as an int.
@@ -93,6 +94,7 @@ def sqrt(number):
     """
     return math.sqrt(number)
 
+
 def mean(array):
     """
     Return the mean value of a list of divisible numbers.
@@ -137,6 +139,7 @@ def median(array):
     else:
         return (sorted_vals[midpoint - 1] + sorted_vals[midpoint]) / 2.0
 
+
 def range(array):
     """
     Return the range between min and max values.
@@ -144,6 +147,7 @@ def range(array):
     if len(array) < 1:
         return 0
     return max(array) - min(array)
+
 
 def variance(array):
     """
@@ -153,6 +157,7 @@ def variance(array):
         return 0
     u = mean(array)
     return sum([(x - u) ** 2 for x in array]) / (len(array) - 1)
+
 
 def stdev(array):
     """

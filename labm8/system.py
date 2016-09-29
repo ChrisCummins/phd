@@ -44,6 +44,7 @@ STDOUT = sys.stdout
 STDERR = sys.stderr
 PIPE = subprocess.PIPE
 
+
 class Error(Exception):
     pass
 
@@ -60,6 +61,7 @@ class CommandNotFoundError(Exception):
     Error thrown a system command is not found.
     """
     pass
+
 
 class ScpError(Error):
     """
@@ -148,7 +150,6 @@ class Subprocess(object):
             thread.join()
 
         return self.process.returncode, self.stdout, self.stderr
-
 
 
 def run(command, num_retries=1, timeout=-1, **kwargs):
