@@ -28,7 +28,7 @@ class Error(Exception):
     pass
 
 
-def finalise(output=None, figsize=None, **kwargs):
+def finalise(output=None, figsize=None, tight=True, **kwargs):
     """
     Finalise a plot.
 
@@ -46,10 +46,11 @@ def finalise(output=None, figsize=None, **kwargs):
 
     # Set figure size.
     if figsize is not None:
-        plt.gcf().set_size_inches(*figsize, dpi=300)
+        plt.gcf().set_size_inches(*figsize)
 
     # Set plot layout.
-    plt.tight_layout()
+    if tight:
+        plt.tight_layout()
 
     if output is None:
         plt.show()

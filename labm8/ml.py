@@ -15,14 +15,18 @@
 """
 Machine learning module.
 
+REQUIREMENTS: Weka http://www.cs.waikato.ac.nz/ml/weka/
+
 Attributes:
 
     WEKA_IS_INSTALLED (bool): True if weka is installed.
     MODULE_SUPPORTED (bool): True if this module is supported.
 """
 from __future__ import division
+from __future__ import print_function
 
 import atexit
+import sys
 
 from random import randint
 
@@ -33,8 +37,23 @@ from labm8 import math as labmath
 from labm8 import system
 
 
-WEKA_IS_INSTALLED = system.which("weka") or fs.exists("/Applications/Weka.app")
-MODULE_SUPPORTED = WEKA_IS_INSTALLED and not lab.is_python3()
+def _find_weka():
+    """
+    Look for Weka installation in system $PATH or /Applications. If
+    not found, return None.
+    """
+    mac_path = '/Applications/Weka.app'
+    linux_path = system.which('weka')
+    return mac_path if fs.exists(mac_path) else linux_path
+
+WEKA_IS_INSTALLED = _find_weka()
+MODULE_SUPPORTED = WEKA_IS_INSTALLED
+
+
+def assert_supported():
+    if not MODULE_SUPPORTED:
+        print("fatal: labm8.ml module not supported! Please install weka.")
+        sys.exit(1)
 
 
 if MODULE_SUPPORTED:
@@ -47,6 +66,8 @@ if MODULE_SUPPORTED:
     from weka.core.converters import Loader as WekaLoader
     from weka.core.converters import Saver as WekaSaver
     from weka.core.classes import Random as WekaRandom
+    from weka.classifiers import FilteredClassifier as WekaFilteredClassifier
+    from weka.filters import Filter
 else:
     # Add dummy variables as required.
     WekaClassifier = object
@@ -56,6 +77,13 @@ else:
 class Error(Exception):
     """
     Module-level error.
+    """
+    pass
+
+
+class AttributeNotFoundException(Error):
+    """
+    Attribute does not exist in dataset.
     """
     pass
 
@@ -140,18 +168,26 @@ class Dataset(object):
         self.class_index = class_index
 
     def __repr__(self):
-        return self.instances.__repr__()
+        return repr(self.instances)
 
     def __self__(self):
-        return self.instances.__str__()
+        return str(self.instances)
 
     def __len__(self):
-        return self.instances.num_instances
+        return self.num_instances
 
     def __getitem__(self, index):
         if index < 0:
             index = self.instances.num_instances + index
         return self.instances.get_instance(index)
+
+    @property
+    def num_attributes(self):
+        return self.instances.num_attributes
+
+    @property
+    def num_instances(self):
+        return self.instances.num_instances
 
     @property
     def class_index(self):
@@ -212,6 +248,24 @@ class Dataset(object):
             folds.append((training, testing))
 
         return folds
+
+    def leave1out(self, *args, **kwargs):
+        kwargs["nfolds"] = self.num_instances
+        return self.folds(*args, **kwargs)
+
+    def attribute_index(self, attribute):
+        try:
+            return self.instances.attribute_by_name(attribute).index
+        except Exception:
+            raise AttributeNotFoundException("no attribute '{}'"
+                                             .format(attribute))
+
+    def remove_attributes(self, *attributes):
+        indices = [self.attribute_index(x) for x in attributes]
+        remove = Filter(classname="weka.filters.unsupervised.attribute.Remove",
+                        options=["-R", ','.join(str(x + 1) for x in indices)])
+        remove.inputformat(self.instances)
+        self.instances = remove.filter(self.instances)
 
     def copy(self, from_row=None, num_rows=None):
         return WekaInstances.copy_instances(self.instances,
@@ -280,6 +334,27 @@ class Classifier(WekaClassifier):
 
     def __repr__(self):
         return " ".join([self.classname,] + self.options)
+
+    def __str__(self):
+        return self.__repr__()
+
+
+class FilteredClassifier(WekaFilteredClassifier):
+    def __init__(self, classifier, ignored_attributes):
+        super(FilteredClassifier, self).__init__()
+
+        # Create attribute filer.
+        rm = Filter(classname="weka.filters.unsupervised.attribute.Remove",
+                    options=["-R",
+                             ','.join([str(x + 1) for x in ignored_attributes])])
+
+        self.classifier = classifier
+
+        self.set_property("filter", rm)
+        self.set_property("classifier", classifier)
+
+    def __repr__(self):
+        return " ".join([self.classifier.classname,] + self.classifier.options)
 
     def __str__(self):
         return self.__repr__()
