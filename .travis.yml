@@ -3,6 +3,9 @@ python:
   - "2.7"
   - "3.3"
 
+git:
+  submodules: false
+
 before_install:
   # Install Anaconda, which we will use to install scipy and other
   # python dependencies:
