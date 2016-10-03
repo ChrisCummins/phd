@@ -440,7 +440,7 @@ extern := $(root)/extern
 #
 # extern/benchmark
 #
-GoogleBenchmark = $(extern)/benchmark/build/src/libbenchmark.a
+GoogleBenchmark = $(build)/benchmark/src/libbenchmark.a
 GoogleBenchmark_CxxFlags = \
 	-isystem $(extern)/benchmark/include -Wno-global-constructors
 GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
@@ -449,14 +449,14 @@ GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
 GoogleBenchmarkCMakeFlags = \
 	-DCMAKE_BUILD_TYPE=Release
 $(GoogleBenchmark)-cmd = \
-	cd $(extern)/benchmark/build \
-	&& $(ToolchainCmake) .. -G Ninja >/dev/null \
+	cd $(build)/benchmark \
+	&& $(ToolchainCmake) $(extern)/benchmark -G Ninja >/dev/null \
 	&& $(ToolchainEnv) ninja
 
-$(GoogleBenchmark): toolchain
+$(GoogleBenchmark): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(V1)rm -rf $(extern)/benchmark/build
-	$(V1)mkdir -p $(extern)/benchmark/build
+	$(V1)rm -rf $(build)/benchmark
+	$(V1)mkdir -p $(build)/benchmark
 	$(V1)$($(GoogleBenchmark)-cmd)
 
 googlebenchmark: $(GoogleBenchmark)
@@ -540,22 +540,21 @@ DistcleanTargets += distclean-clsmith
 #
 # extern/googletest
 #
-GoogleTest = $(extern)/googletest-build/libgtest.a
+GoogleTest = $(build)/googletest/libgtest.a
 GoogleTest_CxxFlags = \
 	-isystem $(extern)/googletest/googletest/include \
-	-isystem $(LlvmSrc)/projects/libcxxabi/include \
 	$(NULL)
 GoogleTest_LdFlags = -lpthread -L$(extern)/googletest-build -lgtest
 
 $(GoogleTest)-cmd = \
-	cd $(extern)/googletest-build \
-	&& $(ToolchainCmake) ../googletest/googletest -G Ninja >/dev/null \
+	cd $(build)/googletest \
+	&& $(ToolchainCmake) $(extern)/googletest/googletest -G Ninja >/dev/null \
 	&& $(ToolchainEnv) ninja
 
 $(GoogleTest): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(V1)rm -rf $(extern)/googletest-build
-	$(V1)mkdir -p $(extern)/googletest-build
+	$(V1)rm -rf $(build)/googletest
+	$(V1)mkdir -p $(build)/googletest
 	$(V1)$($(GoogleTest)-cmd)
 
 googletest: $(GoogleTest)
@@ -1131,7 +1130,6 @@ CxxDebugFlags = $(CxxDebugFlags_$(D))
 CxxFlags = \
 	$(CxxOptimisationFlags) \
 	$(CxxDebugFlags) \
-	-isystem $(build)/llvm/projects/libcxxabi/include \
 	-isystem $(build)/llvm/ \
 	-std=c++1z \
 	-stdlib=libc++ \
@@ -1406,9 +1404,6 @@ Toolchain_CC := $(LlvmBuild)/bin/clang
 Toolchain_CXX := $(LlvmBuild)/bin/clang++
 ToolchainCxxFlags := \
 	-Wno-unused-command-line-argument \
-	-nostdinc++ \
-	-cxx-isystem $(LlvmSrc)/projects/libcxx/include \
-	-cxx-isystem $(LlvmSrc)/projects/libcxxabi/include \
 	-stdlib=libc++ \
 	$(NULL)
 ToolchainEnv := CC=$(Toolchain_CC) CXX=$(Toolchain_CXX) LD_LIBRARY_PATH=$(LlvmLibDir)

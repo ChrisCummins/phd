@@ -8,6 +8,6 @@ be best if you want to actually use any of this stuff (lord mercy!) to
 drop me an email at c.cummins@ed.ac.uk.
 
 Requirements:
+ * modern host toolchain (clang >= 3.6, libc++)
  * ninja
  * cmake
- * a host toolchain capable of compiling LLVM
