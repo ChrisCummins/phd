@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+#
+# Generate OpenCL programs using clsmith.
+#
+from argparse import ArgumentParser
+from sys import exit, stderr
+
+import smith
+from smith.encoder import lr_encode
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('input', help='path to preprocessed OpenCL file')
+    parser.add_argument('idx', type=int, help='index to start encoding')
+    args = parser.parse_args()
+
+    with open(smith.assert_exists(args.input)) as infile:
+        input = infile.read()
+
+    idx = args.idx
+    if idx >= len(input):
+        print("len of input:", len(input), "index:", idx)
+        exit(1)
+
+    print(lr_encode(input, idx))
+
+
+if __name__ == '__main__':
+    main()
