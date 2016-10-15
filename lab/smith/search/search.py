@@ -130,8 +130,8 @@ def get_mutation(input):
             return code, mutate_idx, mutate_seed
 
 
-def search(input, benchmark, logpath="search.log"):
-    init_log(logpath)
+def search(input, benchmark, datadir, logpath="search.log"):
+    init_log(os.path.join(datadir, logpath))
     target_features = get_features(benchmark)
 
     code = input
@@ -141,9 +141,9 @@ def search(input, benchmark, logpath="search.log"):
     log(">>> starting code:" + "\n" + indent(code))
     log(">>> target code:" + "\n" + indent(benchmark))
 
+    log(">>> target features:  ", ", ".join([str(x) for x in target_features]))
     log(">>> starting features:", ", ".join([str(x) for x in features]),
         "distance", distance)
-    log(">>> target features:  ", ", ".join([str(x) for x in target_features]))
 
     best = {
         "distance": distance,
@@ -152,25 +152,48 @@ def search(input, benchmark, logpath="search.log"):
         "code": code
     }
 
+    count = 0
+    improved_counter = 0
     while True:
         ret = get_mutation(code)
         newcode, mutate_idx, mutate_seed = ret
         features = get_features(newcode)
         distance = get_distance(target_features, features)
 
-        log(">>> new mutation",
+        count += 1
+
+        log(">>>", count, "new mutation",
             "features:", ", ".join([str(x) for x in features]),
-            "distance:", distance)
+            "distance:", distance,
+            "( best:", best["distance"], ")")
         log(indent(newcode))
 
         if distance < best["distance"]:
+            improved_counter += 1
             log("-> best feature distance reduced from", best["distance"],
                 "to", distance, "(-{:.2f}%)".format(
-                    ((1 - distance / best["distance"]) * 100)))
+                    ((1 - distance / best["distance"]) * 100)),
+                "improved_counter:", improved_counter)
             best["distance"] = distance
             best["idx"] = mutate_idx
             best["seed"] = mutate_seed
-            best["code"] = ret
+            best["code"] = newcode
+
+            outpath = os.path.join(
+                datadir, "search-step-{}.cl".format(improved_counter))
+            with open(outpath, "w") as outfile:
+                print("/* Iteration #{} */".format(count), file=outfile)
+                print("/* Improvement #{} */".format(improved_counter),
+                      file=outfile)
+                print("/* Target features: {} */".format(
+                            ", ".join([str(x) for x in target_features])),
+                      file=outfile)
+                print("/*        Features: {} */".format(
+                            ", ".join([str(x) for x in features])),
+                      file=outfile)
+                print("/* Distance: {} */".format(distance), file=outfile)
+                print(newcode, file=outfile)
+
             # Doesn't have to be exactly zero but whatever.
             if distance <= 0.000001:
                 log(">>> found exact match")
@@ -182,6 +205,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("input")
     parser.add_argument("benchmark")
+    parser.add_argument("datadir")
     args = parser.parse_args()
 
     with open(args.input) as infile:
@@ -190,7 +214,7 @@ def main():
     with open(args.benchmark) as infile:
         benchmark = infile.read()
 
-    search(input, benchmark)
+    search(input, benchmark, args.datadir)
 
 
 if __name__ == "__main__":
