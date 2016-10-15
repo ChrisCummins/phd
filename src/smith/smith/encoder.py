@@ -11,9 +11,13 @@ from __future__ import print_function
 
 import smith
 
+from re import sub
+
 # End of sequence marker. This must be a character which does not exist in
 # the training data.
 EOF = '£'
+
+PAD = '±'
 
 def lr_encode(input, idx):
     input = input.strip()
@@ -22,8 +26,8 @@ def lr_encode(input, idx):
 
     cmax = max(len(L), len(R))
 
-    L = ' ' * (cmax - len(L)) + L
-    R = ' ' * (cmax - len(R)) + R
+    L = PAD * (cmax - len(L)) + L
+    R = PAD * (cmax - len(R)) + R
 
     S = ''
     for i in range(cmax):
@@ -32,16 +36,14 @@ def lr_encode(input, idx):
 
 
 def lr_decode(input):
-    input = input.rstrip()
+    input = input.strip()
     assert(input[-1] == EOF)
+    assert(input.count(EOF) == 1)
     input = input[:-1]
 
     L = input[::2]
     R = input[1::2][::-1]
 
-    print("L:", L)
-    print("R:", R)
+    assert(len(L) == len(R) or len(L) - 1 == len(R))
 
-    assert(len(L) == len(R))
-
-    return L.lstrip() + R
+    return sub('^{}+'.format(PAD), '', L) + sub('{}+$'.format(PAD), '', R)
