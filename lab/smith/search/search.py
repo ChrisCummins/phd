@@ -60,16 +60,22 @@ def generate_test_code(start_seed=0):
             print(indent(result))
 
 
+_LOGPATH = None
+
+
 def init_log(logpath):
+    global _LOGPATH
+    _LOGPATH = logpath
     with open(logpath, "w") as outfile:
         print(end="", file=outfile)
 
 
 def log(*args, **kwargs):
     print(*args, **kwargs)
-    with open(SEARCH_LOG, "a") as outfile:
-        kwargs["file"] = outfile
-        print(*args, **kwargs)
+    if _LOGPATH:
+        with open(_LOGPATH, "a") as outfile:
+            kwargs["file"] = outfile
+            print(*args, **kwargs)
 
 
 def get_features(code):
@@ -91,8 +97,6 @@ def FeaturesFromFile(path):
 
 
 def get_distance(x1, x2):
-    print("X1", x1, type(x1).__name__)
-    print("X2", x2, type(x2).__name__)
     return np.linalg.norm(x1 - x2)
 
 
@@ -102,12 +106,11 @@ def get_sample(start_txt, seed):
 
     try:
         s = sample(seed)
-        print(indent(s[:600]))
         result = preprocess.preprocess(s)
         if result:
             return result
     except Exception as e:
-        print(indent(type(e).__name__))
+        pass
 
 
 def get_mutation(input):
@@ -138,9 +141,9 @@ def search(input, benchmark, logpath="search.log"):
     log(">>> starting code:" + "\n" + indent(code))
     log(">>> target code:" + "\n" + indent(benchmark))
 
-    log(">>> target features:  ", ", ".join([str(x) for x in target_features]))
     log(">>> starting features:", ", ".join([str(x) for x in features]),
         "distance", distance)
+    log(">>> target features:  ", ", ".join([str(x) for x in target_features]))
 
     best = {
         "distance": distance,
@@ -155,8 +158,9 @@ def search(input, benchmark, logpath="search.log"):
         features = get_features(newcode)
         distance = get_distance(target_features, features)
 
-        log(">>> new mutation, idx", mutate_idx, "seed", mutate_seed,
-            ", ".join([str(x) for x in features]), "distance", distance)
+        log(">>> new mutation",
+            "features:", ", ".join([str(x) for x in features]),
+            "distance:", distance)
         log(indent(newcode))
 
         if distance < best["distance"]:
@@ -167,7 +171,8 @@ def search(input, benchmark, logpath="search.log"):
             best["idx"] = mutate_idx
             best["seed"] = mutate_seed
             best["code"] = ret
-            if distance == 0:
+            # Doesn't have to be exactly zero but whatever.
+            if distance <= 0.000001:
                 log(">>> found exact match")
                 exit(0)
 
