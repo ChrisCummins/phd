@@ -1463,9 +1463,6 @@ CachedLlvmComponents := \
 	cfe \
 	clang-tools-extra \
 	compiler-rt \
-	openmp \
-	libcxx \
-	libcxxabi \
 	$(NONE)
 LlvmTar := -$(LlvmVersion).src.tar.xz
 
@@ -1491,9 +1488,6 @@ $(LlvmSrc): $(CachedLlvmTarballs)
 	$(call unpack-llvm-tar,tools/clang,cfe)
 	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
 	$(call unpack-llvm-tar,projects/compiler-rt,compiler-rt)
-	$(call unpack-llvm-tar,projects/openmp,openmp)
-	$(call unpack-llvm-tar,projects/libcxx,libcxx)
-	$(call unpack-llvm-tar,projects/libcxxabi,libcxxabi)
 
 # Build LLVM.
 $(LlvmBuild)/bin/llvm-config: $(LlvmSrc)
