@@ -1598,6 +1598,17 @@ version:
 	$(V2)echo 'phd version $(version-str)'
 DocStrings += "version: show version information"
 
+# Print information. 'make help' helper.
+define print-info
+	echo $1 | xargs printf "    %-10s $2\n"
+endef
+
+print-program-version-cmd = $(shell which $1 &>/dev/null && \
+	{ $1 --version 2>&1 | head -n1; } || { echo not found; })
+
+define print-program-version
+	$(call print-info,$1,$(print-program-version-cmd))
+endef
 
 # Print doc strings:
 .PHONY: help
@@ -1622,18 +1633,19 @@ help:
 	$(V2)echo
 	$(V2)echo "host info:"
 	$(V2)echo
-	$(V2)echo "    name      $(shell uname -n)"
-	$(V2)echo "    O/S       $(shell uname -o)"
-	$(V2)echo "    arch      $(shell uname -m)"
-	$(V2)echo "    threads   $(threads)"
+	$(V2)$(call print-info,name,$(shell uname -n))
+	$(V2)$(call print-info,O/S,$(shell uname -o))
+	$(V2)$(call print-info,arch,$(shell uname -m))
+	$(V2)$(call print-info,threads,$(threads))
 	$(V2)echo
 	$(V2)echo "build essentials:"
 	$(V2)echo
-	$(V2)echo "    c++       $(shell which c++ &>/dev/null && { c++ --version | head -n1; } || { echo not found; })"
-	$(V2)echo "    cmake     $(shell which cmake &>/dev/null && { cmake --version | head -n1; } || { echo not found; })"
-	$(V2)echo "    ninja     $(shell which ninja &>/dev/null && { ninja --version | head -n1; } || { echo not found; })"
-	$(V2)echo "    pdflatex  $(shell which pdflatex &>/dev/null && { pdflatex --version | head -n1; } || { echo not found; })"
-	$(V2)echo "    python2   $(shell which python2 &>/dev/null && { python2 --version 2>&1 | head -n1; } || { echo not found; })"
-	$(V2)echo "    python3   $(shell which python3 &>/dev/null && { python3 --version | head -n1; } || { echo not found; })"
-	$(V2)echo "    pep8      $(shell which pep8 &>/dev/null && { pep8 --version 2>&1 | head -n1; } || { echo not found; })"
+	$(V2)$(call print-program-version,c++)
+	$(V2)$(call print-program-version,cmake)
+	$(V2)$(call print-program-version,ninja)
+	$(V2)$(call print-program-version,pdflatex)
+	$(V2)$(call print-program-version,pep8)
+	$(V2)$(call print-program-version,python2)
+	$(V2)$(call print-program-version,python3)
+	$(V2)$(call print-program-version,svn)
 	$(V2)echo
