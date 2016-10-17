@@ -1,0 +1,14 @@
+[user]
+	name = Chris Cummins
+	email = chrisc.101@gmail.com
+[help]
+	autocorrect = 1
+[color]
+	ui = true
+[push]
+	default = simple
+[core]
+	pager = diff-so-fancy | less --tabs=4 -RFX
+[alias]
+    ci = commit
+
