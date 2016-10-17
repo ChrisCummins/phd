@@ -1406,7 +1406,11 @@ ToolchainCxxFlags := \
 	-Wno-unused-command-line-argument \
 	-stdlib=libc++ \
 	$(NULL)
-ToolchainEnv := CC=$(Toolchain_CC) CXX=$(Toolchain_CXX) LD_LIBRARY_PATH=$(LlvmLibDir)
+ToolchainEnv := \
+	CC=$(Toolchain_CC) \
+	CXX=$(Toolchain_CXX) \
+	LD_LIBRARY_PATH=$(LlvmLibDir) \
+	$(NULL)
 ToolchainCmake := $(ToolchainEnv) cmake	-DCMAKE_CXX_FLAGS="$(ToolchainCxxFlags)"
 
 # Flags to build against LLVM + Clang toolchain
