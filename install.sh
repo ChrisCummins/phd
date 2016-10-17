@@ -74,7 +74,7 @@ install_zsh() {
 install_ssh() {
     if [[ -d "$private/ssh" ]]; then
         mkdir -p ~/.ssh
-        symlink "$private/ssh/authorized_hosts" ~/.ssh/authorized_hosts
+        symlink "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
         symlink "$private/ssh/config" ~/.ssh/config
         symlink "$private/ssh/known_hosts" ~/.ssh/known_hosts
         symlink "$private/ssh/id_rsa" ~/.ssh/id_rsa
