@@ -639,8 +639,8 @@ $(OpenCL): toolchain
 #
 # extern/triSYCL
 #
-TriSYCL_CxxFlags = $(Boost_CxxFlags) -isystem $(extern)/triSYCL/include
-TriSYCL = $(extern)/triSYCL/include/CL/sycl.hpp
+# TriSYCL_CxxFlags = $(Boost_CxxFlags) -isystem $(extern)/triSYCL/include
+# TriSYCL = $(extern)/triSYCL/include/CL/sycl.hpp
 
 
 #
@@ -864,14 +864,14 @@ $(HooclCxxObjects): $(OpenCL)
 #
 # learn/triSYCL/
 #
-LearnTriSYCLCxxSources = $(wildcard $(learn)/triSYCL/*.cpp)
-LearnTriSYCLCxxObjects = $(patsubst %.cpp,%.o,$(LearnTriSYCLCxxSources))
-CxxObjects += $(LearnTriSYCLCxxObjects)
-CxxTargets += $(patsubst %.cpp,%,$(LearnTriSYCLCxxSources))
+# LearnTriSYCLCxxSources = $(wildcard $(learn)/triSYCL/*.cpp)
+# LearnTriSYCLCxxObjects = $(patsubst %.cpp,%.o,$(LearnTriSYCLCxxSources))
+# CxxObjects += $(LearnTriSYCLCxxObjects)
+# CxxTargets += $(patsubst %.cpp,%,$(LearnTriSYCLCxxSources))
 
-$(learn)/triSYCL_CxxFlags = $(TriSYCL_CxxFlags) $(phd_CxxFlags)
-$(learn)/triSYCL_LdFlags = $(TriSYCL_CxxFlags) $(phd_LdFlags)
-$(LearnTriSYCLCxxObjects): $(TriSYCL) $(phd) $(Boost) $(GoogleBenchmark)
+# $(learn)/triSYCL_CxxFlags = $(TriSYCL_CxxFlags) $(phd_CxxFlags)
+# $(learn)/triSYCL_LdFlags = $(TriSYCL_CxxFlags) $(phd_LdFlags)
+# $(LearnTriSYCLCxxObjects): $(TriSYCL) $(phd) $(Boost) $(GoogleBenchmark)
 
 
 #
