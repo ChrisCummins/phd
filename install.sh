@@ -77,7 +77,7 @@ install_ssh() {
         symlink "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
         symlink "$private/ssh/config" ~/.ssh/config
         symlink "$private/ssh/known_hosts" ~/.ssh/known_hosts
-        symlink "$private/ssh/id_rsa" ~/.ssh/id_rsa
+        cp "$private/ssh/id_rsa" ~/.ssh/id_rsa
         symlink "$private/ssh/id_rsa.ppk" ~/.ssh/id_rsa.ppk
         symlink "$private/ssh/id_rsa.pub" ~/.ssh/id_rsa.pub
     fi
