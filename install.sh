@@ -152,8 +152,8 @@ install_servers() {
 
 
 main() {
-    install_zsh
     install_ssh
+    install_zsh
     install_git
     install_tmux
     install_vim
