@@ -1,14 +1,20 @@
 [user]
-	name = Chris Cummins
-	email = chrisc.101@gmail.com
+    name = Chris Cummins
+    email = chrisc.101@gmail.com
 [help]
-	autocorrect = 1
+    autocorrect = 1
 [color]
-	ui = true
+    ui = true
 [push]
-	default = simple
+    default = simple
 [core]
-	pager = diff-so-fancy | less --tabs=4 -RFX
+    pager = diff-so-fancy | less --tabs=4 -RFX
 [alias]
     ci = commit
-
+[merge]
+    tool = meld
+[mergetool]
+    prompt = false
+[mergetool "meld"]
+    trustExitCode = true
+    cmd = open -W -a Meld --args --auto-merge \"$PWD/$LOCAL\" \"$PWD/$BASE\" \"$PWD/$REMOTE\" --output=\"$PWD/$MERGED\"
