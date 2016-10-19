@@ -350,12 +350,9 @@ endef
 #    insecureAPI.rand - On Mac OS X it suggests using BSD-system's
 #                       arc4random(), which is not available on Linux
 #                       builds.
-#    unused-arg       - It was complaining about how '-std=libc++' was
-#                       unused.
 #
 clang-tidy-disabled-checks = \
 	clang-analyzer-security.insecureAPI.rand \
-	clang-diagnostic-unused-command-line-argument \
 	$(NULL)
 clang-tidy-checks-arg = -checks=-$(strip \
 	$(call join-with,$(comma)-,$(clang-tidy-disabled-checks)))
