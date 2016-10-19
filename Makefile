@@ -201,9 +201,7 @@ DistcleanTargets =
 DontLint =
 InstallTargets =
 PyLintSources =
-Python2SetupInstallDirs =
 Python2SetupTestDirs =
-Python3SetupInstallDirs =
 Python3SetupTestDirs =
 TestTargets =
 
@@ -378,7 +376,9 @@ endef
 
 
 python-setup-test-cmd = \
-	cd $2 && $(strip $1) ./setup.py test &> $2/.$(strip $1).test.log \
+	cd $2 && test -f env/bin/activate || virtualenv -p $1 env \
+	&& source env/bin/active \
+	&& $(strip $1) ./setup.py test &> $2/.$(strip $1).test.log \
 	&& grep -E '^Ran [0-9]+ tests in' $2/.$(strip $1).test.log \
 	|| sed -n -e '/ \.\.\. /,$${p}' $2/.$(strip $1).test.log | \
 	grep -v '... ok'
@@ -391,22 +391,6 @@ python-setup-test-cmd = \
 define python-setup-test
 	$(call print-task,TEST,$(strip $1) $(strip $2),$(TaskMisc))
 	$(V1)$(python-setup-test-cmd)
-endef
-
-
-python-setup-install-cmd = \
-	cd $2 && $(SUDO) $(strip $1) ./setup.py install --prefix=$(PREFIX) &> \
-	$2/.$(strip $1).install.log \
-	|| cat $2/.$(strip $1).install.log
-
-# Run python setup.py install
-#
-# Arguments:
-#   $1 (str) Python executable
-#   $2 (str) Source directory
-define python-setup-install
-	$(call print-task,INSTALL,$(strip $1): $(strip $2),$(TaskInstall))
-	$(V1)$(python-setup-install-cmd)
 endef
 
 
@@ -981,9 +965,7 @@ src = $(root)/src
 # src/labm8
 #
 Python2SetupTestDirs += $(src)/labm8
-Python2SetupInstallDirs += $(src)/labm8
 # Python3SetupTestDirs += $(src)/labm8
-Python3SetupInstallDirs += $(src)/labm8
 PyLintSources += $(wildcard $(src)/labm8/labm8/*.py)
 
 
@@ -991,7 +973,6 @@ PyLintSources += $(wildcard $(src)/labm8/labm8/*.py)
 # src/omnitune
 #
 # Python2SetupTestDirs += $(src)/omnitune
-Python2SetupInstallDirs += $(src)/omnitune
 PyLintSources += $(wildcard $(src)/omnitune/omnitune/*.py)
 
 # Omnitune depends on labm8:
@@ -1337,40 +1318,25 @@ DocStrings += "tex: build all LaTeX targets"
 Python2SetupTestLogs = $(addsuffix /.python2.test.log, \
 	$(Python2SetupTestDirs))
 
-Python2SetupInstallLogs = $(addsuffix /.python2.install.log, \
-	$(Python2SetupInstallDirs))
-
 Python3SetupTestLogs = $(addsuffix /.python3.test.log, \
 	$(Python3SetupTestDirs))
 
-Python3SetupInstallLogs = $(addsuffix /.python3.install.log, \
-	$(Python3SetupInstallDirs))
-
 .PHONY: \
-	$(Python2SetupInstallLogs) \
 	$(Python2SetupTestLogs) \
-	$(Python3SetupInstallLogs) \
 	$(Python3SetupTestLogs) \
 	$(NULL)
 
 $(Python2SetupTestLogs):
 	$(call python-setup-test,python2,$(patsubst %/,%,$(dir $@)))
 
-$(Python2SetupInstallLogs):
-	$(call python-setup-install,python2,$(patsubst %/,%,$(dir $@)))
-
 $(Python3SetupTestLogs):
 	$(call python-setup-test,python3,$(patsubst %/,%,$(dir $@)))
 
-$(Python3SetupInstallLogs):
-	$(call python-setup-install,python3,$(patsubst %/,%,$(dir $@)))
-
 TestTargets += $(Python2SetupTestLogs) $(Python3SetupTestLogs)
-InstallTargets += $(Python2SetupInstallLogs) $(Python3SetupInstallLogs)
 
 # Clean-up:
-Python2CleanDirs = $(sort $(Python2SetupTestDirs) $(Python2SetupInstallDirs))
-Python3CleanDirs = $(sort $(Python3SetupTestDirs) $(Python3SetupInstallDirs))
+Python2CleanDirs = $(sort $(Python2SetupTestDirs))
+Python3CleanDirs = $(sort $(Python3SetupTestDirs))
 
 .PHONY: clean-python
 clean-python:
@@ -1380,9 +1346,7 @@ clean-python:
 CleanTargets += clean-python
 
 CleanFiles += \
-	$(Python2SetupInstallLogs) \
 	$(Python2SetupTestLogs) \
-	$(Python3SetupInstallLogs) \
 	$(Python3SetupTestLogs) \
 	$(NULL)
 
