@@ -1577,6 +1577,9 @@ git-dirty-cmd := git diff-index --quiet HEAD || echo "*"
 version-str = phd-$(shell $(git-shorthead-cmd))$(shell $(git-dirty-cmd))
 
 .PHONY: version
+version-str = phd-$(shell $(git-shorthead-cmd))$(shell $(git-dirty-cmd))
+
+.PHONY: version
 version:
 	$(V2)echo 'phd version $(version-str)'
 DocStrings += "version: show version information"
