@@ -434,7 +434,12 @@ extern := $(root)/extern
 #
 # extern/benchmark
 #
-GoogleBenchmark = $(build)/benchmark/src/libbenchmark.a
+GoogleBenchmarkVersion := 1.0.0
+# TODO: Download https://github.com/google/benchmark/archive/v1.0.0.tar.gz
+# And unpack into src cache
+GoogleBenchmarkSrc := $(extern)/benchmark
+GoogleBenchmarkBuild := $(build)/benchmark/$(GoogleBenchmarkVersion)
+GoogleBenchmark = $(GoogleBenchmarkBuild)/libbenchmark.a
 GoogleBenchmark_CxxFlags = \
 	-isystem $(extern)/benchmark/include -Wno-global-constructors
 GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
@@ -443,15 +448,16 @@ GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
 GoogleBenchmarkCMakeFlags = \
 	-DCMAKE_BUILD_TYPE=Release
 $(GoogleBenchmark)-cmd = \
-	cd $(build)/benchmark \
-	&& $(ToolchainCmake) $(extern)/benchmark -G Ninja >/dev/null \
+	cd $(GoogleBenchmarkBuild) \
+	&& $(ToolchainCmake) $(GoogleBenchmarkSrc) -G Ninja >/dev/null \
 	&& $(ToolchainEnv) ninja
 
 $(GoogleBenchmark): $(toolchain)
 	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(V1)rm -rf $(build)/benchmark
-	$(V1)mkdir -p $(build)/benchmark
+	$(V1)rm -rf $(GoogleBenchmarkBuild)
+	$(V1)mkdir -p $(GoogleBenchmarkBuild)
 	$(V1)$($(GoogleBenchmark)-cmd)
+	$(V1)ln -s src/libbenchmark.a $@
 
 googlebenchmark: $(GoogleBenchmark)
 DocStrings += "googlebenchmark: build Google benchmark library"
