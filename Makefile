@@ -104,6 +104,8 @@ V2 = $(__verbosity_2_$(V))
 
 ########################################################################
 #                         User Configuration
+CC ?= gcc
+CXX ?= g++
 SUDO ?= sudo
 
 # Install prefix:
@@ -179,9 +181,9 @@ endef
 
 # Assume no out-of-tree builds:
 root := $(PWD)
+src := $(root)/.src
 build := $(root)/.build
 cache := $(root)/.cache
-toolchain := $(build)/llvm/3.9.0/bin/llvm-config
 
 comma := ,
 space :=
@@ -356,7 +358,7 @@ clang-tidy-disabled-checks = \
 	$(NULL)
 clang-tidy-checks-arg = -checks=-$(strip \
 	$(call join-with,$(comma)-,$(clang-tidy-disabled-checks)))
-clang-tidy-cmd = $(ToolchainEnv) $(CLANGTIDY) $1 $(clang-tidy-checks-arg) \
+clang-tidy-cmd = $(CLANGTIDY) $1 $(clang-tidy-checks-arg) \
 	-- $(CxxFlags) $2
 
 # Run clang-tidy on input.
@@ -449,10 +451,10 @@ GoogleBenchmarkCMakeFlags = \
 	-DCMAKE_BUILD_TYPE=Release
 $(GoogleBenchmark)-cmd = \
 	cd $(GoogleBenchmarkBuild) \
-	&& $(ToolchainCmake) $(GoogleBenchmarkSrc) -G Ninja >/dev/null \
-	&& $(ToolchainEnv) ninja
+	&& cmake $(GoogleBenchmarkSrc) -G Ninja >/dev/null \
+	&& ninja
 
-$(GoogleBenchmark): $(toolchain)
+$(GoogleBenchmark):
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)rm -rf $(GoogleBenchmarkBuild)
 	$(V1)mkdir -p $(GoogleBenchmarkBuild)
@@ -473,7 +475,7 @@ DistcleanTargets += distclean-googlebenchmark
 # extern/boost
 #
 BoostVersion := 1.46.1
-BoostSrc := $(cache)/boost/$(BoostVersion)
+BoostSrc := $(src)/boost/$(BoostVersion)
 BoostBuild = $(build)/boost/$(BoostVersion)
 Boost = $(BoostBuild)/include/boost/regex.h
 
@@ -495,7 +497,7 @@ $(Boost)-cmd = \
 	&& ./bootstrap.sh --prefix=$(BoostBuild) >/dev/null \
 	&& ./bjam install >/dev/null || true
 
-$(Boost): $(BoostSrc)/bootstrap.sh $(toolchain)
+$(Boost): $(BoostSrc)/bootstrap.sh
 	$(call print-task,BUILD,boost,$(TaskMisc))
 	$(V1)rm -rf $(BoostBuild)
 	$(V1)mkdir -p $(BoostBuild)
@@ -553,10 +555,10 @@ GoogleTest_LdFlags = -lpthread -L$(extern)/googletest-build -lgtest
 
 $(GoogleTest)-cmd = \
 	cd $(build)/googletest \
-	&& $(ToolchainCmake) $(extern)/googletest/googletest -G Ninja >/dev/null \
-	&& $(ToolchainEnv) ninja
+	&& cmake $(extern)/googletest/googletest -G Ninja >/dev/null \
+	&& ninja
 
-$(GoogleTest): $(toolchain)
+$(GoogleTest):
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)rm -rf $(build)/googletest
 	$(V1)mkdir -p $(build)/googletest
@@ -586,7 +588,7 @@ intelTbbUrlBase = https://www.threadingbuildingblocks.org/sites/default/files/so
 $(CachedTbbTarball):
 	$(call wget,$(CachedTbbTarball),$(intelTbbUrlBase)$(notdir $(CachedTbbTarball)))
 
-$(intelTbb): $(CachedTbbTarball) $(toolchain)
+$(intelTbb): $(CachedTbbTarball)
 	$(call unpack-tar,$(intelTbbDir),$<,zxf)
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)cd $(intelTbbDir) && $(MAKE) clean >/dev/null
@@ -616,7 +618,7 @@ $(Libclc)-cmd = \
 	cd $(LibclcDir) && ./configure.py \
 	--with-llvm-config=$(LlvmBuild)/bin/llvm-config && $(MAKE)
 
-$(Libclc): toolchain
+$(Libclc):
 	$(call print-task,BUILD,$@,$(TaskMisc))
 	$(V1)$($(Libclc)-cmd)
 
@@ -638,7 +640,6 @@ else
 OpenCL_LdFlags = -framework OpenCL
 endif
 OpenCL = $(extern)/opencl/include/cl.hpp
-$(OpenCL): toolchain
 
 
 #
@@ -967,31 +968,30 @@ CxxTargets += $(root)/playground/sc/sc
 #
 # src/
 #
-src = $(root)/src
 
 #
 # src/labm8
 #
-Python2SetupTestDirs += $(src)/labm8
-# Python3SetupTestDirs += $(src)/labm8
-PyLintSources += $(wildcard $(src)/labm8/labm8/*.py)
+Python2SetupTestDirs += $(root)/src/labm8
+# Python3SetupTestDirs += $(root)/src/labm8
+PyLintSources += $(wildcard $(root)/src/labm8/labm8/*.py)
 
 
 #
 # src/omnitune
 #
-# Python2SetupTestDirs += $(src)/omnitune
-PyLintSources += $(wildcard $(src)/omnitune/omnitune/*.py)
+# Python2SetupTestDirs += $(root)/src/omnitune
+PyLintSources += $(wildcard $(root)/src/omnitune/omnitune/*.py)
 
 # Omnitune depends on labm8:
-$(src)/omnitune/.python2.install.log: $(src)/labm8/.python2.install.log
+$(root)/src/omnitune/.python2.install.log: $(root)/src/labm8/.python2.install.log
 
 
 #
 # src/phd
 #
-phdSrc = $(src)/phd/src
-phdInclude = $(src)/phd/include
+phdSrc = $(root)/src/phd/src
+phdInclude = $(root)/src/phd/include
 
 phd = $(phdSrc)/libphd.so
 
@@ -1128,7 +1128,8 @@ CxxFlags = \
 	$(CxxOptimisationFlags) \
 	$(CxxDebugFlags) \
 	-isystem $(build)/llvm/include \
-	-std=c++1z \
+	-std=c++11 \
+	-stdlib=libc++ -isystem$(src)/llvm/3.9.0/include \
 	-pedantic \
 	-Weverything \
 	-Wno-c++98-compat \
@@ -1370,14 +1371,11 @@ install: $(InstallTargets)
 DocStrings += "install: install files"
 
 
-########################################################################
-#                            Toolchain
-
 #
-# LLVM Toolchain
+# LLVM
 #
 LlvmVersion := 3.9.0
-LlvmSrc := $(cache)/llvm/$(LlvmVersion)
+LlvmSrc := $(src)/llvm/$(LlvmVersion)
 LlvmBuild := $(build)/llvm/$(LlvmVersion)
 LlvmLibDir := $(LlvmBuild)/lib
 LlvmConfig := $(LlvmBuild)/bin/llvm-config
@@ -1387,18 +1385,6 @@ LlvmCMakeFlags := \
 	-DLLVM_TARGETS_TO_BUILD=X86 \
 	-G Ninja -Wno-dev \
 	$(NULL)
-
-CC := $(LlvmBuild)/bin/clang
-CXX := $(LlvmBuild)/bin/clang++
-ToolchainCxxFlags := \
-	-Wno-unused-command-line-argument \
-	$(NULL)
-ToolchainEnv := \
-	CC=$(CC) \
-	CXX=$(CXX) \
-	LD_LIBRARY_PATH=$(LlvmLibDir) \
-	$(NULL)
-ToolchainCmake := $(ToolchainEnv) cmake	-DCMAKE_CXX_FLAGS="$(ToolchainCxxFlags)"
 
 # Flags to build against LLVM + Clang toolchain
 ClangLlvm_CxxFlags = \
@@ -1445,64 +1431,10 @@ ClangLlvm_LdFlags = \
 # TODO: -lncurses on some systems, not -lcurses
 
 # Toolchain dependencies:
-$(CC) $(CXX): $(toolchain)
 $(CTargets) $(CObjects): $(CC)
 $(CxxTargets) $(CxxObjects): $(CXX)
 
-LlvmUrlBase := http://llvm.org/releases/$(LlvmVersion)/
-CachedLlvmComponents := \
-	llvm \
-	cfe \
-	clang-tools-extra \
-	compiler-rt \
-	$(NULL)
-LlvmTar := -$(LlvmVersion).src.tar.xz
-
-CachedLlvmTarballs = $(addprefix $(cache)/,$(addsuffix $(LlvmTar),$(CachedLlvmComponents)))
-
-# Fetch LLVM tarballs to local cache.
-$(cache)/%$(LlvmTar):
-	$(call wget,$@,$(LlvmUrlBase)$(notdir $@))
-
-# Unpack an LLVM Tarball.
-#
-# Arguments:
-#   $1 (str) Target directory
-#   $2 (str) Source tarball
-#
-define unpack-llvm-tar
-	$(call unpack-tar,$(LlvmSrc)/$1,$(cache)/$2$(LlvmTar),-xf)
-endef
-
-# Unpack LLVM tree from cached tarballs.
-$(LlvmSrc): $(CachedLlvmTarballs)
-	$(call unpack-llvm-tar,,llvm)
-	$(call unpack-llvm-tar,tools/clang,cfe)
-	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
-	$(call unpack-llvm-tar,projects/compiler-rt,compiler-rt)
-
-# Build LLVM.
-$(LlvmBuild)/bin/llvm-config: $(LlvmSrc)
-	$(call print-task,BUILD,LLVM toolchain,$(TaskMisc))
-	$(V1)rm -rf $(LlvmBuild)
-	$(V1)mkdir -p $(LlvmBuild)
-	$(V1)cd $(LlvmBuild) && cmake $(LlvmSrc) $(LlvmCMakeFlags) >/dev/null
-	$(V1)cd $(LlvmBuild) && ninja
-
-toolchain: $(toolchain)
-DocStrings += "toolchain: build toolchain"
-
-.PHONY: clean-toolchain
-clean-toolchain:
-	$(V1)rm -fv $(toolchain)
-	$(V1)rm -fv -r $(LlvmBuild)
-DocStrings += "clean-toolchain: remove toolchain build"
-
-.PHONY: distclean-toolchain
-distclean-toolchain: clean-toolchain
-	$(V1)rm -fv -r $(LlvmSrc)
-DocStrings += "distclean-toolchain: remove *all* toolchain files"
-
+include $(root)/make/llvm.make
 
 #
 # Cache
@@ -1538,7 +1470,7 @@ DocStrings += "clean: remove generated files"
 
 distclean: clean $(DistcleanTargets)
 	$(V1)rm -fv $(sort $(DistcleanFiles))
-DocStrings += "distclean: remove *all* generated files and toolchain"
+DocStrings += "distclean: remove *all* generated files"
 
 
 #
