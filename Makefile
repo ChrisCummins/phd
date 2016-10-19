@@ -1141,7 +1141,7 @@ CxxDebugFlags = $(CxxDebugFlags_$(D))
 CxxFlags = \
 	$(CxxOptimisationFlags) \
 	$(CxxDebugFlags) \
-	-isystem $(build)/llvm/ \
+	-isystem $(build)/llvm/include \
 	-std=c++1z \
 	-pedantic \
 	-Weverything \
@@ -1407,9 +1407,9 @@ DocStrings += "install: install files"
 #
 # LLVM Toolchain
 #
-LlvmVersion := 3.8.1
-LlvmSrc := $(build)/llvm
-LlvmBuild := $(LlvmSrc)/build
+LlvmVersion := 3.9.0
+LlvmSrc := $(cache)/llvm/$(LlvmVersion)
+LlvmBuild := $(build)/llvm/$(LlvmVersion)
 LlvmLibDir := $(LlvmBuild)/lib
 LlvmConfig := $(LlvmBuild)/bin/llvm-config
 LlvmCMakeFlags := \
