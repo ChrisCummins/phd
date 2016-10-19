@@ -86,7 +86,7 @@ ArgStrings += "O=[0,1]: enable optimisations in generated files (default=$(O_def
 # Threading controls:
 #
 threads_default := 4
-nproc := $(shell which nproc 2>&1 >/dev/null && nproc || echo $(threads_default))
+nproc := $(shell which nproc 2>/dev/null >/dev/null && nproc || echo $(threads_default))
 threads ?= $(shell echo "$(nproc) * 2" | bc -l)
 ArgStrings += "threads=[1+]: set number of build threads (default=$(threads_default))"
 
@@ -347,8 +347,21 @@ define pylint
 endef
 
 
-clang-tidy-cmd = $(CLANGTIDY) $1 \
-	-checks=-clang-analyzer-security.insecureAPI.rand \
+# Clang-tidy configuration. Disabled checks:
+#
+#    insecureAPI.rand - On Mac OS X it suggests using BSD-system's
+#                       arc4random(), which is not available on Linux
+#                       builds.
+#    unused-arg       - It was complaining about how '-std=libc++' was
+#                       unused.
+#
+clang-tidy-disabled-checks = \
+	clang-analyzer-security.insecureAPI.rand \
+	clang-diagnostic-unused-command-line-argument \
+	$(NULL)
+clang-tidy-checks-arg = -checks=-$(strip \
+	$(call join-with,$(comma)-,$(clang-tidy-disabled-checks)))
+clang-tidy-cmd = $(ToolchainEnv) $(CLANGTIDY) $1 $(clang-tidy-checks-arg) \
 	-- $(CxxFlags) $2
 
 # Run clang-tidy on input.
@@ -392,7 +405,7 @@ python-setup-install-cmd = \
 #   $1 (str) Python executable
 #   $2 (str) Source directory
 define python-setup-install
-	$(call print-task,INSTALL,$1: $2,$(TaskInstall))
+	$(call print-task,INSTALL,$(strip $1): $(strip $2),$(TaskInstall))
 	$(V1)$(python-setup-install-cmd)
 endef
 
@@ -682,16 +695,6 @@ $(lab)/lm/benchmarks_LdFlags = $(phd_LdFlags)
 
 
 #
-# lab/ml
-#
-# FIXME: Check link errors for rewriter
-# CxxTargets += $(lab)/ml/rewriter
-
-$(lab)/ml/rewriter.o_CxxFlags = $(ClangLlvm_CxxFlags)
-$(lab)/ml/rewriter_LdFlags = $(ClangLlvm_LdFlags)
-
-
-#
 # lab/patterns
 #
 PatternsHeaders = $(wildcard $(lab)/patterns/*.hpp)
@@ -886,7 +889,7 @@ CxxTargets += $(patsubst %.cpp,%,$(LearnPcCxxSources))
 
 $(learn)/pc_CxxFlags = $(phd_CxxFlags)
 $(learn)/pc_LdFlags = $(phd_LdFlags)
-$(LearnPcCxxObjects): $(phd)
+$(LearnPcCxxObjects): $(phd) $(GoogleBenchmark) $(GoogleTest)
 
 
 #
@@ -991,6 +994,9 @@ PyLintSources += $(wildcard $(src)/labm8/labm8/*.py)
 Python2SetupInstallDirs += $(src)/omnitune
 PyLintSources += $(wildcard $(src)/omnitune/omnitune/*.py)
 
+# Omnitune depends on labm8:
+$(src)/omnitune/.python2.install.log: $(src)/labm8/.python2.install.log
+
 
 #
 # src/phd
@@ -1023,15 +1029,20 @@ phd_CxxFlags = $($(phdSrc)_CxxFlags)
 phd_LdFlags = $($(phdSrc)_LdFlags)
 
 
+#
 # thesis/
+#
 AutotexTargets += $(root)/thesis/thesis.pdf
 
+#
 # tools/
+#
 tools = $(root)/tools
 
 pgit = $(PREFIX)/bin/pgit
+pmake = $(PREFIX)/bin/pmake
 
-$(pgit): $(root)/tools/pgit
+$(pgit): $(tools)/pgit
 	$(call install,$@,$<,0755)
 
 InstallTargets += $(pgit)
@@ -1152,6 +1163,15 @@ CxxFlags = \
 	-Wno-weak-vtables \
 	$(NULL)
 
+# Compile object file from C++ source. Pull in flags from three
+# variables: Global, directory-local, and file-local.
+#
+# To compile object file /path/foo.o from /path/foo.cpp:
+#
+#     $(CxxFlags)              - Global flags
+#     $(/path_CxxFlags)        - Directory-local flags
+#     $(/path/foo.o_CxxFlags)  - File-local flags
+#
 %.o: %.cpp
 	$(call cxx-compile-o,$@,$<,\
 		$($(patsubst %/,%,$@)_CxxFlags) \
@@ -1455,6 +1475,7 @@ ClangLlvm_LdFlags = \
 	-lcurses \
 	-ldl \
 	$(NULL)
+# TODO: -lncurses on some systems, not -lcurses
 
 # Toolchain dependencies:
 $(CC) $(CXX): $(toolchain)
@@ -1467,7 +1488,7 @@ CachedLlvmComponents := \
 	cfe \
 	clang-tools-extra \
 	compiler-rt \
-	$(NONE)
+	$(NULL)
 LlvmTar := -$(LlvmVersion).src.tar.xz
 
 CachedLlvmTarballs = $(addprefix $(cache)/,$(addsuffix $(LlvmTar),$(CachedLlvmComponents)))
