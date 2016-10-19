@@ -106,6 +106,7 @@ V2 = $(__verbosity_2_$(V))
 #                         User Configuration
 CC ?= gcc
 CXX ?= g++
+CLANGTIDY ?= clang-tidy
 SUDO ?= sudo
 
 # Install prefix:
@@ -436,40 +437,7 @@ extern := $(root)/extern
 #
 # extern/benchmark
 #
-GoogleBenchmarkVersion := 1.0.0
-# TODO: Download https://github.com/google/benchmark/archive/v1.0.0.tar.gz
-# And unpack into src cache
-GoogleBenchmarkSrc := $(extern)/benchmark
-GoogleBenchmarkBuild := $(build)/benchmark/$(GoogleBenchmarkVersion)
-GoogleBenchmark = $(GoogleBenchmarkBuild)/libbenchmark.a
-GoogleBenchmark_CxxFlags = \
-	-isystem $(extern)/benchmark/include -Wno-global-constructors
-GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
-
-# Build flags
-GoogleBenchmarkCMakeFlags = \
-	-DCMAKE_BUILD_TYPE=Release
-$(GoogleBenchmark)-cmd = \
-	cd $(GoogleBenchmarkBuild) \
-	&& cmake $(GoogleBenchmarkSrc) -G Ninja >/dev/null \
-	&& ninja
-
-$(GoogleBenchmark):
-	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(V1)rm -rf $(GoogleBenchmarkBuild)
-	$(V1)mkdir -p $(GoogleBenchmarkBuild)
-	$(V1)$($(GoogleBenchmark)-cmd)
-	$(V1)ln -s src/libbenchmark.a $@
-
-googlebenchmark: $(GoogleBenchmark)
-DocStrings += "googlebenchmark: build Google benchmark library"
-
-.PHONY: distclean-googlebenchmark
-distclean-googlebenchmark:
-	$(V1)rm -fv -r $(extern)/benchmark/build
-
-DistcleanTargets += distclean-googlebenchmark
-
+include make/googlebenchmark.make
 
 #
 # extern/boost
@@ -547,31 +515,7 @@ DistcleanTargets += distclean-clsmith
 #
 # extern/googletest
 #
-GoogleTest = $(build)/googletest/libgtest.a
-GoogleTest_CxxFlags = \
-	-isystem $(extern)/googletest/googletest/include \
-	$(NULL)
-GoogleTest_LdFlags = -lpthread -L$(extern)/googletest-build -lgtest
-
-$(GoogleTest)-cmd = \
-	cd $(build)/googletest \
-	&& cmake $(extern)/googletest/googletest -G Ninja >/dev/null \
-	&& ninja
-
-$(GoogleTest):
-	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(V1)rm -rf $(build)/googletest
-	$(V1)mkdir -p $(build)/googletest
-	$(V1)$($(GoogleTest)-cmd)
-
-googletest: $(GoogleTest)
-DocStrings += "googletest: build Google Test library"
-
-.PHONY: distclean-googletest
-distclean-googletest:
-	$(V1)rm -fv -r $(extern)/googletest-build
-
-DistcleanTargets += distclean-googletest
+include make/googletest.make
 
 
 #
@@ -615,8 +559,7 @@ Libclc_CxxFlags = -Dcl_clang_storage_class_specifiers \
 	-target nvptx64-nvidia-nvcl -x cl
 
 $(Libclc)-cmd = \
-	cd $(LibclcDir) && ./configure.py \
-	--with-llvm-config=$(LlvmBuild)/bin/llvm-config && $(MAKE)
+	cd $(LibclcDir) && ./configure.py && $(MAKE)
 
 $(Libclc):
 	$(call print-task,BUILD,$@,$(TaskMisc))
@@ -634,10 +577,10 @@ DistcleanTargets += distclean-libclc
 #
 OpenCL_CFlags = -I$(extern)/opencl/include
 OpenCL_CxxFlags = $(OpenCL_CFlags)
-ifeq ($(UNAME), Linux)
-OpenCL_LdFlags = -lOpenCL
-else
+ifeq ($(UNAME),Darwin)
 OpenCL_LdFlags = -framework OpenCL
+else
+OpenCL_LdFlags = -lOpenCL
 endif
 OpenCL = $(extern)/opencl/include/cl.hpp
 
@@ -730,7 +673,7 @@ $(StlTestsObjects): $(StlHeaders) $(phd) $(GoogleTest)
 $(lab)/stl/tests/%.o: $(lab)/stl/tests/%.cpp
 
 $(lab)/stl/tests/tests: $(StlTestsObjects)
-CxxTargets += $(lab)/stl/tests/tests
+# CxxTargets += $(lab)/stl/tests/tests
 $(lab)/stl/tests_CxxFlags = $(Stl_CxxFlags) $(phd_CxxFlags)
 $(lab)/stl/tests_LdFlags = $(phd_LdFlags)
 
@@ -743,7 +686,7 @@ $(StlBenchmarksObjects): $(StlHeaders) $(phd)
 $(lab)/stl/benchmarks/%.o: $(lab)/stl/benchmarks/%.cpp
 
 $(lab)/stl/benchmarks/benchmarks: $(StlBenchmarksObjects)
-CxxTargets += $(lab)/stl/benchmarks/benchmarks
+# CxxTargets += $(lab)/stl/benchmarks/benchmarks
 $(lab)/stl/benchmarks_CxxFlags = $(Stl_CxxFlags) $(phd_CxxFlags)
 $(lab)/stl/benchmarks_LdFlags = $(phd_LdFlags)
 
@@ -1026,22 +969,15 @@ AutotexTargets += $(root)/thesis/thesis.pdf
 #
 # tools/
 #
-tools = $(root)/tools
-
 pgit = $(PREFIX)/bin/pgit
-pmake = $(PREFIX)/bin/pmake
-
-$(pgit): $(tools)/pgit
+$(pgit): $(root)/tools/pgit
 	$(call install,$@,$<,0755)
-
 InstallTargets += $(pgit)
 
 # make_tools/
 pmake = $(PREFIX)/bin/pmake
-
-$(pmake): $(tools)/make_tools/pmake
+$(pmake): $(root)/make_tools/pmake
 	$(call install,$@,$<,0755)
-
 InstallTargets += $(pmake)
 
 
@@ -1049,313 +985,14 @@ InstallTargets += $(pmake)
 #                         Build rules
 
 
-#
-# C
-#
-BuildTargets += $(CTargets)
+include make/C.make
+include make/Cxx.make
+include make/ld.make
+include make/latex.make
+include make/python.make
 
-CTargetsObjects = $(addsuffix .o, $(CTargets))
-CTargetsSources = $(addsuffix .c, $(CTargets))
-CObjects += $(CTargetsObjects)
-
-CTargets: $(CTargetsObjects)
-CTargetsObjects: $(CTargetsSources)
-
-CleanFiles += $(CTargets) $(CObjects)
-
-# Compiler flags:
-COptimisationFlags_0 = -O0
-COptimisationFlags_1 = -O2
-COptimisationFlags = $(COptimisationFlags_$(O))
-
-# Debug flags:
-CDebugFlags_1 = -g
-CDebugFlags = $(CDebugFlags_$(D))
-
-CFlags = \
-	$(COptimisationFlags) \
-	$(CDebugFlags) \
-	-std=c11 \
-	-pedantic \
-	-Weverything \
-	-Wno-bad-function-cast \
-	-Wno-double-promotion \
-	-Wno-missing-prototypes \
-	-Wno-missing-variable-declarations \
-	-Wno-unused-parameter \
-	$(NULL)
-
-%.o: %.c
-	$(call c-compile-o,$@,$<,\
-		$($(patsubst %/,%,$@)_CFlags) \
-		$($(patsubst %/,%,$(dir $@))_CFlags))
-
-c: $(CTargets)
-DocStrings += "c: build C targets"
-
-.PHONY: print-cc
-print-cc:
-	$(V2)echo $(c-compile-o-cmd) $($(PMAKE_INVOC_DIR)_CxxFlags)
-DocStrings += "print-cc: print cc compiler invocation"
-
-
-#
-# C++
-#
-CLANGTIDY := $(build)/llvm/build/bin/clang-tidy
-
-CxxTargetsObjects = $(addsuffix .o, $(CxxTargets))
-CxxTargetsSources = $(addsuffix .cpp, $(CxxTargets))
-CxxObjects += $(CxxTargetsObjects)
-
-# Source -> object -> target
-BuildTargets += $(CxxTargets)
-CxxTargets: $(CxxTargetsObjects)
-CxxTargetsObjects: $(CxxTargetsSources)
-
-CleanFiles += $(CxxTargets) $(CxxObjects)
-
-# Compiler flags:
-
-# Inherit optimisation/debug flags from C config:
-CxxOptimisationFlags_$(O) = $(COptimisationFlags_$(O))
-CxxOptimisationFlags = $(CxxOptimisationFlags_$(O))
-
-CxxDebugFlags_$(D) = $(CDebugFlags_$(D))
-CxxDebugFlags = $(CxxDebugFlags_$(D))
-
-CxxFlags = \
-	$(CxxOptimisationFlags) \
-	$(CxxDebugFlags) \
-	-isystem $(build)/llvm/include \
-	-std=c++11 \
-	-stdlib=libc++ -isystem$(src)/llvm/3.9.0/include \
-	-pedantic \
-	-Weverything \
-	-Wno-c++98-compat \
-	-Wno-c++98-compat-pedantic \
-	-Wno-documentation \
-	-Wno-documentation-unknown-command \
-	-Wno-double-promotion \
-	-Wno-exit-time-destructors \
-	-Wno-float-equal \
-	-Wno-global-constructors \
-	-Wno-missing-braces \
-	-Wno-missing-prototypes \
-	-Wno-missing-variable-declarations \
-	-Wno-padded \
-	-Wno-switch-enum \
-	-Wno-unused-parameter \
-	-Wno-weak-vtables \
-	$(NULL)
-
-# Compile object file from C++ source. Pull in flags from three
-# variables: Global, directory-local, and file-local.
-#
-# To compile object file /path/foo.o from /path/foo.cpp:
-#
-#     $(CxxFlags)              - Global flags
-#     $(/path_CxxFlags)        - Directory-local flags
-#     $(/path/foo.o_CxxFlags)  - File-local flags
-#
-%.o: %.cpp
-	$(call cxx-compile-o,$@,$<,\
-		$($(patsubst %/,%,$@)_CxxFlags) \
-		$($(patsubst %/,%,$(dir $@))_CxxFlags))
-
-cpp: $(CxxTargets)
-DocStrings += "cpp: build C++ targets"
-
-.PHONY: print-cxx
-print-cxx:
-	$(V2)echo $(cxx-compile-o-cmd) $($(PMAKE_INVOC_DIR)_CxxFlags)
-DocStrings += "print-cxx: print cxx compiler invocation"
-
-
-#
-# Cpplint
-#
-CPPLINT := $(root)/make_tools/cpplint.py
-
-CxxLintFilterFlags := \
-	build/c++11 \
-	build/header_guard \
-	build/include_order \
-	legal \
-	readability/streams \
-	readability/todo \
-	runtime/references \
-	$(NULL)
-CxxLintFilters = -$(strip $(call join-with,$(comma)-,\
-			$(strip $(CxxLintFilterFlags))))
-CxxLintFlags = --root=include --filter=$(CxxLintFilters)
-
-# Deduce:
-CppLintTargets = $(addsuffix .cpplint, $(CppLintSources))
-BuildTargets += $(CppLintTargets)
-CleanFiles += $(CppLintTargets)
-
-%.cpplint: %
-	$(call print-task,CPPLINT,$@,$(TaskAux))
-	$(call cpplint,$<)
-
-
-#
-# Pylint - pep8
-#
-PYLINT := pep8
-
-PyLintFlags := \
-	--show-source \
-	--ignore=E231,E701 \
-	$(NULL)
-PyLintTargets = $(addsuffix .pylint, $(PyLintSources))
-BuildTargets += $(PyLintTargets)
-CleanFiles += $(PyLintTargets)
-
-%.pylint: %
-	$(call print-task,PYLINT,$@,$(TaskAux))
-	$(call pylint,$@,$<)
-
-
-lint: $(CppLintTargets) $(PyLintTargets)
-DocStrings += "lint: build lint files"
-
-
-#
-# Linker
-#
-# TODO: Clang picks the linker for us, and will default to using the
-# system linker. I would prefer to use LLVM's lld linker, but in
-# initial tests I found that it wasn't up to the task. Perhaps with a
-# later release I will give this another punt.
-LD := $(CXX)
-
-LdFlags =
-
-%: %.o
-	$(call o-link,$@,$(filter %.o,$^),\
-		$($(patsubst %/,%,$@)_CxxFlags) \
-		$($(patsubst %/,%,$(dir $@))_CxxFlags) \
-		$($(patsubst %/,%,$@)_LdFlags) \
-		$($(patsubst %/,%,$(dir $@))_LdFlags))
-
-.PHONY: print-ld
-print-ld:
-	$(V2)echo $(o-link-cmd) $($(PMAKE_INVOC_DIR)_CxxFlags) \
-		$($(PMAKE_INVOC_DIR)_LdFlags)
-DocStrings += "print-ld: print linker invocation"
-
-
-#
-# LaTeX
-#
-BuildTargets += $(AutotexTargets)
-
-AutotexDirs = $(dir $(AutotexTargets))
-AutotexDepFiles = $(addsuffix .autotex.deps, $(AutotexDirs))
-AutotexLogFiles = $(addsuffix .autotex.log, $(AutotexDirs))
-
-# Autotex does it's own dependency analysis, so always run it:
-.PHONY: $(AutotexTargets)
-$(AutotexTargets):
-	$(V2)$(root)/make_tools/autotex.sh make $(patsubst %.pdf,%,$@)
-
-# File extensions to remove in LaTeX build directories:
-LatexBuildfileExtensions = \
-	-blx.bib \
-	.acn \
-	.acr \
-	.alg \
-	.aux \
-	.bbl \
-	.bcf \
-	.blg \
-	.dvi \
-	.fdb_latexmk \
-	.glg \
-	.glo \
-	.gls \
-	.idx \
-	.ilg \
-	.ind \
-	.ist \
-	.lof \
-	.log \
-	.lol \
-	.lot \
-	.maf \
-	.mtc \
-	.mtc0 \
-	.nav \
-	.nlo \
-	.out \
-	.pdfsync \
-	.ps \
-	.run.xml \
-	.snm \
-	.synctex.gz \
-	.tdo \
-	.toc \
-	.vrb \
-	.xdy \
-	$(NULL)
-
-LatexBuildDirs = $(AutotexDirs)
-
-# Discover files to remove using the shell's `find' tool:
-LatexCleanFiles = $(shell find $(LatexBuildDirs) \
-	-name '*$(call join-with,' -o -name '*, $(LatexBuildfileExtensions))')
-
-CleanFiles += \
-	$(AutotexTargets) \
-	$(AutotexDepFiles) \
-	$(AutotexLogFiles) \
-	$(LatexCleanFiles) \
-	$(NULL)
-
-tex: $(AutotexTargets)
-DocStrings += "tex: build all LaTeX targets"
-
-
-#
-# Python (2 and 3)
-#
-Python2SetupTestLogs = $(addsuffix /.python2.test.log, \
-	$(Python2SetupTestDirs))
-
-Python3SetupTestLogs = $(addsuffix /.python3.test.log, \
-	$(Python3SetupTestDirs))
-
-.PHONY: \
-	$(Python2SetupTestLogs) \
-	$(Python3SetupTestLogs) \
-	$(NULL)
-
-$(Python2SetupTestLogs):
-	$(call python-setup-test,python2,$(patsubst %/,%,$(dir $@)))
-
-$(Python3SetupTestLogs):
-	$(call python-setup-test,python3,$(patsubst %/,%,$(dir $@)))
-
-TestTargets += $(Python2SetupTestLogs) $(Python3SetupTestLogs)
-
-# Clean-up:
-Python2CleanDirs = $(sort $(Python2SetupTestDirs))
-Python3CleanDirs = $(sort $(Python3SetupTestDirs))
-
-.PHONY: clean-python
-clean-python:
-	$(V1)$(call python-setup-clean,python2,$(Python2CleanDirs))
-	$(V1)$(call python-setup-clean,python3,$(Python3CleanDirs))
-
-CleanTargets += clean-python
-
-CleanFiles += \
-	$(Python2SetupTestLogs) \
-	$(Python3SetupTestLogs) \
-	$(NULL)
-
+include make/cpplint.make
+include make/pylint.make
 
 #
 # Testing
@@ -1374,75 +1011,7 @@ DocStrings += "install: install files"
 #
 # LLVM
 #
-LlvmVersion := 3.9.0
-LlvmSrc := $(src)/llvm/$(LlvmVersion)
-LlvmBuild := $(build)/llvm/$(LlvmVersion)
-LlvmLibDir := $(LlvmBuild)/lib
-LlvmConfig := $(LlvmBuild)/bin/llvm-config
-LlvmCMakeFlags := \
-	-DCMAKE_BUILD_TYPE=Release \
-	-DLLVM_ENABLE_ASSERTIONS=true \
-	-DLLVM_TARGETS_TO_BUILD=X86 \
-	-G Ninja -Wno-dev \
-	$(NULL)
-
-# Flags to build against LLVM + Clang toolchain
-ClangLlvm_CxxFlags = \
-	$(shell $(LlvmConfig) --cxxflags) \
-	-isystem $(shell $(LlvmConfig) --src-root)/tools/clang/include \
-	-isystem $(shell $(LlvmConfig) --obj-root)/tools/clang/include \
-	-fno-rtti \
-	$(NULL)
-
-ClangLlvm_LdFlags = \
-	$(shell $(LlvmConfig) --system-libs) \
-	-L$(shell $(LlvmConfig) --libdir) \
-	-ldl \
-	-lclangTooling \
-	-lclangToolingCore \
-	-lclangFrontend \
-	-lclangDriver \
-	-lclangSerialization \
-	-lclangCodeGen \
-	-lclangParse \
-	-lclangSema \
-	-lclangStaticAnalyzerFrontend \
-	-lclangStaticAnalyzerCheckers \
-	-lclangStaticAnalyzerCore \
-	-lclangAnalysis \
-	-lclangARCMigrate \
-	-lclangRewriteFrontend \
-	-lclangRewrite \
-	-lclangEdit \
-	-lclangAST \
-	-lclangLex \
-	-lclangBasic \
-	-lclang \
-	-ldl \
-	$(shell $(LlvmConfig) --libs) \
-	-pthread \
-	-lLLVMCppBackendCodeGen -lLLVMTarget -lLLVMMC \
-	-lLLVMObject -lLLVMCore -lLLVMCppBackendInfo \
-	-ldl -lcurses \
-	-lLLVMSupport \
-	-lcurses \
-	-ldl \
-	$(NULL)
-# TODO: -lncurses on some systems, not -lcurses
-
-# Toolchain dependencies:
-$(CTargets) $(CObjects): $(CC)
-$(CxxTargets) $(CxxObjects): $(CXX)
-
 include $(root)/make/llvm.make
-
-#
-# Cache
-#
-.PHONY: clean-cache
-clean-cache:
-	$(V1)rm -rf $(cache)
-DocStrings += "clean-cache: remove local cache in $(cache)"
 
 
 #
@@ -1515,55 +1084,3 @@ version-str = phd-$(shell $(git-shorthead-cmd))$(shell $(git-dirty-cmd))
 version:
 	$(V2)echo 'phd version $(version-str)'
 DocStrings += "version: show version information"
-
-# Print information. 'make help' helper.
-define print-info
-	echo $1 | xargs printf "    %-10s $2\n"
-endef
-
-print-program-version-cmd = $(shell which $1 &>/dev/null && \
-	{ $1 --version 2>&1 | head -n1; } || { echo not found; })
-
-define print-program-version
-	$(call print-info,$1,$(print-program-version-cmd))
-endef
-
-# Print doc strings:
-.PHONY: help
-help:
-	$(V2)echo "usage: make [argument...] [target...]"
-	$(V2)echo
-	$(V2)echo "values for arguments:"
-	$(V2)echo
-	$(V2)(for var in $(ArgStrings); do echo $$var; done) \
-		| sort --ignore-case | while read var; do \
-		echo $$var | cut -f 1 -d':' | xargs printf "    %-20s "; \
-		echo $$var | cut -d':' -f2-; \
-	done
-	$(V2)echo
-	$(V2)echo "values for targets (default=all):"
-	$(V2)echo
-	$(V2)(for var in $(DocStrings); do echo $$var; done) \
-		| sort --ignore-case | while read var; do \
-		echo $$var | cut -f 1 -d':' | xargs printf "    %-20s "; \
-		echo $$var | cut -d':' -f2-; \
-	done
-	$(V2)echo
-	$(V2)echo "host info:"
-	$(V2)echo
-	$(V2)$(call print-info,name,$(shell uname -n))
-	$(V2)$(call print-info,O/S,$(shell uname -o))
-	$(V2)$(call print-info,arch,$(shell uname -m))
-	$(V2)$(call print-info,threads,$(threads))
-	$(V2)echo
-	$(V2)echo "build essentials:"
-	$(V2)echo
-	$(V2)$(call print-program-version,c++)
-	$(V2)$(call print-program-version,cmake)
-	$(V2)$(call print-program-version,ninja)
-	$(V2)$(call print-program-version,pdflatex)
-	$(V2)$(call print-program-version,pep8)
-	$(V2)$(call print-program-version,python2)
-	$(V2)$(call print-program-version,python3)
-	$(V2)$(call print-program-version,svn)
-	$(V2)echo

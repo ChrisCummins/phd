@@ -1,10 +1,65 @@
 # Build LLVM.
 #
-Llvm = $(build)/llvm/3.9.0/bin/llvm-config
+LlvmVersion := 3.9.0
+LlvmSrc := $(src)/llvm/$(LlvmVersion)
+LlvmBuild := $(build)/llvm/$(LlvmVersion)
+LlvmLibDir := $(LlvmBuild)/lib
+LlvmConfig := $(LlvmBuild)/bin/llvm-config
+Llvm = $(LlvmConfig)
 
+llvm: $(Llvm)
 DocStrings += "llvm: build LLVM"
-DocStrings += "clean-llvm: remove LLVM build"
-DocStrings += "distclean-llvm: remove build and source"
+
+LlvmCMakeFlags := \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DLLVM_ENABLE_ASSERTIONS=true \
+	-DLLVM_TARGETS_TO_BUILD=X86 \
+	-G Ninja -Wno-dev \
+	$(NULL)
+
+# Flags to build against LLVM + Clang toolchain
+ClangLlvm_CxxFlags = \
+	$(shell $(LlvmConfig) --cxxflags) \
+	-isystem $(shell $(LlvmConfig) --src-root)/tools/clang/include \
+	-isystem $(shell $(LlvmConfig) --obj-root)/tools/clang/include \
+	-fno-rtti \
+	$(NULL)
+
+ClangLlvm_LdFlags = \
+	$(shell $(LlvmConfig) --system-libs) \
+	-L$(shell $(LlvmConfig) --libdir) \
+	-ldl \
+	-lclangTooling \
+	-lclangToolingCore \
+	-lclangFrontend \
+	-lclangDriver \
+	-lclangSerialization \
+	-lclangCodeGen \
+	-lclangParse \
+	-lclangSema \
+	-lclangStaticAnalyzerFrontend \
+	-lclangStaticAnalyzerCheckers \
+	-lclangStaticAnalyzerCore \
+	-lclangAnalysis \
+	-lclangARCMigrate \
+	-lclangRewriteFrontend \
+	-lclangRewrite \
+	-lclangEdit \
+	-lclangAST \
+	-lclangLex \
+	-lclangBasic \
+	-lclang \
+	-ldl \
+	$(shell $(LlvmConfig) --libs) \
+	-pthread \
+	-lLLVMCppBackendCodeGen -lLLVMTarget -lLLVMMC \
+	-lLLVMObject -lLLVMCore -lLLVMCppBackendInfo \
+	-ldl -lcurses \
+	-lLLVMSupport \
+	-lcurses \
+	-ldl \
+	$(NULL)
+# TODO: -lncurses on some systems, not -lcurses
 
 LlvmUrlBase := http://llvm.org/releases/$(LlvmVersion)/
 
@@ -48,10 +103,8 @@ $(Llvm): $(LlvmSrc)
 	$(V1)cd $(LlvmBuild) && cmake $(LlvmSrc) $(LlvmCMakeFlags) >/dev/null
 	$(V1)cd $(LlvmBuild) && ninja
 
-.PHONY: clean-llvm distclean-llvm
-
-clean-llvm:
-	$(V1)rm -fv -r $(LlvmBuild)
-
-distclean-llvm: clean-llvm
+.PHONY: distclean-llvm
+distclean-llvm:
 	$(V1)rm -fv -r $(LlvmSrc)
+	$(V1)rm -fv -r $(LlvmBuild)
+DistcleanTargets += distclean-llvm
