@@ -1052,8 +1052,6 @@ InstallTargets += $(pmake)
 #
 # C
 #
-CC := $(build)/llvm/build/bin/clang
-
 BuildTargets += $(CTargets)
 
 CTargetsObjects = $(addsuffix .o, $(CTargets))
@@ -1104,7 +1102,6 @@ DocStrings += "print-cc: print cc compiler invocation"
 #
 # C++
 #
-CXX := $(build)/llvm/build/bin/clang++
 CLANGTIDY := $(build)/llvm/build/bin/clang-tidy
 
 CxxTargetsObjects = $(addsuffix .o, $(CxxTargets))
@@ -1391,14 +1388,14 @@ LlvmCMakeFlags := \
 	-G Ninja -Wno-dev \
 	$(NULL)
 
-Toolchain_CC := $(LlvmBuild)/bin/clang
-Toolchain_CXX := $(LlvmBuild)/bin/clang++
+CC := $(LlvmBuild)/bin/clang
+CXX := $(LlvmBuild)/bin/clang++
 ToolchainCxxFlags := \
 	-Wno-unused-command-line-argument \
 	$(NULL)
 ToolchainEnv := \
-	CC=$(Toolchain_CC) \
-	CXX=$(Toolchain_CXX) \
+	CC=$(CC) \
+	CXX=$(CXX) \
 	LD_LIBRARY_PATH=$(LlvmLibDir) \
 	$(NULL)
 ToolchainCmake := $(ToolchainEnv) cmake	-DCMAKE_CXX_FLAGS="$(ToolchainCxxFlags)"
