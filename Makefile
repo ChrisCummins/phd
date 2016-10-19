@@ -181,7 +181,7 @@ endef
 root := $(PWD)
 build := $(root)/.build
 cache := $(root)/.cache
-toolchain := $(build)/toolchain.build
+toolchain := $(build)/llvm/3.9.0/bin/llvm-config
 
 comma := ,
 space :=
@@ -1486,11 +1486,8 @@ $(LlvmBuild)/bin/llvm-config: $(LlvmSrc)
 	$(call print-task,BUILD,LLVM toolchain,$(TaskMisc))
 	$(V1)rm -rf $(LlvmBuild)
 	$(V1)mkdir -p $(LlvmBuild)
-	$(V1)cd $(LlvmBuild) && cmake .. $(LlvmCMakeFlags) >/dev/null
+	$(V1)cd $(LlvmBuild) && cmake $(LlvmSrc) $(LlvmCMakeFlags) >/dev/null
 	$(V1)cd $(LlvmBuild) && ninja
-
-$(toolchain): $(LlvmBuild)/bin/llvm-config
-	$(V1)date > $(toolchain)
 
 toolchain: $(toolchain)
 DocStrings += "toolchain: build toolchain"
