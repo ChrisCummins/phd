@@ -1143,7 +1143,6 @@ CxxFlags = \
 	$(CxxDebugFlags) \
 	-isystem $(build)/llvm/ \
 	-std=c++1z \
-	-stdlib=libc++ \
 	-pedantic \
 	-Weverything \
 	-Wno-c++98-compat \
@@ -1424,7 +1423,6 @@ Toolchain_CC := $(LlvmBuild)/bin/clang
 Toolchain_CXX := $(LlvmBuild)/bin/clang++
 ToolchainCxxFlags := \
 	-Wno-unused-command-line-argument \
-	-stdlib=libc++ \
 	$(NULL)
 ToolchainEnv := \
 	CC=$(Toolchain_CC) \
