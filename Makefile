@@ -473,30 +473,35 @@ DistcleanTargets += distclean-googlebenchmark
 # extern/boost
 #
 BoostVersion := 1.46.1
-BoostDir := $(build)/boost
-BoostBuild = $(BoostDir)/build
-Boost = $(BoostBuild)/include
+BoostSrc := $(cache)/boost/$(BoostVersion)
+BoostBuild = $(build)/boost/$(BoostVersion)
+Boost = $(BoostBuild)/include/boost/regex.h
 
 CachedBoostTarball = $(cache)/boost_$(subst .,_,$(BoostVersion)).tar.gz
 BoostUrlBase = http://sourceforge.net/projects/boost/files/boost/$(BoostVersion)/
 
+# Download boost tarball
 $(CachedBoostTarball):
 	$(call wget,$(CachedBoostTarball),$(BoostUrlBase)$(notdir $(CachedBoostTarball)))
 
-# NOTE: Even if boost build fails, we don't care. We only need it to
-# copy the headers over for us.
+# Unpack boost tarball
+$(BoostSrc)/bootstrap.sh: $(CachedBoostTarball)
+	$(call unpack-tar,$(BoostSrc),$<,-zxf)
+
+# Build boost. Even if it fails, we don't care. We only need it to copy
+# the headers over for us.
 $(Boost)-cmd = \
-	cd $(BoostDir) \
+	cd $(BoostSrc) \
 	&& ./bootstrap.sh --prefix=$(BoostBuild) >/dev/null \
 	&& ./bjam install >/dev/null || true
 
-$(Boost): $(CachedBoostTarball) $(toolchain)
-	$(call unpack-tar,$(BoostDir),$<,-zxf)
+$(Boost): $(BoostSrc)/bootstrap.sh $(toolchain)
 	$(call print-task,BUILD,boost,$(TaskMisc))
+	$(V1)rm -rf $(BoostBuild)
 	$(V1)mkdir -p $(BoostBuild)
 	$(V1)$($(Boost)-cmd)
 
-Boost_CxxFlags = -isystem $(BoostBuild)/include
+Boost_CxxFlags = -isystem $(BoostBuild)/include/boost/regex.h
 Boost_LdFlags = -L$(BoostBuild)/lib
 
 Boost_filesystem_CxxFlags = $(Boost_CxxFlags)
