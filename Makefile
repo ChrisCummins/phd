@@ -1084,3 +1084,6 @@ version-str = phd-$(shell $(git-shorthead-cmd))$(shell $(git-dirty-cmd))
 version:
 	$(V2)echo 'phd version $(version-str)'
 DocStrings += "version: show version information"
+
+include make/help.make
+
