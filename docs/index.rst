@@ -14,7 +14,6 @@ Contents:
    :maxdepth: 1
    :glob:
 
-   index
    labm8
    modules/*
 
