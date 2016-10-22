@@ -8,8 +8,8 @@ python:
 install:
   - pip install --upgrade pip
   - pip install coveralls
-  - pip install --only-binary=numpy numpy==1.11.2
-  - pip install --only-binary=scipy scipy==0.18.1
+  - pip install --only-binary=numpy
+  - pip install --only-binary=scipy
   - pip install -r requirements.txt
   - python ./setup.py install
 
