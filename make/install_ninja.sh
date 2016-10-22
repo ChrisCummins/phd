@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -eux
 
-wget https://github.com/ninja-build/ninja/releases/download/v1.7.1/ninja-linux.zip
-unzip ninja-linux.zip
+mkdir -p ninja
+cd ninja
+wget https://github.com/ninja-build/ninja/archive/v1.7.1.tar.gz -O ninja.tar.gz
+tar -xf ninja.tar.gz --strip-components=1
+./configure.py --bootstrap
 mv ninja /usr/bin
-
-ninja_path=$(which ninja)
-echo "path to ninja: $ninja_path"
