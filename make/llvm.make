@@ -68,8 +68,8 @@ llvm_LdFlags = \
 	-ldl \
 	$(shell $(LlvmConfig) --libs) \
 	-pthread \
-	-lLLVMCppBackendCodeGen -lLLVMTarget -lLLVMMC \
-	-lLLVMObject -lLLVMCore -lLLVMCppBackendInfo \
+	-lLLVMTarget -lLLVMMC \
+	-lLLVMObject -lLLVMCore \
 	-ldl -lcurses \
 	-lLLVMSupport \
 	-lcurses \
