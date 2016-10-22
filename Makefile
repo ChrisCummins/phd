@@ -25,9 +25,12 @@ PIP3 := pip3
 PYTHON2 := python2
 PIP2 := pip
 
+space :=
+space +=
+
 # source virtualenvs
-env3 := source env3/bin/activate &&
-env2 := source env2/bin/activate &&
+env3 := source env3/bin/activate &&$(space)
+env2 := source env2/bin/activate &&$(space)
 
 # create virtualenvs and install dependencies
 virtualenv: env3/bin/activate env2/bin/activate
