@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
+.DEFAULT: all
+
 # path to virtualenv
 VIRTUALENV := virtualenv
 # path to python3
@@ -26,9 +28,27 @@ PIP3 := pip3
 PYTHON2 := python2
 PIP2 := pip
 
+space :=
+space +=
+
 # source virtualenvs
-env3 := source env3/bin/activate &&
-env2 := source env2/bin/activate &&
+env3 := source env3/bin/activate &&$(space)
+env2 := source env2/bin/activate &&$(space)
+
+# build everything
+all: virtualenv native
+
+# native code
+include make/llvm.make
+
+native := native/rewriter
+
+native: $(native)
+
+native_flags := $(CXXFLAGS) $(llvm_CxxFlags) $(LDFLAGS) $(llvm_LdFlags)
+
+native/rewriter: native/rewriter.cpp $(llvm)
+	$(CXX) $(native_flags) $< -o $@
 
 # create virtualenvs and install dependencies
 virtualenv: env3/bin/activate env2/bin/activate
@@ -49,9 +69,14 @@ test: virtualenv
 	$(env3)python ./setup.py test
 	$(env2)python ./setup.py test
 
-# clean virtualenvs
+# clean compiled files
 .PHONY: clean
 clean:
+	rm -f native/rewriter
+
+# clean everything
+.PHONY: distclean
+distclean: clean distclean-llvm
 	rm -fr env3 env2
 
 # install globally
@@ -81,8 +106,10 @@ docs: install3
 # help text
 .PHONY: help
 help:
-	@echo "make test      Run unit tests in virtualenv"
-	@echo "make clean     Remove virtualenvs"
-	@echo "make install   Install globally"
-	@echo "make docs      Build documentation"
+	@echo "make all        Compile code"
+	@echo "make test       Run unit tests in virtualenv"
+	@echo "make docs       Build documentation"
+	@echo "make install    Install globally"
+	@echo "make clean      Remove compiled files"
+	@echo "make distlcean  Remove all generated files"
 
