@@ -20,22 +20,12 @@ from setuptools import setup
 from setuptools.command.install import install
 from pip.req import parse_requirements
 
+# Because of a bug in scipy setup.py, we have to use 'pip install' to install
+# dependencies rather than using setuptools. See:
+#     https://github.com/scikit-learn/scikit-learn/issues/4164
+#
 install_reqs = parse_requirements('./requirements.txt', session=False)
 reqs = [str(ir.req) for ir in install_reqs]
-
-
-class OverrideInstall(install):
-    """
-    Emulate sequential install of pip install -r requirements.txt
-    To fix numpy bug in scipy, scikit in py2
-
-    Thanks to @eligiblekeng for the fix:
-        https://github.com/scikit-learn/scikit-learn/issues/4164
-    """
-    def run(self):
-        for req in reqs:
-            pip.main(["install", req])
-
 
 setup(name="labm8",
       version="0.0.2",
@@ -47,5 +37,5 @@ setup(name="labm8",
       packages=["labm8"],
       test_suite="nose.collector",
       tests_require=["nose"],
-      cmdclass={"install": OverrideInstall},
+      install_requires=reqs,
       zip_safe=True)

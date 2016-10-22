@@ -18,6 +18,7 @@ env:
     - GH_REPO: github.com/ChrisCummins/labm8.git
 
 script:
+  - pip install -r requirements.txt
   - coverage run --source=labm8 ./setup.py test
 
 after_success:
