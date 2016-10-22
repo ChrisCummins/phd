@@ -17,28 +17,72 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-# path to python3
-PYTHON := python3
 # path to virtualenv
 VIRTUALENV := virtualenv
+# path to python3
+PYTHON3 := python3
+PIP3 := pip3
+# path to python2
+PYTHON2 := python2
+PIP2 := pip
 
+# source virtualenvs
+env3 := source env3/bin/activate &&
+env2 := source env2/bin/activate &&
 
-# Rules to create virtualenv:
+# create virtualenvs and install dependencies
+virtualenv: env3/bin/activate env2/bin/activate
 
-# name of virtualenv (you can leave this)
-VIRTUALENV_BASE := env
+env3/bin/activate:
+	$(VIRTUALENV) -p $(PYTHON3) env3
+	$(env3)pip install -r requirements.txt
+	$(env3)python ./setup.py install
 
-# create virtualenv
-virtualenv: $(VIRTUALENV_BASE)/bin/activate
-$(VIRTUALENV_BASE)/bin/activate:
-	$(VIRTUALENV) -p $(PYTHON) $(VIRTUALENV_BASE)
-
-# source virtualenv
-env := source $(VIRTUALENV_BASE)/bin/activate &&
-
-
-# Targets:
+env2/bin/activate:
+	$(VIRTUALENV) -p $(PYTHON2) env2
+	$(env2)pip install -r requirements.txt
+	$(env2)python ./setup.py install
 
 # run tests
+.PHONY: test
 test: virtualenv
-	$(env)python ./setup.py test
+	$(env3)python ./setup.py test
+	$(env2)python ./setup.py test
+
+# clean virtualenvs
+.PHONY: clean
+clean:
+	rm -fr env3 env2
+
+# install globally
+.PHONY: install install3 install2
+install3:
+	$(PIP3) install -r requirements.txt
+	$(PYTHON3) ./setup.py install
+
+install2:
+	$(PIP2) install -r requirements.txt
+	$(PYTHON2) ./setup.py install
+
+install: install3 install2
+
+# generate documentation
+.PHONY: docs
+docs: install3
+	rm -rf docs/modules
+	mkdir -p docs/modules
+	@for module in $$(cd clgen; ls *.py | grep -v __init__.py); do \
+		cp -v docs/module.rst.template docs/modules/clgen.$${module%.py}.rst; \
+		sed -i "s/@MODULE@/clgen.$${module%.py}/g" docs/modules/clgen.$${module%.py}.rst; \
+		sed -i "s/@MODULE_UNDERLINE@/$$(head -c $$(echo clgen.$${module%.py} | wc -c) < /dev/zero | tr '\0' '=')/" docs/modules/clgen.$${module%.py}.rst; \
+	done
+	$(env3)$(MAKE) -C docs html
+
+# help text
+.PHONY: help
+help:
+	@echo "make test      Run unit tests in virtualenv"
+	@echo "make clean     Remove virtualenvs"
+	@echo "make install   Install globally"
+	@echo "make docs      Build documentation"
+
