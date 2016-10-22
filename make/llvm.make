@@ -137,7 +137,7 @@ LlvmCMakeFlags := -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true \
 $(llvm): $(LlvmSrc)
 	rm -rf $(LlvmBuild)
 	mkdir -p $(LlvmBuild)
-	cd $(LlvmBuild) && cmake $(LlvmSrc) $(LlvmCMakeFlags)
+	cd $(LlvmBuild) && cmake $(LlvmSrc) $(LlvmCMakeFlags) $(LLVM_CMAKE_FLAGS)
 	cd $(LlvmBuild) && ninja
 
 .PHONY: distclean-llvm
