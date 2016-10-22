@@ -119,7 +119,7 @@ help:
 	@echo "make all        Compile code"
 	@echo "make test       Run unit tests in virtualenv"
 	@echo "make install    Install globally"
-	@echo "make docs       Build documentation (requires install)"
+	@echo "make docs       Build documentation (performs partial install)"
 	@echo "make clean      Remove compiled files"
 	@echo "make distlcean  Remove all generated files"
 
