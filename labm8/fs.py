@@ -48,24 +48,25 @@ def abspath(*components):
     return os.path.abspath(path(*components))
 
 
-def basename(path):
+def basename(*components):
     """
     Return the basename of a given file path.
     """
-    return os.path.basename(path)
+    return os.path.basename(path(*components))
 
 
-def dirname(path):
+def dirname(*components):
     """
     Return the directory name of a given file path.
     """
-    return os.path.dirname(path)
+    return os.path.dirname(path(*components))
 
 
 def is_subdir(child, parent):
     """
-    Determine if "child" is a subdirectory of "parent". If child ==
-    parent, returns True.
+    Determine if "child" is a subdirectory of "parent".
+
+    If child == parent, returns True.
     """
     child_path = os.path.realpath(child)
     parent_path = os.path.realpath(parent)
@@ -117,21 +118,21 @@ def pwd():
     return os.getcwd()
 
 
-def exists(path):
+def exists(*components):
     """
     Return whether a file exists.
     """
-    return os.path.exists(path)
+    return os.path.exists(path(*components))
 
 
-def isfile(path):
+def isfile(*components):
     """
     Return whether a path exists, and is a file.
     """
-    return os.path.isfile(path)
+    return os.path.isfile(path(*components))
 
 
-def isexe(path):
+def isexe(*components):
     """
     Return whether a path is an executable file.
 
@@ -154,14 +155,15 @@ def isexe(path):
 
         bool: True if file is executable, else false.
     """
-    return isfile(path) and os.access(path, os.X_OK)
+    _path = path(*components)
+    return isfile(_path) and os.access(_path, os.X_OK)
 
 
-def isdir(path):
+def isdir(*components):
     """
     Return whether a path exists, and is a directory.
     """
-    return os.path.isdir(path)
+    return os.path.isdir(path(*components))
 
 
 def ls(root=".", abspaths=False, recursive=False):
@@ -271,7 +273,7 @@ def lsfiles(root=".", **kwargs):
     return [_path for _path in paths if isfile(path(root, _path))]
 
 
-def rm(path, glob=True):
+def rm(*components, **kwargs):
     """
     Remove a file or directory.
 
@@ -284,12 +286,14 @@ def rm(path, glob=True):
         https://docs.python.org/2/library/glob.html
 
     Arguments:
-        path (string): path to the file or directory to remove. May be
+        *components (string[]): path to the file or directory to remove. May be
           absolute or relative. May contain unix glob
-        glob (bool, optional): whether to perform Unix style pattern
-          expansion of paths.
+        **kwargs: if "glob" is True, perform Unix style pattern expansion of
+          paths (default: True).
     """
-    paths = iglob(path) if glob else [path]
+    _path = path(*components)
+    glob = kwargs.get("glob", True)
+    paths = iglob(_path) if glob else [_path]
 
     for file in paths:
         if isfile(file):
@@ -330,38 +334,41 @@ def cp(src, dst):
         raise IOError("Source '{0}' not found".format(src))
 
 
-def mkdir(path, **kwargs):
+def mkdir(*components, **kwargs):
     """
     Make directory "path", including any required parents. If
     directory already exists, do nothing.
     """
-    if not isdir(path):
-        os.makedirs(path, **kwargs)
-    return path
+    _path = path(*components)
+    if not isdir(_path):
+        os.makedirs(_path, **kwargs)
+    return _path
 
 
 def mkopen(p, *args, **kwargs):
     """
-    A wrapper for the open() builtin which also ensures that the
-    directory exists.
+    A wrapper for the open() builtin which makes parent directories if needed.
     """
     dir = os.path.dirname(p)
     mkdir(dir)
     return open(p, *args, **kwargs)
 
 
-def read(path, rstrip=True, comment_char=None):
+def read(*components, **kwargs):
     """
-    Read file "path" and return a list of lines. If comment_char is
-    set, ignore the contents of lines following the comment_char.
+    Read file and return a list of lines. If comment_char is set, ignore the
+    contents of lines following the comment_char.
 
     Raises:
 
         IOError: if reading path fails
     """
+    rstrip = kwargs.get("rstrip", True)
+    comment_char = kwargs.get("comment_char", None)
+
     ignore_comments = comment_char is not None
 
-    file = open(path)
+    file = open(path(*components))
     lines = file.readlines()
     file.close()
 
@@ -388,18 +395,25 @@ def read(path, rstrip=True, comment_char=None):
         return lines
 
 
-def du(path, human_readable=True):
+def du(*components, **kwargs):
     """
     Get the size of a file in bytes or as a human-readable string.
 
     Arguments:
 
-        path: Path to file.
-        human_readable: If True, return a formatted string, e.g. "976.6 KiB"
+        *components (str[]): Path to file.
+        **kwargs: If "human_readable" is True, return a formatted string,
+          e.g. "976.6 KiB" (default True)
+
+    Returns:
+        int or str: If "human_readble" kwarg is True, return str, else int.
     """
-    if not exists(path):
-        raise Error("file '{}' not found".format(path))
-    size = os.stat(path).st_size
+    human_readable = kwargs.get("human_readable", True)
+
+    _path = path(*components)
+    if not exists(_path):
+        raise Error("file '{}' not found".format(_path))
+    size = os.stat(_path).st_size
     if human_readable:
         return naturalsize(size)
     else:
