@@ -17,7 +17,17 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
+import pip
 from setuptools import setup
+from setuptools.command.install import install
+from pip.req import parse_requirements
+
+# Because of a bug in scipy setup.py, we have to use 'pip install' to install
+# dependencies rather than using setuptools. See:
+#     https://github.com/scikit-learn/scikit-learn/issues/4164
+#
+install_reqs = parse_requirements('./requirements.txt', session=False)
+reqs = [str(ir.req) for ir in install_reqs]
 
 setup(
     name='CLgen',
@@ -32,6 +42,6 @@ setup(
     scripts=["bin/clgen"],
     test_suite='nose.collector',
     tests_require=['nose'],
-    install_requires=[],
+    install_requires=reqs,
     data_files=[],
     zip_safe=False)
