@@ -5,7 +5,12 @@ python:
   - "3.4"
   - "3.5"
 
+before_install:
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo apt-get update -qq
+
 install:
+  - sudo apt-get install -qq gcc-4.8 g++-4.8
   - pip install --upgrade pip
   - pip install coveralls
   - pip install --only-binary=numpy numpy>=1.10.4
@@ -15,8 +20,8 @@ install:
   - python ./setup.py install
 
 script:
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then (CC=gcc-4.8 CXX=g++-4.8 make native); fi
   - python ./setup.py test
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then (make native); fi
 
 notifications:
   email:
