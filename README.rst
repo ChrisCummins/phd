@@ -7,8 +7,7 @@
 
     $ pip install labm8
 
-Supports Pyton 2.7 and 3.3+. See `API
-Documentation <http://chriscummins.cc/labm8/>`__.
+Supports Pyton 2.7 and 3.3+.
 
 Copyright 2015, 2016 Chris Cummins <chrisc.101@gmail.com>.
 
