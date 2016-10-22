@@ -57,6 +57,14 @@ install:
 	$(PYTHON2) ./setup.py install
 	$(PYTHON3) ./setup.py install
 
+.PHONY: docs
+docs:
+	@$(env3)pydoc -w labm8
+	@$(env3)for module in $$(cd labm8; ls *.py | grep -v __init__.py); do \
+			pydoc -w labm8.$${module%.py}; \
+		done
+	cp labm8.html index.html
+
 .PHONY: help
 help:
 	@echo "make test      Run unit tests in virtualenv"
