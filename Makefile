@@ -97,7 +97,7 @@ install: install3 install2
 
 # generate documentation
 .PHONY: docs
-docs: install3
+docs: install
 	rm -rf docs/modules
 	mkdir -p docs/modules
 	@for module in $$(cd clgen; ls *.py | grep -v __init__.py); do \
