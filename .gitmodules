@@ -1,0 +1,3 @@
+[submodule "native/lib/libclc"]
+	path = native/lib/libclc
+	url = https://github.com/llvm-mirror/libclc.git
