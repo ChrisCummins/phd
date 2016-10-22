@@ -16,6 +16,7 @@ install:
 
 script:
   - python ./setup.py test
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then (make native); fi
 
 notifications:
   email:
