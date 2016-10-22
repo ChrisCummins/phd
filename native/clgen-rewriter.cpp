@@ -7,9 +7,9 @@
 //
 //     ./rewriter foo.cl \
 //         -extra-arg=-Dcl_clang_storage_class_specifiers \
-//         -extra-arg=-I/Users/cec/phd/extern/libclc/generic/include \
+//         -extra-arg=-I/path/to/libclc/generic/include \
 //         -extra-arg=-include \
-//         -extra-arg=/Users/cec/phd/extern/libclc/generic/include/clc/clc.h \
+//         -extra-arg=/path/to/libclc/generic/include/clc/clc.h \
 //         -extra-arg=-target -extra-arg=nvptx64-nvidia-nvcl \
 //         -extra-arg=-xcl --
 //
