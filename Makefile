@@ -88,11 +88,11 @@ distclean-virtualenv:
 
 # install globally
 .PHONY: install install3 install2 install-native
-install3: install-native
+install3:
 	$(PIP3) install -r requirements.txt
 	$(PYTHON3) ./setup.py install
 
-install2: install-native
+install2:
 	$(PIP2) install -r requirements.txt
 	$(PYTHON2) ./setup.py install
 
