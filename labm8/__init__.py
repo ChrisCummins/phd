@@ -14,6 +14,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""
+Utils for manipulating quantitative experimental data.
+"""
 import labm8 as lab
 import labm8.io
 

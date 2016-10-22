@@ -14,6 +14,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""
+Time utilities.
+"""
 import datetime
 
 DEFAULT_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"

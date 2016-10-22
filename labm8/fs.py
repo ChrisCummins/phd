@@ -12,6 +12,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""
+High level filesystem interface.
+"""
 import os
 import os.path
 import re

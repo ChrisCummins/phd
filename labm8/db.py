@@ -12,6 +12,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""
+Extended SQL database interface.
+"""
 import atexit
 import csv
 import re

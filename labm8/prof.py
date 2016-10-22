@@ -13,9 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 """
-Profiling module.
-
-Provides a convenient API for timing critical paths in code.
+Profiling API for timing critical paths in code.
 """
 from __future__ import absolute_import
 

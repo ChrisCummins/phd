@@ -14,7 +14,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
-
+#
+"""
+Utils for handling python modules.
+"""
 import imp
 import sys
 

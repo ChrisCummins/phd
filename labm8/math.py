@@ -14,7 +14,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
-
+#
+"""
+Math utils. Import as "labmath" to prevent conflicts with system math package.
+"""
 # Use absolute paths for imports so as to prevent a conflict with the
 # system "math" module.
 from __future__ import absolute_import
