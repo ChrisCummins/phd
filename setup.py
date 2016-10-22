@@ -14,63 +14,38 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
+#
+import pip
 from setuptools import setup
-from sys import version_info
-import os
+from setuptools.command.install import install
+from pip.req import parse_requirements
 
-def program_exists(program):
+install_reqs = parse_requirements('./requirements.txt', session=False)
+reqs = [str(ir.req) for ir in install_reqs]
+
+
+class OverrideInstall(install):
     """
-    Return if a program exists in $PATH.
+    Emulate sequential install of pip install -r requirements.txt
+    To fix numpy bug in scipy, scikit in py2
 
-    Arguments:
-
-        program (str): Name of program.
-
-    Returns:
-
-        bool: True if program name found in system path, else false.
+    Thanks to @eligiblekeng for the fix:
+        https://github.com/scikit-learn/scikit-learn/issues/4164
     """
-    import os
-    for path in os.environ["PATH"].split(os.pathsep):
-        path = path.strip('"')
-        exe_file = os.path.join(path, program)
-        if os.path.isfile(exe_file) and os.access(exe_file, os.X_OK):
-            return True
-    return False
+    def run(self):
+        for req in reqs:
+            pip.main(["install", req])
 
-# FIXME: This seems to induce a race condition when using a
-# parallelised install for both python3 and python2.
-#
-# There are two separate packages implementing a wrapper around
-# weka. Both require weka to be installed.
-#
-# if program_exists("weka") or os.path.exists('/Applications/Weka.app'):
-#     if version_info[0] == 2:
-#         python_weka_wrapper = "python-weka-wrapper"
-#     else:
-#         python_weka_wrapper = "python-weka-wrapper3"
-# else:
-python_weka_wrapper = ""
 
 setup(name="labm8",
-      version="0.0.1",
-      description=("A collection of utilities for collecting and "
-                   "manipulating quantitative experimental data"),
+      version="0.0.2",
+      description="Utils for manipulating quantitative experimental data",
       url="https://github.com/ChrisCummins/labm8",
       author="Chris Cummins",
       author_email="chrisc.101@gmail.com",
-      license="GPL v3",
+      license="GNU General Public License, Version 3",
       packages=["labm8"],
       test_suite="nose.collector",
-      tests_require=[
-          "coverage",
-          "nose"
-      ],
-      install_requires=[
-          "humanize",
-          "numpy",
-          "pandas",
-          "scipy",
-          python_weka_wrapper
-      ],
-      zip_safe=False)
+      tests_require=["nose"],
+      cmdclass={"install": OverrideInstall},
+      zip_safe=True)
