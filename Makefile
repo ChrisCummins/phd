@@ -74,7 +74,7 @@ test: virtualenv
 # clean compiled files
 .PHONY: clean
 clean:
-	rm -f native/rewriter
+	rm -f native/clgen-rewriter
 
 # clean everything
 .PHONY: distclean distclean-virtualenv
