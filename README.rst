@@ -2,6 +2,9 @@
    :alt: labm8
 
 |Build Status| |Coverage Status|
+.. image:: https://readthedocs.org/projects/labm8/badge/?version=latest
+    :target: http://labm8.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
 ::
 
