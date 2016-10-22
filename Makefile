@@ -55,11 +55,13 @@ virtualenv: env3/bin/activate env2/bin/activate
 
 env3/bin/activate:
 	$(VIRTUALENV) -p $(PYTHON3) env3
+	$(env3)pip install -r requirements.devel.txt
 	$(env3)pip install -r requirements.txt
 	$(env3)python ./setup.py install
 
 env2/bin/activate:
 	$(VIRTUALENV) -p $(PYTHON2) env2
+	$(env3)pip install -r requirements.devel.txt
 	$(env2)pip install -r requirements.txt
 	$(env2)python ./setup.py install
 
@@ -75,8 +77,10 @@ clean:
 	rm -f native/rewriter
 
 # clean everything
-.PHONY: distclean
-distclean: clean distclean-llvm
+.PHONY: distclean distclean-virtualenv
+distclean: distclean-virtualenv distclean-llvm
+
+distclean-virtualenv:
 	rm -fr env3 env2
 
 # install globally
