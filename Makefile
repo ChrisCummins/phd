@@ -75,6 +75,17 @@ docs: install
 	done
 	$(env3)$(MAKE) -C docs html
 
+# push sphinx docs to gh-pages
+.PHONY: docs-publish
+docs-publish: docs
+	test -d .docs || git clone git@github.com:ChrisCummins/labm8.git .docs
+	cd .docs && git checkout gh-pages
+	cd .docs && git pull --rebase
+	rsync -avh docs/_build/html/ .docs/
+	cd .docs && git add .
+	cd .docs && git commit -m "Sphinx documentation update"
+	cd .docs && git push -u origin gh-pages
+
 # help text
 .PHONY: help
 help:
