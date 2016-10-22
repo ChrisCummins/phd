@@ -6,8 +6,16 @@ python:
   - "3.5"
 
 install:
-  - pip install numpy scipy scikit-learn pandas coveralls matplotlib
+  - pip install coveralls
   - python ./setup.py install
+
+branches:
+  except:
+    - gh-pages
+
+env:
+  global:
+    - GH_REPO: github.com/ChrisCummins/labm8.git
 
 script:
   - coverage run --source=labm8 ./setup.py test
