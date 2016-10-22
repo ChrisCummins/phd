@@ -12,6 +12,7 @@ before_install:
 
 install:
   - sudo ./make/install_cmake.sh
+  - sudo ./make/install_ninja.sh
   - sudo apt-get install -qq gcc-4.8 g++-4.8
   - pip install --upgrade pip
   - pip install coveralls
