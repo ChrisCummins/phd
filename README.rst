@@ -19,5 +19,5 @@ Released under the terms of the GPLv3 license. See
    :target: https://travis-ci.org/ChrisCummins/labm8
 .. |Coverage Status| image:: https://coveralls.io/repos/github/ChrisCummins/labm8/badge.svg?branch=master
    :target: https://coveralls.io/github/ChrisCummins/labm8?branch=master
-.. |Documentation Status| image:: https://img.shields.io/badge/docs-latest-f39f37.svg
-   :target: http://chriscummins.cc/labm8/
+.. |Documentation Status| image:: https://readthedocs.org/projects/labm8/badge/?version=latest
+   :target: http://labm8.readthedocs.io/en/latest/?badge=latest

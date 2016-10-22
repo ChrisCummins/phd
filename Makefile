@@ -68,6 +68,8 @@ install: install3 install2
 # generate documentation
 .PHONY: docs
 docs: install
+	rm -rf docs/modules
+	mkdir -p docs/modules
 	@for module in $$(cd labm8; ls *.py | grep -v __init__.py); do \
 		cp -v docs/module.rst.template docs/modules/labm8.$${module%.py}.rst; \
 		sed -i "s/@MODULE@/labm8.$${module%.py}/g" docs/modules/labm8.$${module%.py}.rst; \
@@ -75,20 +77,10 @@ docs: install
 	done
 	$(env3)$(MAKE) -C docs html
 
-# push sphinx docs to gh-pages
-.PHONY: docs-publish
-docs-publish: docs
-	test -d .docs || git clone git@github.com:ChrisCummins/labm8.git .docs
-	cd .docs && git checkout gh-pages
-	cd .docs && git pull --rebase
-	rsync -avh docs/_build/html/ .docs/
-	cd .docs && git add .
-	cd .docs && git commit -m "Sphinx documentation update"
-	cd .docs && git push -u origin gh-pages
-
 # help text
 .PHONY: help
 help:
 	@echo "make test      Run unit tests in virtualenv"
 	@echo "make clean     Remove virtualenvs"
 	@echo "make install   Install globally"
+	@echo "make docs      Build documentation"
