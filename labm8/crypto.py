@@ -34,7 +34,6 @@ def sha1_file(path):
     """
     Return the sha1 of file at "path".
     """
-    file = open(path, 'rb')
-    sha1 = _sha1(file.read())
-    file.close()
+    with open(path, 'rb') as infile:
+        sha1 = _sha1(infile.read())
     return sha1

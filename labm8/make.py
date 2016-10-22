@@ -61,7 +61,7 @@ _BAD_TARGET_RE = re.compile(r"No rule to make target "
 
 def make(target="all", dir=".", **kwargs):
     """
-    Run make clean.
+    Run make.
 
     Arguments:
 
@@ -111,6 +111,8 @@ def make(target="all", dir=".", **kwargs):
 def clean(**kwargs):
     """
     Run make clean.
+
+    Equivalent to invoking make() with target="clean".
 
     Arguments:
 

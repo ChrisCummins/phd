@@ -39,6 +39,8 @@ def now():
 
 def nowstr(format=DEFAULT_DATETIME_FORMAT):
     """
-    Convencience wrapper around now() and strfmt().
+    Convenience wrapper to get the current time as a string.
+
+    Equivalent to invoking strfmt(now()).
     """
     return strfmt(now(), format=format)
