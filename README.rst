@@ -1,4 +1,4 @@
-.. figure:: https://raw.github.com/ChrisCummins/labm8/master/docs/logo.jpg
+.. figure:: https://raw.github.com/ChrisCummins/labm8/master/.labm8.jpg
    :alt: labm8
 
 |Build Status| |Coverage Status|

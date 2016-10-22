@@ -20,8 +20,10 @@
 VIRTUALENV := virtualenv
 # path to python3
 PYTHON3 := python3
+PIP3 := pip3
 # path to python2
 PYTHON2 := python2
+PIP2 := pip
 
 # source virtualenvs
 env3 := source env3/bin/activate &&
@@ -52,19 +54,28 @@ clean:
 	rm -fr env3 env2
 
 # install globally
-.PHONY: install
-install:
-	$(PYTHON2) ./setup.py install
+.PHONY: install install3 install2
+install3:
+	$(PIP3) install -r requirements.txt
 	$(PYTHON3) ./setup.py install
 
-.PHONY: docs
-docs:
-	@$(env3)pydoc -w labm8
-	@$(env3)for module in $$(cd labm8; ls *.py | grep -v __init__.py); do \
-			pydoc -w labm8.$${module%.py}; \
-		done
-	cp labm8.html index.html
+install2:
+	$(PIP2) install -r requirements.txt
+	$(PYTHON2) ./setup.py install
 
+install: install3 install2
+
+# generate documentation
+.PHONY: docs
+docs: install
+	@for module in $$(cd labm8; ls *.py | grep -v __init__.py); do \
+		cp -v docs/module.rst.template docs/modules/labm8.$${module%.py}.rst; \
+		sed -i "s/@MODULE@/labm8.$${module%.py}/g" docs/modules/labm8.$${module%.py}.rst; \
+		sed -i "s/@MODULE_UNDERLINE@/$$(head -c $$(echo labm8.$${module%.py} | wc -c) < /dev/zero | tr '\0' '=')/" docs/modules/labm8.$${module%.py}.rst; \
+	done
+	$(env3)$(MAKE) -C docs html
+
+# help text
 .PHONY: help
 help:
 	@echo "make test      Run unit tests in virtualenv"
