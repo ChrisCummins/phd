@@ -5,15 +5,13 @@
 
 .. include:: ../README.rst
 
-Python modules
---------------
+List of Pages
+-------------
 
 .. toctree::
-   :maxdepth: 1
-   :glob:
 
-   clgen
-   modules/*
+   python
+   license
 
 
 Indices and tables
