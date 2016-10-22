@@ -41,13 +41,13 @@ all: virtualenv native
 # native code
 include make/llvm.make
 
-native := native/rewriter
+native := native/clgen-rewriter
 
 native: $(native)
 
 native_flags := $(CXXFLAGS) $(llvm_CxxFlags) $(LDFLAGS) $(llvm_LdFlags)
 
-native/rewriter: native/rewriter.cpp $(llvm)
+native/clgen-rewriter: native/clgen-rewriter.cpp $(llvm)
 	$(CXX) $(native_flags) $< -o $@
 
 # create virtualenvs and install dependencies

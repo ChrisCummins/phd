@@ -28,7 +28,7 @@ LlvmSrc := $(PWD)/native/llvm/$(LlvmVersion)/src
 LlvmBuild := $(PWD)/native/llvm/$(LlvmVersion)/build
 LlvmLibDir := $(LlvmBuild)/lib
 LlvmConfig := $(LlvmBuild)/bin/llvm-config
-llvm = $(LlvmConfig)
+llvm := $(LlvmConfig)
 
 # add this target as a prerequisite for files which require LLVM
 llvm: $(llvm)
@@ -134,7 +134,7 @@ LlvmCMakeFlags := -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true \
 	-DLLVM_TARGETS_TO_BUILD=X86 -G Ninja -Wno-dev
 
 # Build rules.
-$(Llvm): $(LlvmSrc)
+$(llvm): $(LlvmSrc)
 	rm -rf $(LlvmBuild)
 	mkdir -p $(LlvmBuild)
 	cd $(LlvmBuild) && cmake $(LlvmSrc) $(LlvmCMakeFlags)
