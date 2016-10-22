@@ -28,6 +28,9 @@ PIP3 := pip3
 PYTHON2 := python2
 PIP2 := pip
 
+# path to install native files
+PREFIX := /usr/local
+
 space :=
 space +=
 
@@ -84,20 +87,23 @@ distclean-virtualenv:
 	rm -fr env3 env2
 
 # install globally
-.PHONY: install install3 install2
-install3:
+.PHONY: install install3 install2 install-native
+install3: install-native
 	$(PIP3) install -r requirements.txt
 	$(PYTHON3) ./setup.py install
 
-install2:
+install2: install-native
 	$(PIP2) install -r requirements.txt
 	$(PYTHON2) ./setup.py install
 
-install: install3 install2
+install-native: $(native)
+	cp native/clgen-rewriter $(PREFIX)/bin
+
+install: install3 install2 install-native
 
 # generate documentation
 .PHONY: docs
-docs: install
+docs: install2 install3
 	rm -rf docs/modules
 	mkdir -p docs/modules
 	@for module in $$(cd clgen; ls *.py | grep -v __init__.py); do \
@@ -112,8 +118,8 @@ docs: install
 help:
 	@echo "make all        Compile code"
 	@echo "make test       Run unit tests in virtualenv"
-	@echo "make docs       Build documentation"
 	@echo "make install    Install globally"
+	@echo "make docs       Build documentation (requires install)"
 	@echo "make clean      Remove compiled files"
 	@echo "make distlcean  Remove all generated files"
 
