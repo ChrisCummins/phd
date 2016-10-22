@@ -2,15 +2,11 @@
 
 [![Build Status](https://travis-ci.org/ChrisCummins/labm8.svg?branch=master)](https://travis-ci.org/ChrisCummins/labm8) [![Coverage Status](https://coveralls.io/repos/github/ChrisCummins/labm8/badge.svg?branch=master)](https://coveralls.io/github/ChrisCummins/labm8?branch=master)
 
-## Installation
-
 ```
 $ pip install labm8
 ```
 
-Requires Pyton 2.7 or 3.3+.
-
-## License
+Supports Pyton 2.7 and 3.3+.
 
 Copyright 2015, 2016 Chris Cummins <chrisc.101@gmail.com>.
 
