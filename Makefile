@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-.DEFAULT: all
+.DEFAULT_GOAL = all
 
 # path to virtualenv
 VIRTUALENV := virtualenv
