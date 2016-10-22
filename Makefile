@@ -97,7 +97,7 @@ install2: install-native
 	$(PYTHON2) ./setup.py install
 
 install-native: $(native)
-	cp native/clgen-rewriter $(PREFIX)/bin
+	cp native/clgen-rewriter $(PREFIX)/libexec
 
 install: install3 install2 install-native
 
