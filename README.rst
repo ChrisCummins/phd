@@ -22,6 +22,7 @@ Requirements
    `clang <http://llvm.org/releases/download.html>`__ >= 3.1.
 -  `Python <https://www.python.org/>`__ 2.7 or >= 3.4.
 -  `zlib <http://zlib.net/>`__ >= 1.2.3.4.
+-  `libhdf5 <https://support.hdfgroup.org/HDF5/>`__ >= 1.8.11.
 
 Getting started
 ---------------
