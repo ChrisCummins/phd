@@ -39,7 +39,7 @@ setup(
     license='GNU General Public License, Version 3',
     packages=['clgen'],
     package_data={'clgen': [
-        'data/*',
+        'data/*.json',
         'data/bin/*',
         'data/include/*',
         'data/sql/*',
