@@ -5,14 +5,18 @@ python:
   - "3.4"
   - "3.5"
 
-before_install:
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get update -qq
+addons:
+  apt:
+    sources:
+      ubuntu-toolchain-r-test
+    packages:
+      - gcc-4.8
+      - g++-4.8
+      - libhdf5-dev
 
 install:
   - sudo ./make/install_ninja.sh
   - sudo ./make/install_cmake.sh
-  - sudo apt-get install -qq gcc-4.8 g++-4.8 libhdf5-dev
   - pip install --upgrade pip
   - pip install coveralls
   - pip install --only-binary=numpy numpy>=1.10.4
