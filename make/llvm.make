@@ -69,21 +69,19 @@ llvm_LdFlags = \
 	$(shell $(LlvmConfig) --libs 2>/dev/null) \
 	-pthread \
 	-lLLVMTarget -lLLVMMC \
-	-lLLVMObject -lLLVMCore \
-	-ldl -lcurses \
-	-lLLVMSupport
+	-lLLVMObject -lLLVMCore
 
 ifeq ($(UNAME),Darwin)
-llvm_LdFlags += -lcurses -ldl
+llvm_LdFlags += -ldl -lcurses -lLLVMSupport -lcurses -ldl
 else
-llvm_LdFlags += -lncurses -ldl
+llvm_LdFlags += -ldl -lncurses -lLLVMSupport -lncurses -ldl
 endif
 
 # LLVM components to download
-LlvmComponents := llvm cfe clang-tools-extra compiler-rt
+LlvmComponents := llvm cfe clang-tools-extra
 
 ifeq ($(UNAME),Darwin)
-LlvmComponents += libcxx libcxxabi
+LlvmComponents += compiler-rt libcxx libcxxabi
 endif
 
 LlvmUrlBase := http://llvm.org/releases/$(LlvmVersion)/
@@ -141,12 +139,12 @@ $(LlvmSrc): $(LlvmTarballs)
 	$(call unpack-llvm-tar,,llvm)
 	$(call unpack-llvm-tar,tools/clang,cfe)
 	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
-	$(call unpack-llvm-tar,projects/compiler-rt,compiler-rt)
 endif
 
 # flags to configure cmake build
 LlvmCMakeFlags := -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true \
-	-DLLVM_TARGETS_TO_BUILD=X86 -G Ninja -Wno-dev
+	-DLLVM_TARGETS_TO_BUILD=X86 -DCLANG_ENABLE_STATIC_ANALYZER=OFF \
+	-DCLANG_ENABLE_ARCMT=OFF -G Ninja -Wno-dev
 
 # Build rules.
 ifeq ($(UNAME),Darwin)
