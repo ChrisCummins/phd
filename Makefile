@@ -47,6 +47,7 @@ UNAME := $(shell uname)
 # native code
 include make/llvm.make
 include make/libclc.make
+include make/torch-rnn.make
 
 native := clgen/data/bin/clang $(libclc) native/clgen-rewriter
 
