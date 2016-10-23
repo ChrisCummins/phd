@@ -36,14 +36,14 @@ llvm: $(llvm)
 # flags to build with compiled LLVM
 llvm_CxxFlags = \
 	$(shell $(LlvmConfig) --cxxflags) \
-	-isystem $(shell $(LlvmConfig) --src-root)/tools/clang/include \
-	-isystem $(shell $(LlvmConfig) --obj-root)/tools/clang/include \
+	-isystem $(LlvmSrc)/tools/clang/include \
+	-isystem $(LlvmBuild)/tools/clang/include \
 	-fno-rtti
 
 # flags to link against compiled LLVM
 llvm_LdFlags = \
 	$(shell $(LlvmConfig) --system-libs) \
-	-L$(shell $(LlvmConfig) --libdir) \
+	-L$(LlvmBuild)/lib \
 	-ldl \
 	-lclangTooling \
 	-lclangToolingCore \
