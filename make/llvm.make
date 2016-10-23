@@ -39,8 +39,9 @@ llvm_CxxFlags = \
 	-isystem $(LlvmSrc)/include \
 	-isystem $(LlvmBuild)/include \
 	-isystem $(LlvmSrc)/tools/clang/include \
-	-isystem $(LlvmBuild)/tools/clang/include \
-	-fno-rtti
+        -isystem $(LlvmBuild)/tools/clang/include \
+        -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS \
+        -D__STDC_LIMIT_MACROS -fno-rtti
 
 # flags to link against compiled LLVM
 llvm_LdFlags = \
