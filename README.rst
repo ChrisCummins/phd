@@ -15,29 +15,35 @@ Requirements
 -  Linux (x64) or OS X.
 -  An NVIDIA GPU and
    `CUDA <http://www.nvidia.com/object/cuda_home_new.html>`__ >= 6.5.
+-  `GCC <https://gcc.gnu.org/>`__ >= 4.7 or
+   `clang <http://llvm.org/releases/download.html>`__ >= 3.1.
 -  `GNU Make <http://savannah.gnu.org/projects/make>`__ >= 3.79.
 -  `CMake <https://cmake.org/>`__ >= 3.4.3.
 -  `Ninja <https://ninja-build.org/>`__ >= 1.7.
--  `GCC <https://gcc.gnu.org/>`__ >= 4.7 or
-   `clang <http://llvm.org/releases/download.html>`__ >= 3.1.
 -  `Python <https://www.python.org/>`__ 2.7 or >= 3.4.
 -  `zlib <http://zlib.net/>`__ >= 1.2.3.4.
--  `libhdf5 <https://support.hdfgroup.org/HDF5/release/obtainsrc.html`__ >= 1.8.11.
+-  `libhdf5 <https://support.hdfgroup.org/HDF5/release/obtainsrc.html>`__ >= 1.8.11.
 
 Getting started
 ---------------
 
+Checkout CLgen locally.
+
 ::
 
-    $ sudo make install
+    $ git clone --recursive https://github.com/ChrisCummins/clgen.git
 
 Build and install clgen.
 
 ::
 
-    $ clgen model.json arguments.json
+    $ sudo make install
 
 Train and sample a clgen model using a small included training set.
+
+::
+
+    $ clgen model.json arguments.json
 
 License
 -------
