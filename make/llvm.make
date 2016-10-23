@@ -71,11 +71,13 @@ llvm_LdFlags = \
 	-lLLVMTarget -lLLVMMC \
 	-lLLVMObject -lLLVMCore \
 	-ldl -lcurses \
-	-lLLVMSupport \
-	-lcurses \
-	-ldl \
-	$(NULL)
-# TODO: -lncurses on some systems, not -lcurses
+	-lLLVMSupport
+
+ifeq($(UNAME),Darwin)
+llvm_LdFlags += -lcurses -ldl
+else
+llvm_LdFlags += -lncurses -ldl
+endif
 
 # LLVM components to download
 LlvmComponents := llvm cfe clang-tools-extra compiler-rt
