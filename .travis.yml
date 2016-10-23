@@ -12,7 +12,7 @@ before_install:
 install:
   - sudo ./make/install_ninja.sh
   - sudo ./make/install_cmake.sh
-  - sudo apt-get install -qq gcc-4.8 g++-4.8
+  - sudo apt-get install -qq gcc-4.8 g++-4.8 libhdf5-dev
   - pip install --upgrade pip
   - pip install coveralls
   - pip install --only-binary=numpy numpy>=1.10.4
