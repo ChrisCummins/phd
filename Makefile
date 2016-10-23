@@ -49,7 +49,7 @@ include make/llvm.make
 include make/libclc.make
 include make/torch-rnn.make
 
-native := clgen/data/bin/clang $(libclc) native/clgen-rewriter
+native := clgen/data/bin/clang native/clgen-rewriter $(libclc)
 
 clgen/data/bin/clang: $(llvm)
 	mkdir -p $(dir $@)
@@ -57,10 +57,10 @@ clgen/data/bin/clang: $(llvm)
 
 native: $(native)
 
-native_flags := $(CXXFLAGS) $(llvm_CxxFlags) $(LDFLAGS) $(llvm_LdFlags)
+rewriter_flags := $(CXXFLAGS) $(llvm_CxxFlags) $(LDFLAGS) $(llvm_LdFlags)
 
 native/clgen-rewriter: native/clgen-rewriter.cpp $(llvm)
-	$(CXX) $(native_flags) $< -o $@
+	$(CXX) $(rewriter_flags) $< -o $@
 
 # create virtualenvs and install dependencies
 virtualenv: env3/bin/activate env2/bin/activate

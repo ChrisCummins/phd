@@ -36,6 +36,8 @@ llvm: $(llvm)
 # flags to build with compiled LLVM
 llvm_CxxFlags = \
 	$(shell $(LlvmConfig) --cxxflags 2>/dev/null) \
+	-isystem $(LlvmSrc)/include \
+	-isystem $(LlvmBuild)/include \
 	-isystem $(LlvmSrc)/tools/clang/include \
 	-isystem $(LlvmBuild)/tools/clang/include \
 	-fno-rtti
