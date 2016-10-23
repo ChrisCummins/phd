@@ -80,6 +80,10 @@ llvm_LdFlags = \
 # LLVM components to download
 LlvmComponents := llvm cfe clang-tools-extra compiler-rt
 
+ifeq($(UNAME),Darwin)
+LlvmComponents += libcxx libcxxabi
+endif
+
 LlvmUrlBase := http://llvm.org/releases/$(LlvmVersion)/
 LlvmTar := -$(LlvmVersion).src.tar.xz
 LlvmTarballs = $(addprefix native/llvm/$(LlvmVersion)/,$(addsuffix $(LlvmTar),$(LlvmComponents)))
@@ -122,22 +126,40 @@ define unpack-llvm-tar
 endef
 
 # unpack LLVM tree from cached tarballs
+ifeq($(UNAME),Darwin)
 $(LlvmSrc): $(LlvmTarballs)
 	$(call unpack-llvm-tar,,llvm)
 	$(call unpack-llvm-tar,tools/clang,cfe)
 	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
 	$(call unpack-llvm-tar,projects/compiler-rt,compiler-rt)
+	$(call unpack-llvm-tar,projects/libcxx,libcxx)
+	$(call unpack-llvm-tar,projects/libcxxabi,libcxxabi)
+else
+	$(call unpack-llvm-tar,,llvm)
+	$(call unpack-llvm-tar,tools/clang,cfe)
+	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
+	$(call unpack-llvm-tar,projects/compiler-rt,compiler-rt)
+endif
 
 # flags to configure cmake build
 LlvmCMakeFlags := -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true \
 	-DLLVM_TARGETS_TO_BUILD=X86 -G Ninja -Wno-dev
 
 # Build rules.
+ifeq($(UNAME),Darwin)
 $(llvm): $(LlvmSrc)
 	rm -rf $(LlvmBuild)
 	mkdir -p $(LlvmBuild)
 	cd $(LlvmBuild) && cmake $(LlvmSrc) $(LlvmCMakeFlags) $(LLVM_CMAKE_FLAGS)
 	cd $(LlvmBuild) && ninja
+	cd $(LlvmBuild) && ninja cxx
+else
+$(llvm): $(LlvmSrc)
+	rm -rf $(LlvmBuild)
+	mkdir -p $(LlvmBuild)
+	cd $(LlvmBuild) && cmake $(LlvmSrc) $(LlvmCMakeFlags) $(LLVM_CMAKE_FLAGS)
+	cd $(LlvmBuild) && ninja
+endif
 
 .PHONY: distclean-llvm
 distclean-llvm:

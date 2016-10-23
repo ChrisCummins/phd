@@ -41,6 +41,9 @@ env2 := source env2/bin/activate &&$(space)
 # build everything
 all: virtualenv native
 
+# system name
+UNAME := $(shell uname)
+
 # native code
 include make/llvm.make
 include make/libclc.make
