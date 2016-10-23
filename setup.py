@@ -38,8 +38,15 @@ setup(
     author_email='chrisc.101@gmail.com',
     license='GNU General Public License, Version 3',
     packages=['clgen'],
-    package_data={'clgen': ['data/*']},
-    scripts=["bin/clgen"],
+    package_data={'clgen': [
+        'data/*',
+        'data/bin/*',
+        'data/include/*',
+        'data/sql/*',
+    ]},
+    scripts=[
+        'bin/clgen',
+    ],
     test_suite='nose.collector',
     tests_require=['nose'],
     install_requires=reqs,

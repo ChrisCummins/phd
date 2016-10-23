@@ -123,7 +123,6 @@ endef
 
 # unpack LLVM tree from cached tarballs
 $(LlvmSrc): $(LlvmTarballs)
-	@echo "DEPS $^"
 	$(call unpack-llvm-tar,,llvm)
 	$(call unpack-llvm-tar,tools/clang,cfe)
 	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)

@@ -43,8 +43,13 @@ all: virtualenv native
 
 # native code
 include make/llvm.make
+include make/libclc.make
 
-native := native/clgen-rewriter
+native := clgen/data/bin/clang $(libclc) native/clgen-rewriter
+
+clgen/data/bin/clang: $(llvm)
+	mkdir -p $(dir $@)
+	ln -s $(PWD)/native/llvm/3.9.0/build/bin/clang $@
 
 native: $(native)
 
@@ -70,7 +75,7 @@ env2/bin/activate:
 
 # run tests
 .PHONY: test
-test: virtualenv
+test: virtualenv $(native)
 	$(env3)python ./setup.py test
 	$(env2)python ./setup.py test
 
@@ -81,18 +86,18 @@ clean:
 
 # clean everything
 .PHONY: distclean distclean-virtualenv
-distclean: distclean-virtualenv distclean-llvm
+distclean: distclean-virtualenv distclean-llvm distclean-libclc
 
 distclean-virtualenv:
 	rm -fr env3 env2
 
 # install globally
 .PHONY: install install3 install2 install-native
-install3:
+install3: install-native
 	$(PIP3) install -r requirements.txt
 	$(PYTHON3) ./setup.py install
 
-install2:
+install2: install-native
 	$(PIP2) install -r requirements.txt
 	$(PYTHON2) ./setup.py install
 
