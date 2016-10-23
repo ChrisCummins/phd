@@ -28,6 +28,9 @@ import re
 from hashlib import sha1
 from pkg_resources import resource_filename, resource_string, require
 
+import labm8
+from labm8 import fs
+
 
 class CLgenError(Exception):
     """
@@ -189,11 +192,12 @@ def package_data(*path):
     Raises:
         InternalError: In case of IO error.
     """
-    path = package_path(*path)
+    # throw exception if file doesn't exist
+    package_path(*path)
 
     try:
-        return resource_string(__name__, path)
-    except Error:
+        return resource_string(__name__, fs.path(*path))
+    except Exception:
         raise InternalError("failed to read package data '{}'".format(path))
 
 
@@ -226,7 +230,7 @@ def sql_script(name):
     Returns:
         str: SQL script.
     """
-    path = must_exist('data', 'sql', str(name) + ".sql")
+    path = fs.path('data', 'sql', str(name) + ".sql")
     return package_str(path)
 
 
