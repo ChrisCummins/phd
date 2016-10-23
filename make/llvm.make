@@ -73,7 +73,7 @@ llvm_LdFlags = \
 	-ldl -lcurses \
 	-lLLVMSupport
 
-ifeq($(UNAME),Darwin)
+ifeq ($(UNAME),Darwin)
 llvm_LdFlags += -lcurses -ldl
 else
 llvm_LdFlags += -lncurses -ldl
@@ -82,7 +82,7 @@ endif
 # LLVM components to download
 LlvmComponents := llvm cfe clang-tools-extra compiler-rt
 
-ifeq($(UNAME),Darwin)
+ifeq ($(UNAME),Darwin)
 LlvmComponents += libcxx libcxxabi
 endif
 
@@ -128,7 +128,7 @@ define unpack-llvm-tar
 endef
 
 # unpack LLVM tree from cached tarballs
-ifeq($(UNAME),Darwin)
+ifeq ($(UNAME),Darwin)
 $(LlvmSrc): $(LlvmTarballs)
 	$(call unpack-llvm-tar,,llvm)
 	$(call unpack-llvm-tar,tools/clang,cfe)
@@ -148,7 +148,7 @@ LlvmCMakeFlags := -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true \
 	-DLLVM_TARGETS_TO_BUILD=X86 -G Ninja -Wno-dev
 
 # Build rules.
-ifeq($(UNAME),Darwin)
+ifeq ($(UNAME),Darwin)
 $(llvm): $(LlvmSrc)
 	rm -rf $(LlvmBuild)
 	mkdir -p $(LlvmBuild)
