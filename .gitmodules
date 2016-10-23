@@ -1,3 +1,6 @@
 [submodule "native/lib/libclc"]
 	path = native/libclc/trunk
 	url = https://github.com/llvm-mirror/libclc.git
+[submodule "native/torch-rnn/trunk"]
+	path = native/torch-rnn/trunk
+	url = git@github.com:ChrisCummins/torch-rnn.git
