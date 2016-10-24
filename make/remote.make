@@ -23,10 +23,11 @@
 # Arguments:
 #   $1 (str): Target path
 #   $2 (str): Source URL
+#   $3 (str, optional): Additional arguments.
 #
 define wget
 	mkdir -p $(dir $1)
-	wget -O $1 $2
+	wget -O $1 $2 $3
 endef
 
 # unpack a tarball
@@ -34,7 +35,7 @@ endef
 # Arguments:
 #   $1 (str): Target directory
 #   $2 (str): Source tarball.
-#   $3 (str, optional): Tar arguments.
+#   $3 (str, optional): Additional arguments.
 #
 define unpack-tar
 	mkdir -p $1

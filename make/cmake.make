@@ -33,7 +33,7 @@ cmake: $(cmake)
 
 # fetch tarballs
 $(cmake_tar):
-	$(call wget,$@,$(cmake_url))
+	$(call wget,$@,$(cmake_url),--no-check-certificate)
 
 # unpack tar and update timestamp on target
 ifeq ($(UNAME),Darwin)
