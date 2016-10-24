@@ -21,7 +21,7 @@ addons:
 env:
   global:
     - CC=clang-3.6
-    - CXX=clang++-3.6
+    - CXX=clang-3.6
 
 install:
   - make native
