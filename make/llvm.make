@@ -24,8 +24,8 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 LlvmVersion := 3.9.0
-LlvmSrc := $(PWD)/native/llvm/$(LlvmVersion)/src
-LlvmBuild := $(PWD)/native/llvm/$(LlvmVersion)/build
+LlvmSrc := $(root)/native/llvm/$(LlvmVersion)/src
+LlvmBuild := $(root)/native/llvm/$(LlvmVersion)/build
 LlvmLibDir := $(LlvmBuild)/lib
 LlvmConfig := $(LlvmBuild)/bin/llvm-config
 llvm := $(LlvmConfig)
@@ -102,7 +102,7 @@ $(LlvmTarballs):
 #   $2 (str) Source tarball
 #
 define unpack-llvm-tar
-	$(call unpack-tar,$(LlvmSrc)/$1,native/llvm/$(LlvmVersion)/$2$(LlvmTar),-xf)
+	$(call unpack-tar,$(LlvmSrc)/$1,native/llvm/$(LlvmVersion)/$2$(LlvmTar))
 endef
 
 # unpack LLVM tree from cached tarballs
