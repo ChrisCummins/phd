@@ -122,9 +122,16 @@ distclean-virtualenv:
 # install globally
 .PHONY: install install-python install-native
 
+ifeq ($(GPU),0)
 install-python: install-native
 	$(PIP) install -r requirements.txt
 	$(PYTHON) ./setup.py install
+else
+install-python: install-native
+	$(PIP) install -r requirements.txt
+	$(PIP) install -r requirements.gpu.txt
+	$(PYTHON) ./setup.py install
+endif
 
 install: install-python
 
