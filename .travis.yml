@@ -9,6 +9,17 @@ python:
 # faster builds plz
 sudo: false
 
+addons:
+  apt:
+    sources:
+      - llvm-toolchain-precise-3.7
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-4.8
+      - g++-4.8
+      - clang-3.6
+      - libhdf5-serial-dev
+
 env:
   global:
     - CC=clang
