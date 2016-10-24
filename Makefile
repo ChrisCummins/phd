@@ -87,10 +87,19 @@ clgen/data/bin/clgen-rewriter: native/clgen-rewriter.cpp $(llvm)
 # create virtualenv and install dependencies
 virtualenv: env/bin/activate
 
+# we keep GPU dependencies in a separate requirements file
+ifeq ($(GPU),0)
 env/bin/activate:
 	$(VIRTUALENV) -p $(PYTHON) env
 	$(env)pip install -r requirements.txt
 	$(env)pip install -r requirements.devel.txt
+else
+env/bin/activate:
+	$(VIRTUALENV) -p $(PYTHON) env
+	$(env)pip install -r requirements.txt
+	$(env)pip install -r requirements.devel.txt
+	$(env)pip install -r requirements.gpu.txt
+endif
 
 # run tests
 .PHONY: test
