@@ -22,9 +22,9 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-libclcVersion := trunk
-libclcDir := $(PWD)/native/libclc/$(libclcVersion)
-libclc := $(libclcBuild)/utils/prepare-builtins.o
+libclc_version := trunk
+libclc_dir := $(PWD)/native/libclc/$(libclc_version)
+libclc := $(libclc_dir)/utils/prepare-builtins.o
 
 # add this target as a prerequisite for files which require libclc
 libclc: $(libclc)
@@ -37,10 +37,10 @@ libclc_CxxFlags = \
 	-target nvptx64-nvidia-nvcl -x cl
 
 $(libclc): $(llvm)
-	cd $(libclcDir) && ./configure.py --with-llvm-config=$(LlvmConfig)
-	cd $(libclcDir) && $(MAKE)
+	cd $(libclc_dir) && ./configure.py --with-llvm-config=$(llvm)
+	cd $(libclc_dir) && $(MAKE)
 
 .PHONY: distclean-libclc
 distclean-libclc:
-	cd $(libclcDir) && git clean -xfd
+	cd $(libclc_dir) && git clean -xfd
 distclean_targets += distclean-libclc
