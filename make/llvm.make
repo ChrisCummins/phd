@@ -23,30 +23,28 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-LlvmVersion := 3.9.0
-LlvmSrc := $(root)/native/llvm/$(LlvmVersion)/src
-LlvmBuild := $(root)/native/llvm/$(LlvmVersion)/build
-LlvmLibDir := $(LlvmBuild)/lib
-LlvmConfig := $(LlvmBuild)/bin/llvm-config
-llvm := $(LlvmConfig)
+llvm_version := 3.9.0
+llvm_src := $(root)/native/llvm/$(llvm_version)/src
+llvm_build := $(root)/native/llvm/$(llvm_version)/build
+llvm := $(llvm_build)/bin/llvm-config
 
 # add this target as a prerequisite for files which require LLVM
 llvm: $(llvm)
 
 # flags to build with compiled LLVM
 llvm_CxxFlags = \
-	$(shell $(LlvmConfig) --cxxflags 2>/dev/null) \
-	-isystem $(LlvmSrc)/include \
-	-isystem $(LlvmBuild)/include \
-	-isystem $(LlvmSrc)/tools/clang/include \
-        -isystem $(LlvmBuild)/tools/clang/include \
-        -std=c++11 -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS \
-        -D__STDC_LIMIT_MACROS -fno-rtti
+	$(shell $(llvm) --cxxflags 2>/dev/null) \
+	-isystem $(llvm_src)/include \
+	-isystem $(llvm_build)/include \
+	-isystem $(llvm_src)/tools/clang/include \
+	-isystem $(llvm_build)/tools/clang/include \
+	-std=c++11 -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS \
+	-D__STDC_LIMIT_MACROS -fno-rtti
 
 # flags to link against compiled LLVM
 llvm_LdFlags = \
-	$(shell $(LlvmConfig) --system-libs 2>/dev/null) \
-	-L$(LlvmBuild)/lib \
+	$(shell $(llvm) --system-libs 2>/dev/null) \
+	-L$(llvm_build)/lib \
 	-ldl \
 	-lclangTooling \
 	-lclangToolingCore \
@@ -69,7 +67,7 @@ llvm_LdFlags = \
 	-lclangBasic \
 	-lclang \
 	-ldl \
-	$(shell $(LlvmConfig) --libs 2>/dev/null) \
+	$(shell $(llvm) --libs 2>/dev/null) \
 	-pthread \
 	-lLLVMTarget -lLLVMMC \
 	-lLLVMObject -lLLVMCore
@@ -81,19 +79,19 @@ llvm_LdFlags += -ldl -lncurses -lLLVMSupport -lncurses -ldl
 endif
 
 # LLVM components to download
-LlvmComponents := llvm cfe clang-tools-extra
+llvm_components := llvm cfe clang-tools-extra
 
 ifeq ($(UNAME),Darwin)
-LlvmComponents += compiler-rt libcxx libcxxabi
+llvm_components += compiler-rt libcxx libcxxabi
 endif
 
-LlvmUrlBase := http://llvm.org/releases/$(LlvmVersion)/
-LlvmTar := -$(LlvmVersion).src.tar.xz
-LlvmTarballs = $(addprefix native/llvm/$(LlvmVersion)/,$(addsuffix $(LlvmTar),$(LlvmComponents)))
+llvm_url_base := http://llvm.org/releases/$(llvm_version)/
+llvm_url_suffix := -$(llvm_version).src.tar.xz
+llvm_tars = $(addprefix $(root)/native/llvm/$(llvm_version)/,$(addsuffix $(llvm_url_suffix),$(llvm_components)))
 
 # fetch LLVM tarballs
-$(LlvmTarballs):
-	$(call wget,$@,$(LlvmUrlBase)$(notdir $@))
+$(llvm_tars):
+	$(call wget,$@,$(llvm_url_base)$(notdir $@))
 
 # unpack an LLVM Tarball
 #
@@ -102,12 +100,12 @@ $(LlvmTarballs):
 #   $2 (str) Source tarball
 #
 define unpack-llvm-tar
-	$(call unpack-tar,$(LlvmSrc)/$1,native/llvm/$(LlvmVersion)/$2$(LlvmTar))
+	$(call unpack-tar,$(llvm_src)/$1,native/llvm/$(llvm_version)/$2$(llvm_url_suffix))
 endef
 
 # unpack LLVM tree from cached tarballs
 ifeq ($(UNAME),Darwin)
-$(LlvmSrc): $(LlvmTarballs)
+$(llvm_src): $(llvm_tars)
 	$(call unpack-llvm-tar,,llvm)
 	$(call unpack-llvm-tar,tools/clang,cfe)
 	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
@@ -115,27 +113,27 @@ $(LlvmSrc): $(LlvmTarballs)
 	$(call unpack-llvm-tar,projects/libcxx,libcxx)
 	$(call unpack-llvm-tar,projects/libcxxabi,libcxxabi)
 else
-$(LlvmSrc): $(LlvmTarballs)
+$(llvm_src): $(llvm_tars)
 	$(call unpack-llvm-tar,,llvm)
 	$(call unpack-llvm-tar,tools/clang,cfe)
 	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
 endif
 
 # flags to configure cmake build
-LlvmCMakeFlags := -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true \
+llvm_cmake_flags := -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true \
 	-DLLVM_TARGETS_TO_BUILD=X86 -DCLANG_ENABLE_STATIC_ANALYZER=OFF \
 	-DCLANG_ENABLE_ARCMT=OFF -DCMAKE_MAKE_PROGRAM=$(ninja) -G Ninja \
 	-Wno-dev $(LLVM_CMAKE_FLAGS)
 
 # build llvm
-$(llvm): $(LlvmSrc) $(cmake) $(ninja)
-	rm -rf $(LlvmBuild)
-	mkdir -p $(LlvmBuild)
-	cd $(LlvmBuild) && $(cmake) $(LlvmSrc) $(LlvmCMakeFlags)
-	cd $(LlvmBuild) && $(ninja)
+$(llvm): $(llvm_src) $(cmake) $(ninja)
+	rm -rf $(llvm_build)
+	mkdir -p $(llvm_build)
+	cd $(llvm_build) && $(cmake) $(llvm_src) $(llvm_cmake_flags)
+	cd $(llvm_build) && $(ninja)
 
 .PHONY: distclean-llvm
 distclean-llvm:
-	rm -fv -r $(LlvmSrc)
-	rm -fv -r $(LlvmBuild)
+	rm -fv -r $(llvm_src)
+	rm -fv -r $(llvm_build)
 distclean_targets += distclean-llvm
