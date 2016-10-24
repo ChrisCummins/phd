@@ -85,6 +85,11 @@ install_ssh() {
 }
 
 
+install_dropbox() {
+    symlink ~/.dotfiles/dropbox/dropbox.py ~/.local/bin/dropbox
+}
+
+
 install_git() {
     symlink .dotfiles/git/gitconfig ~/.gitconfig
 }
@@ -155,6 +160,7 @@ install_servers() {
 main() {
     install_ssh
     install_zsh
+    install_dropbox
     install_git
     install_tmux
     install_vim
