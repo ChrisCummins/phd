@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+#
+# Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
+#
+# This file is part of CLgen.
+#
+# CLgen is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# CLgen is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
+#
+from argparse import ArgumentParser
+
+import clgen
+from clgen import preprocess
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('inputs', nargs='+', help='path to input')
+    parser.add_argument('-f', '--file', action='store_true',
+                        help='treat input as file')
+    parser.add_argument('-i', '--inplace', action='store_true',
+                        help='inplace file rewrite')
+    parser.add_argument('--remove-bad-preprocessed', action='store_true',
+                        help=("delete the contents of all bad or ugly "
+                              "preprocessed files, but keep the entries in "
+                              "the table"))
+    args = parser.parse_args()
+
+    if args.file and args.inplace:
+        preprocess.preprocess_inplace(args.inputs)
+    else:
+        for path in args.inputs:
+            if args.file:
+                preprocess.preprocess_file(path, inplace=False)
+            else:
+                if args.remove_bad_preprocessed:
+                    preprocess.remove_bad_preprocessed(path)
+                else:
+                    preprocess.preprocess_db(path)
+
+
+if __name__ == '__main__':
+    main()

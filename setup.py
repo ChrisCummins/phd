@@ -66,6 +66,7 @@ setup(
     package_data={'clgen': all_module_data_files("clgen")},
     scripts=[
         'bin/clgen',
+        'bin/clgen-preprocess',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
