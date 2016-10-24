@@ -54,9 +54,6 @@ llvm_LdFlags = \
 	-lclangCodeGen \
 	-lclangParse \
 	-lclangSema \
-	-lclangStaticAnalyzerFrontend \
-	-lclangStaticAnalyzerCheckers \
-	-lclangStaticAnalyzerCore \
 	-lclangAnalysis \
 	-lclangARCMigrate \
 	-lclangRewriteFrontend \

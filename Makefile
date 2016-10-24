@@ -50,17 +50,28 @@ include make/llvm.make
 include make/libclc.make
 include make/torch-rnn.make
 
-native := clgen/data/bin/clang native/clgen-rewriter $(libclc)
+native_targets := \
+	clgen/data/bin/llvm-config \
+	clgen/data/bin/clang \
+	native/clgen-rewriter \
+	$(libclc)
+
+clgen/data/bin/llvm-config: $(llvm)
+	mkdir -p $(dir $@)
+	ln -sf $(llvm_build)/bin/llvm-config $@
 
 clgen/data/bin/clang: $(llvm)
 	mkdir -p $(dir $@)
-	ln -s $(PWD)/native/llvm/3.9.0/build/bin/clang $@
+	ln -sf $(llvm_build)/bin/clang $@
 
-native: $(native)
+native: $(native_targets)
 
 rewriter_flags := $(CXXFLAGS) $(llvm_CxxFlags) $(LDFLAGS) $(llvm_LdFlags)
 
 native/clgen-rewriter: native/clgen-rewriter.cpp $(llvm)
+	@echo
+	@echo "LLVM LIBS: $(shell ls $(llvm_build)/lib)"
+	@echo
 	$(CXX) $(rewriter_flags) $< -o $@
 
 # create virtualenv and install dependencies
@@ -73,7 +84,7 @@ env/bin/activate:
 
 # run tests
 .PHONY: test
-test: virtualenv $(native)
+test: virtualenv $(native_targets)
 	$(env)python ./setup.py install
 	$(env)python ./setup.py test
 
@@ -81,6 +92,7 @@ test: virtualenv $(native)
 .PHONY: clean
 clean:
 	rm -f native/clgen-rewriter
+	rm -f clgen/data/bin/clang
 
 # clean everything
 .PHONY: distclean distclean-virtualenv
@@ -96,7 +108,7 @@ install-python: install-native
 	$(PIP) install -r requirements.txt
 	$(PYTHON) ./setup.py install
 
-install-native: $(native)
+install-native: $(native_targets)
 	cp native/clgen-rewriter $(PREFIX)/libexec
 
 install: install-python install-native
