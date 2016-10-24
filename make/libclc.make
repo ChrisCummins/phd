@@ -43,3 +43,4 @@ $(libclc): $(llvm)
 .PHONY: distclean-libclc
 distclean-libclc:
 	cd $(libclcDir) && git clean -xfd
+distclean_targets += distclean-libclc

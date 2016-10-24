@@ -19,6 +19,9 @@
 #
 .DEFAULT_GOAL = all
 
+root := $(PWD)
+distclean_targets =
+
 # python configuration
 PYTHON := python
 VIRTUALENV := virtualenv
@@ -40,6 +43,9 @@ all: virtualenv native
 UNAME := $(shell uname)
 
 # modules
+include make/remote.make
+include make/cmake.make
+include make/ninja.make
 include make/llvm.make
 include make/libclc.make
 include make/torch-rnn.make
@@ -78,7 +84,7 @@ clean:
 
 # clean everything
 .PHONY: distclean distclean-virtualenv
-distclean: distclean-virtualenv distclean-llvm distclean-libclc
+distclean: $(distclean_targets)
 
 distclean-virtualenv:
 	rm -fr env

@@ -95,29 +95,6 @@ LlvmTarballs = $(addprefix native/llvm/$(LlvmVersion)/,$(addsuffix $(LlvmTar),$(
 $(LlvmTarballs):
 	$(call wget,$@,$(LlvmUrlBase)$(notdir $@))
 
-# download a file
-#
-# Arguments:
-#   $1 (str) Target path
-#   $2 (str) Source URL
-#
-define wget
-	mkdir -p $(dir $1)
-	wget -O $1 $2
-endef
-
-# unpack a tarball
-#
-# Arguments:
-#   $1 (str) Target directory
-#   $2 (str) Source tarball.
-#   $3 (str) Tar arguments.
-#
-define unpack-tar
-	mkdir -p $1
-	tar -xf $2 -C $1 --strip-components=1
-endef
-
 # unpack an LLVM Tarball
 #
 # Arguments:
@@ -147,25 +124,18 @@ endif
 # flags to configure cmake build
 LlvmCMakeFlags := -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true \
 	-DLLVM_TARGETS_TO_BUILD=X86 -DCLANG_ENABLE_STATIC_ANALYZER=OFF \
-	-DCLANG_ENABLE_ARCMT=OFF -G Ninja -Wno-dev
+	-DCLANG_ENABLE_ARCMT=OFF -DCMAKE_MAKE_PROGRAM=$(ninja) -G Ninja \
+	-Wno-dev $(LLVM_CMAKE_FLAGS)
 
-# Build rules.
-ifeq ($(UNAME),Darwin)
-$(llvm): $(LlvmSrc)
+# build llvm
+$(llvm): $(LlvmSrc) $(cmake) $(ninja)
 	rm -rf $(LlvmBuild)
 	mkdir -p $(LlvmBuild)
-	cd $(LlvmBuild) && cmake $(LlvmSrc) $(LlvmCMakeFlags) $(LLVM_CMAKE_FLAGS)
-	cd $(LlvmBuild) && ninja
-	cd $(LlvmBuild) && ninja cxx
-else
-$(llvm): $(LlvmSrc)
-	rm -rf $(LlvmBuild)
-	mkdir -p $(LlvmBuild)
-	cd $(LlvmBuild) && cmake $(LlvmSrc) $(LlvmCMakeFlags) $(LLVM_CMAKE_FLAGS)
-	cd $(LlvmBuild) && ninja
-endif
+	cd $(LlvmBuild) && $(cmake) $(LlvmSrc) $(LlvmCMakeFlags)
+	cd $(LlvmBuild) && $(ninja)
 
 .PHONY: distclean-llvm
 distclean-llvm:
 	rm -fv -r $(LlvmSrc)
 	rm -fv -r $(LlvmBuild)
+distclean_targets += distclean-llvm

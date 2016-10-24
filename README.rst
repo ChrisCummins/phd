@@ -18,8 +18,6 @@ Requirements
 -  `GCC <https://gcc.gnu.org/>`__ >= 4.7 or
    `clang <http://llvm.org/releases/download.html>`__ >= 3.1.
 -  `GNU Make <http://savannah.gnu.org/projects/make>`__ >= 3.79.
--  `CMake <https://cmake.org/>`__ >= 3.4.3.
--  `Ninja <https://ninja-build.org/>`__ >= 1.7.
 -  `Python <https://www.python.org/>`__ 2.7 or >= 3.4.
 -  `zlib <http://zlib.net/>`__ >= 1.2.3.4.
 -  `libhdf5 <https://support.hdfgroup.org/HDF5/release/obtainsrc.html>`__ >= 1.8.11.

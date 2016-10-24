@@ -46,5 +46,6 @@ $(torch-rnn): $(torch)
 .PHONY: distclean-torch-rnn
 distclean-torch-rnn:
 	cd $(PWD)/native/torch/trunk && git clean -xfd
-	cd $(PWD)/native/torch-hd5/trunk && git clean -xfd
+	cd $(PWD)/native/torch-hdf5/trunk && git clean -xfd
 	cd $(torch-rnnDir) && git clean -xfd
+distclean_targets += distclean-torch-rnn
