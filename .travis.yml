@@ -36,6 +36,7 @@ env:
   global:
     - CC=clang
     - CXX=clang++
+    - GPU=0
 
 install:
   - make native
