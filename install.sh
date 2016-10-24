@@ -111,7 +111,8 @@ install_sublime() {
     sudo ln -sf "$HOME/.dotfiles/subl/rsub" /usr/local/bin
 
     # sublime conf
-    if [[ -d "$private/subl" ]]; then
+    if [[ -d "$private/subl" ]] && \
+       [[ -d "$HOME/Library/Application Support/Sublime Text 3" ]]; then
         symlink "Library/Application Support/Sublime Text 3" ~/.subl
         symlink "$private/subl/User" ~/.subl/Packages/User
         symlink "$private/subl/INI" ~/.subl/Packages/INI
