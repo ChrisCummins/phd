@@ -30,9 +30,6 @@ PYTHON := python
 VIRTUALENV := virtualenv
 PIP := pip
 
-# path to install native files
-PREFIX := /usr/local
-
 space :=
 space +=
 
@@ -58,6 +55,7 @@ native_targets := \
 	clgen/data/bin/clang \
 	clgen/data/bin/clang-format \
 	clgen/data/bin/clgen-rewriter \
+	clgen/data/bin/opt \
 	$(libclc)
 
 native: $(native_targets)
@@ -73,6 +71,10 @@ clgen/data/bin/clang: $(llvm)
 clgen/data/bin/clang-format: $(llvm)
 	mkdir -p $(dir $@)
 	ln -sf $(llvm_build)/bin/clang-format $@
+
+clgen/data/bin/opt: $(llvm)
+	mkdir -p $(dir $@)
+	ln -sf $(llvm_build)/bin/opt $@
 
 rewriter_flags := $(CXXFLAGS) $(llvm_CxxFlags) $(LDFLAGS) $(llvm_LdFlags)
 
@@ -115,10 +117,7 @@ install-python: install-native
 	$(PIP) install -r requirements.txt
 	$(PYTHON) ./setup.py install
 
-install-native: $(native_targets)
-	cp native/clgen-rewriter $(PREFIX)/libexec
-
-install: install-python install-native
+install: install-python
 
 # generate documentation
 .PHONY: docs
