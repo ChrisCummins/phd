@@ -30,6 +30,7 @@ from pkg_resources import resource_filename, resource_string, require
 
 import labm8
 from labm8 import fs
+from labm8 import system
 
 
 class CLgenError(Exception):
@@ -95,6 +96,20 @@ def must_exist(*path_components, **kwargs):
         e.path = path
         raise e
     return path
+
+
+def host_has_opencl():
+    """
+    Returns whether the host has a working OpenCL.
+
+    Returns:
+
+        bool: True if host has OpenCL support, else False.
+    """
+    try:
+        return system.is_mac() or len(fs.ls('/etc/OpenCL/vendors'))
+    except Exception:
+        return False
 
 
 def checksum(data):
