@@ -19,8 +19,9 @@ addons:
       - libhdf5-serial-dev
 
 env:
-  - CC=gcc-4.8
-  - CXX=g++-4.8
+  global:
+    - CC=gcc-4.8
+    - CXX=g++-4.8
 
 install:
   - pip install --upgrade pip
