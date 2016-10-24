@@ -22,6 +22,9 @@
 root := $(PWD)
 distclean_targets =
 
+# invoke make with GPU=0 to disable gpu
+GPU ?= 1
+
 # python configuration
 PYTHON := python
 VIRTUALENV := virtualenv
@@ -134,3 +137,5 @@ help:
 	@echo "make docs       Build documentation (performs partial install)"
 	@echo "make clean      Remove compiled files"
 	@echo "make distlcean  Remove all generated files"
+	@echo
+	@echo "set GPU=0 to disable CUDA support"
