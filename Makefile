@@ -19,14 +19,10 @@
 #
 .DEFAULT_GOAL = all
 
-# path to virtualenv
+# python configuration
+PYTHON := python
 VIRTUALENV := virtualenv
-# path to python3
-PYTHON3 := python3
-PIP3 := pip3
-# path to python2
-PYTHON2 := python2
-PIP2 := pip
+PIP := pip
 
 # path to install native files
 PREFIX := /usr/local
@@ -34,9 +30,8 @@ PREFIX := /usr/local
 space :=
 space +=
 
-# source virtualenvs
-env3 := source env3/bin/activate &&$(space)
-env2 := source env2/bin/activate &&$(space)
+# source virtualenv
+env := source env/bin/activate &&$(space)
 
 # build everything
 all: virtualenv native
@@ -44,7 +39,7 @@ all: virtualenv native
 # system name
 UNAME := $(shell uname)
 
-# native code
+# modules
 include make/llvm.make
 include make/libclc.make
 include make/torch-rnn.make
@@ -62,26 +57,19 @@ rewriter_flags := $(CXXFLAGS) $(llvm_CxxFlags) $(LDFLAGS) $(llvm_LdFlags)
 native/clgen-rewriter: native/clgen-rewriter.cpp $(llvm)
 	$(CXX) $(rewriter_flags) $< -o $@
 
-# create virtualenvs and install dependencies
-virtualenv: env3/bin/activate env2/bin/activate
+# create virtualenv and install dependencies
+virtualenv: env/bin/activate
 
-env3/bin/activate:
-	$(VIRTUALENV) -p $(PYTHON3) env3
-	$(env3)pip install -r requirements.devel.txt
-	$(env3)pip install -r requirements.txt
-	$(env3)python ./setup.py install
-
-env2/bin/activate:
-	$(VIRTUALENV) -p $(PYTHON2) env2
-	$(env3)pip install -r requirements.devel.txt
-	$(env2)pip install -r requirements.txt
-	$(env2)python ./setup.py install
+env/bin/activate:
+	$(VIRTUALENV) -p $(PYTHON) env
+	$(env)pip install -r requirements.txt
+	$(env)pip install -r requirements.devel.txt
 
 # run tests
 .PHONY: test
 test: virtualenv $(native)
-	$(env3)python ./setup.py test
-	$(env2)python ./setup.py test
+	$(env)python ./setup.py install
+	$(env)python ./setup.py test
 
 # clean compiled files
 .PHONY: clean
@@ -93,26 +81,23 @@ clean:
 distclean: distclean-virtualenv distclean-llvm distclean-libclc
 
 distclean-virtualenv:
-	rm -fr env3 env2
+	rm -fr env
 
 # install globally
-.PHONY: install install3 install2 install-native
-install3: install-native
-	$(PIP3) install -r requirements.txt
-	$(PYTHON3) ./setup.py install
+.PHONY: install install-python install-native
 
-install2: install-native
-	$(PIP2) install -r requirements.txt
-	$(PYTHON2) ./setup.py install
+install-python: install-native
+	$(PIP) install -r requirements.txt
+	$(PYTHON) ./setup.py install
 
 install-native: $(native)
 	cp native/clgen-rewriter $(PREFIX)/libexec
 
-install: install3 install2 install-native
+install: install-python install-native
 
 # generate documentation
 .PHONY: docs
-docs: install2 install3
+docs: install-python
 	rm -rf docs/modules
 	mkdir -p docs/modules
 	@for module in $$(cd clgen; ls *.py | grep -v __init__.py); do \
@@ -131,4 +116,3 @@ help:
 	@echo "make docs       Build documentation (performs partial install)"
 	@echo "make clean      Remove compiled files"
 	@echo "make distlcean  Remove all generated files"
-
