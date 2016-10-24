@@ -9,6 +9,9 @@ the semantics and usage from large volumes of program fragments,
 generating many-core OpenCL programs that are representative of, but
 *distinct* from, the programs it learns from.
 
+.. figure:: assets/pipeline.png
+   :alt: labm8
+
 Requirements
 ------------
 
