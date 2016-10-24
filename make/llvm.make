@@ -55,7 +55,6 @@ llvm_LdFlags = \
 	-lclangParse \
 	-lclangSema \
 	-lclangAnalysis \
-	-lclangARCMigrate \
 	-lclangRewriteFrontend \
 	-lclangRewrite \
 	-lclangEdit \
