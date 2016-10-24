@@ -61,9 +61,6 @@ install_zsh() {
         symlink "$private/zsh/mary.zsh" ~/.zsh/local/mary.zsh
         symlink "$private/zsh/omni.zsh" ~/.zsh/local/omni.zsh
 
-        # Shared history
-        symlink "Dropbox/Shared/zsh/zsh_history" ~/.zsh_history
-
         # Mac-specific shell stuff
         if [[ "$(uname)" == "Darwin" ]]; then
             symlink "$private/zsh/homebrew.zsh" ~/.zsh/local/homebrew.zsh
