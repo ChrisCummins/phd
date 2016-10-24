@@ -1,3 +1,10 @@
+# build environment
+#
+# We need the extra RAM that a non-container build gives us.
+#
+# See: https://docs.travis-ci.com/user/ci-environment/
+sudo: required
+
 language: python
 
 python:
@@ -6,8 +13,12 @@ python:
 #  - "3.4"
 #  - "3.5"
 
-# faster builds plz
-sudo: false
+# cache:
+#   directories:
+#     - native/llvm/3.9.0/build
+#     - native/llvm/3.9.0/src
+#     - native/cmake
+#     - native/ninja
 
 addons:
   apt:
@@ -19,6 +30,7 @@ addons:
       - g++-4.8
       - clang-3.6
       - libhdf5-serial-dev
+      - python-dev
 
 env:
   global:
