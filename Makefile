@@ -56,8 +56,11 @@ include make/torch-rnn.make
 native_targets := \
 	clgen/data/bin/llvm-config \
 	clgen/data/bin/clang \
-	native/clgen-rewriter \
+	clgen/data/bin/clang-format \
+	clgen/data/bin/clgen-rewriter \
 	$(libclc)
+
+native: $(native_targets)
 
 clgen/data/bin/llvm-config: $(llvm)
 	mkdir -p $(dir $@)
@@ -67,11 +70,13 @@ clgen/data/bin/clang: $(llvm)
 	mkdir -p $(dir $@)
 	ln -sf $(llvm_build)/bin/clang $@
 
-native: $(native_targets)
+clgen/data/bin/clang-format: $(llvm)
+	mkdir -p $(dir $@)
+	ln -sf $(llvm_build)/bin/clang-format $@
 
 rewriter_flags := $(CXXFLAGS) $(llvm_CxxFlags) $(LDFLAGS) $(llvm_LdFlags)
 
-native/clgen-rewriter: native/clgen-rewriter.cpp $(llvm)
+clgen/data/bin/clgen-rewriter: native/clgen-rewriter.cpp $(llvm)
 	@echo
 	@echo "LLVM LIBS: $(shell ls $(llvm_build)/lib)"
 	@echo
@@ -94,8 +99,7 @@ test: virtualenv $(native_targets)
 # clean compiled files
 .PHONY: clean
 clean:
-	rm -f native/clgen-rewriter
-	rm -f clgen/data/bin/clang
+	rm -fv $(native_targets)
 
 # clean everything
 .PHONY: distclean distclean-virtualenv

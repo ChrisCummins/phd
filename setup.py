@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
+import os
 import pip
 from setuptools import setup
 from setuptools.command.install import install
@@ -29,6 +30,30 @@ from pip.req import parse_requirements
 install_reqs = parse_requirements('./requirements.txt', session=False)
 reqs = [str(ir.req) for ir in install_reqs]
 
+
+def all_module_data_files(module, datadir="data"):
+    """
+    Find all data files.
+
+    Returns:
+        str[]: Relative paths to all data files.
+    """
+    cwd = os.getcwd()
+
+    # change to the module directory, since package_data paths must be relative
+    # to this.
+    os.chdir(module)
+
+    # recursively list files in datadir, relative to module root
+    files = [
+        os.path.join(dp, f) for dp, dn, filenames
+        in os.walk(datadir, followlinks=True) for f in filenames]
+
+    # restore working directory
+    os.chdir(cwd)
+
+    return files
+
 setup(
     name='CLgen',
     version='0.0.1',
@@ -38,12 +63,7 @@ setup(
     author_email='chrisc.101@gmail.com',
     license='GNU General Public License, Version 3',
     packages=['clgen'],
-    package_data={'clgen': [
-        'data/*.json',
-        'data/bin/*',
-        'data/include/*',
-        'data/sql/*',
-    ]},
+    package_data={'clgen': all_module_data_files("clgen")},
     scripts=[
         'bin/clgen',
     ],
