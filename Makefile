@@ -56,7 +56,7 @@ native_targets := \
 	clgen/data/bin/clang-format \
 	clgen/data/bin/clgen-rewriter \
 	clgen/data/bin/opt \
-	$(libclc)
+	clgen/data/libclc
 
 native: $(native_targets)
 
@@ -75,6 +75,10 @@ clgen/data/bin/clang-format: $(llvm)
 clgen/data/bin/opt: $(llvm)
 	mkdir -p $(dir $@)
 	ln -sf $(llvm_build)/bin/opt $@
+
+clgen/data/libclc: $(libclc)
+	mkdir -p $(dir $@)
+	ln -sf $(libclc_dir) $@
 
 rewriter_flags := $(CXXFLAGS) $(llvm_CxxFlags) $(LDFLAGS) $(llvm_LdFlags)
 
