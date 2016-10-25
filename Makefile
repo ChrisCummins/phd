@@ -145,6 +145,17 @@ docs: install-python
 		sed -i "s/@MODULE@/clgen.$${module%.py}/g" docs/modules/clgen.$${module%.py}.rst; \
 		sed -i "s/@MODULE_UNDERLINE@/$$(head -c $$(echo clgen.$${module%.py} | wc -c) < /dev/zero | tr '\0' '=')/" docs/modules/clgen.$${module%.py}.rst; \
 	done
+	cp docs/binaries.rst.template docs/binaries.rst
+	@for bin in $$(ls bin); do \
+		echo "adding entry for $$bin"; \
+		echo $$bin >> docs/binaries.rst; \
+		echo "$$(head -c $$(echo $$bin | wc -c) < /dev/zero | tr '\0' '-')" >> docs/binaries.rst; \
+		echo >> docs/binaries.rst; \
+		echo "::" >> docs/binaries.rst; \
+		echo >> docs/binaries.rst; \
+		./bin/$$bin --help | sed 's/^/    /' >> docs/binaries.rst; \
+		echo >> docs/binaries.rst; \
+	done
 	$(env3)$(MAKE) -C docs html
 
 # help text

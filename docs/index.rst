@@ -10,6 +10,7 @@ List of Pages
 
 .. toctree::
 
+   binaries
    python
    license
 
