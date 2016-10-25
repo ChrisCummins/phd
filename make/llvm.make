@@ -44,6 +44,7 @@ llvm_CxxFlags = \
 # flags to link against compiled LLVM
 llvm_LdFlags = \
 	$(shell $(llvm) --system-libs 2>/dev/null) \
+	-Wl,-rpath=$(llbm_build)/lib \
 	-L$(llvm_build)/lib \
 	-ldl \
 	-lclangTooling \
@@ -63,7 +64,7 @@ llvm_LdFlags = \
 	-lclangBasic \
 	-lclang \
 	-ldl \
-	$(shell $(llvm) --libs 2>/dev/null) \
+	$(shell $(llvm) --libs | tr ' ' '\n' | grep -v lgtest | tr '\n' ' ' 2>/dev/null) \
 	-pthread \
 	-lLLVMTarget -lLLVMMC \
 	-lLLVMObject -lLLVMCore

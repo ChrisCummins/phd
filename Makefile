@@ -82,7 +82,8 @@ clgen/data/bin/clgen-rewriter: native/clgen-rewriter.cpp $(llvm)
 	@echo
 	@echo "LLVM LIBS: $(shell ls $(llvm_build)/lib)"
 	@echo
-	$(CXX) $(rewriter_flags) $< -o $@
+	mkdir -p $(dir $@)
+	$(CXX) $< -o $@ $(rewriter_flags)
 
 # create virtualenv and install dependencies
 virtualenv: env/bin/activate
