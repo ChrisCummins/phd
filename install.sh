@@ -107,6 +107,7 @@ install_tmux() {
 install_vim() {
     symlink .dotfiles/vim/vimrc ~/.vimrc
     clone_repo https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+    vim +PluginInstall +qall
 }
 
 
