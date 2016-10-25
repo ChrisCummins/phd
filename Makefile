@@ -83,9 +83,6 @@ clgen/data/libclc: $(libclc)
 rewriter_flags := $(CXXFLAGS) $(llvm_CxxFlags) $(LDFLAGS) $(llvm_LdFlags)
 
 clgen/data/bin/clgen-rewriter: native/clgen-rewriter.cpp $(llvm)
-	@echo
-	@echo "LLVM LIBS: $(shell ls $(llvm_build)/lib)"
-	@echo
 	mkdir -p $(dir $@)
 	$(CXX) $< -o $@ $(rewriter_flags)
 
