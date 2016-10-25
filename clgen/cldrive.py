@@ -26,16 +26,12 @@ from __future__ import unicode_literals
 from __future__ import with_statement
 
 from copy import deepcopy
-from functools import partial, wraps
+from functools import partial
 from io import open
 from random import randrange
-from subprocess import check_output
-from threading import Thread
 
 import numpy as np
 import os
-import pyopencl as cl
-import signal
 import sys
 
 import labm8
@@ -51,6 +47,9 @@ if labm8.is_python3():
     from io import StringIO
 else:
     from StringIO import StringIO
+
+if clgen.host_has_opencl():
+    import pyopencl as cl
 
 
 class CLDriveException(clgen.CLgenError): pass
