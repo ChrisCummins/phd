@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 #
+# clgen-preprocess: Process OpenCL files for machine learning
+#
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is part of CLgen.
@@ -19,7 +21,6 @@
 #
 from argparse import ArgumentParser
 
-import clgen
 from clgen import preprocess
 
 
