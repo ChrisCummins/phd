@@ -19,6 +19,7 @@
 #
 import os
 import pip
+
 from setuptools import setup
 from setuptools.command.install import install
 from pip.req import parse_requirements
@@ -66,6 +67,13 @@ setup(
     package_data={'clgen': all_module_data_files("clgen")},
     scripts=[
         'bin/clgen',
+        'bin/clgen-drive',
+        'bin/clgen-explore',
+        'bin/clgen-fetch',
+        'bin/clgen-fetch-clgen',
+        'bin/clgen-fetch-clsmith',
+        'bin/clgen-fetch-db',
+        'bin/clgen-fetch-github',
         'bin/clgen-preprocess',
     ],
     test_suite='nose.collector',

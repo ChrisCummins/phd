@@ -27,19 +27,17 @@ from __future__ import with_statement
 import json
 import os
 import re
+import requests
 import sys
 import sqlite3
 
-from time import sleep
-from functools import partial
-from io import open
-
-import requests
-
 from base64 import b64decode
+from functools import partial
 from github import Github, GithubException
 from hashlib import sha1
+from io import open
 from subprocess import Popen
+from time import sleep
 
 import clgen
 from clgen import clutil
@@ -454,7 +452,7 @@ def process_sample_file(db_path, sample_path, first_only=False):
     explore.explore(db_path)
 
 
-def clgen(db_path, samples_dir, sample_path, first_only):
+def clgen_sample(db_path, samples_dir, sample_path, first_only):
     if samples_dir:
         files = [os.path.join(samples_dir, f) for f in os.listdir(samples_dir)
                  if os.path.isfile(os.path.join(samples_dir, f))]
