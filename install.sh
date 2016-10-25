@@ -40,6 +40,13 @@ clone_repo() {
 }
 
 
+make_local_dirs() {
+    mkdir -p $HOME/.local/bin
+    mkdir -p $HOME/.local/share
+    mkdir -p $HOME/.local/src
+}
+
+
 install_zsh() {
     # Install zsh configuration
     clone_repo git@github.com:ChrisCummins/zsh.git ~/.local/src/zsh
@@ -156,6 +163,7 @@ install_servers() {
 
 
 main() {
+    make_local_dirs
     install_ssh
     install_zsh
     install_dropbox
