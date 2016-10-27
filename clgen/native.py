@@ -27,6 +27,7 @@ import clgen
 
 CLANG = clgen.data_path(fs.path("bin", "clang"))
 CLANG_FORMAT = clgen.data_path(fs.path("bin", "clang-format"))
+CLGEN_FEATURES = clgen.data_path(fs.path("bin", "clgen-features"))
 CLGEN_REWRITER = clgen.data_path(fs.path("bin", "clgen-rewriter"))
 LIBCLC = clgen.data_path("libclc")
 OPT = clgen.data_path(fs.path("bin", "opt"))

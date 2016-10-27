@@ -54,6 +54,7 @@ native_targets := \
 	clgen/data/bin/llvm-config \
 	clgen/data/bin/clang \
 	clgen/data/bin/clang-format \
+	clgen/data/bin/clgen-features \
 	clgen/data/bin/clgen-rewriter \
 	clgen/data/bin/opt \
 	clgen/data/libclc
@@ -80,11 +81,15 @@ clgen/data/libclc: $(libclc)
 	mkdir -p $(dir $@)
 	ln -sf $(libclc_dir)/generic $@
 
-rewriter_flags := -xc++ $(llvm_CxxFlags) $(LDFLAGS) $(llvm_LdFlags)
+toolchain_flags := -xc++ $(llvm_CxxFlags) $(llvm_LdFlags)
+
+clgen/data/bin/clgen-features: native/clgen-features.cpp $(llvm)
+	mkdir -p $(dir $@)
+	$(CXX) $< -o $@ $(toolchain_flags)
 
 clgen/data/bin/clgen-rewriter: native/clgen-rewriter.cpp $(llvm)
 	mkdir -p $(dir $@)
-	$(CXX) $< -o $@ $(rewriter_flags)
+	$(CXX) $< -o $@ $(toolchain_flags)
 
 # create virtualenv and install dependencies
 virtualenv: env/bin/activate

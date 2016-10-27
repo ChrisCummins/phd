@@ -70,6 +70,7 @@ setup(
         'bin/clgen-create-db',
         'bin/clgen-drive',
         'bin/clgen-explore',
+        'bin/clgen-features',
         'bin/clgen-fetch',
         'bin/clgen-fetch-clgen',
         'bin/clgen-fetch-clsmith',
