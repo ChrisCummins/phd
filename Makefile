@@ -78,7 +78,7 @@ clgen/data/bin/opt: $(llvm)
 
 clgen/data/libclc: $(libclc)
 	mkdir -p $(dir $@)
-	ln -sf $(libclc_dir) $@
+	ln -sf $(libclc_dir)/generic $@
 
 rewriter_flags := -xc++ $(llvm_CxxFlags) $(LDFLAGS) $(llvm_LdFlags)
 
