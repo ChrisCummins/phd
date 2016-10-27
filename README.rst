@@ -38,7 +38,8 @@ Checkout CLgen locally.
 
     $ git clone --recursive https://github.com/ChrisCummins/clgen.git
 
-Build and install clgen.
+Build and install clgen. If CUDA support is not available on your system,
+first `export CLGEN_GPU=0`.
 
 ::
 

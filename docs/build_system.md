@@ -1,0 +1,87 @@
+# Building CLgen
+
+If your system has the [required
+components](https://github.com/ChrisCummins/clgen#requirements), then building
+CLgen should be a relatively straightforward. First, if GPU support is *not*
+required (i.e. you don't have an NVIDIA GPU running CUDA >= 6.5), then set the
+following environment variable:
+
+```
+$ export CLGEN_GPU=0
+```
+
+For convenience sake you may consider adding that to your shell configuration:
+
+```
+export CLGEN_GPU=0 >> ~/.$(basename $SHELL)rc
+```
+
+Then, run the following commands to compile and install the clgen software
+stack:
+
+```sh
+$ make llvm
+$ make
+$ sudo make install
+```
+
+This may take some time (upwards of an hour). If you encounter any problems,
+please consider opening a [bug
+report](https://github.com/ChrisCummins/clgen/issues). The remainder of this
+document provides a brief outline of the build process, which may be useful for
+diagnosing a problem, if one arises.
+
+## Host Toolchain
+
+CLgen requires the LLVM and Clang libraries and binaries. These are built in
+three steps:
+
+```sh
+$ make ninja
+```
+
+The ninja build tool is downloaded and compiled in `native/ninja`.
+
+```sh
+$ make cmake
+```
+
+A precompiled version of CMake is downloaded to `native/cmake`.
+
+```
+$ make llvm
+```
+
+The clang compiler is downloaded and compiled in in `native/llvm`.
+
+## Native File Compilation
+
+```sh
+$ make native
+```
+
+Once the toolchain has been built, it is used to compile the native components
+of CLgen.
+
+## Python Package Installation
+
+One the native components are compiled, the remainder of the build process
+involves installing the python package. This is performed either in a virtual
+environment or into the system python path. The unit tests are performed using a
+virtual environment install:
+
+```sh
+$ make test
+```
+
+The process for virtual environment or system-wide install is the same:
+
+```sh
+$ pip install --upgrade pip
+$ pip install numpy>=1.10.4
+$ pip install -r requirements.txt
+$ pip install -r requirements.devel.txt
+$ if [ "$GPU" -ne 0 ]; then pip install -r requirements.gpu.txt; fi
+$ python ./setup.py install
+$ python ./setup.py test
+```
