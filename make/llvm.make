@@ -44,7 +44,7 @@ llvm_CxxFlags = \
 # flags to link against compiled LLVM
 llvm_LdFlags = \
 	$(shell $(llvm) --system-libs 2>/dev/null) \
-	-Wl,-rpath=$(llvm_build)/lib \
+	-Wl,-rpath,$(llvm_build)/lib \
 	-L$(llvm_build)/lib \
 	-ldl \
 	-lclangTooling \
