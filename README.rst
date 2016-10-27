@@ -44,7 +44,7 @@ Build and install clgen.
 
     $ sudo make install
 
-Train and sample a clgen model using a small included training set.
+Train and sample a clgen model using the small included training set.
 
 ::
 
