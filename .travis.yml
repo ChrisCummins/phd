@@ -40,6 +40,8 @@ env:
     - CXX=clang++
     - GPU=0
 
+# note that we pipe the install output to /dev/null because it's too verbose
+# (thousands of files are copied from clgen/data/libclc).
 install:
   - make llvm
   - make native
@@ -50,7 +52,7 @@ install:
   - pip install --only-binary=pandas pandas>=0.19.0
   - pip install Cython==0.23.4
   - pip install -r requirements.txt
-  - python ./setup.py install
+  - python ./setup.py install >/dev/null
 
 script:
   - python ./setup.py test
