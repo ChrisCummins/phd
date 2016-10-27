@@ -759,7 +759,7 @@ void usage(const std::string& progname, std::ostream& out = std::cout) {
 
 
 int main(int argc, char** argv) {
-  const std::vector<const std::string> args{argv + 1, argv + argc};
+  const std::vector<std::string> args{argv + 1, argv + argc};
   std::vector<std::string> paths, compiler_args;
 
   for (const auto& arg : args) {
