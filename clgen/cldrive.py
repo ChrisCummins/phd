@@ -516,7 +516,7 @@ class KernelPayload(object):
         return KernelPayload._create_payload(np.random.rand, *args, **kwargs)
 
 
-def kernel(src, filename='<stdin>', devtype=cl.device_type.GPU,
+def kernel(src, filename='<stdin>', devtype="__placeholder__",
            size=None, must_validate=False, fatal_errors=False):
     """
     Drive a kernel.
@@ -526,6 +526,11 @@ def kernel(src, filename='<stdin>', devtype=cl.device_type.GPU,
         out:      <file> <size> <kernel> <wgsize> <transfer> <runtime> <ci>
         metaout:  <file> <size> <error> <kernel>
     """
+    # we have to use a string as a placeholder for the default type or else
+    # module import will break when pyopencl is not installed:
+    if devtype == "__placeholder__":
+        devtype = cl.device_type.GPU
+
     try:
         ctx, queue = init_opencl(devtype=devtype)
         driver = KernelDriver(ctx, src)
