@@ -15,10 +15,7 @@ python:
 
 cache:
   directories:
-    - native/llvm/3.9.0/build/bin
-    - native/llvm/3.9.0/build/lib
-    - native/llvm/3.9.0/src/include
-    - native/llvm/3.9.0/src/tools/clang/include
+    - native/llvm/3.9.0
     - native/cmake
     - native/ninja
 
