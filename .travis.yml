@@ -39,6 +39,7 @@ env:
     - GPU=0
 
 install:
+  - make llvm
   - make native
   - pip install --upgrade pip
   - pip install coveralls
