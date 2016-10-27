@@ -64,9 +64,10 @@ setup(
     author_email='chrisc.101@gmail.com',
     license='GNU General Public License, Version 3',
     packages=['clgen'],
-    package_data={'clgen': all_module_data_files("clgen")},
+    package_data={'clgen': all_module_data_files('clgen')},
     scripts=[
         'bin/clgen',
+        'bin/clgen-create-db',
         'bin/clgen-drive',
         'bin/clgen-explore',
         'bin/clgen-fetch',
