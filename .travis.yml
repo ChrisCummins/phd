@@ -13,12 +13,14 @@ python:
 #  - "3.4"
 #  - "3.5"
 
-# cache:
-#   directories:
-#     - native/llvm/3.9.0/build
-#     - native/llvm/3.9.0/src
-#     - native/cmake
-#     - native/ninja
+cache:
+  directories:
+    - native/llvm/3.9.0/build/bin
+    - native/llvm/3.9.0/build/lib
+    - native/llvm/3.9.0/src/include
+    - native/llvm/3.9.0/src/tools/clang/include
+    - native/cmake
+    - native/ninja
 
 addons:
   apt:
