@@ -97,9 +97,16 @@ def hang_requires_restart():
     return True
 
 
-def init_opencl(devtype=cl.device_type.GPU, queue_flags=0):
+def init_opencl(devtype="__placeholder__", queue_flags=0):
     """
     Initialise an OpenCL context with some command queue.
+
+    Arguments:
+
+        devtype (pyopencl.device_type, optional): OpenCL device type.
+            Default: gpu.
+        queue_flags (cl.command_queue_properties, optional): Bitfield of
+            OpenCL queue constructor options.
 
     Raises:
 
@@ -108,6 +115,11 @@ def init_opencl(devtype=cl.device_type.GPU, queue_flags=0):
     """
     if not clgen.host_has_opencl():
         raise OpenCLNotSupported
+
+    # we have to use a string as a placeholder for the default type or else
+    # module import will break when pyopencl is not installed:
+    if devtype == "__placeholder__":
+        devtype = cl.device_type.GPU
 
     platforms = cl.get_platforms()
     try:
