@@ -82,9 +82,9 @@ clgen/data/libclc: $(libclc)
 
 rewriter_flags := -xc++ $(llvm_CxxFlags) $(LDFLAGS) $(llvm_LdFlags)
 
-clgen/data/bin/clgen-rewriter: native/clgen-rewriter.cpp clgen/data/bin/clang
+clgen/data/bin/clgen-rewriter: native/clgen-rewriter.cpp $(llvm)
 	mkdir -p $(dir $@)
-	clgen/data/bin/clang $< -o $@ $(rewriter_flags)
+	$(CXX) $< -o $@ $(rewriter_flags)
 
 # create virtualenv and install dependencies
 virtualenv: env/bin/activate
