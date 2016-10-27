@@ -61,10 +61,12 @@ install_zsh() {
     git pull origin master
     git submodule update
 
+    # install config files
+    symlink ~/.dotfiles ~/.zsh/local/git.zsh
+
     # install local config files
     if [[ -d "$private/zsh" ]]; then
         symlink "$private/zsh/diana.zsh" ~/.zsh/local/diana.zsh
-        symlink "$private/zsh/git.zsh" ~/.zsh/local/git.zsh
         symlink "$private/zsh/mary.zsh" ~/.zsh/local/mary.zsh
         symlink "$private/zsh/omni.zsh" ~/.zsh/local/omni.zsh
 
