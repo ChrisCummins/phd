@@ -15,8 +15,9 @@ python:
 
 cache:
   directories:
-    - native/llvm/3.9.0
     - native/cmake
+    - native/libclc
+    - native/llvm/3.9.0
     - native/ninja
 
 addons:
