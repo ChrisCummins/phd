@@ -102,7 +102,7 @@ endef
 
 # unpack LLVM tree from cached tarballs
 ifeq ($(UNAME),Darwin)
-$(llvm_src)/CMakeLists.txt: $(llvm_tars)
+$(llvm_src)/include/llvm/CMakeLists.txt: $(llvm_tars)
 	$(call unpack-llvm-tar,,llvm)
 	$(call unpack-llvm-tar,tools/clang,cfe)
 	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
@@ -111,7 +111,7 @@ $(llvm_src)/CMakeLists.txt: $(llvm_tars)
 	$(call unpack-llvm-tar,projects/libcxxabi,libcxxabi)
 	touch $@
 else
-$(llvm_src)/CMakeLists.txt: $(llvm_tars)
+$(llvm_src)/include/llvm/CMakeLists.txt: $(llvm_tars)
 	$(call unpack-llvm-tar,,llvm)
 	$(call unpack-llvm-tar,tools/clang,cfe)
 	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
@@ -125,7 +125,7 @@ llvm_cmake_flags := -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true \
 	-Wno-dev $(LLVM_CMAKE_FLAGS)
 
 # build llvm
-$(llvm): $(llvm_src)/CMakeLists.txt $(cmake) $(ninja)
+$(llvm): $(llvm_src)/include/llvm/CMakeLists.txt $(cmake) $(ninja)
 	rm -rf $(llvm_build)
 	mkdir -p $(llvm_build)
 	cd $(llvm_build) && $(cmake) $(llvm_src) $(llvm_cmake_flags)
