@@ -79,7 +79,7 @@ endif
 llvm_components := llvm cfe clang-tools-extra
 
 ifeq ($(UNAME),Darwin)
-llvm_components += compiler-rt libcxx libcxxabi
+llvm_components += libcxx libcxxabi
 endif
 
 llvm_url_base := http://llvm.org/releases/$(llvm_version)/
@@ -106,7 +106,6 @@ $(llvm_src)/include/llvm/CMakeLists.txt: $(llvm_tars)
 	$(call unpack-llvm-tar,,llvm)
 	$(call unpack-llvm-tar,tools/clang,cfe)
 	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
-	$(call unpack-llvm-tar,projects/compiler-rt,compiler-rt)
 	$(call unpack-llvm-tar,projects/libcxx,libcxx)
 	$(call unpack-llvm-tar,projects/libcxxabi,libcxxabi)
 	touch $@
