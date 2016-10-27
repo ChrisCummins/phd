@@ -22,8 +22,8 @@
 root := $(PWD)
 distclean_targets =
 
-# invoke make with GPU=0 to disable gpu
-GPU ?= 1
+# invoke make with CLGEN_GPU=0 to disable gpu
+CLGEN_GPU ?= 1
 
 # python configuration
 PYTHON := python
@@ -90,7 +90,7 @@ clgen/data/bin/clgen-rewriter: native/clgen-rewriter.cpp clgen/data/bin/clang
 virtualenv: env/bin/activate
 
 # we keep GPU dependencies in a separate requirements file
-ifeq ($(GPU),0)
+ifeq ($(CLGEN_GPU),0)
 env/bin/activate:
 	$(VIRTUALENV) -p $(PYTHON) env
 	$(env)pip install -r requirements.txt
@@ -124,7 +124,7 @@ distclean-virtualenv:
 # install globally
 .PHONY: install install-python install-native
 
-ifeq ($(GPU),0)
+ifeq ($(CLGEN_GPU),0)
 install-python: install-native
 	$(PIP) install -r requirements.txt
 	$(PYTHON) ./setup.py install
@@ -170,4 +170,4 @@ help:
 	@echo "make clean      Remove compiled files"
 	@echo "make distlcean  Remove all generated files"
 	@echo
-	@echo "set GPU=0 to disable CUDA support"
+	@echo "set CLGEN_GPU=0 to disable CUDA support"

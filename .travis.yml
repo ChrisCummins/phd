@@ -35,7 +35,7 @@ env:
   global:
     - CC=clang
     - CXX=clang++
-    - GPU=0
+    - CLGEN_GPU=0
 
 # note that we pipe the install output to /dev/null because it's too verbose
 # (thousands of files are copied from clgen/data/libclc).
