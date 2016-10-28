@@ -158,16 +158,22 @@ install: install-python
 # generate documentation
 .PHONY: docs
 docs: install-python
-	rm -rf docs/modules
-	mkdir -p docs/modules
+	@echo "generating API documentation"
+	cp docs/api.rst.template docs/api.rst
 	@for module in $$(cd clgen; ls *.py | grep -v __init__.py); do \
-		cp -v docs/module.rst.template docs/modules/clgen.$${module%.py}.rst; \
-		sed -i "s/@MODULE@/clgen.$${module%.py}/g" docs/modules/clgen.$${module%.py}.rst; \
-		sed -i "s/@MODULE_UNDERLINE@/$$(head -c $$(echo clgen.$${module%.py} | wc -c) < /dev/zero | tr '\0' '=')/" docs/modules/clgen.$${module%.py}.rst; \
+		echo "adding module documentation for clgen.$${module%.py}"; \
+		echo clgen.$${module%.py} >> docs/api.rst; \
+		echo "$$(head -c $$(echo clgen.$${module%.py} | wc -c) < /dev/zero | tr '\0' '-')" >> docs/api.rst; \
+		echo >> docs/api.rst; \
+		echo ".. automodule:: clgen.$${module%.py}" >> docs/api.rst; \
+		echo "   :members:" >> docs/api.rst; \
+		echo "   :undoc-members:" >> docs/api.rst; \
+		echo >> docs/api.rst; \
 	done
+	@echo "generating binary documentation"
 	cp docs/binaries.rst.template docs/binaries.rst
 	@for bin in $$(ls bin); do \
-		echo "adding entry for $$bin"; \
+		echo "adding binary documentation for $$bin"; \
 		echo $$bin >> docs/binaries.rst; \
 		echo "$$(head -c $$(echo $$bin | wc -c) < /dev/zero | tr '\0' '-')" >> docs/binaries.rst; \
 		echo >> docs/binaries.rst; \

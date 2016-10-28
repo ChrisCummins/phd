@@ -5,14 +5,14 @@
 
 .. include:: ../README.rst
 
-List of Pages
--------------
+Contents
+========
 
 .. toctree::
 
    build_system
    binaries
-   python
+   api
    license
 
 

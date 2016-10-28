@@ -1,6 +1,0 @@
-@MODULE@
-@MODULE_UNDERLINE@
-
-.. automodule:: @MODULE@
-   :members:
-   :undoc-members:
