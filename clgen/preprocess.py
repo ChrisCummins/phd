@@ -88,7 +88,7 @@ def clang_cl_args(target=CLANG_CL_TARGETS[0],
     ]
 
     return [
-        '-I' + fs.path(native.LIBCLC, "include"),
+        '-I' + fs.path(native.LIBCLC),
         '-include', native.SHIMFILE,
         '-target', target,
         '-ferror-limit={}'.format(error_limit),

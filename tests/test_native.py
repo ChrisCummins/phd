@@ -40,7 +40,7 @@ class TestNative(TestCase):
 
     def test_libclc(self):
         self.assertTrue(fs.isdir(native.LIBCLC))
-        self.assertTrue(fs.isfile(native.LIBCLC, "include", "clc", "clc.h"))
+        self.assertTrue(fs.isfile(native.LIBCLC, "clc", "clc.h"))
 
     def test_shimfile(self):
         self.assertTrue(fs.isfile(native.SHIMFILE))

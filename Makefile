@@ -81,7 +81,7 @@ clgen/data/bin/opt: $(llvm)
 clgen/data/libclc: $(libclc)
 	mkdir -p $(dir $@)
 	rm -f $@
-	ln -sf $(libclc_dir)/generic $@
+	ln -sf $(libclc_dir)/generic/include $@
 
 toolchain_flags := -xc++ $(llvm_CxxFlags) $(llvm_LdFlags)
 
