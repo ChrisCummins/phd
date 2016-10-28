@@ -1,5 +1,8 @@
 {
-  "corpus": "data/corpus",
+  "corpus": {
+    "path": "corpus",
+    "github": false
+  },
   "train_opts": {
     "model_type": "lstm",
     "rnn_size": 512,
