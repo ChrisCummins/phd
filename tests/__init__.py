@@ -86,10 +86,14 @@ def unpack_archive(*components, **kwargs):
     path = fs.path(*components)
     compression = kwargs.get("compression", "bz2")
 
+    # extract tar relative to it's directory
+    fs.cd(fs.dirname(path))
+
     tar = tarfile.open(path, "r:" + compression)
     tar.extractall()
     tar.close()
-    print("extracted")
+
+    fs.cdpop()
 
 
 def archive(*components):
