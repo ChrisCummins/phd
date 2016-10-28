@@ -32,24 +32,36 @@ Optional, but highly recommended:
 Getting started
 ---------------
 
-Checkout CLgen locally.
+Checkout CLgen locally:
 
 ::
 
-    $ git clone --recursive https://github.com/ChrisCummins/clgen.git
+    git clone --recursive https://github.com/ChrisCummins/clgen.git
 
-Build and install clgen. If CUDA support is not available on your system,
-first `export CLGEN_GPU=0`.
-
-::
-
-    $ sudo make install
-
-Train and sample a clgen model using the small included training set.
+If CUDA support is not available on your system (see optional requirements),
+run:
 
 ::
 
-    $ clgen model.json arguments.json
+    export CLGEN_GPU=0
+
+Build and install clgen:
+
+::
+
+    ./install.sh
+
+Run the test suite. Everything should pass:
+
+::
+
+    ./test.sh
+
+Train and sample a clgen model using the small included training set:
+
+::
+
+    clgen model.json arguments.json
 
 License
 -------
