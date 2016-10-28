@@ -30,20 +30,20 @@ torch-rnn: $(torch-rnn)
 # extra CUDA libraries if GPU is enabled
 ifeq ($(CLGEN_GPU),0)
 $(torch-rnn): $(torch)
-	luarocks install torch
-	luarocks install nn
-	luarocks install optim
-	luarocks install lua-cjson
-	cd $(PWD)/native/torch-hdf5/trunk && luarocks make hdf5-0.0.rockspec
+	$(luarocks) install torch
+	$(luarocks) install nn
+	$(luarocks) install optim
+	$(luarocks) install lua-cjson
+	cd $(PWD)/native/torch-hdf5/trunk && $(luarocks) make hdf5-0-0.rockspec
 	touch $@
 else
-	luarocks install torch
-	luarocks install nn
-	luarocks install optim
-	luarocks install lua-cjson
-	cd $(PWD)/native/torch-hdf5/trunk && luarocks make hdf5-0.0.rockspec
-	luarocks install cutorch
-	luarocks install cunn
+	$(luarocks) install torch
+	$(luarocks) install nn
+	$(luarocks) install optim
+	$(luarocks) install lua-cjson
+	cd $(PWD)/native/torch-hdf5/trunk && $(luarocks) make hdf5-0-0.rockspec
+	$(luarocks) install cutorch
+	$(luarocks) install cunn
 	touch $@
 endif
 
