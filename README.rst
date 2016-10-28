@@ -1,13 +1,14 @@
-clgen - Deep Learning Program Generator
-=======================================
+.. figure:: assets/logo.png
+   :alt: CLgen: Deep Learning Program Generator
+
 
 |Build Status|
 
-CLgen is the first application for generating executable programs using
-deep learning. It *learns* to program using neural networks which model
-the semantics and usage from large volumes of program fragments,
-generating many-core OpenCL programs that are representative of, but
-*distinct* from, the programs it learns from.
+CLgen is an application for generating executable programs using deep learning.
+CLgen *learns* to program using neural networks which model the semantics and
+usage from large volumes of program fragments, generating many-core OpenCL
+programs that are representative of, but *distinct* from, the programs it learns
+from.
 
 .. figure:: assets/pipeline.png
    :alt: labm8
