@@ -16,13 +16,10 @@ For convenience sake you may consider adding that to your shell configuration:
 export CLGEN_GPU=0 >> ~/.$(basename $SHELL)rc
 ```
 
-Then, run the following commands to compile and install the clgen software
-stack:
+Then, compile and install the clgen software stack in one shot:
 
 ```sh
-$ make llvm
-$ make
-$ sudo make install
+$ ./install.sh
 ```
 
 This may take some time (upwards of an hour). If you encounter any problems,
@@ -61,7 +58,25 @@ $ make native
 ```
 
 Once the toolchain has been built, it is used to compile the native components
-of CLgen.
+of CLgen. Roughly, those are:
+
+```sh
+$ make libclc
+```
+
+Libclc provides headers for a generic OpenCL implementation.
+
+```
+$ make torch
+```
+
+The machine learning is implemented using torch.
+
+```
+$ make torch-rnn
+```
+
+Torch-rnn provides the recursive neural network.
 
 ## Python Package Installation
 

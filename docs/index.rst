@@ -10,9 +10,9 @@ List of Pages
 
 .. toctree::
 
+   build_system
    binaries
    python
-   build_system
    license
 
 
