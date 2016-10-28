@@ -26,6 +26,10 @@ torch_src := $(PWD)/native/torch/$(torch_version)/src
 torch_build := $(PWD)/native/torch/$(torch_version)/build
 torch := $(torch_build)/.bootstrapped
 
+# compiled binaries
+luarocks := $(torch_build)/bin/luarocks
+th := $(torch_build)/bin/th
+
 torch: $(torch)
 
 $(torch):
