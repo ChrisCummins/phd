@@ -77,6 +77,7 @@ setup(
         'bin/clgen-fetch-db',
         'bin/clgen-fetch-github',
         'bin/clgen-preprocess',
+        'bin/clgen-train',
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
