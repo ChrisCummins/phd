@@ -20,21 +20,26 @@ from __future__ import absolute_import, print_function, with_statement
 
 import os
 import sqlite3
+import tarfile
 
+from labm8 import fs
 from unittest import TestCase
 
 import clgen
 
-class TestData404(Exception): pass
+
+class TestData404(Exception):
+    pass
 
 
-def data_path(path, exists=True):
+def data_path(*components, **kwargs):
     """
     Return absolute path to unittest data file. Data files are located in
     tests/data.
 
     Args:
-        path (str): Relative path.
+        *components (str[]): Relative path.
+        **kwargs (dict, optional): If 'exists' True, require that file exists.
 
     Returns:
         string: Absolute path.
@@ -42,18 +47,21 @@ def data_path(path, exists=True):
     Raises:
         TestData404: If path doesn"t exist.
     """
+    path = fs.path(*components)
+    exists = kwargs.get("exists", True)
+
     abspath = os.path.join(os.path.dirname(__file__), "data", path)
     if exists and not os.path.exists(abspath):
         raise TestData404(abspath)
     return abspath
 
 
-def data_str(path):
+def data_str(*components):
     """
     Return contents of unittest data file as a string.
 
     Args:
-        path (str): Relative path.
+        *components (str[]): Relative path.
 
     Returns:
         string: File contents.
@@ -61,37 +69,42 @@ def data_str(path):
     Raises:
         TestData404: If path doesn't exist.
     """
+    path = fs.path(*components)
+
     with open(data_path(path)) as infile:
         return infile.read()
 
 
-def unpack_archive(path, compression="bz2"):
+def unpack_archive(*components, **kwargs):
     """
     Unpack a compressed archive.
 
     Arguments:
-        path (str): Path to archive.
+        *components (str[]): Absolute path.
         compression (str, optional): Archive compression type.
     """
-    import tarfile
+    path = fs.path(*components)
+    compression = kwargs.get("compression", "bz2")
+
     tar = tarfile.open(path, "r:" + compression)
     tar.extractall()
     tar.close()
+    print("extracted")
 
 
-def archive(path):
+def archive(*components):
     """
     Returns a text archive, unpacking if necessary.
 
     Arguments:
-        path (str): Path to archive.
+        *components (str[]): Relative path.
 
     Returns:
         str: Path to archive.
     """
-    path = data_path(path)
+    path = data_path(*components, exists=False)
 
-    if not os.path.exists(archive):
+    if not fs.isdir(path):
         unpack_archive(path + ".tar.bz2")
     return path
 
