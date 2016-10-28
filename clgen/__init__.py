@@ -69,6 +69,13 @@ class File404(InternalError):
     pass
 
 
+class CLgenObject(object):
+    """
+    Base object for CLgen classes.
+    """
+    pass
+
+
 def version():
     """
     Get the package version.

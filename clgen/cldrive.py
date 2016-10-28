@@ -164,7 +164,7 @@ def get_event_time(event):
         raise E_BAD_PROFILE
 
 
-class KernelDriver(object):
+class KernelDriver(clgen.CLgenObject):
     """
     OpenCL Kernel driver. Drives a single OpenCL kernel.
 
@@ -354,7 +354,7 @@ class KernelDriver(object):
             raise E_BAD_CODE(e)
 
 
-class KernelPayload(object):
+class KernelPayload(clgen.CLgenObject):
     def __init__(self, ctx, args, ndrange, transfersize):
         self._ctx = ctx
         self._args = args

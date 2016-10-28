@@ -33,7 +33,7 @@ class PrototypeException(OpenCLUtilException): pass
 class UnknownTypeException(PrototypeException): pass
 
 
-class KernelArg(object):
+class KernelArg(clgen.CLgenObject):
     """
     OpenCL Kernel Argument.
 
@@ -194,7 +194,7 @@ class KernelArg(object):
         return self._string
 
 
-class KernelPrototype(object):
+class KernelPrototype(clgen.CLgenObject):
     """
     OpenCL Kernel Prototype.
 
