@@ -63,8 +63,7 @@ class TestCache(TestCase):
 
     def test_404(self):
         c = cache.Cache("__test_404__")
-        with self.assertRaises(cache.Cache404):
-            t = c['foobar']
+        self.assertFalse(c['foobar'])
         with self.assertRaises(cache.Cache404):
             del c['foobar']
         c.empty()
@@ -85,8 +84,7 @@ class TestCache(TestCase):
         # remove from cache
         del c['foobar']
 
-        with self.assertRaises(cache.Cache404):
-            t = c['foobar']
+        self.assertFalse(c['foobar'])
         c.empty()
 
     def test_path_escape(self):

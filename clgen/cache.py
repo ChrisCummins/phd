@@ -89,7 +89,7 @@ class Cache(clgen.CLgenObject):
         """
         return re.sub(r'[ \\/]+', '_', key)
 
-    def _keypath(self, key):
+    def keypath(self, key):
         """
         Return path to key in cache.
 
@@ -126,14 +126,14 @@ class Cache(clgen.CLgenObject):
             key (str): Key.
 
         Returns:
-            str: Path to cache value.
-
-        Raises:
-            Cache404: If no value in cache for key.
+            str: Path to cache value, or bool False if not found.
         """
         assert(type(key) is str)
 
-        return self._incache(self._keypath(key))
+        try:
+            return self._incache(self.keypath(key))
+        except Cache404:
+            return False
 
     def __setitem__(self, key, value):
         """
@@ -151,7 +151,7 @@ class Cache(clgen.CLgenObject):
 
         clgen.must_exist(value, error=clgen.File404)
 
-        path = self._keypath(key)
+        path = self.keypath(key)
         move(value, path)
         log.debug("inserted '{key}' to '{path}'"
                   .format(key=key, path=path))
@@ -168,5 +168,5 @@ class Cache(clgen.CLgenObject):
         """
         assert(type(key) is str)
 
-        path = self._incache(self._keypath(key))
+        path = self._incache(self.keypath(key))
         fs.rm(path)
