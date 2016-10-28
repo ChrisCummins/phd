@@ -474,13 +474,11 @@ def preprocess_split(db_path, split):
         c.close()
 
 
-def preprocess_contentfiles(db_path):
+def preprocess_contentfiles(db_path, num_workers=int(round(cpu_count() * 4))):
     db = sqlite3.connect(db_path)
     num_contentfiles = num_rows_in(db, 'ContentFiles')
     num_preprocessedfiles = num_rows_in(db, 'PreprocessedFiles')
     db.close()
-
-    num_workers = round(cpu_count() * 4)
 
     files_per_worker = math.ceil(num_contentfiles / num_workers)
 
@@ -488,7 +486,7 @@ def preprocess_contentfiles(db_path):
                i * files_per_worker + files_per_worker)
               for i in range(num_workers)]
 
-    with Pool(num_workers) as pool:
+    with clgen.terminating(Pool(num_workers)) as pool:
         print('spawning', num_workers, 'worker threads to process',
               num_contentfiles - num_preprocessedfiles, 'files ...')
         worker = partial(preprocess_split, db_path)
@@ -527,12 +525,11 @@ def _preprocess_inplace_worker(path):
     preprocess_file(path, inplace=True)
 
 
-def preprocess_inplace(paths):
+def preprocess_inplace(paths, num_workers=int(round(cpu_count() * 4))):
     """
     Preprocess a list of files inplace.
     """
-    num_workers = round(cpu_count() * 4)
-    with Pool(num_workers) as pool:
+    with clgen.terminating(Pool(num_workers)) as pool:
         print('spawning', num_workers, 'worker threads to process',
               len(paths), 'files ...')
         pool.map(_preprocess_inplace_worker, paths)
