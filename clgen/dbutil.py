@@ -27,7 +27,8 @@ import sqlite3
 import clgen
 
 
-class DatabaseException(clgen.CLgenError): pass
+class DatabaseException(clgen.CLgenError):
+    pass
 
 
 def create_db(path, github=False):
