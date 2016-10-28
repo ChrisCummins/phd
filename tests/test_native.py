@@ -32,6 +32,12 @@ class TestNative(TestCase):
         native.CLANG_FORMAT,
         native.CLGEN_REWRITER,
         native.OPT,
+        native.TH,
+    ]
+
+    FILES = [
+        fs.path(native.LIBCLC, "clc", "clc.h"),
+        native.SHIMFILE,
         native.TORCH_RNN_PREPROCESS,
     ]
 
@@ -39,9 +45,6 @@ class TestNative(TestCase):
         for binary in self.BINARIES:
             self.assertTrue(fs.isexe(binary))
 
-    def test_libclc(self):
-        self.assertTrue(fs.isdir(native.LIBCLC))
-        self.assertTrue(fs.isfile(native.LIBCLC, "clc", "clc.h"))
-
-    def test_shimfile(self):
-        self.assertTrue(fs.isfile(native.SHIMFILE))
+    def test_files_exist(self):
+        for file in self.FILES:
+            self.assertTrue(fs.isfile(file))
