@@ -71,6 +71,7 @@ def load_json_file(path):
     except clgen.File404:
         log.fatal("could not find file '{}'".format(path))
 
+
 def main(*argv):
     """
     Main entry point to clgen command line interface.
