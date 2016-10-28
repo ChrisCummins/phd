@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-libclc_version := trunk
+libclc_version := d0f8ca7247ded04afbf1561fc5823c3e3517d892
 libclc_dir := $(PWD)/native/libclc/$(libclc_version)
 libclc := $(libclc_dir)/utils/prepare-builtins.o
 
