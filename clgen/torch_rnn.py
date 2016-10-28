@@ -16,32 +16,31 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase
-import tests
+"""
+Python wrapper around torch-rnn.
+"""
+import sys
 
-import labm8
-from labm8 import fs
+from subprocess import Popen, PIPE, STDOUT
 
-import clgen
 from clgen import native
 
 
-class TestNative(TestCase):
-    BINARIES = [
-        native.CLANG,
-        native.CLANG_FORMAT,
-        native.CLGEN_REWRITER,
-        native.OPT,
-        native.TORCH_RNN_PREPROCESS,
+def preprocess(input_txt, output_json, output_h5):
+    """
+    Wrapper around preprocess script.
+    """
+    cmd = [
+        sys.executable, native.TORCH_RNN_PREPROCESS, '--input_txt', input_txt,
+        '--output_json', output_json,
+        '--output_h5', output_h5,
     ]
 
-    def test_binaries_exist(self):
-        for binary in self.BINARIES:
-            self.assertTrue(fs.isexe(binary))
+    process = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = process.communicate()
 
-    def test_libclc(self):
-        self.assertTrue(fs.isdir(native.LIBCLC))
-        self.assertTrue(fs.isfile(native.LIBCLC, "clc", "clc.h"))
+    if process.returncode != 0:
+        raise PreProcessError(stderr.decode('utf-8'))
 
-    def test_shimfile(self):
-        self.assertTrue(fs.isfile(native.SHIMFILE))
+    output = stdout.decode('utf-8')
+    log.info(output)
