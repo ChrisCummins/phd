@@ -30,7 +30,9 @@ from clgen import explore
 from clgen import fetch
 from clgen import log
 from clgen import preprocess
+from clgen import torch_rnn
 from clgen.cache import Cache
+from clgen.train import train
 
 
 class CorpusCache(Cache):
@@ -89,14 +91,30 @@ class Corpus:
         log.debug("corpus {hash} initialized".format(hash=self.hash))
 
         cache = CorpusCache()
-        self.dbname = self.hash + ".db"
+
+        # TODO: Wrap file creation in try blocks, if any stage fails, delete
+        # generated fail (if any)
 
         # create corpus database if not exists
+        self.dbname = self.hash + ".db"
         if not cache[self.dbname]:
             self._create_db(path)
 
+        # create corpus text if not exists
+        self.txtname = self.hash + ".txt"
+        if not cache[self.txtname]:
+            self._create_txt()
+
+        # create LSTM training files if not exists
+        self.jsonname = self.hash + ".json"
+        self.h5name = self.hash + ".h5"
+        if not cache[self.jsonname] or not cache[self.h5name]:
+            self._lstm_preprocess()
+
     def _create_db(self, path):
         cache = CorpusCache()
+
+        log.debug("creating database...")
 
         # create a database and put it in the cache
         tmppath = ".corpus.tmp.db"
@@ -118,6 +136,26 @@ class Corpus:
             explore.explore_gh(cache[self.dbname])
         else:
             explore.explore(cache[self.dbname])
+
+    def _create_txt(self):
+        cache = CorpusCache()
+
+        log.debug("creating corpus...")
+
+        # TODO: additional options in corpus JSON to accomodate for EOF,
+        # different encodings etc.
+        train(cache[self.dbname], ".corpus.tmp.txt")
+        cache[self.txtname] = ".corpus.tmp.txt"
+
+    def _lstm_preprocess(self):
+        cache = CorpusCache()
+
+        log.debug("creating training set...")
+        torch_rnn.preprocess(cache[self.txtname],
+                             ".corpus.tmp.json",
+                             ".corpus.tmp.h5")
+        cache[self.jsonname] = ".corpus.tmp.json"
+        cache[self.h5name] = ".corpus.tmp.h5"
 
     @staticmethod
     def from_json(corpus_json):

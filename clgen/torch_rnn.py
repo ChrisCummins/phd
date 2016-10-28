@@ -23,6 +23,7 @@ import sys
 
 from subprocess import Popen, PIPE, STDOUT
 
+from clgen import log
 from clgen import native
 
 
