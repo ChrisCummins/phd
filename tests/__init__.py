@@ -148,6 +148,17 @@ def db(name, **kwargs):
     return sqlite3.connect(path)
 
 
+def write_file(path, contents):
+    fs.mkdir(fs.dirname(path))
+    with open(path, 'w') as outfile:
+        outfile.write(contents)
+
+
+def read_file(path):
+    with open(path) as infile:
+        return '\n'.join(infile.readlines())
+
+
 class TestCLgen(TestCase):
     def test_checksum(self):
         self.assertEqual("0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33",
