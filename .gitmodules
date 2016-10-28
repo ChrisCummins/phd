@@ -1,5 +1,5 @@
 [submodule "native/lib/libclc"]
-	path = native/libclc/trunk
+	path = native/libclc/d0f8ca7247ded04afbf1561fc5823c3e3517d892
 	url = https://github.com/ChrisCummins/libclc.git
 [submodule "native/torch-rnn/trunk"]
 	path = native/torch-rnn/trunk
