@@ -58,6 +58,7 @@ native_targets := \
 	clgen/data/bin/clgen-features \
 	clgen/data/bin/clgen-rewriter \
 	clgen/data/bin/opt \
+	clgen/data/bin/torch-rnn-preprocess \
 	clgen/data/libclc
 
 native: $(native_targets)
@@ -65,23 +66,33 @@ native: $(native_targets)
 clgen/data/bin/llvm-config: $(llvm)
 	mkdir -p $(dir $@)
 	ln -sf $(llvm_build)/bin/llvm-config $@
+	touch $@
 
 clgen/data/bin/clang: $(llvm)
 	mkdir -p $(dir $@)
 	ln -sf $(llvm_build)/bin/clang $@
+	touch $@
 
 clgen/data/bin/clang-format: $(llvm)
 	mkdir -p $(dir $@)
 	ln -sf $(llvm_build)/bin/clang-format $@
+	touch $@
 
 clgen/data/bin/opt: $(llvm)
 	mkdir -p $(dir $@)
 	ln -sf $(llvm_build)/bin/opt $@
+	touch $@
+
+clgen/data/bin/torch-rnn-preprocess: $(torch-rnn) $(torch-rnn_dir)/scripts/preprocess.py
+	mkdir -p $(dir $@)
+	ln -sf $(torch-rnn_dir)/scripts/preprocess.py $@
+	touch $@
 
 clgen/data/libclc: $(libclc)
 	mkdir -p $(dir $@)
 	rm -f $@
 	ln -sf $(libclc_dir)/generic/include $@
+	touch $@
 
 toolchain_flags := -xc++ $(llvm_CxxFlags) $(llvm_LdFlags)
 
