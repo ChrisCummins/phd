@@ -48,6 +48,7 @@ include make/cmake.make
 include make/ninja.make
 include make/llvm.make
 include make/libclc.make
+include make/torch.make
 include make/torch-rnn.make
 
 native_targets := \

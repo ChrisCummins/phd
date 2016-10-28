@@ -7,6 +7,6 @@
 [submodule "native/torch-hdf5/trunk"]
 	path = native/torch-hdf5/trunk
 	url = https://github.com/deepmind/torch-hdf5
-[submodule "native/torch/trunk"]
-	path = native/torch/trunk
+[submodule "native/torch/src"]
+	path = native/torch/trunk/src
 	url = https://github.com/torch/distro.git
