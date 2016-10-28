@@ -25,7 +25,17 @@ from checksumdir import dirhash
 from labm8 import fs
 
 import clgen
+from clgen import dbutil
+from clgen import explore
+from clgen import fetch
 from clgen import log
+from clgen import preprocess
+from clgen.cache import Cache
+
+
+class CorpusCache(Cache):
+    def __init__(self):
+        super(CorpusCache, self).__init__("corpus")
 
 
 def unpack_directory_if_needed(path):
@@ -43,10 +53,12 @@ def unpack_directory_if_needed(path):
         return path
 
     if fs.isfile(path) and path.endswith(".tar.bz2"):
+        log.info("unpacking '{}'".format(path))
         clgen.unpack_archive(path)
         return re.sub(r'.tar.bz2$', '', path)
 
     if fs.isfile(path + ".tar.bz2"):
+        log.info("unpacking '{}'".format(path + ".tar.bz2"))
         clgen.unpack_archive(path + ".tar.bz2")
         return path
 
@@ -57,7 +69,12 @@ class Corpus:
     """
     Representation of a training corpus.
     """
-    def __init__(self, path):
+    def __init__(self, path, isgithub=False):
+        """
+        Instantiate a corpus.
+
+        If this is a new corpus, a database will be created for it
+        """
         path = fs.abspath(path)
 
         path = unpack_directory_if_needed(path)
@@ -67,5 +84,51 @@ class Corpus:
                                   .format(path))
 
         self.hash = dirhash(path, 'sha1')
+        self.isgithub = isgithub
 
-        log.debug("Corpus {hash} initialized".format(hash=self.hash))
+        log.debug("corpus {hash} initialized".format(hash=self.hash))
+
+        cache = CorpusCache()
+        self.dbname = self.hash + ".db"
+
+        # create corpus database if not exists
+        if not cache[self.dbname]:
+            self._create_db(path)
+
+    def _create_db(self, path):
+        cache = CorpusCache()
+
+        # create a database and put it in the cache
+        tmppath = ".corpus.tmp.db"
+        dbutil.create_db(".corpus.tmp.db", github=self.isgithub)
+        cache[self.dbname] = ".corpus.tmp.db"
+
+        # get a list of files in the corpus
+        filelist = [f for f in fs.ls(path, abspaths=True, recursive=True)
+                    if fs.isfile(f)]
+
+        # import files into database
+        fetch.fs(cache[self.dbname], filelist)
+
+        # preprocess files
+        preprocess.preprocess_db(cache[self.dbname])
+
+        # print database stats
+        if self.isgithub:
+            explore.explore_gh(cache[self.dbname])
+        else:
+            explore.explore(cache[self.dbname])
+
+    @staticmethod
+    def from_json(corpus_json):
+        """
+        Instantiate Corpus from JSON.
+        """
+        log.debug("reading corpus json...")
+
+        path = corpus_json.get("path", None)
+        if path is None:
+            raise clgen.UserError("key 'path' not in corpus JSON")
+        isgithub = corpus_json.get("github", False)
+
+        return Corpus(path, isgithub=isgithub)
