@@ -24,6 +24,7 @@ from __future__ import absolute_import, print_function, with_statement
 import json
 import os
 import re
+import tarfile
 
 from hashlib import sha1
 from pkg_resources import resource_filename, resource_string, require
@@ -175,6 +176,29 @@ def checksum_file(*path_components):
             return checksum(infile.read())
     except Exception:
         raise CLgenError("failed to read '{}'".format(path))
+
+
+def unpack_archive(*components, **kwargs):
+    """
+    Unpack a compressed archive.
+
+    Arguments:
+        *components (str[]): Absolute path.
+        **kwargs (dict, optional): Set "compression" to compression type.
+            Default: bz2. Set "dir" to destination directory. Defaults to the
+            directory of the archive.
+    """
+    path = fs.path(*components)
+    compression = kwargs.get("compression", "bz2")
+    dir = kwargs.get("dir", fs.dirname(path))
+
+    fs.cd(dir)
+    tar = tarfile.open(path, "r:" + compression)
+    tar.extractall()
+    tar.close()
+    fs.cdpop()
+
+    return dir
 
 
 def get_substring_idxs(substr, s):
