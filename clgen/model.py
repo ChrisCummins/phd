@@ -26,18 +26,8 @@ from clgen import log
 
 class Model(clgen.CLgenObject):
     def __init__(self, corpus, train_opts):
-        assert(type(corpus) is Corpus)
+        assert(isinstance(corpus, Corpus))
         assert(type(train_opts) is dict)
-
-        valid_opts = [
-            "-batch_size", "-seq_length", "-model_type", "-rnn_size",
-            "-num_layers", "-dropout", "-batchnorm", "-learning_rate",
-            "-max_epochs", "-grad_clip", "-lr_decay_every", "-lr_decay_factor",
-        ]
-        for key in train_opts.keys():
-            if key not in valid_opts:
-                raise clgen.UserError("Unrecognized training option '{}'"
-                                      .format(key))
 
         self.corpus = corpus
         self.train_opts = train_opts
@@ -46,4 +36,16 @@ class Model(clgen.CLgenObject):
 def from_json(model_json):
     corpus = Corpus.from_json(model_json["corpus"])
     train_opts = model_json["train_opts"]
+
+    # validate train_opts flags against those accpted by torch-rnn/train.lua
+    valid_opts = [
+        "batch_size", "seq_length", "model_type", "rnn_size", "num_layers",
+        "dropout", "batchnorm", "learning_rate", "max_epochs", "grad_clip",
+        "lr_decay_every", "lr_decay_factor",
+    ]
+    for key in train_opts.keys():
+        if key not in valid_opts:
+            raise clgen.UserError(
+                "Unrecognized training option '{}'".format(key))
+
     return Model(corpus, train_opts)
