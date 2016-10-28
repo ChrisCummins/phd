@@ -38,9 +38,10 @@ env:
     - CXX=clang++
     - CLGEN_GPU=0
 
-# note that we pipe the install output to /dev/null because it's too verbose
-# (thousands of files are copied from clgen/data/libclc).
+# note we can't build openblas with clang:
+# Makefile.system:409: *** OpenBLAS: Clang didn't support OpenMP yet..  Stop.
 install:
+  - sed '/install_openblas /d' -i native/torch/trunk/src/install-deps
   - make llvm
   - make native
   - pip install --upgrade pip
@@ -49,7 +50,7 @@ install:
   - pip install --only-binary=scipy scipy>=0.16.1
   - pip install --only-binary=pandas pandas>=0.19.0
   - pip install Cython==0.23.4
-  - pip install -r requirements.txt
+  - pip install
   - python ./setup.py install >/dev/null
 
 script:
