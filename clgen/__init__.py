@@ -26,6 +26,7 @@ import os
 import re
 import tarfile
 
+from contextlib import contextmanager
 from hashlib import sha1
 from pkg_resources import resource_filename, resource_string, require
 
@@ -297,6 +298,17 @@ def format_json(data):
     return json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
 
 
+@contextmanager
+def terminating(thing):
+    """
+    Context manager to terminate object at end of scope.
+    """
+    try:
+        yield thing
+    finally:
+        thing.terminate()
+
+
 def main(model_json, arguments_json, sample_json):
     """
     Main entry point for clgen.
@@ -306,4 +318,8 @@ def main(model_json, arguments_json, sample_json):
         arguments_json (dict): Arguments specification.
         sample_json (dict): Sample specification.
     """
+    from clgen import model
+
+    model = model.from_json(model_json)
+
     raise NotImplementedError("coming soon!")
