@@ -35,11 +35,6 @@ from clgen.cache import Cache
 from clgen.train import train
 
 
-class CorpusCache(Cache):
-    def __init__(self):
-        super(CorpusCache, self).__init__("corpus")
-
-
 def unpack_directory_if_needed(path):
     """
     If path is a tarball, unpack it. If path doesn't exist but there is a
@@ -90,72 +85,69 @@ class Corpus:
 
         log.debug("corpus {hash} initialized".format(hash=self.hash))
 
-        cache = CorpusCache()
+        cache = Cache(self.hash)
 
         # TODO: Wrap file creation in try blocks, if any stage fails, delete
         # generated fail (if any)
 
         # create corpus database if not exists
-        self.dbname = self.hash + ".db"
-        if not cache[self.dbname]:
-            self._create_db(path)
+        if not cache["kernels.db"]:
+            self._create_kernels_db(path)
 
         # create corpus text if not exists
-        self.txtname = self.hash + ".txt"
-        if not cache[self.txtname]:
+        if not cache["corpus.txt"]:
             self._create_txt()
 
         # create LSTM training files if not exists
-        self.jsonname = self.hash + ".json"
-        self.h5name = self.hash + ".h5"
-        if not cache[self.jsonname] or not cache[self.h5name]:
+        if not cache["corpus.json"] or not cache["corpus.h5"]:
             self._lstm_preprocess()
 
-    def _create_db(self, path):
-        cache = CorpusCache()
+    def _create_kernels_db(self, path):
+        cache = Cache(self.hash)
 
         log.debug("creating database...")
 
         # create a database and put it in the cache
-        tmppath = ".corpus.tmp.db"
-        dbutil.create_db(".corpus.tmp.db", github=self.isgithub)
-        cache[self.dbname] = ".corpus.tmp.db"
+        tmppath = fs.path(cache.path, "kernels.db.tmp")
+        dbutil.create_db(tmppath, github=self.isgithub)
+        cache["kernels.db"] = tmppath
 
         # get a list of files in the corpus
         filelist = [f for f in fs.ls(path, abspaths=True, recursive=True)
                     if fs.isfile(f)]
 
         # import files into database
-        fetch.fs(cache[self.dbname], filelist)
+        fetch.fs(cache["kernels.db"], filelist)
 
         # preprocess files
-        preprocess.preprocess_db(cache[self.dbname])
+        preprocess.preprocess_db(cache["kernels.db"])
 
         # print database stats
         if self.isgithub:
-            explore.explore_gh(cache[self.dbname])
+            explore.explore_gh(cache["kernels.db"])
         else:
-            explore.explore(cache[self.dbname])
+            explore.explore(cache["kernels.db"])
 
     def _create_txt(self):
-        cache = CorpusCache()
+        cache = Cache(self.hash)
 
         log.debug("creating corpus...")
 
         # TODO: additional options in corpus JSON to accomodate for EOF,
         # different encodings etc.
-        train(cache[self.dbname], ".corpus.tmp.txt")
-        cache[self.txtname] = ".corpus.tmp.txt"
+        tmppath = fs.path(cache.path, "corpus.txt.tmp")
+        train(cache["corpus.txt"], tmppath)
+        cache["corpus.txt"] = tmppath
 
     def _lstm_preprocess(self):
-        cache = CorpusCache()
+        cache = Cache(self.hash)
 
         log.debug("creating training set...")
-        torch_rnn.preprocess(cache[self.txtname],
-                             ".corpus.tmp.json",
-                             ".corpus.tmp.h5")
-        cache[self.jsonname] = ".corpus.tmp.json"
-        cache[self.h5name] = ".corpus.tmp.h5"
+        tmppaths = (fs.path(cache.path, "corpus.json.tmp"),
+                    fs.path(cache.path, "corpus.h5.tmp"))
+        torch_rnn.preprocess(cache["corpus.txt"], *tmppaths)
+        cache["corpus.json"] = tmppaths[0]
+        cache["corpus.h5"] = tmppaths[1]
 
     @staticmethod
     def from_json(corpus_json):
