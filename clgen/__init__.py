@@ -48,6 +48,13 @@ class InternalError(CLgenError):
     pass
 
 
+class UserError(CLgenError):
+    """
+    Raised in case of bad user interaction, e.g. an invalid argument.
+    """
+    pass
+
+
 class NotImplementedError(InternalError):
     """
     Code not found.
