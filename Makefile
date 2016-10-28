@@ -52,15 +52,15 @@ include make/torch.make
 include make/torch-rnn.make
 
 native_targets := \
-	clgen/data/bin/llvm-config \
 	clgen/data/bin/clang \
 	clgen/data/bin/clang-format \
 	clgen/data/bin/clgen-features \
 	clgen/data/bin/clgen-rewriter \
+	clgen/data/bin/llvm-config \
 	clgen/data/bin/opt \
 	clgen/data/bin/th \
-	clgen/data/bin/torch-rnn-preprocess \
-	clgen/data/libclc
+	clgen/data/libclc \
+	clgen/data/torch-rnn
 
 native: $(native_targets)
 
@@ -89,9 +89,10 @@ clgen/data/bin/th: $(torch) $(torch_build)/bin/th
 	ln -sf $(torch_build)/bin/th $@
 	touch $@
 
-clgen/data/bin/torch-rnn-preprocess: $(torch-rnn) $(torch-rnn_dir)/scripts/preprocess.py
+clgen/data/torch-rnn: $(torch-rnn)
 	mkdir -p $(dir $@)
-	ln -sf $(torch-rnn_dir)/scripts/preprocess.py $@
+	rm -f $@
+	ln -sf $(torch-rnn_dir) $@
 	touch $@
 
 clgen/data/libclc: $(libclc)
