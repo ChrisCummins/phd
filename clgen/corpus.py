@@ -136,7 +136,7 @@ class Corpus:
         # TODO: additional options in corpus JSON to accomodate for EOF,
         # different encodings etc.
         tmppath = fs.path(cache.path, "corpus.txt.tmp")
-        train(cache["corpus.txt"], tmppath)
+        train(cache["kernels.db"], tmppath)
         cache["corpus.txt"] = tmppath
 
     def _lstm_preprocess(self):

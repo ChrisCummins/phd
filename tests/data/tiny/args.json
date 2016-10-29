@@ -1,6 +1,10 @@
-[
-  "__global float*",
-  "__global float*",
-  "__global float*",
-  "const int"
-]
+{
+  "sample_opts": {
+    "args": [
+      "__global float*",
+      "__global float*",
+      "__global float*",
+      "const int"
+    ]
+  }
+}

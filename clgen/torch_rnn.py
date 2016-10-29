@@ -19,12 +19,28 @@
 """
 Python wrapper around torch-rnn.
 """
+import labm8
 import sys
 
+from labm8 import fs
+from six import iteritems
 from subprocess import Popen, PIPE, STDOUT
 
+import clgen
 from clgen import log
 from clgen import native
+
+
+class TorchRnnError(clgen.CLgenError):
+    pass
+
+
+class PreprocessError(TorchRnnError):
+    pass
+
+
+class TrainError(TorchRnnError):
+    pass
 
 
 def preprocess(input_txt, output_json, output_h5):
@@ -41,7 +57,37 @@ def preprocess(input_txt, output_json, output_h5):
     stdout, stderr = process.communicate()
 
     if process.returncode != 0:
-        raise PreProcessError(stderr.decode('utf-8'))
+        raise PreprocessError(stderr.decode('utf-8'))
 
     output = stdout.decode('utf-8')
     log.info(output)
+
+
+def train(**train_opts):
+    """
+    Wrapper around torch-rnn train script.
+
+    Arguments:
+        **train_opts (dict): Key value options for flags.
+    """
+    # change to torch-rnn directory
+    fs.cd(native.TORCH_RNN_DIR)
+
+    flags = labm8.flatten(
+        [('-' + key, str(value)) for key, value in iteritems(train_opts)])
+    cmd = [native.TH, "train.lua"] + flags
+
+    log.debug(' '.join([str(x) for x in cmd]))
+    # process = Popen(cmd)
+    # process.communicate()
+
+    # if process.returncode != 0:
+    #     raise TrainError('torch-rnn training failed with status ' +
+    #                      str(process.returncode))
+
+    # return to previous working directory
+    fs.cdpop()
+
+
+def sample(**sample_opts):
+    pass

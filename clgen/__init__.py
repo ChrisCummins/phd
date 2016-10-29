@@ -321,3 +321,4 @@ def main(model_json, arguments_json, sample_json):
     from clgen import model
 
     model = model.from_json(model_json)
+    model.train()

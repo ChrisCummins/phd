@@ -51,8 +51,6 @@ class Cache(clgen.CLgenObject):
         self._prefix = name + " "
 
         fs.mkdir(self.path)
-        log.debug("initialized {prefix}cache '{path}'"
-                  .format(prefix=self._prefix, path=self.path))
 
     def empty(self):
         """

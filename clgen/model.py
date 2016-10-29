@@ -19,9 +19,18 @@
 """
 CLgen model.
 """
+from __future__ import print_function
+
+import os
+
+from glob import glob, iglob
+from labm8 import fs
+
 import clgen
-from clgen.corpus import Corpus
 from clgen import log
+from clgen import torch_rnn
+from clgen.cache import Cache
+from clgen.corpus import Corpus
 
 
 class Model(clgen.CLgenObject):
@@ -29,8 +38,31 @@ class Model(clgen.CLgenObject):
         assert(isinstance(corpus, Corpus))
         assert(type(train_opts) is dict)
 
+        self.hash = corpus.hash
         self.corpus = corpus
         self.train_opts = train_opts
+
+        self.checkpoint_cache = Cache(fs.path(self.hash, "cv"))
+
+    def train(self):
+        print("CACHE:", self.checkpoint_cache.path)
+        print("CHECKPOINTS:", self.checkpoints)
+        print("MOST RECENT:", self.most_recent_checkpoint)
+
+        self.train_opts["checkpoint_every"] = 100
+        self.train_opts["checkpoint_name"] = (
+            self.checkpoint_cache.path + os.pathsep)
+
+        torch_rnn.train(**self.train_opts)
+
+    @property
+    def checkpoints(self):
+        return glob(fs.path(self.checkpoint_cache.path, '*.t7'))
+
+    @property
+    def most_recent_checkpoint(self):
+        return max(iglob(fs.path(self.checkpoint_cache.path, '*.t7')),
+                   key=os.path.getctime)
 
 
 def from_json(model_json):
