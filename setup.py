@@ -15,17 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 #
-import pip
 from setuptools import setup
-from setuptools.command.install import install
-from pip.req import parse_requirements
 
-# Because of a bug in scipy setup.py, we have to use 'pip install' to install
-# dependencies rather than using setuptools. See:
-#     https://github.com/scikit-learn/scikit-learn/issues/4164
-#
-install_reqs = parse_requirements('./requirements.txt', session=False)
-reqs = [str(ir.req) for ir in install_reqs]
 
 setup(name="labm8",
       version="0.0.2",
@@ -37,5 +28,13 @@ setup(name="labm8",
       packages=["labm8"],
       test_suite="nose.collector",
       tests_require=["nose"],
-      install_requires=reqs,
+      install_requires=[
+          "humanize == 0.5.1",
+          "numpy >= 1.10.4",
+          "pandas >= 0.19.0",
+          "python-dateutil == 2.5.3",
+          "pytz == 2016.7",
+          "scipy >= 0.16.1",
+          "six == 1.10.0",
+      ],
       zip_safe=True)
