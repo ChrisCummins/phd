@@ -62,7 +62,7 @@ install_zsh() {
     git submodule update
 
     # install config files
-    symlink ~/.dotfiles ~/.zsh/local/git.zsh
+    symlink ~/.dotfiles/zsh/git.zsh ~/.zsh/local/git.zsh
 
     # install local config files
     if [[ -d "$private/zsh" ]]; then
