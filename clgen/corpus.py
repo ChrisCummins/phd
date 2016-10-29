@@ -149,6 +149,16 @@ class Corpus:
         cache["corpus.json"] = tmppaths[0]
         cache["corpus.h5"] = tmppaths[1]
 
+    @property
+    def input_json(self):
+        cache = Cache(self.hash)
+        return cache['corpus.json']
+
+    @property
+    def input_h5(self):
+        cache = Cache(self.hash)
+        return cache['corpus.h5']
+
     @staticmethod
     def from_json(corpus_json):
         """
