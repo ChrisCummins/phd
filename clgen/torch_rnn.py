@@ -78,12 +78,12 @@ def train(**train_opts):
     cmd = [native.TH, "train.lua"] + flags
 
     log.debug(' '.join([str(x) for x in cmd]))
-    # process = Popen(cmd)
-    # process.communicate()
+    process = Popen(cmd)
+    process.communicate()
 
-    # if process.returncode != 0:
-    #     raise TrainError('torch-rnn training failed with status ' +
-    #                      str(process.returncode))
+    if process.returncode != 0:
+        raise TrainError('torch-rnn training failed with status ' +
+                         str(process.returncode))
 
     # return to previous working directory
     fs.cdpop()

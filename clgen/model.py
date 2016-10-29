@@ -22,7 +22,9 @@ CLgen model.
 from __future__ import print_function
 
 import os
+import re
 
+from copy import copy
 from glob import glob, iglob
 from labm8 import fs
 
@@ -45,15 +47,29 @@ class Model(clgen.CLgenObject):
         self.checkpoint_cache = Cache(fs.path(self.hash, "cv"))
 
     def train(self):
-        print("CACHE:", self.checkpoint_cache.path)
-        print("CHECKPOINTS:", self.checkpoints)
-        print("MOST RECENT:", self.most_recent_checkpoint)
+        # assemble training options
+        opts = copy(self.train_opts)
 
-        self.train_opts["checkpoint_every"] = 100
-        self.train_opts["checkpoint_name"] = (
-            self.checkpoint_cache.path + os.pathsep)
+        opts["reset_iterations"] = 0
+        opts["input_json"] = self.corpus.input_json
+        opts["input_h5"] = self.corpus.input_h5
+        opts["checkpoint_name"] = fs.path(
+            self.checkpoint_cache.path, "model")
 
-        torch_rnn.train(**self.train_opts)
+        # set default arguments
+        if opts.get("print_every", None) is None:
+            opts["print_every"] = 10
+        if opts.get("checkpoint_every", None) is None:
+            opts["checkpoint_every"] = 100
+
+        # TODO: Determine device type
+        opts["gpu"] = -1
+
+        # resume from prior checkpoint
+        if self.most_recent_checkpoint:
+            opts["init_from"] = self.most_recent_checkpoint
+
+        torch_rnn.train(**opts)
 
     @property
     def checkpoints(self):
@@ -61,8 +77,19 @@ class Model(clgen.CLgenObject):
 
     @property
     def most_recent_checkpoint(self):
-        return max(iglob(fs.path(self.checkpoint_cache.path, '*.t7')),
-                   key=os.path.getctime)
+        """
+        Get path to most recently initialized t7
+        """
+        # if there's nothing trained, then max() will raise ValueError because
+        # of an empty sequence
+        def get_checkpoint_iterations(path):
+            return int(re.search("model_([0-9]+)\.t7", path).group(1))
+
+        try:
+            return max(iglob(fs.path(self.checkpoint_cache.path, '*.t7')),
+                       key=get_checkpoint_iterations)
+        except ValueError:
+            return None
 
 
 def from_json(model_json):
