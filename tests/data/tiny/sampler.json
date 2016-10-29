@@ -1,0 +1,17 @@
+{
+  "kernel_opts": {
+    "args": [
+      "__global float*",
+      "__global float*",
+      "__global float*",
+      "const int"
+    ],
+    "max_length": 10000,
+    "temperature": 0.9
+  },
+  "sampler": {
+    "batch_size": 100",
+    "static_checker": true,
+    "dynamic_checker": false
+  }
+}

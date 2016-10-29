@@ -59,11 +59,11 @@ Run the test suite. Everything should pass:
 
     ./test.sh
 
-Train and sample a clgen model using the small included training set:
+Train and sample a very small clgen model using the included training set:
 
 ::
 
-    clgen model.json arguments.json
+    clgen model.json sampler.json
 
 License
 -------

@@ -309,7 +309,7 @@ def terminating(thing):
         thing.terminate()
 
 
-def main(model_json, arguments_json, sample_json):
+def main(model_json, sampler_json):
     """
     Main entry point for clgen.
 

@@ -48,10 +48,8 @@ def getparser():
         description="Generate OpenCL programs using Deep Learning.")
     parser.add_argument("model_json", metavar="<model-json>",
                         help="path to model specification file")
-    parser.add_argument("arguments_json", metavar="<arguments-json>",
-                        help="path to arguments specification file")
-    parser.add_argument("sample_json", metavar="sample-json", nargs="?",
-                        help="path to sample specification file")
+    parser.add_argument("sampler_json", metavar="<sampler-json>",
+                        help="path to sampler specification file")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="increase output verbosity")
     parser.add_argument("--version", action="store_true",
@@ -97,12 +95,10 @@ def main(*argv):
 
     # Read input configuration files.
     model = load_json_file(args.model_json)
-    arguments = load_json_file(args.arguments_json)
-    sample = load_json_file(
-        args.sample_json or clgen.data_path("default-sample.json"))
+    sampler = load_json_file(args.sampler_json)
 
     try:
-        clgen.main(model, arguments, sample)
+        clgen.main(model, sampler)
         exit(0)
     except Exception as e:
         log.fatal(
