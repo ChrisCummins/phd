@@ -80,6 +80,7 @@ install_zsh() {
 
 install_ssh() {
     if [[ -d "$private/ssh" ]]; then
+        chmod 600 "$private"/ssh/*
         mkdir -p ~/.ssh
         symlink "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
         symlink "$private/ssh/config" ~/.ssh/config
