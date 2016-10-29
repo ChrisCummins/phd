@@ -1,5 +1,6 @@
-.. figure:: assets/logo.png
-   :alt: CLgen: Deep Learning Program Generator
+.. figure:: assets/logo.svg
+   :alt: CLgen: Deep Learning Program Generator.
+   :width: 420 px
 
 
 |Build Status|
