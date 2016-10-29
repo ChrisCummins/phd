@@ -1,5 +1,5 @@
 {
-  "kernel_opts": {
+  "kernels": {
     "args": [
       "__global float*",
       "__global float*",
@@ -10,7 +10,8 @@
     "temperature": 0.9
   },
   "sampler": {
-    "batch_size": 100",
+    "max_kernels": 100,
+    "batch_size": 100,
     "static_checker": true,
     "dynamic_checker": false
   }

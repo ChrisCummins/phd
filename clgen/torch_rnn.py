@@ -89,5 +89,28 @@ def train(**train_opts):
     fs.cdpop()
 
 
-def sample(**sample_opts):
-    pass
+def sample(output, **sample_opts):
+    """
+    Wrapper around torch-rnn sample script.
+
+    Arguments:
+        output (str): Path to output file.
+        **train_opts (dict): Key value options for flags.
+    """
+    # change to torch-rnn directory
+    fs.cd(native.TORCH_RNN_DIR)
+
+    flags = labm8.flatten(
+        [('-' + key, str(value)) for key, value in iteritems(sample_opts)])
+    cmd = [native.TH, "sample.lua"] + flags
+
+    log.debug(' '.join([str(x) for x in cmd]))
+    process = Popen(cmd)
+    process.communicate()
+
+    if process.returncode != 0:
+        raise TrainError('torch-rnn sampling failed with status ' +
+                         str(process.returncode))
+
+    # return to previous working directory
+    fs.cdpop()

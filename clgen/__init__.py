@@ -319,6 +319,10 @@ def main(model_json, sampler_json):
         sample_json (dict): Sample specification.
     """
     from clgen import model
+    from clgen import sampler
 
     model = model.from_json(model_json)
     model.train()
+
+    sampler = sampler.from_json(sampler_json)
+    sampler.sample(model)
