@@ -95,12 +95,12 @@ def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
             for row in rows:
                 id, contents = row
                 if fileid:  # Print file ID
-                    out.write('/* ID: {} */\n\n'.format(id))
-                out.write(contents)
+                    out.write('/* ID: {} */\n\n'.format(id).encode('utf-8'))
+                out.write(contents.encode('utf-8'))
                 if eof:  # Print EOF token
-                    out.write('\n/* EOF */\n\n')
+                    out.write('\n/* EOF */\n\n'.encode('utf-8'))
                 else:
-                    out.write('\n\n')
+                    out.write('\n\n'.encode('utf-8'))
         return 0
 
 
