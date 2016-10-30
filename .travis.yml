@@ -17,6 +17,7 @@ cache:
     - native/cmake
     - native/libclc
     - native/llvm/3.9.0
+    - native/llvm/3.9.0/src
     - native/ninja
     - native/torch/trunk/build
 
