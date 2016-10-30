@@ -3,9 +3,9 @@
    :width: 420 px
    :align: center
 
-.. centered:: |Build Status| |Documentation Status| |Python Version| |License Badge|
-
 ------
+
+.. centered:: |Build Status| |Documentation Status| |Python Version| |License Badge|
 
 **CLgen** is an open source application for generating runnable programs using
 deep learning. CLgen *learns* to program using neural networks which model
