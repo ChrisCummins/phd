@@ -63,9 +63,10 @@ def loads(text, **kwargs):
     Deserialize `text` (a `str` or `unicode` instance containing a JSON
     document with Python or JavaScript like comments) to a Python object.
 
-    Taken from commentjson <https://github.com/vaidik/commentjson>
-    Copyright (c) 2014 Vaidik Kapoor
-    MIT license.
+    Taken from `commentjson <https://github.com/vaidik/commentjson>`_, written
+    by `Vaidik Kapoor <https://github.com/vaidik>`_.
+
+    Copyright (c) 2014 Vaidik Kapoor, MIT license.
 
     :param text: serialized JSON string with or without comments.
     :param kwargs: all the arguments that `json.loads
