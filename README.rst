@@ -1,4 +1,4 @@
-.. figure:: assets/logo.svg
+.. figure:: https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/logo.svg
    :alt: CLgen: Deep Learning Program Generator.
    :width: 420 px
    :align: center
@@ -13,8 +13,8 @@ the semantics and usage from large volumes of program fragments, generating
 many-core OpenCL programs that are representative of, but *distinct* from,
 the programs it learns from.
 
-.. figure:: assets/pipeline.png
-   :alt: labm8
+.. figure:: https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/pipeline.png
+   :alt: CLgen synthesis pipeline.
 
 Requirements
 ------------
