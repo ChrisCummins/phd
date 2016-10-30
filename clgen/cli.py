@@ -21,6 +21,7 @@ Command line interface to clgen.
 """
 import json
 import os
+import re
 
 from argparse import ArgumentParser
 from sys import argv, exit
@@ -57,10 +58,39 @@ def getparser():
     return parser
 
 
+def loads(text, **kwargs):
+    """
+    Deserialize `text` (a `str` or `unicode` instance containing a JSON
+    document with Python or JavaScript like comments) to a Python object.
+
+    Taken from commentjson <https://github.com/vaidik/commentjson>
+    Copyright (c) 2014 Vaidik Kapoor
+    MIT license.
+
+    :param text: serialized JSON string with or without comments.
+    :param kwargs: all the arguments that `json.loads
+                   <http://docs.python.org/2/library/json.html#json.loads>`_
+                   accepts.
+    :returns: `dict` or `list`.
+    """
+    regex = r'\s*(#|\/{2}).*$'
+    regex_inline = r'(:?(?:\s)*([A-Za-z\d\.{}]*)|((?<=\").*\"),?)(?:\s)*(((#|(\/{2})).*)|)$'
+    lines = text.split('\n')
+
+    for index, line in enumerate(lines):
+        if re.search(regex, line):
+            if re.search(r'^' + regex, line, re.IGNORECASE):
+                lines[index] = ""
+            elif re.search(regex_inline, line):
+                lines[index] = re.sub(regex_inline, r'\1', line)
+
+    return json.loads('\n'.join(lines), **kwargs)
+
+
 def load_json_file(path):
     try:
         with open(clgen.must_exist(path)) as infile:
-            return json.loads(infile.read())
+            return loads(infile.read())
     except ValueError as e:
         log.fatal("malformed file '{}'. Message from parser: ".format(
                       os.path.basename(path)),
