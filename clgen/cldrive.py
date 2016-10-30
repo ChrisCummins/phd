@@ -40,6 +40,7 @@ from labm8 import math as labmath
 
 import clgen
 from clgen import clutil
+from clgen import config as cfg
 
 # Python 2 and Python 3 have different StringIO classes.
 # See: http://stackoverflow.com/a/19243243
@@ -48,7 +49,7 @@ if labm8.is_python3():
 else:
     from StringIO import StringIO
 
-if clgen.host_has_opencl():
+if cfg.USE_OPENCL:
     import pyopencl as cl
 
 
@@ -113,7 +114,7 @@ def init_opencl(devtype="__placeholder__", queue_flags=0):
         OpenCLNotSupported: If host does not support OpenCL.
         OpenCLDriverException: In case of error.
     """
-    if not clgen.host_has_opencl():
+    if not cfg.USE_OPENCL:
         raise OpenCLNotSupported
 
     # we have to use a string as a placeholder for the default type or else

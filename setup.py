@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
+import json
 import os
 import pip
 
@@ -30,6 +31,28 @@ from pip.req import parse_requirements
 #
 install_reqs = parse_requirements('./requirements.txt', session=False)
 requirements = [str(ir.req) for ir in install_reqs]
+
+# parse configuration
+with open('./.config.json') as infile:
+    cfg = json.load(infile)
+
+scripts = [
+    'bin/clgen',
+    'bin/clgen-create-db',
+    'bin/clgen-explore',
+    'bin/clgen-features',
+    'bin/clgen-fetch',
+    'bin/clgen-fetch-clgen',
+    'bin/clgen-fetch-clsmith',
+    'bin/clgen-fetch-db',
+    'bin/clgen-fetch-github',
+    'bin/clgen-preprocess',
+    'bin/clgen-train',
+]
+
+# clgen driver requires opencl
+if cfg["opencl"]:
+    scripts.append('bin/clgen-drive')
 
 
 def all_module_data_files(module, datadir="data"):

@@ -23,13 +23,9 @@ import os
 
 from sys import exit, stderr
 
-import clgen
-if not clgen.host_has_opencl():
-    print("fatal: host has no opencl support", file=stderr)
-    exit(1)
-
 import pyopencl as cl
 
+import clgen
 from clgen import cli
 from clgen import cldrive
 

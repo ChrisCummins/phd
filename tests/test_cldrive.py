@@ -30,10 +30,11 @@ import labm8
 from labm8 import fs
 
 import clgen
-from clgen import clutil
 from clgen import cldrive
+from clgen import clutil
+from clgen import config as cfg
 
-if clgen.host_has_opencl():
+if cfg.USE_OPENCL:
     import pyopencl as cl
 
 source1 = """
@@ -111,7 +112,7 @@ source1_E_NO_OUTPUTS = """
 __kernel void A(__global int* a) {}
 """
 
-@skipIf(not clgen.host_has_opencl(), "no OpenCL support in host")
+@skipIf(not cfg.USE_OPENCL, "no OpenCL")
 class TestKernelDriver(TestCase):
     def setUp(self):
         self._devtype = cl.device_type.GPU
@@ -280,7 +281,7 @@ class TestKernelDriver(TestCase):
         self.assertEqual(10, len(driver.runtimes))
 
 
-@skipIf(not clgen.host_has_opencl(), "no OpenCL support in host")
+@skipIf(not cfg.USE_OPENCL, "no OpenCL")
 class TestKernelPayload(TestCase):
     def setUp(self):
         self._devtype = cl.device_type.GPU

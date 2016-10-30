@@ -27,6 +27,7 @@ from six import iteritems
 from subprocess import Popen, PIPE, STDOUT
 
 import clgen
+from clgen import config as cfg
 from clgen import log
 from clgen import native
 
@@ -64,7 +65,22 @@ def preprocess(input_txt, output_json, output_h5):
 
 
 def get_device_flags():
-    return {"gpu": -1}
+    # TODO: This should be runtime configurable
+    gpu_id = 0
+
+    if cfg.USE_CUDA:
+        return {"gpu": gpu_id}
+    # TODO: it apperas that cltorch can no longer be installed using this
+    # method, but instead requires using a fork of the torch distro with
+    # OpenCL support baked in. It would be fairly substantial job to add
+    # support for this second torch distro, so I'm going to ignore it and
+    # simply disable OpenCL support for torch. See:
+    #   https://github.com/hughperkins/distro-cl
+    #
+    # elif cfg.USE_OPENCL:
+    #     return {"gpu": gpu_id, "gpu_backend": "opencl"}
+    else:  # cpu-only
+        return {"gpu": -1}
 
 
 def train(**train_opts):

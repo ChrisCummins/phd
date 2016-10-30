@@ -27,26 +27,38 @@ torch-rnn := $(PWD)/native/torch-rnn/$(torch-rnn_version).bootstrapped
 
 torch-rnn: $(torch-rnn)
 
-# extra CUDA libraries
-ifeq ($(USE_CUDA),0)
-$(torch-rnn): $(torch)
+# basic torch-rnn requirements
+torch-rnn_base := $(PWD)/native/torch-rnn/$(torch-rnn_version).base.bootstrapped
+$(torch-rnn_base): $(torch)
 	$(luarocks) install torch
 	$(luarocks) install nn
 	$(luarocks) install optim
 	$(luarocks) install lua-cjson
 	cd $(PWD)/native/torch-hdf5/trunk && $(luarocks) make hdf5-0-0.rockspec
 	touch $@
-else
-	$(luarocks) install torch
-	$(luarocks) install nn
-	$(luarocks) install optim
-	$(luarocks) install lua-cjson
-	cd $(PWD)/native/torch-hdf5/trunk && $(luarocks) make hdf5-0-0.rockspec
-	$(luarocks) install cutorch
-	$(luarocks) install cunn
-	touch $@
+
+# Additional torch-rnn requirements for GPU support
+torch_rnn_extra_rocks =
+# TODO: it apperas that cltorch can no longer be installed using this method,
+# but instead requires using a fork of the torch distro with OpenCL support
+# baked in. It would be fairly substantial job to add support for this second
+# torch distro, so I'm going to ignore it and simply disable OpenCL support
+# for torch. See:
+#   https://github.com/hughperkins/distro-cl
+#
+# ifeq ($(USE_OPENCL),1)
+# torch_rnn_extra_rocks += cltorch clnn
+# endif
+ifeq ($(USE_CUDA),1)
+torch_rnn_extra_rocks += cutorch cunn
 endif
 
+$(torch-rnn): $(torch-rnn_base)
+	@for lib in $(torch_rnn_extra_rocks); do \
+		echo "$(luarocks) install $$lib"; \
+		$(luarocks) install $$lib; \
+	done
+	touch $@
 
 .PHONY: distclean-torch-rnn
 distclean-torch-rnn:
