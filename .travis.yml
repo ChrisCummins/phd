@@ -56,7 +56,10 @@ install:
 
 script:
   - true
-  # - python ./setup.py test
+  # - coverage run --source=clgen ./setup.py test
+
+# after_success:
+#   - coveralls
 
 notifications:
   email:

@@ -7,6 +7,9 @@
   <a href="https://travis-ci.org/ChrisCummins/clgen" target="_blank">
     <img src="https://travis-ci.org/ChrisCummins/clgen.svg?branch=master">
   </a>
+  <a href="https://coveralls.io/github/ChrisCummins/clgen?branch=master">
+    <img src="https://coveralls.io/repos/github/ChrisCummins/clgen/badge.svg?branch=master">
+  </a>
   <a href="http://chriscummins.cc/clgen/" target="_blank">
     <img src="https://img.shields.io/badge/docs-latest-brightgreen.svg">
   </a>
