@@ -14,36 +14,36 @@ python:
 
 cache:
   directories:
-    - native/cmake
-    - native/libclc
+    # - native/cmake
+    # - native/libclc
     - native/llvm/3.9.0
     - native/llvm/3.9.0/src
-    - native/ninja
-    - native/torch/trunk/build
+    # - native/ninja
+    # - native/torch/trunk/build
 
-addons:
-  apt:
-    sources:
-      - llvm-toolchain-precise-3.7
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-4.8
-      - g++-4.8
-      - clang-3.6
-      - libhdf5-serial-dev
-      - python-dev
+# addons:
+#   apt:
+#     sources:
+#       - llvm-toolchain-precise-3.7
+#       - ubuntu-toolchain-r-test
+#     packages:
+#       - gcc-4.8
+#       - g++-4.8
+#       - clang-3.6
+#       - libhdf5-serial-dev
+#       - python-dev
 
-env:
-  global:
-    - CC=clang
-    - CXX=clang++
-    - CLGEN_GPU=0
+# env:
+#   global:
+#     - CC=clang
+#     - CXX=clang++
+#     - CLGEN_GPU=0
 
 # note we can't build openblas with clang:
 # Makefile.system:409: *** OpenBLAS: Clang didn't support OpenMP yet..  Stop.
 install:
-  - sed '/install_openblas /d' -i native/torch/trunk/src/install-deps
-  - make llvm
+  # - sed '/install_openblas /d' -i native/torch/trunk/src/install-deps
+  - make $TRAVIS_BUILD_DIR/native/llvm/3.9.0/src/include/llvm/CMakeLists.txt
   # - make native
   # - pip install --upgrade pip
   # - pip install coveralls
