@@ -2,7 +2,7 @@
    :alt: CLgen: Deep Learning Program Generator.
    :target: http://chriscummins.cc/clgen/
    :width: 420 px
-
+   :align: center
 ------
 
 .. centered:: |Build Status| |Coverage Status| |Documentation Status| |Python Version| |License Badge|
@@ -86,17 +86,17 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. |Build Status| image:: https://travis-ci.org/ChrisCummins/clgen.svg?branch=master
+.. |Build Status| image:: https://img.shields.io/travis/ChrisCummins/clgen/master.svg?style=flat
    :target: https://travis-ci.org/ChrisCummins/clgen
 
-.. |Coverage Status| image:: https://coveralls.io/repos/github/ChrisCummins/clgen/badge.svg?branch=master
+.. |Coverage Status| image:: https://img.shields.io/coveralls/ChrisCummins/clgen/master.svg?style=flat"
    :target: https://coveralls.io/github/ChrisCummins/clgen?branch=master
 
-.. |Documentation Status| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg
+.. |Documentation Status| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
    :target: http://chriscummins.cc/clgen/
 
-.. |Python Version| image:: https://img.shields.io/badge/python-2%20%26%203-blue.svg
+.. |Python Version| image:: https://img.shields.io/badge/python-2%20%26%203-blue.svg?style=flat
    :target: https://www.python.org/
 
-.. |License Badge| image:: https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg
+.. |License Badge| image:: https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat
    :target: https://www.gnu.org/licenses/gpl-3.0.en.html

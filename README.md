@@ -5,19 +5,19 @@
 
 <div align="center">
   <a href="https://travis-ci.org/ChrisCummins/clgen" target="_blank">
-    <img src="https://travis-ci.org/ChrisCummins/clgen.svg?branch=master">
+    <img src="https://img.shields.io/travis/ChrisCummins/clgen/master.svg?style=flat">
   </a>
   <a href="https://coveralls.io/github/ChrisCummins/clgen?branch=master">
-    <img src="https://coveralls.io/repos/github/ChrisCummins/clgen/badge.svg?branch=master">
+    <img src="https://img.shields.io/coveralls/ChrisCummins/clgen/master.svg?style=flat">
   </a>
   <a href="http://chriscummins.cc/clgen/" target="_blank">
-    <img src="https://img.shields.io/badge/docs-latest-brightgreen.svg">
+    <img src="https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat">
   </a>
    <a href="https://www.python.org/" target="_blank">
-    <img src="https://img.shields.io/badge/python-2%20%26%203-blue.svg">
+    <img src="https://img.shields.io/badge/python-2%20%26%203-blue.svg?style=flat">
   </a>
   <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" target="_blank">
-    <img src="https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg">
+    <img src="https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat">
   </a>
 </div>
 
