@@ -54,8 +54,8 @@ class Sampler(clgen.CLgenObject):
         checksum_data = sorted(
             [str(x) for x in list(sampler_opts.values())] +
             [str(x) for x in list(kernel_opts.values())])
-        checksum_string = "".join([str(x) for x in checksum_data])
-        self.hash = clgen.checksum_str(checksum_string)
+        string = "".join([str(x) for x in checksum_data])
+        self.hash = clgen.checksum_str(string)
 
         # parse sampler options
         self.max_kernels = sampler_opts.get("max_kernels", -1)
@@ -65,10 +65,13 @@ class Sampler(clgen.CLgenObject):
 
         self.kernel_opts = kernel_opts
 
+    def get_cache(self, model):
+        return Cache(fs.path(model.hash, model.corpus.hash, self.hash))
+
     def sample_iteration(self, model):
         assert(isinstance(model, Model))
 
-        cache = Cache(fs.path(model.hash, "samples", self.hash))
+        cache = self.get_cache(model)
 
         # create samples database if it doesn't exist
         if not cache["kernels.db"]:
@@ -102,7 +105,7 @@ class Sampler(clgen.CLgenObject):
         fs.rm(tmppath)
 
     def sample(self, model):
-        cache = Cache(fs.path(model.hash, "samples", self.hash))
+        cache = self.get_cache(model)
 
         # create samples database if it doesn't exist
         if not cache["kernels.db"]:

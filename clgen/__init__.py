@@ -24,8 +24,10 @@ from __future__ import absolute_import, print_function, with_statement
 import json
 import os
 import re
+import six
 import tarfile
 
+from copy import deepcopy
 from contextlib import contextmanager
 from hashlib import sha1
 from pkg_resources import resource_filename, resource_string, require
@@ -307,6 +309,12 @@ def terminating(thing):
         yield thing
     finally:
         thing.terminate()
+
+
+def write_file(path, contents):
+    fs.mkdir(fs.dirname(path))
+    with open(path, 'w') as outfile:
+        outfile.write(contents)
 
 
 def main(model_json, sampler_json):

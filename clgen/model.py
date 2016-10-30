@@ -40,11 +40,15 @@ class Model(clgen.CLgenObject):
         assert(isinstance(corpus, Corpus))
         assert(type(train_opts) is dict)
 
-        self.hash = corpus.hash
         self.corpus = corpus
         self.train_opts = train_opts
 
-        self.checkpoint_cache = Cache(fs.path(self.hash, "cv"))
+        self.hash = self.checksum()
+        self.checkpoint_cache = Cache(fs.path(self.hash, self.corpus.hash))
+
+    def checksum(self):
+        string = "".join([x for x in sorted(self.train_opts)])
+        return clgen.checksum_str(string)
 
     def train(self):
         # assemble training options
