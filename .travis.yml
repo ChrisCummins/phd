@@ -43,16 +43,16 @@ env:
 # the project by restarting the job. Instead, split the build into smaller
 # jobs:
 #
-# install:  # part 1
-#   - make $TRAVIS_BUILD_DIR/native/llvm/3.9.0/src/include/llvm/CMakeLists.txt
-#   - make cmake
-#   - make ninja
-#   - mkdir -p native/llvm/3.9.0/build
-#   - cd $TRAVIS_BUILD_DIR/native/llvm/3.9.0/build && $TRAVIS_BUILD_DIR/native/cmake/3.5.0/bin/cmake $TRAVIS_BUILD_DIR/native/llvm/3.9.0/src -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true -DLLVM_TARGETS_TO_BUILD=X86 -DCLANG_ENABLE_STATIC_ANALYZER=OFF -DCLANG_ENABLE_ARCMT=OFF -DCMAKE_MAKE_PROGRAM=$TRAVIS_BUILD_DIR/native/ninja/1.7.1/ninja -G Ninja -Wno-dev
-#
-install:  # part 2 (restart job until LLVM is compiled)
+install:  # part 1
+  - make $TRAVIS_BUILD_DIR/native/llvm/3.9.0/src/include/llvm/CMakeLists.txt
+  - make cmake
+  - make ninja
   - mkdir -p native/llvm/3.9.0/build
-  - cd $TRAVIS_BUILD_DIR/native/llvm/3.9.0/build && (timeout 2400 $TRAVIS_BUILD_DIR/native/ninja/1.7.1/ninja)
+  - cd $TRAVIS_BUILD_DIR/native/llvm/3.9.0/build && $TRAVIS_BUILD_DIR/native/cmake/3.5.0/bin/cmake $TRAVIS_BUILD_DIR/native/llvm/3.9.0/src -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true -DLLVM_TARGETS_TO_BUILD=X86 -DCLANG_ENABLE_STATIC_ANALYZER=OFF -DCLANG_ENABLE_ARCMT=OFF -DCMAKE_MAKE_PROGRAM=$TRAVIS_BUILD_DIR/native/ninja/1.7.1/ninja -G Ninja -Wno-dev
+#
+# install:  # part 2 (restart job until LLVM is compiled)
+#   - mkdir -p native/llvm/3.9.0/build
+#   - cd $TRAVIS_BUILD_DIR/native/llvm/3.9.0/build && (timeout 2400 $TRAVIS_BUILD_DIR/native/ninja/1.7.1/ninja)
 #
 # install:  # part 3
 #   - make llvm
