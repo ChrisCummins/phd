@@ -99,11 +99,11 @@ def main():
                                       default="yes")
 
     # generate JSON config file
-    with open(".config.json", "wb") as outfile:
+    with open(".config.json", "w") as outfile:
         json.dump(cfg, outfile)
 
     # generate make config file
-    with open(".config.make", "wb") as outfile:
+    with open(".config.make", "w") as outfile:
         print("USE_OPENCL := " + to_make(cfg["opencl"]), file=outfile)
         print("USE_CUDA := " + to_make(cfg["cuda"]), file=outfile)
         print("WITH_DEV_TOOLS := " + to_make(cfg["dev_tools"]), file=outfile)
