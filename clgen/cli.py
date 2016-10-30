@@ -61,7 +61,7 @@ class ArgumentParser(argparse.ArgumentParser):
         # append author information to description
         description = kwargs.get("description", "")
 
-        if description[-1] != "\n":
+        if len(description) and description[-1] != "\n":
             description += "\n"
         description += """
 Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
@@ -107,7 +107,7 @@ Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
 
 def main(method, *args, **kwargs):
     """
-    Main method entry point clgen command line interface.
+    Runs the given method as the main entrypoint to a program.
 
     If an exception is thrown, print error message and exit.
 

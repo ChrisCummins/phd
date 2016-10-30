@@ -28,7 +28,7 @@ Create an empty SQL database.
 
 
 def main():
-    parser = cli.ArgumentParser(descrption=__description__)
+    parser = cli.ArgumentParser(description=__description__)
     parser.add_argument('input', help='path to SQL input dataset')
     parser.add_argument('-g', action='store_true',
                         help='generate dataset with GitHub metadata')

@@ -1,14 +1,17 @@
-Executables
-===========
+Programs
+========
 
 clgen
 ------
 
 ::
 
-    usage: clgen [-h] [-v] [--version] <model-json> <sampler-json>
+    usage: clgen [-h] [--version] [-v] <model-json> <sampler-json>
     
     Generate OpenCL programs using Deep Learning.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
     
     positional arguments:
       <model-json>    path to model specification file
@@ -16,35 +19,51 @@ clgen
     
     optional arguments:
       -h, --help      show this help message and exit
-      -v, --verbose   increase output verbosity
       --version       show version information and exit
+      -v, --verbose   increase output verbosity
 
 clgen-create-db
 ----------------
 
 ::
 
-    usage: clgen-create-db [-h] [-g] input
+    usage: clgen-create-db [-h] [--version] [-v] [-g] input
+    
+    Create an empty SQL database.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
     
     positional arguments:
-      input       path to SQL input dataset
+      input          path to SQL input dataset
     
     optional arguments:
-      -h, --help  show this help message and exit
-      -g          generate dataset with GitHub metadata
+      -h, --help     show this help message and exit
+      --version      show version information and exit
+      -v, --verbose  increase output verbosity
+      -g             generate dataset with GitHub metadata
 
 clgen-drive
 ------------
 
 ::
 
-    usage: clgen-drive [-h] [-f] [-s] [--cpu] [--gpu] [--fatal-errors] input
+    usage: clgen-drive [-h] [--version] [-v] [-f] [-s] [--cpu] [--gpu]
+                       [--fatal-errors]
+                       input
+    
+    Drive generated OpenCL kernels.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
     
     positional arguments:
       input           path to input
     
     optional arguments:
       -h, --help      show this help message and exit
+      --version       show version information and exit
+      -v, --verbose   increase output verbosity
       -f              treat input as file
       -s, --strict    reject any kernels which do not validate
       --cpu           execute on CPU (default: no)
@@ -56,27 +75,41 @@ clgen-explore
 
 ::
 
-    usage: clgen-explore [-h] input
+    usage: clgen-explore [-h] [--version] [-v] input
+    
+    Exploratory analysis of preprocessed dataset.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
     
     positional arguments:
-      input       path to SQL input dataset
+      input          path to SQL input dataset
     
     optional arguments:
-      -h, --help  show this help message and exit
+      -h, --help     show this help message and exit
+      --version      show version information and exit
+      -v, --verbose  increase output verbosity
 
 clgen-features
 ---------------
 
 ::
 
-    usage: clgen-features [-h] [-d] [-s] [-e] [--shim] [-q] [-H]
+    usage: clgen-features [-h] [--version] [-v] [-d] [-s] [-e] [--shim] [-q] [-H]
                           inputs [inputs ...]
+    
+    Extract OpenCL kernel features.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
     
     positional arguments:
       inputs              input path(s)
     
     optional arguments:
       -h, --help          show this help message and exit
+      --version           show version information and exit
+      -v, --verbose       increase output verbosity
       -d, --dir-mode      treat inputs as directories
       -s, --stats         summarize a features files
       -e, --fatal-errors  quit on compiler error
@@ -89,98 +122,151 @@ clgen-fetch
 
 ::
 
-    usage: clgen-fetch [-h] input paths [paths ...]
+    usage: clgen-fetch [-h] [--version] [-v] input paths [paths ...]
+    
+    Import OpenCL files into datbase.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
     
     positional arguments:
-      input       path to SQL dataset
-      paths       path to OpenCL files or directories
+      input          path to SQL dataset
+      paths          path to OpenCL files or directories
     
     optional arguments:
-      -h, --help  show this help message and exit
+      -h, --help     show this help message and exit
+      --version      show version information and exit
+      -v, --verbose  increase output verbosity
 
 clgen-fetch-clgen
 ------------------
 
 ::
 
-    usage: clgen-fetch-clgen [-h] [-d D] [-f F] [--first] input
+    usage: clgen-fetch-clgen [-h] [--version] [-v] [-d D] [-f F] [--first] input
+    
+    Exploratory analysis of preprocessed dataset.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
     
     positional arguments:
-      input       path to SQL dataset
+      input          path to SQL dataset
     
     optional arguments:
-      -h, --help  show this help message and exit
-      -d D        path to samples directory
-      -f F        path to sample file
-      --first     extract only first kernel from sample file(s)
+      -h, --help     show this help message and exit
+      --version      show version information and exit
+      -v, --verbose  increase output verbosity
+      -d D           path to samples directory
+      -f F           path to sample file
+      --first        extract only first kernel from sample file(s)
 
 clgen-fetch-clsmith
 --------------------
 
 ::
 
-    usage: clgen-fetch-clsmith [-h] [-n N] input
+    usage: clgen-fetch-clsmith [-h] [--version] [-v] [-n N] input
+    
+    Generate OpenCL programs using CLSmith.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
     
     positional arguments:
-      input       path to SQL dataset
+      input          path to SQL dataset
     
     optional arguments:
-      -h, --help  show this help message and exit
-      -n N        number of OpenCL kernels to generate
+      -h, --help     show this help message and exit
+      --version      show version information and exit
+      -v, --verbose  increase output verbosity
+      -n N           number of OpenCL kernels to generate
 
 clgen-fetch-db
 ---------------
 
 ::
 
-    usage: clgen-fetch-db [-h] output input
+    usage: clgen-fetch-db [-h] [--version] [-v] output input
+    
+    Import kernels from an existing database.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
     
     positional arguments:
-      output      path to output SQL dataset
-      input       path to input SQL dataset
+      output         path to output SQL dataset
+      input          path to input SQL dataset
     
     optional arguments:
-      -h, --help  show this help message and exit
+      -h, --help     show this help message and exit
+      --version      show version information and exit
+      -v, --verbose  increase output verbosity
 
 clgen-fetch-github
 -------------------
 
 ::
 
-    usage: clgen-fetch-github [-h] input
+    usage: clgen-fetch-github [-h] [--version] [-v] input
+    
+    Fetch OpenCL kernels from Github. Reads github authentication
+    from environmental variables:
+    
+         GITHUB_USERNAME   github username
+         GITHUB_PW         github password
+         GITHUB_TOKEN      github api token
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
     
     positional arguments:
-      input       path to SQL input dataset
+      input          path to SQL input dataset
     
     optional arguments:
-      -h, --help  show this help message and exit
+      -h, --help     show this help message and exit
+      --version      show version information and exit
+      -v, --verbose  increase output verbosity
 
 clgen-preprocess
 -----------------
 
 ::
 
-    usage: clgen-preprocess [-h] [-f] [-i] [--remove-bad-preprocessed]
+    usage: clgen-preprocess [-h] [--version] [-v] [-f] [-i]
+                            [--remove-bad-preprocessed]
                             inputs [inputs ...]
+    
+    Process OpenCL files for machine learning.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
     
     positional arguments:
       inputs                path to input
     
     optional arguments:
       -h, --help            show this help message and exit
+      --version             show version information and exit
+      -v, --verbose         increase output verbosity
       -f, --file            treat input as file
       -i, --inplace         inplace file rewrite
       --remove-bad-preprocessed
-                            delete the contents of all bad or ugly preprocessed
-                            files, but keep the entries in the table
+                            delete the contents of all bad or ugly preprocessed files, but keep the entries in the table
 
 clgen-train
 ------------
 
 ::
 
-    usage: clgen-train [-h] [-d] [-i] [--input-samples] [--eof] [-r] [-s STATUS]
+    usage: clgen-train [-h] [--version] [-v] [-d] [-i] [--input-samples] [--eof]
+                       [-r] [-s STATUS]
                        input output
+    
+    Create training datasets.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
     
     positional arguments:
       input                 path to SQL input dataset
@@ -188,6 +274,8 @@ clgen-train
     
     optional arguments:
       -h, --help            show this help message and exit
+      --version             show version information and exit
+      -v, --verbose         increase output verbosity
       -d                    output to directory (overrides -i, --eof, -r)
       -i                    include file separators
       --input-samples       use input contents, not preprocessed
