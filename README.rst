@@ -3,13 +3,13 @@
    :width: 420 px
 
 
-|Build Status|
+|Build Status| |Documentation Status| |Python Version| |License Badge|
 
-CLgen is an application for generating executable programs using deep learning.
-CLgen *learns* to program using neural networks which model the semantics and
-usage from large volumes of program fragments, generating many-core OpenCL
-programs that are representative of, but *distinct* from, the programs it learns
-from.
+**CLgen** is an open source application for generating runnable programs using
+deep learning. CLgen *learns* to program using neural networks which model
+the semantics and usage from large volumes of program fragments, generating
+many-core OpenCL programs that are representative of, but *distinct* from,
+the programs it learns from.
 
 .. figure:: assets/pipeline.png
    :alt: labm8
@@ -75,3 +75,11 @@ Released under the terms of the GPLv3 license. See
 
 .. |Build Status| image:: https://travis-ci.com/ChrisCummins/clgen.svg?token=RpzWC2nNxou66YeqVQYw&branch=master
    :target: https://travis-ci.com/ChrisCummins/clgen
+
+.. |Documentation Status| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg
+
+.. |Python Version| image:: https://img.shields.io/badge/python-2%20%26%203-blue.svg
+   :target: https://www.python.org/
+
+.. |License Badge| image:: https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg
+   :target: https://www.gnu.org/licenses/gpl-3.0.en.html
