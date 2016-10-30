@@ -18,6 +18,7 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 from os import environ
+from github import BadCredentialsException
 
 from clgen import cli
 from clgen import log
@@ -31,6 +32,13 @@ from environmental variables:
      GITHUB_PW         github password
      GITHUB_TOKEN      github api token
 """
+
+
+def do_fetch(*args, **kwargs):
+    try:
+        fetch.github(*args, **kwargs)
+    except BadCredentialsException as e:
+        log.fatal("bad GitHub credentials")
 
 
 def main():
@@ -47,7 +55,7 @@ def main():
     except KeyError as e:
         log.fatal('environment variable {} not set'.format(e))
 
-    cli.main(fetch.github, db_path, github_username, github_pw, github_token)
+    cli.main(do_fetch, db_path, github_username, github_pw, github_token)
 
 
 if __name__ == '__main__':

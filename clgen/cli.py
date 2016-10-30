@@ -127,6 +127,11 @@ def main(method, *args, **kwargs):
 
     try:
         return method(*args, **kwargs)
+    except clgen.UserError as e:
+        log.fatal(e, "(" + type(e).__name__  + ")")
+    except KeyboardInterrupt:
+        print("interrupted", file=sys.stderr)
+        log.exit(1)
     except Exception as e:
         log.fatal(e, "(" + type(e).__name__  + ")",
                   "\n\nPlease report bugs at <"

@@ -25,20 +25,15 @@ import os
 import sqlite3
 
 import clgen
-
-
-class DatabaseException(clgen.CLgenError):
-    pass
+from clgen import log
 
 
 def create_db(path, github=False):
     path = os.path.expanduser(path)
 
     if os.path.exists(path):
-        raise DatabaseException("Database '{}' already exists"
-                                .format(path))
+        raise clgen.UserError("'{}' already exists".format(path))
 
-    print("creating database ...".format(path))
     db = sqlite3.connect(path)
     c = db.cursor()
     if github:

@@ -19,8 +19,12 @@
 #
 from __future__ import print_function
 
+from labm8 import fs
+
 from clgen import cli
+from clgen import log
 from clgen import dbutil
+
 
 __description__ = """
 Create an empty SQL database.
@@ -30,14 +34,12 @@ Create an empty SQL database.
 def main():
     parser = cli.ArgumentParser(description=__description__)
     parser.add_argument('input', help='path to SQL input dataset')
-    parser.add_argument('-g', action='store_true',
+    parser.add_argument('-g', '--github', action='store_true',
                         help='generate dataset with GitHub metadata')
     args = parser.parse_args()
 
-    db_path = args.input
-    github = args.g
-
-    cli.main(dbutil.create_db, db_path, github)
+    cli.main(dbutil.create_db, args.input, args.github)
+    log.info(fs.abspath(args.input))
 
 
 if __name__ == '__main__':

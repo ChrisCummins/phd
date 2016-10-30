@@ -41,14 +41,13 @@ from time import sleep
 
 import clgen
 from clgen import clutil
+from clgen import dbutil
 from clgen import explore
 
 
 class FetchException(clgen.CLgenError):
     pass
 
-
-MAX_KERNEL_LEN = 5000
 
 # Counters
 repos_new_counter = 0
@@ -84,9 +83,6 @@ def print_counters():
     print('\r\033[Kfiles: new ', files_new_counter,
           ', modified ', files_modified_counter,
           ', unchanged ', files_unchanged_counter,
-          '. repos: new ', repos_new_counter,
-          ', modified ', repos_modified_counter,
-          ', unchanged ', repos_unchanged_counter,
           '. errors ', errors_counter,
           '. current: ', status_string[0:25],
           sep='', end='')
@@ -255,8 +251,11 @@ def github(db_path, github_username, github_pw, github_token):
 
     g = Github(github_username, github_pw)
     db = sqlite3.connect(db_path)
+
+    if not dbutil.is_github:
+        raise clgen.UserError("not a GitHub database")
+
     handle_repo = partial(process_repo, g, db)
-    # TODO: Verify tables have been created
 
     # Fetch the repositories to iterate over. Since opencl isn't
     # treated as a first-class language by GitHub, we can't use the
@@ -275,6 +274,9 @@ def github(db_path, github_username, github_pw, github_token):
         'heterogeneous'
     ]
     for query in query_terms:
+        # Forks are okay. We use checksums to ensure uniqueness in
+        # final dataset.
+        #
         repos = g.search_repositories(query + ' fork:true sort:stars')
 
         for repo in repos:
