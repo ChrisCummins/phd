@@ -95,7 +95,9 @@ set_new_version() {
     sed "s/$current/$new/" -i setup.py
 
     echo "Updating version string... 'docs/conf.py'"
-    sed "s/$current/$new/" -i setup.py
+    sed "s/$current/$new/" -i docs/conf.py
+
+    git add setup.py docs/conf.py
 }
 
 # Make the version bump.
@@ -107,7 +109,6 @@ make_version_bump() {
     cd "$(get_project_root)"
 
     echo "Creating version bump commit... $new_version"
-    git add setup.py
     git commit -m "Release $new_version" >/dev/null
 
     echo "Creating release tag... '$new_version'"
