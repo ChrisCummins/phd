@@ -36,7 +36,6 @@ env:
   global:
     - CC=clang
     - CXX=clang++
-    - CLGEN_GPU=0
 
 before_install:
   # note we can't build openblas with the Travis clang toolchain:
@@ -63,7 +62,7 @@ before_install:
 #
 install:  # part 2 (restart job until LLVM is compiled)
   - mkdir -p native/llvm/3.9.0/build
-  - cd $TRAVIS_BUILD_DIR/native/llvm/3.9.0/build && (timeout 60 $TRAVIS_BUILD_DIR/native/ninja/1.7.1/ninja)
+  - cd $TRAVIS_BUILD_DIR/native/llvm/3.9.0/build && (timeout 60 $TRAVIS_BUILD_DIR/native/ninja/1.7.1/ninja || true)
 #
 # install:  # part 3
 #   - ./configure -b
