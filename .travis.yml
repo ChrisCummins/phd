@@ -18,7 +18,8 @@ cache:
     - native/libclc
     - native/llvm/3.9.0
     - native/ninja
-    - native/torch/trunk/build
+    - native/torch
+    - native/torch-rnn
 
 addons:
   apt:
