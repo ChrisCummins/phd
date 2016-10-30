@@ -75,8 +75,8 @@ Copyright 2016 Chris Cummins chrisc.101@gmail.com.
 Released under the terms of the GPLv3 license. See
 `LICENSE.txt </LICENSE.txt>`__ for details.
 
-.. |Build Status| image:: https://travis-ci.com/ChrisCummins/clgen.svg?token=RpzWC2nNxou66YeqVQYw&branch=master
-   :target: https://travis-ci.com/ChrisCummins/clgen
+.. |Build Status| image:: https://travis-ci.org/ChrisCummins/clgen.svg?branch=master
+   :target: https://travis-ci.org/ChrisCummins/clgen
 
 .. |Documentation Status| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg
 
