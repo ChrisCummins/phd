@@ -98,6 +98,13 @@ clgen.preprocess
    :members:
    :undoc-members:
 
+clgen.sampler
+--------------
+
+.. automodule:: clgen.sampler
+   :members:
+   :undoc-members:
+
 clgen.torch_rnn
 ----------------
 
