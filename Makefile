@@ -162,9 +162,8 @@ endif
 
 install: install-python
 
-# generate documentation
-.PHONY: docs
-docs: install-python
+.PHONY: docs-modules
+docs-modules: install-python
 	@echo "generating API documentation"
 	cp docs/api.rst.template docs/api.rst
 	@for module in $$(cd clgen; ls *.py | grep -v __init__.py); do \
@@ -189,7 +188,21 @@ docs: install-python
 		./bin/$$bin --help | sed 's/^/    /' >> docs/binaries.rst; \
 		echo >> docs/binaries.rst; \
 	done
+
+# generate documentation
+.PHONY: docs
+docs: docs-modules
+	rm -rf docs/_build/html
+	git clone git@github.com:ChrisCummins/clgen.git docs/_build/html
+	cd docs/_build/html && git checkout gh-pages
+	cd docs/_build/html && git reset --hard origin/gh-pages
 	$(env3)$(MAKE) -C docs html
+
+.PHONY: docs-publish
+docs-publish: docs
+	cd docs/_build/html && git add .
+	cd docs/_build/html && git commit -m "Updated sphinx docs" || true
+	cd docs/_build/html && git push -u origin gh-pages
 
 # help text
 .PHONY: help
