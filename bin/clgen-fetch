@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 #
-# clgen-fetch: Import OpenCL files into datbase
-#
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is part of CLgen.
@@ -19,15 +17,18 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from clgen import fetch
-
 import os
 
-from argparse import ArgumentParser
+from clgen import cli
+from clgen import fetch
+
+__description__ = """
+Import OpenCL files into datbase.
+"""
 
 
 def main():
-    parser = ArgumentParser()
+    parser = cli.ArgumentParser(description=__description__)
     parser.add_argument('input', help='path to SQL dataset')
     parser.add_argument('paths', type=str, nargs='+',
                         help='path to OpenCL files or directories')
@@ -35,7 +36,7 @@ def main():
 
     db_path = os.path.expanduser(args.input)
 
-    fetch.fs(db_path, args.paths)
+    cli.main(fetch.fs, db_path, args.paths)
 
 
 if __name__ == '__main__':

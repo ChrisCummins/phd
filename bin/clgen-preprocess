@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 #
-# clgen-preprocess: Process OpenCL files for machine learning
-#
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is part of CLgen.
@@ -19,13 +17,16 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from argparse import ArgumentParser
-
+from clgen import cli
 from clgen import preprocess
+
+__description__ = """
+Process OpenCL files for machine learning.
+"""
 
 
 def main():
-    parser = ArgumentParser()
+    parser = cli.ArgumentParser(description=__description__)
     parser.add_argument('inputs', nargs='+', help='path to input')
     parser.add_argument('-f', '--file', action='store_true',
                         help='treat input as file')
@@ -38,16 +39,16 @@ def main():
     args = parser.parse_args()
 
     if args.file and args.inplace:
-        preprocess.preprocess_inplace(args.inputs)
+        cli.main(preprocess.preprocess_inplace, args.inputs)
     else:
         for path in args.inputs:
             if args.file:
-                preprocess.preprocess_file(path, inplace=False)
+                cli.main(preprocess.preprocess_file, path, inplace=False)
             else:
                 if args.remove_bad_preprocessed:
-                    preprocess.remove_bad_preprocessed(path)
+                    cli.main(preprocess.remove_bad_preprocessed, path)
                 else:
-                    preprocess.preprocess_db(path)
+                    cli.main(preprocess.preprocess_db, path)
 
 
 if __name__ == '__main__':

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 #
-# clgen-features: Extract OpenCL features
-#
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is part of CLgen.
@@ -21,10 +19,14 @@
 #
 from __future__ import print_function
 
-from argparse import ArgumentParser
 from labm8 import fs
 
+from clgen import cli
 from clgen import features
+
+__description__ = """
+Extract OpenCL kernel features.
+"""
 
 
 def features_dir(csv_path):
@@ -32,7 +34,7 @@ def features_dir(csv_path):
 
 
 def main():
-    parser = ArgumentParser()
+    parser = cli.ArgumentParser(description=__description__)
     parser.add_argument('inputs', nargs='+', help='input path(s)')
     parser.add_argument('-d', '--dir-mode', action='store_true',
                         help='treat inputs as directories')
@@ -65,8 +67,9 @@ def main():
         paths = [item for sublist in trees for item in sublist]
     else:
         paths = [fs.path(f) for f in inputs]
-    features.files(paths, fatal_errors=args.fatal_errors, use_shim=args.shim,
-                   quiet=args.quiet, header=not args.no_header)
+
+    cli.main(features.files, paths, fatal_errors=args.fatal_errors,
+             use_shim=args.shim, quiet=args.quiet, header=not args.no_header)
 
 
 if __name__ == '__main__':

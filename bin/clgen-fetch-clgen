@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 #
-# clgen-fetch-clgen: Extract OpenCL programs from a clgen sample
-#
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is part of CLgen.
@@ -19,13 +17,16 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from argparse import ArgumentParser
-
+from clgen import cli
 from clgen import fetch
+
+__description__ = """
+Exploratory analysis of preprocessed dataset.
+"""
 
 
 def main():
-    parser = ArgumentParser()
+    parser = cli.ArgumentParser(description=__description__)
     parser.add_argument('input', help='path to SQL dataset')
     parser.add_argument('-d', type=str, help='path to samples directory')
     parser.add_argument('-f', type=str, default='sample.txt',
@@ -39,7 +40,7 @@ def main():
     sample_path = args.f
     first_only = args.first
 
-    fetch.clgen_sample(db_path, samples_dir, sample_path, first_only)
+    cli.main(fetch.clgen_sample, db_path, samples_dir, sample_path, first_only)
 
 
 if __name__ == '__main__':

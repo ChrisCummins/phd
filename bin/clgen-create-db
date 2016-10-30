@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 #
-# clgen-create-db: Create a database
-#
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is part of CLgen.
@@ -21,17 +19,16 @@
 #
 from __future__ import print_function
 
-import os
-import sys
-import sqlite3
-
-from argparse import ArgumentParser
-
+from clgen import cli
 from clgen import dbutil
+
+__description__ = """
+Create an empty SQL database.
+"""
 
 
 def main():
-    parser = ArgumentParser()
+    parser = cli.ArgumentParser(descrption=__description__)
     parser.add_argument('input', help='path to SQL input dataset')
     parser.add_argument('-g', action='store_true',
                         help='generate dataset with GitHub metadata')
@@ -40,11 +37,7 @@ def main():
     db_path = args.input
     github = args.g
 
-    try:
-        dbutil.create_db(db_path, github)
-    except Exception as e:
-        print(e, file=sys.stderr)
-        sys.exit(1)
+    cli.main(dbutil.create_db, db_path, github)
 
 
 if __name__ == '__main__':

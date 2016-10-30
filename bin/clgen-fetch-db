@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 #
-# clgen-fetch-db: Import kernels from an existing database
-#
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is part of CLgen.
@@ -21,13 +19,16 @@
 #
 import os
 
-from argparse import ArgumentParser
-
+from clgen import cli
 from clgen import fetch
+
+__description__ = """
+Import kernels from an existing database.
+"""
 
 
 def main():
-    parser = ArgumentParser()
+    parser = cli.ArgumentParser(description=__description__)
     parser.add_argument('output', help='path to output SQL dataset')
     parser.add_argument('input', help='path to input SQL dataset')
 
@@ -36,7 +37,7 @@ def main():
     out_db_path = os.path.expanduser(args.output)
     in_db_path = os.path.expanduser(args.input)
 
-    fetch.content_db(out_db_path, in_db_path)
+    cli.main(fetch.content_db, out_db_path, in_db_path)
 
 
 if __name__ == '__main__':
