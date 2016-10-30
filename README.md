@@ -84,6 +84,8 @@ set:
 $ clgen model.json sampler.json
 ```
 
+<img src="https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/clgen.gif" width="500">
+
 See the [online documentation](http://chriscummins.cc/clgen/) for more
 information.
 
