@@ -21,17 +21,12 @@ Sample a CLgen model.
 """
 from __future__ import print_function
 
-import labm8
-import os
-import re
-
-from copy import copy
 from glob import glob, iglob
 from labm8 import fs
 
 import clgen
+from clgen import config as cfg
 from clgen import dbutil
-from clgen import explore
 from clgen import fetch
 from clgen import log
 from clgen import preprocess
@@ -62,6 +57,10 @@ class Sampler(clgen.CLgenObject):
         self.batch_size = sampler_opts.get("batch_size", 1000)
         self.static_checker = sampler_opts.get("static_checker", True)
         self.dynamic_checker = sampler_opts.get("dynamic_checker", False)
+
+        if self.dynamic_checker and not cfg.USE_OPENCL:
+            log.warning("dynamic checking requested, but OpenCL not available")
+            self.dynamic_checker = False
 
         self.kernel_opts = kernel_opts
 
