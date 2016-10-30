@@ -102,6 +102,10 @@ set_new_version() {
     echo "Updating version string... 'docs/conf.py'"
     sed "s/$current/$new/" -i docs/conf.py
     git add docs/conf.py
+
+    echo "Updating version string... 'docs/index.rst'"
+    sed "s/$current/$new/" -i docs/index.rst
+    git add docs/index.rst
 }
 
 # Make the version bump.
@@ -111,6 +115,9 @@ make_version_bump() {
     local new_version=$1
 
     cd "$(get_project_root)"
+
+    echo "Publishing documentation..."
+    make docs-publish
 
     echo "Creating version bump commit... $new_version"
     git commit -m "Release $new_version" >/dev/null
