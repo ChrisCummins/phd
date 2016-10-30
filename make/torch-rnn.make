@@ -27,8 +27,8 @@ torch-rnn := $(PWD)/native/torch-rnn/$(torch-rnn_version).bootstrapped
 
 torch-rnn: $(torch-rnn)
 
-# extra CUDA libraries if GPU is enabled
-ifeq ($(CLGEN_GPU),0)
+# extra CUDA libraries
+ifeq ($(USE_CUDA),0)
 $(torch-rnn): $(torch)
 	$(luarocks) install torch
 	$(luarocks) install nn

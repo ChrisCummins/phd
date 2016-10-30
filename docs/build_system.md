@@ -2,27 +2,18 @@
 
 If your system has the [required
 components](https://github.com/ChrisCummins/clgen#requirements), then building
-CLgen should be a relatively straightforward. First, if GPU support is *not*
-required (i.e. you don't have an NVIDIA GPU running CUDA >= 6.5), then set the
-following environment variable:
+CLgen should be a relatively straightforward. First configure your build:
 
 ```
-$ export CLGEN_GPU=0
+$ ./configure
 ```
-
-For convenience sake you may consider adding that to your shell configuration:
-
-```
-export CLGEN_GPU=0 >> ~/.$(basename $SHELL)rc
-```
-
 Then, compile and install the clgen software stack in one shot:
 
 ```sh
 $ ./install.sh
 ```
 
-This may take some time (upwards of an hour). If you encounter any problems,
+This may take some time (over two hours). If you encounter any problems,
 please consider opening a [bug
 report](https://github.com/ChrisCummins/clgen/issues). The remainder of this
 document provides a brief outline of the build process, which may be useful for

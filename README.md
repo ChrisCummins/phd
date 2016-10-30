@@ -36,7 +36,6 @@ programs it learns from.
    [clang](http://llvm.org/releases/download.html) >= 3.1.
 *  [GNU Make](http://savannah.gnu.org/projects/make) > 3.79.
 *  [Python](https://www.python.org/) 2.7 or >= 3.4.
-*  [OpenCL](https://www.khronos.org/opencl/) == 1.2.
 *  [zlib](http://zlib.net/) >= 1.2.3.4.
 *  [libhdf5](https://support.hdfgroup.org/HDF5/release/obtainsrc.html) >= 1.8.11.
 
@@ -44,6 +43,7 @@ Optional, but highly recommended:
 
 *  An NVIDIA GPU and
    [CUDA](http://www.nvidia.com/object/cuda_home_new.html) >= 6.5.
+*  [OpenCL](https://www.khronos.org/opencl/) == 1.2.
 
 ## Getting started
 
@@ -51,13 +51,9 @@ Checkout CLgen locally:
 
     git clone --recursive https://github.com/ChrisCummins/clgen.git
 
-If CUDA support is not available on your system (see optional
-requirements), run:
+Configure and install clgen:
 
-    export CLGEN_GPU=0
-
-Build and install clgen:
-
+    ./configure
     ./install.sh
 
 Run the test suite. Everything should pass:
