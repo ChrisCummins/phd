@@ -19,7 +19,7 @@ from setuptools import setup
 
 
 setup(name="labm8",
-      version="0.0.4",
+      version="0.0.5",
       description="Utils for manipulating quantitative experimental data",
       url="https://github.com/ChrisCummins/labm8",
       author="Chris Cummins",
