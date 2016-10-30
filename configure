@@ -1,0 +1,109 @@
+#!/usr/bin/env python
+#
+# Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
+#
+# This file is part of CLgen.
+#
+# CLgen is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# CLgen is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
+#
+from __future__ import print_function
+
+import os
+import sys
+
+from argparse import ArgumentParser
+
+
+def yes_no(question, default="no"):
+    """Ask a yes/no question via raw_input() and return their answer.
+
+    "question" is a string that is presented to the user.
+    "default" is the presumed answer if the user just hits <Enter>.
+        It must be "yes" (the default), "no" or None (meaning
+        an answer is required of the user).
+
+    The "answer" return value is True for "yes" or False for "no".
+    """
+    valid = {"yes": True, "y": True, "ye": True,
+             "no": False, "n": False}
+    if default is None:
+        prompt = " [y/n] "
+    elif default == "yes":
+        prompt = " [Y/n] "
+    elif default == "no":
+        prompt = " [y/N] "
+    else:
+        raise ValueError("invalid default answer: '%s'" % default)
+
+    while True:
+        sys.stdout.write(question + prompt)
+        choice = raw_input().lower()
+        if default is not None and choice == '':
+            return valid[default]
+        elif choice in valid:
+            return valid[choice]
+        else:
+            sys.stdout.write("Please respond with 'yes' or 'no' "
+                             "(or 'y' or 'n').\n")
+
+
+def to_make(val):
+    return str(int(val))
+
+
+def to_python(val):
+    return "True" if val else "False"
+
+
+def to_text(val):
+    return "yes" if val else "no"
+
+
+def main():
+    parser = ArgumentParser(description="Configure CLgen build.")
+    parser.add_argument("-b", "--batch", action="store_true",
+                        help="non-interactive batch mode")
+    parser.add_argument("--with-opencl", action="store_true")
+    parser.add_argument("--with-cuda", action="store_true")
+    args = parser.parse_args()
+
+    use_opencl = args.with_opencl
+    use_cuda = args.with_cuda
+
+    if not args.with_opencl and not args.batch:
+        use_opencl = yes_no("Enabled OpenCL support")
+
+    if not args.with_cuda and not args.batch:
+        use_cuda = yes_no("Enable CUDA support?")
+
+    # generate make config file
+    with open(".config.make", "wb") as outfile:
+        print("USE_OPENCL := " + to_make(use_opencl), file=outfile)
+        print("USE_CUDA := " + to_make(use_cuda), file=outfile)
+
+    # generate python config file
+    with open(os.path.join("clgen", "config.py"), "w") as outfile:
+        print("USE_OPENCL = " + to_python(use_opencl), file=outfile)
+        print("USE_CUDA = " + to_python(use_cuda), file=outfile)
+
+    print("CLgen configured:")
+    print()
+    print("    OpenCL support:  " + to_text("yes" if use_opencl else "no"))
+    print("    CUDA support:    " + to_text("yes" if use_cuda else "no"))
+    print()
+    print("You may now build CLgen by running 'make'.")
+
+
+if __name__ == "__main__":
+    main()
