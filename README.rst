@@ -1,4 +1,4 @@
-.. figure:: https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/logo.svg
+.. figure:: https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/logo.png
    :alt: CLgen: Deep Learning Program Generator.
    :width: 420 px
    :align: center
