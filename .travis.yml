@@ -43,25 +43,45 @@ env:
 # the project by restarting the job. Instead, split the build into smaller
 # jobs:
 #
-# install:
+# install:  # part 1
 #   - make $TRAVIS_BUILD_DIR/native/llvm/3.9.0/src/include/llvm/CMakeLists.txt
 #   - make cmake
 #   - make ninja
-
-# note we can't build openblas with clang:
-# Makefile.system:409: *** OpenBLAS: Clang didn't support OpenMP yet..  Stop.
-install:
-  # - sed '/install_openblas /d' -i native/torch/trunk/src/install-deps
-  - make llvm
-  # - make native
-  # - pip install --upgrade pip
-  # - pip install coveralls
-  # - pip install --only-binary=numpy numpy>=1.10.4
-  # - pip install --only-binary=scipy scipy>=0.16.1
-  # - pip install --only-binary=pandas pandas>=0.19.0
-  # - pip install Cython==0.23.4
-  # - pip install
-  # - python ./setup.py install
+#   - cd $TRAVIS_BUILD_DIR/native/llvm/3.9.0/build && $TRAVIS_BUILD_DIR/native/cmake/3.5.0/bin/cmake $TRAVIS_BUILD_DIR/native/llvm/3.9.0/src -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true -DLLVM_TARGETS_TO_BUILD=X86 -DCLANG_ENABLE_STATIC_ANALYZER=OFF -DCLANG_ENABLE_ARCMT=OFF -DCMAKE_MAKE_PROGRAM=$TRAVIS_BUILD_DIR/native/ninja/1.7.1/ninja -G Ninja -Wno-dev
+#
+install:  # part 2 (restart job until LLVM is compiled)
+  - cd $TRAVIS_BUILD_DIR/native/llvm/3.9.0/build && (timeout 2400 $TRAVIS_BUILD_DIR/native/ninja/1.7.1/ninja)
+#
+# install:  # part 3
+#   - make llvm
+#   - sed '/install_openblas /d' -i native/torch/trunk/src/install-deps
+#   - make native
+#
+# install:  # part 4
+#   - make llvm
+#   - sed '/install_openblas /d' -i native/torch/trunk/src/install-deps
+#   - make native
+#   - pip install --upgrade pip
+#   - pip install coveralls
+#   - pip install --only-binary=numpy numpy>=1.10.4
+#   - pip install --only-binary=scipy scipy>=0.16.1
+#   - pip install --only-binary=pandas pandas>=0.19.0
+#   - pip install Cython==0.23.4
+#   - pip install
+#
+# install:  # cache hot
+#   - make llvm
+#   # note we can't build openblas with this clang toolchain:
+#   - sed '/install_openblas /d' -i native/torch/trunk/src/install-deps
+#   - make native
+#   - pip install --upgrade pip
+#   - pip install coveralls
+#   - pip install --only-binary=numpy numpy>=1.10.4
+#   - pip install --only-binary=scipy scipy>=0.16.1
+#   - pip install --only-binary=pandas pandas>=0.19.0
+#   - pip install Cython==0.23.4
+#   - pip install
+#   - python ./setup.py install
 
 script:
   - true
