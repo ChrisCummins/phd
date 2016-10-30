@@ -29,7 +29,7 @@ from pip.req import parse_requirements
 #     https://github.com/scikit-learn/scikit-learn/issues/4164
 #
 install_reqs = parse_requirements('./requirements.txt', session=False)
-reqs = [str(ir.req) for ir in install_reqs]
+requirements = [str(ir.req) for ir in install_reqs]
 
 
 def all_module_data_files(module, datadir="data"):
@@ -81,6 +81,6 @@ setup(
     ],
     test_suite='nose.collector',
     tests_require=['nose'],
-    install_requires=reqs,
+    install_requires=requirements,
     data_files=[],
     zip_safe=False)

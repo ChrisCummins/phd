@@ -63,7 +63,7 @@ before_install:
 #
 install:  # part 2 (restart job until LLVM is compiled)
   - mkdir -p native/llvm/3.9.0/build
-  - cd $TRAVIS_BUILD_DIR/native/llvm/3.9.0/build && (timeout 2400 $TRAVIS_BUILD_DIR/native/ninja/1.7.1/ninja)
+  - cd $TRAVIS_BUILD_DIR/native/llvm/3.9.0/build && (timeout 60 $TRAVIS_BUILD_DIR/native/ninja/1.7.1/ninja)
 #
 # install:  # part 3
 #   - ./configure -b
@@ -74,18 +74,11 @@ install:  # part 2 (restart job until LLVM is compiled)
 #   - ./configure -b
 #   - make llvm
 #   - make native
-#   - pip install -r requirements.txt
 #
 # install:  # cache hot
 #   - ./configure -b
 #   - make llvm
 #   - make native
-#   - pip install --upgrade pip
-#   - pip install coveralls
-#   - pip install --only-binary=numpy numpy>=1.10.4
-#   - pip install --only-binary=scipy scipy>=0.16.1
-#   - pip install --only-binary=pandas pandas>=0.19.0
-#   - pip install Cython==0.23.4
 #   - pip install -r requirements.txt
 #   - python ./setup.py install
 
