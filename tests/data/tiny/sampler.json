@@ -6,8 +6,8 @@
       "__global float*",
       "const int"
     ],
-    "max_length": 10000,
-    "temperature": 0.9
+    "max_length": 500,
+    "temperature": 0.75
   },
   "sampler": {
     "max_kernels": 100,

@@ -21,6 +21,7 @@ Sample a CLgen model.
 """
 from __future__ import print_function
 
+import labm8
 import os
 import re
 
@@ -29,10 +30,20 @@ from glob import glob, iglob
 from labm8 import fs
 
 import clgen
+from clgen import dbutil
+from clgen import explore
+from clgen import fetch
 from clgen import log
+from clgen import preprocess
 from clgen import torch_rnn
 from clgen.cache import Cache
 from clgen.model import Model
+
+
+def serialize_argspec(args):
+    names = map(chr, range(97, 97 + len(args)))
+    strings = [arg + " " + name for arg, name in zip(args, names)]
+    return "__kernel void A({args})".format(args=", ".join(strings))
 
 
 class Sampler(clgen.CLgenObject):
@@ -40,15 +51,73 @@ class Sampler(clgen.CLgenObject):
         assert(type(sampler_opts) is dict)
         assert(type(kernel_opts) is dict)
 
+        checksum_data = sorted(
+            [str(x) for x in list(sampler_opts.values())] +
+            [str(x) for x in list(kernel_opts.values())])
+        checksum_string = "".join([str(x) for x in checksum_data])
+        self.hash = clgen.checksum_str(checksum_string)
+
+        # parse sampler options
+        self.max_kernels = sampler_opts.get("max_kernels", -1)
         self.batch_size = sampler_opts.get("batch_size", 1000)
         self.static_checker = sampler_opts.get("static_checker", True)
         self.dynamic_checker = sampler_opts.get("dynamic_checker", False)
 
+        self.kernel_opts = kernel_opts
 
-    def sample(self, model):
+    def sample_iteration(self, model):
         assert(isinstance(model, Model))
 
-        print("sampling")
+        cache = Cache(fs.path(model.hash, "samples", self.hash))
+
+        # create samples database if it doesn't exist
+        if not cache["kernels.db"]:
+            dbutil.create_db(fs.path(cache.path, "kernels.tmp.db"))
+            cache["kernels.db"] = fs.path(
+                cache.path, "kernels.tmp.db")
+
+        if self.kernel_opts.get("args", None) is not None:
+            start_text = serialize_argspec(self.kernel_opts["args"])
+        else:
+            start_text = "__kernel void A("
+
+        # sample options
+        opts = {
+            "opencl": 1,
+            "stream": 1,
+            "n": self.batch_size,
+            "checkpoint": model.most_recent_checkpoint,
+            "temperature": self.kernel_opts.get("temperature", .75),
+            "length": self.kernel_opts.get("max_length", 10000),
+            "start_text": start_text,
+        }
+
+        tmppath = fs.path(cache.path, "sample.tmp.cl")
+        torch_rnn.sample(tmppath, **opts)
+        fetch.process_sample_file(cache["kernels.db"], tmppath,
+                                  max_kernel_len=opts["length"])
+
+        # TODO: Parse static checker requirement
+        preprocess.preprocess_db(cache["kernels.db"])
+        fs.rm(tmppath)
+
+    def sample(self, model):
+        cache = Cache(fs.path(model.hash, "samples", self.hash))
+
+        # create samples database if it doesn't exist
+        if not cache["kernels.db"]:
+            dbutil.create_db(fs.path(cache.path, "kernels.tmp.db"))
+            cache["kernels.db"] = fs.path(
+                cache.path, "kernels.tmp.db")
+
+        while True:
+            if (self.max_kernels > 0 and
+                dbutil.num_good_kernels(cache["kernels.db"]) > self.max_kernels):
+                return
+
+            self.sample_iteration(model)
+
+        log.info("samples database:", cache["kernels.db"])
 
 
 def from_json(sampler_json):

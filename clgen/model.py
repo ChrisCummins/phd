@@ -62,9 +62,6 @@ class Model(clgen.CLgenObject):
         if opts.get("checkpoint_every", None) is None:
             opts["checkpoint_every"] = 100
 
-        # TODO: Determine device type
-        opts["gpu"] = -1
-
         # resume from prior checkpoint
         if self.most_recent_checkpoint:
             opts["init_from"] = self.most_recent_checkpoint

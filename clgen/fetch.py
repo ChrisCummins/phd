@@ -408,7 +408,8 @@ def fs(db_path, paths=[]):
 kernel_counter = 0
 
 
-def process_sample_file(db_path, sample_path, first_only=False):
+def process_sample_file(db_path, sample_path, first_only=False,
+                        max_kernel_len=5000):
     db = sqlite3.connect(db_path)
     c = db.cursor()
 
@@ -431,11 +432,11 @@ def process_sample_file(db_path, sample_path, first_only=False):
 
         # Find the end index of this kernel.
         head = clutil.get_cl_kernel_end_idx(sample, start_idx=tail,
-                                            max_len=MAX_KERNEL_LEN)
+                                            max_len=max_kernel_len)
 
         # Look for other ends
         end = sample.find('__kernel void ',
-                          tail + offset, tail + offset + MAX_KERNEL_LEN)
+                          tail + offset, tail + offset + max_kernel_len)
         head = min(end, head) if end != -1 else head
 
         kernel = sample[tail:head]

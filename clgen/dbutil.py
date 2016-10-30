@@ -61,3 +61,10 @@ def table_exists(db, table_name):
 
 def is_github(db):
     return table_exists(db, 'Repositories')
+
+
+def num_good_kernels(path):
+    db = sqlite3.connect(path)
+    c = db.cursor()
+    c.execute('SELECT Count(*) FROM PreprocessedFiles WHERE status=0')
+    return c.fetchone()[0]

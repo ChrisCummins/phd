@@ -63,6 +63,10 @@ def preprocess(input_txt, output_json, output_h5):
     log.info(output)
 
 
+def get_device_flags():
+    return {"gpu": -1}
+
+
 def train(**train_opts):
     """
     Wrapper around torch-rnn train script.
@@ -72,6 +76,8 @@ def train(**train_opts):
     """
     # change to torch-rnn directory
     fs.cd(native.TORCH_RNN_DIR)
+
+    train_opts.update(get_device_flags())
 
     flags = labm8.flatten(
         [('-' + key, str(value)) for key, value in iteritems(train_opts)])
@@ -100,13 +106,20 @@ def sample(output, **sample_opts):
     # change to torch-rnn directory
     fs.cd(native.TORCH_RNN_DIR)
 
+    sample_opts.update(get_device_flags())
+
     flags = labm8.flatten(
         [('-' + key, str(value)) for key, value in iteritems(sample_opts)])
     cmd = [native.TH, "sample.lua"] + flags
 
     log.debug(' '.join([str(x) for x in cmd]))
-    process = Popen(cmd)
-    process.communicate()
+    process = Popen(cmd, stdout=PIPE)
+    # TODO: Consider optimizing using a second tee process and pipe
+    with open(output, "wb") as outfile:
+        for line in process.stdout:
+            sys.stdout.write(line.decode('utf-8'))
+            outfile.write(line)
+    process.wait()
 
     if process.returncode != 0:
         raise TrainError('torch-rnn sampling failed with status ' +
