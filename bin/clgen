@@ -19,9 +19,28 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from sys import argv
+import clgen
 from clgen import cli
+
+__description__ = """
+Generate OpenCL programs using Deep Learning.
+"""
+
+
+def main():
+    parser = cli.ArgumentParser(description=__description__)
+    parser.add_argument("model_json", metavar="<model-json>",
+                        help="path to model specification file")
+    parser.add_argument("sampler_json", metavar="<sampler-json>",
+                        help="path to sampler specification file")
+    args = parser.parse_args()
+
+    # Read input configuration files.
+    model = clgen.load_json_file(args.model_json)
+    sampler = clgen.load_json_file(args.sampler_json)
+
+    cli.main(clgen.main, model, sampler)
 
 
 if __name__ == "__main__":
-    cli.main(*argv[1:])
+    main()

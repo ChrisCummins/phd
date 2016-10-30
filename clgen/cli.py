@@ -19,12 +19,16 @@
 """
 Command line interface to clgen.
 """
+from __future__ import print_function
+
+import argparse
 import json
 import os
 import re
+import sys
 
-from argparse import ArgumentParser
-from sys import argv, exit
+from argparse import RawTextHelpFormatter
+from sys import exit
 
 import clgen
 from clgen import log
@@ -34,104 +38,90 @@ def print_version_and_exit():
     """
     Print the clgen version. This function does not return.
     """
-    print("clgen version", clgen.version())
+    print("clgen ", clgen.version())
     exit(0)
 
 
-def getparser():
+class ArgumentParser(argparse.ArgumentParser):
     """
-    Get the clgen argument parser.
+    CLgen specialized argument parser.
 
-    Returns:
-        ArgumentParser: clgen cli argument parser
+    Differs from python argparse.ArgumentParser in the following areas:
+      * Adds an optional --verbose flag and initializes the logging engine.
+      * Adds an optional --version flag which prints version information and
+        quits.
+      * Defaults to using raw formatting for help strings, which disables line
+        wrapping and whitespace squeezing.
+      * Appends author information to description.
     """
-    parser = ArgumentParser(
-        description="Generate OpenCL programs using Deep Learning.")
-    parser.add_argument("model_json", metavar="<model-json>",
-                        help="path to model specification file")
-    parser.add_argument("sampler_json", metavar="<sampler-json>",
-                        help="path to sampler specification file")
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="increase output verbosity")
-    parser.add_argument("--version", action="store_true",
-                        help="show version information and exit")
-    return parser
+    def __init__(self, *args, **kwargs):
+        """
+        See python argparse.ArgumentParser.__init__().
+        """
+        # append author information to description
+        description = kwargs.get("description", "")
+
+        if description[-1] != "\n":
+            description += "\n"
+        description += """
+Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+<http://chriscummins.cc/clgen>"""
+
+        kwargs["description"] = description.lstrip()
+
+        # unless specified otherwise, use raw text formatter. This means
+        # that whitespace isn't squeed and lines aren't wrapped
+        if "formatter_class" not in kwargs:
+            kwargs["formatter_class"] = RawTextHelpFormatter
+
+        # call built in ArgumentParser constructor.
+        super(ArgumentParser, self).__init__(*args, **kwargs)
+
+        # Add defualt arguments
+        self.add_argument("--version", action="store_true",
+                          help="show version information and exit")
+        self.add_argument("-v", "--verbose", action="store_true",
+                          help="increase output verbosity")
+
+    def parse_args(self, args=None, namespace=None):
+        """
+        See python argparse.ArgumentParser.parse_args().
+        """
+        if args is None:
+            args = sys.argv[1:]
+
+        # --version option overrides the normal argument parsing process.
+        if len(args) == 1 and args[0] == "--version":
+            print_version_and_exit()
+
+        ret = super(ArgumentParser, self).parse_args(args, namespace)
+
+        if ret.version:
+            print_version_and_exit()
+
+        # set log level
+        log.init(ret.verbose)
+
+        return ret
 
 
-def loads(text, **kwargs):
+def main(method, *args, **kwargs):
     """
-    Deserialize `text` (a `str` or `unicode` instance containing a JSON
-    document with Python or JavaScript like comments) to a Python object.
+    Main method entry point clgen command line interface.
 
-    Taken from `commentjson <https://github.com/vaidik/commentjson>`_, written
-    by `Vaidik Kapoor <https://github.com/vaidik>`_.
-
-    Copyright (c) 2014 Vaidik Kapoor, MIT license.
-
-    :param text: serialized JSON string with or without comments.
-    :param kwargs: all the arguments that `json.loads
-                   <http://docs.python.org/2/library/json.html#json.loads>`_
-                   accepts.
-    :returns: `dict` or `list`.
-    """
-    regex = r'\s*(#|\/{2}).*$'
-    regex_inline = r'(:?(?:\s)*([A-Za-z\d\.{}]*)|((?<=\").*\"),?)(?:\s)*(((#|(\/{2})).*)|)$'
-    lines = text.split('\n')
-
-    for index, line in enumerate(lines):
-        if re.search(regex, line):
-            if re.search(r'^' + regex, line, re.IGNORECASE):
-                lines[index] = ""
-            elif re.search(regex_inline, line):
-                lines[index] = re.sub(regex_inline, r'\1', line)
-
-    return json.loads('\n'.join(lines), **kwargs)
-
-
-def load_json_file(path):
-    try:
-        with open(clgen.must_exist(path)) as infile:
-            return loads(infile.read())
-    except ValueError as e:
-        log.fatal("malformed file '{}'. Message from parser: ".format(
-                      os.path.basename(path)),
-                  "    " + str(e),
-                  "Hope that makes sense!", sep="\n")
-    except clgen.File404:
-        log.fatal("could not find file '{}'".format(path))
-
-
-def main(*argv):
-    """
-    Main entry point to clgen command line interface.
-
-    This function does not return.
+    If an exception is thrown, print error message and exit.
 
     Args:
-        *argv (str): Command line arguments.
+        method (function): Function to execute.
+        *args (str): Arguments for method.
+        **kwargs (dict): Keyword arguments for method.
+
+    Returns:
+        method(*args, **kwargs)
     """
-    # --version option overrides the normal argument parsing process.
-    if len(argv) == 1 and argv[0] == "--version":
-        print_version_and_exit()
-
-    # Parse arguments. Will not return if arguments are bad, or -h|--help flag.
-    parser = getparser()
-    args = parser.parse_args(argv)
-
-    if args.version:
-        print_version_and_exit()
-
-    # Start the logging engine.
-    log.init(args.verbose)
-
-    # Read input configuration files.
-    model = load_json_file(args.model_json)
-    sampler = load_json_file(args.sampler_json)
-
     try:
-        clgen.main(model, sampler)
-        exit(0)
+        return method(*args, **kwargs)
     except Exception as e:
-        log.fatal(
-            type(e).__name__ + ":", e,
-            "\n\nPlease report bugs to Chris Cummins <chrisc.101@gmail.com>")
+        log.fatal(e, "(" + type(e).__name__  + ")",
+                  "\n\nPlease report bugs at <"
+                  "https://github.com/ChrisCummins/clgen/issues>")

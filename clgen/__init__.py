@@ -300,6 +300,51 @@ def format_json(data):
     return json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
 
 
+def loads(text, **kwargs):
+    """
+    Deserialize `text` (a `str` or `unicode` instance containing a JSON
+    document with Python or JavaScript like comments) to a Python object.
+
+    Taken from `commentjson <https://github.com/vaidik/commentjson>`_, written
+    by `Vaidik Kapoor <https://github.com/vaidik>`_.
+
+    Copyright (c) 2014 Vaidik Kapoor, MIT license.
+
+    :param text: serialized JSON string with or without comments.
+    :param kwargs: all the arguments that `json.loads
+                   <http://docs.python.org/2/library/json.html#json.loads>`_
+                   accepts.
+    :returns: `dict` or `list`.
+    """
+    regex = r'\s*(#|\/{2}).*$'
+    regex_inline = r'(:?(?:\s)*([A-Za-z\d\.{}]*)|((?<=\").*\"),?)(?:\s)*(((#|(\/{2})).*)|)$'
+    lines = text.split('\n')
+
+    for index, line in enumerate(lines):
+        if re.search(regex, line):
+            if re.search(r'^' + regex, line, re.IGNORECASE):
+                lines[index] = ""
+            elif re.search(regex_inline, line):
+                lines[index] = re.sub(regex_inline, r'\1', line)
+
+    return json.loads('\n'.join(lines), **kwargs)
+
+
+def load_json_file(path):
+    from clgen import log
+
+    try:
+        with open(must_exist(path)) as infile:
+            return loads(infile.read())
+    except ValueError as e:
+        log.fatal("malformed file '{}'. Message from parser: ".format(
+                      os.path.basename(path)),
+                  "    " + str(e),
+                  "Hope that makes sense!", sep="\n")
+    except File404:
+        log.fatal("could not find file '{}'".format(path))
+
+
 @contextmanager
 def terminating(thing):
     """
@@ -323,7 +368,6 @@ def main(model_json, sampler_json):
 
     Arguments:
         model_json (dict): Model specification.
-        arguments_json (dict): Arguments specification.
         sample_json (dict): Sample specification.
     """
     from clgen import model

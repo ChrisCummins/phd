@@ -19,15 +19,26 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from clgen import fetch
-
-from argparse import ArgumentParser
 from os import environ
 from sys import exit
 
+from clgen import cli
+from clgen import log
+from clgen import fetch
+
+
+__description__ = """
+Fetch OpenCL kernels from Github. Reads github authentication
+from environmental variables:
+
+     GITHUB_USERNAME   github username
+     GITHUB_PW         github password
+     GITHUB_TOKEN      github api token
+"""
+
 
 def main():
-    parser = ArgumentParser()
+    parser = cli.ArgumentParser(description=__description__)
     parser.add_argument('input', help='path to SQL input dataset')
     args = parser.parse_args()
 
@@ -38,10 +49,9 @@ def main():
         github_pw = environ['GITHUB_PW']
         github_token = environ['GITHUB_TOKEN']
     except KeyError as e:
-        print('fatal: environment variable {} not set'.format(e))
-        exit(1)
+        log.fatal('environment variable {} not set'.format(e))
 
-    fetch.github(db_path, github_username, github_pw, github_token)
+    cli.main(fetch.github, db_path, github_username, github_pw, github_token)
 
 
 if __name__ == '__main__':
