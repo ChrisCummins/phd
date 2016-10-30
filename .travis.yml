@@ -15,10 +15,10 @@ python:
 cache:
   directories:
     - native/cmake
-    # - native/libclc
+    - native/libclc
     - native/llvm/3.9.0
     - native/ninja
-    # - native/torch/trunk/build
+    - native/torch/trunk/build
 
 addons:
   apt:
@@ -29,8 +29,8 @@ addons:
       - gcc-4.8
       - g++-4.8
       - clang-3.6
-      # - libhdf5-serial-dev
-      # - python-dev
+      - libhdf5-serial-dev
+      - python-dev
 
 env:
   global:
