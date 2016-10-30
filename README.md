@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="http://chriscummins/clgen/">
+  <a href="http://chriscummins.cc/clgen/">
     <img src="https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/logo.png" width="420">
   </a>
 </div>
