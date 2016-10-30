@@ -22,9 +22,7 @@ Command line interface to clgen.
 from __future__ import print_function
 
 import argparse
-import json
 import os
-import re
 import sys
 
 from argparse import RawTextHelpFormatter
@@ -130,7 +128,7 @@ def main(method, *args, **kwargs):
     except clgen.UserError as e:
         log.fatal(e, "(" + type(e).__name__  + ")")
     except KeyboardInterrupt:
-        print("interrupted", file=sys.stderr)
+        print(" keyboard interrupt", file=sys.stderr)
         log.exit(1)
     except Exception as e:
         log.fatal(e, "(" + type(e).__name__  + ")",

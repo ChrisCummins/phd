@@ -25,7 +25,6 @@ import os
 import sqlite3
 
 import clgen
-from clgen import log
 
 
 def create_db(path, github=False):
