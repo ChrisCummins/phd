@@ -38,6 +38,17 @@ env:
     - CXX=clang++
     - CLGEN_GPU=0
 
+before_install:
+  # note we can't build openblas with the Travis clang toolchain:
+  - sed '/install_openblas /d' -i native/torch/trunk/src/install-deps
+  #
+  - pip install --upgrade pip
+  - pip install coveralls
+  - pip install --only-binary=numpy numpy>=1.10.4
+  - pip install --only-binary=scipy scipy>=0.16.1
+  - pip install --only-binary=pandas pandas>=0.19.0
+  - pip install Cython==0.23.4
+
 # A clean Travis CI build will timoeut after 50 minutes and fail. Irritatingly,
 # this means that the caches are not updated, so we can't incrementally build
 # the project by restarting the job. Instead, split the build into smaller
@@ -55,26 +66,19 @@ install:  # part 2 (restart job until LLVM is compiled)
   - cd $TRAVIS_BUILD_DIR/native/llvm/3.9.0/build && (timeout 2400 $TRAVIS_BUILD_DIR/native/ninja/1.7.1/ninja)
 #
 # install:  # part 3
+#   - ./configure -b
 #   - make llvm
-#   - sed '/install_openblas /d' -i native/torch/trunk/src/install-deps
 #   - make native
 #
 # install:  # part 4
+#   - ./configure -b
 #   - make llvm
-#   - sed '/install_openblas /d' -i native/torch/trunk/src/install-deps
 #   - make native
-#   - pip install --upgrade pip
-#   - pip install coveralls
-#   - pip install --only-binary=numpy numpy>=1.10.4
-#   - pip install --only-binary=scipy scipy>=0.16.1
-#   - pip install --only-binary=pandas pandas>=0.19.0
-#   - pip install Cython==0.23.4
-#   - pip install
+#   - pip install -r requirements.txt
 #
 # install:  # cache hot
+#   - ./configure -b
 #   - make llvm
-#   # note we can't build openblas with this clang toolchain:
-#   - sed '/install_openblas /d' -i native/torch/trunk/src/install-deps
 #   - make native
 #   - pip install --upgrade pip
 #   - pip install coveralls
@@ -82,7 +86,7 @@ install:  # part 2 (restart job until LLVM is compiled)
 #   - pip install --only-binary=scipy scipy>=0.16.1
 #   - pip install --only-binary=pandas pandas>=0.19.0
 #   - pip install Cython==0.23.4
-#   - pip install
+#   - pip install -r requirements.txt
 #   - python ./setup.py install
 
 script:

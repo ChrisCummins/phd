@@ -73,13 +73,15 @@ def to_text(val):
 def main():
     parser = ArgumentParser(description="Configure CLgen build.")
     parser.add_argument("-b", "--batch", action="store_true",
-                        help="non-interactive batch mode")
+                        help="Defaults all options to 'no'. Override with:")
     parser.add_argument("--with-opencl", action="store_true")
     parser.add_argument("--with-cuda", action="store_true")
+    parser.add_argument("--with-dev-tools", action="store_true")
     args = parser.parse_args()
 
     use_opencl = args.with_opencl
     use_cuda = args.with_cuda
+    dev_tools = args.with_dev_tools
 
     if not args.with_opencl and not args.batch:
         use_opencl = yes_no("Enabled OpenCL support")
@@ -87,20 +89,39 @@ def main():
     if not args.with_cuda and not args.batch:
         use_cuda = yes_no("Enable CUDA support?")
 
+    if not args.with_dev_tools and not args.batch:
+        dev_tools = yes_no("Install extra development tools?", default="yes")
+
     # generate make config file
     with open(".config.make", "wb") as outfile:
         print("USE_OPENCL := " + to_make(use_opencl), file=outfile)
         print("USE_CUDA := " + to_make(use_cuda), file=outfile)
+        print("WITH_DEV_TOOLS := " + to_make(dev_tools), file=outfile)
 
     # generate python config file
     with open(os.path.join("clgen", "config.py"), "w") as outfile:
         print("USE_OPENCL = " + to_python(use_opencl), file=outfile)
         print("USE_CUDA = " + to_python(use_cuda), file=outfile)
+        print("WITH_DEV_TOOLS = " + to_python(dev_tools), file=outfile)
+
+    # generate python requirements file
+    requirements_files = ['requirements.txt']
+    if use_cuda:
+        requirements_files += ['requirements.cuda.txt']
+    if use_opencl:
+        requirements_files += ['requirements.opencl.txt']
+    if dev_tools:
+        requirements_files += ['requirements.dev.txt']
+    with open("requirements.txt", "w") as outfile:
+        for name in requirements_files:
+            with open(os.path.join("make", name)) as infile:
+                outfile.write(infile.read())
 
     print("CLgen configured:")
     print()
-    print("    OpenCL support:  " + to_text("yes" if use_opencl else "no"))
-    print("    CUDA support:    " + to_text("yes" if use_cuda else "no"))
+    print("    OpenCL support:  " + to_text(use_opencl))
+    print("    CUDA support:    " + to_text(use_cuda))
+    print("    Dev tools:       " + to_text(dev_tools))
     print()
     print("You may now build CLgen by running 'make'.")
 
