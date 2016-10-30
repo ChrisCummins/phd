@@ -35,6 +35,13 @@ clgen.clutil
    :members:
    :undoc-members:
 
+clgen.config
+-------------
+
+.. automodule:: clgen.config
+   :members:
+   :undoc-members:
+
 clgen.corpus
 -------------
 
