@@ -1,7 +1,7 @@
 .. figure:: https://raw.github.com/ChrisCummins/labm8/master/.labm8.jpg
    :alt: labm8
 
-|Build Status| |Coverage Status| |Documentation Status| |PyPi Status| |License Badge|
+|Build Status| |Coverage Status| |Documentation Status| |PyPi Status| |Python Version| |License Badge|
 
 ::
 
@@ -25,6 +25,9 @@ Released under the terms of the GPLv3 license. See
 
 .. |PyPi Status| image:: https://badge.fury.io/py/labm8.svg
    :target: https://pypi.python.org/pypi/labm8
+
+.. |Python Version| image:: https://img.shields.io/badge/python-2%20%26%203-blue.svg?style=flat
+   :target: https://www.python.org/
 
 .. |License Badge| image:: https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat
    :target: https://www.gnu.org/licenses/gpl-3.0.en.html
