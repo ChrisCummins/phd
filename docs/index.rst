@@ -89,7 +89,7 @@ Indices and tables
 .. |Build Status| image:: https://img.shields.io/travis/ChrisCummins/clgen/master.svg?style=flat
    :target: https://travis-ci.org/ChrisCummins/clgen
 
-.. |Coverage Status| image:: https://img.shields.io/coveralls/ChrisCummins/clgen/master.svg?style=flat"
+.. |Coverage Status| image:: https://img.shields.io/coveralls/ChrisCummins/clgen/master.svg?style=flat
    :target: https://coveralls.io/github/ChrisCummins/clgen?branch=master
 
 .. |Documentation Status| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
