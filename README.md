@@ -41,29 +41,46 @@ programs it learns from.
 
 Optional, but highly recommended:
 
+*  [OpenCL](https://www.khronos.org/opencl/) == 1.2.
 *  An NVIDIA GPU and
    [CUDA](http://www.nvidia.com/object/cuda_home_new.html) >= 6.5.
-*  [OpenCL](https://www.khronos.org/opencl/) == 1.2.
 
-## Getting started
+## Building from Source
 
-Checkout CLgen locally:
+Checkout this repository and all submodules:
 
-    git clone --recursive https://github.com/ChrisCummins/clgen.git
+```sh
+$ git clone --recursive https://github.com/ChrisCummins/clgen.git
+```
 
-Configure and install clgen:
+Configure and build CLgen:
 
-    ./configure
-    ./install.sh
+```sh
+$ cd clgen
+$ ./configure
+$ make
+```
 
-Run the test suite. Everything should pass:
+Install into your system path:
 
-    ./test.sh
+```sh
+$ sudo make install
+```
+
+(Optional) Run the test suite:
+
+```sh
+$ make test
+```
+
+## Getting Started
 
 Train and sample a very small clgen model using the included training
 set:
 
-    clgen model.json sampler.json
+```sh
+$ clgen model.json sampler.json
+```
 
 See the [online documentation](http://chriscummins.cc/clgen/) for more
 information.

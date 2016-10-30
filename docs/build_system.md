@@ -10,7 +10,8 @@ $ ./configure
 Then, compile and install the clgen software stack in one shot:
 
 ```sh
-$ ./install.sh
+$ make
+$ sudo make install
 ```
 
 This may take some time (over two hours). If you encounter any problems,
@@ -45,7 +46,7 @@ The clang compiler is downloaded and compiled in in `native/llvm`.
 ## Native File Compilation
 
 ```sh
-$ make native
+$ make all
 ```
 
 Once the toolchain has been built, it is used to compile the native components
@@ -72,22 +73,18 @@ Torch-rnn provides the recursive neural network.
 ## Python Package Installation
 
 One the native components are compiled, the remainder of the build process
-involves installing the python package. This is performed either in a virtual
-environment or into the system python path. The unit tests are performed using a
-virtual environment install:
+involves installing the python package:
 
 ```sh
+$ sudo make install
 $ make test
 ```
 
-The process for virtual environment or system-wide install is the same:
+This is roughly equivalent to:
 
 ```sh
-$ pip install --upgrade pip
 $ pip install numpy>=1.10.4
 $ pip install -r requirements.txt
-$ pip install -r requirements.devel.txt
-$ if [ "$GPU" -ne 0 ]; then pip install -r requirements.gpu.txt; fi
-$ python ./setup.py install
+$ sudo python ./setup.py install
 $ python ./setup.py test
 ```

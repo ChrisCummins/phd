@@ -17,57 +17,6 @@ programs it learns from.
    :alt: CLgen synthesis pipeline.
    :width: 500 px
 
-Requirements
-------------
-
--  Linux (x64) or OS X.
--  `GCC <https://gcc.gnu.org/>`__ >= 4.7 or
-   `clang <http://llvm.org/releases/download.html>`__ >= 3.1.
--  `GNU Make <http://savannah.gnu.org/projects/make>`__ >= 3.79.
--  `Python <https://www.python.org/>`__ 2.7 or >= 3.4.
--  `OpenCL <https://www.khronos.org/opencl/>`__ == 1.2.
--  `zlib <http://zlib.net/>`__ >= 1.2.3.4.
--  `libhdf5 <https://support.hdfgroup.org/HDF5/release/obtainsrc.html>`__ >= 1.8.11.
-
-Optional, but highly recommended:
-
--  An NVIDIA GPU and
-   `CUDA <http://www.nvidia.com/object/cuda_home_new.html>`__ >= 6.5.
-
-Getting started
----------------
-
-Checkout CLgen locally:
-
-::
-
-    git clone --recursive https://github.com/ChrisCummins/clgen.git
-
-If CUDA support is not available on your system (see optional requirements),
-run:
-
-::
-
-    export CLGEN_GPU=0
-
-Build and install clgen:
-
-::
-
-    ./install.sh
-
-Run the test suite. Everything should pass:
-
-::
-
-    ./test.sh
-
-Train and sample a very small clgen model using the included training set:
-
-::
-
-    clgen model.json sampler.json
-
 Contents
 --------
 

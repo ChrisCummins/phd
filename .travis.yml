@@ -67,7 +67,7 @@ before_install:
 install:  # cache hot
   - ./configure -b
   - make llvm
-  - make native
+  - make all
   - pip install -r requirements.txt
   - python ./setup.py install
 
