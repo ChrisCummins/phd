@@ -1,9 +1,11 @@
 .. figure:: assets/logo.svg
    :alt: CLgen: Deep Learning Program Generator.
    :width: 420 px
+   :align: center
 
+.. centered:: |Build Status| |Documentation Status| |Python Version| |License Badge|
 
-|Build Status| |Documentation Status| |Python Version| |License Badge|
+------
 
 **CLgen** is an open source application for generating runnable programs using
 deep learning. CLgen *learns* to program using neural networks which model
