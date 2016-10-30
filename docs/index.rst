@@ -5,7 +5,7 @@
    :align: center
 ------
 
-.. centered:: |Build Status| |Coverage Status| |Documentation Status| |Python Version| |License Badge|
+.. centered:: |Build Status| |Coverage Status| |Documentation Status| |Release Version| |License Badge|
 
 **CLgen** is an open source application for generating runnable programs using
 deep learning. CLgen *learns* to program using neural networks which model the
@@ -44,8 +44,8 @@ Indices and tables
 .. |Documentation Status| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
    :target: http://chriscummins.cc/clgen/
 
-.. |Python Version| image:: https://img.shields.io/badge/python-2%20%26%203-blue.svg?style=flat
-   :target: https://www.python.org/
+.. |Release Version| image:: https://img.shields.io/badge/release-0.0.4-blue.svg?style=flat
+   :target: https://github.com/ChrisCummins/clgen/releases
 
 .. |License Badge| image:: https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat
    :target: https://www.gnu.org/licenses/gpl-3.0.en.html
