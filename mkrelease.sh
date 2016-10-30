@@ -76,9 +76,9 @@ get_micro() {
 #
 #     @return Current version string, e.g. '0.1.4'
 get_current_version() {
-    egrep ".*version\s*=\s*['\"][0-9]+\.[0-9]+\.[0-9]+['\"].*" \
-        "$(get_project_root)/setup.py" | \
-        sed -r "s/.*version\s*=\s*['\"]([0-9]+\.[0-9]+\.[0-9]+)['\"].*/\1/"
+    cd "$(get_project_root)"
+
+    python ./setup.py --version
 }
 
 # Replace the project version with a new one.
@@ -87,11 +87,15 @@ get_current_version() {
 set_new_version() {
     local new=$1
 
+    local current="$(get_current_version)"
+
     cd "$(get_project_root)"
 
     echo "Updating version string... 'setup.py'"
-    sed -r "s/(.*version\s*=\s*['\"])([0-9]+\.[0-9]+\.[0-9]+)(['\"].*)/\1$new\3/" \
-        -i setup.py
+    sed "s/$current/$new/" -i setup.py
+
+    echo "Updating version string... 'docs/conf.py'"
+    sed "s/$current/$new/" -i setup.py
 }
 
 # Make the version bump.
