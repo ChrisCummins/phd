@@ -38,13 +38,21 @@ env:
     - CXX=clang++
     - CLGEN_GPU=0
 
+# A clean Travis CI build will timoeut after 50 minutes and fail. Irritatingly,
+# this means that the caches are not updated, so we can't incrementally build
+# the project by restarting the job. Instead, split the build into smaller
+# jobs:
+#
+# install:
+#   - make $TRAVIS_BUILD_DIR/native/llvm/3.9.0/src/include/llvm/CMakeLists.txt
+#   - make cmake
+#   - make ninja
+
 # note we can't build openblas with clang:
 # Makefile.system:409: *** OpenBLAS: Clang didn't support OpenMP yet..  Stop.
 install:
   # - sed '/install_openblas /d' -i native/torch/trunk/src/install-deps
-  - make $TRAVIS_BUILD_DIR/native/llvm/3.9.0/src/include/llvm/CMakeLists.txt
-  - make cmake
-  - make ninja
+  - make llvm
   # - make native
   # - pip install --upgrade pip
   # - pip install coveralls
