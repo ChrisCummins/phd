@@ -15,6 +15,7 @@ the programs it learns from.
 
 .. figure:: https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/pipeline.png
    :alt: CLgen synthesis pipeline.
+   :width: 500 px
 
 Requirements
 ------------
