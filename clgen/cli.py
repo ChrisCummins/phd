@@ -111,6 +111,8 @@ def main(method, *args, **kwargs):
 
     If an exception is thrown, print error message and exit.
 
+    If environmental variable DEBUG=1, then exception is not caught.
+
     Args:
         method (function): Function to execute.
         *args (str): Arguments for method.
@@ -119,6 +121,10 @@ def main(method, *args, **kwargs):
     Returns:
         method(*args, **kwargs)
     """
+    # if DEBUG var set, don't catch exceptions
+    if os.environ.get("DEBUG", None):
+        return method(*args, **kwargs)
+
     try:
         return method(*args, **kwargs)
     except Exception as e:
