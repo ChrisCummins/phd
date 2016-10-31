@@ -35,9 +35,9 @@ Download and unpack the latest CLgen release:
 
 ::
 
-    $ wget -O clgen.tar.gz https://github.com/ChrisCummins/clgen/archive/0.0.4.tar.gz
+    $ wget -O clgen.tar.gz https://github.com/ChrisCummins/clgen/archive/0.0.5.tar.gz
     $ tar xf clgen.tar.gz
-    $ cd clgen-0.0.4
+    $ cd clgen-0.0.5
 
 Compile and build CLgen using:
 
@@ -85,7 +85,7 @@ Indices and tables
 .. |Documentation Status| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
    :target: http://chriscummins.cc/clgen/
 
-.. |Release Version| image:: https://img.shields.io/badge/release-0.0.4-blue.svg?style=flat
+.. |Release Version| image:: https://img.shields.io/badge/release-0.0.5-blue.svg?style=flat
    :target: https://github.com/ChrisCummins/clgen/releases
 
 .. |License Badge| image:: https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat
