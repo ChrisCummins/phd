@@ -1,6 +1,3 @@
-[submodule "native/torch-rnn/trunk"]
-	path = native/torch-rnn/trunk
-	url = https://github.com/ChrisCummins/torch-rnn.git
 [submodule "native/torch-hdf5/trunk"]
 	path = native/torch-hdf5/trunk
 	url = https://github.com/deepmind/torch-hdf5

@@ -21,15 +21,32 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-torch-rnn_version := trunk
-torch-rnn_dir := $(PWD)/native/torch-rnn/$(torch-rnn_version)
-torch-rnn := $(PWD)/native/torch-rnn/$(torch-rnn_version).bootstrapped
+
+# github repo
+torch-rnn_user := ChrisCummins
+torch-rnn_version := 078597f45b74e4bdce719e0afc4c68980b23ff67
+
+torch-rnn_url := https://github.com/$(torch-rnn_user)/torch-rnn/archive/$(torch-rnn_version).zip
+torch-rnn_zip := $(cache)/$(torch-rnn_user).torch-rnn.$(torch-rnn_version).zip
+torch-rnn_dir := $(root)/native/torch-rnn/$(torch-rnn_version)
+torch-rnn := $(root)/native/torch-rnn/$(torch-rnn_version).bootstrapped
 
 torch-rnn: $(torch-rnn)
 
+# download torch-rnn zip
+$(torch-rnn_zip):
+	$(call wget,$@,$(torch-rnn_url))
+
+# unpack torch-rnn zip
+$(torch-rnn_dir)/train.lua: $(torch-rnn_zip)
+	echo "FOOO" $<
+	test -d $(dir $<)/torch-rnn-$(torch-rnn_version) || unzip $< -d $(dir $<)
+	mkdir -p $(dir $(patsubst %/,%,$(dir $@)))
+	mv $(dir $<)/torch-rnn-$(torch-rnn_version) $(patsubst %/,%,$(dir $@))
+
 # basic torch-rnn requirements
-torch-rnn_base := $(PWD)/native/torch-rnn/$(torch-rnn_version).base.bootstrapped
-$(torch-rnn_base): $(torch)
+torch-rnn_base := $(root)/native/torch-rnn/$(torch-rnn_version).base.bootstrapped
+$(torch-rnn_base): $(torch-rnn_dir)/train.lua $(torch)
 	$(luarocks) install torch
 	$(luarocks) install nn
 	$(luarocks) install optim

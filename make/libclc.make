@@ -22,11 +22,13 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
+
+# github repo
 libclc_user := ChrisCummins
-libclc_repo := libclc
 libclc_version := d0f8ca7247ded04afbf1561fc5823c3e3517d892
-libclc_url := https://github.com/$(libclc_user)/$(libclc_repo)/archive/$(libclc_version).zip
-libclc_zip := $(cache)/$(libclc_user).$(libclc_repo).$(libclc_version).zip
+
+libclc_url := https://github.com/$(libclc_user)/libclc/archive/$(libclc_version).zip
+libclc_zip := $(cache)/$(libclc_user).libclc.$(libclc_version).zip
 libclc_dir := $(root)/native/libclc/$(libclc_version)
 libclc := $(libclc_dir)/utils/prepare-builtins.o
 
@@ -44,9 +46,9 @@ $(libclc_zip):
 	$(call wget,$@,$(libclc_url))
 
 $(libclc_dir)/configure.py: $(libclc_zip)
-	test -d $(dir $<) || unzip $< -d $(dir $<)
+	test -d $(dir $<)/libclc-$(libclc_version) || unzip $< -d $(dir $<)
 	mkdir -p $(dir $(patsubst %/,%,$(dir $@)))
-	mv $(dir $<)/$(libclc_repo)-$(libclc_version) $(patsubst %/,%,$(dir $@))
+	mv $(dir $<)/libclc-$(libclc_version) $(patsubst %/,%,$(dir $@))
 
 $(libclc): $(libclc_dir)/configure.py $(llvm)
 	cd $(libclc_dir) && ./configure.py --with-llvm-config=$(llvm)
