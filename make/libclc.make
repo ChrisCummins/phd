@@ -22,8 +22,12 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
+libclc_user := ChrisCummins
+libclc_repo := libclc
 libclc_version := d0f8ca7247ded04afbf1561fc5823c3e3517d892
-libclc_dir := $(PWD)/native/libclc/$(libclc_version)
+libclc_url := https://github.com/$(libclc_user)/$(libclc_repo)/archive/$(libclc_version).zip
+libclc_zip := $(cache)/$(libclc_user).$(libclc_repo).$(libclc_version).zip
+libclc_dir := $(root)/native/libclc/$(libclc_version)
 libclc := $(libclc_dir)/utils/prepare-builtins.o
 
 # add this target as a prerequisite for files which require libclc
@@ -36,7 +40,15 @@ libclc_CxxFlags = \
 	-include $(libclcDir)/generic/include/clc/clc.h \
 	-target nvptx64-nvidia-nvcl -x cl
 
-$(libclc): $(llvm)
+$(libclc_zip):
+	$(call wget,$@,$(libclc_url))
+
+$(libclc_dir)/configure.py: $(libclc_zip)
+	test -d $(dir $<) || unzip $< -d $(dir $<)
+	mkdir -p $(dir $(patsubst %/,%,$(dir $@)))
+	mv $(dir $<)/$(libclc_repo)-$(libclc_version) $(patsubst %/,%,$(dir $@))
+
+$(libclc): $(libclc_dir)/configure.py $(llvm)
 	cd $(libclc_dir) && ./configure.py --with-llvm-config=$(llvm)
 	cd $(libclc_dir) && $(MAKE)
 
