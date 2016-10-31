@@ -33,7 +33,7 @@ llvm: $(llvm)
 
 # flags to build with compiled LLVM
 llvm_CxxFlags = \
-	$(shell $(llvm) --cxxflags 2>/dev/null) \
+	$(shell $(llvm) --cxxflags) \
 	-isystem $(llvm_src)/include \
 	-isystem $(llvm_build)/include \
 	-isystem $(llvm_src)/tools/clang/include \
@@ -43,7 +43,7 @@ llvm_CxxFlags = \
 
 # flags to link against compiled LLVM
 llvm_LdFlags = \
-	$(shell $(llvm) --system-libs 2>/dev/null) \
+	$(shell $(llvm) --system-libs) \
 	-Wl,-rpath,$(llvm_build)/lib \
 	-L$(llvm_build)/lib \
 	-ldl \
@@ -64,7 +64,7 @@ llvm_LdFlags = \
 	-lclangBasic \
 	-lclang \
 	-ldl \
-	$(shell $(llvm) --libs 2>/dev/null) \
+	$(shell $(llvm) --libs) \
 	-pthread \
 	-lLLVMTarget -lLLVMMC \
 	-lLLVMObject -lLLVMCore

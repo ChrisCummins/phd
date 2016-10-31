@@ -87,15 +87,13 @@ clgen/data/libclc: $(libclc)
 	ln -sf $(libclc_dir)/generic/include $@
 	touch $@
 
-toolchain_flags := -xc++ $(llvm_CxxFlags) $(llvm_LdFlags)
-
 clgen/data/bin/clgen-features: native/clgen-features.cpp $(llvm)
 	mkdir -p $(dir $@)
-	$(CXX) $< -o $@ $(toolchain_flags)
+	$(CXX) $< -o $@ $(llvm_CxxFlags) $(llvm_LdFlags)
 
 clgen/data/bin/clgen-rewriter: native/clgen-rewriter.cpp $(llvm)
 	mkdir -p $(dir $@)
-	$(CXX) $< -o $@ $(toolchain_flags)
+	$(CXX) $< -o $@ $(llvm_CxxFlags) $(llvm_LdFlags)
 
 # run tests
 .PHONY: test
