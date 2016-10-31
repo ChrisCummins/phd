@@ -690,10 +690,10 @@ void extract_features(std::string path, std::ostream &out,
   langOpts.OpenCL = 1;
 
   // default arguments
-  auto triple = llvm::Triple::Triple(llvm::sys::getDefaultTargetTriple());
+  llvm::Triple *triple = new llvm::Triple(llvm::sys::getDefaultTargetTriple());
   clang::PreprocessorOptions pproc;
 
-  Invocation->setLangDefaults(langOpts, clang::IK_OpenCL, triple, pproc);
+  Invocation->setLangDefaults(langOpts, clang::IK_OpenCL, *triple, pproc);
 
   compiler.createPreprocessor(clang::TU_Complete);
   compiler.getPreprocessorOpts().UsePredefines = false;
