@@ -82,9 +82,8 @@ def print_file_details(file):
 def print_counters():
     print('\r\033[Kfiles: new ', files_new_counter,
           ', modified ', files_modified_counter,
-          ', unchanged ', files_unchanged_counter,
           '. errors ', errors_counter,
-          '. current: ', status_string[0:25],
+          '. ', status_string[0:25],
           sep='', end='')
     sys.stdout.flush()
 
