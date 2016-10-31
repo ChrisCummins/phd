@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="http://chriscummins.cc/clgen/">
+  <a href="https://github.com/ChrisCummins/clgen">
     <img src="https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/logo.png" width="420">
   </a>
 </div>
@@ -25,60 +25,20 @@
 
 **CLgen** is an open source application for generating runnable programs using
 deep learning. CLgen *learns* to program using neural networks which model the
-semantics and usage from large volumes of program fragments, generating many-
-core OpenCL programs that are representative of, but *distinct* from, the
+semantics and usage from large volumes of program fragments, generating 
+many-core OpenCL programs that are representative of, but *distinct* from, the
 programs it learns from.
 
 <img src="https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/pipeline.png" width="500">
 
-## Requirements
-
-*  Linux (x64) or OS X.
-*  [GCC](https://gcc.gnu.org/) > 4.7 or
-   [clang](http://llvm.org/releases/download.html) >= 3.1.
-*  [GNU Make](http://savannah.gnu.org/projects/make) > 3.79.
-*  [Python](https://www.python.org/) 2.7 or >= 3.4.
-*  [zlib](http://zlib.net/) >= 1.2.3.4.
-*  [libhdf5](https://support.hdfgroup.org/HDF5/release/obtainsrc.html) >= 1.8.11.
-
-Optional, but highly recommended:
-
-*  [OpenCL](https://www.khronos.org/opencl/) == 1.2.
-*  An NVIDIA GPU and
-   [CUDA](http://www.nvidia.com/object/cuda_home_new.html) >= 6.5.
-
-## Building from Source
-
-Checkout this repository and all submodules:
-
-```sh
-$ git clone --recursive https://github.com/ChrisCummins/clgen.git
-```
-
-Configure and build CLgen:
-
-```sh
-$ cd clgen
-$ ./configure
-$ make
-```
-
-Install into your system path:
-
-```sh
-$ sudo make install
-```
-
-(Optional) Run the test suite:
-
-```sh
-$ make test
-```
 
 ## Getting Started
 
-Train and sample a very small clgen model using the included training
-set:
+See the [online documentation](http://chriscummins.cc/clgen/) for instructions
+on how to download and install CLgen.
+
+To train your first CLgen model and sample programs using the small included
+training set, run:
 
 ```sh
 $ clgen model.json sampler.json
@@ -86,8 +46,6 @@ $ clgen model.json sampler.json
 
 <img src="https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/clgen.gif" width="500">
 
-See the [online documentation](http://chriscummins.cc/clgen/) for more
-information.
 
 ## License
 

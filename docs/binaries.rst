@@ -41,7 +41,7 @@ clgen-create-db
       -h, --help     show this help message and exit
       --version      show version information and exit
       -v, --verbose  increase output verbosity
-      -g             generate dataset with GitHub metadata
+      -g, --github   generate dataset with GitHub metadata
 
 clgen-drive
 ------------
