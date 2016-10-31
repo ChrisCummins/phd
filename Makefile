@@ -74,7 +74,7 @@ clgen/data/bin/opt: $(llvm)
 	ln -sf $(llvm_build)/bin/opt $@
 	touch $@
 
-clgen/data/bin/th: $(torch) $(torch_build)/bin/th
+clgen/data/bin/th: $(torch)
 	mkdir -p $(dir $@)
 	ln -sf $(torch_build)/bin/th $@
 	touch $@
