@@ -125,7 +125,6 @@ llvm_cmake_flags := -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true \
 
 # build llvm
 $(llvm): $(llvm_src)/include/llvm/CMakeLists.txt $(cmake) $(ninja)
-	rm -rf $(llvm_build)
 	mkdir -p $(llvm_build)
 	cd $(llvm_build) && $(cmake) $(llvm_src) $(llvm_cmake_flags)
 	cd $(llvm_build) && $(ninja)
