@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One-liner to install CLgen 0.0.16.
+# One-liner to install CLgen 0.0.17.
 #
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -21,12 +21,12 @@
 #
 set -eu
 
-wget https://github.com/ChrisCummins/clgen/archive/0.0.16.tar.gz -O clgen-0.0.16.tar.gz
-tar xf clgen-0.0.16.tar.gz
-rm clgen-0.0.16.tar.gz
-cd clgen-0.0.16
+wget https://github.com/ChrisCummins/clgen/archive/0.0.17.tar.gz -O clgen-0.0.17.tar.gz
+tar xf clgen-0.0.17.tar.gz
+rm clgen-0.0.17.tar.gz
+cd clgen-0.0.17
 
-echo "Configuring CLgen 0.0.16:"
+echo "Configuring CLgen 0.0.17:"
 echo
 ./configure
 

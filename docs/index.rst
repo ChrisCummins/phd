@@ -21,6 +21,7 @@ Requirements
 -  `zlib <http://zlib.net/>`__ >= 1.2.3.4.
 -  `libhdf5 <https://support.hdfgroup.org/HDF5/release/obtainsrc.html>`__
    >= 1.8.11.
+-  `curl <https://curl.haxx.se/>`__ and `wget <https://www.gnu.org/software/wget/>`__.
 
 Optional, but highly recommended:
 
@@ -34,7 +35,7 @@ Installation
 
 ::
 
-    $ sudo bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.16/install.sh)"
+    $ sudo bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.17/install.sh)"
 
 
 When prompted, answer yes/no prompts depending on if you have the optional
@@ -70,7 +71,7 @@ Indices and tables
 .. |Documentation Status| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
    :target: http://chriscummins.cc/clgen/
 
-.. |Release Version| image:: https://img.shields.io/badge/release-0.0.16-blue.svg?style=flat
+.. |Release Version| image:: https://img.shields.io/badge/release-0.0.17-blue.svg?style=flat
    :target: https://github.com/ChrisCummins/clgen/releases
 
 .. |License Badge| image:: https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat

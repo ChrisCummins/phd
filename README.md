@@ -16,7 +16,7 @@
     <img src="https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat">
   </a>
    <a href="https://github.com/ChrisCummins/clgen/releases" target="_blank">
-    <img src="https://img.shields.io/badge/release-0.0.16-blue.svg?style=flat">
+    <img src="https://img.shields.io/badge/release-0.0.17-blue.svg?style=flat">
   </a>
   <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" target="_blank">
     <img src="https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat">
