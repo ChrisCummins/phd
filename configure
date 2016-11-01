@@ -83,7 +83,6 @@ def main():
     cfg = {
         "opencl": args.with_opencl,
         "cuda": args.with_cuda,
-        "dev_tools": args.with_dev_tools
     }
 
     # get input from user
@@ -94,10 +93,6 @@ def main():
         if not cfg["cuda"]:
             cfg["cuda"] = yes_no("Enable CUDA support?")
 
-        if not cfg["dev_tools"]:
-            cfg["dev_tools"] = yes_no("Install extra development tools?",
-                                      default="yes")
-
     # generate JSON config file
     with open(".config.json", "w") as outfile:
         json.dump(cfg, outfile)
@@ -106,13 +101,11 @@ def main():
     with open(".config.make", "w") as outfile:
         print("USE_OPENCL := " + to_make(cfg["opencl"]), file=outfile)
         print("USE_CUDA := " + to_make(cfg["cuda"]), file=outfile)
-        print("WITH_DEV_TOOLS := " + to_make(cfg["dev_tools"]), file=outfile)
 
     # generate python config file
     with open(os.path.join("clgen", "config.py"), "w") as outfile:
         print("USE_OPENCL = " + to_python(cfg["opencl"]), file=outfile)
         print("USE_CUDA = " + to_python(cfg["cuda"]), file=outfile)
-        print("WITH_DEV_TOOLS = " + to_python(cfg["dev_tools"]), file=outfile)
 
     # generate python requirements file
     requirements_files = ['requirements.txt']
@@ -120,8 +113,6 @@ def main():
         requirements_files += ['requirements.opencl.txt']
     if cfg["cuda"]:
         requirements_files += ['requirements.cuda.txt']
-    if cfg["dev_tools"]:
-        requirements_files += ['requirements.dev.txt']
     with open("requirements.txt", "w") as outfile:
         for name in requirements_files:
             with open(os.path.join("make", name)) as infile:
@@ -131,7 +122,6 @@ def main():
     print()
     print("    OpenCL support:  " + to_text(cfg["opencl"]))
     print("    CUDA support:    " + to_text(cfg["cuda"]))
-    print("    Dev tools:       " + to_text(cfg["dev_tools"]))
     print()
     print("You may now build CLgen by running 'make'.")
 

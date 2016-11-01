@@ -32,30 +32,15 @@ Optional, but highly recommended:
 Installation
 ------------
 
-Download and unpack the latest CLgen release:
-
 ::
 
-    $ wget https://github.com/ChrisCummins/clgen/archive/0.0.13.tar.gz -O clgen-0.0.13.tar.gz
-    $ tar xf clgen-0.0.13.tar.gz && cd cglen-0.0.13
+    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.13/install.sh)"
 
-Configure and build CLgen using:
 
-::
-
-    $ ./configure
-    $ make
-    $ sudo make install
-
-This may take some time (over an hour). If you encounter any problems,
-please read the `deailed build instructions <installation.html>`_ and consider
-opening a `bug report <https://github.com/ChrisCummins/clgen/issues>`_.
-
-(Optional) Run the test suite using:
-
-::
-
-    $ make test
+When prompted, answer yes/no prompts depending on if you have the optional
+requirements. If you encounter any problems, please read the `detailed build
+instructions <installation.html>`_ and consider opening a `bug report
+<https://github.com/ChrisCummins/clgen/issues>`_.
 
 
 Contents
