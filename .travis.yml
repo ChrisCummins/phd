@@ -16,7 +16,7 @@ cache:
   directories:
     - native/cmake
     - native/libclc
-    - native/llvm/3.9.0
+    - native/llvm
     - native/ninja
     - native/torch
     - native/torch-rnn
