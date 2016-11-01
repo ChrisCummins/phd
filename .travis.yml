@@ -62,8 +62,7 @@ install:  # part 1 (bootstraps llvm build)
 #
 install:  # part 2 (compiles llvm in 30min chunks, restart job until complete)
   - ./configure -b
-  - mkdir -p native/llvm/3.9.0/build
-  - cd $TRAVIS_BUILD_DIR/native/llvm/3.9.0/build && (timeout 1800 $TRAVIS_BUILD_DIR/native/ninja/1.7.1/ninja || true)
+  - timeout 1800 make all || true
   - touch NORUN
 #
 # install:  # cache hot
