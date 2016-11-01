@@ -88,7 +88,7 @@ def main():
     # get input from user
     if not args.batch:
         if not cfg["opencl"]:
-            cfg["opencl"] = yes_no("Enable OpenCL support")
+            cfg["opencl"] = yes_no("Enable OpenCL support?")
 
         if not cfg["cuda"]:
             cfg["cuda"] = yes_no("Enable CUDA support?")
