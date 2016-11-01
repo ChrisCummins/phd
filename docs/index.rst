@@ -36,10 +36,9 @@ Download and unpack the latest CLgen release:
 ::
 
     $ wget https://github.com/ChrisCummins/clgen/archive/0.0.13.tar.gz -O clgen-0.0.13.tar.gz
-    $ tar xf clgen-0.0.13.tar.gz
-    $ cd clgen-0.0.13
+    $ tar xf clgen-0.0.13.tar.gz && cd cglen-0.0.13
 
-Compile and build CLgen using:
+Configure and build CLgen using:
 
 ::
 
