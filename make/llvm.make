@@ -84,7 +84,7 @@ endif
 
 llvm_url_base := http://llvm.org/releases/$(llvm_version)/
 llvm_url_suffix := -$(llvm_version).src.tar.xz
-llvm_tars = $(addprefix $(root)/native/llvm/$(llvm_version)/,$(addsuffix $(llvm_url_suffix),$(llvm_components)))
+llvm_tars = $(addprefix $(cache)/,$(addsuffix $(llvm_url_suffix),$(llvm_components)))
 
 # fetch LLVM tarballs
 $(llvm_tars):
