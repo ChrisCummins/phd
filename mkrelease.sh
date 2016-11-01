@@ -106,6 +106,10 @@ set_new_version() {
     echo "Updating version string... 'docs/index.rst'"
     sed "s/$current/$new/g" -i docs/index.rst
     git add docs/index.rst
+
+    echo "Updating version string... 'install.sh'"
+    sed "s/$current/$new/g" -i install.sh
+    git add install.sh
 }
 
 # Make the version bump.
