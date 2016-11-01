@@ -23,7 +23,7 @@
 include .config.make
 
 root := $(PWD)
-cache := $(root)/.cache
+cache := $$HOME/.cache/clgen/build
 UNAME := $(shell uname)
 clean_targets =
 distclean_targets =
