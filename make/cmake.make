@@ -21,7 +21,7 @@ cmake_version := 3.5.0
 cmake_dir := $(root)/native/cmake/$(cmake_version)
 cmake := $(cmake_dir)/bin/cmake
 
-cmake_tar := $(cmake_dir)/cmake.tar.gz
+cmake_tar := $(cache)/cmake.$(cmake_version).tar.gz
 ifeq ($(UNAME),Darwin)
 cmake_url := http://cmake.org/files/v3.5/cmake-3.5.0-Darwin-x86_64.tar.gz
 else
