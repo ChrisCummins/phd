@@ -52,10 +52,9 @@ $(torch_deps): $(torch_src)/install-deps
 	test -z "$$TRAVIS" || sed 's/set -e/set -ex/' -i $<
 	cd $(torch_src) && bash install-deps
 	touch $@
-system_dep_targets += $(torch_deps)
 
 # torch build
-$(torch): $(system_dep_targets)
+$(torch): $(torch_deps)
 	mkdir -p $(dir $@)
 	cd $(torch_src) && PREFIX="$(torch_build)" ./install.sh -b
 	$(luarocks) install torch

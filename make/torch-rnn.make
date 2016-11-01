@@ -60,7 +60,7 @@ $(torch-rnn_dir)/train.lua: $(torch-rnn_zip)
 	mv $(dir $<)/torch-rnn-$(torch-rnn_version) $(patsubst %/,%,$(dir $@))
 	touch $@
 
-$(torch-rnn): $(torch-hdf5)
+$(torch-rnn): $(torch-rnn_dir) $(torch-hdf5)
 	@for lib in $(torch_rnn_rocks); do \
 		echo "$(luarocks) install $$lib"; \
 		$(luarocks) install $$lib; \

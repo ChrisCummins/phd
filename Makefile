@@ -23,11 +23,10 @@
 include .config.make
 
 root := $(PWD)
-cache := $$HOME/.cache/clgen/build
+cache := $(root)/.cache/build
 UNAME := $(shell uname)
 clean_targets =
 distclean_targets =
-sysdep_targets =
 
 # modules
 include make/remote.make
@@ -50,7 +49,7 @@ data_files = \
 	clgen/data/torch-rnn
 
 # build everything
-all: $(data_files)
+all: $(torch_deps) $(data_files)
 
 clgen/data/bin/llvm-config: $(llvm)
 	mkdir -p $(dir $@)

@@ -49,5 +49,5 @@ $(torch-hdf5): $(torch-hdf5_dir)/LICENSE $(torch)
 
 .PHONY: distclean-torch-hdf5
 distclean-torch-hdf5:
-	rm -rfv $(torch-hdf5_dir)
+	rm -rf $(torch-hdf5_dir)
 distclean_targets += distclean-torch-hdf5
