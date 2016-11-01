@@ -107,8 +107,10 @@ set_new_version() {
     sed "s/$current/$new/g" -i docs/index.rst
     git add docs/index.rst
 
-    echo "Updating version string... 'install.sh'"
-    sed "s/$current/$new/g" -i install.sh
+    echo "Updating install scripts..."
+    sed "s/$current/$new/g" -i install-cpu.sh
+    sed "s/$current/$new/g" -i install-opencl.sh
+    sed "s/$current/$new/g" -i install-cuda.sh
     git add install.sh
 }
 

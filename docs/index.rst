@@ -7,7 +7,11 @@
 
 .. centered:: |Build Status| |Coverage Status| |Documentation Status| |Release Version| |License Badge|
 
-Welcome to the CLgen documentation.
+**CLgen** is an open source application for generating runnable programs using
+deep learning. CLgen *learns* to program using neural networks which model the
+semantics and usage from large volumes of program fragments, generating  many-
+core OpenCL programs that are representative of, but *distinct* from, the
+programs it learns from.
 
 Requirements
 ------------
@@ -23,24 +27,31 @@ Requirements
    >= 1.8.11.
 -  `curl <https://curl.haxx.se/>`__ and `wget <https://www.gnu.org/software/wget/>`__.
 
-Optional, but highly recommended:
-
--  `OpenCL <https://www.khronos.org/opencl/>`__ == 1.2.
--  An NVIDIA GPU and
-   `CUDA <http://www.nvidia.com/object/cuda_home_new.html>`__ >= 6.5.
-
-
 Installation
 ------------
 
+**CPU-only:** *slow performance, some features disabled*
+
 ::
 
-    $ sudo bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.17/install.sh)"
+    $ sudo bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.17/install-cpu.sh)"
 
+**OpenCL enabled:** *slow performance, all features enabled.*
+Requires `OpenCL <https://www.khronos.org/opencl/>`__.
 
-When prompted, answer yes/no prompts depending on if you have the optional
-requirements. If you encounter any problems, please read the `detailed build
-instructions <installation.html>`_ and consider opening a `bug report
+::
+
+    $ sudo bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.17/install-opencl.sh)"
+
+**CUDA enabled:** *fast performance, all features enabled.*
+Requires `CUDA <http://www.nvidia.com/object/cuda_home_new.html>`__ >= 6.5.
+
+::
+
+    $ sudo bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.17/install-cuda.sh)"
+
+If you encounter any problems, please read the `detailed build instructions
+<installation.html>`_ and consider opening a `bug report
 <https://github.com/ChrisCummins/clgen/issues>`_.
 
 
