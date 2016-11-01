@@ -97,7 +97,7 @@ $(llvm_tars):
 #   $2 (str) Source tarball
 #
 define unpack-llvm-tar
-	$(call unpack-tar,$(cache)/$1,native/llvm/$(llvm_version)/$2$(llvm_url_suffix))
+	$(call unpack-tar,$(llvm_src)/$1,$(cache)/$2$(llvm_url_suffix))
 endef
 
 # unpack LLVM tree from cached tarballs
