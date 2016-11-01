@@ -115,7 +115,7 @@ def main():
         requirements_files += ['requirements.cuda.txt']
     with open("requirements.txt", "w") as outfile:
         for name in requirements_files:
-            with open(os.path.join("make", name)) as infile:
+            with open(os.path.join("make", "requirements", name)) as infile:
                 outfile.write(infile.read())
 
     print("CLgen configured:")
