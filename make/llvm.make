@@ -124,7 +124,7 @@ llvm_cmake_flags := -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true \
 	-Wno-dev $(LLVM_CMAKE_FLAGS)
 
 # build llvm
-$(llvm): $(llvm_src)/include/llvm/CMakeLists.txt $(cmake) $(ninja) $(system_dep_targets)
+$(llvm): $(system_dep_targets) $(llvm_src)/include/llvm/CMakeLists.txt $(cmake) $(ninja)
 	mkdir -p $(llvm_build)
 	cd $(llvm_build) && $(cmake) $(llvm_src) $(llvm_cmake_flags)
 	cd $(llvm_build) && $(ninja)
