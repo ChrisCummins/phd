@@ -49,6 +49,7 @@ $(torch_deps): $(torch_src)/install-deps
 	mkdir -p $(dir $@)
 	# Travis CI clang toolchain can't build openblas:
 	test -z "$$TRAVIS" || sed '/install_openblas /d' -i $<
+	test -z "$$TRAVIS" || sed 's/set -e/set -ex/' -i $<
 	cd $(torch_src) && bash install-deps
 	touch $@
 system_dep_targets += $(torch_deps)
