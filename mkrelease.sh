@@ -111,7 +111,7 @@ set_new_version() {
     sed "s/$current/$new/g" -i install-cpu.sh
     sed "s/$current/$new/g" -i install-opencl.sh
     sed "s/$current/$new/g" -i install-cuda.sh
-    git add install.sh
+    git add install-*.sh
 }
 
 # Make the version bump.

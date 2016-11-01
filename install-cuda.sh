@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One-liner to install CLgen 0.0.17.
+# One-liner to install CLgen 0.0.18.
 #
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -21,10 +21,10 @@
 #
 set -euv
 
-wget https://github.com/ChrisCummins/clgen/archive/0.0.17.tar.gz -O clgen-0.0.17.tar.gz
-tar xf clgen-0.0.17.tar.gz
-rm clgen-0.0.17.tar.gz
-cd clgen-0.0.17
+wget https://github.com/ChrisCummins/clgen/archive/0.0.18.tar.gz -O clgen-0.0.18.tar.gz
+tar xf clgen-0.0.18.tar.gz
+rm clgen-0.0.18.tar.gz
+cd clgen-0.0.18
 ./configure --batch --with-opencl --with-cuda
 make
 make test
