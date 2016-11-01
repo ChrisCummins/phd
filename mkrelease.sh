@@ -92,19 +92,19 @@ set_new_version() {
     cd "$(get_project_root)"
 
     echo "Updating version string... 'README.md'"
-    sed "s/$current/$new/" -i README.md
+    sed "s/$current/$new/g" -i README.md
     git add README.md
 
     echo "Updating version string... 'setup.py'"
-    sed "s/$current/$new/" -i setup.py
+    sed "s/$current/$new/g" -i setup.py
     git add setup.py
 
     echo "Updating version string... 'docs/conf.py'"
-    sed "s/$current/$new/" -i docs/conf.py
+    sed "s/$current/$new/g" -i docs/conf.py
     git add docs/conf.py
 
     echo "Updating version string... 'docs/index.rst'"
-    sed "s/$current/$new/" -i docs/index.rst
+    sed "s/$current/$new/g" -i docs/index.rst
     git add docs/index.rst
 }
 
