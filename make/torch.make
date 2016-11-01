@@ -50,7 +50,7 @@ $(torch_deps): $(torch_src)/install-deps
 	# Travis CI clang toolchain can't build openblas:
 	test -z "$$TRAVIS" || sed '/install_openblas /d' -i $<
 	# Travis CI seems to be hanging ?
-	test -z "$$TRAVIS" || cd $(torch_src) && bash install-deps
+	test -n "$$TRAVIS" || (cd $(torch_src) && bash install-deps)
 	touch $@
 
 # torch build
