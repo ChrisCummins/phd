@@ -57,6 +57,7 @@ $(torch-rnn_zip):
 $(torch-rnn_dir)/train.lua: $(torch-rnn_zip)
 	test -d $(dir $<)/torch-rnn-$(torch-rnn_version) || unzip -q $< -d $(dir $<)
 	mkdir -p $(dir $(patsubst %/,%,$(dir $@)))
+	rm -rf $(dir $@)
 	mv $(dir $<)/torch-rnn-$(torch-rnn_version) $(patsubst %/,%,$(dir $@))
 	touch $@
 

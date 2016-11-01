@@ -41,6 +41,7 @@ $(torch-hdf5_zip):
 $(torch-hdf5_dir)/LICENSE: $(torch-hdf5_zip)
 	test -d $(dir $<)/torch-hdf5-$(torch-hdf5_version) || unzip -q $< -d $(dir $<)
 	mkdir -p $(dir $(patsubst %/,%,$(dir $@)))
+	rm -rf $(dir $@)
 	mv $(dir $<)/torch-hdf5-$(torch-hdf5_version) $(patsubst %/,%,$(dir $@))
 	touch $@
 

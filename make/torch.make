@@ -37,11 +37,13 @@ th := $(torch_build)/bin/th
 
 torch: $(torch)
 
-# clone git repo
+# clone git repo and submodules at a specific commit, then remove the .git dirs
 $(torch_src)/install-deps:
+	rm -rf $(torch_src)
 	git clone $(torch_remote) $(torch_src)
-	cd $(dir $@) && git checkout a58889e5289ca16b78ec7223dd8bbc2e01ef97e0
+	cd $(dir $@) && git reset --hard $(torch_version)
 	cd $(dir $@) && git submodule update --init --recursive
+	rm -rf $(torch_src)/.git
 	touch $@
 
 # torch dependencies
