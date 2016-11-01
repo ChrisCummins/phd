@@ -39,9 +39,6 @@ env:
     - CXX=clang++
 
 before_install:
-  # note we can't build openblas with the Travis clang toolchain:
-  - sed '/install_openblas /d' -i native/torch/trunk/src/install-deps
-  #
   - pip install --upgrade pip
   - pip install coveralls
   - pip install --only-binary=numpy numpy>=1.10.4
