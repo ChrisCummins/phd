@@ -29,7 +29,7 @@ torch-rnn_version := 078597f45b74e4bdce719e0afc4c68980b23ff67
 torch-rnn_url := https://github.com/$(torch-rnn_user)/torch-rnn/archive/$(torch-rnn_version).zip
 torch-rnn_zip := $(cache)/$(torch-rnn_user).torch-rnn.$(torch-rnn_version).zip
 torch-rnn_dir := $(root)/native/torch-rnn/$(torch-rnn_version)
-torch-rnn := $(root)/native/torch-rnn/$(torch-rnn_version).bootstrapped
+torch-rnn := $(root)/native/torch-rnn/$(torch-rnn_version)/.bootstrapped
 
 # Additional torch-rnn requirements for GPU support
 torch_rnn_rocks =
