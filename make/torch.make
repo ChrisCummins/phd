@@ -47,10 +47,11 @@ $(torch_src)/install-deps:
 # torch dependencies
 $(torch_deps): $(torch_src)/install-deps
 	mkdir -p $(dir $@)
-	# Travis CI clang toolchain can't build openblas:
-	test -z "$$TRAVIS" || sed '/install_openblas /d' -i $<
-	# Travis CI seems to be hanging ?
-	test -n "$$TRAVIS" || (cd $(torch_src) && bash install-deps)
+	@test -z "$$TRAVIS" || echo "Travis CI clang toolchain can't build openblas. Patching ..."
+	@test -z "$$TRAVIS" || sed '/install_openblas /d' -i $<
+	@test -z "$$TRAVIS" || echo "Travis CI is haning on install-deps. Skipping ..."
+	@test -n "$$TRAVIS" || echo "cd $(torch_src) && bash install-deps"
+	@test -n "$$TRAVIS" || (cd $(torch_src) && bash install-deps)
 	touch $@
 
 # torch build
