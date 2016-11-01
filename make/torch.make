@@ -23,8 +23,8 @@
 #
 
 # git repo
-torch_remote := https://github.com/torch/distro.git
-torch_version := a58889e5289ca16b78ec7223dd8bbc2e01ef97e0
+torch_remote := https://github.com/ChrisCummins/distro.git
+torch_version := b8586af8f3bd2b351143d339829c70823fea3407
 
 torch_src := $(root)/native/torch/$(torch_version)/src
 torch_build := $(root)/native/torch/$(torch_version)/build
@@ -56,10 +56,17 @@ $(torch_deps): $(torch_src)/install-deps
 	@test -n "$$TRAVIS" || (cd $(torch_src) && bash install-deps)
 	touch $@
 
+# if not configured with CUDA, then torch shouldn't use it
+ifeq ($(USE_CUDA),0)
+torch_disable_cuda := 1
+else
+torch_disable_cuda := 0
+endif
+
 # torch build
 $(torch): $(torch_deps)
 	mkdir -p $(dir $@)
-	cd $(torch_src) && PREFIX="$(torch_build)" ./install.sh -b
+	cd $(torch_src) && TORCH_NO_CUDA=$(torch_disable_cuda) PREFIX="$(torch_build)" ./install.sh -b
 	$(luarocks) install torch
 	$(luarocks) install nn
 	$(luarocks) install optim
