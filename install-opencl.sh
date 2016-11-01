@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One-liner to install CLgen 0.0.18.
+# One-liner to install CLgen 0.0.19.
 #
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -21,11 +21,11 @@
 #
 set -euv
 
-wget https://github.com/ChrisCummins/clgen/archive/0.0.18.tar.gz -O clgen-0.0.18.tar.gz
-tar xf clgen-0.0.18.tar.gz
-rm clgen-0.0.18.tar.gz
-cd clgen-0.0.18
+wget https://github.com/ChrisCummins/clgen/archive/0.0.19.tar.gz -O clgen-0.0.19.tar.gz
+tar xf clgen-0.0.19.tar.gz
+rm clgen-0.0.19.tar.gz
+cd clgen-0.0.19
 ./configure --batch --with-opencl
 make
+make install
 make test
-sudo make install
