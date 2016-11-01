@@ -70,9 +70,9 @@ llvm_LdFlags = \
 	-lLLVMObject -lLLVMCore
 
 ifeq ($(UNAME),Darwin)
-llvm_LdFlags += -ldl -lcurses -lLLVMSupport -lcurses -ldl
+llvm_LdFlags += -ldl -lcurses -lLLVMSupport -lcurses -ldl -lz
 else
-llvm_LdFlags += -ldl -lncurses -lLLVMSupport -lncurses -ldl
+llvm_LdFlags += -ldl -lncurses -lLLVMSupport -lncurses -ldl -lz
 endif
 
 # LLVM components to download
