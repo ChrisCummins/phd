@@ -31,11 +31,11 @@ sysdep_targets =
 
 # modules
 include make/remote.make
+include make/torch.make
 include make/cmake.make
 include make/ninja.make
 include make/llvm.make
 include make/libclc.make
-include make/torch.make
 include make/torch-rnn.make
 
 data_files = \
@@ -114,13 +114,13 @@ distclean: $(distclean_targets)
 
 # install CLgen
 .PHONY: install
-install: 
+install:
 	pip install -r requirements.txt
 	python ./setup.py install
 
 # autogenerate documentation
 .PHONY: docs-modules
-docs-modules: 
+docs-modules:
 	@echo "generating API documentation"
 	cp docs/api.rst.template docs/api.rst
 	@for module in $$(cd clgen; ls *.py | grep -v __init__.py); do \
