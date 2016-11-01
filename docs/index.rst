@@ -34,21 +34,21 @@ Installation
 
 ::
 
-    $ sudo bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.19/install-cpu.sh)"
+    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.19/install-cpu.sh)"
 
 **OpenCL enabled:** *slow performance, all features enabled.*
 Requires `OpenCL <https://www.khronos.org/opencl/>`__.
 
 ::
 
-    $ sudo bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.19/install-opencl.sh)"
+    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.19/install-opencl.sh)"
 
 **CUDA enabled:** *fast performance, all features enabled.*
 Requires `CUDA <http://www.nvidia.com/object/cuda_home_new.html>`__ >= 6.5.
 
 ::
 
-    $ sudo bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.19/install-cuda.sh)"
+    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.19/install-cuda.sh)"
 
 If you encounter any problems, please read the `detailed build instructions
 <installation.html>`_ and consider opening a `bug report

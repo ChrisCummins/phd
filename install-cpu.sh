@@ -27,5 +27,5 @@ rm clgen-0.0.19.tar.gz
 cd clgen-0.0.19
 ./configure --batch
 make
-make install
-make test
+sudo make install
+sudo make test
