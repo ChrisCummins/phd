@@ -45,6 +45,8 @@ before_install:
   - pip install --only-binary=scipy scipy>=0.16.1
   - pip install --only-binary=pandas pandas>=0.19.0
   - pip install Cython==0.23.4
+  # Trying to fix timeout on install-deps:
+  - sudo apt-get update -qq
 
 # A clean Travis CI build will timoeut after 50 minutes and fail. Irritatingly,
 # this means that the caches are not updated, so we can't incrementally build
