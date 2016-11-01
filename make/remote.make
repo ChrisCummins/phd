@@ -28,6 +28,7 @@
 define wget
 	mkdir -p $(dir $1)
 	test -f $1 || wget -O $1 $2 $3
+	touch $@
 endef
 
 # unpack a tarball
