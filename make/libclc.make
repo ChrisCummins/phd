@@ -48,6 +48,7 @@ $(libclc_zip):
 $(libclc_dir)/configure.py: $(libclc_zip)
 	test -d $(dir $<)/libclc-$(libclc_version) || unzip -q $< -d $(dir $<)
 	mkdir -p $(dir $(patsubst %/,%,$(dir $@)))
+	rm -rf $(dir $@)
 	mv $(dir $<)/libclc-$(libclc_version) $(patsubst %/,%,$(dir $@))
 	touch $@
 
