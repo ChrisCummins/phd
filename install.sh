@@ -19,13 +19,16 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-set -euv
+set -eu
 
 wget https://github.com/ChrisCummins/clgen/archive/0.0.13.tar.gz -O clgen-0.0.13.tar.gz
 tar xf clgen-0.0.13.tar.gz
 rm clgen-0.0.13.tar.gz
 cd clgen-0.0.13
 
+echo "Configuring CLgen 0.0.13:"
+echo
 ./configure
+
 make
 sudo make install
