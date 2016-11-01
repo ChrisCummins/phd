@@ -34,7 +34,7 @@ Installation
 
 ::
 
-    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.13/install.sh)"
+    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.14/install.sh)"
 
 
 When prompted, answer yes/no prompts depending on if you have the optional
@@ -70,7 +70,7 @@ Indices and tables
 .. |Documentation Status| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
    :target: http://chriscummins.cc/clgen/
 
-.. |Release Version| image:: https://img.shields.io/badge/release-0.0.13-blue.svg?style=flat
+.. |Release Version| image:: https://img.shields.io/badge/release-0.0.14-blue.svg?style=flat
    :target: https://github.com/ChrisCummins/clgen/releases
 
 .. |License Badge| image:: https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat
