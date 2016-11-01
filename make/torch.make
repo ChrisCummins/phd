@@ -21,9 +21,14 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-torch_version := trunk
-torch_src := $(PWD)/native/torch/$(torch_version)/src
-torch_build := $(PWD)/native/torch/$(torch_version)/build
+
+# git repo
+torch_remote := https://github.com/torch/distro.git
+torch_version := a58889e5289ca16b78ec7223dd8bbc2e01ef97e0
+
+torch_src := $(root)/native/torch/$(torch_version)/src
+torch_build := $(root)/native/torch/$(torch_version)/build
+torch_deps := $(torch_src)/.bootstrapped
 torch := $(torch_build)/.bootstrapped
 
 # compiled binaries
@@ -32,10 +37,28 @@ th := $(torch_build)/bin/th
 
 torch: $(torch)
 
-$(torch):
+# clone git repo
+$(torch_src)/install-deps:
+	git clone $(torch_remote) $(torch_src)
+	cd $(dir $@) && git checkout a58889e5289ca16b78ec7223dd8bbc2e01ef97e0
+	cd $(dir $@) && git submodule update --init --recursive
+	touch $@
+
+# torch dependencies
+$(torch_deps): $(torch_src)/install-deps
 	mkdir -p $(dir $@)
 	cd $(torch_src) && bash install-deps
+	touch $@
+system_dep_targets += $(torch_deps)
+
+# torch build
+$(torch): $(system_dep_targets)
+	mkdir -p $(dir $@)
 	cd $(torch_src) && PREFIX="$(torch_build)" ./install.sh -b
+	$(luarocks) install torch
+	$(luarocks) install nn
+	$(luarocks) install optim
+	$(luarocks) install lua-cjson
 	touch $@
 
 .PHONY: distclean-torch

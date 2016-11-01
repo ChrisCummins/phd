@@ -27,6 +27,7 @@ cache := $(root)/.cache
 UNAME := $(shell uname)
 clean_targets =
 distclean_targets =
+sysdep_targets =
 
 # modules
 include make/remote.make

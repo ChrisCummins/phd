@@ -124,13 +124,12 @@ llvm_cmake_flags := -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true \
 	-Wno-dev $(LLVM_CMAKE_FLAGS)
 
 # build llvm
-$(llvm): $(llvm_src)/include/llvm/CMakeLists.txt $(cmake) $(ninja)
+$(llvm): $(llvm_src)/include/llvm/CMakeLists.txt $(cmake) $(ninja) $(system_dep_targets)
 	mkdir -p $(llvm_build)
 	cd $(llvm_build) && $(cmake) $(llvm_src) $(llvm_cmake_flags)
 	cd $(llvm_build) && $(ninja)
 
 .PHONY: distclean-llvm
 distclean-llvm:
-	rm -fv -r $(llvm_src)
-	rm -fv -r $(llvm_build)
+	rm -rf $(llvm_build)
 distclean_targets += distclean-llvm

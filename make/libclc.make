@@ -46,9 +46,10 @@ $(libclc_zip):
 	$(call wget,$@,$(libclc_url))
 
 $(libclc_dir)/configure.py: $(libclc_zip)
-	test -d $(dir $<)/libclc-$(libclc_version) || unzip $< -d $(dir $<)
+	test -d $(dir $<)/libclc-$(libclc_version) || unzip -q $< -d $(dir $<)
 	mkdir -p $(dir $(patsubst %/,%,$(dir $@)))
 	mv $(dir $<)/libclc-$(libclc_version) $(patsubst %/,%,$(dir $@))
+	touch $@
 
 $(libclc): $(libclc_dir)/configure.py $(llvm)
 	cd $(libclc_dir) && ./configure.py --with-llvm-config=$(llvm)
@@ -56,5 +57,5 @@ $(libclc): $(libclc_dir)/configure.py $(llvm)
 
 .PHONY: distclean-libclc
 distclean-libclc:
-	cd $(libclc_dir) && git clean -xfd
+	rm -rf $(libclc_dir)
 distclean_targets += distclean-libclc

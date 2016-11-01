@@ -31,31 +31,8 @@ torch-rnn_zip := $(cache)/$(torch-rnn_user).torch-rnn.$(torch-rnn_version).zip
 torch-rnn_dir := $(root)/native/torch-rnn/$(torch-rnn_version)
 torch-rnn := $(root)/native/torch-rnn/$(torch-rnn_version).bootstrapped
 
-torch-rnn: $(torch-rnn)
-
-# download torch-rnn zip
-$(torch-rnn_zip):
-	$(call wget,$@,$(torch-rnn_url))
-
-# unpack torch-rnn zip
-$(torch-rnn_dir)/train.lua: $(torch-rnn_zip)
-	echo "FOOO" $<
-	test -d $(dir $<)/torch-rnn-$(torch-rnn_version) || unzip $< -d $(dir $<)
-	mkdir -p $(dir $(patsubst %/,%,$(dir $@)))
-	mv $(dir $<)/torch-rnn-$(torch-rnn_version) $(patsubst %/,%,$(dir $@))
-
-# basic torch-rnn requirements
-torch-rnn_base := $(root)/native/torch-rnn/$(torch-rnn_version).base.bootstrapped
-$(torch-rnn_base): $(torch-rnn_dir)/train.lua $(torch)
-	$(luarocks) install torch
-	$(luarocks) install nn
-	$(luarocks) install optim
-	$(luarocks) install lua-cjson
-	cd $(PWD)/native/torch-hdf5/trunk && $(luarocks) make hdf5-0-0.rockspec
-	touch $@
-
 # Additional torch-rnn requirements for GPU support
-torch_rnn_extra_rocks =
+torch_rnn_rocks =
 # TODO: it apperas that cltorch can no longer be installed using this method,
 # but instead requires using a fork of the torch distro with OpenCL support
 # baked in. It would be fairly substantial job to add support for this second
@@ -64,14 +41,27 @@ torch_rnn_extra_rocks =
 #   https://github.com/hughperkins/distro-cl
 #
 # ifeq ($(USE_OPENCL),1)
-# torch_rnn_extra_rocks += cltorch clnn
+# torch_rnn_rocks += cltorch clnn
 # endif
 ifeq ($(USE_CUDA),1)
-torch_rnn_extra_rocks += cutorch cunn
+torch_rnn_rocks += cutorch cunn
 endif
 
-$(torch-rnn): $(torch-rnn_base)
-	@for lib in $(torch_rnn_extra_rocks); do \
+torch-rnn: $(torch-rnn)
+
+# download torch-rnn zip
+$(torch-rnn_zip):
+	$(call wget,$@,$(torch-rnn_url))
+
+# unpack torch-rnn zip
+$(torch-rnn_dir)/train.lua: $(torch-rnn_zip)
+	test -d $(dir $<)/torch-rnn-$(torch-rnn_version) || unzip -q $< -d $(dir $<)
+	mkdir -p $(dir $(patsubst %/,%,$(dir $@)))
+	mv $(dir $<)/torch-rnn-$(torch-rnn_version) $(patsubst %/,%,$(dir $@))
+	touch $@
+
+$(torch-rnn): $(torch-hdf5)
+	@for lib in $(torch_rnn_rocks); do \
 		echo "$(luarocks) install $$lib"; \
 		$(luarocks) install $$lib; \
 	done
@@ -79,6 +69,5 @@ $(torch-rnn): $(torch-rnn_base)
 
 .PHONY: distclean-torch-rnn
 distclean-torch-rnn:
-	cd $(PWD)/native/torch-hdf5/trunk && git clean -xfd
-	cd $(torch-rnn_dir) && git clean -xfd
+	rm -rf $(torch-rnn_dir)
 distclean_targets += distclean-torch-rnn
