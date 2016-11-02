@@ -17,9 +17,8 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-CLgen persistent
+CLgen persistent cache mechanism.
 """
-import os
 import re
 
 from labm8 import fs
