@@ -108,7 +108,7 @@ def main():
     with open(os.path.join("clgen", "config.py"), "w") as outfile:
         print("USE_OPENCL = " + to_python(cfg["opencl"]), file=outfile)
         print("USE_CUDA = " + to_python(cfg["cuda"]), file=outfile)
-        print("VERSION = " + cfg["version"], file=outfile)
+        print("VERSION = '{}'".format(cfg["version"]), file=outfile)
 
     # generate python requirements file
     requirements_files = ['requirements.txt']
