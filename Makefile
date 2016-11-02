@@ -26,7 +26,7 @@ endif
 include .config.make
 
 root := $(PWD)
-cache := $(root)/.cache/build
+cache := $(root)/.cache/$(CLGEN_VERSION)
 UNAME := $(shell uname)
 clean_targets =
 distclean_targets =
