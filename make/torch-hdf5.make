@@ -47,6 +47,7 @@ $(torch-hdf5_dir)/LICENSE: $(torch-hdf5_zip)
 
 $(torch-hdf5): $(torch-hdf5_dir)/LICENSE $(torch)
 	cd $(torch-hdf5_dir) && $(luarocks) make hdf5-0-0.rockspec
+	./make/patches/hdf5-osx-hotfix.sh
 
 .PHONY: distclean-torch-hdf5
 distclean-torch-hdf5:
