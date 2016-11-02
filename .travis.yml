@@ -66,6 +66,7 @@ before_install:
 install:  # cache hot
   - ./configure -b
   - make all
+  - make install
 
 script:
   - test -f NORUN || coverage run --source=clgen ./setup.py test
