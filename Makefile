@@ -41,62 +41,65 @@ include make/llvm.make
 include make/libclc.make
 include make/torch-rnn.make
 
-data_files = \
-	clgen/data/bin/clang \
-	clgen/data/bin/clang-format \
-	clgen/data/bin/clgen-features \
-	clgen/data/bin/clgen-rewriter \
-	clgen/data/bin/llvm-config \
-	clgen/data/bin/opt \
-	clgen/data/bin/th \
-	clgen/data/libclc \
-	clgen/data/torch-rnn
+data_symlinks = \
+	$(root)/clgen/data/bin/clang \
+	$(root)/clgen/data/bin/clang-format \
+	$(root)/clgen/data/bin/llvm-config \
+	$(root)/clgen/data/bin/opt \
+	$(root)/clgen/data/bin/th \
+	$(root)/clgen/data/libclc \
+	$(root)/clgen/data/torch-rnn
+
+data_bin = \
+	$(root)/clgen/data/bin/clgen-features \
+	$(root)/clgen/data/bin/clgen-rewriter
+
 
 # build everything
-all: $(torch_deps) $(data_files)
+all: $(torch_deps) $(data_symlinks) $(data_bin)
 
-clgen/data/bin/llvm-config: $(llvm)
+$(root)/clgen/data/bin/llvm-config: $(llvm)
 	mkdir -p $(dir $@)
 	ln -sf $(llvm_build)/bin/llvm-config $@
 	touch $@
 
-clgen/data/bin/clang: $(llvm)
+$(root)/clgen/data/bin/clang: $(llvm)
 	mkdir -p $(dir $@)
 	ln -sf $(llvm_build)/bin/clang $@
 	touch $@
 
-clgen/data/bin/clang-format: $(llvm)
+$(root)/clgen/data/bin/clang-format: $(llvm)
 	mkdir -p $(dir $@)
 	ln -sf $(llvm_build)/bin/clang-format $@
 	touch $@
 
-clgen/data/bin/opt: $(llvm)
+$(root)/clgen/data/bin/opt: $(llvm)
 	mkdir -p $(dir $@)
 	ln -sf $(llvm_build)/bin/opt $@
 	touch $@
 
-clgen/data/bin/th: $(torch)
+$(root)/clgen/data/bin/th: $(torch)
 	mkdir -p $(dir $@)
 	ln -sf $(torch_build)/bin/th $@
 	touch $@
 
-clgen/data/torch-rnn: $(torch-rnn)
+$(root)/clgen/data/torch-rnn: $(torch-rnn)
 	mkdir -p $(dir $@)
 	rm -f $@
 	ln -sf $(torch-rnn_dir) $@
 	touch $@
 
-clgen/data/libclc: $(libclc)
+$(root)/clgen/data/libclc: $(libclc)
 	mkdir -p $(dir $@)
 	rm -f $@
 	ln -sf $(libclc_dir)/generic/include $@
 	touch $@
 
-clgen/data/bin/clgen-features: native/clgen-features.cpp $(llvm)
+$(root)/clgen/data/bin/clgen-features: $(root)/native/clgen-features.cpp $(data_symlinks)
 	mkdir -p $(dir $@)
 	$(CXX) $< -o $@ $(llvm_CxxFlags) $(llvm_LdFlags)
 
-clgen/data/bin/clgen-rewriter: native/clgen-rewriter.cpp $(llvm)
+$(root)/clgen/data/bin/clgen-rewriter: $(root)/native/clgen-rewriter.cpp $(data_symlinks)
 	mkdir -p $(dir $@)
 	$(CXX) $< -o $@ $(llvm_CxxFlags) $(llvm_LdFlags)
 
@@ -108,12 +111,12 @@ test:
 # clean compiled files
 .PHONY: clean
 clean: $(clean_targets)
-	rm -fvr $(data_files) corpus tests/data/tiny/corpus
+	rm -fr $(data_symlinks) $(data_bin) corpus tests/data/tiny/corpus
 
 # clean everything
 .PHONY: distclean
 distclean: $(distclean_targets)
-	rm -fv requirements.txt .config.json .config.make clgen/config.py
+	rm -f requirements.txt .config.json .config.make clgen/config.py
 
 # install CLgen
 .PHONY: install
