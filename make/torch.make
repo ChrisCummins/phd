@@ -24,7 +24,7 @@
 
 # git repo
 torch_remote := https://github.com/ChrisCummins/distro.git
-torch_version := 06ab8470787c06b11cbf0c81f945c96e5734300e
+torch_version := 3467b980c56942451ee242937dbe76d15fcfc5ab
 
 torch_src := $(root)/native/torch/$(torch_version)/src
 torch_build := $(root)/native/torch/$(torch_version)/build
