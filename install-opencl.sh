@@ -27,5 +27,5 @@ rm clgen-0.0.20.tar.gz
 cd clgen-0.0.20
 ./configure --batch --with-opencl
 make
-sudo make install
-sudo make test
+sudo -H make install
+sudo -H make test
