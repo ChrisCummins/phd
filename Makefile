@@ -34,6 +34,7 @@ distclean_targets =
 # modules
 include make/remote.make
 include make/torch.make
+include make/torch-hdf5.make
 include make/cmake.make
 include make/ninja.make
 include make/llvm.make
