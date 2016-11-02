@@ -17,12 +17,8 @@
 #
 from setuptools import setup
 
-# read from requirements.txt
-with open("./requirements.txt") as infile:
-    requirements = [x.strip() for x in infile.readlines() if x.strip()]
-
 setup(name="labm8",
-      version="0.0.9",
+      version="0.0.10",
       description="Utils for manipulating quantitative experimental data",
       url="https://github.com/ChrisCummins/labm8",
       author="Chris Cummins",
@@ -31,5 +27,13 @@ setup(name="labm8",
       packages=["labm8"],
       test_suite="nose.collector",
       tests_require=["nose"],
-      install_requires=requirements,
+      install_requires=[
+          "humanize == 0.5.1",
+          "numpy >= 1.10.4",
+          "pandas >= 0.19.0",
+          "python-dateutil == 2.5.3",
+          "pytz == 2016.7",
+          "scipy >= 0.16.1",
+          "six == 1.10.0",
+      ],
       zip_safe=True)
