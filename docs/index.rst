@@ -25,6 +25,7 @@ Requirements
 -  `zlib <http://zlib.net/>`__ >= 1.2.3.4.
 -  `libhdf5 <https://support.hdfgroup.org/HDF5/release/obtainsrc.html>`__
    >= 1.8.11.
+-  `libffi <https://sourceware.org/libffi/>`__ >= 3.0.13
 -  `curl <https://curl.haxx.se/>`__ and `wget <https://www.gnu.org/software/wget/>`__.
 
 Installation
