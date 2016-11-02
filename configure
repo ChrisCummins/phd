@@ -83,6 +83,7 @@ def main():
     cfg = {
         "opencl": args.with_opencl,
         "cuda": args.with_cuda,
+        "version": "0.2.22",
     }
 
     # get input from user
@@ -101,11 +102,13 @@ def main():
     with open(".config.make", "w") as outfile:
         print("USE_OPENCL := " + to_make(cfg["opencl"]), file=outfile)
         print("USE_CUDA := " + to_make(cfg["cuda"]), file=outfile)
+        print("CLGEN_VERSION := " + cfg["version"], file=outfile)
 
     # generate python config file
     with open(os.path.join("clgen", "config.py"), "w") as outfile:
         print("USE_OPENCL = " + to_python(cfg["opencl"]), file=outfile)
         print("USE_CUDA = " + to_python(cfg["cuda"]), file=outfile)
+        print("VERSION = " + cfg["version"], file=outfile)
 
     # generate python requirements file
     requirements_files = ['requirements.txt']
@@ -118,7 +121,7 @@ def main():
             with open(os.path.join("make", "requirements", name)) as infile:
                 outfile.write(infile.read())
 
-    print("CLgen configured:")
+    print("CLgen {version} configured:".format(version=cfg["version"]))
     print()
     print("    OpenCL support:  " + to_text(cfg["opencl"]))
     print("    CUDA support:    " + to_text(cfg["cuda"]))

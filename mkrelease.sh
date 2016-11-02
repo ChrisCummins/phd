@@ -107,6 +107,10 @@ set_new_version() {
     sed "s/$current/$new/g" -i docs/index.rst
     git add docs/index.rst
 
+    echo "Updating configure script..."
+    sed "s/$current/$new/g" -i configure
+    git add configure
+
     echo "Updating install scripts..."
     sed "s/$current/$new/g" -i install-cpu.sh
     sed "s/$current/$new/g" -i install-opencl.sh
