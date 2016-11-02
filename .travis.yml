@@ -46,27 +46,18 @@ before_install:
 
 # A clean Travis CI build will timoeut after 50 minutes and fail. Irritatingly,
 # this means that the caches are not updated, so we can't incrementally build
-# the project by restarting the job. Instead, split the build into smaller
-# jobs:
+# the project by restarting the job. The workaround is to kill the build after
+# a time limit and then restart the job by hand:
 #
-# install:  # part 1 (bootstraps llvm build)
-#  - ./configure -b
-#  - make $TRAVIS_BUILD_DIR/native/llvm/3.9.0/src/include/llvm/CMakeLists.txt
-#  - make cmake
-#  - make ninja
-#  - mkdir -p native/llvm/3.9.0/build
-#  - cd $TRAVIS_BUILD_DIR/native/llvm/3.9.0/build && $TRAVIS_BUILD_DIR/native/cmake/3.5.0/bin/cmake $TRAVIS_BUILD_DIR/native/llvm/3.9.0/src -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true -DLLVM_TARGETS_TO_BUILD=X86 -DCLANG_ENABLE_STATIC_ANALYZER=OFF -DCLANG_ENABLE_ARCMT=OFF -DCMAKE_MAKE_PROGRAM=$TRAVIS_BUILD_DIR/native/ninja/1.7.1/ninja -G Ninja -Wno-dev
-#  - touch NORUN
-#
-# install:  # part 2 (runs build in 30min chunks, restart job until complete)
-#   - ./configure -b
-#   - timeout 1800 make all || true
-#   - touch NORUN
-#
-install:  # cache hot
+install:  # cache cold (runs build in 30min chunks, restart job until complete)
   - ./configure -b
-  - make all
-  - make install
+  - timeout 1800 make all || true
+  - touch NORUN
+#
+# install:  # cache hot
+#   - ./configure -b
+#   - make all
+#   - make install
 
 script:
   - test -f NORUN || coverage run --source=clgen ./setup.py test
