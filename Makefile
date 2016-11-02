@@ -118,6 +118,11 @@ distclean: $(distclean_targets)
 # install CLgen
 .PHONY: install
 install:
+	pip install --upgrade pip
+	pip install --only-binary=numpy numpy>=1.10.4
+	pip install --only-binary=scipy scipy>=0.16.1
+	pip install --only-binary=pandas pandas>=0.19.0
+	pip install Cython==0.23.4
 	pip install -r requirements.txt
 	python ./setup.py install
 
