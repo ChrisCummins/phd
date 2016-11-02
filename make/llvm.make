@@ -130,6 +130,7 @@ $(llvm): $(llvm_src)/include/llvm/CMakeLists.txt $(cmake) $(ninja)
 	mkdir -p $(llvm_build)
 	cd $(llvm_build) && $(cmake) $(llvm_src) $(llvm_cmake_flags)
 	cd $(llvm_build) && $(ninja)
+	touch $@
 
 .PHONY: distclean-llvm
 distclean-llvm:

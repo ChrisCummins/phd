@@ -55,6 +55,7 @@ $(libclc_dir)/configure.py: $(libclc_zip)
 $(libclc): $(libclc_dir)/configure.py $(llvm)
 	cd $(libclc_dir) && ./configure.py --with-llvm-config=$(llvm)
 	cd $(libclc_dir) && $(MAKE)
+	touch $@
 
 .PHONY: distclean-libclc
 distclean-libclc:
