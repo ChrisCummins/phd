@@ -24,7 +24,7 @@
 
 # git repo
 torch_remote := https://github.com/ChrisCummins/distro.git
-torch_version := b8586af8f3bd2b351143d339829c70823fea3407
+torch_version := e4f149919964cd4df95c925ae6feaf2ed2f51c3d
 
 torch_src := $(root)/native/torch/$(torch_version)/src
 torch_build := $(root)/native/torch/$(torch_version)/build
@@ -66,7 +66,7 @@ endif
 # torch build
 $(torch): $(torch_deps)
 	mkdir -p $(dir $@)
-	cd $(torch_src) && TORCH_NO_CUDA=$(torch_disable_cuda) PREFIX="$(torch_build)" ./install.sh -b
+	cd $(torch_src) && TORCH_NO_CUDA=$(torch_disable_cuda) TORCH_NO_RC=1 PREFIX="$(torch_build)" ./install.sh -b
 	$(luarocks) install torch
 	$(luarocks) install nn
 	$(luarocks) install optim
