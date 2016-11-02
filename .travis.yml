@@ -62,16 +62,16 @@ before_install:
 #  - cd $TRAVIS_BUILD_DIR/native/llvm/3.9.0/build && $TRAVIS_BUILD_DIR/native/cmake/3.5.0/bin/cmake $TRAVIS_BUILD_DIR/native/llvm/3.9.0/src -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=true -DLLVM_TARGETS_TO_BUILD=X86 -DCLANG_ENABLE_STATIC_ANALYZER=OFF -DCLANG_ENABLE_ARCMT=OFF -DCMAKE_MAKE_PROGRAM=$TRAVIS_BUILD_DIR/native/ninja/1.7.1/ninja -G Ninja -Wno-dev
 #  - touch NORUN
 #
-install:  # part 2 (compiles llvm in 30min chunks, restart job until complete)
-  - ./configure -b
-  - timeout 1800 make all || true
-  - touch NORUN
+# install:  # part 2 (runs build in 30min chunks, restart job until complete)
+#   - ./configure -b
+#   - timeout 1800 make all || true
+#   - touch NORUN
 #
-# install:  # cache hot
-#  - ./configure -b
-#  - make all
-#  - pip install -r requirements.txt
-#  - python ./setup.py install
+install:  # cache hot
+  - ./configure -b
+  - make all
+  - pip install -r requirements.txt
+  - python ./setup.py install
 
 script:
   - test -f NORUN || coverage run --source=clgen ./setup.py test
