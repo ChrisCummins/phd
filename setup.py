@@ -19,18 +19,12 @@
 #
 import json
 import os
-import pip
 
 from setuptools import setup
-from setuptools.command.install import install
-from pip.req import parse_requirements
 
-# Because of a bug in scipy setup.py, we have to use 'pip install' to install
-# dependencies rather than using setuptools. See:
-#     https://github.com/scikit-learn/scikit-learn/issues/4164
-#
-install_reqs = parse_requirements('./requirements.txt', session=False)
-requirements = [str(ir.req) for ir in install_reqs]
+# read from requirements.txt
+with open("./requirements.txt") as infile:
+    requirements = [x.strip() for x in infile.readlines() if x.strip()]
 
 # parse configuration
 with open('./.config.json') as infile:
