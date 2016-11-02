@@ -17,7 +17,7 @@ Requirements
 ------------
 
 -  Linux (x64) or OS X.
--  `GCC <https://gcc.gnu.org/>`__ > 4.7 or
+-  `GCC <https://gcc.gnu.org/>`__ > 4.8.2 or
    `clang <http://llvm.org/releases/download.html>`__ >= 3.1.
 -  `GNU Make <http://savannah.gnu.org/projects/make>`__ > 3.79.
 -  `Python <https://www.python.org/>`__ 2.7 or >= 3.4.
