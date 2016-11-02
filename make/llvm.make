@@ -108,12 +108,14 @@ $(llvm_src)/include/llvm/CMakeLists.txt: $(llvm_tars)
 	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
 	$(call unpack-llvm-tar,projects/libcxx,libcxx)
 	$(call unpack-llvm-tar,projects/libcxxabi,libcxxabi)
+	patch -p0 < make/patches/llvm/$(llvm_version)/FindAllSymbolsMain.cpp.patch
 	touch $@
 else
 $(llvm_src)/include/llvm/CMakeLists.txt: $(llvm_tars)
 	$(call unpack-llvm-tar,,llvm)
 	$(call unpack-llvm-tar,tools/clang,cfe)
 	$(call unpack-llvm-tar,tools/clang/tools/extra,clang-tools-extra)
+	patch -p0 < make/patches/llvm/$(llvm_version)/FindAllSymbolsMain.cpp.patch
 	touch $@
 endif
 
