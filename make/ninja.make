@@ -38,5 +38,5 @@ $(ninja): $(ninja_tar)
 
 .PHONY: distclean-ninja
 distclean-ninja:
-	rm -fvr $(ninja_tar) $(ninja_dir)
+	rm -fr $(ninja_tar) $(ninja_dir)
 distclean_targets += distclean-ninja

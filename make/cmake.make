@@ -48,5 +48,5 @@ endif
 
 .PHONY: distclean-cmake
 distclean-cmake:
-	rm -fvr $(cmake_tar) $(cmake_dir)
+	rm -fr $(cmake_tar) $(cmake_dir)
 distclean_targets += distclean-cmake
