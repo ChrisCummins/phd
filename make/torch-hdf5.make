@@ -29,7 +29,7 @@ torch-hdf5_version := 639bb4e62417ac392bf31a53cdd495d19337642b
 torch-hdf5_url := https://github.com/$(torch-hdf5_user)/torch-hdf5/archive/$(torch-hdf5_version).zip
 torch-hdf5_zip := $(cache)/$(torch-hdf5_user).torch-hdf5.$(torch-hdf5_version).zip
 torch-hdf5_dir := $(root)/native/torch-hdf5/$(torch-hdf5_version)
-torch-hdf5 := $(torch-hdf5_dir)/utils/prepare-builtins.o
+torch-hdf5 := $(torch-hdf5_dir)/.bootstrapped
 
 # add this target as a prerequisite for files which require torch-hdf5
 torch-hdf5: $(torch-hdf5)
@@ -49,6 +49,7 @@ $(torch-hdf5): $(torch-hdf5_dir)/LICENSE $(torch)
 	cd $(torch-hdf5_dir) && $(luarocks) make hdf5-0-0.rockspec
 	./make/patches/hdf5-osx-hotfix.sh
 	./make/patches/hdf5-nullable.sh
+	touch $@
 
 .PHONY: distclean-torch-hdf5
 distclean-torch-hdf5:
