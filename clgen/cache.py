@@ -28,7 +28,7 @@ from shutil import move
 import clgen
 from clgen import log
 
-ROOT = fs.path("~", ".cache", "clgen")
+ROOT = fs.path("~", ".cache", "clgen", clgen.version())
 
 
 class Cache404(clgen.File404):
