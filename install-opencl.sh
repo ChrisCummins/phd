@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One-liner to install CLgen 0.0.23.
+# One-liner to install CLgen 0.0.24.
 #
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -21,10 +21,10 @@
 #
 set -euv
 
-wget https://github.com/ChrisCummins/clgen/archive/0.0.23.tar.gz -O clgen-0.0.23.tar.gz
-tar xf clgen-0.0.23.tar.gz
-rm clgen-0.0.23.tar.gz
-cd clgen-0.0.23
+wget https://github.com/ChrisCummins/clgen/archive/0.0.24.tar.gz -O clgen-0.0.24.tar.gz
+tar xf clgen-0.0.24.tar.gz
+rm clgen-0.0.24.tar.gz
+cd clgen-0.0.24
 ./configure --batch --with-opencl
 make
 sudo -H make install
