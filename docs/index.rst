@@ -22,14 +22,31 @@ Requirements
 -  `GNU Make <http://savannah.gnu.org/projects/make>`__ > 3.79.
 -  `Python <https://www.python.org/>`__ 2.7.12 or >= 3.4.
 -  `git <https://git-scm.com/>`__ >= 1.8.1.4.
--  `zlib <http://zlib.net/>`__ >= 1.2.3.4.
 -  `libhdf5 <https://support.hdfgroup.org/HDF5/release/obtainsrc.html>`__
    >= 1.8.11.
 -  `libffi <https://sourceware.org/libffi/>`__ >= 3.0.13.
+-  `zlib <http://zlib.net/>`__ >= 1.2.3.4.
 -  `curl <https://curl.haxx.se/>`__ and `wget <https://www.gnu.org/software/wget/>`__.
+
+On Ubuntu, these can be installed using:
+
+::
+
+    $ sudo apt-get update
+    $ sudo apt-get install build-essential python-dev git zlib1g-dev libhdf5-dev libffi-dev zlib1g-dev curl wget
+
+On OS X, install these requirements using `Homebrew <http://brew.sh/>`_:
+
+::
+
+    $ brew tap homebrew/science
+    $ brew install python git hdf5 libffi wget
+
 
 Installation
 ------------
+
+Install the latest release of CLgen using one of the following configurations:
 
 **CPU-only:** *slow performance, some features disabled.*
 
@@ -51,8 +68,7 @@ Requires `CUDA <http://www.nvidia.com/object/cuda_home_new.html>`__ >= 6.5.
 
     $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.24/install-cuda.sh)"
 
-If you encounter any problems, please read the `detailed build instructions
-<installation.html>`_ and consider opening a `bug report
+If you encounter any problems, please consider opening a `bug report
 <https://github.com/ChrisCummins/clgen/issues>`_.
 
 
