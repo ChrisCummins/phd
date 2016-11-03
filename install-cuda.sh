@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One-liner to install CLgen 0.0.24.
+# One-liner to install CLgen 0.0.25.
 #
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -21,7 +21,7 @@
 #
 set -euv
 
-version=0.0.24
+version=0.0.25
 major=$(echo $version | cut -d'.' -f1)
 minor=$(echo $version | cut -d'.' -f2)
 micro=$(echo $version | cut -d'.' -f3)
