@@ -13,7 +13,7 @@
     <img src="https://img.shields.io/coveralls/ChrisCummins/clgen/master.svg?style=flat">
   </a>
   <a href="http://chriscummins.cc/clgen/" target="_blank">
-    <img src="https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat">
+    <img src="https://img.shields.io/badge/docs-0.0.24-brightgreen.svg?style=flat">
   </a>
    <a href="https://github.com/ChrisCummins/clgen/releases" target="_blank">
     <img src="https://img.shields.io/badge/release-0.0.24-blue.svg?style=flat">

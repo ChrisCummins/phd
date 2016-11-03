@@ -80,7 +80,7 @@ Indices and tables
 .. |Coverage Status| image:: https://img.shields.io/coveralls/ChrisCummins/clgen/master.svg?style=flat
    :target: https://coveralls.io/github/ChrisCummins/clgen?branch=master
 
-.. |Documentation Status| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
+.. |Documentation Status| image:: https://img.shields.io/badge/docs-0.0.24-brightgreen.svg?style=flat
    :target: http://chriscummins.cc/clgen/
 
 .. |Release Version| image:: https://img.shields.io/badge/release-0.0.24-blue.svg?style=flat
