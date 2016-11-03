@@ -55,9 +55,9 @@ class Cache(clgen.CLgenObject):
         """
         Empty the filesystem cache.
         """
-        fs.rm(self.path)
-        log.debug("emptied {prefix}cache '{path}"
+        log.debug("empty {prefix}cache {path}"
                   .format(prefix=self._prefix, path=self.path))
+        fs.rm(self.path)
 
     def mapkey(self, key):
         """
@@ -150,7 +150,7 @@ class Cache(clgen.CLgenObject):
 
         path = self.keypath(key)
         move(value, path)
-        log.debug("inserted '{key}' to '{path}'"
+        log.debug("cached {path}"
                   .format(key=key, path=path))
 
     def __delitem__(self, key):
