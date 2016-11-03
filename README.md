@@ -13,10 +13,10 @@
     <img src="https://img.shields.io/coveralls/ChrisCummins/clgen/master.svg?style=flat">
   </a>
   <a href="http://chriscummins.cc/clgen/" target="_blank">
-    <img src="https://img.shields.io/badge/docs-0.0.26-brightgreen.svg?style=flat">
+    <img src="https://img.shields.io/badge/docs-0.0.27-brightgreen.svg?style=flat">
   </a>
    <a href="https://github.com/ChrisCummins/clgen/releases" target="_blank">
-    <img src="https://img.shields.io/badge/release-0.0.26-blue.svg?style=flat">
+    <img src="https://img.shields.io/badge/release-0.0.27-blue.svg?style=flat">
   </a>
   <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" target="_blank">
     <img src="https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat">
