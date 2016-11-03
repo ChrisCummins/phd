@@ -21,10 +21,15 @@
 #
 set -euv
 
-wget https://github.com/ChrisCummins/clgen/archive/0.0.24.tar.gz -O clgen-0.0.24.tar.gz
-tar xf clgen-0.0.24.tar.gz
-rm clgen-0.0.24.tar.gz
-cd clgen-0.0.24
+version=0.0.24
+major=$(echo $version | cut -d'.' -f1)
+minor=$(echo $version | cut -d'.' -f2)
+micro=$(echo $version | cut -d'.' -f3)
+
+wget https://github.com/ChrisCummins/clgen/archive/$version.tar.gz -O clgen-$major.$minor.tar.gz
+tar xf clgen-$version.tar.gz
+rm clgen-$version.tar.gz
+cd clgen-$major.$minor
 ./configure --batch --with-opencl
 make
 sudo -H make install
