@@ -117,7 +117,7 @@ class Corpus:
                     if fs.isfile(f)]
 
         # import files into database
-        fetch.fs(cache["kernels.db"], filelist)
+        fetch.fetch_fs(cache["kernels.db"], filelist)
 
         # preprocess files
         preprocess.preprocess_db(cache["kernels.db"])
