@@ -21,8 +21,12 @@ import tests
 
 import os
 
+from labm8 import fs
+
 import clgen
 from clgen import dbutil
+from clgen import preprocess
+
 
 class TestDbutil(TestCase):
     def test_table_exists(self):
@@ -34,6 +38,25 @@ class TestDbutil(TestCase):
     def test_is_github(self):
         self.assertFalse(dbutil.is_github(tests.db('empty')))
         self.assertTrue(dbutil.is_github(tests.db('empty-gh')))
+
+    def test_remove_preprocessed(self):
+        tmpdb = 'test_remove_preprocessed.db'
+        fs.cp(tests.db_path('10-kernels-preprocessed'), tmpdb)
+
+        self.assertEqual(8, dbutil.num_good_kernels(tmpdb))
+        db = preprocess.connect(tmpdb)
+        self.assertFalse(preprocess.is_modified(db))
+        db.close()
+
+        dbutil.remove_preprocessed(tmpdb)
+
+        self.assertEqual(0, dbutil.num_good_kernels(tmpdb))
+
+        db = preprocess.connect(tmpdb)
+        self.assertTrue(preprocess.is_modified(db))
+        db.close()
+
+        fs.rm(tmpdb)
 
 
 if __name__ == '__main__':

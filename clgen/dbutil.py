@@ -62,3 +62,21 @@ def num_good_kernels(path):
     c = db.cursor()
     c.execute('SELECT Count(*) FROM PreprocessedFiles WHERE status=0')
     return c.fetchone()[0]
+
+
+def remove_preprocessed(path):
+    """
+    Removes all preprocessed files from database.
+
+    ContentFiles remain unchanged.
+
+    Arguments:
+
+        path (str): Path to database.
+    """
+    db = sqlite3.connect(path)
+    c = db.cursor()
+    c.execute("DELETE FROM PreprocessedFiles")
+    c.execute("DELETE FROM Meta WHERE key='preprocessed_checksum'")
+    c.close()
+    db.commit()

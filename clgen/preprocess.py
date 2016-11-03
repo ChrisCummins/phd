@@ -535,11 +535,33 @@ def preprocess_inplace(paths, num_workers=int(round(cpu_count() * 4))):
         pool.map(_preprocess_inplace_worker, paths)
 
 
-def preprocess_db(db_path):
+def connect(db_path):
+    """
+    Returns a connection to a database.
+
+    Database has additional aggregate functions:
+
+        MD5SUM() returns md5 of column values
+        LC() returns sum line count of text columns
+        CC() returns sum character count of text columns
+
+    Arguments:
+
+        db_path (str): Path to database
+
+    Returns:
+
+        sqlite3 connection
+    """
     db = sqlite3.connect(db_path)
     db.create_aggregate("MD5SUM", 1, md5sum_aggregator)
     db.create_aggregate("LC", 1, linecount_aggregator)
     db.create_aggregate("CC", 1, charcount_aggregator)
+    return db
+
+
+def preprocess_db(db_path):
+    db = connect(db_path)
 
     modified = is_modified(db)
     if modified:
