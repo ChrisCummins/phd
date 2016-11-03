@@ -19,16 +19,16 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-set -euv
-
+set -eu
 version=0.0.27
 major=$(echo $version | cut -d'.' -f1)
 minor=$(echo $version | cut -d'.' -f2)
 micro=$(echo $version | cut -d'.' -f3)
-
-wget https://github.com/ChrisCummins/clgen/archive/$version.tar.gz -O clgen-$major.$minor.tar.gz
-tar xf clgen-$major.minor.tar.gz
-rm clgen-$major.minor.tar.gz
+set -x
+wget https://github.com/ChrisCummins/clgen/archive/$version.tar.gz -O clgen-$version.tar.gz
+mkdir -p clgen-$major.$minor
+tar xf clgen-$version.tar.gz -C clgen-$major.$minor --strip-components=1
+rm clgen-$version.tar.gz
 cd clgen-$major.$minor
 ./configure --batch --with-opencl --with-cuda
 make
