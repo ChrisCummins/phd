@@ -83,7 +83,7 @@ def main():
     cfg = {
         "opencl": args.with_opencl,
         "cuda": args.with_cuda,
-        "version": "0.0.25",
+        "version": "0.0.26",
     }
 
     # get input from user
