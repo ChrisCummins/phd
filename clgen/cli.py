@@ -128,7 +128,8 @@ def main(method, *args, **kwargs):
     except clgen.UserError as e:
         log.fatal(e, "(" + type(e).__name__  + ")")
     except KeyboardInterrupt:
-        print(" keyboard interrupt", file=sys.stderr)
+        sys.stderr.flush()
+        print("\nkeyboard interrupt, terminating", file=sys.stderr)
         log.exit(1)
     except Exception as e:
         log.fatal(e, "(" + type(e).__name__  + ")",
