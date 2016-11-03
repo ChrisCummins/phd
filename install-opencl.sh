@@ -27,8 +27,8 @@ minor=$(echo $version | cut -d'.' -f2)
 micro=$(echo $version | cut -d'.' -f3)
 
 wget https://github.com/ChrisCummins/clgen/archive/$version.tar.gz -O clgen-$major.$minor.tar.gz
-tar xf clgen-$version.tar.gz
-rm clgen-$version.tar.gz
+tar xf clgen-$major.minor.tar.gz
+rm clgen-$major.minor.tar.gz
 cd clgen-$major.$minor
 ./configure --batch --with-opencl
 make
