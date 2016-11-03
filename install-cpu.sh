@@ -26,7 +26,7 @@ major=$(echo $version | cut -d'.' -f1)
 minor=$(echo $version | cut -d'.' -f2)
 micro=$(echo $version | cut -d'.' -f3)
 
-wget https://github.com/ChrisCummins/clgen/archive/$version.tar.gz -O clgen-$major.$minor.tar.gz
+wget https://github.com/ChrisCummins/clgen/archive/$version.tar.gz -O clgen-$version.tar.gz
 tar xf clgen-$version.tar.gz
 rm clgen-$version.tar.gz
 cd clgen-$major.$minor
