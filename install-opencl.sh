@@ -32,5 +32,13 @@ rm clgen-$version.tar.gz
 cd clgen-$major.$minor
 ./configure --batch --with-opencl
 make
-sudo -H make install
-sudo -H make test
+
+if [[ -n "$VIRTUAL_ENV" ]]; then
+    # virtualen - no sudo required
+    make install
+    make test
+else
+    # system-wide - use sudo
+    sudo -H make install
+    sudo -H make test
+fi
