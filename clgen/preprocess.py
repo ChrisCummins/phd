@@ -46,6 +46,7 @@ import clgen
 from clgen import clutil
 from clgen import log
 from clgen import native
+from clgen.cache import Cache
 
 
 #
@@ -436,47 +437,72 @@ def set_modified_status(db, checksum):
     c.close()
 
 
-def preprocess_split(db_path, split):
+def _preprocess_db_worker(job):
+    """Database worker thread"""
+    db_path = job["db_in"]
+    db_index_range = job["db_index_range"]
+    outpath = job["json_out"]
+    log.debug("worker", outpath)
+
     db = sqlite3.connect(db_path)
     c = db.cursor()
-    split_start, split_end = split
+    split_start, split_end = db_index_range
     split_size = split_end - split_start
 
+    # get the files to preprocess
     c.execute('SELECT id,contents FROM ContentFiles LIMIT {} OFFSET {}'
               .format(split_size, split_start))
-    rows = c.fetchall()
-    c.close()
 
-    for row in rows:
-        id, contents = row
+    with open(outpath, 'wb') as outfile:
+        for row in c.fetchall():
+            id, contents = row
+
+            # Get checksum of cached file:
+            c.execute('SELECT id FROM PreprocessedFiles WHERE id=?', (id,))
+            result = c.fetchone()
+            cached_id = result[0] if result else None
+
+            # Check that file is modified:
+            if id != cached_id:
+                try:
+                    # Try and preprocess it:
+                    contents = preprocess(contents, id)
+                    status = 0
+                except BadCodeException as e:
+                    contents = str(e)
+                    status = 1
+                except UglyCodeException as e:
+                    contents = str(e)
+                    status = 2
+
+                # write result to json
+                outfile.write(json.dumps([id, status, contents]))
+                outfile.write('\n')
+
+    c.close()
+    db.close()
+
+
+def preprocess_contentfiles(db_path, max_num_workers=cpu_count() * 4):
+    def _finalize(db_path, cache):
+        """Tidy up after worker threads finish"""
+        log.debug("worker finalize")
+
+        db = sqlite3.connect(db_path)
         c = db.cursor()
 
-        # Get checksum of cached file:
-        c.execute('SELECT id FROM PreprocessedFiles WHERE id=?', (id,))
-        result = c.fetchone()
-        cached_id = result[0] if result else None
+        # import results from worker threads
+        for outpath in fs.ls(cache.path, abspaths=True):
+            with open(outpath) as infile:
+                for line in infile:
+                    c.execute('INSERT OR REPLACE INTO PreprocessedFiles '
+                              'VALUES(?,?,?)', json.loads(line))
 
-        # Check that file is modified:
-        if id != cached_id:
-            try:
-                # Try and preprocess it:
-                contents = preprocess(contents, id)
-                status = 0
-            except BadCodeException as e:
-                contents = str(e)
-                status = 1
-            except UglyCodeException as e:
-                contents = str(e)
-                status = 2
-            c.execute('INSERT OR REPLACE INTO PreprocessedFiles '
-                      'VALUES(?,?,?)',
-                      (id, status, contents))
-            db.commit()
-        c.close()
+        # write changes to database and remove cache
+        db.commit()
+        db.close()
+        cache.empty()
 
-
-def preprocess_contentfiles(db_path,
-                            max_num_workers=int(round(cpu_count() * 4))):
     db = sqlite3.connect(db_path)
     num_contentfiles = num_rows_in(db, 'ContentFiles')
     num_preprocessedfiles = num_rows_in(db, 'PreprocessedFiles')
@@ -485,15 +511,27 @@ def preprocess_contentfiles(db_path,
     num_workers = min(num_contentfiles, max_num_workers)
     files_per_worker = math.ceil(num_contentfiles / num_workers)
 
-    splits = [(i * files_per_worker,
-               i * files_per_worker + files_per_worker)
-              for i in range(num_workers)]
+    # temporary cache used for worker thread results
+    cache = Cache("{pid}.preprocess".format(pid=os.getpid()))
+    # each worker thread receives a range of database indices to preprocess,
+    # and a JSON file to write results into
+    jobs = [{
+        "db_in": db_path,
+        "db_index_range": (i * files_per_worker,
+                           i * files_per_worker + files_per_worker),
+        "json_out": fs.path(cache.path, "{i}.json".format(i=i))
+    } for i in range(num_workers)]
 
-    with clgen.terminating(Pool(num_workers)) as pool:
+    # spool up worker threads then finalize
+    try:
         log.info('spawning', num_workers, 'worker threads to process',
                  num_contentfiles - num_preprocessedfiles, 'files ...')
-        worker = partial(preprocess_split, db_path)
-        pool.map(worker, splits)
+        with clgen.terminating(Pool(num_workers)) as pool:
+            pool.map(_preprocess_db_worker, jobs)
+    except Exception as e:
+        _finalize(db_path, cache)
+        raise e
+    _finalize(db_path, cache)
 
 
 def preprocess_file(path, inplace=False):
@@ -526,7 +564,7 @@ def _preprocess_inplace_worker(path):
     preprocess_file(path, inplace=True)
 
 
-def preprocess_inplace(paths, max_num_workers=int(round(cpu_count() * 4))):
+def preprocess_inplace(paths, max_num_workers=cpu_count() * 4):
     """
     Preprocess a list of files inplace.
     """
