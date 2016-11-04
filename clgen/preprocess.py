@@ -478,7 +478,7 @@ def _preprocess_db_worker(job):
                 # write result to json
                 line = json.dumps([id, status, contents]).encode('utf-8')
                 outfile.write(line)
-                outfile.write('\n')
+                outfile.write('\n'.encode('utf-8'))
 
     c.close()
     db.close()
