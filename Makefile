@@ -33,6 +33,7 @@ distclean_targets =
 
 # modules
 include make/remote.make
+include make/cuda.make
 include make/torch.make
 include make/torch-hdf5.make
 include make/cmake.make
@@ -120,7 +121,7 @@ distclean: $(distclean_targets)
 
 # install CLgen
 .PHONY: install
-install:
+install: cuda
 	pip install --upgrade pip
 	pip install --only-binary=numpy numpy>=1.10.4
 	pip install --only-binary=scipy scipy>=0.16.1

@@ -234,7 +234,7 @@ clgen-preprocess
 ::
 
     usage: clgen-preprocess [-h] [--version] [-v] [-f] [-i]
-                            [--remove-bad-preprocessed]
+                            [--remove-bad-preprocessed] [--remove-preprocessed]
                             inputs [inputs ...]
     
     Process OpenCL files for machine learning.
@@ -252,7 +252,10 @@ clgen-preprocess
       -f, --file            treat input as file
       -i, --inplace         inplace file rewrite
       --remove-bad-preprocessed
-                            delete the contents of all bad or ugly preprocessed files, but keep the entries in the table
+                            delete the contents of all bad or ugly preprocessed files,
+                            but keep the entries in the table
+      --remove-preprocessed
+                            remove all preprocessed files from database
 
 clgen-train
 ------------

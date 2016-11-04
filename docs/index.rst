@@ -52,21 +52,21 @@ Install the latest release of CLgen using one of the following configurations:
 
 ::
 
-    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.24/install-cpu.sh)"
+    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.28/install-cpu.sh)"
 
 **OpenCL enabled:** *slow performance, all features enabled.*
 Requires `OpenCL <https://www.khronos.org/opencl/>`__.
 
 ::
 
-    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.24/install-opencl.sh)"
+    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.28/install-opencl.sh)"
 
 **CUDA enabled:** *fast performance, all features enabled.*
 Requires `CUDA <http://www.nvidia.com/object/cuda_home_new.html>`__ >= 6.5.
 
 ::
 
-    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.24/install-cuda.sh)"
+    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.28/install-cuda.sh)"
 
 If you encounter any problems, please consider opening a `bug report
 <https://github.com/ChrisCummins/clgen/issues>`_.
@@ -96,10 +96,10 @@ Indices and tables
 .. |Coverage Status| image:: https://img.shields.io/coveralls/ChrisCummins/clgen/master.svg?style=flat
    :target: https://coveralls.io/github/ChrisCummins/clgen?branch=master
 
-.. |Documentation Status| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
+.. |Documentation Status| image:: https://img.shields.io/badge/docs-0.0.28-brightgreen.svg?style=flat
    :target: http://chriscummins.cc/clgen/
 
-.. |Release Version| image:: https://img.shields.io/badge/release-0.0.24-blue.svg?style=flat
+.. |Release Version| image:: https://img.shields.io/badge/release-0.0.28-blue.svg?style=flat
    :target: https://github.com/ChrisCummins/clgen/releases
 
 .. |License Badge| image:: https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat

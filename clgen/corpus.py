@@ -77,13 +77,13 @@ class Corpus:
         path = unpack_directory_if_needed(path)
 
         if not fs.isdir(path):
-            raise clgen.UserError("Corpus '{}' must be a directory"
+            raise clgen.UserError("Corpus path '{}' is not a directory"
                                   .format(path))
 
         self.hash = dirhash(path, 'sha1')
         self.isgithub = isgithub
 
-        log.debug("corpus {hash} initialized".format(hash=self.hash))
+        log.debug("corpus {hash}".format(hash=self.hash))
 
         cache = Cache(self.hash)
 
@@ -105,7 +105,7 @@ class Corpus:
     def _create_kernels_db(self, path):
         cache = Cache(self.hash)
 
-        log.debug("creating database...")
+        log.debug("creating database")
 
         # create a database and put it in the cache
         tmppath = fs.path(cache.path, "kernels.db.tmp")
@@ -117,7 +117,7 @@ class Corpus:
                     if fs.isfile(f)]
 
         # import files into database
-        fetch.fs(cache["kernels.db"], filelist)
+        fetch.fetch_fs(cache["kernels.db"], filelist)
 
         # preprocess files
         preprocess.preprocess_db(cache["kernels.db"])
@@ -131,7 +131,7 @@ class Corpus:
     def _create_txt(self):
         cache = Cache(self.hash)
 
-        log.debug("creating corpus...")
+        log.debug("creating corpus")
 
         # TODO: additional options in corpus JSON to accomodate for EOF,
         # different encodings etc.
@@ -142,7 +142,7 @@ class Corpus:
     def _lstm_preprocess(self):
         cache = Cache(self.hash)
 
-        log.debug("creating training set...")
+        log.debug("creating training set")
         tmppaths = (fs.path(cache.path, "corpus.json.tmp"),
                     fs.path(cache.path, "corpus.h5.tmp"))
         torch_rnn.preprocess(cache["corpus.txt"], *tmppaths)
@@ -164,11 +164,11 @@ class Corpus:
         """
         Instantiate Corpus from JSON.
         """
-        log.debug("reading corpus json...")
+        log.debug("corpus from json")
 
         path = corpus_json.get("path", None)
         if path is None:
-            raise clgen.UserError("key 'path' not in corpus JSON")
+            raise clgen.UserError("no path found for corpus")
         isgithub = corpus_json.get("github", False)
 
         return Corpus(path, isgithub=isgithub)

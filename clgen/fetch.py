@@ -36,16 +36,18 @@ from functools import partial
 from github import Github, GithubException
 from hashlib import sha1
 from io import open
+from labm8 import fs
 from subprocess import Popen
 from time import sleep
 
 import clgen
 from clgen import clutil
 from clgen import dbutil
+from clgen import log
 from clgen import explore
 
 
-class FetchException(clgen.CLgenError):
+class FetchError(clgen.CLgenError):
     pass
 
 
@@ -369,9 +371,13 @@ def process_cl_file(db_path, path):
     db = sqlite3.connect(db_path)
     c = db.cursor()
 
-    contents = inline_fs_headers(path, [])
+    log.debug("fetch {path}".format(path=fs.abspath(path)))
+    try:
+        contents = inline_fs_headers(path, [])
+    except IOError:
+        raise FetchError(
+            "cannot read file '{path}'".format(path=fs.abspath(path)))
     id = get_path_id(path)
-    print(id)
     c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
               (id, contents))
 
@@ -398,11 +404,9 @@ def content_db(db_path, in_db_path, table='PreprocessedFiles'):
             odb.commit()
 
 
-def fs(db_path, paths=[]):
+def fetch_fs(db_path, paths=[]):
     for path in paths:
         process_cl_file(db_path, path)
-
-    print("\r\033[K\ndone.")
 
 
 # Counters

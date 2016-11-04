@@ -1,6 +1,4 @@
-#!/usr/bin/env bash
-#
-# One-liner to install CLgen 0.0.28.
+# Workaround for Linux CUDA install.
 #
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -19,18 +17,16 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-set -eu
-version=0.0.28
-major=$(echo $version | cut -d'.' -f1)
-minor=$(echo $version | cut -d'.' -f2)
-micro=$(echo $version | cut -d'.' -f3)
-set -x
-wget https://github.com/ChrisCummins/clgen/archive/$version.tar.gz -O clgen-$version.tar.gz
-mkdir -p clgen-$major.$minor
-tar xf clgen-$version.tar.gz -C clgen-$major.$minor --strip-components=1
-rm clgen-$version.tar.gz
-cd clgen-$major.$minor
-./configure --batch --with-opencl
-make
-sudo -H make install
-sudo -H make test
+.PHONY: cuda
+ifeq ($(USE_CUDA),1)
+cuda: cuda_headers cuda_libs
+else
+cuda:
+endif
+
+.PHONY: cuda_headers cuda_libs
+cuda_headers: $(root)/make/patches/cuda-headers.sh
+	$<
+
+cuda_libs: $(root)/make/patches/cuda-libs.sh
+	$<

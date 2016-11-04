@@ -18,6 +18,8 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 from clgen import cli
+from clgen import log
+from clgen import dbutil
 from clgen import preprocess
 
 __description__ = """
@@ -33,9 +35,11 @@ def main():
     parser.add_argument('-i', '--inplace', action='store_true',
                         help='inplace file rewrite')
     parser.add_argument('--remove-bad-preprocessed', action='store_true',
-                        help=("delete the contents of all bad or ugly "
-                              "preprocessed files, but keep the entries in "
-                              "the table"))
+                        help="""
+delete the contents of all bad or ugly preprocessed files,
+but keep the entries in the table""".strip())
+    parser.add_argument("--remove-preprocessed", action="store_true",
+                        help="remove all preprocessed files from database")
     args = parser.parse_args()
 
     if args.file and args.inplace:
@@ -44,11 +48,16 @@ def main():
         for path in args.inputs:
             if args.file:
                 cli.main(preprocess.preprocess_file, path, inplace=False)
+            elif args.remove_bad_preprocessed:
+                cli.main(preprocess.remove_bad_preprocessed, path)
+            elif args.remove_preprocessed:
+                cli.main(dbutil.remove_preprocessed, path)
+                log.info("done.")
             else:
-                if args.remove_bad_preprocessed:
-                    cli.main(preprocess.remove_bad_preprocessed, path)
+                if cli.main(preprocess.preprocess_db, path):
+                    log.info("done.")
                 else:
-                    cli.main(preprocess.preprocess_db, path)
+                    log.info("nothing to be done.")
 
 
 if __name__ == '__main__':

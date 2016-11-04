@@ -32,6 +32,7 @@ from multiprocessing import Pool
 from labm8 import fs
 
 from clgen import dbutil
+from clgen import log
 
 
 IMG_DIR = 'img'
@@ -91,7 +92,7 @@ def seq_stats(sorted_arr):
 # Generate dataset stats.
 #
 def stats_worker(db_path):
-    print("stats worker ...")
+    log.debug("stats worker ...")
     db = sqlite3.connect(db_path)
     c = db.cursor()
     stats = []
