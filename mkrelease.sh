@@ -99,13 +99,11 @@ set_new_version() {
     sed "s/$current/$new/g" -i setup.py
     git add setup.py
 
-    echo "Updating version string... 'docs/conf.py'"
-    sed "s/$current/$new/g" -i docs/conf.py
-    git add docs/conf.py
-
-    echo "Updating version string... 'docs/index.rst'"
+    echo "Updating docs..."
     sed "s/$current/$new/g" -i docs/index.rst
-    git add docs/index.rst
+    sed "s/$current/$new/g" -i docs/installation.md
+    sed "s/$current/$new/g" -i docs/conf.py
+    git add docs/index.rst docs/installation.md docs/conf.py
 
     echo "Updating configure script..."
     sed "s/$current/$new/g" -i configure
