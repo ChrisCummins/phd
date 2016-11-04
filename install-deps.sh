@@ -9,7 +9,8 @@
 #     Copyright (c) 2016, Soumith Chintala, Ronan Collobert,
 #     Koray Kavukcuoglu, Clement Farabet All rights reserved.
 #
-torch_deps=https://raw.githubusercontent.com/ChrisCummins/distro/3467b980c56942451ee242937dbe76d15fcfc5ab/install-deps
+torch_version=3467b980c56942451ee242937dbe76d15fcfc5ab
+torch_deps=https://raw.githubusercontent.com/ChrisCummins/distro/$torch_version/install-deps
 curl -s "$torch_deps" | bash
 
 set -e

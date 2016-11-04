@@ -24,7 +24,12 @@
 
 # git repo
 torch_remote := https://github.com/ChrisCummins/distro.git
+#
+# *** WARNING ***
+#
+# When changing torch_version, be sure to update ../install-deps.sh !
 torch_version := 3467b980c56942451ee242937dbe76d15fcfc5ab
+#
 
 torch_src := $(root)/native/torch/$(torch_version)/src
 torch_build := $(root)/native/torch/$(torch_version)/build
