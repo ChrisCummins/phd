@@ -475,12 +475,14 @@ def preprocess_split(db_path, split):
         c.close()
 
 
-def preprocess_contentfiles(db_path, num_workers=int(round(cpu_count() * 4))):
+def preprocess_contentfiles(db_path,
+                            max_num_workers=int(round(cpu_count() * 4))):
     db = sqlite3.connect(db_path)
     num_contentfiles = num_rows_in(db, 'ContentFiles')
     num_preprocessedfiles = num_rows_in(db, 'PreprocessedFiles')
     db.close()
 
+    num_workers = min(num_contentfiles, max_num_workers)
     files_per_worker = math.ceil(num_contentfiles / num_workers)
 
     splits = [(i * files_per_worker,
@@ -513,8 +515,7 @@ def preprocess_file(path, inplace=False):
     except BadCodeException as e:
         log.fatal(e, ret=1)
     except UglyCodeException as e:
-        print(e, file=sys.stderr)
-        sys.exit(2)
+        log.fatal(e, ret=2)
 
 
 def _preprocess_inplace_worker(path):
@@ -525,10 +526,11 @@ def _preprocess_inplace_worker(path):
     preprocess_file(path, inplace=True)
 
 
-def preprocess_inplace(paths, num_workers=int(round(cpu_count() * 4))):
+def preprocess_inplace(paths, max_num_workers=int(round(cpu_count() * 4))):
     """
     Preprocess a list of files inplace.
     """
+    num_workers = min(len(paths), max_num_workers)
     with clgen.terminating(Pool(num_workers)) as pool:
         log.info('spawning', num_workers, 'worker threads to process',
                  len(paths), 'files ...')
