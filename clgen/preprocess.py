@@ -563,15 +563,26 @@ def connect(db_path):
 
 
 def preprocess_db(db_path):
+    """
+    Preprocess database contents.
+
+    Arguments:
+
+        db_path (str): Path to database.
+
+    Returns:
+
+        bool: True if modified, false if no work needed.
+    """
     db = connect(db_path)
 
     modified = is_modified(db)
     if modified:
         preprocess_contentfiles(db_path)
         set_modified_status(db, modified)
-        print('done.')
+        return True
     else:
-        print('nothing to be done.')
+        return False
 
 
 def remove_bad_preprocessed(db_path):

@@ -54,7 +54,10 @@ but keep the entries in the table""".strip())
                 cli.main(dbutil.remove_preprocessed, path)
                 log.info("done.")
             else:
-                cli.main(preprocess.preprocess_db, path)
+                if cli.main(preprocess.preprocess_db, path):
+                    log.info("done.")
+                else:
+                    log.info("nothing to be done.")
 
 
 if __name__ == '__main__':
