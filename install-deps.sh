@@ -43,7 +43,6 @@ elif [[ "$(uname)" == 'Linux' ]]; then
         exit 1
     fi
 
-    # Install dependencies for Torch:
     if [[ "$DISTRO" == 'ubuntu' ]]; then
 
         sudo apt-get install -y build-essential python-dev python-virtualenv \
@@ -51,6 +50,8 @@ elif [[ "$(uname)" == 'Linux' ]]; then
             curl wget
 
     fi
+
+else
     # Unsupported
     echo '==> platform not supported, aborting'
     exit 1
