@@ -47,7 +47,6 @@ class Cache(clgen.CLgenObject):
         """
         self.path = fs.path(ROOT, name)
         self.name = name
-        self._prefix = name + " "
 
         fs.mkdir(self.path)
 
@@ -55,8 +54,7 @@ class Cache(clgen.CLgenObject):
         """
         Empty the filesystem cache.
         """
-        log.debug("empty {prefix}cache {path}"
-                  .format(prefix=self._prefix, path=self.path))
+        log.debug("empty cache {path}".format(path=self.path))
         fs.rm(self.path)
 
     def mapkey(self, key):
