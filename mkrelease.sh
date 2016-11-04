@@ -110,6 +110,7 @@ set_new_version() {
     git add configure
 
     echo "Updating install scripts..."
+    sed "s/$current/$new/g" -i install-deps.sh
     sed "s/$current/$new/g" -i install-cpu.sh
     sed "s/$current/$new/g" -i install-opencl.sh
     sed "s/$current/$new/g" -i install-cuda.sh
