@@ -16,20 +16,8 @@ programs it learns from.
 Requirements
 ------------
 
--  Linux (x64) or OS X.
--  `GCC <https://gcc.gnu.org/>`__ > 4.8.2 or
-   `clang <http://llvm.org/releases/download.html>`__ >= 3.1.
--  `GNU Make <http://savannah.gnu.org/projects/make>`__ > 3.79.
--  `Python <https://www.python.org/>`__ 2.7.12 or >= 3.4.
--  `libhdf5 <https://support.hdfgroup.org/HDF5/release/obtainsrc.html>`__ >=
-   1.8.11.
--  `libffi <https://sourceware.org/libffi/>`__ >= 3.0.13.
--  `zlib <http://zlib.net/>`__ >= 1.2.3.4.
--  `git <https://git-scm.com/>`__, `curl <https://curl.haxx.se/>`__ and `wget
-   <https://www.gnu.org/software/wget/>`__.
-
-On **Ubuntu 16.04** or **OS X**, the following command will install the
-requirements automatically:
+For **Ubuntu 16.04** or **OS X**, the following command will install the
+CLgen requirements automatically:
 
 ::
 
@@ -39,7 +27,36 @@ Note that on Ubuntu, sudo privileges are required to install these requirements
 - you may be prompted for your password.
 
 For **other Linux distributions** and older versions of Ubuntu, please check
-each of these requirements yourself.
+each for each of the following requirements:
+
+-  Linux (x64) or OS X.
+-  `GCC <https://gcc.gnu.org/>`_ > >= 4.8.2 or
+   `clang <http://llvm.org/releases/download.html>`_ >= 3.1.
+-  `GNU Make <http://savannah.gnu.org/projects/make>`_ > 3.79.
+-  `Python <https://www.python.org/>`_ 2.7.12 or >= 3.4.
+-  `libhdf5 <https://support.hdfgroup.org/HDF5/release/obtainsrc.html>`_ >=
+   1.8.11.
+-  `libffi <https://sourceware.org/libffi/>`_ >= 3.0.13.
+-  `zlib <http://zlib.net/>`_ >= 1.2.3.4.
+-  `CMake <https://cmake.org/>`_ >= 2.8.12.
+-  `GNU Readline <https://cnswww.cns.cwru.edu/php/chet/readline/rltop.html>`_.
+-  `Qt 4 <https://www.qt.io/>`_.
+-  `ncurses <https://www.gnu.org/software/ncurses/>`_.
+-  `libzmq <https://github.com/zeromq/libzmq>`_.
+-  `gnuplot <http://gnuplot.sourceforge.net/>`_.
+-  `imagemagic <http://www.imagemagick.org/script/index.php>`_.
+-  `libjpeg <http://libjpeg.sourceforge.net/>`_.
+-  `GraphicsMagick <http://www.graphicsmagick.org/>`_.
+-  `sox <http://sox.sourceforge.net/libsox.html>`_.
+-  `git <https://git-scm.com/>`_.
+-  `curl <https://curl.haxx.se/>`_.
+-  `wget <https://www.gnu.org/software/wget/>`_.
+
+Optional, but recommended:
+
+- NVIDIA GPU, `CUDA <http://www.nvidia.com/object/cuda_home_new.html>`__ >= 6.5.
+- `OpenCL <https://www.khronos.org/opencl/>`_.
+- `OpenBlas <https://github.com/xianyi/OpenBLAS>`_.
 
 
 Installation - Virtualenv
