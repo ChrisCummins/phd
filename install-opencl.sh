@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-set -eux
+set -ex
 wget https://github.com/ChrisCummins/clgen/archive/0.0.31.tar.gz -O clgen-0.0.31.tar.gz
 tar xf clgen-0.0.31.tar.gz
 rm clgen-0.0.31.tar.gz
