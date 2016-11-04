@@ -43,22 +43,12 @@ th := $(torch_build)/bin/th
 torch: $(torch)
 
 # clone git repo and submodules at a specific commit, then remove the .git dirs
-$(torch_src)/install-deps:
+$(torch_src)/LICENSE.md:
 	rm -rf $(torch_src)
 	git clone $(torch_remote) $(torch_src)
 	cd $(dir $@) && git reset --hard $(torch_version)
 	cd $(dir $@) && git submodule update --init --recursive
 	rm -rf $(torch_src)/.git
-	touch $@
-
-# torch dependencies
-$(torch_deps): $(torch_src)/install-deps
-	mkdir -p $(dir $@)
-	@test -z "$$TRAVIS" || echo "Travis CI clang toolchain can't build openblas. Patching ..."
-	@test -z "$$TRAVIS" || sed '/install_openblas /d' -i $<
-	@test -z "$$TRAVIS" || echo "Travis CI is haning on install-deps. Skipping ..."
-	@test -n "$$TRAVIS" || echo "cd $(torch_src) && bash install-deps"
-	@test -n "$$TRAVIS" || (cd $(torch_src) && bash install-deps)
 	touch $@
 
 # if not configured with CUDA, then torch shouldn't use it
@@ -69,7 +59,7 @@ torch_disable_cuda := 0
 endif
 
 # torch build
-$(torch): $(torch_deps)
+$(torch): $(torch_src)/LICENSE.md
 	mkdir -p $(dir $@)
 	cd $(torch_src) && TORCH_NO_CUDA=$(torch_disable_cuda) TORCH_NO_RC=1 PREFIX="$(torch_build)" ./install.sh -b
 	$(luarocks) install torch
