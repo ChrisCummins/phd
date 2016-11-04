@@ -57,7 +57,7 @@ data_bin = \
 
 
 # build everything
-all: $(torch_deps) $(data_symlinks) $(data_bin)
+all: $(data_symlinks) $(data_bin)
 
 $(root)/clgen/data/bin/llvm-config: $(llvm)
 	mkdir -p $(dir $@)

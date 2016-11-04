@@ -33,7 +33,6 @@ torch_version := 3467b980c56942451ee242937dbe76d15fcfc5ab
 
 torch_src := $(root)/native/torch/$(torch_version)/src
 torch_build := $(root)/native/torch/$(torch_version)/build
-torch_deps := $(torch_src)/.bootstrapped
 torch := $(torch_build)/.bootstrapped
 
 # compiled binaries
