@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One-liner to install CLgen 0.0.30.
+# One-liner to install CLgen 0.0.31.
 #
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -20,10 +20,10 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 set -eux
-wget https://github.com/ChrisCummins/clgen/archive/0.0.30.tar.gz -O clgen-0.0.30.tar.gz
-tar xf clgen-0.0.30.tar.gz
-rm clgen-0.0.30.tar.gz
-cd clgen-0.0.30
+wget https://github.com/ChrisCummins/clgen/archive/0.0.31.tar.gz -O clgen-0.0.31.tar.gz
+tar xf clgen-0.0.31.tar.gz
+rm clgen-0.0.31.tar.gz
+cd clgen-0.0.31
 ./configure --batch --with-opencl
 make
 
