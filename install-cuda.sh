@@ -20,16 +20,11 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 set -eu
-version=0.0.28
-major=$(echo $version | cut -d'.' -f1)
-minor=$(echo $version | cut -d'.' -f2)
-micro=$(echo $version | cut -d'.' -f3)
-set -x
-wget https://github.com/ChrisCummins/clgen/archive/$version.tar.gz -O clgen-$version.tar.gz
-mkdir -p clgen-$major.$minor
-tar xf clgen-$version.tar.gz -C clgen-$major.$minor --strip-components=1
-rm clgen-$version.tar.gz
-cd clgen-$major.$minor
+set -eux
+wget https://github.com/ChrisCummins/clgen/archive/0.0.28.tar.gz -O clgen-0.0.28.tar.gz
+tar xf clgen-0.0.28.tar.gz
+rm clgen-0.0.28.tar.gz
+cd clgen-0.0.28
 ./configure --batch --with-opencl --with-cuda
 make
 
