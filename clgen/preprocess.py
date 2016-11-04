@@ -44,6 +44,7 @@ from labm8 import fs
 
 import clgen
 from clgen import clutil
+from clgen import log
 from clgen import native
 
 
@@ -283,7 +284,7 @@ def clangformat_ocl(src, id='anon'):
     stdout, stderr = process.communicate(src.encode('utf-8'))
 
     if stderr:
-        print(stderr.decode('utf-8'))
+        log.error(stderr.decode('utf-8'))
     if process.returncode != 0:
         raise ClangFormatException(stderr.decode('utf-8'))
 
@@ -307,9 +308,9 @@ def print_bytecode_features(db_path):
         for key in features.keys():
             uniq_features.add(key)
 
-    print('Features:')
+    log.info('Features:')
     for feature in uniq_features:
-        print('        ', feature)
+        log.info('        ', feature)
 
 
 def verify_bytecode_features(bc_features, id='anon'):
@@ -487,8 +488,8 @@ def preprocess_contentfiles(db_path, num_workers=int(round(cpu_count() * 4))):
               for i in range(num_workers)]
 
     with clgen.terminating(Pool(num_workers)) as pool:
-        print('spawning', num_workers, 'worker threads to process',
-              num_contentfiles - num_preprocessedfiles, 'files ...')
+        log.info('spawning', num_workers, 'worker threads to process',
+                 num_contentfiles - num_preprocessedfiles, 'files ...')
         worker = partial(preprocess_split, db_path)
         pool.map(worker, splits)
 
@@ -508,10 +509,9 @@ def preprocess_file(path, inplace=False):
             with open(path, 'w') as outfile:
                 outfile.write(out)
         else:
-            print(out)
+            log.info('preprocess', out)
     except BadCodeException as e:
-        print(e, file=sys.stderr)
-        sys.exit(1)
+        log.fatal(e, ret=1)
     except UglyCodeException as e:
         print(e, file=sys.stderr)
         sys.exit(2)
@@ -521,7 +521,7 @@ def _preprocess_inplace_worker(path):
     """
     Worker function for preprocess_inplace().
     """
-    print(path)
+    log.info('preprocess', path)
     preprocess_file(path, inplace=True)
 
 
@@ -530,8 +530,8 @@ def preprocess_inplace(paths, num_workers=int(round(cpu_count() * 4))):
     Preprocess a list of files inplace.
     """
     with clgen.terminating(Pool(num_workers)) as pool:
-        print('spawning', num_workers, 'worker threads to process',
-              len(paths), 'files ...')
+        log.info('spawning', num_workers, 'worker threads to process',
+                 len(paths), 'files ...')
         pool.map(_preprocess_inplace_worker, paths)
 
 
@@ -578,7 +578,7 @@ def remove_bad_preprocessed(db_path):
     """
     original_size = fs.du(db_path, human_readable=False)
     original_size_human_readable = fs.du(db_path, human_readable=True)
-    print("vacuuming", original_size_human_readable, "database")
+    log.info("vacuuming", original_size_human_readable, "database")
     sys.stdout.flush()
 
     # Remove contents from bad or ugly preprocessed files.
@@ -597,5 +597,5 @@ def remove_bad_preprocessed(db_path):
     new_size = fs.du(db_path, human_readable=False)
     new_size_human_readable = fs.du(db_path, human_readable=True)
     reduction_ratio = (1 - (new_size / original_size)) * 100
-    print("done. new size {}. ({:.0f}% reduction)"
-          .format(new_size_human_readable, reduction_ratio), sep=".")
+    log.info("done. new size {}. ({:.0f}% reduction)"
+             .format(new_size_human_readable, reduction_ratio), sep=".")
