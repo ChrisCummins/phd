@@ -1,28 +1,71 @@
 # Building the Development Version
 
-To install the latest development version of CLgen, checkout the development
-sources locally using:
+To build the latest development version of CLgen, checkout the source
+repository locally using:
 
 ```sh
-$ git clone https://github.com/ChrisCummins/clgen.git
-$ cd clgen
+$ git clone https://github.com/ChrisCummins/clgen.git clgen-dev
+$ cd clgen-dev
 ```
 
 Configure and compile CLgen using:
 
 ```sh
-./configure
-make all
+$ ./configure
+$ make all
 ```
 
-(Optional) Run the test suite using:
+Installation - Virtualenv
+-------------------------
+
+Create a virtualenv environment in the directory `~/clgen-dev`:
+
+```sh
+$ virtualenv --system-site-packages ~/clgen-dev
+```
+
+Activate this environment:
+
+```sh
+$ source ~/clgen-dev/bin/activate
+```
+
+Install CLgen in the virtualenv environment:
+
+```sh
+(clgen-dev)$ make install
+```
+
+(Optional) Run the test suite:
+
+```sh
+(clgen-dev)$ make test
+```
+
+When you are done using CLgen, deactivate the virtualenv environment:
+
+```sh
+(clgen-dev)$ deactivate
+```
+
+To use CLgen later you will need to activate the virtualenv environment again:
+
+```sh
+$ source ~/clgen-dev/bin/activate
+```
+
+
+Installation - System-wide
+--------------------------
+
+Install CLgen system-wide using:
+
+```sh
+$ sudo make install
+```
+
+(Optional) Run the test suite:
 
 ```sh
 $ make test
-```
-
-Install the python package into the system python using:
-
-```sh
-sudo make install
 ```

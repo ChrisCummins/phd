@@ -21,55 +21,112 @@ Requirements
    `clang <http://llvm.org/releases/download.html>`__ >= 3.1.
 -  `GNU Make <http://savannah.gnu.org/projects/make>`__ > 3.79.
 -  `Python <https://www.python.org/>`__ 2.7.12 or >= 3.4.
--  `git <https://git-scm.com/>`__ >= 1.8.1.4.
--  `libhdf5 <https://support.hdfgroup.org/HDF5/release/obtainsrc.html>`__
-   >= 1.8.11.
+-  `libhdf5 <https://support.hdfgroup.org/HDF5/release/obtainsrc.html>`__ >=
+   1.8.11.
 -  `libffi <https://sourceware.org/libffi/>`__ >= 3.0.13.
 -  `zlib <http://zlib.net/>`__ >= 1.2.3.4.
--  `curl <https://curl.haxx.se/>`__ and `wget <https://www.gnu.org/software/wget/>`__.
+-  `git <https://git-scm.com/>`__, curl <https://curl.haxx.se/>`__ and `wget
+   <https://www.gnu.org/software/wget/>`__.
 
-On Ubuntu, these can be installed using:
-
-::
-
-    $ sudo apt-get update
-    $ sudo apt-get install build-essential python-dev git zlib1g-dev libhdf5-dev libffi-dev zlib1g-dev curl wget
-
-On OS X, install these requirements using `Homebrew <http://brew.sh/>`_:
+On **Ubuntu 16.04** or **OS X**, the following command will install the
+requirements automatically:
 
 ::
 
-    $ brew tap homebrew/science
-    $ brew install python git hdf5 libffi wget
+    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.28/install-deps.sh | bash
+
+Note that on Ubuntu, sudo privileges are required to install these requirements
+- you may be prompted for your password.
+
+For **other Linux distributions** and older versions of Ubuntu, please check
+each of these requirements yourself.
 
 
-Installation
-------------
+Installation - Virtualenv
+-------------------------
+
+We recommend using a `virtualenv <https://virtualenv.pypa.io/en/stable/>`_
+environment to install CLgen. This installs CLgen in its own directory, not
+impacting any existing programs on the machine. Unlike a system-wide install,
+this does not require sudo privileges.
+
+Create a virtualenv environment in the directory `~/clgen`:
+
+::
+
+    $ virtualenv --system-site-packages ~/clgen
+
+Activate this environment:
+
+::
+
+    $ source ~/clgen/bin/activate
 
 Install the latest release of CLgen using one of the following configurations:
 
-**CPU-only:** *slow performance, some features disabled.*
+**1. CPU-only:** *slow performance, some features disabled.*
 
 ::
 
-    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.28/install-cpu.sh)"
+    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.28/install-cpu.sh | bash
 
-**OpenCL enabled:** *slow performance, all features enabled.*
+**2. OpenCL enabled:** *slow performance, all features enabled.*
 Requires `OpenCL <https://www.khronos.org/opencl/>`__.
 
 ::
 
-    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.28/install-opencl.sh)"
+    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.28/install-opencl.sh | bash
 
-**CUDA enabled:** *fast performance, all features enabled.*
+**3. CUDA enabled:** *fast performance, all features enabled.* Requires NVIDIA
+GPU, `CUDA <http://www.nvidia.com/object/cuda_home_new.html>`__ >= 6.5.
+
+::
+
+    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.28/install-cuda.sh | bash
+
+When you are done using CLgen, deactivate the virtualenv environment:
+
+::
+
+    (clgen)$ deactivate
+
+To use CLgen later you will need to activate the virtualenv environment again:
+
+::
+
+    $ source ~/clgen/bin/activate
+
+
+Installation - System-wide
+--------------------------
+
+A system-wide install allows any user on the machine to run CLgen without
+activating a virtualenv environment. This may update some of the previously
+installed Python packages. System-wide installation requires sudo priveledges -
+you may be prompted for your password.
+
+Install the latest release of CLgen system-wide using one of the following
+configurations:
+
+**1. CPU-only:** *slow performance, some features disabled.*
+
+::
+
+    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.28/install-cpu.sh | bash
+
+**2. OpenCL enabled:** *slow performance, all features enabled.*
+Requires `OpenCL <https://www.khronos.org/opencl/>`__.
+
+::
+
+    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.28/install-opencl.sh | bash
+
+**3. CUDA enabled:** *fast performance, all features enabled.*
 Requires `CUDA <http://www.nvidia.com/object/cuda_home_new.html>`__ >= 6.5.
 
 ::
 
-    $ bash -c "$(curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.28/install-cuda.sh)"
-
-If you encounter any problems, please consider opening a `bug report
-<https://github.com/ChrisCummins/clgen/issues>`_.
+    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.28/install-cuda.sh | bash
 
 
 Contents
