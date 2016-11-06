@@ -85,27 +85,27 @@ Install the latest release of CLgen using one of the following configurations:
 
 ::
 
-    (clgen) $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.32/install-cpu.sh | bash
+    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.32/install-cpu.sh | bash
 
 **2. OpenCL enabled:** *slow performance, all features enabled.*
 Requires `OpenCL <https://www.khronos.org/opencl/>`__.
 
 ::
 
-    (clgen) $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.32/install-opencl.sh | bash
+    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.32/install-opencl.sh | bash
 
 **3. CUDA enabled:** *fast performance, all features enabled.* Requires NVIDIA
 GPU, `CUDA <http://www.nvidia.com/object/cuda_home_new.html>`__ >= 6.5.
 
 ::
 
-    (clgen) $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.32/install-cuda.sh | bash
+    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.0.32/install-cuda.sh | bash
 
 When you are done using CLgen, deactivate the virtualenv environment:
 
 ::
 
-    (clgen) $ deactivate
+    (clgen)$ deactivate
 
 To use CLgen later you will need to activate the virtualenv environment again:
 
