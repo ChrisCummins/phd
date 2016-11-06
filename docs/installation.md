@@ -33,19 +33,19 @@ $ source ~/clgen-dev/bin/activate
 Install CLgen in the virtualenv environment:
 
 ```sh
-(clgen-dev)$ make install
+(clgen-dev) $ make install
 ```
 
 (Optional) Run the test suite:
 
 ```sh
-(clgen-dev)$ make test
+(clgen-dev) $ make test
 ```
 
 When you are done using CLgen, deactivate the virtualenv environment:
 
 ```sh
-(clgen-dev)$ deactivate
+(clgen-dev) $ deactivate
 ```
 
 To use CLgen later you will need to activate the virtualenv environment again:
