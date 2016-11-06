@@ -21,7 +21,7 @@ ninja_version := 1.7.1
 ninja_dir := $(root)/native/ninja/$(ninja_version)
 ninja := $(ninja_dir)/ninja
 
-ninja_tar := $(cache)/ninja.$(version).tar.gz
+ninja_tar := $(cache)/ninja.$(ninja_version).tar.gz
 ninja_url := https://github.com/ninja-build/ninja/archive/v$(ninja_version).tar.gz
 
 # add this target as a prerequisite for files which require ninja
