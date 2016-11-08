@@ -20,7 +20,6 @@
 from __future__ import print_function
 
 import json
-import labm8
 import os
 import sys
 
@@ -28,7 +27,7 @@ from argparse import ArgumentParser
 
 
 def yes_no(question, default="no"):
-    """Ask a yes/no question via raw_input() and return their answer.
+    """Ask a yes/no question and return user's answer.
 
     "question" is a string that is presented to the user.
     "default" is the presumed answer if the user just hits <Enter>.
@@ -50,7 +49,7 @@ def yes_no(question, default="no"):
 
     while True:
         sys.stdout.write(question + prompt)
-        if labm8.is_python3():
+        if sys.version_info >= (3, 0):
             choice = input().lower()
         else:
             choice = raw_input().lower()
