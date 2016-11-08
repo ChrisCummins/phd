@@ -30,7 +30,7 @@ For **other Linux distributions** and older versions of Ubuntu, please check
 each for each of the following requirements:
 
 -  Linux (x64) or OS X.
--  `GCC <https://gcc.gnu.org/>`_ > >= 4.8.2 or
+-  `GCC <https://gcc.gnu.org/>`_ >= 4.8.2 or
    `clang <http://llvm.org/releases/download.html>`_ >= 3.1.
 -  `GNU Make <http://savannah.gnu.org/projects/make>`_ > 3.79.
 -  `Python <https://www.python.org/>`_ 2.7.12 or >= 3.4.
