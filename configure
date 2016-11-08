@@ -20,6 +20,7 @@
 from __future__ import print_function
 
 import json
+import labm8
 import os
 import sys
 
@@ -49,7 +50,11 @@ def yes_no(question, default="no"):
 
     while True:
         sys.stdout.write(question + prompt)
-        choice = raw_input().lower()
+        if labm8.is_python3():
+            choice = input().lower()
+        else:
+            choice = raw_input().lower()
+
         if default is not None and choice == '':
             return valid[default]
         elif choice in valid:
