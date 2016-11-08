@@ -33,7 +33,6 @@ import sqlite3
 import sys
 
 from functools import partial
-from hashlib import md5
 from io import open
 from multiprocessing import cpu_count, Pool
 from subprocess import Popen, PIPE, STDOUT
@@ -76,7 +75,7 @@ CLANG_CL_TARGETS = [
 
 
 def clang_cl_args(target=CLANG_CL_TARGETS[0],
-                  error_limit=0):
+                  use_shim=True, error_limit=0):
     """
     Get the Clang args to compile OpenCL.
 
@@ -90,13 +89,17 @@ def clang_cl_args(target=CLANG_CL_TARGETS[0],
         'macro-redefined',
     ]
 
-    return [
+    args = [
         '-I' + fs.path(native.LIBCLC),
-        '-include', native.SHIMFILE,
         '-target', target,
         '-ferror-limit={}'.format(error_limit),
         '-xcl'
     ] + ['-Wno-{}'.format(x) for x in disabled_warnings]
+
+    if use_shim:
+        args += ['-include', native.SHIMFILE]
+
+    return args
 
 
 def num_rows_in(db, table):
@@ -107,8 +110,8 @@ def num_rows_in(db, table):
     return num_rows
 
 
-def compiler_preprocess_cl(src, id='anon'):
-    cmd = [native.CLANG] + clang_cl_args() + [
+def compiler_preprocess_cl(src, id='anon', use_shim=True):
+    cmd = [native.CLANG] + clang_cl_args(use_shim=use_shim) + [
         '-E', '-c', '-', '-o', '-'
     ]
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -134,13 +137,14 @@ def compiler_preprocess_cl(src, id='anon'):
     return src
 
 
-def rewrite_cl(src, id='anon'):
+def rewrite_cl(src, id='anon', use_shim=True):
     # Rewriter can't read from stdin.
     with NamedTemporaryFile('w', suffix='.cl') as tmp:
         tmp.write(src)
         tmp.flush()
         cmd = ([native.CLGEN_REWRITER, tmp.name] +
-               ['-extra-arg=' + x for x in clang_cl_args()] + ['--'])
+               ['-extra-arg=' + x
+                for x in clang_cl_args(use_shim=use_shim)] + ['--'])
 
         process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
@@ -164,8 +168,8 @@ def rewrite_cl(src, id='anon'):
     return stripped
 
 
-def compile_cl_bytecode(src, id='anon'):
-    cmd = [native.CLANG] + clang_cl_args() + [
+def compile_cl_bytecode(src, id='anon', use_shim=True):
+    cmd = [native.CLANG] + clang_cl_args(use_shim=use_shim) + [
         '-emit-llvm', '-S', '-c', '-', '-o', '-'
     ]
 
@@ -352,7 +356,7 @@ def sanitize_prototype(src):
 #   2. Bad. Code can't be preprocessed.
 #   3. Ugly. Code can be preprocessed, but isn't useful for training.
 #
-def preprocess(src, id='anon'):
+def preprocess(src, id='anon', use_shim=True):
     """
     Preprocess an OpenCL source. There are three possible outcomes:
 
@@ -370,13 +374,13 @@ def preprocess(src, id='anon'):
     :throws clgen.InternalException: In case of some other error.
     """
     # Compile to bytecode and verify features:
-    bc = compile_cl_bytecode(src, id)
+    bc = compile_cl_bytecode(src, id, use_shim)
     bc_features = bytecode_features(bc, id)
     verify_bytecode_features(bc_features, id)
 
     # Rewrite and format source:
-    src = compiler_preprocess_cl(src, id)
-    src = rewrite_cl(src, id)
+    src = compiler_preprocess_cl(src, id, use_shim)
+    src = rewrite_cl(src, id, use_shim)
     src = clangformat_ocl(src, id).strip()
     src = sanitize_prototype(src)
 

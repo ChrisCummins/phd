@@ -64,6 +64,14 @@ class TestPreprocess(TestCase):
     def test_preprocess(self):
         self.assertEqual(*preprocess_pair('sample-1'))
 
+    def test_preprocess_shim(self):
+        self.assertTrue(preprocess.preprocess("""
+__kernel void A(__global FLOAT_T* a) {}"""))
+
+        with self.assertRaises(preprocess.BadCodeException):
+            preprocess.preprocess("""
+__kernel void A(__global FLOAT_T* a) {}""", use_shim=False)
+
     def test_remove_bad_preprocessed(self):
         fs.rm("tmp.db")
         dbutil.create_db("tmp.db")
