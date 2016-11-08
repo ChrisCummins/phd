@@ -85,9 +85,9 @@ def connect(db_path):
 
     Database has additional aggregate functions:
 
-        MD5SUM() returns md5 of column values
-        LC() returns sum line count of text columns
-        CC() returns sum character count of text columns
+     * MD5SUM() returns md5 of column values
+     * LC() returns sum line count of text columns
+     * CC() returns sum character count of text columns
 
     Arguments:
 
