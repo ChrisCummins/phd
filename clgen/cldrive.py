@@ -458,7 +458,25 @@ class KernelPayload(clgen.CLgenObject):
     def transfersize(self): return self._transfersize
 
     def __repr__(self):
-        return ('\n'.join([repr(x.hostdata) for x in self.args]))
+        s = "Payload on host:\n"
+        for i, arg in enumerate(self.args):
+            if arg.hostdata is None:
+                s += "  arg {i}: None\n".format(i=i)
+            else:
+                s += "  arg {i}: {typename} size: {size} {val}\n".format(
+                    i=i, typename=type(arg.hostdata).__name__,
+                    size=arg.hostdata.size, val=str(arg.hostdata))
+        s += "\nPayload on device:\n"
+        for i, arg in enumerate(self.args):
+            if arg.hostdata is None:
+                s += "  arg {i}: {typename} val: {val}\n".format(
+                    i=i, typename=type(arg.devdata).__name__,
+                    val=str(arg.devdata))
+            else:
+                s += "  arg {i}: {typename} size: {size} {val}\n".format(
+                    i=i, typename=type(arg.devdata).__name__,
+                    size=arg.devdata.size, val=str(arg.devdata))
+        return s
 
     @staticmethod
     def _create_payload(nparray, driver, size):
