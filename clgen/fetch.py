@@ -251,7 +251,7 @@ def github(db_path, github_username, github_pw, github_token):
     global errors_counter
 
     g = Github(github_username, github_pw)
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
 
     if not dbutil.is_github:
         raise clgen.UserError("not a GitHub database")
@@ -368,7 +368,7 @@ def process_cl_file(db_path, path):
     :param db_path: Path to output database.
     :param path: Path to input file.
     """
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
     c = db.cursor()
 
     log.debug("fetch {path}".format(path=fs.abspath(path)))
@@ -386,8 +386,8 @@ def process_cl_file(db_path, path):
 
 
 def content_db(db_path, in_db_path, table='PreprocessedFiles'):
-    odb = sqlite3.connect(db_path)
-    idb = sqlite3.connect(in_db_path)
+    odb = dbutil.connect(db_path)
+    idb = dbutil.connect(in_db_path)
     ic = idb.cursor()
 
     ic.execute('SELECT id,contents FROM {}'.format(table))
@@ -415,7 +415,7 @@ kernel_counter = 0
 
 def process_sample_file(db_path, sample_path, first_only=False,
                         max_kernel_len=5000):
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
     c = db.cursor()
 
     with open(sample_path) as infile:
@@ -525,7 +525,7 @@ def get_new_program(db_path):
 
     outputpath = 'CLProg.c'
 
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
     c = db.cursor()
 
     # TODO: CLSmith might not be in path
@@ -557,7 +557,7 @@ def clsmith(db_path, target_num_kernels):
 
     print('generating', target_num_kernels, 'kernels to', db_path)
 
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
     c = db.cursor()
     c.execute('SELECT Count(*) FROM ContentFiles')
     num_kernels = c.fetchone()[0]

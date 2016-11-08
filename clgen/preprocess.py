@@ -33,7 +33,6 @@ import sqlite3
 import sys
 
 from functools import partial
-from hashlib import md5
 from io import open
 from multiprocessing import cpu_count, Pool
 from subprocess import Popen, PIPE, STDOUT
@@ -44,6 +43,7 @@ from labm8 import fs
 
 import clgen
 from clgen import clutil
+from clgen import dbutil
 from clgen import log
 from clgen import native
 from clgen.cache import Cache
@@ -75,7 +75,7 @@ CLANG_CL_TARGETS = [
 
 
 def clang_cl_args(target=CLANG_CL_TARGETS[0],
-                  error_limit=0):
+                  use_shim=True, error_limit=0):
     """
     Get the Clang args to compile OpenCL.
 
@@ -89,13 +89,17 @@ def clang_cl_args(target=CLANG_CL_TARGETS[0],
         'macro-redefined',
     ]
 
-    return [
+    args = [
         '-I' + fs.path(native.LIBCLC),
-        '-include', native.SHIMFILE,
         '-target', target,
         '-ferror-limit={}'.format(error_limit),
         '-xcl'
     ] + ['-Wno-{}'.format(x) for x in disabled_warnings]
+
+    if use_shim:
+        args += ['-include', native.SHIMFILE]
+
+    return args
 
 
 def num_rows_in(db, table):
@@ -106,8 +110,8 @@ def num_rows_in(db, table):
     return num_rows
 
 
-def compiler_preprocess_cl(src, id='anon'):
-    cmd = [native.CLANG] + clang_cl_args() + [
+def compiler_preprocess_cl(src, id='anon', use_shim=True):
+    cmd = [native.CLANG] + clang_cl_args(use_shim=use_shim) + [
         '-E', '-c', '-', '-o', '-'
     ]
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -133,13 +137,14 @@ def compiler_preprocess_cl(src, id='anon'):
     return src
 
 
-def rewrite_cl(src, id='anon'):
+def rewrite_cl(src, id='anon', use_shim=True):
     # Rewriter can't read from stdin.
     with NamedTemporaryFile('w', suffix='.cl') as tmp:
         tmp.write(src)
         tmp.flush()
         cmd = ([native.CLGEN_REWRITER, tmp.name] +
-               ['-extra-arg=' + x for x in clang_cl_args()] + ['--'])
+               ['-extra-arg=' + x
+                for x in clang_cl_args(use_shim=use_shim)] + ['--'])
 
         process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
@@ -163,8 +168,8 @@ def rewrite_cl(src, id='anon'):
     return stripped
 
 
-def compile_cl_bytecode(src, id='anon'):
-    cmd = [native.CLANG] + clang_cl_args() + [
+def compile_cl_bytecode(src, id='anon', use_shim=True):
+    cmd = [native.CLANG] + clang_cl_args(use_shim=use_shim) + [
         '-emit-llvm', '-S', '-c', '-', '-o', '-'
     ]
 
@@ -293,7 +298,7 @@ def clangformat_ocl(src, id='anon'):
 
 
 def print_bytecode_features(db_path):
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
     c = db.cursor()
 
     c.execute('SELECT sha,contents FROM Bytecodes')
@@ -351,7 +356,7 @@ def sanitize_prototype(src):
 #   2. Bad. Code can't be preprocessed.
 #   3. Ugly. Code can be preprocessed, but isn't useful for training.
 #
-def preprocess(src, id='anon'):
+def preprocess(src, id='anon', use_shim=True):
     """
     Preprocess an OpenCL source. There are three possible outcomes:
 
@@ -369,72 +374,17 @@ def preprocess(src, id='anon'):
     :throws clgen.InternalException: In case of some other error.
     """
     # Compile to bytecode and verify features:
-    bc = compile_cl_bytecode(src, id)
+    bc = compile_cl_bytecode(src, id, use_shim)
     bc_features = bytecode_features(bc, id)
     verify_bytecode_features(bc_features, id)
 
     # Rewrite and format source:
-    src = compiler_preprocess_cl(src, id)
-    src = rewrite_cl(src, id)
+    src = compiler_preprocess_cl(src, id, use_shim)
+    src = rewrite_cl(src, id, use_shim)
     src = clangformat_ocl(src, id).strip()
     src = sanitize_prototype(src)
 
     return src
-
-
-class md5sum_aggregator:
-    def __init__(self):
-        self.md5 = md5()
-
-    def step(self, value):
-        self.md5.update(str(value).encode('utf-8'))
-
-    def finalize(self):
-        return self.md5.hexdigest()
-
-
-class linecount_aggregator:
-    def __init__(self):
-        self.count = 0
-
-    def step(self, value):
-        self.count += len(value.split('\n'))
-
-    def finalize(self):
-        return self.count
-
-
-class charcount_aggregator:
-    def __init__(self):
-        self.count = 0
-
-    def step(self, value):
-        self.count += len(value)
-
-    def finalize(self):
-        return self.count
-
-
-def is_modified(db):
-    c = db.cursor()
-
-    c.execute("SELECT value FROM Meta WHERE key='preprocessed_checksum'")
-    result = c.fetchone()
-    cached_checksum = result[0] if result else None
-
-    c.execute('SELECT MD5SUM(id) FROM ContentFiles')
-    checksum = c.fetchone()[0]
-    c.close()
-
-    return False if cached_checksum == checksum else checksum
-
-
-def set_modified_status(db, checksum):
-    c = db.cursor()
-    c.execute("INSERT OR REPLACE INTO Meta VALUES (?,?)",
-              ('preprocessed_checksum', checksum))
-    db.commit()
-    c.close()
 
 
 def _preprocess_db_worker(job):
@@ -444,7 +394,7 @@ def _preprocess_db_worker(job):
     outpath = job["json_out"]
     log.debug("worker", outpath)
 
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
     c = db.cursor()
     split_start, split_end = db_index_range
     split_size = split_end - split_start
@@ -489,7 +439,7 @@ def preprocess_contentfiles(db_path, max_num_workers=cpu_count() * 4):
         """Tidy up after worker threads finish"""
         log.debug("worker finalize")
 
-        db = sqlite3.connect(db_path)
+        db = dbutil.connect(db_path)
         c = db.cursor()
 
         # import results from worker threads
@@ -504,7 +454,7 @@ def preprocess_contentfiles(db_path, max_num_workers=cpu_count() * 4):
         db.close()
         cache.empty()
 
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
     num_contentfiles = num_rows_in(db, 'ContentFiles')
     num_preprocessedfiles = num_rows_in(db, 'PreprocessedFiles')
     db.close()
@@ -576,31 +526,6 @@ def preprocess_inplace(paths, max_num_workers=cpu_count() * 4):
         pool.map(_preprocess_inplace_worker, paths)
 
 
-def connect(db_path):
-    """
-    Returns a connection to a database.
-
-    Database has additional aggregate functions:
-
-        MD5SUM() returns md5 of column values
-        LC() returns sum line count of text columns
-        CC() returns sum character count of text columns
-
-    Arguments:
-
-        db_path (str): Path to database
-
-    Returns:
-
-        sqlite3 connection
-    """
-    db = sqlite3.connect(db_path)
-    db.create_aggregate("MD5SUM", 1, md5sum_aggregator)
-    db.create_aggregate("LC", 1, linecount_aggregator)
-    db.create_aggregate("CC", 1, charcount_aggregator)
-    return db
-
-
 def preprocess_db(db_path):
     """
     Preprocess database contents.
@@ -613,12 +538,12 @@ def preprocess_db(db_path):
 
         bool: True if modified, false if no work needed.
     """
-    db = connect(db_path)
+    db = dbutil.connect(db_path)
 
-    modified = is_modified(db)
+    modified = dbutil.is_modified(db)
     if modified:
         preprocess_contentfiles(db_path)
-        set_modified_status(db, modified)
+        dbutil.set_modified_status(db, modified)
         return True
     else:
         return False
@@ -634,7 +559,7 @@ def remove_bad_preprocessed(db_path):
     sys.stdout.flush()
 
     # Remove contents from bad or ugly preprocessed files.
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
     c = db.cursor()
     c.execute("UPDATE PreprocessedFiles SET contents='[DELETED]' "
               "WHERE status=1 OR status=2")

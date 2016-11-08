@@ -109,7 +109,7 @@ def linecount(t):
 
 
 def train(db_path, out_path, **kwargs):
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
     db.create_function("LC", 1, linecount)
 
     # auto-detect whether it's a GitHub repo

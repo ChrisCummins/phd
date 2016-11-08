@@ -25,7 +25,6 @@ from labm8 import fs
 
 import clgen
 from clgen import dbutil
-from clgen import preprocess
 
 
 class TestDbutil(TestCase):
@@ -44,16 +43,16 @@ class TestDbutil(TestCase):
         fs.cp(tests.db_path('10-kernels-preprocessed'), tmpdb)
 
         self.assertEqual(8, dbutil.num_good_kernels(tmpdb))
-        db = preprocess.connect(tmpdb)
-        self.assertFalse(preprocess.is_modified(db))
+        db = dbutil.connect(tmpdb)
+        self.assertFalse(dbutil.is_modified(db))
         db.close()
 
         dbutil.remove_preprocessed(tmpdb)
 
         self.assertEqual(0, dbutil.num_good_kernels(tmpdb))
 
-        db = preprocess.connect(tmpdb)
-        self.assertTrue(preprocess.is_modified(db))
+        db = dbutil.connect(tmpdb)
+        self.assertTrue(dbutil.is_modified(db))
         db.close()
 
         fs.rm(tmpdb)
