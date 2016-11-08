@@ -140,9 +140,59 @@ def is_github(db):
 
 
 def num_good_kernels(path):
+    """
+    Fetch the number of good preprocessed kernels from dataset.
+
+    Arguments:
+
+        path (str): Path to database.
+
+    Returns:
+
+        int: Num preprocessed kernels where status is 0.
+    """
+    return num_rows_in(path, "PreprocessedFiles", "WHERE status=0")
+
+
+def num_rows_in(path, table, condition=""):
+    """
+    Fetch number of rows in table.
+
+    Arguments:
+
+        path (str): Path to database.
+        table (str): Table ID.
+        condition (str, optional): Conditional.
+
+    Returns:
+
+        int: Num rows.
+    """
     db = connect(path)
     c = db.cursor()
-    c.execute('SELECT Count(*) FROM PreprocessedFiles WHERE status=0')
+    c.execute('SELECT Count(*) FROM {table} {condition}'
+              .format(table=table, condition=condition))
+    return c.fetchone()[0]
+
+
+def lc(path, table, column="Contents", condition=""):
+    """
+    Fetch line count of contents in table.
+
+    Arguments:
+
+        path (str): Path to database.
+        table (str): Table ID.
+        condition (str, optional): Conditional.
+
+    Returns:
+
+        int: Num lines.
+    """
+    db = connect(path)
+    c = db.cursor()
+    c.execute("SELECT LC({column}) FROM {table} {condition}"
+              .format(column=column, table=table, condition=condition))
     return c.fetchone()[0]
 
 
