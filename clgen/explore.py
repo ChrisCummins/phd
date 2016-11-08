@@ -93,7 +93,7 @@ def seq_stats(sorted_arr):
 #
 def stats_worker(db_path):
     log.debug("stats worker ...")
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
     c = db.cursor()
     stats = []
 
@@ -149,7 +149,7 @@ def stats_worker(db_path):
 #
 def gh_stats_worker(db_path):
     print("stats worker ...")
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
     c = db.cursor()
     stats = []
 
@@ -232,7 +232,7 @@ def graph_ocl_lc(db_path):
 
     out_path = fs.path(IMG_DIR, '/ocl_lcs.png')
     print('graph', out_path, '...')
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
     c = db.cursor()
 
     c.execute("SELECT contents FROM ContentFiles")
@@ -258,7 +258,7 @@ def graph_bc_lc(db_path):
 
     out_path = fs.path(IMG_DIR, 'bc_lcs.png')
     print('graph', out_path, '...')
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
     c = db.cursor()
 
     c.execute("SELECT contents FROM Bytecodes")
@@ -284,7 +284,7 @@ def graph_ocl_stars(db_path):
 
     out_path = fs.path(IMG_DIR, '/ocl_stars.png')
     print('graph', out_path, '...')
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
     c = db.cursor()
 
     c.execute('SELECT stars FROM ContentMeta LEFT JOIN Repositories '
@@ -304,7 +304,7 @@ def graph_ocl_stars(db_path):
 def explore(db_path, graph=False):
     locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
 
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
 
     if dbutil.is_github(db):
         db.close()
@@ -342,7 +342,7 @@ def explore(db_path, graph=False):
 def explore_gh(db_path, graph=False):
     locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
 
-    db = sqlite3.connect(db_path)
+    db = dbutil.connect(db_path)
 
     if graph and not os.path.exists(IMG_DIR):
         os.makedirs(IMG_DIR)
