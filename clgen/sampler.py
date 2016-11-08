@@ -38,7 +38,7 @@ from clgen.model import Model
 def serialize_argspec(args):
     names = map(chr, range(97, 97 + len(args)))
     strings = [arg + " " + name for arg, name in zip(args, names)]
-    return "__kernel void A({args}) {".format(args=", ".join(strings))
+    return "__kernel void A({args}) {{".format(args=", ".join(strings))
 
 
 class Sampler(clgen.CLgenObject):
