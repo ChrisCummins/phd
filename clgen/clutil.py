@@ -23,9 +23,12 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 import re
-import sys
+import platform
+import psutil
 
 import clgen
+from clgen import config as cfg
+from clgen import log
 
 
 class OpenCLUtilException(clgen.CLgenError): pass
@@ -344,3 +347,36 @@ def extract_prototype(src):
         raise PrototypeException("malformed seed")
 
     return KernelPrototype(prototype)
+
+
+def platform_info(printfn=print):
+    """
+    Log platform information.
+
+    Arguments:
+        printfn (fn, optional): Function to call to print output to. Default
+            `print()`.
+    """
+    printfn("Platform:  ", platform.system())
+    printfn("Memory:    ",
+            round(psutil.virtual_memory().total / (1024 ** 2)), "MB")
+    printfn()
+
+    if not cfg.USE_OPENCL:
+        printfn("Device:     None")
+        return
+
+    import pyopencl as cl
+    ctx = cl.Context(properties=[(cl.context_properties.PLATFORM,
+                                  cl.get_platforms()[0])])
+    device = ctx.get_info(cl.context_info.DEVICES)[0]
+    devtype = cl.device_type.to_string(device.get_info(cl.device_info.TYPE))
+    dev = device.get_info(cl.device_info.NAME)
+
+    printfn("Device:    ", devtype, dev)
+    printfn("Compute #.:", device.get_info(cl.device_info.MAX_COMPUTE_UNITS))
+    printfn("Frequency: ", device.get_info(
+        cl.device_info.MAX_CLOCK_FREQUENCY), "HZ")
+    printfn("Memory:    ", round(
+        device.get_info(cl.device_info.GLOBAL_MEM_SIZE) / (1024 ** 2)), "MB")
+    printfn("Driver:    ", device.get_info(cl.device_info.DRIVER_VERSION))
