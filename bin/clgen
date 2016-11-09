@@ -27,17 +27,13 @@ Generate OpenCL programs using Deep Learning.
 
 def main():
     parser = cli.ArgumentParser(description=__description__)
-    parser.add_argument("model_json", metavar="<model-json>",
-                        help="path to model specification file")
-    parser.add_argument("sampler_json", metavar="<sampler-json>",
+    parser.add_argument("model", metavar="<model>",
+                        help="path to model dist or specification file")
+    parser.add_argument("sampler", metavar="<sampler>",
                         help="path to sampler specification file")
     args = parser.parse_args()
 
-    # Read input configuration files.
-    model = clgen.load_json_file(args.model_json)
-    sampler = clgen.load_json_file(args.sampler_json)
-
-    cli.main(clgen.main, model, sampler)
+    cli.main(clgen.main, args.model, args.sampler)
 
 
 if __name__ == "__main__":

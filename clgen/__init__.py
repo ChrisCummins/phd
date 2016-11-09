@@ -163,7 +163,7 @@ def checksum_file(*path_components):
     path = must_exist(*path_components)
 
     try:
-        with open(path) as infile:
+        with open(path, 'rb') as infile:
             return checksum(infile.read())
     except Exception:
         raise CLgenError("failed to read '{}'".format(path))
@@ -179,7 +179,7 @@ def unpack_archive(*components, **kwargs):
             Default: bz2. Set "dir" to destination directory. Defaults to the
             directory of the archive.
     """
-    path = fs.path(*components)
+    path = fs.abspath(*components)
     compression = kwargs.get("compression", "bz2")
     dir = kwargs.get("dir", fs.dirname(path))
 
@@ -350,19 +350,24 @@ def write_file(path, contents):
         outfile.write(contents)
 
 
-def main(model_json, sampler_json):
+def main(model, sampler):
     """
     Main entry point for clgen.
 
     Arguments:
-        model_json (dict): Model specification.
-        sample_json (dict): Sample specification.
+        model (str): Path to model.
+        sample (str): Path to sampler.
     """
-    from clgen import model
-    from clgen import sampler
+    import clgen.model
+    import clgen.sampler
 
-    model = model.from_json(model_json)
+    if model.endswith(".tar.bz2"):
+        model = clgen.model.from_tar(model)
+    else:
+        model_json = load_json_file(model)
+        model = clgen.model.from_json(model_json)
     model.train()
 
-    sampler = sampler.from_json(sampler_json)
+    sampler_json = load_json_file(sampler)
+    sampler = clgen.sampler.from_json(sampler_json)
     sampler.sample(model)

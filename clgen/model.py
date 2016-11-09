@@ -95,6 +95,56 @@ class Model(clgen.CLgenObject):
             return None
 
 
+class DistError(clgen.CLgenError):
+    """Error thrown if dist model is badly formatted."""
+    pass
+
+
+class DistModel(Model):
+    def __init__(self, tarpath):
+        assert(type(tarpath) is str)
+
+        self.hash = self._hash(tarpath)
+        self.cache = Cache(fs.path("model", self.hash))
+
+        log.info("dist model", self.hash)
+
+        # unpack archive if necessary
+        if not self.cache['model.json'] or not self.cache['model.t7']:
+            log.info("unpacking", tarpath)
+            clgen.unpack_archive(tarpath, dir=self.cache.path)
+            if not len(fs.ls(self.cache.path)) == 3:
+                log.error("Unpackaed tar contents:\n  ",
+                          "\n  ".join(fs.ls(self.cache.path, abspaths=True)))
+                raise DistError("Bad distfile '{}'".format(tarpath))
+            if not self.cache['model.json']:
+                raise DistError("model.json not in '{}'".format(tarpath))
+            if not self.cache['model.t7']:
+                raise DistError("model.t7 not in '{}'".format(tarpath))
+            if not self.cache['meta.json']:
+                raise DistError("meta.json not in '{}'".format(tarpath))
+
+        metadata = clgen.load_json_file(self.cache['meta.json'])
+        self.train_opts = metadata['train_opts']
+
+    def _hash(self, tarpath):
+        return clgen.checksum_file(tarpath)
+
+    def train(self):
+        pass
+
+    @property
+    def checkpoints(self):
+        return [self.most_recent_checkpoint()]
+
+    @property
+    def most_recent_checkpoint(self):
+        """
+        Get path to most recently initialized t7
+        """
+        return self.cache['model.t7']
+
+
 def from_json(model_json):
     corpus = Corpus.from_json(model_json["corpus"])
     train_opts = model_json["train_opts"]
@@ -111,3 +161,7 @@ def from_json(model_json):
                 "Unrecognized training option '{}'".format(key))
 
     return Model(corpus, train_opts)
+
+
+def from_tar(path):
+    return DistModel(path)
