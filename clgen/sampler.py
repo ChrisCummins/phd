@@ -104,8 +104,9 @@ class Sampler(clgen.CLgenObject):
         fetch.process_sample_file(cache["kernels.db"], tmppath,
                                   max_kernel_len=opts["length"])
 
-        # TODO: Parse static checker requirement
-        preprocess.preprocess_db(cache["kernels.db"])
+        if self.static_checker:
+            # TODO: Parse dynamic checker requirement
+            preprocess.preprocess_db(cache["kernels.db"])
         fs.rm(tmppath)
 
     def sample(self, model):
