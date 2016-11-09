@@ -74,6 +74,10 @@ class Model(clgen.CLgenObject):
 
         torch_rnn.train(**opts)
 
+    def __repr__(self):
+        return "{hash}: {data}".format(
+            hash=self.hash, data=clgen.format_json(self.train_opts))
+
     @property
     def checkpoints(self):
         return glob(fs.path(self.cache.path, '*.t7'))
