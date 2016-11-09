@@ -6,7 +6,7 @@ clgen
 
 ::
 
-    usage: clgen [-h] [--version] [-v] <model-json> <sampler-json>
+    usage: clgen [-h] [--version] [-v] <model> <sampler>
     
     Generate OpenCL programs using Deep Learning.
     
@@ -14,13 +14,13 @@ clgen
     <http://chriscummins.cc/clgen>
     
     positional arguments:
-      <model-json>    path to model specification file
-      <sampler-json>  path to sampler specification file
+      <model>        path to model dist or specification file
+      <sampler>      path to sampler specification file
     
     optional arguments:
-      -h, --help      show this help message and exit
-      --version       show version information and exit
-      -v, --verbose   increase output verbosity
+      -h, --help     show this help message and exit
+      --version      show version information and exit
+      -v, --verbose  increase output verbosity
 
 clgen-create-db
 ----------------
