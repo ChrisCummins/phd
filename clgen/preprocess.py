@@ -392,7 +392,7 @@ def _preprocess_db_worker(job):
     db_path = job["db_in"]
     db_index_range = job["db_index_range"]
     outpath = job["json_out"]
-    log.debug("worker", outpath)
+    log.debug("worker", os.getpid(), outpath)
 
     db = dbutil.connect(db_path)
     c = db.cursor()
