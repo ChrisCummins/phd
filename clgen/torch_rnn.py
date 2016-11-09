@@ -100,7 +100,13 @@ def train(**train_opts):
     cmd = [native.TH, "train.lua"] + flags
 
     log.debug(' '.join([str(x) for x in cmd]))
-    process = Popen(cmd)
+    process = Popen(cmd, stdout=PIPE)
+    while True:  # print stdout in real-time
+        line = process.stdout.readline()
+        sys.stdout.write(line.decode('utf-8'))
+        if not line:
+            break
+
     process.communicate()
 
     if process.returncode != 0:
