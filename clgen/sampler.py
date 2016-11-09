@@ -120,11 +120,16 @@ class Sampler(clgen.CLgenObject):
         batch_i = 0
         while True:
             batch_i += 1
-            if (self.max_kernels > 0 and
-                dbutil.num_good_kernels(cache["kernels.db"]) > self.max_kernels):
+
+            # stop if we have enough kernels
+            has_max_kernels = self.max_kernels > 0
+            num_good_kernels = dbutil.num_good_kernels(cache["kernels.db"])
+            if has_max_kernels and num_good_kernels > self.max_kernels:
                 return
 
-            if self.max_batches > 0 and batch_i > self.max_batches:
+            # stop if we've done enough batches
+            has_max_batches = self.max_batches > 0
+            if has_max_batches and batch_i > self.max_batches:
                 return
 
             self.sample_iteration(model)
