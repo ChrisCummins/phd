@@ -159,6 +159,11 @@ class Corpus:
         cache = Cache(self.hash)
         return cache['corpus.h5']
 
+    def __repr__(self):
+        cache = Cache(self.hash)
+        n = dbutil.num_good_kernels(cache['kernels.db'])
+        return "corpus of {n} files".format(n=n)
+
     @staticmethod
     def from_json(corpus_json):
         """
