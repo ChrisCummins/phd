@@ -26,15 +26,12 @@ from __future__ import print_function
 
 import os
 import re
-import sqlite3
 import sys
 
-import labm8
+from io import open
 from labm8 import fs
 
-import clgen
 from clgen import dbutil
-from io import open
 
 
 def sanitize_id(id):
