@@ -137,7 +137,10 @@ def sample(output, **sample_opts):
         [('-' + key, str(value)) for key, value in iteritems(sample_opts)])
     cmd = [native.TH, "sample.lua"] + flags
 
-    log.debug(' '.join([str(x) for x in cmd]))
+    log.debug('(cd {dir} && {cmd})'.format(
+        dir=native.TORCH_RNN_DIR,
+        cmd=' '.join([str(x) for x in cmd])))
+
     process = Popen(cmd, stdout=PIPE)
     # TODO: Consider optimizing using a second tee process and pipe
     with open(output, "wb") as outfile:
