@@ -123,7 +123,7 @@ class Sampler(clgen.CLgenObject):
             batch_i += 1
 
             # stop if we have enough kernels
-            has_max_kernels = self.max_kernels > 0
+            has_max_kernels = self.max_kernels >= 0
             num_good_kernels = dbutil.num_good_kernels(cache["kernels.db"])
             if has_max_kernels and num_good_kernels > self.max_kernels:
                 return
