@@ -104,13 +104,9 @@ def train(**train_opts):
         cmd=' '.join([str(x) for x in cmd])))
 
     process = Popen(cmd, stdout=PIPE)
-    while True:  # print stdout in real-time
-        line = process.stdout.readline()
+    for line in process.stdout:
         sys.stdout.write(line.decode('utf-8'))
-        if not line:
-            break
-
-    process.communicate()
+    process.wait()
 
     if process.returncode != 0:
         raise TrainError('torch-rnn training failed with status ' +
