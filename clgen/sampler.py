@@ -55,6 +55,7 @@ class Sampler(clgen.CLgenObject):
         # parse sampler options
         self.max_kernels = sampler_opts.get("max_kernels", -1)
         self.batch_size = sampler_opts.get("batch_size", 1000)
+        self.max_batches = sampler_opts.get("max_batches", -1)
         self.static_checker = sampler_opts.get("static_checker", True)
         self.dynamic_checker = sampler_opts.get("dynamic_checker", False)
 
@@ -112,9 +113,14 @@ class Sampler(clgen.CLgenObject):
             cache["kernels.db"] = fs.path(
                 cache.path, "kernels.tmp.db")
 
+        batch_i = 0
         while True:
+            batch_i += 1
             if (self.max_kernels > 0 and
                 dbutil.num_good_kernels(cache["kernels.db"]) > self.max_kernels):
+                return
+
+            if self.max_batches > 0 and batch_i > self.max_batches:
                 return
 
             self.sample_iteration(model)
