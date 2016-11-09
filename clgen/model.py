@@ -43,11 +43,14 @@ class Model(clgen.CLgenObject):
         self.corpus = corpus
         self.train_opts = train_opts
 
-        self.hash = self.checksum()
-        self.checkpoint_cache = Cache(fs.path(self.hash, self.corpus.hash))
+        self.hash = self._hash(train_opts, corpus)
+        self.cache = Cache(fs.path("model", self.hash))
 
-    def checksum(self):
-        string = "".join([x for x in sorted(self.train_opts)])
+    def _hash(self, train_opts, corpus):
+        checksum_data = sorted(
+            [str(x) for x in train_opts.values()] +
+            [corpus.hash])
+        string = "".join([str(x) for x in checksum_data])
         return clgen.checksum_str(string)
 
     def train(self):
@@ -57,8 +60,7 @@ class Model(clgen.CLgenObject):
         opts["reset_iterations"] = 0
         opts["input_json"] = self.corpus.input_json
         opts["input_h5"] = self.corpus.input_h5
-        opts["checkpoint_name"] = fs.path(
-            self.checkpoint_cache.path, "model")
+        opts["checkpoint_name"] = fs.path(self.cache.path, "model")
 
         # set default arguments
         if opts.get("print_every", None) is None:
@@ -74,7 +76,7 @@ class Model(clgen.CLgenObject):
 
     @property
     def checkpoints(self):
-        return glob(fs.path(self.checkpoint_cache.path, '*.t7'))
+        return glob(fs.path(self.cache.path, '*.t7'))
 
     @property
     def most_recent_checkpoint(self):
@@ -87,7 +89,7 @@ class Model(clgen.CLgenObject):
             return int(re.search("model_([0-9]+)\.t7", path).group(1))
 
         try:
-            return max(iglob(fs.path(self.checkpoint_cache.path, '*.t7')),
+            return max(iglob(fs.path(self.cache.path, '*.t7')),
                        key=get_checkpoint_iterations)
         except ValueError:
             return None

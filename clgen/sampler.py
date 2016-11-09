@@ -46,11 +46,7 @@ class Sampler(clgen.CLgenObject):
         assert(type(sampler_opts) is dict)
         assert(type(kernel_opts) is dict)
 
-        checksum_data = sorted(
-            [str(x) for x in list(sampler_opts.values())] +
-            [str(x) for x in list(kernel_opts.values())])
-        string = "".join([str(x) for x in checksum_data])
-        self.hash = clgen.checksum_str(string)
+        self.hash = self._hash(sampler_opts, kernel_opts)
 
         # parse sampler options
         self.max_kernels = sampler_opts.get("max_kernels", -1)
@@ -65,13 +61,21 @@ class Sampler(clgen.CLgenObject):
 
         self.kernel_opts = kernel_opts
 
-    def get_cache(self, model):
-        return Cache(fs.path(model.hash, model.corpus.hash, self.hash))
+    def _hash(self, sampler_opts, kernel_opts):
+        checksum_data = sorted(
+            [str(x) for x in sampler_opts.values()] +
+            [str(x) for x in kernel_opts.values()])
+        string = "".join([str(x) for x in checksum_data])
+        return clgen.checksum_str(string)
+
+    def cache(self, model):
+        sampler_model_hash = clgen.checksum_str(self.hash + model.hash)
+        return Cache(fs.path("sampler", sampler_model_hash))
 
     def sample_iteration(self, model):
         assert(isinstance(model, Model))
 
-        cache = self.get_cache(model)
+        cache = self.cache(model)
 
         # create samples database if it doesn't exist
         if not cache["kernels.db"]:
@@ -105,7 +109,7 @@ class Sampler(clgen.CLgenObject):
         fs.rm(tmppath)
 
     def sample(self, model):
-        cache = self.get_cache(model)
+        cache = self.cache(model)
 
         # create samples database if it doesn't exist
         if not cache["kernels.db"]:

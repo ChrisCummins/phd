@@ -85,83 +85,74 @@ class Corpus:
 
         log.debug("corpus {hash}".format(hash=self.hash))
 
-        cache = Cache(self.hash)
+        self.cache = Cache(fs.path("corpus", self.hash))
 
         # TODO: Wrap file creation in try blocks, if any stage fails, delete
         # generated fail (if any)
 
         # create corpus database if not exists
-        if not cache["kernels.db"]:
+        if not self.cache["kernels.db"]:
             self._create_kernels_db(path)
 
         # create corpus text if not exists
-        if not cache["corpus.txt"]:
+        if not self.cache["corpus.txt"]:
             self._create_txt()
 
         # create LSTM training files if not exists
-        if not cache["corpus.json"] or not cache["corpus.h5"]:
+        if not self.cache["corpus.json"] or not self.cache["corpus.h5"]:
             self._lstm_preprocess()
 
     def _create_kernels_db(self, path):
-        cache = Cache(self.hash)
-
         log.debug("creating database")
 
         # create a database and put it in the cache
-        tmppath = fs.path(cache.path, "kernels.db.tmp")
+        tmppath = fs.path(self.cache.path, "kernels.db.tmp")
         dbutil.create_db(tmppath, github=self.isgithub)
-        cache["kernels.db"] = tmppath
+        self.cache["kernels.db"] = tmppath
 
         # get a list of files in the corpus
         filelist = [f for f in fs.ls(path, abspaths=True, recursive=True)
                     if fs.isfile(f)]
 
         # import files into database
-        fetch.fetch_fs(cache["kernels.db"], filelist)
+        fetch.fetch_fs(self.cache["kernels.db"], filelist)
 
         # preprocess files
-        preprocess.preprocess_db(cache["kernels.db"])
+        preprocess.preprocess_db(self.cache["kernels.db"])
 
         # print database stats
         if self.isgithub:
-            explore.explore_gh(cache["kernels.db"])
+            explore.explore_gh(self.cache["kernels.db"])
         else:
-            explore.explore(cache["kernels.db"])
+            explore.explore(self.cache["kernels.db"])
 
     def _create_txt(self):
-        cache = Cache(self.hash)
-
         log.debug("creating corpus")
 
         # TODO: additional options in corpus JSON to accomodate for EOF,
         # different encodings etc.
-        tmppath = fs.path(cache.path, "corpus.txt.tmp")
-        train(cache["kernels.db"], tmppath)
-        cache["corpus.txt"] = tmppath
+        tmppath = fs.path(self.cache.path, "corpus.txt.tmp")
+        train(self.cache["kernels.db"], tmppath)
+        self.cache["corpus.txt"] = tmppath
 
     def _lstm_preprocess(self):
-        cache = Cache(self.hash)
-
         log.debug("creating training set")
-        tmppaths = (fs.path(cache.path, "corpus.json.tmp"),
-                    fs.path(cache.path, "corpus.h5.tmp"))
-        torch_rnn.preprocess(cache["corpus.txt"], *tmppaths)
-        cache["corpus.json"] = tmppaths[0]
-        cache["corpus.h5"] = tmppaths[1]
+        tmppaths = (fs.path(self.cache.path, "corpus.json.tmp"),
+                    fs.path(self.cache.path, "corpus.h5.tmp"))
+        torch_rnn.preprocess(self.cache["corpus.txt"], *tmppaths)
+        self.cache["corpus.json"] = tmppaths[0]
+        self.cache["corpus.h5"] = tmppaths[1]
 
     @property
     def input_json(self):
-        cache = Cache(self.hash)
-        return cache['corpus.json']
+        return self.cache['corpus.json']
 
     @property
     def input_h5(self):
-        cache = Cache(self.hash)
-        return cache['corpus.h5']
+        return self.cache['corpus.h5']
 
     def __repr__(self):
-        cache = Cache(self.hash)
-        n = dbutil.num_good_kernels(cache['kernels.db'])
+        n = dbutil.num_good_kernels(self.cache['kernels.db'])
         return "corpus of {n} files".format(n=n)
 
     @staticmethod
