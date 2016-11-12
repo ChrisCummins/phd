@@ -31,6 +31,10 @@ UNAME := $(shell uname)
 clean_targets =
 distclean_targets =
 
+# allow overriding python:
+PYTHON ?= python
+PIP ?= pip
+
 # modules
 include make/remote.make
 include make/cuda.make
@@ -107,7 +111,7 @@ $(root)/clgen/data/bin/clgen-rewriter: $(root)/native/clgen-rewriter.cpp $(data_
 # run tests
 .PHONY: test
 test:
-	python ./setup.py test
+	$(PYTHON) ./setup.py test
 
 # clean compiled files
 .PHONY: clean
@@ -122,13 +126,13 @@ distclean: $(distclean_targets)
 # install CLgen
 .PHONY: install
 install: cuda
-	pip install --upgrade pip
-	pip install --only-binary=numpy 'numpy>=1.10.4'
-	pip install --only-binary=scipy 'scipy>=0.16.1'
-	pip install --only-binary=pandas 'pandas>=0.19.0'
-	pip install 'Cython==0.23.4'
-	pip install -r requirements.txt
-	python ./setup.py install
+	$(PIP) install --upgrade pip
+	$(PIP) install --only-binary=numpy 'numpy>=1.10.4'
+	$(PIP) install --only-binary=scipy 'scipy>=0.16.1'
+	$(PIP) install --only-binary=pandas 'pandas>=0.19.0'
+	$(PIP) install 'Cython==0.23.4'
+	$(PIP) install -r requirements.txt
+	$(PYTHON) ./setup.py install
 
 # autogenerate documentation
 .PHONY: docs-modules
