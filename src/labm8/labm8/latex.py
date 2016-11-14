@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Chris Cummins.
+# Copyright (C) 2015, 2016 Chris Cummins.
 #
 # Labm8 is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -71,6 +71,7 @@ def write_table_body(data, output=None, headers=None,
         output.write("\\hline\n")
 
     return None if isfile else output.getvalue()
+
 
 def table(rows, columns=None, output=None, data_args={}, **kwargs):
     """

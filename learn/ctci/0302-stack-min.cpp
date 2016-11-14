@@ -9,6 +9,8 @@
 #include <forward_list>
 #include <vector>
 
+static unsigned int seed = 0xCEC;
+
 //
 // Use two singly linked lists: the first, storing the elements
 // themselves (in reverse order, so that pop() and push() modify the
@@ -187,7 +189,7 @@ void BM_MinStack(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (int i = 0; i < len; i++)
-      a.push(static_cast<int>(arc4random()));
+      a.push(static_cast<int>(rand_r(&seed)));
     for (int i = 0; i < len; i++) {
       auto res = a.min();
       a.pop();
@@ -203,7 +205,7 @@ void BM_MinStack_alt(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (int i = 0; i < len; i++)
-      a.push(static_cast<int>(arc4random()));
+      a.push(static_cast<int>(rand_r(&seed)));
     for (int i = 0; i < len; i++) {
       auto res = a.min();
       a.pop();

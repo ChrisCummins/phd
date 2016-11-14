@@ -3,6 +3,8 @@
  */
 #include "./ctci.h"
 
+static unsigned int seed = 0xCEC;
+
 //
 // First solution. Iterate backwards over the string, inserting escape
 // characters as required.
@@ -53,10 +55,10 @@ static const size_t BM_length_max = 10 << 10;
 
 void populateString(char *const t, const size_t strlen, size_t *len) {
   for (size_t i = 0; i < strlen; i++) {
-    if (!arc4random() % 4)
+    if (!rand_r(&seed) % 4)
       t[i] = ' ';
     else
-      t[i] = static_cast<char>(arc4random());
+      t[i] = static_cast<char>(rand_r(&seed));
   }
 
   *len = strlen;

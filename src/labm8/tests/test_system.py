@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Chris Cummins.
+# Copyright (C) 2015, 2016 Chris Cummins.
 #
 # Labm8 is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -111,14 +111,13 @@ class TestSystem(TestCase):
 
     # which()
     def test_which(self):
-        self._test("/bin/ls", system.which("ls"))
-        self._test("/bin/ls", system.which("/bin/ls"))
+        self._test("/bin/sh", system.which("sh"))
         self._test(None, system.which("not-a-real-command"))
 
     def test_which_path(self):
-        self._test("/bin/ls", system.which("ls", path=("/usr", "/bin")))
-        self._test(None, system.which("ls", path=("/dev",)))
-        self._test(None, system.which("ls", path=("/not-a-real-path",)))
+        self._test("/bin/sh", system.which("sh", path=("/usr", "/bin")))
+        self._test(None, system.which("sh", path=("/dev",)))
+        self._test(None, system.which("sh", path=("/not-a-real-path",)))
         self._test(None, system.which("not-a-real-command", path=("/bin",)))
 
     # scp()

@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Chris Cummins.
+# Copyright (C) 2015, 2016 Chris Cummins.
 #
 # This file is part of labm8.
 #
@@ -42,6 +42,7 @@ class NoMakefileError(Error):
     Thrown if a directory does not contain a Makefile.
     """
     pass
+
 
 class NoTargetError(Error):
     """

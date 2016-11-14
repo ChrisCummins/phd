@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Chris Cummins.
+# Copyright (C) 2015, 2016 Chris Cummins.
 #
 # Labm8 is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -27,7 +27,6 @@ class TestMake(TestCase):
         ret, out, err = make.make(dir="tests/data/makeproj")
         self._test(0, ret)
         self._test(True, out is not None)
-        self._test(None, err)
         self._test(True, fs.isfile("tests/data/makeproj/foo"))
         self._test(True, fs.isfile("tests/data/makeproj/foo.o"))
 

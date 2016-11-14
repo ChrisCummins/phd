@@ -4,18 +4,27 @@
 [submodule "extern/skelcl"]
 	path = extern/skelcl
 	url = git@bitbucket.org:skelcl/skelcl.git
-[submodule "tools/llvm"]
-	path = tools/llvm
-	url = git@github.com:ChrisCummins/llvm.git
-[submodule "extern/intel-tbb"]
-	path = extern/intel-tbb
-	url = https://github.com/intel-tbb/intel-tbb.git
 [submodule "extern/benchmark"]
 	path = extern/benchmark
 	url = https://github.com/google/benchmark.git
-[submodule "extern/triSYCL"]
-	path = extern/triSYCL
-	url = https://github.com/amd/triSYCL.git
-[submodule "extern/boost"]
-	path = extern/boost
-	url = https://github.com/boostorg/boost.git
+[submodule "extern/libclc"]
+	path = extern/libclc
+	url = https://github.com/llvm-mirror/libclc.git
+[submodule "lab/humanorrobot.uk"]
+	path = lab/humanorrobot.uk
+	url = git@github.com:ChrisCummins/humanorrobot.uk.git
+[submodule "extern/torch-rnn"]
+	path = extern/torch-rnn
+	url = git@github.com:ChrisCummins/torch-rnn.git
+[submodule "extern/clsmith"]
+	path = extern/clsmith
+	url = git@github.com:ChrisCummins/CLSmith.git
+[submodule "extern/oclgrind"]
+	path = extern/oclgrind
+	url = https://github.com/jrprice/Oclgrind.git
+[submodule "docs/2016-01-adapt"]
+	path = docs/2016-01-adapt
+	url = git@github.com:ChrisCummins/paper-autotuning-opencl-wgsize.git
+[submodule "docs/2016-01-hlpgpu"]
+	path = docs/2016-01-hlpgpu
+	url = git@github.com:ChrisCummins/paper-towards-collaborative-performance-tuning.git

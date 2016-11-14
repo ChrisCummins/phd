@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Chris Cummins.
+# Copyright (C) 2015, 2016 Chris Cummins.
 #
 # Labm8 is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -22,16 +22,13 @@ class TestFmt(TestCase):
 
     # table()
     def test_table(self):
-        self._test(" foo  1\n"
-                   " bar  2",
-                   fmt.table((("foo", 1), ("bar", 2))))
+        self._test(["foo","1", "bar", "2"],
+                   fmt.table((("foo", 1), ("bar", 2))).split())
 
     def test_table_columns(self):
-        self._test("type  value\n"
-                   " foo      1\n"
-                   " bar      2",
+        self._test((["type", "value", "foo", "1", "bar", "2"]),
                    fmt.table((("foo", 1), ("bar", 2)),
-                             columns=("type", "value")))
+                             columns=("type", "value")).split())
 
     def test_table_bad_columns(self):
         with self.assertRaises(fmt.Error):

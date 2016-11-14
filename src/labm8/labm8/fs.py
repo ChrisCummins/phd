@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Chris Cummins.
+# Copyright (C) 2015, 2016 Chris Cummins.
 #
 # Labm8 is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -20,6 +20,7 @@ import shutil
 from glob import iglob
 
 import labm8 as lab
+
 
 class Error(Exception):
     pass
@@ -88,7 +89,7 @@ def cd(path):
 
     Returns absolute path to new working directory.
     """
-    _cdhist.append(pwd()) # Push to history.
+    _cdhist.append(pwd())  # Push to history.
     path = abspath(path)
     os.chdir(path)
     return path
@@ -101,7 +102,7 @@ def cdpop():
     Returns absolute path to new working directory.
     """
     if len(_cdhist) >= 1:
-        old = _cdhist.pop() # Pop from history.
+        old = _cdhist.pop()  # Pop from history.
         os.chdir(old)
         return old
     else:

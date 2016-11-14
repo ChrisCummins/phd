@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Chris Cummins.
+# Copyright (C) 2015, 2016 Chris Cummins.
 #
 # This file is part of labm8.
 #
@@ -18,17 +18,20 @@ import datetime
 
 DEFAULT_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
+
 def strfmt(datetime, format=DEFAULT_DATETIME_FORMAT):
     """
     Format date to string.
     """
     return datetime.strftime(format)
 
+
 def now():
     """
     Get the current datetime.
     """
     return datetime.datetime.now()
+
 
 def nowstr(format=DEFAULT_DATETIME_FORMAT):
     """

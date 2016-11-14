@@ -32,9 +32,10 @@
 % Document starts
 \begin{document}
 
-\title{Proposal}
+\title{Deep Learning over Programs}
 
 \author{Chris Cummins}
+% TODO: Supervisors:
 
 \maketitle
 
@@ -149,6 +150,8 @@ The Orléans Skeleton Library for C++ has exceptions~\cite{Legaux2013}.
 
 \section{Literature Review}
 
+
+Evaluating GPGPU benchmarks~\cite{Ryoo2015}.
 
 \subsection{Skeleton-aware compilation}
 
@@ -347,12 +350,44 @@ exoskeleton
 SkePU related workx
 
 
+\section{Year 1 Progress}
+
+\subsection{Research Outputs}
+
+Publications: ADAPT~\cite{Cummins2015a}; HLPGPU~\cite{Cummins2016}.
+
+Posters at: HiPEAC'16; PLDI'16; ACACES'16.
+
+Talks at: Amazon Development Center, Edinburgh; Ocado Technology,
+Hatfield.
+
+
+\subsection{Codeplay Internship}
+
+ComputeCpp is a compiler and runtime which implements the SYCL
+specification for heterogeneous
+parallelism~\cite{Rovatsou2015}. Compiling a SYCL application with
+ComputeCpp is a two pass process. In the first pass, the device
+compiler produces SPIR code for execution on parallel devices. SPIR is
+an intermediate language which extends LLVM bytecode for parallel
+compute and graphics~\cite{Portable2014}. The second compiler pass
+uses a host compiler and links against the generated SPIR bytecode. At
+runtime, the SYCL runtime schedules kernels for execution on parallel
+devices, and OpenCL platforms compile the SPIR bytecode to executable
+device code.
+
+Eigen~\footnote{\url{http://eigen.tuxfamily.org/}} is a C++ template
+library which provides linear math operations on N-dimensional
+tensors. It is a key dependency of
+TensorFlow~\footnote{\url{https://www.tensorflow.org/}}. VisionCPP~\cite{Goli2016a}. Kernel
+composition~\cite{Potter2015}. Tree kernels~\cite{Annesi2014}.
+
 \section{Work Plan}
 
 Paper 1, Paper 2, Paper 3.
 
 
-\section{Conclusions}
+\section{Conclusion}
 
 
 \newpage

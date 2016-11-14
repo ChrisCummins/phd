@@ -86,8 +86,8 @@ def bitcode(source, language="cl", path=DEFAULT_LLVM_PATH):
         "-target", "nvptx64-nvidia-nvcl",
         "-x" + str(language),
         "-emit-llvm",
-        "-c", "-", # Read from stdin
-        "-o", "-" # Output to stdout
+        "-c", "-",  # Read from stdin
+        "-o", "-"  # Output to stdout
     ]
 
     clang = subprocess.Popen(clang_args,
@@ -131,7 +131,7 @@ def instcounts(bitcode, path=DEFAULT_LLVM_PATH):
         "-analyze",
         "-stats",
         "-instcount",
-        "-" # Read from stdin
+        "-"  # Read from stdin
     ]
 
     # LLVM pass output pritns to stderr, so we'll pipe stderr to

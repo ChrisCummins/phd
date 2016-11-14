@@ -24,7 +24,9 @@
 #include <vector>
 #include <cstdint>
 
+#ifdef USE_TBB
 #include "tbb/parallel_for.h"
+#endif
 
 #include "rt/camera.h"
 #include "rt/image.h"
@@ -116,18 +118,24 @@ void Renderer::render(Image *const image) const {
   std::vector<Colour> sampled(borderedSize);
 
   // Collect pixel samples:
+#ifdef USE_TBB
   tbb::parallel_for(
-      static_cast<size_t>(0),
-      sampled.size(),
-      [&](const size_t index) {
-        // Get the pixel coordinates.
-        const auto x = image::x(index, borderedWidth);
-        const auto y = image::y(index, borderedWidth);
+      static_cast<size_t>(0), sampled.size(), [&](const size_t index)
+#else  // USE_TBB
+  for (size_t index = 0; index < sampled.size(); ++index)
+#endif  // USE_TBB
+    {
+      // Get the pixel coordinates.
+      const auto x = image::x(index, borderedWidth);
+      const auto y = image::y(index, borderedWidth);
 
-        // Sample a point in the centre of the pixel.
-        sampled[index] = renderPoint(x + .5, y + .5,
-                                     transformMatrix);
-      });
+      // Sample a point in the centre of the pixel.
+      sampled[index] = renderPoint(x + .5, y + .5,
+                                   transformMatrix);
+    }
+#ifdef USE_TBB
+  );  // NOLINT
+#endif  // USE_TBB
 
   // Allocate memory for super-sampled image.
   std::vector<Colour> superSampled(image->size);

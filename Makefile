@@ -20,6 +20,8 @@
 # spat somehting out to stderr. Then implement an 'all-warn' target
 # which rebuilds these files.
 #
+# Run 'make info' to see build dependencies.
+#
 
 # The default goal is...
 .DEFAULT_GOAL = all
@@ -84,7 +86,8 @@ ArgStrings += "O=[0,1]: enable optimisations in generated files (default=$(O_def
 # Threading controls:
 #
 threads_default := 4
-threads ?= $(threads_default)
+nproc := $(shell which nproc 2>/dev/null >/dev/null && nproc || echo $(threads_default))
+threads ?= $(shell echo "$(nproc) * 2" | bc -l)
 ArgStrings += "threads=[1+]: set number of build threads (default=$(threads_default))"
 
 
@@ -101,20 +104,18 @@ V2 = $(__verbosity_2_$(V))
 
 ########################################################################
 #                         User Configuration
+CC ?= gcc
+CXX ?= g++
+CLANGTIDY ?= clang-tidy
+SUDO ?= sudo
 
-AWK ?= awk
-EGREP ?= egrep
-GIT ?= git
-GREP ?= grep
-PYTHON2 ?= python2
-PYTHON3 ?= python3
-RM ?= rm -fv
-SED ?= sed
-SHELL ?= /bin/bash
-
+# Install prefix:
+PREFIX ?= /usr/local
 
 # Non-configurable;
 MAKEFLAGS := -j$(threads)
+SHELL = /bin/bash
+UNAME := $(shell uname)
 
 
 ########################################################################
@@ -181,6 +182,9 @@ endef
 
 # Assume no out-of-tree builds:
 root := $(PWD)
+src := $(root)/.src
+build := $(root)/.build
+cache := $(root)/.cache
 
 comma := ,
 space :=
@@ -190,16 +194,17 @@ AutotexTargets =
 BuildTargets =
 CleanFiles =
 CleanTargets =
-CTargets =
-CxxTargets =
+CObjects =
 CppLintSources =
+CTargets =
+CxxObjects =
+CxxTargets =
 DistcleanFiles =
 DistcleanTargets =
 DontLint =
 InstallTargets =
-Python2SetupInstallDirs =
+PyLintSources =
 Python2SetupTestDirs =
-Python3SetupInstallDirs =
 Python3SetupTestDirs =
 TestTargets =
 
@@ -225,6 +230,47 @@ DocStrings =
 #   $2 (str[]) List
 define join-with
 	$(subst $(space),$1,$(strip $2))
+endef
+
+
+# Install a file to a location and set mode. Provides a subset of the
+# functionality of GNU install, which Mac OS X doesn't provide.
+#
+# Arguments:
+#   $1 (str) Destination
+#   $2 (str) Source
+#   $3 (str) Mode
+define install
+	$(call print-task,INSTALL,$1,$(TaskInstall))
+	$(V1)$(SUDO) mkdir -p $(dir $1)
+	$(V1)$(SUDO) cp $2 $1
+	$(V1)$(SUDO) chmod $3 $1
+endef
+
+
+# Download a remote resource.
+#
+# Arguments:
+#   $1 (str) Target path
+#   $2 (str) Source URL
+#
+define wget
+	$(call print-task,FETCH,$1,$(TaskInstall))
+	$(V1)mkdir -p $(dir $1)
+	$(V1)wget -O $1 $2 &>/dev/null
+endef
+
+# Unpack an LLVM Tarball.
+#
+# Arguments:
+#   $1 (str) Target directory
+#   $2 (str) Source tarball.
+#   $3 (str) Tar arguments.
+#
+define unpack-tar
+	$(call print-task,UNPACK,$2)
+	$(V1)mkdir -p $1
+	$(V1)tar -xf $2 -C $1 --strip-components=1
 endef
 
 
@@ -265,15 +311,15 @@ endef
 o-link-cmd = $(LD) $(CxxFlags) $(LdFlags)
 define o-link
 	$(call print-task,LD,$1,$(TaskLink))
-	$(V1)$(o-link-cmd) $3 $2 -o $1
+	$(V1)$(o-link-cmd) -o $1 $2 $3
 endef
 
 
 cpplint-cmd = $(CPPLINT) $(CxxLintFlags) $1 2>&1 \
 	| grep -v '^Done processing\|^Total errors found: ' \
-	| tee $1.lint
+	| tee $1.cpplint
 
-# Run cpplint on input, generating a .lint file.
+# Run cpplint on input, generating a .cpplint file.
 #
 # Arguments:
 #   $1 (str) C++ source/header
@@ -285,7 +331,36 @@ define cpplint
 endef
 
 
-clang-tidy-cmd = $(CLANGTIDY) $1 -- $(CxxFlags) $2
+pylint-cmd = $(PYLINT) $(PyLintFlags) $2 2>&1 \
+	| tee $1
+
+# Run pylint on input.
+#
+# Arguments:
+#   $1 (str) Destination output file.
+#   $2 (str) Source python file.
+#
+define pylint
+	$(V2)if [[ -z "$(filter $2, $(DontLint))" ]]; then \
+		test -z "$(V1)" && echo "$(pylint-cmd)"; \
+		$(pylint-cmd); \
+	fi
+endef
+
+
+# Clang-tidy configuration. Disabled checks:
+#
+#    insecureAPI.rand - On Mac OS X it suggests using BSD-system's
+#                       arc4random(), which is not available on Linux
+#                       builds.
+#
+clang-tidy-disabled-checks = \
+	clang-analyzer-security.insecureAPI.rand \
+	$(NULL)
+clang-tidy-checks-arg = -checks=-$(strip \
+	$(call join-with,$(comma)-,$(clang-tidy-disabled-checks)))
+clang-tidy-cmd = $(CLANGTIDY) $1 $(clang-tidy-checks-arg) \
+	-- $(CxxFlags) $2
 
 # Run clang-tidy on input.
 #
@@ -301,8 +376,10 @@ endef
 
 
 python-setup-test-cmd = \
-	cd $2 && $(strip $1) ./setup.py test &> $2/.$(strip $1).test.log \
-	&& $(GREP) -E '^Ran [0-9]+ tests in' $2/.$(strip $1).test.log \
+	cd $2 && test -f env/bin/activate || virtualenv -p $1 env \
+	&& source env/bin/active \
+	&& $(strip $1) ./setup.py test &> $2/.$(strip $1).test.log \
+	&& grep -E '^Ran [0-9]+ tests in' $2/.$(strip $1).test.log \
 	|| sed -n -e '/ \.\.\. /,$${p}' $2/.$(strip $1).test.log | \
 	grep -v '... ok'
 
@@ -314,21 +391,6 @@ python-setup-test-cmd = \
 define python-setup-test
 	$(call print-task,TEST,$(strip $1) $(strip $2),$(TaskMisc))
 	$(V1)$(python-setup-test-cmd)
-endef
-
-
-python-setup-install-cmd = \
-	cd $2 && $(strip $1) ./setup.py install &> $2/.$(strip $1).install.log \
-	|| cat $2/.$(strip $1).install.log
-
-# Run python setup.py install
-#
-# Arguments:
-#   $1 (str) Python executable
-#   $2 (str) Source directory
-define python-setup-install
-	$(call print-task,INSTALL,$2,$(TaskInstall))
-	$(V1)$(python-setup-install-cmd)
 endef
 
 
@@ -355,10 +417,13 @@ endef
 # docs/
 #
 AutotexTargets += \
-	$(root)/docs/2015-01-msc-thesis/thesis.pdf \
-	$(root)/docs/2015-02-progression-review/document.pdf \
+	$(root)/docs/2015-08-msc-thesis/thesis.pdf \
+	$(root)/docs/2015-09-progression-review/document.pdf \
 	$(root)/docs/2016-01-adapt/adapt.pdf \
-	$(root)/docs/2016-02-hlpgpu/hlpgpu.pdf \
+	$(root)/docs/2016-01-hlpgpu/hlpgpu.pdf \
+	$(root)/docs/2016-06-pldi/abstract.pdf \
+	$(root)/docs/2016-07-acaces/abstract.pdf \
+	$(root)/docs/2016-07-pact/pact.pdf \
 	$(root)/docs/wip-outline/outline.pdf \
 	$(root)/docs/wip-taco/taco.pdf \
 	$(NULL)
@@ -373,81 +438,139 @@ extern := $(root)/extern
 #
 # extern/benchmark
 #
-GoogleBenchmark = $(extern)/benchmark/build/src/libbenchmark.a
-GoogleBenchmark_CxxFlags = \
-	-I$(extern)/benchmark/include -Wno-global-constructors
-GoogleBenchmark_LdFlags = -L$(extern)/benchmark/build/src -lbenchmark
-
-$(GoogleBenchmark):
-	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(V1)mkdir -pv $(extern)/benchmark/build
-	$(V1)cd $(extern)/benchmark/build && cmake .. && $(MAKE)
-
-.PHONY: distclean-googlebenchmark
-distclean-googlebenchmark:
-	$(V1)$(RM) -r $(extern)/benchmark/build
-
-DistcleanTargets += distclean-googlebenchmark
-
+include make/googlebenchmark.make
 
 #
 # extern/boost
 #
-Boost = $(extern)/boost/boost/system
-BoostDir = $(extern)/boost
-BoostConfigDir = $(tools)
+BoostVersion := 1.46.1
+BoostSrc := $(src)/boost/$(BoostVersion)
+BoostBuild = $(build)/boost/$(BoostVersion)
+Boost = $(BoostBuild)/include/boost/regex.h
 
-Boost_CxxFlags = -I$(extern)/boost/boost
-Boost_LdFlags = -L$(BoostDir)/stage/lib
+CachedBoostTarball = $(cache)/boost_$(subst .,_,$(BoostVersion)).tar.gz
+BoostUrlBase = http://sourceforge.net/projects/boost/files/boost/$(BoostVersion)/
+
+# Download boost tarball
+$(CachedBoostTarball):
+	$(call wget,$(CachedBoostTarball),$(BoostUrlBase)$(notdir $(CachedBoostTarball)))
+
+# Unpack boost tarball
+$(BoostSrc)/bootstrap.sh: $(CachedBoostTarball)
+	$(call unpack-tar,$(BoostSrc),$<,-zxf)
+
+# Build boost. Even if it fails, we don't care. We only need it to copy
+# the headers over for us.
+$(Boost)-cmd = \
+	cd $(BoostSrc) \
+	&& ./bootstrap.sh --prefix=$(BoostBuild) >/dev/null \
+	&& ./bjam install >/dev/null || true
+
+$(Boost): $(BoostSrc)/bootstrap.sh
+	$(call print-task,BUILD,boost,$(TaskMisc))
+	$(V1)rm -rf $(BoostBuild)
+	$(V1)mkdir -p $(BoostBuild)
+	$(V1)$($(Boost)-cmd)
+
+Boost_CxxFlags = -isystem $(BoostBuild)/include/boost/regex.h
+Boost_LdFlags = -L$(BoostBuild)/lib
 
 Boost_filesystem_CxxFlags = $(Boost_CxxFlags)
 Boost_filesystem_LdFlags = $(Boost_LdFlags) -lboost_filesystem -lboost_system
 
-$(Boost)-cmd = \
-	cd $(BoostDir) && \
-	./bootstrap.sh --prefix=$(BoostBuild) cxxflags="-stdlib=libc++" stage \
-	&& BOOST_BUILD_PATH=$(BoostConfigDir) \
-	./b2 --prefix=$(BoostBuild) threading=multi \
-	link=static runtime-link=static \
-	cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++"
-
-$(Boost):
-	$(call print-task,BUILD,boost,$(TaskMisc))
-	$(V1)mkdir -pv $(BoostBuild)
-	$(V1)$($(Boost)-cmd)
+boost: $(Boost)
+DocStrings += "boost: build Boost library"
 
 distclean-boost-cmd = \
-	cd $(BoostDir) && ./b2 clean \
-	&& find . -name '*.a' -o -name '*.o' -exec rm {} \;
+	find $(BoostDir) -name '*.a' -o -name '*.o' 2>/dev/null \
+		| grep -v config_test.o | xargs rm -fv
 
 .PHONY: distclean-boost
 distclean-boost:
+	$(V1)if [ -d $(BoostDir) ]; then cd $(BoostDir) && if [ -f bjam ]; then ./bjam clean &>/dev/null; fi fi
 	$(V1)$(distclean-boost-cmd)
-
 DistcleanTargets += distclean-boost
+
+
+#
+# extern/clsmith
+#
+CLSmith = $(extern)/clsmith/build/CLSmith
+
+$(CLSmith)-cmd = \
+	cd $(extern)/clsmith/build \
+	&& cmake .. >/dev/null && $(MAKE)
+
+$(CLSmith):
+	$(call print-task,BUILD,$@,$(TaskMisc))
+	$(V1)mkdir -p $(extern)/clsmith/build
+	$(V1)$($(CLSmith)-cmd)
+
+.PHONY: distclean-clsmith
+distclean-clsmith:
+	$(V1)rm -fv -r $(extern)/clsmith/build
+
+DistcleanTargets += distclean-clsmith
 
 
 #
 # extern/googletest
 #
-GoogleTest = $(extern)/googletest-build/libgtest.a
-GoogleTest_CxxFlags = -I$(extern)/googletest/googletest/include
-GoogleTest_LdFlags = -L$(extern)/googletest-build -lgtest
+include make/googletest.make
 
-$(GoogleTest)-cmd = \
-	cd $(extern)/googletest-build \
-	&& cmake ../googletest/googletest && $(MAKE)
 
-$(GoogleTest):
+#
+# extern/intel-tbb
+#
+intelTbbDir = $(build)/intel-tbb
+intelTbbBuildDir = $(intelTbbDir)/build/build_release
+
+intelTbb = $(intelTbbBuildDir)/libtbb.so
+
+CachedTbbTarball = $(cache)/tbb44_20160526oss_src_0.tgz
+intelTbbUrlBase = https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/
+
+$(CachedTbbTarball):
+	$(call wget,$(CachedTbbTarball),$(intelTbbUrlBase)$(notdir $(CachedTbbTarball)))
+
+$(intelTbb): $(CachedTbbTarball)
+	$(call unpack-tar,$(intelTbbDir),$<,zxf)
 	$(call print-task,BUILD,$@,$(TaskMisc))
-	$(V1)mkdir -pv $(extern)/googletest-build
-	$(V1)$($(GoogleTest)-cmd)
+	$(V1)cd $(intelTbbDir) && $(MAKE) clean >/dev/null
+	$(V1)cd $(intelTbbDir) && tbb_build_prefix=build $(MAKE) >/dev/null
 
-.PHONY: distclean-googletest
-distclean-googletest:
-	$(V1)$(RM) -r $(extern)/googletest-build
+intelTbb_CxxFlags = -isystem $(intelTbbDir)/include
+intelTbb_LdFlags = -L$(intelTbbBuildDir) -ltbb
 
-DistcleanTargets += distclean-googletest
+.PHONY: distclean-intel-tbb
+distclean-intel-tbb:
+	$(V1)rm -fv -r $(intelTbbDir)
+DistcleanTargets += distclean-intel-tbb
+
+
+#
+# extern/libclc
+#
+LibclcDir = $(extern)/libclc
+Libclc = $(LibclcDir)/utils/prepare-builtins.o
+
+Libclc_CxxFlags = -Dcl_clang_storage_class_specifiers \
+	-I$(LibclcDir)/generic/include \
+	-include $(LibclcDir)/generic/include/clc/clc.h \
+	-target nvptx64-nvidia-nvcl -x cl
+
+$(Libclc)-cmd = \
+	cd $(LibclcDir) && ./configure.py && $(MAKE)
+
+$(Libclc):
+	$(call print-task,BUILD,$@,$(TaskMisc))
+	$(V1)$($(Libclc)-cmd)
+
+.PHONY: distclean-libclc
+distclean-libclc:
+	$(V1)cd $(LibclcDir) && if [ -f Makefile ]; then $(MAKE) clean; fi
+
+DistcleanTargets += distclean-libclc
 
 
 #
@@ -455,21 +578,71 @@ DistcleanTargets += distclean-googletest
 #
 OpenCL_CFlags = -I$(extern)/opencl/include
 OpenCL_CxxFlags = $(OpenCL_CFlags)
+ifeq ($(UNAME),Darwin)
 OpenCL_LdFlags = -framework OpenCL
+else
+OpenCL_LdFlags = -lOpenCL
+endif
 OpenCL = $(extern)/opencl/include/cl.hpp
 
 
 #
 # extern/triSYCL
 #
-TriSYCL_CxxFlags = -I$(extern)/triSYCL/include
-TriSYCL = $(extern)/triSYCL/include/CL/sycl.hpp
+# TriSYCL_CxxFlags = $(Boost_CxxFlags) -isystem $(extern)/triSYCL/include
+# TriSYCL = $(extern)/triSYCL/include/CL/sycl.hpp
 
 
 #
 # lab/
 #
 lab := $(root)/lab
+
+
+#
+# lab/lm
+#
+LmHeaders = $(filter-out $(wildcard $(lab)/lm/include/lm/*.cpplint),$(wildcard $(lab)/lm/include/lm/*))
+CppLintSources += $(LmHeaders)
+Lm_CxxFlags = -I$(lab)/lm/include
+
+# Lm unit tests:
+LmTestsSources = $(wildcard $(lab)/lm/tests/*.cpp)
+LmTestsObjects = $(patsubst %.cpp,%.o,$(LmTestsSources))
+CxxObjects += $(LmTestsObjects)
+$(LmTestsObjects): $(LmHeaders) $(phd) $(GoogleTest)
+$(lab)/lm/tests/%.o: $(lab)/lm/tests/%.cpp
+
+$(lab)/lm/tests/tests: $(LmTestsObjects)
+CxxTargets += $(lab)/lm/tests/tests
+$(lab)/lm/tests_CxxFlags = $(Lm_CxxFlags) $(phd_CxxFlags)
+$(lab)/lm/tests_LdFlags = $(phd_LdFlags)
+
+# Lm benchmarks:
+LmBenchmarksSources = $(wildcard $(lab)/lm/benchmarks/*.cpp)
+LmBenchmarksObjects = $(patsubst %.cpp,%.o,$(LmBenchmarksSources))
+CxxObjects += $(LmBenchmarksObjects)
+$(LmBenchmarksObjects): $(LmHeaders) $(phd) $(GoogleBenchmark)
+$(lab)/lm/benchmarks/%.o: $(lab)/lm/benchmarks/%.cpp
+
+$(lab)/lm/benchmarks/benchmarks: $(LmBenchmarksObjects)
+CxxTargets += $(lab)/lm/benchmarks/benchmarks
+$(lab)/lm/benchmarks_CxxFlags = $(Lm_CxxFlags) $(phd_CxxFlags)
+$(lab)/lm/benchmarks_LdFlags = $(phd_LdFlags)
+
+
+#
+# lab/patterns
+#
+PatternsHeaders = $(wildcard $(lab)/patterns/*.hpp)
+PatternsCxxSources = $(wildcard $(lab)/patterns/*.cpp)
+PatternsCxxObjects = $(patsubst %.cpp,%.o,$(PatternsCxxSources))
+CxxObjects += $(PatternsCxxObjects)
+CxxTargets += $(patsubst %.cpp,%,$(PatternsCxxSources))
+
+$(lab)/patterns_CxxFlags = $(phd_CxxFlags)
+$(lab)/patterns_LdFlags = $(phd_LdFlags)
+$(PatternsCxxObjects): $(phd) $(PatternsHeaders)
 
 
 #
@@ -481,6 +654,7 @@ StlComponents = \
 	forward_list \
 	list \
 	map \
+	set \
 	stack \
 	type_traits \
 	unordered_map \
@@ -495,11 +669,12 @@ Stl_CxxFlags = -I$(lab)/stl/include
 StlTestsSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/tests/,$(StlComponents)))
 StlTestsObjects = $(patsubst %.cpp,%.o,$(StlTestsSources))
-$(StlTestsObjects): $(StlHeaders) $(phd)
+CxxObjects += $(StlTestsObjects)
+$(StlTestsObjects): $(StlHeaders) $(phd) $(GoogleTest)
 $(lab)/stl/tests/%.o: $(lab)/stl/tests/%.cpp
 
 $(lab)/stl/tests/tests: $(StlTestsObjects)
-CxxTargets += $(lab)/stl/tests/tests
+# CxxTargets += $(lab)/stl/tests/tests
 $(lab)/stl/tests_CxxFlags = $(Stl_CxxFlags) $(phd_CxxFlags)
 $(lab)/stl/tests_LdFlags = $(phd_LdFlags)
 
@@ -507,11 +682,12 @@ $(lab)/stl/tests_LdFlags = $(phd_LdFlags)
 StlBenchmarksSources = $(addsuffix .cpp,\
 	$(addprefix $(lab)/stl/benchmarks/,$(StlComponents)))
 StlBenchmarksObjects = $(patsubst %.cpp,%.o,$(StlBenchmarksSources))
+CxxObjects += $(StlBenchmarksObjects)
 $(StlBenchmarksObjects): $(StlHeaders) $(phd)
 $(lab)/stl/benchmarks/%.o: $(lab)/stl/benchmarks/%.cpp
 
 $(lab)/stl/benchmarks/benchmarks: $(StlBenchmarksObjects)
-CxxTargets += $(lab)/stl/benchmarks/benchmarks
+# CxxTargets += $(lab)/stl/benchmarks/benchmarks
 $(lab)/stl/benchmarks_CxxFlags = $(Stl_CxxFlags) $(phd_CxxFlags)
 $(lab)/stl/benchmarks_LdFlags = $(phd_LdFlags)
 
@@ -527,6 +703,7 @@ learn := $(root)/learn
 #
 AtcppCxxSources = $(wildcard $(learn)/atc++/*.cpp)
 AtcppCxxObjects = $(patsubst %.cpp,%.o,$(AtcppCxxSources))
+CxxObjects += $(AtcppCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(AtcppCxxSources))
 
 $(learn)/atc++_CxxFlags = $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
@@ -539,9 +716,10 @@ $(wildcard $(learn)/atc++/%.o): $(GoogleTest)
 #
 LearnBoostCxxSources = $(wildcard $(learn)/boost/*.cpp)
 LearnBoostCxxObjects = $(patsubst %.cpp,%.o,$(LearnBoostCxxSources))
+CxxObjects += $(LearnBoostCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(LearnBoostCxxSources))
 
-$(learn)/boost_CxxFlags = $(Boost_filesystem_CxxFlags)
+$(learn)/boost_CxxFlags = $(Boost_filesystem_CxxFlags) -I/opt/local/include
 $(learn)/boost_LdFlags = $(Boost_filesystem_LdFlags) -lcrypto -lssl
 $(LearnBoostCxxObjects): $(Boost)
 
@@ -553,7 +731,13 @@ $(LearnBoostCxxObjects): $(Boost)
 # C++ solutions:
 ChallengesCxxSources = $(wildcard $(learn)/challenges/*.cpp)
 ChallengesCxxObjects = $(patsubst %.cpp,%.o,$(ChallengesCxxSources))
+CxxObjects += $(ChallengesCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(ChallengesCxxSources))
+
+ChallengesCSources = $(wildcard $(learn)/challenges/*.c)
+ChallengesCObjects = $(patsubst %.c,%.o,$(ChallengesCSources))
+CObjects += $(ChallengesCObjects)
+CTargets += $(patsubst %.c,%,$(ChallengesCSources))
 
 DontLint += $(learn)/challenges/009-longest-substr.cpp
 
@@ -563,8 +747,8 @@ $(learn)/challenges/011-big-mandelbrot.o: $(OpenCL)
 
 $(learn)/challenges_CxxFlags = $(phd_CxxFlags)
 $(learn)/challenges_LdFlags = $(phd_LdFlags)
-$(ChallengesCxxObjects): $(phd)
-
+$(ChallengesCObjects) $(ChallengesCxxObjects): \
+	$(phd) $(GoogleBenchmark) $(GoogleTest)
 
 #
 # learn/ctci/
@@ -573,11 +757,12 @@ $(ChallengesCxxObjects): $(phd)
 # C++ solutions:
 CtCiCxxSources = $(wildcard $(learn)/ctci/*.cpp)
 CtCiCxxObjects = $(patsubst %.cpp,%.o,$(CtCiCxxSources))
+CxxObjects += $(CtCiCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(CtCiCxxSources))
 
 $(learn)/ctci_CxxFlags = $(GoogleBenchmark_CxxFlags) $(GoogleTest_CxxFlags)
 $(learn)/ctci_LdFlags = $(GoogleBenchmark_LdFlags) $(GoogleTest_LdFlags)
-$(CtCiCxxObjects): $(GoogleBenchmark) $(GoogleTest)
+$(CtCiCxxObjects): $(phd) $(GoogleBenchmark) $(GoogleTest)
 
 
 #
@@ -600,12 +785,14 @@ $(HooclCCommonObjects): $(OpenCL) $(HooclCommonHeaders)
 # C solutions:
 HooclCSources = $(wildcard $(learn)/hoocl/*.c)
 HooclCObjects = $(patsubst %.c,%.o,$(HooclCSources))
+CObjects += $(HooclCObjects)
 CTargets += $(patsubst %.c,%,$(HooclCSources))
 $(HooclCObjects): $(OpenCL) $(HooclCCommonObjects) $(HooclCommonHeaders)
 
 # C++ solutions:
 HooclCxxSources = $(wildcard $(learn)/hoocl/*.cpp)
 HooclCxxObjects = $(patsubst %.cpp,%.o,$(HooclCxxSources))
+CxxObjects += $(HooclCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(HooclCxxSources))
 
 $(learn)/hoocl_CFlags = $(OpenCL_CFlags) -I$(learn)/hoocl/include
@@ -617,13 +804,14 @@ $(HooclCxxObjects): $(OpenCL)
 #
 # learn/triSYCL/
 #
-LearnTriSYCLCxxSources = $(wildcard $(learn)/triSYCL/*.cpp)
-LearnTriSYCLCxxObjects = $(patsubst %.cpp,%.o,$(LearnTriSYCLCxxSources))
-CxxTargets += $(patsubst %.cpp,%,$(LearnTriSYCLCxxSources))
+# LearnTriSYCLCxxSources = $(wildcard $(learn)/triSYCL/*.cpp)
+# LearnTriSYCLCxxObjects = $(patsubst %.cpp,%.o,$(LearnTriSYCLCxxSources))
+# CxxObjects += $(LearnTriSYCLCxxObjects)
+# CxxTargets += $(patsubst %.cpp,%,$(LearnTriSYCLCxxSources))
 
-$(learn)/triSYCL_CxxFlags = $(TriSYCL_CxxFlags) $(phd_CxxFlags)
-$(learn)/triSYCL_LdFlags = $(TriSYCL_CxxFlags) $(phd_LdFlags)
-$(LearnTriSYCLCxxObjects): $(TriSYCL) $(phd)
+# $(learn)/triSYCL_CxxFlags = $(TriSYCL_CxxFlags) $(phd_CxxFlags)
+# $(learn)/triSYCL_LdFlags = $(TriSYCL_CxxFlags) $(phd_LdFlags)
+# $(LearnTriSYCLCxxObjects): $(TriSYCL) $(phd) $(Boost) $(GoogleBenchmark)
 
 
 #
@@ -633,11 +821,12 @@ $(LearnTriSYCLCxxObjects): $(TriSYCL) $(phd)
 # C++ solutions:
 LearnPcCxxSources = $(wildcard $(learn)/pc/*.cpp)
 LearnPcCxxObjects = $(patsubt %.cpp,%.o,$(LearnPcCxxSources))
+CxxObjects += $(LearnPcCxxObjects)
 CxxTargets += $(patsubst %.cpp,%,$(LearnPcCxxSources))
 
 $(learn)/pc_CxxFlags = $(phd_CxxFlags)
 $(learn)/pc_LdFlags = $(phd_LdFlags)
-$(LearnPcCxxObjects): $(phd)
+$(LearnPcCxxObjects): $(phd) $(GoogleBenchmark) $(GoogleTest)
 
 
 #
@@ -656,10 +845,11 @@ CxxTargets += $(playground)/r/main
 RayTracerDir = $(playground)/rt
 RayTracerLib = $(RayTracerDir)/src/librt.so
 
-CxxTargets += \
+RayTracerBins = \
 	$(RayTracerDir)/examples/example1 \
 	$(RayTracerDir)/examples/example2 \
 	$(NULL)
+CxxTargets += $(RayTracerBins)
 
 $(RayTracerDir)/examples/example1: $(RayTracerLib)
 
@@ -695,14 +885,16 @@ CppLintSources += $(RayTracerHeaders)
 
 RayTracerSources = $(wildcard $(RayTracerDir)/src/*.cpp)
 RayTracerObjects = $(patsubst %.cpp,%.o,$(RayTracerSources))
+CxxObjects += $(RayTracerObjects)
 
-$(RayTracerObjects): $(RayTracerHeaders) $(toolchain)
+$(RayTracerObjects) $(addsuffix .o,$(RayTracerBins)): \
+	$(RayTracerHeaders) $(intelTbb)
 
 # Project specific flags:
-RayTracerCxxFlags = -I$(RayTracerDir)/include
+RayTracerCxxFlags = -fPIC -I$(RayTracerDir)/include
 $(RayTracerDir)/src_CxxFlags = $(RayTracerCxxFlags)
-$(RayTracerDir)/examples_CxxFlags = $(RayTracerCxxFlags)
-$(RayTracerDir)/examples_LdFlags = -ltbb -lrt -L$(dir $(RayTracerLib))
+$(RayTracerDir)/examples_CxxFlags = $(intelTbb_CxxFlags) $(RayTracerCxxFlags)
+$(RayTracerDir)/examples_LdFlags = $(intelTbb_LdFlags) -lrt -L$(dir $(RayTracerLib))
 
 # Link library:
 $(RayTracerLib): $(RayTracerObjects)
@@ -720,33 +912,54 @@ CxxTargets += $(root)/playground/sc/sc
 #
 # src/
 #
-src = $(root)/src
 
 #
 # src/labm8
 #
-Python2SetupTestDirs += $(src)/labm8
-Python2SetupInstallDirs += $(src)/labm8
-Python3SetupTestDirs += $(src)/labm8
-Python3SetupInstallDirs += $(src)/labm8
+Python2SetupTestDirs += $(root)/src/labm8
+# Python3SetupTestDirs += $(root)/src/labm8
+PyLintSources += $(wildcard $(root)/src/labm8/labm8/*.py)
 
 
 #
 # src/omnitune
 #
-Python2SetupTestDirs += $(src)/omnitune
-Python2SetupInstallDirs += $(src)/omnitune
+# Python2SetupTestDirs += $(root)/src/omnitune
+PyLintSources += $(wildcard $(root)/src/omnitune/omnitune/*.py)
+
+# Omnitune depends on labm8:
+$(root)/src/omnitune/.python2.install.log: $(root)/src/labm8/.python2.install.log
 
 
 #
 # src/phd
 #
-phdHeaders = $(wildcard $(src)/phd/include/*)
-phd_CxxFlags = \
-	-I$(src)/phd/include $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
-phd_LdFlags = $(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
-phd = $(phdHeaders)
-$(phd): $(GoogleBenchmark) $(GoogleTest)
+phdSrc = $(root)/src/phd/src
+phdInclude = $(root)/src/phd/include
+
+phd = $(phdSrc)/libphd.so
+
+phdCxxSources = $(wildcard $(phdSrc)/*.cpp)
+phdCxxObjects = $(patsubst %.cpp,%.o,$(phdCxxSources))
+CxxObjects += $(phdCxxObjects)
+$(phdCxxObjects): $(GoogleBenchmark) $(GoogleTest)
+
+phdCxxHeaders = $(filter-out %.cpplint,$(wildcard $(phdInclude)/*))
+CppLintSources += $(phdCxxHeaders)
+
+# Flags to build phd.
+$(phdSrc)_CxxFlags = \
+	-I$(phdInclude) $(GoogleTest_CxxFlags) $(GoogleBenchmark_CxxFlags)
+$(phdSrc)_LdFlags = \
+	$(GoogleTest_LdFlags) $(GoogleBenchmark_LdFlags)
+
+# Build phd.
+$(phd): $(phdCxxObjects)
+	$(call o-link,$@,$(phdCxxObjects),-fPIC -shared)
+
+# Flags to build against phd.
+phd_CxxFlags = $($(phdSrc)_CxxFlags)
+phd_LdFlags = $($(phdSrc)_LdFlags)
 
 
 #
@@ -754,305 +967,33 @@ $(phd): $(GoogleBenchmark) $(GoogleTest)
 #
 AutotexTargets += $(root)/thesis/thesis.pdf
 
+#
+# tools/
+#
+pgit = $(PREFIX)/bin/pgit
+$(pgit): $(root)/tools/pgit
+	$(call install,$@,$<,0755)
+InstallTargets += $(pgit)
+
+# make_tools/
+pmake = $(PREFIX)/bin/pmake
+$(pmake): $(root)/make_tools/pmake
+	$(call install,$@,$<,0755)
+InstallTargets += $(pmake)
+
 
 ########################################################################
 #                         Build rules
 
 
-#
-# C
-#
-CC := $(root)/tools/llvm/build/bin/clang
+include make/C.make
+include make/Cxx.make
+include make/ld.make
+include make/latex.make
+include make/python.make
 
-BuildTargets += $(CTargets)
-
-CObjects = $(addsuffix .o, $(CTargets))
-CSources = $(addsuffix .c, $(CTargets))
-
-CTargets: $(CObjects)
-CObjects: $(CSources)
-
-CleanFiles += $(CTargets) $(CObjects)
-
-# Compiler flags:
-COptimisationFlags_0 = -O0
-COptimisationFlags_1 = -O2
-COptimisationFlags = $(COptimisationFlags_$(O))
-
-# Debug flags:
-CDebugFlags_1 = -g
-CDebugFlags = $(CDebugFlags_$(D))
-
-CFlags = \
-	$(COptimisationFlags) \
-	$(CDebugFlags) \
-	-std=c11 \
-	-pedantic \
-	-Weverything \
-	-Wno-bad-function-cast \
-	-Wno-double-promotion \
-	-Wno-missing-prototypes \
-	-Wno-missing-variable-declarations \
-	-Wno-unused-parameter \
-	$(NULL)
-
-%.o: %.c
-	$(call c-compile-o,$@,$<,\
-		$($(patsubst %/,%,$@)_CFlags) \
-		$($(patsubst %/,%,$(dir $@))_CFlags))
-
-c: $(CTargets)
-DocStrings += "c: build C targets"
-
-.PHONY: print-cc
-print-cc:
-	$(V2)echo $(c-compile-o-cmd) $($(PMAKE_INVOC_DIR)_CxxFlags)
-DocStrings += "print-cc: print cc compiler invocation"
-
-
-#
-# C++
-#
-CXX := $(root)/tools/llvm/build/bin/clang++
-CLANGTIDY := $(root)/tools/llvm/build/bin/clang-tidy
-
-CxxObjects = $(addsuffix .o, $(CxxTargets))
-CxxSources = $(addsuffix .cpp, $(CxxTargets))
-
-# Source -> object -> target
-BuildTargets += $(CxxTargets)
-CxxTargets: $(CxxObjects)
-CxxObjects: $(CxxSources)
-
-CleanFiles += $(CxxTargets) $(CxxObjects)
-
-# Compiler flags:
-
-# Inherit optimisation/debug flags from C config:
-CxxOptimisationFlags_$(O) = $(COptimisationFlags_$(O))
-CxxOptimisationFlags = $(CxxOptimisationFlags_$(O))
-
-CxxDebugFlags_$(D) = $(CDebugFlags_$(D))
-CxxDebugFlags = $(CxxDebugFlags_$(D))
-
-CxxFlags = \
-	$(CxxOptimisationFlags) \
-	$(CxxDebugFlags) \
-	-std=c++1z \
-	-stdlib=libc++ \
-	-pedantic \
-	-Weverything \
-	-Wno-c++98-compat \
-	-Wno-c++98-compat-pedantic \
-	-Wno-documentation \
-	-Wno-documentation-unknown-command \
-	-Wno-double-promotion \
-	-Wno-exit-time-destructors \
-	-Wno-float-equal \
-	-Wno-global-constructors \
-	-Wno-missing-braces \
-	-Wno-missing-prototypes \
-	-Wno-missing-variable-declarations \
-	-Wno-padded \
-	-Wno-switch-enum \
-	-Wno-unused-parameter \
-	-Wno-weak-vtables \
-	$(NULL)
-
-%.o: %.cpp
-	$(call cxx-compile-o,$@,$<,\
-		$($(patsubst %/,%,$@)_CxxFlags) \
-		$($(patsubst %/,%,$(dir $@))_CxxFlags))
-
-cpp: $(CxxTargets)
-DocStrings += "cpp: build C++ targets"
-
-.PHONY: print-cxx
-print-cxx:
-	$(V2)echo $(cxx-compile-o-cmd) $($(PMAKE_INVOC_DIR)_CxxFlags)
-DocStrings += "print-cxx: print cxx compiler invocation"
-
-
-#
-# Cpplint
-#
-CPPLINT := $(root)/tools/cpplint.py
-
-CxxLintFilterFlags = \
-	build/c++11 \
-	build/header_guard \
-	build/include_order \
-	legal \
-	readability/streams \
-	readability/todo \
-	runtime/references \
-	$(NULL)
-CxxLintFilters = -$(strip $(call join-with,$(comma)-,\
-			$(strip $(CxxLintFilterFlags))))
-CxxLintFlags = --root=include --filter=$(CxxLintFilters)
-
-# Deduce:
-CppLintTargets = $(addsuffix .lint, $(CppLintSources))
-BuildTargets += $(CppLintTargets)
-CleanFiles += $(CppLintTargets)
-
-%.lint: %
-	$(call print-task,LINT,$@,$(TaskAux))
-	$(call cpplint,$<)
-
-lint: $(CppLintTargets)
-DocStrings += "lint: build lint files"
-
-
-#
-# Linker
-#
-LD := $(CXX)
-
-LdFlags =
-
-%: %.o
-	$(call o-link,$@,$(filter %.o,$^),\
-		$($(patsubst %/,%,$@)_CxxFlags) \
-		$($(patsubst %/,%,$(dir $@))_CxxFlags) \
-		$($(patsubst %/,%,$@)_LdFlags) \
-		$($(patsubst %/,%,$(dir $@))_LdFlags))
-
-.PHONY: print-ld
-print-ld:
-	$(V2)echo $(o-link-cmd) $($(PMAKE_INVOC_DIR)_CxxFlags) \
-		$($(PMAKE_INVOC_DIR)_LdFlags)
-DocStrings += "print-ld: print linker invocation"
-
-
-#
-# LaTeX
-#
-AUTOTEX := $(root)/tools/autotex.sh
-
-BuildTargets += $(AutotexTargets)
-
-AutotexDirs = $(dir $(AutotexTargets))
-AutotexDepFiles = $(addsuffix .autotex.deps, $(AutotexDirs))
-AutotexLogFiles = $(addsuffix .autotex.log, $(AutotexDirs))
-
-# Autotex does it's own dependency analysis, so always run it:
-.PHONY: $(AutotexTargets)
-$(AutotexTargets):
-	$(V2)$(AUTOTEX) make $(patsubst %.pdf,%,$@)
-
-# File extensions to remove in LaTeX build directories:
-LatexBuildfileExtensions = \
-	-blx.bib \
-	.acn \
-	.acr \
-	.alg \
-	.aux \
-	.bbl \
-	.bcf \
-	.blg \
-	.dvi \
-	.fdb_latexmk \
-	.glg \
-	.glo \
-	.gls \
-	.idx \
-	.ilg \
-	.ind \
-	.ist \
-	.lof \
-	.log \
-	.lol \
-	.lot \
-	.maf \
-	.mtc \
-	.mtc0 \
-	.nav \
-	.nlo \
-	.out \
-	.pdfsync \
-	.ps \
-	.run.xml \
-	.snm \
-	.synctex.gz \
-	.tdo \
-	.toc \
-	.vrb \
-	.xdy \
-	$(NULL)
-
-LatexBuildDirs = $(AutotexDirs)
-
-# Discover files to remove using the shell's `find' tool:
-LatexCleanFiles = $(shell find $(LatexBuildDirs) \
-	-name '*$(call join-with,' -o -name '*, $(LatexBuildfileExtensions))')
-
-CleanFiles += \
-	$(AutotexTargets) \
-	$(AutotexDepFiles) \
-	$(AutotexLogFiles) \
-	$(LatexCleanFiles) \
-	$(NULL)
-
-tex: $(AutotexTargets)
-DocStrings += "tex: build all LaTeX targets"
-
-
-#
-# Python (2 and 3)
-#
-Python2SetupTestLogs = $(addsuffix /.python2.test.log, \
-	$(Python2SetupTestDirs))
-
-Python2SetupInstallLogs = $(addsuffix /.python2.install.log, \
-	$(Python2SetupInstallDirs))
-
-Python3SetupTestLogs = $(addsuffix /.python3.test.log, \
-	$(Python3SetupTestDirs))
-
-Python3SetupInstallLogs = $(addsuffix /.python3.install.log, \
-	$(Python3SetupInstallDirs))
-
-.PHONY: \
-	$(Python2SetupInstallLogs) \
-	$(Python2SetupTestLogs) \
-	$(Python3SetupInstallLogs) \
-	$(Python3SetupTestLogs) \
-	$(NULL)
-
-$(Python2SetupTestLogs):
-	$(call python-setup-test,$(PYTHON2),$(patsubst %/,%,$(dir $@)))
-
-$(Python2SetupInstallLogs):
-	$(call python-setup-install,$(PYTHON2),$(patsubst %/,%,$(dir $@)))
-
-$(Python3SetupTestLogs):
-	$(call python-setup-test, $(PYTHON3),$(patsubst %/,%,$(dir $@)))
-
-$(Python3SetupInstallLogs):
-	$(call python-setup-install,$(PYTHON3),$(patsubst %/,%,$(dir $@)))
-
-TestTargets += $(Python2SetupTestLogs) $(Python3SetupTestLogs)
-InstallTargets += $(Python2SetupInstallLogs) $(Python3SetupInstalLogs)
-
-# Clean-up:
-Python2CleanDirs = $(sort $(Python2SetupTestDirs) $(Python2SetupInstallDirs))
-Python3CleanDirs = $(sort $(Python3SetupTestDirs) $(Python3SetupInstallDirs))
-
-.PHONY: clean-python
-clean-python:
-	$(V1)$(call python-setup-clean,$(PYTHON2),$(Python2CleanDirs))
-	$(V1)$(call python-setup-clean,$(PYTHON3),$(Python3CleanDirs))
-
-CleanTargets += clean-python
-
-CleanFiles += \
-	$(Python2SetupInstallLogs) \
-	$(Python2SetupTestLogs) \
-	$(Python3SetupInstallLogs) \
-	$(Python3SetupTestLogs) \
-	$(NULL)
-
+include make/cpplint.make
+include make/pylint.make
 
 #
 # Testing
@@ -1069,41 +1010,9 @@ DocStrings += "install: install files"
 
 
 #
-# Bootstrapping
+# LLVM
 #
-toolchain := $(root)/.bootstrapped
-
-LlvmSrc := $(root)/tools/llvm
-LlvmBuild := $(root)/tools/llvm/build
-
-# Compilers depend on boostrapping:
-$(CC): $(toolchain)
-$(CTargets) $(CObjects): $(CC)
-
-$(CXX): $(toolchain)
-$(CxxTargets): $(CXX)
-$(CxxObjects): $(CXX)
-
-$(toolchain)-cmd = \
-	cd $(LlvmBuild) \
-	&& cmake $(LlvmSrc) -DCMAKE_BUILD_TYPE=Release \
-	&& $(MAKE)
-
-$(toolchain):
-	$(call print,Bootstrapping! Go enjoy a coffee, this will take a while.)
-	$(V1)mkdir -vp $(LlvmBuild)
-	$(V1)$($(toolchain)-cmd)
-	$(V1)date > $(toolchain)
-
-.PHONY: distclean-toolchain
-distclean-toolchain:
-	$(V1)$(RM) $(toolchain)
-	$(V1)$(RM) -r $(LlvmBuild)
-
-DistcleanTargets += distclean-toolchain
-
-toolchain: $(toolchain)
-DocStrings += "toolchain: build toolchain"
+include $(root)/make/llvm.make
 
 
 #
@@ -1126,12 +1035,12 @@ DocStrings += "git: configure version control"
 #
 .PHONY: clean distclean
 clean: $(CleanTargets)
-	$(V1)$(RM) $(sort $(CleanFiles))
+	$(V1)rm -fv $(sort $(CleanFiles))
 DocStrings += "clean: remove generated files"
 
 distclean: clean $(DistcleanTargets)
-	$(V1)$(RM) $(sort $(DistcleanFiles))
-DocStrings += "distclean: remove *all* generated files and toolchain"
+	$(V1)rm -fv $(sort $(DistcleanFiles))
+DocStrings += "distclean: remove *all* generated files"
 
 
 #
@@ -1170,28 +1079,12 @@ git-dirty-cmd := git diff-index --quiet HEAD || echo "*"
 version-str = phd-$(shell $(git-shorthead-cmd))$(shell $(git-dirty-cmd))
 
 .PHONY: version
+version-str = phd-$(shell $(git-shorthead-cmd))$(shell $(git-dirty-cmd))
+
+.PHONY: version
 version:
 	$(V2)echo 'phd version $(version-str)'
 DocStrings += "version: show version information"
 
-# Print doc strings:
-.PHONY: help
-help:
-	$(V2)echo "usage: make [runtime-argument...] [target...]"
-	$(V2)echo
-	$(V2)echo "values for runtime-arguments:"
-	$(V2)echo
-	$(V2)(for var in $(ArgStrings); do echo $$var; done) \
-		| sort --ignore-case | while read var; do \
-		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
-		echo $$var | cut -d':' -f2-; \
-	done
-	$(V2)echo
-	$(V2)echo "values for targets (default=all):"
-	$(V2)echo
-	$(V2)(for var in $(DocStrings); do echo $$var; done) \
-		| sort --ignore-case | while read var; do \
-		echo $$var | cut -f 1 -d':' | xargs printf "    %-12s "; \
-		echo $$var | cut -d':' -f2-; \
-	done
-	$(V2)echo
+include make/help.make
+
