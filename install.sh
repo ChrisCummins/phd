@@ -60,14 +60,15 @@ install_zsh() {
     symlink .zsh/zshrc ~/.zshrc
 
     # install local config files
+    mkdir -p ~/.zsh/private
     if [[ -d "$private/zsh" ]]; then
-        symlink "$private/zsh/diana.zsh" ~/.zsh/diana.zsh
-        symlink "$private/zsh/mary.zsh" ~/.zsh/mary.zsh
-        symlink "$private/zsh/omni.zsh" ~/.zsh/omni.zsh
+        symlink "$private/zsh/diana.zsh" ~/.zsh/private/diana.zsh
+        symlink "$private/zsh/mary.zsh" ~/.zsh/private/mary.zsh
+        symlink "$private/zsh/omni.zsh" ~/.zsh/private/omni.zsh
 
         # Mac-specific shell stuff
         if [[ "$(uname)" == "Darwin" ]]; then
-            symlink "$private/zsh/homebrew.zsh" ~/.zsh/homebrew.zsh
+            symlink "$private/zsh/homebrew.zsh" ~/.zsh/private/homebrew.zsh
         fi
     fi
 }

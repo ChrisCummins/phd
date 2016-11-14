@@ -205,15 +205,19 @@ export USE_CCACHE=1
 # See: https://virtualenv.pypa.io/en/stable/reference/#envvar-VIRTUAL_ENV_DISABLE_PROMPT
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
-# Enable Travis tab completion
+# travis tab completion
 [ -f ~/.travis/travis.sh ] && source ~/.travis/travis.sh
 
-# Enable autoenv if installed. https://github.com/kennethreitz/autoenv
+# autoenv cd script. https://github.com/kennethreitz/autoenv
 which activate.sh &>/dev/null && source $(which activate.sh)
 
-# Activate torch
+# torch environment
 [ -f ~/torch/install/bin/torch-activate ] && source ~/torch/install/bin/torch-activate
 
+# rbenv shims. https://github.com/sstephenson/rbenv#how-it-works
+if [[ -x $(which rbenv) ]]; then
+    eval "$(rbenv init -)"
+fi
 
 # --------------------------------------------------------------------------
 # Paths.
@@ -556,20 +560,16 @@ if test -d /etc/profile.d/; then
     unset profile
 fi
 
-# Custom zsh scripts that are placed in the local/ directory will automatically
-# be sourced at launch.
+# Custom zsh scripts
 if test -d ~/.zsh; then
     for script in ~/.zsh/*.zsh; do
         test -r "$script" && . "$script"
     done
-    unset script
-fi
 
-# If rbenv is installed, inject shims into PATH. See:
-#
-#    https://github.com/sstephenson/rbenv#how-it-works
-if [[ -x $(which rbenv) ]]; then
-    eval "$(rbenv init -)"
+    for script in ~/.zsh/private/*.zsh; do
+        test -r "$script" && . "$script"
+    done
+    unset script
 fi
 
 unsetopt nullglob
