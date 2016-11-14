@@ -51,7 +51,6 @@ data_symlinks = \
 	$(root)/clgen/data/bin/clang-format \
 	$(root)/clgen/data/bin/llvm-config \
 	$(root)/clgen/data/bin/opt \
-	$(root)/clgen/data/bin/th \
 	$(root)/clgen/data/libclc \
 	$(root)/clgen/data/torch-rnn
 
@@ -81,11 +80,6 @@ $(root)/clgen/data/bin/clang-format: $(llvm)
 $(root)/clgen/data/bin/opt: $(llvm)
 	mkdir -p $(dir $@)
 	ln -sf $(llvm_build)/bin/opt $@
-	touch $@
-
-$(root)/clgen/data/bin/th: $(torch)
-	mkdir -p $(dir $@)
-	ln -sf $(torch_build)/bin/th $@
 	touch $@
 
 $(root)/clgen/data/torch-rnn: $(torch-rnn)

@@ -19,7 +19,6 @@
 """
 Native files
 """
-import labm8
 from labm8 import fs
 
 import clgen
@@ -32,6 +31,6 @@ CLGEN_REWRITER = clgen.data_path(fs.path("bin", "clgen-rewriter"))
 LIBCLC = clgen.data_path("libclc")
 OPT = clgen.data_path(fs.path("bin", "opt"))
 SHIMFILE = clgen.data_path(fs.path("include", "opencl-shim.h"))
-TH = clgen.data_path(fs.path("bin", "th"))
+TH = clgen.data_path(fs.path("torch", "bin", "th"))
 TORCH_RNN_PREPROCESS = clgen.data_path("torch-rnn", "scripts", "preprocess.py")
 TORCH_RNN_DIR = clgen.data_path("torch-rnn")

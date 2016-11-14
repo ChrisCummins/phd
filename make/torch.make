@@ -31,13 +31,12 @@ torch_remote := https://github.com/ChrisCummins/distro.git
 torch_version := 3467b980c56942451ee242937dbe76d15fcfc5ab
 #
 
-torch_src := $(root)/native/torch/$(torch_version)/src
-torch_build := $(root)/native/torch/$(torch_version)/build
+torch_src := $(root)/native/torch/$(torch_version)
+torch_build := $(root)/clgen/data/torch
 torch := $(torch_build)/.bootstrapped
 
 # compiled binaries
 luarocks := $(torch_build)/bin/luarocks
-th := $(torch_build)/bin/th
 
 torch: $(torch)
 
