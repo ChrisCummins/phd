@@ -145,9 +145,9 @@ install_tex() {
 }
 
 
-install_omni() {
+install_omnifocus() {
     # add to OmniFocus cli
-    sudo ln -sf "$HOME/.dotfiles/omni/omni" /usr/local/bin
+    sudo ln -sf "$HOME/.dotfiles/omnifocus/omni" /usr/local/bin
 }
 
 
@@ -173,7 +173,7 @@ main() {
     install_sublime
     install_inbox
     install_tex
-    install_omni
+    install_omnifocus
     install_servers
 }
 main $@
