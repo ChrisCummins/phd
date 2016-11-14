@@ -25,3 +25,9 @@
 [submodule "docs/wip-smith"]
 	path = docs/2017-02-cgo
 	url = https://git.overleaf.com/5933348yfhrbn
+[submodule "docs/2016-01-adapt"]
+	path = docs/2016-01-adapt
+	url = git@github.com:ChrisCummins/paper-autotuning-opencl-wgsize.git
+[submodule "docs/2016-01-hlpgpu"]
+	path = docs/2016-01-hlpgpu
+	url = git@github.com:ChrisCummins/paper-towards-collaborative-performance-tuning.git
