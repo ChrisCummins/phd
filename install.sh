@@ -48,31 +48,26 @@ make_local_dirs() {
 
 
 install_zsh() {
-    # Install zsh configuration
-    clone_repo git@github.com:ChrisCummins/zsh.git ~/.local/src/zsh
-    symlink .local/src/zsh/zshrc ~/.zshrc
+    # Install oh-my-zsh
+    clone_repo https://github.com/ChrisCummins/oh-my-zsh ~/.oh-my-zsh
 
-    # symlink for config directories
-    symlink .local/src/zsh ~/.zsh
-    symlink .local/src/zsh/oh-my-zsh ~/.oh-my-zsh
-
-    cd ~/.zsh
-    echo "Updating ~/.zsh"
+    cd ~/.oh-my-zsh
+    echo "Updating ~/.oh-my-zsh"
     git pull origin master
-    git submodule update
 
     # install config files
-    symlink ~/.dotfiles/zsh/git.zsh ~/.zsh/local/git.zsh
+    symlink ~/.dotfiles/zsh ~/.zsh
+    symlink .zsh/zshrc ~/.zshrc
 
     # install local config files
     if [[ -d "$private/zsh" ]]; then
-        symlink "$private/zsh/diana.zsh" ~/.zsh/local/diana.zsh
-        symlink "$private/zsh/mary.zsh" ~/.zsh/local/mary.zsh
-        symlink "$private/zsh/omni.zsh" ~/.zsh/local/omni.zsh
+        symlink "$private/zsh/diana.zsh" ~/.zsh/diana.zsh
+        symlink "$private/zsh/mary.zsh" ~/.zsh/mary.zsh
+        symlink "$private/zsh/omni.zsh" ~/.zsh/omni.zsh
 
         # Mac-specific shell stuff
         if [[ "$(uname)" == "Darwin" ]]; then
-            symlink "$private/zsh/homebrew.zsh" ~/.zsh/local/homebrew.zsh
+            symlink "$private/zsh/homebrew.zsh" ~/.zsh/homebrew.zsh
         fi
     fi
 }
