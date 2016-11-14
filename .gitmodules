@@ -22,3 +22,9 @@
 [submodule "extern/oclgrind"]
 	path = extern/oclgrind
 	url = https://github.com/jrprice/Oclgrind.git
+[submodule "docs/2016-01-adapt"]
+	path = docs/2016-01-adapt
+	url = git@github.com:ChrisCummins/paper-autotuning-opencl-wgsize.git
+[submodule "docs/2016-01-hlpgpu"]
+	path = docs/2016-01-hlpgpu
+	url = git@github.com:ChrisCummins/paper-towards-collaborative-performance-tuning.git
