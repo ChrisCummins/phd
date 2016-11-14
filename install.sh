@@ -48,16 +48,13 @@ make_local_dirs() {
 
 
 install_zsh() {
-    # Install oh-my-zsh
-    clone_repo https://github.com/ChrisCummins/oh-my-zsh ~/.oh-my-zsh
-
-    cd ~/.oh-my-zsh
-    echo "Updating ~/.oh-my-zsh"
-    git pull origin master
-
     # install config files
     symlink ~/.dotfiles/zsh ~/.zsh
     symlink .zsh/zshrc ~/.zshrc
+
+    # install oh-my-zsh
+    clone_repo git@github.com:robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
+    ln -s ~/.zsh/cec.zsh-theme ~/.oh-my-zsh/custom
 
     # install local config files
     mkdir -p ~/.zsh/private
