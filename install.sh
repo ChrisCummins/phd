@@ -68,7 +68,7 @@ install_zsh() {
 
     # install oh-my-zsh
     clone_repo git@github.com:robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
-    ln -s ~/.zsh/cec.zsh-theme ~/.oh-my-zsh/custom
+    symlink ~/.zsh/cec.zsh-theme ~/.oh-my-zsh/custom/cec.zsh-theme
 
     # install local config files
     mkdir -p ~/.zsh/private
