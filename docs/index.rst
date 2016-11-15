@@ -64,8 +64,8 @@ Installation - Virtualenv
 
 We recommend using a `virtualenv <https://virtualenv.pypa.io/en/stable/>`_
 environment to install CLgen. This installs CLgen in its own directory, not
-impacting any existing programs on the machine. Unlike a system-wide install,
-this does not require sudo privileges.
+impacting any existing programs on the machine. Installing in a virtualenv
+environment does not require sudo privileges.
 
 Create a virtualenv environment in the directory `~/clgen`:
 

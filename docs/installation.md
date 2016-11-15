@@ -1,10 +1,10 @@
 # Building the Development Version
 
-To build the latest development version of CLgen, checkout the source
-repository locally using:
+To build the latest development version of CLgen, checkout the latest
+development sources using:
 
 ```sh
-$ git clone https://github.com/ChrisCummins/clgen.git clgen-dev
+$ git clone git@github.com:ChrisCummins/clgen.git clgen-dev
 $ cd clgen-dev
 ```
 
@@ -61,11 +61,11 @@ Installation - System-wide
 Install CLgen system-wide using:
 
 ```sh
-$ sudo make install
+$ sudo -H make install
 ```
 
 (Optional) Run the test suite:
 
 ```sh
-$ make test
+$ sudo -H make test
 ```
