@@ -213,6 +213,8 @@ class DistModel(Model):
 
 
 def from_json(model_json):
+    assert(type(model_json) is dict)
+
     corpus = Corpus.from_json(model_json["corpus"])
     train_opts = model_json["train_opts"]
 
@@ -231,4 +233,6 @@ def from_json(model_json):
 
 
 def from_tar(path):
+    assert(type(path) is str)
+
     return DistModel(path)
