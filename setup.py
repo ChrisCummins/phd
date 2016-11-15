@@ -47,7 +47,7 @@ scripts = [
 
 # clgen driver requires opencl
 if cfg["opencl"]:
-    scripts.append('bin/clgen-drive')
+    scripts.append('bin/cldrive')
 
 
 def all_module_data_files(module, datadir="data"):

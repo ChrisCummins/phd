@@ -3,6 +3,33 @@ Programs
 
 The CLgen command line interface consists of a suite of related programs.
 
+cldrive
+--------
+
+::
+
+    usage: cldrive [-h] [--version] [-v] [-f] [-s] [--cpu] [--gpu]
+                   [--fatal-errors]
+                   input
+    
+    Drive generated OpenCL kernels.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
+    
+    positional arguments:
+      input           path to input
+    
+    optional arguments:
+      -h, --help      show this help message and exit
+      --version       show version information and exit
+      -v, --verbose   increase output verbosity
+      -f              treat input as file
+      -s, --strict    reject any kernels which do not validate
+      --cpu           execute on CPU (default: no)
+      --gpu           execute on GPU (default: yes)
+      --fatal-errors  exit on failure
+
 clgen
 ------
 
@@ -65,34 +92,7 @@ clgen-dist
       -h, --help       show this help message and exit
       --version        show version information and exit
       -v, --verbose    increase output verbosity
-      --author AUTHOR  Name of author (default: cec@diana)
-
-clgen-drive
-------------
-
-::
-
-    usage: clgen-drive [-h] [--version] [-v] [-f] [-s] [--cpu] [--gpu]
-                       [--fatal-errors]
-                       input
-    
-    Drive generated OpenCL kernels.
-    
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
-    <http://chriscummins.cc/clgen>
-    
-    positional arguments:
-      input           path to input
-    
-    optional arguments:
-      -h, --help      show this help message and exit
-      --version       show version information and exit
-      -v, --verbose   increase output verbosity
-      -f              treat input as file
-      -s, --strict    reject any kernels which do not validate
-      --cpu           execute on CPU (default: no)
-      --gpu           execute on GPU (default: yes)
-      --fatal-errors  exit on failure
+      --author AUTHOR  Name of author (default: cec@florence)
 
 clgen-explore
 --------------
