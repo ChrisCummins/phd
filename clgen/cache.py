@@ -32,7 +32,7 @@ ROOT = fs.path("~", ".cache", "clgen", clgen.version())
 
 class Cache404(clgen.File404):
     """
-    Error thrown for cache miss.
+    Error thrown for cache misses.
     """
     pass
 

@@ -75,6 +75,13 @@ class File404(InternalError):
     pass
 
 
+class InvalidFile(UserError):
+    """
+    Raised in case a file contains invalid contents.
+    """
+    pass
+
+
 class CLgenObject(object):
     """
     Base object for CLgen classes.
@@ -86,8 +93,8 @@ def version():
     """
     Get the package version.
 
-    DO NOT try and parse this or derive any special major/minor version
-    information from it, treat it as an opaque char array. The only valid
+    *DO NOT* try to parse this or derive any special major/minor version
+    information from it. Treat it as an opaque char array. The only valid
     operators for comparing versions are == and !=.
 
     Returns:
@@ -210,6 +217,14 @@ def get_substring_idxs(substr, s):
 def package_path(*path):
     """
     Path to package file.
+
+    Arguments:
+
+        *path (str[]): Path components.
+
+    Returns:
+
+        str: Path.
     """
     path = os.path.expanduser(os.path.join(*path))
     abspath = resource_filename(__name__, path)
@@ -219,6 +234,14 @@ def package_path(*path):
 def data_path(*path):
     """
     Path to package file.
+
+    Arguments:
+
+        *path (str[]): Path components.
+
+    Returns:
+
+        str: Path.
     """
     return package_path("data", *path)
 

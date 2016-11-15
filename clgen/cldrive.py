@@ -53,24 +53,96 @@ if cfg.USE_OPENCL:
     import pyopencl as cl
 
 
-class CLDriveException(clgen.CLgenError): pass
-class OpenCLDriverException(CLDriveException): pass
-class OpenCLNotSupported(OpenCLDriverException): pass
+class CLDriveException(clgen.CLgenError):
+    """
+    Module error.
+    """
+    pass
 
-class KernelDriverException(CLDriveException): pass
 
-class E_BAD_CODE(KernelDriverException): pass
-class E_UGLY_CODE(KernelDriverException): pass
+class OpenCLDriverException(CLDriveException):
+    """
+    Error from OpenCL driver.
+    """
+    pass
 
-class E_BAD_DRIVER(KernelDriverException): pass
-class E_BAD_ARGS(E_BAD_DRIVER): pass
-class E_BAD_PROFILE(E_BAD_DRIVER): pass
 
-class E_NON_TERMINATING(E_BAD_CODE): pass
+class OpenCLNotSupported(OpenCLDriverException):
+    """
+    Thrown if attempting to use OpenCL, but CLgen is configured with OpenCL
+    support enabled.
+    """
+    pass
 
-class E_INPUT_INSENSITIVE(E_UGLY_CODE): pass
-class E_NO_OUTPUTS(E_UGLY_CODE): pass
-class E_NONDETERMINISTIC(E_UGLY_CODE): pass
+
+class KernelDriverException(CLDriveException):
+    """
+    Kernel driver exception.
+    """
+    pass
+
+
+class E_BAD_CODE(KernelDriverException):
+    """
+    Thrown for bad code.
+    """
+    pass
+
+
+class E_UGLY_CODE(KernelDriverException):
+    """
+    Thrown for ugly code.
+    """
+    pass
+
+
+class E_BAD_DRIVER(KernelDriverException):
+    """
+    Thrown in case of CLdrive errors.
+    """
+    pass
+
+
+class E_BAD_ARGS(E_BAD_DRIVER):
+    """
+    Kernel has invalid arguments.
+    """
+    pass
+
+
+class E_BAD_PROFILE(E_BAD_DRIVER):
+    """
+    OpenCL profiling failed.
+    """
+    pass
+
+
+class E_NON_TERMINATING(E_BAD_CODE):
+    """
+    Kernel did not terminate.
+    """
+    pass
+
+
+class E_INPUT_INSENSITIVE(E_UGLY_CODE):
+    """
+    Kernel is input insensitive.
+    """
+    pass
+
+
+class E_NO_OUTPUTS(E_UGLY_CODE):
+    """
+    Kernel does not compute an output.
+    """
+    pass
+
+
+class E_NONDETERMINISTIC(E_UGLY_CODE):
+    """
+    Kernel is nondeterministic.
+    """
+    pass
 
 
 def assert_device_type(device, devtype):
@@ -316,39 +388,92 @@ class KernelDriver(clgen.CLgenObject):
               sep=',', file=out)
 
     @property
-    def context(self): return self._ctx
+    def context(self):
+        """
+        OpenCL context.
+        """
+        return self._ctx
 
     @property
-    def source(self): return self._src
+    def source(self):
+        """
+        Kernel source code.
+        """
+        return self._src
 
     @property
-    def program(self): return self._program
+    def program(self):
+        """
+        OpenCL program instance.
+        """
+        return self._program
 
     @property
-    def prototype(self): return self._prototype
+    def prototype(self):
+        """
+        Kernel prototype instance.
+        """
+        return self._prototype
 
     @property
-    def kernel(self): return self._kernel
+    def kernel(self):
+        """
+        Kernel instance.
+        """
+        return self._kernel
 
     @property
-    def name(self): return self._name
+    def name(self):
+        """
+        Kernel name.
+        """
+        return self._name
 
     @property
-    def wgsizes(self): return self._wgsizes
+    def wgsizes(self):
+        """
+        Workgroup sizes used.
+        """
+        return self._wgsizes
 
     @property
-    def transfers(self): return self._transfers
+    def transfers(self):
+        """
+        Size of data transfers (in bytes).
+        """
+        return self._transfers
 
     @property
-    def runtimes(self): return self._runtimes
+    def runtimes(self):
+        """
+        Runtimes recorded.
+        """
+        return self._runtimes
 
     @staticmethod
     def build_program(ctx, src, quiet=True):
         """
         Compile an OpenCL program.
+
+        Arguments:
+
+            ctx (cl.Context): OpenCL context.
+            src (str): Kernel source.
+            quiet (bool, optional): suppress compiler output.
+
+        Returns:
+
+            cl.Program: Program instance.
+
+        Raises:
+
+            E_BAD_CODE: If does not build.
         """
-        if not quiet:
+        if quiet:
+            os.environ['PYOPENCL_COMPILER_OUTPUT'] = '0'
+        else:
             os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
+
         try:
             return cl.Program(ctx, src).build()
         except Exception as e:
@@ -356,6 +481,9 @@ class KernelDriver(clgen.CLgenObject):
 
 
 class KernelPayload(clgen.CLgenObject):
+    """
+    Abstraction of data for OpenCL kernel.
+    """
     def __init__(self, ctx, args, ndrange, transfersize):
         self._ctx = ctx
         self._args = args
@@ -394,6 +522,9 @@ class KernelPayload(clgen.CLgenObject):
             self.context, args, self.ndrange, self.transfersize)
 
     def __eq__(self, other):
+        """
+        Equality comparison. Checks that OpenCL context and arguments match.
+        """
         if self.context != other.context:
             return False
 
@@ -417,6 +548,9 @@ class KernelPayload(clgen.CLgenObject):
         return not self.__eq__(other)
 
     def device_to_host(self, queue):
+        """
+        Transfer payload from device to host.
+        """
         elapsed = 0
 
         for arg in self.args:
@@ -430,6 +564,9 @@ class KernelPayload(clgen.CLgenObject):
         return elapsed
 
     def host_to_device(self, queue):
+        """
+        Transfer payload from host to device.
+        """
         elapsed = 0
 
         for arg in self.args:
@@ -443,21 +580,44 @@ class KernelPayload(clgen.CLgenObject):
         return elapsed
 
     @property
-    def context(self): return self._ctx
+    def context(self):
+        """
+        OpenCL context.
+        """
+        return self._ctx
 
     @property
-    def args(self): return self._args
+    def args(self):
+        """
+        Argument instances.
+        """
+        return self._args
 
     @property
-    def kargs(self): return [a.devdata for a in self.args]
+    def kargs(self):
+        """
+        Device data for arguments.
+        """
+        return [a.devdata for a in self.args]
 
     @property
-    def ndrange(self): return self._ndrange
+    def ndrange(self):
+        """
+        ND-range
+        """
+        return self._ndrange
 
     @property
-    def transfersize(self): return self._transfersize
+    def transfersize(self):
+        """
+        Returns transfer size (in bytes).
+        """
+        return self._transfersize
 
     def __repr__(self):
+        """
+        Stringify payload.
+        """
         s = "Payload on host:\n"
         for i, arg in enumerate(self.args):
             if arg.hostdata is None:
@@ -528,10 +688,16 @@ class KernelPayload(clgen.CLgenObject):
 
     @staticmethod
     def create_sequential(*args, **kwargs):
+        """
+        Create a payload of sequential values.
+        """
         return KernelPayload._create_payload(np.arange, *args, **kwargs)
 
     @staticmethod
     def create_random(*args, **kwargs):
+        """
+        Create a payload of random values.
+        """
         return KernelPayload._create_payload(np.random.rand, *args, **kwargs)
 
 
@@ -579,6 +745,9 @@ def kernel(src, filename='<stdin>', devtype="__placeholder__",
 
 
 def file(path, **kwargs):
+    """
+    Read an OpenCL kernel from a file and drive it.
+    """
     with open(fs.path(path)) as infile:
         src = infile.read()
         for kernelsrc in clutil.get_cl_kernels(src):
@@ -586,6 +755,9 @@ def file(path, **kwargs):
 
 
 def directory(path, **kwargs):
+    """
+    Drive a directory containing OpenCL kernel files.
+    """
     files = fs.ls(fs.path(path), abspaths=True, recursive=True)
     for path in [f for f in files if f.endswith('.cl')]:
         file(path, **kwargs)

@@ -45,8 +45,8 @@ class ArgumentParser(argparse.ArgumentParser):
     CLgen specialized argument parser.
 
     Differs from python argparse.ArgumentParser in the following areas:
-      * Adds an optional --verbose flag and initializes the logging engine.
-      * Adds an optional --version flag which prints version information and
+      * Adds an optional `--verbose` flag and initializes the logging engine.
+      * Adds an optional `--version` flag which prints version information and
         quits.
       * Defaults to using raw formatting for help strings, which disables line
         wrapping and whitespace squeezing.
