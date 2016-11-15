@@ -273,8 +273,10 @@ class DistModel(Model):
         self.train_opts = self.meta['train_opts']
 
         log.info("distfile model: ", self.hash)
-        log.verbose("distfile author:", self.meta["author"])
-        log.verbose("distfile date:  ", self.meta["date packaged"])
+        if "author" in self.meta:
+            log.verbose("distfile author:", self.meta["author"])
+        if "date packaged" in self.meta:
+            log.verbose("distfile date:  ", self.meta["date packaged"])
 
     def _hash(self, tarpath):
         return clgen.checksum_file(tarpath)
