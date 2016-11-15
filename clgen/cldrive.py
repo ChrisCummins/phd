@@ -35,6 +35,7 @@ from functools import partial
 from io import open
 from labm8 import fs
 from labm8 import math as labmath
+from numbers import Number
 from random import randrange
 from six import string_types
 
@@ -675,7 +676,7 @@ class KernelPayload(clgen.CLgenObject):
     def _create_payload(nparray, driver, size):
         assert(callable(nparray))
         assert(isinstance(driver, KernelDriver))
-        assert(isinstance(size, int))
+        assert(isinstance(size, Number))
 
         args = [clutil.KernelArg(arg.string) for arg in driver.prototype.args]
         transfer = 0
