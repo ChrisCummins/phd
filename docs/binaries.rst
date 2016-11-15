@@ -16,6 +16,19 @@ cldrive
     For each kernel, generate a randomly sized payload and execute.
     Use environment variable 'DSIZE' to override random payload size.
     
+    Program output is in CSV format, with the following scheme:
+    
+        <path>,<dsize>,<kernel>,<transfer>,<mean>,<ci>
+    
+    where each value corresponds to:
+    
+       <path>      path to input file
+       <dsize>     payload size
+       <kernel>    kernel name
+       <transfer>  transfer size, in bytes
+       <mean>      mean execution time
+       <ci>        95% confidence interval of execution time
+    
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
