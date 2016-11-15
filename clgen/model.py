@@ -73,10 +73,16 @@ class Model(clgen.CLgenObject):
         checksum_data = sorted(
             [str(x) for x in train_opts.values()] +
             [corpus.hash])
-        string = "".join([str(x) for x in checksum_data])
+        string = "".join(checksum_data)
         return clgen.checksum_str(string)
 
     def train(self):
+        """
+        Train model.
+
+        Invokes torch-rnn to train the model up to the specified maximum number
+        of epochs.
+        """
         # assemble training options
         opts = copy(self.train_opts)
 
@@ -183,17 +189,27 @@ class Model(clgen.CLgenObject):
         return outpath
 
     def __repr__(self):
+        """
+        String representation.
+        """
         return "{hash}: {data}".format(
             hash=self.hash, data=clgen.format_json(self.train_opts))
 
     @property
     def checkpoints(self):
+        """
+        Training checkpoints.
+
+        Returns:
+
+            str[]: List of paths to checkpoint files.
+        """
         return glob(fs.path(self.cache.path, '*.t7'))
 
     @property
     def most_recent_checkpoint(self):
         """
-        Get path to most recently created t7 checkpoint
+        Get path to most recently created t7 checkpoint.
 
         Returns:
 
@@ -257,6 +273,15 @@ class DistModel(Model):
 
 
 def from_json(model_json):
+    """
+    Load model from JSON.
+
+    Arguments:
+        model_json (dict): JSON specification.
+
+    Returns:
+        Model: Model instance.
+    """
     assert(type(model_json) is dict)
 
     corpus = Corpus.from_json(model_json["corpus"])
@@ -277,6 +302,19 @@ def from_json(model_json):
 
 
 def from_tar(path):
+    """
+    Load model from tarball.
+
+    Arguments:
+        path (str): Path to tarball.
+
+    Returns:
+        DistModel: Model instance.
+
+    Raises:
+        File404: If path does not exist.
+        DistError: If distfile is malformed.
+    """
     assert(type(path) is str)
 
     return DistModel(path)
