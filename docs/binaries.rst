@@ -45,6 +45,28 @@ clgen-create-db
       -v, --verbose  increase output verbosity
       -g, --github   generate dataset with GitHub metadata
 
+clgen-dist
+-----------
+
+::
+
+    usage: clgen-dist [-h] [--version] [-v] [--author AUTHOR] <model> <distname>
+    
+    Package CLgen model for distribution.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
+    
+    positional arguments:
+      <model>          path to model specification file
+      <distname>       name of dist file
+    
+    optional arguments:
+      -h, --help       show this help message and exit
+      --version        show version information and exit
+      -v, --verbose    increase output verbosity
+      --author AUTHOR  Name of author (default: cec@diana)
+
 clgen-drive
 ------------
 
