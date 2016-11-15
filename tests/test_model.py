@@ -23,6 +23,7 @@ import json
 import re
 
 from labm8 import fs
+from six import string_types
 from tempfile import mkdtemp
 
 import clgen
@@ -66,10 +67,10 @@ class TestModel(TestCase):
         # version
         self.assertEqual(meta["version"], clgen.version())
         # author
-        self.assertTrue(type(meta["author"]) is str)
+        self.assertTrue(isinstance(meta["author"], string_types))
         self.assertNotEqual(meta["author"], "")
         # date packaged
-        self.assertTrue(type(meta["date packaged"]) is str)
+        self.assertTrue(isinstance(meta["date packaged"], string_types))
         self.assertNotEqual(meta["date packaged"], "")
         # contents
         contents = meta["contents"]

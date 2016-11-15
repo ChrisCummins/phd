@@ -23,6 +23,7 @@ import re
 
 from labm8 import fs
 from shutil import move
+from six import string_types
 
 import clgen
 from clgen import log
@@ -123,7 +124,7 @@ class Cache(clgen.CLgenObject):
         Returns:
             str: Path to cache value, or bool False if not found.
         """
-        assert(type(key) is str)
+        assert(isinstance(key, string_types))
 
         try:
             return self._incache(self.keypath(key))
@@ -141,8 +142,8 @@ class Cache(clgen.CLgenObject):
         Raises:
             clgen.File404: If no "value" does nto exist.
         """
-        assert(type(key) is str)
-        assert(type(value) is str)
+        assert(isinstance(key, string_types))
+        assert(isinstance(value, string_types))
 
         clgen.must_exist(value, error=clgen.File404)
 
@@ -161,7 +162,7 @@ class Cache(clgen.CLgenObject):
         Raises:
             Cache404: If file not in cache.
         """
-        assert(type(key) is str)
+        assert(isinstance(key, string_types))
 
         path = self._incache(self.keypath(key))
         fs.rm(path)

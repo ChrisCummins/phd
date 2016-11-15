@@ -31,6 +31,7 @@ from glob import glob, iglob
 from labm8 import fs
 from labm8 import system
 from labm8 import time
+from six import string_types
 from tempfile import mktemp
 
 import clgen
@@ -252,7 +253,7 @@ class DistModel(Model):
         Arguments:
             tarpath (str): Path to distmodel.
         """
-        assert(type(tarpath) is str)
+        assert(isinstance(tarpath, string_types))
 
         self.hash = self._hash(tarpath)
         self.cache = Cache(fs.path("model", self.hash))
@@ -406,7 +407,7 @@ def from_tar(path):
         File404: If path does not exist.
         DistError: If distfile is malformed.
     """
-    assert(type(path) is str)
+    assert(isinstance(path, string_types))
 
     path = fs.path(path)
     if not fs.isfile(path):
