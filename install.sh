@@ -58,8 +58,6 @@ install_packages() {
 
 make_local_dirs() {
     mkdir -p $HOME/.local/bin
-    mkdir -p $HOME/.local/share
-    mkdir -p $HOME/.local/src
 }
 
 
