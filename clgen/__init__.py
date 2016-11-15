@@ -342,18 +342,26 @@ def loads(text, **kwargs):
 
 
 def load_json_file(path):
-    from clgen import log
+    """
+    Load a JSON data blob.
 
+    Arguments:
+        path (str): Path to file.
+
+    Returns:
+        array or dict: JSON data.
+
+    Raises:
+        File404: If path does not exist.
+        InvalidFile: If JSON is malformed.
+    """
     try:
         with open(must_exist(path)) as infile:
             return loads(infile.read())
     except ValueError as e:
-        log.fatal("malformed file '{}'. Message from parser: ".format(
-                      os.path.basename(path)),
-                  "    " + str(e),
-                  "Hope that makes sense!", sep="\n")
-    except File404:
-        log.fatal("could not find file '{}'".format(path))
+        raise InvalidFile(
+            "malformed JSON file '{path}'. Message from parser: {err}"
+            .format(path=os.path.basename(path)), err=str(e))
 
 
 @contextmanager
