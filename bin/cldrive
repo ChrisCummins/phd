@@ -21,6 +21,7 @@ from __future__ import print_function
 
 import os
 
+from labm8 import fs
 from sys import exit, stderr
 
 import pyopencl as cl
@@ -28,16 +29,33 @@ import pyopencl as cl
 import clgen
 from clgen import cli
 from clgen import cldrive
+from clgen import log
 
 __description__ = """
-Drive generated OpenCL kernels.
+Drive OpenCL kernels.
+
+For each kernel, generate a randomly sized payload and execute.
+Use environment variable 'DSIZE' to override random payload size.
+
+Program output is in CSV format, with the following scheme:
+
+    <path>,<dsize>,<kernel>,<transfer>,<mean>,<ci>
+
+where each value corresponds to:
+
+   <path>      path to input file
+   <dsize>     payload size
+   <kernel>    kernel name
+   <transfer>  transfer size, in bytes
+   <mean>      mean execution time
+   <ci>        95% confidence interval of execution time
 """
 
 
 def main():
     parser = cli.ArgumentParser(description=__description__)
-    parser.add_argument('input', help='path to input')
-    parser.add_argument('-f', action='store_true', help='treat input as file')
+    parser.add_argument('inputs', metavar="<input>", nargs='+',
+                        help='input file(s) or directories')
     parser.add_argument('-s', '--strict', action='store_true', default=False,
                         help='reject any kernels which do not validate')
     parser.add_argument('--cpu', action='store_true', default=False,
@@ -45,13 +63,8 @@ def main():
     parser.add_argument('--gpu', action='store_true', default=False,
                         help='execute on GPU (default: yes)')
     parser.add_argument('--fatal-errors', action="store_true", default=False,
-                        help="exit on failure")
+                        help="exit on error")
     args = parser.parse_args()
-
-    input_path = args.input
-    file_mode = args.f
-    use_cpu = args.cpu  # default is gpu
-    strict = args.strict
 
     if 'DSIZE' in os.environ:
         dsize = int(os.environ['DSIZE'])
@@ -59,19 +72,34 @@ def main():
     else:
         size = None
 
-    devtype = cl.device_type.CPU if use_cpu else cl.device_type.GPU
+    devtype = cl.device_type.CPU if args.cpu else cl.device_type.GPU
 
     kwargs = {
         "size": size,
         "devtype": devtype,
-        "must_validate": strict,
+        "must_validate": args.strict,
         "fatal_errors": args.fatal_errors
     }
 
-    if file_mode:
-        cli.main(cldrive.file, input_path, **kwargs)
-    else:
-        cli.main(cldrive.directory, input_path, **kwargs)
+    # check first that arguments exist
+    for path in args.inputs:
+        if not fs.exists(path):
+            log.fatal("input not found:", path)
+
+    file_iterator(args.inputs, kwargs)
+
+
+def file_iterator(paths, kwargs):
+    """recursively evalute files"""
+    for path in paths:
+        if fs.isfile(path):   # file
+            cli.main(cldrive.file, fs.abspath(path), **kwargs)
+        elif fs.isdir(path):  # directory, recurse
+            contents = [x for x in fs.ls(path, abspaths=True, recursive=True)
+                        if fs.isfile(x)]
+            file_iterator(contents, kwargs)
+        else:
+            log.fatal("i have no idea what to do with argument", path)
 
 
 if __name__ == '__main__':

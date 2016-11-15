@@ -8,27 +8,28 @@ cldrive
 
 ::
 
-    usage: cldrive [-h] [--version] [-v] [-f] [-s] [--cpu] [--gpu]
-                   [--fatal-errors]
-                   input
+    usage: cldrive [-h] [--version] [-v] [-s] [--cpu] [--gpu] [--fatal-errors]
+                   <input> [<input> ...]
     
-    Drive generated OpenCL kernels.
+    Drive OpenCL kernels.
+    
+    For each kernel, generate a randomly sized payload and execute.
+    Use environment variable 'DSIZE' to override random payload size.
     
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
     positional arguments:
-      input           path to input
+      <input>         input file(s) or directories
     
     optional arguments:
       -h, --help      show this help message and exit
       --version       show version information and exit
       -v, --verbose   increase output verbosity
-      -f              treat input as file
       -s, --strict    reject any kernels which do not validate
       --cpu           execute on CPU (default: no)
       --gpu           execute on GPU (default: yes)
-      --fatal-errors  exit on failure
+      --fatal-errors  exit on error
 
 clgen
 ------

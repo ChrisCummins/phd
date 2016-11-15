@@ -798,18 +798,23 @@ def kernel(src, filename='<stdin>', devtype="__placeholder__",
 
 def file(path, **kwargs):
     """
-    Read an OpenCL kernel from a file and drive it.
+    Drive an OpenCL kernel file.
+
+    Arguments:
+        path (str): Path to file
+        **kwargs (dict, optional): Arguments to kernel()
     """
-    with open(fs.path(path)) as infile:
+    with open(path) as infile:
         src = infile.read()
-        for kernelsrc in clutil.get_cl_kernels(src):
+        kernels = clutil.get_cl_kernels(src)
+
+        # error if there's no kernels
+        if not len(kernels):
+            if kwargs.get("fatal_errors", False):
+                raise E_BAD_CODE("no kernels in file '{}'".format(path))
+            else:
+                print(path, "-", "E_BAD_CODE", '-', sep=',', file=sys.stderr)
+
+        # execute all kernels in file
+        for kernelsrc in kernels:
             kernel(kernelsrc, filename=fs.basename(path), **kwargs)
-
-
-def directory(path, **kwargs):
-    """
-    Drive a directory containing OpenCL kernel files.
-    """
-    files = fs.ls(fs.path(path), abspaths=True, recursive=True)
-    for path in [f for f in files if f.endswith('.cl')]:
-        file(path, **kwargs)
