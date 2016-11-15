@@ -23,6 +23,7 @@ import json
 import re
 
 from labm8 import fs
+from tempfile import mkdtemp
 
 import clgen
 from clgen import model
@@ -79,3 +80,33 @@ class TestModel(TestCase):
         self.assertEqual(contents["model.json"], clgen.checksum_file(json_))
         # train opts
         self.assertEqual(meta["train_opts"], m.train_opts)
+
+    def test_to_dist(self):
+        m = get_test_model()
+        m.train()
+
+        tmpdir = mkdtemp(prefix="clgen-")
+        outpath = m.to_dist(fs.path(tmpdir, "dist"))
+        self.assertTrue(fs.isfile(outpath))
+        self.assertEqual(fs.dirname(outpath), tmpdir)
+        fs.rm(tmpdir)
+
+
+class TestDistModel(TestCase):
+    def test_import(self):
+        m = get_test_model()
+        m.train()
+
+        train_opts = m.train_opts
+
+        tmpdir = mkdtemp(prefix="clgen-")
+        outpath = m.to_dist(fs.path(tmpdir, "dist"))
+
+        m = model.from_tar(outpath)
+        self.assertEqual(type(m), model.DistModel)
+        self.assertEqual(m.train_opts, train_opts)
+        fs.rm(tmpdir)
+
+    def test_import_bad_path(self):
+        with self.assertRaises(clgen.File404):
+            model.from_tar("/bad/path")

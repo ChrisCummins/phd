@@ -59,7 +59,17 @@ def get_default_author():
 
 
 class Model(clgen.CLgenObject):
+    """
+    A CLgen Model.
+    """
     def __init__(self, corpus, train_opts):
+        """
+        Instantiate model.
+
+        Arguments:
+            corpus (Corpus): Corpus instance.
+            train_opts (dict): Training options.
+        """
         assert(isinstance(corpus, Corpus))
         assert(type(train_opts) is dict)
 
@@ -92,6 +102,8 @@ class Model(clgen.CLgenObject):
         opts["checkpoint_name"] = fs.path(self.cache.path, "model")
 
         # set default arguments
+        if opts.get("max_epochs", None) is None:
+            opts["max_epochs"] = 50
         if opts.get("print_every", None) is None:
             opts["print_every"] = 10
         if opts.get("checkpoint_every", None) is None:
@@ -228,48 +240,125 @@ class Model(clgen.CLgenObject):
 
 
 class DistModel(Model):
+    """
+    Distributed model.
+
+    A distmodel is a pre-trained model, distributed without training corpus.
+    """
     def __init__(self, tarpath):
+        """
+        Instantiate distmodel.
+
+        Arguments:
+            tarpath (str): Path to distmodel.
+        """
         assert(type(tarpath) is str)
 
         self.hash = self._hash(tarpath)
         self.cache = Cache(fs.path("model", self.hash))
 
-        log.info("dist model", self.hash)
-
         # unpack archive if necessary
+        unpacked = False
         if not self.cache['model.json'] or not self.cache['model.t7']:
+            unpacked = True
             log.info("unpacking", tarpath)
             clgen.unpack_archive(tarpath, dir=self.cache.path)
-            if not len(fs.ls(self.cache.path)) == 3:
-                log.error("Unpackaed tar contents:\n  ",
-                          "\n  ".join(fs.ls(self.cache.path, abspaths=True)))
-                raise DistError("Bad distfile '{}'".format(tarpath))
-            if not self.cache['model.json']:
-                raise DistError("model.json not in '{}'".format(tarpath))
-            if not self.cache['model.t7']:
-                raise DistError("model.t7 not in '{}'".format(tarpath))
             if not self.cache['meta.json']:
                 raise DistError("meta.json not in '{}'".format(tarpath))
 
-        metadata = clgen.load_json_file(self.cache['meta.json'])
-        self.train_opts = metadata['train_opts']
+        self._meta = clgen.load_json_file(self.cache['meta.json'])
+        if unpacked:
+            self.validate()
+
+        self.train_opts = self.meta['train_opts']
+
+        log.info("distfile model: ", self.hash)
+        log.verbose("distfile author:", self.meta["author"])
+        log.verbose("distfile date:  ", self.meta["date packaged"])
 
     def _hash(self, tarpath):
         return clgen.checksum_file(tarpath)
 
+    @property
+    def meta(self):
+        """
+        Get model metadata.
+
+        Format spec: https://github.com/ChrisCummins/clgen/issues/25
+
+        Returns:
+            dict: Metadata.
+        """
+        return self._meta
+
     def train(self):
+        """
+        This method does nothing, distmodels are pre-tained.
+        """
         pass
 
     @property
     def checkpoints(self):
+        """
+        Training checkpoints.
+
+        Returns:
+
+            str[]: List of paths to checkpoint files.
+        """
         return [self.most_recent_checkpoint()]
 
     @property
     def most_recent_checkpoint(self):
         """
-        Get path to most recently initialized t7
+        Get path to pre-trained t7 checkpoint.
+
+        Returns:
+
+            str or None: Path to checkpoint.
         """
         return self.cache['model.t7']
+
+    def validate(self):
+        """
+        Validate contents of a distfile.
+
+        Returns:
+            bool: True.
+
+        Raises:
+            DistError: In case of invalid distfile.
+        """
+        version = self.meta.get("version", None)
+
+        if version is None:
+            # before version 0.1.1, distfiles did not contain version string
+            if not len(fs.ls(self.cache.path)) == 3:
+                log.error("Unpackaed tar contents:\n  ",
+                          "\n  ".join(fs.ls(self.cache.path, abspaths=True)))
+                raise DistError("Bad distfile")
+            if not self.cache['model.json']:
+                raise DistError("model.json not in disfile")
+            if not self.cache['model.t7']:
+                raise DistError("model.t7 not in disfile")
+            return True
+
+        if version != clgen.version():
+            log.warning("distfile version {} does not match CLgen version "
+                        "{}. There may be incompabilities"
+                        .format(version, clgen.version()))
+        contents = self.meta["contents"]
+        for file in contents:
+            # compare unpacked file contents to expected checksums
+            path = self.cache[file]
+            checksum = clgen.checksum_file(path)
+            log.verbose("  expected checksum:", file, contents[file])
+            log.verbose("calculated checksum:", file, checksum)
+            if checksum != contents[file]:
+                raise DistError(
+                    "distfile {} checksum failed".format(file))
+
+        return True
 
 
 def from_json(model_json):
@@ -316,5 +405,9 @@ def from_tar(path):
         DistError: If distfile is malformed.
     """
     assert(type(path) is str)
+
+    path = fs.path(path)
+    if not fs.isfile(path):
+        raise clgen.File404("distfile not found '{}'".format(path))
 
     return DistModel(path)
