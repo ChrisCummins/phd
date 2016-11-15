@@ -345,7 +345,7 @@ class TestDatabase(TestCase):
     def test_export_csv_bad_path(self):
         # An error is thrown if we can't write to file.
         with self.assertRaises(IOError) as ctx:
-            self.db.export_csv("names", "/root")
+            self.db.export_csv("names", "/not/a/real/path")
 
     def test_export_csv_missing_table(self):
         # An error is thrown if the table is not found.
