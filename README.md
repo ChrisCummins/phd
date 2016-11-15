@@ -25,7 +25,7 @@
 
 **CLgen** is an open source application for generating runnable programs using
 deep learning. CLgen *learns* to program using neural networks which model the
-semantics and usage from large volumes of program fragments, generating 
+semantics and usage from large volumes of program fragments, generating
 many-core OpenCL programs that are representative of, but *distinct* from, the
 programs it learns from.
 
@@ -37,10 +37,11 @@ programs it learns from.
 See the [online documentation](http://chriscummins.cc/clgen/) for instructions
 on how to download and install CLgen.
 
-To train your first CLgen model and sample programs using the small included
-training set, run:
+Download a tiny example dataset to train and sample your first CLgen model:
 
 ```sh
+$ wget https://github.com/ChrisCummins/clgen/raw/master/tests/data/tiny.tar.bz2
+$ tar xf tiny.tar.bz2
 $ clgen model.json sampler.json
 ```
 
