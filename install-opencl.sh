@@ -38,3 +38,4 @@ else
 fi
 cd ..
 rm -rf clgen-0.1.1
+echo "==> CLgen 0.1.1 installed"
