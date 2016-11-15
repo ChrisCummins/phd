@@ -21,14 +21,17 @@ CLgen model.
 """
 from __future__ import print_function
 
+import json
 import os
 import re
+import tarfile
 
 from copy import copy
 from glob import glob, iglob
 from labm8 import fs
-from labm8 import time
 from labm8 import system
+from labm8 import time
+from tempfile import mktemp
 
 import clgen
 from clgen import log
@@ -132,11 +135,52 @@ class Model(clgen.CLgenObject):
             "contents": contents
         }
 
-    def to_dist(distpath, author=None):
+    def to_dist(self, distpath, author=None):
+        """
+        Create a dist file.
+
+        Arguments:
+            distpath (str): Path to dist file.
+            author (str, optional): Author name.
+
+        Returns:
+            str: Path to generated distfile.
+        """
+        outpath = fs.abspath(distpath) + ".tar.bz2"
+        if fs.exists(outpath):
+            raise DistError("file {} exists".format(outpath))
+
         meta = self.meta
         if author is not None:
             meta["author"] = author
-        # TODO: Create temp directory, write meta, copy model files, create tar
+        log.debug(clgen.format_json(meta))
+
+        try:
+            tar = tarfile.open(outpath, 'w:bz2')
+
+            # write meta
+            metapath = mktemp(prefix="clgen-", suffix=".json")
+            clgen.write_file(metapath, json.dumps(meta))
+            log.debug("metafile:", metapath)
+
+            dist_t7 = self.most_recent_checkpoint
+            dist_json = re.sub(r'.t7$', '.json', dist_t7)
+
+            # create tarball
+            tar.add(metapath, arcname="meta.json")
+            tar.add(dist_t7, arcname="model.t7")
+            tar.add(dist_json, arcname="model.json")
+
+            # tidy up
+            fs.rm(metapath)
+            tar.close()
+        except Exception as e:
+            tar.close()
+            fs.rm(metapath)
+            fs.rm(outpath)
+            raise e
+
+        return outpath
 
     def __repr__(self):
         return "{hash}: {data}".format(
