@@ -25,18 +25,18 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
-from copy import deepcopy
-from functools import partial
-from io import open
-from random import randrange
-
+import labm8
 import numpy as np
 import os
 import sys
 
-import labm8
+from copy import deepcopy
+from functools import partial
+from io import open
 from labm8 import fs
 from labm8 import math as labmath
+from random import randrange
+from six import string_types
 
 import clgen
 from clgen import clutil
@@ -255,7 +255,7 @@ class KernelDriver(clgen.CLgenObject):
     def __init__(self, ctx, source, source_path='<stdin>'):
         # Safety first, kids:
         assert(type(ctx) == cl.Context)
-        assert(type(source) == str or type(source) == unicode)
+        assert(isinstance(source, string_types))
 
         self._ctx = ctx
         self._src = str(source)
@@ -366,7 +366,7 @@ class KernelDriver(clgen.CLgenObject):
             out:      <kernel> <wgsize> <transfer> <runtime> <ci>
             metaout:  <error> <kernel>
         """
-        assert(type(queue) == cl.CommandQueue)
+        assert(isinstance(queue, cl.CommandQueue))
 
         if must_validate:
             try:
@@ -485,6 +485,20 @@ class KernelPayload(clgen.CLgenObject):
     Abstraction of data for OpenCL kernel.
     """
     def __init__(self, ctx, args, ndrange, transfersize):
+        """
+        Create a kernel payload.
+
+        Arguments:
+            ctx (cl.Context): OpenCL context.
+            args (KernelArg[]): Kernel arguments.
+            ndrange (int tuple): NDRange
+            transfersize (int): Number of bytes transferred to and from device.
+        """
+        assert(isinstance(ctx, cl.Context))
+        assert(all(isinstance(x, clutil.KernelArg) for x in args))
+        assert(all(isinstance(x, int) for x in ndrange))
+        assert(isinstance(transfersize, int))
+
         self._ctx = ctx
         self._args = args
         self._ndrange = ndrange
@@ -524,7 +538,15 @@ class KernelPayload(clgen.CLgenObject):
     def __eq__(self, other):
         """
         Equality comparison. Checks that OpenCL context and arguments match.
+
+        Arguments:
+            other (KernelPayload): Other operand.
+
+        Returns:
+            bool: True if equal, else false.
         """
+        assert(isinstance(other, KernelPayload))
+
         if self.context != other.context:
             return False
 
@@ -545,12 +567,22 @@ class KernelPayload(clgen.CLgenObject):
         return True
 
     def __ne__(self, other):
+        """
+        Not equal check.
+
+        Arguments:
+            other (KernelPayload): Other operand.
+
+        Returns:
+            bool: True if not equal, else false.
+        """
         return not self.__eq__(other)
 
     def device_to_host(self, queue):
         """
         Transfer payload from device to host.
         """
+        assert(isinstance(queue, cl.CommandQueue))
         elapsed = 0
 
         for arg in self.args:
@@ -567,6 +599,7 @@ class KernelPayload(clgen.CLgenObject):
         """
         Transfer payload from host to device.
         """
+        assert(isinstance(queue, cl.CommandQueue))
         elapsed = 0
 
         for arg in self.args:
@@ -640,6 +673,10 @@ class KernelPayload(clgen.CLgenObject):
 
     @staticmethod
     def _create_payload(nparray, driver, size):
+        assert(callable(nparray))
+        assert(isinstance(driver, KernelDriver))
+        assert(isinstance(size, int))
+
         args = [clutil.KernelArg(arg.string) for arg in driver.prototype.args]
         transfer = 0
 
@@ -687,18 +724,32 @@ class KernelPayload(clgen.CLgenObject):
         return KernelPayload(driver.context, args, (size,), transfer)
 
     @staticmethod
-    def create_sequential(*args, **kwargs):
+    def create_sequential(driver, size):
         """
         Create a payload of sequential values.
+
+        Arguments:
+            driver (KernelDriver): Driver instance.
+            size (int): Payload size.
+
+        Returns:
+            KernelPayload: Generated payload.
         """
-        return KernelPayload._create_payload(np.arange, *args, **kwargs)
+        return KernelPayload._create_payload(np.arange, driver, size)
 
     @staticmethod
-    def create_random(*args, **kwargs):
+    def create_random(driver, size):
         """
         Create a payload of random values.
+
+        Arguments:
+            driver (KernelDriver): Driver instance.
+            size (int): Payload size.
+
+        Returns:
+            KernelPayload: Generated payload.
         """
-        return KernelPayload._create_payload(np.random.rand, *args, **kwargs)
+        return KernelPayload._create_payload(np.random.rand, driver, size)
 
 
 def kernel(src, filename='<stdin>', devtype="__placeholder__",
