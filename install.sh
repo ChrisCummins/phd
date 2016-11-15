@@ -40,6 +40,22 @@ clone_repo() {
 }
 
 
+install_packages() {
+    set +u
+    [ -f /etc/os-release ] && source /etc/os-release
+    [ -z "$NAME" ] && export NAME=$(uname)
+    set -u
+
+    if [[ "$NAME" == "Darwin" ]]; then
+        brew install npm nodejs || true
+    elif [[ "$NAME" == "Ubuntu" ]]; then
+        sudo apt-get install -y nodejs npm
+    fi
+
+    sudo npm install -g diff-so-fancy
+}
+
+
 make_local_dirs() {
     mkdir -p $HOME/.local/bin
     mkdir -p $HOME/.local/share
@@ -160,6 +176,7 @@ install_servers() {
 
 
 main() {
+    install_packages
     make_local_dirs
     install_ssh
     install_zsh
