@@ -53,6 +53,8 @@ install_packages() {
     fi
 
     sudo npm install -g diff-so-fancy
+
+    pip install autoenv
 }
 
 
