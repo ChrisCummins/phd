@@ -15,6 +15,7 @@
 from unittest import main
 from tests import TestCase
 
+import getpass
 import os
 import socket
 
@@ -25,10 +26,20 @@ from labm8 import system
 
 class TestSystem(TestCase):
 
-    def test_name(self):
+    def test_hostname(self):
         hostname = socket.gethostname()
         self._test(hostname, system.HOSTNAME)
         self._test(hostname, system.HOSTNAME)
+
+    def test_username(self):
+        username = getpass.getuser()
+        self._test(username, system.USERNAME)
+        self._test(username, system.USERNAME)
+
+    def test_uid(self):
+        uid = os.getuid()
+        self._test(uid, system.UID)
+        self._test(uid, system.UID)
 
     def test_pid(self):
         pid = os.getpid()

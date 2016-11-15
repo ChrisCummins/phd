@@ -19,12 +19,15 @@
 Utilies for grokking the underlying system.
 
 Variables:
-  HOSTNAME System hostname.
-  PID Process ID.
+  * `HOSTNAME` (str) System hostname.
+  * `USERNAME` (str) Username.
+  * `UID` (int) User ID.
+  * `PID` (int) Process ID.
 """
 
 from __future__ import print_function
 
+import getpass
 import os
 import socket
 import sys
@@ -38,7 +41,8 @@ from labm8 import fs
 from labm8 import io
 
 HOSTNAME = socket.gethostname()
-
+USERNAME = getpass.getuser()
+UID = os.getuid()
 PID = os.getpid()
 
 argv = sys.argv
