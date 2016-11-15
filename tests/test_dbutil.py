@@ -38,6 +38,40 @@ class TestDbutil(TestCase):
         self.assertFalse(dbutil.is_github(tests.db('empty')))
         self.assertTrue(dbutil.is_github(tests.db('empty-gh')))
 
+    def test_num_rows_in(self):
+        self.assertEqual(10, dbutil.num_rows_in(tests.db_path('10-kernels'),
+                                                "ContentFiles"))
+
+        self.assertEqual(0, dbutil.num_rows_in(tests.db_path('10-kernels'),
+                                               "PreprocessedFiles"))
+
+        self.assertEqual(8, dbutil.num_rows_in(tests.db_path('10-kernels-preprocessed'),
+                                               "PreprocessedFiles",
+                                               "WHERE status=0"))
+
+        self.assertEqual(2, dbutil.num_rows_in(tests.db_path('10-kernels-preprocessed'),
+                                               "PreprocessedFiles",
+                                               "WHERE status!=0"))
+
+    def test_lc(self):
+        self.assertEqual(1368, dbutil.lc(tests.db_path('10-kernels'),
+                                         "ContentFiles"))
+
+        self.assertEqual(
+            None,
+            dbutil.lc(tests.db_path('10-kernels'),
+                      "PreprocessedFiles"))
+
+        self.assertEqual(
+            865,
+            dbutil.lc(tests.db_path('10-kernels-preprocessed'),
+                      "PreprocessedFiles", condition="WHERE status=0"))
+
+        self.assertEqual(
+            2,
+            dbutil.lc(tests.db_path('10-kernels-preprocessed'),
+                      "PreprocessedFiles", condition="WHERE status!=0"))
+
     def test_remove_preprocessed(self):
         tmpdb = 'test_remove_preprocessed.db'
         fs.cp(tests.db_path('10-kernels-preprocessed'), tmpdb)
