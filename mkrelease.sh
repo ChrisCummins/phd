@@ -126,6 +126,10 @@ make_version_bump() {
     cd "$(get_project_root)"
 
     echo "Publishing documentation..."
+    set +u
+    [ -z "$VIRTUAL_ENV" ] || deactivate
+    set -u
+    sudo -H make install
     make docs-publish
 
     echo "Creating version bump commit... $new_version"
