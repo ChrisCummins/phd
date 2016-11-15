@@ -36,3 +36,5 @@ else
     sudo -H make install
     sudo -H make test
 fi
+cd ..
+rm -rf clgen-0.1.1
