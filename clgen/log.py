@@ -58,6 +58,13 @@ def debug(*msg, **opts):
     logging.debug(_fmt(msg, opts))
 
 
+def verbose(*msg, **opts):
+    """
+    Calls debug().
+    """
+    debug(*msg, **opts)
+
+
 def info(*msg, **opts):
     """
     Info message.
