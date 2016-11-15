@@ -19,11 +19,11 @@
 from unittest import TestCase,skip
 import tests
 
-import numpy as np
-import sys
-import os
-
 import labm8
+import numpy as np
+import os
+import sys
+
 from labm8 import fs
 
 import clgen
@@ -70,22 +70,22 @@ test_args = [
     ['__global float* a', '__global float* b', '__local int* c'],
     ['__global int* a', '__global int* b', 'const int c', 'const int d']
 ]
-test_arg_names = [['a', 'b', 'c'], ['a', 'b', 'c'], ['a', 'b', 'c', 'd']]
-test_arg_types = [['float*', 'float*', 'int'],
-                  ['float*', 'float*', 'int*'],
-                  ['int*', 'int*', 'int', 'int']]
 test_arg_globals = [[True, True, False],
                     [True, True, False],
                     [True, True, False, False]]
 test_arg_locals = [[False, False, False],
                    [False, False, True],
                    [False, False, False, False]]
+test_arg_names = [['a', 'b', 'c'], ['a', 'b', 'c'], ['a', 'b', 'c', 'd']]
+test_arg_types = [['float*', 'float*', 'int'],
+                  ['float*', 'float*', 'int*'],
+                  ['int*', 'int*', 'int', 'int']]
 test_inputs = zip(test_sources, test_prototypes)
 
 
 class TestOpenCLUtil(TestCase):
     def test_get_kernel_prototype(self):
-        for source,prototype in test_inputs:
+        for source, prototype in test_inputs:
             self.assertEqual(prototype,
                              str(clutil.extract_prototype(source)))
 
@@ -98,13 +98,16 @@ class TestOpenCLUtil(TestCase):
         self.assertEqual(out, clutil.strip_attributes(tin))
 
         out = "typedef  unsigned char uchar8;"
-        tin = "typedef __attribute__((ext_vector_type(8))) unsigned char uchar8;"
+        tin = ("typedef __attribute__((ext_vector_type(8))) "
+               "unsigned char uchar8;")
         self.assertEqual(out, clutil.strip_attributes(tin))
 
         out = ("typedef  unsigned char uchar8;\n"
                "typedef  unsigned char uchar8;")
-        tin = ("typedef __attribute__  ((ext_vector_type(8))) unsigned char uchar8;\n"
-               "typedef __attribute__((reqd_work_group_size(64,1,1))) unsigned char uchar8;")
+        tin = ("typedef __attribute__  ((ext_vector_type(8))) "
+               "unsigned char uchar8;\n"
+               "typedef __attribute__((reqd_work_group_size(64,1,1))) "
+               "unsigned char uchar8;")
         self.assertEqual(out, clutil.strip_attributes(tin))
 
 
@@ -114,37 +117,113 @@ class TestKernelPrototype(TestCase):
             self.assertEqual(prototype,
                              str(clutil.KernelPrototype.from_source(source)))
 
-    def test_kernel_name(self):
-        for source,name in zip(test_sources, test_names):
+    def test_name(self):
+        for source, name in zip(test_sources, test_names):
             p = clutil.KernelPrototype.from_source(source)
             self.assertEqual(name, p.name)
 
-    def test_kernel_args(self):
-        for source,args in zip(test_sources, test_args):
+    def test_args(self):
+        for source, args in zip(test_sources, test_args):
             p = clutil.KernelPrototype.from_source(source)
             self.assertEqual(args, [str(x) for x in p.args])
 
-
-class TestKernelArg(TestCase):
-    def test_arg_names(self):
-        for source,argnames in zip(test_sources, test_arg_names):
+    def test_args_names(self):
+        for source, argnames in zip(test_sources, test_arg_names):
             p = clutil.KernelPrototype.from_source(source)
             self.assertEqual(argnames, [x.name for x in p.args])
 
-    def test_arg_names(self):
-        for source,type in zip(test_sources, test_arg_types):
+    def test_args_types(self):
+        for source, type in zip(test_sources, test_arg_types):
             p = clutil.KernelPrototype.from_source(source)
             self.assertEqual(type, [x.type for x in p.args])
 
-    def test_arg_is_global(self):
-        for source,isglobal in zip(test_sources, test_arg_globals):
+    def test_args_is_global(self):
+        for source, isglobal in zip(test_sources, test_arg_globals):
             p = clutil.KernelPrototype.from_source(source)
             self.assertEqual(isglobal, [x.is_global for x in p.args])
 
-    def test_arg_is_local(self):
-        for source,islocal in zip(test_sources, test_arg_locals):
+    def test_args_is_local(self):
+        for source, islocal in zip(test_sources, test_arg_locals):
             p = clutil.KernelPrototype.from_source(source)
             self.assertEqual(islocal, [x.is_local for x in p.args])
+
+
+class TestKernelArg(TestCase):
+    def test_string(self):
+        self.assertEqual(
+            clutil.KernelArg("__global float4* a").string,
+            "__global float4* a")
+        self.assertEqual(
+            clutil.KernelArg("const int b").string,
+            "const int b")
+
+    def test_components(self):
+        self.assertEqual(
+            clutil.KernelArg("__global float4* a").components,
+            ["__global", "float4*", "a"])
+        self.assertEqual(
+            clutil.KernelArg("const int b").components,
+            ["const", "int", "b"])
+        self.assertEqual(
+            clutil.KernelArg("const __restrict int c").components,
+            ["const", "int", "c"])
+
+    def test_name(self):
+        self.assertEqual(clutil.KernelArg("__global float4* a").name, "a")
+        self.assertEqual(clutil.KernelArg("const int b").name, "b")
+
+    def test_type(self):
+        self.assertEqual(
+            clutil.KernelArg("__global float4* a").type, "float4*")
+        self.assertEqual(clutil.KernelArg("const int b").type, "int")
+
+    def test_is_restrict(self):
+        self.assertEqual(
+            clutil.KernelArg("__global float4* a").is_restrict, False)
+        self.assertEqual(
+            clutil.KernelArg("const restrict int b").is_restrict, True)
+
+    def test_qualifiers(self):
+        self.assertEqual(
+            clutil.KernelArg("__global float4* a").qualifiers, ["__global"])
+        self.assertEqual(clutil.KernelArg("const int b").qualifiers, ["const"])
+        self.assertEqual(clutil.KernelArg("int c").qualifiers, [])
+
+    def test_is_pointer(self):
+        self.assertTrue(clutil.KernelArg("__global float4* a").is_pointer)
+        self.assertFalse(clutil.KernelArg("const int b").is_pointer)
+
+    def test_is_vector(self):
+        self.assertTrue(clutil.KernelArg("__global float4* a").is_vector)
+        self.assertFalse(clutil.KernelArg("const int b").is_vector)
+
+    def test_vector_width(self):
+        self.assertEqual(
+            clutil.KernelArg("__global float4* a").vector_width, 4)
+        self.assertEqual(clutil.KernelArg("const int32 b").vector_width, 32)
+        self.assertEqual(clutil.KernelArg("const int c").vector_width, 1)
+
+    def test_bare_type(self):
+        self.assertEqual(
+            clutil.KernelArg("__global float4* a").bare_type, "float")
+        self.assertEqual(clutil.KernelArg("const int b").bare_type, "int")
+
+    def test_is_const(self):
+        self.assertFalse(clutil.KernelArg("__global float4* a").is_const)
+        self.assertTrue(clutil.KernelArg("const int b").is_const)
+
+    def test_is_global(self):
+        self.assertTrue(clutil.KernelArg("__global float4* a").is_global)
+        self.assertFalse(clutil.KernelArg("const int b").is_global)
+
+    def test_is_local(self):
+        self.assertTrue(clutil.KernelArg("__local float4* a").is_local)
+        self.assertFalse(clutil.KernelArg("const int b").is_local)
+
+    def test_numpy_type(self):
+        self.assertEqual(
+            clutil.KernelArg("__local float4* a").numpy_type, np.float32)
+        self.assertEqual(clutil.KernelArg("const int b").numpy_type, np.int32)
 
     def test_arg(self):
         a = clutil.KernelArg("__global float* a")

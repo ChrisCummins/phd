@@ -17,32 +17,58 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-OpenCL utilities
+OpenCL utilities.
 """
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
-import re
 import platform
 import psutil
+import re
+
+from six import string_types
 
 import clgen
 from clgen import config as cfg
 from clgen import log
 
 
-class OpenCLUtilException(clgen.CLgenError): pass
-class PrototypeException(OpenCLUtilException): pass
-class UnknownTypeException(PrototypeException): pass
+class OpenCLUtilException(clgen.CLgenError):
+    """
+    Module error.
+    """
+    pass
+
+
+class PrototypeException(OpenCLUtilException):
+    """
+    Kernel prototype error.
+    """
+    pass
+
+
+class UnknownTypeException(PrototypeException):
+    """
+    Bad or unsupported type.
+    """
+    pass
 
 
 class KernelArg(clgen.CLgenObject):
     """
     OpenCL Kernel Argument.
 
-    Requires source code to have been pre-processed.
+    *Note:* Requires source code to have been pre-processed.
     """
     def __init__(self, string):
+        """
+        Create a kernel argument from a string.
+
+        Arguments:
+            string (str): OpenCL argument string.
+        """
+        assert(isinstance(string, string_types))
+
         self._string = string.strip()
         self._components = self._string.split()
 
@@ -50,10 +76,7 @@ class KernelArg(clgen.CLgenObject):
             if "restrict" in self._components:
                 self._is_restrict = True
                 self._components.remove("restrict")
-            else:
-                self._is_restrict = False
-
-            if "__restrict" in self._components:
+            elif "__restrict" in self._components:
                 self._is_restrict = True
                 self._components.remove("__restrict")
             else:
@@ -68,39 +91,156 @@ class KernelArg(clgen.CLgenObject):
 
     @property
     def string(self):
+        """
+        Return the original string.
+
+        Examples:
+
+            >>> KernelArg("__global float4* a").string
+            "__global float4* a"
+            >>> KernelArg("const int b").string
+            "const int b"
+
+        Returns:
+            str: String, as passed to constructor.
+        """
         return self._string
 
     @property
     def components(self):
+        """
+        Kernel argument components.
+
+        Examples:
+
+            >>> KernelArg("__global float4* a").components
+            ["__global", "float4*", "a"]
+            >>> KernelArg("const int b").components
+            ["const", "int", "b"]
+
+        Returns:
+            str[]: Argument components.
+        """
         return self._components
 
     @property
     def name(self):
+        """
+        Get the argument variable name.
+
+        Examples:
+
+            >>> KernelArg("__global float4* a").name
+            "a"
+            >>> KernelArg("const int b").name
+            "b"
+
+        Returns:
+            str: Argument name.
+        """
         return self._components[-1]
 
     @property
     def type(self):
+        """
+        Get the argument type.
+
+        Examples:
+
+            >>> KernelArg("__global float4* a").type
+            "float4*"
+            >>> KernelArg("const int b").type
+            "int"
+
+        Returns:
+            str: Argument type, including pointer '*' symbol, if present.
+        """
         return self._components[-2]
 
     @property
     def is_restrict(self):
+        """
+        Argument has restrict keyword.
+
+        Examples:
+
+            >>> KernelArg("__global float4* a").is_restrict
+            False
+            >>> KernelArg("restrict int* b").is_restrict
+            True
+
+        Returns:
+            bool: True if restrict.
+        """
         return self._is_restrict
 
     @property
     def qualifiers(self):
+        """
+        Return all argument type qualifiers.
+
+        Examples:
+
+            >>> KernelArg("__global float4* a").qualifiers
+            ["__global"]
+            >>> KernelArg("const int b").qualifiers
+            ["const"]
+
+        Returns:
+            str[]: Type qualifiers.
+        """
         return self._components[:-2]
 
     @property
     def is_pointer(self):
+        """
+        Returns whether argument is a pointer.
+
+        Examples:
+
+            >>> KernelArg("__global float4* a").is_pointer
+            True
+            >>> KernelArg("const int b").is_pointer
+            False
+
+        Returns:
+            bool: True if pointer, else False.
+        """
         return self.type[-1] == '*'
 
     @property
     def is_vector(self):
+        """
+        Returns whether argument is a vectory type, e.g. 'int4'.
+
+        Examples:
+
+            >>> KernelArg("__global float4* a").is_vector
+            True
+            >>> KernelArg("const int b").is_vector
+            False
+
+        Returns:
+            bool: True if vector type, else False.
+        """
         idx = -2 if self.is_pointer else -1
         return self.type[idx].isdigit()
 
     @property
     def vector_width(self):
+        """
+        Returns width of vector type.
+
+        Examples:
+
+            >>> KernelArg("__global float4* a").vector_width
+            4
+            >>> KernelArg("__global int* a").vector_width
+            1
+
+        Returns:
+            int: Vector width.
+        """
         try:
             return self._vector_width
         except AttributeError:  # set
@@ -118,8 +258,13 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            KernelArg("float4*").bare_type == "float"
-            KernelArg("uchar32").bare_type == "uchar"
+            >>> KernelArg("__global float4* a").bare_type
+            "float"
+            >>> KernelArg("const int b").bare_type
+            "uchar"
+
+        Returns:
+            str: Bare type.
         """
         try:
             return self._bare_type
@@ -129,6 +274,19 @@ class KernelArg(clgen.CLgenObject):
 
     @property
     def is_const(self):
+        """
+        Kernel arg is constant.
+
+        Examples:
+
+            >>> KernelArg("__global float4* a").is_const
+            False
+            >>> KernelArg("const int b").is_const
+            True
+
+        Returns:
+            bool: True if const, else False.
+        """
         try:
             return self._is_const
         except AttributeError:  # set
@@ -137,24 +295,48 @@ class KernelArg(clgen.CLgenObject):
 
     @property
     def is_global(self):
+        """
+        Kernel arg is global.
+
+        Examples:
+
+            >>> KernelArg("__global float4* a").is_global
+            True
+            >>> KernelArg("const int b").is_global
+            False
+
+        Returns:
+            bool: True if global, else False.
+        """
         try:
             return self._is_global
         except AttributeError:  # set
-            self._is_global = (True if
-                               '__global' in self.qualifiers or
-                               'global' in self.qualifiers
-                               else False)
+            self._is_global = (
+                True if '__global' in self.qualifiers or
+                'global' in self.qualifiers else False)
             return self._is_global
 
     @property
     def is_local(self):
+        """
+        Kernel arg is local.
+
+        Examples:
+
+            >>> KernelArg("__local float4* a").is_local
+            True
+            >>> KernelArg("const int b").is_local
+            False
+
+        Returns:
+            bool: True if local, else False.
+        """
         try:
             return self._is_local
         except AttributeError:  # set
-            self._is_local = (True if
-                              '__local' in self.qualifiers or
-                              'local' in self.qualifiers
-                              else False)
+            self._is_local = (
+                True if '__local' in self.qualifiers or
+                'local' in self.qualifiers else False)
             return self._is_local
 
     @property
@@ -162,9 +344,16 @@ class KernelArg(clgen.CLgenObject):
         """
         Return the numpy data type associated with this argument.
 
+        Examples:
+
+            >>> KernelArg("__local float4* a").numpy_type
+            np.float32
+            >>> KernelArg("const int b").numpy_type
+            np.int32
+
         Return:
 
-            numpy type
+            numpy type: Kernel type.
 
         Raises:
 
