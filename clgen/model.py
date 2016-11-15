@@ -27,12 +27,32 @@ import re
 from copy import copy
 from glob import glob, iglob
 from labm8 import fs
+from labm8 import time
+from labm8 import system
 
 import clgen
 from clgen import log
 from clgen import torch_rnn
 from clgen.cache import Cache
 from clgen.corpus import Corpus
+
+
+class ModelError(clgen.CLgenError):
+    """
+    Module level error
+    """
+    pass
+
+
+class DistError(ModelError):
+    """
+    Dist model import or export error.
+    """
+    pass
+
+
+def get_default_author():
+    return "{user}@{host}".format(user=system.USERNAME, host=system.HOSTNAME)
 
 
 class Model(clgen.CLgenObject):
@@ -74,6 +94,50 @@ class Model(clgen.CLgenObject):
 
         torch_rnn.train(**opts)
 
+    @property
+    def meta(self):
+        """
+        Get trained model metadata.
+
+        Format spec: https://github.com/ChrisCummins/clgen/issues/25
+
+        Returns:
+            dict: Metadata.
+
+        Raises:
+            DistError: If model has not been trained.
+        """
+        dist_t7 = self.most_recent_checkpoint
+
+        if dist_t7 is None:
+            raise DistError("model is untrained")
+
+        dist_json = re.sub(r'.t7$', '.json', dist_t7)
+
+        if not fs.exists(dist_json):  # sanity check
+            raise clgen.InternalError(
+                "Checkpoint {t7} does not have corresponding json file {json}"
+                .format(t7=dist_t7, json=dist_json))
+
+        contents = {
+            "model.t7": clgen.checksum_file(dist_t7),
+            "model.json": clgen.checksum_file(dist_json)
+        }
+
+        return {
+            "version": clgen.version(),
+            "author": get_default_author(),
+            "date packaged": time.nowstr(),
+            "train_opts": self.train_opts,
+            "contents": contents
+        }
+
+    def to_dist(distpath, author=None):
+        meta = self.meta
+        if author is not None:
+            meta["author"] = author
+        # TODO: Create temp directory, write meta, copy model files, create tar
+
     def __repr__(self):
         return "{hash}: {data}".format(
             hash=self.hash, data=clgen.format_json(self.train_opts))
@@ -85,7 +149,11 @@ class Model(clgen.CLgenObject):
     @property
     def most_recent_checkpoint(self):
         """
-        Get path to most recently initialized t7
+        Get path to most recently created t7 checkpoint
+
+        Returns:
+
+            str or None: Path to checkpoint, or None if no checkpoints.
         """
         # if there's nothing trained, then max() will raise ValueError because
         # of an empty sequence
@@ -97,11 +165,6 @@ class Model(clgen.CLgenObject):
                        key=get_checkpoint_iterations)
         except ValueError:
             return None
-
-
-class DistError(clgen.CLgenError):
-    """Error thrown if dist model is badly formatted."""
-    pass
 
 
 class DistModel(Model):
