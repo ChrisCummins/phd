@@ -30,6 +30,13 @@ import clgen
 
 
 def create_db(path, github=False):
+    """
+    Create an empty OpenCL kernel database.
+
+    Arguments:
+        path (str): Path to database to create.
+        github (bool, optional): Add tables for GitHub metadata.
+    """
     path = os.path.expanduser(path)
 
     if os.path.exists(path):
@@ -44,9 +51,13 @@ def create_db(path, github=False):
     c.executescript(script)
     c.close()
     db.commit()
+    db.close()
 
 
 class md5sum_aggregator:
+    """
+    sqlite3 aggregator for computing checksum of column values.
+    """
     def __init__(self):
         self.md5 = md5()
 
@@ -58,6 +69,9 @@ class md5sum_aggregator:
 
 
 class linecount_aggregator:
+    """
+    sqlite3 aggregator for computing line count of column values.
+    """
     def __init__(self):
         self.count = 0
 
@@ -69,6 +83,9 @@ class linecount_aggregator:
 
 
 class charcount_aggregator:
+    """
+    sqlite3 aggregator for computing character count of column values.
+    """
     def __init__(self):
         self.count = 0
 
@@ -105,6 +122,15 @@ def connect(db_path):
 
 
 def is_modified(db):
+    """
+    Returns whether database is preprocessed.
+
+    Arguments:
+        db (sqlite3.Connection): Database.
+
+    Returns:
+        bool: True if database is modified, else False.
+    """
     c = db.cursor()
 
     c.execute("SELECT value FROM Meta WHERE key='preprocessed_checksum'")
@@ -119,6 +145,13 @@ def is_modified(db):
 
 
 def set_modified_status(db, checksum):
+    """
+    Set database preprocessed checksum.
+
+    Arguments:
+        db (sqlite3.Connection): Database.
+        checksum (str): New preprocessed checksum.
+    """
     c = db.cursor()
     c.execute("INSERT OR REPLACE INTO Meta VALUES (?,?)",
               ('preprocessed_checksum', checksum))
@@ -127,6 +160,16 @@ def set_modified_status(db, checksum):
 
 
 def table_exists(db, table_name):
+    """
+    SQL table exists.
+
+    Arguments:
+        db (sqlite3.Connection): Database.
+        table_name (str): Name of table.
+
+    Returns:
+        bool: True if table with name exists.
+    """
     c = db.cursor()
     c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='" +
               table_name + "'")
@@ -136,6 +179,15 @@ def table_exists(db, table_name):
 
 
 def is_github(db):
+    """
+    SQL table has GitHub metadata tables.
+
+    Arguments:
+        db (sqlite3.Connection): Database.
+
+    Returns:
+        bool: True if GitHub tables in database.
+    """
     return table_exists(db, 'Repositories')
 
 

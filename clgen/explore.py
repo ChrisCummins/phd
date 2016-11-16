@@ -38,9 +38,18 @@ from clgen import log
 IMG_DIR = 'img'
 
 
-def decode(code):
+def decode(string):
+    """
+    Decode Unicode string.
+
+    Arguments:
+        string (str): Unicode encoded string.
+
+    Returns:
+        str: Decoded string, or empty string if decode fails.
+    """
     try:
-        return code.decode('utf-8')
+        return string.decode('utf-8')
     except UnicodeDecodeError:
         return ''
 
@@ -49,9 +58,12 @@ def div(x, y):
     """
     Zero-safe division.
 
-    :param x: Numerator
-    :param y: Denominator
-    :return: x / y
+    Arguments:
+        x (Number): Numerator
+        y (Number): Denominator
+
+    Returns:
+        Number: x / y
     """
     try:
         return x / y
@@ -60,6 +72,15 @@ def div(x, y):
 
 
 def median(sorted_arr):
+    """
+    Return the median of a sorted sequence.
+
+    Arugments:
+        sorted_arr (Number[]): Sequence.
+
+    Returns:
+        Number: Median value.
+    """
     n = len(sorted_arr)
     if not n:
         return 0
@@ -72,10 +93,28 @@ def median(sorted_arr):
 
 
 def bigint(n):
+    """
+    Return comma seperated big numbers.
+
+    Arugments:
+        n (Number): Value.
+
+    Returns:
+        str: Comma separated value.
+    """
     return locale.format('%d', round(n), grouping=True)
 
 
 def seq_stats(sorted_arr):
+    """
+    Return stats on a sequence.
+
+    Arguments:
+        sorted_arr (Number[]): Sequence.
+
+    Returns:
+        str: Sequnece stats.
+    """
     sorted_arr = sorted_arr or [0]
     avg = sum(sorted_arr) / len(sorted_arr)
     midpoint = int(len(sorted_arr) / 2)
@@ -89,9 +128,10 @@ def seq_stats(sorted_arr):
             bigint(sorted_arr[len(sorted_arr) - 1])))
 
 
-# Generate dataset stats.
-#
 def stats_worker(db_path):
+    """
+    Generate dataset stats.
+    """
     log.debug("stats worker ...")
     db = dbutil.connect(db_path)
     c = db.cursor()
@@ -145,9 +185,10 @@ def stats_worker(db_path):
     return stats
 
 
-# Generate dataset stats.
-#
 def gh_stats_worker(db_path):
+    """
+    Generate github dataset stats.
+    """
     print("stats worker ...")
     db = dbutil.connect(db_path)
     c = db.cursor()
