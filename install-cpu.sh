@@ -31,11 +31,13 @@ if [[ -n "$VIRTUAL_ENV" ]]; then
     # virtualen - no sudo required
     make install
     make test
+    cd ..
+    rm -rf clgen-0.1.6
 else
     # system-wide - use sudo
     sudo -H make install
     sudo -H make test
+    cd ..
+    sudo rm -rf clgen-0.1.6
 fi
-cd ..
-rm -rf clgen-0.1.6
 echo "==> CLgen 0.1.6 installed"
