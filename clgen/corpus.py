@@ -145,10 +145,22 @@ class Corpus:
 
     @property
     def input_json(self):
+        """
+        Path to input JSON.
+
+        Returns:
+            str: Path.
+        """
         return self.cache['corpus.json']
 
     @property
     def input_h5(self):
+        """
+        Path to input h5.
+
+        Returns:
+            str: Path.
+        """
         return self.cache['corpus.h5']
 
     def __repr__(self):
@@ -159,6 +171,12 @@ class Corpus:
     def from_json(corpus_json):
         """
         Instantiate Corpus from JSON.
+
+        Arguments:
+            corpus_json (dict): Specification.
+
+        Returns:
+            Corpus: Insantiated corpus.
         """
         log.debug("corpus from json")
 
