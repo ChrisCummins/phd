@@ -37,5 +37,5 @@ else
     sudo -H make test
 fi
 cd ..
-rm -rf clgen-0.1.1
-echo "==> CLgen 0.1.1 installed"
+rm -rf clgen-0.1.5
+echo "==> CLgen 0.1.5 installed"
