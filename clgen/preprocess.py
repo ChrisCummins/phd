@@ -646,10 +646,8 @@ def preprocess_contentfiles(db_path, max_num_workers=cpu_count() * 4):
         db.close()
         cache.empty()
 
-    db = dbutil.connect(db_path)
-    num_contentfiles = dbutil.num_rows_in(db, 'ContentFiles')
-    num_preprocessedfiles = dbutil.num_rows_in(db, 'PreprocessedFiles')
-    db.close()
+    num_contentfiles = dbutil.num_rows_in(db_path, 'ContentFiles')
+    num_preprocessedfiles = dbutil.num_rows_in(db_path, 'PreprocessedFiles')
 
     num_workers = min(num_contentfiles, max_num_workers)
     files_per_worker = math.ceil(num_contentfiles / num_workers)
