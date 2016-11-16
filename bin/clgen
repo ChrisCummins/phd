@@ -22,6 +22,16 @@ from clgen import cli
 
 __description__ = """
 Generate OpenCL programs using Deep Learning.
+
+This is a five-step process:
+   1. Input files are collected from the model specification file.
+   2. The input files are preprocessed into an OpenCL kernel database.
+   3. A training corpus is generated from the input files.
+   4. A model is instantiated and trained on the corpus.
+   5. The trained model is sampled for new kernels.
+
+This program automates the execution of all five stages of the pipeline.
+The pipeline can be interrupted and resumed at any time.
 """
 
 

@@ -520,7 +520,7 @@ def inline_headers(src):
     return '\n'.join(outlines)
 
 
-def get_new_program(db_path):
+def get_clsmith_program(db_path):
     global files_new_counter
 
     outputpath = 'CLProg.c'
@@ -562,7 +562,7 @@ def clsmith(db_path, target_num_kernels):
     c.execute('SELECT Count(*) FROM ContentFiles')
     num_kernels = c.fetchone()[0]
     while num_kernels < target_num_kernels:
-        get_new_program(db_path)
+        get_clsmith_program(db_path)
         c.execute('SELECT Count(*) FROM ContentFiles')
         num_kernels = c.fetchone()[0]
 

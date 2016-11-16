@@ -22,6 +22,17 @@ from clgen import fetch
 
 __description__ = """
 Generate OpenCL programs using CLSmith.
+
+CLSmith is a random program generator designed for fuzz testing OpenCL
+compilers and implementations.
+
+Install CLSmith into your system path from here:
+
+   <https://github.com/ChrisLidbury/CLSmith>
+
+Note CLSmith is *not* developed by us. It is the efforts of the fine folks
+at Imperial College London: Christopher Lidbury, Andrei Lascu, Nathan Chong,
+Alastair F. Donaldson.
 """
 
 

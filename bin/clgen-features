@@ -25,7 +25,15 @@ from clgen import cli
 from clgen import features
 
 __description__ = """
-Extract OpenCL kernel features.
+Extract static OpenCL kernel features.
+
+This extracts a subset of the features required for the paper:
+
+    Grewe, D., Wang, Z., & O'Boyle, M. F. P. M. (2013). Portable Mapping of
+    Data Parallel Programs to OpenCL for Heterogeneous Systems. In CGO. IEEE.
+
+Note that dynamic features are extracted using the cldrive program for CLgen
+kernels, or by using libcecl for ad-hoc programs.
 """
 
 

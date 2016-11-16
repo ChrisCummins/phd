@@ -24,7 +24,11 @@ from clgen import log
 from clgen import fetch
 
 __description__ = """
-Import OpenCL files into datbase.
+Import OpenCL files into kernel datbase.
+
+The kernel database is used as a staging ground for input files, which are
+then preprocessed and assembled into corpuses. This program acts as the front
+end, assembling files from the file system into a database for preprocessing.
 """
 
 

@@ -27,7 +27,7 @@ from clgen import dbutil
 
 
 __description__ = """
-Create an empty SQL database.
+Create an empty OpenCL kernel database.
 """
 
 

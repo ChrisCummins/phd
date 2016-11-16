@@ -24,6 +24,12 @@ from clgen import preprocess
 
 __description__ = """
 Process OpenCL files for machine learning.
+
+This is a three step process. First, the OpenCL kernels are compiled to
+bytecode, then the source files are preprocessed, before being rewritten.
+
+Preprocessing is computationally demanding and highly paralellised.
+Expect high resource contention during preprocessing.
 """
 
 

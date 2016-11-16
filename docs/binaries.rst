@@ -29,6 +29,9 @@ cldrive
        <mean>      mean execution time
        <ci>        95% confidence interval of execution time
     
+    In case of an error, "-" is output for values which cannot be determined,
+    and the kernel name field is substituted for an error name.
+    
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
@@ -53,6 +56,16 @@ clgen
     
     Generate OpenCL programs using Deep Learning.
     
+    This is a five-step process:
+       1. Input files are collected from the model specification file.
+       2. The input files are preprocessed into an OpenCL kernel database.
+       3. A training corpus is generated from the input files.
+       4. A model is instantiated and trained on the corpus.
+       5. The trained model is sampled for new kernels.
+    
+    This program automates the execution of all five stages of the pipeline.
+    The pipeline can be interrupted and resumed at any time.
+    
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
@@ -72,7 +85,7 @@ clgen-create-db
 
     usage: clgen-create-db [-h] [--version] [-v] [-g] input
     
-    Create an empty SQL database.
+    Create an empty OpenCL kernel database.
     
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
@@ -93,7 +106,12 @@ clgen-dist
 
     usage: clgen-dist [-h] [--version] [-v] [--author AUTHOR] <model> <distname>
     
-    Package CLgen model for distribution.
+    Package CLgen models for distribution.
+    
+    Once a CLgen model has been trained, it can be distribute to other devices
+    for sampling. This program provides the mechanism for doing so. So called
+    "dist files" contain trained Neural Network models and metadata describing
+    the method by which they were trained.
     
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
@@ -117,6 +135,8 @@ clgen-explore
     
     Exploratory analysis of preprocessed dataset.
     
+    Provides an overview of the contents of an OpenCL kernel database.
+    
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
@@ -136,7 +156,15 @@ clgen-features
     usage: clgen-features [-h] [--version] [-v] [-d] [-s] [-e] [--shim] [-q] [-H]
                           inputs [inputs ...]
     
-    Extract OpenCL kernel features.
+    Extract static OpenCL kernel features.
+    
+    This extracts a subset of the features required for the paper:
+    
+        Grewe, D., Wang, Z., & O'Boyle, M. F. P. M. (2013). Portable Mapping of
+        Data Parallel Programs to OpenCL for Heterogeneous Systems. In CGO. IEEE.
+    
+    Note that dynamic features are extracted using the cldrive program for CLgen
+    kernels, or by using libcecl for ad-hoc programs.
     
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
@@ -162,7 +190,11 @@ clgen-fetch
 
     usage: clgen-fetch [-h] [--version] [-v] input paths [paths ...]
     
-    Import OpenCL files into datbase.
+    Import OpenCL files into kernel datbase.
+    
+    The kernel database is used as a staging ground for input files, which are
+    then preprocessed and assembled into corpuses. This program acts as the front
+    end, assembling files from the file system into a database for preprocessing.
     
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
@@ -183,7 +215,10 @@ clgen-fetch-clgen
 
     usage: clgen-fetch-clgen [-h] [--version] [-v] [-d D] [-f F] [--first] input
     
-    Exploratory analysis of preprocessed dataset.
+    Generate OpenCL kernels from CLgen samples.
+    
+    This splits the continuous output of CLgen into discrete OpenCL kernels for
+    preprocessing.
     
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
@@ -208,6 +243,17 @@ clgen-fetch-clsmith
     
     Generate OpenCL programs using CLSmith.
     
+    CLSmith is a random program generator designed for fuzz testing OpenCL
+    compilers and implementations.
+    
+    Install CLSmith into your system path from here:
+    
+       <https://github.com/ChrisLidbury/CLSmith>
+    
+    Note CLSmith is *not* developed by us. It is the efforts of the fine folks
+    at Imperial College London: Christopher Lidbury, Andrei Lascu, Nathan Chong,
+    Alastair F. Donaldson.
+    
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
@@ -227,7 +273,7 @@ clgen-fetch-db
 
     usage: clgen-fetch-db [-h] [--version] [-v] output input
     
-    Import kernels from an existing database.
+    Copies OpenCL kernels from an existing SQL database into a new one.
     
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
@@ -248,12 +294,20 @@ clgen-fetch-github
 
     usage: clgen-fetch-github [-h] [--version] [-v] input
     
-    Fetch OpenCL kernels from Github. Reads github authentication
-    from environmental variables:
+    Mines OpenCL kernels from Github. Requires the following environment
+    variables to be set:
     
          GITHUB_USERNAME   github username
          GITHUB_PW         github password
          GITHUB_TOKEN      github api token
+    
+    For instructions to generate an API token, see:
+    
+      <https://help.github.com/articles/creating-an-access-token-for-command-line-use/>
+    
+    This process issues thousands of GitHub API requests per minute. Please
+    exercise restrained in minimizing your use of this program -- we don't
+    want to upset the nice folks at GH :-)
     
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
@@ -276,6 +330,12 @@ clgen-preprocess
                             inputs [inputs ...]
     
     Process OpenCL files for machine learning.
+    
+    This is a three step process. First, the OpenCL kernels are compiled to
+    bytecode, then the source files are preprocessed, before being rewritten.
+    
+    Preprocessing is computationally demanding and highly paralellised.
+    Expect high resource contention during preprocessing.
     
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
@@ -305,6 +365,9 @@ clgen-train
                        input output
     
     Create training datasets.
+    
+    Provides a front-end for utilities for turning kernel databases into corpuses
+    for training CLgen models on.
     
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>

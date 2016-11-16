@@ -23,7 +23,7 @@ from clgen import cli
 from clgen import fetch
 
 __description__ = """
-Import kernels from an existing database.
+Copies OpenCL kernels from an existing SQL database into a new one.
 """
 
 

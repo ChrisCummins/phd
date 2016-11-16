@@ -49,6 +49,9 @@ where each value corresponds to:
    <transfer>  transfer size, in bytes
    <mean>      mean execution time
    <ci>        95% confidence interval of execution time
+
+In case of an error, "-" is output for values which cannot be determined,
+and the kernel name field is substituted for an error name.
 """
 
 

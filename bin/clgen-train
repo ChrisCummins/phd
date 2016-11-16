@@ -22,6 +22,9 @@ from clgen.train import train
 
 __description__ = """
 Create training datasets.
+
+Provides a front-end for utilities for turning kernel databases into corpuses
+for training CLgen models on.
 """
 
 

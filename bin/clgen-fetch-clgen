@@ -21,7 +21,10 @@ from clgen import cli
 from clgen import fetch
 
 __description__ = """
-Exploratory analysis of preprocessed dataset.
+Generate OpenCL kernels from CLgen samples.
+
+This splits the continuous output of CLgen into discrete OpenCL kernels for
+preprocessing.
 """
 
 

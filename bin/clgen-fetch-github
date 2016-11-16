@@ -25,12 +25,20 @@ from clgen import log
 from clgen import fetch
 
 __description__ = """
-Fetch OpenCL kernels from Github. Reads github authentication
-from environmental variables:
+Mines OpenCL kernels from Github. Requires the following environment
+variables to be set:
 
      GITHUB_USERNAME   github username
      GITHUB_PW         github password
      GITHUB_TOKEN      github api token
+
+For instructions to generate an API token, see:
+
+  <https://help.github.com/articles/creating-an-access-token-for-command-line-use/>
+
+This process issues thousands of GitHub API requests per minute. Please
+exercise restrained in minimizing your use of this program -- we don't
+want to upset the nice folks at GH :-)
 """
 
 

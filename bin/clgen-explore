@@ -22,6 +22,8 @@ from clgen import explore
 
 __description__ = """
 Exploratory analysis of preprocessed dataset.
+
+Provides an overview of the contents of an OpenCL kernel database.
 """
 
 def main():

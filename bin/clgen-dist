@@ -23,7 +23,12 @@ from clgen import log
 from clgen import model
 
 __description__ = """
-Package CLgen model for distribution.
+Package CLgen models for distribution.
+
+Once a CLgen model has been trained, it can be distribute to other devices
+for sampling. This program provides the mechanism for doing so. So called
+"dist files" contain trained Neural Network models and metadata describing
+the method by which they were trained.
 """
 
 
