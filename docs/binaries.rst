@@ -106,7 +106,7 @@ clgen-dist
       -h, --help       show this help message and exit
       --version        show version information and exit
       -v, --verbose    increase output verbosity
-      --author AUTHOR  Name of author (default: cec@florence)
+      --author AUTHOR  Name of author (default: $USER@$HOSTNAME)
 
 clgen-explore
 --------------

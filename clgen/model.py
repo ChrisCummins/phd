@@ -56,7 +56,18 @@ class DistError(ModelError):
 
 
 def get_default_author():
-    return "{user}@{host}".format(user=system.USERNAME, host=system.HOSTNAME)
+    """
+    Get the default author name for CLgen dist models.
+
+    If CLGEN_AUTHOR environment variable is set, use that. Else, author
+    is $USER@$HOSTNAME.
+
+    Returns:
+        str: Author name.
+    """
+    return os.environ.get(
+        "CLGEN_AUTHOR",
+        "{user}@{host}".format(user=system.USERNAME, host=system.HOSTNAME))
 
 
 class Model(clgen.CLgenObject):

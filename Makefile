@@ -152,6 +152,7 @@ docs-modules:
 		echo >> docs/binaries.rst; \
 		echo "::" >> docs/binaries.rst; \
 		echo >> docs/binaries.rst; \
+		export CLGEN_AUTHOR='$$USER@$$HOSTNAME'; \
 		./bin/$$bin --help | sed 's/^/    /' >> docs/binaries.rst; \
 		echo >> docs/binaries.rst; \
 	done
