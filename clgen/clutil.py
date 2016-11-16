@@ -596,6 +596,24 @@ def extract_prototype(src):
     return KernelPrototype(prototype)
 
 
+def get_contexts_and_devices():
+    """
+    Instantiate OpenCL contexts for all platforms and return devices.
+
+    Returns:
+        dict: pyopencl.Context as key, pyopencl.Device[] as value
+    """
+    import pyopencl as cl
+
+    results = {}
+    for pltfm in cl.get_platforms():
+        ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, pltfm)])
+        devices = ctx.get_info(cl.context_info.DEVICES)
+        results[ctx] = devices
+
+    return results
+
+
 def platform_info(printfn=print):
     """
     Log platform information.
@@ -611,7 +629,6 @@ def platform_info(printfn=print):
     if not cfg.USE_OPENCL:
         printfn()
         printfn("Device:     None")
-        return
 
     import pyopencl as cl
     for pltfm in cl.get_platforms():
