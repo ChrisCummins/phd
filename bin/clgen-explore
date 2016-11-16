@@ -26,6 +26,7 @@ Exploratory analysis of preprocessed dataset.
 Provides an overview of the contents of an OpenCL kernel database.
 """
 
+
 def main():
     parser = cli.ArgumentParser(description=__description__)
     parser.add_argument('input', help='path to SQL input dataset')
