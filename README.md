@@ -6,14 +6,14 @@
 -------
 
 <div align="center">
+  <a href="http://chriscummins.cc/clgen/" target="_blank">
+    <img src="https://img.shields.io/badge/docs-0.1.5-brightgreen.svg?style=flat">
+  </a>
   <a href="https://travis-ci.org/ChrisCummins/clgen" target="_blank">
     <img src="https://img.shields.io/travis/ChrisCummins/clgen/master.svg?style=flat">
   </a>
   <a href="https://coveralls.io/github/ChrisCummins/clgen?branch=master">
     <img src="https://img.shields.io/coveralls/ChrisCummins/clgen/master.svg?style=flat">
-  </a>
-  <a href="http://chriscummins.cc/clgen/" target="_blank">
-    <img src="https://img.shields.io/badge/docs-0.1.5-brightgreen.svg?style=flat">
   </a>
    <a href="https://github.com/ChrisCummins/clgen/releases" target="_blank">
     <img src="https://img.shields.io/badge/release-0.1.5-blue.svg?style=flat">
