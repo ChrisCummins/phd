@@ -17,7 +17,7 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-Preprocess OpenCL files for machine learning
+Preprocess OpenCL files for machine learning.
 """
 from __future__ import with_statement
 from __future__ import absolute_import
@@ -25,6 +25,7 @@ from __future__ import division
 from __future__ import print_function
 
 import json
+import labm8
 import math
 import os
 import re
@@ -34,12 +35,11 @@ import sys
 
 from functools import partial
 from io import open
+from labm8 import fs
 from multiprocessing import cpu_count, Pool
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import NamedTemporaryFile
 
-import labm8
-from labm8 import fs
 
 import clgen
 from clgen import clutil
@@ -54,18 +54,65 @@ from clgen.cache import Cache
 #
 
 # Internal exceptions:
-class LlvmException(clgen.CLgenError): pass
-class ClangFormatException(LlvmException): pass
-class OptException(LlvmException): pass
+class LlvmException(clgen.CLgenError):
+    """LLVM Error"""
+    pass
 
-# Good, bad, ugly exceptions:
-class BadCodeException(clgen.CLgenError): pass
-class ClangException(BadCodeException): pass
-class CodeAnalysisException(BadCodeException): pass
 
-class UglyCodeException(clgen.CLgenError): pass
-class InstructionCountException(UglyCodeException): pass
-class RewriterException(UglyCodeException): pass
+class ClangFormatException(LlvmException):
+    """
+    clang-format error.
+    """
+    pass
+
+
+class OptException(LlvmException):
+    """
+    LLVM opt error.
+    """
+    pass
+
+
+class BadCodeException(clgen.CLgenError):
+    """
+    Code is bad.
+    """
+    pass
+
+
+class ClangException(BadCodeException):
+    """
+    clang error.
+    """
+    pass
+
+
+class CodeAnalysisException(BadCodeException):
+    """
+    Code analysis error.
+    """
+    pass
+
+
+class UglyCodeException(clgen.CLgenError):
+    """
+    Code is ugly.
+    """
+    pass
+
+
+class InstructionCountException(UglyCodeException):
+    """
+    Instruction count error.
+    """
+    pass
+
+
+class RewriterException(UglyCodeException):
+    """
+    Program rewriter error.
+    """
+    pass
 
 
 CLANG_CL_TARGETS = [
@@ -79,9 +126,15 @@ def clang_cl_args(target=CLANG_CL_TARGETS[0],
     """
     Get the Clang args to compile OpenCL.
 
-    :return: Array of args.
+    Arguments:
+        target (str): LLVM target.
+        use_shim (bool, optional): Inject shim header.
+        error_limit (int, optional): Limit number of compiler errors.
+
+    Returns:
+        str[]: Array of args.
     """
-    # List of clang warnings to disable.
+    # clang warnings to disable
     disabled_warnings = [
         'ignored-pragmas',
         'implicit-function-declaration',
@@ -102,15 +155,23 @@ def clang_cl_args(target=CLANG_CL_TARGETS[0],
     return args
 
 
-def num_rows_in(db, table):
-    c = db.cursor()
-    c.execute('SELECT Count(*) FROM ' + str(table))
-    num_rows = c.fetchone()[0]
-    c.close()
-    return num_rows
-
-
 def compiler_preprocess_cl(src, id='anon', use_shim=True):
+    """
+    Preprocess OpenCL file.
+
+    Inlines macros, removes comments, etc.
+
+    Arguments:
+        src (str): OpenCL source.
+        id (str, optional): Name of OpenCL source.
+        use_shim (bool, optional): Inject shim header.
+
+    Returns:
+        str: Preprocessed source.
+
+    Raises:
+        ClangException: If compiler errors.
+    """
     cmd = [native.CLANG] + clang_cl_args(use_shim=use_shim) + [
         '-E', '-c', '-', '-o', '-'
     ]
@@ -138,6 +199,22 @@ def compiler_preprocess_cl(src, id='anon', use_shim=True):
 
 
 def rewrite_cl(src, id='anon', use_shim=True):
+    """
+    Rewrite OpenCL sources.
+
+    Renames all functions and variables with short, unique names.
+
+    Arguments:
+        src (str): OpenCL source.
+        id (str, optional): OpenCL source name.
+        use_shim (bool, optional): Inject shim header.
+
+    Returns:
+        str: Rewritten OpenCL source.
+
+    Raises:
+        RewriterException: If rewriter fails.
+    """
     # Rewriter can't read from stdin.
     with NamedTemporaryFile('w', suffix='.cl') as tmp:
         tmp.write(src)
@@ -169,6 +246,20 @@ def rewrite_cl(src, id='anon', use_shim=True):
 
 
 def compile_cl_bytecode(src, id='anon', use_shim=True):
+    """
+    Compile OpenCL kernel to LLVM bytecode.
+
+    Arguments:
+        src (str): OpenCL source.
+        id (str, optional): Name of OpenCL source.
+        use_shim (bool, optional): Inject shim header.
+
+    Returns:
+        bytes: Bytecode.
+
+    Raises:
+        ClangException: If compiler errors.
+    """
     cmd = [native.CLANG] + clang_cl_args(use_shim=use_shim) + [
         '-emit-llvm', '-S', '-c', '-', '-o', '-'
     ]
@@ -186,6 +277,16 @@ _instcount_re = re.compile(
 
 
 def parse_instcounts(txt):
+    """
+    Parse LLVM opt instruction counts pass.
+
+    Arguments:
+        txt (str): LLVM output.
+
+    Returns:
+        dict: key, value pairs, where key is instruction type and value is
+            instruction type count.
+    """
     lines = [x.strip() for x in txt.split("\n")]
     counts = {}
 
@@ -212,11 +313,32 @@ _sql_sub_chars = re.compile(r'-')
 
 
 def escape_sql_key(key):
+    """
+    Escape SQL key.
+
+    Arguments:
+        key (str): SQL key.
+
+    Returns:
+        str: Escaped key.
+    """
     return re.sub(_sql_sub_chars, '_',
                   re.sub(_sql_rm_chars, '', '_'.join(key.split(' '))))
 
 
 def instcounts2ratios(counts):
+    """
+    Convert instruction counts to instruction densities.
+
+    If, for example, there are 10 instructions and 2 addition instructions,
+    then the instruction density of add operations is .2.
+
+    Arguments:
+        counts (dict): Key value pairs of instruction types and counts.
+
+    Returns:
+        ratios (dict): Key value pairs of instruction types and densities.
+    """
     if not len(counts):
         return {}
 
@@ -241,6 +363,16 @@ def instcounts2ratios(counts):
 
 
 def sql_insert_dict(c, table, data):
+    """
+    Insert a dict of key value pairs into an SQL table.
+
+    Uses the key names as column names, as the values as column values.
+
+    Arguments:
+        c (sqlite3.Cursor): Database cursor.
+        table (str): Destination table.
+        data (dict): Key value pairs.
+    """
     cmd = ("INSERT INTO {table}({cols}) VALUES({vals})"
            .format(table=table,
                    cols=','.join(data.keys()),
@@ -250,6 +382,19 @@ def sql_insert_dict(c, table, data):
 
 
 def bytecode_features(bc, id='anon'):
+    """
+    Extract features from bytecode.
+
+    Arguments:
+        bc (bytes): LLVM bytecode.
+        id (str, optional): Name of OpenCL source.
+
+    Returns:
+        dict: Key value pairs of instruction types and densities.
+
+    Raises:
+        OptException: If LLVM opt pass errors.
+    """
     cmd = [native.OPT, '-analyze', '-stats', '-instcount', '-']
 
     # LLVM pass output pritns to stderr, so we'll pipe stderr to
@@ -284,6 +429,19 @@ clangformat_config = {
 
 
 def clangformat_ocl(src, id='anon'):
+    """
+    Enforce code style on OpenCL file.
+
+    Arguments:
+        src (str): OpenCL source.
+        id (str, optional): Name of OpenCL source.
+
+    Returns:
+        str: Styled source.
+
+    Raises:
+        ClangFormatException: If formatting errors.
+    """
     cmd = [native.CLANG_FORMAT, '-style={}'.format(
         json.dumps(clangformat_config))]
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -298,6 +456,12 @@ def clangformat_ocl(src, id='anon'):
 
 
 def print_bytecode_features(db_path):
+    """
+    Print Bytecode features.
+
+    Arguments:
+        db_path: Path to dataset.
+    """
     db = dbutil.connect(db_path)
     c = db.cursor()
 
@@ -320,6 +484,16 @@ def print_bytecode_features(db_path):
 
 
 def verify_bytecode_features(bc_features, id='anon'):
+    """
+    Verify LLVM bytecode features.
+
+    Arguments:
+        bc_features (dict): Bytecode features.
+        id (str, optional): Name of OpenCL source.
+
+    Raises:
+        InstructionCountException: If verification errors.
+    """
     # The minimum number of instructions before a kernel is discarded
     # as ugly.
     min_num_instructions = 0
@@ -335,6 +509,17 @@ def verify_bytecode_features(bc_features, id='anon'):
 
 
 def sanitize_prototype(src):
+    """
+    Sanitize OpenCL prototype.
+
+    Ensures that OpenCL prototype fits on a single line.
+
+    Arguments:
+        src (str): OpenCL source.
+
+    Returns:
+        str: Sanitized OpenCL source.
+    """
     # Ensure that prototype is well-formed on a single line:
     try:
         prototype_end_idx = src.index('{') + 1
@@ -344,18 +529,12 @@ def sanitize_prototype(src):
         # Ok so erm... if the '{' character isn't found, a ValueError
         # is thrown. Why would '{' not be found? Who knows, but
         # whatever, if the source file got this far through the
-        # preprocessing pipeline then it's clearly "good" code. It
+        # preprocessing pipeline then it's probably "good" code. It
         # could just be that an empty file slips through the cracks or
         # something.
         return src
 
 
-# 3 possible outcomes:
-#
-#   1. Good. Code is preprocessed and ready to be put into a training set.
-#   2. Bad. Code can't be preprocessed.
-#   3. Ugly. Code can be preprocessed, but isn't useful for training.
-#
 def preprocess(src, id='anon', use_shim=True):
     """
     Preprocess an OpenCL source. There are three possible outcomes:
@@ -365,13 +544,19 @@ def preprocess(src, id='anon', use_shim=True):
     3. Ugly. Code can be preprocessed but isn't useful for training
        (e.g. it's an empty file).
 
-    :param src: The source code as a string.
-    :param id (optional): An identifying name for the source code
-      (used in exception messages).
-    :return: Preprocessed source code as a string.
-    :throws BadCodeException: If code is bad (see above).
-    :throws UglyCodeException: If code is ugly (see above).
-    :throws clgen.InternalException: In case of some other error.
+    Arguments:
+        src (str): The source code as a string.
+        id (str, optional): An identifying name for the source code
+            (used in exception messages).
+        use_shim (bool, optional): Inject shim header.
+
+    Returns:
+        str: Preprocessed source code as a string.
+
+    Raises:
+        BadCodeException: If code is bad (see above).
+        UglyCodeException: If code is ugly (see above).
+        clgen.InternalException: In case of some other error.
     """
     # Compile to bytecode and verify features:
     bc = compile_cl_bytecode(src, id, use_shim)
@@ -435,6 +620,13 @@ def _preprocess_db_worker(job):
 
 
 def preprocess_contentfiles(db_path, max_num_workers=cpu_count() * 4):
+    """
+    Preprocess OpenCL dataset.
+
+    Arguments:
+        db_path (str): OpenCL kernels dataset.
+        max_num_workers (int, optional): Number of processes to spawn.
+    """
     def _finalize(db_path, cache):
         """Tidy up after worker threads finish"""
         log.debug("worker finalize")
@@ -455,8 +647,8 @@ def preprocess_contentfiles(db_path, max_num_workers=cpu_count() * 4):
         cache.empty()
 
     db = dbutil.connect(db_path)
-    num_contentfiles = num_rows_in(db, 'ContentFiles')
-    num_preprocessedfiles = num_rows_in(db, 'PreprocessedFiles')
+    num_contentfiles = dbutil.num_rows_in(db, 'ContentFiles')
+    num_preprocessedfiles = dbutil.num_rows_in(db, 'PreprocessedFiles')
     db.close()
 
     num_workers = min(num_contentfiles, max_num_workers)
@@ -489,8 +681,12 @@ def preprocess_file(path, inplace=False):
     """
     Preprocess a file.
 
-    :param path: String path to file.
-    :param inplace (optional): If True, overwrite input file.
+    Prints output to stdout by default. If preprocessing fails, this function
+    exits.
+
+    Arguments:
+        path (str): String path to file.
+        inplace (bool, optional): If True, overwrite input file.
     """
     with open(path) as infile:
         contents = infile.read()
@@ -508,16 +704,18 @@ def preprocess_file(path, inplace=False):
 
 
 def _preprocess_inplace_worker(path):
-    """
-    Worker function for preprocess_inplace().
-    """
+    """worker function for preprocess_inplace()"""
     log.info('preprocess', path)
     preprocess_file(path, inplace=True)
 
 
 def preprocess_inplace(paths, max_num_workers=cpu_count() * 4):
     """
-    Preprocess a list of files inplace.
+    Preprocess a list of files in place.
+
+    Arguments:
+        paths (str[]): List of paths.
+        max_num_workers (int, optional): Number of processes to spawn.
     """
     num_workers = min(len(paths), max_num_workers)
     with clgen.terminating(Pool(num_workers)) as pool:
@@ -531,11 +729,9 @@ def preprocess_db(db_path):
     Preprocess database contents.
 
     Arguments:
-
         db_path (str): Path to database.
 
     Returns:
-
         bool: True if modified, false if no work needed.
     """
     db = dbutil.connect(db_path)
@@ -552,6 +748,9 @@ def preprocess_db(db_path):
 def remove_bad_preprocessed(db_path):
     """
     Remove all ugly and bad contents from PreprocessedFiles table.
+
+    Arguments:
+        db_path (str): Dataset.
     """
     original_size = fs.du(db_path, human_readable=False)
     original_size_human_readable = fs.du(db_path, human_readable=True)

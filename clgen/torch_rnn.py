@@ -33,20 +33,34 @@ from clgen import native
 
 
 class TorchRnnError(clgen.CLgenError):
+    """
+    Module error.
+    """
     pass
 
 
 class PreprocessError(TorchRnnError):
+    """
+    Preprocess error.
+    """
     pass
 
 
 class TrainError(TorchRnnError):
+    """
+    Training error.
+    """
     pass
 
 
 def preprocess(input_txt, output_json, output_h5):
     """
     Wrapper around preprocess script.
+
+    Arguments:
+        input_txt (str): Path to input text file.
+        output_json (str): Path to output JSON.
+        output_h5 (str): Path to output h5.
     """
     cmd = [
         sys.executable, native.TORCH_RNN_PREPROCESS, '--input_txt', input_txt,
@@ -65,6 +79,12 @@ def preprocess(input_txt, output_json, output_h5):
 
 
 def get_device_flags():
+    """
+    Get torch-rnn device flags.
+
+    Returns:
+        dict: Key value pairs for arguments.
+    """
     # TODO: This should be runtime configurable
     gpu_id = 0
 

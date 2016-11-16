@@ -48,6 +48,9 @@ from clgen import explore
 
 
 class FetchError(clgen.CLgenError):
+    """
+    Module error.
+    """
     pass
 
 
@@ -63,6 +66,12 @@ status_string = ''
 
 
 def print_repo_details(repo):
+    """
+    Print GitHub repo details.
+
+    Arguments:
+        repo: Repository.
+    """
     print('url:', repo.url)
     print('owner:', repo.owner.email)
     print('name:', repo.name)
@@ -75,6 +84,12 @@ def print_repo_details(repo):
 
 
 def print_file_details(file):
+    """
+    Print GitHub file details.
+
+    Arguments:
+        file: File.
+    """
     print('url:', file.url)
     print('path:', file.path)
     print('sha:', file.sha)
@@ -82,6 +97,9 @@ def print_file_details(file):
 
 
 def print_counters():
+    """
+    Print analytics counters.
+    """
     print('\r\033[Kfiles: new ', files_new_counter,
           ', modified ', files_modified_counter,
           '. errors ', errors_counter,
@@ -91,6 +109,12 @@ def print_counters():
 
 
 def rate_limit(g):
+    """
+    Block on GitHub rate limit.
+
+    Arguments:
+        g: GitHub connection.
+    """
     global status_string
     remaining = g.get_rate_limit().rate.remaining
     while remaining < 100:
@@ -101,6 +125,22 @@ def rate_limit(g):
 
 
 def process_repo(g, db, repo):
+    """
+    GitHub repository handler.
+
+    Determines if a repository needs to be scraped. There are two cases for
+    this:
+        * The repository has not already been visited.
+        * The repository has been modified since it was last visited.
+
+    Arguments:
+        g: GitHub connection.
+        db (sqlite3.Connection): Dataset.
+        repo: Repository.
+
+    Returns:
+        bool: True if repository should be scraped, else False.
+    """
     global repos_new_counter
     global repos_modified_counter
     global repos_unchanged_counter
@@ -147,12 +187,32 @@ def process_repo(g, db, repo):
 
 
 def is_opencl_path(path):
+    """
+    Return whether file is opencl.
+
+    Arguments:
+        path (str): File.
+    """
     return path.endswith('.cl') or path.endswith('.ocl')
 
 _include_re = re.compile('\w*#include ["<](.*)[">]')
 
 
 def download_file(github_token, repo, url, stack):
+    """
+    Fetch file from GitHub.
+
+    Recursively downloads and inlines headers.
+
+    Arguments:
+        github_token (str): Authorization.
+        repo: Repository.
+        url (str): Path.
+        stack (str[]): URL stack.
+
+    Returns:
+        str: File contents.
+    """
     # Recursion stack
     stack.append(url)
 
@@ -196,12 +256,23 @@ def download_file(github_token, repo, url, stack):
 
 
 def process_file(g, github_token, db, repo, file):
+    """
+    GitHub file handler.
+
+    Arguments:
+        g: GitHub connection.
+        github_token (str): Authorization.
+        db (sqlite3.Connection): Dataset.
+        repo: Repository.
+        file: File.
+
+    Return:
+        bool: True on success, else False.
+    """
     global files_new_counter
     global files_modified_counter
     global files_unchanged_counter
     global status_string
-
-    # rate_limit(g)
 
     # We're only interested in OpenCL files.
     if not is_opencl_path(file.path):
@@ -242,12 +313,20 @@ def process_file(g, github_token, db, repo, file):
     return True
 
 
-# Download all of the OpenCL on GitHub (!)
-#
-# Shortcomings of this appraoch:
-#
-#   Only includes exclusively OpenCL files, no inline strings
 def github(db_path, github_username, github_pw, github_token):
+    """
+    Download all of the OpenCL on GitHub (!)
+
+    Shortcomings of this appraoch:
+        * Only includes exclusively OpenCL files, no inline strings.
+        * Occasionally (< 1%) can't find headers to include.
+
+    Arguments:
+        db_path (str): Dataset path.
+        github_username (str): Authorization.
+        github_pw (str): Authorization.
+        github_token (str): Authorization.
+    """
     global errors_counter
 
     g = Github(github_username, github_pw)
@@ -258,11 +337,10 @@ def github(db_path, github_username, github_pw, github_token):
 
     handle_repo = partial(process_repo, g, db)
 
-    # Fetch the repositories to iterate over. Since opencl isn't
+    # fetch the repositories to iterate over. Since opencl isn't
     # treated as a first-class language by GitHub, we can't use the
     # 'language=' keyword for queries, so instead we through a much
     # wider net and filter the results afterwards.
-    #
     query_terms = [
         'opencl',
         'cl',
@@ -275,9 +353,8 @@ def github(db_path, github_username, github_pw, github_token):
         'heterogeneous'
     ]
     for query in query_terms:
-        # Forks are okay. We use checksums to ensure uniqueness in
-        # final dataset.
-        #
+        # forks are okay - we use checksums to ensure uniqueness in
+        # final dataset
         repos = g.search_repositories(query + ' fork:true sort:stars')
 
         for repo in repos:
@@ -289,11 +366,10 @@ def github(db_path, github_username, github_pw, github_token):
 
             handle_file = partial(process_file, g, github_token, db, repo)
 
-            # Iterate over the entire git tree of the repo's default
+            # iterate over the entire git tree of the repo's default
             # branch (usually 'master'). If a file ends with the .cl
             # extension, check to see if we already have it, else download
-            # it.
-            #
+            # it
             try:
                 branch = repo.default_branch
                 tree_iterator = repo.get_git_tree(branch, recursive=True).tree
@@ -311,20 +387,17 @@ def github(db_path, github_username, github_pw, github_token):
     db.close()
 
 
-_include_re = re.compile(r'\w*#include ["<](.*)[">]')
-_parboil_re = re.compile(
-    r'.+/benchmarks/parboil/benchmarks/(.+)/src/opencl_base/(.+\.cl)')
-
-
-def get_path_id(path):
-    match = re.match(_parboil_re, path)
-    if match:
-        return match.group(1) + '-' + match.group(2)
-    else:
-        return path
-
-
 def inline_fs_headers(path, stack):
+    """
+    Recursively inline headers in file.
+
+    Arguments:
+        path (str): File.
+        stack (str[]): File stack.
+
+    Returns:
+        str: Inlined file.
+    """
     stack.append(path)
 
     with open(path) as infile:
@@ -360,13 +433,25 @@ def inline_fs_headers(path, stack):
 
 
 def flatten(l):
+    """
+    Flattens a list of lists.
+
+    Arguments:
+        l (list of list): Input.
+
+    Returns:
+        list: Flattened list.
+    """
     return [item for sublist in l for item in sublist]
 
 
 def process_cl_file(db_path, path):
     """
-    :param db_path: Path to output database.
-    :param path: Path to input file.
+    Process OpenCL file.
+
+    Arguments:
+        db_path (str): Path to output database.
+        path (str): Path to input file.
     """
     db = dbutil.connect(db_path)
     c = db.cursor()
@@ -377,15 +462,22 @@ def process_cl_file(db_path, path):
     except IOError:
         raise FetchError(
             "cannot read file '{path}'".format(path=fs.abspath(path)))
-    id = get_path_id(path)
     c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
-              (id, contents))
+              (path, contents))
 
     db.commit()
     c.close()
 
 
 def content_db(db_path, in_db_path, table='PreprocessedFiles'):
+    """
+    Fetch kernels from a content database.
+
+    Arguments:
+        db_path (str): Output path.
+        in_db_path (str): Input path.
+        table (str, optional): Table to fetch from.
+    """
     odb = dbutil.connect(db_path)
     idb = dbutil.connect(in_db_path)
     ic = idb.cursor()
@@ -405,6 +497,13 @@ def content_db(db_path, in_db_path, table='PreprocessedFiles'):
 
 
 def fetch_fs(db_path, paths=[]):
+    """
+    Fetch from a list of files.
+
+    Arguments:
+        db_path (str): Output dataset.
+        paths (str[]): List of paths.
+    """
     for path in paths:
         process_cl_file(db_path, path)
 
@@ -415,6 +514,16 @@ kernel_counter = 0
 
 def process_sample_file(db_path, sample_path, first_only=False,
                         max_kernel_len=5000):
+    """
+    Fetch from a CLgen sample file.
+
+    Arguments:
+        db_path (str): Output path.
+        sample_path (str): Sample path.
+        first_only (bool, optional): If True, only fetch the first kernel in
+            sample.
+        ma_kernel_len (int, optional): Maximum kernel length.
+    """
     db = dbutil.connect(db_path)
     c = db.cursor()
 
@@ -459,6 +568,16 @@ def process_sample_file(db_path, sample_path, first_only=False,
 
 
 def clgen_sample(db_path, samples_dir, sample_path, first_only):
+    """
+    Fetch from CLgen.
+
+    Arguments:
+        db_path (str): Output path.
+        sample_path (str): Samples directory.
+        sample_path (str): Sample path.
+        first_only (bool, optional): If True, only fetch the first kernel in
+            sample.
+    """
     if samples_dir:
         files = [os.path.join(samples_dir, f) for f in os.listdir(samples_dir)
                  if os.path.isfile(os.path.join(samples_dir, f))]
@@ -476,51 +595,83 @@ errors_counter = 0
 
 
 class CLSmithException(clgen.CLgenError):
+    """
+    CLSmith error.
+    """
     pass
 
 
 class HeaderNotFoundException(clgen.CLgenError):
+    """
+    Unable to locate header file.
+    """
     pass
 
 
 def print_clsmith_counters():
+    """
+    Print CLSmith counters.
+    """
     print('\r\033[Kfiles: new ', files_new_counter,
           '. errors ', errors_counter,
           sep='', end='')
     sys.stdout.flush()
 
 
-_include_re = re.compile('\w*#include ["<](.*)[">]')
+def include_clsmith_path(name, header_paths):
+    """
+    Fetch path to CLSmith header.
 
+    Arguments:
+        name (str): Header name.
+        header_paths (str[]): Directories containing CLSmith headers.
 
-def include_path(name):
-    dirs = ('~/phd/extern/clsmith/runtime',
-            '~/phd/extern/clsmith/build')
-    for dir in dirs:
+    Returns:
+        str: Header path.
+    """
+    for dir in header_paths:
         path = os.path.join(os.path.expanduser(dir), name)
         if os.path.exists(path):
             return path
     raise HeaderNotFoundException(name)
 
 
-def inline_headers(src):
+def inline_clsmith_headers(src, header_paths):
+    """
+    Inline CLSmith headers.
+
+    Arguments:
+        str (str): CLSmith source.
+        header_paths (str[]): Directories containing CLSmith headers.
+
+    Returns:
+        str: CLSmith source with headers inlined.
+    """
     outlines = []
     for line in src.split('\n'):
         match = re.match(_include_re, line)
         if match:
             include_name = match.group(1)
 
-            path = include_path(include_name)
+            path = include_clsmith_path(include_name, header_paths)
             with open(path) as infile:
                 header = infile.read()
-                outlines.append(inline_headers(header))
+                outlines.append(inline_clsmith_headers(header))
         else:
             outlines.append(line)
 
     return '\n'.join(outlines)
 
 
-def get_clsmith_program(db_path):
+def get_clsmith_program(db_path,
+                        header_paths=["~/clsmith/runtime", "~/clsmith/build"]):
+    """
+    Generate a program using CLSmith and add to dataset.
+
+    Arguments:
+        db_path (str): Path to output dataset.
+        header_paths (str[]): Directories containing CLSmith headers.
+    """
     global files_new_counter
 
     outputpath = 'CLProg.c'
@@ -540,7 +691,7 @@ def get_clsmith_program(db_path):
     with open(outputpath) as infile:
         contents = infile.read()
 
-    contents = inline_headers(contents)
+    contents = inline_clsmith_headers(contents, header_paths)
 
     sha = sha1(contents.encode('utf-8')).hexdigest()
 
@@ -553,6 +704,13 @@ def get_clsmith_program(db_path):
 
 
 def clsmith(db_path, target_num_kernels):
+    """
+    Generate kernels using CLSmith.
+
+    Arguments:
+        db_path (str): Path to dataset.
+        target_num_kernels (int): Number of kernels to generate.
+    """
     global errors_counter
 
     print('generating', target_num_kernels, 'kernels to', db_path)

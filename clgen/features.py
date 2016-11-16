@@ -17,7 +17,7 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-OpenCL feature extraction
+OpenCL feature extraction.
 """
 from __future__ import absolute_import
 from __future__ import division
@@ -38,19 +38,22 @@ from subprocess import Popen, PIPE, STDOUT
 from clgen import native
 
 
-def extra_args(use_shim=False):
+def _shim_args(use_shim=False):
+    """get shim header args"""
     args = []
     if use_shim:
         args += ["-DCLGEN_FEATURES", "-include", native.SHIMFILE]
     return args
 
 
-def is_features(line):
+def _is_features(line):
+    """true if features"""
     return len(line) == 10
 
 
-def is_good_features(line, stderr):
-    if is_features(line):
+def _is_good_features(line, stderr):
+    """true if feature extractor worked"""
+    if _is_features(line):
         has_err = False if stderr.find(' error: ') == -1 else True
         return not has_err
     return False
@@ -58,10 +61,20 @@ def is_good_features(line, stderr):
 
 def features(path, file=sys.stdout, fatal_errors=False, use_shim=False,
              quiet=False):
+    """
+    Print CSV format features of file.
+
+    Arguments:
+        path (str): Path.
+        file (pipe, optional): Target to print to.
+        fatal_errors (bool, optional): Exit on error.
+        use_shim (bool, optional): Inject shim header.
+        quiet (bool, optional): Don't print compiler output on errors.
+    """
     print(path, file=sys.stderr)
 
-    cmd = [native.CLGEN_FEATURES, path] + ['-extra-arg=' + x for x in
-                                           extra_args(use_shim=use_shim)]
+    cmd = [native.CLGEN_FEATURES, path] + [
+        '-extra-arg=' + x for x in _shim_args(use_shim=use_shim)]
 
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
@@ -85,11 +98,17 @@ def features(path, file=sys.stdout, fatal_errors=False, use_shim=False,
         return
 
     for line in data[1:]:
-        if is_good_features(line, stderr):
+        if _is_good_features(line, stderr):
             print(','.join(line), file=file)
 
 
 def feature_headers(file=sys.stdout):
+    """
+    Print CSV format feature header.
+
+    Arguments:
+        file (pipe, optional): Target to print to.
+    """
     cmd = [native.CLGEN_FEATURES, '-header-only']
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, _ = process.communicate()
@@ -99,6 +118,15 @@ def feature_headers(file=sys.stdout):
 
 
 def files(paths, header=True, file=sys.stdout, **kwargs):
+    """
+    Print feature values of files in CSV format.
+
+    Arguments:
+        paths (str[]): Files.
+        header (bool, optional): Include CSV format header.
+        file (pipe, optional): Target to print to.
+        **kwargs (optional): Additional arguments to features().
+    """
     npaths = len(paths)
 
     if header:
@@ -108,6 +136,15 @@ def files(paths, header=True, file=sys.stdout, **kwargs):
 
 
 def summarize(csv_path):
+    """
+    Summarize a CSV file of feature values.
+
+    Arguments:
+        csv_path (str): Path to csv.
+
+    Returns:
+        dict: Summary values.
+    """
     with open(csv_path) as infile:
         reader = csv.reader(infile)
         table = [row for row in reader]

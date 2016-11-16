@@ -17,7 +17,19 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-Native files
+Paths to native files.
+
+Variables:
+    * `CLANG` (str): Path to clang binary.
+    * `CLANG_FORMAT` (str): Path to clang-format binary.
+    * `CLGEN_FEATURES` (str): Path to clgen-features binary.
+    * `CLGEN_REWRITER` (str): Path to clgen-rewriter binary.
+    * `LIBCLC` (str): Path to libclc directory.
+    * `OPT` (str): Path to LLVM opt binary.
+    * `SHIMFILE` (str): Path to shim headerfile.
+    * `TH` (str): Path to torch th binary.
+    * `TORCH_RNN_PREPROCESS` (str): Path to torch-rnn's preprocess script.
+    * `TORCH_RNN_DIR` (str): Path to torch-rnn directory.
 """
 from labm8 import fs
 

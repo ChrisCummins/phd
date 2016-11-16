@@ -17,7 +17,7 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-Training utils
+Training utils.
 """
 from __future__ import with_statement
 from __future__ import absolute_import
@@ -35,11 +35,34 @@ from clgen import dbutil
 
 
 def sanitize_id(id):
+    """
+    Sanitize ID.
+
+    Arguments:
+        id (str): ID.
+
+    Returns:
+        str: ID.
+    """
     return re.sub('[/:\.]+', '-', id)
 
 
 def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
                   input_samples=False, status=0, eof=False, dir=False):
+    """
+    Create CLgen training corpus.
+
+    Arguments:
+        db (slite3.Connection): Dataset.
+        out_path (str): Path to output.
+        gh (bool, optional): Dataset is GitHub.
+        fileid (bool, optional): Include file IDs.
+        reverse (bool, optional): Reverse ordering of output.
+        input_samples (bool, optional): If True, use un-preprocessed files.
+        status (int, optional): Filter preprocess status.
+        eof (bool, optional): Include EOF separators.
+        dir (bool, optional): Write output to directory.
+    """
     # Dump all the preprocessed OpenCL files
     print('creating DNN corpus', out_path, '...')
 
@@ -102,10 +125,27 @@ def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
 
 
 def linecount(t):
+    """
+    Line count.
+
+    Arguments:
+        t (str): String.
+
+    Returns:
+        int: Line count.
+    """
     return len(t.split('\n'))
 
 
 def train(db_path, out_path, **kwargs):
+    """
+    Generate corpus.
+
+    Arguments:
+        db_path (str): Dataset.
+        out_path (str): Corpus path.
+        **kwargs (dict): Additional arguments to create_corpus().
+    """
     db = dbutil.connect(db_path)
     db.create_function("LC", 1, linecount)
 

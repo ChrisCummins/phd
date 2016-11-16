@@ -264,9 +264,10 @@ def gh_stats_worker(db_path):
     return stats
 
 
-# Plot distribution of OpenCL file line counts.
-#
 def graph_ocl_lc(db_path):
+    """
+    Plot distribution of OpenCL file line counts.
+    """
     import matplotlib.pyplot as plt
     import seaborn as sns
     sns.set(color_codes=True)
@@ -290,9 +291,10 @@ def graph_ocl_lc(db_path):
     plt.savefig(out_path)
 
 
-# Plot distribution of Bytecode line counts.
-#
 def graph_bc_lc(db_path):
+    """
+    Plot distribution of bytecode line counts.
+    """
     import matplotlib.pyplot as plt
     import seaborn as sns
     sns.set(color_codes=True)
@@ -316,9 +318,10 @@ def graph_bc_lc(db_path):
     plt.savefig(out_path)
 
 
-# Plot distribution of stargazers per file.
-#
 def graph_ocl_stars(db_path):
+    """
+    Plot distribution of stargazers per file.
+    """
     import matplotlib.pyplot as plt
     import seaborn as sns
     sns.set(color_codes=True)
@@ -343,6 +346,13 @@ def graph_ocl_stars(db_path):
 
 
 def explore(db_path, graph=False):
+    """
+    Run exploratory analysis on dataset.
+
+    Arguments:
+        db_path (str): Path to dataset.
+        graph (bool, optional): Render graphs.
+    """
     locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
 
     db = dbutil.connect(db_path)
@@ -381,6 +391,13 @@ def explore(db_path, graph=False):
 
 
 def explore_gh(db_path, graph=False):
+    """
+    Run exploratory analysis on GitHub dataset.
+
+    Arguments:
+        db_path (str): Path to dataset.
+        graph (bool, optional): Render graphs.
+    """
     locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
 
     db = dbutil.connect(db_path)

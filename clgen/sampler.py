@@ -36,13 +36,32 @@ from clgen.model import Model
 
 
 def serialize_argspec(args):
+    """
+    Serializes an argument spec to a kernel prototype.
+
+    Arguments:
+        args (str[]): Argument specification.
+
+    Returns:
+        str: Kernel prototype.
+    """
     names = map(chr, range(97, 97 + len(args)))
     strings = [arg + " " + name for arg, name in zip(args, names)]
     return "__kernel void A({args}) {{".format(args=", ".join(strings))
 
 
 class Sampler(clgen.CLgenObject):
+    """
+    CLgen sampler for models.
+    """
     def __init__(self, sampler_opts, kernel_opts):
+        """
+        Instantiate a sampler.
+
+        Arguments:
+            sampler_opts (dict): Sampler options.
+            kernel_opts (dict): Kernel options.
+        """
         assert(type(sampler_opts) is dict)
         assert(type(kernel_opts) is dict)
 
@@ -62,6 +81,7 @@ class Sampler(clgen.CLgenObject):
         self.kernel_opts = kernel_opts
 
     def _hash(self, sampler_opts, kernel_opts):
+        """compute sampler checksum"""
         checksum_data = sorted(
             [str(x) for x in sampler_opts.values()] +
             [str(x) for x in kernel_opts.values()])
@@ -69,10 +89,25 @@ class Sampler(clgen.CLgenObject):
         return clgen.checksum_str(string)
 
     def cache(self, model):
+        """
+        Return sampler cache.
+
+        Arguments:
+            model (Model): CLgen model.
+
+        Returns:
+            Cache: Cache.
+        """
         sampler_model_hash = clgen.checksum_str(self.hash + model.hash)
         return Cache(fs.path("sampler", sampler_model_hash))
 
     def sample_iteration(self, model):
+        """
+        Run one sample iteration.
+
+        Arguments:
+            model (Model): CLgen model.
+        """
         assert(isinstance(model, Model))
 
         cache = self.cache(model)
@@ -110,6 +145,12 @@ class Sampler(clgen.CLgenObject):
         fs.rm(tmppath)
 
     def sample(self, model):
+        """
+        Sample CLgen model.
+
+        Arguments:
+            model (Model): CLgen model.
+        """
         cache = self.cache(model)
 
         # create samples database if it doesn't exist
@@ -139,6 +180,15 @@ class Sampler(clgen.CLgenObject):
 
 
 def from_json(sampler_json):
+    """
+    Instantiate sampler from JSON.
+
+    Arguments:
+        sampler_json (dict): JSON data.
+
+    Returns:
+        Sampler: Instantiate sampler.
+    """
     sampler_opts = sampler_json.get("sampler", None)
     if not sampler_opts:
         raise clgen.UserError("no sampler section in sampler specification")
