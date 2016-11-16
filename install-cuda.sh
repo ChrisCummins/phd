@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One-liner to install CLgen 0.1.5.
+# One-liner to install CLgen 0.1.6.
 #
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -20,10 +20,10 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 set -ex
-wget https://github.com/ChrisCummins/clgen/archive/0.1.5.tar.gz -O clgen-0.1.5.tar.gz
-tar xf clgen-0.1.5.tar.gz
-rm clgen-0.1.5.tar.gz
-cd clgen-0.1.5
+wget https://github.com/ChrisCummins/clgen/archive/0.1.6.tar.gz -O clgen-0.1.6.tar.gz
+tar xf clgen-0.1.6.tar.gz
+rm clgen-0.1.6.tar.gz
+cd clgen-0.1.6
 ./configure --batch --with-opencl --with-cuda
 make
 
@@ -37,5 +37,5 @@ else
     sudo -H make test
 fi
 cd ..
-rm -rf clgen-0.1.5
-echo "==> CLgen 0.1.5 installed"
+rm -rf clgen-0.1.6
+echo "==> CLgen 0.1.6 installed"
