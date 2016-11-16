@@ -71,8 +71,6 @@ def features(path, file=sys.stdout, fatal_errors=False, use_shim=False,
         use_shim (bool, optional): Inject shim header.
         quiet (bool, optional): Don't print compiler output on errors.
     """
-    print(path, file=sys.stderr)
-
     cmd = [native.CLGEN_FEATURES, path] + [
         '-extra-arg=' + x for x in _shim_args(use_shim=use_shim)]
 
@@ -132,6 +130,7 @@ def files(paths, header=True, file=sys.stdout, **kwargs):
     if header:
         feature_headers(file=file)
     for path in paths:
+        print(path, file=sys.stderr)
         features(path, file=file, **kwargs)
 
 
