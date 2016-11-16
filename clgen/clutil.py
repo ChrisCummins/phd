@@ -393,12 +393,31 @@ class KernelPrototype(clgen.CLgenObject):
     Requires source code to have been pre-processed.
     """
     def __init__(self, string):
+        """
+        Create OpenCL kernel prototype.
+
+        *Note:* requires source to have been preprocessed.
+
+        Arguments:
+            string (str): Prototype string.
+        """
         self._string = ' '.join(string.split())
         if not self._string.startswith('__kernel void '):
             raise PrototypeException('malformed prototype', self._string)
 
     @property
     def name(self):
+        """
+        Kernel function name.
+
+        Examples:
+
+            >>> KernelPrototype("__kernel void A() {").name
+            "A"
+
+        Returns:
+            str: Kernel name.
+        """
         try:
             return self._name
         except AttributeError:  # set
@@ -409,6 +428,12 @@ class KernelPrototype(clgen.CLgenObject):
 
     @property
     def args(self):
+        """
+        Kernel arguments.
+
+        Returns:
+            KernelArg[]: Kernel arguments.
+        """
         try:
             return self._args
         except AttributeError:
@@ -427,16 +452,35 @@ class KernelPrototype(clgen.CLgenObject):
 
     @staticmethod
     def from_source(src):
+        """
+        Create KernelPrototype from OpenCL kernel source.
+
+        Argument:
+            src (str): OpenCL kernel source.
+
+        Returns:
+            KernelPrototype: Kernel prototype.
+        """
         return extract_prototype(src)
 
 
-def get_attribute_range(s, start_idx):
-    i = s.find('(', start_idx) + 1
+def get_attribute_range(src, start_idx):
+    """
+    Get string indices range of attributes.
+
+    Arguments:
+        src (str): OpenCL kernel source.
+        start_idx (int): Index of attribute opening brace.
+
+    Returns:
+        tuple of int: Start and end indices of attributes.
+    """
+    i = src.find('(', start_idx) + 1
     d = 1
-    while i < len(s) and d > 0:
-        if s[i] == '(':
+    while i < len(src) and d > 0:
+        if src[i] == '(':
             d += 1
-        elif s[i] == ')':
+        elif src[i] == ')':
             d -= 1
         i += 1
 
@@ -444,9 +488,23 @@ def get_attribute_range(s, start_idx):
 
 
 def strip_attributes(src):
+    """
+    Remove attributes from OpenCL source.
+
+    Arguments:
+        src (str): OpenCL source.
+
+    Returns:
+        str: OpenCL source, with ((attributes)) removed.
+    """
+    # get list of __attribute__ substrings
     idxs = sorted(clgen.get_substring_idxs('__attribute__', src))
-    ranges = [get_attribute_range(src, i) for i in idxs]
-    for r in reversed(ranges):
+
+    # get ((attribute)) ranges
+    attribute_ranges = [get_attribute_range(src, i) for i in idxs]
+
+    # remove ((atribute)) ranges
+    for r in reversed(attribute_ranges):
         src = src[:r[0]] + src[r[1]:]
     return src
 
