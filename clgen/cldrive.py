@@ -76,6 +76,13 @@ class OpenCLNotSupported(OpenCLDriverException):
     pass
 
 
+class OpenCLDeviceNotFound(OpenCLDriverException):
+    """
+    Could not find a matching device.
+    """
+    pass
+
+
 class KernelDriverException(CLDriveException):
     """
     Kernel driver exception.
@@ -146,21 +153,19 @@ class E_NONDETERMINISTIC(E_UGLY_CODE):
     pass
 
 
-def assert_device_type(device, devtype):
+def device_type_matches(device, devtype):
     """
     Check that device type matches.
 
-    Raises:
+    Arguments:
+        device (pyopencl.Device): Device.
+        devtype (cl.device_info.TYPE): Requested device type.
 
-        OpenCLDriverException: If device type does not match argument.
+    Returns:
+        bool: True if device is of type devtype, else False.
     """
     actual = device.get_info(cl.device_info.TYPE)
-    if actual != devtype:
-        requested = cl.device_type.to_string(devtype)
-        received = cl.device_type.to_string(actual)
-        raise OpenCLDriverException("Device type '{}' does not match "
-                                    "requested '{}'"
-                                    .format(received, requested))
+    return actual == devtype
 
 
 def hang_requires_restart():
@@ -196,23 +201,18 @@ def init_opencl(devtype="__placeholder__", queue_flags=0):
         devtype = cl.device_type.GPU
 
     platforms = cl.get_platforms()
-    try:
+    for platform in platforms:
         ctx = cl.Context(
-            dev_type=devtype,
-            properties=[(cl.context_properties.PLATFORM, platforms[0])])
-    except Exception:
-        try:
-            ctx = cl.create_some_context(interactive=False)
-        except Exception as e:
-            raise OpenCLDriverException(e)
+            properties=[(cl.context_properties.PLATFORM, platform)])
+        devices = ctx.get_info(cl.context_info.DEVICES)
+        for device in devices:
+            if device_type_matches(device, devtype):
+                queue_flags |= cl.command_queue_properties.PROFILING_ENABLE
+                queue = cl.CommandQueue(ctx, properties=queue_flags)
 
-    # Check that device type is what we expected:
-    device = ctx.get_info(cl.context_info.DEVICES)[0]
-    assert_device_type(device, devtype)
-    queue_flags |= cl.command_queue_properties.PROFILING_ENABLE
-    queue = cl.CommandQueue(ctx, properties=queue_flags)
+                return ctx, queue
 
-    return ctx, queue
+    raise OpenCLDeviceNotFound("Could not find a suitable device")
 
 
 def get_event_time(event):
