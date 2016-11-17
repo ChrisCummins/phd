@@ -191,6 +191,7 @@ def init_opencl(devtype="__placeholder__", queue_flags=0):
 
         OpenCLNotSupported: If host does not support OpenCL.
         OpenCLDriverException: In case of error.
+        OpenCLDeviceNotFound: If no matching type found.
     """
     if not cfg.USE_OPENCL:
         raise OpenCLNotSupported
