@@ -152,8 +152,8 @@ Contents
 .. toctree::
 
    installation
-   binaries
    api/index
+   bin/index
    license
 
 
