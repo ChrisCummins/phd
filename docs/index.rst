@@ -153,7 +153,7 @@ Contents
 
    installation
    binaries
-   api
+   api/index
    license
 
 

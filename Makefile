@@ -132,16 +132,16 @@ install: cuda
 .PHONY: docs-modules
 docs-modules:
 	@echo "generating API documentation"
-	cp docs/api.rst.template docs/api.rst
+	cp docs/api/.template docs/api/index.rst
 	@for module in $$(cd clgen; ls *.py | grep -v __init__.py); do \
 		echo "adding module documentation for clgen.$${module%.py}"; \
-		echo clgen.$${module%.py} >> docs/api.rst; \
-		echo "$$(head -c $$(echo clgen.$${module%.py} | wc -c) < /dev/zero | tr '\0' '-')" >> docs/api.rst; \
-		echo >> docs/api.rst; \
-		echo ".. automodule:: clgen.$${module%.py}" >> docs/api.rst; \
-		echo "   :members:" >> docs/api.rst; \
-		echo "   :undoc-members:" >> docs/api.rst; \
-		echo >> docs/api.rst; \
+		echo clgen.$${module%.py} >> docs/api/index.rst; \
+		echo "$$(head -c $$(echo clgen.$${module%.py} | wc -c) < /dev/zero | tr '\0' '-')" >> docs/api/index.rst; \
+		echo >> docs/api/index.rst; \
+		echo ".. automodule:: clgen.$${module%.py}" >> docs/api/index.rst; \
+		echo "   :members:" >> docs/api/index.rst; \
+		echo "   :undoc-members:" >> docs/api/index.rst; \
+		echo >> docs/api/index.rst; \
 	done
 	@echo "generating binary documentation"
 	cp docs/binaries.rst.template docs/binaries.rst
