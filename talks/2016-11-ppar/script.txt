@@ -1,0 +1,12 @@
+My name is Chris and I’m teaching neural networks how to program. This involves
+mining millions of lines of code off GitHub and using deep learning algorithms
+to understand not just the syntax of how to construct a program in a particular
+language, but also what are the patterns and traits of programs which are most
+representative of real human workloads.
+
+My use case for this is performance tuning. If you are developing an autotuner
+whose roles is to predict the optimisations which are best for a particular
+piece of code, then the limiting factor will the number of pieces of code which
+you train your autotuner on. What my research provides is an unbounded number of
+programs which you can use as benchmarks, which have the properties and
+behaviour of real hand-written code.
