@@ -74,8 +74,8 @@ class TestSampler(TestCase):
         s.sample(m)
         nun_contentfiles = dbutil.num_rows_in(s.cache(m)["kernels.db"], "ContentFiles")
         num_preprocessed = dbutil.num_rows_in(s.cache(m)["kernels.db"], "PreProcessedFiles")
-        self.assertEquals(nun_contentfiles, 1)
-        self.assertEquals(num_preprocessed, 1)
+        self.assertEqual(nun_contentfiles, 1)
+        self.assertEqual(num_preprocessed, 1)
 
         s.sample(m)
         nun_contentfiles = dbutil.num_rows_in(s.cache(m)["kernels.db"], "ContentFiles")
