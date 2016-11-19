@@ -44,7 +44,6 @@ import clgen
 from clgen import clutil
 from clgen import dbutil
 from clgen import log
-from clgen import explore
 
 
 class FetchError(clgen.CLgenError):
@@ -564,7 +563,6 @@ def process_sample_file(db_path, sample_path, first_only=False,
     print()
     db.commit()
     c.close()
-    explore.explore(db_path)
 
 
 def clgen_sample(db_path, samples_dir, sample_path, first_only):
