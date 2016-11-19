@@ -512,7 +512,7 @@ kernel_counter = 0
 
 
 def process_sample_file(db_path, sample_path, first_only=False,
-                        max_kernel_len=5000):
+                        max_kernel_len=5000, quiet=False):
     """
     Fetch from a CLgen sample file.
 
@@ -533,8 +533,9 @@ def process_sample_file(db_path, sample_path, first_only=False,
     tail = 0
     offset = len('__kernel void ')
     while True:
-        print('\r\033[Kkernel', i, end='')
-        sys.stdout.flush()
+        if not quiet:
+            print('\r\033[Kkernel', i, end='')
+            sys.stdout.flush()
 
         # Find the starting index of the next kernel.
         tail = sample.find('__kernel void ', tail)
@@ -560,7 +561,8 @@ def process_sample_file(db_path, sample_path, first_only=False,
         i += 1
         if first_only:
             break
-    print()
+    if not quiet:
+        print()
     db.commit()
     c.close()
 

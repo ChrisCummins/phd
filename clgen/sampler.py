@@ -137,7 +137,7 @@ class Sampler(clgen.CLgenObject):
         tmppath = fs.path(cache.path, "sample.tmp.cl")
         torch_rnn.sample(tmppath, **opts)
         fetch.process_sample_file(cache["kernels.db"], tmppath,
-                                  max_kernel_len=opts["length"])
+                                  max_kernel_len=opts["length"], quiet=True)
 
         if self.static_checker:
             # TODO: Parse dynamic checker requirement
