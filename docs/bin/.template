@@ -1,5 +1,5 @@
-Programs
-========
+Command Line Interface
+======================
 
 The CLgen command line interface consists of a suite of related programs.
 
