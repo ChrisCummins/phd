@@ -32,6 +32,7 @@ from clgen import log
 from clgen import preprocess
 from clgen import torch_rnn
 from clgen.cache import Cache
+from clgen.explore import explore
 from clgen.model import Model
 
 
@@ -162,6 +163,7 @@ class Sampler(clgen.CLgenObject):
         batch_i = 0
         while True:
             batch_i += 1
+            print("beginning batch", batch_i, "...")
 
             # stop if we have enough kernels
             has_max_kernels = self.max_kernels >= 0
@@ -175,6 +177,9 @@ class Sampler(clgen.CLgenObject):
                 return
 
             self.sample_iteration(model)
+
+            print()
+            explore(self.cache(model)["kernels.db"])
 
         log.info("samples database:", cache["kernels.db"])
 
