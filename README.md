@@ -48,6 +48,19 @@ $ clgen model.json sampler.json
 <img src="https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/clgen.gif" width="500">
 
 
+## Learn More
+
+Introductory & background slides:
+
+<a href="https://speakerdeck.com/chriscummins/machine-learning-and-compilers">
+  <img src="https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/slides.png" width="500">
+</a>
+
+Publication
+["Synthesizing Benchmarks for Predictive Modeling"](https://github.com/ChrisCummins/paper-synthesizing-benchmarks)
+(CGO'17).
+
+
 ## License
 
 Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
