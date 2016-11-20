@@ -9,8 +9,8 @@
 
 **CLgen** is an open source application for generating runnable programs using
 deep learning. CLgen *learns* to program using neural networks which model the
-semantics and usage from large volumes of program fragments, generating  many-
-core OpenCL programs that are representative of, but *distinct* from, the
+semantics and usage from large volumes of program fragments, generating
+many-core OpenCL programs that are representative of, but *distinct* from, the
 programs it learns from.
 
 Requirements
@@ -29,7 +29,6 @@ Note that on Ubuntu, sudo privileges are required to install these requirements
 For **other Linux distributions** and older versions of Ubuntu, please check
 each for each of the following requirements:
 
--  Linux (x64) or OS X.
 -  `GCC <https://gcc.gnu.org/>`_ >= 4.8.2 or
    `clang <http://llvm.org/releases/download.html>`_ >= 3.1.
 -  `GNU Make <http://savannah.gnu.org/projects/make>`_ > 3.79.
@@ -63,7 +62,7 @@ Installation - Virtualenv
 -------------------------
 
 We recommend using a `virtualenv <https://virtualenv.pypa.io/en/stable/>`_
-environment to install CLgen. This installs CLgen in its own directory, not
+environment to install CLgen. This installs CLgen in its own directory, without
 impacting any existing programs on the machine. Installing in a virtualenv
 environment does not require sudo privileges.
 
@@ -79,7 +78,7 @@ Activate this environment:
 
     $ source ~/clgen/bin/activate
 
-Install the latest release of CLgen using one of the following configurations:
+Install the latest release of CLgen using one of the three configurations:
 
 **1. CPU-only:** *slow performance, some features disabled.*
 
