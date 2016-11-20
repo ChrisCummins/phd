@@ -48,7 +48,7 @@ $ clgen model.json sampler.json
 <img src="https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/clgen.gif" width="500">
 
 
-## Learn More
+## Resources
 
 Introductory & background slides:
 
@@ -59,6 +59,13 @@ Introductory & background slides:
 Publication
 ["Synthesizing Benchmarks for Predictive Modeling"](https://github.com/ChrisCummins/paper-synthesizing-benchmarks)
 (CGO'17).
+
+[Jupyter notebook](https://github.com/ChrisCummins/paper-synthesizing-
+benchmarks/blob/master/code/Paper.ipynb) containing experimental evaluation of
+CLgen.
+
+Documentation for the [Python API](http://chriscummins.cc/clgen/api/) and
+[command line interface](http://chriscummins.cc/clgen/bin/).
 
 
 ## License
