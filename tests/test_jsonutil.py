@@ -29,7 +29,8 @@ class TestJsonutil(TestCase):
         a_str = """{
             "a": 1,  // this has comments
             "b": [1, 2, 3]
-        }"""
+        } # end comment
+        """
         a = jsonutil.loads(a_str)
 
         self.assertEqual(a["a"], 1)
@@ -45,7 +46,8 @@ class TestJsonutil(TestCase):
         a_str = """{
             "a": 1,  // this has comments
             "b": [1, 2, 3]
-        }"""
+        } # end comment
+        """
         system.echo(a_str, "/tmp/labm8.loaf.json")
         a = jsonutil.loadf("/tmp/labm8.loaf.json")
 
