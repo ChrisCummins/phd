@@ -46,8 +46,8 @@ class TestCache(TestCase):
         tests.write_file(tests.data_path("tmp", "file.txt", exists=False),
                          "Hello, world!")
         # sanity check
-        self.assertTrue(tests.read_file(tests.data_path("tmp", "file.txt")),
-                        "Hello, world!")
+        self.assertEqual(tests.read_file(tests.data_path("tmp", "file.txt")),
+                         "Hello, world!")
 
         # insert file into cache
         c['foobar'] = tests.data_path("tmp", "file.txt")
@@ -75,8 +75,8 @@ class TestCache(TestCase):
         tests.write_file(tests.data_path("tmp", "file.txt", exists=False),
                          "Hello, world!")
         # sanity check
-        self.assertTrue(tests.read_file(tests.data_path("tmp", "file.txt")),
-                        "Hello, world!")
+        self.assertEqual(tests.read_file(tests.data_path("tmp", "file.txt")),
+                         "Hello, world!")
 
         # insert file into cache
         c['foobar'] = tests.data_path("tmp", "file.txt")
@@ -94,13 +94,13 @@ class TestCache(TestCase):
         tests.write_file(tests.data_path("tmp", "file.txt", exists=False),
                          "Hello, world!")
         # sanity check
-        self.assertTrue(tests.read_file(tests.data_path("tmp", "file.txt")),
-                        "Hello, world!")
+        self.assertEqual(tests.read_file(tests.data_path("tmp", "file.txt")),
+                         "Hello, world!")
 
         # insert file into cache
         key = 'this key/path needs: escaping!.?'
         c[key] = tests.data_path("tmp", "file.txt")
 
         # check file contents
-        self.assertTrue(tests.read_file(c[key]), "Hello, world!")
+        self.assertEqual(tests.read_file(c[key]), "Hello, world!")
         c.empty()
