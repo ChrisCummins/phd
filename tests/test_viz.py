@@ -33,12 +33,20 @@ class TestViz(TestCase):
         s = np.sin(2*np.pi*t)
         plt.plot(t, s)
 
-    def test_finalize(self):
+    def test_finalise(self):
         self._mkplot()
         viz.finalise("/tmp/labm8.png")
         self.assertTrue(fs.exists("/tmp/labm8.png"))
+        fs.rm("/tmp/labm8.png")
 
-    def test_finalize_tight(self):
+    def test_finalise_tight(self):
         self._mkplot()
         viz.finalise("/tmp/labm8.png", tight=True)
         self.assertTrue(fs.exists("/tmp/labm8.png"))
+        fs.rm("/tmp/labm8.png")
+
+    def test_finalise_figsize(self):
+        self._mkplot()
+        viz.finalise("/tmp/labm8.png", figsize=(10, 5))
+        self.assertTrue(fs.exists("/tmp/labm8.png"))
+        fs.rm("/tmp/labm8.png")
