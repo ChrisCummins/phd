@@ -60,8 +60,7 @@ Publication
 ["Synthesizing Benchmarks for Predictive Modeling"](https://github.com/ChrisCummins/paper-synthesizing-benchmarks)
 (CGO'17).
 
-[Jupyter notebook](https://github.com/ChrisCummins/paper-synthesizing-
-benchmarks/blob/master/code/Paper.ipynb) containing experimental evaluation of
+[Jupyter notebook](https://github.com/ChrisCummins/paper-synthesizing-benchmarks/blob/master/code/Paper.ipynb) containing experimental evaluation of
 CLgen.
 
 Documentation for the [Python API](http://chriscummins.cc/clgen/api/) and
