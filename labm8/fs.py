@@ -23,6 +23,7 @@ import shutil
 
 from glob import iglob
 from humanize import naturalsize
+from send2trash import send2trash
 
 import labm8 as lab
 
@@ -308,6 +309,26 @@ def rm(*components, **kwargs):
             os.remove(file)
         elif exists(file):
             shutil.rmtree(file, ignore_errors=False)
+
+
+def rmtrash(*components):
+    """
+    Move a file or directory to trash.
+
+    If file does not exist, nothing happens.
+
+    Examples:
+
+        >>> fs.rmtrash("foo", "bar")
+
+        >>> fs.rmtrash("/home/labm8/file.txt")
+
+    Arguments:
+        *components (string[]): path to the file or directory.
+    """
+    _path = path(*components)
+    if exists(_path):
+        send2trash(_path)
 
 
 def cp(src, dst):

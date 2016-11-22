@@ -250,6 +250,25 @@ class TestFs(TestCase):
         self._test(False, fs.isfile("/tmp/labm8.glob/2"))
         self._test(False, fs.isfile("/tmp/labm8.glob/abc"))
 
+    # rmtrash()
+    def test_rmtrash(self):
+        system.echo("Hello, world!", "/tmp/labm8.tmp")
+        self.assertTrue(fs.isfile("/tmp/labm8.tmp"))
+        fs.rmtrash("/tmp/labm8.tmp")
+        self.assertFalse(fs.isfile("/tmp/labm8.tmp"))
+        fs.rmtrash("/tmp/labm8.tmp")
+        fs.rm("/tmp/labm8.tmp")
+        fs.rm("/tmp/labm8.dir")
+        fs.mkdir("/tmp/labm8.dir/foo/bar")
+        system.echo("Hello, world!", "/tmp/labm8.dir/foo/bar/baz")
+        self.assertTrue(fs.isfile("/tmp/labm8.dir/foo/bar/baz"))
+        fs.rmtrash("/tmp/labm8.dir")
+        self.assertFalse(fs.isfile("/tmp/labm8.dir/foo/bar/baz"))
+        self.assertFalse(fs.isfile("/tmp/labm8.dir/"))
+
+    def test_rmtrash_bad_path(self):
+        fs.rmtrash("/not/a/real/path")
+
     # cp()
     def test_cp(self):
         system.echo("Hello, world!", "/tmp/labm8.tmp")
