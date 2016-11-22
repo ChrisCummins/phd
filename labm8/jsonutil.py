@@ -33,11 +33,14 @@ def loads(text, **kwargs):
 
     Copyright (c) 2014 Vaidik Kapoor, MIT license.
 
-    :param text: serialized JSON string with or without comments.
-    :param kwargs: all the arguments that `json.loads
-                   <http://docs.python.org/2/library/json.html#json.loads>`_
-                   accepts.
-    :returns: `dict` or `list`.
+    Arguments:
+        text (str): serialized JSON string with or without comments.
+        **kwargs (optional): all the arguments that
+            `json.loads <http://docs.python.org/2/library/json.html#json.loads>`_
+            accepts.
+
+    Returns:
+        `dict` or `list`: Decoded JSON.
     """
     regex = r'\s*(#|\/{2}).*$'
     regex_inline = r'(:?(?:\s)*([A-Za-z\d\.{}]*)|((?<=\").*\"),?)(?:\s)*(((#|(\/{2})).*)|)$'
@@ -61,7 +64,7 @@ def loadf(*components):
         *components (str[]): Path to file.
 
     Returns:
-        array or dict: JSON data.
+        `dict` or `list`: JSON data.
 
     Raises:
         fs.File404: If path does not exist.
