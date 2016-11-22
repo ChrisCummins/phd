@@ -331,6 +331,7 @@ if $(which dircolors &>/dev/null); then
 fi
 
 # Shortcuts.
+alias a='atom'
 alias c='cat'
 alias E='exit'
 alias f='file'
