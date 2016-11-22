@@ -357,6 +357,7 @@ def mv(src, dst):
     Raises:
 
         File404: if source does not exist.
+        IOError: in case of error.
     """
     if not exists(src):
         raise File404(src)
