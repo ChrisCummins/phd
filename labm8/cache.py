@@ -21,6 +21,7 @@ import json
 import six
 
 import labm8 as lab
+from labm8 import crypto
 from labm8 import fs
 from labm8 import io
 
@@ -176,3 +177,126 @@ class JsonCache(TransientCache):
         with open(self.path, "w") as file:
             json.dump(self._data, file, sort_keys=True, indent=2,
                       separators=(',', ': '))
+
+
+class FSCache(Cache):
+    """
+    Persistent filesystem cache.
+
+    Each key uniquely identifies a file.
+    Each value is a file path.
+
+    Adding a file to the cache moves it into the cahce directory.
+    """
+    def __init__(self, root):
+        """
+        Create filesystem cache.
+
+        Arguments:
+            root (str): String.
+        """
+        self.path = root
+
+        fs.mkdir(self.path)
+
+    def clear(self):
+        """
+        Empty the filesystem cache.
+
+        This deletes the entire cache directory.
+        """
+        fs.rm(self.path)
+
+    def _keypath(self, key):
+        """
+        Convert key to relative cache path.
+
+        Arguments:
+            key: Key.
+
+        Returns:
+            str: Absolute path.
+        """
+        hash = crypto.sha1(json.dumps(key, sort_keys=True))
+        return fs.path(self.path, hash)
+
+    def __getitem__(self, key):
+        """
+        Get path to file in cache.
+
+        Arguments:
+            key: Key.
+
+        Returns:
+            str: Path to cache value.
+
+        Raises:
+            KeyErorr: If key not in cache.
+        """
+        path = self._keypath(key)
+        if fs.exists(path):
+            return path
+        else:
+            raise KeyError(key)
+
+    def __setitem__(self, key, value):
+        """
+        Emplace file in cache.
+
+        Arguments:
+            key: Key.
+            value (str): Path of file to insert in cache.
+
+        Raises:
+            ValueError: If no "value" does nto exist.
+        """
+        if not fs.exists(value):
+            raise ValueError(value)
+
+        path = self._keypath(key)
+        fs.mv(value, path)
+
+    def __contains__(self, key):
+        """
+        Check cache contents.
+
+        Arguments:
+            key: Key.
+
+        Returns:
+            bool: True if key in cache, else false.
+        """
+        path = self._keypath(key)
+        return fs.exists(path)
+
+    def __delitem__(self, key):
+        """
+        Delete cached file.
+
+        Arguments:
+            key: Key.
+
+        Raises:
+            KeyError: If file not in cache.
+        """
+        path = self._keypath(key)
+        if fs.exists(path):
+            fs.rm(path)
+        else:
+            raise KeyError(key)
+
+    def get(self, key, default=None):
+        """
+        Fetch from cache.
+
+        Arguments:
+            key: Key.
+            default (optional): Value returned if key not found.
+
+        Returns:
+            str: Path to cached file.
+        """
+        if key in self:
+            return self[key]
+        else:
+            return default
