@@ -18,6 +18,7 @@ from tests import TestCase
 import labm8
 from labm8 import types
 
+
 class TestTypes(TestCase):
     def test_is_str(self):
         self.assertTrue(types.is_str("Hello, World!"))
