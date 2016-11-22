@@ -302,6 +302,27 @@ class TestFs(TestCase):
         self._test(fs.read("/tmp/labm8.tmp.src/foo"),
                    fs.read("/tmp/labm8.tmp.copy/foo"))
 
+    # mv()
+    def test_mv(self):
+        system.echo("Hello, world!", "/tmp/labm8.tmp")
+        self._test(["Hello, world!"], fs.read("/tmp/labm8.tmp"))
+        # Cleanup any existing file.
+        fs.rm("/tmp/labm8.tmp.copy")
+        self._test(False, fs.exists("/tmp/labm8.tmp.copy"))
+        fs.mv("/tmp/labm8.tmp", "/tmp/labm8.tmp.copy")
+        self.assertEqual(["Hello, world!"], fs.read("/tmp/labm8.tmp.copy"))
+        self._test(False, fs.exists("/tmp/labm8.tmp"))
+
+    def test_mv_no_src(self):
+        with self.assertRaises(fs.File404):
+            fs.mv("/bad/path", "foo")
+
+    def test_mv_no_dst(self):
+        system.echo("Hello, world!", "/tmp/labm8.tmp")
+        with self.assertRaises(IOError):
+            fs.mv("/tmp/labm8.tmp", "/not/a/real/path")
+        fs.rm("/tmp/labm8.tmp")
+
     # ls()
     def test_ls(self):
         self._test(["a", "b", "c", "d"],

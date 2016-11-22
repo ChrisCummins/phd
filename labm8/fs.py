@@ -31,6 +31,10 @@ class Error(Exception):
     pass
 
 
+class File404(Error):
+    pass
+
+
 def path(*components):
     """
     Get a file path.
@@ -336,6 +340,31 @@ def cp(src, dst):
         shutil.copy(src, dst)
     else:
         raise IOError("Source '{0}' not found".format(src))
+
+
+def mv(src, dst):
+    """
+    Move a file or directory.
+
+    If the destination already exists, this will attempt to overwrite
+    it.
+
+    Arguments:
+
+        src (string): path to the source file or directory.
+        dst (string): path to the destination file or directory.
+
+    Raises:
+
+        File404: if source does not exist.
+    """
+    if not exists(src):
+        raise File404(src)
+
+    try:
+        shutil.move(src, dst)
+    except Exception as e:
+        raise IOError(str(e))
 
 
 def mkdir(*components, **kwargs):
