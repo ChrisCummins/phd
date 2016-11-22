@@ -17,6 +17,9 @@ from __future__ import division
 from unittest import main
 from tests import TestCase
 
+import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 import numpy as np
 
