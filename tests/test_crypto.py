@@ -37,6 +37,3 @@ class TestCrypto(TestCase):
     def test_sha1_file_hello_world(self):
         self._test("09fac8dbfd27bd9b4d23a00eb648aa751789536d",
                    lab.crypto.sha1_file("tests/data/hello_world"))
-
-if __name__ == '__main__':
-    main()

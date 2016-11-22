@@ -97,7 +97,3 @@ class TestProf(TestCase):
         prof.start("foo")
         with self.assertRaises(prof.TimerNameError):
             prof.start("foo", unique=True)
-
-
-if __name__ == '__main__':
-    main()

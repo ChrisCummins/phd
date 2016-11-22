@@ -31,6 +31,3 @@ class TestTime(TestCase):
 
     def test_nowstr(self):
         self._test("str", type(lab.time.nowstr()).__name__)
-
-if __name__ == '__main__':
-    main()

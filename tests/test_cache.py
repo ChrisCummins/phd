@@ -112,7 +112,3 @@ class TestCache(TestCase):
         # Set for next time.
         _cache["foo"] = 1
         _cache.write()
-
-
-if __name__ == '__main__':
-    main()

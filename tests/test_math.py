@@ -186,7 +186,3 @@ class TestMath(TestCase):
         self._test(0.4714045207910322, labmath.confinterval([1,2,3], conf=.5,
                                                             error_only=True),
                    approximate=True)
-
-
-if __name__ == '__main__':
-    main()

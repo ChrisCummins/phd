@@ -91,7 +91,3 @@ class TestIO(TestCase):
         out = StringIO()
         io.prof("foo", file=out)
         self._test("PROF", re.search("PROF", out.getvalue()).group(0))
-
-
-if __name__ == '__main__':
-    main()

@@ -109,7 +109,3 @@ class TestLatex(TestCase):
     def test_table_bad_rows(self):
         with self.assertRaises(latex.Error):
             latex.table((("foo", 1), ("bar", 2), ("car",)))
-
-
-if __name__ == '__main__':
-    main()

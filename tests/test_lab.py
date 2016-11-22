@@ -106,7 +106,3 @@ class TestLabm8(TestCase):
     # flatten()
     def test_flatten(self):
         self._test([1, 2, 3], lab.flatten([[1], [2, 3]]))
-
-
-if __name__ == '__main__':
-    main()

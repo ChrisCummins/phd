@@ -53,7 +53,3 @@ class TestText(TestCase):
         self._test(1, text.diff("foo", ""))
         self._test(0.25, text.diff("1234", "1 34"))
         self._test((1/3), text.diff("123", "1 3"))
-
-
-if __name__ == '__main__':
-    main()

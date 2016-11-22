@@ -351,7 +351,3 @@ class TestDatabase(TestCase):
         # An error is thrown if the table is not found.
         with self.assertRaises(db.SchemaError) as ctx:
             self.db.export_csv("foo")
-
-
-if __name__ == '__main__':
-    main()

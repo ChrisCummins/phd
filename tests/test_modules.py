@@ -33,7 +33,3 @@ class TestModules(TestCase):
         if sys.version_info < (3, 0):
             self.assertRaises(ImportError, modules.import_foreign,
                               "notamodule", "foo")
-
-
-if __name__ == '__main__':
-    main()

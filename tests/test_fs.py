@@ -394,6 +394,3 @@ class TestFs(TestCase):
 
     def test_lsfiles_single_file(self):
         self._test(["a"], fs.lsfiles("tests/data/testdir/a"))
-
-if __name__ == "__main__":
-    main()

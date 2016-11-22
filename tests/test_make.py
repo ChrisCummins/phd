@@ -54,7 +54,3 @@ class TestMake(TestCase):
         self._test(False, fs.isfile("foo"))
         self._test(False, fs.isfile("foo.o"))
         fs.cdpop()
-
-
-if __name__ == '__main__':
-    main()

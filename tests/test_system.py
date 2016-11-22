@@ -202,7 +202,3 @@ class TestSystem(TestCase):
         # We hope there aren't this many processes running!
         self._test(False, system.isprocess(10000000))
         self._test(False, system.isprocess(10000001))
-
-
-if __name__ == '__main__':
-    main()
