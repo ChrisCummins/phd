@@ -48,6 +48,25 @@ def path(*components):
     return _path
 
 
+def must_exist(*components):
+    """
+    Ensure path exists.
+
+    Arguments:
+        *components (str[]): Path components.
+
+    Returns:
+        str: File path.
+
+    Raises:
+        File404: If path does not exist.
+    """
+    _path = path(*components)
+    if not exists(_path):
+        raise File404(_path)
+    return _path
+
+
 def abspath(*components):
     """
     Get an absolute file path.

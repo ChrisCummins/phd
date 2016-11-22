@@ -35,6 +35,16 @@ class TestFs(TestCase):
         self._test(os.path.join(os.path.expanduser("~"), "foo"),
                    fs.path("~", "foo"))
 
+    def test_must_exist(self):
+        system.echo("Hello, world!", "/tmp/labm8.must_exist.txt")
+        self.assertEqual(fs.must_exist("/tmp/labm8.must_exist.txt"),
+                         "/tmp/labm8.must_exist.txt")
+        self.assertEqual(fs.must_exist("/tmp", "labm8.must_exist.txt"),
+                         "/tmp/labm8.must_exist.txt")
+        with self.assertRaises(fs.File404):
+            fs.must_exist("/not/a/real/path")
+        fs.rm("/tmp/labm8.must_exist.txt")
+
 
     # abspath()
     def test_abspath(self):
