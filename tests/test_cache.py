@@ -142,6 +142,7 @@ class TestFSCache(TestCase):
         self.assertFalse(fs.isfile("/tmp/labm8.testfile.txt"))
         # check file contents
         self.assertTrue(fs.read(c['foobar']), ["Hello, world!"])
+        self.assertEqual(fs.read(c['foobar']), fs.read(c.get('foobar')))
         c.clear()
 
     def test_404(self):
