@@ -18,12 +18,6 @@
 #
 # path to virtualenv
 VIRTUALENV := virtualenv
-# path to python3
-PYTHON3 := python3
-PIP3 := pip3
-# path to python2
-PYTHON2 := python2
-PIP2 := pip
 
 space :=
 space +=
@@ -56,21 +50,23 @@ test: virtualenv
 clean:
 	rm -fr env3 env2
 
+# install in virtualenv
+.PHONY: install
+install: virtualenv
+	$(env3)pip install -r requirements.txt
+	$(env3)python ./setup.py install
+	$(env2)pip install -r requirements.txt
+	$(env2)python ./setup.py install
+
 # install globally
-.PHONY: install install3 install2
-install3:
-	$(PIP3) install -r requirements.txt
-	$(PYTHON3) ./setup.py install
-
-install2:
-	$(PIP2) install -r requirements.txt
-	$(PYTHON2) ./setup.py install
-
-install: install3 install2
+.PHONY: install-global
+install-global:
+	pip install -r requirements.txt
+	python ./setup.py install
 
 # generate documentation
 .PHONY: docs
-docs: install
+docs: install-global
 	rm -rf docs/modules
 	mkdir -p docs/modules
 	@for module in $$(cd labm8; ls *.py | grep -v __init__.py); do \
