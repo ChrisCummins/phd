@@ -30,6 +30,7 @@ class TestJsonutil(TestCase):
             "a": 1,  // this has comments
             "b": [1, 2, 3]
         } # end comment
+        // begin with comment
         """
         a = jsonutil.loads(a_str)
 
@@ -47,6 +48,7 @@ class TestJsonutil(TestCase):
             "a": 1,  // this has comments
             "b": [1, 2, 3]
         } # end comment
+        // begin with comment
         """
         system.echo(a_str, "/tmp/labm8.loaf.json")
         a = jsonutil.loadf("/tmp/labm8.loaf.json")
