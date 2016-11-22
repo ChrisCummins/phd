@@ -28,6 +28,8 @@ def loads(text, **kwargs):
     Deserialize `text` (a `str` or `unicode` instance containing a JSON
     document with Python or JavaScript like comments) to a Python object.
 
+    Supported comment types: `// comment` and `# comment`.
+
     Taken from `commentjson <https://github.com/vaidik/commentjson>`_, written
     by `Vaidik Kapoor <https://github.com/vaidik>`_.
 
