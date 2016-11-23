@@ -116,6 +116,11 @@ install_tmux() {
 }
 
 
+install_atom() {
+    symlink .dotfiles/atom ~/.atom
+}
+
+
 install_vim() {
     symlink .dotfiles/vim/vimrc ~/.vimrc
     clone_repo https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
@@ -183,6 +188,7 @@ main() {
     install_dropbox
     install_git
     install_tmux
+    install_atom
     install_vim
     install_sublime
     install_inbox

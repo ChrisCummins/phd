@@ -1,0 +1,10 @@
+.apm
+.node-gyp
+.npm
+atom-shell/
+blob-store
+compile-cache
+dev
+nohup.out
+packages/
+storage

@@ -1,0 +1,19 @@
+"*":
+  core:
+    telemetryConsent: "no"
+    themes: [
+      "atom-dark-ui"
+      "monokai"
+    ]
+  editor:
+    fontSize: 15
+    showInvisibles: true
+  "exception-reporting":
+    userId: "89238f39-41b1-38a3-2657-397fa4728b99"
+  "markdown-preview":
+    useGitHubStyle: true
+  "remote-atom":
+    keep_alive: true
+    launch_at_startup: true
+  welcome:
+    showOnStartup: false
