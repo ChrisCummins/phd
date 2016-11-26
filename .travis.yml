@@ -44,7 +44,7 @@ before_install:
   - pip install coveralls
   - sudo apt-get update -qq
 
-# A clean Travis CI build will timoeut after 50 minutes and fail. Irritatingly,
+# A clean Travis CI build will timeout after 50 minutes and fail. Irritatingly,
 # this means that the caches are not updated, so we can't incrementally build
 # the project by restarting the job. The workaround is to kill the build after
 # a time limit and then restart the job by hand:
