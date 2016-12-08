@@ -22,17 +22,23 @@ CLgen model.
 from __future__ import print_function
 
 import json
+import numpy as np
 import os
 import re
 import tarfile
+import tensorflow as tf
+import time
 
 from copy import copy
 from glob import glob, iglob
 from labm8 import fs
 from labm8 import system
-from labm8 import time
+from labm8 import time as labtime
 from six import string_types
+from six.moves import cPickle
 from tempfile import mktemp
+from tensorflow.python.ops import rnn_cell
+from tensorflow.python.ops import seq2seq
 
 import clgen
 from clgen import log
@@ -74,7 +80,7 @@ class Model(clgen.CLgenObject):
     """
     A CLgen Model.
     """
-    def __init__(self, corpus, train_opts):
+    def __init__(self, corpus, train_opts, infer=False):
         """
         Instantiate model.
 
@@ -91,6 +97,74 @@ class Model(clgen.CLgenObject):
         self.hash = self._hash(train_opts, corpus)
         self.cache = Cache(fs.path("model", self.hash))
 
+        # Parse model options:
+        # TODO: Change model format so that model type, rnn size, and num layers
+        # are in the top level specification, not in "train_opts" dict.
+        model_type = self.train_opts.get("model_type", "lstm")
+        rnn_size = self.train_opts.get("rnn_size", 128)
+        num_layers = self.train_opts.get("num_layers", 2)
+        grad_clip = self.train_opts.get("grad_clip", 5)
+
+        # Corpus info:
+        batch_size = 1 if infer else self.corpus.batch_size
+        seq_length = 1 if infer else self.corpus.seq_length
+        vocab_size = self.corpus.vocab_size
+
+        tmp_chars_vocab_path = fs.path(self.cache.path, "chars_vocab.tmp.pkl")
+        with open(tmp_chars_vocab_path, 'wb') as outfile:
+            cPickle.dump((self.corpus.chars, self.corpus.vocab), outfile)
+        self.cache["chars_vocab.pkl"] = tmp_chars_vocab_path
+
+        cell_fn = {
+            "lstm": rnn_cell.BasicLSTMCell,
+            "gru": rnn_cell.GRUCell,
+            "rnn": rnn_cell.BasicRNNCell
+        }.get(model_type, None)
+        if cell_fn is None:
+            raise clgen.UserError("Unrecognized model type")
+        cell = cell_fn(rnn_size, state_is_tuple=True)
+        self.cell = cell = rnn_cell.MultiRNNCell([cell] * num_layers,
+                                                 state_is_tuple=True)
+        self.input_data = tf.placeholder(tf.int32, [batch_size, seq_length])
+        self.targets = tf.placeholder(tf.int32, [batch_size, seq_length])
+        self.initial_state = self.cell.zero_state(batch_size, tf.float32)
+
+        with tf.variable_scope('rnnlm'):
+            softmax_w = tf.get_variable("softmax_w", [rnn_size, vocab_size])
+            softmax_b = tf.get_variable("softmax_b", [vocab_size])
+            # TODO: Determine device
+            with tf.device("/cpu:0"):
+                embedding = tf.get_variable("embedding", [vocab_size, rnn_size])
+                inputs = tf.split(
+                    1, seq_length, tf.nn.embedding_lookup(
+                        embedding, self.input_data))
+                inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
+
+        def loop(prev, _):
+            prev = tf.matmul(prev, softmax_w) + softmax_b
+            prev_symbol = tf.stop_gradient(tf.argmax(prev, 1))
+            return tf.nn.embedding_lookup(embedding, prev_symbol)
+
+        outputs, last_state = seq2seq.rnn_decoder(
+            inputs, self.initial_state, cell,
+            loop_function=loop if infer else None, scope='rnnlm')
+        output = tf.reshape(tf.concat(1, outputs), [-1, rnn_size])
+        self.logits = tf.matmul(output, softmax_w) + softmax_b
+        self.probs = tf.nn.softmax(self.logits)
+        loss = seq2seq.sequence_loss_by_example(
+                [self.logits],
+                [tf.reshape(self.targets, [-1])],
+                [tf.ones([batch_size * seq_length])],
+                vocab_size)
+        self.cost = tf.reduce_sum(loss) / batch_size / seq_length
+        self.final_state = last_state
+        self.lr = tf.Variable(0.0, trainable=False)
+        tvars = tf.trainable_variables()
+        grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars),
+                grad_clip)
+        optimizer = tf.train.AdamOptimizer(self.lr)
+        self.train_op = optimizer.apply_gradients(zip(grads, tvars))
+
     def _hash(self, train_opts, corpus):
         checksum_data = sorted(
             [str(x) for x in train_opts.values()] +
@@ -101,31 +175,51 @@ class Model(clgen.CLgenObject):
     def train(self):
         """
         Train model.
-
-        Invokes torch-rnn to train the model up to the specified maximum number
-        of epochs.
         """
-        # assemble training options
-        opts = copy(self.train_opts)
-
-        opts["reset_iterations"] = 0
-        opts["input_json"] = self.corpus.input_json
-        opts["input_h5"] = self.corpus.input_h5
-        opts["checkpoint_name"] = fs.path(self.cache.path, "model")
-
-        # set default arguments
-        if opts.get("max_epochs", None) is None:
-            opts["max_epochs"] = 50
-        if opts.get("print_every", None) is None:
-            opts["print_every"] = 10
-        if opts.get("checkpoint_every", None) is None:
-            opts["checkpoint_every"] = 100
+        max_epochs = self.train_opts.get("max_epochs", 50)
+        learning_rate = self.train_opts.get("learning_rate", 2e-3)
+        decay_rate = self.train_opts.get("lr_decary_rate", 5)
+        checkpoint_every = 100  # TODO: Better value
 
         # resume from prior checkpoint
         if self.most_recent_checkpoint:
-            opts["init_from"] = self.most_recent_checkpoint
+            pass # FIXME: Load checkpoint and verify compatability
 
-        torch_rnn.train(**opts)
+        with tf.Session() as sess:
+            tf.initialize_all_variables().run()
+            saver = tf.train.Saver(tf.all_variables())
+
+            # restore model from checkpoint
+            if False: # FIXME: self.most_recent_checkpoint:
+                saver.restore(sess, ckpt.model_checkpoint_path)
+
+            for e in range(max_epochs):
+                sess.run(tf.assign(self.lr, learning_rate * (decay_rate ** e)))
+                self.corpus.reset_batch_pointer()
+                state = sess.run(self.initial_state)
+                for b in range(self.corpus.num_batches):
+                    time_start = time.time()
+                    x, y = self.corpus.next_batch()
+                    feed = { self.input_data: x, self.targets: y }
+                    for i, (c, h) in enumerate(self.initial_state):
+                        feed[c] = state[i].c
+                        feed[h] = state[i].h
+                    train_loss, state, _ = sess.run(
+                        [self.cost, self.final_state, self.train_op], feed)
+                    time_end = time.time()
+                    batch_num = e * self.corpus.num_batches + b
+                    max_batch = max_epochs * self.corpus.num_batches
+                    print("{}/{} (epoch {}/{}), train_loss = {:.3f}, time/batch = {:.3f}" \
+                          .format(batch_num, max_batch,
+                                  e, max_epochs,
+                                  train_loss, time_end - time_start))
+                    save_checkpoint = batch_num % checkpoint_every == 0
+                    save_checkpoint |= (e == max_epochs - 1
+                                        and b == self.corpus.num_batches - 1)
+                    if save_checkpoint:
+                        checkpoint_path = fs.path(self.cache.path, "model.ckpt")
+                        saver.save(sess, checkpoint_path, global_step=batch_num)
+                        print("model saved to {}".format(checkpoint_path))
 
     @property
     def meta(self):
@@ -160,7 +254,7 @@ class Model(clgen.CLgenObject):
         return {
             "version": clgen.version(),
             "author": get_default_author(),
-            "date packaged": time.nowstr(),
+            "date packaged": labtime.nowstr(),
             "train_opts": self.train_opts,
             "contents": contents
         }
