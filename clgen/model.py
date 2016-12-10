@@ -183,24 +183,41 @@ class Model(clgen.CLgenObject):
 
         # resume from prior checkpoint
         if self.most_recent_checkpoint:
-            pass # FIXME: Load checkpoint and verify compatability
+            # open saved vocab/dict and check if vocabs/dicts are compatible
+            assert(fs.isfile(self.cache["chars_vocab.pkl"]))
+            # FIXME:
+            # with open(self.cache["chars_vocab.pkl"]) as infile:
+            #     saved_chars, saved_vocab = cPickle.load(infile)
+            # assert(saved_chars == self.corpus.chars)
+            # assert(saved_vocab == self.corpus.vocab)
+
+            # check if all necessary files exist
+            assert(fs.isdir(self.most_recent_checkpoint))
+            ckpt = tf.train.get_checkpoint_state(self.most_recent_checkpoint)
+            assert(ckpt)
+            assert(ckpt.model_checkpoint_path)
+            log.debug("loaded checkpoint {}".format(ckpt.model_checkpoint_path))
 
         with tf.Session() as sess:
             tf.initialize_all_variables().run()
             saver = tf.train.Saver(tf.all_variables())
 
             # restore model from checkpoint
-            if False: # FIXME: self.most_recent_checkpoint:
+            if self.most_recent_checkpoint:
                 saver.restore(sess, ckpt.model_checkpoint_path)
+                # FIXME: Load start e from Session
+                start_e = 0
+            else:  # no previous model
+                start_e = 0
 
-            for e in range(max_epochs):
+            for e in range(start_e, max_epochs):
                 sess.run(tf.assign(self.lr, learning_rate * (decay_rate ** e)))
                 self.corpus.reset_batch_pointer()
                 state = sess.run(self.initial_state)
                 for b in range(self.corpus.num_batches):
                     time_start = time.time()
                     x, y = self.corpus.next_batch()
-                    feed = { self.input_data: x, self.targets: y }
+                    feed = {self.input_data: x, self.targets: y}
                     for i, (c, h) in enumerate(self.initial_state):
                         feed[c] = state[i].c
                         feed[h] = state[i].h
@@ -322,7 +339,7 @@ class Model(clgen.CLgenObject):
 
             str[]: List of paths to checkpoint files.
         """
-        return glob(fs.path(self.cache.path, '*.t7'))
+        return []  # TODO
 
     @property
     def most_recent_checkpoint(self):
@@ -333,15 +350,9 @@ class Model(clgen.CLgenObject):
 
             str or None: Path to checkpoint, or None if no checkpoints.
         """
-        # if there's nothing trained, then max() will raise ValueError because
-        # of an empty sequence
-        def get_checkpoint_iterations(path):
-            return int(re.search("model_([0-9]+)\.t7", path).group(1))
-
-        try:
-            return max(iglob(fs.path(self.cache.path, '*.t7')),
-                       key=get_checkpoint_iterations)
-        except ValueError:
+        if self.cache["checkpoint"]:
+            return self.cache.path
+        else:
             return None
 
 
