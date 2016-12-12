@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+#
+# Extract kernels from an existing database.
+#
+import smith
+from smith import fetch
+
+import os
+
+from argparse import ArgumentParser
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('output', help='path to output SQL dataset')
+    parser.add_argument('input', help='path to input SQL dataset')
+
+    # parser.add_argument('path', help='path to directory with OpenCL kernels')
+    args = parser.parse_args()
+
+    out_db_path = os.path.expanduser(args.output)
+    in_db_path = os.path.expanduser(args.input)
+
+    fetch.content_db(out_db_path, in_db_path)
+
+
+if __name__ == '__main__':
+    main()

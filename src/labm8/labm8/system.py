@@ -31,6 +31,8 @@ import sys
 import subprocess
 import threading
 
+from sys import platform
+
 import labm8 as lab
 from labm8 import fs
 from labm8 import io
@@ -150,6 +152,18 @@ class Subprocess(object):
             thread.join()
 
         return self.process.returncode, self.stdout, self.stderr
+
+
+def is_linux():
+    return platform == "linux" or platform == "linux2"
+
+
+def is_mac():
+    return platform == "darwin"
+
+
+def is_windows():
+    return platform == "win32"
 
 
 def run(command, num_retries=1, timeout=-1, **kwargs):

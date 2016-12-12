@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+
+import smith
+import smith.parboil
+from smith import parboil
+
+from smith.parboil import BenchmarkException
+
+def main():
+    db_path = 'test.db'
+    db = parboil.Database.init(db_path)
+
+    for benchmark in db.benchmarks():
+        for dataset in benchmark.datasets:
+            for kernel in db.kernels(benchmark):
+                for device in [parboil.OpenCLDeviceType.GPU]:
+                    n_iter = 2
+                    print(benchmark, dataset, kernel, device, n_iter)
+                    try:
+                        runtimes = benchmark.run(
+                            kernel, dataset, device=device, n=n_iter)
+                        db.add_runtimes(runtimes)
+                    except BenchmarkException as e:
+                        print(e)
+                        db.mark_kernel_bad(kernel)
+
+
+if __name__ == "__main__":
+    main()

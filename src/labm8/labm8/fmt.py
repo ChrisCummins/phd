@@ -50,7 +50,7 @@ def table(rows, columns=None, output=None, data_args={}, **kwargs):
           multiple columns per row.
         columns (list of str, optional): Column names.
         output (str, optional): Path to output file.
-        str_args (dict, optional): Any additional kwargs to pass to
+        data_args (dict, optional): Any additional kwargs to pass to
           pandas.DataFrame constructor.
         **kwargs: Any additional arguments to pass to
           pandas.DataFrame.to_string().

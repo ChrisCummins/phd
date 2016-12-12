@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+#
+# Create a database.
+#
+from __future__ import print_function
+
+import os
+import sys
+import sqlite3
+
+from argparse import ArgumentParser
+
+import smith
+from smith import dbutil
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('input', help='path to SQL input dataset')
+    parser.add_argument('-g', action='store_true', help='generate dataset with GitHub metadata')
+    args = parser.parse_args()
+
+    db_path = args.input
+    github = args.g
+
+    try:
+        dbutil.create_db(db_path, github)
+    except Exception as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

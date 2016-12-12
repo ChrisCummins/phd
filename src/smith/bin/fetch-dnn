@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+#
+# Extract OpenCL programs from a DNN sample.
+#
+import smith
+from smith import fetch
+
+from argparse import ArgumentParser
+import os
+
+def main():
+    global errors_counter
+
+    parser = ArgumentParser()
+    parser.add_argument('input', help='path to SQL dataset')
+    parser.add_argument('-d', type=str, help='path to samples directory')
+    parser.add_argument('-f', type=str, default="sample.txt",
+                        help='path to sample file')
+    parser.add_argument('--first', action='store_true', default=False,
+                        help='extract only first kernel from sample file(s)')
+    args = parser.parse_args()
+    db_path = args.input
+    samples_dir = args.d
+    sample_path = args.f
+    first_only = args.first
+
+    fetch.dnn(db_path, samples_dir, sample_path, first_only)
+
+if __name__ == '__main__':
+    main()

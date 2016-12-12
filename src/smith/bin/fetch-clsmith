@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+#
+# Generate OpenCL programs using clsmith.
+#
+import smith
+from smith import fetch
+
+from argparse import ArgumentParser
+import os
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('input', help='path to SQL dataset')
+    parser.add_argument('-n', type=int, default=5000,
+                        help='number of OpenCL kernels to generate')
+    args = parser.parse_args()
+    db_path = args.input
+    target_num_kernels = args.n
+
+    fetch.clsmith(db_path, target_num_kernels)
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+#
+# Convert cecl log output to CGO'13 features.
+#
+from __future__ import print_function
+from __future__ import division
+
+from argparse import ArgumentParser
+
+import sys
+
+import smith
+from smith import cecl
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('inputs', nargs='+', help='input path(s)')
+    parser.add_argument('-d', '--dir-mode', action='store_true',
+                        help='treat input as directory tree')
+    args = parser.parse_args()
+
+    try:
+        if args.dir_mode:
+            if len(args.inputs) > 1:
+                raise Exception("directory mode accepts only single argument")
+            cecl.dir2features(smith.assert_exists(args.inputs[0]))
+        else:
+            paths = [smith.assert_exists(x) for x in args.inputs]
+            for path in paths:
+                cecl.log2features(path)
+    except Exception as e:
+        print("fatal:", e, file=sys.stderr)
+
+
+if __name__ == '__main__':
+    main()

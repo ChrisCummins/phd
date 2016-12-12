@@ -53,15 +53,21 @@ class TestML(TestCase):
     def test_csv2arff(self):
         if not ml.MODULE_SUPPORTED: return
         ml.csv2arff(self.csv, "/tmp/labm8.arfftest")
-        self._test(open("tests/data/diabetes.csv2arff").read(),
-                   open("/tmp/labm8.arfftest").read())
+        a = open("tests/data/diabetes.csv2arff")
+        b = open("/tmp/labm8.arfftest")
+        self._test(a.read(), b.read())
+        a.close()
+        b.close()
 
     # arff2csv()
     def test_arff2csv(self):
         if not ml.MODULE_SUPPORTED: return
         ml.arff2csv(self.arff, "/tmp/labm8.csvtest")
-        self._test(open(self.csv).read(),
-                   open("/tmp/labm8.csvtest").read())
+        a = open(self.csv)
+        b = open("/tmp/labm8.csvtest")
+        self._test(a.read(), b.read())
+        a.close()
+        b.close()
 
     # classifier_basename()
     def test_classifier_basename(self):

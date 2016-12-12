@@ -118,7 +118,7 @@ def geomean(array):
         return 0
     elif n == 1:
         return array[0]
-    return (reduce(lambda x, y: x * y, array)) ** (1 / n)
+    return stats.mstats.gmean(array)
 
 
 def median(array):

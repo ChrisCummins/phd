@@ -12,11 +12,8 @@
 #include <string>
 #include <vector>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Weverything"
 #include <benchmark/benchmark.h>
 #include <gtest/gtest.h>
-#pragma GCC diagnostic pop
 
 static unsigned int seed = 0xCEC;
 
@@ -209,7 +206,8 @@ void chris(benchmark::State& state) {
     for (auto &c : t)  // generate string
       c = rand_r(&seed) % std::numeric_limits<char>::max();
 
-    maxnsubstr_chris(t, (rand_r(&seed) % t.length()) / 2);
+    maxnsubstr_chris(t, (static_cast<unsigned long>(rand_r(&seed))
+                         % t.length()) / 2);
     benchmark::DoNotOptimize(t.data());
   }
 }
@@ -221,9 +219,11 @@ void adam(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     for (auto &c : t)  // generate string
-      c = rand_r(&seed) % std::numeric_limits<char>::max();
+      c = static_cast<unsigned long>(rand_r(&seed))
+          % std::numeric_limits<char>::max();
 
-    maxnsubstr_adam(t, (rand_r(&seed) % t.length()) / 2);
+    maxnsubstr_adam(t, static_cast<int>(
+        static_cast<unsigned long>(rand_r(&seed)) % t.length()) / 2);
     benchmark::DoNotOptimize(t.data());
   }
 }
@@ -237,7 +237,8 @@ void christophe(benchmark::State& state) {
     for (auto &c : t)  // generate string
       c = rand_r(&seed) % std::numeric_limits<char>::max();
 
-    maxnsubstr_christophe(t, (rand_r(&seed) % t.length()) / 2);
+    maxnsubstr_christophe(t, static_cast<int>(
+        static_cast<unsigned long>(rand_r(&seed)) % t.length()) / 2);
     benchmark::DoNotOptimize(t.data());
   }
 }

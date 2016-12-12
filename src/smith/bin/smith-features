@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+#
+# Extract features.
+#
+from argparse import ArgumentParser
+
+import labm8
+from labm8 import fmt
+from labm8 import fs
+
+import smith
+from smith import features
+
+def features_dir(csv_path):
+    return fs.basename(fs.dirname(csv_path))
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('inputs', nargs='+', help='input path(s)')
+    parser.add_argument('-d', '--dir-mode', action='store_true',
+                        help='treat inputs as directories')
+    parser.add_argument('-s', '--stats', action='store_true',
+                        help='summarize a features files')
+    parser.add_argument('-e', '--fatal-errors', action='store_true',
+                        help="quit on compiler error")
+    parser.add_argument('--shim', action='store_true',
+                        help="include shim header")
+    parser.add_argument("-q", '--quiet', action='store_true',
+                        help="minimal error output")
+    parser.add_argument("-H", "--no-header", action="store_true",
+                        help="no features header")
+    args = parser.parse_args()
+
+    inputs = args.inputs
+    dir_mode = args.dir_mode
+    summarise = args.stats
+
+    if summarise:
+        stats = [features.summarize(f) for f in inputs]
+
+        print('dataset', *list(stats[0].keys()), sep=',')
+        for path,stat in zip(inputs,stats):
+            print(features_dir(path), *list(stat.values()), sep=',')
+        return
+
+    if dir_mode:
+        trees = [fs.ls(d, abspaths=True, recursive=True) for d in inputs]
+        paths = [item for sublist in trees for item in sublist]
+    else:
+        paths = [fs.path(f) for f in inputs]
+    features.files(paths, fatal_errors=args.fatal_errors, use_shim=args.shim,
+                   quiet=args.quiet, header=not args.no_header)
+
+
+if __name__ == '__main__':
+    main()
