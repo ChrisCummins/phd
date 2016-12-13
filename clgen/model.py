@@ -100,10 +100,34 @@ class Model(clgen.CLgenObject):
         # Parse model options:
         # TODO: Change model format so that model type, rnn size, and num layers
         # are in the top level specification, not in "train_opts" dict.
-        model_type = self.train_opts.get("model_type", "lstm")
-        rnn_size = self.train_opts.get("rnn_size", 128)
-        num_layers = self.train_opts.get("num_layers", 2)
-        grad_clip = self.train_opts.get("grad_clip", 5)
+        self.model_type = self.train_opts.get("model_type", "lstm")
+        self.rnn_size = self.train_opts.get("rnn_size", 128)
+        self.num_layers = self.train_opts.get("num_layers", 2)
+        self.grad_clip = self.train_opts.get("grad_clip", 5)
+
+        self.cell_fn = {
+            "lstm": rnn_cell.BasicLSTMCell,
+            "gru": rnn_cell.GRUCell,
+            "rnn": rnn_cell.BasicRNNCell
+        }.get(self.model_type, None)
+        if self.cell_fn is None:
+            raise clgen.UserError("Unrecognized model type")
+
+    def _hash(self, train_opts, corpus):
+        checksum_data = sorted(
+            [str(x) for x in train_opts.values()] +
+            [corpus.hash])
+        string = "".join(checksum_data)
+        return clgen.checksum_str(string)
+
+    def _init_tensorflow(self, infer=False):
+        try:
+            if self.tensorflow_state == infer:
+                return
+            else:
+                re_init = True
+        except AttributeError:
+            re_init = None
 
         # Corpus info:
         batch_size = 1 if infer else self.corpus.batch_size
@@ -115,26 +139,22 @@ class Model(clgen.CLgenObject):
             cPickle.dump((self.corpus.chars, self.corpus.vocab), outfile)
         self.cache["chars_vocab.pkl"] = tmp_chars_vocab_path
 
-        cell_fn = {
-            "lstm": rnn_cell.BasicLSTMCell,
-            "gru": rnn_cell.GRUCell,
-            "rnn": rnn_cell.BasicRNNCell
-        }.get(model_type, None)
-        if cell_fn is None:
-            raise clgen.UserError("Unrecognized model type")
-        cell = cell_fn(rnn_size, state_is_tuple=True)
-        self.cell = cell = rnn_cell.MultiRNNCell([cell] * num_layers,
+        cell = self.cell_fn(self.rnn_size, state_is_tuple=True)
+        self.cell = cell = rnn_cell.MultiRNNCell([cell] * self.num_layers,
                                                  state_is_tuple=True)
         self.input_data = tf.placeholder(tf.int32, [batch_size, seq_length])
         self.targets = tf.placeholder(tf.int32, [batch_size, seq_length])
         self.initial_state = self.cell.zero_state(batch_size, tf.float32)
 
-        with tf.variable_scope('rnnlm'):
-            softmax_w = tf.get_variable("softmax_w", [rnn_size, vocab_size])
+        scope_name = 'rnnlm'
+        # FIXME: Set re-use
+        with tf.variable_scope(scope_name, reuse=re_init):
+            softmax_w = tf.get_variable("softmax_w", [self.rnn_size, vocab_size])
             softmax_b = tf.get_variable("softmax_b", [vocab_size])
             # TODO: Determine device
             with tf.device("/cpu:0"):
-                embedding = tf.get_variable("embedding", [vocab_size, rnn_size])
+                embedding = tf.get_variable("embedding",
+                                            [vocab_size, self.rnn_size])
                 inputs = tf.split(
                     1, seq_length, tf.nn.embedding_lookup(
                         embedding, self.input_data))
@@ -147,8 +167,8 @@ class Model(clgen.CLgenObject):
 
         outputs, last_state = seq2seq.rnn_decoder(
             inputs, self.initial_state, cell,
-            loop_function=loop if infer else None, scope='rnnlm')
-        output = tf.reshape(tf.concat(1, outputs), [-1, rnn_size])
+            loop_function=loop if infer else None, scope=scope_name)
+        output = tf.reshape(tf.concat(1, outputs), [-1, self.rnn_size])
         self.logits = tf.matmul(output, softmax_w) + softmax_b
         self.probs = tf.nn.softmax(self.logits)
         loss = seq2seq.sequence_loss_by_example(
@@ -160,26 +180,25 @@ class Model(clgen.CLgenObject):
         self.final_state = last_state
         self.lr = tf.Variable(0.0, trainable=False)
         tvars = tf.trainable_variables()
-        grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars),
-                grad_clip)
+        grads, _ = tf.clip_by_global_norm(
+            tf.gradients(self.cost, tvars), self.grad_clip)
         optimizer = tf.train.AdamOptimizer(self.lr)
         self.train_op = optimizer.apply_gradients(zip(grads, tvars))
 
-    def _hash(self, train_opts, corpus):
-        checksum_data = sorted(
-            [str(x) for x in train_opts.values()] +
-            [corpus.hash])
-        string = "".join(checksum_data)
-        return clgen.checksum_str(string)
+        # set model status
+        self.tensorflow_state = infer
+
 
     def train(self):
         """
         Train model.
         """
+        self._init_tensorflow(infer=False)
+
         max_epochs = self.train_opts.get("max_epochs", 50)
         learning_rate = self.train_opts.get("learning_rate", 2e-3)
         decay_rate = self.train_opts.get("lr_decary_rate", 5)
-        checkpoint_every = 100  # TODO: Better value
+        checkpoint_every = 500  # TODO: Better value
 
         # resume from prior checkpoint
         if self.most_recent_checkpoint:
@@ -243,6 +262,8 @@ class Model(clgen.CLgenObject):
         """
         Sample model.
         """
+        self._init_tensorflow(infer=True)
+
         with tf.Session() as sess:
             tf.initialize_all_variables().run()
             saver = tf.train.Saver(tf.all_variables())
@@ -261,6 +282,10 @@ class Model(clgen.CLgenObject):
                 x[0, 0] = vocab[char]
                 feed = {self.input_data: x, self.initial_state: state}
                 [state] = sess.run([self.final_state], feed)
+
+            output.write(seed_text)
+            if not quiet:
+                sys.stdout.write(seed_text)
 
             def weighted_pick(weights):
                 t = np.cumsum(weights)

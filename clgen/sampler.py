@@ -21,6 +21,8 @@ Sample a CLgen model.
 """
 from __future__ import print_function
 
+import sys
+
 from glob import glob, iglob
 from labm8 import fs
 
@@ -112,32 +114,25 @@ class Sampler(clgen.CLgenObject):
 
         cache = self.cache(model)
 
-        # create samples database if it doesn't exist
-        if not cache["kernels.db"]:
-            dbutil.create_db(fs.path(cache.path, "kernels.tmp.db"))
-            cache["kernels.db"] = fs.path(
-                cache.path, "kernels.tmp.db")
-
         if self.kernel_opts.get("args", None) is not None:
             start_text = serialize_argspec(self.kernel_opts["args"])
         else:
             start_text = "__kernel void A("
 
-        # sample options
-        opts = {
-            "opencl": 1,
-            "stream": 1,
-            "n": self.batch_size,
-            "checkpoint": model.most_recent_checkpoint,
-            "temperature": self.kernel_opts.get("temperature", .75),
-            "length": self.kernel_opts.get("max_length", 10000),
-            "start_text": start_text,
-        }
-
         tmppath = fs.path(cache.path, "sample.tmp.cl")
-        torch_rnn.sample(tmppath, **opts)
+
+        with open(tmppath, "w") as outfile:
+            opts = {
+                "output": outfile,
+                "num_samples": self.batch_size,
+                "temperature": self.kernel_opts.get("temperature", .75),
+                "max_length": self.kernel_opts.get("max_length", 10000),
+                "seed_text": start_text,
+            }
+            model.sample(**opts)
+
         fetch.process_sample_file(cache["kernels.db"], tmppath,
-                                  max_kernel_len=opts["length"], quiet=True)
+                                  max_kernel_len=opts["max_length"], quiet=True)
 
         if self.static_checker:
             # TODO: Parse dynamic checker requirement
