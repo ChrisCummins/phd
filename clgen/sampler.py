@@ -30,7 +30,6 @@ from clgen import dbutil
 from clgen import fetch
 from clgen import log
 from clgen import preprocess
-from clgen import torch_rnn
 from clgen.cache import Cache
 from clgen.explore import explore
 from clgen.model import Model
