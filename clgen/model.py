@@ -243,7 +243,7 @@ class Model(clgen.CLgenObject):
                     train_loss, state, _ = sess.run(
                         [self.cost, self.final_state, self.train_op], feed)
                     time_end = time.time()
-                    batch_num = e * self.corpus.num_batches + b
+                    batch_num = (e - 1) * self.corpus.num_batches + b
                     max_batch = max_epochs * self.corpus.num_batches
                     print("{}/{} (epoch {}/{}), train_loss = {:.3f}, time/batch = {:.3f}" \
                           .format(batch_num + 1, max_batch,
