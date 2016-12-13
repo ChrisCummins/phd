@@ -133,6 +133,7 @@ def main(method, *args, **kwargs):
         print("\nkeyboard interrupt, terminating", file=sys.stderr)
         log.exit(1)
     except Exception as e:
+        # TODO: Print limited stack trace
         log.fatal(e, "(" + type(e).__name__  + ")",
                   "\n\nPlease report bugs at <"
                   "https://github.com/ChrisCummins/clgen/issues>")
