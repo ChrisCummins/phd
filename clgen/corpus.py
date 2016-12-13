@@ -21,7 +21,6 @@ Manipulating and handling training corpuses.
 """
 import re
 import codecs
-import os
 import numpy as np
 
 from collections import Counter
