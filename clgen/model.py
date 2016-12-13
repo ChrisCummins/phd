@@ -245,10 +245,11 @@ class Model(clgen.CLgenObject):
                     time_end = time.time()
                     batch_num = (e - 1) * self.corpus.num_batches + b
                     max_batch = max_epochs * self.corpus.num_batches
-                    print("{}/{} (epoch {}/{}), train_loss = {:.3f}, time/batch = {:.3f}" \
-                          .format(batch_num + 1, max_batch,
-                                  e, max_epochs,
-                                  train_loss, time_end - time_start))
+                    print("{:2.1f} %  batch {}/{}, epoch {}/{}, "
+                          "train_loss = {:.3f}, time/batch = {:.3f}s".format(
+                              ((batch_num + 1) / max_batch) * 100,
+                              batch_num + 1, max_batch, e, max_epochs,
+                              train_loss, time_end - time_start))
                     # save_checkpoint = batch_num % checkpoint_every == 0
                     # save_checkpoint |= (e == max_epochs - 1
                     #                     and b == self.corpus.num_batches - 1)
