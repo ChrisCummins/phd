@@ -226,7 +226,7 @@ class Model(clgen.CLgenObject):
             if self.most_recent_checkpoint:
                 saver.restore(sess, ckpt.model_checkpoint_path)
 
-            for e in range(sess.run(self.epoch), max_epochs):
+            for e in range(sess.run(self.epoch) + 1, max_epochs):
                 # decay and set learning rate
                 sess.run(tf.assign(self.learning_rate, learning_rate * (decay_rate ** e)))
                 sess.run(tf.assign(self.epoch, e))
