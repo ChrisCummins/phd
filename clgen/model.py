@@ -80,7 +80,7 @@ class Model(clgen.CLgenObject):
     """
     A CLgen Model.
     """
-    def __init__(self, corpus, train_opts, infer=False):
+    def __init__(self, corpus, train_opts):
         """
         Instantiate model.
 
@@ -219,8 +219,8 @@ class Model(clgen.CLgenObject):
             log.debug("loaded checkpoint {}".format(ckpt.model_checkpoint_path))
 
         with tf.Session() as sess:
-            tf.initialize_all_variables().run()
-            saver = tf.train.Saver(tf.all_variables())
+            tf.global_variables_initializer().run()
+            saver = tf.train.Saver(tf.global_variables())
 
             # restore model from checkpoint
             if self.most_recent_checkpoint:
@@ -228,7 +228,10 @@ class Model(clgen.CLgenObject):
 
             for e in range(sess.run(self.epoch) + 1, max_epochs):
                 # decay and set learning rate
-                sess.run(tf.assign(self.learning_rate, learning_rate * (decay_rate ** e)))
+                new_learning_rate = learning_rate * (
+                    (float(100 - decay_rate) / 100.0) ** e)
+                log.info("learning rate", new_learning_rate)
+                sess.run(tf.assign(self.learning_rate, new_learning_rate))
                 sess.run(tf.assign(self.epoch, e))
 
                 self.corpus.reset_batch_pointer()
@@ -245,11 +248,14 @@ class Model(clgen.CLgenObject):
                     time_end = time.time()
                     batch_num = (e - 1) * self.corpus.num_batches + b
                     max_batch = max_epochs * self.corpus.num_batches
-                    print("{:2.1f} %  batch {}/{}, epoch {}/{}, "
-                          "train_loss = {:.3f}, time/batch = {:.3f}s".format(
-                              ((batch_num + 1) / max_batch) * 100,
-                              batch_num + 1, max_batch, e, max_epochs,
-                              train_loss, time_end - time_start))
+
+                    progress = (batch_num + 1) / max_batch
+                    elapsed = time_end - time_start
+
+                    log.info("{:2.1f} %   batch = {} / {}, epoch = {} / {}, "
+                             "train_loss = {:.3f}, time/batch = {:.3f}s".format(
+                                progress * 100, batch_num + 1, max_batch, e,
+                                max_epochs, train_loss, elapsed))
                     # save_checkpoint = batch_num % checkpoint_every == 0
                     # save_checkpoint |= (e == max_epochs - 1
                     #                     and b == self.corpus.num_batches - 1)
@@ -257,16 +263,29 @@ class Model(clgen.CLgenObject):
                 saver.save(sess, checkpoint_path, global_step=batch_num)
                 log.info("model saved to {}".format(checkpoint_path))
 
-    def sample(self, seed_text, output=sys.stdout, num_samples=1,
-               temperature=.75, max_length=10000, quiet=False):
+    def sample(self, seed_text="__kernel void", output=sys.stdout, num_samples=1,
+               temperature=.75, max_length=10000, seed=None, quiet=False):
         """
         Sample model.
+
+        Arguments:
+            seed_text (str, optional): Sample start text
+            output (file handler, optional): Where to print output to
+            num_samples (int, optional): Number of samples to generated
+            temperature (float, optional): Sampling temperature
+            max_length (int, optional): Maximum sample length
+            seed (int, optional): If set, set random number seed for
+                reproducible samples. If None, set no seed.
+            quiet (bool, optional): If False, stream output to stdout
         """
         self._init_tensorflow(infer=True)
 
+        if seed is not None:
+            pass  # TODO: Set seed.
+
         with tf.Session() as sess:
-            tf.initialize_all_variables().run()
-            saver = tf.train.Saver(tf.all_variables())
+            tf.global_variables_initializer().run()
+            saver = tf.train.Saver(tf.global_variables())
             ckpt = tf.train.get_checkpoint_state(self.cache.path)
 
             assert(ckpt)
@@ -453,7 +472,8 @@ class Model(clgen.CLgenObject):
 
             str[]: List of paths to checkpoint files.
         """
-        return []  # TODO
+        # TODO: Fetch the list from tf
+        return [self.most_recent_checkpoint]
 
     @property
     def most_recent_checkpoint(self):
@@ -490,10 +510,10 @@ class DistModel(Model):
 
         # unpack archive if necessary
         unpacked = False
-        if not self.cache['model.json'] or not self.cache['model.t7']:
-            unpacked = True
+        if not self.cache['model.json']:
             log.info("unpacking", tarpath)
             clgen.unpack_archive(tarpath, dir=self.cache.path)
+            unpacked = True
             if not self.cache['meta.json']:
                 raise DistError("meta.json not in '{}'".format(tarpath))
 
@@ -530,28 +550,6 @@ class DistModel(Model):
         """
         pass
 
-    @property
-    def checkpoints(self):
-        """
-        Training checkpoints.
-
-        Returns:
-
-            str[]: List of paths to checkpoint files.
-        """
-        return [self.most_recent_checkpoint()]
-
-    @property
-    def most_recent_checkpoint(self):
-        """
-        Get path to pre-trained t7 checkpoint.
-
-        Returns:
-
-            str or None: Path to checkpoint.
-        """
-        return self.cache['model.t7']
-
     def validate(self):
         """
         Validate contents of a distfile.
@@ -572,8 +570,8 @@ class DistModel(Model):
                 raise DistError("Bad distfile")
             if not self.cache['model.json']:
                 raise DistError("model.json not in disfile")
-            if not self.cache['model.t7']:
-                raise DistError("model.t7 not in disfile")
+            if not self.cache['checkpoint']:
+                raise DistError("checkpoint not in disfile")
             return True
 
         if version != clgen.version():
@@ -620,8 +618,7 @@ def from_json(model_json):
             raise clgen.UserError(
                 "Unrecognized training option '{}'".format(key))
 
-    # FIXME: set infer
-    return Model(corpus, train_opts, infer=True)
+    return Model(corpus, train_opts)
 
 
 def from_tar(path):
