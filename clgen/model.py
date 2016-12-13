@@ -275,69 +275,81 @@ class Model(clgen.CLgenObject):
                 chars, vocab = cPickle.load(infile)
 
             saver.restore(sess, ckpt.model_checkpoint_path)
-            state = sess.run(self.cell.zero_state(1, tf.float32))
-            depth = 0  # function block depth
-            started = False
-
-            for char in seed_text[:-1]:
-                if char == '{':
-                    depth += 1
-                    started = True
-                elif char == '}':
-                    depth -= 1
-
-                x = np.zeros((1, 1))
-                x[0, 0] = vocab[char]
-                feed = {self.input_data: x, self.initial_state: state}
-                [state] = sess.run([self.final_state], feed)
-
-            output.write(seed_text)
-            if not quiet:
-                sys.stdout.write(seed_text)
 
             def weighted_pick(weights):
                 t = np.cumsum(weights)
                 s = np.sum(weights)
                 return int(np.searchsorted(t, np.random.rand(1) * s))
 
-            sampling_type = 1  # default
-
-            ret = seed_text
-            char = seed_text[-1]
-
-            for n in range(max_length):
-                x = np.zeros((1, 1))
-
-                [probs, state] = sess.run([self.probs, self.final_state], feed)
-                p = probs[0]
-
-                if sampling_type == 0:
-                    sample = np.argmax(p)
-                elif sampling_type == 2:
-                    if char == ' ':
-                        sample = weighted_pick(p)
-                    else:
-                        sample = np.argmax(p)
-                else: # sampling_type == 1 default:
-                    sample = weighted_pick(p)
-
-                pred = chars[sample]
-                ret += pred
-                char = pred
-
-                output.write(pred)
-                if not quiet:
-                    sys.stdout.write(pred)
-
-                # update function block depth
+            start_depth = 0
+            start_started = False
+            for char in seed_text:
                 if char == '{':
-                    started = True
-                    depth += 1
+                    start_depth += 1
+                    start_started = True
                 elif char == '}':
-                    depth -= 1
-                # stop sampling if depth = 0
-                if started and depth == 0:
-                    break
+                    start_depth -= 1
+
+            for i in range(1, num_samples + 1):
+                state = sess.run(self.cell.zero_state(1, tf.float32))
+                depth = start_depth  # function block depth
+                started = start_started
+
+                for char in seed_text[:-1]:
+                    x = np.zeros((1, 1))
+                    x[0, 0] = vocab[char]
+                    feed = {self.input_data: x, self.initial_state: state}
+                    [state] = sess.run([self.final_state], feed)
+
+                sampling_type = 1  # default
+                output.write("\n\n/* SAMPLE {} */\n\n".format(i))
+                output.write(seed_text)
+                if not quiet:
+                    sys.stdout.write("\n\n/* SAMPLE {} */\n\n".format(i))
+                    sys.stdout.write(seed_text)
+                    sys.stdout.flush()
+
+                ret = seed_text
+                char = seed_text[-1]
+
+                for _ in range(max_length):
+                    x = np.zeros((1, 1))
+                    x[0, 0] = vocab[char]
+                    feed = {self.input_data: x, self.initial_state: state}
+                    [probs, state] = sess.run(
+                        [self.probs, self.final_state], feed)
+                    p = probs[0]
+
+                    if sampling_type == 0:
+                        # use max at each step
+                        sample = np.argmax(p)
+                    elif sampling_type == 2:
+                        # sample on space
+                        if char == ' ':
+                            sample = weighted_pick(p)
+                        else:
+                            sample = np.argmax(p)
+                    else:
+                        # sample on each step
+                        sample = weighted_pick(p)
+
+                    pred = chars[sample]
+                    ret += pred
+                    char = pred
+
+                    output.write(pred)
+                    if not quiet:
+                        sys.stdout.write(pred)
+
+                    # update function block depth
+                    if char == '{':
+                        started = True
+                        depth += 1
+                    elif char == '}':
+                        depth -= 1
+                    # stop sampling if depth = 0
+                    if started and depth == 0:
+                        break
 
     @property
     def meta(self):
