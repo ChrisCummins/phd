@@ -37,10 +37,7 @@ class TestNative(TestCase):
 
     FILES = [
         fs.path(native.LIBCLC, "clc", "clc.h"),
-        fs.path(native.TORCH_RNN_DIR, "sample.lua"),
-        fs.path(native.TORCH_RNN_DIR, "train.lua"),
         native.SHIMFILE,
-        native.TORCH_RNN_PREPROCESS,
     ]
 
     def test_binaries_exist(self):

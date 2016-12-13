@@ -25,6 +25,7 @@ import json
 import numpy as np
 import os
 import re
+import sys
 import tarfile
 import tensorflow as tf
 import time
@@ -42,7 +43,6 @@ from tensorflow.python.ops import seq2seq
 
 import clgen
 from clgen import log
-from clgen import torch_rnn
 from clgen.cache import Cache
 from clgen.corpus import Corpus
 
@@ -237,6 +237,62 @@ class Model(clgen.CLgenObject):
                         checkpoint_path = fs.path(self.cache.path, "model.ckpt")
                         saver.save(sess, checkpoint_path, global_step=batch_num)
                         print("model saved to {}".format(checkpoint_path))
+
+    def sample(self, seed_text, output=sys.stdout, num_samples=1,
+               temperature=.75, max_length=10000, quiet=False):
+        """
+        Sample model.
+        """
+        with tf.Session() as sess:
+            tf.initialize_all_variables().run()
+            saver = tf.train.Saver(tf.all_variables())
+            ckpt = tf.train.get_checkpoint_state(self.cache.path)
+
+            assert(ckpt)
+            assert(ckpt.model_checkpoint_path)
+
+            with open(self.cache["chars_vocab.pkl"], "rb") as infile:
+                chars, vocab = cPickle.load(infile)
+
+            saver.restore(sess, ckpt.model_checkpoint_path)
+            state = sess.run(self.cell.zero_state(1, tf.float32))
+            for char in seed_text[:-1]:
+                x = np.zeros((1, 1))
+                x[0, 0] = vocab[char]
+                feed = {self.input_data: x, self.initial_state: state}
+                [state] = sess.run([self.final_state], feed)
+
+            def weighted_pick(weights):
+                t = np.cumsum(weights)
+                s = np.sum(weights)
+                return int(np.searchsorted(t, np.random.rand(1) * s))
+
+            sampling_type = 1  # default
+
+            ret = seed_text
+            char = seed_text[-1]
+            for n in range(max_length):
+                x = np.zeros((1, 1))
+
+                [probs, state] = sess.run([self.probs, self.final_state], feed)
+                p = probs[0]
+
+                if sampling_type == 0:
+                    sample = np.argmax(p)
+                elif sampling_type == 2:
+                    if char == ' ':
+                        sample = weighted_pick(p)
+                    else:
+                        sample = np.argmax(p)
+                else: # sampling_type == 1 default:
+                    sample = weighted_pick(p)
+
+                pred = chars[sample]
+                ret += pred
+                char = pred
+                output.write(pred)
+                if not quiet:
+                    sys.stdout.write(pred)
 
     @property
     def meta(self):
@@ -495,7 +551,7 @@ def from_json(model_json):
     corpus = Corpus.from_json(model_json["corpus"])
     train_opts = model_json["train_opts"]
 
-    # validate train_opts flags against those accpted by torch-rnn/train.lua
+    # validate train_opts flags
     valid_opts = [
         "batch_size", "seq_length", "model_type", "rnn_size", "num_layers",
         "dropout", "batchnorm", "learning_rate", "max_epochs", "grad_clip",
@@ -506,7 +562,8 @@ def from_json(model_json):
             raise clgen.UserError(
                 "Unrecognized training option '{}'".format(key))
 
-    return Model(corpus, train_opts)
+    # FIXME: set infer
+    return Model(corpus, train_opts, infer=True)
 
 
 def from_tar(path):

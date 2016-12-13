@@ -19,8 +19,6 @@ cache:
     - native/libclc
     - native/llvm
     - native/ninja
-    - native/torch
-    - native/torch-rnn
 
 addons:
   apt:
@@ -31,7 +29,6 @@ addons:
       - gcc-4.8
       - g++-4.8
       - clang-3.6
-      - libhdf5-serial-dev
       - python-dev
 
 env:
