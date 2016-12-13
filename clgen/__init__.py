@@ -390,11 +390,9 @@ def main(model, sampler):
     else:
         model_json = load_json_file(model)
         model = clgen.model.from_json(model_json)
-    model.train()
 
-    import sys
-    print("done training")
-    sys.exit(0)
-    # sampler_json = load_json_file(sampler)
-    # sampler = clgen.sampler.from_json(sampler_json)
-    # sampler.sample(model)
+    sampler_json = load_json_file(sampler)
+    sampler = clgen.sampler.from_json(sampler_json)
+
+    model.train()
+    sampler.sample(model)
