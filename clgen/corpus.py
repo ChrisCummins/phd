@@ -203,13 +203,31 @@ class Corpus(clgen.CLgenObject):
                                   self.num_batches, 1)
 
     def reset_batch_pointer(self):
+        """
+        Resets batch pointer to first batch.
+        """
         self.pointer = 0
 
     def next_batch(self):
+        """
+        Fetch next batch indices.
+
+        Returns:
+            (np.array, np.array): X, Y batch tuple.
+        """
         x = self.x_batches[self.pointer]
         y = self.y_batches[self.pointer]
         self.pointer += 1
         return x, y
+
+    def set_batch_pointer(self, pointer):
+        """
+        Set batch pointer.
+
+        Arguments:
+            pointer (int): New batch pointer.
+        """
+        self.pointer = pointer
 
     def __repr__(self):
         n = dbutil.num_good_kernels(self.cache['kernels.db'])
