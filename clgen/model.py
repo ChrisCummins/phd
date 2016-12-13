@@ -124,10 +124,10 @@ class Model(clgen.CLgenObject):
         try:
             if self.tensorflow_state == infer:
                 return
-            else:
-                re_init = True
         except AttributeError:
-            re_init = None
+            pass
+
+        tf.reset_default_graph()
 
         # Corpus info:
         batch_size = 1 if infer else self.corpus.batch_size
@@ -147,9 +147,9 @@ class Model(clgen.CLgenObject):
         self.initial_state = self.cell.zero_state(batch_size, tf.float32)
 
         scope_name = 'rnnlm'
-        # FIXME: Set re-use
-        with tf.variable_scope(scope_name, reuse=re_init):
-            softmax_w = tf.get_variable("softmax_w", [self.rnn_size, vocab_size])
+        with tf.variable_scope(scope_name):
+            softmax_w = tf.get_variable("softmax_w",
+                                        [self.rnn_size, vocab_size])
             softmax_b = tf.get_variable("softmax_b", [vocab_size])
             # TODO: Determine device
             with tf.device("/cpu:0"):
@@ -172,17 +172,18 @@ class Model(clgen.CLgenObject):
         self.logits = tf.matmul(output, softmax_w) + softmax_b
         self.probs = tf.nn.softmax(self.logits)
         loss = seq2seq.sequence_loss_by_example(
-                [self.logits],
-                [tf.reshape(self.targets, [-1])],
-                [tf.ones([batch_size * seq_length])],
-                vocab_size)
+            [self.logits],
+            [tf.reshape(self.targets, [-1])],
+            [tf.ones([batch_size * seq_length])],
+            vocab_size)
         self.cost = tf.reduce_sum(loss) / batch_size / seq_length
         self.final_state = last_state
-        self.lr = tf.Variable(0.0, trainable=False)
+        self.learning_rate = tf.Variable(0.0, trainable=False)
+        self.epoch = tf.Variable(0, trainable=False)
         tvars = tf.trainable_variables()
         grads, _ = tf.clip_by_global_norm(
             tf.gradients(self.cost, tvars), self.grad_clip)
-        optimizer = tf.train.AdamOptimizer(self.lr)
+        optimizer = tf.train.AdamOptimizer(self.learning_rate)
         self.train_op = optimizer.apply_gradients(zip(grads, tvars))
 
         # set model status
@@ -198,7 +199,7 @@ class Model(clgen.CLgenObject):
         max_epochs = self.train_opts.get("max_epochs", 50)
         learning_rate = self.train_opts.get("learning_rate", 2e-3)
         decay_rate = self.train_opts.get("lr_decary_rate", 5)
-        checkpoint_every = 500  # TODO: Better value
+        checkpoint_path = fs.path(self.cache.path, "model.ckpt")
 
         # resume from prior checkpoint
         if self.most_recent_checkpoint:
@@ -224,13 +225,12 @@ class Model(clgen.CLgenObject):
             # restore model from checkpoint
             if self.most_recent_checkpoint:
                 saver.restore(sess, ckpt.model_checkpoint_path)
-                # FIXME: Load start e from Session
-                start_e = 0
-            else:  # no previous model
-                start_e = 0
 
-            for e in range(start_e, max_epochs):
-                sess.run(tf.assign(self.lr, learning_rate * (decay_rate ** e)))
+            for e in range(sess.run(self.epoch), max_epochs):
+                # decay and set learning rate
+                sess.run(tf.assign(self.learning_rate, learning_rate * (decay_rate ** e)))
+                sess.run(tf.assign(self.epoch, e))
+
                 self.corpus.reset_batch_pointer()
                 state = sess.run(self.initial_state)
                 for b in range(self.corpus.num_batches):
@@ -246,16 +246,15 @@ class Model(clgen.CLgenObject):
                     batch_num = e * self.corpus.num_batches + b
                     max_batch = max_epochs * self.corpus.num_batches
                     print("{}/{} (epoch {}/{}), train_loss = {:.3f}, time/batch = {:.3f}" \
-                          .format(batch_num, max_batch,
+                          .format(batch_num + 1, max_batch,
                                   e, max_epochs,
                                   train_loss, time_end - time_start))
-                    save_checkpoint = batch_num % checkpoint_every == 0
-                    save_checkpoint |= (e == max_epochs - 1
-                                        and b == self.corpus.num_batches - 1)
-                    if save_checkpoint:
-                        checkpoint_path = fs.path(self.cache.path, "model.ckpt")
-                        saver.save(sess, checkpoint_path, global_step=batch_num)
-                        print("model saved to {}".format(checkpoint_path))
+                    # save_checkpoint = batch_num % checkpoint_every == 0
+                    # save_checkpoint |= (e == max_epochs - 1
+                    #                     and b == self.corpus.num_batches - 1)
+                    # if save_checkpoint:
+                saver.save(sess, checkpoint_path, global_step=batch_num)
+                log.info("model saved to {}".format(checkpoint_path))
 
     def sample(self, seed_text, output=sys.stdout, num_samples=1,
                temperature=.75, max_length=10000, quiet=False):
@@ -277,7 +276,16 @@ class Model(clgen.CLgenObject):
 
             saver.restore(sess, ckpt.model_checkpoint_path)
             state = sess.run(self.cell.zero_state(1, tf.float32))
+            depth = 0  # function block depth
+            started = False
+
             for char in seed_text[:-1]:
+                if char == '{':
+                    depth += 1
+                    started = True
+                elif char == '}':
+                    depth -= 1
+
                 x = np.zeros((1, 1))
                 x[0, 0] = vocab[char]
                 feed = {self.input_data: x, self.initial_state: state}
@@ -296,6 +304,7 @@ class Model(clgen.CLgenObject):
 
             ret = seed_text
             char = seed_text[-1]
+
             for n in range(max_length):
                 x = np.zeros((1, 1))
 
@@ -315,9 +324,20 @@ class Model(clgen.CLgenObject):
                 pred = chars[sample]
                 ret += pred
                 char = pred
+
                 output.write(pred)
                 if not quiet:
                     sys.stdout.write(pred)
+
+                # update function block depth
+                if char == '{':
+                    started = True
+                    depth += 1
+                elif char == '}':
+                    depth -= 1
+                # stop sampling if depth = 0
+                if started and depth == 0:
+                    break
 
     @property
     def meta(self):
