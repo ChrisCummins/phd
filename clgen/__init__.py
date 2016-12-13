@@ -61,13 +61,6 @@ class UserError(CLgenError):
     pass
 
 
-class NotImplementedError(InternalError):
-    """
-    Code not found.
-    """
-    pass
-
-
 class File404(InternalError):
     """
     Data not found.
