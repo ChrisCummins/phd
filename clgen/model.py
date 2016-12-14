@@ -226,7 +226,7 @@ class Model(clgen.CLgenObject):
             if self.most_recent_checkpoint:
                 saver.restore(sess, ckpt.model_checkpoint_path)
 
-            for e in range(sess.run(self.epoch) + 1, max_epochs):
+            for e in range(sess.run(self.epoch) + 1, max_epochs + 1):
                 # decay and set learning rate
                 new_learning_rate = learning_rate * (
                     (float(100 - decay_rate) / 100.0) ** (e - 1))
