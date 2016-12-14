@@ -52,7 +52,9 @@ clgen
 
 ::
 
-    usage: clgen [-h] [--version] [-v] <model> <sampler>
+    usage: clgen [-h] [--version] [-v] [--corpus-dir] [--model-dir]
+                 [--sampler-dir]
+                 <model> <sampler>
     
     Generate OpenCL programs using Deep Learning.
     
@@ -64,7 +66,8 @@ clgen
        5. The trained model is sampled for new kernels.
     
     This program automates the execution of all five stages of the pipeline.
-    The pipeline can be interrupted and resumed at any time.
+    The pipeline can be interrupted and resumed at any time. Results are cached
+    across runs.
     
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
@@ -77,6 +80,31 @@ clgen
       -h, --help     show this help message and exit
       --version      show version information and exit
       -v, --verbose  increase output verbosity
+      --corpus-dir   print path to corpus cache
+      --model-dir    print path to model cache
+      --sampler-dir  print path to sampler cache
+
+clgen-atomize
+--------------
+
+::
+
+    usage: clgen-atomize [-h] [--version] [-v] [-t TYPE] [-s] input
+    
+    Extract and print corpus vocabulary.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
+    
+    positional arguments:
+      input                 path to input text file
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      --version             show version information and exit
+      -v, --verbose         increase output verbosity
+      -t TYPE, --type TYPE  vocabulary type
+      -s, --size            print vocabulary size
 
 clgen-create-db
 ----------------
