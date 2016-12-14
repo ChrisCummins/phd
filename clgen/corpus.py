@@ -204,7 +204,7 @@ class Corpus(clgen.CLgenObject):
         self.vocab = dict(zip(self.atoms, range(len(self.atoms))))
         with open(tmp_vocab_file, 'wb') as f:
             cPickle.dump(self.atoms, f)
-        # encode tensor from vocab
+        # encode corpus with vocab
         self.tensor = np.array(list(map(self.vocab.get, data)))
         np.save(tmp_tensor_file, self.tensor)
 

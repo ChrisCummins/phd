@@ -31,7 +31,8 @@ This is a five-step process:
    5. The trained model is sampled for new kernels.
 
 This program automates the execution of all five stages of the pipeline.
-The pipeline can be interrupted and resumed at any time.
+The pipeline can be interrupted and resumed at any time. Results are cached
+across runs.
 """
 
 
