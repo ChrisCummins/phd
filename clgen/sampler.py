@@ -191,11 +191,9 @@ def from_json(sampler_json):
     Returns:
         Sampler: Instantiate sampler.
     """
-    sampler_opts = sampler_json.get("sampler", None)
-    if not sampler_opts:
-        raise clgen.UserError("no sampler section in sampler specification")
+    sampler_opts = sampler_json.get("sampler", {})
 
-    kernel_opts = sampler_json.get("kernels", None)
+    kernel_opts = sampler_json.get("kernels", {})
     if not kernel_opts:
         raise clgen.UserError("no kernels section in sampler specification")
 
