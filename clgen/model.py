@@ -281,7 +281,7 @@ class Model(clgen.CLgenObject):
         self._init_tensorflow(infer=True)
 
         if seed is not None:
-            pass  # TODO: Set seed.
+            pass  # TODO: Set numpy RNG seed.
 
         with tf.Session() as sess:
             tf.global_variables_initializer().run()
@@ -324,7 +324,9 @@ class Model(clgen.CLgenObject):
                 sampling_type = 1  # default
                 output.write("\n\n/* SAMPLE {} */\n\n".format(i))
                 output.write(seed_text)
-                if not quiet:
+                if quiet:
+                    print(" - sample", i)
+                else:
                     sys.stdout.write("\n\n/* SAMPLE {} */\n\n".format(i))
                     sys.stdout.write(seed_text)
                     sys.stdout.flush()
