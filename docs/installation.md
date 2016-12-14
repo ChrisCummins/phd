@@ -8,6 +8,12 @@ $ git clone git@github.com:ChrisCummins/clgen.git clgen-dev
 $ cd clgen-dev
 ```
 
+Install the build requirements using:
+
+```
+$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.1/install-deps.sh | bash
+```
+
 Configure and compile CLgen using:
 
 ```sh
