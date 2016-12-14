@@ -29,6 +29,7 @@ addons:
       - gcc-4.8
       - g++-4.8
       - clang-3.6
+      - libhdf5-serial-dev
       - python-dev
 
 env:
