@@ -132,6 +132,8 @@ class Sampler(clgen.CLgenObject):
             }
             model.sample(**opts)
 
+        sys.stdout.flush()
+        sys.stderr.flush()
         fetch.process_sample_file(cache["kernels.db"], tmppath,
                                   max_kernel_len=opts["max_length"], quiet=True)
 

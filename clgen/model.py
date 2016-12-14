@@ -373,6 +373,9 @@ class Model(clgen.CLgenObject):
                     if started and depth == 0:
                         break
 
+            if not quiet:
+                sys.stdout.write('\n\n')
+
     @property
     def meta(self):
         """
