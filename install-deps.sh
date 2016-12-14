@@ -43,7 +43,8 @@ elif [[ "$(uname)" == 'Linux' ]]; then
 
         sudo apt-get install -y build-essential python-dev python-virtualenv \
             python-pip git zlib1g-dev libffi-dev zlib1g-dev \
-            curl wget python3-dev python3-pip python3-virtualenv
+            curl wget python3-dev python3-pip python3-virtualenv unzip \
+            libncurses5-dev libhdf5-dev
 
     fi
 
