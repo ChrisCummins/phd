@@ -87,7 +87,7 @@ def main():
     cfg = {
         "opencl": args.with_opencl,
         "cuda": args.with_cuda,
-        "version": "0.2.0",
+        "version": "0.2.1",
     }
 
     # get input from user
