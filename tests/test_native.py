@@ -32,7 +32,6 @@ class TestNative(TestCase):
         native.CLANG_FORMAT,
         native.CLGEN_REWRITER,
         native.OPT,
-        native.TH,
     ]
 
     FILES = [
