@@ -103,7 +103,7 @@ class Sampler(clgen.CLgenObject):
         sampler_model_hash = clgen.checksum_str(self.hash + model.hash)
         return Cache(fs.path("sampler", sampler_model_hash))
 
-    def sample_iteration(self, model):
+    def sample_iteration(self, model, quiet=False):
         """
         Run one sample iteration.
 
@@ -128,6 +128,7 @@ class Sampler(clgen.CLgenObject):
                 "temperature": self.kernel_opts.get("temperature", .75),
                 "max_length": self.kernel_opts.get("max_length", 10000),
                 "seed_text": start_text,
+                "quiet": quiet
             }
             model.sample(**opts)
 
@@ -139,7 +140,7 @@ class Sampler(clgen.CLgenObject):
             preprocess.preprocess_db(cache["kernels.db"])
         fs.rm(tmppath)
 
-    def sample(self, model):
+    def sample(self, model, quiet=False):
         """
         Sample CLgen model.
 
@@ -170,7 +171,7 @@ class Sampler(clgen.CLgenObject):
             if has_max_batches and batch_i > self.max_batches:
                 return
 
-            self.sample_iteration(model)
+            self.sample_iteration(model, quiet=quiet)
 
             print()
             explore(self.cache(model)["kernels.db"])
