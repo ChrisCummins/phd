@@ -171,7 +171,7 @@ class Sampler(clgen.CLgenObject):
                 return
 
             batch_i += 1
-            print("beginning batch", batch_i, "...")
+            print("sample batch", batch_i, "...")
 
             self.sample_iteration(model, quiet=quiet)
 
