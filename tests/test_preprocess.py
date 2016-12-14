@@ -66,11 +66,29 @@ class TestPreprocess(TestCase):
 
     def test_preprocess_shim(self):
         self.assertTrue(preprocess.preprocess("""
-__kernel void A(__global FLOAT_T* a) {}"""))
+__kernel void A(__global FLOAT_T* a) { int b; }"""))
 
         with self.assertRaises(preprocess.BadCodeException):
             preprocess.preprocess("""
-__kernel void A(__global FLOAT_T* a) {}""", use_shim=False)
+__kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=False)
+
+    def test_ugly_preprocessed(self):
+        # empty kernel protoype is rejected
+        with self.assertRaises(preprocess.NoCodeException):
+            preprocess.preprocess("""\
+__kernel void A() {
+}\
+""")
+        # kernel containing some code returns the same.
+        self.assertEqual("""\
+__kernel void A() {
+  int a;
+}\
+""", preprocess.preprocess("""\
+__kernel void A() {
+  int a;
+}\
+"""))
 
     def test_remove_bad_preprocessed(self):
         fs.rm("tmp.db")
