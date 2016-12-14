@@ -58,9 +58,7 @@ class TestDbutil(TestCase):
                                          "ContentFiles"))
 
         self.assertEqual(
-            None,
-            dbutil.lc(tests.db_path('10-kernels'),
-                      "PreprocessedFiles"))
+            0, dbutil.lc(tests.db_path('10-kernels'), "PreprocessedFiles"))
 
         self.assertEqual(
             865,

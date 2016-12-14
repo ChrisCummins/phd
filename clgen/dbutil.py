@@ -245,7 +245,7 @@ def cc(path, table, column="Contents", condition=""):
     c = db.cursor()
     c.execute("SELECT CC({column}) FROM {table} {condition}"
               .format(column=column, table=table, condition=condition))
-    return c.fetchone()[0]
+    return c.fetchone()[0] or 0
 
 
 def lc(path, table, column="Contents", condition=""):
@@ -266,7 +266,7 @@ def lc(path, table, column="Contents", condition=""):
     c = db.cursor()
     c.execute("SELECT LC({column}) FROM {table} {condition}"
               .format(column=column, table=table, condition=condition))
-    return c.fetchone()[0]
+    return c.fetchone()[0] or 0
 
 
 def remove_preprocessed(path):
