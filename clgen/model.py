@@ -229,7 +229,7 @@ class Model(clgen.CLgenObject):
             for e in range(sess.run(self.epoch) + 1, max_epochs):
                 # decay and set learning rate
                 new_learning_rate = learning_rate * (
-                    (float(100 - decay_rate) / 100.0) ** e)
+                    (float(100 - decay_rate) / 100.0) ** (e - 1))
                 log.info("learning rate", new_learning_rate)
                 sess.run(tf.assign(self.learning_rate, new_learning_rate))
                 sess.run(tf.assign(self.epoch, e))
