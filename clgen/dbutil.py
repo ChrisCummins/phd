@@ -227,6 +227,27 @@ def num_rows_in(path, table, condition=""):
     return c.fetchone()[0]
 
 
+def cc(path, table, column="Contents", condition=""):
+    """
+    Fetch character count of contents in table.
+
+    Arguments:
+
+        path (str): Path to database.
+        table (str): Table ID.
+        condition (str, optional): Conditional.
+
+    Returns:
+
+        int: Num lines.
+    """
+    db = connect(path)
+    c = db.cursor()
+    c.execute("SELECT CC({column}) FROM {table} {condition}"
+              .format(column=column, table=table, condition=condition))
+    return c.fetchone()[0] or 0
+
+
 def lc(path, table, column="Contents", condition=""):
     """
     Fetch line count of contents in table.
@@ -245,7 +266,7 @@ def lc(path, table, column="Contents", condition=""):
     c = db.cursor()
     c.execute("SELECT LC({column}) FROM {table} {condition}"
               .format(column=column, table=table, condition=condition))
-    return c.fetchone()[0]
+    return c.fetchone()[0] or 0
 
 
 def remove_preprocessed(path):

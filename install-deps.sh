@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One-liner to install dependencies for CLgen 0.1.7.
+# One-liner to install dependencies for CLgen 0.2.0.
 #
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -9,17 +9,13 @@
 #     Copyright (c) 2016, Soumith Chintala, Ronan Collobert,
 #     Koray Kavukcuoglu, Clement Farabet All rights reserved.
 #
-torch_version=3467b980c56942451ee242937dbe76d15fcfc5ab
-torch_deps=https://raw.githubusercontent.com/ChrisCummins/distro/$torch_version/install-deps
-curl -s "$torch_deps" | bash
-
 set -e
 
 # Based on Platform:
 if [[ `uname` == 'Darwin' ]]; then
 
     brew tap homebrew/science
-    brew install git hdf5 libffi wget python python3
+    brew install git libffi wget python python3
 
 elif [[ "$(uname)" == 'Linux' ]]; then
 
@@ -46,7 +42,7 @@ elif [[ "$(uname)" == 'Linux' ]]; then
     if [[ "$DISTRO" == 'ubuntu' ]]; then
 
         sudo apt-get install -y build-essential python-dev python-virtualenv \
-            python-pip git zlib1g-dev libhdf5-dev libffi-dev zlib1g-dev \
+            python-pip git zlib1g-dev libffi-dev zlib1g-dev \
             curl wget python3-dev python3-pip python3-virtualenv
 
     fi

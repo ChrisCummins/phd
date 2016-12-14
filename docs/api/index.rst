@@ -112,13 +112,6 @@ clgen.sampler
    :members:
    :undoc-members:
 
-clgen.torch_rnn
-----------------
-
-.. automodule:: clgen.torch_rnn
-   :members:
-   :undoc-members:
-
 clgen.train
 ------------
 

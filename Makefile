@@ -38,21 +38,17 @@ PIP ?= pip
 # modules
 include make/remote.make
 include make/cuda.make
-include make/torch.make
-include make/torch-hdf5.make
 include make/cmake.make
 include make/ninja.make
 include make/llvm.make
 include make/libclc.make
-include make/torch-rnn.make
 
 data_symlinks = \
 	$(root)/clgen/data/bin/clang \
 	$(root)/clgen/data/bin/clang-format \
 	$(root)/clgen/data/bin/llvm-config \
 	$(root)/clgen/data/bin/opt \
-	$(root)/clgen/data/libclc \
-	$(root)/clgen/data/torch-rnn
+	$(root)/clgen/data/libclc
 
 data_bin = \
 	$(root)/clgen/data/bin/clgen-features \
@@ -80,12 +76,6 @@ $(root)/clgen/data/bin/clang-format: $(llvm)
 $(root)/clgen/data/bin/opt: $(llvm)
 	mkdir -p $(dir $@)
 	ln -sf $(llvm_build)/bin/opt $@
-	touch $@
-
-$(root)/clgen/data/torch-rnn: $(torch-rnn)
-	mkdir -p $(dir $@)
-	rm -f $@
-	ln -sf $(torch-rnn_dir) $@
 	touch $@
 
 $(root)/clgen/data/libclc: $(libclc)

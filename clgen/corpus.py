@@ -20,9 +20,13 @@
 Manipulating and handling training corpuses.
 """
 import re
+import codecs
+import numpy as np
 
+from collections import Counter
 from checksumdir import dirhash
 from labm8 import fs
+from six.moves import cPickle
 
 import clgen
 from clgen import dbutil
@@ -30,7 +34,6 @@ from clgen import explore
 from clgen import fetch
 from clgen import log
 from clgen import preprocess
-from clgen import torch_rnn
 from clgen.cache import Cache
 from clgen.train import train
 
@@ -62,26 +65,70 @@ def unpack_directory_if_needed(path):
     return path
 
 
-class Corpus:
+def atomize(corpus, vocab="char"):
+    """
+    Extract vocabulary of a corpus.
+
+    Arguments:
+        corpus (str): Corpus.
+        voca (str, optional): Vocabularly type.
+
+    Returns:
+        list of str: Vocabularly.
+    """
+    def get_chars(corpus):
+        counter = Counter(corpus)
+        count_pairs = sorted(counter.items(), key=lambda x: -x[1])
+        chars, _ = zip(*count_pairs)
+        return chars
+
+    def get_tokens(corpus):
+        # FIXME: Actual token stream, not just whitespace separated.
+        tokens = sorted(list(set(corpus.split())))
+        return tokens
+
+    # dispatch atomizer based on vocab type
+    atomizers = {
+        "char": get_chars,
+        "tokens": get_tokens,
+    }
+    atomizer = atomizers.get(vocab, None)
+    if atomizer is None:
+        raise clgen.UserError(
+            "Unknown vocabulary type '{}'. Supported types: {}".format(
+                vocab, ", ".join(sorted(atomizers.keys()))))
+    else:
+        return atomizer(corpus)
+
+
+class Corpus(clgen.CLgenObject):
     """
     Representation of a training corpus.
     """
-    def __init__(self, path, isgithub=False):
+    def __init__(self, path, isgithub=False, batch_size=50, seq_length=50):
         """
         Instantiate a corpus.
 
-        If this is a new corpus, a database will be created for it
-        """
-        path = fs.abspath(path)
+        If this is a new corpus, a number of files will be created, which may
+        take some time.
 
-        path = unpack_directory_if_needed(path)
+        Arguments:
+            path (str): Path to corpus.
+            isgithub (bool): Whether corpus is from GitHub.
+            batch_size (int): Batch size.
+            seq_length (int): Sequence length.
+        """
+        path = unpack_directory_if_needed(fs.abspath(path))
 
         if not fs.isdir(path):
             raise clgen.UserError("Corpus path '{}' is not a directory"
                                   .format(path))
 
         self.hash = dirhash(path, 'sha1')
+
         self.isgithub = isgithub
+        self.batch_size = batch_size
+        self.seq_length = seq_length
 
         log.debug("corpus {hash}".format(hash=self.hash))
 
@@ -98,11 +145,17 @@ class Corpus:
         if not self.cache["corpus.txt"]:
             self._create_txt()
 
-        # create LSTM training files if not exists
-        if not self.cache["corpus.json"] or not self.cache["corpus.h5"]:
-            self._lstm_preprocess()
+        # preprocess if needed
+        if self.cache["tensor.npy"] and self.cache["vocab.pkl"]:
+            self._load_preprocessed()
+        else:
+            self._preprocess()
+
+        self._create_batches()
+        self.reset_batch_pointer()
 
     def _create_kernels_db(self, path):
+        """creates and caches kernels.db"""
         log.debug("creating database")
 
         # create a database and put it in the cache
@@ -127,6 +180,7 @@ class Corpus:
             explore.explore(self.cache["kernels.db"])
 
     def _create_txt(self):
+        """creates and caches corpus.txt"""
         log.debug("creating corpus")
 
         # TODO: additional options in corpus JSON to accomodate for EOF,
@@ -135,33 +189,80 @@ class Corpus:
         train(self.cache["kernels.db"], tmppath)
         self.cache["corpus.txt"] = tmppath
 
-    def _lstm_preprocess(self):
-        log.debug("creating training set")
-        tmppaths = (fs.path(self.cache.path, "corpus.json.tmp"),
-                    fs.path(self.cache.path, "corpus.h5.tmp"))
-        torch_rnn.preprocess(self.cache["corpus.txt"], *tmppaths)
-        self.cache["corpus.json"] = tmppaths[0]
-        self.cache["corpus.h5"] = tmppaths[1]
+    def _preprocess(self):
+        """creates and caches two files: vocab.pkl and tensor.npy"""
+        log.debug("creating vocab and tensor files")
+        input_file = self.cache["corpus.txt"]
+        tmp_vocab_file = fs.path(self.cache.path, "vocab.tmp.pkl")
+        tmp_tensor_file = fs.path(self.cache.path, "tensor.tmp.npy")
 
-    @property
-    def input_json(self):
+        with codecs.open(input_file, "r", encoding="utf-8") as infile:
+            data = infile.read()
+        self.atoms = atomize(data, vocab="char")
+
+        self.vocab_size = len(self.atoms)
+        self.vocab = dict(zip(self.atoms, range(len(self.atoms))))
+        with open(tmp_vocab_file, 'wb') as f:
+            cPickle.dump(self.atoms, f)
+        # encode corpus with vocab
+        self.tensor = np.array(list(map(self.vocab.get, data)))
+        np.save(tmp_tensor_file, self.tensor)
+
+        self.cache["vocab.pkl"] = tmp_vocab_file
+        self.cache["tensor.npy"] = tmp_tensor_file
+
+    def _load_preprocessed(self):
+        with open(self.cache["vocab.pkl"], 'rb') as infile:
+            self.atoms = cPickle.load(infile)
+        self.vocab_size = len(self.atoms)
+        self.vocab = dict(zip(self.atoms, range(len(self.atoms))))
+        self.tensor = np.load(self.cache["tensor.npy"])
+
+    def _create_batches(self):
+        log.debug("creating batches")
+        self.num_batches = int(
+            self.tensor.size / (self.batch_size * self.seq_length))
+
+        if self.num_batches == 0:
+            raise clgen.UserError(
+                "Not enough data. Make seq_length and batch_size smaller.")
+
+        self.tensor = self.tensor[:self.num_batches * self.batch_size * self.seq_length]
+        xdata = self.tensor
+        ydata = np.copy(self.tensor)
+        ydata[:-1] = xdata[1:]
+        ydata[-1] = xdata[0]
+        self.x_batches = np.split(xdata.reshape(self.batch_size, -1),
+                                  self.num_batches, 1)
+        self.y_batches = np.split(ydata.reshape(self.batch_size, -1),
+                                  self.num_batches, 1)
+
+    def reset_batch_pointer(self):
         """
-        Path to input JSON.
+        Resets batch pointer to first batch.
+        """
+        self.pointer = 0
+
+    def next_batch(self):
+        """
+        Fetch next batch indices.
 
         Returns:
-            str: Path.
+            (np.array, np.array): X, Y batch tuple.
         """
-        return self.cache['corpus.json']
+        x = self.x_batches[self.pointer]
+        y = self.y_batches[self.pointer]
+        self.pointer += 1
+        return x, y
 
-    @property
-    def input_h5(self):
+    def set_batch_pointer(self, pointer):
         """
-        Path to input h5.
+        Set batch pointer.
 
-        Returns:
-            str: Path.
+        Arguments:
+            pointer (int): New batch pointer.
         """
-        return self.cache['corpus.h5']
+        self.pointer = pointer
 
     def __repr__(self):
         n = dbutil.num_good_kernels(self.cache['kernels.db'])
@@ -183,6 +284,10 @@ class Corpus:
         path = corpus_json.get("path", None)
         if path is None:
             raise clgen.UserError("no path found for corpus")
-        isgithub = corpus_json.get("github", False)
 
-        return Corpus(path, isgithub=isgithub)
+        isgithub = corpus_json.get("github", False)
+        batch_size = corpus_json.get("batch_size", 50)
+        seq_length = corpus_json.get("seq_length", 50)
+
+        return Corpus(path=path, isgithub=isgithub, batch_size=batch_size,
+                      seq_length=seq_length)

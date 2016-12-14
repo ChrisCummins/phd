@@ -57,6 +57,7 @@ class TestModel(TestCase):
         with self.assertRaises(model.DistError):
             m.meta
 
+    @skip("FIXME: TensorFlow")
     def test_meta(self):
         m = get_test_model()
         m.train()
@@ -82,6 +83,7 @@ class TestModel(TestCase):
         # train opts
         self.assertEqual(meta["train_opts"], m.train_opts)
 
+    @skip("FIXME: TensorFlow")
     def test_to_dist(self):
         m = get_test_model()
         m.train()
@@ -94,6 +96,7 @@ class TestModel(TestCase):
 
 
 class TestDistModel(TestCase):
+    @skip("FIXME: TensorFlow")
     def test_import(self):
         m = get_test_model()
         m.train()
@@ -108,6 +111,7 @@ class TestDistModel(TestCase):
         self.assertEqual(m.train_opts, train_opts)
         fs.rm(tmpdir)
 
+    @skip("FIXME: TensorFlow")
     def test_import_bad_path(self):
         with self.assertRaises(clgen.File404):
             model.from_tar("/bad/path")

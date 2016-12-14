@@ -21,6 +21,8 @@ Sample a CLgen model.
 """
 from __future__ import print_function
 
+import sys
+
 from glob import glob, iglob
 from labm8 import fs
 
@@ -30,7 +32,6 @@ from clgen import dbutil
 from clgen import fetch
 from clgen import log
 from clgen import preprocess
-from clgen import torch_rnn
 from clgen.cache import Cache
 from clgen.explore import explore
 from clgen.model import Model
@@ -102,7 +103,7 @@ class Sampler(clgen.CLgenObject):
         sampler_model_hash = clgen.checksum_str(self.hash + model.hash)
         return Cache(fs.path("sampler", sampler_model_hash))
 
-    def sample_iteration(self, model):
+    def sample_iteration(self, model, quiet=False):
         """
         Run one sample iteration.
 
@@ -113,39 +114,35 @@ class Sampler(clgen.CLgenObject):
 
         cache = self.cache(model)
 
-        # create samples database if it doesn't exist
-        if not cache["kernels.db"]:
-            dbutil.create_db(fs.path(cache.path, "kernels.tmp.db"))
-            cache["kernels.db"] = fs.path(
-                cache.path, "kernels.tmp.db")
-
-        if self.kernel_opts.get("args", None) is not None:
+        if self.kernel_opts.get("args", None):
             start_text = serialize_argspec(self.kernel_opts["args"])
         else:
             start_text = "__kernel void A("
 
-        # sample options
-        opts = {
-            "opencl": 1,
-            "stream": 1,
-            "n": self.batch_size,
-            "checkpoint": model.most_recent_checkpoint,
-            "temperature": self.kernel_opts.get("temperature", .75),
-            "length": self.kernel_opts.get("max_length", 10000),
-            "start_text": start_text,
-        }
-
         tmppath = fs.path(cache.path, "sample.tmp.cl")
-        torch_rnn.sample(tmppath, **opts)
+
+        with open(tmppath, "w") as outfile:
+            opts = {
+                "output": outfile,
+                "num_samples": self.batch_size,
+                "temperature": self.kernel_opts.get("temperature", .75),
+                "max_length": self.kernel_opts.get("max_length", 10000),
+                "seed_text": start_text,
+                "quiet": quiet
+            }
+            model.sample(**opts)
+
+        sys.stdout.flush()
+        sys.stderr.flush()
         fetch.process_sample_file(cache["kernels.db"], tmppath,
-                                  max_kernel_len=opts["length"], quiet=True)
+                                  max_kernel_len=opts["max_length"], quiet=True)
 
         if self.static_checker:
             # TODO: Parse dynamic checker requirement
             preprocess.preprocess_db(cache["kernels.db"])
         fs.rm(tmppath)
 
-    def sample(self, model):
+    def sample(self, model, quiet=False):
         """
         Sample CLgen model.
 
@@ -162,21 +159,21 @@ class Sampler(clgen.CLgenObject):
 
         batch_i = 0
         while True:
-            batch_i += 1
-            print("beginning batch", batch_i, "...")
-
             # stop if we have enough kernels
-            has_max_kernels = self.max_kernels >= 0
+            has_max_kernels = self.max_kernels > 0
             num_good_kernels = dbutil.num_good_kernels(cache["kernels.db"])
             if has_max_kernels and num_good_kernels >= self.max_kernels:
                 return
 
             # stop if we've done enough batches
             has_max_batches = self.max_batches > 0
-            if has_max_batches and batch_i > self.max_batches:
+            if has_max_batches and batch_i >= self.max_batches:
                 return
 
-            self.sample_iteration(model)
+            batch_i += 1
+            print("sample batch", batch_i, "...")
+
+            self.sample_iteration(model, quiet=quiet)
 
             print()
             explore(self.cache(model)["kernels.db"])
@@ -194,11 +191,9 @@ def from_json(sampler_json):
     Returns:
         Sampler: Instantiate sampler.
     """
-    sampler_opts = sampler_json.get("sampler", None)
-    if not sampler_opts:
-        raise clgen.UserError("no sampler section in sampler specification")
+    sampler_opts = sampler_json.get("sampler", {})
 
-    kernel_opts = sampler_json.get("kernels", None)
+    kernel_opts = sampler_json.get("kernels", {})
     if not kernel_opts:
         raise clgen.UserError("no kernels section in sampler specification")
 

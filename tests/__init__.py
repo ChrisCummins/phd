@@ -21,11 +21,15 @@ from __future__ import absolute_import, print_function, with_statement
 import os
 import sqlite3
 import tarfile
+import tensorflow as tf
 
 from labm8 import fs
 from unittest import TestCase
 
 import clgen
+
+# Quiet tensorflow. See: http://stackoverflow.com/a/38645250/1318051
+tf.logging.set_verbosity(tf.logging.WARN)
 
 
 class TestData404(Exception):

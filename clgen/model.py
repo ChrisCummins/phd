@@ -22,21 +22,27 @@ CLgen model.
 from __future__ import print_function
 
 import json
+import numpy as np
 import os
 import re
+import sys
 import tarfile
+import tensorflow as tf
+import time
 
 from copy import copy
 from glob import glob, iglob
 from labm8 import fs
 from labm8 import system
-from labm8 import time
+from labm8 import time as labtime
 from six import string_types
+from six.moves import cPickle
 from tempfile import mktemp
+from tensorflow.python.ops import rnn_cell
+from tensorflow.python.ops import seq2seq
 
 import clgen
 from clgen import log
-from clgen import torch_rnn
 from clgen.cache import Cache
 from clgen.corpus import Corpus
 
@@ -91,6 +97,22 @@ class Model(clgen.CLgenObject):
         self.hash = self._hash(train_opts, corpus)
         self.cache = Cache(fs.path("model", self.hash))
 
+        # Parse model options:
+        # TODO: Change model format so that model type, rnn size, and num layers
+        # are in the top level specification, not in "train_opts" dict.
+        self.model_type = self.train_opts.get("model_type", "lstm")
+        self.rnn_size = self.train_opts.get("rnn_size", 128)
+        self.num_layers = self.train_opts.get("num_layers", 2)
+        self.grad_clip = self.train_opts.get("grad_clip", 5)
+
+        self.cell_fn = {
+            "lstm": rnn_cell.BasicLSTMCell,
+            "gru": rnn_cell.GRUCell,
+            "rnn": rnn_cell.BasicRNNCell
+        }.get(self.model_type, None)
+        if self.cell_fn is None:
+            raise clgen.UserError("Unrecognized model type")
+
     def _hash(self, train_opts, corpus):
         checksum_data = sorted(
             [str(x) for x in train_opts.values()] +
@@ -98,34 +120,261 @@ class Model(clgen.CLgenObject):
         string = "".join(checksum_data)
         return clgen.checksum_str(string)
 
+    def _init_tensorflow(self, infer=False):
+        try:
+            if self.tensorflow_state == infer:
+                return
+        except AttributeError:
+            pass
+
+        tf.reset_default_graph()
+
+        # Corpus info:
+        batch_size = 1 if infer else self.corpus.batch_size
+        seq_length = 1 if infer else self.corpus.seq_length
+        vocab_size = self.corpus.vocab_size
+
+        tmp_chars_vocab_path = fs.path(self.cache.path, "chars_vocab.tmp.pkl")
+        with open(tmp_chars_vocab_path, 'wb') as outfile:
+            cPickle.dump((self.corpus.atoms, self.corpus.vocab), outfile)
+        self.cache["chars_vocab.pkl"] = tmp_chars_vocab_path
+
+        cell = self.cell_fn(self.rnn_size, state_is_tuple=True)
+        self.cell = cell = rnn_cell.MultiRNNCell([cell] * self.num_layers,
+                                                 state_is_tuple=True)
+        self.input_data = tf.placeholder(tf.int32, [batch_size, seq_length])
+        self.targets = tf.placeholder(tf.int32, [batch_size, seq_length])
+        self.initial_state = self.cell.zero_state(batch_size, tf.float32)
+
+        scope_name = 'rnnlm'
+        with tf.variable_scope(scope_name):
+            softmax_w = tf.get_variable("softmax_w",
+                                        [self.rnn_size, vocab_size])
+            softmax_b = tf.get_variable("softmax_b", [vocab_size])
+            # TODO: Determine device
+            with tf.device("/cpu:0"):
+                embedding = tf.get_variable("embedding",
+                                            [vocab_size, self.rnn_size])
+                inputs = tf.split(
+                    1, seq_length, tf.nn.embedding_lookup(
+                        embedding, self.input_data))
+                inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
+
+        def loop(prev, _):
+            prev = tf.matmul(prev, softmax_w) + softmax_b
+            prev_symbol = tf.stop_gradient(tf.argmax(prev, 1))
+            return tf.nn.embedding_lookup(embedding, prev_symbol)
+
+        outputs, last_state = seq2seq.rnn_decoder(
+            inputs, self.initial_state, cell,
+            loop_function=loop if infer else None, scope=scope_name)
+        output = tf.reshape(tf.concat(1, outputs), [-1, self.rnn_size])
+        self.logits = tf.matmul(output, softmax_w) + softmax_b
+        self.probs = tf.nn.softmax(self.logits)
+        loss = seq2seq.sequence_loss_by_example(
+            [self.logits],
+            [tf.reshape(self.targets, [-1])],
+            [tf.ones([batch_size * seq_length])],
+            vocab_size)
+        self.cost = tf.reduce_sum(loss) / batch_size / seq_length
+        self.final_state = last_state
+        self.learning_rate = tf.Variable(0.0, trainable=False)
+        self.epoch = tf.Variable(0, trainable=False)
+        tvars = tf.trainable_variables()
+        grads, _ = tf.clip_by_global_norm(
+            tf.gradients(self.cost, tvars), self.grad_clip)
+        optimizer = tf.train.AdamOptimizer(self.learning_rate)
+        self.train_op = optimizer.apply_gradients(zip(grads, tvars))
+
+        # set model status
+        self.tensorflow_state = infer
+
+
     def train(self):
         """
         Train model.
-
-        Invokes torch-rnn to train the model up to the specified maximum number
-        of epochs.
         """
-        # assemble training options
-        opts = copy(self.train_opts)
+        self._init_tensorflow(infer=False)
 
-        opts["reset_iterations"] = 0
-        opts["input_json"] = self.corpus.input_json
-        opts["input_h5"] = self.corpus.input_h5
-        opts["checkpoint_name"] = fs.path(self.cache.path, "model")
-
-        # set default arguments
-        if opts.get("max_epochs", None) is None:
-            opts["max_epochs"] = 50
-        if opts.get("print_every", None) is None:
-            opts["print_every"] = 10
-        if opts.get("checkpoint_every", None) is None:
-            opts["checkpoint_every"] = 100
+        max_epochs = self.train_opts.get("max_epochs", 50)
+        learning_rate = self.train_opts.get("learning_rate", 2e-3)
+        decay_rate = self.train_opts.get("lr_decary_rate", 5)
+        checkpoint_path = fs.path(self.cache.path, "model.ckpt")
 
         # resume from prior checkpoint
         if self.most_recent_checkpoint:
-            opts["init_from"] = self.most_recent_checkpoint
+            # open saved vocab/dict and check if vocabs/dicts are compatible
+            assert(fs.isfile(self.cache["chars_vocab.pkl"]))
+            # FIXME:
+            # with open(self.cache["chars_vocab.pkl"]) as infile:
+            #     saved_chars, saved_vocab = cPickle.load(infile)
+            # assert(saved_chars == self.corpus.atoms)
+            # assert(saved_vocab == self.corpus.vocab)
 
-        torch_rnn.train(**opts)
+            # check if all necessary files exist
+            assert(fs.isdir(self.most_recent_checkpoint))
+            ckpt = tf.train.get_checkpoint_state(self.most_recent_checkpoint)
+            assert(ckpt)
+            assert(ckpt.model_checkpoint_path)
+            log.debug("loaded checkpoint {}".format(ckpt.model_checkpoint_path))
+
+        with tf.Session() as sess:
+            tf.global_variables_initializer().run()
+            saver = tf.train.Saver(tf.global_variables())
+
+            # restore model from checkpoint
+            if self.most_recent_checkpoint:
+                saver.restore(sess, ckpt.model_checkpoint_path)
+
+            for e in range(sess.run(self.epoch) + 1, max_epochs + 1):
+                # decay and set learning rate
+                new_learning_rate = learning_rate * (
+                    (float(100 - decay_rate) / 100.0) ** (e - 1))
+                log.info("learning rate", new_learning_rate)
+                sess.run(tf.assign(self.learning_rate, new_learning_rate))
+                sess.run(tf.assign(self.epoch, e))
+
+                self.corpus.reset_batch_pointer()
+                state = sess.run(self.initial_state)
+                for b in range(self.corpus.num_batches):
+                    time_start = time.time()
+                    x, y = self.corpus.next_batch()
+                    feed = {self.input_data: x, self.targets: y}
+                    for i, (c, h) in enumerate(self.initial_state):
+                        feed[c] = state[i].c
+                        feed[h] = state[i].h
+                    train_loss, state, _ = sess.run(
+                        [self.cost, self.final_state, self.train_op], feed)
+                    time_end = time.time()
+                    batch_num = (e - 1) * self.corpus.num_batches + b
+                    max_batch = max_epochs * self.corpus.num_batches
+
+                    progress = (batch_num + 1) / max_batch
+                    elapsed = time_end - time_start
+
+                    log.info("{:2.1f} %   batch = {} / {}, epoch = {} / {}, "
+                             "train_loss = {:.3f}, time/batch = {:.3f}s".format(
+                                progress * 100, batch_num + 1, max_batch, e,
+                                max_epochs, train_loss, elapsed))
+                    # save_checkpoint = batch_num % checkpoint_every == 0
+                    # save_checkpoint |= (e == max_epochs - 1
+                    #                     and b == self.corpus.num_batches - 1)
+                    # if save_checkpoint:
+                saver.save(sess, checkpoint_path, global_step=batch_num)
+                log.info("model saved to {}".format(checkpoint_path))
+
+    def sample(self, seed_text="__kernel void", output=sys.stdout, num_samples=1,
+               temperature=.75, max_length=10000, seed=None, quiet=False):
+        """
+        Sample model.
+
+        Arguments:
+            seed_text (str, optional): Sample start text
+            output (file handler, optional): Where to print output to
+            num_samples (int, optional): Number of samples to generated
+            temperature (float, optional): Sampling temperature
+            max_length (int, optional): Maximum sample length
+            seed (int, optional): If set, set random number seed for
+                reproducible samples. If None, set no seed.
+            quiet (bool, optional): If False, stream output to stdout
+        """
+        self._init_tensorflow(infer=True)
+
+        if seed is not None:
+            pass  # TODO: Set numpy RNG seed.
+
+        with tf.Session() as sess:
+            tf.global_variables_initializer().run()
+            saver = tf.train.Saver(tf.global_variables())
+            ckpt = tf.train.get_checkpoint_state(self.cache.path)
+
+            assert(ckpt)
+            assert(ckpt.model_checkpoint_path)
+
+            with open(self.cache["chars_vocab.pkl"], "rb") as infile:
+                chars, vocab = cPickle.load(infile)
+
+            saver.restore(sess, ckpt.model_checkpoint_path)
+
+            def weighted_pick(weights):
+                t = np.cumsum(weights)
+                s = np.sum(weights)
+                return int(np.searchsorted(t, np.random.rand(1) * s))
+
+            start_depth = 0
+            start_started = False
+            for char in seed_text:
+                if char == '{':
+                    start_depth += 1
+                    start_started = True
+                elif char == '}':
+                    start_depth -= 1
+
+            for i in range(1, num_samples + 1):
+                state = sess.run(self.cell.zero_state(1, tf.float32))
+                depth = start_depth  # function block depth
+                started = start_started
+
+                for char in seed_text[:-1]:
+                    x = np.zeros((1, 1))
+                    x[0, 0] = vocab[char]
+                    feed = {self.input_data: x, self.initial_state: state}
+                    [state] = sess.run([self.final_state], feed)
+
+                sampling_type = 1  # default
+                output.write("\n\n/* SAMPLE {} */\n\n".format(i))
+                output.write(seed_text)
+                if quiet:
+                    print(" - sample", i)
+                else:
+                    sys.stdout.write("\n\n/* SAMPLE {} */\n\n".format(i))
+                    sys.stdout.write(seed_text)
+                    sys.stdout.flush()
+
+                ret = seed_text
+                char = seed_text[-1]
+
+                for _ in range(max_length):
+                    x = np.zeros((1, 1))
+                    x[0, 0] = vocab[char]
+                    feed = {self.input_data: x, self.initial_state: state}
+                    [probs, state] = sess.run(
+                        [self.probs, self.final_state], feed)
+                    p = probs[0]
+
+                    if sampling_type == 0:
+                        # use max at each step
+                        sample = np.argmax(p)
+                    elif sampling_type == 2:
+                        # sample on space
+                        if char == ' ':
+                            sample = weighted_pick(p)
+                        else:
+                            sample = np.argmax(p)
+                    else:
+                        # sample on each step
+                        sample = weighted_pick(p)
+
+                    pred = chars[sample]
+                    ret += pred
+                    char = pred
+
+                    output.write(pred)
+                    if not quiet:
+                        sys.stdout.write(pred)
+
+                    # update function block depth
+                    if char == '{':
+                        started = True
+                        depth += 1
+                    elif char == '}':
+                        depth -= 1
+                    # stop sampling if depth = 0
+                    if started and depth == 0:
+                        break
+
+            if not quiet:
+                sys.stdout.write('\n\n')
 
     @property
     def meta(self):
@@ -160,7 +409,7 @@ class Model(clgen.CLgenObject):
         return {
             "version": clgen.version(),
             "author": get_default_author(),
-            "date packaged": time.nowstr(),
+            "date packaged": labtime.nowstr(),
             "train_opts": self.train_opts,
             "contents": contents
         }
@@ -228,7 +477,8 @@ class Model(clgen.CLgenObject):
 
             str[]: List of paths to checkpoint files.
         """
-        return glob(fs.path(self.cache.path, '*.t7'))
+        # TODO: Fetch the list from tf
+        return [self.most_recent_checkpoint]
 
     @property
     def most_recent_checkpoint(self):
@@ -239,15 +489,9 @@ class Model(clgen.CLgenObject):
 
             str or None: Path to checkpoint, or None if no checkpoints.
         """
-        # if there's nothing trained, then max() will raise ValueError because
-        # of an empty sequence
-        def get_checkpoint_iterations(path):
-            return int(re.search("model_([0-9]+)\.t7", path).group(1))
-
-        try:
-            return max(iglob(fs.path(self.cache.path, '*.t7')),
-                       key=get_checkpoint_iterations)
-        except ValueError:
+        if self.cache["checkpoint"]:
+            return self.cache.path
+        else:
             return None
 
 
@@ -271,10 +515,10 @@ class DistModel(Model):
 
         # unpack archive if necessary
         unpacked = False
-        if not self.cache['model.json'] or not self.cache['model.t7']:
-            unpacked = True
+        if not self.cache['model.json']:
             log.info("unpacking", tarpath)
             clgen.unpack_archive(tarpath, dir=self.cache.path)
+            unpacked = True
             if not self.cache['meta.json']:
                 raise DistError("meta.json not in '{}'".format(tarpath))
 
@@ -311,28 +555,6 @@ class DistModel(Model):
         """
         pass
 
-    @property
-    def checkpoints(self):
-        """
-        Training checkpoints.
-
-        Returns:
-
-            str[]: List of paths to checkpoint files.
-        """
-        return [self.most_recent_checkpoint()]
-
-    @property
-    def most_recent_checkpoint(self):
-        """
-        Get path to pre-trained t7 checkpoint.
-
-        Returns:
-
-            str or None: Path to checkpoint.
-        """
-        return self.cache['model.t7']
-
     def validate(self):
         """
         Validate contents of a distfile.
@@ -353,8 +575,8 @@ class DistModel(Model):
                 raise DistError("Bad distfile")
             if not self.cache['model.json']:
                 raise DistError("model.json not in disfile")
-            if not self.cache['model.t7']:
-                raise DistError("model.t7 not in disfile")
+            if not self.cache['checkpoint']:
+                raise DistError("checkpoint not in disfile")
             return True
 
         if version != clgen.version():
@@ -390,7 +612,7 @@ def from_json(model_json):
     corpus = Corpus.from_json(model_json["corpus"])
     train_opts = model_json["train_opts"]
 
-    # validate train_opts flags against those accpted by torch-rnn/train.lua
+    # validate train_opts flags
     valid_opts = [
         "batch_size", "seq_length", "model_type", "rnn_size", "num_layers",
         "dropout", "batchnorm", "learning_rate", "max_epochs", "grad_clip",

@@ -32,6 +32,7 @@ with open('./.config.json') as infile:
 
 scripts = [
     'bin/clgen',
+    'bin/clgen-atomize',
     'bin/clgen-create-db',
     'bin/clgen-dist',
     'bin/clgen-explore',
@@ -75,7 +76,7 @@ def all_module_data_files(module, datadir="data"):
 
 setup(
     name='CLgen',
-    version='0.1.7',
+    version='0.2.0',
     description='',
     url='https://github.com/ChrisCummins/clgen',
     author='Chris Cummins',

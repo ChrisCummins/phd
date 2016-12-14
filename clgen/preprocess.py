@@ -108,6 +108,13 @@ class InstructionCountException(UglyCodeException):
     pass
 
 
+class NoCodeException(UglyCodeException):
+    """
+    Sample contains no code.
+    """
+    pass
+
+
 class RewriterException(UglyCodeException):
     """
     Program rewriter error.
@@ -508,6 +515,22 @@ def verify_bytecode_features(bc_features, id='anon'):
             .format(num_instructions, min_num_instructions))
 
 
+def ensure_has_code(src):
+    """
+    Check that file contains actual executable code.
+
+    Arguments:
+        src (str): OpenCL source, must be preprocessed.
+
+    Raises:
+        NoCodeException: If kernel is empty.
+    """
+    if len(src.split('\n')) < 3:
+        raise NoCodeException
+
+    return src
+
+
 def sanitize_prototype(src):
     """
     Sanitize OpenCL prototype.
@@ -567,6 +590,7 @@ def preprocess(src, id='anon', use_shim=True):
     src = compiler_preprocess_cl(src, id, use_shim)
     src = rewrite_cl(src, id, use_shim)
     src = clangformat_ocl(src, id).strip()
+    src = ensure_has_code(src)
     src = sanitize_prototype(src)
 
     return src

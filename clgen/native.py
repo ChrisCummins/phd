@@ -27,9 +27,6 @@ Variables:
     * `LIBCLC` (str): Path to libclc directory.
     * `OPT` (str): Path to LLVM opt binary.
     * `SHIMFILE` (str): Path to shim headerfile.
-    * `TH` (str): Path to torch th binary.
-    * `TORCH_RNN_PREPROCESS` (str): Path to torch-rnn's preprocess script.
-    * `TORCH_RNN_DIR` (str): Path to torch-rnn directory.
 """
 from labm8 import fs
 
@@ -43,6 +40,3 @@ CLGEN_REWRITER = clgen.data_path(fs.path("bin", "clgen-rewriter"))
 LIBCLC = clgen.data_path("libclc")
 OPT = clgen.data_path(fs.path("bin", "opt"))
 SHIMFILE = clgen.data_path(fs.path("include", "opencl-shim.h"))
-TH = clgen.data_path(fs.path("torch", "bin", "th"))
-TORCH_RNN_PREPROCESS = clgen.data_path("torch-rnn", "scripts", "preprocess.py")
-TORCH_RNN_DIR = clgen.data_path("torch-rnn")
