@@ -114,7 +114,7 @@ class Sampler(clgen.CLgenObject):
 
         cache = self.cache(model)
 
-        if self.kernel_opts.get("args", None) is not None:
+        if self.kernel_opts.get("args", None):
             start_text = serialize_argspec(self.kernel_opts["args"])
         else:
             start_text = "__kernel void A("
