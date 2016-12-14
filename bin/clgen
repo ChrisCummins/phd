@@ -41,9 +41,21 @@ def main():
                         help="path to model dist or specification file")
     parser.add_argument("sampler", metavar="<sampler>",
                         help="path to sampler specification file")
+    parser.add_argument("--corpus-dir", action="store_true",
+                        help="print path to corpus cache")
+    parser.add_argument("--model-dir", action="store_true",
+                        help="print path to model cache")
+    parser.add_argument("--sampler-dir", action="store_true",
+                        help="print path to sampler cache")
     args = parser.parse_args()
 
-    cli.main(clgen.main, args.model, args.sampler)
+    opts = {
+        "print_corpus_dir": args.corpus_dir,
+        "print_model_dir": args.model_dir,
+        "print_sampler_dir": args.sampler_dir,
+    }
+
+    cli.main(clgen.main, args.model, args.sampler, **opts)
 
 
 if __name__ == "__main__":

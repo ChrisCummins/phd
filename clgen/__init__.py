@@ -25,6 +25,7 @@ import json
 import os
 import re
 import six
+import sys
 import tarfile
 
 from copy import deepcopy
@@ -374,16 +375,21 @@ def write_file(path, contents):
         outfile.write(contents)
 
 
-def main(model, sampler):
+def main(model, sampler, print_corpus_dir=False, print_model_dir=False,
+         print_sampler_dir=False):
     """
     Main entry point for clgen.
 
     Arguments:
         model (str): Path to model.
         sample (str): Path to sampler.
+        print_corpus_dir (bool, optional): If True, print cache path and exit.
+        print_model_dir (bool, optional): If True, print cache path and exit.
+        print_sampler_dir (bool, optional): If True, print cache path and exit.
     """
     import clgen.model
     import clgen.sampler
+    from clgen import log
 
     if model.endswith(".tar.bz2"):
         model = clgen.model.from_tar(model)
@@ -393,6 +399,17 @@ def main(model, sampler):
 
     sampler_json = load_json_file(sampler)
     sampler = clgen.sampler.from_json(sampler_json)
+
+    # print cache paths
+    if print_corpus_dir:
+        log.info(model.corpus.cache.path)
+        sys.exit(0)
+    elif print_model_dir:
+        log.info(model.cache.path)
+        sys.exit(0)
+    elif print_sampler_dir:
+        log.info(sampler.cache(model).path)
+        sys.exit(0)
 
     model.train()
     sampler.sample(model)
