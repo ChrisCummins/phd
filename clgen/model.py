@@ -191,7 +191,7 @@ class Model(clgen.CLgenObject):
         self.tensorflow_state = infer
 
 
-    def train(self):
+    def train(self, quiet=False):
         """
         Train model.
         """
@@ -253,10 +253,11 @@ class Model(clgen.CLgenObject):
                     progress = (batch_num + 1) / max_batch
                     elapsed = time_end - time_start
 
-                    log.info("{:2.1f} %   batch = {} / {}, epoch = {} / {}, "
-                             "train_loss = {:.3f}, time/batch = {:.3f}s".format(
-                                progress * 100, batch_num + 1, max_batch, e,
-                                max_epochs, train_loss, elapsed))
+                    if not quiet:
+                        log.info("{:2.1f} %   batch = {} / {}, epoch = {} / {},"
+                                 " train_loss = {:.3f}, time/batch = {:.3f}s"
+                                 .format(progress * 100, batch_num + 1,
+                                 max_batch, e, max_epochs, train_loss, elapsed))
                     # save_checkpoint = batch_num % checkpoint_every == 0
                     # save_checkpoint |= (e == max_epochs - 1
                     #                     and b == self.corpus.num_batches - 1)
