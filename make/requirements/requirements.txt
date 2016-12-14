@@ -11,5 +11,5 @@ requests==2.11.1
 PyGithub==1.29
 scipy>=0.16.1
 six==1.10.0
-tensorflow==0.12.0rc0
+tensorflow==0.12.*
 labm8==0.0.11
