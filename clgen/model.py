@@ -134,6 +134,7 @@ class Model(clgen.CLgenObject):
         seq_length = 1 if infer else self.corpus.seq_length
         vocab_size = self.corpus.vocab_size
 
+        fs.mkdir(self.cache.path)
         tmp_chars_vocab_path = fs.path(self.cache.path, "chars_vocab.tmp.pkl")
         with open(tmp_chars_vocab_path, 'wb') as outfile:
             cPickle.dump((self.corpus.atoms, self.corpus.vocab), outfile)
