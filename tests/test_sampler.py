@@ -47,7 +47,6 @@ def get_test_model():
 
 
 class TestSampler(TestCase):
-    @skip("FIXME: TensorFlow")
     def test_sample(self):
         m = get_test_model()
         m.train()
