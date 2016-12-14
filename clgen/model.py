@@ -136,7 +136,7 @@ class Model(clgen.CLgenObject):
 
         tmp_chars_vocab_path = fs.path(self.cache.path, "chars_vocab.tmp.pkl")
         with open(tmp_chars_vocab_path, 'wb') as outfile:
-            cPickle.dump((self.corpus.chars, self.corpus.vocab), outfile)
+            cPickle.dump((self.corpus.atoms, self.corpus.vocab), outfile)
         self.cache["chars_vocab.pkl"] = tmp_chars_vocab_path
 
         cell = self.cell_fn(self.rnn_size, state_is_tuple=True)
@@ -208,7 +208,7 @@ class Model(clgen.CLgenObject):
             # FIXME:
             # with open(self.cache["chars_vocab.pkl"]) as infile:
             #     saved_chars, saved_vocab = cPickle.load(infile)
-            # assert(saved_chars == self.corpus.chars)
+            # assert(saved_chars == self.corpus.atoms)
             # assert(saved_vocab == self.corpus.vocab)
 
             # check if all necessary files exist

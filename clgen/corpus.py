@@ -65,6 +65,42 @@ def unpack_directory_if_needed(path):
     return path
 
 
+def atomize(corpus, vocab="char"):
+    """
+    Extract vocabulary of a corpus.
+
+    Arguments:
+        corpus (str): Corpus.
+        voca (str, optional): Vocabularly type.
+
+    Returns:
+        list of str: Vocabularly.
+    """
+    def get_chars(corpus):
+        counter = Counter(corpus)
+        count_pairs = sorted(counter.items(), key=lambda x: -x[1])
+        chars, _ = zip(*count_pairs)
+        return chars
+
+    def get_tokens(corpus):
+        # FIXME: Actual token stream, not just whitespace separated.
+        tokens = sorted(list(set(corpus.split())))
+        return tokens
+
+    # dispatch atomizer based on vocab type
+    atomizers = {
+        "char": get_chars,
+        "tokens": get_tokens,
+    }
+    atomizer = atomizers.get(vocab, None)
+    if atomizer is None:
+        raise clgen.UserError(
+            "Unknown vocabulary type '{}'. Supported types: {}".format(
+                vocab, ", ".join(sorted(atomizers.keys()))))
+    else:
+        return atomizer(corpus)
+
+
 class Corpus(clgen.CLgenObject):
     """
     Representation of a training corpus.
@@ -162,13 +198,13 @@ class Corpus(clgen.CLgenObject):
 
         with codecs.open(input_file, "r", encoding="utf-8") as infile:
             data = infile.read()
-        counter = Counter(data)
-        count_pairs = sorted(counter.items(), key=lambda x: -x[1])
-        self.chars, _ = zip(*count_pairs)
-        self.vocab_size = len(self.chars)
-        self.vocab = dict(zip(self.chars, range(len(self.chars))))
+        self.atoms = atomize(data, vocab="char")
+
+        self.vocab_size = len(self.atoms)
+        self.vocab = dict(zip(self.atoms, range(len(self.atoms))))
         with open(tmp_vocab_file, 'wb') as f:
-            cPickle.dump(self.chars, f)
+            cPickle.dump(self.atoms, f)
+        # encode tensor from vocab
         self.tensor = np.array(list(map(self.vocab.get, data)))
         np.save(tmp_tensor_file, self.tensor)
 
@@ -177,9 +213,9 @@ class Corpus(clgen.CLgenObject):
 
     def _load_preprocessed(self):
         with open(self.cache["vocab.pkl"], 'rb') as infile:
-            self.chars = cPickle.load(infile)
-        self.vocab_size = len(self.chars)
-        self.vocab = dict(zip(self.chars, range(len(self.chars))))
+            self.atoms = cPickle.load(infile)
+        self.vocab_size = len(self.atoms)
+        self.vocab = dict(zip(self.atoms, range(len(self.atoms))))
         self.tensor = np.load(self.cache["tensor.npy"])
 
     def _create_batches(self):
