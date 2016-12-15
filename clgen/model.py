@@ -42,6 +42,7 @@ from tensorflow.python.ops import rnn_cell
 from tensorflow.python.ops import seq2seq
 
 import clgen
+from clgen import cache
 from clgen import log
 from clgen.cache import Cache
 from clgen.corpus import Corpus
@@ -387,26 +388,19 @@ class Model(clgen.CLgenObject):
 
         Returns:
             dict: Metadata.
-
-        Raises:
-            DistError: If model has not been trained.
         """
-        dist_t7 = self.most_recent_checkpoint
+        # checksum corpus and model cache files. Paths are relative to cache
+        # root.
+        cache_root_re = r'^' + cache.ROOT + '/'
+        corpus_files = dict(
+            (re.sub(cache_root_re, "", x), clgen.checksum_file(x))
+            for x in fs.ls(self.corpus.cache.path, abspaths=True))
+        model_files = dict(
+            (re.sub(cache_root_re, "", x), clgen.checksum_file(x))
+            for x in fs.ls(self.cache.path, abspaths=True))
 
-        if dist_t7 is None:
-            raise DistError("model is untrained")
-
-        dist_json = re.sub(r'.t7$', '.json', dist_t7)
-
-        if not fs.exists(dist_json):  # sanity check
-            raise clgen.InternalError(
-                "Checkpoint {t7} does not have corresponding json file {json}"
-                .format(t7=dist_t7, json=dist_json))
-
-        contents = {
-            "model.t7": clgen.checksum_file(dist_t7),
-            "model.json": clgen.checksum_file(dist_json)
-        }
+        contents = corpus_files.copy()
+        contents.update(model_files)
 
         return {
             "version": clgen.version(),
@@ -444,13 +438,14 @@ class Model(clgen.CLgenObject):
             clgen.write_file(metapath, json.dumps(meta))
             log.debug("metafile:", metapath)
 
-            dist_t7 = self.most_recent_checkpoint
-            dist_json = re.sub(r'.t7$', '.json', dist_t7)
-
             # create tarball
             tar.add(metapath, arcname="meta.json")
-            tar.add(dist_t7, arcname="model.t7")
-            tar.add(dist_json, arcname="model.json")
+
+            # pack contents:
+            for path in meta["contents"]:
+                abspath = fs.path(cache.ROOT, path)
+                log.verbose("packing", abspath)
+                tar.add(abspath, arcname=fs.path("contents", path))
 
             # tidy up
             fs.rm(metapath)
@@ -513,11 +508,11 @@ class DistModel(Model):
         assert(isinstance(tarpath, string_types))
 
         self.hash = self._hash(tarpath)
-        self.cache = Cache(fs.path("model", self.hash))
+        self.cache = Cache(fs.path("dist", self.hash))
 
         # unpack archive if necessary
         unpacked = False
-        if not self.cache['model.json']:
+        if not self.cache['meta.json']:
             log.info("unpacking", tarpath)
             clgen.unpack_archive(tarpath, dir=self.cache.path)
             unpacked = True
@@ -526,6 +521,16 @@ class DistModel(Model):
 
         self._meta = clgen.load_json_file(self.cache['meta.json'])
         if unpacked:
+            for path in self._meta['contents']:
+                fs.mkdir(fs.path(cache.ROOT, fs.dirname(path)))
+                cache_path = fs.path(self.cache['contents'], path)
+                dest_path = fs.path(cache.ROOT, path)
+                print("mv", cache_path, dest_path)
+                #fs.mv()
+
+            # print("mv", self.cache['contents'], cache.ROOT)
+            sys.exit(0)
+            fs.mv(self.cache['contents'], cache.ROOT)
             self.validate()
 
         self.train_opts = self.meta['train_opts']
@@ -568,9 +573,15 @@ class DistModel(Model):
             DistError: In case of invalid distfile.
         """
         version = self.meta.get("version", None)
+        version_1_re = r'0\.1\.[0-9]+'
 
+        # before version 0.1.1, distfiles did not contain version string
         if version is None:
-            # before version 0.1.1, distfiles did not contain version string
+            if not re.match(version_1_re, clgen.version()):
+                log.fatal("distfile is incompatible with CLgen version {}. "
+                          "Please install CLgen 0.1.7."
+                          .format(clgen.version()))
+
             if not len(fs.ls(self.cache.path)) == 3:
                 log.error("Unpackaed tar contents:\n  ",
                           "\n  ".join(fs.ls(self.cache.path, abspaths=True)))
@@ -581,21 +592,40 @@ class DistModel(Model):
                 raise DistError("checkpoint not in disfile")
             return True
 
-        if version != clgen.version():
-            log.warning("distfile version {} does not match CLgen version "
-                        "{}. There may be incompabilities"
-                        .format(version, clgen.version()))
         contents = self.meta["contents"]
-        for file in contents:
-            # compare unpacked file contents to expected checksums
-            path = self.cache[file]
-            checksum = clgen.checksum_file(path)
-            log.verbose("  expected checksum:", file, contents[file])
-            log.verbose("calculated checksum:", file, checksum)
-            if checksum != contents[file]:
-                raise DistError(
-                    "distfile {} checksum failed".format(file))
 
+        # versions 0.1.1 - 0.1.7:
+        if re.match(version_1_re, version):
+            if not re.match(version_1_re, clgen.version()):
+                log.fatal("distfile version {} is incompatible with CLgen "
+                          "version {}. Please install CLgen 0.1.7."
+                          .format(version, clgen.version()))
+
+            if version != clgen.version():
+                log.warning("distfile version {} does not match CLgen version "
+                            "{}. There may be incompabilities"
+                            .format(version, clgen.version()))
+            for file in contents:
+                # compare unpacked file contents to expected checksums
+                path = self.cache[file]
+                checksum = clgen.checksum_file(path)
+                log.verbose("  expected checksum:", file, contents[file])
+                log.verbose("calculated checksum:", file, checksum)
+                if checksum != contents[file]:
+                    raise DistError(
+                        "distfile {} checksum failed".format(file))
+            return True
+
+        # version 0.2.x:
+        for path in contents:
+            # compare unpacked file contents to expected checksums
+            abspath = fs.path(cache.ROOT, path)
+            checksum = clgen.checksum_file(abspath)
+            log.verbose("  expected checksum:", path, contents[path])
+            log.verbose("calculated checksum:", path, checksum)
+            if checksum != contents[path]:
+                raise DistError(
+                    "distfile {} checksum failed".format(path))
         return True
 
 
