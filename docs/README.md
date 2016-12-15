@@ -14,6 +14,10 @@
 
 # Miscellaneous
 
+1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather.
+   "Collaborative Autotuning of Algorithmic Skeletons for GPUs and CPUs".
+   Incomplete journal version of ADAPT and HLPGPU papers. Files:
+   `docs/2016-12-wip-taco`
 1. Chris Cummins, Hugh Leather. "Autotuning OpenCL Workgroup Sizes". Rejected
    submission for PACT'16 Student Research Competition. Files:
    `docs/2016-07-pact`
