@@ -263,6 +263,8 @@ class Model(clgen.CLgenObject):
                     # save_checkpoint |= (e == max_epochs - 1
                     #                     and b == self.corpus.num_batches - 1)
                     # if save_checkpoint:
+                if quiet:
+                    log.info("epoch", e, "of", max_epochs + 1)
                 saver.save(sess, checkpoint_path, global_step=batch_num)
                 log.info("model saved to {}".format(checkpoint_path))
 
