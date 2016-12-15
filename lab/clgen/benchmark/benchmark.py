@@ -1,3 +1,7 @@
+# Usage:
+#
+# python ./benchmark.py model-64x2x50.json 2>&1 | tee benchmark-model-64x2x50.log
+#
 from time import time
 from labm8 import fs
 from labm8 import system
@@ -14,6 +18,7 @@ from clgen import preprocess
 def evaluate(model, sampler):
     """ evaluate sampling efficiency """
     model.cache.empty()  # clear checkpoint cache
+    print("starting training")
     tstart = time()  # start timer
     model.train()  # train model
     training_time = time() - tstart
@@ -22,6 +27,7 @@ def evaluate(model, sampler):
     sampler.cache(model).empty()
 
     # sample kernels and time
+    print("starting sampling")
     tstart = time()
     sampler.sample(model)
     tend = time()
