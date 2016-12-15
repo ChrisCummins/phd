@@ -23,6 +23,8 @@ from __future__ import absolute_import, print_function, with_statement
 
 import json
 import os
+import platform
+import psutil
 import re
 import six
 import sys
@@ -373,6 +375,51 @@ def write_file(path, contents):
     fs.mkdir(fs.dirname(path))
     with open(path, 'w') as outfile:
         outfile.write(contents)
+
+
+def platform_info(printfn=print):
+    """
+    Log platform information.
+
+    Arguments:
+        printfn (fn, optional): Function to call to print output to. Default
+            `print()`.
+    """
+    if cfg.USE_CUDA:
+        features_str = "(with CUDA)"
+    elif cfg.USE_OPENCL:
+        features_str = "(with OpenCL)"
+    else:
+        features_str = ""
+
+    printfn("CLgen:     ", version(), features_str)
+    printfn("Platform:  ", platform.system())
+    printfn("Memory:    ",
+            round(psutil.virtual_memory().total / (1024 ** 2)), "MB")
+
+    if not cfg.USE_OPENCL:
+        printfn()
+        printfn("Device:     None")
+
+    import pyopencl as cl
+    for pltfm in cl.get_platforms():
+        ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, pltfm)])
+        for device in ctx.get_info(cl.context_info.DEVICES):
+            devtype = cl.device_type.to_string(
+                device.get_info(cl.device_info.TYPE))
+            dev = device.get_info(cl.device_info.NAME)
+
+            printfn()
+            printfn("Device:    ", devtype, dev)
+            printfn("Compute #.:", device.get_info(
+                cl.device_info.MAX_COMPUTE_UNITS))
+            printfn("Frequency: ", device.get_info(
+                cl.device_info.MAX_CLOCK_FREQUENCY), "HZ")
+            printfn("Memory:    ", round(
+                device.get_info(
+                    cl.device_info.GLOBAL_MEM_SIZE) / (1024 ** 2)), "MB")
+            printfn("Driver:    ",
+                    device.get_info(cl.device_info.DRIVER_VERSION))
 
 
 def main(model, sampler, print_corpus_dir=False, print_model_dir=False,
