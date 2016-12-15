@@ -65,7 +65,7 @@ def evaluate(model, sampler):
 
 def main():
     import sys
-    m = model.from_json(sys.argv[1])
+    m = model.from_json(clgen.load_json_file(sys.argv[1]))
     s = sampler.from_json({
         "kernels": {
             "args": [
@@ -85,12 +85,13 @@ def main():
         }
     })
 
-    print("Corpus size:", m.size)
-    print("Vocab size: ", m.vocab_size)
+    print("Corpus size:", m.corpus.size)
+    print("Vocab size: ", m.corpus.vocab_size)
     print()
     clgen.platform_info()
+    print()
 
-    outpath = "benchmark-" + fs.basename(m)
+    outpath = "benchmark-" + fs.basename(sys.argv[1])
     info = evaluate(m, s)
     clgen.write_file(outpath, clgen.format_json(info))
 
