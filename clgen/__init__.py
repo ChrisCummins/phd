@@ -381,7 +381,8 @@ def terminating(thing):
 
 
 def write_file(path, contents):
-    fs.mkdir(fs.dirname(path))
+    if fs.dirname(path):
+        fs.mkdir(fs.dirname(path))
     with open(path, 'w') as outfile:
         outfile.write(contents)
 
