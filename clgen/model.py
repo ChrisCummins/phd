@@ -257,9 +257,9 @@ class Model(clgen.CLgenObject):
                     if not quiet:
                         log.info(
                             "{progress:2.1f} %  {size}x{layers} {model}  "
-                            "batch = {batch_num} / {max_batch}, "
-                            "epoch = {epoch_num} / {max_epoch}, "
-                            "train_loss = {tloss:.3f}, "
+                            "batch = {batch_num} / {max_batch}  "
+                            "epoch = {epoch_num} / {max_epoch}  "
+                            "train_loss = {tloss:.3f}  "
                             "time/batch = {time_batch:.3f}s".format(
                                 size=self.rnn_size,
                                 layers=self.num_layers,
