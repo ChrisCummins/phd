@@ -151,6 +151,7 @@ class Corpus(clgen.CLgenObject):
         else:
             self._preprocess()
 
+        self.size = len(self.tensor)
         self._create_batches()
         self.reset_batch_pointer()
 
