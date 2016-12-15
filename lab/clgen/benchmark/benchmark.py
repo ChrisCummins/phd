@@ -10,6 +10,7 @@ from labm8.time import nowstr
 import clgen
 from clgen import corpus
 from clgen import dbutil
+from clgen import log
 from clgen import sampler
 from clgen import model
 from clgen import preprocess
@@ -71,6 +72,8 @@ def evaluate(model, sampler):
 
 def main():
     import sys
+
+    log.init(verbose=True)
     m = model.from_json(clgen.load_json_file(sys.argv[1]))
     s = sampler.from_json({
         "kernels": {
