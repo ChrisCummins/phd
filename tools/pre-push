@@ -27,7 +27,7 @@ url_is_priv() {
 
 while read local_ref local_sha remote_ref remote_sha
 do
-    if ( url_is_priv "$url" && ! local_ref_is_master "$local_ref" ); then
+    if ( url_is_priv "$url" ); then
         echo "Privacy: private - OK"
         exit 0
     elif ( ! url_is_priv "$url" && local_ref_is_master "$local_ref" ); then
