@@ -100,7 +100,7 @@ def main():
     clgen.platform_info()
     print()
 
-    outpath = "benchmark-" + fs.basename(sys.argv[1])
+    outpath = "./benchmark-" + fs.basename(sys.argv[1])
     info = evaluate(m, s)
     clgen.write_file(outpath, clgen.format_json(info))
 
