@@ -120,6 +120,8 @@ def must_exist(*path_components, **kwargs):
         raise e
     return path
 
+_must_exist = must_exist  # prevent variable scope shadowing
+
 
 def checksum(data):
     """
@@ -337,27 +339,34 @@ def loads(text, **kwargs):
     return json.loads('\n'.join(lines), **kwargs)
 
 
-def load_json_file(path):
+def load_json_file(path, must_exist=True):
     """
     Load a JSON data blob.
 
     Arguments:
         path (str): Path to file.
+        must_exist (bool, otional): If False, return empty dict if file does
+            not exist.
 
     Returns:
         array or dict: JSON data.
 
     Raises:
-        File404: If path does not exist.
+        File404: If path does not exist, and must_exist is True.
         InvalidFile: If JSON is malformed.
     """
     try:
-        with open(must_exist(path)) as infile:
+        with open(_must_exist(path)) as infile:
             return loads(infile.read())
     except ValueError as e:
         raise InvalidFile(
             "malformed JSON file '{path}'. Message from parser: {err}"
             .format(path=os.path.basename(path)), err=str(e))
+    except File404 as e:
+        if must_exist:
+            raise e
+        else:
+            return {}
 
 
 @contextmanager
