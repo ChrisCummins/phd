@@ -255,10 +255,22 @@ class Model(clgen.CLgenObject):
                     elapsed = time_end - time_start
 
                     if not quiet:
-                        log.info("{:2.1f} %   batch = {} / {}, epoch = {} / {},"
-                                 " train_loss = {:.3f}, time/batch = {:.3f}s"
-                                 .format(progress * 100, batch_num + 1,
-                                 max_batch, e, max_epochs, train_loss, elapsed))
+                        log.info(
+                            "{progress:2.1f} %  {size}x{layers} {model}  "
+                            "batch = {batch_num} / {max_batch}, "
+                            "epoch = {epoch_num} / {max_epoch}, "
+                            "train_loss = {tloss:.3f}, "
+                            "time/batch = {time_batch:.3f}s".format(
+                                size=self.rnn_size,
+                                layers=self.num_layers,
+                                model=self.model_type.upper(),
+                                progress=progress * 100,
+                                batch_num=batch_num + 1,
+                                max_batch=max_batch,
+                                epoch_num=e,
+                                max_epoch=max_epochs,
+                                tloss=train_loss,
+                                time_batch=elapsed))
                     # save_checkpoint = batch_num % checkpoint_every == 0
                     # save_checkpoint |= (e == max_epochs - 1
                     #                     and b == self.corpus.num_batches - 1)
