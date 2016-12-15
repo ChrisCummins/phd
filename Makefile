@@ -425,6 +425,7 @@ AutotexTargets += \
 	$(root)/docs/2016-07-acaces/abstract.pdf \
 	$(root)/docs/2016-07-pact/pact.pdf \
 	$(root)/docs/wip-outline/outline.pdf \
+	$(root)/docs/wip-taco/taco.pdf \
 	$(NULL)
 
 
