@@ -48,6 +48,12 @@ Install CLgen in the virtualenv environment:
 (clgen-dev)$ make test
 ```
 
+(Optional) Install Python development tools:
+
+```sh
+(clgen-dev)$ pip install -r make/requirements/requirements.dev.txt
+```
+
 When you are done using CLgen, deactivate the virtualenv environment:
 
 ```sh
