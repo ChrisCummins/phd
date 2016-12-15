@@ -1,0 +1,48 @@
+\newpage
+\section{Proposal}
+
+%The proposed topic for this PhD is the exploitation of deep learning techniques for compiler research. This broad remit provides scope for contributions in numerous areas, but is focused on the project objectives outlined in Section~\ref{sec:objectives}.
+
+\subsection{Thesis outline}
+
+\paragraph{Chapter 1: Introduction.} An introduction to the main topic, summary of contributions, and motivating examples.
+
+\paragraph{Chapter 2: Literature survey.} A thorough exposition of the relevant literature in the fields of compiler research and machine learning.
+
+\paragraph{Chapter 3: Language modelling for program code.} Defining machine learning systems for language modelling over corpuses of program source code. Background and application of language modelling approaches to programming languages. Description of source code transformations for machine learning, and an empirical evaluation of the effects of transformations on the effectiveness of learned LSTM models. This chapter will provide the foundational methodology for building probabilistic models of programs in a given programming languages.
+
+\paragraph{Chapter 4: Automatic program generation through deep learning.}  Introducing novel techniques for generating and evaluating programs and their inputs, as described in the first project objective. Empirical evaluations for two use cases: compiler autotuning and differential testing. For each evaluation: experimental setup, methodology, results, and analysis. The basis of this chapter will be previous work for synthesising OpenCL kernels [Appendix~\ref{app:cgo}], with extensions for a grammar-based approach to program generation.
+
+\paragraph{Chapter 5: Searching the program feature space.} A methodology for performing directed searches of program feature spaces using deep learning program synthesis, satisfying the second project objective. This may be an iterative process of mutating code to converge on the goal features, or using a model-based approach which guarantees program synthesis with specific features by considering only well-formed sequences which result in the target feature values. This section will contain an empirical evaluation of convergence time and possible coverage of feature spaces.
+
+\paragraph{Chapter 6: Learning the compiler optimisation pipeline.} Applying an agent based approach to the compiler optimisation pipeline, the third project objective. This would replace the fixed ordering of optimisation passes in present compilers, and would use reinforcement learning combined with automatic program generation to explore the space of pass orderings and selection. The agent will be trained using synthesised programs, and empirically evaluated on benchmark suites using LLVM.
+
+\paragraph{Chapter 7: Conclusions.} Summary of contributions and research impact. Future research questions and directions for extended work.
+
+
+\newpage
+\subsection{Work plan}
+
+\paragraph{Year 2} The year will begin with extensions to previous work on CLgen\footnote{\url{http://chriscummins.cc/clgen/}}: 
+%
+\begin{itemize}
+        \item adding support for alternate vocabularies, to enable learning models at the token or AST-level, as opposed to the current character-based approach;
+        \item adding support for alternative encodings, enabling additional corpus transformations, for example, by reversing the character sequence, or interleaving characters from the start and end of sequences.
+        \item implementing an iterative hill climb search of the program feature space using mutations to model seed text and random number generator state;
+\end{itemize}
+%
+The goal of these extensions is incremental improvements to my current work on deep learning program synthesis (Appendix~\ref{app:cgo}), by demonstrating the ability to enumerate feature spaces, and reducing the rejection rate of synthesised programs. The deliverable for this work would be either an extended journal publication of Appendix~\ref{app:cgo}, or a new publication \emph{``Directed exploration of program feature spaces''}. This outcome would depend on the extend to which these changes improve CLgen. At a minimum, the rejection rate would be measurably decreased so that programs can be generated a faster rate, and an iterative process of sample rejection would be shown to produce programs which converge towards specific feature values.
+
+Upon completion of these first goals by the end of February 2017, a short period of time will be dedicated to analysis of the language models learned by CLgen. By modelling the syntax and semantics of source codes in a given language, it may be possible to extract the learned grammar of the language from the model's intermediate layers. The ability to automatically generate a formal grammar for a program language would have benefits for program synthesis, allowing the development of a grammar based system which operates on well-formed syntax trees, replacing the need for rejection tests to validate that a synthesised program is syntactically and semantically correct.
+
+Should this brief exploratory analysis fail at extracting formal language grammars from learned models, then an alternative approach to reducing the rejection rate of generated programs would be the development of a system to iteratively and incrementally repair issues with rejected programs. This would extend the functionality of existing systems for statically verifying correctness of programs, allowing generated programs with small syntactic and semantic errors to be recovered.
+
+The latter 3 months of the year will be used to test improvements on corpus generation. This will involve an empirical evaluation of the program rejection rate when sampling a model trained on previously generated programs. If the performance of the system improves under the these conditions, then it will allow for training language models on incrementally larger corpuses, and provide a mechanism for a program generator which is self-improving as the number of programs it generates increases. The qualitative evaluation of synthesised programs described in Appendix~\ref{app:cgo} will be repeated for models trained on generated programs.
+
+\paragraph{Year 3} The first three months of my third year will be used to develop a formal grammar based approach to automatic program synthesis. Given a corpus of example programs in a given programming language, and a tool which verifies or rejects a program in the given language, this approach would instantiate the grammar probabilistically, using a language model trained on the corpus to determine the probability of a given production rule based on its probability distribution within the corpus.
+
+By operating only on sequences of well-formed syntax trees, a grammar based approach has the potential to significantly improve the rate of program generation by pruning the space of possible output sequences to only those which produce correct programs. This would allow more strict checks to be imposed on generated programs, allowing focus on generating programs which are free from undefined behaviour.
+
+The successul development of this system will be validated in a set of experiments to generate programs in three programming languages: OpenCL, C, and Java. Generated programs will be tested on multiple compilers, and the computed results of each compared. If the computed results differ and the programs are free from undefined behaviour, then a bug has been exposed in at least one of the disagreeing compilers. The intended deliverable for this work is a publication \emph{``Differential testing compilers through deep learning''}.
+
+Months 4 through 6 of year 3 will be used to develop an agent-based approach to compiler pass selection and ordering. This will involve extensions to the LLVM pass manager to support reinforcement learning, and use the automatic program generator developed previously to explore the program feature space. The implementation work for this project is minimal, with the majority of time required for running empirical evaluations of the system on benchmark suites. The second half of the year will be dedicated to thesis write up.

@@ -20,6 +20,8 @@
    "Collaborative Autotuning of Algorithmic Skeletons for GPUs and CPUs".
    Incomplete journal version of ADAPT and HLPGPU papers. Files:
    `docs/2016-12-wip-taco`
+1. Chris Cummins. "Deep Learning for Compilers". PhD First Year Review
+   Document, 2016. Files: `docs/2016-11-first-year-review`
 1. Chris Cummins, Hugh Leather. "Autotuning OpenCL Workgroup Sizes". Rejected
    submission for PACT'16 Student Research Competition. Files:
    `docs/2016-07-pact`

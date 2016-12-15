@@ -1,0 +1,39 @@
+\section{Summary of progress}
+
+Progress in my first year has been focused on developing the initial proof-of-concept of this novel approach to program generation, and in extending and publishing previous work on predictive modeling for optimising GPU stencil computations.
+
+\newpage
+\subsection{Research outputs}
+
+\paragraph{Publications}
+\begin{enumerate}
+\item Cummins, C, Petoumenos, P, Steuwer, M \& Leather, H, ``Autotuning OpenCL Workgroup Size for Stencil Patterns''. In International Workshop on Adaptive Self-tuning Computing Systems (ADAPT). HiPEAC, Prague, Czech Republic, 18 January 2016 [\textbf{Appendix~\ref{app:adapt}}];
+\item Cummins, C, Petoumenos, P, Steuwer, M \& Leather, H , ``Towards Collaborative Performance Tuning of Algorithmic Skeletons''. In Workshop on High-Level Programming for Heterogeneous \& Hierarchical Parallel Systems (HLPGPU). HiPEAC, Prague, Czech Republic, 19 January 2016 [\textbf{Appendix~\ref{app:hlpgpu}}];
+\item Cummins, C, Petoumenos, P, Wang, Z \& Leather, H, ``Synthesizing Benchmarks for Predictive Modeling''. To appear in International Symposium on Code Generation and Optimization (CGO). Austin, TX, USA, 4--8 February 2017 [\textbf{Appendix~\ref{app:cgo}}].
+\end{enumerate}
+
+\paragraph{Posters}
+\begin{enumerate}
+  \item Cummins, C, Petoumenous, P, Steuwer, M, Leather, H, ``Humans Need Not Apply'', Google PhD Student Summit on Compiler \& Programming Technology, Munich, Germany, 7--9 December 2015;
+  \item Cummins, C, Petoumenos, P, Steuwer, M \& Leather, H, ``Autotuning OpenCL Workgroup Sizes'', HiPEAC, Prague, Czech Republic, 18--20 January 2016.
+  \item Cummins, C, Petoumenos, P, Steuwer, M \& Leather, H, ``Autotuning OpenCL Workgroup Sizes'', 37th ACM SIGPLAN conference on Programming Language Design \& Implementation (PLDI), Santa Barbara, California, 13--17 June 2016.
+  \item Cummins, C, Petoumenos, P, Steuwer, M \& Leather, H, ``Autotuning OpenCL Workgroup Sizes'', 12th International Summer School on Advanced Computer Architecture and Compilation for High-Performance and Embedded Systems (ACACES), Fiuggi, Italy, 10--16 July 2016.
+\end{enumerate}
+
+\paragraph{Talks}
+\begin{enumerate}
+  \item Cummins, C, ``All the OpenCL on GitHub: Teaching an AI to code, one character at a time''. Amazon Development Centre, Edinburgh, UK, 19 May 2016;
+  \item Cummins, C, ``Building an AI that Codes'', Ocado Technology, Hatfield, UK, 22 July 2016;
+  \item Cummins, C, ``Machine Learning \& Compilers'', Codeplay Software, Edinburgh, UK, 9 September 2016.
+\end{enumerate}
+
+
+\subsection{Codeplay internship}
+
+From April through September I interned at Codeplay Software in Edinburgh. My role within Codeplay was as a member of the SYCL demos team, in which I contributed to SYCL support for TensorFlow and Eigen; developed a Python frontend for the C++ template library VisionCpp; and developed a toolset of metaprogramming utilities for SYCL.
+
+Eigen\footnote{\url{http://eigen.tuxfamily.org/}} is a C++ template library which provides linear math operations on $n$-dimensional tensors. It is a key dependency of TensorFlow~\ref{Abadi}, a popular library for distributed and parallelised machine learning. During my internship I imlpemented GPU memory management for tensors using SYCL, and support for broadcast operations.
+
+SYCL is a single-source specification for heterogeneous parallelism in C++~\cite{Rovatsou2015}. Codeplay is developing a compiler for this standard, ComputeCpp. Compiling a SYCL application with ComputeCpp is a two pass process. In the first pass, the device compiler produces SPIR code for execution on parallel devices. SPIR is an intermediate language which extends LLVM bytecode for parallel compute and graphics~\cite{Portable2014}. The second compiler pass uses a host compiler and links against the generated SPIR bytecode. At runtime, the SYCL runtime schedules kernels for execution on parallel devices, and OpenCL platforms compile the SPIR bytecode to executable device code.
+
+VisionCPP~\cite{Goli2016a} is a C++ template library for performance-portable vision processing using SYCL. Users declare trees of VisionCpp expressions, which at compile time may be fused into a single kernel for efficient execution on GPUs~\cite{Potter2015}. While working at Codeplay I implemented a Python interface for VisionCpp, which allows for simple construction of expression trees using the python object interface. When evaluated, python expression trees are lazily evaluated to a sequence of nodes, from which C++ code is generated. The ComputeCpp compiler is then invoked to generate a native binary for the expression tree, which is linked and loaded by the python runtime and called. Inputs and outputs are transferred between python and the native binary, allowing for a seemless interface of high level scripting language and effecitient native GPU-accelerated code. This is a research project with the potential for publication in a high level GPU programming workshop.
