@@ -1,5 +1,7 @@
 #  Publications
 
+1. Chris Cummins, Pavlos Petoumenos, Zheng Wang, Hugh Leather. "Synthesizing
+   Benchmarks for Predictive Modeling". CGO '17. Files: `docs/2017-02-cgo`
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather. "Autotuning
    OpenCL Workgroup Sizes". ACACES '16. Files: `docs/2016-07-acaces`
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather. "Towards

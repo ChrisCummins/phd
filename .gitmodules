@@ -28,3 +28,6 @@
 [submodule "docs/2016-01-hlpgpu"]
 	path = docs/2016-01-hlpgpu
 	url = git@github.com:ChrisCummins/paper-towards-collaborative-performance-tuning.git
+[submodule "docs/2017-02-cgo"]
+	path = docs/2017-02-cgo
+	url = git@github.com:ChrisCummins/paper-synthesizing-benchmarks.git
