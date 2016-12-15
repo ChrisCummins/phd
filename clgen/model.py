@@ -327,9 +327,7 @@ class Model(clgen.CLgenObject):
                 sampling_type = 1  # default
                 output.write("\n\n/* SAMPLE {} */\n\n".format(i))
                 output.write(seed_text)
-                if quiet:
-                    print(" - sample", i)
-                else:
+                if not quiet:
                     sys.stdout.write("\n\n/* SAMPLE {} */\n\n".format(i))
                     sys.stdout.write(seed_text)
                     sys.stdout.flush()
