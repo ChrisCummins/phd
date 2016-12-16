@@ -29,6 +29,7 @@ from labm8 import fs
 from six.moves import cPickle
 
 import clgen
+from clgen import cache
 from clgen import dbutil
 from clgen import explore
 from clgen import fetch
@@ -105,7 +106,8 @@ class Corpus(clgen.CLgenObject):
     """
     Representation of a training corpus.
     """
-    def __init__(self, path, isgithub=False, batch_size=50, seq_length=50):
+    def __init__(self, uid, path=None, isgithub=False, batch_size=50,
+                 seq_length=50):
         """
         Instantiate a corpus.
 
@@ -113,18 +115,13 @@ class Corpus(clgen.CLgenObject):
         take some time.
 
         Arguments:
-            path (str): Path to corpus.
+            uid (str): Corpus ID.
+            path (str, optional): Path to corpus.
             isgithub (bool): Whether corpus is from GitHub.
             batch_size (int): Batch size.
             seq_length (int): Sequence length.
         """
-        self.path = unpack_directory_if_needed(fs.abspath(path))
-
-        if not fs.isdir(self.path):
-            raise clgen.UserError("Corpus path '{}' is not a directory"
-                                  .format(self.path))
-
-        self.hash = dirhash(self.path, 'sha1')
+        self.hash = uid
 
         self.isgithub = isgithub
         self.batch_size = batch_size
@@ -134,12 +131,13 @@ class Corpus(clgen.CLgenObject):
 
         self.cache = Cache(fs.path("corpus", self.hash))
 
-        # TODO: Wrap file creation in try blocks, if any stage fails, delete
-        # generated fail (if any)
-
-        # create corpus database if not exists
-        if not self.cache["kernels.db"]:
-            self._create_kernels_db(self.path)
+        if path is not None:
+            if not fs.isdir(path):
+                raise clgen.UserError(
+                    "Corpus path '{}' is not a directory".format(path))
+            # create kernels database if necessary
+            if not self.cache["kernels.db"]:
+                self._create_kernels_db(path)
 
         # create corpus text if not exists
         if not self.cache["corpus.txt"]:
@@ -246,12 +244,8 @@ class Corpus(clgen.CLgenObject):
         Returns:
             dict: Metadata.
         """
-        cache_path = fs.path(self.cache.path, "corpus")
-        log.verbose("cp", self.path, cache_path)
-        fs.cp(self.path, cache_path)
-
         return {
-            "path": cache_path,
+            "id": self.hash,
             "github": self.isgithub,
             "batch_size": self.batch_size,
             "seq_length": self.seq_length
@@ -302,12 +296,23 @@ class Corpus(clgen.CLgenObject):
         log.debug("corpus from json")
 
         path = corpus_json.get("path", None)
-        if path is None:
-            raise clgen.UserError("no path found for corpus")
+        if path:
+            path = unpack_directory_if_needed(fs.abspath(path))
+            if not fs.isdir(path):
+                raise clgen.UserError(
+                    "Corpus path '{}' is not a directory".format(path))
+            uid = dirhash(path, 'sha1')
+        else:
+            uid = corpus_json.get("id", None)
+            if not uid:
+                raise clgen.UserError("No corpus path or ID provided")
+            cache_path = fs.path(cache.ROOT, "corpus", uid)
+            if not fs.isdir(cache_path):
+                raise clgen.UserError("Corpus {} not found".format(uid))
 
         isgithub = corpus_json.get("github", False)
         batch_size = corpus_json.get("batch_size", 50)
         seq_length = corpus_json.get("seq_length", 50)
 
-        return Corpus(path=path, isgithub=isgithub, batch_size=batch_size,
-                      seq_length=seq_length)
+        return Corpus(uid=uid, path=path, isgithub=isgithub,
+                      batch_size=batch_size, seq_length=seq_length)

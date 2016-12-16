@@ -401,9 +401,6 @@ class Model(clgen.CLgenObject):
         Returns:
             dict: Metadata.
         """
-        # Get corpus data
-        corpus_opts = self.corpus.meta
-
         # checksum corpus and model cache files. Paths are relative to cache
         # root.
         cache_root_re = r'^' + cache.ROOT + '/'
@@ -421,7 +418,7 @@ class Model(clgen.CLgenObject):
             "version": clgen.version(),
             "author": get_default_author(),
             "date packaged": labtime.nowstr(),
-            "corpus": corpus_opts,
+            "corpus": self.corpus.meta,
             "train_opts": self.train_opts,
             "contents": contents
         }
@@ -523,13 +520,13 @@ class DistModel(Model):
         """
         assert(isinstance(tarpath, string_types))
 
-        self.hash = self._hash(tarpath)
-        self.cache = Cache(fs.path("dist", self.hash))
+        disthash = clgen.checksum_file(tarpath)
+        self.cache = Cache(fs.path("dist", disthash))
 
         # unpack archive if necessary
         unpacked = False
         if not self.cache['meta.json']:
-            log.info("unpacking", tarpath)
+            log.info("unpacking distmodel", tarpath)
             clgen.unpack_archive(tarpath, dir=self.cache.path)
             unpacked = True
             if not self.cache['meta.json']:
@@ -541,25 +538,22 @@ class DistModel(Model):
                 fs.mkdir(fs.path(cache.ROOT, fs.dirname(path)))
                 cache_path = fs.path(self.cache['contents'], path)
                 dest_path = fs.path(cache.ROOT, path)
-                log.verbose(path)
+                log.verbose("unpacking", path)
                 os.rename(cache_path, dest_path)
 
             self.validate()
 
         self.train_opts = self.meta['train_opts']
 
-        log.info("distfile model: ", self.hash)
+        log.info("distfile model: ", disthash)
         if "author" in self.meta:
             log.info("distfile author:", self.meta["author"])
         if "date packaged" in self.meta:
             log.info("distfile date:  ", self.meta["date packaged"])
 
-        self.cache.empty()
+        # Invoke superconstructor, to proceed as a normal model.
         super(DistModel, self).__init__(
             Corpus.from_json(self.meta["corpus"]), self.meta["train_opts"])
-
-    def _hash(self, tarpath):
-        return clgen.checksum_file(tarpath)
 
     @property
     def meta(self):
