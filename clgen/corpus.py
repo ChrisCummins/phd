@@ -118,13 +118,13 @@ class Corpus(clgen.CLgenObject):
             batch_size (int): Batch size.
             seq_length (int): Sequence length.
         """
-        path = unpack_directory_if_needed(fs.abspath(path))
+        self.path = unpack_directory_if_needed(fs.abspath(path))
 
-        if not fs.isdir(path):
+        if not fs.isdir(self.path):
             raise clgen.UserError("Corpus path '{}' is not a directory"
-                                  .format(path))
+                                  .format(self.path))
 
-        self.hash = dirhash(path, 'sha1')
+        self.hash = dirhash(self.path, 'sha1')
 
         self.isgithub = isgithub
         self.batch_size = batch_size
@@ -139,7 +139,7 @@ class Corpus(clgen.CLgenObject):
 
         # create corpus database if not exists
         if not self.cache["kernels.db"]:
-            self._create_kernels_db(path)
+            self._create_kernels_db(self.path)
 
         # create corpus text if not exists
         if not self.cache["corpus.txt"]:
@@ -237,6 +237,25 @@ class Corpus(clgen.CLgenObject):
                                   self.num_batches, 1)
         self.y_batches = np.split(ydata.reshape(self.batch_size, -1),
                                   self.num_batches, 1)
+
+    @property
+    def meta(self):
+        """
+        Get corpus metadata.
+
+        Returns:
+            dict: Metadata.
+        """
+        cache_path = fs.path(self.cache.path, "corpus")
+        log.verbose("cp", self.path, cache_path)
+        fs.cp(self.path, cache_path)
+
+        return {
+            "path": cache_path,
+            "github": self.isgithub,
+            "batch_size": self.batch_size,
+            "seq_length": self.seq_length
+        }
 
     def reset_batch_pointer(self):
         """

@@ -401,6 +401,9 @@ class Model(clgen.CLgenObject):
         Returns:
             dict: Metadata.
         """
+        # Get corpus data
+        corpus_opts = self.corpus.meta
+
         # checksum corpus and model cache files. Paths are relative to cache
         # root.
         cache_root_re = r'^' + cache.ROOT + '/'
@@ -418,6 +421,7 @@ class Model(clgen.CLgenObject):
             "version": clgen.version(),
             "author": get_default_author(),
             "date packaged": labtime.nowstr(),
+            "corpus": corpus_opts,
             "train_opts": self.train_opts,
             "contents": contents
         }
@@ -537,21 +541,22 @@ class DistModel(Model):
                 fs.mkdir(fs.path(cache.ROOT, fs.dirname(path)))
                 cache_path = fs.path(self.cache['contents'], path)
                 dest_path = fs.path(cache.ROOT, path)
-                print("mv", cache_path, dest_path)
-                #fs.mv()
+                log.verbose(path)
+                os.rename(cache_path, dest_path)
 
-            # print("mv", self.cache['contents'], cache.ROOT)
-            sys.exit(0)
-            fs.mv(self.cache['contents'], cache.ROOT)
             self.validate()
 
         self.train_opts = self.meta['train_opts']
 
         log.info("distfile model: ", self.hash)
         if "author" in self.meta:
-            log.verbose("distfile author:", self.meta["author"])
+            log.info("distfile author:", self.meta["author"])
         if "date packaged" in self.meta:
-            log.verbose("distfile date:  ", self.meta["date packaged"])
+            log.info("distfile date:  ", self.meta["date packaged"])
+
+        self.cache.empty()
+        super(DistModel, self).__init__(
+            Corpus.from_json(self.meta["corpus"]), self.meta["train_opts"])
 
     def _hash(self, tarpath):
         return clgen.checksum_file(tarpath)
@@ -567,12 +572,6 @@ class DistModel(Model):
             dict: Metadata.
         """
         return self._meta
-
-    def train(self):
-        """
-        This method does nothing, distmodels are pre-tained.
-        """
-        pass
 
     def validate(self):
         """
@@ -623,6 +622,7 @@ class DistModel(Model):
                 checksum = clgen.checksum_file(path)
                 log.verbose("  expected checksum:", file, contents[file])
                 log.verbose("calculated checksum:", file, checksum)
+                log.verbose()
                 if checksum != contents[file]:
                     raise DistError(
                         "distfile {} checksum failed".format(file))
