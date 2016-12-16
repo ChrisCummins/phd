@@ -42,6 +42,7 @@ def evaluate(model, sampler):
                                condition="WHERE status=0")
 
     return {
+        "argspec": sampler.kernel_opts["args"],
         "num_kernels": num_kernels,
         "num_good_kernels": num_good_kernels,
         "discard_rate": discard_rate,
