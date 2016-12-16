@@ -118,6 +118,7 @@ install_tmux() {
 
 install_atom() {
     symlink .dotfiles/atom ~/.atom
+    symlink ~/.dotfiles/atom/ratom ~/.local/bin/ratom
 }
 
 
