@@ -116,12 +116,17 @@ def main():
 
     # generate python requirements file
     requirements_files = ['requirements.txt']
-    if not cfg["opencl"]:
-        requirements_files += ['requirements.cpu.txt']
     if cfg["opencl"]:
         requirements_files += ['requirements.opencl.txt']
     if cfg["cuda"]:
         requirements_files += ['requirements.cuda.txt']
+
+    # if configured with CUDA, require GPU-enabled tensorflow:
+    if cfg["cuda"]:
+        requirements_files += ['requirements.tensorflow.gpu.txt']
+    else:
+        requirements_files += ['requirements.tensorflow.cpu.txt']
+
     with open("requirements.txt", "w") as outfile:
         for name in requirements_files:
             with open(os.path.join("make", "requirements", name)) as infile:
