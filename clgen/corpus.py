@@ -316,3 +316,54 @@ class Corpus(clgen.CLgenObject):
 
         return Corpus(uid=uid, path=path, isgithub=isgithub,
                       batch_size=batch_size, seq_length=seq_length)
+
+
+def preprocessed_kernels(corpus):
+    """
+    Return an iterator over all preprocessed kernels.
+
+    Arguments:
+        corpus (Corpus): Corpus.
+
+    Returns:
+        sequence of str: Kernel sources.
+    """
+    assert(isinstance(corpus, Corpus))
+    db = dbutil.connect(corpus.cache["kernels.db"])
+    c = db.cursor()
+    query = c.execute("SELECT Contents FROM PreprocessedFiles WHERE status=0")
+    for row in query.fetchall():
+        yield row[0]
+
+
+def most_common_prototypes(c, n):
+    """
+    Return the n most frequently occuring prototypes.
+
+    Arguments:
+        c (Corpus): Corpus.
+        n (int): Number of prototypes to return:
+
+    Returns:
+        tuple of list of tuples, int:
+    """
+    from clgen import clutil
+
+    prototypes = []
+    for kernel in preprocessed_kernels(c):
+        try:
+            prototype = clutil.KernelPrototype.from_source(kernel)
+            if prototype.is_synthesizable:
+                prototypes.append(", ".join(str(x) for x in prototype.args))
+        except clutil.PrototypeException:
+            pass
+
+    # Convert frequency into ratios
+    counter = Counter(prototypes)
+    results = []
+    for row in counter.most_common(n):
+        prototype, freq = row
+        ratio = freq / len(prototypes)
+        results.append((ratio, prototype))
+
+    return results, len(prototypes)
