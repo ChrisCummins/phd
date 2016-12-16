@@ -27,6 +27,7 @@ from six import string_types
 from tempfile import mkdtemp
 
 import clgen
+from clgen import cache
 from clgen import model
 
 
@@ -50,15 +51,6 @@ class TestModel(TestCase):
         m.cache.empty()  # untrain
         self.assertEqual(m.most_recent_checkpoint, None)
 
-    @skip("FIXME: TensorFlow")
-    def test_meta_untrained(self):
-        m = get_test_model()
-        m.cache.empty()  # untrain
-        # meta is only accesible on a trained model
-        with self.assertRaises(model.DistError):
-            m.meta
-
-    @skip("FIXME: TensorFlow")
     def test_meta(self):
         m = get_test_model()
         m.train()
@@ -76,15 +68,16 @@ class TestModel(TestCase):
         self.assertNotEqual(meta["date packaged"], "")
         # contents
         contents = meta["contents"]
-        self.assertEqual(len(contents), 2)
-        t7_ = m.most_recent_checkpoint
-        self.assertEqual(contents["model.t7"], clgen.checksum_file(t7_))
-        json_ = re.sub(r".t7$", ".json", m.most_recent_checkpoint)
-        self.assertEqual(contents["model.json"], clgen.checksum_file(json_))
+
+        # compare meta checksums to files
+        for file in contents:
+            path = fs.path(cache.ROOT, file)
+            checksum = clgen.checksum_file(path)
+            self.assertEqual(checksum, contents[file])
+
         # train opts
         self.assertEqual(meta["train_opts"], m.train_opts)
 
-    @skip("FIXME: TensorFlow")
     def test_to_dist(self):
         m = get_test_model()
         m.train()
@@ -97,7 +90,6 @@ class TestModel(TestCase):
 
 
 class TestDistModel(TestCase):
-    @skip("FIXME: TensorFlow")
     def test_import(self):
         m = get_test_model()
         m.train()
@@ -112,7 +104,6 @@ class TestDistModel(TestCase):
         self.assertEqual(m.train_opts, train_opts)
         fs.rm(tmpdir)
 
-    @skip("FIXME: TensorFlow")
     def test_import_bad_path(self):
         with self.assertRaises(clgen.File404):
             model.from_tar("/bad/path")

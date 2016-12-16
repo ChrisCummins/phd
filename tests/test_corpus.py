@@ -38,23 +38,29 @@ TINY_HASH = tests.data_str("tiny", "corpus.contents.sha1").rstrip()
 class TestCorpus(TestCase):
     def test_path(self):
         path = tests.archive("tiny", "corpus")
-        c = corpus.Corpus(path)
+        c = corpus.Corpus.from_json({"id": TINY_HASH, "path": path})
         self.assertEqual(TINY_HASH, c.hash)
 
     def test_badpath(self):
         with self.assertRaises(clgen.CLgenError):
-            corpus.Corpus("notarealpath")
+            corpus.Corpus("notarealid", path="notarealpath")
 
     def test_unpack_archive(self):
         # delete any existing unpacked directory
         fs.rm(tests.data_path("tiny", "corpus"))
 
-        c = corpus.Corpus(tests.data_path("tiny", "corpus", exists=False))
+        c = corpus.Corpus.from_json({
+            "id": TINY_HASH,
+            "path": tests.data_path("tiny", "corpus", exists=False)
+        })
         self.assertEqual(TINY_HASH, c.hash)
 
     def test_path_is_archive(self):
         # delete any existing unpacked directory
         fs.rm(tests.data_path("tiny", "corpus"))
 
-        c = corpus.Corpus(tests.data_path("tiny", "corpus.tar.bz2"))
+        c = corpus.Corpus.from_json({
+            "id": TINY_HASH,
+            "path": tests.data_path("tiny", "corpus.tar.bz2")
+        })
         self.assertEqual(TINY_HASH, c.hash)
