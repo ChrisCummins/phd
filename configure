@@ -116,6 +116,8 @@ def main():
 
     # generate python requirements file
     requirements_files = ['requirements.txt']
+    if not cfg["opencl"]:
+        requirements_files += ['requirements.cpu.txt']
     if cfg["opencl"]:
         requirements_files += ['requirements.opencl.txt']
     if cfg["cuda"]:

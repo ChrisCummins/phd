@@ -1,2 +1,1 @@
-pyopencl==2016.2
 tensorflow==0.12.0rc0
