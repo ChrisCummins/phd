@@ -71,8 +71,8 @@ def main():
             continue
 
         _, prototype = row
-        argspec = prototype.split(',')
-        print(argspec)
+        argspec = [' '.join(x.split()[:-1]) for x in prototype.split(',')]
+        print("argspec", ','.join([str(x) for x in argspec]))
         s = sampler.from_json({
             "kernels": {
                 "args": argspec,
