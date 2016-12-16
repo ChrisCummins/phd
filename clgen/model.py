@@ -218,7 +218,7 @@ class Model(clgen.CLgenObject):
             ckpt = tf.train.get_checkpoint_state(self.most_recent_checkpoint)
             assert(ckpt)
             assert(ckpt.model_checkpoint_path)
-            log.debug("loaded checkpoint {}".format(ckpt.model_checkpoint_path))
+            log.info("loaded checkpoint {}".format(ckpt.model_checkpoint_path))
 
         with tf.Session() as sess:
             tf.global_variables_initializer().run()
