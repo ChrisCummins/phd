@@ -445,6 +445,15 @@ class KernelPrototype(clgen.CLgenObject):
                 self._args = [KernelArg(x) for x in inner_brace.split(',')]
             return self._args
 
+    @property
+    def is_synthesizable(self):
+        for arg in self.args:
+            try:
+                arg.numpy_type
+            except UnknownTypeException:
+                return False
+        return True
+
     def __repr__(self):
         return self._string
 
