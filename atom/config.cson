@@ -10,6 +10,8 @@
     showInvisibles: true
   "exception-reporting":
     userId: "89238f39-41b1-38a3-2657-397fa4728b99"
+  linter:
+    showErrorPanel: false
   "markdown-preview":
     useGitHubStyle: true
   "remote-atom":
