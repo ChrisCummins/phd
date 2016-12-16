@@ -19,7 +19,6 @@
 from unittest import TestCase, skip, skipIf
 import tests
 
-import json
 import re
 
 from labm8 import fs
