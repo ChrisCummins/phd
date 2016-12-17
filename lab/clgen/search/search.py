@@ -14,7 +14,7 @@ from tempfile import NamedTemporaryFile
 from random import randint
 
 import clgen
-from clgen import log
+from clgen import log as clgen_log
 from clgen import model
 from clgen import preprocess
 
@@ -92,6 +92,23 @@ def get_sample(m, seed_text, seed):
         return 2, None
 
 
+def get_start_code(m):
+    while True:
+        try:
+            buf = StringIO()
+            m.sample(seed_text='__kernel void A(__global float* a, '
+                                '__global float* b, __global float* c, '
+                                'const int d) {',
+                     output=buf, max_length=5000, quiet=True)
+            out = buf.getvalue()
+            return preprocess.preprocess(out)
+        except preprocess.BadCodeException:
+            pass
+        except preprocess.UglyCodeException:
+            pass
+
+
+
 def get_mutation(m, start_code):
     """
     Fetch a mutation of code.
@@ -106,7 +123,7 @@ def get_mutation(m, start_code):
     """
     min_mutate_idx = len('__kernel void ')
     max_mutate_idx = len(start_code) - 1
-    attempts = []
+    attempts = ''
 
     max_attempts = 500
 
@@ -130,7 +147,7 @@ def get_mutation(m, start_code):
                 print("bad")
             else:
                 print("ugly")
-            attempts.append((ret, mutate_idx, mutate_seed))
+            attempts += str(ret)
     return None, None, None, attempts
 
 
@@ -150,75 +167,123 @@ def escape_features(features):
     return ', '.join([str(x) for x in features])
 
 
-def search(m, start_code, target_code, logpath):
-    log = []
-    code_history = [start_code]
+def get_entries(log, name):
+    entries = []
+    for entry in log:
+        if entry.get("name") == name:
+            entries.append(entry)
+    return entries
 
-    if fs.dirname(logpath):
-        print("mkdir", fs.dirname(logpath))
-        fs.mkdir(fs.dirname(logpath))
 
-    write_log(log, logpath)
+def get_steps(log):
+    return get_entries(log, "step")
+
+
+def get_code_history(log):
+    code_history = [log[0]['data']['start_code']]
+    for step in get_steps(log):
+        if step['data']['code'] != code_history[-1]:
+            code_history.append(step['data']['code'])
+    return code_history
+
+
+def search(m, target_code, logpath, start_code=None):
+    # resume search
+    if fs.exists(logpath):
+        log = clgen.load_json_file(logpath)
+        print("resuming search of", len(get_steps(log)), "steps")
+    else:
+        log = []
+
+    steps = get_steps(log)
+
+    if start_code and not len(steps):
+        code = start_code
+    elif len(steps):
+        code = steps[-1]['data']['code']
+    else:
+        code = get_start_code(m)
+
     target_features = get_features(target_code)
-
-    code = start_code
     features = get_features(code)
     distance = get_distance(target_features, features)
 
-    add_to_log(log, {
-        "start_code": start_code,
-        "start_features": escape_features(features),
-        "target_features": escape_features(target_features),
-        "target_code": target_code,
-        "distance": distance
-    }, name="init")
-    write_log(log, logpath)
+    if get_entries(log, "init"):
+        init = get_entries(log, "init")[0]
+        assert(init['data']['target_features'] == target_features)
+        assert(init['data']['target_code'] == target_code)
 
-    best = {
-        "distance": distance,
-        "idx": -1,
-        "seed": 0,
-        "code": code
-    }
+        # load history from log
+        code_history = get_code_history(log)
+    else:
+        # create init entry
+        add_to_log(log, {
+            "start_code": start_code,
+            "start_features": escape_features(features),
+            "target_features": escape_features(target_features),
+            "target_code": target_code,
+            "distance": distance
+        }, name="init")
+        write_log(log, logpath)
+        code_history = [code]
+
+    # keep track of best
+    if len(steps):
+        best = steps[-1]['data']['best']
+    else:
+        best = {
+            "distance": distance,
+            "code": code
+        }
 
     # maximum number of mutations before stopping search
-    max_count = 1000
+    max_count = 1000 - len(steps)
 
-    improved_counter = 0
     for i in range(max_count):
+        print("step", i, "of", max_count)
         newcode, mutate_idx, mutate_seed, attempts = get_mutation(m, code)
+        try:
+            features = get_features(newcode)
+            distance = get_distance(target_features, features)
+        except ValueError:
+            newcode = None
 
         entry = {
             "count": i,
-            "attempts": attempts,
-            "best": distance
+            "attempts": attempts
         }
 
         if newcode:
-            features = get_features(newcode)
-            distance = get_distance(target_features, features)
-            entry["code"] = newcode,
-            entry["features"] = escape_features(features),
+            entry["base_code"] = code
+            entry["code"] = newcode
             entry["distance"] = distance
-            entry["mutate_idx"] = mutate_idx,
-            entry["mutate_seed"] = mutate_seed,
+            entry["distance_diff"] = 1 - distance / best["distance"]
+            entry["features"] = escape_features(features)
+            entry["mutate_idx"] = mutate_idx
+            entry["mutate_seed"] = mutate_seed
             code_history.append(code)
         else:
-            print("step back")
+            print("    -> step back")
             # step back
             if len(code_history):
                 code = code_history.pop()
             entry["step_back"] = code
 
         if distance < best["distance"]:
-            improved_counter += 1
-            entry["improvement_count"] = improved_counter
-            entry["improvement"] = -(1 - distance / best["distance"])
-
+            print("    -> improvement {:.1f}%".format(
+                entry["distance_diff"] * 100))
             best["distance"] = distance
             best["idx"] = mutate_idx
             best["seed"] = mutate_seed
             best["code"] = newcode
+        else:
+            if newcode:
+                print("    -> regression {:.1f}%".format(
+                    entry["distance_diff"] * 100))
+
+        entry["best"] = best["distance"]
+        entry["best_code"] = best["code"]
+        entry["best_idx"] = best[""]
 
         add_to_log(log, entry, name="step")
         write_log(log, logpath)
@@ -241,15 +306,16 @@ def main():
 
     parser = ArgumentParser()
     parser.add_argument("model", help="Path to model")
-    parser.add_argument("input", help="Path to starting code")
     parser.add_argument("target", help="Path to target code")
+    parser.add_argument("-i", "--input", metavar="path", default="none",
+                        help="Path to starting code")
     parser.add_argument("-l", "--log", metavar="path", default="search-log.json",
                         help="Path to log file")
     args = parser.parse_args()
 
-    log.init(verbose=True)
+    clgen_log.init(verbose=True)
 
-    # load model
+    # load and train model
     modelpath = args.model
     if modelpath.endswith(".tar.bz2"):
         m = model.from_tar(modelpath)
@@ -258,13 +324,16 @@ def main():
         m = clgen.model.from_json(model_json)
     m.train()
 
-    with open(args.input) as infile:
-        start_code = infile.read()
-
+    # read target code
     with open(args.target) as infile:
         target_code = infile.read()
 
-    search(m, start_code, target_code, args.log)
+    # read start code if provided
+    if args.input:
+        with open(args.input) as infile:
+            start_code = infile.read()
+
+    search(m, target_code, args.log, start_code=start_code)
 
 
 if __name__ == "__main__":
