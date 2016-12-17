@@ -218,7 +218,7 @@ def search(m, target_code, logpath, start_code=None):
     else:
         # create init entry
         add_to_log(log, {
-            "start_code": start_code,
+            "start_code": code,
             "start_features": escape_features(features),
             "target_features": escape_features(target_features),
             "target_code": target_code,
@@ -234,7 +234,8 @@ def search(m, target_code, logpath, start_code=None):
     else:
         best = {
             "distance": distance,
-            "code": code
+            "code": code,
+            "improvement_count": 0
         }
 
     # maximum number of mutations before stopping search
@@ -276,6 +277,7 @@ def search(m, target_code, logpath, start_code=None):
             best["distance"] = distance
             best["code"] = newcode
             best["features"] = encode_features(features)
+            best["improvement_count"] += 1
         else:
             if newcode:
                 print("    -> regression {:.1f}%".format(
