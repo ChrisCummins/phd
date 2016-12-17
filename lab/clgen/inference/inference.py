@@ -77,10 +77,10 @@ def main():
         s = sampler.from_json({
             "kernels": {
                 "args": argspec,
-                "max_length": 10000
+                "max_length": 5000
             },
             "sampler": {
-                "batch_size": 5000,
+                "batch_size": 2000,
                 "max_batches": 1,
                 "static_checker": False,
                 "dynamic_checker": False
