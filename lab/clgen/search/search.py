@@ -81,19 +81,14 @@ def get_sample(m, seed_text, seed):
     """
     try:
         buf = StringIO()
-        print(">>> trying idx", len(seed_text), "seed", seed, "-", end=" ")
-
         m.sample(seed_text=seed_text, output=buf, seed=seed, max_length=5000,
                  quiet=True)
         out = buf.getvalue()
         result = preprocess.preprocess(out)
-        print("good")
         return 0, result
     except preprocess.BadCodeException:
-        print("bad")
         return 1, None
     except preprocess.UglyCodeException:
-        print("ugly")
         return 2, None
 
 
@@ -113,20 +108,31 @@ def get_mutation(m, start_code):
     max_mutate_idx = len(start_code) - 1
     attempts = []
 
-    max_attempts = 250
+    max_attempts = 500
 
-    for _ in range(max_attempts):
+    for i in range(1, max_attempts + 1):
         # pick a random split and seed
         mutate_idx = randint(min_mutate_idx, max_mutate_idx)
         mutate_seed = randint(0, 255)
 
         start_text = start_code[:mutate_idx]
 
+        print(">>> attempt", i, "idx", mutate_idx, "seed", mutate_seed, "-",
+              end=" ")
         ret, code = get_sample(m, start_text, mutate_seed)
         if not ret and code != start_code:
+            print("good")
             return code, mutate_idx, mutate_seed, attempts
         else:
+            if ret == 0:
+                print("unmodified")
+            elif ret == 1:
+                print("bad")
+            else:
+                print("ugly")
             attempts.append((ret, mutate_idx, mutate_seed))
+    return None, None, None, attempts
+
 
 
 def write_log(log, logpath):
@@ -146,6 +152,8 @@ def escape_features(features):
 
 def search(m, start_code, target_code, logpath):
     log = []
+    code_history = [start_code]
+
     if fs.dirname(logpath):
         print("mkdir", fs.dirname(logpath))
         fs.mkdir(fs.dirname(logpath))
@@ -194,6 +202,13 @@ def search(m, start_code, target_code, logpath):
             entry["distance"] = distance
             entry["mutate_idx"] = mutate_idx,
             entry["mutate_seed"] = mutate_seed,
+            code_history.append(code)
+        else:
+            print("step back")
+            # step back
+            if len(code_history):
+                code = code_history.pop()
+            entry["step_back"] = code
 
         if distance < best["distance"]:
             improved_counter += 1
@@ -206,6 +221,7 @@ def search(m, start_code, target_code, logpath):
             best["code"] = newcode
 
         add_to_log(log, entry, name="step")
+        write_log(log, logpath)
 
         # doesn't have to be exactly zero but whatever
         if distance <= 0.001:
@@ -213,11 +229,9 @@ def search(m, start_code, target_code, logpath):
             break
 
     add_to_log(log, {
-        "final_code": start_code,
-        "final_features": escape_features(features),
-        "target_features": escape_features(target_features),
-        "target_code": target_code,
-        "distance": distance
+        "best_code": best['code'],
+        "best_features": escape_features(best['features']),
+        "best_distance": best['distance']
     }, name="end")
     write_log(log, logpath)
 
@@ -229,7 +243,7 @@ def main():
     parser.add_argument("model", help="Path to model")
     parser.add_argument("input", help="Path to starting code")
     parser.add_argument("target", help="Path to target code")
-    parser.add_argument("-l", "--log", metavar="path", default="search.log",
+    parser.add_argument("-l", "--log", metavar="path", default="search-log.json",
                         help="Path to log file")
     args = parser.parse_args()
 
