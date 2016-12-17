@@ -280,8 +280,9 @@ class Model(clgen.CLgenObject):
                 saver.save(sess, checkpoint_path, global_step=batch_num)
                 log.info("model saved to {}".format(checkpoint_path))
 
-    def sample(self, seed_text="__kernel void", output=sys.stdout, num_samples=1,
-               temperature=.75, max_length=10000, seed=None, quiet=False):
+    def sample(self, seed_text="__kernel void", output=sys.stdout,
+               num_samples=1, temperature=1, max_length=10000, seed=None,
+               quiet=False):
         """
         Sample model.
 
@@ -298,7 +299,8 @@ class Model(clgen.CLgenObject):
         self._init_tensorflow(infer=True)
 
         if seed is not None:
-            pass  # TODO: Set numpy RNG seed.
+            np.random.seed(seed)
+            tf.set_random_seed(seed)
 
         with tf.Session() as sess:
             tf.global_variables_initializer().run()

@@ -19,6 +19,7 @@
 from unittest import TestCase, skip, skipIf
 import tests
 
+import labm8
 import re
 
 from labm8 import fs
@@ -28,6 +29,11 @@ from tempfile import mkdtemp
 import clgen
 from clgen import cache
 from clgen import model
+
+if labm8.is_python3():
+    from io import StringIO
+else:
+    from StringIO import StringIO
 
 
 def get_test_model():
@@ -39,7 +45,7 @@ def get_test_model():
             "model_type": "lstm",
             "rnn_size": 8,
             "num_layers": 2,
-            "max_epochs": 1
+            "max_epochs": 2
         }
     })
 
@@ -86,6 +92,22 @@ class TestModel(TestCase):
         self.assertTrue(fs.isfile(outpath))
         self.assertEqual(fs.dirname(outpath), tmpdir)
         fs.rm(tmpdir)
+
+    def test_sample_seed(self):
+        m = get_test_model()
+        m.train()
+
+        # sample 50 chars a few times
+        buf1 = StringIO()
+        m.sample(seed_text='__k', output=buf1, seed=204, max_length=50)
+        out1 = buf1.getvalue()
+        print("OUT1", out1)
+        for _ in range(4):
+            buf = StringIO()
+            m.sample(seed_text='__k', output=buf, seed=204, max_length=50)
+            out = buf.getvalue()
+            print("OUT", out)
+            self.assertEqual(out1, out)
 
 
 class TestDistModel(TestCase):
