@@ -276,7 +276,7 @@ def search(m, target_code, logpath, start_code=None):
                 entry["distance_diff"] * 100))
             best["distance"] = distance
             best["code"] = newcode
-            best["features"] = encode_features(features)
+            best["features"] = escape_features(features)
             best["improvement_count"] += 1
         else:
             if newcode:
@@ -307,7 +307,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("model", help="Path to model")
     parser.add_argument("target", help="Path to target code")
-    parser.add_argument("-i", "--input", metavar="path", default="none",
+    parser.add_argument("-i", "--input", metavar="path", default=None,
                         help="Path to starting code")
     parser.add_argument("-l", "--log", metavar="path", default="search-log.json",
                         help="Path to log file")
@@ -329,6 +329,7 @@ def main():
         target_code = infile.read()
 
     # read start code if provided
+    start_code = None
     if args.input:
         with open(args.input) as infile:
             start_code = infile.read()
