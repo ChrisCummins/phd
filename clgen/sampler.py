@@ -25,6 +25,7 @@ import sys
 
 from glob import glob, iglob
 from labm8 import fs
+from labm8 import system
 
 import clgen
 from clgen import config as cfg
@@ -119,7 +120,8 @@ class Sampler(clgen.CLgenObject):
         else:
             start_text = "__kernel void A("
 
-        tmppath = fs.path(cache.path, "sample.tmp.cl")
+        tmppath = fs.path(cache.path,
+                          "sampler-{pid}.tmp.cl".format(pid=system.PID))
 
         with open(tmppath, "w") as outfile:
             opts = {
