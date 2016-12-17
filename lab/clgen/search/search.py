@@ -210,8 +210,8 @@ def search(m, target_code, logpath, start_code=None):
 
     if get_entries(log, "init"):
         init = get_entries(log, "init")[0]
-        assert(init['data']['target_features'] == target_features)
         assert(init['data']['target_code'] == target_code)
+        assert(init['data']['target_features'] == escape_features(target_features))
 
         # load history from log
         code_history = get_code_history(log)
@@ -222,7 +222,8 @@ def search(m, target_code, logpath, start_code=None):
             "start_features": escape_features(features),
             "target_features": escape_features(target_features),
             "target_code": target_code,
-            "distance": distance
+            "distance": distance,
+            "model": m.meta
         }, name="init")
         write_log(log, logpath)
         code_history = [code]
@@ -237,10 +238,10 @@ def search(m, target_code, logpath, start_code=None):
         }
 
     # maximum number of mutations before stopping search
-    max_count = 1000 - len(steps)
+    MAX_STEPS = 1000
 
-    for i in range(max_count):
-        print("step", i, "of", max_count)
+    for i in range(len(steps), MAX_STEPS):
+        print("step", i, "of", MAX_STEPS)
         newcode, mutate_idx, mutate_seed, attempts = get_mutation(m, code)
         try:
             features = get_features(newcode)
@@ -273,17 +274,14 @@ def search(m, target_code, logpath, start_code=None):
             print("    -> improvement {:.1f}%".format(
                 entry["distance_diff"] * 100))
             best["distance"] = distance
-            best["idx"] = mutate_idx
-            best["seed"] = mutate_seed
             best["code"] = newcode
+            best["features"] = encode_features(features)
         else:
             if newcode:
                 print("    -> regression {:.1f}%".format(
                     entry["distance_diff"] * 100))
 
-        entry["best"] = best["distance"]
-        entry["best_code"] = best["code"]
-        entry["best_idx"] = best[""]
+        entry["best"] = best
 
         add_to_log(log, entry, name="step")
         write_log(log, logpath)
