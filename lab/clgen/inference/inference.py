@@ -5,13 +5,11 @@
 import sys
 
 from collections import Counter
-from time import time
 from labm8 import fs
+from labm8 import time
 from labm8 import system
-from labm8.time import nowstr
 
 import clgen
-from clgen import clutil
 from clgen import corpus
 from clgen import dbutil
 from clgen import log
@@ -22,7 +20,6 @@ from clgen import preprocess
 
 def evaluate(model, sampler):
     """ evaluate sampling efficiency """
-
     print("starting sampling")
     sampler.sample(model)
 
@@ -43,6 +40,8 @@ def evaluate(model, sampler):
 
     return {
         "argspec": sampler.kernel_opts["args"],
+        "host": system.HOSTNAME,
+        "date": time.nowstr(),
         "num_kernels": num_kernels,
         "num_good_kernels": num_good_kernels,
         "discard_rate": discard_rate,
