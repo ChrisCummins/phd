@@ -68,7 +68,10 @@ def main():
     for i, row in enumerate(p):
         outpath = "./inference-p" + str(i + 1) + "-" + fs.basename(sys.argv[1])
         if fs.exists(outpath):
+            print("skipped result for", outpath)
             continue
+        else:
+            print("starting result for", outpath)
 
         _, prototype = row
         argspec = [' '.join(x.split()[:-1]) for x in prototype.split(',')]
