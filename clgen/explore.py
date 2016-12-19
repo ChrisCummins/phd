@@ -137,18 +137,10 @@ def stats_worker(db_path):
     c = db.cursor()
     stats = []
 
-    c.execute("SELECT Count(*) from ContentFiles")
-    nb_ocl_files = c.fetchone()[0]
-    stats.append(('Number of content files', bigint(nb_ocl_files)))
-    stats.append(('', ''))
-
     # ContentFiles
     c.execute("SELECT Count(DISTINCT id) from ContentFiles")
     nb_uniq_ocl_files = c.fetchone()[0]
-    ratio_uniq_ocl_files = div(nb_uniq_ocl_files, nb_ocl_files)
-    stats.append(('Number of unique content files',
-                  bigint(nb_uniq_ocl_files) +
-                  ' ({:.0f}%)'.format(ratio_uniq_ocl_files * 100)))
+    stats.append(('Number of content files', bigint(nb_uniq_ocl_files)))
 
     c.execute("SELECT contents FROM ContentFiles")
     code = c.fetchall()
@@ -163,7 +155,7 @@ def stats_worker(db_path):
     # Preprocessed
     c.execute("SELECT Count(*) FROM PreprocessedFiles WHERE status=0")
     nb_pp_files = c.fetchone()[0]
-    ratio_pp_files = div(nb_pp_files, nb_ocl_files)
+    ratio_pp_files = div(nb_pp_files, nb_uniq_ocl_files)
     stats.append(('Number of good preprocessed files',
                   bigint(nb_pp_files) +
                   ' ({:.0f}%)'.format(ratio_pp_files * 100)))
@@ -212,20 +204,14 @@ def gh_stats_worker(db_path):
                   bigint(nb_forks) +
                   ' ({:.0f}%)'.format(ratio_forks * 100)))
 
-    c.execute("SELECT Count(*) from ContentFiles")
-    nb_ocl_files = c.fetchone()[0]
-    stats.append(('Number of content files', bigint(nb_ocl_files)))
-    stats.append(('', ''))
-
     # ContentFiles
     c.execute("SELECT Count(DISTINCT id) from ContentFiles")
     nb_uniq_ocl_files = c.fetchone()[0]
-    ratio_uniq_ocl_files = div(nb_uniq_ocl_files, nb_ocl_files)
+    ratio_uniq_ocl_files = div(nb_uniq_ocl_files, nb_uniq_ocl_files)
     stats.append(('Number of unique content files',
-                  bigint(nb_uniq_ocl_files) +
-                  ' ({:.0f}%)'.format(ratio_uniq_ocl_files * 100)))
+                  bigint(nb_uniq_ocl_files)))
 
-    avg_nb_ocl_files_per_repo = div(nb_ocl_files, nb_ocl_repos)
+    avg_nb_ocl_files_per_repo = div(nb_uniq_ocl_files, nb_ocl_repos)
     stats.append(('Content files per repository',
                   'avg: {:.2f}'.format(avg_nb_ocl_files_per_repo)))
 
@@ -242,7 +228,7 @@ def gh_stats_worker(db_path):
     # Preprocessed
     c.execute("SELECT Count(*) FROM PreprocessedFiles WHERE status=0")
     nb_pp_files = c.fetchone()[0]
-    ratio_pp_files = div(nb_pp_files, nb_ocl_files)
+    ratio_pp_files = div(nb_pp_files, nb_uniq_ocl_files)
     stats.append(('Number of good preprocessed files',
                   bigint(nb_pp_files) +
                   ' ({:.0f}%)'.format(ratio_pp_files * 100)))
