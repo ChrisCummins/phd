@@ -43,6 +43,7 @@ scripts = [
     'bin/clgen-fetch-db',
     'bin/clgen-fetch-github',
     'bin/clgen-preprocess',
+    'bin/clgen-merge',
     'bin/clgen-train',
 ]
 
