@@ -117,6 +117,7 @@ install_tmux() {
 
 
 install_atom() {
+    pip install pylint  # needed for python linter
     symlink .dotfiles/atom ~/.atom
     symlink ~/.dotfiles/atom/ratom ~/.local/bin/ratom
 }
