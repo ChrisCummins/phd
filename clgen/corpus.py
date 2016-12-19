@@ -121,6 +121,20 @@ class Corpus(clgen.CLgenObject):
             batch_size (int): Batch size.
             seq_length (int): Sequence length.
         """
+        def _init_error(err):
+            """ tidy up in case of error """
+            paths = [
+                fs.path(self.cache.path, "kernels.db"),
+                fs.path(self.cache.path, "corpus.txt"),
+                fs.path(self.cache.path, "tensor.npy"),
+                fs.path(self.cache.path, "vocab.pkl")
+            ]
+            for path in paths:
+                if fs.exists(path):
+                    log.info("removing", path)
+                    fs.rm(path)
+            raise err
+
         self.hash = uid
 
         self.isgithub = isgithub
@@ -135,19 +149,27 @@ class Corpus(clgen.CLgenObject):
             if not fs.isdir(path):
                 raise clgen.UserError(
                     "Corpus path '{}' is not a directory".format(path))
-            # create kernels database if necessary
-            if not self.cache["kernels.db"]:
-                self._create_kernels_db(path)
-
-        # create corpus text if not exists
-        if not self.cache["corpus.txt"]:
-            self._create_txt()
+            try:
+                # create kernels database if necessary
+                if not self.cache["kernels.db"]:
+                    self._create_kernels_db(path)
+            except Exception as e:
+                _init_error(e)
+        try:
+            # create corpus text if not exists
+            if not self.cache["corpus.txt"]:
+                self._create_txt()
+        except Exception as e:
+            _init_error(e)
 
         # preprocess if needed
         if self.cache["tensor.npy"] and self.cache["vocab.pkl"]:
             self._load_preprocessed()
         else:
-            self._preprocess()
+            try:
+                self._preprocess()
+            except Exception as e:
+                _init_error(e)
 
         self.size = len(self.tensor)
         self._create_batches()
