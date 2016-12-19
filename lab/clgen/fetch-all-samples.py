@@ -23,37 +23,53 @@ import clgen
 from clgen import cache
 from clgen import cli
 from clgen import dbutil
+from clgen import explore
 from clgen import log
 
 __description__ = """
-Merge all sampler files into a database.
+Merge kernel datasets.
 """
 
-def merge_all_samplers(outpath):
-    if not fs.isfile(outpath):
-        dbutil.create_db(outpath)
-
-    db = dbutil.connect(outpath)
+def get_all_sampler_datasets():
+    datasets = []
     for samplerdir in fs.ls(fs.path(cache.ROOT, "sampler"), abspaths=True):
         inpath = fs.path(samplerdir, "kernels.db")
-        if not fs.isfile(inpath):
-            continue
+        if fs.isfile(inpath):
+            datasets.append(inpath)
+    return datasets
 
-        log.info("importing from", fs.basename(samplerdir))
+
+def merge(outpath, inpaths=[]):
+    if not fs.isfile(outpath):
+        dbutil.create_db(outpath)
+        log.info("created", outpath)
+
+    db = dbutil.connect(outpath)
+
+    if not inpaths:
+        inpaths = get_all_sampler_datasets()
+
+    for inpath in inpaths:
+        log.info("merging from", inpath)
         c = db.cursor()
-        c.execute("ATTACH {} AS rhs".format(outpath))
+        c.execute("ATTACH '{}' AS rhs".format(inpath))
+        c.execute("INSERT OR IGNORE INTO ContentFiles "
+                  "SELECT * FROM rhs.ContentFiles")
         c.execute("INSERT OR IGNORE INTO PreprocessedFiles "
                   "SELECT * FROM rhs.PreprocessedFiles")
+        c.execute("DETACH rhs")
         db.commit()
+
+    explore.explore(outpath)
 
 
 def main():
     parser = cli.ArgumentParser(description=__description__)
-    parser.add_argument("dataset", metavar="<dataset>",
-                        help="path to output dataset")
+    parser.add_argument("dataset", help="path to output dataset")
+    parser.add_argument("inputs", nargs='+', help="path to input datasets")
     args = parser.parse_args()
 
-    cli.main(merge_all_samplers, fs.path(args.dataset))
+    cli.main(merge, args.dataset, args.inputs)
 
 
 if __name__ == "__main__":
