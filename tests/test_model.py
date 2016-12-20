@@ -22,6 +22,7 @@ import tests
 import labm8
 import re
 
+from io import StringIO
 from labm8 import fs
 from six import string_types
 from tempfile import mkdtemp
@@ -29,11 +30,6 @@ from tempfile import mkdtemp
 import clgen
 from clgen import cache
 from clgen import model
-
-if labm8.is_python3():
-    from io import StringIO
-else:
-    from StringIO import StringIO
 
 
 def get_test_model():
