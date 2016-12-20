@@ -55,6 +55,9 @@ before_install:
 install:  # cache hot
   - pip install 'protobuf==3.1.0'
   - pip install tensorflow
+  - apt-cache policy libc6
+  - ldd --version
+  - sudo apt-get install libc6
   - ldd --version
   - python -c 'import tensorflow as tf; print("tensorflow:", tf.__version__)'
   - ./configure -b
