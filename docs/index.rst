@@ -33,7 +33,7 @@ each for each of the following requirements:
 -  `GCC <https://gcc.gnu.org/>`_ >= 4.8.2 or
    `clang <http://llvm.org/releases/download.html>`_ >= 3.1.
 -  `GNU Make <http://savannah.gnu.org/projects/make>`_ > 3.79.
--  `Python <https://www.python.org/>`_ 2.7.12 or >= 3.4.
+-  `Python <https://www.python.org/>`_ == 3.5.
 -  `libhdf5 <https://support.hdfgroup.org/HDF5/release/obtainsrc.html>`_ >=
    1.8.11.
 -  `libffi <https://sourceware.org/libffi/>`_ >= 3.0.13.
