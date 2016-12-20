@@ -15,7 +15,7 @@ set -e
 if [[ `uname` == 'Darwin' ]]; then
 
     brew tap homebrew/science
-    brew install git libffi wget python python3
+    brew install git libffi wget python3
 
 elif [[ "$(uname)" == 'Linux' ]]; then
 
@@ -41,10 +41,9 @@ elif [[ "$(uname)" == 'Linux' ]]; then
 
     if [[ "$DISTRO" == 'ubuntu' ]]; then
 
-        sudo apt-get install -y build-essential python-dev python-virtualenv \
-            python-pip git zlib1g-dev libffi-dev zlib1g-dev \
-            curl wget python3-dev python3-pip python3-virtualenv unzip \
-            libncurses5-dev libhdf5-dev
+        sudo apt-get install -y build-essential git zlib1g-dev libffi-dev \
+            zlib1g-dev curl wget python3-dev python3-pip python3-virtualenv \
+            unzip libncurses5-dev libhdf5-dev
 
     fi
 
