@@ -451,7 +451,7 @@ class Model(clgen.CLgenObject):
 
             # write meta
             metapath = mktemp(prefix="clgen-", suffix=".json")
-            clgen.write_file(metapath, json.dumps(meta))
+            clgen.write_file(metapath, clgen.format_json(meta))
             log.debug("metafile:", metapath)
 
             # create tarball
