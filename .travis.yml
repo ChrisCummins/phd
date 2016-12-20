@@ -53,6 +53,7 @@ before_install:
 #   - touch NORUN
 #
 install:  # cache hot
+  - pip install 'protobuf==3.1.0'
   - pip install tensorflow
   - ./configure -b
   - make all
