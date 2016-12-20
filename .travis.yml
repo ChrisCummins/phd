@@ -4,7 +4,6 @@
 #
 # See: https://docs.travis-ci.com/user/ci-environment/
 sudo: required
-dist: trusty
 
 language: python
 
@@ -27,8 +26,8 @@ addons:
       - llvm-toolchain-precise-3.7
       - ubuntu-toolchain-r-test
     packages:
-      - gcc-4.8
-      - g++-4.8
+      - gcc-5
+      - g++-5
       - clang-3.6
       - libhdf5-serial-dev
       - python-dev
