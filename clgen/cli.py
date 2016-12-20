@@ -24,8 +24,10 @@ from __future__ import print_function
 import argparse
 import os
 import sys
+import traceback
 
 from argparse import RawTextHelpFormatter
+from labm8 import fs
 from sys import exit
 
 import clgen
@@ -121,6 +123,10 @@ def main(method, *args, **kwargs):
     """
     # if DEBUG var set, don't catch exceptions
     if os.environ.get("DEBUG", None):
+        # verbose stack traces. see: https://pymotw.com/2/cgitb/
+        import cgitb
+        cgitb.enable(format='text')
+
         return method(*args, **kwargs)
 
     try:
@@ -133,7 +139,19 @@ def main(method, *args, **kwargs):
         print("\nkeyboard interrupt, terminating", file=sys.stderr)
         log.exit(1)
     except Exception as e:
-        # TODO: Print limited stack trace
-        log.fatal(e, "(" + type(e).__name__  + ")",
-                  "\n\nPlease report bugs at <"
-                  "https://github.com/ChrisCummins/clgen/issues>")
+
+        # get limited stack trace
+        _, _, tb = sys.exc_info()
+        trace = "\n".join(
+            "       {file}:{ln}:{fn}".format(file=fs.basename(x[0]), ln=x[1],
+                                             fn=x[2])
+            for x in traceback.extract_tb(tb, limit=5)[1:])
+
+        log.fatal("""\
+{err} ({type})
+
+stacktrace:
+{stack_trace}
+
+Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
+""".format(err=e, type=type(e).__name__, stack_trace=trace))
