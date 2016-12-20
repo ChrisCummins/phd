@@ -25,6 +25,7 @@ import numpy as np
 
 from collections import Counter
 from checksumdir import dirhash
+from io import StringIO
 from labm8 import fs
 from six.moves import cPickle
 
@@ -232,6 +233,17 @@ class Corpus(clgen.CLgenObject):
         self.vocab_size = len(self.atoms)
         self.vocab = dict(zip(self.atoms, range(len(self.atoms))))
 
+    def _generate_kernel_corpus(self) -> str:
+        """ dump all kernels into a string in a random order """
+        db = dbutil.connect(self.cache["kernels.db"])
+        c = db.cursor()
+
+        c.execute("""\
+            SELECT PreprocessedFiles.Contents FROM PreprocessedFiles
+            WHERE status=0 ORDER BY RANDOM()""")
+
+        return '\n\n'.join(row[0] for row in c.fetchall())
+
     def create_batches(self):
         """
         Create batches for training.
@@ -239,8 +251,8 @@ class Corpus(clgen.CLgenObject):
         log.debug("creating batches")
         self.reset_batch_pointer()
 
-        # read the corpus text file
-        data = self._read_txt()
+        # generate a corpus
+        data = self._generate_kernel_corpus()
 
         # encode corpus with vocab
         self._tensor = np.array(list(map(self.vocab.get, data)))
@@ -252,6 +264,7 @@ class Corpus(clgen.CLgenObject):
             raise clgen.UserError(
                 "Not enough data. Use a smaller seq_length and batch_size")
 
+        # split into batches
         self._tensor = self._tensor[:self.num_batches * self.batch_size * self.seq_length]
         xdata = self._tensor
         ydata = np.copy(self._tensor)
