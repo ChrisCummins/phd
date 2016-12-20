@@ -4,6 +4,7 @@
 #
 # See: https://docs.travis-ci.com/user/ci-environment/
 sudo: required
+dist: trusty
 
 language: python
 
@@ -40,6 +41,7 @@ env:
 before_install:
   - pip install --upgrade pip
   - pip install coveralls
+  - pip --version
   - sudo apt-get update -qq
 
 # A clean Travis CI build will timeout after 50 minutes and fail. Irritatingly,
