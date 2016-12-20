@@ -26,7 +26,6 @@ from __future__ import unicode_literals
 from __future__ import with_statement
 
 from io import StringIO
-import labm8
 import numpy as np
 import os
 import sys
