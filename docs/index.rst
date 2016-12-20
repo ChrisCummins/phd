@@ -87,8 +87,9 @@ Requires `OpenCL <https://www.khronos.org/opencl/>`__.
 
     (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.2/install-opencl.sh | bash
 
-**3. CUDA enabled:** *fast performance, all features enabled.* Requires NVIDIA
-GPU, `CUDA <http://www.nvidia.com/object/cuda_home_new.html>`__ >= 6.5.
+**3. CUDA enabled:** *fast performance, all features enabled.*
+Requires NVIDIA GPU with
+`CUDA 8.0 and cuDNN <https://www.tensorflow.org/get_started/os_setup#optional_install_cuda_gpus_on_linux>`_.
 
 ::
 
@@ -132,7 +133,8 @@ Requires `OpenCL <https://www.khronos.org/opencl/>`__.
     $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.2/install-opencl.sh | bash
 
 **3. CUDA enabled:** *fast performance, all features enabled.*
-Requires `CUDA <http://www.nvidia.com/object/cuda_home_new.html>`__ >= 6.5.
+Requires NVIDIA GPU with
+`CUDA 8.0 and cuDNN <https://www.tensorflow.org/get_started/os_setup#optional_install_cuda_gpus_on_linux>`_.
 
 ::
 
