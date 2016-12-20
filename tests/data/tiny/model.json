@@ -1,12 +1,23 @@
 {
   "corpus": {
+    // path (str): directory containing kernel files. May be absolute or relative
     "path": "corpus",
-    "github": false
+    // preserve_order (bool, default true): If true, kernel ordering is shuffled
+    //     during training. If false, kernel order is preserved.
+    "preserve_order": false,
+    // eof (bool, default false): If true, insert 'end of file' separators
+    // between files in corpus. If false, do not.
+    "eof": false
   },
   "train_opts": {
+    // model_type (str: {lstm,rnn,gru}, default lstm): Network cell type.
     "model_type": "lstm",
+    // rnn_size (int, default 128): Network layer size.
     "rnn_size": 128,
+    // num_layers (int, default 2): Number of layers in model.
     "num_layers": 2,
+    // max_epochs (int, default 50): Number of epochs (iterations over training
+    //     data) to train for.
     "max_epochs": 10
   }
 }

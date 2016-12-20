@@ -23,9 +23,9 @@ import re
 import codecs
 import numpy as np
 
-from collections import Counter
 from checksumdir import dirhash
-from io import StringIO
+from collections import Counter
+from copy import copy
 from labm8 import fs
 from six.moves import cPickle
 
@@ -107,8 +107,7 @@ class Corpus(clgen.CLgenObject):
     """
     Representation of a training corpus.
     """
-    def __init__(self, uid, path=None, isgithub=False, batch_size=50,
-                 seq_length=50):
+    def __init__(self, uid, path=None, **opts):
         """
         Instantiate a corpus.
 
@@ -118,9 +117,7 @@ class Corpus(clgen.CLgenObject):
         Arguments:
             uid (str): Corpus ID.
             path (str, optional): Path to corpus.
-            isgithub (bool): Whether corpus is from GitHub.
-            batch_size (int): Batch size.
-            seq_length (int): Sequence length.
+            **opts: Keyword options.
         """
         def _init_error(err):
             """ tidy up in case of error """
@@ -137,11 +134,7 @@ class Corpus(clgen.CLgenObject):
             raise err
 
         self.hash = uid
-
-        self.isgithub = isgithub
-        self.batch_size = batch_size
-        self.seq_length = seq_length
-
+        self.opts = opts
         log.debug("corpus {hash}".format(hash=self.hash))
 
         self.cache = Cache(fs.path("corpus", self.hash))
@@ -178,7 +171,7 @@ class Corpus(clgen.CLgenObject):
 
         # create a database and put it in the cache
         tmppath = fs.path(self.cache.path, "kernels.db.tmp")
-        dbutil.create_db(tmppath, github=self.isgithub)
+        dbutil.create_db(tmppath)
         self.cache["kernels.db"] = tmppath
 
         # get a list of files in the corpus
@@ -192,10 +185,7 @@ class Corpus(clgen.CLgenObject):
         preprocess.preprocess_db(self.cache["kernels.db"])
 
         # print database stats
-        if self.isgithub:
-            explore.explore_gh(self.cache["kernels.db"])
-        else:
-            explore.explore(self.cache["kernels.db"])
+        explore.explore(self.cache["kernels.db"])
 
     def _create_txt(self):
         """creates and caches corpus.txt"""
@@ -242,7 +232,9 @@ class Corpus(clgen.CLgenObject):
             SELECT PreprocessedFiles.Contents FROM PreprocessedFiles
             WHERE status=0 ORDER BY RANDOM()""")
 
-        return '\n\n'.join(row[0] for row in c.fetchall())
+        sep = '\n\n// EOF\n\n' if self.opts.get("eof") else '\n\n'
+
+        return sep.join(row[0] for row in c.fetchall())
 
     def create_batches(self):
         """
@@ -252,7 +244,10 @@ class Corpus(clgen.CLgenObject):
         self.reset_batch_pointer()
 
         # generate a corpus
-        data = self._generate_kernel_corpus()
+        if self.opts.get("preserve_order", False):
+            data = self._read_txt()
+        else:
+            data = self._generate_kernel_corpus()
 
         # encode corpus with vocab
         self._tensor = np.array(list(map(self.vocab.get, data)))
@@ -287,6 +282,14 @@ class Corpus(clgen.CLgenObject):
             return self._size
 
     @property
+    def batch_size(self) -> int:
+        return self.opts.get("batch_size", 50)
+
+    @property
+    def seq_length(self) -> int:
+        return self.opts.get("seq_length", 50)
+
+    @property
     def num_batches(self) -> int:
         try:
             return self._num_batches
@@ -302,12 +305,9 @@ class Corpus(clgen.CLgenObject):
         Returns:
             dict: Metadata.
         """
-        return {
-            "id": self.hash,
-            "github": self.isgithub,
-            "batch_size": self.batch_size,
-            "seq_length": self.seq_length
-        }
+        _meta = copy(self.opts)
+        _meta["if"] = self.hash
+        return _meta
 
     def reset_batch_pointer(self):
         """
@@ -368,12 +368,11 @@ class Corpus(clgen.CLgenObject):
             if not fs.isdir(cache_path):
                 raise clgen.UserError("Corpus {} not found".format(uid))
 
-        isgithub = corpus_json.get("github", False)
-        batch_size = corpus_json.get("batch_size", 50)
-        seq_length = corpus_json.get("seq_length", 50)
+        # remove UID and path from json
+        corpus_json.pop("path")
+        corpus_json.pop("uid")
 
-        return Corpus(uid=uid, path=path, isgithub=isgithub,
-                      batch_size=batch_size, seq_length=seq_length)
+        return Corpus(uid=uid, path=path, **corpus_json)
 
 
 def preprocessed_kernels(corpus):
