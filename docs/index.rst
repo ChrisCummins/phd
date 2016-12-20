@@ -29,6 +29,7 @@ Note that on Ubuntu, sudo privileges are required to install these requirements
 For **other Linux distributions** and older versions of Ubuntu, please check
 each for each of the following requirements:
 
+-  `tensorflow <https://www.tensorflow.org/get_started/os_setup>`_ == 0.12
 -  `GCC <https://gcc.gnu.org/>`_ >= 4.8.2 or
    `clang <http://llvm.org/releases/download.html>`_ >= 3.1.
 -  `GNU Make <http://savannah.gnu.org/projects/make>`_ > 3.79.
