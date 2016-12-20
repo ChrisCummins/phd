@@ -60,6 +60,8 @@ install:  # cache hot
   - make install
 
 script:
+  - export CC='gcc'
+  - export CXX='g++'
   - test -f NORUN || coverage run --source=clgen ./setup.py test
 
 after_success:
