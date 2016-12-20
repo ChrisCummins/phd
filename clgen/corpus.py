@@ -163,17 +163,13 @@ class Corpus(clgen.CLgenObject):
             _init_error(e)
 
         # preprocess if needed
-        if self.cache["tensor.npy"] and self.cache["vocab.pkl"]:
-            self._load_preprocessed()
+        if self.cache["vocab.pkl"]:
+            self._load_vocab()
         else:
             try:
-                self._preprocess()
+                self._create_vocab()
             except Exception as e:
                 _init_error(e)
-
-        self.size = len(self.tensor)
-        self._create_batches()
-        self.reset_batch_pointer()
 
     def _create_kernels_db(self, path):
         """creates and caches kernels.db"""
@@ -210,53 +206,80 @@ class Corpus(clgen.CLgenObject):
         train(self.cache["kernels.db"], tmppath)
         self.cache["corpus.txt"] = tmppath
 
-    def _preprocess(self):
-        """creates and caches two files: vocab.pkl and tensor.npy"""
-        log.debug("creating vocab and tensor files")
-        input_file = self.cache["corpus.txt"]
-        tmp_vocab_file = fs.path(self.cache.path, "vocab.tmp.pkl")
-        tmp_tensor_file = fs.path(self.cache.path, "tensor.tmp.npy")
+    def _read_txt(self):
+        with codecs.open(self.cache["corpus.txt"], encoding="utf-8") as infile:
+            return infile.read()
 
-        with codecs.open(input_file, "r", encoding="utf-8") as infile:
-            data = infile.read()
+    def _create_vocab(self):
+        """creates and caches vocab.pkl"""
+        log.debug("creating vocab file")
+
+        tmp_vocab_file = fs.path(self.cache.path, "vocab.tmp.pkl")
+
+        data = self._read_txt()
         self.atoms = atomize(data, vocab="char")
 
         self.vocab_size = len(self.atoms)
         self.vocab = dict(zip(self.atoms, range(len(self.atoms))))
         with open(tmp_vocab_file, 'wb') as f:
             cPickle.dump(self.atoms, f)
-        # encode corpus with vocab
-        self.tensor = np.array(list(map(self.vocab.get, data)))
-        np.save(tmp_tensor_file, self.tensor)
 
         self.cache["vocab.pkl"] = tmp_vocab_file
-        self.cache["tensor.npy"] = tmp_tensor_file
 
-    def _load_preprocessed(self):
+    def _load_vocab(self):
         with open(self.cache["vocab.pkl"], 'rb') as infile:
             self.atoms = cPickle.load(infile)
         self.vocab_size = len(self.atoms)
         self.vocab = dict(zip(self.atoms, range(len(self.atoms))))
-        self.tensor = np.load(self.cache["tensor.npy"])
 
     def _create_batches(self):
+        """
+        Create batches for training.
+        """
         log.debug("creating batches")
-        self.num_batches = int(
-            self.tensor.size / (self.batch_size * self.seq_length))
+        self.reset_batch_pointer()
 
+        # read the corpus text file
+        data = self._read_txt()
+
+        # encode corpus with vocab
+        self._tensor = np.array(list(map(self.vocab.get, data)))
+
+        # set corpus size and number of batches
+        self._size = len(self._tensor)
+        self._num_batches = int(self.size / (self.batch_size * self.seq_length))
         if self.num_batches == 0:
             raise clgen.UserError(
-                "Not enough data. Make seq_length and batch_size smaller.")
+                "Not enough data. Use a smaller seq_length and batch_size")
 
-        self.tensor = self.tensor[:self.num_batches * self.batch_size * self.seq_length]
-        xdata = self.tensor
-        ydata = np.copy(self.tensor)
+        self._tensor = self._tensor[:self.num_batches * self.batch_size * self.seq_length]
+        xdata = self._tensor
+        ydata = np.copy(self._tensor)
         ydata[:-1] = xdata[1:]
         ydata[-1] = xdata[0]
-        self.x_batches = np.split(xdata.reshape(self.batch_size, -1),
-                                  self.num_batches, 1)
-        self.y_batches = np.split(ydata.reshape(self.batch_size, -1),
-                                  self.num_batches, 1)
+        self._x_batches = np.split(xdata.reshape(self.batch_size, -1),
+                                   self.num_batches, 1)
+        self._y_batches = np.split(ydata.reshape(self.batch_size, -1),
+                                   self.num_batches, 1)
+
+    @property
+    def size(self) -> int:
+        """
+        Return the atomized size of the corpus.
+        """
+        try:
+            return self._size
+        except AttributeError:
+            self._create_batches()
+            return self._size
+
+    @property
+    def num_batches(self) -> int:
+        try:
+            return self._num_batches
+        except AttributeError:
+            self._create_batches()
+            return self._num_batches
 
     @property
     def meta(self):
@@ -277,7 +300,7 @@ class Corpus(clgen.CLgenObject):
         """
         Resets batch pointer to first batch.
         """
-        self.pointer = 0
+        self._pointer = 0
 
     def next_batch(self):
         """
@@ -286,9 +309,9 @@ class Corpus(clgen.CLgenObject):
         Returns:
             (np.array, np.array): X, Y batch tuple.
         """
-        x = self.x_batches[self.pointer]
-        y = self.y_batches[self.pointer]
-        self.pointer += 1
+        x = self._x_batches[self._pointer]
+        y = self._y_batches[self._pointer]
+        self._pointer += 1
         return x, y
 
     def set_batch_pointer(self, pointer):
@@ -298,7 +321,7 @@ class Corpus(clgen.CLgenObject):
         Arguments:
             pointer (int): New batch pointer.
         """
-        self.pointer = pointer
+        self._pointer = pointer
 
     def __repr__(self):
         n = dbutil.num_good_kernels(self.cache['kernels.db'])
