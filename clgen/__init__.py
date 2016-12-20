@@ -19,8 +19,6 @@
 """
 Deep learning program generator
 """
-from __future__ import absolute_import, print_function, with_statement
-
 import json
 import os
 import platform
