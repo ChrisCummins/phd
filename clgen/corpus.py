@@ -40,6 +40,18 @@ from clgen.cache import Cache
 from clgen.train import train
 
 
+# Default options used for corpus. Any values provided by the user will override
+# these defaults.
+DEFAULT_CORPUS_OPTS = {
+    "eof": False,
+    "batch_size": 50,
+    "seq_length": 50,
+    "vocabulary": "char",
+    "encoding": "default",
+    "preserve_order": False,
+}
+
+
 def unpack_directory_if_needed(path):
     """
     If path is a tarball, unpack it. If path doesn't exist but there is a
@@ -107,7 +119,7 @@ class Corpus(clgen.CLgenObject):
     """
     Representation of a training corpus.
     """
-    def __init__(self, uid, path=None, **opts):
+    def __init__(self, contentid, path=None, **opts):
         """
         Instantiate a corpus.
 
@@ -115,7 +127,7 @@ class Corpus(clgen.CLgenObject):
         take some time.
 
         Arguments:
-            uid (str): Corpus ID.
+            contentid (str): ID of corpus content.
             path (str, optional): Path to corpus.
             **opts: Keyword options.
         """
@@ -133,8 +145,17 @@ class Corpus(clgen.CLgenObject):
                     fs.rm(path)
             raise err
 
-        self.hash = uid
-        self.opts = opts
+        # Validate options
+        for key in opts.keys():
+            if key not in DEFAULT_CORPUS_OPTS:
+                raise clgen.UserError(
+                    "Unsupported corpus option '{}'. Valid keys: {}".format(
+                        key, ','.join(sorted(DEFAULT_CORPUS_OPTS.keys()))))
+
+        self.opts = copy(DEFAULT_CORPUS_OPTS)
+        self.opts.update(opts)
+        self.hash = self._hash(contentid, self.opts)
+
         log.debug("corpus {hash}".format(hash=self.hash))
 
         self.cache = Cache(fs.path("corpus", self.hash))
@@ -149,6 +170,7 @@ class Corpus(clgen.CLgenObject):
                     self._create_kernels_db(path)
             except Exception as e:
                 _init_error(e)
+
         try:
             # create corpus text if not exists
             if not self.cache["corpus.txt"]:
@@ -164,6 +186,12 @@ class Corpus(clgen.CLgenObject):
                 self._create_vocab()
             except Exception as e:
                 _init_error(e)
+
+    def _hash(self, contentid, opts):
+        checksum_string = "".join(sorted(
+            [str(x) for x in opts.values()] +
+            [contentid]))
+        return clgen.checksum_str(checksum_string)
 
     def _create_kernels_db(self, path):
         """creates and caches kernels.db"""
@@ -228,11 +256,14 @@ class Corpus(clgen.CLgenObject):
         db = dbutil.connect(self.cache["kernels.db"])
         c = db.cursor()
 
-        c.execute("""\
-            SELECT PreprocessedFiles.Contents FROM PreprocessedFiles
-            WHERE status=0 ORDER BY RANDOM()""")
+        # if preservering order, order by line count. Else, order randomly
+        orderby = "LC(contents)" if self.opts["preserve_order"] else "RANDOM()"
 
-        sep = '\n\n// EOF\n\n' if self.opts.get("eof") else '\n\n'
+        c.execute("SELECT PreprocessedFiles.Contents FROM PreprocessedFiles "
+                  "WHERE status=0 ORDER BY {orderby}".format(orderby=orderby))
+
+        # If file separators are requested, insert EOF markers between files
+        sep = '\n\n// EOF\n\n' if self.opts["eof"] else '\n\n'
 
         return sep.join(row[0] for row in c.fetchall())
 
@@ -243,32 +274,40 @@ class Corpus(clgen.CLgenObject):
         log.debug("creating batches")
         self.reset_batch_pointer()
 
-        # generate a corpus
-        if self.opts.get("preserve_order", False):
-            data = self._read_txt()
-        else:
-            data = self._generate_kernel_corpus()
+        # generate a kernel corpus
+        data = self._generate_kernel_corpus()
 
         # encode corpus with vocab
         self._tensor = np.array(list(map(self.vocab.get, data)))
 
+        batch_size = self.batch_size
+        seq_length = self.seq_length
+
         # set corpus size and number of batches
         self._size = len(self._tensor)
-        self._num_batches = int(self.size / (self.batch_size * self.seq_length))
+        self._num_batches = int(self.size / (batch_size * seq_length))
         if self.num_batches == 0:
             raise clgen.UserError(
                 "Not enough data. Use a smaller seq_length and batch_size")
 
         # split into batches
-        self._tensor = self._tensor[:self.num_batches * self.batch_size * self.seq_length]
+        self._tensor = self._tensor[:self.num_batches * batch_size * seq_length]
         xdata = self._tensor
         ydata = np.copy(self._tensor)
         ydata[:-1] = xdata[1:]
         ydata[-1] = xdata[0]
-        self._x_batches = np.split(xdata.reshape(self.batch_size, -1),
+        self._x_batches = np.split(xdata.reshape(batch_size, -1),
                                    self.num_batches, 1)
-        self._y_batches = np.split(ydata.reshape(self.batch_size, -1),
+        self._y_batches = np.split(ydata.reshape(batch_size, -1),
                                    self.num_batches, 1)
+
+    @property
+    def batch_size(self) -> int:
+        return self.opts["batch_size"]
+
+    @property
+    def seq_length(self) -> int:
+        return self.opts["seq_length"]
 
     @property
     def size(self) -> int:
@@ -280,14 +319,6 @@ class Corpus(clgen.CLgenObject):
         except AttributeError:
             self.create_batches()
             return self._size
-
-    @property
-    def batch_size(self) -> int:
-        return self.opts.get("batch_size", 50)
-
-    @property
-    def seq_length(self) -> int:
-        return self.opts.get("seq_length", 50)
 
     @property
     def num_batches(self) -> int:
@@ -306,7 +337,7 @@ class Corpus(clgen.CLgenObject):
             dict: Metadata.
         """
         _meta = copy(self.opts)
-        _meta["if"] = self.hash
+        _meta["id"] = self.hash
         return _meta
 
     def reset_batch_pointer(self):
@@ -353,26 +384,23 @@ class Corpus(clgen.CLgenObject):
         """
         log.debug("corpus from json")
 
-        path = corpus_json.get("path", None)
+        path = corpus_json.pop("path", None)
+        uid = corpus_json.pop("id", None)
+
         if path:
             path = unpack_directory_if_needed(fs.abspath(path))
             if not fs.isdir(path):
                 raise clgen.UserError(
                     "Corpus path '{}' is not a directory".format(path))
             uid = dirhash(path, 'sha1')
-        else:
-            uid = corpus_json.get("id", None)
-            if not uid:
-                raise clgen.UserError("No corpus path or ID provided")
+        elif uid:
             cache_path = fs.path(cache.ROOT, "corpus", uid)
             if not fs.isdir(cache_path):
                 raise clgen.UserError("Corpus {} not found".format(uid))
+        else:
+            raise clgen.UserError("No corpus path or ID provided")
 
-        # remove UID and path from json
-        corpus_json.pop("path")
-        corpus_json.pop("uid")
-
-        return Corpus(uid=uid, path=path, **corpus_json)
+        return Corpus(uid, path=path, **corpus_json)
 
 
 def preprocessed_kernels(corpus):

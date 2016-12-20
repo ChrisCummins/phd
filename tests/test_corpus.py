@@ -16,17 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase, skip, skipIf
+from unittest import TestCase
 import tests
 
-from copy import deepcopy
-from functools import partial
-
-import numpy as np
-import os
-import sys
-
-import labm8
 from labm8 import fs
 
 import clgen
@@ -45,22 +37,47 @@ class TestCorpus(TestCase):
         with self.assertRaises(clgen.CLgenError):
             corpus.Corpus("notarealid", path="notarealpath")
 
-    def test_unpack_archive(self):
+    def test_from_archive(self):
         # delete any existing unpacked directory
         fs.rm(tests.data_path("tiny", "corpus"))
 
         c = corpus.Corpus.from_json({
-            "id": TINY_HASH,
             "path": tests.data_path("tiny", "corpus", exists=False)
         })
         self.assertEqual(TINY_HASH, c.hash)
 
-    def test_path_is_archive(self):
+    def test_from_archive_path(self):
         # delete any existing unpacked directory
         fs.rm(tests.data_path("tiny", "corpus"))
 
         c = corpus.Corpus.from_json({
-            "id": TINY_HASH,
             "path": tests.data_path("tiny", "corpus.tar.bz2")
         })
         self.assertEqual(TINY_HASH, c.hash)
+
+    def test_hash(self):
+        c1 = corpus.Corpus.from_json({
+            "path": tests.archive("tiny", "corpus")
+        })
+
+        # same as c1, with explicit default opt:
+        c2 = corpus.Corpus.from_json({
+            "path": tests.archive("tiny", "corpus"),
+            "eof": False
+        })
+
+        # different opt value:
+        c3 = corpus.Corpus.from_json({
+            "path": tests.archive("tiny", "corpus"),
+            "eof": True
+        })
+
+        self.assertEqual(c1.hash, c2.hash)
+        self.assertNotEqual(c2.hash, c3.hash)
+
+    def test_bad_option(self):
+        with self.assertRaises(clgen.UserError):
+            corpus.Corpus.from_json({
+                "path": tests.archive("tiny", "corpus"),
+                "not_a_real_option": False
+            })
