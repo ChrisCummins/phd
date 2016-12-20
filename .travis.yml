@@ -40,33 +40,32 @@ env:
 
 before_install:
   - pip install --upgrade pip
+  - pip --version   # updated pip
   - pip install coveralls
-  - pip --version
   - sudo apt-get update -qq
+  - ldd --version   # glibc version
+  - $CC --version   # c compiler
+  - $CXX --version  # c++ compiler
 
 # A clean Travis CI build will timeout after 50 minutes and fail. Irritatingly,
 # this means that the caches are not updated, so we can't incrementally build
 # the project by restarting the job. The workaround is to kill the build after
 # a time limit and then restart the job by hand:
 #
-install:  # cache cold (runs build in 30min chunks, restart job until complete)
-  - ldd --version
-  - ./configure -b
-  - timeout 1800 make all || true
-  - touch NORUN
-#
-# install:  # cache hot
-#   - pip install 'protobuf==3.1.0'
-#   - pip install tensorflow
-#   - ldd --version
-#   - python -c 'import tensorflow as tf; print("tensorflow:", tf.__version__)'
+# install:  # cache cold (runs build in 30min chunks, restart job until complete)
 #   - ./configure -b
-#   - make all
-#   - make install
+#   - timeout 1800 make all || true
+#   - touch NORUN
+#
+install:  # cache hot
+  - pip install 'protobuf==3.1.0'
+  - pip install tensorflow
+  - ./configure -b
+  - make all
+  - make install
+  - pip freeze  # python package versions
 
 script:
-  - export CC='gcc'
-  - export CXX='g++'
   - test -f NORUN || coverage run --source=clgen ./setup.py test
 
 after_success:
