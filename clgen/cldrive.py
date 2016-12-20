@@ -25,7 +25,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from __future__ import with_statement
 
-import labm8
+from io import StringIO
 import numpy as np
 import os
 import sys
@@ -42,13 +42,6 @@ from six import string_types
 import clgen
 from clgen import clutil
 from clgen import config as cfg
-
-# Python 2 and Python 3 have different StringIO classes.
-# See: http://stackoverflow.com/a/19243243
-if labm8.is_python3():
-    from io import StringIO
-else:
-    from StringIO import StringIO
 
 if cfg.USE_OPENCL:
     import pyopencl as cl

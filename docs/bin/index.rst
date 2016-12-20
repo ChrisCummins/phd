@@ -348,6 +348,27 @@ clgen-fetch-github
       --version      show version information and exit
       -v, --verbose  increase output verbosity
 
+clgen-merge
+------------
+
+::
+
+    usage: clgen-merge [-h] [--version] [-v] dataset [inputs [inputs ...]]
+    
+    Merge kernel datasets.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
+    
+    positional arguments:
+      dataset        path to output dataset
+      inputs         path to input datasets
+    
+    optional arguments:
+      -h, --help     show this help message and exit
+      --version      show version information and exit
+      -v, --verbose  increase output verbosity
+
 clgen-preprocess
 -----------------
 
