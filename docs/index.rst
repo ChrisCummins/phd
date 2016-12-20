@@ -71,7 +71,7 @@ Create a virtualenv environment in the directory `~/clgen`:
 
 ::
 
-    $ virtualenv --system-site-packages ~/clgen
+    $ virtualenv -p python3.5 ~/clgen
 
 Activate this environment:
 

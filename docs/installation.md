@@ -27,7 +27,7 @@ Installation - Virtualenv
 Create a virtualenv environment in the directory `~/clgen-dev`:
 
 ```sh
-$ virtualenv --system-site-packages ~/clgen-dev
+$ virtualenv -p python3.5 ~/clgen-dev
 ```
 
 Activate this environment:
@@ -80,4 +80,10 @@ $ sudo -H make install
 
 ```sh
 $ sudo -H make test
+```
+
+(Optional) Install Python development tools:
+
+```sh
+$ pip3.5 install -r make/requirements/requirements.dev.txt
 ```
