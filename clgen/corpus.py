@@ -232,7 +232,7 @@ class Corpus(clgen.CLgenObject):
         self.vocab_size = len(self.atoms)
         self.vocab = dict(zip(self.atoms, range(len(self.atoms))))
 
-    def _create_batches(self):
+    def create_batches(self):
         """
         Create batches for training.
         """
@@ -270,7 +270,7 @@ class Corpus(clgen.CLgenObject):
         try:
             return self._size
         except AttributeError:
-            self._create_batches()
+            self.create_batches()
             return self._size
 
     @property
@@ -278,7 +278,7 @@ class Corpus(clgen.CLgenObject):
         try:
             return self._num_batches
         except AttributeError:
-            self._create_batches()
+            self.create_batches()
             return self._num_batches
 
     @property

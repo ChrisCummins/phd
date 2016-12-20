@@ -236,7 +236,8 @@ class Model(clgen.CLgenObject):
                 sess.run(tf.assign(self.learning_rate, new_learning_rate))
                 sess.run(tf.assign(self.epoch, e))
 
-                self.corpus.reset_batch_pointer()
+                self.corpus.create_batches()
+
                 state = sess.run(self.initial_state)
                 for b in range(self.corpus.num_batches):
                     time_start = time.time()
