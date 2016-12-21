@@ -48,6 +48,36 @@ def get_test_model():
 
 
 class TestModel(TestCase):
+    def test_hash(self):
+        m1 = model.from_json({
+            "corpus": {
+                "path": tests.data_path("tiny", "corpus")
+            }
+        })
+
+        # same as m1, with explicit default opt:
+        m2 = model.from_json({
+            "corpus": {
+                "path": tests.data_path("tiny", "corpus")
+            },
+            "train_opts": {
+                "intermediate_checkpoints": True
+            }
+        })
+
+        # different opt value:
+        m3 = model.from_json({
+            "corpus": {
+                "path": tests.data_path("tiny", "corpus")
+            },
+            "train_opts": {
+                "intermediate_checkpoints": False
+            }
+        })
+
+        self.assertEqual(m1.hash, m2.hash)
+        self.assertNotEqual(m2.hash, m3.hash)
+
     def test_most_recent_checkpoint_untrained(self):
         m = get_test_model()
         m.cache.empty()  # untrain

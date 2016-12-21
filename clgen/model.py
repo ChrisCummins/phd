@@ -129,10 +129,8 @@ class Model(clgen.CLgenObject):
             raise clgen.UserError("Unrecognized model type")
 
     def _hash(self, corpus: Corpus, opts: dict) -> str:
-        checksum_string = "".join(sorted(
-            [str(x) for x in opts.values()] +
-            [corpus.hash]))
-        return clgen.checksum_str(checksum_string)
+        """ compute model hash """
+        return clgen.checksum_list(corpus.hash, *clgen.dict_values(opts))
 
     def _init_tensorflow(self, infer=False):
         # Use self.tensorflow_state to mark whether or not model is configured

@@ -187,11 +187,9 @@ class Corpus(clgen.CLgenObject):
             except Exception as e:
                 _init_error(e)
 
-    def _hash(self, contentid, opts):
-        checksum_string = "".join(sorted(
-            [str(x) for x in opts.values()] +
-            [contentid]))
-        return clgen.checksum_str(checksum_string)
+    def _hash(self, contentid: str, opts: dict) -> str:
+        """ compute corpus hash """
+        return clgen.checksum_list(contentid, *clgen.dict_values(opts))
 
     def _create_kernels_db(self, path):
         """creates and caches kernels.db"""

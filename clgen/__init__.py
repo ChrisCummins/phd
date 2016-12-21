@@ -138,6 +138,20 @@ def checksum(data):
         raise InternalError("failed to checksum '{}'".format(data[:100]))
 
 
+def checksum_list(*elems) -> str:
+    """
+    Checksum all elements of a list.
+
+    Arguments:
+        *elems: List of stringifiable data.
+
+    Returns:
+        str: Checksum.
+    """
+    string = "".join(sorted(str(x) for x in elems))
+    return checksum_str(string)
+
+
 def checksum_str(string):
     """
     Checksum a string.
@@ -200,7 +214,7 @@ def update(dst: dict, src: dict) -> dict:
     """
     Recursively update values in dst from src.
 
-    Unlike the builting dict.update() function, this method will decend into
+    Unlike the builtin dict.update() function, this method will decend into
     nested dicts, updating all nested values.
 
     Arguments:
@@ -217,6 +231,26 @@ def update(dst: dict, src: dict) -> dict:
         else:
             dst[k] = src[k]
     return dst
+
+
+def dict_values(src: dict) -> list:
+    """
+    Recursively get values in dict.
+
+    Unlike the builtin dict.values() function, this method will descend into
+    nested dicts, returning all nested values.
+
+    Arguments:
+        src (dict): Source dict.
+
+    Returns:
+        list: List of values.
+    """
+    for v in src.values():
+        if isinstance(v, dict):
+            yield from dict_values(v)
+        else:
+            yield v
 
 
 def get_substring_idxs(substr, s):
