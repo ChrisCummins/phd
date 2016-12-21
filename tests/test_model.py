@@ -78,10 +78,10 @@ class TestModel(TestCase):
         self.assertEqual(m1.hash, m2.hash)
         self.assertNotEqual(m2.hash, m3.hash)
 
-    def test_most_recent_checkpoint_untrained(self):
+    def test_checkpoint_path_untrained(self):
         m = get_test_model()
         m.cache.empty()  # untrain
-        self.assertEqual(m.most_recent_checkpoint, None)
+        self.assertEqual(m.checkpoint_path, None)
 
     def test_meta(self):
         m = get_test_model()
