@@ -311,14 +311,13 @@ class Model(clgen.CLgenObject):
                     time_end = time.time()
                     elapsed = time_end - time_start
 
-                    # metrics
-                    total_elapsed += elapsed
-                    avg_elapsed = total_elapsed / batch_count
-                    remaining_time = (max_batch - batch_count) / avg_elapsed
-                    eta_h, eta_m = divmod(remaining_time / 60, 60)
-                    eta_d, eta_h = divmod(eta_h, 24)
-
                     if not quiet:
+                        total_elapsed += elapsed
+                        avg_elapsed = total_elapsed / batch_count
+                        remaining_time = (max_batch - batch_count) / avg_elapsed
+                        eta_h, eta_m = divmod(remaining_time / 60, 60)
+                        eta_d, eta_h = divmod(eta_h, 24)
+
                         print(
                             "\r\033[K"
                             "{progress:2.1f}%  {size}x{layers}x{max_epoch} "
