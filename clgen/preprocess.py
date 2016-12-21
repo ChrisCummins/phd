@@ -638,7 +638,7 @@ def _preprocess_db_worker(job):
     db.close()
 
 
-def preprocess_contentfiles(db_path, max_num_workers=cpu_count() * 4):
+def preprocess_contentfiles(db_path, max_num_workers=cpu_count(), attempt=1):
     """
     Preprocess OpenCL dataset.
 
@@ -665,6 +665,9 @@ def preprocess_contentfiles(db_path, max_num_workers=cpu_count() * 4):
         db.close()
         cache.empty()
 
+    if attempt >= MAX_OS_RETRIES:
+        raise clgen.InternalError("failed to preprocess files")
+
     num_contentfiles = dbutil.num_rows_in(db_path, 'ContentFiles')
     num_preprocessedfiles = dbutil.num_rows_in(db_path, 'PreprocessedFiles')
 
@@ -688,6 +691,15 @@ def preprocess_contentfiles(db_path, max_num_workers=cpu_count() * 4):
                  num_contentfiles - num_preprocessedfiles, 'files ...')
         with clgen.terminating(Pool(num_workers)) as pool:
             pool.map(_preprocess_db_worker, jobs)
+    except OSError as e:
+        _finalize(db_path, cache)
+        log.error(e)
+
+        # Try again with fewer threads.
+        # See: https://github.com/ChrisCummins/clgen/issues/64
+        max_num_workers = max(int(max_num_workers / 2), 1)
+        preprocess_contentfiles(db_path, max_num_workers=max_num_workers,
+                                attempt=attempt + 1)
     except Exception as e:
         _finalize(db_path, cache)
         raise e
@@ -726,7 +738,10 @@ def _preprocess_inplace_worker(path):
     preprocess_file(path, inplace=True)
 
 
-def preprocess_inplace(paths, max_num_workers=cpu_count() * 4):
+MAX_OS_RETRIES = 10
+
+
+def preprocess_inplace(paths, max_num_workers=cpu_count(), attempt=1):
     """
     Preprocess a list of files in place.
 
@@ -734,11 +749,25 @@ def preprocess_inplace(paths, max_num_workers=cpu_count() * 4):
         paths (str[]): List of paths.
         max_num_workers (int, optional): Number of processes to spawn.
     """
+    if attempt >= MAX_OS_RETRIES:
+        raise clgen.InternalError("Failed to process files")
+
     num_workers = min(len(paths), max_num_workers)
-    with clgen.terminating(Pool(num_workers)) as pool:
-        log.info('spawning', num_workers, 'worker threads to process',
+
+    try:
+        log.info('spawned', num_workers, 'worker threads to process',
                  len(paths), 'files ...')
-        pool.map(_preprocess_inplace_worker, paths)
+        with clgen.terminating(Pool(num_workers)) as pool:
+            pool.map(_preprocess_inplace_worker, paths)
+    except OSError as e:
+        log.error(e)
+
+        # Try again with fewer threads.
+        # See: https://github.com/ChrisCummins/clgen/issues/64
+        max_num_workers = max(int(max_num_workers / 2), 1)
+        preprocess_inplace(paths, max_num_workers=max_num_workers,
+                           attempt=attempt + 1)
+
 
 
 def preprocess_db(db_path):
