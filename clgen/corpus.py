@@ -155,10 +155,9 @@ class Corpus(clgen.CLgenObject):
         self.opts = deepcopy(DEFAULT_CORPUS_OPTS)
         clgen.update(self.opts, opts)
         self.hash = self._hash(contentid, self.opts)
+        self.cache = Cache(fs.path("corpus", self.hash))
 
         log.debug("corpus {hash}".format(hash=self.hash))
-
-        self.cache = Cache(fs.path("corpus", self.hash))
 
         if path is not None:
             if not fs.isdir(path):
@@ -380,8 +379,6 @@ class Corpus(clgen.CLgenObject):
         Returns:
             Corpus: Insantiated corpus.
         """
-        log.debug("corpus from json")
-
         path = corpus_json.pop("path", None)
         uid = corpus_json.pop("id", None)
 

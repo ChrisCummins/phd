@@ -120,6 +120,8 @@ class Model(clgen.CLgenObject):
         self.hash = self._hash(self.corpus, self.opts)
         self.cache = Cache(fs.path("model", self.hash))
 
+        log.debug("model", self.hash)
+
         self.cell_fn = {
             "lstm": rnn_cell.BasicLSTMCell,
             "gru": rnn_cell.GRUCell,
