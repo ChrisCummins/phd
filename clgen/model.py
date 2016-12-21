@@ -245,10 +245,12 @@ class Model(clgen.CLgenObject):
                 saver.restore(sess, ckpt.model_checkpoint_path)
 
             for e in range(sess.run(self.epoch) + 1, self.epochs + 1):
+                if quiet:
+                    log.info("epoch", e, "of", self.epochs + 1)
+
                 # decay and set learning rate
                 new_learning_rate = learning_rate * (
                     (float(100 - decay_rate) / 100.0) ** (e - 1))
-                log.info("learning rate", new_learning_rate)
                 sess.run(tf.assign(self.learning_rate, new_learning_rate))
                 sess.run(tf.assign(self.epoch, e))
 
@@ -272,12 +274,15 @@ class Model(clgen.CLgenObject):
                     elapsed = time_end - time_start
 
                     if not quiet:
-                        log.info(
-                            "{progress:2.1f} %  {size}x{layers} {model}  "
-                            "batch = {batch_num} / {max_batch}  "
-                            "epoch = {epoch_num} / {max_epoch}  "
-                            "train_loss = {tloss:.3f}  "
-                            "time/batch = {time_batch:.3f}s".format(
+                        print(
+                            "\r\033[K"
+                            "{progress:2.1f}%  {size}x{layers}x{max_epoch} "
+                            "{model}  "
+                            "batch={batch_num}/{max_batch}  "
+                            "epoch={epoch_num}/{max_epoch}  "
+                            "lr={lr:.6f}  "
+                            "loss={tloss:.3f}  "
+                            "time/batch={time_batch:.3f}s".format(
                                 size=self.rnn_size,
                                 layers=self.num_layers,
                                 model=self.model_type.upper(),
@@ -286,18 +291,15 @@ class Model(clgen.CLgenObject):
                                 max_batch=max_batch,
                                 epoch_num=e,
                                 max_epoch=self.epochs,
+                                lr=new_learning_rate,
                                 tloss=train_loss,
-                                time_batch=elapsed))
-                    # save_checkpoint = batch_num % checkpoint_every == 0
-                    # save_checkpoint |= (e == self.epochs - 1
-                    #                     and b == self.corpus.num_batches - 1)
-                    # if save_checkpoint:
-                if quiet:
-                    log.info("epoch", e, "of", self.epochs + 1)
+                                time_batch=elapsed), end="")
 
                 save = self.opts["train_opts"]["intermediate_checkpoints"]
                 save |= e == self.epochs  # last epoch
                 if save:
+                    if not quiet:
+                        print()
                     saver.save(sess, checkpoint_path, global_step=batch_num)
                     log.info("model saved to {}".format(checkpoint_path))
 
