@@ -314,7 +314,7 @@ class Model(clgen.CLgenObject):
                     if not quiet:
                         total_elapsed += elapsed
                         avg_elapsed = total_elapsed / batch_count
-                        remaining_time = (max_batch - batch_count) / avg_elapsed
+                        remaining_time = (max_batch - batch_count) * avg_elapsed
                         eta_h, eta_m = divmod(remaining_time / 60, 60)
                         eta_d, eta_h = divmod(eta_h, 24)
 
