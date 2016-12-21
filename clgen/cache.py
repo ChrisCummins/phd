@@ -42,7 +42,7 @@ class Cache(clgen.CLgenObject):
     """
     Persistent filesystem cache.
     """
-    def __init__(self, name):
+    def __init__(self, name: str):
         """
         Create filesystem cache.
         """
@@ -51,14 +51,14 @@ class Cache(clgen.CLgenObject):
 
         fs.mkdir(self.path)
 
-    def empty(self):
+    def empty(self) -> None:
         """
         Empty the filesystem cache.
         """
         log.debug("empty cache {path}".format(path=self.path))
         fs.rm(self.path)
 
-    def mapkey(self, key):
+    def mapkey(self, key: str) -> str:
         """
         Map a key to an internal key.
 
@@ -73,7 +73,7 @@ class Cache(clgen.CLgenObject):
         """
         return key
 
-    def escape(self, key):
+    def escape(self, key: str) -> str:
         """
         Escape key to path.
 
@@ -85,7 +85,7 @@ class Cache(clgen.CLgenObject):
         """
         return re.sub(r'[ \\/]+', '_', key)
 
-    def keypath(self, key):
+    def keypath(self, key: str) -> str:
         """
         Return path to key in cache.
 
@@ -97,7 +97,7 @@ class Cache(clgen.CLgenObject):
         """
         return fs.path(self.path, self.escape(self.mapkey(key)))
 
-    def _incache(self, path):
+    def _incache(self, path: str) -> str:
         """
         Assert that file is in cache.
 
@@ -114,7 +114,7 @@ class Cache(clgen.CLgenObject):
             raise Cache404("file '{path}' not found".format(path=path))
         return path
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> str:
         """
         Get path to file in cache.
 
@@ -131,7 +131,7 @@ class Cache(clgen.CLgenObject):
         except Cache404:
             return False
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: str) -> None:
         """
         Emplace file in cache.
 
@@ -152,7 +152,7 @@ class Cache(clgen.CLgenObject):
         log.debug("cached {path}"
                   .format(key=key, path=path))
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         """
         Delete cached file.
 
