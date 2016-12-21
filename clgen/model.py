@@ -24,7 +24,6 @@ import os
 import re
 import sys
 import tarfile
-import tensorflow as tf
 import time
 
 from copy import deepcopy
@@ -35,8 +34,6 @@ from labm8 import time as labtime
 from six import string_types
 from six.moves import cPickle
 from tempfile import mktemp
-from tensorflow.python.ops import rnn_cell
-from tensorflow.python.ops import seq2seq
 
 import clgen
 from clgen import cache
@@ -122,6 +119,41 @@ class Model(clgen.CLgenObject):
 
         log.debug("model", self.hash)
 
+    def _hash(self, corpus: Corpus, opts: dict) -> str:
+        """ compute model hash """
+        hashopts = deepcopy(opts)
+        hashopts["train_opts"].pop("epochs")
+        return clgen.checksum_list(corpus.hash, *clgen.dict_values(hashopts))
+
+    def _init_tensorflow(self, infer: bool=False):
+        """
+        Deferred importing of tensorflow and initializing model for training
+        or sampling.
+
+        This is necessary for two reasons: first, the tensorflow graph is
+        different for training and inference, so must be reset when switching
+        between modes. Second, importing tensorflow takes a long time, so
+        we only want to do it if we actually need to.
+
+        Arguments:
+            infer (bool): If True, initialize model for inference. If False,
+                initialize model for training.
+
+        Returns:
+            module: imported TensorFlow module
+        """
+        import tensorflow as tf
+        from tensorflow.python.ops import rnn_cell
+        from tensorflow.python.ops import seq2seq
+
+        # Use self.tensorflow_state to mark whether or not model is configured
+        # for training or inference.
+        try:
+            if self.tensorflow_state == infer:
+                return tf
+        except AttributeError:
+            pass
+
         self.cell_fn = {
             "lstm": rnn_cell.BasicLSTMCell,
             "gru": rnn_cell.GRUCell,
@@ -129,21 +161,6 @@ class Model(clgen.CLgenObject):
         }.get(self.model_type, None)
         if self.cell_fn is None:
             raise clgen.UserError("Unrecognized model type")
-
-    def _hash(self, corpus: Corpus, opts: dict) -> str:
-        """ compute model hash """
-        hashopts = deepcopy(opts)
-        hashopts["train_opts"].pop("epochs")
-        return clgen.checksum_list(corpus.hash, *clgen.dict_values(hashopts))
-
-    def _init_tensorflow(self, infer=False):
-        # Use self.tensorflow_state to mark whether or not model is configured
-        # for training or inference.
-        try:
-            if self.tensorflow_state == infer:
-                return
-        except AttributeError:
-            pass
 
         # reset the graph when switching between training and inference
         tf.reset_default_graph()
@@ -209,6 +226,8 @@ class Model(clgen.CLgenObject):
         # set model status
         self.tensorflow_state = infer
 
+        return tf
+
 
     def _get_params_path(self, ckpt):
         """ return path to checkpoint closest to target num of epochs """
@@ -233,7 +252,7 @@ class Model(clgen.CLgenObject):
         """
         Train model.
         """
-        self._init_tensorflow(infer=False)
+        tf = self._init_tensorflow(infer=False)
 
         # training options
         learning_rate = self.train_opts["learning_rate"]
@@ -367,7 +386,7 @@ class Model(clgen.CLgenObject):
                 reproducible samples. If None, set no seed.
             quiet (bool, optional): If False, stream output to stdout
         """
-        self._init_tensorflow(infer=True)
+        tf = self._init_tensorflow(infer=True)
 
         if seed is not None:
             np.random.seed(seed)
