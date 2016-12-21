@@ -37,11 +37,12 @@ def get_test_model():
         "corpus": {
             "path": tests.data_path("tiny", "corpus"),
         },
+        "architecture": {
+          "rnn_size": 8,
+          "num_layers": 2,
+        },
         "train_opts": {
-            "model_type": "lstm",
-            "rnn_size": 8,
-            "num_layers": 2,
-            "max_epochs": 1
+          "epochs": 2 
         }
     })
 

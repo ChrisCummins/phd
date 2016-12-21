@@ -28,8 +28,9 @@ import six
 import sys
 import tarfile
 
-from copy import deepcopy
+from collections import Mapping
 from contextlib import contextmanager
+from copy import deepcopy
 from hashlib import sha1
 from pkg_resources import resource_filename, resource_string, require
 
@@ -193,6 +194,29 @@ def unpack_archive(*components, **kwargs):
     fs.cdpop()
 
     return dir
+
+
+def update(dst: dict, src: dict) -> dict:
+    """
+    Recursively update values in dst from src.
+
+    Unlike the builting dict.update() function, this method will decend into
+    nested dicts, updating all nested values.
+
+    Arguments:
+        dst (dict): Destination dict.
+        src (dict): Source dict.
+
+    Returns:
+        dict: dst updated with entries from src.
+    """
+    for k, v in src.items():
+        if isinstance(v, Mapping):
+            r = update(dst.get(k, {}), v)
+            dst[k] = r
+        else:
+            dst[k] = src[k]
+    return dst
 
 
 def get_substring_idxs(substr, s):

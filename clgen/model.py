@@ -19,7 +19,6 @@
 """
 CLgen model.
 """
-import json
 import numpy as np
 import os
 import re
@@ -28,8 +27,8 @@ import tarfile
 import tensorflow as tf
 import time
 
-from copy import copy
-from glob import glob, iglob
+from copy import deepcopy
+from glob import iglob
 from labm8 import fs
 from labm8 import system
 from labm8 import time as labtime
@@ -46,21 +45,7 @@ from clgen.cache import Cache
 from clgen.corpus import Corpus
 
 
-class ModelError(clgen.CLgenError):
-    """
-    Module level error
-    """
-    pass
-
-
-class DistError(ModelError):
-    """
-    Dist model import or export error.
-    """
-    pass
-
-
-def get_default_author():
+def get_default_author() -> str:
     """
     Get the default author name for CLgen dist models.
 
@@ -75,34 +60,65 @@ def get_default_author():
         "{user}@{host}".format(user=system.USERNAME, host=system.HOSTNAME))
 
 
+# Default options used for model. Any values provided by the user will override
+# these defaults.
+DEFAULT_MODEL_OPTS = {
+    "author": get_default_author(),
+    "architecture": {
+      "model_type": "lstm",  # {lstm,rnn.gru}
+      "rnn_size": 128,  # num nodes in layer
+      "num_layers": 2,  # num layers
+    },
+    "train_opts": {
+      "epochs": 10,
+      "grad_clip": 5,
+      "learning_rate": 2e-3,  # initial learning rate
+      "lr_decary_rate": 5,  # % to reduce learning rate by per epoch
+      "intermediate_checkpoints": True
+    }
+}
+
+
+class ModelError(clgen.CLgenError):
+    """
+    Module level error
+    """
+    pass
+
+
+class DistError(ModelError):
+    """
+    Dist model import or export error.
+    """
+    pass
+
+
 class Model(clgen.CLgenObject):
     """
     A CLgen Model.
     """
-    def __init__(self, corpus, train_opts):
+    def __init__(self, corpus: Corpus, **opts):
         """
         Instantiate model.
 
         Arguments:
             corpus (Corpus): Corpus instance.
-            train_opts (dict): Training options.
+            opts (dict): Training options.
         """
         assert(isinstance(corpus, Corpus))
-        assert(type(train_opts) is dict)
 
+        # Validate options
+        for key in opts.keys():
+            if key not in DEFAULT_MODEL_OPTS:
+                raise clgen.UserError(
+                    "Unsupported model option '{}'. Valid keys: {}".format(
+                        key, ','.join(sorted(DEFAULT_MODEL_OPTS.keys()))))
+
+        # set properties
+        self.opts = clgen.update(deepcopy(DEFAULT_MODEL_OPTS), opts)
         self.corpus = corpus
-        self.train_opts = train_opts
-
-        self.hash = self._hash(train_opts, corpus)
+        self.hash = self._hash(self.corpus, self.opts)
         self.cache = Cache(fs.path("model", self.hash))
-
-        # Parse model options:
-        # TODO: Change model format so that model type, rnn size, and num layers
-        # are in the top level specification, not in "train_opts" dict.
-        self.model_type = self.train_opts.get("model_type", "lstm")
-        self.rnn_size = self.train_opts.get("rnn_size", 128)
-        self.num_layers = self.train_opts.get("num_layers", 2)
-        self.grad_clip = self.train_opts.get("grad_clip", 5)
 
         self.cell_fn = {
             "lstm": rnn_cell.BasicLSTMCell,
@@ -112,23 +128,25 @@ class Model(clgen.CLgenObject):
         if self.cell_fn is None:
             raise clgen.UserError("Unrecognized model type")
 
-    def _hash(self, train_opts, corpus):
-        checksum_data = sorted(
-            [str(x) for x in train_opts.values()] +
-            [corpus.hash])
-        string = "".join(checksum_data)
-        return clgen.checksum_str(string)
+    def _hash(self, corpus: Corpus, opts: dict) -> str:
+        checksum_string = "".join(sorted(
+            [str(x) for x in opts.values()] +
+            [corpus.hash]))
+        return clgen.checksum_str(checksum_string)
 
     def _init_tensorflow(self, infer=False):
+        # Use self.tensorflow_state to mark whether or not model is configured
+        # for training or inference.
         try:
             if self.tensorflow_state == infer:
                 return
         except AttributeError:
             pass
 
+        # reset the graph when switching between training and inference
         tf.reset_default_graph()
 
-        # Corpus info:
+        # corpus info:
         batch_size = 1 if infer else self.corpus.batch_size
         seq_length = 1 if infer else self.corpus.seq_length
         vocab_size = self.corpus.vocab_size
@@ -151,7 +169,7 @@ class Model(clgen.CLgenObject):
             softmax_w = tf.get_variable("softmax_w",
                                         [self.rnn_size, vocab_size])
             softmax_b = tf.get_variable("softmax_b", [vocab_size])
-            # TODO: Determine device
+
             with tf.device("/cpu:0"):
                 embedding = tf.get_variable("embedding",
                                             [vocab_size, self.rnn_size])
@@ -196,9 +214,9 @@ class Model(clgen.CLgenObject):
         """
         self._init_tensorflow(infer=False)
 
-        max_epochs = self.train_opts.get("max_epochs", 50)
-        learning_rate = self.train_opts.get("learning_rate", 2e-3)
-        decay_rate = self.train_opts.get("lr_decary_rate", 5)
+        # training options
+        learning_rate = self.train_opts["learning_rate"]
+        decay_rate = self.train_opts["lr_decary_rate"]
         checkpoint_path = fs.path(self.cache.path, "model.ckpt")
 
         # resume from prior checkpoint
@@ -226,7 +244,7 @@ class Model(clgen.CLgenObject):
             if self.most_recent_checkpoint:
                 saver.restore(sess, ckpt.model_checkpoint_path)
 
-            for e in range(sess.run(self.epoch) + 1, max_epochs + 1):
+            for e in range(sess.run(self.epoch) + 1, self.epochs + 1):
                 # decay and set learning rate
                 new_learning_rate = learning_rate * (
                     (float(100 - decay_rate) / 100.0) ** (e - 1))
@@ -248,7 +266,7 @@ class Model(clgen.CLgenObject):
                         [self.cost, self.final_state, self.train_op], feed)
                     time_end = time.time()
                     batch_num = (e - 1) * self.corpus.num_batches + b
-                    max_batch = max_epochs * self.corpus.num_batches
+                    max_batch = self.epochs * self.corpus.num_batches
 
                     progress = (batch_num + 1) / max_batch
                     elapsed = time_end - time_start
@@ -267,17 +285,21 @@ class Model(clgen.CLgenObject):
                                 batch_num=batch_num + 1,
                                 max_batch=max_batch,
                                 epoch_num=e,
-                                max_epoch=max_epochs,
+                                max_epoch=self.epochs,
                                 tloss=train_loss,
                                 time_batch=elapsed))
                     # save_checkpoint = batch_num % checkpoint_every == 0
-                    # save_checkpoint |= (e == max_epochs - 1
+                    # save_checkpoint |= (e == self.epochs - 1
                     #                     and b == self.corpus.num_batches - 1)
                     # if save_checkpoint:
                 if quiet:
-                    log.info("epoch", e, "of", max_epochs + 1)
-                saver.save(sess, checkpoint_path, global_step=batch_num)
-                log.info("model saved to {}".format(checkpoint_path))
+                    log.info("epoch", e, "of", self.epochs + 1)
+
+                save = self.opts["train_opts"]["intermediate_checkpoints"]
+                save |= e == self.epochs  # last epoch
+                if save:
+                    saver.save(sess, checkpoint_path, global_step=batch_num)
+                    log.info("model saved to {}".format(checkpoint_path))
 
     def sample(self, seed_text="__kernel void", output=sys.stdout,
                num_samples=1, temperature=1, max_length=10000, seed=None,
@@ -393,6 +415,30 @@ class Model(clgen.CLgenObject):
                 sys.stdout.write('\n\n')
 
     @property
+    def model_type(self) -> str:
+        return self.opts["architecture"]["model_type"]
+
+    @property
+    def rnn_size(self) -> int:
+        return self.opts["architecture"]["rnn_size"]
+
+    @property
+    def num_layers(self) -> int:
+        return self.opts["architecture"]["num_layers"]
+
+    @property
+    def grad_clip(self) -> int:
+        return self.train_opts["grad_clip"]
+
+    @property
+    def epochs(self) -> int:
+        return self.train_opts["epochs"]
+
+    @property
+    def train_opts(self) -> dict:
+        return self.opts["train_opts"]
+
+    @property
     def meta(self):
         """
         Get trained model metadata.
@@ -415,14 +461,13 @@ class Model(clgen.CLgenObject):
         contents = corpus_files.copy()
         contents.update(model_files)
 
-        return {
-            "version": clgen.version(),
-            "author": get_default_author(),
-            "date packaged": labtime.nowstr(),
-            "corpus": self.corpus.meta,
-            "train_opts": self.train_opts,
-            "contents": contents
-        }
+        _meta = deepcopy(self.opts)
+        _meta["version"] = clgen.version()
+        _meta["date_packaged"] = labtime.nowstr()
+        _meta["corpus"] = self.corpus.meta,
+        _meta["contents"] = contents
+
+        return _meta
 
     def to_dist(self, distpath, author=None):
         """
@@ -477,7 +522,7 @@ class Model(clgen.CLgenObject):
         String representation.
         """
         return "{hash}: {data}".format(
-            hash=self.hash, data=clgen.format_json(self.train_opts))
+            hash=self.hash, data=clgen.format_json(self.opts))
 
     @property
     def checkpoints(self):
@@ -544,15 +589,17 @@ class DistModel(Model):
 
             self.validate()
 
-        self.train_opts = self.meta['train_opts']
+        # FIXME:
+        self.opts = self.meta
 
         log.info("distfile model: ", disthash)
         if "author" in self.meta:
             log.info("distfile author:", self.meta["author"])
         if "date packaged" in self.meta:
-            log.info("distfile date:  ", self.meta["date packaged"])
+            log.info("distfile date:  ", self.meta["date_packaged"])
 
         # Invoke superconstructor, to proceed as a normal model.
+        # FIXME:
         super(DistModel, self).__init__(
             Corpus.from_json(self.meta["corpus"]), self.meta["train_opts"])
 
@@ -636,7 +683,7 @@ class DistModel(Model):
         return True
 
 
-def from_json(model_json):
+def from_json(model_json: dict) -> Model:
     """
     Load model from JSON.
 
@@ -648,21 +695,13 @@ def from_json(model_json):
     """
     assert(type(model_json) is dict)
 
-    corpus = Corpus.from_json(model_json["corpus"])
-    train_opts = model_json["train_opts"]
+    if "corpus" not in model_json:
+        raise clgen.UserError("model JSON has no corpus entry")
 
-    # validate train_opts flags
-    valid_opts = [
-        "batch_size", "seq_length", "model_type", "rnn_size", "num_layers",
-        "dropout", "batchnorm", "learning_rate", "max_epochs", "grad_clip",
-        "lr_decay_every", "lr_decay_factor",
-    ]
-    for key in train_opts.keys():
-        if key not in valid_opts:
-            raise clgen.UserError(
-                "Unrecognized training option '{}'".format(key))
+    # create corpus and remove from JSON
+    corpus = Corpus.from_json(model_json.pop("corpus"))
 
-    return Model(corpus, train_opts)
+    return Model(corpus, **model_json)
 
 
 def from_tar(path):

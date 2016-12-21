@@ -1,23 +1,20 @@
 {
+  "author": "Chris Cummins <chrisc.101@gmail.com>",  # str
   "corpus": {
-    // path (str): directory containing kernel files. May be absolute or relative
-    "path": "corpus",
-    // preserve_order (bool, default true): If true, kernel ordering is shuffled
-    //     during training. If false, kernel order is preserved.
-    "preserve_order": false,
-    // eof (bool, default false): If true, insert 'end of file' separators
-    // between files in corpus. If false, do not.
-    "eof": false
+    "path": "corpus",  # directory containing kernel files
+    "preserve_order": false,  # if false, shuffle kernels during training
+    "eof": false  # if True, insert markers between kernels during training
+  },
+  "architecture": {
+    "model_type": "lstm",  # {"lstm","rnn","gru"}
+    "rnn_size": 128,  # num nodes per layer, int
+    "num_layers": 2
   },
   "train_opts": {
-    // model_type (str: {lstm,rnn,gru}, default lstm): Network cell type.
-    "model_type": "lstm",
-    // rnn_size (int, default 128): Network layer size.
-    "rnn_size": 128,
-    // num_layers (int, default 2): Number of layers in model.
-    "num_layers": 2,
-    // max_epochs (int, default 50): Number of epochs (iterations over training
-    //     data) to train for.
-    "max_epochs": 10
+    "epochs": 10,  # number of iterations over training data
+    "grad_clip": 5,
+    "learning_rate": 2e-3,  # initial learning rate
+    "lr_decary_rate": 5,  # % to reduce learning rate by per epoch
+    "intermediate_checkpoints": true
   }
 }

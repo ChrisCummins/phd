@@ -37,11 +37,12 @@ def get_test_model():
         "corpus": {
             "path": tests.data_path("tiny", "corpus"),
         },
+        "architecture": {
+          "rnn_size": 8,
+          "num_layers": 2
+        },
         "train_opts": {
-            "model_type": "lstm",
-            "rnn_size": 8,
-            "num_layers": 2,
-            "max_epochs": 2
+            "epochs": 2
         }
     })
 
@@ -57,16 +58,14 @@ class TestModel(TestCase):
         m.train()
         meta = m.meta
 
-        # meta format spec: https://github.com/ChrisCummins/clgen/issues/25
-
         # version
         self.assertEqual(meta["version"], clgen.version())
         # author
         self.assertTrue(isinstance(meta["author"], string_types))
         self.assertNotEqual(meta["author"], "")
         # date packaged
-        self.assertTrue(isinstance(meta["date packaged"], string_types))
-        self.assertNotEqual(meta["date packaged"], "")
+        self.assertTrue(isinstance(meta["date_packaged"], string_types))
+        self.assertNotEqual(meta["date_packaged"], "")
         # contents
         contents = meta["contents"]
 
