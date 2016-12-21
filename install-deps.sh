@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One-liner to install dependencies for CLgen 0.2.2.
+# One-liner to install dependencies for CLgen 0.2.3.
 #
 # Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
 #
