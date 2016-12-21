@@ -515,13 +515,13 @@ def main(model, sampler, print_corpus_dir=False, print_model_dir=False,
 
     # print cache paths
     if print_corpus_dir:
-        log.info(model.corpus.cache.path)
+        print(model.corpus.cache.path)
         sys.exit(0)
     elif print_model_dir:
-        log.info(model.cache.path)
+        print(model.cache.path)
         sys.exit(0)
     elif print_sampler_dir:
-        log.info(sampler.cache(model).path)
+        print(sampler.cache(model).path)
         sys.exit(0)
 
     model.train()
