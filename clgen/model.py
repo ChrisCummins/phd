@@ -275,6 +275,9 @@ class Model(clgen.CLgenObject):
                 saver.recover_last_checkpoints(ckpt_paths)
 
             start_batch = sess.run(self.epoch) * self.corpus.num_batches
+            batch_count = 0
+            total_elapsed = 0
+            eta_d, eta_h, eta_m = 0, 0, 0
 
             for e in range(sess.run(self.epoch) + 1, self.epochs + 1):
                 if quiet:
@@ -291,6 +294,7 @@ class Model(clgen.CLgenObject):
                 state = sess.run(self.initial_state)
                 for b in range(self.corpus.num_batches):
                     time_start = time.time()
+                    batch_count += 1
                     x, y = self.corpus.next_batch()
                     feed = {self.input_data: x, self.targets: y}
                     for i, (c, h) in enumerate(self.initial_state):
@@ -298,13 +302,21 @@ class Model(clgen.CLgenObject):
                         feed[h] = state[i].h
                     train_loss, state, _ = sess.run(
                         [self.cost, self.final_state, self.train_op], feed)
-                    time_end = time.time()
                     batch_num = (e - 1) * self.corpus.num_batches + b
                     max_batch = self.epochs * self.corpus.num_batches
 
                     progress = float((batch_num + 1 - start_batch) /
                                      (max_batch - start_batch))
+
+                    time_end = time.time()
                     elapsed = time_end - time_start
+
+                    # metrics
+                    total_elapsed += elapsed
+                    avg_elapsed = total_elapsed / batch_count
+                    remaining_time = (max_batch - batch_count) / avg_elapsed
+                    eta_h, eta_m = divmod(remaining_time / 60, 60)
+                    eta_d, eta_h = divmod(eta_h, 24)
 
                     if not quiet:
                         print(
@@ -315,7 +327,8 @@ class Model(clgen.CLgenObject):
                             "epoch={epoch_num}/{max_epoch}  "
                             "lr={lr:.6f}  "
                             "loss={tloss:.3f}  "
-                            "time/batch={time_batch:.3f}s".format(
+                            "time/batch={time_batch:.3f}s  "
+                            "eta={eta_d}d{eta_h}h{eta_m:02d}m".format(
                                 size=self.rnn_size,
                                 layers=self.num_layers,
                                 model=self.model_type.upper(),
@@ -326,7 +339,10 @@ class Model(clgen.CLgenObject):
                                 max_epoch=self.epochs,
                                 lr=new_learning_rate,
                                 tloss=train_loss,
-                                time_batch=elapsed), end="")
+                                time_batch=avg_elapsed,
+                                eta_d=int(eta_d),
+                                eta_h=int(eta_h),
+                                eta_m=int(eta_m)), end="")
 
                 save = self.opts["train_opts"]["intermediate_checkpoints"]
                 save |= e == self.epochs  # last epoch
