@@ -84,7 +84,7 @@ class CLgenObject(object):
     pass
 
 
-def version():
+def version() -> str:
     """
     Get the package version.
 
@@ -98,7 +98,7 @@ def version():
     return require("clgen")[0].version
 
 
-def must_exist(*path_components, **kwargs):
+def must_exist(*path_components, **kwargs) -> str:
     """
     Require that a file exists.
 
@@ -122,7 +122,7 @@ def must_exist(*path_components, **kwargs):
 _must_exist = must_exist  # prevent variable scope shadowing
 
 
-def checksum(data):
+def checksum(data) -> str:
     """
     Checksum a byte stream.
 
@@ -152,7 +152,7 @@ def checksum_list(*elems) -> str:
     return checksum_str(string)
 
 
-def checksum_str(string):
+def checksum_str(string: str) -> str:
     """
     Checksum a string.
 
@@ -168,7 +168,7 @@ def checksum_str(string):
         raise InternalError("failed to encode '{}'".format(string[:100]))
 
 
-def checksum_file(*path_components):
+def checksum_file(*path_components) -> str:
     """
     Checksum a file.
 
@@ -187,7 +187,7 @@ def checksum_file(*path_components):
         raise CLgenError("failed to read '{}'".format(path))
 
 
-def unpack_archive(*components, **kwargs):
+def unpack_archive(*components, **kwargs) -> str:
     """
     Unpack a compressed archive.
 
@@ -196,6 +196,9 @@ def unpack_archive(*components, **kwargs):
         **kwargs (dict, optional): Set "compression" to compression type.
             Default: bz2. Set "dir" to destination directory. Defaults to the
             directory of the archive.
+
+    Returns:
+        str: Path to directory.
     """
     path = fs.abspath(*components)
     compression = kwargs.get("compression", "bz2")
@@ -253,7 +256,7 @@ def dict_values(src: dict) -> list:
             yield v
 
 
-def get_substring_idxs(substr, s):
+def get_substring_idxs(substr: str, s: str):
     """
     Return a list of indexes of substr. If substr not found, list is
     empty.
@@ -268,7 +271,7 @@ def get_substring_idxs(substr, s):
     return [m.start() for m in re.finditer(substr, s)]
 
 
-def package_path(*path):
+def package_path(*path) -> str:
     """
     Path to package file.
 
@@ -285,7 +288,7 @@ def package_path(*path):
     return must_exist(abspath)
 
 
-def data_path(*path):
+def data_path(*path) -> str:
     """
     Path to package file.
 
@@ -300,7 +303,7 @@ def data_path(*path):
     return package_path("data", *path)
 
 
-def package_data(*path):
+def package_data(*path) -> bytes:
     """
     Read package data file.
 
@@ -322,7 +325,7 @@ def package_data(*path):
         raise InternalError("failed to read package data '{}'".format(path))
 
 
-def package_str(*path):
+def package_str(*path) -> str:
     """
     Read package data file as a string.
 
@@ -341,7 +344,7 @@ def package_str(*path):
         raise InternalError("failed to decode package data '{}'".format(path))
 
 
-def sql_script(name):
+def sql_script(name: str) -> str:
     """
     Read SQL script to string.
 
@@ -355,12 +358,15 @@ def sql_script(name):
     return package_str(path)
 
 
-def format_json(data):
+def format_json(data: dict) -> str:
     """
     Pretty print JSON.
 
     Arguments:
         data (dict): JSON blob.
+
+    Returns:
+        str: Formatted JSON
     """
     return json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
 
@@ -395,7 +401,7 @@ def loads(text, **kwargs):
     return json.loads('\n'.join(lines), **kwargs)
 
 
-def load_json_file(path, must_exist=True):
+def load_json_file(path: str, must_exist: bool=True):
     """
     Load a JSON data blob.
 
@@ -436,14 +442,14 @@ def terminating(thing):
         thing.terminate()
 
 
-def write_file(path, contents):
+def write_file(path: str, contents: str) -> None:
     if fs.dirname(path):
         fs.mkdir(fs.dirname(path))
     with open(path, 'w') as outfile:
         outfile.write(contents)
 
 
-def platform_info(printfn=print):
+def platform_info(printfn=print) -> None:
     """
     Log platform information.
 
@@ -489,7 +495,7 @@ def platform_info(printfn=print):
 
 
 def main(model, sampler, print_corpus_dir=False, print_model_dir=False,
-         print_sampler_dir=False):
+         print_sampler_dir=False) -> None:
     """
     Main entry point for clgen.
 
