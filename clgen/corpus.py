@@ -25,7 +25,7 @@ import numpy as np
 
 from checksumdir import dirhash
 from collections import Counter
-from copy import copy
+from copy import deepcopy
 from labm8 import fs
 from six.moves import cPickle
 
@@ -119,7 +119,7 @@ class Corpus(clgen.CLgenObject):
     """
     Representation of a training corpus.
     """
-    def __init__(self, contentid, path=None, **opts):
+    def __init__(self, contentid: str, path: str=None, **opts):
         """
         Instantiate a corpus.
 
@@ -152,8 +152,8 @@ class Corpus(clgen.CLgenObject):
                     "Unsupported corpus option '{}'. Valid keys: {}".format(
                         key, ','.join(sorted(DEFAULT_CORPUS_OPTS.keys()))))
 
-        self.opts = copy(DEFAULT_CORPUS_OPTS)
-        self.opts.update(opts)
+        self.opts = deepcopy(DEFAULT_CORPUS_OPTS)
+        clgen.update(self.opts, opts)
         self.hash = self._hash(contentid, self.opts)
 
         log.debug("corpus {hash}".format(hash=self.hash))
@@ -336,7 +336,7 @@ class Corpus(clgen.CLgenObject):
         Returns:
             dict: Metadata.
         """
-        _meta = copy(self.opts)
+        _meta = deepcopy(self.opts)
         _meta["id"] = self.hash
         return _meta
 
