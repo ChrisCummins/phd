@@ -119,6 +119,30 @@ def main(method, *args, **kwargs):
     Returns:
         method(*args, **kwargs)
     """
+    def _user_message(exception):
+        log.fatal("""\
+{err} ({type})
+
+Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
+""".format(err=e, type=type(e).__name__))
+
+    def _user_message_with_stacktrace(exception):
+        # get limited stack trace
+        _, _, tb = sys.exc_info()
+        trace = "\n".join(
+            "       {file}:{ln}:{fn}".format(
+                file=fs.basename(x[0]), ln=x[1], fn=x[2])
+            for x in traceback.extract_tb(tb, limit=5)[1:])
+
+        log.fatal("""\
+{err} ({type})
+
+  stacktrace:
+{stack_trace}
+
+Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
+""".format(err=e, type=type(e).__name__, stack_trace=trace))
+
     # if DEBUG var set, don't catch exceptions
     if os.environ.get("DEBUG", None):
         # verbose stack traces. see: https://pymotw.com/2/cgitb/
@@ -136,20 +160,9 @@ def main(method, *args, **kwargs):
         sys.stderr.flush()
         print("\nkeyboard interrupt, terminating", file=sys.stderr)
         log.exit(1)
+    except clgen.UserError as e:
+        _user_message(e)
+    except clgen.File404 as e:
+        _user_message(e)
     except Exception as e:
-
-        # get limited stack trace
-        _, _, tb = sys.exc_info()
-        trace = "\n".join(
-            "       {file}:{ln}:{fn}".format(file=fs.basename(x[0]), ln=x[1],
-                                             fn=x[2])
-            for x in traceback.extract_tb(tb, limit=5)[1:])
-
-        log.fatal("""\
-{err} ({type})
-
-stacktrace:
-{stack_trace}
-
-Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
-""".format(err=e, type=type(e).__name__, stack_trace=trace))
+        _user_message_with_stacktrace(e)
