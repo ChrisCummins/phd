@@ -130,7 +130,9 @@ class Model(clgen.CLgenObject):
 
     def _hash(self, corpus: Corpus, opts: dict) -> str:
         """ compute model hash """
-        return clgen.checksum_list(corpus.hash, *clgen.dict_values(opts))
+        hashopts = deepcopy(opts)
+        hashopts["train_opts"].pop("epochs")
+        return clgen.checksum_list(corpus.hash, *clgen.dict_values(hashopts))
 
     def _init_tensorflow(self, infer=False):
         # Use self.tensorflow_state to mark whether or not model is configured
@@ -206,6 +208,25 @@ class Model(clgen.CLgenObject):
         self.tensorflow_state = infer
 
 
+    def _get_params_path(self, ckpt):
+        """ return path to checkpoint closest to target num of epochs """
+        paths = ckpt.all_model_checkpoint_paths
+        batch_nums = [int(x.split('-')[-1]) for x in paths]
+        epoch_nums = [int((x + 1) / (self.corpus.num_batches))
+                      for x in batch_nums]
+
+        closest = self.epochs
+        closest_path = None
+        for e, path in zip(epoch_nums, paths):
+            diff = self.epochs - e
+            if diff >= 0 and diff < closest:
+                log.verbose("  cached checkpoint at epoch =", e, "diff =", diff)
+                closest = diff
+                closest_path = path
+
+        return closest_path, paths
+
+
     def train(self, quiet=False):
         """
         Train model.
@@ -218,29 +239,40 @@ class Model(clgen.CLgenObject):
         checkpoint_path = fs.path(self.cache.path, "model.ckpt")
 
         # resume from prior checkpoint
-        if self.most_recent_checkpoint:
+        ckpt_path, ckpt_paths = None, None
+        if self.checkpoint_path:
             # open saved vocab/dict and check if vocabs/dicts are compatible
             assert(fs.isfile(self.cache["chars_vocab.pkl"]))
-            # FIXME:
+            # TODO:
             # with open(self.cache["chars_vocab.pkl"]) as infile:
             #     saved_chars, saved_vocab = cPickle.load(infile)
             # assert(saved_chars == self.corpus.atoms)
             # assert(saved_vocab == self.corpus.vocab)
 
             # check if all necessary files exist
-            assert(fs.isdir(self.most_recent_checkpoint))
-            ckpt = tf.train.get_checkpoint_state(self.most_recent_checkpoint)
+            assert(fs.isdir(self.checkpoint_path))
+            ckpt = tf.train.get_checkpoint_state(self.checkpoint_path)
             assert(ckpt)
             assert(ckpt.model_checkpoint_path)
-            log.info("loaded checkpoint {}".format(ckpt.model_checkpoint_path))
+            ckpt_path, ckpt_paths = self._get_params_path(ckpt)
 
         with tf.Session() as sess:
             tf.global_variables_initializer().run()
-            saver = tf.train.Saver(tf.global_variables())
 
-            # restore model from checkpoint
-            if self.most_recent_checkpoint:
-                saver.restore(sess, ckpt.model_checkpoint_path)
+            # keep all checkpoints
+            saver = tf.train.Saver(tf.global_variables(), max_to_keep=100)
+
+            # restore model from closest checkpoint
+            if ckpt_path:
+                log.debug("restoring", ckpt_path)
+                saver.restore(sess, ckpt_path)
+                log.info("restored checkpoint {}".format(ckpt_path))
+
+            # make sure we don't lose track of other checkpoints
+            if ckpt_paths:
+                saver.recover_last_checkpoints(ckpt_paths)
+
+            start_batch = sess.run(self.epoch) * self.corpus.num_batches
 
             for e in range(sess.run(self.epoch) + 1, self.epochs + 1):
                 if quiet:
@@ -268,7 +300,8 @@ class Model(clgen.CLgenObject):
                     batch_num = (e - 1) * self.corpus.num_batches + b
                     max_batch = self.epochs * self.corpus.num_batches
 
-                    progress = (batch_num + 1) / max_batch
+                    progress = float((batch_num + 1 - start_batch) /
+                                     (max_batch - start_batch))
                     elapsed = time_end - time_start
 
                     if not quiet:
@@ -525,21 +558,9 @@ class Model(clgen.CLgenObject):
             hash=self.hash, data=clgen.format_json(self.opts))
 
     @property
-    def checkpoints(self):
+    def checkpoint_path(self):
         """
-        Training checkpoints.
-
-        Returns:
-
-            str[]: List of paths to checkpoint files.
-        """
-        # TODO: Fetch the list from tf
-        return [self.most_recent_checkpoint]
-
-    @property
-    def most_recent_checkpoint(self):
-        """
-        Get path to most recently created t7 checkpoint.
+        Get path to most checkpoint, if exists.
 
         Returns:
 
