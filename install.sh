@@ -47,7 +47,7 @@ install_packages() {
     set -u
 
     if [[ "$NAME" == "Darwin" ]]; then
-        brew install npm nodejs || true
+        brew install npm nodejs python || true
     elif [[ "$NAME" == "Ubuntu" ]]; then
         sudo apt-get install -y nodejs npm python-pip
     fi
