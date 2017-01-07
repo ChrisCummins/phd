@@ -182,6 +182,13 @@ install_servers() {
 }
 
 
+install_macos() {
+  # install Mac OS X specific stuff
+  mkdir -p ~/.local/bin
+  symlink "$HOME/.dotfiles/macos/rm-dsstore" ~/.local/bin/rm-dsstore
+}
+
+
 main() {
     install_packages
     make_local_dirs
@@ -194,8 +201,15 @@ main() {
     install_vim
     install_sublime
     install_inbox
-    install_tex
     install_omnifocus
     install_servers
+
+    if $(which pdflatex &>/dev/null); then
+      install_tex
+    fi
+
+    if [[ "$(uname)" == "Darwin" ]]; then
+      install_macos
+    fi
 }
 main $@
