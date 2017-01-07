@@ -53,7 +53,6 @@ install_packages() {
     fi
 
     sudo npm install -g diff-so-fancy
-
     pip install autoenv
 }
 
@@ -157,11 +156,9 @@ install_inbox() {
 
 
 install_tex() {
-    if $(which pdflatex &>/dev/null); then
-        mkdir -p ~/.local/bin
-        symlink "$HOME/.dotfiles/tex/autotex" ~/.local/bin/autotex
-        symlink "$HOME/.dotfiles/tex/cleanbib" ~/.local/bin/cleanbib
-    fi
+    mkdir -p ~/.local/bin
+    symlink "$HOME/.dotfiles/tex/autotex" ~/.local/bin/autotex
+    symlink "$HOME/.dotfiles/tex/cleanbib" ~/.local/bin/cleanbib
 }
 
 
@@ -174,7 +171,7 @@ install_omnifocus() {
 install_servers() {
     # server scripts
     case "$(hostname)" in
-    florence | diana | mary)
+    florence | diana | mary | plod)
         symlink "$HOME/.dotfiles/servers/mary" ~/.local/bin/mary
         symlink "$HOME/.dotfiles/servers/diana" ~/.local/bin/diana
         ;;
