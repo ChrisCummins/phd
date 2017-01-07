@@ -57,11 +57,6 @@ install_packages() {
 }
 
 
-make_local_dirs() {
-    mkdir -p $HOME/.local/bin
-}
-
-
 install_zsh() {
     # install config files
     symlink ~/.dotfiles/zsh ~/.zsh
@@ -87,16 +82,15 @@ install_zsh() {
 
 
 install_ssh() {
-    if [[ -d "$private/ssh" ]]; then
-        chmod 600 "$private"/ssh/*
-        mkdir -p ~/.ssh
-        symlink "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
-        symlink "$private/ssh/config" ~/.ssh/config
-        symlink "$private/ssh/known_hosts" ~/.ssh/known_hosts
-        cp "$private/ssh/id_rsa" ~/.ssh/id_rsa
-        symlink "$private/ssh/id_rsa.ppk" ~/.ssh/id_rsa.ppk
-        symlink "$private/ssh/id_rsa.pub" ~/.ssh/id_rsa.pub
-    fi
+    # shared SSH key
+    chmod 600 "$private"/ssh/*
+    mkdir -p ~/.ssh
+    symlink "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
+    symlink "$private/ssh/config" ~/.ssh/config
+    symlink "$private/ssh/known_hosts" ~/.ssh/known_hosts
+    cp "$private/ssh/id_rsa" ~/.ssh/id_rsa
+    symlink "$private/ssh/id_rsa.ppk" ~/.ssh/id_rsa.ppk
+    symlink "$private/ssh/id_rsa.pub" ~/.ssh/id_rsa.pub
 }
 
 
@@ -149,9 +143,7 @@ install_sublime() {
 
 
 install_inbox() {
-    if [[ -d ~/Dropbos/Inbox ]]; then
-        symlink Dropbox/Inbox ~/Inbox
-    fi
+    symlink Dropbox/Inbox ~/Inbox
 }
 
 
@@ -168,38 +160,52 @@ install_omnifocus() {
 }
 
 
-install_servers() {
+install_server_scripts() {
     # server scripts
-    case "$(hostname)" in
-    florence | diana | mary | plod)
-        symlink "$HOME/.dotfiles/servers/mary" ~/.local/bin/mary
-        symlink "$HOME/.dotfiles/servers/diana" ~/.local/bin/diana
-        ;;
-    esac
+    symlink "$HOME/.dotfiles/servers/mary" ~/.local/bin/mary
+    symlink "$HOME/.dotfiles/servers/diana" ~/.local/bin/diana
 }
 
 
 install_macos() {
-  # install Mac OS X specific stuff
-  mkdir -p ~/.local/bin
-  symlink "$HOME/.dotfiles/macos/rm-dsstore" ~/.local/bin/rm-dsstore
+    # install Mac OS X specific stuff
+    mkdir -p ~/.local/bin
+    symlink "$HOME/.dotfiles/macos/rm-dsstore" ~/.local/bin/rm-dsstore
 }
 
 
 main() {
     install_packages
-    make_local_dirs
-    install_ssh
+
+    if [[ -d "$private/ssh" ]]; then
+        install_ssh
+    fi
+
     install_zsh
+
     install_dropbox
+
     install_git
+
     install_tmux
+
     install_atom
+
     install_vim
+
     install_sublime
-    install_inbox
+
+    if [[ -d ~/Dropbos/Inbox ]]; then
+        install_inbox
+    fi
+
     install_omnifocus
-    install_servers
+
+    case "$(hostname)" in
+      florence | diana | mary | plod)
+      install_server_scripts
+      ;;
+    esac
 
     if $(which pdflatex &>/dev/null); then
       install_tex
