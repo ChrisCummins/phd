@@ -28,9 +28,12 @@ from collections import Counter
 from copy import deepcopy
 from labm8 import fs
 from six.moves import cPickle
+from subprocess import Popen, PIPE
+from tempfile import NamedTemporaryFile
 
 import clgen
 from clgen import cache
+from clgen import clutil
 from clgen import dbutil
 from clgen import explore
 from clgen import fetch
@@ -115,6 +118,42 @@ def atomize(corpus: str, vocab: str="char") -> list:
         return atomizer(corpus)
 
 
+def features_from_file(path):
+    """
+    Fetch features from file.
+
+    Arguments:
+        path (str): Path to file.
+
+    Returns:
+        np.array: Feature values.
+    """
+    # hacky call to clgen-features and parse output
+    cmd = ['clgen-features', path]
+    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    cout, _ = proc.communicate()
+    features = [float(x) for x in
+                cout.decode('utf-8').split('\n')[1].split(',')[2:]]
+    return np.array(features)
+
+
+def get_features(code):
+    """
+    Get features for code.
+
+    Arguments:
+        code (str): Source code.
+
+    Returns:
+        np.array: Feature values.
+    """
+    with NamedTemporaryFile() as outfile:
+        outfile.write(code.encode("utf-8"))
+        outfile.seek(0)
+        features = features_from_file(outfile.name)
+    return features
+
+
 def encode(kernels_db: str, encoding: str) -> None:
     """
     Encode a kernels database.
@@ -126,9 +165,41 @@ def encode(kernels_db: str, encoding: str) -> None:
     def _default(kernels_db: str) -> None:
         pass
 
+    def _static_features(kernels_db: str) -> None:
+        log.verbose("Static feature encoding")
+        db = dbutil.connect(kernels_db)
+        c = db.cursor()
+        c.execute("SELECT id,contents FROM PreprocessedFiles WHERE status=0")
+        for row in list(c.fetchall()):
+            id, contents = row
+            c.execute("DELETE FROM PreprocessedFiles WHERE id=?", (id,))
+            for i, kernel in enumerate(clutil.get_cl_kernels(contents)):
+                features = get_features(kernel)
+                kid = "{}-{}".format(id, i)
+                log.verbose("features", kid)
+                if len(features) == 8:
+                    feature_str = ("/* {:10} {:10} {:10} {:10} {:10} {:10}"
+                                   "{:10.3f} {:10.3f} */".format(
+                                       int(features[0]),
+                                       int(features[1]),
+                                       int(features[2]),
+                                       int(features[3]),
+                                       int(features[4]),
+                                       int(features[5]),
+                                       features[6],
+                                       features[7]))
+                    newsource = feature_str + '\n' + kernel
+                    c.execute("""
+                        INSERT INTO PreprocessedFiles (id,contents,status)
+                        VALUES (?,?,?)
+                    """, (kid, newsource, 0))
+        c.close()
+        db.commit()
+
     # dispatch encoder based on encoding
     encoders = {
         "default": _default,
+        "static_features": _static_features,
     }
     encoder = encoders.get(encoding, None)
     if encoder is None:
@@ -191,6 +262,7 @@ class Corpus(clgen.CLgenObject):
                 # create kernels database if necessary
                 if not self.cache["kernels.db"]:
                     self._create_kernels_db(path, self.opts["encoding"])
+                    assert(self.cache["kernels.db"])
             except Exception as e:
                 _init_error(e)
 
@@ -198,12 +270,14 @@ class Corpus(clgen.CLgenObject):
             # create corpus text if not exists
             if not self.cache["corpus.txt"]:
                 self._create_txt()
+                assert(self.cache["corpus.txt"])
         except Exception as e:
             _init_error(e)
 
         # preprocess if needed
         if self.cache["vocab.pkl"]:
             self._load_vocab()
+            assert(self.cache["vocab.pkl"])
         else:
             try:
                 self._create_vocab(self.opts["vocabulary"])
