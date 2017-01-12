@@ -81,3 +81,17 @@ class TestCorpus(TestCase):
                 "path": tests.archive("tiny", "corpus"),
                 "not_a_real_option": False
             })
+
+    def test_bad_vocab(self):
+        with self.assertRaises(clgen.UserError):
+            corpus.Corpus.from_json({
+                "path": tests.archive("tiny", "corpus"),
+                "vocab": "INVALID_VOCAB"
+            })
+
+    def test_bad_encoding(self):
+        with self.assertRaises(clgen.UserError):
+            corpus.Corpus.from_json({
+                "path": tests.archive("tiny", "corpus"),
+                "encoding": "INVALID_ENCODING"
+            })

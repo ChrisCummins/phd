@@ -79,13 +79,13 @@ def unpack_directory_if_needed(path):
     return path
 
 
-def atomize(corpus, vocab="char"):
+def atomize(corpus: str, vocab: str="char") -> list:
     """
     Extract vocabulary of a corpus.
 
     Arguments:
         corpus (str): Corpus.
-        voca (str, optional): Vocabularly type.
+        vocab (str, optional): Vocabularly type.
 
     Returns:
         list of str: Vocabularly.
@@ -109,10 +109,34 @@ def atomize(corpus, vocab="char"):
     atomizer = atomizers.get(vocab, None)
     if atomizer is None:
         raise clgen.UserError(
-            "Unknown vocabulary type '{}'. Supported types: {}".format(
-                vocab, ", ".join(sorted(atomizers.keys()))))
+            "Unknown vocabulary type '{bad}'. Supported values: {good}".format(
+                bad=vocab, good=", ".join(sorted(atomizers.keys()))))
     else:
         return atomizer(corpus)
+
+
+def encode(kernels_db: str, encoding: str) -> None:
+    """
+    Encode a kernels database.
+
+    Arguments:
+        kernels_db (str): Path to kernels database.
+        encoding (str): Encoding type.
+    """
+    def _default(kernels_db: str) -> None:
+        pass
+
+    # dispatch encoder based on encoding
+    encoders = {
+        "default": _default,
+    }
+    encoder = encoders.get(encoding, None)
+    if encoder is None:
+        raise clgen.UserError(
+            "Unknown encoding type '{bad}'. Supported values: {good}".format(
+                bad=encoding, good=", ".join(sorted(encoders.keys()))))
+    else:
+        encoder(kernels_db)
 
 
 class Corpus(clgen.CLgenObject):
@@ -166,7 +190,7 @@ class Corpus(clgen.CLgenObject):
             try:
                 # create kernels database if necessary
                 if not self.cache["kernels.db"]:
-                    self._create_kernels_db(path)
+                    self._create_kernels_db(path, self.opts["encoding"])
             except Exception as e:
                 _init_error(e)
 
@@ -182,7 +206,7 @@ class Corpus(clgen.CLgenObject):
             self._load_vocab()
         else:
             try:
-                self._create_vocab()
+                self._create_vocab(self.opts["vocabulary"])
             except Exception as e:
                 _init_error(e)
 
@@ -190,7 +214,7 @@ class Corpus(clgen.CLgenObject):
         """ compute corpus hash """
         return clgen.checksum_list(contentid, *clgen.dict_values(opts))
 
-    def _create_kernels_db(self, path):
+    def _create_kernels_db(self, path, encoding="default"):
         """creates and caches kernels.db"""
         log.debug("creating database")
 
@@ -209,6 +233,9 @@ class Corpus(clgen.CLgenObject):
         # preprocess files
         preprocess.preprocess_db(self.cache["kernels.db"])
 
+        # encode kernel db
+        encode(self.cache["kernels.db"], encoding)
+
         # print database stats
         explore.explore(self.cache["kernels.db"])
 
@@ -226,14 +253,14 @@ class Corpus(clgen.CLgenObject):
         with codecs.open(self.cache["corpus.txt"], encoding="utf-8") as infile:
             return infile.read()
 
-    def _create_vocab(self):
+    def _create_vocab(self, vocab="char"):
         """creates and caches vocab.pkl"""
         log.debug("creating vocab file")
 
         tmp_vocab_file = fs.path(self.cache.path, "vocab.tmp.pkl")
 
         data = self._read_txt()
-        self.atoms = atomize(data, vocab="char")
+        self.atoms = atomize(data, vocab)
 
         self.vocab_size = len(self.atoms)
         self.vocab = dict(zip(self.atoms, range(len(self.atoms))))
