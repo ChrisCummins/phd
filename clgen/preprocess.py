@@ -54,13 +54,6 @@ class LlvmException(clgen.CLgenError):
     pass
 
 
-class ClangFormatException(LlvmException):
-    """
-    clang-format error.
-    """
-    pass
-
-
 class OptException(LlvmException):
     """
     LLVM opt error.
@@ -78,6 +71,13 @@ class BadCodeException(clgen.CLgenError):
 class ClangException(BadCodeException):
     """
     clang error.
+    """
+    pass
+
+
+class ClangFormatException(BadCodeException):
+    """
+    clang-format error.
     """
     pass
 
