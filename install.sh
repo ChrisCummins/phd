@@ -13,12 +13,31 @@ private="$HOME/Dropbox/Shared"
 symlink() {
     # args:
     #   $1 path that symlink resolves to
-    #   $2 fully qualified destination symlink (not just the directory name)
+    #   $2 fully qualified destination symlink (not just the parent directory)
     local source="$1"
     local destination="$2"
 
     if [[ ! -L "$destination" ]]; then
         if [[ -f "$destination" ]]; then
+            local backup="$destination.backup"
+            echo "backup $destination -> $destination.backup"
+            mv "$destination" "$destination.backup"
+        fi
+        echo "symlink $source -> $destination"
+        ln -s "$source" "$destination"
+    fi
+}
+
+
+symlink_dir() {
+    # args:
+    #   $1 path that symlink resolves to
+    #   $2 fully qualified destination symlink (not just the parent directory)
+    local source="$1"
+    local destination="$2"
+
+    if [[ ! -L "$destination" ]]; then
+        if [[ -d "$destination" ]]; then
             local backup="$destination.backup"
             echo "backup $destination -> $destination.backup"
             mv "$destination" "$destination.backup"
@@ -171,6 +190,11 @@ install_macos() {
     # install Mac OS X specific stuff
     mkdir -p ~/.local/bin
     symlink "$HOME/.dotfiles/macos/rm-dsstore" ~/.local/bin/rm-dsstore
+
+    if [[ -d "$private/Library" ]] && [[ -d ~/Library ]]; then
+        symlink_dir "$private/Library/Fonts" ~/Library/Fonts
+        symlink_dir "$private/Library/Spelling" ~/Library/Spelling
+    fi
 }
 
 
