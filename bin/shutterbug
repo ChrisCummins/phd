@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+from argparse import ArgumentParser
+
+from shutterbug import unchunk, mkchunks
+
+def main():
+    parser = ArgumentParser(description="""\
+Split photo collections into chunks for backup.\
+""")
+
+    parser.add_argument('directory', nargs='+',
+                        help='input directories')
+    parser.add_argument('-u', '--unpack', action='store_true',
+                        help="unpack chunks (overrides all other flags)")
+    parser.add_argument('-s', '--size', type=float, default=4500,
+                        help="maximum size of chunks (in MB)")
+    parser.add_argument('-g', '--gzip', action='store_true',
+                        help="use GZIP compression on files")
+    parser.add_argument('-i', '--in-order', action='store_true',
+                        help='preserve file ordering in chunks')
+    parser.add_argument('-r', '--seed', type=int, default=204,
+                        help=("integer value to control file order shuffling "
+                              "(ignored if --in-order flag used)"))
+    args = parser.parse_args()
+
+    if args.unpack:
+        unchunk(args.directory)
+    else:
+        mkchunks(args.directory, args.size * 1024 ** 2,
+                 shuffle=not args.in_order, seed=args.seed, compress=args.gzip)
+
+
+if __name__ == "__main__":
+    main()
