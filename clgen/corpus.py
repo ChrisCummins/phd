@@ -228,6 +228,7 @@ class Corpus(clgen.CLgenObject):
         """
         def _init_error(err):
             """ tidy up in case of error """
+            log.error("corpus creation failed. Deleting corpus files")
             paths = [
                 fs.path(self.cache.path, "kernels.db"),
                 fs.path(self.cache.path, "corpus.txt"),
