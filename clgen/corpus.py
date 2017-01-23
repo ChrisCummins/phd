@@ -32,6 +32,7 @@ from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
 
 import clgen
+from clgen import atomizer
 from clgen import cache
 from clgen import clutil
 from clgen import dbutil
@@ -82,40 +83,27 @@ def unpack_directory_if_needed(path):
     return path
 
 
-def atomize(corpus: str, vocab: str="char") -> list:
+def get_atomizer(corpus: str, vocab: str="char") -> list:
     """
-    Extract vocabulary of a corpus.
+    Get atomizer for a corpus.
 
     Arguments:
         corpus (str): Corpus.
         vocab (str, optional): Vocabularly type.
 
     Returns:
-        list of str: Vocabularly.
+        atomizer.Atomizer: Atomizer.
     """
-    def get_chars(corpus):
-        counter = Counter(corpus)
-        count_pairs = sorted(counter.items(), key=lambda x: -x[1])
-        chars, _ = zip(*count_pairs)
-        return chars
-
-    def get_tokens(corpus):
-        # FIXME: Actual token stream, not just whitespace separated.
-        tokens = sorted(list(set(corpus.split())))
-        return tokens
-
-    # dispatch atomizer based on vocab type
     atomizers = {
-        "char": get_chars,
-        "tokens": get_tokens,
+        "char": atomizer.CharacterAtomizer,
     }
-    atomizer = atomizers.get(vocab, None)
-    if atomizer is None:
+    atomizerclass = atomizers.get(vocab, None)
+    if atomizerclass is None:
         raise clgen.UserError(
             "Unknown vocabulary type '{bad}'. Supported values: {good}".format(
                 bad=vocab, good=", ".join(sorted(atomizers.keys()))))
     else:
-        return atomizer(corpus)
+        return atomizerclass.from_text(corpus)
 
 
 def features_from_file(path):
@@ -335,10 +323,12 @@ class Corpus(clgen.CLgenObject):
         tmp_vocab_file = fs.path(self.cache.path, "vocab.tmp.pkl")
 
         data = self._read_txt()
-        self.atoms = atomize(data, vocab)
 
-        self.vocab_size = len(self.atoms)
-        self.vocab = dict(zip(self.atoms, range(len(self.atoms))))
+        atomizer = get_atomizer(data, vocab)
+        self.atoms = atomizer.atoms
+
+        self.vocab_size = atomizer.vocab_size 
+        self.vocab = atomizer.vocab
         with open(tmp_vocab_file, 'wb') as f:
             cPickle.dump(self.atoms, f)
 
