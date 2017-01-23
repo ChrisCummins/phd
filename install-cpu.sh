@@ -2,7 +2,7 @@
 #
 # One-liner to install CLgen 0.2.3.
 #
-# Copyright 2016 Chris Cummins <chrisc.101@gmail.com>.
+# Copyright 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is part of CLgen.
 #
