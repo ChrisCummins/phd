@@ -109,7 +109,7 @@ class CharacterAtomizer(Atomizer):
 
     def atomize(self, text: str) -> np.array:
         try:
-            return np.array(list(map(self.vocab.get, text)))
+            return np.array(list(map(lambda x: self.vocab[x], text)))
         except KeyError:
             raise VocabError
 

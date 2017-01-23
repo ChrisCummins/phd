@@ -32,6 +32,11 @@ class TestCharacterAtomizer(TestCase):
         c = atomizer.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
         self.assertListEqual([1, 2, 3, 1, 2, 3], list(c.atomize('abcabc')))
 
+    def test_atomize_error(self):
+        c = atomizer.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
+        with self.assertRaises(atomizer.VocabError):
+            c.atomize('abcdeabc')
+
     def test_deatomize(self):
         c = atomizer.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
         self.assertEqual('abcabc', c.deatomize([1, 2, 3, 1, 2, 3]))
