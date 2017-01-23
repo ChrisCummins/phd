@@ -34,7 +34,22 @@ class TestCharacterAtomizer(TestCase):
 
     def test_deatomize(self):
         c = atomizer.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
-        self.assertEqual('abcabc', c.deatomize(c.atomize('abcabc')))
+        self.assertEqual('abcabc', c.deatomize([1, 2, 3, 1, 2, 3]))
+
+        text = """
+__kernel void A(__global float* a, const int b, const double c) {
+  int d = get_global_id(0);
+  if (b < get_global_size(0))
+    a[d] *= (float)c;
+}
+"""
+        c = atomizer.CharacterAtomizer.from_text(text)
+        self.assertEqual(text, c.deatomize(c.atomize(text)))
+
+    def test_deatomize_error(self):
+        c = atomizer.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
+        with self.assertRaises(atomizer.VocabError):
+            c.deatomize([1, 2, 5, 10, 0])
 
 
 class TestGreedyAtomizer(TestCase):

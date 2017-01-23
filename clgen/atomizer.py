@@ -81,7 +81,10 @@ class Atomizer(clgen.CLgenObject):
         Returns:
             str: Decoded text.
         """
-        raise NotImplementedError("abstact class")
+        try:
+            return ''.join(list(map(lambda x: self.decoder[x], encoded)))
+        except KeyError:
+            raise VocabError
 
     @staticmethod
     def from_text(text: str):
@@ -109,9 +112,6 @@ class CharacterAtomizer(Atomizer):
             return np.array(list(map(self.vocab.get, text)))
         except KeyError:
             raise VocabError
-
-    def deatomize(self, encoded: np.array) -> str:
-        return ''.join(list(map(self.decoder.get, encoded)))
 
     @staticmethod
     def from_text(text: str) -> Atomizer:
