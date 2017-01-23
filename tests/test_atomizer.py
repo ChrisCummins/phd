@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase
+from unittest import TestCase, main, skip
 
 from clgen import atomizer
 
@@ -35,3 +35,16 @@ class TestCharacterAtomizer(TestCase):
     def test_deatomize(self):
         c = atomizer.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
         self.assertEqual('abcabc', c.deatomize(c.atomize('abcabc')))
+
+
+class TestGreedyAtomizer(TestCase):
+    @skip("FIXME: Work in progress")
+    def test_from_text(self):
+        c = atomizer.GreedyAtomizer.from_text(
+            '__kernel void A(__global float* a, const int b, const double c)')
+        print(c.vocab)
+        self.assertEqual(c.vocab_size, 11)
+
+
+if __name__ == "__main__":
+    main()

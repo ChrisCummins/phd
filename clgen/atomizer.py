@@ -120,3 +120,40 @@ class CharacterAtomizer(Atomizer):
         atoms, _ = zip(*count_pairs)
         vocab = dict(zip(atoms, range(len(atoms))))
         return CharacterAtomizer(vocab)
+
+
+class GreedyAtomizer(Atomizer):
+    """
+    TODO:
+    """
+    def __init__(self, *args, **kwargs):
+        super(GreedyAtomizer, self).__init__(*args, **kwargs)
+
+    @staticmethod
+    def from_text(text: str) -> Atomizer:
+        available_tokens = set([
+            '__kernel void',
+            'int',
+            'float',
+            'char',
+            'double',
+            'const',
+            '__global',
+            '__local',
+        ] + string.printable)
+
+        atoms = set()
+
+        # TODO: Complete this....
+        buf = ''
+        for i in range(len(text) - 1):
+            for j in range(i+1, len(text)):
+                buf = text[i:j]
+                if buf not in available_tokens:
+                    assert(buf[i:j-1] in available_tokens)
+                    atoms.add(buf[i:j-1])
+                    i = j
+                    break
+
+        vocab = dict(zip(sorted(atoms), range(len(atoms))))
+        return GreedyAtomizer(vocab)
