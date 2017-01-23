@@ -129,31 +129,96 @@ class GreedyAtomizer(Atomizer):
     def __init__(self, *args, **kwargs):
         super(GreedyAtomizer, self).__init__(*args, **kwargs)
 
+    def atomize(self, text: str) -> np.array:
+        atoms = set(self.atoms)
+        indices = []
+        try:
+            i, j = 0, 0
+            while j < len(text):
+                j += 1
+                if not any(x.startswith(text[i:j]) for x in atoms):
+                    indices.append(self.vocab[text[i:j-1]])
+                    i = j - 1
+                    j -= 1
+            indices.append(self.vocab[text[i:j]])
+            return np.array(indices)
+        except KeyError:
+            raise VocabError
+
     @staticmethod
     def from_text(text: str) -> Atomizer:
-        available_tokens = set([
-            '__kernel void',
-            'int',
-            'float',
-            'char',
-            'double',
-            'const',
+        available_atoms = set([
+            '__assert',
+            '__attribute',
+            '__builtin_astype',
+            '__clc_fabs',
+            '__clc_fma',
+            '__constant',
             '__global',
+            '__inline',
+            '__kernel void',
             '__local',
-        ] + string.printable)
+            '__private',
+            'abs',
+            'atomic_add',
+            'barrier',
+            'break',
+            'case',
+            'char',
+            'clamp',
+            'const',
+            'continue',
+            'double',
+            'else',
+            'fabs',
+            'false',
+            'float',
+            'get_global_id',
+            'get_global_size',
+            'get_local_id',
+            'get_local_size',
+            'get_num_groups',
+            'global',
+            'if',
+            'inline',
+            'int',
+            'kernel',
+            'local',
+            'local',
+            'long',
+            'private',
+            'restrict',
+            'return',
+            'short',
+            'shuffle',
+            'size_t',
+            'sizeof',
+            'sqrt',
+            'struct',
+            'switch',
+            'true',
+            'typedef',
+            'u32',
+            'uchar',
+            'uint',
+            'ulong',
+            'unsigned',
+            'void',
+            'volatile',
+            'while',
+            'wide',
+        ] + list(string.printable))
 
         atoms = set()
 
-        # TODO: Complete this....
-        buf = ''
-        for i in range(len(text) - 1):
-            for j in range(i+1, len(text)):
-                buf = text[i:j]
-                if buf not in available_tokens:
-                    assert(buf[i:j-1] in available_tokens)
-                    atoms.add(buf[i:j-1])
-                    i = j
-                    break
+        i, j = 0, 0
+        while j < len(text):
+            j += 1
+            if not any(x.startswith(text[i:j]) for x in available_atoms):
+                atoms.add(text[i:j-1])
+                i = j - 1
+                j -= 1
+        atoms.add(text[i:j])
 
         vocab = dict(zip(sorted(atoms), range(len(atoms))))
         return GreedyAtomizer(vocab)

@@ -58,12 +58,28 @@ __kernel void A(__global float* a, const int b, const double c) {
 
 
 class TestGreedyAtomizer(TestCase):
-    @skip("FIXME: Work in progress")
     def test_from_text(self):
         c = atomizer.GreedyAtomizer.from_text(
-            '__kernel void A(__global float* a, const int b, const double c)')
-        print(c.vocab)
-        self.assertEqual(c.vocab_size, 11)
+            '__kernel void A(__global float* a, const int b, const double c) {')
+        self.assertEqual(c.vocab_size, 16)
+
+    def test_atomize(self):
+        c = atomizer.GreedyAtomizer({'abc': 1, 'a': 2, 'b': 3, 'ab': 4})
+        self.assertListEqual([1, 4, 4, 3, 2], list(c.atomize('abcababba')))
+
+    def test_datomize(self):
+        c = atomizer.GreedyAtomizer({'abc': 1, 'a': 2, 'b': 3, 'ab': 4})
+        self.assertEqual('abcababba', c.deatomize([1, 4, 4, 3, 2]))
+
+        text = """
+__kernel void A(__global float* a, const int b, const double c) {
+  int d = get_global_id(0);
+  if (b < get_global_size(0))
+    a[d] *= (float)c;
+}
+"""
+        c = atomizer.GreedyAtomizer.from_text(text)
+        self.assertEqual(text, c.deatomize(c.atomize(text)))
 
 
 if __name__ == "__main__":
