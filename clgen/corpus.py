@@ -96,6 +96,7 @@ def get_atomizer(corpus: str, vocab: str="char") -> list:
     """
     atomizers = {
         "char": atomizer.CharacterAtomizer,
+        "greedy": atomizer.GreedyAtomizer,
     }
     atomizerclass = atomizers.get(vocab, None)
     if atomizerclass is None:
@@ -327,7 +328,7 @@ class Corpus(clgen.CLgenObject):
         atomizer = get_atomizer(data, vocab)
         self.atoms = atomizer.atoms
 
-        self.vocab_size = atomizer.vocab_size 
+        self.vocab_size = atomizer.vocab_size
         self.vocab = atomizer.vocab
         with open(tmp_vocab_file, 'wb') as f:
             cPickle.dump(self.atoms, f)

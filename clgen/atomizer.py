@@ -124,7 +124,7 @@ class CharacterAtomizer(Atomizer):
 
 class GreedyAtomizer(Atomizer):
     """
-    TODO:
+    Greedy encoding for multi-characten modelling.
     """
     def __init__(self, *args, **kwargs):
         super(GreedyAtomizer, self).__init__(*args, **kwargs)
