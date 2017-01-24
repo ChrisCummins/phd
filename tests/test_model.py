@@ -134,6 +134,7 @@ class TestModel(TestCase):
             print("OUT", out)
             self.assertEqual(out1, out)
 
+    @skip("Takes too long, need to optimize atomizer")
     def test_sample_seed_greedy(self):
         m = get_test_model(vocab="greedy")
         m.train()
