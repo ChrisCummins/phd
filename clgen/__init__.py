@@ -494,8 +494,8 @@ def platform_info(printfn=print) -> None:
                     device.get_info(cl.device_info.DRIVER_VERSION))
 
 
-def main(model, sampler, print_corpus_dir=False, print_model_dir=False,
-         print_sampler_dir=False) -> None:
+def main(model, sampler, print_file_list=False, print_corpus_dir=False,
+         print_model_dir=False, print_sampler_dir=False) -> None:
     """
     Main entry point for clgen.
 
@@ -520,7 +520,14 @@ def main(model, sampler, print_corpus_dir=False, print_model_dir=False,
     sampler = clgen.sampler.from_json(sampler_json)
 
     # print cache paths
-    if print_corpus_dir:
+    if print_file_list:
+        files = sorted(
+            fs.ls(model.corpus.cache.path, abspaths=True, recursive=True) +
+            fs.ls(model.cache.path, abspaths=True, recursive=True) +
+            fs.ls(sampler.cache(model).path, abspaths=True, recursive=True))
+        print('\n'.join(files))
+        sys.exit(0)
+    elif print_corpus_dir:
         print(model.corpus.cache.path)
         sys.exit(0)
     elif print_model_dir:
