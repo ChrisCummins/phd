@@ -222,7 +222,7 @@ class Corpus(clgen.CLgenObject):
                 fs.path(self.cache.path, "kernels.db"),
                 fs.path(self.cache.path, "corpus.txt"),
                 fs.path(self.cache.path, "tensor.npy"),
-                fs.path(self.cache.path, "vocab.pkl")
+                fs.path(self.cache.path, "atomizer.pkl")
             ]
             for path in paths:
                 if fs.exists(path):
@@ -244,35 +244,29 @@ class Corpus(clgen.CLgenObject):
 
         log.debug("corpus {hash}".format(hash=self.hash))
 
-        if path is not None:
-            if not fs.isdir(path):
-                raise clgen.UserError(
-                    "Corpus path '{}' is not a directory".format(path))
-            try:
+        try:
+            if path is not None:
+                if not fs.isdir(path):
+                    raise clgen.UserError(
+                        "Corpus path '{}' is not a directory".format(path))
                 # create kernels database if necessary
                 if not self.cache["kernels.db"]:
                     self._create_kernels_db(path, self.opts["encoding"])
                     assert(self.cache["kernels.db"])
-            except Exception as e:
-                _init_error(e)
 
-        try:
             # create corpus text if not exists
             if not self.cache["corpus.txt"]:
                 self._create_txt()
                 assert(self.cache["corpus.txt"])
+
+            # create atomizer if needed
+            if self.cache["atomizer.pkl"]:
+                self._load_atomizer()
+                assert(self.cache["atomizer.pkl"])
+            else:
+                self._create_atomizer(self.opts["vocabulary"])
         except Exception as e:
             _init_error(e)
-
-        # preprocess if needed
-        if self.cache["vocab.pkl"]:
-            self._load_vocab()
-            assert(self.cache["vocab.pkl"])
-        else:
-            try:
-                self._create_vocab(self.opts["vocabulary"])
-            except Exception as e:
-                _init_error(e)
 
     def _hash(self, contentid: str, opts: dict) -> str:
         """ compute corpus hash """
@@ -317,29 +311,31 @@ class Corpus(clgen.CLgenObject):
         with codecs.open(self.cache["corpus.txt"], encoding="utf-8") as infile:
             return infile.read()
 
-    def _create_vocab(self, vocab="char"):
-        """creates and caches vocab.pkl"""
+    def _create_atomizer(self, vocab="char"):
+        """creates and caches atomizer.pkl"""
         log.debug("creating vocab file")
-
-        tmp_vocab_file = fs.path(self.cache.path, "vocab.tmp.pkl")
 
         data = self._read_txt()
 
-        atomizer = get_atomizer(data, vocab)
-        self.atoms = atomizer.atoms
+        self.atomizer = get_atomizer(data, vocab)
 
-        self.vocab_size = atomizer.vocab_size
-        self.vocab = atomizer.vocab
+        self.atoms = self.atomizer.atoms
+        self.vocab_size = self.atomizer.vocab_size
+        self.vocab = self.atomizer.vocab
+
+        tmp_vocab_file = fs.path(self.cache.path, "atomizer.tmp.pkl")
         with open(tmp_vocab_file, 'wb') as f:
-            cPickle.dump(self.atoms, f)
+            cPickle.dump(self.atomizer, f)
 
-        self.cache["vocab.pkl"] = tmp_vocab_file
+        self.cache["atomizer.pkl"] = tmp_vocab_file
 
-    def _load_vocab(self):
-        with open(self.cache["vocab.pkl"], 'rb') as infile:
-            self.atoms = cPickle.load(infile)
-        self.vocab_size = len(self.atoms)
-        self.vocab = dict(zip(self.atoms, range(len(self.atoms))))
+    def _load_atomizer(self):
+        with open(self.cache["atomizer.pkl"], 'rb') as infile:
+            self.atomizer = cPickle.load(infile)
+
+        self.atoms = self.atomizer.atoms
+        self.vocab_size = self.atomizer.vocab_size
+        self.vocab = self.atomizer.vocab
 
     def _generate_kernel_corpus(self) -> str:
         """ dump all kernels into a string in a random order """
@@ -367,8 +363,8 @@ class Corpus(clgen.CLgenObject):
         # generate a kernel corpus
         data = self._generate_kernel_corpus()
 
-        # encode corpus with vocab
-        self._tensor = np.array(list(map(self.vocab.get, data)))
+        # encode corpus into vocab indices
+        self._tensor = self.atomizer.atomize(data)
 
         batch_size = self.batch_size
         seq_length = self.seq_length

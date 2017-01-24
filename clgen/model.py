@@ -171,10 +171,6 @@ class Model(clgen.CLgenObject):
         vocab_size = self.corpus.vocab_size
 
         fs.mkdir(self.cache.path)
-        tmp_chars_vocab_path = fs.path(self.cache.path, "chars_vocab.tmp.pkl")
-        with open(tmp_chars_vocab_path, 'wb') as outfile:
-            cPickle.dump((self.corpus.atoms, self.corpus.vocab), outfile)
-        self.cache["chars_vocab.pkl"] = tmp_chars_vocab_path
 
         cell = self.cell_fn(self.rnn_size, state_is_tuple=True)
         self.cell = cell = rnn_cell.MultiRNNCell([cell] * self.num_layers,
@@ -262,14 +258,6 @@ class Model(clgen.CLgenObject):
         # resume from prior checkpoint
         ckpt_path, ckpt_paths = None, None
         if self.checkpoint_path:
-            # open saved vocab/dict and check if vocabs/dicts are compatible
-            assert(fs.isfile(self.cache["chars_vocab.pkl"]))
-            # TODO:
-            # with open(self.cache["chars_vocab.pkl"]) as infile:
-            #     saved_chars, saved_vocab = cPickle.load(infile)
-            # assert(saved_chars == self.corpus.atoms)
-            # assert(saved_vocab == self.corpus.vocab)
-
             # check if all necessary files exist
             assert(fs.isdir(self.checkpoint_path))
             ckpt = tf.train.get_checkpoint_state(self.checkpoint_path)
@@ -400,9 +388,6 @@ class Model(clgen.CLgenObject):
             assert(ckpt)
             assert(ckpt.model_checkpoint_path)
 
-            with open(self.cache["chars_vocab.pkl"], "rb") as infile:
-                chars, vocab = cPickle.load(infile)
-
             saver.restore(sess, ckpt.model_checkpoint_path)
 
             def weighted_pick(weights):
@@ -424,9 +409,10 @@ class Model(clgen.CLgenObject):
                 depth = start_depth  # function block depth
                 started = start_started
 
-                for char in seed_text[:-1]:
+                seed_tensor = self.corpus.atomizer.atomize(seed_text)
+                for index in seed_tensor[:-1]:
                     x = np.zeros((1, 1))
-                    x[0, 0] = vocab[char]
+                    x[0, 0] = index
                     feed = {self.input_data: x, self.initial_state: state}
                     [state] = sess.run([self.final_state], feed)
 
@@ -439,11 +425,11 @@ class Model(clgen.CLgenObject):
                     sys.stdout.flush()
 
                 ret = seed_text
-                char = seed_text[-1]
+                index = seed_tensor[-1]
 
                 for _ in range(max_length):
                     x = np.zeros((1, 1))
-                    x[0, 0] = vocab[char]
+                    x[0, 0] = index
                     feed = {self.input_data: x, self.initial_state: state}
                     [probs, state] = sess.run(
                         [self.probs, self.final_state], feed)
@@ -454,7 +440,7 @@ class Model(clgen.CLgenObject):
                         sample = np.argmax(p)
                     elif sampling_type == 2:
                         # sample on space
-                        if char == ' ':
+                        if atom == ' ':
                             sample = weighted_pick(p)
                         else:
                             sample = np.argmax(p)
@@ -462,20 +448,21 @@ class Model(clgen.CLgenObject):
                         # sample on each step
                         sample = weighted_pick(p)
 
-                    pred = chars[sample]
-                    ret += pred
-                    char = pred
+                    index = sample
+                    atom = self.corpus.atomizer.deatomize([sample])
+                    ret += atom
 
-                    output.write(pred)
+                    output.write(atom)
                     if not quiet:
-                        sys.stdout.write(pred)
+                        sys.stdout.write(atom)
 
                     # update function block depth
-                    if char == '{':
-                        started = True
-                        depth += 1
-                    elif char == '}':
-                        depth -= 1
+                    for char in atom:
+                        if char == '{':
+                            started = True
+                            depth += 1
+                        elif char == '}':
+                            depth -= 1
                     # stop sampling if depth = 0
                     if started and depth == 0:
                         break
