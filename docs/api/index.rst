@@ -7,6 +7,13 @@ clgen
    :members:
    :undoc-members:
 
+clgen.atomizer
+---------------
+
+.. automodule:: clgen.atomizer
+   :members:
+   :undoc-members:
+
 clgen.cache
 ------------
 
