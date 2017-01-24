@@ -3,7 +3,8 @@
   "corpus": {
     "path": "corpus",  # directory containing kernel files
     "preserve_order": false,  # if false, shuffle kernels during training
-    "eof": false  # if True, insert markers between kernels during training
+    "eof": false,  # if True, insert markers between kernels during training
+    "vocabulary": "char"  # encoding type {"char","greedy"}
   },
   "architecture": {
     "model_type": "lstm",  # {"lstm","rnn","gru"}
