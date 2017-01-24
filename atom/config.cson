@@ -6,8 +6,11 @@
       "monokai"
     ]
   editor:
-    fontSize: 13
+    fontSize: 15
+    invisibles: {}
+    showIndentGuide: true
     showInvisibles: true
+    tabLength: 4
   "exception-reporting":
     userId: "89238f39-41b1-38a3-2657-397fa4728b99"
   linter:
