@@ -21,12 +21,14 @@ Split photo collections into chunks for backup.\
     parser.add_argument('-r', '--seed', type=int, default=204,
                         help=("integer value to control file order shuffling "
                               "(ignored if --in-order flag used)"))
+    parser.add_argument('-p', '--prefix', type=str, default='chunk',
+                        help='chunk prefix (default: "chunk")')
     args = parser.parse_args()
 
     if args.unpack:
         unchunk(args.directory)
     else:
-        mkchunks(args.directory, args.size * 1024 ** 2,
+        mkchunks(args.directory, args.size * 1024 ** 2, prefix=args.prefix,
                  shuffle=not args.in_order, seed=args.seed, compress=args.gzip)
 
 
