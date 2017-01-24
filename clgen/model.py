@@ -327,7 +327,7 @@ class Model(clgen.CLgenObject):
 
                         print(
                             "\r\033[K"
-                            "{progress:2.1f}%  {size}x{layers}x{max_epoch} "
+                            "{progress:3.1f}%  {size}x{layers}x{max_epoch} "
                             "{model}  "
                             "batch={batch_num}/{max_batch}  "
                             "epoch={epoch_num}/{max_epoch}  "
