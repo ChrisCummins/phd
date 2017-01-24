@@ -510,11 +510,8 @@ def main(model, sampler, print_file_list=False, print_corpus_dir=False,
     import clgen.sampler
     from clgen import log
 
-    if model.endswith(".tar.bz2"):
-        model = clgen.model.from_tar(model)
-    else:
-        model_json = load_json_file(model)
-        model = clgen.model.from_json(model_json)
+    model_json = load_json_file(model)
+    model = clgen.model.from_json(model_json)
 
     sampler_json = load_json_file(sampler)
     sampler = clgen.sampler.from_json(sampler_json)

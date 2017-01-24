@@ -152,26 +152,5 @@ class TestModel(TestCase):
             self.assertEqual(out1, out)
 
 
-@skip("FIXME: corpus ID")
-class TestDistModel(TestCase):
-    def test_import(self):
-        m = get_test_model()
-        m.train()
-
-        train_opts = m.train_opts
-
-        tmpdir = mkdtemp(prefix="clgen-")
-        outpath = m.to_dist(fs.path(tmpdir, "dist"))
-
-        m = model.from_tar(outpath)
-        self.assertEqual(type(m), model.DistModel)
-        self.assertEqual(m.train_opts, train_opts)
-        fs.rm(tmpdir)
-
-    def test_import_bad_path(self):
-        with self.assertRaises(clgen.File404):
-            model.from_tar("/bad/path")
-
-
 if __name__ == "__main__":
     main()
