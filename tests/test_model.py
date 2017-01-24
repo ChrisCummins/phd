@@ -16,11 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase, skip, skipIf
+from unittest import TestCase, skip, skipIf, main
 import tests
-
-import labm8
-import re
 
 from io import StringIO
 from labm8 import fs
@@ -154,3 +151,7 @@ class TestDistModel(TestCase):
     def test_import_bad_path(self):
         with self.assertRaises(clgen.File404):
             model.from_tar("/bad/path")
+
+
+if __name__ == "__main__":
+    main()
