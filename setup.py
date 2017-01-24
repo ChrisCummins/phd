@@ -34,7 +34,6 @@ scripts = [
     'bin/clgen',
     'bin/clgen-atomize',
     'bin/clgen-create-db',
-    'bin/clgen-dist',
     'bin/clgen-explore',
     'bin/clgen-features',
     'bin/clgen-fetch',
