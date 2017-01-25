@@ -284,6 +284,8 @@ class Model(clgen.CLgenObject):
             start_batch = sess.run(self.epoch) * self.corpus.num_batches
             batch_count = 0
             total_elapsed = 0
+            total_atomize = 0
+            total_checkpoint, avg_checkpoint = 0, 0
             eta_d, eta_h, eta_m = 0, 0, 0
 
             for e in range(sess.run(self.epoch) + 1, self.epochs + 1):
@@ -296,7 +298,10 @@ class Model(clgen.CLgenObject):
                 sess.run(tf.assign(self.learning_rate, new_learning_rate))
                 sess.run(tf.assign(self.epoch, e))
 
+                time_start = time.time()
                 self.corpus.create_batches()
+                total_atomize += time.time() - time_start
+                avg_atomize = total_atomize / e
 
                 state = sess.run(self.initial_state)
                 for b in range(self.corpus.num_batches):
@@ -321,7 +326,10 @@ class Model(clgen.CLgenObject):
                     if not quiet:
                         total_elapsed += elapsed
                         avg_elapsed = total_elapsed / batch_count
-                        remaining_time = (max_batch - batch_count) * avg_elapsed
+                        remaining_time = (
+                            (max_batch - batch_count) * avg_elapsed +  # batches
+                            (e - self.epochs) * avg_atomize +  # atomizings
+                            (e - self.epochs) * avg_checkpoint)  # checkpoints
                         eta_h, eta_m = divmod(remaining_time / 60, 60)
                         eta_d, eta_h = divmod(eta_h, 24)
 
@@ -329,23 +337,27 @@ class Model(clgen.CLgenObject):
                             "\r\033[K"
                             "{progress:3.1f}%  {size}x{layers}x{max_epoch} "
                             "{model}  "
-                            "batch={batch_num}/{max_batch}  "
                             "epoch={epoch_num}/{max_epoch}  "
+                            "batch={batch_num}/{max_batch}  "
                             "lr={lr:.6f}  "
                             "loss={tloss:.3f}  "
+                            "time/atomize={time_atomize:.3f}s  "
                             "time/batch={time_batch:.3f}s  "
+                            "time/checkpoint={time_checkpoint:.3f}s  "
                             "eta={eta_d}d{eta_h}h{eta_m:02d}m".format(
                                 size=self.rnn_size,
                                 layers=self.num_layers,
                                 model=self.model_type.upper(),
                                 progress=progress * 100,
-                                batch_num=b + 1,
-                                max_batch=self.corpus.num_batches,
                                 epoch_num=e,
                                 max_epoch=self.epochs,
+                                batch_num=b + 1,
+                                max_batch=self.corpus.num_batches,
                                 lr=new_learning_rate,
                                 tloss=train_loss,
+                                time_atomize=avg_atomize,
                                 time_batch=avg_elapsed,
+                                time_checkpoint=avg_checkpoint,
                                 eta_d=int(eta_d),
                                 eta_h=int(eta_h),
                                 eta_m=int(eta_m)), end="")
@@ -355,7 +367,10 @@ class Model(clgen.CLgenObject):
                 if save:
                     if not quiet:
                         print()
+                    time_start = time.time()
                     saver.save(sess, checkpoint_path, global_step=batch_num)
+                    total_checkpoint += time.time() - time_start
+                    avg_checkpoint = total_checkpoint / e
                     log.info("model saved to {}".format(checkpoint_path))
 
     def sample(self, seed_text="__kernel void", output=sys.stdout,
