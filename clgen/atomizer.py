@@ -27,6 +27,120 @@ from collections import Counter
 import clgen
 
 
+# Taken from the C99 spec, OpenCL spec 1.2, and bag-of-words analysis of
+# GitHub corpus:
+OPENCL_ATOMS = set([
+    '  ',
+    '__assert',
+    '__attribute',
+    '__builtin_astype',
+    '__clc_fabs',
+    '__clc_fma',
+    '__constant',
+    '__global',
+    '__inline',
+    '__kernel',
+    '__local',
+    '__private',
+    '__read_only',
+    '__read_write',
+    '__write_only',
+    '*/',
+    '/*',
+    '//',
+    'abs',
+    'alignas',
+    'alignof',
+    'atomic_add',
+    'auto',
+    'barrier',
+    'bool',
+    'break',
+    'case',
+    'char',
+    'clamp',
+    'complex',
+    'const',
+    'constant',
+    'continue',
+    'default',
+    'define',
+    'defined',
+    'do',
+    'double',
+    'elif',
+    'else',
+    'endif',
+    'enum',
+    'error',
+    'event_t',
+    'extern',
+    'fabs',
+    'false',
+    'float',
+    'for',
+    'get_global_id',
+    'get_global_size',
+    'get_local_id',
+    'get_local_size',
+    'get_num_groups',
+    'global',
+    'goto',
+    'half',
+    'if',
+    'ifdef',
+    'ifndef',
+    'image1d_array_t',
+    'image1d_buffer_t',
+    'image1d_t',
+    'image2d_array_t',
+    'image2d_t',
+    'image3d_t',
+    'imaginary',
+    'include',
+    'inline',
+    'int',
+    'into',
+    'kernel',
+    'line',
+    'local',
+    'long',
+    'noreturn',
+    'pragma',
+    'private',
+    'quad',
+    'read_only',
+    'read_write',
+    'register',
+    'restrict',
+    'return',
+    'sampler_t',
+    'short',
+    'shuffle',
+    'signed',
+    'size_t',
+    'sizeof',
+    'sqrt',
+    'static',
+    'struct',
+    'switch',
+    'true',
+    'typedef',
+    'u32',
+    'uchar',
+    'uint',
+    'ulong',
+    'undef',
+    'union',
+    'unsigned',
+    'void',
+    'volatile',
+    'while',
+    'wide',
+    'write_only',
+] + list(string.printable))
+
+
 class VocabError(clgen.CLgenError):
     """A character sequence is not in the atomizer's vocab"""
     pass
@@ -45,19 +159,16 @@ class Atomizer(clgen.CLgenObject):
         assert(isinstance(vocab, dict))
 
         self.vocab = vocab
+        self.vocab_size = len(self.vocab)
         self.decoder = dict((val, key) for key, val in vocab.items())
 
     @property
     def atoms(self):
-        return list(self.vocab.keys())
+        return list(sorted(self.vocab.keys()))
 
     @property
     def indices(self):
-        return list(self.vocab.values())
-
-    @property
-    def vocab_size(self):
-        return len(self.vocab)
+        return list(sorted(self.vocab.values()))
 
     def atomize(self, text: str) -> np.array:
         """
@@ -70,6 +181,19 @@ class Atomizer(clgen.CLgenObject):
             np.array: Indices into vocabulary for all atoms in text.
         """
         raise NotImplementedError("abstract class")
+
+    def tokenize(self, text: str) -> list:
+        """
+        Atomize a text into an array of atomsself.
+
+        Arguments:
+            text (str): Input text.
+
+        Returns:
+            list of str: Atom strings.
+        """
+        indices = self.atomize(text)
+        return list(map(lambda x: self.decoder[x], indices))
 
     def deatomize(self, encoded: np.array) -> str:
         """
@@ -128,97 +252,49 @@ class GreedyAtomizer(Atomizer):
     """
     def __init__(self, *args, **kwargs):
         super(GreedyAtomizer, self).__init__(*args, **kwargs)
+        multichars = set(k for k in self.atoms if len(k) > 1)
+        first_chars = set(a[0] for a in multichars)
+        self.lookup = dict((c, [a for a in multichars if a[0] == c])
+                           for c in first_chars)
 
     def atomize(self, text: str) -> np.array:
-        atoms = set(self.atoms)
         indices = []
+        i = 0
+        j = 2
         try:
-            i, j = 0, 0
-            while j < len(text):
-                j += 1
-                if not any(x.startswith(text[i:j]) for x in atoms):
-                    indices.append(self.vocab[text[i:j-1]])
-                    i = j - 1
-                    j -= 1
-            indices.append(self.vocab[text[i:j]])
-            return np.array(indices)
+            while i < len(text):
+                if self.lookup.get(text[i]):
+                    if j <= len(text) and any(x.startswith(text[i:j])
+                                              for x in self.lookup[text[i]]):
+                        j += 1
+                    else:
+                        while j > i + 1:
+                            if any(x == text[i:j]
+                                   for x in self.lookup[text[i]]):
+                                indices.append(self.vocab[text[i:j]])
+                                i = j
+                                j = j + 2
+                                break
+                            else:
+                                j -= 1
+                        else:
+                            indices.append(self.vocab[text[i]])
+                            i = i + 1
+                            j = j + 2
+                else:
+                    indices.append(self.vocab[text[i]])
+                    i = i + 1
+                    j = j + 2
         except KeyError:
             raise VocabError
 
+        return np.array(indices)
+
     @staticmethod
-    def from_text(text: str) -> Atomizer:
-        available_atoms = set([
-            '__assert',
-            '__attribute',
-            '__builtin_astype',
-            '__clc_fabs',
-            '__clc_fma',
-            '__constant',
-            '__global',
-            '__inline',
-            '__kernel void',
-            '__local',
-            '__private',
-            'abs',
-            'atomic_add',
-            'barrier',
-            'break',
-            'case',
-            'char',
-            'clamp',
-            'const',
-            'continue',
-            'double',
-            'else',
-            'fabs',
-            'false',
-            'float',
-            'get_global_id',
-            'get_global_size',
-            'get_local_id',
-            'get_local_size',
-            'get_num_groups',
-            'global',
-            'if',
-            'inline',
-            'int',
-            'kernel',
-            'local',
-            'local',
-            'long',
-            'private',
-            'restrict',
-            'return',
-            'short',
-            'shuffle',
-            'size_t',
-            'sizeof',
-            'sqrt',
-            'struct',
-            'switch',
-            'true',
-            'typedef',
-            'u32',
-            'uchar',
-            'uint',
-            'ulong',
-            'unsigned',
-            'void',
-            'volatile',
-            'while',
-            'wide',
-        ] + list(string.printable))
+    def from_text(text: str):
+        opencl_vocab = dict(zip(OPENCL_ATOMS, range(len(OPENCL_ATOMS))))
+        c = GreedyAtomizer(opencl_vocab)
 
-        atoms = set()
-
-        i, j = 0, 0
-        while j < len(text):
-            j += 1
-            if not any(x.startswith(text[i:j]) for x in available_atoms):
-                atoms.add(text[i:j-1])
-                i = j - 1
-                j -= 1
-        atoms.add(text[i:j])
-
-        vocab = dict(zip(sorted(atoms), range(len(atoms))))
+        tokens = sorted(list(set(c.tokenize(text))))
+        vocab = dict(zip(tokens, range(len(tokens))))
         return GreedyAtomizer(vocab)
