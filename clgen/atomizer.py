@@ -291,7 +291,7 @@ class GreedyAtomizer(Atomizer):
         return np.array(indices)
 
     @staticmethod
-    def from_text(text: str):
+    def from_text(text: str) -> Atomizer:
         opencl_vocab = dict(zip(OPENCL_ATOMS, range(len(OPENCL_ATOMS))))
         c = GreedyAtomizer(opencl_vocab)
 
