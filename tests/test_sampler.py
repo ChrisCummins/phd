@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase, skip, skipIf
+from unittest import TestCase, skip, skipIf, main
 import tests
 
 import json
@@ -42,7 +42,7 @@ def get_test_model():
           "num_layers": 2,
         },
         "train_opts": {
-          "epochs": 2 
+          "epochs": 2
         }
     })
 
@@ -85,3 +85,7 @@ class TestSampler(TestCase):
         # single sample in db:
         self.assertTrue(nun_contentfiles >= 1)
         self.assertTrue(num_preprocessed >= 1)
+
+
+if __name__ == "__main__":
+    main()
