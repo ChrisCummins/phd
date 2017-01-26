@@ -125,7 +125,7 @@ class Sampler(clgen.CLgenObject):
             opts = {
                 "output": outfile,
                 "num_samples": self.batch_size,
-                "temperature": self.kernel_opts.get("temperature", .75),
+                "temperature": self.kernel_opts.get("temperature", 1),
                 "max_length": self.kernel_opts.get("max_length", 10000),
                 "seed_text": start_text,
                 "quiet": quiet

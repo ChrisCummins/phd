@@ -405,10 +405,10 @@ class Model(clgen.CLgenObject):
 
             saver.restore(sess, ckpt.model_checkpoint_path)
 
-            def weighted_pick(weights):
+            def weighted_pick(weights, temperature):
                 t = np.cumsum(weights)
                 s = np.sum(weights)
-                return int(np.searchsorted(t, np.random.rand(1) * s))
+                return int(np.searchsorted(t, np.random.rand(temperature) * s))
 
             start_depth = 0
             start_started = False
@@ -439,7 +439,6 @@ class Model(clgen.CLgenObject):
                     sys.stdout.write(seed_text)
                     sys.stdout.flush()
 
-                ret = seed_text
                 index = seed_tensor[-1]
 
                 for _ in range(max_length):
@@ -450,23 +449,12 @@ class Model(clgen.CLgenObject):
                         [self.probs, self.final_state], feed)
                     p = probs[0]
 
-                    if sampling_type == 0:
-                        # use max at each step
-                        sample = np.argmax(p)
-                    elif sampling_type == 2:
-                        # sample on space
-                        if atom == ' ':
-                            sample = weighted_pick(p)
-                        else:
-                            sample = np.argmax(p)
-                    else:
-                        # sample on each step
-                        sample = weighted_pick(p)
+                    # sample distribution to pick next:
+                    index = weighted_pick(p, temperature)
+                    # alternatively, select most probable:
+                    # index = np.argmax(p)
 
-                    index = sample
-                    atom = self.corpus.atomizer.deatomize([sample])
-                    ret += atom
-
+                    atom = self.corpus.atomizer.deatomize([index])
                     output.write(atom)
                     if not quiet:
                         sys.stdout.write(atom)

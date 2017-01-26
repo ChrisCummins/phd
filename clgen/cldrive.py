@@ -140,7 +140,7 @@ class E_NONDETERMINISTIC(E_UGLY_CODE):
     pass
 
 
-def device_type_matches(device, devtype):
+def device_type_matches(device, devtype) -> bool:
     """
     Check that device type matches.
 
@@ -155,27 +155,25 @@ def device_type_matches(device, devtype):
     return actual == devtype
 
 
-def hang_requires_restart():
-    """
-    Does an OpenCL kernel hang require a system restart?
-    """
-    # FIXME: return gethostname() == "monza"
-    return True
-
-
 def init_opencl(devtype="__placeholder__", queue_flags=0):
     """
-    Initialise an OpenCL context with some command queue.
+    Initialise an OpenCL for a requested device type.
+
+    Iterates over the available OpenCL platforms and devices looking for a
+    device matching the requested type. Constructs and returns an OpenCL
+    context and queue for the matching device. Note that OpenCL profiling is
+    enabled.
 
     Arguments:
-
         devtype (pyopencl.device_type, optional): OpenCL device type.
             Default: gpu.
         queue_flags (cl.command_queue_properties, optional): Bitfield of
             OpenCL queue constructor options.
 
-    Raises:
+    Returns:
+        (cl.Context, cl.Queue): Tuple of OpenCL context and device queue.
 
+    Raises:
         OpenCLNotSupported: If host does not support OpenCL.
         OpenCLDriverException: In case of error.
         OpenCLDeviceNotFound: If no matching type found.
@@ -203,13 +201,18 @@ def init_opencl(devtype="__placeholder__", queue_flags=0):
     raise OpenCLDeviceNotFound("Could not find a suitable device")
 
 
-def get_event_time(event):
+def get_event_time(event) -> float:
     """
     Block until OpenCL event has completed and return time delta
     between event submission and end, in milliseconds.
 
-    Raises:
+    Arguments:
+        event (cl.Event): Event handle.
 
+    Returns:
+        float: Elapsed time, in milliseconds.
+
+    Raises:
         E_BAD_PROFILE: In case of error.
     """
     try:
@@ -226,254 +229,11 @@ def get_event_time(event):
         raise E_BAD_PROFILE
 
 
-class KernelDriver(clgen.CLgenObject):
-    """
-    OpenCL Kernel driver. Drives a single OpenCL kernel.
-
-    Arguments:
-
-        ctx:  pyopencl context.
-        queue: OpenCL queue for context.
-        source: String kernel source.
-
-    Raises:
-
-        E_BAD_CODE: If program doesn't compile.
-        E_UGLY_CODE: If program contains multiple kernels.
-    """
-    def __init__(self, ctx, source, source_path='<stdin>'):
-        # Safety first, kids:
-        assert(type(ctx) == cl.Context)
-        assert(isinstance(source, string_types))
-
-        self._ctx = ctx
-        self._src = str(source)
-        self._program = KernelDriver.build_program(self._ctx, self._src)
-        self._prototype = clutil.KernelPrototype.from_source(self._src)
-
-        kernels = self._program.all_kernels()
-        if len(kernels) != 1:
-            raise E_UGLY_CODE
-        self._kernel = kernels[0]
-        self._name = self._kernel.get_info(cl.kernel_info.FUNCTION_NAME)
-
-        # Profiling stats
-        self._wgsizes = []
-        self._transfers = []
-        self._runtimes = []
-
-    def __call__(self, queue, payload):
-        # Safety first, kids:
-        assert(type(queue) == cl.CommandQueue)
-        assert(type(payload) == KernelPayload)
-
-        # First off, let's clear any existing tasks in the command
-        # queue:
-        queue.flush()
-
-        elapsed = 0
-        output = deepcopy(payload)
-
-        kargs = output.kargs
-
-        # Copy data from host to device.
-        elapsed += output.host_to_device(queue)
-
-        # Try setting the kernel arguments.
-        try:
-            self.kernel.set_args(*kargs)
-        except Exception as e:
-            raise E_BAD_ARGS(e)
-
-        # Execute kernel.
-        local_size_x = min(output.ndrange[0], 256)
-        event = self.kernel(queue, output.ndrange, (local_size_x,), *kargs)
-        elapsed += get_event_time(event)
-
-        # Copy data from device to host.
-        elapsed += output.device_to_host(queue)
-
-        # Record workgroup size.
-        self.wgsizes.append(local_size_x)
-
-        # Record runtime.
-        self.runtimes.append(elapsed)
-
-        # Record transfers.
-        self.transfers.append(payload.transfersize)
-
-        # Check that everything is done before we finish:
-        queue.flush()
-
-        return output
-
-    def __repr__(self):
-        return self.source
-
-    def validate(self, queue, size=16):
-        assert(type(queue) == cl.CommandQueue)
-
-        def assert_constraint(constraint, err=CLDriveException):
-            if not constraint:
-                raise err
-
-        # Create payloads.
-        A1in = KernelPayload.create_sequential(self, size)
-        A2in = deepcopy(A1in)
-
-        B1in = KernelPayload.create_random(self, size)
-        B2in = deepcopy(B1in)
-
-        # Input constraints.
-        assert_constraint(A1in == A2in, E_BAD_DRIVER)
-        assert_constraint(B1in == B2in, E_BAD_DRIVER)
-        assert_constraint(A1in != B1in, E_BAD_DRIVER)
-
-        k = partial(self, queue)
-        A1out = k(A1in)
-        B1out = k(B1in)
-        A2out = k(A2in)
-        B2out = k(B2in)
-
-        # outputs must be consistent across runs:
-        assert_constraint(A1out == A2out, E_NONDETERMINISTIC)
-        assert_constraint(B1out == B2out, E_NONDETERMINISTIC)
-
-        # outputs must depend on inputs:
-        if any(not x.is_const for x in self.prototype.args):
-            assert_constraint(A1out != B1out, E_INPUT_INSENSITIVE)
-
-        # outputs must be different from inputs:
-        assert_constraint(A1in != A1out, E_NO_OUTPUTS)
-        assert_constraint(B1in != B1out, E_NO_OUTPUTS)
-
-    def profile(self, queue, size=16, must_validate=False,
-                out=sys.stdout, metaout=sys.stderr, min_num_iterations=10):
-        """
-        Output format (CSV):
-
-            out:      <kernel> <wgsize> <transfer> <runtime> <ci>
-            metaout:  <error> <kernel>
-        """
-        assert(isinstance(queue, cl.CommandQueue))
-
-        if must_validate:
-            try:
-                self.validate(queue, size)
-            except CLDriveException as e:
-                print(type(e).__name__, self.name, sep=',', file=metaout)
-
-        P = KernelPayload.create_random(self, size)
-        k = partial(self, queue)
-
-        while len(self.runtimes) < min_num_iterations:
-            k(P)
-
-        wgsize = int(round(labmath.mean(self.wgsizes)))
-        transfer = int(round(labmath.mean(self.transfers)))
-        mean = labmath.mean(self.runtimes)
-        ci = labmath.confinterval(self.runtimes, array_mean=mean)[1] - mean
-        print(self.name, wgsize, transfer, round(mean, 6), round(ci, 6),
-              sep=',', file=out)
-
-    @property
-    def context(self):
-        """
-        OpenCL context.
-        """
-        return self._ctx
-
-    @property
-    def source(self):
-        """
-        Kernel source code.
-        """
-        return self._src
-
-    @property
-    def program(self):
-        """
-        OpenCL program instance.
-        """
-        return self._program
-
-    @property
-    def prototype(self):
-        """
-        Kernel prototype instance.
-        """
-        return self._prototype
-
-    @property
-    def kernel(self):
-        """
-        Kernel instance.
-        """
-        return self._kernel
-
-    @property
-    def name(self):
-        """
-        Kernel name.
-        """
-        return self._name
-
-    @property
-    def wgsizes(self):
-        """
-        Workgroup sizes used.
-        """
-        return self._wgsizes
-
-    @property
-    def transfers(self):
-        """
-        Size of data transfers (in bytes).
-        """
-        return self._transfers
-
-    @property
-    def runtimes(self):
-        """
-        Runtimes recorded.
-        """
-        return self._runtimes
-
-    @staticmethod
-    def build_program(ctx, src, quiet=True):
-        """
-        Compile an OpenCL program.
-
-        Arguments:
-
-            ctx (cl.Context): OpenCL context.
-            src (str): Kernel source.
-            quiet (bool, optional): suppress compiler output.
-
-        Returns:
-
-            cl.Program: Program instance.
-
-        Raises:
-
-            E_BAD_CODE: If does not build.
-        """
-        if quiet:
-            os.environ['PYOPENCL_COMPILER_OUTPUT'] = '0'
-        else:
-            os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
-
-        try:
-            return cl.Program(ctx, src).build()
-        except Exception as e:
-            raise E_BAD_CODE(e)
-
-
 class KernelPayload(clgen.CLgenObject):
     """
     Abstraction of data for OpenCL kernel.
     """
-    def __init__(self, ctx, args, ndrange, transfersize):
+    def __init__(self, ctx, args: list, ndrange, transfersize: int):
         """
         Create a kernel payload.
 
@@ -493,7 +253,7 @@ class KernelPayload(clgen.CLgenObject):
         self._ndrange = ndrange
         self._transfersize = transfersize
 
-    def __deepcopy__(self, memo={}):
+    def __deepcopy__(self, memo: dict={}):
         """
         Make a deep copy of a payload.
 
@@ -501,30 +261,34 @@ class KernelPayload(clgen.CLgenObject):
         OpenCL mem objects with pointers to this host data. Note that
         this DOES NOT copy the OpenCL context associated with the
         payload.
+
+        Returns:
+            KernelPayload: A new kernel payload instance containing copies of
+                all data.
         """
         args = [clutil.KernelArg(a.string) for a in self.args]
 
-        for newarg, arg in zip(args, self.args):
-            if arg.hostdata is None and arg.is_local:
+        for src, dst in zip(self.args, args):
+            if src.hostdata is None and src.is_local:
                 # Copy a local memory buffer.
-                newarg.hostdata = None
-                newarg.bufsize = arg.bufsize
-                newarg.devdata = cl.LocalMemory(newarg.bufsize)
-            elif arg.hostdata is None:
+                dst.hostdata = None
+                dst.bufsize = src.bufsize
+                dst.devdata = cl.LocalMemory(src.bufsize)
+            elif src.hostdata is None:
                 # Copy a scalar value.
-                newarg.hostdata = None
-                newarg.devdata = deepcopy(arg.devdata)
+                dst.hostdata = None
+                dst.devdata = deepcopy(src.devdata)
             else:
                 # Copy a global memory buffer.
-                newarg.hostdata = deepcopy(arg.hostdata, memo=memo)
-                newarg.flags = arg.flags
-                newarg.devdata = cl.Buffer(self.context, newarg.flags,
-                                           hostbuf=newarg.hostdata)
+                dst.hostdata = deepcopy(src.hostdata, memo=memo)
+                dst.flags = src.flags
+                dst.devdata = cl.Buffer(self.context, src.flags,
+                                        hostbuf=dst.hostdata)
 
         return KernelPayload(
             self.context, args, self.ndrange, self.transfersize)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """
         Equality comparison. Checks that OpenCL context and arguments match.
 
@@ -555,7 +319,7 @@ class KernelPayload(clgen.CLgenObject):
                     return False
         return True
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         """
         Not equal check.
 
@@ -567,26 +331,15 @@ class KernelPayload(clgen.CLgenObject):
         """
         return not self.__eq__(other)
 
-    def device_to_host(self, queue):
-        """
-        Transfer payload from device to host.
-        """
-        assert(isinstance(queue, cl.CommandQueue))
-        elapsed = 0
-
-        for arg in self.args:
-            if arg.hostdata is None or arg.is_const:
-                continue
-
-            event = cl.enqueue_copy(queue, arg.hostdata, arg.devdata,
-                                    is_blocking=False)
-            get_event_time(event)
-
-        return elapsed
-
-    def host_to_device(self, queue):
+    def host_to_device(self, queue) -> float:
         """
         Transfer payload from host to device.
+
+        Arguments:
+            queue (cl.Queue): Device Queue.
+
+        Returns:
+            float: Elapsed time, in milliseconds.
         """
         assert(isinstance(queue, cl.CommandQueue))
         elapsed = 0
@@ -601,45 +354,56 @@ class KernelPayload(clgen.CLgenObject):
 
         return elapsed
 
+    def device_to_host(self, queue):
+        """
+        Transfer payload from device to host.
+
+        Arguments:
+            queue (cl.Queue): Device Queue.
+
+        Returns:
+            float: Elapsed time, in milliseconds.
+        """
+        assert(isinstance(queue, cl.CommandQueue))
+        elapsed = 0
+
+        for arg in self.args:
+            if arg.hostdata is None or arg.is_const:
+                continue
+
+            event = cl.enqueue_copy(queue, arg.hostdata, arg.devdata,
+                                    is_blocking=False)
+            get_event_time(event)
+
+        return elapsed
+
     @property
     def context(self):
-        """
-        OpenCL context.
-        """
+        """ OpenCL context. """
         return self._ctx
 
     @property
     def args(self):
-        """
-        Argument instances.
-        """
+        """ Argument instances. """
         return self._args
 
     @property
     def kargs(self):
-        """
-        Device data for arguments.
-        """
+        """ Device data for arguments. """
         return [a.devdata for a in self.args]
 
     @property
     def ndrange(self):
-        """
-        ND-range
-        """
+        """ ND-range """
         return self._ndrange
 
     @property
     def transfersize(self):
-        """
-        Returns transfer size (in bytes).
-        """
+        """ Returns transfer size (in bytes). """
         return self._transfersize
 
     def __repr__(self):
-        """
-        Stringify payload.
-        """
+        """ Stringify payload. """
         s = "Payload on host:\n"
         for i, arg in enumerate(self.args):
             if arg.hostdata is None:
@@ -662,6 +426,20 @@ class KernelPayload(clgen.CLgenObject):
 
     @staticmethod
     def _create_payload(nparray, driver, size):
+        """
+        Create a payload.
+
+        Arguments:
+            nparray (function): Numpy array generator.
+            driver (KernelDriver): Driver.
+            size (int): Payload size parameter.
+
+        Returns:
+            KernelPayload: Generated payload.
+
+        Raises:
+            E_BAD_ARGS: If payload can't be synthesized for kernel argument(s).
+        """
         assert(callable(nparray))
         assert(isinstance(driver, KernelDriver))
         assert(isinstance(size, Number))
@@ -723,6 +501,9 @@ class KernelPayload(clgen.CLgenObject):
 
         Returns:
             KernelPayload: Generated payload.
+
+        Raises:
+            E_BAD_ARGS: If payload can't be synthesized for kernel argument(s).
         """
         return KernelPayload._create_payload(np.arange, driver, size)
 
@@ -737,12 +518,273 @@ class KernelPayload(clgen.CLgenObject):
 
         Returns:
             KernelPayload: Generated payload.
+
+        Raises:
+            E_BAD_ARGS: If payload can't be synthesized for kernel argument(s).
         """
         return KernelPayload._create_payload(np.random.rand, driver, size)
 
 
-def kernel(src, filename='<stdin>', devtype="__placeholder__",
-           size=None, must_validate=False, fatal_errors=False):
+class KernelDriver(clgen.CLgenObject):
+    """
+    OpenCL Kernel driver. Drives a single OpenCL kernel.
+    """
+    def __init__(self, ctx, source: str, source_path: str='<stdin>'):
+        """
+        Arguments:
+            ctx (cl.Context): OpenCL context.
+            source (str): String kernel source.
+            source_path (str, optional): Path to corresponding source file.
+
+        Raises:
+            E_BAD_CODE: If source doesn't compile.
+            E_UGLY_CODE: If source contains multiple kernels.
+        """
+        # Safety first, kids:
+        assert(type(ctx) == cl.Context)
+        assert(isinstance(source, string_types))
+
+        self._ctx = ctx
+        self._src = str(source)
+        self._program = KernelDriver.build_program(self._ctx, self._src)
+        self._prototype = clutil.KernelPrototype.from_source(self._src)
+
+        kernels = self._program.all_kernels()
+        if len(kernels) != 1:
+            raise E_UGLY_CODE
+        self._kernel = kernels[0]
+        self._name = self._kernel.get_info(cl.kernel_info.FUNCTION_NAME)
+
+        # Profiling stats
+        self._wgsizes = []
+        self._transfers = []
+        self._runtimes = []
+
+    def __call__(self, queue, payload):
+        """
+        Run kernel.
+
+        Arguments:
+            queue (cl.Queue): Device queue.
+            payload (KernelPayload): Input payload.
+
+        Returns:
+            Payload: Output payload.
+
+        Raises:
+            E_BAD_ARGS: If payload input does not match kernel arguments.
+        """
+        # Safety first, kids:
+        assert(type(queue) == cl.CommandQueue)
+        assert(type(payload) == KernelPayload)
+
+        # First off, let's clear any existing tasks in the command
+        # queue:
+        queue.flush()
+
+        elapsed = 0
+        output = deepcopy(payload)
+
+        kargs = output.kargs
+
+        # Copy data from host to device.
+        elapsed += output.host_to_device(queue)
+
+        # Try setting the kernel arguments.
+        try:
+            self.kernel.set_args(*kargs)
+        except Exception as e:
+            raise E_BAD_ARGS(e)
+
+        # Execute kernel.
+        local_size_x = min(output.ndrange[0], 256)
+        event = self.kernel(queue, output.ndrange, (local_size_x,), *kargs)
+        elapsed += get_event_time(event)
+
+        # Copy data from device to host.
+        elapsed += output.device_to_host(queue)
+
+        # Record workgroup size.
+        self.wgsizes.append(local_size_x)
+
+        # Record runtime.
+        self.runtimes.append(elapsed)
+
+        # Record transfers.
+        self.transfers.append(payload.transfersize)
+
+        # Check that everything is done before we finish:
+        queue.flush()
+
+        return output
+
+    def __repr__(self) -> str:
+        return self.source
+
+    def validate(self, queue, size: int=16):
+        """
+        Run dynamic checker on OpenCL kernel.
+
+        This is a 3 step process:
+          1. Create 4 equal size payloads A1in, B1in, A2in, B2in, subject to
+             restrictions: A1in = A2in , B1in = B2in , A1in != B1in.
+          2. Execute kernel k 4 times: k(A1in) → A1out, k(B1in) → B1out,
+             k(A2in) → A2out, k(B2in) → B2out.
+          3. Assert:
+             a. A1out != A1in or B1out != B1in, else k has no output.
+             b. A1out == A2out and B1out == B2out, else k is nondeterministic.
+             c. A1out != B1out, else k is input insensitive.
+
+        Raises:
+            E_BAD_DRIVER: If unable to synthesize payloads (see step 1 above).
+            E_NO_OUTPUTS: If kernel has no outputs (step 3a above).
+            E_NONDETERMINISTIC: If kernel is nondeterministic (step 3b above).
+            E_INPUT_INSENSITIVE: If kernel is input insensitive (step 3c above).
+        """
+        assert(type(queue) == cl.CommandQueue)
+
+        def assert_constraint(constraint, err=CLDriveException, msg=None):
+            """ assert condition else raise exception with message """
+            if not constraint:
+                raise err(msg)
+
+        # Create payloads.
+        A1in = KernelPayload.create_sequential(self, size)
+        A2in = deepcopy(A1in)
+
+        B1in = KernelPayload.create_random(self, size)
+        while B1in == A1in:  # input constraint: A1in != B1in
+            B1in = KernelPayload.create_random(self, size)
+        B2in = deepcopy(B1in)
+
+        # Input constraints.
+        assert_constraint(A1in == A2in, E_BAD_DRIVER, "A1in != A2in")
+        assert_constraint(B1in == B2in, E_BAD_DRIVER, "B1in != B2in")
+
+        # Run kernel.
+        k = partial(self, queue)
+        A1out = k(A1in)
+        B1out = k(B1in)
+        A2out = k(A2in)
+        B2out = k(B2in)
+
+        # outputs must be different from inputs:
+        assert_constraint(A1in != A1out, E_NO_OUTPUTS)
+        assert_constraint(B1in != B1out, E_NO_OUTPUTS)
+
+        # outputs must be consistent across runs:
+        assert_constraint(A1out == A2out, E_NONDETERMINISTIC)
+        assert_constraint(B1out == B2out, E_NONDETERMINISTIC)
+
+        # outputs must depend on inputs:
+        if any(not x.is_const for x in self.prototype.args):
+            assert_constraint(A1out != B1out, E_INPUT_INSENSITIVE)
+
+    def profile(self, queue, size: int=16, must_validate: bool=False,
+                out=sys.stdout, metaout=sys.stderr, min_num_iterations: int=10):
+        """
+        Run kernel and profile runtime.
+
+        Output format (CSV):
+
+            out:      <kernel> <wgsize> <transfer> <runtime> <ci>
+            metaout:  <error> <kernel>
+        """
+        assert(isinstance(queue, cl.CommandQueue))
+
+        if must_validate:
+            try:
+                self.validate(queue, size)
+            except CLDriveException as e:
+                print(type(e).__name__, self.name, sep=',', file=metaout)
+
+        P = KernelPayload.create_random(self, size)
+        k = partial(self, queue)
+
+        while len(self.runtimes) < min_num_iterations:
+            k(P)
+
+        wgsize = int(round(labmath.mean(self.wgsizes)))
+        transfer = int(round(labmath.mean(self.transfers)))
+        mean = labmath.mean(self.runtimes)
+        ci = labmath.confinterval(self.runtimes, array_mean=mean)[1] - mean
+        print(self.name, wgsize, transfer, round(mean, 6), round(ci, 6),
+              sep=',', file=out)
+
+    @property
+    def context(self):
+        """ OpenCL context. """
+        return self._ctx
+
+    @property
+    def source(self):
+        """ Kernel source code. """
+        return self._src
+
+    @property
+    def program(self):
+        """ OpenCL program instance. """
+        return self._program
+
+    @property
+    def prototype(self):
+        """ Kernel prototype instance. """
+        return self._prototype
+
+    @property
+    def kernel(self):
+        """ Kernel instance. """
+        return self._kernel
+
+    @property
+    def name(self):
+        """ Kernel name. """
+        return self._name
+
+    @property
+    def wgsizes(self):
+        """ Workgroup sizes used. """
+        return self._wgsizes
+
+    @property
+    def transfers(self):
+        """ Size of data transfers (in bytes). """
+        return self._transfers
+
+    @property
+    def runtimes(self):
+        """ Runtimes recorded. """
+        return self._runtimes
+
+    @staticmethod
+    def build_program(ctx, src, quiet=True):
+        """
+        Compile an OpenCL program.
+
+        Arguments:
+            ctx (cl.Context): OpenCL context.
+            src (str): Kernel source.
+            quiet (bool, optional): suppress compiler output.
+
+        Returns:
+            cl.Program: Program instance.
+
+        Raises:
+            E_BAD_CODE: If does not build.
+        """
+        if quiet:
+            os.environ['PYOPENCL_COMPILER_OUTPUT'] = '0'
+        else:
+            os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
+
+        try:
+            return cl.Program(ctx, src).build()
+        except Exception as e:
+            raise E_BAD_CODE(e)
+
+
+def kernel(src, filename: str='<stdin>', devtype="__placeholder__",
+           size: int=None, must_validate: bool=False, fatal_errors: bool=False):
     """
     Drive a kernel.
 
@@ -765,7 +807,7 @@ def kernel(src, filename='<stdin>', devtype="__placeholder__",
         print(filename, size, type(e).__name__, '-', sep=',', file=sys.stderr)
         return
 
-    # If no size is given, pick one.
+    # If no size is given, pick a random size.
     if size is None:
         size = 2 ** randrange(4, 15)
 
@@ -784,7 +826,7 @@ def kernel(src, filename='<stdin>', devtype="__placeholder__",
      for line in stderr.split('\n') if line]
 
 
-def file(path, **kwargs):
+def file(path: str, **kwargs):
     """
     Drive an OpenCL kernel file.
 
