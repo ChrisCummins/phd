@@ -225,7 +225,7 @@ class Model(clgen.CLgenObject):
         return tf
 
 
-    def _get_params_path(self, ckpt):
+    def _get_params_path(self, ckpt) -> str:
         """ return path to checkpoint closest to target num of epochs """
         paths = ckpt.all_model_checkpoint_paths
         batch_nums = [int(x.split('-')[-1]) for x in paths]
@@ -244,7 +244,7 @@ class Model(clgen.CLgenObject):
         return closest_path, paths
 
 
-    def train(self, quiet=False):
+    def train(self, quiet: bool=False) -> None:
         """
         Train model.
         """
@@ -373,9 +373,9 @@ class Model(clgen.CLgenObject):
                     avg_checkpoint = total_checkpoint / e
                     log.info("model saved to {}".format(checkpoint_path))
 
-    def sample(self, seed_text="__kernel void", output=sys.stdout,
-               num_samples=1, temperature=1, max_length=10000, seed=None,
-               quiet=False):
+    def sample(self, seed_text: str="__kernel void", output=sys.stdout,
+               num_samples: int=1, temperature: float=1, max_length: int=10000,
+               seed: int=None, quiet: bool=False) -> None:
         """
         Sample model.
 
@@ -498,7 +498,7 @@ class Model(clgen.CLgenObject):
         return self.opts["train_opts"]
 
     @property
-    def meta(self):
+    def meta(self) -> dict:
         """
         Get trained model metadata.
 
@@ -528,7 +528,7 @@ class Model(clgen.CLgenObject):
 
         return _meta
 
-    def to_dist(self, distpath, author=None):
+    def to_dist(self, distpath: str, author: str=None) -> str:
         """
         Create a dist file.
 
@@ -576,7 +576,7 @@ class Model(clgen.CLgenObject):
 
         return outpath
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         String representation.
         """
@@ -584,7 +584,7 @@ class Model(clgen.CLgenObject):
             hash=self.hash, data=clgen.format_json(self.opts))
 
     @property
-    def checkpoint_path(self):
+    def checkpoint_path(self) -> str:
         """
         Get path to most checkpoint, if exists.
 
