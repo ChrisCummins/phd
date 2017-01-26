@@ -27,7 +27,7 @@ from hashlib import md5
 import clgen
 
 
-def create_db(path, github=False):
+def create_db(path: str, github: bool=False) -> None:
     """
     Create an empty OpenCL kernel database.
 
@@ -59,10 +59,10 @@ class md5sum_aggregator:
     def __init__(self):
         self.md5 = md5()
 
-    def step(self, value):
+    def step(self, value) -> None:
         self.md5.update(str(value).encode('utf-8'))
 
-    def finalize(self):
+    def finalize(self) -> str:
         return self.md5.hexdigest()
 
 
@@ -73,10 +73,10 @@ class linecount_aggregator:
     def __init__(self):
         self.count = 0
 
-    def step(self, value):
+    def step(self, value) -> None:
         self.count += len(value.split('\n'))
 
-    def finalize(self):
+    def finalize(self) -> int:
         return self.count
 
 
@@ -87,14 +87,14 @@ class charcount_aggregator:
     def __init__(self):
         self.count = 0
 
-    def step(self, value):
+    def step(self, value) -> None:
         self.count += len(value)
 
-    def finalize(self):
+    def finalize(self) -> int:
         return self.count
 
 
-def connect(db_path):
+def connect(db_path: str):
     """
     Returns a connection to a database.
 
@@ -119,7 +119,7 @@ def connect(db_path):
     return db
 
 
-def is_modified(db):
+def is_modified(db) -> bool:
     """
     Returns whether database is preprocessed.
 
@@ -142,7 +142,7 @@ def is_modified(db):
     return False if cached_checksum == checksum else checksum
 
 
-def set_modified_status(db, checksum):
+def set_modified_status(db, checksum: str) -> None:
     """
     Set database preprocessed checksum.
 
@@ -157,7 +157,7 @@ def set_modified_status(db, checksum):
     c.close()
 
 
-def table_exists(db, table_name):
+def table_exists(db, table_name: str) -> None:
     """
     SQL table exists.
 
@@ -176,7 +176,7 @@ def table_exists(db, table_name):
     return res and res[0]
 
 
-def is_github(db):
+def is_github(db) -> None:
     """
     SQL table has GitHub metadata tables.
 
@@ -189,7 +189,7 @@ def is_github(db):
     return table_exists(db, 'Repositories')
 
 
-def num_good_kernels(path):
+def num_good_kernels(path: str) -> int:
     """
     Fetch the number of good preprocessed kernels from dataset.
 
@@ -204,7 +204,7 @@ def num_good_kernels(path):
     return num_rows_in(path, "PreprocessedFiles", "WHERE status=0")
 
 
-def num_rows_in(path, table, condition=""):
+def num_rows_in(path: str, table: str, condition: str="") -> int:
     """
     Fetch number of rows in table.
 
@@ -225,7 +225,7 @@ def num_rows_in(path, table, condition=""):
     return c.fetchone()[0]
 
 
-def cc(path, table, column="Contents", condition=""):
+def cc(path: str, table: str, column: str="Contents", condition: str="") -> int:
     """
     Fetch character count of contents in table.
 
@@ -246,7 +246,7 @@ def cc(path, table, column="Contents", condition=""):
     return c.fetchone()[0] or 0
 
 
-def lc(path, table, column="Contents", condition=""):
+def lc(path: str, table: str, column: str="Contents", condition: str="") -> int:
     """
     Fetch line count of contents in table.
 
@@ -267,7 +267,7 @@ def lc(path, table, column="Contents", condition=""):
     return c.fetchone()[0] or 0
 
 
-def remove_preprocessed(path):
+def remove_preprocessed(path: str) -> None:
     """
     Removes all preprocessed files from database.
 
