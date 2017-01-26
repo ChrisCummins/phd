@@ -24,7 +24,7 @@ import logging
 from sys import exit
 
 
-def _fmt(msg, fmt_opts):
+def _fmt(msg: str, fmt_opts: dict) -> str:
     """
     Format a message to a string.
     """
@@ -33,7 +33,7 @@ def _fmt(msg, fmt_opts):
     return sep.join([str(x) for x in msg])
 
 
-def init(verbose=False):
+def init(verbose: bool=False) -> None:
     """
     Initialiaze the logging engine.
 
@@ -44,7 +44,7 @@ def init(verbose=False):
     logging.basicConfig(level=level, format="%(message)s")
 
 
-def debug(*msg, **opts):
+def debug(*msg, **opts) -> None:
     """
     Debug message.
 
@@ -58,14 +58,14 @@ def debug(*msg, **opts):
     logging.debug(_fmt(msg, opts))
 
 
-def verbose(*msg, **opts):
+def verbose(*msg, **opts) -> None:
     """
     Calls debug().
     """
     debug(*msg, **opts)
 
 
-def info(*msg, **opts):
+def info(*msg, **opts) -> None:
     """
     Info message.
 
@@ -78,7 +78,7 @@ def info(*msg, **opts):
     logging.info(_fmt(msg, opts))
 
 
-def warning(*msg, **opts):
+def warning(*msg, **opts) -> None:
     """
     Warning message.
 
@@ -91,7 +91,7 @@ def warning(*msg, **opts):
     logging.warning("warning: " + _fmt(msg, opts))
 
 
-def error(*msg, **opts):
+def error(*msg, **opts) -> None:
     """
     Error message.
 
