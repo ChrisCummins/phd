@@ -86,7 +86,7 @@ class KernelArg(clgen.CLgenObject):
 
 
     @property
-    def string(self):
+    def string(self) -> str:
         """
         Return the original string.
 
@@ -103,7 +103,7 @@ class KernelArg(clgen.CLgenObject):
         return self._string
 
     @property
-    def components(self):
+    def components(self) -> list:
         """
         Kernel argument components.
 
@@ -120,7 +120,7 @@ class KernelArg(clgen.CLgenObject):
         return self._components
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         Get the argument variable name.
 
@@ -137,7 +137,7 @@ class KernelArg(clgen.CLgenObject):
         return self._components[-1]
 
     @property
-    def type(self):
+    def type(self) -> str:
         """
         Get the argument type.
 
@@ -154,7 +154,7 @@ class KernelArg(clgen.CLgenObject):
         return self._components[-2]
 
     @property
-    def is_restrict(self):
+    def is_restrict(self) -> bool:
         """
         Argument has restrict keyword.
 
@@ -171,7 +171,7 @@ class KernelArg(clgen.CLgenObject):
         return self._is_restrict
 
     @property
-    def qualifiers(self):
+    def qualifiers(self) -> float:
         """
         Return all argument type qualifiers.
 
@@ -188,7 +188,7 @@ class KernelArg(clgen.CLgenObject):
         return self._components[:-2]
 
     @property
-    def is_pointer(self):
+    def is_pointer(self) -> bool:
         """
         Returns whether argument is a pointer.
 
@@ -205,7 +205,7 @@ class KernelArg(clgen.CLgenObject):
         return self.type[-1] == '*'
 
     @property
-    def is_vector(self):
+    def is_vector(self) -> bool:
         """
         Returns whether argument is a vectory type, e.g. 'int4'.
 
@@ -223,9 +223,11 @@ class KernelArg(clgen.CLgenObject):
         return self.type[idx].isdigit()
 
     @property
-    def vector_width(self):
+    def vector_width(self) -> int:
         """
         Returns width of vector type.
+
+        If not a vector type, returned width is 1.
 
         Examples:
 
@@ -248,7 +250,7 @@ class KernelArg(clgen.CLgenObject):
             return self._vector_width
 
     @property
-    def bare_type(self):
+    def bare_type(self) -> float:
         """
         Type name, without vector or pointer qualifiers.
 
@@ -269,7 +271,7 @@ class KernelArg(clgen.CLgenObject):
             return self._bare_type
 
     @property
-    def is_const(self):
+    def is_const(self) -> bool:
         """
         Kernel arg is constant.
 
@@ -290,7 +292,7 @@ class KernelArg(clgen.CLgenObject):
             return self._is_const
 
     @property
-    def is_global(self):
+    def is_global(self) -> bool:
         """
         Kernel arg is global.
 
@@ -313,7 +315,7 @@ class KernelArg(clgen.CLgenObject):
             return self._is_global
 
     @property
-    def is_local(self):
+    def is_local(self) -> bool:
         """
         Kernel arg is local.
 
@@ -388,7 +390,7 @@ class KernelPrototype(clgen.CLgenObject):
 
     Requires source code to have been pre-processed.
     """
-    def __init__(self, string):
+    def __init__(self, string: str):
         """
         Create OpenCL kernel prototype.
 
@@ -402,7 +404,7 @@ class KernelPrototype(clgen.CLgenObject):
             raise PrototypeException('malformed prototype', self._string)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         Kernel function name.
 
@@ -423,7 +425,7 @@ class KernelPrototype(clgen.CLgenObject):
             return self._name
 
     @property
-    def args(self):
+    def args(self) -> list:
         """
         Kernel arguments.
 
@@ -444,7 +446,7 @@ class KernelPrototype(clgen.CLgenObject):
             return self._args
 
     @property
-    def is_synthesizable(self):
+    def is_synthesizable(self) -> bool:
         for arg in self.args:
             try:
                 arg.numpy_type
@@ -452,11 +454,11 @@ class KernelPrototype(clgen.CLgenObject):
                 return False
         return True
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self._string
 
     @staticmethod
-    def from_source(src):
+    def from_source(src: str):
         """
         Create KernelPrototype from OpenCL kernel source.
 
@@ -469,7 +471,7 @@ class KernelPrototype(clgen.CLgenObject):
         return extract_prototype(src)
 
 
-def get_attribute_range(src, start_idx):
+def get_attribute_range(src: str, start_idx: int) -> tuple:
     """
     Get string indices range of attributes.
 
@@ -492,7 +494,7 @@ def get_attribute_range(src, start_idx):
     return (start_idx, i)
 
 
-def strip_attributes(src):
+def strip_attributes(src: str) -> str:
     """
     Remove attributes from OpenCL source.
 
@@ -514,7 +516,7 @@ def strip_attributes(src):
     return src
 
 
-def get_cl_kernel_end_idx(src, start_idx=0, max_len=5000):
+def get_cl_kernel_end_idx(src: str, start_idx: int=0, max_len: int=5000) -> int:
     """
     Return the index of the character after the end of the OpenCL
     kernel.
@@ -540,7 +542,7 @@ def get_cl_kernel_end_idx(src, start_idx=0, max_len=5000):
     return i
 
 
-def get_cl_kernel(src, start_idx, max_len=5000):
+def get_cl_kernel(src: str, start_idx: int, max_len: int=5000) -> str:
     """
     Return the OpenCL kernel.
 
@@ -557,7 +559,7 @@ def get_cl_kernel(src, start_idx, max_len=5000):
     return src[start_idx:get_cl_kernel_end_idx(src, start_idx)]
 
 
-def get_cl_kernels(src):
+def get_cl_kernels(src: str) -> list:
     """
     Return OpenCL kernels.
 
@@ -574,7 +576,7 @@ def get_cl_kernels(src):
     return kernels
 
 
-def extract_prototype(src):
+def extract_prototype(src: str) -> KernelPrototype:
     """
     Extract OpenCL kernel prototype from preprocessed file.
 
@@ -601,12 +603,12 @@ def extract_prototype(src):
     return KernelPrototype(prototype)
 
 
-def get_contexts_and_devices():
+def get_contexts_and_devices() -> dict:
     """
     Instantiate OpenCL contexts for all platforms and return devices.
 
     Returns:
-        dict: pyopencl.Context as key, pyopencl.Device[] as value
+        dict: pyopencl.Context keys, pyopencl.Device[] values.
     """
     import pyopencl as cl
 
