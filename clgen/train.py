@@ -29,7 +29,7 @@ from labm8 import fs
 from clgen import dbutil
 
 
-def sanitize_id(id):
+def sanitize_id(id: str) -> str:
     """
     Sanitize ID.
 
@@ -42,8 +42,9 @@ def sanitize_id(id):
     return re.sub('[/:\.]+', '-', id)
 
 
-def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
-                  input_samples=False, status=0, eof=False, dir=False):
+def create_corpus(db, out_path: str, gh: bool=False, fileid: bool=False,
+                  reverse: bool=False, input_samples: bool=False, status: int=0,
+                  eof: bool=False, dir: bool=False) -> None:
     """
     Create CLgen training corpus.
 
@@ -119,7 +120,7 @@ def create_corpus(db, out_path, gh=False, fileid=False, reverse=False,
         return 0
 
 
-def linecount(t):
+def linecount(t: str) -> int:
     """
     Line count.
 
@@ -132,7 +133,7 @@ def linecount(t):
     return len(t.split('\n'))
 
 
-def train(db_path, out_path, **kwargs):
+def train(db_path: str, out_path: str, **kwargs) -> None:
     """
     Generate corpus.
 
