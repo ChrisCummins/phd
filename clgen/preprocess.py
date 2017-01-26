@@ -123,8 +123,8 @@ CLANG_CL_TARGETS = [
 ]
 
 
-def clang_cl_args(target=CLANG_CL_TARGETS[0],
-                  use_shim=True, error_limit=0):
+def clang_cl_args(target: str=CLANG_CL_TARGETS[0],
+                  use_shim: bool=True, error_limit: int=0) -> list:
     """
     Get the Clang args to compile OpenCL.
 
@@ -157,7 +157,8 @@ def clang_cl_args(target=CLANG_CL_TARGETS[0],
     return args
 
 
-def compiler_preprocess_cl(src, id='anon', use_shim=True):
+def compiler_preprocess_cl(src: str, id: str='anon',
+                           use_shim: bool=True) -> str:
     """
     Preprocess OpenCL file.
 
@@ -200,7 +201,7 @@ def compiler_preprocess_cl(src, id='anon', use_shim=True):
     return src
 
 
-def rewrite_cl(src, id='anon', use_shim=True):
+def rewrite_cl(src: str, id: str='anon', use_shim: bool=True) -> str:
     """
     Rewrite OpenCL sources.
 
@@ -247,7 +248,7 @@ def rewrite_cl(src, id='anon', use_shim=True):
     return stripped
 
 
-def compile_cl_bytecode(src, id='anon', use_shim=True):
+def compile_cl_bytecode(src: str, id: str='anon', use_shim: bool=True) -> str:
     """
     Compile OpenCL kernel to LLVM bytecode.
 
@@ -257,7 +258,7 @@ def compile_cl_bytecode(src, id='anon', use_shim=True):
         use_shim (bool, optional): Inject shim header.
 
     Returns:
-        bytes: Bytecode.
+        str: Bytecode.
 
     Raises:
         ClangException: If compiler errors.
@@ -278,7 +279,7 @@ _instcount_re = re.compile(
     r"^(?P<count>\d+) instcount - Number of (?P<type>.+)")
 
 
-def parse_instcounts(txt):
+def parse_instcounts(txt: str) -> dict:
     """
     Parse LLVM opt instruction counts pass.
 
@@ -314,7 +315,7 @@ _sql_rm_chars = re.compile(r'[\(\)]')
 _sql_sub_chars = re.compile(r'-')
 
 
-def escape_sql_key(key):
+def escape_sql_key(key: str) -> str:
     """
     Escape SQL key.
 
@@ -328,7 +329,7 @@ def escape_sql_key(key):
                   re.sub(_sql_rm_chars, '', '_'.join(key.split(' '))))
 
 
-def instcounts2ratios(counts):
+def instcounts2ratios(counts: dict) -> dict:
     """
     Convert instruction counts to instruction densities.
 
@@ -364,7 +365,7 @@ def instcounts2ratios(counts):
     return ratios
 
 
-def sql_insert_dict(c, table, data):
+def sql_insert_dict(c, table: str, data: dict) -> None:
     """
     Insert a dict of key value pairs into an SQL table.
 
@@ -383,12 +384,12 @@ def sql_insert_dict(c, table, data):
     c.execute(cmd, tuple(data.values()))
 
 
-def bytecode_features(bc, id='anon'):
+def bytecode_features(bc: str, id: str='anon') -> dict:
     """
     Extract features from bytecode.
 
     Arguments:
-        bc (bytes): LLVM bytecode.
+        bc (str): LLVM bytecode.
         id (str, optional): Name of OpenCL source.
 
     Returns:
@@ -430,7 +431,7 @@ clangformat_config = {
 }
 
 
-def clangformat_ocl(src, id='anon'):
+def clangformat_ocl(src: str, id: str='anon') -> str:
     """
     Enforce code style on OpenCL file.
 
@@ -457,7 +458,7 @@ def clangformat_ocl(src, id='anon'):
     return stdout.decode('utf-8')
 
 
-def print_bytecode_features(db_path):
+def print_bytecode_features(db_path: str) -> None:
     """
     Print Bytecode features.
 
@@ -485,7 +486,7 @@ def print_bytecode_features(db_path):
         log.info('        ', feature)
 
 
-def verify_bytecode_features(bc_features, id='anon'):
+def verify_bytecode_features(bc_features: dict, id: str='anon') -> None:
     """
     Verify LLVM bytecode features.
 
@@ -510,7 +511,7 @@ def verify_bytecode_features(bc_features, id='anon'):
             .format(num_instructions, min_num_instructions))
 
 
-def ensure_has_code(src):
+def ensure_has_code(src: str) -> str:
     """
     Check that file contains actual executable code.
 
@@ -526,7 +527,7 @@ def ensure_has_code(src):
     return src
 
 
-def sanitize_prototype(src):
+def sanitize_prototype(src: str) -> str:
     """
     Sanitize OpenCL prototype.
 
@@ -553,7 +554,7 @@ def sanitize_prototype(src):
         return src
 
 
-def preprocess(src, id='anon', use_shim=True):
+def preprocess(src: str, id: str='anon', use_shim: bool=True) -> str:
     """
     Preprocess an OpenCL source. There are three possible outcomes:
 
@@ -591,7 +592,7 @@ def preprocess(src, id='anon', use_shim=True):
     return src
 
 
-def _preprocess_db_worker(job):
+def _preprocess_db_worker(job: dict) -> None:
     """Database worker thread"""
     db_path = job["db_in"]
     db_index_range = job["db_index_range"]
@@ -638,7 +639,8 @@ def _preprocess_db_worker(job):
     db.close()
 
 
-def preprocess_contentfiles(db_path, max_num_workers=cpu_count(), attempt=1):
+def preprocess_contentfiles(db_path: str, max_num_workers: int=cpu_count(),
+                            attempt: int=1) -> None:
     """
     Preprocess OpenCL dataset.
 
@@ -706,7 +708,7 @@ def preprocess_contentfiles(db_path, max_num_workers=cpu_count(), attempt=1):
     _finalize(db_path, cache)
 
 
-def preprocess_file(path, inplace=False):
+def preprocess_file(path: str, inplace: bool=False) -> None:
     """
     Preprocess a file.
 
@@ -732,7 +734,7 @@ def preprocess_file(path, inplace=False):
         log.fatal(e, ret=2)
 
 
-def _preprocess_inplace_worker(path):
+def _preprocess_inplace_worker(path: str):
     """worker function for preprocess_inplace()"""
     log.info('preprocess', path)
     preprocess_file(path, inplace=True)
@@ -741,7 +743,8 @@ def _preprocess_inplace_worker(path):
 MAX_OS_RETRIES = 10
 
 
-def preprocess_inplace(paths, max_num_workers=cpu_count(), attempt=1):
+def preprocess_inplace(paths: str, max_num_workers: int=cpu_count(),
+                       attempt: int=1) -> None:
     """
     Preprocess a list of files in place.
 
@@ -770,7 +773,7 @@ def preprocess_inplace(paths, max_num_workers=cpu_count(), attempt=1):
 
 
 
-def preprocess_db(db_path):
+def preprocess_db(db_path: str) -> bool:
     """
     Preprocess database contents.
 
@@ -791,7 +794,7 @@ def preprocess_db(db_path):
         return False
 
 
-def remove_bad_preprocessed(db_path):
+def remove_bad_preprocessed(db_path: str) -> None:
     """
     Remove all ugly and bad contents from PreprocessedFiles table.
 
