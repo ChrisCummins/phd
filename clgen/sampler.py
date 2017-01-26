@@ -36,7 +36,7 @@ from clgen.explore import explore
 from clgen.model import Model
 
 
-def serialize_argspec(args):
+def serialize_argspec(args: list) -> str:
     """
     Serializes an argument spec to a kernel prototype.
 
@@ -55,7 +55,7 @@ class Sampler(clgen.CLgenObject):
     """
     CLgen sampler for models.
     """
-    def __init__(self, sampler_opts, kernel_opts):
+    def __init__(self, sampler_opts: dict, kernel_opts: dict):
         """
         Instantiate a sampler.
 
@@ -81,7 +81,7 @@ class Sampler(clgen.CLgenObject):
 
         self.kernel_opts = kernel_opts
 
-    def _hash(self, sampler_opts, kernel_opts):
+    def _hash(self, sampler_opts: dict, kernel_opts: dict) -> str:
         """compute sampler checksum"""
         checksum_data = sorted(
             [str(x) for x in sampler_opts.values()] +
@@ -89,7 +89,7 @@ class Sampler(clgen.CLgenObject):
         string = "".join([str(x) for x in checksum_data])
         return clgen.checksum_str(string)
 
-    def cache(self, model):
+    def cache(self, model: Model) -> Cache:
         """
         Return sampler cache.
 
@@ -102,7 +102,7 @@ class Sampler(clgen.CLgenObject):
         sampler_model_hash = clgen.checksum_str(self.hash + model.hash)
         return Cache(fs.path("sampler", sampler_model_hash))
 
-    def sample_iteration(self, model, quiet=False):
+    def sample_iteration(self, model: Model, quiet: bool=False) -> None:
         """
         Run one sample iteration.
 
@@ -142,7 +142,7 @@ class Sampler(clgen.CLgenObject):
             preprocess.preprocess_db(cache["kernels.db"])
         fs.rm(tmppath)
 
-    def sample(self, model, quiet=False):
+    def sample(self, model: Model, quiet: bool=False) -> None:
         """
         Sample CLgen model.
 
@@ -181,7 +181,7 @@ class Sampler(clgen.CLgenObject):
         log.info("samples database:", cache["kernels.db"])
 
 
-def from_json(sampler_json):
+def from_json(sampler_json: dict) -> Sampler:
     """
     Instantiate sampler from JSON.
 
