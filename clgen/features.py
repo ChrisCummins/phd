@@ -33,7 +33,7 @@ from subprocess import Popen, PIPE, STDOUT
 from clgen import native
 
 
-def _shim_args(use_shim=False):
+def _shim_args(use_shim: bool=False) -> list:
     """get shim header args"""
     args = []
     if use_shim:
@@ -41,12 +41,12 @@ def _shim_args(use_shim=False):
     return args
 
 
-def _is_features(line):
+def _is_features(line: int) -> bool:
     """true if features"""
     return len(line) == 10
 
 
-def _is_good_features(line, stderr):
+def _is_good_features(line: str, stderr: str) -> bool:
     """true if feature extractor worked"""
     if _is_features(line):
         has_err = False if stderr.find(' error: ') == -1 else True
@@ -54,8 +54,8 @@ def _is_good_features(line, stderr):
     return False
 
 
-def features(path, file=sys.stdout, fatal_errors=False, use_shim=False,
-             quiet=False):
+def features(path: str, file=sys.stdout, fatal_errors: bool=False,
+             use_shim: bool=False, quiet: bool=False) -> None:
     """
     Print CSV format features of file.
 
@@ -95,7 +95,7 @@ def features(path, file=sys.stdout, fatal_errors=False, use_shim=False,
             print(','.join(line), file=file)
 
 
-def feature_headers(file=sys.stdout):
+def feature_headers(file=sys.stdout) -> None:
     """
     Print CSV format feature header.
 
@@ -110,7 +110,7 @@ def feature_headers(file=sys.stdout):
     print(stdout, file=file)
 
 
-def files(paths, header=True, file=sys.stdout, **kwargs):
+def files(paths: list, header: bool=True, file=sys.stdout, **kwargs) -> None:
     """
     Print feature values of files in CSV format.
 
@@ -129,7 +129,7 @@ def files(paths, header=True, file=sys.stdout, **kwargs):
         features(path, file=file, **kwargs)
 
 
-def summarize(csv_path):
+def summarize(csv_path: path) -> OrderedDict:
     """
     Summarize a CSV file of feature values.
 
