@@ -56,7 +56,7 @@ DEFAULT_CORPUS_OPTS = {
 }
 
 
-def unpack_directory_if_needed(path):
+def unpack_directory_if_needed(path: str) -> str:
     """
     If path is a tarball, unpack it. If path doesn't exist but there is a
     tarball with the same name, unpack it.
@@ -107,7 +107,7 @@ def get_atomizer(corpus: str, vocab: str="char") -> list:
         return atomizerclass.from_text(corpus)
 
 
-def features_from_file(path):
+def features_from_file(path: str) -> np.array:
     """
     Fetch features from file.
 
@@ -126,7 +126,7 @@ def features_from_file(path):
     return np.array(features)
 
 
-def get_features(code):
+def get_features(code: str) -> np.array:
     """
     Get features for code.
 
@@ -215,7 +215,7 @@ class Corpus(clgen.CLgenObject):
             path (str, optional): Path to corpus.
             **opts: Keyword options.
         """
-        def _init_error(err):
+        def _init_error(err: Exception) -> None:
             """ tidy up in case of error """
             log.error("corpus creation failed. Deleting corpus files")
             paths = [
@@ -272,7 +272,7 @@ class Corpus(clgen.CLgenObject):
         """ compute corpus hash """
         return clgen.checksum_list(contentid, *clgen.dict_values(opts))
 
-    def _create_kernels_db(self, path, encoding="default"):
+    def _create_kernels_db(self, path: str, encoding: str="default") -> None:
         """creates and caches kernels.db"""
         log.debug("creating database")
 
@@ -297,7 +297,7 @@ class Corpus(clgen.CLgenObject):
         # print database stats
         explore.explore(self.cache["kernels.db"])
 
-    def _create_txt(self):
+    def _create_txt(self) -> None:
         """creates and caches corpus.txt"""
         log.debug("creating corpus")
 
@@ -307,11 +307,11 @@ class Corpus(clgen.CLgenObject):
         train(self.cache["kernels.db"], tmppath)
         self.cache["corpus.txt"] = tmppath
 
-    def _read_txt(self):
+    def _read_txt(self) -> str:
         with codecs.open(self.cache["corpus.txt"], encoding="utf-8") as infile:
             return infile.read()
 
-    def _create_atomizer(self, vocab="char"):
+    def _create_atomizer(self, vocab: str="char") -> None:
         """creates and caches atomizer.pkl"""
         log.debug("creating vocab file")
 
@@ -329,7 +329,7 @@ class Corpus(clgen.CLgenObject):
 
         self.cache["atomizer.pkl"] = tmp_vocab_file
 
-    def _load_atomizer(self):
+    def _load_atomizer(self) -> None:
         with open(self.cache["atomizer.pkl"], 'rb') as infile:
             self.atomizer = cPickle.load(infile)
 
@@ -353,7 +353,7 @@ class Corpus(clgen.CLgenObject):
 
         return sep.join(row[0] for row in c.fetchall())
 
-    def create_batches(self):
+    def create_batches(self) -> None:
         """
         Create batches for training.
         """
@@ -415,7 +415,7 @@ class Corpus(clgen.CLgenObject):
             return self._num_batches
 
     @property
-    def meta(self):
+    def meta(self) -> dict:
         """
         Get corpus metadata.
 
@@ -426,13 +426,13 @@ class Corpus(clgen.CLgenObject):
         _meta["id"] = self.hash
         return _meta
 
-    def reset_batch_pointer(self):
+    def reset_batch_pointer(self) -> None:
         """
         Resets batch pointer to first batch.
         """
         self._pointer = 0
 
-    def next_batch(self):
+    def next_batch(self) -> tuple:
         """
         Fetch next batch indices.
 
@@ -444,7 +444,7 @@ class Corpus(clgen.CLgenObject):
         self._pointer += 1
         return x, y
 
-    def set_batch_pointer(self, pointer):
+    def set_batch_pointer(self, pointer: int) -> None:
         """
         Set batch pointer.
 
@@ -453,12 +453,12 @@ class Corpus(clgen.CLgenObject):
         """
         self._pointer = pointer
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         n = dbutil.num_good_kernels(self.cache['kernels.db'])
         return "corpus of {n} files".format(n=n)
 
     @staticmethod
-    def from_json(corpus_json):
+    def from_json(corpus_json: dict):
         """
         Instantiate Corpus from JSON.
 
@@ -487,7 +487,7 @@ class Corpus(clgen.CLgenObject):
         return Corpus(uid, path=path, **corpus_json)
 
 
-def preprocessed_kernels(corpus):
+def preprocessed_kernels(corpus: Corpus) -> list:
     """
     Return an iterator over all preprocessed kernels.
 
@@ -505,7 +505,7 @@ def preprocessed_kernels(corpus):
         yield row[0]
 
 
-def most_common_prototypes(c, n):
+def most_common_prototypes(c: Corpus, n: int) -> tuple:
     """
     Return the n most frequently occuring prototypes.
 
