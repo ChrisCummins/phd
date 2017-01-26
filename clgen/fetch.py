@@ -59,7 +59,7 @@ errors_counter = 0
 status_string = ''
 
 
-def print_repo_details(repo):
+def print_repo_details(repo) -> None:
     """
     Print GitHub repo details.
 
@@ -77,7 +77,7 @@ def print_repo_details(repo):
     print('updated_at:', repo.updated_at)
 
 
-def print_file_details(file):
+def print_file_details(file) -> None:
     """
     Print GitHub file details.
 
@@ -90,7 +90,7 @@ def print_file_details(file):
     print('size:', file.size)
 
 
-def print_counters():
+def print_counters() -> None:
     """
     Print analytics counters.
     """
@@ -102,7 +102,7 @@ def print_counters():
     sys.stdout.flush()
 
 
-def rate_limit(g):
+def rate_limit(g) -> None:
     """
     Block on GitHub rate limit.
 
@@ -118,7 +118,7 @@ def rate_limit(g):
         remaining = g.get_rate_limit().rate.remaining
 
 
-def process_repo(g, db, repo):
+def process_repo(g, db, repo) -> bool:
     """
     GitHub repository handler.
 
@@ -180,7 +180,7 @@ def process_repo(g, db, repo):
     return True
 
 
-def is_opencl_path(path):
+def is_opencl_path(path: str) -> bool:
     """
     Return whether file is opencl.
 
@@ -192,7 +192,7 @@ def is_opencl_path(path):
 _include_re = re.compile('\w*#include ["<](.*)[">]')
 
 
-def download_file(github_token, repo, url, stack):
+def download_file(github_token: str, repo, url: str, stack: list) -> str:
     """
     Fetch file from GitHub.
 
@@ -249,7 +249,7 @@ def download_file(github_token, repo, url, stack):
     return '\n'.join(outlines)
 
 
-def process_file(g, github_token, db, repo, file):
+def process_file(g, github_token: str, db, repo, file) -> bool:
     """
     GitHub file handler.
 
@@ -307,7 +307,8 @@ def process_file(g, github_token, db, repo, file):
     return True
 
 
-def github(db_path, github_username, github_pw, github_token):
+def github(db_path: str, github_username: str, github_pw: str,
+           github_token: str) -> None:
     """
     Download all of the OpenCL on GitHub (!)
 
@@ -381,7 +382,7 @@ def github(db_path, github_username, github_pw, github_token):
     db.close()
 
 
-def inline_fs_headers(path, stack):
+def inline_fs_headers(path: str, stack: list) -> str:
     """
     Recursively inline headers in file.
 
@@ -426,7 +427,7 @@ def inline_fs_headers(path, stack):
     return '\n'.join(outlines)
 
 
-def flatten(l):
+def flatten(l: list) -> list:
     """
     Flattens a list of lists.
 
@@ -439,7 +440,7 @@ def flatten(l):
     return [item for sublist in l for item in sublist]
 
 
-def process_cl_file(db_path, path):
+def process_cl_file(db_path: str, path: str) -> None:
     """
     Process OpenCL file.
 
@@ -463,7 +464,8 @@ def process_cl_file(db_path, path):
     c.close()
 
 
-def content_db(db_path, in_db_path, table='PreprocessedFiles'):
+def content_db(db_path: str, in_db_path: str,
+               table: str='PreprocessedFiles') -> None:
     """
     Fetch kernels from a content database.
 
@@ -490,7 +492,7 @@ def content_db(db_path, in_db_path, table='PreprocessedFiles'):
             odb.commit()
 
 
-def fetch_fs(db_path, paths=[]):
+def fetch_fs(db_path: str, paths: list=[]) -> None:
     """
     Fetch from a list of files.
 
@@ -506,8 +508,8 @@ def fetch_fs(db_path, paths=[]):
 kernel_counter = 0
 
 
-def process_sample_file(db_path, sample_path, first_only=False,
-                        max_kernel_len=5000, quiet=False):
+def process_sample_file(db_path: str, sample_path: str, first_only: bool=False,
+                        max_kernel_len: int=5000, quiet: bool=False) -> None:
     """
     Fetch from a CLgen sample file.
 
@@ -562,7 +564,8 @@ def process_sample_file(db_path, sample_path, first_only=False,
     c.close()
 
 
-def clgen_sample(db_path, samples_dir, sample_path, first_only):
+def clgen_sample(db_path: str, samples_dir: str, sample_path: str,
+                 first_only: bool) -> None:
     """
     Fetch from CLgen.
 
@@ -603,7 +606,7 @@ class HeaderNotFoundException(clgen.CLgenError):
     pass
 
 
-def print_clsmith_counters():
+def print_clsmith_counters() -> None:
     """
     Print CLSmith counters.
     """
@@ -613,7 +616,7 @@ def print_clsmith_counters():
     sys.stdout.flush()
 
 
-def include_clsmith_path(name, header_paths):
+def include_clsmith_path(name: str, header_paths: list) -> str:
     """
     Fetch path to CLSmith header.
 
@@ -631,7 +634,7 @@ def include_clsmith_path(name, header_paths):
     raise HeaderNotFoundException(name)
 
 
-def inline_clsmith_headers(src, header_paths):
+def inline_clsmith_headers(src: str, header_paths: list) -> str:
     """
     Inline CLSmith headers.
 
@@ -658,8 +661,9 @@ def inline_clsmith_headers(src, header_paths):
     return '\n'.join(outlines)
 
 
-def get_clsmith_program(db_path,
-                        header_paths=["~/clsmith/runtime", "~/clsmith/build"]):
+def get_clsmith_program(db_path: str,
+                        header_paths: list=[
+                            "~/clsmith/runtime", "~/clsmith/build"]) -> None:
     """
     Generate a program using CLSmith and add to dataset.
 
@@ -698,7 +702,7 @@ def get_clsmith_program(db_path,
     print_clsmith_counters()
 
 
-def clsmith(db_path, target_num_kernels):
+def clsmith(db_path: str, target_num_kernels: int) -> None:
     """
     Generate kernels using CLSmith.
 
