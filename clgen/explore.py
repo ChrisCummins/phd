@@ -34,7 +34,7 @@ from clgen import log
 IMG_DIR = 'img'
 
 
-def decode(string):
+def decode(string: str) -> str:
     """
     Decode Unicode string.
 
@@ -50,7 +50,7 @@ def decode(string):
         return ''
 
 
-def div(x, y):
+def div(x, y) -> float:
     """
     Zero-safe division.
 
@@ -67,7 +67,7 @@ def div(x, y):
         return 0
 
 
-def median(sorted_arr):
+def median(sorted_arr: list):
     """
     Return the median of a sorted sequence.
 
@@ -88,7 +88,7 @@ def median(sorted_arr):
         return (sorted_arr[midpoint - 1] + sorted_arr[midpoint]) / 2.0
 
 
-def bigint(n):
+def bigint(n) -> str:
     """
     Return comma seperated big numbers.
 
@@ -101,7 +101,7 @@ def bigint(n):
     return locale.format('%d', round(n), grouping=True)
 
 
-def seq_stats(sorted_arr):
+def seq_stats(sorted_arr: list) -> str:
     """
     Return stats on a sequence.
 
@@ -124,7 +124,7 @@ def seq_stats(sorted_arr):
             bigint(sorted_arr[len(sorted_arr) - 1])))
 
 
-def stats_worker(db_path):
+def stats_worker(db_path: str) -> list:
     """
     Generate dataset stats.
     """
@@ -173,7 +173,7 @@ def stats_worker(db_path):
     return stats
 
 
-def gh_stats_worker(db_path):
+def gh_stats_worker(db_path: str) -> list:
     """
     Generate github dataset stats.
     """
@@ -246,7 +246,7 @@ def gh_stats_worker(db_path):
     return stats
 
 
-def graph_ocl_lc(db_path):
+def graph_ocl_lc(db_path: str) -> None:
     """
     Plot distribution of OpenCL file line counts.
     """
@@ -273,7 +273,7 @@ def graph_ocl_lc(db_path):
     plt.savefig(out_path)
 
 
-def graph_bc_lc(db_path):
+def graph_bc_lc(db_path: str) -> None:
     """
     Plot distribution of bytecode line counts.
     """
@@ -300,7 +300,7 @@ def graph_bc_lc(db_path):
     plt.savefig(out_path)
 
 
-def graph_ocl_stars(db_path):
+def graph_ocl_stars(db_path: str) -> None:
     """
     Plot distribution of stargazers per file.
     """
@@ -327,7 +327,7 @@ def graph_ocl_stars(db_path):
     plt.savefig(out_path)
 
 
-def explore(db_path, graph=False):
+def explore(db_path: str, graph: bool=False) -> None:
     """
     Run exploratory analysis on dataset.
 
@@ -372,7 +372,7 @@ def explore(db_path, graph=False):
             print()
 
 
-def explore_gh(db_path, graph=False):
+def explore_gh(db_path: str, graph: bool=False) -> None:
     """
     Run exploratory analysis on GitHub dataset.
 
