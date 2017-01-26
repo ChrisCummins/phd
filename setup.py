@@ -34,16 +34,16 @@ scripts = [
     'bin/clgen',
     'bin/clgen-atomize',
     'bin/clgen-create-db',
+    'bin/clgen-dump',
     'bin/clgen-explore',
     'bin/clgen-features',
-    'bin/clgen-fetch',
     'bin/clgen-fetch-clgen',
     'bin/clgen-fetch-clsmith',
     'bin/clgen-fetch-db',
     'bin/clgen-fetch-github',
-    'bin/clgen-preprocess',
+    'bin/clgen-fetch',
     'bin/clgen-merge',
-    'bin/clgen-train',
+    'bin/clgen-preprocess',
 ]
 
 # clgen driver requires opencl
