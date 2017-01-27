@@ -423,7 +423,7 @@ def load_json_file(path: str, must_exist: bool=True):
     except ValueError as e:
         raise InvalidFile(
             "malformed JSON file '{path}'. Message from parser: {err}"
-            .format(path=os.path.basename(path)), err=str(e))
+            .format(path=os.path.basename(path), err=str(e)))
     except File404 as e:
         if must_exist:
             raise e
