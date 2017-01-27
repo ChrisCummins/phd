@@ -408,7 +408,7 @@ class Model(clgen.CLgenObject):
             def weighted_pick(weights, temperature):
                 t = np.cumsum(weights)
                 s = np.sum(weights)
-                return int(np.searchsorted(t, np.random.rand(temperature) * s))
+                return int(np.searchsorted(t, np.random.rand(1) * s))
 
             start_depth = 0
             start_started = False
