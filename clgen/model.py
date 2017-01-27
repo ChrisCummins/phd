@@ -335,15 +335,15 @@ class Model(clgen.CLgenObject):
 
                         print(
                             "\r\033[K"
-                            "{progress:3.1f}%  {size}x{layers}x{max_epoch} "
-                            "{model}  "
-                            "epoch={epoch_num}/{max_epoch}  "
-                            "batch={batch_num}/{max_batch}  "
-                            "lr={lr:.6f}  "
-                            "loss={tloss:.3f}  "
-                            "time/atomize={time_atomize:.3f}s  "
-                            "time/batch={time_batch:.3f}s  "
-                            "time/checkpoint={time_checkpoint:.3f}s  "
+                            "{progress:3.1f}% | "
+                            "{size}x{layers}x{max_epoch} {model} | "
+                            "epoch={epoch_num}/{max_epoch} | "
+                            "batch={batch_num}/{max_batch} | "
+                            "lr={lr:.5f} | "
+                            "loss={tloss:.3f} | "
+                            "t1={time_atomize:.3f}s "
+                            "t2={time_batch:.3f}s "
+                            "t3={time_checkpoint:.3f}s | "
                             "eta={eta_d}d{eta_h}h{eta_m:02d}m".format(
                                 size=self.rnn_size,
                                 layers=self.num_layers,
