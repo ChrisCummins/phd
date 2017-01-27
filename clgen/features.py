@@ -20,17 +20,25 @@
 OpenCL feature extraction.
 """
 import csv
+import numpy as np
 import os
 import re
 import sys
 
 from collections import OrderedDict
-from io import open
+from io import open, StringIO
 from labm8 import fs
 from labm8 import math as labmath
 from subprocess import Popen, PIPE, STDOUT
 
+import clgen
+from clgen import log
 from clgen import native
+
+
+class FeatureExtractionError(clgen.CLgenError):
+    """ Thrown in case feature extraction fails """
+    pass
 
 
 def _shim_args(use_shim: bool=False) -> list:
@@ -52,6 +60,35 @@ def _is_good_features(line: str, stderr: str) -> bool:
         has_err = False if stderr.find(' error: ') == -1 else True
         return not has_err
     return False
+
+
+def to_np_arrays(paths: list, **kwargs):
+    """
+    Returns a list of numpy arrays for features in kernels in files.
+
+    Arguments:
+        path (str[]): List of file paths.
+        **kwargs (dict, optional): Arguments to features()
+
+    Raises:
+        FeatureExtractionError: In case feature extraction fails.
+    """
+    def _process_file(path: str, **kwargs):
+        buf = StringIO()
+        features(path=path, file=buf, **kwargs)
+        ret = buf.getvalue()
+        try:
+             # last line is empty:
+            lines = ret.split('\n')[:-1]
+            # first two cols are ignored (path and kernel names):
+            parse = lambda l: np.array([float(x) for x in l.split(',')[2:]])
+            return [parse(line) for line in lines]
+        except IndexError:
+            log.error("lines:", lines)
+            raise FeatureExtractionError
+
+    flatten = lambda l: [item for sublist in l for item in sublist]
+    return flatten([_process_file(path, **kwargs) for path in paths])
 
 
 def features(path: str, file=sys.stdout, fatal_errors: bool=False,
@@ -129,7 +166,7 @@ def files(paths: list, header: bool=True, file=sys.stdout, **kwargs) -> None:
         features(path, file=file, **kwargs)
 
 
-def summarize(csv_path: path) -> OrderedDict:
+def summarize(csv_path: str) -> OrderedDict:
     """
     Summarize a CSV file of feature values.
 

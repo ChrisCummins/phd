@@ -37,6 +37,7 @@ from clgen import cache
 from clgen import clutil
 from clgen import dbutil
 from clgen import explore
+from clgen import features
 from clgen import fetch
 from clgen import log
 from clgen import preprocess
@@ -54,6 +55,12 @@ DEFAULT_CORPUS_OPTS = {
     "encoding": "default",
     "preserve_order": False,
 }
+
+class FeaturesError(clgen.CLgenError):
+    """
+    Thrown in case of error during features encoding.
+    """
+    pass
 
 
 def unpack_directory_if_needed(path: str) -> str:
@@ -107,25 +114,6 @@ def get_atomizer(corpus: str, vocab: str="char") -> list:
         return atomizerclass.from_text(corpus)
 
 
-def features_from_file(path: str) -> np.array:
-    """
-    Fetch features from file.
-
-    Arguments:
-        path (str): Path to file.
-
-    Returns:
-        np.array: Feature values.
-    """
-    # hacky call to clgen-features and parse output
-    cmd = ['clgen-features', path]
-    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
-    cout, _ = proc.communicate()
-    features = [float(x) for x in
-                cout.decode('utf-8').split('\n')[1].split(',')[2:]]
-    return np.array(features)
-
-
 def get_features(code: str) -> np.array:
     """
     Get features for code.
@@ -139,8 +127,11 @@ def get_features(code: str) -> np.array:
     with NamedTemporaryFile() as outfile:
         outfile.write(code.encode("utf-8"))
         outfile.seek(0)
-        features = features_from_file(outfile.name)
-    return features
+        f = features.to_np_arrays([outfile.name])
+    if len(f) != 1:
+        log.error("features:", f)
+        raise FeaturesError("code contains more than one kernel")
+    return f[0]
 
 
 def encode(kernels_db: str, encoding: str) -> None:
@@ -165,8 +156,8 @@ def encode(kernels_db: str, encoding: str) -> None:
             for i, kernel in enumerate(clutil.get_cl_kernels(contents)):
                 features = get_features(kernel)
                 kid = "{}-{}".format(id, i)
-                log.verbose("features", kid)
                 if len(features) == 8:
+                    log.verbose("features", kid)
                     feature_str = ("/* {:10} {:10} {:10} {:10} {:10} {:10}"
                                    "{:10.3f} {:10.3f} */".format(
                                        int(features[0]),
@@ -182,6 +173,8 @@ def encode(kernels_db: str, encoding: str) -> None:
                         INSERT INTO PreprocessedFiles (id,contents,status)
                         VALUES (?,?,?)
                     """, (kid, newsource, 0))
+                else:
+                    log.verbose("ignored", kid)
         c.close()
         db.commit()
 
