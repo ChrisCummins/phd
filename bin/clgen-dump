@@ -19,8 +19,8 @@
 #
 import clgen
 
-from clgen import model
 from clgen import cli
+from clgen import model
 from clgen.train import train
 
 
@@ -34,7 +34,7 @@ for training CLgen models on.
 
 def main():
     parser = cli.ArgumentParser(description=__description__)
-    parser.add_argument('model', help='path to model descriptor')
+    parser.add_argument('input', help='path to model descriptor')
     parser.add_argument('output', help='path to output file or directory')
     parser.add_argument('-d', action='store_true', default=False,
                         help='output to directory (overrides -i, --eof, -r)')
@@ -51,8 +51,7 @@ def main():
                         help='status code to use')
     args = parser.parse_args()
 
-    m = model.from_json(clgen.load_json_file(args.model))
-    db_path = args.model
+    db_path = args.input
     out_path = args.output
     opts = {
         "dir": args.d,
