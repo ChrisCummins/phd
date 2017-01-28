@@ -28,7 +28,7 @@ Split photo collections into chunks for backup.\
     if args.unpack:
         unchunk(args.directory)
     else:
-        mkchunks(args.directory, args.size * 1024 ** 2, prefix=args.prefix,
+        mkchunks(args.directory, args.size * 1000 ** 2, prefix=args.prefix,
                  shuffle=not args.in_order, seed=args.seed, compress=args.gzip)
 
 

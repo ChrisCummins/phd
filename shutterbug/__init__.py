@@ -71,7 +71,7 @@ line in the manifest file:
 """.format(**vars()), file=outfile)
         print("Wrote", readmepath)
 
-        chunksize_mb = chunksize / 1024 ** 2
+        chunksize_mb = chunksize / 1000 ** 2
         nfiles = len(chunk)
         chunksize_perc = (chunksize / maxsize) * 100
         print('{chunk_path} has {nfiles} files, size {chunksize_mb:.2f} MB '
@@ -105,7 +105,7 @@ line in the manifest file:
         checksum, outpath = get_outpath(chunk_path, path)
 
         copyfile(path, outpath)
-        print(outpath, '{:.2f}MB'.format(size / 1024 ** 2))
+        print(outpath, '{:.2f}MB'.format(size / 1000 ** 2))
         return os.path.basename(outpath), checksum
 
     def gz(path, size, chunk_path):
@@ -119,8 +119,8 @@ line in the manifest file:
         if outsize <= size:
             # see if compressed file size is smaller than starting size
             print(outpath,
-                  '{:.2f}MB -> {:.2f}MB'.format(size / 1024 ** 2,
-                                               outsize / 1024 ** 2))
+                  '{:.2f}MB -> {:.2f}MB'.format(size / 1000 ** 2,
+                                               outsize / 1000 ** 2))
             return os.path.basename(outpath), checksum
         else:
             # if not, replace it with the original file
@@ -202,7 +202,7 @@ def mkchunks(directories, chunksize, **kwargs):
 
     chunks = chunk_files(files, '.', chunksize, **kwargs)
 
-    chunksizes_mb = [chunk[1] / 1024 ** 2 for chunk in chunks]
+    chunksizes_mb = [chunk[1] / 1000 ** 2 for chunk in chunks]
     totalsize_mb = sum(chunksizes_mb)
     avgchunksize_mb = totalsize_mb / len(chunks)
     minchunksize_mb, maxchunksize_mb = min(chunksizes_mb), max(chunksizes_mb)
