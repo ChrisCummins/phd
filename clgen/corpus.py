@@ -212,10 +212,10 @@ class Corpus(clgen.CLgenObject):
             """ tidy up in case of error """
             log.error("corpus creation failed. Deleting corpus files")
             paths = [
-                fs.path(self.cache.path, "kernels.db"),
-                fs.path(self.cache.path, "corpus.txt"),
-                fs.path(self.cache.path, "tensor.npy"),
-                fs.path(self.cache.path, "atomizer.pkl")
+                fs.path(self.contentcache.path, "kernels.db"),
+                fs.path(self.contentcache.path, "corpus.txt"),
+                fs.path(self.contentcache.path, "tensor.npy"),
+                fs.path(self.contentcache.path, "atomizer.pkl")
             ]
             for path in paths:
                 if fs.exists(path):
@@ -232,8 +232,11 @@ class Corpus(clgen.CLgenObject):
 
         self.opts = deepcopy(DEFAULT_CORPUS_OPTS)
         clgen.update(self.opts, opts)
+        self.contentid = contentid
         self.hash = self._hash(contentid, self.opts)
         self.cache = Cache(fs.path("corpus", self.hash))
+        self.contentcache = Cache(fs.path("contentfiles", contentid))
+        self.kernels_db = self.contentcache['kernels.db']
 
         log.debug("corpus {hash}".format(hash=self.hash))
 
@@ -243,9 +246,9 @@ class Corpus(clgen.CLgenObject):
                     raise clgen.UserError(
                         "Corpus path '{}' is not a directory".format(path))
                 # create kernels database if necessary
-                if not self.cache["kernels.db"]:
+                if not self.contentcache["kernels.db"]:
                     self._create_kernels_db(path, self.opts["encoding"])
-                    assert(self.cache["kernels.db"])
+                    assert(self.contentcache["kernels.db"])
 
             # create corpus text if not exists
             if not self.cache["corpus.txt"]:
@@ -270,25 +273,25 @@ class Corpus(clgen.CLgenObject):
         log.debug("creating database")
 
         # create a database and put it in the cache
-        tmppath = fs.path(self.cache.path, "kernels.db.tmp")
+        tmppath = fs.path(self.contentcache.path, "kernels.db.tmp")
         dbutil.create_db(tmppath)
-        self.cache["kernels.db"] = tmppath
+        self.contentcache["kernels.db"] = tmppath
 
         # get a list of files in the corpus
         filelist = [f for f in fs.ls(path, abspaths=True, recursive=True)
                     if fs.isfile(f)]
 
         # import files into database
-        fetch.fetch_fs(self.cache["kernels.db"], filelist)
+        fetch.fetch_fs(self.contentcache["kernels.db"], filelist)
 
         # preprocess files
-        preprocess.preprocess_db(self.cache["kernels.db"])
+        preprocess.preprocess_db(self.contentcache["kernels.db"])
 
         # encode kernel db
-        encode(self.cache["kernels.db"], encoding)
+        encode(self.contentcache["kernels.db"], encoding)
 
         # print database stats
-        explore.explore(self.cache["kernels.db"])
+        explore.explore(self.contentcache["kernels.db"])
 
     def _create_txt(self) -> None:
         """creates and caches corpus.txt"""
@@ -297,7 +300,7 @@ class Corpus(clgen.CLgenObject):
         # TODO: additional options in corpus JSON to accomodate for EOF,
         # different encodings etc.
         tmppath = fs.path(self.cache.path, "corpus.txt.tmp")
-        train(self.cache["kernels.db"], tmppath)
+        train(self.contentcache["kernels.db"], tmppath)
         self.cache["corpus.txt"] = tmppath
 
     def _read_txt(self) -> str:
@@ -332,7 +335,7 @@ class Corpus(clgen.CLgenObject):
 
     def _generate_kernel_corpus(self) -> str:
         """ dump all kernels into a string in a random order """
-        db = dbutil.connect(self.cache["kernels.db"])
+        db = dbutil.connect(self.contentcache["kernels.db"])
         c = db.cursor()
 
         # if preservering order, order by line count. Else, order randomly
@@ -447,7 +450,7 @@ class Corpus(clgen.CLgenObject):
         self._pointer = pointer
 
     def __repr__(self) -> str:
-        n = dbutil.num_good_kernels(self.cache['kernels.db'])
+        n = dbutil.num_good_kernels(self.contentcache['kernels.db'])
         return "corpus of {n} files".format(n=n)
 
     @staticmethod
@@ -491,7 +494,7 @@ def preprocessed_kernels(corpus: Corpus) -> list:
         sequence of str: Kernel sources.
     """
     assert(isinstance(corpus, Corpus))
-    db = dbutil.connect(corpus.cache["kernels.db"])
+    db = dbutil.connect(corpus.contentcache["kernels.db"])
     c = db.cursor()
     query = c.execute("SELECT Contents FROM PreprocessedFiles WHERE status=0")
     for row in query.fetchall():
