@@ -103,6 +103,8 @@ def features(path: str, file=sys.stdout, fatal_errors: bool=False,
         use_shim (bool, optional): Inject shim header.
         quiet (bool, optional): Don't print compiler output on errors.
     """
+    path = clgen.must_exist(path)
+
     cmd = [native.CLGEN_FEATURES, path] + [
         '-extra-arg=' + x for x in _shim_args(use_shim=use_shim)]
 
