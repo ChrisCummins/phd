@@ -310,11 +310,6 @@ unsetopt nullglob
 # Don't kill forked jobs on shell exit.
 alias exit='disown &>/dev/null; exit'
 
-# Don't foobar '/'. See chgrph(1) for --preserver-root details.
-alias chgrp='chgrp --preserve-root'
-alias chmod='chmod --preserve-root'
-alias chown='chown --preserve-root'
-
 alias off='sudo shutdown -h now'
 
 # Enable pretty colors.
