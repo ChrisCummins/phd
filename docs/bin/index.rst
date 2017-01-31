@@ -52,7 +52,7 @@ clgen
 
 ::
 
-    usage: clgen [-h] [--version] [-v] [--corpus-dir] [--model-dir]
+    usage: clgen [-h] [--version] [-v] [--list-files] [--corpus-dir] [--model-dir]
                  [--sampler-dir]
                  <model> <sampler>
     
@@ -80,6 +80,7 @@ clgen
       -h, --help     show this help message and exit
       --version      show version information and exit
       -v, --verbose  increase output verbosity
+      --list-files   print cached corpus, model, and sampler, files
       --corpus-dir   print path to corpus cache
       --model-dir    print path to model cache
       --sampler-dir  print path to sampler cache
@@ -127,32 +128,38 @@ clgen-create-db
       -v, --verbose  increase output verbosity
       -g, --github   generate dataset with GitHub metadata
 
-clgen-dist
+clgen-dump
 -----------
 
 ::
 
-    usage: clgen-dist [-h] [--version] [-v] [--author AUTHOR] <model> <distname>
+    usage: clgen-dump [-h] [--version] [-v] [-d] [-i] [--input-samples] [--eof]
+                      [-r] [-s STATUS]
+                      input output
     
-    Package CLgen models for distribution.
+    Create training datasets.
     
-    Once a CLgen model has been trained, it can be distribute to other devices
-    for sampling. This program provides the mechanism for doing so. So called
-    "dist files" contain trained Neural Network models and metadata describing
-    the method by which they were trained.
+    Provides a front-end for utilities for turning kernel databases into corpuses
+    for training CLgen models on.
     
     Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
     positional arguments:
-      <model>          path to model specification file
-      <distname>       name of dist file
+      input                 path to model descriptor
+      output                path to output file or directory
     
     optional arguments:
-      -h, --help       show this help message and exit
-      --version        show version information and exit
-      -v, --verbose    increase output verbosity
-      --author AUTHOR  Name of author (default: $USER@$HOSTNAME)
+      -h, --help            show this help message and exit
+      --version             show version information and exit
+      -v, --verbose         increase output verbosity
+      -d                    output to directory (overrides -i, --eof, -r)
+      -i                    include file separators
+      --input-samples       use input contents, not preprocessed
+      --eof                 print end of file
+      -r                    use reverse order
+      -s STATUS, --status STATUS
+                            status code to use
 
 clgen-explore
 --------------
@@ -403,37 +410,4 @@ clgen-preprocess
                             but keep the entries in the table
       --remove-preprocessed
                             remove all preprocessed files from database
-
-clgen-train
-------------
-
-::
-
-    usage: clgen-train [-h] [--version] [-v] [-d] [-i] [--input-samples] [--eof]
-                       [-r] [-s STATUS]
-                       input output
-    
-    Create training datasets.
-    
-    Provides a front-end for utilities for turning kernel databases into corpuses
-    for training CLgen models on.
-    
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
-    <http://chriscummins.cc/clgen>
-    
-    positional arguments:
-      input                 path to SQL input dataset
-      output                path to output file or directory
-    
-    optional arguments:
-      -h, --help            show this help message and exit
-      --version             show version information and exit
-      -v, --verbose         increase output verbosity
-      -d                    output to directory (overrides -i, --eof, -r)
-      -i                    include file separators
-      --input-samples       use input contents, not preprocessed
-      --eof                 print end of file
-      -r                    use reverse order
-      -s STATUS, --status STATUS
-                            status code to use
 
