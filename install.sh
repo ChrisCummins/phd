@@ -197,8 +197,8 @@ install_macos() {
     fi
 
     if [[ "$(uname)" == "Darwin" ]] && [[ -d "$private/macos" ]]; then
-        brew list > "$private/macos/brew-$HOST.txt"
-        brew cask list > "$private/macos/brew-$HOST-casks.txt"
+        brew list > "$private/macos/brew-$(hostname).txt"
+        brew cask list > "$private/macos/brew-$(hostname)-casks.txt"
     fi
 }
 
