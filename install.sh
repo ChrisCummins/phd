@@ -195,6 +195,11 @@ install_macos() {
         symlink_dir "$private/Library/Fonts" ~/Library/Fonts
         symlink_dir "$private/Library/Spelling" ~/Library/Spelling
     fi
+
+    if [[ "$(uname)" == "Darwin" ]] && [[ -d "$private/macos" ]]; then
+        brew list > "$private/macos/brew-$HOST.txt"
+        brew cask list > "$private/macos/brew-$HOST-casks.txt"
+    fi
 }
 
 
