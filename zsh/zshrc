@@ -269,22 +269,15 @@ export LD_LIBRARY_PATH=$(build_path "${ld_library_path_dirs[@]}")
 path_dirs=( \
     ~/bin \
     ~/.local/bin \
-    ~/.cabal/bin \
     ~/.rvm/bin \
-    ~/android-sdks/platform-tools \
     ~/.gem/*/*/bin \
     ~/.gem/*/ruby/*/bin \
-    ~/src/torch/install/bin/ \
-    /Applications/Emacs.app/Contents/MacOS/bin \
     /Library/TeX/Distributions/.DefaultTeX/Contents/Programs/texbin \
-    $(brew --prefix coreutils 2>/dev/null)/libexec/gnubin \
-    /usr/local/Cellar/coreutils/8.24/libexec/gnubin/ \
-    /usr/lib/ccache \
-    /usr/lib/postgresql/*/bin \
-    /usr/lib/jvm/java-1.7.0-openjdk-amd64/bin \
+    /usr/local/opt/coreutils/libexec/gnubin \
+    /usr/local/opt/gnu-sed/libexec/gnubin/ \
+    /usr/local/opt/gnu-tar/libexec/gnubin/ \
     /usr/local/bin \
     /usr/contrib/bin \
-    /opt/Xilinx/14.7/ISE_DS/ISE/bin/lin64 \
     /opt/bin \
     /opt/local/bin/ \
     /opt/local/sbin/ \
@@ -292,14 +285,20 @@ path_dirs=( \
     /usr/bin \
     /usr/bin/core_perl \
     /usr/bin/vendor_perl \
-    /usr/games \
     /usr/local/mysql/bin \
-    /usr/local/games \
     /usr/sbin/ \
     /usr/texbin \
     /sbin \
 )
 export PATH=$(build_path "${path_dirs[@]}")
+
+manpath_dirs=( \
+    /Library/TeX/Distributions/.DefaultTeX/Contents/Man/ \
+    /usr/local/opt/coreutils/libexec/gnuman \
+    /usr/local/opt/gnu-sed/libexec/gnuman \
+    /usr/local/opt/gnu-tar/libexec/gnuman \
+)
+export MANPATH=$(build_path "${manpath_dirs[@]}")
 
 unsetopt nullglob
 
