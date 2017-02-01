@@ -114,6 +114,7 @@ install_ssh() {
 
 
 install_dropbox() {
+    mkdir -p ~/.local/bin
     symlink ~/.dotfiles/dropbox/dropbox.py ~/.local/bin/dropbox
 }
 
