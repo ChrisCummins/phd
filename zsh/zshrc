@@ -256,13 +256,9 @@ pkg_config_path_dirs=( \
 export PKG_CONFIG_PATH=$(build_path "${pkg_config_path_dirs[@]}")
 
 ld_library_path_dirs=( \
-    ~/phd/tools/llvm/build/lib/ \
-    /opt/intel/opencl-sdk/lib64 \
-    /opt/intel/intel-opencl-1.2-6.2.0.1760/opencl-sdk/lib64 \
     /usr/lib \
     /usr/lib32 \
     /usr/local/lib \
-    ~/src/torch/install/lib \
 )
 export LD_LIBRARY_PATH=$(build_path "${ld_library_path_dirs[@]}")
 
