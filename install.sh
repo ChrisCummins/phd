@@ -192,11 +192,6 @@ install_macos() {
     mkdir -p ~/.local/bin
     symlink "$HOME/.dotfiles/macos/rm-dsstore" ~/.local/bin/rm-dsstore
 
-    if [[ -d "$private/Library" ]] && [[ -d ~/Library ]]; then
-        symlink_dir "$private/Library/Fonts" ~/Library/Fonts
-        symlink_dir "$private/Library/Spelling" ~/Library/Spelling
-    fi
-
     if [[ "$(uname)" == "Darwin" ]] && [[ -d "$private/macos" ]]; then
         brew list > "$private/macos/brew-$(hostname).txt"
         brew cask list > "$private/macos/brew-$(hostname)-casks.txt"
