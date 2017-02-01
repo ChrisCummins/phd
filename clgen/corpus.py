@@ -213,9 +213,9 @@ class Corpus(clgen.CLgenObject):
             log.error("corpus creation failed. Deleting corpus files")
             paths = [
                 fs.path(self.contentcache.path, "kernels.db"),
-                fs.path(self.contentcache.path, "corpus.txt"),
-                fs.path(self.contentcache.path, "tensor.npy"),
-                fs.path(self.contentcache.path, "atomizer.pkl")
+                fs.path(self.cache.path, "corpus.txt"),
+                fs.path(self.cache.path, "tensor.npy"),
+                fs.path(self.cache.path, "atomizer.pkl")
             ]
             for path in paths:
                 if fs.exists(path):
