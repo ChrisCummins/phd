@@ -46,7 +46,8 @@ def chunk_files(paths, outdir, maxsize, prefix="chunk", shuffle=True,
     def chunk_meta(chunk_path, chunk, chunksize, maxsize):
         manifestpath = os.path.join(chunk_path, 'MANIFEST.txt')
         with open(manifestpath, 'w') as outfile:
-            for outpath, path, size, checksum in chunk:
+            for outpath, path, size, checksum in sorted(chunk,
+                                                        key=lambda x: x[0]):
                 print(outpath, checksum, size, path, file=outfile, sep='\t')
         print("Wrote", manifestpath)
 
