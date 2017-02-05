@@ -672,40 +672,48 @@ def preprocess_contentfiles(db_path: str, max_num_workers: int=cpu_count(),
 
     num_contentfiles = dbutil.num_rows_in(db_path, 'ContentFiles')
     num_preprocessedfiles = dbutil.num_rows_in(db_path, 'PreprocessedFiles')
+    log.info("{n} ({r:.1%}) files need preprocessing".format(
+        n=num_contentfiles - num_preprocessedfiles,
+        r=(num_contentfiles - num_preprocessedfiles) / num_contentfiles))
 
-    num_workers = min(num_contentfiles, max_num_workers)
-    files_per_worker = math.ceil(num_contentfiles / num_workers)
+    # split into mulitple jobs of a maximum size
+    jobsize = min(512, num_contentfiles)
+    numjobs = math.ceil(num_contentfiles / jobsize)
+    for j, offset in enumerate(range(0, num_contentfiles, jobsize)):
+        num_preprocessedfiles = dbutil.num_rows_in(db_path, 'PreprocessedFiles')
+        num_workers = min(num_contentfiles, max_num_workers)
+        files_per_worker = math.ceil(jobsize / num_workers)
 
-    # temporary cache used for worker thread results
-    cache = Cache("{pid}.preprocess".format(pid=os.getpid()))
-    # each worker thread receives a range of database indices to preprocess,
-    # and a JSON file to write results into
-    jobs = [{
-        "db_in": db_path,
-        "db_index_range": (i * files_per_worker,
-                           i * files_per_worker + files_per_worker),
-        "json_out": fs.path(cache.path, "{i}.json".format(i=i))
-    } for i in range(num_workers)]
+        # temporary cache used for worker thread results
+        cache = Cache("{pid}.preprocess".format(pid=os.getpid()))
+        # each worker thread receives a range of database indices to preprocess,
+        # and a JSON file to write results into
+        jobs = [{
+            "db_in": db_path,
+            "db_index_range": (offset + i * files_per_worker,
+                               offset + i * files_per_worker + files_per_worker),
+            "json_out": fs.path(cache.path, "{i}.json".format(i=i))
+        } for i in range(num_workers)]
 
-    # spool up worker threads then finalize
-    try:
-        log.info('spawning', num_workers, 'worker threads to process',
-                 num_contentfiles - num_preprocessedfiles, 'files ...')
-        with clgen.terminating(Pool(num_workers)) as pool:
-            pool.map(_preprocess_db_worker, jobs)
-    except OSError as e:
+        # spool up worker threads then finalize
+        log.info('job {j} of {numjobs}: spawning {num_workers} worker threads '
+                 'to process {jobsize} files ...'.format(**vars()))
+        try:
+            with clgen.terminating(Pool(num_workers)) as pool:
+                pool.map(_preprocess_db_worker, jobs)
+        except OSError as e:
+            _finalize(db_path, cache)
+            log.error(e)
+
+            # Try again with fewer threads.
+            # See: https://github.com/ChrisCummins/clgen/issues/64
+            max_num_workers = max(int(max_num_workers / 2), 1)
+            preprocess_contentfiles(db_path, max_num_workers=max_num_workers,
+                                    attempt=attempt + 1)
+        except Exception as e:
+            _finalize(db_path, cache)
+            raise e
         _finalize(db_path, cache)
-        log.error(e)
-
-        # Try again with fewer threads.
-        # See: https://github.com/ChrisCummins/clgen/issues/64
-        max_num_workers = max(int(max_num_workers / 2), 1)
-        preprocess_contentfiles(db_path, max_num_workers=max_num_workers,
-                                attempt=attempt + 1)
-    except Exception as e:
-        _finalize(db_path, cache)
-        raise e
-    _finalize(db_path, cache)
 
 
 def preprocess_file(path: str, inplace: bool=False) -> None:
