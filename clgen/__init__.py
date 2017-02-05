@@ -449,6 +449,34 @@ def write_file(path: str, contents: str) -> None:
         outfile.write(contents)
 
 
+def files_from_list(paths: list) -> list:
+    """
+    Return a list of all file paths from a list of files or directories.
+
+    For each path in the input: if it is a file, return it; if it is a
+    directory, return a list of files in the directory.
+
+    Arguments:
+        paths (list of str): List of file and directory paths.
+
+    Returns:
+        list of str: Absolute file paths.
+
+    Raises:
+        File404: If any of the paths do not exist.
+    """
+    ret = []
+    for path in paths:
+        if fs.isfile(path):
+            ret.append(fs.abspath(path))
+        elif fs.isdir(path):
+            ret += [f for f in fs.ls(path, abspaths=True, recursive=True)
+                    if fs.isfile(f)]
+        else:
+            raise File404(path)
+    return ret
+
+
 def platform_info(printfn=print) -> None:
     """
     Log platform information.

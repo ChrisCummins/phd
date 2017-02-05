@@ -447,6 +447,9 @@ def process_cl_file(db_path: str, path: str) -> None:
     Arguments:
         db_path (str): Path to output database.
         path (str): Path to input file.
+
+    Raises:
+        FetchError: In case of IO error.
     """
     db = dbutil.connect(db_path)
     c = db.cursor()
@@ -498,10 +501,26 @@ def fetch_fs(db_path: str, paths: list=[]) -> None:
 
     Arguments:
         db_path (str): Output dataset.
-        paths (str[]): List of paths.
+        paths (str[]): List of file paths.
     """
+    paths = clgen.files_from_list(paths)  # expand directories
+
+    db = dbutil.connect(db_path)
+    c = db.cursor()
+
     for path in paths:
-        process_cl_file(db_path, path)
+        log.debug("fetch", path)
+        try:
+            contents = inline_fs_headers(path, [])
+        except IOError:
+            db.commit()
+            raise FetchError(
+                "cannot read file '{path}'".format(path=fs.abspath(path)))
+        c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
+                  (path, contents))
+
+    db.commit()
+
 
 
 # Counters
