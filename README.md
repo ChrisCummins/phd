@@ -50,9 +50,9 @@ $ clgen model.json sampler.json
 
 ## Resources
 
-Introductory & background slides:
+Presentation slides:
 
-<a href="https://speakerdeck.com/chriscummins/machine-learning-and-compilers">
+<a href="https://speakerdeck.com/chriscummins/synthesizing-benchmarks-for-predictive-modelling-cgo-17">
   <img src="https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/slides.png" width="500">
 </a>
 
