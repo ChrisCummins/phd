@@ -119,6 +119,50 @@ def connect(db_path: str):
     return db
 
 
+def set_version_meta(path: str, version: str=clgen.version()) -> None:
+    """
+    Set the "version" key in an database.
+
+    This is useful for marking version requirements of specific datasets, e.g.
+    a databse schema which requires a particular CLgen version, or a scheme
+    which is likely to change in the future.
+
+    Arguments:
+        path (str): Path to database.
+        version (str, optional): Version value (defaults to CLgen version).
+    """
+    db = sqlite3.connect(path)
+    c = db.cursor()
+    c.execute("INSERT INTO Meta (key, value) VALUES (?,?)",
+              ("version", version))
+    c.close()
+    db.commit()
+
+
+def version_meta_matches(path: str, version: str=clgen.version()) -> bool:
+    """
+    Check that the "version" key in a database matches the expected value.
+
+    If the database does not have a "version" key in the Meta table, returns
+    False.
+
+    Arguments:
+        path (str): Path to database.
+        version (str, optional): Version value (defaults to CLgen version).
+
+    Returns:
+        bool: True if version in database matches expected version, else False.
+    """
+    db = sqlite3.connect(path)
+    c = db.cursor()
+    c.execute("SELECT value FROM Meta WHERE key=?", ("version",))
+    v = c.fetchone()
+    if v:
+        return v[0] == version
+    else:  # no "version" key
+        return False
+
+
 def is_modified(db) -> bool:
     """
     Returns whether database is preprocessed.
