@@ -128,11 +128,21 @@ Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
 
     def _user_message_with_stacktrace(exception):
         # get limited stack trace
+        def _msg(i, x):
+            n = i + 1
+
+            filename = fs.basename(x[0])
+            lineno = x[1]
+            fnname = x[2]
+
+            loc = "{filename}:{lineno}".format(**vars())
+            return "      #{n}  {loc: <18} {fnname}()".format(**vars())
+
         _, _, tb = sys.exc_info()
-        trace = "\n".join(
-            "       {file}:{ln}:{fn}".format(
-                file=fs.basename(x[0]), ln=x[1], fn=x[2])
-            for x in traceback.extract_tb(tb, limit=5)[1:])
+        NUM_ROWS = 5  # number of rows in traceback
+
+        trace = reversed(traceback.extract_tb(tb, limit=NUM_ROWS+1)[1:])
+        message = "\n".join(_msg(*r) for r in enumerate(trace))
 
         log.fatal("""\
 {err} ({type})
@@ -141,7 +151,7 @@ Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
 {stack_trace}
 
 Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
-""".format(err=e, type=type(e).__name__, stack_trace=trace))
+""".format(err=e, type=type(e).__name__, stack_trace=message))
 
     # if DEBUG var set, don't catch exceptions
     if os.environ.get("DEBUG", None):
