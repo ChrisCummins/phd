@@ -134,7 +134,7 @@ def run_files(dataset, files, devtype="gpu", validation_size=1024,
             e = "ok (no outputs)"
         except cldrive.E_INPUT_INSENSITIVE:
             status = Status.INPUT_INSENSITIVE
-            e = "E_INPUT_INSENSITIVE"
+            e = "ok (input insensitive)"
         except cldrive.E_NONDETERMINISTIC:
             status = Status.NONDETERMINISTIC
             e = "E_NONDETERMINISTIC"
