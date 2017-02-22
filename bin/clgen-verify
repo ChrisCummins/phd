@@ -27,6 +27,7 @@ from labm8 import fs
 
 import json
 import pyopencl as cl
+import sys
 
 __description__ = """
 Run a collection of CLgen programs and store their output.
@@ -76,6 +77,7 @@ def run_files(dataset, files, devtype="gpu", validation_size=1024,
         e = "ok"
 
         print("{basename: <50}".format(basename=basename), end=" ")
+        sys.stdout.flush()
 
         try:
             # validate kernels:
