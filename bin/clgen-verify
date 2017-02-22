@@ -42,6 +42,8 @@ class Status:
     NONDETERMINISTIC = 2
     INPUT_INSENSITIVE = 3
     BAD_DRIVER = 4
+    BAD_CODE = 5
+
 
 def create_db(path):
     """
@@ -54,6 +56,22 @@ def create_db(path):
     dbutil.set_version_meta(path)
 
 
+def add_db_data(path, id, status, data):
+    db = dbutil.connect(path)
+    c = db.cursor()
+    c.execute("INSERT INTO Data VALUES (?,?,?)", (id, status, data))
+    c.close()
+    db.commit()
+    db.close()
+
+
+def db_data_exists(path, id):
+    db = dbutil.connect(path)
+    c = db.cursor()
+    c.execute("SELECT id FROM Data WHERE id=?", (id,))
+    return c.fetchone() or None
+
+
 def run_files(dataset, files, devtype="gpu", validation_size=1024,
               test_size=512):
     ctx, queue = cldrive.init_opencl(devtype=devtype)
@@ -62,37 +80,33 @@ def run_files(dataset, files, devtype="gpu", validation_size=1024,
         basename = fs.basename(path)
 
         # check if we already have a result
-        db = dbutil.connect(dataset)
-        c = db.cursor()
-        c.execute("SELECT status FROM Data WHERE id=?", (basename,))
-        cached = c.fetchone()
-        if cached:
+        if db_data_exists(dataset, basename):
             log.verbose("skip", path)
             continue
 
-        with open(path) as infile:
-            src = infile.read()
-        driver = cldrive.KernelDriver(ctx, src)
+        print("{basename: <50}".format(basename=basename), end=" ")
+        sys.stdout.flush()
+
+        try:
+            with open(path) as infile:
+                src = infile.read()
+            driver = cldrive.KernelDriver(ctx, src)
+        except Exception:
+            print("E_BAD_CODE")
+            add_db_data(dataset, basename, Status.BAD_CODE, "")
+            continue
 
         # default values
         status = Status.GOOD
         result = None
         e = "ok"
 
-        print("{basename: <50}".format(basename=basename), end=" ")
-        sys.stdout.flush()
-
         try:
             # validate kernels:
             driver.validate(queue, validation_size)
-            # create a dataset to test with:
-            P = cldrive.KernelPayload.create_sequential(driver, test_size)
-            # run driver to compute result:
-            data = driver(queue, P).json(roundval=5)
-            result = json.dumps(data, separators=(',', ':'))
         except cldrive.E_NO_OUTPUTS:
             status = Status.NO_OUTPUTS
-            e = "E_NO_OUTPUTS"
+            e = "ok (no outputs)"
         except cldrive.E_NONDETERMINISTIC:
             status = Status.NONDETERMINISTIC
             e = "E_NONDETERMINISTIC"
@@ -103,14 +117,15 @@ def run_files(dataset, files, devtype="gpu", validation_size=1024,
             status = Status.BAD_DRIVER
             e = "E_BAD_DRIVER"
 
-        print(e)
+        if status == Status.GOOD or status == Status.NO_OUTPUTS:
+            # create a dataset to test with:
+            P = cldrive.KernelPayload.create_sequential(driver, test_size)
+            # run driver to compute result:
+            data = driver(queue, P).json(roundval=5)
+            result = json.dumps(data, separators=(',', ':'))
 
-        db = dbutil.connect(dataset)
-        c = db.cursor()
-        c.execute("INSERT INTO Data VALUES (?,?,?)", (basename, status, result))
-        c.close()
-        db.commit()
-        db.close()
+        print(e)
+        add_db_data(dataset, basename, status, result)
 
 
 def do_verify(dataset, inputdir, use_cpu=False):
