@@ -119,6 +119,47 @@ def connect(db_path: str):
     return db
 
 
+def set_meta(path: str, key: str, value: str) -> None:
+    """
+    Set a value in a database's Meta table.
+
+    If the a row with this key already exists in the table, it is replaced.
+
+    Arguments:
+        path (str): Path to database.
+        key (str): Key name.
+        value (str): Value to insert.
+    """
+    db = sqlite3.connect(path)
+    c = db.cursor()
+    c.execute("DELETE FROM Meta WHERE key=?", (key,))
+    c.execute("INSERT INTO Meta (key, value) VALUES (?,?)",
+              (key, value))
+    c.close()
+    db.commit()
+
+
+def get_meta(path: str, key: str) -> str:
+    """
+    Retrieve a value from a database's Meta table.
+
+    Arguments:
+        path (str): Path to database.
+        key (str): Key name.
+
+    Returns:
+        str: Value. If no row matching key is found, returns empty string.
+    """
+    db = sqlite3.connect(path)
+    c = db.cursor()
+    c.execute("SELECT value FROM Meta WHERE key=?", (key,))
+    v = c.fetchone()
+    if v:
+        return v[0]
+    else:
+        return ""
+
+
 def set_version_meta(path: str, version: str=clgen.version()) -> None:
     """
     Set the "version" key in an database.
@@ -131,12 +172,7 @@ def set_version_meta(path: str, version: str=clgen.version()) -> None:
         path (str): Path to database.
         version (str, optional): Version value (defaults to CLgen version).
     """
-    db = sqlite3.connect(path)
-    c = db.cursor()
-    c.execute("INSERT INTO Meta (key, value) VALUES (?,?)",
-              ("version", version))
-    c.close()
-    db.commit()
+    set_meta(path, "version", version)
 
 
 def version_meta_matches(path: str, version: str=clgen.version()) -> bool:
@@ -153,14 +189,23 @@ def version_meta_matches(path: str, version: str=clgen.version()) -> bool:
     Returns:
         bool: True if version in database matches expected version, else False.
     """
+    return get_meta(path, "version") == version
+
+
+def run_script(path: str, script: str) -> None:
+    """
+    Run an SQL script on a databse.
+
+    Arguments:
+        path (str): Path to database.
+        script (str): Name of SQL data script.
+    """
     db = sqlite3.connect(path)
     c = db.cursor()
-    c.execute("SELECT value FROM Meta WHERE key=?", ("version",))
-    v = c.fetchone()
-    if v:
-        return v[0] == version
-    else:  # no "version" key
-        return False
+    c.executescript(clgen.sql_script(script))
+    c.close()
+    db.commit()
+    db.close()
 
 
 def is_modified(db) -> bool:
