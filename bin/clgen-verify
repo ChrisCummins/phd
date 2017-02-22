@@ -102,7 +102,7 @@ def run_files(dataset, files, devtype="gpu", validation_size=1024,
 
         db = dbutil.connect(dataset)
         c = db.cursor()
-        c.execute("INSERT INTO Data VALUES (?,?,?)", (path, status, result))
+        c.execute("INSERT INTO Data VALUES (?,?,?)", (basename, status, result))
         c.close()
         db.commit()
         db.close()
