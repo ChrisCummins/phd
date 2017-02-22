@@ -29,6 +29,9 @@ import json
 import pyopencl as cl
 import sys
 
+from random import shuffle
+
+
 __description__ = """
 Run a collection of CLgen programs and store their output.
 """
@@ -131,6 +134,8 @@ def do_verify(dataset, inputdir, use_cpu=False):
     devtype = cl.device_type.CPU if use_cpu else cl.device_type.GPU
     devtype_name = "cpu" if use_cpu else "gpu"
     log.verbose("using device type", devtype_name)
+
+    shuffle(files)
 
     run_files(dataset, files, devtype)
 
