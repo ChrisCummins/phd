@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.5
 #
-# Copyright 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
+# Copyright 2017 Chris Cummins <chrisc.101@gmail.com>.
 #
 # This file is part of CLgen.
 #
@@ -72,6 +72,21 @@ def db_data_exists(path, id):
     return c.fetchone() or None
 
 
+def get_device_name(ctx):
+    dev = ctx.get_info(cl.context_info.DEVICES)[0]
+    return dev.get_info(cl.device_info.NAME)
+
+
+def add_src(dataset, id, src):
+    db = dbutil.connect(dataset)
+    c = db.cursor()
+    c.execute("INSERT OR IGNORE INTO Source VALUES (?, ?)",
+              (id, src))
+    c.close()
+    db.commit()
+    db.close()
+
+
 def run_files(dataset, files, devtype="gpu", validation_size=1024,
               test_size=512):
     ctx, queue = cldrive.init_opencl(devtype=devtype)
@@ -90,6 +105,8 @@ def run_files(dataset, files, devtype="gpu", validation_size=1024,
         try:
             with open(path) as infile:
                 src = infile.read()
+
+            add_src(dataset, basename, src)
             driver = cldrive.KernelDriver(ctx, src)
         except Exception:
             print("E_BAD_CODE")

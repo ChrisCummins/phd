@@ -10,3 +10,9 @@ CREATE TABLE IF NOT EXISTS Data (
         result                  TEXT,
         UNIQUE(id)
 );
+
+CREATE TABLE IF NOT EXISTS Source (
+        id                      TEXT NOT NULL,
+        source                  TEXT NOT NULL,
+        UNIQUE(id)
+);
