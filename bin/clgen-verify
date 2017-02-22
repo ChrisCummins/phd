@@ -36,11 +36,12 @@ __description__ = """
 Run a collection of CLgen programs and store their output.
 """
 
+
 class Status:
     GOOD = 0
     NO_OUTPUTS = 1
-    NONDETERMINISTIC = 2
-    INPUT_INSENSITIVE = 3
+    INPUT_INSENSITIVE = 2
+    NONDETERMINISTIC = 3
     BAD_DRIVER = 4
     BAD_CODE = 5
 
@@ -124,17 +125,19 @@ def run_files(dataset, files, devtype="gpu", validation_size=1024,
         except cldrive.E_NO_OUTPUTS:
             status = Status.NO_OUTPUTS
             e = "ok (no outputs)"
-        except cldrive.E_NONDETERMINISTIC:
-            status = Status.NONDETERMINISTIC
-            e = "E_NONDETERMINISTIC"
         except cldrive.E_INPUT_INSENSITIVE:
             status = Status.INPUT_INSENSITIVE
             e = "E_INPUT_INSENSITIVE"
+        except cldrive.E_NONDETERMINISTIC:
+            status = Status.NONDETERMINISTIC
+            e = "E_NONDETERMINISTIC"
         except cldrive.E_BAD_DRIVER:
             status = Status.BAD_DRIVER
             e = "E_BAD_DRIVER"
 
-        if status == Status.GOOD or status == Status.NO_OUTPUTS:
+        if (status == Status.GOOD or
+            status == Status.NO_OUTPUTS or
+            status == Status.INPUT_INSENSITIVE):
             # create a dataset to test with:
             P = cldrive.KernelPayload.create_sequential(driver, test_size)
             # run driver to compute result:
