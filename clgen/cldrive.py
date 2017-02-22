@@ -19,7 +19,7 @@
 """
 OpenCL kernel driver
 """
-from io import StringIO
+from io import BytesIO, StringIO
 import numpy as np
 import os
 import sys
@@ -401,6 +401,26 @@ class KernelPayload(clgen.CLgenObject):
     def transfersize(self):
         """ Returns transfer size (in bytes). """
         return self._transfersize
+
+    @property
+    def bytes(self):
+        """ Returns a raw byte array of host data. """
+        out = BytesIO()
+        for arg in self.args:
+            if arg.hostdata is not None:
+                np.save(out, arg.hostdata)
+        out.seek(0)
+        return out.read()
+
+    def json(self, roundval=None):
+        """ Return JSON arrays of host data, with optional decimal rounding. """
+        if roundval is None:
+            f = lambda x: x
+        else:
+            f = lambda x: round(x, roundval)
+
+        return [[f(x) for x in arg.hostdata.tolist()] for arg in self.args
+                if arg.hostdata is not None]
 
     def __repr__(self):
         """ Stringify payload. """
