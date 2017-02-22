@@ -1,0 +1,154 @@
+#!/usr/bin/env python3.5
+#
+# Copyright 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
+#
+# This file is part of CLgen.
+#
+# CLgen is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# CLgen is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
+#
+import clgen
+from clgen import cli
+from clgen import log
+from clgen import dbutil
+from clgen import cldrive
+
+from labm8 import fs
+
+import json
+import pyopencl as cl
+
+__description__ = """
+Run a collection of CLgen programs and store their output.
+"""
+
+class Status:
+    GOOD = 0
+    NO_OUTPUTS = 1
+    NONDETERMINISTIC = 2
+    INPUT_INSENSITIVE = 3
+    BAD_DRIVER = 4
+
+def create_db(path):
+    """
+    Create an empty database.
+
+    Arguments:
+        path (str): Path to database to create.
+    """
+    dbutil.run_script(path, 'create-verify-db')
+    dbutil.set_version_meta(path)
+
+
+def run_files(dataset, files, devtype="gpu", validation_size=1024,
+              test_size=512):
+    ctx, queue = cldrive.init_opencl(devtype=devtype)
+
+    for path in files:
+        basename = fs.basename(path)
+
+        # check if we already have a result
+        db = dbutil.connect(dataset)
+        c = db.cursor()
+        c.execute("SELECT status FROM Data WHERE id=?", (basename,))
+        cached = c.fetchone()
+        if cached:
+            log.verbose("skip", path)
+            continue
+
+        with open(path) as infile:
+            src = infile.read()
+        driver = cldrive.KernelDriver(ctx, src)
+
+        # default values
+        status = Status.GOOD
+        result = None
+        e = "ok"
+
+        print("{basename: <50}".format(basename=basename), end=" ")
+
+        try:
+            # validate kernels:
+            driver.validate(queue, validation_size)
+            # create a dataset to test with:
+            P = cldrive.KernelPayload.create_sequential(driver, test_size)
+            # run driver to compute result:
+            data = driver(queue, P).json(roundval=5)
+            result = json.dumps(data, separators=(',', ':'))
+        except cldrive.E_NO_OUTPUTS:
+            status = Status.NO_OUTPUTS
+            e = "E_NO_OUTPUTS"
+        except cldrive.E_NONDETERMINISTIC:
+            status = Status.NONDETERMINISTIC
+            e = "E_NONDETERMINISTIC"
+        except cldrive.E_INPUT_INSENSITIVE:
+            status = Status.INPUT_INSENSITIVE
+            e = "E_INPUT_INSENSITIVE"
+        except cldrive.E_BAD_DRIVER:
+            status = Status.BAD_DRIVER
+            e = "E_BAD_DRIVER"
+
+        print(e)
+
+        db = dbutil.connect(dataset)
+        c = db.cursor()
+        c.execute("INSERT INTO Data VALUES (?,?,?)", (path, status, result))
+        c.close()
+        db.commit()
+        db.close()
+
+
+def do_verify(dataset, inputdir, use_cpu=False):
+    if not fs.exists(dataset):
+        create_db(dataset)
+        log.info("created empty dataset '{}'".format(dataset))
+    else:
+        if not dbutil.version_meta_matches(dataset):
+            raise clgen.UserError("dataset '{dataset}' version does not match"
+                                  .format(**vars()))
+
+    if not fs.isdir(inputdir):
+        raise clgen.UserError("input '{inputdir}' is not a directory"
+                              .format(**vars()))
+
+    files = fs.ls(inputdir, abspaths=True)
+    if not len(files):
+        raise clgen.UserError("directory '{inputdir}' is empty"
+                              .format(**vars()))
+
+    devtype = cl.device_type.CPU if use_cpu else cl.device_type.GPU
+    devtype_name = "cpu" if use_cpu else "gpu"
+    log.verbose("using device type", devtype_name)
+
+    run_files(dataset, files, devtype)
+
+
+def main():
+    parser = cli.ArgumentParser(description=__description__)
+    parser.add_argument("dataset", metavar="<dataset>", help="""\
+path to output database. If it does not exist, it is created.""")
+    parser.add_argument("inputdir", metavar="<input-dir>", help="""\
+path to directory containing CLgen-generated programs.""")
+    parser.add_argument("--cpu", action="store_true",
+                        help="Use CPU for execution (default: GPU)")
+    args = parser.parse_args()
+
+    cli.main(method=do_verify,
+             dataset=fs.path(args.dataset),
+             inputdir=fs.path(args.inputdir),
+             use_cpu=args.cpu)
+    log.info("done.")
+
+
+if __name__ == '__main__':
+    main()

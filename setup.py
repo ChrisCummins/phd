@@ -44,6 +44,7 @@ scripts = [
     'bin/clgen-fetch',
     'bin/clgen-merge',
     'bin/clgen-preprocess',
+    'bin/clgen-verify',
 ]
 
 # clgen driver requires opencl
