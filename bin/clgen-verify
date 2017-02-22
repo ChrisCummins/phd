@@ -24,6 +24,7 @@ from clgen import dbutil
 from clgen import cldrive
 
 from labm8 import fs
+from labm8 import system
 
 import json
 import pyopencl as cl
@@ -95,6 +96,8 @@ def run_files(dataset, files, devtype="gpu", validation_size=1024,
     devname = get_device_name(ctx)
     dbutil.set_meta(dataset, "device", devname)
     log.verbose("using device", devname)
+
+    dbutil.set_meta(dataset, "host", system.HOSTNAME)
 
     for path in files:
         basename = fs.basename(path)
