@@ -322,7 +322,7 @@ fi
 
 # Shortcuts.
 alias a='atom'
-alias c='cat'
+alias c='clear'
 alias E='exit'
 alias f='file'
 alias ff='find'
