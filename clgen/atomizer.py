@@ -237,6 +237,9 @@ class CharacterAtomizer(Atomizer):
         except KeyError:
             raise VocabError
 
+    def __repr__(self):
+        return "CharacterAtomizer[{n} chars]".format(n=self.vocab_size)
+
     @staticmethod
     def from_text(text: str) -> Atomizer:
         counter = Counter(text)
@@ -289,6 +292,9 @@ class GreedyAtomizer(Atomizer):
             raise VocabError
 
         return np.array(indices)
+
+    def __repr__(self):
+        return "GreedyAtomizer[{n} tokens]".format(n=self.vocab_size)
 
     @staticmethod
     def from_text(text: str) -> Atomizer:
