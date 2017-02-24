@@ -13,8 +13,7 @@ import random
 
 from datetime import datetime
 from hashlib import md5
-from shutil import copyfile, copyfileobj, move
-
+from shutil import copy, copyfileobj
 
 def md5sum(path):
     m = md5()
@@ -105,7 +104,7 @@ line in the manifest file:
     def cp(path, size, chunk_path):
         checksum, outpath = get_outpath(chunk_path, path)
 
-        copyfile(path, outpath)
+        copy(path, outpath)
         print(outpath, '{:.2f}MB'.format(size / 1000 ** 2))
         return os.path.basename(outpath), checksum
 
@@ -220,11 +219,10 @@ def unchunk_file(chunk_path, outdir, manifest_entry, lineno):
         with gzip.open(src, 'rb') as infile:
             with open(dst, 'wb') as outfile:
                 copyfileobj(infile, outfile)
-        os.remove(src)
 
-    def mv(src, dst):
+    def cp(src, dst):
         print(src, "->", dst)
-        move(src, dst)
+        copy(src, dst)
 
     inpath, checksum, size, outpath = manifest_entry.split('\t')
 
@@ -242,7 +240,7 @@ def unchunk_file(chunk_path, outdir, manifest_entry, lineno):
     ext = os.path.splitext(inpath)[1]  # file extension
 
     # determine whether file is compressed
-    unpack_fn = deflate if ext == ".gz" else mv
+    unpack_fn = deflate if ext == ".gz" else cp
 
     # if file is compressed, unpack it
     unpack_fn(inpath, outpath)
