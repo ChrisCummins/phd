@@ -735,7 +735,7 @@ def preprocess_file(path: str, inplace: bool=False) -> None:
             with open(path, 'w') as outfile:
                 outfile.write(out)
         else:
-            log.info('preprocess', out)
+            print(out)
     except BadCodeException as e:
         log.fatal(e, ret=1)
     except UglyCodeException as e:
