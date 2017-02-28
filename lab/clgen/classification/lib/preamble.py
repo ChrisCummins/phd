@@ -8,6 +8,7 @@ import pandas as pd
 import pickle
 import re
 import seaborn as sns
+import sys
 import time
 
 from clgen import clutil
@@ -414,14 +415,11 @@ def experiments(model_desc, evaluate_opts={}, dataframe_opts={}):
 
 ### UTILITY
 
-def get_model_path(model_desc, platform, source, split, atomizer=CharacterAtomizer, maxlen=1024, seed=204):
-    data_desc = load_dataframe(platform=platform, source=source,
-                               max_seq_len=maxlen, atomizer=atomizer)
-
+def get_model_path(model_desc, platform, source, split,
+                   atomizer="CharacterAtomizer", maxlen=1024, seed=204):
     split_txt = ":".join("{:02d}".format(round(d * 100)) for d in split)
-    atomizer_txt = type(data_desc["atomizer"]).__name__
     name = model_desc["name"]
-    return "models/{name}/{platform}-{source}-{split_txt}-{atomizer_txt}:{maxlen}-{seed}.model".format(**vars())
+    return "models/{name}/{platform}-{source}-{split_txt}-{atomizer}:{maxlen}-{seed}.model".format(**vars())
 
 def train_and_save(model_desc, platform, source,
                    split=(.6, .2, .2), atomizer=CharacterAtomizer, maxlen=1024,
