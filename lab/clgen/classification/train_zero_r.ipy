@@ -1,9 +1,12 @@
 %run lib/preamble.py
 
 def zero_r():
-    def train_fn(model, train, *args, **kwargs):
+    def train_fn(model, train, *args, platform=None, **kwargs):
         """ train a model """
-        model["zero_r"] = Counter(train["y"][:,0]).most_common(1)[0][0]
+        if platform == "amd":
+            model["zero_r"] = 0
+        elif platform == "nvidia":
+            model["zero_r"] = 1
 
     def test_fn(model, test, seed, *args, **kwargs):
         """ make predictions for test data """
@@ -31,3 +34,13 @@ def zero_r():
 for seed in range(204, 214):
     train_and_save(zero_r(), "amd", "B", split=(.6, .2, .2), seed=seed)
     train_and_save(zero_r(), "nvidia", "B", split=(.6, .2, .2), seed=seed)
+
+    train_and_save(zero_r(), "amd", "B", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
+    train_and_save(zero_r(), "nvidia", "B", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
+
+for seed in range(204, 214):
+    train_and_save(zero_r(), "amd", "BS", split=(.6, .2, .2), seed=seed)
+    train_and_save(zero_r(), "nvidia", "BS", split=(.6, .2, .2), seed=seed)
+
+    train_and_save(zero_r(), "amd", "BS", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
+    train_and_save(zero_r(), "nvidia", "BS", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)

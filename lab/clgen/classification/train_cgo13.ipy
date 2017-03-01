@@ -39,3 +39,13 @@ def cgo13():
 for seed in range(204, 214):
     train_and_save(cgo13(), "amd", "B", split=(.6, .2, .2), seed=seed)
     train_and_save(cgo13(), "nvidia", "B", split=(.6, .2, .2), seed=seed)
+
+    train_and_save(cgo13(), "amd", "B", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
+    train_and_save(cgo13(), "nvidia", "B", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
+
+for seed in range(204, 214):
+    train_and_save(cgo13(), "amd", "BS", split=(.6, .2, .2), seed=seed)
+    train_and_save(cgo13(), "nvidia", "BS", split=(.6, .2, .2), seed=seed)
+
+    train_and_save(cgo13(), "amd", "BS", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
+    train_and_save(cgo13(), "nvidia", "BS", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)

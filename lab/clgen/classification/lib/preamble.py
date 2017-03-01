@@ -14,7 +14,7 @@ import time
 from clgen import clutil
 from clgen.atomizer import CharacterAtomizer, GreedyAtomizer
 
-from collections import Counter
+from collections import defaultdict, Counter
 
 from IPython.display import SVG
 
@@ -35,7 +35,26 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 
+# plotting config:
+sns.set(style="ticks", color_codes=True)
+plt.style.use(["seaborn-white", "seaborn-paper"])
+
 # methods for data wrangling:
+
+def escape_suite_name(g):
+    """format benchmark suite name for display"""
+    c = g.split('-')
+    if (c[0] == "amd" or
+        c[0] == "npb" or
+        c[0] == "nvidia" or
+        c[0] == "shoc"):
+        return c[0].upper()
+    elif (c[0] == "parboil" or
+          c[0] == "polybench" or
+          c[0] == "rodinia"):
+        return c[0].capitalize()
+    else:
+        return "CLgen"
 
 def get_2(D):
     """ return np array of shape (len(D), nb_features)"""
@@ -92,70 +111,84 @@ def get_y2(D):
 
 
 def get_train_validation_test_splits(D, split=(.6, .2, .2), seed=1):
-    """ split dataframe into 3 frames for training, validation, and testing """
-    if round(sum(split), 3) != 1.000:  # FIXME
-        print(round(sum(split), 3))
-    assert(round(sum(split), 3) == 1.000)
-    train_split, validation_split, test_split = split
-
-    num_synthetic = sum(D["synthetic"].values)
-
-    np.random.seed(seed)
-    train_msk = np.random.rand(len(D)) < train_split
-
-    train = D[train_msk]
-    other = D[~train_msk]
-
-    test_msk = np.random.rand(len(other)) < split[2] / sum(split[1:])
-    test = other[test_msk]
-    validation = other[~test_msk]
-
-    return train, validation, test
-
-
-def get_train_validation_test_splits(D, split=(.6, .2, .2), seed=1):
     """ split dataframe into 3 frames for training, validation, and testing.
     synthetics are exclusively for training """
-    # TODO: balance benchmark suites in splits
-    # TODO: balance labels in splits
-    if round(sum(split), 3) != 1.000:  # FIXME
-        print(round(sum(split), 3))
     assert(round(sum(split), 3) == 1.0)
     train_split, validation_split, test_split = split
 
     num_synthetic = sum(D["synthetic"].values)
     num_benchmarks = len(D) - num_synthetic
 
+    import math
+    import random
+    random.seed(seed)
     np.random.seed(seed)
 
-    if num_benchmarks:
-        train_msk = np.logical_or(np.random.rand(len(D)) < train_split, D["synthetic"])
-    else:
-        train_msk = np.random.rand(len(D)) < train_split
+    # ratios from benchmark suites
+    suites = set(D["source"])
+    suites.discard("CLgen")
 
-    train = D[train_msk]
-    other = D[~train_msk]
+    suite_counts = D[D["synthetic"] == 0].groupby('source').size()
+    suite_ratios = suite_counts / num_benchmarks
 
-    test_msk = np.random.rand(len(other)) < split[2] / sum(split[1:])
-    test = other[test_msk]
-    validation = other[~test_msk]
+    # ratios of GPU-optimal
+    gpus_msk = (D["oracle_enc"] == 1) & (D["synthetic"] == 0)
+    gpus_counts = D[gpus_msk].groupby('source').size()
+    gpus_ratios = gpus_counts / suite_counts
 
-    np.random.seed()  # re-seed RNG
-    return train, validation, test
+    lookup_1 = dict((s, suite_ratios[s] * gpus_ratios[s]) for s in suites)
+    lookup_0 = dict((s, suite_ratios[s] * (1 - gpus_ratios[s])) for s in suites)
+    lookup = {
+        0: lookup_0,
+        1: lookup_1
+    }
+
+    # sanity checks
+    from math import isclose
+    assert isclose(sum(lookup_1.values()) + sum(lookup_0.values()), 1)
+    for s in suites:
+        assert(isclose(lookup_1[s] + lookup_0[s], suite_ratios[s]))
+
+    train_n0 = dict((s, math.ceil(lookup[0][s] * num_benchmarks * train_split)) for s in suites)
+    train_n1 = dict((s, math.ceil(lookup[1][s] * num_benchmarks * train_split)) for s in suites)
+    train_n = {0: train_n0, 1: train_n1}
+
+    val_n0 = dict((s, math.ceil(lookup[0][s] * num_benchmarks * validation_split)) for s in suites)
+    val_n1 = dict((s, math.ceil(lookup[1][s] * num_benchmarks * validation_split)) for s in suites)
+    val_n = {0: val_n0, 1: val_n1}
+
+    train, validation, test = [], [], []
+    i = 0
+    D = D.sample(frac=1).reset_index(drop=True)
+
+    for row in D.T.to_dict().values():
+        i += 1
+        if row["source"] == "CLgen":
+            if random.random() < test_split / (test_split + validation_split):
+                train.append(row)
+            else:
+                validation.append(row)
+        elif train_n[row["oracle_enc"]][row["source"]] > 0:
+            train.append(row)
+            train_n[row["oracle_enc"]][row["source"]] -= 1
+        elif val_n[row["oracle_enc"]][row["source"]] > 0:
+            validation.append(row)
+            val_n[row["oracle_enc"]][row["source"]] -= 1
+        else:
+            test.append(row)
+
+    assert(i == len(D))
+    assert(len(train) + len(validation) + len(test) == len(D))
+
+    return (pd.DataFrame(train),
+            pd.DataFrame(validation),
+            pd.DataFrame(test))
 
 
-def load_dataframe(platform, source="B",
+def load_data_desc(platform, source="B",
                    max_seq_len=1000, atomizer=CharacterAtomizer,
                    quiet=False):
     """ load experimental results """
-    def escape_suite_name(g):
-        """format benchmark suite name for display"""
-        c = g.split('-')
-        if (c[0] == "amd" or c[0] == "npb" or c[0] == "nvidia" or c[0] == "shoc"):
-            return c[0].upper()
-        else:
-            return c[0].capitalize()
-
     def get_benchmarks(platform):
         B = pd.read_csv(fs.path("runtimes/{platform}-benchmarks.csv".format(**vars())))
         B["source"] = [escape_suite_name(x) for x in B["benchmark"]]
@@ -299,8 +332,8 @@ def analyze(predictions, test):
 
     return {
         "accuracy": accuracy,
+        "correct": correct,
         "confusion_matrix": confusion_matrix,
-        "predictions": predictions,
         "speedups": speedups,
         "speedup_min": min(speedups),
         "speedup_max": max(speedups),
@@ -408,7 +441,7 @@ def experiments(model_desc, evaluate_opts={}, dataframe_opts={}):
     for a in [["amd", "B"], ["nvidia", "B"]]:
         platform, source = a
         print("PLATFORM", platform, "SOURCE", source)
-        data_desc = load_dataframe(platform=platform, source=source, **dataframe_opts)
+        data_desc = load_data_desc(platform=platform, source=source, **dataframe_opts)
         r.append(evaluate(data_desc, model_desc, **evaluate_opts))
         print()
 
@@ -422,57 +455,89 @@ def get_model_path(model_desc, platform, source, split,
     return "models/{name}/{platform}-{source}-{split_txt}-{atomizer}:{maxlen}-{seed}.model".format(**vars())
 
 def train_and_save(model_desc, platform, source,
-                   split=(.6, .2, .2), atomizer=CharacterAtomizer, maxlen=1024,
+                   split=(.6, .2, .2), atomizer="CharacterAtomizer", maxlen=1024,
                    seed=204):
     np.random.seed(seed)
 
     name = model_desc["name"]
-    create_fn = model_desc.get("create_model", _nop)
-    train_fn = model_desc.get("train_fn", _nop)
-    save_fn = model_desc["save_fn"]
-
-    # create data split
-    data_desc = load_dataframe(platform=platform, source=source,
-                               max_seq_len=maxlen, atomizer=atomizer)
-    train, validation, test = get_training_data(data_desc, seed, split=split)
-
-    # create model
-    model = create_fn(seed=seed, data_desc=data_desc)
-
-    # train model
-    train_fn(model=model, train=train, validation=validation, seed=seed)
-
-    fs.mkdir("models/{name}".format(**vars()))
     split_txt = ":".join("{:02d}".format(round(d * 100)) for d in split)
-    atomizer_txt = type(data_desc["atomizer"]).__name__
-    outpath = "models/{name}/{platform}-{source}-{split_txt}-{atomizer_txt}:{maxlen}-{seed}.model".format(**vars())
-    save_fn(outpath, model)
-    print("model saved as", outpath)
+    outpath = "models/{name}/{platform}-{source}-{split_txt}-{atomizer}:{maxlen}-{seed}.model".format(**vars())
+    if not fs.exists(outpath):
+        create_fn = model_desc.get("create_model", _nop)
+        train_fn = model_desc.get("train_fn", _nop)
+        save_fn = model_desc["save_fn"]
+        _atomizer = globals().get(atomizer)
+
+        # load training data
+        data_desc = load_data_desc(platform=platform, source=source,
+                                   max_seq_len=maxlen, atomizer=_atomizer)
+        train, validation, test = get_training_data(data_desc, seed, split=split)
+
+        # create model
+        model = create_fn(seed=seed, data_desc=data_desc)
+
+        # train model
+        train_fn(model=model, train=train, validation=validation, seed=seed,
+                 platform=platform, source=source)
+
+        fs.mkdir("models/{name}".format(**vars()))
+        save_fn(outpath, model)
+        print("model saved as", outpath)
+
+    # evaluate model
+    return load_and_test(model_desc, platform, source, split=split,
+                         atomizer=atomizer, maxlen=maxlen, seed=seed)
+
 
 def load_and_test(model_desc, platform, source,
-                  split=(.6, .2, .2), atomizer=CharacterAtomizer, maxlen=1024,
+                  split=(.6, .2, .2), atomizer="CharacterAtomizer", maxlen=1024,
                   seed=204):
     np.random.seed(seed)
 
     name = model_desc["name"]
+    split_txt = ":".join("{:02d}".format(round(d * 100)) for d in split)
+    inpath = "models/{name}/{platform}-{source}-{split_txt}-{atomizer}:{maxlen}-{seed}.model".format(**vars())
+    outpath = "models/{name}/{platform}-{source}-{split_txt}-{atomizer}:{maxlen}-{seed}.result".format(**vars())
+
+    if fs.exists(outpath):
+        return load_result(model_desc, platform, source, split=split,
+                           atomizer=atomizer, maxlen=maxlen, seed=seed)
+
     test_fn = model_desc["test_fn"]
     load_fn = model_desc["load_fn"]
 
     # load training data
-    data_desc = load_dataframe(platform=platform, source=source,
-                               max_seq_len=maxlen, atomizer=atomizer,
+    _atomizer = globals().get(atomizer)
+    data_desc = load_data_desc(platform=platform, source=source,
+                               max_seq_len=maxlen, atomizer=_atomizer,
                                quiet=True)
     train, validation, test = get_training_data(data_desc, seed, split=split)
 
     # load model
-    split_txt = ":".join("{:02d}".format(round(d * 100)) for d in split)
-    atomizer_txt = type(data_desc["atomizer"]).__name__
-    inpath = "models/{name}/{platform}-{source}-{split_txt}-{atomizer_txt}:{maxlen}-{seed}.model".format(**vars())
     model = load_fn(inpath)
     print("model loaded from", inpath)
 
     # test model
     predictions = test_fn(model=model, test=test, seed=seed)
-    test_result = analyze(predictions, test)
+    analysis = analyze(predictions, test)
+    test.update(analysis)
+    test["predictions"] = predictions
 
-    return test_result
+    with open(outpath, 'wb') as outfile:
+        pickle.dump(test, outfile)
+    print("result saved to", outpath)
+
+    return test
+
+def load_result(model_desc, platform, source,
+                split=(.6, .2, .2), atomizer="CharacterAtomizer", maxlen=1024,
+                seed=204):
+    name = model_desc["name"]
+    split_txt = ":".join("{:02d}".format(round(d * 100)) for d in split)
+    inpath = "models/{name}/{platform}-{source}-{split_txt}-{atomizer}:{maxlen}-{seed}.result".format(**vars())
+    if not fs.exists(inpath):
+        return False
+
+    with open(inpath, 'rb') as infile:
+        d = pickle.load(infile)
+    return d
