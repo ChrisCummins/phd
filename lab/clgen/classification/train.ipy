@@ -4,9 +4,13 @@
 seed = 204
 n_splits = 10
 m = model()
-print("loading model", m["name"])
+name = m["name"]
 
+print("evaluating model", name)
 
+import time
+
+start = time.time()
 for i in range(n_splits):
     ## GreedyAtomizer:
     train_and_save(m, "amd",    "B", atomizer="GreedyAtomizer", seed=seed, split_i=i, n_splits=n_splits)
@@ -19,3 +23,6 @@ for i in range(n_splits):
     # train_and_save(model(), "nvidia", "B",  seed=seed, split_i=i, n_splits=n_splits)
     # train_and_save(model(), "amd",    "BS", seed=seed, split_i=i, n_splits=n_splits)
     # train_and_save(model(), "nvidia", "BS", seed=seed, split_i=i, n_splits=n_splits)
+    
+elapsed = time.time() - start
+print("training {name} took {elapsed:.2f} seconds".format(**vars()))
