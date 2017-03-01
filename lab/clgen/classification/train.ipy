@@ -1,0 +1,22 @@
+%run lib/preamble.py
+%run lib/models.py
+
+seed = 204
+n_splits = 10
+m = model()
+print("loading model", m["name"])
+
+
+for i in range(n_splits):
+    # train_and_save(model(), "amd", "B", split=(.6, .2, .2), seed=seed)
+    # train_and_save(model(), "nvidia", "B", split=(.6, .2, .2), seed=seed)
+    #
+    train_and_save(m, "amd", "B", atomizer="GreedyAtomizer", seed=seed, split_i=i)
+    train_and_save(m, "nvidia", "B", atomizer="GreedyAtomizer", seed=seed, split_i=i)
+
+# for seed in range(204, 214):
+#     train_and_save(model(), "amd", "BS", split=(.6, .2, .2), seed=seed)
+#     train_and_save(model(), "nvidia", "BS", split=(.6, .2, .2), seed=seed)
+#
+#     train_and_save(model(), "amd", "BS", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
+#     train_and_save(model(), "nvidia", "BS", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)

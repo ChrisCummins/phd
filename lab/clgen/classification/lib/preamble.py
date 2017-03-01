@@ -376,10 +376,8 @@ def load_and_test(model_desc, platform, source,
 
 def load_result(model_desc, platform, source,
                 atomizer="CharacterAtomizer", maxlen=1024,
-                n_splits=10, split_i=0,
-                seed=204):
+                n_splits=10, split_i=0, seed=204):
     name = model_desc["name"]
-    split_txt = ":".join("{:02d}".format(round(d * 100)) for d in split)
     inpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.result".format(**vars())
     if not fs.exists(inpath):
         return False
