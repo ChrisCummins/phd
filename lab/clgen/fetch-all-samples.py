@@ -32,7 +32,13 @@ Merge kernel datasets.
 
 def get_all_sampler_datasets():
     datasets = []
-    for samplerdir in fs.ls(fs.path(cache.ROOT, "sampler"), abspaths=True):
+    sampledirs = []
+    for versioncache in fs.ls(fs.path("~/.cache/clgen"), abspaths=True):
+        samplerdir = fs.path(versioncache, "sampler")
+        if fs.isdir(samplerdir):
+            sampledirs += fs.ls(samplerdir, abspaths=True)
+
+    for samplerdir in sampledirs:
         inpath = fs.path(samplerdir, "kernels.db")
         if fs.isfile(inpath):
             datasets.append(inpath)
@@ -66,7 +72,7 @@ def merge(outpath, inpaths=[]):
 def main():
     parser = cli.ArgumentParser(description=__description__)
     parser.add_argument("dataset", help="path to output dataset")
-    parser.add_argument("inputs", nargs='+', help="path to input datasets")
+    parser.add_argument("inputs", nargs='*', help="path to input datasets")
     args = parser.parse_args()
 
     cli.main(merge, args.dataset, args.inputs)
