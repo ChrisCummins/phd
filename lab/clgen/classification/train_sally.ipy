@@ -70,8 +70,8 @@ def sally():
     }
 
 for seed in range(204, 214):
-    # train_and_save(sally(), "amd", "B", split=(.6, .2, .2), atomizer=CharacterAtomizer, maxlen=1024, seed=seed)
-    train_and_save(sally(), "amd", "B", split=(.6, .2, .2), atomizer=GreedyAtomizer, maxlen=1024, seed=seed)
+    train_and_save(sally(), "amd", "B", split=(.6, .2, .2), atomizer="CharacterAtomizer", maxlen=1024, seed=seed)
+    train_and_save(sally(), "amd", "B", split=(.6, .2, .2), atomizer="GreedyAtomizer", maxlen=1024, seed=seed)
 
-    # train_and_save(sally(), "nvidia", "B", split=(.6, .2, .2), atomizer=CharacterAtomizer, maxlen=1024, seed=seed)
-    # train_and_save(sally(), "nvidia", "B", split=(.6, .2, .2), atomizer=GreedyAtomizer, maxlen=1024, seed=seed)
+    train_and_save(sally(), "nvidia", "B", split=(.6, .2, .2), atomizer="CharacterAtomizer", maxlen=1024, seed=seed)
+    train_and_save(sally(), "nvidia", "B", split=(.6, .2, .2), atomizer="GreedyAtomizer", maxlen=1024, seed=seed)
