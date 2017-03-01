@@ -8,15 +8,14 @@ print("loading model", m["name"])
 
 
 for i in range(n_splits):
-    # train_and_save(model(), "amd", "B", split=(.6, .2, .2), seed=seed)
-    # train_and_save(model(), "nvidia", "B", split=(.6, .2, .2), seed=seed)
-    #
-    train_and_save(m, "amd", "B", atomizer="GreedyAtomizer", seed=seed, split_i=i)
-    train_and_save(m, "nvidia", "B", atomizer="GreedyAtomizer", seed=seed, split_i=i)
+    ## GreedyAtomizer:
+    train_and_save(m, "amd",    "B", atomizer="GreedyAtomizer", seed=seed, split_i=i, n_splits=n_splits)
+    train_and_save(m, "nvidia", "B", atomizer="GreedyAtomizer", seed=seed, split_i=i, n_splits=n_splits)
+    # train_and_save(model(), "amd",    "BS", atomizer="GreedyAtomizer", seed=seed, split_i=i, n_splits=n_splits)
+    # train_and_save(model(), "nvidia", "BS", atomizer="GreedyAtomizer", seed=seed, split_i=i, n_splits=n_splits)
 
-# for seed in range(204, 214):
-#     train_and_save(model(), "amd", "BS", split=(.6, .2, .2), seed=seed)
-#     train_and_save(model(), "nvidia", "BS", split=(.6, .2, .2), seed=seed)
-#
-#     train_and_save(model(), "amd", "BS", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
-#     train_and_save(model(), "nvidia", "BS", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
+    ## CharacterAtomizer:
+    # train_and_save(model(), "amd",    "B",  seed=seed, split_i=i, n_splits=n_splits)
+    # train_and_save(model(), "nvidia", "B",  seed=seed, split_i=i, n_splits=n_splits)
+    # train_and_save(model(), "amd",    "BS", seed=seed, split_i=i, n_splits=n_splits)
+    # train_and_save(model(), "nvidia", "BS", seed=seed, split_i=i, n_splits=n_splits)
