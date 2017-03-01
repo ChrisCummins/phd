@@ -5,7 +5,7 @@ set -eu
 
 export LC_ALL='C'
 
-tr '[;:,.({})~+-/[]><&!*"#%=?[:punct:][:space:]]' '\n' < "$1" \
+tr '[;:,.({})~+-/[]><&!*"#%=?[:space:]]' '\n' < "$1" \
     | grep -v '^$' \
     | sort \
     | uniq -c \
