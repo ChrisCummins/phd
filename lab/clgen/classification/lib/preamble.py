@@ -346,6 +346,8 @@ def load_and_test(model_desc, platform, source,
         return load_result(model_desc, platform, source, n_splits=n_splits,
                            split_i=split_i, atomizer=atomizer, maxlen=maxlen,
                            seed=seed)
+    if not fs.exists(inpath):
+        return False
 
     test_fn = model_desc["test_fn"]
     load_fn = model_desc["load_fn"]
