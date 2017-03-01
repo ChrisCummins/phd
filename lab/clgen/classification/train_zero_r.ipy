@@ -31,16 +31,19 @@ def zero_r():
         "load_fn": load_fn
     }
 
-for seed in range(204, 214):
-    train_and_save(zero_r(), "amd", "B", split=(.6, .2, .2), seed=seed)
-    train_and_save(zero_r(), "nvidia", "B", split=(.6, .2, .2), seed=seed)
+seed = 204
+n_splits = 10
 
-    train_and_save(zero_r(), "amd", "B", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
-    train_and_save(zero_r(), "nvidia", "B", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
+for i in range(n_splits):
+    # train_and_save(zero_r(), "amd", "B", atomizer="CharacterAtomizer", seed=seed, n_splits=n_splits, split_i=split_i)
+    # train_and_save(zero_r(), "nvidia", "B", atomizer="CharacterAtomizer", seed=seed, n_splits=n_splits, split_i=split_i)
 
-for seed in range(204, 214):
-    train_and_save(zero_r(), "amd", "BS", split=(.6, .2, .2), seed=seed)
-    train_and_save(zero_r(), "nvidia", "BS", split=(.6, .2, .2), seed=seed)
+    train_and_save(zero_r(), "amd", "B", atomizer="GreedyAtomizer", seed=seed, n_splits=n_splits, split_i=i)
+    train_and_save(zero_r(), "nvidia", "B", atomizer="GreedyAtomizer", seed=seed, n_splits=n_splits, split_i=i)
 
-    train_and_save(zero_r(), "amd", "BS", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
-    train_and_save(zero_r(), "nvidia", "BS", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
+# for i in range(n_splits):
+    # train_and_save(zero_r(), "amd", "BS", atomizer="CharacterAtomizer", seed=seed, n_splits=n_splits, split_i=split_i)
+    # train_and_save(zero_r(), "nvidia", "BS", atomizer="CharacterAtomizer", seed=seed, n_splits=n_splits, split_i=split_i)
+
+    # train_and_save(zero_r(), "amd", "B", atomizer="GreedyAtomizer", seed=seed, n_splits=n_splits, split_i=i)
+    # train_and_save(zero_r(), "nvidia", "B", atomizer="GreedyAtomizer", seed=seed, n_splits=n_splits, split_i=i)

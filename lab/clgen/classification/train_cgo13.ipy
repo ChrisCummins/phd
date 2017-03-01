@@ -3,9 +3,12 @@
 def cgo13():
     def create_model(seed=seed, **kwargs):
         """ instantiate a model """
-        return DecisionTreeClassifier(random_state=seed, splitter="best", criterion="entropy")
+        return DecisionTreeClassifier(
+            random_state=seed, splitter="best",
+            max_depth=5, min_samples_leaf=5,
+            criterion="entropy")
 
-    def train_fn(model, train, validation, *args, **kwargs):
+    def train_fn(model, train, *args, **kwargs):
         """ train a model """
         np.random.seed(seed)
         model.fit(train["x_4"], train["y"])
@@ -36,16 +39,19 @@ def cgo13():
         "load_fn": load_fn
     }
 
-for seed in range(204, 214):
-    train_and_save(cgo13(), "amd", "B", split=(.6, .2, .2), seed=seed)
-    train_and_save(cgo13(), "nvidia", "B", split=(.6, .2, .2), seed=seed)
+seed = 204
+n_splits = 10
 
-    train_and_save(cgo13(), "amd", "B", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
-    train_and_save(cgo13(), "nvidia", "B", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
+for i in range(n_splits):
+    # train_and_save(cgo13(), "amd", "B", split=(.6, .2, .2), seed=seed)
+    # train_and_save(cgo13(), "nvidia", "B", split=(.6, .2, .2), seed=seed)
+    #
+    train_and_save(cgo13(), "amd", "B", atomizer="GreedyAtomizer", seed=seed, split_i=i)
+    train_and_save(cgo13(), "nvidia", "B", atomizer="GreedyAtomizer", seed=seed, split_i=i)
 
-for seed in range(204, 214):
-    train_and_save(cgo13(), "amd", "BS", split=(.6, .2, .2), seed=seed)
-    train_and_save(cgo13(), "nvidia", "BS", split=(.6, .2, .2), seed=seed)
-
-    train_and_save(cgo13(), "amd", "BS", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
-    train_and_save(cgo13(), "nvidia", "BS", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
+# for seed in range(204, 214):
+#     train_and_save(cgo13(), "amd", "BS", split=(.6, .2, .2), seed=seed)
+#     train_and_save(cgo13(), "nvidia", "BS", split=(.6, .2, .2), seed=seed)
+#
+#     train_and_save(cgo13(), "amd", "BS", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)
+#     train_and_save(cgo13(), "nvidia", "BS", split=(.6, .2, .2), atomizer="GreedyAtomizer", seed=seed)

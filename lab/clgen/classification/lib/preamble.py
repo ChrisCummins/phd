@@ -56,6 +56,17 @@ def escape_suite_name(g):
     else:
         return "CLgen"
 
+
+def escape_benchmark_name(g):
+    """escape benchmark name for display"""
+    c = g.split('-')
+    suite = escape_suite_name(c[0])
+    if suite == "CLgen":
+        return suite
+    else:
+        return suite + "." + c[-2]
+
+
 def get_2(D):
     """ return np array of shape (len(D), nb_features)"""
     return np.array([
@@ -110,79 +121,20 @@ def get_y2(D):
     return np.array(list(zip(l1, l2)), dtype=np.int32)
 
 
-def get_train_validation_test_splits(D, split=(.6, .2, .2), seed=1):
-    """ split dataframe into 3 frames for training, validation, and testing.
-    synthetics are exclusively for training """
-    assert(round(sum(split), 3) == 1.0)
-    train_split, validation_split, test_split = split
+def get_train_test_splits(D, n_splits=10, seed=1):
+    synthetics = D[D["synthetic"] == 1]
+    benchmarks = D[D["synthetic"] == 0]
+    assert(len(synthetics) + len(benchmarks) == len(D))
 
-    num_synthetic = sum(D["synthetic"].values)
-    num_benchmarks = len(D) - num_synthetic
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
+    T = []
+    for train_index, test_index in skf.split(benchmarks.index, benchmarks["oracle_enc"]):
+        indices = list(train_index) + list(test_index)
+        assert len(indices) == len(benchmarks)
+        assert set(benchmarks.index) == set(indices)
 
-    import math
-    import random
-    random.seed(seed)
-    np.random.seed(seed)
-
-    # ratios from benchmark suites
-    suites = set(D["source"])
-    suites.discard("CLgen")
-
-    suite_counts = D[D["synthetic"] == 0].groupby('source').size()
-    suite_ratios = suite_counts / num_benchmarks
-
-    # ratios of GPU-optimal
-    gpus_msk = (D["oracle_enc"] == 1) & (D["synthetic"] == 0)
-    gpus_counts = D[gpus_msk].groupby('source').size()
-    gpus_ratios = gpus_counts / suite_counts
-
-    lookup_1 = dict((s, suite_ratios[s] * gpus_ratios[s]) for s in suites)
-    lookup_0 = dict((s, suite_ratios[s] * (1 - gpus_ratios[s])) for s in suites)
-    lookup = {
-        0: lookup_0,
-        1: lookup_1
-    }
-
-    # sanity checks
-    from math import isclose
-    assert isclose(sum(lookup_1.values()) + sum(lookup_0.values()), 1)
-    for s in suites:
-        assert(isclose(lookup_1[s] + lookup_0[s], suite_ratios[s]))
-
-    train_n0 = dict((s, math.ceil(lookup[0][s] * num_benchmarks * train_split)) for s in suites)
-    train_n1 = dict((s, math.ceil(lookup[1][s] * num_benchmarks * train_split)) for s in suites)
-    train_n = {0: train_n0, 1: train_n1}
-
-    val_n0 = dict((s, math.ceil(lookup[0][s] * num_benchmarks * validation_split)) for s in suites)
-    val_n1 = dict((s, math.ceil(lookup[1][s] * num_benchmarks * validation_split)) for s in suites)
-    val_n = {0: val_n0, 1: val_n1}
-
-    train, validation, test = [], [], []
-    i = 0
-    D = D.sample(frac=1).reset_index(drop=True)
-
-    for row in D.T.to_dict().values():
-        i += 1
-        if row["source"] == "CLgen":
-            if random.random() < test_split / (test_split + validation_split):
-                train.append(row)
-            else:
-                validation.append(row)
-        elif train_n[row["oracle_enc"]][row["source"]] > 0:
-            train.append(row)
-            train_n[row["oracle_enc"]][row["source"]] -= 1
-        elif val_n[row["oracle_enc"]][row["source"]] > 0:
-            validation.append(row)
-            val_n[row["oracle_enc"]][row["source"]] -= 1
-        else:
-            test.append(row)
-
-    assert(i == len(D))
-    assert(len(train) + len(validation) + len(test) == len(D))
-
-    return (pd.DataFrame(train),
-            pd.DataFrame(validation),
-            pd.DataFrame(test))
+        T.append((pd.concat((synthetics, benchmarks.loc[train_index])), benchmarks.loc[test_index]))
+    return T
 
 
 def load_data_desc(platform, source="B",
@@ -220,10 +172,11 @@ def load_data_desc(platform, source="B",
         raise Exception
 
     dataframe["oracle_enc"] = [1 if x == "GPU" else 0 for x in dataframe["oracle"].values]
+    dataframe["benchmark_name"] = [escape_benchmark_name(b) for b in dataframe["benchmark"].values]
 
     # load source code:
     source_dir = fs.path("kernels")
-    srcs = []
+    srcs, benchmark_names = [], []
     for row in dataframe["benchmark"].values:
         inpath = fs.path(source_dir, row + ".cl")
         with open(inpath) as infile:
@@ -232,7 +185,6 @@ def load_data_desc(platform, source="B",
             print(fs.basename(inpath))
             raise Exception(src)
         srcs.append(src)
-
     dataframe["src"] = srcs
     dataframe["src_len"] = [len(s) for s in srcs]
 
@@ -264,11 +216,11 @@ def load_data_desc(platform, source="B",
     }
 
 
-def get_training_data(data_desc, seed, *args, split=(.6, .2, .2), **kwargs):
+def get_training_data(data_desc, *args, seed=204, n_splits=10, split_i=0, **kwargs):
     dataframe = data_desc["dataframe"]
     seq_length = data_desc["seq_length"]
-    train, validation, test = get_train_validation_test_splits(
-        dataframe, seed=seed, split=split)
+    train, test = get_train_test_splits(
+        dataframe, seed=seed, n_splits=n_splits)[split_i]
 
     x_train_2 = get_2(train)
     x_train_4 = get_4(train)
@@ -276,13 +228,6 @@ def get_training_data(data_desc, seed, *args, split=(.6, .2, .2), **kwargs):
     x_train_seq = get_sequences(train, seq_length)
     y_train = get_labels(train)
     y2_train = get_y2(train)
-
-    x_val_2 = get_2(validation)
-    x_val_4 = get_4(validation)
-    x_val_11 = get_11(validation)
-    x_val_seq = get_sequences(validation, seq_length)
-    y_val = get_labels(validation)
-    y2_val = get_y2(validation)
 
     x_test_2 = get_2(test)
     x_test_4 = get_4(test)
@@ -293,7 +238,6 @@ def get_training_data(data_desc, seed, *args, split=(.6, .2, .2), **kwargs):
 
     return (
         {"dataframe": train, "x_2": x_train_2, "x_4": x_train_4, "x_11": x_train_11, "x_seq": x_train_seq, "y": y_train, "y_2": y2_train},
-        {"dataframe": validation, "x_2": x_val_2, "x_4": x_val_4, "x_11": x_val_11, "x_seq": x_val_seq, "y": y_val, "y_2": y2_val},
         {"dataframe": test, "x_2": x_test_2, "x_4": x_test_4, "x_11": x_test_11, "x_seq": x_test_seq, "y": y_test, "y_2": y2_test},
     )
 
@@ -345,123 +289,22 @@ def analyze(predictions, test):
 def _nop(*args, **kwargs):
         return {}
 
-def evaluate(data_desc, model_desc, seed=204, split=(.6, .2, .2), n=10, quiet=False):
-    """
-    Model desc members:
-        create_model (function): Function with definition:
-                create_model(seed, i) -> model
-        train_fn (function): Function with definition:
-                train_fn(seed, model, train_data, validation_data) -> {}
-        save_fn (function): Function with definition:
-                save_fn(seed, i, model) -> None
-        test_fn (function): Function with definition:
-                test_fn(seed, model, test_data) -> {}
-
-    Arguments:
-        n (int): Number of repetitions
-
-    Returns:
-        list: list of length n, each element a pair of train_fn(), test_fn() return values
-    """
-    dataframe = data_desc["dataframe"]
-    seq_length = data_desc["seq_length"]
-    atomizer = data_desc["atomizer"]
-
-    def _nop(*args, **kwargs):
-        return {}
-
-    create_model = model_desc.get("create_model", _nop)
-    train_fn = model_desc.get("train_fn", _nop)
-    save_fn = model_desc.get("save_fn", _nop)
-    test_fn = model_desc["test_fn"]
-
-    train_results = []
-    test_results = []
-    for i in range(n):
-        j = i + 1
-        # get training_data
-        train, validation, test = get_training_data(data_desc, seed + i, i=i, n=n, split=split)
-        # create model
-        model = create_model(i=i, seed=seed + i, atomizer=atomizer)
-        # train model
-        start = time.time()
-        train_result = train_fn(model=model, train=train, validation=validation, i=i, seed=seed + i) or {}
-        elapsed = time.time() - start
-        train_result["time"] = elapsed
-        m = len(train["y"])
-        #if elapsed > 3:
-        if not quiet:
-            print("[{j:2} of {n}] training on {m} instances took {elapsed:.2f}s".format(**vars()))
-        train_results.append(train_result)
-        # save model
-        save_fn(model=model, i=i, n=n, seed=seed + i)
-        # make predictions
-        start = time.time()
-        predictions = test_fn(model=model, test=test, i=i, seed=seed + i)
-        elapsed = time.time() - start
-        test_result = analyze(predictions, test)
-        test_result["time"] = elapsed
-        accuracy = test_result["accuracy"]
-        geo_speedup = test_result["speedup_geo"]
-        m = len(test["y"])
-
-        if not quiet:
-            print("[{j:2} of {n}] accuracy on {m} test instances: {accuracy:.2%}, speedup {geo_speedup:.2}x (elapsed {elapsed:.2f}s)".format(**vars()))
-        test_results.append(test_result)
-
-        del model
-
-    # accuracy
-    a = np.array([x["accuracy"] for x in test_results])
-    mean_acc = a.mean()
-    std = a.std()
-
-    a = np.array([x["speedup_geo"] for x in test_results])
-    geo_speedup = gmean(a)
-    std_speedup = a.std()
-
-    # times
-    a = np.array([x["time"] for x in train_results])
-    mean_train_time = a.mean()
-    std_train_time = a.std()
-
-    a = np.array([x["time"] for x in test_results])
-    mean_eval_time = a.mean()
-    std_eval_time = a.std()
-
-    if not quiet:
-        print()
-    print("avg training time {mean_train_time:.2f}s, eval time {mean_eval_time:.2f}s".format(**vars()))
-    print("avg accuracy {mean_acc:.2%} (std: {std:.2%}), oracle {geo_speedup:.2f}x (std: {std_speedup:.2%})".format(**vars()))
-    return train_results, test_results
-
-
-def experiments(model_desc, evaluate_opts={}, dataframe_opts={}):
-    r = []
-    for a in [["amd", "B"], ["nvidia", "B"]]:
-        platform, source = a
-        print("PLATFORM", platform, "SOURCE", source)
-        data_desc = load_data_desc(platform=platform, source=source, **dataframe_opts)
-        r.append(evaluate(data_desc, model_desc, **evaluate_opts))
-        print()
-
 
 ### UTILITY
-
-def get_model_path(model_desc, platform, source, split,
-                   atomizer="CharacterAtomizer", maxlen=1024, seed=204):
-    split_txt = ":".join("{:02d}".format(round(d * 100)) for d in split)
-    name = model_desc["name"]
-    return "models/{name}/{platform}-{source}-{split_txt}-{atomizer}:{maxlen}-{seed}.model".format(**vars())
+#
+# def get_model_path(model_desc, platform, source,
+#                    atomizer="CharacterAtomizer", maxlen=1024, seed=204):
+#     split_txt = ":".join("{:02d}".format(round(d * 100)) for d in split)
+#     name = model_desc["name"]
+#     return "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.model".format(**vars())
 
 def train_and_save(model_desc, platform, source,
-                   split=(.6, .2, .2), atomizer="CharacterAtomizer", maxlen=1024,
-                   seed=204):
+                   atomizer="CharacterAtomizer", maxlen=1024,
+                   n_splits=10, split_i=0, seed=204):
     np.random.seed(seed)
 
     name = model_desc["name"]
-    split_txt = ":".join("{:02d}".format(round(d * 100)) for d in split)
-    outpath = "models/{name}/{platform}-{source}-{split_txt}-{atomizer}:{maxlen}-{seed}.model".format(**vars())
+    outpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.model".format(**vars())
     if not fs.exists(outpath):
         create_fn = model_desc.get("create_model", _nop)
         train_fn = model_desc.get("train_fn", _nop)
@@ -471,37 +314,38 @@ def train_and_save(model_desc, platform, source,
         # load training data
         data_desc = load_data_desc(platform=platform, source=source,
                                    max_seq_len=maxlen, atomizer=_atomizer)
-        train, validation, test = get_training_data(data_desc, seed, split=split)
+        train, test = get_training_data(data_desc, seed=seed, split_i=split_i, n_splits=n_splits)
 
         # create model
         model = create_fn(seed=seed, data_desc=data_desc)
 
         # train model
-        train_fn(model=model, train=train, validation=validation, seed=seed,
-                 platform=platform, source=source)
+        train_fn(model=model, train=train, seed=seed, platform=platform,
+                 source=source)
 
         fs.mkdir("models/{name}".format(**vars()))
         save_fn(outpath, model)
         print("model saved as", outpath)
 
     # evaluate model
-    return load_and_test(model_desc, platform, source, split=split,
-                         atomizer=atomizer, maxlen=maxlen, seed=seed)
+    return load_and_test(model_desc, platform, source, n_splits=n_splits,
+                         split_i=split_i, atomizer=atomizer, maxlen=maxlen,
+                         seed=seed)
 
 
 def load_and_test(model_desc, platform, source,
-                  split=(.6, .2, .2), atomizer="CharacterAtomizer", maxlen=1024,
-                  seed=204):
+                  atomizer="CharacterAtomizer", maxlen=1024, n_splits=10,
+                  split_i=0, seed=204):
     np.random.seed(seed)
 
     name = model_desc["name"]
-    split_txt = ":".join("{:02d}".format(round(d * 100)) for d in split)
-    inpath = "models/{name}/{platform}-{source}-{split_txt}-{atomizer}:{maxlen}-{seed}.model".format(**vars())
-    outpath = "models/{name}/{platform}-{source}-{split_txt}-{atomizer}:{maxlen}-{seed}.result".format(**vars())
+    inpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.model".format(**vars())
+    outpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.result".format(**vars())
 
     if fs.exists(outpath):
-        return load_result(model_desc, platform, source, split=split,
-                           atomizer=atomizer, maxlen=maxlen, seed=seed)
+        return load_result(model_desc, platform, source, n_splits=n_splits,
+                           split_i=split_i, atomizer=atomizer, maxlen=maxlen,
+                           seed=seed)
 
     test_fn = model_desc["test_fn"]
     load_fn = model_desc["load_fn"]
@@ -511,7 +355,8 @@ def load_and_test(model_desc, platform, source,
     data_desc = load_data_desc(platform=platform, source=source,
                                max_seq_len=maxlen, atomizer=_atomizer,
                                quiet=True)
-    train, validation, test = get_training_data(data_desc, seed, split=split)
+    train, test = get_training_data(
+        data_desc, seed=seed, split_i=split_i, n_splits=n_splits)
 
     # load model
     model = load_fn(inpath)
@@ -530,14 +375,17 @@ def load_and_test(model_desc, platform, source,
     return test
 
 def load_result(model_desc, platform, source,
-                split=(.6, .2, .2), atomizer="CharacterAtomizer", maxlen=1024,
+                atomizer="CharacterAtomizer", maxlen=1024,
+                n_splits=10, split_i=0,
                 seed=204):
     name = model_desc["name"]
     split_txt = ":".join("{:02d}".format(round(d * 100)) for d in split)
-    inpath = "models/{name}/{platform}-{source}-{split_txt}-{atomizer}:{maxlen}-{seed}.result".format(**vars())
+    inpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.result".format(**vars())
     if not fs.exists(inpath):
         return False
 
     with open(inpath, 'rb') as infile:
         d = pickle.load(infile)
+
+    d["dataframe"]["benchmark_name"] = [escape_benchmark_name(b) for b in d["dataframe"]["benchmark"].values]
     return d
