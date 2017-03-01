@@ -37,7 +37,7 @@ def cgo13():
             max_depth=5, min_samples_leaf=5,
             criterion="entropy")
 
-    def train_fn(model, train, *args, **kwargs):
+    def train_fn(model, train, *args, seed=None, **kwargs):
         """ train a model """
         np.random.seed(seed)
         model.fit(train["x_4"], train["y"])
