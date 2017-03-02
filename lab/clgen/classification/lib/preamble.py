@@ -243,10 +243,12 @@ def get_training_data(data_desc, *args, seed=204, n_splits=10, split_i=0, **kwar
 
 # analyze results:
 
-def analyze(predictions, test):
-    def enc2key(p):
-        return "runtime_gpu" if p else "runtime_cpu"
 
+def enc2key(p):
+    return "runtime_gpu" if p else "runtime_cpu"
+
+
+def analyze(predictions, test):
     frame = test["dataframe"]
     oracle = np.array(frame["oracle_enc"], dtype=np.bool)
     incorrect = np.logical_xor(predictions, oracle)
@@ -376,6 +378,79 @@ def load_and_test(model_desc, platform, source,
 
     return test
 
+
+def benchmark_inference(model_desc, platform, source,
+                        atomizer="CharacterAtomizer", maxlen=1024, n_splits=10,
+                        split_i=0, seed=204, n_runtimes=100):
+    np.random.seed(seed)
+
+    name = model_desc["name"]
+    inpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.model".format(**vars())
+    outpath = "models/{name}/{platform}-{source}-{atomizer}:{maxlen}-{seed}-{n_splits}-{split_i}.result".format(**vars())
+
+    if not fs.exists(inpath):
+        return False
+
+    test_fn = model_desc["test_fn"]
+    load_fn = model_desc["load_fn"]
+
+    # load training data
+    _atomizer = globals().get(atomizer)
+    data_desc = load_data_desc(platform=platform, source=source,
+                               max_seq_len=maxlen, atomizer=_atomizer,
+                               quiet=True)
+    train, test = get_training_data(
+        data_desc, seed=seed, split_i=split_i, n_splits=n_splits)
+
+    # load model
+    model = load_fn(inpath)
+    print("model loaded from", inpath)
+
+    # test model
+    runtimes = []
+    for i in range(n_runtimes):
+        start = time.time()
+        predictions = test_fn(model=model, test=test, seed=seed)
+        elapsed = (time.time() - start) / len(test["y"])
+        runtimes.append(elapsed)
+
+    return np.array(runtimes)
+
+
+from itertools import product
+
+
+def source2str(s):
+    if s == "B":
+        return "Benchmarks"
+    elif s == "S":
+        return "CLgen"
+    elif s == "BS":
+        return "w. CLgen"
+    else:
+        raise Exception
+
+
+def platform2str(p):
+    if p == "amd":
+        return "AMD Tahiti 7970"
+    elif p == "nvidia":
+        return "NVIDIA GTX 970"
+    else:
+        raise Exception
+
+
+def model2str(m):
+    if m == "zero_r":
+        return "Static mapping"
+    elif m == "cgo13":
+        return "CGO'13"
+    # elif m == "bruno":
+    #     return "DeepTune"
+    else:
+        return m.title()
+
+
 def load_result(model_desc, platform, source,
                 atomizer="CharacterAtomizer", maxlen=1024,
                 n_splits=10, split_i=0, seed=204):
@@ -385,7 +460,6 @@ def load_result(model_desc, platform, source,
         return False
 
     with open(inpath, 'rb') as infile:
-        d = pickle.load(infile)
+        result = pickle.load(infile)
 
-    d["dataframe"]["benchmark_name"] = [escape_benchmark_name(b) for b in d["dataframe"]["benchmark"].values]
-    return d
+    return result
