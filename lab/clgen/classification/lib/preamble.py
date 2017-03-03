@@ -440,17 +440,6 @@ def platform2str(p):
         raise Exception
 
 
-def model2str(m):
-    if m == "zero_r":
-        return "Static mapping"
-    elif m == "cgo13":
-        return "CGO'13"
-    # elif m == "bruno":
-    #     return "DeepTune"
-    else:
-        return m.title()
-
-
 def load_result(model_desc, platform, source,
                 atomizer="CharacterAtomizer", maxlen=1024,
                 n_splits=10, split_i=0, seed=204):
