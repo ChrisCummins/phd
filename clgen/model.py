@@ -143,8 +143,8 @@ class Model(clgen.CLgenObject):
             module: imported TensorFlow module
         """
         import tensorflow as tf
-        from tensorflow.python.ops import rnn_cell
-        from tensorflow.python.ops import seq2seq
+        from tensorflow.contrib import rnn
+        from tensorflow.contrib import seq2seq
 
         # Use self.tensorflow_state to mark whether or not model is configured
         # for training or inference.
@@ -155,9 +155,9 @@ class Model(clgen.CLgenObject):
             pass
 
         self.cell_fn = {
-            "lstm": rnn_cell.BasicLSTMCell,
-            "gru": rnn_cell.GRUCell,
-            "rnn": rnn_cell.BasicRNNCell
+            "lstm": rnn.BasicLSTMCell,
+            "gru": rnn.GRUCell,
+            "rnn": rnn.BasicRNNCell
         }.get(self.model_type, None)
         if self.cell_fn is None:
             raise clgen.UserError("Unrecognized model type")
@@ -173,7 +173,7 @@ class Model(clgen.CLgenObject):
         fs.mkdir(self.cache.path)
 
         cell = self.cell_fn(self.rnn_size, state_is_tuple=True)
-        self.cell = cell = rnn_cell.MultiRNNCell([cell] * self.num_layers,
+        self.cell = cell = rnn.MultiRNNCell([cell] * self.num_layers,
                                                  state_is_tuple=True)
         self.input_data = tf.placeholder(tf.int32, [batch_size, seq_length])
         self.targets = tf.placeholder(tf.int32, [batch_size, seq_length])
