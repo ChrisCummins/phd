@@ -143,8 +143,8 @@ class Model(clgen.CLgenObject):
             module: imported TensorFlow module
         """
         import tensorflow as tf
+        import tensorflow.contrib.legacy_seq2seq as seq2seq
         from tensorflow.contrib import rnn
-        from tensorflow.contrib import seq2seq
 
         # Use self.tensorflow_state to mark whether or not model is configured
         # for training or inference.
@@ -189,8 +189,8 @@ class Model(clgen.CLgenObject):
                 embedding = tf.get_variable("embedding",
                                             [vocab_size, self.rnn_size])
                 inputs = tf.split(
-                    1, seq_length, tf.nn.embedding_lookup(
-                        embedding, self.input_data))
+                    axis=1, num_or_size_splits=seq_length,
+                    value=tf.nn.embedding_lookup(embedding, self.input_data))
                 inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
 
         def loop(prev, _):
@@ -201,7 +201,7 @@ class Model(clgen.CLgenObject):
         outputs, last_state = seq2seq.rnn_decoder(
             inputs, self.initial_state, cell,
             loop_function=loop if infer else None, scope=scope_name)
-        output = tf.reshape(tf.concat(1, outputs), [-1, self.rnn_size])
+        output = tf.reshape(tf.concat(axis=1, values=outputs), [-1, self.rnn_size])
         self.logits = tf.matmul(output, softmax_w) + softmax_b
         self.probs = tf.nn.softmax(self.logits)
         loss = seq2seq.sequence_loss_by_example(
