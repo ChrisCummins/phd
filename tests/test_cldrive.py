@@ -334,3 +334,7 @@ class TestKernelPayload(TestCase):
         p6 = cldrive.KernelPayload.create_random(self._driver1, 8)
         self.assertNotEqual(p1, p5)
         self.assertNotEqual(p5, p6)
+
+
+if __name__ == "__main__":
+    main()
