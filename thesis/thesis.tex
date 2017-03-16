@@ -34,6 +34,23 @@
 %% MSc by Research, which also needs an institute
 \documentclass[phd,icsa,logo,twoside,openright]{infthesis}
 
+\usepackage[%
+backend=biber,
+style=alphabetic,
+% style=numeric-comp,  % numerical-compressed
+% sorting=none,        % nty,nyt,nyvt,anyt,anyvt,ynt,ydnt,none
+sortcites=true,      % sort \cite{b a d c}: true,false
+block=none,          % space between blocks: none,space,par,nbpar,ragged
+indexing=false,      % indexing options: true,false,cite,bib
+citereset=none,      % don't reset cites
+isbn=false,          % print ISBN?
+url=true,            % print URL?
+doi=false,           % print DOI?
+natbib=true,         % natbib compatability
+]{biblatex}
+
+\addbibresource{../../library.bib}
+
 \title{Thesis}
 
 \author{Chris Cummins}
@@ -41,5 +58,7 @@
 \begin{document}
 
 \maketitle
+
+\input{chap/litreview}
 
 \end{document}
