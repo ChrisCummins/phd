@@ -39,7 +39,7 @@ class TestCorpus(TestCase):
 
     def test_from_archive(self):
         # delete any existing unpacked directory
-        fs.rm(tests.data_path("tiny", "corpus"))
+        fs.rm(tests.data_path("tiny", "corpus", exists=False))
 
         c = corpus.Corpus.from_json({
             "path": tests.data_path("tiny", "corpus", exists=False)
@@ -48,7 +48,7 @@ class TestCorpus(TestCase):
 
     def test_from_archive_path(self):
         # delete any existing unpacked directory
-        fs.rm(tests.data_path("tiny", "corpus"))
+        fs.rm(tests.data_path("tiny", "corpus", exists=False))
 
         c = corpus.Corpus.from_json({
             "path": tests.data_path("tiny", "corpus.tar.bz2")
