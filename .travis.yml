@@ -57,7 +57,6 @@ before_install:
 #
 install:  # cache hot
   - pip install 'protobuf==3.1.0'
-  - pip install tensorflow
   - ./configure -b
   - make all
   - make install
