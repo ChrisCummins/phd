@@ -56,7 +56,6 @@ before_install:
 #   - touch NORUN
 #
 install:  # cache hot
-  - pip install 'protobuf==3.1.0'
   - ./configure -b
   - make all
   - make install
