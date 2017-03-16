@@ -1,21 +1,37 @@
 \input{preamble}
 
-% Paper header
 \begin{document}
-
+        
 \title{Human-like Code Generation for Identifying Compiler and Runtime Bugs}
 
-\date{}
-\maketitle
+%
+% any author declaration will be ignored  when using 'pldi' option (for double blind review)
+%
+\authorinfo{Person 1 \and Person 2}
+{\makebox{A Department} \\
+        \makebox{A University}  \\
+        \makebox{A Place, AS 12345}}
+{\{person1,person2\}@cs.auniv.edu}
 
-\thispagestyle{empty}
+\maketitle
 
 \input{abstract}
 
 \input{sec/intro}
+
+\section{The thing we built}
+Grammar variational autoencoder~\cite{Kusner2017}.
+
 \input{sec/methodology}
 \input{sec/results}
 \input{sec/related_work}
 \input{sec/conclusion}
 
-\input{postamble}
+
+% \input{sec/acks}  % double blind review
+
+
+
+\printbibliography
+        
+\end{document}
