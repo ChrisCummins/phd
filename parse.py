@@ -4,8 +4,9 @@ import pickle
 
 from labm8 import fs
 from pycparser.plyparser import ParseError
-from pycparserext.ext_c_parser import OpenCLCParser
 from pycparserext.ext_c_generator import OpenCLCGenerator
+from pycparserext.ext_c_parser import OpenCLCParser
+from random import shuffle
 
 
 class Main(object):
@@ -19,6 +20,8 @@ class Main(object):
         files = fs.ls(indir, abspaths=True)
         n = len(files)
         print("{n} input files".format(**vars()))
+
+        shuffle(files)
 
         fs.mkdir(outdir)
 
