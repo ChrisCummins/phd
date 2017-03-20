@@ -335,7 +335,6 @@ alias M='mkdir'
 alias mm='./autogen.sh && ./configure'
 alias p='ipython'
 alias q='which'
-alias R='rmdir'
 alias s='subl'
 alias T='tail'
 alias t='touch'
@@ -471,6 +470,12 @@ silent() {
         exit $ret
     }
     rm "$tmpfile"
+}
+
+ra() {
+    for arg in "$@"; do
+        ratom "$arg";
+    done
 }
 
 # Buffer standard input to a file. Useful for redirecting output of a
