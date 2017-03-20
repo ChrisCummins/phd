@@ -32,7 +32,7 @@ clean_targets =
 distclean_targets =
 
 # allow overriding python:
-PYTHON ?= python3.5
+PYTHON ?= python3
 PIP ?= pip3.5
 
 # modules

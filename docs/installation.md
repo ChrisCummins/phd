@@ -27,7 +27,7 @@ Installation - Virtualenv
 Create a virtualenv environment in the directory `~/clgen-dev`:
 
 ```sh
-$ virtualenv -p python3.5 ~/clgen-dev
+$ virtualenv -p python3 ~/clgen-dev
 ```
 
 Activate this environment:

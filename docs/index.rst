@@ -29,7 +29,7 @@ Note that on Ubuntu, sudo privileges are required to install these requirements
 For **other Linux distributions** and older versions of Ubuntu, please check
 each for each of the following requirements:
 
--  `Python <https://www.python.org/>`_ == 3.5.
+-  `Python <https://www.python.org/>`_ >= 3.5.
 -  `TensorFlow <https://www.tensorflow.org/get_started/os_setup>`_ == 1.0.1
 -  `GCC <https://gcc.gnu.org/>`_ >= 4.8.2 or
    `clang <http://llvm.org/releases/download.html>`_ >= 3.1.
@@ -64,7 +64,7 @@ Create a virtualenv environment in the directory `~/clgen`:
 
 ::
 
-    $ virtualenv -p python3.5 ~/clgen
+    $ virtualenv -p python3 ~/clgen
 
 Activate this environment:
 
