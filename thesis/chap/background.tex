@@ -1,0 +1,29 @@
+\chapter{Background}
+
+\section{Neural Networks}
+
+\subsection{Long Short-Term Memory}
+
+LSTM variants review~\cite{Greff2015}.
+
+Notation: $\odot$ point-wise multiplication of tensors.
+
+$\bm{x}^t$ is the input vector at time $t$; $\bm{W}$ are input weight matrices; $\bm{R}$ are recurrent weight matrices; $\bm{p}$ are peephole weight vectors; $\bm{b}$ are bias vectors; functions $g$, $h$, and $\sigma$ are point-wise nonlinear activation functions.
+
+block input:
+\[ \bm{z}^{t} = g \left( \bm{W}_z \bm{x}^t + \bm{R}_z \bm{y}^{t - 1} + \bm{b}_z \right) \]
+
+input gate:
+\[ \bm{i}^{t} = \sigma \left( \bm{W}_i \bm{x}^t + \bm{R}_i \bm{y}^{t-1} + \bm{p}_i \odot c^{t-1} + \bm{b}_i \right) \]
+
+forget gate:
+\[ \bm{f}^{t} = \sigma \left( \bm{W}_f \bm{x}^t + \bm{R}_f \bm{y}^{t-1} + \bm{p}_f \odot c^{t-1} + \bm{b}_f \right) \]
+
+cell state:
+\[ \bm{c}^t = \bm{i}^t \odot \bm{z}^t + \bm{f}^t \odot \bm{c}^{t-1} \]
+
+output gate:
+\[ \bm{o}^{t} = \sigma \left( \bm{W}_i \bm{x}^t + \bm{R}_o \bm{y}^{t - 1} + \bm{p}_o \odot c^{t-1} + \bm{b}_o \right) \]
+
+block output:
+\[ \bm{y}^t = \bm{o}^t \odot h(\bm{c}^t) \]
