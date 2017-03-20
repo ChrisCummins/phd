@@ -1,5 +1,8 @@
 "*":
   core:
+    disabledPackages: [
+      "scroll-through-time"
+    ]
     telemetryConsent: "no"
     themes: [
       "atom-dark-ui"
@@ -13,6 +16,8 @@
     tabLength: 4
   "exception-reporting":
     userId: "89238f39-41b1-38a3-2657-397fa4728b99"
+  "file-types":
+    ipy: "source.python"
   linter:
     showErrorPanel: false
   "markdown-preview":
@@ -20,5 +25,11 @@
   "remote-atom":
     keep_alive: true
     launch_at_startup: true
+  "split-diff":
+    diffWords: true
+    ignoreWhitespace: true
+    leftEditorColor: "red"
+    rightEditorColor: "green"
+    scrollSyncType: "Vertical + Horizontal"
   welcome:
     showOnStartup: false
