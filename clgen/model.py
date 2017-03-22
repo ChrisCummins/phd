@@ -258,9 +258,15 @@ class Model(clgen.CLgenObject):
         return closest_path, paths
 
 
-    def train(self, quiet: bool=False) -> None:
+    def train(self, quiet: bool=False):
         """
         Train model.
+
+        Arguments:
+            quiet (bool, optional): If true, print less.
+
+        Returns:
+            Model: self.
         """
         tf = self._init_tensorflow(infer=False)
 
@@ -386,6 +392,8 @@ class Model(clgen.CLgenObject):
                     total_checkpoint += time.time() - time_start
                     avg_checkpoint = total_checkpoint / e
                     log.info("model saved to {}".format(checkpoint_path))
+
+        return self
 
     def sample(self, seed_text: str="__kernel void", output=sys.stdout,
                num_samples: int=1, temperature: float=1, max_length: int=10000,
