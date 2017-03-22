@@ -83,11 +83,25 @@ class ModelError(clgen.CLgenError):
     pass
 
 
-class DistError(ModelError):
+def from_json(model_json: dict):
     """
-    Dist model import or export error.
+    Load model from JSON.
+
+    Arguments:
+        model_json (dict): JSON specification.
+
+    Returns:
+        Model: Model instance.
     """
-    pass
+    assert(type(model_json) is dict)
+
+    if "corpus" not in model_json:
+        raise clgen.UserError("model JSON has no corpus entry")
+
+    # create corpus and remove from JSON
+    corpus = Corpus.from_json(model_json.pop("corpus"))
+
+    return Model(corpus, **model_json)
 
 
 class Model(clgen.CLgenObject):
@@ -597,23 +611,6 @@ class Model(clgen.CLgenObject):
         else:
             return None
 
-
-def from_json(model_json: dict) -> Model:
-    """
-    Load model from JSON.
-
-    Arguments:
-        model_json (dict): JSON specification.
-
-    Returns:
-        Model: Model instance.
-    """
-    assert(type(model_json) is dict)
-
-    if "corpus" not in model_json:
-        raise clgen.UserError("model JSON has no corpus entry")
-
-    # create corpus and remove from JSON
-    corpus = Corpus.from_json(model_json.pop("corpus"))
-
-    return Model(corpus, **model_json)
+    @staticmethod
+    def from_json(model_json: dict):
+        return from_json(model_json)
