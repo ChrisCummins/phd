@@ -51,6 +51,25 @@ def serialize_argspec(args: list) -> str:
     return "__kernel void A({args}) {{".format(args=", ".join(strings))
 
 
+def from_json(sampler_json: dict):
+    """
+    Instantiate sampler from JSON.
+
+    Arguments:
+        sampler_json (dict): JSON data.
+
+    Returns:
+        Sampler: Instantiate sampler.
+    """
+    sampler_opts = sampler_json.get("sampler", {})
+
+    kernel_opts = sampler_json.get("kernels", {})
+    if not kernel_opts:
+        raise clgen.UserError("no kernels section in sampler specification")
+
+    return Sampler(sampler_opts, kernel_opts)
+
+
 class Sampler(clgen.CLgenObject):
     """
     CLgen sampler for models.
@@ -180,21 +199,6 @@ class Sampler(clgen.CLgenObject):
 
         log.info("samples database:", cache["kernels.db"])
 
-
-def from_json(sampler_json: dict) -> Sampler:
-    """
-    Instantiate sampler from JSON.
-
-    Arguments:
-        sampler_json (dict): JSON data.
-
-    Returns:
-        Sampler: Instantiate sampler.
-    """
-    sampler_opts = sampler_json.get("sampler", {})
-
-    kernel_opts = sampler_json.get("kernels", {})
-    if not kernel_opts:
-        raise clgen.UserError("no kernels section in sampler specification")
-
-    return Sampler(sampler_opts, kernel_opts)
+    @staticmethod
+    def from_json(sampler_json: dict):
+        return from_json(sampler_json)
