@@ -542,54 +542,6 @@ class Model(clgen.CLgenObject):
 
         return _meta
 
-    def to_dist(self, distpath: str, author: str=None) -> str:
-        """
-        Create a dist file.
-
-        Arguments:
-            distpath (str): Path to dist file.
-            author (str, optional): Author name.
-
-        Returns:
-            str: Path to generated distfile.
-        """
-        outpath = fs.abspath(distpath) + ".tar.bz2"
-        if fs.exists(outpath):
-            raise DistError("file {} exists".format(outpath))
-
-        meta = self.meta
-        if author is not None:
-            meta["author"] = author
-        log.debug(clgen.format_json(meta))
-
-        try:
-            tar = tarfile.open(outpath, 'w:bz2')
-
-            # write meta
-            metapath = mktemp(prefix="clgen-", suffix=".json")
-            clgen.write_file(metapath, clgen.format_json(meta))
-            log.debug("metafile:", metapath)
-
-            # create tarball
-            tar.add(metapath, arcname="meta.json")
-
-            # pack contents:
-            for path in meta["contents"]:
-                abspath = fs.path(cache.ROOT, path)
-                log.verbose("packing", abspath)
-                tar.add(abspath, arcname=fs.path("contents", path))
-
-            # tidy up
-            fs.rm(metapath)
-            tar.close()
-        except Exception as e:
-            tar.close()
-            fs.rm(metapath)
-            fs.rm(outpath)
-            raise e
-
-        return outpath
-
     def __repr__(self) -> str:
         """
         String representation.

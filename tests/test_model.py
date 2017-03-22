@@ -106,16 +106,6 @@ class TestModel(TestCase):
         # train opts
         self.assertEqual(meta["train_opts"], m.train_opts)
 
-    def test_to_dist(self):
-        m = get_test_model()
-        m.train()
-
-        tmpdir = mkdtemp(prefix="clgen-")
-        outpath = m.to_dist(fs.path(tmpdir, "dist"))
-        self.assertTrue(fs.isfile(outpath))
-        self.assertEqual(fs.dirname(outpath), tmpdir)
-        fs.rm(tmpdir)
-
     def test_sample_seed(self):
         m = get_test_model()
         m.train()
