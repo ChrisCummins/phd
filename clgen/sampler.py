@@ -21,6 +21,7 @@ Sample a CLgen model.
 """
 import sys
 
+from copy import deepcopy
 from glob import glob, iglob
 from labm8 import fs
 from labm8 import system
@@ -34,6 +35,21 @@ from clgen import preprocess
 from clgen.cache import Cache
 from clgen.explore import explore
 from clgen.model import Model
+
+# Default options used for sampler. Any values provided by the user will
+# override these defaults.
+DEFAULT_SAMPLER_OPTS = {
+    "max_kernels": -1,
+    "max_batches": -1,
+    "batch_size": 1000,
+    "static_checker": True,
+    "dynamic_checker": False
+}
+DEFAULT_KERNELS_OPTS = {
+    "args": False,
+    "max_length": 10000,
+    "temperature": 1
+}
 
 
 def serialize_argspec(args: list) -> str:
@@ -85,20 +101,28 @@ class Sampler(clgen.CLgenObject):
         assert(type(sampler_opts) is dict)
         assert(type(kernel_opts) is dict)
 
+        # Validate options
+        for key in sampler_opts.keys():
+            if key not in DEFAULT_SAMPLER_OPTS:
+                raise clgen.UserError(
+                    "Unsupported sampler option '{}'. Valid keys: {}".format(
+                        key, ','.join(sorted(DEFAULT_SAMPLER_OPTS.keys()))))
+        for key in kernel_opts.keys():
+            if key not in DEFAULT_KERNELS_OPTS:
+                raise clgen.UserError(
+                    "Unsupported kernels option '{}'. Valid keys: {}".format(
+                        key, ','.join(sorted(DEFAULT_KERNELS_OPTS.keys()))))
+
+        # set properties
         self.hash = self._hash(sampler_opts, kernel_opts)
+        self.sampler_opts = clgen.update(deepcopy(DEFAULT_SAMPLER_OPTS),
+                                         sampler_opts)
+        self.kernel_opts = clgen.update(deepcopy(DEFAULT_KERNELS_OPTS),
+                                        kernel_opts)
 
-        # parse sampler options
-        self.max_kernels = sampler_opts.get("max_kernels", -1)
-        self.batch_size = sampler_opts.get("batch_size", 1000)
-        self.max_batches = sampler_opts.get("max_batches", -1)
-        self.static_checker = sampler_opts.get("static_checker", True)
-        self.dynamic_checker = sampler_opts.get("dynamic_checker", False)
-
-        if self.dynamic_checker and not cfg.USE_OPENCL:
+        if self.sampler_opts["dynamic_checker"] and not cfg.USE_OPENCL:
             log.warning("dynamic checking requested, but OpenCL not available")
-            self.dynamic_checker = False
-
-        self.kernel_opts = kernel_opts
+            self.sampler_opts["dynamic_checker"] = False
 
     def _hash(self, sampler_opts: dict, kernel_opts: dict) -> str:
         """compute sampler checksum"""
@@ -132,10 +156,10 @@ class Sampler(clgen.CLgenObject):
 
         cache = self.cache(model)
 
-        if self.kernel_opts.get("args", None):
-            start_text = serialize_argspec(self.kernel_opts["args"])
-        else:
+        if self.kernel_opts["args"] == False:
             start_text = "__kernel void A("
+        else:
+            start_text = serialize_argspec(self.kernel_opts["args"])
 
         tmppath = fs.path(cache.path,
                           "sampler-{pid}.tmp.cl".format(pid=system.PID))
@@ -143,9 +167,9 @@ class Sampler(clgen.CLgenObject):
         with open(tmppath, "w") as outfile:
             opts = {
                 "output": outfile,
-                "num_samples": self.batch_size,
-                "temperature": self.kernel_opts.get("temperature", 1),
-                "max_length": self.kernel_opts.get("max_length", 10000),
+                "num_samples": self.sampler_opts["batch_size"],
+                "temperature": self.kernel_opts["temperature"],
+                "max_length": self.kernel_opts["max_length"],
                 "seed_text": start_text,
                 "quiet": quiet
             }
@@ -153,10 +177,11 @@ class Sampler(clgen.CLgenObject):
 
         sys.stdout.flush()
         sys.stderr.flush()
-        fetch.process_sample_file(cache["kernels.db"], tmppath,
-                                  max_kernel_len=opts["max_length"], quiet=True)
+        fetch.process_sample_file(
+            cache["kernels.db"], tmppath,
+            max_kernel_len=opts["max_length"], quiet=True)
 
-        if self.static_checker:
+        if self.sampler_opts["static_checker"]:
             # TODO: Parse dynamic checker requirement
             preprocess.preprocess_db(cache["kernels.db"])
         fs.rm(tmppath)
@@ -176,17 +201,23 @@ class Sampler(clgen.CLgenObject):
             cache["kernels.db"] = fs.path(
                 cache.path, "kernels.tmp.db")
 
+        # properties
+        max_kernels = self.sampler_opts["max_kernels"]
+        has_max_kernels = max_kernels >= 0
+
+        max_batches = self.sampler_opts["max_batches"]
+        has_max_batches = max_batches >= 0
+
+
         batch_i = 0
         while True:
             # stop if we have enough kernels
-            has_max_kernels = self.max_kernels >= 0
             num_good_kernels = dbutil.num_good_kernels(cache["kernels.db"])
-            if has_max_kernels and num_good_kernels >= self.max_kernels:
+            if has_max_kernels and num_good_kernels >= max_kernels:
                 return
 
             # stop if we've done enough batches
-            has_max_batches = self.max_batches >= 0
-            if has_max_batches and batch_i >= self.max_batches:
+            if has_max_batches and batch_i >= max_batches:
                 return
 
             batch_i += 1
