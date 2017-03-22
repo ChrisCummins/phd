@@ -230,6 +230,16 @@ class Sampler(clgen.CLgenObject):
 
         log.info("samples database:", cache["kernels.db"])
 
+    def __repr__(self) -> str:
+        """
+        String representation.
+        """
+        return "{hash}: {data}".format(
+            hash=self.hash, data=clgen.format_json({
+                "kernels": self.kernel_opts,
+                "sampler": self.sampler_opts
+            }))
+
     @staticmethod
     def from_json(sampler_json: dict):
         return from_json(sampler_json)
