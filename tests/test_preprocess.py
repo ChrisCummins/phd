@@ -63,9 +63,11 @@ class TestPreprocess(TestCase):
         self.assertEqual(*preprocess_pair('sample-1'))
 
     def test_preprocess_shim(self):
+        # FLOAT_T is defined in shim header
         self.assertTrue(preprocess.preprocess("""
-__kernel void A(__global FLOAT_T* a) { int b; }"""))
+__kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=True))
 
+        # Preprocess will fail without FLOAT_T defined
         with self.assertRaises(preprocess.BadCodeException):
             preprocess.preprocess("""
 __kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=False)
@@ -87,6 +89,21 @@ __kernel void A() {
   int a;
 }\
 """))
+
+    def test_preprocess_stable(self):
+        code = """\
+__kernel void A(__global float* a) {
+  int b;
+  float c;
+  int d = get_global_id(0);
+
+  a[d] *= 2.0f;
+}"""
+        # pre-processing is "stable" if the code doesn't change
+        out = code
+        for _ in range(5):
+            out = preprocess.preprocess(out)
+            self.assertEqual(out, code)
 
     def test_remove_bad_preprocessed(self):
         fs.rm("tmp.db")
