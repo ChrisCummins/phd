@@ -33,7 +33,7 @@ distclean_targets =
 
 # allow overriding python:
 PYTHON ?= python3
-PIP ?= pip3.5
+PIP ?= pip3
 
 # modules
 include make/remote.make
