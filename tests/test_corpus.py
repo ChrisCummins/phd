@@ -24,7 +24,7 @@ from labm8 import fs
 import clgen
 from clgen import corpus
 
-TINY_HASH = tests.data_str("tiny", "corpus.contents.sha1").rstrip()
+TINY_HASH = '1fd1cf76b997b4ae163fd7b2cd3e3d94beb281ff'
 
 
 class TestCorpus(TestCase):
@@ -98,3 +98,29 @@ class TestCorpus(TestCase):
                 "path": tests.archive("tiny", "corpus"),
                 "encoding": "INVALID_ENCODING"
             })
+
+    def test_eq(self):
+        c1 = corpus.Corpus.from_json({
+            "path": tests.archive("tiny", "corpus"),
+            "eof": False
+        })
+        c2 = corpus.Corpus.from_json({
+            "path": tests.archive("tiny", "corpus"),
+            "eof": False
+        })
+        c3 = corpus.Corpus.from_json({
+            "path": tests.archive("tiny", "corpus"),
+            "eof": True
+        })
+
+        self.assertEqual(c1, c2)
+        self.assertNotEqual(c2, c3)
+        self.assertNotEqual(c1, False)
+        self.assertNotEqual(c1, 'abcdef')
+
+    def test_to_json(self):
+        c1 = corpus.Corpus.from_json({
+            "path": tests.archive("tiny", "corpus")
+        })
+        c2 = corpus.Corpus.from_json(c1.to_json())
+        self.assertEqual(c1, c2)

@@ -114,15 +114,23 @@ class Sampler(clgen.CLgenObject):
                         key, ','.join(sorted(DEFAULT_KERNELS_OPTS.keys()))))
 
         # set properties
-        self.hash = self._hash(sampler_opts, kernel_opts)
         self.sampler_opts = clgen.update(deepcopy(DEFAULT_SAMPLER_OPTS),
                                          sampler_opts)
         self.kernel_opts = clgen.update(deepcopy(DEFAULT_KERNELS_OPTS),
                                         kernel_opts)
+        self.hash = self._hash(self.sampler_opts, self.kernel_opts)
 
         if self.sampler_opts["dynamic_checker"] and not cfg.USE_OPENCL:
             log.warning("dynamic checking requested, but OpenCL not available")
             self.sampler_opts["dynamic_checker"] = False
+
+        def _start_text(args):
+            if args == False:
+                return "__kernel void A("
+            else:
+                return serialize_argspec(args)
+
+        self.start_text = _start_text(self.kernel_opts["args"])
 
     def _hash(self, sampler_opts: dict, kernel_opts: dict) -> str:
         """compute sampler checksum"""
@@ -156,11 +164,6 @@ class Sampler(clgen.CLgenObject):
 
         cache = self.cache(model)
 
-        if self.kernel_opts["args"] == False:
-            start_text = "__kernel void A("
-        else:
-            start_text = serialize_argspec(self.kernel_opts["args"])
-
         tmppath = fs.path(cache.path,
                           "sampler-{pid}.tmp.cl".format(pid=system.PID))
 
@@ -170,7 +173,7 @@ class Sampler(clgen.CLgenObject):
                 "num_samples": self.sampler_opts["batch_size"],
                 "temperature": self.kernel_opts["temperature"],
                 "max_length": self.kernel_opts["max_length"],
-                "seed_text": start_text,
+                "seed_text": self.start_text,
                 "quiet": quiet
             }
             model.sample(**opts)
@@ -234,11 +237,26 @@ class Sampler(clgen.CLgenObject):
         """
         String representation.
         """
-        return "{hash}: {data}".format(
-            hash=self.hash, data=clgen.format_json({
-                "kernels": self.kernel_opts,
-                "sampler": self.sampler_opts
-            }))
+        hash = self.hash
+        seed = self.start_text
+        return "sampler[{hash}]: '{seed}'".format(**vars())
+
+    def to_json(self) -> dict:
+        """
+        JSON representation.
+        """
+        return {
+            "kernels": self.kernel_opts,
+            "sampler": self.sampler_opts
+        }
+
+    def __eq__(self, rhs) -> bool:
+        if not isinstance(rhs, Sampler):
+            return False
+        return rhs.hash == self.hash
+
+    def __ne__(self, rhs) -> bool:
+        return not self.__eq__(rhs)
 
     @staticmethod
     def from_json(sampler_json: dict):

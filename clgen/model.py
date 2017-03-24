@@ -554,8 +554,26 @@ class Model(clgen.CLgenObject):
         """
         String representation.
         """
-        return "{hash}: {data}".format(
-            hash=self.hash, data=clgen.format_json(self.opts))
+        hash = self.hash
+        size = self.rnn_size
+        nlayers = self.num_layers
+        model = self.model_type.upper()
+        nepochs = self.epochs
+
+        return "model[{hash}]: {size}x{nlayers}x{nepochs} {model}".format(**vars())
+
+    def to_json(self) -> dict:
+        d = deepcopy(self.opts)
+        d["corpus"] = self.corpus.to_json()
+        return d
+
+    def __eq__(self, rhs) -> bool:
+        if not isinstance(rhs, Model):
+            return False
+        return rhs.hash == self.hash
+
+    def __ne__(self, rhs) -> bool:
+        return not self.__eq__(rhs)
 
     @property
     def checkpoint_path(self) -> str:

@@ -86,6 +86,51 @@ class TestSampler(TestCase):
         self.assertTrue(nun_contentfiles >= 1)
         self.assertTrue(num_preprocessed >= 1)
 
+    def test_eq(self):
+        s1 = sampler.from_json({
+            "kernels": {
+                "args": [
+                    '__global float*',
+                    '__global float*',
+                    'const int'
+                ]
+            }
+        })
+        s2 = sampler.from_json({
+            "kernels": {
+                "args": [
+                    '__global float*',
+                    '__global float*',
+                    'const int'
+                ]
+            }
+        })
+        s3 = sampler.from_json({
+            "kernels": {
+                "args": [
+                    'int'
+                ]
+            }
+        })
+
+        self.assertEqual(s1, s2)
+        self.assertNotEqual(s2, s3)
+        self.assertNotEqual(s1, False)
+        self.assertNotEqual(s1, 'abcdef')
+
+    def test_to_json(self):
+        s1 = sampler.from_json({
+            "kernels": {
+                "args": [
+                    '__global float*',
+                    '__global float*',
+                    'const int'
+                ]
+            }
+        })
+        s2 = sampler.from_json(s1.to_json())
+        self.assertEqual(s1, s2)
+
 
 if __name__ == "__main__":
     main()
