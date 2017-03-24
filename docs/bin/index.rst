@@ -411,3 +411,25 @@ clgen-preprocess
       --remove-preprocessed
                             remove all preprocessed files from database
 
+clgen-verify
+-------------
+
+::
+
+    usage: clgen-verify [-h] [--version] [-v] [--cpu] <dataset> <input-dir>
+    
+    Run a collection of CLgen programs and store their output.
+    
+    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
+    
+    positional arguments:
+      <dataset>      path to output database. If it does not exist, it is created.
+      <input-dir>    path to directory containing CLgen-generated programs.
+    
+    optional arguments:
+      -h, --help     show this help message and exit
+      --version      show version information and exit
+      -v, --verbose  increase output verbosity
+      --cpu          Use CPU for execution (default: GPU)
+
