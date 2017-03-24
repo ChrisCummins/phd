@@ -56,6 +56,7 @@ DEFAULT_CORPUS_OPTS = {
     "preserve_order": False,
 }
 
+
 class FeaturesError(clgen.CLgenError):
     """
     Thrown in case of error during features encoding.
@@ -232,6 +233,7 @@ class Corpus(clgen.CLgenObject):
 
         self.opts = deepcopy(DEFAULT_CORPUS_OPTS)
         clgen.update(self.opts, opts)
+        self.opts["id"] = contentid
         self.contentid = contentid
         self.hash = self._hash(contentid, self.opts)
         self.cache = Cache(fs.path("corpus", self.hash))
@@ -450,8 +452,23 @@ class Corpus(clgen.CLgenObject):
         self._pointer = pointer
 
     def __repr__(self) -> str:
-        n = dbutil.num_good_kernels(self.contentcache['kernels.db'])
-        return "corpus of {n} files".format(n=n)
+        hash = self.hash
+        nf = dbutil.num_good_kernels(self.contentcache['kernels.db'])
+        v = self.opts["vocabulary"]
+        nt = self.atomizer.vocab_size
+        return ("corpus[{hash}]: {nf} files, {v} vocabulary with {nt} tokens"
+                .format(**vars()))
+
+    def to_json(self) -> dict:
+        return self.opts
+
+    def __eq__(self, rhs) -> bool:
+        if not isinstance(rhs, Corpus):
+            return False
+        return rhs.hash == self.hash
+
+    def __ne__(self, rhs) -> bool:
+        return not self.__eq__(rhs)
 
     @staticmethod
     def from_json(corpus_json: dict):
@@ -474,9 +491,9 @@ class Corpus(clgen.CLgenObject):
                     "Corpus path '{}' is not a directory".format(path))
             uid = dirhash(path, 'sha1')
         elif uid:
-            cache_path = fs.path(cache.ROOT, "corpus", uid)
+            cache_path = fs.path(cache.ROOT, "contentfiles", uid)
             if not fs.isdir(cache_path):
-                raise clgen.UserError("Corpus {} not found".format(uid))
+                raise clgen.UserError("Corpus content {} not found".format(uid))
         else:
             raise clgen.UserError("No corpus path or ID provided")
 

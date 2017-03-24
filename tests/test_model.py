@@ -142,6 +142,49 @@ class TestModel(TestCase):
             print("OUT", out)
             self.assertEqual(out1, out)
 
+    def test_eq(self):
+        m1 = model.from_json({
+            "corpus": {
+                "path": tests.data_path("tiny", "corpus")
+            },
+            "train_opts": {
+                "intermediate_checkpoints": False
+            }
+        })
+        m2 = model.from_json({
+            "corpus": {
+                "path": tests.data_path("tiny", "corpus")
+            },
+            "train_opts": {
+                "intermediate_checkpoints": False
+            }
+        })
+        m3 = model.from_json({
+            "corpus": {
+                "path": tests.data_path("tiny", "corpus")
+            },
+            "train_opts": {
+                "intermediate_checkpoints": True
+            }
+        })
+
+        self.assertEqual(m1, m2)
+        self.assertNotEqual(m2, m3)
+        self.assertNotEqual(m1, False)
+        self.assertNotEqual(m1, 'abcdef')
+
+    def test_to_json(self):
+        m1 = model.from_json({
+            "corpus": {
+                "path": tests.data_path("tiny", "corpus")
+            },
+            "train_opts": {
+                "intermediate_checkpoints": True
+            }
+        })
+        m2 = model.from_json(m1.to_json())
+        self.assertEqual(m1, m2)
+
 
 if __name__ == "__main__":
     main()
