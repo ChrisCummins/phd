@@ -341,24 +341,6 @@ def parse_instcounts(txt: str) -> dict:
     return counts
 
 
-_sql_rm_chars = re.compile(r'[\(\)]')
-_sql_sub_chars = re.compile(r'-')
-
-
-def escape_sql_key(key: str) -> str:
-    """
-    Escape SQL key.
-
-    Arguments:
-        key (str): SQL key.
-
-    Returns:
-        str: Escaped key.
-    """
-    return re.sub(_sql_sub_chars, '_',
-                  re.sub(_sql_rm_chars, '', '_'.join(key.split(' '))))
-
-
 def instcounts2ratios(counts: dict) -> dict:
     """
     Convert instruction counts to instruction densities.
@@ -383,35 +365,17 @@ def instcounts2ratios(counts: dict) -> dict:
     total = float(counts[total_key])
 
     for key in non_ratio_keys:
-        ratios[escape_sql_key(key)] = counts[key]
+        ratios[dbutil.escape_sql_key(key)] = counts[key]
 
     for key in counts:
         if key not in non_ratio_keys:
             # Copy count
-            ratios[escape_sql_key(key)] = counts[key]
+            ratios[dbutil.escape_sql_key(key)] = counts[key]
             # Insert ratio
-            ratios[escape_sql_key('ratio_' + key)] = float(counts[key]) / total
+            ratio = float(counts[key]) / total
+            ratios[dbutil.escape_sql_key('ratio_' + key)] = ratio
 
     return ratios
-
-
-def sql_insert_dict(c, table: str, data: dict) -> None:
-    """
-    Insert a dict of key value pairs into an SQL table.
-
-    Uses the key names as column names, as the values as column values.
-
-    Arguments:
-        c (sqlite3.Cursor): Database cursor.
-        table (str): Destination table.
-        data (dict): Key value pairs.
-    """
-    cmd = ("INSERT INTO {table}({cols}) VALUES({vals})"
-           .format(table=table,
-                   cols=','.join(data.keys()),
-                   vals=','.join(['?'] * len(data))))
-
-    c.execute(cmd, tuple(data.values()))
 
 
 def bytecode_features(bc: str, id: str='anon') -> dict:
@@ -830,35 +794,3 @@ def preprocess_db(db_path: str) -> bool:
         return True
     else:
         return False
-
-
-def remove_bad_preprocessed(db_path: str) -> None:
-    """
-    Remove all ugly and bad contents from PreprocessedFiles table.
-
-    Arguments:
-        db_path (str): Dataset.
-    """
-    original_size = fs.du(db_path, human_readable=False)
-    original_size_human_readable = fs.du(db_path, human_readable=True)
-    log.info("vacuuming", original_size_human_readable, "database")
-    sys.stdout.flush()
-
-    # Remove contents from bad or ugly preprocessed files.
-    db = dbutil.connect(db_path)
-    c = db.cursor()
-    c.execute("UPDATE PreprocessedFiles SET contents='[DELETED]' "
-              "WHERE status=1 OR status=2")
-    db.commit()
-    c.close()
-
-    c = db.cursor()
-    c.execute("VACUUM")
-    db.commit()
-    c.close()
-
-    new_size = fs.du(db_path, human_readable=False)
-    new_size_human_readable = fs.du(db_path, human_readable=True)
-    reduction_ratio = (1 - (new_size / original_size)) * 100
-    log.info("done. new size {}. ({:.0f}% reduction)"
-             .format(new_size_human_readable, reduction_ratio), sep=".")

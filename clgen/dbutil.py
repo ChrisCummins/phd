@@ -372,3 +372,72 @@ def remove_preprocessed(path: str) -> None:
     c.execute("DELETE FROM Meta WHERE key='preprocessed_checksum'")
     c.close()
     db.commit()
+
+
+def remove_bad_preprocessed(db_path: str) -> None:
+    """
+    Remove all ugly and bad contents from PreprocessedFiles table.
+
+    Arguments:
+        db_path (str): Dataset.
+    """
+    original_size = fs.du(db_path, human_readable=False)
+    original_size_human_readable = fs.du(db_path, human_readable=True)
+    log.info("vacuuming", original_size_human_readable, "database")
+    sys.stdout.flush()
+
+    # Remove contents from bad or ugly preprocessed files.
+    db = dbutil.connect(db_path)
+    c = db.cursor()
+    c.execute("UPDATE PreprocessedFiles SET contents='[DELETED]' "
+              "WHERE status=1 OR status=2")
+    db.commit()
+    c.close()
+
+    c = db.cursor()
+    c.execute("VACUUM")
+    db.commit()
+    c.close()
+
+    new_size = fs.du(db_path, human_readable=False)
+    new_size_human_readable = fs.du(db_path, human_readable=True)
+    reduction_ratio = (1 - (new_size / original_size)) * 100
+    log.info("done. new size {}. ({:.0f}% reduction)"
+             .format(new_size_human_readable, reduction_ratio), sep=".")
+
+
+def sql_insert_dict(c, table: str, data: dict) -> None:
+    """
+    Insert a dict of key value pairs into an SQL table.
+
+    Uses the key names as column names, as the values as column values.
+
+    Arguments:
+        c (sqlite3.Cursor): Database cursor.
+        table (str): Destination table.
+        data (dict): Key value pairs.
+    """
+    cmd = ("INSERT INTO {table}({cols}) VALUES({vals})"
+           .format(table=table,
+                   cols=','.join(data.keys()),
+                   vals=','.join(['?'] * len(data))))
+
+    c.execute(cmd, tuple(data.values()))
+
+
+_sql_rm_chars = re.compile(r'[\(\)]')
+_sql_sub_chars = re.compile(r'-')
+
+
+def escape_sql_key(key: str) -> str:
+    """
+    Escape SQL key.
+
+    Arguments:
+        key (str): SQL key.
+
+    Returns:
+        str: Escaped key.
+    """
+    return re.sub(_sql_sub_chars, '_',
+                  re.sub(_sql_rm_chars, '', '_'.join(key.split(' '))))
