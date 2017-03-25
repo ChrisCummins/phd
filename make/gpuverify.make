@@ -30,6 +30,7 @@ gpuverify: $(gpuverify)
 # note that we've hardcoded a specific version of GPUverify, but the nightly
 # build may update at any time and break this.
 $(gpuverify):
+	rm -rf $(root)/native/gpuverify
 	mkdir -p $(root)/native/gpuverify
 	cd $(root)/native/gpuverify && wget $(gpuverify_url) -O gpuverify.zip
 	cd $(root)/native/gpuverify && unzip gpuverify.zip
