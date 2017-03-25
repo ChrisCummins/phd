@@ -589,7 +589,7 @@ def preprocess(src: str, id: str='anon', use_shim: bool=True,
         log.info("Dynamic checker")
 
     if use_gpuverify:
-        log.info("GPUVerify")
+        gpuverify(src)
 
     return src
 
