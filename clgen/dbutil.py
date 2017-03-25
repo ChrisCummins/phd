@@ -21,11 +21,14 @@ CLgen sqlite3 database utilities
 """
 import os
 import re
+import sys
 import sqlite3
 
 from hashlib import md5
+from labm8 import fs
 
 import clgen
+from clgen import log
 
 
 def create_db(path: str, github: bool=False) -> None:
@@ -388,7 +391,7 @@ def remove_bad_preprocessed(db_path: str) -> None:
     sys.stdout.flush()
 
     # Remove contents from bad or ugly preprocessed files.
-    db = dbutil.connect(db_path)
+    db = connect(db_path)
     c = db.cursor()
     c.execute("UPDATE PreprocessedFiles SET contents='[DELETED]' "
               "WHERE status=1 OR status=2")
