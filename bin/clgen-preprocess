@@ -40,6 +40,10 @@ def main():
                         help='treat input as file')
     parser.add_argument('-i', '--inplace', action='store_true',
                         help='inplace file rewrite')
+    parser.add_argument('-D', '--dynamic-checker', action='store_true',
+                        help='run dynamic checker on kernels')
+    parser.add_argument('-G', '--gpuverify', action='store_true',
+                        help='run GPUVerify on kernels')
     parser.add_argument('--remove-bad-preprocessed', action='store_true',
                         help="""
 delete the contents of all bad or ugly preprocessed files,
@@ -48,19 +52,25 @@ but keep the entries in the table""".strip())
                         help="remove all preprocessed files from database")
     args = parser.parse_args()
 
+    preprocess_opts = {
+        "use_dynamic_checker": args.dynamic_checker,
+        "use_gpuverify": args.gpuverify,
+    }
+
     if args.file and args.inplace:
-        cli.main(preprocess.preprocess_inplace, args.inputs)
+        cli.main(preprocess.preprocess_inplace, args.inputs, **preprocess_opts)
     else:
         for path in args.inputs:
             if args.file:
-                cli.main(preprocess.preprocess_file, path, inplace=False)
+                cli.main(preprocess.preprocess_file, path,
+                         inplace=False, **preprocess_opts)
             elif args.remove_bad_preprocessed:
                 cli.main(dbutil.remove_bad_preprocessed, path)
             elif args.remove_preprocessed:
                 cli.main(dbutil.remove_preprocessed, path)
                 log.info("done.")
             else:
-                if cli.main(preprocess.preprocess_db, path):
+                if cli.main(preprocess.preprocess_db, path, **preprocess_opts):
                     log.info("done.")
                 else:
                     log.info("nothing to be done.")

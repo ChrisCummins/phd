@@ -545,7 +545,9 @@ def sanitize_prototype(src: str) -> str:
         return src
 
 
-def preprocess(src: str, id: str='anon', use_shim: bool=True) -> str:
+def preprocess(src: str, id: str='anon', use_shim: bool=True,
+               use_dynamic_checker: bool=False,
+               use_gpuverify: bool=False) -> str:
     """
     Preprocess an OpenCL source. There are three possible outcomes:
 
@@ -559,6 +561,9 @@ def preprocess(src: str, id: str='anon', use_shim: bool=True) -> str:
         id (str, optional): An identifying name for the source code
             (used in exception messages).
         use_shim (bool, optional): Inject shim header.
+        use_dynamic_checker (bool, optional): Whether to run the dynamic
+            checker on the code.
+        use_gpuverify (bool, optional): Whether to run GPUVerify on the code.
 
     Returns:
         str: Preprocessed source code as a string.
@@ -580,6 +585,12 @@ def preprocess(src: str, id: str='anon', use_shim: bool=True) -> str:
     src = ensure_has_code(src)
     src = sanitize_prototype(src)
 
+    if use_dynamic_checker:
+        log.info("Dynamic checker")
+
+    if use_gpuverify:
+        log.info("GPUVerify")
+
     return src
 
 
@@ -588,6 +599,8 @@ def _preprocess_db_worker(job: dict) -> None:
     db_path = job["db_in"]
     db_index_range = job["db_index_range"]
     outpath = job["json_out"]
+    preprocess_opts = job["preprocess_opts"]
+
     log.debug("worker", os.getpid(), outpath)
 
     db = dbutil.connect(db_path)
@@ -612,7 +625,7 @@ def _preprocess_db_worker(job: dict) -> None:
             if id != cached_id:
                 try:
                     # Try and preprocess it:
-                    contents = preprocess(contents, id)
+                    contents = preprocess(contents, id, **preprocess_opts)
                     status = 0
                 except BadCodeException as e:
                     contents = str(e)
@@ -631,7 +644,7 @@ def _preprocess_db_worker(job: dict) -> None:
 
 
 def preprocess_contentfiles(db_path: str, max_num_workers: int=cpu_count(),
-                            attempt: int=1) -> None:
+                            attempt: int=1, **preprocess_opts) -> None:
     """
     Preprocess OpenCL dataset.
 
@@ -683,7 +696,8 @@ def preprocess_contentfiles(db_path: str, max_num_workers: int=cpu_count(),
             "db_in": db_path,
             "db_index_range": (offset + i * files_per_worker,
                                offset + i * files_per_worker + files_per_worker),
-            "json_out": fs.path(cache.path, "{i}.json".format(i=i))
+            "json_out": fs.path(cache.path, "{i}.json".format(i=i)),
+            "preprocess_opts": preprocess_opts
         } for i in range(num_workers)]
 
         # spool up worker threads then finalize
@@ -700,14 +714,14 @@ def preprocess_contentfiles(db_path: str, max_num_workers: int=cpu_count(),
             # See: https://github.com/ChrisCummins/clgen/issues/64
             max_num_workers = max(int(max_num_workers / 2), 1)
             preprocess_contentfiles(db_path, max_num_workers=max_num_workers,
-                                    attempt=attempt + 1)
+                                    attempt=attempt + 1, **preprocess_opts)
         except Exception as e:
             _finalize(db_path, cache)
             raise e
         _finalize(db_path, cache)
 
 
-def preprocess_file(path: str, inplace: bool=False) -> None:
+def preprocess_file(path: str, inplace: bool=False, **preprocess_opts) -> None:
     """
     Preprocess a file.
 
@@ -721,7 +735,7 @@ def preprocess_file(path: str, inplace: bool=False) -> None:
     with open(path) as infile:
         contents = infile.read()
     try:
-        out = preprocess(contents)
+        out = preprocess(contents, **preprocess_opts)
         if inplace:
             with open(path, 'w') as outfile:
                 outfile.write(out)
@@ -772,7 +786,7 @@ def preprocess_inplace(paths: str, max_num_workers: int=cpu_count(),
 
 
 
-def preprocess_db(db_path: str) -> bool:
+def preprocess_db(db_path: str, **preprocess_opts) -> bool:
     """
     Preprocess database contents.
 
@@ -786,7 +800,7 @@ def preprocess_db(db_path: str) -> bool:
 
     modified = dbutil.is_modified(db)
     if modified:
-        preprocess_contentfiles(db_path)
+        preprocess_contentfiles(db_path, **preprocess_opts)
         dbutil.set_modified_status(db, modified)
         return True
     else:
