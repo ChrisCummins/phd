@@ -456,18 +456,19 @@ def write_file(path: str, contents: str) -> None:
         outfile.write(contents)
 
 
-def write_json_file(path: str, data) -> None:
+def write_json_file(path: str, data, format: bool=True) -> None:
     """
     Write JSON data to file.
 
     Arguments:
         path (str): Destination.
         data (dict or list): JSON serializable data.
+        format (bool, optional): Pretty-print JSON data.
     """
-    if fs.dirname(path):
-        fs.mkdir(fs.dirname(path))
-    with open(path, 'w') as outfile:
-        outfile.write(json.dumps(data))
+    if format:
+        write_file(path, format_json(data))
+    else:
+        write_file(path, json.dumps(data))
 
 
 def files_from_list(paths: list) -> list:
