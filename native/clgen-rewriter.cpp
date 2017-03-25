@@ -35,6 +35,7 @@
 // along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 //
 #include <memory>
+#include <set>
 #include <string>
 #include <map>
 
@@ -80,6 +81,17 @@ static bool isRewritten() {
 // character types
 enum ctype { AZ, az };
 
+// reserved OpenCL keywords to check for when picking a name. Of course, there
+// are many reserved words, but we select only the short ones, which are
+// plausible to occur in the real world.
+//
+std::set<std::string> reserved_names {
+  "do",
+  "if",
+  "abs",
+  "for",
+  "int"
+};
 
 // increment a single character name
 //
@@ -124,6 +136,10 @@ std::string get_next_name(const std::string& current) {
       break;
     }
   }
+
+  // Check that it isn't a reserved word, or else generate a new one
+  if (reserved_names.find(c) != reserved_names.end())
+    return get_next_name(c);
 
   return c;
 }
