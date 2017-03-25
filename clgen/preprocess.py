@@ -82,13 +82,6 @@ class ClangFormatException(BadCodeException):
     pass
 
 
-class GPUVerifyException(BadCodeException):
-    """
-    GPUVerify found a bug.
-    """
-    pass
-
-
 class UglyCodeException(clgen.CLgenError):
     """
     Code is ugly.
@@ -113,6 +106,13 @@ class NoCodeException(UglyCodeException):
 class RewriterException(UglyCodeException):
     """
     Program rewriter error.
+    """
+    pass
+
+
+class GPUVerifyException(UglyCodeException):
+    """
+    GPUVerify found a bug.
     """
     pass
 
