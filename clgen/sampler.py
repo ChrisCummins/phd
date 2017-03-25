@@ -159,7 +159,19 @@ class Sampler(clgen.CLgenObject):
             Cache: Cache.
         """
         sampler_model_hash = clgen.checksum_str(self.hash + model.hash)
-        return Cache(fs.path("sampler", sampler_model_hash))
+
+        cache = Cache(fs.path("sampler", sampler_model_hash))
+
+        # validate metadata against cache
+        meta = self.to_json()
+        if cache["META"]:
+            cached_meta = clgen.load_json_file(cache["META"])
+            if meta != cached_meta:
+                raise clgen.InternalError("sampler metadata mismatch")
+        else:
+            clgen.write_json_file(cache.keypath("META"), meta)
+
+        return cache
 
     def sample_iteration(self, model: Model, quiet: bool=False) -> None:
         """

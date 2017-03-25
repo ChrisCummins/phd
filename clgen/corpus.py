@@ -234,6 +234,7 @@ class Corpus(clgen.CLgenObject):
         self.opts = deepcopy(DEFAULT_CORPUS_OPTS)
         clgen.update(self.opts, opts)
         self.opts["id"] = contentid
+
         self.contentid = contentid
         self.hash = self._hash(contentid, self.opts)
         self.cache = Cache(fs.path("corpus", self.hash))
@@ -241,6 +242,15 @@ class Corpus(clgen.CLgenObject):
         self.kernels_db = self.contentcache['kernels.db']
 
         log.debug("corpus {hash}".format(hash=self.hash))
+
+        # validate metadata against cache
+        meta = self.to_json()
+        if self.cache["META"]:
+            cached_meta = clgen.load_json_file(self.cache["META"])
+            if meta != cached_meta:
+                raise clgen.InternalError("corpus metadata mismatch")
+        else:
+            clgen.write_json_file(self.cache.keypath("META"), meta)
 
         try:
             if path is not None:

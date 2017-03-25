@@ -443,10 +443,31 @@ def terminating(thing):
 
 
 def write_file(path: str, contents: str) -> None:
+    """
+    Write string to file.
+
+    Arguments:
+        path (str): Destination.
+        contents (str): Contents.
+    """
     if fs.dirname(path):
         fs.mkdir(fs.dirname(path))
     with open(path, 'w') as outfile:
         outfile.write(contents)
+
+
+def write_json_file(path: str, data) -> None:
+    """
+    Write JSON data to file.
+
+    Arguments:
+        path (str): Destination.
+        data (dict or list): JSON serializable data.
+    """
+    if fs.dirname(path):
+        fs.mkdir(fs.dirname(path))
+    with open(path, 'w') as outfile:
+        outfile.write(json.dumps(data))
 
 
 def files_from_list(paths: list) -> list:

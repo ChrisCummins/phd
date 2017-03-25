@@ -133,6 +133,15 @@ class Model(clgen.CLgenObject):
 
         log.debug("model", self.hash)
 
+        # validate metadata against cache
+        meta = self.to_json()
+        if self.cache["META"]:
+            cached_meta = clgen.load_json_file(self.cache["META"])
+            if meta != cached_meta:
+                raise clgen.InternalError("model metadata mismatch")
+        else:
+            clgen.write_json_file(self.cache.keypath("META"), meta)
+
     def _hash(self, corpus: Corpus, opts: dict) -> str:
         """ compute model hash """
         hashopts = deepcopy(opts)
