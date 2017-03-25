@@ -31,6 +31,7 @@ addons:
       - clang-3.6
       - libhdf5-serial-dev
       - python-dev
+      - mono-complete
 
 env:
   global:
