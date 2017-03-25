@@ -43,7 +43,8 @@ DEFAULT_SAMPLER_OPTS = {
     "max_batches": -1,
     "batch_size": 1000,
     "static_checker": True,
-    "dynamic_checker": False
+    "dynamic_checker": False,
+    "gpuverify": False
 }
 DEFAULT_KERNELS_OPTS = {
     "args": False,
@@ -130,7 +131,14 @@ class Sampler(clgen.CLgenObject):
             else:
                 return serialize_argspec(args)
 
+        # seed to language model
         self.start_text = _start_text(self.kernel_opts["args"])
+
+        # options to pass to preprocess_db()
+        self.preprocess_opts = {
+            "use_dynamic_checker": self.sampler_opts["dynamic_checker"],
+            "use_gpuverify": self.sampler_opts["gpuverify"]
+        }
 
     def _hash(self, sampler_opts: dict, kernel_opts: dict) -> str:
         """compute sampler checksum"""
@@ -185,8 +193,7 @@ class Sampler(clgen.CLgenObject):
             max_kernel_len=opts["max_length"], quiet=True)
 
         if self.sampler_opts["static_checker"]:
-            # TODO: Parse dynamic checker requirement
-            preprocess.preprocess_db(cache["kernels.db"])
+            preprocess.preprocess_db(cache["kernels.db"], **self.preprocess_opts)
         fs.rm(tmppath)
 
     def sample(self, model: Model, quiet: bool=False) -> None:
