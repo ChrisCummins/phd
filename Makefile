@@ -39,6 +39,7 @@ PIP ?= pip3
 include make/remote.make
 include make/cuda.make
 include make/cmake.make
+include make/gpuverify.make
 include make/ninja.make
 include make/llvm.make
 include make/libclc.make
@@ -109,7 +110,7 @@ distclean: $(distclean_targets)
 
 # install CLgen
 .PHONY: install
-install: cuda
+install: cuda gpuverify
 	$(PIP) install --upgrade pip
 	$(PIP) install --only-binary=numpy 'numpy>=1.10.4'
 	$(PIP) install --only-binary=scipy 'scipy>=0.16.1'

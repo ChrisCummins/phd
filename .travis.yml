@@ -15,6 +15,7 @@ cache:
   directories:
     - .cache
     - native/cmake
+    - native/gpuverify
     - native/libclc
     - native/llvm
     - native/ninja
