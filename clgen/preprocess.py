@@ -689,7 +689,7 @@ def preprocess_contentfiles(db_path: str, max_num_workers: int=cpu_count(),
         files_per_worker = math.ceil(jobsize / num_workers)
 
         # temporary cache used for worker thread results
-        cache = Cache("{pid}.preprocess".format(pid=os.getpid()))
+        cache = Cache("preprocess/{pid}".format(pid=os.getpid()))
         # each worker thread receives a range of database indices to preprocess,
         # and a JSON file to write results into
         jobs = [{
