@@ -52,6 +52,10 @@
 #include <clang/Tooling/Tooling.h>
 
 
+// Uncomment the following line for verbose output:
+// #define VERBOSE
+
+
 namespace rewriter {
 
 // global state
@@ -325,6 +329,7 @@ int main(int argc, const char** argv) {
 
   const auto& id = rewriter::rewriter.getSourceMgr().getMainFileID();
 
+#ifdef VERBOSE
   if (!rewriter::isRewritten()) {
     llvm::errs() << "fatal: nothing to rewrite!";
     return E_NO_INPUT;
@@ -338,6 +343,10 @@ int main(int argc, const char** argv) {
                << " variable declarations\n"
                << "Rewrote " << rewriter::_var_use_rewrites_counter
                << " variable uses\n";
+#else  // not VERBOSE
+  if (!rewriter::isRewritten())
+    return E_NO_INPUT;
+#endif  // VERBOSE
 
   rewriter::rewriter.getEditBuffer(id).write(llvm::outs());
   return result;
