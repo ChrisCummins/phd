@@ -55,7 +55,7 @@ but keep the entries in the table""".strip())
             if args.file:
                 cli.main(preprocess.preprocess_file, path, inplace=False)
             elif args.remove_bad_preprocessed:
-                cli.main(preprocess.remove_bad_preprocessed, path)
+                cli.main(dbutil.remove_bad_preprocessed, path)
             elif args.remove_preprocessed:
                 cli.main(dbutil.remove_preprocessed, path)
                 log.info("done.")
