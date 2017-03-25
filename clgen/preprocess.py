@@ -681,7 +681,7 @@ def preprocess_contentfiles(db_path: str, max_num_workers: int=cpu_count(),
         r=(num_contentfiles - num_preprocessedfiles) / num_contentfiles))
 
     # split into mulitple jobs of a maximum size
-    jobsize = min(512, num_contentfiles)
+    jobsize = min(max_num_workers * 200, num_contentfiles)
     numjobs = math.ceil(num_contentfiles / jobsize)
     for j, offset in enumerate(range(0, num_contentfiles, jobsize)):
         num_preprocessedfiles = dbutil.num_rows_in(db_path, 'PreprocessedFiles')
