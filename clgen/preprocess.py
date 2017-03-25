@@ -701,11 +701,13 @@ def preprocess_contentfiles(db_path: str, max_num_workers: int=cpu_count(),
         } for i in range(num_workers)]
 
         # spool up worker threads then finalize
-        log.info('job {j} of {numjobs}: spawning {num_workers} worker threads '
-                 'to process {jobsize} files ...'.format(**vars()))
+        k = j + 1
+        log.info('[job {k} / {numjobs}] {num_workers} worker threads '
+                 'processing {jobsize} files ...'.format(**vars()))
         try:
             with clgen.terminating(Pool(num_workers)) as pool:
                 pool.map(_preprocess_db_worker, jobs)
+            _finalize(db_path, cache)
         except OSError as e:
             _finalize(db_path, cache)
             log.error(e)
@@ -718,7 +720,6 @@ def preprocess_contentfiles(db_path: str, max_num_workers: int=cpu_count(),
         except Exception as e:
             _finalize(db_path, cache)
             raise e
-        _finalize(db_path, cache)
 
 
 def preprocess_file(path: str, inplace: bool=False, **preprocess_opts) -> None:
