@@ -20,6 +20,7 @@
 CLgen sqlite3 database utilities
 """
 import os
+import re
 import sqlite3
 
 from hashlib import md5

@@ -201,36 +201,6 @@ def compiler_preprocess_cl(src: str, id: str='anon',
     return src
 
 
-def gpuverify(src: str, args: list, id: str='anon') -> str:
-    """
-    Run GPUverify over kernel.
-
-    Arguments:
-        src (str): OpenCL source.
-        id (str, optional): OpenCL source name.
-
-    Returns:
-        str: OpenCL source.
-
-    Raises:
-        GPUVerifyException: If GPUverify finds a bug.
-        InternalError: If GPUverify fails.
-    """
-    # GPUverify can't read from stdin.
-    with NamedTemporaryFile('w', suffix='.cl') as tmp:
-        tmp.write(src)
-        tmp.flush()
-        cmd = ([native.GPUVERIFY, tmp.name] + args)
-
-        process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = process.communicate()
-
-    if process.returncode != 0:
-        raise GPUVerifyException(stderr.decode('utf-8'))
-
-    return src
-
-
 def rewrite_cl(src: str, id: str='anon', use_shim: bool=True) -> str:
     """
     Rewrite OpenCL sources.
@@ -303,6 +273,36 @@ def compile_cl_bytecode(src: str, id: str='anon', use_shim: bool=True) -> str:
     if process.returncode != 0:
         raise ClangException(stderr.decode('utf-8'))
     return stdout
+
+
+def gpuverify(src: str, args: list, id: str='anon') -> str:
+    """
+    Run GPUverify over kernel.
+
+    Arguments:
+        src (str): OpenCL source.
+        id (str, optional): OpenCL source name.
+
+    Returns:
+        str: OpenCL source.
+
+    Raises:
+        GPUVerifyException: If GPUverify finds a bug.
+        InternalError: If GPUverify fails.
+    """
+    # GPUverify can't read from stdin.
+    with NamedTemporaryFile('w', suffix='.cl') as tmp:
+        tmp.write(src)
+        tmp.flush()
+        cmd = ([native.GPUVERIFY, tmp.name] + args)
+
+        process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+
+    if process.returncode != 0:
+        raise GPUVerifyException(stderr.decode('utf-8'))
+
+    return src
 
 
 _instcount_re = re.compile(
@@ -493,11 +493,8 @@ def verify_bytecode_features(bc_features: dict, id: str='anon') -> None:
     """
     # The minimum number of instructions before a kernel is discarded
     # as ugly.
-    min_num_instructions = 0
-    try:
-        num_instructions = bc_features['instructions_of_all_types']
-    except KeyError:
-        num_instructions = 0
+    min_num_instructions = 1
+    num_instructions = bc_features.get('instructions_of_all_types', 0)
 
     if num_instructions < min_num_instructions:
         raise InstructionCountException(
