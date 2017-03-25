@@ -19,6 +19,7 @@ cache:
     - native/libclc
     - native/llvm
     - native/ninja
+    - native/oclgrind
 
 addons:
   apt:
