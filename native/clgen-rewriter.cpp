@@ -209,10 +209,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
     const auto name = func->getNameInfo().getName().getAsString();
     const auto replacement = get_fn_rewrite(name);
 
-    rewriter.ReplaceText(
-        func->getLocation(),
-        static_cast<unsigned int>(name.length()),
-        replacement);
+    rewriter.ReplaceText(func->getLocation(), replacement);
     ++_fn_decl_rewrites_counter;
 
     return true;
@@ -227,10 +224,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
       const auto name = d->getNameAsString();
       const auto replacement = get_var_rewrite(name);
 
-      rewriter.ReplaceText(
-          decl->getLocation(),
-          static_cast<unsigned int>(name.length()),
-          replacement);
+      rewriter.ReplaceText(decl->getLocation(), replacement);
       ++_var_decl_rewrites_counter;
     }
 
@@ -250,10 +244,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
         if (it != _fns.end()) {
           const auto replacement = (*it).second;
 
-          rewriter.ReplaceText(
-              call->getLocStart(),
-              static_cast<unsigned int>(name.length()),
-              replacement);
+          rewriter.ReplaceText(call->getLocStart(), replacement);
           ++_fn_call_rewrites_counter;
         }  // else function name is externally defined
       }  // else not a direct callee (what does that mean?)
@@ -265,10 +256,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
       const auto it = _vars.find(name);
       if (it != _vars.end()) {
         const auto replacement = (*it).second;
-        rewriter.ReplaceText(
-            ref->getLocStart(),
-            static_cast<unsigned int>(name.length()),
-            replacement);
+        rewriter.ReplaceText(ref->getLocStart(), replacement);
         ++_var_use_rewrites_counter;
       }  // else variable name is externally defined
     }
