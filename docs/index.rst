@@ -30,7 +30,8 @@ For **other Linux distributions** and older versions of Ubuntu, please check
 each for each of the following requirements:
 
 -  `Python <https://www.python.org/>`_ >= 3.5.
--  `TensorFlow <https://www.tensorflow.org/get_started/os_setup>`_ == 1.0.1
+-  `TensorFlow <https://www.tensorflow.org/get_started/os_setup>`_ == 1.0.1.
+-  `Mono <http://www.mono-project.com/>`.
 -  `GCC <https://gcc.gnu.org/>`_ >= 4.8.2 or
    `clang <http://llvm.org/releases/download.html>`_ >= 3.1.
 -  `GNU Make <http://savannah.gnu.org/projects/make>`_ > 3.79.
