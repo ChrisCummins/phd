@@ -49,7 +49,8 @@ data_symlinks = \
 	$(root)/clgen/data/bin/clang-format \
 	$(root)/clgen/data/bin/llvm-config \
 	$(root)/clgen/data/bin/opt \
-	$(root)/clgen/data/libclc
+	$(root)/clgen/data/libclc \
+	$(root)/clgen/data/gpuverify
 
 data_bin = \
 	$(root)/clgen/data/bin/clgen-features \
@@ -85,6 +86,12 @@ $(root)/clgen/data/libclc: $(libclc)
 	ln -sf $(libclc_dir)/generic/include $@
 	touch $@
 
+$(root)/clgen/data/gpuverify: $(GPUVerify)
+	mkdir -p $(dir $@)
+	rm -f $@
+	ln -sf $(root)/native/gpuverify/$(gpuverify_version) $@
+	touch $@
+
 $(root)/clgen/data/bin/clgen-features: $(root)/native/clgen-features.cpp $(data_symlinks)
 	mkdir -p $(dir $@)
 	$(CXX) $< -o $@ $(llvm_CxxFlags) $(llvm_LdFlags)
@@ -110,7 +117,7 @@ distclean: $(distclean_targets)
 
 # install CLgen
 .PHONY: install
-install: cuda gpuverify
+install: cuda
 	$(PIP) install --upgrade pip
 	$(PIP) install --only-binary=numpy 'numpy>=1.10.4'
 	$(PIP) install --only-binary=scipy 'scipy>=0.16.1'
