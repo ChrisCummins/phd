@@ -82,9 +82,9 @@ class ClangFormatException(BadCodeException):
     pass
 
 
-class CodeAnalysisException(BadCodeException):
+class GPUVerifyException(BadCodeException):
     """
-    Code analysis error.
+    GPUVerify found a bug.
     """
     pass
 
@@ -197,6 +197,36 @@ def compiler_preprocess_cl(src: str, id: str='anon',
     # stuff):
     src = '\n'.join([line for line in src.split('\n')
                      if not line.startswith('#')])
+
+    return src
+
+
+def gpuverify(src: str, args: list, id: str='anon') -> str:
+    """
+    Run GPUverify over kernel.
+
+    Arguments:
+        src (str): OpenCL source.
+        id (str, optional): OpenCL source name.
+
+    Returns:
+        str: OpenCL source.
+
+    Raises:
+        GPUVerifyException: If GPUverify finds a bug.
+        InternalError: If GPUverify fails.
+    """
+    # GPUverify can't read from stdin.
+    with NamedTemporaryFile('w', suffix='.cl') as tmp:
+        tmp.write(src)
+        tmp.flush()
+        cmd = ([native.GPUVERIFY, tmp.name] + args)
+
+        process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+
+    if process.returncode != 0:
+        raise GPUVerifyException(stderr.decode('utf-8'))
 
     return src
 
