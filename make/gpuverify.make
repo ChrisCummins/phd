@@ -39,3 +39,4 @@ $(gpuverify):
 .PHONY: distclean-gpuverify
 distclean-gpuverify:
 	rm -rf $(root)/native/gpuverify
+distclean_targets += distclean-gpuverify

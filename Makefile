@@ -86,7 +86,7 @@ $(root)/clgen/data/libclc: $(libclc)
 	ln -sf $(libclc_dir)/generic/include $@
 	touch $@
 
-$(root)/clgen/data/gpuverify: $(GPUVerify)
+$(root)/clgen/data/gpuverify: $(gpuverify)
 	mkdir -p $(dir $@)
 	rm -f $@
 	ln -sf $(root)/native/gpuverify/$(gpuverify_version) $@
