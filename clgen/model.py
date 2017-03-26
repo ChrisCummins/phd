@@ -19,6 +19,7 @@
 """
 CLgen model.
 """
+import filelock
 import numpy as np
 import os
 import re
@@ -267,16 +268,7 @@ class Model(clgen.CLgenObject):
         return closest_path, paths
 
 
-    def train(self, quiet: bool=False):
-        """
-        Train model.
-
-        Arguments:
-            quiet (bool, optional): If true, print less.
-
-        Returns:
-            Model: self.
-        """
+    def _locked_train(self, quiet):
         tf = self._init_tensorflow(infer=False)
 
         # training options
@@ -404,6 +396,28 @@ class Model(clgen.CLgenObject):
 
         return self
 
+    def train(self, quiet: bool=False):
+        """
+        Train model.
+
+        Arguments:
+            quiet (bool, optional): If true, print less.
+
+        Returns:
+            Model: self.
+        """
+        try:
+            with self.lock.acquire(timeout=1):
+                log.verbose("lockfile", self.lock.lock_file)
+                self._locked_train(quiet)
+        except filelock.Timeout:
+            log.fatal("""\
+model is already locked for training. Unlock the model by removing:
+  {lockpath}""".format(lockpath=self.lock.lock_file))
+        finally:
+            self.lock.release()
+
+
     def sample(self, seed_text: str="__kernel void", output=sys.stdout,
                num_samples: int=1, temperature: float=1, max_length: int=10000,
                seed: int=None, quiet: bool=False) -> None:
@@ -420,6 +434,11 @@ class Model(clgen.CLgenObject):
                 reproducible samples. If None, set no seed.
             quiet (bool, optional): If False, stream output to stdout
         """
+        if fs.exists(self.lock.lock_file):
+            log.fatal("""\
+model is locked for training. Unlock the model by removing:
+  {lockpath}""".format(lockpath=self.lock.lock_file))
+
         tf = self._init_tensorflow(infer=True)
 
         if seed is not None:
@@ -503,6 +522,11 @@ class Model(clgen.CLgenObject):
 
             if not quiet:
                 sys.stdout.write('\n\n')
+
+    @property
+    def lock(self):
+        lockpath = self.cache.keypath("LOCK")
+        return filelock.FileLock(lockpath)
 
     @property
     def model_type(self) -> str:
