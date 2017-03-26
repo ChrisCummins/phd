@@ -320,3 +320,9 @@ def github(db_path: str, github_username: str, github_pw: str,
     print_counters()
     print("\n\ndone.")
     db.close()
+
+if __name__ == "__main__":
+    import sys
+    import os
+    github(sys.argv[1], os.environ["GITHUB_USERNAME"],
+           os.environ["GITHUB_PW"], os.environ["GITHUB_TOKEN"])
