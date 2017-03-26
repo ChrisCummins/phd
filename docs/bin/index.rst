@@ -381,7 +381,7 @@ clgen-preprocess
 
 ::
 
-    usage: clgen-preprocess [-h] [--version] [-v] [-f] [-i]
+    usage: clgen-preprocess [-h] [--version] [-v] [-f] [-i] [-D] [-G]
                             [--remove-bad-preprocessed] [--remove-preprocessed]
                             inputs [inputs ...]
     
@@ -405,6 +405,9 @@ clgen-preprocess
       -v, --verbose         increase output verbosity
       -f, --file            treat input as file
       -i, --inplace         inplace file rewrite
+      -D, --dynamic-checker
+                            run dynamic checker on kernels
+      -G, --gpuverify       run GPUVerify on kernels
       --remove-bad-preprocessed
                             delete the contents of all bad or ugly preprocessed files,
                             but keep the entries in the table
