@@ -36,6 +36,7 @@ from six import string_types
 import clgen
 from clgen import clutil
 from clgen import config as cfg
+from clgen import log
 
 if cfg.USE_OPENCL:
     import pyopencl as cl
@@ -191,11 +192,17 @@ def init_opencl(devtype=None, queue_flags=0):
 
     platforms = cl.get_platforms()
     for platform in platforms:
+        platform_str = platform.get_info(cl.platform_info.NAME)
         ctx = cl.Context(
             properties=[(cl.context_properties.PLATFORM, platform)])
         devices = ctx.get_info(cl.context_info.DEVICES)
         for device in devices:
+            device_str = device.get_info(cl.device_info.NAME)
+            log.verbose(
+                'found device "{device_str}" on platform "{platform_str}"'
+                .format(**vars()))
             if device_type_matches(device, devtype):
+                log.verbose("matched device")
                 queue_flags |= cl.command_queue_properties.PROFILING_ENABLE
                 queue = cl.CommandQueue(ctx, properties=queue_flags)
 
