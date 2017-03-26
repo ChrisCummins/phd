@@ -59,10 +59,10 @@ def main():
                         help='input file(s) or directories')
     parser.add_argument('-s', '--strict', action='store_true', default=False,
                         help='reject any kernels which do not validate')
-    parser.add_argument('--cpu', action='store_true', default=False,
-                        help='execute on CPU (default: no)')
-    parser.add_argument('--gpu', action='store_true', default=False,
-                        help='execute on GPU (default: yes)')
+    parser.add_argument('--cpu', action='store_true',
+                        help='execute on CPU')
+    parser.add_argument('--gpu', action='store_true',
+                        help='execute on GPU')
     parser.add_argument('--fatal-errors', action="store_true", default=False,
                         help="exit on error")
     args = parser.parse_args()
@@ -73,7 +73,12 @@ def main():
     else:
         size = None
 
-    devtype = cl.device_type.CPU if args.cpu else cl.device_type.GPU
+    if args.cpu:
+        devtype = cl.device_type.CPU
+    elif args.gpu:
+        devtype = cl.device_type.GPU
+    else:
+        devtype = None
 
     kwargs = {
         "size": size,

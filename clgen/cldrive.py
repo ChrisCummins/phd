@@ -140,7 +140,7 @@ class E_NONDETERMINISTIC(E_UGLY_CODE):
     pass
 
 
-def device_type_matches(device, devtype) -> bool:
+def device_type_matches(device, devtype=None) -> bool:
     """
     Check that device type matches.
 
@@ -151,13 +151,16 @@ def device_type_matches(device, devtype) -> bool:
     Returns:
         bool: True if device is of type devtype, else False.
     """
-    actual = device.get_info(cl.device_info.TYPE)
-    return actual == devtype
+    if devtype:
+        actual_devtype = device.get_info(cl.device_info.TYPE)
+        return actual_devtype == devtype
+    else:  # no devtype to match against
+        return True
 
 
-def init_opencl(devtype="__placeholder__", queue_flags=0):
+def init_opencl(devtype=None, queue_flags=0):
     """
-    Initialise an OpenCL for a requested device type.
+    Initialise an OpenCL context and device queue for a requested device type.
 
     Iterates over the available OpenCL platforms and devices looking for a
     device matching the requested type. Constructs and returns an OpenCL
@@ -166,7 +169,7 @@ def init_opencl(devtype="__placeholder__", queue_flags=0):
 
     Arguments:
         devtype (pyopencl.device_type, optional): OpenCL device type.
-            Default: gpu.
+            If not specified, the first available device will be used.
         queue_flags (cl.command_queue_properties, optional): Bitfield of
             OpenCL queue constructor options.
 
