@@ -106,7 +106,8 @@ def file_iterator(paths, kwargs):
                         if fs.isfile(x)]
             file_iterator(contents, kwargs)
         else:
-            log.fatal("i have no idea what to do with argument", path)
+            log.fatal("argument '{path}' if neither a file or a directory"
+                      .format(**vars()))
 
 
 if __name__ == '__main__':
