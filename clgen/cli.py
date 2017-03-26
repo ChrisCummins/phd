@@ -36,7 +36,7 @@ def print_version_and_exit():
     """
     Print the clgen version. This function does not return.
     """
-    print("clgen ", clgen.version())
+    print("clgen", clgen.version())
     exit(0)
 
 
@@ -62,7 +62,7 @@ class ArgumentParser(argparse.ArgumentParser):
         if len(description) and description[-1] != "\n":
             description += "\n"
         description += """
-Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
 <http://chriscummins.cc/clgen>"""
 
         kwargs["description"] = description.lstrip()
@@ -80,27 +80,28 @@ Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
                           help="show version information and exit")
         self.add_argument("-v", "--verbose", action="store_true",
                           help="increase output verbosity")
+        self.add_argument("--debug", action="store_true",
+                          help="in case of error, print debugging information")
 
-    def parse_args(self, args=None, namespace=None):
+    def parse_args(self, args=sys.argv[1:], namespace=None):
         """
         See python argparse.ArgumentParser.parse_args().
         """
-        if args is None:
-            args = sys.argv[1:]
-
         # --version option overrides the normal argument parsing process.
-        if len(args) == 1 and args[0] == "--version":
+        if "--version" in args:
             print_version_and_exit()
 
-        ret = super(ArgumentParser, self).parse_args(args, namespace)
-
-        if ret.version:
-            print_version_and_exit()
+        # parse args normally
+        args_ns = super(ArgumentParser, self).parse_args(args, namespace)
 
         # set log level
-        log.init(ret.verbose)
+        log.init(args_ns.verbose)
 
-        return ret
+        # set debug option
+        if args_ns.debug:
+            os.environ["DEBUG"] = "1"
+
+        return args_ns
 
 
 def main(method, *args, **kwargs):

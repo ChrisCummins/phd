@@ -43,6 +43,7 @@ include make/gpuverify.make
 include make/ninja.make
 include make/llvm.make
 include make/libclc.make
+include make/oclgrind.make
 
 data_symlinks = \
 	$(root)/clgen/data/bin/clang \

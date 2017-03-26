@@ -36,6 +36,7 @@ from six import string_types
 import clgen
 from clgen import clutil
 from clgen import config as cfg
+from clgen import log
 
 if cfg.USE_OPENCL:
     import pyopencl as cl
@@ -73,6 +74,13 @@ class OpenCLDeviceNotFound(OpenCLDriverException):
 class KernelDriverException(CLDriveException):
     """
     Kernel driver exception.
+    """
+    pass
+
+
+class E_NO_INPUT(KernelDriverException):
+    """
+    Thrown if there's no kernel to drive.
     """
     pass
 
@@ -140,7 +148,7 @@ class E_NONDETERMINISTIC(E_UGLY_CODE):
     pass
 
 
-def device_type_matches(device, devtype) -> bool:
+def device_type_matches(device, devtype=None) -> bool:
     """
     Check that device type matches.
 
@@ -151,13 +159,16 @@ def device_type_matches(device, devtype) -> bool:
     Returns:
         bool: True if device is of type devtype, else False.
     """
-    actual = device.get_info(cl.device_info.TYPE)
-    return actual == devtype
+    if devtype:
+        actual_devtype = device.get_info(cl.device_info.TYPE)
+        return actual_devtype == devtype
+    else:  # no devtype to match against
+        return True
 
 
-def init_opencl(devtype="__placeholder__", queue_flags=0):
+def init_opencl(devtype=None, queue_flags=0):
     """
-    Initialise an OpenCL for a requested device type.
+    Initialise an OpenCL context and device queue for a requested device type.
 
     Iterates over the available OpenCL platforms and devices looking for a
     device matching the requested type. Constructs and returns an OpenCL
@@ -166,7 +177,7 @@ def init_opencl(devtype="__placeholder__", queue_flags=0):
 
     Arguments:
         devtype (pyopencl.device_type, optional): OpenCL device type.
-            Default: gpu.
+            If not specified, the first available device will be used.
         queue_flags (cl.command_queue_properties, optional): Bitfield of
             OpenCL queue constructor options.
 
@@ -188,11 +199,19 @@ def init_opencl(devtype="__placeholder__", queue_flags=0):
 
     platforms = cl.get_platforms()
     for platform in platforms:
+        platform_str = platform.get_info(cl.platform_info.NAME)
         ctx = cl.Context(
             properties=[(cl.context_properties.PLATFORM, platform)])
         devices = ctx.get_info(cl.context_info.DEVICES)
         for device in devices:
+            device_str = device.get_info(cl.device_info.NAME)
+            log.verbose(
+                'found device "{device_str}" on platform "{platform_str}"'
+                .format(**vars()))
             if device_type_matches(device, devtype):
+                log.verbose(
+                    'using device "{device_str}" on platform "{platform_str}"'
+                    .format(**vars()))
                 queue_flags |= cl.command_queue_properties.PROFILING_ENABLE
                 queue = cl.CommandQueue(ctx, properties=queue_flags)
 
@@ -707,8 +726,8 @@ class KernelDriver(clgen.CLgenObject):
 
         Output format (CSV):
 
-            out:      <kernel> <wgsize> <transfer> <runtime> <ci>
-            metaout:  <error> <kernel>
+            out:      <kernel> <platform> <device> <wgsize> <transfer> <runtime>
+            metaout:  <kernel> <platform> <device> <error>
         """
         assert(isinstance(queue, cl.CommandQueue))
 
@@ -716,7 +735,7 @@ class KernelDriver(clgen.CLgenObject):
             try:
                 self.validate(queue, size)
             except CLDriveException as e:
-                print(type(e).__name__, self.name, sep=',', file=metaout)
+                print(self.name, type(e).__name__, sep=',', file=metaout)
 
         P = KernelPayload.create_random(self, size)
         k = partial(self, queue)
@@ -724,12 +743,16 @@ class KernelDriver(clgen.CLgenObject):
         while len(self.runtimes) < min_num_iterations:
             k(P)
 
-        wgsize = int(round(labmath.mean(self.wgsizes)))
-        transfer = int(round(labmath.mean(self.transfers)))
-        mean = labmath.mean(self.runtimes)
-        ci = labmath.confinterval(self.runtimes, array_mean=mean)[1] - mean
-        print(self.name, wgsize, transfer, round(mean, 6), round(ci, 6),
-              sep=',', file=out)
+        device = queue.get_info(cl.command_queue_info.DEVICE)
+        device_str = device.get_info(cl.device_info.NAME)
+
+        platform = device.get_info(cl.device_info.PLATFORM)
+        platform_str = platform.get_info(cl.platform_info.NAME)
+
+        results = zip(self.wgsizes, self.transfers, self.runtimes)
+        for wgsize, transfer, runtime in results:
+            print(self.name, platform_str, device_str, wgsize, transfer,
+                  "{:.6f}".format(runtime), sep=',', file=out)
 
     @property
     def context(self):
@@ -803,21 +826,16 @@ class KernelDriver(clgen.CLgenObject):
             raise E_BAD_CODE(e)
 
 
-def kernel(src, filename: str='<stdin>', devtype="__placeholder__",
+def kernel(src, filename: str='<stdin>', devtype=None,
            size: int=None, must_validate: bool=False, fatal_errors: bool=False):
     """
     Drive a kernel.
 
     Output format (CSV):
 
-        out:      <file> <size> <kernel> <wgsize> <transfer> <runtime> <ci>
-        metaout:  <file> <size> <error> <kernel>
+        out:      <file> <size> <profile() out...>
+        metaout:  <file> <size> <profile() metaout...>
     """
-    # we have to use a string as a placeholder for the default type or else
-    # module import will break when pyopencl is not installed:
-    if devtype == "__placeholder__":
-        devtype = cl.device_type.GPU
-
     try:
         ctx, queue = init_opencl(devtype=devtype)
         driver = KernelDriver(ctx, src)
@@ -853,6 +871,9 @@ def file(path: str, **kwargs):
     Arguments:
         path (str): Path to file
         **kwargs (dict, optional): Arguments to kernel()
+
+    Raises:
+        E_NO_INPUT: If file contains no OpenCL kernels.
     """
     with open(path) as infile:
         src = infile.read()
@@ -861,9 +882,9 @@ def file(path: str, **kwargs):
         # error if there's no kernels
         if not len(kernels):
             if kwargs.get("fatal_errors", False):
-                raise E_BAD_CODE("no kernels in file '{}'".format(path))
+                raise E_NO_INPUT("no kernels in file '{}'".format(path))
             else:
-                print(path, "-", "E_BAD_CODE", '-', sep=',', file=sys.stderr)
+                print(path, "-", "E_NO_INPUT", '-', sep=',', file=sys.stderr)
 
         # execute all kernels in file
         for kernelsrc in kernels:
