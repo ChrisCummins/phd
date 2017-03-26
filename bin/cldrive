@@ -37,16 +37,17 @@ Use environment variable 'DSIZE' to override random payload size.
 
 Program output is in CSV format, with the following scheme:
 
-    <path>,<dsize>,<kernel>,<transfer>,<mean>,<ci>
+    <path>,<dsize>,<kernel>,<platform>,<device>,<transfer>,<time>
 
 where each value corresponds to:
 
    <path>      path to input file
    <dsize>     payload size
    <kernel>    kernel name
+   <platform>  OpenCL platform name
+   <device>    OpenCL device name
    <transfer>  transfer size, in bytes
-   <mean>      mean execution time
-   <ci>        95% confidence interval of execution time
+   <time>      mean execution time
 
 In case of an error, "-" is output for values which cannot be determined,
 and the kernel name field is substituted for an error name.

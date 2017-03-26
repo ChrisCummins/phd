@@ -710,8 +710,8 @@ class KernelDriver(clgen.CLgenObject):
 
         Output format (CSV):
 
-            out:      <kernel> <wgsize> <transfer> <runtime> <ci>
-            metaout:  <error> <kernel>
+            out:      <kernel> <platform> <device> <wgsize> <transfer> <runtime>
+            metaout:  <kernel> <platform> <device> <error>
         """
         assert(isinstance(queue, cl.CommandQueue))
 
@@ -719,7 +719,7 @@ class KernelDriver(clgen.CLgenObject):
             try:
                 self.validate(queue, size)
             except CLDriveException as e:
-                print(type(e).__name__, self.name, sep=',', file=metaout)
+                print(self.name, type(e).__name__, sep=',', file=metaout)
 
         P = KernelPayload.create_random(self, size)
         k = partial(self, queue)
@@ -727,12 +727,16 @@ class KernelDriver(clgen.CLgenObject):
         while len(self.runtimes) < min_num_iterations:
             k(P)
 
-        wgsize = int(round(labmath.mean(self.wgsizes)))
-        transfer = int(round(labmath.mean(self.transfers)))
-        mean = labmath.mean(self.runtimes)
-        ci = labmath.confinterval(self.runtimes, array_mean=mean)[1] - mean
-        print(self.name, wgsize, transfer, round(mean, 6), round(ci, 6),
-              sep=',', file=out)
+        device = queue.get_info(cl.command_queue_info.DEVICE)
+        device_str = device.get_info(cl.device_info.NAME)
+
+        platform = device.get_info(cl.device_info.PLATFORM)
+        platform_str = platform.get_info(cl.platform_info.NAME)
+
+        results = zip(self.wgsizes, self.transfers, self.runtimes)
+        for wgsize, transfer, runtime in results:
+            print(self.name, platform_str, device_str, wgsize, transfer,
+                  "{:.6f}".format(runtime), sep=',', file=out)
 
     @property
     def context(self):
@@ -806,21 +810,16 @@ class KernelDriver(clgen.CLgenObject):
             raise E_BAD_CODE(e)
 
 
-def kernel(src, filename: str='<stdin>', devtype="__placeholder__",
+def kernel(src, filename: str='<stdin>', devtype=None,
            size: int=None, must_validate: bool=False, fatal_errors: bool=False):
     """
     Drive a kernel.
 
     Output format (CSV):
 
-        out:      <file> <size> <kernel> <wgsize> <transfer> <runtime> <ci>
-        metaout:  <file> <size> <error> <kernel>
+        out:      <file> <size> <profile() out...>
+        metaout:  <file> <size> <profile() metaout...>
     """
-    # we have to use a string as a placeholder for the default type or else
-    # module import will break when pyopencl is not installed:
-    if devtype == "__placeholder__":
-        devtype = cl.device_type.GPU
-
     try:
         ctx, queue = init_opencl(devtype=devtype)
         driver = KernelDriver(ctx, src)
