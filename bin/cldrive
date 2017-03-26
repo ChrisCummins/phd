@@ -97,17 +97,14 @@ def main():
 
 
 def file_iterator(paths, kwargs):
-    """recursively evalute files"""
+    """recursively evaluate files"""
     for path in paths:
         if fs.isfile(path):   # file
             cli.main(cldrive.file, fs.abspath(path), **kwargs)
-        elif fs.isdir(path):  # directory, recurse
+        else:  # it's a directory
             contents = [x for x in fs.ls(path, abspaths=True, recursive=True)
                         if fs.isfile(x)]
             file_iterator(contents, kwargs)
-        else:
-            log.fatal("argument '{path}' if neither a file or a directory"
-                      .format(**vars()))
 
 
 if __name__ == '__main__':
