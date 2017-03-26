@@ -78,6 +78,13 @@ class KernelDriverException(CLDriveException):
     pass
 
 
+class E_NO_INPUT(KernelDriverException):
+    """
+    Thrown if there's no kernel to drive.
+    """
+    pass
+
+
 class E_BAD_CODE(KernelDriverException):
     """
     Thrown for bad code.
@@ -864,6 +871,9 @@ def file(path: str, **kwargs):
     Arguments:
         path (str): Path to file
         **kwargs (dict, optional): Arguments to kernel()
+
+    Raises:
+        E_NO_INPUT: If file contains no OpenCL kernels.
     """
     with open(path) as infile:
         src = infile.read()
@@ -872,9 +882,9 @@ def file(path: str, **kwargs):
         # error if there's no kernels
         if not len(kernels):
             if kwargs.get("fatal_errors", False):
-                raise E_BAD_CODE("no kernels in file '{}'".format(path))
+                raise E_NO_INPUT("no kernels in file '{}'".format(path))
             else:
-                print(path, "-", "E_BAD_CODE", '-', sep=',', file=sys.stderr)
+                print(path, "-", "E_NO_INPUT", '-', sep=',', file=sys.stderr)
 
         # execute all kernels in file
         for kernelsrc in kernels:
