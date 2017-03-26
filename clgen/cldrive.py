@@ -202,7 +202,9 @@ def init_opencl(devtype=None, queue_flags=0):
                 'found device "{device_str}" on platform "{platform_str}"'
                 .format(**vars()))
             if device_type_matches(device, devtype):
-                log.verbose("matched device")
+                log.verbose(
+                    'using device "{device_str}" on platform "{platform_str}"'
+                    .format(**vars()))
                 queue_flags |= cl.command_queue_properties.PROFILING_ENABLE
                 queue = cl.CommandQueue(ctx, properties=queue_flags)
 
