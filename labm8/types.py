@@ -32,3 +32,69 @@ def is_str(s):
         bool: True if is string, else false.
     """
     return isinstance(s, string_types)
+
+
+def is_dict(obj):
+    """
+    Check if an object is a dict.
+    """
+    return isinstance(obj, dict)
+
+
+def is_seq(obj):
+    """
+    Check if an object is a sequence.
+    """
+    return (not is_str(obj) and not is_dict(obj) and
+            (hasattr(obj, "__getitem__") or hasattr(obj, "__iter__")))
+
+
+def flatten(lists):
+    """
+    Flatten a list of lists.
+    """
+    return [item for sublist in lists for item in sublist]
+
+
+def update(dst, src):
+    """
+    Recursively update values in dst from src.
+
+    Unlike the builtin dict.update() function, this method will decend into
+    nested dicts, updating all nested values.
+
+    Arguments:
+        dst (dict): Destination dict.
+        src (dict): Source dict.
+
+    Returns:
+        dict: dst updated with entries from src.
+    """
+    for k, v in src.items():
+        if isinstance(v, Mapping):
+            r = update(dst.get(k, {}), v)
+            dst[k] = r
+        else:
+            dst[k] = src[k]
+    return dst
+
+
+def dict_values(src):
+    """
+    Recursively get values in dict.
+
+    Unlike the builtin dict.values() function, this method will descend into
+    nested dicts, returning all nested values.
+
+    Arguments:
+        src (dict): Source dict.
+
+    Returns:
+        list: List of values.
+    """
+    for v in src.values():
+        if isinstance(v, dict):
+            for v in dict_values(v):
+                yield v
+        else:
+            yield v

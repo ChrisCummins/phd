@@ -54,35 +54,3 @@ def is_python3():
         bool: True if Python >= 3, else False.
     """
     return sys.version_info >= (3, 0)
-
-
-def is_str(obj):
-    """
-    Check if an object is a string (Python 2 and 3 compatible).
-    """
-    try:
-        return isinstance(obj, basestring)
-    except NameError:
-        return isinstance(obj, str)
-
-
-def is_dict(obj):
-    """
-    Check if an object is a dict.
-    """
-    return isinstance(obj, dict)
-
-
-def is_seq(obj):
-    """
-    Check if an object is a sequence.
-    """
-    return (not is_str(obj) and not is_dict(obj) and
-            (hasattr(obj, "__getitem__") or hasattr(obj, "__iter__")))
-
-
-def flatten(lists):
-    """
-    Flatten a list of lists.
-    """
-    return [item for sublist in lists for item in sublist]
