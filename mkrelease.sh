@@ -100,7 +100,7 @@ set_new_version() {
     echo "Updating version string... 'docs/conf.py'"
     sed "s/$current/$new/" -i docs/conf.py
 
-    git add setup.py docs/conf.py
+    git add labm8/__init__.py setup.py docs/conf.py
 }
 
 # Make the version bump.
