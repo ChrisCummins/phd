@@ -161,6 +161,12 @@ install_sublime() {
     fi
 }
 
+install_python() {
+    if [[ -f "$private/python/.pypirc" ]]; then
+        symlink "$private/python/.pypirc" ~/.pypirc
+    fi
+}
+
 
 install_inbox() {
     symlink Dropbox/Inbox ~/Inbox
@@ -219,6 +225,8 @@ main() {
     install_vim
 
     install_sublime
+
+    install_python
 
     if [[ -d ~/Dropbos/Inbox ]]; then
         install_inbox
