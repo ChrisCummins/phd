@@ -21,6 +21,7 @@ CLgen model.
 """
 import numpy as np
 import os
+import progressbar
 import re
 import sys
 import tarfile
@@ -310,15 +311,15 @@ class Model(clgen.CLgenObject):
                 saver.recover_last_checkpoints(ckpt_paths)
 
             start_batch = sess.run(self.epoch) * self.corpus.num_batches
-            batch_count = 0
-            total_elapsed = 0
-            total_atomize = 0
-            total_checkpoint, avg_checkpoint = 0, 0
-            eta_d, eta_h, eta_m = 0, 0, 0
+            max_batch = self.epochs * self.corpus.num_batches
+
+            # progress bar
+            bar = progressbar.ProgressBar(max_value=max_batch)
+
+            if sess.run(self.epoch) != self.epochs:
+                log.info("training", self)
 
             for e in range(sess.run(self.epoch) + 1, self.epochs + 1):
-                if quiet:
-                    log.info("epoch", e, "of", self.epochs + 1)
 
                 # decay and set learning rate
                 new_learning_rate = learning_rate * (
@@ -326,15 +327,10 @@ class Model(clgen.CLgenObject):
                 sess.run(tf.assign(self.learning_rate, new_learning_rate))
                 sess.run(tf.assign(self.epoch, e))
 
-                time_start = time.time()
                 self.corpus.create_batches()
-                total_atomize += time.time() - time_start
-                avg_atomize = total_atomize / e
 
                 state = sess.run(self.initial_state)
                 for b in range(self.corpus.num_batches):
-                    time_start = time.time()
-                    batch_count += 1
                     x, y = self.corpus.next_batch()
                     feed = {self.input_data: x, self.targets: y}
                     for i, (c, h) in enumerate(self.initial_state):
@@ -342,64 +338,21 @@ class Model(clgen.CLgenObject):
                         feed[h] = state[i].h
                     train_loss, state, _ = sess.run(
                         [self.cost, self.final_state, self.train_op], feed)
+
+                    # update progress bar
                     batch_num = (e - 1) * self.corpus.num_batches + b
-                    max_batch = self.epochs * self.corpus.num_batches
-
-                    progress = float((batch_num + 1 - start_batch) /
-                                     (max_batch - start_batch))
-
-                    time_end = time.time()
-                    elapsed = time_end - time_start
-
-                    if not quiet:
-                        total_elapsed += elapsed
-                        avg_elapsed = total_elapsed / batch_count
-                        remaining_time = (
-                            (max_batch - batch_count) * avg_elapsed +  # batches
-                            (e - self.epochs) * avg_atomize +  # atomizings
-                            (e - self.epochs) * avg_checkpoint)  # checkpoints
-                        eta_h, eta_m = divmod(remaining_time / 60, 60)
-                        eta_d, eta_h = divmod(eta_h, 24)
-
-                        print(
-                            "\r\033[K"
-                            "{progress:3.1f}% | "
-                            "{size}x{layers}x{max_epoch} {model} | "
-                            "epoch={epoch_num}/{max_epoch} | "
-                            "batch={batch_num}/{max_batch} | "
-                            "lr={lr:.5f} | "
-                            "loss={tloss:.3f} | "
-                            "t1={time_atomize:.3f}s "
-                            "t2={time_batch:.3f}s "
-                            "t3={time_checkpoint:.3f}s | "
-                            "eta={eta_d}d{eta_h}h{eta_m:02d}m".format(
-                                size=self.rnn_size,
-                                layers=self.num_layers,
-                                model=self.model_type.upper(),
-                                progress=progress * 100,
-                                epoch_num=e,
-                                max_epoch=self.epochs,
-                                batch_num=b + 1,
-                                max_batch=self.corpus.num_batches,
-                                lr=new_learning_rate,
-                                tloss=train_loss,
-                                time_atomize=avg_atomize,
-                                time_batch=avg_elapsed,
-                                time_checkpoint=avg_checkpoint,
-                                eta_d=int(eta_d),
-                                eta_h=int(eta_h),
-                                eta_m=int(eta_m)), end="")
+                    bar.update(batch_num)
 
                 save = self.opts["train_opts"]["intermediate_checkpoints"]
-                save |= e == self.epochs  # last epoch
+                save |= e == self.epochs  # always save on last epoch
                 if save:
-                    if not quiet:
-                        print()
-                    time_start = time.time()
                     saver.save(sess, checkpoint_path, global_step=batch_num)
-                    total_checkpoint += time.time() - time_start
-                    avg_checkpoint = total_checkpoint / e
-                    log.info("model saved to {}".format(checkpoint_path))
+
+                    next_checkpoint = e * self.corpus.num_batches + b
+                    max_epoch = self.epochs
+                    log.info("\n{self} epoch {e} / {max_epoch}. "
+                             "next checkpoint at batch {next_checkpoint}"
+                             .format(**vars()))
 
         return self
 

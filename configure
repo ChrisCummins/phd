@@ -75,18 +75,29 @@ def to_text(val):
 
 def main():
     parser = ArgumentParser(description="Configure CLgen build.")
+    parser.add_argument("-r", "--reconfigure", action="store_true",
+                        help="re-run configuraiton using previous settings")
     parser.add_argument("-b", "--batch", action="store_true",
-                        help="Defaults all options to 'no'. Override with:")
+                        help="defaults all options to 'no'. Override with:")
     parser.add_argument("--with-opencl", action="store_true")
     parser.add_argument("--with-cuda", action="store_true")
     parser.add_argument("--with-dev-tools", action="store_true")
     args = parser.parse_args()
 
-    cfg = {
-        "opencl": args.with_opencl,
-        "cuda": args.with_cuda,
-        "version": "0.2.9",
-    }
+    if args.reconfigure:
+        args.batch = True
+        try:
+            with open(".config.json") as infile:
+                cfg = json.loads(infile.read())
+        except FileNotFoundError:
+            print("you must run ./configure first", file=sys.stderr)
+            sys.exit(1)
+    else:
+        cfg = {
+            "opencl": args.with_opencl,
+            "cuda": args.with_cuda,
+            "version": "0.2.9",
+        }
 
     # get input from user
     if not args.batch:
