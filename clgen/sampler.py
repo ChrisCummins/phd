@@ -19,18 +19,22 @@
 """
 Sample a CLgen model.
 """
+import numpy as np
 import sys
 
 from copy import deepcopy
 from glob import glob, iglob
+from io import StringIO
 from labm8 import crypto
 from labm8 import fs
 from labm8 import jsonutil
+from labm8 import lockfile
 from labm8 import system
 from labm8 import types
 from threading import Condition, Event, Thread, Lock
 
 import clgen
+from clgen import clutil
 from clgen import config as cfg
 from clgen import dbutil
 from clgen import fetch
@@ -41,16 +45,18 @@ from clgen.model import Model
 
 # Default options used for sampler. Any values provided by the user will
 # override these defaults.
+DEFAULT_KERNELS_OPTS = {
+    "args": None,
+    "max_length": 10000,
+    "seed": None,
+    "temperature": 1
+}
 DEFAULT_SAMPLER_OPTS = {
-    "min_kernels": -1,
     "min_samples": -1,
+    "min_kernels": -1,
     "static_checker": True,
     "dynamic_checker": False,
     "gpuverify": False
-}
-DEFAULT_KERNELS_OPTS = {
-    "args": False,
-    "max_length": 10000,
 }
 
 
@@ -80,44 +86,140 @@ def from_json(sampler_json: dict):
         Sampler: Instantiate sampler.
     """
     sampler_opts = sampler_json.get("sampler", {})
-
     kernel_opts = sampler_json.get("kernels", {})
-    if not kernel_opts:
-        raise clgen.UserError("no kernels section in sampler specification")
 
     return Sampler(sampler_opts, kernel_opts)
 
+
 class SampleProducer(Thread):
-    def __init__(self, model, condition, queue, **kernel_opts):
+    def __init__(self, model: Model, condition: Condition, queue: list,
+                 quiet: bool=False, **kernel_opts):
         super(SampleProducer, self).__init__()
+
         self.model = model
         self.condition = condition
         self.queue = queue
         self.stop_signal = Event()
         self.kernel_opts = kernel_opts
+        self.quiet = quiet
 
     def run(self):
-        while not self.stop_requested:
-            # TODO: create sample
-            # "max_length": self.kernel_opts["max_length"],
-            # "seed_text": self.start_text,
+        model = self.model
+        start_text = self.kernel_opts["start_text"]
+        max_length = self.kernel_opts["max_length"]
+        temperature = self.kernel_opts["temperature"]
 
-            self.condition.acquire()
-            self.queue.append(sample)
-            self.condition.notify()
-            self.condition.release()
+        if model.lock.islocked:  # model is locked during training
+            raise lockfile.UnableToAcquireLockError(self.lock)
+
+        tf = model._init_tensorflow(infer=True)
+
+        # seed RNG
+        np.random.seed(self.kernel_opts["seed"])
+        tf.set_random_seed(self.kernel_opts["seed"])
+
+        with tf.Session() as sess:
+            tf.global_variables_initializer().run()
+            saver = tf.train.Saver(tf.global_variables())
+            ckpt = tf.train.get_checkpoint_state(model.cache.path)
+
+            assert(ckpt)
+            assert(ckpt.model_checkpoint_path)
+
+            saver.restore(sess, ckpt.model_checkpoint_path)
+
+            def weighted_pick(weights, temperature):
+                t = np.cumsum(weights)
+                s = np.sum(weights)
+                return int(np.searchsorted(t, np.random.rand(1) * s))
+
+            def update_bracket_depth(text, started: bool=False, depth: int=0):
+                """ calculate function block depth """
+                for char in text:
+                    if char == '{':
+                        depth += 1
+                        started = True
+                    elif char == '}':
+                        depth -= 1
+
+                return started, depth
+
+            init_started, init_depth = update_bracket_depth(start_text)
+
+            while not self.stop_requested:
+                buf = StringIO()
+                started, depth = init_started, init_depth
+
+                state = sess.run(model.cell.zero_state(1, tf.float32))
+
+                seed_tensor = model.corpus.atomizer.atomize(start_text)
+                for index in seed_tensor[:-1]:
+                    x = np.zeros((1, 1))
+                    x[0, 0] = index
+                    feed = {model.input_data: x, model.initial_state: state}
+                    [state] = sess.run([model.final_state], feed)
+
+                buf.write(start_text)
+                if not self.quiet:
+                    sys.stdout.write("\n\n/* ==== START SAMPLE ==== */\n\n")
+                    sys.stdout.write(start_text)
+                    sys.stdout.flush()
+
+                index = seed_tensor[-1]
+
+                for _ in range(max_length):
+                    x = np.zeros((1, 1))
+                    x[0, 0] = index
+                    feed = {model.input_data: x, model.initial_state: state}
+                    [probs, state] = sess.run([model.probs, model.final_state],
+                                              feed)
+                    p = probs[0]
+
+                    # sample distribution to pick next:
+                    index = weighted_pick(p, temperature)
+                    # alternatively, select most probable:
+                    # index = np.argmax(p)
+
+                    atom = model.corpus.atomizer.deatomize([index])
+                    buf.write(atom)
+                    if not self.quiet:
+                        sys.stdout.write(atom)
+
+                    # update function block depth
+                    started, depth = update_bracket_depth(atom, started, depth)
+
+                    # stop sampling if depth <= 0
+                    if started and depth <= 0:
+                        break
+
+                # submit sample to processing queue
+                self.condition.acquire()
+                self.queue.append(buf.getvalue())
+
+                self.condition.notify()
+                self.condition.release()
+
+            if not self.quiet:
+                sys.stdout.write('\n\n')
 
     def stop(self):
         self.stop_signal.set()
 
     @property
     def stop_requested(self):
-        return self._stop_signal.isSet()
+        return self.stop_signal.isSet()
 
 
 class SampleConsumer(Thread):
-    def __init__(self, db_path: str, sampler: SampleProducer, condition, queue,
+    """ handle generated samples """
+    def __init__(self, db_path: str, sampler: SampleProducer,
+                 condition: Condition, queue: list, quiet: bool=False,
                  **sampler_opts):
+        """
+        Arguments:
+            db_path (str): Path to samples database.
+            sampler (SampleProducer):
+        """
         super(SampleConsumer, self).__init__()
 
         self.db_path = db_path
@@ -125,13 +227,14 @@ class SampleConsumer(Thread):
         self.condition = condition
         self.queue = queue
         self.sampler_opts = sampler_opts
+        self.quiet = quiet
 
         # properties
         min_kernels = sampler_opts["min_kernels"]
         has_min_kernels = min_kernels >= 0
 
         min_samples = sampler_opts["min_samples"]
-        has_min_samples = min_batches >= 0
+        has_min_samples = min_samples >= 0
 
         def min_kernels_cond(i):
             return dbutil.num_good_kernels(self.db_path) >= min_kernels
@@ -151,7 +254,7 @@ class SampleConsumer(Thread):
 
         self.term_condition = term_condition
 
-    def run(self):
+    def run(self) -> None:
         # bar = progressbar.ProgressBar(max_value=self.numjobs)
 
         i = 0
@@ -166,37 +269,48 @@ class SampleConsumer(Thread):
 
             i += 1
 
-            kernels = get_cl_kernels(sample)
+            kernels = clutil.get_cl_kernels(sample)
             ids = [crypto.sha1_str(k) for k in kernels]
 
-            if self.sample_opts["static_checker"]:
+            if self.sampler_opts["static_checker"]:
                 preprocess_opts = {
                     "use_shim": False,
-                    "use_gpuverify": False
+                    "use_dynamic_checker": self.sampler_opts["dynamic_checker"],
+                    "use_gpuverify": self.sampler_opts["gpuverify"]
                 }
-                pp = [preprocess_for_db(k, **preprocess_opts) in kernels]
+                pp = [preprocess.preprocess_for_db(k, **preprocess_opts)
+                      for k in kernels]
+
+                if self.quiet:
+                    npp = len([x for x in pp if x[0] == 0])
+                    n = len(kernels)
+                    log.info("{npp} of {n} good samples".format(**vars()))
 
             db = dbutil.connect(self.db_path)
             c = db.cursor()
 
+            # insert raw samples
             for kid, src in zip(ids, kernels):
                 dbutil.sql_insert_dict(c, "ContentFiles",
-                                       {"id": kid, "contents": src})
+                                       {"id": kid, "contents": src},
+                                       replace_existing=True)
 
-            if sampler_opts["static_checker"]:
+            # insert preprocessed samples
+            if self.sampler_opts["static_checker"]:
                 for kid, (status, src) in zip(ids, pp):
                     dbutil.sql_insert_dict(c, "PreprocessedFiles", {
                         "id": kid, "status": status, "contents": src
-                    })
+                    }, replace_existing=True)
 
             c.close()
             db.commit()
             db.close()
 
+            # determine if we are done sampling
             if self.term_condition(i):
-                # signal the sampler to stop
                 self.sampler.stop()
                 return
+
 
 class Sampler(clgen.CLgenObject):
     """
@@ -210,6 +324,12 @@ class Sampler(clgen.CLgenObject):
             sampler_opts (dict): Sampler options.
             kernel_opts (dict): Kernel options.
         """
+        def _start_text(args):
+            if args is None:
+                return "__kernel void A("
+            else:
+                return serialize_argspec(args)
+
         assert(type(sampler_opts) is dict)
         assert(type(kernel_opts) is dict)
 
@@ -230,20 +350,15 @@ class Sampler(clgen.CLgenObject):
                                          sampler_opts)
         self.kernel_opts = types.update(deepcopy(DEFAULT_KERNELS_OPTS),
                                         kernel_opts)
+
+        self.start_text = _start_text(self.kernel_opts["args"])
+        self.kernel_opts["start_text"] = self.start_text
+
         self.hash = self._hash(self.sampler_opts, self.kernel_opts)
 
         if self.sampler_opts["dynamic_checker"] and not cfg.USE_OPENCL:
             log.warning("dynamic checking requested, but OpenCL not available")
             self.sampler_opts["dynamic_checker"] = False
-
-        def _start_text(args):
-            if args == False:
-                return "__kernel void A("
-            else:
-                return serialize_argspec(args)
-
-        # seed to language model
-        self.start_text = _start_text(self.kernel_opts["args"])
 
         # options to pass to preprocess_db()
         self.preprocess_opts = {
@@ -304,13 +419,15 @@ class Sampler(clgen.CLgenObject):
         lock = Lock()
         condition = Condition()
 
-        sampler = SampleProducer(model, condition, queue, **self.kernel_opts)
+        sampler = SampleProducer(model, condition, queue, quiet=quiet,
+                                 **self.kernel_opts)
         sampler.start()
 
-        consumer = SampleConsumer(sampler, condition, queue, **self.sample_opts)
+        consumer = SampleConsumer(cache["kernels.db"], sampler, condition,
+                                  queue, quiet=quiet, **self.sampler_opts)
         consumer.start()
 
-        producer.join()
+        sampler.join()
         consumer.join()
         print()
         explore(cache["kernels.db"])

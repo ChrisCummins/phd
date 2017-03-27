@@ -456,7 +456,7 @@ def remove_bad_preprocessed(db_path: str) -> None:
              .format(new_size_human_readable, reduction_ratio), sep=".")
 
 
-def sql_insert_dict(c, table: str, data: dict) -> None:
+def sql_insert_dict(c, table: str, data: dict, replace_existing=False) -> None:
     """
     Insert a dict of key value pairs into an SQL table.
 
@@ -467,12 +467,14 @@ def sql_insert_dict(c, table: str, data: dict) -> None:
         table (str): Destination table.
         data (dict): Key value pairs.
     """
-    cmd = ("INSERT INTO {table}({cols}) VALUES({vals})"
-           .format(table=table,
-                   cols=','.join(data.keys()),
-                   vals=','.join(['?'] * len(data))))
+    or_replace = "OR REPLACE" if replace_existing else ""
+    cols = ','.join(sorted(data.keys()))
+    vals = ','.join(['?'] * len(data))
 
-    c.execute(cmd, tuple(data.values()))
+    cmd = ("INSERT {or_replace} INTO {table}({cols}) VALUES({vals})"
+           .format(**vars()))
+
+    c.execute(cmd, tuple([data[v] for v in sorted(data.keys())]))
 
 
 _sql_rm_chars = re.compile(r'[\(\)]')

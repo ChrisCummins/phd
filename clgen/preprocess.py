@@ -608,7 +608,7 @@ def preprocess_for_db(src, **preprocess_opts):
         contents = str(e)
         status = 2
 
-    status, contents
+    return status, contents
 
 
 def preprocess_file(path: str, inplace: bool=False, **preprocess_opts) -> None:
