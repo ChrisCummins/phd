@@ -55,9 +55,9 @@ def read_file(*components, **kwargs):
     must_exist = kwargs.get("must_exist", True)
 
     if must_exist:
-        path = fs.path(*components)
-    else:
         path = fs.must_exist(*components)
+    else:
+        path = fs.path(*components)
 
     try:
         with open(path) as infile:
@@ -66,14 +66,14 @@ def read_file(*components, **kwargs):
         raise ValueError(
             "malformed JSON file '{path}'. Message from parser: {err}"
             .format(path=fs.basename(path), err=str(e)))
-    except File404 as e:
+    except IOError as e:
         if not must_exist:
             return {}
         else:
             return e
 
 
-def write_file(path, data, format):
+def write_file(path, data, format=True):
     """
     Write JSON data to file.
 
@@ -124,20 +124,3 @@ def loads(text, **kwargs):
                 lines[index] = re.sub(regex_inline, r'\1', line)
 
     return json.loads('\n'.join(lines), **kwargs)
-
-
-def loadf(*components):
-    """
-    Load a JSON data blob.
-
-    Arguments:
-        *components (str[]): Path to file.
-
-    Returns:
-        `dict` or `list`: JSON data.
-
-    Raises:
-        fs.File404: If path does not exist.
-    """
-    with open(fs.must_exist(*components)) as infile:
-        return loads(infile.read())
