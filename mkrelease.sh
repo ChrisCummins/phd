@@ -91,6 +91,9 @@ set_new_version() {
 
     cd "$(get_project_root)"
 
+    echo "Updating version string... 'labm8/__init__.py'"
+    sed "s/$current/$new/" -i labm8/__init__.py
+
     echo "Updating version string... 'setup.py'"
     sed "s/$current/$new/" -i setup.py
 

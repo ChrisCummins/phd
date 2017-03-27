@@ -24,6 +24,9 @@ import labm8.io
 import sys
 
 
+__version__ = "0.0.13"
+
+
 def exit(status=0):
     """
     Terminate the program with the given status code.
