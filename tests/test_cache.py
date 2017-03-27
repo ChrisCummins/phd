@@ -137,7 +137,7 @@ class TestFSCache(TestCase):
         c['foobar'] = "/tmp/labm8.testfile.txt"
 
         # file must be in cache
-        self.assertTrue(fs.isfile(c._keypath("foobar")))
+        self.assertTrue(fs.isfile(c.keypath("foobar")))
         # file must have been moved
         self.assertFalse(fs.isfile("/tmp/labm8.testfile.txt"))
         # check file contents
