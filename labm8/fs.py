@@ -16,6 +16,7 @@
 """
 High level filesystem interface.
 """
+import json
 import os
 import os.path
 import re
@@ -26,6 +27,7 @@ from humanize import naturalsize
 from send2trash import send2trash
 
 import labm8 as lab
+from labm8 import types
 
 
 class Error(Exception):
@@ -249,7 +251,7 @@ def ls(root=".", abspaths=False, recursive=False):
     elif recursive:
         # Recursively expand subdirectories.
         paths = ls(root, abspaths=abspaths, recursive=False)
-        return lab.flatten([_expand_subdirs(file) for file in paths])
+        return types.flatten([_expand_subdirs(file) for file in paths])
     else:
         # List directory contents.
         return list(sorted(os.listdir(root)))
