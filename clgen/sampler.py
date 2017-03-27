@@ -35,7 +35,6 @@ from clgen import dbutil
 from clgen import fetch
 from clgen import log
 from clgen import preprocess
-from clgen.cache import Cache
 from clgen.explore import explore
 from clgen.model import Model
 
@@ -151,7 +150,7 @@ class Sampler(clgen.CLgenObject):
         string = "".join([str(x) for x in checksum_data])
         return crypto.sha1_str(string)
 
-    def cache(self, model: Model) -> Cache:
+    def cache(self, model: Model):
         """
         Return sampler cache.
 
@@ -159,15 +158,15 @@ class Sampler(clgen.CLgenObject):
             model (Model): CLgen model.
 
         Returns:
-            Cache: Cache.
+            labm8.FSCache: Cache.
         """
         sampler_model_hash = crypto.sha1_str(self.hash + model.hash)
 
-        cache = Cache(fs.path("sampler", sampler_model_hash))
+        cache = clgen.mkcache("sampler", sampler_model_hash)
 
         # validate metadata against cache
         meta = self.to_json()
-        if cache["META"]:
+        if cache.get("META"):
             cached_meta = jsonutil.read_file(cache["META"])
             if meta != cached_meta:
                 raise clgen.InternalError("sampler metadata mismatch")
@@ -221,10 +220,10 @@ class Sampler(clgen.CLgenObject):
         cache = self.cache(model)
 
         # create samples database if it doesn't exist
-        if not cache["kernels.db"]:
-            dbutil.create_db(fs.path(cache.path, "kernels.tmp.db"))
-            cache["kernels.db"] = fs.path(
-                cache.path, "kernels.tmp.db")
+        if not cache.get("kernels.db"):
+            tmp_kernels_db = cache.keypath("kernels.tmp.db")
+            dbutil.create_db(tmp_kernels_db)
+            cache["kernels.db"] = tmp_kernels_db
 
         # properties
         max_kernels = self.sampler_opts["max_kernels"]

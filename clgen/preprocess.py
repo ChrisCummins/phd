@@ -44,7 +44,6 @@ from clgen import clutil
 from clgen import dbutil
 from clgen import log
 from clgen import native
-from clgen.cache import Cache
 
 
 #

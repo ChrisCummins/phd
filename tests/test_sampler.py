@@ -69,7 +69,7 @@ class TestSampler(TestCase):
             }
         })
 
-        s.cache(m).empty()  # clear old samples
+        s.cache(m).clear()  # clear old samples
 
         # sample a single kernel:
         s.sample(m)
