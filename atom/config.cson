@@ -9,7 +9,6 @@
       "monokai"
     ]
   editor:
-    fontSize: 15
     invisibles: {}
     showIndentGuide: true
     showInvisibles: true
@@ -18,8 +17,9 @@
     userId: "89238f39-41b1-38a3-2657-397fa4728b99"
   "file-types":
     ipy: "source.python"
-  linter:
-    showErrorPanel: false
+  linter: {}
+  "linter-ui-default":
+    showPanel: true
   "markdown-preview":
     useGitHubStyle: true
   "remote-atom":
