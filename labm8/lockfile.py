@@ -16,6 +16,11 @@
 """
 Lock file mechanism.
 """
+from __future__ import print_function
+# Use absolute paths for imports so as to prevent a conflict with the
+# system "time" module.
+from __future__ import absolute_import
+
 import datetime
 import os
 import time
