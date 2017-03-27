@@ -6,14 +6,14 @@
       "__global float*",
       "const int"
     ],
-    "max_length": 500,
-    "temperature": 0.75
+    "max_length": 500,  # max kernel length
+    "temperature": 1  # sampling temperature
   },
   "sampler": {
-    "max_kernels": 100,
-    "batch_size": 100,
-    "static_checker": true,
-    "dynamic_checker": false,
-    "gpuverify": false
+    "min_kernels": 100,  # if <= 0, no minimum
+    "min_samples": -1,  # if <= 0, no minimum
+    "static_checker": true,  # {true,false}
+    "dynamic_checker": false,  # {true,false}
+    "gpuverify": false  # {true,false}
   }
 }

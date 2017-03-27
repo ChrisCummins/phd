@@ -367,15 +367,14 @@ class Model(clgen.CLgenObject):
             return self._locked_train(quiet)
 
 
-    def sample(self, seed_text: str="__kernel void", output=sys.stdout,
-               num_samples: int=1, temperature: float=1, max_length: int=10000,
-               seed: int=None, quiet: bool=False) -> None:
+    def sample(self, seed_text: str="__kernel void", num_samples: int=1,
+               temperature: float=1, max_length: int=10000,
+               seed: int=None, quiet: bool=False) -> str:
         """
         Sample model.
 
         Arguments:
             seed_text (str, optional): Sample start text
-            output (file handler, optional): Where to print output to
             num_samples (int, optional): Number of samples to generated
             temperature (float, optional): Sampling temperature
             max_length (int, optional): Maximum sample length

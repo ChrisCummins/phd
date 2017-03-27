@@ -597,6 +597,21 @@ def preprocess(src: str, id: str='anon', use_shim: bool=True,
     return src
 
 
+def preprocess_for_db(src, **preprocess_opts):
+    try:
+        # Try and preprocess it:
+        contents = preprocess(src, **preprocess_opts)
+        status = 0
+    except BadCodeException as e:
+        contents = str(e)
+        status = 1
+    except UglyCodeException as e:
+        contents = str(e)
+        status = 2
+
+    status, contents
+
+
 def preprocess_file(path: str, inplace: bool=False, **preprocess_opts) -> None:
     """
     Preprocess a file.
@@ -678,16 +693,7 @@ class PreprocessWorker(Thread):
             src = job["src"]
             preprocess_opts = job["preprocess_opts"]
 
-            try:
-                # Try and preprocess it:
-                contents = preprocess(src, id, **preprocess_opts)
-                status = 0
-            except BadCodeException as e:
-                contents = str(e)
-                status = 1
-            except UglyCodeException as e:
-                contents = str(e)
-                status = 2
+            contents, status = preprocess_for_db(src, id=id, **preprocess_opts)
 
             result = {
                 "id": kid,
