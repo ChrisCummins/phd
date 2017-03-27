@@ -486,7 +486,7 @@ def content_db(db_path: str, in_db_path: str,
 
     for id, contents in rows:
         kernels = clutil.get_cl_kernels(contents)
-        ids = [clgen.checksum_str(kernel) for kernel in kernels]
+        ids = [crypto.sha1_str(kernel) for kernel in kernels]
         # print("{} kernels in {}".format(len(kernels), id))
         for kid, kernel in zip(ids, kernels):
             oc = odb.cursor()
@@ -520,90 +520,6 @@ def fetch_fs(db_path: str, paths: list=[]) -> None:
                   (path, contents))
 
     db.commit()
-
-
-
-# Counters
-kernel_counter = 0
-
-
-def process_sample_file(db_path: str, sample_path: str, first_only: bool=False,
-                        max_kernel_len: int=5000, quiet: bool=False) -> None:
-    """
-    Fetch from a CLgen sample file.
-
-    Arguments:
-        db_path (str): Output path.
-        sample_path (str): Sample path.
-        first_only (bool, optional): If True, only fetch the first kernel in
-            sample.
-        ma_kernel_len (int, optional): Maximum kernel length.
-    """
-    db = dbutil.connect(db_path)
-    c = db.cursor()
-
-    with open(sample_path) as infile:
-        sample = infile.read()
-
-    i = 0
-    tail = 0
-    offset = len('__kernel void ')
-    while True:
-        if not quiet:
-            print('\r\033[Kkernel', i, end='')
-            sys.stdout.flush()
-
-        # Find the starting index of the next kernel.
-        tail = sample.find('__kernel void ', tail)
-
-        # If we didn't find another kernel, stop.
-        if tail == -1:
-            break
-
-        # Find the end index of this kernel.
-        head = clutil.get_cl_kernel_end_idx(sample, start_idx=tail,
-                                            max_len=max_kernel_len)
-
-        # Look for other ends
-        end = sample.find('__kernel void ',
-                          tail + offset, tail + offset + max_kernel_len)
-        head = min(end, head) if end != -1 else head
-
-        kernel = sample[tail:head]
-        id = clgen.checksum_str(kernel)
-        c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
-                  (id, kernel))
-        tail = head
-        i += 1
-        if first_only:
-            break
-    if not quiet:
-        print()
-    db.commit()
-    c.close()
-
-
-def clgen_sample(db_path: str, samples_dir: str, sample_path: str,
-                 first_only: bool) -> None:
-    """
-    Fetch from CLgen.
-
-    Arguments:
-        db_path (str): Output path.
-        sample_path (str): Samples directory.
-        sample_path (str): Sample path.
-        first_only (bool, optional): If True, only fetch the first kernel in
-            sample.
-    """
-    if samples_dir:
-        files = [os.path.join(samples_dir, f) for f in os.listdir(samples_dir)
-                 if os.path.isfile(os.path.join(samples_dir, f))]
-        for sample_path in files:
-            process_sample_file(db_path, sample_path, first_only=first_only)
-    else:
-        process_sample_file(db_path, sample_path, first_only=first_only)
-
-    print("\r\033[K\ndone.")
 
 
 # Counters
