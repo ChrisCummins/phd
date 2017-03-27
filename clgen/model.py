@@ -19,7 +19,6 @@
 """
 CLgen model.
 """
-import filelock
 import numpy as np
 import os
 import re
@@ -38,6 +37,7 @@ from tempfile import mktemp
 
 import clgen
 from clgen import cache
+from clgen import lockfile
 from clgen import log
 from clgen.cache import Cache
 from clgen.corpus import Corpus
@@ -406,16 +406,8 @@ class Model(clgen.CLgenObject):
         Returns:
             Model: self.
         """
-        try:
-            with self.lock.acquire(timeout=1):
-                log.verbose("lockfile", self.lock.lock_file)
-                self._locked_train(quiet)
-        except filelock.Timeout:
-            log.fatal("""\
-model is already locked for training. Unlock the model by removing:
-  {lockpath}""".format(lockpath=self.lock.lock_file))
-        finally:
-            self.lock.release()
+        with self.lock.acquire():
+            return self._locked_train(quiet)
 
 
     def sample(self, seed_text: str="__kernel void", output=sys.stdout,
@@ -434,10 +426,8 @@ model is already locked for training. Unlock the model by removing:
                 reproducible samples. If None, set no seed.
             quiet (bool, optional): If False, stream output to stdout
         """
-        if fs.exists(self.lock.lock_file):
-            log.fatal("""\
-model is locked for training. Unlock the model by removing:
-  {lockpath}""".format(lockpath=self.lock.lock_file))
+        if self.lock.islocked:
+            raise lockfile.UnableToAcquireLockError(self.lock)
 
         tf = self._init_tensorflow(infer=True)
 
@@ -526,7 +516,7 @@ model is locked for training. Unlock the model by removing:
     @property
     def lock(self):
         lockpath = self.cache.keypath("LOCK")
-        return filelock.FileLock(lockpath)
+        return lockfile.LockFile(lockpath)
 
     @property
     def model_type(self) -> str:
