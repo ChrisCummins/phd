@@ -19,6 +19,25 @@ Hashing and cryptography utils.
 import hashlib
 
 
+def _checksum(hash_fn, data):
+    return hash_fn(data).hexdigest()
+
+
+def _checksum_str(hash_fn, string, encoding='utf-8'):
+    return _checksum(hash_fn, string.encode(encoding))
+
+
+def _checksum_list(hash_fn, *elems):
+    string = "".join(sorted(str(x) for x in elems))
+    return _checksum_str(hash_fn, string)
+
+
+def _checksum_file(hash_fn, path):
+    with open(path, 'rb') as infile:
+        ret = _checksum(hash_fn, infile.read())
+    return ret
+
+
 def sha1(data):
     """
     Return the sha1 of "data".
@@ -29,7 +48,7 @@ def sha1(data):
     Returns:
         str: Hex encoded.
     """
-    return hashlib.sha1(data).hexdigest()
+    return _checksum(hashlib.sha1, data)
 
 
 def sha1_str(string, encoding='utf-8'):
@@ -42,7 +61,7 @@ def sha1_str(string, encoding='utf-8'):
     Returns:
         str: Hex encoded.
     """
-    return sha1(string.encode(encoding))
+    return _checksum_str(hashlib.sha1, string, encoding=encoding)
 
 
 def sha1_list(*elems):
@@ -55,8 +74,7 @@ def sha1_list(*elems):
     Returns:
         str: Hex encoded.
     """
-    string = "".join(sorted(str(x) for x in elems))
-    return sha1_str(string)
+    return _checksum_list(hashlib.sha1, *elems)
 
 
 def sha1_file(path):
@@ -69,6 +87,108 @@ def sha1_file(path):
     Returns:
         str: Hex encoded.
     """
-    with open(path, 'rb') as infile:
-        ret = sha1(infile.read())
-    return ret
+    return _checksum_file(hashlib.sha1, path)
+
+
+def md5(data):
+    """
+    Return the md5 of "data".
+
+    Arguments:
+        data (bytes): Data.
+
+    Returns:
+        str: Hex encoded.
+    """
+    return _checksum(hashlib.md5, data)
+
+
+def md5_str(string, encoding='utf-8'):
+    """
+    Return the md5 of string "data".
+
+    Arguments:
+        string: String.
+
+    Returns:
+        str: Hex encoded.
+    """
+    return _checksum_str(hashlib.md5, string, encoding=encoding)
+
+
+def md5_list(*elems):
+    """
+    Return the md5 of all elements of a list.
+
+    Arguments:
+        *elems: List of stringifiable data.
+
+    Returns:
+        str: Hex encoded.
+    """
+    return _checksum_list(hashlib.md5, *elems)
+
+
+def md5_file(path):
+    """
+    Return the md5 of file at "path".
+
+    Arguments:
+        path (str): Path to file
+
+    Returns:
+        str: Hex encoded.
+    """
+    return _checksum_file(hashlib.md5, path)
+
+
+def sha256(data):
+    """
+    Return the sha256 of "data".
+
+    Arguments:
+        data (bytes): Data.
+
+    Returns:
+        str: Hex encoded.
+    """
+    return _checksum(hashlib.sha256, data)
+
+
+def sha256_str(string, encoding='utf-8'):
+    """
+    Return the sha256 of string "data".
+
+    Arguments:
+        string: String.
+
+    Returns:
+        str: Hex encoded.
+    """
+    return _checksum_str(hashlib.sha256, string, encoding=encoding)
+
+
+def sha256_list(*elems):
+    """
+    Return the sha256 of all elements of a list.
+
+    Arguments:
+        *elems: List of stringifiable data.
+
+    Returns:
+        str: Hex encoded.
+    """
+    return _checksum_list(hashlib.sha256, *elems)
+
+
+def sha256_file(path):
+    """
+    Return the sha256 of file at "path".
+
+    Arguments:
+        path (str): Path to file
+
+    Returns:
+        str: Hex encoded.
+    """
+    return _checksum_file(hashlib.sha256, path)
