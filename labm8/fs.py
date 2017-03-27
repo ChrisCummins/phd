@@ -16,7 +16,6 @@
 """
 High level filesystem interface.
 """
-import json
 import os
 import os.path
 import re
@@ -494,3 +493,55 @@ def du(*components, **kwargs):
         return naturalsize(size)
     else:
         return size
+
+
+def write_file(path, contents):
+    """
+    Write string to file.
+
+    Arguments:
+        path (str): Destination.
+        contents (str): Contents.
+    """
+    with mkopen(path, 'w') as outfile:
+        outfile.write(contents)
+
+
+def read_file(path):
+    """
+    Read file to string.
+
+    Arguments:
+        path (str): Source.
+    """
+    with open(must_exist(path)) as infile:
+        r = infile.read()
+    return r
+
+
+def files_from_list(*paths):
+    """
+    Return a list of all file paths from a list of files or directories.
+
+    For each path in the input: if it is a file, return it; if it is a
+    directory, return a list of files in the directory.
+
+    Arguments:
+        paths (list of str): List of file and directory paths.
+
+    Returns:
+        list of str: Absolute file paths.
+
+    Raises:
+        File404: If any of the paths do not exist.
+    """
+    ret = []
+    for path in paths:
+        if isfile(path):
+            ret.append(fs.abspath(path))
+        elif fs.isdir(path):
+            ret += [f for f in fs.ls(path, abspaths=True, recursive=True)
+                    if fs.isfile(f)]
+        else:
+            raise File404(path)
+    return ret

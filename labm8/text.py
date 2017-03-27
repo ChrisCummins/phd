@@ -37,6 +37,21 @@ class TruncateError(Error):
     pass
 
 
+def get_substring_idxs(substr, string):
+    """
+    Return a list of indexes of substr. If substr not found, list is
+    empty.
+
+    Arguments:
+        substr (str): Substring to match.
+        string (str): String to match in.
+
+    Returns:
+        list of int: Start indices of substr.
+    """
+    return [match.start() for match in re.finditer(substr, string)]
+
+
 def truncate(string, maxchar):
     """
     Truncate a string to a maximum number of characters.

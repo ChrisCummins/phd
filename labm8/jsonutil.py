@@ -23,6 +23,74 @@ import labm8
 from labm8 import fs
 
 
+def format_json(data):
+    """
+    Pretty print JSON.
+
+    Arguments:
+        data (dict): JSON blob.
+
+    Returns:
+        str: Formatted JSON
+    """
+    return json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
+
+
+def read_file(*components, **kwargs):
+    """
+    Load a JSON data blob.
+
+    Arguments:
+        path (str): Path to file.
+        must_exist (bool, otional): If False, return empty dict if file does
+            not exist.
+
+    Returns:
+        array or dict: JSON data.
+
+    Raises:
+        File404: If path does not exist, and must_exist is True.
+        InvalidFile: If JSON is malformed.
+    """
+    must_exist = kwargs.get("must_exist", True)
+
+    if must_exist:
+        path = fs.path(*components)
+    else:
+        path = fs.must_exist(*components)
+
+    try:
+        with open(path) as infile:
+            return loads(infile.read())
+    except ValueError as e:
+        raise ValueError(
+            "malformed JSON file '{path}'. Message from parser: {err}"
+            .format(path=fs.basename(path), err=str(e)))
+    except File404 as e:
+        if not must_exist:
+            return {}
+        else:
+            return e
+
+
+def write_file(path, data, format):
+    """
+    Write JSON data to file.
+
+    Arguments:
+        path (str): Destination.
+        data (dict or list): JSON serializable data.
+        format (bool, optional): Pretty-print JSON data.
+    """
+    import json
+    import jsonutil
+
+    if format:
+        fs.write_file(path, format_json(data))
+    else:
+        fs.write_file(path, json.dumps(data))
+
+
 def loads(text, **kwargs):
     """
     Deserialize `text` (a `str` or `unicode` instance containing a JSON

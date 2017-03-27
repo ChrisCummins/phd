@@ -24,8 +24,6 @@ class TestCrypto(TestCase):
     def test_sha1_empty_str(self):
         self._test("da39a3ee5e6b4b0d3255bfef95601890afd80709",
                    lab.crypto.sha1_str(""))
-        self._test("da39a3ee5e6b4b0d3255bfef95601890afd80709",
-                   lab.crypto.sha1_str("".decode("utf-8")))
 
     def test_sha1_hello_world(self):
         self._test("0a0a9f2a6772942557ab5355d76af442f8f65e01",
@@ -55,8 +53,6 @@ class TestCrypto(TestCase):
     def test_md5_empty_str(self):
         self._test("d41d8cd98f00b204e9800998ecf8427e",
                    lab.crypto.md5_str(""))
-        self._test("d41d8cd98f00b204e9800998ecf8427e",
-                   lab.crypto.md5_str("".decode("utf-8")))
 
     def test_md5_hello_world(self):
         self._test("65a8e27d8879283831b664bd8b7f0ad4",
@@ -86,8 +82,6 @@ class TestCrypto(TestCase):
     def test_sha256_empty_str(self):
         self._test("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                    lab.crypto.sha256_str(""))
-        self._test("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                   lab.crypto.sha256_str("".decode("utf-8")))
 
     def test_sha256_hello_world(self):
         self._test("dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f",
