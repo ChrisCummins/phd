@@ -22,6 +22,11 @@ from labm8 import text
 
 class TestText(TestCase):
 
+    # get_substring_idxs()
+    def test_get_substring_idxs(self):
+        self.assertEqual([0, 2], text.get_substring_idxs('a', 'aba'))
+        self.assertEqual([], text.get_substring_idxs('a', 'bb'))
+
     # truncate()
     def test_truncate(self):
         self._test("foo", text.truncate("foo", 100))
