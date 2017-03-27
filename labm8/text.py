@@ -20,6 +20,8 @@ Text utilities.
 """
 from __future__ import division
 
+import re
+
 import labm8 as lab
 
 
