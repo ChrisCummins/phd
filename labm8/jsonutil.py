@@ -82,9 +82,6 @@ def write_file(path, data, format=True):
         data (dict or list): JSON serializable data.
         format (bool, optional): Pretty-print JSON data.
     """
-    import json
-    import jsonutil
-
     if format:
         fs.write_file(path, format_json(data))
     else:
