@@ -538,10 +538,10 @@ def files_from_list(*paths):
     ret = []
     for path in paths:
         if isfile(path):
-            ret.append(fs.abspath(path))
-        elif fs.isdir(path):
-            ret += [f for f in fs.ls(path, abspaths=True, recursive=True)
-                    if fs.isfile(f)]
+            ret.append(abspath(path))
+        elif isdir(path):
+            ret += [f for f in ls(path, abspaths=True, recursive=True)
+                    if isfile(f)]
         else:
             raise File404(path)
     return ret
