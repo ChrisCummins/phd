@@ -23,11 +23,18 @@ class TestCrypto(TestCase):
     # sha1()
     def test_sha1_empty_str(self):
         self._test("da39a3ee5e6b4b0d3255bfef95601890afd80709",
-                   lab.crypto.sha1(""))
+                   lab.crypto.sha1_str(""))
+        self._test("da39a3ee5e6b4b0d3255bfef95601890afd80709",
+                   lab.crypto.sha1_str("".decode("utf-8")))
 
     def test_sha1_hello_world(self):
         self._test("0a0a9f2a6772942557ab5355d76af442f8f65e01",
-                   lab.crypto.sha1("Hello, World!"))
+                   lab.crypto.sha1_str("Hello, World!"))
+
+    # sha1_list()
+    def test_sha1_list(self):
+        self._test("06bf71070d31b2ebe4bdae828fc76a70e4b56f00",
+                   lab.crypto.sha1_list(["hello", "world"]))
 
     # sha1_file()
     def test_sha1_file_empty(self):

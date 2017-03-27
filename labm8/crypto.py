@@ -19,21 +19,56 @@ Hashing and cryptography utils.
 import hashlib
 
 
-def _sha1(data):
+def sha1(data):
+    """
+    Return the sha1 of "data".
+
+    Arguments:
+        data (bytes): Data.
+
+    Returns:
+        str: Hex encoded.
+    """
     return hashlib.sha1(data).hexdigest()
 
 
-def sha1(data):
+def sha1_str(string, encoding='utf-8'):
     """
     Return the sha1 of string "data".
+
+    Arguments:
+        string: String.
+
+    Returns:
+        str: Hex encoded.
     """
-    return _sha1(data.encode("utf-8"))
+    return sha1(string.encode(encoding))
+
+
+def sha1_list(*elems):
+    """
+    Return the sha1 of all elements of a list.
+
+    Arguments:
+        *elems: List of stringifiable data.
+
+    Returns:
+        str: Hex encoded.
+    """
+    string = "".join(sorted(str(x) for x in elems))
+    return sha1_str(string)
 
 
 def sha1_file(path):
     """
     Return the sha1 of file at "path".
+
+    Arguments:
+        path (str): Path to file
+
+    Returns:
+        str: Hex encoded.
     """
     with open(path, 'rb') as infile:
-        sha1 = _sha1(infile.read())
-    return sha1
+        ret = sha1(infile.read())
+    return ret
