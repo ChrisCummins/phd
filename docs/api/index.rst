@@ -84,6 +84,13 @@ clgen.fetch
    :members:
    :undoc-members:
 
+clgen.lockfile
+---------------
+
+.. automodule:: clgen.lockfile
+   :members:
+   :undoc-members:
+
 clgen.log
 ----------
 

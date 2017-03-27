@@ -8,7 +8,8 @@ cldrive
 
 ::
 
-    usage: cldrive [-h] [--version] [-v] [-s] [--cpu] [--gpu] [--fatal-errors]
+    usage: cldrive [-h] [--version] [-v] [--debug] [-s] [--cpu] [--gpu]
+                   [--fatal-errors]
                    <input> [<input> ...]
     
     Drive OpenCL kernels.
@@ -18,21 +19,22 @@ cldrive
     
     Program output is in CSV format, with the following scheme:
     
-        <path>,<dsize>,<kernel>,<transfer>,<mean>,<ci>
+        <path>,<dsize>,<kernel>,<platform>,<device>,<transfer>,<time>
     
     where each value corresponds to:
     
        <path>      path to input file
        <dsize>     payload size
        <kernel>    kernel name
+       <platform>  OpenCL platform name
+       <device>    OpenCL device name
        <transfer>  transfer size, in bytes
-       <mean>      mean execution time
-       <ci>        95% confidence interval of execution time
+       <time>      mean execution time
     
     In case of an error, "-" is output for values which cannot be determined,
     and the kernel name field is substituted for an error name.
     
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
     positional arguments:
@@ -42,9 +44,10 @@ cldrive
       -h, --help      show this help message and exit
       --version       show version information and exit
       -v, --verbose   increase output verbosity
+      --debug         in case of error, print debugging information
       -s, --strict    reject any kernels which do not validate
-      --cpu           execute on CPU (default: no)
-      --gpu           execute on GPU (default: yes)
+      --cpu           execute on CPU
+      --gpu           execute on GPU
       --fatal-errors  exit on error
 
 clgen
@@ -52,8 +55,8 @@ clgen
 
 ::
 
-    usage: clgen [-h] [--version] [-v] [--list-files] [--corpus-dir] [--model-dir]
-                 [--sampler-dir]
+    usage: clgen [-h] [--version] [-v] [--debug] [--list-files] [--corpus-dir]
+                 [--model-dir] [--sampler-dir]
                  <model> <sampler>
     
     Generate OpenCL programs using Deep Learning.
@@ -69,7 +72,7 @@ clgen
     The pipeline can be interrupted and resumed at any time. Results are cached
     across runs.
     
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
     positional arguments:
@@ -80,6 +83,7 @@ clgen
       -h, --help     show this help message and exit
       --version      show version information and exit
       -v, --verbose  increase output verbosity
+      --debug        in case of error, print debugging information
       --list-files   print cached corpus, model, and sampler, files
       --corpus-dir   print path to corpus cache
       --model-dir    print path to model cache
@@ -90,33 +94,17 @@ clgen-atomize
 
 ::
 
-    usage: clgen-atomize [-h] [--version] [-v] [-t TYPE] [-s] input
-    
-    Extract and print corpus vocabulary.
-    
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
-    <http://chriscummins.cc/clgen>
-    
-    positional arguments:
-      input                 path to input text file
-    
-    optional arguments:
-      -h, --help            show this help message and exit
-      --version             show version information and exit
-      -v, --verbose         increase output verbosity
-      -t TYPE, --type TYPE  vocabulary type
-      -s, --size            print vocabulary size
 
 clgen-create-db
 ----------------
 
 ::
 
-    usage: clgen-create-db [-h] [--version] [-v] [-g] input
+    usage: clgen-create-db [-h] [--version] [-v] [--debug] [-g] input
     
     Create an empty OpenCL kernel database.
     
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
     positional arguments:
@@ -126,6 +114,7 @@ clgen-create-db
       -h, --help     show this help message and exit
       --version      show version information and exit
       -v, --verbose  increase output verbosity
+      --debug        in case of error, print debugging information
       -g, --github   generate dataset with GitHub metadata
 
 clgen-dump
@@ -133,46 +122,19 @@ clgen-dump
 
 ::
 
-    usage: clgen-dump [-h] [--version] [-v] [-d] [-i] [--input-samples] [--eof]
-                      [-r] [-s STATUS]
-                      input output
-    
-    Create training datasets.
-    
-    Provides a front-end for utilities for turning kernel databases into corpuses
-    for training CLgen models on.
-    
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
-    <http://chriscummins.cc/clgen>
-    
-    positional arguments:
-      input                 path to model descriptor
-      output                path to output file or directory
-    
-    optional arguments:
-      -h, --help            show this help message and exit
-      --version             show version information and exit
-      -v, --verbose         increase output verbosity
-      -d                    output to directory (overrides -i, --eof, -r)
-      -i                    include file separators
-      --input-samples       use input contents, not preprocessed
-      --eof                 print end of file
-      -r                    use reverse order
-      -s STATUS, --status STATUS
-                            status code to use
 
 clgen-explore
 --------------
 
 ::
 
-    usage: clgen-explore [-h] [--version] [-v] input
+    usage: clgen-explore [-h] [--version] [-v] [--debug] input
     
     Exploratory analysis of preprocessed dataset.
     
     Provides an overview of the contents of an OpenCL kernel database.
     
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
     positional arguments:
@@ -182,13 +144,15 @@ clgen-explore
       -h, --help     show this help message and exit
       --version      show version information and exit
       -v, --verbose  increase output verbosity
+      --debug        in case of error, print debugging information
 
 clgen-features
 ---------------
 
 ::
 
-    usage: clgen-features [-h] [--version] [-v] [-d] [-s] [-e] [--shim] [-q] [-H]
+    usage: clgen-features [-h] [--version] [-v] [--debug] [-d] [-s] [-e] [--shim]
+                          [-q] [-H]
                           inputs [inputs ...]
     
     Extract static OpenCL kernel features.
@@ -201,7 +165,7 @@ clgen-features
     Note that dynamic features are extracted using the cldrive program for CLgen
     kernels, or by using libcecl for ad-hoc programs.
     
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
     positional arguments:
@@ -211,6 +175,7 @@ clgen-features
       -h, --help          show this help message and exit
       --version           show version information and exit
       -v, --verbose       increase output verbosity
+      --debug             in case of error, print debugging information
       -d, --dir-mode      treat inputs as directories
       -s, --stats         summarize a features files
       -e, --fatal-errors  quit on compiler error
@@ -223,7 +188,7 @@ clgen-fetch
 
 ::
 
-    usage: clgen-fetch [-h] [--version] [-v] input paths [paths ...]
+    usage: clgen-fetch [-h] [--version] [-v] [--debug] input paths [paths ...]
     
     Import OpenCL files into kernel datbase.
     
@@ -231,7 +196,7 @@ clgen-fetch
     then preprocessed and assembled into corpuses. This program acts as the front
     end, assembling files from the file system into a database for preprocessing.
     
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
     positional arguments:
@@ -242,20 +207,23 @@ clgen-fetch
       -h, --help     show this help message and exit
       --version      show version information and exit
       -v, --verbose  increase output verbosity
+      --debug        in case of error, print debugging information
 
 clgen-fetch-clgen
 ------------------
 
 ::
 
-    usage: clgen-fetch-clgen [-h] [--version] [-v] [-d D] [-f F] [--first] input
+    usage: clgen-fetch-clgen [-h] [--version] [-v] [--debug] [-d D] [-f F]
+                             [--first]
+                             input
     
     Generate OpenCL kernels from CLgen samples.
     
     This splits the continuous output of CLgen into discrete OpenCL kernels for
     preprocessing.
     
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
     positional arguments:
@@ -265,6 +233,7 @@ clgen-fetch-clgen
       -h, --help     show this help message and exit
       --version      show version information and exit
       -v, --verbose  increase output verbosity
+      --debug        in case of error, print debugging information
       -d D           path to samples directory
       -f F           path to sample file
       --first        extract only first kernel from sample file(s)
@@ -274,7 +243,7 @@ clgen-fetch-clsmith
 
 ::
 
-    usage: clgen-fetch-clsmith [-h] [--version] [-v] [-n N] input
+    usage: clgen-fetch-clsmith [-h] [--version] [-v] [--debug] [-n N] input
     
     Generate OpenCL programs using CLSmith.
     
@@ -289,7 +258,7 @@ clgen-fetch-clsmith
     at Imperial College London: Christopher Lidbury, Andrei Lascu, Nathan Chong,
     Alastair F. Donaldson.
     
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
     positional arguments:
@@ -299,6 +268,7 @@ clgen-fetch-clsmith
       -h, --help     show this help message and exit
       --version      show version information and exit
       -v, --verbose  increase output verbosity
+      --debug        in case of error, print debugging information
       -n N           number of OpenCL kernels to generate
 
 clgen-fetch-db
@@ -306,11 +276,11 @@ clgen-fetch-db
 
 ::
 
-    usage: clgen-fetch-db [-h] [--version] [-v] output input
+    usage: clgen-fetch-db [-h] [--version] [-v] [--debug] output input
     
     Copies OpenCL kernels from an existing SQL database into a new one.
     
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
     positional arguments:
@@ -321,13 +291,14 @@ clgen-fetch-db
       -h, --help     show this help message and exit
       --version      show version information and exit
       -v, --verbose  increase output verbosity
+      --debug        in case of error, print debugging information
 
 clgen-fetch-github
 -------------------
 
 ::
 
-    usage: clgen-fetch-github [-h] [--version] [-v] input
+    usage: clgen-fetch-github [-h] [--version] [-v] [--debug] input
     
     Mines OpenCL kernels from Github. Requires the following environment
     variables to be set:
@@ -344,7 +315,7 @@ clgen-fetch-github
     exercise restrained in minimizing your use of this program -- we don't
     want to upset the nice folks at GH :-)
     
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
     positional arguments:
@@ -354,17 +325,19 @@ clgen-fetch-github
       -h, --help     show this help message and exit
       --version      show version information and exit
       -v, --verbose  increase output verbosity
+      --debug        in case of error, print debugging information
 
 clgen-merge
 ------------
 
 ::
 
-    usage: clgen-merge [-h] [--version] [-v] dataset [inputs [inputs ...]]
+    usage: clgen-merge [-h] [--version] [-v] [--debug]
+                       dataset [inputs [inputs ...]]
     
     Merge kernel datasets.
     
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
     positional arguments:
@@ -375,55 +348,31 @@ clgen-merge
       -h, --help     show this help message and exit
       --version      show version information and exit
       -v, --verbose  increase output verbosity
+      --debug        in case of error, print debugging information
 
 clgen-preprocess
 -----------------
 
 ::
 
-    usage: clgen-preprocess [-h] [--version] [-v] [-f] [-i] [-D] [-G]
-                            [--remove-bad-preprocessed] [--remove-preprocessed]
-                            inputs [inputs ...]
-    
-    Process OpenCL files for machine learning.
-    
-    This is a three step process. First, the OpenCL kernels are compiled to
-    bytecode, then the source files are preprocessed, before being rewritten.
-    
-    Preprocessing is computationally demanding and highly paralellised.
-    Expect high resource contention during preprocessing.
-    
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
-    <http://chriscummins.cc/clgen>
-    
-    positional arguments:
-      inputs                path to input
-    
-    optional arguments:
-      -h, --help            show this help message and exit
-      --version             show version information and exit
-      -v, --verbose         increase output verbosity
-      -f, --file            treat input as file
-      -i, --inplace         inplace file rewrite
-      -D, --dynamic-checker
-                            run dynamic checker on kernels
-      -G, --gpuverify       run GPUVerify on kernels
-      --remove-bad-preprocessed
-                            delete the contents of all bad or ugly preprocessed files,
-                            but keep the entries in the table
-      --remove-preprocessed
-                            remove all preprocessed files from database
+
+clgen-train
+------------
+
+::
+
 
 clgen-verify
 -------------
 
 ::
 
-    usage: clgen-verify [-h] [--version] [-v] [--cpu] <dataset> <input-dir>
+    usage: clgen-verify [-h] [--version] [-v] [--debug] [--cpu]
+                        <dataset> <input-dir>
     
     Run a collection of CLgen programs and store their output.
     
-    Copyright (C) 2016 Chris Cummins <chrisc.101@gmail.com>.
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
     
     positional arguments:
@@ -434,5 +383,6 @@ clgen-verify
       -h, --help     show this help message and exit
       --version      show version information and exit
       -v, --verbose  increase output verbosity
+      --debug        in case of error, print debugging information
       --cpu          Use CPU for execution (default: GPU)
 
