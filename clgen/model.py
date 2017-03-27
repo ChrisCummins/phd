@@ -383,14 +383,13 @@ class Model(clgen.CLgenObject):
                 reproducible samples. If None, set no seed.
             quiet (bool, optional): If False, stream output to stdout
         """
-        if self.lock.islocked:
+        if self.lock.islocked:  # model is locked during training
             raise lockfile.UnableToAcquireLockError(self.lock)
 
         tf = self._init_tensorflow(infer=True)
 
-        if seed is not None:
-            np.random.seed(seed)
-            tf.set_random_seed(seed)
+        np.random.seed(seed)
+        tf.set_random_seed(seed)
 
         with tf.Session() as sess:
             tf.global_variables_initializer().run()
@@ -407,19 +406,21 @@ class Model(clgen.CLgenObject):
                 s = np.sum(weights)
                 return int(np.searchsorted(t, np.random.rand(1) * s))
 
-            start_depth = 0
-            start_started = False
-            for char in seed_text:
-                if char == '{':
-                    start_depth += 1
-                    start_started = True
-                elif char == '}':
-                    start_depth -= 1
+            def update_bracket_depth(text, started: bool=False, depth: int=0):
+                """ calculate function block depth """
+                for char in text:
+                    if char == '{':
+                        depth += 1
+                        started = True
+                    elif char == '}':
+                        depth -= 1
+
+                return started, depth
+
+            started, depth = update_bracket_depth(seed_text)
 
             for i in range(1, num_samples + 1):
                 state = sess.run(self.cell.zero_state(1, tf.float32))
-                depth = start_depth  # function block depth
-                started = start_started
 
                 seed_tensor = self.corpus.atomizer.atomize(seed_text)
                 for index in seed_tensor[:-1]:
@@ -428,7 +429,6 @@ class Model(clgen.CLgenObject):
                     feed = {self.input_data: x, self.initial_state: state}
                     [state] = sess.run([self.final_state], feed)
 
-                sampling_type = 1  # default
                 output.write("\n\n/* SAMPLE {} */\n\n".format(i))
                 output.write(seed_text)
                 if not quiet:
@@ -457,12 +457,8 @@ class Model(clgen.CLgenObject):
                         sys.stdout.write(atom)
 
                     # update function block depth
-                    for char in atom:
-                        if char == '{':
-                            started = True
-                            depth += 1
-                        elif char == '}':
-                            depth -= 1
+                    started, depth = update_bracket_depth(atom, started, depth)
+
                     # stop sampling if depth = 0
                     if started and depth < 1:
                         break
