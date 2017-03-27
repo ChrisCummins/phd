@@ -16,8 +16,8 @@
 """
 Python type utilities.
 """
+from collections import Mapping
 from six import string_types
-
 
 def is_str(s):
     """
