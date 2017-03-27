@@ -31,6 +31,7 @@ from glob import iglob
 from labm8 import crypto
 from labm8 import fs
 from labm8 import jsonutil
+from labm8 import lockfile
 from labm8 import system
 from labm8 import time as labtime
 from labm8 import types
@@ -41,7 +42,6 @@ from tempfile import mktemp
 import clgen
 from clgen import cache
 from clgen import config as cfg
-from clgen import lockfile
 from clgen import log
 from clgen.cache import Cache
 from clgen.corpus import Corpus

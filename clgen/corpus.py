@@ -29,6 +29,7 @@ from copy import deepcopy
 from labm8 import crypto
 from labm8 import fs
 from labm8 import jsonutil
+from labm8 import lockfile
 from labm8 import tar
 from labm8 import types
 from six.moves import cPickle
@@ -43,7 +44,6 @@ from clgen import dbutil
 from clgen import explore
 from clgen import features
 from clgen import fetch
-from clgen import lockfile
 from clgen import log
 from clgen import preprocess
 from clgen.cache import Cache
