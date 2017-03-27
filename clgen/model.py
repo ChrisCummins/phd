@@ -28,9 +28,12 @@ import time
 
 from copy import deepcopy
 from glob import iglob
+from labm8 import crypto
 from labm8 import fs
+from labm8 import jsonutil
 from labm8 import system
 from labm8 import time as labtime
+from labm8 import types
 from six import string_types
 from six.moves import cPickle
 from tempfile import mktemp
@@ -128,7 +131,7 @@ class Model(clgen.CLgenObject):
                         key, ','.join(sorted(DEFAULT_MODEL_OPTS.keys()))))
 
         # set properties
-        self.opts = clgen.update(deepcopy(DEFAULT_MODEL_OPTS), opts)
+        self.opts = types.update(deepcopy(DEFAULT_MODEL_OPTS), opts)
         self.corpus = corpus
         self.hash = self._hash(self.corpus, self.opts)
         self.cache = Cache(fs.path("model", self.hash))
@@ -138,17 +141,17 @@ class Model(clgen.CLgenObject):
         # validate metadata against cache
         meta = self.to_json()
         if self.cache["META"]:
-            cached_meta = clgen.load_json_file(self.cache["META"])
+            cached_meta = jsonutil.read_file(self.cache["META"])
             if meta != cached_meta:
                 raise clgen.InternalError("model metadata mismatch")
         else:
-            clgen.write_json_file(self.cache.keypath("META"), meta)
+            jsonutil.write_file(self.cache.keypath("META"), meta)
 
     def _hash(self, corpus: Corpus, opts: dict) -> str:
         """ compute model hash """
         hashopts = deepcopy(opts)
         hashopts["train_opts"].pop("epochs")
-        return clgen.checksum_list(corpus.hash, *clgen.dict_values(hashopts))
+        return crypto.sha1_list(corpus.hash, *types.dict_values(hashopts))
 
     def _init_tensorflow(self, infer: bool=False):
         """
@@ -560,10 +563,10 @@ class Model(clgen.CLgenObject):
         # root.
         cache_root_re = r'^' + cache.ROOT + '/'
         corpus_files = dict(
-            (re.sub(cache_root_re, "", x), clgen.checksum_file(x))
+            (re.sub(cache_root_re, "", x), crypto.sha1_file(x))
             for x in fs.ls(self.corpus.cache.path, abspaths=True))
         model_files = dict(
-            (re.sub(cache_root_re, "", x), clgen.checksum_file(x))
+            (re.sub(cache_root_re, "", x), crypto.sha1_file(x))
             for x in fs.ls(self.cache.path, abspaths=True))
 
         contents = corpus_files.copy()

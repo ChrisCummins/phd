@@ -23,8 +23,11 @@ import sys
 
 from copy import deepcopy
 from glob import glob, iglob
+from labm8 import crypto
 from labm8 import fs
+from labm8 import jsonutil
 from labm8 import system
+from labm8 import types
 
 import clgen
 from clgen import config as cfg
@@ -115,9 +118,9 @@ class Sampler(clgen.CLgenObject):
                         key, ','.join(sorted(DEFAULT_KERNELS_OPTS.keys()))))
 
         # set properties
-        self.sampler_opts = clgen.update(deepcopy(DEFAULT_SAMPLER_OPTS),
+        self.sampler_opts = types.update(deepcopy(DEFAULT_SAMPLER_OPTS),
                                          sampler_opts)
-        self.kernel_opts = clgen.update(deepcopy(DEFAULT_KERNELS_OPTS),
+        self.kernel_opts = types.update(deepcopy(DEFAULT_KERNELS_OPTS),
                                         kernel_opts)
         self.hash = self._hash(self.sampler_opts, self.kernel_opts)
 
@@ -146,7 +149,7 @@ class Sampler(clgen.CLgenObject):
             [str(x) for x in sampler_opts.values()] +
             [str(x) for x in kernel_opts.values()])
         string = "".join([str(x) for x in checksum_data])
-        return clgen.checksum_str(string)
+        return crypto.sha1_str(string)
 
     def cache(self, model: Model) -> Cache:
         """
@@ -158,18 +161,18 @@ class Sampler(clgen.CLgenObject):
         Returns:
             Cache: Cache.
         """
-        sampler_model_hash = clgen.checksum_str(self.hash + model.hash)
+        sampler_model_hash = crypto.sha1_str(self.hash + model.hash)
 
         cache = Cache(fs.path("sampler", sampler_model_hash))
 
         # validate metadata against cache
         meta = self.to_json()
         if cache["META"]:
-            cached_meta = clgen.load_json_file(cache["META"])
+            cached_meta = jsonutil.read_file(cache["META"])
             if meta != cached_meta:
                 raise clgen.InternalError("sampler metadata mismatch")
         else:
-            clgen.write_json_file(cache.keypath("META"), meta)
+            jsonutil.write_file(cache.keypath("META"), meta)
 
         return cache
 

@@ -43,10 +43,10 @@ class TestCache(TestCase):
         c = cache.Cache("__test_set_and_get__")
 
         # create file
-        tests.write_file(tests.data_path("tmp", "file.txt", exists=False),
-                         "Hello, world!")
+        fs.write_file(tests.data_path("tmp", "file.txt", exists=False),
+                      "Hello, world!")
         # sanity check
-        self.assertEqual(tests.read_file(tests.data_path("tmp", "file.txt")),
+        self.assertEqual(fs.read_file(tests.data_path("tmp", "file.txt")),
                          "Hello, world!")
 
         # insert file into cache
@@ -57,7 +57,7 @@ class TestCache(TestCase):
         # file must have been moved
         self.assertFalse(fs.isfile(tests.data_path("file.txt", exists=False)))
         # check file contents
-        self.assertTrue(tests.read_file(c['foobar']),
+        self.assertTrue(fs.read_file(c['foobar']),
                         "Hello, world!")
         c.empty()
 
@@ -72,10 +72,10 @@ class TestCache(TestCase):
         c = cache.Cache("__test_remove__")
 
         # create file
-        tests.write_file(tests.data_path("tmp", "file.txt", exists=False),
-                         "Hello, world!")
+        fs.write_file(tests.data_path("tmp", "file.txt", exists=False),
+                      "Hello, world!")
         # sanity check
-        self.assertEqual(tests.read_file(tests.data_path("tmp", "file.txt")),
+        self.assertEqual(fs.read_file(tests.data_path("tmp", "file.txt")),
                          "Hello, world!")
 
         # insert file into cache
@@ -91,10 +91,10 @@ class TestCache(TestCase):
         c = cache.Cache("__test_path_escape__")
 
         # create file
-        tests.write_file(tests.data_path("tmp", "file.txt", exists=False),
-                         "Hello, world!")
+        fs.write_file(tests.data_path("tmp", "file.txt", exists=False),
+                      "Hello, world!")
         # sanity check
-        self.assertEqual(tests.read_file(tests.data_path("tmp", "file.txt")),
+        self.assertEqual(fs.read_file(tests.data_path("tmp", "file.txt")),
                          "Hello, world!")
 
         # insert file into cache
@@ -102,5 +102,5 @@ class TestCache(TestCase):
         c[key] = tests.data_path("tmp", "file.txt")
 
         # check file contents
-        self.assertEqual(tests.read_file(c[key]), "Hello, world!")
+        self.assertEqual(fs.read_file(c[key]), "Hello, world!")
         c.empty()

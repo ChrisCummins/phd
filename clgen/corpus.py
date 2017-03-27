@@ -26,7 +26,11 @@ import numpy as np
 from checksumdir import dirhash
 from collections import Counter
 from copy import deepcopy
+from labm8 import crypto
 from labm8 import fs
+from labm8 import jsonutil
+from labm8 import tar
+from labm8 import types
 from six.moves import cPickle
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
@@ -81,12 +85,12 @@ def unpack_directory_if_needed(path: str) -> str:
 
     if fs.isfile(path) and path.endswith(".tar.bz2"):
         log.info("unpacking '{}'".format(path))
-        clgen.unpack_archive(path)
+        tar.unpack_archive(path)
         return re.sub(r'.tar.bz2$', '', path)
 
     if fs.isfile(path + ".tar.bz2"):
         log.info("unpacking '{}'".format(path + ".tar.bz2"))
-        clgen.unpack_archive(path + ".tar.bz2")
+        tar.unpack_archive(path + ".tar.bz2")
         return path
 
     return path
@@ -218,7 +222,7 @@ class Corpus(clgen.CLgenObject):
                         key, ','.join(sorted(DEFAULT_CORPUS_OPTS.keys()))))
 
         self.opts = deepcopy(DEFAULT_CORPUS_OPTS)
-        clgen.update(self.opts, opts)
+        types.update(self.opts, opts)
         self.opts["id"] = contentid
 
         self.contentid = contentid
@@ -232,11 +236,11 @@ class Corpus(clgen.CLgenObject):
         # validate metadata against cache
         meta = self.to_json()
         if self.cache["META"]:
-            cached_meta = clgen.load_json_file(self.cache["META"])
+            cached_meta = jsonutil.read_file(self.cache["META"])
             if meta != cached_meta:
                 raise clgen.InternalError("corpus metadata mismatch")
         else:
-            clgen.write_json_file(self.cache.keypath("META"), meta)
+            jsonutil.write_file(self.cache.keypath("META"), meta)
 
         with self.lock.acquire():
             self._create_files(path)
@@ -283,7 +287,7 @@ class Corpus(clgen.CLgenObject):
 
     def _hash(self, contentid: str, opts: dict) -> str:
         """ compute corpus hash """
-        return clgen.checksum_list(contentid, *clgen.dict_values(opts))
+        return crypto.sha1_list(contentid, *types.dict_values(opts))
 
     def _create_kernels_db(self, path: str, encoding: str="default") -> None:
         """creates and caches kernels.db"""

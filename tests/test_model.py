@@ -20,6 +20,7 @@ from unittest import TestCase, skip, skipIf, main
 import tests
 
 from io import StringIO
+from labm8 import crypto
 from labm8 import fs
 from six import string_types
 from tempfile import mkdtemp
@@ -100,7 +101,7 @@ class TestModel(TestCase):
         # compare meta checksums to files
         for file in contents:
             path = fs.path(cache.ROOT, file)
-            checksum = clgen.checksum_file(path)
+            checksum = crypto.sha1_file(path)
             self.assertEqual(checksum, contents[file])
 
         # train opts

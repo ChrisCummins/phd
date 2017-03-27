@@ -31,6 +31,7 @@ from functools import partial
 from github import Github, GithubException
 from hashlib import sha1
 from io import open
+from labm8 import crypto
 from labm8 import fs
 from subprocess import Popen
 from time import sleep
@@ -486,7 +487,7 @@ def content_db(db_path: str, in_db_path: str,
 
     for id, contents in rows:
         kernels = clutil.get_cl_kernels(contents)
-        ids = [clgen.checksum_str(kernel) for kernel in kernels]
+        ids = [crypto.sha1_str(kernel) for kernel in kernels]
         # print("{} kernels in {}".format(len(kernels), id))
         for kid, kernel in zip(ids, kernels):
             oc = odb.cursor()
@@ -570,7 +571,7 @@ def process_sample_file(db_path: str, sample_path: str, first_only: bool=False,
         head = min(end, head) if end != -1 else head
 
         kernel = sample[tail:head]
-        id = clgen.checksum_str(kernel)
+        id = crypto.sha1_str(kernel)
         c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
                   (id, kernel))
         tail = head
