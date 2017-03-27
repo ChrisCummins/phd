@@ -17,6 +17,11 @@
 Tarball util.
 """
 
+import tarfile
+
+from labm8 import fs
+
+
 def unpack_archive(*components, **kwargs) -> str:
     """
     Unpack a compressed archive.
