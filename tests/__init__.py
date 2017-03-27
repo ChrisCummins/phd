@@ -22,6 +22,7 @@ import tarfile
 import tensorflow as tf
 
 from labm8 import fs
+from labm8 import tar
 from unittest import TestCase
 
 import clgen
@@ -77,27 +78,6 @@ def data_str(*components):
         return infile.read()
 
 
-def unpack_archive(*components, **kwargs):
-    """
-    Unpack a compressed archive.
-
-    Arguments:
-        *components (str[]): Absolute path.
-        compression (str, optional): Archive compression type.
-    """
-    path = fs.path(*components)
-    compression = kwargs.get("compression", "bz2")
-
-    # extract tar relative to it's directory
-    fs.cd(fs.dirname(path))
-
-    tar = tarfile.open(path, "r:" + compression)
-    tar.extractall()
-    tar.close()
-
-    fs.cdpop()
-
-
 def archive(*components):
     """
     Returns a text archive, unpacking if necessary.
@@ -111,7 +91,7 @@ def archive(*components):
     path = data_path(*components, exists=False)
 
     if not fs.isdir(path):
-        unpack_archive(path + ".tar.bz2")
+        tar.unpack_archive(path + ".tar.bz2")
     return path
 
 
@@ -150,40 +130,7 @@ def db(name, **kwargs):
     return sqlite3.connect(path)
 
 
-def write_file(path, contents):
-    fs.mkdir(fs.dirname(path))
-    with open(path, 'w') as outfile:
-        outfile.write(contents)
-
-
-def read_file(path):
-    with open(path) as infile:
-        return '\n'.join(infile.readlines())
-
-
 class TestCLgen(TestCase):
-    def test_checksum(self):
-        self.assertEqual("0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33",
-                         clgen.checksum("foo".encode()))
-        self.assertEqual("62cdb7020ff920e5aa642c3d4066950dd1f01f4d",
-                         clgen.checksum("bar".encode()))
-
-    def test_checksum_str(self):
-        self.assertEqual("0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33",
-                         clgen.checksum_str("foo"))
-        self.assertEqual("62cdb7020ff920e5aa642c3d4066950dd1f01f4d",
-                         clgen.checksum_str("bar"))
-        self.assertEqual("ac3478d69a3c81fa62e60f5c3696165a4e5e6ac4",
-                         clgen.checksum_str(5))
-
-    def test_checksum_file(self):
-        with self.assertRaises(clgen.InternalError):
-            clgen.checksum_file("NOT A PATH")
-
-    def test_get_substring_idxs(self):
-        self.assertEqual([0, 2], clgen.get_substring_idxs('a', 'aba'))
-        self.assertEqual([], clgen.get_substring_idxs('a', 'bb'))
-
     def test_pacakge_data(self):
         with self.assertRaises(clgen.InternalError):
             clgen.package_data("This definitely isn't a real path")

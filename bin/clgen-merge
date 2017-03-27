@@ -20,7 +20,6 @@
 from labm8 import fs
 
 import clgen
-from clgen import cache
 from clgen import cli
 from clgen import dbutil
 from clgen import explore
@@ -32,7 +31,7 @@ Merge kernel datasets.
 
 def get_all_sampler_datasets():
     datasets = []
-    for samplerdir in fs.ls(fs.path(cache.ROOT, "sampler"), abspaths=True):
+    for samplerdir in fs.ls(fs.path(clgen.CACHE_ROOT, "sampler"), abspaths=True):
         inpath = fs.path(samplerdir, "kernels.db")
         if fs.isfile(inpath):
             datasets.append(inpath)

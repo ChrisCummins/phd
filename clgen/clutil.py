@@ -22,6 +22,7 @@ OpenCL utilities.
 import numpy as np
 import re
 
+from labm8 import text
 from six import string_types
 
 import clgen
@@ -505,7 +506,7 @@ def strip_attributes(src: str) -> str:
         str: OpenCL source, with ((attributes)) removed.
     """
     # get list of __attribute__ substrings
-    idxs = sorted(clgen.get_substring_idxs('__attribute__', src))
+    idxs = sorted(text.get_substring_idxs('__attribute__', src))
 
     # get ((attribute)) ranges
     attribute_ranges = [get_attribute_range(src, i) for i in idxs]
@@ -571,7 +572,7 @@ def get_cl_kernels(src: str) -> list:
 
         str[]: OpenCL kernels.
     """
-    idxs = clgen.get_substring_idxs('__kernel', src)
+    idxs = text.get_substring_idxs('__kernel', src)
     kernels = [get_cl_kernel(src, i) for i in idxs]
     return kernels
 
@@ -588,7 +589,7 @@ def extract_prototype(src: str) -> KernelPrototype:
 
         KernelPrototype: Prototype instance.
     """
-    idxs = clgen.get_substring_idxs('__kernel void ', src)
+    idxs = text.get_substring_idxs('__kernel void ', src)
     if len(idxs) != 1:
         raise PrototypeException("Invalid number of kernels found: {}"
                                  .format(len(idxs)))

@@ -28,14 +28,15 @@ import six
 import sys
 import tarfile
 
-from collections import Mapping
 from contextlib import contextmanager
 from copy import deepcopy
 from hashlib import sha1
 from pkg_resources import resource_filename, resource_string, require
 
 import labm8
+from labm8 import cache
 from labm8 import fs
+from labm8 import jsonutil
 from labm8 import system
 
 from clgen import config as cfg
@@ -98,6 +99,39 @@ def version() -> str:
     return require("clgen")[0].version
 
 
+def cachepath(*relative_path_components: list) -> str:
+    """
+    Return path to file system cache.
+
+    Arguments:
+        *relative_path_components (list of str): Relative path of cache.
+
+    Returns:
+        str: Absolute path of file system cache.
+    """
+    assert(relative_path_components)
+
+    cache_root = ["~", ".cache", "clgen", version()]
+    return fs.path(*cache_root, *relative_path_components)
+
+
+def mkcache(*relative_path_components: list) -> cache.FSCache:
+    """
+    Instantiae a file system cache.
+
+    If the cache does not exist, one is created.
+
+    Arguments:
+        *relative_path_components (list of str): Relative path of cache.
+
+    Returns:
+        labm8.FSCache: Filesystem cache.
+    """
+
+    return cache.FSCache(cachepath(*relative_path_components),
+                         escape_key=cache.escape_path)
+
+
 def must_exist(*path_components, **kwargs) -> str:
     """
     Require that a file exists.
@@ -120,155 +154,6 @@ def must_exist(*path_components, **kwargs) -> str:
     return path
 
 _must_exist = must_exist  # prevent variable scope shadowing
-
-
-def checksum(data) -> str:
-    """
-    Checksum a byte stream.
-
-    Arguments:
-        data (bytes): Data.
-
-    Returns:
-        str: Checksum.
-    """
-    try:
-        return sha1(data).hexdigest()
-    except Exception:
-        raise InternalError("failed to checksum '{}'".format(data[:100]))
-
-
-def checksum_list(*elems) -> str:
-    """
-    Checksum all elements of a list.
-
-    Arguments:
-        *elems: List of stringifiable data.
-
-    Returns:
-        str: Checksum.
-    """
-    string = "".join(sorted(str(x) for x in elems))
-    return checksum_str(string)
-
-
-def checksum_str(string: str) -> str:
-    """
-    Checksum a string.
-
-    Arguments:
-        string (str): String.
-
-    Returns:
-        str: Checksum.
-    """
-    try:
-        return checksum(str(string).encode('utf-8'))
-    except UnicodeEncodeError:
-        raise InternalError("failed to encode '{}'".format(string[:100]))
-
-
-def checksum_file(*path_components) -> str:
-    """
-    Checksum a file.
-
-    Arguments:
-        path_components (str): Path.
-
-    Returns:
-        str: Checksum.
-    """
-    path = must_exist(*path_components)
-
-    try:
-        with open(path, 'rb') as infile:
-            return checksum(infile.read())
-    except Exception:
-        raise CLgenError("failed to read '{}'".format(path))
-
-
-def unpack_archive(*components, **kwargs) -> str:
-    """
-    Unpack a compressed archive.
-
-    Arguments:
-        *components (str[]): Absolute path.
-        **kwargs (dict, optional): Set "compression" to compression type.
-            Default: bz2. Set "dir" to destination directory. Defaults to the
-            directory of the archive.
-
-    Returns:
-        str: Path to directory.
-    """
-    path = fs.abspath(*components)
-    compression = kwargs.get("compression", "bz2")
-    dir = kwargs.get("dir", fs.dirname(path))
-
-    fs.cd(dir)
-    tar = tarfile.open(path, "r:" + compression)
-    tar.extractall()
-    tar.close()
-    fs.cdpop()
-
-    return dir
-
-
-def update(dst: dict, src: dict) -> dict:
-    """
-    Recursively update values in dst from src.
-
-    Unlike the builtin dict.update() function, this method will decend into
-    nested dicts, updating all nested values.
-
-    Arguments:
-        dst (dict): Destination dict.
-        src (dict): Source dict.
-
-    Returns:
-        dict: dst updated with entries from src.
-    """
-    for k, v in src.items():
-        if isinstance(v, Mapping):
-            r = update(dst.get(k, {}), v)
-            dst[k] = r
-        else:
-            dst[k] = src[k]
-    return dst
-
-
-def dict_values(src: dict) -> list:
-    """
-    Recursively get values in dict.
-
-    Unlike the builtin dict.values() function, this method will descend into
-    nested dicts, returning all nested values.
-
-    Arguments:
-        src (dict): Source dict.
-
-    Returns:
-        list: List of values.
-    """
-    for v in src.values():
-        if isinstance(v, dict):
-            yield from dict_values(v)
-        else:
-            yield v
-
-
-def get_substring_idxs(substr: str, s: str):
-    """
-    Return a list of indexes of substr. If substr not found, list is
-    empty.
-
-    Arguments:
-        substr (str): Substring to match.
-        s (str): String to match in.
-
-    Returns:
-        list of int: Start indices of substr.
-    """
-    return [m.start() for m in re.finditer(substr, s)]
 
 
 def package_path(*path) -> str:
@@ -358,79 +243,6 @@ def sql_script(name: str) -> str:
     return package_str(path)
 
 
-def format_json(data: dict) -> str:
-    """
-    Pretty print JSON.
-
-    Arguments:
-        data (dict): JSON blob.
-
-    Returns:
-        str: Formatted JSON
-    """
-    return json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
-
-
-def loads(text, **kwargs):
-    """
-    Deserialize `text` (a `str` or `unicode` instance containing a JSON
-    document with Python or JavaScript like comments) to a Python object.
-
-    Taken from `commentjson <https://github.com/vaidik/commentjson>`_, written
-    by `Vaidik Kapoor <https://github.com/vaidik>`_.
-
-    Copyright (c) 2014 Vaidik Kapoor, MIT license.
-
-    :param text: serialized JSON string with or without comments.
-    :param kwargs: all the arguments that `json.loads
-                   <http://docs.python.org/2/library/json.html#json.loads>`_
-                   accepts.
-    :returns: `dict` or `list`.
-    """
-    regex = r'\s*(#|\/{2}).*$'
-    regex_inline = r'(:?(?:\s)*([A-Za-z\d\.{}]*)|((?<=\").*\"),?)(?:\s)*(((#|(\/{2})).*)|)$'
-    lines = text.split('\n')
-
-    for index, line in enumerate(lines):
-        if re.search(regex, line):
-            if re.search(r'^' + regex, line, re.IGNORECASE):
-                lines[index] = ""
-            elif re.search(regex_inline, line):
-                lines[index] = re.sub(regex_inline, r'\1', line)
-
-    return json.loads('\n'.join(lines), **kwargs)
-
-
-def load_json_file(path: str, must_exist: bool=True):
-    """
-    Load a JSON data blob.
-
-    Arguments:
-        path (str): Path to file.
-        must_exist (bool, otional): If False, return empty dict if file does
-            not exist.
-
-    Returns:
-        array or dict: JSON data.
-
-    Raises:
-        File404: If path does not exist, and must_exist is True.
-        InvalidFile: If JSON is malformed.
-    """
-    try:
-        with open(_must_exist(path)) as infile:
-            return loads(infile.read())
-    except ValueError as e:
-        raise InvalidFile(
-            "malformed JSON file '{path}'. Message from parser: {err}"
-            .format(path=os.path.basename(path), err=str(e)))
-    except File404 as e:
-        if must_exist:
-            raise e
-        else:
-            return {}
-
-
 @contextmanager
 def terminating(thing):
     """
@@ -440,63 +252,6 @@ def terminating(thing):
         yield thing
     finally:
         thing.terminate()
-
-
-def write_file(path: str, contents: str) -> None:
-    """
-    Write string to file.
-
-    Arguments:
-        path (str): Destination.
-        contents (str): Contents.
-    """
-    if fs.dirname(path):
-        fs.mkdir(fs.dirname(path))
-    with open(path, 'w') as outfile:
-        outfile.write(contents)
-
-
-def write_json_file(path: str, data, format: bool=True) -> None:
-    """
-    Write JSON data to file.
-
-    Arguments:
-        path (str): Destination.
-        data (dict or list): JSON serializable data.
-        format (bool, optional): Pretty-print JSON data.
-    """
-    if format:
-        write_file(path, format_json(data))
-    else:
-        write_file(path, json.dumps(data))
-
-
-def files_from_list(paths: list) -> list:
-    """
-    Return a list of all file paths from a list of files or directories.
-
-    For each path in the input: if it is a file, return it; if it is a
-    directory, return a list of files in the directory.
-
-    Arguments:
-        paths (list of str): List of file and directory paths.
-
-    Returns:
-        list of str: Absolute file paths.
-
-    Raises:
-        File404: If any of the paths do not exist.
-    """
-    ret = []
-    for path in paths:
-        if fs.isfile(path):
-            ret.append(fs.abspath(path))
-        elif fs.isdir(path):
-            ret += [f for f in fs.ls(path, abspaths=True, recursive=True)
-                    if fs.isfile(f)]
-        else:
-            raise File404(path)
-    return ret
 
 
 def platform_info(printfn=print) -> None:
@@ -560,10 +315,10 @@ def main(model, sampler, print_file_list=False, print_corpus_dir=False,
     import clgen.sampler
     from clgen import log
 
-    model_json = load_json_file(model)
+    model_json = jsonutil.read_file(model)
     model = clgen.model.from_json(model_json)
 
-    sampler_json = load_json_file(sampler)
+    sampler_json = jsonutil.read_file(sampler)
     sampler = clgen.sampler.from_json(sampler_json)
 
     # print cache paths

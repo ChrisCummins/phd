@@ -29,19 +29,20 @@ import time
 
 from copy import deepcopy
 from glob import iglob
+from labm8 import crypto
 from labm8 import fs
+from labm8 import jsonutil
+from labm8 import lockfile
 from labm8 import system
 from labm8 import time as labtime
+from labm8 import types
 from six import string_types
 from six.moves import cPickle
 from tempfile import mktemp
 
 import clgen
-from clgen import cache
 from clgen import config as cfg
-from clgen import lockfile
 from clgen import log
-from clgen.cache import Cache
 from clgen.corpus import Corpus
 
 
@@ -129,27 +130,27 @@ class Model(clgen.CLgenObject):
                         key, ','.join(sorted(DEFAULT_MODEL_OPTS.keys()))))
 
         # set properties
-        self.opts = clgen.update(deepcopy(DEFAULT_MODEL_OPTS), opts)
+        self.opts = types.update(deepcopy(DEFAULT_MODEL_OPTS), opts)
         self.corpus = corpus
         self.hash = self._hash(self.corpus, self.opts)
-        self.cache = Cache(fs.path("model", self.hash))
+        self.cache = clgen.mkcache("model", self.hash)
 
         log.debug("model", self.hash)
 
         # validate metadata against cache
         meta = self.to_json()
-        if self.cache["META"]:
-            cached_meta = clgen.load_json_file(self.cache["META"])
+        if self.cache.get("META"):
+            cached_meta = jsonutil.read_file(self.cache["META"])
             if meta != cached_meta:
                 raise clgen.InternalError("model metadata mismatch")
         else:
-            clgen.write_json_file(self.cache.keypath("META"), meta)
+            jsonutil.write_file(self.cache.keypath("META"), meta)
 
     def _hash(self, corpus: Corpus, opts: dict) -> str:
         """ compute model hash """
         hashopts = deepcopy(opts)
         hashopts["train_opts"].pop("epochs")
-        return clgen.checksum_list(corpus.hash, *clgen.dict_values(hashopts))
+        return crypto.sha1_list(corpus.hash, *types.dict_values(hashopts))
 
     def _init_tensorflow(self, infer: bool=False):
         """
@@ -198,8 +199,6 @@ class Model(clgen.CLgenObject):
         batch_size = 1 if infer else self.corpus.batch_size
         seq_length = 1 if infer else self.corpus.seq_length
         vocab_size = self.corpus.vocab_size
-
-        fs.mkdir(self.cache.path)
 
         cell = self.cell_fn(self.rnn_size, state_is_tuple=True)
         self.cell = cell = rnn.MultiRNNCell([cell] * self.num_layers,
@@ -279,12 +278,11 @@ class Model(clgen.CLgenObject):
         # training options
         learning_rate = self.train_opts["learning_rate"]
         decay_rate = self.train_opts["lr_decary_rate"]
-        checkpoint_path = fs.path(self.cache.path, "model.ckpt")
 
         # resume from prior checkpoint
         ckpt_path, ckpt_paths = None, None
         if self.checkpoint_path:
-            # check if all necessary files exist
+            # check that all necessary files exist
             assert(fs.isdir(self.checkpoint_path))
             ckpt = tf.train.get_checkpoint_state(self.checkpoint_path)
             assert(ckpt)
@@ -343,7 +341,8 @@ class Model(clgen.CLgenObject):
                 save = self.opts["train_opts"]["intermediate_checkpoints"]
                 save |= e == self.epochs  # always save on last epoch
                 if save:
-                    saver.save(sess, checkpoint_path, global_step=batch_num)
+                    saver.save(sess, self.cache.keypath("model.ckpt"),
+                               global_step=batch_num)
 
                     next_checkpoint = e * self.corpus.num_batches + b
                     max_epoch = self.epochs
@@ -494,37 +493,6 @@ class Model(clgen.CLgenObject):
     def train_opts(self) -> dict:
         return self.opts["train_opts"]
 
-    @property
-    def meta(self) -> dict:
-        """
-        Get trained model metadata.
-
-        Format spec: https://github.com/ChrisCummins/clgen/issues/25
-
-        Returns:
-            dict: Metadata.
-        """
-        # checksum corpus and model cache files. Paths are relative to cache
-        # root.
-        cache_root_re = r'^' + cache.ROOT + '/'
-        corpus_files = dict(
-            (re.sub(cache_root_re, "", x), clgen.checksum_file(x))
-            for x in fs.ls(self.corpus.cache.path, abspaths=True))
-        model_files = dict(
-            (re.sub(cache_root_re, "", x), clgen.checksum_file(x))
-            for x in fs.ls(self.cache.path, abspaths=True))
-
-        contents = corpus_files.copy()
-        contents.update(model_files)
-
-        _meta = deepcopy(self.opts)
-        _meta["version"] = clgen.version()
-        _meta["date_packaged"] = labtime.nowstr()
-        _meta["corpus"] = self.corpus.meta,
-        _meta["contents"] = contents
-
-        return _meta
-
     def __repr__(self) -> str:
         """
         String representation.
@@ -553,16 +521,17 @@ class Model(clgen.CLgenObject):
     @property
     def checkpoint_path(self) -> str:
         """
-        Get path to most checkpoint, if exists.
+        Get path to most recemt checkpoint, if exists.
 
         Returns:
 
             str or None: Path to checkpoint, or None if no checkpoints.
         """
-        if self.cache["checkpoint"]:
+        if self.cache.get("checkpoint"):
             return self.cache.path
         else:
             return None
+
 
     @staticmethod
     def from_json(model_json: dict):

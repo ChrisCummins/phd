@@ -20,6 +20,7 @@ from unittest import TestCase, skip, skipIf, main
 import tests
 
 from io import StringIO
+from labm8 import crypto
 from labm8 import fs
 from six import string_types
 from tempfile import mkdtemp
@@ -78,33 +79,8 @@ class TestModel(TestCase):
 
     def test_checkpoint_path_untrained(self):
         m = get_test_model()
-        m.cache.empty()  # untrain
+        m.cache.clear()  # untrain
         self.assertEqual(m.checkpoint_path, None)
-
-    def test_meta(self):
-        m = get_test_model()
-        m.train()
-        meta = m.meta
-
-        # version
-        self.assertEqual(meta["version"], clgen.version())
-        # author
-        self.assertTrue(isinstance(meta["author"], string_types))
-        self.assertNotEqual(meta["author"], "")
-        # date packaged
-        self.assertTrue(isinstance(meta["date_packaged"], string_types))
-        self.assertNotEqual(meta["date_packaged"], "")
-        # contents
-        contents = meta["contents"]
-
-        # compare meta checksums to files
-        for file in contents:
-            path = fs.path(cache.ROOT, file)
-            checksum = clgen.checksum_file(path)
-            self.assertEqual(checksum, contents[file])
-
-        # train opts
-        self.assertEqual(meta["train_opts"], m.train_opts)
 
     def test_sample_seed(self):
         m = get_test_model()

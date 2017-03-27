@@ -31,6 +31,7 @@ from functools import partial
 from github import Github, GithubException
 from hashlib import sha1
 from io import open
+from labm8 import crypto
 from labm8 import fs
 from subprocess import Popen
 from time import sleep
@@ -503,7 +504,7 @@ def fetch_fs(db_path: str, paths: list=[]) -> None:
         db_path (str): Output dataset.
         paths (str[]): List of file paths.
     """
-    paths = clgen.files_from_list(paths)  # expand directories
+    paths = fs.files_from_list(*paths)  # expand directories
 
     db = dbutil.connect(db_path)
     c = db.cursor()
