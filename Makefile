@@ -119,6 +119,7 @@ distclean: $(distclean_targets)
 # install CLgen
 .PHONY: install
 install: cuda
+	./configure -r >/dev/null
 	$(PIP) install --upgrade pip
 	$(PIP) install --only-binary=numpy 'numpy>=1.10.4'
 	$(PIP) install --only-binary=scipy 'scipy>=0.16.1'
