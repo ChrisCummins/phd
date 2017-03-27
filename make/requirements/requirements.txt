@@ -12,3 +12,4 @@ PyGithub==1.29
 scipy>=0.16.1
 six==1.10.0
 labm8==0.0.11
+progressbar2==3.16.0
