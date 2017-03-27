@@ -18,6 +18,7 @@ Transient and persistent caching mechanisms.
 """
 import atexit
 import json
+import re
 import six
 
 import labm8 as lab
@@ -179,6 +180,20 @@ class JsonCache(TransientCache):
                       separators=(',', ': '))
 
 
+def hash_key(key):
+    """
+    Convert a key to a filename by hashing its value.
+    """
+    return crypto.sha1_str(json.dumps(key, sort_keys=True))
+
+
+def escape_path(key):
+    """
+    Convert a key to a filename by escaping invalid characters.
+    """
+    return re.sub(r'[ \\/]+', '_', key)
+
+
 class FSCache(Cache):
     """
     Persistent filesystem cache.
@@ -187,15 +202,21 @@ class FSCache(Cache):
     Each value is a file path.
 
     Adding a file to the cache moves it into the cahce directory.
+
+    Members:
+        path (str): Root cache.
+        escape_key (fn): Function to convert keys to file names.
     """
-    def __init__(self, root):
+    def __init__(self, root, escape_key=hash_key):
         """
         Create filesystem cache.
 
         Arguments:
             root (str): String.
+            escape_key (fn, optional): Function to convert keys to file names.
         """
         self.path = root
+        self.escape_key = escape_key
 
         fs.mkdir(self.path)
 
@@ -207,9 +228,9 @@ class FSCache(Cache):
         """
         fs.rm(self.path)
 
-    def _keypath(self, key):
+    def keypath(self, key):
         """
-        Convert key to relative cache path.
+        Get the filesystem path for a key.
 
         Arguments:
             key: Key.
@@ -217,8 +238,7 @@ class FSCache(Cache):
         Returns:
             str: Absolute path.
         """
-        hash = crypto.sha1_str(json.dumps(key, sort_keys=True))
-        return fs.path(self.path, hash)
+        return fs.path(self.path, self.escape_key(key))
 
     def __getitem__(self, key):
         """
@@ -233,7 +253,7 @@ class FSCache(Cache):
         Raises:
             KeyErorr: If key not in cache.
         """
-        path = self._keypath(key)
+        path = self.keypath(key)
         if fs.exists(path):
             return path
         else:
@@ -253,7 +273,7 @@ class FSCache(Cache):
         if not fs.exists(value):
             raise ValueError(value)
 
-        path = self._keypath(key)
+        path = self.keypath(key)
         fs.mv(value, path)
 
     def __contains__(self, key):
@@ -266,7 +286,7 @@ class FSCache(Cache):
         Returns:
             bool: True if key in cache, else false.
         """
-        path = self._keypath(key)
+        path = self.keypath(key)
         return fs.exists(path)
 
     def __delitem__(self, key):
@@ -279,7 +299,7 @@ class FSCache(Cache):
         Raises:
             KeyError: If file not in cache.
         """
-        path = self._keypath(key)
+        path = self.keypath(key)
         if fs.exists(path):
             fs.rm(path)
         else:
