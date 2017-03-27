@@ -23,6 +23,8 @@ import json
 import labm8
 import math
 import os
+import progressbar
+import random
 import re
 import shutil
 import sqlite3
@@ -34,6 +36,7 @@ from labm8 import fs
 from multiprocessing import cpu_count, Pool
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import NamedTemporaryFile
+from threading import Condition, Thread, Lock
 
 
 import clgen
@@ -594,134 +597,6 @@ def preprocess(src: str, id: str='anon', use_shim: bool=True,
     return src
 
 
-def _preprocess_db_worker(job: dict) -> None:
-    """Database worker thread"""
-    db_path = job["db_in"]
-    db_index_range = job["db_index_range"]
-    outpath = job["json_out"]
-    preprocess_opts = job["preprocess_opts"]
-
-    log.debug("worker", os.getpid(), outpath)
-
-    db = dbutil.connect(db_path)
-    c = db.cursor()
-    split_start, split_end = db_index_range
-    split_size = split_end - split_start
-
-    # get the files to preprocess
-    c.execute('SELECT id,contents FROM ContentFiles LIMIT {} OFFSET {}'
-              .format(split_size, split_start))
-
-    with open(outpath, 'wb') as outfile:
-        for row in c.fetchall():
-            id, contents = row
-
-            # Get checksum of cached file:
-            c.execute('SELECT id FROM PreprocessedFiles WHERE id=?', (id,))
-            result = c.fetchone()
-            cached_id = result[0] if result else None
-
-            # Check that file is modified:
-            if id != cached_id:
-                try:
-                    # Try and preprocess it:
-                    contents = preprocess(contents, id, **preprocess_opts)
-                    status = 0
-                except BadCodeException as e:
-                    contents = str(e)
-                    status = 1
-                except UglyCodeException as e:
-                    contents = str(e)
-                    status = 2
-
-                # write result to json
-                line = json.dumps([id, status, contents]).encode('utf-8')
-                outfile.write(line)
-                outfile.write('\n'.encode('utf-8'))
-
-    c.close()
-    db.close()
-
-
-def preprocess_contentfiles(db_path: str, max_num_workers: int=cpu_count(),
-                            attempt: int=1, **preprocess_opts) -> None:
-    """
-    Preprocess OpenCL dataset.
-
-    Arguments:
-        db_path (str): OpenCL kernels dataset.
-        max_num_workers (int, optional): Number of processes to spawn.
-    """
-    def _finalize(db_path, cache):
-        """Tidy up after worker threads finish"""
-        log.debug("worker finalize")
-
-        db = dbutil.connect(db_path)
-        c = db.cursor()
-
-        # import results from worker threads
-        for outpath in fs.ls(cache.path, abspaths=True):
-            with open(outpath) as infile:
-                for line in infile:
-                    c.execute('INSERT OR REPLACE INTO PreprocessedFiles '
-                              'VALUES(?,?,?)', json.loads(line))
-
-        # write changes to database and remove cache
-        db.commit()
-        db.close()
-        cache.empty()
-
-    if attempt >= MAX_OS_RETRIES:
-        raise clgen.InternalError("failed to preprocess files")
-
-    num_contentfiles = dbutil.num_rows_in(db_path, 'ContentFiles')
-    num_preprocessedfiles = dbutil.num_rows_in(db_path, 'PreprocessedFiles')
-    log.info("{n} ({r:.1%}) files need preprocessing".format(
-        n=num_contentfiles - num_preprocessedfiles,
-        r=(num_contentfiles - num_preprocessedfiles) / num_contentfiles))
-
-    # split into mulitple jobs of a maximum size
-    jobsize = min(max_num_workers * 200, num_contentfiles)
-    numjobs = math.ceil(num_contentfiles / jobsize)
-    for j, offset in enumerate(range(0, num_contentfiles, jobsize)):
-        num_preprocessedfiles = dbutil.num_rows_in(db_path, 'PreprocessedFiles')
-        num_workers = min(num_contentfiles, max_num_workers)
-        files_per_worker = math.ceil(jobsize / num_workers)
-
-        # temporary cache used for worker thread results
-        cache = Cache("preprocess/{pid}".format(pid=os.getpid()))
-        # each worker thread receives a range of database indices to preprocess,
-        # and a JSON file to write results into
-        jobs = [{
-            "db_in": db_path,
-            "db_index_range": (offset + i * files_per_worker,
-                               offset + i * files_per_worker + files_per_worker),
-            "json_out": fs.path(cache.path, "{i}.json".format(i=i)),
-            "preprocess_opts": preprocess_opts
-        } for i in range(num_workers)]
-
-        # spool up worker threads then finalize
-        k = j + 1
-        log.info('[job {k} / {numjobs}] {num_workers} worker threads '
-                 'processing {jobsize} files ...'.format(**vars()))
-        try:
-            with clgen.terminating(Pool(num_workers)) as pool:
-                pool.map(_preprocess_db_worker, jobs)
-            _finalize(db_path, cache)
-        except OSError as e:
-            _finalize(db_path, cache)
-            log.error(e)
-
-            # Try again with fewer threads.
-            # See: https://github.com/ChrisCummins/clgen/issues/64
-            max_num_workers = max(int(max_num_workers / 2), 1)
-            preprocess_contentfiles(db_path, max_num_workers=max_num_workers,
-                                    attempt=attempt + 1, **preprocess_opts)
-        except Exception as e:
-            _finalize(db_path, cache)
-            raise e
-
-
 def preprocess_file(path: str, inplace: bool=False, **preprocess_opts) -> None:
     """
     Preprocess a file.
@@ -786,6 +661,144 @@ def preprocess_inplace(paths: str, max_num_workers: int=cpu_count(),
                            attempt=attempt + 1)
 
 
+class PreprocessWorker(Thread):
+    """ preprocessor worker thread """
+
+    def __init__(self, jobs, condition, queue):
+        super(PreprocessWorker, self).__init__()
+        self.jobs = jobs
+        self.condition = condition
+        self.queue = queue
+
+    def run(self):
+        while self.jobs:
+            job = self.jobs.pop(0)
+
+            kid = job["id"]
+            src = job["src"]
+            preprocess_opts = job["preprocess_opts"]
+
+            try:
+                # Try and preprocess it:
+                contents = preprocess(src, id, **preprocess_opts)
+                status = 0
+            except BadCodeException as e:
+                contents = str(e)
+                status = 1
+            except UglyCodeException as e:
+                contents = str(e)
+                status = 2
+
+            result = {
+                "id": kid,
+                "status": status,
+                "contents": contents
+            }
+
+            self.condition.acquire()
+            self.queue.append(result)
+            self.condition.notify()
+            self.condition.release()
+
+
+class DbImportWorker(Thread):
+    """ insert preprocessed results into database """
+    def __init__(self, db_path, numjobs, condition, queue):
+        super(DbImportWorker, self).__init__()
+        self.db_path = db_path
+        self.numjobs = numjobs
+        self.condition = condition
+        self.queue = queue
+
+    def run(self):
+        bar = progressbar.ProgressBar(max_value=self.numjobs)
+
+        for i in bar(range(self.numjobs)):
+            # get the next result
+            self.condition.acquire()
+            if not self.queue:
+                self.condition.wait()
+            result = self.queue.pop(0)
+            self.condition.release()
+
+            # insert result into database
+            db = dbutil.connect(self.db_path)
+            c = db.cursor()
+            c.execute("INSERT INTO PreprocessedFiles VALUES(?,?,?)",
+                      (result["id"], result["status"], result["contents"]))
+            c.close()
+            db.commit()
+            db.close()
+
+
+def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
+                   attempt: int=1, **preprocess_opts) -> None:
+    """
+    Preprocess OpenCL dataset.
+
+    Arguments:
+        db_path (str): OpenCL kernels dataset.
+        max_num_workers (int, optional): Number of processes to spawn.
+    """
+    if attempt >= MAX_OS_RETRIES:
+        raise clgen.InternalError(
+            "failed to preprocess files after {attempt} attempts"
+            .format(**vars()))
+
+    log.verbose("determining jobs")
+
+    contentfiles = set(dbutil.kernel_ids(db_path, "ContentFiles"))
+    preprocessedfiles = set(dbutil.kernel_ids(db_path, "PreprocessedFiles"))
+
+    ncontentfiles = len(contentfiles)
+    npreprocessedfiles = len(preprocessedfiles)
+
+    todo = contentfiles - preprocessedfiles
+    ntodo = len(todo)
+
+    todo_ratio = ntodo / ncontentfiles
+
+    log.info("{ntodo} ({todo_ratio:.1%}) files need preprocessing"
+             .format(**vars()))
+
+    log.verbose("creating jobs")
+
+    # create jobs
+    jobs = [{
+        "id": kid,
+        "src": dbutil.get_kernel(db_path, kid, "ContentFiles"),
+        "preprocess_opts": preprocess_opts
+    } for kid in todo]
+
+    random.shuffle(jobs)
+
+    # split size
+    worker_njobs = math.ceil(ntodo / max_num_workers)
+
+    # producer-consumer queue
+    queue = []
+    lock = Lock()
+    condition = Condition()
+
+    log.verbose("assigning {ntodo} jobs to {max_num_workers} threads"
+                .format(**vars()))
+
+    try:
+        for i in range(0, ntodo, worker_njobs):
+            PreprocessWorker(jobs[i:i+worker_njobs], condition, queue).start()
+
+        importer = DbImportWorker(db_path, ntodo, condition, queue)
+        importer.start()
+        importer.join()
+    except OSError as e:
+        log.error(e)
+
+        # Try again with fewer threads.
+        # See: https://github.com/ChrisCummins/clgen/issues/64
+        max_num_workers = max(int(max_num_workers / 2), 1)
+        _preprocess_db(db_path, max_num_workers=max_num_workers,
+                       attempt=attempt + 1, **preprocess_opts)
+
 
 def preprocess_db(db_path: str, **preprocess_opts) -> bool:
     """
@@ -801,7 +814,7 @@ def preprocess_db(db_path: str, **preprocess_opts) -> bool:
 
     modified = dbutil.is_modified(db)
     if modified:
-        preprocess_contentfiles(db_path, **preprocess_opts)
+        _preprocess_db(db_path, **preprocess_opts)
         dbutil.set_modified_status(db, modified)
         return True
     else:

@@ -149,6 +149,13 @@ def stats_worker(db_path: str) -> list:
     stats.append(('', ''))
 
     # Preprocessed
+    c.execute("SELECT Count(*) FROM PreprocessedFiles")
+    nb_pp_files = c.fetchone()[0]
+    ratio_pp_files = div(nb_pp_files, nb_uniq_ocl_files)
+    stats.append(('Number of preprocessed files',
+                  bigint(nb_pp_files) +
+                  ' ({:.0f}%)'.format(ratio_pp_files * 100)))
+
     c.execute("SELECT Count(*) FROM PreprocessedFiles WHERE status=0")
     nb_pp_files = c.fetchone()[0]
     ratio_pp_files = div(nb_pp_files, nb_uniq_ocl_files)
@@ -222,6 +229,13 @@ def gh_stats_worker(db_path: str) -> list:
     stats.append(('', ''))
 
     # Preprocessed
+    c.execute("SELECT Count(*) FROM PreprocessedFiles")
+    nb_pp_files = c.fetchone()[0]
+    ratio_pp_files = div(nb_pp_files, nb_uniq_ocl_files)
+    stats.append(('Number of preprocessed files',
+                  bigint(nb_pp_files) +
+                  ' ({:.0f}%)'.format(ratio_pp_files * 100)))
+
     c.execute("SELECT Count(*) FROM PreprocessedFiles WHERE status=0")
     nb_pp_files = c.fetchone()[0]
     ratio_pp_files = div(nb_pp_files, nb_uniq_ocl_files)

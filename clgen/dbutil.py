@@ -164,6 +164,29 @@ def get_meta(path: str, key: str) -> str:
         return ""
 
 
+def get_kernel(path: str, kid: str, table: str="PreprocessedFiles") -> str:
+    """
+    Retrieve a kernel from a database.
+
+    Arguments:
+        path (str): Path to database.
+        kid (str): Kernel ID.
+        table (str): Name of table.
+
+    Returns:
+        str: Source code.
+    """
+    db = sqlite3.connect(path)
+    c = db.cursor()
+    c.execute("SELECT contents FROM {table} WHERE id=?".format(**vars()), (kid,))
+    src = c.fetchone()[0]
+
+    c.close()
+    db.close()
+
+    return src
+
+
 def set_version_meta(path: str, version: str=clgen.version()) -> None:
     """
     Set the "version" key in an database.
@@ -248,6 +271,29 @@ def set_modified_status(db, checksum: str) -> None:
               ('preprocessed_checksum', checksum))
     db.commit()
     c.close()
+
+
+def kernel_ids(db_path: str, table: str="PreprocessedFiles") -> list:
+    """
+    Get a list of kernel IDs.
+
+    Arguments:
+        path (str): Database path.
+        table (str, optional): Name of table.
+
+    Returns:
+        list of str: Kernel IDs.
+    """
+    db = connect(db_path)
+    c = db.cursor()
+
+    c.execute("SELECT id FROM {table}".format(**vars()))
+    results = [row[0] for row in c.fetchall()]
+
+    c.close()
+    db.close()
+
+    return results
 
 
 def table_exists(db, table_name: str) -> None:
