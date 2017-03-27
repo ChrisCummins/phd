@@ -217,7 +217,7 @@ class FSCache(Cache):
         Returns:
             str: Absolute path.
         """
-        hash = crypto.sha1(json.dumps(key, sort_keys=True))
+        hash = crypto.sha1_str(json.dumps(key, sort_keys=True))
         return fs.path(self.path, hash)
 
     def __getitem__(self, key):
