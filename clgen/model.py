@@ -464,7 +464,7 @@ class Model(clgen.CLgenObject):
                         elif char == '}':
                             depth -= 1
                     # stop sampling if depth = 0
-                    if started and depth == 0:
+                    if started and depth < 1:
                         break
 
             if not quiet:
