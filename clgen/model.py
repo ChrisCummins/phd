@@ -37,6 +37,7 @@ from tempfile import mktemp
 
 import clgen
 from clgen import cache
+from clgen import config as cfg
 from clgen import log
 from clgen.cache import Cache
 from clgen.corpus import Corpus
@@ -165,6 +166,9 @@ class Model(clgen.CLgenObject):
         Returns:
             module: imported TensorFlow module
         """
+        if cfg.USE_CUDA:
+            import setGPU
+
         import tensorflow as tf
         import tensorflow.contrib.legacy_seq2seq as seq2seq
         from tensorflow.contrib import rnn
