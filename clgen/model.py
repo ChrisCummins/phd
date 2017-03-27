@@ -37,6 +37,7 @@ from tempfile import mktemp
 
 import clgen
 from clgen import cache
+from clgen import lockfile
 from clgen import log
 from clgen.cache import Cache
 from clgen.corpus import Corpus
@@ -267,16 +268,7 @@ class Model(clgen.CLgenObject):
         return closest_path, paths
 
 
-    def train(self, quiet: bool=False):
-        """
-        Train model.
-
-        Arguments:
-            quiet (bool, optional): If true, print less.
-
-        Returns:
-            Model: self.
-        """
+    def _locked_train(self, quiet):
         tf = self._init_tensorflow(infer=False)
 
         # training options
@@ -404,6 +396,20 @@ class Model(clgen.CLgenObject):
 
         return self
 
+    def train(self, quiet: bool=False):
+        """
+        Train model.
+
+        Arguments:
+            quiet (bool, optional): If true, print less.
+
+        Returns:
+            Model: self.
+        """
+        with self.lock.acquire():
+            return self._locked_train(quiet)
+
+
     def sample(self, seed_text: str="__kernel void", output=sys.stdout,
                num_samples: int=1, temperature: float=1, max_length: int=10000,
                seed: int=None, quiet: bool=False) -> None:
@@ -420,6 +426,9 @@ class Model(clgen.CLgenObject):
                 reproducible samples. If None, set no seed.
             quiet (bool, optional): If False, stream output to stdout
         """
+        if self.lock.islocked:
+            raise lockfile.UnableToAcquireLockError(self.lock)
+
         tf = self._init_tensorflow(infer=True)
 
         if seed is not None:
@@ -503,6 +512,11 @@ class Model(clgen.CLgenObject):
 
             if not quiet:
                 sys.stdout.write('\n\n')
+
+    @property
+    def lock(self):
+        lockpath = self.cache.keypath("LOCK")
+        return lockfile.LockFile(lockpath)
 
     @property
     def model_type(self) -> str:

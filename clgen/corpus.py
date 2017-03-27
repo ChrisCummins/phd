@@ -39,6 +39,7 @@ from clgen import dbutil
 from clgen import explore
 from clgen import features
 from clgen import fetch
+from clgen import lockfile
 from clgen import log
 from clgen import preprocess
 from clgen.cache import Cache
@@ -209,21 +210,6 @@ class Corpus(clgen.CLgenObject):
             path (str, optional): Path to corpus.
             **opts: Keyword options.
         """
-        def _init_error(err: Exception) -> None:
-            """ tidy up in case of error """
-            log.error("corpus creation failed. Deleting corpus files")
-            paths = [
-                fs.path(self.contentcache.path, "kernels.db"),
-                fs.path(self.cache.path, "corpus.txt"),
-                fs.path(self.cache.path, "tensor.npy"),
-                fs.path(self.cache.path, "atomizer.pkl")
-            ]
-            for path in paths:
-                if fs.exists(path):
-                    log.info("removing", path)
-                    fs.rm(path)
-            raise err
-
         # Validate options
         for key in opts.keys():
             if key not in DEFAULT_CORPUS_OPTS:
@@ -251,6 +237,25 @@ class Corpus(clgen.CLgenObject):
                 raise clgen.InternalError("corpus metadata mismatch")
         else:
             clgen.write_json_file(self.cache.keypath("META"), meta)
+
+        with self.lock.acquire():
+            self._create_files(path)
+
+    def _create_files(self, path):
+        def _init_error(err: Exception) -> None:
+            """ tidy up in case of error """
+            log.error("corpus creation failed. Deleting corpus files")
+            paths = [
+                fs.path(self.contentcache.path, "kernels.db"),
+                fs.path(self.cache.path, "corpus.txt"),
+                fs.path(self.cache.path, "tensor.npy"),
+                fs.path(self.cache.path, "atomizer.pkl")
+            ]
+            for path in paths:
+                if fs.exists(path):
+                    log.info("removing", path)
+                    fs.rm(path)
+            raise err
 
         try:
             if path is not None:
@@ -394,6 +399,11 @@ class Corpus(clgen.CLgenObject):
                                    self.num_batches, 1)
         self._y_batches = np.split(ydata.reshape(batch_size, -1),
                                    self.num_batches, 1)
+
+    @property
+    def lock(self):
+        lockpath = self.cache.keypath("LOCK")
+        return lockfile.LockFile(lockpath)
 
     @property
     def batch_size(self) -> int:
