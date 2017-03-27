@@ -92,11 +92,12 @@ def from_json(sampler_json: dict):
 
 
 class SampleProducer(Thread):
-    def __init__(self, model: Model, condition: Condition, queue: list,
-                 quiet: bool=False, **kernel_opts):
+    def __init__(self, model: Model, start_text: str, condition: Condition,
+                 queue: list, quiet: bool=False, **kernel_opts):
         super(SampleProducer, self).__init__()
 
         self.model = model
+        self.start_text = start_text
         self.condition = condition
         self.queue = queue
         self.stop_signal = Event()
@@ -105,7 +106,6 @@ class SampleProducer(Thread):
 
     def run(self):
         model = self.model
-        start_text = self.kernel_opts["start_text"]
         max_length = self.kernel_opts["max_length"]
         temperature = self.kernel_opts["temperature"]
 
@@ -144,7 +144,7 @@ class SampleProducer(Thread):
 
                 return started, depth
 
-            init_started, init_depth = update_bracket_depth(start_text)
+            init_started, init_depth = update_bracket_depth(self.start_text)
 
             while not self.stop_requested:
                 buf = StringIO()
@@ -152,17 +152,17 @@ class SampleProducer(Thread):
 
                 state = sess.run(model.cell.zero_state(1, tf.float32))
 
-                seed_tensor = model.corpus.atomizer.atomize(start_text)
+                seed_tensor = model.corpus.atomizer.atomize(self.start_text)
                 for index in seed_tensor[:-1]:
                     x = np.zeros((1, 1))
                     x[0, 0] = index
                     feed = {model.input_data: x, model.initial_state: state}
                     [state] = sess.run([model.final_state], feed)
 
-                buf.write(start_text)
+                buf.write(self.start_text)
                 if not self.quiet:
                     sys.stdout.write("\n\n/* ==== START SAMPLE ==== */\n\n")
-                    sys.stdout.write(start_text)
+                    sys.stdout.write(self.start_text)
                     sys.stdout.flush()
 
                 index = seed_tensor[-1]
@@ -351,14 +351,13 @@ class Sampler(clgen.CLgenObject):
         self.kernel_opts = types.update(deepcopy(DEFAULT_KERNELS_OPTS),
                                         kernel_opts)
 
-        self.start_text = _start_text(self.kernel_opts["args"])
-        self.kernel_opts["start_text"] = self.start_text
-
         self.hash = self._hash(self.sampler_opts, self.kernel_opts)
 
         if self.sampler_opts["dynamic_checker"] and not cfg.USE_OPENCL:
             log.warning("dynamic checking requested, but OpenCL not available")
             self.sampler_opts["dynamic_checker"] = False
+
+        self.start_text = _start_text(self.kernel_opts["args"])
 
         # options to pass to preprocess_db()
         self.preprocess_opts = {
@@ -419,8 +418,8 @@ class Sampler(clgen.CLgenObject):
         lock = Lock()
         condition = Condition()
 
-        sampler = SampleProducer(model, condition, queue, quiet=quiet,
-                                 **self.kernel_opts)
+        sampler = SampleProducer(model, self.start_text, condition, queue,
+                                 quiet=quiet, **self.kernel_opts)
         sampler.start()
 
         consumer = SampleConsumer(cache["kernels.db"], sampler, condition,
