@@ -23,7 +23,7 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 oclgrind_version := c3760d07365b74ccda04cd361e1b567a6d99dd8c
-oclgrind_remote := git@github.com:jrprice/Oclgrind.git
+oclgrind_remote := https://github.com/jrprice/Oclgrind.git
 oclgrind_dir := $(root)/native/oclgrind/$(oclgrind_version)
 oclgrind := $(oclgrind_dir)/install/bin/oclgrind
 
