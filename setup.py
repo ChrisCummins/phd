@@ -28,12 +28,14 @@ setup(name="labm8",
       test_suite="nose.collector",
       tests_require=["nose"],
       install_requires=[
-          "humanize == 0.5.1",
+          "Send2Trash >= 1.3.0"
+          "humanize >= 0.5.1",
           "numpy >= 1.10.4",
           "pandas >= 0.19.0",
-          "python-dateutil == 2.5.3",
-          "pytz == 2016.7",
+          "python-dateutil >= 2.5.3",
+          "matplotlib >= 1.5.3",
+          "pytz >= 2016.7",
           "scipy >= 0.16.1",
-          "six == 1.10.0",
+          "six >= 1.10.0",
       ],
       zip_safe=True)
