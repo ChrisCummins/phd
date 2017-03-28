@@ -469,7 +469,8 @@ def remove_bad_preprocessed(db_path: str) -> None:
              .format(new_size_human_readable, reduction_ratio), sep=".")
 
 
-def sql_insert_dict(c, table: str, data: dict, replace_existing=False) -> None:
+def sql_insert_dict(c, table: str, data: dict, ignore_existing: bool=False,
+                    replace_existing: bool=False) -> None:
     """
     Insert a dict of key value pairs into an SQL table.
 
@@ -479,12 +480,15 @@ def sql_insert_dict(c, table: str, data: dict, replace_existing=False) -> None:
         c (sqlite3.Cursor): Database cursor.
         table (str): Destination table.
         data (dict): Key value pairs.
+        ignore_existing (bool, optional): Ignore existing entries.
+        replace_existing (bool, optional): Replace existing entries.
     """
+    or_ignore = "OR IGNORE" if ignore_existing else ""
     or_replace = "OR REPLACE" if replace_existing else ""
     cols = ','.join(sorted(data.keys()))
     vals = ','.join(['?'] * len(data))
 
-    cmd = ("INSERT {or_replace} INTO {table}({cols}) VALUES({vals})"
+    cmd = ("INSERT {or_ignore} {or_replace} INTO {table}({cols}) VALUES({vals})"
            .format(**vars()))
 
     c.execute(cmd, tuple([data[v] for v in sorted(data.keys())]))

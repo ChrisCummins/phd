@@ -311,14 +311,14 @@ class SampleConsumer(Thread):
                 for kid, src in zip(ids, kernels):
                     dbutil.sql_insert_dict(c, "ContentFiles",
                                            {"id": kid, "contents": src},
-                                           replace_existing=True)
+                                           ignore_existing=True)
 
                 # insert preprocessed samples
                 if self.sampler_opts["static_checker"]:
                     for kid, (status, src) in zip(ids, pp):
                         dbutil.sql_insert_dict(c, "PreprocessedFiles", {
                             "id": kid, "status": status, "contents": src
-                        }, replace_existing=True)
+                        }, ignore_existing=True)
 
                 c.close()
                 db.commit()
