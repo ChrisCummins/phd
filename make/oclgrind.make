@@ -43,9 +43,9 @@ $(oclgrind):
 	rm -rf $(oclgrind_dir)/.git
 	mkdir $(oclgrind_dir)/build $(oclgrind_dir)/install
 	cd $(oclgrind_dir)/build && $(oclgrind_cmake)
-	cd $(oclgrind_dir)/build && make#$(ninja)
-	cd $(oclgrind_dir)/build && make#$(ninja) test
-	cd $(oclgrind_dir)/build && make#$(ninja) install
+	cd $(oclgrind_dir)/build && make #$(ninja)
+	cd $(oclgrind_dir)/build && make #$(ninja) test
+	cd $(oclgrind_dir)/build && make #$(ninja) install
 
 .PHONY: distclean-oclgrind
 distclean-oclgrind:
