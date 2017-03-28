@@ -148,3 +148,6 @@ class TestCLgen(TestCase):
             clgen.sql_script("This definitely isn't a real path")
         with self.assertRaises(clgen.File404):
             clgen.sql_script("This definitely isn't a real path")
+
+    def test_platform_info(self):
+        clgen.platform_info()

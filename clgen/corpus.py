@@ -76,6 +76,9 @@ def unpack_directory_if_needed(path: str) -> str:
 
     Returns:
         str: Path to directory.
+
+    Raises:
+        clgen.InternalError: If unable to extract archive.
     """
     if fs.isdir(path):
         return path
@@ -90,7 +93,8 @@ def unpack_directory_if_needed(path: str) -> str:
         tar.unpack_archive(path + ".tar.bz2")
         return path
 
-    return path
+    raise clgen.InternalError("cannot interpret archive '{path}'"
+                              .format(**vars()))
 
 
 def get_atomizer(corpus: str, vocab: str="char") -> list:
