@@ -230,8 +230,6 @@ class SampleConsumer(Thread):
         self.sampler_opts = sampler_opts
         self.quiet = quiet
 
-        print("SAMPLE OPTS", self.sampler_opts)
-
         # properties
         min_kernels = self.sampler_opts["min_kernels"]
         has_min_kernels = min_kernels >= 0
@@ -347,6 +345,20 @@ class Sampler(clgen.CLgenObject):
             sampler_opts (dict): Sampler options.
             kernel_opts (dict): Kernel options.
         """
+        def _hash(self, sampler_opts: dict, kernel_opts: dict) -> str:
+            """compute sampler checksum"""
+
+            # we don't consider the number of samples in the ID
+            sampler_opts = deepcopy(sampler_opts)
+            del sampler_opts["min_samples"]
+            del sampler_opts["min_kernels"]
+
+            checksum_data = sorted(
+                [str(x) for x in sampler_opts.values()] +
+                [str(x) for x in kernel_opts.values()])
+            string = "".join([str(x) for x in checksum_data])
+            return crypto.sha1_str(string)
+
         def _start_text(args):
             if args is None:
                 return "__kernel void A("
@@ -374,7 +386,7 @@ class Sampler(clgen.CLgenObject):
         self.kernel_opts = types.update(deepcopy(DEFAULT_KERNELS_OPTS),
                                         kernel_opts)
 
-        self.hash = self._hash(self.sampler_opts, self.kernel_opts)
+        self.hash = _hash(self.sampler_opts, self.kernel_opts)
 
         if self.sampler_opts["dynamic_checker"] and not cfg.USE_OPENCL:
             log.warning("dynamic checking requested, but OpenCL not available")
@@ -387,20 +399,6 @@ class Sampler(clgen.CLgenObject):
             "use_dynamic_checker": self.sampler_opts["dynamic_checker"],
             "use_gpuverify": self.sampler_opts["gpuverify"]
         }
-
-    def _hash(self, sampler_opts: dict, kernel_opts: dict) -> str:
-        """compute sampler checksum"""
-
-        # we don't consider the number of samples in the ID
-        sampler_opts = deepcopy(sampler_opts)
-        del sampler_opts["min_samples"]
-        del sampler_opts["min_kernels"]
-
-        checksum_data = sorted(
-            [str(x) for x in sampler_opts.values()] +
-            [str(x) for x in kernel_opts.values()])
-        string = "".join([str(x) for x in checksum_data])
-        return crypto.sha1_str(string)
 
     def cache(self, model: Model):
         """
@@ -418,7 +416,6 @@ class Sampler(clgen.CLgenObject):
 
         # validate metadata against cache
         meta = deepcopy(self.to_json())
-        print("META", meta)
         del meta["sampler"]["min_samples"]
         del meta["sampler"]["min_kernels"]
 
@@ -464,14 +461,21 @@ class Sampler(clgen.CLgenObject):
         print()
         explore(cache["kernels.db"])
 
+    @property
+    def min_samples(self):
+        return self.sampler_opts["min_samples"]
 
-    def __repr__(self) -> str:
-        """
-        String representation.
-        """
-        hash = self.hash
-        seed = self.start_text
-        return "sampler[{hash}]: '{seed}'".format(**vars())
+    @property
+    def num_samples(self):
+        return dbutil.num_rows_in(self.db_path, "ContentFiles")
+
+    @property
+    def min_kernels(self):
+        return self.sampler_opts["min_kernels"]
+
+    @property
+    def num_good_kernels(self):
+        return dbutil.num_good_kernels(self.db_path)
 
     def to_json(self) -> dict:
         """
@@ -481,6 +485,14 @@ class Sampler(clgen.CLgenObject):
             "kernels": self.kernel_opts,
             "sampler": self.sampler_opts
         }
+
+    def __repr__(self) -> str:
+        """
+        String representation.
+        """
+        hash = self.hash
+        seed = self.start_text
+        return "sampler[{hash}]: '{seed}'".format(**vars())
 
     def __eq__(self, rhs) -> bool:
         if not isinstance(rhs, Sampler):
