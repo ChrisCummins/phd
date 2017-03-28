@@ -41,6 +41,10 @@ CLGEN_FEATURES = clgen.data_path(fs.path("bin", "clgen-features"))
 CLGEN_REWRITER = clgen.data_path(fs.path("bin", "clgen-rewriter"))
 GPUVERIFY = clgen.data_path(fs.path("gpuverify", "gpuverify"))
 LIBCLC = clgen.data_path("libclc")
-OCLGRIND = clgen.data_path(fs.path("oclgrind", "bin", "oclgrind"))
+try:
+    OCLGRIND = clgen.data_path(fs.path("oclgrind", "bin", "oclgrind"))
+except clgen.File404:
+    # FIXME: oclgrind is broken on Travis CI.
+    pass
 OPT = clgen.data_path(fs.path("bin", "opt"))
 SHIMFILE = clgen.data_path(fs.path("include", "opencl-shim.h"))
