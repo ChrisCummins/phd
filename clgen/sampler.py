@@ -345,9 +345,7 @@ class Sampler(clgen.CLgenObject):
             sampler_opts (dict): Sampler options.
             kernel_opts (dict): Kernel options.
         """
-        def _hash(self, sampler_opts: dict, kernel_opts: dict) -> str:
-            """compute sampler checksum"""
-
+        def _hash(sampler_opts: dict, kernel_opts: dict) -> str:
             # we don't consider the number of samples in the ID
             sampler_opts = deepcopy(sampler_opts)
             del sampler_opts["min_samples"]
