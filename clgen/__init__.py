@@ -300,7 +300,7 @@ def platform_info(printfn=print) -> None:
 
 
 def main(model, sampler, print_file_list=False, print_corpus_dir=False,
-         print_model_dir=False, print_sampler_dir=False) -> None:
+         print_model_dir=False, print_sampler_dir=False, quiet=False) -> None:
     """
     Main entry point for clgen.
 
@@ -340,4 +340,4 @@ def main(model, sampler, print_file_list=False, print_corpus_dir=False,
         sys.exit(0)
 
     model.train()
-    sampler.sample(model)
+    sampler.sample(model, quiet=quiet)

@@ -20,6 +20,7 @@
 Sample a CLgen model.
 """
 import numpy as np
+import progressbar
 import sys
 
 from copy import deepcopy
@@ -229,35 +230,60 @@ class SampleConsumer(Thread):
         self.sampler_opts = sampler_opts
         self.quiet = quiet
 
+        print("SAMPLE OPTS", self.sampler_opts)
+
         # properties
-        min_kernels = sampler_opts["min_kernels"]
+        min_kernels = self.sampler_opts["min_kernels"]
         has_min_kernels = min_kernels >= 0
 
-        min_samples = sampler_opts["min_samples"]
+        min_samples = self.sampler_opts["min_samples"]
         has_min_samples = min_samples >= 0
-
-        def min_kernels_cond(i):
-            return dbutil.num_good_kernels(self.db_path) >= min_kernels
-        def min_samples_cond(i):
-            return i >= min_samples
 
         # Determine termination criteria
         if has_min_kernels and has_min_samples:
-            term_condition = lambda i: (min_kernels_cond(i) and
-                                        min_samples_cond(i))
-        if has_min_kernels:
-            term_condition = min_kernels_cond
+            self.term_condition = self.min_kernels_and_samples_cond
+            self.max_i = self.sampler_opts["min_kernels"]
+            self.progress = self.min_kernels_progress
+        elif has_min_kernels:
+            self.term_condition = self.min_kernels_cond
+            self.max_i = self.sampler_opts["min_kernels"]
+            self.progress = self.min_kernels_progress
         elif has_min_samples:
-            term_condition = min_samples_cond
+            self.term_condition = self.min_samples_cond
+            self.max_i = self.sampler_opts["min_samples"]
+            self.progress = self.min_samples_progress
         else:
-            term_condition = lambda i: False
+            self.term_condition = self.null_cond
+            self.max_i = progressbar.UnknownLength
+            self.progress = self.min_samples_progress
 
-        self.term_condition = term_condition
+    def min_kernels_and_samples_cond(self):
+        return self.min_kernels_cond() and self.min_samples_cond()
+
+    def min_kernels_cond(self):
+        return self.min_kernels_progress() >= self.sampler_opts["min_kernels"]
+
+    def min_samples_cond(self):
+        return (dbutil.num_rows_in(self.db_path, "ContentFiles") >=
+                self.sampler_opts["min_samples"])
+
+    def null_cond(self):
+        return False
+
+    def min_kernels_progress(self):
+        return min(dbutil.num_good_kernels(self.db_path),
+                   self.sampler_opts["min_kernels"])
+
+    def min_samples_progress(self):
+        return min(dbutil.num_rows_in(self.db_path, "ContentFiles"),
+                   self.sampler_opts["min_samples"])
 
     def run(self) -> None:
-        # bar = progressbar.ProgressBar(max_value=self.numjobs)
+        i = dbutil.num_rows_in(self.db_path, "ContentFiles")
 
-        i = 0
+        if self.quiet:
+            bar = progressbar.ProgressBar(max_value=self.max_i)
+            bar.update(self.progress())
 
         while True:
             # get the next sample
@@ -266,8 +292,6 @@ class SampleConsumer(Thread):
                 self.condition.wait()
             sample = self.queue.pop(0)
             self.condition.release()
-
-            i += 1
 
             kernels = clutil.get_cl_kernels(sample)
             ids = [crypto.sha1_str(k) for k in kernels]
@@ -280,11 +304,6 @@ class SampleConsumer(Thread):
                 }
                 pp = [preprocess.preprocess_for_db(k, **preprocess_opts)
                       for k in kernels]
-
-                if self.quiet:
-                    npp = len([x for x in pp if x[0] == 0])
-                    n = len(kernels)
-                    log.info("{npp} of {n} good samples".format(**vars()))
 
             db = dbutil.connect(self.db_path)
             c = db.cursor()
@@ -306,8 +325,12 @@ class SampleConsumer(Thread):
             db.commit()
             db.close()
 
+            # update progress bar
+            if self.quiet:
+                bar.update(self.progress())
+
             # determine if we are done sampling
-            if self.term_condition(i):
+            if self.term_condition():
                 self.sampler.stop()
                 return
 
@@ -367,6 +390,12 @@ class Sampler(clgen.CLgenObject):
 
     def _hash(self, sampler_opts: dict, kernel_opts: dict) -> str:
         """compute sampler checksum"""
+
+        # we don't consider the number of samples in the ID
+        sampler_opts = deepcopy(sampler_opts)
+        del sampler_opts["min_samples"]
+        del sampler_opts["min_kernels"]
+
         checksum_data = sorted(
             [str(x) for x in sampler_opts.values()] +
             [str(x) for x in kernel_opts.values()])
@@ -388,7 +417,11 @@ class Sampler(clgen.CLgenObject):
         cache = clgen.mkcache("sampler", sampler_model_hash)
 
         # validate metadata against cache
-        meta = self.to_json()
+        meta = deepcopy(self.to_json())
+        print("META", meta)
+        del meta["sampler"]["min_samples"]
+        del meta["sampler"]["min_kernels"]
+
         if cache.get("META"):
             cached_meta = jsonutil.read_file(cache["META"])
             if meta != cached_meta:
