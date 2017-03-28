@@ -24,7 +24,9 @@ Variables:
     * `CLANG_FORMAT` (str): Path to clang-format binary.
     * `CLGEN_FEATURES` (str): Path to clgen-features binary.
     * `CLGEN_REWRITER` (str): Path to clgen-rewriter binary.
+    * `GPUVERIFY` (str): Path to GPUVerify.
     * `LIBCLC` (str): Path to libclc directory.
+    * `OCLGRIND (str)`: Path to OCLgrind
     * `OPT` (str): Path to LLVM opt binary.
     * `SHIMFILE` (str): Path to shim headerfile.
 """
@@ -39,5 +41,6 @@ CLGEN_FEATURES = clgen.data_path(fs.path("bin", "clgen-features"))
 CLGEN_REWRITER = clgen.data_path(fs.path("bin", "clgen-rewriter"))
 GPUVERIFY = clgen.data_path(fs.path("gpuverify", "gpuverify"))
 LIBCLC = clgen.data_path("libclc")
+OCLGRIND = clgen.data_path(fs.path("oclgrind", "bin", "oclgrind"))
 OPT = clgen.data_path(fs.path("bin", "opt"))
 SHIMFILE = clgen.data_path(fs.path("include", "opencl-shim.h"))

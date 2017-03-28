@@ -6,14 +6,15 @@
       "__global float*",
       "const int"
     ],
-    "max_length": 500,
-    "temperature": 0.75
+    "max_length": 500,  # max sample length
+    "temperature": 1,  # sampling temperature [0,1]
+    "seed": null  # if an integer, seed the RNG
   },
   "sampler": {
-    "max_kernels": 100,
-    "batch_size": 100,
-    "static_checker": true,
-    "dynamic_checker": false,
-    "gpuverify": false
+    "min_samples": 100,  # stop sampling after min_kernels samples (ignored if <= 0)
+    "min_kernels": -1,  # stop sampling after min_kernels good samples (ignored if <= 0)
+    "static_checker": true,  # use static checker {true,false}
+    "dynamic_checker": false,  # use dynamic checker {true,false}
+    "gpuverify": false  # use GPUVerify {true,false}
   }
 }

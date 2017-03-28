@@ -42,6 +42,8 @@ def main():
                         help="path to model dist or specification file")
     parser.add_argument("sampler", metavar="<sampler>",
                         help="path to sampler specification file")
+    parser.add_argument("-q", "--quiet", action="store_true",
+                        help="run quietly")
     parser.add_argument("--list-files", action="store_true",
                         help="print cached corpus, model, and sampler, files")
     parser.add_argument("--corpus-dir", action="store_true",
@@ -53,6 +55,7 @@ def main():
     args = parser.parse_args()
 
     opts = {
+        "quiet": args.quiet,
         "print_file_list": args.list_files,
         "print_corpus_dir": args.corpus_dir,
         "print_model_dir": args.model_dir,

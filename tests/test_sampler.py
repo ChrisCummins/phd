@@ -64,27 +64,27 @@ class TestSampler(TestCase):
                 "max_length": 300,
             },
             "sampler": {
-                "batch_size": 1,
-                "max_batches": 1
+                "min_samples": 1
             }
         })
 
-        s.cache(m).empty()  # clear old samples
+        s.cache(m).clear()  # clear old samples
 
         # sample a single kernel:
         s.sample(m)
-        nun_contentfiles = dbutil.num_rows_in(s.cache(m)["kernels.db"], "ContentFiles")
+        num_contentfiles = dbutil.num_rows_in(s.cache(m)["kernels.db"], "ContentFiles")
         num_preprocessed = dbutil.num_rows_in(s.cache(m)["kernels.db"], "PreProcessedFiles")
-        self.assertEqual(nun_contentfiles, 1)
-        self.assertEqual(num_preprocessed, 1)
+        self.assertTrue(num_contentfiles >= 1)
+        self.assertTrue(num_preprocessed >= 1)
 
         s.sample(m)
-        nun_contentfiles = dbutil.num_rows_in(s.cache(m)["kernels.db"], "ContentFiles")
-        num_preprocessed = dbutil.num_rows_in(s.cache(m)["kernels.db"], "PreProcessedFiles")
+        num_contentfiles2 = dbutil.num_rows_in(s.cache(m)["kernels.db"], "ContentFiles")
+        num_preprocessed2 = dbutil.num_rows_in(s.cache(m)["kernels.db"], "PreProcessedFiles")
+        diff = num_contentfiles2 - num_contentfiles
         # if sample is the same as previous, then there will still only be a
         # single sample in db:
-        self.assertTrue(nun_contentfiles >= 1)
-        self.assertTrue(num_preprocessed >= 1)
+        self.assertTrue(diff >= 1)
+        self.assertTrue(num_preprocessed2 - num_preprocessed == diff)
 
     def test_eq(self):
         s1 = sampler.from_json({

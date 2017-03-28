@@ -26,23 +26,25 @@ import numpy as np
 from checksumdir import dirhash
 from collections import Counter
 from copy import deepcopy
+from labm8 import crypto
 from labm8 import fs
+from labm8 import jsonutil
+from labm8 import lockfile
+from labm8 import tar
+from labm8 import types
 from six.moves import cPickle
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
 
 import clgen
 from clgen import atomizer
-from clgen import cache
 from clgen import clutil
 from clgen import dbutil
 from clgen import explore
 from clgen import features
 from clgen import fetch
-from clgen import lockfile
 from clgen import log
 from clgen import preprocess
-from clgen.cache import Cache
 from clgen.train import train
 
 
@@ -81,12 +83,12 @@ def unpack_directory_if_needed(path: str) -> str:
 
     if fs.isfile(path) and path.endswith(".tar.bz2"):
         log.info("unpacking '{}'".format(path))
-        clgen.unpack_archive(path)
+        tar.unpack_archive(path)
         return re.sub(r'.tar.bz2$', '', path)
 
     if fs.isfile(path + ".tar.bz2"):
         log.info("unpacking '{}'".format(path + ".tar.bz2"))
-        clgen.unpack_archive(path + ".tar.bz2")
+        tar.unpack_archive(path + ".tar.bz2")
         return path
 
     return path
@@ -218,25 +220,32 @@ class Corpus(clgen.CLgenObject):
                         key, ','.join(sorted(DEFAULT_CORPUS_OPTS.keys()))))
 
         self.opts = deepcopy(DEFAULT_CORPUS_OPTS)
-        clgen.update(self.opts, opts)
+        types.update(self.opts, opts)
         self.opts["id"] = contentid
 
+        # check that contentid exists
+        if (path is None and
+            not fs.isdir(clgen.cachepath("contentfiles", contentid))):
+            raise clgen.UserError("corpus {contentid} not found"
+                                  .format(**vars()))
+
         self.contentid = contentid
+        self.contentcache = clgen.mkcache("contentfiles", contentid)
+        self.kernels_db = self.contentcache.keypath('kernels.db')
+
         self.hash = self._hash(contentid, self.opts)
-        self.cache = Cache(fs.path("corpus", self.hash))
-        self.contentcache = Cache(fs.path("contentfiles", contentid))
-        self.kernels_db = self.contentcache['kernels.db']
+        self.cache = clgen.mkcache("corpus", self.hash)
 
         log.debug("corpus {hash}".format(hash=self.hash))
 
         # validate metadata against cache
         meta = self.to_json()
-        if self.cache["META"]:
-            cached_meta = clgen.load_json_file(self.cache["META"])
+        if self.cache.get("META"):
+            cached_meta = jsonutil.read_file(self.cache["META"])
             if meta != cached_meta:
                 raise clgen.InternalError("corpus metadata mismatch")
         else:
-            clgen.write_json_file(self.cache.keypath("META"), meta)
+            jsonutil.write_file(self.cache.keypath("META"), meta)
 
         with self.lock.acquire():
             self._create_files(path)
@@ -246,10 +255,10 @@ class Corpus(clgen.CLgenObject):
             """ tidy up in case of error """
             log.error("corpus creation failed. Deleting corpus files")
             paths = [
-                fs.path(self.contentcache.path, "kernels.db"),
-                fs.path(self.cache.path, "corpus.txt"),
-                fs.path(self.cache.path, "tensor.npy"),
-                fs.path(self.cache.path, "atomizer.pkl")
+                self.contentcache.keypath("kernels.db"),
+                self.cache.keypath("corpus.txt"),
+                self.cache.keypath("tensor.npy"),
+                self.cache.keypath("atomizer.pkl")
             ]
             for path in paths:
                 if fs.exists(path):
@@ -263,34 +272,38 @@ class Corpus(clgen.CLgenObject):
                     raise clgen.UserError(
                         "Corpus path '{}' is not a directory".format(path))
                 # create kernels database if necessary
-                if not self.contentcache["kernels.db"]:
+                try:
+                    self.contentcache["kernels.db"]
+                except KeyError:
                     self._create_kernels_db(path, self.opts["encoding"])
-                    assert(self.contentcache["kernels.db"])
 
             # create corpus text if not exists
-            if not self.cache["corpus.txt"]:
+            try:
+                self.cache["corpus.txt"]
+            except KeyError:
                 self._create_txt()
                 assert(self.cache["corpus.txt"])
 
             # create atomizer if needed
-            if self.cache["atomizer.pkl"]:
+            try:
+                self.cache["atomizer.pkl"]
                 self._load_atomizer()
-                assert(self.cache["atomizer.pkl"])
-            else:
+            except KeyError:
                 self._create_atomizer(self.opts["vocabulary"])
+                assert(self.cache["atomizer.pkl"])
         except Exception as e:
             _init_error(e)
 
     def _hash(self, contentid: str, opts: dict) -> str:
         """ compute corpus hash """
-        return clgen.checksum_list(contentid, *clgen.dict_values(opts))
+        return crypto.sha1_list(contentid, *types.dict_values(opts))
 
     def _create_kernels_db(self, path: str, encoding: str="default") -> None:
         """creates and caches kernels.db"""
         log.debug("creating database")
 
         # create a database and put it in the cache
-        tmppath = fs.path(self.contentcache.path, "kernels.db.tmp")
+        tmppath = self.contentcache.keypath("kernels.db.tmp")
         dbutil.create_db(tmppath)
         self.contentcache["kernels.db"] = tmppath
 
@@ -316,7 +329,7 @@ class Corpus(clgen.CLgenObject):
 
         # TODO: additional options in corpus JSON to accomodate for EOF,
         # different encodings etc.
-        tmppath = fs.path(self.cache.path, "corpus.txt.tmp")
+        tmppath = self.cache.keypath("corpus.txt.tmp")
         train(self.contentcache["kernels.db"], tmppath)
         self.cache["corpus.txt"] = tmppath
 
@@ -336,7 +349,7 @@ class Corpus(clgen.CLgenObject):
         self.vocab_size = self.atomizer.vocab_size
         self.vocab = self.atomizer.vocab
 
-        tmp_vocab_file = fs.path(self.cache.path, "atomizer.tmp.pkl")
+        tmp_vocab_file = self.cache.keypath("atomizer.tmp.pkl")
         with open(tmp_vocab_file, 'wb') as f:
             cPickle.dump(self.atomizer, f)
 
@@ -511,7 +524,7 @@ class Corpus(clgen.CLgenObject):
                     "Corpus path '{}' is not a directory".format(path))
             uid = dirhash(path, 'sha1')
         elif uid:
-            cache_path = fs.path(cache.ROOT, "contentfiles", uid)
+            cache_path = clgen.mkcache("contentfiles", uid).path
             if not fs.isdir(cache_path):
                 raise clgen.UserError("Corpus content {} not found".format(uid))
         else:
