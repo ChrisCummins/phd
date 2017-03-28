@@ -22,13 +22,32 @@
 
 \section{The thing we built\textsuperscript{TM}}
 
-If we don't prove correctness:
+Possible innovations:
+
+\begin{itemize}
+        \item Iterative self-training.
+        \item Data augmentation: probabilistic rewriter, dead code insertion.
+        \item Adversarial model selection, and model benchmark metrics.
+        \item Masked grammar / lexer based sampling.
+\end{itemize}
+
+\noindent If we don't prove correctness:
 
 Finding incorrect code using incorrect code.
 
 \begin{figure}
         \centering
         \includegraphics[width=.8\columnwidth]{img/rej} %
+        % \vspace{-2em}%
+        \caption{%
+                foo.%
+        }%
+        \label{fig:deeptune}
+\end{figure}
+
+\begin{figure}
+        \centering
+        \includegraphics[width=.95\columnwidth]{img/proc} %
         % \vspace{-2em}%
         \caption{%
                 foo.%
