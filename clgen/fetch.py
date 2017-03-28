@@ -428,19 +428,6 @@ def inline_fs_headers(path: str, stack: list) -> str:
     return '\n'.join(outlines)
 
 
-def flatten(l: list) -> list:
-    """
-    Flattens a list of lists.
-
-    Arguments:
-        l (list of list): Input.
-
-    Returns:
-        list: Flattened list.
-    """
-    return [item for sublist in l for item in sublist]
-
-
 def process_cl_file(db_path: str, path: str) -> None:
     """
     Process OpenCL file.
