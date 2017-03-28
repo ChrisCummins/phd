@@ -176,14 +176,6 @@ class Model(clgen.CLgenObject):
         import tensorflow.contrib.legacy_seq2seq as seq2seq
         from tensorflow.contrib import rnn
 
-        # Use self.tensorflow_state to mark whether or not model is configured
-        # for training or inference.
-        try:
-            if self.tensorflow_state == infer:
-                return tf
-        except AttributeError:
-            pass
-
         self.cell_fn = {
             "lstm": rnn.BasicLSTMCell,
             "gru": rnn.GRUCell,
@@ -246,9 +238,6 @@ class Model(clgen.CLgenObject):
             tf.gradients(self.cost, tvars), self.grad_clip)
         optimizer = tf.train.AdamOptimizer(self.learning_rate)
         self.train_op = optimizer.apply_gradients(zip(grads, tvars))
-
-        # set model status
-        self.tensorflow_state = infer
 
         return tf
 
@@ -364,105 +353,6 @@ class Model(clgen.CLgenObject):
         """
         with self.lock.acquire():
             return self._locked_train(quiet)
-
-
-    def sample(self, seed_text: str="__kernel void", num_samples: int=1,
-               temperature: float=1, max_length: int=10000,
-               seed: int=None, quiet: bool=False) -> str:
-        """
-        Sample model.
-
-        Arguments:
-            seed_text (str, optional): Sample start text
-            num_samples (int, optional): Number of samples to generated
-            temperature (float, optional): Sampling temperature
-            max_length (int, optional): Maximum sample length
-            seed (int, optional): If set, set random number seed for
-                reproducible samples. If None, set no seed.
-            quiet (bool, optional): If False, stream output to stdout
-        """
-        if self.lock.islocked:  # model is locked during training
-            raise lockfile.UnableToAcquireLockError(self.lock)
-
-        tf = self._init_tensorflow(infer=True)
-
-        np.random.seed(seed)
-        tf.set_random_seed(seed)
-
-        with tf.Session() as sess:
-            tf.global_variables_initializer().run()
-            saver = tf.train.Saver(tf.global_variables())
-            ckpt = tf.train.get_checkpoint_state(self.cache.path)
-
-            assert(ckpt)
-            assert(ckpt.model_checkpoint_path)
-
-            saver.restore(sess, ckpt.model_checkpoint_path)
-
-            def weighted_pick(weights, temperature):
-                t = np.cumsum(weights)
-                s = np.sum(weights)
-                return int(np.searchsorted(t, np.random.rand(1) * s))
-
-            def update_bracket_depth(text, started: bool=False, depth: int=0):
-                """ calculate function block depth """
-                for char in text:
-                    if char == '{':
-                        depth += 1
-                        started = True
-                    elif char == '}':
-                        depth -= 1
-
-                return started, depth
-
-            started, depth = update_bracket_depth(seed_text)
-
-            for i in range(1, num_samples + 1):
-                state = sess.run(self.cell.zero_state(1, tf.float32))
-
-                seed_tensor = self.corpus.atomizer.atomize(seed_text)
-                for index in seed_tensor[:-1]:
-                    x = np.zeros((1, 1))
-                    x[0, 0] = index
-                    feed = {self.input_data: x, self.initial_state: state}
-                    [state] = sess.run([self.final_state], feed)
-
-                output.write("\n\n/* SAMPLE {} */\n\n".format(i))
-                output.write(seed_text)
-                if not quiet:
-                    sys.stdout.write("\n\n/* SAMPLE {} */\n\n".format(i))
-                    sys.stdout.write(seed_text)
-                    sys.stdout.flush()
-
-                index = seed_tensor[-1]
-
-                for _ in range(max_length):
-                    x = np.zeros((1, 1))
-                    x[0, 0] = index
-                    feed = {self.input_data: x, self.initial_state: state}
-                    [probs, state] = sess.run(
-                        [self.probs, self.final_state], feed)
-                    p = probs[0]
-
-                    # sample distribution to pick next:
-                    index = weighted_pick(p, temperature)
-                    # alternatively, select most probable:
-                    # index = np.argmax(p)
-
-                    atom = self.corpus.atomizer.deatomize([index])
-                    output.write(atom)
-                    if not quiet:
-                        sys.stdout.write(atom)
-
-                    # update function block depth
-                    started, depth = update_bracket_depth(atom, started, depth)
-
-                    # stop sampling if depth = 0
-                    if started and depth < 1:
-                        break
-
-            if not quiet:
-                sys.stdout.write('\n\n')
 
     @property
     def lock(self):

@@ -82,42 +82,6 @@ class TestModel(TestCase):
         m.cache.clear()  # untrain
         self.assertEqual(m.checkpoint_path, None)
 
-    def test_sample_seed(self):
-        m = get_test_model()
-        m.train()
-
-        # sample 20 chars three times
-        buf1 = StringIO()
-        m.sample(seed_text='__kernel void ', output=buf1, seed=204,
-                 max_length=20)
-        out1 = buf1.getvalue()
-        print("OUT1", out1)
-        for _ in range(2):
-            buf = StringIO()
-            m.sample(seed_text='__kernel void ', output=buf, seed=204,
-                     max_length=20)
-            out = buf.getvalue()
-            print("OUT", out)
-            self.assertEqual(out1, out)
-
-    @skip("Takes too long, need to optimize atomizer")
-    def test_sample_seed_greedy(self):
-        m = get_test_model(vocab="greedy")
-        m.train()
-
-        buf1 = StringIO()
-        m.sample(seed_text='__kernel void ', output=buf1, seed=204,
-                 max_length=20)
-        out1 = buf1.getvalue()
-        print("OUT1", out1)
-        for _ in range(2):
-            buf = StringIO()
-            m.sample(seed_text='__kernel void ', output=buf, seed=204,
-                     max_length=20)
-            out = buf.getvalue()
-            print("OUT", out)
-            self.assertEqual(out1, out)
-
     def test_eq(self):
         m1 = model.from_json({
             "corpus": {
