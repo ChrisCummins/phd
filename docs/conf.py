@@ -36,6 +36,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
+    'sphinx_autodoc_typehints',
     'sphinx.ext.napoleon',  # Google docstring parser
 ]
 
