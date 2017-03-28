@@ -41,7 +41,7 @@ def get_test_model(vocab="char"):
           "num_layers": 2
         },
         "train_opts": {
-            "epochs": 2
+            "epochs": 1
         }
     })
 

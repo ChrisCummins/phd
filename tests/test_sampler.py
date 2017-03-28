@@ -42,7 +42,7 @@ def get_test_model():
           "num_layers": 2,
         },
         "train_opts": {
-          "epochs": 2
+          "epochs": 1
         }
     })
 
