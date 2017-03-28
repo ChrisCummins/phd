@@ -20,21 +20,17 @@
 import clgen
 
 from clgen import cli
-from clgen import model
-from clgen.train import train
+from clgen import dbutil
 
 
 __description__ = """
-Create training datasets.
-
-Provides a front-end for utilities for turning kernel databases into corpuses
-for training CLgen models on.
+Dump kernel dataset to file(s).
 """
 
 
 def main():
     parser = cli.ArgumentParser(description=__description__)
-    parser.add_argument('input', help='path to model descriptor')
+    parser.add_argument('input', help='path to kernels database')
     parser.add_argument('output', help='path to output file or directory')
     parser.add_argument('-d', action='store_true', default=False,
                         help='output to directory (overrides -i, --eof, -r)')
@@ -62,7 +58,7 @@ def main():
         "status": args.status
     }
 
-    cli.main(train, db_path, out_path, **opts)
+    cli.main(dbutil.dump_db, db_path, out_path, **opts)
 
 
 if __name__ == '__main__':

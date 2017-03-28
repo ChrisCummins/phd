@@ -120,6 +120,12 @@ class Model(clgen.CLgenObject):
             corpus (Corpus): Corpus instance.
             opts (dict): Training options.
         """
+        def _hash(corpus: Corpus, opts: dict) -> str:
+            """ compute model hash """
+            hashopts = deepcopy(opts)
+            del hashopts["train_opts"]["epochs"]
+            return crypto.sha1_list(corpus.hash, *types.dict_values(hashopts))
+
         assert(isinstance(corpus, Corpus))
 
         # Validate options
@@ -132,13 +138,14 @@ class Model(clgen.CLgenObject):
         # set properties
         self.opts = types.update(deepcopy(DEFAULT_MODEL_OPTS), opts)
         self.corpus = corpus
-        self.hash = self._hash(self.corpus, self.opts)
+        self.hash = _hash(self.corpus, self.opts)
         self.cache = clgen.mkcache("model", self.hash)
 
         log.debug("model", self.hash)
 
         # validate metadata against cache
-        meta = self.to_json()
+        meta = deepcopy(self.to_json())
+        del meta["train_opts"]["epochs"]
         if self.cache.get("META"):
             cached_meta = jsonutil.read_file(self.cache["META"])
             if meta != cached_meta:
@@ -146,11 +153,6 @@ class Model(clgen.CLgenObject):
         else:
             jsonutil.write_file(self.cache.keypath("META"), meta)
 
-    def _hash(self, corpus: Corpus, opts: dict) -> str:
-        """ compute model hash """
-        hashopts = deepcopy(opts)
-        hashopts["train_opts"].pop("epochs")
-        return crypto.sha1_list(corpus.hash, *types.dict_values(hashopts))
 
     def _init_tensorflow(self, infer: bool=False):
         """

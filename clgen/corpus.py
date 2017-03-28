@@ -45,7 +45,6 @@ from clgen import features
 from clgen import fetch
 from clgen import log
 from clgen import preprocess
-from clgen.train import train
 
 
 # Default options used for corpus. Any values provided by the user will override
@@ -330,7 +329,7 @@ class Corpus(clgen.CLgenObject):
         # TODO: additional options in corpus JSON to accomodate for EOF,
         # different encodings etc.
         tmppath = self.cache.keypath("corpus.txt.tmp")
-        train(self.contentcache["kernels.db"], tmppath)
+        dbutil.dump_db(self.contentcache["kernels.db"], tmppath)
         self.cache["corpus.txt"] = tmppath
 
     def _read_txt(self) -> str:
