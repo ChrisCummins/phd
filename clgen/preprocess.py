@@ -657,6 +657,8 @@ def preprocess_inplace(paths: str, max_num_workers: int=cpu_count(),
     """
     if attempt >= MAX_OS_RETRIES:
         raise clgen.InternalError("Failed to process files")
+    elif attempt > 1:
+        log.warning("preprocess attempt #.", attempt)
 
     num_workers = min(len(paths), max_num_workers)
 
