@@ -126,7 +126,7 @@ make_version_bump() {
     cd "$(get_project_root)"
 
     echo "Publishing documentation..."
-    sudo -H make install
+    make install
     make docs-publish
 
     echo "Creating version bump commit... $new_version"
@@ -177,12 +177,6 @@ main() {
     test -n "$DEBUG" && {
         set -x
     }
-
-    if test -n "$VIRTUAL_ENV"; then
-        echo "fatal: Cannot execute within virtualenv environment" >&2
-        echo "       run 'deactivate' then try again" >&2
-        exit 1
-    fi
 
     # Check for help argument and print usage
     for arg in $@; do
