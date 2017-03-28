@@ -51,7 +51,8 @@ data_symlinks = \
 	$(root)/clgen/data/bin/llvm-config \
 	$(root)/clgen/data/bin/opt \
 	$(root)/clgen/data/libclc \
-	$(root)/clgen/data/gpuverify
+	$(root)/clgen/data/gpuverify \
+	$(root)/clgen/data/oclgrind
 
 data_bin = \
 	$(root)/clgen/data/bin/clgen-features \
@@ -91,6 +92,12 @@ $(root)/clgen/data/gpuverify: $(gpuverify)
 	mkdir -p $(dir $@)
 	rm -f $@
 	ln -sf $(root)/native/gpuverify/$(gpuverify_version) $@
+	touch $@
+
+$(root)/clgen/data/oclgrind: $(oclgrind)
+	mkdir -p $(dir $@)
+	rm -f $@
+	ln -sf $(root)/native/oclgrind/$(oclgrind_version)/install $@
 	touch $@
 
 $(root)/clgen/data/bin/clgen-features: $(root)/native/clgen-features.cpp $(data_symlinks)
