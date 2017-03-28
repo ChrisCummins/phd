@@ -84,6 +84,17 @@ class linecount_aggregator:
         return self.count
 
 
+def linecount(t: str) -> int:
+    """
+    Line count.
+    Arguments:
+        t (str): String.
+    Returns:
+        int: Line count.
+    """
+    return len(t.split('\n'))
+
+
 class charcount_aggregator:
     """
     sqlite3 aggregator for computing character count of column values.
@@ -107,6 +118,7 @@ def connect(db_path: str):
      * MD5SUM() returns md5 of column values
      * LC() returns sum line count of text columns
      * CC() returns sum character count of text columns
+     * LC_col() returns line count of text value
 
     Arguments:
 
@@ -120,6 +132,7 @@ def connect(db_path: str):
     db.create_aggregate("MD5SUM", 1, md5sum_aggregator)
     db.create_aggregate("LC", 1, linecount_aggregator)
     db.create_aggregate("CC", 1, charcount_aggregator)
+    db.create_function("LC_col", 1, linecount)
     return db
 
 
@@ -547,7 +560,7 @@ def _dump_db(db, out_path: str, gh: bool=False, fileid: bool=False,
                   .format(table))
         orderby = 'Repositories.stars'
     else:
-        orderby = 'LC(contents)'
+        orderby = 'LC_col(contents)'
 
     query = ('{select} FROM {table} {qualifier} ORDER BY {orderby} {order}'
              .format(select=select, table=table, qualifier=qualifier,
