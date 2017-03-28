@@ -176,7 +176,7 @@ docs: docs-modules
 	git clone git@github.com:ChrisCummins/clgen.git docs/_build/html
 	cd docs/_build/html && git checkout gh-pages
 	cd docs/_build/html && git reset --hard origin/gh-pages
-	$(env3)$(MAKE) -C docs html
+	$(MAKE) -C docs html
 
 # publish documentation
 .PHONY: docs-publish
