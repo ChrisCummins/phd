@@ -260,13 +260,12 @@ def gh_stats_worker(db_path: str) -> list:
     return stats
 
 
-def explore(db_path: str, graph: bool=False) -> None:
+def explore(db_path: str) -> None:
     """
     Run exploratory analysis on dataset.
 
     Arguments:
         db_path (str): Path to dataset.
-        graph (bool, optional): Render graphs.
     """
     locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
 
@@ -277,15 +276,8 @@ def explore(db_path: str, graph: bool=False) -> None:
         explore_gh(db_path)
         return
 
-    if graph and not os.path.exists(IMG_DIR):
-        os.makedirs(IMG_DIR)
-
     # Worker process pool
     pool, jobs = Pool(processes=4), []
-    if graph:
-        jobs.append(pool.apply_async(graph_ocl_lc, (db_path,)))
-        # TODO: If GH dataset:
-        # jobs.append(pool.apply_async(graph_ocl_stars, (db_path,)))
     future_stats = pool.apply_async(stats_worker, (db_path,))
 
     # Wait for jobs to finish
@@ -305,26 +297,19 @@ def explore(db_path: str, graph: bool=False) -> None:
             print()
 
 
-def explore_gh(db_path: str, graph: bool=False) -> None:
+def explore_gh(db_path: str) -> None:
     """
     Run exploratory analysis on GitHub dataset.
 
     Arguments:
         db_path (str): Path to dataset.
-        graph (bool, optional): Render graphs.
     """
     locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
 
     db = dbutil.connect(db_path)
 
-    if graph and not os.path.exists(IMG_DIR):
-        os.makedirs(IMG_DIR)
-
     # Worker process pool
     pool, jobs = Pool(processes=4), []
-    if graph:
-        jobs.append(pool.apply_async(graph_ocl_lc, (db_path,)))
-        jobs.append(pool.apply_async(graph_ocl_stars, (db_path,)))
 
     future_stats = pool.apply_async(gh_stats_worker, (db_path,))
 
