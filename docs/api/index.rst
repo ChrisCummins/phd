@@ -14,13 +14,6 @@ clgen.atomizer
    :members:
    :undoc-members:
 
-clgen.cache
-------------
-
-.. automodule:: clgen.cache
-   :members:
-   :undoc-members:
-
 clgen.cldrive
 --------------
 
@@ -81,13 +74,6 @@ clgen.fetch
 ------------
 
 .. automodule:: clgen.fetch
-   :members:
-   :undoc-members:
-
-clgen.lockfile
----------------
-
-.. automodule:: clgen.lockfile
    :members:
    :undoc-members:
 
