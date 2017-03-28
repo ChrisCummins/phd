@@ -292,11 +292,16 @@ def gpuverify(src: str, args: list, id: str='anon') -> str:
         GPUVerifyException: If GPUverify finds a bug.
         InternalError: If GPUverify fails.
     """
+    # FIXME: GPUVerify support on macOS.
+    from labm8 import system
+    if not system.is_linux():
+        raise clgen.InternalError("GPUVerify only supported on Linux!")
+
     # GPUverify can't read from stdin.
     with NamedTemporaryFile('w', suffix='.cl') as tmp:
         tmp.write(src)
         tmp.flush()
-        cmd = ([native.GPUVERIFY, tmp.name] + args)
+        cmd = [native.GPUVERIFY, tmp.name] + args
 
         process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
@@ -452,34 +457,6 @@ def clangformat_ocl(src: str, id: str='anon') -> str:
         raise ClangFormatException(stderr.decode('utf-8'))
 
     return stdout.decode('utf-8')
-
-
-def print_bytecode_features(db_path: str) -> None:
-    """
-    Print Bytecode features.
-
-    Arguments:
-        db_path: Path to dataset.
-    """
-    db = dbutil.connect(db_path)
-    c = db.cursor()
-
-    c.execute('SELECT sha,contents FROM Bytecodes')
-    query = c.fetchall()
-
-    uniq_features = set()
-    for row in query:
-        sha, contents = row
-
-        features = bytecode_features(contents)
-        # Add the table key
-        features['sha'] = sha
-        for key in features.keys():
-            uniq_features.add(key)
-
-    log.info('Features:')
-    for feature in uniq_features:
-        log.info('        ', feature)
 
 
 def verify_bytecode_features(bc_features: dict, id: str='anon') -> None:

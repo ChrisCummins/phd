@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase
+from unittest import TestCase, skipIf
 import tests
 
 import os
@@ -25,6 +25,7 @@ import sys
 
 import labm8
 from labm8 import fs
+from labm8 import system
 
 import clgen
 from clgen import dbutil
@@ -104,3 +105,23 @@ __kernel void A(__global float* a) {
         for _ in range(5):
             out = preprocess.preprocess(out)
             self.assertEqual(out, code)
+
+    @skipIf(not system.is_linux(), "Pre-built binary")  # FIXME: GPUVerify support on macOS.
+    def test_gpuverify(self):
+        code = """\
+__kernel void A(__global float* a) {
+  int b = get_global_id(0);
+  a[b] *= 2.0f;
+}"""
+        self.assertEqual(
+            preprocess.gpuverify(code, ["--local_size=64", "--num_groups=128"]),
+            code)
+
+    @skipIf(not system.is_linux(), "Pre-built binary")  # FIXME: GPUVerify support on macOS.
+    def test_gpuverify_data_race(self):
+        code = """\
+__kernel void A(__global float* a) {
+  a[0] +=  1.0f;
+}"""
+        with self.assertRaises(preprocess.GPUVerifyException):
+            preprocess.gpuverify(code, ["--local_size=64", "--num_groups=128"])

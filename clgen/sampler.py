@@ -283,54 +283,57 @@ class SampleConsumer(Thread):
             bar = progressbar.ProgressBar(max_value=self.max_i)
             bar.update(self.progress())
 
-        while True:
-            # get the next sample
-            self.condition.acquire()
-            if not self.queue:
-                self.condition.wait()
-            sample = self.queue.pop(0)
-            self.condition.release()
+        try:
+            while True:
+                # get the next sample
+                self.condition.acquire()
+                if not self.queue:
+                    self.condition.wait()
+                sample = self.queue.pop(0)
+                self.condition.release()
 
-            kernels = clutil.get_cl_kernels(sample)
-            ids = [crypto.sha1_str(k) for k in kernels]
+                kernels = clutil.get_cl_kernels(sample)
+                ids = [crypto.sha1_str(k) for k in kernels]
 
-            if self.sampler_opts["static_checker"]:
-                preprocess_opts = {
-                    "use_shim": False,
-                    "use_dynamic_checker": self.sampler_opts["dynamic_checker"],
-                    "use_gpuverify": self.sampler_opts["gpuverify"]
-                }
-                pp = [preprocess.preprocess_for_db(k, **preprocess_opts)
-                      for k in kernels]
+                if self.sampler_opts["static_checker"]:
+                    preprocess_opts = {
+                        "use_shim": False,
+                        "use_dynamic_checker": self.sampler_opts["dynamic_checker"],
+                        "use_gpuverify": self.sampler_opts["gpuverify"]
+                    }
+                    pp = [preprocess.preprocess_for_db(k, **preprocess_opts)
+                          for k in kernels]
 
-            db = dbutil.connect(self.db_path)
-            c = db.cursor()
+                db = dbutil.connect(self.db_path)
+                c = db.cursor()
 
-            # insert raw samples
-            for kid, src in zip(ids, kernels):
-                dbutil.sql_insert_dict(c, "ContentFiles",
-                                       {"id": kid, "contents": src},
-                                       replace_existing=True)
+                # insert raw samples
+                for kid, src in zip(ids, kernels):
+                    dbutil.sql_insert_dict(c, "ContentFiles",
+                                           {"id": kid, "contents": src},
+                                           replace_existing=True)
 
-            # insert preprocessed samples
-            if self.sampler_opts["static_checker"]:
-                for kid, (status, src) in zip(ids, pp):
-                    dbutil.sql_insert_dict(c, "PreprocessedFiles", {
-                        "id": kid, "status": status, "contents": src
-                    }, replace_existing=True)
+                # insert preprocessed samples
+                if self.sampler_opts["static_checker"]:
+                    for kid, (status, src) in zip(ids, pp):
+                        dbutil.sql_insert_dict(c, "PreprocessedFiles", {
+                            "id": kid, "status": status, "contents": src
+                        }, replace_existing=True)
 
-            c.close()
-            db.commit()
-            db.close()
+                c.close()
+                db.commit()
+                db.close()
 
-            # update progress bar
-            if self.quiet:
-                bar.update(self.progress())
+                # update progress bar
+                if self.quiet:
+                    bar.update(self.progress())
 
-            # determine if we are done sampling
-            if self.term_condition():
-                self.sampler.stop()
-                return
+                # determine if we are done sampling
+                if self.term_condition():
+                    self.sampler.stop()
+                    return
+        finally:  # always kill the sampler thread
+            self.sampler.stop()
 
 
 class Sampler(clgen.CLgenObject):
