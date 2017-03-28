@@ -75,6 +75,32 @@ class TestCorpus(TestCase):
         self.assertEqual(c1.hash, c2.hash)
         self.assertNotEqual(c2.hash, c3.hash)
 
+    def test_get_features(self):
+        code = """\
+__kernel void A(__global float* a) {
+  int b = get_global_id(0);
+  a[b] *= 2.0f;
+}"""
+        import numpy as np
+        self.assertTrue(np.array_equal(corpus.get_features(code),
+                                       [0, 0, 1, 0, 1, 0, 1, 0]))
+
+    def test_get_features_bad_code(self):
+        code = """\
+__kernel void A(__global float* a) {
+  SYNTAX ERROR!
+}"""
+        with self.assertRaises(corpus.FeaturesError):
+            corpus.get_features(code, quiet=True)
+
+    def test_get_features_multiple_kernels(self):
+        code = """\
+__kernel void A(__global float* a) {}
+__kernel void B(__global float* a) {}"""
+
+        with self.assertRaises(corpus.FeaturesError):
+            corpus.get_features(code)
+
     @skip("FIXME: UserError not raised")
     def test_bad_option(self):
         with self.assertRaises(clgen.UserError):
@@ -117,6 +143,20 @@ class TestCorpus(TestCase):
         self.assertNotEqual(c2, c3)
         self.assertNotEqual(c1, False)
         self.assertNotEqual(c1, 'abcdef')
+
+    def test_preprocessed(self):
+        c1 = corpus.Corpus.from_json({
+            "path": tests.archive("tiny", "corpus")
+        })
+        self.assertEqual(len(list(c1.preprocessed())), 187)
+        self.assertEqual(len(list(c1.preprocessed(1))), 56)
+        self.assertEqual(len(list(c1.preprocessed(2))), 7)
+
+    def test_contentfiles(self):
+        c1 = corpus.Corpus.from_json({
+            "path": tests.archive("tiny", "corpus")
+        })
+        self.assertEqual(len(list(c1.contentfiles())), 250)
 
     def test_to_json(self):
         c1 = corpus.Corpus.from_json({

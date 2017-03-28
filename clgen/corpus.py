@@ -121,12 +121,13 @@ def get_atomizer(corpus: str, vocab: str="char") -> list:
         return atomizerclass.from_text(corpus)
 
 
-def get_features(code: str) -> np.array:
+def get_features(code: str, **kwargs) -> np.array:
     """
     Get features for code.
 
     Arguments:
         code (str): Source code.
+        **kwargs (dict, optional): Arguments to features.features()
 
     Returns:
         np.array: Feature values.
@@ -134,7 +135,7 @@ def get_features(code: str) -> np.array:
     with NamedTemporaryFile() as outfile:
         outfile.write(code.encode("utf-8"))
         outfile.seek(0)
-        f = features.to_np_arrays([outfile.name])
+        f = features.to_np_arrays([outfile.name], **kwargs)
     if len(f) != 1:
         log.error("features:", f)
         raise FeaturesError("code contains more than one kernel")
@@ -448,18 +449,6 @@ class Corpus(clgen.CLgenObject):
             self.create_batches()
             return self._num_batches
 
-    @property
-    def meta(self) -> dict:
-        """
-        Get corpus metadata.
-
-        Returns:
-            dict: Metadata.
-        """
-        _meta = deepcopy(self.opts)
-        _meta["id"] = self.hash
-        return _meta
-
     def reset_batch_pointer(self) -> None:
         """
         Resets batch pointer to first batch.
@@ -486,6 +475,70 @@ class Corpus(clgen.CLgenObject):
             pointer (int): New batch pointer.
         """
         self._pointer = pointer
+
+    def preprocessed(self, status: int=0) -> list:
+        """
+        Return an iterator over all preprocessed kernels.
+
+        Arguments:
+            status (int, optional): Pre-processed status, {0, 1, 2} for
+                {good, bad, ugly}.
+
+        Returns:
+            sequence of str: Sources.
+        """
+        db = dbutil.connect(self.contentcache["kernels.db"])
+        c = db.cursor()
+        query = c.execute(
+            "SELECT Contents FROM PreprocessedFiles WHERE status={status}"
+            .format(**vars()))
+        for row in query.fetchall():
+            yield row[0]
+
+    def contentfiles(self) -> list:
+        """
+        Return an iterator over all un-processed samples.
+
+        Returns:
+            sequence of str: Samples.
+        """
+        db = dbutil.connect(self.contentcache["kernels.db"])
+        c = db.cursor()
+        query = c.execute("SELECT Contents FROM ContentFiles")
+        for row in query.fetchall():
+            yield row[0]
+
+    def most_common_prototypes(self, n: int) -> tuple:
+        """
+        Return the n most frequently occuring prototypes.
+
+        Arguments:
+            c (Corpus): Corpus.
+            n (int): Number of prototypes to return:
+
+        Returns:
+            tuple of list of tuples, int:
+        """
+        from clgen import clutil
+
+        prototypes = []
+        for kernel in self.preprocessed():
+            try:
+                prototype = clutil.KernelPrototype.from_source(kernel)
+                if prototype.is_synthesizable:
+                    prototypes.append(", ".join(str(x) for x in prototype.args))
+            except clutil.PrototypeException:
+                pass
+
+        # Convert frequency into ratios
+        counter = Counter(prototypes)
+        results = []
+        for row in counter.most_common(n):
+            prototype, freq = row
+            ratio = freq / len(prototypes)
+            results.append((ratio, prototype))
+
+        return results, len(prototypes)
 
     def __repr__(self) -> str:
         hash = self.hash
@@ -534,54 +587,3 @@ class Corpus(clgen.CLgenObject):
             raise clgen.UserError("No corpus path or ID provided")
 
         return Corpus(uid, path=path, **corpus_json)
-
-
-def preprocessed_kernels(corpus: Corpus) -> list:
-    """
-    Return an iterator over all preprocessed kernels.
-
-    Arguments:
-        corpus (Corpus): Corpus.
-
-    Returns:
-        sequence of str: Kernel sources.
-    """
-    assert(isinstance(corpus, Corpus))
-    db = dbutil.connect(corpus.contentcache["kernels.db"])
-    c = db.cursor()
-    query = c.execute("SELECT Contents FROM PreprocessedFiles WHERE status=0")
-    for row in query.fetchall():
-        yield row[0]
-
-
-def most_common_prototypes(c: Corpus, n: int) -> tuple:
-    """
-    Return the n most frequently occuring prototypes.
-
-    Arguments:
-        c (Corpus): Corpus.
-        n (int): Number of prototypes to return:
-
-    Returns:
-        tuple of list of tuples, int:
-    """
-    from clgen import clutil
-
-    prototypes = []
-    for kernel in preprocessed_kernels(c):
-        try:
-            prototype = clutil.KernelPrototype.from_source(kernel)
-            if prototype.is_synthesizable:
-                prototypes.append(", ".join(str(x) for x in prototype.args))
-        except clutil.PrototypeException:
-            pass
-
-    # Convert frequency into ratios
-    counter = Counter(prototypes)
-    results = []
-    for row in counter.most_common(n):
-        prototype, freq = row
-        ratio = freq / len(prototypes)
-        results.append((ratio, prototype))
-
-    return results, len(prototypes)
