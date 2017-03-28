@@ -411,7 +411,7 @@ def inline_fs_headers(path: str, stack: list) -> str:
             include_path = os.path.join(os.path.dirname(path), include_name)
 
             if os.path.exists(include_path) and include_path not in stack:
-                include_src = inline_headers(include_path, stack)
+                include_src = inline_fs_headers(include_path, stack)
                 outlines.append('// [FETCH] include: ' + include_path)
                 outlines.append(include_src)
                 outlines.append('// [FETCH] eof(' + include_path + ')')
