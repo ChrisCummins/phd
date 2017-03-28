@@ -24,9 +24,9 @@ from clgen import fetch
 
 class TestFetch(TestCase):
     def test_inline_fs_headers(self):
-        src = fetch.inline_fs_headers(tests.data_path("cl", "sample-3.cl"))
-        self.assertTrue(src.contains("MY_DATA_TYPE"))
-        self.assertTrue(src.contains("__kernel void"))
+        src = fetch.inline_fs_headers(tests.data_path("cl", "sample-3.cl"), [])
+        self.assertTrue("MY_DATA_TYPE" in src)
+        self.assertTrue("__kernel void" in src)
 
 
 if __name__ == "__main__":

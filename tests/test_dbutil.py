@@ -16,11 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase
+from unittest import TestCase, main, skip
 import tests
-
-import os
-import sqlite3
 
 from labm8 import fs
 
@@ -29,117 +26,63 @@ from clgen import dbutil
 
 
 class TestDbutil(TestCase):
-    def test_table_exists(self):
-        self.assertTrue(dbutil.table_exists(
-            tests.db('empty'), 'ContentFiles'))
-        self.assertFalse(dbutil.table_exists(
-            tests.db('empty'), 'NotATable'))
+    def test_create_db(self):
+        db_path = tests.data_path("db", "tmp.db", exists=False)
+        fs.rm(db_path)
 
-    def test_is_github(self):
-        self.assertFalse(dbutil.is_github(tests.db('empty')))
-        self.assertTrue(dbutil.is_github(tests.db('empty-gh')))
+        dbutil.create_db(db_path, github=False)
+        self.assertTrue(fs.exists(db_path))
 
-    def test_num_rows_in(self):
-        self.assertEqual(10, dbutil.num_rows_in(tests.db_path('10-kernels'),
-                                                "ContentFiles"))
+        with self.assertRaises(clgen.UserError):
+            dbutil.create_db(db_path, github=False)
 
-        self.assertEqual(0, dbutil.num_rows_in(tests.db_path('10-kernels'),
-                                               "PreprocessedFiles"))
+    def test_create_db_gh(self):
+        db_path = tests.data_path("db", "tmp.db", exists=False)
+        fs.rm(db_path)
 
-        self.assertEqual(8, dbutil.num_rows_in(tests.db_path('10-kernels-preprocessed'),
-                                               "PreprocessedFiles",
-                                               "WHERE status=0"))
+        dbutil.create_db(db_path, github=True)
+        self.assertTrue(fs.exists(db_path))
 
-        self.assertEqual(2, dbutil.num_rows_in(tests.db_path('10-kernels-preprocessed'),
-                                               "PreprocessedFiles",
-                                               "WHERE status!=0"))
+        with self.assertRaises(clgen.UserError):
+            dbutil.create_db(db_path, github=True)
 
-    def test_lc(self):
-        self.assertEqual(1368, dbutil.lc(tests.db_path('10-kernels'),
-                                         "ContentFiles"))
+    def test_insert(self):
+        db_path = tests.data_path("db", "tmp.db", exists=False)
+        fs.rm(db_path)
 
-        self.assertEqual(
-            0, dbutil.lc(tests.db_path('10-kernels'), "PreprocessedFiles"))
-
-        self.assertEqual(
-            865,
-            dbutil.lc(tests.db_path('10-kernels-preprocessed'),
-                      "PreprocessedFiles", condition="WHERE status=0"))
-
-        self.assertEqual(
-            2,
-            dbutil.lc(tests.db_path('10-kernels-preprocessed'),
-                      "PreprocessedFiles", condition="WHERE status!=0"))
-
-    def test_remove_preprocessed(self):
-        tmpdb = 'test_remove_preprocessed.db'
-        fs.cp(tests.db_path('10-kernels-preprocessed'), tmpdb)
-
-        self.assertEqual(8, dbutil.num_good_kernels(tmpdb))
-        db = dbutil.connect(tmpdb)
-        self.assertFalse(dbutil.is_modified(db))
-        db.close()
-
-        dbutil.remove_preprocessed(tmpdb)
-
-        self.assertEqual(0, dbutil.num_good_kernels(tmpdb))
-
-        db = dbutil.connect(tmpdb)
-        self.assertTrue(dbutil.is_modified(db))
-        db.close()
-
-        fs.rm(tmpdb)
-
-    def test_remove_bad_preprocessed(self):
-        fs.rm("tmp.db")
-        dbutil.create_db("tmp.db")
-        db = sqlite3.connect("tmp.db")
+        dbutil.create_db(db_path)
+        db = dbutil.connect(db_path)
         c = db.cursor()
 
-        # Create some data to test with:
-        c.execute("DELETE FROM PreprocessedFiles")
-        c.execute("INSERT INTO PreprocessedFiles VALUES(?,?,?)",
-                  ("id1", 0, "good output"))
-        c.execute("INSERT INTO PreprocessedFiles VALUES(?,?,?)",
-                  ("id2", 1, "bad output"))
-        c.execute("INSERT INTO PreprocessedFiles VALUES(?,?,?)",
-                  ("id3", 2, "ugly output"))
+        self.assertEqual(dbutil.num_rows_in(db_path, "ContentFiles"), 0)
+
+        dbutil.sql_insert_dict(c, "ContentFiles",
+                               {"id": "a", "contents": "foo"})
+        dbutil.sql_insert_dict(c, "PreprocessedFiles",
+                               {"id": "a", "status": 0, "contents": "bar"})
+        dbutil.sql_insert_dict(c, "PreprocessedFiles",
+                               {"id": "b", "status": 1, "contents": "car"})
+
         db.commit()
-        c.close()
-
-        # Check that data was written properly:
         c = db.cursor()
-        c.execute("SELECT Count(*) FROM PreprocessedFiles")
-        count = c.fetchone()[0]
-        self.assertEqual(3, count)
-        db.close()
 
-        dbutil.remove_bad_preprocessed("tmp.db")
+        self.assertEqual(dbutil.num_rows_in(db_path, "ContentFiles"), 1)
+        self.assertEqual(dbutil.num_rows_in(db_path, "PreprocessedFiles"), 2)
 
-        # Check that clean worked:
-        db = sqlite3.connect("tmp.db")
-        c = db.cursor()
-        c.execute("SELECT Count(*) FROM PreprocessedFiles")
-        count = c.fetchone()[0]
-        self.assertEqual(3, count)
-        c.execute("SELECT contents FROM PreprocessedFiles WHERE status=1 "
-                  "OR status=2")
-        rows = c.fetchall()
-        print(rows)
-        self.assertTrue(all(not r == "[DELETED]" for r in rows))
+        self.assertEqual(dbutil.cc(db_path, "ContentFiles", "contents"), 3)
+        self.assertEqual(dbutil.cc(db_path, "ContentFiles", "id"), 1)
+        self.assertEqual(dbutil.lc(db_path, "ContentFiles", "contents"), 1)
 
-        # Clean up:
-        c.execute("DELETE FROM PreprocessedFiles")
-        db.commit()
-        c.close()
+        dbutil.remove_bad_preprocessed(db_path)
+        self.assertEqual(dbutil.num_rows_in(db_path, "ContentFiles"), 1)
+        # remove_bad_preprocessed doesn't actually delete any rows, just
+        # replaces contents
+        self.assertEqual(dbutil.num_rows_in(db_path, "PreprocessedFiles"), 2)
 
-        # Check that clean-up worked:
-        c = db.cursor()
-        c.execute("SELECT Count(*) FROM PreprocessedFiles")
-        count = c.fetchone()[0]
-        self.assertEqual(0, count)
-        fs.rm("tmp.db")
+        dbutil.remove_preprocessed(db_path)
+        self.assertEqual(dbutil.num_rows_in(db_path, "ContentFiles"), 1)
+        self.assertEqual(dbutil.num_rows_in(db_path, "PreprocessedFiles"), 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
