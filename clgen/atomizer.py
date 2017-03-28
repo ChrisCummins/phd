@@ -138,7 +138,7 @@ OPENCL_ATOMS = set([
     'while',
     'wide',
     'write_only',
-] + list(string.printable))
+] + [chr(i) for i in range(128)]
 
 
 class VocabError(clgen.CLgenError):
