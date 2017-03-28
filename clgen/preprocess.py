@@ -599,14 +599,14 @@ def preprocess(src: str, id: str='anon', use_shim: bool=True,
 def preprocess_for_db(src, **preprocess_opts):
     try:
         # Try and preprocess it:
-        contents = preprocess(src, **preprocess_opts)
         status = 0
+        contents = preprocess(src, **preprocess_opts)
     except BadCodeException as e:
-        contents = str(e)
         status = 1
-    except UglyCodeException as e:
         contents = str(e)
+    except UglyCodeException as e:
         status = 2
+        contents = str(e)
 
     return status, contents
 
@@ -692,7 +692,7 @@ class PreprocessWorker(Thread):
             src = job["src"]
             preprocess_opts = job["preprocess_opts"]
 
-            contents, status = preprocess_for_db(src, id=id, **preprocess_opts)
+            status, contents = preprocess_for_db(src, id=id, **preprocess_opts)
 
             result = {
                 "id": kid,
@@ -763,7 +763,7 @@ def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
 
     todo_ratio = ntodo / ncontentfiles
 
-    log.info("{ntodo} ({todo_ratio:.1%}) files need preprocessing"
+    log.info("{ntodo} ({todo_ratio:.1%}) samples need preprocessing"
              .format(**vars()))
 
     log.verbose("creating jobs")
