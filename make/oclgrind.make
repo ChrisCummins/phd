@@ -33,8 +33,8 @@ oclgrind_cmake = $(cmake) .. -DCMAKE_BUILD_TYPE=RelWithDebInfo \
 	-DCMAKE_INSTALL_PREFIX=../install \
 	-DLLVM_DIR=$(llvm_build)/lib/cmake/llvm \
 	-DCLANG_ROOT=$(llvm_src)/tools/clang \
-	-DCMAKE_CXX_FLAGS="-I$(llvm_build)/tools/clang/include" \
-	-DCMAKE_MAKE_PROGRAM=$(ninja) -G Ninja
+	-DCMAKE_CXX_FLAGS="-I$(llvm_build)/tools/clang/include"
+	#-DCMAKE_MAKE_PROGRAM=$(ninja) -G Ninja
 
 $(oclgrind):
 	mkdir -p $(root)/native/oclgrind
@@ -43,9 +43,9 @@ $(oclgrind):
 	rm -rf $(oclgrind_dir)/.git
 	mkdir $(oclgrind_dir)/build $(oclgrind_dir)/install
 	cd $(oclgrind_dir)/build && $(oclgrind_cmake)
-	cd $(oclgrind_dir)/build && $(ninja)
-	cd $(oclgrind_dir)/build && $(ninja) test
-	cd $(oclgrind_dir)/build && $(ninja) install
+	cd $(oclgrind_dir)/build && make#$(ninja)
+	cd $(oclgrind_dir)/build && make#$(ninja) test
+	cd $(oclgrind_dir)/build && make#$(ninja) install
 
 .PHONY: distclean-oclgrind
 distclean-oclgrind:
