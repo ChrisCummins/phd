@@ -27,7 +27,8 @@ Possible improvements over CGO'17:
 \begin{itemize}
         \item Iterative self-training.
         \item Data augmentation: probabilistic rewriter, dead code insertion.
-        \item Adversarial model selection, and model benchmark metrics.
+        \item Adversarial model selection.
+        \item Model benchmark metrics and GA tuning.
         \item Masked grammar / lexer based sampling.
 \end{itemize}
 
@@ -40,7 +41,7 @@ Finding incorrect code using incorrect code.
         \includegraphics[width=.8\columnwidth]{img/rej} %
         % \vspace{-2em}%
         \caption{%
-                foo.%
+                Rejection pipeline.%
         }%
         \label{fig:deeptune}
 \end{figure}
@@ -50,7 +51,7 @@ Finding incorrect code using incorrect code.
         \includegraphics[width=.95\columnwidth]{img/proc} %
         % \vspace{-2em}%
         \caption{%
-                foo.%
+                Program generation process.%
         }%
         \label{fig:deeptune}
 \end{figure}
