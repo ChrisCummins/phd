@@ -545,7 +545,8 @@ class Corpus(clgen.CLgenObject):
         nf = dbutil.num_good_kernels(self.contentcache['kernels.db'])
         v = self.opts["vocabulary"]
         nt = self.atomizer.vocab_size
-        return ("corpus[{hash}]: {nf} files, {v} vocabulary with {nt} tokens"
+        size = self.size
+        return ("corpus[{hash}]: {nf} files, {size} tokens using {v} vocabulary of size {nt}"
                 .format(**vars()))
 
     def to_json(self) -> dict:
