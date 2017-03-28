@@ -51,8 +51,13 @@ data_symlinks = \
 	$(root)/clgen/data/bin/llvm-config \
 	$(root)/clgen/data/bin/opt \
 	$(root)/clgen/data/libclc \
-	$(root)/clgen/data/gpuverify \
-	$(root)/clgen/data/oclgrind
+	$(root)/clgen/data/gpuverify
+
+# FIXME: Oclgrind fails to build on Travis CI.
+# See: https://travis-ci.org/ChrisCummins/clgen/builds/215785205
+ifeq ($(TRAVIS),)
+data_symlinks += $(root)/clgen/data/oclgrind
+endif
 
 data_bin = \
 	$(root)/clgen/data/bin/clgen-features \
