@@ -610,3 +610,47 @@ def dump_db(db_path: str, out_path: str, **kwargs) -> None:
     kwargs['gh'] = is_github(db)
 
     _dump_db(db, out_path, **kwargs)
+
+
+def get_all_sampler_datasets(all_clgen_versions: bool=True) -> list:
+    if all_clgen_versions:
+        versiondirs = fs.ls("~/.cache/clgen", abspaths=True)
+    else:
+        versiondirs = [fs.path("~/.cache/clgen", clgen.version())]
+
+    datasets = []
+    for versiondir in versiondirs:
+        for samplerdir in fs.ls(versiondir, "sampler", abspaths=True):
+            inpath = fs.path(samplerdir, "kernels.db")
+            if fs.isfile(inpath):
+                datasets.append(inpath)
+    return datasets
+
+
+def merge(outpath, inpaths=None):
+    """
+    Merge kernel datasets.
+    """
+    from clgen import explore
+
+    if not fs.isfile(outpath):
+        create_db(outpath)
+        log.info("created", outpath)
+
+    db = connect(outpath)
+
+    if not inpaths:
+        inpaths = get_all_sampler_datasets()
+
+    for inpath in inpaths:
+        log.info("merging from", inpath)
+        c = db.cursor()
+        c.execute("ATTACH '{}' AS rhs".format(inpath))
+        c.execute("INSERT OR IGNORE INTO ContentFiles "
+                  "SELECT * FROM rhs.ContentFiles")
+        c.execute("INSERT OR IGNORE INTO PreprocessedFiles "
+                  "SELECT * FROM rhs.PreprocessedFiles")
+        c.execute("DETACH rhs")
+        db.commit()
+
+    explore.explore(outpath)
