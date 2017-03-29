@@ -281,10 +281,10 @@ class Corpus(clgen.CLgenObject):
                 except KeyError:
                     self._create_kernels_db(path)
 
-                # preprocess and encode kernel db
-                encoding = self.opts["encoding"]
-                if preprocess.preprocess_db(self.contentcache["kernels.db"]):
-                    encode(self.contentcache["kernels.db"], encoding)
+            # preprocess and encode kernel db
+            encoding = self.opts["encoding"]
+            if preprocess.preprocess_db(self.contentcache["kernels.db"]):
+                encode(self.contentcache["kernels.db"], encoding)
 
             # create corpus text if not exists
             try:
