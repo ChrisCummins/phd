@@ -566,6 +566,7 @@ class Corpus(clgen.CLgenObject):
 
     def to_json(self) -> dict:
         d = deepcopy(self.opts)
+        d["contentfiles"] = self.contentid
         d["stats"] = self.stats
         return d
 
