@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
+from labm8 import jsonutil
+
 import clgen
 from clgen import cli
 from clgen.model import Model
@@ -26,7 +28,7 @@ Train a CLgen model.
 """
 
 def do_train(model_path: str):
-    model_json = clgen.load_json_file(model_path)
+    model_json = jsonutil.read_file(model_path)
     model = Model.from_json(model_json)
 
     model.train()
