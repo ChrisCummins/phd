@@ -279,7 +279,12 @@ class Corpus(clgen.CLgenObject):
                 try:
                     self.contentcache["kernels.db"]
                 except KeyError:
-                    self._create_kernels_db(path, self.opts["encoding"])
+                    self._create_kernels_db(path)
+
+                # preprocess and encode kernel db
+                encoding = self.opts["encoding"]
+                if preprocess.preprocess_db(self.contentcache["kernels.db"]):
+                    encode(self.contentcache["kernels.db"], encoding)
 
             # create corpus text if not exists
             try:
@@ -302,7 +307,7 @@ class Corpus(clgen.CLgenObject):
         """ compute corpus hash """
         return crypto.sha1_list(contentid, *types.dict_values(opts))
 
-    def _create_kernels_db(self, path: str, encoding: str="default") -> None:
+    def _create_kernels_db(self, path: str) -> None:
         """creates and caches kernels.db"""
         log.debug("creating database")
 
@@ -317,15 +322,6 @@ class Corpus(clgen.CLgenObject):
 
         # import files into database
         fetch.fetch_fs(self.contentcache["kernels.db"], filelist)
-
-        # preprocess files
-        preprocess.preprocess_db(self.contentcache["kernels.db"])
-
-        # encode kernel db
-        encode(self.contentcache["kernels.db"], encoding)
-
-        # print database stats
-        explore.explore(self.contentcache["kernels.db"])
 
     def _create_txt(self) -> None:
         """creates and caches corpus.txt"""
