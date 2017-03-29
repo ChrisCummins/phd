@@ -104,10 +104,11 @@ std::set<std::string> reserved_names {
 // Takes an existing rewrite table and inserts a.
 //
 std::string get_next_name(std::map<std::string, std::string>& rewrites,
-                          const std::string& name, const char& base_char) {
+                          const std::string& name, const char& base_char,
+                          const std::string& prefix = "") {
   auto i = rewrites.size();
 
-  std::string s = "";
+  std::string s = prefix;
 
   // build the new name character by character.
   while (i > 25) {
@@ -149,7 +150,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
   std::string get_fn_rewrite(const std::string& name) {
     if (_fns.find(name) == _fns.end()) {
       // New function:
-      auto replacement = get_next_name(_fns, name, 'a');
+      auto replacement = get_next_name(_fns, name, 'a', "fn_");
       return replacement;
     } else {
       // Previously declared function:
