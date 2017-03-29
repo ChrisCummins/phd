@@ -35,6 +35,7 @@ from labm8 import types
 from six.moves import cPickle
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
+from time import time
 
 import clgen
 from clgen import atomizer
@@ -243,16 +244,27 @@ class Corpus(clgen.CLgenObject):
         log.debug("corpus {hash}".format(hash=self.hash))
 
         # validate metadata against cache
-        meta = self.to_json()
+        self.stats = {
+            "preprocess_time": 0
+        }
+        meta = deepcopy(self.to_json())
         if self.cache.get("META"):
             cached_meta = jsonutil.read_file(self.cache["META"])
+            self.stats = cached_meta["stats"]  # restore stats
+
+            del cached_meta["stats"]
+            del meta["stats"]
+
             if meta != cached_meta:
                 raise clgen.InternalError("corpus metadata mismatch")
         else:
-            jsonutil.write_file(self.cache.keypath("META"), meta)
+            self._flush_meta()
 
         with self.lock.acquire():
             self._create_files(path)
+
+    def _flush_meta(self):
+        jsonutil.write_file(self.cache.keypath("META"), self.to_json())
 
     def _create_files(self, path):
         def _init_error(err: Exception) -> None:
@@ -282,9 +294,17 @@ class Corpus(clgen.CLgenObject):
                     self._create_kernels_db(path)
 
             # preprocess and encode kernel db
+            modified = False
+            preprocess_time = time()
             encoding = self.opts["encoding"]
             if preprocess.preprocess_db(self.contentcache["kernels.db"]):
+                modified = True
                 encode(self.contentcache["kernels.db"], encoding)
+
+            if modified:
+                preprocess_time = time() - preprocess_time
+                self.stats["preprocess_time"] += preprocess_time
+                self._flush_meta()
 
             # create corpus text if not exists
             try:
@@ -383,7 +403,6 @@ class Corpus(clgen.CLgenObject):
         """
         Create batches for training.
         """
-        log.debug("creating batches")
         self.reset_batch_pointer()
 
         # generate a kernel corpus
@@ -546,7 +565,9 @@ class Corpus(clgen.CLgenObject):
                 .format(**vars()))
 
     def to_json(self) -> dict:
-        return self.opts
+        d = deepcopy(self.opts)
+        d["stats"] = self.stats
+        return d
 
     def __eq__(self, rhs) -> bool:
         if not isinstance(rhs, Corpus):
@@ -582,5 +603,8 @@ class Corpus(clgen.CLgenObject):
                 raise clgen.UserError("Corpus content {} not found".format(uid))
         else:
             raise clgen.UserError("No corpus path or ID provided")
+
+        if "stats" in corpus_json:  # ignore stats
+            del corpus_json["stats"]
 
         return Corpus(uid, path=path, **corpus_json)
