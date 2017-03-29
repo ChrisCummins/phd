@@ -242,8 +242,13 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
 
     if (auto d = clang::dyn_cast<clang::NamedDecl>(decl)) {
       const auto name = d->getNameAsString();
-      const auto replacement = get_var_rewrite(name);
 
+      // variables can be declared without a name (e.g. in function
+      // declarations). Do not rewrite these names.
+      if (name.empty())
+        return true;
+
+      const auto replacement = get_var_rewrite(name);
       rewriter.ReplaceText(decl->getLocation(), replacement);
       ++_var_decl_rewrites_counter;
     }
