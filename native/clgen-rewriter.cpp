@@ -149,7 +149,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
   std::string get_fn_rewrite(const std::string& name) {
     if (_fns.find(name) == _fns.end()) {
       // New function:
-      auto replacement = get_next_name(_fns, name, 'A');
+      auto replacement = get_next_name(_fns, name, 'a');
       return replacement;
     } else {
       // Previously declared function:
@@ -163,7 +163,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
                               const std::string& name) {
     if (rewrites.find(name) == rewrites.end()) {
       // New variable:
-      auto replacement = get_next_name(_vars, name, 'a');
+      auto replacement = get_next_name(_vars, name, 'A');
       return replacement;
     } else {
       // Previously declared variable:
