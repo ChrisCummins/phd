@@ -333,13 +333,15 @@ class SampleConsumer(Thread):
                 db.commit()
                 db.close()
 
+                # update progress bar
+                progress = self.progress()
+                if self.quiet:
+                    bar.update(progress)
+
                 sample_time = time() - sample_time
+                self.sampler.stats["progress"] = progress
                 self.sampler.stats["time"] += sample_time
                 self.sampler._flush_meta(self.cache)
-
-                # update progress bar
-                if self.quiet:
-                    bar.update(self.progress())
 
                 # determine if we are done sampling
                 if self.term_condition():
