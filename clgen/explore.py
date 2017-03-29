@@ -20,12 +20,6 @@
 Exploratory analysis of OpenCL dataset
 """
 import locale
-import os
-import sqlite3
-
-from multiprocessing import Pool
-
-from labm8 import fs
 
 from clgen import dbutil
 from clgen import log
