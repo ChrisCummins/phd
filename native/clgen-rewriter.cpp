@@ -161,10 +161,11 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
   // accepts a variable name, and returns the rewritten name
   //
   std::string get_var_rewrite(std::map<std::string, std::string>& rewrites,
-                              const std::string& name) {
+                              const std::string& name,
+                              const std::string& prefix="") {
     if (rewrites.find(name) == rewrites.end()) {
       // New variable:
-      auto replacement = get_next_name(_vars, name, 'A');
+      auto replacement = get_next_name(rewrites, name, 'A');
       return replacement;
     } else {
       // Previously declared variable:
@@ -225,12 +226,24 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
     return true;
   }
 
-  bool VisitStmt(clang::Stmt *st) {
-    if (!isMainFile(st->getLocStart()))
-      return true;
+  bool VisitDeclRefExpr(clang::DeclRefExpr* ref) {
+    if (isMainFile(ref->getLocStart())) {
+      const auto name = ref->getNameInfo().getName().getAsString();
 
-    // rewrite function calls
-    if (auto call = clang::dyn_cast<clang::CallExpr>(st)) {
+      const auto it = _global_vars.find(name);
+      if (it != _global_vars.end()) {
+        const auto replacement = (*it).second;
+        rewriter.ReplaceText(ref->getLocStart(), replacement);
+        ++_var_use_rewrites_counter;
+      }  // else variable name is externally defined
+    }  // else not in main file
+
+    return true;
+  }
+
+  bool VisitCallExpr(clang::CallExpr *call) {
+    if (isMainFile(call->getLocStart())) {
+      // rewrite function calls
       const auto callee = call->getDirectCallee();
       if (callee) {
         const auto name = callee->getNameInfo().getName().getAsString();
@@ -241,19 +254,8 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
           rewriter.ReplaceText(call->getLocStart(), replacement);
           ++_fn_call_rewrites_counter;
         }  // else function name is externally defined
-      }  // else not a direct callee (what does that mean?)
-    }
-
-    // rewrite variable names
-    if (auto *ref = clang::dyn_cast<clang::DeclRefExpr>(st)) {
-      const auto name = ref->getNameInfo().getName().getAsString();
-      const auto it = _vars.find(name);
-      if (it != _vars.end()) {
-        const auto replacement = (*it).second;
-        rewriter.ReplaceText(ref->getLocStart(), replacement);
-        ++_var_use_rewrites_counter;
-      }  // else variable name is externally defined
-    }
+      }  // else not a direct callee (do we need to handle that?)
+    }  // else not in main file
 
     return true;
   }
