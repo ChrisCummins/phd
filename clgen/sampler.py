@@ -33,6 +33,7 @@ from labm8 import lockfile
 from labm8 import system
 from labm8 import types
 from threading import Condition, Event, Thread, Lock
+from time import time
 
 import clgen
 from clgen import clutil
@@ -213,18 +214,25 @@ class SampleProducer(Thread):
 
 class SampleConsumer(Thread):
     """ handle generated samples """
-    def __init__(self, db_path: str, sampler: SampleProducer,
-                 condition: Condition, queue: list, quiet: bool=False,
+    def __init__(self, db_path: str, producer: SampleProducer, sampler,
+                 cache, condition: Condition, queue: list, quiet: bool=False,
                  **sampler_opts):
         """
         Arguments:
             db_path (str): Path to samples database.
-            sampler (SampleProducer):
+            producer (SampleProducer): Sample producer thread.
+            sampler (Sampler): Host sampler.
+            condition (Condition): For locking.
+            queue (list): output result queue.
+            quiet (bool, optional): If true, quiet output.
+            **sampler_opts: Sampler options.
         """
         super(SampleConsumer, self).__init__()
 
         self.db_path = db_path
+        self.producer = producer
         self.sampler = sampler
+        self.cache = cache
         self.condition = condition
         self.queue = queue
         self.sampler_opts = sampler_opts
@@ -285,6 +293,7 @@ class SampleConsumer(Thread):
 
         try:
             while True:
+                sample_time = time()
                 # get the next sample
                 self.condition.acquire()
                 if not self.queue:
@@ -324,16 +333,21 @@ class SampleConsumer(Thread):
                 db.commit()
                 db.close()
 
+                sample_time = time() - sample_time
+                self.sampler.stats["time"] += sample_time
+                self.sampler._flush_meta(self.cache)
+
                 # update progress bar
                 if self.quiet:
                     bar.update(self.progress())
 
                 # determine if we are done sampling
                 if self.term_condition():
-                    self.sampler.stop()
+                    self.producer.stop()
                     return
         finally:  # always kill the sampler thread
-            self.sampler.stop()
+            print()
+            self.producer.stop()
 
 
 class Sampler(clgen.CLgenObject):
@@ -416,18 +430,32 @@ class Sampler(clgen.CLgenObject):
         cache = clgen.mkcache("sampler", sampler_model_hash)
 
         # validate metadata against cache
+        self.stats = {
+            "time": 0,
+            "progress": 0
+        }
         meta = deepcopy(self.to_json())
-        del meta["sampler"]["min_samples"]
-        del meta["sampler"]["min_kernels"]
-
         if cache.get("META"):
             cached_meta = jsonutil.read_file(cache["META"])
+            self.stats = cached_meta["stats"]
+
+            del cached_meta["sampler"]["min_samples"]
+            del meta["sampler"]["min_samples"]
+
+            del cached_meta["sampler"]["min_kernels"]
+            del meta["sampler"]["min_kernels"]
+
+            del cached_meta["stats"]
+
             if meta != cached_meta:
                 raise clgen.InternalError("sampler metadata mismatch")
         else:
-            jsonutil.write_file(cache.keypath("META"), meta)
+            self._flush_meta(cache)
 
         return cache
+
+    def _flush_meta(self, cache):
+        jsonutil.write_file(cache.keypath("META"), self.to_json(cache))
 
     def sample(self, model: Model, quiet: bool=False) -> None:
         """
@@ -453,13 +481,14 @@ class Sampler(clgen.CLgenObject):
                                  quiet=quiet, **self.kernel_opts)
         sampler.start()
 
-        consumer = SampleConsumer(cache["kernels.db"], sampler, condition,
-                                  queue, quiet=quiet, **self.sampler_opts)
+        consumer = SampleConsumer(cache["kernels.db"], sampler, self, cache,
+                                  condition, queue, quiet=quiet,
+                                  **self.sampler_opts)
         consumer.start()
 
         sampler.join()
         consumer.join()
-        print()
+
         explore(cache["kernels.db"])
 
     @property
@@ -478,14 +507,19 @@ class Sampler(clgen.CLgenObject):
     def num_good_kernels(self):
         return dbutil.num_good_kernels(self.db_path)
 
-    def to_json(self) -> dict:
+    def to_json(self, cache=None) -> dict:
         """
         JSON representation.
         """
-        return {
+        d = {
             "kernels": self.kernel_opts,
             "sampler": self.sampler_opts
         }
+
+        if cache:
+            d["stats"] = self.stats
+
+        return d
 
     def __repr__(self) -> str:
         """
