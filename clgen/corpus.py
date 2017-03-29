@@ -254,6 +254,11 @@ class Corpus(clgen.CLgenObject):
         with self.lock.acquire():
             self._create_files(path)
 
+        # preprocess and encode kernel db
+        encoding = self.opts["encoding"]
+        if preprocess.preprocess_db(self.contentcache["kernels.db"]):
+            encode(self.contentcache["kernels.db"], encoding)
+
     def _create_files(self, path):
         def _init_error(err: Exception) -> None:
             """ tidy up in case of error """
@@ -280,11 +285,6 @@ class Corpus(clgen.CLgenObject):
                     self.contentcache["kernels.db"]
                 except KeyError:
                     self._create_kernels_db(path)
-
-            # preprocess and encode kernel db
-            encoding = self.opts["encoding"]
-            if preprocess.preprocess_db(self.contentcache["kernels.db"]):
-                encode(self.contentcache["kernels.db"], encoding)
 
             # create corpus text if not exists
             try:
