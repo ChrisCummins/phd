@@ -618,16 +618,17 @@ def dump_db(db_path: str, out_path: str, **kwargs) -> None:
 
 def get_all_sampler_datasets(all_clgen_versions: bool=True) -> list:
     if all_clgen_versions:
-        versiondirs = fs.ls("~/.cache/clgen", abspaths=True)
+        versiondirs = fs.ls(fs.path("~/.cache/clgen"), abspaths=True)
     else:
         versiondirs = [fs.path("~/.cache/clgen", clgen.version())]
 
     datasets = []
     for versiondir in versiondirs:
-        for samplerdir in fs.ls(versiondir, "sampler", abspaths=True):
+        for samplerdir in fs.ls(fs.path(versiondir, "sampler"), abspaths=True):
             inpath = fs.path(samplerdir, "kernels.db")
             if fs.isfile(inpath):
                 datasets.append(inpath)
+
     return datasets
 
 
