@@ -101,6 +101,9 @@ def from_json(model_json: dict):
     # create corpus and remove from JSON
     corpus = Corpus.from_json(model_json.pop("corpus"))
 
+    if "stats" in model_json:  # ignore stats
+        del model_json["stats"]
+
     return Model(corpus, **model_json)
 
 
@@ -139,15 +142,27 @@ class Model(clgen.CLgenObject):
 
         log.debug("model", self.hash)
 
-        # validate metadata against cache
+        # validate metadata against cache, and restore stats
+        self.stats = {
+            "epoch_times": [],
+            "epoch_costs": [],
+            "epoch_batches": []
+        }
         meta = deepcopy(self.to_json())
-        del meta["train_opts"]["epochs"]
         if self.cache.get("META"):
             cached_meta = jsonutil.read_file(self.cache["META"])
+            self.stats = cached_meta["stats"]  # restore stats
+
+            del cached_meta["stats"]
+            del meta["stats"]
+
+            del cached_meta["train_opts"]["epochs"]
+            del meta["train_opts"]["epochs"]
+
             if meta != cached_meta:
                 raise clgen.InternalError("model metadata mismatch")
         else:
-            jsonutil.write_file(self.cache.keypath("META"), meta)
+            self._flush_meta()
 
 
     def _init_tensorflow(self, infer: bool=False):
@@ -301,6 +316,7 @@ class Model(clgen.CLgenObject):
                 log.info("training", self)
 
             for e in range(sess.run(self.epoch) + 1, self.epochs + 1):
+                epoch_start = time()
 
                 # decay and set learning rate
                 new_learning_rate = learning_rate * (
@@ -317,7 +333,7 @@ class Model(clgen.CLgenObject):
                     for i, (c, h) in enumerate(self.initial_state):
                         feed[c] = state[i].c
                         feed[h] = state[i].h
-                    _, state, _ = sess.run(
+                    train_cost, state, _ = sess.run(
                         [self.cost, self.final_state, self.train_op], feed)
 
                     # update progress bar
@@ -336,7 +352,19 @@ class Model(clgen.CLgenObject):
                              "next checkpoint at batch {next_checkpoint}"
                              .format(**vars()))
 
+                    # update training time
+                    epoch_duration = time() - epoch_start
+                    self.stats["epoch_costs"].append(float(train_cost))
+                    self.stats["epoch_times"].append(epoch_duration)
+                    self.stats["epoch_batches"].append(batch_num)
+                    self._flush_meta()
+
         return self
+
+
+    def _flush_meta(self):
+        jsonutil.write_file(self.cache.keypath("META"), self.to_json())
+
 
     def train(self, quiet: bool=False):
         """
@@ -395,6 +423,7 @@ class Model(clgen.CLgenObject):
     def to_json(self) -> dict:
         d = deepcopy(self.opts)
         d["corpus"] = self.corpus.to_json()
+        d["stats"] = self.stats
         return d
 
     def __eq__(self, rhs) -> bool:
