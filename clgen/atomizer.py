@@ -138,7 +138,7 @@ OPENCL_ATOMS = set([
     'while',
     'wide',
     'write_only',
-] + [chr(i) for i in range(128)])
+])
 
 
 class VocabError(clgen.CLgenError):
@@ -157,10 +157,8 @@ class Atomizer(clgen.CLgenObject):
                 atomizing text from atoms into indices.
         """
         assert(isinstance(vocab, dict))
-
         self.vocab = vocab
-        self.vocab_size = len(self.vocab)
-        self.decoder = dict((val, key) for key, val in vocab.items())
+        self._vocab_update()
 
     @property
     def atoms(self):
@@ -169,6 +167,11 @@ class Atomizer(clgen.CLgenObject):
     @property
     def indices(self):
         return list(sorted(self.vocab.values()))
+
+    def _vocab_update(self):
+        """ call this when vocab is modified """
+        self.vocab_size = len(self.vocab)
+        self.decoder = dict((val, key) for key, val in self.vocab.items())
 
     def atomize(self, text: str) -> np.array:
         """
@@ -254,13 +257,22 @@ class GreedyAtomizer(Atomizer):
     Greedy encoding for multi-characten modelling.
     """
     def __init__(self, *args, **kwargs):
+        self.determine_chars = kwargs.pop("determine_chars", False)
         super(GreedyAtomizer, self).__init__(*args, **kwargs)
+
         multichars = set(k for k in self.atoms if len(k) > 1)
         first_chars = set(a[0] for a in multichars)
         self.lookup = dict((c, [a for a in multichars if a[0] == c])
                            for c in first_chars)
 
     def atomize(self, text: str) -> np.array:
+        def _add_to_vocab(token: str):
+            if self.determine_chars and token not in self.vocab:
+                maxind = max(self.vocab.values())
+                self.vocab[token] = maxind + 1
+
+            return self.vocab[token]
+
         indices = []
         i = 0
         j = 2
@@ -281,15 +293,18 @@ class GreedyAtomizer(Atomizer):
                             else:
                                 j -= 1
                         else:
-                            indices.append(self.vocab[text[i]])
+                            indices.append(_add_to_vocab(text[i]))
                             i = i + 1
                             j = j + 2
                 else:
-                    indices.append(self.vocab[text[i]])
+                    indices.append(_add_to_vocab(text[i]))
                     i = i + 1
                     j = j + 2
         except KeyError:
             raise VocabError
+
+        if self.determine_chars:
+            self._vocab_update()
 
         return np.array(indices)
 
@@ -299,7 +314,7 @@ class GreedyAtomizer(Atomizer):
     @staticmethod
     def from_text(text: str) -> Atomizer:
         opencl_vocab = dict(zip(OPENCL_ATOMS, range(len(OPENCL_ATOMS))))
-        c = GreedyAtomizer(opencl_vocab)
+        c = GreedyAtomizer(opencl_vocab, determine_chars=True)
 
         tokens = sorted(list(set(c.tokenize(text))))
         vocab = dict(zip(tokens, range(len(tokens))))
