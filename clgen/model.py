@@ -19,26 +19,22 @@
 """
 CLgen model.
 """
-import numpy as np
 import os
-import progressbar
 import re
 import sys
 import tarfile
-import time
 
 from copy import deepcopy
-from glob import iglob
+from time import time
+
+import progressbar
+
 from labm8 import crypto
 from labm8 import fs
 from labm8 import jsonutil
 from labm8 import lockfile
 from labm8 import system
-from labm8 import time as labtime
 from labm8 import types
-from six import string_types
-from six.moves import cPickle
-from tempfile import mktemp
 
 import clgen
 from clgen import config as cfg
@@ -66,16 +62,16 @@ def get_default_author() -> str:
 DEFAULT_MODEL_OPTS = {
     "author": get_default_author(),
     "architecture": {
-      "model_type": "lstm",  # {lstm,rnn.gru}
-      "rnn_size": 128,  # num nodes in layer
-      "num_layers": 2,  # num layers
+        "model_type": "lstm",  # {lstm,rnn.gru}
+        "rnn_size": 128,  # num nodes in layer
+        "num_layers": 2,  # num layers
     },
     "train_opts": {
-      "epochs": 10,
-      "grad_clip": 5,
-      "learning_rate": 2e-3,  # initial learning rate
-      "lr_decary_rate": 5,  # % to reduce learning rate by per epoch
-      "intermediate_checkpoints": True
+        "epochs": 10,
+        "grad_clip": 5,
+        "learning_rate": 2e-3,  # initial learning rate
+        "lr_decary_rate": 5,  # % to reduce learning rate by per epoch
+        "intermediate_checkpoints": True
     }
 }
 
@@ -97,7 +93,7 @@ def from_json(model_json: dict):
     Returns:
         Model: Model instance.
     """
-    assert(type(model_json) is dict)
+    assert(isinstance(model_json, dict))
 
     if "corpus" not in model_json:
         raise clgen.UserError("model JSON has no corpus entry")
@@ -129,7 +125,7 @@ class Model(clgen.CLgenObject):
         assert(isinstance(corpus, Corpus))
 
         # Validate options
-        for key in opts.keys():
+        for key in opts:
             if key not in DEFAULT_MODEL_OPTS:
                 raise clgen.UserError(
                     "Unsupported model option '{}'. Valid keys: {}".format(
@@ -195,8 +191,8 @@ class Model(clgen.CLgenObject):
         vocab_size = self.corpus.vocab_size
 
         cell = self.cell_fn(self.rnn_size, state_is_tuple=True)
-        self.cell = cell = rnn.MultiRNNCell([cell] * self.num_layers,
-                                                 state_is_tuple=True)
+        self.cell = cell = rnn.MultiRNNCell(
+            [cell] * self.num_layers, state_is_tuple=True)
         self.input_data = tf.placeholder(tf.int32, [batch_size, seq_length])
         self.targets = tf.placeholder(tf.int32, [batch_size, seq_length])
         self.initial_state = self.cell.zero_state(batch_size, tf.float32)
