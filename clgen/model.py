@@ -356,7 +356,7 @@ class Model(clgen.CLgenObject):
                     epoch_duration = time() - epoch_start
                     self.stats["epoch_costs"].append(float(train_cost))
                     self.stats["epoch_times"].append(epoch_duration)
-                    self.stats["epoch_batches"].append(batch_num)
+                    self.stats["epoch_batches"].append(batch_num + 1)
                     self._flush_meta()
 
         return self
