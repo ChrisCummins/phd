@@ -242,12 +242,7 @@ def rewrite_cl(src: str, id: str='anon', use_shim: bool=True) -> str:
     # propogated correctly to the rewriter. However, the rewriter will
     # still correctly process the input, so we ignore all error codes
     # except the one we care about (EUGLY_CODE).
-    rewritten = stdout.decode('utf-8')
-
-    # Remove __attribute__ qualifiers
-    stripped = clutil.strip_attributes(rewritten)
-
-    return stripped
+    return stdout.decode('utf-8')
 
 
 def compile_cl_bytecode(src: str, id: str='anon', use_shim: bool=True) -> str:
