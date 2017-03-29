@@ -34,10 +34,11 @@
 // You should have received a copy of the GNU General Public License
 // along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 //
+#include <map>
 #include <memory>
 #include <set>
+#include <sstream>
 #include <string>
-#include <map>
 
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
@@ -97,55 +98,39 @@ std::set<std::string> reserved_names {
   "int"
 };
 
-// increment a single character name
+
+// generate a new identifier name
 //
-// Takes upper and lower character sequences and preserves case.
-// e.g. 'A' -> 'B', 'B' -> 'C', 'az' -> 'ba'.
+// Takes an existing rewrite table and inserts a.
 //
-std::string get_next_name(const std::string& current) {
-  auto c = current;
-  char *cc = &c[c.length() - 1];
-  ctype type;
+std::string get_next_name(std::map<std::string, std::string>& rewrites,
+                          const std::string& name, const char& base_char) {
+  auto i = rewrites.size();
 
-  while (true) {
-    // determine type
-    if (*cc >= 'A' && *cc <= 'Z')
-      type = ctype::AZ;
-    else
-      type = ctype::az;
+  std::string s = "";
 
-    ++*cc;
-
-    // if the value has overflowed, reset and move to next char
-    if (*cc == 'Z' + 1 || *cc == 'z' + 1) {
-      // reset char
-      if (type == ctype::AZ)
-        *cc = 'A';
-      else
-        *cc = 'a';
-
-
-      // if we're at the last character, insert a new one, otherwise
-      // just move to the next character to increment
-      if (cc == &c[0]) {
-        if (type == ctype::AZ)
-          c.insert(c.begin(), 'A');
-        else
-          c.insert(c.begin(), 'a');
-        break;
-      } else {
-        --cc;
-      }
-    } else {
-      break;
-    }
+  // build the new name character by character.
+  while (i > 25) {
+    auto k = i / 26;
+    i %= 26;
+    s.push_back(base_char - 1 + k);
   }
+  s.push_back(base_char + i);
 
   // Check that it isn't a reserved word, or else generate a new one
-  if (reserved_names.find(c) != reserved_names.end())
-    return get_next_name(c);
+  if (reserved_names.find(s) != reserved_names.end()) {
+    // insert a "dummy" value using an illegal identifier name.
+    std::stringstream invalid_identifier;
+    invalid_identifier << "\t!@invalid@!\t" << rewrites.size();
 
-  return c;
+    rewrites[invalid_identifier.str()] = s;
+    return get_next_name(rewrites, name, base_char);
+  }
+
+  // insert the re-write name
+  rewrites[name] = s;
+
+  return s;
 }
 
 
@@ -155,26 +140,16 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
 
   // function name rewriting
   std::map<std::string, std::string> _fns;
-  std::string _last_fn;
 
   // variable name rewriting
   std::map<std::string, std::string> _vars;
-  std::string _last_var;
 
   // accepts a function name, and returns the rewritten name.
   //
   std::string get_fn_rewrite(const std::string& name) {
-    if (_fns.empty()) {
-      // First function, seed the rewrite process:
-      const auto seed = "A";
-      _last_fn = seed;
-      _fns[name] = seed;
-      return seed;
-    } else if (_fns.find(name) == _fns.end()) {
+    if (_fns.find(name) == _fns.end()) {
       // New function:
-      auto replacement = get_next_name(_last_fn);
-      _last_fn = replacement;
-      _fns[name] = replacement;
+      auto replacement = get_next_name(_fns, name, 'A');
       return replacement;
     } else {
       // Previously declared function:
@@ -184,22 +159,15 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
 
   // accepts a variable name, and returns the rewritten name
   //
-  std::string get_var_rewrite(const std::string& name) {
-    if (_vars.empty()) {
-      // First variable, seed the rewrite process:
-      const auto seed = "a";
-      _last_var = seed;
-      _vars[name] = seed;
-      return seed;
-    } else if (_vars.find(name) == _vars.end()) {
+  std::string get_var_rewrite(std::map<std::string, std::string>& rewrites,
+                              const std::string& name) {
+    if (rewrites.find(name) == rewrites.end()) {
       // New variable:
-      auto replacement = get_next_name(_last_var);
-      _last_var = replacement;
-      _vars[name] = replacement;
+      auto replacement = get_next_name(_vars, name, 'a');
       return replacement;
     } else {
       // Previously declared variable:
-      return (*_vars.find(name)).second;
+      return (*rewrites.find(name)).second;
     }
   }
 
@@ -248,7 +216,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
       if (name.empty())
         return true;
 
-      const auto replacement = get_var_rewrite(name);
+      const auto replacement = get_var_rewrite(_vars, name);
       rewriter.ReplaceText(decl->getLocation(), replacement);
       ++_var_decl_rewrites_counter;
     }
