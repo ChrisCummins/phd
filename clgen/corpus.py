@@ -608,4 +608,7 @@ class Corpus(clgen.CLgenObject):
         if "stats" in corpus_json:  # ignore stats
             del corpus_json["stats"]
 
+        if "contentfiles" in corpus_json:
+            del corpus_json["contentfiles"]
+
         return Corpus(uid, path=path, **corpus_json)
