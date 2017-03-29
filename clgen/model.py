@@ -292,7 +292,6 @@ class Model(clgen.CLgenObject):
             if ckpt_paths:
                 saver.recover_last_checkpoints(ckpt_paths)
 
-            start_batch = sess.run(self.epoch) * self.corpus.num_batches
             max_batch = self.epochs * self.corpus.num_batches
 
             # progress bar
@@ -318,7 +317,7 @@ class Model(clgen.CLgenObject):
                     for i, (c, h) in enumerate(self.initial_state):
                         feed[c] = state[i].c
                         feed[h] = state[i].h
-                    train_loss, state, _ = sess.run(
+                    _, state, _ = sess.run(
                         [self.cost, self.final_state, self.train_op], feed)
 
                     # update progress bar
