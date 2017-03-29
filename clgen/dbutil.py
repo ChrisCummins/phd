@@ -622,6 +622,8 @@ def get_all_sampler_datasets(all_clgen_versions: bool=True) -> list:
     else:
         versiondirs = [fs.path("~/.cache/clgen", clgen.version())]
 
+    versiondirs = [v for v in versiondirs if fs.isdir(v, "sampler")]
+
     datasets = []
     for versiondir in versiondirs:
         for samplerdir in fs.ls(fs.path(versiondir, "sampler"), abspaths=True):
