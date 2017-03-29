@@ -276,16 +276,10 @@ def explore(db_path: str) -> None:
         explore_gh(db_path)
         return
 
-    # Worker process pool
-    pool, jobs = Pool(processes=4), []
-    future_stats = pool.apply_async(stats_worker, (db_path,))
-
-    # Wait for jobs to finish
-    [job.wait() for job in jobs]
+    stats = stats_worker(db_path)
 
     # Print stats
     print()
-    stats = future_stats.get()
     maxlen = max([len(x[0]) for x in stats])
     for stat in stats:
         k, v = stat
@@ -308,17 +302,10 @@ def explore_gh(db_path: str) -> None:
 
     db = dbutil.connect(db_path)
 
-    # Worker process pool
-    pool, jobs = Pool(processes=4), []
-
-    future_stats = pool.apply_async(gh_stats_worker, (db_path,))
-
-    # Wait for jobs to finish
-    [job.wait() for job in jobs]
+    stats = gh_stats_worker(db_path)
 
     # Print stats
     print()
-    stats = future_stats.get()
     maxlen = max([len(x[0]) for x in stats])
     for stat in stats:
         k, v = stat
