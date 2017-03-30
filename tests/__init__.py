@@ -130,6 +130,17 @@ def db(name, **kwargs):
     return sqlite3.connect(path)
 
 
+def local_cachepath(*relative_path_components: list) -> str:
+    """ return path to local testing cache """
+    assert(relative_path_components)
+
+    cache_root = [data_path("cache", exists=False)]
+    return fs.path(*cache_root, *relative_path_components)
+
+# use local cache for testing
+clgen.cachepath = local_cachepath
+
+
 class TestCLgen(TestCase):
     def test_pacakge_data(self):
         with self.assertRaises(clgen.InternalError):
