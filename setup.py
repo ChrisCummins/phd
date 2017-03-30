@@ -78,7 +78,7 @@ def all_module_data_files(module, datadir="data"):
 
 setup(
     name='CLgen',
-    version='0.2.16',
+    version='0.2.17',
     description='',
     url='https://github.com/ChrisCummins/clgen',
     author='Chris Cummins',
