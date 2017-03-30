@@ -735,6 +735,10 @@ def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
     todo = contentfiles - preprocessedfiles
     ntodo = len(todo)
 
+    # check we have something to do
+    if not ntodo:
+        return
+
     todo_ratio = ntodo / ncontentfiles
 
     log.info("{ntodo} ({todo_ratio:.1%}) samples need preprocessing"
