@@ -99,18 +99,21 @@ std::set<std::string> reserved_names {
 };
 
 
+typedef std::map<std::string, std::string> rewrite_table_t;
+
+
 // generate a new identifier name
 //
 // Takes an existing rewrite table and inserts a.
 //
-std::string get_next_name(std::map<std::string, std::string>& rewrites,
+std::string get_next_name(rewrite_table_t& rewrites,
                           const std::string& name, const char& base_char,
                           const std::string& prefix = "") {
   auto i = rewrites.size();
 
   std::string s = prefix;
 
-  // build the new name character by character.
+  // build the new name character by character
   while (i > 25) {
     auto k = i / 26;
     i %= 26;
@@ -139,12 +142,12 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
  private:
   std::unique_ptr<clang::ASTContext> _context;  // additional AST info
 
-  // function name rewriting
-  std::map<std::string, std::string> _fns;
-
-  // variable name rewriting
-  std::map<std::string, std::string> _global_vars;
-  std::map<std::string, std::map<std::string, std::string>> _local_vars;
+  // identifier rewrite tables. There's one table to rewrite function names,
+  // one table to rewrite global variables, and one table for each user
+  // function:
+  rewrite_table_t _fns;
+  rewrite_table_t _global_vars;
+  std::map<std::string, rewrite_table_t> _local_vars;
 
   // accepts a function name, and returns the rewritten name.
   //
@@ -161,7 +164,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
 
   // accepts a variable name, and returns the rewritten name
   //
-  std::string get_var_rewrite(std::map<std::string, std::string>& rewrites,
+  std::string get_var_rewrite(rewrite_table_t& rewrites,
                               const std::string& name,
                               const std::string& prefix="") {
     if (rewrites.find(name) == rewrites.end()) {
@@ -172,6 +175,19 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
       // Previously declared variable:
       return (*rewrites.find(name)).second;
     }
+  }
+
+  // accepts a function declaration, and returns the rewrite table for it
+  //
+  rewrite_table_t& get_fn_var_rewrite_table(const clang::FunctionDecl* fn) {
+    const auto fn_name = fn->getNameInfo().getName().getAsString();
+    const auto fn_it = _local_vars.find(fn_name);
+
+    // if there's no existing table, create one
+    if (fn_it == _local_vars.end())
+      _local_vars[fn_name] = rewrite_table_t();
+
+    return _local_vars[fn_name];
   }
 
   // return true if a location is in the main source file
@@ -192,22 +208,65 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
 
   virtual ~RewriterVisitor() {}
 
+  void rewrite_fn_name(clang::FunctionDecl *const func,
+                       const std::string& replacement) {
+   rewriter.ReplaceText(func->getLocation(), replacement);
+   ++_fn_call_rewrites_counter;
+  }
+
+  void rewrite_fn_name(clang::CallExpr *const call,
+                       const std::string& replacement) {
+   rewriter.ReplaceText(call->getLocStart(), replacement);
+   ++_fn_call_rewrites_counter;
+  }
+
+  void rewrite_var_name(clang::DeclRefExpr *const ref,
+                        const std::string& replacement) {
+    rewriter.ReplaceText(ref->getLocStart(), replacement);
+    ++_var_use_rewrites_counter;
+  }
+
+  void rewrite_var_name(clang::VarDecl *const decl,
+                        const std::string& replacement) {
+    rewriter.ReplaceText(decl->getLocation(), replacement);
+    ++_var_decl_rewrites_counter;
+  }
+
   // rewrite function declarations
+  //
   bool VisitFunctionDecl(clang::FunctionDecl *func) {
-    if (!isMainFile(func->getLocation()))
-      return true;
+    // only re-write functions declared in the main file
+    if (isMainFile(func->getLocation())) {
+      const auto name = func->getNameInfo().getName().getAsString();
+      rewrite_fn_name(func, get_fn_rewrite(name));
+    }
 
-    const auto name = func->getNameInfo().getName().getAsString();
-    const auto replacement = get_fn_rewrite(name);
+    return true;
+  }
 
-    rewriter.ReplaceText(func->getLocation(), replacement);
-    ++_fn_decl_rewrites_counter;
+  // rewrite function calls
+  //
+  bool VisitCallExpr(clang::CallExpr *call) {
+    if (isMainFile(call->getLocStart())) {
+      // rewrite function calls
+      const auto callee = call->getDirectCallee();
+      if (callee) {
+        const auto name = callee->getNameInfo().getName().getAsString();
+
+        // rewrite fn name
+        const auto it = _fns.find(name);
+        if (it != _fns.end())
+          rewrite_fn_name(call, (*it).second);
+      }  // else not a direct callee (do we need to handle that?)
+    }  // else not in main file
 
     return true;
   }
 
   // rewrite variable declarations
+  //
   bool VisitVarDecl(clang::VarDecl *decl) {
+    // only re-write variables declared in the main file
     if (!isMainFile(decl->getLocation()))
       return true;
 
@@ -215,38 +274,37 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
       const auto name = d->getNameAsString();
 
       // variables can be declared without a name (e.g. in function
-      // declarations). Do not rewrite these names.
+      // declarations). Do not rewrite these
       if (name.empty())
         return true;
 
-      std::string replacement;
+      // get the parent function
       const auto* parent = d->getParentFunctionOrMethod();
       if (parent == nullptr) {
-          replacement = get_var_rewrite(_global_vars, name, "gb_");
-      } else if (auto func = clang::dyn_cast<clang::FunctionDecl>(parent)) {
-        // get function rewrite table
-        const auto fn_name = func->getNameInfo().getName().getAsString();
-        const auto fn_it = _local_vars.find(fn_name);
-        if (fn_it == _local_vars.end()) {
-          _local_vars[fn_name] = std::map<std::string, std::string>();
-          std::cerr << "adding lookup table for " << fn_name << '\n';
-        }
+        // if there's no parent, then it's a global variable
+        const auto replacement = get_var_rewrite(_global_vars, name, "gb_");
 
-        // get and set re-write
-        auto& lookup_table = _local_vars[fn_name];
-        replacement = get_var_rewrite(lookup_table, name);
+        // rewrite variable name
+        rewrite_var_name(decl, replacement);
+      } else if (auto fn = clang::dyn_cast<clang::FunctionDecl>(parent)) {
+        // if it's in function scope, get the rewrite table
+        auto& rewrite_table = get_fn_var_rewrite_table(fn);
+        const auto replacement = get_var_rewrite(rewrite_table, name);
+
+        // rewrite variable name
+        rewrite_var_name(decl, replacement);
       } else {
-          llvm::errs() << "warning: cannot determine scope of variable '"
-                       << name << "'\n";
+        // this shouldn't happen
+        llvm::errs() << "warning: cannot determine scope of variable '"
+                     << name << "'\n";
       }
-
-      rewriter.ReplaceText(decl->getLocation(), replacement);
-      ++_var_decl_rewrites_counter;
     }
 
     return true;
   }
 
+  // rewrite variable refs
+  //
   bool VisitDeclRefExpr(clang::DeclRefExpr* ref) {
     if (isMainFile(ref->getLocStart())) {
       const auto name = ref->getNameInfo().getName().getAsString();
@@ -254,43 +312,23 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
 
       const auto* parent = d->getParentFunctionOrMethod();
       if (parent == nullptr) {
-          const auto it = _global_vars.find(name);
-          if (it != _global_vars.end()) {
-            const auto replacement = (*it).second;
-            rewriter.ReplaceText(ref->getLocStart(), replacement);
-            ++_var_use_rewrites_counter;
-          }  // else variable name is externally defined
-      } else if (auto func = clang::dyn_cast<clang::FunctionDecl>(parent)) {
-        const auto fn_name = func->getNameInfo().getName().getAsString();
-        const auto& lookup_table = _local_vars[fn_name];
+        // get rewrite name
+        const auto it = _global_vars.find(name);
+
+        // rewrite
+        if (it != _global_vars.end())
+          rewrite_var_name(ref, (*it).second);
+      } else if (auto fn = clang::dyn_cast<clang::FunctionDecl>(parent)) {
+        // get rewrite name
+        const auto& lookup_table = get_fn_var_rewrite_table(fn);
         const auto it = lookup_table.find(name);
-        if (it != lookup_table.end()) {
-          const auto replacement = (*it).second;
-          rewriter.ReplaceText(ref->getLocStart(), replacement);
-          ++_var_use_rewrites_counter;
-        }  // else variable name is externally defined
+
+        // rewrite
+        if (it != lookup_table.end())
+          rewrite_var_name(ref, (*it).second);
       } else {
         llvm::errs() << "warning: cannot determine scope of variable '" << name << "'\n";
       }
-    }  // else not in main file
-
-    return true;
-  }
-
-  bool VisitCallExpr(clang::CallExpr *call) {
-    if (isMainFile(call->getLocStart())) {
-      // rewrite function calls
-      const auto callee = call->getDirectCallee();
-      if (callee) {
-        const auto name = callee->getNameInfo().getName().getAsString();
-        const auto it = _fns.find(name);
-        if (it != _fns.end()) {
-          const auto replacement = (*it).second;
-
-          rewriter.ReplaceText(call->getLocStart(), replacement);
-          ++_fn_call_rewrites_counter;
-        }  // else function name is externally defined
-      }  // else not a direct callee (do we need to handle that?)
     }  // else not in main file
 
     return true;
