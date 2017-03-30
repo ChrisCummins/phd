@@ -82,23 +82,23 @@ __kernel void A() {
 """)
         # kernel containing some code returns the same.
         self.assertEqual("""\
-__kernel void A() {
-  int a;
+__kernel void fn_A() {
+  int A;
 }\
 """, preprocess.preprocess("""\
-__kernel void A() {
-  int a;
+__kernel void fn_A() {
+  int A;
 }\
 """))
 
     def test_preprocess_stable(self):
         code = """\
-__kernel void A(__global float* a) {
-  int b;
-  float c;
-  int d = get_global_id(0);
+__kernel void fn_A(__global float* A) {
+  int B;
+  float C;
+  int D = get_global_id(0);
 
-  a[d] *= 2.0f;
+  A[D] *= 2.0f;
 }"""
         # pre-processing is "stable" if the code doesn't change
         out = code
