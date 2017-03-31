@@ -103,6 +103,11 @@ class Params(Base):
             "-l", "{self.lsize_x},{self.lsize_y},{self.lsize_z}".format(**vars())
         ]
 
+    def __repr__(self):
+        return ("global ({self.gsize_x}, {self.gsize_y}, {self.gsize_z}), "
+                "local ({self.lsize_x}, {self.lsize_y}, {self.lsize_z})"
+                .format(**vars()))
+
 
 class Result(Base):
     __tablename__ = "Results"
