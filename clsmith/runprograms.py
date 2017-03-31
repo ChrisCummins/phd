@@ -12,7 +12,7 @@ import re
 
 
 def cl_launcher(src: str, platform_id: int, device_id: int, *args):
-    with NamedTemporaryFile(prefix='cl_launcher-', suffix='.c') as tmp:
+    with NamedTemporaryFile(prefix='cl_launcher-', suffix='.cl') as tmp:
         tmp.write(src.encode('utf-8'))
         tmp.flush()
 

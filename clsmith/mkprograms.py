@@ -21,7 +21,7 @@ def make_program(*flags) -> None:
     Arguments:
         *flags: Additional flags to CLSmith.
     """
-    with NamedTemporaryFile(prefix='clsmith-', suffix='.c') as tmp:
+    with NamedTemporaryFile(prefix='clsmith-', suffix='.cl') as tmp:
         runtime, _, stdout, stderr = clsmith.clsmith('-o', tmp.name, *flags)
         file_id = crypto.sha1_file(tmp.name)
         src = fs.read_file(tmp.name)
