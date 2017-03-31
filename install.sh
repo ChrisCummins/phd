@@ -170,7 +170,7 @@ install_python() {
 
 install_mysql() {
     if [[ -f "$private/mysql/.my.cnf" ]]; then
-        symlink "$private/mysql/.my.cnf" ~/.my.conf
+        symlink "$private/mysql/.my.cnf" ~/.my.cnf
     fi
 }
 
