@@ -2,6 +2,7 @@
   core:
     disabledPackages: [
       "scroll-through-time"
+      "language-python"
     ]
     telemetryConsent: "no"
     themes: [
@@ -18,7 +19,11 @@
   "file-types":
     ipy: "source.python"
   linter: {}
+  "linter-cppcheck":
+    enableMissingInclude: true
+  "linter-pylint": {}
   "linter-ui-default":
+    panelHeight: 141
     showPanel: true
   "markdown-preview":
     useGitHubStyle: true
@@ -33,3 +38,9 @@
     scrollSyncType: "Vertical + Horizontal"
   welcome:
     showOnStartup: false
+".c.source":
+  editor:
+    tabLength: 2
+".cpp.source":
+  editor:
+    tabLength: 2
