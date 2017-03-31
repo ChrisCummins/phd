@@ -261,7 +261,7 @@ class SampleConsumer(Thread):
         else:
             self.term_condition = self.null_cond
             self.max_i = progressbar.UnknownLength
-            self.progress = self.min_samples_progress
+            self.progress = self.null_progress
 
     def min_kernels_and_samples_cond(self):
         return self.min_kernels_cond() and self.min_samples_cond()
@@ -283,6 +283,9 @@ class SampleConsumer(Thread):
     def min_samples_progress(self):
         return min(dbutil.num_rows_in(self.db_path, "ContentFiles"),
                    self.sampler_opts["min_samples"])
+
+    def null_progress(self):
+        return dbutil.num_rows_in(self.db_path, "ContentFiles")
 
     def run(self) -> None:
         i = dbutil.num_rows_in(self.db_path, "ContentFiles")
