@@ -168,6 +168,13 @@ install_python() {
 }
 
 
+install_mysql() {
+    if [[ -f "$private/mysql/.my.conf" ]]; then
+        symlink "$private/mysql/.my.conf" ~/.my.conf
+    fi
+}
+
+
 install_inbox() {
     symlink Dropbox/Inbox ~/Inbox
 }
@@ -227,6 +234,8 @@ main() {
     install_sublime
 
     install_python
+
+    install_mysql
 
     if [[ -d ~/Dropbos/Inbox ]]; then
         install_inbox
