@@ -104,8 +104,8 @@ class Params(Base):
         ]
 
     def __repr__(self):
-        return ("global ({self.gsize_x}, {self.gsize_y}, {self.gsize_z}), "
-                "local ({self.lsize_x}, {self.lsize_y}, {self.lsize_z})"
+        return ("global: ({self.gsize_x}, {self.gsize_y}, {self.gsize_z}), "
+                "local: ({self.lsize_x}, {self.lsize_y}, {self.lsize_z})"
                 .format(**vars()))
 
 
