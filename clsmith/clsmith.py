@@ -2,8 +2,10 @@ from labm8 import fs
 from subprocess import Popen, PIPE, STDOUT
 from time import time
 
+
 exec_path = fs.path("~/src/CLSmith/build/CLSmith")
 include_path = fs.path("~/src/CLSmith/runtime")
+
 
 def clsmith(*args):
     start_time = time()

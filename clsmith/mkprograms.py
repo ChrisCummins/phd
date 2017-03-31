@@ -38,7 +38,6 @@ def make_program(*flags) -> None:
             pass
 
 
-
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("dbpath", metavar="<database>",
