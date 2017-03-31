@@ -75,7 +75,7 @@ class Testbed(Base):
 
 class Params(Base):
     """ params """
-    __tablename__ = "Parameters"
+    __tablename__ = "Params"
     id = sql.Column(sql.Integer, primary_key=True)
     gsize_x = sql.Column(sql.Integer, nullable=False)
     gsize_y = sql.Column(sql.Integer, nullable=False)
@@ -83,13 +83,26 @@ class Params(Base):
     lsize_x = sql.Column(sql.Integer, nullable=False)
     lsize_y = sql.Column(sql.Integer, nullable=False)
     lsize_z = sql.Column(sql.Integer, nullable=False)
+    __table_args__ = (sql.UniqueConstraint('gsize_x', 'gsize_y', 'gsize_z',
+                                           'lsize_x', 'lsize_y', 'lsize_z',
+                                           name='_uid'),)
+
+    def to_args(self):
+        return [
+            "-g", "{self.gsize_x},{self.gsize_y},{self.gsize_z}".format(**vars()),
+            "-l", "{self.lsize_x},{self.lsize_y},{self.lsize_z}".format(**vars())
+        ]
 
 
 class Result(Base):
     __tablename__ = "Results"
     id = sql.Column(sql.Integer, primary_key=True)
-    program_id = sql.Column(sql.String(40), sql.ForeignKey("Programs.id"))
-    device_id = sql.Column(sql.Integer, sql.ForeignKey("Devices.id"))
+    program_id = sql.Column(sql.String(40), sql.ForeignKey("Programs.id"),
+                            nullable=False)
+    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
+                            nullable=False)
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("Params.id"),
+                           nullable=False)
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
     cli = sql.Column(sql.Text, nullable=False)
     status = sql.Column(sql.Integer, nullable=False)
@@ -112,12 +125,10 @@ def register_testbed(platform_name: str, device_name: str) -> int:
     Returns:
         int: Testbed ID.
     """
-    new = False
     try:
         with Session() as session:
             d = get_testbed(platform_name, device_name)
             session.add(d)
-            new = True
     except IntegrityError:
         with Session() as session:
             d = get_testbed(platform_name, device_name)
@@ -133,7 +144,11 @@ def register_testbed(platform_name: str, device_name: str) -> int:
             Testbed.platform == d.platform,
             Testbed.device == d.device).one().id
 
-    if new:
-        print("registered new testbed", testbed_id)
-
     return testbed_id
+
+
+def get_num_progs_to_run(testbed_id):
+    with Session() as session:
+        subquery = session.query(Result.program_id).filter(
+            Result.testbed_id == testbed_id)
+        return session.query(Program.id).filter(~Program.id.in_(subquery)).count()
