@@ -100,7 +100,6 @@ def run_next_prog(platform, device, testbed_id):
         program = session.query(db.Program).filter(
             ~db.Program.id.in_(subquery)).order_by(db.Program.id).first()
 
-        print('next program', program)
         opts = params.to_args()
         runtime, status, stdout, stderr = cl_launcher(
             program.src, platform_id, device_id, *opts)
@@ -142,9 +141,14 @@ if __name__ == "__main__":
 
     print('using testbed', testbed_id, 'using', device_name)
 
-    ntodo = db.get_num_progs_to_run(testbed_id)
-    print("{ntodo} programs to run".format(**vars()))
-
-    while db.get_num_progs_to_run(testbed_id):
+    ran, ntodo = db.get_num_progs_to_run(testbed_id)
+    bar = progressbar.ProgressBar(initial_value=ran, max_value=ntodo)
+    while True:
         run_next_prog((platform_id, platform_name), (device_id, device_name),
                       testbed_id)
+
+        ran, ntodo = db.get_num_progs_to_run(testbed_id)
+        bar.max_value = ntodo
+        bar.update(ran)
+        if not ntodo:
+            break

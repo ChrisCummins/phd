@@ -151,4 +151,8 @@ def get_num_progs_to_run(testbed_id):
     with Session() as session:
         subquery = session.query(Result.program_id).filter(
             Result.testbed_id == testbed_id)
-        return session.query(Program.id).filter(~Program.id.in_(subquery)).count()
+        ran = session.query(Program.id).filter(Program.id.in_(subquery)).count()
+        subquery = session.query(Result.program_id).filter(
+            Result.testbed_id == testbed_id)
+        total = session.query(Program.id).count()
+        return ran, total
