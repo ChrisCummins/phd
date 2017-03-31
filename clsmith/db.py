@@ -2,8 +2,10 @@ import datetime
 import sqlalchemy as sql
 
 from contextlib import contextmanager
+from labm8 import system
 from labm8 import fs
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.exc import IntegrityError
 
 Base = declarative_base()
 
@@ -58,13 +60,13 @@ class Program(Base):
         return self.id
 
 
-class Device(Base):
+class Testbed(Base):
     """ devices """
-    __tablename__ = 'Devices'
+    __tablename__ = 'Testbeds'
     id = sql.Column(sql.Integer, primary_key=True)
     hostname = sql.Column(sql.String(63), nullable=False)  # RFC 1035
-    platform = sql.Column(sql.Text, nullable=False)
-    device = sql.Column(sql.Text, nullable=False)
+    platform = sql.Column(sql.String(255), nullable=False)  # CL_DEVICE_NAME
+    device = sql.Column(sql.String(255), nullable=False)  # CL_PLATFORM_NAME
     __table_args__ = (sql.UniqueConstraint('hostname', 'platform', 'device', name='_uid'),)
 
     def __repr__(self):
@@ -94,3 +96,43 @@ class Result(Base):
     runtime = sql.Column(sql.Float, nullable=False)
     stdout = sql.Column(sql.Text, nullable=False)
     stderr = sql.Column(sql.Text, nullable=False)
+
+
+# Helper functions
+
+
+def get_testbed(platform_name: str, device_name: str) -> Testbed:
+    return Testbed(hostname=system.HOSTNAME,
+                   platform=platform_name,
+                   device=device_name)
+
+
+def register_testbed(platform_name: str, device_name: str) -> int:
+    """
+    Returns:
+        int: Testbed ID.
+    """
+    new = False
+    try:
+        with Session() as session:
+            d = get_testbed(platform_name, device_name)
+            session.add(d)
+            new = True
+    except IntegrityError:
+        with Session() as session:
+            d = get_testbed(platform_name, device_name)
+            assert(session.query(Testbed).filter(
+                Testbed.hostname == d.hostname,
+                Testbed.platform == d.platform,
+                Testbed.device == d.device).count() == 1)
+
+    with Session() as session:
+        testbed_id = session.query(Testbed).filter(
+            Testbed.hostname == d.hostname,
+            Testbed.platform == d.platform,
+            Testbed.device == d.device).one().id
+
+    if new:
+        print("registered new testbed", testbed_id)
+
+    return testbed_id
