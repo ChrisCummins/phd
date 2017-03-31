@@ -127,6 +127,7 @@ def register_testbed(platform_name: str, device_name: str) -> int:
                 Testbed.device == d.device).count() == 1)
 
     with Session() as session:
+        d = get_testbed(platform_name, device_name)
         testbed_id = session.query(Testbed).filter(
             Testbed.hostname == d.hostname,
             Testbed.platform == d.platform,
