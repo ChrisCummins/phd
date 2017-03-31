@@ -43,7 +43,8 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("dbpath", metavar="<database>",
                         help="path to database")
-    parser.add_argument("-n", "--num", type=int, default=1000)
+    parser.add_argument("-n", "--num", type=int, default=-1,
+                        help="max programs to generate, no max if < 0")
     args = parser.parse_args()
 
     dbpath = fs.path(args.dbpath)
@@ -52,10 +53,13 @@ if __name__ == "__main__":
     db.init(dbpath)  # initialize db engine
 
     numprogs = get_num_progs()
-    bar = progressbar.ProgressBar(initial_value=numprogs,
-                                  max_value=target_num_progs)
+    if target_num_progs > 0:
+        bar = progressbar.ProgressBar(initial_value=numprogs,
+                                      max_value=target_num_progs)
+    else:
+        bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
 
-    while numprogs < target_num_progs:
+    while target_num_progs < 0 or numprogs < target_num_progs:
         make_program('--small')
         numprogs = get_num_progs()
         bar.update(numprogs)
