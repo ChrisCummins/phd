@@ -1,6 +1,7 @@
 import datetime
 import sqlalchemy as sql
 
+from configparser import ConfigParser
 from contextlib import contextmanager
 from labm8 import system
 from labm8 import fs
@@ -12,11 +13,20 @@ Base = declarative_base()
 # must call init() first
 make_session = None
 
-def init(path: str):
+def get_mysql_creds():
+    """ read default MySQL credentials in ~/.my.cnf """
+    config = ConfigParser()
+    config.read(fs.path("~/.my.cnf"))
+    return config['mysql']['user'], config['mysql']['password']
+
+
+def init(hostname: str):
     """ must be called before using anything """
     global make_session
-    path = fs.path(path)
-    engine = sql.create_engine('sqlite:///{path}'.format(**vars()))
+    username, password = get_mysql_creds()
+
+    engine = sql.create_engine(
+        "mysql://{username}:{password}@{hostname}:3306/clsmith".format(**vars()))
     Base.metadata.create_all(engine)
     Base.metadata.bind = engine
     make_session = sql.orm.sessionmaker(bind=engine)
@@ -46,15 +56,15 @@ class Program(Base):
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
 
     # additional flags passed to CLSmith
-    flags = sql.Column(sql.Text, nullable=False)
+    flags = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     # time taken to produce program (in seconds).
     runtime = sql.Column(sql.Float, nullable=False)
 
     # production output
-    stdout = sql.Column(sql.Text, nullable=False)
-    stderr = sql.Column(sql.Text, nullable=False)
-    src = sql.Column(sql.Text, nullable=False)
+    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     def __repr__(self):
         return self.id
@@ -104,11 +114,11 @@ class Result(Base):
     params_id = sql.Column(sql.Integer, sql.ForeignKey("Params.id"),
                            nullable=False)
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
-    cli = sql.Column(sql.Text, nullable=False)
+    flags = sql.Column(sql.String(255), nullable=False)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
-    stdout = sql.Column(sql.Text, nullable=False)
-    stderr = sql.Column(sql.Text, nullable=False)
+    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
 
 # Helper functions

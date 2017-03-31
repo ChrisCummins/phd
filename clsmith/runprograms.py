@@ -114,14 +114,14 @@ def run_next_prog(platform, device, testbed_id):
         # add new result
         session.add(db.Result(
             program_id=program.id, testbed_id=testbed_id, params_id=params.id,
-            cli=" ".join(opts), status=status, runtime=runtime,
+            flags=" ".join(opts), status=status, runtime=runtime,
             stdout=stdout, stderr=stderr))
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("dbpath", metavar="<database>",
-                        help="path to database")
+    parser.add_argument("-H", "--hostname", type=str, default="cc1",
+                        help="MySQL database hostname")
     parser.add_argument("platform_id", metavar="<platform-id>", type=int,
                         help="OpenCL platform ID")
     parser.add_argument("device_id", metavar="<device-id>", type=int,
@@ -130,16 +130,15 @@ if __name__ == "__main__":
 
     platform_id = args.platform_id
     device_id = args.device_id
-    dbpath = fs.path(args.dbpath)
 
     platform_name = clinfo.get_platform_name(platform_id)
     device_name = clinfo.get_device_name(args.platform_id, device_id)
 
-    db.init(dbpath)  # initialize db engine
+    db.init(args.hostname)  # initialize db engine
 
     testbed_id = db.register_testbed(platform_name, device_name)
 
-    print('using testbed', testbed_id, 'using', device_name)
+    print('testbed', testbed_id, 'using', device_name)
 
     ran, ntodo = db.get_num_progs_to_run(testbed_id)
     bar = progressbar.ProgressBar(initial_value=ran, max_value=ntodo)

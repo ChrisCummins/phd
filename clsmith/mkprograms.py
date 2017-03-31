@@ -39,16 +39,15 @@ def make_program(*flags) -> None:
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("dbpath", metavar="<database>",
-                        help="path to database")
+    parser.add_argument("-H", "--hostname", type=str, default="cc1",
+                        help="MySQL database hostname")
     parser.add_argument("-n", "--num", type=int, default=-1,
                         help="max programs to generate, no max if < 0")
     args = parser.parse_args()
 
-    dbpath = fs.path(args.dbpath)
     target_num_progs = args.num
 
-    db.init(dbpath)  # initialize db engine
+    db.init(args.hostname)  # initialize db engine
 
     numprogs = get_num_progs()
     if target_num_progs > 0:
