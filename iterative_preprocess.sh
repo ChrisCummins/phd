@@ -13,7 +13,7 @@ clgen-preprocess $datadir/pp1.db
 clgen-explore $datadir/pp1.db
 
 set +x
-for j in {2..10}; do
+for j in {2..3}; do
     i=$((j-1))
     echo "iteration $i"
     if [[ ! -f $datadir/pp$j.db ]]; then
