@@ -73,12 +73,16 @@ def get_actual_params(stderr):
         if global_size and local_size:
             return global_size, local_size
 
+gsize = None
+lsize = None
+optimizations = None
 
 def get_params(session) -> db.Params:
-    gsize = (128, 16, 1)
-    lsize = (32, 1, 1)
+    global gsize
+    global lsize
+    global optimizations
     params = db.Params(
-        optimizations = True,
+        optimizations = optimizations,
         gsize_x = gsize[0], gsize_y = gsize[1], gsize_z = gsize[2],
         lsize_x = lsize[0], lsize_y = lsize[1], lsize_z = lsize[2]
     )
@@ -140,6 +144,21 @@ def run_next_prog(platform, device, testbed_id) -> None:
             stdout=stdout, stderr=stderr))
 
 
+def set_params(args):
+    global gsize
+    global lsize
+    global optimizations
+
+    def parse_ndrange(ndrange):
+        components = ndrange.split(',')
+        assert(len(components) == 3)
+        return (int(components[0]), int(components[1]), int(components[2]))
+
+    optimizations = not args.no_opts
+    gsize = parse_ndrange(args.gsize)
+    lsize = parse_ndrange(args.lsize)
+
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-H", "--hostname", type=str, default="cc1",
@@ -148,22 +167,34 @@ if __name__ == "__main__":
                         help="OpenCL platform ID")
     parser.add_argument("device_id", metavar="<device-id>", type=int,
                         help="OpenCL device ID")
+    parser.add_argument("--no-opts", action="store_true",
+                        help="Disable OpenCL optimizations (on by default)")
+    parser.add_argument("-g", "--gsize", type=str, default="128,16,1",
+                        help="Comma separated global sizes (default: 128,16,1)")
+    parser.add_argument("-l", "--lsize", type=str, default="32,1,1",
+                        help="Comma separated global sizes (default: 32,1,1)")
     args = parser.parse_args()
+
 
     platform_id = args.platform_id
     device_id = args.device_id
 
     platform_name = clinfo.get_platform_name(platform_id)
-    device_name = clinfo.get_device_name(args.platform_id, device_id)
+    device_name = clinfo.get_device_name(platform_id, device_id)
 
     db.init(args.hostname)  # initialize db engine
 
-    testbed_id = db.register_testbed(platform_name, device_name)
+    testbed_id = db.register_testbed(platform_id, device_id)
 
-    print('testbed', testbed_id, 'using', device_name)
+    # set parameters
+    set_params(args)
+
 
     with db.Session() as session:
-        ran, ntodo = db.get_num_progs_to_run(testbed_id, get_params(session))
+        params = get_params(session)
+        ran, ntodo = db.get_num_progs_to_run(testbed_id, params)
+        print('testbed', testbed_id, 'using', device_name)
+        print("params", params)
     bar = progressbar.ProgressBar(init_value=ran, max_value=ntodo)
     while True:
         run_next_prog((platform_id, platform_name), (device_id, device_name),
