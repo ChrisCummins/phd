@@ -7,11 +7,20 @@ def get_platform_name(platform_id):
     platform = cl.get_platforms()[platform_id]
     return platform.get_info(cl.platform_info.NAME)
 
+
 def get_device_name(platform_id, device_id):
     platform = cl.get_platforms()[platform_id]
     ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
     device = ctx.get_info(cl.context_info.DEVICES)[device_id]
     return device.get_info(cl.device_info.NAME)
+
+
+def get_driver_version(platform_id, device_id):
+    platform = cl.get_platforms()[platform_id]
+    ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
+    device = ctx.get_info(cl.context_info.DEVICES)[device_id]
+    return device.get_info(cl.device_info.DRIVER_VERSION)
+
 
 if __name__ == "__main__":
     for platform_id, platform in enumerate(cl.get_platforms()):
@@ -26,7 +35,8 @@ if __name__ == "__main__":
             device_name = device.get_info(cl.device_info.NAME)
             device_type = cl.device_type.to_string(
                 device.get_info(cl.device_info.TYPE))
+            driver = device.get_info(cl.device_info.DRIVER_VERSION)
 
-            print("    Device {device_id}: {device_type} {device_name}"
+            print("    Device {device_id}: {device_type} {device_name} {driver}"
                   .format(**vars()))
         print()

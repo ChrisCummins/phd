@@ -8,6 +8,8 @@ from labm8 import fs
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import IntegrityError
 
+import clinfo
+
 Base = declarative_base()
 
 # must call init() first
@@ -75,13 +77,16 @@ class Testbed(Base):
     """ devices """
     __tablename__ = 'Testbeds'
     id = sql.Column(sql.Integer, primary_key=True)
-    hostname = sql.Column(sql.String(63), nullable=False)  # RFC 1035
     platform = sql.Column(sql.String(255), nullable=False)  # CL_DEVICE_NAME
     device = sql.Column(sql.String(255), nullable=False)  # CL_PLATFORM_NAME
-    __table_args__ = (sql.UniqueConstraint('hostname', 'platform', 'device', name='_uid'),)
+    driver = sql.Column(sql.String(255), nullable=False)  # CL_DRIVER_VERSION
+    __table_args__ = (
+        sql.UniqueConstraint('platform', 'device', 'driver', name='_uid'),)
 
     def __repr__(self):
-        return "Host: {self.hostname}, Platform: {self.platform}, Device: {self.device}".format(**vars())
+        return ("Platform: {self.platform}, "
+                "Device: {self.device}, "
+                "Driver: {self.driver}".format(**vars()))
 
 
 class Params(Base):
@@ -136,35 +141,41 @@ class Result(Base):
 # Helper functions
 
 
-def get_testbed(platform_name: str, device_name: str) -> Testbed:
-    return Testbed(hostname=system.HOSTNAME,
-                   platform=platform_name,
-                   device=device_name)
+def get_testbed(platform_name: str,
+                device_name: str,
+                driver_version: str) -> Testbed:
+    return Testbed(platform=platform_name,
+                   device=device_name,
+                   driver=driver_version)
 
 
-def register_testbed(platform_name: str, device_name: str) -> int:
+def register_testbed(platform_id: int, device_id: int) -> int:
     """
     Returns:
         int: Testbed ID.
     """
+    platform_name = clinfo.get_platform_name(platform_id)
+    device_name = clinfo.get_device_name(platform_id, device_id)
+    driver_version = clinfo.get_driver_version(platform_id, device_id)
+
     try:
         with Session() as session:
-            d = get_testbed(platform_name, device_name)
+            d = get_testbed(platform_name, device_name, driver_version)
             session.add(d)
     except IntegrityError:
         with Session() as session:
-            d = get_testbed(platform_name, device_name)
+            d = get_testbed(platform_name, device_name, driver_version)
             assert(session.query(Testbed).filter(
-                Testbed.hostname == d.hostname,
                 Testbed.platform == d.platform,
-                Testbed.device == d.device).count() == 1)
+                Testbed.device == d.device,
+                Testbed.driver == d.driver).count() == 1)
 
     with Session() as session:
-        d = get_testbed(platform_name, device_name)
+        d = get_testbed(platform_name, device_name, driver_version)
         testbed_id = session.query(Testbed).filter(
-            Testbed.hostname == d.hostname,
             Testbed.platform == d.platform,
-            Testbed.device == d.device).one().id
+            Testbed.device == d.device,
+            Testbed.driver == d.driver).one().id
 
     return testbed_id
 
