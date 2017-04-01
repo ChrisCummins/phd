@@ -8,7 +8,6 @@ from labm8 import fs
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import IntegrityError
 
-import clinfo
 
 Base = declarative_base()
 
@@ -49,6 +48,21 @@ def Session():
         session.close()
 
 
+def get_or_create(session, model, defaults=None, **kwargs):
+    """
+    Instantiate a mapped database object. If the object is not in the database,
+    add it.
+    """
+    instance = session.query(model).filter_by(**kwargs).first()
+    if not instance:
+        params = dict((k, v) for k, v in kwargs.items() if not isinstance(v, sql.sql.expression.ClauseElement))
+        params.update(defaults or {})
+        instance = model(**params)
+        session.add(instance)
+
+    return instance
+
+
 # Database Schema
 
 
@@ -70,7 +84,7 @@ class Program(Base):
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     # relation back to results:
-    results = sql.orm.relationship("Result", backref="program")
+    results = sql.orm.relationship("Result", back_populates="program")
 
     def __repr__(self):
         return self.id
@@ -87,7 +101,7 @@ class Testbed(Base):
     __table_args__ = (
         sql.UniqueConstraint('platform', 'device', 'driver', name='_uid'),)
     # relation back to results:
-    results = sql.orm.relationship("Result", backref="testbed")
+    results = sql.orm.relationship("Result", back_populates="testbed")
 
     def __repr__(self):
         return ("Platform: {self.platform}, "
@@ -111,7 +125,7 @@ class Params(Base):
         'optimizations', 'gsize_x', 'gsize_y', 'gsize_z',
         'lsize_x', 'lsize_y', 'lsize_z', name='_uid'),)
     # relation back to results:
-    results = sql.orm.relationship("Result", backref="params")
+    results = sql.orm.relationship("Result", back_populates="params")
 
     def to_flags(self):
         flags = [
@@ -135,9 +149,9 @@ class Params(Base):
         return (self.lsize_x, self.lsize_y, self.lsize_z)
 
     def __repr__(self):
-        return ("optimizations: {self.optimizations_on_off}, "
-                "global: {self.gsize}, "
-                "local: {self.lsize}"
+        return ("Optimizations: {self.optimizations_on_off}, "
+                "Global size: {self.gsize}, "
+                "Local size: {self.lsize}"
                 .format(**vars()))
 
 
@@ -157,6 +171,10 @@ class Result(Base):
     stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
+    program = sql.orm.relationship("Program", back_populates="results")
+    testbed = sql.orm.relationship("Testbed", back_populates="results")
+    params = sql.orm.relationship("Params", back_populates="results")
+
     def __repr__(self):
         return ("program: {self.program_id}, "
                 "testbed: {self.testbed_id}, "
@@ -164,56 +182,3 @@ class Result(Base):
                 "status: {self.status}, "
                 "runtime: {self.runtime:.2f}s"
                 .format(**vars()))
-
-
-# Helper functions
-
-
-def get_testbed(platform_name: str,
-                device_name: str,
-                driver_version: str) -> Testbed:
-    return Testbed(platform=platform_name,
-                   device=device_name,
-                   driver=driver_version)
-
-
-def register_testbed(platform_id: int, device_id: int) -> int:
-    """
-    Returns:
-        int: Testbed ID.
-    """
-    platform_name = clinfo.get_platform_name(platform_id)
-    device_name = clinfo.get_device_name(platform_id, device_id)
-    driver_version = clinfo.get_driver_version(platform_id, device_id)
-
-    try:
-        with Session() as session:
-            d = get_testbed(platform_name, device_name, driver_version)
-            session.add(d)
-    except IntegrityError:
-        with Session() as session:
-            d = get_testbed(platform_name, device_name, driver_version)
-            assert(session.query(Testbed).filter(
-                Testbed.platform == d.platform,
-                Testbed.device == d.device,
-                Testbed.driver == d.driver).count() == 1)
-
-    with Session() as session:
-        d = get_testbed(platform_name, device_name, driver_version)
-        testbed_id = session.query(Testbed).filter(
-            Testbed.platform == d.platform,
-            Testbed.device == d.device,
-            Testbed.driver == d.driver).one().id
-
-    return testbed_id
-
-
-def get_num_progs_to_run(testbed_id, params):
-    with Session() as session:
-        subquery = session.query(Result.program_id).filter(
-            Result.testbed_id == testbed_id, Result.params_id == params.id)
-        ran = session.query(Program.id).filter(Program.id.in_(subquery)).count()
-        subquery = session.query(Result.program_id).filter(
-            Result.testbed_id == testbed_id)
-        total = session.query(Program.id).count()
-        return ran, total
