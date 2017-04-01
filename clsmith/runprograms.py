@@ -83,11 +83,11 @@ def parse_ndrange(ndrange):
 def get_num_progs_to_run(session, testbed, params):
     subquery = session.query(Result.program_id).filter(
         Result.testbed_id == testbed.id, Result.params_id == params.id)
-    ran = session.query(Program.id).filter(Program.id.in_(subquery)).count()
+    num_ran = session.query(Program.id).filter(Program.id.in_(subquery)).count()
     subquery = session.query(Result.program_id).filter(
         Result.testbed_id == testbed.id)
     total = session.query(Program.id).count()
-    return ran, total
+    return num_ran, total
 
 
 if __name__ == "__main__":
@@ -135,8 +135,8 @@ if __name__ == "__main__":
         print(params)
 
         # progress bar
-        ran, total_to_run = get_num_progs_to_run(session, testbed, params)
-        bar = progressbar.ProgressBar(init_value=ran, max_value=total_to_run)
+        num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
+        bar = progressbar.ProgressBar(init_value=num_ran, max_value=num_to_run)
 
         # main execution loop:
         while True:
@@ -170,8 +170,8 @@ if __name__ == "__main__":
             session.commit()
 
             # update progress bar
-            ran, total_to_run = get_num_progs_to_run(session, testbed, params)
-            bar.max_value = ntodo
-            bar.update(min(ran, ntodo))
+            num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
+            bar.max_value = num_to_run
+            bar.update(min(num_ran, num_to_run))
 
     print("\ndone.")
