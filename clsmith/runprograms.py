@@ -35,7 +35,16 @@ def verify_device(device_name, stderr):
             return
 
 
-def get_params(stderr):
+def verify_optimizations(disable_optimizations, stderr):
+    optimizations = "on" if disable_optimizations else "off"
+    for line in stderr.split('\n'):
+        if line.startswith("OpenCL optimizations: "):
+            actual_optimizations = re.sub(r"^OpenCL optimizations: ", "", line).rstrip()
+            assert(actual_optimizations == optimizations)
+            return
+
+
+def get_actual_params(stderr):
     global_size = None
     local_size = None
     for line in stderr.split('\n'):
@@ -65,56 +74,69 @@ def get_params(stderr):
             return global_size, local_size
 
 
-def run_next_prog(platform, device, testbed_id):
+def get_params(session) -> db.Params:
+    gsize = (128, 16, 1)
+    lsize = (32, 1, 1)
+    params = db.Params(
+        optimizations = True,
+        gsize_x = gsize[0], gsize_y = gsize[1], gsize_z = gsize[2],
+        lsize_x = lsize[0], lsize_y = lsize[1], lsize_z = lsize[2]
+    )
+    nparam = session.query(db.Params).filter(
+        db.Params.optimizations == params.optimizations,
+        db.Params.gsize_x == gsize[0],
+        db.Params.gsize_y == gsize[1],
+        db.Params.gsize_z == gsize[2],
+        db.Params.lsize_x == lsize[0],
+        db.Params.lsize_y == lsize[1],
+        db.Params.lsize_z == lsize[2]
+    ).count()
+    if nparam == 0:
+        session.add(params)
+    session.flush()
+    return session.query(db.Params).filter(
+        db.Params.optimizations == params.optimizations,
+        db.Params.gsize_x == gsize[0],
+        db.Params.gsize_y == gsize[1],
+        db.Params.gsize_z == gsize[2],
+        db.Params.lsize_x == lsize[0],
+        db.Params.lsize_y == lsize[1],
+        db.Params.lsize_z == lsize[2]
+    ).one()
+
+
+def run_next_prog(platform, device, testbed_id) -> None:
     platform_id, platform_name = platform
     device_id, device_name = device
 
     with db.Session() as session:
-        gsize = (128, 16, 1)
-        lsize = (32, 1, 1)
-        params = db.Params(
-            gsize_x = gsize[0], gsize_y = gsize[1], gsize_z = gsize[2],
-            lsize_x = lsize[0], lsize_y = lsize[1], lsize_z = lsize[2])
-        nparam = session.query(db.Params).filter(
-            db.Params.gsize_x == gsize[0],
-            db.Params.gsize_y == gsize[1],
-            db.Params.gsize_z == gsize[2],
-            db.Params.lsize_x == lsize[0],
-            db.Params.lsize_y == lsize[1],
-            db.Params.lsize_z == lsize[2]
-        ).count()
-        if nparam == 0:
-            session.add(params)
-        session.flush()
-        params = session.query(db.Params).filter(
-            db.Params.gsize_x == gsize[0],
-            db.Params.gsize_y == gsize[1],
-            db.Params.gsize_z == gsize[2],
-            db.Params.lsize_x == lsize[0],
-            db.Params.lsize_y == lsize[1],
-            db.Params.lsize_z == lsize[2]
-        ).one()
+        params = get_params(session)
 
         subquery = session.query(db.Result.program_id).filter(
             db.Result.testbed_id == testbed_id, db.Result.params_id == params.id)
         program = session.query(db.Program).filter(
             ~db.Program.id.in_(subquery)).order_by(db.Program.id).first()
 
-        opts = params.to_args()
+        # we have no program to run
+        if not program:
+            return
+
+        flags = params.to_flags()
         runtime, status, stdout, stderr = cl_launcher(
-            program.src, platform_id, device_id, *opts)
+            program.src, platform_id, device_id, *flags)
 
         # assert that run params match expected
         verify_platform(platform_name, stderr)
         verify_device(device_name, stderr)
-        actual_gsize, actual_lsize = get_params(stderr)
-        assert(gsize == actual_gsize)
-        assert(lsize == actual_lsize)
+        verify_optimizations(params.optimizations, stderr)
+        actual_gsize, actual_lsize = get_actual_params(stderr)
+        assert((params.gsize_x, params.gsize_y, params.gsize_z) == actual_gsize)
+        assert((params.lsize_x, params.lsize_y, params.lsize_z) == actual_lsize)
 
         # add new result
         session.add(db.Result(
             program_id=program.id, testbed_id=testbed_id, params_id=params.id,
-            flags=" ".join(opts), status=status, runtime=runtime,
+            flags=" ".join(flags), status=status, runtime=runtime,
             stdout=stdout, stderr=stderr))
 
 
@@ -140,14 +162,17 @@ if __name__ == "__main__":
 
     print('testbed', testbed_id, 'using', device_name)
 
-    ran, ntodo = db.get_num_progs_to_run(testbed_id)
-    bar = progressbar.ProgressBar(initial_value=ran, max_value=ntodo)
+    with db.Session() as session:
+        ran, ntodo = db.get_num_progs_to_run(testbed_id, get_params(session))
+    bar = progressbar.ProgressBar(init_value=ran, max_value=ntodo)
     while True:
         run_next_prog((platform_id, platform_name), (device_id, device_name),
                       testbed_id)
 
-        ran, ntodo = db.get_num_progs_to_run(testbed_id)
+        with db.Session() as session:
+            ran, ntodo = db.get_num_progs_to_run(testbed_id, get_params(session))
         bar.max_value = ntodo
         bar.update(ran)
-        if not ntodo:
+        if ran == ntodo:
             break
+    print("\ndone.")

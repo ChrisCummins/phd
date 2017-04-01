@@ -13,6 +13,7 @@ Base = declarative_base()
 # must call init() first
 make_session = None
 
+
 def get_mysql_creds():
     """ read default MySQL credentials in ~/.my.cnf """
     config = ConfigParser()
@@ -87,24 +88,30 @@ class Params(Base):
     """ params """
     __tablename__ = "Params"
     id = sql.Column(sql.Integer, primary_key=True)
+    optimizations = sql.Column(sql.Boolean, nullable=False)
     gsize_x = sql.Column(sql.Integer, nullable=False)
     gsize_y = sql.Column(sql.Integer, nullable=False)
     gsize_z = sql.Column(sql.Integer, nullable=False)
     lsize_x = sql.Column(sql.Integer, nullable=False)
     lsize_y = sql.Column(sql.Integer, nullable=False)
     lsize_z = sql.Column(sql.Integer, nullable=False)
-    __table_args__ = (sql.UniqueConstraint('gsize_x', 'gsize_y', 'gsize_z',
-                                           'lsize_x', 'lsize_y', 'lsize_z',
-                                           name='_uid'),)
+    # unique combination of values:
+    __table_args__ = (sql.UniqueConstraint(
+        'optimizations', 'gsize_x', 'gsize_y', 'gsize_z',
+        'lsize_x', 'lsize_y', 'lsize_z', name='_uid'),)
 
-    def to_args(self):
-        return [
+    def to_flags(self):
+        flags = [
             "-g", "{self.gsize_x},{self.gsize_y},{self.gsize_z}".format(**vars()),
             "-l", "{self.lsize_x},{self.lsize_y},{self.lsize_z}".format(**vars())
         ]
+        if not self.optimizations:
+            flags.append("---disable_opts")
+        return flags
 
     def __repr__(self):
-        return ("global: ({self.gsize_x}, {self.gsize_y}, {self.gsize_z}), "
+        return ("optimizations: {self.optimizations}, "
+                "global: ({self.gsize_x}, {self.gsize_y}, {self.gsize_z}), "
                 "local: ({self.lsize_x}, {self.lsize_y}, {self.lsize_z})"
                 .format(**vars()))
 
@@ -162,10 +169,10 @@ def register_testbed(platform_name: str, device_name: str) -> int:
     return testbed_id
 
 
-def get_num_progs_to_run(testbed_id):
+def get_num_progs_to_run(testbed_id, params):
     with Session() as session:
         subquery = session.query(Result.program_id).filter(
-            Result.testbed_id == testbed_id)
+            Result.testbed_id == testbed_id, Result.params_id == params.id)
         ran = session.query(Program.id).filter(Program.id.in_(subquery)).count()
         subquery = session.query(Result.program_id).filter(
             Result.testbed_id == testbed_id)
