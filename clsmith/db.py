@@ -69,6 +69,9 @@ class Program(Base):
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
+    # relation back to results:
+    results = sql.orm.relationship("Result", backref="program")
+
     def __repr__(self):
         return self.id
 
@@ -80,8 +83,11 @@ class Testbed(Base):
     platform = sql.Column(sql.String(255), nullable=False)  # CL_DEVICE_NAME
     device = sql.Column(sql.String(255), nullable=False)  # CL_PLATFORM_NAME
     driver = sql.Column(sql.String(255), nullable=False)  # CL_DRIVER_VERSION
+    # unique combination of values:
     __table_args__ = (
         sql.UniqueConstraint('platform', 'device', 'driver', name='_uid'),)
+    # relation back to results:
+    results = sql.orm.relationship("Result", backref="testbed")
 
     def __repr__(self):
         return ("Platform: {self.platform}, "
@@ -104,6 +110,8 @@ class Params(Base):
     __table_args__ = (sql.UniqueConstraint(
         'optimizations', 'gsize_x', 'gsize_y', 'gsize_z',
         'lsize_x', 'lsize_y', 'lsize_z', name='_uid'),)
+    # relation back to results:
+    results = sql.orm.relationship("Result", backref="params")
 
     def to_flags(self):
         flags = [
@@ -114,10 +122,22 @@ class Params(Base):
             flags.append("---disable_opts")
         return flags
 
+    @property
+    def optimizations_on_off(self):
+        return "on" if self.optimizations else "off"
+
+    @property
+    def gsize(self):
+        return (self.gsize_x, self.gsize_y, self.gsize_z)
+
+    @property
+    def lsize(self):
+        return (self.lsize_x, self.lsize_y, self.lsize_z)
+
     def __repr__(self):
-        return ("optimizations: {self.optimizations}, "
-                "global: ({self.gsize_x}, {self.gsize_y}, {self.gsize_z}), "
-                "local: ({self.lsize_x}, {self.lsize_y}, {self.lsize_z})"
+        return ("optimizations: {self.optimizations_on_off}, "
+                "global: {self.gsize}, "
+                "local: {self.lsize}"
                 .format(**vars()))
 
 
@@ -136,6 +156,14 @@ class Result(Base):
     runtime = sql.Column(sql.Float, nullable=False)
     stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+
+    def __repr__(self):
+        return ("program: {self.program_id}, "
+                "testbed: {self.testbed_id}, "
+                "params: {self.params_id}, "
+                "status: {self.status}, "
+                "runtime: {self.runtime:.2f}s"
+                .format(**vars()))
 
 
 # Helper functions
