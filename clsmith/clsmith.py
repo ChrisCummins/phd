@@ -9,7 +9,7 @@ cl_launcher_path = fs.path("~/src/CLSmith/build/cl_launcher")
 include_path = fs.path("~/src/CLSmith/runtime")
 
 
-def clsmith_cli(*args, timeout=30):
+def clsmith_cli(*args, timeout=60):
     return ["timeout", "--signal=9", str(timeout), exec_path] + list(args)
 
 
@@ -31,7 +31,7 @@ def clsmith(*args):
 
 
 def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
-                    *args, timeout=30) -> str:
+                    *args, timeout=60) -> str:
     return ["timeout", "--signal=9", str(timeout),
             cl_launcher_path, '---debug', '-f', program_path,
             '-p', str(platform_id), '-d', str(device_id),
