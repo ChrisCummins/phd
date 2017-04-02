@@ -1,5 +1,15 @@
 \section{Compiler Test-case Generation}\label{sec:motivation}
 
+\begin{figure}
+	\centering
+	\includegraphics[width=.9\columnwidth]{img/difftest} %
+	% \vspace{-2em}%
+	\caption{%
+		Differential testing compilers on a single program. The compilers may be on different systems.%
+	}%
+	\label{fig:deeptune}
+\end{figure}
+
 \begin{itemize}
 	\item \emph{Csmith} defines a probabilistic grammar over a large subset of the C programming language, and recursively instantiates a program, using rigorous and conservative static and dynamic analysis to ensure that programs are \emph{guaranteed} to be free from the 190 undefined behaviors of the C language specification.
 	\item Because Csmith programs are free form undefined behavior, there is only a single interpretation. This allows oracle-less differential testing across compilers, using a voting heuristic to identify erroneous compiler outputs.
