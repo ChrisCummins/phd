@@ -102,6 +102,7 @@ class Testbed(Base):
     platform = sql.Column(sql.String(255), nullable=False)  # CL_DEVICE_NAME
     device = sql.Column(sql.String(255), nullable=False)  # CL_PLATFORM_NAME
     driver = sql.Column(sql.String(255), nullable=False)  # CL_DRIVER_VERSION
+    host = sql.Column(sql.String(255), nullable=False)
     # unique combination of values:
     __table_args__ = (
         sql.UniqueConstraint('platform', 'device', 'driver', name='_uid'),)
@@ -111,7 +112,8 @@ class Testbed(Base):
     def __repr__(self):
         return ("Platform: {self.platform}, "
                 "Device: {self.device}, "
-                "Driver: {self.driver}".format(**vars()))
+                "Driver: {self.driver}, "
+                "Host: {self.host}".format(**vars()))
 
 
 class Params(Base):

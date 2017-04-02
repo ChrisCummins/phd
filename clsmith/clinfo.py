@@ -24,8 +24,9 @@ def get_driver_version(platform_id, device_id):
 
 
 def get_os():
-    system = platform.system()
-    release = platform.release()
+    dist = platform.linux_distribution()
+    system = dist[0]
+    release = dist[1]
     arch = platform.architecture()[0]
 
     return "{system} {release} {arch}".format(**vars())

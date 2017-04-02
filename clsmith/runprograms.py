@@ -123,7 +123,8 @@ if __name__ == "__main__":
 
     with Session() as session:
         testbed = db.get_or_create(session, Testbed,
-            platform=platform_name, device=device_name, driver=driver_version)
+            platform=platform_name, device=device_name, driver=driver_version,
+            host=clinfo.get_os())
 
         params = db.get_or_create(session, Params,
             optimizations = optimizations,
