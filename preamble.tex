@@ -67,19 +67,21 @@ maxbibnames=99       % no 'et-al' condensing author names in biliography
 %
 %\usepackage[normalem]{ulem}
 %
-%\usepackage{booktabs}
-%
-%% Required for full page-width tables.
-%\usepackage{tabularx}
-%\usepackage{hhline}
-%\usepackage{xspace}
-%
-%% Define column types L, C, R with known text justification and fixed widths:
-%\usepackage{array}
-%\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
-%\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
-%\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
-%
+
+
+% Tables.
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{hhline}
+\usepackage{xspace}
+\usepackage[table]{xcolor}
+
+% Define column types L, C, R with known text justification and fixed widths:
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
 %% needed for \upgammar
 %\usepackage{upgreek}
 %
