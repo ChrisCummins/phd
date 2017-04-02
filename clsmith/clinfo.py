@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import pyopencl as cl
+import platform
 
 
 def get_platform_name(platform_id):
@@ -22,7 +23,16 @@ def get_driver_version(platform_id, device_id):
     return device.get_info(cl.device_info.DRIVER_VERSION)
 
 
+def get_os():
+    system = platform.system()
+    release = platform.release()
+    arch = platform.architecture()[0]
+
+    return "{system} {release} {arch}".format(**vars())
+
 if __name__ == "__main__":
+    print("Host:", get_os(), "\n")
+
     for platform_id, platform in enumerate(cl.get_platforms()):
         platform_name = platform.get_info(cl.platform_info.NAME)
 
