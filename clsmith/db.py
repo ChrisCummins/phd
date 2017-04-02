@@ -34,7 +34,7 @@ def init(hostname: str) -> str:
     Base.metadata.bind = engine
     make_session = sql.orm.sessionmaker(bind=engine)
 
-    return uri
+    return "mysql://{hostname}:3306/clsmith".format(**vars())
 
 
 @contextmanager
