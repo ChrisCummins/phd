@@ -22,16 +22,19 @@ def get_mysql_creds():
     return config['mysql']['user'], config['mysql']['password']
 
 
-def init(hostname: str):
+def init(hostname: str) -> str:
     """ must be called before using anything """
     global make_session
     username, password = get_mysql_creds()
 
-    engine = sql.create_engine(
-        "mysql://{username}:{password}@{hostname}:3306/clsmith".format(**vars()))
+    uri = "mysql://{username}:{password}@{hostname}:3306/clsmith".format(**vars())
+    engine = sql.create_engine(uri)
+
     Base.metadata.create_all(engine)
     Base.metadata.bind = engine
     make_session = sql.orm.sessionmaker(bind=engine)
+
+    return uri
 
 
 @contextmanager
