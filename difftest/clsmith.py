@@ -1,6 +1,7 @@
 from labm8 import fs
 from subprocess import Popen, PIPE, STDOUT
 from time import time
+from typing import Dict, List, Tuple
 
 
 # set these variables to your local CLSmith build:
@@ -9,11 +10,11 @@ cl_launcher_path = fs.path("~/src/CLSmith/build/cl_launcher")
 include_path = fs.path("~/src/CLSmith/runtime")
 
 
-def clsmith_cli(*args, timeout=60):
+def clsmith_cli(*args, timeout: int=60) -> List[str]:
     return ["timeout", "--signal=9", str(timeout), exec_path] + list(args)
 
 
-def clsmith(*args):
+def clsmith(*args) -> Tuple[float, int, str, str]:
     """
         Returns:
             (float, int, str, str): Runtime, status, stdout, and stderr.
@@ -38,7 +39,8 @@ def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
             '--include_path', include_path] + list(args)
 
 
-def cl_launcher(program_path: str, platform_id: int, device_id: int, *args):
+def cl_launcher(program_path: str, platform_id: int, device_id: int,
+                *args) -> Tuple[float, int, str, str]:
     """
         Returns:
             (float, int, stdout, stderr): Runtime, status, stdout, and stderr.

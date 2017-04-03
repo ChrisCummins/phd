@@ -10,6 +10,8 @@ from tempfile import NamedTemporaryFile
 import clsmith
 import db
 
+from db import CLSmithProgram, Session
+
 
 def get_num_progs() -> int:
     with db.Session() as session:
@@ -34,12 +36,13 @@ def make_program(*flags) -> None:
 
         # insert program into the table. If it already exists, ignore it.
         try:
-            with db.Session() as session:
-                program = db.CLSmithProgram(
+            with Session() as session:
+                program = CLSmithProgram(
                     id=file_id, flags=" ".join(flags), runtime=runtime,
                     stdout=stdout, stderr=stderr, src=src)
                 session.add(program)
         except sql.exc.IntegrityError:
+            # duplicate program already exists
             pass
 
 

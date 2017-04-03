@@ -7,7 +7,7 @@ from labm8 import system
 from labm8 import fs
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import IntegrityError
-
+from typing import Dict, List, Tuple
 
 Base = declarative_base()
 
@@ -15,7 +15,7 @@ Base = declarative_base()
 make_session = None
 
 
-def get_mysql_creds():
+def get_mysql_creds() -> Tuple[str, str]:
     """ read default MySQL credentials in ~/.my.cnf """
     config = ConfigParser()
     config.read(fs.path("~/.my.cnf"))
@@ -40,7 +40,7 @@ def init(hostname: str) -> str:
 
 
 @contextmanager
-def Session():
+def Session() -> sql.orm.session.Session:
     """Provide a transactional scope around a series of operations."""
     session = make_session()
     try:
@@ -52,8 +52,8 @@ def Session():
     finally:
         session.close()
 
-
-def get_or_create(session, model, defaults=None, **kwargs):
+def get_or_create(session: sql.orm.session.Session, model,
+                  defaults: Dict[str, object]=None, **kwargs) -> object:
     """
     Instantiate a mapped database object. If the object is not in the database,
     add it.
@@ -111,7 +111,7 @@ class CLgenProgram(Base):
     # relation back to results:
     results = sql.orm.relationship("CLgenResult", back_populates="program")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.id
 
 
@@ -129,7 +129,7 @@ class Testbed(Base):
     # relation back to results:
     results = sql.orm.relationship("Result", back_populates="testbed")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return ("Platform: {self.platform}, "
                 "Device: {self.device}, "
                 "Driver: {self.driver}, "
@@ -154,7 +154,7 @@ class CLSmithParams(Base):
     # relation back to results:
     results = sql.orm.relationship("CLSmithResult", back_populates="params")
 
-    def to_flags(self):
+    def to_flags(self) -> List[str]:
         flags = [
             "-g", "{self.gsize_x},{self.gsize_y},{self.gsize_z}".format(**vars()),
             "-l", "{self.lsize_x},{self.lsize_y},{self.lsize_z}".format(**vars())
@@ -164,18 +164,18 @@ class CLSmithParams(Base):
         return flags
 
     @property
-    def optimizations_on_off(self):
+    def optimizations_on_off(self) -> str:
         return "on" if self.optimizations else "off"
 
     @property
-    def gsize(self):
+    def gsize(self) -> Tuple[int, int, int]:
         return (self.gsize_x, self.gsize_y, self.gsize_z)
 
     @property
-    def lsize(self):
+    def lsize(self) -> Tuple[int, int, int]:
         return (self.lsize_x, self.lsize_y, self.lsize_z)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return ("Optimizations: {self.optimizations_on_off}, "
                 "Global size: {self.gsize}, "
                 "Local size: {self.lsize}"
@@ -280,7 +280,7 @@ class CLgenResult(Base):
     testbed = sql.orm.relationship("Testbed", back_populates="results")
     params = sql.orm.relationship("CLgenParams", back_populates="results")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return ("program: {self.program_id}, "
                 "testbed: {self.testbed_id}, "
                 "params: {self.params_id}, "

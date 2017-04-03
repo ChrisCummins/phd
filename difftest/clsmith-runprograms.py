@@ -5,6 +5,7 @@ import re
 from argparse import ArgumentParser
 from labm8 import fs
 from tempfile import NamedTemporaryFile
+from typing import Dict, List, Tuple
 
 import clinfo
 import clsmith
@@ -13,7 +14,8 @@ import db
 from db import CLSmithProgram, CLSmithParams, CLSmithResult, Session, Testbed
 
 
-def cl_launcher(src: str, platform_id: int, device_id: int, *args):
+def cl_launcher(src: str, platform_id: int, device_id: int,
+                *args) -> Tuple[float, int, str, str]:
     """ Invoke cl launcher on source """
     with NamedTemporaryFile(prefix='cl_launcher-', suffix='.cl') as tmp:
         tmp.write(src.encode('utf-8'))
@@ -24,7 +26,7 @@ def cl_launcher(src: str, platform_id: int, device_id: int, *args):
 
 def verify_params(platform: str, device: str, optimizations: bool,
                   global_size: tuple, local_size: tuple,
-                  stderr: str):
+                  stderr: str) -> None:
     """ verify that expected params match actual as reported by CLsmith """
     optimizations = "on" if optimizations else "off"
 
@@ -74,13 +76,13 @@ def verify_params(platform: str, device: str, optimizations: bool,
             return
 
 
-def parse_ndrange(ndrange):
+def parse_ndrange(ndrange: str) -> Tuple[int, int, int]:
     components = ndrange.split(',')
     assert(len(components) == 3)
     return (int(components[0]), int(components[1]), int(components[2]))
 
 
-def get_num_progs_to_run(session, testbed, params):
+def get_num_progs_to_run(session, testbed: Testbed, params: Params):
     subquery = session.query(CLSmithResult.program_id).filter(
         CLSmithResult.testbed_id == testbed.id, CLSmithResult.params_id == params.id)
     num_ran = session.query(CLSmithProgram.id).filter(CLSmithProgram.id.in_(subquery)).count()
