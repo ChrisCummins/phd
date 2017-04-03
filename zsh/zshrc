@@ -335,7 +335,6 @@ alias M='mkdir'
 alias mm='./autogen.sh && ./configure'
 alias p='ipython'
 alias q='which'
-alias s='subl'
 alias T='tail'
 alias t='touch'
 alias v='vim'
@@ -477,6 +476,23 @@ ra() {
         ratom "$arg";
     done
 }
+
+
+# If sublime-text is available locally, command 's' opens sublime.
+# If not, command 's' opens rsub.
+#
+s() {
+    if [[ -f /usr/local/bin/subl ]]; then
+        # open locally
+        subl $@
+    else
+        # open remotely
+        for arg in "$@"; do
+            rsub "$arg"
+        done
+    fi
+}
+
 
 # Buffer standard input to a file. Useful for redirecting output of a
 # pipe chain to the same input file. Example:
