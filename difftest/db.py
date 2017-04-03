@@ -39,8 +39,11 @@ def init(hostname: str) -> str:
     return "mysql://{hostname}:{port}/{table}".format(**vars())
 
 
+# session type
+session_t = sql.orm.session.Session
+
 @contextmanager
-def Session() -> sql.orm.session.Session:
+def Session() -> session_t:
     """Provide a transactional scope around a series of operations."""
     session = make_session()
     try:

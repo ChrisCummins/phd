@@ -82,7 +82,8 @@ def parse_ndrange(ndrange: str) -> Tuple[int, int, int]:
     return (int(components[0]), int(components[1]), int(components[2]))
 
 
-def get_num_progs_to_run(session, testbed: Testbed, params: Params):
+def get_num_progs_to_run(session: db.session_t,
+                         testbed: Testbed, params: Params):
     subquery = session.query(CLSmithResult.program_id).filter(
         CLSmithResult.testbed_id == testbed.id, CLSmithResult.params_id == params.id)
     num_ran = session.query(CLSmithProgram.id).filter(CLSmithProgram.id.in_(subquery)).count()

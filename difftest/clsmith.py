@@ -1,7 +1,11 @@
 from labm8 import fs
 from subprocess import Popen, PIPE, STDOUT
 from time import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, NewType
+
+
+runtime_t = NewType('runtime_t', float)
+status_t = NewType('status_t', int)
 
 
 # set these variables to your local CLSmith build:
@@ -14,7 +18,7 @@ def clsmith_cli(*args, timeout: int=60) -> List[str]:
     return ["timeout", "--signal=9", str(timeout), exec_path] + list(args)
 
 
-def clsmith(*args) -> Tuple[float, int, str, str]:
+def clsmith(*args) -> Tuple[runtime_t, status_t, str, str]:
     """
         Returns:
             (float, int, str, str): Runtime, status, stdout, and stderr.
@@ -25,9 +29,9 @@ def clsmith(*args) -> Tuple[float, int, str, str]:
     process = Popen(cli, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
 
-    runtime = time() - start_time
+    runtime = runtime_t(time() - start_time)
 
-    return (runtime, process.returncode,
+    return (runtime, status_t(process.returncode),
             stdout.decode('utf-8'), stderr.decode('utf-8'))
 
 
@@ -40,7 +44,7 @@ def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
 
 
 def cl_launcher(program_path: str, platform_id: int, device_id: int,
-                *args) -> Tuple[float, int, str, str]:
+                *args) -> Tuple[runtime_t, status_t, str, str]:
     """
         Returns:
             (float, int, stdout, stderr): Runtime, status, stdout, and stderr.
@@ -51,7 +55,7 @@ def cl_launcher(program_path: str, platform_id: int, device_id: int,
     process = Popen(cli, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
 
-    runtime = time() - start_time
+    runtime = runtime_t(time() - start_time)
 
-    return (runtime, process.returncode,
+    return (runtime, status_t(process.returncode),
             stdout.decode('utf-8'), stderr.decode('utf-8'))
