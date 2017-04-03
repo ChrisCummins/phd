@@ -241,6 +241,7 @@ class Corpus(clgen.CLgenObject):
         self.hash = self._hash(contentid, self.opts)
         self.cache = clgen.mkcache("corpus", self.hash)
 
+        log.debug("contentfiles {self.contentid}".format(**vars()))
         log.debug("corpus {hash}".format(hash=self.hash))
 
         # validate metadata against cache
