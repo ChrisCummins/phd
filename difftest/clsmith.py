@@ -1,12 +1,12 @@
 from labm8 import fs
+from collections import namedtuple
 from subprocess import Popen, PIPE, STDOUT
 from time import time
 from typing import Dict, List, Tuple, NewType
 
-
 runtime_t = NewType('runtime_t', float)
 status_t = NewType('status_t', int)
-
+return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
 
 # set these variables to your local CLSmith build:
 exec_path = fs.path("~/src/CLSmith/build/CLSmith")
@@ -18,10 +18,11 @@ def clsmith_cli(*args, timeout: int=60) -> List[str]:
     return ["timeout", "--signal=9", str(timeout), exec_path] + list(args)
 
 
-def clsmith(*args) -> Tuple[runtime_t, status_t, str, str]:
+def clsmith(*args) -> return_t:
     """
         Returns:
-            (float, int, str, str): Runtime, status, stdout, and stderr.
+            return_t: A named tuple consisting of runtime (float),
+                status (int), stdout (str), and stderr (str).
     """
     start_time = time()
 
@@ -31,8 +32,9 @@ def clsmith(*args) -> Tuple[runtime_t, status_t, str, str]:
 
     runtime = runtime_t(time() - start_time)
 
-    return (runtime, status_t(process.returncode),
-            stdout.decode('utf-8'), stderr.decode('utf-8'))
+    return return_t(
+        runtime=runtime, status=status_t(process.returncode),
+        stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
 
 
 def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
@@ -44,10 +46,11 @@ def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
 
 
 def cl_launcher(program_path: str, platform_id: int, device_id: int,
-                *args) -> Tuple[runtime_t, status_t, str, str]:
+                *args) -> return_t:
     """
         Returns:
-            (float, int, stdout, stderr): Runtime, status, stdout, and stderr.
+            return_t: A named tuple consisting of runtime (float),
+                status (int), stdout (str), and stderr (str).
     """
     start_time = time()
 
@@ -57,5 +60,6 @@ def cl_launcher(program_path: str, platform_id: int, device_id: int,
 
     runtime = runtime_t(time() - start_time)
 
-    return (runtime, status_t(process.returncode),
-            stdout.decode('utf-8'), stderr.decode('utf-8'))
+    return return_t(
+        runtime=runtime, status=status_t(process.returncode),
+        stdout=stdout.decode('utf-8'), stderr=stderr.decode('utf-8'))
