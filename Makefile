@@ -133,10 +133,9 @@ distclean: $(distclean_targets)
 install: cuda
 	./configure -r >/dev/null
 	$(PIP) install --upgrade pip
-	$(PIP) install --only-binary=numpy 'numpy>=1.10.4'
-	$(PIP) install --only-binary=scipy 'scipy>=0.16.1'
-	$(PIP) install --only-binary=pandas 'pandas>=0.19.0'
-	$(PIP) install 'Cython==0.23.4'
+	$(PIP) install --only-binary=numpy '$(shell grep numpy requirements.txt)'
+	$(PIP) install --only-binary=scipy '$(shell grep scipy requirements.txt)'
+	$(PIP) install --only-binary=pandas '$(shell grep pandas requirements.txt)'
 	$(PIP) install -r requirements.txt
 	$(PYTHON) ./setup.py install
 
