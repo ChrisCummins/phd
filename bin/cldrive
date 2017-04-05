@@ -21,6 +21,8 @@ from cldrive import clinfo
 
 
 def main():
+    # TODO: Accept one file as argument. If no file given, read from stdin.
+    # TODO: Run kernel, print outputs as precise hex values.
     raise NotImplementedError
 
 
