@@ -209,9 +209,6 @@ export VIRTUAL_ENV_DISABLE_PROMPT=1
 # travis tab completion
 [ -f ~/.travis/travis.sh ] && source ~/.travis/travis.sh
 
-# autoenv cd script. https://github.com/kennethreitz/autoenv
-which activate.sh &>/dev/null && source $(which activate.sh)
-
 # torch environment
 [ -f ~/torch/install/bin/torch-activate ] && source ~/torch/install/bin/torch-activate
 
@@ -559,6 +556,9 @@ fi
 # --------------------------------------------------------------------------
 # External files.
 # --------------------------------------------------------------------------
+
+# autoenv cd script. https://github.com/kennethreitz/autoenv
+which activate.sh &>/dev/null && source $(which activate.sh)
 
 setopt nullglob
 
