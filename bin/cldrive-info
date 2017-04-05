@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+
+from cldrive import clinfo
+
+
+def main():
+    clinfo.print_summary()
+
+
+if __name__ == "__main__":
+    main()
