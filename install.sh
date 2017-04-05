@@ -97,6 +97,8 @@ install_zsh() {
             symlink "$private/zsh/homebrew.zsh" ~/.zsh/private/homebrew.zsh
         fi
     fi
+
+    clone_repo https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
 }
 
 
