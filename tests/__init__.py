@@ -23,6 +23,41 @@ import cldrive
 
 
 class TestCldrive(TestCase):
+    def test_extract_args(self):
+        src = """
+    typedef int foobar;
+
+    void B(const int e);
+
+    __kernel void A(const __global int* data, __local float4 * restrict car,
+                    __global const float* b, const int foo, int d) {
+        int tid = get_global_id(0);
+        data[tid] *= 2.0;
+    }
+
+    void B(const int e) {}
+    """
+        args = cldrive.extract_args(src)
+        self.assertEqual(len(args), 5)
+
+    def test_extract_args_multiple_kernels(self):
+        src = """
+    __kernel void A(__global int* a) {}
+    __kernel void B(const int e) {}
+    """
+        with self.assertRaises(cldrive.ParseError):
+            cldrive.extract_args(src)
+
+    def test_extract_args_no_args(self):
+        src = """__kernel void A() {}"""
+        args = cldrive.extract_args(src)
+        self.assertEqual(len(args), 0)
+
+    def test_extract_args_no_kernel(self):
+        src = """__kernel void A();"""
+        with self.assertRaises(cldrive.ParseError):
+            cldrive.extract_args(src)
+
     def test_make_env_not_found(self):
         with self.assertRaises(cldrive.OpenCLDeviceNotFound):
             cldrive.make_env(platform_id=9999999, device_id=9999999)

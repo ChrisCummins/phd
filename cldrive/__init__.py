@@ -22,17 +22,14 @@ import platform
 
 from collections import namedtuple
 from enum import Enum, auto
+from typing import List
 
 import numpy as np
 import pyopencl as cl
 
-from pycparser.plyparser import ParseError
-from pycparserext.ext_c_parser import OpenCLCParser
-
 class CLdriveError(Exception):
     """ Base error type. """
     pass
-
 
 class InputTypeError(ValueError, CLdriveError):
     """ Raised if an input is of incorrect type. """
@@ -44,6 +41,18 @@ class OpenCLDeviceNotFound(LookupError, CLdriveError):
     pass
 
 
+class ParseError(ValueError, CLdriveError):
+    """ Raised if parsing OpenCL source fails. """
+    pass
+
+
+class KernelArgError(ValueError, CLdriveError):
+    """ Raised if kernel argument processing fails. """
+    pass
+
+from cldrive import payload
+
+
 NDRange = namedtuple('NDRange', ['x', 'y', 'z'])
 OpenCLEnvironment = namedtuple('OpenCLEnvironment', ['ctx', 'queue'])
 
@@ -53,9 +62,6 @@ class Generator(Enum):
     SEQ = auto()
     ZEROS = auto()
     ONES = auto()
-
-
-_parser = OpenCLCParser()
 
 
 def _assert_or_raise(stmt: bool, exception=CLdriveError,
@@ -135,6 +141,25 @@ def make_env(platform_id: int=None, device_id: int=None,
             return OpenCLEnvironment(ctx=ctx, queue=queue)
 
     raise OpenCLDeviceNotFound("Could not find a suitable device")
+
+
+def extract_args(src: str) -> List[payload.KernelArg]:
+    """
+    Extract kernel arguments for an OpenCL kernel.
+
+    Returns:
+        List[payload.KernelArg]: A list of the kernel's arguments, in order.
+
+    Raises:
+        ParseError: If the source contains more than one kernel definition,
+            or if any of the kernel's parameters cannot be determined.
+        KernelArgError: If any of the kernel's parameters are invalid or
+            not supported.
+    """
+    ast = payload.parse(src)
+    visitor = payload.ArgumentExtractor()
+    visitor.visit(ast)
+    return visitor.args
 
 
 def make_data(src: str, gsize: NDRange, data_generator: Generator) -> np.array:
