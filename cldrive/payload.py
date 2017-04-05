@@ -100,14 +100,17 @@ class KernelArg(object):
 
 
 class ScalarArg(KernelArg):
+    is_pointer = False
     has_host_input = True
 
 
 class LocalBufferArg(KernelArg):
+    is_pointer = True
     has_host_input = False
 
 
 class GlobalBufferArg(KernelArg):
+    is_pointer = True
     has_host_input = True
 
 

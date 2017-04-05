@@ -22,7 +22,7 @@ import platform
 
 from collections import namedtuple
 from enum import Enum, auto
-from functools import reduce
+from functools import partial, reduce
 from operator import mul
 from typing import List
 
@@ -61,10 +61,16 @@ OpenCLEnvironment = namedtuple('OpenCLEnvironment', ['ctx', 'queue'])
 
 
 class Generator(Enum):
-    RAND = auto()
-    SEQ = auto()
-    ZEROS = auto()
-    ONES = auto()
+    # We wrap functions in a partial so that they are interpreted as attributes
+    # rather than methods. See: http://stackoverflow.com/a/40339397
+    RAND = partial(np.random.rand)
+    SEQ = partial(np.arange)
+    ZEROS = partial(np.zeros)
+    ONES = partial(np.ones)
+
+    def __call__(self, numpy_type: np.dtype, *args, **kwargs):
+        """ generate arrays of data """
+        return self.value(*args, **kwargs).astype(numpy_type)
 
 
 def _assert_or_raise(stmt: bool, exception=CLdriveError,
@@ -181,22 +187,17 @@ def make_data(src: str, gsize: NDRange, data_generator: Generator) -> np.array:
     gsize = NDRange(*gsize)
 
     scalar_gsize = reduce(mul, gsize, 1)
-    args = extract_args(src)
 
+    args = extract_args(src)
     args_with_inputs = [arg for arg in args if arg.has_host_input]
+
     data = []
     for arg in args_with_inputs:
-        if isinstance(arg, payload.GlobalBufferArg):
-            num_elem = scalar_gsize * arg.vector_width
+        if arg.is_pointer:
+            argdata = data_generator(arg.numpy_type, scalar_gsize * arg.vector_width)
         else:
-            num_elem = arg.vector_width
-
-        if data_generator == Generator.ZEROS:
-            argdata = np.zeros(num_elem).astype(arg.numpy_type)
-        elif data_generator == Generator.RAND:
-            argdata = np.random.rand(num_elem).astype(arg.numpy_type)
-        else:
-            raise InputTypeError
+            # scalar values have the global size
+            argdata = np.array([scalar_gsize] * arg.vector_width).astype(arg.numpy_type)
 
         data.append(argdata)
 
@@ -248,7 +249,20 @@ def run_kernel(src: str, gsize: NDRange, lsize: NDRange,
         _assert_or_raise(isinstance(env[1], cl.CommandQueue), InputTypeError)
     ctx, queue = env
 
+    # TODO: make_data() already extracts args, so this is duplicate effort
+    args = extract_args(src)
+    args_with_inputs = [arg for arg in args if arg.has_host_input]
+    args_with_outputs = [arg for arg in args_with_inputs if not arg.is_const]
+
+    # FIXME: WIP
+    devdata = []
+    for arg in args:
+        if isinstance(arg, payload.ScalarArg):
+            devdata.append(arg.numpy_type(scalar_gsize))
+
     # clear any existing tasks in the command queue:
     queue.flush()
+
+    args_with_inputs = [arg for arg in args if arg.has_host_input]
 
     return data * 2

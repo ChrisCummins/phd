@@ -93,6 +93,21 @@ __kernel void A(__global float* a, const int b, __local int* c) {}
         self.assertEqual(data[0].dtype, np.float32)
         self.assertEqual(data[1].dtype, np.int32)
 
+    def test_make_data_vector_type(self):
+        src = '''\
+kernel void A(global float4* a, global int2* b, const int c) {}
+'''
+        data = cldrive.make_data(
+            src, (128,4,1), data_generator=cldrive.Generator.ZEROS)
+
+        self.assertEqual((3,), data.shape)
+        self.assertEqual((128 * 4 * 4,), data[0].shape)
+        self.assertEqual((128 * 4 * 2,), data[1].shape)
+        self.assertEqual((1,), data[2].shape)
+        self.assertEqual(data[0].dtype, np.float32)
+        self.assertEqual(data[1].dtype, np.int32)
+        self.assertEqual(data[2].dtype, np.int32)
+
     def test_make_env_not_found(self):
         with self.assertRaises(cldrive.OpenCLDeviceNotFound):
             cldrive.make_env(platform_id=9999999, device_id=9999999)
@@ -117,3 +132,5 @@ __kernel void A(__global float* a, const int b, __local int* c) {}
 #                                      lsize=cldrive.NDRange(1,1,1),
 #                                      env=env)
         # self.assertTrue(np.array_equal(outputs, [[0,2,4,6,8,10,12,14]]))
+
+# TODO: Difftest against cl_launcher from CLSmith for a CLSmith kernel.
