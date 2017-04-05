@@ -18,12 +18,13 @@
 """
 Run arbitrary OpenCL kernels.
 """
+import math
+import os
 import platform
 
 from collections import namedtuple
 from enum import Enum, auto
-from functools import partial, reduce
-from operator import mul
+from functools import partial
 from typing import List
 
 import numpy as np
@@ -171,9 +172,13 @@ def extract_args(src: str) -> List[payload.KernelArg]:
     return visitor.args
 
 
-def make_data(src: str, gsize: NDRange, data_generator: Generator) -> np.array:
+def make_data(src: str, size: int, data_generator: Generator,
+              scalar_val: float=None) -> np.array:
     """
     Generate data for OpenCL kernels.
+
+    Creates a numpy array for each OpenCL argument, except arguments with the
+    'local' qualifier, since those are instantiated.
 
     Returns:
         np.array: The generated data.
@@ -181,12 +186,12 @@ def make_data(src: str, gsize: NDRange, data_generator: Generator) -> np.array:
     Raises:
         InputTypeError: If any of the input arguments are of incorrect type.
     """
+    # check the input types
     _assert_or_raise(isinstance(src, str), InputTypeError)
-    _assert_or_raise(len(gsize) == 3, InputTypeError)
     _assert_or_raise(isinstance(data_generator, Generator), InputTypeError)
-    gsize = NDRange(*gsize)
 
-    scalar_gsize = reduce(mul, gsize, 1)
+    if scalar_val is None:
+        scalar_val = size
 
     args = extract_args(src)
     args_with_inputs = [arg for arg in args if arg.has_host_input]
@@ -194,10 +199,14 @@ def make_data(src: str, gsize: NDRange, data_generator: Generator) -> np.array:
     data = []
     for arg in args_with_inputs:
         if arg.is_pointer:
-            argdata = data_generator(arg.numpy_type, scalar_gsize * arg.vector_width)
+            argdata = data_generator(arg.numpy_type, size * arg.vector_width)
         else:
-            # scalar values have the global size
-            argdata = np.array([scalar_gsize] * arg.vector_width).astype(arg.numpy_type)
+            # scalar values are still arrays, so e.g. 'float4' is an array of
+            # 4 floats. Each component of a scalar value is the flattened
+            # global size, e.g. with gsize (32,2,1), scalar arugments have the
+            # value 32 * 2 * 1 = 64.
+            scalar_val = [scalar_val] * arg.vector_width
+            argdata = np.array(scalar_val).astype(arg.numpy_type)
 
         data.append(argdata)
 
@@ -205,9 +214,9 @@ def make_data(src: str, gsize: NDRange, data_generator: Generator) -> np.array:
 
 
 def run_kernel(src: str, gsize: NDRange, lsize: NDRange,
-               data: np.array=None,
+               data: np.array=None, buf_scale: float=1.0,
                data_generator: Generator=Generator.SEQ,
-               env: OpenCLEnvironment=None) -> np.array:
+               env: OpenCLEnvironment=None, debug: bool=False) -> np.array:
     """
     Execute an OpenCL kernel.
 
@@ -216,6 +225,8 @@ def run_kernel(src: str, gsize: NDRange, lsize: NDRange,
         gsize (NDRange): Kernel global size.
         lsize (NDRange): Kernel local (workgroup) size.
         data (np.array, optional): Data for kernel arguments.
+        buf_scale (float, optional): Scaling factor for multiplying global
+            size dimensions when generating data.
         data_generator (Generator, optional): Type of data generator to use.
             Ignored if `data` argument is not None.
         env (OpenCLEnvironment, optional): The OpenCL environment to run the
@@ -228,6 +239,7 @@ def run_kernel(src: str, gsize: NDRange, lsize: NDRange,
     Raises:
         InputTypeError: If any of the input arguments are of incorrect type.
     """
+    # check our input types
     _assert_or_raise(isinstance(src, str), InputTypeError)
     _assert_or_raise(len(gsize) == 3, InputTypeError)
     _assert_or_raise(len(lsize) == 3, InputTypeError)
@@ -235,12 +247,7 @@ def run_kernel(src: str, gsize: NDRange, lsize: NDRange,
     gsize = NDRange(*gsize)
     lsize = NDRange(*lsize)
 
-    # ensure we're working with a numpy array
-    if data is None:
-        data = make_data(src=src, gsize=gsize, data_generator=data_generator)
-    else:
-        data = np.array(data)
-
+    # setup our OpenCL environment as required
     if env is None:
         env = make_env()
     else:
@@ -249,20 +256,93 @@ def run_kernel(src: str, gsize: NDRange, lsize: NDRange,
         _assert_or_raise(isinstance(env[1], cl.CommandQueue), InputTypeError)
     ctx, queue = env
 
-    # TODO: make_data() already extracts args, so this is duplicate effort
-    args = extract_args(src)
-    args_with_inputs = [arg for arg in args if arg.has_host_input]
-    args_with_outputs = [arg for arg in args_with_inputs if not arg.is_const]
+    # scalar_gsize is the product of the global NDRange.
+    # buf_size is scaled relative to the global size in each dimension.
+    scalar_gsize: int = 1
+    buf_size: int = 1
+    for x in gsize:
+        scalar_gsize *= x
+        buf_size *= x * buf_scale if x > 1 else x
+    buf_size = math.ceil(buf_size)
 
-    # FIXME: WIP
-    devdata = []
-    for arg in args:
-        if isinstance(arg, payload.ScalarArg):
-            devdata.append(arg.numpy_type(scalar_gsize))
+    # generate data and ensure we're working with a numpy array
+    if data is None:
+        data = make_data(src=src, size=buf_size, scalar_val=scalar_gsize,
+                         data_generator=data_generator)
+    else:
+        data = np.array(data, copy=True)
+
+    # get the indices of input arguments
+    args = extract_args(src)
+    data_indices = [i for i, arg in enumerate(args) if arg.has_host_input]
+
+    # sanity check that there are enough the correct number of inputs
+    _assert_or_raise(len(data_indices) == len(data), InputTypeError,
+                     "Incorrect number of inputs provided")
+
+    ArgTuple = namedtuple('ArgTuple', ['kernelarg', 'hostdata', 'devdata'])
+    argtuples = []
+    for i, arg in enumerate(args):
+        if isinstance(arg, payload.GlobalBufferArg):
+            hostdata = data[i]
+        else:
+            hostdata = None
+
+        if isinstance(arg, payload.LocalBufferArg):
+            nbytes = buf_size * arg.vector_width * arg.numpy_type.itemsize
+            devdata = cl.LocalMemory(nbytes)
+        elif isinstance(arg, payload.GlobalBufferArg):
+            assert(i in data_indices)  # sanity check
+            data_indices.remove(i)
+
+            # determine flags to pass to OpenCL buffer creation:
+            flags = cl.mem_flags.COPY_HOST_PTR
+            if arg.is_const:
+                flags |= cl.mem_flags.READ_ONLY
+            else:
+                flags |= cl.mem_flags.READ_WRITE
+
+            devdata = cl.Buffer(ctx, flags, hostbuf=hostdata)
+        elif isinstance(arg, payload.ScalarArg):
+            assert(i in data_indices)
+            data_indices.remove(i)
+
+            devdata = data[i]
+        argtuples.append(ArgTuple(kernelarg=arg, hostdata=hostdata,
+                                  devdata=devdata))
+    assert(not len(data_indices))
 
     # clear any existing tasks in the command queue:
     queue.flush()
 
-    args_with_inputs = [arg for arg in args if arg.has_host_input]
+    # compile the program
+    if debug:
+        os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
+    else:
+        os.environ['PYOPENCL_COMPILER_OUTPUT'] = '0'
+    program = cl.Program(ctx, src).build()
+    kernel = program.all_kernels()[0]
 
-    return data * 2
+    # copy data to device
+    for arg in argtuples:
+        if arg.hostdata is not None:
+            cl.enqueue_copy(queue, arg.devdata, arg.hostdata,
+                            is_blocking=False)
+
+    kernel_args = [t.devdata for t in argtuples]
+
+    # set the kernel arguments
+    kernel.set_args(*kernel_args)
+
+    # run the kernel
+    kernel(queue, gsize, lsize, *kernel_args)
+
+    for arg in argtuples:
+        if arg.hostdata is not None and not arg.kernelarg.is_const:
+            cl.enqueue_copy(queue, arg.hostdata, arg.devdata,
+                            is_blocking=False)
+
+    # wait for queue to finish
+    queue.flush()
+
+    return data

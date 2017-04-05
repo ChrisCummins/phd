@@ -152,7 +152,9 @@ class ArgumentExtractor(NodeVisitor):
                 param.quals.remove("__global")
                 argtype = GlobalBufferArg
             else:
-                raise cldrive.ParseError(f"Unknown pointer type {param.name}")
+                # the pointer argument is neither a global or float
+                raise cldrive.ParseError(f"Argument '{param.name}' is neither "
+                                         "global or float qualified")
         elif isinstance(param.type, TypeDecl):
             argtype = ScalarArg
         else:

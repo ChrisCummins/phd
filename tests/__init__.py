@@ -19,6 +19,8 @@ from unittest import TestCase, skipIf
 
 import numpy as np
 
+from numpy import testing as nptest
+
 import cldrive
 
 
@@ -63,47 +65,45 @@ class TestCldrive(TestCase):
 __kernel void A() {}
 '''
         data = cldrive.make_data(
-            src, (32,1,1), data_generator=cldrive.Generator.ZEROS)
+            src, size=32, data_generator=cldrive.Generator.ZEROS)
 
-        self.assertEqual(0, len(data))
-        self.assertEqual((0,), data.shape)
+        self.assertEqual(data.shape, (0,))
 
-    def test_make_data_zeros_1(self):
+    def test_make_data_1_arg(self):
         src = '''\
 __kernel void A(__global int* data) {}
 '''
         data = cldrive.make_data(
-            src, (1,1,1), data_generator=cldrive.Generator.ZEROS)
+            src, size=1, data_generator=cldrive.Generator.ZEROS)
 
-        self.assertEqual(1, len(data))
-        self.assertEqual(1, len(data[0]))
-        self.assertEqual((1, 1), data.shape)
-        self.assertEqual(0, data[0][0])
+        self.assertEqual(data.shape, (1, 1))
+        self.assertEqual(data[0].dtype, np.int32)
+        self.assertEqual(data[0][0], 0)
 
-    def test_make_data_zeros_2(self):
+    def test_make_data_3_args(self):
         src = '''\
 __kernel void A(__global float* a, const int b, __local int* c) {}
 '''
         data = cldrive.make_data(
-            src, (32,1,1), data_generator=cldrive.Generator.ZEROS)
+            src, size=32, data_generator=cldrive.Generator.ZEROS)
 
-        self.assertEqual((2,), data.shape)
-        self.assertEqual((32,), data[0].shape)
-        self.assertEqual((1,), data[1].shape)
+        self.assertEqual(data.shape, (2,))
+        self.assertEqual(data[0].shape, (32,))
+        self.assertEqual(data[1].shape, (1,))
         self.assertEqual(data[0].dtype, np.float32)
         self.assertEqual(data[1].dtype, np.int32)
 
-    def test_make_data_vector_type(self):
+    def test_make_data_vector_types(self):
         src = '''\
-kernel void A(global float4* a, global int2* b, const int c) {}
+kernel void A(global float4* a, global int2* b, const int3 c) {}
 '''
         data = cldrive.make_data(
-            src, (128,4,1), data_generator=cldrive.Generator.ZEROS)
+            src, 512, data_generator=cldrive.Generator.ZEROS)
 
-        self.assertEqual((3,), data.shape)
-        self.assertEqual((128 * 4 * 4,), data[0].shape)
-        self.assertEqual((128 * 4 * 2,), data[1].shape)
-        self.assertEqual((1,), data[2].shape)
+        self.assertEqual(data.shape, (3,))
+        self.assertEqual(data[0].shape, (512 * 4,))
+        self.assertEqual(data[1].shape, (512 * 2,))
+        self.assertEqual(data[2].shape, (3,))
         self.assertEqual(data[0].dtype, np.float32)
         self.assertEqual(data[1].dtype, np.int32)
         self.assertEqual(data[2].dtype, np.int32)
@@ -112,25 +112,57 @@ kernel void A(global float4* a, global int2* b, const int c) {}
         with self.assertRaises(cldrive.OpenCLDeviceNotFound):
             cldrive.make_env(platform_id=9999999, device_id=9999999)
 
-#     def test_run(self):
-#         kernel = '''\
-# __kernel void A(__global int* data) {
-#     int tid = get_global_id(0);
-#     data[tid] *= 2.0;
-# }
-# '''
-#         env = cldrive.make_env()
+    def test_run_1(self):
+        src = '''\
+__kernel void A(__global int* data) {
+    int tid = get_global_id(0);
+    data[tid] *= 2;
+}
+'''
+        env = cldrive.make_env()
 
-#         outputs = cldrive.run_kernel(kernel, data_generator=cldrive.Generator.SEQ,
-#                                      gsize=cldrive.NDRange(4,1,1),
-#                                      lsize=cldrive.NDRange(1,1,1),
-#                                      env=env)
-#         self.assertTrue(np.array_equal(outputs, [[0,2,4,6]]))
+        outputs = cldrive.run_kernel(src, data_generator=cldrive.Generator.SEQ,
+                                     gsize=cldrive.NDRange(4,1,1),
+                                     lsize=cldrive.NDRange(1,1,1),
+                                     env=env)
+        nptest.assert_equal(outputs, [[0,2,4,6]])
 
-#         outputs = cldrive.run_kernel(kernel, data_generator=cldrive.Generator.SEQ,
-#                                      gsize=cldrive.NDRange(8,1,1),
-#                                      lsize=cldrive.NDRange(1,1,1),
-#                                      env=env)
-        # self.assertTrue(np.array_equal(outputs, [[0,2,4,6,8,10,12,14]]))
+        outputs = cldrive.run_kernel(src, data_generator=cldrive.Generator.ZEROS,
+                                     gsize=cldrive.NDRange(8,2,1),
+                                     lsize=cldrive.NDRange(1,1,1),
+                                     env=env)
+        nptest.assert_equal(outputs, [[0] * 16])
+
+    def test_run_2(self):
+        src = '''\
+__kernel void A(__global float* data, const float b) {
+    int xid = get_global_id(0);
+    int yid = get_global_id(1) * get_global_size(0);
+    data[yid + xid] = data[yid + xid] + b;
+}
+'''
+        env = cldrive.make_env()
+
+        outputs = cldrive.run_kernel(src, data_generator=cldrive.Generator.SEQ,
+                                     gsize=cldrive.NDRange(4,1,1),
+                                     lsize=cldrive.NDRange(2,1,1),
+                                     env=env)
+        nptest.assert_almost_equal(outputs[0], [4,5,6,7])
+        nptest.assert_almost_equal(outputs[1], [4])
+
+        # same again, but scale the buffer this time
+        outputs = cldrive.run_kernel(src, data_generator=cldrive.Generator.SEQ,
+                                     gsize=cldrive.NDRange(4,1,1),
+                                     lsize=cldrive.NDRange(2,1,1),
+                                     env=env, buf_scale=2.0)
+        nptest.assert_almost_equal(outputs[0], [4,5,6,7,4,5,6,7])
+        nptest.assert_almost_equal(outputs[1], [4])
+
+        outputs = cldrive.run_kernel(src, data_generator=cldrive.Generator.ZEROS,
+                                     gsize=cldrive.NDRange(8,2,1),
+                                     lsize=cldrive.NDRange(2,2,1),
+                                     env=env)
+        nptest.assert_almost_equal(outputs[0], [16] * 16)
+        nptest.assert_almost_equal(outputs[1], [16])
 
 # TODO: Difftest against cl_launcher from CLSmith for a CLSmith kernel.
