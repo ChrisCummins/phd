@@ -36,8 +36,10 @@ __kernel void A(__global int* data) {
 }
 """
 
-outputs = cldrive.run(kernel, inputs="seq", gsize=(4,1,1), lsize=(1,1,1))
-print(outputs)  # output: [[[0, 2, 4, 6, 8]]]
+outputs = cldrive.run_kernel(kernel, inputs=cldrive.Inputs.SEQ,
+                             gsize=cldrive.NDRange(4,1,1),
+                             lsize=cldrive.NDRange(1,1,1))
+print(outputs)  # output: [0, 2, 4, 6, 8]
 ```
 
 
