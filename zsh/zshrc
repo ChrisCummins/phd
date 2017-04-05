@@ -192,7 +192,12 @@ if [[ -x $(which lesspipe.sh) ]]; then
 fi
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
-export EDITOR='vim'
+# sublime for local shell, rsub if on a remote machine
+if [[ -f /usr/local/bin/subl ]]; then
+    export EDITOR='subl --wait'
+else
+    export EDITOR='rsub --wait'
+fi
 export ALTERNATE_EDITOR=''
 export USE_EDITOR=$EDITOR
 export VISUAL=$EDITOR
