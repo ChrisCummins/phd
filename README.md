@@ -1,5 +1,9 @@
 # cldrive - Run arbitrary OpenCL kernels
 
+## Requirements
+* OpenCL
+* Python >= 3.6
+
 ## Installation
 
 ```sh
