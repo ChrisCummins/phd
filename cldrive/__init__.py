@@ -22,10 +22,13 @@ import platform
 
 from collections import namedtuple
 from enum import Enum, auto
+from functools import reduce
+from operator import mul
 from typing import List
 
 import numpy as np
 import pyopencl as cl
+
 
 class CLdriveError(Exception):
     """ Base error type. """
@@ -173,10 +176,31 @@ def make_data(src: str, gsize: NDRange, data_generator: Generator) -> np.array:
         InputTypeError: If any of the input arguments are of incorrect type.
     """
     _assert_or_raise(isinstance(src, str), InputTypeError)
-    _assert_or_raise(isinstance(gsize, NDRange), InputTypeError)
+    _assert_or_raise(len(gsize) == 3, InputTypeError)
     _assert_or_raise(isinstance(data_generator, Generator), InputTypeError)
+    gsize = NDRange(*gsize)
 
-    return np.array([[0, 1, 2, 3]])
+    scalar_gsize = reduce(mul, gsize, 1)
+    args = extract_args(src)
+
+    args_with_inputs = [arg for arg in args if arg.has_host_input]
+    data = []
+    for arg in args_with_inputs:
+        if isinstance(arg, payload.GlobalBufferArg):
+            num_elem = scalar_gsize * arg.vector_width
+        else:
+            num_elem = arg.vector_width
+
+        if data_generator == Generator.ZEROS:
+            argdata = np.zeros(num_elem).astype(arg.numpy_type)
+        elif data_generator == Generator.RAND:
+            argdata = np.random.rand(num_elem).astype(arg.numpy_type)
+        else:
+            raise InputTypeError
+
+        data.append(argdata)
+
+    return np.array(data)
 
 
 def run_kernel(src: str, gsize: NDRange, lsize: NDRange,
@@ -204,9 +228,11 @@ def run_kernel(src: str, gsize: NDRange, lsize: NDRange,
         InputTypeError: If any of the input arguments are of incorrect type.
     """
     _assert_or_raise(isinstance(src, str), InputTypeError)
-    _assert_or_raise(isinstance(gsize, NDRange), InputTypeError)
-    _assert_or_raise(isinstance(lsize, NDRange), InputTypeError)
+    _assert_or_raise(len(gsize) == 3, InputTypeError)
+    _assert_or_raise(len(lsize) == 3, InputTypeError)
     _assert_or_raise(isinstance(data_generator, Generator), InputTypeError)
+    gsize = NDRange(*gsize)
+    lsize = NDRange(*lsize)
 
     # ensure we're working with a numpy array
     if data is None:

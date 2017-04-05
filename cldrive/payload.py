@@ -28,6 +28,11 @@ import cldrive
 
 
 class KernelArg(object):
+    """
+    TODO:
+        * Attribute 'numpy_type' should depend on the properties of the device.
+          E.g. not all devices will have 32 bit integer widths.
+    """
     def __init__(self, typename: str, name="", quals: List[str]=[]):
         self.typename = typename
         self.name = name
@@ -95,20 +100,15 @@ class KernelArg(object):
 
 
 class ScalarArg(KernelArg):
-    pass
+    has_host_input = True
 
 
 class LocalBufferArg(KernelArg):
-    pass
+    has_host_input = False
 
 
 class GlobalBufferArg(KernelArg):
-    pass
-
-
-class KernelPayload(object):
-    def __init__(self, args):
-        pass
+    has_host_input = True
 
 
 class ArgumentExtractor(NodeVisitor):
