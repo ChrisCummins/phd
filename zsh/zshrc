@@ -194,9 +194,9 @@ fi
 
 # sublime for local shell, rsub if on a remote machine
 if [[ -f /usr/local/bin/subl ]]; then
-    export EDITOR='subl --wait'
+    export EDITOR='subl --new-window --wait'
 else
-    export EDITOR='rsub --wait'
+    export EDITOR='rsub --new-window --wait'
 fi
 export ALTERNATE_EDITOR=''
 export USE_EDITOR=$EDITOR
