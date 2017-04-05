@@ -23,15 +23,27 @@ import cldrive
 
 
 class TestCldrive(TestCase):
+    def test_make_env_not_found(self):
+        with self.assertRaises(cldrive.OpenCLDeviceNotFound):
+            cldrive.make_env(platform_id=9999999, device_id=9999999)
+
     def test_run(self):
         kernel = '''\
 __kernel void A(__global int* data) {
     int tid = get_global_id(0);
-    data[tid] *= 2.0
+    data[tid] *= 2.0;
 }
 '''
-        outputs = cldrive.run(kernel, inputs=cldrive.Inputs.SEQ,
-                              gsize=cldrive.NDRange(4,1,1),
-                              lsize=cldrive.NDRange(1,1,1))
+        env = cldrive.make_env()
 
+        outputs = cldrive.run_kernel(kernel, data_generator=cldrive.Generator.SEQ,
+                                     gsize=cldrive.NDRange(4,1,1),
+                                     lsize=cldrive.NDRange(1,1,1),
+                                     env=env)
         self.assertTrue(np.array_equal(outputs, [[0,2,4,6]]))
+
+        outputs = cldrive.run_kernel(kernel, data_generator=cldrive.Generator.SEQ,
+                                     gsize=cldrive.NDRange(8,1,1),
+                                     lsize=cldrive.NDRange(1,1,1),
+                                     env=env)
+        # self.assertTrue(np.array_equal(outputs, [[0,2,4,6,8,10,12,14]]))
