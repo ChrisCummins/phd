@@ -17,13 +17,71 @@
 # You should have received a copy of the GNU General Public License
 # along with cldrive.  If not, see <http://www.gnu.org/licenses/>.
 #
-from cldrive import clinfo
+from argparse import ArgumentParser
+
+import fileinput
+import sys
+
+from collections import ChainMap
+from typing import Tuple
+
+import cldrive
+
+
+def parse_ndrange(ndrange: str) -> Tuple[int, int, int]:
+    components = ndrange.split(',')
+    assert(len(components) == 3)
+    return (int(components[0]), int(components[1]), int(components[2]))
 
 
 def main():
-    # TODO: Accept one file as argument. If no file given, read from stdin.
-    # TODO: Run kernel, print outputs as precise hex values.
-    raise NotImplementedError
+    parser = ArgumentParser()
+    parser.add_argument("inpath", metavar="kernel", type=str, nargs="?",
+                        help=("path to kernel source file. If not provided, "
+                              "source is read from stdin"))
+    parser.add_argument("-p", "--platform", metavar="id", type=int,
+                        default=None, help="use specified OpenCL platform ID")
+    parser.add_argument("-d", "--device", metavar="id", type=int, default=None,
+                        help="use specified OpenCL device ID")
+    parser.add_argument("--cpu", action="store_true",
+                        help="use first available CPU device")
+    parser.add_argument("--gpu", action="store_true",
+                        help="use first available GPU device")
+    parser.add_argument("-g", "--gsize", metavar="x,y,z", default="128,1,1",
+                        help="comma separated global size (default: 128,1,1)")
+    parser.add_argument("-l", "--lsize", metavar="x,y,z", default="32,1,1",
+                        help="comma separated local size (default: 32,1,1)")
+    parser.add_argument("--no-opts", action="store_true",
+                        help="disable OpenCL optimizations (on by default)")
+    args = parser.parse_args()
+
+    if args.inpath is None:
+        src = "".join(fileinput.input())
+    else:
+        try:
+            with open(args.inpath) as infile:
+                src = infile.read()
+        except FileNotFoundError:
+            print(f"fatal: path '{args.inpath}' does not exist",
+                  file=sys.stderr)
+            sys.exit(2)
+
+    defaults = {
+        "platform": None,
+        "device": None,
+        "cpu": False,
+        "gpu": False,
+        "gsize_str": "128,1,1",
+        "lsize_str": "32,1,1",
+        "data_generator_str": "seq",
+        "timeout": -1,
+        "debug": False
+    }
+
+    # outputs = cldrive.run_kernel(src, gsize: NDRange, lsize: NDRange,
+    #            data: np.array=None, buf_scale: float=1.0,
+    #            data_generator: Generator=Generator.SEQ, timeout: float=-1,
+    #            env: OpenCLEnvironment=None, debug: bool=False)
 
 
 if __name__ == "__main__":

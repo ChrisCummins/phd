@@ -73,6 +73,19 @@ class Generator(Enum):
         """ generate arrays of data """
         return self.value(*args, **kwargs).astype(numpy_type)
 
+    @staticmethod
+    def from_str(string) -> Generator:
+        if string == "rand":
+            return Generator.RAND
+        elif string == "seq":
+            return Generator.SEQ
+        elif string == "zeros":
+            return Generator.ZEROS
+        elif string == "ones":
+            return Generator.ONES
+        else:
+            raise InputTypeError
+
 
 def _assert_or_raise(stmt: bool, exception=CLdriveError,
                      *exception_args, **exception_kwargs) -> None:
@@ -244,6 +257,7 @@ def run_kernel(src: str, gsize: NDRange, lsize: NDRange,
 
     TODO:
         * Implement timeout.
+        * Implement Optimizations on or off.
     """
     # check our input types
     _assert_or_raise(isinstance(src, str), InputTypeError)
