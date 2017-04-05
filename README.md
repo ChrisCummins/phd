@@ -39,7 +39,9 @@ __kernel void A(__global int* data) {
 outputs = cldrive.run_kernel(kernel, inputs=cldrive.Inputs.SEQ,
                              gsize=cldrive.NDRange(4,1,1),
                              lsize=cldrive.NDRange(1,1,1))
-print(outputs)  # output: [0, 2, 4, 6, 8]
+print(outputs)  # output: array([[0, 2, 4, 6, 8]])
+# outputs are one array of 4 elements:
+print(outputs.shape)  # output: (1, 4)
 ```
 
 
