@@ -215,7 +215,7 @@ def make_data(src: str, size: int, data_generator: Generator,
 
 def run_kernel(src: str, gsize: NDRange, lsize: NDRange,
                data: np.array=None, buf_scale: float=1.0,
-               data_generator: Generator=Generator.SEQ,
+               data_generator: Generator=Generator.SEQ, timeout: float=-1,
                env: OpenCLEnvironment=None, debug: bool=False) -> np.array:
     """
     Execute an OpenCL kernel.
@@ -229,15 +229,21 @@ def run_kernel(src: str, gsize: NDRange, lsize: NDRange,
             size dimensions when generating data.
         data_generator (Generator, optional): Type of data generator to use.
             Ignored if `data` argument is not None.
+        timeout (float, optional): Cancel execution if it has not completed
+            after this many seconds. A value <= 0 means never time out.
         env (OpenCLEnvironment, optional): The OpenCL environment to run the
             kernel in. If not provided, one is created by calling make_env()
             with no arguments.
+        debug(bool, optional): If true, silence the OpenCL compiler compiler.
 
     Returns:
         np.array: The output values.
 
     Raises:
         InputTypeError: If any of the input arguments are of incorrect type.
+
+    TODO:
+        * Implement timeout.
     """
     # check our input types
     _assert_or_raise(isinstance(src, str), InputTypeError)
