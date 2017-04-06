@@ -10,39 +10,28 @@
 $ pip install cldrive
 ```
 
+
 ## Usage
-
-From command line:
-
-```sh
-$ cat kernel.cl
-__kernel void A(__global int* data) {
-    int tid = get_global_id(0);
-    data[tid] *= 2.0
-}
-$ cldrive kernel.cl -g=4,1,1 -l=1,1,1 -i="seq"
-0, 2, 4, 6, 8
-```
-
-From Python:
 
 ```py
 import cldrive
 
-kernel = """\
-__kernel void A(__global int* data) {
-    int tid = get_global_id(0);
-    data[tid] *= 2.0
-}
-"""
+# create an OpenCL environment:
+env = cldrive.make_env()
 
-outputs = cldrive.run_kernel(kernel, inputs=cldrive.Inputs.SEQ,
-                             gsize=cldrive.NDRange(4,1,1),
-                             lsize=cldrive.NDRange(1,1,1))
-print(outputs)  # output: array([[0, 2, 4, 6, 8]])
-# outputs are one array of 4 elements:
-print(outputs.shape)  # output: (1, 4)
+# create a driver for an OpenCL kernel:
+driver = cldrive.Driver(env, """
+    kernel void double_inputs(global int* data) {
+        data[get_global_id(0)] *= 2;
+    }""")
+
+# run kernel on some input:
+outputs = driver([[0, 1, 2, 3]], gsize=(4, 1, 1), lsize=(1, 1, 1))
+
+print(outputs)  # prints `[[0 2 4 6]]`
 ```
+
+See the `examples/` directory for Jupyter notebooks with more detailed examples and API documentation.
 
 
 ## License
