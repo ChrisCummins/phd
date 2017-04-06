@@ -17,25 +17,13 @@
 # You should have received a copy of the GNU General Public License
 # along with cldrive.  If not, see <http://www.gnu.org/licenses/>.
 #
-from argparse import ArgumentParser
-
 import fileinput
-import sys
 
-from collections import ChainMap
-from typing import Tuple
-
-import cldrive
-
-
-def parse_ndrange(ndrange: str) -> Tuple[int, int, int]:
-    components = ndrange.split(',')
-    assert(len(components) == 3)
-    return (int(components[0]), int(components[1]), int(components[2]))
+from cldrive import *
 
 
 def main():
-    parser = ArgumentParser()
+    parser = CliParser()
     parser.add_argument(
         "inpath", metavar="kernel", type=str, nargs="?",
         help="path to kernel source file. If not provided, source is read from stdin")
