@@ -174,7 +174,8 @@ def make_env(platform_id: int=None, device_id: int=None,
         devices = [d for d in devices if device_type_matches(d, cl_devtype)]
 
         if len(devices):
-            queue = cl.CommandQueue(ctx, properties=queue_flags)
+            queue = cl.CommandQueue(ctx, device=devices[0],
+                                    properties=queue_flags)
             return OpenCLEnvironment(ctx=ctx, queue=queue)
 
     raise LookupError("Could not find a suitable device")
