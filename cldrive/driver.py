@@ -95,7 +95,8 @@ class Driver(object):
                 after this many seconds. A value <= 0 means never time out.
 
         Returns:
-            np.array: The output values.
+            np.array: A numpy array of the same shape as the inputs, with the
+                values after running the OpenCL kernel.
 
         Raises:
             TypeError: If an input is of an incorrect type.
@@ -104,12 +105,12 @@ class Driver(object):
         TODO:
             * Implement timeout.
         """
-        # copy data
-        args_with_indices = [arg for arg in self.args if not arg.is_local]
-        data_indices = [i for i, arg in enumerate(self.args) if not arg.is_local]
-        data = np.array([np.array(x).astype(a.numpy_type) for x, a in zip(inputs, self.args)])
+        # copy inputs into the expected data types
+        data = np.array([np.array(d).astype(a.numpy_type)
+                         for d, a in zip(inputs, self.args)])
 
         # sanity check that there are enough the correct number of inputs
+        data_indices = [i for i, arg in enumerate(self.args) if not arg.is_local]
         assert_or_raise(len(data_indices) == len(data), ValueError,
                         "Incorrect number of inputs provided")
 
@@ -130,8 +131,6 @@ class Driver(object):
         # buffer size is the scalar global size, or the size of the largest
         # input, which is bigger
         buf_size = max(scalar_gsize, *[x.size for x in data])
-
-
 
         # assemble argtuples
         ArgTuple = namedtuple('ArgTuple', ['hostdata', 'devdata'])
