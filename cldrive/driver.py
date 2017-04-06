@@ -105,8 +105,8 @@ class Driver(object):
             * Implement timeout.
         """
         # copy data
-        args_with_indices = [arg for arg in self.args if arg.has_input]
-        data_indices = [i for i, arg in enumerate(self.args) if arg.has_input]
+        args_with_indices = [arg for arg in self.args if not arg.is_local]
+        data_indices = [i for i, arg in enumerate(self.args) if not arg.is_local]
         data = np.array([np.array(x).astype(a.numpy_type) for x, a in zip(inputs, self.args)])
 
         # sanity check that there are enough the correct number of inputs
@@ -155,10 +155,11 @@ class Driver(object):
                 buf = cl.LocalMemory(nbytes)
 
                 hostdata, devdata = None, buf
-            elif arg.is_scalar:
+            elif not arg.is_pointer:
                 hostdata = None
                 devdata, data_i = arg.numpy_type(data[data_i]), data_i + 1
             else:
+                # argument is neither global or local, but is a pointer?
                 raise ValueError(f"unknown argument type '{arg}'")
             argtuples.append(ArgTuple(hostdata=hostdata, devdata=devdata))
 
