@@ -23,6 +23,11 @@ import numpy as np
 
 from pycparser.c_ast import NodeVisitor, PtrDecl, TypeDecl, IdentifierType
 from pycparserext.ext_c_parser import OpenCLCParser
+from pycparser.plyparser import ParseError
+
+
+class OpenCLValueError(ValueError):
+    pass
 
 
 class KernelArg(object):
@@ -49,27 +54,28 @@ class KernelArg(object):
                 self.is_global = True
 
             if self.is_local and self.is_global:
-                raise ValueError("Argument is both global and local qualified")
+                raise OpenCLValueError(
+                    "Argument is both global and local qualified")
             elif not self.is_local and not self.is_global:
-                raise ValueError("Argument is neither global or local qualified")
+                raise OpenCLValueError(
+                    "Argument is neither global or local qualified")
 
         # determine tyename
-        if isinstance(self.ast.type.type, IdentifierType):
-            typenames = self.ast.type.type.names
-        elif isinstance(self.ast.type.type.type, IdentifierType):
-            typenames = self.ast.type.type.type.names
-        else:
-            raise ValueError("unsupported data type")  # e.g. structs
+        try:
+            if isinstance(self.ast.type.type, IdentifierType):
+                typenames = self.ast.type.type.names
+            else:
+                typenames = self.ast.type.type.type.names
+        except AttributeError as e:
+            raise ValueError("unsupported data type") from e  # e.g. structs
 
         if len(typenames) != 1:
-            raise ValueError("too many typenames")
+            raise OpenCLValueError("too many typenames")
 
         self.typename = typenames[0]
 
         self.name = self.ast.name
         self.quals = self.ast.quals
-        self.has_input = not self.is_local
-        self.is_scalar = not self.is_pointer
         self.bare_type = self.typename.rstrip('0123456789')
         self.is_vector = self.typename[-1].isdigit()
         self.is_const = "const" in self.quals
@@ -117,6 +123,9 @@ class ArgumentExtractor(NodeVisitor):
     Attributes:
         args (List[KernelArg]): List of KernelArg instances.
 
+    Raises:
+        ValueError: If source contains more than one kernel definition.
+
     TODO:
         * build a table of typedefs and substitute the original types when
           constructing kernel args.
@@ -125,12 +134,6 @@ class ArgumentExtractor(NodeVisitor):
         super(ArgumentExtractor, self).__init__(*args, **kwargs)
         self.kernel_count = 0
         self._args: List[KernelArg] = []
-
-    @property
-    def args(self):
-        if self.kernel_count != 1:
-            raise cldrive.ParseError("source contains no kernel definitions.")
-        return self._args
 
     def visit_FuncDef(self, node):
         """
@@ -146,7 +149,7 @@ class ArgumentExtractor(NodeVisitor):
 
         # ensure we've only visited one kernel
         if self.kernel_count > 1:
-            raise cldrive.ParseError(
+            raise LookupError(
                 "source contains more than one kernel definition")
 
         # function may not have arguments
@@ -154,7 +157,15 @@ class ArgumentExtractor(NodeVisitor):
             for param in node.decl.type.args.params:
                 self._args.append(KernelArg(param))
 
+    @property
+    def args(self):
+        if self.kernel_count != 1:
+            raise LookupError("source contains no kernel definitions.")
+        return self._args
+
+
 __parser = OpenCLCParser()
+
 
 def extract_args(src: str) -> List[KernelArg]:
     """
@@ -164,15 +175,19 @@ def extract_args(src: str) -> List[KernelArg]:
         List[KernelArg]: A list of the kernel's arguments, in order.
 
     Raises:
-        ParseError: If the source contains more than one kernel definition,
-            or if any of the kernel's parameters cannot be determined.
-        KernelArgError: If any of the kernel's parameters are invalid or
-            not supported.
+        OpenCLValueError: The source is not well formed, e.g. it contains a
+            syntax error, or invalid types.
+        LookupError: If the source contains no OpenCL kernel definitions,
+            or more than one.
+        ValueError: If one of the kernel's parameter types are unsupported.
 
     TODO:
         * Pre-process source code
     """
-    ast = __parser.parse(src)
-    visitor = ArgumentExtractor()
-    visitor.visit(ast)
-    return visitor.args
+    try:
+        ast = __parser.parse(src)
+        visitor = ArgumentExtractor()
+        visitor.visit(ast)
+        return visitor.args
+    except ParseError as e:
+        raise OpenCLValueError from e
