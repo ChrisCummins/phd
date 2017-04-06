@@ -28,7 +28,7 @@ class Generator(Enum):
     # We wrap functions in a partial so that they are interpreted as attributes
     # rather than methods. See: http://stackoverflow.com/a/40339397
     RAND = partial(np.random.rand)
-    SEQ = partial(np.arange)
+    ARANGE = partial(np.arange)
     ZEROS = partial(np.zeros)
     ONES = partial(np.ones)
 
@@ -40,8 +40,8 @@ class Generator(Enum):
     def from_str(string: str) -> 'Generator':
         if string == "rand":
             return Generator.RAND
-        elif string == "seq":
-            return Generator.SEQ
+        elif string == "arange":
+            return Generator.ARANGE
         elif string == "zeros":
             return Generator.ZEROS
         elif string == "ones":
@@ -50,7 +50,7 @@ class Generator(Enum):
             raise InputTypeError
 
 
-def make_data(drive: Driver, size: int, data_generator: Generator,
+def make_data(driver: Driver, size: int, data_generator: Generator,
               scalar_val: float=None) -> np.array:
     """
     Generate data for OpenCL kernels.
@@ -65,26 +65,48 @@ def make_data(drive: Driver, size: int, data_generator: Generator,
         InputTypeError: If any of the input arguments are of incorrect type.
     """
     # check the input types
-    _assert_or_raise(isinstance(driver, Driver), TypeError)
-    _assert_or_raise(isinstance(data_generator, Generator), TypeError)
+    assert_or_raise(isinstance(driver, Driver), TypeError,
+                    "invalid argument type for driver")
+    assert_or_raise(isinstance(data_generator, Generator), TypeError,
+                    "invalid argument type for enum data_generator")
 
     if scalar_val is None:
         scalar_val = size
 
-    args_with_inputs = [arg for arg in args if arg.has_input]
-
     data = []
-    for arg in args_with_inputs:
-        if arg.is_global:
+    for arg in driver.args:
+        if arg.is_local:
+            # we don't need to generate data for local memory
+            continue
+        elif arg.is_global:
             argdata = data_generator(arg.numpy_type, size * arg.vector_width)
-        else:
+        elif not arg.is_pointer:
             # scalar values are still arrays, so e.g. 'float4' is an array of
             # 4 floats. Each component of a scalar value is the flattened
             # global size, e.g. with gsize (32,2,1), scalar arugments have the
             # value 32 * 2 * 1 = 64.
             scalar_val = [scalar_val] * arg.vector_width
             argdata = np.array(scalar_val).astype(arg.numpy_type)
+        else:
+            # argument is neither global or local, but is a pointer?
+            raise ValueError(f"unknown argument type '{arg}'")
 
         data.append(argdata)
 
     return np.array(data)
+
+
+def zeros(*args, **kwargs) -> np.array:
+    return make_data(*args, data_generator=Generator.ZEROS, **kwargs)
+
+
+def ones(*args, **kwargs) -> np.array:
+    return make_data(*args, data_generator=Generator.ONES, **kwargs)
+
+
+def arange(*args, **kwargs) -> np.array:
+    return make_data(*args, data_generator=Generator.ARANGE, **kwargs)
+
+
+def rand(*args, **kwargs) -> np.array:
+    return make_data(*args, data_generator=Generator.RAND, **kwargs)
