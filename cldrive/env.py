@@ -101,7 +101,7 @@ def clinfo(file=sys.stdout) -> None:
 
 
 def make_env(platform_id: int=None, device_id: int=None,
-             devtype: str="any", queue_flags: int=0) -> OpenCLEnvironment:
+             devtype: str="all", queue_flags: int=0) -> OpenCLEnvironment:
     """
     Create an OpenCL context and device queue.
 
@@ -135,14 +135,16 @@ def make_env(platform_id: int=None, device_id: int=None,
             return True
         else:
             actual_devtype = device.get_info(cl.device_info.TYPE)
-            return actual_devtype == devtype
+            return actual_devtype == cl_devtype
 
     if devtype == "cpu":
         cl_devtype = cl.device_type.CPU
     elif devtype == "gpu":
         cl_devtype = cl.device_type.GPU
-    else:
+    elif devtype == "all":
         cl_devtype = cl.device_type.ALL
+    else:
+        raise ValueError(f"unsupported device type '{devtype}'")
 
     # get list of platforms to iterate over. If platform ID is provided, use
     # only that platform.
