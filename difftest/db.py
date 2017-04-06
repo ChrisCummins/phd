@@ -249,6 +249,7 @@ class CLSmithResult(Base):
     runtime = sql.Column(sql.Float, nullable=False)
     stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    outcome = sql.Column(sql.String(255))
 
     program = sql.orm.relationship("CLSmithProgram", back_populates="results")
     testbed = sql.orm.relationship("Testbed", back_populates="results")
