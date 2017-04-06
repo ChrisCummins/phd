@@ -30,8 +30,7 @@ class TestData(TestCase):
     def test_zeros(self):
         src = """ kernel void A(global float* a) {} """
 
-        driver = cldrive.Driver(ENV, src)
-        outputs = cldrive.zeros(driver, 64)
+        outputs = cldrive.zeros(src, 64)
         outputs_gs = [np.zeros(64)]
 
         almost_equal(outputs, outputs_gs)
@@ -39,8 +38,7 @@ class TestData(TestCase):
     def test_ones(self):
         src = """ kernel void A(global float* a, const int b) {} """
 
-        driver = cldrive.Driver(ENV, src)
-        outputs = cldrive.ones(driver, 1024)
+        outputs = cldrive.ones(src, 1024)
         outputs_gs = [np.ones(1024), [1024]]
 
         almost_equal(outputs, outputs_gs)
@@ -48,8 +46,7 @@ class TestData(TestCase):
     def test_arange(self):
         src = "kernel void A(global float* a, local float* b, const int c) {}"
 
-        driver = cldrive.Driver(ENV, src)
-        outputs = cldrive.arange(driver, 512, scalar_val=0)
+        outputs = cldrive.arange(src, 512, scalar_val=0)
         outputs_gs = [np.arange(512), [0]]
 
         almost_equal(outputs, outputs_gs)
@@ -57,8 +54,7 @@ class TestData(TestCase):
     def test_rand(self):
         src = "kernel void A(global float* a, global float* b) {}"
 
-        driver = cldrive.Driver(ENV, src)
-        outputs = cldrive.rand(driver, 16, scalar_val=0)
+        outputs = cldrive.rand(src, 16, scalar_val=0)
 
         # we can't test the actual values
         self.assertEqual(outputs.shape, (2, 16))

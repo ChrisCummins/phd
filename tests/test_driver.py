@@ -23,9 +23,6 @@ import cldrive
 
 
 class TestDriver(TestCase):
-    def __init__(self, *args, **kwargs):
-        super(TestDriver, self).__init__(*args, **kwargs)
-
     def test_simple(self):
         inputs      = [[0, 1, 2, 3, 4,  5,  6,  7]]
         inputs_orig = [[0, 1, 2, 3, 4,  5,  6,  7]]
@@ -39,8 +36,7 @@ class TestDriver(TestCase):
         }
         """
 
-        driver = cldrive.Driver(ENV, src)
-        outputs = driver(inputs, gsize=(8, 1, 1), lsize=(1, 1, 1))
+        outputs = cldrive.drive(ENV, src, inputs, gsize=(8, 1, 1), lsize=(1, 1, 1))
 
         # inputs are unmodified
         almost_equal(inputs, inputs_orig)
@@ -65,16 +61,23 @@ class TestDriver(TestCase):
         }
         """
 
-        driver = cldrive.Driver(ENV, src)
-        outputs = driver(inputs, gsize=(4, 2, 1), lsize=(1, 1, 1))
+        outputs = cldrive.drive(ENV, src, inputs, gsize=(4, 2, 1), lsize=(1, 1, 1))
 
         almost_equal(inputs, inputs_orig)
         almost_equal(outputs, outputs_gs)
 
         # run kernel a second time with the previous outputs
-        outputs2 = driver(outputs, gsize=(4, 2, 1), lsize=(1, 1, 1))
+        outputs2 = cldrive.drive(ENV, src, outputs, gsize=(4, 2, 1), lsize=(1, 1, 1))
         outputs2_gs  = [[0, 4, 8, 12, 0, 16, 32, 48], [2, 4]]
         almost_equal(outputs2, outputs2_gs)
+
+
+    def test_syntax_error(self):
+        src = """
+        kernel void A(gl ob a l  i nt* a) {}
+        """
+        with self.assertRaises(cldrive.OpenCLValueError):
+            cldrive.drive(ENV, src, [[]], gsize=(1,1,1), lsize=(1,1,1))
 
 
 # TODO: Difftest against cl_launcher from CLSmith for a CLSmith kernel.

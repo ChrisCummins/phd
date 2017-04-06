@@ -50,7 +50,7 @@ class Generator(Enum):
             raise InputTypeError
 
 
-def make_data(driver: Driver, size: int, data_generator: Generator,
+def make_data(src: str, size: int, data_generator: Generator,
               scalar_val: float=None) -> np.array:
     """
     Generate data for OpenCL kernels.
@@ -65,8 +65,7 @@ def make_data(driver: Driver, size: int, data_generator: Generator,
         InputTypeError: If any of the input arguments are of incorrect type.
     """
     # check the input types
-    assert_or_raise(isinstance(driver, Driver), TypeError,
-                    "invalid argument type for driver")
+    assert_or_raise(isinstance(src, str), TypeError)
     assert_or_raise(isinstance(data_generator, Generator), TypeError,
                     "invalid argument type for enum data_generator")
 
@@ -74,7 +73,7 @@ def make_data(driver: Driver, size: int, data_generator: Generator,
         scalar_val = size
 
     data = []
-    for arg in driver.args:
+    for arg in extract_args(src):
         if arg.is_local:
             # we don't need to generate data for local memory
             continue

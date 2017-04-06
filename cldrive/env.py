@@ -3,12 +3,44 @@ import platform
 import sys
 
 from collections import namedtuple
-from typing import List
+from typing import List, Tuple
 
 import pyopencl as cl
 
 
-OpenCLEnvironment = namedtuple('OpenCLEnvironment', ['ctx', 'queue'])
+class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device'])):
+    __slots__ = ()  # memory saving
+
+    def __repr__(self) -> str:
+        return f"Device: {self.device}, Platform: {self.platform}"
+
+    @property
+    def ctx_queue(self) -> Tuple[cl.Context, cl.CommandQueue]:
+        """
+        Raises:
+            RuntimeError: TODO
+        """
+        try:
+            for platform in cl.get_platforms():
+                ctx = cl.Context(
+                    properties=[(cl.context_properties.PLATFORM, platform)])
+                platform_str = platform.get_info(cl.platform_info.VENDOR)
+
+                if platform_str != self.platform:
+                    continue
+
+                for device in ctx.get_info(cl.context_info.DEVICES):
+                    device_str = device.get_info(cl.device_info.NAME)
+
+                    if device_str != self.device:
+                        continue
+
+                    queue = cl.CommandQueue(ctx, device=device)
+                    return ctx, queue
+            else:
+                raise LookupError
+        except cl.RuntimeError as e:
+            raise RuntimeError from e
 
 
 def host_os() -> str:
@@ -117,16 +149,19 @@ def make_env(platform_id: int=None, device_id: int=None,
             available device may be used. Requires that platform_id is set.
         devtype (str, optional): OpenCL device type to use, one of:
             {all,cpu,gpu}.
-        queue_flags (cl.command_queue_properties, optional): Bitfield of
-            OpenCL queue constructor options.
+
 
     Returns:
-        OpenCLEnvironment: A named tuple consisting of an OpenCL context and
-            device queue.
+        OpenCLEnvironment: A named tuple consisting of the platform and device
+            name.
 
     Raises:
         ValueError: If device_id is set, but not platform_id.
         LookupError: If no matching device found.
+        RuntimeError: In case OpenCL API call fails.
+
+    TODO:
+        * Implement profiling.
     """
     def device_type_matches(device: cl.Device,
                             cl_devtype: cl.device_type) -> bool:
@@ -157,8 +192,11 @@ def make_env(platform_id: int=None, device_id: int=None,
             raise LookupError(f"No platform for id={platform_id}")
 
     for platform in platforms:
-        ctx = cl.Context(
-            properties=[(cl.context_properties.PLATFORM, platform)])
+        try:
+            ctx = cl.Context(
+                properties=[(cl.context_properties.PLATFORM, platform)])
+        except cl.RuntimeError as e:
+            raise RuntimeError from e
 
         # get list of devices to iterate over. If device ID is provided, use
         # only that device. Else, take any device which matches devtype
@@ -174,8 +212,14 @@ def make_env(platform_id: int=None, device_id: int=None,
         devices = [d for d in devices if device_type_matches(d, cl_devtype)]
 
         if len(devices):
-            queue = cl.CommandQueue(ctx, device=devices[0],
-                                    properties=queue_flags)
-            return OpenCLEnvironment(ctx=ctx, queue=queue)
+            try:
+                queue = cl.CommandQueue(ctx, device=devices[0])
+            except cl.RuntimeError as e:
+                raise RuntimeError from e
+
+            platform_str = platform.get_info(cl.platform_info.VENDOR)
+            device_str = devices[0].get_info(cl.device_info.NAME)
+
+            return OpenCLEnvironment(platform=platform_str, device=device_str)
 
     raise LookupError("Could not find a suitable device")
