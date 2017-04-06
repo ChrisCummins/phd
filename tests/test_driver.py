@@ -68,10 +68,13 @@ class TestDriver(TestCase):
         driver = cldrive.Driver(ENV, src)
         outputs = driver(inputs, gsize=(4, 2, 1), lsize=(1, 1, 1))
 
-        # inputs are unmodified
         almost_equal(inputs, inputs_orig)
-        # outputs
         almost_equal(outputs, outputs_gs)
+
+        # run kernel a second time with the previous outputs
+        outputs2 = driver(outputs, gsize=(4, 2, 1), lsize=(1, 1, 1))
+        outputs2_gs  = [[0, 4, 8, 12, 0, 16, 32, 48], [2, 4]]
+        almost_equal(outputs2, outputs2_gs)
 
 
 # TODO: Difftest against cl_launcher from CLSmith for a CLSmith kernel.
