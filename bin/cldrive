@@ -36,25 +36,42 @@ def parse_ndrange(ndrange: str) -> Tuple[int, int, int]:
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument("inpath", metavar="kernel", type=str, nargs="?",
-                        help=("path to kernel source file. If not provided, "
-                              "source is read from stdin"))
-    parser.add_argument("-p", "--platform", metavar="id", type=int,
-                        default=None, help="use specified OpenCL platform ID")
-    parser.add_argument("-d", "--device", metavar="id", type=int, default=None,
-                        help="use specified OpenCL device ID")
-    parser.add_argument("--cpu", action="store_true",
-                        help="use first available CPU device")
-    parser.add_argument("--gpu", action="store_true",
-                        help="use first available GPU device")
-    parser.add_argument("-g", "--gsize", metavar="x,y,z", default="128,1,1",
-                        help="comma separated global size (default: 128,1,1)")
-    parser.add_argument("-l", "--lsize", metavar="x,y,z", default="32,1,1",
-                        help="comma separated local size (default: 32,1,1)")
-    parser.add_argument("--no-opts", action="store_true",
-                        help="disable OpenCL optimizations (on by default)")
+    parser.add_argument(
+        "inpath", metavar="kernel", type=str, nargs="?",
+        help="path to kernel source file. If not provided, source is read from stdin")
+    parser.add_argument(
+        "-p", "--platform", metavar="id", type=int, default=None,
+        help="use specified OpenCL platform ID")
+    parser.add_argument(
+        "-d", "--device", metavar="id", type=int, default=None,
+        help="use specified OpenCL device ID")
+    parser.add_argument(
+        "--cpu", action="store_true",
+        help="use first available CPU device")
+    parser.add_argument(
+        "--gpu", action="store_true",
+        help="use first available GPU device")
+    parser.add_argument(
+        "-g", "--gsize", metavar="x,y,z", default="128,1,1",
+        help="comma separated global size (default: 128,1,1)")
+    parser.add_argument(
+        "-l", "--lsize", metavar="x,y,z", default="32,1,1",
+        help="comma separated local size (default: 32,1,1)")
+    parser.add_argument(
+        "-i", "--inputs", metavar="gen", default="seq",
+        help="input generator to use, one of: {rand,seq,zeros,ones} (default: seq)")
+    parser.add_argument(
+        "-b", "--buf-scale", metavar="scale", default=1.0,
+        help="buffer size scaling factor")
+    parser.add_argument(
+        "--no-opts", action="store_true",
+        help="disable OpenCL optimizations (on by default)")
+    parser.add_argument(
+        "--debug", action="store_true",
+        help="enable more verbose OpenCL copmilation and execution")
     args = parser.parse_args()
 
+    # read kernel source
     if args.inpath is None:
         src = "".join(fileinput.input())
     else:
@@ -66,22 +83,33 @@ def main():
                   file=sys.stderr)
             sys.exit(2)
 
-    defaults = {
-        "platform": None,
-        "device": None,
-        "cpu": False,
-        "gpu": False,
-        "gsize_str": "128,1,1",
-        "lsize_str": "32,1,1",
-        "data_generator_str": "seq",
-        "timeout": -1,
-        "debug": False
+    if args.cpu:
+        devtype = "cpu"
+    elif args.gpu:
+        devtype = "gpu"
+    else:
+        devtype = "any"
+
+    # convert command line args to API args
+    env_opts = {
+        "platform_id": args.platform,
+        "device_id": args.device,
+        "devtype": devtype
     }
 
-    # outputs = cldrive.run_kernel(src, gsize: NDRange, lsize: NDRange,
-    #            data: np.array=None, buf_scale: float=1.0,
-    #            data_generator: Generator=Generator.SEQ, timeout: float=-1,
-    #            env: OpenCLEnvironment=None, debug: bool=False)
+    run_opts = {
+        "src": src,
+        "gsize": parse_ndrange(args.gsize),
+        "lsize": parse_ndrange(args.lsize),
+        "data_generator": cldrive.Generator.from_str(args.inputs),
+        "debug": args.debug,
+        "optimizations": not args.no_opts,
+    }
+
+    env = cldrive.make_env(**env_opts)
+    outputs = cldrive.run_kernel(env=env, **run_opts)
+
+    print(outputs)
 
 
 if __name__ == "__main__":

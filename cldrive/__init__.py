@@ -74,7 +74,7 @@ class Generator(Enum):
         return self.value(*args, **kwargs).astype(numpy_type)
 
     @staticmethod
-    def from_str(string) -> Generator:
+    def from_str(string: str) -> 'Generator':
         if string == "rand":
             return Generator.RAND
         elif string == "seq":
@@ -97,7 +97,7 @@ def _assert_or_raise(stmt: bool, exception=CLdriveError,
 
 
 def make_env(platform_id: int=None, device_id: int=None,
-             devtype=None, queue_flags=0) -> OpenCLEnvironment:
+             devtype: str="any", queue_flags: int=0) -> OpenCLEnvironment:
     """
     Create an OpenCL context and device queue.
 
@@ -111,8 +111,8 @@ def make_env(platform_id: int=None, device_id: int=None,
             available platform may be used.
         device_id (int, optional): OpenCL Device ID. If not provided, any
             available device may be used. Requires that platform_id is set.
-        devtype (pyopencl.device_type, optional): OpenCL device type.
-            If not specified, the first available device will be used.
+        devtype (str, optional): OpenCL device type to use, one of:
+            {all,cpu,gpu}.
         queue_flags (cl.command_queue_properties, optional): Bitfield of
             OpenCL queue constructor options.
 
@@ -124,13 +124,21 @@ def make_env(platform_id: int=None, device_id: int=None,
         ValueError: If device_id is set, but not platform_id.
         OpenCLDeviceNotFound: If no matching type found.
     """
-    def device_type_matches(device, devtype) -> bool:
+    def device_type_matches(device: cl.Device,
+                            cl_devtype: cl.device_type) -> bool:
         """ check that device type matches """
-        if devtype:
+        if cl_devtype == cl.device_type.ALL:
+            return True
+        else:
             actual_devtype = device.get_info(cl.device_info.TYPE)
             return actual_devtype == devtype
-        else:  # no devtype to match against
-            return True
+
+    if devtype == "cpu":
+        cl_devtype = cl.device_type.CPU
+    elif devtype == "gpu":
+        cl_devtype = cl.device_type.GPU
+    else:
+        cl_devtype = cl.device_type.ALL
 
     # get list of platforms to iterate over. If platform ID is provided, use
     # only that platform.
@@ -157,7 +165,7 @@ def make_env(platform_id: int=None, device_id: int=None,
             except IndexError:
                 raise OpenCLDeviceNotFound(f"No device for id={device_id}")
 
-        devices = [d for d in devices if device_type_matches(d, devtype)]
+        devices = [d for d in devices if device_type_matches(d, cl_devtype)]
 
         if len(devices):
             queue = cl.CommandQueue(ctx, properties=queue_flags)
@@ -229,7 +237,8 @@ def make_data(src: str, size: int, data_generator: Generator,
 def run_kernel(src: str, gsize: NDRange, lsize: NDRange,
                data: np.array=None, buf_scale: float=1.0,
                data_generator: Generator=Generator.SEQ, timeout: float=-1,
-               env: OpenCLEnvironment=None, debug: bool=False) -> np.array:
+               env: OpenCLEnvironment=None, optimizations: bool=True,
+               debug: bool=False) -> np.array:
     """
     Execute an OpenCL kernel.
 
@@ -247,6 +256,8 @@ def run_kernel(src: str, gsize: NDRange, lsize: NDRange,
         env (OpenCLEnvironment, optional): The OpenCL environment to run the
             kernel in. If not provided, one is created by calling make_env()
             with no arguments.
+        optimizations(bool, optional): Whether to enable or disbale OpenCL
+            compiler optimizations.
         debug(bool, optional): If true, silence the OpenCL compiler compiler.
 
     Returns:
