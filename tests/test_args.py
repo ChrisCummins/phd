@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with cldrive.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase, skipIf
+from unittest import TestCase, skip, main
 
 import cldrive
 
@@ -71,18 +71,18 @@ class TestArgs(TestCase):
 
     def test_extract_args(self):
         src = """
-    typedef int foobar;
+        typedef int foobar;
 
-    void B(const int e);
+        void B(const int e);
 
-    __kernel void A(const __global int* data, __local float4 * restrict car,
-                    __global const float* b, const int foo, int d) {
-        int tid = get_global_id(0);
-        data[tid] *= 2.0;
-    }
+        __kernel void A(const __global int* data, __local float4 * restrict car,
+                        __global const float* b, const int foo, int d) {
+            int tid = get_global_id(0);
+            data[tid] *= 2.0;
+        }
 
-    void B(const int e) {}
-    """
+        void B(const int e) {}
+        """
         args = cldrive.extract_args(src)
         self.assertEqual(len(args), 5)
         self.assertTrue(args[0].is_const)
@@ -126,3 +126,7 @@ class TestArgs(TestCase):
         self.assertEqual(args[2].is_vector, True)
         self.assertEqual(args[2].vector_width, 4)
         self.assertEqual(args[2].is_const, False)
+
+
+if __name__ == "__main__":
+    main()
