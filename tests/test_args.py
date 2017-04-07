@@ -149,6 +149,16 @@ class TestArgs(TestCase):
         self.assertEqual(args[2].vector_width, 4)
         self.assertEqual(args[2].is_const, False)
 
+    def test_extract_args_struct(self):
+        src = """
+        struct s { int a; };
+
+        kernel void A(global struct s *a) {}
+        """
+        # we can't handle structs yet
+        with self.assertRaises(cldrive.OpenCLValueError):
+            cldrive.extract_args(src)
+
 
 if __name__ == "__main__":
     main()

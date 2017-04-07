@@ -21,7 +21,7 @@ from typing import List
 
 import numpy as np
 
-from pycparser.c_ast import NodeVisitor, PtrDecl, TypeDecl, IdentifierType
+from pycparser.c_ast import NodeVisitor, PtrDecl, TypeDecl, Struct, IdentifierType
 from pycparserext.ext_c_parser import OpenCLCParser
 from pycparser.plyparser import ParseError
 
@@ -54,11 +54,13 @@ class KernelArg(object):
         try:
             if isinstance(self.ast.type.type, IdentifierType):
                 typenames = self.ast.type.type.names
+            elif isinstance(self.ast.type.type.type, Struct):
+                typenames = ["struct", self.ast.type.type.type.name]
             else:
                 typenames = self.ast.type.type.type.names
         except AttributeError as e:  # e.g. structs
             raise ValueError(
-                f"unsupported data type for argument '{self.quals_str}{self.name}'") from e
+                f"unsupported data type for argument '{self.name}'") from e
 
         self.typename = " ".join(typenames)
         self.bare_type = self.typename.rstrip('0123456789')
@@ -149,6 +151,7 @@ class ArgumentExtractor(NodeVisitor):
     TODO:
         * build a table of typedefs and substitute the original types when
           constructing kernel args.
+        * handle structs by creating numpy types.
     """
     def __init__(self, *args, **kwargs):
         super(ArgumentExtractor, self).__init__(*args, **kwargs)
