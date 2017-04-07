@@ -100,10 +100,11 @@ def main():
         print(d.decode('latin-1'), end='', flush=True)
     else:
         np.set_printoptions(threshold=np.nan)
-        args = [arg for arg in extract_args(src) if not arg.is_local]
+        args = [arg for arg in extract_args(src)
+                if not arg.address_space == 'local']
         assert(len(args) == len(outputs))
         for arr, arg in zip(outputs, args):
-            print(f"{arg.name}:", arr)
+            print(f"{arg}: {arr}")
 
 
 if __name__ == "__main__":

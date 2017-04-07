@@ -74,11 +74,11 @@ def make_data(src: str, size: int, data_generator: Generator,
 
     data = []
     for arg in extract_args(src):
-        if arg.is_local:
+        if arg.address_space == "global" or arg.address_space == "constant":
+            argdata = data_generator(arg.numpy_type, size * arg.vector_width)
+        elif arg.address_space == "local":
             # we don't need to generate data for local memory
             continue
-        elif arg.is_global:
-            argdata = data_generator(arg.numpy_type, size * arg.vector_width)
         elif not arg.is_pointer:
             # scalar values are still arrays, so e.g. 'float4' is an array of
             # 4 floats. Each component of a scalar value is the flattened

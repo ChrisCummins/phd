@@ -90,6 +90,31 @@ class TestArgs(TestCase):
         self.assertEqual(args[0].typename, "int")
         self.assertEqual(args[0].bare_type, "int")
 
+    def test_extract_args_address_spaces(self):
+        src = """
+        kernel void A(global int* a, local int* b, constant int* c, const int d) {}
+        """
+        args = cldrive.extract_args(src)
+        self.assertEqual(len(args), 4)
+        self.assertEqual(args[0].address_space, "global")
+        self.assertEqual(args[1].address_space, "local")
+        self.assertEqual(args[2].address_space, "constant")
+        self.assertEqual(args[3].address_space, "private")
+
+    def test_extract_args_no_address_space(self):
+        src = """
+        kernel void A(int* a) {}
+        """
+        with self.assertRaises(cldrive.OpenCLValueError):
+            args = cldrive.extract_args(src)
+
+    def test_extract_args_multiple_address_spaces(self):
+        src = """
+        kernel void A(global local int* a) {}
+        """
+        with self.assertRaises(cldrive.OpenCLValueError):
+            args = cldrive.extract_args(src)
+
     def test_extract_args_properties(self):
         src = """
         kernel void A(const global int* a, global const float* b,
@@ -98,8 +123,7 @@ class TestArgs(TestCase):
         args = cldrive.extract_args(src)
         self.assertEqual(len(args), 5)
         self.assertEqual(args[0].is_pointer, True)
-        self.assertEqual(args[0].is_global, True)
-        self.assertEqual(args[0].is_local, False)
+        self.assertEqual(args[0].address_space, "global")
         self.assertEqual(args[0].typename, "int")
         self.assertEqual(args[0].name, "a")
         self.assertEqual(args[0].bare_type, "int")
@@ -108,8 +132,7 @@ class TestArgs(TestCase):
         self.assertEqual(args[0].is_const, True)
 
         self.assertEqual(args[1].is_pointer, True)
-        self.assertEqual(args[1].is_global, True)
-        self.assertEqual(args[1].is_local, False)
+        self.assertEqual(args[1].address_space, "global")
         self.assertEqual(args[1].typename, "float")
         self.assertEqual(args[1].name, "b")
         self.assertEqual(args[1].bare_type, "float")
@@ -118,8 +141,7 @@ class TestArgs(TestCase):
         self.assertEqual(args[1].is_const, True)
 
         self.assertEqual(args[2].is_pointer, True)
-        self.assertEqual(args[2].is_global, False)
-        self.assertEqual(args[2].is_local, True)
+        self.assertEqual(args[2].address_space, "local")
         self.assertEqual(args[2].typename, "float4")
         self.assertEqual(args[2].name, "c")
         self.assertEqual(args[2].bare_type, "float")

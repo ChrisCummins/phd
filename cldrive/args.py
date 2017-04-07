@@ -41,8 +41,7 @@ class KernelArg(object):
 
         # determine pointer type
         self.is_pointer = isinstance(self.ast.type, PtrDecl)
-        self.is_local = False
-        self.is_global = False
+        self.address_space = "private"
 
         self.name = self.ast.name
         self.quals = self.ast.quals
@@ -62,6 +61,7 @@ class KernelArg(object):
                 f"unsupported data type for argument '{self.quals_str}{self.name}'") from e
 
         self.typename = " ".join(typenames)
+        self.bare_type = self.typename.rstrip('0123456789')
 
         numpy_types = {
             "bool": np.bool_,
@@ -83,32 +83,47 @@ class KernelArg(object):
             "void": np.int64,
         }
         try:
-            self.numpy_type = numpy_types[self.typename]
+            self.numpy_type = numpy_types[self.bare_type]
         except KeyError:
             supported_types_str = ",".join(sorted(numpy_types.keys()))
-            raise KernelArgError(f"""\
-unsupported type '{self.typename}' for argument '{self.quals_str}{self.name}'. \
+            raise OpenCLValueError(f"""\
+unsupported type '{self.typename}' for argument \
+'{self.quals_str}{self.typename} {self.name}'. \
 supported types are: {{{supported_types_str}}}""")
 
+        # get address space
         if self.is_pointer:
-            if ("local" in self.ast.quals
-                or "__local" in self.ast.quals):
-                self.is_local = True
+            address_quals = []
+            if "local" in self.ast.quals:
+                address_quals.append("local")
 
-            if ("global" in self.ast.quals
-                  or "__global" in self.ast.quals):
-                self.is_global = True
+            if "__local" in self.ast.quals:
+                address_quals.append("local")
 
-            if self.is_local and self.is_global:
+            if "global" in self.ast.quals:
+                address_quals.append("global")
+
+            if "__global" in self.ast.quals:
+                address_quals.append("global")
+
+            if "constant" in self.ast.quals:
+                address_quals.append("constant")
+
+            if "__constant" in self.ast.quals:
+                address_quals.append("constant")
+
+            err_prefix = f"pointer argument '{self.quals_str}{self.typename} {self.name}'"
+            if len(address_quals) == 1:
+                self.address_space = address_quals[0]
+            elif len(address_quals) > 1:
                 raise OpenCLValueError(
-                    "Argument is both global and local qualified")
-            elif not self.is_local and not self.is_global:
+                    f"{err_prefix} has multiple address space qualifiers")
+            else:
                 raise OpenCLValueError(
-                    f"argument '{self.quals_str}{self.typename} {self.name}' is neither global or local qualified")
+                    f"{err_prefix} has no address space qualifier")
 
-        self.bare_type = self.typename.rstrip('0123456789')
         self.is_vector = self.typename[-1].isdigit()
-        self.is_const = "const" in self.quals
+        self.is_const = "const" in self.quals or self.address_space == "constant"
 
         if self.is_vector:
             m = re.search(r'([0-9]+)\*?$', self.typename)

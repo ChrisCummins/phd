@@ -148,7 +148,8 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
     args = extract_args(src)
 
     # check that the number of inputs is correct
-    args_with_inputs = [i for i, arg in enumerate(args) if not arg.is_local]
+    args_with_inputs = [i for i, arg in enumerate(args)
+                        if not arg.address_space == 'local']
     assert_or_raise(len(args_with_inputs) == len(inputs), ValueError,
                     "Kernel expects {} inputs, but {} were provided".format(
                         len(args_with_inputs), len(inputs)))
@@ -296,7 +297,7 @@ def __porcelain_exec(path: str) -> np.array:
     argtuples = []
     data_i = 0
     for i, arg in enumerate(args):
-        if arg.is_global:
+        if arg.address_space == 'global':
             data[data_i] = data[data_i].astype(arg.numpy_type)
             hostdata = data[data_i]
             # determine flags to pass to OpenCL buffer creation:
@@ -308,7 +309,7 @@ def __porcelain_exec(path: str) -> np.array:
             buf = cl.Buffer(ctx, flags, hostbuf=hostdata)
 
             devdata, data_i = buf, data_i + 1
-        elif arg.is_local:
+        elif arg.address_space == 'local':
             nbytes = buf_size * arg.vector_width * arg.numpy_type.itemsize
             buf = cl.LocalMemory(nbytes)
 
