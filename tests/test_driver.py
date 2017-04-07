@@ -23,6 +23,11 @@ import cldrive
 
 
 class TestDriver(TestCase):
+    def test_empty_kernel(self):
+        src = " kernel void A() {} "
+        outputs = cldrive.drive(ENV, src, [], gsize=(1,1,1), lsize=(1,1,1))
+        self.assertEqual(len(outputs), 0)
+
     def test_simple(self):
         inputs      = [[0, 1, 2, 3, 4,  5,  6,  7]]
         inputs_orig = [[0, 1, 2, 3, 4,  5,  6,  7]]
