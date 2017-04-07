@@ -60,33 +60,21 @@ class KernelArg(object):
                 raise OpenCLValueError(
                     "Argument is neither global or local qualified")
 
+        self.name = self.ast.name
+
         # determine tyename
         try:
             if isinstance(self.ast.type.type, IdentifierType):
                 typenames = self.ast.type.type.names
             else:
                 typenames = self.ast.type.type.type.names
-        except AttributeError as e:
-            raise ValueError("unsupported data type") from e  # e.g. structs
+        except AttributeError as e:  # e.g. structs
+            raise ValueError(
+                f"unsupported data type for argument '{self.name}'") from e
 
-        if len(typenames) != 1:
-            raise OpenCLValueError("too many typenames")
+        self.typename = " ".join(typenames)
 
-        self.typename = typenames[0]
-
-        self.name = self.ast.name
-        self.quals = self.ast.quals
-        self.bare_type = self.typename.rstrip('0123456789')
-        self.is_vector = self.typename[-1].isdigit()
-        self.is_const = "const" in self.quals
-
-        if self.is_vector:
-            m = re.search(r'([0-9]+)\*?$', self.typename)
-            self.vector_width = int(m.group(1))
-        else:
-            self.vector_width = 1
-
-        self.numpy_type = {
+        numpy_types = {
             "bool": np.bool_,
             "char": np.int8,
             "double": np.float64,
@@ -104,9 +92,25 @@ class KernelArg(object):
             "unsigned short": np.uint16,
             "ushort": np.uint16,
             "void": np.int64,
-        }.get(self.bare_type, None)
-        if self.numpy_type is None:
-            raise cldrive.KernelArgError(self.bare_type)
+        }
+        try:
+            self.numpy_type = numpy_types[self.typename]
+        except KeyError:
+            supported_types_str = ",".join(sorted(numpy_types.keys()))
+            raise KernelArgError(f"""\
+unsupported type '{self.typename}' for argument '{self.name}'. \
+supported types are: {{{supported_types_str}}}""")
+
+        self.quals = self.ast.quals
+        self.bare_type = self.typename.rstrip('0123456789')
+        self.is_vector = self.typename[-1].isdigit()
+        self.is_const = "const" in self.quals
+
+        if self.is_vector:
+            m = re.search(r'([0-9]+)\*?$', self.typename)
+            self.vector_width = int(m.group(1))
+        else:
+            self.vector_width = 1
 
     def __repr__(self):
         if len(self.quals):
