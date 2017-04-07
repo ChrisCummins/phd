@@ -47,7 +47,7 @@ def _devtype_matches(device: cl.Device,
         return True
     else:
         actual_devtype = device.get_info(cl.device_info.TYPE)
-        return actual_devtype == cl_devtype
+        return actual_devtype == devtype
 
 
 def _lookup_env(return_cl: bool, platform: str=None, device: str=None,
