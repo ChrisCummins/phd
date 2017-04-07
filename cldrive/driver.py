@@ -190,8 +190,8 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         stdout, stderr = process.communicate()
         status = process.returncode
 
-        log(stdout.decode('utf-8'))
-        log(stderr.decode('utf-8'))
+        log(stdout.decode('utf-8').strip())
+        log(stderr.decode('utf-8').strip())
 
         # test for non-zero exit codes. The porcelain subprocess catches
         # exceptions and executes gracefully, so a non-zero return code is
