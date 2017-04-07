@@ -36,4 +36,5 @@ setup(name='cldrive',
             'bin/cldrive-info'
       ],
       install_requires=requirements,
-      zip_safe=True)
+      # not zip safe, since we directly invoke a module by it's path:
+      zip_safe=False)
