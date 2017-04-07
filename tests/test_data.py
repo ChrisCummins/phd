@@ -54,10 +54,27 @@ class TestData(TestCase):
     def test_rand(self):
         src = "kernel void A(global float* a, global float* b) {}"
 
-        outputs = cldrive.rand(src, 16, scalar_val=0)
+        outputs = cldrive.rand(src, 16)
 
         # we can't test the actual values
         self.assertEqual(outputs.shape, (2, 16))
+
+    def test_data_unchanged(self):
+        src = "kernel void A(global int* a, global int* b, const int c) {}"
+
+        inputs = cldrive.rand(src, 16)
+        outputs = cldrive.drive(ENV, src, inputs, gsize=(16,1,1), lsize=(1,1,1))
+
+        almost_equal(outputs, inputs)
+
+    def test_data_zerod(self):
+        # zero-ing a randomly initialized array
+        src = "kernel void A(global int* a) { a[get_global_id(0)] = 0; }"
+
+        inputs = cldrive.rand(src, 16)
+        outputs = cldrive.drive(ENV, src, inputs, gsize=(16,1,1), lsize=(4,1,1))
+
+        almost_equal(outputs, [np.zeros(16)])
 
 
 if __name__ == "__main__":
