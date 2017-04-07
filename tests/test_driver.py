@@ -77,8 +77,26 @@ class TestDriver(TestCase):
         kernel void A(gl ob a l  i nt* a) {}
         """
         with DevNullRedirect():
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(cldrive.OpenCLValueError):
                 cldrive.drive(ENV, src, [[]], gsize=(1,1,1), lsize=(1,1,1))
+
+
+    def test_incorrect_num_of_args(self):
+        src = """
+        kernel void A(const int a) {}
+        """
+        # too many inputs
+        with self.assertRaises(ValueError):
+            cldrive.drive(ENV, src, [[1], [2], [3]], gsize=(1,1,1), lsize=(1,1,1))
+
+        # too few inputs
+        with self.assertRaises(ValueError):
+            cldrive.drive(ENV, src, [], gsize=(1,1,1), lsize=(1,1,1))
+
+        # incorrect input width (3 ints instead of one)
+        # with self.assertRaises(ValueError):
+        #     cldrive.drive(ENV, src, [[1, 2, 3]], gsize=(1,1,1), lsize=(1,1,1),
+        #                   debug=True)
 
 
 # TODO: Difftest against cl_launcher from CLSmith for a CLSmith kernel.

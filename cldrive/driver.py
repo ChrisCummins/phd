@@ -19,7 +19,7 @@ import pickle
 import sys
 
 from pkg_resources import resource_filename
-from subprocess import Popen, DEVNULL
+from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
 
 import numpy as np
@@ -29,14 +29,28 @@ from cldrive import *
 
 
 class NDRange(namedtuple('NDRange', ['x', 'y', 'z'])):
+    """
+    A 3 dimensional NDRange tuple. Has components x,y,z.
+    """
     __slots__ = ()
 
-    def __repr__(self):
-        return f"[self.x, self.y, self.z]"
+    def __repr__(self) -> str:
+        return f"[{self.x}, {self.y}, {self.z}]"
 
     @property
-    def product(self):
+    def product(self) -> int:
+        """ linear product is x * y * z """
         return self.x * self.y * self.z
+
+    def __eq__(self, rhs: 'NDRange') -> bool:
+        return (self.x == rhs.x and self.y == rhs.y and self.z == rhs.z)
+
+    def __gt__(self, rhs: 'NDRange') -> bool:
+        return (self.product > rhs.product and
+                self.x >= rhs.x and self.y >= rhs.y and self.z >= rhs.z)
+
+    def __ge__(self, rhs: 'NDRange') -> bool:
+        return self == rhs or self > rhs
 
 
 def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
@@ -79,74 +93,102 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
                     "env argument is of incorrect type")
     assert_or_raise(isinstance(src, str), ValueError,
                     "source is not a string")
+
+    # validate global and local sizes
     assert_or_raise(len(gsize) == 3, TypeError)
     assert_or_raise(len(lsize) == 3, TypeError)
     gsize, lsize = NDRange(*gsize), NDRange(*lsize)
 
+    assert_or_raise(gsize.product >= 1, ValueError,
+                    f"Scalar global size {gsize.product} must be >= 1")
+    assert_or_raise(lsize.product >= 1, ValueError,
+                    f"Scalar local size {lsize.product} must be >= 1")
+    assert_or_raise(gsize >= lsize, ValueError,
+                    f"Global size {gsize} must be larger than local size {lsize}")
+    log(f"""\
+3-D global size {gsize.product} = {gsize}
+3-D local size {lsize.product} = {lsize}""")
+
+    # parse args in this process since we want to preserve the sueful exception
+    # type
+    args = extract_args(src)
+
+    # check that the number of inputs is correct
+    args_with_inputs = [i for i, arg in enumerate(args) if not arg.is_local]
+    assert_or_raise(len(args_with_inputs) == len(inputs), ValueError,
+                    "Kernel expects {} inputs, but {} were provided".format(
+                        len(args_with_inputs), len(inputs)))
+
+    # copy inputs into the expected data types
+    data = np.array([np.array(d).astype(a.numpy_type)
+                     for d, a in zip(inputs, args)])
+
     job = {
         "env": env,
         "src": src,
-        "inputs": inputs,
+        "args": args,
+        "data": inputs,
         "gsize": gsize,
         "lsize": lsize,
         "optimizations": optimizations,
-        "profiling": profiling,
-        "debug": debug
+        "profiling": profiling
     }
 
     with NamedTemporaryFile('rb+', prefix='cldrive-', suffix='.job') as tmpfile:
         porcelain_job_file = tmpfile.name
+
+        # write job file
         pickle.dump(job, tmpfile)
         tmpfile.flush()
 
-        cldrive_path = "cldrive"#, resource_filename(__name__, "bin/cldrive")
-
+        # enforce timeout using `timeout' command
         if timeout > 0:
             cli = ["timeout", "--signal=9", str(int(timeout))]
         else:
             cli = []
-
-        popen_opts = {}
-        if not debug:
-            popen_opts["stdout"] = DEVNULL
-            popen_opts["stderr"] = DEVNULL
-
         cli += [sys.executable, __file__, porcelain_job_file]
 
         cli_str = " ".join(cli)
         log(cli_str)
-        process = Popen(cli, **popen_opts)
-        process.communicate()
+
+        # fork and run
+        process = Popen(cli, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+
+        log(stdout.decode('utf-8'))
+        log(stderr.decode('utf-8'))
 
         if process.returncode:
             raise RuntimeError(
-                f"worker '{cli_str}' exited with status code {process.returncode}")
+                f"porcelain subprocess exited with status code {process.returncode}")
 
+        # read result
         tmpfile.seek(0)
         data = pickle.load(tmpfile)
 
     return data
 
 
-def porcelain(path: str) -> None:
+def __porcelain(path: str) -> None:
     """
-    This function does not return.
+    Run OpenCL kernel. Invoke as a subprocess.
     """
     def log(*args, **kwargs):
-        if debug:
-            print(*args, **kwargs, file=sys.stderr)
+        print(*args, **kwargs, file=sys.stderr)
 
     with open(path, 'rb') as infile:
         job = pickle.load(infile)
 
     env = job["env"]
     src = job["src"]
-    inputs = job["inputs"]
+    args = job["args"]
+    data = job["data"]
     gsize = job["gsize"]
     lsize = job["lsize"]
     optimizations = job["optimizations"]
     profiling = job["profiling"]
-    debug = job["debug"]
+
+    log(env)
 
     # OpenCL compiler flags
     if optimizations:
@@ -156,15 +198,10 @@ def porcelain(path: str) -> None:
         build_flags = ['-cl-opt-disable']
         log("OpenCL optimizations: off")
 
-    if debug:
-        os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
-    else:
-        os.environ['PYOPENCL_COMPILER_OUTPUT'] = '0'
-
-    # parse args first as this is most likely to raise an error
-    args = extract_args(src)
-
     ctx, queue = env.ctx_queue
+
+    # parent process determines whether or not to silence this output
+    os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
 
     try:
         program = cl.Program(ctx, src).build(build_flags)
@@ -176,29 +213,6 @@ def porcelain(path: str) -> None:
     # than one kernel:
     assert(len(kernels) == 1)
     kernel = kernels[0]
-
-    # copy inputs into the expected data types
-    data = np.array([np.array(d).astype(a.numpy_type)
-                     for d, a in zip(inputs, args)])
-
-    # sanity check that there are enough the correct number of inputs
-    data_indices = [i for i, arg in enumerate(args) if not arg.is_local]
-    assert_or_raise(len(data_indices) == len(data), ValueError,
-                    "Incorrect number of inputs provided")
-
-    # scalar_gsize is the product of the global NDRange.
-    scalar_gsize, scalar_lsize = gsize.product, lsize.product
-
-    assert_or_raise(gsize.product >= 1, ValueError,
-                    f"Scalar global size {gsize.product} must be >= 1")
-    assert_or_raise(lsize.product >= 1, ValueError,
-                    f"Scalar local size {lsize.product} must be >= 1")
-    assert_or_raise(gsize > lsize, ValueError,
-                    f"Global size {gsize} must be larger than local size {lsize}")
-
-    log(f"""\
-3-D global size {gsize.product} = {gsize}
-3-D local size {lsize.product} = {lsize}""")
 
     # buffer size is the scalar global size, or the size of the largest
     # input, which is bigger
@@ -237,10 +251,10 @@ def porcelain(path: str) -> None:
     assert_or_raise(len(data) == data_i, ValueError,
                     "failed to set input arguments")
 
-    # clear any existing tasks in the command queue:
+    # clear any existing tasks in the command queue
     queue.flush()
 
-    # copy host -> device
+    # copy inputs from host -> device
     for argtuple in argtuples:
         if argtuple.hostdata is not None:
             cl.enqueue_copy(queue, argtuple.devdata, argtuple.hostdata,
@@ -256,21 +270,20 @@ def porcelain(path: str) -> None:
     # run the kernel
     kernel(queue, gsize, lsize, *kernel_args)
 
-    # copy device -> host
+    # copy data from device -> host
     for arg, argtuple in zip(args, argtuples):
+        # const arguments are unmodified
         if argtuple.hostdata is not None and not arg.is_const:
-            cl.enqueue_copy(
-                queue, argtuple.hostdata, argtuple.devdata,
-                is_blocking=False)
+            cl.enqueue_copy(queue, argtuple.hostdata, argtuple.devdata,
+                            is_blocking=False)
 
-    # wait for queue to finish
+    # wait for OpenCL commands to complete
     queue.flush()
 
     with open(path, 'wb') as outfile:
         pickle.dump(data, outfile)
 
-    sys.exit(0)
 
-
+# entry point for porcelain incvocation
 if __name__ == "__main__":
-    porcelain(sys.argv[1])
+    __porcelain(sys.argv[1])
