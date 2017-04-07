@@ -18,6 +18,12 @@
 """
 Run arbitrary OpenCL kernels.
 """
+from pkg_resources import require
+
+
+__version__ = require("cldrive")[0].version
+
+
 def assert_or_raise(stmt: bool, exception: Exception,
                     *exception_args, **exception_kwargs) -> None:
     """

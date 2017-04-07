@@ -1,7 +1,6 @@
 import sys
 
 from argparse import ArgumentParser
-from pkg_resources import require
 from typing import Tuple
 
 from cldrive import *
@@ -14,8 +13,7 @@ def parse_ndrange(ndrange: str) -> Tuple[int, int, int]:
 
 
 def print_version_and_exit() -> None:
-    version = require("cldrive")[0].version
-    print(f"cldrive {version}")
+    print(f"cldrive {__version__}")
     sys.exit(0)
 
 
