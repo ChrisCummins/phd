@@ -17,7 +17,6 @@
 #
 from setuptools import setup
 
-# read from requirements.txt
 with open('./requirements.txt') as infile:
     requirements = [x.strip() for x in infile.readlines() if x.strip()]
 
