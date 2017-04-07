@@ -104,7 +104,7 @@ def main():
                 if not arg.address_space == 'local']
         assert(len(args) == len(outputs))
         for arr, arg in zip(outputs, args):
-            print(f"{arg}: {arr}")
+            print(f"{arg.name}: {arr}")
 
 
 if __name__ == "__main__":
