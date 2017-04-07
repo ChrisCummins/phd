@@ -132,7 +132,8 @@ supported types are: {{{supported_types_str}}}""")
             self.vector_width = 1
 
     def __repr__(self):
-        return f"{self.quals_str}{self.typename} {self.name}"
+        pointer_str = "*" if self.is_pointer else ""
+        return f"{self.quals_str}{self.typename} {self.name}{pointer_str}"
 
 
 class ArgumentExtractor(NodeVisitor):
