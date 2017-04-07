@@ -23,12 +23,17 @@
 #
 set -e
 
+# List of files in which the version number should be updated
 files_to_update=(
     "setup.py"
     "README.md"
 )
 
+# Branch on which releases must be made
 release_branch="master"
+
+# Version number suffix for development versions
+dev_suffix=".dev0"
 
 
 version_is_pep440_compliant() {
@@ -106,7 +111,6 @@ main() {
     local current_version_re="$(echo $current_version | sed -e 's/[]\/$*.^|[]/\\&/g')"
 
     # set new version
-
     for file in ${files_to_update[@]}; do
         echo 'sed -r "s/$current_version_re/$new_version/g" -i "$file"'
         sed -r "s/$current_version_re/$new_version/g" -i "$file"
@@ -136,5 +140,15 @@ main() {
 
     # update on PyPi
     python setup.py sdist upload
+
+    # set dev version
+    local dev_version="$new_version$dev_suffix"
+    for file in ${files_to_update[@]}; do
+        echo 'sed -r "s/$new_version/$dev_version/g" -i "$file"'
+        sed -r "s/$new_version/$dev_version/g" -i "$file"
+        echo 'git add "$file"'
+        git add "$file"
+    done
+    git commit -m "Development version bump"
 }
 main $@
