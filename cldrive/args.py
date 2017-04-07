@@ -44,23 +44,12 @@ class KernelArg(object):
         self.is_local = False
         self.is_global = False
 
-        if self.is_pointer:
-            if ("local" in self.ast.quals
-                or "__local" in self.ast.quals):
-                self.is_local = True
-
-            if ("global" in self.ast.quals
-                  or "__global" in self.ast.quals):
-                self.is_global = True
-
-            if self.is_local and self.is_global:
-                raise OpenCLValueError(
-                    "Argument is both global and local qualified")
-            elif not self.is_local and not self.is_global:
-                raise OpenCLValueError(
-                    "Argument is neither global or local qualified")
-
         self.name = self.ast.name
+        self.quals = self.ast.quals
+        if len(self.quals):
+            self.quals_str = " ".join(self.quals) + " "
+        else:
+            self.quals_str = ""
 
         # determine tyename
         try:
@@ -70,7 +59,7 @@ class KernelArg(object):
                 typenames = self.ast.type.type.type.names
         except AttributeError as e:  # e.g. structs
             raise ValueError(
-                f"unsupported data type for argument '{self.name}'") from e
+                f"unsupported data type for argument '{self.quals_str}{self.name}'") from e
 
         self.typename = " ".join(typenames)
 
@@ -98,10 +87,25 @@ class KernelArg(object):
         except KeyError:
             supported_types_str = ",".join(sorted(numpy_types.keys()))
             raise KernelArgError(f"""\
-unsupported type '{self.typename}' for argument '{self.name}'. \
+unsupported type '{self.typename}' for argument '{self.quals_str}{self.name}'. \
 supported types are: {{{supported_types_str}}}""")
 
-        self.quals = self.ast.quals
+        if self.is_pointer:
+            if ("local" in self.ast.quals
+                or "__local" in self.ast.quals):
+                self.is_local = True
+
+            if ("global" in self.ast.quals
+                  or "__global" in self.ast.quals):
+                self.is_global = True
+
+            if self.is_local and self.is_global:
+                raise OpenCLValueError(
+                    "Argument is both global and local qualified")
+            elif not self.is_local and not self.is_global:
+                raise OpenCLValueError(
+                    f"argument '{self.quals_str}{self.typename} {self.name}' is neither global or local qualified")
+
         self.bare_type = self.typename.rstrip('0123456789')
         self.is_vector = self.typename[-1].isdigit()
         self.is_const = "const" in self.quals
@@ -113,11 +117,7 @@ supported types are: {{{supported_types_str}}}""")
             self.vector_width = 1
 
     def __repr__(self):
-        if len(self.quals):
-            quals_str = " ".join(self.quals) + " "
-        else:
-            quals_str = ""
-        return f"{quals_str}{self.typename} {self.name}"
+        return f"{self.quals_str}{self.typename} {self.name}"
 
 
 class ArgumentExtractor(NodeVisitor):
