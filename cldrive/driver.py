@@ -209,6 +209,7 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
 
 def __porcelain_exec(path: str) -> np.array:
     def log(*args, **kwargs):
+        print("[cldrive] ", end="", file=sys.stderr)
         print(*args, **kwargs, file=sys.stderr)
 
     with open(path, 'rb') as infile:
@@ -242,7 +243,18 @@ def __porcelain_exec(path: str) -> np.array:
     # Additional logging output for inputs:
     log("Number of kernel arguments:", len(args))
     log("Kernel arguments:", ", ".join(str(a) for a in args))
-    log("Kernel input elements:", ", ".join(str(x.size) for x in data))
+    log("Kernel input sizes: [", ", ".join(str(x.size) for x in data), "]",
+        sep="")
+
+    # buffer size is the scalar global size, or the size of the largest
+    # input, whichever is bigger
+    if len(data):
+        buf_size = max(gsize.product, *[x.size for x in data])
+    else:
+        buf_size = gsize.product
+
+    # parent process determines whether or not to silence this output
+    os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
 
     # OpenCL compiler flags
     if optimizations:
@@ -252,11 +264,9 @@ def __porcelain_exec(path: str) -> np.array:
         build_flags = ['-cl-opt-disable']
         log("OpenCL optimizations: off")
 
-    # parent process determines whether or not to silence this output
-    os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
-
     try:
         program = cl.Program(ctx, src).build(build_flags)
+        log("Compilation succeeded")
     except cl.RuntimeError as e:
         raise RuntimeError from e
 
@@ -266,12 +276,9 @@ def __porcelain_exec(path: str) -> np.array:
     assert(len(kernels) == 1)
     kernel = kernels[0]
 
-    # buffer size is the scalar global size, or the size of the largest
-    # input, whichever is bigger
-    if len(data):
-        buf_size = max(gsize.product, *[x.size for x in data])
-    else:
-        buf_size = gsize.product
+    # clear any existing tasks in the command queue
+    queue.flush()
+    log("Command queue flushed")
 
     # assemble argtuples
     ArgTuple = namedtuple('ArgTuple', ['hostdata', 'devdata'])
@@ -304,36 +311,39 @@ def __porcelain_exec(path: str) -> np.array:
         argtuples.append(ArgTuple(hostdata=hostdata, devdata=devdata))
 
     assert_or_raise(len(data) == data_i, ValueError,
-                    "failed to set input arguments")
-
-    # clear any existing tasks in the command queue
-    queue.flush()
-
-    # copy inputs from host -> device
-    for argtuple in argtuples:
-        if argtuple.hostdata is not None:
-            cl.enqueue_copy(queue, argtuple.devdata, argtuple.hostdata,
-                            is_blocking=False)
+                    "failed to interpret inputs")
+    log("Device memory allocated")
 
     kernel_args = [argtuple.devdata for argtuple in argtuples]
 
     try:
         kernel.set_args(*kernel_args)
+        log("Set kernel arguments")
     except cl.LogicError as e:
         raise ValueError(e)
 
+    if len(argtuples):
+        for argtuple in argtuples:
+            if argtuple.hostdata is not None:
+                cl.enqueue_copy(queue, argtuple.devdata, argtuple.hostdata,
+                                is_blocking=False)
+        log("Host -> Device transfers enqueued")
+
     # run the kernel
     kernel(queue, gsize, lsize, *kernel_args)
+    log("Kernel execution enqueued")
 
-    # copy data from device -> host
-    for arg, argtuple in zip(args, argtuples):
-        # const arguments are unmodified
-        if argtuple.hostdata is not None and not arg.is_const:
-            cl.enqueue_copy(queue, argtuple.hostdata, argtuple.devdata,
-                            is_blocking=False)
+    if len(argtuples):
+        for arg, argtuple in zip(args, argtuples):
+            # const arguments are unmodified
+            if argtuple.hostdata is not None and not arg.is_const:
+                cl.enqueue_copy(queue, argtuple.hostdata, argtuple.devdata,
+                                is_blocking=False)
+        log("Device -> Host transfers enqueued")
 
     # wait for OpenCL commands to complete
     queue.flush()
+    log("Command queue flushed")
 
     return data
 
