@@ -35,7 +35,7 @@ outputs = cldrive.drive(env, src, inputs, gsize=(4, 1, 1), lsize=(1, 1, 1))
 print(outputs)  # prints `[[0 2 4 6]]`
 ```
 
-See [examples/API.ipynb](https://github.com/ChrisCummins/cldrive/blob/master/examples/API.ipynb) for a more comprehensive overview of the API.
+See [examples/API.ipynb](/examples/API.ipynb) for a more comprehensive overview of the API.
 
 
 ## License
