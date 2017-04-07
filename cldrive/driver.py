@@ -232,8 +232,11 @@ def __porcelain_exec(path: str) -> np.array:
     kernel = kernels[0]
 
     # buffer size is the scalar global size, or the size of the largest
-    # input, which is bigger
-    buf_size = max(gsize.product, *[x.size for x in data])
+    # input, whichever is bigger
+    if len(data):
+        buf_size = max(gsize.product, *[x.size for x in data])
+    else:
+        buf_size = gsize.product
 
     # assemble argtuples
     ArgTuple = namedtuple('ArgTuple', ['hostdata', 'devdata'])
