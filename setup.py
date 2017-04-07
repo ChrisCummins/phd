@@ -17,6 +17,9 @@
 #
 from setuptools import setup
 
+with open('./requirements.txt') as infile:
+    requirements = [x.strip() for x in infile.readlines() if x.strip()]
+
 setup(name="labm8",
       version="0.0.15",
       description="Utils for manipulating quantitative experimental data",
@@ -27,15 +30,5 @@ setup(name="labm8",
       packages=["labm8"],
       test_suite="nose.collector",
       tests_require=["nose"],
-      install_requires=[
-          "Send2Trash >= 1.3.0",
-          "humanize >= 0.5.1",
-          "numpy >= 1.10.4",
-          "pandas >= 0.19.0",
-          "python-dateutil >= 2.5.3",
-          "matplotlib >= 1.5.3",
-          "pytz >= 2016.7",
-          "scipy >= 0.16.1",
-          "six >= 1.10.0",
-      ],
+      install_requires=requirements,
       zip_safe=True)
