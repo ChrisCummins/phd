@@ -113,7 +113,7 @@ class KernelArg(object):
             quals_str = " ".join(self.quals) + " "
         else:
             quals_str = ""
-        return f"{self.__class__.__name__} {quals_str}{self.typename} {self.name}"
+        return f"{quals_str}{self.typename} {self.name}"
 
 
 class ArgumentExtractor(NodeVisitor):
