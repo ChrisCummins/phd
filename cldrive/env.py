@@ -5,8 +5,6 @@ import sys
 from collections import namedtuple
 from typing import List, Tuple
 
-import pyopencl as cl
-
 
 class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device'])):
     __slots__ = ()  # memory saving
@@ -15,7 +13,7 @@ class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device']))
         return f"Device: {self.device}, Platform: {self.platform}"
 
     @property
-    def ctx_queue(self) -> Tuple[cl.Context, cl.CommandQueue]:
+    def ctx_queue(self) -> Tuple['cl.Context', 'cl.CommandQueue']:
         """
         Return an OpenCL context and command queue for the given environment.
 
@@ -27,7 +25,7 @@ class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device']))
                            device=self.device)
 
 
-def _cl_devtype_from_str(string: str) -> cl.device_type:
+def _cl_devtype_from_str(cl, string: str) -> 'cl.device_type':
     devtypes = {
         "cpu": cl.device_type.CPU,
         "gpu": cl.device_type.GPU,
@@ -40,8 +38,8 @@ def _cl_devtype_from_str(string: str) -> cl.device_type:
         raise ValueError(f"unrecognized device type '{string}'")
 
 
-def _devtype_matches(device: cl.Device,
-                     devtype: cl.device_type) -> bool:
+def _devtype_matches(cl, device: 'cl.Device',
+                     devtype: 'cl.device_type') -> bool:
     """ check that device type matches """
     if devtype == cl.device_type.ALL:
         return True
@@ -53,7 +51,9 @@ def _devtype_matches(device: cl.Device,
 def _lookup_env(return_cl: bool, platform: str=None, device: str=None,
                 devtype: str="all") -> OpenCLEnvironment:
     """ find a matching OpenCL device """
-    cl_devtype = _cl_devtype_from_str(devtype)
+    import pyopencl as cl
+
+    cl_devtype = _cl_devtype_from_str(cl, devtype)
 
     try:
         cl_platforms = cl.get_platforms()
@@ -72,7 +72,7 @@ def _lookup_env(return_cl: bool, platform: str=None, device: str=None,
             cl_devices = ctx.get_info(cl.context_info.DEVICES)
 
             # filter devices on device type
-            cl_devices = [d for d in cl_devices if _devtype_matches(d, cl_devtype)]
+            cl_devices = [d for d in cl_devices if _devtype_matches(cl, d, cl_devtype)]
 
             for cl_device in cl_devices:
                 device_str = cl_device.get_info(cl.device_info.NAME)
@@ -119,55 +119,9 @@ def host_os() -> str:
     return f"{system} {release} {arch}"
 
 
-def platform_name(platform_id: int) -> str:
-    """
-    Get the OpenCL platform name.
-
-    Arguments:
-        platform_id (int): ID of platform.
-
-    Returns:
-        str: Platform name.
-    """
-    platform = cl.get_platforms()[platform_id]
-    return platform.get_info(cl.platform_info.NAME)
-
-
-def device_name(platform_id: int, device_id: int) -> str:
-    """
-    Get the OpenCL device name.
-
-    Arguments:
-        platform_id (int): ID of platform.
-        device_id (int): ID of device.
-
-    Returns:
-        str: Device name.
-    """
-    platform = cl.get_platforms()[platform_id]
-    ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
-    device = ctx.get_info(cl.context_info.DEVICES)[device_id]
-    return device.get_info(cl.device_info.NAME)
-
-
-def driver_version(platform_id: int, device_id: int) -> str:
-    """
-    Get the OpenCL device driver version.
-
-    Arguments:
-        platform_id (int): ID of platform.
-        device_id (int): ID of device.
-
-    Returns:
-        str: Driver version string.
-    """
-    platform = cl.get_platforms()[platform_id]
-    ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
-    device = ctx.get_info(cl.context_info.DEVICES)[device_id]
-    return device.get_info(cl.device_info.DRIVER_VERSION)
-
-
 def clinfo(file=sys.stdout) -> None:
+    import pyopencl as cl
+
     print("Host:", host_os(), file=file)
 
     for platform_id, platform in enumerate(cl.get_platforms()):

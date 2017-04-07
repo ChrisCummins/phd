@@ -17,8 +17,6 @@
 #
 from unittest import TestCase, skip, main
 
-import pyopencl as cl
-
 import cldrive
 
 

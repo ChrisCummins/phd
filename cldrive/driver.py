@@ -23,7 +23,6 @@ from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
 
 import numpy as np
-import pyopencl as cl
 
 from cldrive import *
 
@@ -220,6 +219,8 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
 
 
 def __porcelain_exec(path: str) -> np.array:
+    import pyopencl as cl  # defered loading of OpenCL library
+
     def log(*args, **kwargs):
         print("[cldrive] ", end="", file=sys.stderr)
         print(*args, **kwargs, file=sys.stderr)
