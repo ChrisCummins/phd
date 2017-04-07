@@ -6,12 +6,6 @@ from typing import Tuple
 from cldrive import *
 
 
-def parse_ndrange(ndrange: str) -> Tuple[int, int, int]:
-    components = ndrange.split(',')
-    assert(len(components) == 3)
-    return (int(components[0]), int(components[1]), int(components[2]))
-
-
 def print_version_and_exit() -> None:
     print(f"cldrive {__version__}")
     sys.exit(0)

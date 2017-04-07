@@ -57,6 +57,29 @@ class NDRange(namedtuple('NDRange', ['x', 'y', 'z'])):
     def __ge__(self, rhs: 'NDRange') -> bool:
         return self == rhs or self > rhs
 
+    @staticmethod
+    def from_str(string: str) -> 'NDRange':
+        """
+        Parse an NDRange from a string of format 'x,y,z'.
+
+        Arguments:
+            string (str): comma separated NDRange values.
+
+        Returns:
+            NDRange: parsed NDRange.
+
+        Raises:
+            ValueError: if string does not contain three comma separated
+                integers.
+        """
+        components = string.split(',')
+        if not len(components) == 3:
+            raise ValueError(f"invalid NDRange '{string}'")
+
+        x, y, z = int(components[0]), int(components[1]), int(components[2])
+
+        return NDRange(x, y, z)
+
 
 def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
           gsize: NDRange, lsize: NDRange, timeout: int=-1,
