@@ -76,8 +76,9 @@ class TestDriver(TestCase):
         src = """
         kernel void A(gl ob a l  i nt* a) {}
         """
-        with self.assertRaises(cldrive.OpenCLValueError):
-            cldrive.drive(ENV, src, [[]], gsize=(1,1,1), lsize=(1,1,1))
+        with DevNullRedirect():
+            with self.assertRaises(RuntimeError):
+                cldrive.drive(ENV, src, [[]], gsize=(1,1,1), lsize=(1,1,1))
 
 
 # TODO: Difftest against cl_launcher from CLSmith for a CLSmith kernel.

@@ -26,7 +26,7 @@ def assert_or_raise(stmt: bool, exception: Exception,
     if not stmt:
         raise exception(*exception_args, **exception_kwargs)
 
-
+# note to future me: the order of imports here is important.
 from cldrive.env import *
 from cldrive.args import *
 from cldrive.driver import *

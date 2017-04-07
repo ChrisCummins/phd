@@ -15,7 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with cldrive.  If not, see <http://www.gnu.org/licenses/>.
 #
+import pickle
 import sys
+
+from pkg_resources import resource_filename
+from subprocess import Popen, DEVNULL
+from tempfile import NamedTemporaryFile
 
 import numpy as np
 import pyopencl as cl
@@ -35,7 +40,7 @@ class NDRange(namedtuple('NDRange', ['x', 'y', 'z'])):
 
 
 def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
-          gsize: NDRange, lsize: NDRange, timeout: float=-1,
+          gsize: NDRange, lsize: NDRange, timeout: int=-1,
           optimizations: bool=True, profiling: bool=False, debug: bool=False):
     """
     OpenCL kernel.
@@ -47,7 +52,7 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         optimizations (bool, optional): Whether to enable or disbale OpenCL
             compiler optimizations.
         profiling (bool, optional): If true, record OpenCLevent times for
-        timeout (float, optional): Cancel execution if it has not completed
+        timeout (int, optional): Cancel execution if it has not completed
             after this many seconds. A value <= 0 means never time out.
         debug (bool, optional): If true, silence the OpenCL compiler.
         data transfers and kernel executions.
@@ -77,6 +82,71 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
     assert_or_raise(len(gsize) == 3, TypeError)
     assert_or_raise(len(lsize) == 3, TypeError)
     gsize, lsize = NDRange(*gsize), NDRange(*lsize)
+
+    job = {
+        "env": env,
+        "src": src,
+        "inputs": inputs,
+        "gsize": gsize,
+        "lsize": lsize,
+        "optimizations": optimizations,
+        "profiling": profiling,
+        "debug": debug
+    }
+
+    with NamedTemporaryFile('rb+', prefix='cldrive-', suffix='.job') as tmpfile:
+        porcelain_job_file = tmpfile.name
+        pickle.dump(job, tmpfile)
+        tmpfile.flush()
+
+        cldrive_path = "cldrive"#, resource_filename(__name__, "bin/cldrive")
+
+        if timeout > 0:
+            cli = ["timeout", "--signal=9", str(int(timeout))]
+        else:
+            cli = []
+
+        popen_opts = {}
+        if not debug:
+            popen_opts["stdout"] = DEVNULL
+            popen_opts["stderr"] = DEVNULL
+
+        cli += [sys.executable, __file__, porcelain_job_file]
+
+        cli_str = " ".join(cli)
+        log(cli_str)
+        process = Popen(cli, **popen_opts)
+        process.communicate()
+
+        if process.returncode:
+            raise RuntimeError(
+                f"worker '{cli_str}' exited with status code {process.returncode}")
+
+        tmpfile.seek(0)
+        data = pickle.load(tmpfile)
+
+    return data
+
+
+def porcelain(path: str) -> None:
+    """
+    This function does not return.
+    """
+    def log(*args, **kwargs):
+        if debug:
+            print(*args, **kwargs, file=sys.stderr)
+
+    with open(path, 'rb') as infile:
+        job = pickle.load(infile)
+
+    env = job["env"]
+    src = job["src"]
+    inputs = job["inputs"]
+    gsize = job["gsize"]
+    lsize = job["lsize"]
+    optimizations = job["optimizations"]
+    profiling = job["profiling"]
+    debug = job["debug"]
 
     # OpenCL compiler flags
     if optimizations:
@@ -196,4 +266,11 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
     # wait for queue to finish
     queue.flush()
 
-    return data
+    with open(path, 'wb') as outfile:
+        pickle.dump(data, outfile)
+
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    porcelain(sys.argv[1])

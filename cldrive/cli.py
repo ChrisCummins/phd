@@ -51,8 +51,5 @@ Copyright (C) 2017 Chris Cummins <chrisc.101@gmail.com>.
         if "--version" in args:
             print_version_and_exit()
 
-        if len(args) == 2 and args[0] == "--porcelain":
-            porcelain(args[1])
-
         # parse args normally
         return super(CliParser, self).parse_args(args, namespace)

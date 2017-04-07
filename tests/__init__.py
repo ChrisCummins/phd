@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with cldrive.  If not, see <http://www.gnu.org/licenses/>.
 #
+import sys
+
+from io import StringIO
+
 import numpy as np
 
 from numpy import testing as nptest
@@ -31,3 +35,20 @@ def lol2np(list_of_lists):
 def almost_equal(l1, l2):
     for x, y in zip(l1, l2):
         nptest.assert_almost_equal(lol2np(x), lol2np(y))
+
+class DevNullRedirect(object):
+    """docstring for DevNullOutputs"""
+    def __init__(self):
+        self.stdout = None
+        self.stderr = None
+
+    def __enter__(self):
+        self.stdout = sys.stdout
+        self.stderr = sys.stderr
+
+        sys.stdout = StringIO()
+        sys.stderr = StringIO()
+
+    def __exit__(self, *args):
+        sys.stdout = self.stdout
+        sys.stderr = self.stderr
