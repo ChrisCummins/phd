@@ -25,14 +25,17 @@ import cldrive
 class TestEnv(TestCase):
     def test_make_env_not_found(self):
         with self.assertRaises(LookupError):
-            cldrive.make_env(platform_id=9999999, device_id=9999999)
+            cldrive.make_env(platform="not a real plat",
+                             device="not a real dev")
 
+    @skip
     def test_make_env_cpu(self):
         env = cldrive.make_env(devtype="cpu")
         # device = env.queue.get_info(cl.command_queue_info.DEVICE)
         # device_type = device.get_info(cl.device_info.TYPE)
         # self.assertEqual(device_type, cl.device_type.CPU)
 
+    @skip
     def test_make_env_gpu(self):
         env = cldrive.make_env(devtype="gpu")
         # device = env.queue.get_info(cl.command_queue_info.DEVICE)

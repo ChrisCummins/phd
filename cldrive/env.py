@@ -23,27 +23,80 @@ class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device']))
             LookupError: If a matching OpenCL device cannot be found.
             RuntimeError: In case of an OpenCL API call failure.
         """
-        try:
-            for platform in cl.get_platforms():
-                ctx = cl.Context(
-                    properties=[(cl.context_properties.PLATFORM, platform)])
-                platform_str = platform.get_info(cl.platform_info.VENDOR)
+        return _lookup_env(return_cl=True, platform=self.platform,
+                           device=self.device)
 
-                if platform_str != self.platform:
+
+def _cl_devtype_from_str(string: str) -> cl.device_type:
+    devtypes = {
+        "cpu": cl.device_type.CPU,
+        "gpu": cl.device_type.GPU,
+        "all": cl.device_type.ALL
+    }
+
+    try:
+        return devtypes[string.lower()]
+    except KeyError:
+        raise ValueError(f"unrecognized device type '{string}'")
+
+
+def _devtype_matches(device: cl.Device,
+                     devtype: cl.device_type) -> bool:
+    """ check that device type matches """
+    if devtype == cl.device_type.ALL:
+        return True
+    else:
+        actual_devtype = device.get_info(cl.device_info.TYPE)
+        return actual_devtype == cl_devtype
+
+
+def _lookup_env(return_cl: bool, platform: str=None, device: str=None,
+                devtype: str="all") -> OpenCLEnvironment:
+    """ find a matching OpenCL device """
+    cl_devtype = _cl_devtype_from_str(devtype)
+
+    try:
+        cl_platforms = cl.get_platforms()
+        if not len(cl_platforms):
+            raise LookupError("no OpenCL platforms available")
+
+        for cl_platform in cl_platforms:
+            platform_str = cl_platform.get_info(cl.platform_info.VENDOR)
+
+            if platform and platform != platform_str:
+                continue
+
+            ctx = cl.Context(
+                properties=[(cl.context_properties.PLATFORM, cl_platform)])
+
+            cl_devices = ctx.get_info(cl.context_info.DEVICES)
+
+            # filter devices on device type
+            cl_devices = [d for d in cl_devices if _devtype_matches(d, cl_devtype)]
+
+            for cl_device in cl_devices:
+                device_str = cl_device.get_info(cl.device_info.NAME)
+
+                if device and device != device_str:
                     continue
 
-                for device in ctx.get_info(cl.context_info.DEVICES):
-                    device_str = device.get_info(cl.device_info.NAME)
-
-                    if device_str != self.device:
-                        continue
-
-                    queue = cl.CommandQueue(ctx, device=device)
+                if return_cl:
+                    queue = cl.CommandQueue(ctx, device=cl_device)
                     return ctx, queue
+                else:
+                    return OpenCLEnvironment(platform=platform, device=device)
             else:
-                raise LookupError
-        except cl.RuntimeError as e:
-            raise RuntimeError from e
+                if device:
+                    raise LookupError(
+                        f"could not find device '{device}' on platform '{platform}'")
+        else:
+            if platform:
+                raise LookupError(
+                        f"could not find platform '{platform}'")
+
+        raise LookupError(f"could not find a device of type '{devtype}'")
+    except cl.RuntimeError as e:
+        raise RuntimeError from e
 
 
 def host_os() -> str:
@@ -135,8 +188,8 @@ def clinfo(file=sys.stdout) -> None:
                   f"{driver}", file=file)
 
 
-def make_env(platform_id: int=None, device_id: int=None,
-             devtype: str="all", queue_flags: int=0) -> OpenCLEnvironment:
+def make_env(platform: str=None, device: str=None,
+             devtype: str="all") -> OpenCLEnvironment:
     """
     Create an OpenCL context and device queue.
 
@@ -162,67 +215,6 @@ def make_env(platform_id: int=None, device_id: int=None,
         ValueError: If device_id is set, but not platform_id.
         LookupError: If no matching device found.
         RuntimeError: In case OpenCL API call fails.
-
-    TODO:
-        * Implement profiling.
     """
-    def device_type_matches(device: cl.Device,
-                            cl_devtype: cl.device_type) -> bool:
-        """ check that device type matches """
-        if cl_devtype == cl.device_type.ALL:
-            return True
-        else:
-            actual_devtype = device.get_info(cl.device_info.TYPE)
-            return actual_devtype == cl_devtype
-
-    if devtype == "cpu":
-        cl_devtype = cl.device_type.CPU
-    elif devtype == "gpu":
-        cl_devtype = cl.device_type.GPU
-    elif devtype == "all":
-        cl_devtype = cl.device_type.ALL
-    else:
-        raise ValueError(f"unsupported device type '{devtype}'")
-
-    # get list of platforms to iterate over. If platform ID is provided, use
-    # only that platform.
-    if platform_id is None:
-        platforms = cl.get_platforms()
-    else:
-        try:
-            platforms = [cl.get_platforms()[platform_id]]
-        except IndexError:
-            raise LookupError(f"No platform for id={platform_id}")
-
-    for platform in platforms:
-        try:
-            ctx = cl.Context(
-                properties=[(cl.context_properties.PLATFORM, platform)])
-        except cl.RuntimeError as e:
-            raise RuntimeError from e
-
-        # get list of devices to iterate over. If device ID is provided, use
-        # only that device. Else, take any device which matches devtype
-        if device_id is None:
-            devices = ctx.get_info(cl.context_info.DEVICES)
-        else:
-            _assert_or_raise(platform_id is not None, ValueError)
-            try:
-                devices = [ctx.get_info(cl.context_info.DEVICES)[device_id]]
-            except IndexError:
-                raise LookupError(f"No device for id={device_id}")
-
-        devices = [d for d in devices if device_type_matches(d, cl_devtype)]
-
-        if len(devices):
-            try:
-                queue = cl.CommandQueue(ctx, device=devices[0])
-            except cl.RuntimeError as e:
-                raise RuntimeError from e
-
-            platform_str = platform.get_info(cl.platform_info.VENDOR)
-            device_str = devices[0].get_info(cl.device_info.NAME)
-
-            return OpenCLEnvironment(platform=platform_str, device=device_str)
-
-    raise LookupError("Could not find a suitable device")
+    return _lookup_env(return_cl=False, platform=platform, device=device,
+                       devtype=devtype)
