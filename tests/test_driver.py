@@ -94,9 +94,16 @@ class TestDriver(TestCase):
             cldrive.drive(ENV, src, [], gsize=(1,1,1), lsize=(1,1,1))
 
         # incorrect input width (3 ints instead of one)
-        # with self.assertRaises(ValueError):
-        #     cldrive.drive(ENV, src, [[1, 2, 3]], gsize=(1,1,1), lsize=(1,1,1),
-        #                   debug=True)
+        with self.assertRaises(ValueError):
+            cldrive.drive(ENV, src, [[1, 2, 3]], gsize=(1,1,1), lsize=(1,1,1))
+
+
+    def test_nonterminating(self):
+        src = """
+        kernel void A() { while (true) ; }
+        """
+        with self.assertRaises(cldrive.NonTerminatingError):
+            cldrive.drive(ENV, src, [], gsize=(1,1,1), lsize=(1,1,1), timeout=1)
 
 
 # TODO: Difftest against cl_launcher from CLSmith for a CLSmith kernel.

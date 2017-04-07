@@ -28,6 +28,11 @@ import pyopencl as cl
 from cldrive import *
 
 
+class NonTerminatingError(RuntimeError):
+    """ thrown if kernel executions fails to complete before timeout """
+    pass
+
+
 class NDRange(namedtuple('NDRange', ['x', 'y', 'z'])):
     """
     A 3 dimensional NDRange tuple. Has components x,y,z.
@@ -155,7 +160,14 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         log(stdout.decode('utf-8'))
         log(stderr.decode('utf-8'))
 
-        if process.returncode:
+        # test for non-zero exit codes. The porcelain subprocess catches
+        # exceptions and executes gracefully, so a non-zero return code is
+        # indicative of a more serious problem
+        KILL_SIGNAL = -9
+        if timeout > 0 and process.returncode == KILL_SIGNAL:
+            raise NonTerminatingError(
+                f"porcelain subprocess failed to complete within {timeout} seconds")
+        elif process.returncode:
             raise RuntimeError(
                 f"porcelain subprocess exited with status code {process.returncode}")
 
