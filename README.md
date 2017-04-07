@@ -16,22 +16,26 @@ $ pip install cldrive
 ```py
 import cldrive
 
+# our OpenCL kernel to run:
+src = """
+    kernel void double_inputs(global int* data) {
+        data[get_global_id(0)] *= 2;
+    }
+"""
+
+# the data to run it on:
+inputs = [[0, 1, 2, 3]]
+
 # create an OpenCL environment:
 env = cldrive.make_env()
 
-# create a driver for an OpenCL kernel:
-driver = cldrive.Driver(env, """
-    kernel void double_inputs(global int* data) {
-        data[get_global_id(0)] *= 2;
-    }""")
-
-# run kernel on some input:
-outputs = driver([[0, 1, 2, 3]], gsize=(4, 1, 1), lsize=(1, 1, 1))
+# run kernel on the input:
+outputs = cldrive.drive(env, src, inputs, gsize=(4, 1, 1), lsize=(1, 1, 1))
 
 print(outputs)  # prints `[[0 2 4 6]]`
 ```
 
-See the `examples/` directory for Jupyter notebooks with more detailed examples and API documentation.
+See [examples/API.ipynb](https://github.com/ChrisCummins/cldrive/blob/master/examples/API.ipynb) for a more comprehensive overview of the API.
 
 
 ## License
