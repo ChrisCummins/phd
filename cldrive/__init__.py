@@ -17,11 +17,14 @@
 #
 """
 Run arbitrary OpenCL kernels.
+
+Attributes:
+    __version__ (str): PEP 440 compiliant package version.
 """
 from pkg_resources import require
 
 
-__version__ = require("cldrive")[0].version
+__version__: str = require("cldrive")[0].version
 
 
 def assert_or_raise(stmt: bool, exception: Exception,
