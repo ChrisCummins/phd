@@ -146,7 +146,7 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         cli += [sys.executable, __file__, porcelain_job_file]
 
         cli_str = " ".join(cli)
-        log(cli_str)
+        log("Porcelain invocation:", cli_str)
 
         # fork and run
         process = Popen(cli, stdout=PIPE, stderr=PIPE)
@@ -313,6 +313,8 @@ def __porcelain(path: str) -> None:
     try:
         outputs = __porcelain_exec(path)
     except Exception as e:
+        import traceback
+        traceback.print_exc(file=sys.stderr)
         err = e
 
     with open(path, 'wb') as outfile:
