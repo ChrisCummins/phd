@@ -298,7 +298,7 @@ def __porcelain_exec(path: str) -> np.array:
     argtuples = []
     data_i = 0
     for i, arg in enumerate(args):
-        if arg.address_space == 'global':
+        if arg.address_space == 'global' or arg.address_space == 'constant':
             data[data_i] = data[data_i].astype(arg.numpy_type)
             hostdata = data[data_i]
             # determine flags to pass to OpenCL buffer creation:
