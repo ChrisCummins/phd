@@ -213,4 +213,4 @@ def extract_args(src: str) -> List[KernelArg]:
         visitor.visit(ast)
         return visitor.args
     except ParseError as e:
-        raise OpenCLValueError from e
+        raise OpenCLValueError("syntax error") from e
