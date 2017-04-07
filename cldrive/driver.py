@@ -105,9 +105,6 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
                     f"Scalar local size {lsize.product} must be >= 1")
     assert_or_raise(gsize >= lsize, ValueError,
                     f"Global size {gsize} must be larger than local size {lsize}")
-    log(f"""\
-3-D global size {gsize.product} = {gsize}
-3-D local size {lsize.product} = {lsize}""")
 
     # parse args in this process since we want to preserve the sueful exception
     # type
@@ -127,7 +124,7 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         "env": env,
         "src": src,
         "args": args,
-        "data": inputs,
+        "data": data,
         "gsize": gsize,
         "lsize": lsize,
         "optimizations": optimizations,
@@ -164,15 +161,18 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
 
         # read result
         tmpfile.seek(0)
-        data = pickle.load(tmpfile)
 
-    return data
+        rets = pickle.load(tmpfile)
+        outputs = rets["outputs"]
+        err = rets["err"]
+
+        if err:
+            raise err
+        else:
+            return outputs
 
 
-def __porcelain(path: str) -> None:
-    """
-    Run OpenCL kernel. Invoke as a subprocess.
-    """
+def __porcelain_exec(path: str) -> np.array:
     def log(*args, **kwargs):
         print(*args, **kwargs, file=sys.stderr)
 
@@ -188,7 +188,26 @@ def __porcelain(path: str) -> None:
     optimizations = job["optimizations"]
     profiling = job["profiling"]
 
-    log(env)
+    ctx, queue = env.ctx_queue
+
+    # CLSmith cl_launcher compatible logging output. See:
+    #    https://github.com/ChrisCummins/CLSmith/blob/master/src/CLSmith/cl_launcher.c
+    device = queue.get_info(cl.command_queue_info.DEVICE)
+    device_name = device.get_info(cl.device_info.NAME)
+
+    platform = device.get_info(cl.device_info.PLATFORM)
+    platform_name = platform.get_info(cl.platform_info.VENDOR)
+
+    log(f"Platform: {platform_name}")
+    log(f"Device: {device_name}")
+
+    log(f"3-D global size {gsize.product} = {gsize}")
+    log(f"3-D local size {lsize.product} = {lsize}")
+
+    # Additional logging output for inputs:
+    log("Number of kernel arguments:", len(args))
+    log("Kernel arguments:", ", ".join(str(a) for a in args))
+    log("Kernel input elements:", ", ".join(str(x.size) for x in data))
 
     # OpenCL compiler flags
     if optimizations:
@@ -197,8 +216,6 @@ def __porcelain(path: str) -> None:
     else:
         build_flags = ['-cl-opt-disable']
         log("OpenCL optimizations: off")
-
-    ctx, queue = env.ctx_queue
 
     # parent process determines whether or not to silence this output
     os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
@@ -265,7 +282,7 @@ def __porcelain(path: str) -> None:
     try:
         kernel.set_args(*kernel_args)
     except cl.LogicError as e:
-        raise TypeError(e)
+        raise ValueError(e)
 
     # run the kernel
     kernel(queue, gsize, lsize, *kernel_args)
@@ -280,8 +297,26 @@ def __porcelain(path: str) -> None:
     # wait for OpenCL commands to complete
     queue.flush()
 
+    return data
+
+
+def __porcelain(path: str) -> None:
+    """
+    Run OpenCL kernel. Invoke as a subprocess.
+    """
+    outputs = None
+    err = None
+
+    try:
+        outputs = __porcelain_exec(path)
+    except Exception as e:
+        err = e
+
     with open(path, 'wb') as outfile:
-        pickle.dump(data, outfile)
+        pickle.dump({
+            "outputs": outputs,
+            "err": err
+        }, outfile)
 
 
 # entry point for porcelain incvocation

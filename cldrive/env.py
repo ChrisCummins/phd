@@ -17,8 +17,11 @@ class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device']))
     @property
     def ctx_queue(self) -> Tuple[cl.Context, cl.CommandQueue]:
         """
+        Return an OpenCL context and command queue for the given environment.
+
         Raises:
-            RuntimeError: TODO
+            LookupError: If a matching OpenCL device cannot be found.
+            RuntimeError: In case of an OpenCL API call failure.
         """
         try:
             for platform in cl.get_platforms():
