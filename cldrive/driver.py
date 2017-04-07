@@ -33,6 +33,13 @@ class NonTerminatingError(RuntimeError):
     pass
 
 
+class PorcelainError(RuntimeError):
+    """ raised if porcelain subprocess exits with non-zero return code """
+    def __init__(self, *args, status: int=1, **kwargs):
+        super(PorcelainError, self).__init__(*args, **kwargs)
+        self.status = status
+
+
 class NDRange(namedtuple('NDRange', ['x', 'y', 'z'])):
     """
     A 3 dimensional NDRange tuple. Has components x,y,z.
@@ -107,6 +114,8 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         ValueError: if input types are incorrect.
         TypeError: if an input is of an incorrect type.
         LogicError: if the input types do not match OpenCL kernel types.
+        PorcelainError: if the OpenCL subprocess exits with non-zero return
+            code.
         RuntimeError: if OpenCL program fails to build or run.
 
     TODO:
@@ -179,6 +188,7 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         # fork and run
         process = Popen(cli, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
+        status = process.returncode
 
         log(stdout.decode('utf-8'))
         log(stderr.decode('utf-8'))
@@ -187,12 +197,13 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         # exceptions and executes gracefully, so a non-zero return code is
         # indicative of a more serious problem
         KILL_SIGNAL = -9
-        if timeout > 0 and process.returncode == KILL_SIGNAL:
+        if timeout > 0 and status == KILL_SIGNAL:
             raise NonTerminatingError(
                 f"porcelain subprocess failed to complete within {timeout} seconds")
-        elif process.returncode:
-            raise RuntimeError(
-                f"porcelain subprocess exited with status code {process.returncode}")
+        elif status:
+            raise PorcelainError(
+                f"porcelain subprocess exited with status code {status}",
+                status=status)
 
         # read result
         tmpfile.seek(0)
