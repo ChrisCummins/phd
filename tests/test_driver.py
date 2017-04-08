@@ -139,6 +139,20 @@ class TestDriver(TestCase):
         almost_equal(outputs, outputs_gs)
         almost_equal
 
+    def test_zero_size_input(self):
+        src = "kernel void A(global int* a) {}"
+        with self.assertRaises(ValueError):
+            cldrive.drive(ENV, src, [[]], gsize=(1,1,1), lsize=(1,1,1))
+
+    def test_comparison_against_pointer_warning(self):
+        src = """
+        kernel void A(global int* a) {
+            int id = get_global_id(0);
+            if (id < a) a += 1;
+        }
+        """
+
+        cldrive.drive(ENV, src, [[0]], gsize=(1,1,1), lsize=(1,1,1))
 
 # TODO: Difftest against cl_launcher from CLSmith for a CLSmith kernel.
 

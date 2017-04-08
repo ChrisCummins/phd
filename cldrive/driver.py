@@ -131,6 +131,7 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
     """
     def log(*args, **kwargs):
         if debug:
+            print("[cldrive] ", end="", file=sys.stderr)
             print(*args, **kwargs, file=sys.stderr)
 
     # assert input types
@@ -199,9 +200,10 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         stdout, stderr = process.communicate()
         status = process.returncode
 
-        log("[cldrive] Porcelain return code: status")
-        log(stdout.decode('utf-8').strip())
-        log(stderr.decode('utf-8').strip())
+        if debug:
+            print(stdout.decode('utf-8').strip(), file=sys.stderr)
+            print(stderr.decode('utf-8').strip(), file=sys.stderr)
+        log(f"Porcelain return code: {status}")
 
         # test for non-zero exit codes. The porcelain subprocess catches
         # exceptions and completes gracefully, so a non-zero return code is
@@ -237,7 +239,7 @@ def __porcelain_exec(path: str) -> np.array:
     import pyopencl as cl  # defered loading of OpenCL library
 
     def log(*args, **kwargs):
-        print("[cldrive] ", end="", file=sys.stderr)
+        print("[porcelain] ", end="", file=sys.stderr)
         print(*args, **kwargs, file=sys.stderr)
 
     with open(path, 'rb') as infile:
@@ -348,7 +350,7 @@ def __porcelain_exec(path: str) -> np.array:
         kernel.set_args(*kernel_args)
         log("Set kernel arguments")
     except cl.LogicError as e:
-        raise ValueError(e)
+        raise ValueError(f"failed to set kernel args") from e
 
     if len(argtuples):
         for argtuple in argtuples:
@@ -396,7 +398,7 @@ def __porcelain(path: str) -> None:
             "err": err
         }, outfile)
 
-    print("[cldrive] Porcelain complete", file=sys.stderr)
+    print("[porcelain] Porcelain complete", file=sys.stderr)
     sys.exit(0)
 
 
