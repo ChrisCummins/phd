@@ -98,7 +98,8 @@ class NDRange(namedtuple('NDRange', ['x', 'y', 'z'])):
 
 def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
           gsize: NDRange, lsize: NDRange, timeout: int=-1,
-          optimizations: bool=True, profiling: bool=False, debug: bool=False):
+          optimizations: bool=True, profiling: bool=False,
+          debug: bool=False) -> np.array:
     """
     OpenCL kernel.
 
@@ -125,9 +126,6 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         PorcelainError: if the OpenCL subprocess exits with non-zero return
             code.
         RuntimeError: if OpenCL program fails to build or run.
-
-    TODO:
-        * Implement profiling
     """
     def log(*args, **kwargs):
         if debug:
@@ -240,12 +238,30 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
 
 
 def __porcelain_exec(path: str) -> np.array:
+    """ here be dragons """
     import pyopencl as cl  # defered loading of OpenCL library
 
     def log(*args, **kwargs):
         print("[cldrive] ", end="", file=sys.stderr)
         print(*args, **kwargs, file=sys.stderr)
 
+    def get_event_time(event: cl.Event) -> float:
+        """
+        Block until OpenCL event has completed and return time delta
+        between event submission and end, in milliseconds.
+
+        Arguments:
+            event (cl.Event): Event handle.
+
+        Returns:
+            float: Elapsed time, in milliseconds.
+        """
+        event.wait()
+        tstart = event.get_profiling_info(cl.profiling_info.START)
+        tend = event.get_profiling_info(cl.profiling_info.END)
+        return (tend - tstart) / 1000000
+
+    # restore job
     with open(path, 'rb') as infile:
         job = pickle.load(infile)
 
@@ -258,7 +274,7 @@ def __porcelain_exec(path: str) -> np.array:
     optimizations = job["optimizations"]
     profiling = job["profiling"]
 
-    ctx, queue = env.ctx_queue
+    ctx, queue = env.ctx_queue(profiling=profiling)
 
     # CLSmith cl_launcher compatible logging output. See:
     #    https://github.com/ChrisCummins/CLSmith/blob/master/src/CLSmith/cl_launcher.c
@@ -300,6 +316,11 @@ def __porcelain_exec(path: str) -> np.array:
     else:
         build_flags = ['-cl-opt-disable']
         log("OpenCL optimizations: off")
+
+    if profiling:
+        log("OpenCL profiling: on")
+    else:
+        log("OpenCL profiling: off")
 
     try:
         program = cl.Program(ctx, src).build(build_flags)
@@ -359,24 +380,45 @@ def __porcelain_exec(path: str) -> np.array:
     except cl.LogicError as e:
         raise ValueError(f"failed to set kernel args") from e
 
+    upload_elapsed = 0
     if len(argtuples):
         for argtuple in argtuples:
             if argtuple.hostdata is not None:
-                cl.enqueue_copy(queue, argtuple.devdata, argtuple.hostdata,
-                                is_blocking=False)
-        log("Host -> Device transfers enqueued")
+                event = cl.enqueue_copy(queue, argtuple.devdata, argtuple.hostdata,
+                                        is_blocking=False)
+                if profiling:
+                    upload_elapsed += get_event_time(event)
+
+        if profiling:
+            log(f"Host -> Device transfers time: {upload_elapsed:.6f}ms")
+        else:
+            log("Host -> Device transfers enqueued")
 
     # run the kernel
-    kernel(queue, gsize, lsize, *kernel_args)
+    event = kernel(queue, gsize, lsize, *kernel_args)
     log("Kernel execution enqueued")
 
+    if profiling:
+        runtime = get_event_time(event)
+        log(f"Kernel runtime: {runtime:.6f}ms")
+
+
+    download_elapsed = 0
     if len(argtuples):
         for arg, argtuple in zip(args, argtuples):
             # const arguments are unmodified
             if argtuple.hostdata is not None and not arg.is_const:
                 cl.enqueue_copy(queue, argtuple.hostdata, argtuple.devdata,
                                 is_blocking=False)
-        log("Device -> Host transfers enqueued")
+                if profiling:
+                    download_elapsed += get_event_time(event)
+
+        if profiling:
+            log(f"Device -> Host transfers time: {download_elapsed:.6f}ms")
+        else:
+            log("Device -> Host transfers enqueued")
+
+
 
     # wait for OpenCL commands to complete
     queue.flush()

@@ -154,6 +154,23 @@ class TestDriver(TestCase):
 
         cldrive.drive(ENV, src, [[0]], gsize=(1,1,1), lsize=(1,1,1))
 
+    def test_profiling(self):
+        src = """
+        kernel void A(global int* a, constant int* b) {
+            const int id = get_global_id(0);
+            a[id] *= b[id];
+        }
+        """
+
+        inputs = [np.arange(16), np.arange(16)]
+        outputs_gs = [np.arange(16) ** 2, np.arange(16)]
+
+        outputs = cldrive.drive(ENV, src, inputs, gsize=(16,1,1), lsize=(16,1,1),
+                                profiling=True)
+
+        almost_equal(outputs, outputs_gs)
+
+
 # TODO: Difftest against cl_launcher from CLSmith for a CLSmith kernel.
 
 

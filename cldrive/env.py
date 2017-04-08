@@ -12,17 +12,19 @@ class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device']))
     def __repr__(self) -> str:
         return f"Device: {self.device}, Platform: {self.platform}"
 
-    @property
-    def ctx_queue(self) -> Tuple['cl.Context', 'cl.CommandQueue']:
+    def ctx_queue(self, profiling=False) -> Tuple['cl.Context', 'cl.CommandQueue']:
         """
         Return an OpenCL context and command queue for the given environment.
+
+        Arguments:
+            profiling (bool, optional): If True, enable profiling support.
 
         Raises:
             LookupError: If a matching OpenCL device cannot be found.
             RuntimeError: In case of an OpenCL API call failure.
         """
         return _lookup_env(return_cl=True, platform=self.platform,
-                           device=self.device)
+                           device=self.device, profiling=profiling)
 
 
 def _cl_devtype_from_str(cl, string: str) -> 'cl.device_type':
@@ -49,7 +51,7 @@ def _devtype_matches(cl, device: 'cl.Device',
 
 
 def _lookup_env(return_cl: bool, platform: str=None, device: str=None,
-                devtype: str="all") -> OpenCLEnvironment:
+                devtype: str="all", profiling: bool=False) -> OpenCLEnvironment:
     """ find a matching OpenCL device """
     import pyopencl as cl
 
@@ -81,7 +83,13 @@ def _lookup_env(return_cl: bool, platform: str=None, device: str=None,
                     continue
 
                 if return_cl:
-                    queue = cl.CommandQueue(ctx, device=cl_device)
+                    if profiling:
+                        properties = cl.command_queue_properties.PROFILING_ENABLE
+                    else:
+                        properties = None
+
+                    queue = cl.CommandQueue(ctx, device=cl_device,
+                                            properties=properties)
                     return ctx, queue
                 else:
                     return OpenCLEnvironment(
