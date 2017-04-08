@@ -84,7 +84,8 @@ def _lookup_env(return_cl: bool, platform: str=None, device: str=None,
                     queue = cl.CommandQueue(ctx, device=cl_device)
                     return ctx, queue
                 else:
-                    return OpenCLEnvironment(platform=platform, device=device)
+                    return OpenCLEnvironment(
+                        platform=platform_str, device=device_str)
             else:
                 if device:
                     raise LookupError(
