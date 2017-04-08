@@ -130,7 +130,8 @@ class Testbed(Base):
     __table_args__ = (
         sql.UniqueConstraint('platform', 'device', 'driver', name='_uid'),)
     # relation back to results:
-    results = sql.orm.relationship("Result", back_populates="testbed")
+    clsmith_results = sql.orm.relationship("CLSmithResult", back_populates="testbed")
+    clgen_results = sql.orm.relationship("CLgenResult", back_populates="testbed")
 
     def __repr__(self) -> str:
         return ("Platform: {self.platform}, "
@@ -204,7 +205,7 @@ class CLgenParams(Base):
         'size', 'generator', 'scalar_val', 'gsize_x', 'gsize_y', 'gsize_z',
         'lsize_x', 'lsize_y', 'lsize_z', 'optimizations', name='_uid'),)
     # relation back to results:
-    results = sql.orm.relationship("CLSmithResult", back_populates="params")
+    results = sql.orm.relationship("CLgenResult", back_populates="params")
 
     def to_flags(self):
         flags = [
@@ -252,7 +253,7 @@ class CLSmithResult(Base):
     outcome = sql.Column(sql.String(255))
 
     program = sql.orm.relationship("CLSmithProgram", back_populates="results")
-    testbed = sql.orm.relationship("Testbed", back_populates="results")
+    testbed = sql.orm.relationship("Testbed", back_populates="clsmith_results")
     params = sql.orm.relationship("CLSmithParams", back_populates="results")
 
     def __repr__(self):
@@ -281,7 +282,7 @@ class CLgenResult(Base):
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     program = sql.orm.relationship("CLgenProgram", back_populates="results")
-    testbed = sql.orm.relationship("Testbed", back_populates="results")
+    testbed = sql.orm.relationship("Testbed", back_populates="clgen_results")
     params = sql.orm.relationship("CLgenParams", back_populates="results")
 
     def __repr__(self) -> str:
