@@ -290,6 +290,9 @@ def __porcelain_exec(path: str) -> np.array:
     # parent process determines whether or not to silence this output
     os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
 
+    # always compile kernels, don't use cached binaries
+    os.environ['PYOPENCL_NO_CACHE'] = '1'
+
     # OpenCL compiler flags
     if optimizations:
         build_flags = []
