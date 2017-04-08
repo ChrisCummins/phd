@@ -26,7 +26,6 @@ set -e
 # List of files in which the version number should be updated
 files_to_update=(
     "setup.py"
-    "README.md"
 )
 
 # Branch on which releases must be made
