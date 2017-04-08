@@ -16,6 +16,7 @@
 # along with cldrive.  If not, see <http://www.gnu.org/licenses/>.
 #
 import pickle
+import re
 import sys
 
 from contextlib import suppress
@@ -205,6 +206,11 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         if debug:
             print(stdout.decode('utf-8').strip(), file=sys.stderr)
             print(stderr.decode('utf-8').strip(), file=sys.stderr)
+        elif profiling:
+            # print profiling output when not in debug mode:
+            for line in stderr.decode('utf-8').split('\n'):
+                if re.match(r'\[cldrive\] .+ time: [0-9]+\.[0-9]+ ms', line):
+                    print(line, file=sys.stderr)
         log(f"Porcelain return code: {status}")
 
         # test for non-zero exit codes. The porcelain subprocess catches
@@ -390,7 +396,7 @@ def __porcelain_exec(path: str) -> np.array:
                     upload_elapsed += get_event_time(event)
 
         if profiling:
-            log(f"Host -> Device transfers time: {upload_elapsed:.6f}ms")
+            log(f"Host -> Device transfers time: {upload_elapsed:.6f} ms")
         else:
             log("Host -> Device transfers enqueued")
 
@@ -400,7 +406,7 @@ def __porcelain_exec(path: str) -> np.array:
 
     if profiling:
         runtime = get_event_time(event)
-        log(f"Kernel runtime: {runtime:.6f}ms")
+        log(f"Kernel execution time: {runtime:.6f} ms")
 
 
     download_elapsed = 0
@@ -414,7 +420,7 @@ def __porcelain_exec(path: str) -> np.array:
                     download_elapsed += get_event_time(event)
 
         if profiling:
-            log(f"Device -> Host transfers time: {download_elapsed:.6f}ms")
+            log(f"Device -> Host transfers time: {download_elapsed:.6f} ms")
         else:
             log("Device -> Host transfers enqueued")
 
