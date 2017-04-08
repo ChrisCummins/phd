@@ -163,6 +163,10 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
                     "Kernel expects {} inputs, but {} were provided".format(
                         len(args_with_inputs), len(inputs)))
 
+    # all inputs must have some length
+    for i, x in enumerate(inputs):
+        assert_or_raise(len(x), ValueError, f"Input {i} has size zero")
+
     # copy inputs into the expected data types
     data = np.array([np.array(d).astype(a.numpy_type)
                      for d, a in zip(inputs, args)])
