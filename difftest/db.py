@@ -181,10 +181,7 @@ class CLSmithParams(Base):
         return (self.lsize_x, self.lsize_y, self.lsize_z)
 
     def __repr__(self) -> str:
-        return ("Optimizations: {self.optimizations_on_off}, "
-                "Global size: {self.gsize}, "
-                "Local size: {self.lsize}"
-                .format(**vars()))
+        return " ".join(self.to_flags())
 
 
 class CLgenParams(Base):
@@ -279,7 +276,7 @@ class CLgenResult(Base):
     cli = sql.Column(sql.String(255), nullable=False)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
-    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    stdout = sql.Column(sql.LargeBinary(length=2**31), nullable=False)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     program = sql.orm.relationship("CLgenProgram", back_populates="results")
