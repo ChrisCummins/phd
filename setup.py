@@ -30,10 +30,7 @@ setup(name='cldrive',
       packages=['cldrive'],
       test_suite='nose.collector',
       tests_require=['nose'],
-      scripts=[
-            'bin/cldrive',
-            'bin/cldrive-info'
-      ],
+      scripts=['bin/cldrive'],
       install_requires=requirements,
       # not zip safe, since we directly invoke a module by it's path:
       zip_safe=False)

@@ -19,6 +19,7 @@
 #
 import sys
 
+from argparse import ArgumentParser
 from io import TextIOWrapper
 
 import numpy as np
@@ -27,9 +28,18 @@ from cldrive import *
 
 
 def main():
-    parser = CliParser(description="Reads an OpenCL kernel from stdin, "
-        "generates data for it, executes it on a suitable device, "
-        "and prints the outputs.\n")
+    parser = ArgumentParser(description="""\
+Reads an OpenCL kernel from stdin, generates data for it, executes it on a \
+suitable device, and prints the outputs. Copyright (C) 2017 Chris Cummins \
+<chrisc.101@gmail.com>. <https://github.com/ChrisCummins/cldrive>""")
+
+    # admin
+    parser.add_argument(
+        "--version", action="store_true",
+        help="show version information and exit")
+    parser.add_argument(
+        "--clinfo", action="store_true",
+        help="list available OpenCL devices and exit")
 
     # environment controls
     parser.add_argument(
@@ -77,6 +87,15 @@ def main():
         "-b", "--binary", action="store_true",
         help="Print outputs as a pickled binary numpy array")
     args = parser.parse_args()
+
+    if args.version:
+        import cldrive
+        print(f"cldrive {cldrive.__version__}")
+        sys.exit(0)
+
+    if args.clinfo:
+        clinfo()
+        sys.exit(0)
 
     # read kernel source
     src = sys.stdin.read()
