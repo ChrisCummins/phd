@@ -110,6 +110,22 @@ class TestDriver(TestCase):
         with self.assertRaises(cldrive.NonTerminatingError):
             cldrive.drive(ENV, src, [], gsize=(1,1,1), lsize=(1,1,1), timeout=1)
 
+    def test_invalid_sizes(self):
+        src = "kernel void A() {}"
+
+        # invalid global size
+        with self.assertRaises(ValueError):
+            cldrive.drive(ENV, src, [], gsize=(0,-4,1), lsize=(1,1,1))
+
+        # invalid local size
+        with self.assertRaises(ValueError):
+            cldrive.drive(ENV, src, [], gsize=(1,1,1), lsize=(-1,1,1))
+
+    def test_gsize_smaller_than_lsize(self):
+        src = "kernel void A() {}"
+        with self.assertRaises(ValueError):
+            cldrive.drive(ENV, src, [], gsize=(4,1,1), lsize=(8,1,1))
+
 
 # TODO: Difftest against cl_launcher from CLSmith for a CLSmith kernel.
 
