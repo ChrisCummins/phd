@@ -103,11 +103,10 @@ class TestDriver(TestCase):
             cldrive.drive(ENV, src, [[1, 2, 3]], gsize=(1,1,1), lsize=(1,1,1))
 
 
-    def test_nonterminating(self):
-        src = """
-        kernel void A() { while (true) ; }
-        """
-        with self.assertRaises(cldrive.NonTerminatingError):
+    def test_timeout(self):
+        # non-terminating kernel
+        src = "kernel void A() { while (true) ; }"
+        with self.assertRaises(cldrive.Timeout):
             cldrive.drive(ENV, src, [], gsize=(1,1,1), lsize=(1,1,1), timeout=1)
 
     def test_invalid_sizes(self):

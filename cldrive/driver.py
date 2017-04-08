@@ -18,25 +18,34 @@
 import pickle
 import sys
 
+from contextlib import suppress
 from pkg_resources import resource_filename
+from signal import Signals
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
+from typing import Union
 
 import numpy as np
 
 from cldrive import *
 
 
-class NonTerminatingError(RuntimeError):
+class Timeout(RuntimeError):
     """ thrown if kernel executions fails to complete before timeout """
-    pass
+    def __init__(self, timeout: int):
+        self.timeout = timeout
+
+    def __repr__(self) -> str:
+        return f"execution failed to complete with {self.timeout} seconds"
 
 
 class PorcelainError(RuntimeError):
     """ raised if porcelain subprocess exits with non-zero return code """
-    def __init__(self, *args, status: int=1, **kwargs):
-        super(PorcelainError, self).__init__(*args, **kwargs)
+    def __init__(self, status: Union[int, str]):
         self.status = status
+
+    def __repr__(self) -> str:
+        return f"porcelain subprocess exited with return code {self.status}"
 
 
 class NDRange(namedtuple('NDRange', ['x', 'y', 'z'])):
@@ -196,14 +205,18 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         # test for non-zero exit codes. The porcelain subprocess catches
         # exceptions and executes gracefully, so a non-zero return code is
         # indicative of a more serious problem
-        KILL_SIGNAL = -9
-        if timeout > 0 and status == KILL_SIGNAL:
-            raise NonTerminatingError(
-                f"porcelain subprocess failed to complete within {timeout} seconds")
-        elif status:
-            raise PorcelainError(
-                f"porcelain subprocess exited with status code {status}",
-                status=status)
+        if status:
+            # a negative return code means a signal. Try and convert the value
+            # into a signal name.
+            with suppress(ValueError):
+                status = Signals(-status).name
+
+            if status == "SIGKILL":
+                raise Timeout(timeout)
+            else:
+                raise PorcelainError(
+                    f"porcelain subprocess exited return code {status}",
+                    status=status)
 
         # read result
         tmpfile.seek(0)
