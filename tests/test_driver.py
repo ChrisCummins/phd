@@ -41,14 +41,14 @@ class TestDriver(TestCase):
         }
         """
 
-        outputs = cldrive.drive(ENV, src, inputs, gsize=(8, 1, 1), lsize=(1, 1, 1))
+        outputs = cldrive.drive(ENV, src, inputs, gsize=(8,1,1), lsize=(1,1,1))
 
         # inputs are unmodified
         almost_equal(inputs, inputs_orig)
         # outputs
         almost_equal(outputs, outputs_gs)
 
-    def test_double_inputs(self):
+    def test_vector_input(self):
         inputs      = [[0, 1, 2, 3, 0, 1, 2, 3],  [2, 4]]
         inputs_orig = [[0, 1, 2, 3, 0, 1, 2, 3],  [2, 4]]
         outputs_gs  = [[0, 2, 4, 6, 0, 4, 8, 12], [2, 4]]
@@ -66,30 +66,24 @@ class TestDriver(TestCase):
         }
         """
 
-        outputs = cldrive.drive(ENV, src, inputs, gsize=(4, 2, 1), lsize=(1, 1, 1))
+        outputs = cldrive.drive(ENV, src, inputs, gsize=(4,2,1), lsize=(1,1,1))
 
         almost_equal(inputs, inputs_orig)
         almost_equal(outputs, outputs_gs)
 
         # run kernel a second time with the previous outputs
-        outputs2 = cldrive.drive(ENV, src, outputs, gsize=(4, 2, 1), lsize=(1, 1, 1))
+        outputs2 = cldrive.drive(ENV, src, outputs, gsize=(4,2,1), lsize=(1,1,1))
         outputs2_gs  = [[0, 4, 8, 12, 0, 16, 32, 48], [2, 4]]
         almost_equal(outputs2, outputs2_gs)
 
-
     def test_syntax_error(self):
-        src = """
-        kernel void A(gl ob a l  i nt* a) {}
-        """
+        src = "kernel void A(gl ob a l  i nt* a) {}"
         with DevNullRedirect():
             with self.assertRaises(cldrive.OpenCLValueError):
                 cldrive.drive(ENV, src, [[]], gsize=(1,1,1), lsize=(1,1,1))
 
-
     def test_incorrect_num_of_args(self):
-        src = """
-        kernel void A(const int a) {}
-        """
+        src = "kernel void A(const int a) {}"
         # too many inputs
         with self.assertRaises(ValueError):
             cldrive.drive(ENV, src, [[1], [2], [3]], gsize=(1,1,1), lsize=(1,1,1))
