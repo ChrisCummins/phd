@@ -68,6 +68,9 @@ def main():
         "--no-opts", action="store_true",
         help="disable OpenCL optimizations (on by default)")
     parser.add_argument(
+        "--profiling", action="store_true",
+        help="enable kernel and transfer profiling")
+    parser.add_argument(
         "--debug", action="store_true",
         help="enable more verbose OpenCL copmilation and execution")
     parser.add_argument(
@@ -90,7 +93,7 @@ def main():
                        scalar_val=args.scalar_val)
 
     outputs = drive(env=env, src=src, inputs=inputs, gsize=gsize, lsize=lsize,
-                    optimizations=not args.no_opts, profiling=False,
+                    optimizations=not args.no_opts, profiling=args.profiling,
                     debug=args.debug, timeout=args.timeout)
 
     # print result
