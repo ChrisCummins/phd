@@ -71,9 +71,9 @@ def get_or_create(session, model, defaults=None, **kwargs):
 # Database Schema
 
 
-class Program(Base):
-    """ CLSmith programs """
-    __tablename__ = 'Programs'
+class CLSmithProgram(Base):
+    """ programs """
+    __tablename__ = 'CLSmithPrograms'
     id = sql.Column(sql.String(40), primary_key=True)
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
 
@@ -89,7 +89,27 @@ class Program(Base):
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     # relation back to results:
-    results = sql.orm.relationship("Result", back_populates="program")
+    results = sql.orm.relationship("CLSmithResult", back_populates="program")
+
+    def __repr__(self):
+        return self.id
+
+
+class CLgenProgram(Base):
+    """ programs """
+    __tablename__ = 'CLgenPrograms'
+    id = sql.Column(sql.String(40), primary_key=True)
+    date_added = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+
+    clgen_version = sql.Column(sql.String(12))
+    model = sql.Column(sql.String(40))
+    sampler = sql.Column(sql.String(40))
+
+    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    status = sql.Column(sql.Integer)
+
+    # relation back to results:
+    results = sql.orm.relationship("CLgenResult", back_populates="program")
 
     def __repr__(self):
         return self.id
@@ -116,9 +136,9 @@ class Testbed(Base):
                 "Host: {self.host}".format(**vars()))
 
 
-class Params(Base):
-    """ params """
-    __tablename__ = "Params"
+class CLSmithParams(Base):
+    """ params used by cl_launcher to run kernel """
+    __tablename__ = "CLSmithParams"
     id = sql.Column(sql.Integer, primary_key=True)
     optimizations = sql.Column(sql.Boolean, nullable=False)
     gsize_x = sql.Column(sql.Integer, nullable=False)
@@ -132,7 +152,7 @@ class Params(Base):
         'optimizations', 'gsize_x', 'gsize_y', 'gsize_z',
         'lsize_x', 'lsize_y', 'lsize_z', name='_uid'),)
     # relation back to results:
-    results = sql.orm.relationship("Result", back_populates="params")
+    results = sql.orm.relationship("CLSmithResult", back_populates="params")
 
     def to_flags(self):
         flags = [
@@ -162,14 +182,63 @@ class Params(Base):
                 .format(**vars()))
 
 
-class Result(Base):
-    __tablename__ = "Results"
+class CLgenParams(Base):
+    """ params used by cldrive to run kernel """
+    __tablename__ = "CLgenParams"
     id = sql.Column(sql.Integer, primary_key=True)
-    program_id = sql.Column(sql.String(40), sql.ForeignKey("Programs.id"),
+    size = sql.Column(sql.Integer, nullable=False)
+    generator = sql.Column(sql.String(12), nullable=False)
+    scalar_val = sql.Column(sql.Integer, nullable=False)
+    gsize_x = sql.Column(sql.Integer, nullable=False)
+    gsize_y = sql.Column(sql.Integer, nullable=False)
+    gsize_z = sql.Column(sql.Integer, nullable=False)
+    lsize_x = sql.Column(sql.Integer, nullable=False)
+    lsize_y = sql.Column(sql.Integer, nullable=False)
+    lsize_z = sql.Column(sql.Integer, nullable=False)
+    optimizations = sql.Column(sql.Boolean, nullable=False)
+    # unique combination of values:
+    __table_args__ = (sql.UniqueConstraint(
+        'size', 'generator', 'scalar_val', 'gsize_x', 'gsize_y', 'gsize_z',
+        'lsize_x', 'lsize_y', 'lsize_z', 'optimizations', name='_uid'),)
+    # relation back to results:
+    results = sql.orm.relationship("CLSmithResult", back_populates="params")
+
+    def to_flags(self):
+        flags = [
+            "-s", f"{self.size}",
+            "-i", f"{self.generator}",
+            "--scalar-val", f"{self.scalar_val}",
+            "-g", f"{self.gsize_x},{self.gsize_y},{self.gsize_z}",
+            "-l", f"{self.lsize_x},{self.lsize_y},{self.lsize_z}"
+        ]
+        if not self.optimizations:
+            flags.append("--no-opts")
+        return flags
+
+    @property
+    def optimizations_on_off(self):
+        return "on" if self.optimizations else "off"
+
+    @property
+    def gsize(self):
+        return (self.gsize_x, self.gsize_y, self.gsize_z)
+
+    @property
+    def lsize(self):
+        return (self.lsize_x, self.lsize_y, self.lsize_z)
+
+    def __repr__(self):
+        return " ".join(self.to_flags())
+
+
+class CLSmithResult(Base):
+    __tablename__ = "CLSmithResults"
+    id = sql.Column(sql.Integer, primary_key=True)
+    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLSmithPrograms.id"),
                             nullable=False)
     testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
                             nullable=False)
-    params_id = sql.Column(sql.Integer, sql.ForeignKey("Params.id"),
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithParams.id"),
                            nullable=False)
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
     flags = sql.Column(sql.String(255), nullable=False)
@@ -178,9 +247,38 @@ class Result(Base):
     stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
-    program = sql.orm.relationship("Program", back_populates="results")
+    program = sql.orm.relationship("CLSmithProgram", back_populates="results")
     testbed = sql.orm.relationship("Testbed", back_populates="results")
-    params = sql.orm.relationship("Params", back_populates="results")
+    params = sql.orm.relationship("CLSmithParams", back_populates="results")
+
+    def __repr__(self):
+        return ("program: {self.program_id}, "
+                "testbed: {self.testbed_id}, "
+                "params: {self.params_id}, "
+                "status: {self.status}, "
+                "runtime: {self.runtime:.2f}s"
+                .format(**vars()))
+
+
+class CLgenResult(Base):
+    __tablename__ = "CLgenResults"
+    id = sql.Column(sql.Integer, primary_key=True)
+    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLgenPrograms.id"),
+                            nullable=False)
+    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
+                            nullable=False)
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenParams.id"),
+                           nullable=False)
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    cli = sql.Column(sql.String(255), nullable=False)
+    status = sql.Column(sql.Integer, nullable=False)
+    runtime = sql.Column(sql.Float, nullable=False)
+    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+
+    program = sql.orm.relationship("CLgenProgram", back_populates="results")
+    testbed = sql.orm.relationship("Testbed", back_populates="results")
+    params = sql.orm.relationship("CLgenParams", back_populates="results")
 
     def __repr__(self):
         return ("program: {self.program_id}, "

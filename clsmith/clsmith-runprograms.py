@@ -10,7 +10,7 @@ import clinfo
 import clsmith
 import db
 
-from db import Program, Testbed, Params, Result, Session
+from db import CLSmithProgram, CLSmithParams, CLSmithResult, Session, Testbed
 
 
 def cl_launcher(src: str, platform_id: int, device_id: int, *args):
@@ -81,12 +81,12 @@ def parse_ndrange(ndrange):
 
 
 def get_num_progs_to_run(session, testbed, params):
-    subquery = session.query(Result.program_id).filter(
-        Result.testbed_id == testbed.id, Result.params_id == params.id)
-    num_ran = session.query(Program.id).filter(Program.id.in_(subquery)).count()
-    subquery = session.query(Result.program_id).filter(
-        Result.testbed_id == testbed.id)
-    total = session.query(Program.id).count()
+    subquery = session.query(CLSmithResult.program_id).filter(
+        CLSmithResult.testbed_id == testbed.id, CLSmithResult.params_id == params.id)
+    num_ran = session.query(CLSmithProgram.id).filter(CLSmithProgram.id.in_(subquery)).count()
+    subquery = session.query(CLSmithResult.program_id).filter(
+        CLSmithResult.testbed_id == testbed.id)
+    total = session.query(CLSmithProgram.id).count()
     return num_ran, total
 
 
@@ -126,7 +126,7 @@ if __name__ == "__main__":
             platform=platform_name, device=device_name, driver=driver_version,
             host=clinfo.get_os())
 
-        params = db.get_or_create(session, Params,
+        params = db.get_or_create(session, CLSmithParams,
             optimizations = optimizations,
             gsize_x = gsize[0], gsize_y = gsize[1], gsize_z = gsize[2],
             lsize_x = lsize[0], lsize_y = lsize[1], lsize_z = lsize[2])
@@ -142,10 +142,10 @@ if __name__ == "__main__":
         # main execution loop:
         while True:
             # get the next program to run
-            subquery = session.query(Result.program_id).filter(
-                Result.testbed_id == testbed.id, Result.params_id == params.id)
-            program = session.query(Program).filter(
-                ~Program.id.in_(subquery)).order_by(Program.id).first()
+            subquery = session.query(CLSmithResult.program_id).filter(
+                CLSmithResult.testbed_id == testbed.id, CLSmithResult.params_id == params.id)
+            program = session.query(CLSmithProgram).filter(
+                ~CLSmithProgram.id.in_(subquery)).order_by(CLSmithProgram.id).first()
 
             # we have no program to run
             if not program:
@@ -161,7 +161,7 @@ if __name__ == "__main__":
                           stderr=stderr)
 
             # create new result
-            result = Result(
+            result = CLSmithResult(
                 program=program, params=params, testbed=testbed,
                 flags=" ".join(flags), status=status, runtime=runtime,
                 stdout=stdout, stderr=stderr)

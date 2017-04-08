@@ -13,7 +13,7 @@ import db
 
 def get_num_progs() -> int:
     with db.Session() as session:
-        return session.query(db.Program).count()
+        return session.query(db.CLSmithProgram).count()
 
 
 def make_program(*flags) -> None:
@@ -35,7 +35,7 @@ def make_program(*flags) -> None:
         # insert program into the table. If it already exists, ignore it.
         try:
             with db.Session() as session:
-                program = db.Program(
+                program = db.CLSmithProgram(
                     id=file_id, flags=" ".join(flags), runtime=runtime,
                     stdout=stdout, stderr=stderr, src=src)
                 session.add(program)
