@@ -133,8 +133,6 @@ main() {
     set -x
     git commit -m "Release $new_version"
     git tag "$new_version"
-
-    git push origin master
     git push origin "$new_version"
 
     # update on PyPi
@@ -148,6 +146,8 @@ main() {
         echo 'git add "$file"'
         git add "$file"
     done
+
     git commit -m "Development version bump"
+    git push origin master
 }
 main $@
