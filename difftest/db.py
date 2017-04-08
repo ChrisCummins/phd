@@ -43,12 +43,13 @@ def init(hostname: str) -> str:
 session_t = sql.orm.session.Session
 
 @contextmanager
-def Session() -> session_t:
+def Session(commit: bool=True) -> session_t:
     """Provide a transactional scope around a series of operations."""
     session = make_session()
     try:
         yield session
-        session.commit()
+        if commit:
+            session.commit()
     except:
         session.rollback()
         raise
