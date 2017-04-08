@@ -50,7 +50,7 @@ suitable device, and prints the outputs. Copyright (C) 2017 Chris Cummins \
         help="use OpenCL device with name, e.g. 'GeForce GTX 1080'")
     parser.add_argument(
         "--devtype", metavar="<devtype>", default="all",
-        help="use OpenCL device of type {all,cpu,gpu} (default: all)")
+        help="use any OpenCL device of type {all,cpu,gpu} (default: all)")
 
     # input opts
     parser.add_argument(
