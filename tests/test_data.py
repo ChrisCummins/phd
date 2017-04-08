@@ -76,6 +76,24 @@ class TestData(TestCase):
 
         almost_equal(outputs, [np.zeros(16)])
 
+    def test_vector_input_switch(self):
+        src = """
+        kernel void A(global int2* a) {
+            const int tid = get_global_id(0);
+
+            const int tmp = a[tid].x;
+            a[tid].x = a[tid].y;
+            a[tid].y = tmp;
+        }
+        """
+
+        inputs = cldrive.arange(src, 4)
+        outputs_gs = [[1, 0, 3, 2, 5, 4, 7, 6]]
+
+        outputs = cldrive.drive(ENV, src, inputs, gsize=(4,1,1), lsize=(4,1,1))
+
+        almost_equal(outputs, outputs_gs)
+
 
 if __name__ == "__main__":
     main()

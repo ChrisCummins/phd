@@ -119,6 +119,26 @@ class TestDriver(TestCase):
         with self.assertRaises(ValueError):
             cldrive.drive(ENV, src, [], gsize=(4,1,1), lsize=(8,1,1))
 
+    def test_iterative_iterative_increment(self):
+        src = "kernel void A(global int* a) { a[get_global_id(0)] += 1; }"
+
+        d_cl, d_host = [np.arange(16)], np.arange(16)
+        for _ in range(8):
+            d_host += 1  # perform computation on host
+            d_cl = cldrive.drive(ENV, src, d_cl, gsize=(16,1,1), lsize=(16,1,1))
+            almost_equal(d_cl, [d_host])
+
+    def test_gsize_smaller_than_data(self):
+        src = "kernel void A(global int* a) { a[get_global_id(0)] = 0; }"
+
+        inputs     = [[5, 5, 5, 5, 5, 5, 5, 5]]
+        outputs_gs = [[0, 0, 0, 0, 5, 5, 5, 5]]
+
+        outputs = cldrive.drive(ENV, src, inputs, gsize=(4,1,1), lsize=(4,1,1))
+
+        almost_equal(outputs, outputs_gs)
+        almost_equal
+
 
 # TODO: Difftest against cl_launcher from CLSmith for a CLSmith kernel.
 
