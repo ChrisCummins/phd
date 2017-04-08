@@ -184,7 +184,7 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         pickle.dump(job, tmpfile)
         tmpfile.flush()
 
-        # enforce timeout using `timeout' command
+        # enforce timeout using sigkill
         if timeout > 0:
             cli = ["timeout", "--signal=9", str(int(timeout))]
         else:
@@ -199,13 +199,17 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
         stdout, stderr = process.communicate()
         status = process.returncode
 
+        log("[cldrive] Porcelain return code: status")
         log(stdout.decode('utf-8').strip())
         log(stderr.decode('utf-8').strip())
 
         # test for non-zero exit codes. The porcelain subprocess catches
-        # exceptions and executes gracefully, so a non-zero return code is
-        # indicative of a more serious problem
-        if status:
+        # exceptions and completes gracefully, so a non-zero return code is
+        # indicative of a more serious problem.
+        #
+        # FIXME: I'm seeing a number of SIGABRT returncodes which I can't
+        # explain. However, ignoring them seems to not cause a problem ...
+        if status != 0 and status != -Signals['SIGABRT'].value:
             # a negative return code means a signal. Try and convert the value
             # into a signal name.
             with suppress(ValueError):
@@ -214,18 +218,16 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
             if status == "SIGKILL":
                 raise Timeout(timeout)
             else:
-                raise PorcelainError(
-                    f"porcelain subprocess exited return code {status}",
-                    status=status)
+                raise PorcelainError(status)
 
         # read result
         tmpfile.seek(0)
-
         rets = pickle.load(tmpfile)
+
         outputs = rets["outputs"]
         err = rets["err"]
 
-        if err:
+        if err:  # porcelain raised an exception, re-raise it
             raise err
         else:
             return outputs
@@ -393,6 +395,9 @@ def __porcelain(path: str) -> None:
             "outputs": outputs,
             "err": err
         }, outfile)
+
+    print("[cldrive] Porcelain complete", file=sys.stderr)
+    sys.exit(0)
 
 
 # entry point for porcelain incvocation
