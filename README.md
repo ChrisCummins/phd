@@ -1,5 +1,12 @@
 # cldrive - Run arbitrary OpenCL kernels
 
+<a href="https://badge.fury.io/py/cldrive">
+  <img src="https://img.shields.io/pypi/v/cldrive.svg?colorB=green&style=flat">
+</a>
+<a href="https://www.gnu.org/licenses/gpl-3.0.en.html" target="_blank">
+  <img src="https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat">
+</a>
+
 ## Requirements
 * OpenCL
 * Python >= 3.6
