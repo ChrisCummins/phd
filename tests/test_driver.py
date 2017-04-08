@@ -165,8 +165,10 @@ class TestDriver(TestCase):
         inputs = [np.arange(16), np.arange(16)]
         outputs_gs = [np.arange(16) ** 2, np.arange(16)]
 
-        outputs = cldrive.drive(ENV, src, inputs, gsize=(16,1,1), lsize=(16,1,1),
-                                profiling=True)
+        with DevNullRedirect():
+            outputs = cldrive.drive(ENV, src, inputs,
+                                    gsize=(16,1,1), lsize=(16,1,1),
+                                    profiling=True)
 
         almost_equal(outputs, outputs_gs)
 
