@@ -243,7 +243,7 @@ def __porcelain_exec(path: str) -> np.array:
     import pyopencl as cl  # defered loading of OpenCL library
 
     def log(*args, **kwargs):
-        print("[porcelain] ", end="", file=sys.stderr)
+        print("[cldrive] ", end="", file=sys.stderr)
         print(*args, **kwargs, file=sys.stderr)
 
     with open(path, 'rb') as infile:
@@ -405,7 +405,7 @@ def __porcelain(path: str) -> None:
             "err": err
         }, outfile)
 
-    print("[porcelain] Porcelain complete", file=sys.stderr)
+    print("[cldrive] Porcelain subprocess complete", file=sys.stderr)
     sys.exit(0)
 
 
