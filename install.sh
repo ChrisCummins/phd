@@ -66,13 +66,15 @@ install_packages() {
     set -u
 
     if [[ "$NAME" == "Darwin" ]]; then
-        brew install npm nodejs python || true
+        # macOS
+        brew list | grep '^node$' &>/dev/null || brew install npm nodejs
+        brew list | grep '^python$' &>/dev/null || brew install python
     elif [[ "$NAME" == "Ubuntu" ]]; then
         sudo apt-get install -y nodejs npm python-pip
     fi
 
-    sudo npm install -g diff-so-fancy
-    pip install autoenv
+    npm list -g | grep diff-so-fancy &>/dev/null || sudo npm install -g diff-so-fancy
+    pip freeze | grep '^autoenv' &>/dev/null || pip install autoenv
 }
 
 
@@ -132,7 +134,8 @@ install_tmux() {
 
 
 install_atom() {
-    pip install pylint  # needed for python linter
+    # python linter
+    pip freeze | grep '^pylint' &>/dev/null || pip install pylint
     symlink .dotfiles/atom ~/.atom
     symlink ~/.dotfiles/atom/ratom ~/.local/bin/ratom
 }
