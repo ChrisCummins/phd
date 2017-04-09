@@ -106,15 +106,17 @@ install_zsh() {
 
 
 install_ssh() {
-    # shared SSH key
-    chmod 600 "$private"/ssh/*
-    mkdir -p ~/.ssh
-    symlink "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
-    symlink "$private/ssh/config" ~/.ssh/config
-    symlink "$private/ssh/known_hosts" ~/.ssh/known_hosts
-    cp "$private/ssh/id_rsa" ~/.ssh/id_rsa
-    symlink "$private/ssh/id_rsa.ppk" ~/.ssh/id_rsa.ppk
-    symlink "$private/ssh/id_rsa.pub" ~/.ssh/id_rsa.pub
+    # shared SSH config
+    if [[ -d "$private/ssh" ]]; then
+        chmod 600 "$private"/ssh/*
+        mkdir -p ~/.ssh
+        symlink "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
+        symlink "$private/ssh/config" ~/.ssh/config
+        symlink "$private/ssh/known_hosts" ~/.ssh/known_hosts
+        cp "$private/ssh/id_rsa" ~/.ssh/id_rsa
+        symlink "$private/ssh/id_rsa.ppk" ~/.ssh/id_rsa.ppk
+        symlink "$private/ssh/id_rsa.pub" ~/.ssh/id_rsa.pub
+    fi
 }
 
 
@@ -186,9 +188,11 @@ install_mysql() {
 
 
 install_tex() {
-    mkdir -p ~/.local/bin
-    symlink "$HOME/.dotfiles/tex/autotex" ~/.local/bin/autotex
-    symlink "$HOME/.dotfiles/tex/cleanbib" ~/.local/bin/cleanbib
+    if $(which pdflatex &>/dev/null); then
+        mkdir -p ~/.local/bin
+        symlink "$HOME/.dotfiles/tex/autotex" ~/.local/bin/autotex
+        symlink "$HOME/.dotfiles/tex/cleanbib" ~/.local/bin/cleanbib
+    fi
 }
 
 
@@ -199,9 +203,13 @@ install_omnifocus() {
 
 
 install_server_scripts() {
-    # server scripts
-    symlink "$HOME/.dotfiles/servers/mary" ~/.local/bin/mary
-    symlink "$HOME/.dotfiles/servers/diana" ~/.local/bin/diana
+    case "$(hostname)" in
+      florence | diana | mary | plod)
+        # server scripts
+        symlink "$HOME/.dotfiles/servers/mary" ~/.local/bin/mary
+        symlink "$HOME/.dotfiles/servers/diana" ~/.local/bin/diana
+        ;;
+    esac
 }
 
 
@@ -219,43 +227,19 @@ install_macos() {
 
 main() {
     install_packages
-
-    if [[ -d "$private/ssh" ]]; then
-        install_ssh
-    fi
-
-    install_zsh
-
     install_dropbox
-
+    install_ssh
+    install_zsh
     install_git
-
     install_tmux
-
     install_atom
-
     install_vim
-
     install_sublime
-
     install_python
-
     install_mysql
-
     install_omnifocus
-
-    case "$(hostname)" in
-      florence | diana | mary | plod)
-      install_server_scripts
-      ;;
-    esac
-
-    if $(which pdflatex &>/dev/null); then
-      install_tex
-    fi
-
-    if [[ "$(uname)" == "Darwin" ]]; then
-      install_macos
-    fi
+    install_server_scripts
+    install_tex
+    install_macos
 }
 main $@
