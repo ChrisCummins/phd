@@ -190,7 +190,7 @@ class CLgenParams(Base):
     id = sql.Column(sql.Integer, primary_key=True)
     size = sql.Column(sql.Integer, nullable=False)
     generator = sql.Column(sql.String(12), nullable=False)
-    scalar_val = sql.Column(sql.Integer, nullable=False)
+    scalar_val = sql.Column(sql.Integer)
     gsize_x = sql.Column(sql.Integer, nullable=False)
     gsize_y = sql.Column(sql.Integer, nullable=False)
     gsize_z = sql.Column(sql.Integer, nullable=False)
