@@ -209,10 +209,11 @@ class CLgenParams(Base):
         flags = [
             "-s", f"{self.size}",
             "-i", f"{self.generator}",
-            "--scalar-val", f"{self.scalar_val}",
             "-g", f"{self.gsize_x},{self.gsize_y},{self.gsize_z}",
             "-l", f"{self.lsize_x},{self.lsize_y},{self.lsize_z}"
         ]
+        if self.scalar_val is not None:
+            flags.append(f"--scalar-val={self.scalar_val}")
         if not self.optimizations:
             flags.append("--no-opts")
         return flags
