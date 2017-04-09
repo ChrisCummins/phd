@@ -86,6 +86,7 @@ install_zsh() {
     # install oh-my-zsh
     clone_repo git@github.com:robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
     symlink ~/.zsh/cec.zsh-theme ~/.oh-my-zsh/custom/cec.zsh-theme
+    clone_repo https://github.com/zsh-users/zsh-syntax-highlighting.git ~/oh-my-zsh/custom/plugins/zsh-syntax-highlighting
 
     # install local config files
     mkdir -p ~/.zsh/private
