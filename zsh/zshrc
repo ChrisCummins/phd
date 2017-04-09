@@ -552,9 +552,9 @@ todo() {
 
 # Easy-open.
 if [[ "$(uname -s)" == "Darwin" ]]; then
-    alias xo='open'
+    alias o='open'
 else
-    xo() {
+    o() {
         xdg-open "$@" &>/dev/null
     }
 fi
