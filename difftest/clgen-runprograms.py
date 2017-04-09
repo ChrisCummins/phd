@@ -19,7 +19,7 @@ return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
 
 def cldrive_cli(platform: str, device: str, *args, timeout=60) -> str:
     """ get cldrive command """
-    return ['cldrive', '-p', platform, '-d', device, '--debug', '--profile',
+    return ['cldrive', '-p', platform, '-d', device, '--debug', '--profiling',
             '-t', '60', '-b'] + list(args)
 
 
