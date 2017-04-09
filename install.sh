@@ -121,6 +121,10 @@ install_ssh() {
 install_dropbox() {
     mkdir -p ~/.local/bin
     symlink ~/.dotfiles/dropbox/dropbox.py ~/.local/bin/dropbox
+
+    if [[ -d ~/Dropbos/Inbox ]]; then
+        symlink Dropbox/Inbox ~/Inbox
+    fi
 }
 
 
@@ -181,11 +185,6 @@ install_mysql() {
 }
 
 
-install_inbox() {
-    symlink Dropbox/Inbox ~/Inbox
-}
-
-
 install_tex() {
     mkdir -p ~/.local/bin
     symlink "$HOME/.dotfiles/tex/autotex" ~/.local/bin/autotex
@@ -242,10 +241,6 @@ main() {
     install_python
 
     install_mysql
-
-    if [[ -d ~/Dropbos/Inbox ]]; then
-        install_inbox
-    fi
 
     install_omnifocus
 
