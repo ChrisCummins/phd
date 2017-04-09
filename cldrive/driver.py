@@ -288,7 +288,7 @@ def __porcelain_exec(path: str) -> np.array:
     device_name = device.get_info(cl.device_info.NAME)
 
     platform = device.get_info(cl.device_info.PLATFORM)
-    platform_name = platform.get_info(cl.platform_info.VENDOR)
+    platform_name = platform.get_info(cl.platform_info.NAME)
 
     log(f"Platform: {platform_name}")
     log(f"Device: {device_name}")

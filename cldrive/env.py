@@ -63,7 +63,7 @@ def _lookup_env(return_cl: bool, platform: str=None, device: str=None,
             raise LookupError("no OpenCL platforms available")
 
         for cl_platform in cl_platforms:
-            platform_str = cl_platform.get_info(cl.platform_info.VENDOR)
+            platform_str = cl_platform.get_info(cl.platform_info.NAME)
 
             if platform and platform != platform_str:
                 continue
