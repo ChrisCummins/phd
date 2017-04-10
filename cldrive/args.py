@@ -17,13 +17,15 @@
 #
 import re
 
+from tempfile import NamedTemporaryFile
 from typing import List
 
 import numpy as np
 
-from pycparser.c_ast import NodeVisitor, PtrDecl, TypeDecl, Struct, IdentifierType
-from pycparserext.ext_c_parser import OpenCLCParser
+from pycparser import parse_file
+from pycparser.c_ast import FileAST, NodeVisitor, PtrDecl, TypeDecl, Struct, IdentifierType
 from pycparser.plyparser import ParseError
+from pycparserext.ext_c_parser import OpenCLCParser
 
 
 class OpenCLValueError(ValueError):
@@ -173,12 +175,6 @@ class ArgumentExtractor(NodeVisitor):
         self._args: List[KernelArg] = []
 
     def visit_FuncDef(self, node):
-        """
-        Raises
-        ------
-        ParseError
-            In case of a problem.
-        """
         # only visit kernels, not allfunctions
         if ("kernel" in node.decl.funcspec or
             "__kernel" in node.decl.funcspec):
@@ -206,6 +202,42 @@ class ArgumentExtractor(NodeVisitor):
 __parser = OpenCLCParser()
 
 
+def parse(src: str) -> FileAST:
+    """
+    Parse OpenCL source code.
+
+    Parameters
+    ----------
+    src : str
+        OpenCL kernel source.
+
+    Returns
+    -------
+    FileAST
+        Parsed AST.
+
+    Raises
+    ------
+    OpenCLValueError
+        The source is not well formed, e.g. it contains a syntax error, or
+        invalid types.
+    """
+    try:
+        with NamedTemporaryFile('w', suffix='.c') as tmp:
+            tmp.write(src)
+            tmp.flush()
+            ast = parse_file(tmp.name, use_cpp=True, parser=__parser)
+
+        # strip the preprocesor line objects and rebuild the AST.
+        # See: https://github.com/inducer/pycparserext/issues/27
+        children = [x[1] for x in ast.children() if not isinstance(x[1], list)]
+        new_ast = FileAST(ext=children, coord=0)
+
+        return new_ast
+    except ParseError as e:
+        raise OpenCLValueError("syntax error") from e
+
+
 def extract_args(src: str) -> List[KernelArg]:
     """
     Extract kernel arguments for an OpenCL kernel.
@@ -225,9 +257,6 @@ def extract_args(src: str) -> List[KernelArg]:
 
     Raises
     ------
-    OpenCLValueError
-        The source is not well formed, e.g. it contains a syntax error, or
-        invalid types.
     LookupError
         If the source contains no OpenCL kernel definitions, or more than one.
     ValueError
@@ -267,10 +296,6 @@ def extract_args(src: str) -> List[KernelArg]:
     ----
     * Pre-process source code.
     """
-    try:
-        ast = __parser.parse(src)
-        visitor = ArgumentExtractor()
-        visitor.visit(ast)
-        return visitor.args
-    except ParseError as e:
-        raise OpenCLValueError("syntax error") from e
+    visitor = ArgumentExtractor()
+    visitor.visit(parse(src))
+    return visitor.args

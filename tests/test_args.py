@@ -20,6 +20,54 @@ import pytest
 import cldrive
 
 
+def test_parse():
+    ast = cldrive.parse("kernel void A() {}")
+    assert len(ast.children()) >= 1
+
+
+def test_extract_args_syntax_error():
+    src = "kernel void A(@!"
+    with pytest.raises(cldrive.OpenCLValueError):
+        cldrive.parse(src)
+
+    # OpenCLValueError extends ValueError
+    with pytest.raises(ValueError):
+        cldrive.parse(src)
+
+
+def test_parse_preprocess():
+    src = """
+    #define DTYPE float
+    kernel void A(global DTYPE *a) {}
+    """
+
+    ast = cldrive.parse(src)
+    assert len(ast.children()) >= 1
+
+
+def test_extract_args():
+    src = """
+    typedef int foobar;
+
+    void B(const int e);
+
+    __kernel void A(const __global int* data, __local float4 * restrict car,
+                    __global const float* b, const int foo, int d) {
+        int tid = get_global_id(0);
+        data[tid] *= 2.0;
+    }
+
+    void B(const int e) {}
+    """
+    args = cldrive.extract_args(src)
+
+    assert len(args) == 5
+    assert args[0].is_const
+    assert args[0].is_pointer
+    assert args[0].typename == "int"
+    assert args[0].bare_type == "int"
+
+
 def test_extract_args_no_declaration():
     with pytest.raises(LookupError):
         cldrive.extract_args("")
@@ -28,16 +76,6 @@ def test_extract_args_no_declaration():
 def test_extract_args_no_definition():
     src = "kernel void A();"
     with pytest.raises(LookupError):
-        cldrive.extract_args(src)
-
-
-def test_extract_args_syntax_error():
-    src = "kernel void A(@!"
-    with pytest.raises(cldrive.OpenCLValueError):
-        cldrive.extract_args(src)
-
-    # OpenCLValueError extends ValueError
-    with pytest.raises(ValueError):
         cldrive.extract_args(src)
 
 
@@ -68,29 +106,6 @@ def test_extract_args_no_qualifiers():
 def test_extract_args_no_args():
     src = "kernel void A() {}"
     assert len(cldrive.extract_args(src)) == 0
-
-
-def test_extract_args():
-    src = """
-    typedef int foobar;
-
-    void B(const int e);
-
-    __kernel void A(const __global int* data, __local float4 * restrict car,
-                    __global const float* b, const int foo, int d) {
-        int tid = get_global_id(0);
-        data[tid] *= 2.0;
-    }
-
-    void B(const int e) {}
-    """
-    args = cldrive.extract_args(src)
-
-    assert len(args) == 5
-    assert args[0].is_const
-    assert args[0].is_pointer
-    assert args[0].typename == "int"
-    assert args[0].bare_type == "int"
 
 
 def test_extract_args_address_spaces():
@@ -165,3 +180,12 @@ def test_extract_args_struct():
     # we can't handle structs yet
     with pytest.raises(cldrive.OpenCLValueError):
         cldrive.extract_args(src)
+
+def test_extract_args_preprocess():
+    src = """
+    #define DTYPE float
+    kernel void A(global DTYPE *a) {}
+    """
+
+    args = cldrive.extract_args(src)
+    assert args[0].typename == 'float'
