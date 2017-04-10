@@ -28,9 +28,9 @@ setup(name='cldrive',
       author_email='chrisc.101@gmail.com',
       license='GNU General Public License, Version 3',
       packages=['cldrive'],
-      test_suite='nose.collector',
-      tests_require=['nose'],
+      setup_requires=['pytest-runner'],
+      tests_require=['pytest>=3.0'],
       scripts=['bin/cldrive'],
       install_requires=requirements,
-      # not zip safe, since we directly invoke a module by it's path:
+      # not zip safe, since we directly invoke the driver module as a script:
       zip_safe=False)
