@@ -16,11 +16,9 @@
 # along with cldrive.  If not, see <http://www.gnu.org/licenses/>.
 #
 import sys
-
 from io import StringIO
 
 import numpy as np
-
 from numpy import testing as nptest
 
 import cldrive
@@ -36,8 +34,13 @@ def almost_equal(l1, l2):
     for x, y in zip(l1, l2):
         nptest.assert_almost_equal(lol2np(x), lol2np(y))
 
+
 class DevNullRedirect(object):
-    """docstring for DevNullOutputs"""
+    """
+    Examples
+    --------
+    >>> with DevNullRedirect(): print("this will not print")
+    """
     def __init__(self):
         self.stdout = None
         self.stderr = None

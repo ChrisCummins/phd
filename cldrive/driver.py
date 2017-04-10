@@ -52,6 +52,26 @@ class PorcelainError(RuntimeError):
 class NDRange(namedtuple('NDRange', ['x', 'y', 'z'])):
     """
     A 3 dimensional NDRange tuple. Has components x,y,z.
+
+    Attributes
+    ----------
+    x : int
+        x component.
+    y : int
+        y component.
+    z : int
+        z component.
+
+    Examples
+    --------
+    >>> NDRange(1, 2, 3)
+    [1, 2, 3]
+
+    >>> NDRange(1, 2, 3).product
+    6
+
+    >>> NDRange(10, 10, 10) > NDRange(10, 9, 10)
+    True
     """
     __slots__ = ()
 
@@ -78,15 +98,30 @@ class NDRange(namedtuple('NDRange', ['x', 'y', 'z'])):
         """
         Parse an NDRange from a string of format 'x,y,z'.
 
-        Arguments:
-            string (str): comma separated NDRange values.
+        Parameters
+        ----------
+        string : str
+            Comma separated NDRange values.
 
-        Returns:
-            NDRange: parsed NDRange.
+        Returns
+        -------
+        NDRange
+            Parsed NDRange.
 
-        Raises:
-            ValueError: if string does not contain three comma separated
-                integers.
+        Raises
+        ------
+        ValueError:
+            If the string does not contain three comma separated integers.
+
+        Examples
+        --------
+        >>> NDRange.from_str('10,11,3')
+        [10, 11, 3]
+
+        >>> NDRange.from_str('10,11,3,1')  # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        ...
+        ValueError
         """
         components = string.split(',')
         if not len(components) == 3:
@@ -102,31 +137,57 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
           optimizations: bool=True, profiling: bool=False,
           debug: bool=False) -> np.array:
     """
-    OpenCL kernel.
+    Drive an OpenCL kernel.
 
-    Arguments:
-        env (OpenCLEnvironment): The OpenCL environment to run the
-            kernel in.
-        src (str): The OpenCL kernel source.
-        optimizations (bool, optional): Whether to enable or disbale OpenCL
-            compiler optimizations.
-        profiling (bool, optional): If true, record OpenCLevent times for
-        timeout (int, optional): Cancel execution if it has not completed
-            after this many seconds. A value <= 0 means never time out.
-        debug (bool, optional): If true, silence the OpenCL compiler.
-        data transfers and kernel executions.
+    Executes an OpenCL kernel on the given environment, over the given inputs.
+    Execution is performed in a subprocess.
 
-    Returns:
-        np.array: A numpy array of the same shape as the inputs, with the
-            values after running the OpenCL kernel.
+    Parameters
+    ----------
+    env : OpenCLEnvironment
+        The OpenCL environment to run the kernel in.
+    src : str
+        The OpenCL kernel source.
+    inputs : np.array
+        The input data to the kernel.
+    optimizations : bool, optional
+        Whether to enable or disbale OpenCL compiler optimizations.
+    profiling : bool, optional
+        If true, print OpenCLevent times for data transfers and kernel
+        executions to stderr.
+    timeout : int, optional
+        Cancel execution if it has not completed after this many seconds.
+        A value <= 0 means never time out.
+    debug : bool, optional
+        If true, silence the OpenCL compiler.
 
-    Raises:
-        ValueError: if input types are incorrect.
-        TypeError: if an input is of an incorrect type.
-        LogicError: if the input types do not match OpenCL kernel types.
-        PorcelainError: if the OpenCL subprocess exits with non-zero return
-            code.
-        RuntimeError: if OpenCL program fails to build or run.
+    Returns
+    -------
+    np.array
+        A numpy array of the same shape as the inputs, with the values after
+        running the OpenCL kernel.
+
+    Raises
+    ------
+    ValueError
+        If input types are incorrect.
+    TypeError
+        If an input is of an incorrect type.
+    LogicError
+        If the input types do not match OpenCL kernel types.
+    PorcelainError
+        If the OpenCL subprocess exits with non-zero return  code.
+    RuntimeError
+        If OpenCL program fails to build or run.
+
+    Examples
+    --------
+    A simple kernel which doubles its inputs:
+
+    >>> src = "kernel void A(global int* a) { a[get_global_id(0)] *= 2; }"
+    >>> inputs = [[1, 2, 3, 4, 5]]
+    >>> drive(make_env(), src, inputs, gsize=(5,1,1), lsize=(1,1,1))
+    array([[ 2,  4,  6,  8, 10]], dtype=int32)
     """
     def log(*args, **kwargs):
         if debug:
@@ -433,10 +494,10 @@ def __porcelain_exec(path: str) -> np.array:
     return data
 
 
-def __porcelain(path: str) -> None:
-    """
-    Run OpenCL kernel. Invoke as a subprocess.
-    """
+# entry point for porcelain incvocation
+if __name__ == "__main__":
+    path = sys.argv[1]
+
     outputs = None
     err = None
 
@@ -455,8 +516,3 @@ def __porcelain(path: str) -> None:
 
     print("[cldrive] Porcelain subprocess complete", file=sys.stderr)
     sys.exit(0)
-
-
-# entry point for porcelain incvocation
-if __name__ == "__main__":
-    __porcelain(sys.argv[1])
