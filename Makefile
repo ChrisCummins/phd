@@ -21,14 +21,18 @@
 PYTHON ?= python3
 PIP ?= pip3
 
-.PHONY: help install test
+.PHONY: help install test docs
 
 help:
-	@echo "Usage: make {help,install,test}"
+	@echo "Usage: make {help,install,test,docs}"
 
 install:
 	$(PIP) install -r requirements.txt
 	$(PYTHON) ./setup.py install
 
-test:
+test: install
 	$(PYTHON) ./setup.py test
+
+docs: install
+	$(PIP) install -r docs/requirements.txt
+	$(MAKE) -C docs html
