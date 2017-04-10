@@ -155,9 +155,9 @@ main() {
     # set dev version
     local dev_version="$new_version$dev_suffix"
     for file in ${files_to_update[@]}; do
-        echo 'sed -r "s/$new_version/$dev_version/g" -i "$file"'
+        echo "sed -r \"s/$new_version/$dev_version/g\" -i $file"
         sed -r "s/$new_version/$dev_version/g" -i "$file"
-        echo 'git add "$file"'
+        echo "git add \"$file\""
         git add "$file"
     done
 
