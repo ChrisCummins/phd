@@ -59,6 +59,34 @@ clone_repo() {
 }
 
 
+_pip_install() {
+    local package="$1"
+
+    # on linux, we need sudo to pip install.
+    local use_sudo=""
+    if [[ "$(uname)" != "Darwin" ]]; then
+        use_sudo="sudo"
+    fi
+
+    pip freeze 2>/dev/null | grep "^$package" &>/dev/null \
+        || $use_sudo pip install "$package" 2>/dev/null
+}
+
+
+_apt_get_install() {
+    local package="$1"
+
+    dpkg -s "$package" &>/dev/null || sudo apt-get install -y "$package"
+}
+
+
+_npm_install() {
+    local package="$1"
+
+    npm list -g | grep "$package" &>/dev/null || sudo npm install -g "$pacakge"
+}
+
+
 install_packages() {
     set +u
     [ -f /etc/os-release ] && source /etc/os-release
@@ -66,15 +94,16 @@ install_packages() {
     set -u
 
     if [[ "$NAME" == "Darwin" ]]; then
-        # macOS
         brew list | grep '^node$' &>/dev/null || brew install npm nodejs
         brew list | grep '^python$' &>/dev/null || brew install python
     elif [[ "$NAME" == "Ubuntu" ]]; then
-        sudo apt-get install -y nodejs npm python-pip
+        _apt_get_install nodejs
+        _apt_get_install npm
+        _apt_get_install python-pip
     fi
 
-    npm list -g | grep diff-so-fancy &>/dev/null || sudo npm install -g diff-so-fancy
-    pip freeze | grep '^autoenv' &>/dev/null || pip install autoenv
+    _pip_install autoenv
+    _npm_install diff-so-fancy
 }
 
 
@@ -142,7 +171,7 @@ install_tmux() {
 
 install_atom() {
     # python linter
-    pip freeze | grep '^pylint' &>/dev/null || pip install pylint
+    _pip_install pylint
     symlink .dotfiles/atom ~/.atom
     symlink ~/.dotfiles/atom/ratom ~/.local/bin/ratom
 }
