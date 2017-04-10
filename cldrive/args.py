@@ -33,9 +33,12 @@ class OpenCLValueError(ValueError):
 
 class KernelArg(object):
     """
-    TODO:
-        * Attribute 'numpy_type' should depend on the properties of the device.
-          E.g. not all devices will have 32 bit integer widths.
+    OpenCL kernel argument representation.
+
+    TODO
+    ----
+    * Attribute 'numpy_type' should depend on the properties of the device.
+      E.g. not all devices will have 32 bit integer widths.
     """
     def __init__(self, ast):
         self.ast = ast
@@ -148,16 +151,21 @@ class ArgumentExtractor(NodeVisitor):
     """
     Extract kernel arguments from an OpenCL AST.
 
-    Attributes:
-        args (List[KernelArg]): List of KernelArg instances.
+    Attributes
+    ----------
+    args : List[KernelArg]
+        List of KernelArg instances.
 
-    Raises:
-        ValueError: If source contains more than one kernel definition.
+    Raises
+    ------
+    ValueError
+        If source contains more than one kernel definition.
 
-    TODO:
-        * build a table of typedefs and substitute the original types when
-          constructing kernel args.
-        * handle structs by creating numpy types.
+    TODO
+    ----
+    * build a table of typedefs and substitute the original types when
+      constructing kernel args.
+    * handle structs by creating numpy types.
     """
     def __init__(self, *args, **kwargs):
         super(ArgumentExtractor, self).__init__(*args, **kwargs)
@@ -200,18 +208,62 @@ def extract_args(src: str) -> List[KernelArg]:
     """
     Extract kernel arguments for an OpenCL kernel.
 
-    Returns:
-        List[KernelArg]: A list of the kernel's arguments, in order.
+    Accepts the source code for an OpenCL kernel and returns a list of its
+    arguments.
 
-    Raises:
-        OpenCLValueError: The source is not well formed, e.g. it contains a
-            syntax error, or invalid types.
-        LookupError: If the source contains no OpenCL kernel definitions,
-            or more than one.
-        ValueError: If one of the kernel's parameter types are unsupported.
+    Parameters
+    ----------
+    src : str
+        The OpenCL kernel source.
 
-    TODO:
-        * Pre-process source code
+    Returns
+    -------
+    List[KernelArg]
+        A list of the kernel's arguments, in order.
+
+    Raises
+    ------
+    OpenCLValueError
+        The source is not well formed, e.g. it contains a syntax error, or
+        invalid types.
+    LookupError
+        If the source contains no OpenCL kernel definitions, or more than one.
+    ValueError
+        If one of the kernel's parameter types are unsupported.
+
+    Examples
+    --------
+    >>> args = extract_args("void kernel A(global float *a, const int b) {}")
+    >>> args
+    [global float * a, const int b]
+    >>> args[0].typename
+    'float'
+    >>> args[0].address_space
+    'global'
+    >>> args[1].is_pointer
+    False
+
+    >>> extract_args("void kernel A() {}")
+    []
+
+    >>> extract_args("void /@&&& syn)")  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    OpenCLValueError
+
+    >>> extract_args("")  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    LookupError
+
+    >>> extract_args("void kernel A() {} void kernel B() {}")  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    LookupError
+
+    TODO
+    ----
+    * Pre-process source code.
     """
     try:
         ast = __parser.parse(src)
