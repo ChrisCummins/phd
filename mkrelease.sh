@@ -26,6 +26,8 @@ set -e
 # List of files in which the version number should be updated
 files_to_update=(
     "setup.py"
+    "docs/conf.py"
+    "docs/index.rst"
 )
 
 # Branch on which releases must be made
@@ -117,6 +119,14 @@ main() {
         git add "$file"
     done
 
+    # build sphinx docs
+    rm -rf docs/_build/html
+    git clone git@github.com:ChrisCummins/cldrive.git docs/_build/html
+    (cd docs/_build/html && git checkout gh-pages)
+    (cd docs/_build/html && git reset --hard origin/gh-pages)
+    make docs  # build new docs
+    (cd docs/_build/html && git add .)
+
     echo "Please review the changes staged to commit:"
     git status
     git diff --cached
@@ -134,6 +144,10 @@ main() {
     git commit -m "Release $new_version"
     git tag "$new_version"
     git push origin "$new_version"
+
+    # push new docs
+    (cd docs/_build/html && git commit -m "Release $new_version" || true)
+    (cd docs/_build/html && git push -u origin gh-pages)
 
     # update on PyPi
     python setup.py sdist upload
