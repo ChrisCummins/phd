@@ -44,17 +44,22 @@ version_is_pep440_compliant() {
     echo "$version" | python -c 'import sys; import packaging.version; packaging.version.Version(sys.stdin.read().strip())' &>/dev/null
 }
 
+
 git_tree_dirty() {
     [[ $(git diff --shortstat 2> /dev/null | tail -n1) != "" ]] || return 1
 }
 
+
 branch_is() {
+    local expected_branch="$1"
+
     branch_name=$(git symbolic-ref -q HEAD)
     branch_name=${branch_name##refs/heads/}
     branch_name=${branch_name:-HEAD}
 
-    [[ "$branch_name" == "$1" ]] || return 1
+    [[ "$branch_name" == "$expected_branch" ]] || return 1
 }
+
 
 usage() {
     echo "Usage: $0 <version>"
@@ -113,9 +118,9 @@ main() {
 
     # set new version
     for file in ${files_to_update[@]}; do
-        echo 'sed -r "s/$current_version_re/$new_version/g" -i "$file"'
+        echo "sed -r \"s/$current_version_re/$new_version/g\" -i \"$file\""
         sed -r "s/$current_version_re/$new_version/g" -i "$file"
-        echo 'git add "$file"'
+        echo "git add \"$file\""
         git add "$file"
     done
 
