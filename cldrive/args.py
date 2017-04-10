@@ -27,6 +27,7 @@ from pycparser.plyparser import ParseError
 
 
 class OpenCLValueError(ValueError):
+    """ Raised if there is an invalid value OpenCL code """
     pass
 
 
@@ -43,7 +44,7 @@ class KernelArg(object):
         self.is_pointer = isinstance(self.ast.type, PtrDecl)
         self.address_space = "private"
 
-        self.name = self.ast.name
+        self.name = self.ast.name if self.ast.name else ""
         self.quals = self.ast.quals
         if len(self.quals):
             self.quals_str = " ".join(self.quals) + " "
@@ -134,8 +135,13 @@ supported types are: {{{supported_types_str}}}""")
             self.vector_width = 1
 
     def __repr__(self):
-        pointer_str = "*" if self.is_pointer else ""
-        return f"{self.quals_str}{self.typename} {self.name}{pointer_str}"
+        s = self.quals if len(self.quals) else []
+        s.append(self.typename)
+        if self.is_pointer:
+            s.append("*")
+        if self.name:
+            s.append(self.name)
+        return " ".join(s)
 
 
 class ArgumentExtractor(NodeVisitor):
