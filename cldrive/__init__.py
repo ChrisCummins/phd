@@ -18,8 +18,10 @@
 """
 Run arbitrary OpenCL kernels.
 
-Attributes:
-    __version__ (str): PEP 440 compiliant package version.
+Attributes
+----------
+__version__ : str
+    PEP 440 compiliant package version.
 """
 from pkg_resources import require
 
