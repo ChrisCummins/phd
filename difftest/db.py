@@ -264,6 +264,36 @@ class CLSmithResult(Base):
                 .format(**vars()))
 
 
+class cldriveCLSmithResult(Base):
+    __tablename__ = "cldriveCLSmithResults"
+    id = sql.Column(sql.Integer, primary_key=True)
+    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLSmithPrograms.id"),
+                            nullable=False)
+    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
+                            nullable=False)
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenParams.id"),
+                           nullable=False)
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    cli = sql.Column(sql.String(255), nullable=False)
+    status = sql.Column(sql.Integer, nullable=False)
+    runtime = sql.Column(sql.Float, nullable=False)
+    stdout = sql.Column(sql.LargeBinary(length=2**31), nullable=False)
+    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    outcome = sql.Column(sql.String(255))
+
+    program = sql.orm.relationship("CLSmithProgram", back_populates="results")
+    testbed = sql.orm.relationship("Testbed", back_populates="clgen_results")
+    params = sql.orm.relationship("CLgenParams", back_populates="results")
+
+    def __repr__(self) -> str:
+        return ("program: {self.program_id}, "
+                "testbed: {self.testbed_id}, "
+                "params: {self.params_id}, "
+                "status: {self.status}, "
+                "runtime: {self.runtime:.2f}s"
+                .format(**vars()))
+
+
 class CLgenResult(Base):
     __tablename__ = "CLgenResults"
     id = sql.Column(sql.Integer, primary_key=True)
