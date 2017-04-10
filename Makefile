@@ -30,9 +30,9 @@ install:
 	$(PIP) install -r requirements.txt
 	$(PYTHON) ./setup.py install
 
-test:
+test: install
 	$(PYTHON) ./setup.py test
 
-docs:
+docs: install
 	$(PIP) install -r docs/requirements.txt
 	$(MAKE) -C docs html
