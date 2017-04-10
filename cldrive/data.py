@@ -58,11 +58,15 @@ def make_data(src: str, size: int, data_generator: Generator,
     Creates a numpy array for each OpenCL argument, except arguments with the
     'local' qualifier, since those are instantiated.
 
-    Returns:
-        np.array: The generated data.
+    Returns
+    -------
+    np.array
+        The generated data.
 
-    Raises:
-        InputTypeError: If any of the input arguments are of incorrect type.
+    Raises
+    ------
+    InputTypeError
+        If any of the input arguments are of incorrect type.
     """
     # check the input types
     assert_or_raise(isinstance(src, str), TypeError)

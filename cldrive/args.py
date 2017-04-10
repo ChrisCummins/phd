@@ -174,8 +174,10 @@ class ArgumentExtractor(NodeVisitor):
 
     def visit_FuncDef(self, node):
         """
-        Raises:
-            ParseError: In case of a problem.
+        Raises
+        ------
+        ParseError
+            In case of a problem.
         """
         # only visit kernels, not allfunctions
         if ("kernel" in node.decl.funcspec or
