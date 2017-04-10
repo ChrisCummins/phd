@@ -453,10 +453,9 @@ search() {
 }
 
 # Launch a webserver in the current dir.
-server() {
-    local port=$1
-
-    open "http://localhost:${1}" && python -m SimpleHTTPServer $port
+serve() {
+    local port=${1:=3000}
+    python2 -m SimpleHTTPServer $port
 }
 
 # Silence the output of a command, unless it fails. Example:
