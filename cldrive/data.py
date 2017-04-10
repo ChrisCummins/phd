@@ -65,8 +65,27 @@ def make_data(src: str, size: int, data_generator: Generator,
 
     Raises
     ------
-    InputTypeError
+    TypeError
         If any of the input arguments are of incorrect type.
+    ValueError
+        If any of the arguments cannot be interpreted.
+
+    Examples
+    --------
+
+    >>> make_data("kernel void A(global int* a, const int b) {}", 3, Generator.ZEROS)
+    array([array([0, 0, 0], dtype=int32), array([3], dtype=int32)], dtype=object)
+
+    >>> make_data("kernel void A(global int* a, const int b) {}", 3, Generator.ONES)
+    array([array([1, 1, 1], dtype=int32), array([3], dtype=int32)], dtype=object)
+
+    >>> make_data("kernel void A(global int* a, const int b) {}", 3, Generator.ARANGE)
+    array([array([0, 1, 2], dtype=int32), array([3], dtype=int32)], dtype=object)
+
+    Use `scalar_val` parameter to fix the value of scalar arguments:
+
+    >>> make_data("kernel void A(global int* a, const int b) {}", 3, Generator.ARANGE, scalar_val=100)
+    array([array([0, 1, 2], dtype=int32), array([100], dtype=int32)], dtype=object)
     """
     # check the input types
     assert_or_raise(isinstance(src, str), TypeError)
