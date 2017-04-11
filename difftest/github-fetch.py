@@ -2,6 +2,7 @@
 import os
 from argparse import ArgumentParser
 from pathlib import Path
+from random import shuffle
 
 import sqlalchemy as sql
 from labm8 import fs
@@ -22,6 +23,7 @@ if __name__ == "__main__":
 
     # get a list of files to import
     paths = [x for x in Path(args.directory).iterdir() if x.is_file()]
+    shuffle(paths)
 
     if args.num > 1:  # limit number of imports if user requested
         paths = paths[:args.num]
