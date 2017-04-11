@@ -120,6 +120,19 @@ class CLgenProgram(Base):
         return self.id
 
 
+class GitHubProgram(Base):
+    """ programs """
+    __tablename__ = 'GitHubPrograms'
+    id = sql.Column(sql.String(40), primary_key=True)
+    date_added = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+
+    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    status = sql.Column(sql.Integer)
+
+    def __repr__(self) -> str:
+        return self.id
+
+
 class Testbed(Base):
     """ devices """
     __tablename__ = 'Testbeds'
@@ -135,6 +148,7 @@ class Testbed(Base):
     clsmith_results = sql.orm.relationship("CLSmithResult", back_populates="testbed")
     clgen_results = sql.orm.relationship("CLgenResult", back_populates="testbed")
     cldrive_clsmith_results = sql.orm.relationship("cldriveCLSmithResult", back_populates="testbed")
+    github_results = sql.orm.relationship("GitHubResult", back_populates="testbed")
 
     def __repr__(self) -> str:
         return ("Platform: {self.platform}, "
@@ -205,7 +219,7 @@ class CLgenParams(Base):
         'size', 'generator', 'scalar_val', 'gsize_x', 'gsize_y', 'gsize_z',
         'lsize_x', 'lsize_y', 'lsize_z', 'optimizations', name='_uid'),)
     # relation back to results:
-    results = sql.orm.relationship("CLgenResult", back_populates="params")
+    clgen_results = sql.orm.relationship("CLgenResult", back_populates="params")
 
     def to_flags(self):
         flags = [
@@ -315,7 +329,37 @@ class CLgenResult(Base):
 
     program = sql.orm.relationship("CLgenProgram", back_populates="results")
     testbed = sql.orm.relationship("Testbed", back_populates="clgen_results")
-    params = sql.orm.relationship("CLgenParams", back_populates="results")
+    params = sql.orm.relationship("CLgenParams", back_populates="clgen_results")
+
+    def __repr__(self) -> str:
+        return ("program: {self.program_id}, "
+                "testbed: {self.testbed_id}, "
+                "params: {self.params_id}, "
+                "status: {self.status}, "
+                "runtime: {self.runtime:.2f}s"
+                .format(**vars()))
+
+
+class GitHubResult(Base):
+    __tablename__ = "GitHubResults"
+    id = sql.Column(sql.Integer, primary_key=True)
+    program_id = sql.Column(sql.String(40), sql.ForeignKey("GitHubPrograms.id"),
+                            nullable=False)
+    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
+                            nullable=False)
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenParams.id"),
+                           nullable=False)
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    cli = sql.Column(sql.String(255), nullable=False)
+    status = sql.Column(sql.Integer, nullable=False)
+    runtime = sql.Column(sql.Float, nullable=False)
+    stdout = sql.Column(sql.LargeBinary(length=2**31), nullable=False)
+    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    outcome = sql.Column(sql.String(255))
+
+    program = sql.orm.relationship("GitHubProgram", back_populates="results")
+    testbed = sql.orm.relationship("Testbed", back_populates="github_results")
+    params = sql.orm.relationship("CLgenParams", back_populates="github_results")
 
     def __repr__(self) -> str:
         return ("program: {self.program_id}, "
