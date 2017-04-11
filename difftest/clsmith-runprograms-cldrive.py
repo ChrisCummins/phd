@@ -167,7 +167,9 @@ if __name__ == "__main__":
             if not program:
                 break
 
-            runtime, status, stdout, stderr = drive(cli, program.src)
+            src = cldrive.preprocess(
+                program.src, include_dirs=["~/src/CLSmith/runtime"])
+            runtime, status, stdout, stderr = drive(cli, src)
 
             # assert that executed params match expected
             verify_params(platform=args.platform, device=args.device,
