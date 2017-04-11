@@ -129,6 +129,8 @@ class GitHubProgram(Base):
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     status = sql.Column(sql.Integer)
 
+    results = sql.orm.relationship("GitHubResult", back_populates="program")
+
     def __repr__(self) -> str:
         return self.id
 
@@ -218,8 +220,9 @@ class CLgenParams(Base):
     __table_args__ = (sql.UniqueConstraint(
         'size', 'generator', 'scalar_val', 'gsize_x', 'gsize_y', 'gsize_z',
         'lsize_x', 'lsize_y', 'lsize_z', 'optimizations', name='_uid'),)
-    # relation back to results:
+
     clgen_results = sql.orm.relationship("CLgenResult", back_populates="params")
+    github_results = sql.orm.relationship("GitHubResult", back_populates="params")
 
     def to_flags(self):
         flags = [
