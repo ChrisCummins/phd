@@ -93,7 +93,8 @@ class CLSmithProgram(Base):
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     # relation back to results:
-    results = sql.orm.relationship("CLSmithResult", back_populates="program")
+    cl_launcher_results = sql.orm.relationship("CLSmithResult", back_populates="program")
+    cldrive_results = sql.orm.relation("cldriveCLSmithResult", back_populates="program")
 
     def __repr__(self):
         return self.id
@@ -133,6 +134,7 @@ class Testbed(Base):
     # relation back to results:
     clsmith_results = sql.orm.relationship("CLSmithResult", back_populates="testbed")
     clgen_results = sql.orm.relationship("CLgenResult", back_populates="testbed")
+    cldrive_clsmith_results = sql.orm.relationship("cldriveCLSmithResult", back_populates="testbed")
 
     def __repr__(self) -> str:
         return ("Platform: {self.platform}, "
@@ -251,7 +253,7 @@ class CLSmithResult(Base):
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     outcome = sql.Column(sql.String(255))
 
-    program = sql.orm.relationship("CLSmithProgram", back_populates="results")
+    program = sql.orm.relationship("CLSmithProgram", back_populates="cl_launcher_results")
     testbed = sql.orm.relationship("Testbed", back_populates="clsmith_results")
     params = sql.orm.relationship("CLSmithParams", back_populates="results")
 
@@ -281,9 +283,9 @@ class cldriveCLSmithResult(Base):
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     outcome = sql.Column(sql.String(255))
 
-    program = sql.orm.relationship("CLSmithProgram", back_populates="results")
-    testbed = sql.orm.relationship("Testbed", back_populates="clgen_results")
-    params = sql.orm.relationship("CLgenParams", back_populates="results")
+    program = sql.orm.relationship("CLSmithProgram", back_populates="cldrive_results")
+    testbed = sql.orm.relationship("Testbed", back_populates="cldrive_clsmith_results")
+    params = sql.orm.relationship("CLgenParams")
 
     def __repr__(self) -> str:
         return ("program: {self.program_id}, "
