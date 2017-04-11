@@ -26,7 +26,7 @@ import sys
 from pkg_resources import require
 
 
-__version__: str = require("labm8")[0].version
+__version__ = require("labm8")[0].version
 
 
 def exit(status=0):
