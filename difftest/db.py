@@ -29,7 +29,7 @@ def init(hostname: str) -> str:
     table = "project_b"
     port = "3306"
 
-    uri = "mysql://{username}:{password}@{hostname}:{port}/{table}".format(**vars())
+    uri = f"mysql://{username}:{password}@{hostname}:{port}/{table}"
     engine = sql.create_engine(uri)
 
     Base.metadata.create_all(engine)
