@@ -23,8 +23,10 @@ import labm8.io
 
 import sys
 
+from pkg_resources import require
 
-__version__ = "0.0.17"
+
+__version__: str = require("labm8")[0].version
 
 
 def exit(status=0):
