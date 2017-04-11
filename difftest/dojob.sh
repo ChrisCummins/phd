@@ -6,7 +6,7 @@ set -ux
 # example usage:
 #     PLATFORM='NVIDIA CUDA' DEVICE='GeForce GTX 1080' bash ./dojob.sh
 
-script="./clsmith-runprograms-cldrive.py"
+script="./clsmith-run-cldrive.py"
 
 while true; do
         $script "$PLATFORM" "$DEVICE" -g 1,1,1 -l 1,1,1 -s 256 -i arange

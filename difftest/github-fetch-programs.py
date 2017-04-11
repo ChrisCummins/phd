@@ -20,8 +20,6 @@ if __name__ == "__main__":
                         help="max programs to generate, no max if < 0")
     args = parser.parse_args()
 
-    db.init(args.hostname)
-
     # get a list of files to import
     paths = [x for x in Path(args.directory).iterdir() if x.is_file()]
 
@@ -29,6 +27,7 @@ if __name__ == "__main__":
         paths = paths[:args.num]
 
     for path in ProgressBar()(paths):
+        db.init(args.hostname)
         kid = os.path.splitext(path.name)[0]  # strip file extension
 
         try:
