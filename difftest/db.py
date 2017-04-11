@@ -123,7 +123,7 @@ class CLgenProgram(Base):
 class GitHubProgram(Base):
     """ programs """
     __tablename__ = 'GitHubPrograms'
-    id = sql.Column(sql.String(40), primary_key=True)
+    id = sql.Column(sql.String(255), primary_key=True)
     date_added = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
 
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
