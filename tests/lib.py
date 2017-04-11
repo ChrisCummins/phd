@@ -15,8 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with cldrive.  If not, see <http://www.gnu.org/licenses/>.
 #
+import os
 import sys
 from io import StringIO
+from pathlib import Path
+from typing import List
 
 import numpy as np
 from numpy import testing as nptest
@@ -26,17 +29,23 @@ import cldrive
 ENV = cldrive.make_env()
 
 
-def lol2np(list_of_lists):
+def data_path(path: str) -> Path:
+    return Path(os.path.join(os.path.dirname(__file__), "data", path))
+
+
+def lol2np(list_of_lists: List[list]) -> np.array:
     return np.array([np.array(x) for x in list_of_lists])
 
 
-def almost_equal(l1, l2):
+def almost_equal(l1: np.array, l2: np.array) -> None:
     for x, y in zip(l1, l2):
         nptest.assert_almost_equal(lol2np(x), lol2np(y))
 
 
 class DevNullRedirect(object):
     """
+    Context manager to redirect stdout and stderr to devnull.
+
     Examples
     --------
     >>> with DevNullRedirect(): print("this will not print")

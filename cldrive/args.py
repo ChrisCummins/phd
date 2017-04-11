@@ -17,15 +17,40 @@
 #
 import re
 
+from pathlib import Path
+from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
 from typing import List
 
 import numpy as np
 
-from pycparser import parse_file
+from pycparser import preprocess_file
 from pycparser.c_ast import FileAST, NodeVisitor, PtrDecl, TypeDecl, Struct, IdentifierType
 from pycparser.plyparser import ParseError
 from pycparserext.ext_c_parser import OpenCLCParser
+
+
+class OpenCLPreprocessError(ValueError):
+    """
+    Raised if pre-processor fails fails.
+
+    Attributes
+    ----------
+    command : str
+        Pre-processor invocation
+    stdout : str
+        Pre-processor output
+    stderr : str
+        Pre-processor error output
+    """
+    def __init__(self, command: str, stdout: str, stderr: str):
+        super(OpenCLPreprocessError, self).__init__(command)
+        self.command = command
+        self.stdout = stdout
+        self.stderr = stderr
+
+    def __repr__(self) -> str:
+        return self.command
 
 
 class OpenCLValueError(ValueError):
@@ -202,6 +227,22 @@ class ArgumentExtractor(NodeVisitor):
 __parser = OpenCLCParser()
 
 
+def preprocess(src: str, include_dirs: List[Path]=[]) -> str:
+    command = ['cpp'] + [f"-I{p}" for p in include_dirs] + ['-xc', '-']
+
+    try:
+        process = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                     universal_newlines=True)
+        stdout, stderr = process.communicate(src)
+        if process.returncode != 0:
+            raise OpenCLPreprocessError(" ".join(command), stdout, stderr)
+
+        return stdout
+    except OSError as e:
+        c = " ".join(command)
+        raise RuntimeError(f"preprocess command {c} failed")
+
+
 def parse(src: str) -> FileAST:
     """
     Parse OpenCL source code.
@@ -223,12 +264,8 @@ def parse(src: str) -> FileAST:
         invalid types.
     """
     try:
-        with NamedTemporaryFile('w', suffix='.c') as tmp:
-            tmp.write(src)
-            tmp.flush()
-            ast = parse_file(tmp.name, use_cpp=True, parser=__parser)
-
-        # strip the preprocesor line objects and rebuild the AST.
+        ast = __parser.parse(src)
+        # strip preprocesor line objects and rebuild the AST.
         # See: https://github.com/inducer/pycparserext/issues/27
         children = [x[1] for x in ast.children() if not isinstance(x[1], list)]
         new_ast = FileAST(ext=children, coord=0)

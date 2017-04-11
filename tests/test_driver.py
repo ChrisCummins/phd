@@ -181,4 +181,20 @@ def test_profiling():
     almost_equal(outputs, outputs_gs)
 
 
+def test_header():
+    src = """
+    #include "header.h"
+    kernel void A(global DTYPE* a) {
+      a[get_global_id(0)] = DOUBLE(a[get_global_id(0)]);
+    }
+    """
+
+    inputs = [np.arange(16)]
+    outputs_gs = [np.arange(16) * 2]
+
+    pp = cldrive.preprocess(src, include_dirs=[data_path("")])
+    outputs = cldrive.drive(ENV, pp, inputs, gsize=(16,1,1), lsize=(16,1,1))
+    almost_equal(outputs, outputs_gs)
+
+
 # TODO: Difftest against cl_launcher from CLSmith for a CLSmith kernel.

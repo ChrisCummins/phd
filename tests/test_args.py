@@ -19,6 +19,13 @@ import pytest
 
 import cldrive
 
+from lib import *
+
+
+def test_preprocess():
+    pp = cldrive.preprocess("kernel void A() {}")
+    assert pp.split("\n")[-2] == "kernel void A() {}"
+
 
 def test_parse():
     ast = cldrive.parse("kernel void A() {}")
@@ -41,7 +48,20 @@ def test_parse_preprocess():
     kernel void A(global DTYPE *a) {}
     """
 
-    ast = cldrive.parse(src)
+    pp = cldrive.preprocess(src)
+    ast = cldrive.parse(pp)
+    assert len(ast.children()) >= 1
+
+
+def test_parse_header():
+    src = """
+    #include "header.h"
+    kernel void A(global DTYPE* a) {
+      a[get_global_id(0)] = DOUBLE(a[get_global_id(0)]);
+    }
+    """
+    pp = cldrive.preprocess(src, include_dirs=[data_path("")])
+    ast = cldrive.parse(pp)
     assert len(ast.children()) >= 1
 
 
@@ -187,5 +207,6 @@ def test_extract_args_preprocess():
     kernel void A(global DTYPE *a) {}
     """
 
-    args = cldrive.extract_args(src)
+    pp = cldrive.preprocess(src)
+    args = cldrive.extract_args(pp)
     assert args[0].typename == 'float'
