@@ -28,21 +28,19 @@ if __name__ == "__main__":
     if args.num > 1:  # limit number of imports if user requested
         paths = paths[:args.num]
 
-    with Session(commit=True) as session:
-        for path in ProgressBar()(paths):
-            kid = os.path.splitext(path.name)[0]  # strip file extension
+    for path in ProgressBar()(paths):
+        kid = os.path.splitext(path.name)[0]  # strip file extension
 
-            exists = session.query(GitHubProgram).filter(GitHubProgram.id == kid).count()
-
-            if not exists:
-                try:
+        try:
+            with Session(commit=True) as session:
+                exists = session.query(GitHubProgram).filter(GitHubProgram.id == kid).count()
+                if not exists:
                     p = GitHubProgram(
                         id=kid, src=fs.read_file(path))
                     session.add(p)
-                    session.commit()
-                except UnicodeError:
-                    # at least one of the programs contains non-ASCII char
-                    session.rollback()
+        except UnicodeError:
+            # at least one of the programs contains non-ASCII char
+            session.rollback()
 
 
     print("done.")
