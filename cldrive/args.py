@@ -228,6 +228,7 @@ __parser = OpenCLCParser()
 
 
 def preprocess(src: str, include_dirs: List[Path]=[]) -> str:
+    include_dirs = [Path(p).expanduser() for p in include_dirs]  # expand '~'
     command = ['cpp'] + [f"-I{p}" for p in include_dirs] + ['-xc', '-']
 
     try:
