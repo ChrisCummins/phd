@@ -294,6 +294,7 @@ class cldriveCLSmithResult(Base):
                            nullable=False)
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
     cli = sql.Column(sql.String(255), nullable=False)
+    # cldrive_version = sql.Column(sql.String(12))
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
     stdout = sql.Column(sql.LargeBinary(length=2**31), nullable=False)
