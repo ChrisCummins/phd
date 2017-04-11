@@ -11,7 +11,7 @@ import progressbar
 from labm8 import fs
 
 import db
-from db import CLSmithProgram, CLgenParams, cldriveCLSmithResult, Session, Testbed
+from db import CLSmithProgram, cldriveParams, cldriveCLSmithResult, Session, Testbed
 
 
 status_t = NewType('status_t', int)
@@ -79,7 +79,7 @@ def verify_params(platform: str, device: str, optimizations: bool,
 
 
 def get_num_progs_to_run(session: db.session_t,
-                         testbed: Testbed, params: CLgenParams):
+                         testbed: Testbed, params: cldriveParams):
     subquery = session.query(cldriveCLSmithResult.program_id).filter(
         cldriveCLSmithResult.testbed == testbed, cldriveCLSmithResult.params == params)
     num_ran = session.query(CLSmithProgram.id).filter(CLSmithProgram.id.in_(subquery)).count()
@@ -140,7 +140,7 @@ if __name__ == "__main__":
         testbed = get_testbed(session, args.platform, args.device)
 
         params = db.get_or_create(
-            session, CLgenParams, size=args.size, generator=args.generator,
+            session, cldriveParams, size=args.size, generator=args.generator,
             scalar_val=args.scalar_val, gsize_x=gsize.x, gsize_y=gsize.y,
             gsize_z=gsize.z, lsize_x=lsize.x, lsize_y=lsize.y, lsize_z=lsize.z,
             optimizations=not args.no_opts)

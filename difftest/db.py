@@ -26,7 +26,7 @@ def init(hostname: str) -> str:
     """ must be called before using anything """
     global make_session
     username, password = get_mysql_creds()
-    table = "clsmith"
+    table = "project_b"
     port = "3306"
 
     uri = "mysql://{username}:{password}@{hostname}:{port}/{table}".format(**vars())
@@ -159,9 +159,9 @@ class Testbed(Base):
                 "Host: {self.host}".format(**vars()))
 
 
-class CLSmithParams(Base):
+class cl_launcherParams(Base):
     """ params used by cl_launcher to run kernel """
-    __tablename__ = "CLSmithParams"
+    __tablename__ = "cl_launcherParams"
     id = sql.Column(sql.Integer, primary_key=True)
     optimizations = sql.Column(sql.Boolean, nullable=False)
     gsize_x = sql.Column(sql.Integer, nullable=False)
@@ -202,9 +202,9 @@ class CLSmithParams(Base):
         return " ".join(self.to_flags())
 
 
-class CLgenParams(Base):
+class cldriveParams(Base):
     """ params used by cldrive to run kernel """
-    __tablename__ = "CLgenParams"
+    __tablename__ = "cldriveParams"
     id = sql.Column(sql.Integer, primary_key=True)
     size = sql.Column(sql.Integer, nullable=False)
     generator = sql.Column(sql.String(12), nullable=False)
@@ -260,7 +260,7 @@ class CLSmithResult(Base):
                             nullable=False)
     testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
                             nullable=False)
-    params_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithParams.id"),
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("cl_launcherParams.id"),
                            nullable=False)
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
     flags = sql.Column(sql.String(255), nullable=False)
@@ -272,7 +272,7 @@ class CLSmithResult(Base):
 
     program = sql.orm.relationship("CLSmithProgram", back_populates="cl_launcher_results")
     testbed = sql.orm.relationship("Testbed", back_populates="clsmith_results")
-    params = sql.orm.relationship("CLSmithParams", back_populates="results")
+    params = sql.orm.relationship("cl_launcherParams", back_populates="results")
 
     def __repr__(self):
         return ("program: {self.program_id}, "
@@ -290,7 +290,7 @@ class cldriveCLSmithResult(Base):
                             nullable=False)
     testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
                             nullable=False)
-    params_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenParams.id"),
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("cldriveParams.id"),
                            nullable=False)
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
     cli = sql.Column(sql.String(255), nullable=False)
@@ -302,7 +302,7 @@ class cldriveCLSmithResult(Base):
 
     program = sql.orm.relationship("CLSmithProgram", back_populates="cldrive_results")
     testbed = sql.orm.relationship("Testbed", back_populates="cldrive_clsmith_results")
-    params = sql.orm.relationship("CLgenParams")
+    params = sql.orm.relationship("cldriveParams")
 
     def __repr__(self) -> str:
         return ("program: {self.program_id}, "
@@ -320,7 +320,7 @@ class CLgenResult(Base):
                             nullable=False)
     testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
                             nullable=False)
-    params_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenParams.id"),
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("cldriveParams.id"),
                            nullable=False)
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
     cli = sql.Column(sql.String(255), nullable=False)
@@ -332,7 +332,7 @@ class CLgenResult(Base):
 
     program = sql.orm.relationship("CLgenProgram", back_populates="results")
     testbed = sql.orm.relationship("Testbed", back_populates="clgen_results")
-    params = sql.orm.relationship("CLgenParams", back_populates="clgen_results")
+    params = sql.orm.relationship("cldriveParams", back_populates="clgen_results")
 
     def __repr__(self) -> str:
         return ("program: {self.program_id}, "
@@ -350,7 +350,7 @@ class GitHubResult(Base):
                             nullable=False)
     testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
                             nullable=False)
-    params_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenParams.id"),
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("cldriveParams.id"),
                            nullable=False)
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
     cli = sql.Column(sql.String(255), nullable=False)
@@ -362,7 +362,7 @@ class GitHubResult(Base):
 
     program = sql.orm.relationship("GitHubProgram", back_populates="results")
     testbed = sql.orm.relationship("Testbed", back_populates="github_results")
-    params = sql.orm.relationship("CLgenParams", back_populates="github_results")
+    params = sql.orm.relationship("cldriveParams", back_populates="github_results")
 
     def __repr__(self) -> str:
         return ("program: {self.program_id}, "

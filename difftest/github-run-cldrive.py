@@ -11,7 +11,7 @@ import progressbar
 from labm8 import fs
 
 import db
-from db import GitHubProgram, CLgenParams, GitHubResult, Session, Testbed
+from db import GitHubProgram, cldriveParams, GitHubResult, Session, Testbed
 
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
@@ -78,7 +78,7 @@ def verify_params(platform: str, device: str, optimizations: bool,
 
 
 def get_num_progs_to_run(session: db.session_t,
-                         testbed: Testbed, params: CLgenParams):
+                         testbed: Testbed, params: cldriveParams):
     subquery = session.query(GitHubResult.program_id).filter(
         GitHubResult.testbed == testbed, GitHubResult.params == params)
     num_ran = session.query(GitHubProgram.id).filter(GitHubProgram.id.in_(subquery)).count()
@@ -139,7 +139,7 @@ if __name__ == "__main__":
         testbed = get_testbed(session, args.platform, args.device)
 
         params = db.get_or_create(
-            session, CLgenParams, size=args.size, generator=args.generator,
+            session, cldriveParams, size=args.size, generator=args.generator,
             scalar_val=args.scalar_val, gsize_x=gsize.x, gsize_y=gsize.y,
             gsize_z=gsize.z, lsize_x=lsize.x, lsize_y=lsize.y, lsize_z=lsize.z,
             optimizations=not args.no_opts)

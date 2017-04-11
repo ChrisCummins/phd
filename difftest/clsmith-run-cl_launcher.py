@@ -13,7 +13,7 @@ import clsmith
 import cldrive
 import db
 
-from db import CLSmithProgram, CLSmithParams, CLSmithResult, Session, Testbed
+from db import CLSmithProgram, cl_launcherParams, CLSmithResult, Session, Testbed
 
 
 def get_platform_name(platform_id):
@@ -104,7 +104,7 @@ def parse_ndrange(ndrange: str) -> Tuple[int, int, int]:
 
 
 def get_num_progs_to_run(session: db.session_t,
-                         testbed: Testbed, params: CLSmithParams):
+                         testbed: Testbed, params: cl_launcherParams):
     subquery = session.query(CLSmithResult.program_id).filter(
         CLSmithResult.testbed_id == testbed.id, CLSmithResult.params_id == params.id)
     num_ran = session.query(CLSmithProgram.id).filter(CLSmithProgram.id.in_(subquery)).count()
@@ -150,7 +150,7 @@ if __name__ == "__main__":
             platform=platform_name, device=device_name, driver=driver_version,
             host=cldrive.host_os())
 
-        params = db.get_or_create(session, CLSmithParams,
+        params = db.get_or_create(session, cl_launcherParams,
             optimizations = optimizations,
             gsize_x = gsize[0], gsize_y = gsize[1], gsize_z = gsize[2],
             lsize_x = lsize[0], lsize_y = lsize[1], lsize_z = lsize[2])

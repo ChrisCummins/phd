@@ -1,10 +1,10 @@
 host=cc1
 user=cec
-table=clsmith
+db=project_b
 dstdir=~/src/project_b/data
 
 set -eux
 
-ssh $host "mysqldump -u $user -p $table > /tmp/$table.mysql"
-ssh $host "tar cjvf $dstdir/$table-$(date '+%Y-%m-%d').mysql.tar.bz2 -C /tmp $table.mysql"
-ssh $host "rm -v /tmp/$table.mysql"
+ssh $host "mysqldump -u $user -p $db > /tmp/$db.mysql"
+ssh $host "tar cjvf $dstdir/$db-$(date '+%Y-%m-%d').mysql.tar.bz2 -C /tmp $db.mysql"
+ssh $host "rm -v /tmp/$db.mysql"
