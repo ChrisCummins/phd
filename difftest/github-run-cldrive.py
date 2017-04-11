@@ -90,7 +90,6 @@ def get_num_progs_to_run(session: db.session_t,
 
 def get_testbed(session, platform: str, device: str) -> Testbed:
     import pyopencl as cl
-    import clinfo
 
     env = cldrive.make_env(platform=platform, device=device)
     ctx, queue = env.ctx_queue()
@@ -99,7 +98,7 @@ def get_testbed(session, platform: str, device: str) -> Testbed:
 
     return db.get_or_create(
         session, Testbed, platform=platform, device=device, driver=driver,
-            host=clinfo.get_os())
+            host=cldrive.host_os())
 
 
 if __name__ == "__main__":

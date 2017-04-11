@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import platform
 import progressbar
+import pyopencl as cl
 import re
 
 from argparse import ArgumentParser
@@ -7,11 +9,30 @@ from labm8 import fs
 from tempfile import NamedTemporaryFile
 from typing import Dict, List, Tuple
 
-import clinfo
 import clsmith
+import cldrive
 import db
 
 from db import CLSmithProgram, CLSmithParams, CLSmithResult, Session, Testbed
+
+
+def get_platform_name(platform_id):
+    platform = cl.get_platforms()[platform_id]
+    return platform.get_info(cl.platform_info.NAME)
+
+
+def get_device_name(platform_id, device_id):
+    platform = cl.get_platforms()[platform_id]
+    ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
+    device = ctx.get_info(cl.context_info.DEVICES)[device_id]
+    return device.get_info(cl.device_info.NAME)
+
+
+def get_driver_version(platform_id, device_id):
+    platform = cl.get_platforms()[platform_id]
+    ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
+    device = ctx.get_info(cl.context_info.DEVICES)[device_id]
+    return device.get_info(cl.device_info.DRIVER_VERSION)
 
 
 def cl_launcher(src: str, platform_id: int, device_id: int,
@@ -118,16 +139,16 @@ if __name__ == "__main__":
     lsize = parse_ndrange(args.lsize)
 
     # get testbed information
-    platform_name = clinfo.get_platform_name(platform_id)
-    device_name = clinfo.get_device_name(platform_id, device_id)
-    driver_version = clinfo.get_driver_version(platform_id, device_id)
+    platform_name = .get_platform_name(platform_id)
+    device_name = get_device_name(platform_id, device_id)
+    driver_version = get_driver_version(platform_id, device_id)
 
     db.init(args.hostname)  # initialize db engine
 
     with Session() as session:
         testbed = db.get_or_create(session, Testbed,
             platform=platform_name, device=device_name, driver=driver_version,
-            host=clinfo.get_os())
+            host=cldrive.host_os())
 
         params = db.get_or_create(session, CLSmithParams,
             optimizations = optimizations,
