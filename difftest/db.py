@@ -347,7 +347,7 @@ class CLgenResult(Base):
 class GitHubResult(Base):
     __tablename__ = "GitHubResults"
     id = sql.Column(sql.Integer, primary_key=True)
-    program_id = sql.Column(sql.String(40), sql.ForeignKey("GitHubPrograms.id"),
+    program_id = sql.Column(sql.String(255), sql.ForeignKey("GitHubPrograms.id"),
                             nullable=False)
     testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
                             nullable=False)

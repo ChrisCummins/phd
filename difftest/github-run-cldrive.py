@@ -11,7 +11,7 @@ import progressbar
 from labm8 import fs
 
 import db
-from db import GitHubProgram, cldriveParams, GitHubResult, Session, Testbed
+from db import *
 
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
@@ -157,7 +157,7 @@ if __name__ == "__main__":
         while True:
             # get the next program to run
             subquery = session.query(GitHubResult.program_id).filter(
-                CLgenResult.testbed == testbed, GitHubResult.params == params)
+                GitHubResult.testbed == testbed, GitHubResult.params == params)
             program = session.query(GitHubProgram).filter(
                 ~GitHubProgram.id.in_(subquery)).order_by(GitHubProgram.id).first()
 
