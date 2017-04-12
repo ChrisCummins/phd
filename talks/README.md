@@ -1,5 +1,7 @@
 # Talks
 
+1. Chris Cummins. "Using Deep Learning to Generate Human-like Code", 22nd April, 2017. Scottish Programming Languages Seminar, University of St. Andrews, Scotland. Files `talks/2017-03-spls`
+1. Chris Cummins. "Synthesizing Benchmarks for Predictive Modeling", 6th Febuary, 2017. International Symposium on Code Generationand Optimization (CGO), Austin, Texas, USA. Files: `taks/2017-02-cgo`
 1. Chris Cummins. "Building an AI that Codes", 22nd July, 2016.  Ocado
 Technology, Hatfield, England. Files: `talks/2016-07-ocado`
 1. Chris Cummins. "All the OpenCL on GitHub: Teaching an AI to code, one
