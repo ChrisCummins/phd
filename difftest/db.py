@@ -143,13 +143,13 @@ class Testbed(Base):
     device = sql.Column(sql.String(255), nullable=False)  # CL_PLATFORM_NAME
     driver = sql.Column(sql.String(255), nullable=False)  # CL_DRIVER_VERSION
     host = sql.Column(sql.String(255), nullable=False)
-    version = sql.Column(sql.String(8), nullable=False)  # CL_PLATFORM_VERSION
+    opencl = sql.Column(sql.String(8), nullable=False)  # CL_PLATFORM_VERSION
     devtype = sql.Column(sql.String(12), nullable=False)  # CL_DEVICE_TYPE
 
-    # unique combination of values:
     __table_args__ = (
-        sql.UniqueConstraint('platform', 'device', 'driver', name='_uid'),)
-    # relation back to results:
+        sql.UniqueConstraint('platform', 'device', 'driver', 'host',
+                             'opencl', 'devtype', name='_uid'),)
+
     clsmith_results = sql.orm.relationship("CLSmithResult", back_populates="testbed")
     clgen_results = sql.orm.relationship("CLgenResult", back_populates="testbed")
     cldrive_clsmith_results = sql.orm.relationship("cldriveCLSmithResult", back_populates="testbed")
