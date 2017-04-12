@@ -58,6 +58,14 @@ Reference compiler: LLVM 3.9.0
         \label{fig:deeptune}
 \end{figure}
 
+\section{Identifying Bugs using CLgen}
+
+\begin{enumerate}
+	\item Generate sample $S$ using CLgen.
+	\item For each compiler $C = \{C_1 \ldots C_n\}$, attempt to compile sample $S$.
+	\item For each compiler which produced program code, execute the program using each test case configuration $P = \{P_1 \ldots P_n\}$.
+\end{enumerate}
+
 \input{sec/methodology}
 \input{sec/results}
 \input{sec/related_work}
@@ -65,18 +73,6 @@ Reference compiler: LLVM 3.9.0
 
 
 % \input{sec/acks}  % double blind review
-
-\section{Identifying Bugs using CLgen}
-
-\begin{enumerate}
-	\item Generate sample $S$ using CLgen.
-	\item For each compiler $C = \{C_1 \ldots C_n\}$, attempt to compile sample $S$.
-	\item If
-	\item Attempt to compile sample on reference compiler $C_{ref}$.
-	\item Attempt to run compiled programs
-	\item If
-\end{enumerate}
-
 
 
 \printbibliography
