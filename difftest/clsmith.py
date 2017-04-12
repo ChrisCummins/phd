@@ -46,7 +46,7 @@ def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
 
 
 def cl_launcher(program_path: str, platform_id: int, device_id: int,
-                *args) -> return_t:
+                *args, **kwargs) -> return_t:
     """
         Returns:
             return_t: A named tuple consisting of runtime (float),
@@ -54,7 +54,7 @@ def cl_launcher(program_path: str, platform_id: int, device_id: int,
     """
     start_time = time()
 
-    cli = cl_launcher_cli(program_path, platform_id, device_id, *args)
+    cli = cl_launcher_cli(program_path, platform_id, device_id, *args, **kwargs)
     process = Popen(cli, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate()
 

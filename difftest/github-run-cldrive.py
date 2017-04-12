@@ -12,15 +12,10 @@ from labm8 import fs
 
 import db
 from db import *
+from lib import *
 
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
-
-
-def cldrive_cli(platform: str, device: str, *args, timeout=60) -> str:
-    """ get cldrive command """
-    return ['cldrive', '-p', platform, '-d', device, '--debug', '--profiling',
-            '-t', '60', '-b'] + list(args)
 
 
 def drive(command: List[str], src: str) -> Tuple[float, int, str, str]:

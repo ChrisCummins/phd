@@ -382,18 +382,19 @@ def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
     Get the testbed for the specified hardware.
     """
     import pyopencl as cl
+    import cldrive
 
     env = cldrive.make_env(platform=platform, device=device)
     ctx, queue = env.ctx_queue()
     dev = queue.get_info(cl.command_queue_info.DEVICE)
     driver = dev.get_info(cl.device_info.DRIVER_VERSION)
-    platform = dev.get_info(cl.device_info.PLATFORM)
+    plat = dev.get_info(cl.device_info.PLATFORM)
     devtype = cldrive.device_type(dev)
 
-    return db.get_or_create(session, Testbed,
-                            platform=platform,
-                            device=device,
-                            driver=driver,
-                            host=cldrive.host_os(),
-                            opencl=cldrive.opencl_version(platform),
-                            devtype=devtype)
+    return get_or_create(session, Testbed,
+                         platform=platform,
+                         device=device,
+                         driver=driver,
+                         host=cldrive.host_os(),
+                         opencl=cldrive.opencl_version(plat),
+                         devtype=devtype)

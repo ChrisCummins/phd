@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import platform
 import progressbar
 import pyopencl as cl
@@ -11,9 +12,10 @@ from typing import Dict, List, Tuple
 
 import clsmith
 import cldrive
-import db
 
-from db import CLSmithProgram, cl_launcherParams, CLSmithResult, Session, Testbed
+import db
+from db import *
+from lib import *
 
 
 def get_platform_name(platform_id):
@@ -42,7 +44,8 @@ def cl_launcher(src: str, platform_id: int, device_id: int,
         tmp.write(src.encode('utf-8'))
         tmp.flush()
 
-        return clsmith.cl_launcher(tmp.name, platform_id, device_id, *args)
+        return clsmith.cl_launcher(tmp.name, platform_id, device_id, *args,
+                                   timeout=os.environ.get("TIMEOUT", 60))
 
 
 def verify_params(platform: str, device: str, optimizations: bool,
