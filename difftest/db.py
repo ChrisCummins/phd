@@ -144,6 +144,8 @@ class Testbed(Base):
     driver = sql.Column(sql.String(255), nullable=False)  # CL_DRIVER_VERSION
     host = sql.Column(sql.String(255), nullable=False)
     version = sql.Column(sql.String(8), nullable=False)  # CL_PLATFORM_VERSION
+    devtype = sql.Column(sql.String(12), nullable=False)  # CL_DEVICE_TYPE
+
     # unique combination of values:
     __table_args__ = (
         sql.UniqueConstraint('platform', 'device', 'driver', name='_uid'),)
@@ -386,7 +388,12 @@ def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
     dev = queue.get_info(cl.command_queue_info.DEVICE)
     driver = dev.get_info(cl.device_info.DRIVER_VERSION)
     platform = dev.get_info(cl.device_info.PLATFORM)
+    devtype = cldrive.device_type(dev)
 
-    return db.get_or_create(
-        session, Testbed, platform=platform, device=device, driver=driver,
-            host=cldrive.host_os(), opencl=cldrive.opencl_version(platform))
+    return db.get_or_create(session, Testbed,
+                            platform=platform,
+                            device=device,
+                            driver=driver,
+                            host=cldrive.host_os(),
+                            opencl=cldrive.opencl_version(platform),
+                            devtype=devtype)
