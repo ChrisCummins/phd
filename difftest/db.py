@@ -274,6 +274,7 @@ class CLSmithResult(Base):
     stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     outcome = sql.Column(sql.String(255))
+    classification = sql.Column(sql.String(16))
 
     program = sql.orm.relationship("CLSmithProgram", back_populates="cl_launcher_results")
     testbed = sql.orm.relationship("Testbed", back_populates="clsmith_results")
@@ -305,6 +306,7 @@ class cldriveCLSmithResult(Base):
     stdout = sql.Column(sql.LargeBinary(length=2**31), nullable=False)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     outcome = sql.Column(sql.String(255))
+    classification = sql.Column(sql.String(16))
 
     program = sql.orm.relationship("CLSmithProgram", back_populates="cldrive_results")
     testbed = sql.orm.relationship("Testbed", back_populates="cldrive_clsmith_results")
@@ -335,6 +337,7 @@ class CLgenResult(Base):
     stdout = sql.Column(sql.LargeBinary(length=2**31), nullable=False)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     outcome = sql.Column(sql.String(255))
+    classification = sql.Column(sql.String(16))
 
     program = sql.orm.relationship("CLgenProgram", back_populates="results")
     testbed = sql.orm.relationship("Testbed", back_populates="clgen_results")
@@ -365,6 +368,7 @@ class GitHubResult(Base):
     stdout = sql.Column(sql.LargeBinary(length=2**31), nullable=False)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     outcome = sql.Column(sql.String(255))
+    classification = sql.Column(sql.String(16))
 
     program = sql.orm.relationship("GitHubProgram", back_populates="results")
     testbed = sql.orm.relationship("Testbed", back_populates="github_results")
