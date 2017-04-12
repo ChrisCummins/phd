@@ -34,3 +34,9 @@
 [submodule "src/labm8"]
 	path = src/labm8
 	url = git@github.com:ChrisCummins/labm8.git
+[submodule "src/cldrive"]
+	path = src/cldrive
+	url = git@github.com:ChrisCummins/cldrive.git
+[submodule "src/clgen"]
+	path = src/clgen
+	url = git@github.com:ChrisCummins/clgen.git
