@@ -1,5 +1,6 @@
 import os
 import platform
+import re
 import sys
 
 from collections import namedtuple
@@ -134,6 +135,48 @@ def host_os() -> str:
     return f"{system} {release} {arch}"
 
 
+def opencl_version(platform: cl.Platform) -> str:
+    """
+    Parameters
+    ----------
+    platform : cl.Platform
+        Pyopencl platform object.
+
+    Returns
+    -------
+    str
+        OpenCL version supported by platform.
+
+    Raises
+    ------
+    TypeError:
+        If parameter is of invalid type.
+    LookupError:
+        If the OpenCL version cannot be determined from the output of
+        CL_PLATFORM_VERSION.
+
+    Examples
+    --------
+    With a platform that supports OpenCL 1.2:
+    >>> opencl_version(platform1)  # doctest: +SKIP
+    "1.2"
+
+    With a platform that supports OpenCL 2.0:
+    >>> opencl_version(platform2)  # doctest: +SKIP
+    "2.0"
+    """
+    if not isinstance(platform, cl.Platform):
+        raise TypeError("not a pyopencl platform")
+
+    version = platform.get_info(cl.platform_info.VERSION)
+    m = re.match(r'OpenCL (\d+\.\d+)', version)
+    if m:
+        return m.group(1)
+    else:
+        raise LookupError(
+            f"Could not determine OpenCL version from string '{version}'")
+
+
 def clinfo(file=sys.stdout) -> None:
     print("Host:", host_os(), file=file)
 
@@ -143,7 +186,11 @@ def clinfo(file=sys.stdout) -> None:
         ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
         devices = ctx.get_info(cl.context_info.DEVICES)
 
-        print(f"Platform {platform_id}: {platform_name}", file=file)
+        version = opencl_version(platform)
+
+        print((f"Platform {platform_id}: "
+               f"{platform_name} "
+               f"(OpenCL {version})"), file=file)
 
         for device_id, device in enumerate(devices):
             device_name = device.get_info(cl.device_info.NAME)
