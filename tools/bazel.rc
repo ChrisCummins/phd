@@ -1,1 +1,4 @@
 build --cxxopt='-std=c++14'
+
+# FIXME: set this dependent on macOS / linux:
+build --define opencl_ld='-framework OpenCL'
