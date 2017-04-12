@@ -139,7 +139,7 @@ if __name__ == "__main__":
     lsize = parse_ndrange(args.lsize)
 
     # get testbed information
-    platform_name = .get_platform_name(platform_id)
+    platform_name = get_platform_name(platform_id)
     device_name = get_device_name(platform_id, device_id)
     driver_version = get_driver_version(platform_id, device_id)
 
