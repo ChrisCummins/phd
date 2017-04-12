@@ -137,6 +137,8 @@ def host_os() -> str:
 
 def opencl_version(platform: cl.Platform) -> str:
     """
+    Get supported OpenCL version of a platform.
+
     Parameters
     ----------
     platform : cl.Platform
@@ -177,6 +179,51 @@ def opencl_version(platform: cl.Platform) -> str:
             f"Could not determine OpenCL version from string '{version}'")
 
 
+def device_type(device: cl.Device) -> str:
+    """
+    Get the type of an OpenCL device.
+
+    Parameters
+    ----------
+    device : cl.Device
+        Pyopencl device object.
+
+    Returns
+    -------
+    str
+        OpenCL device type.
+
+    Raises
+    ------
+    TypeError:
+        If parameter is of invalid type.
+    ValueError:
+        If the OpenCL device cannot be determined from the output of
+        CL_DEVICE_TYPE.
+
+    Examples
+    --------
+    On a GPU device:
+    >>> opencl_version(device1)  # doctest: +SKIP
+    "GPU"
+
+    On a CPU device:
+    >>> opencl_version(device2)  # doctest: +SKIP
+    "CPU"
+
+    Using oclgrind:
+    >>> opencl_version(device)  # doctest: +SKIP
+    "Emulator"
+    """
+    cl_device_type = device.get_info(cl.device_info.TYPE)
+    if cl_device_type == 15:
+        # add special work-around for non-standard value '15', which is used
+        # by oclgrind.
+        return "Emulator"
+    else:
+        return cl.device_type.to_string(cl_device_type)
+
+
 def clinfo(file=sys.stdout) -> None:
     print("Host:", host_os(), file=file)
 
@@ -194,11 +241,10 @@ def clinfo(file=sys.stdout) -> None:
 
         for device_id, device in enumerate(devices):
             device_name = device.get_info(cl.device_info.NAME)
-            device_type = cl.device_type.to_string(
-                device.get_info(cl.device_info.TYPE))
+            devtype = device_type(device)
             driver = device.get_info(cl.device_info.DRIVER_VERSION)
 
-            print(f"    Device {device_id}: {device_type} {device_name} "
+            print(f"    Device {device_id}: {devtype} {device_name} "
                   f"{driver}", file=file)
 
 
