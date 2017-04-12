@@ -9,6 +9,7 @@ from typing import Dict, List, Tuple, NewType
 import cldrive
 import progressbar
 from labm8 import fs
+from clgen import preprocess
 
 import db
 from db import *
@@ -22,13 +23,20 @@ def drive(command: List[str], src: str) -> Tuple[float, int, str, str]:
     """ invoke cldrive on source """
     start_time = time()
 
-    process = Popen(cli, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate(src.encode('utf-8'))
+    try:
+        src = preprocess.compiler_preprocess_cl(program.src)
+        process = Popen(cli, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate(src.encode('utf-8'))
+        status = process.returncode
+    except preprocess.ClangException as e:
+        status = 1024
+        stdout = "".encode('utf-8')
+        stderr = str(e).encode('utf-8')
 
     runtime = time() - start_time
 
     return return_t(
-        runtime=runtime, status=status_t(process.returncode),
+        runtime=runtime, status=status_t(status),
         stdout=stdout, stderr=stderr.decode('utf-8'))
 
 
@@ -147,8 +155,7 @@ if __name__ == "__main__":
             if not program:
                 break
 
-            src = cldrive.preprocess(program.src)
-            runtime, status, stdout, stderr = drive(cli, src)
+            runtime, status, stdout, stderr = drive(cli, program.src)
 
             # assert that executed params match expected
             verify_params(platform=args.platform, device=args.device,
