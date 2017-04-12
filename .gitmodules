@@ -31,3 +31,6 @@
 [submodule "docs/2017-02-cgo"]
 	path = docs/2017-02-cgo
 	url = git@github.com:ChrisCummins/paper-synthesizing-benchmarks.git
+[submodule "src/labm8"]
+	path = src/labm8
+	url = git@github.com:ChrisCummins/labm8.git
