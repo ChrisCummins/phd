@@ -8,7 +8,7 @@ cc_library(
 )
 
 cc_test(
-    name =  "0101-unique-chars-in-string",
+    name =  "0101-unique-chars-in-string-cpp",
     srcs = ["0101-unique-chars-in-string.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -17,8 +17,14 @@ cc_test(
     deps = [":ctci"],
 )
 
+py_test(
+    name =  '0101-unique-chars-in-string-py',
+    srcs = ['0101-unique-chars-in-string.py'],
+    main =  '0101-unique-chars-in-string.py',
+)
+
 cc_test(
-    name =  "0102-reverse-string",
+    name =  "0102-reverse-string-cpp",
     srcs = ["0102-reverse-string.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -28,7 +34,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "0103-permutations",
+    name =  "0103-permutations-cpp",
     srcs = ["0103-permutations.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -37,8 +43,14 @@ cc_test(
     deps = [":ctci"],
 )
 
+py_test(
+    name =  '0103-permutations-py',
+    srcs = ['0103-permutations.py'],
+    main =  '0103-permutations.py',
+)
+
 cc_test(
-    name =  "0104-escape-string",
+    name =  "0104-escape-string-cpp",
     srcs = ["0104-escape-string.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -47,8 +59,14 @@ cc_test(
     deps = [":ctci"],
 )
 
+py_test(
+    name =  '0104-escape-string-py',
+    srcs = ['0104-escape-string.py'],
+    main =  '0104-escape-string.py',
+)
+
 cc_test(
-    name =  "0105-string-compression",
+    name =  "0105-string-compression-cpp",
     srcs = ["0105-string-compression.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -58,7 +76,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "0107-matrix-zero",
+    name =  "0107-matrix-zero-cpp",
     srcs = ["0107-matrix-zero.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -68,7 +86,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "0108-string-rotation",
+    name =  "0108-string-rotation-cpp",
     srcs = ["0108-string-rotation.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -78,7 +96,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "0201-list-remove-dups",
+    name =  "0201-list-remove-dups-cpp",
     srcs = ["0201-list-remove-dups.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -87,8 +105,14 @@ cc_test(
     deps = [":ctci"],
 )
 
+py_test(
+    name =  "0201-list-remove-dups-py",
+    srcs = ["0201-list-remove-dups.py"],
+    main =  '0201-list-remove-dups.py',
+)
+
 cc_test(
-    name =  "0202-linked-list-k-last",
+    name =  "0202-linked-list-k-last-cpp",
     srcs = ["0202-linked-list-k-last.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -98,7 +122,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "0207-list-palindrone",
+    name =  "0207-list-palindrone-cpp",
     srcs = ["0207-list-palindrone.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -108,7 +132,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "0302-stack-min",
+    name =  "0302-stack-min-cpp",
     srcs = ["0302-stack-min.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -118,7 +142,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "0303-set-of-stacks",
+    name =  "0303-set-of-stacks-cpp",
     srcs = ["0303-set-of-stacks.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -128,7 +152,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "0305-stack-queue",
+    name =  "0305-stack-queue-cpp",
     srcs = ["0305-stack-queue.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -138,7 +162,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "0402-directed-graph-routefinder",
+    name =  "0402-directed-graph-routefinder-cpp",
     srcs = ["0402-directed-graph-routefinder.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -148,7 +172,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "0404-binary-tree-list",
+    name =  "0404-binary-tree-list-cpp",
     srcs = ["0404-binary-tree-list.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -158,7 +182,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "0502-binary-double",
+    name =  "0502-binary-double-cpp",
     srcs = ["0502-binary-double.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -168,7 +192,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "0505-int-bitdiff",
+    name =  "0505-int-bitdiff-cpp",
     srcs = ["0505-int-bitdiff.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -178,7 +202,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "0508-horiz-line",
+    name =  "0508-horiz-line-cpp",
     srcs = ["0508-horiz-line.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -188,7 +212,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "1101-merge-arrays",
+    name =  "1101-merge-arrays-cpp",
     srcs = ["1101-merge-arrays.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -198,7 +222,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "1102-sort-anagrams",
+    name =  "1102-sort-anagrams-cpp",
     srcs = ["1102-sort-anagrams.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -208,7 +232,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "1301-last-k-lines",
+    name =  "1301-last-k-lines-cpp",
     srcs = ["1301-last-k-lines.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -218,7 +242,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "1307-tree-copy",
+    name =  "1307-tree-copy-cpp",
     srcs = ["1307-tree-copy.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -230,7 +254,7 @@ cc_test(
 # FIXME: this is broken
 #
 # cc_test(
-#     name =  "1310-2d-alloc",
+#     name =  "1310-2d-alloc-cpp",
 #     srcs = ["1310-2d-alloc.cc"],
 #     copts = [
 #         "-Iexternal/gtest/include",
@@ -240,7 +264,7 @@ cc_test(
 # )
 
 cc_test(
-    name =  "1701-num-swap",
+    name =  "1701-num-swap-cpp",
     srcs = ["1701-num-swap.cc"],
     copts = [
         "-Iexternal/gtest/include",
@@ -250,7 +274,7 @@ cc_test(
 )
 
 cc_test(
-    name =  "1702-tic-tac-toe",
+    name =  "1702-tic-tac-toe-cpp",
     srcs = ["1702-tic-tac-toe.cc"],
     copts = [
         "-Iexternal/gtest/include",
