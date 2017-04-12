@@ -11,7 +11,7 @@ import progressbar
 from labm8 import fs
 
 import db
-from db import CLSmithProgram, cldriveParams, cldriveCLSmithResult, Session, Testbed
+from db import *
 
 
 status_t = NewType('status_t', int)
@@ -87,19 +87,6 @@ def get_num_progs_to_run(session: db.session_t,
         cldriveCLSmithResult.testbed == testbed)
     total = session.query(CLSmithProgram.id).count()
     return num_ran, total
-
-
-def get_testbed(session, platform: str, device: str) -> Testbed:
-    import pyopencl as cl
-
-    env = cldrive.make_env(platform=platform, device=device)
-    ctx, queue = env.ctx_queue()
-    dev = queue.get_info(cl.command_queue_info.DEVICE)
-    driver = dev.get_info(cl.device_info.DRIVER_VERSION)
-
-    return db.get_or_create(
-        session, Testbed, platform=platform, device=device, driver=driver,
-            host=cldrive.host_os())
 
 
 if __name__ == "__main__":

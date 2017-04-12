@@ -143,6 +143,7 @@ class Testbed(Base):
     device = sql.Column(sql.String(255), nullable=False)  # CL_PLATFORM_NAME
     driver = sql.Column(sql.String(255), nullable=False)  # CL_DRIVER_VERSION
     host = sql.Column(sql.String(255), nullable=False)
+    version = sql.Column(sql.String(8), nullable=False)  # CL_PLATFORM_VERSION
     # unique combination of values:
     __table_args__ = (
         sql.UniqueConstraint('platform', 'device', 'driver', name='_uid'),)
@@ -372,3 +373,20 @@ class GitHubResult(Base):
                 "status: {self.status}, "
                 "runtime: {self.runtime:.2f}s"
                 .format(**vars()))
+
+
+def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
+    """
+    Get the testbed for the specified hardware.
+    """
+    import pyopencl as cl
+
+    env = cldrive.make_env(platform=platform, device=device)
+    ctx, queue = env.ctx_queue()
+    dev = queue.get_info(cl.command_queue_info.DEVICE)
+    driver = dev.get_info(cl.device_info.DRIVER_VERSION)
+    platform = dev.get_info(cl.device_info.PLATFORM)
+
+    return db.get_or_create(
+        session, Testbed, platform=platform, device=device, driver=driver,
+            host=cldrive.host_os(), opencl=cldrive.opencl_version(platform))
