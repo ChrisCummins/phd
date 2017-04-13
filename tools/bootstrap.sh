@@ -13,7 +13,7 @@ bootstrap_macos() {
     set -x
 
     # Note OpenMP may not work if gcc built with multilib support.
-    brew list | grep '^gcc$' &>/dev/null || brew install gcc --without-multilib
+    # brew list | grep '^gcc$' &>/dev/null || brew install gcc --without-multilib
 
     brew cask list | grep '^java$' &>/dev/null || brew cask install java
     brew list | grep '^bazel$' &>/dev/null || brew install bazel
