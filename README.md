@@ -1,13 +1,26 @@
 # My PhD
 
-This repo is not intended for human consumption. However, in the
-interest of open and honest scientific inquiry, I have decided to live
-my research career like an open wound and am posting all of my
-scribblings in this repository. Licensing is a mixed bag, so it would
-be best if you want to actually use any of this stuff (lord mercy!) to
-drop me an email at c.cummins@ed.ac.uk.
+A self-contained, monolothic repository for (almost) everything I have done while at the University of Edinburgh. Living an #open life.
 
-Requirements:
- * modern host toolchain (clang >= 3.6, libc++)
- * ninja
- * cmake
+
+## Building the code
+
+### Requirements
+
+* Ubuntu Linux or macOS.
+* OpenCL.
+
+Additional requirements can be installed one-off using:
+
+```sh
+$ ./tools/bootstrap.sh
+```
+
+
+### Installation
+
+Test the universe using:
+
+```
+$ bazel test //...
+```
