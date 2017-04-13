@@ -30,7 +30,7 @@ bootstrap_ubuntu() {
 
 
 main() {
-    if [[ "$(uname)" != "Darwin" ]]; then
+    if [[ "$(uname)" == "Darwin" ]]; then
         bootstrap_macos
     else
         bootstrap_ubuntu
