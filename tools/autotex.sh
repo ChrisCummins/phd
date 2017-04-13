@@ -230,7 +230,9 @@ main() {
 
     cd $tmpdir
 
-    rsync -ah $input_dir/ $tmpdir/
+    # copy the sources into the working directory. When symlinks are
+    # encountered, the file they point to is copied.
+    rsync -a --copy-links $input_dir/ $tmpdir/
 
     setup_env
 
