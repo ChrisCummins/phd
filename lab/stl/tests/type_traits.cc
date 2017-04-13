@@ -44,8 +44,8 @@ TEST(std_type_traits, is_void) {
   static_assert(std::is_void<const volatile void>::value);
 
   // c++17 usage:
-  static_assert(std::is_void_v<void>);
-  static_assert(!std::is_void_v<int>);
+  // static_assert(std::is_void_v<void>);
+  // static_assert(!std::is_void_v<int>);
 }
 
 TEST(ustl_type_traits, is_void) {
@@ -71,8 +71,8 @@ TEST(std_type_traits, is_integral) {
   static_assert(std::is_integral<const unsigned long long>::value);  // NOLINT
 
   // c++17 usage:
-  static_assert(std::is_integral_v<int>);
-  static_assert(!std::is_integral_v<float>);
+  // static_assert(std::is_integral_v<int>);
+  // static_assert(!std::is_integral_v<float>);
 }
 
 TEST(ustl_type_traits, is_integral) {
@@ -102,8 +102,8 @@ TEST(std_type_traits, is_pointer) {
   static_assert(std::is_pointer<const float*>::value);
 
   // c++17 usage:
-  static_assert(std::is_pointer_v<int*>);
-  static_assert(!std::is_pointer_v<int>);
+  // static_assert(std::is_pointer_v<int*>);
+  // static_assert(!std::is_pointer_v<int>);
 }
 
 TEST(ustl_type_traits, is_pointer) {
@@ -126,19 +126,19 @@ TEST(ustl_type_traits, is_pointer) {
 // Type relationships //
 ////////////////////////
 
-TEST(std_type_traits, is_same) {
-  int x;
+// TEST(std_type_traits, is_same) {
+//   int x;
 
-  static_assert(std::is_same<int, int>::value);
-  static_assert(!std::is_same<int, float>::value);
-  static_assert(std::is_same<int, decltype(x)>::value);
-  // cv qualifiers count:
-  static_assert(!std::is_same<const int, decltype(x)>::value);
+//   static_assert(std::is_same<int, int>::value);
+//   static_assert(!std::is_same<int, float>::value);
+//   static_assert(std::is_same<int, decltype(x)>::value);
+//   // cv qualifiers count:
+//   static_assert(!std::is_same<const int, decltype(x)>::value);
 
-  // c++17 usage:
-  static_assert(std::is_same_v<int, int>);
-  static_assert(!std::is_same_v<int, float>);
-}
+//   // c++17 usage:
+//   static_assert(std::is_same_v<int, int>);
+//   static_assert(!std::is_same_v<int, float>);
+// }
 
 
 TEST(ustl_type_traits, is_same) {
@@ -281,19 +281,19 @@ TEST(ustl_type_traits, add_rvalue_reference) {
 //////////////
 
 
-TEST(std_type_traits, remove_pointer) {
-  static_assert(std::is_same_v<int, std::remove_pointer_t<int>>);
-  static_assert(std::is_same<int, std::remove_pointer<int*>::type>::value);
-  static_assert(std::is_same<int*, std::remove_pointer<int**>::type>::value);
-  static_assert(std::is_same<const int,
-                std::remove_pointer<const int*>::type>::value);
-  static_assert(std::is_same<int,
-                std::remove_pointer<int*const>::type>::value);
-  static_assert(std::is_same<int,
-                std::remove_pointer<int*const volatile>::type>::value);
-  static_assert(std::is_same<int&,
-                std::remove_pointer_t<int&>>::value);
-}
+// TEST(std_type_traits, remove_pointer) {
+//   static_assert(std::is_same_v<int, std::remove_pointer_t<int>>);
+//   static_assert(std::is_same<int, std::remove_pointer<int*>::type>::value);
+//   static_assert(std::is_same<int*, std::remove_pointer<int**>::type>::value);
+//   static_assert(std::is_same<const int,
+//                 std::remove_pointer<const int*>::type>::value);
+//   static_assert(std::is_same<int,
+//                 std::remove_pointer<int*const>::type>::value);
+//   static_assert(std::is_same<int,
+//                 std::remove_pointer<int*const volatile>::type>::value);
+//   static_assert(std::is_same<int&,
+//                 std::remove_pointer_t<int&>>::value);
+// }
 
 TEST(ustl_type_traits, remove_pointer) {
   static_assert(ustl::is_same_v<int, ustl::remove_pointer_t<int>>);
@@ -315,13 +315,13 @@ TEST(ustl_type_traits, remove_pointer) {
 ////////////
 
 
-TEST(std_type_traits, remove_extent) {
-  static_assert(std::is_same_v<int, std::remove_extent_t<int>>);
-  static_assert(std::is_same_v<int, std::remove_extent_t<int[]>>);
-  static_assert(std::is_same_v<int, std::remove_extent_t<int[10]>>);
-  static_assert(std::is_same_v<int[10][15],
-                std::remove_extent<int[5][10][15]>::type>);
-}
+// TEST(std_type_traits, remove_extent) {
+//   static_assert(std::is_same_v<int, std::remove_extent_t<int>>);
+//   static_assert(std::is_same_v<int, std::remove_extent_t<int[]>>);
+//   static_assert(std::is_same_v<int, std::remove_extent_t<int[10]>>);
+//   static_assert(std::is_same_v<int[10][15],
+//                 std::remove_extent<int[5][10][15]>::type>);
+// }
 
 TEST(ustl_type_traits, remove_extent) {
   static_assert(ustl::is_same_v<int, ustl::remove_extent_t<int>>);

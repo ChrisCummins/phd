@@ -1,18 +1,13 @@
 cc_test(
     name = 'main',
     srcs = [
-        'lm.cc',
-        'meta-math.cc',
-        'tests.hpp',
+        'main.cc',
+        'container.hpp',
     ],
     copts = [
-        '-Ilab/lm/include',
         '-Isrc/phd/include',
         '-Iexternal/gtest/include',
         '-Iexternal/benchmark/include',
     ],
-    deps = [
-        '//lab/stl:main',
-        '//src/phd:main',
-    ],
+    deps = ['//src/phd:main'],
 )
