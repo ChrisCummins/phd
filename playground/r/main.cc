@@ -544,7 +544,7 @@ int main() {
   auto start = std::clock(); double timer;
 
   Image img{width, height, pixel{255}};
-  Model model{"african_head.obj"};
+  Model model{"playground/r/african_head.obj"};
 
   img.solid(model, {0, 0, -1}, {255, 180, 140});
 
