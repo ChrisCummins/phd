@@ -1,21 +1,21 @@
-[submodule "lab/humanorrobot.uk"]
-	path = src/humanorrobot.uk
-	url = git@github.com:ChrisCummins/humanorrobot.uk.git
 [submodule "docs/2016-01-adapt"]
 	path = docs/2016-01-adapt
-	url = git@github.com:ChrisCummins/paper-autotuning-opencl-wgsize.git
+	url = https://github.com/ChrisCummins/paper-autotuning-opencl-wgsize.git
 [submodule "docs/2016-01-hlpgpu"]
 	path = docs/2016-01-hlpgpu
-	url = git@github.com:ChrisCummins/paper-towards-collaborative-performance-tuning.git
+	url = https://github.com/ChrisCummins/paper-towards-collaborative-performance-tuning.git
 [submodule "docs/2017-02-cgo"]
 	path = docs/2017-02-cgo
-	url = git@github.com:ChrisCummins/paper-synthesizing-benchmarks.git
-[submodule "src/labm8"]
-	path = src/labm8
-	url = git@github.com:ChrisCummins/labm8.git
+	url = https://github.com/ChrisCummins/paper-synthesizing-benchmarks.git
+[submodule "lab/humanorrobot.uk"]
+	path = src/humanorrobot.uk
+	url = https://github.com/ChrisCummins/humanorrobot.uk.git
 [submodule "src/cldrive"]
 	path = src/cldrive
-	url = git@github.com:ChrisCummins/cldrive.git
+	url = https://github.com/ChrisCummins/cldrive.git
 [submodule "src/clgen"]
 	path = src/clgen
-	url = git@github.com:ChrisCummins/clgen.git
+	url = https://github.com/ChrisCummins/clgen.git
+[submodule "src/labm8"]
+	path = src/labm8
+	url = https://github.com/ChrisCummins/labm8.git
