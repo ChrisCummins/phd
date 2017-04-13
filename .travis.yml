@@ -13,6 +13,14 @@ os:
   - linux
   - osx
 
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-5
+      - g++-5
+
 before_install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
@@ -27,6 +35,12 @@ before_install:
 
 script:
   - |
+    if [[ "${TRAVIS_OS_NAME}" != "osx" ]]; then
+      export CC=gcc-5
+      export CXX=g++-5
+    fi
+    $CC --version   # c compiler
+    $CXX --version  # c++ compiler
     bazel \
       test \
         --verbose_failures \
