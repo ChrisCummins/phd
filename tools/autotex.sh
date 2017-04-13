@@ -217,7 +217,7 @@ main() {
 
 
     # temporary directory
-    tmpdir="$(mktemp -d --suffix=.$input_document.autotex)"
+    tmpdir="$(mktemp -p $output_dir -d --suffix=.$input_document.autotex)"
     if [[ ! "$tmpdir" || ! -d "$tmpdir" ]]; then
         echo "autotex: failed to create temporary directory" >&2
         exit 2
