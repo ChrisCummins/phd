@@ -51,7 +51,10 @@ genrule(
 genrule(
     name = "2016-06-pldi",
     srcs = glob([
-        "2016-06-pldi/*.tex",
+        "2016-06-pldi/abstract.tex",
+        "2016-06-pldi/hugh-letter.pdf",
+        "2016-06-pldi/preamble.tex",
+        "2016-06-pldi/poster.pdf",
     ]),
     outs = ["2016-06-pldi.pdf"],
     cmd = "$(location //tools:autotex) docs/2016-06-pldi/abstract.tex $@",

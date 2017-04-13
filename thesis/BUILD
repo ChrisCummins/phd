@@ -6,6 +6,8 @@ genrule(
         "eushield-normal.sty",
         "infthesis.cls",
         "thesis-shield.pdf",
+        'eushield.sty',
+        'refs.bib',
     ]),
     outs = ["main.pdf"],
     cmd = "$(location //tools:autotex) thesis/thesis.tex $@",
