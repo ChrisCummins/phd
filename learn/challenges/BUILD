@@ -56,7 +56,7 @@ cc_test(
 cc_test(
     name =  "011-big-mandelbrot",
     srcs = ["011-big-mandelbrot.cc"],
-    copts = ["-Iextern/opencl/include"],
+    copts = ["-Ithird_party/opencl/include"],
     linkopts = ['$(opencl_ld)'],
     deps = ["//:opencl"],
 )

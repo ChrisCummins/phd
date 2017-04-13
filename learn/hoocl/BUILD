@@ -7,7 +7,7 @@ cc_library(
     ]),
     copts = [
         '-Ilearn/hoocl/include',
-        '-Iextern/opencl/include',
+        '-Ithird_party/opencl/include',
     ],
     deps = ['//:opencl'],
 )
@@ -17,7 +17,7 @@ cc_binary(
     srcs = ['001-dev-info.cc'],
     copts = [
         '-Ilearn/hoocl/include',
-        '-Iextern/opencl/include',
+        '-Ithird_party/opencl/include',
     ],
     linkopts = ['$(opencl_ld)'],
     deps = [':shared'],
@@ -28,7 +28,7 @@ cc_binary(
     srcs = ['002-vadd.c'],
     copts = [
         '-Ilearn/hoocl/include',
-        '-Iextern/opencl/include',
+        '-Ithird_party/opencl/include',
     ],
     linkopts = ['$(opencl_ld)'],
     deps = [':shared'],
@@ -39,7 +39,7 @@ cc_binary(
     srcs = ['003-vadd_cpp.cc'],
     copts = [
         '-Ilearn/hoocl/include',
-        '-Iextern/opencl/include',
+        '-Ithird_party/opencl/include',
     ],
     linkopts = ['$(opencl_ld)'],
     deps = [':shared'],
