@@ -9,34 +9,25 @@
 set -eu
 
 
-bootstrap_macos() {
-    set -x
-
-    # Note OpenMP may not work if gcc built with multilib support.
-    # brew list | grep '^gcc$' &>/dev/null || brew install gcc --without-multilib
-
-    brew cask list | grep '^java$' &>/dev/null || brew cask install java
-    brew list | grep '^bazel$' &>/dev/null || brew install bazel
-}
-
-
-bootstrap_ubuntu() {
-    set -x
-
-    # add bazel APT repositories
-    echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
-    curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
-
-    sudo apt-get update
-    dpkg -s 'bazel' &>/dev/null || sudo apt-get install -y bazel
-}
-
-
 main() {
+    # install bazel
     if [[ "$(uname)" == "Darwin" ]]; then
-        bootstrap_macos
+        brew cask list | grep '^java$' &>/dev/null || brew cask install java
+        brew list | grep '^bazel$' &>/dev/null || brew install bazel
     else
-        bootstrap_ubuntu
+        # bazel APT repositories
+        echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+        curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
+
+        sudo apt-get update
+        dpkg -s 'bazel' &>/dev/null || sudo apt-get install -y bazel
+    fi
+
+    # install latex
+    if [[ "$(uname)" == "Darwin" ]]; then
+        brew cask install texlive-full
+    else
+        sudo apt-get install -y texlive-full biber
     fi
 }
 main $@
