@@ -19,9 +19,9 @@ before_install:
   - wget http://portablecl.org/downloads/pocl-0.12.tar.gz
   - tar xzf pocl-0.12.tar.gz
   - cd pocl-0.12/ && ./configure && make && sudo make install && cd ..
+  - sudo rm -r pocl-0.12
 
 install:
-  - pwd
   - make install
 
 script:
