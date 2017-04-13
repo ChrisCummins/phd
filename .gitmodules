@@ -1,12 +1,6 @@
-[submodule "extern/googletest"]
-	path = extern/googletest
-	url = https://github.com/google/googletest.git
 [submodule "extern/skelcl"]
 	path = extern/skelcl
 	url = git@bitbucket.org:skelcl/skelcl.git
-[submodule "extern/benchmark"]
-	path = extern/benchmark
-	url = https://github.com/google/benchmark.git
 [submodule "extern/libclc"]
 	path = extern/libclc
 	url = https://github.com/llvm-mirror/libclc.git
