@@ -171,18 +171,7 @@ docs-modules:
 # generate documentation
 .PHONY: docs
 docs: docs-modules
-	rm -rf docs/_build/html
-	git clone git@github.com:ChrisCummins/clgen.git docs/_build/html
-	cd docs/_build/html && git checkout gh-pages
-	cd docs/_build/html && git reset --hard origin/gh-pages
 	$(MAKE) -C docs html
-
-# publish documentation
-.PHONY: docs-publish
-docs-publish: docs
-	cd docs/_build/html && git add .
-	cd docs/_build/html && git commit -m "Updated sphinx docs" || true
-	cd docs/_build/html && git push -u origin gh-pages
 
 # help text
 .PHONY: help

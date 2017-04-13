@@ -21,191 +21,161 @@
 # You should have received a copy of the GNU General Public License
 # along with labm8.  If not, see <http://www.gnu.org/licenses/>.
 #
-set -eu
+set -e
 
-# Print program usage
+# List of files in which the version number should be updated
+files_to_update=(
+    "configure"
+    "docs/conf.py"
+    "docs/index.rst"
+    "docs/installation.md"
+    "install-cpu.sh"
+    "install-cuda.sh"
+    "install-deps.sh"
+    "install-opencl.sh"
+    "README.md"
+    "setup.py"
+)
+
+# Name of the package git repository
+repo=clgen
+
+# Branch on which releases must be made
+release_branch="master"
+
+# Version number suffix for development versions
+dev_suffix=".dev0"
+
+
+version_is_pep440_compliant() {
+    local version="$1"
+
+    pip install packaging &>/dev/null
+    echo "$version" | python -c 'import sys; import packaging.version; packaging.version.Version(sys.stdin.read().strip())' &>/dev/null
+}
+
+
+git_tree_dirty() {
+    [[ $(git diff --shortstat 2> /dev/null | tail -n1) != "" ]] || return 1
+}
+
+
+branch_is() {
+    local expected_branch="$1"
+
+    branch_name=$(git symbolic-ref -q HEAD)
+    branch_name=${branch_name##refs/heads/}
+    branch_name=${branch_name:-HEAD}
+
+    [[ "$branch_name" == "$expected_branch" ]] || return 1
+}
+
+
 usage() {
     echo "Usage: $0 <version>"
     echo
-    echo "Current version is: $(get_current_version)."
+    echo "Current version is: $1."
 }
 
-# Lookup the root directory for the project. If unable to locate root,
-# exit script.
-#
-#     @return The absolute path to the project root directory
-get_project_root() {
-    while [[ "$(pwd)" != "/" ]]; do
-        if test -f setup.py; then
-            pwd
-            return
-        fi
-        cd ..
-    done
-
-    echo "fatal: Unable to locate project base directory." >&2
-    exit 3
-}
-
-# Given a version string in the form <major>.<minor>.<micro>, return
-# the major component.
-#
-#     @return Major component as an integer, e.g. '5'
-get_major() {
-    echo "$1" | sed -r 's/^([0-9]+)\.[0-9]+\.[0-9]+$/\1/'
-}
-
-# Given a version string in the form <major>.<minor>.<micro>, return
-# the minor component.
-#
-#     @return Minor component as an integer, e.g. '5'
-get_minor() {
-    echo "$1" | sed -r 's/^[0-9]+\.([0-9]+)\.[0-9]+$/\1/'
-}
-
-# Given a version string in the form <major>.<minor>.<micro>, return
-# the micro component.
-#
-#     @return Micro component as an integer, e.g. '5'
-get_micro() {
-    echo "$1" | sed -r 's/^[0-9]+\.[0-9]+\.([0-9]+)$/\1/'
-}
-
-# Find and return the current version string in the form
-# <major>.<minor>.<micro>
-#
-#     @return Current version string, e.g. '0.1.4'
-get_current_version() {
-    cd "$(get_project_root)"
-
-    python ./setup.py --version
-}
-
-# Replace the project version with a new one.
-#
-#     @param $1 The new version string
-set_new_version() {
-    local new=$1
-
-    local current="$(get_current_version)"
-
-    cd "$(get_project_root)"
-
-    echo "Updating version string... 'README.md'"
-    sed "s/$current/$new/g" -i README.md
-    git add README.md
-
-    echo "Updating version string... 'setup.py'"
-    sed "s/$current/$new/g" -i setup.py
-    git add setup.py
-
-    echo "Updating docs..."
-    sed "s/$current/$new/g" -i docs/index.rst
-    sed "s/$current/$new/g" -i docs/installation.md
-    sed "s/$current/$new/g" -i docs/conf.py
-    git add docs/index.rst docs/installation.md docs/conf.py
-
-    echo "Updating configure script..."
-    sed "s/$current/$new/g" -i configure
-    git add configure
-
-    echo "Updating install scripts..."
-    sed "s/$current/$new/g" -i install-deps.sh
-    sed "s/$current/$new/g" -i install-cpu.sh
-    sed "s/$current/$new/g" -i install-opencl.sh
-    sed "s/$current/$new/g" -i install-cuda.sh
-    git add install-*.sh
-}
-
-# Make the version bump.
-#
-#     @param $1 The new version string
-make_version_bump() {
-    local new_version=$1
-
-    cd "$(get_project_root)"
-
-    echo "Publishing documentation..."
-    make install
-    make docs-publish
-
-    echo "Creating version bump commit... $new_version"
-    git commit -m "Release $new_version" >/dev/null
-
-    echo "Creating release tag... '$new_version'"
-    git tag "$new_version"
-
-    git push origin master
-    git push origin "$new_version"
-}
-
-# Perform the new release.
-#
-#     @param $1 New version string
-do_mkrelease() {
-    local new_version=$1
-
-    echo -n "Getting current version... "
-    local current_version=$(get_current_version)
-    echo "'$current_version'"
-
-    set_new_version "$new_version"
-    make_version_bump "$new_version"
-}
-
-# Given a version string in the form <major>.<minor>.<micro>, verify
-# that it is correct.
-#
-#     @return 0 if version is valid, else 1
-verify_version() {
-    local version="$1"
-
-    local major="$(get_major "$version")"
-    local minor="$(get_minor "$version")"
-    local micro="$(get_micro "$version")"
-
-    test -n "$major" || return 1;
-    test -n "$minor" || return 1;
-    test -n "$micro" || return 1;
-
-    return 0;
-}
 
 main() {
-    set +u
-    # Set debugging output if DEBUG=1
-    test -n "$DEBUG" && {
-        set -x
-    }
+    test -n "$DEBUG" && set -x  # Set debugging output if DEBUG=1
+    local new_version="$1"
 
-    # Check for help argument and print usage
+    set -eu
+
+    ./configure -r >/dev/null # regenerate config files
+
+    local current_version="$(python ./setup.py --version)"
+
+    # validate args
     for arg in $@; do
         if [ "$arg" = "--help" ] || [ "$arg" = "-h" ]; then
-            usage
+            usage "$current_version"
             exit 0
         fi
     done
 
-    # Check for new version argument
-    if test -z "$1"; then
-        usage
+    if [[ $# != 1 ]]; then
+        usage "$current_version"
         exit 1
     fi
-    set -u
 
-    if [ $(git diff --cached --exit-code HEAD^ > /dev/null \
-          && (git ls-files --other --exclude-standard --directory \
-              | grep -c -v '/$')) ]; then
+    # check that it is the root of a python package
+    if [ ! -f setup.py ] ; then
+        echo "File setup.py not found" >&2
+        exit 1
+    fi
+
+    if ! branch_is "$release_branch"; then
+        echo "On the wrong branch. Must be on '$release_branch'"
+        exit 1
+    fi
+
+    if git_tree_dirty; then
         echo "Unstaged changes. Please commit them before continuing"
         exit 1
     fi
 
     # Sanity-check on supplied version string
-    if ! verify_version "$1"; then
-        echo "Invalid version string!" >&2
+    if ! version_is_pep440_compliant "$new_version"; then
+        echo "Version string '$1' is not compliant with PEP 440" >&2
+        echo >&2
+        echo "See: <https://www.python.org/dev/peps/pep-0440/>" >&2
         exit 1
     fi
 
-    do_mkrelease "$1"
+    # escape current for regex
+    local current_version_re="$(echo $current_version | sed -e 's/[]\/$*.^|[]/\\&/g')"
+
+    # set new version
+    for file in ${files_to_update[@]}; do
+        echo "sed -r \"s/$current_version_re/$new_version/g\" -i \"$file\""
+        sed -r "s/$current_version_re/$new_version/g" -i "$file"
+        echo "git add \"$file\""
+        git add "$file"
+    done
+
+    # build sphinx docs
+    rm -rf docs/_build/html
+    git clone git@github.com:ChrisCummins/$repo.git docs/_build/html
+    (cd docs/_build/html && git checkout gh-pages)
+    (cd docs/_build/html && git reset --hard origin/gh-pages)
+    make docs  # build new docs
+    (cd docs/_build/html && git add .)
+
+    echo "Please review the changes staged to commit:"
+    git status
+    git diff --cached
+
+    while true; do
+        read -p "Commit to release $new_version? [yn] " yn
+        case $yn in
+            [Yy]* ) break;;
+            [Nn]* ) exit 1;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+
+    set -x
+    git commit -m "Release $new_version"
+    git tag "$new_version"
+    git push origin "$new_version"
+
+    # push new docs
+    (cd docs/_build/html && git commit -m "Release $new_version" || true)
+    (cd docs/_build/html && git push -u origin gh-pages)
+
+    # set dev version
+    local dev_version="$new_version$dev_suffix"
+    for file in ${files_to_update[@]}; do
+        echo "sed -r \"s/$new_version/$dev_version/g\" -i $file"
+        sed -r "s/$new_version/$dev_version/g" -i "$file"
+        echo "git add \"$file\""
+        git add "$file"
+    done
+
+    git commit -m "Development version bump"
+    git push origin master
 }
 main $@
