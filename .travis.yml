@@ -15,10 +15,15 @@ os:
 
 before_install:
   - |
-    echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
-    curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
-    sudo apt-get update
-    dpkg -s 'bazel' &>/dev/null || sudo apt-get install -y bazel
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+      brew update
+      brew install bazel
+    else
+      echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+      curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
+      sudo apt-get update
+      dpkg -s 'bazel' &>/dev/null || sudo apt-get install -y bazel
+    fi
 
 script:
   - |
