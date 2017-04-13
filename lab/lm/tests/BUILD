@@ -12,7 +12,7 @@ cc_test(
         '-Iexternal/benchmark/include',
     ],
     deps = [
-        '//lab/stl:main',
+        '//lab/lm:main',
         '//src/phd:main',
     ],
 )
