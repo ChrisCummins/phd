@@ -19,7 +19,10 @@ cc_binary(
         '-Ilearn/hoocl/include',
         '-Ithird_party/opencl/include',
     ],
-    linkopts = ['$(opencl_ld)'],
+    linkopts = select({
+        '//:darwin': ['-framework OpenCL'],
+        '//conditions:default': ['-lOpenCL'],
+    }),
     deps = [':shared'],
 )
 
@@ -30,7 +33,10 @@ cc_binary(
         '-Ilearn/hoocl/include',
         '-Ithird_party/opencl/include',
     ],
-    linkopts = ['$(opencl_ld)'],
+    linkopts = select({
+        '//:darwin': ['-framework OpenCL'],
+        '//conditions:default': ['-lOpenCL'],
+    }),
     deps = [':shared'],
 )
 
@@ -41,6 +47,9 @@ cc_binary(
         '-Ilearn/hoocl/include',
         '-Ithird_party/opencl/include',
     ],
-    linkopts = ['$(opencl_ld)'],
+    linkopts = select({
+        '//:darwin': ['-framework OpenCL'],
+        '//conditions:default': ['-lOpenCL'],
+    }),
     deps = [':shared'],
 )
