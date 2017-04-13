@@ -122,7 +122,7 @@ exec_hooks() {
 
     if [[ -n "$hooks" ]]; then
         for hook in $hooks; do
-            print_task "HOOK" "$PWD/$hook" "$TaskMisc"
+            print_task "HOOK" "$hook" "$TaskMisc"
             silent_unless_fail $LOGFILE $hook
         done
     fi
@@ -136,7 +136,7 @@ run_pdflatex() {
     local document=$1
     local format=$2
 
-    print_task "LATEX" "$PWD/$document.pdf" "$format"
+    print_task "LATEX" "$document.pdf" "$format"
     silent_unless_fail $LOGFILE $PDFLATEX $PDFLATEX_ARGS $document.tex
 }
 
@@ -186,11 +186,11 @@ run_citation_backend() {
 
     case $backend in
         "biber")
-            print_task "BIBER" "$PWD/$document" "$format"
+            print_task "BIBER" "$document" "$format"
             silent_unless_fail $LOGFILE $BIBER $document
             ;;
         "bibtex")
-            print_task "BIBTEX" "$PWD/$document" "$format"
+            print_task "BIBTEX" "$document" "$format"
             silent_unless_fail $LOGFILE $BIBTEX $document
             ;;
         *)
@@ -215,9 +215,23 @@ main() {
     local input_document="$(basename ${input_file%.tex})"
     local output_document="$(basename ${output_file%.pdf})"
 
-    rsync -ah $input_dir/ $output_dir/
 
-    cd $output_dir
+    # temporary directory
+    tmpdir="$(mktemp -d --suffix=.$input_document.autotex)"
+    if [[ ! "$tmpdir" || ! -d "$tmpdir" ]]; then
+        echo "autotex: failed to create temporary directory" >&2
+        exit 2
+    fi
+
+    rm_tmpdir() {
+        rm -rf "$tmpdir"
+    }
+    trap rm_tmpdir EXIT
+
+    cd $tmpdir
+
+    rsync -ah $input_dir/ $tmpdir/
+
     setup_env
 
     exec_hooks ".pre"
@@ -233,8 +247,9 @@ main() {
     run_pdflatex $input_document "$TTYgreen"
     exec_hooks ".post"
 
-    if [[ "$input_document.pdf" != "$output_document.pdf" ]]; then
-        mv $input_document.pdf $output_document.pdf
-    fi
+    # copy from temporary directory to output
+    cd - &>/dev/null
+    mkdir -p "$output_dir"
+    mv "$tmpdir/$input_document.pdf" "$output_file"
 }
 main $@

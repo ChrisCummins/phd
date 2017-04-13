@@ -3,6 +3,9 @@
 \usepackage{times}
 \usepackage{psfig}
 
+\usepackage{etex}
+\usepackage[utf8]{inputenc}
+
 \usepackage[left=1.00in,top=1.00in,bottom=1.00in,right=1.00in]{geometry}
 \renewcommand{\baselinestretch}{1.00}
 \pagestyle{empty}
@@ -26,14 +29,7 @@
 % Reduce the font size of the bibliography:
 \renewcommand{\bibfont}{\normalfont\footnotesize}
 
-\newcommand{\BibResourceGlobal}{../../../library.bib}
-\newcommand{\BibResourceLocal}{refs.bib}
-
-\IfFileExists{\BibResourceGlobal}
-  {\newcommand{\BibResource}{\BibResourceGlobal}}
-  {\newcommand{\BibResource}{\BibResourceLocal}}
-
-\addbibresource{\BibResource}
+\addbibresource{refs.bib}
 
 \usepackage{adjustbox}
 \usepackage{graphicx}
