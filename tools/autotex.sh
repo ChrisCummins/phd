@@ -18,15 +18,13 @@ BIBER=biber
 BIBTEX=bibtex
 PDFLATEX_ARGS="-recorder -output-format pdf -progname pdflatex -file-line-error -interaction=nonstopmode --shell-escape"
 
-# GNU coreutils:
+# coreutils:
 if [ "$(uname)" == "Darwin" ]; then
-    MAKETEMP=/usr/local/opt/coreutils/libexec/gnubin/mktemp
+    MKTEMP=/usr/local/opt/coreutils/libexec/gnubin/mktemp
     READLINK=/usr/local/opt/coreutils/libexec/gnubin/readlink
-    STAT=/usr/local/opt/coreutils/libexec/gnubin/stat
 else
-    MAKETEMP=mktemp
+    MKTEMP=mktemp
     READLINK=readlink
-    STAT=stat
 fi
 
 # Included tools:
@@ -185,7 +183,7 @@ main() {
 
 
     # temporary directory
-    tmpdir="$(mktemp -p $output_dir -d --suffix=.$input_document.autotex)"
+    tmpdir="$($MKTEMP -p $output_dir -d --suffix=.$input_document.autotex)"
     if [[ ! "$tmpdir" || ! -d "$tmpdir" ]]; then
         echo "autotex: failed to create temporary directory" >&2
         exit 2

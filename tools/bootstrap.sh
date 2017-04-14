@@ -19,7 +19,7 @@ main() {
     echo "# $USER@$(hostname) $(date)"
     echo
 
-    # On macOS: Homebrew
+    # On macOS: Homebrew & coreutils
     if [[ "$(uname)" == "Darwin" ]]; then
         if which brew &>/dev/null ; then
             echo '# homebrew: installed'
@@ -27,6 +27,14 @@ main() {
             echo '# homebrew:'
             echo '/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'
             echo 'brew update'
+            echo
+        fi
+
+        if brew list | grep '^coreutils$' &>/dev/null ; then
+            echo '# coreutils: installed'
+        else
+            echo '# coreutils:'
+            echo 'brew install coreutils'
             echo
         fi
     fi
