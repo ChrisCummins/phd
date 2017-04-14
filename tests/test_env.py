@@ -19,6 +19,8 @@ import pytest
 
 import cldrive
 
+from lib import *
+
 
 def test_make_env_not_found():
     with pytest.raises(LookupError):
@@ -26,11 +28,13 @@ def test_make_env_not_found():
                          device="not a real dev")
 
 
+@needs_cpu
 def test_make_env_cpu():
     env = cldrive.make_env(devtype="cpu")
     # TODO
 
 
+@needs_gpu
 def test_make_env_gpu():
     env = cldrive.make_env(devtype="gpu")
     # TODO

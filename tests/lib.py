@@ -26,7 +26,17 @@ from numpy import testing as nptest
 
 import cldrive
 
+import pytest
+
 ENV = cldrive.make_env()
+
+
+# test decorators
+needs_cpu = pytest.mark.skipif(
+    not cldrive.has_cpu(), reason="no OpenCL CPU device available")
+
+needs_gpu = pytest.mark.skipif(
+    not cldrive.has_gpu(), reason="no OpenCL GPU device available")
 
 
 def data_path(path: str) -> Path:

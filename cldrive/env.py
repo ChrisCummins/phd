@@ -285,3 +285,33 @@ def make_env(platform: str=None, device: str=None,
     """
     return _lookup_env(return_cl=False, platform=platform, device=device,
                        devtype=devtype)
+
+
+def has_cpu() -> bool:
+    """
+    Determine if there is a CPU OpenCL device available.
+
+    Returns
+    -------
+    bool
+        True if device available, else False.
+    """
+    try:
+        make_env(devtype="cpu")
+    except LookupError:
+        return False
+
+
+def has_gpu() -> bool:
+    """
+    Determine if there is a CPU OpenCL device available.
+
+    Returns
+    -------
+    bool
+        True if device available, else False.
+    """
+    try:
+        make_env(devtype="cpu")
+    except LookupError:
+        return False
