@@ -32,7 +32,6 @@ files_to_update=(
     "install-cpu.sh"
     "install-cuda.sh"
     "install-deps.sh"
-    "install-opencl.sh"
     "README.md"
     "setup.py"
 )
