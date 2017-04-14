@@ -11,7 +11,7 @@ $ cd clgen-dev
 Install the build requirements using:
 
 ```
-$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.18.dev0/install-deps.sh | bash
+$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.19/install-deps.sh | bash
 ```
 
 Configure and compile CLgen using:

@@ -21,7 +21,7 @@ CLgen requirements automatically:
 
 ::
 
-    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.18.dev0/install-deps.sh | bash
+    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.19/install-deps.sh | bash
 
 Note that on Ubuntu, sudo privileges are required to install these requirements
 - you may be prompted for your password.
@@ -77,7 +77,7 @@ Install the latest release of CLgen using one of the two configurations:
 
 ::
 
-    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.18.dev0/install-cpu.sh | bash
+    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.19/install-cpu.sh | bash
 
 **2. CUDA enabled:** *fast performance.*
 Requires NVIDIA GPU with
@@ -85,7 +85,7 @@ Requires NVIDIA GPU with
 
 ::
 
-    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.18.dev0/install-cuda.sh | bash
+    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.19/install-cuda.sh | bash
 
 When you are done using CLgen, deactivate the virtualenv environment:
 
@@ -115,14 +115,14 @@ configurations:
 
 ::
 
-    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.18.dev0/install-cpu.sh | bash
+    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.19/install-cpu.sh | bash
 
 **2. OpenCL enabled:** *slow performance, all features enabled.*
 Requires `OpenCL <https://www.khronos.org/opencl/>`__.
 
 ::
 
-    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.18.dev0/install-opencl.sh | bash
+    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.19/install-opencl.sh | bash
 
 **3. CUDA enabled:** *fast performance, all features enabled.*
 Requires NVIDIA GPU with
@@ -130,7 +130,7 @@ Requires NVIDIA GPU with
 
 ::
 
-    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.18.dev0/install-cuda.sh | bash
+    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.19/install-cuda.sh | bash
 
 
 Contents
@@ -151,7 +151,7 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. |Documentation Status| image:: https://img.shields.io/badge/docs-0.2.18.dev0-brightgreen.svg?style=flat
+.. |Documentation Status| image:: https://img.shields.io/badge/docs-0.2.19-brightgreen.svg?style=flat
    :target: http://chriscummins.cc/clgen/
 
 .. |Build Status| image:: https://img.shields.io/travis/ChrisCummins/clgen/master.svg?style=flat
@@ -160,7 +160,7 @@ Indices and tables
 .. |Coverage Status| image:: https://img.shields.io/coveralls/ChrisCummins/clgen/master.svg?style=flat
    :target: https://coveralls.io/github/ChrisCummins/clgen?branch=master
 
-.. |Release Version| image:: https://img.shields.io/badge/release-0.2.18.dev0-blue.svg?style=flat
+.. |Release Version| image:: https://img.shields.io/badge/release-0.2.19-blue.svg?style=flat
    :target: https://github.com/ChrisCummins/clgen/releases
 
 .. |License Badge| image:: https://img.shields.io/badge/license-GNU%20GPL%20v3-blue.svg?style=flat
