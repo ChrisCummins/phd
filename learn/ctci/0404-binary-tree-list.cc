@@ -5,6 +5,7 @@
  */
 #include "./ctci.h"
 
+#include <functional>
 #include <vector>
 #include <list>
 

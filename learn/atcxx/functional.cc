@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <functional>
 #include <vector>
 #include <iostream>
 #include <type_traits>
