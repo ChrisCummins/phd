@@ -64,15 +64,4 @@ TEST(anagrams, is_anagram) {
   ASSERT_FALSE(is_anagram("abc", "caba"));
 }
 
-TEST(anagrams, basic) {
-  std::vector<std::string> a{"abc", "ed", "f", "de", "cab", "f"};
-  sort_anagrams(a);
-
-  ASSERT_TRUE(is_anagram(a[0], a[1]));
-  ASSERT_FALSE(is_anagram(a[1], a[2]));
-  ASSERT_TRUE(is_anagram(a[2], a[3]));
-  ASSERT_FALSE(is_anagram(a[3], a[4]));
-  ASSERT_TRUE(is_anagram(a[4], a[5]));
-}
-
 CTCI_MAIN();
