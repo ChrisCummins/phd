@@ -6,7 +6,7 @@
 #
 #     ./boostrap.sh
 #
-set -eux
+set -eu
 
 
 main() {
@@ -24,15 +24,8 @@ main() {
     fi
 
     # Compiler: Clang
-    if [[ "$(uname)" != "Dawrin" ]]; then
+    if [[ "$(uname)" != "Darwin" ]]; then
         sudo apt-get install -y clang
-    fi
-
-    # LaTeX
-    if [[ "$(uname)" == "Darwin" ]]; then
-        brew cask install texlive-full
-    else
-        sudo apt-get install -y texlive-full biber
     fi
 
     # autoenv
@@ -43,5 +36,12 @@ main() {
     fi
     pip freeze 2>/dev/null | grep "^autoenv" &>/dev/null \
         || $use_sudo pip install "autoenv" 2>/dev/null
+
+    # LaTeX
+    if [[ "$(uname)" == "Darwin" ]]; then
+        brew cask list | grep mactex &>/dev/null || brew cask install mactex
+    else
+        sudo apt-get install -y texlive-full biber
+    fi
 }
 main $@
