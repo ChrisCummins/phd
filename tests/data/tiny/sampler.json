@@ -14,7 +14,6 @@
     "min_samples": 100,  # stop sampling after min_kernels samples (ignored if <= 0)
     "min_kernels": -1,  # stop sampling after min_kernels good samples (ignored if <= 0)
     "static_checker": true,  # use static checker {true,false}
-    "dynamic_checker": false,  # use dynamic checker {true,false}
     "gpuverify": false  # use GPUVerify {true,false}
   }
 }

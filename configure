@@ -79,7 +79,6 @@ def main():
                         help="re-run configuraiton using previous settings")
     parser.add_argument("-b", "--batch", action="store_true",
                         help="defaults all options to 'no'. Override with:")
-    parser.add_argument("--with-opencl", action="store_true")
     parser.add_argument("--with-cuda", action="store_true")
     parser.add_argument("--with-dev-tools", action="store_true")
     args = parser.parse_args()
@@ -94,16 +93,12 @@ def main():
             sys.exit(1)
     else:
         cfg = {
-            "opencl": args.with_opencl,
             "cuda": args.with_cuda,
             "version": "0.2.18.dev0",
         }
 
     # get input from user
     if not args.batch:
-        if not cfg["opencl"]:
-            cfg["opencl"] = yes_no("Enable OpenCL support?")
-
         if not cfg["cuda"]:
             cfg["cuda"] = yes_no("Enable CUDA support?")
 
@@ -113,20 +108,16 @@ def main():
 
     # generate make config file
     with open(".config.make", "w") as outfile:
-        print("USE_OPENCL := " + to_make(cfg["opencl"]), file=outfile)
         print("USE_CUDA := " + to_make(cfg["cuda"]), file=outfile)
         print("CLGEN_VERSION := " + cfg["version"], file=outfile)
 
     # generate python config file
     with open(os.path.join("clgen", "config.py"), "w") as outfile:
-        print("USE_OPENCL = " + to_python(cfg["opencl"]), file=outfile)
         print("USE_CUDA = " + to_python(cfg["cuda"]), file=outfile)
         print("VERSION = '{}'".format(cfg["version"]), file=outfile)
 
     # generate python requirements file
     requirements_files = ['requirements.txt']
-    if cfg["opencl"]:
-        requirements_files += ['requirements.opencl.txt']
     if cfg["cuda"]:
         requirements_files += ['requirements.cuda.txt']
 
@@ -143,7 +134,6 @@ def main():
 
     print("CLgen {version} configured:".format(version=cfg["version"]))
     print()
-    print("    OpenCL support:  " + to_text(cfg["opencl"]))
     print("    CUDA support:    " + to_text(cfg["cuda"]))
     print()
     print("You may now build CLgen by running 'make'.")

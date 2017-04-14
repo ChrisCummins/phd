@@ -37,7 +37,6 @@ PIP ?= pip3
 
 # modules
 include make/remote.make
-include make/cuda.make
 include make/cmake.make
 include make/gpuverify.make
 include make/ninja.make
@@ -130,7 +129,7 @@ distclean: $(distclean_targets)
 
 # install CLgen
 .PHONY: install
-install: cuda
+install:
 	./configure -r >/dev/null
 	$(PIP) install --upgrade pip
 	$(PIP) install --only-binary=numpy '$(shell grep numpy requirements.txt)'

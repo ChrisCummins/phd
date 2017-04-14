@@ -40,8 +40,6 @@ def main():
                         help='treat input as file')
     parser.add_argument('-i', '--inplace', action='store_true',
                         help='inplace file rewrite')
-    parser.add_argument('-D', '--dynamic-checker', action='store_true',
-                        help='run dynamic checker on kernels')
     parser.add_argument('-G', '--gpuverify', action='store_true',
                         help='run GPUVerify on kernels')
     parser.add_argument('--remove-bad-preprocessed', action='store_true',
@@ -53,7 +51,6 @@ but keep the entries in the table""".strip())
     args = parser.parse_args()
 
     preprocess_opts = {
-        "use_dynamic_checker": args.dynamic_checker,
         "use_gpuverify": args.gpuverify,
     }
 
