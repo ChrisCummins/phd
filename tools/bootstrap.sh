@@ -39,6 +39,15 @@ main() {
         fi
     fi
 
+    # git hook
+    if [[ -f ".git/hooks/pre-push" ]]; then
+        echo '# git hook: installed'
+    else
+        echo '# git hook:'
+        echo 'cp -v tools/pre-push .git/hooks/pre-push'
+        echo
+    fi
+
     # Build system: Bazel
     if [[ "$(uname)" == "Darwin" ]]; then
         if brew list | grep '^bazel$' &>/dev/null ; then
