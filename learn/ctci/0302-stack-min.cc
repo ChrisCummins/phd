@@ -69,8 +69,8 @@ class MinStack {
   }
 
  private:
-  std::forward_list<const T> _elem;
-  std::forward_list<const T*> _min;
+  std::forward_list<T> _elem;
+  std::forward_list<T*> _min;
 };
 
 
@@ -181,7 +181,7 @@ TEST(MinStack_alt, tests) {
 ////////////////
 
 static const size_t BM_length_min = 8;
-static const size_t BM_length_max = 10 << 10;
+static const size_t BM_length_max = 5 << 10;
 
 void BM_MinStack(benchmark::State& state) {
   const auto len = state.range(0);
