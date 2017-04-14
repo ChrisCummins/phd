@@ -9,16 +9,15 @@ A self-contained, monolothic repository for (almost) everything I have done whil
 
 * Ubuntu Linux or macOS.
 * OpenCL.
-* Python 3.6.
-
-Additional requirements can be installed one-off using:
-
-```sh
-$ ./tools/bootstrap.sh
-```
 
 
 ### Installation
+
+The script `./tools/bootstrap.sh` will probe your system for the required packages, and if any are missing, print the commands necessary to install them. Automatically install them using:
+
+```sh
+$ ./tools/bootstrap.sh | bash
+```
 
 Test the universe using:
 

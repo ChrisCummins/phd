@@ -10,38 +10,111 @@ set -eu
 
 
 main() {
+    # header
+    if [[ "$(uname)" == "Darwin" ]]; then
+        echo "# $0 on macOS"
+    else
+        echo "# $0 on Ubuntu Linux"
+    fi
+    echo "# $USER@$(hostname) $(date)"
+    echo
+
+    # On macOS: Homebrew
+    if [[ "$(uname)" == "Darwin" ]]; then
+        if which brew &>/dev/null ; then
+            echo '# homebrew: installed'
+        else
+            echo '# homebrew:'
+            echo '/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'
+            echo 'brew update'
+            echo
+        fi
+    fi
+
     # Build system: Bazel
     if [[ "$(uname)" == "Darwin" ]]; then
-        brew cask list | grep '^java$' &>/dev/null || brew cask install java
-        brew list | grep '^bazel$' &>/dev/null || brew install bazel
+        if brew list | grep '^bazel$' &>/dev/null ; then
+            echo '# bazel: installed'
+        else
+            echo '# bazel:'
+            echo "brew cask list | grep '^java$' &>/dev/null || brew cask install java"
+            echo 'brew install bazel'
+            echo
+        fi
     else
-        # bazel APT repositories
-        echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
-        curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
-
-        sudo apt-get update
-        dpkg -s 'bazel' &>/dev/null || sudo apt-get install -y bazel
+        if dpkg -s bazel &>/dev/null ; then
+            echo '# bazel: installed'
+        else
+            echo '# bazel:'
+            echo '"deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list'
+            echo 'curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -'
+            echo 'sudo apt-get update'
+            echo 'sudo apt-get install -y bazel'
+        fi
     fi
 
     # Compiler: Clang
-    if [[ "$(uname)" != "Darwin" ]]; then
-        sudo apt-get install -y clang
+    if [[ "$(uname)" == "Darwin" ]]; then
+        echo '# clang: installed (system)'
+    else
+        if dpkg -s clang ; then
+            echo '# clang: installed'
+        else
+            echo '# clang:'
+            echo 'sudo apt-get install -y clang'
+            echo
+        fi
+    fi
+
+    # Python 3.6
+    if [[ "$(uname)" == "Darwin" ]]; then
+        if brew list | grep '^python$' &>/dev/null ; then
+            echo '# python>=3.6: installed'
+        else
+            echo '# python>=3.6:'
+            echo 'brew install python'
+            echo
+        fi
+    else
+        if which dpkg -s python3.6 &>/dev/null ; then
+            echo '# python3.6: installed'
+        else
+            echo '# python3.6:'
+            echo 'sudo add-apt-repository ppa:jonathonf/python-3.6'
+            echo 'sudo apt-get update'
+            echo 'sudo apt-get install -y python3.6 python3.6-venv python3.6-dev'
+        fi
     fi
 
     # autoenv
-    #   on linux, we need sudo to pip install.
-    local use_sudo=""
-    if [[ "$(uname)" != "Darwin" ]]; then
-        use_sudo="sudo -H"
+    if pip freeze 2>/dev/null | grep '^autoenv' &>/dev/null ; then
+        echo '# autoenv: installed'
+    else
+        echo '# autoenv:'
+        if [[ "$(uname)" == "Darwin" ]]; then
+            echo 'pip install autoenv'
+        else  # we need sudo on linux
+            echo 'sudo -H pip install autoenv'
+        fi
+        echo
     fi
-    pip freeze 2>/dev/null | grep "^autoenv" &>/dev/null \
-        || $use_sudo pip install "autoenv" 2>/dev/null
 
     # LaTeX
     if [[ "$(uname)" == "Darwin" ]]; then
-        brew cask list | grep mactex &>/dev/null || brew cask install mactex
+        if brew cask list | grep mactex &>/dev/null ; then
+            echo '# mactex: installed'
+        else
+            echo '# mactex:'
+            echo 'brew cask install mactex'
+        fi
     else
-        sudo apt-get install -y texlive-full biber
+        if dpkg -s texlive-full ; then
+            echo '# texlive-full: installed'
+        else:
+            echo '# texlive-full:'
+            echo 'sudo apt-get install -y texlive-full biber'
+            echo
+        fi
     fi
 }
 main $@
