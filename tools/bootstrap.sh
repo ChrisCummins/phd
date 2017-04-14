@@ -23,6 +23,11 @@ main() {
         dpkg -s 'bazel' &>/dev/null || sudo apt-get install -y bazel
     fi
 
+    # install compiler toolchain
+    if [[ "$(uname)" != "Dawrin" ]]; then
+        sudo apt-get install -y clang
+    fi
+
     # install latex
     if [[ "$(uname)" == "Darwin" ]]; then
         brew cask install texlive-full

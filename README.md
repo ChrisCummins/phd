@@ -9,7 +9,6 @@ A self-contained, monolothic repository for (almost) everything I have done whil
 
 * Ubuntu Linux or macOS.
 * OpenCL.
-* TexLive.
 * Python 3.6.
 
 Additional requirements can be installed one-off using:
