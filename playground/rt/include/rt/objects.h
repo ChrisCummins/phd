@@ -79,7 +79,7 @@ namespace rt {
     virtual const Material *surface(const Vector &point) const = 0;
   };
 
-  using Objects = const std::vector<const Object *const>;
+  using Objects = const std::vector<Object *>;
 
   // A plane.
   class Plane : public Object {

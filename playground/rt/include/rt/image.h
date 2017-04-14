@@ -20,6 +20,7 @@
 #ifndef RT_IMAGE_H_
 #define RT_IMAGE_H_
 
+#include <array>
 #include <limits>
 #include <vector>
 
@@ -99,8 +100,8 @@ class Image {
     return image::y(index, width);
   }
 
-  friend auto& operator<<(std::ostream& out,
-                          const Image<_width, _height> &image) {
+  friend std::ostream& operator<<(std::ostream& out,
+                                  const Image<_width, _height> &image) {
     // Print PPM header.
 
     // Magic number:

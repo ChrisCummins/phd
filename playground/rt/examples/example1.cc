@@ -32,14 +32,14 @@ int main() {
   static const rt::Colour blue  = rt::Colour(0x0000ff);
 
   // Create materials.
-  const std::array<const rt::Material *const, 3> materials = {
+  const std::array<rt::Material *, 3> materials = {
     new rt::Material(red, 0, 1, .2, 10, 0),
     new rt::Material(green, 0, 1, .2, 10, 0),
     new rt::Material(blue, 0, 1, .2, 10, 0)
   };
 
   // Create objects.
-  const std::array<const rt::Sphere *const, 3> _objects = {
+  const std::array<rt::Sphere *, 3> _objects = {
     new rt::Sphere(rt::Vector(0,    50, 0), 50,
                    materials[0]),
     new rt::Sphere(rt::Vector(50,  -50, 0), 50,
@@ -49,7 +49,7 @@ int main() {
   };
 
   // Create lights.
-  const std::array<const rt::Light *const, 2> _lights = {
+  const std::array<rt::Light *, 2> _lights = {
     new rt::SoftLight(rt::Vector(-300,  400, -400),
                       rt::Colour(0xffffff)),
     new rt::SoftLight(rt::Vector( 300, -200,  100),
