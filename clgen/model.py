@@ -271,7 +271,7 @@ class Model(clgen.CLgenObject):
         return closest_path, paths
 
 
-    def _locked_train(self, quiet):
+    def _locked_train(self):
         tf = self._init_tensorflow(infer=False)
 
         # training options
@@ -298,7 +298,7 @@ class Model(clgen.CLgenObject):
             if ckpt_path:
                 log.debug("restoring", ckpt_path)
                 saver.restore(sess, ckpt_path)
-                log.info("restored checkpoint {}".format(ckpt_path))
+                log.verbose("restored checkpoint {}".format(ckpt_path))
 
             # make sure we don't lose track of other checkpoints
             if ckpt_paths:
@@ -345,9 +345,9 @@ class Model(clgen.CLgenObject):
 
                     next_checkpoint = e * self.corpus.num_batches + b
                     max_epoch = self.epochs
-                    log.info("\n{self} epoch {e} / {max_epoch}. "
-                             "next checkpoint at batch {next_checkpoint}"
-                             .format(**vars()))
+                    log.verbose("\n{self} epoch {e} / {max_epoch}. "
+                                "next checkpoint at batch {next_checkpoint}"
+                                .format(**vars()))
 
                     # update training time
                     epoch_duration = time() - epoch_start
@@ -363,18 +363,15 @@ class Model(clgen.CLgenObject):
         jsonutil.write_file(self.cache.keypath("META"), self.to_json())
 
 
-    def train(self, quiet: bool=False):
+    def train(self):
         """
         Train model.
-
-        Arguments:
-            quiet (bool, optional): If true, print less.
 
         Returns:
             Model: self.
         """
         with self.lock.acquire():
-            return self._locked_train(quiet)
+            return self._locked_train()
 
     @property
     def lock(self):

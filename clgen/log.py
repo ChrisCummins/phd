@@ -44,6 +44,10 @@ def init(verbose: bool=False) -> None:
     logging.basicConfig(level=level, format="%(message)s")
 
 
+def is_verbose() -> bool:
+    return logging.getLogger().getEffectiveLevel() == logging.DEBUG
+
+
 def debug(*msg, **opts) -> None:
     """
     Debug message.

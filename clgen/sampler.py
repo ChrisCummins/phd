@@ -95,7 +95,7 @@ def from_json(sampler_json: dict):
 
 class SampleProducer(Thread):
     def __init__(self, model: Model, start_text: str, condition: Condition,
-                 queue: list, quiet: bool=False, **kernel_opts):
+                 queue: list, **kernel_opts):
         super(SampleProducer, self).__init__()
 
         self.model = model
@@ -104,7 +104,6 @@ class SampleProducer(Thread):
         self.queue = queue
         self.stop_signal = Event()
         self.kernel_opts = kernel_opts
-        self.quiet = quiet
 
     def run(self):
         model = self.model
@@ -162,7 +161,7 @@ class SampleProducer(Thread):
                     [state] = sess.run([model.final_state], feed)
 
                 buf.write(self.start_text)
-                if not self.quiet:
+                if log.is_verbose():
                     sys.stdout.write("\n\n/* ==== START SAMPLE ==== */\n\n")
                     sys.stdout.write(self.start_text)
                     sys.stdout.flush()
@@ -184,7 +183,7 @@ class SampleProducer(Thread):
 
                     atom = model.corpus.atomizer.deatomize([index])
                     buf.write(atom)
-                    if not self.quiet:
+                    if log.is_verbose():
                         sys.stdout.write(atom)
 
                     # update function block depth
@@ -201,7 +200,7 @@ class SampleProducer(Thread):
                 self.condition.notify()
                 self.condition.release()
 
-            if not self.quiet:
+            if log.is_verbose():
                 sys.stdout.write('\n\n')
 
     def stop(self):
@@ -215,8 +214,7 @@ class SampleProducer(Thread):
 class SampleConsumer(Thread):
     """ handle generated samples """
     def __init__(self, db_path: str, producer: SampleProducer, sampler,
-                 cache, condition: Condition, queue: list, quiet: bool=False,
-                 **sampler_opts):
+                 cache, condition: Condition, queue: list, **sampler_opts):
         """
         Arguments:
             db_path (str): Path to samples database.
@@ -224,7 +222,6 @@ class SampleConsumer(Thread):
             sampler (Sampler): Host sampler.
             condition (Condition): For locking.
             queue (list): output result queue.
-            quiet (bool, optional): If true, quiet output.
             **sampler_opts: Sampler options.
         """
         super(SampleConsumer, self).__init__()
@@ -236,7 +233,6 @@ class SampleConsumer(Thread):
         self.condition = condition
         self.queue = queue
         self.sampler_opts = sampler_opts
-        self.quiet = quiet
 
         # properties
         min_kernels = self.sampler_opts["min_kernels"]
@@ -290,7 +286,7 @@ class SampleConsumer(Thread):
     def run(self) -> None:
         i = dbutil.num_rows_in(self.db_path, "ContentFiles")
 
-        if self.quiet:
+        if not log.is_verbose():
             bar = progressbar.ProgressBar(max_value=self.max_i)
             bar.update(self.progress())
 
@@ -338,7 +334,7 @@ class SampleConsumer(Thread):
 
                 # update progress bar
                 progress = self.progress()
-                if self.quiet:
+                if not log.is_verbose():
                     bar.update(progress)
 
                 sample_time = time() - sample_time
@@ -462,7 +458,7 @@ class Sampler(clgen.CLgenObject):
     def _flush_meta(self, cache):
         jsonutil.write_file(cache.keypath("META"), self.to_json(cache))
 
-    def sample(self, model: Model, quiet: bool=False) -> None:
+    def sample(self, model: Model) -> None:
         """
         Sample CLgen model.
 
@@ -482,13 +478,14 @@ class Sampler(clgen.CLgenObject):
         lock = Lock()
         condition = Condition()
 
+        log.info("sampling", self)
+
         sampler = SampleProducer(model, self.start_text, condition, queue,
-                                 quiet=quiet, **self.kernel_opts)
+                                 **self.kernel_opts)
         sampler.start()
 
         consumer = SampleConsumer(cache["kernels.db"], sampler, self, cache,
-                                  condition, queue, quiet=quiet,
-                                  **self.sampler_opts)
+                                  condition, queue, **self.sampler_opts)
         consumer.start()
 
         sampler.join()
