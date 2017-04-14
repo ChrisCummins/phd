@@ -6,11 +6,11 @@
 #
 #     ./boostrap.sh
 #
-set -eu
+set -eux
 
 
 main() {
-    # install bazel
+    # Build system: Bazel
     if [[ "$(uname)" == "Darwin" ]]; then
         brew cask list | grep '^java$' &>/dev/null || brew cask install java
         brew list | grep '^bazel$' &>/dev/null || brew install bazel
@@ -23,16 +23,25 @@ main() {
         dpkg -s 'bazel' &>/dev/null || sudo apt-get install -y bazel
     fi
 
-    # install compiler toolchain
+    # Compiler: Clang
     if [[ "$(uname)" != "Dawrin" ]]; then
         sudo apt-get install -y clang
     fi
 
-    # install latex
+    # LaTeX
     if [[ "$(uname)" == "Darwin" ]]; then
         brew cask install texlive-full
     else
         sudo apt-get install -y texlive-full biber
     fi
+
+    # autoenv
+    #   on linux, we need sudo to pip install.
+    local use_sudo=""
+    if [[ "$(uname)" != "Darwin" ]]; then
+        use_sudo="sudo -H"
+    fi
+    pip freeze 2>/dev/null | grep "^autoenv" &>/dev/null \
+        || $use_sudo pip install "autoenv" 2>/dev/null
 }
 main $@
