@@ -46,7 +46,7 @@ static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 10;
 
 void BM_is_palindrone(benchmark::State& state) {
-  const auto len = static_cast<size_t>(state.range_x());
+  const auto len = static_cast<size_t>(state.range(0));
   const auto half = len / 2;
 
   std::list<int> list;

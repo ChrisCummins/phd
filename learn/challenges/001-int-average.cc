@@ -92,7 +92,7 @@ static const size_t lengthMin = 8;
 static const size_t lengthMax = 10 << 10;
 
 void BM_baseline(benchmark::State& state) {
-    const auto n = static_cast<size_t>(state.range_x());
+    const auto n = static_cast<size_t>(state.range(0));
     auto *m = new int32_t[n];
 
     while (state.KeepRunning()) {
@@ -107,7 +107,7 @@ void BM_baseline(benchmark::State& state) {
 BENCHMARK(BM_baseline)->Range(lengthMin, lengthMax);
 
 void BM_averageIntList1(benchmark::State& state) {
-    const auto n = static_cast<size_t>(state.range_x());
+    const auto n = static_cast<size_t>(state.range(0));
     int *m = new int[n];
 
     while (state.KeepRunning()) {
@@ -123,7 +123,7 @@ void BM_averageIntList1(benchmark::State& state) {
 BENCHMARK(BM_averageIntList1)->Range(lengthMin, lengthMax);
 
 void BM_averageIntList2(benchmark::State& state) {
-    const auto n = static_cast<size_t>(state.range_x());
+    const auto n = static_cast<size_t>(state.range(0));
     int *m = new int[n];
 
     while (state.KeepRunning()) {

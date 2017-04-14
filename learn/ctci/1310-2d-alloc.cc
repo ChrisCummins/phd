@@ -212,7 +212,7 @@ static const size_t BM_size_min = 8;
 static const size_t BM_size_max = 10 << 10;
 
 void BM_my2DAlloc1(benchmark::State& state) {
-  const size_t size = static_cast<size_t>(state.range_x());
+  const size_t size = static_cast<size_t>(state.range(0));
   assert(size);
 
   while (state.KeepRunning()) {
@@ -224,7 +224,7 @@ void BM_my2DAlloc1(benchmark::State& state) {
 BENCHMARK(BM_my2DAlloc1)->Range(BM_size_min, BM_size_max);
 
 void BM_my2DAlloc2(benchmark::State& state) {
-  const size_t size = static_cast<size_t>(state.range_x());
+  const size_t size = static_cast<size_t>(state.range(0));
   assert(size);
 
   while (state.KeepRunning()) {
@@ -236,7 +236,7 @@ void BM_my2DAlloc2(benchmark::State& state) {
 BENCHMARK(BM_my2DAlloc2)->Range(BM_size_min, BM_size_max);
 
 void BM_my2DAlloc3(benchmark::State& state) {
-  const size_t size = static_cast<size_t>(state.range_x());
+  const size_t size = static_cast<size_t>(state.range(0));
   assert(size);
 
   while (state.KeepRunning()) {

@@ -49,7 +49,7 @@ void print(Container &c) {
 
 
 static void VectorReference(benchmark::State& state) {
-    std::vector<int> v(static_cast<size_t>(state.range_x()));
+    std::vector<int> v(static_cast<size_t>(state.range(0)));
     for (auto &i : v)
         i = static_cast<int>(rand_r(&seed));
 
@@ -61,7 +61,7 @@ static void VectorReference(benchmark::State& state) {
 BENCHMARK(VectorReference)->Range(size_min, size_max);
 
 static void VectorPointer(benchmark::State& state) {
-    std::vector<int> v(static_cast<size_t>(state.range_x()));
+    std::vector<int> v(static_cast<size_t>(state.range(0)));
     for (auto &i : v)
         i = static_cast<int>(rand_r(&seed));
 
@@ -73,7 +73,7 @@ static void VectorPointer(benchmark::State& state) {
 BENCHMARK(VectorPointer)->Range(size_min, size_max);
 
 static void VectorValue(benchmark::State& state) {
-    std::vector<int> v(static_cast<size_t>(state.range_x()));
+    std::vector<int> v(static_cast<size_t>(state.range(0)));
     for (auto &i : v)
         i = static_cast<int>(rand_r(&seed));
 

@@ -55,7 +55,7 @@ static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 10;
 
 void BM_is_permutation(benchmark::State& state) {
-  auto len = static_cast<size_t>(state.range_x());
+  auto len = static_cast<size_t>(state.range(0));
   std::string t1(len, 'a'), t2(len, 'a');
 
   while (state.KeepRunning()) {

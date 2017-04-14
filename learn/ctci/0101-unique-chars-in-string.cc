@@ -113,7 +113,7 @@ static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 10;
 
 void BM_unique(benchmark::State& state) {
-  std::string t(static_cast<size_t>(state.range_x()), 'a');
+  std::string t(static_cast<size_t>(state.range(0)), 'a');
 
   while (state.KeepRunning()) {
     for (auto &c : t)
@@ -126,7 +126,7 @@ void BM_unique(benchmark::State& state) {
 BENCHMARK(BM_unique)->Range(BM_length_min, BM_length_max);
 
 void BM_str_unique(benchmark::State& state) {
-  std::string t(static_cast<size_t>(state.range_x()), 'a');
+  std::string t(static_cast<size_t>(state.range(0)), 'a');
 
   while (state.KeepRunning()) {
     for (auto &c : t)
@@ -139,7 +139,7 @@ void BM_str_unique(benchmark::State& state) {
 BENCHMARK(BM_str_unique)->Range(BM_length_min, BM_length_max);
 
 void BM_inplace_unique(benchmark::State& state) {
-  std::string t(static_cast<size_t>(state.range_x()), 'a');
+  std::string t(static_cast<size_t>(state.range(0)), 'a');
 
   while (state.KeepRunning()) {
     for (auto &c : t)

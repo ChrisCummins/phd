@@ -68,7 +68,7 @@ void populateString(char *const t, const size_t strlen, size_t *len) {
 }
 
 void BM_escape_space(benchmark::State& state) {
-  const auto strlen = static_cast<size_t>(state.range_x());
+  const auto strlen = static_cast<size_t>(state.range(0));
   char *const t = new char[strlen];
   size_t len = 0;
 

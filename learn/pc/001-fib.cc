@@ -262,7 +262,7 @@ TEST(fib_compile_time, basic) {
 ////////////////
 
 void BM_fib(benchmark::State& state) {
-  const auto n = state.range_x();
+  const auto n = state.range(0);
 
   while (state.KeepRunning()) {
     auto ret = fib(n);
@@ -273,7 +273,7 @@ BENCHMARK(BM_fib)->Range(1, 25);
 
 
 void BM_fib_mem(benchmark::State& state) {
-  const auto n = state.range_x();
+  const auto n = state.range(0);
 
   while (state.KeepRunning()) {
     auto ret = fib_mem(n);
@@ -284,7 +284,7 @@ BENCHMARK(BM_fib_mem)->Range(1, 25);
 
 
 void BM_fib_mem_unsigned(benchmark::State& state) {
-  const auto n = static_cast<unsigned>(state.range_x());
+  const auto n = static_cast<unsigned>(state.range(0));
 
   while (state.KeepRunning()) {
     auto ret = fib_mem(n);
@@ -295,7 +295,7 @@ BENCHMARK(BM_fib_mem_unsigned)->Range(1, 25);
 
 
 void BM_fib_iter(benchmark::State& state) {
-  const auto n = state.range_x();
+  const auto n = state.range(0);
 
   while (state.KeepRunning()) {
     auto ret = fib_iter(n);

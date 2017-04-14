@@ -11,7 +11,7 @@ static const size_t sort_size_min = 8;
 static const size_t sort_size_max = 8 << 10;
 
 static void std_forward_list_sort_int(benchmark::State& state) {
-  std::forward_list<int> list(static_cast<size_t>(state.range_x()));
+  std::forward_list<int> list(static_cast<size_t>(state.range(0)));
 
   while (state.KeepRunning()) {
     for (auto& i : list)
@@ -24,7 +24,7 @@ static void std_forward_list_sort_int(benchmark::State& state) {
 BENCHMARK(std_forward_list_sort_int)->Range(sort_size_min, sort_size_max);
 
 static void ustl_forward_list_sort_int(benchmark::State& state) {
-  ustl::forward_list<int> list(static_cast<size_t>(state.range_x()));
+  ustl::forward_list<int> list(static_cast<size_t>(state.range(0)));
 
   while (state.KeepRunning()) {
     for (auto& i : list)

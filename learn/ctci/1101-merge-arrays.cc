@@ -65,7 +65,7 @@ static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 10;
 
 void BM_std_inplace_merge(benchmark::State& state) {
-  auto len = static_cast<size_t>(state.range_x());
+  auto len = static_cast<size_t>(state.range(0));
   std::vector<int> a(len * 2);
 
   while (state.KeepRunning()) {
@@ -84,7 +84,7 @@ void BM_std_inplace_merge(benchmark::State& state) {
 BENCHMARK(BM_std_inplace_merge)->Range(BM_length_min, BM_length_max);
 
 void BM_std_merge(benchmark::State& state) {
-  auto len = static_cast<size_t>(state.range_x());
+  auto len = static_cast<size_t>(state.range(0));
   std::vector<int> a(len);
   std::vector<int> b(len);
   std::vector<int> out(2 * len);
@@ -105,7 +105,7 @@ void BM_std_merge(benchmark::State& state) {
 BENCHMARK(BM_std_merge)->Range(BM_length_min, BM_length_max);
 
 void BM_merge(benchmark::State& state) {
-  auto len = static_cast<size_t>(state.range_x());
+  auto len = static_cast<size_t>(state.range(0));
   std::vector<int> a(len * 2);
   std::vector<int> b(len);
 

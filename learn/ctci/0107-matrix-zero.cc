@@ -100,7 +100,7 @@ static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 5;
 
 void BM_matrix_zero(benchmark::State& state) {
-  const auto n = static_cast<size_t>(state.range_x());
+  const auto n = static_cast<size_t>(state.range(0));
   int *m = new int[n * n];
 
   while (state.KeepRunning()) {

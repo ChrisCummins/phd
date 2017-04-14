@@ -188,7 +188,7 @@ static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 10;
 
 void baseline(benchmark::State& state) {
-  std::string t(static_cast<size_t>(state.range_x()), 'a');
+  std::string t(static_cast<size_t>(state.range(0)), 'a');
 
   while (state.KeepRunning()) {
     for (auto &c : t)  // generate string
@@ -200,7 +200,7 @@ BENCHMARK(baseline)->Range(BM_length_min, BM_length_max);
 
 
 void chris(benchmark::State& state) {
-  std::string t(static_cast<size_t>(state.range_x()), 'a');
+  std::string t(static_cast<size_t>(state.range(0)), 'a');
 
   while (state.KeepRunning()) {
     for (auto &c : t)  // generate string
@@ -215,7 +215,7 @@ BENCHMARK(chris)->Range(BM_length_min, BM_length_max);
 
 
 void adam(benchmark::State& state) {
-  std::string t(static_cast<size_t>(state.range_x()), 'a');
+  std::string t(static_cast<size_t>(state.range(0)), 'a');
 
   while (state.KeepRunning()) {
     for (auto &c : t)  // generate string
@@ -231,7 +231,7 @@ BENCHMARK(adam)->Range(BM_length_min, BM_length_max);
 
 
 void christophe(benchmark::State& state) {
-  std::string t(static_cast<size_t>(state.range_x()), 'a');
+  std::string t(static_cast<size_t>(state.range(0)), 'a');
 
   while (state.KeepRunning()) {
     for (auto &c : t)  // generate string

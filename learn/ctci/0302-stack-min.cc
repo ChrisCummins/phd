@@ -184,7 +184,7 @@ static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 10;
 
 void BM_MinStack(benchmark::State& state) {
-  const auto len = state.range_x();
+  const auto len = state.range(0);
   MinStack<int> a;
 
   while (state.KeepRunning()) {
@@ -200,7 +200,7 @@ void BM_MinStack(benchmark::State& state) {
 BENCHMARK(BM_MinStack)->Range(BM_length_min, BM_length_max);
 
 void BM_MinStack_alt(benchmark::State& state) {
-  const auto len = state.range_x();
+  const auto len = state.range(0);
   MinStack_alt<int> a;
 
   while (state.KeepRunning()) {

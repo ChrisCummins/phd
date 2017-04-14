@@ -145,7 +145,7 @@ void BM_remove_dups(benchmark::State& state) {
   while (state.KeepRunning()) {
     std::forward_list<int> list;
 
-    for (auto i = 0; i < state.range_x(); i++)
+    for (auto i = 0; i < state.range(0); i++)
       list.push_front(rand_r(&seed) % 10);
 
     remove_dups(list);
@@ -158,7 +158,7 @@ void BM_inplace_remove_dups(benchmark::State& state) {
   while (state.KeepRunning()) {
     std::forward_list<int> list;
 
-    for (auto i = 0; i < state.range_x(); i++)
+    for (auto i = 0; i < state.range(0); i++)
       list.push_front(rand_r(&seed) % 10);
 
     inplace_remove_dups(list);

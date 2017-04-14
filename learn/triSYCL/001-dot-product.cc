@@ -141,8 +141,8 @@ static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 10;
 
 void BM_dot_product_float(benchmark::State& state) {
-  std::vector<float> a(static_cast<size_t>(state.range_x()));
-  std::vector<float> b(static_cast<size_t>(state.range_x()));
+  std::vector<float> a(static_cast<size_t>(state.range(0)));
+  std::vector<float> b(static_cast<size_t>(state.range(0)));
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < a.size(); i++) {
@@ -157,8 +157,8 @@ void BM_dot_product_float(benchmark::State& state) {
 BENCHMARK(BM_dot_product_float)->Range(BM_length_min, BM_length_max);
 
 void BM_sycl_dot_product_float(benchmark::State& state) {
-  std::vector<float> a(static_cast<size_t>(state.range_x()));
-  std::vector<float> b(static_cast<size_t>(state.range_x()));
+  std::vector<float> a(static_cast<size_t>(state.range(0)));
+  std::vector<float> b(static_cast<size_t>(state.range(0)));
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < a.size(); i++) {
@@ -173,8 +173,8 @@ void BM_sycl_dot_product_float(benchmark::State& state) {
 BENCHMARK(BM_sycl_dot_product_float)->Range(BM_length_min, BM_length_max);
 
 void BM_dot_product_int(benchmark::State& state) {
-  std::vector<int> a(static_cast<size_t>(state.range_x()));
-  std::vector<int> b(static_cast<size_t>(state.range_x()));
+  std::vector<int> a(static_cast<size_t>(state.range(0)));
+  std::vector<int> b(static_cast<size_t>(state.range(0)));
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < a.size(); i++) {
@@ -189,8 +189,8 @@ void BM_dot_product_int(benchmark::State& state) {
 BENCHMARK(BM_dot_product_int)->Range(BM_length_min, BM_length_max);
 
 void BM_sycl_dot_product_int(benchmark::State& state) {
-  std::vector<int> a(static_cast<size_t>(state.range_x()));
-  std::vector<int> b(static_cast<size_t>(state.range_x()));
+  std::vector<int> a(static_cast<size_t>(state.range(0)));
+  std::vector<int> b(static_cast<size_t>(state.range(0)));
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < a.size(); i++) {

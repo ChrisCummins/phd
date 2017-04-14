@@ -46,7 +46,7 @@ static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 10;
 
 void BM_reverse(benchmark::State& state) {
-  const auto len = static_cast<size_t>(state.range_x());
+  const auto len = static_cast<size_t>(state.range(0));
   char *t = new char[len];
 
   for (size_t i = 0; i < len; i++)

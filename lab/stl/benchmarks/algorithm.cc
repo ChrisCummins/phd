@@ -17,7 +17,7 @@ static const size_t sort_size_min = 8;
 static const size_t sort_size_max = 8 << 10;
 
 static void std_algorithm_sort_int(benchmark::State& state) {
-  std::vector<int> v(static_cast<size_t>(state.range_x()));
+  std::vector<int> v(static_cast<size_t>(state.range(0)));
 
   while (state.KeepRunning()) {
     for (auto& i : v)
@@ -30,7 +30,7 @@ static void std_algorithm_sort_int(benchmark::State& state) {
 BENCHMARK(std_algorithm_sort_int)->Range(sort_size_min, sort_size_max);
 
 static void ustl_algorithm_sort_int(benchmark::State& state) {
-  ustl::vector<int> v(static_cast<size_t>(state.range_x()));
+  ustl::vector<int> v(static_cast<size_t>(state.range(0)));
 
   while (state.KeepRunning()) {
     for (auto& i : v)

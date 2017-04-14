@@ -89,8 +89,8 @@ static const size_t BM_length_max = 10 << 10;
 
 void BM_saxpy(benchmark::State& state) {
   float a = rand_r(&seed) / static_cast<float>(UINT32_MAX);
-  std::vector<float> x(static_cast<size_t>(state.range_x()));
-  std::vector<float> y(static_cast<size_t>(state.range_x()));
+  std::vector<float> x(static_cast<size_t>(state.range(0)));
+  std::vector<float> y(static_cast<size_t>(state.range(0)));
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < x.size(); i++) {
@@ -106,8 +106,8 @@ BENCHMARK(BM_saxpy)->Range(BM_length_min, BM_length_max);
 
 void BM_sycl_saxpy(benchmark::State& state) {
   float a = rand_r(&seed) / static_cast<float>(UINT32_MAX);
-  std::vector<float> x(static_cast<size_t>(state.range_x()));
-  std::vector<float> y(static_cast<size_t>(state.range_x()));
+  std::vector<float> x(static_cast<size_t>(state.range(0)));
+  std::vector<float> y(static_cast<size_t>(state.range(0)));
 
   while (state.KeepRunning()) {
     for (size_t i = 0; i < x.size(); i++) {

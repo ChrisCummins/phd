@@ -69,7 +69,7 @@ static const size_t BM_length_min = 8;
 static const size_t BM_length_max = 10 << 10;
 
 void BM_compress_str(benchmark::State& state) {
-  const auto strlen = static_cast<size_t>(state.range_x());
+  const auto strlen = static_cast<size_t>(state.range(0));
   std::string t;
 
   while (state.KeepRunning()) {
