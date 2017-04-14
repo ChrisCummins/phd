@@ -8,6 +8,7 @@ cc_binary(
     srcs = ['benchmark-argument-type.cc'],
     copts = ['-Iexternal/benchmark/include'],
     deps = ['@benchmark//:main'],
+    linkopts = ['-pthread'],
 )
 
 cc_test(
@@ -45,6 +46,7 @@ cc_binary(
     srcs = ['lambdas.cc'],
     copts = ['-Iexternal/benchmark/include'],
     deps = ['@benchmark//:main'],
+    linkopts = ['-pthread'],
 )
 
 cc_test(
