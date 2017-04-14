@@ -14,13 +14,6 @@ clgen.atomizer
    :members:
    :undoc-members:
 
-clgen.cldrive
---------------
-
-.. automodule:: clgen.cldrive
-   :members:
-   :undoc-members:
-
 clgen.cli
 ----------
 

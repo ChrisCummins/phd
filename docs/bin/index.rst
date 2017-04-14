@@ -3,60 +3,13 @@ Command Line Interface
 
 The CLgen command line interface consists of a suite of related programs.
 
-cldrive
---------
-
-::
-
-    usage: cldrive [-h] [--version] [-v] [--debug] [-s] [--cpu] [--gpu]
-                   [--fatal-errors]
-                   <input> [<input> ...]
-    
-    Drive OpenCL kernels.
-    
-    For each kernel, generate a randomly sized payload and execute.
-    Use environment variable 'DSIZE' to override random payload size.
-    
-    Program output is in CSV format, with the following scheme:
-    
-        <path>,<dsize>,<kernel>,<platform>,<device>,<transfer>,<time>
-    
-    where each value corresponds to:
-    
-       <path>      path to input file
-       <dsize>     payload size
-       <kernel>    kernel name
-       <platform>  OpenCL platform name
-       <device>    OpenCL device name
-       <transfer>  transfer size, in bytes
-       <time>      mean execution time
-    
-    In case of an error, "-" is output for values which cannot be determined,
-    and the kernel name field is substituted for an error name.
-    
-    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
-    <http://chriscummins.cc/clgen>
-    
-    positional arguments:
-      <input>         input file(s) or directories
-    
-    optional arguments:
-      -h, --help      show this help message and exit
-      --version       show version information and exit
-      -v, --verbose   increase output verbosity
-      --debug         in case of error, print debugging information
-      -s, --strict    reject any kernels which do not validate
-      --cpu           execute on CPU
-      --gpu           execute on GPU
-      --fatal-errors  exit on error
-
 clgen
 ------
 
 ::
 
-    usage: clgen [-h] [--version] [-v] [--debug] [-q] [--list-files]
-                 [--corpus-dir] [--model-dir] [--sampler-dir]
+    usage: clgen [-h] [--version] [-v] [--debug] [--list-files] [--corpus-dir]
+                 [--model-dir] [--sampler-dir]
                  <model> <sampler>
     
     Generate OpenCL programs using Deep Learning.
@@ -84,7 +37,6 @@ clgen
       --version      show version information and exit
       -v, --verbose  increase output verbosity
       --debug        in case of error, print debugging information
-      -q, --quiet    run quietly
       --list-files   print cached corpus, model, and sampler, files
       --corpus-dir   print path to corpus cache
       --model-dir    print path to model cache
@@ -398,7 +350,7 @@ clgen-preprocess
 
 ::
 
-    usage: clgen-preprocess [-h] [--version] [-v] [--debug] [-f] [-i] [-D] [-G]
+    usage: clgen-preprocess [-h] [--version] [-v] [--debug] [-f] [-i] [-G]
                             [--remove-bad-preprocessed] [--remove-preprocessed]
                             inputs [inputs ...]
     
@@ -423,8 +375,6 @@ clgen-preprocess
       --debug               in case of error, print debugging information
       -f, --file            treat input as file
       -i, --inplace         inplace file rewrite
-      -D, --dynamic-checker
-                            run dynamic checker on kernels
       -G, --gpuverify       run GPUVerify on kernels
       --remove-bad-preprocessed
                             delete the contents of all bad or ugly preprocessed files,
@@ -452,28 +402,4 @@ clgen-train
       --version      show version information and exit
       -v, --verbose  increase output verbosity
       --debug        in case of error, print debugging information
-
-clgen-verify
--------------
-
-::
-
-    usage: clgen-verify [-h] [--version] [-v] [--debug] [--cpu]
-                        <dataset> <input-dir>
-    
-    Run a collection of CLgen programs and store their output.
-    
-    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
-    <http://chriscummins.cc/clgen>
-    
-    positional arguments:
-      <dataset>      path to output database. If it does not exist, it is created.
-      <input-dir>    path to directory containing CLgen-generated programs.
-    
-    optional arguments:
-      -h, --help     show this help message and exit
-      --version      show version information and exit
-      -v, --verbose  increase output verbosity
-      --debug        in case of error, print debugging information
-      --cpu          Use CPU for execution (default: GPU)
 
