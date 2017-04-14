@@ -71,21 +71,14 @@ Activate this environment:
 
     $ source ~/clgen/bin/activate
 
-Install the latest release of CLgen using one of the two configurations:
-
-**1. CPU-only:** *slow performance.*
+Install the latest release of CLgen:
 
 ::
 
-    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.19.dev0/install-cpu.sh | bash
-
-**2. CUDA enabled:** *fast performance.*
-Requires NVIDIA GPU with
-`CUDA 8.0 and cuDNN <https://www.tensorflow.org/get_started/os_setup#optional_install_cuda_gpus_on_linux>`_.
-
-::
-
+    # if you have an NVIDIA GPU with CUDA 8.0 and cuDNN:
     (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.19.dev0/install-cuda.sh | bash
+    # CPU only:
+    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.19.dev0/install-cpu.sh | bash
 
 When you are done using CLgen, deactivate the virtualenv environment:
 
@@ -108,29 +101,14 @@ activating a virtualenv environment. This may update some of the previously
 installed Python packages. System-wide installation requires sudo priveledges -
 you may be prompted for your password.
 
-Install the latest release of CLgen system-wide using one of the following
-configurations:
-
-**1. CPU-only:** *slow performance, some features disabled.*
+Install the latest release of CLgen:
 
 ::
 
-    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.19.dev0/install-cpu.sh | bash
-
-**2. OpenCL enabled:** *slow performance, all features enabled.*
-Requires `OpenCL <https://www.khronos.org/opencl/>`__.
-
-::
-
-    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.19.dev0/install-opencl.sh | bash
-
-**3. CUDA enabled:** *fast performance, all features enabled.*
-Requires NVIDIA GPU with
-`CUDA 8.0 and cuDNN <https://www.tensorflow.org/get_started/os_setup#optional_install_cuda_gpus_on_linux>`_.
-
-::
-
+    # if you have an NVIDIA GPU with CUDA 8.0 and cuDNN:
     $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.19.dev0/install-cuda.sh | bash
+    # CPU only:
+    $ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.19.dev0/install-cpu.sh | bash
 
 
 Contents
