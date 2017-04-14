@@ -33,7 +33,6 @@ fi
 ROOT=~/phd
 
 # Filename locations
-LOGFILE=.autotex.log
 HOOKS_DIRECTORY=scripts
 
 # Output formatting:
@@ -57,49 +56,32 @@ set -e
 
 TaskNameLength=8
 
-# Print a message.
-#
-print() {
-    local body="$1"
-    local format="$2"
-
-    echo "$format$body$TTYreset"
-}
-
-# Print a formatted task message.
-#
-print_task() {
-    local name="$1"
-    local path="$2"
-    local format="$3"
-
-    printf "  $TTYbold$format%-${TaskNameLength}s$TTYreset %s\n" "$name" "$path"
-}
-
 
 # Log output of a command silently. If command fails, print log.
 #
 # $1 (str) Path to log file
 # $@ Command arguments to execute
 silent_unless_fail() {
-    local log=$1
+    local log="$1"
     shift
     local command=$@
 
     set +e
-    # FIXME: Append logfile instead of overwriting, but still redirect
-    # all outputs (not just stdout and stderr):
-    $command &> $log
+    echo "======================================================" >> "$log"
+    echo "$command" >> "$log"
+    echo "======================================================" >> "$log"
+    echo >> "$log"
+    $command 2>&1 >> "$log"
+    echo >> "$log"
     status=$?
     set -e
 
     if (( $status )); then
-        echo "*** Build failed! Autotex log:" >&2
+        echo "*** Build failed with status $status! Autotex log:" >&2
         echo
         cat $log >&2
-        echo
-        echo "*** End of autotex log. See: $log" >&2
-        exit 1
+        echo "*** End of autotex log. See: $($READLINK -f $log)" >&2
+        exit $status
     fi
 }
 
@@ -122,7 +104,6 @@ exec_hooks() {
 
     if [[ -n "$hooks" ]]; then
         for hook in $hooks; do
-            print_task "HOOK" "$hook" "$TaskMisc"
             silent_unless_fail $LOGFILE $hook
         done
     fi
@@ -136,18 +117,7 @@ run_pdflatex() {
     local document=$1
     local format=$2
 
-    print_task "LATEX" "$document.pdf" "$format"
     silent_unless_fail $LOGFILE $PDFLATEX $PDFLATEX_ARGS $document.tex
-}
-
-# Setup environment variables and autotex env.
-#
-setup_env() {
-    # Export environment variables
-    export TEXINPUTS=.:./lib:
-
-    # Remove the old logfile.
-    rm -f $LOGFILE
 }
 
 # Determine which citation backend is used. Returns an empty string if
@@ -186,11 +156,9 @@ run_citation_backend() {
 
     case $backend in
         "biber")
-            print_task "BIBER" "$document" "$format"
             silent_unless_fail $LOGFILE $BIBER $document
             ;;
         "bibtex")
-            print_task "BIBTEX" "$document" "$format"
             silent_unless_fail $LOGFILE $BIBTEX $document
             ;;
         *)
@@ -230,11 +198,15 @@ main() {
 
     cd $tmpdir
 
+    export LOGFILE="$tmpdir/.autotex.log"
+    rm -f $LOGFILE  # Remove existing logfile
+
     # copy the sources into the working directory. When symlinks are
     # encountered, the file they point to is copied.
     rsync -a --copy-links $input_dir/ $tmpdir/
 
-    setup_env
+    # Export environment variables
+    export TEXINPUTS=.:./lib:
 
     exec_hooks ".pre"
     run_pdflatex $input_document "$TTYred"
@@ -253,5 +225,9 @@ main() {
     cd - &>/dev/null
     mkdir -p "$output_dir"
     mv "$tmpdir/$input_document.pdf" "$output_file"
+
+    local output_log="$output_dir/.$output_document.log"
+    mv "$LOGFILE" "$output_log"
+    echo "autotex log: $output_log"
 }
 main $@
