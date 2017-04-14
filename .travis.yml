@@ -25,4 +25,5 @@ install:
   - make install
 
 script:
+  - cldrive --clinfo
   - make test
