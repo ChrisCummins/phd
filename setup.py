@@ -45,12 +45,7 @@ scripts = [
     'bin/clgen-merge',
     'bin/clgen-preprocess',
     'bin/clgen-train',
-    'bin/clgen-verify',
 ]
-
-# clgen driver requires opencl
-if cfg["opencl"]:
-    scripts.append('bin/cldrive')
 
 
 def all_module_data_files(module, datadir="data"):

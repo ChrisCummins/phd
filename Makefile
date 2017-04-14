@@ -37,7 +37,6 @@ PIP ?= pip3
 
 # modules
 include make/remote.make
-include make/cuda.make
 include make/cmake.make
 include make/gpuverify.make
 include make/ninja.make

@@ -49,7 +49,6 @@ Optional, but recommended:
 
 - NVIDIA GPU with
   `CUDA 8.0 and cuDNN <https://www.tensorflow.org/get_started/os_setup#optional_install_cuda_gpus_on_linux>`_.
-- `OpenCL <https://www.khronos.org/opencl/>`_.
 
 
 Installation - Virtualenv
@@ -72,22 +71,15 @@ Activate this environment:
 
     $ source ~/clgen/bin/activate
 
-Install the latest release of CLgen using one of the three configurations:
+Install the latest release of CLgen using one of the two configurations:
 
-**1. CPU-only:** *slow performance, some features disabled.*
+**1. CPU-only:** *slow performance.*
 
 ::
 
     (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.18.dev0/install-cpu.sh | bash
 
-**2. OpenCL enabled:** *slow performance, all features enabled.*
-Requires `OpenCL <https://www.khronos.org/opencl/>`__.
-
-::
-
-    (clgen)$ curl -s https://raw.githubusercontent.com/ChrisCummins/clgen/0.2.18.dev0/install-opencl.sh | bash
-
-**3. CUDA enabled:** *fast performance, all features enabled.*
+**2. CUDA enabled:** *fast performance.*
 Requires NVIDIA GPU with
 `CUDA 8.0 and cuDNN <https://www.tensorflow.org/get_started/os_setup#optional_install_cuda_gpus_on_linux>`_.
 

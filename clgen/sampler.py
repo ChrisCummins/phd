@@ -57,7 +57,6 @@ DEFAULT_SAMPLER_OPTS = {
     "min_samples": -1,
     "min_kernels": -1,
     "static_checker": True,
-    "dynamic_checker": False,
     "gpuverify": False
 }
 
@@ -310,7 +309,6 @@ class SampleConsumer(Thread):
                 if self.sampler_opts["static_checker"]:
                     preprocess_opts = {
                         "use_shim": False,
-                        "use_dynamic_checker": self.sampler_opts["dynamic_checker"],
                         "use_gpuverify": self.sampler_opts["gpuverify"]
                     }
                     pp = [preprocess.preprocess_for_db(k, **preprocess_opts)
@@ -408,15 +406,10 @@ class Sampler(clgen.CLgenObject):
 
         self.hash = _hash(self.sampler_opts, self.kernel_opts)
 
-        if self.sampler_opts["dynamic_checker"] and not cfg.USE_OPENCL:
-            log.warning("dynamic checking requested, but OpenCL not available")
-            self.sampler_opts["dynamic_checker"] = False
-
         self.start_text = _start_text(self.kernel_opts["args"])
 
         # options to pass to preprocess_db()
         self.preprocess_opts = {
-            "use_dynamic_checker": self.sampler_opts["dynamic_checker"],
             "use_gpuverify": self.sampler_opts["gpuverify"]
         }
 

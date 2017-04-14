@@ -520,7 +520,6 @@ def sanitize_prototype(src: str) -> str:
 
 
 def preprocess(src: str, id: str='anon', use_shim: bool=True,
-               use_dynamic_checker: bool=False,
                use_gpuverify: bool=False) -> str:
     """
     Preprocess an OpenCL source. There are three possible outcomes:
@@ -535,8 +534,6 @@ def preprocess(src: str, id: str='anon', use_shim: bool=True,
         id (str, optional): An identifying name for the source code
             (used in exception messages).
         use_shim (bool, optional): Inject shim header.
-        use_dynamic_checker (bool, optional): Whether to run the dynamic
-            checker on the code.
         use_gpuverify (bool, optional): Whether to run GPUVerify on the code.
 
     Returns:
@@ -558,9 +555,6 @@ def preprocess(src: str, id: str='anon', use_shim: bool=True,
     src = clangformat_ocl(src, id).strip()
     src = ensure_has_code(src)
     src = sanitize_prototype(src)
-
-    if use_dynamic_checker:
-        log.info("Dynamic checker")
 
     if use_gpuverify:
         gpuverify(src)

@@ -24,7 +24,7 @@ wget https://github.com/ChrisCummins/clgen/archive/0.2.18.dev0.tar.gz -O clgen-0
 tar xf clgen-0.2.18.dev0.tar.gz
 rm clgen-0.2.18.dev0.tar.gz
 cd clgen-0.2.18.dev0
-./configure --batch --with-opencl --with-cuda
+./configure --batch --with-cuda
 make
 
 if [[ -n "$VIRTUAL_ENV" ]]; then

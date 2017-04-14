@@ -602,21 +602,3 @@ def extract_prototype(src: str) -> KernelPrototype:
         raise PrototypeException("malformed seed")
 
     return KernelPrototype(prototype)
-
-
-def get_contexts_and_devices() -> dict:
-    """
-    Instantiate OpenCL contexts for all platforms and return devices.
-
-    Returns:
-        dict: pyopencl.Context keys, pyopencl.Device[] values.
-    """
-    import pyopencl as cl
-
-    results = {}
-    for pltfm in cl.get_platforms():
-        ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, pltfm)])
-        devices = ctx.get_info(cl.context_info.DEVICES)
-        results[ctx] = devices
-
-    return results
