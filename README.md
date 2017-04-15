@@ -6,37 +6,37 @@ A self-contained, monolothic repository for (almost) everything I have done whil
 ##  Publications
 
 1. Chris Cummins, Pavlos Petoumenos, Zheng Wang, Hugh Leather. "Synthesizing
-   Benchmarks for Predictive Modeling". CGO '17. Files: `docs/2017-02-cgo`
+   Benchmarks for Predictive Modeling". CGO '17. Files: [docs/2017-02-cgo](https://github.com/ChrisCummins/paper-synthesizing-benchmarks/).
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather. "Autotuning
-   OpenCL Workgroup Sizes". ACACES '16. Files: `docs/2016-07-acaces`
+   OpenCL Workgroup Sizes". ACACES '16. Files: [docs/2016-07-acaces](/docs/2016-07-acaces).
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather. "Towards
    Collaborative Performance Tuning of Algorithmic Skeletons". HLPGPU '16,
-   HiPEAC. Files: `docs/2016-01-hlpgpu`
+   HiPEAC. Files: [docs/2016-01-hlpgpu](https://github.com/ChrisCummins/paper-towards-collaborative-performance-tuning).
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather. "Autotuning
    OpenCL Workgroup Size for Stencil Patterns". ADAPT '16, HiPEAC. Files:
-   `docs/2016-01-adapt`
+   [docs/2016-01-adapt](https://github.com/ChrisCummins/paper-autotuning-opencl-wgsize).
 1. Chris Cummins. "Autotuning Stencils Codes with Algorithmic Skeletons". MSc
-   Thesis, 2015. The University of Edinburgh. Files: `docs/2015-08-msc-thesis`
+   Thesis, 2015. The University of Edinburgh. Files: [docs/2015-08-msc-thesis](/docs/2015-08-msc-thesis).
 
 
 ## Talks
 
-1. Chris Cummins. "Using Deep Learning to Generate Human-like Code", 22nd April, 2017. Scottish Programming Languages Seminar, University of St. Andrews, Scotland. Files `talks/2017-03-spls`
-1. Chris Cummins. "Synthesizing Benchmarks for Predictive Modeling", 6th Febuary, 2017. International Symposium on Code Generationand Optimization (CGO), Austin, Texas, USA. Files: `taks/2017-02-cgo`
+1. Chris Cummins. "Using Deep Learning to Generate Human-like Code", 22nd April, 2017. Scottish Programming Languages Seminar, University of St. Andrews, Scotland. Files [talks/2017-03-spls](/talks/2017-03-spls).
+1. Chris Cummins. "Synthesizing Benchmarks for Predictive Modeling", 6th Febuary, 2017. International Symposium on Code Generationand Optimization (CGO), Austin, Texas, USA. Files: [taks/2017-02-cgo](/talks/2017-02-cgo).
 1. Chris Cummins. "Building an AI that Codes", 22nd July, 2016.  Ocado
-Technology, Hatfield, England. Files: `talks/2016-07-ocado`
+Technology, Hatfield, England. Files: [talks/2016-07-ocado](/talks/2016-07-ocado).
 1. Chris Cummins. "All the OpenCL on GitHub: Teaching an AI to code, one
 character at a time", 19th May, 2016. Amazon Development Centre,
-Edinburgh, Scotland. Files: `talks/2016-05-amazon`
+Edinburgh, Scotland. Files: [talks/2016-05-amazon](/talks/2016-05-amazon).
 1. Chris Cummins. "Autotuning and Algorithmic Skeletons", Wed 10th Feb,
-2016. The University of Edinburgh, Scotland. Files: `talks/2016-02-ppar`
+2016. The University of Edinburgh, Scotland. Files: [talks/2016-02-ppar](/talks/2016-02-ppar).
 1. Chris Cummins. "Towards Collaborative Performance Tuning of
-Algorithmic Skeletons", Tues 19th Jan, 2016. HLPGPU, HiPEAC, Prague. Files: `talks/2016-01-hlpgpu`
+Algorithmic Skeletons", Tues 19th Jan, 2016. HLPGPU, HiPEAC, Prague. Files: [talks/2016-01-hlpgpu](/talks/2016-01-hlpgpu).
 1. Chris Cummins. "Towards Collaborative Performance Tuning of
 Algorithmic Skeletons", Thurs 14th Jan, 2016. CArD talk, University of
-Edinburgh. Files: `talks/2016-01-hlpgpu`
+Edinburgh. Files: [talks/2016-01-hlpgpu](/talks/2016-01-hlpgpu).
 1. Chris Cummins. "Autotuning OpenCL Workgroup Size for Stencil
-Patterns", Mon 18th Jan, 2016. ADAPT, HiPEAC, Prague. Files: `talks/2016-01-adapt`
+Patterns", Mon 18th Jan, 2016. ADAPT, HiPEAC, Prague. Files: [talks/2016-01-adapt](/talks/2016-01-adapt).
 
 
 ## Misc
@@ -44,17 +44,17 @@ Patterns", Mon 18th Jan, 2016. ADAPT, HiPEAC, Prague. Files: `talks/2016-01-adap
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather.
    "Collaborative Autotuning of Algorithmic Skeletons for GPUs and CPUs".
    Incomplete journal version of ADAPT and HLPGPU papers. Files:
-   `docs/2016-12-wip-taco`
+   [docs/2016-12-wip-taco](/docs/2016-12-wip-taco).
 1. Chris Cummins. "Deep Learning for Compilers". PhD First Year Review
-   Document, 2016. Files: `docs/2016-11-first-year-review`
+   Document, 2016. Files: [docs/2016-11-first-year-review](/docs/2016-11-first-year-review).
 1. Chris Cummins, Hugh Leather. "Autotuning OpenCL Workgroup Sizes". Rejected
    submission for PACT'16 Student Research Competition. Files:
-   `docs/2016-07-pact`
+   [docs/2016-07-pact](/docs/2016-07-pact).
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather. "Autotuning
    OpenCL Workgroup Sizes". Submission for PLDI'16 Student Poster Session.
-   Files: `docs/2016-06-pldi`
+   Files: [docs/2016-06-pldi](/docs/2016-06-pldi).
 1. Chris Cummins. "Autotuning and Skeleton-aware Compilation". PhD Progression
-   Review, 2015. Files: `docs/2015-09-progression-review`
+   Review, 2015. Files: [docs/2015-09-progression-review](/docs/2015-09-progression-review).
 
 
 ## Building the code
