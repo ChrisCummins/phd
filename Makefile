@@ -27,6 +27,7 @@ help:
 	@echo "Usage: make {help,install,test,docs}"
 
 install:
+	$(PIP) install --only-binary=numpy '$(shell grep numpy requirements.txt)'
 	$(PIP) install -r requirements.txt
 	$(PYTHON) ./setup.py install
 
