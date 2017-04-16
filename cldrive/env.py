@@ -244,8 +244,8 @@ def clinfo(file=sys.stdout) -> None:
             devtype = device_type(device)
             driver = device.get_info(cl.device_info.DRIVER_VERSION)
 
-            print(f"    Device {device_id}: {devtype} {device_name} "
-                  f"{driver}", file=file)
+            print(f"    Device {device_id}: {device_name} "
+                  f"(Type: {devtype}, Driver: {driver})", file=file)
 
 
 def make_env(platform: str=None, device: str=None,
