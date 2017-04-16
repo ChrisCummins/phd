@@ -42,6 +42,7 @@ def init(hostname: str) -> str:
 # session type
 session_t = sql.orm.session.Session
 
+
 @contextmanager
 def Session(commit: bool=True) -> session_t:
     """Provide a transactional scope around a series of operations."""
@@ -55,6 +56,7 @@ def Session(commit: bool=True) -> session_t:
         raise
     finally:
         session.close()
+
 
 def get_or_create(session: sql.orm.session.Session, model,
                   defaults: Dict[str, object]=None, **kwargs) -> object:
