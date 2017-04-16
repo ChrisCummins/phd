@@ -197,9 +197,6 @@ def device_type(device: cl.Device) -> str:
     ------
     TypeError:
         If parameter is of invalid type.
-    ValueError:
-        If the OpenCL device cannot be determined from the output of
-        CL_DEVICE_TYPE.
 
     Examples
     --------
@@ -221,7 +218,10 @@ def device_type(device: cl.Device) -> str:
         # by oclgrind.
         return "Emulator"
     else:
-        return cl.device_type.to_string(cl_device_type)
+        try:
+            return cl.device_type.to_string(cl_device_type)
+        except ValueError:
+            return int(cl_device_type)
 
 
 def clinfo(file=sys.stdout) -> None:
