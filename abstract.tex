@@ -3,7 +3,7 @@ In recent years randomized test-case generation has been successfully applied to
 
 These tools, while successful at identifying bugs, often yield programs which bare little to no resemblance to actual real code written by human programmers. This causes a triaging problem, as developers must inspect each problematic generated code to determine whether or not it exposes a bug worthy of fixing. [Only XX\% of ] What is needed is a technique for biasing the random generation of programs so that the generated codes closely resemble that of plausible, real hand written code.
 
-We apply deep learning techniques over large corpuses of open source code fragments to learn models which describe the structure of common real world codes. We use these models to generate thousands of new unseen programs, and show how an established differential testing methodology can be used to expose bugs in compilers which are symptomatic of real hand written code.
+We present a new approach for the generation of \emph{plausible} test cases. We apply deep learning techniques over large corpuses of open source code fragments to learn models which describe the structure of common real world codes. We use these models to generate thousands of new programs, and show how the established differential testing methodology can be used to expose bugs in compilers which are symptomatic of real hand written code.
 
 This approach extends the state of the art in compiler test-case generation, automatically exposing bugs in compilers which are likely to arise from real world use cases, in a way which is not possible using existing techniques.
 \end{abstract}

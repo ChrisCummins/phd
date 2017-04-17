@@ -2,7 +2,7 @@
 
 \begin{document}
 
-\title{Human-like Code Generation for Identifying Compiler and Runtime Bugs}
+\title{Plausible Test Case Generation for Identifying Compiler and Runtime Bugs}
 
 %
 % any author declaration will be ignored  when using 'pldi' option (for double blind review)
@@ -20,9 +20,48 @@
 \input{sec/intro}
 \input{sec/motivation}
 
-\section{The thing we built\textsuperscript{TM}}
+\section{Identifying Bugs with Differential Testing}
 
-Possible improvements over CGO'17:
+\subsection{Differential test methodology}
+
+Figure~\ref{fig:difftest} shows the differential testing methodology for a single test case.
+
+\begin{enumerate}
+	\item Generate program code $S$.
+	\item For each compiler $C = \{C_1 \ldots C_n\}$, attempt to compile $S$.
+	\item For each compiler which produced program code, execute the program using each test case configuration $P = \{P_1 \ldots P_n\}$.
+\end{enumerate}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.9\columnwidth]{img/difftest} %
+  % \vspace{-2em}%
+  \caption{%
+    Differential testing across a single test case. A test case consists of a program source and runtime parameters. Outcomes are either the output of the program execution, a compiler crash, or a runtime crash.%
+  }%
+  \label{fig:difftest}
+\end{figure}
+
+
+\subsection{Classifying test results}
+
+We select the mode output across a range of devices. Voting is used to select the oracle output.
+%
+\begin{enumerate}
+\setcounter{enumi}{-1}
+\item \emph{Invalid test case} Program code + parameter combination is illegal, or some other failure. These are device specific; a test case which is valid on one platform may be invalid for another. We simply ignore this class of outcomes.
+\item \emph{Build failure} Online compilation of OpenCL program fails.
+\item \emph{Runtime failure} One or more OpenCL API calls return an error status during the program execution, or the program crashes due to segmentation fault. Note that segmentation faults may be caused by compiler, in which case these outcomes should perhaps be classified as build failures. We do not account for this.
+\item \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority.
+\item \emph{Okay} Program terminates gracefully and computes a result which agrees with the majority.
+\end{enumerate}
+
+
+\section{Deep Learning Test Case Generation}
+
+\subsection{clgen: Compute Kernel Generation}
+
+Figure~\ref{fig:deeptune} shows the test case generation process. Possible improvements over CGO'17:
 
 \begin{itemize}
         \item Iterative self-training.
@@ -38,15 +77,15 @@ Finding incorrect code using incorrect code.
 
 Reference compiler: LLVM 3.9.0
 
-\begin{figure}
-        \centering
-        \includegraphics[width=.8\columnwidth]{img/rej} %
-        % \vspace{-2em}%
-        \caption{%
-                Rejection pipeline.%
-        }%
-        \label{fig:deeptune}
-\end{figure}
+% \begin{figure}
+%         \centering
+%         \includegraphics[width=.8\columnwidth]{img/rej} %
+%         % \vspace{-2em}%
+%         \caption{%
+%                 Rejection pipeline.%
+%         }%
+%         \label{fig:deeptune}
+% \end{figure}
 
 \begin{figure}
         \centering
@@ -58,13 +97,10 @@ Reference compiler: LLVM 3.9.0
         \label{fig:deeptune}
 \end{figure}
 
-\section{Identifying Bugs using CLgen}
+\subsection{cldrive: Arbitrary kernel execution}
 
-\begin{enumerate}
-	\item Generate sample $S$ using CLgen.
-	\item For each compiler $C = \{C_1 \ldots C_n\}$, attempt to compile sample $S$.
-	\item For each compiler which produced program code, execute the program using each test case configuration $P = \{P_1 \ldots P_n\}$.
-\end{enumerate}
+Parse AST. Read function arguments. Generate data inputs for arguments. Limited subset of data types supported: No structs, no irregular data types.
+
 
 \input{sec/methodology}
 \input{sec/results}
