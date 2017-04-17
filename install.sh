@@ -111,26 +111,16 @@ install_zsh() {
     # install config files
     symlink ~/.dotfiles/zsh ~/.zsh
     symlink .zsh/zshrc ~/.zshrc
+    if [[ -d "$private/zsh" ]]; then
+        symlink "$private/zsh" ~/.zsh/private
+    fi
 
     # install oh-my-zsh
     clone_repo git@github.com:robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
-    symlink ~/.zsh/cec.zsh-theme ~/.oh-my-zsh/custom/cec.zsh-theme
-    clone_repo https://github.com/zsh-users/zsh-syntax-highlighting.git ~/oh-my-zsh/custom/plugins/zsh-syntax-highlighting
-
-    # install local config files
-    mkdir -p ~/.zsh/private
-    if [[ -d "$private/zsh" ]]; then
-        symlink "$private/zsh/diana.zsh" ~/.zsh/private/diana.zsh
-        symlink "$private/zsh/mary.zsh" ~/.zsh/private/mary.zsh
-        symlink "$private/zsh/omni.zsh" ~/.zsh/private/omni.zsh
-
-        # Mac-specific shell stuff
-        if [[ "$(uname)" == "Darwin" ]]; then
-            symlink "$private/zsh/homebrew.zsh" ~/.zsh/private/homebrew.zsh
-        fi
-    fi
-
     clone_repo https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+
+    # oh-my-zsh config
+    symlink ~/.zsh/cec.zsh-theme ~/.oh-my-zsh/custom/cec.zsh-theme
 }
 
 
