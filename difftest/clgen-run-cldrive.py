@@ -170,4 +170,4 @@ if __name__ == "__main__":
             bar.max_value = num_to_run
             bar.update(min(num_ran, num_to_run))
 
-    print("\ndone.")
+    print("done.")
