@@ -126,8 +126,10 @@ def main():
                         CLSmithResult.status == 0)]
             if len(outputs) > 2:
                 # Use voting to pick oracle.
-                majority_output = Counter(outputs).most_common(1)[0][0]
-                if result.stdout != majority_output:
+                majority_output, majority_count = Counter(outputs).most_common(1)[0]
+                if majority_count == 1:  # no majority
+                    result.classification = "Wrong code"
+                elif result.stdout != majority_output:
                     result.classification = "Wrong code"
             elif len(outputs) == 2:
                 if outputs[0] != outputs[1]:
@@ -149,8 +151,10 @@ def main():
                             table.status == 0)]
                 if len(outputs) > 2:
                     # Use voting to pick oracle.
-                    majority_output = Counter(outputs).most_common(1)[0][0]
-                    if result.stdout != majority_output:
+                    majority_output, majority_count = Counter(outputs).most_common(1)[0]
+                    if majority_count == 1:  # no majority
+                        result.classification = "Wrong code"
+                    elif result.stdout != majority_output:
                         result.classification = "Wrong code"
                 elif len(outputs) == 2:
                     if outputs[0] != outputs[1]:
