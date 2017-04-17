@@ -2,7 +2,22 @@
   \scriptsize %
   \centering %
   % \rowcolors{2}{white}{gray!25}
-  \input{build/tab/results-CLSmith}
-  \caption{Test results using CLSmith~\cite{Lidbury2015a}.}
+  \subfloat[Testcases generated and executed using CLSmith~\cite{Lidbury2015a}]{%
+    \input{build/tab/results-CLSmith}
+    \label{tab:results-clsmith}
+  }\\*
+  \subfloat[Testcases generated using CLSmith~\cite{Lidbury2015a} and executed using our driver]{%
+    \input{build/tab/results-CLSmith-w.-cldrive}
+    \label{tab:results-clsmith-cldrive}
+  }\\*
+  \subfloat[Program code taken from GitHub and executed using our driver]{%
+    \input{build/tab/results-GitHub}
+    \label{tab:results-github}
+  }\\*
+  \subfloat[Testcases generated and executed using CLgen]{%
+    \input{build/tab/results-CLgen}
+    \label{tab:results-clgen}
+  }\\*
+  \caption{Summary of all test results.}
   \label{tab:results}
 \end{table*}
