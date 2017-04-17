@@ -85,7 +85,7 @@ main() {
             echo
         fi
     else
-        if which dpkg -s python3.6 &>/dev/null ; then
+        if dpkg -s python3.6 &>/dev/null ; then
             echo '# python3.6: installed'
         else
             echo '# python3.6:'
