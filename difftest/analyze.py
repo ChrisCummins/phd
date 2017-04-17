@@ -11,6 +11,9 @@ def main():
     db.init("cc1")
     session = db.make_session()
 
+    CLDRIVE_TABLE_NAMES = ["CLSmith w. cldrive", "GitHub", "CLgen"]
+    CLDRIVE_TABLES = [cldriveCLSmithResult, GitHubResult, CLgenResult]
+
     # Group outcomes into less-granular classifications, as in the CLSmith paper.
     # This table maps <outcome>: <classification>
     CLASSIFICATIONS = {
@@ -22,17 +25,18 @@ def main():
         'CL_OUT_OF_HOST_MEMORY': 'Runtime crash',
         'CL_OUT_OF_RESOURCES': 'Runtime crash',
         'cldrive Error': 'Invalid testcase',
+        'cldrive.driver.PorcelainError: SIGFPE': 'Runtime crash',
         'clWaitForEvents()': 'Runtime crash',
+        'INVALID_WORK_GROUP_SIZE': 'Invalid testcase',
         'Multiple OpenCL kernels': 'Invalid testcase',
         'No OpenCL kernel': 'Invalid testcase',
         'Preprocessing Failed': 'Invalid testcase',
         'Segmentation Fault': 'Build failure',
         'SIGBUS': 'Runtime crash',
         'Timeout': 'Invalid testcase',
+        'UnicodeError': 'Invalid testcase',
         'Unsupported Program': 'Invalid testcase',
         'z_Okay': 'Okay',
-        'INVALID_WORK_GROUP_SIZE': 'Invalid testcase',
-        'UnicodeError': 'Invalid testcase',
     }
     print("Possible classifications:", ", ".join(f"'{s}'" for s in sorted(set(CLASSIFICATIONS.values()))))
 
