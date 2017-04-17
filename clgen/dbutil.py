@@ -657,7 +657,8 @@ def merge(outpath, inpaths=None):
                   "SELECT * FROM rhs.ContentFiles")
         c.execute("INSERT OR IGNORE INTO PreprocessedFiles "
                   "SELECT * FROM rhs.PreprocessedFiles")
-        c.execute("DETACH rhs")
         db.commit()
+        c.execute("DETACH rhs")
+        c.close()
 
     explore.explore(outpath)
