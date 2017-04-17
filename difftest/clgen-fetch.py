@@ -37,12 +37,16 @@ if __name__ == "__main__":
             kid = os.path.splitext(path.name)[0]
             assert(len(kid) == 40)
 
-            exists = session.query(CLgenProgram).filter(CLgenProgram.id == kid).count()
+            src = fs.read_file(path)
+
+            exists = session.query(CLgenProgram).filter(
+                    sql.or_(CLgenProgram.id == kid, CLgenProgram.src == src)
+                ).count()
 
             if not exists:
                 p = CLgenProgram(
                     id=kid, clgen_version=args.version, model=args.model,
-                    sampler=args.sampler, src=fs.read_file(path),
+                    sampler=args.sampler, src=src,
                     status=args.status)
                 session.add(p)
 
