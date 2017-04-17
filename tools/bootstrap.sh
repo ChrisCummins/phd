@@ -54,10 +54,11 @@ main() {
             echo '# bazel: installed'
         else
             echo '# bazel:'
-            echo '"deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list'
+            echo 'echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list'
             echo 'curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -'
             echo 'sudo apt-get update'
             echo 'sudo apt-get install -y bazel'
+            echo
         fi
     fi
 
@@ -65,7 +66,7 @@ main() {
     if [[ "$(uname)" == "Darwin" ]]; then
         echo '# clang: installed (system)'
     else
-        if dpkg -s clang ; then
+        if dpkg -s clang &>/dev/null ; then
             echo '# clang: installed'
         else
             echo '# clang:'
@@ -91,6 +92,7 @@ main() {
             echo 'sudo add-apt-repository ppa:jonathonf/python-3.6'
             echo 'sudo apt-get update'
             echo 'sudo apt-get install -y python3.6 python3.6-venv python3.6-dev'
+            echo
         fi
     fi
 
@@ -114,9 +116,10 @@ main() {
         else
             echo '# mactex:'
             echo 'brew cask install mactex'
+            echo
         fi
     else
-        if dpkg -s texlive-full ; then
+        if dpkg -s texlive-full &>/dev/null ; then
             echo '# texlive-full: installed'
         else:
             echo '# texlive-full:'
