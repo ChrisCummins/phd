@@ -121,7 +121,7 @@ main() {
     else
         if dpkg -s texlive-full &>/dev/null ; then
             echo '# texlive-full: installed'
-        else:
+        else
             echo '# texlive-full:'
             echo 'sudo apt-get install -y texlive-full biber'
             echo
