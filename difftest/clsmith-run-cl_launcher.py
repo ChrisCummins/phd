@@ -149,9 +149,7 @@ if __name__ == "__main__":
     db.init(args.hostname)  # initialize db engine
 
     with Session() as session:
-        testbed = db.get_or_create(session, Testbed,
-            platform=platform_name, device=device_name, driver=driver_version,
-            host=cldrive.host_os())
+        testbed = get_testbed(session, platform_name, device_name)
 
         params = db.get_or_create(session, cl_launcherParams,
             optimizations = optimizations,
@@ -204,21 +202,7 @@ if __name__ == "__main__":
 
             # record result
             session.add(result)
-            try:
-                session.commit()
-            except UnicodeError:
-                session.rollback()
-                stdout = ''
-                stderr = 'UnicodeError'
-                status = 1025
-                result = CLSmithResult(
-                    program=program, params=params, testbed=testbed,
-                    flags=" ".join(flags), status=status, runtime=runtime,
-                    stdout=stdout, stderr=stderr)
-                session.add(result)
-                session.commit()
-
-
+            session.commit()
 
             # update progress bar
             num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
