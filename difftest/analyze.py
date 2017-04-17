@@ -70,6 +70,12 @@ def main():
                     }.get(line, line)
                 prev = line
             else:  # should never happen
+                print("\nI could not understand this output:")
+                print(result.stderr)
+                print("Return code:", result.status)
+                print("stdout:")
+                print(result.stdout)
+                print("RESULT ID:", result.id)
                 raise LookupError
         else:
             return lookup_status(result.status)
