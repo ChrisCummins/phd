@@ -1,4 +1,3 @@
-# Git goodness.
 alias g='git'
 alias gA='git add'
 alias gAp='git add -p'
@@ -17,3 +16,11 @@ alias gZa='git fetch --all'
 
 # "git + hub = github" wrapper.
 [ -x /usr/local/bin/hub ] && alias git='hub'
+
+# clone
+clone-me() {
+        local repo="$1"
+        shift
+
+        git clone git@github.com:ChrisCummins/$repo.git $@
+}
