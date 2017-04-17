@@ -63,29 +63,33 @@ def main():
         ['-g', '128,16,1', '-l', '32,1,1', '--no-opts'],
     ]
 
-    cl_launcher_jobs = list(product(cl_launcher_scripts, cl_launcher_script_args))
-    cldrive_jobs = list(product(cldrive_scripts, cldrive_script_args))
-
-    print(len(cl_launcher_jobs), "cl_launcher jobs,",
-          len(cldrive_jobs), "cldrive jobs")
+    cl_launcher_jobs = [
+        ['python', script, str(platform_id), str(device_id)] + args
+        for script, args in product(cl_launcher_scripts, cl_launcher_script_args)
+    ]
+    cldrive_jobs = [
+        ['python', script, platform_name, device_name] + args
+        for script, args in product(cldrive_scripts, cldrive_script_args)
+    ]
+    jobs = cl_launcher_jobs + cldrive_jobs
+    i = 0
 
     try:
-        while True:
-            for script, args in cl_launcher_jobs:
-                cmd = [script, str(platform_id), str(device_id)] + args
-                print('\033[1m', *cmd, '\033[0m')
-                p = Popen(['python'] + cmd)
-                p.communicate()
-                if p.returncode:
-                    print("\033[1m\033[91m>>>> EXIT STATUS", p.returncode, '\033[0m')
+        while len(jobs):
+            i += 1
+            job = jobs.pop(0)
+            nremaining = len(jobs)
 
-            for script, args in cldrive_jobs:
-                cmd = [script, platform_name, device_name] + args
-                print('\033[1m', *cmd, '\033[0m')
-                p = Popen(['python'] + cmd)
-                p.communicate()
-                if p.returncode:
-                    print("\033[1m\033[91m>>>> EXIT STATUS", p.returncode, '\033[0m')
+            # run job
+            print(f'\033[1mjob {i} ({nremaining} remaining)\033[0m', *job)
+            p = Popen(job)
+            p.communicate()
+
+            # repeat job if it fails
+            if p.returncode:
+                print('\033[1m\033[91m>>>> EXIT STATUS', p.returncode, '\033[0m')
+                jobs.append(job)
+
     except KeyboardInterrupt:
         print("\ninterrupting, abort.")
 
