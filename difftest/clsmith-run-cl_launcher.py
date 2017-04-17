@@ -188,13 +188,13 @@ if __name__ == "__main__":
                           stderr=stderr)
 
             # if the output can't be encoded, record a unicode error
-            try:
-                stdout.encode('latin-1')
-                stderr.encode('latin-1')
-            except UnicodeError:
-                stdout = ""
-                stderr = "UnicodeError"
-                status = 1025  # unicode error
+            # try:
+            #     stdout.encode('latin-1')
+            #     stderr.encode('latin-1')
+            # except UnicodeError:
+            #     stdout = ""
+            #     stderr = "UnicodeError"
+            #     status = 1025  # unicode error
 
             # create new result
             result = CLSmithResult(
