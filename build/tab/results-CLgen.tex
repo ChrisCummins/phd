@@ -1,10 +1,10 @@
-\begin{tabular}{lrrrrr}
+\begin{tabular}{llllrrrrr}
 \toprule
-{} &  Invalid Testcases &  Build Failures &  Runtime Crashes &  Incorrect Outputs &  Okay \\
+{} &         Platform &                  Device &          Driver &  Invalid Testcases &  Build Failures &  Runtime Crashes &  Incorrect Outputs &  Okay \\
 \midrule
-Intel E5-2620        &                  0 &              16 &                0 &                680 &  3304 \\
-Intel E5-2620 (pocl) &                  0 &               0 &                1 &                  4 &   995 \\
-NVIDIA GTX 1080      &                  0 &               0 &                6 &                840 &  3154 \\
-Oclgrind Simulator   &                  2 &               0 &                0 &                687 &  3311 \\
+1 &  Intel(R) OpenCL &           Intel E5-2620 &        1.2.0.25 &                  0 &              16 &                0 &                680 &  3304 \\
+2 &             POCL &  Intel E5-2620 (thread) &            0.14 &                  0 &               0 &                1 &                  4 &   995 \\
+3 &      NVIDIA CUDA &         NVIDIA GTX 1080 &          375.39 &                  0 &               0 &                6 &                840 &  3154 \\
+4 &         Oclgrind &      Oclgrind Simulator &  Oclgrind 16.10 &                  2 &               0 &                0 &                687 &  3311 \\
 \bottomrule
 \end{tabular}
