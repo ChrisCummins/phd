@@ -124,9 +124,13 @@ def main():
                 .filter(CLSmithResult.program == result.program,
                         CLSmithResult.params == result.params,
                         CLSmithResult.status == 0)]
-            if len(outputs) > 1:
+            if len(outputs) > 2:
+                # Use voting to pick oracle.
                 majority_output = Counter(outputs).most_common(1)[0][0]
                 if result.stdout != majority_output:
+                    result.classification = "Wrong code"
+            elif len(outputs) == 2:
+                if outputs[0] != outputs[1]:
                     result.classification = "Wrong code"
     session.commit()
 
@@ -143,9 +147,13 @@ def main():
                     .filter(table.program == result.program,
                             table.params == result.params,
                             table.status == 0)]
-                if len(outputs) > 1:
+                if len(outputs) > 2:
+                    # Use voting to pick oracle.
                     majority_output = Counter(outputs).most_common(1)[0][0]
                     if result.stdout != majority_output:
+                        result.classification = "Wrong code"
+                elif len(outputs) == 2:
+                    if outputs[0] != outputs[1]:
                         result.classification = "Wrong code"
         session.commit()
 
