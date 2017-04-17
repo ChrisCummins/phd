@@ -17,18 +17,13 @@ from lib import *
 
 
 status_t = NewType('status_t', int)
-return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
+return_t = namedtuple('return_t', ['status', 'stdout', 'stderr'])
 
 
-def drive(command: List[str], src: str) -> Tuple[float, int, str, str]:
+def drive(command: List[str], src: str) -> return_t:
     """ invoke cldrive on source """
-    start_time = time()
-
     process = Popen(cli, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate(src.encode('utf-8'))
-
-    runtime = time() - start_time
-
     return return_t(
         runtime=runtime, status=status_t(process.returncode),
         stdout=stdout, stderr=stderr.decode('utf-8'))
@@ -149,9 +144,16 @@ if __name__ == "__main__":
             if not program:
                 break
 
-            src = cldrive.preprocess(
-                program.src, include_dirs=["~/src/CLSmith/runtime"])
-            runtime, status, stdout, stderr = drive(cli, src)
+            start_time = time()
+            try:
+                src = cldrive.preprocess(
+                    program.src, include_dirs=["~/src/CLSmith/runtime"])
+                status, stdout, stderr = drive(cli, src)
+            except cldrive.OpenCLPreprocessError:
+                status = 1024  # preprocess error
+                stdout = ''.encode('utf-8')
+                stderr = 'OpenCLPreprocessError'
+            runtime = time() - start_time
 
             # assert that executed params match expected
             verify_params(platform=args.platform, device=args.device,
