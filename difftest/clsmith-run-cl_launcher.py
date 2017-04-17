@@ -204,7 +204,21 @@ if __name__ == "__main__":
 
             # record result
             session.add(result)
-            session.commit()
+            try:
+                session.commit()
+            except UnicodeError:
+                session.rollback()
+                stdout = ''
+                stderr = 'UnicodeError'
+                status = 1025
+                result = CLSmithResult(
+                    program=program, params=params, testbed=testbed,
+                    flags=" ".join(flags), status=status, runtime=runtime,
+                    stdout=stdout, stderr=stderr)
+                session.add(result)
+                session.commit()
+
+
 
             # update progress bar
             num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
