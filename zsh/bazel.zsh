@@ -1,0 +1,5 @@
+alias b='bazel'
+alias bb='bazel build'
+alias bq='bazel query'
+alias br='bazel run'
+alias bt='bazel test'
