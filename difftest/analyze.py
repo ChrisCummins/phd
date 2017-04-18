@@ -33,6 +33,7 @@ def main():
         'Preprocessing Failed': 'Invalid testcase',
         'Segmentation Fault': 'Build failure',
         'SIGBUS': 'Runtime crash',
+        'Signal 5': 'Runtime crash',
         'Timeout': 'Invalid testcase',
         'UnicodeError': 'Invalid testcase',
         'Unsupported Program': 'Invalid testcase',
@@ -45,6 +46,7 @@ def main():
         return {
             -11: "Segmentation Fault",
             -9: "Timeout",
+            -5: "Signal 5",
             0: "z_Okay",
             1024: "Preprocessing Failed",
             1025: "UnicodeError",
