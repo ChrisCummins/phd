@@ -49,7 +49,7 @@ We select the mode output across a range of devices. Voting is used to select th
 %
 \begin{enumerate}
 \setcounter{enumi}{-1}
-\item \emph{Invalid test case} Program code + parameter combination is illegal, or some other failure. These are device specific; a test case which is valid on one platform may be invalid for another. We simply ignore this class of outcomes.
+\item \emph{Invalid test case} Program code and parameter combination is illegal (this is device specific), or some other failure (e.g. program timeout). We simply ignore this class of results.
 \item \emph{Build failure} Online compilation of OpenCL program fails.
 \item \emph{Runtime failure} One or more OpenCL API calls return an error status during the program execution, or the program crashes due to segmentation fault. Note that segmentation faults may be caused by compiler, in which case these outcomes should perhaps be classified as build failures. We do not account for this.
 \item \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority.
