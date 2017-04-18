@@ -83,7 +83,7 @@ _apt_get_install() {
 _npm_install() {
     local package="$1"
 
-    npm list -g | grep "$package" &>/dev/null || sudo npm install -g "$pacakge"
+    npm list -g | grep "$package" &>/dev/null || sudo npm install -g "$package"
 }
 
 
