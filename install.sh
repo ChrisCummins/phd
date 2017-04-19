@@ -1,8 +1,25 @@
 #!/usr/bin/env bash
+#
+# dotfiles install script
+#
+usage() {
+    echo "usage: $0 [-v|--verbose]"
+}
+
+version() {
+    echo "dotfiles $(git rev-parse --short HEAD)"
+}
+
 set -e
 if [[ "$1" == "-v" ]] || [[ "$1" == "--verbose" ]]; then
     set -x
     shift
+elif [[ "$1" == "--version" ]]; then
+    version
+    exit 0
+elif [[ -n "$1" ]]; then
+    usage >&2
+    exit 1
 fi
 set -u
 
