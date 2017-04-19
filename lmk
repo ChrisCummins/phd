@@ -48,6 +48,7 @@ from __future__ import print_function
 
 import argparse
 import cgi
+import humanize
 import os
 import smtplib
 import string
@@ -83,8 +84,6 @@ DEFAULT_CFG = """\
 ;   * Shell $VARIABLES are expanded, use '\$' to escape '$' symbol.
 ;   * Special variable $HOST expands to system hostname.
 ;   * 'To' field of messages may be a comma separated list of recipients.
-;   * Subject line may use special variables $EXIT (exit status of command) and
-;       $CMD (the command executed).
 ;
 [smtp]
 Host: smtp.gmail.com
@@ -95,7 +94,6 @@ Password: $LMK_PWD
 [messages]
 From: $USER@$HOST
 To: $LMK_TO
-Subject: $USER@$HOST [$EXIT_EMOJI] \$ $CMD
 """
 DEFAULT_CFG_PATH = os.path.expanduser('~/.lmk.cfg')
 
@@ -315,7 +313,7 @@ def load_cfg(path=None):
 
     cfg['messages']['from'] = parse(cfg['messages']['from'])
     cfg['messages']['to'] = parse(cfg['messages']['to'])
-    # note: cfg["messages"]["subject"] is parsed after command completion,
+    # note: 'subject' variables are parsed after command completion,
     #   so we can substitue in outcomes.
 
     # add runtime metadata
@@ -449,8 +447,6 @@ def build_html_message_body(output, command=None, returncode=None,
     lmk = '<a href="github.com/ChrisCummins/lmk">lmk</a>'
     me = '<a href="http://chriscummins.cc">Chris Cummins</a>'
 
-    command_html = cgi.escape(command)
-
     prompt_css = ";".join([
         "font-family:'Courier New', monospace",
         "font-weight:700",
@@ -486,6 +482,7 @@ def build_html_message_body(output, command=None, returncode=None,
 
     # command line invocation
     if command is not None:
+        command_html = cgi.escape(command)
         html += u"""\
   <tr style="line-height:1em;">
     <td style="{prompt_css}">$</td>
@@ -504,7 +501,7 @@ def build_html_message_body(output, command=None, returncode=None,
   </tr>
 """.format(**vars())
 
-    html += '</table>\n<hr style="margin-top:20px;"/>\n<table>'
+    html += '</table>\n<hr style="margin-top:20px;"/>\n<table>\n'
 
     # metadata block
     if returncode is not None:
@@ -517,11 +514,13 @@ def build_html_message_body(output, command=None, returncode=None,
         html += ('  <tr><td>Started</td><td>{date_started}</td></tr>\n'
                  .format(**vars()))
     if date_ended:
-        html += ('  <tr><td>Started</td><td>{date_ended}</td></tr>\n'
+        html += ('  <tr><td>Completed</td><td>{date_ended}</td></tr>\n'
                  .format(**vars()))
 
     # footer
     html += u"""\
+</table>
+
 <center style="color:#626262;">
   {lmk} {lmk_version} made with ♥ by {me}
 </center>
@@ -560,30 +559,48 @@ def check_connection(cfg=None):
     get_smtp_server(cfg).quit()
 
 
+def build_message_subject(output, command=None, returncode=None, cfg=None,
+                          date_started=None, date_ended=None):
+    """
+    Build message subject line.
+
+    Returns
+    -------
+    str
+        Unicode message subject.
+    """
+    user = os.environ['USER']
+    host = gethostname()
+
+    if command is not None and returncode is not None:
+        happy_sad = u'🙈' if returncode else u'🙂'
+        return u'{user}@{host} {happy_sad} $ {command}'.format(**vars())
+    elif command is not None:
+        return u'{user}@{host} $ {command}'.format(**vars())
+    elif date_started is not None:
+        delta = humanize.naturaltime(datetime.now() - date_started)
+        return u'{user}@{host} finished job started {delta}'.format(**vars())
+    else:
+        return u'{user}@{host} finished job'
+
+
 def let_me_know(output, command=None, returncode=None, cfg=None,
                 date_started=None, date_ended=None):
     if cfg is None:
         cfg = load_cfg()
 
-    exit_tick_cross = u'✘ ' + str(returncode) if returncode else u'✔'
-    exit_emoji = u'🙈' if returncode else u'🙂'
-
+    subject = build_message_subject(
+        output=output, command=command, returncode=returncode,
+        date_started=date_started, date_ended=date_ended)
     html = build_html_message_body(
-        command, output, returncode, date_started, date_ended)
+        output=output, command=command, returncode=returncode,
+        date_started=date_started, date_ended=date_ended)
     if sys.version_info < (3, 0):
         html = html.encode('utf-8')
 
     msg = MIMEMultipart()
     msg['From'] = cfg['messages']['from']
-    msg['Subject'] = parse_str(cfg['messages']['subject'], {
-        'HOST': lambda: gethostname(),
-        'EXIT': lambda: str(returncode),
-        'EXIT_TICK_CROSS': lambda: exit_tick_cross,
-        'EXIT_EMOJI': lambda: exit_emoji,
-        'CMD': lambda: command,
-        'DATE_START': lambda: str(date_started),
-        'DATE_END': lambda: str(date_ended),
-    })
+    msg['Subject'] = subject
     msg.attach(MIMEText(html, 'html'))
 
     server = get_smtp_server(cfg)
@@ -593,9 +610,26 @@ def let_me_know(output, command=None, returncode=None, cfg=None,
     server.quit()
 
 
-def main():
-    command = parse_args(sys.argv[1:])
+def read_from_stdin():
+    cfg = load_cfg()
+    check_connection(cfg)
 
+    date_started = datetime.now()
+
+    out = []
+    for line in sys.stdin:
+        sys.stdout.write(line)
+        out.append(line)
+
+    date_ended = datetime.now()
+    output = ''.join(out).rstrip()
+
+    let_me_know(
+        output=output, cfg=cfg, date_started=date_started,
+        date_ended=date_ended)
+
+
+def run_subprocess(command):
     cfg = load_cfg()
     check_connection(cfg)
 
@@ -617,19 +651,28 @@ def main():
 
     with process.stdout:
         for line in output_iter:
-            print(line, end='')
+            sys.stdout.write(line)
             out.append(line)
     process.wait()
 
     date_ended = datetime.now()
 
-    output = ''.join(out).strip()
+    output = ''.join(out).rstrip()
     returncode = process.returncode
 
     let_me_know(
         output=output, command=command, returncode=returncode, cfg=cfg,
         date_started=date_started, date_ended=date_ended)
     sys.exit(returncode)
+
+
+def main():
+    command = parse_args(sys.argv[1:])
+
+    if command == '-':
+        read_from_stdin()
+    else:
+        run_subprocess(command)
 
 
 if __name__ == '__main__':
