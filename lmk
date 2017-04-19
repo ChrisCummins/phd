@@ -216,6 +216,7 @@ and emails you with the output and result.""")
         sys.exit(E_SMTP)
 
     date_started = datetime.now()
+    initial_wd = os.getcwd()
 
     out = []
     process = subprocess.Popen(
@@ -261,7 +262,7 @@ job completed: {date_ended}
 
     html = u"""\
 <pre style="font-weight:700; font-size:13px;">\
-{user}@{host} $ {args.command}
+$ {args.command}
 </pre>
 <pre style="font-size:13px;">
 {out}\
@@ -269,6 +270,8 @@ job completed: {date_ended}
 
 <hr/>
 <table>
+<tr><td>Host</td><td">{user}@{host}</td></tr>
+<tr><td>Working directory</td><td">{initial_wd}</td></tr>
 <tr><td>Started</td><td>{date_started}</td></tr>
 <tr><td>Completed</td><td>{date_ended}</td></tr>
 </table>
