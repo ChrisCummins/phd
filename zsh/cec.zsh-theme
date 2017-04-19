@@ -32,7 +32,7 @@ fi
 #
 __cec_zsh_theme_cwd() {
     local cwd="$(pwd | sed -e "s,^$HOME,~,;s,^/home/,~,;s,^/Users/,~,")"
-    echo "\e[1m$cwd%{$reset_color%}"
+    echo "$(tput bold)$(tput setaf 1)$cwd$(tput sgr0)"
 }
 
 # Get the prompt prefix, e.g. "$", "#", "(dev) *$", etc.
