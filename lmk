@@ -23,13 +23,19 @@ import sys
 
 from argparse import ArgumentParser
 from datetime import datetime
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEText import MIMEText
 from socket import gethostname
+
+if sys.version_info >= (3,0):
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+else:
+    from email.MIMEMultipart import MIMEMultipart
+    from email.MIMEText import MIMEText
 
 DEFAULT_CFG_PATH=os.path.expanduser("~/.lmk.cfg")
 
 E_CFG = 2
+E_SMTP = 3
 
 def create_default_cfg(path):
     """
@@ -151,6 +157,11 @@ def load_cfg(path):
     cfg["smtp"]["username"] = parse(cfg["smtp"]["username"])
     cfg["smtp"]["password"] = parse(cfg["smtp"]["password"])
 
+    _verify(cfg["smtp"]["host"], "stmp host is empty. Check %s" % path)
+    _verify(cfg["smtp"]["port"], "stmp port is empty. Check %s" % path)
+    _verify(cfg["smtp"]["username"], "stmp username is empty. Check %s" % path)
+    _verify(cfg["smtp"]["password"], "stmp password is empty. Check %s" % path)
+
     cfg["messages"]["from"] = parse(cfg["messages"]["from"])
     cfg["messages"]["to"] = parse(cfg["messages"]["to"])
     # note: cfg["messages"]["subject"] is parsed after command completion,
@@ -177,15 +188,23 @@ and emails you with the output and result.""")
 
     cfg = load_cfg(cfg_path)
 
-    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server = smtplib.SMTP(cfg["smtp"]["host"], int(cfg["smtp"]["port"]))
     server.starttls()
     try:
+        # server.login(cfg["smtp"]["username"], cfg["smtp"]["password"])
+        username = cfg["smtp"]["username"]
+        password = cfg["smtp"]["password"]
+        print("%s %s" % (cfg["smtp"]["username"], cfg["smtp"]["password"]))
         server.login(cfg["smtp"]["username"], cfg["smtp"]["password"])
     except smtplib.SMTPAuthenticationError:
         # DEBUG: print("%s %s" % (cfg["smtp"]["username"], cfg["smtp"]["password"]))
         print('fatal: authentication failed. Check username and '
               'password credentials in %s' % cfg_path, file=sys.stderr)
-        sys.exit(E_CFG)
+        sys.exit(E_SMTP)
+    except smtplib.SMTPServerDisconnected:
+        print('fatal: server disconnected. Check smtp settings in '
+              '%s' % cfg_path, file=sys.stderr)
+        sys.exit(E_SMTP)
 
     date_started = datetime.now()
 
@@ -193,9 +212,15 @@ and emails you with the output and result.""")
     process = subprocess.Popen(
         args.command, shell=True, universal_newlines=True, bufsize=1,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    if sys.version_info >= (3, 0):
+        output_iter = process.stdout
+    else:
+        output_iter = iter(process.stdout.readline, b'')
+
     with process.stdout:
-        for line in iter(process.stdout.readline, b''):
-            print(line, end="")
+        for line in output_iter:
+            print(line, end='')
             out.append(line)
     process.wait()
 
@@ -214,7 +239,6 @@ and emails you with the output and result.""")
 
     user = os.environ["USER"]
     host = gethostname()
-    heart = unicode('&#9829;')  #
     plaintext = u"""\
 {user}@{host} $ {args.command}
 {out}
@@ -242,7 +266,10 @@ job completed: {date_ended}
   <a href="github.com/ChrisCummins/lmk">lmk</a> made with ♥ by
   <a href="http://chriscummins.cc">Chris Cummins</a>
 </center>
-""".format(**vars()).encode('utf-8')
+""".format(**vars())
+
+    if sys.version_info < (3, 0):
+        html = html.encode('utf-8')
 
     # msg.attach(MIMEText(plaintext, 'plain'))
     msg.attach(MIMEText(html, 'html'))
