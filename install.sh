@@ -129,23 +129,30 @@ symlink_dir() {
 
 
 clone_git_repo() {
-    # clone a git repository
-    #
-    # args:
-    #   $1 git remote url
-    #   $2 destination directory
     local url="$1"
     local destination="$2"
+    local version="$3"
 
     if [[ ! -d "$destination" ]]; then
-        echo "cloning repo $destination"
+        echo "cloning repo $url to $destination"
         git clone --recursive "$url" "$destination"
     fi
 
     if [[ ! -d "$destination/.git" ]]; then
-        echo "failed: cloning repo $url to $destination"
-        echo "error: $destination/.git does not exist"
+        echo "failed: cloning repo $url to $destination" >&2
+        echo "error: $destination/.git does not exist" >&2
+        exit 1
     fi
+
+    cd "$destination"
+    local target_hash="$(git rev-parse $version 2>/dev/null)"
+    local current_hash="$(git rev-parse HEAD)"
+    if [[ "$current_hash" != "$target_hash" ]]; then
+        echo "updating repo version $destination to $version"
+        git fetch --all
+        git reset --hard "$version"
+    fi
+    cd - &>/dev/null
 }
 
 
@@ -164,17 +171,18 @@ _pip_install() {
 }
 
 
+_npm_install() {
+    local package="$1"
+    local version="$2"
+
+    npm list -g | grep "$package@$version" &>/dev/null || sudo npm install -g "$package@$version"
+}
+
+
 _apt_get_install() {
     local package="$1"
 
     dpkg -s "$package" &>/dev/null || sudo apt-get install -y "$package"
-}
-
-
-_npm_install() {
-    local package="$1"
-
-    npm list -g | grep "$package" &>/dev/null || sudo npm install -g "$package"
 }
 
 
@@ -186,11 +194,17 @@ install_zsh() {
         symlink_dir "$private/zsh" ~/.zsh/private
     fi
 
-    # install oh-my-zsh
-    clone_git_repo git@github.com:robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
+    # oh-my-zsh
+    clone_git_repo \
+        git@github.com:robbyrussell/oh-my-zsh.git \
+        ~/.oh-my-zsh \
+        66bae5a5deb7a053adfb05b38a93fe47295841eb
 
     # syntax highlighting
-    clone_git_repo https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+    clone_git_repo \
+        git@github.com:zsh-users/zsh-syntax-highlighting.git \
+        ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting \
+        ad522a091429ba180c930f84b2a023b40de4dbcc
 
     # oh-my-zsh config
     symlink ~/.zsh/cec.zsh-theme ~/.oh-my-zsh/custom/cec.zsh-theme
@@ -239,7 +253,7 @@ install_git() {
         _apt_get_install npm
     fi
 
-    _npm_install diff-so-fancy
+    _npm_install diff-so-fancy 0.11.4
     symlink .dotfiles/git/gitconfig ~/.gitconfig
 }
 
@@ -259,7 +273,12 @@ install_atom() {
 
 install_vim() {
     symlink "$dotfiles/vim/vimrc" ~/.vimrc
-    clone_git_repo https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+
+    # Vundle
+    clone_git_repo \
+        git@github.com:VundleVim/Vundle.vim.git \
+        ~/.vim/bundle/Vundle.vim \
+        6497e37694cd2134ccc3e2526818447ee8f20f92
     vim +PluginInstall +qall
 }
 
