@@ -49,8 +49,6 @@ from __future__ import print_function
 import argparse
 import cgi
 import os
-import pipes
-import shlex
 import smtplib
 import string
 import subprocess
@@ -426,7 +424,9 @@ def send_email_smtp(cfg, server, msg):
     return False
 
 
-def build_html_message_body(command, output, returncode, runtime):
+def build_html_message_body(output, command=None, returncode=None,
+                            date_started=None, date_ended=None,
+                            runtime=None):
     """
     Parameters
     ----------
@@ -446,7 +446,6 @@ def build_html_message_body(command, output, returncode, runtime):
     host = gethostname()
     cwd = os.getcwd()
     lmk_version = __version__
-    date_started, date_ended = runtime
     lmk = '<a href="github.com/ChrisCummins/lmk">lmk</a>'
     me = '<a href="http://chriscummins.cc">Chris Cummins</a>'
 
@@ -482,13 +481,19 @@ def build_html_message_body(command, output, returncode, runtime):
         "color:#000",
     ])
 
-    html = u"""<table>
+    # start of HTML body
+    html = '<table>\n'
+
+    # command line invocation
+    if command is not None:
+        html += u"""\
   <tr style="line-height:1em;">
     <td style="{prompt_css}">$</td>
     <td style="{command_css}">{command_html}</td>
   </tr>
 """.format(**vars())
 
+    # command output
     for i, line in enumerate(output.split('\n')):
         lineno = i + 1
         line_html = cgi.escape(line)
@@ -499,22 +504,29 @@ def build_html_message_body(command, output, returncode, runtime):
   </tr>
 """.format(**vars())
 
+    html += '</table>\n<hr style="margin-top:20px;"/>\n<table>'
+
+    # metadata block
+    if returncode is not None:
+        html += ('  <tr><td>Return code</td>'
+                 '<td style="font-weight:700;">{returncode}</td></tr>\n'
+                 .format(**vars()))
+    html += ('  <tr><td>Working directory</td><td>{cwd}</td></tr>\n'
+             .format(**vars()))
+    if date_started:
+        html += ('  <tr><td>Started</td><td>{date_started}</td></tr>\n'
+                 .format(**vars()))
+    if date_ended:
+        html += ('  <tr><td>Started</td><td>{date_ended}</td></tr>\n'
+                 .format(**vars()))
+
+    # footer
     html += u"""\
-</table>
-
-<hr style="margin-top:20px;"/>
-<table>
-  <tr><td>Return code</td><td style="font-weight:700;">{returncode}</td></tr>
-  <tr><td>Host</td><td>{user}@{host}</td></tr>
-  <tr><td>Working directory</td><td>{cwd}</td></tr>
-  <tr><td>Started</td><td>{date_started}</td></tr>
-  <tr><td>Completed</td><td>{date_ended}</td></tr>
-</table>
-
 <center style="color:#626262;">
   {lmk} {lmk_version} made with ♥ by {me}
 </center>
 """.format(**vars())
+
     return html
 
 
@@ -548,7 +560,8 @@ def check_connection(cfg=None):
     get_smtp_server(cfg).quit()
 
 
-def let_me_know(command, output, returncode=None, runtime=None, cfg=None):
+def let_me_know(output, command=None, returncode=None, cfg=None,
+                date_started=None, date_ended=None):
     if cfg is None:
         cfg = load_cfg()
 
@@ -556,7 +569,7 @@ def let_me_know(command, output, returncode=None, runtime=None, cfg=None):
     exit_emoji = u'🙈' if returncode else u'🙂'
 
     html = build_html_message_body(
-        command, output, returncode, runtime)
+        command, output, returncode, date_started, date_ended)
     if sys.version_info < (3, 0):
         html = html.encode('utf-8')
 
@@ -614,8 +627,8 @@ def main():
     returncode = process.returncode
 
     let_me_know(
-        command=command, output=output, returncode=returncode,
-        runtime=(date_started, date_ended), cfg=cfg)
+        output=output, command=command, returncode=returncode, cfg=cfg,
+        date_started=date_started, date_ended=date_ended)
     sys.exit(returncode)
 
 
