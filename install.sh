@@ -209,7 +209,7 @@ install_zsh() {
     # oh-my-zsh config
     symlink ~/.zsh/cec.zsh-theme ~/.oh-my-zsh/custom/cec.zsh-theme
 
-    _pip_install autoenv 0.2.0
+    _pip_install autoenv 1.0.0
 }
 
 
