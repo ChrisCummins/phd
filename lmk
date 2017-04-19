@@ -96,7 +96,7 @@ Password: $LMK_PWD
 [messages]
 From: $USER@$HOST
 To: $LMK_TO
-Subject: $USER@$HOST [↪ $EXIT] \$ $CMD
+Subject: $USER@$HOST [$EXIT_EMOJI] \$ $CMD
 """
 DEFAULT_CFG_PATH = os.path.expanduser('~/.lmk.cfg')
 
@@ -488,7 +488,6 @@ def get_cfg_path():
 
 
 def main():
-    c = colors
     command = parse_args(sys.argv[1:])
 
     cfg = load_cfg(get_cfg_path())
@@ -519,10 +518,13 @@ def main():
     process.wait()
 
     exit_status = process.returncode
+    exit_tick_cross = u'✘ ' + str(exit_status) if exit_status else u'✔'
+    exit_emoji = u'🙈' if exit_status else u'🙂'
     output = ''.join(out)
     date_ended = datetime.now()
 
-    html = build_html_message_body(command, output, (date_started, date_ended))
+    html = build_html_message_body(
+        command, output, exit_status, (date_started, date_ended))
     if sys.version_info < (3, 0):
         html = html.encode('utf-8')
 
@@ -531,7 +533,11 @@ def main():
     msg['Subject'] = parse_str(cfg['messages']['subject'], {
         'HOST': lambda: gethostname(),
         'EXIT': lambda: str(exit_status),
+        'EXIT_TICK_CROSS': lambda: exit_tick_cross,
+        'EXIT_EMOJI': lambda: exit_emoji,
         'CMD': lambda: command,
+        'DATE_START': lambda: str(date_started),
+        'DATE_END': lambda: str(date_ended),
     })
     msg.attach(MIMEText(html, 'html'))
 
