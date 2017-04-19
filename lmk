@@ -281,6 +281,48 @@ def send_email_smtp(cfg, server, msg):
     return False
 
 
+def build_html_message_body(command, output, runtime):
+    """
+    Parameters
+    ----------
+    command : str
+        The command which was run.
+    output : str
+        The output of the command.
+    runtime : Tuple(datetime, datetime)
+        The command start and end dates.
+
+    Returns
+    -------
+    str
+        HTML string.
+    """
+    user = os.environ["USER"]
+    host = gethostname()
+    cwd = os.getcwd()
+    lmk_version = __version__
+    date_started, date_ended = runtime
+    lmk = '<a href="github.com/ChrisCummins/lmk">lmk</a>'
+    me = '<a href="http://chriscummins.cc">Chris Cummins</a>'
+
+    return u"""\
+<pre style="font-weight:700; font-size:13px;">$ {command}</pre>
+<pre style="font-size:13px;">{output}</pre>
+
+<hr/>
+<table>
+  <tr><td>Host</td><td">{user}@{host}</td></tr>
+  <tr><td>Working directory</td><td">{cwd}</td></tr>
+  <tr><td>Started</td><td>{date_started}</td></tr>
+  <tr><td>Completed</td><td>{date_ended}</td></tr>
+</table>
+
+<center style="color:#626262;">
+  {lmk} {lmk_version} made with ♥ by {me}
+</center>
+""".format(**vars())
+
+
 def main():
     parser = ArgumentParser(description="""\
 lmk: let me know. Patiently awaits the completion of the specified comamnd,
@@ -303,7 +345,6 @@ and emails you with the output and result.""")
     get_smtp_server(cfg).quit()
 
     date_started = datetime.now()
-    initial_wd = os.getcwd()
 
     out = []
     process = subprocess.Popen(
@@ -321,58 +362,22 @@ and emails you with the output and result.""")
             out.append(line)
     process.wait()
 
+    command = args.command
     exit_status = process.returncode
-    out = "".join(out)
+    output = ''.join(out)
     date_ended = datetime.now()
 
+    html = build_html_message_body(command, output, (date_started, date_ended))
+    if sys.version_info < (3, 0):
+        html = html.encode('utf-8')
+
     msg = MIMEMultipart()
-    msg.add_header('from','me@no.where')
     msg['From'] = cfg["messages"]["from"]
     msg['Subject'] = parse_str(cfg["messages"]["subject"], {
         "HOST": lambda: gethostname(),
         "EXIT": lambda: str(exit_status),
         "CMD": lambda: args.command
     })
-
-    user = os.environ["USER"]
-    host = gethostname()
-    lmk_version = __version__
-
-    plaintext = u"""\
-{user}@{host} $ {args.command}
-{out}
-
-==============================================================
-job started:   {date_started}
-job completed: {date_ended}
-""".format(**vars())
-
-    html = u"""\
-<pre style="font-weight:700; font-size:13px;">\
-$ {args.command}
-</pre>
-<pre style="font-size:13px;">
-{out}\
-</pre>
-
-<hr/>
-<table>
-<tr><td>Host</td><td">{user}@{host}</td></tr>
-<tr><td>Working directory</td><td">{initial_wd}</td></tr>
-<tr><td>Started</td><td>{date_started}</td></tr>
-<tr><td>Completed</td><td>{date_ended}</td></tr>
-</table>
-
-<center style="color:#626262;">
-  <a href="github.com/ChrisCummins/lmk">lmk</a> {lmk_version} made with ♥ by
-  <a href="http://chriscummins.cc">Chris Cummins</a>
-</center>
-""".format(**vars())
-
-    if sys.version_info < (3, 0):
-        html = html.encode('utf-8')
-
-    # msg.attach(MIMEText(plaintext, 'plain'))
     msg.attach(MIMEText(html, 'html'))
 
     c = colors
