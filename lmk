@@ -157,7 +157,7 @@ class ArgumentParser(argparse.ArgumentParser):
             sys.exit(0)
 
         if '--create-config' in args:
-            create_default_cfg(get_cfg_path())
+            get_cfg_path()
             sys.exit(0)
 
         return super(ArgumentParser, self).parse_args(args, namespace)
@@ -193,6 +193,7 @@ def create_default_cfg(path):
     """
     with open(path, 'w') as outfile:
         print(DEFAULT_CFG, end='', file=outfile)
+    os.chmod(path, 384)  # 384 == 0o600
     c = colors
     print(
         '{c.bold}[lmk] created default configuration file {path}{c.reset}'
