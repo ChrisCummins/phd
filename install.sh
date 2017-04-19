@@ -30,19 +30,6 @@ version() {
     echo "dotfiles $(git rev-parse --short HEAD)"
 }
 
-set -e
-if [[ "$1" == "-v" ]] || [[ "$1" == "--verbose" ]]; then
-    set -x
-    shift
-elif [[ "$1" == "--version" ]]; then
-    version
-    exit 0
-elif [[ -n "$1" ]]; then
-    usage >&2
-    exit 1
-fi
-set -u
-
 
 private="$HOME/Dropbox/Shared"
 
@@ -332,7 +319,25 @@ install_macos() {
 }
 
 
+parse_args() {
+    set -e
+    if [[ "$1" == "-v" ]] || [[ "$1" == "--verbose" ]]; then
+        set -x
+        shift
+    elif [[ "$1" == "--version" ]]; then
+        version
+        exit 0
+    elif [[ -n "$1" ]]; then
+        usage >&2
+        exit 1
+    fi
+    set -u
+}
+
+
 main() {
+    parse_args $@
+
     install_dropbox
     install_ssh
     install_python
