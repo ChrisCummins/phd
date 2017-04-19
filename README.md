@@ -23,6 +23,14 @@ $ lmk 'bash ./experiments.sh'
 
 ![](demo.png)
 
+Alternatively, `lmk -` reads passively from stdin:
+
+```sh
+$ (./experiment1.sh; experiment2.py) 2>&1 | lmk -
+... # commands run and output normally
+[lmk] chrisc.101@gmail.com notified
+```
+
 ## Installation
 ```sh
 $ pip install lmk

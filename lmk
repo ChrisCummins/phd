@@ -68,23 +68,36 @@ else:
 
 __version__ = require("lmk")[0].version
 
+DEFAULT_CFG_PATH = os.path.expanduser('~/.lmkrc')
+
 __description__ = """\
 lmk {__version__}: let me know. Patiently awaits the completion of the
 specified comamnd, and emails you with the output and result.
+
+Examples
+--------
+Run a command using lmk to receive an email when it completes, containing it's
+output and return code:
+
+    $ lmk './experiments -n 100'
+
+Alternatively, pipe the output of commands to lmk to receive an email when they
+complete:
+
+    $ (./experiment1.sh; experiment2.py -n 100) 2>&1 | lmk -
+
+Configuration
+-------------
+The file {DEFAULT_CFG_PATH} contains the configuration settings. Modify
+the smtp and message settings to suit.
 
 Made with \033[1;31m♥\033[0;0m by Chris Cummins.
 <https://github.com/ChrisCummins/lmk>\
 """.format(**vars())
 
 DEFAULT_CFG = """\
-; lkm 'let me know' config file
-; <https://github.com/ChrisCummins/lmk>
-;
-; Notes:
-;   * Shell $VARIABLES are expanded, use '\$' to escape '$' symbol.
-;   * Special variable $HOST expands to system hostname.
-;   * 'To' field of messages may be a comma separated list of recipients.
-;
+; lkm config <https://github.com/ChrisCummins/lmk>
+
 [smtp]
 Host: smtp.gmail.com
 Port: 587
@@ -95,7 +108,6 @@ Password: $LMK_PWD
 From: $USER@$HOST
 To: $LMK_TO
 """
-DEFAULT_CFG_PATH = os.path.expanduser('~/.lmk.cfg')
 
 E_CFG = 2
 E_SMTP = 3
@@ -128,6 +140,9 @@ class ArgumentParser(argparse.ArgumentParser):
             '--version',
             action='store_true',
             help='show version information and exit')
+        self.add_argument(
+            '--create-config', action='store_true',
+            help='create configuration file and exit')
 
     def parse_args(self, args=sys.argv[1:], namespace=None):
         """
@@ -139,6 +154,10 @@ class ArgumentParser(argparse.ArgumentParser):
         if '--version' in args:
             print('lnk {version}, made with {c.red}♥{c.reset} by '
                   'Chris Cummins <chrisc.101@gmail.com>'.format(**vars()))
+            sys.exit(0)
+
+        if '--create-config' in args:
+            create_default_cfg(get_cfg_path())
             sys.exit(0)
 
         return super(ArgumentParser, self).parse_args(args, namespace)
@@ -157,7 +176,8 @@ def parse_args(args):
         description=__description__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        'command', metavar='<command>', help='command to execute')
+        'command', metavar='<command>',
+        help='command to execute, or "-" to read from stdin')
     args = parser.parse_args(args)
     return args.command
 
@@ -668,7 +688,8 @@ def run_subprocess(command):
     let_me_know(
         output=output, command=command, returncode=returncode, cfg=cfg,
         date_started=date_started, date_ended=date_ended)
-    sys.exit(returncode)
+
+    return returncode
 
 
 def main():
@@ -677,7 +698,7 @@ def main():
     if command == '-':
         read_from_stdin()
     else:
-        run_subprocess(command)
+        sys.exit(run_subprocess(command))
 
 
 if __name__ == '__main__':
