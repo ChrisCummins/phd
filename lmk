@@ -47,6 +47,7 @@ E_SMTP : int
 from __future__ import print_function
 
 import argparse
+import cgi
 import os
 import pipes
 import shlex
@@ -258,7 +259,7 @@ def parse_str(str_, substitutions={}):
     return ''.join(out)
 
 
-def load_cfg(path):
+def load_cfg(path=None):
     """
     Parse configuration.
 
@@ -284,6 +285,9 @@ def load_cfg(path):
         from configparser import ConfigParser
     else:
         from configparser import ConfigParser
+
+    if path is None:
+        path = get_cfg_path()
 
     cfg = ConfigParser()
     cfg.read(path)
@@ -446,7 +450,6 @@ def build_html_message_body(command, output, returncode, runtime):
     lmk = '<a href="github.com/ChrisCummins/lmk">lmk</a>'
     me = '<a href="http://chriscummins.cc">Chris Cummins</a>'
 
-    import cgi
     command_html = cgi.escape(command)
 
     prompt_css = ";".join([
@@ -538,13 +541,50 @@ def get_cfg_path():
     return cfg_path
 
 
+def check_connection(cfg=None):
+    if cfg is None:
+        cfg = load_cfg()
+
+    get_smtp_server(cfg).quit()
+
+
+def let_me_know(command, output, returncode=None, runtime=None, cfg=None):
+    if cfg is None:
+        cfg = load_cfg()
+
+    exit_tick_cross = u'✘ ' + str(returncode) if returncode else u'✔'
+    exit_emoji = u'🙈' if returncode else u'🙂'
+
+    html = build_html_message_body(
+        command, output, returncode, runtime)
+    if sys.version_info < (3, 0):
+        html = html.encode('utf-8')
+
+    msg = MIMEMultipart()
+    msg['From'] = cfg['messages']['from']
+    msg['Subject'] = parse_str(cfg['messages']['subject'], {
+        'HOST': lambda: gethostname(),
+        'EXIT': lambda: str(returncode),
+        'EXIT_TICK_CROSS': lambda: exit_tick_cross,
+        'EXIT_EMOJI': lambda: exit_emoji,
+        'CMD': lambda: command,
+        'DATE_START': lambda: str(date_started),
+        'DATE_END': lambda: str(date_ended),
+    })
+    msg.attach(MIMEText(html, 'html'))
+
+    server = get_smtp_server(cfg)
+    for recipient in cfg['messages']['to'].split(','):
+        msg['To'] = cfg['messages']['to']
+        send_email_smtp(cfg, server, msg)
+    server.quit()
+
+
 def main():
     command = parse_args(sys.argv[1:])
 
-    cfg = load_cfg(get_cfg_path())
-
-    # test the connection
-    get_smtp_server(cfg).quit()
+    cfg = load_cfg()
+    check_connection(cfg)
 
     date_started = datetime.now()
 
@@ -568,37 +608,15 @@ def main():
             out.append(line)
     process.wait()
 
-    exit_status = process.returncode
-    exit_tick_cross = u'✘ ' + str(exit_status) if exit_status else u'✔'
-    exit_emoji = u'🙈' if exit_status else u'🙂'
-    output = ''.join(out).strip()
     date_ended = datetime.now()
 
-    html = build_html_message_body(
-        command, output, exit_status, (date_started, date_ended))
-    if sys.version_info < (3, 0):
-        html = html.encode('utf-8')
+    output = ''.join(out).strip()
+    returncode = process.returncode
 
-    msg = MIMEMultipart()
-    msg['From'] = cfg['messages']['from']
-    msg['Subject'] = parse_str(cfg['messages']['subject'], {
-        'HOST': lambda: gethostname(),
-        'EXIT': lambda: str(exit_status),
-        'EXIT_TICK_CROSS': lambda: exit_tick_cross,
-        'EXIT_EMOJI': lambda: exit_emoji,
-        'CMD': lambda: command,
-        'DATE_START': lambda: str(date_started),
-        'DATE_END': lambda: str(date_ended),
-    })
-    msg.attach(MIMEText(html, 'html'))
-
-    server = get_smtp_server(cfg)
-    for recipient in cfg['messages']['to'].split(','):
-        msg['To'] = cfg['messages']['to']
-        send_email_smtp(cfg, server, msg)
-    server.quit()
-
-    sys.exit(exit_status)
+    let_me_know(
+        command=command, output=output, returncode=returncode,
+        runtime=(date_started, date_ended), cfg=cfg)
+    sys.exit(returncode)
 
 
 if __name__ == '__main__':
