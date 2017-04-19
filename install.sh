@@ -14,17 +14,21 @@ symlink() {
     # args:
     #   $1 path that symlink resolves to
     #   $2 fully qualified destination symlink (not just the parent directory)
+    #   $3 (optional) prefix. set to "sudo" to symlink with sudo permissions
     local source="$1"
     local destination="$2"
+    set +u
+    local prefix="$3"
+    set -u
 
-    if [[ ! -L "$destination" ]]; then
-        if [[ -f "$destination" ]]; then
+    if ! $prefix test -L "$destination" ; then
+        if $prefix test -f "$destination" ; then
             local backup="$destination.backup"
             echo "backup $destination -> $destination.backup"
-            mv "$destination" "$destination.backup"
+            $prefix mv "$destination" "$destination.backup"
         fi
         echo "symlink $source -> $destination"
-        ln -s "$source" "$destination"
+        $prefix ln -s "$source" "$destination"
     fi
 }
 
@@ -193,6 +197,13 @@ install_sublime() {
     fi
 }
 
+install_ssmtp() {
+    if [[ "$(uname)" != "Darwin" ]]; then
+        _apt_get_install ssmtp
+        symlink "$private/ssmtp/ssmtp.conf" /etc/ssmtp/ssmtp.conf sudo
+    fi
+}
+
 install_python() {
     if [[ -f "$private/python/.pypirc" ]]; then
         symlink "$private/python/.pypirc" ~/.pypirc
@@ -255,6 +266,7 @@ main() {
     install_atom
     install_vim
     install_sublime
+    install_ssmtp
     install_python
     install_mysql
     install_omnifocus
