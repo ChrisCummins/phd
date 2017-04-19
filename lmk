@@ -45,7 +45,6 @@ else:
     from email.MIMEMultipart import MIMEMultipart
     from email.MIMEText import MIMEText
 
-
 __version__ = require("lmk")[0].version
 
 __description__ = """\
@@ -78,19 +77,22 @@ From: $USER@$HOST
 To: $LMK_TO
 Subject: $USER@$HOST [↪ $EXIT] \$ $CMD
 """
-DEFAULT_CFG_PATH=os.path.expanduser('~/.lmk.cfg')
+DEFAULT_CFG_PATH = os.path.expanduser('~/.lmk.cfg')
 
 E_CFG = 2
 E_SMTP = 3
 
 
 class colors:
-    reset   = '\033[0;0m'
-    red     = '\033[1;31m'
-    blue    = '\033[1;34m'
-    cyan    = '\033[1;36m'
-    green   = '\033[0;32m'
-    bold    = '\033[;1m'
+    """
+    Shell escape codes.
+    """
+    reset = '\033[0;0m'
+    red = '\033[1;31m'
+    blue = '\033[1;34m'
+    cyan = '\033[1;36m'
+    green = '\033[0;32m'
+    bold = '\033[;1m'
     reverse = '\033[;7m'
 
 
@@ -98,13 +100,16 @@ class ArgumentParser(argparse.ArgumentParser):
     """
     Specialized argument parser, with --version flag.
     """
+
     def __init__(self, *args, **kwargs):
         """
         See python argparse.ArgumentParser.__init__().
         """
         super(ArgumentParser, self).__init__(*args, **kwargs)
-        self.add_argument('--version', action='store_true',
-                          help='show version information and exit')
+        self.add_argument(
+            '--version',
+            action='store_true',
+            help='show version information and exit')
 
     def parse_args(self, args=sys.argv[1:], namespace=None):
         """
@@ -133,8 +138,8 @@ def parse_args(args):
     parser = ArgumentParser(
         description=__description__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('command', metavar='<command>',
-                        help='command to execute')
+    parser.add_argument(
+        'command', metavar='<command>', help='command to execute')
     args = parser.parse_args(args)
     return args.command
 
@@ -151,11 +156,13 @@ def create_default_cfg(path):
     with open(path, 'w') as outfile:
         print(DEFAULT_CFG, end='', file=outfile)
     c = colors
-    print('{c.bold}[lmk] created default configuration file {path}{c.reset}'
-          .format(**vars()), file=sys.stderr)
+    print(
+        '{c.bold}[lmk] created default configuration file {path}{c.reset}'
+        .format(**vars()),
+        file=sys.stderr)
 
 
-def parse_str(string, substitutions={}):
+def parse_str(str_, substitutions={}):
     """
     Parse a string, escaping shell and special variables.
 
@@ -163,11 +170,12 @@ def parse_str(string, substitutions={}):
 
     Parameters
     ----------
-    string : str
+    str_ : str
         String to parse.
     substitutions : Dict[str, lambda: str]
         A dictionary of substitution functions.
     """
+
     def expandvar():
         if ''.join(varname) in substitutions:
             var = substitutions[''.join(varname)]()
@@ -177,29 +185,35 @@ def parse_str(string, substitutions={}):
 
     BASH_VAR_CHARS = string.ascii_letters + string.digits + '_'
 
+    # parser state
     out = []
     varname = []
     invar = False
     escape = False
-    for c in string:
+
+    for c in str_:
         if c == '\\':
             if escape:
+                # '\\' -> '\'
                 out.append('\\')
                 escape = False
             else:
                 escape = True
         elif c == '$':
             if escape:
+                # '\$' -> '$'
                 out.append('$')
                 escape = False
             else:
                 if invar:
+                    # '$foo$bar' -> $(foo) $(bar)
                     expandvar()
                 varname = []
                 invar = True
         elif c == ' ':
             escape = False
             if invar:
+                # '$foo ' -> $(foo)' '
                 expandvar()
                 varname = []
                 invar = False
@@ -209,6 +223,7 @@ def parse_str(string, substitutions={}):
                 if c in BASH_VAR_CHARS:
                     varname.append(c)
                 else:
+                    # '$foo@' -> $(foo)'@'
                     expandvar()
                     varname = []
                     invar = False
@@ -233,13 +248,15 @@ def load_cfg(path):
     ConfigParser
         Parsed configuration.
     """
+
     def _verify(stmt, *msg, **kwargs):
         sep = kwargs.get('sep', ' ')
         msg = sep.join(msg)
         c = colors
         if not stmt:
-            print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(**vars()),
-                  file=sys.stderr)
+            print(
+                '{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(**vars()),
+                file=sys.stderr)
             sys.exit(E_CFG)
 
     if sys.version_info >= (3, 0):
@@ -302,11 +319,13 @@ def get_smtp_server(cfg):
     SMTP
         SMTP Server.
     """
+
     def _error(*msg, **kwargs):
         sep = kwargs.get('sep', ' ')
         msg = sep.join(msg)
-        print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(**vars()),
-              file=sys.stderr)
+        print(
+            '{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(**vars()),
+            file=sys.stderr)
         sys.exit(E_SMTP)
 
     c = colors
@@ -324,8 +343,10 @@ def get_smtp_server(cfg):
     except smtplib.SMTPServerDisconnected:
         host, port = cfg['smtp']['host'], cfg['smtp']['port']
         cfg_path = cfg['/run']['path']
-        _error('{host}:{port} disconnected. Check smtp settings in {cfg_path}'
-               .format(**vars()), file=sys.stderr)
+        _error(
+            '{host}:{port} disconnected. Check smtp settings in {cfg_path}'
+            .format(**vars()),
+            file=sys.stderr)
     except smptlib.SMTPException:
         host, port = cfg['smtp']['host'], cfg['smtp']['port']
         cfg_path = cfg['/run']['path']
@@ -348,19 +369,23 @@ def send_email_smtp(cfg, server, msg):
     bool
         True is send suceeded, else false.
     """
+
     def _error(*msg, **kwargs):
         sep = kwargs.get('sep', ' ')
         msg = sep.join(msg)
-        print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(**vars()),
-              file=sys.stderr)
+        print(
+            '{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(**vars()),
+            file=sys.stderr)
         return False
 
     c = colors
     try:
         recipient = msg['To']
         server.sendmail(msg['From'], msg['To'], msg.as_string())
-        print('{c.bold}{c.cyan}[lmk] {recipient} notified{c.reset}'
-              .format(**vars()), file=sys.stderr)
+        print(
+            '{c.bold}{c.cyan}[lmk] {recipient} notified{c.reset}'.format(
+                **vars()),
+            file=sys.stderr)
         return True
     except smtplib.SMTPHeloError:
         host, port = cfg['smtp']['host'], cfg['smtp']['port']
@@ -433,8 +458,10 @@ def get_cfg_path():
     if not os.path.exists(cfg_path) and cfg_path == DEFAULT_CFG_PATH:
         create_default_cfg(cfg_path)
     elif not os.path.exists(cfg_path):
-        print('{c.bold}{c.red}$LMK_CFG ({cfg_path}) not found{c.reset}'
-              .format(**vars()), file=sys.stderr)
+        print(
+            '{c.bold}{c.red}$LMK_CFG ({cfg_path}) not found{c.reset}'.format(
+                **vars()),
+            file=sys.stderr)
         sys.exit(E_CFG)
     return cfg_path
 
@@ -452,8 +479,12 @@ def main():
 
     out = []
     process = subprocess.Popen(
-        command, shell=True, universal_newlines=True, bufsize=1,
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        command,
+        shell=True,
+        universal_newlines=True,
+        bufsize=1,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT)
 
     if sys.version_info >= (3, 0):
         output_iter = process.stdout
