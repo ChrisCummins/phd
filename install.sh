@@ -395,6 +395,7 @@ parse_args() {
 
 main() {
     parse_args $@
+    version
 
     install_dropbox
     install_ssh
