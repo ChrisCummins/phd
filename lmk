@@ -5,16 +5,27 @@ let me know - Email output of command upon completion
 
 Attributes
 ----------
+__version__ : str
+    Package version.
+
+__description__ : str
+    Package description.
+
+DEFAULT_CFG : str
+    Default configuration.
+
 DEFAULT_CFG_PATH : str
     Default path to the configuration file.
 
 E_CFG : int
     Non-zero return code for configuration errors.
+
 E_SMTP : int
     Non-zero return code for fatal SMTP errors.
 """
 from __future__ import print_function
 
+import argparse
 import os
 import pipes
 import shlex
@@ -23,39 +34,29 @@ import string
 import subprocess
 import sys
 
-from argparse import ArgumentParser
 from datetime import datetime
 from pkg_resources import require
 from socket import gethostname
 
-if sys.version_info >= (3,0):
+if sys.version_info >= (3, 0):
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
 else:
     from email.MIMEMultipart import MIMEMultipart
     from email.MIMEText import MIMEText
 
+
 __version__ = require("lmk")[0].version
 
-DEFAULT_CFG_PATH=os.path.expanduser("~/.lmk.cfg")
+__description__ = """\
+lmk {__version__}: let me know. Patiently awaits the completion of the
+specified comamnd, and emails you with the output and result.
 
-E_CFG = 2
-E_SMTP = 3
+Made with \033[1;31m♥\033[0;0m by Chris Cummins.
+<https://github.com/ChrisCummins/lmk>\
+""".format(**vars())
 
-class colors:
-    reset   = "\033[0;0m"
-    red     = "\033[1;31m"
-    blue    = "\033[1;34m"
-    cyan    = "\033[1;36m"
-    green   = "\033[0;32m"
-    bold    = "\033[;1m"
-    reverse = "\033[;7m"
-
-def create_default_cfg(path):
-    """
-    """
-    with open(path, 'w') as outfile:
-        print("""\
+DEFAULT_CFG = """\
 ; lkm 'let me know' config file
 ; <https://github.com/ChrisCummins/lmk>
 ;
@@ -76,15 +77,94 @@ Password: $LMK_PWD
 From: $USER@$HOST
 To: $LMK_TO
 Subject: $USER@$HOST [↪ $EXIT] \$ $CMD
-""", file=outfile)
-    c = colors
-    print("{c.bold}[lmk] created default configuration file {path}{c.reset}"
-          .format(**vars()), file=sys.stderr)
+"""
+DEFAULT_CFG_PATH=os.path.expanduser('~/.lmk.cfg')
 
-def parse_str(var, substitutions={}):
+E_CFG = 2
+E_SMTP = 3
+
+
+class colors:
+    reset   = '\033[0;0m'
+    red     = '\033[1;31m'
+    blue    = '\033[1;34m'
+    cyan    = '\033[1;36m'
+    green   = '\033[0;32m'
+    bold    = '\033[;1m'
+    reverse = '\033[;7m'
+
+
+class ArgumentParser(argparse.ArgumentParser):
     """
+    Specialized argument parser, with --version flag.
+    """
+    def __init__(self, *args, **kwargs):
+        """
+        See python argparse.ArgumentParser.__init__().
+        """
+        super(ArgumentParser, self).__init__(*args, **kwargs)
+        self.add_argument('--version', action='store_true',
+                          help='show version information and exit')
+
+    def parse_args(self, args=sys.argv[1:], namespace=None):
+        """
+        See python argparse.ArgumentParser.parse_args().
+        """
+        # --version option overrides the normal argument parsing process.
+        c = colors
+        version = __version__
+        if '--version' in args:
+            print('lnk {version}, made with {c.red}♥{c.reset} by '
+                  'Chris Cummins <chrisc.101@gmail.com>'.format(**vars()))
+            sys.exit(0)
+
+        return super(ArgumentParser, self).parse_args(args, namespace)
+
+
+def parse_args(args):
+    """
+    Parse command line options.
+
+    Returns
+    -------
+    str
+        Command to execute.
+    """
+    parser = ArgumentParser(
+        description=__description__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('command', metavar='<command>',
+                        help='command to execute')
+    args = parser.parse_args(args)
+    return args.command
+
+
+def create_default_cfg(path):
+    """
+    Create default configuration file.
+
     Parameters
     ----------
+    path : str
+        Path of cfg file to create.
+    """
+    with open(path, 'w') as outfile:
+        print(DEFAULT_CFG, end='', file=outfile)
+    c = colors
+    print('{c.bold}[lmk] created default configuration file {path}{c.reset}'
+          .format(**vars()), file=sys.stderr)
+
+
+def parse_str(string, substitutions={}):
+    """
+    Parse a string, escaping shell and special variables.
+
+    Rudimentary, crummy bash variable parser.
+
+    Parameters
+    ----------
+    string : str
+        String to parse.
     substitutions : Dict[str, lambda: str]
         A dictionary of substitution functions.
     """
@@ -96,18 +176,19 @@ def parse_str(var, substitutions={}):
         out.append(var)
 
     BASH_VAR_CHARS = string.ascii_letters + string.digits + '_'
+
     out = []
     varname = []
     invar = False
     escape = False
-    for c in var:
+    for c in string:
         if c == '\\':
             if escape:
                 out.append('\\')
                 escape = False
             else:
                 escape = True
-        elif c == "$":
+        elif c == '$':
             if escape:
                 out.append('$')
                 escape = False
@@ -140,10 +221,25 @@ def parse_str(var, substitutions={}):
         expandvar()
     return ''.join(out)
 
+
 def load_cfg(path):
-    def _verify(stmt, msg):
+    """
+    Parse configuration.
+
+    In case of error, kills process with status E_CFG.
+
+    Returns
+    -------
+    ConfigParser
+        Parsed configuration.
+    """
+    def _verify(stmt, *msg, **kwargs):
+        sep = kwargs.get('sep', ' ')
+        msg = sep.join(msg)
+        c = colors
         if not stmt:
-            print("fatal:", msg, file=sys.stderr)
+            print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(**vars()),
+                  file=sys.stderr)
             sys.exit(E_CFG)
 
     if sys.version_info >= (3, 0):
@@ -154,37 +250,37 @@ def load_cfg(path):
     cfg = ConfigParser()
     cfg.read(path)
 
-    _verify("smtp" in cfg, "config file %s contains no [smtp] section" % path)
-    _verify("host" in cfg["smtp"], "no host in %s:smtp" % path)
-    _verify("port" in cfg["smtp"], "no port in %s:smtp" % path)
-    _verify("username" in cfg["smtp"], "no username in %s:smtp" % path)
-    _verify("password" in cfg["smtp"], "no password in %s:smtp" % path)
+    _verify('smtp' in cfg, 'config file %s contains no [smtp] section' % path)
+    _verify('host' in cfg['smtp'], 'no host in %s:smtp' % path)
+    _verify('port' in cfg['smtp'], 'no port in %s:smtp' % path)
+    _verify('username' in cfg['smtp'], 'no username in %s:smtp' % path)
+    _verify('password' in cfg['smtp'], 'no password in %s:smtp' % path)
 
-    _verify("messages" in cfg,
-            "config file %s contains no [messages] section" % path)
-    _verify("from" in cfg["messages"], "no from address in %s:messages" % path)
-    _verify("to" in cfg["messages"], "no to address in %s:messages" % path)
+    _verify('messages' in cfg,
+            'config file %s contains no [messages] section' % path)
+    _verify('from' in cfg['messages'], 'no from address in %s:messages' % path)
+    _verify('to' in cfg['messages'], 'no to address in %s:messages' % path)
 
-    parse = lambda x: parse_str(x, {"HOST": lambda: gethostname()})
+    parse = lambda x: parse_str(x, {'HOST': lambda: gethostname()})
 
-    cfg["smtp"]["host"] = parse(cfg["smtp"]["host"])
-    cfg["smtp"]["port"] = parse(cfg["smtp"]["port"])
-    cfg["smtp"]["username"] = parse(cfg["smtp"]["username"])
-    cfg["smtp"]["password"] = parse(cfg["smtp"]["password"])
+    cfg['smtp']['host'] = parse(cfg['smtp']['host'])
+    cfg['smtp']['port'] = parse(cfg['smtp']['port'])
+    cfg['smtp']['username'] = parse(cfg['smtp']['username'])
+    cfg['smtp']['password'] = parse(cfg['smtp']['password'])
 
-    _verify(cfg["smtp"]["host"], "stmp host is empty. Check %s" % path)
-    _verify(cfg["smtp"]["port"], "stmp port is empty. Check %s" % path)
-    _verify(cfg["smtp"]["username"], "stmp username is empty. Check %s" % path)
-    _verify(cfg["smtp"]["password"], "stmp password is empty. Check %s" % path)
+    _verify(cfg['smtp']['host'], 'stmp host is empty. Check %s' % path)
+    _verify(cfg['smtp']['port'], 'stmp port is empty. Check %s' % path)
+    _verify(cfg['smtp']['username'], 'stmp username is empty. Check %s' % path)
+    _verify(cfg['smtp']['password'], 'stmp password is empty. Check %s' % path)
 
-    cfg["messages"]["from"] = parse(cfg["messages"]["from"])
-    cfg["messages"]["to"] = parse(cfg["messages"]["to"])
+    cfg['messages']['from'] = parse(cfg['messages']['from'])
+    cfg['messages']['to'] = parse(cfg['messages']['to'])
     # note: cfg["messages"]["subject"] is parsed after command completion,
     #   so we can substitue in outcomes.
 
     # add runtime metadata
-    cfg.add_section("/run")
-    cfg["/run"]["path"] = path
+    cfg.add_section('/run')
+    cfg['/run']['path'] = path
 
     return cfg
 
@@ -207,34 +303,33 @@ def get_smtp_server(cfg):
         SMTP Server.
     """
     def _error(*msg, **kwargs):
-        sep = kwargs.get("sep", " ")
+        sep = kwargs.get('sep', ' ')
         msg = sep.join(msg)
-        print("{c.bold}{c.red}[lmk] {msg}{c.reset}".format(**vars()),
+        print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(**vars()),
               file=sys.stderr)
         sys.exit(E_SMTP)
-    c = colors
 
+    c = colors
     try:
-        server = smtplib.SMTP(cfg["smtp"]["host"], int(cfg["smtp"]["port"]))
+        server = smtplib.SMTP(cfg['smtp']['host'], int(cfg['smtp']['port']))
         server.starttls()
-        server.login(cfg["smtp"]["username"], cfg["smtp"]["password"])
+        server.login(cfg['smtp']['username'], cfg['smtp']['password'])
         return server
     except smptlib.SMTPHeloError:
-        host, port = cfg["smtp"]["host"], cfg["smtp"]["port"]
-        _error("connection to {host}:{port} failed".format(**vars()))
+        host, port = cfg['smtp']['host'], cfg['smtp']['port']
+        _error('connection to {host}:{port} failed'.format(**vars()))
     except smtplib.SMTPAuthenticationError:
-        cfg_path = cfg["/run"]["path"]
         _error('smtp authentication failed. Check username and password in '
-               '%s' % cfg_path)
+               '%s' % cfg['/run']['path'])
     except smtplib.SMTPServerDisconnected:
-        host, port = cfg["smtp"]["host"], cfg["smtp"]["port"]
-        cfg_path = cfg["/run"]["path"]
+        host, port = cfg['smtp']['host'], cfg['smtp']['port']
+        cfg_path = cfg['/run']['path']
         _error('{host}:{port} disconnected. Check smtp settings in {cfg_path}'
                .format(**vars()), file=sys.stderr)
     except smptlib.SMTPException:
-        host, port = cfg["smtp"]["host"], cfg["smtp"]["port"]
-        cfg_path = cfg["/run"]["path"]
-        _error("unknown error from {host}:{port}".format(**vars()))
+        host, port = cfg['smtp']['host'], cfg['smtp']['port']
+        cfg_path = cfg['/run']['path']
+        _error('unknown error from {host}:{port}'.format(**vars()))
 
 
 def send_email_smtp(cfg, server, msg):
@@ -254,30 +349,30 @@ def send_email_smtp(cfg, server, msg):
         True is send suceeded, else false.
     """
     def _error(*msg, **kwargs):
-        sep = kwargs.get("sep", " ")
+        sep = kwargs.get('sep', ' ')
         msg = sep.join(msg)
-        print("{c.bold}{c.red}[lmk] {msg}{c.reset}".format(**vars()),
+        print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(**vars()),
               file=sys.stderr)
         return False
 
     c = colors
     try:
-        recipient = msg["To"]
-        server.sendmail(msg["From"], msg["To"], msg.as_string())
-        print("{c.bold}{c.cyan}[lmk] {recipient} notified{c.reset}"
+        recipient = msg['To']
+        server.sendmail(msg['From'], msg['To'], msg.as_string())
+        print('{c.bold}{c.cyan}[lmk] {recipient} notified{c.reset}'
               .format(**vars()), file=sys.stderr)
         return True
     except smtplib.SMTPHeloError:
-        host, port = cfg["smtp"]["host"], cfg["smtp"]["port"]
-        return _error("connection to {host}:{port} failed".format(**vars()))
+        host, port = cfg['smtp']['host'], cfg['smtp']['port']
+        return _error('connection to {host}:{port} failed'.format(**vars()))
     except smtplib.SMTPDataError:
-        host, port = cfg["smtp"]["host"], cfg["smtp"]["port"]
-        return _error("unknown error from {host}:{port}".format(**vars()))
+        host, port = cfg['smtp']['host'], cfg['smtp']['port']
+        return _error('unknown error from {host}:{port}'.format(**vars()))
     except smtplib.SMTPRecipientsRefused:
-        return _error("recipient {recipient} refused".format(**vars()))
+        return _error('recipient {recipient} refused'.format(**vars()))
     except smtplib.SMTPSenderRefused:
-        from_ = msg["From"]
-        return _error("sender {from_} refused".format(**vars()))
+        from_ = msg['From']
+        return _error('sender {from_} refused'.format(**vars()))
     return False
 
 
@@ -297,7 +392,7 @@ def build_html_message_body(command, output, runtime):
     str
         HTML string.
     """
-    user = os.environ["USER"]
+    user = os.environ['USER']
     host = gethostname()
     cwd = os.getcwd()
     lmk_version = __version__
@@ -323,23 +418,32 @@ def build_html_message_body(command, output, runtime):
 """.format(**vars())
 
 
-def main():
-    parser = ArgumentParser(description="""\
-lmk: let me know. Patiently awaits the completion of the specified comamnd,
-and emails you with the output and result.""")
-    parser.add_argument('command', metavar="<command>",
-                        help="command to execute")
-    args = parser.parse_args()
+def get_cfg_path():
+    """
+    Get path to config file.
 
-    cfg_path = os.path.expanduser(os.environ.get("LMK_CFG", DEFAULT_CFG_PATH))
+    If config file not found, kills the process with E_CFG.
+
+    Returns
+    -------
+    str
+        Config path.
+    """
+    cfg_path = os.path.expanduser(os.environ.get('LMK_CFG', DEFAULT_CFG_PATH))
     if not os.path.exists(cfg_path) and cfg_path == DEFAULT_CFG_PATH:
         create_default_cfg(cfg_path)
     elif not os.path.exists(cfg_path):
-        print("fatal: file $LMK_CFG (%s) not found" % cfg_path,
-              file=sys.stderr)
+        print('{c.bold}{c.red}$LMK_CFG ({cfg_path}) not found{c.reset}'
+              .format(**vars()), file=sys.stderr)
         sys.exit(E_CFG)
+    return cfg_path
 
-    cfg = load_cfg(cfg_path)
+
+def main():
+    c = colors
+    command = parse_args(sys.argv[1:])
+
+    cfg = load_cfg(get_cfg_path())
 
     # test the connection
     get_smtp_server(cfg).quit()
@@ -348,7 +452,7 @@ and emails you with the output and result.""")
 
     out = []
     process = subprocess.Popen(
-        args.command, shell=True, universal_newlines=True, bufsize=1,
+        command, shell=True, universal_newlines=True, bufsize=1,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     if sys.version_info >= (3, 0):
@@ -362,7 +466,6 @@ and emails you with the output and result.""")
             out.append(line)
     process.wait()
 
-    command = args.command
     exit_status = process.returncode
     output = ''.join(out)
     date_ended = datetime.now()
@@ -372,23 +475,22 @@ and emails you with the output and result.""")
         html = html.encode('utf-8')
 
     msg = MIMEMultipart()
-    msg['From'] = cfg["messages"]["from"]
-    msg['Subject'] = parse_str(cfg["messages"]["subject"], {
-        "HOST": lambda: gethostname(),
-        "EXIT": lambda: str(exit_status),
-        "CMD": lambda: args.command
+    msg['From'] = cfg['messages']['from']
+    msg['Subject'] = parse_str(cfg['messages']['subject'], {
+        'HOST': lambda: gethostname(),
+        'EXIT': lambda: str(exit_status),
+        'CMD': lambda: command,
     })
     msg.attach(MIMEText(html, 'html'))
 
-    c = colors
     server = get_smtp_server(cfg)
-    for recipient in cfg["messages"]["to"].split(','):
-        msg['To'] = cfg["messages"]["to"]
+    for recipient in cfg['messages']['to'].split(','):
+        msg['To'] = cfg['messages']['to']
         send_email_smtp(cfg, server, msg)
     server.quit()
 
     sys.exit(exit_status)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
