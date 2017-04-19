@@ -21,6 +21,22 @@ symlink() {
     local prefix="$3"
     set -u
 
+    if [[ "$source" == /* ]]; then
+        local source_abs="$source"
+    else
+        local source_abs="$(dirname $destination)/$source"
+    fi
+
+    if ! $prefix test -f "$source_abs" ; then
+        echo "error: symlink source '$source_abs' does not exist" >&2
+        exit 1
+    fi
+
+    if $prefix test -d "$destination" ; then
+        echo "error: symlink destination '$destination' is a directory" >&2
+        exit 1
+    fi
+
     if ! $prefix test -L "$destination" ; then
         if $prefix test -f "$destination" ; then
             local backup="$destination.backup"
@@ -37,17 +53,37 @@ symlink_dir() {
     # args:
     #   $1 path that symlink resolves to
     #   $2 fully qualified destination symlink (not just the parent directory)
+    #   $3 (optional) prefix. set to "sudo" to symlink with sudo permissions
     local source="$1"
     local destination="$2"
+    set +u
+    local prefix="$3"
+    set -u
 
-    if [[ ! -L "$destination" ]]; then
-        if [[ -d "$destination" ]]; then
+    if [[ "$source" == /* ]]; then
+        local source_abs="$source"
+    else
+        local source_abs="$(dirname $destination)/$source"
+    fi
+
+    if ! $prefix test -d "$source_abs" ; then
+        echo "error: symlink_dir source '$source_abs' does not exist"
+        exit 1
+    fi
+
+    if $prefix test -f "$destination" ; then
+        echo "error: symlink_dir destination '$destination' is a file" >&2
+        exit 1
+    fi
+
+    if ! $prefix test -L "$destination" ; then
+        if $prefix test -d "$destination" ; then
             local backup="$destination.backup"
             echo "backup $destination -> $destination.backup"
-            mv "$destination" "$destination.backup"
+            $prefix mv "$destination" "$destination.backup"
         fi
-        echo "symlink $source -> $destination"
-        ln -s "$source" "$destination"
+        echo "symlink_dir $source -> $destination"
+        $prefix ln -s "$source" "$destination"
     fi
 }
 
@@ -114,7 +150,7 @@ install_packages() {
 
 install_zsh() {
     # install config files
-    symlink ~/.dotfiles/zsh ~/.zsh
+    symlink_dir ~/.dotfiles/zsh ~/.zsh
     symlink .zsh/zshrc ~/.zshrc
     if [[ -d "$private/zsh" ]]; then
         symlink_dir "$private/zsh" ~/.zsh/private
@@ -167,7 +203,7 @@ install_tmux() {
 install_atom() {
     # python linter
     _pip_install pylint
-    symlink .dotfiles/atom ~/.atom
+    symlink_dir .dotfiles/atom ~/.atom
     symlink ~/.dotfiles/atom/ratom ~/.local/bin/ratom
 }
 
