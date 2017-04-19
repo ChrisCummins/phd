@@ -1,0 +1,262 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+let me know - Email output of command upon completion
+
+Attributes
+----------
+DEFAULT_CFG_PATH : str
+    Default path to the configuration file.
+
+E_CFG : int
+    Non-zero return code for configuration errors.
+"""
+from __future__ import print_function
+
+import os
+import pipes
+import shlex
+import smtplib
+import string
+import subprocess
+import sys
+
+from argparse import ArgumentParser
+from datetime import datetime
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEText import MIMEText
+from socket import gethostname
+
+DEFAULT_CFG_PATH=os.path.expanduser("~/.lmk.cfg")
+
+E_CFG = 2
+
+def create_default_cfg(path):
+    """
+    """
+    with open(path, 'w') as outfile:
+        print("""\
+; lkm 'let me know' config file
+; <https://github.com/ChrisCummins/lmk>
+;
+; Notes:
+;   * Shell $VARIABLES are expanded, use '\$' to escape '$' symbol.
+;   * Special variable $HOST expands to system hostname.
+;   * 'To' field of messages may be a comma separated list of recipients.
+;   * Subject line may use special variables $EXIT (exit status of command) and
+;       $CMD (the command executed).
+;
+[smtp]
+Host: smtp.gmail.com
+Port: 587
+Username: $LMK_USER
+Password: $LMK_PWD
+
+[messages]
+From: $USER@$HOST
+To: $LMK_TO
+Subject: $USER@$HOST [↪ $EXIT] \$ $CMD
+""", file=outfile)
+    print("[lmk] created default configuration file %s" % path,
+          file=sys.stderr)
+
+def parse_str(var, substitutions={}):
+    """
+    Parameters
+    ----------
+    substitutions : Dict[str, lambda: str]
+        A dictionary of substitution functions.
+    """
+    def expandvar():
+        if ''.join(varname) in substitutions:
+            var = substitutions[''.join(varname)]()
+        else:
+            var = os.environ.get(''.join(varname), '')
+        out.append(var)
+
+    BASH_VAR_CHARS = string.ascii_letters + string.digits + '_'
+    out = []
+    varname = []
+    invar = False
+    escape = False
+    for c in var:
+        if c == '\\':
+            if escape:
+                out.append('\\')
+                escape = False
+            else:
+                escape = True
+        elif c == "$":
+            if escape:
+                out.append('$')
+                escape = False
+            else:
+                if invar:
+                    expandvar()
+                varname = []
+                invar = True
+        elif c == ' ':
+            escape = False
+            if invar:
+                expandvar()
+                varname = []
+                invar = False
+            out.append(' ')
+        else:
+            if invar:
+                if c in BASH_VAR_CHARS:
+                    varname.append(c)
+                else:
+                    expandvar()
+                    varname = []
+                    invar = False
+                    out.append(c)
+            else:
+                escape = False
+                out.append(c)
+
+    if invar:
+        expandvar()
+    return ''.join(out)
+
+def load_cfg(path):
+    def _verify(stmt, msg):
+        if not stmt:
+            print("fatal:", msg, file=sys.stderr)
+            sys.exit(E_CFG)
+
+    if sys.version_info >= (3, 0):
+        from configparser import ConfigParser
+    else:
+        from configparser import ConfigParser
+
+    cfg = ConfigParser()
+    cfg.read(path)
+
+    _verify("smtp" in cfg, "config file %s contains no [smtp] section" % path)
+    _verify("host" in cfg["smtp"], "no host in %s:smtp" % path)
+    _verify("port" in cfg["smtp"], "no port in %s:smtp" % path)
+    _verify("username" in cfg["smtp"], "no username in %s:smtp" % path)
+    _verify("password" in cfg["smtp"], "no password in %s:smtp" % path)
+
+    _verify("messages" in cfg,
+            "config file %s contains no [messages] section" % path)
+    _verify("from" in cfg["messages"], "no from address in %s:messages" % path)
+    _verify("to" in cfg["messages"], "no to address in %s:messages" % path)
+
+    parse = lambda x: parse_str(x, {"HOST": lambda: gethostname()})
+
+    cfg["smtp"]["host"] = parse(cfg["smtp"]["host"])
+    cfg["smtp"]["port"] = parse(cfg["smtp"]["port"])
+    cfg["smtp"]["username"] = parse(cfg["smtp"]["username"])
+    cfg["smtp"]["password"] = parse(cfg["smtp"]["password"])
+
+    cfg["messages"]["from"] = parse(cfg["messages"]["from"])
+    cfg["messages"]["to"] = parse(cfg["messages"]["to"])
+    # note: cfg["messages"]["subject"] is parsed after command completion,
+    #   so we can substitue in outcomes.
+
+    return cfg
+
+
+def main():
+    parser = ArgumentParser(description="""\
+lmk: let me know. Patiently awaits the completion of the specified comamnd,
+and emails you with the output and result.""")
+    parser.add_argument('command', metavar="<command>",
+                        help="command to execute")
+    args = parser.parse_args()
+
+    cfg_path = os.path.expanduser(os.environ.get("LMK_CFG", DEFAULT_CFG_PATH))
+    if not os.path.exists(cfg_path) and cfg_path == DEFAULT_CFG_PATH:
+        create_default_cfg(cfg_path)
+    elif not os.path.exists(cfg_path):
+        print("fatal: file $LMK_CFG (%s) not found" % cfg_path,
+              file=sys.stderr)
+        sys.exit(E_CFG)
+
+    cfg = load_cfg(cfg_path)
+
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    try:
+        server.login(cfg["smtp"]["username"], cfg["smtp"]["password"])
+    except smtplib.SMTPAuthenticationError:
+        # DEBUG: print("%s %s" % (cfg["smtp"]["username"], cfg["smtp"]["password"]))
+        print('fatal: authentication failed. Check username and '
+              'password credentials in %s' % cfg_path, file=sys.stderr)
+        sys.exit(E_CFG)
+
+    date_started = datetime.now()
+
+    out = []
+    process = subprocess.Popen(
+        args.command, shell=True, universal_newlines=True, bufsize=1,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    with process.stdout:
+        for line in iter(process.stdout.readline, b''):
+            print(line, end="")
+            out.append(line)
+    process.wait()
+
+    exit_status = process.returncode
+    out = "".join(out)
+    date_ended = datetime.now()
+
+    msg = MIMEMultipart()
+    msg.add_header('from','me@no.where')
+    msg['From'] = cfg["messages"]["from"]
+    msg['Subject'] = parse_str(cfg["messages"]["subject"], {
+        "HOST": lambda: gethostname(),
+        "EXIT": lambda: str(exit_status),
+        "CMD": lambda: args.command
+    })
+
+    user = os.environ["USER"]
+    host = gethostname()
+    heart = unicode('&#9829;')  #
+    plaintext = u"""\
+{user}@{host} $ {args.command}
+{out}
+
+==============================================================
+job started:   {date_started}
+job completed: {date_ended}
+""".format(**vars())
+
+    html = u"""\
+<pre style="font-weight:700; font-size:13px;">\
+{user}@{host} $ {args.command}
+</pre>
+<pre style="font-size:13px;">
+{out}\
+</pre>
+
+<hr/>
+<table>
+<tr><td>Started</td><td>{date_started}</td></tr>
+<tr><td>Completed</td><td>{date_ended}</td></tr>
+</table>
+
+<center style="color:#626262;">
+  <a href="github.com/ChrisCummins/lmk">lmk</a> made with ♥ by
+  <a href="http://chriscummins.cc">Chris Cummins</a>
+</center>
+""".format(**vars()).encode('utf-8')
+
+    # msg.attach(MIMEText(plaintext, 'plain'))
+    msg.attach(MIMEText(html, 'html'))
+
+    for recipient in cfg["messages"]["to"].split(','):
+        msg['To'] = cfg["messages"]["to"]
+        server.sendmail(msg["From"],
+                        msg["To"],
+                        msg.as_string())
+        print("[lmk] message sent to %s" % recipient, file=sys.stderr)
+    server.quit()
+
+    sys.exit(exit_status)
+
+
+if __name__ == "__main__":
+    main()
