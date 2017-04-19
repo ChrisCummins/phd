@@ -146,7 +146,7 @@ clone_git_repo() {
     local version="$3"
 
     if [[ ! -d "$destination" ]]; then
-        echo_ok "cloning repo $url to $destination"
+        echo_ok "cloning $url -> $destination"
         git clone --recursive "$url" "$destination"
     fi
 
@@ -395,7 +395,7 @@ parse_args() {
 
 main() {
     parse_args $@
-    version
+    echo_ok "dotfiles $(git rev-parse --short HEAD)"
 
     install_dropbox
     install_ssh
