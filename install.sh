@@ -127,27 +127,6 @@ _npm_install() {
 }
 
 
-install_packages() {
-    set +u
-    [ -f /etc/os-release ] && source /etc/os-release
-    [ -z "$NAME" ] && export NAME=$(uname)
-    set -u
-
-    if [[ "$NAME" == "Darwin" ]]; then
-        brew list | grep '^node$' &>/dev/null || brew install npm nodejs
-        brew list | grep '^python$' &>/dev/null || brew install python
-    elif [[ "$NAME" == "Ubuntu" ]]; then
-        _apt_get_install nodejs
-        _apt_get_install npm
-        _apt_get_install python-pip
-    fi
-
-    _pip_install autoenv
-    _pip_install lmk
-    _npm_install diff-so-fancy
-}
-
-
 install_zsh() {
     # install config files
     symlink_dir ~/.dotfiles/zsh ~/.zsh
@@ -158,10 +137,19 @@ install_zsh() {
 
     # install oh-my-zsh
     clone_repo git@github.com:robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
+
+    # syntax highlighting
     clone_repo https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
 
     # oh-my-zsh config
     symlink ~/.zsh/cec.zsh-theme ~/.oh-my-zsh/custom/cec.zsh-theme
+
+    _pip_install autoenv
+}
+
+
+install_lmk() {
+    _pip_install lmk
 }
 
 
@@ -191,6 +179,15 @@ install_dropbox() {
 
 
 install_git() {
+    # diff-so-fancy requires node stack
+    if [[ "$(uname)" == "Darwin" ]]; then
+        brew list | grep '^node$' &>/dev/null || brew install npm nodejs
+    else
+        _apt_get_install nodejs
+        _apt_get_install npm
+    fi
+
+    _npm_install diff-so-fancy
     symlink .dotfiles/git/gitconfig ~/.gitconfig
 }
 
@@ -239,6 +236,13 @@ install_ssmtp() {
 }
 
 install_python() {
+    # modern python
+    if [[ "$(uname)" == "Darwin" ]]; then
+        brew list | grep '^python$' &>/dev/null || brew install python
+    else
+        _apt_get_install python-pip
+    fi
+
     if [[ -f "$private/python/.pypirc" ]]; then
         symlink "$private/python/.pypirc" ~/.pypirc
     fi
@@ -291,17 +295,17 @@ install_macos() {
 
 
 main() {
-    install_packages
     install_dropbox
     install_ssh
+    install_python
     install_zsh
+    install_lmk
     install_git
     install_tmux
     install_atom
     install_vim
     install_sublime
     install_ssmtp
-    install_python
     install_mysql
     install_omnifocus
     install_server_scripts
