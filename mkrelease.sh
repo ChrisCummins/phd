@@ -141,7 +141,7 @@ main() {
     git push origin "$new_version"
 
     # update on PyPi
-    python setup.py sdist upload
+    python setup.py sdist upload -r pypi
 
     # set dev version
     local dev_version="$new_version$dev_suffix"
