@@ -325,7 +325,6 @@ if $(which dircolors &>/dev/null); then
 fi
 
 # Shortcuts.
-alias a='atom'
 alias c='clear'
 alias E='exit'
 alias f='file'
@@ -335,7 +334,6 @@ alias l='less'
 alias ll='ls -lh'
 alias m='make'
 alias M='mkdir'
-alias mm='./autogen.sh && ./configure'
 alias p='ipython'
 alias q='which'
 alias T='tail'
