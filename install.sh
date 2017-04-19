@@ -38,6 +38,18 @@ dotfiles="$HOME/.dotfiles"
 private="$HOME/Dropbox/Shared"
 
 
+echo_ok() {
+    local msg="$@"
+    echo -e "$(tput bold)$@$(tput sgr0)"
+}
+
+
+echo_error() {
+    local msg="$@"
+    echo -e "$(tput bold)$(tput setaf 1)$@$(tput sgr0)" >&2
+}
+
+
 symlink() {
     # symlink a file
     #
@@ -59,25 +71,25 @@ symlink() {
     fi
 
     if ! $prefix test -f "$source_abs" ; then
-        echo "failed: symlink $source -> $destination"
-        echo "error: symlink source '$source_abs' does not exist" >&2
+        echo_error "failed: symlink $source -> $destination"
+        echo_error "error:  symlink source '$source_abs' does not exist"
         exit 1
     fi
 
     # check that destination is not a file
     if $prefix test -d "$destination" ; then
-        echo "failed: $source -> $destination"
-        echo "error: symlink destination '$destination' is a directory" >&2
+        echo_error "failed: $source -> $destination"
+        echo_error "error:  symlink destination '$destination' is a directory"
         exit 1
     fi
 
     if ! $prefix test -L "$destination" ; then
         if $prefix test -f "$destination" ; then
             local backup="$destination.backup"
-            echo "backup $destination -> $destination.backup"
+            echo_ok "backup $destination -> $destination.backup"
             $prefix mv "$destination" "$destination.backup"
         fi
-        echo "symlink $source -> $destination"
+        echo_ok "symlink $source -> $destination"
         $prefix ln -s "$source" "$destination"
     fi
 }
@@ -104,25 +116,25 @@ symlink_dir() {
     fi
 
     if ! $prefix test -d "$source_abs" ; then
-        echo "failed: symlink_dir $source -> $destination"
-        echo "error: symlink_dir source '$source_abs' does not exist"
+        echo_error "failed: symlink_dir $source -> $destination"
+        echo_error "error:  symlink_dir source '$source_abs' does not exist"
         exit 1
     fi
 
     # check that destination is not a file
     if $prefix test -f "$destination" ; then
-        echo "failed: symlink_dir $source -> $destination"
-        echo "error: symlink_dir destination '$destination' is a file" >&2
+        echo_error "failed: symlink_dir $source -> $destination"
+        echo_error "error:  symlink_dir destination '$destination' is a file"
         exit 1
     fi
 
     if ! $prefix test -L "$destination" ; then
         if $prefix test -d "$destination" ; then
             local backup="$destination.backup"
-            echo "backup $destination -> $destination.backup"
+            echo_ok "backup $destination -> $destination.backup"
             $prefix mv "$destination" "$destination.backup"
         fi
-        echo "symlink_dir $source -> $destination"
+        echo_ok "symlink_dir $source -> $destination"
         $prefix ln -s "$source" "$destination"
     fi
 }
@@ -134,13 +146,13 @@ clone_git_repo() {
     local version="$3"
 
     if [[ ! -d "$destination" ]]; then
-        echo "cloning repo $url to $destination"
+        echo_ok "cloning repo $url to $destination"
         git clone --recursive "$url" "$destination"
     fi
 
     if [[ ! -d "$destination/.git" ]]; then
-        echo "failed: cloning repo $url to $destination" >&2
-        echo "error: $destination/.git does not exist" >&2
+        echo_error "failed: cloning repo $url to $destination" >&2
+        echo_error "error:  $destination/.git does not exist" >&2
         exit 1
     fi
 
@@ -148,7 +160,7 @@ clone_git_repo() {
     local target_hash="$(git rev-parse $version 2>/dev/null)"
     local current_hash="$(git rev-parse HEAD)"
     if [[ "$current_hash" != "$target_hash" ]]; then
-        echo "updating repo version $destination to $version"
+        echo_ok "setting repo version $destination to $version"
         git fetch --all
         git reset --hard "$version"
     fi
