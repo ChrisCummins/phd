@@ -31,10 +31,13 @@ version() {
 }
 
 
+dotfiles="$HOME/.dotfiles"
 private="$HOME/Dropbox/Shared"
 
 
 symlink() {
+    # symlink a file
+    #
     # args:
     #   $1 path that symlink resolves to
     #   $2 fully qualified destination symlink (not just the parent directory)
@@ -45,6 +48,7 @@ symlink() {
     local prefix="$3"
     set -u
 
+    # check that source exists
     if [[ "$source" == /* ]]; then
         local source_abs="$source"
     else
@@ -52,11 +56,14 @@ symlink() {
     fi
 
     if ! $prefix test -f "$source_abs" ; then
+        echo "failed: symlink $source -> $destination"
         echo "error: symlink source '$source_abs' does not exist" >&2
         exit 1
     fi
 
+    # check that destination is not a file
     if $prefix test -d "$destination" ; then
+        echo "failed: $source -> $destination"
         echo "error: symlink destination '$destination' is a directory" >&2
         exit 1
     fi
@@ -74,6 +81,8 @@ symlink() {
 
 
 symlink_dir() {
+    # symlink a directory
+    #
     # args:
     #   $1 path that symlink resolves to
     #   $2 fully qualified destination symlink (not just the parent directory)
@@ -84,6 +93,7 @@ symlink_dir() {
     local prefix="$3"
     set -u
 
+    # check that source exists
     if [[ "$source" == /* ]]; then
         local source_abs="$source"
     else
@@ -91,11 +101,14 @@ symlink_dir() {
     fi
 
     if ! $prefix test -d "$source_abs" ; then
+        echo "failed: symlink_dir $source -> $destination"
         echo "error: symlink_dir source '$source_abs' does not exist"
         exit 1
     fi
 
+    # check that destination is not a file
     if $prefix test -f "$destination" ; then
+        echo "failed: symlink_dir $source -> $destination"
         echo "error: symlink_dir destination '$destination' is a file" >&2
         exit 1
     fi
@@ -112,7 +125,12 @@ symlink_dir() {
 }
 
 
-clone_repo() {
+clone_git_repo() {
+    # clone a git repository
+    #
+    # args:
+    #   $1 git remote url
+    #   $2 destination directory
     local url="$1"
     local destination="$2"
 
@@ -153,17 +171,17 @@ _npm_install() {
 
 install_zsh() {
     # install config files
-    symlink_dir ~/.dotfiles/zsh ~/.zsh
+    symlink_dir "$dotfiles/zsh" ~/.zsh
     symlink .zsh/zshrc ~/.zshrc
     if [[ -d "$private/zsh" ]]; then
         symlink_dir "$private/zsh" ~/.zsh/private
     fi
 
     # install oh-my-zsh
-    clone_repo git@github.com:robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
+    clone_git_repo git@github.com:robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
 
     # syntax highlighting
-    clone_repo https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+    clone_git_repo https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
 
     # oh-my-zsh config
     symlink ~/.zsh/cec.zsh-theme ~/.oh-my-zsh/custom/cec.zsh-theme
@@ -195,7 +213,7 @@ install_ssh() {
 
 install_dropbox() {
     mkdir -p ~/.local/bin
-    symlink ~/.dotfiles/dropbox/dropbox.py ~/.local/bin/dropbox
+    symlink "$dotfiles/dropbox/dropbox.py" ~/.local/bin/dropbox
 
     if [[ -d ~/Dropbos/Inbox ]]; then
         symlink Dropbox/Inbox ~/Inbox
@@ -226,20 +244,20 @@ install_atom() {
     # python linter
     _pip_install pylint
     symlink_dir .dotfiles/atom ~/.atom
-    symlink ~/.dotfiles/atom/ratom ~/.local/bin/ratom
+    symlink "$dotfiles/atom/ratom" ~/.local/bin/ratom
 }
 
 
 install_vim() {
-    symlink .dotfiles/vim/vimrc ~/.vimrc
-    clone_repo https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+    symlink "$dotfiles/vim/vimrc" ~/.vimrc
+    clone_git_repo https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
     vim +PluginInstall +qall
 }
 
 
 install_sublime() {
     # rsub
-    sudo ln -sf "$HOME/.dotfiles/subl/rsub" /usr/local/bin
+    sudo ln -sf "$dotfiles/subl/rsub" /usr/local/bin
 
     # sublime conf
     if [[ -d "$private/subl" ]] && \
@@ -284,15 +302,15 @@ install_mysql() {
 install_tex() {
     if $(which pdflatex &>/dev/null); then
         mkdir -p ~/.local/bin
-        symlink "$HOME/.dotfiles/tex/autotex" ~/.local/bin/autotex
-        symlink "$HOME/.dotfiles/tex/cleanbib" ~/.local/bin/cleanbib
+        symlink "$dotfiles/tex/autotex" ~/.local/bin/autotex
+        symlink "$dotfiles/tex/cleanbib" ~/.local/bin/cleanbib
     fi
 }
 
 
 install_omnifocus() {
     # add to OmniFocus cli
-    sudo ln -sf "$HOME/.dotfiles/omnifocus/omni" /usr/local/bin
+    sudo ln -sf "$dotfiles/omnifocus/omni" /usr/local/bin
 }
 
 
@@ -300,8 +318,8 @@ install_server_scripts() {
     case "$(hostname)" in
       florence | diana | mary | plod)
         # server scripts
-        symlink "$HOME/.dotfiles/servers/mary" ~/.local/bin/mary
-        symlink "$HOME/.dotfiles/servers/diana" ~/.local/bin/diana
+        symlink "$dotfiles/servers/mary" ~/.local/bin/mary
+        symlink "$dotfiles/servers/diana" ~/.local/bin/diana
         ;;
     esac
 }
@@ -310,7 +328,7 @@ install_server_scripts() {
 install_macos() {
     # install Mac OS X specific stuff
     mkdir -p ~/.local/bin
-    symlink "$HOME/.dotfiles/macos/rm-dsstore" ~/.local/bin/rm-dsstore
+    symlink "$dotfiles/macos/rm-dsstore" ~/.local/bin/rm-dsstore
 
     if [[ "$(uname)" == "Darwin" ]] && [[ -d "$private/macos" ]]; then
         brew list > "$private/macos/brew-$(hostname).txt"
