@@ -504,17 +504,22 @@ def build_html_message_body(output, command=None, returncode=None,
     html += '</table>\n<hr style="margin-top:20px;"/>\n<table>\n'
 
     # metadata block
+    style = 'padding-right:15px;'
     if returncode is not None:
-        html += ('  <tr><td>Return code</td>'
+        html += ('  <tr><td style="{style}">Return code</td>'
                  '<td style="font-weight:700;">{returncode}</td></tr>\n'
                  .format(**vars()))
-    html += ('  <tr><td>Working directory</td><td>{cwd}</td></tr>\n'
+    html += ('  <tr><td style="{style}">Working directory</td>'
+             '<td>{cwd}</td></tr>\n'
              .format(**vars()))
     if date_started:
-        html += ('  <tr><td>Started</td><td>{date_started}</td></tr>\n'
+        delta = humanize.naturaltime(datetime.now() - date_started)
+        html += ('  <tr><td style="{style}">Started</td>'
+                 '<td>{date_started} ({delta})</td></tr>\n'
                  .format(**vars()))
     if date_ended:
-        html += ('  <tr><td>Completed</td><td>{date_ended}</td></tr>\n'
+        html += ('  <tr><td style="{style}">Completed</td>'
+                 '<td>{date_ended}</td></tr>\n'
                  .format(**vars()))
 
     # footer
