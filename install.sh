@@ -117,7 +117,7 @@ install_zsh() {
     symlink ~/.dotfiles/zsh ~/.zsh
     symlink .zsh/zshrc ~/.zshrc
     if [[ -d "$private/zsh" ]]; then
-        symlink "$private/zsh" ~/.zsh/private
+        symlink_dir "$private/zsh" ~/.zsh/private
     fi
 
     # install oh-my-zsh
