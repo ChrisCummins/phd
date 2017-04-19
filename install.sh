@@ -138,6 +138,11 @@ clone_git_repo() {
         echo "cloning repo $destination"
         git clone --recursive "$url" "$destination"
     fi
+
+    if [[ ! -d "$destination/.git" ]]; then
+        echo "failed: cloning repo $url to $destination"
+        echo "error: $destination/.git does not exist"
+    fi
 }
 
 
