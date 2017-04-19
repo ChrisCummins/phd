@@ -191,10 +191,6 @@ and emails you with the output and result.""")
     server = smtplib.SMTP(cfg["smtp"]["host"], int(cfg["smtp"]["port"]))
     server.starttls()
     try:
-        # server.login(cfg["smtp"]["username"], cfg["smtp"]["password"])
-        username = cfg["smtp"]["username"]
-        password = cfg["smtp"]["password"]
-        print("%s %s" % (cfg["smtp"]["username"], cfg["smtp"]["password"]))
         server.login(cfg["smtp"]["username"], cfg["smtp"]["password"])
     except smtplib.SMTPAuthenticationError:
         # DEBUG: print("%s %s" % (cfg["smtp"]["username"], cfg["smtp"]["password"]))
