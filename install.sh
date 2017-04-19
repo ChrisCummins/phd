@@ -103,6 +103,7 @@ install_packages() {
     fi
 
     _pip_install autoenv
+    _pip_install lmk
     _npm_install diff-so-fancy
 }
 
