@@ -226,7 +226,7 @@ install_zsh() {
 
 
 install_lmk() {
-    _pip_install lmk 0.0.3
+    _pip_install lmk 0.0.4
     symlink "$private/lmk/lmkconfig" ~/.lmk.cfg
 }
 
