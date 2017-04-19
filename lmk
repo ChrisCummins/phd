@@ -10,6 +10,8 @@ DEFAULT_CFG_PATH : str
 
 E_CFG : int
     Non-zero return code for configuration errors.
+E_SMTP : int
+    Non-zero return code for fatal SMTP errors.
 """
 from __future__ import print_function
 
@@ -180,7 +182,103 @@ def load_cfg(path):
     # note: cfg["messages"]["subject"] is parsed after command completion,
     #   so we can substitue in outcomes.
 
+    # add runtime metadata
+    cfg.add_section("/run")
+    cfg["/run"]["path"] = path
+
     return cfg
+
+
+def get_smtp_server(cfg):
+    """
+    Create a connection an SMTP server.
+
+    In case of an error, this function kills the process.
+    Remove to close connections with quit().
+
+    Parameters
+    ----------
+    cfg : ConfigParser
+        Configuration.
+
+    Returns
+    -------
+    SMTP
+        SMTP Server.
+    """
+    def _error(*msg, **kwargs):
+        sep = kwargs.get("sep", " ")
+        msg = sep.join(msg)
+        print("{c.bold}{c.red}[lmk] {msg}{c.reset}".format(**vars()),
+              file=sys.stderr)
+        sys.exit(E_SMTP)
+    c = colors
+
+    try:
+        server = smtplib.SMTP(cfg["smtp"]["host"], int(cfg["smtp"]["port"]))
+        server.starttls()
+        server.login(cfg["smtp"]["username"], cfg["smtp"]["password"])
+        return server
+    except smptlib.SMTPHeloError:
+        host, port = cfg["smtp"]["host"], cfg["smtp"]["port"]
+        _error("connection to {host}:{port} failed".format(**vars()))
+    except smtplib.SMTPAuthenticationError:
+        cfg_path = cfg["/run"]["path"]
+        _error('smtp authentication failed. Check username and password in '
+               '%s' % cfg_path)
+    except smtplib.SMTPServerDisconnected:
+        host, port = cfg["smtp"]["host"], cfg["smtp"]["port"]
+        cfg_path = cfg["/run"]["path"]
+        _error('{host}:{port} disconnected. Check smtp settings in {cfg_path}'
+               .format(**vars()), file=sys.stderr)
+    except smptlib.SMTPException:
+        host, port = cfg["smtp"]["host"], cfg["smtp"]["port"]
+        cfg_path = cfg["/run"]["path"]
+        _error("unknown error from {host}:{port}".format(**vars()))
+
+
+def send_email_smtp(cfg, server, msg):
+    """
+    Send an email.
+
+    Parameters
+    ----------
+    server : SMTP
+        SMTP server.
+    msg : MIMEMultipart
+        Message to send.
+
+    Returns
+    -------
+    bool
+        True is send suceeded, else false.
+    """
+    def _error(*msg, **kwargs):
+        sep = kwargs.get("sep", " ")
+        msg = sep.join(msg)
+        print("{c.bold}{c.red}[lmk] {msg}{c.reset}".format(**vars()),
+              file=sys.stderr)
+        return False
+
+    c = colors
+    try:
+        recipient = msg["To"]
+        server.sendmail(msg["From"], msg["To"], msg.as_string())
+        print("{c.bold}{c.cyan}[lmk] {recipient} notified{c.reset}"
+              .format(**vars()), file=sys.stderr)
+        return True
+    except smtplib.SMTPHeloError:
+        host, port = cfg["smtp"]["host"], cfg["smtp"]["port"]
+        return _error("connection to {host}:{port} failed".format(**vars()))
+    except smtplib.SMTPDataError:
+        host, port = cfg["smtp"]["host"], cfg["smtp"]["port"]
+        return _error("unknown error from {host}:{port}".format(**vars()))
+    except smtplib.SMTPRecipientsRefused:
+        return _error("recipient {recipient} refused".format(**vars()))
+    except smtplib.SMTPSenderRefused:
+        from_ = msg["From"]
+        return _error("sender {from_} refused".format(**vars()))
+    return False
 
 
 def main():
@@ -201,19 +299,8 @@ and emails you with the output and result.""")
 
     cfg = load_cfg(cfg_path)
 
-    server = smtplib.SMTP(cfg["smtp"]["host"], int(cfg["smtp"]["port"]))
-    server.starttls()
-    try:
-        server.login(cfg["smtp"]["username"], cfg["smtp"]["password"])
-    except smtplib.SMTPAuthenticationError:
-        # DEBUG: print("%s %s" % (cfg["smtp"]["username"], cfg["smtp"]["password"]))
-        print('fatal: authentication failed. Check username and '
-              'password credentials in %s' % cfg_path, file=sys.stderr)
-        sys.exit(E_SMTP)
-    except smtplib.SMTPServerDisconnected:
-        print('fatal: server disconnected. Check smtp settings in '
-              '%s' % cfg_path, file=sys.stderr)
-        sys.exit(E_SMTP)
+    # test the connection
+    get_smtp_server(cfg).quit()
 
     date_started = datetime.now()
     initial_wd = os.getcwd()
@@ -289,13 +376,10 @@ $ {args.command}
     msg.attach(MIMEText(html, 'html'))
 
     c = colors
+    server = get_smtp_server(cfg)
     for recipient in cfg["messages"]["to"].split(','):
         msg['To'] = cfg["messages"]["to"]
-        server.sendmail(msg["From"],
-                        msg["To"],
-                        msg.as_string())
-        print("{c.bold}{c.cyan}[lmk] {recipient} notified{c.reset}"
-              .format(**vars()), file=sys.stderr)
+        send_email_smtp(cfg, server, msg)
     server.quit()
 
     sys.exit(exit_status)
