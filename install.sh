@@ -222,14 +222,12 @@ install_sublime() {
     # sublime conf
     if [[ -d "$private/subl" ]] && \
        [[ -d "$HOME/Library/Application Support/Sublime Text 3" ]]; then
-        symlink "Library/Application Support/Sublime Text 3" ~/.subl
-        symlink "$private/subl/User" ~/.subl/Packages/User
-        symlink "$private/subl/INI" ~/.subl/Packages/INI
+        symlink_dir "Library/Application Support/Sublime Text 3" ~/.subl
+        symlink_dir "$private/subl/User" ~/.subl/Packages/User
+        symlink_dir "$private/subl/INI" ~/.subl/Packages/INI
 
         # subl
-        sudo ln -sf \
-            "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" \
-            /usr/local/bin
+        symlink "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl sudo
     fi
 }
 
