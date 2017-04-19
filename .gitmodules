@@ -19,3 +19,6 @@
 [submodule "src/labm8"]
 	path = src/labm8
 	url = https://github.com/ChrisCummins/labm8.git
+[submodule "src/lmk"]
+	path = src/lmk
+	url = git@github.com:ChrisCummins/lmk.git
