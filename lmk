@@ -446,13 +446,62 @@ def build_html_message_body(command, output, returncode, runtime):
     lmk = '<a href="github.com/ChrisCummins/lmk">lmk</a>'
     me = '<a href="http://chriscummins.cc">Chris Cummins</a>'
 
-    return u"""\
-<pre style="font-weight:700; font-size:13px;">$ {command}</pre>
-<pre style="font-size:13px;">{output}</pre>
+    import cgi
+    command_html = cgi.escape(command)
 
-<hr/>
+    prompt_css = ";".join([
+        "font-family:'Courier New', monospace",
+        "font-weight:700",
+        "font-size:14px",
+        "padding-right:10px",
+        "color:#000",
+        "text-align:right",
+    ])
+
+    command_css = ";".join([
+        "font-family:'Courier New', monospace",
+        "font-weight:700",
+        "font-size:14px",
+        "color:#000",
+    ])
+
+    lineno_css = ";".join([
+        "font-family:'Courier New', monospace",
+        "font-size:14px",
+        "padding-right:10px",
+        "color:#666",
+        "text-align:right",
+    ])
+
+    line_css = ";".join([
+        "font-family:'Courier New', monospace",
+        "font-size:14px",
+        "color:#000",
+    ])
+
+    html = u"""<table>
+  <tr style="line-height:1em;">
+    <td style="{prompt_css}">$</td>
+    <td style="{command_css}">{command_html}</td>
+  </tr>
+""".format(**vars())
+
+    for i, line in enumerate(output.split('\n')):
+        lineno = i + 1
+        line_html = cgi.escape(line)
+        html += """\
+  <tr style="line-height:1em;">
+    <td style="{lineno_css}">{lineno}</td>
+    <td style="{line_css}">{line_html}</td>
+  </tr>
+""".format(**vars())
+
+    html += u"""\
+</table>
+
+<hr style="margin-top:20px;"/>
 <table>
-  <tr><td>Return code</td><td>{returncode}</td></tr>
+  <tr><td>Return code</td><td style="font-weight:700;">{returncode}</td></tr>
   <tr><td>Host</td><td>{user}@{host}</td></tr>
   <tr><td>Working directory</td><td>{cwd}</td></tr>
   <tr><td>Started</td><td>{date_started}</td></tr>
@@ -463,6 +512,7 @@ def build_html_message_body(command, output, returncode, runtime):
   {lmk} {lmk_version} made with ♥ by {me}
 </center>
 """.format(**vars())
+    return html
 
 
 def get_cfg_path():
@@ -521,7 +571,7 @@ def main():
     exit_status = process.returncode
     exit_tick_cross = u'✘ ' + str(exit_status) if exit_status else u'✔'
     exit_emoji = u'🙈' if exit_status else u'🙂'
-    output = ''.join(out)
+    output = ''.join(out).strip()
     date_ended = datetime.now()
 
     html = build_html_message_body(
