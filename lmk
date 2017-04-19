@@ -422,7 +422,7 @@ def send_email_smtp(cfg, server, msg):
     return False
 
 
-def build_html_message_body(command, output, runtime):
+def build_html_message_body(command, output, returncode, runtime):
     """
     Parameters
     ----------
@@ -452,8 +452,9 @@ def build_html_message_body(command, output, runtime):
 
 <hr/>
 <table>
-  <tr><td>Host</td><td">{user}@{host}</td></tr>
-  <tr><td>Working directory</td><td">{cwd}</td></tr>
+  <tr><td>Return code</td><td>{returncode}</td></tr>
+  <tr><td>Host</td><td>{user}@{host}</td></tr>
+  <tr><td>Working directory</td><td>{cwd}</td></tr>
   <tr><td>Started</td><td>{date_started}</td></tr>
   <tr><td>Completed</td><td>{date_ended}</td></tr>
 </table>
