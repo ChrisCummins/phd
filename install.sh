@@ -26,12 +26,15 @@ usage() {
     echo "usage: $0 [-v|--verbose]"
 }
 
+
 version() {
     echo "dotfiles $(git rev-parse --short HEAD)"
 }
 
 
+# path to this repo
 dotfiles="$HOME/.dotfiles"
+# path to private files
 private="$HOME/Dropbox/Shared"
 
 
@@ -148,6 +151,7 @@ clone_git_repo() {
 
 _pip_install() {
     local package="$1"
+    local version="$2"
 
     # on linux, we need sudo to pip install.
     local use_sudo=""
@@ -155,8 +159,8 @@ _pip_install() {
         use_sudo="sudo"
     fi
 
-    pip freeze 2>/dev/null | grep "^$package" &>/dev/null \
-        || $use_sudo pip install "$package" 2>/dev/null
+    pip freeze 2>/dev/null | grep "^$package==$version" &>/dev/null \
+        || $use_sudo pip install --upgrade "$package==$version" 2>/dev/null
 }
 
 
@@ -191,12 +195,12 @@ install_zsh() {
     # oh-my-zsh config
     symlink ~/.zsh/cec.zsh-theme ~/.oh-my-zsh/custom/cec.zsh-theme
 
-    _pip_install autoenv
+    _pip_install autoenv 0.2.0
 }
 
 
 install_lmk() {
-    _pip_install lmk
+    _pip_install lmk 0.0.3
     symlink "$private/lmk/lmkconfig" ~/.lmk.cfg
 }
 
@@ -247,7 +251,7 @@ install_tmux() {
 
 install_atom() {
     # python linter
-    _pip_install pylint
+    _pip_install pylint 1.7.1
     symlink_dir .dotfiles/atom ~/.atom
     symlink "$dotfiles/atom/ratom" ~/.local/bin/ratom
 }
