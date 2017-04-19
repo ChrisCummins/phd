@@ -40,6 +40,15 @@ DEFAULT_CFG_PATH=os.path.expanduser("~/.lmk.cfg")
 E_CFG = 2
 E_SMTP = 3
 
+class colors:
+    reset   = "\033[0;0m"
+    red     = "\033[1;31m"
+    blue    = "\033[1;34m"
+    cyan    = "\033[1;36m"
+    green   = "\033[0;32m"
+    bold    = "\033[;1m"
+    reverse = "\033[;7m"
+
 def create_default_cfg(path):
     """
     """
@@ -66,8 +75,9 @@ From: $USER@$HOST
 To: $LMK_TO
 Subject: $USER@$HOST [↪ $EXIT] \$ $CMD
 """, file=outfile)
-    print("[lmk] created default configuration file %s" % path,
-          file=sys.stderr)
+    c = colors
+    print("{c.bold}[lmk] created default configuration file {path}{c.reset}"
+          .format(**vars()), file=sys.stderr)
 
 def parse_str(var, substitutions={}):
     """
@@ -275,12 +285,14 @@ job completed: {date_ended}
     # msg.attach(MIMEText(plaintext, 'plain'))
     msg.attach(MIMEText(html, 'html'))
 
+    c = colors
     for recipient in cfg["messages"]["to"].split(','):
         msg['To'] = cfg["messages"]["to"]
         server.sendmail(msg["From"],
                         msg["To"],
                         msg.as_string())
-        print("[lmk] message sent to %s" % recipient, file=sys.stderr)
+        print("{c.bold}{c.cyan}[lmk] {recipient} notified{c.reset}"
+              .format(**vars()), file=sys.stderr)
     server.quit()
 
     sys.exit(exit_status)
