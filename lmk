@@ -23,6 +23,7 @@ import sys
 
 from argparse import ArgumentParser
 from datetime import datetime
+from pkg_resources import require
 from socket import gethostname
 
 if sys.version_info >= (3,0):
@@ -31,6 +32,8 @@ if sys.version_info >= (3,0):
 else:
     from email.MIMEMultipart import MIMEMultipart
     from email.MIMEText import MIMEText
+
+__version__ = require("lmk")[0].version
 
 DEFAULT_CFG_PATH=os.path.expanduser("~/.lmk.cfg")
 
@@ -235,6 +238,8 @@ and emails you with the output and result.""")
 
     user = os.environ["USER"]
     host = gethostname()
+    lmk_version = __version__
+
     plaintext = u"""\
 {user}@{host} $ {args.command}
 {out}
@@ -259,7 +264,7 @@ job completed: {date_ended}
 </table>
 
 <center style="color:#626262;">
-  <a href="github.com/ChrisCummins/lmk">lmk</a> made with ♥ by
+  <a href="github.com/ChrisCummins/lmk">lmk</a> {lmk_version} made with ♥ by
   <a href="http://chriscummins.cc">Chris Cummins</a>
 </center>
 """.format(**vars())
