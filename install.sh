@@ -168,6 +168,27 @@ clone_git_repo() {
 }
 
 
+_pip_freeze_cache="$dotfiles/.pip-freeze.txt"
+_brew_list_cache="$dotfiles/.brew-list.txt"
+_npm_list_cache="$dotfiles/.npm-list.txt"
+_brew_cask_list_cache="$dotfiles/.brew-cask-list.txt"
+_cache_cleanup() {
+    rm -f "$_pip_freeze_cache" \
+        "$_npm_list_cache" \
+        "$_brew_list_cache" \
+        "$_brew_cask_list_cache"
+}
+trap _cache_cleanup EXIT
+
+
+pip_freeze() {
+    if [[ ! -f "$_pip_freeze_cache" ]] ; then
+        pip freeze 2>/dev/null > "$_pip_freeze_cache"
+    fi
+    echo "$_pip_freeze_cache"
+}
+
+
 _pip_install() {
     local package="$1"
     local version="$2"
@@ -178,8 +199,16 @@ _pip_install() {
         use_sudo="sudo"
     fi
 
-    pip freeze 2>/dev/null | grep "^$package==$version" &>/dev/null \
+    grep "^$package==$version" < "$(pip_freeze)" >/dev/null \
         || $use_sudo pip install --upgrade "$package==$version" 2>/dev/null
+}
+
+
+npm_list() {
+    if [[ ! -f "$_npm_list_cache" ]] ; then
+        npm list -g > "$_npm_list_cache"
+    fi
+    echo "$_npm_list_cache"
 }
 
 
@@ -187,12 +216,48 @@ _npm_install() {
     local package="$1"
     local version="$2"
 
-    npm list -g | grep "$package@$version" &>/dev/null || sudo npm install -g "$package@$version"
+    grep "$package@$version" < "$(npm_list)" >/dev/null || \
+        sudo npm install -g "$package@$version"
+}
+
+
+brew_list() {
+    if [[ ! -f "$_brew_list_cache" ]] ; then
+        brew list > "$_brew_list_cache"
+    fi
+
+    echo "$_brew_list_cache"
+}
+
+
+brew_install() {
+    local package="$1"
+    # warning: homebrew packages are not verioned
+
+    grep "^$package$" < "$(brew_list)" >/dev/null || brew install "$package"
+}
+
+
+brew_cask_list() {
+    if [[ ! -f "$_brew_cask_list_cache" ]] ; then
+        brew cask list > "$_brew_cask_list_cache"
+    fi
+    echo "$_brew_cask_list_cache"
+}
+
+
+brew_cask_install() {
+    local package="$1"
+    # warning: homebrew casks are not versioned
+
+    grep "^$package$" < "$(brew_cask_list)" >/dev/null || \
+        brew cask install "$package"
 }
 
 
 _apt_get_install() {
     local package="$1"
+    # warning: debian packages are not verioned
 
     dpkg -s "$package" &>/dev/null || sudo apt-get install -y "$package"
 }
@@ -324,7 +389,7 @@ install_ssmtp() {
 install_python() {
     # modern python
     if [[ "$(uname)" == "Darwin" ]]; then
-        brew list | grep '^python$' &>/dev/null || brew install python
+        brew_install python
     else
         _apt_get_install python-pip
     fi
@@ -337,7 +402,7 @@ install_python() {
 
 install_node() {
     if [[ "$(uname)" == "Darwin" ]]; then
-        brew list | grep '^node$' &>/dev/null || brew install npm nodejs
+        brew_install node
     else
         _apt_get_install nodejs
         _apt_get_install npm
@@ -382,11 +447,6 @@ install_macos() {
     # install Mac OS X specific stuff
     mkdir -p ~/.local/bin
     symlink "$dotfiles/macos/rm-dsstore" ~/.local/bin/rm-dsstore
-
-    if [[ "$(uname)" == "Darwin" ]] && [[ -d "$private/macos" ]]; then
-        brew list > "$private/macos/brew-$(hostname).txt"
-        brew cask list > "$private/macos/brew-$(hostname)-casks.txt"
-    fi
 }
 
 
@@ -406,14 +466,27 @@ parse_args() {
 }
 
 
+freeze_packages() {
+    if [[ -d "$private/packages" ]]; then
+        if [[ "$(uname)" == "Darwin" ]]; then
+            cat "$(brew_list)" > "$private/packages/$(hostname)-brew.txt"
+            cat "$(brew_cask_list)" > "$private/packages/$(hostname)-brew-cask.txt"
+        fi
+
+        cat "$(pip_freeze)" > "$private/packages/$(hostname)-pip.txt"
+        cat "$(npm_list)" > "$private/packages/$(hostname)-npm.txt"
+    fi
+}
+
+
 main() {
     parse_args $@
     echo_ok "dotfiles $(git rev-parse --short HEAD)"
 
-    install_dropbox
-    install_ssh
     install_homebrew
     install_python
+    install_dropbox
+    install_ssh
     install_node
     install_zsh
     install_lmk
@@ -428,5 +501,7 @@ main() {
     install_server_scripts
     install_tex
     install_macos
+
+    freeze_packages
 }
 main $@
