@@ -276,6 +276,10 @@ install_homebrew() {
 
 
 install_zsh() {
+    if [[ "$(uname)" == "Darwin" ]]; then
+        brew_install zsh
+    fi
+
     # install config files
     symlink_dir "$dotfiles/zsh" ~/.zsh
     symlink .zsh/zshrc ~/.zshrc
