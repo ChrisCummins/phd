@@ -265,11 +265,18 @@ _apt_get_install() {
 
 install_homebrew() {
     if [[ "$(uname)" == "Darwin" ]]; then
-        if ! which brew &>/dev/null ; then
+        if ! which brew >/dev/null ; then
             echo_ok "installing homebrew"
             /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
             brew update
             brew doctor
+        fi
+
+        if ! which brew-cask-outdated >/dev/null ; then
+            echo_ok "installing brew-cask-outdated"
+            local version="2f08b5a76605fbfa9ab0caeb4868a29ef7e69bb1"
+            curl https://raw.githubusercontent.com/bgandon/brew-cask-outdated/$version/brew-cask-outdated.sh 2>/dev/null > ~/.local/bin/brew-cask-outdated
+            chmod +x ~/.local/bin/brew-cask-outdated
         fi
     fi
 }
