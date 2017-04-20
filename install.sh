@@ -330,6 +330,14 @@ install_dropbox() {
     mkdir -p ~/.local/bin
     symlink "$dotfiles/dropbox/dropbox.py" ~/.local/bin/dropbox
 
+    if [[ "$(uname)" == "Darwin" ]]; then
+        if ! grep "^dropbox$" < "$(brew_cask_list)" >/dev/null ; then
+            brew_cask_install dropbox
+            echo_error "wait for dropbox sync to complete then re-run"
+            exit 0
+        fi
+    fi
+
     if [[ -d ~/Dropbos/Inbox ]]; then
         symlink Dropbox/Inbox ~/Inbox
     fi
