@@ -198,6 +198,18 @@ _apt_get_install() {
 }
 
 
+install_homebrew() {
+    if [[ "$(uname)" == "Darwin" ]]; then
+        if ! which brew &>/dev/null ; then
+            echo_ok "installing homebrew"
+            /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+            brew update
+            brew doctor
+        fi
+    fi
+}
+
+
 install_zsh() {
     # install config files
     symlink_dir "$dotfiles/zsh" ~/.zsh
@@ -232,7 +244,6 @@ install_lmk() {
 
 
 install_ssh() {
-    # shared SSH config
     if [[ -d "$private/ssh" ]]; then
         chmod 600 "$private"/ssh/*
         mkdir -p ~/.ssh
@@ -257,14 +268,6 @@ install_dropbox() {
 
 
 install_git() {
-    # diff-so-fancy requires node stack
-    if [[ "$(uname)" == "Darwin" ]]; then
-        brew list | grep '^node$' &>/dev/null || brew install npm nodejs
-    else
-        _apt_get_install nodejs
-        _apt_get_install npm
-    fi
-
     _npm_install diff-so-fancy 0.11.4
     symlink .dotfiles/git/gitconfig ~/.gitconfig
 }
@@ -328,6 +331,16 @@ install_python() {
 
     if [[ -f "$private/python/.pypirc" ]]; then
         symlink "$private/python/.pypirc" ~/.pypirc
+    fi
+}
+
+
+install_node() {
+    if [[ "$(uname)" == "Darwin" ]]; then
+        brew list | grep '^node$' &>/dev/null || brew install npm nodejs
+    else
+        _apt_get_install nodejs
+        _apt_get_install npm
     fi
 }
 
@@ -399,7 +412,9 @@ main() {
 
     install_dropbox
     install_ssh
+    install_homebrew
     install_python
+    install_node
     install_zsh
     install_lmk
     install_git
