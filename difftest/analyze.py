@@ -33,10 +33,11 @@ def main():
         'No OpenCL kernel': 'Invalid testcase',
         'Preprocessing Failed': 'Invalid testcase',
         'Segmentation Fault': 'Build failure',
-        'SIGBUS': 'Runtime crash',
         'SIGABRT': 'Runtime crash',
+        'SIGBUS': 'Runtime crash',
         'SIGILL': 'Runtime crash',
         'Signal 5': 'Runtime crash',
+        'SIGTRAP': 'Runtime crash',
         'Timeout': 'Invalid testcase',
         'UnicodeError': 'Invalid testcase',
         'Unsupported Program': 'Invalid testcase',
@@ -72,11 +73,11 @@ def main():
                 elif line.startswith("Error"):
                     # Interpret CLSmith error messages
                     return {
-                        "Error enqueueing kernel: -6": "CL_OUT_OF_HOST_MEMORY",
-                        "Error sending finish command: -36": "CL_INVALID_COMMAND_QUEUE",
                         "Error building program: -11": "CL_BUILD_PROGRAM _FAILURE",
                         "Error creating kernel: -46": "CL_INVALID_KERNEL_NAME",
                         "Error enqueueing kernel: -5": "CL_OUT_OF_RESOURCES",
+                        "Error enqueueing kernel: -6": "CL_OUT_OF_HOST_MEMORY",
+                        "Error sending finish command: -36": "CL_INVALID_COMMAND_QUEUE",
                     }.get(line, line)
                 prev = line
             else:  # should never happen
