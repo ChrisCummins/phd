@@ -152,7 +152,7 @@ class ArgumentParser(argparse.ArgumentParser):
         c = colors
         version = __version__
         if '--version' in args:
-            print('lnk {version}, made with {c.red}♥{c.reset} by '
+            print('lmk {version}, made with {c.red}♥{c.reset} by '
                   'Chris Cummins <chrisc.101@gmail.com>'.format(**vars()))
             sys.exit(0)
 
