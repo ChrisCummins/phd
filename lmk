@@ -413,11 +413,11 @@ def send_email_smtp(cfg, server, msg):
     """
 
     def _error(*msg, **kwargs):
+        c = colors
         sep = kwargs.get('sep', ' ')
         msg = sep.join(msg)
-        print(
-            '{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(**vars()),
-            file=sys.stderr)
+        print('{c.bold}{c.red}[lmk] {msg}{c.reset}'.format(**vars()),
+              file=sys.stderr)
         return False
 
     c = colors
