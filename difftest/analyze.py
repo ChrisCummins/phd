@@ -3,6 +3,7 @@ import sqlalchemy as sql
 
 from collections import Counter
 from progressbar import ProgressBar
+from signal import Signals
 
 import db
 from db import *
@@ -33,6 +34,8 @@ def main():
         'Preprocessing Failed': 'Invalid testcase',
         'Segmentation Fault': 'Build failure',
         'SIGBUS': 'Runtime crash',
+        'SIGABRT': 'Runtime crash',
+        'SIGILL': 'Runtime crash',
         'Signal 5': 'Runtime crash',
         'Timeout': 'Invalid testcase',
         'UnicodeError': 'Invalid testcase',
@@ -43,14 +46,19 @@ def main():
 
 
     def lookup_status(status):
-        return {
-            -11: "Segmentation Fault",
-            -9: "Timeout",
-            -5: "Signal 5",
-            0: "z_Okay",
-            1024: "Preprocessing Failed",
-            1025: "UnicodeError",
-        }[status]
+        try:
+            return {
+                -11: "Segmentation Fault",
+                -9: "Timeout",
+                0: "z_Okay",
+                1024: "Preprocessing Failed",
+                1025: "UnicodeError",
+            }[status]
+        except KeyError:
+            try:
+                return Signals(-status).name
+            except ValueError:
+                return f'Returncode {status}'
 
 
     def get_cl_launcher_outcome(result):
