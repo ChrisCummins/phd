@@ -9,7 +9,7 @@ if sys.version_info < (3, 0):
 
 setup(
     name='shutterbug',
-    version='0.0.3',
+    version='0.0.3.dev0',
     description='',
     url='https://github.com/ChrisCummins/shutterbug',
     author='Chris Cummins',
