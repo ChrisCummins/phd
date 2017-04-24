@@ -41,7 +41,6 @@ from clgen import config as cfg
 from clgen import dbutil
 from clgen import fetch
 from clgen import log
-from clgen import preprocess
 from clgen.explore import explore
 from clgen.model import Model
 
@@ -307,7 +306,7 @@ class SampleConsumer(Thread):
                         "use_shim": False,
                         "use_gpuverify": self.sampler_opts["gpuverify"]
                     }
-                    pp = [preprocess.preprocess_for_db(k, **preprocess_opts)
+                    pp = [clgen.preprocess_for_db(k, **preprocess_opts)
                           for k in kernels]
 
                 db = dbutil.connect(self.db_path)

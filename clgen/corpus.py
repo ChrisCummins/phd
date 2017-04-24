@@ -45,7 +45,6 @@ from clgen import explore
 from clgen import features
 from clgen import fetch
 from clgen import log
-from clgen import preprocess
 
 
 # Default options used for corpus. Any values provided by the user will override
@@ -298,7 +297,7 @@ class Corpus(clgen.CLgenObject):
             modified = False
             preprocess_time = time()
             encoding = self.opts["encoding"]
-            if preprocess.preprocess_db(self.contentcache["kernels.db"]):
+            if clgen.preprocess_db(self.contentcache["kernels.db"]):
                 modified = True
                 encode(self.contentcache["kernels.db"], encoding)
 

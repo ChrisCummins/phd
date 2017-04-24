@@ -28,8 +28,6 @@ from labm8 import fs
 from labm8 import system
 
 import clgen
-from clgen import dbutil
-from clgen import preprocess
 
 # Invoke tests with UPDATE_GS_FILES set to update the gold standard
 # tests. E.g.:
@@ -38,7 +36,7 @@ from clgen import preprocess
 #
 UPDATE_GS_FILES = True if 'UPDATE_GS_FILES' in os.environ else False
 
-def preprocess_pair(basename, preprocessor=preprocess.preprocess):
+def preprocess_pair(basename, preprocessor=clgen.preprocess):
     gs_path = tests.data_path(os.path.join('cl', str(basename) + '.gs'),
                               exists=not UPDATE_GS_FILES)
     tin_path = tests.data_path(os.path.join('cl', str(basename) + '.cl'))
@@ -65,18 +63,18 @@ class TestPreprocess(TestCase):
 
     def test_preprocess_shim(self):
         # FLOAT_T is defined in shim header
-        self.assertTrue(preprocess.preprocess("""
+        self.assertTrue(clgen.preprocess("""
 __kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=True))
 
         # Preprocess will fail without FLOAT_T defined
-        with self.assertRaises(preprocess.BadCodeException):
-            preprocess.preprocess("""
+        with self.assertRaises(clgen.BadCodeException):
+            clgen.preprocess("""
 __kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=False)
 
     def test_ugly_preprocessed(self):
         # empty kernel protoype is rejected
-        with self.assertRaises(preprocess.NoCodeException):
-            preprocess.preprocess("""\
+        with self.assertRaises(clgen.NoCodeException):
+            clgen.preprocess("""\
 __kernel void A() {
 }\
 """)
@@ -85,7 +83,7 @@ __kernel void A() {
 __kernel void A() {
   int a;
 }\
-""", preprocess.preprocess("""\
+""", clgen.preprocess("""\
 __kernel void A() {
   int a;
 }\
@@ -103,7 +101,7 @@ __kernel void A(__global float* a) {
         # pre-processing is "stable" if the code doesn't change
         out = code
         for _ in range(5):
-            out = preprocess.preprocess(out)
+            out = clgen.preprocess(out)
             self.assertEqual(out, code)
 
     @skipIf(not system.is_linux(), "Pre-built binary")  # FIXME: GPUVerify support on macOS.
@@ -114,7 +112,7 @@ __kernel void A(__global float* a) {
   a[b] *= 2.0f;
 }"""
         self.assertEqual(
-            preprocess.gpuverify(code, ["--local_size=64", "--num_groups=128"]),
+            clgen.gpuverify(code, ["--local_size=64", "--num_groups=128"]),
             code)
 
     @skipIf(not system.is_linux(), "Pre-built binary")  # FIXME: GPUVerify support on macOS.
@@ -123,5 +121,5 @@ __kernel void A(__global float* a) {
 __kernel void A(__global float* a) {
   a[0] +=  1.0f;
 }"""
-        with self.assertRaises(preprocess.GPUVerifyException):
-            preprocess.gpuverify(code, ["--local_size=64", "--num_groups=128"])
+        with self.assertRaises(clgen.GPUVerifyException):
+            clgen.gpuverify(code, ["--local_size=64", "--num_groups=128"])
