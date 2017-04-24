@@ -162,3 +162,27 @@ class TestCLgen(TestCase):
 
     def test_platform_info(self):
         clgen.platform_info()
+
+
+class DevNullRedirect(object):
+    """
+    Context manager to redirect stdout and stderr to devnull.
+
+    Examples
+    --------
+    >>> with DevNullRedirect(): print("this will not print")
+    """
+    def __init__(self):
+        self.stdout = None
+        self.stderr = None
+
+    def __enter__(self):
+        self.stdout = sys.stdout
+        self.stderr = sys.stderr
+
+        sys.stdout = StringIO()
+        sys.stderr = StringIO()
+
+    def __exit__(self, *args):
+        sys.stdout = self.stdout
+        sys.stderr = self.stderr
