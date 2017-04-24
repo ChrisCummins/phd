@@ -39,9 +39,6 @@ from labm8 import fs
 from labm8 import jsonutil
 from labm8 import system
 
-from clgen import config as cfg
-
-
 __author__ = "Chris Cummins"
 __copyright__ = "Copyright 2017, Chris Cummins"
 __license__ = "GPL v3"
@@ -50,6 +47,7 @@ __maintainer__ = __author__
 __email__ = "chrisc.101@gmail.com"
 __status__ = "Prototype"
 
+from clgen.config import *
 
 class CLgenError(Exception):
     """
@@ -271,7 +269,7 @@ def platform_info(printfn=print) -> None:
         printfn (fn, optional): Function to call to print output to. Default
             `print()`.
     """
-    if cfg.USE_CUDA:
+    if USE_CUDA:
         features_str = "(with CUDA)"
     else:
         features_str = ""

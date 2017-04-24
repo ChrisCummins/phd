@@ -26,7 +26,6 @@ from labm8 import text
 from six import string_types
 
 import clgen
-from clgen import config as cfg
 from clgen import log
 
 

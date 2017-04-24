@@ -37,7 +37,6 @@ from labm8 import system
 from labm8 import types
 
 import clgen
-from clgen import config as cfg
 from clgen import log
 from clgen.corpus import Corpus
 

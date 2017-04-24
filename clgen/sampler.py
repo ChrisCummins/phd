@@ -37,7 +37,6 @@ from time import time
 
 import clgen
 from clgen import clutil
-from clgen import config as cfg
 from clgen import dbutil
 from clgen import fetch
 from clgen import log
