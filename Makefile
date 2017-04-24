@@ -133,8 +133,6 @@ install:
 	./configure -r >/dev/null
 	$(PIP) install --upgrade pip
 	$(PIP) install --only-binary=numpy '$(shell grep numpy requirements.txt)'
-	$(PIP) install --only-binary=scipy '$(shell grep scipy requirements.txt)'
-	$(PIP) install --only-binary=pandas '$(shell grep pandas requirements.txt)'
 	$(PIP) install -r requirements.txt
 	$(PYTHON) ./setup.py install
 
