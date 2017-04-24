@@ -42,6 +42,15 @@ from labm8 import system
 from clgen import config as cfg
 
 
+__author__ = "Chris Cummins"
+__copyright__ = "Copyright 2017, Chris Cummins"
+__license__ = "GPL v3"
+__version__ = require("clgen")[0].version
+__maintainer__ = __author__
+__email__ = "chrisc.101@gmail.com"
+__status__ = "Prototype"
+
+
 class CLgenError(Exception):
     """
     Module error.
@@ -96,7 +105,7 @@ def version() -> str:
     Returns:
         str: Version string.
     """
-    return require("clgen")[0].version
+    return __version__
 
 
 def cachepath(*relative_path_components: list) -> str:
