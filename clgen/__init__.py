@@ -280,8 +280,9 @@ def platform_info(printfn=print) -> None:
             round(psutil.virtual_memory().total / (1024 ** 2)), "MB")
 
 
-def main(model, sampler, print_file_list=False, print_corpus_dir=False,
-         print_model_dir=False, print_sampler_dir=False) -> None:
+def main(model: str, sampler: str, print_file_list: bool=False,
+         print_corpus_dir: bool=False, print_model_dir: bool=False,
+         print_sampler_dir: bool=False) -> None:
     """
     Main entry point for clgen.
 
@@ -292,15 +293,13 @@ def main(model, sampler, print_file_list=False, print_corpus_dir=False,
         print_model_dir (bool, optional): If True, print cache path and exit.
         print_sampler_dir (bool, optional): If True, print cache path and exit.
     """
-    import clgen.model
-    import clgen.sampler
     from clgen import log
 
     model_json = jsonutil.read_file(model)
-    model = clgen.model.from_json(model_json)
+    model = clgen.Model.from_json(model_json)
 
     sampler_json = jsonutil.read_file(sampler)
-    sampler = clgen.sampler.from_json(sampler_json)
+    sampler = clgen.Sampler.from_json(sampler_json)
 
     # print cache paths
     if print_file_list:
@@ -323,6 +322,12 @@ def main(model, sampler, print_file_list=False, print_corpus_dir=False,
     model.train()
     sampler.sample(model)
 
+
+# package level imports
+from clgen._fetch import *
+from clgen._explore import *
 from clgen._atomizer import *
 from clgen._corpus import *
+from clgen._model import *
 from clgen._preprocess import *
+from clgen._sampler import *

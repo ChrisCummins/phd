@@ -81,30 +81,6 @@ class ModelError(clgen.CLgenError):
     pass
 
 
-def from_json(model_json: dict):
-    """
-    Load model from JSON.
-
-    Arguments:
-        model_json (dict): JSON specification.
-
-    Returns:
-        Model: Model instance.
-    """
-    assert(isinstance(model_json, dict))
-
-    if "corpus" not in model_json:
-        raise clgen.UserError("model JSON has no corpus entry")
-
-    # create corpus and remove from JSON
-    corpus = clgen.Corpus.from_json(model_json.pop("corpus"))
-
-    if "stats" in model_json:  # ignore stats
-        del model_json["stats"]
-
-    return Model(corpus, **model_json)
-
-
 class Model(clgen.CLgenObject):
     """
     A CLgen Model.
@@ -445,5 +421,25 @@ class Model(clgen.CLgenObject):
 
 
     @staticmethod
-    def from_json(model_json: dict):
-        return from_json(model_json)
+    def from_json(model_json: dict) -> 'Model':
+        """
+        Load model from JSON.
+
+        Arguments:
+            model_json (dict): JSON specification.
+
+        Returns:
+            Model: Model instance.
+        """
+        assert(isinstance(model_json, dict))
+
+        if "corpus" not in model_json:
+            raise clgen.UserError("model JSON has no corpus entry")
+
+        # create corpus and remove from JSON
+        corpus = clgen.Corpus.from_json(model_json.pop("corpus"))
+
+        if "stats" in model_json:  # ignore stats
+            del model_json["stats"]
+
+        return Model(corpus, **model_json)

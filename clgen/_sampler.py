@@ -38,10 +38,7 @@ from time import time
 import clgen
 from clgen import clutil
 from clgen import dbutil
-from clgen import fetch
 from clgen import log
-from clgen.explore import explore
-from clgen.model import Model
 
 # Default options used for sampler. Any values provided by the user will
 # override these defaults.
@@ -74,25 +71,9 @@ def serialize_argspec(args: list) -> str:
     return "__kernel void A({args}) {{".format(args=", ".join(strings))
 
 
-def from_json(sampler_json: dict):
-    """
-    Instantiate sampler from JSON.
-
-    Arguments:
-        sampler_json (dict): JSON data.
-
-    Returns:
-        Sampler: Instantiate sampler.
-    """
-    sampler_opts = sampler_json.get("sampler", {})
-    kernel_opts = sampler_json.get("kernels", {})
-
-    return Sampler(sampler_opts, kernel_opts)
-
-
 class SampleProducer(Thread):
-    def __init__(self, model: Model, start_text: str, condition: Condition,
-                 queue: list, **kernel_opts):
+    def __init__(self, model: clgen.Model, start_text: str,
+                 condition: Condition, queue: list, **kernel_opts):
         super(SampleProducer, self).__init__()
 
         self.model = model
@@ -407,12 +388,12 @@ class Sampler(clgen.CLgenObject):
             "use_gpuverify": self.sampler_opts["gpuverify"]
         }
 
-    def cache(self, model: Model):
+    def cache(self, model: clgen.Model):
         """
         Return sampler cache.
 
         Arguments:
-            model (Model): CLgen model.
+            model (clgen.Model): CLgen model.
 
         Returns:
             labm8.FSCache: Cache.
@@ -449,12 +430,12 @@ class Sampler(clgen.CLgenObject):
     def _flush_meta(self, cache):
         jsonutil.write_file(cache.keypath("META"), self.to_json(cache))
 
-    def sample(self, model: Model) -> None:
+    def sample(self, model: clgen.Model) -> None:
         """
         Sample CLgen model.
 
         Arguments:
-            model (Model): CLgen model.
+            model (clgen.Model): CLgen model.
         """
         cache = self.cache(model)
 
@@ -482,7 +463,7 @@ class Sampler(clgen.CLgenObject):
         sampler.join()
         consumer.join()
 
-        explore(cache["kernels.db"])
+        clgen.explore(cache["kernels.db"])
 
     @property
     def min_samples(self):
@@ -531,5 +512,25 @@ class Sampler(clgen.CLgenObject):
         return not self.__eq__(rhs)
 
     @staticmethod
-    def from_json(sampler_json: dict):
-        return from_json(sampler_json)
+    def from_json(sampler_json: dict) -> 'Sampler':
+        """
+        Instantiate sampler from JSON.
+
+        Arguments:
+            sampler_json (dict): JSON data.
+
+        Returns:
+            Sampler: Instantiate sampler.
+        """
+        unrecognized_keys = (set(sampler_json.keys()) -
+                             set(["sampler", "kernels"]))
+        if unrecognized_keys:
+            raise clgen.UserError(
+                "unrecognized sampler JSON options '{}'".format(
+                    ",".join(["'{}'".format(key)
+                             for key in unrecognized_keys])))
+
+        sampler_opts = sampler_json.get("sampler", {})
+        kernel_opts = sampler_json.get("kernels", {})
+
+        return Sampler(sampler_opts, kernel_opts)

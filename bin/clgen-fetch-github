@@ -20,9 +20,9 @@
 from os import environ
 from github import BadCredentialsException
 
+import clgen
 from clgen import cli
 from clgen import log
-from clgen import fetch
 
 __description__ = """
 Mines OpenCL kernels from Github. Requires the following environment
@@ -44,7 +44,7 @@ want to upset the nice folks at GH :-)
 
 def do_fetch(*args, **kwargs):
     try:
-        fetch.github(*args, **kwargs)
+        fetch_github(*args, **kwargs)
     except BadCredentialsException as e:
         log.fatal("bad GitHub credentials")
 

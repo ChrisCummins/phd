@@ -27,11 +27,10 @@ from tempfile import mkdtemp
 
 import clgen
 from clgen import cache
-from clgen import model
 
 
 def get_test_model(vocab="char"):
-    return model.from_json({
+    return clgen.Model.from_json({
         "corpus": {
             "path": tests.data_path("tiny", "corpus"),
             "vocabulary": vocab
@@ -48,14 +47,14 @@ def get_test_model(vocab="char"):
 
 class TestModel(TestCase):
     def test_hash(self):
-        m1 = model.from_json({
+        m1 = clgen.Model.from_json({
             "corpus": {
                 "path": tests.data_path("tiny", "corpus")
             }
         })
 
         # same as m1, with explicit default opt:
-        m2 = model.from_json({
+        m2 = clgen.Model.from_json({
             "corpus": {
                 "path": tests.data_path("tiny", "corpus")
             },
@@ -65,7 +64,7 @@ class TestModel(TestCase):
         })
 
         # different opt value:
-        m3 = model.from_json({
+        m3 = clgen.Model.from_json({
             "corpus": {
                 "path": tests.data_path("tiny", "corpus")
             },
@@ -83,7 +82,7 @@ class TestModel(TestCase):
         self.assertEqual(m.checkpoint_path, None)
 
     def test_eq(self):
-        m1 = model.from_json({
+        m1 = clgen.Model.from_json({
             "corpus": {
                 "path": tests.data_path("tiny", "corpus")
             },
@@ -91,7 +90,7 @@ class TestModel(TestCase):
                 "intermediate_checkpoints": False
             }
         })
-        m2 = model.from_json({
+        m2 = clgen.Model.from_json({
             "corpus": {
                 "path": tests.data_path("tiny", "corpus")
             },
@@ -99,7 +98,7 @@ class TestModel(TestCase):
                 "intermediate_checkpoints": False
             }
         })
-        m3 = model.from_json({
+        m3 = clgen.Model.from_json({
             "corpus": {
                 "path": tests.data_path("tiny", "corpus")
             },
@@ -114,7 +113,7 @@ class TestModel(TestCase):
         self.assertNotEqual(m1, 'abcdef')
 
     def test_to_json(self):
-        m1 = model.from_json({
+        m1 = clgen.Model.from_json({
             "corpus": {
                 "path": tests.data_path("tiny", "corpus")
             },
@@ -122,7 +121,7 @@ class TestModel(TestCase):
                 "intermediate_checkpoints": True
             }
         })
-        m2 = model.from_json(m1.to_json())
+        m2 = clgen.Model.from_json(m1.to_json())
         self.assertEqual(m1, m2)
 
 

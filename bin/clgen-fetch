@@ -19,9 +19,9 @@
 #
 import os
 
+import clgen
 from clgen import cli
 from clgen import log
-from clgen import fetch
 
 __description__ = """
 Import OpenCL files into kernel datbase.
@@ -41,7 +41,7 @@ def main():
 
     db_path = os.path.expanduser(args.input)
 
-    cli.main(fetch.fetch_fs, db_path, args.paths)
+    cli.main(clgen.fetch, db_path, args.paths)
     log.info("done.")
 
 

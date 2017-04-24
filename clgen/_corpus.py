@@ -22,6 +22,7 @@ Manipulating and handling training corpuses.
 import re
 import codecs
 import numpy as np
+import pickle
 
 from checksumdir import dirhash
 from collections import Counter
@@ -32,17 +33,13 @@ from labm8 import jsonutil
 from labm8 import lockfile
 from labm8 import tar
 from labm8 import types
-from six.moves import cPickle
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
 from time import time
 
 import clgen
-from clgen import clutil
 from clgen import dbutil
-from clgen import explore
 from clgen import features
-from clgen import fetch
 from clgen import log
 
 
@@ -316,7 +313,7 @@ class Corpus(clgen.CLgenObject):
                     if fs.isfile(f)]
 
         # import files into database
-        fetch.fetch_fs(self.contentcache["kernels.db"], filelist)
+        clgen.fetch(self.contentcache["kernels.db"], filelist)
 
     def _create_txt(self) -> None:
         """creates and caches corpus.txt"""
@@ -370,13 +367,13 @@ class Corpus(clgen.CLgenObject):
 
         tmp_vocab_file = self.cache.keypath("atomizer.tmp.pkl")
         with open(tmp_vocab_file, 'wb') as f:
-            cPickle.dump(self.atomizer, f)
+            pickle.dump(self.atomizer, f)
 
         self.cache["atomizer.pkl"] = tmp_vocab_file
 
     def _load_atomizer(self) -> None:
         with open(self.cache["atomizer.pkl"], 'rb') as infile:
-            self.atomizer = cPickle.load(infile)
+            self.atomizer = pickle.load(infile)
 
         self.atoms = self.atomizer.atoms
         self.vocab_size = self.atomizer.vocab_size

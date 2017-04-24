@@ -19,12 +19,12 @@
 from unittest import TestCase, main, skip
 import tests
 
-from clgen import fetch
+import clgen
 
 
 class TestFetch(TestCase):
     def test_inline_fs_headers(self):
-        src = fetch.inline_fs_headers(tests.data_path("cl", "sample-3.cl"), [])
+        src = clgen.inline_fs_headers(tests.data_path("cl", "sample-3.cl"), [])
         self.assertTrue("MY_DATA_TYPE" in src)
         self.assertTrue("__kernel void" in src)
 

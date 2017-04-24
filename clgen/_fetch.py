@@ -60,38 +60,7 @@ errors_counter = 0
 status_string = ''
 
 
-def print_repo_details(repo) -> None:
-    """
-    Print GitHub repo details.
-
-    Arguments:
-        repo: Repository.
-    """
-    print('url:', repo.url)
-    print('owner:', repo.owner.email)
-    print('name:', repo.name)
-    print('fork:', repo.fork)
-    print('stars:', repo.stargazers_count)
-    print('contributors:', len([x for x in repo.get_contributors()]))
-    print('forks:', repo.forks)
-    print('created_at:', repo.created_at)
-    print('updated_at:', repo.updated_at)
-
-
-def print_file_details(file) -> None:
-    """
-    Print GitHub file details.
-
-    Arguments:
-        file: File.
-    """
-    print('url:', file.url)
-    print('path:', file.path)
-    print('sha:', file.sha)
-    print('size:', file.size)
-
-
-def print_counters() -> None:
+def _print_counters() -> None:
     """
     Print analytics counters.
     """
@@ -103,7 +72,7 @@ def print_counters() -> None:
     sys.stdout.flush()
 
 
-def rate_limit(g) -> None:
+def _rate_limit(g) -> None:
     """
     Block on GitHub rate limit.
 
@@ -115,11 +84,11 @@ def rate_limit(g) -> None:
     while remaining < 100:
         sleep(1)
         status_string = 'WAITING ON RATE LIMIT'
-        print_counters()
+        _print_counters()
         remaining = g.get_rate_limit().rate.remaining
 
 
-def process_repo(g, db, repo) -> bool:
+def _process_repo(g, db, repo) -> bool:
     """
     GitHub repository handler.
 
@@ -141,12 +110,12 @@ def process_repo(g, db, repo) -> bool:
     global repos_unchanged_counter
     global status_string
 
-    rate_limit(g)
+    _rate_limit(g)
     url = repo.url
     updated_at = str(repo.updated_at)
     name = repo.name
     status_string = name
-    print_counters()
+    _print_counters()
 
     c = db.cursor()
     c.execute("SELECT updated_at FROM Repositories WHERE url=?", (url,))
@@ -181,19 +150,10 @@ def process_repo(g, db, repo) -> bool:
     return True
 
 
-def is_opencl_path(path: str) -> bool:
-    """
-    Return whether file is opencl.
-
-    Arguments:
-        path (str): File.
-    """
-    return path.endswith('.cl') or path.endswith('.ocl')
-
 _include_re = re.compile('\w*#include ["<](.*)[">]')
 
 
-def download_file(github_token: str, repo, url: str, stack: list) -> str:
+def _download_file(github_token: str, repo, url: str, stack: list) -> str:
     """
     Fetch file from GitHub.
 
@@ -237,7 +197,7 @@ def download_file(github_token: str, repo, url: str, stack: list) -> str:
                     break
 
             if include_url and include_url not in stack:
-                include_src = download_file(github_token, repo, include_url)
+                include_src = _download_file(github_token, repo, include_url)
                 outlines.append(include_src)
             else:
                 if not include_url:
@@ -250,7 +210,7 @@ def download_file(github_token: str, repo, url: str, stack: list) -> str:
     return '\n'.join(outlines)
 
 
-def process_file(g, github_token: str, db, repo, file) -> bool:
+def _process_file(g, github_token: str, db, repo, file) -> bool:
     """
     GitHub file handler.
 
@@ -270,14 +230,14 @@ def process_file(g, github_token: str, db, repo, file) -> bool:
     global status_string
 
     # We're only interested in OpenCL files.
-    if not is_opencl_path(file.path):
+    if not (file.path.endswith('.cl') or path.endswith('.ocl')):
         return
 
     url = file.url
     sha = file.sha
     path = file.path
     status_string = repo.name + '/' + path
-    print_counters()
+    _print_counters()
 
     c = db.cursor()
     c.execute("SELECT sha FROM ContentMeta WHERE id=?", (url,))
@@ -289,7 +249,7 @@ def process_file(g, github_token: str, db, repo, file) -> bool:
         return False
 
     repo_url = repo.url
-    contents = download_file(github_token, repo, file.url, [])
+    contents = _download_file(github_token, repo, file.url, [])
     size = file.size
 
     c.execute("DELETE FROM ContentFiles WHERE id=?", (url,))
@@ -308,8 +268,8 @@ def process_file(g, github_token: str, db, repo, file) -> bool:
     return True
 
 
-def github(db_path: str, github_username: str, github_pw: str,
-           github_token: str) -> None:
+def fetch_github(db_path: str, github_username: str, github_pw: str,
+                 github_token: str) -> None:
     """
     Download all of the OpenCL on GitHub (!)
 
@@ -331,7 +291,7 @@ def github(db_path: str, github_username: str, github_pw: str,
     if not dbutil.is_github:
         raise clgen.UserError("not a GitHub database")
 
-    handle_repo = partial(process_repo, g, db)
+    handle_repo = partial(_process_repo, g, db)
 
     # fetch the repositories to iterate over. Since opencl isn't
     # treated as a first-class language by GitHub, we can't use the
@@ -360,7 +320,7 @@ def github(db_path: str, github_username: str, github_pw: str,
             if not repo_modified:
                 continue
 
-            handle_file = partial(process_file, g, github_token, db, repo)
+            handle_file = partial(_process_file, g, github_token, db, repo)
 
             # iterate over the entire git tree of the repo's default
             # branch (usually 'master'). If a file ends with the .cl
@@ -378,7 +338,7 @@ def github(db_path: str, github_username: str, github_pw: str,
                 # do nothing in case of error (such as an empty repo)
                 pass
 
-    print_counters()
+    _print_counters()
     print("\n\ndone.")
     db.close()
 
@@ -455,35 +415,7 @@ def process_cl_file(db_path: str, path: str) -> None:
     c.close()
 
 
-def content_db(db_path: str, in_db_path: str,
-               table: str='PreprocessedFiles') -> None:
-    """
-    Fetch kernels from a content database.
-
-    Arguments:
-        db_path (str): Output path.
-        in_db_path (str): Input path.
-        table (str, optional): Table to fetch from.
-    """
-    odb = dbutil.connect(db_path)
-    idb = dbutil.connect(in_db_path)
-    ic = idb.cursor()
-
-    ic.execute('SELECT id,contents FROM {}'.format(table))
-    rows = ic.fetchall()
-
-    for id, contents in rows:
-        kernels = clutil.get_cl_kernels(contents)
-        ids = [crypto.sha1_str(kernel) for kernel in kernels]
-        # print("{} kernels in {}".format(len(kernels), id))
-        for kid, kernel in zip(ids, kernels):
-            oc = odb.cursor()
-            oc.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
-                       (kid, kernel))
-            odb.commit()
-
-
-def fetch_fs(db_path: str, paths: list=[]) -> None:
+def fetch(db_path: str, paths: list=[]) -> None:
     """
     Fetch from a list of files.
 
@@ -508,144 +440,3 @@ def fetch_fs(db_path: str, paths: list=[]) -> None:
                   (path, contents))
 
     db.commit()
-
-
-# Counters
-files_new_counter = 0
-errors_counter = 0
-
-
-class CLSmithException(clgen.CLgenError):
-    """
-    CLSmith error.
-    """
-    pass
-
-
-class HeaderNotFoundException(clgen.CLgenError):
-    """
-    Unable to locate header file.
-    """
-    pass
-
-
-def print_clsmith_counters() -> None:
-    """
-    Print CLSmith counters.
-    """
-    print('\r\033[Kfiles: new ', files_new_counter,
-          '. errors ', errors_counter,
-          sep='', end='')
-    sys.stdout.flush()
-
-
-def include_clsmith_path(name: str, header_paths: list) -> str:
-    """
-    Fetch path to CLSmith header.
-
-    Arguments:
-        name (str): Header name.
-        header_paths (str[]): Directories containing CLSmith headers.
-
-    Returns:
-        str: Header path.
-    """
-    for dir in header_paths:
-        path = os.path.join(os.path.expanduser(dir), name)
-        if os.path.exists(path):
-            return path
-    raise HeaderNotFoundException(name)
-
-
-def inline_clsmith_headers(src: str, header_paths: list) -> str:
-    """
-    Inline CLSmith headers.
-
-    Arguments:
-        str (str): CLSmith source.
-        header_paths (str[]): Directories containing CLSmith headers.
-
-    Returns:
-        str: CLSmith source with headers inlined.
-    """
-    outlines = []
-    for line in src.split('\n'):
-        match = re.match(_include_re, line)
-        if match:
-            include_name = match.group(1)
-
-            path = include_clsmith_path(include_name, header_paths)
-            with open(path) as infile:
-                header = infile.read()
-                outlines.append(inline_clsmith_headers(header))
-        else:
-            outlines.append(line)
-
-    return '\n'.join(outlines)
-
-
-def get_clsmith_program(db_path: str,
-                        header_paths: list=[
-                            "~/clsmith/runtime", "~/clsmith/build"]) -> None:
-    """
-    Generate a program using CLSmith and add to dataset.
-
-    Arguments:
-        db_path (str): Path to output dataset.
-        header_paths (str[]): Directories containing CLSmith headers.
-    """
-    global files_new_counter
-
-    outputpath = 'CLProg.c'
-
-    db = dbutil.connect(db_path)
-    c = db.cursor()
-
-    # TODO: CLSmith might not be in path
-    cmd = ["CLSmith"]
-
-    process = Popen(cmd)
-    process.communicate()
-
-    if process.returncode != 0:
-        raise CLSmithException()
-
-    with open(outputpath) as infile:
-        contents = infile.read()
-
-    contents = inline_clsmith_headers(contents, header_paths)
-
-    sha = sha1(contents.encode('utf-8')).hexdigest()
-
-    c.execute('INSERT OR IGNORE INTO ContentFiles VALUES(?,?)',
-              (sha, contents))
-    db.commit()
-    db.close()
-    files_new_counter += 1
-    print_clsmith_counters()
-
-
-def clsmith(db_path: str, target_num_kernels: int) -> None:
-    """
-    Generate kernels using CLSmith.
-
-    Arguments:
-        db_path (str): Path to dataset.
-        target_num_kernels (int): Number of kernels to generate.
-    """
-    global errors_counter
-
-    print('generating', target_num_kernels, 'kernels to', db_path)
-
-    db = dbutil.connect(db_path)
-    c = db.cursor()
-    c.execute('SELECT Count(*) FROM ContentFiles')
-    num_kernels = c.fetchone()[0]
-    while num_kernels < target_num_kernels:
-        get_clsmith_program(db_path)
-        c.execute('SELECT Count(*) FROM ContentFiles')
-        num_kernels = c.fetchone()[0]
-
-    print_counters()
-    print("\n\ndone.")
-    db.close()

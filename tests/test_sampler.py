@@ -28,12 +28,10 @@ from tempfile import mkdtemp
 
 import clgen
 from clgen import dbutil
-from clgen import model
-from clgen import sampler
 
 
 def get_test_model():
-    return model.from_json({
+    return clgen.Model.from_json({
         "corpus": {
             "path": tests.data_path("tiny", "corpus"),
         },
@@ -58,7 +56,7 @@ class TestSampler(TestCase):
             '__global float*',
             'const int'
         ]
-        s = sampler.from_json({
+        s = clgen.Sampler.from_json({
             "kernels": {
                 "args": argspec,
                 "max_length": 300,
@@ -87,7 +85,7 @@ class TestSampler(TestCase):
         self.assertTrue(num_preprocessed2 - num_preprocessed == diff)
 
     def test_eq(self):
-        s1 = sampler.from_json({
+        s1 = clgen.Sampler.from_json({
             "kernels": {
                 "args": [
                     '__global float*',
@@ -96,7 +94,7 @@ class TestSampler(TestCase):
                 ]
             }
         })
-        s2 = sampler.from_json({
+        s2 = clgen.Sampler.from_json({
             "kernels": {
                 "args": [
                     '__global float*',
@@ -105,7 +103,7 @@ class TestSampler(TestCase):
                 ]
             }
         })
-        s3 = sampler.from_json({
+        s3 = clgen.Sampler.from_json({
             "kernels": {
                 "args": [
                     'int'
@@ -119,7 +117,7 @@ class TestSampler(TestCase):
         self.assertNotEqual(s1, 'abcdef')
 
     def test_to_json(self):
-        s1 = sampler.from_json({
+        s1 = clgen.Sampler.from_json({
             "kernels": {
                 "args": [
                     '__global float*',
@@ -128,7 +126,7 @@ class TestSampler(TestCase):
                 ]
             }
         })
-        s2 = sampler.from_json(s1.to_json())
+        s2 = clgen.Sampler.from_json(s1.to_json())
         self.assertEqual(s1, s2)
 
 

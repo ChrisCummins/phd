@@ -78,7 +78,7 @@ const char fn_base_char = 'A';
 // variable names
 const char var_base_char = 'a';
 const std::string var_prefix = "";
-const std::string gb_prefix = "g";
+const std::string gb_prefix = "G";
 //
 #elif REWRITE_STYLE == 1
 //

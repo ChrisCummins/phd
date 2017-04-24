@@ -22,20 +22,19 @@ import tests
 from labm8 import fs
 
 import clgen
-from clgen import explore
 
 class TestExplore(TestCase):
     def test_explore(self):
         c = clgen.Corpus.from_json({
             "path": tests.data_path("tiny", "corpus", exists=False)
         })
-        explore.explore(c.contentcache["kernels.db"])
+        clgen.explore(c.contentcache["kernels.db"])
 
     def test_explore_gh(self):
         db_path = tests.archive("tiny-gh.db")
         assert(fs.exists(db_path))
 
-        explore.explore(db_path)
+        clgen.explore(db_path)
 
 
 if __name__ == "__main__":
