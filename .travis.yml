@@ -27,9 +27,8 @@ os:
 #       - clang-3.6
 
 before_install:
-  - |
-    sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
-    git submodule update --init --recursive
+  - sed -i 's,git@github.com:,https://github.com/,' .gitmodules
+  - git submodule update --init --recursive
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       brew update
