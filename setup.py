@@ -1,4 +1,11 @@
+from __future__ import print_function
+
+import sys
 from setuptools import setup
+
+if sys.version_info < (3, 0):
+    print("fatal: shutterbug requires Python 3")
+    sys.exit(1)
 
 setup(
     name='shutterbug',
