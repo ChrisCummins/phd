@@ -7,10 +7,10 @@ clgen
    :members:
    :undoc-members:
 
-clgen.atomizer
----------------
+clgen._atomizer
+----------------
 
-.. automodule:: clgen.atomizer
+.. automodule:: clgen._atomizer
    :members:
    :undoc-members:
 
@@ -28,17 +28,17 @@ clgen.clutil
    :members:
    :undoc-members:
 
-clgen.config
--------------
+clgen._config
+--------------
 
-.. automodule:: clgen.config
+.. automodule:: clgen._config
    :members:
    :undoc-members:
 
-clgen.corpus
--------------
+clgen._corpus
+--------------
 
-.. automodule:: clgen.corpus
+.. automodule:: clgen._corpus
    :members:
    :undoc-members:
 
@@ -49,10 +49,10 @@ clgen.dbutil
    :members:
    :undoc-members:
 
-clgen.explore
---------------
+clgen._explore
+---------------
 
-.. automodule:: clgen.explore
+.. automodule:: clgen._explore
    :members:
    :undoc-members:
 
@@ -63,10 +63,10 @@ clgen.features
    :members:
    :undoc-members:
 
-clgen.fetch
-------------
+clgen._fetch
+-------------
 
-.. automodule:: clgen.fetch
+.. automodule:: clgen._fetch
    :members:
    :undoc-members:
 
@@ -77,10 +77,10 @@ clgen.log
    :members:
    :undoc-members:
 
-clgen.model
-------------
+clgen._model
+-------------
 
-.. automodule:: clgen.model
+.. automodule:: clgen._model
    :members:
    :undoc-members:
 
@@ -91,17 +91,17 @@ clgen.native
    :members:
    :undoc-members:
 
-clgen.preprocess
------------------
+clgen._preprocess
+------------------
 
-.. automodule:: clgen.preprocess
+.. automodule:: clgen._preprocess
    :members:
    :undoc-members:
 
-clgen.sampler
---------------
+clgen._sampler
+---------------
 
-.. automodule:: clgen.sampler
+.. automodule:: clgen._sampler
    :members:
    :undoc-members:
 

@@ -204,90 +204,6 @@ clgen-fetch
       -v, --verbose  increase output verbosity
       --debug        in case of error, print debugging information
 
-clgen-fetch-clgen
-------------------
-
-::
-
-    usage: clgen-fetch-clgen [-h] [--version] [-v] [--debug] [-d D] [-f F]
-                             [--first]
-                             input
-    
-    Generate OpenCL kernels from CLgen samples.
-    
-    This splits the continuous output of CLgen into discrete OpenCL kernels for
-    preprocessing.
-    
-    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
-    <http://chriscummins.cc/clgen>
-    
-    positional arguments:
-      input          path to SQL dataset
-    
-    optional arguments:
-      -h, --help     show this help message and exit
-      --version      show version information and exit
-      -v, --verbose  increase output verbosity
-      --debug        in case of error, print debugging information
-      -d D           path to samples directory
-      -f F           path to sample file
-      --first        extract only first kernel from sample file(s)
-
-clgen-fetch-clsmith
---------------------
-
-::
-
-    usage: clgen-fetch-clsmith [-h] [--version] [-v] [--debug] [-n N] input
-    
-    Generate OpenCL programs using CLSmith.
-    
-    CLSmith is a random program generator designed for fuzz testing OpenCL
-    compilers and implementations.
-    
-    Install CLSmith into your system path from here:
-    
-       <https://github.com/ChrisLidbury/CLSmith>
-    
-    Note CLSmith is *not* developed by us. It is the efforts of the fine folks
-    at Imperial College London: Christopher Lidbury, Andrei Lascu, Nathan Chong,
-    Alastair F. Donaldson.
-    
-    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
-    <http://chriscummins.cc/clgen>
-    
-    positional arguments:
-      input          path to SQL dataset
-    
-    optional arguments:
-      -h, --help     show this help message and exit
-      --version      show version information and exit
-      -v, --verbose  increase output verbosity
-      --debug        in case of error, print debugging information
-      -n N           number of OpenCL kernels to generate
-
-clgen-fetch-db
----------------
-
-::
-
-    usage: clgen-fetch-db [-h] [--version] [-v] [--debug] output input
-    
-    Copies OpenCL kernels from an existing SQL database into a new one.
-    
-    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
-    <http://chriscummins.cc/clgen>
-    
-    positional arguments:
-      output         path to output SQL dataset
-      input          path to input SQL dataset
-    
-    optional arguments:
-      -h, --help     show this help message and exit
-      --version      show version information and exit
-      -v, --verbose  increase output verbosity
-      --debug        in case of error, print debugging information
-
 clgen-fetch-github
 -------------------
 
@@ -381,6 +297,24 @@ clgen-preprocess
                             but keep the entries in the table
       --remove-preprocessed
                             remove all preprocessed files from database
+
+clgen-test
+-----------
+
+::
+
+    usage: clgen-test [-h] [--version] [-v] [--debug]
+    
+    Run the CLgen self-test suite.
+    
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
+    
+    optional arguments:
+      -h, --help     show this help message and exit
+      --version      show version information and exit
+      -v, --verbose  increase output verbosity
+      --debug        in case of error, print debugging information
 
 clgen-train
 ------------
