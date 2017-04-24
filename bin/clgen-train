@@ -21,7 +21,6 @@ from labm8 import jsonutil
 
 import clgen
 from clgen import cli
-from clgen.model import Model
 
 __description__ = """
 Train a CLgen model.
@@ -29,7 +28,7 @@ Train a CLgen model.
 
 def do_train(model_path: str):
     model_json = jsonutil.read_file(model_path)
-    model = Model.from_json(model_json)
+    model = clgen.Model.from_json(model_json)
 
     model.train()
     print("done.")
