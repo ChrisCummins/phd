@@ -16,67 +16,74 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase, main, skip
+import pytest
 
 import clgen
 
+import clgen.test as test
 
-class TestCharacterAtomizer(TestCase):
-    def test_from_text(self):
-        c = clgen.CharacterAtomizer.from_text('abcabc')
 
-        self.assertCountEqual(c.indices, [0, 1, 2])
-        self.assertCountEqual(c.atoms, ['a', 'b', 'c'])
-        self.assertEqual(c.vocab_size, 3)
+def test_CharacterAtomizer_from_text():
+    c = clgen.CharacterAtomizer.from_text('abcabc')
 
-    def test_atomize(self):
-        c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
-        self.assertListEqual([1, 2, 3, 1, 2, 3], list(c.atomize('abcabc')))
+    assert c.indices == [0, 1, 2]
+    assert c.atoms == ['a', 'b', 'c']
+    assert c.vocab_size == 3
 
-    def test_atomize_error(self):
-        c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
-        with self.assertRaises(clgen.VocabError):
-            c.atomize('abcdeabc')
 
-    def test_deatomize(self):
-        c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
-        self.assertEqual('abcabc', c.deatomize([1, 2, 3, 1, 2, 3]))
+def test_CharacterAtomizer_atomize():
+    c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
+    assert list(c.atomize('abcabc')) == [1, 2, 3, 1, 2, 3]
 
-        text = """
+
+def test_CharacterAtomizer_atomize_error():
+    c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
+    with pytest.raises(clgen.VocabError):
+        c.atomize('abcdeabc')
+
+
+def test_CharacterAtomizer_deatomize():
+    c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
+    assert c.deatomize([1, 2, 3, 1, 2, 3]) == 'abcabc'
+
+    text = """
 __kernel void A(__global float* a, const int b, const double c) {
   int d = get_global_id(0);
   if (b < get_global_size(0))
     a[d] *= (float)c;
 }
 """
-        c = clgen.CharacterAtomizer.from_text(text)
-        self.assertEqual(text, c.deatomize(c.atomize(text)))
+    c = clgen.CharacterAtomizer.from_text(text)
+    assert c.deatomize(c.atomize(text)) == text
 
-    def test_deatomize_error(self):
-        c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
-        with self.assertRaises(clgen.VocabError):
-            c.deatomize([1, 2, 5, 10, 0])
+# Greedy
+
+def test_CharacterAtomizer_deatomize_error():
+    c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
+    with pytest.raises(clgen.VocabError):
+        c.deatomize([1, 2, 5, 10, 0])
 
 
-class TestGreedyAtomizer(TestCase):
-    def test_tokeize1(self):
-        test_vocab = {'abc': 1, 'a': 2, 'b': 3, 'ab': 4, 'c': 5, 'cab': 6, ' ': 7}
-        test_in = 'abcababbaabcabcaabccccabcabccabcccabcabc'
-        test_out = [
-            'abc', 'ab', 'ab', 'b', 'a', 'abc', 'abc', 'a', 'abc', 'c', 'c',
-            'cab', 'cab', 'c', 'cab', 'c', 'c', 'cab', 'cab', 'c']
-        c = clgen.GreedyAtomizer(test_vocab)
-        self.assertListEqual(test_out, list(c.tokenize(test_in)))
+def test_GreedyAtomizer_tokeize1():
+    test_vocab = {'abc': 1, 'a': 2, 'b': 3, 'ab': 4, 'c': 5, 'cab': 6, ' ': 7}
+    test_in = 'abcababbaabcabcaabccccabcabccabcccabcabc'
+    test_out = [
+        'abc', 'ab', 'ab', 'b', 'a', 'abc', 'abc', 'a', 'abc', 'c', 'c',
+        'cab', 'cab', 'c', 'cab', 'c', 'c', 'cab', 'cab', 'c']
+    c = clgen.GreedyAtomizer(test_vocab)
+    assert c.tokenize(test_in) == test_out
 
-    def test_tokenize2(self):
-        test_vocab = {'volatile': 0, 'voletile': 1, 'vo': 2, ' ': 3, 'l': 4}
-        test_in = 'volatile voletile vol '
-        test_out = ['volatile', ' ', 'voletile', ' ', 'vo', 'l', ' ']
-        c = clgen.GreedyAtomizer(test_vocab)
-        self.assertListEqual(test_out, list(c.tokenize(test_in)))
 
-    def test_tokenize3(self):
-        test_in = """\
+def test_GreedyAtomizer_tokenize2():
+    test_vocab = {'volatile': 0, 'voletile': 1, 'vo': 2, ' ': 3, 'l': 4}
+    test_in = 'volatile voletile vol '
+    test_out = ['volatile', ' ', 'voletile', ' ', 'vo', 'l', ' ']
+    c = clgen.GreedyAtomizer(test_vocab)
+    assert c.tokenize(test_in) == test_out
+
+
+def test_GreedyAtomizer_tokenize3():
+    test_in = """\
 __kernel void A(__global float* a, __global float* b, const int c) {
   int d = get_global_id(0);
   if (d < c) {
@@ -84,21 +91,21 @@ __kernel void A(__global float* a, __global float* b, const int c) {
   }
 }\
 """
-        test_out = [
-            '__kernel', ' ', 'void', ' ', 'A', '(', '__global', ' ', 'float', '*',
-            ' ', 'a', ',', ' ', '__global', ' ', 'float', '*', ' ', 'b', ',',
-            ' ', 'const', ' ', 'int', ' ', 'c', ')', ' ', '{', '\n', '  ', 'int',
-            ' ', 'd', ' ', '=', ' ', 'get_global_id', '(', '0', ')', ';', '\n',
-            '  ', 'if', ' ', '(', 'd', ' ', '<', ' ', 'c', ')', ' ', '{', '\n',
-            '  ', '  ', 'a', '[', 'd', ']', ' ', '=', ' ', 'b', '[', 'd', ']',
-            ' ', '*', ' ', '1', '0', '.', '0', 'f', ';', '\n', '  ', '}', '\n',
-            '}'
-        ]
-        c = clgen.GreedyAtomizer.from_text(test_in)
-        self.assertListEqual(test_out, c.tokenize(test_in))
+    test_out = [
+        '__kernel', ' ', 'void', ' ', 'A', '(', '__global', ' ', 'float', '*',
+        ' ', 'a', ',', ' ', '__global', ' ', 'float', '*', ' ', 'b', ',',
+        ' ', 'const', ' ', 'int', ' ', 'c', ')', ' ', '{', '\n', '  ', 'int',
+        ' ', 'd', ' ', '=', ' ', 'get_global_id', '(', '0', ')', ';', '\n',
+        '  ', 'if', ' ', '(', 'd', ' ', '<', ' ', 'c', ')', ' ', '{', '\n',
+        '  ', '  ', 'a', '[', 'd', ']', ' ', '=', ' ', 'b', '[', 'd', ']',
+        ' ', '*', ' ', '1', '0', '.', '0', 'f', ';', '\n', '  ', '}', '\n',
+        '}'
+    ]
+    c = clgen.GreedyAtomizer.from_text(test_in)
+    assert c.tokenize(test_in) == test_out
 
-    def test_deatomize(self):
-        test_in = """\
+def test_GreedyAtomizer_deatomize():
+    test_in = """\
 __kernel void A(__global float* a, __global float* b, const int c) {
   int d = get_global_id(0);
   if (d < c) {
@@ -106,12 +113,12 @@ __kernel void A(__global float* a, __global float* b, const int c) {
   }
 }\
 """
-        c = clgen.GreedyAtomizer.from_text(test_in)
-        a = c.atomize(test_in)
-        self.assertEqual(test_in, c.deatomize(a))
+    c = clgen.GreedyAtomizer.from_text(test_in)
+    a = c.atomize(test_in)
+    assert c.deatomize(a) == test_in
 
-    def test_from_text(self):
-        test_in = """\
+def test_GreedyAtomizer_from_text():
+    test_in = """\
 __kernel void A(__global float* a, __global float* b, const int c) {
   int d = get_global_id(0);
   if (d < c) {
@@ -119,15 +126,11 @@ __kernel void A(__global float* a, __global float* b, const int c) {
   }
 }\
 """
-        tokens = [
-            '__kernel', ' ', 'A', '(', ')', '__global', 'float', '*', 'a', '0',
-            'b', 'const', 'int', 'c', '{', '}', '  ', 'd', 'get_global_id',
-            ';', 'if', '<', '[', ']', 'f', '.', '1', '\n', '=', ',', 'void'
-        ]
-        c = clgen.GreedyAtomizer.from_text(test_in)
-        self.assertCountEqual(tokens, c.atoms)
-        self.assertEqual(len(tokens), c.vocab_size)
-
-
-if __name__ == "__main__":
-    main()
+    tokens = [
+        '__kernel', ' ', 'A', '(', ')', '__global', 'float', '*', 'a', '0',
+        'b', 'const', 'int', 'c', '{', '}', '  ', 'd', 'get_global_id',
+        ';', 'if', '<', '[', ']', 'f', '.', '1', '\n', '=', ',', 'void'
+    ]
+    c = clgen.GreedyAtomizer.from_text(test_in)
+    assert sorted(c.atoms) == sorted(tokens)
+    assert c.vocab_size == len(tokens)

@@ -223,6 +223,14 @@ class Atomizer(clgen.CLgenObject):
 
         Returns:
             Atomizer: Specialized atomizer.
+
+        Examples:
+            >>> a = CharacterAtomizer.from_text('abcdefg')
+            >>> b = a.atomize('abcd')
+            >>> len(b)
+            4
+            >>> a.deatomize(b)
+            'abcd'
         """
         raise NotImplementedError("abstract class")
 
