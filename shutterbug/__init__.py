@@ -123,7 +123,7 @@ line in the manifest file:
             # see if compressed file size is smaller than starting size
             print(outpath,
                   '{:.2f}MB -> {:.2f}MB'.format(size / 1000 ** 2,
-                                               outsize / 1000 ** 2))
+                                                outsize / 1000 ** 2))
             return os.path.basename(outpath), checksum
         else:
             # if not, replace it with the original file
