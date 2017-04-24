@@ -3,3 +3,4 @@ build --compilation_mode opt
 
 build --cxxopt='-std=c++14'
 build --ignore_unsupported_sandboxing
+build --verbose_failures
