@@ -27,9 +27,9 @@ os:
 #       - clang-3.6
 
 before_install:
-  - |
-    sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+  - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
     git submodule update --init --recursive
+  - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       brew update
       brew install bazel
@@ -41,10 +41,10 @@ before_install:
     fi
 
 script:
+  - source .env
+  - $CC --version   # c compiler
+  - $CXX --version  # c++ compiler
   - |
-    source .env
-    $CC --version   # c compiler
-    $CXX --version  # c++ compiler
     bazel \
       test \
         --verbose_failures \
