@@ -192,4 +192,5 @@ def main():
     module_path = os.path.dirname(clgen.__file__)
     os.chdir(module_path)
 
-    pytest.main(["--doctest-modules"])
+    pytest.main(["--doctest-modules", "--cov=clgen",
+                 "--cov-config", ".coveragerc"])
