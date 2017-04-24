@@ -21,20 +21,26 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
+
+# note that we've hardcoded a specific version of GPUverify, but the nightly
+# build may update at any time and break this.
 gpuverify_version := 2016-03-28
 gpuverify := $(root)/native/gpuverify/$(gpuverify_version)/gpuverify
 gpuverify_url := http://multicore.doc.ic.ac.uk/tools/downloads/GPUVerifyLinux64-nightly.zip
 
 gpuverify: $(gpuverify)
 
-# note that we've hardcoded a specific version of GPUverify, but the nightly
-# build may update at any time and break this.
+# we remove some python 2 scripts from bugle directory after unpacking, as
+# setuptools discovers them and considers them part of CLgen, causing syntax
+# errors
 $(gpuverify):
 	rm -rf $(root)/native/gpuverify
 	mkdir -p $(root)/native/gpuverify
 	cd $(root)/native/gpuverify && wget $(gpuverify_url) -O gpuverify.zip
 	cd $(root)/native/gpuverify && unzip gpuverify.zip
 	rm $(root)/native/gpuverify/gpuverify.zip
+	find $(root)/native/gpuverify/$(gpuverify_version)/bugle/include-blang \
+		-name '*.py' -exec rm -v {} \;
 	touch $@
 
 .PHONY: distclean-gpuverify
