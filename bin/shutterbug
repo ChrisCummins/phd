@@ -1,7 +1,39 @@
 #!/usr/bin/env python3
-from argparse import ArgumentParser
+# -*- coding: utf-8 -*-
+import argparse
+import sys
+
+from pkg_resources import require
 
 from shutterbug import unchunk, mkchunks
+
+
+class ArgumentParser(argparse.ArgumentParser):
+    """
+    Specialized argument parser, with --version flag.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        See python argparse.ArgumentParser.__init__().
+        """
+        super(ArgumentParser, self).__init__(*args, **kwargs)
+        self.add_argument('--version', action='store_true',
+                          help='show version information and exit')
+
+    def parse_args(self, args=sys.argv[1:], namespace=None):
+        """
+        See python argparse.ArgumentParser.parse_args().
+        """
+        # --version option overrides the normal argument parsing process.
+        if '--version' in args:
+            version = require("shutterbug")[0].version
+            print('shutterbug %s, made with \033[1;31m♥\033[0;0m by '
+                  'Chris Cummins <chrisc.101@gmail.com>' % version)
+            sys.exit(0)
+
+        return super(ArgumentParser, self).parse_args(args, namespace)
+
 
 def main():
     parser = ArgumentParser(description="""\
