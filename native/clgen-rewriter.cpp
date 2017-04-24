@@ -52,7 +52,6 @@
 #include <clang/Tooling/CommonOptionsParser.h>
 #include <clang/Tooling/Tooling.h>
 
-
 // Uncomment the following line for verbose output:
 // #define VERBOSE
 // Uncommend the following line for debug output:
@@ -64,6 +63,37 @@
 #else
 # define DEBUG_OUT(x)
 #endif
+
+
+#ifndef REWRITE_STYLE
+# warning "use -DREWRITE_STYLE to define a rewrite style"
+# define REWRITE_STYLE 0
+#endif
+
+#if REWRITE_STYLE == 0
+//
+// function names
+const std::string fn_prefix = "";
+const char fn_base_char = 'A';
+// variable names
+const char var_base_char = 'a';
+const std::string var_prefix = "";
+const std::string gb_prefix = "g";
+//
+#elif REWRITE_STYLE == 1
+//
+// function names
+const std::string fn_prefix = "fn_";
+const char fn_base_char = 'A';
+// variable names
+const char var_base_char = 'a';
+const std::string var_prefix = "";
+const std::string gb_prefix = "gb_";
+//
+#else
+#error "unknown rewrite style"
+#endif
+
 
 namespace rewriter {
 
@@ -162,7 +192,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
   std::string get_fn_rewrite(const std::string& name) {
     if (_fns.find(name) == _fns.end()) {
       // New function:
-      auto replacement = get_next_name(_fns, name, 'A', "fn_");
+      auto replacement = get_next_name(_fns, name, fn_base_char, fn_prefix);
       return replacement;
     } else {
       // Previously declared function:
@@ -177,7 +207,7 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
                               const std::string& prefix="") {
     if (rewrites.find(name) == rewrites.end()) {
       // New variable:
-      auto replacement = get_next_name(rewrites, name, 'A', prefix);
+      auto replacement = get_next_name(rewrites, name, var_base_char, prefix);
       return replacement;
     } else {
       // Previously declared variable:
@@ -295,7 +325,10 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
       const auto* parent = d->getParentFunctionOrMethod();
       if (parent == nullptr) {
         // if there's no parent, then it's a global variable
-        const auto replacement = get_var_rewrite(_global_vars, name, "gb_");
+        const auto replacement = get_var_rewrite(
+            _global_vars,  // rewrite table
+            name,  // original name
+            gb_prefix);  // prefix for new name
 
         // rewrite variable name
         rewrite_var_name(decl, replacement);
@@ -303,7 +336,10 @@ class RewriterVisitor : public clang::RecursiveASTVisitor<RewriterVisitor> {
       } else if (auto fn = clang::dyn_cast<clang::FunctionDecl>(parent)) {
         // if it's in function scope, get the rewrite table
         auto& rewrite_table = get_fn_var_rewrite_table(fn);
-        const auto replacement = get_var_rewrite(rewrite_table, name);
+        const auto replacement = get_var_rewrite(
+            rewrite_table, // rewrite table
+            name,  // original name
+            var_prefix);  // prefix for new name
 
         // rewrite variable name
         rewrite_var_name(decl, replacement);
