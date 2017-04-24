@@ -47,7 +47,7 @@ __maintainer__ = __author__
 __email__ = "chrisc.101@gmail.com"
 __status__ = "Prototype"
 
-from clgen.config import *
+from clgen._config import *
 
 class CLgenError(Exception):
     """

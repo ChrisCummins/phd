@@ -112,7 +112,7 @@ def main():
         print("CLGEN_VERSION := " + cfg["version"], file=outfile)
 
     # generate python config file
-    with open(os.path.join("clgen", "config.py"), "w") as outfile:
+    with open(os.path.join("clgen", "_config.py"), "w") as outfile:
         print("USE_CUDA = " + to_python(cfg["cuda"]), file=outfile)
         print("VERSION = '{}'".format(cfg["version"]), file=outfile)
 
