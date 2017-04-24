@@ -17,7 +17,7 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 from unittest import TestCase, skip
-import tests
+from clgen import test as tests
 
 from labm8 import fs
 

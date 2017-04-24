@@ -22,6 +22,7 @@ import os
 
 from clgen import cli
 
+
 def get_parser():
     parser = cli.ArgumentParser()
     parser.add_argument("a")

@@ -92,10 +92,10 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelArg("__global float4* a").string
-            "__global float4* a"
-            >>> KernelArg("const int b").string
-            "const int b"
+            >>> KernelArg('__global float4* a').string
+            '__global float4* a'
+            >>> KernelArg('const int b').string
+            'const int b'
 
         Returns:
             str: String, as passed to constructor.
@@ -109,10 +109,10 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelArg("__global float4* a").components
-            ["__global", "float4*", "a"]
-            >>> KernelArg("const int b").components
-            ["const", "int", "b"]
+            >>> KernelArg('__global float4* a').components
+            ['__global', 'float4*', 'a']
+            >>> KernelArg('const int b').components
+            ['const', 'int', 'b']
 
         Returns:
             str[]: Argument components.
@@ -126,10 +126,10 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelArg("__global float4* a").name
-            "a"
-            >>> KernelArg("const int b").name
-            "b"
+            >>> KernelArg('__global float4* a').name
+            'a'
+            >>> KernelArg('const int b').name
+            'b'
 
         Returns:
             str: Argument name.
@@ -143,10 +143,10 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelArg("__global float4* a").type
-            "float4*"
-            >>> KernelArg("const int b").type
-            "int"
+            >>> KernelArg('__global float4* a').type
+            'float4*'
+            >>> KernelArg('const int b').type
+            'int'
 
         Returns:
             str: Argument type, including pointer '*' symbol, if present.
@@ -160,9 +160,9 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelArg("__global float4* a").is_restrict
+            >>> KernelArg('__global float4* a').is_restrict
             False
-            >>> KernelArg("restrict int* b").is_restrict
+            >>> KernelArg('restrict int* b').is_restrict
             True
 
         Returns:
@@ -177,10 +177,10 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelArg("__global float4* a").qualifiers
-            ["__global"]
-            >>> KernelArg("const int b").qualifiers
-            ["const"]
+            >>> KernelArg('__global float4* a').qualifiers
+            ['__global']
+            >>> KernelArg('const int b').qualifiers
+            ['const']
 
         Returns:
             str[]: Type qualifiers.
@@ -194,9 +194,9 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelArg("__global float4* a").is_pointer
+            >>> KernelArg('__global float4* a').is_pointer
             True
-            >>> KernelArg("const int b").is_pointer
+            >>> KernelArg('const int b').is_pointer
             False
 
         Returns:
@@ -211,9 +211,9 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelArg("__global float4* a").is_vector
+            >>> KernelArg('__global float4* a').is_vector
             True
-            >>> KernelArg("const int b").is_vector
+            >>> KernelArg('const int b').is_vector
             False
 
         Returns:
@@ -231,9 +231,9 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelArg("__global float4* a").vector_width
+            >>> KernelArg('__global float4* a').vector_width
             4
-            >>> KernelArg("__global int* a").vector_width
+            >>> KernelArg('__global int* a').vector_width
             1
 
         Returns:
@@ -256,10 +256,10 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelArg("__global float4* a").bare_type
-            "float"
-            >>> KernelArg("const int b").bare_type
-            "uchar"
+            >>> KernelArg('__global float4* a').bare_type
+            'float'
+            >>> KernelArg('const int b').bare_type
+            'int'
 
         Returns:
             str: Bare type.
@@ -277,9 +277,9 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelArg("__global float4* a").is_const
+            >>> KernelArg('__global float4* a').is_const
             False
-            >>> KernelArg("const int b").is_const
+            >>> KernelArg('const int b').is_const
             True
 
         Returns:
@@ -298,9 +298,9 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelArg("__global float4* a").is_global
+            >>> KernelArg('__global float4* a').is_global
             True
-            >>> KernelArg("const int b").is_global
+            >>> KernelArg('const int b').is_global
             False
 
         Returns:
@@ -321,9 +321,9 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelArg("__local float4* a").is_local
+            >>> KernelArg('__local float4* a').is_local
             True
-            >>> KernelArg("const int b").is_local
+            >>> KernelArg('const int b').is_local
             False
 
         Returns:
@@ -344,10 +344,10 @@ class KernelArg(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelArg("__local float4* a").numpy_type
-            np.float32
-            >>> KernelArg("const int b").numpy_type
-            np.int32
+            >>> KernelArg('__local float4* a').numpy_type
+            <class 'numpy.float32'>
+            >>> KernelArg('const int b').numpy_type
+            <class 'numpy.int32'>
 
         Return:
 
@@ -410,8 +410,8 @@ class KernelPrototype(clgen.CLgenObject):
 
         Examples:
 
-            >>> KernelPrototype("__kernel void A() {").name
-            "A"
+            >>> KernelPrototype('__kernel void A() {').name
+            'A'
 
         Returns:
             str: Kernel name.

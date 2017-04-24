@@ -17,6 +17,7 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 import os
+import pytest
 import sqlite3
 import sys
 import tarfile
@@ -29,7 +30,7 @@ from unittest import TestCase
 import clgen
 
 
-class TestData404(Exception):
+class Data404(Exception):
     pass
 
 
@@ -46,14 +47,14 @@ def data_path(*components, **kwargs):
         string: Absolute path.
 
     Raises:
-        TestData404: If path doesn"t exist.
+        Data404: If path doesn"t exist.
     """
     path = fs.path(*components)
     exists = kwargs.get("exists", True)
 
     abspath = os.path.join(os.path.dirname(__file__), "data", path)
     if exists and not os.path.exists(abspath):
-        raise TestData404(abspath)
+        raise Data404(abspath)
     return abspath
 
 
@@ -68,7 +69,7 @@ def data_str(*components):
         string: File contents.
 
     Raises:
-        TestData404: If path doesn't exist.
+        Data404: If path doesn't exist.
     """
     path = fs.path(*components)
 
@@ -105,7 +106,7 @@ def db_path(path):
         string: Absolute path.
 
     Raises:
-        TestData404: If path doesn't exist.
+        Data404: If path doesn't exist.
     """
     return data_path(os.path.join("db", str(path) + ".db"))
 
@@ -122,7 +123,7 @@ def db(name, **kwargs):
         sqlite.Connection: Sqlite connection to database.
 
     Raises:
-        TestData404: If path doesn't exist.
+        Data404: If path doesn't exist.
     """
     path = data_path(db_path(name), **kwargs)
     return sqlite3.connect(path)
@@ -184,3 +185,11 @@ class DevNullRedirect(object):
     def __exit__(self, *args):
         sys.stdout = self.stdout
         sys.stderr = self.stderr
+
+
+def main():
+    # run from module directory
+    module_path = os.path.dirname(clgen.__file__)
+    os.chdir(module_path)
+
+    pytest.main(["--doctest-modules"])

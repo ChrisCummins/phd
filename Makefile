@@ -115,7 +115,7 @@ $(root)/clgen/data/bin/clgen-rewriter: $(root)/native/clgen-rewriter.cpp $(data_
 # run tests
 .PHONY: test
 test:
-	$(PYTHON) ./setup.py test
+	clgen-test
 
 # clean compiled files
 .PHONY: clean
@@ -125,13 +125,12 @@ clean: $(clean_targets)
 # clean everything
 .PHONY: distclean
 distclean: $(distclean_targets)
-	rm -f requirements.txt .config.json .config.make clgen/config.py
+	rm -f requirements.txt .config.json .config.make clgen/_config.py
 
 # install CLgen
 .PHONY: install
 install:
 	./configure -r >/dev/null
-	$(PIP) install --upgrade pip
 	$(PIP) install --only-binary=numpy '$(shell grep numpy requirements.txt)'
 	$(PIP) install -r requirements.txt
 	$(PYTHON) ./setup.py install

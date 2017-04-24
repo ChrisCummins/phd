@@ -20,6 +20,7 @@ from unittest import TestCase, main, skip
 
 import clgen
 
+
 class TestCharacterAtomizer(TestCase):
     def test_from_text(self):
         c = clgen.CharacterAtomizer.from_text('abcabc')

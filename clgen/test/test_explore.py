@@ -17,16 +17,24 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 from unittest import TestCase, main, skip
-import tests
+from clgen import test as tests
+
+from labm8 import fs
 
 import clgen
 
+class TestExplore(TestCase):
+    def test_explore(self):
+        c = clgen.Corpus.from_json({
+            "path": tests.data_path("tiny", "corpus", exists=False)
+        })
+        clgen.explore(c.contentcache["kernels.db"])
 
-class TestFetch(TestCase):
-    def test_inline_fs_headers(self):
-        src = clgen.inline_fs_headers(tests.data_path("cl", "sample-3.cl"), [])
-        self.assertTrue("MY_DATA_TYPE" in src)
-        self.assertTrue("__kernel void" in src)
+    def test_explore_gh(self):
+        db_path = tests.archive("tiny-gh.db")
+        assert(fs.exists(db_path))
+
+        clgen.explore(db_path)
 
 
 if __name__ == "__main__":

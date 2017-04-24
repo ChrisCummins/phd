@@ -17,7 +17,7 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 from unittest import TestCase, skip, skipIf, main
-import tests
+from clgen import test as tests
 
 import json
 import re

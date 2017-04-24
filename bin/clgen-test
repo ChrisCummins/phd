@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #
 # Copyright 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -16,33 +17,21 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase
-import tests
+import clgen.test
 
-import labm8
-from labm8 import fs
-
-import clgen
-from clgen import native
+from clgen import cli
 
 
-class TestNative(TestCase):
-    BINARIES = [
-        native.CLANG,
-        native.CLANG_FORMAT,
-        native.CLGEN_REWRITER,
-        native.OPT,
-    ]
+__description__ = """
+Run the CLgen self-test suite.
+"""
 
-    FILES = [
-        fs.path(native.LIBCLC, "clc", "clc.h"),
-        native.SHIMFILE,
-    ]
 
-    def test_binaries_exist(self):
-        for binary in self.BINARIES:
-            self.assertTrue(fs.isexe(binary))
+def main():
+    parser = cli.ArgumentParser(description=__description__)
+    args = parser.parse_args()
+    clgen.test.main()
 
-    def test_files_exist(self):
-        for file in self.FILES:
-            self.assertTrue(fs.isfile(file))
+
+if __name__ == "__main__":
+    main()
