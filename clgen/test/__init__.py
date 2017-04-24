@@ -193,4 +193,4 @@ def main():
     os.chdir(module_path)
 
     pytest.main(["--doctest-modules", "--cov=clgen",
-                 "--cov-config", ".coveragerc"])
+                 "--cov-config", data_path("coveragerc")])
