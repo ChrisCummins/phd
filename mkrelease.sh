@@ -23,6 +23,9 @@
 #
 set -e
 
+# python interpreter to use
+PYTHON=python3
+
 # List of files in which the version number should be updated
 files_to_update=(
     "setup.py"
@@ -39,7 +42,7 @@ version_is_pep440_compliant() {
     local version="$1"
 
     pip install packaging &>/dev/null
-    echo "$version" | python -c 'import sys; import packaging.version; packaging.version.Version(sys.stdin.read().strip())' &>/dev/null
+    echo "$version" | $PYTHON -c 'import sys; import packaging.version; packaging.version.Version(sys.stdin.read().strip())' &>/dev/null
 }
 
 
@@ -72,7 +75,7 @@ main() {
 
     set -eu
 
-    local current_version="$(python ./setup.py --version)"
+    local current_version="$($PYTHON ./setup.py --version)"
 
     # validate args
     for arg in $@; do
@@ -141,7 +144,7 @@ main() {
     git push origin "$new_version"
 
     # update on PyPi
-    python setup.py sdist upload -r pypi
+    $PYTHON setup.py sdist upload -r pypi
 
     # set dev version
     local dev_version="$new_version$dev_suffix"
