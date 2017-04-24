@@ -1,11 +1,10 @@
 checksumdir==1.0.5
 humanize>=0.5.1
-labm8==0.0.15
+labm8>=0.0.18
 numpy>=1.10.4
 progressbar2>=3.16.0
 psutil>=5.0.0
 PyGithub==1.29
-python-dateutil>=2.5.3
 pytz>=2016.7
 requests>=2.11.1
 Send2Trash>=1.3.0
