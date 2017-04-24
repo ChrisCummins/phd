@@ -49,8 +49,9 @@ Split photo collections into chunks for backup.\
     parser.add_argument('-g', '--gzip', action='store_true',
                         help="use GZIP compression on files")
     parser.add_argument('-i', '--in-order', action='store_true',
-                        help='preserve file ordering in chunks')
-    parser.add_argument('-r', '--seed', type=int, default=204,
+                        help=('preserve file ordering in chunks (else, files '
+                              'are shuffled between chunks'))
+    parser.add_argument('-r', '--seed', type=int, default=None,
                         help=("integer value to control file order shuffling "
                               "(ignored if --in-order flag used)"))
     parser.add_argument('-p', '--prefix', type=str, default='chunk',
