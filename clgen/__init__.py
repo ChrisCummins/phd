@@ -325,5 +325,5 @@ def main(model, sampler, print_file_list=False, print_corpus_dir=False,
     model.train()
     sampler.sample(model)
 
-
+from clgen._atomizer import *
 from clgen._preprocess import *

@@ -18,27 +18,27 @@
 #
 from unittest import TestCase, main, skip
 
-from clgen import atomizer
+import clgen
 
 class TestCharacterAtomizer(TestCase):
     def test_from_text(self):
-        c = atomizer.CharacterAtomizer.from_text('abcabc')
+        c = clgen.CharacterAtomizer.from_text('abcabc')
 
         self.assertCountEqual(c.indices, [0, 1, 2])
         self.assertCountEqual(c.atoms, ['a', 'b', 'c'])
         self.assertEqual(c.vocab_size, 3)
 
     def test_atomize(self):
-        c = atomizer.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
+        c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
         self.assertListEqual([1, 2, 3, 1, 2, 3], list(c.atomize('abcabc')))
 
     def test_atomize_error(self):
-        c = atomizer.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
-        with self.assertRaises(atomizer.VocabError):
+        c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
+        with self.assertRaises(clgen.VocabError):
             c.atomize('abcdeabc')
 
     def test_deatomize(self):
-        c = atomizer.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
+        c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
         self.assertEqual('abcabc', c.deatomize([1, 2, 3, 1, 2, 3]))
 
         text = """
@@ -48,12 +48,12 @@ __kernel void A(__global float* a, const int b, const double c) {
     a[d] *= (float)c;
 }
 """
-        c = atomizer.CharacterAtomizer.from_text(text)
+        c = clgen.CharacterAtomizer.from_text(text)
         self.assertEqual(text, c.deatomize(c.atomize(text)))
 
     def test_deatomize_error(self):
-        c = atomizer.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
-        with self.assertRaises(atomizer.VocabError):
+        c = clgen.CharacterAtomizer({'a': 1, 'b': 2, 'c': 3})
+        with self.assertRaises(clgen.VocabError):
             c.deatomize([1, 2, 5, 10, 0])
 
 
@@ -64,14 +64,14 @@ class TestGreedyAtomizer(TestCase):
         test_out = [
             'abc', 'ab', 'ab', 'b', 'a', 'abc', 'abc', 'a', 'abc', 'c', 'c',
             'cab', 'cab', 'c', 'cab', 'c', 'c', 'cab', 'cab', 'c']
-        c = atomizer.GreedyAtomizer(test_vocab)
+        c = clgen.GreedyAtomizer(test_vocab)
         self.assertListEqual(test_out, list(c.tokenize(test_in)))
 
     def test_tokenize2(self):
         test_vocab = {'volatile': 0, 'voletile': 1, 'vo': 2, ' ': 3, 'l': 4}
         test_in = 'volatile voletile vol '
         test_out = ['volatile', ' ', 'voletile', ' ', 'vo', 'l', ' ']
-        c = atomizer.GreedyAtomizer(test_vocab)
+        c = clgen.GreedyAtomizer(test_vocab)
         self.assertListEqual(test_out, list(c.tokenize(test_in)))
 
     def test_tokenize3(self):
@@ -93,7 +93,7 @@ __kernel void A(__global float* a, __global float* b, const int c) {
             ' ', '*', ' ', '1', '0', '.', '0', 'f', ';', '\n', '  ', '}', '\n',
             '}'
         ]
-        c = atomizer.GreedyAtomizer.from_text(test_in)
+        c = clgen.GreedyAtomizer.from_text(test_in)
         self.assertListEqual(test_out, c.tokenize(test_in))
 
     def test_deatomize(self):
@@ -105,7 +105,7 @@ __kernel void A(__global float* a, __global float* b, const int c) {
   }
 }\
 """
-        c = atomizer.GreedyAtomizer.from_text(test_in)
+        c = clgen.GreedyAtomizer.from_text(test_in)
         a = c.atomize(test_in)
         self.assertEqual(test_in, c.deatomize(a))
 
@@ -123,7 +123,7 @@ __kernel void A(__global float* a, __global float* b, const int c) {
             'b', 'const', 'int', 'c', '{', '}', '  ', 'd', 'get_global_id',
             ';', 'if', '<', '[', ']', 'f', '.', '1', '\n', '=', ',', 'void'
         ]
-        c = atomizer.GreedyAtomizer.from_text(test_in)
+        c = clgen.GreedyAtomizer.from_text(test_in)
         self.assertCountEqual(tokens, c.atoms)
         self.assertEqual(len(tokens), c.vocab_size)
 

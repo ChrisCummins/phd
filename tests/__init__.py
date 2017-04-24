@@ -18,9 +18,11 @@
 #
 import os
 import sqlite3
+import sys
 import tarfile
 import tensorflow as tf
 
+from io import StringIO
 from labm8 import fs
 from labm8 import tar
 from unittest import TestCase

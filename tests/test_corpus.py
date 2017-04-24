@@ -90,8 +90,9 @@ __kernel void A(__global float* a) {
 __kernel void A(__global float* a) {
   SYNTAX ERROR!
 }"""
-        with self.assertRaises(corpus.FeaturesError):
-            corpus.get_features(code, quiet=True)
+        with tests.DevNullRedirect():
+            with self.assertRaises(corpus.FeaturesError):
+                corpus.get_features(code, quiet=True)
 
     def test_get_features_multiple_kernels(self):
         code = """\

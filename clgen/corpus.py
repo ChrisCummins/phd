@@ -38,7 +38,6 @@ from tempfile import NamedTemporaryFile
 from time import time
 
 import clgen
-from clgen import atomizer
 from clgen import clutil
 from clgen import dbutil
 from clgen import explore
@@ -106,11 +105,11 @@ def get_atomizer(corpus: str, vocab: str="char") -> list:
         vocab (str, optional): Vocabularly type.
 
     Returns:
-        atomizer.Atomizer: Atomizer.
+        clgen.Atomizer: Atomizer.
     """
     atomizers = {
-        "char": atomizer.CharacterAtomizer,
-        "greedy": atomizer.GreedyAtomizer,
+        "char": clgen.CharacterAtomizer,
+        "greedy": clgen.GreedyAtomizer,
     }
     atomizerclass = atomizers.get(vocab, None)
     if atomizerclass is None:
