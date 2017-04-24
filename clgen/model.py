@@ -182,6 +182,9 @@ class Model(clgen.CLgenObject):
         Returns:
             module: imported TensorFlow module
         """
+        # quiet tensorflow. See: https://github.com/tensorflow/tensorflow/issues/1258
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
         import tensorflow as tf
         import tensorflow.contrib.legacy_seq2seq as seq2seq
         from tensorflow.contrib import rnn

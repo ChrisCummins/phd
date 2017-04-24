@@ -20,7 +20,6 @@ import os
 import sqlite3
 import sys
 import tarfile
-import tensorflow as tf
 
 from io import StringIO
 from labm8 import fs
@@ -28,9 +27,6 @@ from labm8 import tar
 from unittest import TestCase
 
 import clgen
-
-# Quiet tensorflow. See: http://stackoverflow.com/a/38645250/1318051
-tf.logging.set_verbosity(tf.logging.WARN)
 
 
 class TestData404(Exception):
