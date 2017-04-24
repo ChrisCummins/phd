@@ -32,7 +32,6 @@ with open('./.config.json') as infile:
 
 scripts = [
     'bin/clgen',
-    'bin/clgen-atomize',
     'bin/clgen-create-db',
     'bin/clgen-dump',
     'bin/clgen-explore',

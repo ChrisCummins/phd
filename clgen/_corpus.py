@@ -96,31 +96,7 @@ def unpack_directory_if_needed(path: str) -> str:
                               .format(**vars()))
 
 
-def get_atomizer(corpus: str, vocab: str="char") -> list:
-    """
-    Get atomizer for a corpus.
-
-    Arguments:
-        corpus (str): Corpus.
-        vocab (str, optional): Vocabularly type.
-
-    Returns:
-        clgen.Atomizer: Atomizer.
-    """
-    atomizers = {
-        "char": clgen.CharacterAtomizer,
-        "greedy": clgen.GreedyAtomizer,
-    }
-    atomizerclass = atomizers.get(vocab, None)
-    if atomizerclass is None:
-        raise clgen.UserError(
-            "Unknown vocabulary type '{bad}'. Supported values: {good}".format(
-                bad=vocab, good=", ".join(sorted(atomizers.keys()))))
-    else:
-        return atomizerclass.from_text(corpus)
-
-
-def get_features(code: str, **kwargs) -> np.array:
+def get_kernel_features(code: str, **kwargs) -> np.array:
     """
     Get features for code.
 
@@ -141,7 +117,7 @@ def get_features(code: str, **kwargs) -> np.array:
     return f[0]
 
 
-def encode(kernels_db: str, encoding: str) -> None:
+def encode_kernels_db(kernels_db: str, encoding: str) -> None:
     """
     Encode a kernels database.
 
@@ -161,7 +137,7 @@ def encode(kernels_db: str, encoding: str) -> None:
             id, contents = row
             c.execute("DELETE FROM PreprocessedFiles WHERE id=?", (id,))
             for i, kernel in enumerate(clutil.get_cl_kernels(contents)):
-                features = get_features(kernel)
+                features = get_kernel_features(kernel)
                 kid = "{}-{}".format(id, i)
                 if len(features) == 8:
                     log.verbose("features", kid)
@@ -298,7 +274,7 @@ class Corpus(clgen.CLgenObject):
             encoding = self.opts["encoding"]
             if clgen.preprocess_db(self.contentcache["kernels.db"]):
                 modified = True
-                encode(self.contentcache["kernels.db"], encoding)
+                encode_kernels_db(self.contentcache["kernels.db"], encoding)
 
             if modified:
                 preprocess_time = time() - preprocess_time
@@ -358,11 +334,35 @@ class Corpus(clgen.CLgenObject):
 
     def _create_atomizer(self, vocab: str="char") -> None:
         """creates and caches atomizer.pkl"""
-        log.debug("creating vocab file")
 
+        def _get_atomizer(corpus_txt: str, vocab: str="char") -> list:
+            """
+            Get atomizer for a corpus.
+
+            Arguments:
+                corpus (str): Corpus.
+                vocab (str, optional): Vocabularly type.
+
+            Returns:
+                clgen.Atomizer: Atomizer.
+            """
+            atomizers = {
+                "char": clgen.CharacterAtomizer,
+                "greedy": clgen.GreedyAtomizer,
+            }
+            atomizerclass = atomizers.get(vocab, None)
+            if atomizerclass is None:
+                raise clgen.UserError(
+                    "Unknown vocabulary type '{bad}'. "
+                    "Supported values: {good}".format(
+                        bad=vocab, good=", ".join(sorted(atomizers.keys()))))
+            else:
+                return atomizerclass.from_text(corpus_txt)
+
+        log.debug("creating vocab file")
         data = self._read_txt()
 
-        self.atomizer = get_atomizer(data, vocab)
+        self.atomizer = _get_atomizer(data, vocab)
 
         self.atoms = self.atomizer.atoms
         self.vocab_size = self.atomizer.vocab_size

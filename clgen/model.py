@@ -38,7 +38,6 @@ from labm8 import types
 
 import clgen
 from clgen import log
-from clgen.corpus import Corpus
 
 
 def get_default_author() -> str:
@@ -98,7 +97,7 @@ def from_json(model_json: dict):
         raise clgen.UserError("model JSON has no corpus entry")
 
     # create corpus and remove from JSON
-    corpus = Corpus.from_json(model_json.pop("corpus"))
+    corpus = clgen.Corpus.from_json(model_json.pop("corpus"))
 
     if "stats" in model_json:  # ignore stats
         del model_json["stats"]
@@ -110,21 +109,21 @@ class Model(clgen.CLgenObject):
     """
     A CLgen Model.
     """
-    def __init__(self, corpus: Corpus, **opts):
+    def __init__(self, corpus: clgen.Corpus, **opts):
         """
         Instantiate model.
 
         Arguments:
-            corpus (Corpus): Corpus instance.
+            corpus (clgen.Corpus): Corpus instance.
             opts (dict): Training options.
         """
-        def _hash(corpus: Corpus, opts: dict) -> str:
+        def _hash(corpus: clgen.Corpus, opts: dict) -> str:
             """ compute model hash """
             hashopts = deepcopy(opts)
             del hashopts["train_opts"]["epochs"]
             return crypto.sha1_list(corpus.hash, *types.dict_values(hashopts))
 
-        assert(isinstance(corpus, Corpus))
+        assert(isinstance(corpus, clgen.Corpus))
 
         # Validate options
         for key in opts:

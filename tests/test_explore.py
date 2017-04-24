@@ -21,12 +21,12 @@ import tests
 
 from labm8 import fs
 
-from clgen import corpus
+import clgen
 from clgen import explore
 
 class TestExplore(TestCase):
     def test_explore(self):
-        c = corpus.Corpus.from_json({
+        c = clgen.Corpus.from_json({
             "path": tests.data_path("tiny", "corpus", exists=False)
         })
         explore.explore(c.contentcache["kernels.db"])

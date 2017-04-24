@@ -22,7 +22,6 @@ import tests
 from labm8 import fs
 
 import clgen
-from clgen import corpus
 
 TINY_HASH = '1fd1cf76b997b4ae163fd7b2cd3e3d94beb281ff'
 
@@ -30,18 +29,18 @@ TINY_HASH = '1fd1cf76b997b4ae163fd7b2cd3e3d94beb281ff'
 class TestCorpus(TestCase):
     def test_path(self):
         path = tests.archive("tiny", "corpus")
-        c = corpus.Corpus.from_json({"id": TINY_HASH, "path": path})
+        c = clgen.Corpus.from_json({"id": TINY_HASH, "path": path})
         self.assertEqual(TINY_HASH, c.hash)
 
     def test_badpath(self):
         with self.assertRaises(clgen.CLgenError):
-            corpus.Corpus("notarealid", path="notarealpath")
+            clgen.Corpus("notarealid", path="notarealpath")
 
     def test_from_archive(self):
         # delete any existing unpacked directory
         fs.rm(tests.data_path("tiny", "corpus", exists=False))
 
-        c = corpus.Corpus.from_json({
+        c = clgen.Corpus.from_json({
             "path": tests.data_path("tiny", "corpus", exists=False)
         })
         self.assertEqual(TINY_HASH, c.hash)
@@ -50,24 +49,24 @@ class TestCorpus(TestCase):
         # delete any existing unpacked directory
         fs.rm(tests.data_path("tiny", "corpus", exists=False))
 
-        c = corpus.Corpus.from_json({
+        c = clgen.Corpus.from_json({
             "path": tests.data_path("tiny", "corpus.tar.bz2")
         })
         self.assertEqual(TINY_HASH, c.hash)
 
     def test_hash(self):
-        c1 = corpus.Corpus.from_json({
+        c1 = clgen.Corpus.from_json({
             "path": tests.archive("tiny", "corpus")
         })
 
         # same as c1, with explicit default opt:
-        c2 = corpus.Corpus.from_json({
+        c2 = clgen.Corpus.from_json({
             "path": tests.archive("tiny", "corpus"),
             "eof": False
         })
 
         # different opt value:
-        c3 = corpus.Corpus.from_json({
+        c3 = clgen.Corpus.from_json({
             "path": tests.archive("tiny", "corpus"),
             "eof": True
         })
@@ -82,7 +81,7 @@ __kernel void A(__global float* a) {
   a[b] *= 2.0f;
 }"""
         import numpy as np
-        self.assertTrue(np.array_equal(corpus.get_features(code),
+        self.assertTrue(np.array_equal(clgen.get_kernel_features(code),
                                        [0, 0, 1, 0, 1, 0, 1, 0]))
 
     def test_get_features_bad_code(self):
@@ -91,21 +90,21 @@ __kernel void A(__global float* a) {
   SYNTAX ERROR!
 }"""
         with tests.DevNullRedirect():
-            with self.assertRaises(corpus.FeaturesError):
-                corpus.get_features(code, quiet=True)
+            with self.assertRaises(clgen.FeaturesError):
+                clgen.get_kernel_features(code, quiet=True)
 
     def test_get_features_multiple_kernels(self):
         code = """\
 __kernel void A(__global float* a) {}
 __kernel void B(__global float* a) {}"""
 
-        with self.assertRaises(corpus.FeaturesError):
-            corpus.get_features(code)
+        with self.assertRaises(clgen.FeaturesError):
+            clgen.get_kernel_features(code)
 
     @skip("FIXME: UserError not raised")
     def test_bad_option(self):
         with self.assertRaises(clgen.UserError):
-            corpus.Corpus.from_json({
+            clgen.Corpus.from_json({
                 "path": tests.archive("tiny", "corpus"),
                 "not_a_real_option": False
             })
@@ -113,7 +112,7 @@ __kernel void B(__global float* a) {}"""
     @skip("FIXME: UserError not raised")
     def test_bad_vocab(self):
         with self.assertRaises(clgen.UserError):
-            corpus.Corpus.from_json({
+            clgen.Corpus.from_json({
                 "path": tests.archive("tiny", "corpus"),
                 "vocab": "INVALID_VOCAB"
             })
@@ -121,21 +120,21 @@ __kernel void B(__global float* a) {}"""
     @skip("FIXME: UserError not raised")
     def test_bad_encoding(self):
         with self.assertRaises(clgen.UserError):
-            corpus.Corpus.from_json({
+            clgen.Corpus.from_json({
                 "path": tests.archive("tiny", "corpus"),
                 "encoding": "INVALID_ENCODING"
             })
 
     def test_eq(self):
-        c1 = corpus.Corpus.from_json({
+        c1 = clgen.Corpus.from_json({
             "path": tests.archive("tiny", "corpus"),
             "eof": False
         })
-        c2 = corpus.Corpus.from_json({
+        c2 = clgen.Corpus.from_json({
             "path": tests.archive("tiny", "corpus"),
             "eof": False
         })
-        c3 = corpus.Corpus.from_json({
+        c3 = clgen.Corpus.from_json({
             "path": tests.archive("tiny", "corpus"),
             "eof": True
         })
@@ -146,7 +145,7 @@ __kernel void B(__global float* a) {}"""
         self.assertNotEqual(c1, 'abcdef')
 
     def test_preprocessed(self):
-        c1 = corpus.Corpus.from_json({
+        c1 = clgen.Corpus.from_json({
             "path": tests.archive("tiny", "corpus")
         })
         self.assertEqual(len(list(c1.preprocessed())), 187)
@@ -154,14 +153,14 @@ __kernel void B(__global float* a) {}"""
         self.assertEqual(len(list(c1.preprocessed(2))), 7)
 
     def test_contentfiles(self):
-        c1 = corpus.Corpus.from_json({
+        c1 = clgen.Corpus.from_json({
             "path": tests.archive("tiny", "corpus")
         })
         self.assertEqual(len(list(c1.contentfiles())), 250)
 
     def test_to_json(self):
-        c1 = corpus.Corpus.from_json({
+        c1 = clgen.Corpus.from_json({
             "path": tests.archive("tiny", "corpus")
         })
-        c2 = corpus.Corpus.from_json(c1.to_json())
+        c2 = clgen.Corpus.from_json(c1.to_json())
         self.assertEqual(c1, c2)

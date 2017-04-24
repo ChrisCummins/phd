@@ -324,4 +324,5 @@ def main(model, sampler, print_file_list=False, print_corpus_dir=False,
     sampler.sample(model)
 
 from clgen._atomizer import *
+from clgen._corpus import *
 from clgen._preprocess import *
