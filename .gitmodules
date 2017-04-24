@@ -22,3 +22,6 @@
 [submodule "src/lmk"]
 	path = src/lmk
 	url = git@github.com:ChrisCummins/lmk.git
+[submodule "src/shutterbug"]
+	path = src/shutterbug
+	url = git@github.com:ChrisCummins/shutterbug.git
