@@ -44,8 +44,8 @@ Split photo collections into chunks for backup.\
                         help='input directories')
     parser.add_argument('-u', '--unpack', action='store_true',
                         help="unpack chunks (overrides all other flags)")
-    parser.add_argument('-s', '--size', type=float, default=4600,
-                        help="maximum size of chunks (in MB, default: 4600)")
+    parser.add_argument('-s', '--size', type=float, default=4695,
+                        help="maximum size of chunks (in MB, default: 4695)")
     parser.add_argument('-g', '--gzip', action='store_true',
                         help="use GZIP compression on files")
     parser.add_argument('-i', '--in-order', action='store_true',
