@@ -41,9 +41,12 @@ elif [[ "$(uname)" == 'Linux' ]]; then
 
     if [[ "$DISTRO" == 'ubuntu' ]]; then
 
+        sudo add-apt-repository ppa:jonathonf/python-3.6
+        sudo apt-get update
         sudo apt-get install -y build-essential git zlib1g-dev libffi-dev \
             zlib1g-dev curl wget python3-dev python3-pip python3-virtualenv \
-            unzip libncurses5-dev libhdf5-dev
+            unzip libncurses5-dev libhdf5-dev python3.6 python3.6-venv \
+            python3.6-dev
 
     fi
 
