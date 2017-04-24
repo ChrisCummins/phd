@@ -16,7 +16,7 @@ cache:
   directories:
     - .cache
     - native/cmake
-    - native/gpuverify
+# FIXME:    - native/gpuverify
     - native/libclc
     - native/llvm
     - native/ninja
