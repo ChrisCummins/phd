@@ -1,27 +1,30 @@
 [submodule "docs/2016-01-adapt"]
 	path = docs/2016-01-adapt
-	url = https://github.com/ChrisCummins/paper-autotuning-opencl-wgsize.git
+	url = git@github.com:ChrisCummins/paper-autotuning-opencl-wgsize.git
 [submodule "docs/2016-01-hlpgpu"]
 	path = docs/2016-01-hlpgpu
-	url = https://github.com/ChrisCummins/paper-towards-collaborative-performance-tuning.git
+	url = git@github.com:ChrisCummins/paper-towards-collaborative-performance-tuning.git
 [submodule "docs/2017-02-cgo"]
 	path = docs/2017-02-cgo
-	url = https://github.com/ChrisCummins/paper-synthesizing-benchmarks.git
+	url = git@github.com:ChrisCummins/paper-synthesizing-benchmarks.git
 [submodule "lab/humanorrobot.uk"]
 	path = src/humanorrobot.uk
-	url = https://github.com/ChrisCummins/humanorrobot.uk.git
+	url = git@github.com:ChrisCummins/humanorrobot.uk.git
 [submodule "src/cldrive"]
 	path = src/cldrive
-	url = https://github.com/ChrisCummins/cldrive.git
+	url = git@github.com:ChrisCummins/cldrive.git
 [submodule "src/clgen"]
 	path = src/clgen
-	url = https://github.com/ChrisCummins/clgen.git
+	url = git@github.com:ChrisCummins/clgen.git
 [submodule "src/labm8"]
 	path = src/labm8
-	url = https://github.com/ChrisCummins/labm8.git
+	url = git@github.com:ChrisCummins/labm8.git
 [submodule "src/lmk"]
 	path = src/lmk
 	url = git@github.com:ChrisCummins/lmk.git
 [submodule "src/shutterbug"]
 	path = src/shutterbug
 	url = git@github.com:ChrisCummins/shutterbug.git
+[submodule "src/chriscumms.cc"]
+	path = src/chriscumms.cc
+	url = git@github.com:ChrisCummins/chriscummins.github.io.git
