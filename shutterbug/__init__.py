@@ -1,11 +1,3 @@
-__author__ = "Chris Cummins"
-__copyright__ = "Copyright 2017, Chris Cummins"
-__license__ = "GPL"
-__version__ = "0.0.1"
-__maintainer__ = __author__
-__email__ = "chrisc.101@gmail.com"
-__status__ = "Development"
-
 import gzip
 import os
 import sys
@@ -13,7 +5,18 @@ import random
 
 from datetime import datetime
 from hashlib import md5
+from pkg_resources import require
 from shutil import copy, copyfileobj
+
+
+__author__ = "Chris Cummins"
+__copyright__ = "Copyright 2017, Chris Cummins"
+__license__ = "GPL v3"
+__version__ = require("shutterbug")[0].version
+__maintainer__ = __author__
+__email__ = "chrisc.101@gmail.com"
+__status__ = "Development"
+
 
 def md5sum(path):
     m = md5()
