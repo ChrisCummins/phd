@@ -208,7 +208,16 @@ def coveragerc_path():
 
 
 def main():
+    """
+    Run the CLgen test suite.
+
+    Returns
+    -------
+    int
+        Test return code. 0 if successful.
+    """
     # run from module directory
+    cwd = os.getcwd()
     os.chdir(module_path())
 
     assert os.path.exists(coveragerc_path())
@@ -222,6 +231,11 @@ def main():
     else:
         args.append("--cov-report=")
 
-    pytest.main(args)
+    ret = pytest.main(args)
 
     assert os.path.exists(coverage_report_path())
+
+    # change back to previous directory
+    os.chdir(cwd)
+
+    return ret
