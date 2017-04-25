@@ -79,12 +79,14 @@ A self-contained, monolothic repository for (almost) everything I have done whil
    Rejected submission for PACT'16 Student Research Competition.
    [[source code]](/docs/2016-07-pact).
    Build command: `$ bazel build //docs:2016-07-pact`.
-1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather. "Autotuning
-   OpenCL Workgroup Sizes". Submission for PLDI'16 Student Poster Session.
+1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather.
+   "**Autotuning OpenCL Workgroup Sizes**".
+   Submission for PLDI'16 Student Poster Session.
    [[source code]](/docs/2016-06-pldi).
    Build command: `$ bazel build //docs:2016-06-pldi`.
-1. Chris Cummins. "Autotuning and Skeleton-aware Compilation". PhD Progression
-   Review, 2015. [[source code]](/docs/2015-09-progression-review).
+1. Chris Cummins. "**Autotuning and Skeleton-aware Compilation**".
+   PhD Progression Review, 2015.
+   [[source code]](/docs/2015-09-progression-review).
    Build command: `$ bazel build //docs:2015-09-progression-review`.
 
 
