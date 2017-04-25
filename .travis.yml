@@ -69,8 +69,8 @@ script:
   - test -f NORUN || clgen-test -v
 
 after_success:
-  - test -f NORUN || coveralls \
-        --data_file "$(clgen-test --coverage-path)" \
+  - test -f NORUN || coveralls
+        --data_file "$(clgen-test --coverage-path)"
         --config_file "$(clgen-test --coveragerc-path)"
 
 notifications:
