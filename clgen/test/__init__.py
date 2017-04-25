@@ -24,6 +24,7 @@ import tarfile
 
 from io import StringIO
 from labm8 import fs
+from labm8 import system
 from labm8 import tar
 from unittest import TestCase
 
@@ -33,6 +34,11 @@ from clgen import log
 
 class Data404(Exception):
     pass
+
+
+# test decorators
+needs_cuda = pytest.mark.skipif(not clgen.USE_CUDA, reason="no CUDA support")
+needs_linux = pytest.mark.skipif(not system.is_linux(), reason="not linux")
 
 
 def data_path(*components, **kwargs):
