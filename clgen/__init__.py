@@ -136,7 +136,8 @@ def cachepath(*relative_path_components: list) -> str:
     """
     assert(relative_path_components)
 
-    cache_root = ["~", ".cache", "clgen", version()]
+    cache_root = ["~", ".cache", "clgen",
+                  f"{version_info.major}.{version_info.minor}.x" ]
     return fs.path(*cache_root, *relative_path_components)
 
 
