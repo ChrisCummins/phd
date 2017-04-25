@@ -636,7 +636,7 @@ def preprocess_inplace(paths: str, max_num_workers: int=cpu_count(),
                  len(paths), 'files ...')
         with clgen.terminating(Pool(num_workers)) as pool:
             pool.map(_preprocess_inplace_worker, paths)
-    except OSError as e:
+    except (OSError, TimeoutError) as e:
         log.error(e)
 
         # Try again with fewer threads.
@@ -744,7 +744,7 @@ def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
             try:
                 result = queue.get(timeout=60)
             except QueueEmpty:
-                raise clgen.CLgenError(
+                raise TimeoutError(
                     'failed to fetch result after 60 seconds. '
                     'something went wrong') from e
 
