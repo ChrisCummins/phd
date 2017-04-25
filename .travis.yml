@@ -72,7 +72,9 @@ script:
 after_success:
   - export COERAGE_REPORT="$(clgen-test --coverage-path)" && echo "$COVERAGE_REPORT"
   - export COERAGERC="$(clgen-test --coveragerc-path)" && echo "$COVERAGERC"
-  - test -f NORUN || coveralls --data_file "$COVERAGE_REPORT" --config_file "$COVERAGERC"
+  - test -f NORUN || coveralls
+      --data_file ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/.coverage
+      --config_file ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/test/data/coveragerc
 
 notifications:
   email:
