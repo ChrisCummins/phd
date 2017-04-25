@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
+import clgen
 from clgen import cli
-from clgen import explore
 
 __description__ = """
 Exploratory analysis of preprocessed dataset.
@@ -34,7 +34,7 @@ def main():
 
     db_path = args.input
 
-    cli.main(explore.explore, db_path)
+    cli.main(clgen.explore, db_path)
 
 
 if __name__ == '__main__':
