@@ -39,6 +39,7 @@ class Data404(Exception):
 # test decorators
 needs_cuda = pytest.mark.skipif(not clgen.USE_CUDA, reason="no CUDA support")
 needs_linux = pytest.mark.skipif(not system.is_linux(), reason="not linux")
+skip_on_travis = pytest.mark.skipif(os.environ.get("TRAVIS"))
 
 
 def data_path(*components, **kwargs):
