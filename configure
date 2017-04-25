@@ -118,8 +118,6 @@ def main():
 
     # generate python requirements file
     requirements_files = ['requirements.txt']
-    if cfg["cuda"]:
-        requirements_files += ['requirements.cuda.txt']
 
     # if configured with CUDA, require GPU-enabled tensorflow:
     if cfg["cuda"]:
