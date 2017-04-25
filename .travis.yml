@@ -21,6 +21,7 @@ cache:
     - native/ninja
     - native/oclgrind
 
+# here we do the work that install-deps.sh script does
 addons:
   apt:
     sources:
