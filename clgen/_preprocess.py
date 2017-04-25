@@ -746,7 +746,7 @@ def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
             except QueueEmpty:
                 raise clgen.CLgenError(
                     'failed to fetch result after 60 seconds. '
-                    'something went wrong')
+                    'something went wrong') from e
 
             # insert result into database
             db = dbutil.connect(db_path)
