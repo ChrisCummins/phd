@@ -65,7 +65,7 @@ install:  # cache hot
   - pip freeze  # python package versions
 
 script:
-  - test -f NORUN || coverage run --source=clgen ./setup.py test
+  - test -f NORUN || clgen-test -v
 
 after_success:
   - test -f NORUN || coveralls \
