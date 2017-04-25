@@ -24,6 +24,7 @@ import labm8
 import math
 import os
 import progressbar
+import queue
 import random
 import re
 import shutil
@@ -34,9 +35,11 @@ from functools import partial
 from io import open
 from labm8 import fs
 from multiprocessing import cpu_count, Pool
+from queue import Queue
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import NamedTemporaryFile
-from threading import Condition, Thread, Lock
+from threading import Thread
+from typing import Dict, List
 
 
 import clgen
@@ -646,10 +649,9 @@ def preprocess_inplace(paths: str, max_num_workers: int=cpu_count(),
 class PreprocessWorker(Thread):
     """ preprocessor worker thread """
 
-    def __init__(self, jobs, condition, queue):
+    def __init__(self, jobs: List[Dict], queue: Queue):
         super(PreprocessWorker, self).__init__()
         self.jobs = jobs
-        self.condition = condition
         self.queue = queue
 
     def run(self):
@@ -668,40 +670,7 @@ class PreprocessWorker(Thread):
                 "contents": contents
             }
 
-            self.condition.acquire()
-            self.queue.append(result)
-            self.condition.notify()
-            self.condition.release()
-
-
-class DbImportWorker(Thread):
-    """ insert preprocessed results into database """
-    def __init__(self, db_path, numjobs, condition, queue):
-        super(DbImportWorker, self).__init__()
-        self.db_path = db_path
-        self.numjobs = numjobs
-        self.condition = condition
-        self.queue = queue
-
-    def run(self):
-        bar = progressbar.ProgressBar(max_value=self.numjobs)
-
-        for i in bar(range(self.numjobs)):
-            # get the next result
-            self.condition.acquire()
-            if not self.queue:
-                self.condition.wait()
-            result = self.queue.pop(0)
-            self.condition.release()
-
-            # insert result into database
-            db = dbutil.connect(self.db_path)
-            c = db.cursor()
-            c.execute("INSERT INTO PreprocessedFiles VALUES(?,?,?)",
-                      (result["id"], result["status"], result["contents"]))
-            c.close()
-            db.commit()
-            db.close()
+            self.queue.put(result)
 
 
 def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
@@ -753,20 +722,44 @@ def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
     worker_njobs = math.ceil(ntodo / max_num_workers)
 
     # producer-consumer queue
-    queue = []
-    lock = Lock()
-    condition = Condition()
+    queue = Queue(maxsize=128)
 
     log.verbose("assigning {ntodo} jobs to {max_num_workers} threads"
                 .format(**vars()))
 
     try:
-        for i in range(0, ntodo, worker_njobs):
-            PreprocessWorker(jobs[i:i+worker_njobs], condition, queue).start()
+        # our worker threads. these busy little bees will do the heavy lifting
+        # of preprocessing the contentfiles, pushing their results onto
+        # the queue
+        producers = [PreprocessWorker(jobs[i:i+worker_njobs], queue)
+                     for i in range(0, ntodo, worker_njobs)]
 
-        importer = DbImportWorker(db_path, ntodo, condition, queue)
-        importer.start()
-        importer.join()
+        # fly, my pretties, fly!
+        for producer in producers:
+            producer.start()
+
+        # consume the results from the worker threads from the main thread
+        for i in progressbar.ProgressBar()(range(ntodo)):
+            # pull a fresh result from the queue (block if necessary)
+            try:
+                result = queue.get(timeout=60)
+            except queue.Empty:
+                raise clgen.CLgenError(
+                    'failed to fetch result after 60 seconds. '
+                    'something went wrong')
+
+            # insert result into database
+            db = dbutil.connect(db_path)
+            c = db.cursor()
+            c.execute("INSERT INTO PreprocessedFiles VALUES(?,?,?)",
+                      (result["id"], result["status"], result["contents"]))
+            c.close()
+            db.commit()
+            db.close()
+
+        for producer in producers:
+            producer.join()
+
     except OSError as e:
         log.error(e)
 

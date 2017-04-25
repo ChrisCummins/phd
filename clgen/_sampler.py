@@ -21,6 +21,7 @@ Sample a CLgen model.
 """
 import numpy as np
 import progressbar
+import queue
 import sys
 
 from copy import deepcopy
@@ -32,7 +33,8 @@ from labm8 import jsonutil
 from labm8 import lockfile
 from labm8 import system
 from labm8 import types
-from threading import Condition, Event, Thread, Lock
+from queue import Queue
+from threading import Event, Thread
 from time import time
 
 import clgen
@@ -72,13 +74,12 @@ def serialize_argspec(args: list) -> str:
 
 
 class SampleProducer(Thread):
-    def __init__(self, model: clgen.Model, start_text: str,
-                 condition: Condition, queue: list, **kernel_opts):
+    def __init__(self, model: clgen.Model, start_text: str, queue: Queue,
+                 **kernel_opts):
         super(SampleProducer, self).__init__()
 
         self.model = model
         self.start_text = start_text
-        self.condition = condition
         self.queue = queue
         self.stop_signal = Event()
         self.kernel_opts = kernel_opts
@@ -172,11 +173,7 @@ class SampleProducer(Thread):
                         break
 
                 # submit sample to processing queue
-                self.condition.acquire()
-                self.queue.append(buf.getvalue())
-
-                self.condition.notify()
-                self.condition.release()
+                self.queue.put(buf.getvalue())
 
             if log.is_verbose():
                 sys.stdout.write('\n\n')
@@ -192,14 +189,14 @@ class SampleProducer(Thread):
 class SampleConsumer(Thread):
     """ handle generated samples """
     def __init__(self, db_path: str, producer: SampleProducer, sampler,
-                 cache, condition: Condition, queue: list, **sampler_opts):
+                 cache, queue: Queue, **sampler_opts):
         """
         Arguments:
             db_path (str): Path to samples database.
             producer (SampleProducer): Sample producer thread.
             sampler (Sampler): Host sampler.
             condition (Condition): For locking.
-            queue (list): output result queue.
+            queue (Queue): output result queue.
             **sampler_opts: Sampler options.
         """
         super(SampleConsumer, self).__init__()
@@ -208,7 +205,6 @@ class SampleConsumer(Thread):
         self.producer = producer
         self.sampler = sampler
         self.cache = cache
-        self.condition = condition
         self.queue = queue
         self.sampler_opts = sampler_opts
 
@@ -271,12 +267,7 @@ class SampleConsumer(Thread):
         try:
             while True:
                 sample_time = time()
-                # get the next sample
-                self.condition.acquire()
-                if not self.queue:
-                    self.condition.wait()
-                sample = self.queue.pop(0)
-                self.condition.release()
+                sample = self.queue.get(timeout=60)
 
                 kernels = clutil.get_cl_kernels(sample)
                 ids = [crypto.sha1_str(k) for k in kernels]
@@ -446,18 +437,16 @@ class Sampler(clgen.CLgenObject):
             cache["kernels.db"] = tmp_kernels_db
 
         # producer-consumer queue
-        queue = []
-        lock = Lock()
-        condition = Condition()
+        queue = Queue(maxsize=128)
 
         log.info("sampling", self)
 
-        sampler = SampleProducer(model, self.start_text, condition, queue,
+        sampler = SampleProducer(model, self.start_text, queue,
                                  **self.kernel_opts)
         sampler.start()
 
         consumer = SampleConsumer(cache["kernels.db"], sampler, self, cache,
-                                  condition, queue, **self.sampler_opts)
+                                  queue, **self.sampler_opts)
         consumer.start()
 
         sampler.join()
