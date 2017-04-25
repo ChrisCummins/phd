@@ -68,7 +68,7 @@ DEFAULT_MODEL_OPTS = {
         "epochs": 10,
         "grad_clip": 5,
         "learning_rate": 2e-3,  # initial learning rate
-        "lr_decary_rate": 5,  # % to reduce learning rate by per epoch
+        "lr_decay_rate": 5,  # % to reduce learning rate by per epoch
         "intermediate_checkpoints": True
     }
 }
@@ -253,7 +253,7 @@ class Model(clgen.CLgenObject):
 
         # training options
         learning_rate = self.train_opts["learning_rate"]
-        decay_rate = self.train_opts["lr_decary_rate"]
+        decay_rate = self.train_opts["lr_decay_rate"]
 
         # resume from prior checkpoint
         ckpt_path, ckpt_paths = None, None
