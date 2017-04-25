@@ -105,7 +105,7 @@ def test_eq():
 
     assert s1 == s2
     assert s2 != s3
-    assert s1 != False
+    assert s1
     assert s1 != 'abcdef'
 
 
