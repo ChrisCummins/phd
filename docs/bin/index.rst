@@ -303,7 +303,8 @@ clgen-test
 
 ::
 
-    usage: clgen-test [-h] [--version] [-v] [--debug]
+    usage: clgen-test [-h] [--version] [-v] [--debug] [--coveragerc-path]
+                      [--coverage-path]
     
     Run the CLgen self-test suite.
     
@@ -311,10 +312,12 @@ clgen-test
     <http://chriscummins.cc/clgen>
     
     optional arguments:
-      -h, --help     show this help message and exit
-      --version      show version information and exit
-      -v, --verbose  increase output verbosity
-      --debug        in case of error, print debugging information
+      -h, --help         show this help message and exit
+      --version          show version information and exit
+      -v, --verbose      increase output verbosity
+      --debug            in case of error, print debugging information
+      --coveragerc-path  print path to coveragerc file
+      --coverage-path    print path to coverage file
 
 clgen-train
 ------------
