@@ -186,7 +186,7 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
 
     >>> src = "kernel void A(global int* a) { a[get_global_id(0)] *= 2; }"
     >>> inputs = [[1, 2, 3, 4, 5]]
-    >>> drive(make_env(), src, inputs, gsize=(5,1,1), lsize=(1,1,1))
+    >>> drive(make_env(), src, inputs, gsize=(5,1,1), lsize=(1,1,1)) # doctest: +SKIP
     array([[ 2,  4,  6,  8, 10]], dtype=int32)
     """
     def log(*args, **kwargs):

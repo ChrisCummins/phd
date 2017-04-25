@@ -30,8 +30,19 @@ import pytest
 
 ENV = cldrive.make_env()
 
+def _platform_name():
+    import pyopencl as cl
+    _, queue = ENV.ctx_queue()
+    device = queue.get_info(cl.command_queue_info.DEVICE)
+    platform = device.get_info(cl.device_info.PLATFORM)
+    return platform.get_info(cl.platform_info.NAME)
+
 
 # test decorators
+skip_on_pocl = pytest.mark.skipif(
+    _platform_name() == "Portable Computing Language",
+    reason="not supported on POCL")
+
 needs_cpu = pytest.mark.skipif(
     not cldrive.has_cpu(), reason="no OpenCL CPU device available")
 

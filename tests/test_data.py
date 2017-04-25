@@ -80,6 +80,7 @@ def test_data_zerod():
     almost_equal(outputs, [np.zeros(16)])
 
 
+@skip_on_pocl
 def test_vector_input_switch():
     src = """
     kernel void A(global int2* a) {

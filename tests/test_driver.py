@@ -28,6 +28,7 @@ def test_empty_kernel():
     assert len(outputs) == 0
 
 
+@skip_on_pocl
 def test_simple():
     inputs      = [[0, 1, 2, 3, 4,  5,  6,  7]]
     inputs_orig = [[0, 1, 2, 3, 4,  5,  6,  7]]
@@ -47,6 +48,7 @@ def test_simple():
     almost_equal(outputs, outputs_gs)
 
 
+@skip_on_pocl
 def test_vector_input():
     inputs      = [[0, 1, 2, 3, 0, 1, 2, 3],  [2, 4]]
     inputs_orig = [[0, 1, 2, 3, 0, 1, 2, 3],  [2, 4]]
@@ -83,6 +85,7 @@ def test_syntax_error():
             cldrive.drive(ENV, src, [[]], gsize=(1,1,1), lsize=(1,1,1))
 
 
+@skip_on_pocl
 def test_incorrect_num_of_args():
     src = "kernel void A(const int a) {}"
     # too many inputs
@@ -123,7 +126,8 @@ def test_gsize_smaller_than_lsize():
         cldrive.drive(ENV, src, [], gsize=(4,1,1), lsize=(8,1,1))
 
 
-def test_iterative_iterative_increment():
+@skip_on_pocl
+def test_iterative_increment():
     src = "kernel void A(global int* a) { a[get_global_id(0)] += 1; }"
 
     d_cl, d_host = [np.arange(16)], np.arange(16)
@@ -133,6 +137,7 @@ def test_iterative_iterative_increment():
         almost_equal(d_cl, [d_host])
 
 
+@skip_on_pocl
 def test_gsize_smaller_than_data():
     src = "kernel void A(global int* a) { a[get_global_id(0)] = 0; }"
 
@@ -181,6 +186,7 @@ def test_profiling():
     almost_equal(outputs, outputs_gs)
 
 
+@skip_on_pocl
 def test_header():
     src = """
     #include "header.h"
