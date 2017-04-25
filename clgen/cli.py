@@ -36,7 +36,9 @@ def print_version_and_exit():
     """
     Print the clgen version. This function does not return.
     """
-    print("clgen", clgen.version())
+    version = clgen.version()
+    print(f"clgen {version} made with \033[1;31m♥\033[0;0m by "
+           "Chris Cummins <chrisc.101@gmail.com>.")
     exit(0)
 
 
