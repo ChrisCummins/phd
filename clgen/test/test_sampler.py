@@ -37,6 +37,7 @@ def _get_test_model():
     })
 
 
+@tests.skip_on_travis
 def test_sample():
     m = _get_test_model()
     m.train()
@@ -76,6 +77,7 @@ def test_sample():
     assert num_preprocessed2 - num_preprocessed == diff
 
 
+@tests.skip_on_travis
 def test_eq():
     s1 = clgen.Sampler.from_json({
         "kernels": {
@@ -109,6 +111,7 @@ def test_eq():
     assert s1 != 'abcdef'
 
 
+@tests.skip_on_travis
 def test_to_json():
     s1 = clgen.Sampler.from_json({
         "kernels": {
