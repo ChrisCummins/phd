@@ -156,6 +156,7 @@ def test_zero_size_input():
         cldrive.drive(ENV, src, [[]], gsize=(1,1,1), lsize=(1,1,1))
 
 
+@skip_on_pocl
 def test_comparison_against_pointer_warning():
     src = """
     kernel void A(global int* a) {
