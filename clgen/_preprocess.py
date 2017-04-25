@@ -24,7 +24,6 @@ import labm8
 import math
 import os
 import progressbar
-import queue
 import random
 import re
 import shutil
@@ -36,6 +35,7 @@ from io import open
 from labm8 import fs
 from multiprocessing import cpu_count, Pool
 from queue import Queue
+from queue import Empty as QueueEmpty
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import NamedTemporaryFile
 from threading import Thread
@@ -743,7 +743,7 @@ def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
             # pull a fresh result from the queue (block if necessary)
             try:
                 result = queue.get(timeout=60)
-            except queue.Empty:
+            except QueueEmpty:
                 raise clgen.CLgenError(
                     'failed to fetch result after 60 seconds. '
                     'something went wrong')
