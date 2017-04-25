@@ -66,6 +66,7 @@ install:  # cache hot
   - pip freeze  # python package versions
 
 script:
+  - which clgen-test
   - test -f NORUN || clgen-test -v
 
 after_success:
