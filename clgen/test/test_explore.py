@@ -16,26 +16,21 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase, main, skip
-from clgen import test as tests
-
 from labm8 import fs
 
 import clgen
-
-class TestExplore(TestCase):
-    def test_explore(self):
-        c = clgen.Corpus.from_json({
-            "path": tests.data_path("tiny", "corpus", exists=False)
-        })
-        clgen.explore(c.contentcache["kernels.db"])
-
-    def test_explore_gh(self):
-        db_path = tests.archive("tiny-gh.db")
-        assert(fs.exists(db_path))
-
-        clgen.explore(db_path)
+from clgen import test as tests
 
 
-if __name__ == "__main__":
-    main()
+def test_explore():
+    c = clgen.Corpus.from_json({
+        "path": tests.data_path("tiny", "corpus", exists=False)
+    })
+    clgen.explore(c.contentcache["kernels.db"])
+
+
+def test_explore_gh():
+    db_path = tests.archive("tiny-gh.db")
+    assert(fs.exists(db_path))
+
+    clgen.explore(db_path)
