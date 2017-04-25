@@ -28,6 +28,7 @@ addons:
       - llvm-toolchain-precise-3.7
       - ubuntu-toolchain-r-test
     packages:
+      - binutils-dev  # possible fix for segfault. See: https://github.com/SimonKagstrom/kcov/issues/105
       - gcc-5
       - g++-5
       - clang-3.6
