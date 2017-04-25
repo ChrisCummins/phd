@@ -3,6 +3,9 @@
 <a href="https://badge.fury.io/py/cldrive">
   <img src="https://img.shields.io/pypi/v/cldrive.svg?colorB=green&style=flat">
 </a>
+<a href="https://travis-ci.org/ChrisCummins/cldrive" target="_blank">
+  <img src="https://img.shields.io/travis/ChrisCummins/cldrive/master.svg?style=flat">
+</a>
 <a href="http://chriscummins.cc/cldrive" target="_blank">
   <img src="https://img.shields.io/badge/docs-latest-green.svg?style=flat">
 </a>
