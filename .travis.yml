@@ -69,9 +69,9 @@ script:
   - test -f NORUN || clgen-test -v
 
 after_success:
-  - test -f NORUN || coveralls
-        --data_file "$(clgen-test --coverage-path)"
-        --config_file "$(clgen-test --coveragerc-path)"
+  - export COERAGE_REPORT="$(clgen-test --coverage-path)" && echo "$COVERAGE_REPORT"
+  - export COERAGERC="$(clgen-test --coveragerc-path)" && echo "$COVERAGERC"
+  - test -f NORUN || coveralls --data_file "$COVERAGE_REPORT" --config_file "$COVERAGERC"
 
 notifications:
   email:
