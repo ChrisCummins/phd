@@ -421,8 +421,8 @@ def send_email_smtp(cfg, server, msg):
         return False
 
     c = colors
+    recipient = msg['To']
     try:
-        recipient = msg['To']
         server.sendmail(msg['From'], msg['To'], msg.as_string())
         print(
             '{c.bold}{c.cyan}[lmk] {recipient} notified{c.reset}'.format(
