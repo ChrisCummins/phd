@@ -57,7 +57,12 @@ Patterns", Mon 18th Jan, 2016. ADAPT, HiPEAC, Prague. Files: [talks/2016-01-adap
    Review, 2015. Files: [docs/2015-09-progression-review](/docs/2015-09-progression-review).
 
 
-## Building the code
+<h2>
+   Building the code
+   <a href="https://travis-ci.org/ChrisCummins/phd" target="_blank">
+    <img src="https://img.shields.io/travis/ChrisCummins/phd/master.svg?style=flat">
+  </a>
+</h2>
 
 ### Requirements
 
