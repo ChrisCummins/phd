@@ -18,6 +18,15 @@
 #
 """
 Deep learning program generator
+
+Attributes
+----------
+
+__version__ : str
+    PEP 440 compliant version string.
+
+version_info : namedtuple['major', 'minor', 'micro', 'releaselevel'])
+    Version tuple.
 """
 import json
 import os
@@ -28,6 +37,7 @@ import six
 import sys
 import tarfile
 
+from collections import namedtuple
 from contextlib import contextmanager
 from copy import deepcopy
 from hashlib import sha1
@@ -39,6 +49,9 @@ from labm8 import fs
 from labm8 import jsonutil
 from labm8 import system
 
+from clgen._config import *
+
+
 __author__ = "Chris Cummins"
 __copyright__ = "Copyright 2017, Chris Cummins"
 __license__ = "GPL v3"
@@ -47,7 +60,16 @@ __maintainer__ = __author__
 __email__ = "chrisc.101@gmail.com"
 __status__ = "Prototype"
 
-from clgen._config import *
+
+# version_info tuple
+_major = int(__version__.split(".")[0])
+_minor = int(__version__.split('.')[1]) if len(__version__.split('.')) > 1 else 0
+_micro = int(__version__.split('.')[2]) if len(__version__.split('.')) > 2 else 0
+_releaselevel = __version__.split('.')[3] if len(__version__.split('.')) > 3 else 'final'
+
+version_info_t = namedtuple('version_info_t', ['major', 'minor', 'micro', 'releaselevel'])
+version_info = version_info_t(_major, _minor, _micro, _releaselevel)
+
 
 class CLgenError(Exception):
     """
@@ -95,10 +117,6 @@ class CLgenObject(object):
 def version() -> str:
     """
     Get the package version.
-
-    *DO NOT* try to parse this or derive any special major/minor version
-    information from it. Treat it as an opaque char array. The only valid
-    operators for comparing versions are == and !=.
 
     Returns:
         str: Version string.
