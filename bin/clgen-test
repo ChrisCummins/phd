@@ -18,6 +18,7 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 import clgen.test
+import sys
 
 from clgen import cli
 
@@ -29,7 +30,20 @@ Run the CLgen self-test suite.
 
 def main():
     parser = cli.ArgumentParser(description=__description__)
+    parser.add_argument("--coveragerc-path", action="store_true",
+                        help="print path to coveragerc file")
+    parser.add_argument("--coverage-path", action="store_true",
+                        help="print path to coverage file")
     args = parser.parse_args()
+
+    if args.coveragerc_path:
+        print(clgen.test.coveragerc_path())
+        sys.exit(0)
+
+    if args.coverage_path:
+        print(clgen.test.coverage_report_path())
+        sys.exit(0)
+
     clgen.test.main()
 
 

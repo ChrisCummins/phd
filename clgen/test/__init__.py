@@ -28,6 +28,7 @@ from labm8 import tar
 from unittest import TestCase
 
 import clgen
+from clgen import log
 
 
 class Data404(Exception):
@@ -187,10 +188,33 @@ class DevNullRedirect(object):
         sys.stderr = self.stderr
 
 
+def module_path():
+    return os.path.dirname(clgen.__file__)
+
+
+def coverage_report_path():
+    return os.path.join(module_path(), ".coverage")
+
+
+def coveragerc_path():
+    return data_path("coveragerc")
+
+
 def main():
     # run from module directory
-    module_path = os.path.dirname(clgen.__file__)
-    os.chdir(module_path)
+    os.chdir(module_path())
 
-    pytest.main(["--doctest-modules", "--cov=clgen",
-                 "--cov-config", data_path("coveragerc")])
+    assert os.path.exists(coveragerc_path())
+
+    args = ["--doctest-modules", "--cov=clgen",
+            "--cov-config", coveragerc_path()]
+
+    # unless verbose, don't print coverage report
+    if log.is_verbose():
+        args.append("--verbose")
+    else:
+        args.append("--cov-report=")
+
+    pytest.main(args)
+
+    assert os.path.exists(coverage_report_path())

@@ -68,7 +68,9 @@ script:
   - test -f NORUN || coverage run --source=clgen ./setup.py test
 
 after_success:
-  - test -f NORUN || coveralls
+  - test -f NORUN || coveralls \
+        --data_file "$(clgen-test --coverage-path)" \
+        --config_file "$(clgen-test --coveragerc-path)"
 
 notifications:
   email:
