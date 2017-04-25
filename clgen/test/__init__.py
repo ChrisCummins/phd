@@ -239,4 +239,8 @@ def main():
     # change back to previous directory
     os.chdir(cwd)
 
+    if log.is_verbose():
+        print("coverage path:", coverage_report_path())
+        print("coveragerc path:", coveragerc_path())
+
     return ret
