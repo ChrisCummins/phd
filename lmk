@@ -512,10 +512,36 @@ def build_html_message_body(output, command=None, returncode=None,
 """.format(**vars())
 
     # command output
-    for i, line in enumerate(output.split('\n')):
-        lineno = i + 1
-        line_html = cgi.escape(line)
-        html += """\
+    lines = output.split('\n')
+
+    if len(lines) > 200:
+        # truncated report. First 100 and last 100 lines
+        for line, lineno in zip(lines[:100], range(1, 101)):
+            line_html = cgi.escape(line)
+            html += """\
+  <tr style="line-height:1em;">
+    <td style="{lineno_css}">{lineno}</td>
+    <td style="{line_css}">{line_html}</td>
+  </tr>
+""".format(**vars())
+        num_omitted = len(lines) - 200
+        html += "</table>"
+        html += "... ({num_omitted} lines snipped)".format(**vars())
+        html += "<table>\n"
+        for line, lineno in zip(lines[-100:], range(len(lines) - 99,
+                                                    len(lines) + 1)):
+            line_html = cgi.escape(line)
+            html += """\
+  <tr style="line-height:1em;">
+    <td style="{lineno_css}">{lineno}</td>
+    <td style="{line_css}">{line_html}</td>
+  </tr>
+""".format(**vars())
+    else:
+        # full length report
+        for line, lineno in zip(lines, range(1, len(lines) + 1)):
+            line_html = cgi.escape(line)
+            html += """
   <tr style="line-height:1em;">
     <td style="{lineno_css}">{lineno}</td>
     <td style="{line_css}">{line_html}</td>
