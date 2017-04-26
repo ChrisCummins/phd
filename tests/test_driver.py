@@ -168,6 +168,7 @@ def test_comparison_against_pointer_warning():
     cldrive.drive(ENV, src, [[0]], gsize=(1,1,1), lsize=(1,1,1))
 
 
+@skip_on_pocl
 def test_profiling():
     src = """
     kernel void A(global int* a, constant int* b) {

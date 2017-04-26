@@ -70,6 +70,7 @@ def test_data_unchanged():
     almost_equal(outputs, inputs)
 
 
+@skip_on_pocl
 def test_data_zerod():
     # zero-ing a randomly initialized array
     src = "kernel void A(global int* a) { a[get_global_id(0)] = 0; }"
