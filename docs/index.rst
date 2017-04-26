@@ -119,6 +119,7 @@ Contents
    installation
    api/index
    bin/index
+   versions
    license
 
 
