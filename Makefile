@@ -114,7 +114,7 @@ $(root)/clgen/data/bin/clgen-rewriter: $(root)/native/clgen-rewriter.cpp $(data_
 
 # run tests
 .PHONY: test
-test:
+test: install
 	clgen-test
 
 # clean compiled files
