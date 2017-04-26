@@ -612,20 +612,20 @@ def _preprocess_inplace_worker(path: str):
     preprocess_file(path, inplace=True)
 
 
-MAX_OS_RETRIES = 10
-
-
 def preprocess_inplace(paths: str, max_num_workers: int=cpu_count(),
-                       attempt: int=1) -> None:
+                       max_attempts: int=100, attempt: int=1) -> None:
     """
     Preprocess a list of files in place.
 
     Arguments:
         paths (str[]): List of paths.
         max_num_workers (int, optional): Number of processes to spawn.
+        max_attempts (int, optional): In case of an OSError or TimeoutError,
+            this number of attempts will be made.
     """
-    if attempt >= MAX_OS_RETRIES:
-        raise clgen.InternalError("Failed to process files")
+    if attempt > max_attempts:
+        raise clgen.InternalError(
+            f"Failed to process files after {max_attempts} attempts")
     elif attempt > 1:
         log.warning("preprocess attempt #.", attempt)
 
@@ -643,7 +643,7 @@ def preprocess_inplace(paths: str, max_num_workers: int=cpu_count(),
         # See: https://github.com/ChrisCummins/clgen/issues/64
         max_num_workers = max(int(max_num_workers / 2), 1)
         preprocess_inplace(paths, max_num_workers=max_num_workers,
-                           attempt=attempt + 1)
+                           attempt=attempt + 1, max_attempts=max_attempts)
 
 
 class PreprocessWorker(Thread):
@@ -674,18 +674,20 @@ class PreprocessWorker(Thread):
 
 
 def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
-                   attempt: int=1, **preprocess_opts) -> None:
+                   max_attempts: int=100, attempt: int=1,
+                   **preprocess_opts) -> None:
     """
     Preprocess OpenCL dataset.
 
     Arguments:
         db_path (str): OpenCL kernels dataset.
         max_num_workers (int, optional): Number of processes to spawn.
+        max_attempts (int, optional): In case of an OSError or TimeoutError,
+            this number of attempts will be made.
     """
-    if attempt >= MAX_OS_RETRIES:
+    if attempt > max_attempts:
         raise clgen.InternalError(
-            "failed to preprocess files after {attempt} attempts"
-            .format(**vars()))
+            f"failed to preprocess files after {max_attempts} attempts")
 
     log.verbose("determining jobs")
 
@@ -724,8 +726,7 @@ def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
     # producer-consumer queue
     queue = Queue(maxsize=128)
 
-    log.verbose("assigning {ntodo} jobs to {max_num_workers} threads"
-                .format(**vars()))
+    log.verbose(f"assigning {ntodo} jobs to {max_num_workers} threads")
 
     try:
         # our worker threads. these busy little bees will do the heavy lifting
@@ -767,7 +768,8 @@ def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
         # See: https://github.com/ChrisCummins/clgen/issues/64
         max_num_workers = max(int(max_num_workers / 2), 1)
         _preprocess_db(db_path, max_num_workers=max_num_workers,
-                       attempt=attempt + 1, **preprocess_opts)
+                       attempt=attempt + 1, max_attempts=max_attempts,
+                       **preprocess_opts)
 
 
 def preprocess_db(db_path: str, **preprocess_opts) -> bool:
