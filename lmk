@@ -625,7 +625,7 @@ def build_message_subject(output, command=None, returncode=None, cfg=None,
     host = gethostname()
 
     if command is not None and returncode is not None:
-        happy_sad = u'🙈' if returncode else u'🙂'
+        happy_sad = u'🙈' if returncode else u'✔'
         return u'{user}@{host} {happy_sad} $ {command}'.format(**vars())
     elif command is not None:
         return u'{user}@{host} $ {command}'.format(**vars())
