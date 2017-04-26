@@ -743,7 +743,7 @@ def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
             # pull a fresh result from the queue (block if necessary)
             try:
                 result = queue.get(timeout=60)
-            except QueueEmpty:
+            except QueueEmpty as e:
                 raise TimeoutError(
                     'failed to fetch result after 60 seconds. '
                     'something went wrong') from e
