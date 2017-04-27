@@ -263,6 +263,7 @@ ld_library_path_dirs=( \
     /usr/lib \
     /usr/lib32 \
     /usr/local/lib \
+    /usr/local/cuda/lib64 \
 )
 export LD_LIBRARY_PATH=$(build_path "${ld_library_path_dirs[@]}")
 
@@ -278,6 +279,7 @@ path_dirs=( \
     /usr/local/opt/gnu-tar/libexec/gnubin/ \
     /usr/local/bin \
     /usr/contrib/bin \
+    /usr/local/cuda/bin \
     /opt/bin \
     /opt/local/bin/ \
     /opt/local/sbin/ \
