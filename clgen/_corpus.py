@@ -36,6 +36,7 @@ from labm8 import types
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
 from time import time
+from typing import List
 
 import clgen
 from clgen import dbutil
@@ -239,53 +240,56 @@ class Corpus(clgen.CLgenObject):
         jsonutil.write_file(self.cache.keypath("META"), self.to_json())
 
     def _create_files(self, path):
-        def _init_error(err: Exception) -> None:
+        def _init_error(err: Exception, files_to_rm: List[str]=[]) -> None:
             """ tidy up in case of error """
             log.error("corpus creation failed. Deleting corpus files")
-            paths = [
-                self.contentcache.keypath("kernels.db"),
-                self.cache.keypath("corpus.txt"),
-                self.cache.keypath("tensor.npy"),
-                self.cache.keypath("atomizer.pkl")
-            ]
-            for path in paths:
+            for path in files_to_rm:
                 if fs.exists(path):
                     log.info("removing", path)
                     fs.rm(path)
             raise err
 
+        # create kernels database if necessary
         try:
             if path is not None:
                 if not fs.isdir(path):
                     raise clgen.UserError(
                         "Corpus path '{}' is not a directory".format(path))
-                # create kernels database if necessary
                 try:
                     self.contentcache["kernels.db"]
                 except KeyError:
                     self._create_kernels_db(path)
+        except Exception as e:
+            _init_error(e, [self.contentcache.keypath("kernels.db")])
 
-            # preprocess and encode kernel db
+        # preprocess and encode kernel db
+        try:
             modified = False
             preprocess_time = time()
             encoding = self.opts["encoding"]
             if clgen.preprocess_db(self.contentcache["kernels.db"]):
                 modified = True
                 encode_kernels_db(self.contentcache["kernels.db"], encoding)
+        except Exception as e:
+            _init_error(e)
 
-            if modified:
-                preprocess_time = time() - preprocess_time
-                self.stats["preprocess_time"] += preprocess_time
-                self._flush_meta()
+        if modified:
+            preprocess_time = time() - preprocess_time
+            self.stats["preprocess_time"] += preprocess_time
+            self._flush_meta()
 
-            # create corpus text if not exists
+        # create corpus text if not exists
+        try:
             try:
                 self.cache["corpus.txt"]
             except KeyError:
                 self._create_txt()
                 assert(self.cache["corpus.txt"])
+        except Exception as e:
+            _init_error(e, [self.cache.keypath("corpus.txt")])
 
-            # create atomizer if needed
+        # create atomizer if needed
+        try:
             try:
                 self.cache["atomizer.pkl"]
                 self._load_atomizer()
@@ -293,7 +297,7 @@ class Corpus(clgen.CLgenObject):
                 self._create_atomizer(self.opts["vocabulary"])
                 assert(self.cache["atomizer.pkl"])
         except Exception as e:
-            _init_error(e)
+            _init_error(e, [self.cache.keypath("atomizer.pkl")])
 
     def _hash(self, contentid: str, opts: dict) -> str:
         """ compute corpus hash """
