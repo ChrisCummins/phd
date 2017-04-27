@@ -58,3 +58,27 @@ class TestLockFile(TestCase):
         lock.acquire(replace_stale=True)
         self.assertTrue(lock.islocked)
         self.assertTrue(lock.owned_by_self)
+
+        lock.release()
+        self.assertFalse(fs.exists(lock.path))
+
+    def test_force(self):
+        lock = lockfile.LockFile("/tmp/labm8.force.lock")
+        fs.rm(lock.path)
+
+        self.assertFalse(lock.islocked)
+
+        lockfile.LockFile.write(lock.path, 0, time.time())
+
+        self.assertTrue(lock.islocked)
+        self.assertFalse(lock.owned_by_self)
+
+        with self.assertRaises(lockfile.UnableToAcquireLockError):
+            lock.acquire()
+
+        lock.acquire(force=True)
+        self.assertTrue(lock.islocked)
+        self.assertTrue(lock.owned_by_self)
+
+        lock.release()
+        self.assertFalse(fs.exists(lock.path))
