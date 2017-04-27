@@ -348,7 +348,7 @@ class Model(clgen.CLgenObject):
         Returns:
             Model: self.
         """
-        with self.lock.acquire():
+        with self.lock.acquire(replace_stale=True):
             return self._locked_train()
 
     @property

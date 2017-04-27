@@ -233,7 +233,7 @@ class Corpus(clgen.CLgenObject):
         else:
             self._flush_meta()
 
-        with self.lock.acquire():
+        with self.lock.acquire(replace_stale=True):
             self._create_files(path)
 
     def _flush_meta(self):
