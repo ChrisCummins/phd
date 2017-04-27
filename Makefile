@@ -1,0 +1,12 @@
+.PHONY: test
+
+venv3.6_activate = python/3.6/bin/activate
+venv3.6 = source $(venv3.6_activate) &&
+
+$(venv3.6_activate):
+	virtualenv -p python3.6 python/3.6
+
+test: $(venv3.6_activate)
+	pip install -r requirements.txt
+	mkdir -pv build/3.6
+	$(venv3.6) protoc --python3_out build/3.6 freefocus.proto
