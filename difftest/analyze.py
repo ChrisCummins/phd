@@ -12,8 +12,8 @@ def main():
     db.init("cc1")
     session = db.make_session()
 
-    CLDRIVE_TABLE_NAMES = ["CLSmith w. cldrive", "GitHub", "CLgen"]
-    CLDRIVE_TABLES = [cldriveCLSmithResult, GitHubResult, CLgenResult]
+    CLDRIVE_TABLE_NAMES = ["CLSmith w. cldrive", "GitHub"]
+    CLDRIVE_TABLES = [cldriveCLSmithResult, GitHubResult]
 
     # Group outcomes into less-granular classifications, as in the CLSmith paper.
     # This table maps <outcome>: <classification>
@@ -179,6 +179,34 @@ def main():
                     if outputs[0] != outputs[1]:
                         result.classification = "Wrong code"
         session.commit()
+
+    # CLgen programs have special treatment because we require that they be
+    # gpuverified before labeling as wrong code
+    name = "CLgen"
+    table = CLgenResult
+    print(f"{name} ...")
+    for result in ProgressBar()(session.query(table).all()):
+        result.outcome = get_cldrive_outcome(result)
+        result.classification = CLASSIFICATIONS[result.outcome]
+
+        # determine if output differs from the majority (if there is one)
+        # Require that all programs be gpuverified:
+        if result.status == 0 and result.program.gpuverified == 1:
+            outputs = [x[0] for x in session.query(table.stdout)\
+                .filter(table.program == result.program,
+                        table.params == result.params,
+                        table.status == 0)]
+            if len(outputs) > 2:
+                # Use voting to pick oracle.
+                majority_output, majority_count = Counter(outputs).most_common(1)[0]
+                if majority_count == 1:  # no majority
+                    result.classification = "Wrong code"
+                elif result.stdout != majority_output:
+                    result.classification = "Wrong code"
+            elif len(outputs) == 2:
+                if outputs[0] != outputs[1]:
+                    result.classification = "Wrong code"
+    session.commit()
 
 
 if __name__ == "__main__":
