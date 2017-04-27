@@ -26,6 +26,7 @@ import os
 import time
 
 from labm8 import fs
+from labm8 import system
 
 
 class Error(Exception):
@@ -82,28 +83,16 @@ class LockFile:
         """
         The process ID of the lock. Value is None if lock is not claimed.
         """
-        if fs.exists(self.path):
-            with open(self.path) as infile:
-                data = infile.read()
-                components = data.split()
-                pid = int(components[0])
-                return pid
-        else:
-            return None
+        pid, _ = LockFile.read(self.path)
+        return pid
 
     @property
     def date(self):
         """
         The date that the lock was acquired. Value is None if lock is unclaimed.
         """
-        if fs.exists(self.path):
-            with open(self.path) as lockfile:
-                data = lockfile.read()
-                components = data.split()
-                date = datetime.date.fromtimestamp(float(components[1]))
-                return date
-        else:
-            return None
+        _, date = LockFile.read(self.path)
+        return date
 
     @property
     def islocked(self):
@@ -119,7 +108,7 @@ class LockFile:
         """
         return self.pid == os.getpid()
 
-    def acquire(self, force=False):
+    def acquire(self, replace_stale=False, force=False):
         """
         Acquire the lock.
 
@@ -129,7 +118,10 @@ class LockFile:
             3. The lock is held by the current process.
 
         Arguments:
-            force (boolean, optional): If true, ignore any existing
+            replace_stale (bool, optional) If true, lock can be aquired from
+                stale processes. A stale process is one which currently owns
+                the parent lock, but no process with that PID is alive.
+            force (bool, optional): If true, ignore any existing
               lock. If false, fail if lock already claimed.
 
         Returns:
@@ -139,12 +131,25 @@ class LockFile:
             UnableToAcquireLockError: If the lock is already claimed
               (not raised if force option is used).
         """
-        if not self.islocked or force or self.pid == os.getpid():
-            with open(self.path, "w") as lockfile:
-                print(os.getpid(), time.time(), file=lockfile)
-            return self
-        else:
-            raise UnableToAcquireLockError(self)
+
+        def _create_lock():
+            LockFile.write(self.path, os.getpid(), time.time())
+
+        if self.islocked:
+            lock_owner_pid = self.pid
+
+            if self.owned_by_self:
+                pass  # don't replace existing lock
+            elif force:
+                _create_lock()
+            elif replace_stale and not system.isprocess(lock_owner_pid):
+                _create_lock()
+            else:
+                raise UnableToAcquireLockError(self)
+        else:  # new lock
+            _create_lock()
+
+        return self
 
     def release(self, force=False):
         """
@@ -176,3 +181,38 @@ class LockFile:
 
     def __exit__(self, type, value, tb):
         self.release()
+
+    @staticmethod
+    def read(path):
+        """
+        Read the contents of a LockFile.
+
+        Arguments:
+            path (str): Path to lockfile.
+
+        Returns:
+            Tuple(int, datetime): The integer PID of the lock owner, and the
+                date the lock was required. If the lock is not claimed, both
+                values are None.
+        """
+        if fs.exists(path):
+            with open(path) as infile:
+                components = infile.read().split()
+                pid = int(components[0])
+                date = datetime.date.fromtimestamp(float(components[1]))
+            return pid, date
+        else:
+            return None, None
+
+    @staticmethod
+    def write(path, pid, timestamp):
+        """
+        Write the contents of a LockFile.
+
+        Arguments:
+            path (str): Path to lockfile.
+            pid (int): The integer process ID.
+            timestamp (datetime): The time the lock was aquired.
+        """
+        with open(path, "w") as lockfile:
+            print(pid, timestamp, file=lockfile)

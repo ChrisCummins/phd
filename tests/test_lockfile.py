@@ -15,10 +15,8 @@
 from unittest import main
 from tests import TestCase
 
-import os
-import re
+import time
 
-import labm8 as lab
 from labm8 import fs
 from labm8 import lockfile
 
@@ -41,3 +39,22 @@ class TestLockFile(TestCase):
 
         lock.release()
         self.assertFalse(fs.exists(lock.path))
+
+    def test_replace_stale(self):
+        lock = lockfile.LockFile("/tmp/labm8.stale.lock")
+        fs.rm(lock.path)
+
+        self.assertFalse(lock.islocked)
+
+        MAX_PROCESSES = 4194303  # OS-dependent. This value is for Linux
+        lockfile.LockFile.write(lock.path, MAX_PROCESSES + 1, time.time())
+
+        self.assertTrue(lock.islocked)
+        self.assertFalse(lock.owned_by_self)
+
+        with self.assertRaises(lockfile.UnableToAcquireLockError):
+            lock.acquire()
+
+        lock.acquire(replace_stale=True)
+        self.assertTrue(lock.islocked)
+        self.assertTrue(lock.owned_by_self)
