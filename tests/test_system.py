@@ -199,6 +199,5 @@ class TestSystem(TestCase):
     def test_isprocess(self):
         self._test(True, system.isprocess(0))
         self._test(True, system.isprocess(os.getpid()))
-        # We hope there aren't this many processes running!
-        self._test(False, system.isprocess(10000000))
-        self._test(False, system.isprocess(10000001))
+        MAX_PROCESSES = 4194303  # OS-dependent. This value is for Linux
+        self._test(False, system.isprocess(MAX_PROCESSES + 1))
