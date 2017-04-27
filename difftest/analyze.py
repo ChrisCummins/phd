@@ -42,6 +42,8 @@ def main():
         'UnicodeError': 'Invalid testcase',
         'Unsupported Program': 'Invalid testcase',
         'z_Okay': 'Okay',
+        'cldrive.driver.PorcelainError: 127': 'Runtime crash',
+        'cldrive.driver.PorcelainError: 1': 'Runtime crash',
     }
     print("Possible classifications:", ", ".join(f"'{s}'" for s in sorted(set(CLASSIFICATIONS.values()))))
 
