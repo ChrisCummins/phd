@@ -114,6 +114,7 @@ class CLgenProgram(Base):
 
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     status = sql.Column(sql.Integer)
+    gpuverified = sql.Column(sql.Boolean)
 
     # relation back to results:
     results = sql.orm.relationship("CLgenResult", back_populates="program")
