@@ -761,8 +761,14 @@ def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
         for producer in producers:
             producer.join()
 
-    except OSError as e:
+    except (OSError, TimeoutError) as e:
         log.error(e)
+
+        if attempt > 2 and not i:
+            log.warning("no progress has been made since previous attempt. "
+                        "I'm not going to try another attempt.")
+            return
+
 
         # Try again with fewer threads.
         # See: https://github.com/ChrisCummins/clgen/issues/64
