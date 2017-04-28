@@ -31,8 +31,7 @@ fi
 # in place of full paths for home directories. E.g. "~/", "~foo/".
 #
 __cec_zsh_theme_cwd() {
-    local cwd="$(pwd | sed -e "s,^$HOME,~,;s,^/home/,~,;s,^/Users/,~,")"
-    echo "$(tput bold)$(tput setaf 1)$cwd$(tput sgr0)"
+    echo "$(tput bold)$(tput setaf 1)${PWD/$HOME/~}$(tput sgr0)"
 }
 
 # Get the prompt prefix, e.g. "$", "#", "(dev) *$", etc.
