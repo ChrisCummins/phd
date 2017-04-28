@@ -469,6 +469,13 @@ install_macos() {
 }
 
 
+install_gpustat() {
+    if which nvidia-smi >/dev/null ; then
+        _pip_install gpustat 0.3.1
+    fi
+}
+
+
 parse_args() {
     set -e
     if [[ "$1" == "-v" ]] || [[ "$1" == "--verbose" ]]; then
@@ -520,6 +527,7 @@ main() {
     install_server_scripts
     install_tex
     install_macos
+    install_gpustat
 
     freeze_packages
 }
