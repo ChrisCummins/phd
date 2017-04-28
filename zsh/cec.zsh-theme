@@ -39,11 +39,24 @@ __cec_zsh_theme_cwd() {
 __cec_zsh_theme_prefix() {
     local prefix=''
 
-    # Prefix prompt with (<$ENV>) environment variable, if set. This
+    # Prefix promt with [GPU:$CUDA_VISIBLE_DEVICES], if set.
+    if [ ! -z ${CUDA_VISIBLE_DEVICES+x} ]; then
+        if [ -z "${CUDA_VISIBLE_DEVICES}" ]; then
+            prefix="[GPU:none] "
+        else
+            prefix="[GPU:$CUDA_VISIBLE_DEVICES] "
+        fi
+    fi
+
+    # Prefix prompt with ($ENV) environment variable, if set. This
     # can be used be scripts which spawn subshells in order to
     # indicate a non-standard environment.
-    [ $ENV ] && { prefix="($(basename $ENV)) " }
-    [ $VIRTUAL_ENV ] && { prefix="($(basename $VIRTUAL_ENV)) " }
+    [ $ENV ] && { prefix="$prefix($(basename $ENV)) " }
+
+    # Prefix prompt with ($VIRTUAL_ENV) environment variable, if set. This
+    # is used for python development. See:
+    #   https://python-guide-pt-br.readthedocs.io/en/latest/dev/virtualenvs/
+    [ $VIRTUAL_ENV ] && { prefix="$prefix($(basename $VIRTUAL_ENV)) " }
 
     # Set pound sign "#" or dollar sign "$" prefix character depending
     # on whether we're superuser or a normal user, respectively.
