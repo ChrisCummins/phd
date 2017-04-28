@@ -507,7 +507,7 @@ freeze_packages() {
 
 main() {
     parse_args $@
-    echo_ok "dotfiles $(git rev-parse --short HEAD)"
+    echo_ok "dotfiles $(cat .install-lastrun.txt 2>/dev/null)..$(git rev-parse --short HEAD)"
 
     install_homebrew
     install_python
@@ -530,5 +530,7 @@ main() {
     install_gpustat
 
     freeze_packages
+
+    git rev-parse --short HEAD > .install-lastrun.txt
 }
 main $@
