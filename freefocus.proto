@@ -220,9 +220,10 @@ message Comment {
 
     Type type = 1;
     Workspace workspace = 2;
-    Asset asset = 3;
-    Tag tag = 4;
-    Comment comment = 5;
+    Task task = 3;
+    Asset asset = 4;
+    Tag tag = 5;
+    Comment comment = 6;
   }
 
   string id = 1;
