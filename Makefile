@@ -9,4 +9,4 @@ $(venv3.6_activate):
 test: $(venv3.6_activate)
 	mkdir -pv build/3.6
 	$(venv3.6) pip install -r requirements.txt
-	$(venv3.6) protoc --python3_out build/3.6 freefocus.proto
+	$(venv3.6) protoc -I=. --python_out=freefocus freefocus.proto
