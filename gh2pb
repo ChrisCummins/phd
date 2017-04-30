@@ -1,0 +1,95 @@
+#!/usr/bin/env python
+"""
+Convert a GitHub issue tracker into FreeFocus Protobuf messages.
+"""
+import calendar
+import os
+import sys
+import time
+
+from argparse import ArgumentParser
+from github import Github, GithubException
+from google.protobuf.json_format import MessageToJson
+
+import freefocus
+
+
+def now():
+    return calendar.timegm(time.gmtime())
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("owner")
+    parser.add_argument("repo")
+    args = parser.parse_args()
+
+    try:
+        github_username = os.environ['GITHUB_USERNAME']
+        github_pw = os.environ['GITHUB_PW']
+    except KeyError as e:
+        print('environment variable {} not set'.format(e), file=sys.stderr)
+        sys.exit(1)
+
+    g = Github(github_username, github_pw)
+    r = g.get_repo(f"{args.owner}/{args.repo}")
+
+    workspace = freefocus.Workspace(uid="GitHub", created=calendar.timegm(time.strptime("1/4/08", "%d/%m/%y")))
+
+    owner_subtree = workspace.tasks.add()
+    owner_subtree.id = f"//:{args.owner}"
+
+    # owner_subtree.parent.type = freefocus.Task.Parent.WORKSPACE
+    # owner_subtree.parent.workspace.uid = workspace.uid
+
+    repo_subtree = owner_subtree.children.add()
+    repo_subtree.id = f"//{args.owner}:{args.repo}"
+
+    # repo_subtree.parent.type = freefocus.Task.Parent.TASK
+    # repo_subtree.parent.task.id = owner_subtree.id
+
+    owner_tagtree = workspace.tags.add()
+    owner_tagtree.id = f"@tags//:{args.owner}"
+
+    repo_tagtree = owner_tagtree.children.add()
+    repo_tagtree.id = f"@tags//{args.owner}:{args.repo}"
+
+    for label in r.get_labels():
+        tag = repo_tagtree.children.add()
+        tag.id = f"@tags//{args.owner}/{args.repo}/Labels:{label.name}"
+        tag.body = label.name
+        # TODO: tag.color
+
+    for issue in r.get_issues():
+        task = repo_subtree.children.add()
+        task.id = f"//{args.owner}/{args.repo}:{issue.number}"
+
+        # task.parent.type = freefocus.Task.Parent.TASK
+        # task.parent.task.id = repo_subtree.id
+
+        task.body = (f"{issue.title}\n\n" + issue.body.replace('\r\n', '\n')).rstrip()
+
+        # task.created = task.created_at
+        # task.completed = task.closed_at
+        # task.milestone
+
+        task.status = freefocus.Task.ACTIVE
+
+        comment_parent = task
+        # comment_parent_t = freefocus.Comment.Parent.COMMENT
+        for i, comment in enumerate(issue.get_comments()):
+            j = i + 1
+            comment_node = comment_parent.comments.add()
+            comment_node.id = f"@comments//{args.owner}/{args.repo}/{issue.number}:{j}"
+            # comment_node.parent.type = comment_parent_t
+            comment_node.body = issue.body
+            comment_parent = comment_node
+
+        for label in issue.get_labels():
+            tag = task.tags.add()
+            tag.id = f"@tags//{args.owner}:{args.repo}/Labels:{label.name}"
+
+        for assignee in issue.assignees:
+            pass
+
+    print(MessageToJson(workspace))
