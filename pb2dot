@@ -15,6 +15,26 @@ def escape(string):
     return string.replace(":", "/")
 
 
+def plot_groups(dot, parent_id, nodes):
+    def plot_group_members(parent_id, members):
+        for member in members:
+            if member.type == freefocus.Group.Member.GROUP:
+                dot.node(escape(member.group.id, escape(member.group.id)))
+                dot.edge(escape(parent_id), escape(member.group.id))
+
+                plot_group_members(member.id, member.members)
+            else:
+                dot.node(escape(member.person.uid), escape(member.person.uid))
+                dot.edge(escape(parent_id), escape(member.person.uid))
+
+    for node in nodes:
+        dot.node(escape(node.id), escape(node.id))
+        dot.edge(escape(parent_id), escape(node.id))
+
+        if len(node.members):
+            plot_group_members(node.id, node.members)
+
+
 def plot_tags(dot, parent_id, nodes):
     for node in nodes:
         dot.node(escape(node.id), escape(node.id))
@@ -53,13 +73,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     workspace = freefocus.Workspace()
-
     json_format.Parse(sys.stdin.read(), workspace)
 
     dot = Digraph(comment=workspace.uid)
+    dot.graph_attr['rankdir'] = 'LR'
 
     dot.node(escape(workspace.uid), escape(workspace.uid))
 
+    plot_groups(dot, workspace.uid, workspace.groups)
     plot_tags(dot, workspace.uid, workspace.tags)
     plot_tasks(dot, workspace.uid, workspace.tasks)
 
