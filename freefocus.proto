@@ -100,6 +100,11 @@ message Task {
     Task task = 3;
   }
 
+  enum Status {
+    ACTIVE = 0;
+    INACTIVE = 1;
+  }
+
   string id = 1;
   Parent parent = 2;
   repeated Task children = 3;
@@ -122,13 +127,19 @@ message Task {
   int64 completed = 14;
   int64 duration = 15;
 
-  // Accountability
-  Person created_by = 16;
-  int64 created = 17;
-  Person modified_by = 18;
-  int64 modified = 19;
+  Status status = 16;
 
-  repeated Comment comments = 20;
+  // Self-duplicating tasks
+  int64 duplicate_after = 17;
+  Task duplicated_from = 18;
+
+  // Accountability
+  Person created_by = 19;
+  int64 created = 20;
+  Person modified_by = 21;
+  int64 modified = 22;
+
+  repeated Comment comments = 23;
 }
 
 
@@ -216,7 +227,7 @@ message Comment {
 
   string id = 1;
   Parent parent = 2;
-  repeated Comment children = 3;
+  repeated Comment comments = 3;
 
   string body = 4;
 
