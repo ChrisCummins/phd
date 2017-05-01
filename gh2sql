@@ -47,7 +47,22 @@ if __name__ == "__main__":
 
     session = make_session()
 
-    def get_or_create_user(github_user):
+    def get_or_create_usergroup(p: Person) -> Group:
+        q = session.query(Group)\
+            .filter(Group.body == p.name,
+                    Group.created_by == p,
+                    Group.created == p.created)
+
+        if q.count():
+            return q.one()
+        else:
+            usergroup = Group(body=p.name, created_by=p, created=p.created)
+            usergroup.members.append(p)
+            session.add(usergroup)
+            return usergroup
+
+
+    def get_or_create_user(github_user) -> Person:
         q = session.query(Person)\
             .filter(Person.name == github_user.login,
                     Person.created == github_user.created_at)\
@@ -69,21 +84,6 @@ if __name__ == "__main__":
             get_or_create_usergroup(p)  # create group
 
             return p
-
-
-    def get_or_create_usergroup(p):
-        q = session.query(Group)\
-            .filter(Group.body == p.name,
-                    Group.created_by == p,
-                    Group.created == p.created)
-
-        if q.count():
-            return q.one()
-        else:
-            usergroup = Group(body=p.name, created_by=p, created=p.created)
-            usergroup.members.append(p)
-            session.add(usergroup)
-            return usergroup
 
 
     # Create repo owner

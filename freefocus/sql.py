@@ -5,19 +5,38 @@ import sqlalchemy as sql
 
 from datetime import datetime
 from sqlalchemy import Boolean
+from sqlalchemy import Column
+from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy import String
 from sqlalchemy import UnicodeText
-from sqlalchemy import Column
-from sqlalchemy import DateTime
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
+from typing import List, Dict, Tuple
 
 
 Base = declarative_base()
+
+
+def get_or_create(session: sql.orm.session.Session, model,
+                  defaults: Dict[str, object]=None, **kwargs) -> object:
+    """
+    Instantiate a mapped database object. If the object is not in the database,
+    add it.
+    """
+    instance = session.query(model).filter_by(**kwargs).first()
+
+    if not instance:
+        params = dict((k, v) for k, v in kwargs.items()
+                      if not isinstance(v, sql.sql.expression.ClauseElement))
+        params.update(defaults or {})
+        instance = model(**params)
+        session.add(instance)
+
+    return instance
 
 
 ### Persons
@@ -56,8 +75,7 @@ class Workspace(Base):
     __tablename__ = "workspaces"
 
     uid = Column(String(255), primary_key=True)
-    created = Column(DateTime, nullable=False,
-                     default=datetime.utcnow)
+    created = Column(DateTime, nullable=False, default=datetime.utcnow)
 
 
 ### Groups
@@ -147,6 +165,80 @@ class GroupFriendAssociation(Base):
     friend_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
     __table_args__ = (
         PrimaryKeyConstraint('group_id', 'friend_id', name='_uid'),)
+
+
+### Assets
+
+
+class Asset(Base):
+    __tablename__ = "assets"
+
+    id = Column(Integer, primary_key=True)
+
+    # null parent ID means the group belongs to the workspace.
+    parent_id = Column(Integer, ForeignKey("assets.id"))
+    children = relationship(
+        "Asset", backref=backref('parent', remote_side=[id]))
+
+    owners = relationship("Group", secondary="asset_owner_associations")
+    friends = relationship("Group", secondary="asset_friend_associations")
+
+    body = Column(UnicodeText(length=2**31), nullable=False)
+
+    tasks = relationship("Task", secondary="task_asset_associations")
+
+    # Accountability
+    created_by_id = Column(
+        Integer, ForeignKey("persons.uid"), nullable=False)
+    created_by = relationship(
+        "Person", primaryjoin="Person.uid == Asset.created_by_id")
+    created = Column(
+        DateTime, nullable=False, default=datetime.utcnow)
+
+    modified_by_id = Column(Integer, ForeignKey("persons.uid"))
+    modified_by = relationship(
+        "Person", primaryjoin="Person.uid == Asset.modified_by_id")
+    modified = Column(DateTime)
+
+    comments = relationship("AssetComment")
+
+
+class AssetOwnerAssociation(Base):
+    __tablename__ = "asset_owner_associations"
+    asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('asset_id', 'owner_id', name='_uid'),)
+
+
+class AssetFriendAssociation(Base):
+    __tablename__ = "asset_friend_associations"
+    asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)
+    friend_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('asset_id', 'friend_id', name='_uid'),)
+
+
+class AssetComment(Base):
+    __tablename__ = "asset_comments"
+    id = Column(Integer, primary_key=True)
+
+    # a asset comment's parent is either a asset or another comment
+    asset_id = Column(Integer, ForeignKey("assets.id"))
+    asset = relationship("Asset")
+    parent_id = Column(Integer, ForeignKey("asset_comments.id"))
+    children = relationship(
+        "AssetComment", backref=backref('parent', remote_side=[id]))
+
+    body = Column(UnicodeText(length=2**31), nullable=False)
+
+    # Accountability
+    created_by_id = Column(Integer, ForeignKey("persons.uid"), nullable=False)
+    created_by = relationship("Person")
+    created = Column(
+        DateTime, nullable=False, default=datetime.utcnow)
+
+    modified = Column(DateTime)  # comments may only be modified by the creator
 
 
 ### Tags
@@ -252,7 +344,7 @@ class Task(Base):
     duration = Column(Integer)
 
     tags = relationship("Tag", secondary="task_tag_associations")
-    # assets = relationship("Asset", secondary="task_asset_associations")
+    assets = relationship("Asset", secondary="task_asset_associations")
     deps = relationship(
         "Task", secondary="task_dep_associations",
         primaryjoin="TaskDepAssociation.task_id == Task.id",
@@ -314,6 +406,14 @@ class TaskFriendAssociation(Base):
     friend_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
     __table_args__ = (
         PrimaryKeyConstraint('task_id', 'friend_id', name='_uid'),)
+
+
+class TaskAssetAssociation(Base):
+    __tablename__ = "task_asset_associations"
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('task_id', 'asset_id', name='_uid'),)
 
 
 class TaskTagAssociation(Base):
