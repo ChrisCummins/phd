@@ -80,8 +80,8 @@ if __name__ == "__main__":
                 p.emails.append(Email(address=github_user.email))
 
             session.add(p)
-
             get_or_create_usergroup(p)  # create group
+            session.commit()
 
             return p
 
@@ -111,6 +111,7 @@ if __name__ == "__main__":
         repo_tagtree.children.append(tag)
 
     session.add(tagtree)
+    session.commit()
 
     tasktree = Task(
         body=args.owner, created_by=p, created=r.created_at)
@@ -137,6 +138,7 @@ if __name__ == "__main__":
             m.tags.append(tag)
 
     session.add(repo_tasktree)
+    session.commit()
 
     # Import Issues as Tasks
     for issue in r.get_issues(state="all"):
@@ -176,6 +178,8 @@ if __name__ == "__main__":
         for assignee in issue.assignees:
             a = get_or_create_usergroup(get_or_create_user(assignee))
             task.assigned.append(a)
+
+        session.commit()
 
     session.add(tasktree)
     session.commit()
