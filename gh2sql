@@ -174,8 +174,8 @@ if __name__ == "__main__":
             task.tags.append(tag)
 
         for assignee in issue.assignees:
-            # FIXME: get_or_create_user(assignee)
-            task.assigned.append(usergroup)
+            a = get_or_create_usergroup(get_or_create_user(assignee))
+            task.assigned.append(a)
 
     session.add(tasktree)
     session.commit()
