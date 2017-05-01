@@ -22,7 +22,8 @@ def build_graph(
                    node_type, edge_type):
         for item in items:
             label = make_id(item, type=node_type)
-            add_node(label, item, type=node_type)
+            if not add_node(label, item, type=node_type):
+                continue
             add_edge(parent_label, label, type=edge_type)
 
             if hasattr(item, 'created_by'):
@@ -83,7 +84,8 @@ if __name__ == "__main__":
     parser.add_argument("uri")
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("--html", action="store_true")
-    parser.add_argument("--created_by", action="store_true")
+    parser.add_argument("--complete", action="store_true")
+    parser.add_argument("--created-by", action="store_true")
     parser.add_argument("--tag-refs", action="store_true")
     parser.add_argument("--asset-refs", action="store_true")
     args = parser.parse_args()
@@ -124,6 +126,10 @@ if __name__ == "__main__":
                 raise LookupError(type)
 
         def add_node(id, item, type):
+            if hasattr(item, 'completed'):
+                if item.completed != None and not args.complete:
+                    return False
+
             groups = {
                 'workspace': 1,
                 'person': 2,
@@ -135,6 +141,7 @@ if __name__ == "__main__":
             }
 
             graph['nodes'].append({'id': id, 'group': groups[type]})
+            return True
 
         def add_edge(from_id, to_id, type):
             values = {
@@ -293,6 +300,10 @@ redraw();
                 raise LookupError(type)
 
         def add_node(id, item, type):
+            if hasattr(item, 'completed'):
+                if item.completed != None and not args.complete:
+                    return False
+
             node_opts = {'shape':'rect', 'style':'filled'}
 
             if type == "workspace":
@@ -319,6 +330,7 @@ redraw();
                 name = id
 
             dot.node(escape(id), escape(name), **node_opts)
+            return True
 
         def add_edge(from_id, to_id, type):
             if type[0] == "person" and not args.created_by:
