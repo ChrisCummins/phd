@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+"""
+Convert a SQL workspace to dot source.
+"""
+import sqlalchemy as sql
+import sys
+
+from argparse import ArgumentParser
+from graphviz import Digraph
+from typing import List
+
+from freefocus.sql import *
+
+
+def escape(string):
+    line = str(string).strip().split('\n')[0].replace(":", "/")
+
+    if len(line) > 30:
+        return line[:27] + "..."
+    else:
+        return line
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("uri")
+    parser.add_argument("-v", "--verbose", action="store_true")
+    parser.add_argument("--created-by", action="store_true")
+    args = parser.parse_args()
+
+    engine = sql.create_engine(args.uri, echo=args.verbose)
+
+    Base.metadata.bind = engine
+    make_session = sql.orm.sessionmaker(bind=engine)
+
+    session = make_session()
+
+    def plot_items(dot, parent_label, items: List[Base],
+                   mklabel, mkcaption, node_opts={}, created_by=False):
+        for item in items:
+            label = mklabel(item)
+            dot.node(label, mkcaption(item), **node_opts)
+            dot.edge(parent_label, label)
+
+            if hasattr(item, 'created_by') and created_by:
+                person_label = "__persons__." + escape(item.created_by.uid)
+                dot.edge(person_label, label)
+
+            if hasattr(item, 'members'):
+                plot_items(
+                    dot, label, item.members,
+                    mklabel=lambda i: "__persons__." + escape(i.uid),
+                    mkcaption=lambda i: "@persons//" + escape(i.name),
+                    node_opts={'shape':'rect', 'style':'filled', 'fillcolor':'#FFD1DC'})
+
+            if hasattr(item, 'comments'):
+                plot_items(
+                    dot, label, item.comments,
+                    mklabel=lambda i: "__comments__." + escape(i.id),
+                    mkcaption=lambda i: "@comments//" + escape(i.body),
+                    node_opts={'shape':'rect', 'style':'filled', 'fillcolor':'#FDFD96'},
+                    created_by=created_by)
+
+            if hasattr(item, 'tags'):
+                for tag in item.tags:
+                    tag_label = "__tags__." + escape(tag.id)
+                    dot.edge(tag_label, label)
+
+            if hasattr(item, 'assets'):
+                for asset in item.assets:
+                    asset_label = "__assets__." + escape(asset.id)
+                    dot.edge(asset_label, label)
+
+            if hasattr(item, 'children'):
+                plot_items(dot, label, item.children, mklabel, mkcaption,
+                           node_opts, created_by=False)
+
+    workspace = session.query(Workspace).one()
+
+    dot = Digraph(comment=workspace.uid)
+    dot.graph_attr['rankdir'] = 'LR'
+
+    workspace_label = "__workspace__." + escape(workspace.uid)
+    dot.node(workspace_label, escape(workspace.uid),
+             shape='rect', style='filled', fillcolor='#CFCFC4')
+
+    plot_items(  # groups
+        dot, workspace_label,
+        session.query(Group).filter(Group.parent == None).all(),
+        mklabel=lambda i: "__groups__." + escape(i.id),
+        mkcaption=lambda i: "@groups//" + escape(i.body),
+        node_opts={'shape':'rect', 'style':'filled', 'fillcolor':'#77DD77'},
+        created_by=args.created_by)
+
+    plot_items(  # tags
+        dot, workspace_label,
+        session.query(Tag).filter(Tag.parent == None).all(),
+        mklabel=lambda i: "__tags__." + escape(i.id),
+        mkcaption=lambda i: "@tags//" + escape(i.body),
+        node_opts={'shape':'rect', 'style':'filled', 'fillcolor':'#AEC6CF'},
+        created_by=args.created_by)
+
+    plot_items(  # tasks
+        dot, workspace_label,
+        session.query(Task).filter(Task.parent == None).all(),
+        mklabel=lambda i: "__task__." + escape(i.id),
+        mkcaption=lambda i: "@tasks//" + escape(i.body),
+        node_opts={'shape':'rect', 'style':'filled', 'fillcolor':'#FFB347'},
+        created_by=args.created_by)
+
+    print(dot.source)
