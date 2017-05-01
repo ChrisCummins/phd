@@ -1,0 +1,354 @@
+"""
+SQL schema for FreeFocus.
+"""
+import sqlalchemy as sql
+
+from datetime import datetime
+from sqlalchemy import Boolean
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import PrimaryKeyConstraint
+from sqlalchemy import String
+from sqlalchemy import UnicodeText
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import backref, relationship
+
+
+Base = declarative_base()
+
+
+### Persons
+
+
+class Person(Base):
+    __tablename__ = "persons"
+
+    uid = Column(Integer, primary_key=True)
+    name = Column(UnicodeText(length=255), nullable=False)
+
+    emails = relationship("Email")
+    groups = relationship("Group", secondary="person_group_associations")
+
+    created = Column(
+        DateTime, nullable=False, default=datetime.utcnow)
+
+
+class Email(Base):
+    __tablename__ = "email_addresses"
+
+    person_uid = Column(Integer, ForeignKey("persons.uid"),
+                        nullable=False)
+    person = relationship("Person")
+    address = Column(String(255), nullable=False)
+
+    __table_args__ = (
+        PrimaryKeyConstraint('person_uid', 'address', name='_uid'),)
+
+
+### Workspace
+
+
+class Workspace(Base):
+    """ only one Workspace per database """
+    __tablename__ = "workspaces"
+
+    uid = Column(String(255), primary_key=True)
+    created = Column(DateTime, nullable=False,
+                     default=datetime.utcnow)
+
+
+### Groups
+
+
+class Group(Base):
+    __tablename__ = "groups"
+
+    id = Column(Integer, primary_key=True)
+
+    # null parent ID means the group belongs to the workspace.
+    parent_id = Column(Integer, ForeignKey("groups.id"))
+    children = relationship(
+        "Group", backref=backref('parent', remote_side=[id]))
+
+    owners = relationship(
+        "Group", secondary="group_owner_associations",
+        primaryjoin="GroupOwnerAssociation.group_id == Group.id",
+        secondaryjoin="GroupOwnerAssociation.owner_id == Group.id")
+
+    friends = relationship(
+        "Group", secondary="group_friend_associations",
+        primaryjoin="GroupFriendAssociation.group_id == Group.id",
+        secondaryjoin="GroupFriendAssociation.friend_id == Group.id")
+
+    body = Column(UnicodeText(length=2**31), nullable=False)
+
+    members = relationship("Person", secondary="person_group_associations")
+
+    # Accountability
+    created_by_id = Column(
+        Integer, ForeignKey("persons.uid"), nullable=False)
+    created_by = relationship(
+        "Person", primaryjoin="Person.uid == Group.created_by_id")
+    created = Column(
+        DateTime, nullable=False, default=datetime.utcnow)
+
+    modified_by_id = Column(Integer, ForeignKey("persons.uid"))
+    modified_by = relationship(
+        "Person", primaryjoin="Person.uid == Group.modified_by_id")
+    modified = Column(DateTime)
+
+    comments = relationship("GroupComment")
+
+
+class GroupComment(Base):
+    __tablename__ = "group_comments"
+    id = Column(Integer, primary_key=True)
+
+    # a group comment's parent is either a group or another comment
+    group_id = Column(Integer, ForeignKey("groups.id"))
+    group = relationship("Group")
+    parent_id = Column(Integer, ForeignKey("group_comments.id"))
+    children = relationship(
+        "GroupComment", backref=backref('parent', remote_side=[id]))
+
+    body = Column(UnicodeText(length=2**31), nullable=False)
+
+    # Accountability
+    created_by_id = Column(Integer, ForeignKey("persons.uid"), nullable=False)
+    created_by = relationship("Person")
+    created = Column(
+        DateTime, nullable=False, default=datetime.utcnow)
+
+    modified = Column(DateTime)  # comments may only be modified by the creator
+
+
+class PersonGroupAssociation(Base):
+    __tablename__ = "person_group_associations"
+    person_uid = Column(Integer, ForeignKey("persons.uid"), nullable=False)
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('person_uid', 'group_id', name='_uid'),)
+
+
+class GroupOwnerAssociation(Base):
+    __tablename__ = "group_owner_associations"
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('group_id', 'owner_id', name='_uid'),)
+
+
+class GroupFriendAssociation(Base):
+    __tablename__ = "group_friend_associations"
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    friend_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('group_id', 'friend_id', name='_uid'),)
+
+
+### Tags
+
+
+class Tag(Base):
+    __tablename__ = "tags"
+
+    id = Column(Integer, primary_key=True)
+
+    # null parent ID means the group belongs to the workspace.
+    parent_id = Column(Integer, ForeignKey("tags.id"))
+    children = relationship(
+        "Tag", backref=backref('parent', remote_side=[id]))
+
+    owners = relationship("Group", secondary="tag_owner_associations")
+    friends = relationship("Group", secondary="tag_friend_associations")
+
+    body = Column(UnicodeText(length=2**31), nullable=False)
+
+    tasks = relationship("Task", secondary="task_tag_associations")
+
+    # Accountability
+    created_by_id = Column(
+        Integer, ForeignKey("persons.uid"), nullable=False)
+    created_by = relationship(
+        "Person", primaryjoin="Person.uid == Tag.created_by_id")
+    created = Column(
+        DateTime, nullable=False, default=datetime.utcnow)
+
+    modified_by_id = Column(Integer, ForeignKey("persons.uid"))
+    modified_by = relationship(
+        "Person", primaryjoin="Person.uid == Tag.modified_by_id")
+    modified = Column(DateTime)
+
+    comments = relationship("TagComment")
+
+
+class TagOwnerAssociation(Base):
+    __tablename__ = "tag_owner_associations"
+    tag_id = Column(Integer, ForeignKey("tags.id"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('tag_id', 'owner_id', name='_uid'),)
+
+
+class TagFriendAssociation(Base):
+    __tablename__ = "tag_friend_associations"
+    tag_id = Column(Integer, ForeignKey("tags.id"), nullable=False)
+    friend_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('tag_id', 'friend_id', name='_uid'),)
+
+
+class TagComment(Base):
+    __tablename__ = "tag_comments"
+    id = Column(Integer, primary_key=True)
+
+    # a tag comment's parent is either a tag or another comment
+    tag_id = Column(Integer, ForeignKey("tags.id"))
+    tag = relationship("Tag")
+    parent_id = Column(Integer, ForeignKey("tag_comments.id"))
+    children = relationship(
+        "TagComment", backref=backref('parent', remote_side=[id]))
+
+    body = Column(UnicodeText(length=2**31), nullable=False)
+
+    # Accountability
+    created_by_id = Column(Integer, ForeignKey("persons.uid"), nullable=False)
+    created_by = relationship("Person")
+    created = Column(
+        DateTime, nullable=False, default=datetime.utcnow)
+
+    modified = Column(DateTime)  # comments may only be modified by the creator
+
+
+### Tasks
+
+
+class Task(Base):
+    __tablename__ = "tasks"
+
+    id = Column(Integer, primary_key=True)
+
+    # null parent ID means the group belongs to the workspace.
+    parent_id = Column(Integer, ForeignKey("tasks.id"))
+    children = relationship(
+        "Task", backref=backref('parent', remote_side=[id]))
+
+    assigned = relationship("Group", secondary="task_assigned_associations")
+    owners = relationship("Group", secondary="task_owner_associations")
+    friends = relationship("Group", secondary="task_friend_associations")
+
+    body = Column(UnicodeText(length=2**31), nullable=False)
+    active = Column(Boolean, nullable=False, default=True)
+
+    defer_until = Column(DateTime)
+    due = Column(DateTime)
+    estimated_duration = Column(Integer)
+
+    started = Column(DateTime)
+    completed = Column(DateTime)
+    duration = Column(Integer)
+
+    tags = relationship("Tag", secondary="task_tag_associations")
+    # assets = relationship("Asset", secondary="task_asset_associations")
+    deps = relationship(
+        "Task", secondary="task_dep_associations",
+        primaryjoin="TaskDepAssociation.task_id == Task.id",
+        secondaryjoin="TaskDepAssociation.dep_id == Task.id",
+        backref="dependees")
+
+    # Accountability
+    created_by_id = Column(
+        Integer, ForeignKey("persons.uid"), nullable=False)
+    created_by = relationship(
+        "Person", primaryjoin="Person.uid == Task.created_by_id")
+    created = Column(
+        DateTime, nullable=False, default=datetime.utcnow)
+
+    modified_by_id = Column(Integer, ForeignKey("persons.uid"))
+    modified_by = relationship(
+        "Person", primaryjoin="Person.uid == Task.modified_by_id")
+    modified = Column(DateTime)
+
+    comments = relationship("TaskComment")
+
+    @property
+    def status(self):
+        if self.active:
+            return "active"
+        elif self.completed:
+            return "complete"
+        else:
+            return "inactive"
+
+    def add_subtask(self, subtask: 'Task'=None, **subtask_opts):
+        if subtask is None:
+            subtask = Task(**subtask_opts)
+
+        # TODO: Check for circular dependencies
+        self.children.append(subtask)
+        return subtask
+
+
+class TaskAssignedAssociation(Base):
+    __tablename__ = "task_assigned_associations"
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    assigned_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('task_id', 'assigned_id', name='_uid'),)
+
+
+class TaskOwnerAssociation(Base):
+    __tablename__ = "task_owner_associations"
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('task_id', 'owner_id', name='_uid'),)
+
+
+class TaskFriendAssociation(Base):
+    __tablename__ = "task_friend_associations"
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    friend_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('task_id', 'friend_id', name='_uid'),)
+
+
+class TaskTagAssociation(Base):
+    __tablename__ = "task_tag_associations"
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    tag_id = Column(Integer, ForeignKey("tags.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('task_id', 'tag_id', name='_uid'),)
+
+
+class TaskDepAssociation(Base):
+    __tablename__ = "task_dep_associations"
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    dep_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('task_id', 'dep_id', name='_uid'),)
+
+
+class TaskComment(Base):
+    __tablename__ = "task_comments"
+    id = Column(Integer, primary_key=True)
+
+    # a task comment's parent is either a task or another comment
+    task_id = Column(Integer, ForeignKey("tasks.id"))
+    task = relationship("Task")
+    parent_id = Column(Integer, ForeignKey("task_comments.id"))
+    children = relationship(
+        "TaskComment", backref=backref('parent', remote_side=[id]))
+
+    body = Column(UnicodeText(length=2**31), nullable=False)
+
+    # Accountability
+    created_by_id = Column(Integer, ForeignKey("persons.uid"), nullable=False)
+    created_by = relationship("Person")
+    created = Column(
+        DateTime, nullable=False, default=datetime.utcnow)
+
+    modified = Column(DateTime)  # comments may only be modified by the creator
