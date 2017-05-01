@@ -15,18 +15,8 @@ message Person {
 
   repeated Group groups = 3;
   repeated string email = 4;
-}
 
-
-message GroupOrWorkspace {
-  enum Type {
-    GROUP = 0;
-    WORKSPACE = 1;
-  }
-
-  Type type = 1;
-  Group group = 2;
-  Workspace workspace = 3;
+  int64 created = 5;
 }
 
 
@@ -37,10 +27,12 @@ message Workspace {
   repeated Tag tags = 4;
   repeated Asset assets = 5;
 
-  repeated GroupOrWorkspace owners = 6;
-  repeated GroupOrWorkspace friends = 7;
+  repeated Group owners = 6;
+  repeated Group friends = 7;
 
+  // Accountability
   int64 created = 8;
+  Person created_by = 7;
 
   repeated Comment comments = 9;
 }
@@ -70,9 +62,9 @@ message Group {
   }
 
   string id = 1;
-  Group parent = 2;
-  repeated GroupOrWorkspace owners = 3;
-  repeated GroupOrWorkspace friends = 4;
+  Parent parent = 2;
+  repeated Group owners = 3;
+  repeated Group friends = 4;
 
   string body = 5;
   repeated Member members = 6;
@@ -109,37 +101,38 @@ message Task {
   Parent parent = 2;
   repeated Task children = 3;
 
-  string body = 4;
+  repeated Group assigned = 4;
+  repeated Group owners = 5;
+  repeated Group friends = 6;
 
-  repeated GroupOrWorkspace owners = 5;
-  repeated GroupOrWorkspace friends = 6;
+  string body = 7;
 
-  repeated Tag tags = 7;
-  repeated Asset assets = 8;
+  repeated Tag tags = 8;
+  repeated Asset assets = 9;
 
-  repeated Task deps = 9;
+  repeated Task deps = 10;
 
-  int64 defer = 10;
-  int64 due = 11;
-  int64 estimated_duration = 12;
+  int64 defer = 11;
+  int64 due = 12;
+  int64 estimated_duration = 13;
 
-  int64 started = 13;
-  int64 completed = 14;
-  int64 duration = 15;
+  int64 started = 14;
+  int64 completed = 15;
+  int64 duration = 16;
 
-  Status status = 16;
+  Status status = 17;
 
   // Self-duplicating tasks
-  int64 duplicate_after = 17;
-  Task duplicated_from = 18;
+  int64 duplicate_after = 18;
+  Task duplicated_from = 19;
 
   // Accountability
-  Person created_by = 19;
-  int64 created = 20;
-  Person modified_by = 21;
-  int64 modified = 22;
+  Person created_by = 20;
+  int64 created = 21;
+  Person modified_by = 22;
+  int64 modified = 23;
 
-  repeated Comment comments = 23;
+  repeated Comment comments = 24;
 }
 
 
@@ -162,8 +155,8 @@ message Tag {
 
   string body = 4;
 
-  repeated GroupOrWorkspace owners = 5;
-  repeated GroupOrWorkspace friends = 6;
+  repeated Group owners = 5;
+  repeated Group friends = 6;
 
   // Accountability
   Person created_by = 7;
@@ -191,8 +184,8 @@ message Asset {
   Parent parent = 2;
   repeated Asset children = 3;
 
-  repeated GroupOrWorkspace owners = 4;
-  repeated GroupOrWorkspace friends = 5;
+  repeated Group owners = 4;
+  repeated Group friends = 5;
 
   string type = 6;
   string body = 7;
