@@ -18,7 +18,7 @@ def escape(string):
 def plot_groups(dot, parent_id, nodes):
     def plot_group_members(parent_id, members):
         for member in members:
-            if member.type == freefocus.Group.Member.GROUP:
+            if member.type == freefocus.pb.Group.Member.GROUP:
                 dot.node(escape(member.group.id, escape(member.group.id)))
                 dot.edge(escape(parent_id), escape(member.group.id))
 
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     parser = ArgumentParser(description=__doc__)
     args = parser.parse_args()
 
-    workspace = freefocus.Workspace()
+    workspace = freefocus.pb.Workspace()
     json_format.Parse(sys.stdin.read(), workspace)
 
     dot = Digraph(comment=workspace.uid)

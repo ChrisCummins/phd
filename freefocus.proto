@@ -32,9 +32,9 @@ message Workspace {
 
   // Accountability
   int64 created = 8;
-  Person created_by = 7;
+  Person created_by = 9;
 
-  repeated Comment comments = 9;
+  repeated Comment comments = 10;
 }
 
 

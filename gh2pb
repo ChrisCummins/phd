@@ -42,31 +42,32 @@ if __name__ == "__main__":
 
     # create person
     user = g.get_user(args.owner)
-    p = freefocus.Person(uid=args.owner, name=user.name)
+    p = freefocus.pb.Person(uid=args.owner, name=user.name)
 
-    workspace = freefocus.Workspace(uid="GitHub", created=calendar.timegm(time.strptime("1/4/08", "%d/%m/%y")))
+    workspace = freefocus.pb.Workspace(
+        uid="GitHub",
+        created=calendar.timegm(time.strptime("1/4/08", "%d/%m/%y")))
 
     group = workspace.groups.add()
     group.id = f"@groups//{user.name}"
 
     groupmember = group.members.add()
-    groupmember.type = freefocus.Group.Member.PERSON
+    groupmember.type = freefocus.pb.Group.Member.PERSON
     groupmember.person.uid = p.uid
 
     owner_subtree = workspace.tasks.add()
     owner_subtree.id = f"//:{args.owner}"
 
     owner = owner_subtree.owners.add()
-    owner.type = freefocus.GroupOrWorkspace.GROUP
-    owner.group.id = group.id
+    owner.id = group.id
 
-    # owner_subtree.parent.type = freefocus.Task.Parent.WORKSPACE
+    # owner_subtree.parent.type = freefocus.pb.Task.Parent.WORKSPACE
     # owner_subtree.parent.workspace.uid = workspace.uid
 
     repo_subtree = owner_subtree.children.add()
     repo_subtree.id = f"//{args.owner}:{args.repo}"
 
-    # repo_subtree.parent.type = freefocus.Task.Parent.TASK
+    # repo_subtree.parent.type = freefocus.pb.Task.Parent.TASK
     # repo_subtree.parent.task.id = owner_subtree.id
 
     owner_tagtree = workspace.tags.add()
@@ -93,31 +94,31 @@ if __name__ == "__main__":
                 milestone = repo_subtree.children.add()
                 milestone.id = milestone_id
                 milestone.body = (f"{issue.milestone.title}\n\n{issue.milestone.description}").rstrip()
-                milestone.status = freefocus.Task.ACTIVE
+                milestone.status = freefocus.pb.Task.ACTIVE
 
-                milestone.parent.type = freefocus.Task.Parent.TASK
+                milestone.parent.type = freefocus.pb.Task.Parent.TASK
                 milestone.parent.task.id = repo_subtree.id
 
             task = milestone.children.add()
             task.id = f"//{args.owner}/{args.repo}/{issue.milestone.title}:{issue.number}"
 
-            task.parent.type = freefocus.Task.Parent.TASK
+            task.parent.type = freefocus.pb.Task.Parent.TASK
             task.parent.task.id = milestone_id
         else:
             task = repo_subtree.children.add()
             task.id = f"//{args.owner}/{args.repo}:{issue.number}"
 
-            task.parent.type = freefocus.Task.Parent.TASK
+            task.parent.type = freefocus.pb.Task.Parent.TASK
             task.parent.task.id = repo_subtree.id
 
         task.body = (f"{issue.title}\n\n" + issue.body.replace('\r\n', '\n')).rstrip()
-        task.status = freefocus.Task.ACTIVE
+        task.status = freefocus.pb.Task.ACTIVE
 
         for i, comment in enumerate(issue.get_comments()):
             j = i + 1
             comment_node = task.comments.add()
             comment_node.id = f"@comments//{args.owner}/{args.repo}/{issue.number}:{j}"
-            comment_node.parent.type = freefocus.Comment.Parent.TASK
+            comment_node.parent.type = freefocus.pb.Comment.Parent.TASK
             comment_node.parent.task.id = task.id
             comment_node.body = issue.body
 
