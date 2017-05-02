@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import clgen
 import re
 from argparse import ArgumentParser
 from collections import namedtuple
@@ -9,7 +10,6 @@ from typing import Dict, List, Tuple, NewType
 import cldrive
 import progressbar
 from labm8 import fs
-from clgen import preprocess
 
 import db
 from db import *
@@ -24,11 +24,11 @@ def drive(command: List[str], src: str) -> Tuple[float, int, str, str]:
     start_time = time()
 
     try:
-        src = preprocess.compiler_preprocess_cl(program.src)
+        src = clgen.compiler_preprocess_cl(program.src)
         process = Popen(cli, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate(src.encode('utf-8'))
         status = process.returncode
-    except preprocess.ClangException as e:
+    except clgen.ClangException as e:
         status = 1024
         stdout = "".encode('utf-8')
         stderr = str(e).encode('utf-8')
