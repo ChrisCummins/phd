@@ -77,6 +77,30 @@ class Workspace(Base):
     uid = Column(String(255), primary_key=True)
     created = Column(DateTime, nullable=False, default=datetime.utcnow)
 
+    comments = relationship("WorkspaceComment")
+
+
+class WorkspaceComment(Base):
+    __tablename__ = "workspace_comments"
+    id = Column(Integer, primary_key=True)
+
+    # a workspace comment's parent is either a workspace or another comment
+    workspace_uid = Column(Integer, ForeignKey("workspaces.uid"))
+    workspace = relationship("Workspace")
+    parent_id = Column(Integer, ForeignKey("workspace_comments.id"))
+    children = relationship(
+        "WorkspaceComment", backref=backref('parent', remote_side=[id]))
+
+    body = Column(UnicodeText(length=2**31), nullable=False)
+
+    # Accountability
+    created_by_id = Column(Integer, ForeignKey("persons.uid"), nullable=False)
+    created_by = relationship("Person")
+    created = Column(
+        DateTime, nullable=False, default=datetime.utcnow)
+
+    modified = Column(DateTime)  # comments may only be modified by the creator
+
 
 ### Groups
 
