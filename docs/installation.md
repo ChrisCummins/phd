@@ -79,11 +79,11 @@ $ sudo -H make install
 (Optional) Run the test suite:
 
 ```sh
-$ sudo -H make test
+$ make test
 ```
 
 (Optional) Install Python development tools:
 
 ```sh
-$ pip3.5 install -r make/requirements/requirements.dev.txt
+$ pip install -r make/requirements/requirements.dev.txt
 ```
