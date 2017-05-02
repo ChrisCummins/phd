@@ -64,9 +64,8 @@ install-global:
 	pip install -r requirements.txt
 	python ./setup.py install
 
-# generate documentation
-.PHONY: docs
-docs: install-global
+.PHONY: doc-modules
+doc-modules:
 	rm -rf docs/modules
 	mkdir -p docs/modules
 	@for module in $$(cd labm8; ls *.py | grep -v __init__.py); do \
@@ -74,6 +73,10 @@ docs: install-global
 		sed -i "s/@MODULE@/labm8.$${module%.py}/g" docs/modules/labm8.$${module%.py}.rst; \
 		sed -i "s/@MODULE_UNDERLINE@/$$(head -c $$(echo labm8.$${module%.py} | wc -c) < /dev/zero | tr '\0' '=')/" docs/modules/labm8.$${module%.py}.rst; \
 	done
+
+# generate documentation
+.PHONY: docs
+docs: doc-modules install-global
 	$(env3)$(MAKE) -C docs html
 
 # help text
