@@ -1,6 +1,6 @@
-labm8.fmt
+labm8.tar
 ==========
 
-.. automodule:: labm8.fmt
+.. automodule:: labm8.tar
    :members:
    :undoc-members:
