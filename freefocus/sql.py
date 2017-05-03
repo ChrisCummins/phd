@@ -39,6 +39,14 @@ def get_or_create(session: sql.orm.session.Session, model,
     return instance
 
 
+
+class Meta(Base):
+    __tablename__ = "meta"
+
+    key = Column(String(255), primary_key=True)
+    value = Column(String(255), nullable=False)
+
+
 ### Persons
 
 
@@ -77,7 +85,33 @@ class Workspace(Base):
     uid = Column(String(255), primary_key=True)
     created = Column(DateTime, nullable=False, default=datetime.utcnow)
 
+    owners = relationship(
+        "Group", secondary="workspace_owner_associations",
+        primaryjoin="WorkspaceOwnerAssociation.workspace_id == Group.id",
+        secondaryjoin="WorkspaceOwnerAssociation.owner_id == Group.id")
+
+    friends = relationship(
+        "Group", secondary="workspace_friend_associations",
+        primaryjoin="WorkspaceFriendAssociation.workspace_id == Group.id",
+        secondaryjoin="WorkspaceFriendAssociation.friend_id == Group.id")
+
     comments = relationship("WorkspaceComment")
+
+
+class WorkspaceOwnerAssociation(Base):
+    __tablename__ = "workspace_owner_associations"
+    workspace_uid = Column(Integer, ForeignKey("workspaces.uid"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('workspace_uid', 'owner_id', name='_uid'),)
+
+
+class WorkspaceFriendAssociation(Base):
+    __tablename__ = "workspace_friend_associations"
+    workspace_uid = Column(Integer, ForeignKey("workspaces.uid"), nullable=False)
+    friend_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('workspace_uid', 'friend_id', name='_uid'),)
 
 
 class WorkspaceComment(Base):
@@ -144,6 +178,14 @@ class Group(Base):
 
     comments = relationship("GroupComment")
 
+    def validate(self):
+        for owner in self.owners:
+            if self.id == owner.id:
+                raise ValueError
+
+        for friend in self.friends:
+            if self.id == friend.id:
+                raise ValueError
 
 class GroupComment(Base):
     __tablename__ = "group_comments"
@@ -283,8 +325,6 @@ class Tag(Base):
 
     body = Column(UnicodeText(length=2**31), nullable=False)
 
-    tasks = relationship("Task", secondary="task_tag_associations")
-
     # Accountability
     created_by_id = Column(
         Integer, ForeignKey("persons.uid"), nullable=False)
@@ -299,6 +339,8 @@ class Tag(Base):
     modified = Column(DateTime)
 
     comments = relationship("TagComment")
+
+    tasks = relationship("Task", secondary="task_tag_associations")
 
 
 class TagOwnerAssociation(Base):
