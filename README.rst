@@ -9,7 +9,7 @@
 
 Supports Python versions 2.7 and >= 3.4.
 
-Copyright 2015, 2016 Chris Cummins <chrisc.101@gmail.com>.
+Copyright 2015-2017 Chris Cummins <chrisc.101@gmail.com>.
 
 Released under the terms of the GPLv3 license. See
 `LICENSE.txt </LICENSE.txt>`__ for details.
