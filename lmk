@@ -722,10 +722,15 @@ def run_subprocess(command):
 def main():
     command = parse_args(sys.argv[1:])
 
-    if command == '-':
-        read_from_stdin()
-    else:
-        sys.exit(run_subprocess(command))
+    try:
+        if command == '-':
+            read_from_stdin()
+        else:
+            sys.exit(run_subprocess(command))
+    except KeyboardInterrupt:
+        c = colors
+        print('{c.bold}{c.red}[lmk] aborted{c.reset}'.format(**vars()))
+        sys.exit(1)
 
 
 if __name__ == '__main__':
