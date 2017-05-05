@@ -61,6 +61,23 @@ We select the mode output across a range of devices. Voting is used to select th
 
 \subsection{clgen: Compute Kernel Generation}
 
+\begin{itemize}
+\item An initial seed corpus is collated from GitHub (w. rejection filter).
+\item Source code is encoded using partial tokenization into vocabulary.
+\item LSTM networks model the distribution over this vocabulary in the corpus.
+\item The trained network is sampled to generate new programs.
+\end{itemize}
+
+In subsequent iterations, synthesized kernels may be used to augment the training corpus.
+
+\begin{itemize}
+\item Samples are synthesized by the network and pruned using the rejection filter.
+\item The samples are mixed with kernels from the GitHub seed corpus.
+\item These combined samples are labeled (synthetic or human), and used to train a classifier for human-or-robot.
+\item The classifier is tested on unseen programs, and the accuracy is used as a fitness function for the model's parameters.
+\item A GA mutates and evolves the best performing parameters.
+\end{itemize}
+
 Figure~\ref{fig:deeptune} shows the test case generation process. Possible improvements over CGO'17:
 
 \begin{itemize}
@@ -97,7 +114,7 @@ Reference compiler: LLVM 3.9.0
         \label{fig:deeptune}
 \end{figure}
 
-\subsection{cldrive: Arbitrary kernel execution}
+\subsection{cldrive: OpenCL Test Case Execution}
 
 Parse AST. Read function arguments. Generate data inputs for arguments. Limited subset of data types supported: No structs, no irregular data types.
 
