@@ -61,6 +61,7 @@ def test_rand():
     assert outputs.shape == (2, 16)
 
 
+@skip_on_pocl
 def test_data_unchanged():
     src = "kernel void A(global int* a, global int* b, const int c) {}"
 
