@@ -34,6 +34,32 @@ class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device']))
         return _lookup_env(return_cl=True, platform=self.platform,
                            device=self.device, profiling=profiling)
 
+    @property
+    def driver_version(self) -> str:
+        """
+        Get the OpenCL driver version.
+
+        Returns
+        -------
+        str
+            OpenCL device version.
+
+        Raises
+        ------
+        LookupError
+            If a matching OpenCL device cannot be found.
+        RuntimeError
+            In case of an OpenCL API call failure.
+
+        Examples
+        --------
+        make_env().driver_version  # doctest: +SKIP
+        "375.39"
+        """
+        ctx, queue = self.ctx_queue()
+        dev = queue.get_info(cl.command_queue_info.DEVICE)
+        return dev.get_info(cl.device_info.DRIVER_VERSION)
+
 
 def _cl_devtype_from_str(string: str) -> cl.device_type:
     devtypes = {
