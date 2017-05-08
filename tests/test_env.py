@@ -41,10 +41,10 @@ def test_all_envs():
 @needs_cpu
 def test_make_env_cpu():
     env = cldrive.make_env(devtype="cpu")
-    # TODO
+    assert env.device_type == "CPU"
 
 
 @needs_gpu
 def test_make_env_gpu():
     env = cldrive.make_env(devtype="gpu")
-    # TODO
+    assert env.device_type == "GPU"
