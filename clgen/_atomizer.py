@@ -147,17 +147,26 @@ class VocabError(clgen.CLgenError):
     pass
 
 
+class InvalidVocab(VocabError):
+    """An invalid atomizer vocabulary"""
+    pass
+
+
 class Atomizer(clgen.CLgenObject):
     """
-    Atomizer.
+    Abstract base class for atomizers.
     """
     def __init__(self, vocab: Dict[str, int]):
         """
         Arguments:
-            vocab (dict): A dictionary of string -> integer mappings to use for
-                atomizing text from atoms into indices.
+            vocab (Dict[str, int]): A dictionary of mappings from character
+                sequences (atoms) into indices.
+
+        Raises:
+            TypeError: If vocab is not a dictionary.
+            InvalidVocab: If the dictionary of mappings includes any duplicate
+                values.
         """
-        assert(isinstance(vocab, dict))
         self.vocab = vocab
         self._vocab_update()
 
@@ -171,6 +180,15 @@ class Atomizer(clgen.CLgenObject):
 
     def _vocab_update(self) -> None:
         """ call this when vocab is modified """
+        if not isinstance(self.vocab, dict):
+            raise TypeError('vocabulary must be a dict')
+
+        # Each atom and index must be unique to ensure deterministic encoding.
+        if len(set(self.vocab.keys())) != len(self.vocab):
+            raise InvalidVocab('all atoms must be unique')
+        if len(set(self.vocab.values())) != len(self.vocab):
+            raise InvalidVocab('all indices must be unique')
+
         self.vocab_size = len(self.vocab)
         self.decoder = dict((val, key) for key, val in self.vocab.items())
 
