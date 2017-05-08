@@ -317,11 +317,15 @@ def __porcelain_exec(path: str) -> np.array:
         Block until OpenCL event has completed and return time delta
         between event submission and end, in milliseconds.
 
-        Arguments:
-            event (cl.Event): Event handle.
+        Arguments
+        ---------
+        event : cl.Event
+            Event handle.
 
-        Returns:
-            float: Elapsed time, in milliseconds.
+        Returns
+        -------
+        float
+            Elapsed time, in milliseconds.
         """
         event.wait()
         tstart = event.get_profiling_info(cl.profiling_info.START)

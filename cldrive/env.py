@@ -19,8 +19,8 @@ class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device']))
         """
         Return an OpenCL context and command queue for the given environment.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         profiling : bool, optional
             If True, enable profiling support.
 
