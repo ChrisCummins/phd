@@ -183,6 +183,9 @@ class ArgumentExtractor(NodeVisitor):
     args : List[KernelArg]
         List of KernelArg instances.
 
+    name : str
+        Kernel name.
+
     Raises
     ------
     ValueError
@@ -204,6 +207,7 @@ class ArgumentExtractor(NodeVisitor):
         if ("kernel" in node.decl.funcspec or
             "__kernel" in node.decl.funcspec):
             self.kernel_count += 1
+            self.name = node.decl.name
         else:
             return
 
@@ -337,3 +341,36 @@ def extract_args(src: str) -> List[KernelArg]:
     visitor = ArgumentExtractor()
     visitor.visit(parse(src))
     return visitor.args
+
+
+def kernel_name(src: str) -> str:
+    """
+    Extract the name of an OpenCL kernel.
+
+    Accepts the source code for an OpenCL kernel and returns its name.
+
+    Parameters
+    ----------
+    src : str
+        The OpenCL kernel source.
+
+    Returns
+    -------
+    str
+        The kernel name.
+
+    Raises
+    ------
+    LookupError
+        If the source contains no OpenCL kernel definitions, or more than one.
+
+    Examples
+    --------
+    >>> kernel_name("void kernel foo() {}")
+    'foo'
+    >>> kernel_name("void kernel A(global float *a, const int b) {}")
+    'A'
+    """
+    visitor = ArgumentExtractor()
+    visitor.visit(parse(src))
+    return visitor.name
