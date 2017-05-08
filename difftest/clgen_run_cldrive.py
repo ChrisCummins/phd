@@ -18,20 +18,6 @@ status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'stdout', 'stderr'])
 
 
-def drive(command: List[str], src: str) -> Tuple[float, int, str, str]:
-    """ invoke cldrive on source """
-    start_time = time()
-
-    process = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate(src.encode('utf-8'))
-
-    runtime = time() - start_time
-
-    return return_t(
-        runtime=runtime, status=status_t(process.returncode),
-        stdout=stdout, stderr=stderr.decode('utf-8'))
-
-
 def verify_params(platform: str, device: str, optimizations: bool,
                   global_size: tuple, local_size: tuple,
                   stderr: str) -> None:
@@ -70,6 +56,21 @@ def verify_params(platform: str, device: str, optimizations: bool,
             assert(actual_global_size == global_size)
             assert(actual_local_size == local_size)
             return
+
+
+def drive(command: List[str], src: str) -> Tuple[float, int, str, str]:
+    """ invoke cldrive on source """
+    start_time = time()
+
+    process = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = process.communicate(src.encode('utf-8'))
+    stderr = stderr.decode('utf-8')
+
+    runtime = time() - start_time
+
+    return return_t(
+        runtime=runtime, status=status_t(process.returncode),
+        stdout=stdout, stderr=stderr)
 
 
 def get_num_progs_to_run(session: db.session_t,
