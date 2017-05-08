@@ -298,6 +298,7 @@ def has_cpu() -> bool:
     """
     try:
         make_env(devtype="cpu")
+        return True
     except LookupError:
         return False
 
@@ -313,5 +314,6 @@ def has_gpu() -> bool:
     """
     try:
         make_env(devtype="cpu")
+        return True
     except LookupError:
         return False
