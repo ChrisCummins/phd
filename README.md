@@ -1,36 +1,39 @@
 # Shutterbug
 
-Shutterbug solves the simple problem that I have a bunch of photos I'd like to
-burn to DVDs for safe keeping. It does two things: splits collections of files
-into size-limited "chunks", and recovers those chunks back into the original
-directory trees. Naturally this turned into an exploration of knapsack problems,
-packing, and other NP complete fun.
+Shutterbug splits a large collection of photos into a series of DVD-sized folders for burning to disc, and provides a mechanism to go from these disc backups back to the original directory structure.
 
 Shutterbug is paranoid about data loss and corruption, and has some coping
 strategies:
 
-* It maintains a 1-1 mappings so that 1 input file = 1 file on a disk.
-* It shuffles the order of the files on the disks so that if a disk is lost, you
-  end up with lots of tiny gaps in your photo library, not one big one.
-* It validates the contents of files before and after copying to disk so that
-  you have a warning of data corruption.
+* It maintains a 1-1 mappings so that 1 input file = 1 file on a disc. This
+  means if a file becomes corrupted, you lose one image. Other approaches which
+  do not respect file boundaries lead to losing multiple images in one go.
+* It randomizes the order of the files on the discs so that if a disc is lost,
+  you end up with lots of tiny gaps in your photo library, not one big one.
+* It validates your files after restoring from backup, so you have a warning of
+  data corruption. Note this does not **prevent** data loss, only **discovers**
+  it. *The best way to prevent irrecoverable data loss is to make more copies of
+  your data to begin with.*
 
 ## Usage
 
-Install using:
+### Requirements
+
+* Python 3.
+
+### Installation
 
 ```
-$ python ./setup.py install
+$ pip3 install shutterbug
 ```
 
-### Archiving
+### Archiving to disc
 
-To burn your old photos in `~/Pictures/2016` to 4.7GB DVDs, create the required
-"chunks":
+To backup your photo library in `~/Pictures/2016` to 4.7GB DVDs, split the folder into "chunks" using shutterbug:
 
 ```
 $ mkdir ~/chunks && cd ~/chunks
-$ shutterbug ~/Pictures/2016 --size 4700 --gzip
+$ shutterbug ~/Pictures/2016 --gzip
 chunk_001/ae3d47f87af176b74e1ec30599a7b31a.jpg.gz 4.93MB -> 4.90MB
 chunk_001/631600d1e11339794e81d75f104e9f19.jpg.gz 7.40MB -> 7.38MB
 chunk_001/130c52fe396237a59500a61b8101ff55.jpg.gz 6.79MB -> 6.77MB
@@ -47,11 +50,11 @@ chunk_002/bc17480a318e7ba9a3e4e2e57538917d.jpg.gz 9.63MB -> 9.60MB
 
 Burn each of the resulting folders in `~/chunks` to DVDs.
 
-### Unarchiving
+### Restoring from disc
 
-Copy each chunk from your DVDs back to disk, e.g. `~/import/chunk_001`,
-`~/import/chunk_002` etc. Restore original file structure by running shutterbug
-from the output directory:
+Copy each chunk from your DVDs back to disc, e.g. `~/import/chunk_001`,
+`~/import/chunk_002` etc. Restore the original file structure by running
+shutterbug from the output directory:
 
 ```
 $ mkdir ~/Pictures/2016 && cd ~/Pictures/2016
