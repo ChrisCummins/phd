@@ -4,7 +4,7 @@ import re
 import sys
 
 from collections import namedtuple
-from typing import List, Tuple
+from typing import List, Tuple, Iterator
 
 import pyopencl as cl
 
@@ -285,6 +285,36 @@ def make_env(platform: str=None, device: str=None,
     """
     return _lookup_env(return_cl=False, platform=platform, device=device,
                        devtype=devtype)
+
+
+def all_envs(devtype: str='all') -> Iterator[OpenCLEnvironment]:
+    """
+    Iterate over all available OpenCL environments on a system.
+
+    Parameters
+    ----------
+    devtype : str, optional
+        OpenCL device type to filter by, one of: {all,cpu,gpu}.
+
+    Returns
+    -------
+    Iterator[OpenCLEnvironment]
+        An iterator over all available OpenCL environments.
+    """
+    cl_devtype = _cl_devtype_from_str(devtype)
+    cl_platforms = cl.get_platforms()
+    for cl_platform in cl_platforms:
+        platform_str = cl_platform.get_info(cl.platform_info.NAME)
+        ctx = cl.Context(
+                properties=[(cl.context_properties.PLATFORM, cl_platform)])
+
+        cl_devices = ctx.get_info(cl.context_info.DEVICES)
+        cl_devices = [d for d in cl_devices if _devtype_matches(d, cl_devtype)]
+
+        for cl_device in cl_devices:
+            device_str = cl_device.get_info(cl.device_info.NAME)
+
+            yield OpenCLEnvironment(platform=platform_str, device=device_str)
 
 
 def has_cpu() -> bool:
