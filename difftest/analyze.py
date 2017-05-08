@@ -149,7 +149,7 @@ def analyze_cl_launch_result(result, session):
                 result.classification = "Wrong code"
 
 
-def analyze_cldrive_result(result, session, require_gpuverified=False):
+def analyze_cldrive_result(result, table, session, require_gpuverified=False):
     result.outcome = get_cldrive_outcome(result)
     result.classification = CLASSIFICATIONS[result.outcome]
 
@@ -194,7 +194,7 @@ def main():
     for name, table in zip(CLDRIVE_TABLE_NAMES, CLDRIVE_TABLES):
         print(f"{name} ...")
         for result in ProgressBar()(session.query(table).all()):
-            analyze_cldrive_result(result, session)
+            analyze_cldrive_result(result, table, session)
         session.commit()
 
     # CLgen programs have special treatment because we require that they be
@@ -203,7 +203,7 @@ def main():
     table = CLgenResult
     print(f"{name} ...")
     for result in ProgressBar()(session.query(table).all()):
-        analyze_cldrive_result(result, session, require_gpuverified=True)
+        analyze_cldrive_result(result, table, session, require_gpuverified=True)
     session.commit()
 
 
