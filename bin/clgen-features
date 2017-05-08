@@ -25,13 +25,10 @@ from clgen import features
 __description__ = """
 Extract static OpenCL kernel features.
 
-This extracts a subset of the features required for the paper:
+This extracts the static compile-time features of the paper:
 
     Grewe, D., Wang, Z., & O'Boyle, M. F. P. M. (2013). Portable Mapping of
     Data Parallel Programs to OpenCL for Heterogeneous Systems. In CGO. IEEE.
-
-Note that dynamic features are extracted using the cldrive program for CLgen
-kernels, or by using libcecl for ad-hoc programs.
 """
 
 
