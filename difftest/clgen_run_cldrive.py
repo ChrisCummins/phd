@@ -22,7 +22,7 @@ def drive(command: List[str], src: str) -> Tuple[float, int, str, str]:
     """ invoke cldrive on source """
     start_time = time()
 
-    process = Popen(cli, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    process = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate(src.encode('utf-8'))
 
     runtime = time() - start_time
