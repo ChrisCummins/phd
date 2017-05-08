@@ -23,6 +23,7 @@ import numpy as np
 import string
 
 from collections import Counter
+from typing import Dict, List
 
 import clgen
 
@@ -150,7 +151,7 @@ class Atomizer(clgen.CLgenObject):
     """
     Atomizer.
     """
-    def __init__(self, vocab: dict):
+    def __init__(self, vocab: Dict[str, int]):
         """
         Arguments:
             vocab (dict): A dictionary of string -> integer mappings to use for
@@ -161,14 +162,14 @@ class Atomizer(clgen.CLgenObject):
         self._vocab_update()
 
     @property
-    def atoms(self):
+    def atoms(self) -> List[str]:
         return list(sorted(self.vocab.keys()))
 
     @property
-    def indices(self):
+    def indices(self) -> List[int]:
         return list(sorted(self.vocab.values()))
 
-    def _vocab_update(self):
+    def _vocab_update(self) -> None:
         """ call this when vocab is modified """
         self.vocab_size = len(self.vocab)
         self.decoder = dict((val, key) for key, val in self.vocab.items())
@@ -185,9 +186,9 @@ class Atomizer(clgen.CLgenObject):
         """
         raise NotImplementedError("abstract class")
 
-    def tokenize(self, text: str) -> list:
+    def tokenize(self, text: str) -> List[str]:
         """
-        Atomize a text into an array of atomsself.
+        Split the text into atoms, but do not encode to indices.
 
         Arguments:
             text (str): Input text.
@@ -214,7 +215,7 @@ class Atomizer(clgen.CLgenObject):
             raise VocabError
 
     @staticmethod
-    def from_text(text: str):
+    def from_text(text: str) -> 'Atomizer':
         """
         Instantiate and specialize an atomizer from a corpus text.
 
@@ -248,11 +249,11 @@ class CharacterAtomizer(Atomizer):
         except KeyError:
             raise VocabError
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "CharacterAtomizer[{n} chars]".format(n=self.vocab_size)
 
     @staticmethod
-    def from_text(text: str) -> Atomizer:
+    def from_text(text: str) -> 'CharacterAtomizer':
         counter = Counter(text)
         count_pairs = sorted(counter.items(), key=lambda x: -x[1])
         atoms, _ = zip(*count_pairs)
