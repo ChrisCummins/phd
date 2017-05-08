@@ -281,7 +281,7 @@ class CharacterAtomizer(Atomizer):
 
 class GreedyAtomizer(Atomizer):
     """
-    Greedy encoding for multi-characten modelling.
+    Greedy encoding for multi-character modelling.
     """
     def __init__(self, *args, **kwargs):
         self.determine_chars = kwargs.pop("determine_chars", False)
@@ -335,14 +335,19 @@ class GreedyAtomizer(Atomizer):
 
         return np.array(indices)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "GreedyAtomizer[{n} tokens]".format(n=self.vocab_size)
 
     @staticmethod
-    def from_text(text: str) -> Atomizer:
-        opencl_vocab = dict(zip(OPENCL_ATOMS, range(len(OPENCL_ATOMS))))
-        c = GreedyAtomizer(opencl_vocab, determine_chars=True)
+    def from_text(text: str, atoms=OPENCL_ATOMS) -> 'GreedyAtomizer':
+        # Instantiate a greedy atomizer using the full vocabulary.
+        full_vocab = dict(zip(atoms, range(len(atoms))))
+        c = GreedyAtomizer(full_vocab, determine_chars=True)
 
+        # Derive the subset of the vocabulary required to encode the given
+        # text.
         tokens = sorted(list(set(c.tokenize(text))))
-        vocab = dict(zip(tokens, range(len(tokens))))
-        return GreedyAtomizer(vocab)
+        vocab_subset = dict(zip(tokens, range(len(tokens))))
+
+        # Return a new atomizer using the subset vocabulary.
+        return GreedyAtomizer(vocab_subset)
