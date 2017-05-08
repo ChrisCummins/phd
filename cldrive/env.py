@@ -60,6 +60,59 @@ class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device']))
         dev = queue.get_info(cl.command_queue_info.DEVICE)
         return dev.get_info(cl.device_info.DRIVER_VERSION)
 
+    @property
+    def opencl_version(self) -> str:
+        """
+        Get the OpenCL platform version.
+
+        Returns
+        -------
+        str
+            OpenCL platform version.
+
+        Raises
+        ------
+        LookupError
+            If a matching OpenCL device cannot be found.
+        RuntimeError
+            In case of an OpenCL API call failure.
+
+        Examples
+        --------
+        make_env().platform_version  # doctest: +SKIP
+        "1.2"
+        """
+        ctx, queue = self.ctx_queue()
+        dev = queue.get_info(cl.command_queue_info.DEVICE)
+        plat = dev.get_info(cl.device_info.PLATFORM)
+        return opencl_version(plat)
+
+    @property
+    def device_type(self) -> str:
+        """
+        Get the OpenCL device type.
+
+        Returns
+        -------
+        str
+            OpenCL device type.
+
+        Raises
+        ------
+        LookupError
+            If a matching OpenCL device cannot be found.
+        RuntimeError
+            In case of an OpenCL API call failure.
+
+        Examples
+        --------
+        make_env().device_type  # doctest: +SKIP
+        "CPU"
+        """
+        ctx, queue = self.ctx_queue()
+        dev = queue.get_info(cl.command_queue_info.DEVICE)
+        return device_type(dev)
+
 
 def _cl_devtype_from_str(string: str) -> cl.device_type:
     devtypes = {
