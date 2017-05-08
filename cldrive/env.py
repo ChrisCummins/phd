@@ -225,6 +225,9 @@ def device_type(device: cl.Device) -> str:
 
 
 def clinfo(file=sys.stdout) -> None:
+    """
+    Print a summary of available OpenCL devices.
+    """
     print("Host:", host_os(), file=file)
 
     for platform_id, platform in enumerate(cl.get_platforms()):
@@ -260,12 +263,11 @@ def make_env(platform: str=None, device: str=None,
 
     Parameters
     ----------
-    platform_id : int, optional
-        OpenCL Platform ID. If not provided, any available platform may be
+    platform : str, optional
+        OpenCL Platform name. If not provided, any available platform may be
         used.
-    device_id : int, optional
-        OpenCL Device ID. If not provided, any available device may be used.
-        Requires that platform_id is set.
+    device : str, optional
+        OpenCL Device name. If not provided, any available device may be used.
     devtype : str, optional
         OpenCL device type to use, one of: {all,cpu,gpu}.
 
@@ -276,12 +278,24 @@ def make_env(platform: str=None, device: str=None,
 
     Raises
     ------
-    ValueError
-        If device_id is set, but not platform_id.
     LookupError
         If no matching device found.
     RuntimeError
-        In case OpenCL API call fails.
+        In case an OpenCL API call fails.
+
+    Examples
+    --------
+    To generate an environment for the first available device:
+    >>> make_env()  # doctest: +SKIP
+    Device: ..., Platform: ...
+
+    To generate an environment for a GPU device:
+    >>> make_env(devtype="gpu")  # doctest: +SKIP
+    Device: ..., Platform: ...
+
+    To generate an environment for a specific device:
+    >>> make_env(platform="NVIDIA CUDA", device="GeForce GTX 1080")  # doctest: +SKIP
+    Device: GeForce GTX 1080, Platform: NVIDIA CUDA
     """
     return _lookup_env(return_cl=False, platform=platform, device=device,
                        devtype=devtype)
