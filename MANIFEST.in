@@ -1,1 +1,1 @@
-include Makefile README.py requirements.txt
+include Makefile README.md requirements.txt
