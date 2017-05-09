@@ -66,13 +66,6 @@ class TestProf(TestCase):
         self._test(" foo: ", re.search(" foo: ", out).group(0))
         self._test(" bar: ", re.search(" bar: ", out).group(0))
 
-    def test_new(self):
-        t1 = prof.new()
-        t2 = prof.new()
-        self._test(True, t1 != t2)
-        prof.stop(t1)
-        prof.stop(t2)
-
     def test_reset(self):
         prof.start("foo")
         prof.reset("foo")
@@ -81,19 +74,19 @@ class TestProf(TestCase):
     def test_stop_twice_error(self):
         prof.start("foo")
         prof.stop("foo")
-        with self.assertRaises(prof.TimerNameError):
+        with self.assertRaises(LookupError):
             prof.stop("foo")
 
     def test_stop_bad_name_error(self):
-        with self.assertRaises(prof.TimerNameError):
+        with self.assertRaises(LookupError):
             prof.stop("not a timer")
 
     def test_reset_bad_name_error(self):
-        with self.assertRaises(prof.TimerNameError):
+        with self.assertRaises(LookupError):
             prof.reset("not a timer")
 
     def test_unique_error(self):
         prof.start("foo")
         prof.start("foo")
-        with self.assertRaises(prof.TimerNameError):
+        with self.assertRaises(ValueError):
             prof.start("foo", unique=True)

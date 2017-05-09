@@ -26,7 +26,7 @@ from labm8 import fs
 from labm8 import io
 
 
-_GLOBAL_TIMER = "__global__"
+_GLOBAL_TIMER = "__default_timer__"
 _timers = {}
 
 
@@ -44,26 +44,6 @@ def isrunning(name=None):
     """
     name = name or _GLOBAL_TIMER
     return name in _timers
-
-
-def _add_timer(name):
-    _timers[name] = time()
-
-
-def _get_elapsed_time(name):
-    t = _timers[name]
-    return (time() - t) * 1000
-
-
-def _stop_timer(name):
-    elapsed = _get_elapsed_time(name)
-    del _timers[name]
-    return elapsed
-
-
-def _new_timer_name():
-    name = "{:08x}".format(random.randrange(16 ** 8))
-    return name if not isrunning(name) else _new_timer_name()
 
 
 def start(name=None, unique=False):
@@ -86,26 +66,10 @@ def start(name=None, unique=False):
     """
     name = name or _GLOBAL_TIMER
 
-    if unique and isrunning(name):
+    if unique and name in _timers:
         raise ValueError("A timer named '{}' already exists".format(name))
 
-    _add_timer(name)
-
-
-def new():
-    """
-    Create and start a uniquely named timer.
-
-    Generates a timer name which is guaranteed to be unique, then
-    starts it.
-
-    Returns:
-
-        str: Name of new timer.
-    """
-    name = _new_timer_name()
-    start(name=name)
-    return name
+    _timers[name] = time()
 
 
 def stop(name=None, **kwargs):
@@ -121,6 +85,7 @@ def stop(name=None, **kwargs):
 
         LookupError: If the named timer does not exist.
     """
+    quiet = kwargs.pop("quiet", False)
     name = name or _GLOBAL_TIMER
 
     if name not in _timers:
@@ -129,18 +94,14 @@ def stop(name=None, **kwargs):
         else:
             raise LookupError("No timer named '{}'".format(name))
 
-    elapsed = int(round(_stop_timer(name)))
+    elapsed = int(round((time() - _timers[name]) * 1000))
+    del _timers[name]
+
     if name == _GLOBAL_TIMER:
         name = "Timer"
 
-    io.prof("{}: {} ms".format(name, elapsed), **kwargs)
-
-
-def end(*args, **kwargs):
-    """
-    Stop a timer, see stop().
-    """
-    stop(*args, **kwars)
+    if not quiet:
+        io.prof("{}: {} ms".format(name, elapsed), **kwargs)
 
 
 def reset(name=None):
@@ -156,19 +117,42 @@ def reset(name=None):
 
         LookupError: If the named timer does not exist.
     """
+    name = name or _GLOBAL_TIMER
+
     if name not in _timers:
         raise LookupError("No timer named '{}'".format(name))
 
-    _add_timer(name)
+    _timers[name] = time()
 
 
 def elapsed(name=None):
+    """
+    Reset a timer.
+
+    Arguments:
+
+        name (str, optional): The name of the timer to reset. If no
+          name is given, reset the global anonymous timer.
+
+    Returns:
+
+        float: Elapsed time, in milliseconds.
+
+    Raises:
+
+        LookupError: If the named timer does not exist.
+    """
     name = name or _GLOBAL_TIMER
 
     if name not in _timers:
         if name == _GLOBAL_TIMER:
-            raise Error("Global timer has not been started")
+            raise LookupError("Global timer has not been started")
         else:
             raise LookupError("No timer named '{}'".format(name))
 
-    return _get_elapsed_time(name)
+    return (time() - _timers[name]) * 1000
+
+
+def timers():
+    for name in _timers:
+        yield name, elapsed(name)
