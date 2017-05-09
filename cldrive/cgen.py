@@ -15,9 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with cldrive.  If not, see <http://www.gnu.org/licenses/>.
 #
-from enum import Enum
-from functools import partial
-
 import numpy as np
 
 
@@ -30,6 +27,40 @@ def escape_c_string(s):
         return '"{}\\n"'.format(x)
 
     return '\n'.join(escape_line(l) for l in s.split('\n') if len(l.strip()))
+
+
+def gen_data_block(src: str, inputs: np.array):
+    from cldrive import args
+
+    c_lines = []
+    for i, (arg, array) in enumerate(zip(extract_args(src), inputs)):
+        ctype = args.OPENCL_TYPES[array.dtype]
+
+        if arg.is_pointer:
+            array_values = ', '.join(repr(x) for x in array.tolist())
+
+            flags = "CL_MEM_COPY_HOST_PTR"
+            if arg.is_const:
+                flags += " | CL_MEM_READ_ONLY"
+            else:
+                flags += " | CL_MEM_READ_WRITE"
+
+            c_lines.append("""\
+    {ctype} host_{i}[{array.size}] = {{ {array_values} }};
+    cl_mem dev_{i} = clCreateBuffer(ctx, {flags}, sizeof({ctype}) * {array.size}, &host_{i}, &err);
+    check_error("clCreateBuffer", err);
+    err = clSetKernelArg(kernel, {i}, sizeof(cl_mem), &dev_{i});
+    check_error("clSetKernelArg", err);
+""".format(**vars()))
+        else:
+            assert(array.size == 1)
+            c_lines.append("""\
+    {ctype} host_{i} = {array[0]};
+    err = clSetKernelArg(kernel, {i}, sizeof({ctype}), &host_{i});
+    check_error("clSetKernelArg", err);
+""".format(**vars()))
+
+    return '\n'.join(c_lines)
 
 
 def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
@@ -80,8 +111,13 @@ def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
     --------
     TODO
     """
-    c = """\
-/* generated using cldrive <https://github.com/ChrisCummins/cldrive> */
+    src_string = escape_c_string(src)
+    _kernel_name = kernel_name(src)
+
+    data_block = gen_data_block(src, inputs)
+
+    c = """
+/* Code generated using cldrive <https://github.com/ChrisCummins/cldrive> */
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -92,201 +128,138 @@ def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
 #endif
 
 const char *kernel_src = \\
-"""
-    c += escape_c_string(src)
+{src_string};
+const char *kernel_name = "{_kernel_name}";
 
-    c += """;
-const char *kernel_name = "{}";
-""".format(kernel_name(src))
+const char *clerror_string(cl_int err) {{
+/* written by @Selmar http://stackoverflow.com/a/24336429 */
+    switch(err) {{
+        /* run-time and JIT compiler errors */
+        case 0: return "CL_SUCCESS";
+        case -1: return "CL_DEVICE_NOT_FOUND";
+        case -2: return "CL_DEVICE_NOT_AVAILABLE";
+        case -3: return "CL_COMPILER_NOT_AVAILABLE";
+        case -4: return "CL_MEM_OBJECT_ALLOCATION_FAILURE";
+        case -5: return "CL_OUT_OF_RESOURCES";
+        case -6: return "CL_OUT_OF_HOST_MEMORY";
+        case -7: return "CL_PROFILING_INFO_NOT_AVAILABLE";
+        case -8: return "CL_MEM_COPY_OVERLAP";
+        case -9: return "CL_IMAGE_FORMAT_MISMATCH";
+        case -10: return "CL_IMAGE_FORMAT_NOT_SUPPORTED";
+        case -11: return "CL_BUILD_PROGRAM_FAILURE";
+        case -12: return "CL_MAP_FAILURE";
+        case -13: return "CL_MISALIGNED_SUB_BUFFER_OFFSET";
+        case -14: return "CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST";
+        case -15: return "CL_COMPILE_PROGRAM_FAILURE";
+        case -16: return "CL_LINKER_NOT_AVAILABLE";
+        case -17: return "CL_LINK_PROGRAM_FAILURE";
+        case -18: return "CL_DEVICE_PARTITION_FAILED";
+        case -19: return "CL_KERNEL_ARG_INFO_NOT_AVAILABLE";
 
-    c += """
-int main() {
-        int err;
+        /* compile-time errors */
+        case -30: return "CL_INVALID_VALUE";
+        case -31: return "CL_INVALID_DEVICE_TYPE";
+        case -32: return "CL_INVALID_PLATFORM";
+        case -33: return "CL_INVALID_DEVICE";
+        case -34: return "CL_INVALID_CONTEXT";
+        case -35: return "CL_INVALID_QUEUE_PROPERTIES";
+        case -36: return "CL_INVALID_COMMAND_QUEUE";
+        case -37: return "CL_INVALID_HOST_PTR";
+        case -38: return "CL_INVALID_MEM_OBJECT";
+        case -39: return "CL_INVALID_IMAGE_FORMAT_DESCRIPTOR";
+        case -40: return "CL_INVALID_IMAGE_SIZE";
+        case -41: return "CL_INVALID_SAMPLER";
+        case -42: return "CL_INVALID_BINARY";
+        case -43: return "CL_INVALID_BUILD_OPTIONS";
+        case -44: return "CL_INVALID_PROGRAM";
+        case -45: return "CL_INVALID_PROGRAM_EXECUTABLE";
+        case -46: return "CL_INVALID_KERNEL_NAME";
+        case -47: return "CL_INVALID_KERNEL_DEFINITION";
+        case -48: return "CL_INVALID_KERNEL";
+        case -49: return "CL_INVALID_ARG_INDEX";
+        case -50: return "CL_INVALID_ARG_VALUE";
+        case -51: return "CL_INVALID_ARG_SIZE";
+        case -52: return "CL_INVALID_KERNEL_ARGS";
+        case -53: return "CL_INVALID_WORK_DIMENSION";
+        case -54: return "CL_INVALID_WORK_GROUP_SIZE";
+        case -55: return "CL_INVALID_WORK_ITEM_SIZE";
+        case -56: return "CL_INVALID_GLOBAL_OFFSET";
+        case -57: return "CL_INVALID_EVENT_WAIT_LIST";
+        case -58: return "CL_INVALID_EVENT";
+        case -59: return "CL_INVALID_OPERATION";
+        case -60: return "CL_INVALID_GL_OBJECT";
+        case -61: return "CL_INVALID_BUFFER_SIZE";
+        case -62: return "CL_INVALID_MIP_LEVEL";
+        case -63: return "CL_INVALID_GLOBAL_WORK_SIZE";
+        case -64: return "CL_INVALID_PROPERTY";
+        case -65: return "CL_INVALID_IMAGE_DESCRIPTOR";
+        case -66: return "CL_INVALID_COMPILER_OPTIONS";
+        case -67: return "CL_INVALID_LINKER_OPTIONS";
+        case -68: return "CL_INVALID_DEVICE_PARTITION_COUNT";
 
-        cl_uint num_platforms;
-        cl_platform_id platform_id;
-        err = clGetPlatformIDs(
+        /* extension errors */
+        case -1000: return "CL_INVALID_GL_SHAREGROUP_REFERENCE_KHR";
+        case -1001: return "CL_PLATFORM_NOT_FOUND_KHR";
+        case -1002: return "CL_INVALID_D3D10_DEVICE_KHR";
+        case -1003: return "CL_INVALID_D3D10_RESOURCE_KHR";
+        case -1004: return "CL_D3D10_RESOURCE_ALREADY_ACQUIRED_KHR";
+        case -1005: return "CL_D3D10_RESOURCE_NOT_ACQUIRED_KHR";
+
+        default: return "Unknown OpenCL error";
+    }}
+}}
+
+void check_error(const char* api_call, cl_int err) {{
+    if(err != CL_SUCCESS) {{
+        fprintf(stderr, "%s %s\\n", api_call, clerror_string(err));
+        exit(1);
+    }}
+}}
+
+int main() {{
+    int err;
+
+    cl_uint num_platforms;
+    cl_platform_id platform_id;
+    err = clGetPlatformIDs(
                 /* cl_uint num_entries */ 1,
                 /* cl_platform_id *platforms */ &platform_id,
                 /* cl_uint *num_platforms */ &num_platforms);
-        switch (err) {
-                case CL_SUCCESS:
-                        break;
-                case CL_INVALID_VALUE:
-                        fprintf(stderr, "clGetPlatformIDs CL_INVALID_VALUE\\n");
-                        return 1;
-        }
+    check_error("clGetPlatformIDs", err);
 
-        cl_device_id device_id;
-        err = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, 1, &device_id, NULL);
-        switch (err) {
-                case CL_SUCCESS:
-                        break;
-                case CL_INVALID_PLATFORM:
-                        fprintf(stderr, "clGetDeviceIDs CL_INVALID_PLATFORM\\n");
-                        return 1;
-                case CL_INVALID_DEVICE_TYPE:
-                        fprintf(stderr, "clGetDeviceIDs CL_INVALID_DEVICE_TYPE\\n");
-                        return 1;
-                case CL_INVALID_VALUE:
-                        fprintf(stderr, "clGetDeviceIDs CL_INVALID_VALUE\\n");
-                        return 1;
-                case CL_DEVICE_NOT_FOUND:
-                        fprintf(stderr, "clGetDeviceIDs CL_DEVICE_NOT_FOUND\\n");
-                        return 1;
-                default:
-                        fprintf(stderr, "clGetDeviceIDs %d\\n", err);
-                        return 1;
-        }
+    cl_device_id device_id;
+    err = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, 1, &device_id, NULL);
+    check_error("clGetDeviceIDs", err);
 
-        cl_context ctx = clCreateContext(
-                /* cl_context_properties *properties */ NULL,
-                /* cl_uint num_devices */ 1,
-                /* const cl_device_id *devices */ &device_id,
-                /* void *pfn_notify */ NULL,
-                /* void *user_data */ NULL,
-                /* cl_int *errcode_ret */ &err);
-        switch (err) {
-                case CL_SUCCESS:
-                        break;
-                case CL_INVALID_PLATFORM:
-                        fprintf(stderr, "clCreateContext CL_INVALID_PLATFORM\\n");
-                        return 1;
-                case CL_INVALID_DEVICE:
-                        fprintf(stderr, "clCreateContext CL_INVALID_DEVICE\\n");
-                        return 1;
-                case CL_INVALID_VALUE:
-                        fprintf(stderr, "clCreateContext CL_INVALID_VALUE\\n");
-                        return 1;
-                case CL_DEVICE_NOT_AVAILABLE:
-                        fprintf(stderr, "clCreateContext CL_DEVICE_NOT_AVAILABLE\\n");
-                        return 1;
-                case CL_OUT_OF_HOST_MEMORY:
-                        fprintf(stderr, "clCreateContext CL_OUT_OF_HOST_MEMORY\\n");
-                        return 1;
-                default:
-                        fprintf(stderr, "clCreateContext %d\\n", err);
-                        return 1;
-        }
+    cl_context ctx = clCreateContext(
+            /* cl_context_properties *properties */ NULL,
+            /* cl_uint num_devices */ 1,
+            /* const cl_device_id *devices */ &device_id,
+            /* void *pfn_notify */ NULL,
+            /* void *user_data */ NULL,
+            /* cl_int *errcode_ret */ &err);
+    check_error("clCreateContext", err);
 
-        cl_command_queue queue = clCreateCommandQueue(
-                /* cl_context context */ ctx,
-                /* cl_device_id device */ device_id,
-                /* cl_command_queue_properties properties */ 0,
-                /* cl_int *errcode_ret */ &err);
-        switch (err) {
-                case CL_SUCCESS:
-                        break;
-                case CL_INVALID_CONTEXT:
-                        fprintf(stderr, "clCreateCommandQueue CL_INVALID_CONTEXT\\n");
-                        return 1;
-                case CL_INVALID_DEVICE:
-                        fprintf(stderr, "clCreateCommandQueue CL_INVALID_DEVICE\\n");
-                        return 1;
-                case CL_INVALID_VALUE:
-                        fprintf(stderr, "clCreateCommandQueue CL_INVALID_VALUE\\n");
-                        return 1;
-                case CL_INVALID_QUEUE_PROPERTIES:
-                        fprintf(stderr, "clCreateCommandQueue CL_INVALID_QUEUE_PROPERTIES\\n");
-                        return 1;
-                case CL_OUT_OF_HOST_MEMORY:
-                        fprintf(stderr, "clCreateCommandQueue CL_OUT_OF_HOST_MEMORY\\n");
-                        return 1;
-                default:
-                        fprintf(stderr, "clCreateCommandQueue %d\\n", err);
-                        return 1;
-        }
+    cl_command_queue queue = clCreateCommandQueue(
+        /* cl_context context */ ctx,
+        /* cl_device_id device */ device_id,
+        /* cl_command_queue_properties properties */ 0,
+        /* cl_int *errcode_ret */ &err);
+    check_error("clCreateCommandQueue", err);
 
-        cl_program program = clCreateProgramWithSource(ctx, 1, (const char **) &kernel_src, NULL, &err);
-        switch (err) {
-                case CL_SUCCESS:
-                        break;
-                case CL_INVALID_CONTEXT:
-                        fprintf(stderr, "clCreateProgramWithSource CL_INVALID_CONTEXT\\n");
-                        return 1;
-                case CL_INVALID_VALUE:
-                        fprintf(stderr, "clCreateProgramWithSource CL_INVALID_VALUE\\n");
-                        return 1;
-                case CL_OUT_OF_HOST_MEMORY:
-                        fprintf(stderr, "clCreateProgramWithSource CL_OUT_OF_HOST_MEMORY\\n");
-                        return 1;
-                default:
-                        fprintf(stderr, "clCreateProgramWithSource %d\\n", err);
-                        return 1;
-        }
+    cl_program program = clCreateProgramWithSource(ctx, 1, (const char **) &kernel_src, NULL, &err);
+    check_error("clCreateProgramWithSource", err);
 
-        err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
-        if (err != CL_SUCCESS) {
-                size_t len;
-                char buffer[2048];
+    err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
+    check_error("clBuildProgram", err);
 
-                fprintf(stderr, "clBuildProgram build log:\\n");
-                clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &len);
-                fprintf(stderr, "%s\\n", buffer);
-                exit(1);
+    cl_kernel kernel = clCreateKernel(program, kernel_name, &err);
+    check_error("clCreateKernel", err);
 
-                switch (err) {
-                        case CL_INVALID_PROGRAM:
-                                fprintf(stderr, "clGetProgramBuildInfo CL_INVALID_PROGRAM\\n");
-                                return 1;
-                        case CL_INVALID_VALUE:
-                                fprintf(stderr, "clGetProgramBuildInfo CL_INVALID_VALUE\\n");
-                                return 1;
-                        case CL_INVALID_DEVICE:
-                                fprintf(stderr, "clGetProgramBuildInfo CL_INVALID_DEVICE\\n");
-                                return 1;
-                        case CL_INVALID_BINARY:
-                                fprintf(stderr, "clGetProgramBuildInfo CL_INVALID_BINARY\\n");
-                                return 1;
-                        case CL_INVALID_BUILD_OPTIONS:
-                                fprintf(stderr, "clGetProgramBuildInfo CL_INVALID_BUILD_OPTIONS\\n");
-                                return 1;
-                        case CL_INVALID_OPERATION:
-                                fprintf(stderr, "clGetProgramBuildInfo CL_INVALID_OPERATION\\n");
-                                return 1;
-                        case CL_COMPILER_NOT_AVAILABLE:
-                                fprintf(stderr, "clGetProgramBuildInfo CL_COMPILER_NOT_AVAILABLE\\n");
-                                return 1;
-                        case CL_BUILD_PROGRAM_FAILURE:
-                                fprintf(stderr, "clGetProgramBuildInfo CL_BUILD_PROGRAM_FAILURE\\n");
-                                return 1;
-                        case CL_OUT_OF_HOST_MEMORY:
-                                fprintf(stderr, "clGetProgramBuildInfo CL_OUT_OF_HOST_MEMORY\\n");
-                                return 1;
-                        default:
-                                fprintf(stderr, "clGetProgramBuildInfo %d\\n", err);
-                                return 1;
-                }
-        }
+{data_block}
 
-        cl_kernel kernel = clCreateKernel(program, kernel_name, &err);
-        switch (err) {
-                case CL_SUCCESS:
-                        break;
-                case CL_INVALID_PROGRAM:
-                        fprintf(stderr, "clCreateContext CL_INVALID_PROGRAM\\n");
-                        return 1;
-                case CL_INVALID_PROGRAM_EXECUTABLE:
-                        fprintf(stderr, "clCreateContext CL_INVALID_PROGRAM_EXECUTABLE\\n");
-                        return 1;
-                case CL_INVALID_VALUE:
-                        fprintf(stderr, "clCreateContext CL_INVALID_VALUE\\n");
-                        return 1;
-                case CL_INVALID_KERNEL_NAME:
-                        fprintf(stderr, "clCreateContext CL_INVALID_KERNEL_NAME\\n");
-                        return 1;
-                case CL_INVALID_KERNEL_DEFINITION:
-                        fprintf(stderr, "clCreateContext CL_INVALID_KERNEL_DEFINITION\\n");
-                        return 1;
-                case CL_OUT_OF_HOST_MEMORY:
-                        fprintf(stderr, "clCreateContext CL_OUT_OF_HOST_MEMORY\\n");
-                        return 1;
-                default:
-                        fprintf(stderr, "clCreateContext %d\\n", err);
-                        return 1;
-        }
-
-        return 0;
-}
-"""
+    printf("done.\\n");
+    return 0;
+}}
+""".format(**vars())
     return c
