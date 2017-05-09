@@ -30,20 +30,6 @@ _GLOBAL_TIMER = "__global__"
 _timers = {}
 
 
-class Error(Exception):
-    """
-    Module-level error class.
-    """
-    pass
-
-
-class TimerNameError(Error):
-    """
-    Thrown in case of timer name conflicts or lookup misses.
-    """
-    pass
-
-
 def isrunning(name=None):
     """
     Check if a timer is running.
@@ -95,13 +81,13 @@ def start(name=None, unique=False):
 
     Raises:
 
-        TimerNameError: If `unique' is true and a timer with
+        ValueError: If `unique' is true and a timer with
           the same name already exists.
     """
     name = name or _GLOBAL_TIMER
 
     if unique and isrunning(name):
-        raise TimerNameError("A timer named '{}' already exists".format(name))
+        raise ValueError("A timer named '{}' already exists".format(name))
 
     _add_timer(name)
 
@@ -133,7 +119,7 @@ def stop(name=None, **kwargs):
 
     Raises:
 
-        TimerNameError: If the named timer does not exist.
+        LookupError: If the named timer does not exist.
     """
     name = name or _GLOBAL_TIMER
 
@@ -141,7 +127,7 @@ def stop(name=None, **kwargs):
         if name == _GLOBAL_TIMER:
             raise Error("Global timer has not been started")
         else:
-            raise TimerNameError("No timer named '{}'".format(name))
+            raise LookupError("No timer named '{}'".format(name))
 
     elapsed = int(round(_stop_timer(name)))
     if name == _GLOBAL_TIMER:
@@ -168,10 +154,10 @@ def reset(name=None):
 
     Raises:
 
-        TimerNameError: If the named timer does not exist.
+        LookupError: If the named timer does not exist.
     """
     if name not in _timers:
-        raise TimerNameError("No timer named '{}'".format(name))
+        raise LookupError("No timer named '{}'".format(name))
 
     _add_timer(name)
 
@@ -183,6 +169,6 @@ def elapsed(name=None):
         if name == _GLOBAL_TIMER:
             raise Error("Global timer has not been started")
         else:
-            raise TimerNameError("No timer named '{}'".format(name))
+            raise LookupError("No timer named '{}'".format(name))
 
     return _get_elapsed_time(name)
