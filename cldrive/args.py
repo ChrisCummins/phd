@@ -15,6 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with cldrive.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""
+Attributes
+----------
+NUMPY_TYPES : Dict[str, np.dtype]
+    A lookup table mapping OpenCL data type names to the corresponding numpy
+    data type.
+
+NUMPY_TYPES : Dict[np.dtype, str]
+    The inverse lookup table of NUMPY_TYPES.
+"""
 import re
 
 from pathlib import Path
@@ -28,6 +38,30 @@ from pycparser import preprocess_file
 from pycparser.c_ast import FileAST, NodeVisitor, PtrDecl, TypeDecl, Struct, IdentifierType
 from pycparser.plyparser import ParseError
 from pycparserext.ext_c_parser import OpenCLCParser
+
+
+NUMPY_TYPES = {
+    "bool": np.dtype("bool"),
+    "char": np.dtype("int8"),
+    "double": np.dtype("float64"),
+    "float": np.dtype("float32"),
+    "half": np.dtype("uint8"),
+    "int": np.dtype("int32"),
+    "long": np.dtype("int64"),
+    "short": np.dtype("int16"),
+    "uchar": np.dtype("uint8"),
+    "uint": np.dtype("uint32"),
+    "ulong": np.dtype("uint64"),
+    "unsigned char": np.dtype("uint8"),
+    "unsigned int": np.dtype("uint32"),
+    "unsigned long": np.dtype("uint64"),
+    "unsigned short": np.dtype("uint16"),
+    "ushort": np.dtype("uint16"),
+    "void": np.dtype("int64"),
+}
+
+
+OPENCL_TYPES = dict((v, k) for k, v in NUMPY_TYPES.items())
 
 
 class OpenCLPreprocessError(ValueError):
@@ -96,29 +130,10 @@ class KernelArg(object):
         self.typename = " ".join(typenames)
         self.bare_type = self.typename.rstrip('0123456789')
 
-        numpy_types = {
-            "bool": np.bool_,
-            "char": np.int8,
-            "double": np.float64,
-            "float": np.float32,
-            "half": np.uint8,
-            "int": np.int32,
-            "long": np.int64,
-            "short": np.int16,
-            "uchar": np.uint8,
-            "uint": np.uint32,
-            "ulong": np.uint64,
-            "unsigned char": np.uint8,
-            "unsigned int": np.uint32,
-            "unsigned long": np.uint64,
-            "unsigned short": np.uint16,
-            "ushort": np.uint16,
-            "void": np.int64,
-        }
         try:
-            self.numpy_type = numpy_types[self.bare_type]
+            self.numpy_type = NUMPY_TYPES[self.bare_type]
         except KeyError:
-            supported_types_str = ",".join(sorted(numpy_types.keys()))
+            supported_types_str = ",".join(sorted(NUMPY_TYPES.keys()))
             raise OpenCLValueError(f"""\
 unsupported type '{self.typename}' for argument \
 '{self.quals_str}{self.typename} {self.name}'. \
