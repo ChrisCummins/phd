@@ -16,6 +16,7 @@ from unittest import main
 from tests import TestCase
 
 import re
+import os
 
 import labm8 as lab
 from labm8 import prof
@@ -28,14 +29,9 @@ else:
 
 class TestProf(TestCase):
 
-    def test_anonymous_timer(self):
-        buf = StringIO()
-
-        prof.start()
-        prof.stop(file=buf)
-
-        out = buf.getvalue()
-        self._test("PROF", re.search("PROF", out).group(0))
+    def __init__(self, *args, **kwargs):
+        super(TestProf, self).__init__(*args, **kwargs)
+        os.environ["PROFILE"] = "1"
 
     def test_named_timer(self):
         buf = StringIO()
@@ -44,8 +40,7 @@ class TestProf(TestCase):
         prof.stop("foo", file=buf)
 
         out = buf.getvalue()
-        self._test("PROF", re.search("PROF", out).group(0))
-        self._test(" foo: ", re.search(" foo: ", out).group(0))
+        self._test(" foo ", re.search(" foo ", out).group(0))
 
     def test_named_timer(self):
         buf = StringIO()
@@ -55,38 +50,21 @@ class TestProf(TestCase):
         prof.stop("bar", file=buf)
 
         out = buf.getvalue()
-        self._test("PROF", re.search("PROF", out).group(0))
-        self._test(None, re.search(" foo: ", out))
-        self._test(" bar: ", re.search(" bar: ", out).group(0))
+        self._test(None, re.search(" foo ", out))
+        self._test(" bar ", re.search(" bar ", out).group(0))
 
         prof.stop("foo", file=buf)
 
         out = buf.getvalue()
-        self._test("PROF", re.search("PROF", out).group(0))
-        self._test(" foo: ", re.search(" foo: ", out).group(0))
-        self._test(" bar: ", re.search(" bar: ", out).group(0))
-
-    def test_reset(self):
-        prof.start("foo")
-        prof.reset("foo")
-        prof.stop("foo")
+        self._test(" foo ", re.search(" foo ", out).group(0))
+        self._test(" bar ", re.search(" bar ", out).group(0))
 
     def test_stop_twice_error(self):
         prof.start("foo")
         prof.stop("foo")
-        with self.assertRaises(LookupError):
+        with self.assertRaises(KeyError):
             prof.stop("foo")
 
     def test_stop_bad_name_error(self):
-        with self.assertRaises(LookupError):
+        with self.assertRaises(KeyError):
             prof.stop("not a timer")
-
-    def test_reset_bad_name_error(self):
-        with self.assertRaises(LookupError):
-            prof.reset("not a timer")
-
-    def test_unique_error(self):
-        prof.start("foo")
-        prof.start("foo")
-        with self.assertRaises(ValueError):
-            prof.start("foo", unique=True)

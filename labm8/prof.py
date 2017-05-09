@@ -17,7 +17,10 @@ Profiling API for timing critical paths in code.
 """
 from __future__ import absolute_import
 
+import inspect
+import os
 import random
+import sys
 
 from time import time
 
@@ -26,11 +29,22 @@ from labm8 import fs
 from labm8 import io
 
 
-_GLOBAL_TIMER = "__default_timer__"
-_timers = {}
+__TIMERS = {}
 
 
-def isrunning(name=None):
+def is_enabled():
+    return os.environ.get("PROFILE") is not None
+
+
+def enable():
+    os.envion["PROFILE"] = True
+
+
+def disable():
+    os.environ["PROFILE"] = False
+
+
+def isrunning(name):
     """
     Check if a timer is running.
 
@@ -42,11 +56,10 @@ def isrunning(name=None):
 
         bool: True if timer is running, else False.
     """
-    name = name or _GLOBAL_TIMER
     return name in _timers
 
 
-def start(name=None, unique=False):
+def start(name):
     """
     Start a new profiling timer.
 
@@ -59,100 +72,83 @@ def start(name=None, unique=False):
           is unique. This is to prevent accidentally resetting an
           existing timer.
 
-    Raises:
+    Returns:
 
-        ValueError: If `unique' is true and a timer with
-          the same name already exists.
+        bool: Whether or not profiling is enabled.
     """
-    name = name or _GLOBAL_TIMER
-
-    if unique and name in _timers:
-        raise ValueError("A timer named '{}' already exists".format(name))
-
-    _timers[name] = time()
+    if is_enabled():
+        __TIMERS[name] = time()
+    return is_enabled()
 
 
-def stop(name=None, **kwargs):
+def stop(name, file=sys.stderr):
     """
-    Stop a timer.
+    Stop a profiling timer.
 
     Arguments:
 
-       name (str, optional): The name of the timer to stop. If no name
-         is given, stop the global anonymous timer.
-
-    Raises:
-
-        LookupError: If the named timer does not exist.
-    """
-    quiet = kwargs.pop("quiet", False)
-    name = name or _GLOBAL_TIMER
-
-    if name not in _timers:
-        if name == _GLOBAL_TIMER:
-            raise Error("Global timer has not been started")
-        else:
-            raise LookupError("No timer named '{}'".format(name))
-
-    elapsed = int(round((time() - _timers[name]) * 1000))
-    del _timers[name]
-
-    if name == _GLOBAL_TIMER:
-        name = "Timer"
-
-    if not quiet:
-        io.prof("{}: {} ms".format(name, elapsed), **kwargs)
-
-
-def reset(name=None):
-    """
-    Reset a timer.
-
-    Arguments:
-
-        name (str, optional): The name of the timer to reset. If no
-          name is given, reset the global anonymous timer.
-
-    Raises:
-
-        LookupError: If the named timer does not exist.
-    """
-    name = name or _GLOBAL_TIMER
-
-    if name not in _timers:
-        raise LookupError("No timer named '{}'".format(name))
-
-    _timers[name] = time()
-
-
-def elapsed(name=None):
-    """
-    Reset a timer.
-
-    Arguments:
-
-        name (str, optional): The name of the timer to reset. If no
-          name is given, reset the global anonymous timer.
+        name (str): The name of the timer to stop. If no name is given, stop
+            the global anonymous timer.
 
     Returns:
 
-        float: Elapsed time, in milliseconds.
+        bool: Whether or not profiling is enabled.
 
     Raises:
 
-        LookupError: If the named timer does not exist.
+        KeyError: If the named timer does not exist.
     """
-    name = name or _GLOBAL_TIMER
+    if is_enabled():
+        elapsed = (time() - __TIMERS[name]) * 1000
+        del __TIMERS[name]
+        print(f"[prof] {name}  {elapsed:.1f} ms", file=file)
+    return is_enabled()
 
-    if name not in _timers:
-        if name == _GLOBAL_TIMER:
-            raise LookupError("Global timer has not been started")
-        else:
-            raise LookupError("No timer named '{}'".format(name))
 
-    return (time() - _timers[name]) * 1000
+def get_class_that_defined_method(meth):
+    """
+    Written by @Yoel http://stackoverflow.com/a/25959545
+    """
+    if inspect.ismethod(meth):
+        for cls in inspect.getmro(meth.__self__.__class__):
+           if cls.__dict__.get(meth.__name__) is meth:
+                return cls
+        meth = meth.__func__ # fallback to __qualname__ parsing
+    if inspect.isfunction(meth):
+        cls = getattr(inspect.getmodule(meth),
+                      meth.__qualname__.split('.<locals>', 1)[0].rsplit('.', 1)[0])
+        if isinstance(cls, type):
+            return cls
+    return None # not required since None would have been implicitly returned anyway
+
+
+def profile(fun, *args, **kwargs):
+    """
+    Profile a function.
+    """
+    timer_name = kwargs.pop("prof_name")
+
+    if not timer_name:
+        module = inspect.getmodule(fun)
+        c = [module.__name__]
+        parentclass = get_class_that_defined_method(fun)
+        if parentclass:
+            c.append(parentclass.__name__)
+        c.append(fun.__name__)
+        timer_name = ".".join(c)
+
+    start(timer_name)
+    ret = fun(*args, **kwargs)
+    stop(timer_name)
+    return ret
 
 
 def timers():
-    for name in _timers:
-        yield name, elapsed(name)
+    """
+    Iterate over all timers.
+
+    Returns:
+        Iterable[str]: An iterator over all time names.
+    """
+    for name in __TIMERS:
+        yield name
