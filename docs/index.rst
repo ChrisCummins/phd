@@ -19,6 +19,13 @@ cldrive.args
    :members:
    :undoc-members:
 
+cldrive.cgen
+------------
+
+.. automodule:: cldrive.cgen
+   :members:
+   :undoc-members:
+
 cldrive.env
 -----------
 

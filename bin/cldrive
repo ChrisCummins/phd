@@ -41,6 +41,10 @@ suitable device, and prints the outputs. Copyright (C) 2017 Chris Cummins \
         "--clinfo", action="store_true",
         help="list available OpenCL devices and exit")
 
+    parser.add_argument(
+        "--emit-c", action="store_true",
+        help="generate standalone C code")
+
     # environment controls
     parser.add_argument(
         "-p", "--platform", metavar="<platform name>", default=None,
@@ -112,22 +116,35 @@ suitable device, and prints the outputs. Copyright (C) 2017 Chris Cummins \
     inputs = make_data(src=src, size=args.size, data_generator=data_generator,
                        scalar_val=args.scalar_val)
 
-    outputs = drive(env=env, src=src, inputs=inputs, gsize=gsize, lsize=lsize,
-                    optimizations=not args.no_opts, profiling=args.profiling,
-                    debug=args.debug, timeout=args.timeout)
+    drive_args = {
+        "env": env,
+        "src": src,
+        "inputs": inputs,
+        "gsize": gsize,
+        "lsize": lsize,
+        "optimizations": not args.no_opts,
+        "profiling": args.profiling,
+        "debug": args.debug,
+        "timeout": args.timeout,
+    }
 
-    # print result
-    if args.binary:
-        d = pickle.dumps(outputs)
-        sys.stdout = TextIOWrapper(sys.stdout.detach(), encoding='latin-1')
-        print(d.decode('latin-1'), end='', flush=True)
+    if args.emit_c:
+        print(emit_c(**drive_args))
     else:
-        np.set_printoptions(threshold=np.nan)
-        args = [arg for arg in extract_args(src)
-                if not arg.address_space == 'local']
-        assert(len(args) == len(outputs))
-        for arr, arg in zip(outputs, args):
-            print(f"{arg.name}: {arr}")
+        outputs = drive(**drive_args)
+
+        # print result
+        if args.binary:
+            d = pickle.dumps(outputs)
+            sys.stdout = TextIOWrapper(sys.stdout.detach(), encoding='latin-1')
+            print(d.decode('latin-1'), end='', flush=True)
+        else:
+            np.set_printoptions(threshold=np.nan)
+            args = [arg for arg in extract_args(src)
+                    if not arg.address_space == 'local']
+            assert(len(args) == len(outputs))
+            for arr, arg in zip(outputs, args):
+                print(f"{arg.name}: {arr}")
 
 
 if __name__ == "__main__":
