@@ -172,7 +172,7 @@ Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
         sys.stdout.flush()
         sys.stderr.flush()
         print("\nkeyboard interrupt, terminating", file=sys.stderr)
-        log.exit(1)
+        sys.exit(1)
     except clgen.UserError as e:
         _user_message(e)
     except clgen.File404 as e:
