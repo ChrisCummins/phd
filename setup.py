@@ -21,7 +21,7 @@ with open('./requirements.txt') as infile:
     requirements = [x.strip() for x in infile.readlines() if x.strip()]
 
 setup(name="labm8",
-      version="0.0.20.dev0",
+      version="0.0.21",
       description="Utils for manipulating quantitative experimental data",
       url="https://github.com/ChrisCummins/labm8",
       author="Chris Cummins",
