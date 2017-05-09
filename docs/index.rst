@@ -10,42 +10,36 @@ cldrive
 -------
 .. automodule:: cldrive
    :members:
-   :undoc-members:
 
 cldrive.args
 ------------
 
 .. automodule:: cldrive.args
    :members:
-   :undoc-members:
 
 cldrive.cgen
 ------------
 
 .. automodule:: cldrive.cgen
    :members:
-   :undoc-members:
 
 cldrive.env
 -----------
 
 .. automodule:: cldrive.env
    :members:
-   :undoc-members:
 
 cldrive.data
 ------------
 
 .. automodule:: cldrive.data
    :members:
-   :undoc-members:
 
 cldrive.driver
 --------------
 
 .. automodule:: cldrive.driver
    :members:
-   :undoc-members:
 
 
 Command Line Interface
