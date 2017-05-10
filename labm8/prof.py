@@ -41,7 +41,7 @@ def enable():
 
 
 def disable():
-    os.environ.pop("PROFILE")
+    os.environ.pop("PROFILE", None)
 
 
 def isrunning(name):
@@ -126,7 +126,7 @@ def profile(fun, *args, **kwargs):
     """
     Profile a function.
     """
-    timer_name = kwargs.pop("prof_name")
+    timer_name = kwargs.pop("prof_name", None)
 
     if not timer_name:
         module = inspect.getmodule(fun)
