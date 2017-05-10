@@ -16,6 +16,9 @@
 """
 Python type utilities.
 """
+import inspect
+import sys
+
 from collections import Mapping
 from six import string_types
 
@@ -98,3 +101,33 @@ def dict_values(src):
                 yield v
         else:
             yield v
+
+
+def get_class_that_defined_method(meth):
+    """
+    Return the class that defines a method.
+
+    Arguments:
+        meth (str): Class method.
+
+    Returns:
+        class: Class object, or None if not a class method.
+    """
+    if sys.version_info >= (3, 0):
+        # Written by @Yoel http://stackoverflow.com/a/25959545
+        if inspect.ismethod(meth):
+            for cls in inspect.getmro(meth.__self__.__class__):
+               if cls.__dict__.get(meth.__name__) is meth:
+                    return cls
+            meth = meth.__func__ # fallback to __qualname__ parsing
+        if inspect.isfunction(meth):
+            cls = getattr(inspect.getmodule(meth),
+                          meth.__qualname__.split('.<locals>', 1)[0].rsplit('.', 1)[0])
+            if isinstance(cls, type):
+                return cls
+    else:
+        # Writted by @Alex Martelli http://stackoverflow.com/a/961057
+        for cls in inspect.getmro(meth.im_class):
+            if meth.__name__ in cls.__dict__:
+                return cls
+    return None

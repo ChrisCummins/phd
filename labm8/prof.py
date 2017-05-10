@@ -28,6 +28,7 @@ from time import time
 import labm8 as lab
 from labm8 import fs
 from labm8 import io
+from labm8 import types
 
 
 __TIMERS = {}
@@ -106,23 +107,6 @@ def stop(name, file=sys.stderr):
     return is_enabled()
 
 
-def get_class_that_defined_method(meth):
-    """
-    Written by @Yoel http://stackoverflow.com/a/25959545
-    """
-    if inspect.ismethod(meth):
-        for cls in inspect.getmro(meth.__self__.__class__):
-           if cls.__dict__.get(meth.__name__) is meth:
-                return cls
-        meth = meth.__func__ # fallback to __qualname__ parsing
-    if inspect.isfunction(meth):
-        cls = getattr(inspect.getmodule(meth),
-                      meth.__qualname__.split('.<locals>', 1)[0].rsplit('.', 1)[0])
-        if isinstance(cls, type):
-            return cls
-    return None # not required since None would have been implicitly returned anyway
-
-
 def profile(fun, *args, **kwargs):
     """
     Profile a function.
@@ -132,7 +116,7 @@ def profile(fun, *args, **kwargs):
     if not timer_name:
         module = inspect.getmodule(fun)
         c = [module.__name__]
-        parentclass = get_class_that_defined_method(fun)
+        parentclass = types.get_class_that_defined_method(fun)
         if parentclass:
             c.append(parentclass.__name__)
         c.append(fun.__name__)
