@@ -101,9 +101,16 @@ def stop(name, file=sys.stderr):
         KeyError: If the named timer does not exist.
     """
     if is_enabled():
-        elapsed = (time() - __TIMERS[name]) * 1000
+        elapsed = (time() - __TIMERS[name])
+        if elapsed > 60:
+            elapsed_str = '{:.1f} m'.format(elapsed / 60)
+        elif elapsed > 1:
+            elapsed_str = '{:.1f} s'.format(elapsed)
+        else:
+            elapsed_str = '{:.1f} ms'.format(elapsed * 1000)
+
         del __TIMERS[name]
-        print("[prof] {}  {:.1f} ms".format(name, elapsed), file=file)
+        print("[prof]", name, elapsed_str, file=file)
     return is_enabled()
 
 
