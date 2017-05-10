@@ -75,3 +75,16 @@ class TestProf(TestCase):
     def test_stop_bad_name_error(self):
         with self.assertRaises(KeyError):
             prof.stop("not a timer")
+
+    def test_profile(self):
+        def test_fn(x, y):
+            return x + y
+
+        self.assertEquals(prof.profile(test_fn, 1, 2), 3)
+
+    def test_timers(self):
+        x = len(list(prof.timers()))
+        prof.start("new timer")
+        self.assertEquals(len(list(prof.timers())), x + 1)
+        prof.stop("new timer")
+        self.assertEquals(len(list(prof.timers())), x)
