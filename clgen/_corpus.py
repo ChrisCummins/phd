@@ -31,6 +31,7 @@ from labm8 import crypto
 from labm8 import fs
 from labm8 import jsonutil
 from labm8 import lockfile
+from labm8 import prof
 from labm8 import tar
 from labm8 import types
 from subprocess import Popen, PIPE
@@ -611,4 +612,4 @@ class Corpus(clgen.CLgenObject):
         if "contentfiles" in corpus_json:
             del corpus_json["contentfiles"]
 
-        return Corpus(uid, path=path, **corpus_json)
+        return prof.profile(Corpus, uid, path=path, **corpus_json)

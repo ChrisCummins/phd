@@ -19,13 +19,14 @@
 """
 Command line interface to clgen.
 """
+import cProfile
 import argparse
 import os
 import sys
 import traceback
 
 from argparse import RawTextHelpFormatter
-from labm8 import fs
+from labm8 import fs, prof
 from sys import exit
 
 import clgen
@@ -49,6 +50,7 @@ class ArgumentParser(argparse.ArgumentParser):
     Differs from python argparse.ArgumentParser in the following areas:
       * Adds an optional `--verbose` flag and initializes the logging engine.
       * Adds a `--debug` flag for more verbose crashes.
+      * Adds a `--profile` flag for internal profiling.
       * Adds an optional `--version` flag which prints version information and
         quits.
       * Defaults to using raw formatting for help strings, which disables line
@@ -85,6 +87,8 @@ Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
                           help="increase output verbosity")
         self.add_argument("--debug", action="store_true",
                           help="in case of error, print debugging information")
+        self.add_argument("--profile", action="store_true",
+                          help="enable internal API profiling")
 
     def parse_args(self, args=sys.argv[1:], namespace=None):
         """
@@ -103,6 +107,10 @@ Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
         # set debug option
         if args_ns.debug:
             os.environ["DEBUG"] = "1"
+
+        # set profile option
+        if args_ns.profile:
+            prof.enable()
 
         return args_ns
 
@@ -166,7 +174,13 @@ Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
         return method(*args, **kwargs)
 
     try:
-        return method(*args, **kwargs)
+        def run():
+            method(*args, **kwargs)
+
+        if prof.is_enabled():
+            return cProfile.runctx('run()', None, locals(), sort='tottime')
+        else:
+            return run()
     except clgen.UserError as e:
         log.fatal(e, "(" + type(e).__name__  + ")")
     except KeyboardInterrupt:
