@@ -80,11 +80,11 @@ class TestProf(TestCase):
         def test_fn(x, y):
             return x + y
 
-        self.assertEquals(prof.profile(test_fn, 1, 2), 3)
+        self.assertEqual(prof.profile(test_fn, 1, 2), 3)
 
     def test_timers(self):
         x = len(list(prof.timers()))
         prof.start("new timer")
-        self.assertEquals(len(list(prof.timers())), x + 1)
+        self.assertEqual(len(list(prof.timers())), x + 1)
         prof.stop("new timer")
-        self.assertEquals(len(list(prof.timers())), x)
+        self.assertEqual(len(list(prof.timers())), x)
