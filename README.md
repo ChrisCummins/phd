@@ -29,11 +29,14 @@ $ pip install cldrive
 From the command line:
 ```sh
 $ cat kernel.cl
-kernel void double_inputs(global int* arr) {
-    arr[get_global_id(0)] *= 2;
+kernel void my_kernel(global int* a, global int* b) {
+    int tid = get_global_id(0);
+    a[tid] += 1;
+    b[tid] = a[tid] * 2;
 }
-$ cldrive < kernel.cl --devtype=gpu --generator=arange --size 16 -g 16,1,1 -l 4,1,1
-arr: [ 0  2  4  6  8 10 12 14 16 18 20 22 24 26 28 30]
+$ cldrive < kernel.cl --devtype=gpu --generator=arange --size 12 -g 12,1,1 -l 4,1,1
+a: [ 1  2  3  4  5  6  7  8  9 10 11 12]
+b: [ 2  4  6  8 10 12 14 16 18 20 22 24]
 ```
 
 From Python:
