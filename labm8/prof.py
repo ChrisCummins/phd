@@ -37,11 +37,11 @@ def is_enabled():
 
 
 def enable():
-    os.envion["PROFILE"] = True
+    os.environ["PROFILE"] = "1"
 
 
 def disable():
-    os.environ["PROFILE"] = False
+    os.environ.pop("PROFILE")
 
 
 def isrunning(name):

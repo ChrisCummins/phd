@@ -33,6 +33,13 @@ class TestProf(TestCase):
         super(TestProf, self).__init__(*args, **kwargs)
         os.environ["PROFILE"] = "1"
 
+    def test_enable_disable(self):
+        self.assertTrue(prof.is_enabled())
+        prof.disable()
+        self.assertFalse(prof.is_enabled())
+        prof.enable()
+        self.assertTrue(prof.is_enabled())
+
     def test_named_timer(self):
         buf = StringIO()
 
