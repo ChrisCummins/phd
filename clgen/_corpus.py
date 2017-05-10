@@ -24,7 +24,6 @@ import codecs
 import numpy as np
 import pickle
 
-from checksumdir import dirhash
 from collections import Counter
 from copy import deepcopy
 from labm8 import crypto
@@ -34,6 +33,7 @@ from labm8 import lockfile
 from labm8 import prof
 from labm8 import tar
 from labm8 import types
+from labm8.dirhashcache import DirHashCache
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
 from time import time
@@ -598,7 +598,9 @@ class Corpus(clgen.CLgenObject):
             if not fs.isdir(path):
                 raise clgen.UserError(
                     "Corpus path '{}' is not a directory".format(path))
-            uid = dirhash(path, 'sha1')
+
+            dirhashcache = DirHashCache(clgen.cachepath("dirhash.db"), 'sha1')
+            uid = prof.profile(dirhashcache.dirhash, path)
         elif uid:
             cache_path = clgen.mkcache("contentfiles", uid).path
             if not fs.isdir(cache_path):
