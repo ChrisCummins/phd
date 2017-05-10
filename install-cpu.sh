@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# One-liner to install CLgen 0.3.5.
+# One-liner to install CLgen 0.3.5.dev0.
 #
 # Copyright 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
 #
@@ -20,10 +20,10 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 set -ex
-wget https://github.com/ChrisCummins/clgen/archive/0.3.5.tar.gz -O clgen-0.3.5.tar.gz
-tar xf clgen-0.3.5.tar.gz
-rm clgen-0.3.5.tar.gz
-cd clgen-0.3.5
+wget https://github.com/ChrisCummins/clgen/archive/0.3.5.dev0.tar.gz -O clgen-0.3.5.dev0.tar.gz
+tar xf clgen-0.3.5.dev0.tar.gz
+rm clgen-0.3.5.dev0.tar.gz
+cd clgen-0.3.5.dev0
 ./configure --batch
 make
 
@@ -32,12 +32,12 @@ if [[ -n "$VIRTUAL_ENV" ]]; then
     make install
     make test
     cd ..
-    rm -rf clgen-0.3.5
+    rm -rf clgen-0.3.5.dev0
 else
     # system-wide - use sudo
     sudo -H make install
     sudo -H make test
     cd ..
-    sudo rm -rf clgen-0.3.5
+    sudo rm -rf clgen-0.3.5.dev0
 fi
-echo "==> CLgen 0.3.5 installed"
+echo "==> CLgen 0.3.5.dev0 installed"
