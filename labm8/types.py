@@ -126,8 +126,11 @@ def get_class_that_defined_method(meth):
             if isinstance(cls, type):
                 return cls
     else:
-        # Writted by @Alex Martelli http://stackoverflow.com/a/961057
-        for cls in inspect.getmro(meth.im_class):
-            if meth.__name__ in cls.__dict__:
-                return cls
+        try:
+            # Writted by @Alex Martelli http://stackoverflow.com/a/961057
+            for cls in inspect.getmro(meth.im_class):
+                if meth.__name__ in cls.__dict__:
+                    return cls
+        except AttributeError:
+            return None
     return None
