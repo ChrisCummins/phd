@@ -2,7 +2,7 @@
 
 \begin{document}
 
-\title{Plausible Test Case Generation for Identifying Compiler and Runtime Bugs}
+\title{Plausible Test Case Generation for Compiler and Runtime Bug Discovery}
 
 %
 % any author declaration will be ignored  when using 'pldi' option (for double blind review)
@@ -24,14 +24,6 @@
 
 \subsection{Differential test methodology}
 
-Figure~\ref{fig:difftest} shows the differential testing methodology for a single test case.
-
-\begin{enumerate}
-	\item Generate program code $S$.
-	\item For each compiler $C = \{C_1 \ldots C_n\}$, attempt to compile $S$.
-	\item For each compiler which produced program code, execute the program using each test case configuration $P = \{P_1 \ldots P_n\}$.
-\end{enumerate}
-
 \begin{figure}
   \centering
   \includegraphics[width=.9\columnwidth]{img/difftest} %
@@ -41,6 +33,15 @@ Figure~\ref{fig:difftest} shows the differential testing methodology for a singl
   }%
   \label{fig:difftest}
 \end{figure}
+
+Figure~\ref{fig:difftest} shows the differential testing methodology for a single test case.
+
+\begin{enumerate}
+	\item Generate string $S$.
+	\item For each compiler $C = \{C_1 \ldots C_n\}$, attempt to compile $S$.
+	\item For each compiler which produced a program binary, execute the program using each test case configuration $P = \{P_1 \ldots P_n\}$.
+    \item For each $p \in P$, compare outcomes $O_p = \{ O_{C_1,p} \ldots O_{C_n,p} \}$.
+\end{enumerate}
 
 
 \subsection{Classifying test results}
