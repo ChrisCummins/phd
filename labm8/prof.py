@@ -101,7 +101,7 @@ def stop(name, file=sys.stderr):
     if is_enabled():
         elapsed = (time() - __TIMERS[name]) * 1000
         del __TIMERS[name]
-        print(f"[prof] {name}  {elapsed:.1f} ms", file=file)
+        print("[prof] {}  {:.1f} ms".format(name, elapsed), file=file)
     return is_enabled()
 
 
