@@ -68,6 +68,23 @@ def all_module_data_files(module, datadir="data", excludes=[]):
     return files
 
 
+console_entry_points = {
+    'clgen-create-db': 'clgen.cli:create_db',
+    'clgen-dump': 'clgen.cli:dump',
+    'clgen-explore': 'clgen.cli:explore',
+    'clgen-features': 'clgen.cli:features',
+    'clgen-fetch-github': 'clgen.cli:fetch_github',
+    'clgen-fetch': 'clgen.cli:fetch',
+    'clgen-grid': 'clgen.cli:grid',
+    'clgen-merge': 'clgen.cli:merge',
+    'clgen-preprocess': 'clgen.cli:preprocess',
+    'clgen-refresh-cache': 'clgen.cli:refresh_cache',
+    'clgen-test': 'clgen.cli:test',
+    'clgen-train': 'clgen.cli:train',
+    'clgen': 'clgen.cli:clgen_main',
+}
+
+
 setup(
     name='CLgen',
     version='0.3.7.dev0',
@@ -88,21 +105,10 @@ setup(
             'data/cache',
         ]),
     },
-    scripts=[
-        'bin/clgen',
-        'bin/clgen-create-db',
-        'bin/clgen-dump',
-        'bin/clgen-explore',
-        'bin/clgen-features',
-        'bin/clgen-fetch-github',
-        'bin/clgen-fetch',
-        'bin/clgen-grid',
-        'bin/clgen-merge',
-        'bin/clgen-preprocess',
-        'bin/clgen-refresh-cache',
-        'bin/clgen-test',
-        'bin/clgen-train',
-    ],
+    entry_points={
+        'console_scripts': list(
+            f"{k}={v}" for k, v in console_entry_points.items())
+    },
     install_requires=read_requirements('requirements.txt'),
     cmdclass={'test': CLgenTestCommand},
     data_files=[],
