@@ -117,7 +117,8 @@ class Model(clgen.CLgenObject):
             cached_meta = jsonutil.read_file(self.cache["META"])
             self.stats = cached_meta["stats"]  # restore stats
 
-            del cached_meta["created"]
+            if "created" in cached_meta:
+                del cached_meta["created"]
             del meta["created"]
 
             if "created" in cached_meta["corpus"]:
@@ -128,7 +129,8 @@ class Model(clgen.CLgenObject):
                 del cached_meta["stats"]
             del meta["stats"]
 
-            del cached_meta["train_opts"]["epochs"]
+            if "epochs" in cached_meta["train_opts"]:
+                del cached_meta["train_opts"]["epochs"]
             del meta["train_opts"]["epochs"]
 
             if meta != cached_meta:

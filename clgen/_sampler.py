@@ -410,13 +410,16 @@ class Sampler(clgen.CLgenObject):
             cached_meta = jsonutil.read_file(cache["META"])
             self.stats = cached_meta["stats"]
 
-            del cached_meta["sampler"]["created"]
+            if "created" in cached_meta["sampler"]:
+                del cached_meta["sampler"]["created"]
             del meta["sampler"]["created"]
 
-            del cached_meta["sampler"]["min_samples"]
+            if "min_samples" in cached_meta["sampler"]:
+                del cached_meta["sampler"]["min_samples"]
             del meta["sampler"]["min_samples"]
 
-            del cached_meta["sampler"]["min_kernels"]
+            if "min_kernels" in cached_meta["sampler"]:
+                del cached_meta["sampler"]["min_kernels"]
             del meta["sampler"]["min_kernels"]
 
             del cached_meta["stats"]

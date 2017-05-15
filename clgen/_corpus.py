@@ -232,10 +232,12 @@ class Corpus(clgen.CLgenObject):
             cached_meta = jsonutil.read_file(self.cache["META"])
             self.stats = cached_meta["stats"]  # restore stats
 
-            del cached_meta["created"]
+            if "created" in cached_meta:
+                del cached_meta["created"]
             del meta["created"]
 
-            del cached_meta["stats"]
+            if "stats" in cached_meta:
+                del cached_meta["stats"]
             del meta["stats"]
 
             if meta != cached_meta:
