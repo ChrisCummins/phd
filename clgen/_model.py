@@ -134,6 +134,7 @@ class Model(clgen.CLgenObject):
             del meta["train_opts"]["epochs"]
 
             if meta != cached_meta:
+                log.error("Computed META:", jsonutil.format_json(meta))
                 raise clgen.InternalError(
                     "metadata mismatch in model %s" % self.cache["META"])
         else:
