@@ -96,6 +96,7 @@ setup(
         'bin/clgen-features',
         'bin/clgen-fetch-github',
         'bin/clgen-fetch',
+        'bin/clgen-grid',
         'bin/clgen-merge',
         'bin/clgen-preprocess',
         'bin/clgen-refresh-cache',
