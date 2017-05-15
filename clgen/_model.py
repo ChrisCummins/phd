@@ -139,8 +139,7 @@ class Model(clgen.CLgenObject):
         else:
             self._flush_meta()
 
-
-    def _init_tensorflow(self, infer: bool=False):
+    def _init_tensorflow(self, infer: bool=False) -> 'tf':
         """
         Deferred importing of tensorflow and initializing model for training
         or sampling.
@@ -229,7 +228,6 @@ class Model(clgen.CLgenObject):
 
         return tf
 
-
     def _get_params_path(self, ckpt) -> str:
         """ return path to checkpoint closest to target num of epochs """
         paths = ckpt.all_model_checkpoint_paths
@@ -248,8 +246,7 @@ class Model(clgen.CLgenObject):
 
         return closest_path, paths
 
-
-    def _locked_train(self):
+    def _locked_train(self) -> 'Model':
         tf = self._init_tensorflow(infer=False)
 
         # training options
@@ -336,12 +333,10 @@ class Model(clgen.CLgenObject):
 
         return self
 
-
-    def _flush_meta(self):
+    def _flush_meta(self) -> None:
         jsonutil.write_file(self.cache.keypath("META"), self.to_json())
 
-
-    def train(self):
+    def train(self) -> 'Model':
         """
         Train model.
 
@@ -352,7 +347,7 @@ class Model(clgen.CLgenObject):
             return self._locked_train()
 
     @property
-    def lock(self):
+    def lock(self) -> lockfile.LockFile:
         lockpath = self.cache.keypath("LOCK")
         return lockfile.LockFile(lockpath)
 
@@ -419,7 +414,6 @@ class Model(clgen.CLgenObject):
             return self.cache.path
         else:
             return None
-
 
     @staticmethod
     def from_json(model_json: dict) -> 'Model':
