@@ -8,8 +8,8 @@ clgen
 
 ::
 
-    usage: clgen [-h] [--version] [-v] [--debug] [--list-files] [--corpus-dir]
-                 [--model-dir] [--sampler-dir]
+    usage: clgen [-h] [--version] [-v] [--debug] [--profile] [--ls-files]
+                 [--corpus-dir] [--model-dir] [--sampler-dir]
                  <model> <sampler>
     
     Generate OpenCL programs using Deep Learning.
@@ -37,7 +37,8 @@ clgen
       --version      show version information and exit
       -v, --verbose  increase output verbosity
       --debug        in case of error, print debugging information
-      --list-files   print cached corpus, model, and sampler, files
+      --profile      enable internal API profiling
+      --ls-files     print cached corpus, model, and sampler, files
       --corpus-dir   print path to corpus cache
       --model-dir    print path to model cache
       --sampler-dir  print path to sampler cache
@@ -47,7 +48,9 @@ clgen-atomize
 
 ::
 
-    usage: clgen-atomize [-h] [--version] [-v] [--debug] [-t TYPE] [-s] input
+    usage: clgen-atomize [-h] [--version] [-v] [--debug] [--profile] [-t TYPE]
+                         [-s]
+                         input
     
     Extract and print corpus vocabulary.
     
@@ -62,6 +65,7 @@ clgen-atomize
       --version             show version information and exit
       -v, --verbose         increase output verbosity
       --debug               in case of error, print debugging information
+      --profile             enable internal API profiling
       -t TYPE, --type TYPE  vocabulary type
       -s, --size            print vocabulary size
 
@@ -70,7 +74,7 @@ clgen-create-db
 
 ::
 
-    usage: clgen-create-db [-h] [--version] [-v] [--debug] [-g] input
+    usage: clgen-create-db [-h] [--version] [-v] [--debug] [--profile] [-g] input
     
     Create an empty OpenCL kernel database.
     
@@ -85,6 +89,7 @@ clgen-create-db
       --version      show version information and exit
       -v, --verbose  increase output verbosity
       --debug        in case of error, print debugging information
+      --profile      enable internal API profiling
       -g, --github   generate dataset with GitHub metadata
 
 clgen-dump
@@ -92,8 +97,8 @@ clgen-dump
 
 ::
 
-    usage: clgen-dump [-h] [--version] [-v] [--debug] [-d] [-i] [--input-samples]
-                      [--eof] [-r] [-s STATUS]
+    usage: clgen-dump [-h] [--version] [-v] [--debug] [--profile] [-d] [-i]
+                      [--input-samples] [--eof] [-r] [-s STATUS]
                       input output
     
     Dump kernel dataset to file(s).
@@ -110,6 +115,7 @@ clgen-dump
       --version             show version information and exit
       -v, --verbose         increase output verbosity
       --debug               in case of error, print debugging information
+      --profile             enable internal API profiling
       -d                    output to directory (overrides -i, --eof, -r)
       -i                    include file separators
       --input-samples       use input contents, not preprocessed
@@ -123,7 +129,7 @@ clgen-explore
 
 ::
 
-    usage: clgen-explore [-h] [--version] [-v] [--debug] input
+    usage: clgen-explore [-h] [--version] [-v] [--debug] [--profile] input
     
     Exploratory analysis of preprocessed dataset.
     
@@ -140,25 +146,23 @@ clgen-explore
       --version      show version information and exit
       -v, --verbose  increase output verbosity
       --debug        in case of error, print debugging information
+      --profile      enable internal API profiling
 
 clgen-features
 ---------------
 
 ::
 
-    usage: clgen-features [-h] [--version] [-v] [--debug] [-d] [-s] [-e] [--shim]
-                          [-q] [-H]
+    usage: clgen-features [-h] [--version] [-v] [--debug] [--profile] [-d] [-s]
+                          [-e] [--shim] [-q] [-H]
                           inputs [inputs ...]
     
     Extract static OpenCL kernel features.
     
-    This extracts a subset of the features required for the paper:
+    This extracts the static compile-time features of the paper:
     
         Grewe, D., Wang, Z., & O'Boyle, M. F. P. M. (2013). Portable Mapping of
         Data Parallel Programs to OpenCL for Heterogeneous Systems. In CGO. IEEE.
-    
-    Note that dynamic features are extracted using the cldrive program for CLgen
-    kernels, or by using libcecl for ad-hoc programs.
     
     Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
     <http://chriscummins.cc/clgen>
@@ -171,6 +175,7 @@ clgen-features
       --version           show version information and exit
       -v, --verbose       increase output verbosity
       --debug             in case of error, print debugging information
+      --profile           enable internal API profiling
       -d, --dir-mode      treat inputs as directories
       -s, --stats         summarize a features files
       -e, --fatal-errors  quit on compiler error
@@ -183,7 +188,8 @@ clgen-fetch
 
 ::
 
-    usage: clgen-fetch [-h] [--version] [-v] [--debug] input paths [paths ...]
+    usage: clgen-fetch [-h] [--version] [-v] [--debug] [--profile]
+                       input paths [paths ...]
     
     Import OpenCL files into kernel datbase.
     
@@ -203,13 +209,14 @@ clgen-fetch
       --version      show version information and exit
       -v, --verbose  increase output verbosity
       --debug        in case of error, print debugging information
+      --profile      enable internal API profiling
 
 clgen-fetch-github
 -------------------
 
 ::
 
-    usage: clgen-fetch-github [-h] [--version] [-v] [--debug] input
+    usage: clgen-fetch-github [-h] [--version] [-v] [--debug] [--profile] input
     
     Mines OpenCL kernels from Github. Requires the following environment
     variables to be set:
@@ -237,13 +244,14 @@ clgen-fetch-github
       --version      show version information and exit
       -v, --verbose  increase output verbosity
       --debug        in case of error, print debugging information
+      --profile      enable internal API profiling
 
 clgen-merge
 ------------
 
 ::
 
-    usage: clgen-merge [-h] [--version] [-v] [--debug]
+    usage: clgen-merge [-h] [--version] [-v] [--debug] [--profile]
                        dataset [inputs [inputs ...]]
     
     Merge kernel datasets.
@@ -260,14 +268,16 @@ clgen-merge
       --version      show version information and exit
       -v, --verbose  increase output verbosity
       --debug        in case of error, print debugging information
+      --profile      enable internal API profiling
 
 clgen-preprocess
 -----------------
 
 ::
 
-    usage: clgen-preprocess [-h] [--version] [-v] [--debug] [-f] [-i] [-G]
-                            [--remove-bad-preprocessed] [--remove-preprocessed]
+    usage: clgen-preprocess [-h] [--version] [-v] [--debug] [--profile] [-f] [-i]
+                            [-G] [--remove-bad-preprocessed]
+                            [--remove-preprocessed]
                             inputs [inputs ...]
     
     Process OpenCL files for machine learning.
@@ -289,6 +299,7 @@ clgen-preprocess
       --version             show version information and exit
       -v, --verbose         increase output verbosity
       --debug               in case of error, print debugging information
+      --profile             enable internal API profiling
       -f, --file            treat input as file
       -i, --inplace         inplace file rewrite
       -G, --gpuverify       run GPUVerify on kernels
@@ -303,8 +314,8 @@ clgen-test
 
 ::
 
-    usage: clgen-test [-h] [--version] [-v] [--debug] [--coveragerc-path]
-                      [--coverage-path]
+    usage: clgen-test [-h] [--version] [-v] [--debug] [--profile]
+                      [--coveragerc-path] [--coverage-path]
     
     Run the CLgen self-test suite.
     
@@ -316,6 +327,7 @@ clgen-test
       --version          show version information and exit
       -v, --verbose      increase output verbosity
       --debug            in case of error, print debugging information
+      --profile          enable internal API profiling
       --coveragerc-path  print path to coveragerc file
       --coverage-path    print path to coverage file
 
@@ -324,7 +336,7 @@ clgen-train
 
 ::
 
-    usage: clgen-train [-h] [--version] [-v] [--debug] <model>
+    usage: clgen-train [-h] [--version] [-v] [--debug] [--profile] <model>
     
     Train a CLgen model.
     
@@ -339,4 +351,5 @@ clgen-train
       --version      show version information and exit
       -v, --verbose  increase output verbosity
       --debug        in case of error, print debugging information
+      --profile      enable internal API profiling
 
