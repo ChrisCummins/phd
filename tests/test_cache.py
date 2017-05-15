@@ -203,3 +203,20 @@ class TestFSCache(TestCase):
             c['foo'] = '/not/a/real/path'
 
         c.clear()
+
+    def test_iter_len(self):
+        c = cache.FSCache("/tmp/labm8-fscache-iter",
+                          escape_key=cache.escape_path)
+        c.clear()
+
+        system.echo("Hello, world!", "/tmp/labm8.testfile.txt")
+        c["foo"] = "/tmp/labm8.testfile.txt"
+
+        for path in c:
+            self.assertEqual(path, c.keypath("foo"))
+
+        system.echo("Hello, world!", "/tmp/labm8.testfile.txt")
+        c["bar"] = "/tmp/labm8.testfile.txt"
+
+        self.assertEqual(len(c), 2)
+        c.clear()
