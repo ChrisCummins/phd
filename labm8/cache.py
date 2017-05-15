@@ -87,6 +87,18 @@ class Cache(object):
         """
         raise NotImplementedError
 
+    def __iter__(self):
+        """
+        Iterate over all cache entries.
+        """
+        raise NotImplementedError
+
+    def __len__(self):
+        """
+        Get the number of entries in the cache.
+        """
+        raise NotImplementedError
+
 
 class TransientCache(Cache):
     """
@@ -134,6 +146,25 @@ class TransientCache(Cache):
 
     def __delitem__(self, key):
         del self._data[key]
+
+    def __iter__(self):
+        """
+        Iterate over all cache entries.
+
+        Returns:
+            iterable: Entries in cache.
+        """
+        for value in self._data.values():
+            yield value
+
+    def __len__(self):
+        """
+        Get the number of cache entries.
+
+        Returns:
+            int: Number of entries in the cache.
+        """
+        return len(list(self._data.keys()))
 
 
 class JsonCache(TransientCache):
@@ -304,6 +335,25 @@ class FSCache(Cache):
             fs.rm(path)
         else:
             raise KeyError(key)
+
+    def __iter__(self):
+        """
+        Iterate over all cached files.
+
+        Returns:
+            iterable: Paths in cache.
+        """
+        for path in fs.ls(self.path, abspaths=True):
+            yield path
+
+    def __len__(self):
+        """
+        Get the number of entries in the cache.
+
+        Returns:
+            int: Number of entries in the cache.
+        """
+        return len(list(fs.ls(self.path)))
 
     def get(self, key, default=None):
         """
