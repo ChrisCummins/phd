@@ -382,4 +382,4 @@ class FSCache(Cache):
         Returns:
             iterable: List of files.
         """
-        fs.ls(self.path, **kwargs)
+        return fs.ls(self.path, **kwargs)
