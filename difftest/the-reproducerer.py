@@ -20,6 +20,8 @@ What it does
     Additionally, warn if any experimental setup has changed
         (e.g. different software versions).
 """
+import faulthandler
+faulthandler.enable()
 import cldrive
 import os
 import pyopencl as cl
@@ -263,21 +265,21 @@ def reproduce_clgen_build_failures(result):
     flags = result.params.to_flags()
     cli = cldrive_cli(result.testbed.platform, result.testbed.device, *flags)
 
-    # runtime, status, stdout, stderr = clgen_run_cldrive.drive(
-    #     cli, result.program.src)
+    runtime, status, stdout, stderr = clgen_run_cldrive.drive(
+        cli, result.program.src)
 
-    # new_result = CLgenResult(
-    #     program=result.program, params=result.params, testbed=result.testbed,
-    #     cli=" ".join(cli), status=status, runtime=runtime,
-    #     stdout=stdout, stderr=stderr)
+    new_result = CLgenResult(
+        program=result.program, params=result.params, testbed=result.testbed,
+        cli=" ".join(cli), status=status, runtime=runtime,
+        stdout=stdout, stderr=stderr)
 
-    # analyze.analyze_cldrive_result(new_result, CLgenResult, session)
+    analyze.analyze_cldrive_result(new_result, CLgenResult, session)
 
-    # if new_result.classification != result.classification:
-    #     print("could not reproduce result")
-    #     sys.exit(1)
+    if new_result.classification != result.classification:
+        print("could not reproduce result")
+        sys.exit(1)
 
-    # print(">>>> Reproduced using cldrive")
+    print(">>>> Reproduced using cldrive")
 
     ### Reproduce using C standalone binary
     src = make_c_source(result.program.src)
