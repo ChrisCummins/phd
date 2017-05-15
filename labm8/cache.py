@@ -305,6 +305,7 @@ class FSCache(Cache):
             raise ValueError(value)
 
         path = self.keypath(key)
+        fs.mkdir(self.path)
         fs.mv(value, path)
 
     def __contains__(self, key):
