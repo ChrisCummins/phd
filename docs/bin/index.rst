@@ -246,6 +246,25 @@ clgen-fetch-github
       --debug        in case of error, print debugging information
       --profile      enable internal API profiling
 
+clgen-grid
+-----------
+
+::
+
+    usage: clgen-grid [-h] [--version] [-v] [--debug] [--profile]
+    
+    Print model stats.
+    
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
+    
+    optional arguments:
+      -h, --help     show this help message and exit
+      --version      show version information and exit
+      -v, --verbose  increase output verbosity
+      --debug        in case of error, print debugging information
+      --profile      enable internal API profiling
+
 clgen-merge
 ------------
 
