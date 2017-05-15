@@ -98,6 +98,7 @@ setup(
         'bin/clgen-fetch',
         'bin/clgen-merge',
         'bin/clgen-preprocess',
+        'bin/clgen-refresh-cache',
         'bin/clgen-test',
         'bin/clgen-train',
     ],
