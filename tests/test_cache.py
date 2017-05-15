@@ -219,4 +219,7 @@ class TestFSCache(TestCase):
         c["bar"] = "/tmp/labm8.testfile.txt"
 
         self.assertEqual(len(c), 2)
+
+        self.assertEqual(c.ls(), 2)
+
         c.clear()

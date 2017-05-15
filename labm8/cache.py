@@ -371,3 +371,15 @@ class FSCache(Cache):
             return self[key]
         else:
             return default
+
+    def ls(self, **kwargs):
+        """
+        List files in cache.
+
+        Arguments:
+            **kwargs: Keyword options to pass to fs.ls().
+
+        Returns:
+            iterable: List of files.
+        """
+        fs.ls(self.path, **kwargs)
