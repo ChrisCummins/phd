@@ -134,8 +134,6 @@ def cachepath(*relative_path_components: list) -> str:
     Returns:
         str: Absolute path of file system cache.
     """
-    assert(relative_path_components)
-
     cache_root = ["~", ".cache", "clgen",
                   f"{version_info.major}.{version_info.minor}.x" ]
     fs.mkdir(*cache_root)
