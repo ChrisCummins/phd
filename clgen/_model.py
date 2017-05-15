@@ -96,6 +96,7 @@ class Model(clgen.CLgenObject):
         def _hash(corpus: clgen.Corpus, opts: dict) -> str:
             """ compute model hash """
             hashopts = deepcopy(opts)
+            del hashopts["author"]
             del hashopts["train_opts"]["epochs"]
             return crypto.sha1_list(corpus.hash, *types.dict_values(hashopts))
 
@@ -126,6 +127,9 @@ class Model(clgen.CLgenObject):
         if self.cache.get("META"):
             cached_meta = jsonutil.read_file(self.cache["META"])
             self.stats = cached_meta["stats"]  # restore stats
+
+            del cached_meta["author"]
+            del meta["author"]
 
             del cached_meta["stats"]
             del meta["stats"]
