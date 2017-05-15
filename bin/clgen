@@ -17,10 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-import clgen
-from clgen import cli
-
-__description__ = """
+"""
 Generate OpenCL programs using Deep Learning.
 
 This is a five-step process:
@@ -35,9 +32,12 @@ The pipeline can be interrupted and resumed at any time. Results are cached
 across runs.
 """
 
+import clgen
+from clgen import cli
+
 
 def main():
-    parser = cli.ArgumentParser(description=__description__)
+    parser = cli.ArgumentParser(description=__doc__)
     parser.add_argument("model", metavar="<model>",
                         help="path to model dist or specification file")
     parser.add_argument("sampler", metavar="<sampler>",
