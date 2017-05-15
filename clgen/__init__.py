@@ -29,6 +29,7 @@ version_info : namedtuple['major', 'minor', 'micro', 'releaselevel'])
     Version tuple.
 """
 import json
+import labm8
 import os
 import platform
 import psutil
@@ -41,13 +42,12 @@ from collections import namedtuple
 from contextlib import contextmanager
 from copy import deepcopy
 from hashlib import sha1
-from pkg_resources import resource_filename, resource_string, require
-
-import labm8
 from labm8 import cache
 from labm8 import fs
 from labm8 import jsonutil
 from labm8 import system
+from labm8 import system
+from pkg_resources import resource_filename, resource_string, require
 
 from clgen._config import *
 
@@ -138,6 +138,21 @@ def cachepath(*relative_path_components: list) -> str:
                   f"{version_info.major}.{version_info.minor}.x" ]
     fs.mkdir(*cache_root)
     return fs.path(*cache_root, *relative_path_components)
+
+
+def get_default_author() -> str:
+    """
+    Get a default author name.
+
+    If CLGEN_AUTHOR environment variable is set, use that. Else, author
+    is $USER@$HOSTNAME.
+
+    Returns:
+        str: Author name.
+    """
+    return os.environ.get(
+        "CLGEN_AUTHOR",
+        "{user}@{host}".format(user=system.USERNAME, host=system.HOSTNAME))
 
 
 def mkcache(*relative_path_components: list) -> cache.FSCache:

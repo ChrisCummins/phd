@@ -26,6 +26,7 @@ import pickle
 
 from collections import Counter
 from copy import deepcopy
+from datetime import datetime
 from labm8 import crypto
 from labm8 import fs
 from labm8 import jsonutil
@@ -48,6 +49,11 @@ from clgen import log
 # Default options used for corpus. Any values provided by the user will override
 # these defaults.
 DEFAULT_CORPUS_OPTS = {
+    "created": {
+        "author": clgen.get_default_author(),
+        "date": str(datetime.now()),
+        "version": clgen.version(),
+    },
     "eof": False,
     "batch_size": 50,
     "seq_length": 50,
@@ -226,6 +232,9 @@ class Corpus(clgen.CLgenObject):
             cached_meta = jsonutil.read_file(self.cache["META"])
             self.stats = cached_meta["stats"]  # restore stats
 
+            del cached_meta["created"]
+            del meta["created"]
+
             del cached_meta["stats"]
             del meta["stats"]
 
@@ -302,6 +311,8 @@ class Corpus(clgen.CLgenObject):
 
     def _hash(self, contentid: str, opts: dict) -> str:
         """ compute corpus hash """
+        opts = deepcopy(opts)
+        del opts["created"]
         return crypto.sha1_list(contentid, *types.dict_values(opts))
 
     def _create_kernels_db(self, path: str) -> None:

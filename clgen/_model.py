@@ -25,6 +25,7 @@ import sys
 import tarfile
 
 from copy import deepcopy
+from datetime import datetime
 from time import time
 
 import progressbar
@@ -33,32 +34,20 @@ from labm8 import crypto
 from labm8 import fs
 from labm8 import jsonutil
 from labm8 import lockfile
-from labm8 import system
 from labm8 import types
 
 import clgen
 from clgen import log
 
 
-def get_default_author() -> str:
-    """
-    Get the default author name for CLgen dist models.
-
-    If CLGEN_AUTHOR environment variable is set, use that. Else, author
-    is $USER@$HOSTNAME.
-
-    Returns:
-        str: Author name.
-    """
-    return os.environ.get(
-        "CLGEN_AUTHOR",
-        "{user}@{host}".format(user=system.USERNAME, host=system.HOSTNAME))
-
-
 # Default options used for model. Any values provided by the user will override
 # these defaults.
 DEFAULT_MODEL_OPTS = {
-    "author": get_default_author(),
+    "created": {
+        "author": clgen.get_default_author(),
+        "date": str(datetime.now()),
+        "version": clgen.version(),
+    },
     "architecture": {
         "model_type": "lstm",  # {lstm,rnn.gru}
         "rnn_size": 128,  # num nodes in layer
@@ -96,7 +85,7 @@ class Model(clgen.CLgenObject):
         def _hash(corpus: clgen.Corpus, opts: dict) -> str:
             """ compute model hash """
             hashopts = deepcopy(opts)
-            del hashopts["author"]
+            del hashopts["created"]
             del hashopts["train_opts"]["epochs"]
             return crypto.sha1_list(corpus.hash, *types.dict_values(hashopts))
 
@@ -128,10 +117,15 @@ class Model(clgen.CLgenObject):
             cached_meta = jsonutil.read_file(self.cache["META"])
             self.stats = cached_meta["stats"]  # restore stats
 
-            del cached_meta["author"]
-            del meta["author"]
+            del cached_meta["created"]
+            del meta["created"]
 
-            del cached_meta["stats"]
+            if "created" in cached_meta["corpus"]:
+                del cached_meta["corpus"]["created"]
+            del meta["corpus"]["created"]
+
+            if "stats" in cached_meta:
+                del cached_meta["stats"]
             del meta["stats"]
 
             del cached_meta["train_opts"]["epochs"]

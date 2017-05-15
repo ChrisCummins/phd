@@ -25,6 +25,7 @@ import queue
 import sys
 
 from copy import deepcopy
+from datetime import datetime
 from glob import glob, iglob
 from io import StringIO
 from labm8 import crypto
@@ -51,6 +52,11 @@ DEFAULT_KERNELS_OPTS = {
     "temperature": 1
 }
 DEFAULT_SAMPLER_OPTS = {
+    "created": {
+        "author": clgen.get_default_author(),
+        "date": str(datetime.now()),
+        "version": clgen.version(),
+    },
     "min_samples": -1,
     "min_kernels": -1,
     "static_checker": True,
@@ -336,6 +342,7 @@ class Sampler(clgen.CLgenObject):
             sampler_opts = deepcopy(sampler_opts)
             del sampler_opts["min_samples"]
             del sampler_opts["min_kernels"]
+            del sampler_opts["created"]
 
             checksum_data = sorted(
                 [str(x) for x in sampler_opts.values()] +
@@ -402,6 +409,9 @@ class Sampler(clgen.CLgenObject):
         if cache.get("META"):
             cached_meta = jsonutil.read_file(cache["META"])
             self.stats = cached_meta["stats"]
+
+            del cached_meta["sampler"]["created"]
+            del meta["sampler"]["created"]
 
             del cached_meta["sampler"]["min_samples"]
             del meta["sampler"]["min_samples"]
