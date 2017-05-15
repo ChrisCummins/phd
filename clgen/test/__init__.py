@@ -151,29 +151,6 @@ def local_cachepath(*relative_path_components: list) -> str:
 clgen.cachepath = local_cachepath
 
 
-class TestCLgen(TestCase):
-    def test_pacakge_data(self):
-        with self.assertRaises(clgen.InternalError):
-            clgen.package_data("This definitely isn't a real path")
-        with self.assertRaises(clgen.File404):
-            clgen.package_data("This definitely isn't a real path")
-
-    def test_pacakge_str(self):
-        with self.assertRaises(clgen.InternalError):
-            clgen.package_str("This definitely isn't a real path")
-        with self.assertRaises(clgen.File404):
-            clgen.package_str("This definitely isn't a real path")
-
-    def test_sql_script(self):
-        with self.assertRaises(clgen.InternalError):
-            clgen.sql_script("This definitely isn't a real path")
-        with self.assertRaises(clgen.File404):
-            clgen.sql_script("This definitely isn't a real path")
-
-    def test_platform_info(self):
-        clgen.platform_info()
-
-
 class DevNullRedirect(object):
     """
     Context manager to redirect stdout and stderr to devnull.
