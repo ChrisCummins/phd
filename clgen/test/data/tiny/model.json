@@ -1,5 +1,8 @@
 {
-  "author": "Chris Cummins <chrisc.101@gmail.com>",  # str
+  "created": {
+    "author": "Chris Cummins <chrisc.101@gmail.com>",  # str
+    "date": "2017-05-15 12:00:00"  # str
+  },
   "corpus": {
     "path": "corpus",  # directory containing kernel files
     "preserve_order": false,  # if false, shuffle kernels during training
