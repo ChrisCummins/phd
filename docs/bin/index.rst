@@ -309,6 +309,25 @@ clgen-preprocess
       --remove-preprocessed
                             remove all preprocessed files from database
 
+clgen-refresh-cache
+--------------------
+
+::
+
+    usage: clgen-refresh-cache [-h] [--version] [-v] [--debug] [--profile]
+    
+    Refresh the cached model, corpus, and sampler IDs.
+    
+    Copyright (C) 2016, 2017 Chris Cummins <chrisc.101@gmail.com>.
+    <http://chriscummins.cc/clgen>
+    
+    optional arguments:
+      -h, --help     show this help message and exit
+      --version      show version information and exit
+      -v, --verbose  increase output verbosity
+      --debug        in case of error, print debugging information
+      --profile      enable internal API profiling
+
 clgen-test
 -----------
 
