@@ -20,21 +20,20 @@
 CLgen model.
 """
 import os
+import progressbar
 import re
 import sys
 import tarfile
 
 from copy import deepcopy
 from datetime import datetime
-from time import time
-
-import progressbar
-
 from labm8 import crypto
 from labm8 import fs
 from labm8 import jsonutil
 from labm8 import lockfile
 from labm8 import types
+from time import time
+from typing import Iterator
 
 import clgen
 from clgen import log
@@ -445,3 +444,18 @@ class Model(clgen.CLgenObject):
             del model_json["stats"]
 
         return Model(corpus, **model_json)
+
+
+def models() -> Iterator[Model]:
+    """
+    Iterate over all cached models.
+
+    Returns:
+        Iterator[Model]: An iterable over all cached models.
+    """
+    if fs.isdir(clgen.cachepath(), "model"):
+        modeldirs = fs.ls(fs.path(clgen.cachepath(), "model"), abspaths=True)
+        for modeldir in modeldirs:
+            meta = jsonutil.read_file(fs.path(modeldir, "META"))
+            model = Model.from_json(meta)
+            yield model

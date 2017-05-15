@@ -44,46 +44,44 @@ def main():
         "nodes",
         "layers",
         "epochs",
-        "grad_clip",
         "lr",
         "dr",
+        "gc",
     ])
 
     x.align['nodes'] = 'r'
     x.align['layers'] = 'l'
 
-    if fs.isdir(cache, "model"):
-        for modeldir in fs.ls(fs.path(cache, "model"), abspaths=True):
-            meta = jsonutil.read_file(fs.path(modeldir, "META"))
-            model = clgen.Model.from_json(meta)
+    for model in clgen.models():
+        meta = model.to_json()
 
-            network = f'{meta["architecture"]["rnn_size"]} x {meta["architecture"]["num_layers"]}'
+        network = f'{meta["architecture"]["rnn_size"]} x {meta["architecture"]["num_layers"]}'
 
-            if "stats" in meta:
-                num_epochs = len(meta["stats"]["epoch_costs"])
-            else:
-                num_epochs = 0
+        if "stats" in meta:
+            num_epochs = len(meta["stats"]["epoch_costs"])
+        else:
+            num_epochs = 0
 
-            if num_epochs >= meta["train_opts"]["epochs"]:
-                trained = "Y"
-            elif fs.isfile(fs.path(modeldir, "LOCK")):
-                trained = f"WIP ({num_epochs}/{meta['train_opts']['epochs']})"
-            elif num_epochs > 0:
-                trained = f"{num_epochs}/{meta['train_opts']['epochs']}"
-            else:
-                trained = ""
+        if num_epochs >= meta["train_opts"]["epochs"]:
+            trained = "Y"
+        elif fs.isfile(fs.path(model.cache.path, "LOCK")):
+            trained = f"WIP ({num_epochs}/{meta['train_opts']['epochs']})"
+        elif num_epochs > 0:
+            trained = f"{num_epochs}/{meta['train_opts']['epochs']}"
+        else:
+            trained = ""
 
-            x.add_row([
-                model.hash,
-                trained,
-                meta["architecture"]["model_type"],
-                meta["architecture"]["rnn_size"],
-                meta["architecture"]["num_layers"],
-                meta["train_opts"]["epochs"],
-                meta["train_opts"]["grad_clip"],
-                "{:.0e}".format(meta["train_opts"]["learning_rate"]),
-                meta["train_opts"]["lr_decay_rate"],
-            ])
+        x.add_row([
+            model.hash,
+            trained,
+            meta["architecture"]["model_type"],
+            meta["architecture"]["rnn_size"],
+            meta["architecture"]["num_layers"],
+            meta["train_opts"]["epochs"],
+            "{:.0e}".format(meta["train_opts"]["learning_rate"]),
+            meta["train_opts"]["lr_decay_rate"],
+            meta["train_opts"]["grad_clip"],
+        ])
 
     print(x.get_string(sortby="nodes"))
 
