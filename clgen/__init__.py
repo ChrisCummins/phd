@@ -213,6 +213,29 @@ def package_path(*path) -> str:
     return must_exist(abspath)
 
 
+def _shorthash(hash: str, cachedir: str, min_len: int=7) -> str:
+    """
+    Truncate the hash to a shorter length, while maintaining uniqueness.
+
+    This returns the shortest hash required to uniquely identify all elements
+    in the cache.
+
+    Arguments:
+        hash (str): Hash to truncate.
+        cachedir (str): Path to cache.
+        min_len (int, optional): Minimum length of hash to try.
+
+    Returns:
+        str: Truncated hash.
+    """
+    for shorthash_len in range(min_len, len(hash)):
+        entries = [x[:shorthash_len] for x in fs.ls(cachedir)]
+        if len(entries) == len(set(entries)):
+            break
+
+    return hash[:shorthash_len]
+
+
 def data_path(*path) -> str:
     """
     Path to package file.

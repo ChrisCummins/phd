@@ -470,8 +470,8 @@ def grid(args: List[str]=sys.argv[1:]):
             trained = ""
 
         x.add_row([
-            model.hash[:11],  # TODO: shorthash()
-            model.corpus.hash[:11],  # TODO: shorthash()
+            model.shorthash,
+            model.shorthash,
             trained,
             meta["architecture"]["model_type"],
             meta["architecture"]["rnn_size"],

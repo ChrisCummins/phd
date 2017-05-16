@@ -447,6 +447,10 @@ class Corpus(clgen.CLgenObject):
                                    self.num_batches, 1)
 
     @property
+    def shorthash(self):
+        return clgen._shorthash(self.hash, clgen.cachepath("corpus"))
+
+    @property
     def lock(self):
         lockpath = self.cache.keypath("LOCK")
         return lockfile.LockFile(lockpath)

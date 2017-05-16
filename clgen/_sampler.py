@@ -468,6 +468,10 @@ class Sampler(clgen.CLgenObject):
         clgen.explore(cache["kernels.db"])
 
     @property
+    def shorthash(self):
+        return clgen._shorthash(self.hash, clgen.cachepath("sampler"))
+
+    @property
     def min_samples(self):
         return self.sampler_opts["min_samples"]
 

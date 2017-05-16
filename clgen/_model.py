@@ -347,6 +347,10 @@ class Model(clgen.CLgenObject):
             return self._locked_train()
 
     @property
+    def shorthash(self):
+        return clgen._shorthash(self.hash, clgen.cachepath("model"))
+
+    @property
     def lock(self) -> lockfile.LockFile:
         lockpath = self.cache.keypath("LOCK")
         return lockfile.LockFile(lockpath)
