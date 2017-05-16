@@ -383,13 +383,9 @@ class Model(clgen.CLgenObject):
         """
         String representation.
         """
-        hash = self.hash
-        size = self.rnn_size
-        nlayers = self.num_layers
-        model = self.model_type.upper()
-        nepochs = self.epochs
-
-        return "model[{hash}]: {size}x{nlayers}x{nepochs} {model}".format(**vars())
+        celltype = self.model_type.upper()
+        return (f"model[{self.shorthash}]: " +
+                f"{self.rnn_size}x{self.num_layers}x{self.epochs} {celltype}")
 
     def to_json(self) -> dict:
         d = deepcopy(self.opts)

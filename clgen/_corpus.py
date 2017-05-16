@@ -574,13 +574,10 @@ class Corpus(clgen.CLgenObject):
         return results, len(prototypes)
 
     def __repr__(self) -> str:
-        hash = self.hash
         nf = dbutil.num_good_kernels(self.contentcache['kernels.db'])
-        v = self.opts["vocabulary"]
-        nt = self.atomizer.vocab_size
-        size = self.size
-        return ("corpus[{hash}]: {nf} files, {size} tokens using {v} vocabulary of size {nt}"
-                .format(**vars()))
+        return (f"corpus[{self.shorthash}]: {nf} files, {self.size} tokens " +
+                f"using {self.opts['vocabulary']} vocabulary of size " +
+                f"{self.atomizer.vocab_size}")
 
     def to_json(self) -> dict:
         d = deepcopy(self.opts)

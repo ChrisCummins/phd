@@ -505,9 +505,7 @@ class Sampler(clgen.CLgenObject):
         """
         String representation.
         """
-        hash = self.hash
-        seed = self.start_text
-        return "sampler[{hash}]: '{seed}'".format(**vars())
+        return f"sampler[{self.shorthash}]: '{self.start_text}'"
 
     def __eq__(self, rhs) -> bool:
         if not isinstance(rhs, Sampler):
