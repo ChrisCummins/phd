@@ -337,9 +337,9 @@ def main(model: str, sampler: str, print_file_list: bool=False,
     # print cache paths
     if print_file_list:
         files = sorted(
-            fs.ls(model.corpus.cache.path, abspaths=True, recursive=True) +
-            fs.ls(model.cache.path, abspaths=True, recursive=True) +
-            fs.ls(sampler.cache(model).path, abspaths=True, recursive=True))
+            model.corpus.cache.ls(abspaths=True, recursive=True) +
+            model.cache.ls(abspaths=True, recursive=True) +
+            sampler.cache(model).ls(abspaths=True, recursive=True))
         print('\n'.join(files))
         sys.exit(0)
     elif print_corpus_dir:
