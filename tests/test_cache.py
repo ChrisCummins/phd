@@ -222,6 +222,6 @@ class TestFSCache(TestCase):
 
         self.assertEqual(len(c.ls()), 2)
         self.assertTrue("bar" in c.ls())
-        self.assertTrue("foo" in c.los())
+        self.assertTrue("foo" in c.ls())
 
         c.clear()
