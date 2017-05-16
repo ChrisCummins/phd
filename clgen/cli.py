@@ -440,7 +440,6 @@ def grid(args: List[str]=sys.argv[1:]):
         "trained",
         "type",
         "nodes",
-        "layers",
         "epochs",
         "lr",
         "dr",
@@ -448,7 +447,6 @@ def grid(args: List[str]=sys.argv[1:]):
     ])
 
     x.align['nodes'] = 'r'
-    x.align['layers'] = 'l'
 
     for model in clgen.models():
         meta = model.to_json()
@@ -474,8 +472,7 @@ def grid(args: List[str]=sys.argv[1:]):
             model.shorthash,
             trained,
             meta["architecture"]["model_type"],
-            meta["architecture"]["rnn_size"],
-            meta["architecture"]["num_layers"],
+            network,
             meta["train_opts"]["epochs"],
             "{:.0e}".format(meta["train_opts"]["learning_rate"]),
             meta["train_opts"]["lr_decay_rate"],
