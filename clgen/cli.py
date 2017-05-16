@@ -176,13 +176,13 @@ Please report bugs at <https://github.com/ChrisCummins/clgen/issues>\
         return method(*args, **kwargs)
 
     try:
-        def run():
+        def runctx():
             method(*args, **kwargs)
 
-        if prof.is_enabled():
-            return cProfile.runctx('run()', None, locals(), sort='tottime')
+        if prof.is_enabled() and log.is_verbose():
+            return cProfile.runctx('runctx()', None, locals(), sort='tottime')
         else:
-            return run()
+            return runctx()
     except clgen.UserError as err:
         log.fatal(err, "(" + type(err).__name__  + ")")
     except KeyboardInterrupt:
