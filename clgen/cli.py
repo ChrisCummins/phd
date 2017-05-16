@@ -436,6 +436,7 @@ def grid(args: List[str]=sys.argv[1:]):
 
     x = PrettyTable([
         "id",
+        "corpus",
         "trained",
         "type",
         "nodes",
@@ -469,7 +470,8 @@ def grid(args: List[str]=sys.argv[1:]):
             trained = ""
 
         x.add_row([
-            model.hash,
+            model.hash[:11],  # TODO: shorthash()
+            model.corpus.hash[:11],  # TODO: shorthash()
             trained,
             meta["architecture"]["model_type"],
             meta["architecture"]["rnn_size"],
