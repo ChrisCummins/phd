@@ -31,7 +31,6 @@ from sys import exit
 from typing import List
 
 import clgen
-import clgen.test
 from clgen import log
 from clgen import dbutil
 
@@ -251,6 +250,8 @@ def test(args: List[str]=sys.argv[1:]):
     """
     Run the CLgen self-test suite.
     """
+    import clgen.test  # Must scope this import, as it breaks cache behaviour
+
     parser = ArgumentParser(description=__doc__)
     parser.add_argument("--coveragerc-path", action="store_true",
                         help="print path to coveragerc file")

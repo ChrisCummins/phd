@@ -140,8 +140,6 @@ def db(name, **kwargs):
 
 def local_cachepath(*relative_path_components: list) -> str:
     """ return path to local testing cache """
-    assert(relative_path_components)
-
     cache_root = data_path("cache", exists=False)
     fs.mkdir(cache_root)
 
