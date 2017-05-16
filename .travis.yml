@@ -66,12 +66,12 @@ install:  # cache hot
   - pip freeze  # python package versions
 
 script:
-  - which clgen-test
-  - test -f NORUN || clgen-test -v
+  - which clgen
+  - test -f NORUN || clgen -v test
 
 after_success:
-  - export COERAGE_REPORT="$(clgen-test --coverage-path)" && echo "$COVERAGE_REPORT"
-  - export COERAGERC="$(clgen-test --coveragerc-path)" && echo "$COVERAGERC"
+  - export COERAGE_REPORT="$(clgen test --coverage-path)" && echo "$COVERAGE_REPORT"
+  - export COERAGERC="$(clgen test --coveragerc-path)" && echo "$COVERAGERC"
   - test -f NORUN || coveralls
       --data_file ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/.coverage
       --config_file ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/test/data/coveragerc

@@ -43,7 +43,7 @@ Download a tiny example dataset to train and sample your first CLgen model:
 ```sh
 $ wget https://github.com/ChrisCummins/clgen/raw/master/tests/data/tiny.tar.bz2
 $ tar xf tiny.tar.bz2
-$ clgen model.json sampler.json
+$ clgen sample model.json sampler.json
 ```
 
 <img src="https://raw.githubusercontent.com/ChrisCummins/clgen/master/docs/assets/clgen.gif" width="500">

@@ -185,7 +185,7 @@ def coveragerc_path():
     return data_path("coveragerc")
 
 
-def main():
+def testsuite():
     """
     Run the CLgen test suite.
 

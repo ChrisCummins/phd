@@ -336,49 +336,6 @@ def platform_info(printfn=print) -> None:
             round(psutil.virtual_memory().total / (1024 ** 2)), "MB")
 
 
-def main(model: str, sampler: str, print_file_list: bool=False,
-         print_corpus_dir: bool=False, print_model_dir: bool=False,
-         print_sampler_dir: bool=False) -> None:
-    """
-    Main entry point for clgen.
-
-    Arguments:
-        model (str): Path to model.
-        sample (str): Path to sampler.
-        print_corpus_dir (bool, optional): If True, print cache path and exit.
-        print_model_dir (bool, optional): If True, print cache path and exit.
-        print_sampler_dir (bool, optional): If True, print cache path and exit.
-    """
-    from clgen import log
-
-    model_json = jsonutil.read_file(model)
-    model = clgen.Model.from_json(model_json)
-
-    sampler_json = jsonutil.read_file(sampler)
-    sampler = clgen.Sampler.from_json(sampler_json)
-
-    # print cache paths
-    if print_file_list:
-        files = sorted(
-            model.corpus.cache.ls(abspaths=True, recursive=True) +
-            model.cache.ls(abspaths=True, recursive=True) +
-            sampler.cache(model).ls(abspaths=True, recursive=True))
-        print('\n'.join(files))
-        sys.exit(0)
-    elif print_corpus_dir:
-        print(model.corpus.cache.path)
-        sys.exit(0)
-    elif print_model_dir:
-        print(model.cache.path)
-        sys.exit(0)
-    elif print_sampler_dir:
-        print(sampler.cache(model).path)
-        sys.exit(0)
-
-    model.train()
-    sampler.sample(model)
-
-
 # package level imports
 from clgen._fetch import *
 from clgen._explore import *

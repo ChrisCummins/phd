@@ -32,8 +32,9 @@ from labm8 import fs
 from labm8 import jsonutil
 from labm8 import lockfile
 from labm8 import types
+from prettytable import PrettyTable
 from time import time
-from typing import Iterator
+from typing import Iterator, List
 
 import clgen
 from clgen import log
@@ -453,3 +454,62 @@ def models() -> Iterator[Model]:
             meta = jsonutil.read_file(fs.path(modeldir, "META"))
             model = Model.from_json(meta)
             yield model
+
+
+def models_to_tab(*models: List[Model]) -> PrettyTable:
+    """
+    Pretty print a table of model stats.
+
+    Arguments:
+        models (List[Model]): Models to tablify.
+
+    Returns:
+        PrettyTable: Formatted table for printing.
+    """
+    tab = PrettyTable([
+        "model",
+        "corpus",
+        "trained",
+        "type",
+        "nodes",
+        "epochs",
+        "lr",
+        "dr",
+        "gc",
+    ])
+
+    tab.align['nodes'] = 'r'
+    tab.sortby = "nodes"
+
+    for model in models:
+        meta = model.to_json()
+
+        network = f'{meta["architecture"]["rnn_size"]} x {meta["architecture"]["num_layers"]}'
+
+        if "stats" in meta:
+            num_epochs = len(meta["stats"]["epoch_costs"])
+        else:
+            num_epochs = 0
+
+        if num_epochs >= meta["train_opts"]["epochs"]:
+            trained = "Y"
+        elif fs.isfile(fs.path(model.cache.path, "LOCK")):
+            trained = f"WIP ({num_epochs}/{meta['train_opts']['epochs']})"
+        elif num_epochs > 0:
+            trained = f"{num_epochs}/{meta['train_opts']['epochs']}"
+        else:
+            trained = ""
+
+        tab.add_row([
+            model.shorthash,
+            model.shorthash,
+            trained,
+            meta["architecture"]["model_type"],
+            network,
+            meta["train_opts"]["epochs"],
+            "{:.0e}".format(meta["train_opts"]["learning_rate"]),
+            meta["train_opts"]["lr_decay_rate"],
+            meta["train_opts"]["grad_clip"],
+        ])
+
+    return tab
