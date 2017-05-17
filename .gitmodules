@@ -1,0 +1,3 @@
+[submodule "lib/CLSmith"]
+	path = lib/CLSmith
+	url = https://github.com/ChrisCummins/CLSmith.git
