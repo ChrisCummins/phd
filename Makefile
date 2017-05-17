@@ -140,7 +140,7 @@ install:
 docs-modules:
 	@echo "generating API documentation"
 	cp docs/api/.template docs/api/index.rst
-	@for module in $$(cd clgen; ls *.py | grep -v __init__.py); do \
+	@for module in $$(cd clgen; env LC_COLLATE=C ls *.py | grep -v __init__.py); do \
 		echo "adding module documentation for clgen.$${module%.py}"; \
 		echo clgen.$${module%.py} >> docs/api/index.rst; \
 		echo "$$(head -c $$(echo clgen.$${module%.py} | wc -c) < /dev/zero | tr '\0' '-')" >> docs/api/index.rst; \
