@@ -75,3 +75,8 @@ def test_cli():
 
     fs.rm("kernels.db")
     fs.rm("kernels_out")
+
+
+def test_cli_ls():
+    cli.main("ls models".split())
+    cli.main("ls samplers".split())
