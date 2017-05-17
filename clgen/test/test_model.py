@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase, skip, skipIf, main
 from clgen import test as tests
 
 from io import StringIO
@@ -45,85 +44,80 @@ def get_test_model(vocab="char"):
     })
 
 
-class TestModel(TestCase):
-    def test_hash(self):
-        m1 = clgen.Model.from_json({
-            "corpus": {
-                "path": tests.data_path("tiny", "corpus")
-            }
-        })
+def test_model_hash(self):
+    m1 = clgen.Model.from_json({
+        "corpus": {
+            "path": tests.data_path("tiny", "corpus")
+        }
+    })
 
-        # same as m1, with explicit default opt:
-        m2 = clgen.Model.from_json({
-            "corpus": {
-                "path": tests.data_path("tiny", "corpus")
-            },
-            "train_opts": {
-                "intermediate_checkpoints": True
-            }
-        })
+    # same as m1, with explicit default opt:
+    m2 = clgen.Model.from_json({
+        "corpus": {
+            "path": tests.data_path("tiny", "corpus")
+        },
+        "train_opts": {
+            "intermediate_checkpoints": True
+        }
+    })
 
-        # different opt value:
-        m3 = clgen.Model.from_json({
-            "corpus": {
-                "path": tests.data_path("tiny", "corpus")
-            },
-            "train_opts": {
-                "intermediate_checkpoints": False
-            }
-        })
+    # different opt value:
+    m3 = clgen.Model.from_json({
+        "corpus": {
+            "path": tests.data_path("tiny", "corpus")
+        },
+        "train_opts": {
+            "intermediate_checkpoints": False
+        }
+    })
 
-        self.assertEqual(m1.hash, m2.hash)
-        self.assertNotEqual(m2.hash, m3.hash)
+    assert m1.hash == m2.hash
+    assert m2.hash != m3.hash
 
-    def test_checkpoint_path_untrained(self):
-        m = get_test_model()
-        m.cache.clear()  # untrain
-        self.assertEqual(m.checkpoint_path, None)
+def test_model_checkpoint_path_untrained(self):
+    m = get_test_model()
+    m.cache.clear()  # untrain
+    assert m.checkpoint_path == None
 
-    def test_eq(self):
-        m1 = clgen.Model.from_json({
-            "corpus": {
-                "path": tests.data_path("tiny", "corpus")
-            },
-            "train_opts": {
-                "intermediate_checkpoints": False
-            }
-        })
-        m2 = clgen.Model.from_json({
-            "corpus": {
-                "path": tests.data_path("tiny", "corpus")
-            },
-            "train_opts": {
-                "intermediate_checkpoints": False
-            }
-        })
-        m3 = clgen.Model.from_json({
-            "corpus": {
-                "path": tests.data_path("tiny", "corpus")
-            },
-            "train_opts": {
-                "intermediate_checkpoints": True
-            }
-        })
+def test_model_eq(self):
+    m1 = clgen.Model.from_json({
+        "corpus": {
+            "path": tests.data_path("tiny", "corpus")
+        },
+        "train_opts": {
+            "intermediate_checkpoints": False
+        }
+    })
+    m2 = clgen.Model.from_json({
+        "corpus": {
+            "path": tests.data_path("tiny", "corpus")
+        },
+        "train_opts": {
+            "intermediate_checkpoints": False
+        }
+    })
+    m3 = clgen.Model.from_json({
+        "corpus": {
+            "path": tests.data_path("tiny", "corpus")
+        },
+        "train_opts": {
+            "intermediate_checkpoints": True
+        }
+    })
 
-        self.assertEqual(m1, m2)
-        self.assertNotEqual(m2, m3)
-        self.assertNotEqual(m1, False)
-        self.assertNotEqual(m1, 'abcdef')
+    assert m1 == m2
+    assert m2 != m3
+    assert m1 != False
+    assert m1 != 'abcdef'
 
-    def test_to_json(self):
-        m1 = clgen.Model.from_json({
-            "corpus": {
-                "path": tests.data_path("tiny", "corpus")
-            },
-            "train_opts": {
-                "intermediate_checkpoints": True
-            }
-        })
-        m2 = clgen.Model.from_json(m1.to_json())
-        self.assertEqual(m1, m2)
-
-
-if __name__ == "__main__":
-    main()
+def test_model_to_json(self):
+    m1 = clgen.Model.from_json({
+        "corpus": {
+            "path": tests.data_path("tiny", "corpus")
+        },
+        "train_opts": {
+            "intermediate_checkpoints": True
+        }
+    })
+    m2 = clgen.Model.from_json(m1.to_json())
+    m1 == m2
