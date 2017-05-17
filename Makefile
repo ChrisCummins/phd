@@ -151,18 +151,16 @@ docs-modules:
 		echo >> docs/api/index.rst; \
 	done
 	@echo "generating binary documentation"
-	cp docs/bin/.template docs/bin/index.rst
-	@for bin in $$(ls bin); do \
-		echo "adding binary documentation for $$bin"; \
-		echo $$bin >> docs/bin/index.rst; \
-		echo "$$(head -c $$(echo $$bin | wc -c) < /dev/zero | tr '\0' '-')" >> docs/bin/index.rst; \
-		echo >> docs/bin/index.rst; \
-		echo "::" >> docs/bin/index.rst; \
-		echo >> docs/bin/index.rst; \
-		export CLGEN_AUTHOR='$$USER@$$HOSTNAME'; \
-		./bin/$$bin --help | sed 's/^/    /' >> docs/bin/index.rst; \
-		echo >> docs/bin/index.rst; \
-	done
+	@cp docs/bin/.template docs/bin/index.rst
+	@echo "adding binary documentation for clgen"
+	@echo clgen >> docs/bin/index.rst
+	@echo "$$(head -c $$(echo clgen | wc -c) < /dev/zero | tr '\0' '-')" >> docs/bin/index.rst
+	@echo >> docs/bin/index.rst
+	@echo "::" >> docs/bin/index.rst
+	@echo >> docs/bin/index.rst
+	@export CLGEN_AUTHOR='$$USER@$$HOSTNAME'
+	@clgen --help | sed 's/^/    /' >> docs/bin/index.rst
+	@echo >> docs/bin/index.rst
 
 # generate documentation
 .PHONY: docs
