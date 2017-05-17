@@ -19,6 +19,7 @@
 """
 Command line interface to clgen.
 """
+import argparse
 import cProfile
 import inspect
 import os
@@ -29,7 +30,7 @@ from argparse import ArgumentParser, FileType, RawDescriptionHelpFormatter
 from labm8 import jsonutil, fs, prof, types
 from pathlib import Path
 from sys import exit
-from typing import List, TextIO
+from typing import BinaryIO, List, TextIO
 
 import clgen
 from clgen import log
@@ -45,6 +46,23 @@ def getself(func):
     def wrapper(*args, **kwargs):
         return func(func, *args, **kwargs)
     return wrapper
+
+
+class ReadableFilesOrDirectories(argparse.Action):
+    """
+    Adapted from @mgilson http://stackoverflow.com/a/11415816
+    """
+
+    def __call__(self, parser, namespace, values, option_string=None) -> None:
+        for path in values:
+            if not os.path.isdir(path) and not os.path.isfile(path):
+                raise argparse.ArgumentTypeError(
+                    f"ReadableFilesOrDirectories:{path} not found")
+            if not os.access(path, os.R_OK):
+                raise argparse.ArgumentTypeError(
+                    f"ReadableFilesOrDirectories:{path} is not readable")
+
+        setattr(namespace, self.dest, [Path(path) for path in values])
 
 
 def run(method, *args, **kwargs):
@@ -134,8 +152,8 @@ def _register_test_parser(self, parent: ArgumentParser) -> None:
     Run the CLgen self-test suite.
     """
 
-    def _main(coveragerc_path: bool=None, coverage_path: bool=None) -> None:
-        import clgen.test  # Must scope this import, as it changes cache loc
+    def _main(coveragerc_path: bool, coverage_path: bool) -> None:
+        import clgen.test
 
         if coveragerc_path:
             print(clgen.test.coveragerc_path())
@@ -164,8 +182,8 @@ def _register_train_parser(self, parent: ArgumentParser) -> None:
     Train a CLgen model.
     """
 
-    def _main(model: TextIO) -> None:
-        model_json = jsonutil.loads(model.read())
+    def _main(model_file: TextIO) -> None:
+        model_json = jsonutil.loads(model_file.read())
         model = clgen.Model.from_json(model_json)
         model.train()
         log.info("done.")
@@ -175,9 +193,9 @@ def _register_train_parser(self, parent: ArgumentParser) -> None:
                                description=inspect.getdoc(self),
                                epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
-    parser.add_argument("model", metavar="<model>",
-                       type=FileType("r"),
-                       help="path to model specification file")
+    parser.add_argument("model_file", metavar="<model>",
+                        type=FileType("r"),
+                        help="path to model specification file")
 
 
 @getself
@@ -186,25 +204,25 @@ def _register_sample_parser(self, parent: ArgumentParser) -> None:
     Sample a model.
     """
 
-    def _main(model: TextIO, sampler: TextIO) -> None:
-        model_json = jsonutil.loads(model.read())
+    def _main(model_file: TextIO, sampler_file: TextIO) -> None:
+        model_json = jsonutil.loads(model_file.read())
         model = clgen.Model.from_json(model_json)
 
-        sampler_json = jsonutil.loads(sampler.read())
+        sampler_json = jsonutil.loads(sampler_file.read())
         sampler = clgen.Sampler.from_json(sampler_json)
 
         model.train()
         sampler.sample(model)
 
     parser = parent.add_parser("sample", aliases=["s", "sa"],
-                                   help="train and sample models",
-                                     description=inspect.getdoc(self),
-                                     epilog=__help_epilog__)
+                               help="train and sample models",
+                               description=inspect.getdoc(self),
+                               epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
-    parser.add_argument("model", metavar="<model>",
+    parser.add_argument("model_file", metavar="<model>",
                         type=FileType("r"),
                         help="path to model specification file")
-    parser.add_argument("sampler", metavar="<sampler>",
+    parser.add_argument("sampler_file", metavar="<sampler>",
                         type=FileType("r"),
                         help="path to sampler specification file")
 
@@ -225,20 +243,19 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
         Fetch files from local filesystem.
         """
 
-        def _main(inpath: str, paths: List[str]) -> None:
-            db_path = os.path.expanduser(inpath)
-
-            clgen.fetch(db_path, paths)
+        def _main(db_file: BinaryIO, paths: List[Path]) -> None:
+            clgen.fetch(db_file.name, paths)
             log.info("done.")
 
         parser = parent.add_parser("fs", help="fetch from filesystem",
                                    description=inspect.getdoc(self),
                                    epilog=__help_epilog__)
         parser.set_defaults(dispatch_func=_main)
-        parser.add_argument('inpath', metavar="<db>", type=str,
-                            help='path to SQL dataset')
-        parser.add_argument('paths', metavar="<path>", nargs='+', type=str,
-                            help='path to OpenCL files or directories')
+        parser.add_argument("db_file", metavar="<db>", type=FileType("rb"),
+                            help="path to SQL dataset")
+        parser.add_argument("paths", metavar="<path>", nargs="+",
+                            action=ReadableFilesOrDirectories,
+                            help="path to OpenCL files or directories")
 
     @getself
     def _register_github_parser(self, parent: ArgumentParser) -> None:
@@ -259,19 +276,19 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
         want to upset the nice folks at GH :-)
         """
 
-        def _main(inpath: str) -> None:
+        def _main(db_file: BinaryIO) -> None:
             from os import environ
             from github import BadCredentialsException
 
             try:
-                github_username = environ['GITHUB_USERNAME']
-                github_pw = environ['GITHUB_PW']
-                github_token = environ['GITHUB_TOKEN']
+                username = environ['GITHUB_USERNAME']
+                password = environ['GITHUB_PW']
+                token = environ['GITHUB_TOKEN']
             except KeyError as e:
                 log.fatal('environment variable {} not set'.format(e))
 
             try:
-                fetch_github(inpath, github_username, github_pw, github_token)
+                fetch_github(db_file.name, username, password, token)
             except BadCredentialsException as e:
                 log.fatal("bad GitHub credentials")
 
@@ -279,7 +296,7 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
                                    description=inspect.getdoc(self),
                                    epilog=__help_epilog__)
         parser.set_defaults(dispatch_func=_main)
-        parser.add_argument('inpath', metavar="<db>", type=str,
+        parser.add_argument("db_file", metavar="<db>", type=FileType('rb'),
                             help='path to SQL dataset')
 
     fetch = parent.add_parser("fetch", aliases=["f", "fe"],
@@ -288,8 +305,13 @@ def _register_fetch_parser(self, parent: ArgumentParser) -> None:
                               epilog=__help_epilog__)
     subparser = fetch.add_subparsers(title="available commands")
 
-    _register_fs_parser(subparser)
-    _register_github_parser(subparser)
+    subparsers = [
+        _register_fs_parser,
+        _register_github_parser,
+    ]
+
+    for register_fn in subparsers:
+        register_fn(subparser)
 
 
 @getself
@@ -300,19 +322,20 @@ def _register_ls_parser(self, parent: ArgumentParser) -> None:
         """
         Import OpenCL files into kernel datbase.
 
-        The kernel database is used as a staging ground for input files, which are
-        then preprocessed and assembled into corpuses. This program acts as the front
-        end, assembling files from the file system into a database for preprocessing.
+        The kernel database is used as a staging ground for input files, which
+        are then preprocessed and assembled into corpuses. This program acts as
+        the front end, assembling files from the file system into a database for
+        preprocessing.
         """
 
-        def _main(model: TextIO, sampler: TextIO) -> None:
-            model_json = jsonutil.loads(model.read())
+        def _main(model_file: TextIO, sampler_file: TextIO) -> None:
+            model_json = jsonutil.loads(model_file.read())
             model = clgen.Model.from_json(model_json)
 
             caches = [model.corpus.cache, model.cache]
 
-            if sampler:
-                sampler_json = jsonutil.loads(sampler.read())
+            if sampler_file:
+                sampler_json = jsonutil.loads(sampler_file.read())
                 sampler = clgen.Sampler.from_json(sampler_json)
                 caches.append(sampler.cache(model))
 
@@ -324,10 +347,10 @@ def _register_ls_parser(self, parent: ArgumentParser) -> None:
                                    description=inspect.getdoc(self),
                                    epilog=__help_epilog__)
         parser.set_defaults(dispatch_func=_main)
-        parser.add_argument("model", metavar="<model>",
+        parser.add_argument("model_file", metavar="<model>",
                             type=FileType("r"),
                             help="path to model specification file")
-        parser.add_argument("sampler", metavar="<sampler>", nargs="?",
+        parser.add_argument("sampler_file", metavar="<sampler>", nargs="?",
                             type=FileType("r"),
                             help="path to sampler specification file")
 
@@ -382,18 +405,18 @@ def _register_db_parser(self, parent: ArgumentParser) -> None:
         Utilities for managing content databases.
         """
 
-        def _main(inpath: str, github: bool=False):
+        def _main(db_file: Path, github: bool) -> None:
             """
             Create an empty OpenCL kernel database.
             """
-            dbutil.create_db(inpath, github)
-            print(fs.abspath(inpath))
+            dbutil.create_db(db_file, github)
+            print(fs.abspath(db_file))
 
         parser = parent.add_parser("init", help="create a database",
                                    description=inspect.getdoc(self),
                                    epilog=__help_epilog__)
         parser.set_defaults(dispatch_func=_main)
-        parser.add_argument('inpath', metavar="<db>",
+        parser.add_argument('db_file', metavar="<db>", type=Path,
                             help='path to SQL dataset')
         parser.add_argument('-g', '--github', action='store_true',
                             help='generate dataset with GitHub metadata')
@@ -406,14 +429,14 @@ def _register_db_parser(self, parent: ArgumentParser) -> None:
         Provides an overview of the contents of an OpenCL kernel database.
         """
 
-        def _main(inpath: str):
-            clgen.explore(inpath)
+        def _main(db_file: BinaryIO):
+            clgen.explore(db_file.name)
 
         parser = parent.add_parser("explore", help="show database stats",
                                    description=inspect.getdoc(self),
                                    epilog=__help_epilog__)
         parser.set_defaults(dispatch_func=_main)
-        parser.add_argument('inpath', metavar="<db>",
+        parser.add_argument('db_file', metavar="<db>", type=FileType("rb"),
                             help='path to SQL dataset')
 
     @getself
@@ -422,16 +445,17 @@ def _register_db_parser(self, parent: ArgumentParser) -> None:
         Merge kernel datasets.
         """
 
-        def _main(dataset: str, inputs: List[str]):
-            dbutil.merge(args.dataset, args.inputs)
+        def _main(db_out: BinaryIO, inputs: List[BinaryIO]):
+            dbutil.merge(db_out.name, [db.name for db in inputs])
 
         parser = parent.add_parser("merge", help="merge databases",
                                    description=inspect.getdoc(_main),
                                    epilog=__help_epilog__)
         parser.set_defaults(dispatch_func=_main)
-        parser.add_argument("dataset", metavar="<db>",
+        parser.add_argument("db_out", metavar="<db>", type=FileType("wb"),
                             help="path to output database")
         parser.add_argument("inputs", metavar="<db>", nargs='+',
+                            type=FileType("rb"),
                             help="path to database(s) to merge")
 
     @getself
@@ -440,19 +464,19 @@ def _register_db_parser(self, parent: ArgumentParser) -> None:
         Dump kernel dataset to file(s).
         """
 
-        def _main(inpath: str, outpath: str, dir: str, eof: bool,
+        def _main(db_file: BinaryIO, outpath: Path, dir: bool, eof: bool,
                   file_sep: bool, input_samples: bool, reverse: bool,
                   status: int) -> None:
-            dbutil.dump_db(inpath, outpath, dir=dir, eof=eof, fileid=file_sep,
-                           input_samples=input_samples)
+            dbutil.dump_db(db_file.name, outpath, dir=dir, eof=eof,
+                           fileid=file_sep, input_samples=input_samples)
 
         parser = parent.add_parser("dump", help="export database contents",
                                    description=inspect.getdoc(_main),
                                    epilog=__help_epilog__)
         parser.set_defaults(dispatch_func=_main)
-        parser.add_argument('inpath', metavar="<db>",
+        parser.add_argument('db_file', metavar="<db>", type=FileType("rb"),
                             help='path to kernels database')
-        parser.add_argument('outpath', metavar="<path>",
+        parser.add_argument('outpath', metavar="<path>", type=Path,
                             help='path to output file or directory')
         parser.add_argument("-d", "--dir", action='store_true',
                             help='output to directory (overrides -i, --eof, -r)')
@@ -496,14 +520,16 @@ def _register_preprocess_parser(self, parent: ArgumentParser) -> None:
     Expect high resource contention during preprocessing.
     """
 
-    def _main(inputs: List[str], file_inputs: bool, inplace: bool,
+    def _main(inputs: List[TextIO], inputs_are_files: bool, inplace: bool,
               gpuverify: bool, remove_bad_preprocessed: bool,
               remove_preprocessed: bool) -> None:
-        if file_inputs and inplace:
-            clgen.preprocess_inplace(inputs, use_gpuverify=gpuverify)
+        input_paths = [infile.name for infile in inputs]
+
+        if inputs_are_files and inplace:
+            clgen.preprocess_inplace(input_paths, use_gpuverify=gpuverify)
         else:
-            for path in inputs:
-                if file_inputs:
+            for path in input_paths:
+                if inputs_are_files:
                     clgen.preprocess_file(path, inplace=False,
                                           use_gpuverify=gpuverify)
                 elif remove_bad_preprocessed:
@@ -523,8 +549,10 @@ def _register_preprocess_parser(self, parent: ArgumentParser) -> None:
                                epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
     parser.add_argument('inputs', metavar="<path>", nargs='+',
-                        help='path to input')
-    parser.add_argument('-f', '--file', dest="file_inputs", action='store_true',
+                        type=FileType("r"),
+                        help='path to input(s)')
+    parser.add_argument('-f', '--file', dest="inputs_are_files",
+                        action='store_true',
                         help='treat input as file')
     parser.add_argument('-i', '--inplace', action='store_true',
                         help='inplace file rewrite')
@@ -550,27 +578,29 @@ def _register_features_parser(self, parent: ArgumentParser) -> None:
         Data Parallel Programs to OpenCL for Heterogeneous Systems. In CGO. IEEE.
     """
 
-    def _main(inputs: List[str], dir_mode: bool, summarise: bool,
+    def _main(infiles: List[TextIO], dir_mode: bool, summarise: bool,
               fatal_errors: bool, use_shum: bool, quiet: bool,
               no_header: bool) -> None:
         from clgen import features
+
+        input_paths = [infile.name for infile in infiles]
 
         def features_dir(csv_path):
             return fs.basename(fs.dirname(csv_path))
 
         if summarise:
-            stats = [features.summarize(f) for f in inputs]
+            stats = [features.summarize(f) for f in input_paths]
 
             print('dataset', *list(stats[0].keys()), sep=',')
-            for path, stat in zip(inputs, stats):
+            for path, stat in zip(input_paths, stats):
                 print(features_dir(path), *list(stat.values()), sep=',')
             return
 
         if dir_mode:
-            trees = [fs.ls(d, abspaths=True, recursive=True) for d in inputs]
+            trees = [fs.ls(d, abspaths=True, recursive=True) for d in input_paths]
             paths = [item for sublist in trees for item in sublist]
         else:
-            paths = [fs.path(f) for f in inputs]
+            paths = [fs.path(f) for f in input_paths]
 
         features.files(paths, fatal_errors=fatal_errors, quiet=quiet,
                        use_shim=use_shim, header=not no_header)
@@ -580,7 +610,8 @@ def _register_features_parser(self, parent: ArgumentParser) -> None:
                                description=inspect.getdoc(self),
                                epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
-    parser.add_argument("inputs", metavar="<path>", nargs="+",
+    parser.add_argument("infiles", metavar="<path>", nargs="+",
+                        type=FileType("r"),
                         help="input path(s)")
     parser.add_argument("-d", "--dir", action="store_true",
                         help="treat inputs as directories")
@@ -615,7 +646,7 @@ def _register_atomize_parser(self, parent: ArgumentParser) -> None:
                                description=inspect.getdoc(self),
                                epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
-    parser.add_argument('infile', type=FileType("r"), metavar="<path>",
+    parser.add_argument('infile', metavar="<path>", type=FileType("r"),
                         help='path to input text file')
     parser.add_argument('-t', '--type', type=str, dest="vocab", default='char',
                         help='vocabulary type')
