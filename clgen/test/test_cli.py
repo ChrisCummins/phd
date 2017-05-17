@@ -53,7 +53,7 @@ def test_cli_db():
     cli.main("db init kernels.db".split())
     assert fs.exists("kernels.db")
 
-    corpus_path = tests.data_path("tiny", "corpus")
+    corpus_path = tests.archive("tiny", "corpus")
     cli.main("db explore kernels.db".split())
     cli.main(f"fetch fs kernels.db {corpus_path}".split())
     cli.main("preprocess kernels.db".split())
