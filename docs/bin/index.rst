@@ -11,7 +11,7 @@ clgen
     usage: clgen [-h] [-v] [--version] [--debug] [--profile]
                  [--corpus-dir <corpus>] [--model-dir <model>]
                  [--sampler-dir <model> <sampler>]
-                 {test,train,t,tr,sample,s,sa,fetch,f,fe,ls,db,preprocess,p,pp,features,atomize,cache}
+                 {test,train,t,tr,sample,s,sa,db,fetch,f,fe,ls,preprocess,p,pp,features,atomize,cache}
                  ...
     
     A deep learning program generator for the OpenCL programming language.
@@ -44,15 +44,15 @@ clgen
                             print path to sampler cache
     
     available commands:
-      {test,train,t,tr,sample,s,sa,fetch,f,fe,ls,db,preprocess,p,pp,features,atomize,cache}
+      {test,train,t,tr,sample,s,sa,db,fetch,f,fe,ls,preprocess,p,pp,features,atomize,cache}
         test                run the testsuite
         train (t, tr)       train models
         sample (s, sa)      train and sample models
+        db                  manage databases
         fetch (f, fe)       gather training data
         ls                  list files
-        db                  manage databases
         preprocess (p, pp)  preprocess files for training
-        features            get kernel features
+        features            extract OpenCL kernel features
         atomize             atomize files
         cache               manage filesystem cache
     
