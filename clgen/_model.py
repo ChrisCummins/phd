@@ -223,7 +223,14 @@ class Model(clgen.CLgenObject):
         self.epoch = tf.Variable(0, trainable=False)
         tvars = tf.trainable_variables()
         grads, _ = tf.clip_by_global_norm(
-            tf.gradients(self.cost, tvars), self.grad_clip)
+            # Argument of potential interest:
+            #   aggregation_method=tf.AggregationMethod.EXPERIMENTAL_TREE
+            #
+            # See:
+            #   https://www.tensorflow.org/api_docs/python/tf/gradients
+            #   https://www.tensorflow.org/api_docs/python/tf/AggregationMethod
+            tf.gradients(self.cost, tvars
+        ), self.grad_clip)
         optimizer = tf.train.AdamOptimizer(self.learning_rate)
         self.train_op = optimizer.apply_gradients(zip(grads, tvars))
 
