@@ -72,7 +72,7 @@ test_arg_names = [['a', 'b', 'c'], ['a', 'b', 'c'], ['a', 'b', 'c', 'd']]
 test_arg_types = [['float*', 'float*', 'int'],
                   ['float*', 'float*', 'int*'],
                   ['int*', 'int*', 'int', 'int']]
-test_inputs = zip(test_sources, test_prototypes)
+test_inputs = list(zip(test_sources, test_prototypes))
 
 
 # OpenCLUtil
