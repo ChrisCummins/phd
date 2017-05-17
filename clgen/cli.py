@@ -600,7 +600,7 @@ For information about a specific command, run `clgen <command> --help`.
     db_dump = db_parser.add_parser("dump", help="export database contents",
                                    description=inspect.getdoc(_db_dump),
                                    epilog=__help_epilog__)
-    db_dump.set_defaults(dispatch_func=_db_merge)
+    db_dump.set_defaults(dispatch_func=_db_dump)
     db_dump.add_argument('input', metavar="<db>",
                          help='path to kernels database')
     db_dump.add_argument('output', metavar="<path>",
