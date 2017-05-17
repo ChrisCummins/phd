@@ -345,15 +345,15 @@ def _db_dump(self, args):
     Dump kernel dataset to file(s).
     """
     opts = {
-        "dir": args.d,
+        "dir": args.dir,
         "eof": args.eof,
-        "fileid": args.i,
+        "fileid": args.file_sep,
         "input_samples": args.input_samples,
-        "reverse": args.r,
+        "reverse": args.reverse,
         "status": args.status
     }
 
-    dbutil.dump_db(args.input, args.out_path, **opts)
+    dbutil.dump_db(args.input, args.output, **opts)
 
 
 @getself
@@ -615,9 +615,9 @@ For information about a specific command, run `clgen <command> --help`.
                          help='include file separators')
     db_dump.add_argument('--input-samples', action='store_true',
                          help='use input contents, not preprocessed')
-    db_dump.add_argument('--eof', action='store_true', default=False,
+    db_dump.add_argument('--eof', action='store_true',
                          help='print end of file')
-    db_dump.add_argument('-r', action='store_true', default=False,
+    db_dump.add_argument('-r', '--reverse', action='store_true',
                          help='use reverse order')
     db_dump.add_argument('-s', '--status', type=int, default=0,
                          help='status code to use')
