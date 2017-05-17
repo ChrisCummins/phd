@@ -417,8 +417,7 @@ def _cache_migrate(self, args):
                 log.info(cached_model_id, '->', model.hash)
 
                 if fs.isdir(model.cache.path):
-                    log.error("cache conflict", file=sys.stderr)
-                    sys.exit(1)
+                    log.fatal("cache conflict", file=sys.stderr)
 
                 fs.mv(cached_modeldir, model.cache.path)
 
