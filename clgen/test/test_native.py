@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase
 from clgen import test as tests
 
 import labm8
@@ -26,23 +25,22 @@ import clgen
 from clgen import native
 
 
-class TestNative(TestCase):
-    BINARIES = [
-        native.CLANG,
-        native.CLANG_FORMAT,
-        native.CLGEN_REWRITER,
-        native.OPT,
-    ]
+BINARIES = [
+    native.CLANG,
+    native.CLANG_FORMAT,
+    native.CLGEN_REWRITER,
+    native.OPT,
+]
 
-    FILES = [
-        fs.path(native.LIBCLC, "clc", "clc.h"),
-        native.SHIMFILE,
-    ]
+FILES = [
+    fs.path(native.LIBCLC, "clc", "clc.h"),
+    native.SHIMFILE,
+]
 
-    def test_binaries_exist(self):
-        for binary in self.BINARIES:
-            self.assertTrue(fs.isexe(binary))
+def test_binaries_exist():
+    for binary in BINARIES:
+        assert fs.isexe(binary)
 
-    def test_files_exist(self):
-        for file in self.FILES:
-            self.assertTrue(fs.isfile(file))
+def test_files_exist():
+    for file in FILES:
+        assert fs.isfile(file)

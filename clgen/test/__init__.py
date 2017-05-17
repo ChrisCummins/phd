@@ -26,7 +26,6 @@ from io import StringIO
 from labm8 import fs
 from labm8 import system
 from labm8 import tar
-from unittest import TestCase
 
 import clgen
 from clgen import log

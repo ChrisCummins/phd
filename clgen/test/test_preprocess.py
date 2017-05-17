@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase, skipIf
+import pytest
 from clgen import test as tests
 
 import os
@@ -35,6 +35,7 @@ import clgen
 #   $ UPDATE_GS_FILES=1 python3 ./setup.py test
 #
 UPDATE_GS_FILES = True if 'UPDATE_GS_FILES' in os.environ else False
+
 
 def preprocess_pair(basename, preprocessor=clgen.preprocess):
     gs_path = tests.data_path(os.path.join('cl', str(basename) + '.gs'),
@@ -57,40 +58,42 @@ def preprocess_pair(basename, preprocessor=clgen.preprocess):
     return (gs, tout)
 
 
-class TestPreprocess(TestCase):
-    def test_preprocess(self):
-        self.assertEqual(*preprocess_pair('sample-1'))
+def test_preprocess():
+    assert len(set(preprocess_pair('sample-1'))) == 1
 
-    def test_preprocess_shim(self):
-        # FLOAT_T is defined in shim header
-        self.assertTrue(clgen.preprocess("""
-__kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=True))
 
-        # Preprocess will fail without FLOAT_T defined
-        with self.assertRaises(clgen.BadCodeException):
-            clgen.preprocess("""
+def test_preprocess_shim():
+    # FLOAT_T is defined in shim header
+    assert clgen.preprocess("""
+__kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=True)
+
+    # Preprocess will fail without FLOAT_T defined
+    with pytest.raises(clgen.BadCodeException):
+        clgen.preprocess("""
 __kernel void A(__global FLOAT_T* a) { int b; }""", use_shim=False)
 
-    def test_ugly_preprocessed(self):
-        # empty kernel protoype is rejected
-        with self.assertRaises(clgen.NoCodeException):
-            clgen.preprocess("""\
+
+def test_ugly_preprocessed():
+    # empty kernel protoype is rejected
+    with pytest.raises(clgen.NoCodeException):
+        clgen.preprocess("""\
 __kernel void A() {
 }\
 """)
-        # kernel containing some code returns the same.
-        self.assertEqual("""\
+    # kernel containing some code returns the same.
+    assert """\
 __kernel void A() {
   int a;
 }\
-""", clgen.preprocess("""\
+""" == clgen.preprocess("""\
 __kernel void A() {
   int a;
 }\
-"""))
+""")
 
-    def test_preprocess_stable(self):
-        code = """\
+
+def test_preprocess_stable():
+    code = """\
 __kernel void A(__global float* a) {
   int b;
   float c;
@@ -98,28 +101,28 @@ __kernel void A(__global float* a) {
 
   a[d] *= 2.0f;
 }"""
-        # pre-processing is "stable" if the code doesn't change
-        out = code
-        for _ in range(5):
-            out = clgen.preprocess(out)
-            self.assertEqual(out, code)
+    # pre-processing is "stable" if the code doesn't change
+    out = code
+    for _ in range(5):
+        out = clgen.preprocess(out)
+        assert out == code
 
-    @skipIf(not system.is_linux(), "Pre-built binary")  # FIXME: GPUVerify support on macOS.
-    def test_gpuverify(self):
-        code = """\
+
+@tests.needs_linux  # FIXME: GPUVerify support on macOS.
+def test_gpuverify():
+    code = """\
 __kernel void A(__global float* a) {
   int b = get_global_id(0);
   a[b] *= 2.0f;
 }"""
-        self.assertEqual(
-            clgen.gpuverify(code, ["--local_size=64", "--num_groups=128"]),
-            code)
+    assert clgen.gpuverify(code, ["--local_size=64", "--num_groups=128"]) == code
 
-    @skipIf(not system.is_linux(), "Pre-built binary")  # FIXME: GPUVerify support on macOS.
-    def test_gpuverify_data_race(self):
-        code = """\
+
+@tests.needs_linux  # FIXME: GPUVerify support on macOS.
+def test_gpuverify_data_race():
+    code = """\
 __kernel void A(__global float* a) {
   a[0] +=  1.0f;
 }"""
-        with self.assertRaises(clgen.GPUVerifyException):
-            clgen.gpuverify(code, ["--local_size=64", "--num_groups=128"])
+    with pytest.raises(clgen.GPUVerifyException):
+        clgen.gpuverify(code, ["--local_size=64", "--num_groups=128"])
