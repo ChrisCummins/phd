@@ -16,18 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
-from unittest import TestCase, main, skip
 from clgen import test as tests
 
 import clgen
 
 
-class TestFetch(TestCase):
-    def test_inline_fs_headers(self):
-        src = clgen.inline_fs_headers(tests.data_path("cl", "sample-3.cl"), [])
-        self.assertTrue("MY_DATA_TYPE" in src)
-        self.assertTrue("__kernel void" in src)
-
-
-if __name__ == "__main__":
-    main()
+def test_inline_fs_headers(self):
+    src = clgen.inline_fs_headers(tests.data_path("cl", "sample-3.cl"), [])
+    assert "MY_DATA_TYPE" in src
+    assert "__kernel void" in src
