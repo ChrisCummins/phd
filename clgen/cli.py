@@ -589,7 +589,7 @@ For information about a specific command, run `clgen <command> --help`.
     db_explore.add_argument('input', metavar="<db>",
                             help='path to SQL dataset')
 
-    db_merge = db_parser.add_parser("explore", help="show database stats",
+    db_merge = db_parser.add_parser("merge", help="merge databases",
                                     description=inspect.getdoc(_db_merge),
                                     epilog=__help_epilog__)
     db_merge.set_defaults(dispatch_func=_db_merge)
@@ -597,8 +597,7 @@ For information about a specific command, run `clgen <command> --help`.
     db_merge.add_argument("inputs", metavar="<db>", nargs='+',
                           help="path to input datasets")
 
-
-    db_dump = db_parser.add_parser("dbump", help="export database contents",
+    db_dump = db_parser.add_parser("dump", help="export database contents",
                                    description=inspect.getdoc(_db_dump),
                                    epilog=__help_epilog__)
     db_dump.set_defaults(dispatch_func=_db_merge)
@@ -618,7 +617,6 @@ For information about a specific command, run `clgen <command> --help`.
                          help='use reverse order')
     db_dump.add_argument('-s', '--status', type=int, default=0,
                          help='status code to use')
-
 
     # preprocess
     preprocess = subparser.add_parser(
