@@ -8,6 +8,7 @@ from argparse import ArgumentParser
 from itertools import product
 from subprocess import Popen
 
+import db
 from db import *
 
 def get_platform_name(platform_id):
@@ -36,7 +37,9 @@ def main():
     platform_name = get_platform_name(platform_id)
     device_name = get_device_name(platform_id, device_id)
 
-    init(args.hostname)
+    db_hostname = args.hostname
+    db_url = db.init(db_hostname)
+    print("connected to", db_url)
     with Session(commit=False) as session:
         testbed = str(get_testbed(session, platform_name, device_name))
     print(testbed)
@@ -64,11 +67,11 @@ def main():
     ]
 
     cl_launcher_jobs = [
-        ['python', script, str(platform_id), str(device_id)] + args
+        ['python', script, "--hostname", db_hostname, str(platform_id), str(device_id)] + args
         for script, args in product(cl_launcher_scripts, cl_launcher_script_args)
     ]
     cldrive_jobs = [
-        ['python', script, platform_name, device_name] + args
+        ['python', script, "--hostname", db_hostname, platform_name, device_name] + args
         for script, args in product(cldrive_scripts, cldrive_script_args)
     ]
     jobs = cl_launcher_jobs + cldrive_jobs
