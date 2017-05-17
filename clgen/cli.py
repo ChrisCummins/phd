@@ -623,7 +623,7 @@ For information about a specific command, run `clgen <command> --help`.
 
     # preprocess
     preprocess = subparser.add_parser(
-        "preprocess",
+        "preprocess", aliases=["p", "pp"],
         help="preprocess files for training",
         description=inspect.getdoc(_preprocess),
         epilog=__help_epilog__)
