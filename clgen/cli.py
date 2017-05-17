@@ -166,29 +166,56 @@ def _register_test_parser(self, clgen_parser):
 
 
 @getself
-def _train(self, args):
+def _register_train_parser(self, clgen_parser):
     """
     Train a CLgen model.
     """
-    model_json = jsonutil.loads(args.model.read())
-    model = clgen.Model.from_json(model_json)
-    model.train()
-    log.info("done.")
+
+    def _main(args):
+        model_json = jsonutil.loads(args.model.read())
+        model = clgen.Model.from_json(model_json)
+        model.train()
+        log.info("done.")
+
+    parser = clgen_parser.add_parser("train", aliases=["t", "tr"],
+                                     help="train models",
+                                     description=inspect.getdoc(self),
+                                     epilog=__help_epilog__)
+    parser.set_defaults(dispatch_func=_main)
+    parser.add_argument("model", metavar="<model>",
+                       type=argparse.FileType("r"),
+                       help="path to model specification file")
 
 
 @getself
-def _sample(self, args) -> None:
+def _register_sample_parser(self, clgen_parser) -> None:
     """
     Sample a model.
     """
-    model_json = jsonutil.loads(args.model.read())
-    model = clgen.Model.from_json(model_json)
 
-    sampler_json = jsonutil.loads(args.sampler.read())
-    sampler = clgen.Sampler.from_json(sampler_json)
+    def _main(args):
+        model_json = jsonutil.loads(args.model.read())
+        model = clgen.Model.from_json(model_json)
 
-    model.train()
-    sampler.sample(model)
+        sampler_json = jsonutil.loads(args.sampler.read())
+        sampler = clgen.Sampler.from_json(sampler_json)
+
+        model.train()
+        sampler.sample(model)
+
+    parser = clgen_parser.add_parser("sample", aliases=["s", "sa"],
+                                     help="train and sample models",
+                                     description=inspect.getdoc(self),
+                                     epilog=__help_epilog__)
+    parser.set_defaults(dispatch_func=_main)
+    parser.add_argument("model", metavar="<model>",
+                        type=argparse.FileType("r"),
+                        help="path to model specification file")
+    parser.add_argument("sampler", metavar="<sampler>",
+                        type=argparse.FileType("r"),
+                        help="path to sampler specification file")
+
+
 
 
 @getself
@@ -493,31 +520,9 @@ For information about a specific command, run `clgen <command> --help`.
 
     subparser = parser.add_subparsers(title="available commands")
 
-    # test
     _register_test_parser(subparser)
-
-    # train
-    train = subparser.add_parser("train", aliases=["t", "tr"],
-                                 help="train models",
-                                 description=inspect.getdoc(_train),
-                                 epilog=__help_epilog__)
-    train.set_defaults(dispatch_func=_train)
-    train.add_argument("model", metavar="<model>",
-                       type=argparse.FileType("r"),
-                       help="path to model specification file")
-
-    # sample
-    sample = subparser.add_parser("sample", aliases=["s", "sa"],
-                                  help="train and sample models",
-                                  description=inspect.getdoc(_sample),
-                                  epilog=__help_epilog__)
-    sample.set_defaults(dispatch_func=_sample)
-    sample.add_argument("model", metavar="<model>",
-                        type=argparse.FileType("r"),
-                        help="path to model specification file")
-    sample.add_argument("sampler", metavar="<sampler>",
-                        type=argparse.FileType("r"),
-                        help="path to sampler specification file")
+    _register_train_parser(subparser)
+    _register_sample_parser(subparser)
 
     # fetch
     fetch = subparser.add_parser("fetch", aliases=["f", "fe"],
@@ -720,4 +725,5 @@ but keep the entries in the table""")
         print(sampler.cache(model).path)
         sys.exit(0)
     else:
+        # dispatch the appropriate subparser function
         run(args.dispatch_func, args)
