@@ -136,21 +136,33 @@ def _version():
 
 
 @getself
-def _test(self, args):
+def _register_test_parser(self, clgen_parser):
     """
     Run the CLgen self-test suite.
     """
-    import clgen.test  # Must scope this import, as it breaks cache behaviour
 
-    if args.coveragerc_path:
-        print(clgen.test.coveragerc_path())
-        sys.exit(0)
+    def _main(args):
+        import clgen.test  # Must scope this import, as it changes cache loc
 
-    if args.coverage_path:
-        print(clgen.test.coverage_report_path())
-        sys.exit(0)
+        if args.coveragerc_path:
+            print(clgen.test.coveragerc_path())
+            sys.exit(0)
 
-    sys.exit(clgen.test.testsuite())
+        if args.coverage_path:
+            print(clgen.test.coverage_report_path())
+            sys.exit(0)
+
+        sys.exit(clgen.test.testsuite())
+
+    parser = clgen_parser.add_parser("test", help="run the testsuite",
+                                  description=inspect.getdoc(self),
+                                  epilog=__help_epilog__)
+    parser.set_defaults(dispatch_func=_main)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--coveragerc-path", action="store_true",
+                       help="print path to coveragerc file")
+    group.add_argument("--coverage-path", action="store_true",
+                       help="print path to coverage file")
 
 
 @getself
@@ -482,15 +494,7 @@ For information about a specific command, run `clgen <command> --help`.
     subparser = parser.add_subparsers(title="available commands")
 
     # test
-    test = subparser.add_parser("test", help="run the testsuite",
-                                description=inspect.getdoc(_test),
-                                epilog=__help_epilog__)
-    test.set_defaults(dispatch_func=_test)
-    group = test.add_mutually_exclusive_group()
-    group.add_argument("--coveragerc-path", action="store_true",
-                       help="print path to coveragerc file")
-    group.add_argument("--coverage-path", action="store_true",
-                       help="print path to coverage file")
+    _register_test_parser(subparser)
 
     # train
     train = subparser.add_parser("train", aliases=["t", "tr"],
