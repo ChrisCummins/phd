@@ -48,7 +48,7 @@ def test_run_exception_debug():
         cli.run(_mymethod, 1, 0)
 
 
-def test_cli_db():
+def test_cli():
     fs.rm("kernels.db")
     cli.main("db init kernels.db".split())
     assert fs.exists("kernels.db")
@@ -63,6 +63,10 @@ def test_cli_db():
     cli.main("db dump kernels.db -d kernels_out".split())
     assert fs.isdir("kernels_out")
     assert len(fs.ls("kernels_out")) >= 1
+
+    fs.rm("kernels.cl")
+    cli.main("db dump kernels.db kernels.cl --file-sep --eof --reverse".split())
+    assert fs.isfile("kernels.cl")
 
     fs.rm("kernels_out")
     cli.main("db dump kernels.db --input-samples -d kernels_out".split())
