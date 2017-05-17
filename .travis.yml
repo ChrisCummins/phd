@@ -73,7 +73,6 @@ after_success:
   - mv -v ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/.coverage .
   - mv -v ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/test/data/coveragerc .coveragerc
   # strip absolute paths from coverage file
-  - sed -r 's,/home/travis/virtualenv/python[0-9\.]+/lib/python[0-9\.]+/site-packages/CLgen-[0-9\.]+(\.dev[0-9]+)?-py[0-9\.]+\.egg,'$(pwd)',g' .coverage
   - sed -r 's,/home/travis/virtualenv/python[0-9\.]+/lib/python[0-9\.]+/site-packages/CLgen-[0-9\.]+(\.dev[0-9]+)?-py[0-9\.]+\.egg,'$(pwd)',g' -i .coverage
   - test -f NORUN || coveralls
 
