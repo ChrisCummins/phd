@@ -48,6 +48,21 @@ def test_run_exception_debug():
         cli.run(_mymethod, 1, 0)
 
 
+def test_cli_version():
+    with pytest.raises(SystemExit):
+        cli.main("--version")
+
+
+def test_cli_test_coverage_path():
+    with pytest.raises(SystemExit):
+        cli.main("test --coverage-path".split())
+
+
+def test_cli_test_coveragerc_path():
+    with pytest.raises(SystemExit):
+        cli.main("test --coveragerc-path".split())
+
+
 def test_cli():
     fs.rm("kernels.db")
     cli.main("db init kernels.db".split())
