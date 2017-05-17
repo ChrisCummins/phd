@@ -21,7 +21,7 @@ from clgen import test as tests
 import clgen
 
 
-def test_inline_fs_headers(self):
+def test_inline_fs_headers():
     src = clgen.inline_fs_headers(tests.data_path("cl", "sample-3.cl"), [])
     assert "MY_DATA_TYPE" in src
     assert "__kernel void" in src

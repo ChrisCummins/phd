@@ -44,7 +44,7 @@ def get_test_model(vocab="char"):
     })
 
 
-def test_model_hash(self):
+def test_model_hash():
     m1 = clgen.Model.from_json({
         "corpus": {
             "path": tests.data_path("tiny", "corpus")
@@ -74,12 +74,12 @@ def test_model_hash(self):
     assert m1.hash == m2.hash
     assert m2.hash != m3.hash
 
-def test_model_checkpoint_path_untrained(self):
+def test_model_checkpoint_path_untrained():
     m = get_test_model()
     m.cache.clear()  # untrain
     assert m.checkpoint_path == None
 
-def test_model_eq(self):
+def test_model_eq():
     m1 = clgen.Model.from_json({
         "corpus": {
             "path": tests.data_path("tiny", "corpus")
@@ -110,7 +110,7 @@ def test_model_eq(self):
     assert m1 != False
     assert m1 != 'abcdef'
 
-def test_model_to_json(self):
+def test_model_to_json():
     m1 = clgen.Model.from_json({
         "corpus": {
             "path": tests.data_path("tiny", "corpus")
