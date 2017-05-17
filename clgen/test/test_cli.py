@@ -17,9 +17,12 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 import pytest
+from clgen import test as tests
+
 import os
 
 from clgen import cli
+from labm8 import fs
 
 
 def _mymethod(a, b):
@@ -43,3 +46,28 @@ def test_run_exception_debug():
     os.environ["DEBUG"] = "1"
     with pytest.raises(ZeroDivisionError):
         cli.run(_mymethod, 1, 0)
+
+
+def test_cli_db():
+    fs.rm("kernels.db")
+    cli.main("db init kernels.db".split())
+    assert fs.exists("kernels.db")
+
+    corpus_path = tests.data_path("tiny", "corpus")
+    cli.main("db explore kernels.db".split())
+    cli.main(f"fetch fs kernels.db {corpus_path}".split())
+    cli.main("preprocess kernels.db".split())
+    cli.main("db explore kernels.db".split())
+
+    fs.rm("kernels_out")
+    cli.main("db dump kernels.db -d kernels_out".split())
+    assert fs.isdir("kernels_out")
+    assert len(fs.ls("kernels_out")) >= 1
+
+    fs.rm("kernels_out")
+    cli.main("db dump kernels.db --input-samples -d kernels_out".split())
+    assert fs.isdir("kernels_out")
+    assert len(fs.ls("kernels_out")) == 250
+
+    fs.rm("kernels.db")
+    fs.rm("kernels_out")
