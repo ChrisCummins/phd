@@ -38,8 +38,8 @@ class Data404(Exception):
 # test decorators
 needs_cuda = pytest.mark.skipif(not clgen.USE_CUDA, reason="no CUDA support")
 needs_linux = pytest.mark.skipif(not system.is_linux(), reason="not linux")
-skip_on_travis = pytest.mark.skipif(os.environ.get("TRAVIS") == 'true',
-                                    reason="skip on Travis CI")
+skip_on_travis = pytest.mark.skipif(
+    os.environ.get("TRAVIS") == 'true', reason="skip on Travis CI")
 
 
 def data_path(*components, **kwargs):
@@ -144,9 +144,6 @@ def local_cachepath(*relative_path_components: list) -> str:
 
     return fs.path(cache_root, *relative_path_components)
 
-# use local cache for testing
-clgen.cachepath = local_cachepath
-
 
 class DevNullRedirect(object):
     """
@@ -193,6 +190,14 @@ def testsuite():
     int
         Test return code. 0 if successful.
     """
+    # use local cache for testing
+    old_cachepath = clgen.cachepath
+    clgen.cachepath = local_cachepath
+
+    # no GPUs for testing
+    old_cuda_devs = os.environ.get("CUDA_VISIBLE_DEVICES")
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
     # run from module directory
     cwd = os.getcwd()
     os.chdir(module_path())
@@ -218,5 +223,10 @@ def testsuite():
     if log.is_verbose():
         print("coverage path:", coverage_report_path())
         print("coveragerc path:", coveragerc_path())
+
+    # restore cachepath
+    clgen.cachepath = old_cachepath
+    # restore GPUs
+    os.environ = old_cuda_devs
 
     return ret
