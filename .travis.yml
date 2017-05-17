@@ -71,7 +71,7 @@ script:
 
 after_success:
   - mv -v ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/.coverage .
-  - mv -v ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/test/data/coveragerc .
+  - mv -v ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/test/data/coveragerc .coveragerc
   - test -f NORUN || coveralls
 
 notifications:
