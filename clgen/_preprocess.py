@@ -39,7 +39,7 @@ from queue import Empty as QueueEmpty
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import NamedTemporaryFile
 from threading import Thread
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 
 import clgen
@@ -129,17 +129,23 @@ CLANG_CL_TARGETS = [
 
 
 def clang_cl_args(target: str=CLANG_CL_TARGETS[0],
-                  use_shim: bool=True, error_limit: int=0) -> list:
+                  use_shim: bool=True, error_limit: int=0) -> List[str]:
     """
     Get the Clang args to compile OpenCL.
 
-    Arguments:
-        target (str): LLVM target.
-        use_shim (bool, optional): Inject shim header.
-        error_limit (int, optional): Limit number of compiler errors.
+    Parameters
+    ----------
+    target : str
+        LLVM target.
+    use_shim : bool, optional
+        Inject shim header.
+    error_limit : int, optional
+        Limit number of compiler errors.
 
-    Returns:
-        str[]: Array of args.
+    Returns
+    -------
+    List[str]
+        Array of args.
     """
     # clang warnings to disable
     disabled_warnings = [
@@ -169,16 +175,24 @@ def compiler_preprocess_cl(src: str, id: str='anon',
 
     Inlines macros, removes comments, etc.
 
-    Arguments:
-        src (str): OpenCL source.
-        id (str, optional): Name of OpenCL source.
-        use_shim (bool, optional): Inject shim header.
+    Parameters
+    ----------
+    src : str
+        OpenCL source.
+    id : str, optional
+        Name of OpenCL source.
+    use_shim : bool, optional
+        Inject shim header.
 
-    Returns:
-        str: Preprocessed source.
+    Returns
+    -------
+    str
+        Preprocessed source.
 
-    Raises:
-        ClangException: If compiler errors.
+    Raises
+    ------
+    ClangException
+        If compiler errors.
     """
     cmd = [native.CLANG] + clang_cl_args(use_shim=use_shim) + [
         '-E', '-c', '-', '-o', '-'
@@ -212,16 +226,24 @@ def rewrite_cl(src: str, id: str='anon', use_shim: bool=True) -> str:
 
     Renames all functions and variables with short, unique names.
 
-    Arguments:
-        src (str): OpenCL source.
-        id (str, optional): OpenCL source name.
-        use_shim (bool, optional): Inject shim header.
+    Parameters
+    ----------
+    src : str
+        OpenCL source.
+    id : str, optional
+        OpenCL source name.
+    use_shim : bool, optional
+        Inject shim header.
 
-    Returns:
-        str: Rewritten OpenCL source.
+    Returns
+    -------
+    str
+        Rewritten OpenCL source.
 
-    Raises:
-        RewriterException: If rewriter fails.
+    Raises
+    ------
+    RewriterException
+        If rewriter fails.
     """
     # Rewriter can't read from stdin.
     with NamedTemporaryFile('w', suffix='.cl') as tmp:
@@ -252,16 +274,24 @@ def compile_cl_bytecode(src: str, id: str='anon', use_shim: bool=True) -> str:
     """
     Compile OpenCL kernel to LLVM bytecode.
 
-    Arguments:
-        src (str): OpenCL source.
-        id (str, optional): Name of OpenCL source.
-        use_shim (bool, optional): Inject shim header.
+    Parameters
+    ----------
+    src : str
+        OpenCL source.
+    id : str, optional
+        Name of OpenCL source.
+    use_shim : bool, optional
+        Inject shim header.
 
-    Returns:
-        str: Bytecode.
+    Returns
+    -------
+    str
+        Bytecode.
 
-    Raises:
-        ClangException: If compiler errors.
+    Raises
+    ------
+    ClangException
+        If compiler errors.
     """
     cmd = [native.CLANG] + clang_cl_args(use_shim=use_shim) + [
         '-emit-llvm', '-S', '-c', '-', '-o', '-'
@@ -279,16 +309,24 @@ def gpuverify(src: str, args: list, id: str='anon') -> str:
     """
     Run GPUverify over kernel.
 
-    Arguments:
-        src (str): OpenCL source.
-        id (str, optional): OpenCL source name.
+    Parameters
+    ----------
+    src : str
+        OpenCL source.
+    id : str, optional
+        OpenCL source name.
 
-    Returns:
-        str: OpenCL source.
+    Returns
+    -------
+    str
+        OpenCL source.
 
-    Raises:
-        GPUVerifyException: If GPUverify finds a bug.
-        InternalError: If GPUverify fails.
+    Raises
+    ------
+    GPUVerifyException
+        If GPUverify finds a bug.
+    InternalError
+        If GPUverify fails.
     """
     # FIXME: GPUVerify support on macOS.
     from labm8 import system
@@ -314,16 +352,20 @@ _instcount_re = re.compile(
     r"^(?P<count>\d+) instcount - Number of (?P<type>.+)")
 
 
-def parse_instcounts(txt: str) -> dict:
+def parse_instcounts(txt: str) -> Dict[str, int]:
     """
     Parse LLVM opt instruction counts pass.
 
-    Arguments:
-        txt (str): LLVM output.
+    Parameters
+    ----------
+    txt : str
+        LLVM output.
 
-    Returns:
-        dict: key, value pairs, where key is instruction type and value is
-            instruction type count.
+    Returns
+    -------
+    Dict[str, int]
+        key, value pairs, where key is instruction type and value is
+        instruction type count.
     """
     lines = [x.strip() for x in txt.split("\n")]
     counts = {}
@@ -346,18 +388,22 @@ def parse_instcounts(txt: str) -> dict:
     return counts
 
 
-def instcounts2ratios(counts: dict) -> dict:
+def instcounts2ratios(counts: Dict[str, int]) -> Dict[str, float]:
     """
     Convert instruction counts to instruction densities.
 
     If, for example, there are 10 instructions and 2 addition instructions,
     then the instruction density of add operations is .2.
 
-    Arguments:
-        counts (dict): Key value pairs of instruction types and counts.
+    Parameters
+    ----------
+    counts : Dict[str, int]
+        Key value pairs of instruction types and counts.
 
-    Returns:
-        ratios (dict): Key value pairs of instruction types and densities.
+    Returns
+    -------
+    ratios : Dict[str, float]
+        Key value pairs of instruction types and densities.
     """
     if not len(counts):
         return {}
@@ -383,19 +429,26 @@ def instcounts2ratios(counts: dict) -> dict:
     return ratios
 
 
-def bytecode_features(bc: str, id: str='anon') -> dict:
+def bytecode_features(bc: str, id: str='anon') -> Dict[str, float]:
     """
     Extract features from bytecode.
 
-    Arguments:
-        bc (str): LLVM bytecode.
-        id (str, optional): Name of OpenCL source.
+    Parameters
+    ----------
+    bc : str
+        LLVM bytecode.
+    id : str, optional
+        Name of OpenCL source.
 
-    Returns:
-        dict: Key value pairs of instruction types and densities.
+    Returns
+    -------
+    Dict[str, float]
+        Key value pairs of instruction types and densities.
 
-    Raises:
-        OptException: If LLVM opt pass errors.
+    Raises
+    ------
+    OptException
+        If LLVM opt pass errors.
     """
     cmd = [native.OPT, '-analyze', '-stats', '-instcount', '-']
 
@@ -434,15 +487,22 @@ def clangformat_ocl(src: str, id: str='anon') -> str:
     """
     Enforce code style on OpenCL file.
 
-    Arguments:
-        src (str): OpenCL source.
-        id (str, optional): Name of OpenCL source.
+    Parameters
+    ----------
+    src : str
+        OpenCL source.
+    id : str, optional
+        Name of OpenCL source.
 
-    Returns:
-        str: Styled source.
+    Returns
+    -------
+    str
+        Styled source.
 
-    Raises:
-        ClangFormatException: If formatting errors.
+    Raises
+    ------
+    ClangFormatException
+        If formatting errors.
     """
     cmd = [native.CLANG_FORMAT, '-style={}'.format(
         json.dumps(clangformat_config))]
@@ -457,16 +517,22 @@ def clangformat_ocl(src: str, id: str='anon') -> str:
     return stdout.decode('utf-8')
 
 
-def verify_bytecode_features(bc_features: dict, id: str='anon') -> None:
+def verify_bytecode_features(bc_features: Dict[str, float],
+                             id: str='anon') -> None:
     """
     Verify LLVM bytecode features.
 
-    Arguments:
-        bc_features (dict): Bytecode features.
-        id (str, optional): Name of OpenCL source.
+    Parameters
+    ----------
+    bc_features : Dict[str, float]
+        Bytecode features.
+    id : str, optional
+        Name of OpenCL source.
 
-    Raises:
-        InstructionCountException: If verification errors.
+    Raises
+    ------
+    InstructionCountException
+        If verification errors.
     """
     # The minimum number of instructions before a kernel is discarded
     # as ugly.
@@ -483,11 +549,20 @@ def ensure_has_code(src: str) -> str:
     """
     Check that file contains actual executable code.
 
-    Arguments:
-        src (str): OpenCL source, must be preprocessed.
+    Parameters
+    ----------
+    src : str
+        OpenCL source, must be preprocessed.
 
-    Raises:
-        NoCodeException: If kernel is empty.
+    Returns
+    -------
+    src
+        Unmodified source code.
+
+    Raises
+    ------
+    NoCodeException
+        If kernel is empty.
     """
     if len(src.split('\n')) < 3:
         raise NoCodeException
@@ -501,11 +576,20 @@ def sanitize_prototype(src: str) -> str:
 
     Ensures that OpenCL prototype fits on a single line.
 
-    Arguments:
-        src (str): OpenCL source.
+    Parameters
+    ----------
+    src : str
+        OpenCL source.
 
-    Returns:
-        str: Sanitized OpenCL source.
+    Returns
+    -------
+    src
+        Source code with sanitized prototypes.
+
+    Returns
+    -------
+    str
+        Sanitized OpenCL source.
     """
     # Ensure that prototype is well-formed on a single line:
     try:
@@ -532,20 +616,30 @@ def preprocess(src: str, id: str='anon', use_shim: bool=True,
     3. Ugly. Code can be preprocessed but isn't useful for training
        (e.g. it's an empty file).
 
-    Arguments:
-        src (str): The source code as a string.
-        id (str, optional): An identifying name for the source code
-            (used in exception messages).
-        use_shim (bool, optional): Inject shim header.
-        use_gpuverify (bool, optional): Whether to run GPUVerify on the code.
+    Parameters
+    ----------
+    src : str
+        The source code as a string.
+    id : str, optional
+        An identifying name for the source code (used in exception messages).
+    use_shim : bool, optional
+        Inject shim header.
+    use_gpuverify : bool, optional
+        Whether to run GPUVerify on the code.
 
-    Returns:
-        str: Preprocessed source code as a string.
+    Returns
+    -------
+    str
+        Preprocessed source code as a string.
 
-    Raises:
-        BadCodeException: If code is bad (see above).
-        UglyCodeException: If code is ugly (see above).
-        clgen.InternalException: In case of some other error.
+    Raises
+    ------
+    BadCodeException
+        If code is bad (see above).
+    UglyCodeException
+        If code is ugly (see above).
+    clgen.InternalException
+        In case of some other error.
     """
     # Compile to bytecode and verify features:
     bc = compile_cl_bytecode(src, id, use_shim)
@@ -565,7 +659,22 @@ def preprocess(src: str, id: str='anon', use_shim: bool=True,
     return src
 
 
-def preprocess_for_db(src, **preprocess_opts):
+def preprocess_for_db(src: str, **preprocess_opts) -> Tuple[int, str]:
+    """
+    Preprocess source code for import into contentdb.
+
+    Parameters
+    ----------
+    src : str
+        Source to preprocess.
+    **preprocess_opts
+        Preprocessing options.
+
+    Returns
+    -------
+    Tuple[int, str]
+        The status of the preprocessed code, and the preprocess output.
+    """
     try:
         # Try and preprocess it:
         status = 0
@@ -587,9 +696,12 @@ def preprocess_file(path: str, inplace: bool=False, **preprocess_opts) -> None:
     Prints output to stdout by default. If preprocessing fails, this function
     exits.
 
-    Arguments:
-        path (str): String path to file.
-        inplace (bool, optional): If True, overwrite input file.
+    Parameters
+    ----------
+    path : str
+        String path to file.
+    inplace : bool, optional
+        If True, overwrite input file.
     """
     with open(path) as infile:
         contents = infile.read()
@@ -606,22 +718,26 @@ def preprocess_file(path: str, inplace: bool=False, **preprocess_opts) -> None:
         log.fatal(e, ret=2)
 
 
-def _preprocess_inplace_worker(path: str):
+def _preprocess_inplace_worker(path: str) -> None:
     """worker function for preprocess_inplace()"""
     log.info('preprocess', path)
     preprocess_file(path, inplace=True)
 
 
-def preprocess_inplace(paths: str, max_num_workers: int=cpu_count(),
+def preprocess_inplace(paths: List[str], max_num_workers: int=cpu_count(),
                        max_attempts: int=100, attempt: int=1) -> None:
     """
     Preprocess a list of files in place.
 
-    Arguments:
-        paths (str[]): List of paths.
-        max_num_workers (int, optional): Number of processes to spawn.
-        max_attempts (int, optional): In case of an OSError or TimeoutError,
-            this number of attempts will be made.
+    Parameters
+    ----------
+    paths : List[str]
+        List of paths.
+    max_num_workers : int, optional
+        Number of processes to spawn.
+    max_attempts : int, optional
+        In case of an OSError or TimeoutError, this number of attempts will be
+        made.
     """
     if attempt > max_attempts:
         raise clgen.InternalError(
@@ -679,11 +795,15 @@ def _preprocess_db(db_path: str, max_num_workers: int=cpu_count(),
     """
     Preprocess OpenCL dataset.
 
-    Arguments:
-        db_path (str): OpenCL kernels dataset.
-        max_num_workers (int, optional): Number of processes to spawn.
-        max_attempts (int, optional): In case of an OSError or TimeoutError,
-            this number of attempts will be made.
+    Parameters
+    ----------
+    db_path : str
+        OpenCL kernels dataset.
+    max_num_workers : int, optional
+        Number of processes to spawn.
+    max_attempts : int, optional
+        In case of an OSError or TimeoutError, this number of attempts will be
+        made.
     """
     if attempt > max_attempts:
         raise clgen.InternalError(
@@ -782,11 +902,15 @@ def preprocess_db(db_path: str, **preprocess_opts) -> bool:
     """
     Preprocess database contents.
 
-    Arguments:
-        db_path (str): Path to database.
+    Parameters
+    ----------
+    db_path : str
+        Path to database.
 
-    Returns:
-        bool: True if modified, false if no work needed.
+    Returns
+    -------
+    bool
+        True if modified, false if no work needed.
     """
     db = dbutil.connect(db_path)
 

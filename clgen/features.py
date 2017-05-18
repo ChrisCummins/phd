@@ -30,6 +30,7 @@ from io import open, StringIO
 from labm8 import fs
 from labm8 import math as labmath
 from subprocess import Popen, PIPE, STDOUT
+from typing import List, TextIO
 
 import clgen
 from clgen import log
@@ -62,16 +63,21 @@ def _is_good_features(line: str, stderr: str) -> bool:
     return False
 
 
-def to_np_arrays(paths: list, **kwargs):
+def to_np_arrays(paths: List[str], **kwargs):
     """
     Returns a list of numpy arrays for features in kernels in files.
 
-    Arguments:
-        path (str[]): List of file paths.
-        **kwargs (dict, optional): Arguments to features()
+    Parameters
+    ----------
+    path : List[str]
+        List of file paths.
+    **kwargs
+        Arguments to features()
 
-    Raises:
-        FeatureExtractionError: In case feature extraction fails.
+    Raises
+    ------
+    FeatureExtractionError
+        In case feature extraction fails.
     """
     def _process_file(path: str, **kwargs):
         buf = StringIO()
@@ -96,12 +102,18 @@ def features(path: str, file=sys.stdout, fatal_errors: bool=False,
     """
     Print CSV format features of file.
 
-    Arguments:
-        path (str): Path.
-        file (pipe, optional): Target to print to.
-        fatal_errors (bool, optional): Exit on error.
-        use_shim (bool, optional): Inject shim header.
-        quiet (bool, optional): Don't print compiler output on errors.
+    Parameters
+    ----------
+    path : str
+        Path.
+    file : pipe, optional
+        Target to print to.
+    fatal_errors : bool, optional
+        Exit on error.
+    use_shim : bool, optional
+        Inject shim header.
+    quiet : bool, optional
+        Don't print compiler output on errors.
     """
     path = clgen.must_exist(path)
 
@@ -134,12 +146,14 @@ def features(path: str, file=sys.stdout, fatal_errors: bool=False,
             print(','.join(line), file=file)
 
 
-def feature_headers(file=sys.stdout) -> None:
+def feature_headers(file: TextIO=sys.stdout) -> None:
     """
     Print CSV format feature header.
 
-    Arguments:
-        file (pipe, optional): Target to print to.
+    Parameters
+    ----------
+    file : TextIO, optional
+        Target to print to.
     """
     cmd = [native.CLGEN_FEATURES, '-header-only']
     process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -149,15 +163,21 @@ def feature_headers(file=sys.stdout) -> None:
     print(stdout, file=file)
 
 
-def files(paths: list, header: bool=True, file=sys.stdout, **kwargs) -> None:
+def files(paths: List[str], header: bool=True, file: TextIO=sys.stdout,
+          **kwargs) -> None:
     """
     Print feature values of files in CSV format.
 
-    Arguments:
-        paths (str[]): Files.
-        header (bool, optional): Include CSV format header.
-        file (pipe, optional): Target to print to.
-        **kwargs (optional): Additional arguments to features().
+    Parameters
+    ----------
+    paths : List[str]
+        Files.
+    header : bool, optional
+        Include CSV format header.
+    file : TextIO, optional
+        Target to print to.
+    **kwargs
+        Additional arguments to features().
     """
     npaths = len(paths)
 
@@ -172,11 +192,15 @@ def summarize(csv_path: str) -> OrderedDict:
     """
     Summarize a CSV file of feature values.
 
-    Arguments:
-        csv_path (str): Path to csv.
+    Parameters
+    ----------
+    csv_path : str
+        Path to csv.
 
-    Returns:
-        dict: Summary values.
+    Returns
+    -------
+    OrderedDict
+        Summary values.
     """
     with open(csv_path) as infile:
         reader = csv.reader(infile)

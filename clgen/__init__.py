@@ -21,10 +21,8 @@ Deep learning program generator
 
 Attributes
 ----------
-
 __version__ : str
     PEP 440 compliant version string.
-
 version_info : namedtuple['major', 'minor', 'micro', 'releaselevel'])
     Version tuple.
 """
@@ -118,8 +116,10 @@ def version() -> str:
     """
     Get the package version.
 
-    Returns:
-        str: Version string.
+    Returns
+    -------
+    str
+        Version string.
     """
     return __version__
 
@@ -128,11 +128,15 @@ def cachepath(*relative_path_components: list) -> str:
     """
     Return path to file system cache.
 
-    Arguments:
-        *relative_path_components (list of str): Relative path of cache.
+    Parameters
+    ----------
+    *relative_path_components
+        Relative path of cache.
 
-    Returns:
-        str: Absolute path of file system cache.
+    Returns
+    -------
+    str
+        Absolute path of file system cache.
     """
     cache_root = ["~", ".cache", "clgen",
                   f"{version_info.major}.{version_info.minor}.x" ]
@@ -147,8 +151,10 @@ def get_default_author() -> str:
     If CLGEN_AUTHOR environment variable is set, use that. Else, author
     is $USER@$HOSTNAME.
 
-    Returns:
-        str: Author name.
+    Returns
+    -------
+    str
+        Author name.
     """
     return os.environ.get(
         "CLGEN_AUTHOR",
@@ -161,27 +167,35 @@ def mkcache(*relative_path_components: list) -> cache.FSCache:
 
     If the cache does not exist, one is created.
 
-    Arguments:
-        *relative_path_components (list of str): Relative path of cache.
+    Parameters
+    ----------
+    *relative_path_components
+        Relative path of cache.
 
-    Returns:
-        labm8.FSCache: Filesystem cache.
+    Returns
+    -------
+    labm8.FSCache
+        Filesystem cache.
     """
-
     return cache.FSCache(cachepath(*relative_path_components),
                          escape_key=cache.escape_path)
 
 
-def must_exist(*path_components, **kwargs) -> str:
+def must_exist(*path_components : str, **kwargs) -> str:
     """
     Require that a file exists.
 
-    Arguments:
-        *path_components (str): Components of the path.
-        **kwargs (optional): Key "Error" specifies the exception type to throw.
+    Parameters
+    ----------
+    *path_components : str
+        Components of the path.
+    **kwargs
+        Key "Error" specifies the exception type to throw.
 
-    Returns:
-        str: Path.
+    Returns
+    -------
+    str
+        Path.
     """
     assert(len(path_components))
 
@@ -200,13 +214,15 @@ def package_path(*path) -> str:
     """
     Path to package file.
 
-    Arguments:
+    Parameters
+    ----------
+    *path : str
+        Path components.
 
-        *path (str[]): Path components.
-
-    Returns:
-
-        str: Path.
+    Returns
+    -------
+    str
+        Path.
     """
     path = os.path.expanduser(os.path.join(*path))
     abspath = resource_filename(__name__, path)
@@ -220,13 +236,19 @@ def _shorthash(hash: str, cachedir: str, min_len: int=7) -> str:
     This returns the shortest hash required to uniquely identify all elements
     in the cache.
 
-    Arguments:
-        hash (str): Hash to truncate.
-        cachedir (str): Path to cache.
-        min_len (int, optional): Minimum length of hash to try.
+    Parameters
+    ----------
+    hash : str
+        Hash to truncate.
+    cachedir : str
+        Path to cache.
+    min_len : int, optional
+        Minimum length of hash to try.
 
-    Returns:
-        str: Truncated hash.
+    Returns
+    -------
+    str
+        Truncated hash.
     """
     for shorthash_len in range(min_len, len(hash)):
         entries = [x[:shorthash_len] for x in fs.ls(cachedir)]
@@ -240,13 +262,15 @@ def data_path(*path) -> str:
     """
     Path to package file.
 
-    Arguments:
+    Parameters
+    ----------
+    *path : str
+        Path components.
 
-        *path (str[]): Path components.
-
-    Returns:
-
-        str: Path.
+    Returns
+    -------
+    str
+        Path.
     """
     return package_path("data", *path)
 
@@ -255,14 +279,20 @@ def package_data(*path) -> bytes:
     """
     Read package data file.
 
-    Arguments:
-        path (str): The relative path to the data file, e.g. 'share/foo.txt'.
+    Parameters
+    ----------
+    path : str
+        The relative path to the data file, e.g. 'share/foo.txt'.
 
-    Returns:
-        bytes: File contents.
+    Returns
+    -------
+    bytes
+        File contents.
 
-    Raises:
-        InternalError: In case of IO error.
+    Raises
+    ------
+    InternalError
+        In case of IO error.
     """
     # throw exception if file doesn't exist
     package_path(*path)
@@ -277,14 +307,20 @@ def package_str(*path) -> str:
     """
     Read package data file as a string.
 
-    Arguments:
-        path (str): The relative path to the text file, e.g. 'share/foo.txt'.
+    Parameters
+    ----------
+    path : str
+        The relative path to the text file, e.g. 'share/foo.txt'.
 
-    Returns:
-        str: File contents.
+    Returns
+    -------
+    str
+        File contents.
 
-    Raises:
-        InternalError: In case of IO error.
+    Raises
+    ------
+    InternalError
+        In case of IO error.
     """
     try:
         return package_data(*path).decode('utf-8')
@@ -296,11 +332,15 @@ def sql_script(name: str) -> str:
     """
     Read SQL script to string.
 
-    Arguments:
-        name (str): The name of the SQL script (without file extension).
+    Parameters
+    ----------
+    name : str
+        The name of the SQL script (without file extension).
 
-    Returns:
-        str: SQL script.
+    Returns
+    -------
+    str
+        SQL script.
     """
     path = fs.path('data', 'sql', str(name) + ".sql")
     return package_str(path)
@@ -321,9 +361,10 @@ def platform_info(printfn=print) -> None:
     """
     Log platform information.
 
-    Arguments:
-        printfn (fn, optional): Function to call to print output to. Default
-            `print()`.
+    Parameters
+    ----------
+    printfn : fn, optional
+        Function to call to print output to. Default `print()`.
     """
     if USE_CUDA:
         features_str = "(with CUDA)"

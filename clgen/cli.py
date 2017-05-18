@@ -73,13 +73,18 @@ def run(method, *args, **kwargs):
 
     If environmental variable DEBUG=1, then exception is not caught.
 
-    Args:
-        method (function): Function to execute.
-        *args (str): Arguments for method.
-        **kwargs (dict): Keyword arguments for method.
+    Parameters
+    ----------
+    method : function
+        Function to execute.
+    *args
+        Arguments for method.
+    **kwargs
+        Keyword arguments for method.
 
-    Returns:
-        method(*args, **kwargs)
+    Returns
+    -------
+    method(*args, **kwargs)
     """
     def _user_message(exception):
         log.fatal("""\

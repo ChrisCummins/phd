@@ -19,16 +19,26 @@
 """
 Paths to native files.
 
-Variables:
-    * `CLANG` (str): Path to clang binary.
-    * `CLANG_FORMAT` (str): Path to clang-format binary.
-    * `CLGEN_FEATURES` (str): Path to clgen-features binary.
-    * `CLGEN_REWRITER` (str): Path to clgen-rewriter binary.
-    * `GPUVERIFY` (str): Path to GPUVerify.
-    * `LIBCLC` (str): Path to libclc directory.
-    * `OCLGRIND (str)`: Path to OCLgrind
-    * `OPT` (str): Path to LLVM opt binary.
-    * `SHIMFILE` (str): Path to shim headerfile.
+Attributes
+----------
+CLANG : str
+    Path to clang binary.
+CLANG_FORMAT : str
+    Path to clang-format binary.
+CLGEN_FEATURES : str
+    Path to clgen-features binary.
+CLGEN_REWRITER : str
+    Path to clgen-rewriter binary.
+GPUVERIFY : str
+    Path to GPUVerify.
+LIBCLC : str
+    Path to libclc directory.
+OCLGRIND : str
+     Path to OCLgrind.
+OPT : str
+    Path to LLVM opt binary.
+SHIMFILE : str
+    Path to shim headerfile.
 """
 from labm8 import fs
 
@@ -44,7 +54,6 @@ LIBCLC = clgen.data_path("libclc")
 try:
     OCLGRIND = clgen.data_path(fs.path("oclgrind", "bin", "oclgrind"))
 except clgen.File404:
-    # FIXME: oclgrind is broken on Travis CI.
-    pass
+    pass  # FIXME: oclgrind is broken on Travis CI.
 OPT = clgen.data_path(fs.path("bin", "opt"))
 SHIMFILE = clgen.data_path(fs.path("include", "opencl-shim.h"))

@@ -44,20 +44,27 @@ skip_on_travis = pytest.mark.skipif(
     os.environ.get("TRAVIS") == 'true', reason="skip on Travis CI")
 
 
-def data_path(*components, **kwargs):
+def data_path(*components, **kwargs) -> str:
     """
     Return absolute path to unittest data file. Data files are located in
     tests/data.
 
-    Args:
-        *components (str[]): Relative path.
-        **kwargs (dict, optional): If 'exists' True, require that file exists.
+    Parameters
+    ----------
+    *components : str
+        Relative path.
+    **kwargs
+        If 'exists' True, require that file exists.
 
-    Returns:
-        string: Absolute path.
+    Returns
+    -------
+    str
+        Absolute path.
 
-    Raises:
-        Data404: If path doesn"t exist.
+    Raises
+    ------
+    Data404
+        If path doesn"t exist.
     """
     path = fs.path(*components)
     exists = kwargs.get("exists", True)
@@ -68,18 +75,24 @@ def data_path(*components, **kwargs):
     return abspath
 
 
-def data_str(*components):
+def data_str(*components) -> str:
     """
     Return contents of unittest data file as a string.
 
-    Args:
-        *components (str[]): Relative path.
+    Parameters
+    ----------
+    *components : str
+        Relative path.
 
-    Returns:
-        string: File contents.
+    Returns
+    -------
+    str
+        File contents.
 
-    Raises:
-        Data404: If path doesn't exist.
+    Raises
+    ------
+    Data404
+        If path doesn't exist.
     """
     path = fs.path(*components)
 
@@ -91,11 +104,15 @@ def archive(*components):
     """
     Returns a text archive, unpacking if necessary.
 
-    Arguments:
-        *components (str[]): Relative path.
+    Parameters
+    ----------
+    *components : str
+        Relative path.
 
-    Returns:
-        str: Path to archive.
+    Returns
+    -------
+    str
+        Path to archive.
     """
     path = data_path(*components, exists=False)
 
@@ -109,14 +126,20 @@ def db_path(path):
     Return absolute path to unittest data file. Data files are located in
     tests/data/db.
 
-    Args:
-        path (str): Relative path.
+    Parameters
+    ----------
+    path : str
+        Relative path.
 
-    Returns:
-        string: Absolute path.
+    Returns
+    -------
+    str
+        Absolute path.
 
-    Raises:
-        Data404: If path doesn't exist.
+    Raises
+    ------
+    Data404
+        If path doesn't exist.
     """
     return data_path(os.path.join("db", str(path) + ".db"))
 
@@ -126,14 +149,20 @@ def db(name, **kwargs):
     Return absolute path to unittest data file. Data files are located in
     tests/data/db.
 
-    Args:
-        path (str): Relative path.
+    Parameters
+    ----------
+    path : str
+        Relative path.
 
-    Returns:
-        sqlite.Connection: Sqlite connection to database.
+    Returns
+    -------
+    sqlite.Connection
+        Sqlite connection to database.
 
-    Raises:
-        Data404: If path doesn't exist.
+    Raises
+    ------
+    Data404
+        If path doesn't exist.
     """
     path = data_path(db_path(name), **kwargs)
     return sqlite3.connect(path)

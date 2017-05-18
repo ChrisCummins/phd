@@ -24,6 +24,7 @@ import re
 
 from labm8 import text
 from six import string_types
+from typing import List, Tuple
 
 import clgen
 from clgen import log
@@ -60,8 +61,10 @@ class KernelArg(clgen.CLgenObject):
         """
         Create a kernel argument from a string.
 
-        Arguments:
-            string (str): OpenCL argument string.
+        Parameters
+        ----------
+        string : str
+            OpenCL argument string.
         """
         assert(isinstance(string, string_types))
 
@@ -90,32 +93,36 @@ class KernelArg(clgen.CLgenObject):
         """
         Return the original string.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelArg('__global float4* a').string
+        '__global float4* a'
+        >>> KernelArg('const int b').string
+        'const int b'
 
-            >>> KernelArg('__global float4* a').string
-            '__global float4* a'
-            >>> KernelArg('const int b').string
-            'const int b'
-
-        Returns:
-            str: String, as passed to constructor.
+        Returns
+        -------
+        str
+            String, as passed to constructor.
         """
         return self._string
 
     @property
-    def components(self) -> list:
+    def components(self) -> List[str]:
         """
         Kernel argument components.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelArg('__global float4* a').components
+        ['__global', 'float4*', 'a']
+        >>> KernelArg('const int b').components
+        ['const', 'int', 'b']
 
-            >>> KernelArg('__global float4* a').components
-            ['__global', 'float4*', 'a']
-            >>> KernelArg('const int b').components
-            ['const', 'int', 'b']
-
-        Returns:
-            str[]: Argument components.
+        Returns
+        -------
+        List[str]
+            Argument components.
         """
         return self._components
 
@@ -124,15 +131,17 @@ class KernelArg(clgen.CLgenObject):
         """
         Get the argument variable name.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelArg('__global float4* a').name
+        'a'
+        >>> KernelArg('const int b').name
+        'b'
 
-            >>> KernelArg('__global float4* a').name
-            'a'
-            >>> KernelArg('const int b').name
-            'b'
-
-        Returns:
-            str: Argument name.
+        Returns
+        -------
+        str
+            Argument name.
         """
         return self._components[-1]
 
@@ -141,15 +150,17 @@ class KernelArg(clgen.CLgenObject):
         """
         Get the argument type.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelArg('__global float4* a').type
+        'float4*'
+        >>> KernelArg('const int b').type
+        'int'
 
-            >>> KernelArg('__global float4* a').type
-            'float4*'
-            >>> KernelArg('const int b').type
-            'int'
-
-        Returns:
-            str: Argument type, including pointer '*' symbol, if present.
+        Returns
+        -------
+        str
+            Argument type, including pointer '*' symbol, if present.
         """
         return self._components[-2]
 
@@ -158,32 +169,36 @@ class KernelArg(clgen.CLgenObject):
         """
         Argument has restrict keyword.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelArg('__global float4* a').is_restrict
+        False
+        >>> KernelArg('restrict int* b').is_restrict
+        True
 
-            >>> KernelArg('__global float4* a').is_restrict
-            False
-            >>> KernelArg('restrict int* b').is_restrict
-            True
-
-        Returns:
-            bool: True if restrict.
+        Returns
+        -------
+        bool
+            True if restrict.
         """
         return self._is_restrict
 
     @property
-    def qualifiers(self) -> float:
+    def qualifiers(self) -> List[str]:
         """
         Return all argument type qualifiers.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelArg('__global float4* a').qualifiers
+        ['__global']
+        >>> KernelArg('const int b').qualifiers
+        ['const']
 
-            >>> KernelArg('__global float4* a').qualifiers
-            ['__global']
-            >>> KernelArg('const int b').qualifiers
-            ['const']
-
-        Returns:
-            str[]: Type qualifiers.
+        Returns
+        -------
+        List[str]
+            Type qualifiers.
         """
         return self._components[:-2]
 
@@ -192,15 +207,17 @@ class KernelArg(clgen.CLgenObject):
         """
         Returns whether argument is a pointer.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelArg('__global float4* a').is_pointer
+        True
+        >>> KernelArg('const int b').is_pointer
+        False
 
-            >>> KernelArg('__global float4* a').is_pointer
-            True
-            >>> KernelArg('const int b').is_pointer
-            False
-
-        Returns:
-            bool: True if pointer, else False.
+        Returns
+        -------
+        bool
+            True if pointer, else False.
         """
         return self.type[-1] == '*'
 
@@ -209,15 +226,17 @@ class KernelArg(clgen.CLgenObject):
         """
         Returns whether argument is a vectory type, e.g. 'int4'.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelArg('__global float4* a').is_vector
+        True
+        >>> KernelArg('const int b').is_vector
+        False
 
-            >>> KernelArg('__global float4* a').is_vector
-            True
-            >>> KernelArg('const int b').is_vector
-            False
-
-        Returns:
-            bool: True if vector type, else False.
+        Returns
+        -------
+        bool
+            True if vector type, else False.
         """
         idx = -2 if self.is_pointer else -1
         return self.type[idx].isdigit()
@@ -229,15 +248,17 @@ class KernelArg(clgen.CLgenObject):
 
         If not a vector type, returned width is 1.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelArg('__global float4* a').vector_width
+        4
+        >>> KernelArg('__global int* a').vector_width
+        1
 
-            >>> KernelArg('__global float4* a').vector_width
-            4
-            >>> KernelArg('__global int* a').vector_width
-            1
-
-        Returns:
-            int: Vector width.
+        Returns
+        -------
+        int
+            Vector width.
         """
         try:
             return self._vector_width
@@ -254,15 +275,17 @@ class KernelArg(clgen.CLgenObject):
         """
         Type name, without vector or pointer qualifiers.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelArg('__global float4* a').bare_type
+        'float'
+        >>> KernelArg('const int b').bare_type
+        'int'
 
-            >>> KernelArg('__global float4* a').bare_type
-            'float'
-            >>> KernelArg('const int b').bare_type
-            'int'
-
-        Returns:
-            str: Bare type.
+        Returns
+        -------
+        str
+            Bare type.
         """
         try:
             return self._bare_type
@@ -275,15 +298,17 @@ class KernelArg(clgen.CLgenObject):
         """
         Kernel arg is constant.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelArg('__global float4* a').is_const
+        False
+        >>> KernelArg('const int b').is_const
+        True
 
-            >>> KernelArg('__global float4* a').is_const
-            False
-            >>> KernelArg('const int b').is_const
-            True
-
-        Returns:
-            bool: True if const, else False.
+        Returns
+        -------
+        bool
+            True if const, else False.
         """
         try:
             return self._is_const
@@ -296,15 +321,17 @@ class KernelArg(clgen.CLgenObject):
         """
         Kernel arg is global.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelArg('__global float4* a').is_global
+        True
+        >>> KernelArg('const int b').is_global
+        False
 
-            >>> KernelArg('__global float4* a').is_global
-            True
-            >>> KernelArg('const int b').is_global
-            False
-
-        Returns:
-            bool: True if global, else False.
+        Returns
+        -------
+        bool
+            True if global, else False.
         """
         try:
             return self._is_global
@@ -319,15 +346,17 @@ class KernelArg(clgen.CLgenObject):
         """
         Kernel arg is local.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelArg('__local float4* a').is_local
+        True
+        >>> KernelArg('const int b').is_local
+        False
 
-            >>> KernelArg('__local float4* a').is_local
-            True
-            >>> KernelArg('const int b').is_local
-            False
-
-        Returns:
-            bool: True if local, else False.
+        Returns
+        -------
+        bool
+            True if local, else False.
         """
         try:
             return self._is_local
@@ -342,20 +371,22 @@ class KernelArg(clgen.CLgenObject):
         """
         Return the numpy data type associated with this argument.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelArg('__local float4* a').numpy_type
+        <class 'numpy.float32'>
+        >>> KernelArg('const int b').numpy_type
+        <class 'numpy.int32'>
 
-            >>> KernelArg('__local float4* a').numpy_type
-            <class 'numpy.float32'>
-            >>> KernelArg('const int b').numpy_type
-            <class 'numpy.int32'>
+        Returns
+        -------
+        np.dtype
+            Kernel type.
 
-        Return:
-
-            numpy type: Kernel type.
-
-        Raises:
-
-            UnknownTypeException: If type can't be deduced.
+        Raises
+        ------
+        UnknownTypeException
+            If type can't be deduced.
         """
         np_type = {
             "bool": np.bool_,
@@ -396,8 +427,10 @@ class KernelPrototype(clgen.CLgenObject):
 
         *Note:* requires source to have been preprocessed.
 
-        Arguments:
-            string (str): Prototype string.
+        Parameters
+        ----------
+        string : str
+            Prototype string.
         """
         self._string = ' '.join(string.split())
         if not self._string.startswith('__kernel void '):
@@ -408,13 +441,15 @@ class KernelPrototype(clgen.CLgenObject):
         """
         Kernel function name.
 
-        Examples:
+        Examples
+        --------
+        >>> KernelPrototype('__kernel void A() {').name
+        'A'
 
-            >>> KernelPrototype('__kernel void A() {').name
-            'A'
-
-        Returns:
-            str: Kernel name.
+        Returns
+        -------
+        str
+            Kernel name.
         """
         try:
             return self._name
@@ -425,12 +460,14 @@ class KernelPrototype(clgen.CLgenObject):
             return self._name
 
     @property
-    def args(self) -> list:
+    def args(self) -> List[KernelArg]:
         """
         Kernel arguments.
 
-        Returns:
-            KernelArg[]: Kernel arguments.
+        Returns
+        -------
+        List[KernelArg]
+            Kernel arguments.
         """
         try:
             return self._args
@@ -462,25 +499,34 @@ class KernelPrototype(clgen.CLgenObject):
         """
         Create KernelPrototype from OpenCL kernel source.
 
-        Argument:
-            src (str): OpenCL kernel source.
+        Parameters
+        ----------
+        src : str
+            OpenCL kernel source.
 
-        Returns:
-            KernelPrototype: Kernel prototype.
+        Returns
+        -------
+        KernelPrototype
+            Kernel prototype.
         """
         return extract_prototype(src)
 
 
-def get_attribute_range(src: str, start_idx: int) -> tuple:
+def get_attribute_range(src: str, start_idx: int) -> Tuple[int, int]:
     """
     Get string indices range of attributes.
 
-    Arguments:
-        src (str): OpenCL kernel source.
-        start_idx (int): Index of attribute opening brace.
+    Parameters
+    ----------
+    src : str
+        OpenCL kernel source.
+    start_idx : int
+        Index of attribute opening brace.
 
-    Returns:
-        tuple of int: Start and end indices of attributes.
+    Returns
+    -------
+    Tuple[int, int]
+        Start and end indices of attributes.
     """
     i = src.find('(', start_idx) + 1
     d = 1
@@ -498,11 +544,15 @@ def strip_attributes(src: str) -> str:
     """
     Remove attributes from OpenCL source.
 
-    Arguments:
-        src (str): OpenCL source.
+    Parameters
+    ----------
+    src : str
+        OpenCL source.
 
-    Returns:
-        str: OpenCL source, with ((attributes)) removed.
+    Returns
+    -------
+    str
+        OpenCL source, with ((attributes)) removed.
     """
     # get list of __attribute__ substrings
     idxs = sorted(text.get_substring_idxs('__attribute__', src))
@@ -521,15 +571,19 @@ def get_cl_kernel_end_idx(src: str, start_idx: int=0, max_len: int=5000) -> int:
     Return the index of the character after the end of the OpenCL
     kernel.
 
-    Arguments:
+    Parameters
+    ----------
+    src : str
+        OpenCL source.
+    start_idx : int, optional
+        Start index.
+    max_len : int, optional
+        Maximum kernel length.
 
-        src (str): OpenCL source.
-        start_idx (int, optional): Start index.
-        max_len (int, optional): Maximum kernel length.
-
-    Returns:
-
-        int: Index of end of OpenCL kernel.
+    Returns
+    -------
+    int
+        Index of end of OpenCL kernel.
     """
     i = src.find('{', start_idx) + 1
     d = 1  # depth
@@ -546,30 +600,36 @@ def get_cl_kernel(src: str, start_idx: int, max_len: int=5000) -> str:
     """
     Return the OpenCL kernel.
 
-    Arguments:
+    Parameters
+    ----------
+    src : str
+        OpenCL source.
+    start_idx : int, optional
+        Start index.
+    max_len : int, optional
+        Maximum kernel length.
 
-        src (str): OpenCL source.
-        start_idx (int, optional): Start index.
-        max_len (int, optional): Maximum kernel length.
-
-    Returns:
-
-        str: OpenCL kernel.
+    Returns
+    -------
+    str
+        OpenCL kernel.
     """
     return src[start_idx:get_cl_kernel_end_idx(src, start_idx)]
 
 
-def get_cl_kernels(src: str) -> list:
+def get_cl_kernels(src: str) -> List[str]:
     """
     Return OpenCL kernels.
 
-    Arguments:
+    Parameters
+    ----------
+    src : str
+        OpenCL source.
 
-        src (str): OpenCL source.
-
-    Returns:
-
-        str[]: OpenCL kernels.
+    Returns
+    -------
+    List[str]
+        OpenCL kernels.
     """
     idxs = text.get_substring_idxs('__kernel', src)
     kernels = [get_cl_kernel(src, i) for i in idxs]
@@ -580,13 +640,15 @@ def extract_prototype(src: str) -> KernelPrototype:
     """
     Extract OpenCL kernel prototype from preprocessed file.
 
-    Arguments:
+    Parameters
+    ----------
+    src : str
+        OpenCL source.
 
-        src (str): OpenCL source.
-
-    Returns:
-
-        KernelPrototype: Prototype instance.
+    Returns
+    -------
+    KernelPrototype
+        Prototype instance.
     """
     idxs = text.get_substring_idxs('__kernel void ', src)
     if len(idxs) != 1:

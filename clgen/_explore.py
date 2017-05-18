@@ -32,12 +32,17 @@ def _safe_div(x, y) -> float:
     """
     Zero-safe _safe_division.
 
-    Arguments:
-        x (Number): Numerator
-        y (Number): Denominator
+    Parameters
+    ----------
+    x : Number
+        Numerator.
+    y : Number
+        Denominator.
 
-    Returns:
-        Number: x / y
+    Returns
+    -------
+    Number
+        x / y
     """
     try:
         return x / y
@@ -49,11 +54,15 @@ def _bigint(n) -> str:
     """
     Return comma seperated big numbers.
 
-    Arugments:
-        n (Number): Value.
+    Parameters
+    ----------
+    n : Number
+        Value.
 
-    Returns:
-        str: Comma separated value.
+    Returns
+    -------
+    str
+        Comma separated value.
     """
     return locale.format('%d', round(n), grouping=True)
 
@@ -62,11 +71,15 @@ def _seq_stats(sorted_arr: list) -> str:
     """
     Return stats on a sequence.
 
-    Arguments:
-        sorted_arr (Number[]): Sequence.
+    Parameters
+    ----------
+    sorted_arr : List[Number]
+        Sequence.
 
-    Returns:
-        str: Sequnece stats.
+    Returns
+    -------
+    str
+        Sequnece stats.
     """
     sorted_arr = sorted_arr or [0]
     avg = sum(sorted_arr) / len(sorted_arr)
@@ -85,8 +98,10 @@ def explore(db_path: str) -> None:
     """
     Run exploratory analysis on dataset.
 
-    Arguments:
-        db_path (str): Path to dataset.
+    Parameters
+    ----------
+    db_path : str
+        Path to dataset.
     """
     locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
 
@@ -162,8 +177,10 @@ def explore_gh(db_path: str) -> None:
     """
     Run exploratory analysis on GitHub dataset.
 
-    Arguments:
-        db_path (str): Path to dataset.
+    Parameters
+    ----------
+    db_path : str
+        Path to dataset.
     """
     locale.setlocale(locale.LC_ALL, 'en_GB.utf-8')
 

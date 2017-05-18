@@ -34,7 +34,7 @@ from labm8 import lockfile
 from labm8 import types
 from prettytable import PrettyTable
 from time import time
-from typing import Iterator, List
+from typing import Iterator, List, Union
 
 import clgen
 from clgen import log
@@ -78,18 +78,21 @@ class Model(clgen.CLgenObject):
         """
         Instantiate model.
 
-        Arguments:
-            corpus (clgen.Corpus): Corpus instance.
-            opts (dict): Training options.
+        Parameters
+        ----------
+        corpus : clgen.Corpus
+            Corpus instance.
+        **opts
+            Training options.
         """
+        assert(isinstance(corpus, clgen.Corpus))
+
         def _hash(corpus: clgen.Corpus, opts: dict) -> str:
             """ compute model hash """
             hashopts = deepcopy(opts)
             del hashopts["created"]
             del hashopts["train_opts"]["epochs"]
             return crypto.sha1_list(corpus.hash, *types.dict_values(hashopts))
-
-        assert(isinstance(corpus, clgen.Corpus))
 
         # Validate options
         for key in opts:
@@ -150,12 +153,16 @@ class Model(clgen.CLgenObject):
         between modes. Second, importing tensorflow takes a long time, so
         we only want to do it if we actually need to.
 
-        Arguments:
-            infer (bool): If True, initialize model for inference. If False,
-                initialize model for training.
+        Parameters
+        ----------
+        infer : bool
+            If True, initialize model for inference. If False, initialize
+            model for training.
 
-        Returns:
-            module: imported TensorFlow module
+        Returns
+        -------
+        module
+            TensorFlow module.
         """
         # quiet tensorflow. See: https://github.com/tensorflow/tensorflow/issues/1258
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -348,8 +355,10 @@ class Model(clgen.CLgenObject):
         """
         Train model.
 
-        Returns:
-            Model: self.
+        Returns
+        -------
+        Model
+            self
         """
         with self.lock.acquire(replace_stale=True):
             return self._locked_train()
@@ -410,13 +419,14 @@ class Model(clgen.CLgenObject):
         return not self.__eq__(rhs)
 
     @property
-    def checkpoint_path(self) -> str:
+    def checkpoint_path(self) -> Union[str, None]:
         """
         Get path to most recemt checkpoint, if exists.
 
-        Returns:
-
-            str or None: Path to checkpoint, or None if no checkpoints.
+        Returns
+        -------
+        Union[str, None]
+            Path to checkpoint, or None if no checkpoints.
         """
         if self.cache.get("checkpoint"):
             return self.cache.path
@@ -428,11 +438,15 @@ class Model(clgen.CLgenObject):
         """
         Load model from JSON.
 
-        Arguments:
-            model_json (dict): JSON specification.
+        Parameters
+        ----------
+        model_json : dict
+            JSON specification.
 
-        Returns:
-            Model: Model instance.
+        Returns
+        -------
+        Model
+            Model instance.
         """
         assert(isinstance(model_json, dict))
 
@@ -452,8 +466,10 @@ def models() -> Iterator[Model]:
     """
     Iterate over all cached models.
 
-    Returns:
-        Iterator[Model]: An iterable over all cached models.
+    Returns
+    -------
+    Iterator[Model]
+        An iterable over all cached models.
     """
     if fs.isdir(clgen.cachepath(), "model"):
         modeldirs = fs.ls(fs.path(clgen.cachepath(), "model"), abspaths=True)
@@ -467,11 +483,15 @@ def models_to_tab(*models: List[Model]) -> PrettyTable:
     """
     Pretty print a table of model stats.
 
-    Arguments:
-        models (List[Model]): Models to tablify.
+    Parameters
+    ----------
+    models : List[Model]
+        Models to tablify.
 
-    Returns:
-        PrettyTable: Formatted table for printing.
+    Returns
+    -------
+    PrettyTable
+        Formatted table for printing.
     """
     tab = PrettyTable([
         "model",
@@ -491,7 +511,8 @@ def models_to_tab(*models: List[Model]) -> PrettyTable:
     for model in models:
         meta = model.to_json()
 
-        network = f'{meta["architecture"]["rnn_size"]} x {meta["architecture"]["num_layers"]}'
+        nodes = meta["architecture"]["rnn_size"]
+        layers = meta["architecture"]["num_layers"]
 
         if "stats" in meta:
             num_epochs = len(meta["stats"]["epoch_costs"])
@@ -512,7 +533,7 @@ def models_to_tab(*models: List[Model]) -> PrettyTable:
             model.shorthash,
             trained,
             meta["architecture"]["model_type"],
-            network,
+            f'{nodes} x {layers}',
             meta["train_opts"]["epochs"],
             "{:.0e}".format(meta["train_opts"]["learning_rate"]),
             meta["train_opts"]["lr_decay_rate"],

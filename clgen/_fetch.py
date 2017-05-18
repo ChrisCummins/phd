@@ -35,6 +35,7 @@ from labm8 import crypto
 from labm8 import fs
 from subprocess import Popen
 from time import sleep
+from typing import List
 
 import clgen
 from clgen import clutil
@@ -76,8 +77,10 @@ def _rate_limit(g) -> None:
     """
     Block on GitHub rate limit.
 
-    Arguments:
-        g: GitHub connection.
+    Parameters
+    ----------
+    g
+        GitHub connection.
     """
     global status_string
     remaining = g.get_rate_limit().rate.remaining
@@ -97,13 +100,19 @@ def _process_repo(g, db, repo) -> bool:
         * The repository has not already been visited.
         * The repository has been modified since it was last visited.
 
-    Arguments:
-        g: GitHub connection.
-        db (sqlite3.Connection): Dataset.
-        repo: Repository.
+    Parameters
+    ----------
+    g
+        GitHub connection.
+    db : sqlite3.Connection
+        Dataset.
+    repo
+        Repository.
 
-    Returns:
-        bool: True if repository should be scraped, else False.
+    Returns
+    -------
+    bool
+        True if repository should be scraped, else False.
     """
     global repos_new_counter
     global repos_modified_counter
@@ -153,20 +162,27 @@ def _process_repo(g, db, repo) -> bool:
 _include_re = re.compile('\w*#include ["<](.*)[">]')
 
 
-def _download_file(github_token: str, repo, url: str, stack: list) -> str:
+def _download_file(github_token: str, repo, url: str, stack: List[str]) -> str:
     """
     Fetch file from GitHub.
 
     Recursively downloads and inlines headers.
 
-    Arguments:
-        github_token (str): Authorization.
-        repo: Repository.
-        url (str): Path.
-        stack (str[]): URL stack.
+    Parameters
+    ----------
+    github_token : str
+        Authorization.
+    repo
+        Repository.
+    url : str
+        Path.
+    stack : List[str]
+        URL stack.
 
-    Returns:
-        str: File contents.
+    Returns
+    -------
+    str
+        File contents.
     """
     # Recursion stack
     stack.append(url)
@@ -214,15 +230,23 @@ def _process_file(g, github_token: str, db, repo, file) -> bool:
     """
     GitHub file handler.
 
-    Arguments:
-        g: GitHub connection.
-        github_token (str): Authorization.
-        db (sqlite3.Connection): Dataset.
-        repo: Repository.
-        file: File.
+    Parameters
+    ----------
+    g
+        GitHub connection.
+    github_token : str
+        Authorization.
+    db : sqlite3.Connection
+        Dataset.
+    repo
+        Repository.
+    file
+        File.
 
-    Return:
-        bool: True on success, else False.
+    Returns
+    -------
+    bool
+        True on success, else False.
     """
     global files_new_counter
     global files_modified_counter
@@ -277,11 +301,16 @@ def fetch_github(db_path: str, github_username: str, github_pw: str,
         * Only includes exclusively OpenCL files, no inline strings.
         * Occasionally (< 1%) can't find headers to include.
 
-    Arguments:
-        db_path (str): Dataset path.
-        github_username (str): Authorization.
-        github_pw (str): Authorization.
-        github_token (str): Authorization.
+    Parameters
+    ----------
+    db_path : str
+        Dataset path.
+    github_username : str
+        Authorization.
+    github_pw : str
+        Authorization.
+    github_token : str
+        Authorization.
     """
     global errors_counter
 
@@ -343,16 +372,21 @@ def fetch_github(db_path: str, github_username: str, github_pw: str,
     db.close()
 
 
-def inline_fs_headers(path: str, stack: list) -> str:
+def inline_fs_headers(path: str, stack: List[str]) -> str:
     """
     Recursively inline headers in file.
 
-    Arguments:
-        path (str): File.
-        stack (str[]): File stack.
+    Parameters
+    ----------
+    path : str
+        File.
+    stack : List[str]
+        File stack.
 
-    Returns:
-        str: Inlined file.
+    Returns
+    -------
+    str
+        Inlined file.
     """
     stack.append(path)
 
@@ -392,12 +426,17 @@ def process_cl_file(db_path: str, path: str) -> None:
     """
     Process OpenCL file.
 
-    Arguments:
-        db_path (str): Path to output database.
-        path (str): Path to input file.
+    Parameters
+    ----------
+    db_path : str
+        Path to output database.
+    path : str
+        Path to input file.
 
-    Raises:
-        FetchError: In case of IO error.
+    Raises
+    ------
+    FetchError
+        In case of IO error.
     """
     db = dbutil.connect(db_path)
     c = db.cursor()
@@ -415,13 +454,16 @@ def process_cl_file(db_path: str, path: str) -> None:
     c.close()
 
 
-def fetch(db_path: str, paths: list=[]) -> None:
+def fetch(db_path: str, paths: List[str]=[]) -> None:
     """
     Fetch from a list of files.
 
-    Arguments:
-        db_path (str): Output dataset.
-        paths (str[]): List of file paths.
+    Parameters
+    ----------
+    db_path : str
+        Output dataset.
+    paths : List[str]
+        List of file paths.
     """
     paths = fs.files_from_list(*paths)  # expand directories
 

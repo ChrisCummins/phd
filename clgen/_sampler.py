@@ -37,6 +37,7 @@ from labm8 import types
 from queue import Queue
 from threading import Event, Thread
 from time import time
+from typing import List
 
 import clgen
 from clgen import clutil
@@ -64,15 +65,19 @@ DEFAULT_SAMPLER_OPTS = {
 }
 
 
-def serialize_argspec(args: list) -> str:
+def serialize_argspec(args: List[str]) -> str:
     """
     Serializes an argument spec to a kernel prototype.
 
-    Arguments:
-        args (str[]): Argument specification.
+    Parameters
+    ----------
+    args : List[str]
+        Argument specification.
 
-    Returns:
-        str: Kernel prototype.
+    Returns
+    -------
+    str
+        Kernel prototype.
     """
     names = map(chr, range(97, 97 + len(args)))
     strings = [arg + " " + name for arg, name in zip(args, names)]
@@ -90,7 +95,7 @@ class SampleProducer(Thread):
         self.stop_signal = Event()
         self.kernel_opts = kernel_opts
 
-    def run(self):
+    def run(self) -> None:
         model = self.model
         max_length = self.kernel_opts["max_length"]
         temperature = self.kernel_opts["temperature"]
@@ -184,11 +189,11 @@ class SampleProducer(Thread):
             if log.is_verbose():
                 sys.stdout.write('\n\n')
 
-    def stop(self):
+    def stop(self) -> None:
         self.stop_signal.set()
 
     @property
-    def stop_requested(self):
+    def stop_requested(self) -> bool:
         return self.stop_signal.isSet()
 
 
@@ -197,13 +202,22 @@ class SampleConsumer(Thread):
     def __init__(self, db_path: str, producer: SampleProducer, sampler,
                  cache, queue: Queue, **sampler_opts):
         """
-        Arguments:
-            db_path (str): Path to samples database.
-            producer (SampleProducer): Sample producer thread.
-            sampler (Sampler): Host sampler.
-            condition (Condition): For locking.
-            queue (Queue): output result queue.
-            **sampler_opts: Sampler options.
+        Construct a sample consumer.
+
+        Parameters
+        ----------
+        db_path : str
+            Path to samples database.
+        producer : SampleProducer
+            Sample producer thread.
+        sampler : Sampler
+            Host sampler.
+        condition : Condition
+            For locking.
+        queue : Queue
+            output result queue.
+        **sampler_opts
+            Sampler options.
         """
         super(SampleConsumer, self).__init__()
 
@@ -239,28 +253,28 @@ class SampleConsumer(Thread):
             self.max_i = progressbar.UnknownLength
             self.progress = self.null_progress
 
-    def min_kernels_and_samples_cond(self):
+    def min_kernels_and_samples_cond(self) -> bool:
         return self.min_kernels_cond() and self.min_samples_cond()
 
-    def min_kernels_cond(self):
+    def min_kernels_cond(self) -> bool:
         return self.min_kernels_progress() >= self.sampler_opts["min_kernels"]
 
-    def min_samples_cond(self):
+    def min_samples_cond(self) -> bool:
         return (dbutil.num_rows_in(self.db_path, "ContentFiles") >=
                 self.sampler_opts["min_samples"])
 
-    def null_cond(self):
+    def null_cond(self) -> bool:
         return False
 
-    def min_kernels_progress(self):
+    def min_kernels_progress(self) -> int:
         return min(dbutil.num_good_kernels(self.db_path),
                    self.sampler_opts["min_kernels"])
 
-    def min_samples_progress(self):
+    def min_samples_progress(self) -> int:
         return min(dbutil.num_rows_in(self.db_path, "ContentFiles"),
                    self.sampler_opts["min_samples"])
 
-    def null_progress(self):
+    def null_progress(self) -> int:
         return dbutil.num_rows_in(self.db_path, "ContentFiles")
 
     def run(self) -> None:
@@ -333,9 +347,12 @@ class Sampler(clgen.CLgenObject):
         """
         Instantiate a sampler.
 
-        Arguments:
-            sampler_opts (dict): Sampler options.
-            kernel_opts (dict): Kernel options.
+        Parameters
+        ----------
+        sampler_opts : dict
+            Sampler options.
+        kernel_opts : dict
+            Kernel options.
         """
         def _hash(sampler_opts: dict, kernel_opts: dict) -> str:
             # we don't consider the number of samples in the ID
@@ -390,11 +407,15 @@ class Sampler(clgen.CLgenObject):
         """
         Return sampler cache.
 
-        Arguments:
-            model (clgen.Model): CLgen model.
+        Parameters
+        ----------
+        model : clgen.Model
+            CLgen model.
 
-        Returns:
-            labm8.FSCache: Cache.
+        Returns
+        -------
+        labm8
+            FSCache: Cache.
         """
         sampler_model_hash = crypto.sha1_str(self.hash + model.hash)
 
@@ -438,8 +459,10 @@ class Sampler(clgen.CLgenObject):
         """
         Sample CLgen model.
 
-        Arguments:
-            model (clgen.Model): CLgen model.
+        Parameters
+        ----------
+        model : clgen.Model
+            CLgen model.
         """
         cache = self.cache(model)
 
@@ -468,28 +491,33 @@ class Sampler(clgen.CLgenObject):
         clgen.explore(cache["kernels.db"])
 
     @property
-    def shorthash(self):
+    def shorthash(self) -> str:
         return clgen._shorthash(self.hash, clgen.cachepath("sampler"))
 
     @property
-    def min_samples(self):
+    def min_samples(self) -> int:
         return self.sampler_opts["min_samples"]
 
     @property
-    def num_samples(self):
+    def num_samples(self) -> int:
         return dbutil.num_rows_in(self.db_path, "ContentFiles")
 
     @property
-    def min_kernels(self):
+    def min_kernels(self) -> int:
         return self.sampler_opts["min_kernels"]
 
     @property
-    def num_good_kernels(self):
+    def num_good_kernels(self) -> int:
         return dbutil.num_good_kernels(self.db_path)
 
     def to_json(self, cache=None) -> dict:
         """
         JSON representation.
+
+        Returns
+        -------
+        dict
+            JSON specification.
         """
         d = {
             "kernels": self.kernel_opts,
@@ -520,11 +548,15 @@ class Sampler(clgen.CLgenObject):
         """
         Instantiate sampler from JSON.
 
-        Arguments:
-            sampler_json (dict): JSON data.
+        Parameters
+        ----------
+        sampler_json : dict
+            JSON data.
 
-        Returns:
-            Sampler: Instantiate sampler.
+        Returns
+        -------
+        Sampler
+            Instantiate sampler.
         """
         unrecognized_keys = (set(sampler_json.keys()) -
                              set(["sampler", "kernels"]))

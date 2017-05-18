@@ -26,6 +26,7 @@ import sqlite3
 
 from hashlib import md5
 from labm8 import fs
+from typing import List
 
 import clgen
 from clgen import log
@@ -35,9 +36,12 @@ def create_db(path: str, github: bool=False) -> None:
     """
     Create an empty OpenCL kernel database.
 
-    Arguments:
-        path (str): Path to database to create.
-        github (bool, optional): Add tables for GitHub metadata.
+    Parameters
+    ----------
+    path : str
+        Path to database to create.
+    github : bool, optional
+        Add tables for GitHub metadata.
     """
     path = os.path.expanduser(path)
 
@@ -57,9 +61,7 @@ def create_db(path: str, github: bool=False) -> None:
 
 
 class md5sum_aggregator:
-    """
-    sqlite3 aggregator for computing checksum of column values.
-    """
+    """ sqlite3 aggregator for computing checksum of column values. """
     def __init__(self):
         self.md5 = md5()
 
@@ -71,9 +73,7 @@ class md5sum_aggregator:
 
 
 class linecount_aggregator:
-    """
-    sqlite3 aggregator for computing line count of column values.
-    """
+    """ sqlite3 aggregator for computing line count of column values. """
     def __init__(self):
         self.count = 0
 
@@ -87,10 +87,16 @@ class linecount_aggregator:
 def linecount(t: str) -> int:
     """
     Line count.
-    Arguments:
-        t (str): String.
-    Returns:
-        int: Line count.
+
+    Parameters
+    ----------
+    t : str
+        String.
+
+    Returns
+    -------
+    int
+        Line count.
     """
     return len(t.split('\n'))
 
@@ -120,13 +126,15 @@ def connect(db_path: str):
      * CC() returns sum character count of text columns
      * LC_col() returns line count of text value
 
-    Arguments:
+    Parameters
+    ----------
+    db_path : str
+        Path to database.
 
-        db_path (str): Path to database
-
-    Returns:
-
-        sqlite3 connection
+    Returns
+    -------
+    sqlite3.Connection
+        Database connection.
     """
     db = sqlite3.connect(db_path)
     db.create_aggregate("MD5SUM", 1, md5sum_aggregator)
@@ -142,10 +150,14 @@ def set_meta(path: str, key: str, value: str) -> None:
 
     If the a row with this key already exists in the table, it is replaced.
 
-    Arguments:
-        path (str): Path to database.
-        key (str): Key name.
-        value (str): Value to insert.
+    Parameters
+    ----------
+    path : str
+        Path to database.
+    key : str
+        Key name.
+    value : str
+        Value to insert.
     """
     db = sqlite3.connect(path)
     c = db.cursor()
@@ -160,12 +172,17 @@ def get_meta(path: str, key: str) -> str:
     """
     Retrieve a value from a database's Meta table.
 
-    Arguments:
-        path (str): Path to database.
-        key (str): Key name.
+    Parameters
+    ----------
+    path : str
+        Path to database.
+    key : str
+        Key name.
 
-    Returns:
-        str: Value. If no row matching key is found, returns empty string.
+    Returns
+    -------
+    str
+        Value. If no row matching key is found, returns empty string.
     """
     db = sqlite3.connect(path)
     c = db.cursor()
@@ -181,13 +198,19 @@ def get_kernel(path: str, kid: str, table: str="PreprocessedFiles") -> str:
     """
     Retrieve a kernel from a database.
 
-    Arguments:
-        path (str): Path to database.
-        kid (str): Kernel ID.
-        table (str): Name of table.
+    Parameters
+    ----------
+    path : str
+        Path to database.
+    kid : str
+        Kernel ID.
+    table : str
+        Name of table.
 
-    Returns:
-        str: Source code.
+    Returns
+    -------
+    str
+        Source code.
     """
     db = sqlite3.connect(path)
     c = db.cursor()
@@ -208,9 +231,12 @@ def set_version_meta(path: str, version: str=clgen.version()) -> None:
     a databse schema which requires a particular CLgen version, or a scheme
     which is likely to change in the future.
 
-    Arguments:
-        path (str): Path to database.
-        version (str, optional): Version value (defaults to CLgen version).
+    Parameters
+    ----------
+    path : str
+        Path to database.
+    version : str, optional
+        Version value (defaults to CLgen version).
     """
     set_meta(path, "version", version)
 
@@ -222,12 +248,17 @@ def version_meta_matches(path: str, version: str=clgen.version()) -> bool:
     If the database does not have a "version" key in the Meta table, returns
     False.
 
-    Arguments:
-        path (str): Path to database.
-        version (str, optional): Version value (defaults to CLgen version).
+    Parameters
+    ----------
+    path : str
+        Path to database.
+    version : str, optional
+        Version value (defaults to CLgen version).
 
-    Returns:
-        bool: True if version in database matches expected version, else False.
+    Returns
+    -------
+    bool
+        True if version in database matches expected version, else False.
     """
     return get_meta(path, "version") == version
 
@@ -236,9 +267,12 @@ def run_script(path: str, script: str) -> None:
     """
     Run an SQL script on a databse.
 
-    Arguments:
-        path (str): Path to database.
-        script (str): Name of SQL data script.
+    Parameters
+    ----------
+    path : str
+        Path to database.
+    script : str
+        Name of SQL data script.
     """
     db = sqlite3.connect(path)
     c = db.cursor()
@@ -252,11 +286,15 @@ def is_modified(db) -> bool:
     """
     Returns whether database is preprocessed.
 
-    Arguments:
-        db (sqlite3.Connection): Database.
+    Parameters
+    ----------
+    db : sqlite3.Connection
+        Database.
 
-    Returns:
-        bool: True if database is modified, else False.
+    Returns
+    -------
+    bool
+        True if database is modified, else False.
     """
     c = db.cursor()
 
@@ -275,9 +313,12 @@ def set_modified_status(db, checksum: str) -> None:
     """
     Set database preprocessed checksum.
 
-    Arguments:
-        db (sqlite3.Connection): Database.
-        checksum (str): New preprocessed checksum.
+    Parameters
+    ----------
+    db : sqlite3.Connection
+        Database.
+    checksum : str
+        New preprocessed checksum.
     """
     c = db.cursor()
     c.execute("INSERT OR REPLACE INTO Meta VALUES (?,?)",
@@ -286,16 +327,21 @@ def set_modified_status(db, checksum: str) -> None:
     c.close()
 
 
-def kernel_ids(db_path: str, table: str="PreprocessedFiles") -> list:
+def kernel_ids(db_path: str, table: str="PreprocessedFiles") -> List[str]:
     """
     Get a list of kernel IDs.
 
-    Arguments:
-        path (str): Database path.
-        table (str, optional): Name of table.
+    Parameters
+    ----------
+    path : str
+        Database path.
+    table : str, optional
+        Name of table.
 
-    Returns:
-        list of str: Kernel IDs.
+    Returns
+    -------
+    List[str]
+        Kernel IDs.
     """
     db = connect(db_path)
     c = db.cursor()
@@ -313,12 +359,17 @@ def table_exists(db, table_name: str) -> None:
     """
     SQL table exists.
 
-    Arguments:
-        db (sqlite3.Connection): Database.
-        table_name (str): Name of table.
+    Parameters
+    ----------
+    db : sqlite3.Connection
+        Database.
+    table_name : str
+        Name of table.
 
-    Returns:
-        bool: True if table with name exists.
+    Returns
+    -------
+    bool
+        True if table with name exists.
     """
     c = db.cursor()
     c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='" +
@@ -332,11 +383,15 @@ def is_github(db) -> None:
     """
     SQL table has GitHub metadata tables.
 
-    Arguments:
-        db (sqlite3.Connection): Database.
+    Parameters
+    ----------
+    db : sqlite3.Connection
+        Database.
 
-    Returns:
-        bool: True if GitHub tables in database.
+    Returns
+    -------
+    bool
+        True if GitHub tables in database.
     """
     return table_exists(db, 'Repositories')
 
@@ -345,13 +400,15 @@ def num_good_kernels(path: str) -> int:
     """
     Fetch the number of good preprocessed kernels from dataset.
 
-    Arguments:
+    Parameters
+    ----------
+    path : str
+        Path to database.
 
-        path (str): Path to database.
-
-    Returns:
-
-        int: Num preprocessed kernels where status is 0.
+    Returns
+    -------
+    int
+        Num preprocessed kernels where status is 0.
     """
     return num_rows_in(path, "PreprocessedFiles", "WHERE status=0")
 
@@ -360,15 +417,19 @@ def num_rows_in(path: str, table: str, condition: str="") -> int:
     """
     Fetch number of rows in table.
 
-    Arguments:
+    Parameters
+    ----------
+    path : str
+        Path to database.
+    table : str
+        Table ID.
+    condition : str, optional
+        Conditional.
 
-        path (str): Path to database.
-        table (str): Table ID.
-        condition (str, optional): Conditional.
-
-    Returns:
-
-        int: Num rows.
+    Returns
+    -------
+    int
+        Num rows.
     """
     db = connect(path)
     c = db.cursor()
@@ -381,15 +442,19 @@ def cc(path: str, table: str, column: str="Contents", condition: str="") -> int:
     """
     Fetch character count of contents in table.
 
-    Arguments:
+    Parameters
+    ----------
+    path : str
+        Path to database.
+    table : str
+        Table ID.
+    condition : str, optional
+        Conditional.
 
-        path (str): Path to database.
-        table (str): Table ID.
-        condition (str, optional): Conditional.
-
-    Returns:
-
-        int: Num lines.
+    Returns
+    -------
+    int
+        Num chars.
     """
     db = connect(path)
     c = db.cursor()
@@ -402,15 +467,19 @@ def lc(path: str, table: str, column: str="Contents", condition: str="") -> int:
     """
     Fetch line count of contents in table.
 
-    Arguments:
+    Parameters
+    ----------
+    path : str
+        Path to database.
+    table : str
+        Table ID.
+    condition : str, optional
+        Conditional.
 
-        path (str): Path to database.
-        table (str): Table ID.
-        condition (str, optional): Conditional.
-
-    Returns:
-
-        int: Num lines.
+    Returns
+    -------
+    int
+        Num lines.
     """
     db = connect(path)
     c = db.cursor()
@@ -425,9 +494,10 @@ def remove_preprocessed(path: str) -> None:
 
     ContentFiles remain unchanged.
 
-    Arguments:
-
-        path (str): Path to database.
+    Parameters
+    ----------
+    path : str
+        Path to database.
     """
     db = connect(path)
     c = db.cursor()
@@ -441,8 +511,10 @@ def remove_bad_preprocessed(db_path: str) -> None:
     """
     Remove all ugly and bad contents from PreprocessedFiles table.
 
-    Arguments:
-        db_path (str): Dataset.
+    Parameters
+    ----------
+    db_path : str
+        Dataset.
     """
     original_size = fs.du(db_path, human_readable=False)
     original_size_human_readable = fs.du(db_path, human_readable=True)
@@ -476,12 +548,18 @@ def sql_insert_dict(c, table: str, data: dict, ignore_existing: bool=False,
 
     Uses the key names as column names, as the values as column values.
 
-    Arguments:
-        c (sqlite3.Cursor): Database cursor.
-        table (str): Destination table.
-        data (dict): Key value pairs.
-        ignore_existing (bool, optional): Ignore existing entries.
-        replace_existing (bool, optional): Replace existing entries.
+    Parameters
+    ----------
+    c : sqlite3.Cursor
+        Database cursor.
+    table : str
+        Destination table.
+    data : dict
+        Key value pairs.
+    ignore_existing : bool, optional
+        Ignore existing entries.
+    replace_existing : bool, optional
+        Replace existing entries.
     """
     or_ignore = "OR IGNORE" if ignore_existing else ""
     or_replace = "OR REPLACE" if replace_existing else ""
@@ -502,11 +580,15 @@ def escape_sql_key(key: str) -> str:
     """
     Escape SQL key.
 
-    Arguments:
-        key (str): SQL key.
+    Parameters
+    ----------
+    key : str
+        SQL key.
 
-    Returns:
-        str: Escaped key.
+    Returns
+    -------
+    str
+        Escaped key.
     """
     return re.sub(_sql_sub_chars, '_',
                   re.sub(_sql_rm_chars, '', '_'.join(key.split(' '))))
@@ -516,11 +598,15 @@ def kid_to_path(id: str) -> str:
     """
     Sanitize ID.
 
-    Arguments:
-        id (str): ID.
+    Parameters
+    ----------
+    id : str
+        ID.
 
-    Returns:
-        str: ID.
+    Returns
+    -------
+    str
+        Path.
     """
     return re.sub('[/:\. ]+', '-', id)
 
@@ -531,16 +617,26 @@ def _dump_db(db, out_path: str, gh: bool=False, fileid: bool=False,
     """
     Dump database contents.
 
-    Arguments:
-        db (slite3.Connection): Dataset.
-        out_path (str): Path to output.
-        gh (bool, optional): Dataset is GitHub.
-        fileid (bool, optional): Include file IDs.
-        reverse (bool, optional): Reverse ordering of output.
-        input_samples (bool, optional): If True, use un-preprocessed files.
-        status (int, optional): Filter preprocess status.
-        eof (bool, optional): Include EOF separators.
-        dir (bool, optional): Write output to directory.
+    Parameters
+    ----------
+    db : slite3.Connection
+        Dataset.
+    out_path : str
+        Path to output.
+    gh : bool, optional
+        Dataset is GitHub.
+    fileid : bool, optional
+        Include file IDs.
+    reverse : bool, optional
+        Reverse ordering of output.
+    input_samples : bool, optional
+        If True, use un-preprocessed files.
+    status : int, optional
+        Filter preprocess status.
+    eof : bool, optional
+        Include EOF separators.
+    dir : bool, optional
+        Write output to directory.
     """
     log.info('writing corpus', out_path, '...')
 
@@ -603,10 +699,14 @@ def dump_db(db_path: str, out_path: str, **kwargs) -> None:
     """
     Dump database contents.
 
-    Arguments:
-        db_path (str): Dataset.
-        out_path (str): Corpus path.
-        **kwargs (dict): Additional arguments to _dump_db().
+    Parameters
+    ----------
+    db_path : str
+        Dataset.
+    out_path : str
+        Corpus path.
+    **kwargs : dict
+        Additional arguments to _dump_db().
     """
     db = connect(db_path)
 

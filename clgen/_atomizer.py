@@ -158,14 +158,18 @@ class Atomizer(clgen.CLgenObject):
     """
     def __init__(self, vocab: Dict[str, int]):
         """
-        Arguments:
-            vocab (Dict[str, int]): A dictionary of mappings from character
-                sequences (atoms) into indices.
+        Parameters
+        ----------
+        vocab : Dict[str, int]
+            A dictionary of mappings from character sequences (atoms) into
+            indices.
 
-        Raises:
-            TypeError: If vocab is not a dictionary.
-            InvalidVocab: If the dictionary of mappings includes any duplicate
-                values.
+        Raises
+        ------
+        TypeError
+            If vocab is not a dictionary.
+        InvalidVocab
+            If the dictionary of mappings includes any duplicate values.
         """
         self.vocab = vocab
         self._vocab_update()
@@ -196,11 +200,15 @@ class Atomizer(clgen.CLgenObject):
         """
         Atomize a text into an array of vocabulary indices.
 
-        Arguments:
-            text (str): Input text.
+        Parameters
+        ----------
+        text : str
+            Input text.
 
-        Returns:
-            np.array: Indices into vocabulary for all atoms in text.
+        Returns
+        -------
+        np.array
+            Indices into vocabulary for all atoms in text.
         """
         raise NotImplementedError("abstract class")
 
@@ -208,11 +216,15 @@ class Atomizer(clgen.CLgenObject):
         """
         Split the text into atoms, but do not encode to indices.
 
-        Arguments:
-            text (str): Input text.
+        Parameters
+        ----------
+        text : str
+            Input text.
 
-        Returns:
-            list of str: Atom strings.
+        Returns
+        -------
+        List[str]
+            Atom strings.
         """
         indices = self.atomize(text)
         return list(map(lambda x: self.decoder[x], indices))
@@ -221,11 +233,15 @@ class Atomizer(clgen.CLgenObject):
         """
         Translate atomized code back into a string.
 
-        Arguments:
-            encoded (np.array): Encoded vocabulary indices.
+        Parameters
+        ----------
+        encoded : np.array
+            Encoded vocabulary indices.
 
-        Returns:
-            str: Decoded text.
+        Returns
+        -------
+        str
+            Decoded text.
         """
         try:
             return ''.join(list(map(lambda x: self.decoder[x], encoded)))
@@ -237,19 +253,24 @@ class Atomizer(clgen.CLgenObject):
         """
         Instantiate and specialize an atomizer from a corpus text.
 
-        Arguments:
-            text (str): Text corpus
+        Parameters
+        ----------
+        text : str
+            Text corpus
 
-        Returns:
-            Atomizer: Specialized atomizer.
+        Returns
+        -------
+        Atomizer
+            Specialized atomizer.
 
-        Examples:
-            >>> a = CharacterAtomizer.from_text('abcdefg')
-            >>> b = a.atomize('abcd')
-            >>> len(b)
-            4
-            >>> a.deatomize(b)
-            'abcd'
+        Examples
+        --------
+        >>> a = CharacterAtomizer.from_text('abcdefg')
+        >>> b = a.atomize('abcd')
+        >>> len(b)
+        4
+        >>> a.deatomize(b)
+        'abcd'
         """
         raise NotImplementedError("abstract class")
 

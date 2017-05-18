@@ -38,7 +38,7 @@ from labm8.dirhashcache import DirHashCache
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
 from time import time
-from typing import List
+from typing import Iterable, List, Tuple
 
 import clgen
 from clgen import dbutil
@@ -75,14 +75,20 @@ def unpack_directory_if_needed(path: str) -> str:
     If path is a tarball, unpack it. If path doesn't exist but there is a
     tarball with the same name, unpack it.
 
-    Arguments:
-        path (str): Path to directory or tarball.
+    Parameters
+    ----------
+    path : str
+        Path to directory or tarball.
 
-    Returns:
-        str: Path to directory.
+    Returns
+    -------
+    str
+        Path to directory.
 
-    Raises:
-        clgen.InternalError: If unable to extract archive.
+    Raises
+    ------
+    clgen.InternalError
+        If unable to extract archive.
     """
     if fs.isdir(path):
         return path
@@ -105,12 +111,17 @@ def get_kernel_features(code: str, **kwargs) -> np.array:
     """
     Get features for code.
 
-    Arguments:
-        code (str): Source code.
-        **kwargs (dict, optional): Arguments to features.features()
+    Parameters
+    ----------
+    code : str
+        Source code.
+    **kwargs
+        Arguments to features.features()
 
-    Returns:
-        np.array: Feature values.
+    Returns
+    -------
+    np.array
+        Feature values.
     """
     with NamedTemporaryFile() as outfile:
         outfile.write(code.encode("utf-8"))
@@ -126,9 +137,12 @@ def encode_kernels_db(kernels_db: str, encoding: str) -> None:
     """
     Encode a kernels database.
 
-    Arguments:
-        kernels_db (str): Path to kernels database.
-        encoding (str): Encoding type.
+    Parameters
+    ----------
+    kernels_db : str
+        Path to kernels database.
+    encoding : str
+        Encoding type.
     """
     def _default(kernels_db: str) -> None:
         pass
@@ -191,10 +205,14 @@ class Corpus(clgen.CLgenObject):
         If this is a new corpus, a number of files will be created, which may
         take some time.
 
-        Arguments:
-            contentid (str): ID of corpus content.
-            path (str, optional): Path to corpus.
-            **opts: Keyword options.
+        Parameters
+        ----------
+        contentid : str
+            ID of corpus content.
+        path : str, optional
+            Path to corpus.
+        **opts
+            Keyword options.
         """
         # Validate options
         for key in opts.keys():
@@ -354,12 +372,17 @@ class Corpus(clgen.CLgenObject):
             """
             Get atomizer for a corpus.
 
-            Arguments:
-                corpus (str): Corpus.
-                vocab (str, optional): Vocabularly type.
+            Parameters
+            ----------
+            corpus : str
+                Corpus.
+            vocab : str, optional
+                Vocabularly type.
 
-            Returns:
-                clgen.Atomizer: Atomizer.
+            Returns
+            -------
+            clgen.Atomizer
+                Atomizer.
             """
             atomizers = {
                 "char": clgen.CharacterAtomizer,
@@ -488,12 +511,14 @@ class Corpus(clgen.CLgenObject):
         """
         self._pointer = 0
 
-    def next_batch(self) -> tuple:
+    def next_batch(self) -> Tuple[np.array, np.array]:
         """
         Fetch next batch indices.
 
-        Returns:
-            (np.array, np.array): X, Y batch tuple.
+        Returns
+        -------
+        Tuple[np.array, np.array]
+            X, Y batch tuple.
         """
         x = self._x_batches[self._pointer]
         y = self._y_batches[self._pointer]
@@ -504,21 +529,26 @@ class Corpus(clgen.CLgenObject):
         """
         Set batch pointer.
 
-        Arguments:
-            pointer (int): New batch pointer.
+        Parameters
+        ----------
+        pointer : int
+            New batch pointer.
         """
         self._pointer = pointer
 
-    def preprocessed(self, status: int=0) -> list:
+    def preprocessed(self, status: int=0) -> Iterable[str]:
         """
         Return an iterator over all preprocessed kernels.
 
-        Arguments:
-            status (int, optional): Pre-processed status, {0, 1, 2} for
-                {good, bad, ugly}.
+        Parameters
+        ----------
+        status : int, optional
+            Pre-processed status, {0, 1, 2} for {good, bad, ugly}.
 
-        Returns:
-            sequence of str: Sources.
+        Returns
+        -------
+        Iterable[str]
+            Sources.
         """
         db = dbutil.connect(self.contentcache["kernels.db"])
         c = db.cursor()
@@ -528,12 +558,14 @@ class Corpus(clgen.CLgenObject):
         for row in query.fetchall():
             yield row[0]
 
-    def contentfiles(self) -> list:
+    def contentfiles(self) -> Iterable[str]:
         """
         Return an iterator over all un-processed samples.
 
-        Returns:
-            sequence of str: Samples.
+        Returns
+        -------
+        Iterable[str]
+            Samples.
         """
         db = dbutil.connect(self.contentcache["kernels.db"])
         c = db.cursor()
@@ -541,16 +573,21 @@ class Corpus(clgen.CLgenObject):
         for row in query.fetchall():
             yield row[0]
 
-    def most_common_prototypes(self, n: int) -> tuple:
+    def most_common_prototypes(self, n: int) -> Tuple[List[Tuple[float, str]], int]:
         """
         Return the n most frequently occuring prototypes.
 
-        Arguments:
-            c (Corpus): Corpus.
-            n (int): Number of prototypes to return:
+        Parameters
+        ----------
+        c : Corpus
+            Corpus.
+        n : int
+            Number of prototypes to return:
 
-        Returns:
-            tuple of list of tuples, int:
+        Returns
+        -------
+        Tuple[List[Tuple[float, str]], int]
+            Tuple of list of prototypes, and the number of prototypes.
         """
         from clgen import clutil
 
@@ -594,15 +631,19 @@ class Corpus(clgen.CLgenObject):
         return not self.__eq__(rhs)
 
     @staticmethod
-    def from_json(corpus_json: dict):
+    def from_json(corpus_json: dict) -> 'Corpus':
         """
         Instantiate Corpus from JSON.
 
-        Arguments:
-            corpus_json (dict): Specification.
+        Parameters
+        ----------
+        corpus_json : dict
+            Specification.
 
-        Returns:
-            Corpus: Insantiated corpus.
+        Returns
+        -------
+        Corpus
+            Insantiated corpus.
         """
         path = corpus_json.pop("path", None)
         uid = corpus_json.pop("id", None)

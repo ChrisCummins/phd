@@ -37,14 +37,17 @@ def init(verbose: bool=False) -> None:
     """
     Initialiaze the logging engine.
 
-    Arguments:
-        verbose (bool, optional keyword): If True, print debug() messages.
+    Parameters
+    ----------
+    verbose : bool, optional
+        If True, print debug() messages.
     """
     level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(level=level, format="%(message)s")
 
 
 def is_verbose() -> bool:
+    """ Return whether logging is verbose. """
     return logging.getLogger().getEffectiveLevel() == logging.DEBUG
 
 
@@ -55,9 +58,12 @@ def debug(*msg, **opts) -> None:
     If executing verbosely, prints the given message to stderr. To execute
     verbosely, intialize logging engine using log.init(verbose=True).
 
-    Arguments:
-        *msg (sequence): Message to print.
-        sep (str, optional keyword): Message component separator.
+    Parameters
+    ----------
+    *msg
+        Message to print.
+    **opts
+        Format options.
     """
     logging.debug(_fmt(msg, opts))
 
@@ -75,9 +81,12 @@ def info(*msg, **opts) -> None:
 
     Prints the given message to stderr.
 
-    Arguments:
-        *msg (sequence): Message to print.
-        sep (str, optional keyword): Message component separator.
+    Parameters
+    ----------
+    *msg
+        Message to print.
+    **opts
+        Format options.
     """
     logging.info(_fmt(msg, opts))
 
@@ -88,9 +97,12 @@ def warning(*msg, **opts) -> None:
 
     Prints the given message to stderr prefixed with "warning: ".
 
-    Arguments:
-        *msg (sequence): Message to print.
-        sep (str, optional keyword): Message component separator.
+    Parameters
+    ----------
+    *msg
+        Message to print.
+    **opts
+        Format options.
     """
     logging.warning("warning: " + _fmt(msg, opts))
 
@@ -101,9 +113,12 @@ def error(*msg, **opts) -> None:
 
     Prints the given message to stderr prefixed with "error: ".
 
-    Arguments:
-        *msg (sequence): Message to print.
-        sep (str, optional keyword): Message component separator.
+    Parameters
+    ----------
+    *msg
+        Message to print.
+    **opts
+        Format options.
     """
     logging.error("error: " + _fmt(msg, opts))
 
@@ -115,10 +130,17 @@ def fatal(*msg, **opts):
     Prints the given message to stderr prefixed with "fatal: ", then exists.
     This function does not return.
 
-    Arguments:
-        *msg (sequence): Message to print.
-        sep (str, optional keyword): Message component separator.
-        ret (int, optional keyword): Value to exit with.
+    Parameters
+    ----------
+    *msg
+        Message to print.
+    **opts
+        Format options.
+
+    Raises
+    ------
+    SystemExit
+        This function terminates the process.
     """
     logging.error("fatal: " + _fmt(msg, opts))
     ret = opts.get("ret", 1)
