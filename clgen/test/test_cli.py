@@ -97,7 +97,6 @@ def test_cli():
     fs.rm("kernels_out")
 
 
-@tests.skip_on_travis
 def test_cli_train():
     with tests.chdir(tests.data_path("pico")):
         cli.main("train model.json".split())
