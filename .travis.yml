@@ -29,6 +29,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - binutils-dev  # possible fix for segfault. See: https://github.com/SimonKagstrom/kcov/issues/105
+      - libtcmalloc-minimal4  # possible fix for segfault. See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
       - gcc-5
       - g++-5
       - clang-3.6
@@ -40,6 +41,7 @@ env:
   global:
     - CC=clang
     - CXX=clang++
+    - LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"  # possible fix for segfault. See: https://github.com/tensorflow/tensorflow/issues/6968#issuecomment-279060156
 
 before_install:
   - pip install --upgrade pip
