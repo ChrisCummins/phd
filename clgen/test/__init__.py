@@ -223,14 +223,10 @@ def coveragerc_path():
     return data_path("coveragerc")
 
 
-def testsuite():
+@contextlib.contextmanager
+def test_env():
     """
-    Run the CLgen test suite.
-
-    Returns
-    -------
-    int
-        Test return code. 0 if successful.
+    Manages the environment used for tests.
     """
     # use local cache for testing
     old_cachepath = os.environ.get("CLGEN_CACHE")
@@ -240,34 +236,43 @@ def testsuite():
     old_cuda_devs = os.environ.get("CUDA_VISIBLE_DEVICES")
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
-    # run from module directory
-    cwd = os.getcwd()
-    os.chdir(module_path())
+    try:
+        yield
+    finally:
+        if old_cachepath:
+            os.environ["CLGEN_CACHE"] = old_cachepath
+        if old_cuda_devs:
+            os.environ["CUDA_VISIBLE_DEVICES"] = old_cuda_devs
 
-    assert os.path.exists(coveragerc_path())
 
-    args = ["--doctest-modules", "--cov=clgen",
-            "--cov-config", coveragerc_path()]
+def testsuite():
+    """
+    Run the CLgen test suite.
 
-    # unless verbose, don't print coverage report
-    if log.is_verbose():
-        args.append("--verbose")
-    else:
-        args.append("--cov-report=")
+    Returns
+    -------
+    int
+        Test return code. 0 if successful.
+    """
+    with test_env():
+        with chdir(module_path()):  # run from module directory
+            assert os.path.exists(coveragerc_path())
 
-    ret = pytest.main(args)
+            args = ["--doctest-modules", "--cov=clgen",
+                    "--cov-config", coveragerc_path()]
 
-    assert os.path.exists(coverage_report_path())
+            # unless verbose, don't print coverage report
+            if log.is_verbose():
+                args.append("--verbose")
+            else:
+                args.append("--cov-report=")
 
-    # change back to previous directory
-    os.chdir(cwd)
+            ret = pytest.main(args)
 
-    if log.is_verbose():
-        print("coverage path:", coverage_report_path())
-        print("coveragerc path:", coveragerc_path())
+            assert os.path.exists(coverage_report_path())
 
-    # restore environment
-    os.environ["CLGEN_CACHE"] = old_cachepath
-    os.environ["CUDA_VISIBLE_DEVICES"] = old_cuda_devs
+        if log.is_verbose():
+            print("coverage path:", coverage_report_path())
+            print("coveragerc path:", coveragerc_path())
 
     return ret
