@@ -104,6 +104,7 @@ def test_cli_train():
         cli.main("--model-dir model.json".split())
 
 
+@tests.skip_on_travis
 def test_cli_sample():
     with tests.chdir(tests.data_path("pico")):
         cli.main("sample model.json sampler.json".split())
