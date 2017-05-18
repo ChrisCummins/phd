@@ -824,6 +824,5 @@ For information about a specific command, run `clgen <command> --help`.
         del opts["model_dir"]
         del opts["sampler_dir"]
         del opts["dispatch_func"]
-        print(opts)
 
         run(dispatch_func, **opts)
