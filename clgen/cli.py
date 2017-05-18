@@ -816,7 +816,6 @@ For information about a specific command, run `clgen <command> --help`.
         model = clgen.Model.from_json(jsonutil.loads(args.sampler_dir[0].read()))
         sampler = clgen.Sampler.from_json(jsonutil.loads(args.sampler_dir[1].read()))
         print(sampler.cache(model).path)
-        sys.exit(0)
     else:
         # strip the arguments from the top-level parser
         dispatch_func = args.dispatch_func
