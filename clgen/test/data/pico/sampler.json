@@ -1,0 +1,8 @@
+{
+  "kernels": {
+    "max_length": 100
+  },
+  "sampler": {
+    "min_samples": 5
+  }
+}
