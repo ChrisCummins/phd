@@ -1,4 +1,6 @@
 from freefocus import sql_ops as ops
 
+_helo = ops.System.helo()
+
 def test_system_helo():
-    ops.System.helo()
+    pass  # _helo
