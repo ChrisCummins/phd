@@ -138,10 +138,12 @@ def cachepath(*relative_path_components: list) -> str:
     str
         Absolute path of file system cache.
     """
-    cache_root = ["~", ".cache", "clgen",
-                  f"{version_info.major}.{version_info.minor}.x" ]
-    fs.mkdir(*cache_root)
-    return fs.path(*cache_root, *relative_path_components)
+    cache_root = os.environ.get(
+        "CLGEN_CACHE",
+        "~/.cache/clgen/{version_info.major}.{version_info.minor}.x")
+
+    fs.mkdir(cache_root)
+    return fs.path(cache_root, *relative_path_components)
 
 
 def get_default_author() -> str:

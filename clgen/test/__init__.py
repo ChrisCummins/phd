@@ -168,14 +168,6 @@ def db(name, **kwargs):
     return sqlite3.connect(path)
 
 
-def test_cachepath(*relative_path_components: list) -> str:
-    """ return path to local testing cache """
-    cache_root = data_path("cache", exists=False)
-    fs.mkdir(cache_root)
-
-    return fs.path(cache_root, *relative_path_components)
-
-
 class DevNullRedirect(object):
     """
     Context manager to redirect stdout and stderr to devnull.
@@ -219,6 +211,10 @@ def module_path():
     return os.path.dirname(clgen.__file__)
 
 
+def test_cache_path():
+    return data_path("cache", exists=False)
+
+
 def coverage_report_path():
     return os.path.join(module_path(), ".coverage")
 
@@ -237,8 +233,8 @@ def testsuite():
         Test return code. 0 if successful.
     """
     # use local cache for testing
-    old_cachepath = clgen.cachepath
-    clgen.cachepath = test_cachepath
+    old_cachepath = os.environ.get("CLGEN_CACHE")
+    os.environ["CLGEN_CACHE"] = test_cache_path()
 
     # no GPUs for testing
     old_cuda_devs = os.environ.get("CUDA_VISIBLE_DEVICES")
@@ -270,9 +266,8 @@ def testsuite():
         print("coverage path:", coverage_report_path())
         print("coveragerc path:", coveragerc_path())
 
-    # restore cachepath
-    clgen.cachepath = old_cachepath
-    # restore GPUs
-    os.environ = old_cuda_devs
+    # restore environment
+    os.environ["CLGEN_CACHE"] = old_cachepath
+    os.environ["CUDA_VISIBLE_DEVICES"] = old_cuda_devs
 
     return ret

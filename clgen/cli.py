@@ -162,7 +162,7 @@ def _register_test_parser(self, parent: ArgumentParser) -> None:
         import clgen.test
 
         if cache_path:
-            print(clgen.test.test_cachepath())
+            print(clgen.test.test_cache_path())
             sys.exit(0)
         elif coveragerc_path:
             print(clgen.test.coveragerc_path())
