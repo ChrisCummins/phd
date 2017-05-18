@@ -24,7 +24,7 @@ from pkg_resources import resource_filename
 from signal import Signals
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
-from typing import Union
+from typing import List, Union
 
 import numpy as np
 
@@ -304,6 +304,44 @@ def drive(env: OpenCLEnvironment, src: str, inputs: np.array,
             return outputs
 
 
+ArgTuple = namedtuple('ArgTuple', ['hostdata', 'devdata'])
+
+
+def extract_argtuples(ctx, args: List[KernelArg], data: np.array) -> List[ArgTuple]:
+    argtuples = []
+    data_i = 0
+    for i, arg in enumerate(args):
+        if arg.address_space == 'global' or arg.address_space == 'constant':
+            data[data_i] = data[data_i].astype(arg.numpy_type)
+            hostdata = data[data_i]
+            # determine flags to pass to OpenCL buffer creation:
+            flags = cl.mem_flags.COPY_HOST_PTR
+            if arg.is_const:
+                flags |= cl.mem_flags.READ_ONLY
+            else:
+                flags |= cl.mem_flags.READ_WRITE
+            buf = cl.Buffer(ctx, flags, hostbuf=hostdata)
+
+            devdata, data_i = buf, data_i + 1
+        elif arg.address_space == 'local':
+            nbytes = buf_size * arg.vector_width * arg.numpy_type.itemsize
+            buf = cl.LocalMemory(nbytes)
+
+            hostdata, devdata = None, buf
+        elif not arg.is_pointer:
+            hostdata = None
+            devdata, data_i = arg.numpy_type.type(data[data_i]), data_i + 1
+        else:
+            # argument is neither global or local, but is a pointer?
+            raise ValueError(f"unknown argument type '{arg}'")
+        argtuples.append(ArgTuple(hostdata=hostdata, devdata=devdata))
+
+    assert_or_raise(len(data) == data_i, ValueError,
+                    "failed to interpret inputs")
+
+    return argtuples
+
+
 def __porcelain_exec(path: str) -> np.array:
     """ here be dragons """
     import pyopencl as cl  # defered loading of OpenCL library
@@ -410,37 +448,7 @@ def __porcelain_exec(path: str) -> np.array:
     log("Command queue flushed")
 
     # assemble argtuples
-    ArgTuple = namedtuple('ArgTuple', ['hostdata', 'devdata'])
-    argtuples = []
-    data_i = 0
-    for i, arg in enumerate(args):
-        if arg.address_space == 'global' or arg.address_space == 'constant':
-            data[data_i] = data[data_i].astype(arg.numpy_type)
-            hostdata = data[data_i]
-            # determine flags to pass to OpenCL buffer creation:
-            flags = cl.mem_flags.COPY_HOST_PTR
-            if arg.is_const:
-                flags |= cl.mem_flags.READ_ONLY
-            else:
-                flags |= cl.mem_flags.READ_WRITE
-            buf = cl.Buffer(ctx, flags, hostbuf=hostdata)
-
-            devdata, data_i = buf, data_i + 1
-        elif arg.address_space == 'local':
-            nbytes = buf_size * arg.vector_width * arg.numpy_type.itemsize
-            buf = cl.LocalMemory(nbytes)
-
-            hostdata, devdata = None, buf
-        elif not arg.is_pointer:
-            hostdata = None
-            devdata, data_i = arg.numpy_type(data[data_i]), data_i + 1
-        else:
-            # argument is neither global or local, but is a pointer?
-            raise ValueError(f"unknown argument type '{arg}'")
-        argtuples.append(ArgTuple(hostdata=hostdata, devdata=devdata))
-
-    assert_or_raise(len(data) == data_i, ValueError,
-                    "failed to interpret inputs")
+    argtuples = extract_argtuples(ctx, args, data)
     log("Device memory allocated")
 
     kernel_args = [argtuple.devdata for argtuple in argtuples]

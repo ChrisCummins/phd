@@ -63,6 +63,35 @@ def gen_data_block(src: str, inputs: np.array):
     return '\n'.join(c_lines)
 
 
+def gen_print_block(src: str):
+    from cldrive import args
+
+    c_lines = []
+    for i, (arg, array) in enumerate(zip(extract_args(src), inputs)):
+        ctype = args.OPENCL_TYPES[array.dtype]
+
+        if arg.is_pointer:
+            array_values = ', '.join(repr(x) for x in array.tolist())
+
+
+            c_lines.append("""\
+    {ctype} host_{i}[{array.size}] = {{ {array_values} }};
+    cl_mem dev_{i} = clCreateBuffer(ctx, {flags}, sizeof({ctype}) * {array.size}, &host_{i}, &err);
+    check_error("clCreateBuffer", err);
+    err = clSetKernelArg(kernel, {i}, sizeof(cl_mem), &dev_{i});
+    check_error("clSetKernelArg", err);
+""".format(**vars()))
+        else:
+            assert(array.size == 1)
+            c_lines.append("""\
+    {ctype} host_{i} = {array[0]};
+    err = clSetKernelArg(kernel, {i}, sizeof({ctype}), &host_{i});
+    check_error("clSetKernelArg", err);
+""".format(**vars()))
+
+    return '\n'.join(c_lines)
+
+
 def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
            gsize: NDRange, lsize: NDRange, timeout: int=-1,
            optimizations: bool=True, profiling: bool=False,
@@ -257,6 +286,32 @@ int main() {{
     check_error("clCreateKernel", err);
 
 {data_block}
+
+    const size_t lsize[3] = {{ {lsize.x}, {lsize.y}, {lsize.z} }};
+    const size_t gsize[3] = {{ {gsize.x}, {gsize.y}, {gsize.z} }};
+
+    err = clEnqueueNDRangeKernel(
+        /* cl_command_queue command_queue */ queue,
+        /* cl_kernel kernel */ kernel,
+        /* cl_uint work_dim */ 3,
+        /* const size_t *global_work_offset */ NULL,
+        /* const size_t *global_work_size */ gsize,
+        /* const size_t *local_work_size */ lsize,
+        /* cl_uint num_events_in_wait_list */ 0,
+        /* const cl_event *event_wait_list */ NULL,
+        /* cl_event *event */ NULL);
+    check_error("clEnqueueNDRangeKernel", err);
+
+    err = clFinish(queue);
+    check_error("clFinish", err);
+
+
+
+    /* clReleaseMemObject(); */
+    clReleaseProgram(program);
+    clReleaseKernel(kernel);
+    clReleaseCommandQueue(queue);
+    clReleaseContext(ctx);
 
     printf("done.\\n");
     return 0;
