@@ -152,14 +152,17 @@ def _register_test_parser(self, parent: ArgumentParser) -> None:
     Run the CLgen self-test suite.
     """
 
-    def _main(coveragerc_path: bool, coverage_path: bool) -> None:
+    def _main(cache_path: bool, coveragerc_path: bool,
+              coverage_path: bool) -> None:
         import clgen.test
 
-        if coveragerc_path:
+        if cache_path:
+            print(clgen.test.test_cachepath())
+            sys.exit(0)
+        elif coveragerc_path:
             print(clgen.test.coveragerc_path())
             sys.exit(0)
-
-        if coverage_path:
+        elif coverage_path:
             print(clgen.test.coverage_report_path())
             sys.exit(0)
 
@@ -170,6 +173,8 @@ def _register_test_parser(self, parent: ArgumentParser) -> None:
                                epilog=__help_epilog__)
     parser.set_defaults(dispatch_func=_main)
     group = parser.add_mutually_exclusive_group()
+    group.add_argument("--cache-path", action="store_true",
+                       help="print path to test cache")
     group.add_argument("--coveragerc-path", action="store_true",
                        help="print path to coveragerc file")
     group.add_argument("--coverage-path", action="store_true",

@@ -137,7 +137,7 @@ def db(name, **kwargs):
     return sqlite3.connect(path)
 
 
-def local_cachepath(*relative_path_components: list) -> str:
+def test_cachepath(*relative_path_components: list) -> str:
     """ return path to local testing cache """
     cache_root = data_path("cache", exists=False)
     fs.mkdir(cache_root)
@@ -192,7 +192,7 @@ def testsuite():
     """
     # use local cache for testing
     old_cachepath = clgen.cachepath
-    clgen.cachepath = local_cachepath
+    clgen.cachepath = test_cachepath
 
     # no GPUs for testing
     old_cuda_devs = os.environ.get("CUDA_VISIBLE_DEVICES")
