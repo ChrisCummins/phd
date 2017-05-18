@@ -9,10 +9,10 @@
   },
   "architecture": {
     "model_type": "lstm",
-    "rnn_size": 32,
+    "rnn_size": 8,
     "num_layers": 2
   },
   "train_opts": {
-    "epochs": 3
+    "epochs": 1
   }
 }
