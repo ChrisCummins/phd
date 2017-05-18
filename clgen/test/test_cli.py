@@ -97,6 +97,22 @@ def test_cli():
     fs.rm("kernels_out")
 
 
+def test_cli_train():
+    with tests.chdir(tests.data_path("pico")):
+        cli.main("train model.json".split())
+        cli.main("--corpus-dir model.json".split())
+        cli.main("--model-dir model.json".split())
+
+
+def test_cli_sample():
+    with tests.chdir(tests.data_path("pico")):
+        cli.main("sample model.json sampler.json".split())
+        cli.main("--corpus-dir model.json".split())
+        cli.main("--model-dir model.json".split())
+        cli.main("--sampler-dir model.json sampler.json".split())
+        cli.main("ls files model.json sampler.json".split())
+
+
 def test_cli_ls():
     cli.main("ls models".split())
     cli.main("ls samplers".split())

@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
+import contextlib
 import os
 import pytest
 import sqlite3
@@ -26,6 +27,7 @@ from io import StringIO
 from labm8 import fs
 from labm8 import system
 from labm8 import tar
+from pathlib import Path
 
 import clgen
 from clgen import log
@@ -167,6 +169,21 @@ class DevNullRedirect(object):
     def __exit__(self, *args):
         sys.stdout = self.stdout
         sys.stderr = self.stderr
+
+
+@contextlib.contextmanager
+def chdir(path: Path):
+    """
+    Changes working directory and returns to previous on exit
+
+    By @Lukas http://stackoverflow.com/a/42441759
+    """
+    prev_cwd = Path.cwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prev_cwd)
 
 
 def module_path():
