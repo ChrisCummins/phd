@@ -1,19 +1,24 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
+# required ICD order: Codeplay, AMD, Intel
 
 import subprocess, threading
-import os, sys, time
+import os
+import sys
+import time
 import argparse
 import logging
 
-LAUNCHER = "/home/chris/tmpdir/cl_launcher"
+import clsmith
+
+LAUNCHER = clsmith.cl_launcher_path
 LAUNCHER_OPTS = ["-l", "1,1,1", "-g", "1,1,1"]
 OCLGRIND = "oclgrind"
-OCLGRIND_OPTS = ["--max-errors", "16", "--build-options", "-O0", "-Wall", "--uninitialized"] 
+OCLGRIND_OPTS = ["--max-errors", "16", "--build-options", "-O0", "-Wall", "--uninitialized"]
 
 reference_platforms = ["AMD", "Intel"]
 device = 0
 
-timeout = 30.0 # seconds
+timeout = 60.0 # seconds
 
 logfile = None
 
@@ -40,7 +45,8 @@ class RunInThread:
     def __run(self, command):
         # Start the process
         self.process = subprocess.Popen(command, stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE)
+                                        stderr=subprocess.PIPE,
+                                        universal_newlines=True)
         # Get its output (blocking call)
         self.stdout, self.stderr = self.process.communicate()
 
@@ -55,19 +61,19 @@ def verify_with_oclgrind(clprogram):
         logging.debug("Oclgrind: Timed out")
         return False
 
-    out, err = run.stdout, run.stderr
-    logging.debug("Oclgrind:\nOut: %r\nErr: %r\n", out, err)
+    stdout, stderr = run.stdout, run.stderr
+    logging.debug("Oclgrind:\nOut: %r\nErr: %r\n", stdout, stderr)
     # Check if the compilation process was successful
-    compiled = "ompilation terminated successfully" in out
+    compiled = "ompilation terminated successfully" in stderr
     if not compiled:
         logging.debug("Oclgrind: Compilation failed")
         return False
 
     # Check for issues in the Oclgrind output
-    if "ninitialized value" in err:
+    if "ninitialized value" in stderr:
         logging.debug("Oclgrind: Uninitialized value detected")
         return False
-    if "initialized address" in err:
+    if "initialized address" in stderr:
         logging.debug("Oclgrind: Uninitialized address detected")
         return False
 
@@ -78,33 +84,33 @@ def verify_with_oclgrind(clprogram):
 def get_reference_run(clprogram):
     result = {}
     for platform in range(len(reference_platforms)):
-        pl_name = reference_platforms[platform]
-        result[pl_name] = None
+        platform_name = reference_platforms[platform]
+        result[platform_name] = None
 
         run = RunInThread([LAUNCHER, "-f", clprogram, "-p",
                           str(platform + 1), "-d", str(device)] + LAUNCHER_OPTS,
                           timeout)
 
-        out, err = run.stdout, run.stderr
-        logging.debug("Reference[%s]:\nOut: %r\nErr: %r\n", pl_name, out, err)
+        stdout, stderr = run.stdout, run.stderr
+        logging.debug("Reference[%s]:\nOut: %r\nErr: %r\n", platform_name, stdout, stderr)
 
-        compiled = "ompilation terminated successfully" in out
-
+        compiled = "ompilation terminated successfully" in stderr
         if compiled and not run.timed_out:
-            result[pl_name] = out.split("\n")
+            result[platform_name] = stdout.split("\n")
         else:
             if run.timed_out:
-                logging.debug("Reference[%s]: Timed out", pl_name)
-                result[pl_name] = pl_name + " timed out!"
+                logging.debug("Reference[%s]: Timed out", platform_name)
+                result[platform_name] = platform_name + " timed out!"
             else:
-                logging.debug("Reference[%s]: Compilation failed", pl_name)
-                result[pl_name] = pl_name + " did not compile!"
+                logging.debug("Reference[%s]: Compilation failed", platform_name)
+                result[platform_name] = platform_name + " did not compile!"
             return None
 
         # Accumulate all the results and check if they all match
         # This is done in the loop so that we can exit immediatelly after the
         # first mismatch
-        random_result = result.itervalues().next()
+        _rand_key = list(result.keys())[0]
+        random_result = result[_rand_key]
         if len(random_result) < 2 or not random_result[1]:
             logging.debug("Reference: No result")
             return None
@@ -118,18 +124,18 @@ def get_reference_run(clprogram):
             if random_result[1] == "0,":
                 logging.debug("Zero output is not interesting")
                 return False
-        all_match = all(result[x] == random_result for x in result)
+        all_match = all(result[x] == random_result for x in result.keys())
         if not all_match:
-            logging.debug("Reference: Mismatched results (\n%r\n)", result) 
+            logging.debug("Reference: Mismatched results (\n%r\n)", result)
             return None
 
     # They are all the same anyway
-    random_result = result.itervalues().next()
+    random_result = result[_rand_key]
     return random_result
 
 def get_ocl_run(clprogram):
     result = None
-    pl_name = "OCL"
+    platform_name = "OCL"
     run = RunInThread([LAUNCHER, "-f", clprogram, "-p",
                       str(0), "-d", str(device)] + LAUNCHER_OPTS,
                       timeout)
@@ -138,24 +144,22 @@ def get_ocl_run(clprogram):
     logging.debug("OCL:\nOut: %r\nErr: %r\n", out, err)
 
     compiled = "ompilation terminated successfully" in out
-    
+
     if compiled and not run.timed_out:
         result = out.split("\n")
     else:
         if run.timed_out:
             logging.debug("OCL: Timed out")
-            result = pl_name + " timed out!"
+            result = platform_name + " timed out!"
         else:
             logging.debug("OCL: Compilation failed")
-            result = pl_name + " did not compile!"
+            result = platform_name + " did not compile!"
         return None
 
     return result
 
 
 def run(clprogram, no_oclgrind, vectors=True):
-    if vectors:
-        os.putenv("CODEPLAY_VECZ", "1")
     reference = get_reference_run(clprogram)
     ocl = None
     if reference:
@@ -165,8 +169,9 @@ def run(clprogram, no_oclgrind, vectors=True):
         if no_oclgrind:
             return True
         return verify_with_oclgrind(clprogram)
-    
+
     return False
+
 
 def main(argv):
     global logfile
@@ -197,4 +202,3 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv)
-
