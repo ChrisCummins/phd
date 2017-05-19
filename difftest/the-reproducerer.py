@@ -282,8 +282,10 @@ def reproduce_clgen_build_failures(result):
     print(">>>> Reproduced using cldrive")
 
     ### Reproduce using C standalone binary
-    src = make_c_source(result.program.src)
+    with open(result.program.id + '.cl', 'w') as outfile:
+        print(result.program.src, file=outfile)
 
+    src = make_c_source(result.program.src)
     with open(result.program.id + '.c', 'w') as outfile:
         print(src, file=outfile)
 
