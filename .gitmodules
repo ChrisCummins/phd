@@ -1,3 +1,6 @@
 [submodule "lib/CLSmith"]
 	path = lib/CLSmith
 	url = https://github.com/ChrisCummins/CLSmith.git
+[submodule "lib/clreduce"]
+	path = lib/clreduce
+	url = git@github.com:ChrisCummins/clreduce.git
