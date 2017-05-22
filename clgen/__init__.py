@@ -140,7 +140,7 @@ def cachepath(*relative_path_components: list) -> str:
     """
     cache_root = os.environ.get(
         "CLGEN_CACHE",
-        "~/.cache/clgen/{version_info.major}.{version_info.minor}.x")
+        f"~/.cache/clgen/{version_info.major}.{version_info.minor}.x")
 
     fs.mkdir(cache_root)
     return fs.path(cache_root, *relative_path_components)
