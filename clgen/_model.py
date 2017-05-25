@@ -530,7 +530,7 @@ def models_to_tab(*models: List[Model]) -> PrettyTable:
 
         tab.add_row([
             model.shorthash,
-            model.shorthash,
+            model.corpus.shorthash,
             trained,
             meta["architecture"]["model_type"],
             f'{nodes} x {layers}',
