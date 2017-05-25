@@ -120,6 +120,11 @@ class SampleProducer(Thread):
             saver.restore(sess, ckpt.model_checkpoint_path)
 
             def weighted_pick(weights, temperature):
+                """
+                requires that all probabilities are >= 0, i.e.:
+                  assert all(x >= 0 for x in weights)
+                See: https://github.com/ChrisCummins/clgen/issues/120
+                """
                 t = np.cumsum(weights)
                 s = np.sum(weights)
                 return int(np.searchsorted(t, np.random.rand(1) * s))
