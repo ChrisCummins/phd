@@ -429,7 +429,10 @@ class Sampler(clgen.CLgenObject):
         meta = deepcopy(self.to_json())
         if cache.get("META"):
             cached_meta = jsonutil.read_file(cache["META"])
-            self.stats = cached_meta["stats"]
+
+            if "stats" in cached_meta:
+                self.stats = cached_meta["stats"]
+                del cached_meta["stats"]
 
             if "created" in cached_meta["sampler"]:
                 del cached_meta["sampler"]["created"]
@@ -442,8 +445,6 @@ class Sampler(clgen.CLgenObject):
             if "min_kernels" in cached_meta["sampler"]:
                 del cached_meta["sampler"]["min_kernels"]
             del meta["sampler"]["min_kernels"]
-
-            del cached_meta["stats"]
 
             if meta != cached_meta:
                 raise clgen.InternalError("sampler metadata mismatch")
