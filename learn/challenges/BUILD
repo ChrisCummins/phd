@@ -82,3 +82,8 @@ cc_test(
     srcs = ["014-palindrome.c"],
     args = ['abcdefedcba'],  # palindrome
 )
+
+cc_test(
+    name =  "015-longest-path-matrix",
+    srcs = ["015-longest-path-matrix.cc"]
+)
