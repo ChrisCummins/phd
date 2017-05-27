@@ -475,6 +475,13 @@ install_gpustat() {
     fi
 }
 
+install_ncdu() {
+    if [[ "$(uname)" == "Darwin" ]]; then
+        brew_install ncdu
+    else
+        _apt_get_install ncdu
+    fi
+}
 
 parse_args() {
     set -e
@@ -528,6 +535,7 @@ main() {
     install_tex
     install_macos
     install_gpustat
+    install_ncdu
 
     freeze_packages
 
