@@ -415,6 +415,12 @@ install_python() {
         brew_install python
     else
         _apt_get_install python-pip
+
+        if ! dpkg -s python3.6 &>/dev/null ; then
+            sudo add-apt-repository ppa:jonathonf/python-3.6
+            sudo apt-get update
+            sudo apt-get install -y python3.6 python3.6-venv python3.6-dev
+        fi
     fi
 
     if [[ -f "$private/python/.pypirc" ]]; then
