@@ -354,6 +354,10 @@ install_dropbox() {
 install_git() {
     _npm_install diff-so-fancy 0.11.4
     symlink .dotfiles/git/gitconfig ~/.gitconfig
+
+    if [[ -d "$private/git" ]]; then
+        symlink "$private/git/githubrc" ~/.githubrc
+    fi
 }
 
 
