@@ -427,6 +427,11 @@ install_python() {
     if [[ -f "$private/python/.pypirc" ]]; then
         symlink "$private/python/.pypirc" ~/.pypirc
     fi
+
+    local pip_version="9.0.1"
+    if [[ "$(pip --version | awk '{print $2}')" != "$pip_version" ]]; then
+        pip install --upgrade "pip==$pip_version"
+    fi
 }
 
 
