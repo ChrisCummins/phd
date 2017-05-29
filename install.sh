@@ -500,6 +500,14 @@ install_ncdu() {
     fi
 }
 
+install_htop() {
+    if [[ "$(uname)" == "Darwin" ]]; then
+        brew_install htop
+    else
+        _apt_get_install htop
+    fi
+}
+
 parse_args() {
     set -e
     if [[ "$1" == "-v" ]] || [[ "$1" == "--verbose" ]]; then
@@ -553,6 +561,7 @@ main() {
     install_macos
     install_gpustat
     install_ncdu
+    install_htop
 
     freeze_packages
 
