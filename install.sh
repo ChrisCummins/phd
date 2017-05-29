@@ -531,6 +531,11 @@ install_gh_archiver() {
 }
 
 
+install_emu() {
+    _pip_install emu 0.2.4
+}
+
+
 parse_args() {
     set -e
     if [[ "$1" == "-v" ]] || [[ "$1" == "--verbose" ]]; then
@@ -587,6 +592,7 @@ main() {
     install_ncdu
     install_htop
     install_gh_archiver
+    install_emu
 
     freeze_packages
 
