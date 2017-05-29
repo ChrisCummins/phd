@@ -415,6 +415,7 @@ install_python() {
         brew_install python
     else
         _apt_get_install python-pip
+        _apt_get_install software-properties-common  # provides add-apt-repository
 
         if ! dpkg -s python3.6 &>/dev/null ; then
             sudo add-apt-repository ppa:jonathonf/python-3.6
