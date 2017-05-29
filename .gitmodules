@@ -28,3 +28,6 @@
 [submodule "src/chriscumms.cc"]
 	path = src/chriscumms.cc
 	url = git@github.com:ChrisCummins/chriscummins.github.io.git
+[submodule "src/gh-archiver"]
+	path = src/gh-archiver
+	url = git@github.com:ChrisCummins/gh-archiver.git
