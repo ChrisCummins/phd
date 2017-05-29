@@ -32,9 +32,10 @@ from argparse import ArgumentParser, FileType, RawDescriptionHelpFormatter
 from configparser import ConfigParser
 from datetime import datetime
 from git import Repo
-from github import Github, GithubException
+from github import Github, GithubException, NamedUser
+from github.Repository import Repository as GithubRepository
 from pathlib import Path
-from typing import TextIO
+from typing import Iterator, TextIO
 
 __copyright__ = "Copyright (C) 2017 Chris Cummins <chrisc.101@gmail.com>."
 
@@ -53,6 +54,9 @@ def get_argument_parser() -> ArgumentParser:
     parser.add_argument(
         "--delete", action="store_true",
         help="Delete all other files in output directory")
+    parser.add_argument(
+        "--exclude", dest="excludes", metavar="<repo1,repo2 ...>", default="",
+        help="Comma-separated list of repository names to exclude")
     parser.add_argument(
         "--githubrc", metavar="<file>", type=FileType("r"),
         default=os.path.join(os.path.expanduser("~"), ".githubrc"),
@@ -76,6 +80,16 @@ def get_github_connection(githubrc: TextIO) -> Github:
     return Github(github_username, github_pw)
 
 
+def get_repos(g: Github, username: str,
+              exclude_pattern: str) -> Iterator[GithubRepository]:
+    """ get user repositories """
+    user: NamedUser = g.get_user(username)
+    excluded = exclude_pattern.split(",")
+    for repo in user.get_repos():
+        if repo.name not in excluded:
+            yield repo
+
+
 def main():
     try:
         parser = get_argument_parser()
@@ -83,10 +97,11 @@ def main():
         g = get_github_connection(args.githubrc)
 
         outdir = Path(args.outdir, parents=True, exists_ok=True)
+        repos = list(get_repos(g, args.user, args.excludes))
 
         # delete any files which are not GitHub repos first, if necessary
         if args.delete:
-            repo_names = [r.name for r in g.get_user(args.user).get_repos()]
+            repo_names = [r.name for r in repos]
             for path in outdir.iterdir():
                 basename = os.path.basename(path)
                 if basename not in repo_names:
@@ -96,7 +111,7 @@ def main():
                     else:
                         os.remove(path)
 
-        for repo in g.get_user(args.user).get_repos():
+        for repo in repos:
             local_path = outdir / repo.name
 
             # remove any file of the same name
