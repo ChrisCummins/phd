@@ -37,7 +37,7 @@ A self-contained, monolothic repository for (almost) everything I have done whil
 
 1. Chris Cummins. "**Using Deep Learning to Generate Human-like Code**", 22nd
    April, 2017. Scottish Programming Languages Seminar, University of St.
-   Andrews, Scotland. [[files]](/talks/2017-03-spls).
+   Andrews, Scotland. [[files]](/talks/2017-03-spls). [[pdf]](/talks/2017-03-spls/2017-03-spls.pdf).
 1. Chris Cummins. "**Synthesizing Benchmarks for Predictive Modeling**", 6th
    Febuary, 2017. International Symposium on Code Generationand Optimization
    (CGO), Austin, Texas, USA. [[files]](/talks/2017-02-cgo).
