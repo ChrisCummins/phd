@@ -526,6 +526,11 @@ install_htop() {
 }
 
 
+install_gh_archiver() {
+    _pip_install gh-archiver 0.0.1
+}
+
+
 parse_args() {
     set -e
     if [[ "$1" == "-v" ]] || [[ "$1" == "--verbose" ]]; then
@@ -581,6 +586,7 @@ main() {
     install_gpustat
     install_ncdu
     install_htop
+    install_gh_archiver
 
     freeze_packages
 
