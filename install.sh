@@ -430,6 +430,15 @@ install_python() {
 }
 
 
+install_curl() {
+    if [[ "$(uname)" == "Darwin" ]]; then
+        brew_install curl
+    else
+        _apt_get_install curl
+    fi
+}
+
+
 install_node() {
     if [[ "$(uname)" == "Darwin" ]]; then
         brew_install node
@@ -493,6 +502,7 @@ install_gpustat() {
     fi
 }
 
+
 install_ncdu() {
     if [[ "$(uname)" == "Darwin" ]]; then
         brew_install ncdu
@@ -501,6 +511,7 @@ install_ncdu() {
     fi
 }
 
+
 install_htop() {
     if [[ "$(uname)" == "Darwin" ]]; then
         brew_install htop
@@ -508,6 +519,7 @@ install_htop() {
         _apt_get_install htop
     fi
 }
+
 
 parse_args() {
     set -e
@@ -544,6 +556,7 @@ main() {
 
     install_homebrew
     install_python
+    install_curl
     install_dropbox
     install_ssh
     install_node
