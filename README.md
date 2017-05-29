@@ -10,11 +10,12 @@ A self-contained, monolothic repository for (almost) everything I have done whil
    CGO '17.
    [[source code]](https://github.com/ChrisCummins/paper-synthesizing-benchmarks/).
    [[pdf]](https://github.com/ChrisCummins/paper-synthesizing-benchmarks/raw/master/paper.pdf).
+   [[acm]](https://dl.acm.org/citation.cfm?id=3049843).
    Build command: `$ bazel build //docs:2017-02-cgo`.
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather.
-   "**Autotuning OpenCL Workgroup Sizes**". ACACES '16. [[source
-   code]](/docs/2016-07-acaces). Build command: `$ bazel build
-   //docs:2016-07-acaces`.
+   "**Autotuning OpenCL Workgroup Sizes**". ACACES '16.
+   [[source code]](/docs/2016-07-acaces).
+   Build command: `$ bazel build //docs:2016-07-acaces`.
 1. Chris Cummins, Pavlos Petoumenos, Michel Steuwer, Hugh Leather.
    "**Towards Collaborative Performance Tuning of Algorithmic Skeletons**".
    HLPGPU '16, HiPEAC.
@@ -26,6 +27,7 @@ A self-contained, monolothic repository for (almost) everything I have done whil
    ADAPT '16, HiPEAC.
    [[source code]](https://github.com/ChrisCummins/paper-autotuning-opencl-wgsize).
    [[pdf]](https://github.com/ChrisCummins/paper-autotuning-opencl-wgsize/raw/master/paper.pdf).
+   [[arxiv]](https://arxiv.org/abs/1511.02490).
    Build command: `$ bazel build //docs:2016-01-adapt`.
 1. Chris Cummins. "**Autotuning Stencils Codes with Algorithmic Skeletons**".
    MSc Thesis, 2015. The University of Edinburgh.
@@ -37,32 +39,44 @@ A self-contained, monolothic repository for (almost) everything I have done whil
 
 1. Chris Cummins. "**Using Deep Learning to Generate Human-like Code**", 22nd
    April, 2017. Scottish Programming Languages Seminar, University of St.
-   Andrews, Scotland. [[files]](/talks/2017-03-spls). [[pdf]](/talks/2017-03-spls/2017-03-spls.pdf).
+   Andrews, Scotland.
+   [[files]](/talks/2017-03-spls).
+   [[pdf]](https://github.com/ChrisCummins/phd/raw/master/talks/2017-03-spls/2017-03-spls.pdf).
 1. Chris Cummins. "**Synthesizing Benchmarks for Predictive Modeling**", 6th
    Febuary, 2017. International Symposium on Code Generationand Optimization
-   (CGO), Austin, Texas, USA. [[files]](/talks/2017-02-cgo).
+   (CGO), Austin, Texas, USA.
+   [[files]](/talks/2017-02-cgo).
    [[slides]](https://speakerdeck.com/chriscummins/synthesizing-benchmarks-for-predictive-modelling-cgo-17).
 1. Chris Cummins. "**Machine Learning & Compilers**", 9th September, 2016.
-   Codeplay, Edinburgh, Scotland. [[files]](/talks/2017-02-cgo).
+   Codeplay, Edinburgh, Scotland.
+   [[files]](/talks/2017-02-cgo).
    [[slides]](https://speakerdeck.com/chriscummins/machine-learning-and-compilers).
 1. Chris Cummins. "**Building an AI that Codes**", 22nd July, 2016.  Ocado
-   Technology, Hatfield, England. [[files]](/talks/2016-07-ocado).
+   Technology, Hatfield, England.
+   [[files]](/talks/2016-07-ocado).
+   [[pdf]](https://github.com/ChrisCummins/phd/raw/master/talks/2016-07-ocado/2016-07-ocado.pdf).
 1. Chris Cummins.
    "**All the OpenCL on GitHub: Teaching an AI to code, one character at a time**",
    19th May, 2016. Amazon Development Centre, Edinburgh, Scotland.
    [[files]](/talks/2016-05-amazon).
+   [[pdf]](https://github.com/ChrisCummins/phd/raw/master/talks/2016-05-amazon/2016-05-amazon.pdf).
 1. Chris Cummins. "**Autotuning and Algorithmic Skeletons**", Wed 10th Feb,
-   2016. The University of Edinburgh, Scotland. [[files]](/talks/2016-02-ppar).
+   2016. The University of Edinburgh, Scotland.
+   [[files]](/talks/2016-02-ppar).
+   [[pdf]](https://github.com/ChrisCummins/phd/raw/master/talks/2016-02-ppar/2016-02-ppar.pdf).
 1. Chris Cummins. "**Towards Collaborative Performance Tuning of Algorithmic
    Skeletons**", Tues 19th Jan, 2016. HLPGPU, HiPEAC, Prague.
    [[files]](/talks/2016-01-hlpgpu).
+   [[pdf]](https://github.com/ChrisCummins/phd/raw/master/talks/2016-01-hlpgpu/2016-01-hlpgpu.pdf).
 1. Chris Cummins. "**Autotuning OpenCL Workgroup Size for Stencil Patterns**",
    Mon 18th Jan, 2016. ADAPT, HiPEAC, Prague. Files:
    [[files]](/talks/2016-01-adapt).
+   [[pdf]](https://github.com/ChrisCummins/phd/raw/master/talks/2016-01-adapt/2016-01-adapt.pdf).
 1. Chris Cummins.
    "**Towards Collaborative Performance Tuning of Algorithmic Skeletons**",
    Thurs 14th Jan, 2016. CArD talk, University of Edinburgh.
    [[files]](/talks/2016-01-hlpgpu).
+   [[pdf]](https://github.com/ChrisCummins/phd/raw/master/talks/2016-01-hlpgpu/2016-01-hlpgpu.pdf).
 
 
 ## Misc
@@ -73,7 +87,8 @@ A self-contained, monolothic repository for (almost) everything I have done whil
    [[source code]](/docs/2016-12-wip-taco).
    Build command: `$ bazel build //docs:2016-12-wip-taco`.
 1. Chris Cummins. "**Deep Learning for Compilers**". PhD First Year Review
-   Document, 2016. [[source code]](/docs/2016-11-first-year-review).
+   Document, 2016.
+   [[source code]](/docs/2016-11-first-year-review).
    Build command: `$ bazel build //docs:2016-11-first-year-review`.
 1. Chris Cummins, Hugh Leather. "**Autotuning OpenCL Workgroup Sizes**".
    Rejected submission for PACT'16 Student Research Competition.
