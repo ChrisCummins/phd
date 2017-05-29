@@ -168,12 +168,12 @@ clone_git_repo() {
 }
 
 
-_pip_freeze_cache="$dotfiles/.pip-freeze.txt"
 _brew_list_cache="$dotfiles/.brew-list.txt"
 _npm_list_cache="$dotfiles/.npm-list.txt"
 _brew_cask_list_cache="$dotfiles/.brew-cask-list.txt"
 _cache_cleanup() {
-    rm -f "$_pip_freeze_cache" \
+    rm $dotfiles/.*-freeze.txt
+    rm -f \
         "$_npm_list_cache" \
         "$_brew_list_cache" \
         "$_brew_cask_list_cache"
@@ -182,16 +182,20 @@ trap _cache_cleanup EXIT
 
 
 pip_freeze() {
-    if [[ ! -f "$_pip_freeze_cache" ]] ; then
-        pip freeze 2>/dev/null > "$_pip_freeze_cache"
+    local pip="${1:-pip}"
+
+    local pip_freeze_cache="$dotfiles/.$pip-freeze.txt"
+    if [[ ! -f "$pip_freeze_cache" ]] ; then
+        $pip freeze 2>/dev/null > "$pip_freeze_cache"
     fi
-    echo "$_pip_freeze_cache"
+    echo "$pip_freeze_cache"
 }
 
 
 _pip_install() {
     local package="$1"
     local version="$2"
+    local pip="${3:-pip}"
 
     # on linux, we need sudo to pip install.
     local use_sudo=""
@@ -199,8 +203,10 @@ _pip_install() {
         use_sudo="sudo"
     fi
 
-    grep "^$package==$version" < "$(pip_freeze)" >/dev/null \
-        || $use_sudo pip install --upgrade "$package==$version" 2>/dev/null
+    grep "^$package==$version" < "$(pip_freeze "$pip")" >/dev/null || { \
+        echo_ok "$pip install $package==$version"; \
+        $use_sudo $pip install --upgrade "$package==$version" 2>/dev/null; \
+    }
 }
 
 
@@ -420,7 +426,7 @@ install_python() {
         if ! dpkg -s python3.6 &>/dev/null ; then
             sudo add-apt-repository ppa:jonathonf/python-3.6
             sudo apt-get update
-            sudo apt-get install -y python3.6 python3.6-venv python3.6-dev
+            sudo apt-get install -y python3.6 python3.6-venv python3.6-dev python3-pip
         fi
     fi
 
@@ -527,7 +533,11 @@ install_htop() {
 
 
 install_gh_archiver() {
-    _pip_install gh-archiver 0.0.1
+    if [[ "$(uname)" == "Darwin" ]]; then
+        _pip_install gh-archiver 0.0.1
+    else
+        _pip_install gh-archiver 0.0.1 "python3.6 -m pip"
+    fi
 }
 
 
@@ -559,7 +569,8 @@ freeze_packages() {
             cat "$(brew_cask_list)" > "$private/packages/$(hostname)-brew-cask.txt"
         fi
 
-        cat "$(pip_freeze)" > "$private/packages/$(hostname)-pip.txt"
+        cat "$(pip_freeze pip)" > "$private/packages/$(hostname)-pip.txt"
+        cat "$(pip_freeze pip3)" > "$private/packages/$(hostname)-pip3.txt"
         cat "$(npm_list)" > "$private/packages/$(hostname)-npm.txt"
     fi
 }
