@@ -2,7 +2,7 @@
   lmk - let me know
   <a href="https://badge.fury.io/py/lmk">
     <img src="https://img.shields.io/pypi/v/lmk.svg?colorB=green&style=flat">
-  </a> <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" target="_blank">
+  </a> <a href="https://tldrlegal.com/license/mit-license" target="_blank">
     <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat">
   </a>
 </h1>
