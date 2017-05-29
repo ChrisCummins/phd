@@ -476,6 +476,13 @@ install_macos() {
     # install Mac OS X specific stuff
     mkdir -p ~/.local/bin
     symlink "$dotfiles/macos/rm-dsstore" ~/.local/bin/rm-dsstore
+
+    if [[ "$(uname)" == "Darwin" ]]; then
+        # disable "Last Login ..." messages on terminal
+        if [[ ! -f ~/.hushlogin ]]; then
+            touch ~/.hushlogin
+        fi
+    fi
 }
 
 
