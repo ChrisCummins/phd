@@ -4,7 +4,7 @@ with open('./requirements.txt') as infile:
     requirements = [x.strip() for x in infile.readlines() if x.strip()]
 
 setup(name='lmk',
-      version='0.0.9',
+      version='0.0.9.dev0',
       description='Email notification when command completes',
       url='https://github.com/ChrisCummins/lmk',
       author='Chris Cummins',
