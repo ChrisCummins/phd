@@ -106,7 +106,7 @@ Password: $LMK_PWD
 
 [messages]
 From: $USER@$HOST
-To: $LMK_TO
+To: $MAILTO
 """
 
 E_CFG = 2
@@ -423,7 +423,10 @@ def send_email_smtp(cfg, server, msg):
         return False
 
     c = colors
-    recipient = msg['To']
+    recipient = msg['To'].strip()
+    if not recipient:
+        return _error('no recipient')
+
     try:
         server.sendmail(msg['From'], msg['To'], msg.as_string())
         print(
