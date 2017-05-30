@@ -544,7 +544,7 @@ install_gh_archiver() {
 
 
 install_emu() {
-    _pip_install emu 0.2.4
+    _pip_install emu 0.2.5
 }
 
 
