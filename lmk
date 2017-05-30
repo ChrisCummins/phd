@@ -176,10 +176,12 @@ def parse_args(args):
         description=__description__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
+        '-e', '--only-errors', action='store_true',
+        help='only notify if command fails')
+    parser.add_argument(
         'command', metavar='<command>',
         help='command to execute, or "-" to read from stdin')
-    args = parser.parse_args(args)
-    return args.command
+    return parser.parse_args(args)
 
 
 def create_default_cfg(path):
@@ -681,7 +683,7 @@ def read_from_stdin():
         date_ended=date_ended)
 
 
-def run_subprocess(command):
+def run_subprocess(command, only_errors=False):
     cfg = load_cfg()
     check_connection(cfg)
 
@@ -712,23 +714,30 @@ def run_subprocess(command):
     output = ''.join(out).rstrip()
     returncode = process.returncode
 
-    let_me_know(
-        output=output, command=command, returncode=returncode, cfg=cfg,
-        date_started=date_started, date_ended=date_ended)
+    if returncode or not only_errors:
+        let_me_know(
+            output=output, command=command, returncode=returncode, cfg=cfg,
+            date_started=date_started, date_ended=date_ended)
 
     return returncode
 
 
 def main():
-    command = parse_args(sys.argv[1:])
+    args = parse_args(sys.argv[1:])
+    c = colors
 
     try:
-        if command == '-':
+        if args.command == '-':
+            # check that command line usage is correct
+            if args.only_errors:
+                print('{c.bold}{c.red}[lmk] --only-errors option cannot be '
+                      'used with stdin{c.reset}'.format(**vars()))
+                sys.exit(1)
+
             read_from_stdin()
         else:
-            sys.exit(run_subprocess(command))
+            sys.exit(run_subprocess(args.command, only_errors=args.only_errors))
     except KeyboardInterrupt:
-        c = colors
         print('{c.bold}{c.red}[lmk] aborted{c.reset}'.format(**vars()))
         sys.exit(1)
 
