@@ -378,7 +378,7 @@ def get_smtp_server(cfg):
         server.starttls()
         server.login(cfg['smtp']['username'], cfg['smtp']['password'])
         return server
-    except smptlib.SMTPHeloError:
+    except smtplib.SMTPHeloError:
         host, port = cfg['smtp']['host'], cfg['smtp']['port']
         _error('connection to {host}:{port} failed'.format(**vars()))
     except smtplib.SMTPAuthenticationError:
@@ -391,7 +391,7 @@ def get_smtp_server(cfg):
             '{host}:{port} disconnected. Check smtp settings in {cfg_path}'
             .format(**vars()),
             file=sys.stderr)
-    except smptlib.SMTPException:
+    except smtplib.SMTPException:
         host, port = cfg['smtp']['host'], cfg['smtp']['port']
         cfg_path = cfg['/run']['path']
         _error('unknown error from {host}:{port}'.format(**vars()))
