@@ -31,3 +31,6 @@
 [submodule "src/gh-archiver"]
 	path = src/gh-archiver
 	url = git@github.com:ChrisCummins/gh-archiver.git
+[submodule "docs/2017-09-pact"]
+	path = docs/2017-09-pact
+	url = https://github.com/ChrisCummins/paper-end2end-dl

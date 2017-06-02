@@ -6,6 +6,10 @@ A self-contained, monolothic repository for (almost) everything I have done whil
 ##  Publications
 
 1. Chris Cummins, Pavlos Petoumenos, Zheng Wang, Hugh Leather.
+   "**End-to-end Deep Learning of Optimization Heuristics**".
+   PACT '17.
+   [[source code]](https://github.com/ChrisCummins/paper-end2end-dl/).
+1. Chris Cummins, Pavlos Petoumenos, Zheng Wang, Hugh Leather.
    "**Synthesizing Benchmarks for Predictive Modeling**".
    CGO '17.
    [[source code]](https://github.com/ChrisCummins/paper-synthesizing-benchmarks/).
