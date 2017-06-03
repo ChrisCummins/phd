@@ -62,20 +62,25 @@ E = (
         if source not in self or dest not in self:
             raise ValueError
 
+        # breadth first search, where the queue is a queue of paths, rather than
+        # nodes.
+        #
+        # TODO: Modify to Dijkstra's algorithm, which uses less memory.
         visited = [False] * len(self.vertices)
 
-        q = deque([(source, [source])])
+        q = deque([[source]])
         visited[source] = True
 
         while len(q):
-            vertex, path = q.popleft()
+            path = q.popleft()
+            vertex = path[-1]
 
             if vertex == dest:
                 return path
 
             for neighbor in self.get_adjacent_vertices(vertex):
                 if not visited[neighbor]:
-                    q.append((neighbor, path + [neighbor]))
+                    q.append(path + [neighbor])
                     visited[neighbor] = True
 
         return None
