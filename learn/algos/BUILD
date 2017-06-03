@@ -20,6 +20,11 @@ cc_test(
 )
 
 sh_test(
+    name = "graph",
+    srcs = ["graph.py"],
+)
+
+sh_test(
     name = "search",
     srcs = ["search.py"],
 )
