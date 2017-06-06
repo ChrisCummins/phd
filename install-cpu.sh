@@ -20,7 +20,15 @@
 # along with CLgen.  If not, see <http://www.gnu.org/licenses/>.
 #
 set -ex
-wget https://github.com/ChrisCummins/clgen/archive/0.3.13.dev0.tar.gz -O clgen-0.3.13.dev0.tar.gz
+wget https://github.com/ChrisCummins/clgen/archive/0.3.13.dev0.tar.gz -O clgen-0.3.13.dev0.tar.gz || {
+    set +x
+    echo >&2
+    echo 'failed to fetch clgen archive.' >&2
+    echo 'Please see install instructions:' >&2
+    echo >&2
+    echo '  <https://chriscummins.cc/clgen/>' >&2
+    exit 1
+}
 tar xf clgen-0.3.13.dev0.tar.gz
 rm clgen-0.3.13.dev0.tar.gz
 cd clgen-0.3.13.dev0
