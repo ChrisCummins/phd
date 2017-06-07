@@ -121,8 +121,9 @@ def main():
             if local_path.is_dir():
                 print(f"updating {repo.name}")
             else:
-                print(f"cloning {repo.name}")
-                Repo.clone_from(repo.git_url, local_path)
+                print(f"cloning {repo.name}:{repo.default_branch}")
+                Repo.clone_from(repo.git_url, local_path,
+                                branch=repo.default_branch)
 
             local_repo = Repo(local_path)
             for remote in local_repo.remotes:
