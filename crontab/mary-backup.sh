@@ -14,10 +14,12 @@ mkdir -pv ~/.local/etc
 echo "crontab -l > ~/.local/etc/crontab.txt"
 crontab -l > ~/.local/etc/crontab.txt
 
+~/.local/bin/rm-dsstore ~
+
 cd /
 echo "emu-push -v"
 set +e
-sudo timeout $JOB_TIMEOUT emu-push -v -f
+sudo -E timeout $JOB_TIMEOUT /usr/local/bin/emu push -v -f
 ret=$?
 test $ret != 124 || { echo "timeout after $JOB_TIMEOUT seconds"; exit $ret; }
 test $ret = 0 || exit $ret
