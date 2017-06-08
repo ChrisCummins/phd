@@ -443,6 +443,28 @@ install_python() {
 }
 
 
+install_ruby() {
+    if [[ "$(uname)" == "Darwin" ]]; then
+        brew_install rbenv
+
+        # initialize rbenv if required
+        if $(which rbenv &>/dev/null); then
+            eval "$(rbenv init -)"
+        fi
+
+        # install ruby and set as global version
+        local ruby_version=2.4.1
+        rbenv install --skip-existing "$ruby_version"
+        rbenv global "$ruby_version"
+
+        if ! gem list --local | grep bundler >/dev/null ; then
+            echo_ok "gem install bundler"
+            gem install bundler
+        fi
+    fi
+}
+
+
 install_curl() {
     if [[ "$(uname)" == "Darwin" ]]; then
         brew_install curl
@@ -586,6 +608,7 @@ main() {
 
     install_homebrew
     install_python
+    install_ruby
     install_curl
     install_dropbox
     install_ssh
