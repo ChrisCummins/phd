@@ -196,16 +196,16 @@ _pip_install() {
     local package="$1"
     local version="$2"
     local pip="${3:-pip}"
+    local use_sudo="${4:-}"
 
     # on linux, we need sudo to pip install.
-    local use_sudo=""
     if [[ "$(uname)" != "Darwin" ]]; then
         use_sudo="sudo"
     fi
 
     grep "^$package==$version" < "$(pip_freeze "$pip")" >/dev/null || { \
         echo_ok "$pip install $package==$version"; \
-        $use_sudo $pip install --upgrade "$package==$version" 2>/dev/null; \
+        $use_sudo $pip install --upgrade "$package==$version" >/dev/null; \
     }
 }
 
@@ -408,12 +408,14 @@ install_sublime() {
     fi
 }
 
+
 install_ssmtp() {
     if [[ "$(uname)" != "Darwin" ]]; then
         _apt_get_install ssmtp
         symlink "$private/ssmtp/ssmtp.conf" /etc/ssmtp/ssmtp.conf sudo
     fi
 }
+
 
 install_python() {
     # modern python
