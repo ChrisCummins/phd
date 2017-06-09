@@ -320,7 +320,7 @@ install_zsh() {
 
 
 install_lmk() {
-    _pip_install lmk 0.0.10
+    _pip_install lmk 0.0.11
     symlink "$private/lmk/lmkrc" ~/.lmkrc
 }
 
