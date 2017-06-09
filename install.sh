@@ -200,7 +200,7 @@ _pip_install() {
 
     # on linux, we need sudo to pip install.
     if [[ "$(uname)" != "Darwin" ]]; then
-        use_sudo="sudo"
+        use_sudo="sudo -H"
     fi
 
     grep "^$package==$version" < "$(pip_freeze "$pip")" >/dev/null || { \
