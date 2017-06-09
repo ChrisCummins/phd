@@ -504,7 +504,7 @@ def build_html_message_body(output, command=None, returncode=None,
     ])
 
     # start of HTML body
-    html = '<table>\n'
+    html = u'<table>\n'
 
     # command line invocation
     if command is not None:
@@ -523,7 +523,7 @@ def build_html_message_body(output, command=None, returncode=None,
         # truncated report. First 100 and last 100 lines
         for line, lineno in zip(lines[:100], range(1, 101)):
             line_html = cgi.escape(line)
-            html += """\
+            html += u"""\
   <tr style="line-height:1em;">
     <td style="{lineno_css}">{lineno}</td>
     <td style="{line_css}">{line_html}</td>
@@ -536,7 +536,7 @@ def build_html_message_body(output, command=None, returncode=None,
         for line, lineno in zip(lines[-100:], range(len(lines) - 99,
                                                     len(lines) + 1)):
             line_html = cgi.escape(line)
-            html += """\
+            html += u"""\
   <tr style="line-height:1em;">
     <td style="{lineno_css}">{lineno}</td>
     <td style="{line_css}">{line_html}</td>
@@ -545,33 +545,33 @@ def build_html_message_body(output, command=None, returncode=None,
     else:
         # full length report
         for line, lineno in zip(lines, range(1, len(lines) + 1)):
-            line_html = cgi.escape(line)
-            html += """
+            line_html = cgi.escape(line.decode('utf-8'))
+            html += u"""
   <tr style="line-height:1em;">
     <td style="{lineno_css}">{lineno}</td>
     <td style="{line_css}">{line_html}</td>
   </tr>
 """.format(**vars())
 
-    html += '</table>\n<hr style="margin-top:20px;"/>\n<table>\n'
+    html += u'</table>\n<hr style="margin-top:20px;"/>\n<table>\n'
 
     # metadata block
     style = 'padding-right:15px;'
     if returncode is not None:
-        html += ('  <tr><td style="{style}">Return code</td>'
-                 '<td style="font-weight:700;">{returncode}</td></tr>\n'
+        html += (u'  <tr><td style="{style}">Return code</td>'
+                 u'<td style="font-weight:700;">{returncode}</td></tr>\n'
                  .format(**vars()))
-    html += ('  <tr><td style="{style}">Working directory</td>'
-             '<td>{cwd}</td></tr>\n'
+    html += (u'  <tr><td style="{style}">Working directory</td>'
+             u'<td>{cwd}</td></tr>\n'
              .format(**vars()))
     if date_started:
         delta = humanize.naturaltime(datetime.now() - date_started)
-        html += ('  <tr><td style="{style}">Started</td>'
-                 '<td>{date_started} ({delta})</td></tr>\n'
+        html += (u'  <tr><td style="{style}">Started</td>'
+                 u'<td>{date_started} ({delta})</td></tr>\n'
                  .format(**vars()))
     if date_ended:
-        html += ('  <tr><td style="{style}">Completed</td>'
-                 '<td>{date_ended}</td></tr>\n'
+        html += (u'  <tr><td style="{style}">Completed</td>'
+                 u'<td>{date_ended}</td></tr>\n'
                  .format(**vars()))
 
     # footer
