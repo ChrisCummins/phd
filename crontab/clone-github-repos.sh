@@ -2,17 +2,24 @@
 #
 # Clone and update my GitHub repos locally.
 #
-set -eu
-
-# maximum runtime in seconds
+# ****************************************************************************
+# *                               Configuration                              *
+# ****************************************************************************
 JOB_TIMEOUT=1800  # 30 min
-
 GITHUB_USER=ChrisCummins
 OUTDIR=~/src/GitHub/ChrisCummins
-
-set +e
+GH_ARCHIVER=/usr/local/bin/gh-archiver
 # FIXME: clreduce repo contains broken reference, --exclude for now
-timeout $JOB_TIMEOUT /usr/local/bin/gh-archiver $GITHUB_USER -o $OUTDIR --delete --exclude clreduce,distro
-ret=$?
-test $ret != 124 || { echo "timeout after $JOB_TIMEOUT seconds"; exit $ret; }
-test $ret = 0 || exit $ret
+GH_ARCHIVER_ARGS="--delete --exclude clreduce,distro"
+LMK="/usr/local/bin/lmk -e"
+
+# ****************************************************************************
+# *                                  Program                                 *
+# ****************************************************************************
+set -eux
+
+if [[ -z "${1:-}" ]]; then
+    $LMK "timeout $JOB_TIMEOUT $0 --porcelain"
+else
+    $GH_ARCHIVER $GITHUB_USER -o $OUTDIR $GH_ARCHIVER_ARGS
+fi
