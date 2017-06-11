@@ -87,3 +87,18 @@ cc_test(
     name =  "015-longest-path-matrix",
     srcs = ["015-longest-path-matrix.cc"]
 )
+
+sh_test(
+    name = "016-min-hops",
+    srcs = ["016-min-hops.py"]
+)
+
+sh_test(
+    name = "017-longest-substrings",
+    srcs = ["017-longest-substrings.py"]
+)
+
+sh_test(
+    name = "018-list-binary-tree",
+    srcs = ["018-list-binary-tree.py"]
+)
