@@ -102,3 +102,13 @@ sh_test(
     name = "018-list-binary-tree",
     srcs = ["018-list-binary-tree.py"]
 )
+
+sh_test(
+    name = "019-validate-bst",
+    srcs = ["019-validate-bst.py"]
+)
+
+sh_test(
+    name = "020-highest-product",
+    srcs = ["020-highest-product.py"]
+)
