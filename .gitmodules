@@ -34,3 +34,6 @@
 [submodule "docs/2017-09-pact"]
 	path = docs/2017-09-pact
 	url = https://github.com/ChrisCummins/paper-end2end-dl
+[submodule "learn/interactive-coding-challenges"]
+	path = learn/interactive-coding-challenges
+	url = git@github.com:ChrisCummins/interactive-coding-challenges.git
