@@ -27,13 +27,7 @@ os:
 #       - clang-3.6
 
 before_install:
-  - |
-    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      sed -i '' 's,git@github.com:,https://github.com/,' .gitmodules
-    else
-      sed -i 's,git@github.com:,https://github.com/,' .gitmodules
-    fi
-    cat .gitmodules
+  - ./tools/http-git-submodules.sh
   - git submodule update --init --recursive
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
