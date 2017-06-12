@@ -33,11 +33,15 @@ before_install:
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       brew update >/dev/null
       brew install bazel
+      brew install python
     else
+      sudo add-apt-repository ppa:jonathonf/python-3.6
+
       echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
       curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
       sudo apt-get update >/dev/null
       dpkg -s 'bazel' &>/dev/null || sudo apt-get install -y bazel
+      dpkg -s 'python3.6' &>/dev/null || sudo apt-get install -y python3.6
     fi
 
 script:
@@ -53,5 +57,6 @@ script:
         --test_strategy=standalone \
         --spawn_strategy=standalone \
         --genrule_strategy=standalone \
+        --test_verbose_timeout_warnings \
         --local_resources=400,1,1.0 \
         $(bazel query //... | grep -v -f .travisignore)
