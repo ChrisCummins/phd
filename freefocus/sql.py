@@ -87,12 +87,12 @@ class Workspace(Base):
 
     owners = relationship(
         "Group", secondary="workspace_owner_associations",
-        primaryjoin="WorkspaceOwnerAssociation.workspace_id == Group.id",
+        primaryjoin="WorkspaceOwnerAssociation.workspace_uid == Group.id",
         secondaryjoin="WorkspaceOwnerAssociation.owner_id == Group.id")
 
     friends = relationship(
         "Group", secondary="workspace_friend_associations",
-        primaryjoin="WorkspaceFriendAssociation.workspace_id == Group.id",
+        primaryjoin="WorkspaceFriendAssociation.workspace_uid == Group.id",
         secondaryjoin="WorkspaceFriendAssociation.friend_id == Group.id")
 
     comments = relationship("WorkspaceComment")
