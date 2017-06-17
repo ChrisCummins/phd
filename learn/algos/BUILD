@@ -1,3 +1,8 @@
+cc_binary(
+    name = "binary_search_tree",
+    srcs = ["binary_search_tree.cc"],
+)
+
 cc_test(
     name =  "breadth_first_search",
     srcs = [
