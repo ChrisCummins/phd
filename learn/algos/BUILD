@@ -33,3 +33,14 @@ sh_test(
     name = "search",
     srcs = ["search.py"],
 )
+
+cc_test(
+    name = "priority_queues",
+    srcs = ["priority_queues.cc"],
+    copts = [
+        "-Iexternal/gtest/include",
+    ],
+    deps = [
+        "@gtest//:main",
+    ],
+)
