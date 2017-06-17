@@ -112,3 +112,18 @@ sh_test(
     name = "020-highest-product",
     srcs = ["020-highest-product.py"]
 )
+
+cc_test(
+    name = "021-string-reverse-cpp",
+    srcs = ["021-string-reverse.cc"]
+)
+
+sh_test(
+    name = "021-string-reverse-py",
+    srcs = ["021-string-reverse.py"]
+)
+
+sh_binary(
+    name = "022-multiplication-table",
+    srcs = ["022-multiplication-table.py"]
+)
