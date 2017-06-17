@@ -8,6 +8,11 @@ cc_binary(
     srcs = ["011-largest-product-in-a-grid.c"],
 )
 
+cc_binary(
+    name =  "012-triangle-number",
+    srcs = ["012-triangle-number.cc"],
+)
+
 sh_binary(
     name =  "013-large-sum",
     srcs = ["013-large-sum.py"],
