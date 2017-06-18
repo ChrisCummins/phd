@@ -37,3 +37,6 @@
 [submodule "learn/interactive-coding-challenges"]
 	path = learn/interactive-coding-challenges
 	url = git@github.com:ChrisCummins/interactive-coding-challenges.git
+[submodule "src/emu"]
+	path = src/emu
+	url = git@github.com:ChrisCummins/emu.git
