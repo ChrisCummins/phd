@@ -626,6 +626,11 @@ install_emu() {
 }
 
 
+install_jsonlint() {
+    _npm_install jsonlint 1.6.2
+}
+
+
 parse_args() {
     set -e
     if [[ "$1" == "-v" ]] || [[ "$1" == "--verbose" ]]; then
@@ -685,6 +690,7 @@ main() {
     install_htop
     install_gh_archiver
     install_emu
+    install_jsonlint
 
     freeze_packages
 
