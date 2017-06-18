@@ -331,16 +331,38 @@ install_ssh() {
     if [[ -d "$private/ssh" ]]; then
         chmod 600 "$private"/ssh/*
         mkdir -p ~/.ssh
+
         if [[ "$(stat -c %U "$private/ssh/authorized_keys")" == "$USER" ]]; then
             symlink "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
         else
             cp -v "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
         fi
-        symlink "$private/ssh/config" ~/.ssh/config
-        symlink "$private/ssh/known_hosts" ~/.ssh/known_hosts
-        cp "$private/ssh/id_rsa" ~/.ssh/id_rsa
-        symlink "$private/ssh/id_rsa.ppk" ~/.ssh/id_rsa.ppk
-        symlink "$private/ssh/id_rsa.pub" ~/.ssh/id_rsa.pub
+
+        if [[ "$(stat -c %U "$private/ssh/authorized_keys")" == "$USER" ]]; then
+            symlink "$private/ssh/config" ~/.ssh/config
+        else
+            cp -v "$private/ssh/config" ~/.ssh/config
+        fi
+
+        if [[ "$(stat -c %U "$private/ssh/authorized_keys")" == "$USER" ]]; then
+            symlink "$private/ssh/known_hosts" ~/.ssh/known_hosts
+        else
+            cp -v "$private/ssh/known_hosts" ~/.ssh/known_hosts
+        fi
+
+        cp -v "$private/ssh/id_rsa" ~/.ssh/id_rsa
+
+        if [[ "$(stat -c %U "$private/ssh/authorized_keys")" == "$USER" ]]; then
+            symlink "$private/ssh/id_rsa.ppk" ~/.ssh/id_rsa.ppk
+        else
+            cp -v "$private/ssh/id_rsa.ppk" ~/.ssh/id_rsa.ppk
+        fi
+
+        if [[ "$(stat -c %U "$private/ssh/authorized_keys")" == "$USER" ]]; then
+            symlink "$private/ssh/id_rsa.pub" ~/.ssh/id_rsa.pub
+        else
+            cp -v "$private/ssh/id_rsa.pub" ~/.ssh/id_rsa.pub
+        fi
     fi
 }
 
