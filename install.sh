@@ -37,6 +37,7 @@ dotfiles="$HOME/.dotfiles"
 # path to private files
 private="$HOME/Dropbox/Shared"
 
+hostname="$(hostname)"
 
 echo_ok() {
     local msg="$@"
@@ -559,13 +560,21 @@ install_omnifocus() {
 
 
 install_server_scripts() {
-    case "$(hostname)" in
+    case "$hostname" in
       florence | diana | mary | plod)
         # server scripts
         symlink "$dotfiles/servers/mary" ~/.local/bin/mary
         symlink "$dotfiles/servers/diana" ~/.local/bin/diana
         ;;
     esac
+
+    if [[ "$hostname" == "diana" ]]; then
+        symlink "$dotfiles/servers/push_photo_library_to_mary.sh" ~/.local/bin/push_photo_library_to_mary
+    fi
+
+    if [[ "$hostname" == "florence" ]]; then
+        symlink "$dotfiles/servers/push_music_library_to_mary.sh" ~/.local/bin/push_music_library_to_mary
+    fi
 }
 
 
