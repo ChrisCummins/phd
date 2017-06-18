@@ -321,7 +321,9 @@ install_zsh() {
 
 install_lmk() {
     _pip_install lmk 0.0.11
-    symlink "$private/lmk/lmkrc" ~/.lmkrc
+    if [[ -d "$private/lmk" ]]; then
+        symlink "$private/lmk/lmkrc" ~/.lmkrc
+    fi
 }
 
 
@@ -412,7 +414,9 @@ install_sublime() {
 install_ssmtp() {
     if [[ "$(uname)" != "Darwin" ]]; then
         _apt_get_install ssmtp
-        symlink "$private/ssmtp/ssmtp.conf" /etc/ssmtp/ssmtp.conf sudo
+        if [[ -d "$private/ssmtp" ]]; then
+            symlink "$private/ssmtp/ssmtp.conf" /etc/ssmtp/ssmtp.conf sudo
+        fi
     fi
 }
 
