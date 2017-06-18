@@ -50,6 +50,28 @@ echo_error() {
 }
 
 
+copy() {
+    # copy a file
+    #
+    # args:
+    #   $1 copy source
+    #   $2 fully qualified copy destination (not just the parent directory)
+    local source="$1"
+    local destination="$2"
+
+    if ! test -f "$source" ; then
+        echo_error "failed: cp $source -> $destination"
+        echo_error "error:  source $source does not exist"
+        exit 1
+    fi
+
+    if ! diff "$source" "$destination" &>/dev/null ; then
+        echo_ok "copy $source -> $destination"
+        cp "$source" "$destination"
+    fi
+}
+
+
 symlink() {
     # symlink a file
     #
@@ -335,33 +357,33 @@ install_ssh() {
         if [[ "$(stat -c %U "$private/ssh/authorized_keys")" == "$USER" ]]; then
             symlink "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
         else
-            cp -v "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
+            copy "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
         fi
 
         if [[ "$(stat -c %U "$private/ssh/authorized_keys")" == "$USER" ]]; then
             symlink "$private/ssh/config" ~/.ssh/config
         else
-            cp -v "$private/ssh/config" ~/.ssh/config
+            copy "$private/ssh/config" ~/.ssh/config
         fi
 
         if [[ "$(stat -c %U "$private/ssh/authorized_keys")" == "$USER" ]]; then
             symlink "$private/ssh/known_hosts" ~/.ssh/known_hosts
         else
-            cp -v "$private/ssh/known_hosts" ~/.ssh/known_hosts
+            copy "$private/ssh/known_hosts" ~/.ssh/known_hosts
         fi
 
-        cp -v "$private/ssh/id_rsa" ~/.ssh/id_rsa
+        copy "$private/ssh/id_rsa" ~/.ssh/id_rsa
 
         if [[ "$(stat -c %U "$private/ssh/authorized_keys")" == "$USER" ]]; then
             symlink "$private/ssh/id_rsa.ppk" ~/.ssh/id_rsa.ppk
         else
-            cp -v "$private/ssh/id_rsa.ppk" ~/.ssh/id_rsa.ppk
+            copy "$private/ssh/id_rsa.ppk" ~/.ssh/id_rsa.ppk
         fi
 
         if [[ "$(stat -c %U "$private/ssh/authorized_keys")" == "$USER" ]]; then
             symlink "$private/ssh/id_rsa.pub" ~/.ssh/id_rsa.pub
         else
-            cp -v "$private/ssh/id_rsa.pub" ~/.ssh/id_rsa.pub
+            copy "$private/ssh/id_rsa.pub" ~/.ssh/id_rsa.pub
         fi
     fi
 }
