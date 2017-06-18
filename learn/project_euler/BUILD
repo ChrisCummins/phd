@@ -19,6 +19,11 @@ sh_binary(
 )
 
 sh_binary(
-    name =  "015-lattice-paths",
+    name =  "015-lattice-paths-py",
     srcs = ["015-lattice-paths.py"],
+)
+
+cc_binary(
+    name =  "015-lattice-paths-cpp",
+    srcs = ["015-lattice-paths.cc"],
 )
