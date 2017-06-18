@@ -659,13 +659,13 @@ parse_args() {
 freeze_packages() {
     if [[ -d "$private/packages" ]]; then
         if [[ "$(uname)" == "Darwin" ]]; then
-            cat "$(brew_list)" > "$private/packages/$(hostname)-brew.txt"
-            cat "$(brew_cask_list)" > "$private/packages/$(hostname)-brew-cask.txt"
+            cat "$(brew_list)" > "$private/packages/$hostname-brew.txt"
+            cat "$(brew_cask_list)" > "$private/packages/$hostname-brew-cask.txt"
         fi
 
-        cat "$(pip_freeze pip)" > "$private/packages/$(hostname)-pip.txt"
-        cat "$(pip_freeze pip3)" > "$private/packages/$(hostname)-pip3.txt"
-        cat "$(npm_list)" > "$private/packages/$(hostname)-npm.txt"
+        cat "$(pip_freeze pip)" > "$private/packages/$hostname-pip.txt"
+        cat "$(pip_freeze pip3)" > "$private/packages/$hostname-pip3.txt"
+        cat "$(npm_list)" > "$private/packages/$hostname-npm.txt"
     fi
 }
 
