@@ -85,3 +85,7 @@ match OverLength /\%81v.\+/
 hi Search guibg=peru guifg=wheat
 set hlsearch
 
+
+" iPad keybaord has no escape key
+imap § <Esc>
+
