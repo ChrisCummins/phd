@@ -331,7 +331,11 @@ install_ssh() {
     if [[ -d "$private/ssh" ]]; then
         chmod 600 "$private"/ssh/*
         mkdir -p ~/.ssh
-        symlink "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
+        if [[ "$(stat -c %U "$private/ssh/authorized_keys")" == "$USER" ]]; then
+            symlink "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
+        else
+            cp -v "$private/ssh/authorized_keys" ~/.ssh/authorized_keys
+        fi
         symlink "$private/ssh/config" ~/.ssh/config
         symlink "$private/ssh/known_hosts" ~/.ssh/known_hosts
         cp "$private/ssh/id_rsa" ~/.ssh/id_rsa
