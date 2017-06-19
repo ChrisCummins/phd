@@ -127,3 +127,8 @@ sh_binary(
     name = "022-multiplication-table",
     srcs = ["022-multiplication-table.py"]
 )
+
+sh_binary(
+    name = "023-first-nonrepeated-char",
+    srcs = ["023-first-nonrepeated-char.py"]
+)
