@@ -27,3 +27,13 @@ cc_binary(
     name =  "015-lattice-paths-cpp",
     srcs = ["015-lattice-paths.cc"],
 )
+
+sh_binary(
+    name =  "016-power-digits-sum",
+    srcs = ["016-power-digits-sum.py"],
+)
+
+sh_binary(
+    name =  "017-number-letter-counts",
+    srcs = ["017-number-letter-counts.py"],
+)
