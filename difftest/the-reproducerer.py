@@ -104,12 +104,12 @@ def reproduce_clgen_build_failures(result):
 
 def generate_report_base(result):
     return f"""\
-Operating System:  {result.testbed.host}
-
-OpenCL Device:     {result.testbed.device}
 OpenCL Platform:   {result.testbed.platform}
-OpenCL version:    {result.testbed.opencl}
+OpenCL Device:     {result.testbed.device}
 Driver version:    {result.testbed.driver}
+OpenCL version:    {result.testbed.opencl}
+
+Operating System:  {result.testbed.host}
 """
 
 
@@ -121,7 +121,7 @@ def generate_wrong_code_report(result):
         components = [x for x in stdout.split(",") if x != ""]
         ncomponents = len(components)
         if len(set(components)) == 1:
-            return f"'{components[0]}' x {ncomponents}"
+            return f"'{components[0]},' x {ncomponents}"
         else:
             return stdout
 
@@ -151,22 +151,22 @@ def generate_wrong_code_report(result):
 
     kernel_nlines = len(result.program.src.split('\n'))
 
-    majority_str = ", ".join(t.device for t in majority_devices)
+    majority_str = "\n    - ".join(t.device for t in majority_devices)
 
     program_output = summarize_stdout(result.stdout)
     expected_output = summarize_stdout(majority_output)
 
     return generate_report_base(result) + f"""
-OpenCL kernel:     {result.program.id} ({kernel_nlines} lines)
-
 Global size:       {result.params.gsize}
 Workgroup size:    {result.params.lsize}
 Optimizations:     {result.params.optimizations_on_off}
 
+OpenCL kernel:     {result.program.id} ({kernel_nlines} lines)
 Program output:    {program_output}
 Expected output:   {expected_output}
+
 Majority devices:  {majority_count}
-Correct devices:   {majority_str}
+    - {majority_str}\
 """
 
 
