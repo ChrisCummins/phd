@@ -30,7 +30,7 @@ class CLgenTestCommand(TestCommand):
 
     def run_tests(self):
         import clgen.test
-        clgen.test.main()
+        clgen.test.testsuite()
 
 
 def read_requirements(path='requirements.txt'):
@@ -71,7 +71,7 @@ def all_module_data_files(module, datadir="data", excludes=[]):
 setup(
     name='CLgen',
     version='0.3.13.dev0',
-    description='',
+    description='Deep Learning program generator',
     url='https://github.com/ChrisCummins/clgen',
     author='Chris Cummins',
     author_email='chrisc.101@gmail.com',
