@@ -44,17 +44,17 @@ skip_on_travis = pytest.mark.skipif(
     os.environ.get("TRAVIS") == 'true', reason="skip on Travis CI")
 
 
-def data_path(*components, **kwargs) -> str:
+def data_path(*components, exists=True) -> str:
     """
     Return absolute path to unittest data file. Data files are located in
-    tests/data.
+    <package>/test/data.
 
     Parameters
     ----------
     *components : str
         Relative path.
-    **kwargs
-        If 'exists' True, require that file exists.
+    exists : bool, optional
+        If True, require that file exists.
 
     Returns
     -------
@@ -64,10 +64,9 @@ def data_path(*components, **kwargs) -> str:
     Raises
     ------
     Data404
-        If path doesn"t exist.
+        If path doesn't exist and 'exists' is True.
     """
     path = fs.path(*components)
-    exists = kwargs.get("exists", True)
 
     abspath = os.path.join(os.path.dirname(__file__), "data", path)
     if exists and not os.path.exists(abspath):
@@ -94,7 +93,7 @@ def data_str(*components) -> str:
     Data404
         If path doesn't exist.
     """
-    path = fs.path(*components)
+    path = data_path(*components, exists=True)
 
     with open(data_path(path)) as infile:
         return infile.read()
@@ -124,7 +123,7 @@ def archive(*components):
 def db_path(path):
     """
     Return absolute path to unittest data file. Data files are located in
-    tests/data/db.
+    <package>/test/data/db.
 
     Parameters
     ----------
