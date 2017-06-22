@@ -67,15 +67,15 @@ install:  # cache cold (runs build in 30min chunks, restart job until complete)
 #   - pip freeze  # python package versions
 
 script:
-  - which clgen
+  - test -f NORUN || which clgen
   - test -f NORUN || clgen -v test
 
 after_success:
-  - mv -v ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/.coverage .
-  - mv -v ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/test/data/coveragerc .coveragerc
+  - test -f NORUN || mv -v ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/.coverage .
+  - test -f NORUN || mv -v ~/virtualenv/*/lib/*/site-packages/CLgen-*/clgen/test/data/coveragerc .coveragerc
   # strip absolute paths from coverage file
-  - sed -r 's,/home/travis/virtualenv/python[0-9\.]+/lib/python[0-9\.]+/site-packages/CLgen-[0-9\.]+(\.dev[0-9]+)?-py[0-9\.]+\.egg,'$(pwd)',g' -i .coverage
-  - test -f NORUN || coveralls
+  - test -f NORUN || sed -r 's,/home/travis/virtualenv/python[0-9\.]+/lib/python[0-9\.]+/site-packages/CLgen-[0-9\.]+(\.dev[0-9]+)?-py[0-9\.]+\.egg,'$(pwd)',g' -i .coverage
+  - test -f NORUN || test -f NORUN || coveralls
 
 notifications:
   email:
