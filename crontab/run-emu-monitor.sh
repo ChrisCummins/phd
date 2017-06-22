@@ -16,8 +16,9 @@ export EMU_PORT=65334
 # ****************************************************************************
 # *                                  Program                                 *
 # ****************************************************************************
-set -eux
+set -x
 
 cd /
 sudo $EMU monitor --port $EMU_PORT --host 0.0.0.0
-echo "emu monitor failed" | $LMK
+ret=$?
+echo "emu monitor exited with returncode $ret" | $LMK
