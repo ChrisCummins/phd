@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# Start netdata daemon.
+#
+# ****************************************************************************
+# *                               Configuration                              *
+# ****************************************************************************
+export LMK="/usr/local/bin/lmk -e"
+export LMK_TO="chrisc.101@gmail.com"
+
+export EMU="/usr/local/bin/emu"
+
+export EMU_PORT=65334
+
+
+# ****************************************************************************
+# *                                  Program                                 *
+# ****************************************************************************
+set -eux
+
+cd /
+sudo $EMU monitor --port $EMU_PORT --host 0.0.0.0
+echo "emu monitor failed" | $LMK
