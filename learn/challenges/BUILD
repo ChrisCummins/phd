@@ -148,3 +148,8 @@ sh_binary(
     name = "025-first-nonrepeated-char",
     srcs = ["025-first-nonrepeated-char.py"]
 )
+
+cc_binary(
+    name = "026-remove-dupes",
+    srcs = ["026-remove-dupes.cc"]
+)
