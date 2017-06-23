@@ -129,6 +129,22 @@ sh_binary(
 )
 
 sh_binary(
-    name = "023-first-nonrepeated-char",
-    srcs = ["023-first-nonrepeated-char.py"]
+    name = "023-all-subsets",
+    srcs = ["023-all-subsets.py"]
+)
+
+cc_test(
+    name = "024-linked-list-cycle",
+    srcs = ["024-linked-list-cycle.cc"],
+    copts = [
+        "-Iexternal/gtest/include",
+    ],
+    deps = [
+        "@gtest//:main",
+    ],
+)
+
+sh_binary(
+    name = "025-first-nonrepeated-char",
+    srcs = ["025-first-nonrepeated-char.py"]
 )
