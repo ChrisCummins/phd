@@ -6,7 +6,6 @@ os:
   - osx
 
 before_install:
-  - echo "Operating System: $TRAVIS_OS_NAME"
   - uname -a
 
 script:
