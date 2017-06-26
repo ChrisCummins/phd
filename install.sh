@@ -408,6 +408,15 @@ install_dropbox() {
 }
 
 
+install_inbox() {
+    if [[ "$(uname)" == "Darwin" ]]; then
+        if [[ -d "$private/inbox" ]]; then
+            symlink_dir "$private/inbox/Inbox.app" /Applications/Inbox.app
+        fi
+    fi
+}
+
+
 install_git() {
     _npm_install diff-so-fancy 0.11.4
     symlink .dotfiles/git/gitconfig ~/.gitconfig
@@ -687,6 +696,7 @@ main() {
     install_ruby
     install_curl
     install_dropbox
+    install_inbox
     install_ssh
     install_node
     install_zsh
