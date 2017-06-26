@@ -5,13 +5,15 @@
 # ****************************************************************************
 # *                               Configuration                              *
 # ****************************************************************************
-JOB_TIMEOUT=21600  # 6 hrs
-LMK="/usr/local/bin/lmk"
-LMK_TO="chrisc.101@gmail.com"
+export JOB_TIMEOUT=21600  # 6 hrs
+export LMK="/usr/local/bin/lmk"
+export LMK_TO="chrisc.101@gmail.com"
+export EMU_LOGDIR="/var/log/emu"
+export OLDEST_LOG_DAYS=31  # keep logs for this many days
 
-CRONTAB_BACKUP=~/.local/etc/crontab.txt  # crontab is exported to here
-RM_DSSTORE=~/.local/bin/rm-dsstore
-EMU="/usr/local/bin/emu"
+export CRONTAB_BACKUP=~/.local/etc/crontab.txt  # crontab is exported to here
+export RM_DSSTORE=~/.local/bin/rm-dsstore
+export EMU="/usr/local/bin/emu"
 
 
 # ****************************************************************************
@@ -20,8 +22,10 @@ EMU="/usr/local/bin/emu"
 set -eux
 
 if [[ -z "${1:-}" ]]; then
-    $LMK "timeout $JOB_TIMEOUT $0 --porcelain"
+    # entry point
+    $LMK --only-errors "timeout $JOB_TIMEOUT $0 --porcelain" 2>&1 | tee "$EMU_LOGDIR/$(date '+%Y-%m-%d-%H%M%S').txt"
 else
+    # main script
     df -h
 
     # backup crontab
@@ -30,6 +34,11 @@ else
 
     $RM_DSSTORE ~
 
+    # create log directory, and delete old logs
+    sudo mkdir -pv "$EMU_LOGDIR"
+    sudo find "$EMU_LOGDIR" -mtime +$OLDEST_LOG_DAYS -exec rm -v {} \;
+
+    # create new backup
     cd /
-    sudo -E $EMU push -v -f
+    sudo -E $EMU push --verbose --ignore-errors
 fi
