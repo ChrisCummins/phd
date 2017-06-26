@@ -496,6 +496,13 @@ install_python() {
 }
 
 
+install_unzip() {
+    if [[ "$(uname)" != "Darwin" ]]; then
+        _apt_get_install unzip
+    fi
+}
+
+
 install_ruby() {
     if [[ "$(uname)" == "Darwin" ]]; then
         brew_install rbenv
@@ -676,6 +683,7 @@ main() {
 
     install_homebrew
     install_python
+    install_unzip
     install_ruby
     install_curl
     install_dropbox
