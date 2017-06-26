@@ -1,0 +1,14 @@
+sudo: required
+dist: trusty
+
+before_install:
+  - uname -a
+
+script:
+  - ./install.sh
+  - ./install.sh
+
+notifications:
+  email:
+    on_success: always # [always|never|change]
+    on_failure: always # [always|never|change]
