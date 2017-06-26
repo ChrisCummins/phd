@@ -528,7 +528,9 @@ def remove_bad_preprocessed(db_path: str) -> None:
               "WHERE status=1 OR status=2")
     db.commit()
     c.close()
+    db.close()
 
+    db = connect(db_path)
     c = db.cursor()
     c.execute("VACUUM")
     db.commit()
