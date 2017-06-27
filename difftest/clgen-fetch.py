@@ -20,6 +20,8 @@ if __name__ == "__main__":
     parser.add_argument("--sampler", help="sampler ID")
     parser.add_argument("--version", help="clgen version")
     parser.add_argument("--status", type=int, help="preprocessed status")
+    parser.add_argument("--cl_launchable", action="store_true",
+                        help="kernels have signature '__kernel void entry(...)'")
     parser.add_argument("-n", "--num", type=int, default=-1,
                         help="max programs to generate, no max if < 0")
     args = parser.parse_args()
@@ -47,7 +49,7 @@ if __name__ == "__main__":
                 p = CLgenProgram(
                     id=kid, clgen_version=args.version, model=args.model,
                     sampler=args.sampler, src=src,
-                    status=args.status)
+                    status=args.status, cl_launchable=args.cl_launchable)
                 session.add(p)
 
     print("done.")
