@@ -206,10 +206,16 @@ trap _cache_cleanup EXIT
 
 pip_freeze() {
     local pip="${1:-pip}"
+    local use_sudo="${2:-}"
+
+    # on linux, we need sudo to pip install.
+    if [[ "$(uname)" != "Darwin" ]]; then
+        use_sudo="sudo -H"
+    fi
 
     local pip_freeze_cache="$dotfiles/.$pip-freeze.txt"
     if [[ ! -f "$pip_freeze_cache" ]] ; then
-        $pip freeze 2>/dev/null > "$pip_freeze_cache"
+        $use_sudo $pip freeze 2>/dev/null > "$pip_freeze_cache"
     fi
     echo "$pip_freeze_cache"
 }
