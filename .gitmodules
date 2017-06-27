@@ -4,3 +4,6 @@
 [submodule "lib/clreduce"]
 	path = lib/clreduce
 	url = git@github.com:ChrisCummins/clreduce.git
+[submodule "lib/clgen"]
+	path = lib/clgen
+	url = git@github.com:ChrisCummins/clgen.git
