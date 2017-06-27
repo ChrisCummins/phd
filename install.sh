@@ -504,9 +504,16 @@ install_python() {
         symlink "$private/python/.pypirc" ~/.pypirc
     fi
 
+    # install pip version
     local pip_version="9.0.1"
     if [[ "$(pip --version | awk '{print $2}')" != "$pip_version" ]]; then
+        echo_ok "installing pip==$pip_version"
         pip install --upgrade "pip==$pip_version"
+    fi
+    # same again as root
+    if [[ "$(sudo pip --version | awk '{print $2}')" != "$pip_version" ]]; then
+        echo_ok "installing pip==$pip_version as root"
+        sudo -H pip install --upgrade "pip==$pip_version"
     fi
 }
 
