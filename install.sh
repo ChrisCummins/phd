@@ -549,6 +549,7 @@ install_node() {
     else
         _apt_get_install nodejs
         _apt_get_install npm
+        symlink /usr/bin/nodejs /usr/bin/node sudo
     fi
 }
 
