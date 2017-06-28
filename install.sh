@@ -418,10 +418,14 @@ install_dropbox() {
 }
 
 
-install_inbox() {
+install_fluid_apps() {
     if [[ "$(uname)" == "Darwin" ]]; then
-        if [[ -d "$private/inbox" ]]; then
-            symlink_dir "$private/inbox/Inbox.app" /Applications/Inbox.app
+        brew_cask_install fluid
+
+        if [[ -d "$private/fluid.apps" ]]; then
+            for app in $(find ~/Dropbox/Shared/fluid.apps -type d -depth 1 -name '*.app'); do
+                symlink_dir "$app" "/Applications/$(basename "$app")"
+            done
         fi
     fi
 }
@@ -714,7 +718,7 @@ main() {
     install_ruby
     install_curl
     install_dropbox
-    install_inbox
+    install_fluid_apps
     install_ssh
     install_node
     install_zsh
