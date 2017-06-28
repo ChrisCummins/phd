@@ -35,3 +35,7 @@ clean:
 		$(venv_dir)/bin/jupyter \
 		$(venv_dir)/bin/cldrive \
 		$(NONE)
+
+.PHONY: run
+run:
+	$(venv) jupyter-notebook
