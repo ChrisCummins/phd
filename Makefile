@@ -4,7 +4,7 @@ venv_dir := env/python3.6
 venv_activate := $(venv_dir)/bin/activate
 venv := source $(venv_activate) &&
 
-all: jupyter
+all: jupyter clgen cldrive
 
 clgen: $(venv_dir)/bin/clgen
 
@@ -13,9 +13,15 @@ $(venv_dir)/bin/clgen: $(venv_activate)
 	$(venv) cd lib/clgen && make
 	$(venv) cd lib/clgen && make test
 
+cldrive: $(venv_dir)/bin/cldrive
+
+$(venv_dir)/bin/cldrive: $(venv_activate)
+	$(venv) cd lib/cldrive && make install
+	$(venv) cd lib/cldrive && make test
+
 jupyter: $(venv_dir)/bin/jupyter
 
-$(venv_dir)/bin/jupyter: clgen
+$(venv_dir)/bin/jupyter: $(venv_activate)
 	$(venv) pip install -r reuirements.txt
 
 env/python3.6/bin/activate:
@@ -24,4 +30,8 @@ env/python3.6/bin/activate:
 .PHONY: clean
 clean:
 	$(venv) cd lib/clgen && make clean
-	rm -rfv $(venv_dir)/bin/clgen
+	rm -rfv \
+		$(venv_dir)/bin/clgen \
+		$(venv_dir)/bin/jupyter \
+		$(venv_dir)/bin/cldrive \
+		$(NONE)
