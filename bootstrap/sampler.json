@@ -8,6 +8,6 @@
   },
   "sampler": {
     "static_checker": true,
-    "min_kernels": 200
+    "min_kernels": 500
   }
 }
