@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# required ICD order: Codeplay, AMD, Intel
 
 import subprocess, threading
 import os
