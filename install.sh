@@ -411,6 +411,10 @@ install_dropbox() {
     if [[ -d ~/Dropbos/Inbox ]]; then
         symlink Dropbox/Inbox ~/Inbox
     fi
+
+    if [[ -d ~/Dropbox ]]; then
+        symlink "$dotfiles/dropbox/dropbox-find-conflicts.sh" ~/.local/bin/dropbox-find-conflicts
+    fi
 }
 
 
