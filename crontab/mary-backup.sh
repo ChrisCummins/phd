@@ -41,4 +41,5 @@ else
     # create new backup
     cd /
     sudo -E $EMU push --verbose --ignore-errors
+    echo "done"
 fi
