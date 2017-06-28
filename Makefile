@@ -22,7 +22,7 @@ $(venv_dir)/bin/cldrive: $(venv_activate)
 jupyter: $(venv_dir)/bin/jupyter
 
 $(venv_dir)/bin/jupyter: $(venv_activate)
-	$(venv) pip install -r reuirements.txt
+	$(venv) pip install -r requirements.txt
 
 env/python3.6/bin/activate:
 	virtualenv -p python3.6 env/python3.6
