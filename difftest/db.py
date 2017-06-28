@@ -119,6 +119,8 @@ class CLgenProgram(Base):
 
     # relation back to results:
     results = sql.orm.relationship("CLgenResult", back_populates="program")
+    cl_launcher_results = sql.orm.relationship("cl_launcherCLgenResult",
+                                               back_populates="program")
 
     def __repr__(self) -> str:
         return self.id
@@ -156,6 +158,7 @@ class Testbed(Base):
 
     clsmith_results = sql.orm.relationship("CLSmithResult", back_populates="testbed")
     clgen_results = sql.orm.relationship("CLgenResult", back_populates="testbed")
+    cl_launcher_clgen_results = sql.orm.relationship("cl_launcherCLgenResult", back_populates="testbed")
     cldrive_clsmith_results = sql.orm.relationship("cldriveCLSmithResult", back_populates="testbed")
     github_results = sql.orm.relationship("GitHubResult", back_populates="testbed")
 
@@ -183,6 +186,7 @@ class cl_launcherParams(Base):
         'lsize_x', 'lsize_y', 'lsize_z', name='_uid'),)
     # relation back to results:
     results = sql.orm.relationship("CLSmithResult", back_populates="params")
+    clgen_results = sql.orm.relationship("cl_launcherCLgenResult", back_populates="params")
 
     def to_flags(self) -> List[str]:
         flags = [
@@ -315,6 +319,38 @@ class cldriveCLSmithResult(Base):
     params = sql.orm.relationship("cldriveParams")
 
     def __repr__(self) -> str:
+        return ("program: {self.program_id}, "
+                "testbed: {self.testbed_id}, "
+                "params: {self.params_id}, "
+                "status: {self.status}, "
+                "runtime: {self.runtime:.2f}s"
+                .format(**vars()))
+
+
+class cl_launcherCLgenResult(Base):
+    """ CLgen programs ran using cl_launcher """
+    __tablename__ = "cl_launcherCLgenResults"
+    id = sql.Column(sql.Integer, primary_key=True)
+    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLgenPrograms.id"),
+                            nullable=False)
+    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
+                            nullable=False)
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("cl_launcherParams.id"),
+                           nullable=False)
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    flags = sql.Column(sql.String(255), nullable=False)
+    status = sql.Column(sql.Integer, nullable=False)
+    runtime = sql.Column(sql.Float, nullable=False)
+    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    outcome = sql.Column(sql.String(255))
+    classification = sql.Column(sql.String(16))
+
+    program = sql.orm.relationship("CLgenProgram", back_populates="cl_launcher_results")
+    testbed = sql.orm.relationship("Testbed", back_populates="cl_launcher_clgen_results")
+    params = sql.orm.relationship("cl_launcherParams", back_populates="clgen_results")
+
+    def __repr__(self):
         return ("program: {self.program_id}, "
                 "testbed: {self.testbed_id}, "
                 "params: {self.params_id}, "
