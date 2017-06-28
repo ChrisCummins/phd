@@ -298,6 +298,10 @@ _apt_get_install() {
 }
 
 
+# Global state:
+installed_netdata=0
+
+
 install_homebrew() {
     if [[ "$(uname)" == "Darwin" ]]; then
         if ! which brew >/dev/null ; then
@@ -391,6 +395,17 @@ install_ssh() {
             symlink "$private/ssh/id_rsa.pub" ~/.ssh/id_rsa.pub
         else
             copy "$private/ssh/id_rsa.pub" ~/.ssh/id_rsa.pub
+        fi
+    fi
+}
+
+
+install_netdata() {
+    if [[ "$(uname)" != "Darwin" ]]; then
+        if ! test -f /usr/sbin/netdata ; then
+            echo_ok "installing netdata"
+            bash <(curl -Ss https://my-netdata.io/kickstart.sh) --dont-wait
+            installed_netdata=1
         fi
     fi
 }
@@ -720,6 +735,7 @@ main() {
     install_dropbox
     install_fluid_apps
     install_ssh
+    install_netdata
     install_node
     install_zsh
     install_lmk
@@ -740,6 +756,15 @@ main() {
     install_gh_archiver
     install_emu
     install_jsonlint
+
+    # post-installation user prompts:
+    if [[ "$installed_netdata" == "1" ]]; then
+        echo_error "NOTE: manual steps required to complete netdata installation:"
+        echo >&2
+        echo "    $ crontab -e" >&2
+        echo "    # append the following line to the file and save:" >&2
+        echo "    @reboot ~/.dotfiles/crontab/start-netdata.sh" >&2
+    fi
 
     freeze_packages
 
