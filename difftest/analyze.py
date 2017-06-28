@@ -9,6 +9,9 @@ import db
 from db import *
 
 
+CL_LAUNCHER_TABLE_NAMES = ["CLSmith", "CLgen w. cl_launcher"]
+CL_LAUNCHER_TABLES = [CLSmithResult, cl_launcherCLgenResult]
+
 CLDRIVE_TABLE_NAMES = ["CLSmith w. cldrive", "GitHub"]
 CLDRIVE_TABLES = [cldriveCLSmithResult, GitHubResult]
 
@@ -127,16 +130,16 @@ def get_cldrive_outcome(result):
         return lookup_status(result.status)
 
 
-def analyze_cl_launch_result(result, session):
+def analyze_cl_launch_result(result, table, session):
     result.outcome = get_cl_launcher_outcome(result)
     result.classification = CLASSIFICATIONS[result.outcome]
 
     # determine if output differs from the majority (if there is one)
     if result.status == 0:
-        outputs = [x[0] for x in session.query(CLSmithResult.stdout)\
-            .filter(CLSmithResult.program == result.program,
-                    CLSmithResult.params == result.params,
-                    CLSmithResult.status == 0)]
+        outputs = [x[0] for x in session.query(table.stdout)\
+            .filter(table.program == result.program,
+                    table.params == result.params,
+                    table.status == 0)]
         if len(outputs) > 2:
             # Use voting to pick oracle.
             majority_output, majority_count = Counter(outputs).most_common(1)[0]
@@ -184,13 +187,14 @@ def main():
 
     print("Possible classifications:", ", ".join(f"'{s}'" for s in sorted(set(CLASSIFICATIONS.values()))))
 
-    # cl_launcher result outcomes and classifications
-    print("CLSmith ...")
-    for result in ProgressBar()(session.query(CLSmithResult).all()):
-        analyze_cl_launch_result(result, session)
-    session.commit()
+    # cl_launcher result outcomes and classifications:
+    for name, table in zip(CL_LAUNCHER_TABLE_NAMES, CL_LAUNCHER_TABLES):
+        print(f"{name} ...")
+        for result in ProgressBar()(session.query(CLSmithResult).all()):
+            analyze_cl_launch_result(result, table, session)
+        session.commit()
 
-    # cldrive results outcomes and classifications
+    # cldrive results outcomes and classifications:
     for name, table in zip(CLDRIVE_TABLE_NAMES, CLDRIVE_TABLES):
         print(f"{name} ...")
         for result in ProgressBar()(session.query(table).all()):
