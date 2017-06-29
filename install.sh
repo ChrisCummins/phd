@@ -353,7 +353,7 @@ install_zsh() {
 
 
 install_lmk() {
-    _pip_install lmk 0.0.11
+    _pip_install lmk 0.0.12
     if [[ -d "$private/lmk" ]]; then
         symlink "$private/lmk/lmkrc" ~/.lmkrc
     fi
