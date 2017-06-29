@@ -458,7 +458,7 @@ def send_email_smtp(cfg, server, msg):
 
 def build_html_message_body(output, command=None, returncode=None,
                             date_started=None, date_ended=None,
-                            runtime=None):
+                            runtime=None, snip_after=220, snip_to=200):
     """
     Parameters
     ----------
@@ -468,12 +468,20 @@ def build_html_message_body(output, command=None, returncode=None,
         The output of the command.
     runtime : Tuple(datetime, datetime)
         The command start and end dates.
+    snip_after : int (optional)
+        The maximum number of lines to permit before snipping message.
+    snip_to : int optional
+        If the number of lines exceeds snip_after, snip to this many number of
+        lines.
 
     Returns
     -------
     str
         HTML string.
     """
+    if snip_to > snip_after:
+        raise ValueError("snip_to must be <= snip_after")
+
     user = os.environ['USER']
     host = gethostname()
     cwd = os.getcwd()
@@ -527,9 +535,10 @@ def build_html_message_body(output, command=None, returncode=None,
     # command output
     lines = output.split('\n')
 
-    if len(lines) > 200:
-        # truncated report. First 100 and last 100 lines
-        for line, lineno in zip(lines[:100], range(1, 101)):
+    if len(lines) > snip_after:
+        # truncated report. First and last lines of output
+        line_nums = range(1, snip_to // 2 + 1)
+        for line, lineno in zip(lines[:snip_to // 2], line_nums):
             line_html = cgi.escape(line)
             html += u"""\
   <tr style="line-height:1em;">
@@ -541,8 +550,8 @@ def build_html_message_body(output, command=None, returncode=None,
         html += "</table>"
         html += "... ({num_omitted} lines snipped)".format(**vars())
         html += "<table>\n"
-        for line, lineno in zip(lines[-100:], range(len(lines) - 99,
-                                                    len(lines) + 1)):
+        line_nums = range(len(lines) - snip_to // 2 + 1, len(lines) + 1)
+        for line, lineno in zip(lines[-snip_to // 2:], line_nums):
             line_html = cgi.escape(line)
             html += u"""\
   <tr style="line-height:1em;">
