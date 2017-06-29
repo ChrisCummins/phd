@@ -32,7 +32,7 @@ else
     mkdir -pv ~/.local/etc
     crontab -l > $CRONTAB_BACKUP
 
-    $RM_DSSTORE ~
+    sudo $RM_DSSTORE /home/maria
 
     # create log directory, and delete old logs
     sudo mkdir -pv "$EMU_LOGDIR"
