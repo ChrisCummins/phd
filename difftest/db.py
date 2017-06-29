@@ -29,8 +29,10 @@ def init(hostname: str) -> str:
     table = "project_b"
     port = "3306"
 
-    uri = f"mysql://{username}:{password}@{hostname}:{port}/{table}"
-    engine = sql.create_engine(uri)
+    # Use UTF-8 encoding (default is latin-1) when connecting to MySQL.
+    # See: https://stackoverflow.com/a/16404147/1318051
+    uri = f"mysql+mysqldb://{username}:{password}@{hostname}:{port}/{table}?charset=utf8"
+    engine = sql.create_engine(uri, encoding="utf-8")
 
     Base.metadata.create_all(engine)
     Base.metadata.bind = engine
