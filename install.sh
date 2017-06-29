@@ -693,6 +693,13 @@ install_jsonlint() {
 }
 
 
+install_media() {
+    mkdir -p ~/.local/bin
+    # requires Python 3.6
+    symlink "$dotfiles/media/mkepisodal.py" ~/.local/bin/mkepisodal
+}
+
+
 parse_args() {
     set -e
     if [[ "$1" == "-v" ]] || [[ "$1" == "--verbose" ]]; then
@@ -756,6 +763,7 @@ main() {
     install_gh_archiver
     install_emu
     install_jsonlint
+    install_media
 
     # post-installation user prompts:
     if [[ "$installed_netdata" == "1" ]]; then
