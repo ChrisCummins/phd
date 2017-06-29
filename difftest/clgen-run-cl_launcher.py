@@ -112,10 +112,8 @@ def get_num_progs_to_run(session: db.session_t,
         cl_launcherCLgenResult.testbed_id == testbed.id,
         cl_launcherCLgenResult.params_id == params.id)
     num_ran = session.query(CLgenProgram.id).filter(CLgenProgram.id.in_(subquery)).count()
-    subquery = session.query(cl_launcherCLgenResult.program_id).filter(
-        cl_launcherCLgenResult.testbed_id == testbed.id)
-    total = session.query(
-        CLgenProgram.id, CLgenProgram.cl_launchable == 1).count()
+    total = session.query(CLgenProgram.id).filter(
+        CLgenProgram.cl_launchable == 1).count()
     return num_ran, total
 
 
