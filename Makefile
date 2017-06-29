@@ -13,8 +13,13 @@ all: jupyter clgen cldrive
 
 clgen: $(venv_dir)/bin/clgen
 
+# If CUDA is not available, build with NO_CUDA=1
+ifeq ($(NO_CUDA),)
+clgen_cuda_flag := --with-cuda
+endif
+
 $(venv_dir)/bin/clgen: $(venv_activate)
-	$(venv) cd lib/clgen && ./configure -b --with-cuda
+	$(venv) cd lib/clgen && ./configure -b $(clgen_cuda_flag)
 	$(venv) cd lib/clgen && make
 	$(venv) cd lib/clgen && make test
 
@@ -53,3 +58,9 @@ clean:
 .PHONY: run
 run: all
 	$(venv) jupyter-notebook
+
+.PHONY: help
+help:
+	@echo "make {all,clean,run}"
+	@echo
+	@echo "If CUDA is not available, set NO_CUDA=1"
