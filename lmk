@@ -56,9 +56,11 @@ import subprocess
 import sys
 
 from datetime import datetime
+from email.mime.application import MIMEApplication
 from pkg_resources import require
 from socket import gethostname
 
+# Python 2 and 3 have different email module layouts:
 if sys.version_info >= (3, 0):
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
@@ -476,8 +478,9 @@ def build_html_message_body(output, command=None, returncode=None,
 
     Returns
     -------
-    str
-        HTML string.
+    Tuple(str, bool)
+        The HTML body string, and a boolean value signifying whether the
+        output was tuncated.
     """
     if snip_to > snip_after:
         raise ValueError("snip_to must be <= snip_after")
@@ -534,8 +537,10 @@ def build_html_message_body(output, command=None, returncode=None,
 
     # command output
     lines = output.split('\n')
+    truncated = False
 
     if len(lines) > snip_after:
+        truncated = True
         # truncated report. First and last lines of output
         line_nums = range(1, snip_to // 2 + 1)
         for line, lineno in zip(lines[:snip_to // 2], line_nums):
@@ -600,7 +605,7 @@ def build_html_message_body(output, command=None, returncode=None,
 </center>
 """.format(**vars())
 
-    return html
+    return html, truncated
 
 
 def get_cfg_path():
@@ -666,7 +671,7 @@ def let_me_know(output, command=None, returncode=None, cfg=None,
     subject = build_message_subject(
         output=output, command=command, returncode=returncode,
         date_started=date_started, date_ended=date_ended)
-    html = build_html_message_body(
+    html, truncated = build_html_message_body(
         output=output, command=command, returncode=returncode,
         date_started=date_started, date_ended=date_ended)
     if sys.version_info < (3, 0):
@@ -676,6 +681,11 @@ def let_me_know(output, command=None, returncode=None, cfg=None,
     msg['From'] = cfg['messages']['from']
     msg['Subject'] = subject
     msg.attach(MIMEText(html, 'html'))
+
+    if truncated:
+        attachment = MIMEApplication(output, Name="output.txt")
+        attachment['Content-Disposition'] = 'attachment; filename="output.txt"'
+        msg.attach(attachment)
 
     server = get_smtp_server(cfg)
     for recipient in cfg['messages']['to'].split(','):
