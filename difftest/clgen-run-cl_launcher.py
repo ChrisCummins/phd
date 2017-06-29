@@ -109,11 +109,13 @@ def parse_ndrange(ndrange: str) -> Tuple[int, int, int]:
 def get_num_progs_to_run(session: db.session_t,
                          testbed: Testbed, params: cl_launcherParams):
     subquery = session.query(cl_launcherCLgenResult.program_id).filter(
-        cl_launcherCLgenResult.testbed_id == testbed.id, cl_launcherCLgenResult.params_id == params.id)
+        cl_launcherCLgenResult.testbed_id == testbed.id,
+        cl_launcherCLgenResult.params_id == params.id)
     num_ran = session.query(CLgenProgram.id).filter(CLgenProgram.id.in_(subquery)).count()
     subquery = session.query(cl_launcherCLgenResult.program_id).filter(
         cl_launcherCLgenResult.testbed_id == testbed.id)
-    total = session.query(CLgenProgram.id).count()
+    total = session.query(
+        CLgenProgram.id, CLgenProgram.cl_launchable == 1).count()
     return num_ran, total
 
 
@@ -168,9 +170,12 @@ if __name__ == "__main__":
         while True:
             # get the next program to run
             subquery = session.query(cl_launcherCLgenResult.program_id).filter(
-                cl_launcherCLgenResult.testbed_id == testbed.id, cl_launcherCLgenResult.params_id == params.id)
+                cl_launcherCLgenResult.testbed_id == testbed.id,
+                cl_launcherCLgenResult.params_id == params.id)
             program = session.query(CLgenProgram).filter(
-                ~CLgenProgram.id.in_(subquery)).order_by(CLgenProgram.id).first()
+                ~CLgenProgram.id.in_(subquery),
+                CLgenProgram.cl_launchable == 1
+            ).order_by(CLgenProgram.id).first()
 
             # we have no program to run
             if not program:
