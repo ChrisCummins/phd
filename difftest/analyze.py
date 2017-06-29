@@ -22,20 +22,28 @@ CLASSIFICATIONS = {
     '__NOT_IMPLEMENTED_YET__': 'Wrong code',
     'CL_BUILD_PROGRAM _FAILURE': 'Build failure',
     'CL_INVALID_COMMAND_QUEUE': 'Runtime crash',
+    'CL_INVALID_KERNEL_ARGS': 'Invalid testcase',
     'CL_INVALID_KERNEL_NAME': 'Build failure',
     'CL_INVALID_VALUE': 'Runtime crash',
     'CL_OUT_OF_HOST_MEMORY': 'Runtime crash',
     'CL_OUT_OF_RESOURCES': 'Runtime crash',
     'cldrive Error': 'Invalid testcase',
+    'cldrive.driver.PorcelainError: 1': 'Runtime crash',
+    'cldrive.driver.PorcelainError: 127': 'Runtime crash',
     'cldrive.driver.PorcelainError: SIGFPE': 'Runtime crash',
     'clWaitForEvents()': 'Runtime crash',
+    'Error building program: -42': 'Invalid testcase',
+    'Error enqueueing kernel': 'Invalid testcase',
+    'Error setting kernel argument': 'Invalid testcase',
     'INVALID_WORK_GROUP_SIZE': 'Invalid testcase',
     'Multiple OpenCL kernels': 'Invalid testcase',
     'No OpenCL kernel': 'Invalid testcase',
     'Preprocessing Failed': 'Invalid testcase',
+    'Returncode 127': 'Runtime crash',
     'Segmentation Fault': 'Build failure',
     'SIGABRT': 'Runtime crash',
     'SIGBUS': 'Runtime crash',
+    'SIGFPE': 'Runtime crash',
     'SIGILL': 'Runtime crash',
     'Signal 5': 'Runtime crash',
     'SIGTRAP': 'Runtime crash',
@@ -43,8 +51,6 @@ CLASSIFICATIONS = {
     'UnicodeError': 'Invalid testcase',
     'Unsupported Program': 'Invalid testcase',
     'z_Okay': 'Okay',
-    'cldrive.driver.PorcelainError: 127': 'Runtime crash',
-    'cldrive.driver.PorcelainError: 1': 'Runtime crash',
 }
 
 
@@ -72,6 +78,10 @@ def get_cl_launcher_outcome(result):
             if line == "Error found (callback):":
                 # Interpret CLSmith error callback messages: the following line describes the error
                 return prev.split()[0]
+            elif line.startswith("Error setting kernel argument"):
+                return "Error setting kernel argument"
+            elif line.startswith("Error enqueueing kernel"):
+                return "Error enqueueing kernel"
             elif line.startswith("Error"):
                 # Interpret CLSmith error messages
                 return {
@@ -130,7 +140,7 @@ def get_cldrive_outcome(result):
         return lookup_status(result.status)
 
 
-def analyze_cl_launch_result(result, table, session):
+def analyze_cl_launcher_result(result, table, session):
     result.outcome = get_cl_launcher_outcome(result)
     result.classification = CLASSIFICATIONS[result.outcome]
 
@@ -190,8 +200,8 @@ def main():
     # cl_launcher result outcomes and classifications:
     for name, table in zip(CL_LAUNCHER_TABLE_NAMES, CL_LAUNCHER_TABLES):
         print(f"{name} ...")
-        for result in ProgressBar()(session.query(CLSmithResult).all()):
-            analyze_cl_launch_result(result, table, session)
+        for result in ProgressBar()(session.query(table).all()):
+            analyze_cl_launcher_result(result, table, session)
         session.commit()
 
     # cldrive results outcomes and classifications:
