@@ -104,6 +104,9 @@ Port: 587
 Username: $LMK_USER
 Password: $LMK_PWD
 
+[exec]
+Shell: /bin/bash
+
 [messages]
 From: $USER@$HOST
 To: $MAILTO
@@ -338,6 +341,11 @@ def load_cfg(path=None):
     cfg['messages']['to'] = parse(cfg['messages']['to'])
     # note: 'subject' variables are parsed after command completion,
     #   so we can substitue in outcomes.
+
+    if 'exec' not in cfg:
+        cfg.add_section('exec')
+    if 'shell' not in cfg['exec']:
+        cfg['exec']['shell'] = '/bin/sh'
 
     # add runtime metadata
     cfg.add_section('/run')
@@ -696,6 +704,7 @@ def run_subprocess(command, only_errors=False):
     process = subprocess.Popen(
         command,
         shell=True,
+        executable=cfg['exec']['shell'],
         universal_newlines=True,
         bufsize=1,
         stdout=subprocess.PIPE,
