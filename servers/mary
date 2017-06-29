@@ -32,12 +32,6 @@ MAC=$MARY_MAC
 # A space delimited list of usernames with ssh access
 USERS=$MARY_USERS
 
-# Git configuration
-GIT_USER=$MARY_GIT_USER
-GIT_DIR=$MARY_GIT_DIR
-GIT_URL=$MARY_GIT_URL
-GIT_REMOTE_NAME=$MARY_GIT_REMOTE_NAME
-
 default_user=$(echo $USERS | cut -f1 -d ' ')
 
 set +u
@@ -106,83 +100,6 @@ fail_if_repository_not_exist() {
 		exit 1
 	fi
 	set -e
-}
-
-do_git_ls() {
-	do_ssh $GIT_USER "ls $GIT_DIR" | grep '.git$' | sed 's/.git$//'
-}
-
-do_git_clone() {
-	if [ -z "$1" ]; then
-		echo "No repository name specified!" > /dev/stderr
-		exit 1
-	fi
-
-	local repo="$1"
-	local repo_url="$GIT_DIR/$repo"
-
-	fail_if_repository_not_exist "$repo"
-
-	git clone $GIT_URL$repo_url
-}
-
-do_git_init() {
-	if [ -z "$1" ]; then
-		echo "No repository name specified!" > /dev/stderr
-		exit 1
-	fi
-
-	local repo="$1"
-	local repo_path="$GIT_DIR/$repo.git"
-
-	fail_if_repository_exists "$repo"
-
-	do_ssh $GIT_USER "mkdir $repo_path && GIT_DIR=$repo_path git init --bare"
-}
-
-do_git_rm() {
-	if [ -z "$1" ]; then
-		echo "No repository name specified!" > /dev/stderr
-		exit 1
-	fi
-
-	local repo="$1"
-	local repo_path="$GIT_DIR/$repo.git"
-
-	fail_if_repository_not_exist "$repo"
-
-	do_ssh $GIT_USER "rm -rf $repo_path"
-	echo "Deleted Git repository at '$repo_path'"
-}
-
-do_git_add() {
-	local dir=$(pwd)
-	local repo=${dir##*/}
-	local repo_path="$GIT_DIR/$repo.git"
-
-	if [[ ! -d .git ]]; then
-		echo "fatal: not a git repository!" > /dev/stderr
-		exit 1
-	fi
-
-	git remote add $GIT_REMOTE_NAME $GIT_URL$repo_path
-
-	set +e
-	do_git_ls | grep '^'"$repo"'$' &> /dev/null
-	if [ $? -ne 0 ]; then
-		echo "warning: a repository named '$repo' found!" > /dev/stderr
-		exit 1
-	fi
-	set -e
-}
-
-do_git_push() {
-	local dir=$(pwd)
-	local repo=${dir##*/}
-
-	do_git_init "$repo"
-	do_git_add
-	git push --all $GIT_REMOTE_NAME
 }
 
 do_backup() {
