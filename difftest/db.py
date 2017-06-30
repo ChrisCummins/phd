@@ -171,6 +171,31 @@ class Testbed(Base):
                 "Driver: {self.driver}, "
                 "Host: {self.host}".format(**vars()))
 
+    def platform_id(self):
+        """ return OpenCL platform index, or KeyError if platform not found """
+        import pyopencl as cl
+
+        for i, platform in enumerate(cl.get_platforms()):
+            if platform.get_info(cl.platform_info.NAME) == self.platform:
+                return i
+        raise KeyError(f"platform {self.platform} not found")
+
+
+    def device_id(self):
+        """ return OpenCL device index, or KeyError if device not found """
+        import pyopencl as cl
+
+        for i, device in enumerate(cl.get_platforms):
+            ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
+            devices = ctx.get_info(cl.context_info.DEVICES)
+
+            for i, device in devices:
+                if device.get_info(cl.device_info.NAME) == self.device:
+                    return i
+
+        raise KeyError(f"device {self.device} not found")
+
+
 
 class cl_launcherParams(Base):
     """ params used by cl_launcher to run kernel """
