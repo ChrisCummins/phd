@@ -140,7 +140,9 @@ def get_cldrive_outcome(result):
         return lookup_status(result.status)
 
 
-def analyze_cl_launcher_result(result, table, session, require_gpuverified=False):
+def analyze_cl_launcher_result(result, table, session,
+                               require_gpuverified=False,
+                               require_handchecked=False):
     result.outcome = get_cl_launcher_outcome(result)
     result.classification = CLASSIFICATIONS[result.outcome]
 
@@ -148,6 +150,8 @@ def analyze_cl_launcher_result(result, table, session, require_gpuverified=False
     is_okay = result.status == 0
     if is_okay and require_gpuverified:
         is_okay |= result.program.gpuverified == 1
+    if is_okay and require_handchecked:
+        is_okay |= result.program.handchecked == 1
 
     if is_okay:
         outputs = [x[0] for x in session.query(table.stdout)\
@@ -166,7 +170,8 @@ def analyze_cl_launcher_result(result, table, session, require_gpuverified=False
                 result.classification = "No majority"
 
 
-def analyze_cldrive_result(result, table, session, require_gpuverified=False):
+def analyze_cldrive_result(result, table, session, require_gpuverified=False,
+                           require_handchecked=False):
     result.outcome = get_cldrive_outcome(result)
     result.classification = CLASSIFICATIONS[result.outcome]
 
@@ -174,6 +179,8 @@ def analyze_cldrive_result(result, table, session, require_gpuverified=False):
     is_okay = result.status == 0
     if is_okay and require_gpuverified:
         is_okay |= result.program.gpuverified == 1
+    if is_okay and require_handchecked:
+        is_okay |= result.program.handchecked == 1
 
     if is_okay:
         outputs = [x[0] for x in session.query(table.stdout)\
