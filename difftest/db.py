@@ -118,6 +118,7 @@ class CLgenProgram(Base):
     status = sql.Column(sql.Integer)
     gpuverified = sql.Column(sql.Boolean)
     cl_launchable = sql.Column(sql.Boolean)
+    handchecked = sql.Column(sql.Boolean)
 
     # relation back to results:
     results = sql.orm.relationship("CLgenResult", back_populates="program")
@@ -147,8 +148,8 @@ class Testbed(Base):
     """ devices """
     __tablename__ = 'Testbeds'
     id = sql.Column(sql.Integer, primary_key=True)
-    platform = sql.Column(sql.String(255), nullable=False)  # CL_DEVICE_NAME
-    device = sql.Column(sql.String(255), nullable=False)  # CL_PLATFORM_NAME
+    platform = sql.Column(sql.String(255), nullable=False)  # CL_PLATFORM_NAME
+    device = sql.Column(sql.String(255), nullable=False)  # CL_DEVICE_NAME
     driver = sql.Column(sql.String(255), nullable=False)  # CL_DRIVER_VERSION
     host = sql.Column(sql.String(255), nullable=False)
     opencl = sql.Column(sql.String(8), nullable=False)  # CL_PLATFORM_VERSION

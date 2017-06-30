@@ -8,9 +8,9 @@ from signal import Signals
 import db
 from db import *
 
-
-CL_LAUNCHER_TABLE_NAMES = ["CLSmith", "CLgen w. cl_launcher"]
-CL_LAUNCHER_TABLES = [CLSmithResult, cl_launcherCLgenResult]
+# NOTE: excludes GPUverified tables
+CL_LAUNCHER_TABLE_NAMES = ["CLSmith"]
+CL_LAUNCHER_TABLES = [CLSmithResult]
 
 CLDRIVE_TABLE_NAMES = ["CLSmith w. cldrive", "GitHub"]
 CLDRIVE_TABLES = [cldriveCLSmithResult, GitHubResult]
@@ -140,12 +140,16 @@ def get_cldrive_outcome(result):
         return lookup_status(result.status)
 
 
-def analyze_cl_launcher_result(result, table, session):
+def analyze_cl_launcher_result(result, table, session, require_gpuverified=False):
     result.outcome = get_cl_launcher_outcome(result)
     result.classification = CLASSIFICATIONS[result.outcome]
 
     # determine if output differs from the majority (if there is one)
-    if result.status == 0:
+    is_okay = result.status == 0
+    if is_okay and require_gpuverified:
+        is_okay |= result.program.gpuverified == 1
+
+    if is_okay:
         outputs = [x[0] for x in session.query(table.stdout)\
             .filter(table.program == result.program,
                     table.params == result.params,
@@ -154,12 +158,12 @@ def analyze_cl_launcher_result(result, table, session):
             # Use voting to pick oracle.
             majority_output, majority_count = Counter(outputs).most_common(1)[0]
             if majority_count == 1:  # no majority
-                result.classification = "Wrong code"
+                result.classification = "No majority"
             elif result.stdout != majority_output:
                 result.classification = "Wrong code"
         elif len(outputs) == 2:
             if outputs[0] != outputs[1]:
-                result.classification = "Wrong code"
+                result.classification = "No majority"
 
 
 def analyze_cldrive_result(result, table, session, require_gpuverified=False):
@@ -171,7 +175,7 @@ def analyze_cldrive_result(result, table, session, require_gpuverified=False):
     if is_okay and require_gpuverified:
         is_okay |= result.program.gpuverified == 1
 
-    if result.status == 0:
+    if is_okay:
         outputs = [x[0] for x in session.query(table.stdout)\
             .filter(table.program == result.program,
                     table.params == result.params,
@@ -180,12 +184,12 @@ def analyze_cldrive_result(result, table, session, require_gpuverified=False):
             # Use voting to pick oracle.
             majority_output, majority_count = Counter(outputs).most_common(1)[0]
             if majority_count == 1:  # no majority
-                result.classification = "Wrong code"
+                result.classification = "No majority"
             elif result.stdout != majority_output:
                 result.classification = "Wrong code"
         elif len(outputs) == 2:
             if outputs[0] != outputs[1]:
-                result.classification = "Wrong code"
+                result.classification = "No majority"
 
     result.outcome = get_cldrive_outcome(result)
     result.classification = CLASSIFICATIONS[result.outcome]
@@ -196,6 +200,22 @@ def main():
     session = db.make_session()
 
     print("Possible classifications:", ", ".join(f"'{s}'" for s in sorted(set(CLASSIFICATIONS.values()))))
+
+    # CLgen programs have special treatment because we require that they be
+    # gpuverified before labeling as wrong code
+    name = "CLgen w. cl_launcher"
+    table = cl_launcherCLgenResult
+    print(f"{name} ...")
+    for result in ProgressBar()(session.query(table).all()):
+        analyze_cl_launcher_result(result, table, session, require_gpuverified=True)
+    session.commit()
+
+    name = "CLgen"
+    table = CLgenResult
+    print(f"{name} ...")
+    for result in ProgressBar()(session.query(table).all()):
+        analyze_cldrive_result(result, table, session, require_gpuverified=True)
+    session.commit()
 
     # cl_launcher result outcomes and classifications:
     for name, table in zip(CL_LAUNCHER_TABLE_NAMES, CL_LAUNCHER_TABLES):
@@ -210,15 +230,6 @@ def main():
         for result in ProgressBar()(session.query(table).all()):
             analyze_cldrive_result(result, table, session)
         session.commit()
-
-    # CLgen programs have special treatment because we require that they be
-    # gpuverified before labeling as wrong code
-    name = "CLgen"
-    table = CLgenResult
-    print(f"{name} ...")
-    for result in ProgressBar()(session.query(table).all()):
-        analyze_cldrive_result(result, table, session, require_gpuverified=True)
-    session.commit()
 
 
 if __name__ == "__main__":
