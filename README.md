@@ -5,6 +5,7 @@
 
 * Ubuntu 16.04
 * Python 3.6
+* OpenCL
 * ninja
 
 Optional, but recommended:
