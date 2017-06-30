@@ -602,6 +602,7 @@ def build_html_message_body(output, command=None, returncode=None,
     html += u"""\
 </table>
 
+<hr style="margin-top:20px;"/>
 <center style="color:#626262;">
   {lmk} {lmk_version} made with ♥ by {me}
 </center>
