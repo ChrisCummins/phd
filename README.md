@@ -5,20 +5,32 @@
 
 * Ubuntu 16.04
 * Python 3.6
+* ninja
+
+Optional, but recommended:
+
 * Nvidia GPU and CUDA
 
 ## Installation
 
-Checkout all submodules:
+**Step 1:** Checkout the source.
 
 ```sh
 $ git submodule update --init --recursive
 ```
 
-Create the virtualenv and build all libs:
+**Step 2:** Build the code.
 
-```
+If CUDA is available:
+
+```sh
 $ make all
+```
+
+If CUDA is *not* available:
+
+```sh
+$ NO_CUDA=1 make all
 ```
 
 
