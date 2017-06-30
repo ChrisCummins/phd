@@ -9,7 +9,7 @@ venv := source $(venv_activate) &&
 python_version = 3.6
 python = $(venv_dir)/bin/python$(python_version)
 
-all: jupyter clgen cldrive
+all: jupyter clgen cldrive CLSmith
 
 clgen: $(venv_dir)/bin/clgen
 
@@ -28,6 +28,14 @@ cldrive: $(venv_dir)/bin/cldrive
 $(venv_dir)/bin/cldrive: $(venv_activate)
 	$(venv) cd lib/cldrive && make install
 	$(venv) cd lib/cldrive && make test
+
+CLSmith: lib/CLSmith/build/bin/cl_launcher
+
+lib/CLSmith/build/bin/cl_launcher:
+	mkdir -pv lib/CLSmith/build
+	cd lib/CLSmith/build && cmake .. -G Ninja
+	cd lib/CLSmith/build && ninja
+	cp -v lib/CLSmith/runtime/*.h lib/CLSmith/build/
 
 jupyter: $(venv_dir)/bin/jupyter ~/.ipython/kernels/project_b/kernel.json
 
