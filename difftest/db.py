@@ -185,13 +185,11 @@ class Testbed(Base):
         """ return OpenCL device index, or KeyError if device not found """
         import pyopencl as cl
 
-        for i, device in enumerate(cl.get_platforms):
-            ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
-            devices = ctx.get_info(cl.context_info.DEVICES)
-
-            for i, device in devices:
-                if device.get_info(cl.device_info.NAME) == self.device:
-                    return i
+        platform = cl.get_platforms()[self.platform_id()]
+        ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
+        for i, device in enumerate(ctx.get_info(cl.context_info.DEVICES)):
+            if device.get_info(cl.device_info.NAME) == self.device:
+                return i
 
         raise KeyError(f"device {self.device} not found")
 
