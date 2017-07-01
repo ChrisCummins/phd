@@ -48,7 +48,7 @@ CLASSIFICATIONS = {
     'SIGILL': 'Runtime crash',
     'Signal 5': 'Runtime crash',
     'SIGTRAP': 'Runtime crash',
-    'Timeout': 'Invalid testcase',
+    'Timeout': 'Timeout',
     'UnicodeError': 'Invalid testcase',
     'Unsupported Program': 'Invalid testcase',
     'z_Okay': 'Okay',
