@@ -27,14 +27,25 @@ def reproduce(result_id):
         flags = result.params.to_flags()
         program = result.program
 
-        platform_id = result.testbed.platform_id
-        device_id = result.testbed.device_id
+        try:
+            platform_id = result.testbed.platform_id()
+            device_id = result.testbed.device_id()
+        except KeyError as e:
+            print(e, file=sys.stderr)
+            sys.exit(1)
 
         runtime, status, stdout, stderr = cl_launcher(
                 program.src, platform_id, device_id, *flags)
 
-        # TODO: verify that stdout matches expected:
-        print(stdout, stderr)
+        reproduced = True
+        if stderr != result.stderr:
+            reproduced = False
+            print("stderr differs")
+        if stdout != result.stdout:
+            reproduced = False
+            print("stdout differs")
+
+        return reproduced
 
 
 def main():
@@ -49,7 +60,8 @@ def main():
     db_hostname = args.hostname
     db_url = db.init(db_hostname)
 
-    reproduce(args.result_id)
+    if not reproduce(args.result_id):
+        sys.exit(1)
 
 
 if __name__ == "__main__":
