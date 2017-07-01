@@ -162,7 +162,7 @@ def analyze_cl_launcher_result(result, table, session,
         if len(outputs) > 2:
             # Use voting to pick oracle.
             majority_output, majority_count = Counter(outputs).most_common(1)[0]
-            if majority_count == 1:  # no majority
+            if majority_count < 3:  # no majority
                 result.classification = "No majority"
             elif result.stdout != majority_output:
                 result.classification = "Wrong code"
@@ -191,7 +191,7 @@ def analyze_cldrive_result(result, table, session, require_gpuverified=False,
         if len(outputs) > 2:
             # Use voting to pick oracle.
             majority_output, majority_count = Counter(outputs).most_common(1)[0]
-            if majority_count == 1:  # no majority
+            if majority_count < 3:  # no majority
                 result.classification = "No majority"
             elif result.stdout != majority_output:
                 result.classification = "Wrong code"
