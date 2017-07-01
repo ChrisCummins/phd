@@ -28,6 +28,7 @@ CLASSIFICATIONS = {
     'CL_OUT_OF_HOST_MEMORY': 'Runtime crash',
     'CL_OUT_OF_RESOURCES': 'Runtime crash',
     'cldrive Error': 'Invalid testcase',
+    'Error: recursive call in function(s):': 'Invalid testcase',
     'cldrive.driver.PorcelainError: 1': 'Runtime crash',
     'cldrive.driver.PorcelainError: 127': 'Runtime crash',
     'cldrive.driver.PorcelainError: SIGFPE': 'Runtime crash',
