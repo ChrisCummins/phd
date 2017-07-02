@@ -7,10 +7,10 @@
 # ****************************************************************************
 JOB_TIMEOUT=1800  # 30 min
 GITHUB_USER=ChrisCummins
-OUTDIR=~/src/GitHub/ChrisCummins
+OUTDIR=~/git/github/
 GH_ARCHIVER=/usr/local/bin/gh-archiver
 # FIXME: clreduce repo contains broken reference, --exclude for now
-GH_ARCHIVER_ARGS="--delete --exclude clreduce,distro"
+GH_ARCHIVER_ARGS="--delete --exclude clreduce,distro,CLSmith,dos,grammarVAE,Introduction-to-Java,JavaScript-Koans,JCummins-Library --gogs --gogs-uid 2"
 LMK="/usr/local/bin/lmk -e"
 
 # ****************************************************************************
