@@ -680,7 +680,7 @@ install_htop() {
 
 
 install_gh_archiver() {
-    local gh_archiver_version=0.0.4
+    local gh_archiver_version=0.0.5
 
     if [[ "$(uname)" == "Darwin" ]]; then
         _pip_install gh-archiver $gh_archiver_version
