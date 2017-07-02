@@ -155,15 +155,13 @@ def main():
 
         # delete any files which are not GitHub repos first, if necessary
         if args.delete:
-            repo_names = [r.name for r in repos]
-            for path in outdir.iterdir():
-                basename = os.path.basename(path)
+            if args.gogs:
+                repo_names = [r.name.lower() + ".git" for r in repos]
+            else:
+                repo_names = [r.name for r in repos]
 
-                # strip .git suffix from gogs mirrors
-                if args.gogs:
-                    local_repo_name = re.sub("\.git$", "", basename)
-                else:
-                    local_repo_name = basename
+            for path in outdir.iterdir():
+                local_repo_name = os.path.basename(path)
 
                 if local_repo_name not in repo_names:
                     print(f"removing {basename}")
@@ -174,7 +172,7 @@ def main():
 
         for repo in repos:
             if args.gogs:
-                local_path = outdir / Path(repo.name + ".git")
+                local_path = outdir / Path(repo.name.lower() + ".git")
             else:
                 local_path = outdir / repo.name
 
