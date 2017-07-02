@@ -117,6 +117,29 @@ def get_repos(g: Github, username: str,
             yield repo
 
 
+def truncate(string: str, maxlen: int, suffix=" ...") -> str:
+    """ truncate a string to a maximum length """
+    if len(string) > maxlen:
+        return string[:maxlen - len(suffix)] + suffix
+    else:
+        return string
+
+
+def sanitize_description(string) -> str:
+    """ make GitHub repo description compatible with gogs """
+    if string:
+        # the decode/encode dance. We need to get from ascii-encoded UTF-8, to
+        # plain ascii, with unicode symbols stripped.
+        return truncate(
+            string\
+                .encode('utf-8')\
+                .decode('unicode_escape')\
+                .encode('ascii','ignore')\
+                .decode('ascii'), 255)
+    else:
+        return ''
+
+
 def main():
     try:
         parser = get_argument_parser()
@@ -160,14 +183,6 @@ def main():
                 os.remove(local_path)
 
             if args.gogs:
-
-                def truncate(string: str, maxlen: int, suffix=" ...") -> str:
-                    """ truncate a string to a maximum length """
-                    if len(string) > maxlen:
-                        return string[:maxlen - len(suffix)] + suffix
-                    else:
-                        return string
-
                 # Mirror to gogs instance
                 if not local_path.is_dir():
                     print(f"mirroring {repo.name} ... ", end="")
@@ -178,10 +193,10 @@ def main():
                     data = {
                         "auth_username": github_username,
                         "auth_password": github_pw,
-                        "repo_name": repo.name,
+                        "repo_name": truncate(repo.name, 255),
                         "clone_addr": repo.clone_url,
                         "uid": args.gogs_uid,
-                        "description": truncate(repo.description, 255),
+                        "description": sanitize_description(repo.description),
                         "private": False,
                         "mirror": True,
                     }
