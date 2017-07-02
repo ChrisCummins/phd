@@ -696,8 +696,14 @@ install_emu() {
 }
 
 
-install_jsonlint() {
+install_json_util() {
     _npm_install jsonlint 1.6.2
+
+    if [[ "$(uname)" == "Darwin" ]]; then
+        brew_install jq
+    else
+        _apt_get_install jq
+    fi
 }
 
 
@@ -770,7 +776,7 @@ main() {
     install_htop
     install_gh_archiver
     install_emu
-    install_jsonlint
+    install_json_util
     install_media
 
     # post-installation user prompts:
