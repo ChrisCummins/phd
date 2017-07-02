@@ -17,6 +17,16 @@ updating chriscummins.cc
 ...
 ```
 
+Or mirror to a [gogs](https://gogs.io) server:
+
+```sh
+$ gh-archiver ChrisCummins -o ~/gogs/repos/ChrisCummins --gogs --gogs-uid 1
+mirring atom ... 201
+mirroring autoencoder ... 201
+mirroring chriscummins.cc ... 201
+...
+```
+
 ## Installation
 
 ```sh
@@ -25,7 +35,7 @@ $ pip install gh-archiver
 
 Requires Python >= 3.6.
 
-## Usage
+**GitHub credentials**
 
 Create a credentials file `~/.githubrc` with your GitHub username and password:
 
@@ -38,7 +48,24 @@ EOF
 $ chmod 0600 ~/.githubrc
 ```
 
-Alternatively, use flag `--githubrc <path>` to specify an alternate path to the credentials file.
+Alternatively, use flag `--githubrc <path>` to specify a path to the credentials file.
+
+**Gogs credentials**
+
+Create a credentials file `~/.gogsrc` with your Gogs server address and [token](https://github.com/gogits/go-gogs-client/wiki#access-token):
+
+```sh
+$ cat <<EOF > ~/.gogsrc
+[Server]
+Address = http://example.com:3000
+
+[User]
+Token = 39bbdb529fed7fc4f373410518745446d9901450
+EOF
+$ chmod 0600 ~/.gogsrc
+```
+
+Alternatively, use flag `--gogsrc <path>` to specify a path to the credentials file.
 
 ## License
 
