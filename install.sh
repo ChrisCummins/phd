@@ -269,7 +269,10 @@ brew_install() {
     local package="$1"
     # warning: homebrew packages are not verioned
 
-    grep "^$package$" < "$(brew_list)" >/dev/null || brew install "$package"
+    if ! grep "^$package$" < "$(brew_list)" >/dev/null; then
+        echo_ok "brew install $pacakge"
+        brew install "$package"
+    fi
 }
 
 
@@ -285,8 +288,10 @@ brew_cask_install() {
     local package="$1"
     # warning: homebrew casks are not versioned
 
-    grep "^$package$" < "$(brew_cask_list)" >/dev/null || \
+    if ! grep "^$package$" < "$(brew_cask_list)" >/dev/null; then
+        echo_ok "brew cask install $pacakge"
         brew cask install "$package"
+    fi
 }
 
 
@@ -294,7 +299,10 @@ _apt_get_install() {
     local package="$1"
     # warning: debian packages are not verioned
 
-    dpkg -s "$package" &>/dev/null || sudo apt-get install -y "$package"
+    if ! dpkg -s "$package" &>/dev/null ; then
+        echo_ok "apt-get install $Package"
+        sudo apt-get install -y "$package"
+    fi
 }
 
 
