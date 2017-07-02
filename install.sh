@@ -270,7 +270,7 @@ brew_install() {
     # warning: homebrew packages are not verioned
 
     if ! grep "^$package$" < "$(brew_list)" >/dev/null; then
-        echo_ok "brew install $pacakge"
+        echo_ok "brew install $package"
         brew install "$package"
     fi
 }
