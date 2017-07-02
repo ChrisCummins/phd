@@ -29,7 +29,7 @@ def read_requirements(path='requirements.txt'):
 
 setup(
     name='gh-archiver',
-    version='0.0.4',
+    version='0.0.4.dev0',
     description="Clone and update a GitHub user's repos locally.",
     url='https://github.com/ChrisCummins/gh-archiver',
     author='Chris Cummins',
