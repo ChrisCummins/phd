@@ -20,6 +20,6 @@
     trustExitCode = true
     cmd = open -W -a Meld --args --auto-merge \"$PWD/$LOCAL\" \"$PWD/$BASE\" \"$PWD/$REMOTE\" --output=\"$PWD/$MERGED\"
 [filter "lfs"]
-	required = true
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
+    required = true
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
