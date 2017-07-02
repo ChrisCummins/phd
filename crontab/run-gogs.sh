@@ -9,7 +9,8 @@
 export LMK="/usr/local/bin/lmk -e"
 export LMK_TO="chrisc.101@gmail.com"
 
-export GOGS="/opt/gogs/gogs"
+export GOGS_DIR="/opt/gogs"
+export GOGS="$GOGS_DIR/gogs"
 
 
 # ****************************************************************************
@@ -17,7 +18,7 @@ export GOGS="/opt/gogs/gogs"
 # ****************************************************************************
 set -x
 
-cd /
+cd "$GOGS_DIR"
 "$GOGS" web
 ret=$?
 echo "exited with returncode $ret" | $LMK
