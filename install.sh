@@ -460,6 +460,7 @@ install_git() {
 
     if [[ -d "$private/git" ]]; then
         symlink "$private/git/githubrc" ~/.githubrc
+        symlink "$private/git/gogsrc" ~/.gogsrc
     fi
 }
 
