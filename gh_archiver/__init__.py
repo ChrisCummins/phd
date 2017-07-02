@@ -36,7 +36,7 @@ from git import Repo
 from github import Github, GithubException, NamedUser
 from github.Repository import Repository as GithubRepository
 from pathlib import Path
-from typing import Iterator, TextIO, Tuple
+from typing import Iterator, List, TextIO, Tuple
 
 __copyright__ = "Copyright (C) 2017 Chris Cummins <chrisc.101@gmail.com>."
 
@@ -108,7 +108,7 @@ def get_gogs_config(gogsrc: TextIO) -> Tuple[str, str]:
 
 
 def get_repos(g: Github, username: str,
-              exclude_pattern: str) -> Iterator[GithubRepository]:
+              exclude_pattern: List[str]) -> Iterator[GithubRepository]:
     """ get user repositories """
     user: NamedUser = g.get_user(username)
     excluded = exclude_pattern.split(",")
@@ -164,7 +164,7 @@ def main():
                 local_repo_name = os.path.basename(path)
 
                 if local_repo_name not in repo_names:
-                    print(f"removing {basename}")
+                    print(f"removing {local_repo_name}")
                     if path.is_dir():
                         shutil.rmtree(path)
                     else:
