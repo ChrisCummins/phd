@@ -183,8 +183,7 @@ def main():
             if args.gogs:
                 # Mirror to gogs instance
                 if not local_path.is_dir():
-                    print(f"mirroring {repo.name} ... ", end="")
-                    sys.stdout.flush()
+                    sys.stdout.write(f"mirroring {repo.name} ... ")
                     headers = {
                         "Authorization": f"token {gogs_token}",
                     }
