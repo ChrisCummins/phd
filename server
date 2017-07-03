@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+"""
+Run a REST server.
+"""
+import sqlalchemy
+
+from argparse import ArgumentParser
+from flask import abort, Flask, jsonify, request, make_response
+from typing import Iterable
+
+import freefocus
+from freefocus import sql
+
+app = Flask(__name__)
+
+make_session = None
+
+API_BASE = f"/api/v{freefocus.SPEC_MAJOR}.{freefocus.SPEC_MINOR}"
+
+
+def response(data):
+    """ make an API response """
+    return jsonify(data)
+
+
+def paginated_response(iterable: Iterable):
+    """ make a paginated API response """
+    # TODO: chunk and paginate
+    return response(list(iterable))
+
+
+@app.errorhandler(404)
+def not_found(error):
+    """ 404 error handler """
+    return make_response(jsonify({"error": "Not found"}), 404)
+
+
+@app.route(API_BASE + '/persons', methods=["GET"])
+def get_persons():
+    session = make_session()
+    q = session.query(sql.Person)
+    return paginated_response(p.json() for p in q)
+
+
+@app.route(API_BASE + '/persons/<int:person_uid>', methods=["GET"])
+def get_person(person_uid: int):
+    session = make_session()
+    p = session.query(sql.Person).filter(sql.Person.uid == person_uid).first()
+    if not p:
+        abort(404)
+    return response(p.json())
+
+
+@app.route(API_BASE + '/persons/<int:person_uid>/groups', methods=["GET"])
+def get_person_groups(person_uid: int):
+    session = make_session()
+    p = session.query(sql.Person).filter(sql.Person.uid == person_uid).first()
+    if not p:
+        abort(404)
+    return paginated_response(g.json() for g in p.groups)
+
+
+@app.route(API_BASE + '/tasks', methods=["GET"])
+def tasks():
+    session = make_session()
+    q = session.query(sql.Task)
+    return paginated_response(t.json() for t in q)
+
+
+def main():
+    global make_session
+
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("uri")
+    parser.add_argument("-v", "--verbose", action="store_true")
+    args = parser.parse_args()
+
+    engine = sqlalchemy.create_engine(args.uri, echo=args.verbose)
+
+    sql.Base.metadata.create_all(engine)
+    sql.Base.metadata.bind = engine
+    make_session = sqlalchemy.orm.sessionmaker(bind=engine)
+
+    app.run(debug=True)
+
+
+if __name__ == "__main__":
+    main()

@@ -62,6 +62,13 @@ class Person(Base):
     created = Column(
         DateTime, nullable=False, default=datetime.utcnow)
 
+    def json(self):
+        return {
+            "uid": self.uid,
+            "name": self.name,
+            "created": str(self.created),
+        }
+
 
 class Email(Base):
     __tablename__ = "email_addresses"
@@ -186,6 +193,16 @@ class Group(Base):
         for friend in self.friends:
             if self.id == friend.id:
                 raise ValueError
+
+    def json(self):
+        return {
+            "id": self.id,
+            "parent": self.parent,
+            "body": self.body,
+            "members": [p.uid for p in self.members],
+            "created": str(self.created),
+            "created_by": self.created_by_id
+        }
 
 class GroupComment(Base):
     __tablename__ = "group_comments"
@@ -448,6 +465,17 @@ class Task(Base):
         # TODO: Check for circular dependencies
         self.children.append(subtask)
         return subtask
+
+    def json(self):
+        return {
+            "id": self.id,
+            "parent": self.parent_id,
+            "assigned": [g.id for g in self.assigned],
+            "owners": [g.id for g in self.owners],
+            "friends": [g.id for g in self.friends],
+            "body": self.body,
+            "active": self.active,
+        }
 
 
 class TaskAssignedAssociation(Base):
