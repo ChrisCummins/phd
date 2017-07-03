@@ -10,7 +10,7 @@ GITHUB_USER=ChrisCummins
 OUTDIR=~/git/github/
 GH_ARCHIVER=/usr/local/bin/gh-archiver
 # FIXME: clreduce repo contains broken reference, --exclude for now
-GH_ARCHIVER_ARGS="--exclude clreduce,distro,dos,staging --gogs --gogs-uid 2"
+GH_ARCHIVER_ARGS="--exclude dos,staging --gogs --gogs-uid 2"
 LMK="/usr/local/bin/lmk -e"
 
 # ****************************************************************************
