@@ -50,13 +50,12 @@ if __name__ == "__main__":
     def get_or_create_usergroup(p: Person) -> Group:
         q = session.query(Group)\
             .filter(Group.body == p.name,
-                    Group.created_by == p,
                     Group.created == p.created)
 
         if q.count():
             return q.one()
         else:
-            usergroup = Group(body=p.name, created_by=p, created=p.created)
+            usergroup = Group(body=p.name, created=p.created)
             usergroup.members.append(p)
             session.add(usergroup)
             return usergroup
@@ -97,16 +96,16 @@ if __name__ == "__main__":
 
     # Import labels as Tags
     tagtree = Tag(
-        body=args.owner, created_by=p, created=r.created_at)
+        body=args.owner, created_by=usergroup, created=r.created_at)
     tagtree.owners.append(usergroup)
 
     repo_tagtree = Tag(
-        body=args.repo, created_by=p, created=r.created_at)
+        body=args.repo, created_by=usergroup, created=r.created_at)
     tagtree.children.append(repo_tagtree)
 
     for label in r.get_labels():
         tag = Tag(
-            body=label.name, created_by=p, created=r.created_at)
+            body=label.name, created_by=usergroup, created=r.created_at)
         # TODO: tag.color
         repo_tagtree.children.append(tag)
 
@@ -114,17 +113,18 @@ if __name__ == "__main__":
     session.commit()
 
     tasktree = Task(
-        body=args.owner, created_by=p, created=r.created_at)
+        body=args.owner, created_by=usergroup, created=r.created_at)
     tasktree.owners.append(usergroup)
 
     repo_tasktree = tasktree.add_subtask(Task(
-        body=r.name, created_by=p, created=r.created_at))
+        body=r.name, created_by=usergroup, created=r.created_at))
 
     # Import Milestones as Tasks
     for milestone in r.get_milestones(state='all'):
+        a = get_or_create_usergroup(get_or_create_user(milestone.creator))
         m = repo_tasktree.add_subtask(Task(
             body=(f"{milestone.title}\n\n{milestone.description}").rstrip(),
-            created_by=get_or_create_user(milestone.creator),
+            created_by=a,
             created=milestone.created_at,
             due=milestone.due_on,
             modified=milestone.updated_at,
@@ -151,17 +151,19 @@ if __name__ == "__main__":
         else:
             task_parent = repo_tasktree
 
+        a = get_or_create_usergroup(get_or_create_user(issue.user))
         task = task_parent.add_subtask(
             body = (f"{issue.title}\n\n" + issue.body.replace('\r\n', '\n')).rstrip(),
             completed = issue.closed_at,
-            created_by=get_or_create_user(issue.user),
+            created_by=a,
             created=issue.created_at,
         )
 
         for comment in issue.get_comments():
+            a = get_or_create_usergroup(get_or_create_user(comment.user))
             comment_node = TaskComment(
                 body=comment.body,
-                created_by=get_or_create_user(comment.user),
+                created_by=a,
                 created=issue.created_at,
                 modified=issue.updated_at,
             )

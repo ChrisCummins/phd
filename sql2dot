@@ -26,8 +26,8 @@ def build_graph(
                 continue
             add_edge(parent_label, label, type=edge_type)
 
-            if hasattr(item, 'created_by'):
-                add_edge(make_id(item.created_by, type='person'), label,
+            if hasattr(item, 'created_by') and item.created_by:
+                add_edge(make_id(item.created_by, type='group'), label,
                          type=("person", edge_type[1]))
 
             if hasattr(item, 'members'):

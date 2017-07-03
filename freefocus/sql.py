@@ -135,8 +135,8 @@ class WorkspaceComment(Base):
     body = Column(UnicodeText(length=2**31), nullable=False)
 
     # Accountability
-    created_by_id = Column(Integer, ForeignKey("persons.uid"), nullable=False)
-    created_by = relationship("Person")
+    created_by_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    created_by = relationship("Group")
     created = Column(
         DateTime, nullable=False, default=datetime.utcnow)
 
@@ -154,7 +154,8 @@ class Group(Base):
     # null parent ID means the group belongs to the workspace.
     parent_id = Column(Integer, ForeignKey("groups.id"))
     children = relationship(
-        "Group", backref=backref('parent', remote_side=[id]))
+        "Group", primaryjoin="Group.parent_id == Group.id",
+        backref=backref('parent', remote_side=[id]))
 
     owners = relationship(
         "Group", secondary="group_owner_associations",
@@ -172,9 +173,9 @@ class Group(Base):
 
     # Accountability
     created_by_id = Column(
-        Integer, ForeignKey("persons.uid"), nullable=False)
+        Integer, ForeignKey("groups.id"), nullable=True)
     created_by = relationship(
-        "Person", primaryjoin="Person.uid == Group.created_by_id")
+        "Group", primaryjoin="Group.id == Group.created_by_id")
     created = Column(
         DateTime, nullable=False, default=datetime.utcnow)
 
@@ -183,7 +184,8 @@ class Group(Base):
         "Person", primaryjoin="Person.uid == Group.modified_by_id")
     modified = Column(DateTime)
 
-    comments = relationship("GroupComment")
+    comments = relationship(
+        "GroupComment", primaryjoin="GroupComment.group_id == Group.id")
 
     def validate(self):
         for owner in self.owners:
@@ -210,7 +212,8 @@ class GroupComment(Base):
 
     # a group comment's parent is either a group or another comment
     group_id = Column(Integer, ForeignKey("groups.id"))
-    group = relationship("Group")
+    group = relationship(
+        "Group", primaryjoin="Group.id == GroupComment.group_id")
     parent_id = Column(Integer, ForeignKey("group_comments.id"))
     children = relationship(
         "GroupComment", backref=backref('parent', remote_side=[id]))
@@ -218,8 +221,9 @@ class GroupComment(Base):
     body = Column(UnicodeText(length=2**31), nullable=False)
 
     # Accountability
-    created_by_id = Column(Integer, ForeignKey("persons.uid"), nullable=False)
-    created_by = relationship("Person")
+    created_by_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    created_by = relationship(
+        "Group", primaryjoin="Group.id == GroupComment.created_by_id")
     created = Column(
         DateTime, nullable=False, default=datetime.utcnow)
 
@@ -272,9 +276,9 @@ class Asset(Base):
 
     # Accountability
     created_by_id = Column(
-        Integer, ForeignKey("persons.uid"), nullable=False)
+        Integer, ForeignKey("groups.id"), nullable=False)
     created_by = relationship(
-        "Person", primaryjoin="Person.uid == Asset.created_by_id")
+        "Group", primaryjoin="Group.id == Asset.created_by_id")
     created = Column(
         DateTime, nullable=False, default=datetime.utcnow)
 
@@ -316,8 +320,8 @@ class AssetComment(Base):
     body = Column(UnicodeText(length=2**31), nullable=False)
 
     # Accountability
-    created_by_id = Column(Integer, ForeignKey("persons.uid"), nullable=False)
-    created_by = relationship("Person")
+    created_by_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    created_by = relationship("Group")
     created = Column(
         DateTime, nullable=False, default=datetime.utcnow)
 
@@ -344,9 +348,9 @@ class Tag(Base):
 
     # Accountability
     created_by_id = Column(
-        Integer, ForeignKey("persons.uid"), nullable=False)
+        Integer, ForeignKey("groups.id"), nullable=False)
     created_by = relationship(
-        "Person", primaryjoin="Person.uid == Tag.created_by_id")
+        "Group", primaryjoin="Group.id == Tag.created_by_id")
     created = Column(
         DateTime, nullable=False, default=datetime.utcnow)
 
@@ -390,8 +394,8 @@ class TagComment(Base):
     body = Column(UnicodeText(length=2**31), nullable=False)
 
     # Accountability
-    created_by_id = Column(Integer, ForeignKey("persons.uid"), nullable=False)
-    created_by = relationship("Person")
+    created_by_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    created_by = relationship("Group")
     created = Column(
         DateTime, nullable=False, default=datetime.utcnow)
 
@@ -436,9 +440,9 @@ class Task(Base):
 
     # Accountability
     created_by_id = Column(
-        Integer, ForeignKey("persons.uid"), nullable=False)
+        Integer, ForeignKey("groups.id"), nullable=False)
     created_by = relationship(
-        "Person", primaryjoin="Person.uid == Task.created_by_id")
+        "Group", primaryjoin="Group.id == Task.created_by_id")
     created = Column(
         DateTime, nullable=False, default=datetime.utcnow)
 
@@ -540,8 +544,8 @@ class TaskComment(Base):
     body = Column(UnicodeText(length=2**31), nullable=False)
 
     # Accountability
-    created_by_id = Column(Integer, ForeignKey("persons.uid"), nullable=False)
-    created_by = relationship("Person")
+    created_by_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    created_by = relationship("Group")
     created = Column(
         DateTime, nullable=False, default=datetime.utcnow)
 
