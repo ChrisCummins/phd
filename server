@@ -12,6 +12,7 @@ import freefocus
 from freefocus import sql
 
 app = Flask(__name__)
+app.config.from_object('config')
 
 make_session = None
 
