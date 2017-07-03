@@ -107,10 +107,8 @@ def get_gogs_config(gogsrc: TextIO) -> Tuple[str, str]:
     return server, token
 
 
-def get_repos(g: Github, username: str,
-              exclude_pattern: List[str]) -> Iterator[GithubRepository]:
+def get_repos(user, exclude_pattern: List[str]) -> Iterator[GithubRepository]:
     """ get user repositories """
-    user: NamedUser = g.get_user(username)
     excluded = exclude_pattern.split(",")
     for repo in user.get_repos():
         if repo.name not in excluded:
@@ -147,11 +145,18 @@ def main():
         github_username, github_pw = get_github_config(args.githubrc)
         g = Github(github_username, github_pw)
 
+        if args.user == github_username:
+            # AuthenticatedUser provides access to private repos
+            user: AuthenticatedUser = g.get_user()
+        else:
+            user: NamedUser = g.get_user(username)
+
+        repos = list(get_repos(user, args.excludes))
+
         if args.gogs:
             gogs_server, gogs_token = get_gogs_config(args.gogsrc)
 
         outdir = Path(args.outdir, parents=True, exists_ok=True)
-        repos = list(get_repos(g, args.user, args.excludes))
 
         # delete any files which are not GitHub repos first, if necessary
         if args.delete:
