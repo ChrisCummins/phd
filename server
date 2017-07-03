@@ -2,6 +2,7 @@
 """
 Run a REST server.
 """
+import flask
 import sqlalchemy
 
 from argparse import ArgumentParser
@@ -17,6 +18,48 @@ app.config.from_object('config')
 make_session = None
 
 API_BASE = f"/api/v{freefocus.SPEC_MAJOR}.{freefocus.SPEC_MINOR}"
+
+
+def active_task_graph():
+    def build_graph(session, task: sql.Task):
+        return {
+            "id": task.id,
+            "body": task.body.split('\n')[0],
+            "completed": True if task.completed else False,
+            "children": [build_graph(session, child) for child in
+                         session.query(sql.Task)\
+                            .filter(sql.Task.active,
+                                    sql.Task.parent_id == task.id)\
+                            .order_by(sql.Task.created.desc())]
+        }
+
+    session = make_session()
+
+    # List 'root' tasks
+    q = session.query(sql.Task)\
+        .filter(sql.Task.active, sql.Task.parent == None)\
+        .order_by(sql.Task.created.desc())
+
+    r = [build_graph(session, t) for t in q]
+    return r
+
+
+@app.route('/')
+def index():
+    data = {
+        "freefocus": {
+            "version": f"{freefocus.SPEC_MAJOR}.{freefocus.SPEC_MINOR}.{freefocus.SPEC_MICRO}",
+        },
+        "assets": {
+            "cache_tag": 1,
+            "bootstrap_css": flask.url_for('static', filename='bootstrap.css'),
+            "styles_css": flask.url_for('static', filename='styles.css'),
+            "site_js": flask.url_for('static', filename='site.js'),
+        },
+        "tasks": active_task_graph(),
+    }
+
+    return flask.render_template("lists.html", **data)
 
 
 def response(data):

@@ -1,0 +1,89 @@
+/** Ultra Light */
+@font-face {
+  font-family: "San Francisco";
+  font-weight: 100;
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-ultralight-webfont.woff");
+}
+
+/** Thin */
+@font-face {
+  font-family: "San Francisco";
+  font-weight: 200;
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-thin-webfont.woff");
+}
+
+/** Regular */
+@font-face {
+  font-family: "San Francisco";
+  font-weight: 400;
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-regular-webfont.woff");
+}
+
+/** Medium */
+@font-face {
+  font-family: "San Francisco";
+  font-weight: 500;
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-medium-webfont.woff");
+}
+
+/** Semi Bold */
+@font-face {
+  font-family: "San Francisco";
+  font-weight: 600;
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-semibold-webfont.woff");
+}
+
+/** Bold */
+@font-face {
+  font-family: "San Francisco";
+  font-weight: 700;
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-bold-webfont.woff");
+}
+
+
+html {
+    -webkit-touch-callout: none;
+      -webkit-user-select: none;
+       -khtml-user-select: none;
+         -moz-user-select: none;
+          -ms-user-select: none;
+              user-select: none;
+    cursor: default;
+    min-width: 320px;
+}
+
+body {
+    font-family: "San Francisco","Helvetica Neue",Helvetica,Arial,sans-serif;
+    letter-spacing: .5px;
+ }
+
+.tasks {
+    font-size: 16px;
+}
+
+.tasks ul {
+    list-style-type: none;
+    padding-left: .8em;
+}
+.tasks li.complete {
+    color: #888888;
+}
+.tasks .status {
+    padding-right: .2em;
+    font-weight: 300;
+    font-size: 22px;
+}
+.tasks .status-active {
+    color: #666;
+}
+.tasks .status-complete {
+    color: #444;
+}
+.tasks hr {
+    margin-top: .1em;
+    margin-bottom: .1em;
+}
+
+hr {
+    border-color: #aaa;
+}
