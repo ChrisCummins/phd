@@ -37,6 +37,9 @@
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
         <ul class="nav navbar-nav">
           <li class="active"><a href="#"><i class="fa fa-list" aria-hidden="true"></i> <span class="sr-only">(current)</span></a></li>
+          <li><a href="#"><i class="fa fa-calendar-o" aria-hidden="true"></i></a></li>
+          <li><a href="#"><i class="fa fa-address-book-o" aria-hidden="true"></i></a></li>
+          <li><a href="#"><i class="fa fa-cog" aria-hidden="true"></i></a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
           <li><a href="#"><i class="fa fa-plus" aria-hidden="true"></i></a></li>
@@ -47,12 +50,12 @@
           </div>
         </form>
       </div>
-    </div> <!-- /.container -->
+    </div> <!-- /.container-fluid -->
   </div> <!-- /.navbar -->
 
-  <div class="container">
+  <div class="container-fluid">
     <div class="row">
-      <div class="col-lg-9">
+      <div class="col-lg-8">
         <div class="tasks">
           {% for task in tasks recursive %}
             <ul>
@@ -73,8 +76,12 @@
           {% endfor %}
         </div> <!-- /.tasks -->
       </div>
+      <div class="col-lg-4 right-menu">
+        {% set task = tasks[0].children[0].children[1].children[4] %}
+        <h1>{{ task.body }}</h1>
+      </div>
     </div>
-  </div>
+  </div> <!-- /.container-fluid -->
 
   </div class="container-fluid">
     <div class="row">

@@ -53,9 +53,17 @@ html {
 }
 
 body {
-    font-family: "San Francisco","Helvetica Neue",Helvetica,Arial,sans-serif;
-    letter-spacing: .5px;
+    /*font-family: "San Francisco","Helvetica Neue",Helvetica,Arial,sans-serif;
+    letter-spacing: .5px;*/
  }
+
+.container-fluid {
+  max-width: 1400px;
+}
+
+.right-menu {
+  background-color: #555;
+}
 
 .tasks {
     font-size: 16px;

@@ -420,12 +420,11 @@ class Task(Base):
     friends = relationship("Group", secondary="task_friend_associations")
 
     body = Column(UnicodeText(length=2**31), nullable=False)
-    active = Column(Boolean, nullable=False, default=True)
 
     defer_until = Column(DateTime)
     due = Column(DateTime)
     estimated_duration = Column(Integer)
-
+    start_on = Column(DateTime)
     started = Column(DateTime)
     completed = Column(DateTime)
     duration = Column(Integer)
@@ -455,12 +454,35 @@ class Task(Base):
 
     @property
     def status(self):
-        if self.active:
-            return "active"
+        if self.is_deferred:
+            return "deferred"
         elif self.completed:
             return "complete"
+        elif self.is_blocked:
+            return "blocked"
+        elif self.is_overdue:
+            return "overdue"
+        elif self.stated:
+            return "started"
         else:
-            return "inactive"
+            return "active"
+
+    @property
+    def is_blocked(self):
+        return len(self.deps) > 0
+
+    @property
+    def is_deferred(self):
+        return self.defer_until and self.defer_until > datetime.utcnow()
+
+    @property
+    def is_assigned(self):
+        return len(self.assigned) > 0
+
+
+    @property
+    def is_overdue(self):
+        return self.due and self.due > datetime.utcnow()
 
     def add_subtask(self, subtask: 'Task'=None, **subtask_opts):
         if subtask is None:
@@ -469,17 +491,6 @@ class Task(Base):
         # TODO: Check for circular dependencies
         self.children.append(subtask)
         return subtask
-
-    def json(self):
-        return {
-            "id": self.id,
-            "parent": self.parent_id,
-            "assigned": [g.id for g in self.assigned],
-            "owners": [g.id for g in self.owners],
-            "friends": [g.id for g in self.friends],
-            "body": self.body,
-            "active": self.active,
-        }
 
 
 class TaskAssignedAssociation(Base):
