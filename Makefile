@@ -9,7 +9,7 @@ venv := source $(venv_activate) &&
 python_version = 3.6
 python = $(venv_dir)/bin/python$(python_version)
 
-all: jupyter clgen cldrive CLSmith
+all: jupyter clgen cldrive CLSmith creduce
 
 clgen: $(venv_dir)/bin/clgen
 
@@ -36,6 +36,11 @@ lib/CLSmith/build/bin/cl_launcher:
 	cd lib/CLSmith/build && cmake .. -G Ninja
 	cd lib/CLSmith/build && ninja
 	cp -v lib/CLSmith/runtime/*.h lib/CLSmith/build/
+
+creduce: lib/clreduce/build_creduce/creduce/creduce
+
+lib/clreduce/build_creduce/creduce/creduce:
+	cd lib/creduce && make
 
 jupyter: $(venv_dir)/bin/jupyter ~/.ipython/kernels/project_b/kernel.json
 
