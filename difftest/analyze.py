@@ -16,7 +16,7 @@ CLDRIVE_TABLE_NAMES = ["CLSmith w. cldrive", "GitHub"]
 CLDRIVE_TABLES = [cldriveCLSmithResult, GitHubResult]
 
 
-# Group outcomes into less-granular classifications, as in the CLSmith paper.
+# Group outcomes into less-granular classifications.
 # This table maps <outcome>: <classification>
 CLASSIFICATIONS = {
     '__NOT_IMPLEMENTED_YET__': 'Wrong code',
@@ -28,7 +28,6 @@ CLASSIFICATIONS = {
     'CL_OUT_OF_HOST_MEMORY': 'Runtime crash',
     'CL_OUT_OF_RESOURCES': 'Runtime crash',
     'cldrive Error': 'Invalid testcase',
-    'Error: recursive call in function(s):': 'Invalid testcase',
     'cldrive.driver.PorcelainError: 1': 'Runtime crash',
     'cldrive.driver.PorcelainError: 127': 'Runtime crash',
     'cldrive.driver.PorcelainError: SIGFPE': 'Runtime crash',
@@ -36,6 +35,8 @@ CLASSIFICATIONS = {
     'Error building program: -42': 'Invalid testcase',
     'Error enqueueing kernel': 'Invalid testcase',
     'Error setting kernel argument': 'Invalid testcase',
+    'Error: recursive call in function(s):': 'Invalid testcase',
+    'Error: unresolved pointer calls in function(s):': 'Invalid testcase',
     'INVALID_WORK_GROUP_SIZE': 'Invalid testcase',
     'Multiple OpenCL kernels': 'Invalid testcase',
     'No OpenCL kernel': 'Invalid testcase',

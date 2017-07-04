@@ -1,2 +1,8 @@
 __pycache__
 platform.info
+/actual-output.txt
+/expected-output.txt
+/reproduced-output.txt
+/nvidia-bug-report.log.gz
+/bug-report.sh
+/kernel.cl
