@@ -6,3 +6,4 @@ platform.info
 /nvidia-bug-report.log.gz
 /bug-report.sh
 /kernel.cl
+/CLSmith
