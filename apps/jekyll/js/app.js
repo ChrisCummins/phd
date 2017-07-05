@@ -1,26 +1,59 @@
 SERVER = 'http://localhost:5000'
 API_ENDPOINT = SERVER + '/api/v1.0'
 
-$console = $('#console');
+$tasks = $('#app .tasks');
+$details = $('#app .details');
 
-var task_walk = function(task, depth) {
-    for (var i = 0; i < depth; i++) {
-        $console.append('  ');
-    }
-    $console.append(task.body.data.split('\n')[0] + '\n');
+var generate_task_list = function(tasks) {
 
-    for (var i = 0; i < task.children.length; i++) {
-        task_walk(task.children[i], depth + 1);
+    var walker = function(task, html) {
+        html += '<li>';
+
+        if (task.children.length) {
+            html += '<i class="fa fa-caret-down see-more down" aria-hidden="true"></i>';
+        }
+
+        html += '<img src="/img/task.svg" /><span>' + task.body.data.split('\n')[0] + '</span><hr/>';
+
+        if (task.children.length) {
+            html += '<ul>';
+            for (var i = 0; i < task.children.length; i++) {
+                html = walker(task.children[i], html);
+            }
+            html += '</ul>';
+        }
+
+        return html + '</li>';
     }
+
+    var ret = '<ul>';
+    for (var i = 0; i < tasks.length; i++) {
+        ret = walker(tasks[i], ret);
+    }
+
+    return ret + '</ul>';
 }
 
+console.log("GET /tasks");
 $.get(
     API_ENDPOINT + '/tasks',
     {
     },
     function(data) {
-        for (var i = 0; i < data.length; i++) {
-            task_walk(data[i], 0);
-        }
+        console.log('/tasks');
+        $tasks.html(generate_task_list(data));
+    }
+);
+
+console.log("GET /tasks/17");
+$.get(
+    API_ENDPOINT + '/tasks/17',
+    {
+    },
+    function(data) {
+        console.log('/tasks/17');
+
+        $('.details .task-header').html(markdown.toHTML(data.body.split('\n')[0]))
+        $('.details .task-body').html(markdown.toHTML(data.body))
     }
 );

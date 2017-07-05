@@ -6,6 +6,10 @@ html {
     min-width: 320px;
 }
 
+body {
+    padding-top: $navbar-height;
+}
+
 .swatch {
     display: inline-block;
     min-width: 40px;
@@ -24,4 +28,66 @@ html {
     &.vivid.blue { background-color: $vivid-blue; }
     &.cyan { background-color: $cyan; }
     &.vivid.cyan { background-color: $vivid-cyan; }
+}
+
+#app {
+    @include make-row();
+    min-height: 100%;
+
+    > #main-panel {
+        @include make-sm-column(8);
+
+        background-color: $main-panel-background-color;
+    }
+
+    > #details-panel {
+        @include make-sm-column(4);
+    }
+}
+
+.tasks {
+  font-size: 18px;
+  font-weight: 300;
+
+  ul {
+    list-style-type: none;
+    padding-left: 1.5em;
+  }
+  &> ul {
+    padding-left: 0;
+  }
+
+  hr {
+    border-color: #333333;
+    margin: 0;
+  }
+
+  li {
+    padding: .4em 0;
+
+    .see-more {
+        color: #333333;
+        font-size: 24px;
+        padding-right: .4em;
+    }
+
+    .status {
+      padding-right: .2em;
+      font-weight: 300;
+      font-size: 22px;
+    }
+
+    &.complete {
+      color: #888888;
+    }
+
+    img {
+      width: 24px;
+      height: 24px;
+    }
+
+    span {
+        padding-left: .5em;
+    }
+  }
 }
