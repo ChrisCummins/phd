@@ -8,12 +8,14 @@ import sqlalchemy
 from argparse import ArgumentParser
 from contextlib import contextmanager
 from flask import abort, Flask, jsonify, request, make_response
+from flask_cors import CORS
 from typing import Iterable
 
 import freefocus
 from freefocus import sql
 
 app = Flask(__name__)
+CORS(app)
 app.config.from_object('config')
 
 make_session = None
@@ -253,7 +255,7 @@ def main():
     sql.Base.metadata.bind = engine
     make_session = sqlalchemy.orm.sessionmaker(bind=engine)
 
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
 
 
 if __name__ == "__main__":
