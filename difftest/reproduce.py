@@ -30,13 +30,13 @@ def cl_launcher(src: str, platform_id: int, device_id: int,
                                    timeout=os.environ.get("TIMEOUT", 60))
 
 
-def reproduce(result_id, report=False):
+def reproduce(args):
     TABLE = cl_launcherCLgenResult
 
     with Session(commit=False) as s:
-        result = s.query(TABLE).filter(TABLE.id == result_id).first()
+        result = s.query(TABLE).filter(TABLE.id == args.result_id).first()
         if not result:
-            raise KeyError(f"no result with ID {result_id}")
+            raise KeyError(f"no result with ID {args.result_id}")
 
         flags = result.params.to_flags()
         program = result.program
@@ -48,29 +48,31 @@ def reproduce(result_id, report=False):
             print(e, file=sys.stderr)
             sys.exit(1)
 
-        if report:
+        if args.report:
             # generate bug report
             now = datetime.datetime.utcnow().isoformat()
 
-            expected_output, majority_devs = util.get_majority_output(
-                s, result, cl_launcherCLgenResult)
-            majority_dev_str = "\n".join([f"#   - {d.platform} {d.device}" for d in majority_devs])
             cli = ' '.join(cl_launcher_cli(
                 "kernel.cl", '$PLATFORM_ID', '$DEVICE_ID', *flags,
                 cl_launcher_path="./CLSmith/build/cl_launcher",
                 include_path="./CLSmith/runtime/"))
 
+            bug_type = {
+                "w": "miscompilation",
+                "c": "runtime crash"
+            }[args.report]
+
             print(f"""\
 #!/usr/bin/env bash
 set -eu
 
-# bug report generated {now}
-# execute this script to reproduce bug:
+# {bug_type} bug report generated {now}
+# execute this file to reproduce bug:
 #    export PLATFORM_ID=<id>
 #    export DEVICE_ID=<id>
 #    $ bash ./bug-report.sh
 
-# metadata:
+# Metadata:
 #   OpenCL Platform:        {result.testbed.platform}
 #   OpenCL Device:          {result.testbed.device}
 #   Driver version:         {result.testbed.driver}
@@ -89,6 +91,17 @@ cat << EOF > kernel.cl
 EOF
 echo "kernel written to 'kernel.cl'"
 
+# Kernel parameters:
+#   Global size: {result.params.gsize}
+#   Workgroup size: {result.params.lsize}
+#   Optimizations: {result.params.optimizations_on_off}
+
+""")
+            if args.report == "w":
+                expected_output, majority_devs = util.get_majority_output(
+                    s, result, cl_launcherCLgenResult)
+                majority_dev_str = "\n".join([f"#   - {d.platform} {d.device}" for d in majority_devs])
+                print(f"""
 # Expected output:
 cat << EOF > expected-output.txt
 {expected_output}
@@ -104,8 +117,9 @@ cat << EOF > actual-output.txt
 {result.stdout}
 EOF
 echo "actual output written to 'actual-output.txt'"
+""")
 
-# Build requirements (CLSmith):
+            print(f"""# Build requirements (CLSmith):
 if [ ! -d "./CLSmith" ]; then
     git clone https://github.com/ChrisCummins/CLSmith.git
     cd CLSmith
@@ -122,14 +136,19 @@ if [ ! -d "./CLSmith/build" ]; then
 fi
 
 # Run kernel using CLSmith's cl_launcher:
-{cli} 2>/dev/null > reproduced-output.txt
-echo "reproduced output written to 'reproduced-output.txt'"
+{cli} >stdout.txt 2>stderr.txt
+echo "reproduced output written to 'stdout.txt' and 'stderr.txt'"
 """)
 
-            return True
+            sys.exit(0)
         else:
+            # run the program
             runtime, status, stdout, stderr = cl_launcher(
                     program.src, platform_id, device_id, *flags)
+
+            if verbose:
+                print(stderr)
+                print(stdout)
 
             reproduced = True
             if stderr != result.stderr:
@@ -139,7 +158,7 @@ echo "reproduced output written to 'reproduced-output.txt'"
                 reproduced = False
                 print("stdout differs")
 
-            return reproduced
+            sys.exit(0 if reproduced else 1)
 
 
 def main():
@@ -148,17 +167,16 @@ def main():
                         help="MySQL database hostname")
     parser.add_argument("-r", "--result", dest="result_id", type=int, default=None,
                         help="results ID")
-    parser.add_argument("--report", action="store_true",
-                        help="generate bug report")
+    parser.add_argument("--report",
+                        help="generate bug report of type: {w,bc}")
+    parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
 
     # get testbed information
     db_hostname = args.hostname
     db_url = db.init(db_hostname)
 
-    if not reproduce(args.result_id, args.report):
-        sys.exit(1)
-
+    reproduce(args)
 
 if __name__ == "__main__":
     main()
