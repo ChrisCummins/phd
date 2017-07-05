@@ -95,7 +95,6 @@ echo "kernel written to 'kernel.cl'"
 #   Global size: {result.params.gsize}
 #   Workgroup size: {result.params.lsize}
 #   Optimizations: {result.params.optimizations_on_off}
-
 """)
             if args.report == "w":
                 expected_output, majority_devs = util.get_majority_output(
@@ -117,6 +116,15 @@ cat << EOF > actual-output.txt
 {result.stdout}
 EOF
 echo "actual output written to 'actual-output.txt'"
+""")
+            elif args.report == "c":
+                print(f"""
+# Program output:
+cat << EOF > reported-stderr.txt
+{result.stderr}
+EOF
+echo "reported output written to 'reported-stdout.txt' and 'reported-stderr.txt'"
+echo "reported program returncode is {result.status}"
 """)
 
             print(f"""# Build requirements (CLSmith):
