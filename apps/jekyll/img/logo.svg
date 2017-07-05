@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" viewBox="176 -177 266 74" width="266pt" height="74pt" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <metadata> Produced by OmniGraffle 7.3.1 
+    <dc:date>2017-07-05 10:39:07 +0000</dc:date>
+  </metadata>
+  <defs>
+    <font-face font-family="Helvetica Neue" font-size="60" panose-1="2 11 4 3 2 2 2 2 2 4" units-per-em="1000" underline-position="-75" underline-thickness="50" slope="0" x-height="514" cap-height="714" ascent="966.9952" descent="-212.99744" font-weight="300">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue-Thin"/>
+      </font-face-src>
+    </font-face>
+  </defs>
+  <g stroke="none" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1">
+    <title>Styles</title>
+    <g>
+      <title>Title</title>
+      <text transform="translate(176 -176.8702)" fill="#a5a5a5">
+        <tspan font-family="Helvetica Neue" font-size="60" font-weight="300" fill="#a5a5a5" x="0" y="58" textLength="30.84">F</tspan>
+        <tspan font-family="Helvetica Neue" font-size="60" font-weight="300" fill="#a5a5a5" x="29.4" y="58" textLength="16.68">r</tspan>
+        <tspan font-family="Helvetica Neue" font-size="60" font-weight="300" fill="#a5a5a5" x="45.36" y="58" textLength="93.12">eeF</tspan>
+      </text>
+      <text transform="translate(350 -176.8702)" fill="#a5a5a5">
+        <tspan font-family="Helvetica Neue" font-size="60" font-weight="300" fill="#a5a5a5" x="0" y="58" textLength="91.14">cus</tspan>
+      </text>
+      <circle cx="331" cy="-134" r="15.000024" stroke="#a3b557" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+      <path d="M 324.51868 -130.62768 C 324.51868 -130.62768 324.9689 -130.67945 326.31576 -129.8349 C 327.66264 -128.99036 329.27284 -127.64664 329.27284 -127.64664" stroke="#a3b557" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5"/>
+      <path d="M 336.83383 -139.88925 C 336.83383 -139.88925 334.54614 -137.18334 332.40408 -133.71495 C 330.262 -130.24655 329.27284 -127.64664 329.27284 -127.64664" stroke="#a3b557" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5"/>
+    </g>
+  </g>
+</svg>

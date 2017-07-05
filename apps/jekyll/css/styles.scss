@@ -5,3 +5,23 @@
 html {
     min-width: 320px;
 }
+
+.swatch {
+    display: inline-block;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 12px;
+
+    &.red { background-color: $red; }
+    &.vivid.red { background-color: $vivid-red; }
+    &.green { background-color: $green; }
+    &.vivid.green { background-color: $vivid-green; }
+    &.orange { background-color: $orange; }
+    &.vivid.orange { background-color: $vivid-orange; }
+    &.yellow { background-color: $yellow; }
+    &.vivid.yellow { background-color: $vivid-yellow; }
+    &.blue { background-color: $blue; }
+    &.vivid.blue { background-color: $vivid-blue; }
+    &.cyan { background-color: $cyan; }
+    &.vivid.cyan { background-color: $vivid-cyan; }
+}

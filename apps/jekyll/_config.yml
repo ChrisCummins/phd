@@ -59,6 +59,7 @@ verbose:  false
 defaults:
   -
     values:
+      title: "FreeFocus"
       layout: "default"
 
 liquid:
