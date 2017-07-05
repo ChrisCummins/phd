@@ -371,6 +371,8 @@ class cl_launcherCLgenResult(Base):
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     outcome = sql.Column(sql.String(255))
     classification = sql.Column(sql.String(16))
+    submitted = sql.Column(sql.Boolean)
+    dupe = sql.Column(sql.Boolean)
 
     program = sql.orm.relationship("CLgenProgram", back_populates="cl_launcher_results")
     testbed = sql.orm.relationship("Testbed", back_populates="cl_launcher_clgen_results")
