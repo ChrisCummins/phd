@@ -30,25 +30,18 @@ def cl_launcher(src: str, platform_id: int, device_id: int,
                                    timeout=os.environ.get("TIMEOUT", 60))
 
 
-def reproduce(args):
+def reproduce(**args):
     TABLE = cl_launcherCLgenResult
 
     with Session(commit=False) as s:
-        result = s.query(TABLE).filter(TABLE.id == args.result_id).first()
+        result = s.query(TABLE).filter(TABLE.id == args['result_id']).first()
         if not result:
-            raise KeyError(f"no result with ID {args.result_id}")
+            raise KeyError(f"no result with ID {args['result_id']}")
 
         flags = result.params.to_flags()
         program = result.program
 
-        try:
-            platform_id = result.testbed.platform_id()
-            device_id = result.testbed.device_id()
-        except KeyError as e:
-            print(e, file=sys.stderr)
-            sys.exit(1)
-
-        if args.report:
+        if args['report']:
             # generate bug report
             now = datetime.datetime.utcnow().isoformat()
 
@@ -60,7 +53,7 @@ def reproduce(args):
             bug_type = {
                 "w": "miscompilation",
                 "c": "runtime crash"
-            }[args.report]
+            }[args['report']]
 
             print(f"""\
 #!/usr/bin/env bash
@@ -96,7 +89,7 @@ echo "kernel written to 'kernel.cl'"
 #   Workgroup size: {result.params.lsize}
 #   Optimizations: {result.params.optimizations_on_off}
 """)
-            if args.report == "w":
+            if args['report'] == "w":
                 expected_output, majority_devs = util.get_majority_output(
                     s, result, cl_launcherCLgenResult)
                 majority_dev_str = "\n".join([f"#   - {d.platform} {d.device}" for d in majority_devs])
@@ -117,7 +110,7 @@ cat << EOF > actual-output.txt
 EOF
 echo "actual output written to 'actual-output.txt'"
 """)
-            elif args.report == "c":
+            elif args['report'] == "c":
                 print(f"""
 # Program output:
 cat << EOF > reported-stderr.txt
@@ -150,6 +143,14 @@ echo "reproduced output written to 'stdout.txt' and 'stderr.txt'"
 
             sys.exit(0)
         else:
+            # lookup the device
+            try:
+                platform_id = result.testbed.platform_id()
+                device_id = result.testbed.device_id()
+            except KeyError as e:
+                print(e, file=sys.stderr)
+                sys.exit(1)
+
             # run the program
             runtime, status, stdout, stderr = cl_launcher(
                     program.src, platform_id, device_id, *flags)
@@ -184,7 +185,7 @@ def main():
     db_hostname = args.hostname
     db_url = db.init(db_hostname)
 
-    reproduce(args)
+    reproduce(**vars(args))
 
 if __name__ == "__main__":
     main()
