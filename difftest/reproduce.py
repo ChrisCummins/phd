@@ -30,7 +30,7 @@ def cl_launcher(src: str, platform_id: int, device_id: int,
                                    timeout=os.environ.get("TIMEOUT", 60))
 
 
-def reproduce(**args, file=sys.stdout):
+def reproduce(file=sys.stdout, **args):
     TABLE = cl_launcherCLgenResult
 
     with Session(commit=False) as s:
