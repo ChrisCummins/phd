@@ -30,7 +30,7 @@ def cl_launcher(src: str, platform_id: int, device_id: int,
                                    timeout=os.environ.get("TIMEOUT", 60))
 
 
-def reproduce(**args):
+def reproduce(**args, file=sys.stdout):
     TABLE = cl_launcherCLgenResult
 
     with Session(commit=False) as s:
@@ -71,24 +71,18 @@ set -eu
 #   Driver version:         {result.testbed.driver}
 #   OpenCL version:         {result.testbed.opencl}
 #   Host Operating System:  {result.testbed.host}
-""")
-            if result.testbed.platform.lower().startswith("nvidia"):
-                if not os.path.exists('nvidia-bug-report.log.gz'):
-                    os.system('sudo nvidia-bug-report.sh > /dev/null')
-                print("# see nvidia-bug-report.log.gz for more information")
-
-            print(f"""
-# Kernel:
-cat << EOF > kernel.cl
-{program.src}
-EOF
-echo "kernel written to 'kernel.cl'"
 
 # Kernel parameters:
 #   Global size: {result.params.gsize}
 #   Workgroup size: {result.params.lsize}
 #   Optimizations: {result.params.optimizations_on_off}
-""")
+
+# Kernel:
+cat << EOF > kernel.cl
+{program.src}
+EOF
+echo "kernel written to 'kernel.cl'"
+""", file=file)
             if args['report'] == "w":
                 expected_output, majority_devs = util.get_majority_output(
                     s, result, cl_launcherCLgenResult)
@@ -109,7 +103,7 @@ cat << EOF > actual-output.txt
 {result.stdout}
 EOF
 echo "actual output written to 'actual-output.txt'"
-""")
+""", file=file)
             elif args['report'] == "c":
                 print(f"""
 # Program output:
@@ -118,7 +112,7 @@ cat << EOF > reported-stderr.txt
 EOF
 echo "reported output written to 'reported-stdout.txt' and 'reported-stderr.txt'"
 echo "reported program returncode is {result.status}"
-""")
+""", file=file)
 
             print(f"""# Build requirements (CLSmith):
 if [ ! -d "./CLSmith" ]; then
@@ -139,7 +133,7 @@ fi
 # Run kernel using CLSmith's cl_launcher:
 {cli} >stdout.txt 2>stderr.txt
 echo "reproduced output written to 'stdout.txt' and 'stderr.txt'"
-""")
+""", file=file)
 
             return
         else:
