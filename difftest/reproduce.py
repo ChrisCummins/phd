@@ -141,7 +141,7 @@ fi
 echo "reproduced output written to 'stdout.txt' and 'stderr.txt'"
 """)
 
-            sys.exit(0)
+            return
         else:
             # lookup the device
             try:
@@ -167,7 +167,7 @@ echo "reproduced output written to 'stdout.txt' and 'stderr.txt'"
                 reproduced = False
                 print("stdout differs")
 
-            sys.exit(0 if reproduced else 1)
+            return not reproduced
 
 
 def main():
@@ -185,7 +185,8 @@ def main():
     db_hostname = args.hostname
     db_url = db.init(db_hostname)
 
-    reproduce(**vars(args))
+    if reproduce(**vars(args)):
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
