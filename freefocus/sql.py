@@ -462,7 +462,7 @@ class Task(Base):
             return "blocked"
         elif self.is_overdue:
             return "overdue"
-        elif self.stated:
+        elif self.started:
             return "started"
         else:
             return "active"
