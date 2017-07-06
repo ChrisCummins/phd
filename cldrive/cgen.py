@@ -22,7 +22,8 @@ from cldrive import *
 
 
 def escape_c_string(s: str) -> str:
-    return '\n'.join(f'"{l}\\n"' for l in s.split('\n') if len(l.strip()))
+    return '\n'.join('"{}\\n"'.format(line.replace('"','\\"'))
+                     for line in s.split('\n') if len(line.strip()))
 
 
 def gen_data_block(src: str, inputs: np.array):
