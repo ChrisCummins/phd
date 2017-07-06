@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sqlalchemy as sql
+import sys
 
 from collections import Counter
 from progressbar import ProgressBar
@@ -7,6 +8,9 @@ from signal import Signals
 
 import db
 from db import *
+
+CO_TABLE_NAMES = ["CLgen"]
+CO_TABLES = [coCLgenResult]
 
 # NOTE: excludes GPUverified tables
 CL_LAUNCHER_TABLE_NAMES = ["CLSmith"]
@@ -20,7 +24,7 @@ CLDRIVE_TABLES = [cldriveCLSmithResult, GitHubResult]
 # This table maps <outcome>: <classification>
 CLASSIFICATIONS = {
     '__NOT_IMPLEMENTED_YET__': 'Wrong code',
-    'CL_BUILD_PROGRAM _FAILURE': 'Build failure',
+    'CL_BUILD_PROGRAM_FAILURE': 'Build failure',
     'CL_INVALID_COMMAND_QUEUE': 'Runtime crash',
     'CL_INVALID_KERNEL_ARGS': 'Invalid testcase',
     'CL_INVALID_KERNEL_NAME': 'Build failure',
@@ -87,7 +91,7 @@ def get_cl_launcher_outcome(result):
             elif line.startswith("Error"):
                 # Interpret CLSmith error messages
                 return {
-                    "Error building program: -11": "CL_BUILD_PROGRAM _FAILURE",
+                    "Error building program: -11": "CL_BUILD_PROGRAM_FAILURE",
                     "Error creating kernel: -46": "CL_INVALID_KERNEL_NAME",
                     "Error enqueueing kernel: -5": "CL_OUT_OF_RESOURCES",
                     "Error enqueueing kernel: -6": "CL_OUT_OF_HOST_MEMORY",
@@ -102,6 +106,27 @@ def get_cl_launcher_outcome(result):
             print(result.stdout)
             print("RESULT ID:", result.id)
             raise LookupError
+    else:
+        return lookup_status(result.status)
+
+
+def get_co_outcome(result, session):
+    if result.status == 1:
+        try:
+            return {
+                "clBuildProgram CL_BUILD_PROGRAM_FAILURE": "CL_BUILD_PROGRAM_FAILURE",
+                "clBuildProgram CL_INVALID_BINARY": "CL_INVALID_BINARY",
+            }[result.stderr.rstrip().split('\n')[-1]]
+        except KeyError:
+            print("\n\n=============\nI could not understand this output:")
+            print(result.stderr)
+            print("Return code:", result.status)
+            print("RESULT ID:", result.id)
+            print("PROGRAM ID:", result.program.id)
+            print()
+            print(result.program.src)
+            print()
+            raise KeyError
     else:
         return lookup_status(result.status)
 
@@ -140,6 +165,11 @@ def get_cldrive_outcome(result):
             }.get(line, line)
     else:
         return lookup_status(result.status)
+
+
+def analyze_co_result(result, table, session) -> None:
+    result.outcome = get_co_outcome(result, session)
+    pass
 
 
 def analyze_cl_launcher_result(result, table, session,
@@ -210,36 +240,46 @@ def main():
 
     print("Possible classifications:", ", ".join(f"'{s}'" for s in sorted(set(CLASSIFICATIONS.values()))))
 
-    # CLgen programs have special treatment because we require that they be
-    # gpuverified before labeling as wrong code
-    name = "CLgen w. cl_launcher"
-    table = cl_launcherCLgenResult
-    print(f"{name} ...")
-    for result in ProgressBar()(session.query(table).all()):
-        analyze_cl_launcher_result(result, table, session, require_gpuverified=True)
-    session.commit()
-
-    name = "CLgen"
-    table = CLgenResult
-    print(f"{name} ...")
-    for result in ProgressBar()(session.query(table).all()):
-        analyze_cldrive_result(result, table, session, require_gpuverified=True)
-    session.commit()
-
-    # cl_launcher result outcomes and classifications:
-    for name, table in zip(CL_LAUNCHER_TABLE_NAMES, CL_LAUNCHER_TABLES):
+    for name, table in zip(CO_TABLE_NAMES, CO_TABLES):
         print(f"{name} ...")
         for result in ProgressBar()(session.query(table).all()):
-            analyze_cl_launcher_result(result, table, session)
+            analyze_co_result(result, table, session)
         session.commit()
 
-    # cldrive results outcomes and classifications:
-    for name, table in zip(CLDRIVE_TABLE_NAMES, CLDRIVE_TABLES):
-        print(f"{name} ...")
-        for result in ProgressBar()(session.query(table).all()):
-            analyze_cldrive_result(result, table, session)
-        session.commit()
+    # # CLgen programs have special treatment because we require that they be
+    # # gpuverified before labeling as wrong code
+    # name = "CLgen w. cl_launcher"
+    # table = cl_launcherCLgenResult
+    # print(f"{name} ...")
+    # for result in ProgressBar()(session.query(table).all()):
+    #     analyze_cl_launcher_result(result, table, session, require_gpuverified=True)
+    # session.commit()
+
+    # name = "CLgen"
+    # table = CLgenResult
+    # print(f"{name} ...")
+    # for result in ProgressBar()(session.query(table).all()):
+    #     analyze_cldrive_result(result, table, session, require_gpuverified=True)
+    # session.commit()
+
+    # # cl_launcher result outcomes and classifications:
+    # for name, table in zip(CL_LAUNCHER_TABLE_NAMES, CL_LAUNCHER_TABLES):
+    #     print(f"{name} ...")
+    #     for result in ProgressBar()(session.query(table).all()):
+    #         analyze_cl_launcher_result(result, table, session)
+    #     session.commit()
+
+    # # cldrive results outcomes and classifications:
+    # for name, table in zip(CLDRIVE_TABLE_NAMES, CLDRIVE_TABLES):
+    #     print(f"{name} ...")
+    #     for result in ProgressBar()(session.query(table).all()):
+    #         analyze_cldrive_result(result, table, session)
+    #     session.commit()
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(type(e).__name__, e, file=sys.stderr)
+        sys.exit(1)
