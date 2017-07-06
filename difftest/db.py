@@ -240,7 +240,7 @@ class cl_launcherParams(Base):
 
 class coParams(Base):
     """ params used by compile-only """
-    __tablename__ = "cl_launcherParams"
+    __tablename__ = "coParams"
     id = sql.Column(sql.Integer, primary_key=True)
     optimizations = sql.Column(sql.Boolean, nullable=False)
     build_kernel = sql.Column(sql.Boolean, nullable=False)
@@ -252,7 +252,7 @@ class coParams(Base):
     clgen_results = sql.orm.relationship("coCLgenResult", back_populates="params")
 
     def to_flags(self) -> List[str]:
-        flags = []
+        flags = ['--emit-c', '--compile-only']
         if self.build_kernel:
             flags.append("--with-kernel")
         if not self.optimizations:
@@ -432,9 +432,8 @@ class coCLgenResult(Base):
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     outcome = sql.Column(sql.String(255))
     classification = sql.Column(sql.String(16))
-    submitted = sql.Column(sql.Boolean, nullable=False)
-    dupe = sql.Column(sql.Integer, sql.ForeignKey("coCLgenResults.id"),
-                      nullable=False)
+    submitted = sql.Column(sql.Boolean)
+    dupe = sql.Column(sql.Integer, sql.ForeignKey("coCLgenResults.id"))
 
     program = sql.orm.relationship("CLgenProgram")
     testbed = sql.orm.relationship("Testbed")

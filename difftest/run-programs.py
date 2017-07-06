@@ -44,6 +44,9 @@ def main():
         testbed = str(get_testbed(session, platform_name, device_name))
     print(testbed)
 
+    co_scripts = [
+        'clgen_run_co.py'
+    ]
     cl_launcher_scripts = [
         'clsmith-run-cl_launcher.py',
         'clgen_run_cl_launcher.py',
@@ -54,6 +57,12 @@ def main():
         'github-run-cldrive.py',
     ]
 
+    co_script_args = [
+        [],
+        ['--no-opts'],
+        ['--with-kernel'],
+        ['--with-kernel', '--no-opts'],
+    ]
     cldrive_script_args = [
         ['-g', '1,1,1',    '-l', '1,1,1',  '-s', '256',  '-i', 'arange'],
         ['-g', '1,1,1',    '-l', '1,1,1',  '-s', '256',  '-i', 'arange', '--no-opts'],
@@ -67,6 +76,10 @@ def main():
         ['-g', '128,16,1', '-l', '32,1,1', '--no-opts'],
     ]
 
+    co_jobs = [
+        ['python', script, "--hostname", db_hostname, platform_name, device_name] + args
+         for script, args in product(co_scripts, co_script_args)
+    ]
     cl_launcher_jobs = [
         ['python', script, "--hostname", db_hostname, str(platform_id), str(device_id)] + args
         for script, args in product(cl_launcher_scripts, cl_launcher_script_args)
@@ -75,7 +88,7 @@ def main():
         ['python', script, "--hostname", db_hostname, platform_name, device_name] + args
         for script, args in product(cldrive_scripts, cldrive_script_args)
     ]
-    jobs = cl_launcher_jobs + cldrive_jobs
+    jobs = co_jobs + cl_launcher_jobs + cldrive_jobs
     i = 0
 
     try:
