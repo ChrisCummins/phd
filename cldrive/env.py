@@ -34,6 +34,25 @@ class OpenCLEnvironment(namedtuple('OpenCLEnvironment', ['platform', 'device']))
         return _lookup_env(return_cl=True, platform=self.platform,
                            device=self.device, profiling=profiling)
 
+    def ids(self) -> Tuple[int, int]:
+        """
+        Return platform and device ID numbers.
+
+        The ID numbers can be used to index into the list of platforms and
+        devices. Note that the stability of these IDs is *not* guaranteed
+        by OpenCL, and may depend on ICD load order or any number of other
+        factors.
+
+        Raises:
+        -------
+        LookupError
+            If a matching OpenCL device cannot be found.
+        RuntimeError
+            In case of an OpenCL API call failure.
+        """
+        return _lookup_env(return_ids=True, platform=self.platform,
+                           device=self.device)
+
     @property
     def driver_version(self) -> str:
         """
@@ -136,8 +155,8 @@ def _devtype_matches(device: cl.Device, devtype: cl.device_type) -> bool:
         return actual_devtype == devtype
 
 
-def _lookup_env(return_cl: bool, platform: str=None, device: str=None,
-                devtype: str="all", profiling: bool=False) -> OpenCLEnvironment:
+def _lookup_env(return_cl: bool=False, return_ids: bool=False, platform: str=None,
+                device: str=None, devtype: str="all", profiling: bool=False):
     """ find a matching OpenCL device """
     cl_devtype = _cl_devtype_from_str(devtype)
 
@@ -146,7 +165,7 @@ def _lookup_env(return_cl: bool, platform: str=None, device: str=None,
         if not len(cl_platforms):
             raise LookupError("no OpenCL platforms available")
 
-        for cl_platform in cl_platforms:
+        for platform_id, cl_platform in enumerate(cl_platforms):
             platform_str = cl_platform.get_info(cl.platform_info.NAME)
 
             if platform and platform != platform_str:
@@ -160,7 +179,7 @@ def _lookup_env(return_cl: bool, platform: str=None, device: str=None,
             # filter devices on device type
             cl_devices = [d for d in cl_devices if _devtype_matches(d, cl_devtype)]
 
-            for cl_device in cl_devices:
+            for device_id, cl_device in enumerate(cl_devices):
                 device_str = cl_device.get_info(cl.device_info.NAME)
 
                 if device and device != device_str:
@@ -175,6 +194,8 @@ def _lookup_env(return_cl: bool, platform: str=None, device: str=None,
                     queue = cl.CommandQueue(ctx, device=cl_device,
                                             properties=properties)
                     return ctx, queue
+                elif return_ids:
+                    return platform_id, device_id
                 else:
                     return OpenCLEnvironment(
                         platform=platform_str, device=device_str)

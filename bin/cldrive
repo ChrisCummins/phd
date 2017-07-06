@@ -44,6 +44,12 @@ suitable device, and prints the outputs. Copyright (C) 2017 Chris Cummins \
     parser.add_argument(
         "--emit-c", action="store_true",
         help="generate standalone C code")
+    parser.add_argument(
+        "--compile-only", action="store_true",
+        help="if --emit-c, generate standalone code C code which only compiles kernel")
+    parser.add_argument(
+        "--with-kernel", action="store_true",
+        help="if --compile-only, this creates kernel object after compilation")
 
     # environment controls
     parser.add_argument(
@@ -113,8 +119,11 @@ suitable device, and prints the outputs. Copyright (C) 2017 Chris Cummins \
                    platform=args.platform,
                    device=args.device)
 
-    inputs = make_data(src=src, size=args.size, data_generator=data_generator,
-                       scalar_val=args.scalar_val)
+    if args.compile_only:
+        inputs = []
+    else:
+        inputs = make_data(src=src, size=args.size, data_generator=data_generator,
+                           scalar_val=args.scalar_val)
 
     drive_args = {
         "env": env,
@@ -129,7 +138,12 @@ suitable device, and prints the outputs. Copyright (C) 2017 Chris Cummins \
     }
 
     if args.emit_c:
-        print(emit_c(**drive_args))
+        emit_c_args = {
+            "compile_only": args.compile_only,
+            "create_kernel": args.with_kernel,
+        }
+
+        print(emit_c(**drive_args, **emit_c_args))
     else:
         outputs = drive(**drive_args)
 

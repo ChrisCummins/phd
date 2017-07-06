@@ -91,7 +91,8 @@ def gen_print_block(src: str):
 def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
            gsize: NDRange, lsize: NDRange, timeout: int=-1,
            optimizations: bool=True, profiling: bool=False,
-           debug: bool=False) -> np.array:
+           debug: bool=False, compile_only: bool=False,
+           create_kernel: bool=True) -> np.array:
     """
     Generate C code to drive kernel.
 
@@ -113,6 +114,13 @@ def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
         A value <= 0 means never time out.
     debug : bool, optional
         If true, silence the OpenCL compiler.
+    compile_only: bool, optional
+        If true, generate code only to compile the kernel, not to generate
+        inputs and run it.
+    create_kernel: bool, optional
+        If 'compile_only' parameter is set, this parameter determines whether
+        to create a kernel object after compilation. This requires a kernel
+        name.
 
     Returns
     -------
@@ -137,12 +145,28 @@ def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
     TODO
     """
     src_string = escape_c_string(src)
-    _kernel_name = kernel_name(src)
 
-    data_block = gen_data_block(src, inputs)
+    if compile_only and not create_kernel:
+        kernel_name_decl = ''
+    else:
+        _kernel_name = kernel_name(src)
+        kernel_name_decl = f'const char *kernel_name = "{_kernel_name}";'
 
-    c = """
-/* Code generated using cldrive <https://github.com/ChrisCummins/cldrive> */
+    ids = env.ids()
+    c = f"""
+/*
+ * Usage: gcc -DPLATFORM_ID=0 -DDEVICE_ID=0 code.c -lOpenCL; ./a.out
+ *
+ * Code generated using cldrive <https://github.com/ChrisCummins/cldrive>
+ */
+#ifndef PLATFORM_ID
+# define PLATFORM_ID {ids[0]}
+#endif
+
+#ifndef DEVICE_ID
+# define DEVICE_ID {ids[1]}
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -154,7 +178,7 @@ def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
 
 const char *kernel_src = \\
 {src_string};
-const char *kernel_name = "{_kernel_name}";
+{kernel_name_decl}
 
 const char *clerror_string(cl_int err) {{
 /* written by @Selmar http://stackoverflow.com/a/24336429 */
@@ -245,16 +269,43 @@ int main() {{
     int err;
 
     cl_uint num_platforms;
-    cl_platform_id platform_id;
+    cl_platform_id *platform_ids = (cl_platform_id*)malloc(
+        sizeof(cl_platform_id) * (PLATFORM_ID + 1));
     err = clGetPlatformIDs(
-                /* cl_uint num_entries */ 1,
-                /* cl_platform_id *platforms */ &platform_id,
-                /* cl_uint *num_platforms */ &num_platforms);
+        /* cl_uint num_entries */ PLATFORM_ID + 1,
+        /* cl_platform_id *platforms */ platform_ids,
+        /* cl_uint *num_platforms */ &num_platforms);
     check_error("clGetPlatformIDs", err);
 
-    cl_device_id device_id;
-    err = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, 1, &device_id, NULL);
+    if (num_platforms <= PLATFORM_ID) {{
+        fprintf(stderr, "No platform for id %d\\n", PLATFORM_ID);
+        return 1;
+    }}
+    cl_platform_id platform_id = platform_ids[PLATFORM_ID];
+
+    char strbuf[256];
+    err = clGetPlatformInfo(platform_id, CL_PLATFORM_NAME, sizeof(strbuf),
+                            strbuf, NULL);
+    check_error("clGetPlatformInfo", err);
+    fprintf(stderr, "Platform: %s\\n", strbuf);
+
+    cl_uint num_devices;
+    cl_device_id *device_ids = (cl_device_id*)malloc(
+        sizeof(cl_device_id) * (DEVICE_ID + 1));
+    err = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, DEVICE_ID + 1,
+                         device_ids, &num_devices);
     check_error("clGetDeviceIDs", err);
+
+    if (num_devices <= DEVICE_ID) {{
+        fprintf(stderr, "No device for id %d\\n", DEVICE_ID);
+        return 1;
+    }}
+    cl_device_id device_id = device_ids[DEVICE_ID];
+
+    err = clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(strbuf), strbuf,
+                          NULL);
+    check_error("clGetDeviceInfo", err);
+    fprintf(stderr, "Device: %s\\n", strbuf);
 
     cl_context ctx = clCreateContext(
             /* cl_context_properties *properties */ NULL,
@@ -277,10 +328,18 @@ int main() {{
 
     err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
     check_error("clBuildProgram", err);
+    """
 
+    if not compile_only or (compile_only and create_kernel):
+        c += f"""
     cl_kernel kernel = clCreateKernel(program, kernel_name, &err);
     check_error("clCreateKernel", err);
+    fprintf(stderr, "Kernel: %s\\n", kernel_name);
+"""
 
+    if not compile_only:
+        data_block = gen_data_block(src, inputs)
+        c += f"""
 {data_block}
 
     const size_t lsize[3] = {{ {lsize.x}, {lsize.y}, {lsize.z} }};
@@ -301,16 +360,18 @@ int main() {{
     err = clFinish(queue);
     check_error("clFinish", err);
 
-
+    // TODO: print results.
 
     /* clReleaseMemObject(); */
     clReleaseProgram(program);
     clReleaseKernel(kernel);
     clReleaseCommandQueue(queue);
     clReleaseContext(ctx);
+"""
 
-    printf("done.\\n");
+    c += f"""
+    fprintf(stderr, "done.\\n");
     return 0;
 }}
-""".format(**vars())
+"""
     return c
