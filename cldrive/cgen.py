@@ -145,12 +145,15 @@ def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
     TODO
     """
     src_string = escape_c_string(src)
+    optimizations_on_off = "on" if optimizations else "off"
 
     if compile_only and not create_kernel:
         kernel_name_decl = ''
     else:
         _kernel_name = kernel_name(src)
         kernel_name_decl = f'const char *kernel_name = "{_kernel_name}";'
+
+    clBuildProgram_opts = "NULL" if optimizations else '"-cl-opt-disable"'
 
     ids = env.ids()
     c = f"""
@@ -287,7 +290,7 @@ int main() {{
     err = clGetPlatformInfo(platform_id, CL_PLATFORM_NAME, sizeof(strbuf),
                             strbuf, NULL);
     check_error("clGetPlatformInfo", err);
-    fprintf(stderr, "Platform: %s\\n", strbuf);
+    fprintf(stderr, "[cldrive] Platform: %s\\n", strbuf);
 
     cl_uint num_devices;
     cl_device_id *device_ids = (cl_device_id*)malloc(
@@ -305,7 +308,7 @@ int main() {{
     err = clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(strbuf), strbuf,
                           NULL);
     check_error("clGetDeviceInfo", err);
-    fprintf(stderr, "Device: %s\\n", strbuf);
+    fprintf(stderr, "[cldrive] Device: %s\\n", strbuf);
 
     cl_context ctx = clCreateContext(
             /* cl_context_properties *properties */ NULL,
@@ -323,10 +326,14 @@ int main() {{
         /* cl_int *errcode_ret */ &err);
     check_error("clCreateCommandQueue", err);
 
-    cl_program program = clCreateProgramWithSource(ctx, 1, (const char **) &kernel_src, NULL, &err);
+    fprintf(stderr, "[cldrive] OpenCL optimizations: {optimizations_on_off}\\n");
+
+    cl_program program = clCreateProgramWithSource(
+        ctx, 1, (const char **) &kernel_src, NULL, &err);
     check_error("clCreateProgramWithSource", err);
 
-    err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
+    err = clBuildProgram(program, 0, NULL, {clBuildProgram_opts}, NULL, NULL);
+
     check_error("clBuildProgram", err);
     """
 
