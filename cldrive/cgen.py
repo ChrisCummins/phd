@@ -278,7 +278,7 @@ int main() {{
     check_error("clGetPlatformIDs", err);
 
     if (num_platforms <= PLATFORM_ID) {{
-        fprintf(stderr, "No platform for id %d\\n", PLATFORM_ID);
+        fprintf(stderr, "Platform ID %d not found\\n", PLATFORM_ID);
         return 1;
     }}
     cl_platform_id platform_id = platform_ids[PLATFORM_ID];
@@ -297,7 +297,7 @@ int main() {{
     check_error("clGetDeviceIDs", err);
 
     if (num_devices <= DEVICE_ID) {{
-        fprintf(stderr, "No device for id %d\\n", DEVICE_ID);
+        fprintf(stderr, "Device ID %d not found\\n", DEVICE_ID);
         return 1;
     }}
     cl_device_id device_id = device_ids[DEVICE_ID];
