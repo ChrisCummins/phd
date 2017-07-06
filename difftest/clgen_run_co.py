@@ -31,12 +31,26 @@ def get_num_progs_to_run(session: db.session_t,
 
 
 def get_next_program(session: db.session_t,
-                     testbed: Testbed, params: coParams):
-    subquery = session.query(coCLgenResult.program_id).filter(
+                     testbed: Testbed, params: coParams) -> CLgenProgram:
+    excluded_programs = session.query(coCLgenResult.program_id).filter(
         coCLgenResult.testbed == testbed, coCLgenResult.params == params)
-    program = session.query(CLgenProgram).filter(
-        ~CLgenProgram.id.in_(subquery)).order_by(CLgenProgram.id).first()
-    return program
+
+    q = session.query(CLgenProgram).filter(
+        ~CLgenProgram.id.in_(excluded_programs)).order_by(CLgenProgram.id)
+
+    if params.build_kernel:
+        # If --with-kernel arg, then only run programs which have a clean
+        # build without the --with-kernel arg.
+        params_no_kernel = db.get_or_create(
+            session, coParams, optimizations=params.optimizations,
+            build_kernel=False)
+        e = session.query(coCLgenResult.program_id).filter(
+            coCLgenResult.testbed == testbed,
+            coCLgenResult.params == params_no_kernel,
+            coCLgenResult.status == 0)
+        q = q.filter(~CLgenProgram.id.in_(e))
+
+    return q.first()
 
 
 if __name__ == "__main__":
