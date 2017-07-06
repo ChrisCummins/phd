@@ -340,9 +340,9 @@ int main() {{
 
     if not compile_only or (compile_only and create_kernel):
         c += f"""
+    fprintf(stderr, "Kernel: %s\\n", kernel_name);
     cl_kernel kernel = clCreateKernel(program, kernel_name, &err);
     check_error("clCreateKernel", err);
-    fprintf(stderr, "Kernel: %s\\n", kernel_name);
 """
 
     if not compile_only:
