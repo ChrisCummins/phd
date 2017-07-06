@@ -194,7 +194,6 @@ class Testbed(Base):
         raise KeyError(f"device {self.device} not found")
 
 
-
 class cl_launcherParams(Base):
     """ params used by cl_launcher to run kernel """
     __tablename__ = "cl_launcherParams"
@@ -234,6 +233,35 @@ class cl_launcherParams(Base):
     @property
     def lsize(self) -> Tuple[int, int, int]:
         return (self.lsize_x, self.lsize_y, self.lsize_z)
+
+    def __repr__(self) -> str:
+        return " ".join(self.to_flags())
+
+
+class coParams(Base):
+    """ params used by compile-only """
+    __tablename__ = "cl_launcherParams"
+    id = sql.Column(sql.Integer, primary_key=True)
+    optimizations = sql.Column(sql.Boolean, nullable=False)
+    build_kernel = sql.Column(sql.Boolean, nullable=False)
+
+    # unique combination of values:
+    __table_args__ = (sql.UniqueConstraint(
+        'optimizations', 'build_kernel', name='_uid'),)
+    # relation back to results:
+    clgen_results = sql.orm.relationship("coCLgenResult", back_populates="params")
+
+    def to_flags(self) -> List[str]:
+        flags = []
+        if self.build_kernel:
+            flags.append("--with-kernel")
+        if not self.optimizations:
+            flags.append("--no-opts")
+        return flags
+
+    @property
+    def optimizations_on_off(self) -> str:
+        return "on" if self.optimizations else "off"
 
     def __repr__(self) -> str:
         return " ".join(self.to_flags())
@@ -377,6 +405,40 @@ class cl_launcherCLgenResult(Base):
     program = sql.orm.relationship("CLgenProgram", back_populates="cl_launcher_results")
     testbed = sql.orm.relationship("Testbed", back_populates="cl_launcher_clgen_results")
     params = sql.orm.relationship("cl_launcherParams", back_populates="clgen_results")
+
+    def __repr__(self):
+        return ("program: {self.program_id}, "
+                "testbed: {self.testbed_id}, "
+                "params: {self.params_id}, "
+                "status: {self.status}, "
+                "runtime: {self.runtime:.2f}s"
+                .format(**vars()))
+
+
+class coCLgenResult(Base):
+    """ CLgen programs ran using --compile-only """
+    __tablename__ = "coCLgenResults"
+    id = sql.Column(sql.Integer, primary_key=True)
+    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLgenPrograms.id"),
+                            nullable=False)
+    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
+                            nullable=False)
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("coParams.id"),
+                           nullable=False)
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    status = sql.Column(sql.Integer, nullable=False)
+    runtime = sql.Column(sql.Float, nullable=False)
+    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    outcome = sql.Column(sql.String(255))
+    classification = sql.Column(sql.String(16))
+    submitted = sql.Column(sql.Boolean, nullable=False)
+    dupe = sql.Column(sql.Integer, sql.ForeignKey("coCLgenResults.id"),
+                      nullable=False)
+
+    program = sql.orm.relationship("CLgenProgram")
+    testbed = sql.orm.relationship("Testbed")
+    params = sql.orm.relationship("coParams")
 
     def __repr__(self):
         return ("program: {self.program_id}, "
