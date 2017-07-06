@@ -213,6 +213,8 @@ class ArgumentExtractor(NodeVisitor):
     * handle structs by creating numpy types.
     """
     def __init__(self, *args, **kwargs):
+        self.extract_args = kwargs.pop("extract_args", True)
+
         super(ArgumentExtractor, self).__init__(*args, **kwargs)
         self.kernel_count = 0
         self._args: List[KernelArg] = []
@@ -232,7 +234,7 @@ class ArgumentExtractor(NodeVisitor):
                 "source contains more than one kernel definition")
 
         # function may not have arguments
-        if node.decl.type.args:
+        if self.extract_args and node.decl.type.args:
             for param in node.decl.type.args.params:
                 self._args.append(KernelArg(param))
 
@@ -386,6 +388,6 @@ def kernel_name(src: str) -> str:
     >>> kernel_name("void kernel A(global float *a, const int b) {}")
     'A'
     """
-    visitor = ArgumentExtractor()
+    visitor = ArgumentExtractor(extract_args=False)
     visitor.visit(parse(src))
     return visitor.name
