@@ -24,6 +24,13 @@ PLATFORMS = {
     "Portable Computing Language": "POCL",
 }
 
+PLATFORMS_2_VENDORS = {
+    "Intel(R) OpenCL": "intel",
+    "Intel Gen OCL Driver": "intel",
+    "Portable Computing Language": "pocl",
+    "NVIDIA CUDA": "nvidia"
+}
+
 
 def device_str(device):
     return DEVICES.get(device, device)
