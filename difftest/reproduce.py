@@ -110,7 +110,7 @@ echo "actual output written to 'actual-output.txt'"
 cat << EOF > reported-stderr.txt
 {result.stderr}
 EOF
-echo "reported output written to 'reported-stdout.txt' and 'reported-stderr.txt'"
+echo "reported output written to 'reported-stderr.txt'"
 echo "reported program returncode is {result.status}"
 """, file=file)
 
