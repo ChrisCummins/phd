@@ -5,8 +5,9 @@ import pyopencl as cl
 import random
 import os
 import sys
-from time import sleep
 
+from time import sleep
+from labm8 import crypto
 from argparse import ArgumentParser
 from itertools import product
 from subprocess import Popen
@@ -30,11 +31,10 @@ def cl_launcher(src: str, platform_id: int, device_id: int,
                                    timeout=os.environ.get("TIMEOUT", 60))
 
 
-def reproduce(file=sys.stdout, **args):
-    TABLE = cl_launcherCLgenResult
-
+def reproduce(file=sys.stdout, table=cl_launcherCLgenResult, **args):
     with Session(commit=False) as s:
-        result = s.query(TABLE).filter(TABLE.id == args['result_id']).first()
+        result = s.query(table).filter(table.id == args['result_id']).first()
+
         if not result:
             raise KeyError(f"no result with ID {args['result_id']}")
 
@@ -52,14 +52,19 @@ def reproduce(file=sys.stdout, **args):
 
             bug_type = {
                 "w": "miscompilation",
+                "bf": "compilation failure",
                 "c": "runtime crash"
             }[args['report']]
+
+            report_id = crypto.md5_str(table.__name__) + "-" + str(result.id)
 
             print(f"""\
 #!/usr/bin/env bash
 set -eu
 
 # {bug_type} bug report generated {now}
+# reference id: {report_id}
+#
 # execute this file to reproduce bug:
 #    export PLATFORM_ID=<id>
 #    export DEVICE_ID=<id>
