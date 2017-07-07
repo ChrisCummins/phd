@@ -185,7 +185,7 @@ const char *kernel_src = \\
 {kernel_name_decl}
 
 const char *clerror_string(cl_int err) {{
-/* written by @Selmar http://stackoverflow.com/a/24336429 */
+    /* written by @Selmar http://stackoverflow.com/a/24336429 */
     switch(err) {{
         /* run-time and JIT compiler errors */
         case 0: return "CL_SUCCESS";
