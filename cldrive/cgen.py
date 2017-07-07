@@ -333,9 +333,21 @@ int main() {{
         ctx, 1, (const char **) &kernel_src, NULL, &err);
     check_error("clCreateProgramWithSource", err);
 
-    err = clBuildProgram(program, 0, NULL, {clBuildProgram_opts}, NULL, NULL);
+    int build_err = clBuildProgram(
+        program, 0, NULL, {clBuildProgram_opts}, NULL, NULL);
 
-    check_error("clBuildProgram", err);
+    size_t log_size;
+    err = clGetProgramBuildInfo(
+        program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+    check_error("clGetProgramBuildInfo", err);
+
+    char* log = (char*)malloc(sizeof(char) * (log_size + 1));
+    err = clGetProgramBuildInfo(
+        program, device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+    check_error("clGetProgramBuildInfo", err);
+    printf("%s", log);
+
+    check_error("clBuildProgram", build_err);
     """
 
     if not compile_only or (compile_only and create_kernel):
