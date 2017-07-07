@@ -135,8 +135,17 @@ maxbibnames=99       % no 'et-al' condensing author names in biliography
 %\newcommand\DeepTune{DeepTune\xspace}
 %
 %% math
-%\usepackage{amssymb}
+% \usepackage{amssymb}
 %\usepackage{bm}
 %\usepackage{amsmath}
 %\DeclareMathOperator*{\argmin}{arg\,min}
 %\DeclareMathOperator*{\argmax}{arg\,max} 
+
+\usepackage{tikz}
+\def\checkmark{\tikz\fill[scale=0.2](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;}
+
+\usepackage{amssymb}
+\usepackage{pifont}
+\usepackage{multirow}
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}

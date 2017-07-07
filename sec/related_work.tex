@@ -2,15 +2,17 @@
 
 \subsection{Test Case Generation}
 
-
-\paragraph{SPE} \cec{TODO: Skeletal program enumeration~\cite{Zhang2016b}}. Bounded guarantees of correctness.
-
-
-\paragraph{Csmith}  Grammar-based \emph{fuzz testers} have been developed for C~\cite{Yang2011} and OpenCL~\cite{Lidbury2015a}. Both tools require test case reduction (\cite{Regehr2012a} and~\cite{Pflanzer2016}, respectively). \cec{TODO: study, write up}.
-
-A mutation-based approach for the Java Virtual Machine is demonstrated in~\cite{Chena}.
-
 Compiler test case generation survey~\cite{Boujarwah1997}.
+
+\paragraph{SPE} Skeletal program enumeration~\cite{Zhang2016b}. By enumerating all permutations of a skeleton, provides bounded guarantees of compiler correctness. Same problems of CSmith (well formed programs only). No OpenCL implementation. Probably would take a lot of development effort. \cec{More investigation required.}
+
+\paragraph{CSmith} Grammar-based \emph{fuzz testers} have been developed for C~\cite{Yang2011} and OpenCL~\cite{Lidbury2015a}. Both tools require test case reduction (\cite{Regehr2012a} and~\cite{Pflanzer2016}, respectively).
+
+Developing a random program generator is a huge undertaking, requiring expert knowledge of the target programming language, and complex construction logic. CSmith is 40k lines of C++. Extending CSmith to OpenCL took 9 months (according to the authors). Extending CReduce to OpenCL took 3 months. Despite this, they are far from ``feature complete'' - e.g. CLSmith can't deal with floating point arithmetic, which is dominant in the popular use cases for OpenCL.
+
+\paragraph{CLgen} Same approach but for benchmark generation. LLVM is used as an oracle to determine if program is well formed. Behaviour is validated using runtime checks, with no desire for correctness \cite{Cummins2017a}. We extend this \cec{\ldots}.
+
+\paragraph{Misc} A mutation-based approach for the Java Virtual Machine is demonstrated in~\cite{Chena}.
 
 \subsection{ML over programs} 
 
@@ -20,7 +22,7 @@ Deep Learning is a nascent field that is responsible for a multitude of breakthr
 
 \paragraph{Syntactic Generative Models} Benchmark generation~\cite{Cummins2017a}. Syntactic models provide no guarantees of correctness. System is very wasteful, with often less than 10\% of samples being programs which do useful work (their definition).
 
-Syntactic level modeling has been shown useful for identifying optimization characteristics~\cec{[PACT'17]}.
+Syntactic level modeling has been shown useful for identifying optimization characteristics~\cite{Cummins2017}.
 
 \paragraph{ILP} Goal-directed program generators have been used for a variety of domains, including generating linear transforms~\cite{Voronenko2009}, MapReduce programs~\cite{Smith}, and data structure implementations~\cite{Loncaric2016}. Program synthesis from input/output examples is used for simple algorithms in~\cite{Zaremba2015a}, string manipulation in~\cite{Gulwani2011}, and geometry constructions in~\cite{Gulwani2012}.
 
