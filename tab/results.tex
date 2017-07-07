@@ -2,22 +2,14 @@
   \scriptsize %
   \centering %
   % \rowcolors{2}{white}{gray!25}
-  \subfloat[Testcases generated and executed using CLSmith~\cite{Lidbury2015a}]{%
-    \input{build/tab/results-CLSmith}
-    \label{tab:results-clsmith}
-  }\\*
-  \subfloat[Testcases generated using CLSmith~\cite{Lidbury2015a} and executed using our driver]{%
-    \input{build/tab/results-CLSmith-w.-cldrive}
-    \label{tab:results-clsmith-cldrive}
-  }\\*
-  \subfloat[Program code taken from GitHub and executed using our driver]{%
-    \input{build/tab/results-GitHub}
-    \label{tab:results-github}
-  }\\*
-  \subfloat[Testcases generated and executed using CLgen \cec{us.}]{%
-    \input{build/tab/results-CLgen}
-    \label{tab:results-clgen}
-  }\\*
+  \begin{tabular}{llll | rrrrr | rrrrr}
+    \toprule
+     & & & & \multicolumn{5}{|c|}{CLgen} & \multicolumn{5}{|c|}{CLSmith} \\
+    \# & Platform & Device & Driver & w & bf & c & to & y & w & bf & c & to & y \\
+    \midrule
+
+    \bottomrule
+  \end{tabular}
   \caption{Summary of differential test results. Percentage values are calculated as a ratio of the total number of valid test cases. \cec{Valid Testcases and Okay columns will be removed prior to submission.}}
   \label{tab:results}
 \end{table*}
