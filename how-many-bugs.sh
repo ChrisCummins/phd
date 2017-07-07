@@ -2,6 +2,6 @@
 set -eux
 
 logfile=~/src/project_b/data/bug-reports/.logs/$(date -Idate).txt
-find ~/src/project_b/data/bug-reports -type f -name '*.sh' > $logfile
+find -L ~/src/project_b/data/bug-reports -type f > $logfile
 
 wc -l $logfile
