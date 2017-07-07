@@ -47,6 +47,7 @@ CLASSIFICATIONS = {
     'Preprocessing Failed': 'Invalid testcase',
     'Returncode 127': 'Runtime crash',
     'Segmentation Fault': 'Build failure',
+    'ParseError': 'Invalid testcase',
     'SIGABRT': 'Runtime crash',
     'SIGBUS': 'Runtime crash',
     'SIGFPE': 'Runtime crash',
@@ -66,6 +67,7 @@ def lookup_status(status):
             -11: "Segmentation Fault",
             -9: "Timeout",
             0: "z_Okay",
+            139: "Segmentation Fault",
             1024: "Preprocessing Failed",
             1025: "UnicodeError",
         }[status]
@@ -112,6 +114,8 @@ def get_cl_launcher_outcome(result):
 
 def get_co_outcome(result, session):
     if result.status == 1:
+        if result.stderr.find("pycparser.plyparser.ParseError"):
+            return "ParseError"
         try:
             return {
                 "clBuildProgram CL_BUILD_PROGRAM_FAILURE": "CL_BUILD_PROGRAM_FAILURE",
@@ -169,7 +173,7 @@ def get_cldrive_outcome(result):
 
 def analyze_co_result(result, table, session) -> None:
     result.outcome = get_co_outcome(result, session)
-    pass
+    result.classification = CLASSIFICATIONS[result.outcome]
 
 
 def analyze_cl_launcher_result(result, table, session,
