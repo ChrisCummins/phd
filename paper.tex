@@ -20,38 +20,11 @@
 \input{sec/intro}
 \input{sec/overview}
 
-\section{Identifying Bugs with Differential Testing}
+\section{Test Case Generation using Deep Learning}
 
-\subsection{Differential test methodology}
+\subsection{CLgen}
 
-\begin{figure}
-  \centering
-  \includegraphics[width=.9\columnwidth]{img/difftest} %
-  % \vspace{-2em}%
-  \caption{%
-    Differential testing across a single test case. A test case consists of a program source and runtime parameters. Outcomes are either the output of the program execution, a compiler crash, or a runtime crash.%
-  }%
-  \label{fig:difftest}
-\end{figure}
-
-
-\subsection{Classifying test results}
-
-We select the mode output across a range of devices. Voting is used to select the oracle output.
-%
-\begin{enumerate}
-\setcounter{enumi}{-1}
-\item \emph{Invalid test case} Program code and parameter combination is illegal (this is device specific), or some other failure (e.g. program timeout). We simply ignore this class of results.
-\item \emph{Build failure} Online compilation of OpenCL program fails.
-\item \emph{Runtime failure} One or more OpenCL API calls return an error status during the program execution, or the program crashes due to segmentation fault. Note that segmentation faults may be caused by compiler, in which case these outcomes should perhaps be classified as build failures. We do not account for this.
-\item \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority.
-\item \emph{Okay} Program terminates gracefully and computes a result which agrees with the majority.
-\end{enumerate}
-
-
-\section{Deep Learning Test Case Generation}
-
-\subsection{clgen: Compute Kernel Generation}
+Figure~\ref{fig:deeptune} shows the test case generation process.
 
 \begin{itemize}
 \item An initial seed corpus is collated from GitHub (w. rejection filter).
@@ -60,7 +33,7 @@ We select the mode output across a range of devices. Voting is used to select th
 \item The trained network is sampled to generate new programs.
 \end{itemize}
 
-In subsequent iterations, synthesized kernels may be used to augment the training corpus.
+\noindent In subsequent iterations, synthesized kernels may be used to augment the training corpus.
 
 \begin{itemize}
 \item Samples are synthesized by the network and pruned using the rejection filter.
@@ -70,40 +43,22 @@ In subsequent iterations, synthesized kernels may be used to augment the trainin
 \item A GA mutates and evolves the best performing parameters.
 \end{itemize}
 
-Figure~\ref{fig:deeptune} shows the test case generation process. Possible improvements over CGO'17:
-
-\begin{itemize}
-        \item Iterative self-training.
-        \item Data augmentation: probabilistic rewriter, dead code insertion.
-        \item Adversarial model selection.
-        \item Model benchmark metrics and GA tuning.
-        \item Masked grammar / lexer based sampling.
-\end{itemize}
-
-\noindent If we don't prove correctness:
-
-Finding incorrect code using incorrect code.
-
-Reference compiler: LLVM 3.9.0
-
 
 \begin{figure}
-        \centering
-        \includegraphics[width=.95\columnwidth]{img/clgen} %
-        % \vspace{-2em}%
-        \caption{%
-                Test-case generation process. A corpus of programs from GitHub is used to seed a generative model for program codes.%
-        }%
-        \label{fig:deeptune}
+  \centering
+  \includegraphics[width=.95\columnwidth]{img/clgen} %
+  % \vspace{-2em}%
+  \caption{%
+    Test-case generation process. A corpus of programs from GitHub is used to seed a generative model for program codes.%
+  }%
+  \label{fig:deeptune}
 \end{figure}
 
 \subsection{cldrive: OpenCL Test Case Execution}
 
 Generate host code stub to compile kernel. If kernel compiles: parse AST, read function arguments, generate data inputs for arguments. Limited subset of data types supported: No structs, no irregular data types (this is just an implementation detail, and can be addressed with more dev time).
 
-
 \input{sec/methodology}
-\input{sec/results}
 \input{sec/related_work}
 \input{sec/conclusion}
 

@@ -10,3 +10,13 @@ We make the following contributions:
 \item our test cases are more accessible than state-of-the-art. Code samples do not require reduction, and are more human-like in their use of the programming language;
 \item our tool is not language specific. We \emph{infer} programming language use from examples. CLSmith requires expert-driven development for every language feature supported. 40+k lines of C++ vs a few hundred lines of Python.
 \end{itemize}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.9\columnwidth]{img/difftest} %
+  % \vspace{-2em}%
+  \caption{%
+    Differential testing across a single test case. A test case consists of a program source and runtime parameters. Outcomes are either the output of the program execution, a compiler crash, or a runtime crash.%
+  }%
+  \label{fig:difftest}
+\end{figure}

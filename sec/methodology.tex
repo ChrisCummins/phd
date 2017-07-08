@@ -1,26 +1,34 @@
-\section{Experimental Methodology}\label{sec:methodology}
+\section{Testing Methodologies}\label{sec:methodology}
 
 
-\subsection{Comparison to state-of-the-art}
+\subsection{Classifying test results}
 
-Like-for-like comparison of CLgen and CLSmith. Run the full stack of generation-execution-difftest-reduce for both for a fixed period of time, and report the number of bugs found.
+We select the mode output across a range of devices. Voting is used to select the oracle output.
+%
+\begin{enumerate}
+	\setcounter{enumi}{-1}
+	\item \emph{Invalid test case} Program code and parameter combination is illegal (this is device specific), or some other failure (e.g. program timeout). We simply ignore this class of results.
+	\item \emph{Build failure} Online compilation of OpenCL program fails.
+	\item \emph{Runtime failure} One or more OpenCL API calls return an error status during the program execution, or the program crashes due to segmentation fault. Note that segmentation faults may be caused by compiler, in which case these outcomes should perhaps be classified as build failures. We do not account for this.
+	\item \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority.
+	\item \emph{Okay} Program terminates gracefully and computes a result which agrees with the majority.
+\end{enumerate}
 
-
-\subsection{Extended testing using CLgen}
-
-Through as many programs as possible at the devices. Try older versions.
-
-
-
-\section{Experimental Setup}\label{sec:setup}
-\subsection{Platforms}
-
-Table~\ref{tab:platforms}.
-
-CLsmith used 21 configurations, covering a range of Xeon Phi. Csmith also used older revisions of compilers, which allowed them to show the decreasing number of bugs in compiler releases. We should do this.
-
-\input{tab/platforms}
 
 \subsection{Parameters}
 \input{tab/cldrive-params}
 Table~\ref{tab:cldrive-params}. 
+
+
+\section{Example Bugs}
+
+TODO: listings
+
+
+\section{Comparison to State-of-the-art}
+
+Like-for-like comparison of CLgen and CLSmith. Run the full stack of generation-execution-difftest-reduce for both for a fixed period of time, and report the number of bugs found.
+
+Table~\ref{tab:results}.
+
+\input{tab/results}
