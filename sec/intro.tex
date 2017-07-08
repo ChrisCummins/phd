@@ -1,9 +1,10 @@
 \section{Introduction}\label{sec:intro}
 
-\cec{(ideally)} We make the following contributions:
+We make the following contributions:
 %
 \begin{itemize}
-\item we generate more human-like test cases for compilers than prior, in (some/most) cases eradicating the need for test case reduction;
-\item we identify X bugs in commercial OpenCL drivers and runtimes from Y vendors in a broad study of Z test cases on B combinations of device and compiler. Our approach is automatic;
-\item we advance the state of the art in generative models for programming languages [in some way], testing neural network-synthesized code on an unprecedented scale. Our method achieves X-fold increase in production efficiency compared to prior generative models.
+\item we find bugs faster than state-of-the-art;
+\item we find bugs that the state-of-the-art cannot. E.g. compiler crashes from invalid inputs;
+\item our test cases are more accessible than state-of-the-art. Code samples do not require reduction, and are more human-like in their use of the programming language;
+\item our tool is not language specific. We \emph{infer} programming language use from examples. CLSmith requires expert-driven development for every language feature supported. 40+k lines of C++ vs a few hundred lines of Python.
 \end{itemize}

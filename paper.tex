@@ -117,7 +117,7 @@ Reference compiler: LLVM 3.9.0
 
 \subsection{cldrive: OpenCL Test Case Execution}
 
-Parse AST. Read function arguments. Generate data inputs for arguments. Limited subset of data types supported: No structs, no irregular data types.
+Generate host code stub to compile kernel. If kernel compiles: parse AST, read function arguments, generate data inputs for arguments. Limited subset of data types supported: No structs, no irregular data types (this is just an implementation detail, and can be addressed with more dev time).
 
 
 \input{sec/methodology}

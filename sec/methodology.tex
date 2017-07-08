@@ -1,13 +1,26 @@
 \section{Experimental Methodology}\label{sec:methodology}
 
-\subsection{Experimental Platforms}
 
-\input{tab/platforms}
+\subsection{Comparison to state-of-the-art}
 
-\input{tab/cldrive-params}
+Like-for-like comparison of CLgen and CLSmith. Run the full stack of generation-execution-difftest-reduce for both for a fixed period of time, and report the number of bugs found.
+
+
+\subsection{Extended testing using CLgen}
+
+Through as many programs as possible at the devices. Try older versions.
+
+
+
+\section{Experimental Setup}\label{sec:setup}
+\subsection{Platforms}
+
+Table~\ref{tab:platforms}.
 
 CLsmith used 21 configurations, covering a range of Xeon Phi. Csmith also used older revisions of compilers, which allowed them to show the decreasing number of bugs in compiler releases. We should do this.
 
-\subsection{Generated Programs}
+\input{tab/platforms}
 
-CLsmith used only 600 programs. Csmith used millions.
+\subsection{Parameters}
+\input{tab/cldrive-params}
+Table~\ref{tab:cldrive-params}. 
