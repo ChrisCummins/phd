@@ -3,11 +3,15 @@ Shared utility code for Jupyter notebooks.
 """
 from collections import Counter
 
+HOSTS = {
+    "CentOS Linux 7.1.1503 64bit": "CentOS 7.1 64bit"
+}
 
 # shorthand device names
 DEVICES = {
     "GeForce GTX 1080": "NVIDIA GTX 1080",
-    "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "Intel E5-2620",
+    "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "Intel E5-2620 v4",
+    "Intel(R) Xeon(R) CPU E5-2650 v2 @ 2.60GHz": "Intel E5-2650 v2",
     "Olcgrind Simulator": "Oclgrind",
     "pthread-Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "Intel E5-2620 (pocl)",
     "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz": "Intel i5-4570",
@@ -21,6 +25,7 @@ DRIVERS = {
 
 # shorthand platform names
 PLATFORMS = {
+    "Intel(R) OpenCL": "Intel OpenCL",
     "Portable Computing Language": "POCL",
 }
 
@@ -31,17 +36,39 @@ PLATFORMS_2_VENDORS = {
     "NVIDIA CUDA": "nvidia"
 }
 
+DEVTYPES = {
+    "3": "CPU",
+}
 
-def device_str(device):
+# Ordering for the paper:
+TESTBED_IDS = [3, 13, 9, 14, 10, 12, 11]
+OCLGRIND_ID = 11
+CONFIGURATIONS = list(zip(range(1, len(TESTBED_IDS) + 1), TESTBED_IDS))
+
+
+def platform_str(platform: str):
+    platform = platform.strip()
+    return PLATFORMS.get(platform, platform)
+
+
+def device_str(device: str):
+    device = device.strip()
     return DEVICES.get(device, device)
 
 
-def driver_str(driver):
+def driver_str(driver: str):
+    driver = driver.strip()
     return DRIVERS.get(driver, driver)
 
 
-def platform_str(platform):
-    return PLATFORMS.get(platform, platform)
+def host_str(host: str):
+    host = host.strip()
+    return HOSTS.get(host, host)
+
+
+def devtype_str(devtype: str):
+    devtype = devtype.strip()
+    return DEVTYPES.get(devtype, devtype)
 
 
 def get_majority_output(session, result, table):
