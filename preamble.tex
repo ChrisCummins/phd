@@ -4,23 +4,27 @@
 % Requires temporary version of sigplanconf style file provided on
 % PLDI'16 web site.
 % 
-\documentclass[pldi,nonatbib]{sigplanconf-pldi16}
+\documentclass[pageno,nonatbib]{jpaper}
 % \documentclass[pldi-cameraready]{sigplanconf-pldi16}
 
+\newcommand{\asplossubmissionnumber}{XXX}
+
 \usepackage[utf8]{inputenc}
+
+\usepackage[normalem]{ulem}
 
 %
 % the following standard packages may be helpful, but are not required
 %
-\usepackage{siunitx}            % typset units correctly
-\usepackage{courier}            % standard fixed width font
-\usepackage[scaled]{helvet} % see www.ctan.org/get/macros/latex/required/psnfss/psnfss2e.pdf
-\usepackage{url}                  % format URLs
-\usepackage{listings}          % format code
-\usepackage{enumitem}      % adjust spacing in enums
-\usepackage[colorlinks=true,allcolors=blue,breaklinks,draft=false]{hyperref}   % hyperlinks, including DOIs and URLs in bibliography
+% \usepackage{siunitx}            % typset units correctly
+% \usepackage{courier}            % standard fixed width font
+% \usepackage[scaled]{helvet} % see www.ctan.org/get/macros/latex/required/psnfss/psnfss2e.pdf
+% \usepackage{url}                  % format URLs
+% \usepackage{listings}          % format code
+% \usepackage{enumitem}      % adjust spacing in enums
+% \usepackage[colorlinks=true,allcolors=blue,breaklinks,draft=false]{hyperref}   % hyperlinks, including DOIs and URLs in bibliography
 % known bug: http://tex.stackexchange.com/questions/1522/pdfendlink-ended-up-in-different-nesting-level-than-pdfstartlink
-\newcommand{\doi}[1]{doi:~\href{http://dx.doi.org/#1}{\Hurl{#1}}}   % print a hyperlinked DOI
+% \newcommand{\doi}[1]{doi:~\href{http://dx.doi.org/#1}{\Hurl{#1}}}   % print a hyperlinked DOI
 
 % Start of 'ignore natbib' hack
 \let\bibhang\relax
