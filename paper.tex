@@ -18,7 +18,7 @@
 \input{abstract}
 
 \input{sec/intro}
-\input{sec/motivation}
+\input{sec/overview}
 
 \section{Identifying Bugs with Differential Testing}
 
@@ -33,15 +33,6 @@
   }%
   \label{fig:difftest}
 \end{figure}
-
-Figure~\ref{fig:difftest} shows the differential testing methodology for a single test case.
-
-\begin{enumerate}
-	\item Generate string $S$.
-	\item For each compiler $C = \{C_1 \ldots C_n\}$, attempt to compile $S$.
-	\item For each compiler which produced a program binary, execute the program using each test case configuration $P = \{P_1 \ldots P_n\}$.
-    \item For each $p \in P$, compare outcomes $O_p = \{ O_{C_1,p} \ldots O_{C_n,p} \}$.
-\end{enumerate}
 
 
 \subsection{Classifying test results}

@@ -1,9 +1,11 @@
 \section{Introduction}\label{sec:intro}
 
+Figure~\ref{fig:difftest} shows the differential testing methodology.
+
 We make the following contributions:
 %
 \begin{itemize}
-\item we find bugs faster than state-of-the-art;
+\item we find bugs faster than state-of-the-art. i.e. Production is slower than CLSmith but testing is faster (and no/little reduction);
 \item we find bugs that the state-of-the-art cannot. E.g. compiler crashes from invalid inputs;
 \item our test cases are more accessible than state-of-the-art. Code samples do not require reduction, and are more human-like in their use of the programming language;
 \item our tool is not language specific. We \emph{infer} programming language use from examples. CLSmith requires expert-driven development for every language feature supported. 40+k lines of C++ vs a few hundred lines of Python.
