@@ -7,6 +7,7 @@
 * Python 3.6
 * OpenCL
 * ninja
+* CMake >= 2.8.12
 
 Optional, but recommended:
 
