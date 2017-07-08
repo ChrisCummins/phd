@@ -1,43 +1,7 @@
 \begin{table*}[t!]
-  \scriptsize %
-  \centering %
-  % \rowcolors{2}{white}{gray!25}
-  \begin{tabular}{lllll | rrrrrr | rrrrrr }
-    \toprule
-    & & & & & \multicolumn{6}{c|}{\textbf{CLSmith}} & \multicolumn{6}{c}{\textbf{CLgen}} \\
-    \textbf{\#.} & \textbf{Platform} & \textbf{Device} & \textbf{Driver} & $\pm$ & \textbf{w} & \textbf{bf} & \textbf{c} & \textbf{to} & \cmark & \xmark & \textbf{w} & \textbf{bf} & \textbf{c} & \textbf{to} & \cmark & \xmark \\
-    \midrule
-	\multirow{ 2}{*}{?} & \multirow{ 2}{*}{Intel OpenCL} & \multirow{ 2}{*}{Intel Xeon CPU E5-2620} & \multirow{ 2}{*}{?} & $-$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	& & & & $+$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	\hline
-	\multirow{ 2}{*}{?} & \multirow{ 2}{*}{Intel OpenCL} & \multirow{ 2}{*}{Intel CPU Core i5-4570} & \multirow{ 2}{*}{?} & $-$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	& & & & $+$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	\hline
-	\multirow{ 2}{*}{?} & \multirow{ 2}{*}{NVIDIA CUDA} & \multirow{ 2}{*}{GeForce GTX 1080} & \multirow{ 2}{*}{375.39} & $-$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	& & & & $+$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	\hline
-	\multirow{ 2}{*}{?} & \multirow{ 2}{*}{NVIDIA CUDA} & \multirow{ 2}{*}{GeForce GTX Titan} & \multirow{ 2}{*}{?} & $-$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	& & & & $+$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	\hline
-	\multirow{ 2}{*}{?} & \multirow{ 2}{*}{Intel OpenCL} & \multirow{ 2}{*}{Intel HD Graphics Haswell GT2} & \multirow{ 2}{*}{?} & $-$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	& & & & $+$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	\hline
-	\multirow{ 2}{*}{?} & \multirow{ 2}{*}{Intel OpenCL} & \multirow{ 2}{*}{Intel Xeon Phi} & \multirow{ 2}{*}{?} & $-$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	& & & & $+$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	\hline
-	\multirow{ 2}{*}{?} & \multirow{ 2}{*}{POCL} & \multirow{ 2}{*}{Intel Xeon CPU E5-2620} & \multirow{ 2}{*}{?} & $-$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	& & & & $+$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	\hline
-	\multirow{ 2}{*}{?} & \multirow{ 2}{*}{ComputeAorta} & \multirow{ 2}{*}{Intel Xeon CPU E5-2620} & \multirow{ 2}{*}{?} & $-$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	& & & & $+$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	\hline
-	\multirow{ 2}{*}{?} & \multirow{ 2}{*}{ComputeAorta} & \multirow{ 2}{*}{Intel Xeon CPU i5-4570} & \multirow{ 2}{*}{?} & $-$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	& & & & $+$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	\hline
-	\multirow{ 2}{*}{?} & \multirow{ 2}{*}{Oclgrind} & \multirow{ 2}{*}{Oclgrind Simulator} & \multirow{ 2}{*}{?} & $-$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-	& & & & $+$ & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-    \bottomrule
-  \end{tabular}
-  \caption{Testing results using CLSmith and CLgen. Configuration \#. as per Table~\ref{tab:platforms}. The columns show \textbf{w} wrong-code $\pm$ denotes optimizations off ($-$) vs on ($+$).}
-  \label{tab:results}
+	\scriptsize %
+	\centering %
+	\input{build/tab/megatable}
+	\caption{Testing results using CLSmith and CLgen. Configuration \#. as per Table~\ref{tab:platforms}. The columns show \textbf{w} wrong-code $\pm$ denotes optimizations off ($-$) vs on ($+$).}
+	\label{tab:results}
 \end{table*}
