@@ -171,10 +171,7 @@ def _lookup_env(return_cl: bool=False, return_ids: bool=False, platform: str=Non
             if platform and platform != platform_str:
                 continue
 
-            ctx = cl.Context(
-                properties=[(cl.context_properties.PLATFORM, cl_platform)])
-
-            cl_devices = ctx.get_info(cl.context_info.DEVICES)
+            cl_devices = cl_platform.get_devices()
 
             # filter devices on device type
             cl_devices = [d for d in cl_devices if _devtype_matches(d, cl_devtype)]
@@ -186,6 +183,9 @@ def _lookup_env(return_cl: bool=False, return_ids: bool=False, platform: str=Non
                     continue
 
                 if return_cl:
+                    ctx = cl.Context(
+                        properties=[(cl.context_properties.PLATFORM, cl_platform)])
+
                     if profiling:
                         properties = cl.command_queue_properties.PROFILING_ENABLE
                     else:
@@ -333,8 +333,7 @@ def clinfo(file=sys.stdout) -> None:
     for platform_id, platform in enumerate(cl.get_platforms()):
         platform_name = platform.get_info(cl.platform_info.NAME)
 
-        ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
-        devices = ctx.get_info(cl.context_info.DEVICES)
+        devices = platform.get_devices()
 
         version = opencl_version(platform)
 
@@ -419,10 +418,8 @@ def all_envs(devtype: str='all') -> Iterator[OpenCLEnvironment]:
     cl_platforms = cl.get_platforms()
     for cl_platform in cl_platforms:
         platform_str = cl_platform.get_info(cl.platform_info.NAME)
-        ctx = cl.Context(
-                properties=[(cl.context_properties.PLATFORM, cl_platform)])
 
-        cl_devices = ctx.get_info(cl.context_info.DEVICES)
+        cl_devices = cl.get_devices()
         cl_devices = [d for d in cl_devices if _devtype_matches(d, cl_devtype)]
 
         for cl_device in cl_devices:
