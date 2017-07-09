@@ -250,14 +250,14 @@ def main():
             analyze_co_result(result, table, session)
         session.commit()
 
-    # # CLgen programs have special treatment because we require that they be
-    # # gpuverified before labeling as wrong code
-    # name = "CLgen w. cl_launcher"
-    # table = cl_launcherCLgenResult
-    # print(f"{name} ...")
-    # for result in ProgressBar()(session.query(table).all()):
-    #     analyze_cl_launcher_result(result, table, session, require_gpuverified=True)
-    # session.commit()
+    # CLgen programs have special treatment because we require that they be
+    # gpuverified before labeling as wrong code
+    name = "CLgen w. cl_launcher"
+    table = cl_launcherCLgenResult
+    print(f"{name} ...")
+    for result in ProgressBar()(session.query(table).all()):
+        analyze_cl_launcher_result(result, table, session, require_gpuverified=True)
+    session.commit()
 
     # name = "CLgen"
     # table = CLgenResult
