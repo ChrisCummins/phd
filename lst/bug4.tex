@@ -1,4 +1,4 @@
-__kernel void entry(__global int* a) {
+__kernel void A(__global int* a) {
   int b = 3;
   a[get_global_id(0)] += 2;
 }

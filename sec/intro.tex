@@ -6,31 +6,37 @@
 \am{Draft annotation}
 
 \noindent
-Figure~\ref{fig:difftest} shows the differential testing methodology.
+Optimizing compilers are large and complex programs. Fixed test-suites are inadequate for ensuring correct behavior over the range of accepted inputs, and the lack of formal specifications for sections of compilers renders formal verification unusable beyond isolated subcomponents.
 
-Developing a random program generator is a huge undertaking, requiring expert knowledge of the target programming language, and complex construction logic. CSmith~\cite{Yang2011} was developed over years, and is a 40k line C++ program. Extending CSmith to OpenCL~\cite{Lidbury2015a} took 9 months (confirmed by developers), and is over 8k lines of code. Despite this, they are far from ``feature complete'' - e.g. CLSmith can't deal with floating point arithmetic, which is dominant in the popular use cases for OpenCL.
+Differential testing is a promising methodology for identifying bugs through the pseudo-random generation of test cases. Figure~\ref{fig:difftest} shows the differential testing methodology.
 
-In contrast, our approach is programming language agnostic, requiring only a corpus of sample programs in the intended programming language. Such a corpus can be assembled from GitHub. Learning and sampling an LSTM model requires less than a 100 line of Python script, and contains no programming language-specific logic.
+\begin{figure}
+	\centering
+	\includegraphics[width=.9\columnwidth]{img/difftest} %
+	% \vspace{-2em}%
+	\caption{%
+		Differential testing compilers across a single test case. A test case consists of a program source and runtime parameters. Outcomes are either the output of the program execution, a compiler crash, or a runtime crash.%
+	}%
+	\label{fig:difftest}
+\end{figure}
 
+Developing a random program generator is a huge undertaking, requiring expert knowledge of the target programming language, and complex construction logic. CSmith~\cite{Yang2011} was developed over a period of years, consists of over 40k lines of hand-written C++. CSmith interleaves static analysis with code generation, and inserts runtime checks for cases where static analysis is inadequate. There are 80 probabilities which govern the choices made by CSmith; these were extensively hand tuned so that programs ``look right''.
+
+Grammar-based program generation tightly couples generation logic to the target programming language. This makes them inflexible tools. For example, extending CSmith to OpenCL~\cite{Lidbury2015a} took 9 months (confirmed by developers), and is over 8k lines of code. In contrast, our approach is programming language agnostic, requiring only a corpus of sample programs in the intended programming language. Such a corpus can be assembled from GitHub. Learning and sampling an LSTM model requires less than a 100 line of Python script, and contains no programming language-specific logic. The expressiveness of synthesized programs is governed by the corpus; unlike with grammar-based approach, in which every new language feature must be engineered. E.g. to date, CSmith does not support unions, strings, dynamic memory allocation, function pointers, or recursion. Both CSmith and CLSmith do not support floating point arithmetic, which is dominant in the typical workloads of OpenCL. Additionally, all integer arithmetic is wrapped in ``safe math'' macros.
+
+% Word this to leave open the potential for hand-checking ...
+The design trade-off of our approach is that unstructured, syntactic-level synthesis of program code destroys the ability to guarantee programs are free from undefined behavior, a property which previous approaches have relied upon. In practice, we found this requirement to be too conservative. We discovered only XX cases where a program without a single interpretation was not trivially detectable through differential testing and presented a false positive.
 % Reference: UB in C https://blog.regehr.org/archives/1520
 % Reference: C99 spec appendix J2 - list of UBs
 % OpenCL un-undefines some of those behaviours (e.g. it provides conversion functions between data types), but also adds to them.
 
-We make the following contributions:
+In this work we target OpenCL, an open standard for programming heterogeneous systems. The importance of compiler behavior is amplified for OpenCL since it is compiled online. OpenCL code is shipped by developers to customers for compilation online. OpenCL is increasingly used in safety critical software products such as automotive vision. Segmentation faults and other runtime crashes during online compilation can disrupt the execution of safety critical processes.
+
+\noindent We make the following contributions:
 %
 \begin{itemize}
-\item we find bugs faster than state-of-the-art. i.e. Production is slower than CLSmith but testing is faster (and no/little reduction);
+\item we find bugs faster than state-of-the-art. i.e. Production is slower than CLSmith but testing is much faster (and no/little reduction);
 \item we find bugs that the state-of-the-art cannot. E.g. compiler crashes from invalid inputs;
 \item our test cases are more accessible than state-of-the-art. Code samples do not require reduction, and are more human-like in their use of the programming language;
 \item our tool is not language specific. We \emph{infer} programming language use from examples. CLSmith requires expert-driven development for every language feature supported. 40+k lines of C++ vs a few hundred lines of Python.
 \end{itemize}
-
-\begin{figure}
-  \centering
-  \includegraphics[width=.9\columnwidth]{img/difftest} %
-  % \vspace{-2em}%
-  \caption{%
-    Differential testing compilers across a single test case. A test case consists of a program source and runtime parameters. Outcomes are either the output of the program execution, a compiler crash, or a runtime crash.%
-  }%
-  \label{fig:difftest}
-\end{figure}
