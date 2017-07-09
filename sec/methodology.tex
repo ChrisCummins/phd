@@ -8,11 +8,9 @@ We describe two types of OpenCL testing using our approach. The first is a direc
 We select the mode output across a range of devices. Voting is used to select the oracle output.
 %
 \begin{enumerate}
-	\setcounter{enumi}{-1}
-	\item \emph{Invalid test case} Program code and parameter combination is illegal (this is device specific), or some other failure (e.g. program timeout). We simply ignore this class of results.
-	\item \emph{Build failure} Online compilation of OpenCL program fails.
-	\item \emph{Runtime failure} One or more OpenCL API calls return an error status during the program execution, or the program crashes due to segmentation fault. Note that segmentation faults may be caused by compiler, in which case these outcomes should perhaps be classified as build failures. We do not account for this.
 	\item \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority.
+	\item \emph{Build failure} Online compilation of OpenCL program fails.
+	\item \emph{Runtime failure} One or more OpenCL API calls return an error status during the program execution, or the program crashes.
 	\item \emph{Okay} Program terminates gracefully and computes a result which agrees with the majority.
 \end{enumerate}
 
