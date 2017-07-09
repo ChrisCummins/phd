@@ -183,13 +183,14 @@ def _lookup_env(return_cl: bool=False, return_ids: bool=False, platform: str=Non
                     continue
 
                 if return_cl:
-                    ctx = cl.Context(
-                        properties=[(cl.context_properties.PLATFORM, cl_platform)])
-
                     if profiling:
                         properties = cl.command_queue_properties.PROFILING_ENABLE
                     else:
                         properties = None
+
+                    ctx = cl.Context(
+                        dev_type=cl.device_type.ALL,
+                        properties=[(cl.context_properties.PLATFORM, cl_platform)])
 
                     queue = cl.CommandQueue(ctx, device=cl_device,
                                             properties=properties)
