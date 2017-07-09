@@ -34,11 +34,12 @@ PLATFORMS_2_VENDORS = {
     "Intel(R) OpenCL": "intel",
     "Intel Gen OCL Driver": "intel",
     "Portable Computing Language": "pocl",
-    "NVIDIA CUDA": "nvidia"
+    "NVIDIA CUDA": "nvidia",
 }
 
 DEVTYPES = {
     "3": "CPU",
+    "ACCELERATOR", "Accelerator",
 }
 
 # Ordering for the paper:
