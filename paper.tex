@@ -19,46 +19,10 @@
 
 \input{sec/intro}
 \input{sec/overview}
-
-\section{Test Case Generation using Deep Learning}
-
-\subsection{CLgen}
-
-Figure~\ref{fig:deeptune} shows the test case generation process.
-
-\begin{itemize}
-\item An initial seed corpus is collated from GitHub (w. rejection filter).
-\item Corpus is encoded for training.
-\item LSTM networks model the vocabulary distribution over the encoded corpus.
-\item The trained network is sampled to generate new programs.
-\end{itemize}
-
-\noindent In subsequent iterations, synthesized kernels may be used to augment the training corpus.
-
-\begin{itemize}
-\item Samples are synthesized by the network and pruned using the rejection filter.
-\item The samples are mixed with kernels from the GitHub seed corpus.
-\item These combined samples are labeled (synthetic or human), and used to train a classifier for human-or-robot.
-\item The classifier is tested on unseen programs, and the accuracy is used as a fitness function for the model's parameters.
-\item A GA mutates and evolves the best performing parameters.
-\end{itemize}
-
-
-\begin{figure}
-  \centering
-  \includegraphics[width=.95\columnwidth]{img/clgen} %
-  % \vspace{-2em}%
-  \caption{%
-    Test-case generation process. A corpus of programs from GitHub is used to seed a generative model for program codes.%
-  }%
-  \label{fig:deeptune}
-\end{figure}
-
-\subsection{cldrive: OpenCL Test Case Execution}
-
-Generate host code stub to compile kernel. If kernel compiles: parse AST, read function arguments, generate data inputs for arguments. Limited subset of data types supported: No structs, no irregular data types (this is just an implementation detail, and can be addressed with more dev time).
-
+\input{sec/clgen}
 \input{sec/methodology}
+\input{sec/bugs}
+\input{sec/vs_clsmith}
 \input{sec/related_work}
 \input{sec/conclusion}
 
