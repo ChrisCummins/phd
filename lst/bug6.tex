@@ -1,0 +1,9 @@
+__kernel void A(__global float* a, __local float* b, __local float* c, int d, int e) {
+  int f, g;
+  int h = get_local_id(0);
+  int i = get_local_id(1);
+  int j = get_global_id(0);
+  __global char* k = c + f * g + f;
+  if (f + 1 < h)
+    b[f * d + g * h + g] = g * f;
+}
