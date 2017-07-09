@@ -8,8 +8,6 @@
 
 \paragraph{CSmith} Grammar-based \emph{fuzz testers} have been developed for C~\cite{Yang2011} and OpenCL~\cite{Lidbury2015a}. Both tools require test case reduction (\cite{Regehr2012a} and~\cite{Pflanzer2016}, respectively).
 
-Developing a random program generator is a huge undertaking, requiring expert knowledge of the target programming language, and complex construction logic. CSmith was developed over years, and is a 40k line C++ program. Extending CSmith to OpenCL took 9 months (confirmed by developers), and is over 8k lines of code. Extending CReduce to OpenCL took 3 months. Despite this, they are far from ``feature complete'' - e.g. CLSmith can't deal with floating point arithmetic, which is dominant in the popular use cases for OpenCL.
-
 \paragraph{CLgen} Same approach but for benchmark generation. LLVM is used as an oracle to determine if program is well formed. Behaviour is validated using runtime checks, with no desire for correctness \cite{Cummins2017a}. We extend this \cec{\ldots}.
 
 \paragraph{Misc} A mutation-based approach for the Java Virtual Machine is demonstrated in~\cite{Chena}.

@@ -2,6 +2,8 @@
 
 Figure~\ref{fig:difftest} shows the differential testing methodology.
 
+Developing a random program generator is a huge undertaking, requiring expert knowledge of the target programming language, and complex construction logic. CSmith~\cite{Yang2011} was developed over years, and is a 40k line C++ program. Extending CSmith to OpenCL~\cite{Lidbury2015a} took 9 months (confirmed by developers), and is over 8k lines of code. Despite this, they are far from ``feature complete'' - e.g. CLSmith can't deal with floating point arithmetic, which is dominant in the popular use cases for OpenCL.
+
 % Reference: UB in C https://blog.regehr.org/archives/1520
 % Reference: C99 spec appendix J2 - list of UBs
 % OpenCL un-undefines some of those behaviours (e.g. it provides conversion functions between data types), but also adds to them.

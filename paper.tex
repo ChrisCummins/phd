@@ -28,7 +28,7 @@ Figure~\ref{fig:deeptune} shows the test case generation process.
 
 \begin{itemize}
 \item An initial seed corpus is collated from GitHub (w. rejection filter).
-\item Source code is encoded using partial tokenization.
+\item Corpus is encoded for training.
 \item LSTM networks model the vocabulary distribution over the encoded corpus.
 \item The trained network is sampled to generate new programs.
 \end{itemize}
