@@ -16,6 +16,7 @@ DEVICES = {
     "pthread-Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "Intel E5-2620 (pocl)",
     "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz": "Intel i5-4570",
     'Intel(R) HD Graphics Haswell GT2 Desktop': 'Intel HD Haswell GT2',
+    'Intel(R) Many Integrated Core Acceleration Card': 'Intel Xeon Phi (?)',
 }
 
 # shorthand driver names
