@@ -1,7 +1,9 @@
 \section{Overview of Our Approach and Results}\label{sec:overview}
 
-We conducted testing using X different OpenCL configurations, summarized in Table~\ref{tab:platforms}. A \emph{configuration} refers to an OpenCL \emph{<device, driver>} pair.
+\paragraph{Test case generation} We use CLgen, our deep learning program synthesis tool, to generate thousands of OpenCL samples.
+
+\paragraph{OpenCL configurations tested} We conducted testing of X different OpenCL configurations, summarized in Table~\ref{tab:platforms}. A \emph{configuration} refers to an OpenCL \emph{<device, driver>} pair.
 
 \input{tab/platforms}
 
-All configurations yielded bugs. We found and reported X bugs.
+\paragraph{Testing results} All configurations yielded bugs. We found and reported X bugs. In comparing our approach against the state-of-the-art in OpenCL compiler test case generation, we found our approach was able to \cc{\ldots}

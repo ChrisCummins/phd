@@ -1,9 +1,9 @@
 \begin{abstract}
 Compilers should produce correct code for valid inputs, and produce meaningful errors for invalid inputs. Testing these properties has lead to tools like CSmith.
 
-These tools, by design, yield programs which bare little resemblance to actual real code written by human programmers. This causes a triaging problem, as developers must inspect each problematic generated code to determine whether or not it exposes a bug worthy of fixing. [Only XX\% of ] What is needed is a technique for biasing the random generation of programs so that the generated codes closely resemble that of plausible, real hand written code.
+These tools, by design, yield programs which bare little resemblance to actual real code written by human programmers. This causes a triaging problem, as developers must inspect each problematic generated code to determine whether or not it exposes a bug worthy of fixing. [Only XX\% of ] What is needed is a technique for biasing the random generation of programs so that the generated codes closely resemble that of plausible, real hand-written code.
 
-We present a new approach for the generation of \emph{plausible} test cases. We apply deep learning techniques over large corpuses of open source code fragments to learn models which describe the structure of common real world codes. We use these models to generate thousands of new programs, and show how the established differential testing methodology can be used to expose bugs in compilers which are symptomatic of real hand written code.
+We present a new approach for the generation of \emph{plausible} compiler test cases. We apply deep learning techniques over large corpuses of open source code fragments to learn models which describe the structure of common real world codes. We use these models to generate thousands of new programs, and show how the established differential testing methodology can be used to expose bugs in compilers which are symptomatic of real hand-written code.
 
 We also, for the first time, provide a means of testing compiler behaviour under invalid input conditions. We generate plausible but ill formed inputs.
 

@@ -1,8 +1,16 @@
 \section{Introduction}\label{sec:intro}
 
+\cc{Draft annotation}
+\hl{Draft annotation}
+\pp{Draft annotation}
+\am{Draft annotation}
+
+\noindent
 Figure~\ref{fig:difftest} shows the differential testing methodology.
 
 Developing a random program generator is a huge undertaking, requiring expert knowledge of the target programming language, and complex construction logic. CSmith~\cite{Yang2011} was developed over years, and is a 40k line C++ program. Extending CSmith to OpenCL~\cite{Lidbury2015a} took 9 months (confirmed by developers), and is over 8k lines of code. Despite this, they are far from ``feature complete'' - e.g. CLSmith can't deal with floating point arithmetic, which is dominant in the popular use cases for OpenCL.
+
+In contrast, our approach is programming language agnostic, requiring only a corpus of sample programs in the intended programming language. Such a corpus can be assembled from GitHub. Learning and sampling an LSTM model requires less than a 100 line of Python script, and contains no programming language-specific logic.
 
 % Reference: UB in C https://blog.regehr.org/archives/1520
 % Reference: C99 spec appendix J2 - list of UBs
