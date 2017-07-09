@@ -39,11 +39,11 @@ PLATFORMS_2_VENDORS = {
 
 DEVTYPES = {
     "3": "CPU",
-    "ACCELERATOR", "Accelerator",
+    "ACCELERATOR": "Accelerator",
 }
 
 # Ordering for the paper:
-TESTBED_IDS = [3, 13, 9, 14, 10, 12, 11]
+TESTBED_IDS = [3, 13, 9, 14, 10, 15, 12, 11]
 OCLGRIND_ID = 11
 CONFIGURATIONS = list(zip(range(1, len(TESTBED_IDS) + 1), TESTBED_IDS))
 
@@ -100,3 +100,11 @@ def get_majority_output(session, result, table):
     minority_count = len(minority_devices)
 
     return majority_output, majority_devices
+
+def classification_to_paper(classification):
+    return {
+        "Wrong code": "w",
+        "Build failure": "bf",
+        "Runtime crash": "c",
+        "Timeout": "to",
+    }[classification]
