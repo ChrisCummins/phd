@@ -2,6 +2,15 @@
 
 We describe two types of OpenCL testing using our approach. The first is a direct comparison of our approach to CLSmith, the current state-of-the-art in OpenCL test case generation. The second is results from unstructured, opportunistic testing of OpenCL implementations using CLgen, resulting in XX bug reports.
 
+\begin{enumerate}
+  \item Attempt to compile sample.
+  \item If compilation succeeds, generate two test payloads and execute.
+\end{enumerate}
+
+% \subsection{Parameters}
+% \input{tab/cldrive-params}
+% Table~\ref{tab:cldrive-params}. 
+
 \subsection{Classifying test cases}
 
 \cc{Use the results of difftest to determine whether the input sample was formed, well-typed, free from UB, etc. Plot ratio of CLgen and CLSmith outputs according to classifications (CLSmith should be all perfect).}
@@ -23,8 +32,3 @@ We select the mode output across a range of devices. Voting is used to select th
 	\item \emph{Runtime failure} One or more OpenCL API calls return an error status during the program execution, or the program crashes.
 	\item \emph{Okay} Program terminates gracefully and computes a result which agrees with the majority.
 \end{enumerate}
-
-
-\subsection{Parameters}
-\input{tab/cldrive-params}
-Table~\ref{tab:cldrive-params}. 
