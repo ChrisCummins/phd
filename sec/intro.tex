@@ -30,13 +30,13 @@ The design trade-off of our approach is that unstructured, syntactic-level synth
 % Reference: C99 spec appendix J2 - list of UBs
 % OpenCL un-undefines some of those behaviours (e.g. it provides conversion functions between data types), but also adds to them.
 
-In this work we target OpenCL, an open standard for programming heterogeneous systems. The importance of compiler behavior is amplified for OpenCL since it is compiled online. OpenCL code is shipped by developers to customers for compilation online. OpenCL is increasingly used in safety critical software products such as automotive vision. Segmentation faults and other runtime crashes during online compilation can disrupt the execution of safety critical processes.
+In this work we target OpenCL, an open standard for programming heterogeneous systems, though our approach is language agnostic. The importance of compiler behavior is amplified for OpenCL since it is compiled online. OpenCL code is shipped by developers to customers for compilation online. OpenCL is increasingly used in safety critical software products such as automotive vision. Segmentation faults and other runtime crashes during online compilation can disrupt the execution of safety critical processes.
 
 \noindent We make the following contributions:
 %
 \begin{itemize}
-\item we find bugs faster than state-of-the-art. i.e. Production is slower than CLSmith but testing is much faster (and no/little reduction);
-\item we find bugs that the state-of-the-art cannot. E.g. compiler crashes from invalid inputs. In only 48 hours of empirical testing we discovered and report XX bugs in compiler and open source OpenCL implementations;
-\item our test cases are more interpretable than other program generators. Code samples do not require reduction, and are modeled on human-like constructs;
+\item we find bugs faster than state-of-the-art. In 48 hours we discovered and report XX bugs in compiler and open source OpenCL implementations, XX\% more than CLSmith over the same time period;
+\item we find bugs that the state-of-the-art cannot, covering more are of the compiler. E.g. compiler crashes from invalid inputs;
+\item our test cases are more interpretable than other program generators. Our code is modeled on human-like constructs. Average unreduced test case size is XX lines of code, XX$\times$ fewer than CLSmith programs even after hours spent reducing;
 \item our tool is not language specific. We \emph{infer} programming language use from examples. CLSmith requires expert-driven development for every language feature supported. 40+k lines of C++ vs a few hundred lines of Python.
 \end{itemize}
