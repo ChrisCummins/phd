@@ -39,7 +39,7 @@ bool unique(const Container &cont) {
 // unique we then iterate over the characters and index into this
 // bitset.
 //
-// O(n) time, O(n) space.
+// O(n) time, O(1) space.
 //
 bool str_unique(const std::string &str) {
   std::bitset<std::numeric_limits<char>::max()> chars = {0};
