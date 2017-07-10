@@ -36,7 +36,7 @@ In this work we target OpenCL, an open standard for programming heterogeneous sy
 %
 \begin{itemize}
 \item we find bugs faster than state-of-the-art. i.e. Production is slower than CLSmith but testing is much faster (and no/little reduction);
-\item we find bugs that the state-of-the-art cannot. E.g. compiler crashes from invalid inputs;
-\item our test cases are more accessible than state-of-the-art. Code samples do not require reduction, and are more human-like in their use of the programming language;
+\item we find bugs that the state-of-the-art cannot. E.g. compiler crashes from invalid inputs. In only 48 hours of empirical testing we discovered and report XX bugs in compiler and open source OpenCL implementations;
+\item our test cases are more interpretable than other program generators. Code samples do not require reduction, and are modeled on human-like constructs;
 \item our tool is not language specific. We \emph{infer} programming language use from examples. CLSmith requires expert-driven development for every language feature supported. 40+k lines of C++ vs a few hundred lines of Python.
 \end{itemize}
