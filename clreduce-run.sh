@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eux
+set -ux
 
 cd ~/src/project_b/lib/clreduce
 . .env
