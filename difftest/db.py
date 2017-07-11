@@ -238,6 +238,29 @@ class cl_launcherParams(Base):
         return " ".join(self.to_flags())
 
 
+def cl_launcher_params_groups(session):
+    """
+    Return list of Param IDs for distinct params, grouped by optimizations on/off.
+    """
+    id_groups = []
+    for gx, gy, gz, lx, ly, lz in session.query(
+            cl_launcherParams.gsize_x, cl_launcherParams.gsize_y, cl_launcherParams.gsize_z,
+            cl_launcherParams.lsize_x, cl_launcherParams.lsize_y, cl_launcherParams.lsize_z
+        ).group_by(
+            cl_launcherParams.gsize_x, cl_launcherParams.gsize_y, cl_launcherParams.gsize_z,
+            cl_launcherParams.lsize_x, cl_launcherParams.lsize_y, cl_launcherParams.lsize_z
+        ):
+        id_groups.append([x[0] for x in
+            session.query(cl_launcherParams.id).filter(
+                cl_launcherParams.gsize_x == gx,
+                cl_launcherParams.gsize_y == gy,
+                cl_launcherParams.gsize_z == gz,
+                cl_launcherParams.lsize_x == lx,
+                cl_launcherParams.lsize_y == ly,
+                cl_launcherParams.lsize_z == lz)])
+    return id_groups
+
+
 class coParams(Base):
     """ params used by compile-only """
     __tablename__ = "coParams"
@@ -341,12 +364,33 @@ class CLSmithResult(Base):
     params = sql.orm.relationship("cl_launcherParams", back_populates="results")
 
     def __repr__(self):
-        return ("program: {self.program_id}, "
-                "testbed: {self.testbed_id}, "
-                "params: {self.params_id}, "
+        return ("result: {self.id} "
+                "testbed: {self.testbed.device}, "
+                "program: {self.program_id}, "
+                "params: {self.params}, "
                 "status: {self.status}, "
                 "runtime: {self.runtime:.2f}s"
                 .format(**vars()))
+
+
+class CLSmithReduction(): # FIXME: (Base):
+    __tablename__ = "CLSmithReductions"
+    id = sql.Column(sql.Integer, primary_key=True)
+    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLSmithPrograms.id"),
+                            nullable=False)
+    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
+                            nullable=False)
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("cl_launcherParams.id"),
+                           nullable=False)
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    status = sql.Column(sql.Integer, nullable=False)
+    runtime = sql.Column(sql.Float, nullable=False)
+    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+
+    program = sql.orm.relationship("CLSmithProgram")
+    testbed = sql.orm.relationship("Testbed")
+    params = sql.orm.relationship("cl_launcherParams")
 
 
 class cldriveCLSmithResult(Base):
