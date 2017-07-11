@@ -85,7 +85,6 @@ if __name__ == "__main__":
         for result in ProgressBar()(q, max_value=ntodo):
             result.outcome = get_cldrive_outcome(result)
 
-    param_groups = db.cl_launcher_params_groups(s)
     with Session(commit=True) as s:
         q = s.query(CLgenResult)
 
@@ -113,7 +112,7 @@ if __name__ == "__main__":
         ntodo = q.count()
         for program in ProgressBar()(q, max_value=ntodo):
             # treat param combinations independently
-            for params in s.query(cl_launcherParams):
+            for params in s.query(cldriveParams):
                 # select all results for this test case
                 q = s.query(CLgenResult)\
                     .filter(CLgenResult.program_id == program.id,

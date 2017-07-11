@@ -85,28 +85,27 @@ if __name__ == "__main__":
         for result in ProgressBar()(q, max_value=ntodo):
             result.outcome = get_cl_launcher_outcome(result)
 
-    param_groups = db.cl_launcher_params_groups(s)
     with Session(commit=True) as s:
         q = s.query(CLSmithResult)
 
-        # reset any existing classifications
-        # print("Reseting CLSmith classifications ...")
-        # for result in q:
-        #     result.classification = None
+        reset any existing classifications
+        print("Reseting CLSmith classifications ...")
+        for result in q:
+            result.classification = None
 
-        # direct mappings from outcome to classification
-        # print("Classifying CLSmith timeouts ...")
-        # for result in q.filter(sql.or_(CLSmithResult.outcome == "to", CLSmithResult.outcome == "bto")):
-        #     result.classification = "to"
-        # print("Classifying CLSmith build failures ...")
-        # for result in q.filter(CLSmithResult.outcome == "bf"):
-        #     result.classification = "bf"
-        # print("Classifying CLSmith crashes ...")
-        # for result in q.filter(sql.or_(CLSmithResult.outcome == "c", CLSmithResult.outcome == "bc")):
-        #     result.classification = "c"
-        # print("Classifying CLSmith test failures ...")
-        # for result in q.filter(CLSmithResult.outcome == "fail"):
-        #     result.classification = "fail"
+        direct mappings from outcome to classification
+        print("Classifying CLSmith timeouts ...")
+        for result in q.filter(sql.or_(CLSmithResult.outcome == "to", CLSmithResult.outcome == "bto")):
+            result.classification = "to"
+        print("Classifying CLSmith build failures ...")
+        for result in q.filter(CLSmithResult.outcome == "bf"):
+            result.classification = "bf"
+        print("Classifying CLSmith crashes ...")
+        for result in q.filter(sql.or_(CLSmithResult.outcome == "c", CLSmithResult.outcome == "bc")):
+            result.classification = "c"
+        print("Classifying CLSmith test failures ...")
+        for result in q.filter(CLSmithResult.outcome == "fail"):
+            result.classification = "fail"
 
         # Go program-by-program, looking for wrong-code outputs
         q = s.query(CLSmithProgram)
