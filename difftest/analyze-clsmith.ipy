@@ -88,12 +88,12 @@ if __name__ == "__main__":
     with Session(commit=True) as s:
         q = s.query(CLSmithResult)
 
-        reset any existing classifications
+        # reset any existing classifications
         print("Reseting CLSmith classifications ...")
         for result in q:
             result.classification = None
 
-        direct mappings from outcome to classification
+        # direct mappings from outcome to classification
         print("Classifying CLSmith timeouts ...")
         for result in q.filter(sql.or_(CLSmithResult.outcome == "to", CLSmithResult.outcome == "bto")):
             result.classification = "to"
