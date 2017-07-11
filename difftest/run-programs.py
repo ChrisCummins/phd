@@ -44,11 +44,11 @@ def main():
     print(testbed)
 
     co_scripts = [
-        'clgen_run_co.py'
+        # 'clgen_run_co.py'
     ]
     cl_launcher_scripts = [
-        # 'clsmith-run-cl_launcher.py',
-        'clgen_run_cl_launcher.py',
+        'clsmith-run-cl_launcher.py',
+        # 'clgen_run_cl_launcher.py',
     ]
     cldrive_scripts = [
         # 'clgen_run_cldrive.py',
