@@ -25,15 +25,13 @@ def get_platform_name(platform_id):
 
 def get_device_name(platform_id, device_id):
     platform = cl.get_platforms()[platform_id]
-    ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
-    device = ctx.get_info(cl.context_info.DEVICES)[device_id]
+    device = platform.get_devices()[device_id]
     return device.get_info(cl.device_info.NAME)
 
 
 def get_driver_version(platform_id, device_id):
     platform = cl.get_platforms()[platform_id]
-    ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
-    device = ctx.get_info(cl.context_info.DEVICES)[device_id]
+    device = platform.get_devices()[device_id]
     return device.get_info(cl.device_info.DRIVER_VERSION)
 
 
