@@ -36,6 +36,7 @@ lib/CLSmith/build/bin/cl_launcher:
 	cd lib/CLSmith/build && cmake .. -G Ninja
 	cd lib/CLSmith/build && ninja
 	cp -v lib/CLSmith/runtime/*.h lib/CLSmith/build/
+	cp -v lib/CLSmith/build/*.h lib/CLSmith/runtime/
 
 clreduce: lib/clreduce/build_creduce/creduce/creduce
 
