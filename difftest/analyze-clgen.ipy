@@ -1,0 +1,142 @@
+#!/usr/bin/env ipython
+import sys
+import sqlalchemy as sql
+
+from progressbar import ProgressBar
+
+import db
+from db import *
+%run util.py
+
+OUTCOMES = [
+    "bf",    # build failure
+    "bc",    # build crash
+    "c",     # runtime crash
+    "to",    # timeout
+    "pass",  # execution completed
+    "fail",  # internal testing error - null result
+]
+
+CLASSIFICATIONS = [
+    "w",     # wrong-code
+    "bf",    # build failure
+    "bc",    # build crash
+    "c",     # runtime crash
+    "to",    # timeout
+    "pass",  # test passed
+    "fail",  # internal testing error - null result
+]
+
+
+def get_cldrive_outcome(result):
+    """
+    Given a cldrive result, determine it's outcome.
+    """
+    def crash_or_build_failure():
+        return "c" if "[cldrive] Compilation succeeded..." in result.stderr else "bf"
+    def crash_or_build_crash():
+        return "c" if "[cldrive] Compilation succeeded..." in result.stderr else "bc"
+    def timeout_or_build_timeout():
+        # print("TIMEOUT")
+        # print(result.stderr)
+        # print("Compilation terminated successfully..." in result.stderr)
+        # sys.exit(1)
+        return "to" if "[cldrive] Compilation succeeded..." in result.stderr else "bto"
+
+    if result.status == 0:
+        return "pass"
+    # 139 is SIGSEV
+    elif result.status == 139 or result.status == -11:
+        result.status = 139
+        return crash_or_build_crash()
+    # SIGTRAP
+    elif result.status == -5:
+        return crash_or_build_crash()
+    # SIGKILL
+    elif result.status == -9 and result.runtime >= 60:
+        return timeout_or_build_timeout()
+    # SIGILL
+    elif result.status == -4:
+        return crash_or_build_crash()
+    # SIGABRT
+    elif result.status == -6:
+        return crash_or_build_crash()
+    # cl_launcher error
+    elif result.status == 1:
+        if 'cldrive.driver.Timeout: 60' in result.stderr:
+            return timeout_or_build_timeout()
+        else:
+            return crash_or_build_failure()
+    else:
+        from signal import Signals
+        print(result)
+        print(Signals(-result.status).name)
+        raise LookupError(f"failed to determine outcome of CLgenResult {result.id}")
+
+
+if __name__ == "__main__":
+    hostname = "cc1"
+    print(db.init(hostname))
+
+    print("Determining CLgen outcomes ...")
+    with Session(commit=True) as s:
+        q = s.query(CLgenResult).filter(CLgenResult.outcome == None)
+        ntodo = q.count()
+        for result in ProgressBar()(q, max_value=ntodo):
+            result.outcome = get_cldrive_outcome(result)
+
+    param_groups = db.cl_launcher_params_groups(s)
+    with Session(commit=True) as s:
+        q = s.query(CLgenResult)
+
+        # reset any existing classifications
+        print("Reseting CLgen classifications ...")
+        for result in q:
+            result.classification = None
+
+        # direct mappings from outcome to classification
+        print("Classifying CLgen timeouts ...")
+        for result in q.filter(sql.or_(CLgenResult.outcome == "to", CLgenResult.outcome == "bto")):
+            result.classification = "to"
+        print("Classifying CLgen build failures ...")
+        for result in q.filter(CLgenResult.outcome == "bf"):
+            result.classification = "bf"
+        print("Classifying CLgen crashes ...")
+        for result in q.filter(sql.or_(CLgenResult.outcome == "c", CLgenResult.outcome == "bc")):
+            result.classification = "c"
+        print("Classifying CLgen test failures ...")
+        for result in q.filter(CLgenResult.outcome == "fail"):
+            result.classification = "fail"
+
+        # Go program-by-program, looking for wrong-code outputs
+        q = s.query(CLgenProgram)
+        ntodo = q.count()
+        for program in ProgressBar()(q, max_value=ntodo):
+            # treat param combinations independently
+            for params in s.query(cl_launcherParams):
+                # select all results for this test case
+                q = s.query(CLgenResult)\
+                    .filter(CLgenResult.program_id == program.id,
+                            CLgenResult.params_id == params.id,
+                            CLgenResult.outcome == "pass")
+
+                if q.count() <= 3:
+                    # Too few results for a majority, so everything passed.
+                    for result in q:
+                        result.classification = "pass"
+                else:
+                    # Determine the majority output, and majority size.
+                    majority_output, majority_count = Counter([r.stdout for r in q]).most_common(1)[0]
+
+                    if majority_count < 3:
+                        # No majority, so everything passed.
+                        for result in q:
+                            result.classification = "pass"
+                    else:
+                        # There is a majority conensus, so compare individual
+                        # outputs to majority
+                        for result in q:
+                            if result.stdout == majority_output:
+                                result.classification = "pass"
+                            else:
+                                result.classification = "w"
