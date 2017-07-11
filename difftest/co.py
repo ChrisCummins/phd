@@ -54,7 +54,7 @@ def drive(command: List[str], src: str) -> return_t:
     with NamedTemporaryFile() as tmp:
         tmp_path = tmp.name
 
-    cli = ['./libexec/co.sh', tmp_path] + command
+    cli = ['timeout', '-s9', '60', './libexec/co.sh', tmp_path] + command
     process = Popen(cli, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate(src.encode('utf-8'))
     fs.rm(tmp_path)
