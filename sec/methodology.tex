@@ -1,30 +1,36 @@
 \section{Testing Methodologies}\label{sec:methodology}
 
-We describe two types of OpenCL testing using our approach. The first is a direct comparison of our approach to CLSmith, the current state-of-the-art in OpenCL test case generation. The second is results from unstructured, opportunistic testing of OpenCL implementations using CLgen, resulting in XX bug reports.
+We describe two experiments testing OpenCL configurations using our approach. The first is a direct comparison of our approach to CLSmith, the current state-of-the-art in OpenCL test case generation. The second is results from unstructured, opportunistic testing of OpenCL implementations using CLgen, resulting in XX bug reports.
 
 \input{fig/test_process}
-
-\begin{enumerate}
-  \item Attempt to compile sample.
-  \item If compilation succeeds, generate two test payloads and execute.
-\end{enumerate}
 
 % \subsection{Parameters}
 % \input{tab/cldrive-params}
 % Table~\ref{tab:cldrive-params}. 
 
-\subsection{Classifying test cases}
+%\subsection{Classifying test cases}
+%
+%\cc{Use the results of difftest to determine whether the input sample was formed, well-typed, free from UB, etc. Plot ratio of CLgen and CLSmith outputs according to classifications (CLSmith should be all perfect).}
+%
+%\begin{enumerate}
+%  \item Ill-formed ASCII sequence. The test case contains syntax errors preventing compilation.
+%  \item Well-formed program.
+%  \item Well-typed program.
+%  \item Standard-conformant OpenCL program. The program
+%\end{enumerate}
 
-\cc{Use the results of difftest to determine whether the input sample was formed, well-typed, free from UB, etc. Plot ratio of CLgen and CLSmith outputs according to classifications (CLSmith should be all perfect).}
+\subsection{Test case execution}
 
-\begin{enumerate}
-  \item Ill-formed ASCII sequence. The test case contains syntax errors preventing compilation.
-  \item Well-formed program.
-  \item Well-typed program.
-  \item Standard-conformant OpenCL program. The program
-\end{enumerate}
+Figure~\ref{fig:test-process} shows the methodology for a single test case.
+
+The possible outcomes for a test case are a build failure (\textbf{bf}), build crash (\textbf{bc}), runtime crash (\textbf{c}), or pass (\textbf{\cmark}). A \textbf{bf} occurs when compilation of a kernel fails, usually accompanied by an error message. A \textbf{bc} outcome on the other hand represents a compiler crash which 
+
+In~\cite{Lidbury2015a}, the authors do not distinguish between compiler crashes and other runtime crashes.
+
 
 \subsection{Classifying test outcomes}
+
+In~\cite{Lidbury2015a}, a configuration is determined to have produced a wrong code result for a kernel if, among all the results computer for the kernel, there is a majority of at least 3 among the non-\{\textbf{bf},\textbf{c},\textbf{to}\} results for the kernel, and the configuration yields a non-\{\textbf{bf},\textbf{c},\textbf{to}\} result that disagrees with the majority.
 
 We select the mode output across a range of devices. Voting is used to select the oracle output.
 %

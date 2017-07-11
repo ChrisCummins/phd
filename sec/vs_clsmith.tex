@@ -1,5 +1,9 @@
 \section{Comparison to State-of-the-art}
 
+In this section we report on an experiment using both CLSmith and CLgen for 48 hours each.
+
+Total runtime for a test cases consists of the generation time, the time to execute the test harness on a device, and, if required, the time to reduce the test case.
+
 Like-for-like comparison of CLgen and CLSmith. Run the full stack of generation-execution-difftest-reduce for a fixed period of time, and report the number of bugs found. Is CLgen faster? Do we have to reject test cases?
 
 Table~\ref{tab:results}.
@@ -8,6 +12,10 @@ Table~\ref{tab:results}.
 
 \subsection{Test Case Size}
 
-Median CLgen kernel size: 12 lines. Median reduced CLSmith kernel size: 43 lines (894 lines before reduction). Figure~\ref{fig:kernel-sizes}.
+Median CLSmith kernel is 1086 lines long (excluding headers, and using CLSmith \texttt{--short} option).
+
+For ``interesting'' programs: median CLgen kernel size is 12 lines. Median reduced CLSmith kernel size is 43 lines (894 lines before reduction). Figure~\ref{fig:kernel-sizes}.
+
+Potentially interesting questions: What is the total lines of code which get run on each device during the tests? CLgen programs are smaller, but we get through more of them.
 
 \input{fig/kernel-sizes}
