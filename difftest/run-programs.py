@@ -76,15 +76,15 @@ def main():
     ]
 
     co_jobs = [
-        ['python', script, "--hostname", db_hostname, platform_name, device_name] + args
+        ['timeout', '-s9', '12h', 'python', script, "--hostname", db_hostname, platform_name, device_name] + args
          for script, args in product(co_scripts, co_script_args)
     ]
     cl_launcher_jobs = [
-        ['python', script, "--hostname", db_hostname, str(platform_id), str(device_id)] + args
+        ['timeout', '-s9', '12h', 'python', script, "--hostname", db_hostname, str(platform_id), str(device_id)] + args
         for script, args in product(cl_launcher_scripts, cl_launcher_script_args)
     ]
     cldrive_jobs = [
-        ['python', script, "--hostname", db_hostname, platform_name, device_name] + args
+        ['timeout', '-s9', '12h', 'python', script, "--hostname", db_hostname, platform_name, device_name] + args
         for script, args in product(cldrive_scripts, cldrive_script_args)
     ]
     jobs = co_jobs + cl_launcher_jobs + cldrive_jobs
