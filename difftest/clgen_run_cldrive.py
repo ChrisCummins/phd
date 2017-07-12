@@ -79,7 +79,15 @@ def drive_harness(s: db.session_t, program: CLgenProgram, params: cldriveParams,
         start_time = time()
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate()
-        stdout, stderr = stdout.decode('utf-8'), stderr.decode('utf-8')
+        try:
+            stdout = stdout.decode('utf-8')
+        except UnicodeError as e:
+            stdout = '<-- UTF-ERROR -->'
+
+        try:
+            stderr = stderr.decode('utf-8')
+        except UnicodeError as e:
+            stderr = '<-- UTF-ERROR -->'
         runtime = time() - start_time
 
         return return_t(
@@ -168,10 +176,11 @@ if __name__ == "__main__":
                 session, program, params, env, platform_id, device_id)
 
             # assert that executed params match expected
-            verify_params(platform=args.platform, device=args.device,
-                          optimizations=params.optimizations,
-                          global_size=params.gsize, local_size=params.lsize,
-                          stderr=stderr)
+            if stderr != '<-- UTF-ERROR -->':
+                verify_params(platform=args.platform, device=args.device,
+                              optimizations=params.optimizations,
+                              global_size=params.gsize, local_size=params.lsize,
+                              stderr=stderr)
 
             # create new result
             result = CLgenResult(
