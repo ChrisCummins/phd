@@ -6,9 +6,17 @@ Total runtime for a test cases consists of the generation time, the time to exec
 
 Like-for-like comparison of CLgen and CLSmith. Run the full stack of generation-execution-difftest-reduce for a fixed period of time, and report the number of bugs found. Is CLgen faster? Do we have to reject test cases?
 
+\subsection{Testing Methodology}
+
+Both testing frameworks were used for 48 hours each. CLSmith was configured with default settings. CLReduce was configured with the default settings (four parallel reduction threads).
+
+\subsection{Results}
+
 Table~\ref{tab:results}.
 
 \input{tab/results}
+
+How long do reductions take? How many CLgen test cases can we run in that amount of time? Given the ratio of interesting CLgen test cases, how many more bugs could we find in the amount of time it takes to run a single reduction?
 
 \subsection{Test Case Size}
 
