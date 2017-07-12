@@ -1,0 +1,132 @@
+#!/usr/bin/env ipython
+
+from collections import OrderedDict
+from labm8 import fs
+import os
+import pandas as pd
+import sqlalchemy as sql
+import subprocess
+import sys
+
+import db
+from db import *
+%run util.py
+
+
+hostname = "cc1"
+db.init(hostname)
+
+session = db.make_session()
+
+null_columns = " & ".join(["-"] * 6)
+
+# Measured average CLgen sample time
+clgen_generation_time = .5
+
+def get_counts(results_table, params_table, testbed, no_opt: bool, time_limit: int=None):
+    """
+    Return results for the specified time limit
+    """
+    # If no time limit is provided, return all results.
+    if time_limit is None:
+        return {
+            "w": q.filter(results_table.classification == "w").count(),
+            "bf": q.filter(results_table.classification == "bf").count(),
+            "c": q.filter(results_table.classification == "c").count(),
+            "to": q.filter(results_table.classification == "to").count(),
+            "pass": q.filter(results_table.classification == "pass").count(),
+            "fail": q.filter(results_table.classification == "fail").count(),
+            "total": q.count()
+        }
+
+    # Otherwise, simulate results for a fixed period of time
+    t = 0  # elapsed time
+    counts = {None: 0, "w": 0, "bf": 0, "c": 0, "to": 0, "pass": 0, "fail": 0}
+
+    param_ids = session.query(params_table.id).filter(params_table.optimizations == no_opt)
+    q = session.query(results_table).filter(
+        results_table.testbed_id == testbed.id,
+        results_table.params_id.in_(param_ids))
+
+    for result in q.order_by(results_table.id):
+        if hasattr(result.program, 'runtime'):
+            generation_time = result.program.runtime
+        else:
+            generation_time = clgen_generation_time
+        exec_time = generation_time + result.runtime
+        if t + exec_time > time_limit:
+            hours = t / 60 / 60
+            break
+        t += exec_time
+        counts[result.classification] = counts.get(result.classification, 0) + 1
+    else:
+        counts['total'] = '*'  # asterisk denotes insufficient results to reach time limit
+
+    # remove unclassified results from table
+    counts.pop(None)
+
+    # sum up all results
+    total = counts.pop("total", "")
+    counts['total'] = str(sum(counts.values())) + total
+
+    return counts
+
+
+def get_columns(results_table, params_table, testbed: Testbed, no_opt: bool, time_limit: int=172800):
+    print(f"{results_table.__tablename__} {testbed.device} {no_opt} ", end="")
+    c = get_counts(results_table, params_table, testbed, no_opt, time_limit)
+    print(c)
+    sys.stdout.flush()
+    if c['total'].endswith('*'):
+        print(f"insufficient {results_table.__tablename__} for {testbed.device} {no_opt}", file=sys.stderr)
+        sys.stderr.flush()
+    return f"{c['w']} & {c['bf']} & {c['c']} & {c['to']} & {c['pass']} & {c['total']}"
+
+
+def get_row(config_id, testbed_id):
+    """ get mega-table row """
+    testbed = session.query(Testbed).filter(Testbed.id == testbed_id).first()
+    platform_name = platform_str(testbed.platform)
+    device_name = device_str(testbed.device)
+    driver_name = driver_str(testbed.driver)
+
+    time_limit = 172800
+
+    noopt = False
+    clsmith_columns = get_columns(CLSmithResult, cl_launcherParams, testbed, False)
+    # clsmith_columns = null_columns
+    clgen_columns = get_columns(CLgenResult, cldriveParams, testbed, noopt, time_limit)
+
+    noopt = True
+    clsmith_noopt_columns = get_columns(CLSmithResult, cl_launcherParams, testbed, True)
+    # clsmith_noopt_columns = null_columns
+    clgen_noopt_columns = get_columns(CLgenResult, cldriveParams, testbed, noopt, time_limit)
+
+    return f"""\\multirow{{ 2}}{{*}}{{{config_id}}} & \\multirow{{ 2}}{{*}}{{{platform_name}}} & \
+\\multirow{{ 2}}{{*}}{{{device_name}}} & \
+$-$ & {clsmith_columns}       & {clgen_columns} \\\\
+& & & \
+$+$ & {clsmith_noopt_columns} & {clgen_noopt_columns} \\\\"""
+
+rows = "\n\\hline\n".join(get_row(*x) for x in CONFIGURATIONS)
+
+latex = f"""\
+\\begin{{tabular}}{{llll | rrrrrr | rrrrrr }}
+  \\toprule
+  & & & & \\multicolumn{{6}}{{c|}}{{\\textbf{{CLSmith}}}} & \\multicolumn{{6}}{{c}}{{\\textbf{{CLgen}}}} \\\\
+  \\textbf{{\\#.}} & \\textbf{{Platform}} & \\textbf{{Device}} & $\\pm$ &
+  \\textbf{{w}} & \\textbf{{bf}} & \\textbf{{c}} & \\textbf{{to}} & \\cmark & \\textbf{{total}} &
+  \\textbf{{w}} & \\textbf{{bf}} & \\textbf{{c}} & \\textbf{{to}} & \\cmark & \\textbf{{total}} \\\\
+  \\midrule
+  {rows}
+  \\bottomrule
+\\end{{tabular}}
+"""
+
+# push LaTex to Overleaf
+!cd ~/docs/paper-project_b/ && git pull --rebase
+
+with open(os.path.expanduser("~/docs/paper-project_b/build/tab/megatable.tex"), "w") as outfile:
+    print(latex, file=outfile)
+
+!cd ~/docs/paper-project_b/build && git add . && git commit -m "auto: build/tab/megatable.tex" && git push
