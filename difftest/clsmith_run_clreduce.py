@@ -25,7 +25,6 @@ from lib import *
 CLREDUCE_DIR = fs.abspath('..', 'lib', 'clreduce')
 CREDUCE = fs.abspath(CLREDUCE_DIR, 'build_creduce', 'creduce', 'creduce')
 OCLGRIND = fs.abspath(CLREDUCE_DIR, 'build_oclgrind', 'oclgrind')
-# FIXME: OCLGRIND = "/home/cec/src/project_b/lib/clgen/native/oclgrind/c3760d07365b74ccda04cd361e1b567a6d99dd8c/install/bin/oclgrind"
 CLSMITH_DIR = fs.abspath('..', 'lib', 'CLSmith', 'build')
 CLSMITH_RUNTIME_DIR = fs.abspath('..', 'lib', 'CLSmith', 'runtime')
 CL_LAUNCHER = fs.abspath(CLSMITH_DIR, 'cl_launcher')
