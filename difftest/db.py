@@ -132,7 +132,7 @@ class CLgenProgram(Base):
 
 class CLgenHarness(Base):
     """ cldrive-generated test harnesses for CLgen programs """
-    __tablename__ = 'CLgenHarness'
+    __tablename__ = 'CLgenHarnesses'
     id = sql.Column(sql.Integer, primary_key=True)
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
 
@@ -533,10 +533,9 @@ class CLgenResult(Base):
     params_id = sql.Column(sql.Integer, sql.ForeignKey("cldriveParams.id"),
                            nullable=False)
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
-    cli = sql.Column(sql.String(255), nullable=False)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
-    stdout = sql.Column(sql.LargeBinary(length=2**31), nullable=False)
+    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     outcome = sql.Column(sql.String(255))
     classification = sql.Column(sql.String(16))

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Create cldrive test harnesses.
+Create test harnesses for CLgen programs using cldrive.
 """
 import cldrive
 import clgen
@@ -15,8 +15,11 @@ from labm8 import fs
 from pathlib import Path
 from progressbar import ProgressBar
 from time import time
+from typing import List
+from tempfile import NamedTemporaryFile
 
 import db
+import clgen_mkharness
 from db import *
 
 def mkharness(s, env: cldrive.OpenCLEnvironment, program: db.CLgenProgram,
@@ -62,14 +65,10 @@ def mkharness(s, env: cldrive.OpenCLEnvironment, program: db.CLgenProgram,
 
     generation_time = time() - start_time
 
-    start_time = time()
-    proc = subprocess.Popen(['gcc', '-xc', '-', '-lOpenCL'], stdin=subprocess.PIPE)
-    proc.communicate(src.encode('utf-8'))
-    if not proc.returncode == 0:
-        print(src)
-        print(proc.stderr.decode('utf-8'))
-        raise ValueError('harness compilation failed')
-    compile_time = time() - start_time
+    with NamedTemporaryFile(prefix='cldrive-harness-') as tmpfile:
+        start_time = time()
+        compile_harness(src, tmpfile.name)
+        compile_time = time() - start_time
 
     harness = CLgenHarness(
         program_id=program.id,
@@ -83,6 +82,23 @@ def mkharness(s, env: cldrive.OpenCLEnvironment, program: db.CLgenProgram,
     s.add(harness)
     s.commit()
     return harness
+
+
+def compile_harness(src: str, path: str='a.out', platform_id=None,
+                    device_id=None, cc: str='gcc',
+                    ldflags: List[str]=["-lOpenCL"], timeout: int=60) -> None:
+    """ compile harness binary from source """
+    cmd = ['timeout', '-s9', str(timeout), cc, '-xc', '-', '-o', str(path)] + ldflags
+    if platform_id is not None:
+        cmd.append(f'-DPLATFORM_ID={platform_id}')
+    if device_id is not None:
+        cmd.append(f'-DDEVICE_ID={device_id}')
+
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+    proc.communicate(src.encode('utf-8'))
+    if not proc.returncode == 0:
+        raise ValueError('harness compilation failed with returncode {proc.returncode}')
+    return path
 
 
 if __name__ == "__main__":

@@ -5,9 +5,12 @@ from collections import namedtuple
 from subprocess import Popen, PIPE
 from time import time
 from typing import Dict, List, Tuple, NewType
+from tempfile import NamedTemporaryFile
 
+import clgen_mkharness
 import cldrive
 import progressbar
+import subprocess
 from labm8 import fs
 
 import db
@@ -58,19 +61,31 @@ def verify_params(platform: str, device: str, optimizations: bool,
             return
 
 
-def drive(command: List[str], src: str) -> Tuple[float, int, str, str]:
-    """ invoke cldrive on source """
-    start_time = time()
+def drive_harness(s: db.session_t, program: CLgenProgram, params: cldriveParams,
+                  env: cldrive.OpenCLEnvironment, platform_id: int, device_id: int,
+                  timeout: int=60) -> return_t:
+    """ run CLgen program test harness """
+    harness = clgen_mkharness.mkharness(s, env, program, params)
 
-    process = Popen(command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate(src.encode('utf-8'))
-    stderr = stderr.decode('utf-8')
+    with NamedTemporaryFile(prefix='cldrive-harness-', delete=False) as tmpfile:
+        path = tmpfile.name
+    try:
+        clgen_mkharness.compile_harness(
+            harness.src, path, platform_id=platform_id, device_id=device_id)
 
-    runtime = time() - start_time
+        cmd = ['timeout', '-s9', str(timeout), tmpfile.name]
 
-    return return_t(
-        runtime=runtime, status=status_t(process.returncode),
-        stdout=stdout, stderr=stderr)
+        start_time = time()
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = proc.communicate()
+        stdout, stderr = stdout.decode('utf-8'), stderr.decode('utf-8')
+        runtime = time() - start_time
+
+        return return_t(
+            runtime=runtime, status=status_t(proc.returncode),
+            stdout=stdout, stderr=stderr)
+    finally:
+        fs.rm(path)
 
 
 def get_num_progs_to_run(session: db.session_t,
@@ -116,6 +131,7 @@ if __name__ == "__main__":
     gsize = cldrive.NDRange.from_str(args.gsize)
     lsize = cldrive.NDRange.from_str(args.lsize)
     env = cldrive.make_env(platform=args.platform, device=args.device)
+    platform_id, device_id = env.ids()
 
     db.init(args.hostname)  # initialize db engine
 
@@ -128,13 +144,8 @@ if __name__ == "__main__":
             gsize_z=gsize.z, lsize_x=lsize.x, lsize_y=lsize.y, lsize_z=lsize.z,
             optimizations=not args.no_opts)
 
-        harness = clgen_mkharness.mkharness(session, env, program, params)
-
-        flags = params.to_flags()
-        cli = cldrive_cli(args.platform, args.device, *flags)
-
         print(testbed)
-        print(" ".join(cli))
+        print(params)
 
         # progress bar
         num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
@@ -143,16 +154,17 @@ if __name__ == "__main__":
         # main execution loop:
         while True:
             # get the next program to run
-            subquery = session.query(CLgenResult.program_id).filter(
+            done = session.query(CLgenResult.program_id).filter(
                 CLgenResult.testbed == testbed, CLgenResult.params == params)
             program = session.query(CLgenProgram).filter(
-                ~CLgenProgram.id.in_(subquery)).order_by(CLgenProgram.id).first()
+                ~CLgenProgram.id.in_(done)).order_by(CLgenProgram.id).first()
 
             # we have no program to run
             if not program:
                 break
 
-            runtime, status, stdout, stderr = drive(cli, program.src)
+            runtime, status, stdout, stderr = drive_harness(
+                session, program, params, env, platform_id, device_id)
 
             # assert that executed params match expected
             verify_params(platform=args.platform, device=args.device,
@@ -163,7 +175,7 @@ if __name__ == "__main__":
             # create new result
             result = CLgenResult(
                 program=program, params=params, testbed=testbed,
-                cli=" ".join(cli), status=status, runtime=runtime,
+                status=status, runtime=runtime,
                 stdout=stdout, stderr=stderr)
 
             # record result
