@@ -2,6 +2,7 @@
 import re
 import fileinput
 import os
+import sys
 from argparse import ArgumentParser
 from collections import namedtuple
 from subprocess import Popen, PIPE
@@ -53,10 +54,10 @@ def remove_preprocessor_comments(test_case_name):
 
 def run_reduction(s, result: CLSmithResult) -> return_t:
     """
-
     Note as a side effect this method modified environment variables.
     """
     start_time = time()
+    print("reduction")
 
     oracle_testbed_id = s.query(Testbed.id).filter(Testbed.platform == "Oclgrind").filter()
     assert oracle_testbed_id
@@ -104,8 +105,15 @@ def run_reduction(s, result: CLSmithResult) -> return_t:
         cmd = ['perl', '--', CREDUCE, '--n', '4', '--timing', INTERESTING_TEST, path]
 
         # Run the actual reduction
-        process = subprocess.run(cmd, universal_newlines=True,
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out = []
+        process = subprocess.Popen(cmd, universal_newlines=True, bufsize=1,
+                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        with process.stdout:
+            for line in process.stdout:
+                sys.stdout.write(line)
+                out.append(line)
+        process.wait()
+
         status = process.returncode
 
         with open(kernel) as infile:
@@ -113,7 +121,7 @@ def run_reduction(s, result: CLSmithResult) -> return_t:
 
     runtime = time() - start_time
     return CLSmithReduction(result=result, runtime=runtime, status=status,
-                            src=src, stdout=stdout, stderr=stderr)
+                            src=src, log='\n'.join(out))
 
 
 if __name__ == "__main__":
