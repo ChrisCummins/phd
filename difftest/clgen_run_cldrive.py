@@ -13,6 +13,7 @@ import progressbar
 import subprocess
 from labm8 import fs
 
+import analyze
 import db
 from db import *
 from lib import *
@@ -177,6 +178,9 @@ if __name__ == "__main__":
                 program=program, params=params, testbed=testbed,
                 status=status, runtime=runtime,
                 stdout=stdout, stderr=stderr)
+
+            # set outcome
+            result.outcome = analyze.get_cldrive_outcome(result)
 
             # record result
             session.add(result)

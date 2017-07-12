@@ -13,6 +13,7 @@ from typing import Dict, List, Tuple
 import clsmith
 import cldrive
 
+import analyze
 import db
 from db import *
 from lib import *
@@ -188,6 +189,9 @@ if __name__ == "__main__":
                 program=program, params=params, testbed=testbed,
                 flags=" ".join(flags), status=status, runtime=runtime,
                 stdout=stdout, stderr=stderr)
+
+            # set outcome
+            result.outcome = analyze.get_cl_launcher_outcome(result)
 
             # record result
             session.add(result)
