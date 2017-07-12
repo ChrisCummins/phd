@@ -27,7 +27,7 @@ The possible outcomes for a test case are a build failure (\textbf{bf}), build c
 
 In~\cite{Lidbury2015a}, the authors do not distinguish between compiler crashes and other runtime crashes.
 
-\paragraph{Floating points} The OpenCL 1.2 specification permits acceptable error bounds (ULP) for floating point operations and builtin functions. Some operations like addition, subtraction, and multiplication are precise; divide permits a small error, and builtins vary widely. Thus two implementation may give different answers that both fit within the allowed ranges (and because errors propagate through operations it's hard to even describe the ULP on the final output). \texttt{half\_} functions permit large error bounds. \texttt{native\_} functions have ``implementation defined'' error bounds.
+% \paragraph{Floating points} The OpenCL 1.2 specification permits acceptable error bounds (ULP) for floating point operations and builtin functions. Some operations like addition, subtraction, and multiplication are precise; divide permits a small error, and builtins vary widely. Thus two implementation may give different answers that both fit within the allowed ranges (and because errors propagate through operations it's hard to even describe the ULP on the final output). \texttt{half\_} functions permit large error bounds. \texttt{native\_} functions have ``implementation defined'' error bounds.
 
 CSmith, and by extension, CLSmith, do not support floating point operations. We allow relaxed comparisons between floating point values, using a margin of error. This means that if a compiler were to emit wrong code which changes the computed value only subtly, we may miss it; though we have no reason to suggest that such a case is any more likely than a wrong code bug leading the compiler to produce exactly the same output.
 % Section 7.4 of OpenCL 1.2 spec.
@@ -35,7 +35,7 @@ CSmith, and by extension, CLSmith, do not support floating point operations. We 
 
 \subsection{Classifying test outcomes}
 
-In~\cite{Lidbury2015a}, a configuration is determined to have produced a wrong code result for a kernel if, among all the results computer for the kernel, there is a majority of at least 3 among the non-\{\textbf{bf},\textbf{c},\textbf{to}\} results for the kernel, and the configuration yields a non-\{\textbf{bf},\textbf{c},\textbf{to}\} result that disagrees with the majority.
+In~\cite{Lidbury2015a}, a configuration is determined to have produced a wrong code result for a kernel if there is a majority of at least 3 among the non-\{\textbf{bf},\textbf{c},\textbf{to}\} results for the kernel, and the configuration yields a non-\{\textbf{bf},\textbf{c},\textbf{to}\} result that disagrees with the majority.
 
 We select the mode output across a range of devices. Voting is used to select the oracle output.
 %
