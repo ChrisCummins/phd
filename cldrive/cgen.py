@@ -54,10 +54,12 @@ def gen_data_blocks(args: List[KernelArg], inputs: np.array):
                 teardown_c.append(f"""\
     err = clEnqueueReadBuffer(queue, dev_{i}, CL_TRUE, 0, sizeof({ctype}) * {array.size}, &host_{i}, 0, NULL, NULL);
 """)
-                specifiers = " ".join([format_specifier] * array.size)
-                elements = ", ".join([f"host_{i}[{j}]" for j in range(array.size)])
                 print_c.append(f"""\
-    printf("{arg}: {specifiers}\\n", {elements});
+    printf("{arg}:");
+    for (int i = 0; i < {array.size}; i++) {{
+        printf(" {format_specifier}", host_{i}[i]);
+    }}
+    printf("\\n");
 """)
         else:
             assert(array.size == 1)
