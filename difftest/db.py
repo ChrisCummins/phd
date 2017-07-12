@@ -411,8 +411,10 @@ class CLSmithReduction(Base):
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
+
+    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    log = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     result = sql.orm.relationship("CLSmithResult")
 

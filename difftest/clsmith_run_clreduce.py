@@ -104,8 +104,8 @@ def run_reduction(s, result: CLSmithResult) -> return_t:
         cmd = ['perl', '--', CREDUCE, '--n', '4', '--timing', INTERESTING_TEST, path]
 
         # Run the actual reduction
-        process = subprocess.run(cmd, stdout=subprocess.STDOUT,
-                                 stderr=subprocess.STDOUT)
+        process = subprocess.run(cmd, universal_newlines=True,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         status = process.returncode
 
         with open(kernel) as infile:
@@ -113,7 +113,7 @@ def run_reduction(s, result: CLSmithResult) -> return_t:
 
     runtime = time() - start_time
     return CLSmithReduction(result=result, runtime=runtime, status=status,
-                            src=src, log=log)
+                            src=src, stdout=stdout, stderr=stderr)
 
 
 if __name__ == "__main__":
