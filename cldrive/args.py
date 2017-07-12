@@ -57,7 +57,20 @@ NUMPY_TYPES = {
     "unsigned long": np.dtype("uint64"),
     "unsigned short": np.dtype("uint16"),
     "ushort": np.dtype("uint16"),
-    "void": np.dtype("int64"),
+}
+
+FORMAT_SPECIFIERS = {
+    np.dtype("bool"): "%d",
+    np.dtype("float32"): "%.3f",
+    np.dtype("float64"): "%.3f",
+    np.dtype("int16"): "%hd",
+    np.dtype("int32"): "%d",
+    np.dtype("int64"): "%ld",
+    np.dtype("int8"): "%c",
+    np.dtype("uint16"): "%hu",
+    np.dtype("uint32"): "%u",
+    np.dtype("uint64"): "%lu",
+    np.dtype("uint8"): "%hd",
 }
 
 

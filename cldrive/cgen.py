@@ -17,21 +17,22 @@
 #
 import numpy as np
 
-
+import cldrive
 from cldrive import *
 
 
 def escape_c_string(s: str) -> str:
+    """ quote and return the given string """
     return '\n'.join('"{}\\n"'.format(line.replace('"','\\"'))
                      for line in s.split('\n') if len(line.strip()))
 
 
-def gen_data_block(src: str, inputs: np.array):
-    from cldrive import args
-
-    c_lines = []
-    for i, (arg, array) in enumerate(zip(extract_args(src), inputs)):
-        ctype = args.OPENCL_TYPES[array.dtype]
+def gen_data_blocks(args: List[KernelArg], inputs: np.array):
+    setup_c, teardown_c, print_c = [], [], []
+    for i, (arg, array) in enumerate(zip(args, inputs)):
+        ctype = cldrive.args.OPENCL_TYPES[array.dtype]
+        # we don't support printing all types:
+        format_specifier = cldrive.args.FORMAT_SPECIFIERS.get(array.dtype, None)
 
         if arg.is_pointer:
             array_values = ', '.join(repr(x) for x in array.tolist())
@@ -42,51 +43,35 @@ def gen_data_block(src: str, inputs: np.array):
             else:
                 flags += " | CL_MEM_READ_WRITE"
 
-            c_lines.append("""\
+            setup_c.append(f"""\
     {ctype} host_{i}[{array.size}] = {{ {array_values} }};
     cl_mem dev_{i} = clCreateBuffer(ctx, {flags}, sizeof({ctype}) * {array.size}, &host_{i}, &err);
     check_error("clCreateBuffer", err);
     err = clSetKernelArg(kernel, {i}, sizeof(cl_mem), &dev_{i});
     check_error("clSetKernelArg", err);
-""".format(**vars()))
+""")
+            if format_specifier and not arg.is_const:
+                teardown_c.append(f"""\
+    err = clEnqueueReadBuffer(queue, dev_{i}, CL_TRUE, 0, sizeof({ctype}) * {array.size}, &host_{i}, 0, NULL, NULL);
+""")
+                specifiers = " ".join([format_specifier] * array.size)
+                elements = ", ".join([f"host_{i}[{j}]" for j in range(array.size)])
+                print_c.append(f"""\
+    printf("{arg}: {specifiers}\\n", {elements});
+""")
         else:
             assert(array.size == 1)
-            c_lines.append("""\
+            setup_c.append(f"""\
     {ctype} host_{i} = {array[0]};
     err = clSetKernelArg(kernel, {i}, sizeof({ctype}), &host_{i});
     check_error("clSetKernelArg", err);
-""".format(**vars()))
+""")
 
-    return '\n'.join(c_lines)
-
-
-def gen_print_block(src: str):
-    from cldrive import args
-
-    c_lines = []
-    for i, (arg, array) in enumerate(zip(extract_args(src), inputs)):
-        ctype = args.OPENCL_TYPES[array.dtype]
-
-        if arg.is_pointer:
-            array_values = ', '.join(repr(x) for x in array.tolist())
-
-
-            c_lines.append("""\
-    {ctype} host_{i}[{array.size}] = {{ {array_values} }};
-    cl_mem dev_{i} = clCreateBuffer(ctx, {flags}, sizeof({ctype}) * {array.size}, &host_{i}, &err);
-    check_error("clCreateBuffer", err);
-    err = clSetKernelArg(kernel, {i}, sizeof(cl_mem), &dev_{i});
-    check_error("clSetKernelArg", err);
-""".format(**vars()))
-        else:
-            assert(array.size == 1)
-            c_lines.append("""\
-    {ctype} host_{i} = {array[0]};
-    err = clSetKernelArg(kernel, {i}, sizeof({ctype}), &host_{i});
-    check_error("clSetKernelArg", err);
-""".format(**vars()))
-
-    return '\n'.join(c_lines)
+    return (
+        '\n'.join(setup_c).rstrip(),
+        '\n'.join(teardown_c).rstrip(),
+        '\n'.join(print_c).rstrip()
+    )
 
 
 def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
@@ -148,12 +133,6 @@ def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
     src_string = escape_c_string(src)
     optimizations_on_off = "on" if optimizations else "off"
 
-    if compile_only and not create_kernel:
-        kernel_name_decl = ''
-    else:
-        _kernel_name = kernel_name(src)
-        kernel_name_decl = f'const char *kernel_name = "{_kernel_name}";'
-
     clBuildProgram_opts = "NULL" if optimizations else '"-cl-opt-disable"'
 
     ids = env.ids()
@@ -182,7 +161,6 @@ def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
 
 const char *kernel_src = \\
 {src_string};
-{kernel_name_decl}
 
 const char *clerror_string(cl_int err) {{
     /* written by @Selmar http://stackoverflow.com/a/24336429 */
@@ -273,12 +251,8 @@ int main() {{
     int err;
 
     cl_uint num_platforms;
-    cl_platform_id *platform_ids = (cl_platform_id*)malloc(
-        sizeof(cl_platform_id) * (PLATFORM_ID + 1));
-    err = clGetPlatformIDs(
-        /* cl_uint num_entries */ PLATFORM_ID + 1,
-        /* cl_platform_id *platforms */ platform_ids,
-        /* cl_uint *num_platforms */ &num_platforms);
+    cl_platform_id *platform_ids = (cl_platform_id*)malloc(sizeof(cl_platform_id) * (PLATFORM_ID + 1));
+    err = clGetPlatformIDs(PLATFORM_ID + 1, platform_ids, &num_platforms);
     check_error("clGetPlatformIDs", err);
 
     if (num_platforms <= PLATFORM_ID) {{
@@ -288,16 +262,13 @@ int main() {{
     cl_platform_id platform_id = platform_ids[PLATFORM_ID];
 
     char strbuf[256];
-    err = clGetPlatformInfo(platform_id, CL_PLATFORM_NAME, sizeof(strbuf),
-                            strbuf, NULL);
+    err = clGetPlatformInfo(platform_id, CL_PLATFORM_NAME, sizeof(strbuf), strbuf, NULL);
     check_error("clGetPlatformInfo", err);
     fprintf(stderr, "[cldrive] Platform: %s\\n", strbuf);
 
     cl_uint num_devices;
-    cl_device_id *device_ids = (cl_device_id*)malloc(
-        sizeof(cl_device_id) * (DEVICE_ID + 1));
-    err = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, DEVICE_ID + 1,
-                         device_ids, &num_devices);
+    cl_device_id *device_ids = (cl_device_id*)malloc(sizeof(cl_device_id) * (DEVICE_ID + 1));
+    err = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, DEVICE_ID + 1, device_ids, &num_devices);
     check_error("clGetDeviceIDs", err);
 
     if (num_devices <= DEVICE_ID) {{
@@ -306,81 +277,63 @@ int main() {{
     }}
     cl_device_id device_id = device_ids[DEVICE_ID];
 
-    err = clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(strbuf), strbuf,
-                          NULL);
+    err = clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(strbuf), strbuf, NULL);
     check_error("clGetDeviceInfo", err);
     fprintf(stderr, "[cldrive] Device: %s\\n", strbuf);
 
-    cl_context ctx = clCreateContext(
-            /* cl_context_properties *properties */ NULL,
-            /* cl_uint num_devices */ 1,
-            /* const cl_device_id *devices */ &device_id,
-            /* void *pfn_notify */ NULL,
-            /* void *user_data */ NULL,
-            /* cl_int *errcode_ret */ &err);
+    cl_context ctx = clCreateContext(NULL, 1, &device_id, NULL, NULL, &err);
     check_error("clCreateContext", err);
 
-    cl_command_queue queue = clCreateCommandQueue(
-        /* cl_context context */ ctx,
-        /* cl_device_id device */ device_id,
-        /* cl_command_queue_properties properties */ 0,
-        /* cl_int *errcode_ret */ &err);
+    cl_command_queue queue = clCreateCommandQueue(ctx, device_id, 0, &err);
     check_error("clCreateCommandQueue", err);
 
     fprintf(stderr, "[cldrive] OpenCL optimizations: {optimizations_on_off}\\n");
 
-    cl_program program = clCreateProgramWithSource(
-        ctx, 1, (const char **) &kernel_src, NULL, &err);
+    cl_program program = clCreateProgramWithSource(ctx, 1, (const char **) &kernel_src, NULL, &err);
     check_error("clCreateProgramWithSource", err);
 
-    int build_err = clBuildProgram(
-        program, 0, NULL, {clBuildProgram_opts}, NULL, NULL);
+    int build_err = clBuildProgram(program, 0, NULL, {clBuildProgram_opts}, NULL, NULL);
 
     size_t log_size;
-    err = clGetProgramBuildInfo(
-        program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+    err = clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
     check_error("clGetProgramBuildInfo", err);
 
-    char* log = (char*)malloc(sizeof(char) * (log_size + 1));
-    err = clGetProgramBuildInfo(
-        program, device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
-    check_error("clGetProgramBuildInfo", err);
-    printf("%s", log);
+    if (log_size > 2) {{
+        char* log = (char*)malloc(sizeof(char) * (log_size + 1));
+        err = clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+        check_error("clGetProgramBuildInfo", err);
+        fprintf(stderr, "%s", log);
+    }}
 
     check_error("clBuildProgram", build_err);
     """
 
     if not compile_only or (compile_only and create_kernel):
+        kernel_name_ = kernel_name(src)
         c += f"""
-    fprintf(stderr, "Kernel: %s\\n", kernel_name);
-    cl_kernel kernel = clCreateKernel(program, kernel_name, &err);
+    fprintf(stderr, "[cldrive] Kernel: \\\"{kernel_name_}\\\"\\n");
+    cl_kernel kernel = clCreateKernel(program, "{kernel_name_}", &err);
     check_error("clCreateKernel", err);
 """
 
     if not compile_only:
-        data_block = gen_data_block(src, inputs)
+        args = extract_args(src)
+        setup_block, teardown_block, print_block = gen_data_blocks(args, inputs)
         c += f"""
-{data_block}
+{setup_block}
 
     const size_t lsize[3] = {{ {lsize.x}, {lsize.y}, {lsize.z} }};
     const size_t gsize[3] = {{ {gsize.x}, {gsize.y}, {gsize.z} }};
 
-    err = clEnqueueNDRangeKernel(
-        /* cl_command_queue command_queue */ queue,
-        /* cl_kernel kernel */ kernel,
-        /* cl_uint work_dim */ 3,
-        /* const size_t *global_work_offset */ NULL,
-        /* const size_t *global_work_size */ gsize,
-        /* const size_t *local_work_size */ lsize,
-        /* cl_uint num_events_in_wait_list */ 0,
-        /* const cl_event *event_wait_list */ NULL,
-        /* cl_event *event */ NULL);
+    err = clEnqueueNDRangeKernel(queue, kernel, 3, NULL, gsize, lsize, 0, NULL, NULL);
     check_error("clEnqueueNDRangeKernel", err);
+
+{teardown_block}
 
     err = clFinish(queue);
     check_error("clFinish", err);
 
-    // TODO: print results.
+{print_block}
 
     /* clReleaseMemObject(); */
     clReleaseProgram(program);
@@ -389,6 +342,7 @@ int main() {{
     clReleaseContext(ctx);
 """
 
+    # close out main():
     c += f"""
     fprintf(stderr, "done.\\n");
     return 0;
