@@ -98,7 +98,7 @@ class CLSmithProgram(Base):
 
     # relation back to results:
     cl_launcher_results = sql.orm.relationship("CLSmithResult", back_populates="program")
-    cldrive_results = sql.orm.relation("cldriveCLSmithResult", back_populates="program")
+    cldrive_results = sql.orm.relationship("cldriveCLSmithResult", back_populates="program")
 
     def __repr__(self):
         return self.id
@@ -120,10 +120,39 @@ class CLgenProgram(Base):
     cl_launchable = sql.Column(sql.Boolean)
     handchecked = sql.Column(sql.Boolean)
 
-    # relation back to results:
+    # relations:
     results = sql.orm.relationship("CLgenResult", back_populates="program")
     cl_launcher_results = sql.orm.relationship("cl_launcherCLgenResult",
                                                back_populates="program")
+    harnesses = sql.orm.relationship("CLgenHarness", back_populates="program")
+
+    def __repr__(self) -> str:
+        return self.id
+
+
+class CLgenHarness(Base):
+    """ cldrive-generated test harnesses for CLgen programs """
+    __tablename__ = 'CLgenHarness'
+    id = sql.Column(sql.Integer, primary_key=True)
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+
+    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLgenPrograms.id"),
+                            nullable=False)
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("cldriveParams.id"),
+                           nullable=False)
+
+    # cldrive version which generated harness
+    cldrive_version = sql.Column(sql.String(12))
+    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    compile_only = sql.Column(sql.Boolean)
+
+    # time taken to create harness
+    generation_time = sql.Column(sql.Float, nullable=False)
+    compile_time = sql.Column(sql.Float, nullable=False)
+
+    # relations:
+    program = sql.orm.relationship("CLgenProgram", back_populates="harnesses")
+    params = sql.orm.relationship("cldriveParams", back_populates="harnesses")
 
     def __repr__(self) -> str:
         return self.id
@@ -309,8 +338,10 @@ class cldriveParams(Base):
         'size', 'generator', 'scalar_val', 'gsize_x', 'gsize_y', 'gsize_z',
         'lsize_x', 'lsize_y', 'lsize_z', 'optimizations', name='_uid'),)
 
+    # relations:
     clgen_results = sql.orm.relationship("CLgenResult", back_populates="params")
     github_results = sql.orm.relationship("GitHubResult", back_populates="params")
+    harnesses = sql.orm.relationship("CLgenHarness", back_populates="params")
 
     def to_flags(self):
         flags = [
@@ -510,6 +541,7 @@ class CLgenResult(Base):
     outcome = sql.Column(sql.String(255))
     classification = sql.Column(sql.String(16))
 
+    # relations:
     program = sql.orm.relationship("CLgenProgram", back_populates="results")
     testbed = sql.orm.relationship("Testbed", back_populates="clgen_results")
     params = sql.orm.relationship("cldriveParams", back_populates="clgen_results")

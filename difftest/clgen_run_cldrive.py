@@ -115,6 +115,7 @@ if __name__ == "__main__":
 
     gsize = cldrive.NDRange.from_str(args.gsize)
     lsize = cldrive.NDRange.from_str(args.lsize)
+    env = cldrive.make_env(platform=args.platform, device=args.device)
 
     db.init(args.hostname)  # initialize db engine
 
@@ -126,6 +127,9 @@ if __name__ == "__main__":
             scalar_val=args.scalar_val, gsize_x=gsize.x, gsize_y=gsize.y,
             gsize_z=gsize.z, lsize_x=lsize.x, lsize_y=lsize.y, lsize_z=lsize.z,
             optimizations=not args.no_opts)
+
+        harness = clgen_mkharness.mkharness(session, env, program, params)
+
         flags = params.to_flags()
         cli = cldrive_cli(args.platform, args.device, *flags)
 
