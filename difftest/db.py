@@ -555,14 +555,6 @@ class CLgenResult(Base):
                 .format(**vars()))
 
 
-class CLgenResultReproduction(Base):
-    __tablename__ = "CLgenResultReproductions"
-    id = sql.Column(sql.Integer, primary_key=True)
-    result_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"),
-                           nullable=False)
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
-
-
 class GitHubResult(Base):
     __tablename__ = "GitHubResults"
     id = sql.Column(sql.Integer, primary_key=True)
