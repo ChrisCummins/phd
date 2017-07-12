@@ -52,6 +52,7 @@ NUMPY_TYPES = {
     "uchar": np.dtype("uint8"),
     "uint": np.dtype("uint32"),
     "ulong": np.dtype("uint64"),
+    "unsigned": np.dtype("uint32"),
     "unsigned char": np.dtype("uint8"),
     "unsigned int": np.dtype("uint32"),
     "unsigned long": np.dtype("uint64"),
