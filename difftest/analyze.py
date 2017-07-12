@@ -75,12 +75,21 @@ def get_cl_launcher_outcome(result) -> None:
     # SIGABRT
     elif result.status == -6:
         return crash_or_build_crash()
+    # SIGFPE
+    elif result.status == -8:
+        return crash_or_build_crash()
+    # SIGBUS
+    elif result.status == -7:
+        return crash_or_build_crash()
     # cl_launcher error
     elif result.status == 1:
         return crash_or_build_failure()
     else:
         print(result)
-        print(Signals(-result.status).name)
+        try:
+            print(Signals(-result.status).name)
+        except ValueError:
+            print(result.status)
         raise LookupError(f"failed to determine outcome of cl_launcher {result.id}")
 
 
@@ -123,6 +132,12 @@ def get_cldrive_outcome(result):
     # SIGILL
     elif result.status == -4:
         return crash_or_build_crash()
+    # SIGFPE
+    elif result.status == -8:
+        return crash_or_build_crash()
+    # SIGBUS
+    elif result.status == -7:
+        return crash_or_build_crash()
     # SIGABRT
     elif result.status == -6:
         return crash_or_build_crash()
@@ -132,10 +147,16 @@ def get_cldrive_outcome(result):
             return timeout_or_build_timeout()
         else:
             return crash_or_build_failure()
+    # file not found (check the stderr on this one):
+    elif result.status == 127:
+        return crash_or_build_failure()
     else:
         print(result)
-        print(Signals(-result.status).name)
-        raise LookupError(f"failed to determine outcome of cldrive {result.id}")
+        try:
+            print(Signals(-result.status).name)
+        except ValueError:
+            print(result.status)
+        raise LookupError(f"failed to determine outcome of cldrive result #{result.id}")
 
 
 def set_cldrive_outcomes(session, results_table, rerun: bool=False) -> None:
