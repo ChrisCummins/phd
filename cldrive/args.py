@@ -67,7 +67,7 @@ FORMAT_SPECIFIERS = {
     np.dtype("int16"): "%hd",
     np.dtype("int32"): "%d",
     np.dtype("int64"): "%ld",
-    np.dtype("int8"): "%c",
+    np.dtype("int8"): "%hd",
     np.dtype("uint16"): "%hu",
     np.dtype("uint32"): "%u",
     np.dtype("uint64"): "%lu",
