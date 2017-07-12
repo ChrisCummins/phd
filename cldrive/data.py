@@ -107,8 +107,7 @@ def make_data(src: str, size: int, data_generator: Generator,
             # 4 floats. Each component of a scalar value is the flattened
             # global size, e.g. with gsize (32,2,1), scalar arugments have the
             # value 32 * 2 * 1 = 64.
-            scalar_val = [scalar_val] * arg.vector_width
-            argdata = np.array(scalar_val).astype(arg.numpy_type)
+            argdata = np.array([scalar_val] * arg.vector_width).astype(arg.numpy_type)
         else:
             # argument is neither global or local, but is a pointer?
             raise ValueError(f"unknown argument type '{arg}'")
