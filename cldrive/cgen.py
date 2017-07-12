@@ -35,7 +35,12 @@ def gen_data_blocks(args: List[KernelArg], inputs: np.array):
         format_specifier = cldrive.args.FORMAT_SPECIFIERS.get(array.dtype, None)
 
         if arg.is_pointer:
-            array_values = ', '.join(repr(x) for x in array.tolist())
+            if array.dtype == np.dtype("bool"):
+                stringify = lambda x: "1" if x else "0"
+            else:
+                stringify = repr
+
+            array_values = ', '.join(stringify(x) for x in array.tolist())
 
             flags = "CL_MEM_COPY_HOST_PTR"
             if arg.is_const:
@@ -160,6 +165,8 @@ def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
 #else
 #include <CL/cl.h>
 #endif
+
+typedef unsigned char bool;
 
 const char *kernel_src = \\
 {src_string};
