@@ -31,7 +31,9 @@ def cl_launcher(src: str, platform_id: int, device_id: int,
                                    timeout=os.environ.get("TIMEOUT", 60))
 
 
-def reproduce(file=sys.stdout, table=cl_launcherCLgenResult, **args):
+def reproduce(file=sys.stdout, tablename='cl_launcherCLgenResult',
+              verbose=False, **args):
+    table = eval(tablename)
     with Session(commit=False) as s:
         result = s.query(table).filter(table.id == args['result_id']).first()
 
@@ -154,14 +156,14 @@ echo "reproduced output written to 'stdout.txt' and 'stderr.txt'"
             runtime, status, stdout, stderr = cl_launcher(
                     program.src, platform_id, device_id, *flags)
 
-            if verbose:
-                print(stderr)
-                print(stdout)
+            # if verbose:
+            #     print(stderr[:100])
+            #     print(stdout[:100])
 
             reproduced = True
-            if stderr != result.stderr:
-                reproduced = False
-                print("stderr differs")
+            # if stderr != result.stderr:
+            #     reproduced = False
+            #     print("stderr differs")
             if stdout != result.stdout:
                 reproduced = False
                 print("stdout differs")
@@ -175,6 +177,7 @@ def main():
                         help="MySQL database hostname")
     parser.add_argument("-r", "--result", dest="result_id", type=int, default=None,
                         help="results ID")
+    parser.add_argument("-t", "--table", dest="tablename", default="cl_launcherCLgenResult")
     parser.add_argument("--report",
                         help="generate bug report of type: {w,bc}")
     parser.add_argument("-v", "--verbose", action="store_true")
