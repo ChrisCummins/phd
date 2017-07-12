@@ -393,6 +393,7 @@ class CLSmithResult(Base):
     program = sql.orm.relationship("CLSmithProgram", back_populates="cl_launcher_results")
     testbed = sql.orm.relationship("Testbed", back_populates="clsmith_results")
     params = sql.orm.relationship("cl_launcherParams", back_populates="results")
+    reduction = sql.orm.relation("CLSmithReduction", back_populates="result")
 
     def __repr__(self):
         return ("result: {self.id} "
@@ -404,24 +405,16 @@ class CLSmithResult(Base):
                 .format(**vars()))
 
 
-class CLSmithReduction(): # FIXME: (Base):
+class CLSmithReduction(Base):
     __tablename__ = "CLSmithReductions"
-    id = sql.Column(sql.Integer, primary_key=True)
-    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLSmithPrograms.id"),
-                            nullable=False)
-    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
-                            nullable=False)
-    params_id = sql.Column(sql.Integer, sql.ForeignKey("cl_launcherParams.id"),
-                           nullable=False)
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithResults.id"), primary_key=True)
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
-    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    log = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
-    program = sql.orm.relationship("CLSmithProgram")
-    testbed = sql.orm.relationship("Testbed")
-    params = sql.orm.relationship("cl_launcherParams")
+    result = sql.orm.relationship("CLSmithResult")
 
 
 class cldriveCLSmithResult(Base):
