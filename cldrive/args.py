@@ -307,7 +307,7 @@ def parse(src: str) -> FileAST:
         new_ast = FileAST(ext=children, coord=0)
 
         return new_ast
-    except ParseError as e:
+    except (ParseError, AssertionError) as e:
         raise OpenCLValueError("syntax error") from e
 
 
