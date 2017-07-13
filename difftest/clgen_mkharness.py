@@ -37,6 +37,10 @@ def mkharness(s, env: cldrive.OpenCLEnvironment, program: db.CLgenProgram,
     lsize = cldrive.NDRange(params.lsize_x, params.lsize_y, params.lsize_z)
     compile_only = False
 
+    # acceptable errors from cldrive.emit_c(), such as may be thrown if the
+    # source code is malformed, or contains unsupported data types.
+    errors = (cldrive.OpenCLValueError, ValueError, LookupError)
+
     try:
         # generate the full test harness
         start_time = time()
@@ -47,7 +51,7 @@ def mkharness(s, env: cldrive.OpenCLEnvironment, program: db.CLgenProgram,
         src = cldrive.emit_c(
             env, src=program.src, inputs=inputs, gsize=gsize, lsize=lsize,
             optimizations=params.optimizations)
-    except cldrive.OpenCLValueError as e:
+    except errors as e:
         try:
             # could not generate the full test harness, try and create a kernel
             start_time = time()
@@ -56,7 +60,7 @@ def mkharness(s, env: cldrive.OpenCLEnvironment, program: db.CLgenProgram,
                 env, src=program.src, inputs=[], gsize=gsize, lsize=lsize,
                 optimizations=params.optimizations, compile_only=True,
                 create_kernel=True)
-        except cldrive.OpenCLValueError as e:
+        except errors as e:
             # could not create a kernel, so create a compile-only stub
             start_time = time()
             src = cldrive.emit_c(env, src=program.src, inputs=[], gsize=gsize, lsize=lsize,
