@@ -27,6 +27,16 @@ def escape_c_string(s: str) -> str:
                      for line in s.split('\n') if len(line.strip()))
 
 
+def to_array_str(array):
+    if array.dtype == np.dtype("bool"):
+        stringify = lambda x: "1" if x else "0"
+    else:
+        stringify = repr
+
+    array_values = ', '.join(stringify(x) for x in array.tolist())
+    return f"{{ {array_values} }}"
+
+
 def gen_data_blocks(args: List[KernelArg], inputs: np.array):
     setup_c, teardown_c, print_c = [], [], []
     for i, (arg, array) in enumerate(zip(args, inputs)):
@@ -35,12 +45,7 @@ def gen_data_blocks(args: List[KernelArg], inputs: np.array):
         format_specifier = cldrive.args.FORMAT_SPECIFIERS.get(array.dtype, None)
 
         if arg.is_pointer:
-            if array.dtype == np.dtype("bool"):
-                stringify = lambda x: "1" if x else "0"
-            else:
-                stringify = repr
-
-            array_values = ', '.join(stringify(x) for x in array.tolist())
+            array_str = to_array_str(array)
 
             flags = "CL_MEM_COPY_HOST_PTR"
             if arg.is_const:
@@ -49,7 +54,7 @@ def gen_data_blocks(args: List[KernelArg], inputs: np.array):
                 flags += " | CL_MEM_READ_WRITE"
 
             setup_c.append(f"""\
-    {ctype} host_{i}[{array.size}] = {{ {array_values} }};
+    {ctype} host_{i}[{array.size}] = {array_str};
     cl_mem dev_{i} = clCreateBuffer(ctx, {flags}, sizeof({ctype}) * {array.size}, &host_{i}, &err);
     check_error("clCreateBuffer", err);
     err = clSetKernelArg(kernel, {i}, sizeof(cl_mem), &dev_{i});
@@ -67,9 +72,13 @@ def gen_data_blocks(args: List[KernelArg], inputs: np.array):
     printf("\\n");
 """)
         else:
-            assert(array.size == 1)
+            if array.size > 1:
+                data_val = to_array_str(array)
+                setup_c.append(f"{ctype} host_{i}[{array.size}] = {data_val};")
+            else:
+                setup_c.append(f"{ctype} host_{i} = {array[0]};")
+
             setup_c.append(f"""\
-    {ctype} host_{i} = {array[0]};
     err = clSetKernelArg(kernel, {i}, sizeof({ctype}), &host_{i});
     check_error("clSetKernelArg", err);
 """)
