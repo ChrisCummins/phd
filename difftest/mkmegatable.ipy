@@ -21,66 +21,73 @@ session = db.make_session()
 null_columns = " & ".join(["-"] * 6)
 
 # Measured average CLgen sample time
-clgen_generation_time = .5
+clgen_generation_time = .9
 
-def get_counts(results_table, params_table, testbed, no_opt: bool, time_limit: int=None):
+
+def get_columns(results_table, programs_table, params_table, reductions_table,
+                testbed: Testbed, no_opt: bool):
     """
-    Return results for the specified time limit
+    Return results for the specified time limit.
+
+    Arguments:
+        results_table: SQLAlchemy table for results.
+        programs_table: SQLAlchemy table for programs.
+        params_table: SQLAlchemy table for params.
+        reduction_table: SQLAlchemy table for reduction results. If
+            provided, reductions will be added to the runtime of "w" classified
+            results, where possible.
+        testbed (db.Testbed): Testbed instance to return results for.
+        no_opt (bool): Testbed optimizations off?
     """
-    # If no time limit is provided, return all results.
-    if time_limit is None:
-        return {
-            "w": q.filter(results_table.classification == "w").count(),
-            "bf": q.filter(results_table.classification == "bf").count(),
-            "c": q.filter(results_table.classification == "c").count(),
-            "to": q.filter(results_table.classification == "to").count(),
-            "pass": q.filter(results_table.classification == "pass").count(),
-            "fail": q.filter(results_table.classification == "fail").count(),
-            "total": q.count()
-        }
+    time_limit = 172800
 
-    # Otherwise, simulate results for a fixed period of time
-    t = 0  # elapsed time
-    counts = {None: 0, "w": 0, "bf": 0, "c": 0, "to": 0, "pass": 0, "fail": 0}
-
+    # query to return all results in-order
     param_ids = session.query(params_table.id).filter(params_table.optimizations == no_opt)
     q = session.query(results_table).filter(
         results_table.testbed_id == testbed.id,
-        results_table.params_id.in_(param_ids))
+        results_table.params_id.in_(param_ids)).order_by(results_table.date)
 
-    for result in q.order_by(results_table.id):
-        if hasattr(result.program, 'runtime'):
-            generation_time = result.program.runtime
-        else:
-            generation_time = clgen_generation_time
-        exec_time = generation_time + result.runtime
-        if t + exec_time > time_limit:
-            hours = t / 60 / 60
+    # Otherwise, simulate results for a fixed period of time
+    t = 0  # elapsed time
+    counts = {"w": 0, "bf": 0, "c": 0, "to": 0, "pass": 0, "fail": 0}
+
+    # times
+    generation_time = sql.sql.func.ifnull(programs_table.runtime, clgen_generation_time)
+    runtime = results_table.runtime
+    reduction_time = sql.sql.func.ifnull(reductions_table.runtime, 0)
+    total_time = generation_time + runtime + reduction_time
+
+    q = session.query(
+            results_table.classification,
+            generation_time, runtime, reduction_time, total_time)\
+        .outerjoin(programs_table)\
+        .outerjoin(reductions_table)\
+        .filter(results_table.testbed_id == testbed.id,
+                results_table.params_id.in_(param_ids),
+                results_table.classification != None)\
+        .order_by(results_table.date)
+
+    # accumulate results within the time limit
+    for row in q:
+        classification, generation_time, runtime, reduction_time, total_time = row
+        if t + total_time > time_limit:
             break
-        t += exec_time
-        counts[result.classification] = counts.get(result.classification, 0) + 1
+        t += total_time
+        counts[classification] = counts.get(classification, 0) + 1
     else:
-        counts['total'] = '*'  # asterisk denotes insufficient results to reach time limit
-
-    # remove unclassified results from table
-    counts.pop(None)
+        # We ran out of results before we hit the time limit.
+        # asterisk denotes insufficient results
+        counts['total'] = '*'
 
     # sum up all results
     total = counts.pop("total", "")
     counts['total'] = str(sum(counts.values())) + total
 
-    return counts
-
-
-def get_columns(results_table, params_table, testbed: Testbed, no_opt: bool, time_limit: int=172800):
-    print(f"{results_table.__tablename__} {testbed.device} {no_opt} ", end="")
-    c = get_counts(results_table, params_table, testbed, no_opt, time_limit)
-    print(c)
     sys.stdout.flush()
-    if c['total'].endswith('*'):
+    if counts['total'].endswith('*'):
         print(f"insufficient {results_table.__tablename__} for {testbed.device} {no_opt}", file=sys.stderr)
         sys.stderr.flush()
-    return f"{c['w']} & {c['bf']} & {c['c']} & {c['to']} & {c['pass']} & {c['total']}"
+    return f"{counts['w']} & {counts['bf']} & {counts['c']} & {counts['to']} & {counts['pass']} & {counts['total']}"
 
 
 def get_row(config_id, testbed_id):
@@ -90,23 +97,23 @@ def get_row(config_id, testbed_id):
     device_name = device_str(testbed.device)
     driver_name = driver_str(testbed.driver)
 
-    time_limit = 172800
-
-    noopt = False
-    clsmith_columns = get_columns(CLSmithResult, cl_launcherParams, testbed, False)
-    # clsmith_columns = null_columns
-    clgen_columns = get_columns(CLgenResult, cldriveParams, testbed, noopt, time_limit)
-
     noopt = True
-    clsmith_noopt_columns = get_columns(CLSmithResult, cl_launcherParams, testbed, True)
-    # clsmith_noopt_columns = null_columns
-    clgen_noopt_columns = get_columns(CLgenResult, cldriveParams, testbed, noopt, time_limit)
+    clsmith_columns = get_columns(
+        CLSmithResult, CLSmithProgram, cl_launcherParams, CLSmithReduction, testbed, noopt)
+    clgen_columns = get_columns(
+        CLgenResult, CLgenProgram, cldriveParams, CLgenReduction, testbed, noopt)
+
+    withopt = False
+    clsmith_withopt_columns = get_columns(
+        CLSmithResult, CLSmithProgram, cl_launcherParams, CLSmithReduction, testbed, withopt)
+    clgen_withopt_columns = get_columns(
+        CLgenResult, CLgenProgram, cldriveParams, CLgenReduction, testbed, withopt)
 
     return f"""\\multirow{{ 2}}{{*}}{{{config_id}}} & \\multirow{{ 2}}{{*}}{{{platform_name}}} & \
 \\multirow{{ 2}}{{*}}{{{device_name}}} & \
 $-$ & {clsmith_columns}       & {clgen_columns} \\\\
 & & & \
-$+$ & {clsmith_noopt_columns} & {clgen_noopt_columns} \\\\"""
+$+$ & {clsmith_withopt_columns} & {clgen_withopt_columns} \\\\"""
 
 rows = "\n\\hline\n".join(get_row(*x) for x in CONFIGURATIONS)
 
