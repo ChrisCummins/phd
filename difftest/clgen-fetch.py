@@ -51,5 +51,6 @@ if __name__ == "__main__":
                     sampler=args.sampler, src=src,
                     status=args.status, cl_launchable=args.cl_launchable)
                 session.add(p)
+                session.commit()
 
     print("done.")
