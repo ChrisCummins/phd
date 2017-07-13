@@ -114,6 +114,9 @@ class CLgenProgram(Base):
     model = sql.Column(sql.String(40))
     sampler = sql.Column(sql.String(40))
 
+    # time taken to produce program (in seconds).
+    runtime = sql.Column(sql.Float)
+
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     status = sql.Column(sql.Integer)
     gpuverified = sql.Column(sql.Boolean)
@@ -128,6 +131,19 @@ class CLgenProgram(Base):
 
     def __repr__(self) -> str:
         return self.id
+
+
+class CLgenReduction(Base):
+    __tablename__ = "CLgenReductions"
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"), primary_key=True)
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    status = sql.Column(sql.Integer, nullable=False)
+    runtime = sql.Column(sql.Float, nullable=False)
+
+    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    log = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+
+    result = sql.orm.relationship("CLgenResult")
 
 
 class CLgenHarness(Base):
