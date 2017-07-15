@@ -86,9 +86,10 @@ def mkharness(s, env: cldrive.OpenCLEnvironment, program: db.CLgenProgram,
 
 def compile_harness(src: str, path: str='a.out', platform_id=None,
                     device_id=None, cc: str='gcc',
-                    ldflags: List[str]=["-lOpenCL"], timeout: int=60) -> None:
+                    flags: List[str]=["-std=c99", "-lOpenCL"],
+                    timeout: int=60) -> None:
     """ compile harness binary from source """
-    cmd = ['timeout', '-s9', str(timeout), cc, '-xc', '-', '-o', str(path)] + ldflags
+    cmd = ['timeout', '-s9', str(timeout), cc, '-xc', '-', '-o', str(path)] + flags
     if platform_id is not None:
         cmd.append(f'-DPLATFORM_ID={platform_id}')
     if device_id is not None:
