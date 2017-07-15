@@ -176,6 +176,7 @@ def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
 #endif
 
 typedef unsigned char bool;
+typedef unsigned short ushort;
 
 const char *kernel_src = \\
 {src_string};
