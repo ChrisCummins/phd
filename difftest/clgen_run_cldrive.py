@@ -71,13 +71,8 @@ def drive_harness(s: db.session_t, program: CLgenProgram, params: cldriveParams,
     with NamedTemporaryFile(prefix='cldrive-harness-', delete=False) as tmpfile:
         path = tmpfile.name
     try:
-        try:
-            clgen_mkharness.compile_harness(
-                harness.src, path, platform_id=platform_id, device_id=device_id)
-        except ValueError:
-            return return_t(
-                runtime=0, status=401,
-                stdout='<-- HARNESS ERROR -->', stderr='<-- HARNESS ERROR -->')
+        clgen_mkharness.compile_harness(
+            harness.src, path, platform_id=platform_id, device_id=device_id)
 
         cmd = ['timeout', '-s9', str(timeout), tmpfile.name]
 
