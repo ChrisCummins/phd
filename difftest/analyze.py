@@ -119,6 +119,9 @@ def get_cldrive_outcome(result):
 
     if result.status == 0:
         return "pass"
+    # 401 is bad harness
+    elif result.status == 401:
+        return "fail"
     # 139 is SIGSEV
     elif result.status == 139 or result.status == -11:
         result.status = 139
