@@ -161,9 +161,10 @@ if __name__ == "__main__":
 
             reduction = run_reduction(s, result)
 
-            # record result
-            s.add(reduction)
-            s.commit()
+            # record result if it was successful
+            if reduction.status == 0:
+                s.add(reduction)
+                s.commit()
 
             # update progress bar
             num_ran, total = get_num_results_to_reproduce(s, testbed)
