@@ -9,7 +9,6 @@ HOSTS = {
 
 # shorthand device names
 DEVICES = {
-    "GeForce GTX 1080": "NVIDIA GTX 1080",
     "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "Intel E5-2620 v4",
     "Intel(R) Xeon(R) CPU E5-2650 v2 @ 2.60GHz": "Intel E5-2650 v2",
     "Olcgrind Simulator": "Oclgrind",
@@ -43,7 +42,7 @@ DEVTYPES = {
 }
 
 # Ordering for the paper:
-TESTBED_IDS = [3, 13, 9, 14, 10, 15, 12, 11]
+TESTBED_IDS = [3, 20, 13, 9, 14, 10, 15, 12, 11]
 OCLGRIND_ID = 11
 CONFIGURATIONS = list(zip(range(1, len(TESTBED_IDS) + 1), TESTBED_IDS))
 
