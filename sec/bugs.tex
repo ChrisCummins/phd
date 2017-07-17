@@ -1,12 +1,16 @@
-\section{Bugs Found in OpenCL Implementations}
+\section{Finding Bugs in OpenCL Compilers}
 
-This section reports on the results of extended testing of 9 OpenCL implementations using our method.
+This section reports on the results of extended testing of 9 OpenCL implementations using CLgen. We found that all the compilers we tested crashed, and all of them silently emit wrong code. We divide our discussion by class of bug: first compiler and runtime crashes, then wrong-code bugs.
+
+\subsection{Compiler Crashes}
+
+
+\subsection{Runtime Crashes}
+
+Figure~\ref{TODO} exposes a bug in POCL in which a kernel containing an undefined symbol will successfully compile without warning, then crash the program when attempting to run the kernel. Such a test case is trivial to generate, yet could not be synthesized by CSmith.
+
+\subsection{Wrong-code Bugs}
 
 Examples of bugs shown in Figure~\ref{lst:bugs}.
 
 \input{lst/bugs}
-
-
-\subsection{Bug Characteristics}
-
-\cc{TODO \ldots}
