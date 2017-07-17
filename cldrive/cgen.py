@@ -175,6 +175,8 @@ def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
 #include <CL/cl.h>
 #endif
 
+#define True 1
+#define False 0
 typedef unsigned char bool;
 typedef unsigned short ushort;
 
