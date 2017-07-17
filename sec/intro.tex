@@ -8,6 +8,8 @@
 \noindent
 Optimizing compilers are large and complex programs, with a functionally infinite scope of possible inputs. Fixed test-suites are inadequate for ensuring correct behavior over the range of accepted inputs, and the lack of formal specifications for sections of compilers renders formal verification unusable beyond isolated subcomponents. Despite this, the correct behavior of compilers is of utmost importance, being one of the key trusted technologies in computer science.
 
+\cc{TODO:} We also, for the first time, provide a means of testing compiler behaviour under plausibly-invalid input conditions. We generate plausible but ill formed inputs. Prior work used random ASCII sequences to identify compiler front-end bugs~\cite{McKeeman1998}. By mimicking hand written code, our technique is capable of discovering bugs further within the compiler, including middle-end and even code generation.
+
 Differential testing is a promising methodology for identifying bugs through the pseudo-random generation of test cases. Figure~\ref{fig:difftest} shows the differential testing methodology. A program generator (e.g. CSmith) generates a large, random program (test case), which is run on a range of different compilers or compiler options. The outcomes are compared to determine if the test case is interesting.
 
 \begin{figure}
