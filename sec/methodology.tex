@@ -23,6 +23,8 @@ We describe two experiments testing OpenCL configurations using our approach. Th
 
 Figure~\ref{fig:test-process} shows the methodology for a single test case.
 
+In prior work we required that synthesized programs be well formed and compute \emph{useful work}. For the purpose of testing compilers, we discarded these requirements. Instead, we demand that the behavior of test cases is \emph{portable} and \emph{reproducible}. In some respects this simplifies the execution process.
+
 The possible outcomes for a test case are a build failure (\textbf{bf}), build crash (\textbf{bc}), runtime crash (\textbf{c}), or pass (\textbf{\cmark}). A \textbf{bf} occurs when compilation of a kernel fails, usually accompanied by an error message. A \textbf{bc} outcome on the other hand represents a compiler crash which 
 
 In~\cite{Lidbury2015a}, the authors do not distinguish between compiler crashes and other runtime crashes.

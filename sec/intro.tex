@@ -6,7 +6,7 @@
 \am{Draft annotation}
 
 \noindent
-Optimizing compilers are large and complex programs. Fixed test-suites are inadequate for ensuring correct behavior over the range of accepted inputs, and the lack of formal specifications for sections of compilers renders formal verification unusable beyond isolated subcomponents.
+Optimizing compilers are large and complex programs, with a functionally infinite scope of possible inputs. Fixed test-suites are inadequate for ensuring correct behavior over the range of accepted inputs, and the lack of formal specifications for sections of compilers renders formal verification unusable beyond isolated subcomponents. Despite this, the correct behavior of compilers is of utmost importance, being one of the key trusted technologies in computer science.
 
 Differential testing is a promising methodology for identifying bugs through the pseudo-random generation of test cases. Figure~\ref{fig:difftest} shows the differential testing methodology. A program generator (e.g. CSmith) generates a large, random program (test case), which is run on a range of different compilers or compiler options. The outcomes are compared to determine if the test case is interesting.
 
