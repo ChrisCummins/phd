@@ -66,7 +66,7 @@ if __name__ == "__main__":
         bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
 
     while target_num_progs < 0 or numprogs < target_num_progs:
-        make_program('--small')
+        make_program()# '--small'
         numprogs = get_num_progs()
         bar.update(numprogs)
 
