@@ -98,7 +98,7 @@ def compile_harness(src: str, path: str='a.out', platform_id=None,
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     proc.communicate(src.encode('utf-8'))
     if not proc.returncode == 0:
-        raise ValueError('harness compilation failed with returncode {proc.returncode}')
+        raise ValueError(f'harness compilation failed with returncode {proc.returncode}')
     return path
 
 
