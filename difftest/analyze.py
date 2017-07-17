@@ -3,7 +3,6 @@ import sqlalchemy as sql
 
 from collections import Counter
 from signal import Signals
-from progressbar import ProgressBar
 
 import db
 import util
@@ -100,7 +99,7 @@ def set_cl_launcher_outcomes(session, results_table, rerun: bool=False) -> None:
     if not rerun:
         q = q.filter(results_table.outcome == None)
     ntodo = q.count()
-    for result in ProgressBar()(q, max_value=ntodo):
+    for result in util.NamedProgressBar('cl_launcher outcomes')(q, max_value=ntodo):
         result.outcome = get_cl_launcher_outcome(result)
 
 
@@ -169,7 +168,7 @@ def set_cldrive_outcomes(session, results_table, rerun: bool=False) -> None:
     if not rerun:
         q = q.filter(results_table.outcome == None)
     ntodo = q.count()
-    for result in ProgressBar()(q, max_value=ntodo):
+    for result in util.NamedProgressBar('cldrive outcomes')(q, max_value=ntodo):
         result.outcome = get_cldrive_outcome(result)
 
 
@@ -222,7 +221,7 @@ def set_clsmith_classifications(session, results_table, params_table,
     ok = session.query(results_table.program_id).filter(
         results_table.outcome == "pass").distinct()
     q = session.query(programs_table).filter(programs_table.id.in_(ok))
-    for program in ProgressBar()(q, max_value=q.count()):
+    for program in util.NamedProgressBar('classify')(q, max_value=q.count()):
         # treat param combinations independently
         for params in session.query(params_table):
             # select all results for this test case

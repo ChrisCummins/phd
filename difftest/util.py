@@ -2,6 +2,8 @@
 Shared utility code for Jupyter notebooks.
 """
 from collections import Counter
+from progressbar import ETA, ProgressBar
+
 
 HOSTS = {
     "CentOS Linux 7.1.1503 64bit": "CentOS 7.1 64bit"
@@ -100,6 +102,7 @@ def get_majority_output(session, result, table):
 
     return majority_output, majority_devices
 
+
 def classification_to_paper(classification):
     return {
         "Wrong code": "w",
@@ -107,3 +110,11 @@ def classification_to_paper(classification):
         "Runtime crash": "c",
         "Timeout": "to",
     }[classification]
+
+
+def NamedProgressBar(name):
+    """
+    TODO: Return progress bar with named prefix.
+    """
+    # return ProgressBar(widgets=[f'{name} :: ', ETA()])
+    return ProgressBar()
