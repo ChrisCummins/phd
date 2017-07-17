@@ -6,41 +6,43 @@
 \am{Draft annotation}
 
 \noindent
-Optimizing compilers are large and complex programs, with a functionally infinite scope of possible inputs. Fixed test-suites are inadequate for ensuring correct behavior over the range of accepted inputs, and the lack of formal specifications for sections of compilers renders formal verification unusable beyond isolated subcomponents. Despite this, the correct behavior of compilers is of utmost importance, being one of the key trusted technologies in computer science.
+Optimizing compilers are large and complex programs, with a practically infinite scope of possible inputs. Fixed test-suites are inadequate for ensuring correct behavior over such a range of inputs, and the lack of formal specifications for sections of compilers renders formal verification unusable beyond isolated subcomponents. Despite this, the correct behavior of compilers is of utmost importance, being one of the key trusted technologies in computer science.
 
-\cc{TODO:} We also, for the first time, provide a means of testing compiler behaviour under plausibly-invalid input conditions. We generate plausible but ill formed inputs. Prior work used random ASCII sequences to identify compiler front-end bugs~\cite{McKeeman1998}. By mimicking hand written code, our technique is capable of discovering bugs further within the compiler, including middle-end and even code generation.
-
-Differential testing is a promising methodology for identifying bugs through the pseudo-random generation of test cases. Figure~\ref{fig:difftest} shows the differential testing methodology. A program generator (e.g. CSmith) generates a large, random program (test case), which is run on a range of different compilers or compiler options. The outcomes are compared to determine if the test case is interesting.
+Differential testing is a promising methodology for identifying bugs through the pseudo-random generation of test cases. Figure~\ref{fig:difftest} shows the differential testing methodology. In prior work, a program generator generates a large, random program (test case), which is run on a range of different compilers or compiler options. The outputs of the generated programs are compared to determine if any of the compilers disagree; if so, a bug has been discovered.
 
 \begin{figure}
 	\centering
 	\includegraphics[width=.9\columnwidth]{img/difftest} %
 	% \vspace{-2em}%
 	\caption{%
-		Differential testing compilers across a single test case. A test case consists of a program source and runtime parameters. Outcomes are either the output of the program execution, a compiler crash, or a runtime crash.%
+		Differential testing compilers across a single test case. A test case consists of a program source and all runtime parameters and data. Outcomes are either the output of the program execution, a compiler crash, a runtime crash, or a timeout error.%
 	}%
 	\label{fig:difftest}
 \end{figure}
 
-Developing a random program generator is a huge undertaking, requiring expert knowledge of the target programming language, and complex construction logic. CSmith~\cite{Yang2011} was developed over a period of years, consists of over 40k lines of hand-written C++. CSmith interleaves static analysis with code generation, and inserts runtime checks for cases where static analysis is inadequate. There are 80 probabilities which govern the choices made by CSmith; these were extensively hand tuned so that programs ``look right''.
+Developing a random program generator is a huge undertaking, requiring expert knowledge of the target programming language. CSmith~\cite{Yang2011} was developed over a period of years, and consists of over 40k lines of hand-written C++. CSmith interleaves static analysis with code generation, and inserts runtime checks for cases where static analysis is inadequate. The ``shape'' of CSmith programs is dictated by 80 probabilities; these were extensively hand tuned so that programs ``look right''.
 
-Grammar-based program generation tightly couples generation logic to the target programming language. This makes them inflexible tools. For example, simply lifting CSmith to OpenCL~\cite{Lidbury2015a} took 9 months (confirmed by developers) and is over 8k lines of code, despite the large overlap between C and OpenCL (which is C with extensions). This huge development cost is extended to the reduction tools too, with CLReduce~\cite{Pflanzer2016} requiring extensions to OClgrdind.
+Grammar-based program generation tightly couples the generator logic with the target programming language. This makes them inflexible tools. For example, lifting CSmith from C to OpenCL~\cite{Lidbury2015a} took 9 months (confirmed by developers) and is over 8k lines of code, despite the large overlap between C and OpenCL (which is C with extensions). This huge development cost is extended to the reduction tools too, with CLReduce~\cite{Pflanzer2016} requiring extensions to OCLgrind.
 
-In contrast, our approach is programming language agnostic, requiring only a corpus of sample programs in the intended programming language. Such a corpus can be assembled from GitHub. Learning and sampling an LSTM model requires less than a 100 line of Python script, and contains no programming language-specific logic. The expressiveness of synthesized programs is governed by the corpus; unlike with grammar-based approach, in which every new language feature must be engineered. E.g. to date, CSmith does not support unions, strings, dynamic memory allocation, function pointers, or recursion. Both CSmith and CLSmith do not support floating point arithmetic, which is dominant in the typical workloads of OpenCL. Additionally, all integer arithmetic is wrapped in ``safe math'' macros.
+\cc{We propose \ldots}
 
-% Word this to leave open the potential for hand-checking ...
-The design trade-off of our approach is that unstructured, syntactic-level synthesis of program code destroys the ability to guarantee programs are free from undefined behavior, a property which previous approaches have relied upon. In practice, we found this requirement to be too conservative. We discovered only XX cases where a program without a single interpretation was not trivially detectable through differential testing and presented a false positive.
+In contrast to probabilistic grammar-based approaches, our approach is programming language agnostic, requiring only a corpus of sample programs in the intended programming language. Such corpuses can be readily be assembled from GitHub. Learning and sampling an LSTM model requires less than a 100 line of Python script, and contains no programming language-specific logic. The expressiveness of synthesized programs is governed by the corpus; unlike with grammar-based approach, in which every new language feature must be engineered. E.g. to date, CSmith does not support unions, strings, dynamic memory allocation, function pointers, or recursion. Both CSmith and CLSmith do not support floating point arithmetic, which is dominant in the typical workloads of OpenCL. Additionally, all integer arithmetic is wrapped in ``safe math'' macros.
+
+We also, for the first time, provide a means of testing compiler behaviour under plausibly-invalid input conditions. We generate plausible but ill-formed inputs. Prior work used random ASCII sequences to identify compiler front-end bugs~\cite{McKeeman1998}. By mimicking hand written code, our technique is capable of discovering bugs further within the compiler, including middle-end and even code generation.
+
+The design trade-off of our approach is that unstructured, syntactic-level synthesis of program code removes the guarantee that programs are free from undefined behavior, a property which previous approaches have relied upon. In practice, we found this requirement to be too conservative. In testing XXX cases, we discovered only XX cases where a program without a single interpretation was not trivially detectable through differential testing and presented a false positive.
 % Reference: UB in C https://blog.regehr.org/archives/1520
 % Reference: C99 spec appendix J2 - list of UBs
 % OpenCL un-undefines some of those behaviours (e.g. it provides conversion functions between data types), but also adds to them.
 
 In this work we target OpenCL, an open standard for programming heterogeneous systems, though our approach is language agnostic. The importance of sane compiler behavior is amplified for OpenCL since it is compiled online. OpenCL code is shipped by developers to customers for compilation online. OpenCL is increasingly used in safety critical software products such as automotive vision. Segmentation faults and other runtime crashes during online compilation can disrupt the execution of safety critical processes.
 
-\noindent We make the following contributions:
+% \noindent
+We make the following contributions:
 %
 \begin{itemize}
 \item we find bugs faster than state-of-the-art. In 48 hours we discovered and report XX bugs in compiler and open source OpenCL implementations, XX\% more than CLSmith over the same time period;
-\item we find bugs that the state-of-the-art cannot, covering more are of the compiler. E.g. compiler crashes from invalid inputs;
-\item our test cases are more interpretable than other program generators. Our code is modeled on human-like constructs. Average unreduced test case size is XX lines of code, XX$\times$ fewer than CLSmith programs even after hours spent reducing;
+\item we find bugs that the state-of-the-art cannot, covering more components of the compiler. E.g. compiler crashes from invalid inputs;
+\item our test cases are more interpretable than other program generators, since our code is modeled on human-like constructs. Average unreduced test case size is XX lines of code, XX$\times$ fewer than CLSmith programs even after hours spent reducing;
 \item our tool is not language specific. We \emph{infer} programming language use from examples. CLSmith requires expert-driven development for every language feature supported. 40+k lines of C++ vs a few hundred lines of Python.
 \end{itemize}

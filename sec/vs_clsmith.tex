@@ -1,12 +1,8 @@
-\section{Comparison to State-of-the-art}
+\section{Comparison to State-of-the-art}\label{sec:vs_clsmith}
 
 In this section we report on an experiment using both CLSmith and CLgen for 48 hours each.
 
-Total runtime for a test cases consists of the generation time, the time to execute the test harness on a device, and, if required, the time to reduce the test case.
-
-Like-for-like comparison of CLgen and CLSmith. Run the full stack of generation-execution-difftest-reduce for a fixed period of time, and report the number of bugs found. Is CLgen faster? Do we have to reject test cases?
-
-\subsection{Testing Methodology}
+Total runtime for a test cases consists of the generation time, the time to execute the test harness on a configuration, and, if required, the time to reduce the test case.
 
 Both testing frameworks were used for 48 hours each. CLSmith was configured with default settings. CLReduce was configured with the default settings (four parallel reduction threads).
 
@@ -18,15 +14,16 @@ Table~\ref{tab:results}.
 	\scriptsize %
 	\centering %
 	\input{build/tab/megatable}
-	\caption{Testing results using CLSmith and CLgen for 48 hours each. Configuration \#. as per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on ($+$). The remaining columns denote wrong-code (w), build failure (\textbf{bf}), runtime crash (\textbf{c}), timeout (\textbf{to}), passed (\textbf{\cmark}), and rejected (\textbf{\xmark}) test cases for CLSmith and CLgen, respectively. \cc{Asterisk in 'total' column means the full 48 hours of data have not yet been collected. All results are excluding reductions.}}
+	\caption{Testing results using CLSmith and CLgen for 48 hours each. Configuration \#. as per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on ($+$). The remaining columns denote wrong-code (w), build failure (\textbf{bf}), runtime crash (\textbf{c}), timeout (\textbf{to}), and passed (\textbf{\cmark}) test cases for CLSmith and CLgen, respectively. \cc{Asterisk in 'total' column means the full 48 hours of data have not yet been collected. All results are excluding reductions.}}
 	\label{tab:results}
 \end{table*}
 
-How long do reductions take? How many CLgen test cases can we run in that amount of time? Given the ratio of interesting CLgen test cases, how many more bugs could we find in the amount of time it takes to run a single reduction?
+\cc{TODO: How long do reductions take? How many CLgen test cases can we run in that amount of time? Given the ratio of interesting CLgen test cases, how many more bugs could we find in the amount of time it takes to run a single reduction?}
+
 
 \subsection{Test Case Size}
 
-Median CLSmith kernel is 1086 lines long (excluding headers, and using CLSmith \texttt{--short} option).
+Median CLSmith kernel is 1086 lines long (excluding headers).
 
 For ``interesting'' programs: median CLgen kernel size is 12 lines. Median reduced CLSmith kernel size is 43 lines (894 lines before reduction). Figure~\ref{fig:kernel-sizes}.
 
@@ -40,7 +37,7 @@ Potentially interesting questions: What is the total lines of code which get run
 	\centering %
 	\includegraphics[width=\columnwidth]{build/img/runtimes}%
 	\caption{%
-		Runtimes, excluding timeouts.%
+		Runtimes, excluding timeouts. \cc{TODO: CLgen generation times, CLgen reduction times}%
 	}%
 	\label{fig:runtimes} %
 \end{figure}
@@ -50,7 +47,7 @@ Potentially interesting questions: What is the total lines of code which get run
 	\centering %
 	\includegraphics[width=\columnwidth]{build/img/kernel-sizes}%
 	\caption{%
-		Kernel line counts, grouped by classification. CLSmith programs with \emph{w} classification have been reduced.%
+		Kernel line counts, grouped by classification. Programs with wrong-code (\emph{w}) classifications have been reduced.%
 	}%
 	\label{fig:kernel-sizes} %
 \end{figure}

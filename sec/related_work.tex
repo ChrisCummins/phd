@@ -1,12 +1,14 @@
 \section{Related Work}\label{sec:rw}
 
-\subsection{Test Case Generation}
+% \subsection{Test Case Generation}
 
 \cc{TODO:} Compiler test case generation survey~\cite{Boujarwah1997}. Taming fuzz compilers~\cite{Chen2013}. Empirical comparion of compiler testing techniques~\cite{Chen2014a}. Testing using programs at different levels of quality (random character sequence through model-conforming program)~\cite{McKeeman1998}. Analysis of bugs in GCC and LLVM finds 80\% of test cases to be 45 lines~\cite{Sun2016}.
 
-\paragraph{SPE} Skeletal program enumeration~\cite{Zhang2016a}. By enumerating entire program space, provides bounded guarantees of compiler correctness. Same shortcoming as CSmith (well formed programs only). No OpenCL implementation. Probably would take a lot of development effort. \cc{More investigation required.}
+% \paragraph{SPE}
+Skeletal program enumeration~\cite{Zhang2016a}. By enumerating entire program space, provides bounded guarantees of compiler correctness. Same shortcoming as CSmith (well formed programs only). No OpenCL implementation. Probably would take a lot of development effort. \cc{More investigation required.}
 
-\paragraph{CSmith} Grammar-based \emph{fuzz testers} have been developed for C~\cite{Yang2011} and OpenCL~\cite{Lidbury2015a}. Both tools require test case reduction (\cite{Regehr2012a} and~\cite{Pflanzer2016}, respectively).
+% \paragraph{CSmith}
+Grammar-based \emph{fuzz testers} have been developed for C~\cite{Yang2011} and OpenCL~\cite{Lidbury2015a}. Both tools require test case reduction (\cite{Regehr2012a} and~\cite{Pflanzer2016}, respectively).
 
 Csmith defines a probabilistic grammar over a large subset of the C programming language, and recursively instantiates a program, using rigorous and conservative static and dynamic analysis to ensure that programs are guaranteed to be free from the 190 undefined behaviors of the C language specification.
 
@@ -34,26 +36,28 @@ Both Csmith and CLsmith use unrealistic safe-math macros to wrap arithmetic oper
 
 CLsmith makes it impossible for thread ID to modify control flow. However, in almost all real world codes, this is not the case. This is a big restriction.
 
-\paragraph{CLgen} Same approach but for benchmark generation. LLVM is used as an oracle to determine if program is well formed. Behaviour is validated using runtime checks, with no desire for correctness \cite{Cummins2017a}. We extend this \cc{\ldots}.
+% \paragraph{CLgen}
+CLgen was originally developed for benchmark generation~\cite{Cummins2017a}. LLVM is used as an oracle to determine if program is well formed. Behaviour is validated using runtime checks, with no desire for correctness. We extend this \cc{\ldots}. Syntactic level modeling has been shown useful for identifying optimization characteristics~\cite{Cummins2017b}.
 
-\paragraph{Misc} A mutation-based approach for the Java Virtual Machine is demonstrated in~\cite{Chena}.
+% \paragraph{Misc}
+A mutation-based approach for the Java Virtual Machine is demonstrated in~\cite{Chena}.
 
 Template-based program generation for performance tuning~\cite{Han2017}.
 
-\subsection{ML over programs} 
+% \subsection{ML over programs} 
 
 Deep Learning is a nascent field that is responsible for a multitude of breakthroughs in modeling rich, hierarchical datasets. The major milestones are reviewed in~\cite{Wang2017}, and methods in~\cite{Schmidhuber2014}.
 
-\paragraph{Grammar Variational Autoencoder} Using masking to ensure sampling only from valid production rules. Both the grammars and the generated sequences are small, it's unclear if it would scale. For arithmetic expressions, the grammar includes not just the structure of equations, but it enumerates all the valid inteegr values. \cc{TODO: study, write up}~\cite{Kusner2017}.
+% \paragraph{Grammar Variational Autoencoder}
+Grammar variational autoencoder - Using masking to ensure sampling only from valid production rules. Both the grammars and the generated sequences are small, it's unclear if it would scale. For arithmetic expressions, the grammar includes not just the structure of equations, but it enumerates all the valid inteegr values. \cc{TODO: study, write up}~\cite{Kusner2017}.
 
-\paragraph{Syntactic Generative Models} Benchmark generation~\cite{Cummins2017a}. Syntactic models provide no guarantees of correctness. System is very wasteful, with often less than 10\% of samples being programs which do useful work (their definition).
+% \paragraph{ILP}
+Goal-directed program generators have been used for a variety of domains, including generating linear transforms~\cite{Voronenko2009}, MapReduce programs~\cite{Smith}, and data structure implementations~\cite{Loncaric2016}. Program synthesis from input/output examples is used for simple algorithms in~\cite{Zaremba2015a}, string manipulation in~\cite{Gulwani2011}, and geometry constructions in~\cite{Gulwani2012}.
 
-Syntactic level modeling has been shown useful for identifying optimization characteristics~\cite{Cummins2017b}.
-
-\paragraph{ILP} Goal-directed program generators have been used for a variety of domains, including generating linear transforms~\cite{Voronenko2009}, MapReduce programs~\cite{Smith}, and data structure implementations~\cite{Loncaric2016}. Program synthesis from input/output examples is used for simple algorithms in~\cite{Zaremba2015a}, string manipulation in~\cite{Gulwani2011}, and geometry constructions in~\cite{Gulwani2012}.
-
-\paragraph{Software Testing} Attention network to identify buffer overruns~\cite{Choi2016}. Localizing bugs from bug reports~\cite{Lam2016,Huo2016}.
+% \paragraph{Software Testing}
+Attention network to identify buffer overruns~\cite{Choi2016}. Localizing bugs from bug reports~\cite{Lam2016,Huo2016}.
 
 TODO~\cite{White2016}.
 
-\paragraph{Software Engineering} There is an increasing interest in mining source code repositories at large scale~\cite{Allamanis2013a,White2015a,Bird2009}. Previous studies have involved data mining of GitHub to analyze software engineering practices~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}, for example code generation~\cite{Zhang2015a}, code summarization~\cite{Allamanis2016}, comment generation~\cite{Wong2013}, and code completion~\cite{Raychev2014}. However, no work so far has exploited mined source code for test case generation. This work is the first to do so.
+% \paragraph{Software Engineering}
+There is an increasing interest in mining source code repositories at large scale~\cite{Allamanis2013a,White2015a,Bird2009}. Previous studies have involved data mining of GitHub to analyze software engineering practices~\cite{Wu2014,Guzman2014,Baishakhi2014a,Vasilescu2015}, for example code generation~\cite{Zhang2015a}, code summarization~\cite{Allamanis2016}, comment generation~\cite{Wong2013}, and code completion~\cite{Raychev2014}. However, no work so far has exploited mined source code for test case generation. This work is the first to do so.
