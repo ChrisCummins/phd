@@ -4,6 +4,15 @@
 
 \paragraph{OpenCL configurations tested} We conducted testing of X different OpenCL configurations, summarized in Table~\ref{tab:platforms}. A \emph{configuration} refers to an OpenCL \emph{<device, driver>} pair. We covered a range of hardware available to us: 3 GPUs, 4 CPUs, an Accelerator, and an Emulator. 7 of the OpenCL implementations are commercial products, 2 of them are open source. We tested both different drivers for the same device, and different devices using the same driver.
 
-\input{tab/platforms}
+
+\begin{table*}[t!]
+	\scriptsize %
+	\centering %
+	% \rowcolors{2}{white}{gray!25}
+	\input{build/tab/platforms}
+	\caption{Experimental platforms we tested, and the number of submitted bug generated and reported to date. \cc{I'll clean up column names}}
+	\label{tab:platforms}
+\end{table*}
+
 
 \paragraph{Bugs found} All configurations yielded bugs. Every compiler crashed, and every compiler silently generated wrong code. To date, we have submitted XX bug reports to compiler vendors. In comparing our approach against the state-of-the-art in OpenCL compiler test case generation, we found our approach was able to \cc{\ldots} 
