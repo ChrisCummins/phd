@@ -216,7 +216,12 @@ def set_clsmith_classifications(session, results_table, params_table,
         .update({"classification": "fail"})
 
     # Go program-by-program, looking for wrong-code outputs
-    q = session.query(programs_table)
+    #
+    # We only need to iterate over the programs which have at least one "pass"
+    # outcome:
+    ok = session.query(results_table.program_id).filter(
+        results_table.outcome == "pass").distinct()
+    q = session.query(programs_table).filter(programs_table.id.in_(ok))
     for program in ProgressBar()(q, max_value=q.count()):
         # treat param combinations independently
         for params in session.query(params_table):
