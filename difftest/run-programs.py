@@ -104,7 +104,10 @@ def main():
             p.communicate()
 
             # repeat job if it fails
-            if p.returncode:
+            if p.returncode == -9:
+                print('\033[1m\033[91m>>>> TIMEOUT', p.returncode, '\033[0m')
+                jobs.append(job)
+            elif p.returncode:
                 print('\033[1m\033[91m>>>> EXIT STATUS', p.returncode, '\033[0m')
                 jobs.append(job)
 
