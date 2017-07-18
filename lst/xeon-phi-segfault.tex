@@ -1,0 +1,12 @@
+__kernel void entry(void) {
+  __global int* a;
+  unsigned int* b;
+  b = a[0];
+  a[0] = b;
+  a[0] = b;
+  barrier(1);
+  if (get_global_id(0) == 0) {
+    *a = 0;
+  }
+  a[get_local_id(0)] = 0;
+}

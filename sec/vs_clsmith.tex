@@ -6,6 +6,10 @@ Total runtime for a test cases consists of the generation time, the time to exec
 
 Both testing frameworks were used for 48 hours each. CLSmith was configured with default settings. CLReduce was configured with the default settings (four parallel reduction threads).
 
+\subsubsection{Experimental Setup}
+
+All devices were unloaded.
+
 \subsection{Results}
 
 Table~\ref{tab:results}.
@@ -14,7 +18,7 @@ Table~\ref{tab:results}.
 	\scriptsize %
 	\centering %
 	\input{build/tab/outcomes}
-	\caption{Test case outcomes using CLSmith and CLgen for 48 hours each. Configuration \#. as per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on ($+$). The remaining columns denote build failure (\textbf{bf}), build crash (\textbf{bc}), build timeout (\textbf{bto}), runtime crash (\textbf{c}), timeout (\textbf{to}), and passed (\textbf{\cmark}) test outcomes for CLSmith and CLgen, respectively. \cc{Asterisk in 'total' column means the full 48 hours of data have not yet been collected. All results are excluding reductions.}}
+	\caption{Test case outcomes using CLSmith and CLgen for 48 hours each. Configuration \#. as per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on ($+$). The remaining columns denote build failure (\textbf{bf}), build crash (\textbf{bc}), build timeout (\textbf{bto}), runtime crash (\textbf{c}), timeout (\textbf{to}), and passed (\textbf{\cmark}) outcomes for CLSmith and CLgen, respectively. \cc{Asterisk in 'total' column means the full 48 hours of data have not yet been collected. All results are excluding reductions.}}
 	\label{tab:outcomes}
 \end{table*}
 
