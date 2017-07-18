@@ -1,13 +1,13 @@
-  \begin{{tabular}}{{llll | rrrrrrr | rrrrrrr }}
+  \begin{tabular}{llll | rrrrrrr | rrrrrrr }
   \toprule
-  & & & & \multicolumn{{7}}{{c|}}{{\textbf{{CLSmith}}}} & \multicolumn{{7}}{{c}}{{\textbf{{CLgen}}}} \\
-  \textbf{{\#.}} & \textbf{{Platform}} & \textbf{{Device}} & $\pm$ &
-  \textbf{{bf}} & \textbf{{bc}} & \textbf{{bto}} & \textbf{{c}} & \textbf{{to}} & \cmark & \textbf{{total}} &
-  \textbf{{bf}} & \textbf{{bc}} & \textbf{{bto}} & \textbf{{c}} & \textbf{{to}} & \cmark & \textbf{{total}} &
+  & & & & \multicolumn{7}{c|}{\textbf{CLSmith}} & \multicolumn{7}{c}{\textbf{CLgen}} \\
+  \textbf{\#.} & \textbf{Platform} & \textbf{Device} & $\pm$ &
+  \textbf{bf} & \textbf{bc} & \textbf{bto} & \textbf{c} & \textbf{to} & \cmark & \textbf{total} &
+  \textbf{bf} & \textbf{bc} & \textbf{bto} & \textbf{c} & \textbf{to} & \cmark & \textbf{total} &
   \midrule
-  \multirow{ 2}{*}{1} & \multirow{ 2}{*}{NVIDIA CUDA} & \multirow{ 2}{*}{GeForce GTX 1080} & $-$ & 1100 & 0 & 9 & 213 & 1294 & 12467 & 15083       & 34813 & 19 & 81 & 0 & 0 & 10258 & 45171* \\& & & $+$ & 1132 & 0 & 0 & 137 & 1480 & 12755 & 15504 & 34507 & 18 & 85 & 0 & 0 & 8686 & 43296* \\
+  \multirow{ 2}{*}{1} & \multirow{ 2}{*}{NVIDIA CUDA} & \multirow{ 2}{*}{GeForce GTX 1080} & $-$ & 1100 & 0 & 9 & 213 & 1294 & 12467 & 15083       & 34813 & 19 & 81 & 0 & 0 & 10258 & 45171* \\& & & $+$ & 1132 & 0 & 0 & 137 & 1480 & 12755 & 15504 & 34513 & 18 & 86 & 0 & 0 & 8699 & 43316* \\
 \hline
-\multirow{ 2}{*}{2} & \multirow{ 2}{*}{NVIDIA CUDA} & \multirow{ 2}{*}{GeForce GTX 780} & $-$ & 948 & 23 & 7 & 39 & 1345 & 11122 & 13484*       & 8285 & 6 & 32 & 0 & 0 & 2483 & 10806* \\& & & $+$ & 675 & 0 & 0 & 50 & 924 & 7847 & 9496* & 8319 & 6 & 26 & 0 & 0 & 2455 & 10806* \\
+\multirow{ 2}{*}{2} & \multirow{ 2}{*}{NVIDIA CUDA} & \multirow{ 2}{*}{GeForce GTX 780} & $-$ & 948 & 23 & 7 & 39 & 1345 & 11122 & 13484*       & 8285 & 6 & 32 & 0 & 0 & 2483 & 10806* \\& & & $+$ & 678 & 0 & 0 & 50 & 925 & 7882 & 9535* & 8319 & 6 & 26 & 0 & 0 & 2455 & 10806* \\
 \hline
 \multirow{ 2}{*}{3} & \multirow{ 2}{*}{Intel Gen OCL Driver} & \multirow{ 2}{*}{Intel HD Haswell GT2} & $-$ & 453 & 2642 & 2474 & 3 & 0 & 652 & 6224       & 26567 & 73 & 11 & 0 & 0 & 7654 & 34305* \\& & & $+$ & 456 & 2636 & 2478 & 4 & 0 & 647 & 6221 & 21638 & 66 & 11 & 0 & 0 & 7311 & 29026* \\
 \hline
@@ -19,7 +19,7 @@
 \hline
 \multirow{ 2}{*}{7} & \multirow{ 2}{*}{Intel OpenCL} & \multirow{ 2}{*}{Intel Xeon Phi} & $-$ & 367 & 35 & 1398 & 5 & 295 & 2855 & 4955       & 7049 & 30 & 33 & 0 & 0 & 2178 & 9290* \\& & & $+$ & 992 & 4 & 64 & 436 & 1271 & 11015 & 13782 & 5595 & 24 & 25 & 0 & 0 & 1616 & 7260* \\
 \hline
-\multirow{ 2}{*}{8} & \multirow{ 2}{*}{POCL} & \multirow{ 2}{*}{Intel E5-2620 (pocl)} & $-$ & 1029 & 0 & 3 & 146 & 1604 & 11356 & 14138       & 34607 & 724 & 44 & 0 & 0 & 10240 & 45615* \\& & & $+$ & 1310 & 0 & 0 & 1086 & 1569 & 14156 & 18121 & 31183 & 693 & 52 & 0 & 0 & 8429 & 40357* \\
+\multirow{ 2}{*}{8} & \multirow{ 2}{*}{POCL} & \multirow{ 2}{*}{Intel E5-2620 (pocl)} & $-$ & 1029 & 0 & 3 & 146 & 1604 & 11356 & 14138       & 34636 & 726 & 44 & 0 & 0 & 10250 & 45656* \\& & & $+$ & 1310 & 0 & 0 & 1086 & 1569 & 14156 & 18121 & 31183 & 693 & 52 & 0 & 0 & 8429 & 40357* \\
 \hline
 \multirow{ 2}{*}{9} & \multirow{ 2}{*}{Oclgrind} & \multirow{ 2}{*}{Oclgrind Simulator} & $-$ & 405 & 0 & 0 & 5 & 520 & 4577 & 5507       & 33030 & 2265 & 198 & 0 & 0 & 8921 & 44414* \\& & & $+$ & 393 & 0 & 0 & 5 & 525 & 4472 & 5395 & 30369 & 2087 & 184 & 0 & 0 & 7897 & 40537* \\
   \bottomrule
