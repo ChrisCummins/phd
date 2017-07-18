@@ -3,16 +3,18 @@
 	\centering %
 	\subfloat[Config $2\pm$ compiler assertion during code generation.]{%
 		\noindent\mbox{\parbox{\columnwidth}{%
-				% cl_launcherCLgenResults/runtime_crash/bug-report-int-30870.sh
+				% cl_launcherCLgenResults/runtime_crash/bug-report-intel-30870.sh
 				\lstinputlisting{lst/bug1}%
 			}%
 		}%
+		\label{lst:intel-llvm-assertion}
 	}\\%
 	\subfloat[Compilation should fail; config $6\pm$ succeeds then crashes program.]{%
 		\noindent\mbox{\parbox{\columnwidth}{%
 				\lstinputlisting{lst/bug2}%
 			}%
 		}%
+		\label{lst:pocl-undefined-symbols}
 	}\\%
 	\subfloat[Config $1+$ silently miscompiles, yields incorrect result.]{%
 		\noindent\mbox{\parbox{\columnwidth}{%

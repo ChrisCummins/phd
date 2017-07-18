@@ -1,14 +1,18 @@
 \section{Introduction}\label{sec:intro}
 
-\cc{iannotation}
-\hl{Draft annotation}
-\pp{Draft annotation}
-\am{Draft annotation}
+\cc{Chris comment}
+\hl{Hugh comment}
+\pp{Pavlos comment}
+\am{Alastair comment}
 
 \noindent
 Optimizing compilers are large and complex programs, with a practically infinite scope of possible inputs. Fixed test-suites are inadequate for ensuring correct behavior over such a range of inputs, and the lack of formal specifications for sections of compilers renders formal verification unusable beyond isolated subcomponents. Despite this, the correct behavior of compilers is of utmost importance, being one of the key trusted technologies in computer science.
 
 Differential testing is a promising methodology for identifying bugs through the pseudo-random generation of test cases. Figure~\ref{fig:difftest} shows the differential testing methodology. In prior work, a program generator generates a large, random program (test case), which is run on a range of different compilers or compiler options. The outputs of the generated programs are compared to determine if any of the compilers disagree; if so, a bug has been discovered.
+
+Csmith defines a probabilistic grammar over a large subset of the C programming language, and recursively instantiates a program, using rigorous and conservative static and dynamic analysis to ensure that programs are guaranteed to be free from the 190 undefined behaviors of the C language specification.
+
+Because Csmith programs are free form undefined behavior, there is only a single interpretation. This allows oracle-less differential testing across compilers, using a voting heuristic to identify erroneous compiler outputs.
 
 \begin{figure}
 	\centering
