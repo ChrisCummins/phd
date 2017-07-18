@@ -1,10 +1,10 @@
 \section{Bugs Discovered in OpenCL Compilers}
 
-This section reports on the results of extended testing of 9 OpenCL configurations using CLgen. All configurations yielded bugs. Every compiler crashed, and every compiler silently generated wrong code. To date, we have submitted XX bug reports to compiler vendors. We divide our discussion by class of bug: first compiler and runtime crashes, then wrong-code bugs.
+This section reports on the results of extensive testing of 9 OpenCL configurations using CLgen. All configurations yielded bugs. Every compiler crashed, and every compiler silently generated wrong code. To date, we have submitted XX bug reports to compiler vendors. We divide our discussion by class of bug: first compiler and runtime crashes, then wrong-code bugs.
 
 \subsection{Compiler Crashes}
 
-We found numerous cases where a kernel triggers a crash in the compiler (and as a result, the host process). Figure~\ref{intel-llvm-assertion} fails an assertion from the LLVM code generator backend.
+We found numerous cases where a kernel triggers a crash in the compiler (and as a result, the host process). Figure~\ref{lst:intel-llvm-assertion} fails an assertion from the LLVM code generator backend. Segmentation faults during compilation were a common source of crash. Figure~\ref{lst:intel-vectorizer-segfault} segfaults during the vectorizer pass. Occasionally, the cause of the crash is unclear, such as in Figure~\ref{lst:nvidia-compile-segfault} which segfaults the compiler without warning.
 
 
 \subsection{Runtime Crashes}
