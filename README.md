@@ -9,6 +9,7 @@ A self-contained, monolothic repository for (almost) everything I have done whil
    "**End-to-end Deep Learning of Optimization Heuristics**".
    PACT '17.
    [[source code]](https://github.com/ChrisCummins/paper-end2end-dl/).
+   [[pdf]](https://github.com/ChrisCummins/paper-end2end-dl/raw/master/paper.pdf).
    Build command: `$ bazel build //docs:2017-09-pact`.
 1. Chris Cummins, Pavlos Petoumenos, Zheng Wang, Hugh Leather.
    "**Synthesizing Benchmarks for Predictive Modeling**".
