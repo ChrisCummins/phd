@@ -1,0 +1,19 @@
+\lstset{language=[OpenCL]C}
+\begin{figure}
+	\centering %
+	\subfloat[Config $1+$ silently miscompiles, yields incorrect result.]{%
+		\noindent\mbox{\parbox{\columnwidth}{%
+				\lstinputlisting{lst/bug3}%
+			}%
+		}%
+	}\\%
+	\subfloat[Config $1-$ silently miscompiles, yields incorrect result.]{%
+		\noindent\mbox{\parbox{\columnwidth}{%
+				% cl_launcherCLgenResults/wrong-code/bug-report-nvidia-37044.sh
+				\lstinputlisting{lst/bug4}%
+			}%
+		}%
+	}\\%
+	\caption{Kernels for which compilers emit wrong-code.}%
+\label{lst:compiler-crashes}%
+\end{figure}

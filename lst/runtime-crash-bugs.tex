@@ -1,0 +1,13 @@
+\lstset{language=[OpenCL]C}
+\begin{figure}
+	\centering %
+	\subfloat[Compilation should fail; config $6\pm$ succeeds then crashes program.]{%
+		\noindent\mbox{\parbox{\columnwidth}{%
+				\lstinputlisting{lst/bug2}%
+			}%
+		}%
+		\label{lst:pocl-undefined-symbols}
+	}\\%
+	\caption{Example kernels which expose runtime crash bugs.}%
+\label{lst:crash-bugs}%
+\end{figure}
