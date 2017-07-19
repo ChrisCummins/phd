@@ -6,19 +6,21 @@ Total runtime for a test cases consists of the generation time, the time to exec
 
 Both testing frameworks were used for 48 hours each. CLSmith was configured with default settings. CLReduce was configured with the default settings (four parallel reduction threads).
 
-\subsubsection{Experimental Setup}
+\subsection{Experimental Setup}
 
-All devices were unloaded.
+Each device was configured to run the compiler testing system for a fixed 48 hours. All devices were otherwise unloaded.
 
 \subsection{Results}
 
-Table~\ref{tab:outcomes} shows the outcomes of test cases. Once voting heuristics have been applied, the result is table~\ref{tab:classifications}.
+Table~\ref{tab:outcomes} shows the outcomes of test cases. Column \textbf{bc} is of immediate value for developers; for all other outcomes, differential testing is required.
+
+Once voting heuristics have been applied, the result is table~\ref{tab:classifications}.
 
 \begin{table*}
 	\scriptsize %
 	\centering %
 	\input{build/tab/outcomes}
-	\caption{Test case outcomes using CLSmith and CLgen for 24 hours each. Configuration \#. as per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on ($+$). The remaining columns denote build failure (\textbf{bf}), build crash (\textbf{bc}), build timeout (\textbf{bto}), runtime crash (\textbf{c}), timeout (\textbf{to}), and passed (\textbf{\cmark}) outcomes for CLSmith and CLgen, respectively. \cc{Asterisk in 'total' column means the full 48 hours of data have not yet been collected. All results are excluding reductions.}}
+	\caption{Test case outcomes using CLSmith and CLgen for 24 hours each. Configuration \#. as per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on ($+$). The remaining columns denote build failure (\textbf{bf}), build crash (\textbf{bc}), build timeout (\textbf{bto}), runtime crash (\textbf{c}), timeout (\textbf{to}), and passed (\textbf{\cmark}) outcomes for CLSmith and CLgen, respectively. \cc{Asterisk in 'total' column means incomplete data. All results are excluding reductions.}}
 	\label{tab:outcomes}
 \end{table*}
 
@@ -26,11 +28,16 @@ Table~\ref{tab:outcomes} shows the outcomes of test cases. Once voting heuristic
 	\scriptsize %
 	\centering %
 	\input{build/tab/megatable}
-	\caption{Using voting heuristics to uncover anomalous results in Table~\ref{tab:outcomes}. Columns denote wrong-code (w), build failure (\textbf{bf}), runtime crash (\textbf{c}), timeout (\textbf{to}), and passed (\textbf{\cmark}) classifications for CLSmith and CLgen, respectively. \cc{Asterisk in 'total' column means the full 48 hours of data have not yet been collected. All results are excluding reductions.}}
+	\caption{Using voting heuristics to expose anomalous results in Table~\ref{tab:outcomes}. Columns denote wrong-code (w), build failure (\textbf{bf}), runtime crash (\textbf{c}), and timeout (\textbf{to}) classifications for CLSmith and CLgen, respectively. \cc{Asterisk in 'total' column means incomplete data. All results are excluding reductions.}}
 	\label{tab:classifications}
 \end{table*}
 
 \cc{TODO: How long do reductions take? How many CLgen test cases can we run in that amount of time? Given the ratio of interesting CLgen test cases, how many more bugs could we find in the amount of time it takes to run a single reduction?}
+
+
+\subsection{Analysis of bugs found}
+
+For all except configuration $3\pm$, CLgen exposes more compiler crashes than CLSmith. On average, CLgen hangs the compiler more frequently.
 
 
 \subsection{Test Case Size}

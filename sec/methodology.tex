@@ -26,24 +26,20 @@ Figure~\ref{fig:test-process} shows the methodology for determining the outcomes
 In prior work we required that synthesized programs be well formed and compute \emph{useful work}. For the purpose of testing compilers, we discarded these requirements. Instead, we demand that the behavior of test cases is \emph{portable} and \emph{reproducible}. In some respects this simplifies the execution process. The possible outcomes for a test case are a build failure (\textbf{bf}), build crash (\textbf{bc}), runtime crash (\textbf{c}), or pass (\textbf{\cmark}). A \textbf{bf} occurs when compilation of a kernel fails, usually accompanied by an error message. A \textbf{bc} outcome occurs when the compiler crashes. In~\cite{Lidbury2015a}, the authors do not distinguish between compiler crashes and build failures. A \textbf{c} outcome occurs when the program crashes during execution. The \textbf{bto} and \textbf{to} outcomes occur when the program compilation or execution time out, respectively. As in previous work, we do not guarantee that generated programs time out, finding that XX\% of programs do not.
 
 
-\subsection{Classifying test outcomes}
+\subsection{Classifying Test Outcomes using Voting}
 
 In~\cite{Lidbury2015a}, a configuration is determined to have produced a wrong code result for a kernel if there is a majority of at least 3 among the non-\{\textbf{bf},\textbf{c},\textbf{to}\} results for the kernel, and the configuration yields a non-\{\textbf{bf},\textbf{c},\textbf{to}\} result that disagrees with the majority.
 
-We select the mode output across a range of devices. Voting is used to select the oracle output.
+A majority exists if there are at least 6 non-bc results for the kernel, and of these $n$ non-bc configurations, at least $\ceil{n/2}$ configurations have the same outcome. Majority outcome $\mu$. For \cmark outcomes, the output of the program is used.
+
 %
 \begin{enumerate}
-	\item \textbf{w} \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority.
-	\item \textbf{bf} \emph{Build failure} Online compilation of OpenCL program fails.
-	\item \textbf{bc} \emph{Build crash} Online compilation of OpenCL program fails.
-	\item \textbf{bto} \emph{Build timeout} Online compilation of OpenCL exceeds a timeout of 60 seconds.
+	\item \textbf{w} \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority output.
+	\item \textbf{bf} \emph{Build failure} Online compilation of OpenCL program fails, whereas the majority of configurations produce a binary.
+	\item \textbf{bto} \emph{Build timeout} Online compilation of OpenCL exceeds a timeout of 60 seconds, whereas the majority of configurations produce a binary.
 	\item \textbf{c} \emph{Runtime crash} One or more OpenCL API calls return an error status during the program execution, or the program crashes.
-	\item \textbf{to} \emph{Runtime timeout} Program execution exceeds the timeout of 60 seconds.
-	\item \textbf{\cmark} \emph{Okay} Program terminates gracefully and computes a result which agrees with the majority.
+	\item \textbf{to} \emph{Runtime timeout} Program execution exceeds the timeout of 60 second, whereas the majority of configurations produce an output.
 \end{enumerate}
-
-
-\subsection{Voting Heuristics}
 
 
 \paragraph{Floating points} The OpenCL 1.2 specification permits acceptable error bounds (ULP) for floating point operations and builtin functions. Some operations like addition, subtraction, and multiplication are precise; divide permits a small error, and builtins vary widely. Thus two implementation may give different answers that both fit within the allowed ranges (and because errors propagate through operations it's hard to even describe the ULP on the final output). \texttt{half\_} functions permit large error bounds. \texttt{native\_} functions have ``implementation defined'' error bounds. TODO: Denormal numbers may optionally be pushed to zero.
