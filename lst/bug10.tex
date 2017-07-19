@@ -1,0 +1,5 @@
+__kernel void A(__global float* a, __global float* b, __global float* c, __local float* d, unsigned int e, unsigned int f) {
+  for (unsigned int g = get_local_id(0) + get_local_size(0); g < get_local_size(0); g += get_local_size(0)) {
+    a[2 * get_local_id(0) + 1] = get_local_id(0);
+  }
+}
