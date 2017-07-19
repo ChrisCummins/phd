@@ -12,7 +12,7 @@ All devices were unloaded.
 
 \subsection{Results}
 
-Table~\ref{tab:results}.
+Table~\ref{tab:outcomes} shows the outcomes of test cases. Once voting heuristics have been applied, the result is table~\ref{tab:classifications}.
 
 \begin{table*}
 	\scriptsize %
@@ -27,7 +27,7 @@ Table~\ref{tab:results}.
 	\centering %
 	\input{build/tab/megatable}
 	\caption{Classifying test case outcomes of Table~\ref{tab:outcomes} using voting heuristics. Columns denote wrong-code (w), build failure (\textbf{bf}), runtime crash (\textbf{c}), timeout (\textbf{to}), and passed (\textbf{\cmark}) classifications for CLSmith and CLgen, respectively. \cc{Asterisk in 'total' column means the full 48 hours of data have not yet been collected. All results are excluding reductions.}}
-	\label{tab:results}
+	\label{tab:classifications}
 \end{table*}
 
 \cc{TODO: How long do reductions take? How many CLgen test cases can we run in that amount of time? Given the ratio of interesting CLgen test cases, how many more bugs could we find in the amount of time it takes to run a single reduction?}
