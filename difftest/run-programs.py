@@ -75,7 +75,7 @@ def main():
         ['-g', '128,16,1', '-l', '32,1,1', '--no-opts'],
     ]
 
-    timeout = '6h'
+    timeout = '3h'
 
     co_jobs = [
         ['timeout', '-s9', timeout, 'python', script, "--hostname", db_hostname, platform_name, device_name] + args
