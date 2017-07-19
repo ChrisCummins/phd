@@ -14,10 +14,11 @@ DEVICES = {
     "Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "Intel E5-2620 v4",
     "Intel(R) Xeon(R) CPU E5-2650 v2 @ 2.60GHz": "Intel E5-2650 v2",
     "Olcgrind Simulator": "Oclgrind",
-    "pthread-Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "Intel E5-2620 (pocl)",
+    "pthread-Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz": "Intel E5-2620 (POCL)",
     "Intel(R) Core(TM) i5-4570 CPU @ 3.20GHz": "Intel i5-4570",
     'Intel(R) HD Graphics Haswell GT2 Desktop': 'Intel HD Haswell GT2',
-    'Intel(R) Many Integrated Core Acceleration Card': 'Intel Xeon Phi (?)',
+    'Intel(R) Many Integrated Core Acceleration Card': 'Intel Xeon Phi',
+    'Codeplay Software Ltd. - host CPU': 'Intel E5-2620 (ComputeAorta)',
 }
 
 # shorthand driver names
@@ -36,6 +37,7 @@ PLATFORMS_2_VENDORS = {
     "Intel Gen OCL Driver": "intel",
     "Portable Computing Language": "pocl",
     "NVIDIA CUDA": "nvidia",
+    "Oclgrind": "oclgrind",
 }
 
 DEVTYPES = {
@@ -44,7 +46,7 @@ DEVTYPES = {
 }
 
 # Ordering for the paper:
-TESTBED_IDS = [3, 20, 13, 9, 14, 10, 15, 12, 11]
+TESTBED_IDS = [3, 20, 13, 9, 14, 10, 15, 12, 22, 11]
 OCLGRIND_ID = 11
 CONFIGURATIONS = list(zip(range(1, len(TESTBED_IDS) + 1), TESTBED_IDS))
 
