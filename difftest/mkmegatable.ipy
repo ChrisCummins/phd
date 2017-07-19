@@ -141,7 +141,7 @@ def get_classification_columns(results_table, programs_table, params_table,
     else:
         # We ran out of results before we hit the time limit.
         # asterisk denotes insufficient results
-        counts['total'] = ' *'
+        counts['total'] = '*'
         total_hours = t / 3600
         devname = device_str(testbed.device)
         print(f"insufficient {results_table.__tablename__} for {devname} {no_opt} ({total_hours:.1f} hs)", file=sys.stderr)
@@ -207,8 +207,8 @@ classifications_table = mkmegatable(get_classification_columns, f"""\\begin{{tab
   \\toprule
   & & & \\multicolumn{{5}}{{c|}}{{\\textbf{{CLSmith}}}} & \\multicolumn{{5}}{{c}}{{\\textbf{{CLgen}}}} \\\\
   \\textbf{{\\#.}} & \\textbf{{Device}} & $\\pm$ &
-  \\textbf{{w}} & \\textbf{{bf}} & \\textbf{{c}} & \\textbf{{to}} & \\textbf{{total}} &
-  \\textbf{{w}} & \\textbf{{bf}} & \\textbf{{c}} & \\textbf{{to}} & \\textbf{{total}} \\\\
+  \\textbf{{w}} & \\textbf{{bf}} & \\textbf{{c}} & \\textbf{{to}} & \\textbf{{\\% of total}} &
+  \\textbf{{w}} & \\textbf{{bf}} & \\textbf{{c}} & \\textbf{{to}} & \\textbf{{\\% of total}} \\\\
   \\midrule""")
 
 # push LaTex to Overleaf

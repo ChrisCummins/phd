@@ -202,12 +202,12 @@ def set_clsmith_classifications(session, results_table, params_table,
         .update({"classification": "to"})
     print(f"Classifying {tablename} build failures ...")
     session.query(results_table)\
-        .filter(results_table.outcome == "bf")\
+        .filter(sql.or_(results_table.outcome == "bf",
+                        results_table.outcome == "bc"))\
         .update({"classification": "bf"})
     print(f"Classifying {tablename} crashes ...")
     session.query(results_table)\
-        .filter(sql.or_(results_table.outcome == "c",
-                        results_table.outcome == "bc"))\
+        .filter(results_table.outcome == "c")\
         .update({"classification": "c"})
     print(f"Classifying {tablename} test failures ...")
     session.query(results_table)\
