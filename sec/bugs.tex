@@ -6,7 +6,9 @@ This section reports on the results of extensive testing of OpenCL compilers usi
 
 We found numerous cases where a kernel triggers a crash in the compiler (and as a result, the host process). Figure~\ref{lst:intel-llvm-assertion} fails an assertion from the LLVM code generator backend. Segmentation faults during compilation were a common source of crash. Figure~\ref{lst:intel-vectorizer-segfault} segfaults during the vectorizer pass. Occasionally, the cause of the crash is unclear, such as in Figure~\ref{lst:nvidia-compile-segfault} which segfaults the compiler without warning.
 
-In the majority of cases, we found compiler crashes to be insensitive to OpenCL optimization setting. Figure~\ref{lst:nvidia-compile-segfault} shows a rare case where a crash occurs only if optimizations are enabled.
+Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for configurations $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other configurations raise a build failure. Such test cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random string testing, and impossible through grammar-based tools.
+
+In the majority of cases, we found compiler crashes to be insensitive to OpenCL optimization setting. Our testing revealed bugs in relatively benign and stable parts of mature compilers, such as Figure~\ref{lst:oclgrind-llvm-densemap-assertion}, which exposes a bug in LLVM's hash map implementation.
 
 \input{lst/compiler-crash-bugs}
 
