@@ -4,7 +4,7 @@ This section reports on the results of extensive testing of OpenCL compilers usi
 
 \subsection{Compiler Crashes}
 
-We found numerous cases where a kernel triggers a crash in the compiler (and as a result, the host process). Segmentation faults during compilation were a common source of crash. Occasionally, the cause of the crash is unclear, such as in Figures~\ref{lst:nvidia-recursion-segfault} and~\ref{lst:nvidia-compile-segfault} which segfault the compiler without warning. We found the two commercial vendors NVIDIA and Intel were the most likely to fail silently.
+We found numerous cases where kernels trigger a crash in the compiler (and as a result, the host process). Segmentation faults during compilation were a common source of crash.
 
 In the majority of cases, we found compiler crashes to be insensitive to OpenCL optimization setting.
 
@@ -16,9 +16,11 @@ Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler fro
 
 Parsers were a common source of errors. To date we have identified over 60 cases where unreachable code is executed due to parse error handling. 
 
-\paragraph{Middle-end} Figure~\ref{lst:intel-vectorizer-segfault} segfaults during the vectorizer pass.
+\paragraph{Middle-end} Figure~\ref{lst:intel-vectorizer-segfault} segfaults during vectorization.
 
 \paragraph{Back-end} Figures~\ref{lst:intel-llvm-assertion} and~\ref{lst:intel-scalartype-assertion} cause failures in the LLVM code generator backend.
+
+Occasionally, the cause of the crash is unclear, as in Figures~\ref{lst:nvidia-recursion-segfault} and~\ref{lst:nvidia-compile-segfault} which segfault the compiler without warning. We found the two commercial vendors NVIDIA and Intel were the most likely to fail silently.
 
 \input{lst/compiler-crash-bugs}
 
