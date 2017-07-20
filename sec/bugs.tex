@@ -14,7 +14,7 @@ Our testing revealed bugs in relatively benign and stable parts of mature compil
 
 Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for configurations $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other configurations raise a build failure. Such test cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random string testing, and impossible through grammar-based tools.
 
-Parsers were a common source of errors. To date we have identified over 60 cases where unreachable code is executed due to parse error handling. 
+Parsers were a common source of errors. To date we have identified over 60 cases where unreachable code is executed due to parse error handling. We also found that relatively large code samples, containing many errors crashed multiple compiles \cc{that shared clang frontend?}.
 
 \paragraph{Middle-end} Figure~\ref{lst:intel-vectorizer-segfault} segfaults during vectorization.
 
