@@ -22,6 +22,11 @@ import db
 import clgen_mkharness
 from db import *
 
+
+class HarnessCompilationError(ValueError):
+    pass
+
+
 def mkharness(s, env: cldrive.OpenCLEnvironment, program: db.CLgenProgram,
               params: db.cldriveParams):
     """ generate a self-contained C program for the given test case """
@@ -98,7 +103,7 @@ def compile_harness(src: str, path: str='a.out', platform_id=None,
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     proc.communicate(src.encode('utf-8'))
     if not proc.returncode == 0:
-        raise ValueError(f'harness compilation failed with returncode {proc.returncode}')
+        raise HarnessCompilationError(f'harness compilation failed with returncode {proc.returncode}')
     return path
 
 

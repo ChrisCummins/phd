@@ -202,27 +202,30 @@ if __name__ == "__main__":
                 program = inbox.popleft()
 
                 # drive the program
-                runtime, status, stdout, stderr = drive_harness(
-                    session, program, params, env, platform_id, device_id)
+                try:
+                    runtime, status, stdout, stderr = drive_harness(
+                        session, program, params, env, platform_id, device_id)
 
-                # assert that executed params match expected
-                if stderr != '<-- UTF-ERROR -->':
-                    verify_params(platform=args.platform, device=args.device,
-                                  optimizations=params.optimizations,
-                                  global_size=params.gsize, local_size=params.lsize,
-                                  stderr=stderr)
+                    # assert that executed params match expected
+                    if stderr != '<-- UTF-ERROR -->':
+                        verify_params(platform=args.platform, device=args.device,
+                                      optimizations=params.optimizations,
+                                      global_size=params.gsize, local_size=params.lsize,
+                                      stderr=stderr)
 
-                # create new result
-                result = CLgenResult(
-                    program=program, params=params, testbed=testbed,
-                    status=status, runtime=runtime,
-                    stdout=stdout, stderr=stderr)
-                result.outcome = analyze.get_cldrive_outcome(result)
-                outbox.append(result)
+                    # create new result
+                    result = CLgenResult(
+                        program=program, params=params, testbed=testbed,
+                        status=status, runtime=runtime,
+                        stdout=stdout, stderr=stderr)
+                    result.outcome = analyze.get_cldrive_outcome(result)
+                    outbox.append(result)
 
-                # update progress bar
-                num_ran += 1
-                bar.update(min(num_ran, num_to_run))
+                    # update progress bar
+                    num_ran += 1
+                    bar.update(min(num_ran, num_to_run))
+                except clgen_mkharness.HarnessCompilationError:
+                    print("program:", program.id)
         finally:
             # flush any remaining results
             next_batch()
