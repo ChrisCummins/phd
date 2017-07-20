@@ -2,8 +2,9 @@
 import re
 from argparse import ArgumentParser
 from collections import namedtuple
+from collections import deque
 from subprocess import Popen, PIPE
-from time import time
+from time import time, strftime
 from typing import Dict, List, Tuple, NewType
 from tempfile import NamedTemporaryFile
 
@@ -160,44 +161,71 @@ if __name__ == "__main__":
         num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
         bar = progressbar.ProgressBar(init_value=num_ran, max_value=num_to_run)
 
-        # main execution loop:
-        while True:
-            # get the next program to run
-            done = session.query(CLgenResult.program_id).filter(
-                CLgenResult.testbed == testbed, CLgenResult.params == params)
-            program = session.query(CLgenProgram).filter(
-                ~CLgenProgram.id.in_(done)).order_by(CLgenProgram.id).first()
+        # programs to run, and results to push to database
+        inbox = deque()
+        outbox = deque()
 
-            # we have no program to run
-            if not program:
-                break
-
-            runtime, status, stdout, stderr = drive_harness(
-                session, program, params, env, platform_id, device_id)
-
-            # assert that executed params match expected
-            if stderr != '<-- UTF-ERROR -->':
-                verify_params(platform=args.platform, device=args.device,
-                              optimizations=params.optimizations,
-                              global_size=params.gsize, local_size=params.lsize,
-                              stderr=stderr)
-
-            # create new result
-            result = CLgenResult(
-                program=program, params=params, testbed=testbed,
-                status=status, runtime=runtime,
-                stdout=stdout, stderr=stderr)
-
-            # set outcome
-            result.outcome = analyze.get_cldrive_outcome(result)
-
-            # record result
-            session.add(result)
-            session.commit()
-
-            # update progress bar
+        def prep_local_batches():
+            """
+            Fill the inbox with jobs to run, empty the outbox of jobs we have
+            run.
+            """
+            BATCH_SIZE = 100
+            devname = testbed.device.strip()
+            print(f"\nnext batch of CLgenPrograms for {devname} at", strftime("%H:%M:%S"))
+            # update the counters
             num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
             bar.max_value = num_to_run
             bar.update(min(num_ran, num_to_run))
+
+            # fill inbox
+            done = session.query(CLgenResult.program_id).filter(
+                CLgenResult.testbed == testbed, CLgenResult.params == params)
+            notdone = session.query(CLgenProgram).filter(
+                ~CLgenProgram.id.in_(done)).order_by(CLgenProgram.id).limit(BATCH_SIZE)
+            for program in notdone:
+                inbox.append(program)
+
+            # empty outbox
+            while len(outbox):
+                session.add(outbox.popleft())
+            session.commit()
+
+        try:
+            while True:
+                # get the next batch of programs to run
+                if not len(inbox):
+                    prep_local_batches()
+                # we have no programs to run
+                if not len(inbox):
+                    break
+
+                # get next program to run
+                program = inbox.popleft()
+
+                # drive the program
+                runtime, status, stdout, stderr = drive_harness(
+                    session, program, params, env, platform_id, device_id)
+
+                # assert that executed params match expected
+                if stderr != '<-- UTF-ERROR -->':
+                    verify_params(platform=args.platform, device=args.device,
+                                  optimizations=params.optimizations,
+                                  global_size=params.gsize, local_size=params.lsize,
+                                  stderr=stderr)
+
+                # create new result
+                result = CLgenResult(
+                    program=program, params=params, testbed=testbed,
+                    status=status, runtime=runtime,
+                    stdout=stdout, stderr=stderr)
+                result.outcome = analyze.get_cldrive_outcome(result)
+                outbox.append(result)
+
+                # update progress bar
+                num_ran += 1
+                bar.update(min(num_ran, num_to_run))
+        finally:
+            prep_local_batches()
 
     print("done.")
