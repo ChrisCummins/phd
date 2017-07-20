@@ -4,10 +4,11 @@ import platform
 import progressbar
 import pyopencl as cl
 import re
-
+from collections import deque, namedtuple
 from argparse import ArgumentParser
 from labm8 import fs
 from tempfile import NamedTemporaryFile
+from time import time, strftime
 from typing import Dict, List, Tuple
 
 import clsmith
@@ -163,43 +164,71 @@ if __name__ == "__main__":
         num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
         bar = progressbar.ProgressBar(init_value=num_ran, max_value=num_to_run)
 
-        # main execution loop:
-        while True:
-            # get the next program to run
-            subquery = session.query(CLSmithResult.program_id).filter(
-                CLSmithResult.testbed_id == testbed.id, CLSmithResult.params_id == params.id)
-            program = session.query(CLSmithProgram).filter(
-                ~CLSmithProgram.id.in_(subquery)).order_by(CLSmithProgram.id).first()
+        # programs to run, and results to push to database
+        inbox = deque()
+        outbox = deque()
 
-            # we have no program to run
-            if not program:
-                break
-
-            runtime, status, stdout, stderr = cl_launcher(
-                program.src, platform_id, device_id, *flags)
-
-            # assert that executed params match expected
-            verify_params(platform=platform_name, device=device_name,
-                          optimizations=params.optimizations,
-                          global_size=params.gsize, local_size=params.lsize,
-                          stderr=stderr)
-
-            # create new result
-            result = CLSmithResult(
-                program=program, params=params, testbed=testbed,
-                flags=" ".join(flags), status=status, runtime=runtime,
-                stdout=stdout, stderr=stderr)
-
-            # set outcome
-            result.outcome = analyze.get_cl_launcher_outcome(result)
-
-            # record result
-            session.add(result)
-            session.commit()
-
-            # update progress bar
+        def next_batch():
+            """
+            Fill the inbox with jobs to run, empty the outbox of jobs we have
+            run.
+            """
+            BATCH_SIZE = 100
+            devname = testbed.device.strip()
+            print(f"\nnext CLSmith batch for {devname} at", strftime("%H:%M:%S"))
+            # update the counters
             num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
             bar.max_value = num_to_run
             bar.update(min(num_ran, num_to_run))
+
+            # fill inbox
+            done = session.query(CLSmithResult.program_id).filter(
+                CLSmithResult.testbed == testbed, CLSmithResult.params == params)
+            notdone = session.query(CLSmithProgram).filter(
+                ~CLSmithProgram.id.in_(done)).order_by(CLSmithProgram.id).limit(BATCH_SIZE)
+            for program in notdone:
+                inbox.append(program)
+
+            # empty outbox
+            while len(outbox):
+                session.add(outbox.popleft())
+            session.commit()
+
+        try:
+            while True:
+                # get the next batch of programs to run
+                if not len(inbox):
+                    next_batch()
+                # we have no programs to run
+                if not len(inbox):
+                    break
+
+                # get next program to run
+                program = inbox.popleft()
+
+                # drive the program
+                runtime, status, stdout, stderr = cl_launcher(
+                    program.src, platform_id, device_id, *flags)
+
+                # assert that executed params match expected
+                verify_params(platform=platform_name, device=device_name,
+                              optimizations=params.optimizations,
+                              global_size=params.gsize, local_size=params.lsize,
+                              stderr=stderr)
+
+                # create new result
+                result = CLSmithResult(
+                    program=program, params=params, testbed=testbed,
+                    flags=" ".join(flags), status=status, runtime=runtime,
+                    stdout=stdout, stderr=stderr)
+                result.outcome = analyze.get_cl_launcher_outcome(result)
+                outbox.append(result)
+
+                # update progress bar
+                num_ran += 1
+                bar.update(min(num_ran, num_to_run))
+        finally:
+            # flush any remaining results
+            next_batch()
 
     print("done.")

@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
+import progressbar
 import re
+import subprocess
 from argparse import ArgumentParser
-from collections import namedtuple
-from collections import deque
+from collections import deque, namedtuple
+from labm8 import fs
 from subprocess import Popen, PIPE
+from tempfile import NamedTemporaryFile
 from time import time, strftime
 from typing import Dict, List, Tuple, NewType
-from tempfile import NamedTemporaryFile
-
-import clgen_mkharness
-import cldrive
-import progressbar
-import subprocess
-from labm8 import fs
 
 import analyze
+import cldrive
+import clgen_mkharness
 import db
 from db import *
 from lib import *
@@ -165,14 +163,14 @@ if __name__ == "__main__":
         inbox = deque()
         outbox = deque()
 
-        def prep_local_batches():
+        def next_batch():
             """
             Fill the inbox with jobs to run, empty the outbox of jobs we have
             run.
             """
             BATCH_SIZE = 100
             devname = testbed.device.strip()
-            print(f"\nnext batch of CLgenPrograms for {devname} at", strftime("%H:%M:%S"))
+            print(f"\nnext CLgen batch for {devname} at", strftime("%H:%M:%S"))
             # update the counters
             num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
             bar.max_value = num_to_run
@@ -195,7 +193,7 @@ if __name__ == "__main__":
             while True:
                 # get the next batch of programs to run
                 if not len(inbox):
-                    prep_local_batches()
+                    next_batch()
                 # we have no programs to run
                 if not len(inbox):
                     break
@@ -226,6 +224,7 @@ if __name__ == "__main__":
                 num_ran += 1
                 bar.update(min(num_ran, num_to_run))
         finally:
-            prep_local_batches()
+            # flush any remaining results
+            next_batch()
 
     print("done.")
