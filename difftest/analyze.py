@@ -304,12 +304,14 @@ def set_our_classifications(session, results_table, params_table,
                 # Too few results for a majority
                 continue
 
-            majority_output, majority_count = get_majority(
+            majority_output, output_majority_count = get_majority(
                 [r.stdout for r in q2])
 
-            if majority_count < math.ceil(n2 / 2):
+            min_output_majority_count = max(n2 - 1, 7)
+            # min_output_majority_count = math.ceil(n2 / 2)
+            if output_majority_count < min_output_majority_count:
                 # No majority
-                print("majority_count <", math.ceil(n2 / 2), " = ", majority_count)
+                print("output_majority_count <", min_output_majority_count, " = ", output_majority_count)
                 continue
 
             # There is a majority conensus, so compare individual
