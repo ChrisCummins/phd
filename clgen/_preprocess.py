@@ -122,6 +122,13 @@ class GPUVerifyException(UglyCodeException):
     pass
 
 
+class GPUVerifyTimeoutException(GPUVerifyException):
+    """
+    GPUVerify timed out.
+    """
+    pass
+
+
 CLANG_CL_TARGETS = [
     'nvptx64-nvidia-nvcl',
     'spir64'
@@ -305,7 +312,7 @@ def compile_cl_bytecode(src: str, id: str='anon', use_shim: bool=True) -> str:
     return stdout
 
 
-def gpuverify(src: str, args: list, id: str='anon') -> str:
+def gpuverify(src: str, args: list, id: str='anon', timeout=60) -> str:
     """
     Run GPUverify over kernel.
 
@@ -337,12 +344,14 @@ def gpuverify(src: str, args: list, id: str='anon') -> str:
     with NamedTemporaryFile('w', suffix='.cl') as tmp:
         tmp.write(src)
         tmp.flush()
-        cmd = [native.GPUVERIFY, tmp.name] + args
+        cmd = ['timeout', '-s9', str(timeout), native.GPUVERIFY, tmp.name] + args
 
         process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
 
-    if process.returncode != 0:
+    if process.returncode == -9:  # timeout signal
+        raise GPUVerifyTimeoutException(f"GPUveryify failed to complete with {timeout} seconds")
+    elif process.returncode != 0:
         raise GPUVerifyException(stderr.decode('utf-8'))
 
     return src
