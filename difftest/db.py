@@ -1,6 +1,7 @@
 import datetime
 import sqlalchemy as sql
 
+from collections import namedtuple
 from configparser import ConfigParser
 from contextlib import contextmanager
 from labm8 import system
@@ -619,8 +620,8 @@ Tableset = namedtuple('Tableset', ['results', 'programs', 'params', 'reductions'
 
 CLSMITH_TABLES = Tableset(results=CLSmithResult, programs=CLSmithProgram,
                           params=cl_launcherParams, reductions=CLSmithReduction)
-CLSMITH_TABLES = Tableset(results=CLgenResult, programs=CLgenProgram,
-                          params=cldriveParams, reductions=CLgenReduction)
+CLGEN_TABLES = Tableset(results=CLgenResult, programs=CLgenProgram,
+                        params=cldriveParams, reductions=CLgenReduction)
 
 
 def results_in_timelimit(session, tables: Tableset, testbed_id: int,
