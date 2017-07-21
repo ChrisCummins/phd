@@ -12,6 +12,8 @@ import clgen_mkharness
 import db
 from db import CLgenProgram, Session
 
+# Characters per second of CLgen inference:
+CLGEN_INFERENCE_CPS = 465
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -56,8 +58,9 @@ if __name__ == "__main__":
             if not exists:
                 program = CLgenProgram(
                     id=kid, clgen_version=args.version, model=args.model,
-                    sampler=args.sampler, src=src,
-                    status=args.status, cl_launchable=args.cl_launchable)
+                    sampler=args.sampler, src=src, status=args.status,
+                    runtime=len(src) / CLGEN_INFERENCE_CPS,
+                    cl_launchable=args.cl_launchable)
                 session.add(program)
                 session.commit()
 

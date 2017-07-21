@@ -39,6 +39,7 @@ from progressbar import ProgressBar
 import db
 from db import *
 from lib import *
+from util import *
 
 def reproduce_clgen_build_failures(result):
     import analyze
@@ -180,14 +181,16 @@ if __name__ == "__main__":
     session = db.make_session()
 
     clsmith_wrong_code_programs = session.query(CLSmithResult)\
-            .filter(CLSmithResult.classification == "Wrong code")
+            .filter(CLSmithResult.classification == "w")
     fs.mkdir("../data/difftest/unreduced/clsmith/wrong_code")
     fs.mkdir("../data/difftest/unreduced/clsmith/wrong_code/reports")
     for result in clsmith_wrong_code_programs:
-        with open(f"../data/difftest/unreduced/clsmith/wrong_code/{result.program.id}.cl", "w") as outfile:
+        vendor = vendor_str(result.testbed.platform)
+
+        with open(f"../data/difftest/unreduced/clsmith/wrong_code/{vendor}-{result.program.id}.cl", "w") as outfile:
             print(result.program.src, file=outfile)
 
-        with open(f"../data/difftest/unreduced/clsmith/wrong_code/reports/{result.id}.txt", "w") as outfile:
+        with open(f"../data/difftest/unreduced/clsmith/wrong_code/reports/{vendor}-{result.id}.txt", "w") as outfile:
             print(outfile.name)
             print(generate_wrong_code_report(result), file=outfile)
 

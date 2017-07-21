@@ -46,6 +46,14 @@ def get_majority(lst):
     return Counter(lst).most_common(1)[0]
 
 
+def get_majority_output(session, tables, result):
+    q = session.query(tables.results.stdout)\
+        .filter(tables.results.program_id == result.program.id,
+                tables.results.params_id == result.params.id)
+    majority_output, majority_count = get_majority([r[0] for r in q])
+    return majority_output
+
+
 def get_cl_launcher_outcome(result) -> None:
     """
     Given a cl_launcher result, determine and set it's outcome.

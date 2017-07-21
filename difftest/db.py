@@ -116,7 +116,7 @@ class CLgenProgram(Base):
     sampler = sql.Column(sql.String(40))
 
     # time taken to produce program (in seconds).
-    runtime = sql.Column(sql.Float)
+    runtime = sql.Column(sql.Float, nullable=False)
 
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     status = sql.Column(sql.Integer)
@@ -631,7 +631,8 @@ class InsufficientDataError(ValueError):
 
 def results_in_timelimit(session, tables: Tableset, testbed_id: int,
                          no_opt: bool, time_limit: int,
-                         *return_values, filter=None):
+                         *return_values, filter=None,
+                         generation_time=True, reduction_time=True):
     """
     Raises:
         InsufficientDataError: If run out of results before time_limit is
@@ -643,14 +644,15 @@ def results_in_timelimit(session, tables: Tableset, testbed_id: int,
     param_ids = session.query(tables.params.id)\
         .filter(tables.params.optimizations == no_opt)
 
-    clgen_generation_time = .9  # FIXME
-    generation_time = sql.sql.func.ifnull(tables.programs.runtime, clgen_generation_time)
     runtime = tables.results.runtime
-    reduction_time = sql.sql.func.ifnull(tables.reductions.runtime, 0)
-    result_time = generation_time + runtime + reduction_time
+    if generation_time:
+        clgen_generation_time = .9  # FIXME
+        runtime += sql.sql.func.ifnull(tables.programs.runtime, clgen_generation_time)  # FIXME
+    if reduction_time:
+        runtime += sql.sql.func.ifnull(tables.reductions.runtime, 0)
 
     q = session.query(
-            *return_values, result_time)\
+            *return_values, runtime)\
         .outerjoin(tables.programs)\
         .outerjoin(tables.reductions)\
         .filter(tables.results.testbed_id == testbed_id,
