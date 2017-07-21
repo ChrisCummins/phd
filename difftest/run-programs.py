@@ -29,6 +29,16 @@ def main():
                         help="OpenCL platform ID")
     parser.add_argument("device_id", metavar="<device-id>", type=int,
                         help="OpenCL device ID")
+    parser.add_argument("--opt", action="store_true",
+                        help="Only test with optimizations on")
+    parser.add_argument("--no-opt", action="store_true",
+                        help="Only test with optimizations disabled")
+    parser.add_argument("--clsmith", action="store_true",
+                        help="Only run CLSmith test cases")
+    parser.add_argument("--clgen", action="store_true",
+                        help="Only run CLgen test cases")
+    parser.add_argument("-t", "--timeout", type=str, default="3h",
+                        help="timeout(1) duration for batches (default: 3h)")
     args = parser.parse_args()
 
     # get testbed information
@@ -51,7 +61,7 @@ def main():
         # 'clgen_run_cl_launcher.py',
     ]
     cldrive_scripts = [
-        # 'clgen_run_cldrive.py',
+        'clgen_run_cldrive.py',
         # 'clsmith-run-cldrive.py',
         # 'github-run-cldrive.py',
     ]
@@ -62,21 +72,35 @@ def main():
         ['--with-kernel'],
         ['--with-kernel', '--no-opts'],
     ]
-    cldrive_script_args = [
-        ['-g', '1,1,1',    '-l', '1,1,1',  '-s', '256',  '-i', 'arange'],
-        ['-g', '1,1,1',    '-l', '1,1,1',  '-s', '256',  '-i', 'arange', '--no-opts'],
-        ['-g', '128,16,1', '-l', '32,1,1', '-s', '4096', '-i', 'arange'],
-        ['-g', '128,16,1', '-l', '32,1,1', '-s', '4096', '-i', 'arange', '--no-opts'],
-    ]
-    cl_launcher_script_args = [
-        ['-g', '1,1,1',    '-l', '1,1,1'],
-        ['-g', '1,1,1',    '-l', '1,1,1',  '--no-opts'],
-        ['-g', '128,16,1', '-l', '32,1,1'],
-        ['-g', '128,16,1', '-l', '32,1,1', '--no-opts'],
-    ]
 
-    timeout = '3h'
 
+    cldrive_script_args = []
+
+    if not args.opt:
+        cldrive_script_args += [
+            ['-g', '1,1,1',    '-l', '1,1,1',  '-s', '256',  '-i', 'arange', '--no-opts'],
+            ['-g', '128,16,1', '-l', '32,1,1', '-s', '4096', '-i', 'arange', '--no-opts'],
+        ]
+    if not args.no_opt:
+        cldrive_script_args += [
+            ['-g', '1,1,1',    '-l', '1,1,1',  '-s', '256',  '-i', 'arange'],
+            ['-g', '128,16,1', '-l', '32,1,1', '-s', '4096', '-i', 'arange'],
+        ]
+
+    cl_launcher_script_args = []
+    if not args.opt:
+        cl_launcher_script_args += [
+            ['-g', '1,1,1',    '-l', '1,1,1',  '--no-opts'],
+            ['-g', '128,16,1', '-l', '32,1,1', '--no-opts'],
+        ]
+    if not args.no_opt:
+        cl_launcher_script_args += [
+            ['-g', '1,1,1',    '-l', '1,1,1'],
+            ['-g', '128,16,1', '-l', '32,1,1'],
+        ]
+
+    timeout = str(args.timeout)
+    print("TIMEOUT", args.timeout)
     co_jobs = [
         ['timeout', '-s9', timeout, 'python', script, "--hostname", db_hostname, platform_name, device_name] + args
          for script, args in product(co_scripts, co_script_args)
@@ -89,7 +113,14 @@ def main():
         ['timeout', '-s9', timeout, 'python', script, "--hostname", db_hostname, platform_name, device_name] + args
         for script, args in product(cldrive_scripts, cldrive_script_args)
     ]
-    jobs = co_jobs + cl_launcher_jobs + cldrive_jobs
+
+    # Determine which jobs to run
+    jobs = co_jobs
+    if not args.clgen:
+        jobs += cl_launcher_jobs
+    if not args.clsmith:
+        jobs += cldrive_jobs
+
     i = 0
 
     try:
