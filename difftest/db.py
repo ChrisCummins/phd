@@ -624,22 +624,33 @@ CLGEN_TABLES = Tableset(results=CLgenResult, programs=CLgenProgram,
                         params=cldriveParams, reductions=CLgenReduction)
 
 
+class InsufficientDataError(ValueError):
+    """ raised if not enough results """
+    pass
+
+
 def results_in_timelimit(session, tables: Tableset, testbed_id: int,
-                         no_opt: bool, time_limit: int, return_value=None):
-    if return_value is None:
-        return_value = tables.results
+                         no_opt: bool, time_limit: int,
+                         *return_values, filter=None):
+    """
+    Raises:
+        InsufficientDataError: If run out of results before time_limit is
+            reached.
+    """
+    if not len(return_values):
+        return_values = (tables.results,)
 
     param_ids = session.query(tables.params.id)\
         .filter(tables.params.optimizations == no_opt)
 
+    clgen_generation_time = .9  # FIXME
     generation_time = sql.sql.func.ifnull(tables.programs.runtime, clgen_generation_time)
     runtime = tables.results.runtime
     reduction_time = sql.sql.func.ifnull(tables.reductions.runtime, 0)
     result_time = generation_time + runtime + reduction_time
 
     q = session.query(
-            return_value,
-            result_time)\
+            *return_values, result_time)\
         .outerjoin(tables.programs)\
         .outerjoin(tables.reductions)\
         .filter(tables.results.testbed_id == testbed_id,
@@ -647,9 +658,19 @@ def results_in_timelimit(session, tables: Tableset, testbed_id: int,
                 tables.results.outcome != None)\
         .order_by(tables.results.date)
 
+    if filter is not None:
+        q = q.filter(filter)
+
     total_time = 0  # elapsed time
-    for val, result_time in q:
-        if total_time + result_time > time_limit:
+    for vals in q:
+        if total_time + vals[-1] > time_limit:
             break
-        total_time += result_time
-        yield val, result_time, total_time
+        total_time += vals[-1]
+        yield vals[:-1], vals[-1], total_time
+    else:
+        # Didn't break
+        import util
+        total_hours = total_time / 3600
+        testbed = session.query(Testbed).filter(Testbed.id == testbed_id).first()
+        devname = util.device_str(testbed.device)
+        raise InsufficientDataError(f"insufficient {tables.results.__tablename__} for {devname} {no_opt} ({total_hours:.1f} hs)")

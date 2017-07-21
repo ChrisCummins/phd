@@ -1,6 +1,6 @@
 #!/usr/bin/env ipython
 
-from collections import OrderedDict
+from collections import namedtuple, OrderedDict
 from labm8 import fs
 import os
 import pandas as pd
@@ -23,7 +23,6 @@ null_columns = " & ".join(["-"] * 6)
 # Measured average CLgen sample time
 clgen_generation_time = .9
 
-
 TIME_LIMIT = 24 * 2600
 
 
@@ -42,45 +41,20 @@ def get_outcome_columns(results_table, programs_table, params_table,
         testbed (db.Testbed): Testbed instance to return results for.
         no_opt (bool): Testbed optimizations off?
     """
-    # query to return all results in-order
-    param_ids = session.query(params_table.id).filter(params_table.optimizations == no_opt)
-    q = session.query(results_table).filter(
-        results_table.testbed_id == testbed.id,
-        results_table.params_id.in_(param_ids)).order_by(results_table.date)
-
-    # Otherwise, simulate results for a fixed period of time
-    t = 0  # elapsed time
     counts = {"pass": 0, "bf": 0, "bc": 0, "bto": 0, "c": 0, "to": 0}
 
-    # times
-    generation_time = sql.sql.func.ifnull(programs_table.runtime, clgen_generation_time)
-    runtime = results_table.runtime
-    reduction_time = sql.sql.func.ifnull(reductions_table.runtime, 0)
-    total_time = generation_time + runtime + reduction_time
+    tables = Tableset(results=results_table, programs=programs_table,
+                      params=params_table, reductions=reductions_table)
+    outcomes = results_in_timelimit(
+        session, tables, testbed.id, no_opt, TIME_LIMIT,
+        results_table.outcome)
 
-    q = session.query(
-            results_table.outcome,
-            total_time)\
-        .outerjoin(programs_table)\
-        .outerjoin(reductions_table)\
-        .filter(results_table.testbed_id == testbed.id,
-                results_table.params_id.in_(param_ids),
-                results_table.outcome != None)\
-        .order_by(results_table.date)
-
-    # accumulate results within the time limit
-    for outcome, total_time in q:
-        if t + total_time > TIME_LIMIT:
-            break
-        t += total_time
-        counts[outcome] = counts.get(outcome, 0) + 1
-    else:
-        # We ran out of results before we hit the time limit.
-        # asterisk denotes insufficient results
+    try:
+        for (outcome,), result_time, total_time in outcomes:
+            counts[outcome] = counts.get(outcome, 0) + 1
+    except InsufficientDataError as e:
+        print(e, file=sys.stderr)
         counts['total'] = '*'
-        total_hours = t / 3600
-        devname = device_str(testbed.device)
-        print(f"insufficient {results_table.__tablename__} for {devname} {no_opt} ({total_hours:.1f} hs)", file=sys.stderr)
 
     # sum up all results
     total = counts.pop("total", "")
@@ -104,47 +78,22 @@ def get_classification_columns(results_table, programs_table, params_table,
         testbed (db.Testbed): Testbed instance to return results for.
         no_opt (bool): Testbed optimizations off?
     """
-    # query to return all results in-order
-    param_ids = session.query(params_table.id).filter(params_table.optimizations == no_opt)
-    q = session.query(results_table).filter(
-        results_table.testbed_id == testbed.id,
-        results_table.params_id.in_(param_ids)).order_by(results_table.date)
-
-    # Otherwise, simulate results for a fixed period of time
-    t = 0  # elapsed time
     counts = {"w": 0, "bf": 0, "c": 0, "to": 0, "pass": 0, "fail": 0}
 
-    # times
-    generation_time = sql.sql.func.ifnull(programs_table.runtime, clgen_generation_time)
-    runtime = results_table.runtime
-    reduction_time = sql.sql.func.ifnull(reductions_table.runtime, 0)
-    total_time = generation_time + runtime + reduction_time
+    tables = Tableset(results=results_table, programs=programs_table,
+                      params=params_table, reductions=reductions_table)
+    outcomes = results_in_timelimit(
+        session, tables, testbed.id, no_opt, TIME_LIMIT,
+        results_table.classification, programs_table.src,)
 
-    q = session.query(
-            results_table.classification,
-            #generation_time, runtime, reduction_time,
-            total_time)\
-        .outerjoin(programs_table)\
-        .outerjoin(reductions_table)\
-        .filter(results_table.testbed_id == testbed.id,
-                results_table.params_id.in_(param_ids),
-                results_table.classification != None)\
-        .order_by(results_table.date)
-
-    # accumulate results within the time limit
-    for classification, total_time in q:
-        # classification, generation_time, runtime, reduction_time, total_time = row
-        if t + total_time > TIME_LIMIT:
-            break
-        t += total_time
-        counts[classification] = counts.get(classification, 0) + 1
-    else:
-        # We ran out of results before we hit the time limit.
-        # asterisk denotes insufficient results
+    try:
+        for (classification, src), result_time, total_time in outcomes:
+            if classification == "w" and "float" in src:
+                continue
+            counts[classification] = counts.get(classification, 0) + 1
+    except InsufficientDataError as e:
+        print(e, file=sys.stderr)
         counts['total'] = '*'
-        total_hours = t / 3600
-        devname = device_str(testbed.device)
-        print(f"insufficient {results_table.__tablename__} for {devname} {no_opt} ({total_hours:.1f} hs)", file=sys.stderr)
 
     suffix = counts.pop("total", "")
     total = sum(counts.values())
@@ -154,7 +103,6 @@ def get_classification_columns(results_table, programs_table, params_table,
     total_anomalous = sum(counts.values())
 
     counts['total'] = "{:.1f}\\%".format((total_anomalous / max(total, 1)) * 100) + suffix
-
     return f"{counts['w']} & {counts['bf']} & {counts['c']} & {counts['to']} & {counts['total']}"
 
 
@@ -218,9 +166,9 @@ if __name__ == "__main__":
     # push LaTex to Overleaf
     !cd ~/docs/paper-project_b/ && git pull --rebase
 
-    print("Generating outcomes table ...")
-    with open(os.path.expanduser("~/docs/paper-project_b/build/tab/outcomes.tex"), "w") as outfile:
-        print(get_outcomes_table(), file=outfile)
+    # print("Generating outcomes table ...")
+    # with open(os.path.expanduser("~/docs/paper-project_b/build/tab/outcomes.tex"), "w") as outfile:
+    #     print(get_outcomes_table(), file=outfile)
 
     print("Generating classifications table ...")
     with open(os.path.expanduser("~/docs/paper-project_b/build/tab/megatable.tex"), "w") as outfile:
