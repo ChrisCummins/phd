@@ -118,12 +118,11 @@ if __name__ == "__main__":
     env = cldrive.make_env()
 
     with Session() as s:
-        programs = s.query(CLgenProgram).all()
         params = s.query(cldriveParams).all()
+        q = s.query(CLgenProgram)
 
-        todo = list(product(programs, params))
-
-        for program, params in ProgressBar()(todo):
-            mkharness(s, env, program, params)
+        for program in ProgressBar(max_value=q.count())(q):
+            for param in params:
+                mkharness(s, env, program, param)
 
     print("done.")
