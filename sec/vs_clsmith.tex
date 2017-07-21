@@ -16,6 +16,20 @@ Table~\ref{tab:outcomes} shows the outcomes of test cases. Column \textbf{bc} is
 
 Once voting heuristics have been applied, the result is table~\ref{tab:classifications}.
 
+\subsection{Runtimes}
+
+Figure~\ref{fig:runtimes} shows runtimes. For CLgen, generation time scales linearly with program size.
+
+\begin{figure}
+	\centering %
+	\includegraphics[width=\columnwidth]{build/img/runtimes}%
+	\caption{%
+		Test case runtimes, excluding timeouts. On average, CLgen test case execution is $x\times$ faster than CLSmith. \cc{TODO: CLgen generation times, CLgen reductions}%
+	}%
+	\label{fig:runtimes} %
+\end{figure}
+
+
 \begin{table*}
 	\scriptsize %
 	\centering %
@@ -38,6 +52,7 @@ Once voting heuristics have been applied, the result is table~\ref{tab:classific
 
 The 2357 \textbf{bf} results for CLSmith on Configs.\ $4\pm$ and $6\pm$ are all a result of compilers rejecting empty declarations, e.g. \texttt{int ;}, which CLSmith occasionally emits. % Known issue: https://github.com/ChrisLidbury/CLSmith/issues/7
 
+
 \subsection{Analysis of bugs found}
 
 For all except configuration $3\pm$, CLgen exposes more compiler crashes than CLSmith. On average, CLgen hangs the compiler more frequently.
@@ -54,15 +69,6 @@ Potentially interesting questions: What is the total lines of code which get run
 \cc{CLgen test cases are two orders of magnitude smaller than CLSmith programs which have been reduced.}
 
 \cc{What is the bug rate per line of code?}
-
-\begin{figure}
-	\centering %
-	\includegraphics[width=\columnwidth]{build/img/runtimes}%
-	\caption{%
-		Test case runtimes, excluding timeouts. On average, CLgen test case execution is $x\times$ faster than CLSmith. \cc{TODO: CLgen generation times, CLgen reductions}%
-	}%
-	\label{fig:runtimes} %
-\end{figure}
 
 
 \begin{figure}
