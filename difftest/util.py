@@ -41,6 +41,11 @@ PLATFORMS_2_VENDORS = {
     "ComputeAorta": "codeplay",
 }
 
+
+def vendor_str(platform):
+    return PLATFORMS_2_VENDORS[platform]
+
+
 DEVTYPES = {
     "3": "CPU",
     "ACCELERATOR": "Accelerator",
