@@ -15,9 +15,9 @@ if __name__ == "__main__":
     db_hostname = args.hostname
     print("connected to", db.init(db_hostname))
 
-    with Session(commit=True) as s:
-        analyze.set_cl_launcher_outcomes(s, CLSmithResult, rerun=True)
+    # with Session(commit=True) as s:
+    #     analyze.set_cl_launcher_outcomes(s, CLSmithResult, rerun=False)
 
     with Session(commit=True) as s:
-        analyze.set_clsmith_classifications(
+        analyze.set_classifications(
             s, CLSmithResult, cl_launcherParams, CLSmithProgram, rerun=True)

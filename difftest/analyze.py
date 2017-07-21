@@ -1,3 +1,4 @@
+import math
 import sys
 import sqlalchemy as sql
 
@@ -38,6 +39,11 @@ OUR_CLASSIFICATIONS = [
     "pass",  # same outcome as majority: {pass,bf,c,to}
     "fail",  # misc testing error - null result
 ]
+
+
+def get_majority(lst):
+    """ get the majority value of the list elements, and the majority count """
+    return Counter(lst).most_common(1)[0]
 
 
 def get_cl_launcher_outcome(result) -> None:
@@ -94,7 +100,7 @@ def get_cl_launcher_outcome(result) -> None:
 
 def set_cl_launcher_outcomes(session, results_table, rerun: bool=False) -> None:
     """ Set all cl_launcher outcomes. Set `rerun' to recompute outcomes for all results """
-    print("Determining CLgen outcomes ...")
+    print("Determining CLSmith outcomes ...")
     q = session.query(results_table)
     if not rerun:
         q = q.filter(results_table.outcome == None)
@@ -110,11 +116,11 @@ def get_cldrive_outcome(result):
     See OUTCOMES for list of possible outcomes.
     """
     def crash_or_build_failure():
-        return "c" if "[cldrive] Compilation succeeded..." in result.stderr else "bf"
+        return "c" if "[cldrive] Kernel: " in result.stderr else "bf"
     def crash_or_build_crash():
-        return "c" if "[cldrive] Compilation succeeded..." in result.stderr else "bc"
+        return "c" if "[cldrive] Kernel: " in result.stderr else "bc"
     def timeout_or_build_timeout():
-        return "to" if "[cldrive] Compilation succeeded..." in result.stderr else "bto"
+        return "to" if "[cldrive] Kernel: " in result.stderr else "bto"
 
     if result.status == 0:
         return "pass"
@@ -215,14 +221,12 @@ def set_clsmith_classifications(session, results_table, params_table,
         .update({"classification": "fail"})
 
     # Go program-by-program, looking for wrong-code outputs
-    #
-    # We only need to iterate over the programs which have at least one "pass"
-    # outcome:
     ok = session.query(results_table.program_id).filter(
         results_table.outcome == "pass").distinct()
     q = session.query(programs_table).filter(programs_table.id.in_(ok))
     for program in util.NamedProgressBar('classify')(q, max_value=q.count()):
         # treat param combinations independently
+        # TODO: iterate over pairs of opt on/off params
         for params in session.query(params_table):
             # select all results for this test case
             q = session.query(results_table)\
@@ -236,8 +240,7 @@ def set_clsmith_classifications(session, results_table, params_table,
                     result.classification = "pass"
             else:
                 # Determine the majority output, and majority size.
-                majority_output, majority_count = Counter(
-                    [r.stdout for r in q]).most_common(1)[0]
+                majority_output, majority_count = get_majority([r.stdout for r in q])
 
                 if majority_count < 3:
                     # No majority, so everything passed.
@@ -251,3 +254,68 @@ def set_clsmith_classifications(session, results_table, params_table,
                             result.classification = "pass"
                         else:
                             result.classification = "w"
+
+
+def set_our_classifications(session, results_table, params_table,
+                            programs_table, rerun: bool=True) -> None:
+    """
+    Our methodology for classifying results.
+    """
+    q = session.query(results_table)
+    tablename = results_table.__tablename__
+
+    # reset any existing classifications
+    if rerun:
+        print(f"Reseting {tablename} classifications ...")
+        session.query(results_table).update({"classification": "pass"})
+
+    # Go program-by-program, looking for wrong-code outputs
+    q = session.query(results_table.program_id).distinct()
+    for row in util.NamedProgressBar('classify')(q, max_value=q.count()):
+        program_id = row[0]
+        # treat param combinations independently
+        for params in session.query(params_table):
+            # select all results for this test case
+            q = session.query(results_table)\
+                .filter(results_table.program_id == program_id,
+                        results_table.params_id == params.id)
+            n = q.count()
+
+            if n < 6:
+                # Too few results for a majority
+                continue
+
+            min_majority_count = math.ceil(n / 2)
+            majority_outcome, majority_count = get_majority([r.outcome for r in q])
+            if majority_outcome != "bf":
+                q.filter(results_table.outcome == "bf")\
+                    .update({"classification": "bf"})
+            if majority_outcome != "c":
+                q.filter(results_table.outcome == "c")\
+                    .update({"classification": "c"})
+            if majority_outcome != "to":
+                q.filter(results_table.outcome == "to")\
+                    .update({"classification": "to"})
+
+            # Look for wrong-code bugs
+            q2 = q.filter(results_table.outcome == "pass")
+            n2 = q2.count()
+            if n2 < 6:
+                # Too few results for a majority
+                continue
+
+            majority_output, majority_count = get_majority(
+                [r.stdout for r in q2])
+
+            if majority_count < math.ceil(n2 / 2):
+                # No majority
+                print("majority_count <", math.ceil(n2 / 2), " = ", majority_count)
+                continue
+
+            # There is a majority conensus, so compare individual
+            # outputs to majority
+            q2.filter(results_table.stdout != majority_output)\
+                .update({"classification": "w"})
+
+
+set_classifications = set_our_classifications
