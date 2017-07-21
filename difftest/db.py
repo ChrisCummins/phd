@@ -613,3 +613,42 @@ def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
                          host=cldrive.host_os(),
                          opencl=env.opencl_version,
                          devtype=env.device_type)
+
+# Tablesets ###################################################################
+Tableset = namedtuple('Tableset', ['results', 'programs', 'params', 'reductions'])
+
+CLSMITH_TABLES = Tableset(results=CLSmithResult, programs=CLSmithProgram,
+                          params=cl_launcherParams, reductions=CLSmithReduction)
+CLSMITH_TABLES = Tableset(results=CLgenResult, programs=CLgenProgram,
+                          params=cldriveParams, reductions=CLgenReduction)
+
+
+def results_in_timelimit(session, tables: Tableset, testbed_id: int,
+                         no_opt: bool, time_limit: int, return_value=None):
+    if return_value is None:
+        return_value = tables.results
+
+    param_ids = session.query(tables.params.id)\
+        .filter(tables.params.optimizations == no_opt)
+
+    generation_time = sql.sql.func.ifnull(tables.programs.runtime, clgen_generation_time)
+    runtime = tables.results.runtime
+    reduction_time = sql.sql.func.ifnull(tables.reductions.runtime, 0)
+    result_time = generation_time + runtime + reduction_time
+
+    q = session.query(
+            return_value,
+            result_time)\
+        .outerjoin(tables.programs)\
+        .outerjoin(tables.reductions)\
+        .filter(tables.results.testbed_id == testbed_id,
+                tables.results.params_id.in_(param_ids),
+                tables.results.outcome != None)\
+        .order_by(tables.results.date)
+
+    total_time = 0  # elapsed time
+    for val, result_time in q:
+        if total_time + result_time > time_limit:
+            break
+        total_time += result_time
+        yield val, result_time, total_time
