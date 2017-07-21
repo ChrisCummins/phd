@@ -1,7 +1,7 @@
 """
 Shared utility code for Jupyter notebooks.
 """
-from collections import Counter
+from collections import Counter, namedtuple
 from progressbar import ETA, ProgressBar
 
 
@@ -38,6 +38,7 @@ PLATFORMS_2_VENDORS = {
     "Portable Computing Language": "pocl",
     "NVIDIA CUDA": "nvidia",
     "Oclgrind": "oclgrind",
+    "ComputeAorta": "codeplay",
 }
 
 DEVTYPES = {
@@ -48,7 +49,9 @@ DEVTYPES = {
 # Ordering for the paper:
 TESTBED_IDS = [3, 20, 13, 9, 14, 10, 15, 12, 22, 11]
 OCLGRIND_ID = 11
-CONFIGURATIONS = list(zip(range(1, len(TESTBED_IDS) + 1), TESTBED_IDS))
+Configuration = namedtuple('Configuration', ['id', 'testbed_id'])
+
+CONFIGURATIONS = [Configuration(*x) for x in zip(range(1, len(TESTBED_IDS) + 1), TESTBED_IDS)]
 
 
 def platform_str(platform: str):
