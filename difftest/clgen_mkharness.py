@@ -70,23 +70,30 @@ def mkharness(s, env: cldrive.OpenCLEnvironment, program: db.CLgenProgram,
 
     generation_time = time() - start_time
 
-    with NamedTemporaryFile(prefix='cldrive-harness-') as tmpfile:
-        start_time = time()
-        compile_harness(src, tmpfile.name)
-        compile_time = time() - start_time
+    try:
+        with NamedTemporaryFile(prefix='cldrive-harness-') as tmpfile:
+            start_time = time()
+            compile_harness(src, tmpfile.name)
+            compile_time = time() - start_time
 
-    harness = CLgenHarness(
-        program_id=program.id,
-        params_id=params.id,
-        cldrive_version=cldrive.__version__,
-        src=src,
-        compile_only=compile_only,
-        generation_time=generation_time,
-        compile_time=compile_time)
+        harness = CLgenHarness(
+            program_id=program.id,
+            params_id=params.id,
+            cldrive_version=cldrive.__version__,
+            src=src,
+            compile_only=compile_only,
+            generation_time=generation_time,
+            compile_time=compile_time)
 
-    s.add(harness)
-    s.commit()
-    return harness
+        s.add(harness)
+        s.commit()
+
+        return harness
+    except ValueError:
+        print("\nharness compilation failed!", file=sys.stderr)
+        print("program:", program.id, file=sys.stderr)
+        print("params:", params.id, file=sys.stderr)
+        print(src, file=sys.stderr)
 
 
 def compile_harness(src: str, path: str='a.out', platform_id=None,
