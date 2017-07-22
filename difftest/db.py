@@ -422,6 +422,7 @@ class CLSmithResult(Base):
     testbed = sql.orm.relationship("Testbed", back_populates="clsmith_results")
     params = sql.orm.relationship("cl_launcherParams", back_populates="results")
     reduction = sql.orm.relation("CLSmithReduction", back_populates="result")
+    meta = sql.orm.relation("CLSmithMeta", back_populates="result")
 
     def __repr__(self):
         return ("result: {self.id} "
@@ -430,6 +431,51 @@ class CLSmithResult(Base):
                 "params: {self.params}, "
                 "status: {self.status}, "
                 "runtime: {self.runtime:.2f}s"
+                .format(**vars()))
+
+
+    def previous_result(self, session) -> "CLSmithResult":
+        params_group = session.query(cl_launcherParams.id)\
+            .filter(cl_launcherParams.optimizations == self.params.optimizations)
+
+        return session.query(CLSmithResult)\
+            .filter(CLSmithResult.testbed_id == self.testbed_id,
+                    CLSmithResult.params_id.in_(params_group),
+                    CLSmithResult.date < self.date)\
+            .order_by(CLSmithResult.date.desc()).first()
+
+    def get_meta(self, session) -> "CLSmithMeta":
+        m = session.query(CLSmithMeta).filter(CLSmithMeta.id == self.id).first()
+        if not m:
+            total_time = self.runtime + self.program.runtime
+            prev = self.previous_result(session)
+            cumtime = total_time
+            if prev:
+                prev_meta = prev.get_meta(session)
+                cumtime += prev_meta.cumtime + prev_meta.total_time
+
+            m = CLSmithMeta(id=self.id, total_time=total_time, cumtime=cumtime)
+            session.add(m)
+        return m
+
+
+class CLSmithMeta(Base):
+    __tablename__ = "CLSmithMetas"
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithResults.id"), primary_key=True)
+    total_time = sql.Column(sql.Float, nullable=False)  # time to generate and run test case
+    cumtime = sql.Column(sql.Float, nullable=False)  # culumative time for this device and optimization level
+    classification = sql.Column(sql.String(8))
+    submitted = sql.Column(sql.Boolean)
+
+    # relations:
+    result = sql.orm.relationship("CLSmithResult", back_populates="meta")
+
+    def __repr__(self):
+        return ("result: {self.id} "
+                "total_time: {self.total_time:.3f}s, "
+                "cumtime: {self.cumtime:.1f}s, "
+                "classification: {self.classification}, "
+                "submitted: {self.submitted}"
                 .format(**vars()))
 
 
@@ -568,6 +614,7 @@ class CLgenResult(Base):
     program = sql.orm.relationship("CLgenProgram", back_populates="results")
     testbed = sql.orm.relationship("Testbed", back_populates="clgen_results")
     params = sql.orm.relationship("cldriveParams", back_populates="clgen_results")
+    meta = sql.orm.relationship("CLgenMeta", back_populates="result")
 
     def __repr__(self) -> str:
         return ("program: {self.program_id}, "
@@ -576,6 +623,42 @@ class CLgenResult(Base):
                 "status: {self.status}, "
                 "runtime: {self.runtime:.2f}s"
                 .format(**vars()))
+
+    def previous_result(self, session) -> "CLgenResult":
+        params_group = session.query(cldriveParams.id)\
+            .filter(cldriveParams.optimizations == self.params.optimizations)
+
+        return session.query(CLgenResult)\
+            .filter(CLgenResult.testbed_id == self.testbed_id,
+                    CLgenResult.params_id.in_(params_group),
+                    CLgenResult.date < self.date)\
+            .order_by(CLgenResult.date.desc()).first()
+
+    def get_meta(self, session) -> "CLgenMeta":
+        m = session.query(CLgenMeta).filter(CLgenMeta.id == self.id).first()
+        if not m:
+            total_time = self.runtime + self.program.runtime
+            prev = self.previous_result(session)
+            cumtime = total_time
+            if prev:
+                prev_meta = prev.get_meta(session)
+                cumtime += prev_meta.cumtime + prev_meta.total_time
+
+            m = CLgenMeta(id=self.id, total_time=total_time, cumtime=cumtime)
+            session.add(m)
+        return m
+
+
+class CLgenMeta(Base):
+    __tablename__ = "CLgenMetas"
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"), primary_key=True)
+    total_time = sql.Column(sql.Float, nullable=False)  # time to generate and run test case
+    cumtime = sql.Column(sql.Float, nullable=False)  # culumative time for this device and optimization level
+    classification = sql.Column(sql.String(8))
+    submitted = sql.Column(sql.Boolean)
+
+    # relations:
+    result = sql.orm.relationship("CLgenResult", back_populates="meta")
 
 
 class GitHubResult(Base):
@@ -627,12 +710,15 @@ def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
                          devtype=env.device_type)
 
 # Tablesets ###################################################################
-Tableset = namedtuple('Tableset', ['results', 'programs', 'params', 'reductions'])
+Tableset = namedtuple(
+    'Tableset', ['name', 'results', 'programs', 'harnesses', 'params', 'reductions', 'meta'])
 
-CLSMITH_TABLES = Tableset(results=CLSmithResult, programs=CLSmithProgram,
-                          params=cl_launcherParams, reductions=CLSmithReduction)
-CLGEN_TABLES = Tableset(results=CLgenResult, programs=CLgenProgram,
-                        params=cldriveParams, reductions=CLgenReduction)
+CLSMITH_TABLES = Tableset(name="CLSmith",
+    results=CLSmithResult, programs=CLSmithProgram, harnesses=None,
+    params=cl_launcherParams, reductions=CLSmithReduction, meta=CLSmithMeta)
+CLGEN_TABLES = Tableset(name="CLgen",
+    results=CLgenResult, programs=CLgenProgram, harnesses=CLgenHarness,
+    params=cldriveParams, reductions=CLgenReduction, meta=CLgenMeta)
 
 
 class InsufficientDataError(ValueError):
@@ -643,7 +729,7 @@ class InsufficientDataError(ValueError):
 def results_in_timelimit(session, tables: Tableset, testbed_id: int,
                          no_opt: bool, time_limit: int,
                          *return_values, filter=None,
-                         generation_time=True, reduction_time=True):
+                         generation_time=True, reduction_time=False):
     """
     Raises:
         InsufficientDataError: If run out of results before time_limit is
@@ -656,33 +742,42 @@ def results_in_timelimit(session, tables: Tableset, testbed_id: int,
         .filter(tables.params.optimizations == no_opt)
 
     runtime = tables.results.runtime
+
+    # Include generation time if required
     if generation_time:
         runtime += tables.programs.runtime
+        if tables.harnesses:  # add harness generation time if there are any
+            runtime += tables.harnesses.generation_time
+
+    # Include reduction time if required
     if reduction_time:
         runtime += sql.sql.func.ifnull(tables.reductions.runtime, 0)
 
     q = session.query(
             *return_values, runtime)\
-        .outerjoin(tables.programs)\
-        .outerjoin(tables.reductions)\
+        .join(tables.programs).outerjoin(tables.reductions)\
         .filter(tables.results.testbed_id == testbed_id,
                 tables.results.params_id.in_(param_ids),
                 tables.results.outcome != None)\
         .order_by(tables.results.date)
 
+    if tables.harnesses:
+        q = q.outerjoin(tables.harnesses)
+
     if filter is not None:
         q = q.filter(filter)
 
-    total_time = 0  # elapsed time
+    total_time = 0
     for vals in q:
-        if total_time + vals[-1] > time_limit:
+        if time_limit > 0 and total_time + vals[-1] > time_limit:
             break
         total_time += vals[-1]
         yield vals[:-1], vals[-1], total_time
     else:
-        # Didn't break
-        import util
-        total_hours = total_time / 3600
-        testbed = session.query(Testbed).filter(Testbed.id == testbed_id).first()
-        devname = util.device_str(testbed.device)
-        raise InsufficientDataError(f"insufficient {tables.results.__tablename__} for {devname} {no_opt} ({total_hours:.1f} hs)")
+        if time_limit > 0:
+            # Didn't reach time limit
+            import util
+            total_hours = total_time / 3600
+            testbed = session.query(Testbed).filter(Testbed.id == testbed_id).first()
+            devname = util.device_str(testbed.device)
+            raise InsufficientDataError(f"insufficient {tables.results.__tablename__} for {devname} {no_opt} ({total_hours:.1f} hs)")
