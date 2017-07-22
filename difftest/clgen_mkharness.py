@@ -98,7 +98,7 @@ def mkharness(s, env: cldrive.OpenCLEnvironment, program: db.CLgenProgram,
 
 def compile_harness(src: str, path: str='a.out', platform_id=None,
                     device_id=None, cc: str='gcc',
-                    flags: List[str]=["-std=c99", "-lOpenCL"],
+                    flags: List[str]=["-std=c99", "-Wno-deprecated-declarations", "-lOpenCL"],
                     timeout: int=60) -> None:
     """ compile harness binary from source """
     cmd = ['timeout', '-s9', str(timeout), cc, '-xc', '-', '-o', str(path)] + flags
