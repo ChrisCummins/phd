@@ -1,0 +1,53 @@
+#!/usr/bin/env ipython
+from argparse import ArgumentParser
+from progressbar import ProgressBar
+
+import util
+import db
+from db import *
+
+
+def results_iter(session, tables: Tableset, testbed: Testbed, no_opt: bool):
+    param_ids = session.query(tables.params.id)\
+        .filter(tables.params.optimizations == no_opt)
+
+    done = session.query(tables.meta.id)
+
+    q = session.query(tables.results)\
+        .filter(tables.results.testbed_id == testbed.id,
+                tables.results.params_id.in_(param_ids),
+                ~tables.results.id.in_(done))\
+        .order_by(tables.results.date)
+
+    if tables.harnesses:
+        q = q.outerjoin(tables.harnesses)
+
+    return q
+
+
+def set_metas(session: session_t, tables: Tableset, testbed: Testbed):
+    devname = util.device_str(testbed.device)
+
+    for noopt in [True, False]:
+        print(f"{tables.name} Metas for {devname} {noopt} ...")
+        results = results_iter(session, tables, testbed, noopt)
+        for i, result in enumerate(ProgressBar(max_value=results.count())(results)):
+            result.get_meta(session)
+            if not i % 100:
+                session.commit()
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser(description="Collect difftest results for a device")
+    parser.add_argument("-H", "--hostname", type=str, default="cc1",
+                        help="MySQL database hostname")
+    args = parser.parse_args()
+
+    # Connect to database
+    db_hostname = args.hostname
+    print("connected to", db.init(db_hostname))
+
+    with Session(commit=True) as s:
+        for testbed in s.query(Testbed):
+            set_metas(s, CLSMITH_TABLES, testbed)
+            set_metas(s, CLGEN_TABLES, testbed)
