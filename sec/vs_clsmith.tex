@@ -24,7 +24,7 @@ Figure~\ref{fig:runtimes} shows runtimes. For CLgen, generation time scales line
 	\centering %
 	\includegraphics[width=\columnwidth]{build/img/runtimes}%
 	\caption{%
-		Test case runtimes, excluding timeouts. On average, CLgen test case execution is $x\times$ faster than CLSmith. \cc{TODO: CLgen generation times, CLgen reductions}%
+		Test case runtimes, excluding timeouts. On average, CLgen test case execution is $x\times$ faster than CLSmith. \cc{reduction times}%
 	}%
 	\label{fig:runtimes} %
 \end{figure}
@@ -75,7 +75,7 @@ Potentially interesting questions: What is the total lines of code which get run
 	\centering %
 	\includegraphics[width=\columnwidth]{build/img/kernel-sizes}%
 	\caption{%
-		Kernel line counts, grouped by classification. CLSmith programs with wrong-code (\emph{w}) classifications have been reduced.%
+		Kernel line counts, grouped by classification. CLgen test cases are on average two orders of magnitude smaller than CLSmith, rendering reduction unnecessary \cc{maybe \ldots}.%
 	}%
 	\label{fig:kernel-sizes} %
 \end{figure}
