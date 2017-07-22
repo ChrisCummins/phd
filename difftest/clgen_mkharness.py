@@ -118,6 +118,8 @@ if __name__ == "__main__":
     parser = ArgumentParser(description=__doc__)
     parser.add_argument("-H", "--hostname", type=str, default="cc1",
                         help="MySQL database hostname")
+    parser.add_argument("-p", "--program-id", type=str,
+                        help="Program ID to generate test harnesses for")
     args = parser.parse_args()
 
     db.init(args.hostname)
@@ -127,6 +129,9 @@ if __name__ == "__main__":
     with Session() as s:
         params = s.query(cldriveParams).all()
         q = s.query(CLgenProgram)
+
+        if args.program_id:
+            q = q.filter(CLgenProgram.id == args.program_id)
 
         for program in ProgressBar(max_value=q.count())(q):
             for param in params:
