@@ -20,8 +20,6 @@ session = db.make_session()
 
 null_columns = " & ".join(["-"] * 6)
 
-# Measured average CLgen sample time
-clgen_generation_time = .9
 
 TIME_LIMIT = 24 * 2600
 
