@@ -1,3 +1,4 @@
+import clgen
 import datetime
 import sqlalchemy as sql
 
@@ -132,6 +133,16 @@ class CLgenProgram(Base):
 
     def __repr__(self) -> str:
         return self.id
+
+    def get_gpuverified(self):
+        if self.gpuverified == None:
+            try:
+                clgen.gpuverify(program.src, ["--local_size=64", "--num_groups=128"])
+                self.gpuverified = 1
+            except clgen.GPUVerifyException:
+                self.gpuverified = 0
+
+        return self.gpuverified
 
 
 class CLgenReduction(Base):
@@ -646,8 +657,7 @@ def results_in_timelimit(session, tables: Tableset, testbed_id: int,
 
     runtime = tables.results.runtime
     if generation_time:
-        clgen_generation_time = .9  # FIXME
-        runtime += sql.sql.func.ifnull(tables.programs.runtime, clgen_generation_time)  # FIXME
+        runtime += tables.programs.runtime
     if reduction_time:
         runtime += sql.sql.func.ifnull(tables.reductions.runtime, 0)
 
