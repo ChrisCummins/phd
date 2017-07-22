@@ -637,7 +637,10 @@ class CLgenResult(Base):
     def get_meta(self, session) -> "CLgenMeta":
         m = session.query(CLgenMeta).filter(CLgenMeta.id == self.id).first()
         if not m:
-            total_time = self.runtime + self.program.runtime
+            harness_time = session.query(CLgenHarness.generation_time)\
+                .filter(CLgenHarness.program_id == self.program_id,
+                        CLgenHarness.params_id == self.params_id).first()
+            total_time = self.runtime + self.program.runtime + harness_time
             prev = self.previous_result(session)
             cumtime = total_time
             if prev:
@@ -726,58 +729,50 @@ class InsufficientDataError(ValueError):
     pass
 
 
+def results_in_order(session, tables: Tableset, testbed_id: int,
+                     no_opt: bool, *return_values, reverse=True):
+    if not len(return_values):
+        return_values = (tables.results,)
+
+    optimizations = not no_opt
+    param_ids = session.query(tables.params.id)\
+        .filter(tables.params.optimizations == optimizations)
+
+    q = session.query(*return_values)\
+        .join(tables.programs).join(tables.meta).outerjoin(tables.reductions)\
+        .filter(tables.results.testbed_id == testbed_id,
+                tables.results.params_id.in_(param_ids))
+
+    if reverse:
+        q = q.order_by(tables.results.date.desc())
+    else:
+        q = q.order_by(tables.results.date)
+
+    return q
+
+
 def results_in_timelimit(session, tables: Tableset, testbed_id: int,
                          no_opt: bool, time_limit: int,
-                         *return_values, filter=None,
-                         generation_time=True, reduction_time=False):
+                         *return_values, filter=None):
     """
     Raises:
         InsufficientDataError: If run out of results before time_limit is
             reached.
     """
-    if not len(return_values):
-        return_values = (tables.results,)
-
-    param_ids = session.query(tables.params.id)\
-        .filter(tables.params.optimizations == no_opt)
-
-    runtime = tables.results.runtime
-
-    # Include generation time if required
-    if generation_time:
-        runtime += tables.programs.runtime
-        if tables.harnesses:  # add harness generation time if there are any
-            runtime += tables.harnesses.generation_time
-
-    # Include reduction time if required
-    if reduction_time:
-        runtime += sql.sql.func.ifnull(tables.reductions.runtime, 0)
-
-    q = session.query(
-            *return_values, runtime)\
-        .join(tables.programs).outerjoin(tables.reductions)\
-        .filter(tables.results.testbed_id == testbed_id,
-                tables.results.params_id.in_(param_ids),
-                tables.results.outcome != None)\
-        .order_by(tables.results.date)
-
-    if tables.harnesses:
-        q = q.outerjoin(tables.harnesses)
+    q = results_in_order(session, tables, testbed_id, no_opt, *return_values, tables.meta.cumtime)
 
     if filter is not None:
         q = q.filter(filter)
 
-    total_time = 0
+    vals = [0]
     for vals in q:
-        if time_limit > 0 and total_time + vals[-1] > time_limit:
+        if vals[-1] > time_limit:
             break
-        total_time += vals[-1]
-        yield vals[:-1], vals[-1], total_time
+        yield vals[:-1]
     else:
-        if time_limit > 0:
-            # Didn't reach time limit
-            import util
-            total_hours = total_time / 3600
-            testbed = session.query(Testbed).filter(Testbed.id == testbed_id).first()
-            devname = util.device_str(testbed.device)
-            raise InsufficientDataError(f"insufficient {tables.results.__tablename__} for {devname} {no_opt} ({total_hours:.1f} hs)")
+        # Didn't reach time limit
+        import util
+        total_hours = vals[-1] / 3600
+        testbed = session.query(Testbed).filter(Testbed.id == testbed_id).first()
+        devname = util.device_str(testbed.device)
+        raise InsufficientDataError(f"insufficient {tables.results.__tablename__} for {devname} {no_opt} ({total_hours:.1f} hs)")

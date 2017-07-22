@@ -40,11 +40,12 @@ def get_outcome_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
     """
     counts = {"pass": 0, "bf": 0, "bc": 0, "bto": 0, "c": 0, "to": 0}
 
-    outcomes = results_in_timelimit(
-        session, tables, testbed.id, no_opt, TIME_LIMIT, tables.results.outcome)
+    q = results_in_timelimit(
+        session, tables, testbed.id, no_opt, TIME_LIMIT,
+        tables.results.outcome)
 
     try:
-        for (outcome,), result_time, total_time in outcomes:
+        for outcome, in q:
             counts[outcome] = counts.get(outcome, 0) + 1
     except InsufficientDataError as e:
         print(e, file=sys.stderr)
@@ -73,12 +74,13 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
     """
     counts = {"w": 0, "bf": 0, "c": 0, "to": 0, "pass": 0, "fail": 0}
 
-    outcomes = results_in_timelimit(
-        session, tables, testbed.id, no_opt, TIME_LIMIT,
-        tables.results.classification, programs_table.src)
+    q = results_in_order(
+        session, tables, testbed.id, no_opt,
+        tables.results.classification, tables.programs.src)\
+            .filter(tables.meta.cumtime < TIME_LIMIT)
 
     try:
-        for (classification, src), result_time, total_time in outcomes:
+        for classification, src in q:
             # TODO: Merge this into classification logic
             if classification == "w" and "float" in src:
                 continue
