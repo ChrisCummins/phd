@@ -24,8 +24,7 @@ null_columns = " & ".join(["-"] * 6)
 TIME_LIMIT = 24 * 2600
 
 
-def get_outcome_columns(results_table, programs_table, params_table,
-                        reductions_table, testbed: Testbed, no_opt: bool):
+def get_outcome_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
     """
     Return results for the specified time limit.
 
@@ -41,11 +40,8 @@ def get_outcome_columns(results_table, programs_table, params_table,
     """
     counts = {"pass": 0, "bf": 0, "bc": 0, "bto": 0, "c": 0, "to": 0}
 
-    tables = Tableset(results=results_table, programs=programs_table,
-                      params=params_table, reductions=reductions_table)
     outcomes = results_in_timelimit(
-        session, tables, testbed.id, no_opt, TIME_LIMIT,
-        results_table.outcome, reduction_time=False)
+        session, tables, testbed.id, no_opt, TIME_LIMIT, tables.results.outcome)
 
     try:
         for (outcome,), result_time, total_time in outcomes:
@@ -61,8 +57,7 @@ def get_outcome_columns(results_table, programs_table, params_table,
     return f"{counts['bf']} & {counts['bc']} & {counts['bto']} & {counts['c']} & {counts['to']} & {counts['pass']} & {counts['total']}"
 
 
-def get_classification_columns(results_table, programs_table, params_table,
-                               reductions_table, testbed: Testbed, no_opt: bool):
+def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
     """
     Return results for the specified time limit.
 
@@ -78,14 +73,13 @@ def get_classification_columns(results_table, programs_table, params_table,
     """
     counts = {"w": 0, "bf": 0, "c": 0, "to": 0, "pass": 0, "fail": 0}
 
-    tables = Tableset(results=results_table, programs=programs_table,
-                      params=params_table, reductions=reductions_table)
     outcomes = results_in_timelimit(
         session, tables, testbed.id, no_opt, TIME_LIMIT,
-        results_table.classification, programs_table.src, reduction_time=False)
+        tables.results.classification, programs_table.src)
 
     try:
         for (classification, src), result_time, total_time in outcomes:
+            # TODO: Merge this into classification logic
             if classification == "w" and "float" in src:
                 continue
             counts[classification] = counts.get(classification, 0) + 1
@@ -111,17 +105,11 @@ def get_row(config_id, testbed_id, get_columns):
     device_name = device_str(testbed.device)
     driver_name = driver_str(testbed.driver)
 
-    noopt = True
-    clsmith_columns = get_columns(
-        CLSmithResult, CLSmithProgram, cl_launcherParams, CLSmithReduction, testbed, noopt)
-    clgen_columns = get_columns(
-        CLgenResult, CLgenProgram, cldriveParams, CLgenReduction, testbed, noopt)
+    clsmith_columns = get_columns(CLSMITH_TABLES, testbed, True)
+    clgen_columns = get_columns(CLGEN_TABLES, testbed, True)
 
-    withopt = False
-    clsmith_withopt_columns = get_columns(
-        CLSmithResult, CLSmithProgram, cl_launcherParams, CLSmithReduction, testbed, withopt)
-    clgen_withopt_columns = get_columns(
-        CLgenResult, CLgenProgram, cldriveParams, CLgenReduction, testbed, withopt)
+    clsmith_withopt_columns = get_columns(CLSMITH_TABLES, testbed, False)
+    clgen_withopt_columns = get_columns(CLGEN_TABLES, testbed, False)
 
     return f"""\
 \\multirow{{ 2}}{{*}}{{{config_id}}} & \
