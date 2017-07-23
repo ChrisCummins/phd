@@ -663,6 +663,14 @@ class CLgenMeta(Base):
     # relations:
     result = sql.orm.relationship("CLgenResult", back_populates="meta")
 
+    def __repr__(self):
+        return ("result: {self.id} "
+                "total_time: {self.total_time:.3f}s, "
+                "cumtime: {self.cumtime:.1f}s, "
+                "classification: {self.classification}, "
+                "submitted: {self.submitted}"
+                .format(**vars()))
+
 
 class GitHubResult(Base):
     __tablename__ = "GitHubResults"
