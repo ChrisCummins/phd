@@ -83,9 +83,13 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
 
             for classification, src, gpuverified in q:
                 # TODO: merge this into analyze logic
-                if classification == "w" and not gpuverified:
+                if classification == "w" and ("float" in src or not gpuverified):
+                    print("skipped",
+                          "float" if "float" in src else "nofloat",
+                          "gpuverified" if gpuverified else "unverified")
                     counts['pass'] += 1
-                counts[classification] += 1
+                else:
+                    counts[classification] += 1
         else:
             q = results_in_timelimit(
                 session, tables, testbed.id, no_opt, TIME_LIMIT,
@@ -98,6 +102,7 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
         counts['total'] = '*'
 
     suffix = counts.pop("total", "")
+    counts.pop(None)
     total = sum(counts.values())
 
     # don't count "pass"es

@@ -272,13 +272,16 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
     # Go program-by-program, looking for wrong-code outputs
     programs = session.query(tables.results.program_id).join(tables.meta).distinct().all()
 
+    # with_meta = session.query(tables.results.id).join(tables.meta)
+
     for i, (program_id,) in enumerate(util.NamedProgressBar("classify")(programs)):
         # treat param combinations independently
         for params in session.query(tables.params):
             # select all results for this test case
             q = session.query(tables.results)\
                 .filter(tables.results.program_id == program_id,
-                        tables.results.params_id == params.id)
+                        tables.results.params_id == params.id)#,
+                        # tables.results.id.in_(with_meta))
             n = q.count()
 
             q.update({"classification": "pass"})
@@ -323,8 +326,13 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
 
             # There is a majority conensus, so compare individual
             # outputs to majority
-            q2.filter(tables.results.stdout != majority_output)\
-                .update({"classification": "w"})
+            if tables.name == "CLgen":
+                for result in q2:
+                    if result.program.gpuverified and result.stdout != majority_output:
+                        result.classification = "w"
+            else:
+                q2.filter(tables.results.stdout != majority_output)L
+                    .update({"classification": "w"})
 
         if not i % 100:
             session.commit()
