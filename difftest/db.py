@@ -738,7 +738,7 @@ class InsufficientDataError(ValueError):
 
 
 def results_in_order(session, tables: Tableset, testbed_id: int,
-                     no_opt: bool, *return_values, reverse=True):
+                     no_opt: bool, *return_values, reverse=False):
     if not len(return_values):
         return_values = (tables.results,)
 
@@ -747,7 +747,9 @@ def results_in_order(session, tables: Tableset, testbed_id: int,
         .filter(tables.params.optimizations == optimizations)
 
     q = session.query(*return_values)\
-        .join(tables.programs).join(tables.meta).outerjoin(tables.reductions)\
+        .join(tables.programs)\
+        .join(tables.meta)\
+        .outerjoin(tables.reductions)\
         .filter(tables.results.testbed_id == testbed_id,
                 tables.results.params_id.in_(param_ids))
 
