@@ -7,13 +7,21 @@ import db
 from db import *
 
 
-def results_iter(session, tables: Tableset, testbed: Testbed, no_opt: bool,
-                 count=False):
+def results_iter(session: session_t, tables: Tableset, testbed: Testbed,
+                 no_opt: bool, count: bool=False):
+    """
+    Returns a query which iterates over results without a Meta table entry.
+
+    Arguments:
+        session (session_t): Database session.
+        tables (Tableset): CLSmith / CLgen tableset.
+        testbed (Testbed): Device to iterate over.
+        no_opt (bool): Optimizations disabled?
+        count (bool): If true, return count, not iterator.
+    """
     optimizations = not no_opt
     param_ids = session.query(tables.params.id)\
         .filter(tables.params.optimizations == optimizations)
-
-    done = session.query(tables.meta.id)
 
     if count:
         retvalue = sql.func.count(tables.results.id),
@@ -25,21 +33,24 @@ def results_iter(session, tables: Tableset, testbed: Testbed, no_opt: bool,
             tables.results.runtime + tables.programs.runtime
         )
 
+    # Existing meta entries:
+    done = session.query(tables.meta.id)
+
     q = session.query(*retvalue)\
         .filter(tables.results.testbed_id == testbed.id,
                 tables.results.params_id.in_(param_ids),
                 ~tables.results.id.in_(done))\
         .join(tables.programs)\
-
-    q = q.order_by(tables.results.date)
+        .order_by(tables.results.date)
 
     return q
 
 
-def set_metas(session: session_t, tables: Tableset, testbed: Testbed, no_opt: bool):
-    devname = util.device_str(testbed.device)
-    print(f"{tables.name} Metas for {devname} {no_opt} ...")
-
+def current_cumtime(session: session_t, tables: Tableset, testbed: Testbed,
+                    no_opt: bool) -> float:
+    """
+    Get the current cumulative time of existing results on the device.
+    """
     optimizations = not no_opt
     param_ids = session.query(tables.params.id)\
         .filter(tables.params.optimizations == optimizations)
@@ -50,32 +61,38 @@ def set_metas(session: session_t, tables: Tableset, testbed: Testbed, no_opt: bo
                 tables.results.params_id.in_(param_ids))\
         .order_by(tables.results.date.desc()).first()
 
-    if last_meta:
-        cumtime = last_meta.cumtime
-    else:
-        cumtime = 0
+    return last_meta.cumtime if last_meta else 0
 
+
+def set_metas(session: session_t, tables: Tableset, testbed: Testbed, no_opt: bool):
+    devname = util.device_str(testbed.device)
+    print(f"{tables.name} Metas for {devname} {no_opt} ...")
+
+    # Check if there's anything to do:
     todo = results_iter(session, tables, testbed, no_opt, count=True).scalar()
-
-    # check if there's something to do
     if not todo:
         return
 
-    # iterate over results without meta entries
+    # Get current elapsed cumulative time:
+    cumtime = current_cumtime(session, tables, testbed, no_opt)
+
+    # Iterate over results without meta entries:
     results = results_iter(session, tables, testbed, no_opt).all()
-    for i, (result_id, program_id, params_id, total_time) in enumerate(ProgressBar(max_value=todo)(results)):
-        # Add harness generation time, if applicable
+    for i, (result_id, program_id, params_id, total_time) in enumerate(ProgressBar()(results)):
+        # Add harness generation time, if applicable:
         if tables.harnesses:
             total_time += session.query(tables.harnesses.generation_time)\
                 .filter(tables.harnesses.program_id == program_id,
                         tables.harnesses.params_id == params_id).first()[0]
         cumtime += total_time
 
-        # Create meta entry
+        # Create meta entry:
         m = tables.meta(id=result_id, total_time=total_time, cumtime=cumtime)
         session.add(m)
         if not i % 1000:
             session.commit()
+
+    # Commit whatever's left over:
     session.commit()
 
 
