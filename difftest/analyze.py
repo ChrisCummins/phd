@@ -331,7 +331,7 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
                     if result.program.gpuverified and result.stdout != majority_output:
                         result.classification = "w"
             else:
-                q2.filter(tables.results.stdout != majority_output)L
+                q2.filter(tables.results.stdout != majority_output)\
                     .update({"classification": "w"})
 
         if not i % 100:
