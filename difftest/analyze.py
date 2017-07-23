@@ -276,7 +276,7 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
 
     # Go program-by-program, looking for wrong-code outputs
     q = session.query(tables.results.program_id).distinct()
-    for row in util.NamedProgressBar("classify")(q, max_value=q.count()):
+    for i, row in enumerate(util.NamedProgressBar("classify")(q, max_value=q.count())):
         program_id = row[0]
         # treat param combinations independently
         for params in session.query(tables.params):
@@ -312,17 +312,20 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
             majority_output, output_majority_count = get_majority(
                 [r.stdout for r in q2])
 
-            min_output_majority_count = max(n2 - 1, 7)
+            min_output_majority_count = n2 - 1
             # min_output_majority_count = math.ceil(n2 / 2)
             if output_majority_count < min_output_majority_count:
                 # No majority
-                print("output_majority_count <", min_output_majority_count, " = ", output_majority_count)
+                # print("output_majority_count <", min_output_majority_count, " = ", output_majority_count)
                 continue
 
             # There is a majority conensus, so compare individual
             # outputs to majority
             q2.filter(tables.results.stdout != majority_output)\
                 .update({"classification": "w"})
+
+        if not i % 100:
+            session.commit()
 
 
 set_classifications = set_our_classifications
