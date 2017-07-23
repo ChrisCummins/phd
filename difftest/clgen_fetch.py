@@ -5,12 +5,12 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import sqlalchemy as sql
-from labm8 import fs
+from labm8 import crypto, fs
 from progressbar import ProgressBar
 
 import clgen_mkharness
 import db
-from db import CLgenProgram, Session
+from db import *
 
 # Characters per second of CLgen inference:
 CLGEN_INFERENCE_CPS = 465
@@ -30,6 +30,8 @@ if __name__ == "__main__":
                         help="max programs to generate, no max if < 0")
     parser.add_argument("--no-harness", action="store_true",
                         help="don't generate cldrive harnesses")
+    parser.add_argument("--delete", action="store_true",
+                        help="delete file after import")
     args = parser.parse_args()
 
     db.init(args.hostname)
@@ -43,11 +45,13 @@ if __name__ == "__main__":
     with Session() as session:
         # Environment and params for mkharness()
         env = cldrive.make_env()
-        params = s.query(cldriveParams).all()
+        params = session.query(cldriveParams).all()
 
         for path in ProgressBar()(paths):
             kid = os.path.splitext(path.name)[0]
-            assert(len(kid) == 40)
+            if len(kid) != 40:
+                kid = crypto.sha1_file(path)
+                assert len(kid) == 40
 
             src = fs.read_file(path)
 
@@ -68,5 +72,8 @@ if __name__ == "__main__":
                 if not args.no_harness:
                     for param in params:
                         clgen_mkharness.mkharness(session, env, program, param)
+
+            if args.delete:
+                fs.rm(path)
 
     print("done.")
