@@ -17,14 +17,6 @@
 		}%
 		\label{lst:oclgrind-sema-assertion}
 	}\\%
-	\subfloat[Configs.\ $10\pm$ compiler assertion from \texttt{llvm::densemap} when global size > 1.]{%
-		\noindent\mbox{\parbox{\columnwidth}{%
-				% bug-reports/CLgenResults/bc/oclgrind-densemap/bug-report-oclgrind-434050.c
-				\lstinputlisting{lst/bug8}%
-			}%
-		}%
-		\label{lst:oclgrind-llvm-densemap-assertion}
-	}\\%
 	\subfloat[Configs.\ $1\pm$ segementation fault.]{%
 		\noindent\mbox{\parbox{\columnwidth}{%
 				% bug-reports/coCLgenResults/segfaults/bug-report-nvidia-21742.c
@@ -48,14 +40,7 @@
 			}%
 		}%
 		\label{lst:nvidia-compile-segfault}
-	}%
-	\caption{Example kernels which expose compiler crash bugs.}%
-	\label{lst:compiler-crash-bugs}%
-\end{figure}
-
-\lstset{language=[OpenCL]C}
-\begin{figure}
-	\centering %
+	}\\%
 	\subfloat[Configs.\ $3\pm$ assertion during code generation for storing pointer values.]{%
 		\noindent\mbox{\parbox{\columnwidth}{%
 				% cl_launcherCLgenResults/runtime_crash/bug-report-intel-30870.sh
@@ -64,7 +49,7 @@
 		}%
 		\label{lst:intel-llvm-assertion}
 	}\\%
-	\subfloat[Configs.\ $3\pm$ assertion during code generation for scalar types.]{%
+	\subfloat[Configs.\ $3\pm$ assertion in scalar type code generation.]{%
 		\noindent\mbox{\parbox{\columnwidth}{%
 				% bug-reports/CLgenResults/bc/scalar-type/bug-report-intel-534566.c
 				\lstinputlisting{lst/bug10}%
@@ -72,6 +57,6 @@
 		}%
 		\label{lst:intel-scalartype-assertion}
 	}%
-	\caption{Kernels which expose compiler back-end bugs.}%
+	\caption{Example kernels which expose compiler crash bugs.}%
 	\label{lst:compiler-crash-bugs}%
 \end{figure}

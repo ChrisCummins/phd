@@ -12,19 +12,17 @@ Each device was configured to run the compiler testing system for a fixed 48 hou
 
 \subsection{Results}
 
-Table~\ref{tab:outcomes} shows the outcomes of test cases. Column \textbf{bc} is of immediate value for developers; for all other outcomes, differential testing is required.
+Table~\ref{tab:outcomes} shows the outcomes of test cases. An average of XX CLSmith and XX CLgen test cases were evaluated on each device, with an average time per test case of XX and XX respectively. The XX-fold increase in testing throughput achieved by CLgen is a result of XXX. Figure~\ref{fig:runtimes} shows runtimes. For CLgen, generation time scales linearly with program size.
+
+Column \textbf{bc} is of immediate value for developers; for all other outcomes, voting heuristics are required to expose anomalous results.
 
 Once voting heuristics have been applied, the result is table~\ref{tab:classifications}.
-
-\subsection{Runtimes}
-
-Figure~\ref{fig:runtimes} shows runtimes. For CLgen, generation time scales linearly with program size.
 
 \begin{figure}
 	\centering %
 	\includegraphics[width=\columnwidth]{build/img/runtimes}%
 	\caption{%
-		Test case runtimes, excluding timeouts. On average, CLgen test case execution is $x\times$ faster than CLSmith. \cc{reduction times}%
+		Test case runtimes, excluding timeouts. On average, generating and executing a test case using CLgen is $x\times$ faster than CLSmith. \cc{reduction times}%
 	}%
 	\label{fig:runtimes} %
 \end{figure}
@@ -50,12 +48,13 @@ Figure~\ref{fig:runtimes} shows runtimes. For CLgen, generation time scales line
 
 \cc{TODO: We note that we tested the wrong-code classification of CLSmith, finding that it does not affect the number of CLSmith wrong-code bugs.}
 
-The 2357 \textbf{bf} results for CLSmith on Configs.\ $4\pm$ and $6\pm$ are all a result of compilers rejecting empty declarations, e.g. \texttt{int ;}, which CLSmith occasionally emits. % Known issue: https://github.com/ChrisLidbury/CLSmith/issues/7
+The 2357 \textbf{bf} results for CLSmith on Configs.\ $4\pm$ and $6\pm$ are all a result of compilers rejecting empty declarations, (e.g. \texttt{int;}) which CLSmith occasionally emits. This is a known issue which will likely be addressed.
+% https://github.com/ChrisLidbury/CLSmith/issues/7
 
 
 \subsection{Analysis of bugs found}
 
-For all except configuration $3\pm$, CLgen exposes more compiler crashes than CLSmith. On average, CLgen hangs the compiler more frequently.
+For all except configuration $3\pm$, CLgen exposes more compiler crashes than CLSmith. On average, CLgen hangs the compiler more frequently. We also submitted XX of the bugs found using CLSmith.
 
 
 \subsection{Test Case Size}
@@ -65,8 +64,6 @@ Median CLSmith kernel is 1086 lines long (excluding headers).
 For ``interesting'' programs: median CLgen kernel size is 12 lines. Median reduced CLSmith kernel size is 43 lines (894 lines before reduction). Figure~\ref{fig:kernel-sizes}.
 
 Potentially interesting questions: What is the total lines of code which get run on each device during the tests? CLgen programs are smaller, but we get through more of them.
-
-\cc{CLgen test cases are two orders of magnitude smaller than CLSmith programs which have been reduced.}
 
 \cc{What is the bug rate per line of code?}
 
