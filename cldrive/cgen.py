@@ -63,6 +63,7 @@ def gen_data_blocks(args: List[KernelArg], inputs: np.array):
             if format_specifier and not arg.is_const:
                 teardown_c.append(f"""\
     err = clEnqueueReadBuffer(queue, dev_{i}, CL_TRUE, 0, sizeof({ctype}) * {array.size}, &host_{i}, 0, NULL, NULL);
+    check_error("clEnqueueReadBuffer", err);
 """)
                 print_c.append(f"""\
     printf("{arg}:");
