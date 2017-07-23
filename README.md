@@ -35,6 +35,15 @@ If CUDA is *not* available:
 $ NO_CUDA=1 make all
 ```
 
+Note our software stack is pretty large, requiring around 7 GB of dependencies to be built, including:
+* TensorFlow
+* CSmith (two different versions)
+* oclgrind (two different versions)
+* LLVM (two different versions)
+* CLreduce
+* Various python and perl packages
+
+A clean build may take upwards of an hour.
 
 ## Running the code
 
