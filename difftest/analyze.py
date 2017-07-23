@@ -269,15 +269,10 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
     """
     q = session.query(tables.results)
 
-    # reset any existing classifications
-    if rerun:
-        print(f"Reseting {tables.name} classifications ...")
-        session.query(tables.results).update({"classification": "pass"})
-
     # Go program-by-program, looking for wrong-code outputs
-    q = session.query(tables.results.program_id).distinct()
-    for i, row in enumerate(util.NamedProgressBar("classify")(q, max_value=q.count())):
-        program_id = row[0]
+    programs = session.query(tables.results.program_id).join(tables.meta).distinct().all()
+
+    for i, (program_id,) in enumerate(util.NamedProgressBar("classify")(programs)):
         # treat param combinations independently
         for params in session.query(tables.params):
             # select all results for this test case
@@ -285,6 +280,8 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
                 .filter(tables.results.program_id == program_id,
                         tables.results.params_id == params.id)
             n = q.count()
+
+            q.update({"classification": "pass"})
 
             if n < 6:
                 # Too few results for a majority
@@ -303,6 +300,11 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
                     .update({"classification": "to"})
 
             # Look for wrong-code bugs
+            #
+            # We skip programs with floating point:
+            if "float" in q.first().program.src:
+                continue
+
             q2 = q.filter(tables.results.outcome == "pass")
             n2 = q2.count()
             if n2 < 6:

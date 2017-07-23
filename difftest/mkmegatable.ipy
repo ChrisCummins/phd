@@ -54,7 +54,7 @@ def get_outcome_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
     total = counts.pop("total", "")
     counts['total'] = str(sum(counts.values())) + total
 
-    print('\r\033[1K ', device_str(testbed.device), no_opt, counts, end="")
+    print('\r\033[1K ', tables.name, device_str(testbed.device), no_opt, counts, end="")
     return f"{counts['bf']} & {counts['bc']} & {counts['bto']} & {counts['c']} & {counts['to']} & {counts['pass']} & {counts['total']}"
 
 
@@ -79,9 +79,6 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
 
     try:
         for classification, src in q:
-            # TODO: Merge this into classification logic
-            if classification == "w" and "float" in src:
-                continue
             counts[classification] = counts.get(classification, 0) + 1
     except InsufficientDataError as e:
         print(e, file=sys.stderr)
@@ -96,7 +93,7 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
 
     counts['total'] = "{:.1f}\\%".format((total_anomalous / max(total, 1)) * 100) + suffix
 
-    print('\r\033[1K ', device_str(testbed.device), no_opt, counts, end="")
+    print('\r\033[1K ', tables.name, device_str(testbed.device), no_opt, counts, end="")
     return f"{counts['w']} & {counts['bf']} & {counts['c']} & {counts['to']} & {counts['total']}"
 
 
