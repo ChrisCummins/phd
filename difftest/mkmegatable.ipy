@@ -72,14 +72,27 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
         testbed (db.Testbed): Testbed instance to return results for.
         no_opt (bool): Testbed optimizations off?
     """
-    counts = {"w": 0, "bf": 0, "c": 0, "to": 0, "pass": 0, "fail": 0}
+    counts = {"w": 0, "bf": 0, "c": 0, "to": 0, "pass": 0, "fail": 0, None: 0}
 
-    q = results_in_timelimit(session, tables, testbed.id, no_opt, TIME_LIMIT,
-                             tables.results.classification, tables.programs.src)
 
     try:
-        for classification, src in q:
-            counts[classification] = counts.get(classification, 0) + 1
+        if tables.name == "CLgen":
+            q = results_in_timelimit(
+                session, tables, testbed.id, no_opt, TIME_LIMIT,
+                tables.results.classification, tables.programs.src, tables.programs.gpuverified)
+
+            for classification, src, gpuverified in q:
+                # TODO: merge this into analyze logic
+                if classification == "w" and not gpuverified:
+                    counts['pass'] += 1
+                counts[classification] += 1
+        else:
+            q = results_in_timelimit(
+                session, tables, testbed.id, no_opt, TIME_LIMIT,
+                tables.results.classification, tables.programs.src)
+
+            for classification, src in q:
+                counts[classification] += 1
     except InsufficientDataError as e:
         print(e, file=sys.stderr)
         counts['total'] = '*'
