@@ -13,6 +13,7 @@ from typing import Dict, List, Tuple, NewType
 import analyze
 import cldrive
 import clgen_mkharness
+import util
 import db
 from db import *
 from lib import *
@@ -145,6 +146,7 @@ if __name__ == "__main__":
 
     with Session(commit=False) as session:
         testbed = get_testbed(session, args.platform, args.device)
+        devname = util.device_str(testbed.device)
 
         params = db.get_or_create(
             session, cldriveParams, size=args.size, generator=args.generator,
@@ -169,7 +171,6 @@ if __name__ == "__main__":
             run.
             """
             BATCH_SIZE = 100
-            devname = testbed.device.strip()
             print(f"\nnext CLgen batch for {devname} at", strftime("%H:%M:%S"))
             # update the counters
             num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
