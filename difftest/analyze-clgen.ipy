@@ -15,9 +15,5 @@ if __name__ == "__main__":
     db_hostname = args.hostname
     print("connected to", db.init(db_hostname))
 
-    # with Session(commit=True) as s:
-    #     analyze.set_cldrive_outcomes(s, CLgenResult, rerun=False)
-
     with Session(commit=True) as s:
-        analyze.set_classifications(
-            s, CLgenResult, cldriveParams, CLgenProgram, rerun=True)
+        analyze.set_classifications(s, CLGEN_TABLES, rerun=True)

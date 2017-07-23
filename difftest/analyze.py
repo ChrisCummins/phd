@@ -46,7 +46,7 @@ def get_majority(lst):
     return Counter(lst).most_common(1)[0]
 
 
-def get_majority_output(session, tables, result):
+def get_majority_output(session, tables: Tableset, result):
     q = session.query(tables.results.stdout)\
         .filter(tables.results.program_id == result.program.id,
                 tables.results.params_id == result.params.id)
@@ -106,12 +106,12 @@ def get_cl_launcher_outcome(result) -> None:
         raise LookupError(f"failed to determine outcome of cl_launcher {result.id}")
 
 
-def set_cl_launcher_outcomes(session, results_table, rerun: bool=False) -> None:
+def set_cl_launcher_outcomes(session, tables: Tableset, rerun: bool=False) -> None:
     """ Set all cl_launcher outcomes. Set `rerun' to recompute outcomes for all results """
     print("Determining CLSmith outcomes ...")
-    q = session.query(results_table)
+    q = session.query(tables.results)
     if not rerun:
-        q = q.filter(results_table.outcome == None)
+        q = q.filter(tables.results.outcome == None)
     ntodo = q.count()
     for result in util.NamedProgressBar('cl_launcher outcomes')(q, max_value=ntodo):
         result.outcome = get_cl_launcher_outcome(result)
@@ -175,19 +175,18 @@ def get_cldrive_outcome(result):
         raise LookupError(f"failed to determine outcome of cldrive result #{result.id}")
 
 
-def set_cldrive_outcomes(session, results_table, rerun: bool=False) -> None:
+def set_cldrive_outcomes(session, tables: Tableset, rerun: bool=False) -> None:
     """ Set all cldrive outcomes. Set `rerun' to recompute outcomes for all results """
     print("Determining CLgen outcomes ...")
-    q = session.query(results_table)
+    q = session.query(tables.results)
     if not rerun:
-        q = q.filter(results_table.outcome == None)
+        q = q.filter(tables.results.outcome == None)
     ntodo = q.count()
     for result in util.NamedProgressBar('cldrive outcomes')(q, max_value=ntodo):
         result.outcome = get_cldrive_outcome(result)
 
 
-def set_clsmith_classifications(session, results_table, params_table,
-                                programs_table, rerun: bool=True) -> None:
+def set_clsmith_classifications(session, tables: Tableset, rerun: bool=True) -> None:
     """
     Run results classification algorithm of paper:
 
@@ -200,47 +199,47 @@ def set_clsmith_classifications(session, results_table, params_table,
     whenver changing classification algorithm, or when new results are added, as
     they may change existing outcomes.
     """
-    q = session.query(results_table)
-    tablename = results_table.__tablename__
+    # TODO: Update to meta table layout
+    q = session.query(tables.results)
 
     # reset any existing classifications
     if rerun:
-        print(f"Reseting {tablename} classifications ...")
-        session.query(results_table).update({"classification": None})
+        print(f"Reseting {tables.name} classifications ...")
+        session.query(tables.results).update({"classification": None})
 
     # direct mappings from outcome to classification
-    print(f"Classifying {tablename} timeouts ...")
-    session.query(results_table)\
-        .filter(sql.or_(results_table.outcome == "to",
-                        results_table.outcome == "bto"))\
+    print(f"Classifying {tables.name} timeouts ...")
+    session.query(tables.results)\
+        .filter(sql.or_(tables.results.outcome == "to",
+                        tables.results.outcome == "bto"))\
         .update({"classification": "to"})
-    print(f"Classifying {tablename} build failures ...")
-    session.query(results_table)\
-        .filter(sql.or_(results_table.outcome == "bf",
-                        results_table.outcome == "bc"))\
+    print(f"Classifying {tables.name} build failures ...")
+    session.query(tables.results)\
+        .filter(sql.or_(tables.results.outcome == "bf",
+                        tables.results.outcome == "bc"))\
         .update({"classification": "bf"})
-    print(f"Classifying {tablename} crashes ...")
-    session.query(results_table)\
-        .filter(results_table.outcome == "c")\
+    print(f"Classifying {tables.name} crashes ...")
+    session.query(tables.results)\
+        .filter(tables.results.outcome == "c")\
         .update({"classification": "c"})
-    print(f"Classifying {tablename} test failures ...")
-    session.query(results_table)\
-        .filter(results_table.outcome == "fail")\
+    print(f"Classifying {tables.name} test failures ...")
+    session.query(tables.results)\
+        .filter(tables.results.outcome == "fail")\
         .update({"classification": "fail"})
 
     # Go program-by-program, looking for wrong-code outputs
-    ok = session.query(results_table.program_id).filter(
-        results_table.outcome == "pass").distinct()
-    q = session.query(programs_table).filter(programs_table.id.in_(ok))
+    ok = session.query(tables.results.program_id).filter(
+        tables.results.outcome == "pass").distinct()
+    q = session.query(tables.programs).filter(tables.programs.id.in_(ok))
     for program in util.NamedProgressBar('classify')(q, max_value=q.count()):
         # treat param combinations independently
         # TODO: iterate over pairs of opt on/off params
-        for params in session.query(params_table):
+        for params in session.query(tables.params):
             # select all results for this test case
-            q = session.query(results_table)\
-                .filter(results_table.program_id == program.id,
-                        results_table.params_id == params.id,
-                        results_table.outcome == "pass")
+            q = session.query(tables.results)\
+                .filter(tables.results.program_id == program.id,
+                        tables.results.params_id == params.id,
+                        tables.results.outcome == "pass")
 
             if q.count() <= 3:
                 # Too few results for a majority, so everything passed.
@@ -264,29 +263,27 @@ def set_clsmith_classifications(session, results_table, params_table,
                             result.classification = "w"
 
 
-def set_our_classifications(session, results_table, params_table,
-                            programs_table, rerun: bool=True) -> None:
+def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None:
     """
     Our methodology for classifying results.
     """
-    q = session.query(results_table)
-    tablename = results_table.__tablename__
+    q = session.query(tables.results)
 
     # reset any existing classifications
     if rerun:
-        print(f"Reseting {tablename} classifications ...")
-        session.query(results_table).update({"classification": "pass"})
+        print(f"Reseting {tables.name} classifications ...")
+        session.query(tables.results).update({"classification": "pass"})
 
     # Go program-by-program, looking for wrong-code outputs
-    q = session.query(results_table.program_id).distinct()
-    for row in util.NamedProgressBar('classify')(q, max_value=q.count()):
+    q = session.query(tables.results.program_id).distinct()
+    for row in util.NamedProgressBar("classify")(q, max_value=q.count()):
         program_id = row[0]
         # treat param combinations independently
-        for params in session.query(params_table):
+        for params in session.query(tables.params):
             # select all results for this test case
-            q = session.query(results_table)\
-                .filter(results_table.program_id == program_id,
-                        results_table.params_id == params.id)
+            q = session.query(tables.results)\
+                .filter(tables.results.program_id == program_id,
+                        tables.results.params_id == params.id)
             n = q.count()
 
             if n < 6:
@@ -296,17 +293,17 @@ def set_our_classifications(session, results_table, params_table,
             min_majority_count = math.ceil(n / 2)
             majority_outcome, majority_count = get_majority([r.outcome for r in q])
             if majority_outcome != "bf":
-                q.filter(results_table.outcome == "bf")\
+                q.filter(tables.results.outcome == "bf")\
                     .update({"classification": "bf"})
             if majority_outcome != "c":
-                q.filter(results_table.outcome == "c")\
+                q.filter(tables.results.outcome == "c")\
                     .update({"classification": "c"})
             if majority_outcome != "to":
-                q.filter(results_table.outcome == "to")\
+                q.filter(tables.results.outcome == "to")\
                     .update({"classification": "to"})
 
             # Look for wrong-code bugs
-            q2 = q.filter(results_table.outcome == "pass")
+            q2 = q.filter(tables.results.outcome == "pass")
             n2 = q2.count()
             if n2 < 6:
                 # Too few results for a majority
@@ -324,7 +321,7 @@ def set_our_classifications(session, results_table, params_table,
 
             # There is a majority conensus, so compare individual
             # outputs to majority
-            q2.filter(results_table.stdout != majority_output)\
+            q2.filter(tables.results.stdout != majority_output)\
                 .update({"classification": "w"})
 
 
