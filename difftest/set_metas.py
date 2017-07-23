@@ -1,4 +1,4 @@
-#!/usr/bin/env ipython
+#!/usr/bin/env python
 from argparse import ArgumentParser
 from progressbar import ProgressBar
 
@@ -19,9 +19,6 @@ def results_iter(session, tables: Tableset, testbed: Testbed, no_opt: bool):
                 ~tables.results.id.in_(done))\
         .order_by(tables.results.date)
 
-    if tables.harnesses:
-        q = q.outerjoin(tables.harnesses)
-
     return q
 
 
@@ -35,12 +32,17 @@ def set_metas(session: session_t, tables: Tableset, testbed: Testbed):
             result.get_meta(session)
             if not i % 100:
                 session.commit()
+        session.commit()
 
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Collect difftest results for a device")
     parser.add_argument("-H", "--hostname", type=str, default="cc1",
                         help="MySQL database hostname")
+    parser.add_argument("--clsmith", action="store_true",
+                        help="Only run CLSmith test cases")
+    parser.add_argument("--clgen", action="store_true",
+                        help="Only run CLgen test cases")
     args = parser.parse_args()
 
     # Connect to database
@@ -49,5 +51,7 @@ if __name__ == "__main__":
 
     with Session(commit=True) as s:
         for testbed in s.query(Testbed):
-            set_metas(s, CLSMITH_TABLES, testbed)
-            set_metas(s, CLGEN_TABLES, testbed)
+            if not args.clgen:
+                set_metas(s, CLSMITH_TABLES, testbed)
+            if not args.clsmith:
+                set_metas(s, CLGEN_TABLES, testbed)

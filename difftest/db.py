@@ -639,7 +639,7 @@ class CLgenResult(Base):
         if not m:
             harness_time = session.query(CLgenHarness.generation_time)\
                 .filter(CLgenHarness.program_id == self.program_id,
-                        CLgenHarness.params_id == self.params_id).first()
+                        CLgenHarness.params_id == self.params_id).scalar()
             total_time = self.runtime + self.program.runtime + harness_time
             prev = self.previous_result(session)
             cumtime = total_time
