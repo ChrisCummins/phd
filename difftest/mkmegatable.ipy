@@ -74,10 +74,9 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
     """
     counts = {"w": 0, "bf": 0, "c": 0, "to": 0, "pass": 0, "fail": 0}
 
-    q = results_in_order(
-        session, tables, testbed.id, no_opt,
-        tables.results.classification, tables.programs.src)\
-            .filter(tables.meta.cumtime < TIME_LIMIT)
+    q = results_in_timelimit(
+        session, tables, testbed.id, no_opt, TIME_LIMIT,
+        tables.results.classification, tables.programs.src)
 
     try:
         for classification, src in q:
