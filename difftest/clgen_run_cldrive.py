@@ -153,6 +153,7 @@ if __name__ == "__main__":
             scalar_val=args.scalar_val, gsize_x=gsize.x, gsize_y=gsize.y,
             gsize_z=gsize.z, lsize_x=lsize.x, lsize_y=lsize.y, lsize_z=lsize.z,
             optimizations=not args.no_opts)
+        opt = "-" if args.no_opts else "+"
 
         print(testbed)
         print(params)
@@ -171,7 +172,7 @@ if __name__ == "__main__":
             run.
             """
             BATCH_SIZE = 100
-            print(f"\nnext CLgen batch for {devname} at", strftime("%H:%M:%S"))
+            print(f"\nnext CLgen {opt} batch for {devname} at", strftime("%H:%M:%S"))
             # update the counters
             num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
             bar.max_value = num_to_run

@@ -157,6 +157,7 @@ if __name__ == "__main__":
             optimizations = optimizations,
             gsize_x = gsize[0], gsize_y = gsize[1], gsize_z = gsize[2],
             lsize_x = lsize[0], lsize_y = lsize[1], lsize_z = lsize[2])
+        opt = "-" if args.no_opts else "+"
         flags = params.to_flags()
 
         print(testbed)
@@ -176,7 +177,7 @@ if __name__ == "__main__":
             run.
             """
             BATCH_SIZE = 100
-            print(f"\nnext CLSmith batch for {devname} at", strftime("%H:%M:%S"))
+            print(f"\nnext CLSmith {opt} batch for {devname} at", strftime("%H:%M:%S"))
             # update the counters
             num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
             bar.max_value = num_to_run
