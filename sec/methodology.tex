@@ -25,8 +25,19 @@ Figure~\ref{fig:test-process} shows the methodology for determining the outcomes
 
 In prior work we required that synthesized programs be well formed and compute \emph{useful work}. For the purpose of testing compilers, we discarded these requirements. Instead, we demand that the behavior of test cases is \emph{portable} and \emph{reproducible}. In some respects this simplifies the execution process. The possible outcomes for a test case are a build failure (\textbf{bf}), build crash (\textbf{bc}), runtime crash (\textbf{c}), or pass (\textbf{\cmark}). A \textbf{bf} occurs when compilation of a kernel fails, usually accompanied by an error message. A \textbf{bc} outcome occurs when the compiler crashes. In~\cite{Lidbury2015a}, the authors do not distinguish between compiler crashes and build failures. A \textbf{c} outcome occurs when the program crashes during execution. The \textbf{bto} and \textbf{to} outcomes occur when the program compilation or execution time out, respectively. As in previous work, we do not guarantee that generated programs time out, finding that XX\% of programs do not.
 
+There are six possible outcomes of a test case execution:
+%
+\begin{enumerate}
+	\item \textbf{bf} \emph{Build failure} Online compilation of OpenCL program fails, whereas the majority of configurations produce a binary.
+	\item \textbf{bc} \emph{Build crash} Compilation of program fails due to compiler crahs.
+	\item \textbf{bto} \emph{Build timeout} Online compilation of OpenCL exceeds a timeout of 60 seconds.
+	\item \textbf{c} \emph{Runtime crash} One or more OpenCL API calls return an error status during the program execution, or the program crashes.
+	\item \textbf{to} \emph{Runtime timeout} Program execution exceeds the timeout of 60 second.
+	\item \textbf{\cmark} \emph{Completion} The program terminates gracefully and produces an output.
+\end{enumerate}
 
-\subsection{Classifying Test Outcomes using Voting}
+
+\subsection{Voting Heuristics for Differential Testing}
 
 In~\cite{Lidbury2015a}, a configuration is determined to have produced a wrong code result for a kernel if there is a majority of at least 3 among the non-\{\textbf{bf},\textbf{c},\textbf{to}\} results for the kernel, and the configuration yields a non-\{\textbf{bf},\textbf{c},\textbf{to}\} result that disagrees with the majority.
 

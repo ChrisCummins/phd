@@ -1,11 +1,11 @@
 \section{Test Case Generation using Deep Learning}
 
-Our compiler test case generation approach consists of two parts: first, extending the state-of-the-art in deep learning program synthesis; the second, a general application of established differential testing methodologies for running code samples.
+Figure~\ref{fig:deeptune} shows the test case generation process. Our compiler test case generation approach consists of two parts: first, extending the state-of-the-art in deep learning program synthesis; the second, a general application of established differential testing methodologies for running code samples.
 
 
-\subsection{CLgen}
+\subsection{OpenCL Kernel Synthesis}
 
-Figure~\ref{fig:deeptune} shows the test case generation process. We extend prior work on synthetic program generation using LSTM networks~\cite{Cummins2017a}. We use a two layer LSTM network of 512 nodes each, trained for 50 epochs using an initial learning rate of XX and decaying by a factor of a half every 5 epochs.
+We extend prior work on synthetic program generation using LSTM networks~\cite{Cummins2017a}. We use a two layer LSTM network of 512 nodes each, trained for 50 epochs using an initial learning rate of XX and decaying by a factor of a half every 5 epochs.
 
 \begin{itemize}
 \item An initial seed corpus of OpenCL samples is mined from GitHub. An oracle compiler (LLVM 3.9) is used to reject samples that are not well-formed.
@@ -35,9 +35,12 @@ Figure~\ref{fig:deeptune} shows the test case generation process. We extend prio
   \label{fig:deeptune}
 \end{figure}
 
+
 \subsection{Test Harness Construction}
 
-At first, we used the test harness of CLSmith. However, we considered this too inflexible for our needs: CLSmith kernels accept no inputs, and compute a single result into a \texttt{unsigned long} buffer. This prototype is not a common OpenCL use case (only XX\% of GitHub kernels have this prototype). To test more a expressive range of kernels, we created \emph{cldrive}, a tool to generate test harnesses for arbitrary OpenCL kernels.
+OpenCL kernel requires host code (\emph{test harness}) to compile the kernel and feed with it inputs, then to print the outputs.
+
+At first, we used the test harness of CLSmith. CLSmith kernels accept no inputs, and compute a single result into a \texttt{unsigned long} buffer. This means that they have a single re-usable test harness which compiles the kernel, runs it, and prints the results. We found this fixed harness to be too inflexible for our needs. This prototype is not a common OpenCL use case (only XX\% of GitHub kernels have this prototype). To test more a expressive range of kernels, we created \emph{cldrive}, a tool to generate test harnesses for arbitrary OpenCL kernels.
 
 We use cldrive to generate a unique test harness for every OpenCL sample we generate; the test harness has the OpenCL kernel embedded within it. If the sample is well-formed (i.e. it can be parsed), the test harness creates a \emph{payload} of buffers and values to match the function signature; else if the sample is ill-formed we generate a compile-only stub. 
 
