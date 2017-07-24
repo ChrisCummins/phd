@@ -21,7 +21,7 @@ session = db.make_session()
 null_columns = " & ".join(["-"] * 6)
 
 
-TIME_LIMIT = 48 * 2600
+TIME_LIMIT = 24 * 2600
 
 
 def get_outcome_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
@@ -41,10 +41,10 @@ def get_outcome_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
     counts = {"pass": 0, "bf": 0, "bc": 0, "bto": 0, "c": 0, "to": 0}
 
     q = results_in_timelimit(session, tables, testbed.id, no_opt, TIME_LIMIT,
-                             tables.results.outcome)
+                             tables.results.outcome, tables.meta.cumtime)
 
     try:
-        for outcome, in q:
+        for outcome, cumtime in q:
             counts[outcome] = counts.get(outcome, 0) + 1
     except InsufficientDataError as e:
         print(e, file=sys.stderr)
@@ -54,7 +54,8 @@ def get_outcome_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
     total = counts.pop("total", "")
     counts['total'] = str(sum(counts.values())) + total
 
-    print('\r\033[1K ', tables.name, device_str(testbed.device), no_opt, counts, end="")
+    total_hours = "{:.1f}h".format(cumtime / 3600)
+    print(' ', device_str(testbed.device), tables.name, no_opt, total_hours, counts)
     return f"{counts['bf']} & {counts['bc']} & {counts['bto']} & {counts['c']} & {counts['to']} & {counts['pass']} & {counts['total']}"
 
 
@@ -79,23 +80,24 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
         if tables.name == "CLgen":
             q = results_in_timelimit(
                 session, tables, testbed.id, no_opt, TIME_LIMIT,
-                tables.results.classification, tables.programs.src, tables.programs.gpuverified)
+                tables.results.classification, tables.programs.src,
+                tables.programs.gpuverified, tables.meta.cumtime)
 
-            for classification, src, gpuverified in q:
+            for classification, src, gpuverified, cumtime in q:
                 # TODO: merge this into analyze logic
                 if classification == "w" and ("float" in src or not gpuverified):
-                    print("skipped",
-                          "float" if "float" in src else "nofloat",
-                          "gpuverified" if gpuverified else "unverified")
+                    # print("skipped",
+                    #       "float" if "float" in src else "nofloat",
+                    #       "gpuverified" if gpuverified else "unverified")
                     counts['pass'] += 1
                 else:
                     counts[classification] += 1
         else:
             q = results_in_timelimit(
                 session, tables, testbed.id, no_opt, TIME_LIMIT,
-                tables.results.classification, tables.programs.src)
+                tables.results.classification, tables.programs.src, tables.meta.cumtime)
 
-            for classification, src in q:
+            for classification, src, cumtime in q:
                 counts[classification] += 1
     except InsufficientDataError as e:
         print(e, file=sys.stderr)
@@ -111,7 +113,8 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
 
     counts['total'] = "{:.1f}\\%".format((total_anomalous / max(total, 1)) * 100) + suffix
 
-    print('\r\033[1K ', tables.name, device_str(testbed.device), no_opt, counts, end="")
+    total_hours = "{:.1f}h".format(cumtime / 3600)
+    print(' ', device_str(testbed.device), tables.name, no_opt, total_hours, counts)
     return f"{counts['w']} & {counts['bf']} & {counts['c']} & {counts['to']} & {counts['total']}"
 
 
