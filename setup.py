@@ -21,7 +21,7 @@ with open('./requirements.txt') as infile:
     requirements = [x.strip() for x in infile.readlines() if x.strip()]
 
 setup(name='cldrive',
-      version='0.0.14.dev0',
+      version='0.0.15',
       description='Run arbitrary OpenCL kernels',
       url='https://github.com/ChrisCummins/cldrive',
       author='Chris Cummins',
