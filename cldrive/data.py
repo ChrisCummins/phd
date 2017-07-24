@@ -28,7 +28,7 @@ class Generator(Enum):
     # We wrap functions in a partial so that they are interpreted as attributes
     # rather than methods. See: http://stackoverflow.com/a/40339397
     RAND = partial(np.random.rand)
-    ARANGE = partial(np.arange)
+    ARANGE = partial(lambda x: np.arange(1, x))
     ZEROS = partial(np.zeros)
     ONES = partial(np.ones)
 
