@@ -21,7 +21,7 @@ session = db.make_session()
 null_columns = " & ".join(["-"] * 6)
 
 
-TIME_LIMIT = 24 * 2600
+TIME_LIMIT = 48 * 3600
 
 
 def get_outcome_columns(tables: Tableset, testbed: Testbed, no_opt: bool):

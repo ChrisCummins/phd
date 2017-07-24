@@ -66,7 +66,7 @@ def current_cumtime(session: session_t, tables: Tableset, testbed: Testbed,
 
 def set_metas(session: session_t, tables: Tableset, testbed: Testbed, no_opt: bool):
     devname = util.device_str(testbed.device)
-    print(f"{tables.name} Metas for {devname} {no_opt} ...")
+    print(f"{tables.name} Metas for {devname}", "no-opt" if no_opt else "opt", "...")
 
     # Check if there's anything to do:
     todo = results_iter(session, tables, testbed, no_opt, count=True).scalar()
