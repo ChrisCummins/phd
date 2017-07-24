@@ -290,7 +290,7 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
                         tables.results.outcome != "bc")
 
             # Check that there are enough non-bc results for a majority:
-            n = session.query(sql.sql.func.count(tables.results.id))
+            n = session.query(sql.sql.func.count(tables.results.id))\
                 .filter(tables.results.program_id == program_id,
                         tables.results.params_id == params.id,
                         tables.results.outcome != "bc").scalar() or 0
