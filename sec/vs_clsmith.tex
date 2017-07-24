@@ -12,7 +12,7 @@ Each device was configured to run the compiler testing system for a fixed 48 hou
 
 \subsection{Results}
 
-Table~\ref{tab:outcomes} shows the outcomes of test cases. An average of XX CLSmith and XX CLgen test cases were evaluated on each device, with an average time per test case of XX and XX respectively. The XX-fold increase in testing throughput achieved by CLgen is a result of XXX. Figure~\ref{fig:runtimes} shows runtimes. For CLgen, generation time scales linearly with program size.
+Table~\ref{tab:outcomes} shows the outcomes of test cases. An average of XX CLSmith and XX CLgen test cases were evaluated on each device, with an average time per test case of XX and XX respectively. The XX-fold increase in testing throughput achieved by CLgen is a result of XXX. Figure~\ref{fig:runtimes} shows runtimes. For CLgen, generation time scales linearly with program size. Disabling optimizaitons generally does not affect testing throughput significantly, with the exception of Config XX, in which the slow compilation of kernels containing structs greatly reduces the number of test cases evaluated. This is a known issue --- in XX the authors omnit testing on this configuration for this reason.
 
 Column \textbf{bc} is of immediate value for developers; for all other outcomes, voting heuristics are required to expose anomalous results.
 
