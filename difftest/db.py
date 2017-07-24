@@ -221,6 +221,7 @@ class Testbed(Base):
     cl_launcher_clgen_results = sql.orm.relationship("cl_launcherCLgenResult", back_populates="testbed")
     cldrive_clsmith_results = sql.orm.relationship("cldriveCLSmithResult", back_populates="testbed")
     github_results = sql.orm.relationship("GitHubResult", back_populates="testbed")
+    bug_reports = sql.orm.relationship("Testbed", back_populates="testbed")
 
     def __repr__(self) -> str:
         return ("Platform: {self.platform}, "
@@ -719,7 +720,7 @@ class BugReport(Base):
     rejected = sql.Column(sql.Boolean)
     fixed = sql.Column(sql.Boolean)
 
-    result = sql.orm.relationship("CLgenResult")
+    testbed = sql.orm.relationship("Testbed", back_populates="bug_reports")
 
     def __repr__(self) -> str:
         return ("report: {self.id}, "
