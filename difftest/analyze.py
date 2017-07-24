@@ -269,11 +269,8 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
     """
     q = session.query(tables.results)
 
-    # Go program-by-program, looking for wrong-code outputs
+    # Go program-by-program:
     programs = session.query(tables.results.program_id).join(tables.meta).distinct().all()
-
-    # with_meta = session.query(tables.results.id).join(tables.meta)
-
     for i, (program_id,) in enumerate(util.NamedProgressBar("classify")(programs)):
         # Treat each param combination independently:
         for params in session.query(tables.params):
