@@ -221,7 +221,7 @@ class Testbed(Base):
     cl_launcher_clgen_results = sql.orm.relationship("cl_launcherCLgenResult", back_populates="testbed")
     cldrive_clsmith_results = sql.orm.relationship("cldriveCLSmithResult", back_populates="testbed")
     github_results = sql.orm.relationship("GitHubResult", back_populates="testbed")
-    bug_reports = sql.orm.relationship("Testbed", back_populates="testbed")
+    bug_reports = sql.orm.relationship("BugReport", back_populates="testbed")
 
     def __repr__(self) -> str:
         return ("Platform: {self.platform}, "
@@ -711,8 +711,8 @@ class BugReport(Base):
                             nullable=False)
     classification = sql.Column(sql.String(12))
 
-    local_path = sql.Column(sql.String(255))
-    url = sql.Column(sql.String(255))
+    testcase_url = sql.Column(sql.String(255))
+    reported_url = sql.Column(sql.String(255))
     notes = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow,
@@ -721,6 +721,9 @@ class BugReport(Base):
     fixed = sql.Column(sql.Boolean)
 
     testbed = sql.orm.relationship("Testbed", back_populates="bug_reports")
+
+    __table_args__ = (
+        sql.UniqueConstraint('testbed_id', 'testcase_url', name='_uid'),)
 
     def __repr__(self) -> str:
         return ("report: {self.id}, "
