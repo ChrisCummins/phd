@@ -275,48 +275,72 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
     # with_meta = session.query(tables.results.id).join(tables.meta)
 
     for i, (program_id,) in enumerate(util.NamedProgressBar("classify")(programs)):
-        # treat param combinations independently
+        # Treat each param combination independently:
         for params in session.query(tables.params):
-            # select all results for this test case
+            # Reset existing classifications
+            session.query(tables.results)\
+                .filter(tables.results.program_id == program_id,
+                        tables.results.params_id == params.id)\
+                .update({"classification": "pass"})
+
+            # Select all non-bc results for this test case:
             q = session.query(tables.results)\
                 .filter(tables.results.program_id == program_id,
-                        tables.results.params_id == params.id)#,
-                        # tables.results.id.in_(with_meta))
-            n = q.count()
+                        tables.results.params_id == params.id,
+                        tables.results.outcome != "bc")
 
-            q.update({"classification": "pass"})
-
+            # Check that there are enough non-bc results for a majority:
+            n = session.query(sql.sql.func.count(tables.results.id))
+                .filter(tables.results.program_id == program_id,
+                        tables.results.params_id == params.id,
+                        tables.results.outcome != "bc").scalar() or 0
             if n < 6:
-                # Too few results for a majority
                 continue
 
+            # Determine majority outcome:
             min_majority_count = math.ceil(n / 2)
             majority_outcome, majority_count = get_majority([r.outcome for r in q])
+
+            if majority_count < min_majority_count:
+                continue
+
+            # If majority outcome resulted in binaries, mark anomalous build
+            # failures:
             if majority_outcome != "bf":
                 q.filter(tables.results.outcome == "bf")\
                     .update({"classification": "bf"})
+
+            # If majority outcome did not crash, mark anomalous crashes:
             if majority_outcome != "c":
                 q.filter(tables.results.outcome == "c")\
                     .update({"classification": "c"})
+
+            # If majority outcome did not timeout, mark anomalous timeouts:
             if majority_outcome != "to":
                 q.filter(tables.results.outcome == "to")\
                     .update({"classification": "to"})
 
-            # Look for wrong-code bugs
+            # Look for wrong-code bugs:
             #
-            # We skip programs with floating point:
-            if "float" in q.first().program.src:
+            # If the majority did not produce outputs, then we're done:
+            if majority_outcome != "w":
                 continue
 
+            # Get "pass" outcome results:
             q2 = q.filter(tables.results.outcome == "pass")
             n2 = q2.count()
-            if n2 < 6:
-                # Too few results for a majority
-                continue
 
-            majority_output, output_majority_count = get_majority(
-                [r.stdout for r in q2])
+            # Additional pruning of programs which should not be difftested:
+            if tables.name == "CLgen":
+                program = q.first().program
+                if not program.gpuverified:
+                    continue
+                if "float" in program.src:
+                    continue
 
+            majority_output, output_majority_count = get_majority([r.stdout for r in q2])
+
+            # Ensure that the majority of configurations agree on the output:
             min_output_majority_count = n2 - 1
             # min_output_majority_count = math.ceil(n2 / 2)
             if output_majority_count < min_output_majority_count:
@@ -326,13 +350,8 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
 
             # There is a majority conensus, so compare individual
             # outputs to majority
-            if tables.name == "CLgen":
-                for result in q2:
-                    if result.program.gpuverified and result.stdout != majority_output:
-                        result.classification = "w"
-            else:
-                q2.filter(tables.results.stdout != majority_output)\
-                    .update({"classification": "w"})
+            q2.filter(tables.results.stdout != majority_output)\
+                .update({"classification": "w"})
 
         if not i % 100:
             session.commit()
