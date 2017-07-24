@@ -703,6 +703,33 @@ class GitHubResult(Base):
                 .format(**vars()))
 
 
+class BugReport(Base):
+    __tablename__ = "BugReports"
+    id = sql.Column(sql.Integer, primary_key=True)
+    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
+                            nullable=False)
+    classification = sql.Column(sql.String(12))
+
+    local_path = sql.Column(sql.String(255))
+    url = sql.Column(sql.String(255))
+    notes = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow,
+                      nullable=False)
+    rejected = sql.Column(sql.Boolean)
+    fixed = sql.Column(sql.Boolean)
+
+    result = sql.orm.relationship("CLgenResult")
+
+    def __repr__(self) -> str:
+        return ("report: {self.id}, "
+                "testbed: {self.testbed_id}, "
+                "url: {self.url}, "
+                "rejected: {self.rejected}, "
+                "fixed: {self.fixed}"
+                .format(**vars()))
+
+
 def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
     """
     Get the testbed for the specified hardware.
