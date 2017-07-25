@@ -153,3 +153,8 @@ cc_binary(
     name = "026-remove-dupes",
     srcs = ["026-remove-dupes.cc"]
 )
+
+sh_test(
+    name = "027-missing-number",
+    srcs = ["027-missing-number.py"]
+)
