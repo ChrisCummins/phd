@@ -14,7 +14,7 @@ Each device was configured to run the compiler testing system for a fixed 48 hou
 
 Table~\ref{tab:outcomes} shows the outcomes of test cases. An average of XX CLSmith and XX CLgen test cases were evaluated on each device, with an average time per test case of XX and XX respectively. The XX-fold increase in testing throughput achieved by CLgen is a result of XXX. Figure~\ref{fig:runtimes} shows runtimes. For CLgen, generation time scales linearly with program size. Disabling optimizaitons generally does not affect testing throughput significantly, with the exception of Config XX, in which the slow compilation of kernels containing structs greatly reduces the number of test cases evaluated. This is a known issue --- in XX the authors omnit testing on this configuration for this reason.
 
-Column \textbf{bc} is of immediate value for developers; for all other outcomes, voting heuristics are required to expose anomalous results.
+Column \textbf{bc} is of immediate value for developers; for all other outcomes, voting heuristics are required to expose anomalous results. CLSmith crashed 7 of the 20 configurations, CLgen crashed all of them. See Section X for examples of bugs found from build crashes.
 
 Once voting heuristics have been applied, the result is table~\ref{tab:classifications}.
 
@@ -22,7 +22,7 @@ Once voting heuristics have been applied, the result is table~\ref{tab:classific
 	\centering %
 	\includegraphics[width=\columnwidth]{build/img/runtimes}%
 	\caption{%
-		Test case runtimes, excluding timeouts. On average, generating and executing a test case using CLgen is $x\times$ faster than CLSmith. \cc{reduction times}%
+		Test case runtimes, excluding timeouts. On average, test case generation and exeuction is $2.86\times$ and $4.70\times$ faster with CLgen than CLSmith, respectively. \cc{reduction times}%
 	}%
 	\label{fig:runtimes} %
 \end{figure}
