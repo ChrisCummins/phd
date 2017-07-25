@@ -31,9 +31,10 @@ def get_bug_report(session: session_t, tables: Tableset, result_id: int, report_
         report_id = crypto.md5_str(tables.name) + "-" + str(result.id)
         bug_type = {
             "bf": "compilation failure",
+            "bto": "compiler hangs",
             "bc": "compiler crash",
             "c": "runtime crash",
-            "w": "wrong-code"
+            "w": "wrong-code",
         }[report_type]
 
         header = f"""\
@@ -135,13 +136,13 @@ def generate_bc_reports(tables, time_limit):
     print(f"{dupes} duplicate {tables.name} bc results flagged")
 
 
-def generate_w_reports(tables, time_limit):
-    outbox = fs.path(f"../data/bug-reports/{tables.name}/w")
+def generate_reports(tables, time_limit, type_field, type_name):
+    outbox = fs.path(f"../data/bug-reports/{tables.name}/{type_name}")
     fs.mkdir(outbox)
     with Session(commit=True) as s:
         q = s.query(tables.results.id)\
             .join(tables.meta)\
-            .filter(tables.results.classification == "w")
+            .filter(type_field == type_name)
 
         if time_limit > 0:
             q = q.filter(tables.meta.cumtime < time_limit)
@@ -153,17 +154,7 @@ def generate_w_reports(tables, time_limit):
                 .filter(tables.results.id == result_id)\
                 .first()
 
-            # FIXME: temp hacks until re-analyzed
-            if tables.name == "CLgen":
-                if not result.program.gpuverified:
-                    continue
-                if "float" in result.program.src:
-                    continue
-                if "warning" in result.stderr:
-                    continue
-
             key = result.testbed_id, result.program_id
-
             if key in errs:
                 dupes += 1
                 continue
@@ -177,20 +168,20 @@ def generate_w_reports(tables, time_limit):
                     "session": s,
                     "tables": tables,
                     "result_id": result.id,
-                    "report_type": "w",
+                    "report_type": type_name,
                 })
                 with open(outpath, "w") as outfile:
                     print(report, file=outfile)
                 print(outpath)
-    print(f"{dupes} duplicate {tables.name} w results flagged")
+    print(f"{dupes} duplicate {tables.name} {type_name} results flagged")
 
 
 def main():
     parser = ArgumentParser(description=__doc__)
     parser.add_argument("-H", "--hostname", type=str, default="cc1",
                         help="MySQL database hostname")
-    parser.add_argument("-t", "--time-limit", type=int, default=-1,
-                        help="Number of hours to limit results to")
+    parser.add_argument("-t", "--time-limit", type=int, default=48,
+                        help="Number of hours to limit results to (default: 48)")
     parser.add_argument("--bf", action="store_true")
     parser.add_argument("--w", action="store_true")
     parser.add_argument("--bc", action="store_true")
@@ -217,9 +208,11 @@ def main():
     try:
         for tables in tablesets:
             if args.all or args.bc:
-                generate_bc_reports(tables, time_limit)
+                generate_reports(tables, time_limit, tables.results.outcome, "bc")
+            if args.all or args.bto:
+                generate_reports(tables, time_limit, tables.results.outcome, "bto")
             if args.all or args.w:
-                generate_w_reports(tables, time_limit)
+                generate_reports(tables, time_limit, tables.results.classification, "w")
     except KeyboardInterrupt:
         print("stop")
 

@@ -75,7 +75,6 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
     """
     counts = {"w": 0, "bf": 0, "c": 0, "to": 0, "pass": 0, "fail": 0, None: 0}
 
-
     try:
         if tables.name == "CLgen":
             q = results_in_timelimit(
@@ -85,7 +84,7 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
 
             for classification, src, gpuverified, cumtime in q:
                 # TODO: merge this into analyze logic
-                if classification == "w" and ("float" in src or not gpuverified):
+                if classification == "w" and "float" in src:
                     # print("skipped",
                     #       "float" if "float" in src else "nofloat",
                     #       "gpuverified" if gpuverified else "unverified")

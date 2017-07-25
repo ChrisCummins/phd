@@ -320,7 +320,7 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
             # Look for wrong-code bugs:
             #
             # If the majority did not produce outputs, then we're done:
-            if majority_outcome != "w":
+            if majority_outcome != "pass":
                 continue
 
             # Get "pass" outcome results:
@@ -331,18 +331,20 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
             if tables.name == "CLgen":
                 program = q.first().program
                 if not program.gpuverified:
+                    print("skipping program which failed GPUVerify")
                     continue
                 if "float" in program.src:
+                    print("skipping program with floating point ops")
                     continue
 
             majority_output, output_majority_count = get_majority([r.stdout for r in q2])
 
             # Ensure that the majority of configurations agree on the output:
-            min_output_majority_count = n2 - 1
-            # min_output_majority_count = math.ceil(n2 / 2)
+            # min_output_majority_count = n2 - 1
+            min_output_majority_count = math.ceil(n2 / 2)
             if output_majority_count < min_output_majority_count:
                 # No majority
-                # print("output_majority_count <", min_output_majority_count, " = ", output_majority_count)
+                print("output_majority_count <", min_output_majority_count, " = ", output_majority_count)
                 continue
 
             # There is a majority conensus, so compare individual
@@ -354,5 +356,18 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
             session.commit()
 
 
-# set_classifications = set_our_classifications
-set_classifications = set_clsmith_classifications
+def prune_w_classifications():
+    tables = CLGEN_TABLES
+    TIME_LIMIT = 48 * 3600
+
+    q = session.query(tables.results)\
+        .join(tables.meta)\
+        .filter(tables.meta.cumtime < TIME_LIMIT,
+                tables.results.classification == "w")
+
+    for result in q:
+        print(result.id, result.classification, result.meta.cumtime)
+
+
+set_classifications = set_our_classifications
+# set_classifications = set_clsmith_classifications
