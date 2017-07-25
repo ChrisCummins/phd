@@ -14,6 +14,7 @@ from typing import Dict, List, Tuple
 Base = declarative_base()
 
 # must call init() first
+engine = None
 make_session = None
 
 
@@ -26,6 +27,7 @@ def get_mysql_creds() -> Tuple[str, str]:
 
 def init(hostname: str) -> str:
     """ must be called before using anything """
+    global engine
     global make_session
     username, password = get_mysql_creds()
     table = "project_b"
