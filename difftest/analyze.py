@@ -354,4 +354,5 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
             session.commit()
 
 
-set_classifications = set_our_classifications
+# set_classifications = set_our_classifications
+set_classifications = set_clsmith_classifications
