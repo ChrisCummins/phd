@@ -38,13 +38,13 @@ We extend prior work on synthetic program generation using LSTM networks~\cite{C
 
 \subsection{Test Harness Construction}
 
-OpenCL kernel requires host code (\emph{test harness}) to compile the kernel and feed with it inputs, then to print the outputs.
+An OpenCL kernel requires host code (\emph{test harness}) to compile the kernel and feed with it inputs, then to print the outputs.
 
-At first, we used the test harness of CLSmith. CLSmith kernels accept no inputs, and compute a single result into a \texttt{unsigned long} buffer. This means that they have a single re-usable test harness which compiles the kernel, runs it, and prints the results. We found this fixed harness to be too inflexible for our needs. This prototype is not a common OpenCL use case (only 5.6\% of GitHub kernels accept a single argument, of which 3.4\% are \texttt{ulong}, 0.2\% of the total).
+At first, we used the test harness of CLSmith. CLSmith kernels accept no inputs, and each thread computes the same value which is stored in a \texttt{unsigned long} buffer. The fixed function prototype means that they have a single re-usable test harness which compiles the kernel, runs it, and prints the results. We found this fixed harness to be too inflexible for our needs. This prototype is not a common OpenCL use case (only 5.6\% of GitHub kernels accept a single argument, of which 3.4\% are \texttt{ulong}, 0.2\% of the total).
 % $ grep -E '^__global (.*)\* A$' github-arguments.txt | wc -l     -> 294
 % $ grep '^__global ulong\* A$' ~/src/project_b/difftest/github-arguments.txt | wc -l     -> 10
-To test more a expressive range of kernels, we created \emph{cldrive}, a tool to generate test harnesses for arbitrary OpenCL kernels.
+To test a more expressive range of kernels, we created \emph{cldrive}, a tool to generate test harnesses for arbitrary OpenCL kernels.
 
 We use cldrive to generate a unique test harness for every OpenCL sample we generate; the test harness has the OpenCL kernel embedded within it. If the sample is well-formed (i.e. it can be parsed), the test harness creates a \emph{payload} of buffers and values to match the function signature; else if the sample is ill-formed we generate a compile-only stub. 
 
-Cldrive is the only language-specific component of our software stack. We support a limited subset of data types for kernel inputs: no structs, no irregular data types (this is just an implementation detail, and can be addressed with more dev time).
+Cldrive is the only language-specific component of our software stack. We support a limited subset of data types for kernel inputs: no structs, no irregular data types (this is just an implementation detail, and can be addressed with more dev time). \cc{cldrive is XX lines of code}.

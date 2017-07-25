@@ -2,7 +2,7 @@
 
 In this section we report on an experiment using both CLSmith and CLgen for 48 hours each.
 
-Total runtime for a test cases consists of the generation time, the time to execute the test harness on a configuration, and, if required, the time to reduce the test case.
+Total runtime for a test cases consists of the generation time, the time to execute the test harness on a configuration.
 
 Both testing frameworks were used for 48 hours each. CLSmith was configured with default settings. CLReduce was configured with the default settings (four parallel reduction threads).
 
@@ -12,9 +12,18 @@ Each device was configured to run the compiler testing system for a fixed 48 hou
 
 \subsection{Results}
 
-Table~\ref{tab:outcomes} shows the outcomes of test cases. An average of XX CLSmith and XX CLgen test cases were evaluated on each device, with an average time per test case of XX and XX respectively. The XX-fold increase in testing throughput achieved by CLgen is a result of XXX. Figure~\ref{fig:runtimes} shows runtimes. For CLgen, generation time scales linearly with program size. Disabling optimizaitons generally does not affect testing throughput significantly, with the exception of Config XX, in which the slow compilation of kernels containing structs greatly reduces the number of test cases evaluated. This is a known issue --- in XX the authors omnit testing on this configuration for this reason.
+Table~\ref{tab:outcomes} shows the outcomes of test cases. An average of XX CLSmith and XX CLgen test cases were evaluated on each device, with an average time per test case of XX and XX respectively. The XX-fold increase in testing throughput achieved by CLgen is a result of XXX. Figure~\ref{fig:runtimes} shows runtimes. For CLgen, generation time scales linearly with program size (benchmarked at 465 cps). We also include test harness overhead, though this could be implemented away. Disabling optimizaitons generally does not affect testing throughput significantly, with the exception of Config XX, in which the slow compilation of kernels containing structs greatly reduces the number of test cases evaluated. This is a known issue --- in XX the authors omnit testing on this configuration for this reason.
 
-Column \textbf{bc} is of immediate value for developers; for all other outcomes, voting heuristics are required to expose anomalous results. CLSmith crashed 7 of the 20 configurations, CLgen crashed all of them. See Section X for examples of bugs found from build crashes.
+Column \textbf{bc} is of immediate value for developers; for all other outcomes, voting heuristics are required to expose anomalous results. CLSmith crashed 8 of the 20 configurations, CLgen crashed all of them. See Section X for examples of bugs found from build crashes.
+
+\cc{The integrated GPU Conifgs.\ we tested ($3\pm$) frequently failed to compile  have a lot of \textbf{\{bc,bto\}} outcomes for CLSmith. Why? What's the line count of btos? bc where segfaults without error.}
+% SELECT stderr,COUNT(*) FROM CLSmithResults LEFT JOIN CLSmithMetas ON CLSmithResults.id=CLSmithMetas.id WHERE testbed_id=13 AND CLSmithResults.outcome='bc' AND cumtime < 48 * 3600 GROUP BY CLSmithResults.stderr;
+Of the build crashes, 68\% failed silently, and the remainder were caused by the same bug we discovered using the 4 line test case in Figure~\ref{lst:intel-llvm-assertion}.
+
+% 622 total bc
+Configs.\ $4$, $5$, $6$, and $7$ have a number CLSmith bc outcomes when optimizations are enabled. Of the non-silent crashes, the cause is the OpenCL vectorizer pass, same as Figure~\ref{lst:intel-vectorizer-segfault}.
+
+\cc{Config.\ $7+$ has a lot of \textbf{bto}s. Why?}
 
 Once voting heuristics have been applied, the result is table~\ref{tab:classifications}.
 
@@ -32,7 +41,7 @@ Once voting heuristics have been applied, the result is table~\ref{tab:classific
 	\scriptsize %
 	\centering %
 	\input{build/tab/outcomes}
-	\caption{Results from 24 hours of testing using CLSmith and CLgen. Configuration \#. as per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on ($+$). The remaining columns denote build failure (\textbf{bf}), build crash (\textbf{bc}), build timeout (\textbf{bto}), runtime crash (\textbf{c}), timeout (\textbf{to}), and passed (\textbf{\cmark}) outcomes for CLSmith and CLgen, respectively. \cc{Asterisk in 'total' column means incomplete data. All results are excluding reductions.}}
+	\caption{Results from 48 hours of testing using CLSmith and CLgen. Configuration \#. as per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on ($+$). The remaining columns denote build failure (\textbf{bf}), build crash (\textbf{bc}), build timeout (\textbf{bto}), runtime crash (\textbf{c}), timeout (\textbf{to}), and passed (\textbf{\cmark}) outcomes for CLSmith and CLgen, respectively.}
 	\label{tab:outcomes}
 \end{table*}
 
@@ -40,7 +49,7 @@ Once voting heuristics have been applied, the result is table~\ref{tab:classific
 	\scriptsize %
 	\centering %
 	\input{build/tab/megatable}
-	\caption{Using voting heuristics to expose anomalous results in Table~\ref{tab:outcomes}. Columns denote wrong-code (w), build failure (\textbf{bf}), runtime crash (\textbf{c}), and timeout (\textbf{to}) classifications for CLSmith and CLgen, respectively. \cc{Asterisk in 'total' column means incomplete data. All results are excluding reductions.}}
+	\caption{Using voting heuristics to expose anomalous results from 48 hours of testing using CLSmith and CLgen. Columns denote wrong-code (w), build failure (\textbf{bf}), runtime crash (\textbf{c}), and timeout (\textbf{to}) classifications for CLSmith and CLgen, respectively.}
 	\label{tab:classifications}
 \end{table*}
 
@@ -54,7 +63,7 @@ The 2357 \textbf{bf} results for CLSmith on Configs.\ $4\pm$ and $6\pm$ are all 
 
 \subsection{Analysis of bugs found}
 
-For all except configuration $3\pm$, CLgen exposes more compiler crashes than CLSmith. On average, CLgen hangs the compiler more frequently. We also submitted XX of the bugs found using CLSmith.
+For all except configuration $3\pm$, CLgen exposes more compiler crashes than CLSmith. On average, CLgen hangs the compiler more frequently. We also submitted XX of the bugs found using CLSmith, after reduction.
 
 
 \subsection{Test Case Size}

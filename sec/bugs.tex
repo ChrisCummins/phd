@@ -9,7 +9,7 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
 In the majority of cases, we found compiler crashes to be insensitive to OpenCL optimization setting.
 
 
-\paragraph{Front-end} We found the most bugs in compiler frontends. Because of the large volume of ill-formed test cases, our approach is biased towards discovering bugs in the early stages of compilation: lexing and parsing.
+\paragraph{Front-end} We found the compiler crash bugs in compiler frontends. Because of the large volume of ill-formed test cases, our approach is biased towards discovering bugs in the early stages of compilation: lexing and parsing.
 
 Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for configurations $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other configurations raise a build failure. Such test cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random string testing, and impossible through grammar-based tools.
 
@@ -19,7 +19,7 @@ Parsers were a common source of errors. To date we have identified over 60 cases
 
 \paragraph{Back-end} Figures~\ref{lst:intel-llvm-assertion} and~\ref{lst:intel-scalartype-assertion} cause failures in the LLVM code generator backend.
 
-Occasionally, the cause of the crash is unclear, as in Figures~\ref{lst:nvidia-recursion-segfault} and~\ref{lst:nvidia-compile-segfault} which segfault the compiler without warning. We found the two commercial vendors NVIDIA and Intel were the most likely to fail silently.
+Occasionally, the cause of the crash is unclear, as in Figures~\ref{lst:nvidia-recursion-segfault} and~\ref{lst:nvidia-compile-segfault} which segfault the compiler without warning. We found the two commercial vendors NVIDIA and Intel were the most likely to fail silently. When a commerical compiler crahses without an error message, we can only report and move on.
 
 A bug in \texttt{clang::sema} has been forwarded to the LLVM folks.
 

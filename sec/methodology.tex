@@ -39,7 +39,7 @@ There are six possible outcomes of a test case execution:
 
 \subsection{Voting Heuristics for Differential Testing}
 
-In~\cite{Lidbury2015a}, a configuration is determined to have produced a wrong code result for a kernel if there is a majority of at least 3 among the non-\{\textbf{bf},\textbf{c},\textbf{to}\} results for the kernel, and the configuration yields a non-\{\textbf{bf},\textbf{c},\textbf{to}\} result that disagrees with the majority.
+Voting is used to expose anomalous outcomes from configurations. In prior work, voting has been used to determine wrong-code bugs. In~\cite{Lidbury2015a}, a configuration is determined to have produced a wrong code result for a kernel if there is a majority of at least 3 among the non-\{\textbf{bf},\textbf{c},\textbf{to}\} results for the kernel, and the configuration yields a non-\{\textbf{bf},\textbf{c},\textbf{to}\} result that disagrees with the majority. We extend this approach to describe not only anomalous code bugs, but also anomalous build failures, crashes, and timeouts.
 
 A majority exists if there at least 6 configurations produce non-bc results with the same outcome, and of these $n$ non-bc configurations, at least $\ceil{n/2}$ configurations have the same outcome. Majority outcome $\mu$. For \cmark outcomes, the output of the program is used.
 
@@ -53,22 +53,22 @@ A majority exists if there at least 6 configurations produce non-bc results with
 \end{enumerate}
 
 
-\begin{table}
-	\scriptsize %
-	\centering %
-	\begin{tabular}{ c|ccc }
-		\toprule
-		 & \multicolumn{3}{c}{\textbf{Minority outcome}} \\
-		 & \textbf{bf} & \textbf{c} & \textbf{\cmark} \\
-		\midrule
-		\textbf{bf} & \cmark & ? & ? \\
-		\textbf{c} & c & \cmark & ? \\
-		\textbf{\cmark} & bf & c & \cmark \\
-		\bottomrule
-	\end{tabular}
-	\caption{Voting heuristics to determine the classification of results based on the majority outcome (rows) \cc{wtf is this\ldots}}
-	\label{tab:voting-heuristics}
-\end{table}
+%\begin{table}
+%	\scriptsize %
+%	\centering %
+%	\begin{tabular}{ c|ccc }
+%		\toprule
+%		 & \multicolumn{3}{c}{\textbf{Minority outcome}} \\
+%		 & \textbf{bf} & \textbf{c} & \textbf{\cmark} \\
+%		\midrule
+%		\textbf{bf} & \cmark & ? & ? \\
+%		\textbf{c} & c & \cmark & ? \\
+%		\textbf{\cmark} & bf & c & \cmark \\
+%		\bottomrule
+%	\end{tabular}
+%	\caption{Voting heuristics to determine the classification of results based on the majority outcome (rows) \cc{wtf is this\ldots}}
+%	\label{tab:voting-heuristics}
+%\end{table}
 
 \paragraph{Floating points} The OpenCL 1.2 specification permits acceptable error bounds (ULP) for floating point operations and builtin functions. Some operations like addition, subtraction, and multiplication are precise; divide permits a small error, and builtins vary widely. Thus two implementation may give different answers that both fit within the allowed ranges (and because errors propagate through operations it's hard to even describe the ULP on the final output). \texttt{half\_} functions permit large error bounds. \texttt{native\_} functions have ``implementation defined'' error bounds. TODO: Denormal numbers may optionally be pushed to zero.
 
