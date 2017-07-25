@@ -3,6 +3,7 @@ import re
 import fileinput
 import os
 import sys
+import pyopencl as cl
 from argparse import ArgumentParser
 from collections import namedtuple
 from subprocess import Popen, PIPE
@@ -19,6 +20,7 @@ from labm8 import fs
 
 import analyze
 import db
+import util
 from db import *
 from lib import *
 
@@ -35,7 +37,18 @@ status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'log', 'src'])
 
 
-def get_num_results_to_reproduce(session: db.session_t, testbed: Testbed):
+def get_platform_name(platform_id):
+    platform = cl.get_platforms()[platform_id]
+    return platform.get_info(cl.platform_info.NAME)
+
+
+def get_device_name(platform_id, device_id):
+    platform = cl.get_platforms()[platform_id]
+    device = platform.get_devices()[device_id]
+    return device.get_info(cl.device_info.NAME)
+
+
+def get_num_results_to_reduce(session: db.session_t, testbed: Testbed):
     num_ran = session.query(CLSmithReduction.id).join(CLSmithResult)\
         .filter(CLSmithResult.testbed_id == testbed.id).count()
     total = session.query(CLSmithResult.id)\
@@ -130,9 +143,9 @@ if __name__ == "__main__":
         "-H", "--hostname", type=str, default="cc1",
         help="MySQL database hostname")
     parser.add_argument(
-        "platform", metavar="<platform name>", help="OpenCL platform name")
+        "platform_id", type=int, metavar="<platform id>", help="OpenCL platform ID")
     parser.add_argument(
-        "device", metavar="<device name>", help="OpenCL device name")
+        "device_id", type=int, metavar="<device id>", help="OpenCL device ID")
     args = parser.parse_args()
 
     db.init(args.hostname)  # initialize db engine
@@ -140,11 +153,18 @@ if __name__ == "__main__":
     assert fs.isexe(CREDUCE)
     assert fs.isexe(INTERESTING_TEST)
 
+    platform_id, device_id = args.platform_id, args.device_id
+    platform_name = get_platform_name(platform_id)
+    device_name = get_device_name(platform_id, device_id)
+
+    devname = util.device_str(device_name)
+    print("Reducing w-classified results for {devname} ...")
+
     with Session(commit=False) as s:
-        testbed = get_testbed(s, args.platform, args.device)
+        testbed = get_testbed(s, platform_name, device_name)
 
         # progress bar
-        num_ran, total = get_num_results_to_reproduce(s, testbed)
+        num_ran, total = get_num_results_to_reduce(s, testbed)
         bar = progressbar.ProgressBar(init_value=num_ran, max_value=total)
 
         # main execution loop:
@@ -167,7 +187,7 @@ if __name__ == "__main__":
                 s.commit()
 
             # update progress bar
-            num_ran, total = get_num_results_to_reproduce(s, testbed)
+            num_ran, total = get_num_results_to_reduce(s, testbed)
             bar.max_value = total
             bar.update(min(num_ran, total))
 
