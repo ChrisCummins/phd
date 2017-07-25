@@ -158,7 +158,7 @@ if __name__ == "__main__":
     device_name = get_device_name(platform_id, device_id)
 
     devname = util.device_str(device_name)
-    print("Reducing w-classified results for {devname} ...")
+    print(f"Reducing w-classified results for {devname} ...")
 
     with Session(commit=False) as s:
         testbed = get_testbed(s, platform_name, device_name)
