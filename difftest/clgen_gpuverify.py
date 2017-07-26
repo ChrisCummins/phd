@@ -12,19 +12,9 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from progressbar import ProgressBar
 
-import clsmith_run_clreduce
 import db
 from db import *
 
-
-# def oclgrind_cli(*args):
-#     return [clsmith_run_clreduce.OCLGRIND '--max-errors', '1', '--uninitialized', '--data-races', '--uniform-writes', '--uniform-writes'] + args
-
-# def oclgrind_verify(src):
-#     with
-
-# oclgrind --max-errors 1 --uninitialized --data-races --uniform-writes --uniform-writes foo
-#
 
 if __name__ == "__main__":
     parser = ArgumentParser(description=__doc__)
@@ -38,7 +28,6 @@ if __name__ == "__main__":
     session = db.make_session()
 
     q = session.query(CLgenProgram)
-
     if not args.recheck:
         q = q.filter(CLgenProgram.gpuverified == None)
 

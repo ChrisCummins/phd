@@ -171,9 +171,9 @@ if __name__ == "__main__":
     # push LaTex to Overleaf
     !cd ~/docs/paper-project_b/ && git pull --rebase
 
-    print("Generating outcomes table ...")
-    with open(os.path.expanduser("~/docs/paper-project_b/build/tab/outcomes.tex"), "w") as outfile:
-        print(get_outcomes_table(), file=outfile)
+    # print("Generating outcomes table ...")
+    # with open(os.path.expanduser("~/docs/paper-project_b/build/tab/outcomes.tex"), "w") as outfile:
+    #     print(get_outcomes_table(), file=outfile)
 
     print("\nGenerating classifications table ...")
     with open(os.path.expanduser("~/docs/paper-project_b/build/tab/megatable.tex"), "w") as outfile:

@@ -40,10 +40,10 @@ def clsmith(*args) -> return_t:
 def cl_launcher_cli(program_path: str, platform_id: int, device_id: int,
                     *args, timeout=60, cl_launcher_path=cl_launcher_path,
                     include_path=include_path) -> str:
-    return ["timeout", "--signal=9", str(timeout),
-            cl_launcher_path, '---debug', '-f', program_path,
-            '-p', str(platform_id), '-d', str(device_id),
-            '--include_path', include_path] + list(args)
+    cmd = ["timeout", "--signal=9", str(timeout)] if timeout else []
+    return cmd + [cl_launcher_path, '---debug', '-f', program_path,
+                  '-p', str(platform_id), '-d', str(device_id),
+                  '--include_path', include_path] + list(args)
 
 
 def cl_launcher(program_path: str, platform_id: int, device_id: int,

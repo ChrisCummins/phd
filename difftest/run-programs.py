@@ -57,7 +57,7 @@ def main():
         # 'clgen_run_co.py'
     ]
     cl_launcher_scripts = [
-        'clsmith-run-cl_launcher.py',
+        'clsmith_run_cl_launcher.py',
         # 'clgen_run_cl_launcher.py',
     ]
     cldrive_scripts = [

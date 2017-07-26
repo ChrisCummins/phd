@@ -7,6 +7,7 @@ from collections import Counter
 from signal import Signals
 
 import db
+import oclgrind
 import util
 from db import *
 
@@ -383,17 +384,46 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
     session.commit()
 
 
-def prune_w_classifications():
-    tables = CLGEN_TABLES
-    TIME_LIMIT = 48 * 3600
+def verify_clgen_w_result(session: session_t, result: CLgenResult) -> None:
+    harness = session.query(CLgenHarness)\
+                .filter(CLgenHarness.program_id == result.program_id,
+                        CLgenHarness.params_id == result.params_id)\
+                .scalar()
 
-    q = session.query(tables.results)\
+    if harness.oclverified == None:
+        harness.oclverified = oclgrind.oclgrind_verify_clgen(harness)
+        # TODO: session.commit()
+
+    if not harness.oclverified:
+        print(f"retracted CLgen w-result {result.id}: failed OCLgrind verification")
+        result.classification = "pass"
+        # TODO: session.commit()
+
+
+
+def verify_clsmith_w_result(session: session_t, result: CLgenResult) -> None:
+    verified = oclgrind.oclgrind_verify_clsmith(result)
+
+    if not verified:
+        print(f"retracted CLSmith w-result {result.id}: failed OCLgrind verification")
+        result.classification = "pass"
+        session.commit()
+
+
+def prune_w_classifications(session: session_t, tables: Tableset,
+                            time_limit: int=48 * 3600):
+    q = session.query(tables.results.id)\
         .join(tables.meta)\
-        .filter(tables.meta.cumtime < TIME_LIMIT,
+        .filter(tables.meta.cumtime < time_limit,
                 tables.results.classification == "w")
 
-    for result in q:
-        print(result.id, result.classification, result.meta.cumtime)
+    for i, (result_id,) in enumerate(q):
+        result = session.query(tables.results)\
+            .filter(tables.results.id == result_id).first()
+        if tables.name == "CLgen":
+            verify_clgen_w_result(session, result)
+        elif tables.name == "CLSmith":
+            verify_clsmith_w_result(session, result)
 
 
 set_classifications = set_our_classifications
