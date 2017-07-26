@@ -1,3 +1,4 @@
+import clgen
 import math
 import sys
 import sqlalchemy as sql
@@ -269,27 +270,31 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
     """
     q = session.query(tables.results)
 
-    # Go program-by-program:
-    programs = session.query(tables.results.program_id).join(tables.meta).distinct().all()
-    for i, (program_id,) in enumerate(util.NamedProgressBar("classify")(programs)):
-        # Treat each param combination independently:
-        for params in session.query(tables.params):
-            # Reset existing classifications
-            session.query(tables.results)\
-                .filter(tables.results.program_id == program_id,
-                        tables.results.params_id == params.id)\
-                .update({"classification": "pass"})
+    all_params = [x[0] for x in session.query(tables.params.id).all()]
 
+    # Go program-by-program:
+    # programs = session.query(tables.results.program_id).join(tables.meta).distinct().all()
+    programs = session.query(tables.programs.id).all()
+    for i, (program_id,) in enumerate(util.NamedProgressBar("classify")(programs)):
+        # Reset existing classifications
+        session.query(tables.results)\
+            .filter(tables.results.program_id == program_id)\
+            .update({"classification": "pass"})
+
+        program_ok = None
+
+        # Treat each param combination independently:
+        for params_id in all_params:
             # Select all non-bc results for this test case:
             q = session.query(tables.results)\
                 .filter(tables.results.program_id == program_id,
-                        tables.results.params_id == params.id,
+                        tables.results.params_id == params_id,
                         tables.results.outcome != "bc")
 
             # Check that there are enough non-bc results for a majority:
             n = session.query(sql.sql.func.count(tables.results.id))\
                 .filter(tables.results.program_id == program_id,
-                        tables.results.params_id == params.id,
+                        tables.results.params_id == params_id,
                         tables.results.outcome != "bc").scalar() or 0
             if n < 6:
                 continue
@@ -323,19 +328,39 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
             if majority_outcome != "pass":
                 continue
 
+            # Pruning of programs whose outputs should not be difftested:
+            if tables.name == "CLgen":
+                # If we haven't checked the program yet, do so now:
+                if program_ok == None:
+                    program_ok = True
+
+                    program = session.query(tables.programs)\
+                            .filter(tables.programs.id == program_id).first()
+
+                    # Run GPUverify on kernel
+                    if program.gpuverified == None:
+                        try:
+                            clgen.gpuverify(program.src, ["--local_size=64", "--num_groups=128"])
+                            program.gpuverified = 1
+                        except clgen.GPUVerifyException:
+                            program.gpuverified = 0
+
+                    if not program.gpuverified:
+                        print("skipping kernel which failed GPUVerify")
+                        program_ok = False
+                    if "float" in program.src:
+                        print("skipping floating point kernel")
+                        program_ok = False
+
+                # If program can be skipped, do so:
+                if not program_ok:
+                    continue
+
+                # TODO: Run oclgrind on test harness
+
             # Get "pass" outcome results:
             q2 = q.filter(tables.results.outcome == "pass")
             n2 = q2.count()
-
-            # Additional pruning of programs which should not be difftested:
-            if tables.name == "CLgen":
-                program = q.first().program
-                if not program.gpuverified:
-                    print("skipping program which failed GPUVerify")
-                    continue
-                if "float" in program.src:
-                    print("skipping program with floating point ops")
-                    continue
 
             majority_output, output_majority_count = get_majority([r.stdout for r in q2])
 
@@ -344,7 +369,7 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
             min_output_majority_count = math.ceil(n2 / 2)
             if output_majority_count < min_output_majority_count:
                 # No majority
-                print("output_majority_count <", min_output_majority_count, " = ", output_majority_count)
+                print("skipping output_majority_count <", min_output_majority_count, " = ", output_majority_count)
                 continue
 
             # There is a majority conensus, so compare individual
@@ -354,6 +379,8 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
 
         if not i % 100:
             session.commit()
+
+    session.commit()
 
 
 def prune_w_classifications():
