@@ -385,19 +385,41 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
 
 
 def verify_clgen_w_result(session: session_t, result: CLgenResult) -> None:
+    print(f"Verifying CLgen w-result {result.id} ...")
+
+    def fail():
+        result.classification = "pass"
+        session.commit()
+
+    if "float" in result.program.src:
+        print(f"retracted CLgen w-result {result.id}: contains float")
+        return fail()
+
+    # Run GPUverify on kernel
+    if result.program.gpuverified == None:
+        try:
+            clgen.gpuverify(program.src, ["--local_size=64", "--num_groups=128"])
+            program.gpuverified = 1
+        except clgen.GPUVerifyException:
+            program.gpuverified = 0
+        session.commit()
+
+    if not result.program.gpuverified:
+        print(f"retracted CLgen w-result {result.id}: failed GPUVerify")
+        return fail()
+
     harness = session.query(CLgenHarness)\
                 .filter(CLgenHarness.program_id == result.program_id,
                         CLgenHarness.params_id == result.params_id)\
-                .scalar()
+                .first()
 
     if harness.oclverified == None:
         harness.oclverified = oclgrind.oclgrind_verify_clgen(harness)
-        # TODO: session.commit()
+        session.commit()
 
     if not harness.oclverified:
         print(f"retracted CLgen w-result {result.id}: failed OCLgrind verification")
-        result.classification = "pass"
-        # TODO: session.commit()
+        return fail()
 
 
 

@@ -23,7 +23,7 @@ def oclgrind_verify(cmd):
 
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             universal_newlines=True)
-    stdout, stderr = proc.communicate()
+    _, stderr = proc.communicate()
 
     print("STDERR:")
     print("\n".join([f">> {line}" for line in stderr.split("\n")]))

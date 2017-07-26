@@ -181,6 +181,9 @@ class CLgenHarness(Base):
     generation_time = sql.Column(sql.Float, nullable=False)
     compile_time = sql.Column(sql.Float, nullable=False)
 
+    gpuverified = sql.Column(sql.Boolean)
+    oclverified = sql.Column(sql.Boolean)
+
     # relations:
     program = sql.orm.relationship("CLgenProgram", back_populates="harnesses")
     params = sql.orm.relationship("cldriveParams", back_populates="harnesses")

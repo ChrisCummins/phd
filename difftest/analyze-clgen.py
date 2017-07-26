@@ -21,6 +21,6 @@ if __name__ == "__main__":
 
     with Session(commit=not args.no_commit) as s:
         if args.prune:
-            analyze.prune_w_classifications(s, CLSMITH_TABLES, args.time_limit * 3600)
+            analyze.prune_w_classifications(s, CLGEN_TABLES, args.time_limit * 3600)
         else:
-            analyze.set_classifications(s, CLSMITH_TABLES, rerun=True)
+            analyze.set_classifications(s, CLGEN_TABLES, rerun=True)
