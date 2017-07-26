@@ -44,6 +44,7 @@ each for each of the following requirements:
 -  `git <https://git-scm.com/>`_.
 -  `curl <https://curl.haxx.se/>`_.
 -  `wget <https://www.gnu.org/software/wget/>`_.
+-  `patch <https://linux.die.net/man/1/patch>`_.
 
 Optional, but recommended:
 
