@@ -52,8 +52,9 @@ def get_majority_output(session, tables: Tableset, result):
     q = session.query(tables.results.stdout)\
         .filter(tables.results.program_id == result.program.id,
                 tables.results.params_id == result.params.id)
-    majority_output, majority_count = get_majority([r[0] for r in q])
-    return majority_output
+    outputs = [r[0] for r in q]
+    majority_output, majority_count = get_majority(outputs)
+    return majority_output, majority_count, len(outputs)
 
 
 def get_cl_launcher_outcome(result) -> None:
@@ -421,6 +422,11 @@ def verify_clgen_w_result(session: session_t, result: CLgenResult) -> None:
         print(f"retracted CLgen w-result {result.id}: failed OCLgrind verification")
         return fail()
 
+    majority_output, majority_count, count = get_majority_output(
+        session, CLGEN_TABLES, result)
+    if majority_count < count - 1:
+        print(f"retracting CLgen w-result {result.id}: not a large enough majority (only {majority_count} of {count} agree)")
+        return fail()
 
 
 def verify_clsmith_w_result(session: session_t, result: CLgenResult) -> None:
