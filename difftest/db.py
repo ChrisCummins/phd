@@ -126,7 +126,7 @@ class CLgenProgram(Base):
     status = sql.Column(sql.Integer)
     gpuverified = sql.Column(sql.Boolean)
     cl_launchable = sql.Column(sql.Boolean)
-    handchecked = sql.Column(sql.Boolean)
+    throws_warnings = sql.Column(sql.Boolean)
 
     # relations:
     results = sql.orm.relationship("CLgenResult", back_populates="program")

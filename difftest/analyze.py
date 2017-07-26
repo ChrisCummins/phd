@@ -428,6 +428,8 @@ def verify_clgen_w_result(session: session_t, result: CLgenResult) -> None:
         print(f"retracting CLgen w-result {result.id}: not a large enough majority (only {majority_count} of {count} agree)")
         return fail()
 
+    # TODO: incompatible pointer to integer conversion
+
 
 def verify_clsmith_w_result(session: session_t, result: CLgenResult) -> None:
     verified = oclgrind.oclgrind_verify_clsmith(result)
