@@ -45,7 +45,7 @@ A majority exists if there at least 6 configurations produce non-bc results with
 
 %
 \begin{enumerate}
-	\item \textbf{w} \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority output.
+	\item \textbf{w} \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority output. For a CLgen result to be classified with \emph{wrong-code}, we require first that the program passes verification using GPUVerify~\cite{Betts2012}, and that a reference run with Oclgrind~\cite{Price2015} produces no warnings. We exclude kernels with floating-points.
 	\item \textbf{bf} \emph{Build failure} Online compilation of OpenCL program fails, whereas the majority of configurations produce a binary.
 	\item \textbf{bto} \emph{Build timeout} Online compilation of OpenCL exceeds a timeout of 60 seconds, whereas the majority of configurations produce a binary.
 	\item \textbf{c} \emph{Runtime crash} One or more OpenCL API calls return an error status during the program execution, or the program crashes.
