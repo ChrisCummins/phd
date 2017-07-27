@@ -125,7 +125,7 @@ class CLSmithProgram(Base):
     """ programs """
     __tablename__ = 'CLSmithPrograms'
     id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, unique=True)
+    hash = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
 
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
 
@@ -150,7 +150,7 @@ class CLgenProgram(Base):
     """ programs """
     __tablename__ = 'CLgenPrograms'
     id = sql.Column(sql.Integer, primary_key=True)
-    hash = sql.Column(sql.String(40), nullable=False, unique=True)
+    hash = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
 
     date_added = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
 
@@ -397,7 +397,6 @@ class CLSmithResult(Base):
     stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithStderrs.id"))
 
     outcome = sql.Column(sql.Integer, index=True, nullable=False)
-    classification = sql.Column(sql.Integer, index=True)
 
     # unique
     __table_args__ = (
@@ -405,6 +404,7 @@ class CLSmithResult(Base):
 
     # relations:
     meta = sql.orm.relation("CLSmithMeta", back_populates="result")
+    classification = sql.orm.relation("CLSmithClassification", back_populates="result")
     testbed = sql.orm.relationship("Testbed", back_populates="clsmith_results")
     testcase = sql.orm.relationship("CLSmithTestCase", back_populates="results")
     stdout = sql.orm.relationship("CLSmithStdout")
@@ -445,6 +445,19 @@ class CLSmithMeta(Base):
                 f"cumtime: {self.cumtime:.1f}s")
 
 
+class CLSmithClassification(Base):
+    __tablename__ = "CLSmithClassifications"
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithResults.id"),
+                    primary_key=True)
+    classification = sql.Column(sql.Integer, nullable=False)
+
+    result = sql.orm.relationship("CLSmithResult", back_populates="classification")
+
+    @property
+    def label(self):
+        return INT_TO_CLASSIFICATIONS[self.classification]
+
+
 # CLgen Results ###############################################################
 
 
@@ -466,14 +479,15 @@ class CLgenResult(Base):
     stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStderrs.id"))
 
     outcome = sql.Column(sql.Integer, index=True, nullable=False)
-    classification = sql.Column(sql.Integer, index=True)
 
-    # unique
     __table_args__ = (
-        sql.UniqueConstraint('testbed_id', 'testcase_id', name='_uid'),)
+        sql.UniqueConstraint('testbed_id', 'testcase_id', name='_uid'),
+        sql.Index('testcase_outcome', 'testcase_id', 'outcome')
+    )
 
     # relations:
     meta = sql.orm.relationship("CLgenMeta", back_populates="result")
+    classification = sql.orm.relation("CLgenClassification", back_populates="result")
     testcase = sql.orm.relationship("CLgenTestCase", back_populates="results")
     testbed = sql.orm.relationship("Testbed", back_populates="clgen_results")
     stdout = sql.orm.relationship("CLgenStdout")
@@ -513,6 +527,19 @@ class CLgenMeta(Base):
                 "total_time: {self.total_time:.3f}s, "
                 "cumtime: {self.cumtime:.1f}s, "
                 .format(**vars()))
+
+
+class CLgenClassification(Base):
+    __tablename__ = "CLgenClassifications"
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"),
+                    primary_key=True)
+    classification = sql.Column(sql.Integer, nullable=False)
+
+    result = sql.orm.relationship("CLgenResult", back_populates="classification")
+
+    @property
+    def label(self):
+        return INT_TO_CLASSIFICATIONS[self.classification]
 
 
 # Reductions ##################################################################
@@ -692,15 +719,28 @@ def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
 
 
 # Tablesets ###################################################################
-Tableset = namedtuple(
-    'Tableset', ['name', 'results', 'programs', 'harnesses', 'params', 'reductions', 'meta'])
+Tableset = namedtuple('Tableset', [
+        'name',
+        'results',
+        'testcases',
+        'programs',
+        'harnesses',
+        'params',
+        'reductions',
+        'meta',
+        'classifications',
+    ])
 
 CLSMITH_TABLES = Tableset(name="CLSmith",
-    results=CLSmithResult, programs=CLSmithProgram, harnesses=None,
-    params=cl_launcherParams, reductions=CLSmithReduction, meta=CLSmithMeta)
+    results=CLSmithResult, testcases=CLSmithTestCase,
+    programs=CLSmithProgram, harnesses=None,
+    params=cl_launcherParams, reductions=CLSmithReduction,
+    meta=CLSmithMeta, classifications=CLSmithClassification)
 CLGEN_TABLES = Tableset(name="CLgen",
-    results=CLgenResult, programs=CLgenProgram, harnesses=CLgenHarness,
-    params=cldriveParams, reductions=CLgenReduction, meta=CLgenMeta)
+    results=CLgenResult, testcases=CLgenTestCase,
+    programs=CLgenProgram, harnesses=CLgenHarness,
+    params=cldriveParams, reductions=CLgenReduction,
+    meta=CLgenMeta, classifications=CLSmithClassification)
 
 
 class InsufficientDataError(ValueError):

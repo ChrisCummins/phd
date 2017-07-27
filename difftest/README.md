@@ -1,7 +1,7 @@
 Generate CLSmith programs:
 
 ```sh
-$ ./clsmith-mkprogram.py -n 1000
+$ ./clsmith_mkprogram.py -n 1000
 ```
 
 Generate CLgen programs:

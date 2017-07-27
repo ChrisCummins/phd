@@ -9,16 +9,14 @@ from tempfile import NamedTemporaryFile
 
 import clsmith
 import db
-
-from db import CLSmithProgram, Session
-
-
-def get_num_progs() -> int:
-    with db.Session() as session:
-        return session.query(db.CLSmithProgram).count()
+from db import *
 
 
-def make_program(*flags) -> None:
+def get_num_progs(session: session_t) -> int:
+    return session.query(sql.sql.func.count(CLSmithProgram)).scalar()
+
+
+def make_program(session: session_t, *flags) -> None:
     """
     Arguments:
         *flags: Additional flags to CLSmith.
@@ -31,19 +29,20 @@ def make_program(*flags) -> None:
         if status:
             make_program(*flags)
 
-        file_id = crypto.sha1_file(tmp.name)
         src = fs.read_file(tmp.name)
+        hash_ = crypto.sha1_str(src)
+        dupe = session.query(CLSmithProgram.id)\
+            .filter(CLSmithProgram.hash == hash_).first()
 
-        # insert program into the table. If it already exists, ignore it.
-        try:
-            with Session() as session:
-                program = CLSmithProgram(
-                    id=file_id, flags=" ".join(flags), runtime=runtime,
-                    stdout=stdout, stderr=stderr, src=src)
-                session.add(program)
-        except sql.exc.IntegrityError:
-            # duplicate program already exists
-            pass
+        if not dupe:
+            program = CLSmithProgram(
+                hash=hash_,
+                flags=" ".join(flags),
+                runtime=runtime,
+                src=src,
+                linecount=len(src.split('\n')))
+            session.add(program)
+            session.commit()
 
 
 if __name__ == "__main__":
@@ -58,16 +57,17 @@ if __name__ == "__main__":
 
     db.init(args.hostname)  # initialize db engine
 
-    numprogs = get_num_progs()
-    if target_num_progs > 0:
-        bar = progressbar.ProgressBar(initial_value=numprogs,
-                                      max_value=target_num_progs)
-    else:
-        bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
+    with Session() as s:
+        numprogs = get_num_progs(s)
+        if target_num_progs > 0:
+            bar = progressbar.ProgressBar(
+                initial_value=numprogs, max_value=target_num_progs)
+        else:
+            bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
 
-    while target_num_progs < 0 or numprogs < target_num_progs:
-        make_program()# '--small'
-        numprogs = get_num_progs()
-        bar.update(numprogs)
+        while target_num_progs < 0 or numprogs < target_num_progs:
+            make_program(s)
+            numprogs = get_num_progs(s)
+            bar.update(numprogs)
 
     print("done.")
