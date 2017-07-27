@@ -661,6 +661,11 @@ install_gpustat() {
 }
 
 
+install_iotop() {
+    _apt_get_install iotop
+}
+
+
 install_ncdu() {
     if [[ "$(uname)" == "Darwin" ]]; then
         brew_install ncdu
@@ -773,6 +778,7 @@ main() {
     install_tex
     install_macos
     install_gpustat
+    install_iotop
     install_ncdu
     install_htop
     install_gh_archiver
