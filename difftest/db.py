@@ -1,5 +1,6 @@
 import clgen
 import datetime
+import enum
 import sqlalchemy as sql
 import os
 
@@ -17,6 +18,41 @@ Base = declarative_base()
 # must call init() first
 engine = None
 make_session = None
+
+
+INT_TO_OUTCOMES = {
+    1: "bf",
+    2: "bc",
+    3: "bto",
+    4: "c",
+    5: "to",
+    6: "pass",
+}
+
+OUTCOMES_TO_INT = {
+    "bf": 1,
+    "bc": 2,
+    "bto": 3,
+    "c": 4,
+    "to": 5,
+    "pass": 6,
+}
+
+INT_TO_CLASSIFICATIONS = {
+    1: "w",
+    2: "bf",
+    3: "c",
+    4: "to",
+    5: "pass",
+}
+
+CLASSIFICATIONS_TO_INT = {
+    "w": 1,
+    "bf": 2,
+    "c": 3,
+    "to": 4,
+    "pass": 5,
+}
 
 
 def get_mysql_creds() -> Tuple[str, str]:
@@ -82,13 +118,15 @@ def get_or_create(session: sql.orm.session.Session, model,
     return instance
 
 
-# Database Schema
+# Programs & Harnesses ########################################################
 
 
 class CLSmithProgram(Base):
     """ programs """
     __tablename__ = 'CLSmithPrograms'
-    id = sql.Column(sql.String(40), primary_key=True)
+    id = sql.Column(sql.Integer, primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, unique=True)
+
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
 
     # additional flags passed to CLSmith
@@ -98,12 +136,11 @@ class CLSmithProgram(Base):
     runtime = sql.Column(sql.Float, nullable=False)
 
     # production output
-    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    linecount = sql.Column(sql.Integer, nullable=False)
 
     # relation back to results:
-    cl_launcher_results = sql.orm.relationship("CLSmithResult", back_populates="program")
+    testcases = sql.orm.relationship("CLSmithTestCase", back_populates="program")
 
     def __repr__(self):
         return self.id
@@ -112,149 +149,31 @@ class CLSmithProgram(Base):
 class CLgenProgram(Base):
     """ programs """
     __tablename__ = 'CLgenPrograms'
-    id = sql.Column(sql.String(40), primary_key=True)
-    date_added = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    id = sql.Column(sql.Integer, primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, unique=True)
 
-    clgen_version = sql.Column(sql.String(12))
-    model = sql.Column(sql.String(40))
-    sampler = sql.Column(sql.String(40))
+    date_added = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
 
     # time taken to produce program (in seconds).
     runtime = sql.Column(sql.Float, nullable=False)
 
+    # production output
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    status = sql.Column(sql.Integer)
-    gpuverified = sql.Column(sql.Boolean)
+    linecount = sql.Column(sql.Integer, nullable=False)
+
+    # stats
     cl_launchable = sql.Column(sql.Boolean)
+    gpuverified = sql.Column(sql.Boolean)
     throws_warnings = sql.Column(sql.Boolean)
 
     # relations:
-    results = sql.orm.relationship("CLgenResult", back_populates="program")
-    cl_launcher_results = sql.orm.relationship("cl_launcherCLgenResult",
-                                               back_populates="program")
-    harnesses = sql.orm.relationship("CLgenHarness", back_populates="program")
-
-    def __repr__(self) -> str:
-        return self.id
-
-    def get_gpuverified(self):
-        if self.gpuverified == None:
-            try:
-                clgen.gpuverify(program.src, ["--local_size=64", "--num_groups=128"])
-                self.gpuverified = 1
-            except clgen.GPUVerifyException:
-                self.gpuverified = 0
-
-        return self.gpuverified
-
-
-class CLgenReduction(Base):
-    __tablename__ = "CLgenReductions"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"), primary_key=True)
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
-    status = sql.Column(sql.Integer, nullable=False)
-    runtime = sql.Column(sql.Float, nullable=False)
-
-    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    log = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-
-    result = sql.orm.relationship("CLgenResult")
-
-
-class CLgenHarness(Base):
-    """ cldrive-generated test harnesses for CLgen programs """
-    __tablename__ = 'CLgenHarnesses'
-    id = sql.Column(sql.Integer, primary_key=True)
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
-
-    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLgenPrograms.id"),
-                            nullable=False)
-    params_id = sql.Column(sql.Integer, sql.ForeignKey("cldriveParams.id"),
-                           nullable=False)
-
-    # cldrive version which generated harness
-    cldrive_version = sql.Column(sql.String(12))
-    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    compile_only = sql.Column(sql.Boolean)
-
-    # time taken to create harness
-    generation_time = sql.Column(sql.Float, nullable=False)
-    compile_time = sql.Column(sql.Float, nullable=False)
-
-    gpuverified = sql.Column(sql.Boolean)
-    oclverified = sql.Column(sql.Boolean)
-
-    # relations:
-    program = sql.orm.relationship("CLgenProgram", back_populates="harnesses")
-    params = sql.orm.relationship("cldriveParams", back_populates="harnesses")
+    testcases = sql.orm.relationship("CLgenTestCase", back_populates="program")
 
     def __repr__(self) -> str:
         return self.id
 
 
-class GitHubProgram(Base):
-    """ programs """
-    __tablename__ = 'GitHubPrograms'
-    id = sql.Column(sql.String(255), primary_key=True)
-    date_added = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
-
-    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    status = sql.Column(sql.Integer)
-
-    results = sql.orm.relationship("GitHubResult", back_populates="program")
-
-    def __repr__(self) -> str:
-        return self.id
-
-
-class Testbed(Base):
-    """ devices """
-    __tablename__ = 'Testbeds'
-    id = sql.Column(sql.Integer, primary_key=True)
-    platform = sql.Column(sql.String(255), nullable=False)  # CL_PLATFORM_NAME
-    device = sql.Column(sql.String(255), nullable=False)  # CL_DEVICE_NAME
-    driver = sql.Column(sql.String(255), nullable=False)  # CL_DRIVER_VERSION
-    host = sql.Column(sql.String(255), nullable=False)
-    opencl = sql.Column(sql.String(8), nullable=False)  # CL_PLATFORM_VERSION
-    devtype = sql.Column(sql.String(12), nullable=False)  # CL_DEVICE_TYPE
-
-    __table_args__ = (
-        sql.UniqueConstraint('platform', 'device', 'driver', 'host',
-                             'opencl', 'devtype', name='_uid'),)
-
-    clsmith_results = sql.orm.relationship("CLSmithResult", back_populates="testbed")
-    clgen_results = sql.orm.relationship("CLgenResult", back_populates="testbed")
-    cl_launcher_clgen_results = sql.orm.relationship("cl_launcherCLgenResult", back_populates="testbed")
-    github_results = sql.orm.relationship("GitHubResult", back_populates="testbed")
-    bug_reports = sql.orm.relationship("BugReport", back_populates="testbed")
-
-    def __repr__(self) -> str:
-        return ("Platform: {self.platform}, "
-                "Device: {self.device}, "
-                "Driver: {self.driver}, "
-                "Host: {self.host}".format(**vars()))
-
-    def platform_id(self):
-        """ return OpenCL platform index, or KeyError if platform not found """
-        import pyopencl as cl
-
-        for i, platform in enumerate(cl.get_platforms()):
-            if platform.get_info(cl.platform_info.NAME) == self.platform:
-                return i
-        raise KeyError(f"platform {self.platform} not found")
-
-
-    def device_id(self):
-        """ return OpenCL device index, or KeyError if device not found """
-        import pyopencl as cl
-
-        platform = cl.get_platforms()[self.platform_id()]
-        ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
-        for i, device in enumerate(ctx.get_info(cl.context_info.DEVICES)):
-            if device.get_info(cl.device_info.NAME) == self.device:
-                return i
-
-        raise KeyError(f"device {self.device} not found")
+# Parameters ##################################################################
 
 
 class cl_launcherParams(Base):
@@ -272,9 +191,6 @@ class cl_launcherParams(Base):
     __table_args__ = (sql.UniqueConstraint(
         'optimizations', 'gsize_x', 'gsize_y', 'gsize_z',
         'lsize_x', 'lsize_y', 'lsize_z', name='_uid'),)
-    # relation back to results:
-    results = sql.orm.relationship("CLSmithResult", back_populates="params")
-    clgen_results = sql.orm.relationship("cl_launcherCLgenResult", back_populates="params")
 
     def to_flags(self) -> List[str]:
         flags = [
@@ -301,58 +217,6 @@ class cl_launcherParams(Base):
         return " ".join(self.to_flags())
 
 
-def cl_launcher_params_groups(session):
-    """
-    Return list of Param IDs for distinct params, grouped by optimizations on/off.
-    """
-    id_groups = []
-    for gx, gy, gz, lx, ly, lz in session.query(
-            cl_launcherParams.gsize_x, cl_launcherParams.gsize_y, cl_launcherParams.gsize_z,
-            cl_launcherParams.lsize_x, cl_launcherParams.lsize_y, cl_launcherParams.lsize_z
-        ).group_by(
-            cl_launcherParams.gsize_x, cl_launcherParams.gsize_y, cl_launcherParams.gsize_z,
-            cl_launcherParams.lsize_x, cl_launcherParams.lsize_y, cl_launcherParams.lsize_z
-        ):
-        id_groups.append([x[0] for x in
-            session.query(cl_launcherParams.id).filter(
-                cl_launcherParams.gsize_x == gx,
-                cl_launcherParams.gsize_y == gy,
-                cl_launcherParams.gsize_z == gz,
-                cl_launcherParams.lsize_x == lx,
-                cl_launcherParams.lsize_y == ly,
-                cl_launcherParams.lsize_z == lz)])
-    return id_groups
-
-
-class coParams(Base):
-    """ params used by compile-only """
-    __tablename__ = "coParams"
-    id = sql.Column(sql.Integer, primary_key=True)
-    optimizations = sql.Column(sql.Boolean, nullable=False)
-    build_kernel = sql.Column(sql.Boolean, nullable=False)
-
-    # unique combination of values:
-    __table_args__ = (sql.UniqueConstraint(
-        'optimizations', 'build_kernel', name='_uid'),)
-    # relation back to results:
-    clgen_results = sql.orm.relationship("coCLgenResult", back_populates="params")
-
-    def to_flags(self) -> List[str]:
-        flags = ['--emit-c', '--compile-only']
-        if self.build_kernel:
-            flags.append("--with-kernel")
-        if not self.optimizations:
-            flags.append("--no-opts")
-        return flags
-
-    @property
-    def optimizations_on_off(self) -> str:
-        return "on" if self.optimizations else "off"
-
-    def __repr__(self) -> str:
-        return " ".join(self.to_flags())
-
-
 class cldriveParams(Base):
     """ params used by cldrive to run kernel """
     __tablename__ = "cldriveParams"
@@ -371,11 +235,6 @@ class cldriveParams(Base):
     __table_args__ = (sql.UniqueConstraint(
         'size', 'generator', 'scalar_val', 'gsize_x', 'gsize_y', 'gsize_z',
         'lsize_x', 'lsize_y', 'lsize_z', 'optimizations', name='_uid'),)
-
-    # relations:
-    clgen_results = sql.orm.relationship("CLgenResult", back_populates="params")
-    github_results = sql.orm.relationship("GitHubResult", back_populates="params")
-    harnesses = sql.orm.relationship("CLgenHarness", back_populates="params")
 
     def to_flags(self):
         flags = [
@@ -406,83 +265,257 @@ class cldriveParams(Base):
         return " ".join(self.to_flags())
 
 
-class CLSmithResult(Base):
-    __tablename__ = "CLSmithResults"
+# Testcases ###################################################################
+
+
+class CLSmithTestCase(Base):
+    __tablename__ = "CLSmithTestCases"
     id = sql.Column(sql.Integer, primary_key=True)
-    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLSmithPrograms.id"),
-                            nullable=False)
-    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
+    program_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithPrograms.id"),
                             nullable=False)
     params_id = sql.Column(sql.Integer, sql.ForeignKey("cl_launcherParams.id"),
                            nullable=False)
+
+    __table_args__ = (
+        sql.UniqueConstraint("program_id", "params_id", name="_uid"),)
+
+    program = sql.orm.relationship("CLSmithProgram", back_populates="testcases")
+    params = sql.orm.relationship("cl_launcherParams")
+    results = sql.orm.relationship("CLSmithResult", back_populates="testcase")
+
+
+class CLgenTestCase(Base):
+    __tablename__ = "CLgenTestCases"
+    id = sql.Column(sql.Integer, primary_key=True)
+    program_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenPrograms.id"),
+                            nullable=False)
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("cldriveParams.id"),
+                           nullable=False)
+
+    __table_args__ = (
+        sql.UniqueConstraint("program_id", "params_id", name="_uid"),)
+
+    program = sql.orm.relationship("CLgenProgram", back_populates="testcases")
+    params = sql.orm.relationship("cldriveParams")
+    harness = sql.orm.relationship("CLgenHarness", back_populates="testcase")
+    results = sql.orm.relationship("CLgenResult", back_populates="testcase")
+
+
+class CLgenHarness(Base):
+    """ cldrive-generated test harnesses for CLgen programs """
+    __tablename__ = 'CLgenHarnesses'
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenTestCases.id"),
+                    primary_key=True)
+
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
-    flags = sql.Column(sql.String(255), nullable=False)
+
+    # cldrive version which generated harness
+    cldrive_version = sql.Column(sql.String(12))
+    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    compile_only = sql.Column(sql.Boolean)
+
+    # time taken to create harness
+    generation_time = sql.Column(sql.Float, nullable=False)
+    compile_time = sql.Column(sql.Float, nullable=False)
+
+    gpuverified = sql.Column(sql.Boolean)
+    oclverified = sql.Column(sql.Boolean)
+
+    # relations:
+    testcase = sql.orm.relationship("CLgenTestCase", back_populates="harness")
+
+    def __repr__(self) -> str:
+        return self.id
+
+
+# Testbeds ####################################################################
+
+
+class Testbed(Base):
+    """ devices """
+    __tablename__ = 'Testbeds'
+    id = sql.Column(sql.Integer, primary_key=True)
+    platform = sql.Column(sql.String(255), nullable=False)  # CL_PLATFORM_NAME
+    device = sql.Column(sql.String(255), nullable=False)  # CL_DEVICE_NAME
+    driver = sql.Column(sql.String(255), nullable=False)  # CL_DRIVER_VERSION
+    host = sql.Column(sql.String(255), nullable=False)
+    opencl = sql.Column(sql.String(8), nullable=False)  # CL_PLATFORM_VERSION
+    devtype = sql.Column(sql.String(12), nullable=False)  # CL_DEVICE_TYPE
+
+    __table_args__ = (
+        sql.UniqueConstraint('platform', 'device', 'driver', 'host',
+                             'opencl', 'devtype', name='_uid'),)
+
+    clsmith_results = sql.orm.relationship("CLSmithResult", back_populates="testbed")
+    clgen_results = sql.orm.relationship("CLgenResult", back_populates="testbed")
+    bug_reports = sql.orm.relationship("BugReport", back_populates="testbed")
+
+    def __repr__(self) -> str:
+        return (f"Platform: {self.platform}, Device: {self.device}, " +
+                f"Driver: {self.driver}, Host: {self.host}")
+
+    def platform_id(self):
+        """ return OpenCL platform index, or KeyError if platform not found """
+        import pyopencl as cl
+
+        for i, platform in enumerate(cl.get_platforms()):
+            if platform.get_info(cl.platform_info.NAME) == self.platform:
+                return i
+        raise KeyError(f"platform {self.platform} not found")
+
+    def device_id(self):
+        """ return OpenCL device index, or KeyError if device not found """
+        import pyopencl as cl
+
+        platform = cl.get_platforms()[self.platform_id()]
+        ctx = cl.Context(properties=[(cl.context_properties.PLATFORM, platform)])
+        for i, device in enumerate(ctx.get_info(cl.context_info.DEVICES)):
+            if device.get_info(cl.device_info.NAME) == self.device:
+                return i
+
+        raise KeyError(f"device {self.device} not found")
+
+
+# CLSmith Results #############################################################
+
+
+class CLSmithResult(Base):
+    __tablename__ = "CLSmithResults"
+    id = sql.Column(sql.Integer, primary_key=True)
+    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
+                            nullable=False, index=True)
+    testcase_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithTestCases.id"),
+                             nullable=False, index=True)
+
+    # stats
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
-    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    outcome = sql.Column(sql.String(255))
-    classification = sql.Column(sql.String(16))
 
-    program = sql.orm.relationship("CLSmithProgram", back_populates="cl_launcher_results")
-    testbed = sql.orm.relationship("Testbed", back_populates="clsmith_results")
-    params = sql.orm.relationship("cl_launcherParams", back_populates="results")
-    reduction = sql.orm.relation("CLSmithReduction", back_populates="result")
+    # output
+    stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithStdouts.id"))
+    stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithStderrs.id"))
+
+    outcome = sql.Column(sql.Integer, index=True, nullable=False)
+    classification = sql.Column(sql.Integer, index=True)
+
+    # unique
+    __table_args__ = (
+        sql.UniqueConstraint('testbed_id', 'testcase_id', name='_uid'),)
+
+    # relations:
     meta = sql.orm.relation("CLSmithMeta", back_populates="result")
+    testbed = sql.orm.relationship("Testbed", back_populates="clsmith_results")
+    testcase = sql.orm.relationship("CLSmithTestCase", back_populates="results")
+    stdout = sql.orm.relationship("CLSmithStdout")
+    stderr = sql.orm.relationship("CLSmithStderr")
 
     def __repr__(self):
-        return ("result: {self.id} "
-                "testbed: {self.testbed.device}, "
-                "program: {self.program_id}, "
-                "params: {self.params}, "
-                "status: {self.status}, "
-                "runtime: {self.runtime:.2f}s"
-                .format(**vars()))
+        return (f"result: {self.id} testbed: {self.testbed.device}, " +
+                f"program: {self.program_id}, params: {self.params}, " +
+                f"status: {self.status}, runtime: {self.runtime:.2f}s")
 
 
-    def previous_result(self, session) -> "CLSmithResult":
-        params_group = session.query(cl_launcherParams.id)\
-            .filter(cl_launcherParams.optimizations == self.params.optimizations)
+class CLSmithStdout(Base):
+    __tablename__ = "CLSmithStdouts"
+    id = sql.Column(sql.Integer, primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, unique=True)
+    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
-        return session.query(CLSmithResult)\
-            .filter(CLSmithResult.testbed_id == self.testbed_id,
-                    CLSmithResult.params_id.in_(params_group),
-                    CLSmithResult.date < self.date)\
-            .order_by(CLSmithResult.date.desc()).first()
 
-    def get_meta(self, session) -> "CLSmithMeta":
-        m = session.query(CLSmithMeta).filter(CLSmithMeta.id == self.id).first()
-        if not m:
-            total_time = self.runtime + self.program.runtime
-            prev = self.previous_result(session)
-            cumtime = total_time
-            if prev:
-                prev_meta = prev.get_meta(session)
-                cumtime += prev_meta.cumtime + prev_meta.total_time
-
-            m = CLSmithMeta(id=self.id, total_time=total_time, cumtime=cumtime)
-            session.add(m)
-        return m
+class CLSmithStderr(Base):
+    __tablename__ = "CLSmithStderrs"
+    id = sql.Column(sql.Integer, primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, unique=True)
+    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
 
 class CLSmithMeta(Base):
     __tablename__ = "CLSmithMetas"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithResults.id"), primary_key=True)
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithResults.id"),
+                    primary_key=True)
     total_time = sql.Column(sql.Float, nullable=False)  # time to generate and run test case
     cumtime = sql.Column(sql.Float, nullable=False)  # culumative time for this device and optimization level
-    classification = sql.Column(sql.String(8))
-    submitted = sql.Column(sql.Boolean)
 
     # relations:
     result = sql.orm.relationship("CLSmithResult", back_populates="meta")
 
     def __repr__(self):
+        return (f"result: {self.id} total_time: {self.total_time:.3f}s, " +
+                f"cumtime: {self.cumtime:.1f}s")
+
+
+# CLgen Results ###############################################################
+
+
+class CLgenResult(Base):
+    __tablename__ = "CLgenResults"
+    id = sql.Column(sql.Integer, primary_key=True)
+    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
+                            nullable=False)
+    testcase_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenTestCases.id"),
+                             nullable=False)
+
+    # stats
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    status = sql.Column(sql.Integer, nullable=False)
+    runtime = sql.Column(sql.Float, nullable=False)
+
+    # output
+    stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStdouts.id"))
+    stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStderrs.id"))
+
+    outcome = sql.Column(sql.Integer, index=True, nullable=False)
+    classification = sql.Column(sql.Integer, index=True)
+
+    # unique
+    __table_args__ = (
+        sql.UniqueConstraint('testbed_id', 'testcase_id', name='_uid'),)
+
+    # relations:
+    meta = sql.orm.relationship("CLgenMeta", back_populates="result")
+    testcase = sql.orm.relationship("CLgenTestCase", back_populates="results")
+    testbed = sql.orm.relationship("Testbed", back_populates="clgen_results")
+    stdout = sql.orm.relationship("CLgenStdout")
+    stderr = sql.orm.relationship("CLgenStderr")
+
+    def __repr__(self) -> str:
+        return (f"program: {self.program_id}, testcase: {self.testcase_id}, " +
+                f"status: {self.status}, runtime: {self.runtime:.2f}s")
+
+
+class CLgenStdout(Base):
+    __tablename__ = "CLgenStdouts"
+    id = sql.Column(sql.Integer, primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, unique=True)
+    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+
+
+class CLgenStderr(Base):
+    __tablename__ = "CLgenStderrs"
+    id = sql.Column(sql.Integer, primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, unique=True)
+    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+
+
+class CLgenMeta(Base):
+    __tablename__ = "CLgenMetas"
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"),
+                    primary_key=True)
+    total_time = sql.Column(sql.Float, nullable=False)  # time to generate and run test case
+    cumtime = sql.Column(sql.Float, nullable=False)  # culumative time for this device and optimization level
+
+    # relations:
+    result = sql.orm.relationship("CLgenResult", back_populates="meta")
+
+    def __repr__(self):
         return ("result: {self.id} "
                 "total_time: {self.total_time:.3f}s, "
                 "cumtime: {self.cumtime:.1f}s, "
-                "classification: {self.classification}, "
-                "submitted: {self.submitted}"
                 .format(**vars()))
+
+
+# Reductions ##################################################################
 
 
 class CLSmithReduction(Base):
@@ -498,38 +531,49 @@ class CLSmithReduction(Base):
     result = sql.orm.relationship("CLSmithResult")
 
 
-class cl_launcherCLgenResult(Base):
-    """ CLgen programs ran using cl_launcher """
-    __tablename__ = "cl_launcherCLgenResults"
-    id = sql.Column(sql.Integer, primary_key=True)
-    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLgenPrograms.id"),
-                            nullable=False)
-    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
-                            nullable=False)
-    params_id = sql.Column(sql.Integer, sql.ForeignKey("cl_launcherParams.id"),
-                           nullable=False)
+class CLgenReduction(Base):
+    __tablename__ = "CLgenReductions"
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"), primary_key=True)
     date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
-    flags = sql.Column(sql.String(255), nullable=False)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
-    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    outcome = sql.Column(sql.String(255))
-    classification = sql.Column(sql.String(16))
-    submitted = sql.Column(sql.Boolean)
-    dupe = sql.Column(sql.Boolean)
 
-    program = sql.orm.relationship("CLgenProgram", back_populates="cl_launcher_results")
-    testbed = sql.orm.relationship("Testbed", back_populates="cl_launcher_clgen_results")
-    params = sql.orm.relationship("cl_launcherParams", back_populates="clgen_results")
+    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    log = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
-    def __repr__(self):
-        return ("program: {self.program_id}, "
-                "testbed: {self.testbed_id}, "
-                "params: {self.params_id}, "
-                "status: {self.status}, "
-                "runtime: {self.runtime:.2f}s"
-                .format(**vars()))
+    result = sql.orm.relationship("CLgenResult")
+
+
+# Compile-only tests ##########################################################
+
+
+class coParams(Base):
+    """ params used by compile-only """
+    __tablename__ = "coParams"
+    id = sql.Column(sql.Integer, primary_key=True)
+    optimizations = sql.Column(sql.Boolean, nullable=False)
+    build_kernel = sql.Column(sql.Boolean, nullable=False)
+
+    # unique combination of values:
+    __table_args__ = (sql.UniqueConstraint(
+        'optimizations', 'build_kernel', name='_uid'),)
+    # relation back to results:
+    clgen_results = sql.orm.relationship("coCLgenResult", back_populates="params")
+
+    def to_flags(self) -> List[str]:
+        flags = ['--emit-c', '--compile-only']
+        if self.build_kernel:
+            flags.append("--with-kernel")
+        if not self.optimizations:
+            flags.append("--no-opts")
+        return flags
+
+    @property
+    def optimizations_on_off(self) -> str:
+        return "on" if self.optimizations else "off"
+
+    def __repr__(self) -> str:
+        return " ".join(self.to_flags())
 
 
 class coCLgenResult(Base):
@@ -565,116 +609,23 @@ class coCLgenResult(Base):
                 .format(**vars()))
 
 
-class CLgenResult(Base):
-    __tablename__ = "CLgenResults"
-    id = sql.Column(sql.Integer, primary_key=True)
-    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLgenPrograms.id"),
-                            nullable=False)
-    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
-                            nullable=False)
-    params_id = sql.Column(sql.Integer, sql.ForeignKey("cldriveParams.id"),
-                           nullable=False)
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
-    status = sql.Column(sql.Integer, nullable=False)
-    runtime = sql.Column(sql.Float, nullable=False)
-    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    outcome = sql.Column(sql.String(255))
-    classification = sql.Column(sql.String(16))
-    submitted = sql.Column(sql.Boolean)
-    dupe = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"))
+# GitHub tests ################################################################
 
-    # relations:
-    program = sql.orm.relationship("CLgenProgram", back_populates="results")
-    testbed = sql.orm.relationship("Testbed", back_populates="clgen_results")
-    params = sql.orm.relationship("cldriveParams", back_populates="clgen_results")
-    meta = sql.orm.relationship("CLgenMeta", back_populates="result")
+
+class GitHubProgram(Base):
+    """ programs """
+    __tablename__ = 'GitHubPrograms'
+    id = sql.Column(sql.String(255), primary_key=True)
+    date_added = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+
+    src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    status = sql.Column(sql.Integer)
 
     def __repr__(self) -> str:
-        return ("program: {self.program_id}, "
-                "testbed: {self.testbed_id}, "
-                "params: {self.params_id}, "
-                "status: {self.status}, "
-                "runtime: {self.runtime:.2f}s"
-                .format(**vars()))
-
-    def previous_result(self, session) -> "CLgenResult":
-        params_group = session.query(cldriveParams.id)\
-            .filter(cldriveParams.optimizations == self.params.optimizations)
-
-        return session.query(CLgenResult)\
-            .filter(CLgenResult.testbed_id == self.testbed_id,
-                    CLgenResult.params_id.in_(params_group),
-                    CLgenResult.date < self.date)\
-            .order_by(CLgenResult.date.desc()).first()
-
-    def get_meta(self, session) -> "CLgenMeta":
-        m = session.query(CLgenMeta).filter(CLgenMeta.id == self.id).first()
-        if not m:
-            harness_time = session.query(CLgenHarness.generation_time)\
-                .filter(CLgenHarness.program_id == self.program_id,
-                        CLgenHarness.params_id == self.params_id).scalar()
-            total_time = self.runtime + self.program.runtime + harness_time
-            prev = self.previous_result(session)
-            cumtime = total_time
-            if prev:
-                prev_meta = prev.get_meta(session)
-                cumtime += prev_meta.cumtime + prev_meta.total_time
-
-            m = CLgenMeta(id=self.id, total_time=total_time, cumtime=cumtime)
-            session.add(m)
-        return m
+        return self.id
 
 
-class CLgenMeta(Base):
-    __tablename__ = "CLgenMetas"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"), primary_key=True)
-    total_time = sql.Column(sql.Float, nullable=False)  # time to generate and run test case
-    cumtime = sql.Column(sql.Float, nullable=False)  # culumative time for this device and optimization level
-    classification = sql.Column(sql.String(8))
-    submitted = sql.Column(sql.Boolean)
-
-    # relations:
-    result = sql.orm.relationship("CLgenResult", back_populates="meta")
-
-    def __repr__(self):
-        return ("result: {self.id} "
-                "total_time: {self.total_time:.3f}s, "
-                "cumtime: {self.cumtime:.1f}s, "
-                "classification: {self.classification}, "
-                "submitted: {self.submitted}"
-                .format(**vars()))
-
-
-class GitHubResult(Base):
-    __tablename__ = "GitHubResults"
-    id = sql.Column(sql.Integer, primary_key=True)
-    program_id = sql.Column(sql.String(255), sql.ForeignKey("GitHubPrograms.id"),
-                            nullable=False)
-    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
-                            nullable=False)
-    params_id = sql.Column(sql.Integer, sql.ForeignKey("cldriveParams.id"),
-                           nullable=False)
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
-    cli = sql.Column(sql.String(255), nullable=False)
-    status = sql.Column(sql.Integer, nullable=False)
-    runtime = sql.Column(sql.Float, nullable=False)
-    stdout = sql.Column(sql.LargeBinary(length=2**31), nullable=False)
-    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    outcome = sql.Column(sql.String(255))
-    classification = sql.Column(sql.String(16))
-
-    program = sql.orm.relationship("GitHubProgram", back_populates="results")
-    testbed = sql.orm.relationship("Testbed", back_populates="github_results")
-    params = sql.orm.relationship("cldriveParams", back_populates="github_results")
-
-    def __repr__(self) -> str:
-        return ("program: {self.program_id}, "
-                "testbed: {self.testbed_id}, "
-                "params: {self.params_id}, "
-                "status: {self.status}, "
-                "runtime: {self.runtime:.2f}s"
-                .format(**vars()))
+# Miscellaneous ###############################################################
 
 
 class BugReport(Base):
@@ -707,6 +658,21 @@ class BugReport(Base):
                 .format(**vars()))
 
 
+class CLgenProgramTranslation(Base):
+    __tablename__ = 'tmp_clgenprogram_translate'
+    old_id = sql.Column(sql.String(40), primary_key=True)
+    new_id = sql.Column(sql.Integer, nullable=False, unique=True, index=True)
+
+
+class CLSmithProgramTranslation(Base):
+    __tablename__ = 'tmp_clsmithprogram_translate'
+    old_id = sql.Column(sql.String(40), primary_key=True)
+    new_id = sql.Column(sql.Integer, nullable=False, unique=True, index=True)
+
+
+# Utility #####################################################################
+
+
 def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
     """
     Get the testbed for the specified hardware.
@@ -723,6 +689,7 @@ def get_testbed(session: session_t, platform: str, device: str) -> Testbed:
                          host=cldrive.host_os(),
                          opencl=env.opencl_version,
                          devtype=env.device_type)
+
 
 # Tablesets ###################################################################
 Tableset = namedtuple(
