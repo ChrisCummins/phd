@@ -5,6 +5,7 @@ import sqlalchemy as sql
 
 from collections import Counter
 from signal import Signals
+from progressbar import ProgressBar
 
 import db
 import oclgrind
@@ -308,21 +309,21 @@ def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None
             if majority_count < min_majority_count:
                 continue
 
-            # If majority outcome resulted in binaries, mark anomalous build
-            # failures:
-            if majority_outcome != "bf":
-                q.filter(tables.results.outcome == "bf")\
-                    .update({"classification": "bf"})
+            # # If majority outcome resulted in binaries, mark anomalous build
+            # # failures:
+            # if majority_outcome != "bf":
+            #     q.filter(tables.results.outcome == "bf")\
+            #         .update({"classification": "bf"})
 
-            # If majority outcome did not crash, mark anomalous crashes:
-            if majority_outcome != "c":
-                q.filter(tables.results.outcome == "c")\
-                    .update({"classification": "c"})
+            # # If majority outcome did not crash, mark anomalous crashes:
+            # if majority_outcome != "c":
+            #     q.filter(tables.results.outcome == "c")\
+            #         .update({"classification": "c"})
 
-            # If majority outcome did not timeout, mark anomalous timeouts:
-            if majority_outcome != "to":
-                q.filter(tables.results.outcome == "to")\
-                    .update({"classification": "to"})
+            # # If majority outcome did not timeout, mark anomalous timeouts:
+            # if majority_outcome != "to":
+            #     q.filter(tables.results.outcome == "to")\
+            #         .update({"classification": "to"})
 
             # Look for wrong-code bugs:
             #
@@ -422,13 +423,11 @@ def verify_clgen_w_result(session: session_t, result: CLgenResult) -> None:
         print(f"retracted CLgen w-result {result.id}: failed OCLgrind verification")
         return fail()
 
-    majority_output, majority_count, count = get_majority_output(
-        session, CLGEN_TABLES, result)
-    if majority_count < count - 1:
-        print(f"retracting CLgen w-result {result.id}: not a large enough majority (only {majority_count} of {count} agree)")
-        return fail()
-
-    # TODO: incompatible pointer to integer conversion
+    # majority_output, majority_count, count = get_majority_output(
+    #     session, CLGEN_TABLES, result)
+    # if majority_count < count - 1:
+    #     print(f"retracting CLgen w-result {result.id}: not a large enough majority (only {majority_count} of {count} agree)")
+    #     return fail()
 
 
 def verify_clsmith_w_result(session: session_t, result: CLgenResult) -> None:
@@ -440,12 +439,52 @@ def verify_clsmith_w_result(session: session_t, result: CLgenResult) -> None:
         session.commit()
 
 
-def prune_w_classifications(session: session_t, tables: Tableset,
-                            time_limit: int=48 * 3600):
+def set_throws_warnings(session: session_t, tables: Tableset, program_id: int):
+    """
+    Determine if the program produces relevant compiler warnings, and if so,
+    mark it as such, and remove the wrong-code classification from any results.
+    """
+    def fail():
+        program = session.query(tables.programs)\
+            .filter(tables.programs.id == program_id).first()
+
+        # Mark program as throwing warnings:
+        program.throws_warnings = True
+        # Mark any wrong-code classifications for this program as passes:
+        session.query(tables.results)\
+            .filter(tables.results.program_id == program.id,
+                    tables.results.classification == "w")\
+            .update({"classification": "pass"})
+        session.commit()
+
+    print(f"Checking program {program_id} for compiler warnings")
+    stderrs = session.query(tables.results.stderr)\
+        .filter(tables.programs.id == program_id)
+
+    for stderr in stderrs:
+        if "incompatible pointer to integer conversion" in stderr:
+            print(f"marking program {program_id} as throws errors: incompatible pointer to to integer conversion")
+            return fail()
+
+        if "ordered comparison between pointer and integer" in stderr:
+            print(f"marking program {program_id} as throws errors: ordered comparison between pointer and integer")
+            return fail()
+
+        if "warning: incompatible" in stderr:
+            print(f"marking program {program_id} as throws errors: incompatible")
+            return fail()
+
+        if "warning" in stderr:
+            print("WARNINGS:")
+            print("\n".join(f">> {line}" for line in stderr.split("\n")))
+            # break
+
+
+def prune_w_classifications(session: session_t, tables: Tableset, _):
+    # Verify existing w-classifications:
+    #
     q = session.query(tables.results.id)\
-        .join(tables.meta)\
-        .filter(tables.meta.cumtime < time_limit,
-                tables.results.classification == "w")
+        .filter(tables.results.classification == "w")
 
     for i, (result_id,) in enumerate(q):
         result = session.query(tables.results)\
@@ -454,6 +493,23 @@ def prune_w_classifications(session: session_t, tables: Tableset,
             verify_clgen_w_result(session, result)
         elif tables.name == "CLSmith":
             verify_clsmith_w_result(session, result)
+
+    # Check if programs riase compiler warnings:
+    #
+    program_ids = session.query(tables.results.program_id)\
+        .join(tables.programs)\
+        .filter(tables.results.classification == "w",
+                tables.programs.throws_warnings == None)\
+        .distinct().all()
+
+    for program_id, in ProgressBar()(program_ids):
+        set_throws_warnings(session, tables, program_id)
+
+    # Check for ADL errors:
+    #
+    q = session.query(tables.results)\
+        .filter(tables.results.testbed_id == 20,
+                tables.classification == "w")
 
 
 set_classifications = set_our_classifications

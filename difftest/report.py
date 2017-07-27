@@ -60,7 +60,8 @@ def get_bug_report(session: session_t, tables: Tableset, result_id: int, report_
         elif report_type == "w":
             stderr = comment(result.stderr, prefix='  ')
             result_output = comment(result.stdout, prefix='  ')
-            majority_output = comment(analyze.get_majority_output(session, tables, result), prefix='  ')
+            majority_output, _, _ = analyze.get_majority_output(session, tables, result)
+            majority_output = comment(majority_output, prefix='  ')
             assert majority_output != result_output
             header += f"""\
 //
