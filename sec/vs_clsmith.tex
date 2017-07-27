@@ -1,33 +1,40 @@
 \section{Comparison to State-of-the-art}\label{sec:vs_clsmith}
 
-In this section we report on an experiment using both CLSmith and CLgen for 48 hours each.
+In this section we compare CLgen against CLSmith, the state-of-the-art in OpenCL fuzz testing. For each of the 10 OpenCL configurations, we run the  48 consecutive
 
 Total runtime for a test cases consists of the generation time, the time to execute the test harness on a configuration.
 
 Both testing frameworks were used for 48 hours each. CLSmith was configured with default settings. CLReduce was configured with the default settings (four parallel reduction threads).
 
-\subsection{Experimental Setup}
+%\subsection{Experimental Setup}
+%
+%Each OpenCL configuration from Table~\ref{tab:platforms} was configured to run CLgen and CLSmith test cases for 48 hours. This includes the time taken to generate and execute the test case. All experimental platforms were otherwise unloaded.
 
-Each device was configured to run the compiler testing system for a fixed 48 hours. All devices were otherwise unloaded.
+\subsection{Test Outcomes}
 
-\subsection{Results}
+Table~\ref{tab:outcomes} shows the outcomes of 48 hours of consecutive testing for each of the platforms from Table~\ref{tab:platforms}. We repeated the experiment twice, once with compiler optimizations disabled ($-$) for all configurations, and once with optimizations enabled ($+$).
 
-% OUTCOMES
-Table~\ref{tab:outcomes} shows the outcomes of test cases. An average of XX CLSmith and XX CLgen test cases were evaluated on each device, with an average time per test case of XX and XX respectively. The XX-fold increase in testing throughput achieved by CLgen is a result of XXX. Figure~\ref{fig:runtimes} shows runtimes. For CLgen, generation time scales linearly with program size (benchmarked at 465 cps). We also include test harness overhead, though this could be implemented away. Disabling optimizaitons generally does not affect testing throughput significantly, with the exception of Config XX, in which the slow compilation of kernels containing structs greatly reduces the number of test cases evaluated. This is a known issue --- in XX the authors omnit testing on this configuration for this reason.
+XX\% of CLSmith test cases fails to produce an output (non-\cmark). Proportionally, CLgen test cases are less likely to produce an output, with XX\%
+
+An average of XX CLSmith and XX CLgen test cases were evaluated on each device, with an average time per test case of XX and XX respectively. The XX-fold increase in testing throughput achieved by CLgen is a result of XXX. Figure~\ref{fig:runtimes} shows runtimes. For CLgen, generation time scales linearly with program size (benchmarked at 465 cps). We also include test harness overhead, though this could be implemented away. Disabling optimizaitons generally does not affect testing throughput significantly, with the exception of Config XX, in which the slow compilation of kernels containing structs greatly reduces the number of test cases evaluated. This is a known issue --- in XX the authors omnit testing on this configuration for this reason.
 
 Column \textbf{bc} is of immediate value for developers; for all other outcomes, voting heuristics are required to expose anomalous results. CLSmith crashed 8 of the 20 configurations, CLgen crashed all of them. See Section X for examples of bugs found from build crashes.
 
-\cc{The integrated GPU Conifgs.\ we tested ($3\pm$) frequently failed to compile  have a lot of \textbf{\{bc,bto\}} outcomes for CLSmith. Why? What's the line count of btos? bc where segfaults without error.}
+The integrated GPU Conifgs.\ we tested ($3\pm$) frequently failed to compile CLSmith kernels, resulting in thousands of compiler crashes \textbf{bc} or timeouts \textbf{bc}. 
 % SELECT stderr,COUNT(*) FROM CLSmithResults LEFT JOIN CLSmithMetas ON CLSmithResults.id=CLSmithMetas.id WHERE testbed_id=13 AND CLSmithResults.outcome='bc' AND cumtime < 48 * 3600 GROUP BY CLSmithResults.stderr;
-Of the build crashes, 68\% failed silently, and the remainder were caused by the same bug we discovered using the 4 line test case in Figure~\ref{lst:intel-llvm-assertion}.
+Of the build crashes, 68\% failed silently, and the remainder were caused by the same pointer assignment assertion for which CLgen generated a 4 line test case in Figure~\ref{lst:intel-llvm-assertion}. \cc{We also generated silent build crashes, but with an average line count of XX, versus CLSmith's line count of XX.}
+
+For all except configuration $3\pm$, CLgen exposes more compiler crashes than CLSmith. On average, CLgen hangs the compiler more frequently. We also submitted XX of the bugs found using CLSmith, after reduction.
 
 % 622 total bc
 Configs.\ $4$, $5$, $6$, and $7$ have a number CLSmith bc outcomes when optimizations are enabled. Of the non-silent crashes, the cause is the OpenCL vectorizer pass, same as Figure~\ref{lst:intel-vectorizer-segfault}.
 
 \cc{Config.\ $7+$ has a lot of \textbf{bto}s. Why?}
 
-% CLASSIFICATIONS
-Once voting heuristics have been applied, the result is table~\ref{tab:classifications}.
+
+\subsection{Differential Tests}
+
+Table~\ref{tab:classifications} shows the results of applying voting heuristics to the results of Table~\ref{tab:outcomes}.
 
 \begin{figure}
 	\centering %
@@ -65,14 +72,10 @@ The 2357 \textbf{bf} results for CLSmith on Configs.\ $4\pm$ and $6\pm$ are all 
 
 Oclgrind was resilient to CLSmith testing, yet we managed to trip it up during compilation.
 
-\subsection{Analysis of bugs found}
 
-For all except configuration $3\pm$, CLgen exposes more compiler crashes than CLSmith. On average, CLgen hangs the compiler more frequently. We also submitted XX of the bugs found using CLSmith, after reduction.
+\subsection{Comparison of test cases}
 
-
-\subsection{Test Case Size}
-
-Median CLSmith kernel is 1086 lines long (excluding headers).
+Median CLSmith kernel is 1086 lines long (excluding headers). CLSmith kernels are unreadable, requiring automatic or manual test case reduction.
 
 For ``interesting'' programs: median CLgen kernel size is 12 lines. Median reduced CLSmith kernel size is 43 lines (894 lines before reduction). Figure~\ref{fig:kernel-sizes}.
 

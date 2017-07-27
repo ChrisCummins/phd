@@ -1,6 +1,6 @@
 \section{Overview of Our Approach and Results}\label{sec:overview}
 
-\paragraph{Test case generation} We mine GitHub for OpenCL fragments. We construct a corpus of example programs. We learn a generative model over these programs, and use a discriminative model to tune via feedback cycle. CLgen, our deep learning program synthesis tool, automatically generates an unbounded number of OpenCL samples for testing compilers.
+\paragraph{Test case generation} We mine GitHub for OpenCL fragments, which we use to construct a corpus of representative programs. We learn a generative model over this corpus. CLgen, our deep learning program synthesis tool, automatically generates an unbounded number of OpenCL samples for testing compilers.
 
 \paragraph{OpenCL configurations tested} We conducted testing of 9 different OpenCL configurations, summarized in Table~\ref{tab:platforms}. A \emph{configuration} refers to an OpenCL \emph{<device, driver>} pair. We covered the broadest range of hardware available to us: 3 GPUs, 4 CPUs, an Accelerator, and an Emulator. 7 of the OpenCL implementations are commercial products, 2 of them are open source. We tested both different drivers for the same device, and different devices using the same driver.
 

@@ -60,3 +60,19 @@
 	\caption{Example kernels which expose compiler crash bugs.}%
 	\label{lst:compiler-crash-bugs}%
 \end{figure}
+
+
+\lstset{language=[OpenCL]C}
+\begin{figure}
+	\centering %
+	\subfloat[Configs.\ $3\pm$ hangs (all other configurations compile in < 1s).]{%
+		\noindent\mbox{\parbox{\columnwidth}{%
+				% CLgen/bto/bug-report-intel-487452.c
+				\lstinputlisting{lst/bug12}%
+			}%
+		}%
+		\label{lst:gt2-compiler-hang}
+	}%
+	\caption{Example kernels which hang compilers.}%
+	\label{lst:compiler-hang-bugs}%
+\end{figure}

@@ -5,24 +5,11 @@ Figure~\ref{fig:deeptune} shows the test case generation process. Our compiler t
 
 \subsection{OpenCL Kernel Synthesis}
 
-We extend prior work on synthetic program generation using LSTM networks~\cite{Cummins2017a}. We use a two layer LSTM network of 512 nodes each, trained for 50 epochs using an initial learning rate of XX and decaying by a factor of a half every 5 epochs.
+We extend prior work on synthetic program generation using LSTM networks~\cite{Cummins2017a}. An initial seed corpus of 10k OpenCL kernels is mined from GitHub, using an oracle compiler (LLVM 3.9) to reject files that are not well-formed or do not contain instructions. The corpus is preprocessed: a uniform code style is enforced to ensure consitent use of braces, whitespace, identifier names, etc. The prepocessed corpus is encoded using a hybrid token/character-level encoding~\cite{Cummins2017b}. 
 
-\begin{itemize}
-\item An initial seed corpus of OpenCL samples is mined from GitHub. An oracle compiler (LLVM 3.9) is used to reject samples that are not well-formed.
-\item The corpus is preprocessed: a uniform code style is enforced for whitespace, braces, identifier names, etc. The prepocessed corpus is encoded using either character-level or a hybrid token/character-level encoding~\cite{Cummins2017b}.
-\item LSTM networks model the vocabulary distribution over the encoded corpus.
-\item The trained network is sampled to generate new programs.
-\end{itemize}
+LSTM networks model the vocabulary distribution over the encoded corpus. We use a two layer LSTM network of 512 nodes each, trained for 50 epochs using an initial learning rate of 0.002 and decaying by a factor of a half every 5 epochs.
 
-%\noindent In subsequent iterations, synthesized kernels may be used to augment the training corpus.
-%
-%\begin{itemize}
-%\item Samples are synthesized by the network and pruned using the rejection filter.
-%\item The samples are mixed with kernels from the GitHub seed corpus.
-%\item These combined samples are labeled (synthetic or human), and used to train a classifier for human-or-robot.
-%\item The classifier is tested on unseen programs, and the accuracy is used as a fitness function for the model's parameters.
-%\item A GA mutates and evolves the best performing parameters.
-%\end{itemize}
+The trained network is sampled to generate new programs. The model is seeded with the start of a kernel (\texttt{\_\_kernel void}), and sampled token-by-token until the brackets match, or until a pre-determined maximum number of tokens has been reached.
 
 
 \begin{figure}
@@ -38,7 +25,7 @@ We extend prior work on synthetic program generation using LSTM networks~\cite{C
 
 \subsection{Test Harness Construction}
 
-An OpenCL kernel requires host code (\emph{test harness}) to compile the kernel and feed with it inputs, then to print the outputs.
+OpenCL compute kernels requires host code (\emph{test harness}) to compile the kernel and feed with it inputs, then to print the outputs.
 
 At first, we used the test harness of CLSmith. CLSmith kernels accept no inputs, and each thread computes the same value which is stored in a \texttt{unsigned long} buffer. The fixed function prototype means that they have a single re-usable test harness which compiles the kernel, runs it, and prints the results. We found this fixed harness to be too inflexible for our needs. This prototype is not a common OpenCL use case (only 5.6\% of GitHub kernels accept a single argument, of which 3.4\% are \texttt{ulong}, 0.2\% of the total).
 % $ grep -E '^__global (.*)\* A$' github-arguments.txt | wc -l     -> 294
