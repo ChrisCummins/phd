@@ -25,9 +25,6 @@ def oclgrind_verify(cmd):
                             universal_newlines=True)
     _, stderr = proc.communicate()
 
-    print("STDERR:")
-    print("\n".join([f">> {line}" for line in stderr.split("\n")]))
-
     if proc.returncode:
         return False
 
@@ -37,11 +34,11 @@ def oclgrind_verify(cmd):
     return True
 
 
-def oclgrind_verify_clgen(harness: CLgenHarness):
+def oclgrind_verify_clgen(testcase: CLgenTestCase):
     with NamedTemporaryFile(prefix='oclgrind-harness-', delete=False) as tmpfile:
         binary_path = tmpfile.name
     try:
-        clgen_mkharness.compile_harness(harness.src, binary_path, platform_id=0, device_id=0)
+        clgen_mkharness.compile_harness(testcase.harness.src, binary_path, platform_id=0, device_id=0)
 
         # print("HARNESS:")
         # print(harness.src)
@@ -50,12 +47,12 @@ def oclgrind_verify_clgen(harness: CLgenHarness):
         fs.rm(binary_path)
 
 
-def oclgrind_verify_clsmith(result: CLSmithResult):
+def oclgrind_verify_clsmith(testcase: CLSmithTestCase):
     with NamedTemporaryFile(prefix='clsmith-kernel-', delete=False) as tmpfile:
         src_path = tmpfile.name
     try:
         with open(src_path, "w") as outfile:
-            print(result.program.src, file=outfile)
+            print(testcase.program.src, file=outfile)
 
         return oclgrind_verify(clsmith.cl_launcher_cli(src_path, 0, 0, timeout=None))
     finally:

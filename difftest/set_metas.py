@@ -28,8 +28,7 @@ def results_iter(session: session_t, tables: Tableset, testbed: Testbed,
     else:
         retvalue = (
             tables.results.id,
-            tables.results.program_id,
-            tables.results.params_id,
+            tables.results.testcase_id,
             tables.results.runtime + tables.programs.runtime
         )
 
@@ -38,9 +37,9 @@ def results_iter(session: session_t, tables: Tableset, testbed: Testbed,
 
     q = session.query(*retvalue)\
         .filter(tables.results.testbed_id == testbed.id,
-                tables.results.params_id.in_(param_ids),
+                tables.testcases.params_id.in_(param_ids),
                 ~tables.results.id.in_(done))\
-        .join(tables.programs)\
+        .join(tables.testcases)\
         .order_by(tables.results.date)
 
     return q
@@ -57,43 +56,67 @@ def current_cumtime(session: session_t, tables: Tableset, testbed: Testbed,
 
     last_meta = session.query(tables.meta)\
         .join(tables.results)\
+        .join(tables.testcases)\
         .filter(tables.results.testbed_id == testbed.id,
-                tables.results.params_id.in_(param_ids))\
+                tables.testcases.params_id.in_(param_ids))\
         .order_by(tables.results.date.desc()).first()
 
     return last_meta.cumtime if last_meta else 0
 
 
-def set_metas(session: session_t, tables: Tableset, testbed: Testbed, no_opt: bool):
+def set_metas_for_device(session: session_t, tables: Tableset, testbed: Testbed, optimizations: int):
     devname = util.device_str(testbed.device)
-    print(f"{tables.name} Metas for {devname}", "no-opt" if no_opt else "opt", "...")
+    print(f"{tables.name} Metas for {devname}", "opt" if optimizations else "no-opt", "...")
 
     # Check if there's anything to do:
-    todo = results_iter(session, tables, testbed, no_opt, count=True).scalar()
-    if not todo:
-        return
+    param_ids = session.query(tables.params.id)\
+        .filter(tables.params.optimizations == optimizations)
 
-    # Get current elapsed cumulative time:
-    cumtime = current_cumtime(session, tables, testbed, no_opt)
-
-    # Iterate over results without meta entries:
-    results = results_iter(session, tables, testbed, no_opt).all()
-    for i, (result_id, program_id, params_id, total_time) in enumerate(ProgressBar()(results)):
-        # Add harness generation time, if applicable:
-        if tables.harnesses:
-            total_time += session.query(tables.harnesses.generation_time)\
-                .filter(tables.harnesses.program_id == program_id,
-                        tables.harnesses.params_id == params_id).first()[0]
-        cumtime += total_time
-
-        # Create meta entry:
-        m = tables.meta(id=result_id, total_time=total_time, cumtime=cumtime)
-        session.add(m)
-        if not i % 1000:
-            session.commit()
+    if tables.name == "CLSmith":
+        session.execute(f"""
+    INSERT INTO {tables.meta.__tablename__} (id, total_time, cumtime)
+    SELECT CLSmithResults.id,
+           CLSmithResults.runtime + CLSmithPrograms.runtime AS total_time,
+           @cumtime := @cumtime + CLSmithResults.runtime + CLSmithPrograms.runtime AS cumtime
+       FROM CLSmithResults
+       LEFT JOIN CLSmithTestCases ON CLSmithResults.testcase_id=CLSmithTestCases.id
+       LEFT JOIN CLSmithPrograms ON CLSmithTestCases.program_id=CLSmithPrograms.id
+       JOIN (SELECT @cumtime := 0) r
+            WHERE CLSmithResults.testbed_id={testbed.id}
+            AND CLSmithTestCases.params_id IN (SELECT id FROM cl_launcherParams WHERE optimizations = {optimizations})
+    ORDER BY CLSmithResults.date""")
+    else:
+        # CLgen has harness creation time too
+        session.execute(f"""
+    INSERT INTO {tables.meta.__tablename__} (id, total_time, cumtime)
+    SELECT CLgenResults.id,
+           CLgenResults.runtime + CLgenPrograms.runtime + CLgenHarnesses.generation_time AS total_time,
+           @cumtime := @cumtime + CLgenResults.runtime + CLgenPrograms.runtime + CLgenHarnesses.generation_time AS cumtime
+       FROM CLgenResults
+       LEFT JOIN CLgenTestCases ON CLgenResults.testcase_id=CLgenTestCases.id
+       LEFT JOIN CLgenHarnesses ON CLgenResults.testcase_id=CLgenHarnesses.id
+       LEFT JOIN CLgenPrograms ON CLgenTestCases.program_id=CLgenPrograms.id
+       JOIN (SELECT @cumtime := 0) r
+            WHERE CLgenResults.testbed_id={testbed.id}
+            AND CLgenTestCases.params_id IN (SELECT id FROM cldriveParams WHERE optimizations = {optimizations})
+    ORDER BY CLgenResults.date""")
 
     # Commit whatever's left over:
     session.commit()
+
+def set_metas(session:session_t, tables: Tableset):
+    num_results = session.query(sql.sql.func.count(tables.results.id)).scalar()
+    num_metas = session.query(sql.sql.func.count(tables.meta.id)).scalar()
+
+    if num_results == num_metas:
+        return
+
+    # start from scratch
+    print("Resetting {tables.name} metas ...")
+    session.execute(f"DELETE FROM {tables.meta.__tablename__}")
+    for testbed in session.query(Testbed):
+        set_metas_for_device(session, tables, testbed, 0)
+        set_metas_for_device(session, tables, testbed, 1)
 
 
 if __name__ == "__main__":
@@ -110,11 +133,8 @@ if __name__ == "__main__":
     db_hostname = args.hostname
     print("connected to", db.init(db_hostname))
 
-    with Session(commit=True) as s:
-        for testbed in s.query(Testbed):
-            if not args.clgen:
-                set_metas(s, CLSMITH_TABLES, testbed, True)
-                set_metas(s, CLSMITH_TABLES, testbed, False)
-            if not args.clsmith:
-                set_metas(s, CLGEN_TABLES, testbed, True)
-                set_metas(s, CLGEN_TABLES, testbed, False)
+    with Session() as s:
+        if not args.clgen:
+            set_metas(s, CLSMITH_TABLES)
+        if not args.clsmith:
+            set_metas(s, CLGEN_TABLES)

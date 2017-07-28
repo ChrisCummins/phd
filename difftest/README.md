@@ -30,8 +30,7 @@ $ ./set_metas.sh
 Analyze results:
 
 ```sh
-$ ./analyze-clgen.ipy
-$ ./analyze-clsmith.ipy
+$ ./analyze.py [--clgen|--clsmith] [--prune]
 ```
 
 Generate bug reports:

@@ -20,7 +20,7 @@ engine = None
 make_session = None
 
 
-INT_TO_OUTCOMES = {
+OUTCOMES = {
     1: "bf",
     2: "bc",
     3: "bto",
@@ -38,7 +38,7 @@ OUTCOMES_TO_INT = {
     "pass": 6,
 }
 
-INT_TO_CLASSIFICATIONS = {
+CLASSIFICATIONS = {
     1: "w",
     2: "bf",
     3: "c",
@@ -276,12 +276,17 @@ class CLSmithTestCase(Base):
     params_id = sql.Column(sql.Integer, sql.ForeignKey("cl_launcherParams.id"),
                            nullable=False)
 
+    oclverified = sql.Column(sql.Boolean)
+
     __table_args__ = (
         sql.UniqueConstraint("program_id", "params_id", name="_uid"),)
 
     program = sql.orm.relationship("CLSmithProgram", back_populates="testcases")
     params = sql.orm.relationship("cl_launcherParams")
     results = sql.orm.relationship("CLSmithResult", back_populates="testcase")
+
+    def __repr__(self):
+        return f"testcase {self.id} = {{program: {self.program_id}, params: {self.params_id} }}"
 
 
 class CLgenTestCase(Base):
@@ -291,6 +296,10 @@ class CLgenTestCase(Base):
                             nullable=False)
     params_id = sql.Column(sql.Integer, sql.ForeignKey("cldriveParams.id"),
                            nullable=False)
+
+    gpuverified = sql.Column(sql.Boolean)
+    oclverified = sql.Column(sql.Boolean)
+    contains_floats = sql.Column(sql.Boolean)
 
     __table_args__ = (
         sql.UniqueConstraint("program_id", "params_id", name="_uid"),)
@@ -388,7 +397,8 @@ class CLSmithResult(Base):
                              nullable=False, index=True)
 
     # stats
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow,
+                      nullable=False, index=True)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
 
@@ -470,7 +480,8 @@ class CLgenResult(Base):
                              nullable=False)
 
     # stats
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow,
+                      nullable=False, index=True)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
 
@@ -652,6 +663,43 @@ class GitHubProgram(Base):
         return self.id
 
 
+# cl_launcher tests ###########################################################
+
+
+class cl_launcherCLgenResult(Base):
+    """ CLgen programs ran using cl_launcher """
+    __tablename__ = "cl_launcherCLgenResults"
+    id = sql.Column(sql.Integer, primary_key=True)
+    program_id = sql.Column(sql.String(40), sql.ForeignKey("CLgenPrograms.id"),
+                            nullable=False)
+    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
+                            nullable=False)
+    params_id = sql.Column(sql.Integer, sql.ForeignKey("cl_launcherParams.id"),
+                           nullable=False)
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    flags = sql.Column(sql.String(255), nullable=False)
+    status = sql.Column(sql.Integer, nullable=False)
+    runtime = sql.Column(sql.Float, nullable=False)
+    stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    outcome = sql.Column(sql.String(255))
+    classification = sql.Column(sql.String(16))
+    submitted = sql.Column(sql.Boolean)
+    dupe = sql.Column(sql.Boolean)
+
+    program = sql.orm.relationship("CLgenProgram")
+    testbed = sql.orm.relationship("Testbed")
+    params = sql.orm.relationship("cl_launcherParams")
+
+    def __repr__(self):
+        return ("program: {self.program_id}, "
+                "testbed: {self.testbed_id}, "
+                "params: {self.params_id}, "
+                "status: {self.status}, "
+                "runtime: {self.runtime:.2f}s"
+                .format(**vars()))
+
+
 # Miscellaneous ###############################################################
 
 
@@ -758,16 +806,15 @@ def results_in_order(session, tables: Tableset, testbed_id: int,
         .filter(tables.params.optimizations == optimizations)
 
     q = session.query(*return_values)\
-        .join(tables.programs)\
         .join(tables.meta)\
-        .outerjoin(tables.reductions)\
+        .join(tables.testcases)\
         .filter(tables.results.testbed_id == testbed_id,
-                tables.results.params_id.in_(param_ids))
+                tables.testcases.params_id.in_(param_ids))
 
     if reverse:
-        q = q.order_by(tables.results.date.desc())
+        q = q.order_by(tables.meta.cumtime.desc())
     else:
-        q = q.order_by(tables.results.date)
+        q = q.order_by(tables.meta.cumtime)
 
     return q
 

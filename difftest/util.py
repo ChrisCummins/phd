@@ -84,47 +84,22 @@ def devtype_str(devtype: str):
     return DEVTYPES.get(devtype, devtype)
 
 
-def get_majority_output(session, result, table):
-    results = session.query(table)\
-        .filter(table.program == result.program,
-                table.params == result.params,
-                table.status == 0).all()
-
-    if len(results) > 2:
-        # Use voting to pick oracle.
-        outputs = [r.stdout for r in results]
-        majority_output, majority_count = Counter(outputs).most_common(1)[0]
-    elif len(results) == 2:
-        if results[0].stdout != results[1].stdout:
-            majority_count = 1
-            ndistinct = len(results)
-            majority_output = f"[UNKNOWN] ({ndistinct} distinct outputs)"
-        else:
-            majority_count = 2
-
-    majority_devices = [
-        r.testbed for r in results if r.stdout == majority_output
-    ]
-    minority_devices = [
-        r.testbed for r in results if r.stdout != majority_output
-    ]
-    minority_count = len(minority_devices)
-
-    return majority_output, majority_devices
-
-
-def classification_to_paper(classification):
-    return {
-        "Wrong code": "w",
-        "Build failure": "bf",
-        "Runtime crash": "c",
-        "Timeout": "to",
-    }[classification]
-
-
 def NamedProgressBar(name):
     """
     TODO: Return progress bar with named prefix.
     """
     # return ProgressBar(widgets=[f'{name} :: ', ETA()])
     return ProgressBar()
+
+
+def escape_stdout(stdout):
+    """ filter noise from test harness stdout """
+    return '\n'.join(line for line in stdout.split('\n')
+                     if line != "ADL Escape failed."
+                     and line != "WARNING:endless loop detected!")
+
+
+def escape_stderr(stderr):
+    """ filter noise from test harness stderr """
+    return '\n'.join(line for line in stderr.split('\n')
+                     if "no version information available" not in line)
