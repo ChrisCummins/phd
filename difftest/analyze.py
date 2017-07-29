@@ -58,6 +58,9 @@ def get_cl_launcher_outcome(result) -> None:
     # SIGKILL
     elif result.status == -9 and result.runtime >= 60:
         return timeout_or_build_timeout()
+    elif result.status == -9:
+        print(f"SIGKILL, but only ran for {result.runtime:.2f}s")
+        return crash_or_build_crash()
     # SIGILL
     elif result.status == -4:
         return crash_or_build_crash()
@@ -79,7 +82,7 @@ def get_cl_launcher_outcome(result) -> None:
             print(Signals(-result.status).name)
         except ValueError:
             print(result.status)
-        raise LookupError(f"failed to determine outcome of cl_launcher {result.id}")
+        raise LookupError(f"failed to determine outcome of cl_launcher result #{result.id}")
 
 
 def set_cl_launcher_outcomes(session, tables: Tableset, rerun: bool=False) -> None:
@@ -165,333 +168,11 @@ def set_cldrive_outcomes(session, tables: Tableset, rerun: bool=False) -> None:
         result.outcome = get_cldrive_outcome(result)
 
 
-def set_clsmith_classifications(session, tables: Tableset, rerun: bool=True) -> None:
+def set_classifications(session, tables: Tableset) -> None:
     """
-    Run results classification algorithm of paper:
-
-        Lidbury, C., Lascu, A., Chong, N., & Donaldson, A. (2015). Many-Core
-        Compiler Fuzzing. In PLDI. https://doi.org/10.1145/2737924.2737986
-
-    Requires that result outcomes have been computed.
-
-    Set `rerun' to recompute classifications for all results. You must do this
-    whenver changing classification algorithm, or when new results are added, as
-    they may change existing outcomes.
+    Apply voting heuristics to expose anomalous results.
     """
-    # TODO: Update to meta table layout
-    q = session.query(tables.results)
-
-    # reset any existing classifications
-    if rerun:
-        print(f"Reseting {tables.name} classifications ...")
-        session.query(tables.results).update({"classification": None})
-
-    # direct mappings from outcome to classification
-    print(f"Classifying {tables.name} timeouts ...")
-    session.query(tables.results)\
-        .filter(sql.or_(tables.results.outcome == "to",
-                        tables.results.outcome == "bto"))\
-        .update({"classification": "to"})
-    print(f"Classifying {tables.name} build failures ...")
-    session.query(tables.results)\
-        .filter(sql.or_(tables.results.outcome == "bf",
-                        tables.results.outcome == "bc"))\
-        .update({"classification": "bf"})
-    print(f"Classifying {tables.name} crashes ...")
-    session.query(tables.results)\
-        .filter(tables.results.outcome == "c")\
-        .update({"classification": "c"})
-    print(f"Classifying {tables.name} test failures ...")
-    session.query(tables.results)\
-        .filter(tables.results.outcome == "fail")\
-        .update({"classification": "fail"})
-
-    # Go program-by-program, looking for wrong-code outputs
-    ok = session.query(tables.results.program_id).filter(
-        tables.results.outcome == "pass").distinct()
-    q = session.query(tables.programs).filter(tables.programs.id.in_(ok))
-    for program in util.NamedProgressBar('classify')(q, max_value=q.count()):
-        # treat param combinations independently
-        # TODO: iterate over pairs of opt on/off params
-        for params in session.query(tables.params):
-            # select all results for this test case
-            q = session.query(tables.results)\
-                .filter(tables.results.program_id == program.id,
-                        tables.results.params_id == params.id,
-                        tables.results.outcome == "pass")
-
-            if q.count() <= 3:
-                # Too few results for a majority, so everything passed.
-                for result in q:
-                    result.classification = "pass"
-            else:
-                # Determine the majority output, and majority size.
-                majority_output, majority_count = get_majority([r.stdout for r in q])
-
-                if majority_count < 3:
-                    # No majority, so everything passed.
-                    for result in q:
-                        result.classification = "pass"
-                else:
-                    # There is a majority conensus, so compare individual
-                    # outputs to majority
-                    for result in q:
-                        if result.stdout == majority_output:
-                            result.classification = "pass"
-                        else:
-                            result.classification = "w"
-
-
-def set_our_classifications(session, tables: Tableset, rerun: bool=True) -> None:
-    """
-    Our methodology for classifying results.
-    """
-    q = session.query(tables.results)
-
-    all_params = [x[0] for x in session.query(tables.params.id).all()]
-
-    # Go program-by-program:
-    # programs = session.query(tables.results.program_id).join(tables.meta).distinct().all()
-    programs = session.query(tables.programs.id).all()
-    for i, (program_id,) in enumerate(util.NamedProgressBar("classify")(programs)):
-        # Reset existing classifications
-        session.query(tables.results)\
-            .filter(tables.results.program_id == program_id)\
-            .update({"classification": "pass"})
-
-        program_ok = None
-
-        # Treat each param combination independently:
-        for params_id in all_params:
-            # Select all non-bc results for this test case:
-            q = session.query(tables.results)\
-                .filter(tables.results.program_id == program_id,
-                        tables.results.params_id == params_id,
-                        tables.results.outcome != "bc")
-
-            # Check that there are enough non-bc results for a majority:
-            n = session.query(sql.sql.func.count(tables.results.id))\
-                .filter(tables.results.program_id == program_id,
-                        tables.results.params_id == params_id,
-                        tables.results.outcome != "bc").scalar() or 0
-            if n < 6:
-                continue
-
-            # Determine majority outcome:
-            min_majority_count = math.ceil(n / 2)
-            majority_outcome, majority_count = get_majority([r.outcome for r in q])
-
-            if majority_count < min_majority_count:
-                continue
-
-            # # If majority outcome resulted in binaries, mark anomalous build
-            # # failures:
-            # if majority_outcome != "bf":
-            #     q.filter(tables.results.outcome == "bf")\
-            #         .update({"classification": "bf"})
-
-            # # If majority outcome did not crash, mark anomalous crashes:
-            # if majority_outcome != "c":
-            #     q.filter(tables.results.outcome == "c")\
-            #         .update({"classification": "c"})
-
-            # # If majority outcome did not timeout, mark anomalous timeouts:
-            # if majority_outcome != "to":
-            #     q.filter(tables.results.outcome == "to")\
-            #         .update({"classification": "to"})
-
-            # Look for wrong-code bugs:
-            #
-            # If the majority did not produce outputs, then we're done:
-            if majority_outcome != "pass":
-                continue
-
-            # Pruning of programs whose outputs should not be difftested:
-            if tables.name == "CLgen":
-                # If we haven't checked the program yet, do so now:
-                if program_ok == None:
-                    program_ok = True
-
-                    program = session.query(tables.programs)\
-                            .filter(tables.programs.id == program_id).first()
-
-                    # Run GPUverify on kernel
-                    if program.gpuverified == None:
-                        try:
-                            clgen.gpuverify(program.src, ["--local_size=64", "--num_groups=128"])
-                            program.gpuverified = 1
-                        except clgen.GPUVerifyException:
-                            program.gpuverified = 0
-
-                    if not program.gpuverified:
-                        print("skipping kernel which failed GPUVerify")
-                        program_ok = False
-                    if "float" in program.src:
-                        print("skipping floating point kernel")
-                        program_ok = False
-
-                # If program can be skipped, do so:
-                if not program_ok:
-                    continue
-
-                # TODO: Run oclgrind on test harness
-
-            # Get "pass" outcome results:
-            q2 = q.filter(tables.results.outcome == "pass")
-            n2 = q2.count()
-
-            majority_output, output_majority_count = get_majority([r.stdout for r in q2])
-
-            # Ensure that the majority of configurations agree on the output:
-            # min_output_majority_count = n2 - 1
-            min_output_majority_count = math.ceil(n2 / 2)
-            if output_majority_count < min_output_majority_count:
-                # No majority
-                print("skipping output_majority_count <", min_output_majority_count, " = ", output_majority_count)
-                continue
-
-            # There is a majority conensus, so compare individual
-            # outputs to majority
-            q2.filter(tables.results.stdout != majority_output)\
-                .update({"classification": "w"})
-
-        if not i % 100:
-            session.commit()
-
-    session.commit()
-
-
-def verify_clgen_w_result(session: session_t, result: CLgenResult) -> None:
-    print(f"Verifying CLgen w-result {result.id} ...")
-
-    def fail():
-        result.classification = "pass"
-        session.commit()
-
-    if "float" in result.program.src:
-        print(f"retracted CLgen w-result {result.id}: contains float")
-        return fail()
-
-    # Run GPUverify on kernel
-    if result.program.gpuverified == None:
-        try:
-            clgen.gpuverify(program.src, ["--local_size=64", "--num_groups=128"])
-            program.gpuverified = 1
-        except clgen.GPUVerifyException:
-            program.gpuverified = 0
-        session.commit()
-
-    if not result.program.gpuverified:
-        print(f"retracted CLgen w-result {result.id}: failed GPUVerify")
-        return fail()
-
-    harness = session.query(CLgenHarness)\
-                .filter(CLgenHarness.program_id == result.program_id,
-                        CLgenHarness.params_id == result.params_id)\
-                .first()
-
-    if harness.oclverified == None:
-        harness.oclverified = oclgrind.oclgrind_verify_clgen(harness)
-        session.commit()
-
-    if not harness.oclverified:
-        print(f"retracted CLgen w-result {result.id}: failed OCLgrind verification")
-        return fail()
-
-    # majority_output, majority_count, count = get_majority_output(
-    #     session, CLGEN_TABLES, result)
-    # if majority_count < count - 1:
-    #     print(f"retracting CLgen w-result {result.id}: not a large enough majority (only {majority_count} of {count} agree)")
-    #     return fail()
-
-
-def verify_clsmith_w_result(session: session_t, result: CLgenResult) -> None:
-    verified = oclgrind.oclgrind_verify_clsmith(result)
-
-    if not verified:
-        print(f"retracted CLSmith w-result {result.id}: failed OCLgrind verification")
-        result.classification = "pass"
-        session.commit()
-
-
-def set_throws_warnings(session: session_t, tables: Tableset, program_id: int):
-    """
-    Determine if the program produces relevant compiler warnings, and if so,
-    mark it as such, and remove the wrong-code classification from any results.
-    """
-    def fail():
-        program = session.query(tables.programs)\
-            .filter(tables.programs.id == program_id).first()
-
-        # Mark program as throwing warnings:
-        program.throws_warnings = True
-        # Mark any wrong-code classifications for this program as passes:
-        session.query(tables.results)\
-            .filter(tables.results.program_id == program.id,
-                    tables.results.classification == "w")\
-            .update({"classification": "pass"})
-        session.commit()
-
-    print(f"Checking program {program_id} for compiler warnings")
-    stderrs = session.query(tables.results.stderr)\
-        .filter(tables.programs.id == program_id)
-
-    for stderr in stderrs:
-        if "incompatible pointer to integer conversion" in stderr:
-            print(f"marking program {program_id} as throws errors: incompatible pointer to to integer conversion")
-            return fail()
-
-        if "ordered comparison between pointer and integer" in stderr:
-            print(f"marking program {program_id} as throws errors: ordered comparison between pointer and integer")
-            return fail()
-
-        if "warning: incompatible" in stderr:
-            print(f"marking program {program_id} as throws errors: incompatible")
-            return fail()
-
-        if "warning" in stderr:
-            print("WARNINGS:")
-            print("\n".join(f">> {line}" for line in stderr.split("\n")))
-            # break
-
-
-def prune_w_classifications(session: session_t, tables: Tableset, _):
-    # Verify existing w-classifications:
-    #
-    q = session.query(tables.results.id)\
-        .filter(tables.results.classification == "w")
-
-    for i, (result_id,) in enumerate(q):
-        result = session.query(tables.results)\
-            .filter(tables.results.id == result_id).first()
-        if tables.name == "CLgen":
-            verify_clgen_w_result(session, result)
-        elif tables.name == "CLSmith":
-            verify_clsmith_w_result(session, result)
-
-    # Check if programs riase compiler warnings:
-    #
-    program_ids = session.query(tables.results.program_id)\
-        .join(tables.programs)\
-        .filter(tables.results.classification == "w",
-                tables.programs.throws_warnings == None)\
-        .distinct().all()
-
-    for program_id, in ProgressBar()(program_ids):
-        set_throws_warnings(session, tables, program_id)
-
-    # Check for ADL errors:
-    #
-    q = session.query(tables.results)\
-        .filter(tables.results.testbed_id == 20,
-                tables.classification == "w")
-
-
-def get_classifications(session, tables: Tableset) -> None:
-    """
-    Our methodology for classifying results.
-    """
-    # Go testcase-by-testcase:
+    # Check that there's something to do:
     num_results = session.query(sql.sql.func.count(tables.results.id)).scalar()
     num_classifications = session.query(sql.sql.func.count(tables.classifications.id)).scalar()
 
@@ -604,40 +285,90 @@ AND outcome IN ({OUTCOMES_TO_INT['bc']}, {OUTCOMES_TO_INT['bto']})
 
 
 def verify_testcase(session: session_t, tables: Tableset, testcase) -> None:
+    """
+    Verify
+
+    This is time consuming. It should only be run on supicious testcases.
+    """
 
     def fail():
-        q1 = session.query(tables.classifications.id)\
-            .join(tables.results)\
-            .filter(tables.results.testcase_id == testcase.id,
-                    tables.classifications == CLASSIFICATIONS_TO_INT["w"])
-        q2 = session.query(tables.classification)\
-                .filter(tables.classification.id.in_(q1))\
-                .update({"classification": "pass"})
-        n = q2.count()
-        if n:
-            print("retracting w-classification on {n} results")
-            q2.update({"classification": "pass"})
+        ids_to_update = [
+            x[0] for x in
+            session.query(tables.results.id)\
+                .join(tables.classifications)\
+                .filter(tables.results.testcase_id == testcase.id,
+                        tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"]).all()
+        ]
+        n = len(ids_to_update)
+        assert n > 0
+        ids_str = ",".join(str(x) for x in ids_to_update)
+        print(f"retracting w-classification on {n} results: {ids_str}")
+        session.query(tables.classifications)\
+            .filter(tables.classifications.id.in_(ids_to_update))\
+            .update({"classification": CLASSIFICATIONS_TO_INT["pass"]},
+                    synchronize_session=False)
         session.commit()
 
-    # TODO: Consider checking stderrs for warnings
-
-    if testcase.oclverified == None:
-        if tables.name == "CLSmith":
-            testcase.oclverified = oclgrind.oclgrind_verify_clsmith(testcase)
-        else:
-            testcase.oclverified = oclgrind.oclgrind_verify_clgen(testcase)
-
-    if not testcase.oclverified:
-        print(f"testcase {testcase.id}: failed OCLgrind verification")
-        fail()
-
+    # CLgen-specific analysis. We can omit these checks for CLSmith, as they
+    # will always pass.
     if tables.name == "CLgen":
+
+        # Check for red-flag compiler warnings. We can't do this for CLSmith
+        # because cl_launcher doesn't print build logs.
+        if testcase.compiler_warnings == None:
+            stderrs = [
+                x[0] for x in
+                session.query(tables.stderrs.stderr)\
+                    .join(tables.results)\
+                    .filter(tables.results.testcase_id == testcase.id)
+            ]
+            # print("checking", len(stderrs), "stderrs. first:", stderrs[0])
+            testcase.compiler_warnings = False
+            for stderr in stderrs:
+                if "incompatible pointer to integer conversion" in stderr:
+                    print(f"testcase {testcase.id}: incompatible pointer to to integer conversion")
+                    testcase.compiler_warnings = True
+                    break
+                elif "ordered comparison between pointer and integer" in stderr:
+                    print(f"testcase {testcase.id}: ordered comparison between pointer and integer")
+                    testcase.compiler_warnings = True
+                    break
+                elif "warning: incompatible" in stderr:
+                    print(f"testcase {testcase.id}: incompatible warning")
+                    testcase.compiler_warnings = True
+                    break
+                elif "warning: division by zero is undefined" in stderr:
+                    print(f"testcase {testcase.id}: division by zero is undefined")
+                    testcase.compiler_warnings = True
+                    break
+                elif "warning: comparison of distinct pointer types" in stderr:
+                    print(f"testcase {testcase.id}: comparison of distinct pointer types")
+                    testcase.compiler_warnings = True
+                    break
+                elif "is past the end of the array" in stderr:
+                    print(f"testcase {testcase.id}: is past the end of the array")
+                    testcase.compiler_warnings = True
+                    break
+                elif "warning: comparison between pointer and" in stderr:
+                    print(f"testcase {testcase.id}: comparison between pointer and")
+                    testcase.compiler_warnings = True
+                    break
+                elif "warning" in stderr:
+                    print("\n UNRECOGNIZED WARNINGS in testcase {testcase.id}:")
+                    print("\n".join(f">> {line}" for line in stderr.split("\n")))
+
+
+        if testcase.compiler_warnings:
+            print(f"testcase {testcase.id}: redflag compiler warnings")
+            return fail()
+
+        # Determine if
         if testcase.contains_floats == None:
             testcase.contains_floats = "float" in testcase.program.src
 
         if testcase.contains_floats:
             print(f"testcase {testcase.id}: contains floats")
-            fail()
+            return fail()
 
         # Run GPUverify on kernel
         if testcase.gpuverified == None:
@@ -649,7 +380,18 @@ def verify_testcase(session: session_t, tables: Tableset, testcase) -> None:
 
         if not testcase.gpuverified:
             print(f"testcase {testcase.id}: failed GPUVerify check")
-            fail()
+            return fail()
+
+    # Check that program runs with Oclgrind without error:
+    if testcase.oclverified == None:
+        if tables.name == "CLSmith":
+            testcase.oclverified = oclgrind.oclgrind_verify_clsmith(testcase)
+        else:
+            testcase.oclverified = oclgrind.oclgrind_verify_clgen(testcase)
+
+    if not testcase.oclverified:
+        print(f"testcase {testcase.id}: failed OCLgrind verification")
+        return fail()
 
     session.commit()
 
@@ -660,12 +402,10 @@ def verify_w_classifications(session: session_t, tables: Tableset) -> None:
             .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"])\
             .distinct()
     testcases_to_verify = session.query(tables.testcases)\
-                            .filter(tables.results.testcase_id.in_(q))\
+                            .filter(tables.testcases.id.in_(q))\
                             .distinct().all()
 
     for testcase in ProgressBar()(testcases_to_verify):
-        # testcase = session.query(tables.testcases)\
-        #     .filter(tables.testcases.id == testcase_id)
         verify_testcase(session, tables, testcase)
 
 
@@ -692,12 +432,9 @@ if __name__ == "__main__":
     db_hostname = args.hostname
     print("connected to", db.init(db_hostname))
 
-    set_classifications = set_our_classifications
-    # set_classifications = set_clsmith_classifications
-
     with Session(commit=True) as s:
         for tableset in tables:
             if args.prune:
                 verify_w_classifications(s, tableset)
             else:
-                get_classifications(s, tableset)
+                set_classifications(s, tableset)

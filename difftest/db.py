@@ -300,6 +300,7 @@ class CLgenTestCase(Base):
     gpuverified = sql.Column(sql.Boolean)
     oclverified = sql.Column(sql.Boolean)
     contains_floats = sql.Column(sql.Boolean)
+    compiler_warnings = sql.Column(sql.Boolean)
 
     __table_args__ = (
         sql.UniqueConstraint("program_id", "params_id", name="_uid"),)
@@ -326,9 +327,6 @@ class CLgenHarness(Base):
     # time taken to create harness
     generation_time = sql.Column(sql.Float, nullable=False)
     compile_time = sql.Column(sql.Float, nullable=False)
-
-    gpuverified = sql.Column(sql.Boolean)
-    oclverified = sql.Column(sql.Boolean)
 
     # relations:
     testcase = sql.orm.relationship("CLgenTestCase", back_populates="harness")
@@ -777,18 +775,22 @@ Tableset = namedtuple('Tableset', [
         'reductions',
         'meta',
         'classifications',
+        'stdouts',
+        'stderrs',
     ])
 
 CLSMITH_TABLES = Tableset(name="CLSmith",
     results=CLSmithResult, testcases=CLSmithTestCase,
     programs=CLSmithProgram, harnesses=None,
     params=cl_launcherParams, reductions=CLSmithReduction,
-    meta=CLSmithMeta, classifications=CLSmithClassification)
+    meta=CLSmithMeta, classifications=CLSmithClassification,
+    stdouts=CLSmithStdout, stderrs=CLSmithStderr)
 CLGEN_TABLES = Tableset(name="CLgen",
     results=CLgenResult, testcases=CLgenTestCase,
     programs=CLgenProgram, harnesses=CLgenHarness,
     params=cldriveParams, reductions=CLgenReduction,
-    meta=CLgenMeta, classifications=CLSmithClassification)
+    meta=CLgenMeta, classifications=CLgenClassification,
+    stdouts=CLgenStdout, stderrs=CLgenStderr)
 
 
 class InsufficientDataError(ValueError):
@@ -808,6 +810,7 @@ def results_in_order(session, tables: Tableset, testbed_id: int,
     q = session.query(*return_values)\
         .join(tables.meta)\
         .join(tables.testcases)\
+        .outerjoin(tables.classifications)\
         .filter(tables.results.testbed_id == testbed_id,
                 tables.testcases.params_id.in_(param_ids))
 
