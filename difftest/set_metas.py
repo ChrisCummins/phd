@@ -69,7 +69,10 @@ def set_majorities(session, tables: Tableset) -> None:
     """
     Majority vote on testcase outcomes and outputs.
     """
+    print(f"Resetting {tables.name} test case majorities ...")
     session.execute(f"DELETE FROM {tables.majorities.__tablename__}")
+
+    print(f"Voting on {tables.name} test case majorities ...")
     # Note we have to insert ignore here because there may be ties in the
     # majority outcome or output. E.g. there could be a test case with an even
     # split of 5 '1' outcomes and 5 '3' outcomes. Since there is only a single

@@ -173,6 +173,12 @@ class CLgenProgram(Base):
         return self.id
 
 
+class CLgenHandcheck(Base):
+    __tablename__ = "CLgenHandchecks"
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenPrograms.id"), primary_key=True)
+    handchecked = sql.Column(sql.Boolean)
+
+
 # Parameters ##################################################################
 
 
@@ -383,6 +389,13 @@ class Testbed(Base):
                 return i
 
         raise KeyError(f"device {self.device} not found")
+
+
+class Configuration(Base):
+    __tablename__ = 'Configurations'
+    id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
+                    primary_key=True)
+    num = sql.Column(sql.Integer, nullable=False, unique=True)
 
 
 # CLSmith Results #############################################################
