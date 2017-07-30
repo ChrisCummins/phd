@@ -1,20 +1,12 @@
 \lstset{language=[OpenCL]C}
 \begin{figure}
 	\centering %
-%	\subfloat[Config $1+$ silently miscompiles, yields incorrect result.]{%
-%		\noindent\mbox{\parbox{\columnwidth}{%
-%				\lstinputlisting{lst/bug3}%
-%			}%
-%		}%
-%	}\\%
-%	\subfloat[Config $1-$ silently miscompiles, yields incorrect result.]{%
-%		\noindent\mbox{\parbox{\columnwidth}{%
-%				% cl_launcherCLgenResults/wrong-code/bug-report-nvidia-37044.sh
-%				\lstinputlisting{lst/bug4}%
-%			}%
-%		}%{
-%	}\\%
-	\cc{TODO}
+	\subfloat[Configs.\ $1+$, $2+$, $3-$, $4+$, $5-$, $6-$, $7+$, $8+$, $9-$, $10+$ incorrect vector width. \cc{TODO: Investigate testcase 32786}]{%
+		\noindent\mbox{\parbox{\columnwidth}{%
+				\lstinputlisting{lst/bug13}%
+			}%
+		}%
+	}\\%
 	\caption{Kernels for which compilers silently emit wrong-code.}%
 \label{lst:compiler-crashes}%
 \end{figure}
