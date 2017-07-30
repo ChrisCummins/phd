@@ -53,69 +53,32 @@ def main():
         testbed = str(get_testbed(session, platform_name, device_name))
     print(testbed)
 
-    co_scripts = [
-        # 'clgen_run_co.py'
-    ]
     cl_launcher_scripts = [
         'clsmith_run_cl_launcher.py',
-        # 'clgen_run_cl_launcher.py',
     ]
     cldrive_scripts = [
         'clgen_run_cldrive.py',
-        # 'clsmith-run-cldrive.py',
-        # 'github-run-cldrive.py',
     ]
 
-    co_script_args = [
-        [],
-        ['--no-opts'],
-        ['--with-kernel'],
-        ['--with-kernel', '--no-opts'],
-    ]
-
-
-    cldrive_script_args = []
-
-    if not args.opt:
-        cldrive_script_args += [
-            ['-g', '1,1,1',    '-l', '1,1,1',  '-s', '256',  '-i', 'arange', '--no-opts'],
-            ['-g', '128,16,1', '-l', '32,1,1', '-s', '4096', '-i', 'arange', '--no-opts'],
-        ]
-    if not args.no_opt:
-        cldrive_script_args += [
-            ['-g', '1,1,1',    '-l', '1,1,1',  '-s', '256',  '-i', 'arange'],
-            ['-g', '128,16,1', '-l', '32,1,1', '-s', '4096', '-i', 'arange'],
-        ]
-
-    cl_launcher_script_args = []
-    if not args.opt:
-        cl_launcher_script_args += [
-            ['-g', '1,1,1',    '-l', '1,1,1',  '--no-opts'],
-            ['-g', '128,16,1', '-l', '32,1,1', '--no-opts'],
-        ]
-    if not args.no_opt:
-        cl_launcher_script_args += [
-            ['-g', '1,1,1',    '-l', '1,1,1'],
-            ['-g', '128,16,1', '-l', '32,1,1'],
-        ]
+    if args.opt:
+        script_args = [['--opt']]
+    elif args.no_opt:
+        script_args = [['--no-opt']]
+    else:
+        script_args = [['--opt', '--no-opt']]
 
     timeout = str(args.timeout)
-    print("TIMEOUT", args.timeout)
-    co_jobs = [
-        ['timeout', '-s9', timeout, 'python', script, "--hostname", db_hostname, platform_name, device_name] + args
-         for script, args in product(co_scripts, co_script_args)
-    ]
     cl_launcher_jobs = [
         ['timeout', '-s9', timeout, 'python', script, "--hostname", db_hostname, str(platform_id), str(device_id)] + args
-        for script, args in product(cl_launcher_scripts, cl_launcher_script_args)
+        for script, args in product(cl_launcher_scripts, script_args)
     ]
     cldrive_jobs = [
         ['timeout', '-s9', timeout, 'python', script, "--hostname", db_hostname, platform_name, device_name] + args
-        for script, args in product(cldrive_scripts, cldrive_script_args)
+        for script, args in product(cldrive_scripts, script_args)
     ]
 
     # Determine which jobs to run
-    jobs = co_jobs
+    jobs = []
     if not args.clgen:
         jobs += cl_launcher_jobs
     if not args.clsmith:
@@ -141,6 +104,8 @@ def main():
             elif p.returncode:
                 print('\033[1m\033[91m>>>> EXIT STATUS', p.returncode, '\033[0m')
                 jobs.append(job)
+
+            print("done")
 
     except KeyboardInterrupt:
         print("\ninterrupting, abort.")

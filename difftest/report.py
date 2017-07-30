@@ -97,56 +97,16 @@ def get_bug_report(session: session_t, tables: Tableset, result_id: int, report_
         return (header + src).strip()
 
 
-def generate_bc_reports(tables, time_limit):
-    outbox = fs.path(f"../data/bug-reports/{tables.name}/bc")
-    fs.mkdir(outbox)
-    with Session(commit=True) as s:
-        q = s.query(tables.results.id)\
-            .join(tables.meta)\
-            .filter(tables.results.outcome == "bc")
-
-        if time_limit > 0:
-            q = q.filter(tables.meta.cumtime < time_limit)
-
-        dupes = 0
-        errs = set()
-        for result_id, in q:
-            result = s.query(tables.results)\
-                .filter(tables.results.id == result_id)\
-                .first()
-
-            key = result.testbed_id, result.program_id
-            if key in errs:
-                dupes += 1
-                continue
-            errs.add(key)
-
-            vendor = util.vendor_str(result.testbed.platform)
-            outpath = fs.path(outbox, f"bug-report-{vendor}-{result.id}.c")
-
-            if not fs.exists(outpath):
-                report = get_bug_report(**{
-                    "session": s,
-                    "tables": tables,
-                    "result_id": result.id,
-                    "report_type": "bc",
-                })
-                with open(outpath, "w") as outfile:
-                    print(report, file=outfile)
-                print(outpath)
-    print(f"{dupes} duplicate {tables.name} bc results flagged")
-
-
-def generate_reports(tables, time_limit, type_field, type_name):
+def generate_reports(tables, time_limit, type_field, type_value, type_name):
     outbox = fs.path(f"../data/bug-reports/{tables.name}/{type_name}")
     fs.mkdir(outbox)
     with Session(commit=True) as s:
         q = s.query(tables.results.id)\
-            .join(tables.meta)\
-            .filter(type_field == type_name)
+            .join(tables.classifications)\
+            .filter(type_field == type_value)
 
         if time_limit > 0:
-            q = q.filter(tables.meta.cumtime < time_limit)
+            q = q.join(tables.meta).filter(tables.meta.cumtime < time_limit)
 
         dupes = 0
         errs = set()
@@ -176,6 +136,12 @@ def generate_reports(tables, time_limit, type_field, type_name):
                 print(outpath)
     print(f"{dupes} duplicate {tables.name} {type_name} results flagged")
 
+
+def w_reports(tables, time_limit):
+    with Session(commit=False) as s:
+        q = s.query(tables.results.id, tables.results.program.src)\
+                .join(tables.classifications)\
+                .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"])
 
 def main():
     parser = ArgumentParser(description=__doc__)
@@ -208,12 +174,13 @@ def main():
 
     try:
         for tables in tablesets:
-            if args.all or args.bc:
-                generate_reports(tables, time_limit, tables.results.outcome, "bc")
-            if args.all or args.bto:
-                generate_reports(tables, time_limit, tables.results.outcome, "bto")
+            # if args.all or args.bc:
+            #     generate_reports(tables, time_limit, tables.results.outcome, "bc")
+            # if args.all or args.bto:
+            #     generate_reports(tables, time_limit, tables.results.outcome, "bto")
             if args.all or args.w:
-                generate_reports(tables, time_limit, tables.results.classification, "w")
+                w_reports(tables, time_limit)
+                # generate_reports(tables, time_limit, tables.results.classification, "w")
     except KeyboardInterrupt:
         print("stop")
 

@@ -4,7 +4,7 @@ import re
 import subprocess
 from argparse import ArgumentParser
 from collections import deque, namedtuple
-from labm8 import fs
+from labm8 import crypto, fs
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
 from time import time, strftime
@@ -62,11 +62,11 @@ def verify_params(platform: str, device: str, optimizations: bool,
             return
 
 
-def drive_harness(s: db.session_t, program: CLgenProgram, params: cldriveParams,
-                  env: cldrive.OpenCLEnvironment, platform_id: int, device_id: int,
-                  timeout: int=60) -> return_t:
+def drive_testcase(s: db.session_t, testcase: CLgenTestCase,
+                   env: cldrive.OpenCLEnvironment, platform_id: int,
+                   device_id: int, timeout: int=60) -> return_t:
     """ run CLgen program test harness """
-    harness = clgen_mkharness.mkharness(s, env, program, params)
+    harness = clgen_mkharness.mkharness(s, env, testcase)
 
     with NamedTemporaryFile(prefix='cldrive-harness-', delete=False) as tmpfile:
         path = tmpfile.name
@@ -97,15 +97,18 @@ def drive_harness(s: db.session_t, program: CLgenProgram, params: cldriveParams,
         fs.rm(path)
 
 
-def get_num_progs_to_run(session: db.session_t,
-                         testbed: Testbed, params: cldriveParams):
-    subquery = session.query(CLgenResult.program_id).filter(
-        CLgenResult.testbed_id == testbed.id, CLgenResult.params_id == params.id)
-    num_ran = session.query(CLgenProgram.id).filter(CLgenProgram.id.in_(subquery)).count()
-    subquery = session.query(CLgenResult.program_id).filter(
-        CLgenResult.testbed_id == testbed.id)
-    total = session.query(CLgenProgram.id).count()
-    return num_ran, total
+def get_num_to_run(session: db.session_t, testbed: Testbed, optimizations: int=None):
+    num_ran = session.query(sql.sql.func.count(CLgenResult.id))\
+                .filter(CLgenResult.testbed_id == testbed.id)
+    total = session.query(sql.sql.func.count(CLgenTestCase.id))
+
+    if optimizations is not None:
+        num_ran = num_ran.join(CLgenTestCase).join(cldriveParams)\
+            .filter(cldriveParams.optimizations == optimizations)
+        total = total.join(cldriveParams)\
+            .filter(cldriveParams.optimizations == optimizations)
+
+    return num_ran.scalar(), total.scalar()
 
 
 if __name__ == "__main__":
@@ -118,51 +121,32 @@ if __name__ == "__main__":
     parser.add_argument(
         "device", metavar="<device name>", help="OpenCL device name")
     parser.add_argument(
-        "--no-opts", action="store_true",
-        help="Disable OpenCL optimizations (on by default)")
+        "--opt", action="store_true", help="Only test with optimizations on")
     parser.add_argument(
-        "-s", "--size", metavar="<size>", type=int, default=64,
-        help="size of input arrays to generate (default: 64)")
-    parser.add_argument(
-        "-i", "--generator", metavar="<{rand,arange,zeros,ones}>", default="arange",
-        help="input generator to use, one of: {rand,arange,zeros,ones} (default: arange)")
-    parser.add_argument(
-        "--scalar-val", metavar="<float>", type=float, default=None,
-        help="values to assign to scalar inputs (default: <size> argumnent)")
-    parser.add_argument(
-        "-g", "--gsize", type=str, default="128,16,1",
-        help="Comma separated global sizes (default: 128,16,1)")
-    parser.add_argument(
-        "-l", "--lsize", type=str, default="32,1,1",
-        help="Comma separated global sizes (default: 32,1,1)")
+        "--no-opt", action="store_true", help="Only test with optimizations disabled")
     args = parser.parse_args()
 
-    gsize = cldrive.NDRange.from_str(args.gsize)
-    lsize = cldrive.NDRange.from_str(args.lsize)
     env = cldrive.make_env(platform=args.platform, device=args.device)
     platform_id, device_id = env.ids()
+
+    optimizations = None
+    if args.opt:
+        optimizations = 1
+    if args.no_opt:
+        optimizations = 0
 
     db.init(args.hostname)  # initialize db engine
 
     with Session(commit=False) as session:
         testbed = get_testbed(session, args.platform, args.device)
         devname = util.device_str(testbed.device)
-
-        params = db.get_or_create(
-            session, cldriveParams, size=args.size, generator=args.generator,
-            scalar_val=args.scalar_val, gsize_x=gsize.x, gsize_y=gsize.y,
-            gsize_z=gsize.z, lsize_x=lsize.x, lsize_y=lsize.y, lsize_z=lsize.z,
-            optimizations=not args.no_opts)
-        opt = "-" if args.no_opts else "+"
-
-        print(testbed)
-        print(params)
+        print(devname)
 
         # progress bar
-        num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
+        num_ran, num_to_run = get_num_to_run(session, testbed, optimizations)
         bar = progressbar.ProgressBar(init_value=num_ran, max_value=num_to_run)
 
-        # programs to run, and results to push to database
+        # testcases to run, and results to push to database
         inbox = deque()
         outbox = deque()
 
@@ -172,19 +156,30 @@ if __name__ == "__main__":
             run.
             """
             BATCH_SIZE = 100
-            print(f"\nnext CLgen {opt} batch for {devname} at", strftime("%H:%M:%S"))
+            print(f"\nnext CLgen batch for {devname} at", strftime("%H:%M:%S"))
             # update the counters
-            num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
+            num_ran, num_to_run = get_num_to_run(session, testbed, optimizations)
             bar.max_value = num_to_run
             bar.update(min(num_ran, num_to_run))
 
             # fill inbox
-            done = session.query(CLgenResult.program_id).filter(
-                CLgenResult.testbed == testbed, CLgenResult.params == params)
-            notdone = session.query(CLgenProgram).filter(
-                ~CLgenProgram.id.in_(done)).order_by(CLgenProgram.id).limit(BATCH_SIZE)
-            for program in notdone:
-                inbox.append(program)
+            done = session.query(CLgenResult.testcase_id).filter(
+                CLgenResult.testbed == testbed)
+            if optimizations is not None:
+                done = done.join(CLgenTestCase).join(cldriveParams)\
+                        .filter(cldriveParams.optimizations == optimizations)
+
+            todo = session.query(CLgenTestcase)\
+                        .filter(~CLgenTestcase.id.in_(done))\
+                        .order_by(CLgenTestcase.program_id,
+                                  CLgenTestcase.params_id)\
+                        .limit(BATCH_SIZE)
+            if optimizations is not None:
+                todo = todo.join(cldriveParams)\
+                            .filter(cldriveParams.optimizations == optimizations)
+
+            for testcase in todo:
+                inbox.append(testcase)
 
             # empty outbox
             while len(outbox):
@@ -201,12 +196,12 @@ if __name__ == "__main__":
                     break
 
                 # get next program to run
-                program = inbox.popleft()
+                testcase = inbox.popleft()
 
-                # drive the program
+                # drive the testcase
                 try:
-                    runtime, status, stdout, stderr = drive_harness(
-                        session, program, params, env, platform_id, device_id)
+                    runtime, status, stdout, stderr = drive_testcase(
+                        session, testcase, params, env, platform_id, device_id)
 
                     # assert that executed params match expected
                     if stderr != '<-- UTF-ERROR -->':
@@ -216,11 +211,24 @@ if __name__ == "__main__":
                                       stderr=stderr)
 
                     # create new result
+                    stdout_ = util.escape_stdout(stdout)
+                    stdout = get_or_create(
+                        s, CLgenStdout,
+                        hash=crypto.sha1_str(stdout_), stdout=stdout_)
+
+                    stderr_ = util.escape_stderr(stderr)
+                    stderr = get_or_create(
+                        s, CLgenStderr,
+                        hash=crypto.sha1_str(stderr_), stderr=stderr_)
+
                     result = CLgenResult(
-                        program=program, params=params, testbed=testbed,
-                        status=status, runtime=runtime,
-                        stdout=stdout, stderr=stderr)
-                    result.outcome = analyze.get_cldrive_outcome(result)
+                        testbed_id=testbed.id,
+                        testcase_id=testcase.id,
+                        status=status,
+                        runtime=runtime,
+                        stdout_id=stdout.id,
+                        stderr_id=stderr.id)
+                    result.outcome = OUTCOMES_TO_INT[analyze.get_cldrive_outcome(result)]
                     outbox.append(result)
 
                     # update progress bar

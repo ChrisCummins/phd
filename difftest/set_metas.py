@@ -1,67 +1,11 @@
 #!/usr/bin/env python
+import sqlalchemy as sql
 from argparse import ArgumentParser
 from progressbar import ProgressBar
 
 import util
 import db
 from db import *
-
-
-def results_iter(session: session_t, tables: Tableset, testbed: Testbed,
-                 no_opt: bool, count: bool=False):
-    """
-    Returns a query which iterates over results without a Meta table entry.
-
-    Arguments:
-        session (session_t): Database session.
-        tables (Tableset): CLSmith / CLgen tableset.
-        testbed (Testbed): Device to iterate over.
-        no_opt (bool): Optimizations disabled?
-        count (bool): If true, return count, not iterator.
-    """
-    optimizations = not no_opt
-    param_ids = session.query(tables.params.id)\
-        .filter(tables.params.optimizations == optimizations)
-
-    if count:
-        retvalue = sql.func.count(tables.results.id),
-    else:
-        retvalue = (
-            tables.results.id,
-            tables.results.testcase_id,
-            tables.results.runtime + tables.programs.runtime
-        )
-
-    # Existing meta entries:
-    done = session.query(tables.meta.id)
-
-    q = session.query(*retvalue)\
-        .filter(tables.results.testbed_id == testbed.id,
-                tables.testcases.params_id.in_(param_ids),
-                ~tables.results.id.in_(done))\
-        .join(tables.testcases)\
-        .order_by(tables.results.date)
-
-    return q
-
-
-def current_cumtime(session: session_t, tables: Tableset, testbed: Testbed,
-                    no_opt: bool) -> float:
-    """
-    Get the current cumulative time of existing results on the device.
-    """
-    optimizations = not no_opt
-    param_ids = session.query(tables.params.id)\
-        .filter(tables.params.optimizations == optimizations)
-
-    last_meta = session.query(tables.meta)\
-        .join(tables.results)\
-        .join(tables.testcases)\
-        .filter(tables.results.testbed_id == testbed.id,
-                tables.testcases.params_id.in_(param_ids))\
-        .order_by(tables.results.date.desc()).first()
-
-    return last_meta.cumtime if last_meta else 0
 
 
 def set_metas_for_device(session: session_t, tables: Tableset, testbed: Testbed, optimizations: int):
@@ -101,10 +45,12 @@ def set_metas_for_device(session: session_t, tables: Tableset, testbed: Testbed,
             AND CLgenTestCases.params_id IN (SELECT id FROM cldriveParams WHERE optimizations = {optimizations})
     ORDER BY CLgenResults.date""")
 
-    # Commit whatever's left over:
     session.commit()
 
+
 def set_metas(session:session_t, tables: Tableset):
+    """
+    """
     num_results = session.query(sql.sql.func.count(tables.results.id)).scalar()
     num_metas = session.query(sql.sql.func.count(tables.meta.id)).scalar()
 
@@ -112,11 +58,58 @@ def set_metas(session:session_t, tables: Tableset):
         return
 
     # start from scratch
-    print("Resetting {tables.name} metas ...")
+    print(f"Resetting {tables.name} metas ...")
     session.execute(f"DELETE FROM {tables.meta.__tablename__}")
     for testbed in session.query(Testbed):
         set_metas_for_device(session, tables, testbed, 0)
         set_metas_for_device(session, tables, testbed, 1)
+
+
+def set_majorities(session, tables: Tableset) -> None:
+    """
+    Majority vote on testcase outcomes and outputs.
+    """
+    session.execute(f"DELETE FROM {tables.majorities.__tablename__}")
+    # Note we have to insert ignore here because there may be ties in the
+    # majority outcome or output. E.g. there could be a test case with an even
+    # split of 5 '1' outcomes and 5 '3' outcomes. Since there is only a single
+    # majority outcome, we order results by outcome number, so that '1' (build
+    # failure) will over-rule '6' (pass).
+    session.execute(f"""
+INSERT IGNORE INTO {tables.majorities.__tablename__}
+SELECT t1.testcase_id, t1.maj_outcome, t1.outcome_majsize, t2.maj_stdout_id, t2.stdout_majsize
+FROM (
+    SELECT l.testcase_id,s.outcome as maj_outcome,s.outcome_count AS outcome_majsize
+    FROM (
+        SELECT testcase_id,MAX(outcome_count) as max_count FROM (
+            SELECT testcase_id,COUNT(*) as outcome_count
+            FROM {tables.results.__tablename__}
+            GROUP BY testcase_id, outcome
+        ) r
+        GROUP BY testcase_id
+    ) l INNER JOIN (
+        SELECT testcase_id,outcome,COUNT(*) as outcome_count
+        FROM {tables.results.__tablename__}
+        GROUP BY testcase_id, outcome
+    ) s ON l.testcase_id = s.testcase_id AND l.max_count = s.outcome_count
+) t1 JOIN (
+    SELECT l.testcase_id, s.stdout_id as maj_stdout_id, s.stdout_count AS stdout_majsize
+    FROM (
+        SELECT testcase_id,MAX(stdout_count) as max_count FROM (
+            SELECT testcase_id,COUNT(*) as stdout_count
+            FROM {tables.results.__tablename__}
+            GROUP BY testcase_id, stdout_id
+        ) r
+        GROUP BY testcase_id
+    ) l INNER JOIN (
+        SELECT testcase_id,stdout_id,COUNT(*) as stdout_count
+        FROM {tables.results.__tablename__}
+        GROUP BY testcase_id, stdout_id
+    ) s ON l.testcase_id = s.testcase_id AND l.max_count = s.stdout_count
+) t2 ON t1.testcase_id = t2.testcase_id
+ORDER BY t1.maj_outcome DESC
+""")
+    session.commit()
 
 
 if __name__ == "__main__":
@@ -136,5 +129,7 @@ if __name__ == "__main__":
     with Session() as s:
         if not args.clgen:
             set_metas(s, CLSMITH_TABLES)
+            set_majorities(s, CLSMITH_TABLES)
         if not args.clsmith:
             set_metas(s, CLGEN_TABLES)
+            set_majorities(s, CLGEN_TABLES)

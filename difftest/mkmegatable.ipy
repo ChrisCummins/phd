@@ -45,7 +45,7 @@ def get_outcome_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
 
     try:
         for outcome, cumtime in q:
-            counts[outcome] = counts.get(outcome, 0) + 1
+            counts[OUTCOMES[outcome]] = counts.get(outcome, 0) + 1
     except InsufficientDataError as e:
         print(e, file=sys.stderr)
         counts['total'] = '*'
@@ -73,47 +73,40 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
         testbed (db.Testbed): Testbed instance to return results for.
         no_opt (bool): Testbed optimizations off?
     """
-    counts = {"w": 0, "bf": 0, "c": 0, "to": 0, "pass": 0, "fail": 0, None: 0}
+    optimizations = not no_opt
+    param_ids = [x[0] for x in
+        session.query(tables.params.id)\
+            .filter(tables.params.optimizations == optimizations)]
 
-    try:
-        if tables.name == "CLgen":
-            q = results_in_timelimit(
-                session, tables, testbed.id, no_opt, TIME_LIMIT,
-                tables.results.classification, tables.programs.src,
-                tables.programs.gpuverified, tables.meta.cumtime)
+    def get_classification_count(classification_name: str):
+        classification = CLASSIFICATIONS_TO_INT[classification_name]
 
-            for classification, src, gpuverified, cumtime in q:
-                # TODO: merge this into analyze logic
-                if classification == "w" and "float" in src:
-                    # print("skipped",
-                    #       "float" if "float" in src else "nofloat",
-                    #       "gpuverified" if gpuverified else "unverified")
-                    counts['pass'] += 1
-                else:
-                    counts[classification] += 1
-        else:
-            q = results_in_timelimit(
-                session, tables, testbed.id, no_opt, TIME_LIMIT,
-                tables.results.classification, tables.programs.src, tables.meta.cumtime)
+        return session.query(sql.sql.func.count(tables.classifications.id))\
+                .join(tables.results)\
+                .join(tables.meta)\
+                .join(tables.testcases)\
+                .filter(tables.results.testbed_id == testbed.id,
+                        tables.testcases.params_id.in_(param_ids),
+                        tables.meta.cumtime < TIME_LIMIT,
+                        tables.classifications.classification == classification)\
+                .scalar()
 
-            for classification, src, cumtime in q:
-                counts[classification] += 1
-    except InsufficientDataError as e:
-        print(e, file=sys.stderr)
-        counts['total'] = '*'
 
-    suffix = counts.pop("total", "")
-    counts.pop(None)
+    counts = dict((c, get_classification_count(c))
+                  for c in ["w", "bf", "c", "to"])
     total = sum(counts.values())
 
-    # don't count "pass"es
-    num_passes = counts.pop("pass")
-    total_anomalous = sum(counts.values())
+    num_results = session.query(sql.sql.func.count(tables.results.id))\
+                .join(tables.meta)\
+                .join(tables.testcases)\
+                .filter(tables.results.testbed_id == testbed.id,
+                        tables.testcases.params_id.in_(param_ids),
+                        tables.meta.cumtime < TIME_LIMIT)\
+                .scalar()
 
-    counts['total'] = "{:.1f}\\%".format((total_anomalous / max(total, 1)) * 100) + suffix
+    counts['total'] = "{:.1f}\\%".format((total / max(num_results, 1)) * 100)
 
-    total_hours = "{:.1f}h".format(cumtime / 3600)
-    print(' ', device_str(testbed.device), tables.name, no_opt, total_hours, counts)
+    print(' ', device_str(testbed.device), tables.name, no_opt, counts)
     return f"{counts['w']} & {counts['bf']} & {counts['c']} & {counts['to']} & {counts['total']}"
 
 

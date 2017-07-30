@@ -38,7 +38,7 @@ def oclgrind_verify_clgen(testcase: CLgenTestCase):
     with NamedTemporaryFile(prefix='oclgrind-harness-', delete=False) as tmpfile:
         binary_path = tmpfile.name
     try:
-        clgen_mkharness.compile_harness(testcase.harness.src, binary_path, platform_id=0, device_id=0)
+        clgen_mkharness.compile_harness(testcase.harness[0].src, binary_path, platform_id=0, device_id=0)
 
         # print("HARNESS:")
         # print(harness.src)

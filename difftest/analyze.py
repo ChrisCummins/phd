@@ -168,125 +168,70 @@ def set_cldrive_outcomes(session, tables: Tableset, rerun: bool=False) -> None:
         result.outcome = get_cldrive_outcome(result)
 
 
+
 def set_classifications(session, tables: Tableset) -> None:
     """
-    Apply voting heuristics to expose anomalous results.
+    Determine anomalous results.
     """
-    # Check that there's something to do:
-    num_results = session.query(sql.sql.func.count(tables.results.id)).scalar()
-    num_classifications = session.query(sql.sql.func.count(tables.classifications.id)).scalar()
-
-    # Nothing to do
-    if num_classifications == num_results:
-        return
-
     print(f"Resetting {tables.name} classifications ...")
     session.execute(f"DELETE FROM {tables.classifications.__tablename__}")
     session.commit()
 
-    min_majority_outcome = 6
-    print(f"Classifying testcases with majority outcomes smaller than {min_majority_outcome} as passes ...")
+    print(f"Determining {tables.name} wrong-code classifications ...")
     session.execute(f"""
-INSERT INTO {tables.classifications.__tablename__} (id, classification)
-SELECT id, {CLASSIFICATIONS_TO_INT['pass']}
+INSERT INTO {tables.classifications.__tablename__}
+SELECT {tables.results.__tablename__}.id, {CLASSIFICATIONS_TO_INT["w"]}
 FROM {tables.results.__tablename__}
-WHERE testcase_id IN
-    (SELECT testcase_id
-     FROM (
-        SELECT testcase_id, COUNT(*) as majority_outcome
-        FROM {tables.results.__tablename__}
-        WHERE outcome <> {OUTCOMES_TO_INT['bc']}
-        GROUP BY testcase_id) r
-     WHERE majority_outcome < {min_majority_outcome})
-""")
-
-    session.commit()
-    # Go testcase-by-testcase
-    testcases = session.query(tables.testcases)\
-        .filter(tables.testcases.id.in_(
-            session.query(tables.results.testcase_id)\
-                .outerjoin(tables.classifications)\
-                .filter(tables.classifications.id == None))).all()
-
-    # We count compiler crashes and timeouts as passes, since there's no way of
-    # voting on crashes/timeouts:
-    print("Classifying {bc,bto}-outcomes as passes ...")
-    session.execute(f"""
-INSERT INTO {tables.classifications.__tablename__} (id, classification)
-SELECT {tables.results.__tablename__}.id, {CLASSIFICATIONS_TO_INT['pass']}
-FROM {tables.results.__tablename__}
-LEFT JOIN {tables.classifications.__tablename__} ON {tables.results.__tablename__}.id = {tables.classifications.__tablename__}.id
-WHERE {tables.classifications.__tablename__}.id IS NULL
-AND outcome IN ({OUTCOMES_TO_INT['bc']}, {OUTCOMES_TO_INT['bto']})
+LEFT JOIN {tables.testcases.__tablename__} ON {tables.results.__tablename__}.testcase_id={tables.testcases.__tablename__}.id
+LEFT JOIN {tables.majorities.__tablename__} ON {tables.testcases.__tablename__}.id={tables.majorities.__tablename__}.id
+WHERE outcome = {OUTCOMES_TO_INT["pass"]}
+AND maj_outcome = {OUTCOMES_TO_INT["pass"]}
+AND outcome_majsize >= 6
+AND stdout_majsize >= CEILING(outcome_majsize / 2)
+AND stdout_id <> maj_stdout_id
+AND oclverified = 1
 """)
     session.commit()
 
-    to_add = []
+    print(f"Determining {tables.name} anomalous build-failures ...")
+    session.execute(f"""
+INSERT INTO {tables.classifications.__tablename__}
+SELECT {tables.results.__tablename__}.id, {CLASSIFICATIONS_TO_INT["bf"]}
+FROM {tables.results.__tablename__}
+LEFT JOIN {tables.testcases.__tablename__} ON {tables.results.__tablename__}.testcase_id={tables.testcases.__tablename__}.id
+LEFT JOIN {tables.majorities.__tablename__} ON {tables.testcases.__tablename__}.id={tables.majorities.__tablename__}.id
+WHERE outcome = {OUTCOMES_TO_INT["bf"]}
+AND maj_outcome <> {OUTCOMES_TO_INT["bf"]}
+""")
+    session.commit()
 
-    print("Applying voting heuristics ...")
-    for i, testcase in enumerate(ProgressBar()(testcases)):
+    print(f"Determining {tables.name} anomalous crashes ...")
+    session.execute(f"""
+INSERT INTO {tables.classifications.__tablename__}
+SELECT {tables.results.__tablename__}.id, {CLASSIFICATIONS_TO_INT["c"]}
+FROM {tables.results.__tablename__}
+LEFT JOIN {tables.testcases.__tablename__} ON {tables.results.__tablename__}.testcase_id={tables.testcases.__tablename__}.id
+LEFT JOIN {tables.majorities.__tablename__} ON {tables.testcases.__tablename__}.id={tables.majorities.__tablename__}.id
+WHERE outcome = {OUTCOMES_TO_INT["c"]}
+AND maj_outcome <> {OUTCOMES_TO_INT["c"]}
+""")
+    session.commit()
 
-        if i and not i % 1000:
-            session.bulk_save_objects(to_add)
-            to_add = []
-            session.commit()
-
-        testcase_id = testcase.id
-
-        results = session.query(tables.results)\
-            .outerjoin(tables.classifications)\
-            .filter(tables.results.testcase_id == testcase_id,
-                    tables.classifications.id == None).all()
-        n = len(results)
-
-        if n < min_majority_outcome:
-            to_add += [tables.classifications(id=r.id, classification=CLASSIFICATIONS_TO_INT['pass'])
-                       for r in results]
-            continue
-
-        # Determine majority outcome:
-        min_majority_count = math.ceil(n / 2)
-        majority_outcome, majority_count = get_majority([r.outcome for r in results])
-
-        # If majority outcome resulted in binaries, mark anomalous build
-        # failures:
-        minority_outcomes = set([OUTCOMES_TO_INT["bf"], OUTCOMES_TO_INT["c"], OUTCOMES_TO_INT["to"]])
-        if majority_outcome not in minority_outcomes:
-            to_add += [tables.classifications(id=r.id, classification=CLASSIFICATIONS_TO_INT[OUTCOMES[r.outcome]])
-                       for r in results if r.outcome in minority_outcomes]
-            results[:] = [r for r in results if r.outcome not in minority_outcomes]
-
-        # If the majority did not produce outputs, then we're done:
-        if majority_outcome != OUTCOMES_TO_INT["pass"]:
-            to_add += [tables.classifications(id=r.id, classification=CLASSIFICATIONS_TO_INT['pass'])
-                       for r in results]
-            continue
-
-        # Look for wrong-code bugs:
-        majority_output, output_majority_count = get_majority([r.stdout_id for r in results])
-
-        # Ensure that the majority of configurations agree on the output:
-        min_output_majority_count = math.ceil(len(results) / 2)
-        # min_output_majority_count = len(results) - 1
-        if output_majority_count == len(results):
-            # Everyone agreed on the output:
-            to_add += [tables.classifications(id=r.id, classification=CLASSIFICATIONS_TO_INT["pass"])
-                       for r in results]
-        elif output_majority_count < min_output_majority_count:
-            # No majority:
-            print("skipping output_majority_count <", min_output_majority_count, " = ", output_majority_count)
-            to_add += [tables.classifications(id=r.id, classification=CLASSIFICATIONS_TO_INT["pass"])
-                       for r in results]
-        else:
-            # At least one result disagreed:
-            to_add += [tables.classifications(id=r.id, classification=CLASSIFICATIONS_TO_INT["pass"] if r.stdout_id == majority_output else CLASSIFICATIONS_TO_INT["w"])
-                       for r in results]
+    print(f"Determining {tables.name} anomalous timeouts ...")
+    session.execute(f"""
+INSERT INTO {tables.classifications.__tablename__}
+SELECT {tables.results.__tablename__}.id, {CLASSIFICATIONS_TO_INT["to"]}
+FROM {tables.results.__tablename__}
+LEFT JOIN {tables.majorities.__tablename__} ON {tables.results.__tablename__}.id={tables.majorities.__tablename__}.id
+WHERE outcome = {OUTCOMES_TO_INT["to"]}
+AND maj_outcome <> {OUTCOMES_TO_INT["to"]}
+""")
     session.commit()
 
 
 def verify_testcase(session: session_t, tables: Tableset, testcase) -> None:
     """
-    Verify
+    Verify the testcase.
 
     This is time consuming. It should only be run on supicious testcases.
     """
@@ -305,8 +250,7 @@ def verify_testcase(session: session_t, tables: Tableset, testcase) -> None:
         print(f"retracting w-classification on {n} results: {ids_str}")
         session.query(tables.classifications)\
             .filter(tables.classifications.id.in_(ids_to_update))\
-            .update({"classification": CLASSIFICATIONS_TO_INT["pass"]},
-                    synchronize_session=False)
+            .delete()
         session.commit()
 
     # CLgen-specific analysis. We can omit these checks for CLSmith, as they
@@ -362,13 +306,13 @@ def verify_testcase(session: session_t, tables: Tableset, testcase) -> None:
             print(f"testcase {testcase.id}: redflag compiler warnings")
             return fail()
 
-        # Determine if
+        # Determine if kernel contains floats
         if testcase.contains_floats == None:
             testcase.contains_floats = "float" in testcase.program.src
 
         if testcase.contains_floats:
             print(f"testcase {testcase.id}: contains floats")
-            return fail()
+            # TODO: return fail()
 
         # Run GPUverify on kernel
         if testcase.gpuverified == None:

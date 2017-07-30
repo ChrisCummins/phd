@@ -96,7 +96,8 @@ def escape_stdout(stdout):
     """ filter noise from test harness stdout """
     return '\n'.join(line for line in stdout.split('\n')
                      if line != "ADL Escape failed."
-                     and line != "WARNING:endless loop detected!")
+                     and line != "WARNING:endless loop detected!"
+                     and line != "One module without kernel function!")
 
 
 def escape_stderr(stderr):

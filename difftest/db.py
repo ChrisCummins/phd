@@ -127,7 +127,7 @@ class CLSmithProgram(Base):
     id = sql.Column(sql.Integer, primary_key=True)
     hash = sql.Column(sql.String(40), nullable=False, unique=True, index=True)
 
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    date = sql.Column(sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
     # additional flags passed to CLSmith
     flags = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
@@ -284,6 +284,7 @@ class CLSmithTestCase(Base):
     program = sql.orm.relationship("CLSmithProgram", back_populates="testcases")
     params = sql.orm.relationship("cl_launcherParams")
     results = sql.orm.relationship("CLSmithResult", back_populates="testcase")
+    majority = sql.orm.relationship("CLSmithMajority", back_populates="testcase")
 
     def __repr__(self):
         return f"testcase {self.id} = {{program: {self.program_id}, params: {self.params_id} }}"
@@ -309,6 +310,7 @@ class CLgenTestCase(Base):
     params = sql.orm.relationship("cldriveParams")
     harness = sql.orm.relationship("CLgenHarness", back_populates="testcase")
     results = sql.orm.relationship("CLgenResult", back_populates="testcase")
+    majority = sql.orm.relationship("CLgenMajority", back_populates="testcase")
 
 
 class CLgenHarness(Base):
@@ -317,7 +319,7 @@ class CLgenHarness(Base):
     id = sql.Column(sql.Integer, sql.ForeignKey("CLgenTestCases.id"),
                     primary_key=True)
 
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    date = sql.Column(sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
     # cldrive version which generated harness
     cldrive_version = sql.Column(sql.String(12))
@@ -389,20 +391,17 @@ class Testbed(Base):
 class CLSmithResult(Base):
     __tablename__ = "CLSmithResults"
     id = sql.Column(sql.Integer, primary_key=True)
-    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
-                            nullable=False, index=True)
-    testcase_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithTestCases.id"),
-                             nullable=False, index=True)
+    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"), nullable=False, index=True)
+    testcase_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithTestCases.id"), nullable=False, index=True)
 
     # stats
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow,
-                      nullable=False, index=True)
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
 
     # output
-    stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithStdouts.id"))
-    stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithStderrs.id"))
+    stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithStdouts.id"), nullable=False)
+    stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithStderrs.id"), nullable=False)
 
     outcome = sql.Column(sql.Integer, index=True, nullable=False)
 
@@ -466,25 +465,39 @@ class CLSmithClassification(Base):
         return INT_TO_CLASSIFICATIONS[self.classification]
 
 
+class CLSmithMajority(Base):
+    __tablename__ = "CLSmithMajorities"
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithTestCases.id"),
+                    primary_key=True)
+
+    maj_outcome = sql.Column(sql.Integer, nullable=False)
+    outcome_majsize = sql.Column(sql.Integer, nullable=False)
+
+    maj_stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithStdouts.id"),
+                               nullable=False)
+    stdout_majsize = sql.Column(sql.Integer, nullable=False)
+
+    testcase = sql.orm.relationship("CLSmithTestCase", back_populates="majority")
+    stdout = sql.orm.relationship("CLSmithStdout")
+
+
 # CLgen Results ###############################################################
 
 
 class CLgenResult(Base):
     __tablename__ = "CLgenResults"
     id = sql.Column(sql.Integer, primary_key=True)
-    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
-                            nullable=False)
-    testcase_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenTestCases.id"),
-                             nullable=False)
+    testbed_id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"), nullable=False)
+    testcase_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenTestCases.id"), nullable=False)
 
     # stats
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow,
-                      nullable=False, index=True)
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
 
     # output
-    stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStdouts.id"))
+    stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStdouts.id"), nullable=False)
+    # TODO: ALTER TABLE CLgenResults MODIFY stderr_id INT(11) NOT NULL;
     stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStderrs.id"))
 
     outcome = sql.Column(sql.Integer, index=True, nullable=False)
@@ -551,13 +564,29 @@ class CLgenClassification(Base):
         return INT_TO_CLASSIFICATIONS[self.classification]
 
 
+class CLgenMajority(Base):
+    __tablename__ = "CLgenMajorities"
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenTestCases.id"),
+                    primary_key=True)
+
+    maj_outcome = sql.Column(sql.Integer, nullable=False)
+    outcome_majsize = sql.Column(sql.Integer, nullable=False)
+
+    maj_stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStdouts.id"),
+                               nullable=False)
+    stdout_majsize = sql.Column(sql.Integer, nullable=False)
+
+    testcase = sql.orm.relationship("CLgenTestCase", back_populates="majority")
+    stdout = sql.orm.relationship("CLgenStdout")
+
+
 # Reductions ##################################################################
 
 
 class CLSmithReduction(Base):
     __tablename__ = "CLSmithReductions"
     id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithResults.id"), primary_key=True)
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    date = sql.Column(sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
 
@@ -570,7 +599,7 @@ class CLSmithReduction(Base):
 class CLgenReduction(Base):
     __tablename__ = "CLgenReductions"
     id = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"), primary_key=True)
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    date = sql.Column(sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
 
@@ -622,7 +651,7 @@ class coCLgenResult(Base):
                             nullable=False)
     params_id = sql.Column(sql.Integer, sql.ForeignKey("coParams.id"),
                            nullable=False)
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    date = sql.Column(sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
     stdout = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
@@ -674,7 +703,7 @@ class cl_launcherCLgenResult(Base):
                             nullable=False)
     params_id = sql.Column(sql.Integer, sql.ForeignKey("cl_launcherParams.id"),
                            nullable=False)
-    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow)
+    date = sql.Column(sql.DateTime, nullable=False, default=datetime.datetime.utcnow)
     flags = sql.Column(sql.String(255), nullable=False)
     status = sql.Column(sql.Integer, nullable=False)
     runtime = sql.Column(sql.Float, nullable=False)
@@ -731,18 +760,6 @@ class BugReport(Base):
                 .format(**vars()))
 
 
-class CLgenProgramTranslation(Base):
-    __tablename__ = 'tmp_clgenprogram_translate'
-    old_id = sql.Column(sql.String(40), primary_key=True)
-    new_id = sql.Column(sql.Integer, nullable=False, unique=True, index=True)
-
-
-class CLSmithProgramTranslation(Base):
-    __tablename__ = 'tmp_clsmithprogram_translate'
-    old_id = sql.Column(sql.String(40), primary_key=True)
-    new_id = sql.Column(sql.Integer, nullable=False, unique=True, index=True)
-
-
 # Utility #####################################################################
 
 
@@ -777,6 +794,7 @@ Tableset = namedtuple('Tableset', [
         'classifications',
         'stdouts',
         'stderrs',
+        'majorities',
     ])
 
 CLSMITH_TABLES = Tableset(name="CLSmith",
@@ -784,13 +802,15 @@ CLSMITH_TABLES = Tableset(name="CLSmith",
     programs=CLSmithProgram, harnesses=None,
     params=cl_launcherParams, reductions=CLSmithReduction,
     meta=CLSmithMeta, classifications=CLSmithClassification,
-    stdouts=CLSmithStdout, stderrs=CLSmithStderr)
+    stdouts=CLSmithStdout, stderrs=CLSmithStderr,
+    majorities=CLSmithMajority)
 CLGEN_TABLES = Tableset(name="CLgen",
     results=CLgenResult, testcases=CLgenTestCase,
     programs=CLgenProgram, harnesses=CLgenHarness,
     params=cldriveParams, reductions=CLgenReduction,
     meta=CLgenMeta, classifications=CLgenClassification,
-    stdouts=CLgenStdout, stderrs=CLgenStderr)
+    stdouts=CLgenStdout, stderrs=CLgenStderr,
+    majorities=CLgenMajority)
 
 
 class InsufficientDataError(ValueError):

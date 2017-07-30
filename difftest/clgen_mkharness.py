@@ -27,15 +27,10 @@ class HarnessCompilationError(ValueError):
     pass
 
 
-def mkharness(s, env: cldrive.OpenCLEnvironment, program: db.CLgenProgram,
-              params: db.cldriveParams):
+def mkharness(s, env: cldrive.OpenCLEnvironment, testcase: CLgenTestCase):
     """ generate a self-contained C program for the given test case """
-    # return cached harness if one exists
-    harness = s.query(CLgenHarness).filter(
-        CLgenHarness.program_id == program.id,
-        CLgenHarness.params_id == params.id).first()
-    if harness:
-        return harness
+    if testcase.harness:
+        return testcase.harness
 
     data_generator = cldrive.Generator.from_str(params.generator)
     gsize = cldrive.NDRange(params.gsize_x, params.gsize_y, params.gsize_z)
@@ -77,8 +72,7 @@ def mkharness(s, env: cldrive.OpenCLEnvironment, program: db.CLgenProgram,
             compile_time = time() - start_time
 
         harness = CLgenHarness(
-            program_id=program.id,
-            params_id=params.id,
+            id=testcase.id,
             cldrive_version=cldrive.__version__,
             src=src,
             compile_only=compile_only,
@@ -118,7 +112,7 @@ if __name__ == "__main__":
     parser = ArgumentParser(description=__doc__)
     parser.add_argument("-H", "--hostname", type=str, default="cc1",
                         help="MySQL database hostname")
-    parser.add_argument("-p", "--program-id", type=str,
+    parser.add_argument("-p", "--program-id", type=int,
                         help="Program ID to generate test harnesses for")
     args = parser.parse_args()
 
@@ -127,14 +121,14 @@ if __name__ == "__main__":
     env = cldrive.make_env()
 
     with Session() as s:
-        params = s.query(cldriveParams).all()
-        q = s.query(CLgenProgram)
-
         if args.program_id:
-            q = q.filter(CLgenProgram.id == args.program_id)
+            q = s.query(CLgenTestCase)\
+                    .filter(CLgenTestCase.program_id == args.program_id)
+        else:
+            done = s.query(CLgenHarness.id)
+            q = s.query(CLgenTestCase).filter(~CLgenTestCase.id.in_(done))
 
-        for program in ProgressBar(max_value=q.count())(q):
-            for param in params:
-                mkharness(s, env, program, param)
+        for testcase in ProgressBar(max_value=q.count())(q):
+            mkharness(s, env, testcase)
 
     print("done.")

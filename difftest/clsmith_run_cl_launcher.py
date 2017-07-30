@@ -107,15 +107,18 @@ def parse_ndrange(ndrange: str) -> Tuple[int, int, int]:
     return (int(components[0]), int(components[1]), int(components[2]))
 
 
-def get_num_progs_to_run(session: db.session_t,
-                         testbed: Testbed, params: cl_launcherParams):
-    subquery = session.query(CLSmithResult.program_id).filter(
-        CLSmithResult.testbed_id == testbed.id, CLSmithResult.params_id == params.id)
-    num_ran = session.query(CLSmithProgram.id).filter(CLSmithProgram.id.in_(subquery)).count()
-    subquery = session.query(CLSmithResult.program_id).filter(
-        CLSmithResult.testbed_id == testbed.id)
-    total = session.query(CLSmithProgram.id).count()
-    return num_ran, total
+def get_num_to_run(session: db.session_t, testbed: Testbed, optimizations: int=None):
+    num_ran = session.query(sql.sql.func.count(CLSmithResult.id))\
+                .filter(CLSmithResult.testbed_id == testbed.id)
+    total = session.query(sql.sql.func.count(CLSmithTestCase.id))
+
+    if optimizations is not None:
+        num_ran = num_ran.join(CLSmithTestCase).join(cl_launcherParams)\
+            .filter(cl_launcherParams.optimizations == optimizations)
+        total = total.join(cl_launcherParams)\
+            .filter(cl_launcherParams.optimizations == optimizations)
+
+    return num_ran.scalar(), total.scalar()
 
 
 if __name__ == "__main__":
@@ -126,45 +129,36 @@ if __name__ == "__main__":
                         help="OpenCL platform ID")
     parser.add_argument("device_id", metavar="<device-id>", type=int,
                         help="OpenCL device ID")
-    parser.add_argument("--no-opts", action="store_true",
-                        help="Disable OpenCL optimizations (on by default)")
-    parser.add_argument("-g", "--gsize", type=str, default="128,16,1",
-                        help="Comma separated global sizes (default: 128,16,1)")
-    parser.add_argument("-l", "--lsize", type=str, default="32,1,1",
-                        help="Comma separated global sizes (default: 32,1,1)")
+    parser.add_argument(
+        "--opt", action="store_true", help="Only test with optimizations on")
+    parser.add_argument(
+        "--no-opt", action="store_true", help="Only test with optimizations disabled")
     args = parser.parse_args()
 
     # Parse command line options
     platform_id = args.platform_id
     device_id = args.device_id
 
-    optimizations = not args.no_opts
-    gsize = parse_ndrange(args.gsize)
-    lsize = parse_ndrange(args.lsize)
-
     # get testbed information
     platform_name = get_platform_name(platform_id)
     device_name = get_device_name(platform_id, device_id)
     driver_version = get_driver_version(platform_id, device_id)
+
+    optimizations = None
+    if args.opt:
+        optimizations = 1
+    if args.no_opt:
+        optimizations = 0
 
     db.init(args.hostname)  # initialize db engine
 
     with Session() as session:
         testbed = get_testbed(session, platform_name, device_name)
         devname = util.device_str(testbed.device)
-
-        params = db.get_or_create(session, cl_launcherParams,
-            optimizations = optimizations,
-            gsize_x = gsize[0], gsize_y = gsize[1], gsize_z = gsize[2],
-            lsize_x = lsize[0], lsize_y = lsize[1], lsize_z = lsize[2])
-        opt = "-" if args.no_opts else "+"
-        flags = params.to_flags()
-
-        print(testbed)
-        print(params)
+        print(devname)
 
         # progress bar
-        num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
+        num_ran, num_to_run = get_num_to_run(session, testbed, optimizations)
         bar = progressbar.ProgressBar(init_value=num_ran, max_value=num_to_run)
 
         # programs to run, and results to push to database
@@ -177,19 +171,31 @@ if __name__ == "__main__":
             run.
             """
             BATCH_SIZE = 100
-            print(f"\nnext CLSmith {opt} batch for {devname} at", strftime("%H:%M:%S"))
+            print(f"\nnext CLSmith batch for {devname} at", strftime("%H:%M:%S"))
             # update the counters
-            num_ran, num_to_run = get_num_progs_to_run(session, testbed, params)
+            num_ran, num_to_run = get_num_to_run(session, testbed, optimizations)
             bar.max_value = num_to_run
             bar.update(min(num_ran, num_to_run))
 
             # fill inbox
-            done = session.query(CLSmithResult.program_id).filter(
-                CLSmithResult.testbed == testbed, CLSmithResult.params == params)
-            notdone = session.query(CLSmithProgram).filter(
-                ~CLSmithProgram.id.in_(done)).order_by(CLSmithProgram.id).limit(BATCH_SIZE)
-            for program in notdone:
-                inbox.append(program)
+            done = session.query(CLSmithResult.testcase_id).filter(
+                CLSmithResult.testbed == testbed)
+            if optimizations is not None:
+                done = done.join(CLSmithTestCase).join(cl_launcherParams)\
+                        .filter(cl_launcherParams.optimizations == optimizations)
+
+            todo = session.query(CLSmithTestCase)\
+                        .filter(~CLSmithTestCase.id.in_(done))\
+                        .order_by(CLSmithTestCase.program_id,
+                                  CLSmithTestCase.params_id)
+            if optimizations is not None:
+                todo = todo.join(cl_launcherParams)\
+                            .filter(cl_launcherParams.optimizations == optimizations)
+
+            todo = todo.limit(BATCH_SIZE)
+
+            for testcase in todo:
+                inbox.append(testcase)
 
             # empty outbox
             while len(outbox):
@@ -205,8 +211,15 @@ if __name__ == "__main__":
                 if not len(inbox):
                     break
 
+                print(inbox)
+                sys.exit(0)
+
                 # get next program to run
-                program = inbox.popleft()
+                testcase = inbox.popleft()
+
+                program = testcase.program
+                params = testcase.params
+                flags = params.to_flags()
 
                 # drive the program
                 runtime, status, stdout, stderr = cl_launcher(

@@ -13,7 +13,7 @@ from db import *
 
 
 def get_num_progs(session: session_t) -> int:
-    return session.query(sql.sql.func.count(CLSmithProgram)).scalar()
+    return session.query(sql.sql.func.count(CLSmithProgram.id)).scalar()
 
 
 def make_program(session: session_t, *flags) -> None:
@@ -22,27 +22,29 @@ def make_program(session: session_t, *flags) -> None:
         *flags: Additional flags to CLSmith.
     """
     with NamedTemporaryFile(prefix='clsmith-', suffix='.cl') as tmp:
-        runtime, status, stdout, stderr = clsmith.clsmith('-o', tmp.name, *flags)
+        runtime, status, _, _ = clsmith.clsmith('-o', tmp.name, *flags)
 
         # A non-zero exit status of clsmith implies that no program was
-        # generated.
+        # generated. Try again
         if status:
-            make_program(*flags)
+            make_program(session, *flags)
 
         src = fs.read_file(tmp.name)
-        hash_ = crypto.sha1_str(src)
-        dupe = session.query(CLSmithProgram.id)\
-            .filter(CLSmithProgram.hash == hash_).first()
 
-        if not dupe:
-            program = CLSmithProgram(
-                hash=hash_,
-                flags=" ".join(flags),
-                runtime=runtime,
-                src=src,
-                linecount=len(src.split('\n')))
-            session.add(program)
-            session.commit()
+    # Check if the program is a duplicate:
+    hash_ = crypto.sha1_str(src)
+    dupe = session.query(CLSmithProgram.id)\
+        .filter(CLSmithProgram.hash == hash_).first()
+
+    if not dupe:
+        program = CLSmithProgram(
+            hash=hash_,
+            flags=" ".join(flags),
+            runtime=runtime,
+            src=src,
+            linecount=len(src.split('\n')))
+        session.add(program)
+        session.commit()
 
 
 if __name__ == "__main__":
