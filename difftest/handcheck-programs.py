@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import random
 import pyopencl as cl
 import random
 import os
@@ -52,20 +53,20 @@ def yes_no_or_skip(question, default="skip"):
 def handcheck(recheck=False, include_all=False):
     program = None
     with Session() as session:
-        q = session.query(CLgenProgram).distinct()\
-            .join(cl_launcherCLgenResult, cl_launcherCLgenResult.program_id == CLgenProgram.id)\
-            .filter(CLgenProgram.gpuverified == 1)
+        program_ids = [x[0] for x in session.execute(f"""
+SELECT program_id
+FROM CLgenResults
+LEFT JOIN CLgenTestCases ON CLgenResults.testcase_id = CLgenTestCases.id
+LEFT JOIN CLgenClassifications ON CLgenResults.id = CLgenClassifications.id
+WHERE classification = {CLASSIFICATIONS_TO_INT["w"]}
+GROUP BY program_id
+""")]
 
-        if not include_all:
-            q = q.filter(cl_launcherCLgenResult.status == 0,
-                         cl_launcherCLgenResult.classification == "Wrong code")
-
-        if not recheck:
-            q = q.filter(CLgenProgram.handchecked == None)
-
-        num_todo = q.count()
+        num_todo = len(program_ids)
         if num_todo:
-            program = q.limit(1).offset(random.randint(0, num_todo - 1)).first()
+            program = session.query(CLgenProgram)\
+                        .filter(CLgenProgram.id == random.choice(program_ids))\
+                        .scalar()
 
             print()
             print(f"{num_todo} kernels to check")
@@ -76,10 +77,12 @@ def handcheck(recheck=False, include_all=False):
             if answer == "skip":
                 print("skip")
             else:
-                valid = answer == "yes"
+                valid = 1 if answer == "yes" else 0
                 print(valid)
                 print()
-                program.handchecked = 1 if valid else 0
+                handcheck = get_or_create(session, CLgenHandcheck,
+                                          id=program.id, handcheck=valid)
+                session.add(handcheck)
 
     # next check
     if program:
