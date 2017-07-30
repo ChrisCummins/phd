@@ -1,11 +1,13 @@
 \begin{abstract}
-Compilers should produce correct code for valid inputs, and produce meaningful errors when inputs are invalid. Fixed test-suites are inadequate for ensuring these properties over the enormous range of possible inputs, and the complexity of optimizing compilers renders them beyond the scope of formal verification. In recent years, probabilistic grammar-based tools have proven effective for finding bugs by comparing the output of randomly generated programs across compilers.
+Compilers should produce correct code for valid inputs, and produce meaningful errors when inputs are invalid. Fixed test-suites are incapable of ensuring these properties over the enormous range of possible inputs, and the complexity of optimizing compilers renders them beyond the scope of formal verification. In recent years, probabilistic grammar-based tools have proven effective at finding bugs by comparing the output of randomly generated programs across compilers.
 
 These tools require extensive development effort, and by design, yield large random programs which bare little resemblance to actual real code written by human programmers. These ``implausible'' programs attempt to discover bugs using uncommon combinations of language constructs. \cc{\ldots}
 
+\cc{They do not use the common constructs and patterns of a programming language, and combine unusual language features. By contrast, compiler developers wans minimal test cases based on ``real'' code.}
+
 What is needed is a technique for biasing the random generation of programs so that the generated codes are ``plausible'', and closely resemble that of real hand-written code.
 
-We present a new approach for the generation of \emph{plausible} compiler test cases. We apply deep learning techniques over large corpuses of open source code fragments to learn models which describe the structure of common real world codes. We use these models to generate tens of thousands of source codes, and show how established differential testing methodologies can be used to expose bugs in compilers which are symptomatic of real hand-written code.
+We present a new approach for the generation of \emph{plausible} compiler test cases. We apply deep learning techniques over large corpuses of open source code fragments to learn models which describe the structure of real world codes. We use these models to generate tens of thousands of source codes, and show how established differential testing methodologies can be used to expose bugs in compilers which are symptomatic of real hand-written code.
 
 We apply our technique to OpenCL, automatically exposing bugs in OpenCL compilers which are likely to arise from real world use cases, in a way which is not possible using existing techniques. In over 1,000 hours of automated commercial and open source compiler testing, we discover bugs in all of them, submitting XX bug reports. Our test cases are on average two orders of magnitude smaller than the state-of-the-art, and are evaluated $X\times$ faster, while maintaining comparable ratio of bugs found.
 

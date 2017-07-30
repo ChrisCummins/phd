@@ -1,21 +1,7 @@
 \section{Testing Methodologies}\label{sec:methodology}
 
-We describe two experiments testing OpenCL configurations using our approach. The first is results from unstructured, opportunistic testing of OpenCL implementations while developing CLgen, resulting in XX bug reports to OpenCL vendors. The second is a direct comparison of our approach to CLSmith, the current state-of-the-art in OpenCL test case generation.
+Test cases must be executed, resulting in one-of-six possible outcomes. Then voting across outcomes from different compilers is used to expose anomalous outcomes.
 
-% \subsection{Parameters}
-% \input{tab/cldrive-params}
-% Table~\ref{tab:cldrive-params}. 
-
-%\subsection{Classifying test cases}
-%
-%\cc{Use the results of difftest to determine whether the input sample was formed, well-typed, free from UB, etc. Plot ratio of CLgen and CLSmith outputs according to classifications (CLSmith should be all perfect).}
-%
-%\begin{enumerate}
-%  \item Ill-formed ASCII sequence. The test case contains syntax errors preventing compilation.
-%  \item Well-formed program.
-%  \item Well-typed program.
-%  \item Standard-conformant OpenCL program. The program
-%\end{enumerate}
 
 \subsection{Test Case Execution}
 
@@ -45,7 +31,7 @@ A majority exists if there at least 6 configurations produce non-bc results with
 
 %
 \begin{enumerate}
-	\item \textbf{w} \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority output. For a CLgen result to be classified with \emph{wrong-code}, we require first that the program passes verification using GPUVerify~\cite{Betts2012}, and that a reference run with Oclgrind~\cite{Price2015} produces no warnings. We exclude kernels with floating-points.
+	\item \textbf{w} \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority output. For a DeepSmith result to be classified with \emph{wrong-code}, we require first that the program passes verification using GPUVerify~\cite{Betts2012}, and that a reference run with Oclgrind~\cite{Price2015} produces no warnings. We exclude kernels with floating-points.
 	\item \textbf{bf} \emph{Build failure} Online compilation of OpenCL program fails, whereas the majority of configurations produce a binary.
 	\item \textbf{bto} \emph{Build timeout} Online compilation of OpenCL exceeds a timeout of 60 seconds, whereas the majority of configurations produce a binary.
 	\item \textbf{c} \emph{Runtime crash} One or more OpenCL API calls return an error status during the program execution, or the program crashes.
