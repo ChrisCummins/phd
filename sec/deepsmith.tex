@@ -1,11 +1,11 @@
 \section{Test Case Generation through Deep Learning}
 
-Figure~\ref{fig:deeptune} shows the test case generation process. Our compiler test case generation approach consists of two parts: first, extending the state-of-the-art in deep learning program synthesis; the second, a general application of established differential testing methodologies for running code samples.
+Figure~\ref{fig:deeptune} shows the test case generation process. Our compiler test case generation approach consists of two parts: first, extending the state-of-the-art in deep learning program synthesis; the second, a general application of established differential testing methodologies for running code samples. DeepSmith is open source software~\footnote{DeepSmith: \emph{URL redacted for double-blind review}.}
 
 
 \subsection{OpenCL Kernel Synthesis}
 
-We extend prior work on synthetic program generation using LSTM networks~\cite{Cummins2017a}. An initial seed corpus of 10k OpenCL kernels is mined from GitHub, using an oracle compiler (LLVM 3.9) to reject files that are not well-formed or do not contain instructions. The corpus is preprocessed: a uniform code style is enforced to ensure consitent use of braces, whitespace, identifier names, etc. The prepocessed corpus is encoded using a hybrid token/character-level encoding~\cite{Cummins2017b}. 
+We extend prior work on synthetic program generation using LSTM networks~\cite{Cummins2017a}. We essentially frame the generation of programs as a language modeling problem. An initial seed corpus of 10k OpenCL kernels is mined from GitHub, using an oracle compiler (LLVM 3.9) to reject files that are not well-formed or do not contain instructions. The corpus is preprocessed: a uniform code style is enforced to ensure consitent use of braces, whitespace, identifier names, etc. The prepocessed corpus is encoded using a hybrid token/character-level encoding~\cite{Cummins2017b}. 
 
 LSTM networks model the vocabulary distribution over the encoded corpus. We use a two layer LSTM network of 512 nodes each, trained for 50 epochs using an initial learning rate of 0.002 and decaying by a factor of a half every 5 epochs.
 
