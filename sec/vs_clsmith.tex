@@ -75,11 +75,47 @@ Oclgrind was resilient to CLSmith testing, yet we managed to trip it up during c
 
 \subsection{Comparison of test cases}
 
-Median CLSmith kernel is 1086 lines long (excluding headers). CLSmith kernels are unreadable, requiring automatic or manual test case reduction.
+Average CLSmith kernel is 1200 lines long (excluding headers). CLSmith kernels are unreadable, requiring automatic or manual test case reduction. Average CLgen kernel is 19 lines long.
 
-For ``interesting'' programs: median DeepSmith kernel size is 12 lines. Median reduced CLSmith kernel size is 43 lines (894 lines before reduction). Figure~\ref{fig:kernel-sizes}.
 
 Potentially interesting questions: What is the total lines of code which get run on each device during the tests? DeepSmith programs are smaller, but we get through more of them.
+
+In 48 hours of testing, DeepSmith triggered 9 distinct compiler assertions, CLSmith 2. Both of the assertions triggered by CLSmith were also triggered by CLgen.
+% Test case sizes:
+% 
+% SELECT assertion, AVG(linecount)
+% FROM CLSmithResults results
+% LEFT JOIN CLSmithTestCases testcases ON results.testcase_id = testcases.id
+% LEFT JOIN CLSmithPrograms programs ON testcases.program_id = programs.id
+% INNER JOIN CLSmithAssertions assertions ON results.stderr_id = assertions.id
+% GROUP BY assertion;
+%
+% CLSmith:
+% 'ASSERTION FAILED: (isa<AllocaInst>(ptr) || ptrCandidate.empty()) && \"storing/loading pointers only support private array\"', '1410.8486'
+% 'ASSERTION FAILED: iter != pointerOrigMap.end()', '889.0990'
+%
+% CLgen:
+% ASSERTION FAILED: (isa<AllocaInst>(ptr) || ptrCandidate.empty()) && "storing/loading pointers only support private array"	12.5382
+% ASSERTION FAILED: 0	86.3295
+% ASSERTION FAILED: isScalarType(type)	5.0000
+% ASSERTION FAILED: iter != pointerOrigMap.end()	9.5455
+% ASSERTION FAILED: Missing parameters for sync instruction	10.0000
+% ASSERTION FAILED: Not implemented	7.1579
+% ASSERTION FAILED: Not supported	4.7857
+% ASSERTION FAILED: sel.hasDoubleType()	4.6364
+% ASSERTION FAILED: srcType != ir::TYPE_U64	3.0000
+The CLSmith kernels which triggered the two assertions were on average 1411 and 889 lines respectively (excluding headers). The same assertions were triggered with DeepSmith kernels of average 13 lines and 10 lines, respectively.
+%
+% SELECT num, src, assertion
+%FROM CLgenResults results
+%LEFT JOIN CLgenTestCases testcases ON results.testcase_id = testcases.id
+%LEFT JOIN CLgenPrograms programs ON testcases.program_id = programs.id
+%LEFT JOIN Configurations ON results.testbed_id = Configurations.id
+%INNER JOIN CLgenAssertions assertions ON results.stderr_id = assertions.id
+%WHERE assertion = 'ASSERTION FAILED: srcType != ir::TYPE_U64';
+We were able to trigger the assertion \emph{srcType != ir::TYPE\_U64} in Configs.\ $3\pm$ with only a 3 line test case.
+%
+DeepSmith also triggered 227 \emph{unreachable!} compiler errors, CLSmith triggered 0.
 
 \cc{What is the bug rate per line of code?}
 

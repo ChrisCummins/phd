@@ -72,7 +72,15 @@
 			}%
 		}%
 		\label{lst:gt2-compiler-hang}
+	}\\%
+	\subfloat[Config.\ $1+$ hangs during compilation (Config.\ $1-$ completes in 1.15s), Config.\ $10-$ hangs during execution (Config.\ $10+$ completes in 0.1s).]{%
+	\noindent\mbox{\parbox{\columnwidth}{%
+			% CLgen program_id = 11982
+			\lstinputlisting{lst/bug14}%
+		}%
 	}%
+	\label{lst:gt2-compiler-hang}
+	}\\%
 	\caption{Example kernels which hang compilers.}%
 	\label{lst:compiler-hang-bugs}%
 \end{figure}
