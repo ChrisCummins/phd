@@ -38,8 +38,8 @@
 \begin{figure}
 \begin{lstlisting}
 __kernel void A(__global double* a) {
-  int b = get_global_id(0);
-  if (b < - 1) { a[b] = 1; }
+  if ((int)get_global_id(0) < -1)
+    a[get_global_id(0)] = 1;
 }
 \end{lstlisting}
 \label{lst:intel-size_t-int-reduced}

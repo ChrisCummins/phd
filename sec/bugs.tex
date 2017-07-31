@@ -40,5 +40,12 @@ Figure~\ref{lst:oclgrind-llvm-densemap-assertion} exposed a race condition in sw
 
 Configs.\ $1+$, $2+$, $3-$, $4+$, $5-$, $6-$, $7+$, $8+$, $9-$, $10+$ miscompile~ref{lst:u}.
 
+An error in the optimizer of Configs.\ $4+$, $6+$ causes the \texttt{if} statement of Figure~\ref{lst:compiler-crashes} to be executed.
+% cd ~/data/kernels/github-pp
+% ls | xargs egrep -l 'int [A-Z]+ = get_global_id\(' -- | wc -l
+% >> 2144
+% ls | wc -l
+% >> 4655
+This is troubling --- 46\% of kernels on GitHub use this \texttt{if} construct to guard against invalid memory accesses. Figure~\ref{lst:compiler-crashes} shows a hand-reduced minimal test case.
 
 \input{lst/wrong-code-bugs}
