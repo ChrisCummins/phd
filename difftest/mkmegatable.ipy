@@ -38,25 +38,24 @@ def get_outcome_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
         testbed (db.Testbed): Testbed instance to return results for.
         no_opt (bool): Testbed optimizations off?
     """
-    counts = {"pass": 0, "bf": 0, "bc": 0, "bto": 0, "c": 0, "to": 0}
+    optimizations = not no_opt
+    param_ids = [x[0] for x in
+        session.query(tables.params.id)\
+            .filter(tables.params.optimizations == optimizations)]
 
-    q = results_in_timelimit(session, tables, testbed.id, no_opt, TIME_LIMIT,
-                             tables.results.outcome, tables.meta.cumtime)
+    counts = dict((OUTCOMES[outcome], count) for outcome, count in
+        session.query(tables.results.outcome, sql.sql.func.count(tables.results.outcome))\
+                .join(tables.meta)\
+                .join(tables.testcases)\
+                .filter(tables.results.testbed_id == testbed.id,
+                        tables.testcases.params_id.in_(param_ids),
+                        tables.meta.cumtime < TIME_LIMIT)\
+                .group_by(tables.results.outcome))
 
-    try:
-        for outcome, cumtime in q:
-            counts[OUTCOMES[outcome]] = counts.get(outcome, 0) + 1
-    except InsufficientDataError as e:
-        print(e, file=sys.stderr)
-        counts['total'] = '*'
+    counts['total'] = sum(counts.values())
 
-    # sum up all results
-    total = counts.pop("total", "")
-    counts['total'] = str(sum(counts.values())) + total
-
-    total_hours = "{:.1f}h".format(cumtime / 3600)
-    print(' ', device_str(testbed.device), tables.name, no_opt, total_hours, counts)
-    return f"{counts['bf']} & {counts['bc']} & {counts['bto']} & {counts['c']} & {counts['to']} & {counts['pass']} & {counts['total']}"
+    print(' ', device_str(testbed.device), tables.name, no_opt, counts)
+    return " & ".join(str(counts.get(x, 0)) for x in ["bf", "bc", "bto", "c", "to", "pass", "total"])
 
 
 def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
@@ -78,36 +77,20 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
         session.query(tables.params.id)\
             .filter(tables.params.optimizations == optimizations)]
 
-    def get_classification_count(classification_name: str):
-        classification = CLASSIFICATIONS_TO_INT[classification_name]
-
-        return session.query(sql.sql.func.count(tables.classifications.id))\
+    counts = dict((CLASSIFICATIONS[classification], count) for classification, count in
+        session.query(tables.classifications.classification, sql.sql.func.count(tables.classifications.classification))\
                 .join(tables.results)\
                 .join(tables.meta)\
                 .join(tables.testcases)\
                 .filter(tables.results.testbed_id == testbed.id,
                         tables.testcases.params_id.in_(param_ids),
-                        tables.meta.cumtime < TIME_LIMIT,
-                        tables.classifications.classification == classification)\
-                .scalar()
-
-
-    counts = dict((c, get_classification_count(c))
-                  for c in ["w", "bf", "c", "to"])
-    total = sum(counts.values())
-
-    num_results = session.query(sql.sql.func.count(tables.results.id))\
-                .join(tables.meta)\
-                .join(tables.testcases)\
-                .filter(tables.results.testbed_id == testbed.id,
-                        tables.testcases.params_id.in_(param_ids),
                         tables.meta.cumtime < TIME_LIMIT)\
-                .scalar()
+                .group_by(tables.classifications.classification))
 
-    counts['total'] = "{:.1f}\\%".format((total / max(num_results, 1)) * 100)
+    counts['total'] = sum(counts.values())
 
     print(' ', device_str(testbed.device), tables.name, no_opt, counts)
-    return f"{counts['w']} & {counts['bf']} & {counts['c']} & {counts['to']} & {counts['total']}"
+    return " & ".join(str(counts.get(x, 0)) for x in ["w", "bf", "c", "to", "total"])
 
 
 def get_row(config_id, testbed_id, get_columns):
@@ -155,8 +138,8 @@ def get_classifications_table():
   \\toprule
   & & & \\multicolumn{{5}}{{c|}}{{\\textbf{{CLSmith}}}} & \\multicolumn{{5}}{{c}}{{\\textbf{{CLgen}}}} \\\\
   \\textbf{{\\#.}} & \\textbf{{Device}} & $\\pm$ &
-  \\textbf{{w}} & \\textbf{{bf}} & \\textbf{{c}} & \\textbf{{to}} & \\textbf{{\\% of total}} &
-  \\textbf{{w}} & \\textbf{{bf}} & \\textbf{{c}} & \\textbf{{to}} & \\textbf{{\\% of total}} \\\\
+  \\textbf{{w}} & \\textbf{{bf}} & \\textbf{{c}} & \\textbf{{to}} & \\textbf{{total}} &
+  \\textbf{{w}} & \\textbf{{bf}} & \\textbf{{c}} & \\textbf{{to}} & \\textbf{{total}} \\\\
   \\midrule""")
 
 
@@ -164,9 +147,9 @@ if __name__ == "__main__":
     # push LaTex to Overleaf
     !cd ~/docs/paper-project_b/ && git pull --rebase
 
-    # print("Generating outcomes table ...")
-    # with open(os.path.expanduser("~/docs/paper-project_b/build/tab/outcomes.tex"), "w") as outfile:
-    #     print(get_outcomes_table(), file=outfile)
+    print("Generating outcomes table ...")
+    with open(os.path.expanduser("~/docs/paper-project_b/build/tab/outcomes.tex"), "w") as outfile:
+        print(get_outcomes_table(), file=outfile)
 
     print("\nGenerating classifications table ...")
     with open(os.path.expanduser("~/docs/paper-project_b/build/tab/megatable.tex"), "w") as outfile:

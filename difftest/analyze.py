@@ -174,7 +174,8 @@ def set_classifications(session, tables: Tableset) -> None:
     """
     print(f"Resetting {tables.name} classifications ...")
     session.execute(f"DELETE FROM {tables.classifications.__tablename__}")
-    session.commit()
+
+    min_majsize = 7
 
     print(f"Determining {tables.name} wrong-code classifications ...")
     session.execute(f"""
@@ -185,12 +186,11 @@ LEFT JOIN {tables.testcases.__tablename__} ON {tables.results.__tablename__}.tes
 LEFT JOIN {tables.majorities.__tablename__} ON {tables.testcases.__tablename__}.id={tables.majorities.__tablename__}.id
 WHERE outcome = {OUTCOMES_TO_INT["pass"]}
 AND maj_outcome = {OUTCOMES_TO_INT["pass"]}
-AND outcome_majsize >= 6
-AND stdout_majsize >= CEILING(outcome_majsize / 2)
+AND outcome_majsize >= {min_majsize}
+AND stdout_majsize >= CEILING(2 * outcome_majsize / 3)
 AND stdout_id <> maj_stdout_id
 AND oclverified = 1
 """)
-    session.commit()
 
     print(f"Determining {tables.name} anomalous build-failures ...")
     session.execute(f"""
@@ -200,9 +200,9 @@ FROM {tables.results.__tablename__}
 LEFT JOIN {tables.testcases.__tablename__} ON {tables.results.__tablename__}.testcase_id={tables.testcases.__tablename__}.id
 LEFT JOIN {tables.majorities.__tablename__} ON {tables.testcases.__tablename__}.id={tables.majorities.__tablename__}.id
 WHERE outcome = {OUTCOMES_TO_INT["bf"]}
+AND outcome_majsize >= {min_majsize}
 AND maj_outcome = {OUTCOMES_TO_INT["pass"]}
 """)
-    session.commit()
 
     print(f"Determining {tables.name} anomalous crashes ...")
     session.execute(f"""
@@ -212,9 +212,9 @@ FROM {tables.results.__tablename__}
 LEFT JOIN {tables.testcases.__tablename__} ON {tables.results.__tablename__}.testcase_id={tables.testcases.__tablename__}.id
 LEFT JOIN {tables.majorities.__tablename__} ON {tables.testcases.__tablename__}.id={tables.majorities.__tablename__}.id
 WHERE outcome = {OUTCOMES_TO_INT["c"]}
+AND outcome_majsize >= {min_majsize}
 AND maj_outcome = {OUTCOMES_TO_INT["pass"]}
 """)
-    session.commit()
 
     print(f"Determining {tables.name} anomalous timeouts ...")
     session.execute(f"""
@@ -223,12 +223,60 @@ SELECT {tables.results.__tablename__}.id, {CLASSIFICATIONS_TO_INT["to"]}
 FROM {tables.results.__tablename__}
 LEFT JOIN {tables.majorities.__tablename__} ON {tables.results.__tablename__}.id={tables.majorities.__tablename__}.id
 WHERE outcome = {OUTCOMES_TO_INT["to"]}
+AND outcome_majsize = {min_majsize}
 AND maj_outcome = {OUTCOMES_TO_INT["pass"]}
 """)
     session.commit()
 
 
-def verify_testcase(session: session_t, tables: Tableset, testcase) -> None:
+def testcase_raises_compiler_warnings(session: session_t, tables: Tableset, testcase) -> bool:
+    # Check for red-flag compiler warnings. We can't do this for CLSmith
+    # because cl_launcher doesn't print build logs.
+    if testcase.compiler_warnings == None:
+        stderrs = [
+            x[0] for x in
+            session.query(tables.stderrs.stderr)\
+                .join(tables.results)\
+                .filter(tables.results.testcase_id == testcase.id)
+        ]
+        testcase.compiler_warnings = False
+        for stderr in stderrs:
+            if "incompatible pointer to integer conversion" in stderr:
+                print(f"testcase {testcase.id}: incompatible pointer to to integer conversion")
+                testcase.compiler_warnings = True
+                break
+            elif "ordered comparison between pointer and integer" in stderr:
+                print(f"testcase {testcase.id}: ordered comparison between pointer and integer")
+                testcase.compiler_warnings = True
+                break
+            elif "warning: incompatible" in stderr:
+                print(f"testcase {testcase.id}: incompatible warning")
+                testcase.compiler_warnings = True
+                break
+            elif "warning: division by zero is undefined" in stderr:
+                print(f"testcase {testcase.id}: division by zero is undefined")
+                testcase.compiler_warnings = True
+                break
+            elif "warning: comparison of distinct pointer types" in stderr:
+                print(f"testcase {testcase.id}: comparison of distinct pointer types")
+                testcase.compiler_warnings = True
+                break
+            elif "is past the end of the array" in stderr:
+                print(f"testcase {testcase.id}: is past the end of the array")
+                testcase.compiler_warnings = True
+                break
+            elif "warning: comparison between pointer and" in stderr:
+                print(f"testcase {testcase.id}: comparison between pointer and")
+                testcase.compiler_warnings = True
+                break
+            elif "warning" in stderr:
+                print("\n UNRECOGNIZED WARNINGS in testcase {testcase.id}:")
+                print("\n".join(f">> {line}" for line in stderr.split("\n")))
+
+    return testcase.compiler_warnings
+
+
+def verify_w_testcase(session: session_t, tables: Tableset, testcase) -> None:
     """
     Verify that a testcase is sensible.
 
@@ -251,58 +299,11 @@ def verify_testcase(session: session_t, tables: Tableset, testcase) -> None:
         session.query(tables.classifications)\
             .filter(tables.classifications.id.in_(ids_to_update))\
             .delete()
-        session.commit()
 
     # CLgen-specific analysis. We can omit these checks for CLSmith, as they
     # will always pass.
     if tables.name == "CLgen":
-
-        # Check for red-flag compiler warnings. We can't do this for CLSmith
-        # because cl_launcher doesn't print build logs.
-        if testcase.compiler_warnings == None:
-            stderrs = [
-                x[0] for x in
-                session.query(tables.stderrs.stderr)\
-                    .join(tables.results)\
-                    .filter(tables.results.testcase_id == testcase.id)
-            ]
-            # print("checking", len(stderrs), "stderrs. first:", stderrs[0])
-            testcase.compiler_warnings = False
-            for stderr in stderrs:
-                if "incompatible pointer to integer conversion" in stderr:
-                    print(f"testcase {testcase.id}: incompatible pointer to to integer conversion")
-                    testcase.compiler_warnings = True
-                    break
-                elif "ordered comparison between pointer and integer" in stderr:
-                    print(f"testcase {testcase.id}: ordered comparison between pointer and integer")
-                    testcase.compiler_warnings = True
-                    break
-                elif "warning: incompatible" in stderr:
-                    print(f"testcase {testcase.id}: incompatible warning")
-                    testcase.compiler_warnings = True
-                    break
-                elif "warning: division by zero is undefined" in stderr:
-                    print(f"testcase {testcase.id}: division by zero is undefined")
-                    testcase.compiler_warnings = True
-                    break
-                elif "warning: comparison of distinct pointer types" in stderr:
-                    print(f"testcase {testcase.id}: comparison of distinct pointer types")
-                    testcase.compiler_warnings = True
-                    break
-                elif "is past the end of the array" in stderr:
-                    print(f"testcase {testcase.id}: is past the end of the array")
-                    testcase.compiler_warnings = True
-                    break
-                elif "warning: comparison between pointer and" in stderr:
-                    print(f"testcase {testcase.id}: comparison between pointer and")
-                    testcase.compiler_warnings = True
-                    break
-                elif "warning" in stderr:
-                    print("\n UNRECOGNIZED WARNINGS in testcase {testcase.id}:")
-                    print("\n".join(f">> {line}" for line in stderr.split("\n")))
-
-
-        if testcase.compiler_warnings:
+        if testcase_raises_compiler_warnings(session, tables, testcase):
             print(f"testcase {testcase.id}: redflag compiler warnings")
             return fail()
 
@@ -332,12 +333,11 @@ def verify_testcase(session: session_t, tables: Tableset, testcase) -> None:
             testcase.oclverified = oclgrind.oclgrind_verify_clsmith(testcase)
         else:
             testcase.oclverified = oclgrind.oclgrind_verify_clgen(testcase)
+        session.commit()
 
     if not testcase.oclverified:
         print(f"testcase {testcase.id}: failed OCLgrind verification")
         return fail()
-
-    session.commit()
 
 
 def verify_optimization_sensitive(session: session_t, tables: Tableset, result) -> None:
@@ -369,7 +369,9 @@ def verify_optimization_sensitive(session: session_t, tables: Tableset, result) 
             .filter(tables.classifications.id == result.id).delete()
 
 
-def verify_w_classifications(session: session_t, tables: Tableset) -> None:
+def prune_w_classifications(session: session_t, tables: Tableset) -> None:
+
+    # Verify testcases
     q = session.query(tables.results.testcase_id)\
             .join(tables.classifications)\
             .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"])\
@@ -379,18 +381,158 @@ def verify_w_classifications(session: session_t, tables: Tableset) -> None:
             .distinct()\
             .all()
 
+    print(f"Verifying {tables.name} w-classified testcases ...")
     for testcase in ProgressBar()(testcases_to_verify):
-        verify_testcase(session, tables, testcase)
+        verify_w_testcase(session, tables, testcase)
 
+    # Verify results
     results_to_verify = session.query(tables.results)\
             .join(tables.classifications)\
             .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"])\
             .all()
 
+    print(f"Verifying {tables.name} w-classified optimization sensitivity ...")
     for result in ProgressBar()(results_to_verify):
         verify_optimization_sensitive(session, tables, result)
 
     # TODO: Do any of the other results for this testcase crash?
+
+
+def verify_opencl_version(session: session_t, tables: Tableset, testcase) -> None:
+    """
+    OpenCL 2.0
+    """
+    opencl_2_0_testbeds = session.query(Testbed.id).filter(Testbed.opencl == "2.0")
+
+    passes_2_0 = session.query(sql.sql.func.count(tables.results.id))\
+        .filter(tables.results.testcase_id == testcase.id,
+                tables.results.testbed_id.in_(opencl_2_0_testbeds),
+                tables.results.outcome != OUTCOMES_TO_INT["bf"])\
+        .scalar()
+
+    if not passes_2_0:
+        # If it didn't build on OpenCL 2.0, we're done.
+        return
+
+    passes_1_2 = session.query(sql.sql.func.count(tables.results.id))\
+        .filter(tables.results.testcase_id == testcase.id,
+                ~tables.results.testbed_id.in_(opencl_2_0_testbeds),
+                tables.results.outcome == OUTCOMES_TO_INT["pass"])\
+        .scalar()
+
+    if passes_1_2:
+        # If it *did* build on OpenCL 1.2, we're done.
+        return
+
+    ids_to_update = [
+        x[0] for x in
+        session.query(tables.results.id)\
+            .join(tables.classifications)\
+            .filter(tables.results.testcase_id == testcase.id,
+                    ~tables.results.testbed_id.in_(opencl_2_0_testbeds),
+                    tables.classifications.classification == CLASSIFICATIONS_TO_INT["bf"]).all()
+    ]
+    n = len(ids_to_update)
+    if n:
+        ids_str = ",".join(str(x) for x in ids_to_update)
+        print(f"retracting bf-classification for testcase {testcase.id} - only passes on OpenCL 2.0. {n} results: {ids_str}")
+        session.query(tables.classifications)\
+            .filter(tables.classifications.id.in_(ids_to_update))\
+            .delete(synchronize_session=False)
+
+
+def prune_bf_classifications(session: session_t, tables: Tableset) -> None:
+    # Retract results where 'double' is not supported
+    ids_to_delete = [x[0] for x in session.query(tables.results.id)\
+        .join(tables.classifications)\
+        .join(tables.stderrs)\
+        .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["bf"],
+                tables.stderrs.stderr.like("%use of type 'double' requires cl_khr_fp64 extension%"))]
+
+    n = len(ids_to_delete)
+    if n:
+        print(f"retracting {n} bf-classified {tables.name} results in which 'double' is not supported ...")
+        session.query(tables.classifications)\
+            .filter(tables.classifications.id.in_(ids_to_delete))\
+            .delete(synchronize_session=False)
+
+    # Retract results in which 'implicit function declaration'
+    ids_to_delete = [x[0] for x in session.query(tables.results.id)\
+        .join(tables.classifications)\
+        .join(tables.stderrs)\
+        .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["bf"],
+                tables.stderrs.stderr.like("%implicit declaration of function%"))]
+
+    n = len(ids_to_delete)
+    if n:
+        print(f"retracting {n} bf-classified {tables.name} results with implicit function declarations ...")
+        session.query(tables.classifications)\
+            .filter(tables.classifications.id.in_(ids_to_delete))\
+            .delete(synchronize_session=False)
+    session.commit()
+
+    # Verify results
+    q = session.query(tables.results.testcase_id)\
+        .join(tables.classifications)\
+        .join(Testbed)\
+        .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["bf"],
+                Testbed.opencl == "1.2")\
+        .distinct()
+    testcases_to_verify = session.query(tables.testcases)\
+        .filter(tables.testcases.id.in_(q))\
+        .distinct()\
+        .all()
+
+    print(f"Verifying {tables.name} bf-classified testcases ...")
+    for testcase in ProgressBar()(testcases_to_verify):
+        verify_opencl_version(session, tables, testcase)
+
+
+def verify_c_testcase(session: session_t, tables: Tableset, testcase) -> None:
+    """
+    Verify that a testcase is sensible.
+    """
+
+    def fail():
+        ids_to_update = [
+            x[0] for x in
+            session.query(tables.results.id)\
+                .join(tables.classifications)\
+                .filter(tables.results.testcase_id == testcase.id,
+                        tables.classifications.classification == CLASSIFICATIONS_TO_INT["c"]).all()
+        ]
+        n = len(ids_to_update)
+        assert n > 0
+        ids_str = ",".join(str(x) for x in ids_to_update)
+        print(f"retracting c-classification on {n} results: {ids_str}")
+        session.query(tables.classifications)\
+            .filter(tables.classifications.id.in_(ids_to_update))\
+            .delete(synchronize_session=False)
+
+    # CLgen-specific analysis. We can omit these checks for CLSmith, as they
+    # will always pass.
+    if tables.name == "CLgen":
+        if testcase_raises_compiler_warnings(session, tables, testcase):
+            print(f"testcase {testcase.id}: redflag compiler warnings")
+            return fail()
+
+
+def prune_c_classifications(session: session_t, tables: Tableset) -> None:
+    # Verify testcases
+    q = session.query(tables.results.testcase_id)\
+            .join(tables.classifications)\
+            .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["c"])\
+            .distinct()
+    testcases_to_verify = session.query(tables.testcases)\
+            .filter(tables.testcases.id.in_(q))\
+            .distinct()\
+            .all()
+
+    print(f"Verifying {tables.name} w-classified testcases ...")
+    for testcase in ProgressBar()(testcases_to_verify):
+        verify_c_testcase(session, tables, testcase)
+
+    session.commit()
 
 
 if __name__ == "__main__":
@@ -416,5 +558,6 @@ if __name__ == "__main__":
     with Session(commit=True) as s:
         for tableset in tables:
             set_classifications(s, tableset)
-            verify_w_classifications(s, tableset)
-            get_assertions(s, tableset)
+            prune_w_classifications(s, tableset)
+            prune_bf_classifications(s, tableset)
+            prune_c_classifications(s, tableset)
