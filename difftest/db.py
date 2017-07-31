@@ -449,6 +449,18 @@ class CLSmithStderr(Base):
     hash = sql.Column(sql.String(40), nullable=False, unique=True)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
+    result = sql.orm.relationship("CLSmithResult", back_populates="stderr")
+    assertion = sql.orm.relationship("CLSmithAssertion", back_populates="stderr")
+
+
+class CLSmithAssertion(Base):
+    __tablename__ = "CLSmithAssertions"
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithStderrs.id"), primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, index=True)
+    assertion = sql.Column(sql.UnicodeText(length=1024), nullable=False)
+
+    stderr = sql.orm.relationship("CLSmithStderr", back_populates="assertion")
+
 
 class CLSmithMeta(Base):
     __tablename__ = "CLSmithMetas"
@@ -545,6 +557,18 @@ class CLgenStderr(Base):
     id = sql.Column(sql.Integer, primary_key=True)
     hash = sql.Column(sql.String(40), nullable=False, unique=True)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+
+    result = sql.orm.relationship("CLgenResult", back_populates="stderr")
+    assertion = sql.orm.relationship("CLgenAssertion", back_populates="stderr")
+
+
+class CLgenAssertion(Base):
+    __tablename__ = "CLgenAssertions"
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStderrs.id"), primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, index=True)
+    assertion = sql.Column(sql.UnicodeText(length=1024), nullable=False)
+
+    stderr = sql.orm.relationship("CLgenStderr", back_populates="assertion")
 
 
 class CLgenMeta(Base):
@@ -808,6 +832,7 @@ Tableset = namedtuple('Tableset', [
         'stdouts',
         'stderrs',
         'majorities',
+        'assertions',
     ])
 
 CLSMITH_TABLES = Tableset(name="CLSmith",
@@ -816,14 +841,14 @@ CLSMITH_TABLES = Tableset(name="CLSmith",
     params=cl_launcherParams, reductions=CLSmithReduction,
     meta=CLSmithMeta, classifications=CLSmithClassification,
     stdouts=CLSmithStdout, stderrs=CLSmithStderr,
-    majorities=CLSmithMajority)
+    majorities=CLSmithMajority, assertions=CLSmithAssertion)
 CLGEN_TABLES = Tableset(name="CLgen",
     results=CLgenResult, testcases=CLgenTestCase,
     programs=CLgenProgram, harnesses=CLgenHarness,
     params=cldriveParams, reductions=CLgenReduction,
     meta=CLgenMeta, classifications=CLgenClassification,
     stdouts=CLgenStdout, stderrs=CLgenStderr,
-    majorities=CLgenMajority)
+    majorities=CLgenMajority, assertions=CLgenAssertion)
 
 
 class InsufficientDataError(ValueError):

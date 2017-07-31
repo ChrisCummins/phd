@@ -81,7 +81,7 @@ GROUP BY program_id
                 print(valid)
                 print()
                 handcheck = get_or_create(session, CLgenHandcheck,
-                                          id=program.id, handcheck=valid)
+                                          id=program.id, handchecked=valid)
                 session.add(handcheck)
 
     # next check

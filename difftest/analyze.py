@@ -139,12 +139,11 @@ def get_cldrive_outcome(result):
     # SIGABRT
     elif result.status == -6:
         return crash_or_build_crash()
-    # cl_launcher error
+    # cldrive error
+    elif result.status == 1 and result.runtime >= 60:
+        return timeout_or_build_timeout()
     elif result.status == 1:
-        if 'cldrive.driver.Timeout: 60' in result.stderr:
-            return timeout_or_build_timeout()
-        else:
-            return crash_or_build_failure()
+        return crash_or_build_failure()
     # file not found (check the stderr on this one):
     elif result.status == 127:
         return crash_or_build_failure()
@@ -201,7 +200,7 @@ FROM {tables.results.__tablename__}
 LEFT JOIN {tables.testcases.__tablename__} ON {tables.results.__tablename__}.testcase_id={tables.testcases.__tablename__}.id
 LEFT JOIN {tables.majorities.__tablename__} ON {tables.testcases.__tablename__}.id={tables.majorities.__tablename__}.id
 WHERE outcome = {OUTCOMES_TO_INT["bf"]}
-AND maj_outcome <> {OUTCOMES_TO_INT["bf"]}
+AND maj_outcome = {OUTCOMES_TO_INT["pass"]}
 """)
     session.commit()
 
@@ -213,7 +212,7 @@ FROM {tables.results.__tablename__}
 LEFT JOIN {tables.testcases.__tablename__} ON {tables.results.__tablename__}.testcase_id={tables.testcases.__tablename__}.id
 LEFT JOIN {tables.majorities.__tablename__} ON {tables.testcases.__tablename__}.id={tables.majorities.__tablename__}.id
 WHERE outcome = {OUTCOMES_TO_INT["c"]}
-AND maj_outcome <> {OUTCOMES_TO_INT["c"]}
+AND maj_outcome = {OUTCOMES_TO_INT["pass"]}
 """)
     session.commit()
 
@@ -224,16 +223,17 @@ SELECT {tables.results.__tablename__}.id, {CLASSIFICATIONS_TO_INT["to"]}
 FROM {tables.results.__tablename__}
 LEFT JOIN {tables.majorities.__tablename__} ON {tables.results.__tablename__}.id={tables.majorities.__tablename__}.id
 WHERE outcome = {OUTCOMES_TO_INT["to"]}
-AND maj_outcome <> {OUTCOMES_TO_INT["to"]}
+AND maj_outcome = {OUTCOMES_TO_INT["pass"]}
 """)
     session.commit()
 
 
 def verify_testcase(session: session_t, tables: Tableset, testcase) -> None:
     """
-    Verify the testcase.
+    Verify that a testcase is sensible.
 
-    This is time consuming. It should only be run on supicious testcases.
+    On first run, this is time consuming, though results are cached for later
+    re-use.
     """
 
     def fail():
@@ -340,17 +340,57 @@ def verify_testcase(session: session_t, tables: Tableset, testcase) -> None:
     session.commit()
 
 
+def verify_optimization_sensitive(session: session_t, tables: Tableset, result) -> None:
+    """
+    Check if a wrong-code result is optimization-sensitive, and ignore it
+    if not.
+    """
+    params = result.testcase.params
+    complement_params_id = session.query(tables.params.id)\
+        .filter(tables.params.gsize_x == params.gsize_x,
+                tables.params.gsize_y == params.gsize_y,
+                tables.params.gsize_z == params.gsize_z,
+                tables.params.optimizations == (not params.optimizations))\
+        .scalar()
+
+    complement_result = session.query(tables.results)\
+                            .join(tables.testcases)\
+                            .filter(tables.testcases.program_id == result.testcase.program_id,
+                                    tables.testcases.params_id == complement_params_id)\
+                            .first()
+    if complement_result:
+        if complement_result.stdout_id == result.stdout_id:
+            print(f"retracting w-classification on {tables.name} result {result.id} - optimization insensitive")
+            session.query(tables.classifications)\
+                .filter(tables.classifications.id == result.id).delete()
+    else:
+        print(f"no complement result for {tables.name} result {result.id}")
+        session.query(tables.classifications)\
+            .filter(tables.classifications.id == result.id).delete()
+
+
 def verify_w_classifications(session: session_t, tables: Tableset) -> None:
     q = session.query(tables.results.testcase_id)\
             .join(tables.classifications)\
             .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"])\
             .distinct()
     testcases_to_verify = session.query(tables.testcases)\
-                            .filter(tables.testcases.id.in_(q))\
-                            .distinct().all()
+            .filter(tables.testcases.id.in_(q))\
+            .distinct()\
+            .all()
 
     for testcase in ProgressBar()(testcases_to_verify):
         verify_testcase(session, tables, testcase)
+
+    results_to_verify = session.query(tables.results)\
+            .join(tables.classifications)\
+            .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"])\
+            .all()
+
+    for result in ProgressBar()(results_to_verify):
+        verify_optimization_sensitive(session, tables, result)
+
+    # TODO: Do any of the other results for this testcase crash?
 
 
 if __name__ == "__main__":
@@ -361,9 +401,6 @@ if __name__ == "__main__":
                         help="analyze only clsmith results")
     parser.add_argument("--clgen", action="store_true",
                         help="analyze only clgen results")
-    parser.add_argument("--prune", action="store_true")
-    parser.add_argument("-t", "--time-limit", type=int, default=48,
-                        help="time limit in hours (default: 48)")
     args = parser.parse_args()
 
     tables = []
@@ -378,7 +415,6 @@ if __name__ == "__main__":
 
     with Session(commit=True) as s:
         for tableset in tables:
-            if args.prune:
-                verify_w_classifications(s, tableset)
-            else:
-                set_classifications(s, tableset)
+            set_classifications(s, tableset)
+            verify_w_classifications(s, tableset)
+            get_assertions(s, tableset)

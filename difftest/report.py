@@ -138,10 +138,60 @@ def generate_reports(tables, time_limit, type_field, type_value, type_name):
 
 
 def w_reports(tables, time_limit):
+    outbox = fs.path(f"../data/bug-reports/{tables.name}/w")
+    fs.mkdir(outbox)
     with Session(commit=False) as s:
-        q = s.query(tables.results.id, tables.results.program.src)\
-                .join(tables.classifications)\
-                .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"])
+        results = s.execute(f"""
+SELECT {tables.results.__tablename__}.id,
+       testcase_id,
+       Testbeds.id,
+       {tables.programs.__tablename__}.id,
+       src,
+       gsize_x, gsize_y, gsize_z, lsize_x, lsize_y, lsize_z, optimizations,
+       (SELECT stdout FROM {tables.stdouts.__tablename__} WHERE {tables.stdouts.__tablename__}.id = {tables.majorities.__tablename__}.maj_stdout_id),
+       {tables.stdouts.__tablename__}.stdout
+FROM {tables.results.__tablename__}
+LEFT JOIN {tables.classifications.__tablename__} ON {tables.results.__tablename__}.id={tables.classifications.__tablename__}.id
+LEFT JOIN Testbeds on {tables.results.__tablename__}.testbed_id=Testbeds.id
+LEFT JOIN {tables.meta.__tablename__} ON {tables.results.__tablename__}.id={tables.meta.__tablename__}.id
+LEFT JOIN {tables.stdouts.__tablename__} ON {tables.results.__tablename__}.stdout_id={tables.stdouts.__tablename__}.id
+LEFT JOIN {tables.testcases.__tablename__} ON {tables.results.__tablename__}.testcase_id={tables.testcases.__tablename__}.id
+LEFT JOIN {tables.majorities.__tablename__} ON {tables.testcases.__tablename__}.id={tables.majorities.__tablename__}.id
+LEFT JOIN {tables.programs.__tablename__} ON {tables.testcases.__tablename__}.program_id={tables.programs.__tablename__}.id
+LEFT JOIN {tables.params.__tablename__} ON {tables.params.__tablename__}.id = {tables.testcases.__tablename__}.params_id
+WHERE cumtime < {time_limit}
+AND classification={CLASSIFICATIONS_TO_INT["w"]}
+ORDER BY testbed_id
+""")
+        for row in results.fetchall():
+            result_id, testcase_id, testbed_id, program_id, src, gx, gy, gz, lx, ly, lz, opt, expected_out, actual_out = row
+
+            testbed = s.query(Testbed).filter(Testbed.id == testbed_id).scalar()
+            vendor = util.vendor_str(testbed.platform)
+            outpath = fs.path(outbox, f"bug-report-{vendor}-{result_id}.c")
+            with open(outpath, "w") as outfile:
+                print(outpath)
+                expected_out = comment(expected_out)
+                actual_out = comment(actual_out)
+                print(f"""\
+// bug report {vendor}-{result_id}
+//
+// {tables.results.__tablename__}.id = {result_id}
+// {tables.testcases.__tablename__}.id = {testcase_id}
+// {tables.programs.__tablename__}.id = {program_id}
+// Global size: {gx},{gy},{gz}
+// Workgroup size: {lx},{ly},{lz}
+// Optimizations: {opt}
+// Expected output:
+{expected_out}
+//
+// Actual output:
+{actual_out}
+//
+// Kernel:
+{src}
+""", file=outfile)
+
 
 def main():
     parser = ArgumentParser(description=__doc__)

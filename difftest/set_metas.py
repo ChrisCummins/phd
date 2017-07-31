@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sqlalchemy as sql
 from argparse import ArgumentParser
+from labm8 import crypto
 from progressbar import ProgressBar
 
 import util
@@ -115,6 +116,28 @@ ORDER BY t1.maj_outcome DESC
     session.commit()
 
 
+def get_assertions(session: session_t, tables: Tableset) -> None:
+    print(f"Recording {tables.name} compiler assertions ...")
+    q = session.execute(f"DELETE FROM {tables.assertions.__tablename__}")
+    q = session.execute(f"""
+SELECT stderr.id, stderr.stderr
+FROM {tables.results.__tablename__} results
+LEFT JOIN {tables.meta.__tablename__} meta ON results.id = meta.id
+LEFT JOIN {tables.stderrs.__tablename__} stderr ON results.stderr_id = stderr.id
+WHERE status <> 0
+AND stderr LIKE '%assertion%'
+GROUP BY stderr.id, stderr.stderr
+""")
+
+    for stderr_id, stderr in ProgressBar()(q.fetchall()):
+        lines = [line for line in stderr.split('\n') if "assertion" in line.lower()]
+        assert len(lines) == 1
+        msg = lines[0]
+        assertion = tables.assertions(id=stderr_id, hash=crypto.sha1_str(msg),
+                                      assertion=msg)
+        session.add(assertion)
+
+
 if __name__ == "__main__":
     parser = ArgumentParser(description="Collect difftest results for a device")
     parser.add_argument("-H", "--hostname", type=str, default="cc1",
@@ -129,10 +152,14 @@ if __name__ == "__main__":
     db_hostname = args.hostname
     print("connected to", db.init(db_hostname))
 
-    with Session() as s:
-        if not args.clgen:
-            set_metas(s, CLSMITH_TABLES)
-            set_majorities(s, CLSMITH_TABLES)
-        if not args.clsmith:
-            set_metas(s, CLGEN_TABLES)
-            set_majorities(s, CLGEN_TABLES)
+    tables = []
+    if not args.clgen:
+        tables.append(CLSMITH_TABLES)
+    if not args.clsmith:
+        tables.append(CLGEN_TABLES)
+
+    with Session(commit=True) as s:
+        for tableset in tables:
+            # set_metas(s, tableset)
+            # set_majorities(s, tableset)
+            get_assertions(s, tableset)
