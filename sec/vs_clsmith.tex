@@ -32,6 +32,7 @@ Configs.\ $4$, $5$, $6$, and $7$ have a number CLSmith bc outcomes when optimiza
 \cc{Config.\ $7+$ has a lot of \textbf{bto}s. Why?}
 
 
+
 \subsection{Differential Tests}
 
 Table~\ref{tab:classifications} shows the results of applying voting heuristics to the results of Table~\ref{tab:outcomes}.
@@ -66,8 +67,9 @@ Table~\ref{tab:classifications} shows the results of applying voting heuristics 
 
 \cc{TODO: We note that we tested the wrong-code classification of CLSmith, finding that it does not affect the number of CLSmith wrong-code bugs.}
 
-The 2357 \textbf{bf} results for CLSmith on Configs.\ $4\pm$ and $6\pm$ are all a result of compilers rejecting empty declarations, (e.g. \texttt{int;}) which CLSmith occasionally emits. This is a known issue which will likely be addressed.
+The 2357 \textbf{bf} results for CLSmith on Configs.\ $4\pm$ and $6\pm$ are all a result of compilers rejecting empty declarations, (e.g. \texttt{int;}) which CLSmith occasionally emits. This is a known CLSmith issue which will likely be addressed.
 % https://github.com/ChrisLidbury/CLSmith/issues/7
+Similarly, Intel Configs.\ 4--7 (but not 3) reject DeepSmith kernels which omit a type specified (e.g. \texttt{\_\_global* a}), whereas all other Configs.\ (including 3) emit and warning and default to \texttt{int} type.
 
 
 Oclgrind was resilient to CLSmith testing, yet we managed to trip it up during compilation.
