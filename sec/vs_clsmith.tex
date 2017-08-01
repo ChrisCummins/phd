@@ -80,10 +80,41 @@ Configs.\ $1\pm$, $2\pm$ reject kernels which \texttt{size\_t} parameters.
 
 \subsection{Comparison of test cases}
 
-Average CLSmith kernel is 1200 lines long (excluding headers). CLSmith kernels are unreadable, requiring automatic or manual test case reduction. Average CLgen kernel is 19 lines long.
-
-
-Potentially interesting questions: What is the total lines of code which get run on each device during the tests? DeepSmith programs are smaller, but we get through more of them.
+%SELECT MIN(linecount) as minlen,
+%->    AVG(linecount) as meanlen,
+%->        MAX(linecount) as maxlen
+%-> FROM CLSmithResults results
+%-> LEFT JOIN CLSmithMetas meta ON results.id = meta.id
+%-> LEFT JOIN CLSmithTestCases testcases ON results.testcase_id = testcases.id
+%-> LEFT JOIN CLSmithPrograms programs ON testcases.program_id = programs.id
+%-> WHERE cumtime < 48 * 3600;
+%+--------+-----------+--------+
+%| minlen | meanlen   | maxlen |
+%+--------+-----------+--------+
+%|     56 | 1186.8496 |  11222 |
+%+--------+-----------+--------+
+Average CLSmith kernel is 1189 lines long (excluding headers). CLSmith kernels are unreadable, requiring automatic or manual test case reduction.
+%SELECT MIN(linecount) as minlen,
+%->    AVG(linecount) as meanlen,
+%->        MAX(linecount) as maxlen
+%-> FROM CLgenResults results
+%-> LEFT JOIN CLgenMetas meta ON results.id = meta.id
+%-> LEFT JOIN CLgenTestCases testcases ON results.testcase_id = testcases.id
+%-> LEFT JOIN CLgenPrograms programs ON testcases.program_id = programs.id
+%-> WHERE cumtime < 48 * 3600;
+%+--------+---------+--------+
+%| minlen | meanlen | maxlen |
+%+--------+---------+--------+
+%|      1 | 20.3163 |    636 |
+%+--------+---------+--------+
+Average CLgen kernel is 20 lines long.
+% SELECT SUM(linecount)
+% FROM CLSmithResults results
+% INNER JOIN CLSmithMetas meta ON results.id = meta.id
+% INNER JOIN CLSmithTestCases testcases ON results.testcase_id = testcases.id
+% INNER JOIN CLSmithPrograms programs on testcases.program_id = programs.id
+% WHERE cumtime < 48 * 3600;
+Over the course of testing, a combined $3.39 \times 10^8$ of CLSmith code was evaluated, compared to $3.76 \times 10^6$ lines of DeepSmith code.
 
 In 48 hours of testing, DeepSmith triggered 9 distinct compiler assertions, CLSmith 2. Both of the assertions triggered by CLSmith were also triggered by CLgen.
 % Test case sizes:

@@ -1,10 +1,8 @@
 \section{Motivation}
 
-Figure~\ref{lst:intel-size_t-int-reduced}.
-Figure~\ref{lst:oclgrind-llvm-densemap-assertion}.
-Figure~\ref{fig:motivating-segfault}.
-
-\begin{figure}
+% TODO:
+\newsavebox{\IntelSizetIntReduced}
+\begin{lrbox}{\IntelSizetIntReduced}
 \begin{lstlisting}
 __kernel void A(__global double* a) {
   int tid = get_global_id(0);
@@ -12,13 +10,10 @@ __kernel void A(__global double* a) {
     a[get_global_id(0)] = 1;
 }
 \end{lstlisting}
-\label{lst:intel-size_t-int-reduced}
-\caption{Hand-reduced Figure~\ref{lst:intel-size_t-int}.}
-\end{figure}
+\end{lrbox}
 
-\begin{figure}
-\lstset{language=[OpenCL]C}
-% bug-reports/CLgenResults/bc/oclgrind-densemap/bug-report-oclgrind-434050.c
+\newsavebox{\OclgrindRaceSwitch}
+\begin{lrbox}{\OclgrindRaceSwitch}
 \begin{lstlisting}
 __kernel void A(__global int* a, __global int* b) {
   switch (get_global_id(0)) {
@@ -34,24 +29,37 @@ __kernel void A(__global int* a, __global int* b) {
   barrier(2);
 }
 \end{lstlisting}
-\caption{%
-  Configs.\ $10\pm$ race condition when global size > 1 (fixed upstream).
-  \cc{Though simple, this is code is difficult to produce using existing approaches - CLSmith does not allow thread index to affect program flow.}%
-}
-\label{lst:oclgrind-llvm-densemap-assertion}
-\end{figure}
+\end{lrbox}
 
-\begin{figure}
-\lstset{language=[OpenCL]C}
-% cl_launcherCLgenResults/runtime_crash/bug-report-intel-30870.sh
+\newsavebox{\AlmostEverythingCrash}
+\begin{lrbox}{\AlmostEverythingCrash}
 \begin{lstlisting}
 __kernel void A() {
   __builtin_astype(d, uint4);
 }
 \end{lstlisting}
-\caption{%
-  Of the 10 compilers we tested, 6 crash with segfault when compiling this kernel.
-  CLSmith does not generate erroneous code such as this.
-}%
-\label{fig:motivating-segfault}
+\end{lrbox}
+
+
+\begin{figure}
+  \centering %
+  \subfloat[Hand-reduced Figure~\ref{lst:intel-size_t-int}.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSizetIntReduced}}}%
+    \label{lst:intel-size_t-int-reduced}
+  }\\%
+  \subfloat[Configs.\ $10\pm$ race condition when global size > 1 (fixed upstream). \cc{Though simple, this is code is difficult to produce using existing approaches - CLSmith does not allow thread index to affect program flow.}]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindRaceSwitch}}}%
+    \label{lst:oclgrind-race-switch}
+  }\\%
+  \subfloat[Of the 10 compilers we tested, 6 crash with segfault when compiling this kernel. CLSmith does not generate erroneous code such as this.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\AlmostEverythingCrash}}}%
+    \label{lst:almost-everything-crash}
+  }\\%
+  \caption{Motivating bugs exposed using approach.}%
+  \label{lst:motivation}%
 \end{figure}
+
+
+Figure~\ref{lst:intel-size_t-int-reduced}.
+Figure~\ref{lst:oclgrind-race-switch}.
+Figure~\ref{lst:almost-everything-crash}.
