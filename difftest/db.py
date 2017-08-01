@@ -138,6 +138,7 @@ class CLSmithProgram(Base):
     # production output
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     linecount = sql.Column(sql.Integer, nullable=False)
+    size = sql.Column(sql.Integer, nullable=False)
 
     # relation back to results:
     testcases = sql.orm.relationship("CLSmithTestCase", back_populates="program")
@@ -160,6 +161,7 @@ class CLgenProgram(Base):
     # production output
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
     linecount = sql.Column(sql.Integer, nullable=False)
+    size = sql.Column(sql.Integer, nullable=False)
 
     # stats
     cl_launchable = sql.Column(sql.Boolean)
