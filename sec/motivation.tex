@@ -59,7 +59,16 @@ __kernel void A() {
   \label{lst:motivation}%
 \end{figure}
 
+An error in the optimizer of two of the compilers we tested
+% Configs.\ $4+$, $6+$
+causes the \texttt{if} statement of Figure~\ref{lst:intel-size_t-int-reduced} to be executed when the kernel is compiled with optimizations enabled.
+% cd ~/data/kernels/github-pp
+% ls | xargs egrep -l 'int [A-Z]+ = get_global_id\(' -- | wc -l
+% >> 2144
+% ls | wc -l
+% >> 4655
+This is troubling --- 46\% of kernels on GitHub use this \texttt{if} construct to guard against invalid memory accesses. 
 
-Figure~\ref{lst:intel-size_t-int-reduced}.
-Figure~\ref{lst:oclgrind-race-switch}.
-Figure~\ref{lst:almost-everything-crash}.
+
+\cc{TODO} Figure~\ref{lst:oclgrind-race-switch}.
+\cc{TODO} Figure~\ref{lst:almost-everything-crash}.

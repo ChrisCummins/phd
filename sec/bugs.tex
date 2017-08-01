@@ -27,6 +27,11 @@ This kernel Figure~\ref{lst:crash-almost-everything} crashes all Intel compilers
 
 \input{lst/compiler-crash-bugs}
 
+% TODO: LLVM bug https://bugs.llvm.org/show_bug.cgi?id=33897
+% __kernel void A(__global float* b) {
+%	(float4)(b);
+% }
+
 \subsection{Compiler Hangs}
 
 Configs.\ $1+$ and $2+$ hang on large loop bounds. Configs.\ $3\pm$ hang while assigning a value from a pointer address. Configs.\ $4+$, $5+$, $6+$, $7+$ hang on non-terminating while loops.
@@ -98,8 +103,6 @@ Figure~\ref{lst:oclgrind-llvm-densemap-assertion} exposed a race condition in sw
 \input{lst/runtime-crash-bugs}
 
 \subsection{Wrong-code Bugs}
-
-Configs.\ $1+$, $2+$, $3-$, $4+$, $5-$, $6-$, $7+$, $8+$, $9-$, $10+$ miscompile~ref{lst:u}.
 
 An error in the optimizer of Configs.\ $4+$, $6+$ causes the \texttt{if} statement of Figure~\ref{lst:compiler-crashes} to be executed.
 % cd ~/data/kernels/github-pp
