@@ -53,7 +53,7 @@ __kernel void entry(__global unsigned char* a, unsigned b) {
   barrier(1);
 }
 \end{lstlisting}
-\caption{Configs.\ $8\pm$ spin consuming 100\% CPU usage during code generation.}
+\caption{Configs.\ $7\pm$ spin consuming 100\% CPU usage during code generation.}
 %LLVM ERROR: LLVM2PIL: Cannot yet select: 0x7f72a45a7ed0: i8,i8 = umul_lohi 0x7f72a45a87d0, 0x7f72a45a88d0 [ORD=16] [ID=22]
 %0x7f72a45a87d0: i8 = srl 0x7f72a45a7dd0, 0x7f72a42fff90 [ORD=16] [ID=21]
 %0x7f72a45a7dd0: i8,ch = load 0x7f72a41d9438, 0x7f72a4300790, 0x7f72a4300590<LD1[%scevgep2]> [ORD=15] [ID=20]
