@@ -1,4 +1,0 @@
-__kernel void A(global ushort* a, global short3* b) {
-  int c = get_global_id(0);
-  b[c] = convert_short_sat(a[c]);
-}

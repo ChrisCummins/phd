@@ -155,18 +155,29 @@ A bug in \texttt{clang::sema} has been forwarded to the LLVM folks.
 %	(float4)(b);
 % }
 
+
 \subsection{Compiler Hangs}
 
 \newsavebox{\IntelPtrCompilerHang}
 \begin{lrbox}{\IntelPtrCompilerHang}
   \hspace{1.5em}
   \begin{lstlisting}
-    __kernel void A(__global int* a) {
-      int b = get_global_id(0);
-      a[b] = (6 * 32) + 4 * (32 / 32) + a;
+    __kernel void A(__global ulong* a) {
+      a[get_global_id(0)] = (ulong)(a + 1);
     }
   \end{lstlisting}
 \end{lrbox}
+% Another 3± hang:
+% __kernel void A(__global const char* a, __global char* b, __global char* c) {
+%   int d = get_global_id(0);
+%   c[d] = get_global_id(0) + c;
+% }
+
+% Another 3± hang:
+% __kernel void A(global int* a) {
+%   local int b[4][3][4][5];
+%   b[1][2][3][3] = b[3];
+% }
 
 \newsavebox{\IntelOptCompilerHang}
 \begin{lrbox}{\IntelOptCompilerHang}
@@ -184,15 +195,61 @@ A bug in \texttt{clang::sema} has been forwarded to the LLVM folks.
   \end{lstlisting}
 \end{lrbox}
 
+\newsavebox{\XeonPhiSpin}
+\begin{lrbox}{\XeonPhiSpin}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(__global unsigned char* a, unsigned b) {
+      a[get_global_id(0)] %= 42;
+      barrier(1);
+    }
+  \end{lstlisting}
+\end{lrbox}
+% LLVM ERROR: LLVM2PIL: Cannot yet select: 0x7f72a45a7ed0: i8,i8 = umul_lohi 0x7f72a45a87d0, 0x7f72a45a88d0 [ORD=16] [ID=22]
+% 0x7f72a45a87d0: i8 = srl 0x7f72a45a7dd0, 0x7f72a42fff90 [ORD=16] [ID=21]
+% 0x7f72a45a7dd0: i8,ch = load 0x7f72a41d9438, 0x7f72a4300790, 0x7f72a4300590<LD1[%scevgep2]> [ORD=15] [ID=20]
+% 0x7f72a4300790: i64 = add 0x7f72a45a83d0, 0x7f72a45a80d0 [ORD=14] [ID=17]
+% 0x7f72a45a83d0: i64,ch = CopyFromReg 0x7f72a41d9438, 0x7f72a45a86d0 [ORD=14] [ID=13]
+% 0x7f72a45a86d0: i64 = Register %vreg1 [ID=1]
+% 0x7f72a45a80d0: i64,ch = CopyFromReg 0x7f72a41d9438, 0x7f72a45a81d0 [ORD=14] [ID=14]
+% 0x7f72a45a81d0: i64 = Register %vreg2 [ID=2]
+% 0x7f72a4300590: i64 = undef [ID=3]
+% 0x7f72a42fff90: i8 = Constant<1> [ID=9]
+% 0x7f72a45a88d0: i8 = Constant<49> [ID=10]
+
+\newsavebox{\IntelOptLoopHang}
+\begin{lrbox}{\IntelOptLoopHang}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(long a, long b) {
+      while (a > 273444) { }
+    }
+  \end{lstlisting}
+\end{lrbox}
+% Another example:
+% __kernel void A(__global int* a) {
+%   int b = get_global_id(0);
+%   while (b < 512) { }
+% }
+
+
 \begin{figure}
   \centering %
-  \subfloat[Configs.\ $3\pm$ hangs (all other configurations compile in < 1s).]{%
+  \subfloat[Implicit pointer to integer conversion hangs Configs.\ $3\pm$. All other Configs.\ compile in < 1s.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPtrCompilerHang}}}%
     \label{lst:gt2-compiler-hang}
   }\\%
-  \subfloat[Config.\ $1+$ hangs during compilation, as optimization time grows with the size of loop bounds. Configs.\ $1-$, $2\pm$ compile in under 1 second.]{%
+  \subfloat[Config.\ $1+$ hangs during optimization of programs with large loop bounds. Configs.\ $1-$, $2\pm$ compile in under 1 second.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelOptCompilerHang}}}%
     \label{lst:intel-opt-compiler-hang}
+  }\\%
+  \subfloat[Configs.\ $7\pm$ spin consuming 100\% CPU usage during code generation.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSpin}}}%
+    \label{lst:xeon-phi-spin}
+  }\\%
+  \subfloat[Configs.\ $4+$, $5+$, $6+$, $7+$ hang.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelOptLoopHang}}}%
+    \label{lst:xeon-phi-spin}
   }\\%
   \caption{Example kernels which hang compilers.}%
   \label{lst:compiler-hangs}%
@@ -200,73 +257,79 @@ A bug in \texttt{clang::sema} has been forwarded to the LLVM folks.
 
 Configs.\ $1+$ and $2+$ hang on large loop bounds. Configs.\ $3\pm$ hang while assigning a value from a pointer address. Configs.\ $4+$, $5+$, $6+$, $7+$ hang on non-terminating while loops.
 
-\begin{figure}
-\begin{lstlisting}
-__kernel void A(__global const char* a, __global char* b, __global char* c) {
-	int d = get_global_id(0);
-	c[d] = get_global_id(0) + c;
-}
-\end{lstlisting}
-\begin{lstlisting}
-__kernel void A(__global ulong* a) {
-  a[get_global_id(0)] = (ulong)(a + 1);
-}
-\end{lstlisting}
-\caption{The implicit conversion of pointers to integers in these two kernel causes Configs.\ $3\pm$ to spin in a loop, consuming 100\% CPU and increasing memory until system memory exhausted and the compiler crashes.}
-\end{figure}
-
-\begin{figure}
-\begin{lstlisting}
-__kernel void entry(__global unsigned char* a, unsigned b) {
-  a[get_global_id(0)] %= 42;
-  barrier(1);
-}
-\end{lstlisting}
-\caption{Configs.\ $7\pm$ spin consuming 100\% CPU usage during code generation.}
-%LLVM ERROR: LLVM2PIL: Cannot yet select: 0x7f72a45a7ed0: i8,i8 = umul_lohi 0x7f72a45a87d0, 0x7f72a45a88d0 [ORD=16] [ID=22]
-%0x7f72a45a87d0: i8 = srl 0x7f72a45a7dd0, 0x7f72a42fff90 [ORD=16] [ID=21]
-%0x7f72a45a7dd0: i8,ch = load 0x7f72a41d9438, 0x7f72a4300790, 0x7f72a4300590<LD1[%scevgep2]> [ORD=15] [ID=20]
-%0x7f72a4300790: i64 = add 0x7f72a45a83d0, 0x7f72a45a80d0 [ORD=14] [ID=17]
-%0x7f72a45a83d0: i64,ch = CopyFromReg 0x7f72a41d9438, 0x7f72a45a86d0 [ORD=14] [ID=13]
-%0x7f72a45a86d0: i64 = Register %vreg1 [ID=1]
-%0x7f72a45a80d0: i64,ch = CopyFromReg 0x7f72a41d9438, 0x7f72a45a81d0 [ORD=14] [ID=14]
-%0x7f72a45a81d0: i64 = Register %vreg2 [ID=2]
-%0x7f72a4300590: i64 = undef [ID=3]
-%0x7f72a42fff90: i8 = Constant<1> [ID=9]
-%0x7f72a45a88d0: i8 = Constant<49> [ID=10]
-\end{figure}
-
-% TODO: Another 3± hang
-%__kernel void A(global int* a) {
-%  local int b[4][3][4][5];
-%
-%  b[1][2][3][3] = b[3];
-%}
-
-\begin{figure}
-\begin{lstlisting}
-__kernel void A(long a, long b) {
-  while (a > 273444) { }
-}
-
-__kernel void A(__global int* a) {
-  int b = get_global_id(0);
-  while (b < 512) { }
-}
-\end{lstlisting}
-\caption{Configs.\ $4+$, $5+$, $6+$, $7+$ hang.}
-\end{figure}
 
 \subsection{Runtime Crashes}
+
+\newsavebox{\PoclUndefinedSymbols}
+\begin{lrbox}{\PoclUndefinedSymbols}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(__local int* a) {
+      for (int b = 0; b < 100; b++) {
+        B(a);
+      }
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\begin{figure}
+  \centering %
+  \subfloat[Compilation should fail; config $6\pm$ succeeds then crashes program.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\PoclUndefinedSymbols}}}%
+    \label{lst:pocl-undefined-symbols}
+  }\\%
+  \caption{Example kernels which crash at runtime.}%
+  \label{lst:compiler-hangs}%
+\end{figure}
 
 Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in in which a kernel containing an undefined symbol will successfully compile without warning, then crash the program when attempting to run the kernel. Such a test-case is trivial to generate, yet could not be synthesized by CSmith.
 
 Figure~\ref{lst:oclgrind-llvm-densemap-assertion} exposed a race condition in switch statement handling. After reporting to developers, this been fixed.
 % https://github.com/jrprice/Oclgrind/commit/23eeaa602d63b7cbec286864c4180252dcde861e
 
-\input{lst/runtime-crash-bugs}
 
 \subsection{Wrong-code Bugs}
+
+\newsavebox{\IntelSizetInt}
+\begin{lrbox}{\IntelSizetInt}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(__global double* a, __global double* b, __global double* c, int d, int e) {
+      double f;
+      int g = get_global_id(0);
+      if (g < e - d - 1) {
+        c[g] = (((e) / d) % 5) % (e + d);
+      }
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\XeonPhiInvalidWrite}
+\begin{lrbox}{\XeonPhiInvalidWrite}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(__global int* a) {
+      a[0] = 1;
+      a[-1] = 2;
+      a[0] = 3;
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\begin{figure}
+  \centering %
+  \subfloat[Configs.\ $4+$, $6+$ incorrectly execute \texttt{if} branch.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSizetInt}}}%
+    \label{lst:intel-size_t-int}
+  }\\%
+  \subfloat[Invalid write \texttt{a[-1]} prevents \texttt{a[0]} writes in Configs.\ $7\pm$.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiInvalidWrite}}}%
+    \label{lst:xeon-phi-invalid-write}
+  }\\%
+  \caption{Example kernels for which compilers emit wrong-code.}%
+  \label{lst:wrong-code}%
+\end{figure}
+
 
 An error in the optimizer of Configs.\ $4+$, $6+$ causes the \texttt{if} statement of Figure~\ref{lst:compiler-crashes} to be executed.
 % cd ~/data/kernels/github-pp
@@ -275,20 +338,6 @@ An error in the optimizer of Configs.\ $4+$, $6+$ causes the \texttt{if} stateme
 % ls | wc -l
 % >> 4655
 This is troubling --- 46\% of kernels on GitHub use this \texttt{if} construct to guard against invalid memory accesses. Figure~\ref{lst:compiler-crashes} shows a hand-reduced minimal test-case.
-
-\input{lst/wrong-code-bugs}
-
-
-\begin{figure}
-\begin{lstlisting}
-__kernel void A(__global int* a) {
-  a[-1] = 2;
-  a[0] = 1;
-}
-\end{lstlisting}
-\caption{Read of uninitialized automatic variable \texttt{c}.}
-\label{lst:uninit-read}
-\end{figure}
 
 
 \subsection{False Positives}
