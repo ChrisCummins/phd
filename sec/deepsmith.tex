@@ -1,9 +1,9 @@
-\section{Test Case Generation through Deep Learning}
+\section{DeepSmith: Test Case Generation}
 
-Figure~\ref{fig:deeptune} shows the test case generation process. Our compiler test case generation approach consists of two parts: first, extending the state-of-the-art in deep learning program synthesis; the second, a general application of established differential testing methodologies for running code samples. DeepSmith is open source software~\footnote{DeepSmith: \emph{URL redacted for double-blind review}.}
+Figure~\ref{fig:deeptune} shows the test case generation process. Our compiler test case generation approach consists of two parts: first, extending the state-of-the-art in deep learning program synthesis; the second, a general application of established differential testing methodologies for running code samples. DeepSmith is open source software~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}.}
 
 
-\subsection{DeepSmith}
+\subsection{Program Generation}
 
 We extend prior work on synthetic program generation using LSTM networks~\cite{Cummins2017a}. We frame the generation of programs as a language modeling problem. An initial seed corpus of 10k OpenCL kernels is mined from GitHub, using an oracle compiler (LLVM 3.9) to reject files that are not well-formed or do not contain instructions. The corpus is preprocessed: a uniform code style is enforced to ensure consitent use of braces, whitespace, identifier names, etc. The prepocessed corpus is encoded using a hybrid token/character-level encoding~\cite{Cummins2017b}. 
 
@@ -32,6 +32,18 @@ At first, we used the test harness of CLSmith. CLSmith kernels accept no inputs,
 % $ grep '^__global ulong\* A$' ~/src/project_b/difftest/github-arguments.txt | wc -l     -> 10
 To test a more expressive range of kernels, we created \emph{cldrive}, a tool to generate test harnesses for arbitrary OpenCL kernels.
 
-We use cldrive to generate a unique test harness for every OpenCL sample we generate; the test harness has the OpenCL kernel embedded within it. If the sample is well-formed (i.e. it can be parsed), the test harness creates a \emph{payload} of buffers and values to match the function signature; else if the sample is ill-formed we generate a compile-only stub. 
+We use cldrive to generate a unique test harness for every OpenCL sample we generate; the test harness has the OpenCL kernel embedded within it. If the sample is well-formed (i.e. it can be parsed), the test harness creates required input values to match the function signature; else if the sample is ill-formed we generate a compile-only stub. Input arrays are populated with values {$[1 \ldots n]$}; scalar values are given value $n$. The \emph{output} of a program is the values of all non-const buffers after kernel execution.
 
 Cldrive is the only language-specific component of our software stack. We support a limited subset of data types for kernel inputs: no structs, no irregular data types (this is just an implementation detail, and can be addressed with more dev time). \cc{cldrive is XX lines of code}.
+
+% SELECT (SUM(compile_only) / (
+% SELECT COUNT(*)
+% FROM CLgenResults results
+% INNER JOIN CLgenMetas meta ON results.id = meta.id
+% WHERE cumtime < 48 * 3600
+% )) * 100 as '% compile-only'
+% FROM CLgenResults results
+% INNER JOIN CLgenMetas meta ON results.id = meta.id
+% INNER JOIN CLgenHarnesses harnesses on results.testcase_id = harnesses.id
+% WHERE cumtime < 48 * 3600;
+21.5\% of test cases are compile-only stubs.

@@ -19,11 +19,9 @@ Parsers were a common source of errors. To date we have identified over 60 cases
 
 \paragraph{Back-end} Figures~\ref{lst:intel-llvm-assertion} and~\ref{lst:intel-scalartype-assertion} cause failures in the LLVM code generator backend.
 
-Occasionally, the cause of the crash is unclear, as in Figures~\ref{lst:nvidia-recursion-segfault} and~\ref{lst:nvidia-compile-segfault} which segfault the compiler without warning. We found the two commercial vendors NVIDIA and Intel were the most likely to fail silently. When a commerical compiler crahses without an error message, we can only report and move on.
+Occasionally, the cause of the crash is unclear, as in Figures~\ref{lst:nvidia-recursion-segfault} and~\ref{lst:nvidia-compile-segfault} which segfault the compiler without warning. We found the two commercial vendors NVIDIA and Intel were the most likely to fail silently. When a commerical compiler crashes without an error message, we can only report and move on.
 
 A bug in \texttt{clang::sema} has been forwarded to the LLVM folks.
-
-This kernel Figure~\ref{lst:crash-almost-everything} crashes all Intel compilers except, interestingly, the Intel i5-570.
 
 \input{lst/compiler-crash-bugs}
 
