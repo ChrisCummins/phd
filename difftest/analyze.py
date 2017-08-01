@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import cldrive
 import clgen
 import math
 import sys
@@ -87,7 +87,7 @@ def get_cl_launcher_outcome(result) -> None:
 
 def set_cl_launcher_outcomes(session, tables: Tableset, rerun: bool=False) -> None:
     """ Set all cl_launcher outcomes. Set `rerun' to recompute outcomes for all results """
-    print("Determining CLSmith outcomes ...")
+    print("Determining CLSmith outcomes ...", file=sys.stderr)
     q = session.query(tables.results)
     if not rerun:
         q = q.filter(tables.results.outcome == None)
@@ -158,7 +158,7 @@ def get_cldrive_outcome(result):
 
 def set_cldrive_outcomes(session, tables: Tableset, rerun: bool=False) -> None:
     """ Set all cldrive outcomes. Set `rerun' to recompute outcomes for all results """
-    print("Determining CLgen outcomes ...")
+    print("Determining CLgen outcomes ...", file=sys.stderr)
     q = session.query(tables.results)
     if not rerun:
         q = q.filter(tables.results.outcome == None)
@@ -172,12 +172,12 @@ def set_classifications(session, tables: Tableset) -> None:
     """
     Determine anomalous results.
     """
-    print(f"Resetting {tables.name} classifications ...")
+    print(f"Resetting {tables.name} classifications ...", file=sys.stderr)
     session.execute(f"DELETE FROM {tables.classifications.__tablename__}")
 
     min_majsize = 7
 
-    print(f"Determining {tables.name} wrong-code classifications ...")
+    print(f"Determining {tables.name} wrong-code classifications ...", file=sys.stderr)
     session.execute(f"""
 INSERT INTO {tables.classifications.__tablename__}
 SELECT {tables.results.__tablename__}.id, {CLASSIFICATIONS_TO_INT["w"]}
@@ -192,7 +192,7 @@ AND stdout_id <> maj_stdout_id
 AND oclverified = 1
 """)
 
-    print(f"Determining {tables.name} anomalous build-failures ...")
+    print(f"Determining {tables.name} anomalous build-failures ...", file=sys.stderr)
     session.execute(f"""
 INSERT INTO {tables.classifications.__tablename__}
 SELECT {tables.results.__tablename__}.id, {CLASSIFICATIONS_TO_INT["bf"]}
@@ -204,7 +204,7 @@ AND outcome_majsize >= {min_majsize}
 AND maj_outcome = {OUTCOMES_TO_INT["pass"]}
 """)
 
-    print(f"Determining {tables.name} anomalous crashes ...")
+    print(f"Determining {tables.name} anomalous crashes ...", file=sys.stderr)
     session.execute(f"""
 INSERT INTO {tables.classifications.__tablename__}
 SELECT {tables.results.__tablename__}.id, {CLASSIFICATIONS_TO_INT["c"]}
@@ -216,7 +216,7 @@ AND outcome_majsize >= {min_majsize}
 AND maj_outcome = {OUTCOMES_TO_INT["pass"]}
 """)
 
-    print(f"Determining {tables.name} anomalous timeouts ...")
+    print(f"Determining {tables.name} anomalous timeouts ...", file=sys.stderr)
     session.execute(f"""
 INSERT INTO {tables.classifications.__tablename__}
 SELECT {tables.results.__tablename__}.id, {CLASSIFICATIONS_TO_INT["to"]}
@@ -298,7 +298,7 @@ def verify_w_testcase(session: session_t, tables: Tableset, testcase) -> None:
         print(f"retracting w-classification on {n} results: {ids_str}")
         session.query(tables.classifications)\
             .filter(tables.classifications.id.in_(ids_to_update))\
-            .delete()
+            .delete(synchronize_session=False)
 
     # CLgen-specific analysis. We can omit these checks for CLSmith, as they
     # will always pass.
@@ -315,6 +315,11 @@ def verify_w_testcase(session: session_t, tables: Tableset, testcase) -> None:
             print(f"testcase {testcase.id}: contains floats")
             # TODO: return fail()
 
+        for arg in cldrive.extract_args(testcase.program.src):
+            if arg.is_vector:
+                print(f"testcase {testcase.id}: contains vector types")
+                return fail()
+
         # Run GPUverify on kernel
         if testcase.gpuverified == None:
             try:
@@ -328,14 +333,7 @@ def verify_w_testcase(session: session_t, tables: Tableset, testcase) -> None:
             return fail()
 
     # Check that program runs with Oclgrind without error:
-    if testcase.oclverified == None:
-        if tables.name == "CLSmith":
-            testcase.oclverified = oclgrind.oclgrind_verify_clsmith(testcase)
-        else:
-            testcase.oclverified = oclgrind.oclgrind_verify_clgen(testcase)
-        session.commit()
-
-    if not testcase.oclverified:
+    if not oclgrind.verify_testcase(session, tables, testcase):
         print(f"testcase {testcase.id}: failed OCLgrind verification")
         return fail()
 
@@ -381,7 +379,7 @@ def prune_w_classifications(session: session_t, tables: Tableset) -> None:
             .distinct()\
             .all()
 
-    print(f"Verifying {tables.name} w-classified testcases ...")
+    print(f"Verifying {tables.name} w-classified testcases ...", file=sys.stderr)
     for testcase in ProgressBar()(testcases_to_verify):
         verify_w_testcase(session, tables, testcase)
 
@@ -391,7 +389,7 @@ def prune_w_classifications(session: session_t, tables: Tableset) -> None:
             .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"])\
             .all()
 
-    print(f"Verifying {tables.name} w-classified optimization sensitivity ...")
+    print(f"Verifying {tables.name} w-classified optimization sensitivity ...", file=sys.stderr)
     for result in ProgressBar()(results_to_verify):
         verify_optimization_sensitive(session, tables, result)
 
@@ -483,7 +481,7 @@ def prune_bf_classifications(session: session_t, tables: Tableset) -> None:
         .distinct()\
         .all()
 
-    print(f"Verifying {tables.name} bf-classified testcases ...")
+    print(f"Verifying {tables.name} bf-classified testcases ...", file=sys.stderr)
     for testcase in ProgressBar()(testcases_to_verify):
         verify_opencl_version(session, tables, testcase)
 
@@ -499,7 +497,8 @@ def verify_c_testcase(session: session_t, tables: Tableset, testcase) -> None:
             session.query(tables.results.id)\
                 .join(tables.classifications)\
                 .filter(tables.results.testcase_id == testcase.id,
-                        tables.classifications.classification == CLASSIFICATIONS_TO_INT["c"]).all()
+                        tables.classifications.classification == CLASSIFICATIONS_TO_INT["c"])\
+                .all()
         ]
         n = len(ids_to_update)
         assert n > 0
@@ -528,7 +527,7 @@ def prune_c_classifications(session: session_t, tables: Tableset) -> None:
             .distinct()\
             .all()
 
-    print(f"Verifying {tables.name} w-classified testcases ...")
+    print(f"Verifying {tables.name} w-classified testcases ...", file=sys.stderr)
     for testcase in ProgressBar()(testcases_to_verify):
         verify_c_testcase(session, tables, testcase)
 
@@ -553,7 +552,7 @@ if __name__ == "__main__":
 
     # Connect to database
     db_hostname = args.hostname
-    print("connected to", db.init(db_hostname))
+    print("connected to", db.init(db_hostname), file=sys.stderr)
 
     with Session(commit=True) as s:
         for tableset in tables:
