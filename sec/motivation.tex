@@ -1,43 +1,45 @@
 \section{Motivation}
 
-% TODO:
 \newsavebox{\IntelSizetIntReduced}
 \begin{lrbox}{\IntelSizetIntReduced}
-\begin{lstlisting}
-__kernel void foo(__global double* a) {
-  int b = get_global_id(0);
-  if (b < -1)
-    a[b] = 1;
-}
-\end{lstlisting}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(__global double* a) {
+      int b = get_global_id(0);
+      if (b < -1)
+        a[b] = 1;
+    }
+  \end{lstlisting}
 \end{lrbox}
 
 \newsavebox{\OclgrindRaceSwitch}
 \begin{lrbox}{\OclgrindRaceSwitch}
-\begin{lstlisting}
-__kernel void A(__global int* a, __global int* b) {
-  switch (get_global_id(0)) {
-    case 0:
-      a[get_global_id(0)] = b[get_global_id(0) + 13];
-      break;
-    case 2:
-      a[get_global_id(0)] = b[get_global_id(0) + 11];
-      break;
-    case 6:
-      a[get_global_id(0)] = b[get_global_id(0) + 128];
+  \hspace{1.5em}
+  \begin{lstlisting}
+  __kernel void A(__global int* a, __global int* b) {
+    switch (get_global_id(0)) {
+      case 0:
+        a[get_global_id(0)] = b[get_global_id(0) + 13];
+        break;
+      case 2:
+        a[get_global_id(0)] = b[get_global_id(0) + 11];
+        break;
+      case 6:
+        a[get_global_id(0)] = b[get_global_id(0) + 128];
+    }
+    barrier(2);
   }
-  barrier(2);
-}
-\end{lstlisting}
+  \end{lstlisting}
 \end{lrbox}
 
 \newsavebox{\AlmostEverythingCrash}
 \begin{lrbox}{\AlmostEverythingCrash}
-\begin{lstlisting}
-__kernel void A() {
-  __builtin_astype(d, uint4);
-}
-\end{lstlisting}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A() {
+      __builtin_astype(d, uint4);
+    }
+  \end{lstlisting}
 \end{lrbox}
 
 \begin{figure}
@@ -59,7 +61,7 @@ __kernel void A() {
 \end{figure}
 
 
-We motivate the case for compiler fuzzing through deep learning using three example of bugs found using DeepSmith which cannot be .
+We motivate the case for compiler fuzzing through deep learning using three example of bugs found using DeepSmith which cannot be generated using existing techniques.
 
 An error in the optimizer of two of the compilers we tested
 % Configs.\ $4+$, $6+$
@@ -69,7 +71,7 @@ causes the \texttt{if} statement of Figure~\ref{lst:intel-size_t-int-reduced} to
 % >> 2144
 % ls | wc -l
 % >> 4655
-This is troubling --- 46\% of kernels on GitHub use this ($tid \rightarrow$ int, \texttt{if}) pattern to guard against invalid memory accesses. 
+This is troubling --- 46\% of kernels on GitHub use this ($tid \rightarrow$ int, \texttt{if}) pattern to guard against invalid memory accesses.
 
 
 \cc{TODO} Figure~\ref{lst:oclgrind-race-switch}.

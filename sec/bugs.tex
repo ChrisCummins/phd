@@ -9,9 +9,9 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
 In the majority of cases, we found compiler crashes to be insensitive to OpenCL optimization setting.
 
 
-\paragraph{Front-end} We found the compiler crash bugs in compiler frontends. Because of the large volume of ill-formed test cases, our approach is biased towards discovering bugs in the early stages of compilation: lexing and parsing.
+\paragraph{Front-end} We found the compiler crash bugs in compiler frontends. Because of the large volume of ill-formed test-cases, our approach is biased towards discovering bugs in the early stages of compilation: lexing and parsing.
 
-Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for configurations $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other configurations raise a build failure. Such test cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random string testing, and impossible through grammar-based tools.
+Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for configurations $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other configurations raise a build failure. Such test-cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random string testing, and impossible through grammar-based tools.
 
 Parsers were a common source of errors. To date we have identified over 60 cases where unreachable code is executed due to parse error handling. We also found that relatively large code samples, containing many errors crashed multiple compiles \cc{that shared clang frontend?}.
 
@@ -93,7 +93,7 @@ __kernel void A(__global int* a) {
 
 \subsection{Runtime Crashes}
 
-Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in in which a kernel containing an undefined symbol will successfully compile without warning, then crash the program when attempting to run the kernel. Such a test case is trivial to generate, yet could not be synthesized by CSmith.
+Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in in which a kernel containing an undefined symbol will successfully compile without warning, then crash the program when attempting to run the kernel. Such a test-case is trivial to generate, yet could not be synthesized by CSmith.
 
 Figure~\ref{lst:oclgrind-llvm-densemap-assertion} exposed a race condition in switch statement handling. After reporting to developers, this been fixed.
 % https://github.com/jrprice/Oclgrind/commit/23eeaa602d63b7cbec286864c4180252dcde861e
@@ -108,7 +108,7 @@ An error in the optimizer of Configs.\ $4+$, $6+$ causes the \texttt{if} stateme
 % >> 2144
 % ls | wc -l
 % >> 4655
-This is troubling --- 46\% of kernels on GitHub use this \texttt{if} construct to guard against invalid memory accesses. Figure~\ref{lst:compiler-crashes} shows a hand-reduced minimal test case.
+This is troubling --- 46\% of kernels on GitHub use this \texttt{if} construct to guard against invalid memory accesses. Figure~\ref{lst:compiler-crashes} shows a hand-reduced minimal test-case.
 
 \input{lst/wrong-code-bugs}
 

@@ -3,7 +3,7 @@
 %
 % Requires temporary version of sigplanconf style file provided on
 % PLDI'16 web site.
-% 
+%
 \documentclass[pageno,nonatbib]{jpaper}
 % \documentclass[pldi-cameraready]{sigplanconf-pldi16}
 
@@ -95,18 +95,19 @@ maxbibnames=99       % no 'et-al' condensing author names in biliography
 %\usepackage{upgreek}
 %
 % Source code listings.
-\usepackage{listings}
+\usepackage{listings,lstautogobble}
 \lstset{%
   basicstyle=\scriptsize,%
   numbers=left,%
-  xleftmargin=2em,
-  framexleftmargin=2em,
+  xleftmargin=1em,
+  framexleftmargin=2.5em,
+  framexrightmargin=-2em,
   escapeinside={@|}{|@},
-  frame=b,%
-  breaklines=true,%
-  postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{red}\hookrightarrow\space}},%
-  % red arrow at line breaks
-  captionpos=b%
+  frame=b,
+  breaklines=true,
+  postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{red}\hookrightarrow\space}},% red arrow at line breaks
+  captionpos=b,
+  autogobble=true % indent listing based on first line
 }
 
 % OpenCL listings
@@ -145,7 +146,7 @@ maxbibnames=99       % no 'et-al' condensing author names in biliography
 %\usepackage{bm}
 %\usepackage{amsmath}
 %\DeclareMathOperator*{\argmin}{arg\,min}
-%\DeclareMathOperator*{\argmax}{arg\,max} 
+%\DeclareMathOperator*{\argmax}{arg\,max}
 
 % \ceil operator
 \usepackage{mathtools}

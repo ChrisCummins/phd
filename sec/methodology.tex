@@ -1,6 +1,6 @@
 \section{Testing Methodologies}\label{sec:methodology}
 
-Test cases must be executed, resulting in one-of-six possible outcomes. Then voting across outcomes from different compilers is used to expose anomalous outcomes.
+Test-cases must be executed, resulting in one-of-six possible outcomes. Then voting across outcomes from different compilers is used to expose anomalous outcomes.
 
 
 \subsection{Test Case Execution}
@@ -9,17 +9,17 @@ Test cases must be executed, resulting in one-of-six possible outcomes. Then vot
   \centering %
   \includegraphics[width=.62\columnwidth]{img/test_process}%
   \caption{%
-    Test case execution, and possible outcomes. Each test case produces one of 6 possible outcomes: \{bf,bc,bto,c,to,\cmark\}.%
+    Test-case execution, and possible outcomes. Each test-case produces one of 6 possible outcomes: \{bf,bc,bto,c,to,\cmark\}.%
   }%
 \label{fig:test-process} %
 \end{figure}
 
 
-Figure~\ref{fig:test-process} shows the methodology for determining the outcomes of a single test case.
+Figure~\ref{fig:test-process} shows the methodology for determining the outcomes of a single test-case.
 
-In prior work we required that synthesized programs be well formed and compute \emph{useful work}. For the purpose of testing compilers, we discarded these requirements. Instead, we demand that the behavior of test cases is \emph{portable} and \emph{reproducible}. In some respects this simplifies the execution process. The possible outcomes for a test case are a build failure (\textbf{bf}), build crash (\textbf{bc}), runtime crash (\textbf{c}), or pass (\textbf{\cmark}). A \textbf{bf} occurs when compilation of a kernel fails, usually accompanied by an error message. A \textbf{bc} outcome occurs when the compiler crashes. In~\cite{Lidbury2015a}, the authors do not distinguish between compiler crashes and build failures. A \textbf{c} outcome occurs when the program crashes during execution. The \textbf{bto} and \textbf{to} outcomes occur when the program compilation or execution time out, respectively. As in previous work, we do not guarantee that generated programs time out, finding that XX\% of programs do not.
+In prior work we required that synthesized programs be well formed and compute \emph{useful work}. For the purpose of testing compilers, we discarded these requirements. Instead, we demand that the behavior of test-cases is \emph{portable} and \emph{reproducible}. In some respects this simplifies the execution process. The possible outcomes for a test-case are a build failure (\textbf{bf}), build crash (\textbf{bc}), runtime crash (\textbf{c}), or pass (\textbf{\cmark}). A \textbf{bf} occurs when compilation of a kernel fails, usually accompanied by an error message. A \textbf{bc} outcome occurs when the compiler crashes. In~\cite{Lidbury2015a}, the authors do not distinguish between compiler crashes and build failures. A \textbf{c} outcome occurs when the program crashes during execution. The \textbf{bto} and \textbf{to} outcomes occur when the program compilation or execution time out, respectively. As in previous work, we do not guarantee that generated programs time out, finding that XX\% of programs do not.
 
-There are six possible outcomes of a test case execution:
+There are six possible outcomes of a test-case execution:
 %
 \begin{enumerate}
 	\item \textbf{bf} \emph{Build failure} Online compilation of OpenCL program fails, whereas the majority of configurations produce a binary.

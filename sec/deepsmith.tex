@@ -1,9 +1,9 @@
-\section{DeepSmith: Test Case Generation}
+\section{DeepSmith}
 
-Figure~\ref{fig:deeptune} shows the test case generation process. Our compiler test case generation approach consists of two parts: first, extending the state-of-the-art in deep learning program synthesis; the second, a general application of established differential testing methodologies for running code samples. DeepSmith is open source software~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}.}
+Figure~\ref{fig:deeptune} shows the test-case generation process. Our compiler test-case generation approach consists of two parts: first, extending the state-of-the-art in deep learning program synthesis; the second, a general application of established differential testing methodologies for running code samples. DeepSmith is open source software~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}.}.
 
 
-\subsection{Program Generation}
+\subsection{Test-case Generation}
 
 We extend prior work on synthetic program generation using LSTM networks~\cite{Cummins2017a}. We frame the generation of programs as a language modeling problem. An initial seed corpus of 10k OpenCL kernels is mined from GitHub, using an oracle compiler (LLVM 3.9) to reject files that are not well-formed or do not contain instructions. The corpus is preprocessed: a uniform code style is enforced to ensure consitent use of braces, whitespace, identifier names, etc. The prepocessed corpus is encoded using a hybrid token/character-level encoding~\cite{Cummins2017b}. 
 
@@ -14,18 +14,18 @@ The trained network is sampled to generate new programs. The model is seeded wit
 
 \begin{figure}
   \centering
-  \includegraphics[width=.80\columnwidth]{img/clgen} %
+  \includegraphics[width=.80\columnwidth]{img/deepsmith} %
   % \vspace{-2em}%
   \caption{%
-    Test-case generation. An corpus of programs from GitHub is used to seed a generative model for program codes, whose outputs are parameterized to construct test cases.%
+    Test-case generation. An corpus of programs from GitHub is used to seed a generative model for program codes, whose outputs are parameterized to construct test-cases.%
   }%
   \label{fig:deeptune}
 \end{figure}
 
 
-\subsection{Test Harness Construction}
+\subsection{Test-harness Construction}
 
-OpenCL compute kernels requires host code (\emph{test harness}) to compile the kernel and feed with it inputs, then to print the outputs.
+OpenCL is an embedded compute kernel language, requiring host code to compile, execute, and transfer data between the host and device. Kernels requires host code (\emph{test harness}) to compile the kernel and feed with it inputs, then to print the outputs.
 
 At first, we used the test harness of CLSmith. CLSmith kernels accept no inputs, and each thread computes the same value which is stored in a \texttt{unsigned long} buffer. The fixed function prototype means that they have a single re-usable test harness which compiles the kernel, runs it, and prints the results. We found this fixed harness to be too inflexible for our needs. This prototype is not a common OpenCL use case (only 5.6\% of GitHub kernels accept a single argument, of which 3.4\% are \texttt{ulong}, 0.2\% of the total).
 % $ grep -E '^__global (.*)\* A$' github-arguments.txt | wc -l     -> 294
@@ -46,4 +46,4 @@ Cldrive is the only language-specific component of our software stack. We suppor
 % INNER JOIN CLgenMetas meta ON results.id = meta.id
 % INNER JOIN CLgenHarnesses harnesses on results.testcase_id = harnesses.id
 % WHERE cumtime < 48 * 3600;
-21.5\% of test cases are compile-only stubs.
+21.5\% of test-cases are compile-only stubs.

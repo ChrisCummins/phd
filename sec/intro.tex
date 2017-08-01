@@ -10,9 +10,9 @@ Optimizing compilers are large and complex programs, with a practically infinite
 
 % XSmith: It is difficult to create effective fuzzers for programming language compilers and interpreters because these systems have highly structured inputs, but it is important that such fuzzers exist. Programming language implementations are critical software infrastructure: defects in compilers and interpreters can potentially have great costs in terms of software correctness and reliability, human productivity, and computer security. This project seeks to reduce the time and human effort needed to create sophisticated fuzzers for programming language implementations. In so doing, this project is expected to advance the state of the art in random software testing, improve the quality of several programming language implementations selected for study, and produce new open-source software tools that programmers can use to develop new and more effective fuzz testers.
 
-Differential testing is a promising methodology for identifying compiler bugs. Figure~\ref{fig:difftest} shows the approach. A grammar is defined over a subset of a programming language, and used to probabilistically generate a large, random program (test case). \cc{TODO: Each feature of the grammar must be painstakingly and expertly engineered, meaning that, in practice, only a subset of language features are supported} If a compiler crashes during compilation of a program, then a bug is found. Additionally, by collecting outcomes from multiple compilers, the outputs of the generated programs can be compared to determine if any of the compilers disagree; if so, a bug has been discovered. Typically, these generated programs are many hundreds or thousands of lines long. As such, an additional test case reduction process is usually required, iteratively mutating the test case in an attempt to produce a minimal working example which preserves the behavior of interest.
+Differential testing is a promising methodology for identifying compiler bugs. Figure~\ref{fig:difftest} shows the approach. A grammar is defined over a subset of a programming language, and used to probabilistically generate a large, random program (test-case). \cc{TODO: Each feature of the grammar must be painstakingly and expertly engineered, meaning that, in practice, only a subset of language features are supported} If a compiler crashes during compilation of a program, then a bug is found. Additionally, by collecting outcomes from multiple compilers, the outputs of the generated programs can be compared to determine if any of the compilers disagree; if so, a bug has been discovered. Typically, these generated programs are many hundreds or thousands of lines long. As such, an additional test-case reduction process is usually required, iteratively mutating the test-case in an attempt to produce a minimal working example which preserves the behavior of interest.
 
-The current state of the art in compiler test case generation is Csmith~\cite{Yang2011}. Csmith defines a probabilistic grammar over a large subset of the C programming language, and recursively instantiates a program, using rigorous and conservative static and dynamic analysis to ensure that programs are guaranteed to be free from the 191 undefined behaviors and 52 unspecified behaviors of the C language specification.
+The current state of the art in compiler test-case generation is Csmith~\cite{Yang2011}. Csmith defines a probabilistic grammar over a large subset of the C programming language, and recursively instantiates a program, using rigorous and conservative static and dynamic analysis to ensure that programs are guaranteed to be free from the 191 undefined behaviors and 52 unspecified behaviors of the C language specification.
 
 Because Csmith programs are free form undefined behavior, there is only a single interpretation. This allows oracle-less differential testing across compilers, using a voting heuristic to identify erroneous compiler outputs.
 
@@ -21,7 +21,7 @@ Because Csmith programs are free form undefined behavior, there is only a single
 	\includegraphics[width=.85\columnwidth]{img/difftest} %
 	% \vspace{-2em}%
 	\caption{%
-		Differential testing compiler/hardware configurations across a single test case. A test case consists of a program source and its runtime parameters and data. Outcomes may be the output of the program execution, a compiler crash, a runtime crash, or a timeout error.%
+		Differential testing compiler/hardware configurations across a single test-case. A test-case consists of a program source and its runtime parameters and data. Outcomes may be the output of the program execution, a compiler crash, a runtime crash, or a timeout error.%
 	}%
 	\label{fig:difftest}
 \end{figure}
@@ -52,8 +52,8 @@ the challenges of massively parallel computation cause major problems for existi
 We make the following contributions:
 %
 \begin{itemize}
-\item we present \emph{DeepSmith}, a novel, language-agnostic approach to generating compiler test cases, inferred from open source code. We \emph{infer} programming language use from examples. CLSmith requires expert-driven development for every language feature supported. 40+k lines of C++ vs a few hundred lines of Python.
+\item we present \emph{DeepSmith}, a novel, language-agnostic approach to generating compiler test-cases, inferred from open source code. We \emph{infer} programming language use from examples. CLSmith requires expert-driven development for every language feature supported. 40+k lines of C++ vs a few hundred lines of Python.
 \item we find bugs that the state-of-the-art cannot, covering more components of the compiler. E.g. compiler crashes from invalid inputs;
 \item we find bugs faster than state-of-the-art. In 48 hours we discovered and report XX bugs in compiler and open source OpenCL implementations, XX\% more than CLSmith over the same time period;
-\item our test cases are more interpretable than other program generators, since our code is modeled on human-like constructs. Average test case size is two orders of magnitude smaller than state-of-the-art;
+\item our test-cases are more interpretable than other program generators, since our code is modeled on human-like constructs. Average test-case size is two orders of magnitude smaller than state-of-the-art;
 \end{itemize}
