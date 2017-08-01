@@ -1,0 +1,57 @@
+\section{Motivation}
+
+Figure~\ref{lst:intel-size_t-int-reduced}.
+Figure~\ref{lst:oclgrind-llvm-densemap-assertion}.
+Figure~\ref{fig:motivating-segfault}.
+
+\begin{figure}
+\begin{lstlisting}
+__kernel void A(__global double* a) {
+  int tid = get_global_id(0);
+  if (tid < -1)
+    a[get_global_id(0)] = 1;
+}
+\end{lstlisting}
+\label{lst:intel-size_t-int-reduced}
+\caption{Hand-reduced Figure~\ref{lst:intel-size_t-int}.}
+\end{figure}
+
+\begin{figure}
+\lstset{language=[OpenCL]C}
+% bug-reports/CLgenResults/bc/oclgrind-densemap/bug-report-oclgrind-434050.c
+\begin{lstlisting}
+__kernel void A(__global int* a, __global int* b) {
+  switch (get_global_id(0)) {
+    case 0:
+      a[get_global_id(0)] = b[get_global_id(0) + 13];
+      break;
+    case 2:
+      a[get_global_id(0)] = b[get_global_id(0) + 11];
+      break;
+    case 6:
+      a[get_global_id(0)] = b[get_global_id(0) + 128];
+  }
+  barrier(2);
+}
+\end{lstlisting}
+\caption{%
+  Configs.\ $10\pm$ race condition when global size > 1 (fixed upstream).
+  \cc{Though simple, this is code is difficult to produce using existing approaches - CLSmith does not allow thread index to affect program flow.}%
+}
+\label{lst:oclgrind-llvm-densemap-assertion}
+\end{figure}
+
+\begin{figure}
+\lstset{language=[OpenCL]C}
+% cl_launcherCLgenResults/runtime_crash/bug-report-intel-30870.sh
+\begin{lstlisting}
+__kernel void A() {
+  __builtin_astype(d, uint4);
+}
+\end{lstlisting}
+\caption{%
+  Of the 10 compilers we tested, 6 crash with segfault when compiling this kernel.
+  CLSmith does not generate erroneous code such as this.
+}%
+\label{fig:motivating-segfault}
+\end{figure}

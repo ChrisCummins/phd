@@ -72,7 +72,10 @@ The 2357 \textbf{bf} results for CLSmith on Configs.\ $4\pm$ and $6\pm$ are all 
 Similarly, Intel Configs.\ 4--7 (but not 3) reject DeepSmith kernels which omit a type specified (e.g. \texttt{\_\_global* a}), whereas all other Configs.\ (including 3) emit and warning and default to \texttt{int} type.
 
 
-Oclgrind was resilient to CLSmith testing, yet we managed to trip it up during compilation.
+Oclgrind was resilient to CLSmith testing, yet we managed to trip it up during compilation, and discovered the switch race condition.
+
+% Anomalous build failures
+Configs.\ $1\pm$, $2\pm$ reject kernels which \texttt{size\_t} parameters.
 
 
 \subsection{Comparison of test cases}
