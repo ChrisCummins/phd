@@ -4,6 +4,133 @@ This section reports on the results of extensive testing of OpenCL compilers usi
 
 \subsection{Compiler Crashes}
 
+\newsavebox{\IntelVectorizerSegfault}
+\begin{lrbox}{\IntelVectorizerSegfault}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A() {
+      while (true) {
+        barrier(1);
+      }
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+
+\newsavebox{\OclgrindSemaAssertion}
+\begin{lrbox}{\OclgrindSemaAssertion}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(__global unsigned char* a, __global unsigned char* b) {
+      unsigned long c = get_global_id(0);
+      d[0] = (mad24(f, (int)(a[0], b[get_global_id(0)])) % (d * (d + 3)) + (c / 2))] * a[c + 1];
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\NvidiaCompileSegfault}
+\begin{lrbox}{\NvidiaCompileSegfault}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(__global float* a, __local float* b, __local float* c, int d, int e) {
+      int f, g;
+      int h = get_local_id(0);
+      int i = get_local_id(1);
+      int j = get_global_id(0);
+      __global char* k = c + f * g + f;
+      if (f + 1 < h)
+        b[f * d + g * h + g] = g * f;
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\NvidiaRecursionSegfault}
+\begin{lrbox}{\NvidiaRecursionSegfault}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(float4 a, __global float4* b, __global float4* c, unsigned int d, __global double* e, __global int2* f, __global int4* g, __constant int* h, __constant int* i) {
+      A(a, b, c, d, d, e, f, g, h);
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\XeonPhiSegfault}
+\begin{lrbox}{\XeonPhiSegfault}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(void) {
+      __global int* a;
+      unsigned int* b;
+      b = a[0];
+      a[0] = b;
+      a[0] = b;
+      barrier(1);
+      if (get_global_id(0) == 0) {
+        *a = 0;
+      }
+      a[get_local_id(0)] = 0;
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\IntelPtrAssertion}
+\begin{lrbox}{\IntelPtrAssertion}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(__global int* a, __global int* b) {
+      int c = (int)get_global_id(0);
+      a[c] += b;
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\IntelScalarAssertion}
+\begin{lrbox}{\IntelScalarAssertion}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(__global float* a, __global float* b, __global float* c, __local float* d, unsigned int e, unsigned int f) {
+      for (unsigned int g = get_local_id(0) + get_local_size(0); g < get_local_size(0); g += get_local_size(0)) {
+        a[2 * get_local_id(0) + 1] = get_local_id(0);
+      }
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\begin{figure}
+  \centering %
+  \subfloat[Configs.\ $5\pm$ crash during vectorizer pass.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelVectorizerSegfault}}}%
+    \label{lst:intel-vectorizer-segfault}
+  }\\%
+  \subfloat[Configs.\ $10\pm$ compiler assertion during semantic analysis.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindSemaAssertion}}}%
+    \label{lst:oclgrind-sema-assertion}
+  }\\%
+  \subfloat[Configs.\ $1\pm$ segementation fault.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaCompileSegfault}}}%
+    \label{lst:nvidia-compile-segfault}
+  }\\%
+  \subfloat[Configs.\ $1\pm$, $2\pm$ segementation fault.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaRecursionSegfault}}}%
+    \label{lst:nvidia-recursion-segfault}
+  }\\%
+  \subfloat[Configs.\ $7\pm$ segementation fault.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSegfault}}}%
+    \label{lst:xeon-phi-segfault}
+  }\\%
+  \subfloat[Configs.\ $3\pm$ assertion during code generation for pointer assignment.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPtrAssertion}}}%
+    \label{lst:intel-ptr-assertion}
+  }\\%
+  \subfloat[Configs.\ $3\pm$ assertion in scalar type code generation.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelScalarAssertion}}}%
+    \label{lst:intel-scalar-assertion}
+  }\\%
+  \caption{Example kernels which crash compilers.}%
+  \label{lst:compiler-crashes}%
+\end{figure}
+
+
 We found numerous cases where kernels trigger a crash in the compiler (and as a result, the host process). Segmentation faults during compilation were a common source of crash.
 
 In the majority of cases, we found compiler crashes to be insensitive to OpenCL optimization setting.
@@ -23,14 +150,53 @@ Occasionally, the cause of the crash is unclear, as in Figures~\ref{lst:nvidia-r
 
 A bug in \texttt{clang::sema} has been forwarded to the LLVM folks.
 
-\input{lst/compiler-crash-bugs}
-
 % TODO: LLVM bug https://bugs.llvm.org/show_bug.cgi?id=33897
 % __kernel void A(__global float* b) {
 %	(float4)(b);
 % }
 
 \subsection{Compiler Hangs}
+
+\newsavebox{\IntelPtrCompilerHang}
+\begin{lrbox}{\IntelPtrCompilerHang}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(__global int* a) {
+      int b = get_global_id(0);
+      a[b] = (6 * 32) + 4 * (32 / 32) + a;
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\IntelOptCompilerHang}
+\begin{lrbox}{\IntelOptCompilerHang}
+  \hspace{1.5em}
+  % CLgenProgram.id = 6992
+  \begin{lstlisting}
+    __kernel void A(__global float* a, __global float* b, __global float* c) {
+      int d, e, f;
+      d = get_local_id(0);
+      float g = 0.0;
+      for (int g = 0; g < 100000; g++) {
+        barrier(1);
+      }
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\begin{figure}
+  \centering %
+  \subfloat[Configs.\ $3\pm$ hangs (all other configurations compile in < 1s).]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPtrCompilerHang}}}%
+    \label{lst:gt2-compiler-hang}
+  }\\%
+  \subfloat[Config.\ $1+$ hangs during compilation, as optimization time grows with the size of loop bounds. Configs.\ $1-$, $2\pm$ compile in under 1 second.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelOptCompilerHang}}}%
+    \label{lst:intel-opt-compiler-hang}
+  }\\%
+  \caption{Example kernels which hang compilers.}%
+  \label{lst:compiler-hangs}%
+\end{figure}
 
 Configs.\ $1+$ and $2+$ hang on large loop bounds. Configs.\ $3\pm$ hang while assigning a value from a pointer address. Configs.\ $4+$, $5+$, $6+$, $7+$ hang on non-terminating while loops.
 
@@ -73,7 +239,7 @@ __kernel void entry(__global unsigned char* a, unsigned b) {
 % TODO: Another 3± hang
 %__kernel void A(global int* a) {
 %  local int b[4][3][4][5];
-%	
+%
 %  b[1][2][3][3] = b[3];
 %}
 
