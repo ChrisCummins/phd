@@ -1,0 +1,8 @@
+__kernel void A(__global float* a, __global float* b, __global float* c) {
+  int d, e, f;	
+  d = get_local_id(0);
+  float g = 0.0;
+  for (int g = 0; g < 100000; g++) {
+    barrier(1);
+  }
+}
