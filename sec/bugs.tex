@@ -2,6 +2,11 @@
 
 This section reports on the results of extensive testing of OpenCL compilers using DeepSmith over the past several months. We found bugs in all the compilers we tested --- every compiler crashed, and every compiler silently generated wrong code. To date, we have submitted XX bug reports to compiler vendors. We divide our discussion by class of bug: first compiler and runtime crashes, then wrong-code bugs.
 
+
+\subsection{Experimental Setup}
+
+Tables~\ref{tab:platforms}.
+
 \subsection{Compiler Crashes}
 
 \newsavebox{\IntelVectorizerSegfault}
@@ -295,6 +300,8 @@ Figure~\ref{lst:oclgrind-llvm-densemap-assertion} exposed a race condition in sw
 \subsection{Gray Areas}
 
 Figure~\ref{lst:xeon-phi-invalid-write}.
+
+In Configs.\ $1\pm$, an out-of-bounds reads and writes from one buffer argument will bleed into the next buffer.
 
 \newsavebox{\XeonPhiInvalidWrite}
 \begin{lrbox}{\XeonPhiInvalidWrite}
