@@ -56,7 +56,7 @@ the challenges of massively parallel computation cause major problems for existi
 We make the following contributions:
 %
 \begin{itemize}
-\item we present \emph{DeepSmith}, a novel, language-agnostic approach to generating compiler test-cases, inferred from open source code. We \emph{infer} programming language use from examples. CLSmith requires expert-driven development for every language feature supported. 40+k lines of C++ vs a few hundred lines of Python.
+\item \emph{DeepSmith}, a novel, language-agnostic approach for compiler fuzz testing, inferred from open source code. We \emph{infer} programming language use from examples. CLSmith requires expert-driven development for every language feature supported. 40+k lines of C++ vs a few hundred lines of Python.
 \item we find bugs that the state-of-the-art cannot, covering more components of the compiler. E.g. compiler crashes from invalid inputs;
 \item we find bugs faster than state-of-the-art. In 48 hours we discovered and report XX bugs in compiler and open source OpenCL implementations, XX\% more than CLSmith over the same time period;
 \item our test-cases are more interpretable than other program generators, since our code is modeled on human-like constructs. Average test-case size is two orders of magnitude smaller than state-of-the-art;

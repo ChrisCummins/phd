@@ -220,7 +220,7 @@ A bug in \texttt{clang::sema} has been forwarded to the LLVM folks.
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSpin}}}%
     \label{lst:xeon-phi-spin}
   }\\%
-  \subfloat[Configs.\ $4+$, $5+$, $6+$, $7+$ hang.]{%
+  \subfloat[Configs.\ $4+$, $5+$, $6+$, $7+$ hang during optimization \cc{why?}.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelOptLoopHang}}}%
     \label{lst:xeon-phi-spin}
   }\\%
@@ -247,11 +247,28 @@ Configs.\ $1+$ and $2+$ hang on large loop bounds. Configs.\ $3\pm$ hang while a
   \end{lstlisting}
 \end{lrbox}
 
+\newsavebox{\PoclUndefinedSymbols}
+\begin{lrbox}{\PoclUndefinedSymbols}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(__local int* a) {
+      for (int b = 0; b < 100; b++) {
+        B(a);
+      }
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+
 \begin{figure}
   \centering %
   \subfloat[Configs.\ $4+$, $6+$ incorrectly execute \texttt{if} branch.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSizetInt}}}%
     \label{lst:intel-size_t-int}
+  }\\%
+  \subfloat[Compilation should fail due to call to undefined function \texttt{B()}; Configs.\ $6\pm$ silently succeed then crash upon kernel execution.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\PoclUndefinedSymbols}}}%
+    \label{lst:pocl-undefined-symbols}
   }\\%
   \caption{Example kernels which are miscompiled.}%
   \label{lst:wrong-code}%
@@ -266,35 +283,7 @@ An error in the optimizer of Configs.\ $4+$, $6+$ causes the \texttt{if} stateme
 % >> 4655
 This is troubling --- 46\% of kernels on GitHub use this \texttt{if} construct to guard against invalid memory accesses. Figure~\ref{lst:compiler-crashes} shows a hand-reduced minimal test-case.
 
-
-\subsection{Runtime Crashes}
-
-\newsavebox{\PoclUndefinedSymbols}
-\begin{lrbox}{\PoclUndefinedSymbols}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    __kernel void A(__local int* a) {
-      for (int b = 0; b < 100; b++) {
-        B(a);
-      }
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\begin{figure}
-  \centering %
-  \subfloat[Compilation should fail; config $6\pm$ succeeds then crashes program.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\PoclUndefinedSymbols}}}%
-    \label{lst:pocl-undefined-symbols}
-  }\\%
-  \caption{Example kernels which crash at runtime.}%
-  \label{lst:compiler-hangs}%
-\end{figure}
-
 Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in in which a kernel containing an undefined symbol will successfully compile without warning, then crash the program when attempting to run the kernel. Such a test-case is trivial to generate, yet could not be synthesized by CSmith.
-
-Figure~\ref{lst:oclgrind-llvm-densemap-assertion} exposed a race condition in switch statement handling. After reporting to developers, this been fixed.
-% https://github.com/jrprice/Oclgrind/commit/23eeaa602d63b7cbec286864c4180252dcde861e
 
 
 \subsection{Gray Areas}
