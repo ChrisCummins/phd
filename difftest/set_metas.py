@@ -122,8 +122,7 @@ def get_assertions(session: session_t, tables: Tableset) -> None:
     q = session.execute(f"""
 SELECT stderr.id, stderr.stderr
 FROM {tables.results.__tablename__} results
-LEFT JOIN {tables.meta.__tablename__} meta ON results.id = meta.id
-LEFT JOIN {tables.stderrs.__tablename__} stderr ON results.stderr_id = stderr.id
+INNER JOIN {tables.stderrs.__tablename__} stderr ON results.stderr_id = stderr.id
 WHERE status <> 0
 AND stderr LIKE '%assertion%'
 GROUP BY stderr.id, stderr.stderr
