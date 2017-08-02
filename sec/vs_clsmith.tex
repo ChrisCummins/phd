@@ -10,6 +10,11 @@ Both testing frameworks were used for 48 hours each. CLSmith was configured with
 %
 %Each OpenCL configuration from Table~\ref{tab:platforms} was configured to run DeepSmith and CLSmith test-cases for 48 hours. This includes the time taken to generate and execute the test-case. All experimental platforms were otherwise unloaded.
 
+\subsection{Experimental Setup}
+
+We replicated the experimental setup of our earlier tests, but this time allowing DeepSmith and CLSmith to run for 48 hours each.
+
+
 \subsection{Results Overview}
 
 Table~\ref{tab:outcomes} shows the outcomes of 48 hours of consecutive testing for each of the platforms from Table~\ref{tab:platforms}. We repeated the experiment twice, once with compiler optimizations disabled ($-$) for all configurations, and once with optimizations enabled ($+$).
@@ -199,6 +204,11 @@ We were able to trigger the assertion \emph{srcType != ir::TYPE\_U64} in Configs
 DeepSmith also triggered \emph{unreachable!} compiler errors in 180 distinct test cases, CLSmith triggered 0.
 
 \cc{What is the bug rate per line of code?}
+
+
+\subsection{Reductions}
+
+C-Reduce extensions to support OpenCL~\cite{Pflanzer2016}.
 
 
 \begin{figure}

@@ -97,10 +97,12 @@ Only 2.3\% of CLSmith programs with anomalous outputs are insensitive to optimiz
 
 \subsection{Discussions}
 
-\paragraph{Undefined Behaviors} OpenCL doesn't have CompCert and UBSan. GPUverify~\cite{Betts2012} and Oclgrind can catch some errors, so as we have shown in Section~\ref{sec:motivation}, no tool is perfect. Compiler errors are useful. There is much work to be done. We demand that the behavior of test-cases is \emph{portable} and \emph{reproducible}. In some respects this simplifies the execution process.
+\paragraph{Undefined Behaviors} OpenCL doesn't have the rich tooling of C --- no CompCert and UBSan. GPUverify~\cite{Betts2012} and Oclgrind can catch some errors, but as we have shown in Section~\ref{sec:motivation}, this tool is not without flaws. Compiler warnings are useful for obvious missteps, but our approach still requires some manual inspection. There is much work to be done. We demand that the behavior of test-cases is \emph{portable} and \emph{reproducible}. In some respects this simplifies the execution process.
 
 
 \paragraph{Floating Points} The OpenCL 1.2 specification permits acceptable error bounds (ULP) for floating point operations and builtin functions. Some operations like addition, subtraction, and multiplication are precise; divide permits a small error, and builtins vary widely. Thus two implementation may give different answers that both fit within the allowed ranges (and because errors propagate through operations it's hard to even describe the ULP on the final output). \texttt{half\_} functions permit large error bounds. \texttt{native\_} functions have ``implementation defined'' error bounds. TODO: Denormal numbers may optionally be pushed to zero.
+
+At the moment, we simply rely upon \texttt{printf()} rounding.
 
 \cc{If we difftest across floats:}
 CSmith, and by extension, CLSmith, do not support floating point operations. In our observations with testing using CLSmith (described in Section~\ref{sec:vs_clsmith}), we observed that in cases of wrong-code bugs, the computed values are usually entirely incorrect, not only marginally different. We hypothesized that by allowing relaxed comparisons between floating point values, we could still differential test. We permit a margin of deviation for floating point comparisons. This means that if a compiler were to emit wrong code which changes the computed value only subtly, we may miss it; though we have no reason to suggest that such a case is any more likely than a wrong code bug leading the compiler to produce exactly the same output, which neither we or any prior work have noted.
