@@ -535,15 +535,39 @@ class CLgenResult(Base):
 
     # relations:
     meta = sql.orm.relationship("CLgenMeta", back_populates="result")
+    timeout_rerun = sql.orm.relationship("CLgenTimeoutRerun", back_populates="result")
     classification = sql.orm.relation("CLgenClassification", back_populates="result")
     testcase = sql.orm.relationship("CLgenTestCase", back_populates="results")
     testbed = sql.orm.relationship("Testbed", back_populates="clgen_results")
     stdout = sql.orm.relationship("CLgenStdout")
     stderr = sql.orm.relationship("CLgenStderr")
 
-    def __repr__(self) -> str:
-        return (f"program: {self.program_id}, testcase: {self.testcase_id}, " +
-                f"status: {self.status}, runtime: {self.runtime:.2f}s")
+    def __repr__(self):
+        return (f"result: {self.id}")
+
+
+class CLgenTimeoutRerun(Base):
+    __tablename__ = "CLgenTimeoutReruns"
+    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenResults.id"), primary_key=True)
+
+    # stats
+    date = sql.Column(sql.DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
+    status = sql.Column(sql.Integer, nullable=False)
+    runtime = sql.Column(sql.Float, nullable=False)
+
+    # output
+    stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStdouts.id"), nullable=False)
+    stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStderrs.id"))
+
+    outcome = sql.Column(sql.Integer, index=True, nullable=False)
+
+    # relations:
+    result = sql.orm.relationship("CLgenResult", back_populates="timeout_rerun")
+    stdout = sql.orm.relationship("CLgenStdout")
+    stderr = sql.orm.relationship("CLgenStderr")
+
+    def __repr__(self):
+        return (f"result: {self.id}")
 
 
 class CLgenStdout(Base):
