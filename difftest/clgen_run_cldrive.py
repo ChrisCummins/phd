@@ -140,15 +140,13 @@ if __name__ == "__main__":
     with Session(commit=False) as session:
         testbed = get_testbed(session, args.platform, args.device)
         devname = util.device_str(testbed.device)
-        print(devname)
 
         # progress bar
         num_ran, num_to_run = get_num_to_run(session, testbed, optimizations)
         bar = progressbar.ProgressBar(init_value=num_ran, max_value=num_to_run)
 
-        # testcases to run, and results to push to database
+        # testcases to run
         inbox = deque()
-        outbox = deque()
 
         def next_batch():
             """
@@ -164,27 +162,22 @@ if __name__ == "__main__":
 
             # fill inbox
             done = session.query(CLgenResult.testcase_id).filter(
-                CLgenResult.testbed == testbed)
+                CLgenResult.testbed_id == testbed.id)
             if optimizations is not None:
                 done = done.join(CLgenTestCase).join(cldriveParams)\
                         .filter(cldriveParams.optimizations == optimizations)
 
-            todo = session.query(CLgenTestcase)\
-                        .filter(~CLgenTestcase.id.in_(done))\
-                        .order_by(CLgenTestcase.program_id,
-                                  CLgenTestcase.params_id)\
-                        .limit(BATCH_SIZE)
+            todo = session.query(CLgenTestCase)\
+                .filter(~CLgenTestCase.id.in_(done))\
+                .order_by(CLgenTestCase.id)\
+
             if optimizations is not None:
                 todo = todo.join(cldriveParams)\
-                            .filter(cldriveParams.optimizations == optimizations)
+                    .filter(cldriveParams.optimizations == optimizations)
 
+            todo = todo.limit(BATCH_SIZE)
             for testcase in todo:
                 inbox.append(testcase)
-
-            # empty outbox
-            while len(outbox):
-                session.add(outbox.popleft())
-            session.commit()
 
         try:
             while True:
@@ -201,25 +194,26 @@ if __name__ == "__main__":
                 # drive the testcase
                 try:
                     runtime, status, stdout, stderr = drive_testcase(
-                        session, testcase, params, env, platform_id, device_id)
+                        session, testcase, env, platform_id, device_id)
 
                     # assert that executed params match expected
                     if stderr != '<-- UTF-ERROR -->':
                         verify_params(platform=args.platform, device=args.device,
-                                      optimizations=params.optimizations,
-                                      global_size=params.gsize, local_size=params.lsize,
+                                      optimizations=testcase.params.optimizations,
+                                      global_size=testcase.params.gsize, local_size=testcase.params.lsize,
                                       stderr=stderr)
 
                     # create new result
                     stdout_ = util.escape_stdout(stdout)
                     stdout = get_or_create(
-                        s, CLgenStdout,
+                        session, CLgenStdout,
                         hash=crypto.sha1_str(stdout_), stdout=stdout_)
 
                     stderr_ = util.escape_stderr(stderr)
                     stderr = get_or_create(
-                        s, CLgenStderr,
+                        session, CLgenStderr,
                         hash=crypto.sha1_str(stderr_), stderr=stderr_)
+                    session.flush()
 
                     result = CLgenResult(
                         testbed_id=testbed.id,
@@ -227,15 +221,17 @@ if __name__ == "__main__":
                         status=status,
                         runtime=runtime,
                         stdout_id=stdout.id,
-                        stderr_id=stderr.id)
-                    result.outcome = OUTCOMES_TO_INT[analyze.get_cldrive_outcome(result)]
-                    outbox.append(result)
+                        stderr_id=stderr.id,
+                        outcome=analyze.get_cldrive_outcome(status, runtime, stderr_))
+
+                    session.add(result)
+                    session.commit()
 
                     # update progress bar
                     num_ran += 1
                     bar.update(min(num_ran, num_to_run))
                 except clgen_mkharness.HarnessCompilationError:
-                    print("program:", program.id)
+                    print("harness for program failed to compile:", program.id)
         finally:
             # flush any remaining results
             next_batch()

@@ -37,11 +37,11 @@ def get_cl_launcher_outcome(result) -> None:
     See OUTCOMES for list of possible outcomes.
     """
     def crash_or_build_failure():
-        return "c" if "Compilation terminated successfully..." in result.stderr else "bf"
+        return "c" if "Compilation terminated successfully..." in result.stderr.stderr else "bf"
     def crash_or_build_crash():
-        return "c" if "Compilation terminated successfully..." in result.stderr else "bc"
+        return "c" if "Compilation terminated successfully..." in result.stderr.stderr else "bc"
     def timeout_or_build_timeout():
-        return "to" if "Compilation terminated successfully..." in result.stderr else "bto"
+        return "to" if "Compilation terminated successfully..." in result.stderr.stderr else "bto"
 
     if result.status == 0:
         return "pass"
@@ -96,76 +96,61 @@ def set_cl_launcher_outcomes(session, tables: Tableset, rerun: bool=False) -> No
         result.outcome = get_cl_launcher_outcome(result)
 
 
-def get_cldrive_outcome(result):
+def get_cldrive_outcome(status: int, runtime: float, stderr: str) -> int:
     """
     Given a cldrive result, determine its outcome.
 
     See OUTCOMES for list of possible outcomes.
     """
     def crash_or_build_failure():
-        return "c" if "[cldrive] Kernel: " in result.stderr else "bf"
+        return OUTCOMES_TO_INT["c"] if "[cldrive] Kernel: " in stderr else OUTCOMES_TO_INT["bf"]
     def crash_or_build_crash():
-        return "c" if "[cldrive] Kernel: " in result.stderr else "bc"
+        return OUTCOMES_TO_INT["c"] if "[cldrive] Kernel: " in stderr else OUTCOMES_TO_INT["bc"]
     def timeout_or_build_timeout():
-        return "to" if "[cldrive] Kernel: " in result.stderr else "bto"
+        return OUTCOMES_TO_INT["to"] if "[cldrive] Kernel: " in stderr else OUTCOMES_TO_INT["bto"]
 
-    if result.status == 0:
-        return "pass"
-    # 401 is bad harness
-    elif result.status == 401:
-        return "fail"
+    if status == 0:
+        return OUTCOMES_TO_INT["pass"]
     # 139 is SIGSEV
-    elif result.status == 139 or result.status == -11:
-        result.status = 139
+    elif status == 139 or status == -11:
+        status = 139
         return crash_or_build_crash()
     # SIGTRAP
-    elif result.status == -5:
+    elif status == -5:
         return crash_or_build_crash()
     # SIGKILL
-    elif result.status == -9 and result.runtime >= 60:
+    elif status == -9 and runtime >= 60:
         return timeout_or_build_timeout()
-    elif result.status == -9:
-        print(f"SIGKILL, but only ran for {result.runtime:.2f}s")
+    elif status == -9:
+        print(f"SIGKILL, but only ran for {runtime:.2f}s")
         return crash_or_build_crash()
     # SIGILL
-    elif result.status == -4:
+    elif status == -4:
         return crash_or_build_crash()
     # SIGFPE
-    elif result.status == -8:
+    elif status == -8:
         return crash_or_build_crash()
     # SIGBUS
-    elif result.status == -7:
+    elif status == -7:
         return crash_or_build_crash()
     # SIGABRT
-    elif result.status == -6:
+    elif status == -6:
         return crash_or_build_crash()
     # cldrive error
-    elif result.status == 1 and result.runtime >= 60:
+    elif status == 1 and runtime >= 60:
         return timeout_or_build_timeout()
-    elif result.status == 1:
+    elif status == 1:
         return crash_or_build_failure()
     # file not found (check the stderr on this one):
-    elif result.status == 127:
+    elif status == 127:
         return crash_or_build_failure()
     else:
         print(result)
         try:
-            print(Signals(-result.status).name)
+            print(Signals(-status).name)
         except ValueError:
-            print(result.status)
-        raise LookupError(f"failed to determine outcome of cldrive result #{result.id}")
-
-
-def set_cldrive_outcomes(session, tables: Tableset, rerun: bool=False) -> None:
-    """ Set all cldrive outcomes. Set `rerun' to recompute outcomes for all results """
-    print("Determining CLgen outcomes ...", file=sys.stderr)
-    q = session.query(tables.results)
-    if not rerun:
-        q = q.filter(tables.results.outcome == None)
-    ntodo = q.count()
-    for result in util.NamedProgressBar('cldrive outcomes')(q, max_value=ntodo):
-        result.outcome = get_cldrive_outcome(result)
-
+            print(status)
+        raise LookupError(f"failed to determine outcome of cldrive status {status} with stderr: {stderr}")
 
 
 def set_classifications(session, tables: Tableset) -> None:
@@ -348,28 +333,38 @@ def verify_optimization_sensitive(session: session_t, tables: Tableset, result) 
         .filter(tables.params.gsize_x == params.gsize_x,
                 tables.params.gsize_y == params.gsize_y,
                 tables.params.gsize_z == params.gsize_z,
-                tables.params.optimizations == (not params.optimizations))\
-        .scalar()
+                tables.params.optimizations == (not params.optimizations))
 
-    complement_result = session.query(tables.results)\
-                            .join(tables.testcases)\
-                            .filter(tables.testcases.program_id == result.testcase.program_id,
-                                    tables.testcases.params_id == complement_params_id)\
-                            .first()
-    if complement_result:
-        if complement_result.stdout_id == result.stdout_id:
-            print(f"retracting w-classification on {tables.name} result {result.id} - optimization insensitive")
+    complement_testcase = session.query(tables.testcases.id)\
+        .filter(tables.testcases.program_id == result.testcase.program_id,
+                tables.testcases.params_id == complement_params_id)
+
+    # print("RESULT", result.id, "COMPLEMENT_TESTCASE", complement_testcase.first())
+    q = session.query(
+            tables.results.id,
+            tables.classifications.classification)\
+        .join(tables.testcases)\
+        .filter(tables.results.testbed_id == result.testbed_id,
+                tables.results.testcase_id == complement_testcase)\
+        .first()
+
+    if q:
+        complement_id, complement_classification = q
+        if complement_classification == CLASSIFICATIONS_TO_INT["w"]:
+            print(f"retracting w-classification on 2 {tables.name} results {{{result.id},{complement_id}}} - optimization insensitive")
             session.query(tables.classifications)\
-                .filter(tables.classifications.id == result.id).delete()
+                .filter(tables.classifications.id.in_([result.id, complement_id]))\
+                .delete(synchronize_session=False)
+                # .filter(tables.classifications.id == result.id)\
     else:
         print(f"no complement result for {tables.name} result {result.id}")
-        session.query(tables.classifications)\
-            .filter(tables.classifications.id == result.id).delete()
+        # session.query(tables.classifications)\
+        #     .filter(tables.classifications.id == result.id).delete()
 
 
 def prune_w_classifications(session: session_t, tables: Tableset) -> None:
 
-    # Verify testcases
+    print(f"Verifying {tables.name} w-classified testcases ...", file=sys.stderr)
     q = session.query(tables.results.testcase_id)\
             .join(tables.classifications)\
             .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"])\
@@ -379,19 +374,18 @@ def prune_w_classifications(session: session_t, tables: Tableset) -> None:
             .distinct()\
             .all()
 
-    print(f"Verifying {tables.name} w-classified testcases ...", file=sys.stderr)
     for testcase in ProgressBar()(testcases_to_verify):
         verify_w_testcase(session, tables, testcase)
 
-    # Verify results
-    results_to_verify = session.query(tables.results)\
-            .join(tables.classifications)\
-            .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"])\
-            .all()
+    # FIXME:
+    # print(f"Verifying {tables.name} w-classified optimization sensitivity ...", file=sys.stderr)
+    # results_to_verify = session.query(tables.results)\
+    #         .join(tables.classifications)\
+    #         .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"])\
+    #         .all()
 
-    print(f"Verifying {tables.name} w-classified optimization sensitivity ...", file=sys.stderr)
-    for result in ProgressBar()(results_to_verify):
-        verify_optimization_sensitive(session, tables, result)
+    # for result in ProgressBar()(results_to_verify):
+    #     verify_optimization_sensitive(session, tables, result)
 
     # TODO: Do any of the other results for this testcase crash?
 

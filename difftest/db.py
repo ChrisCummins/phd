@@ -524,8 +524,7 @@ class CLgenResult(Base):
 
     # output
     stdout_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStdouts.id"), nullable=False)
-    # TODO: ALTER TABLE CLgenResults MODIFY stderr_id INT(11) NOT NULL;
-    stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStderrs.id"))
+    stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStderrs.id"), nullable=False)
 
     outcome = sql.Column(sql.Integer, index=True, nullable=False)
 

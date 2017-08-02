@@ -30,7 +30,7 @@ class HarnessCompilationError(ValueError):
 def mkharness(s, env: cldrive.OpenCLEnvironment, testcase: CLgenTestCase):
     """ generate a self-contained C program for the given test case """
     if testcase.harness:
-        return testcase.harness
+        return testcase.harness[0]
 
     data_generator = cldrive.Generator.from_str(params.generator)
     gsize = cldrive.NDRange(params.gsize_x, params.gsize_y, params.gsize_z)
