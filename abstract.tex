@@ -1,21 +1,15 @@
 \begin{abstract}
 % ASPLOS: papers that open new areas with less rigorous evaluation are equally welcome and especially encouraged
 %
-Compilers should produce correct code for valid inputs, and produce meaningful errors when inputs are invalid. Fixed test-suites are incapable of ensuring these properties over the enormous range of possible inputs, and the complexity of optimizing compilers renders them beyond the scope of formal verification. Probabilistic grammar-based tools have proven effective at finding bugs by generating large, random programs and comparing their outputs across compilers.
+Compilers should produce correct code for valid inputs, and produce meaningful errors when inputs are invalid. Fixed test-suites and formal verification techniques cannot ensure these properties over the enormous range of possible inputs and complexity of optimizing compilers, leading to the development of random program generators that attempt to find compiler bugs by comparing the outputs of programs across compilers.
 
-Random program generators require extensive development effort, and by design, yield large random programs which bare little resemblance to actual real code written by human programmers. These ``implausible'' programs attempt to discover bugs using uncommon combinations of language features and constructs. \cc{\ldots}
+Grammar-based random program generators require extensive development effort, and by design, yield large, ``implausible''  programs which bare little resemblance to actual real code written by human programmers. This is in contrast to the needs of compiler developers, who desire small test cases which are symptomatic of of ``plausible'' use cases. What is needed is a technique for biasing the production of random program generation such that they more closely resemble real handwritten code, and which expose bugs which are likely to arise from common use cases.
 
-Compiler developers prefer test-cases to be small and symptomatic of ``plausible'' use cases. However, the current state-of-the-art in compiler fuzzing cannot .
+% Furthermore, extensive effort is expended on minimizing the risk of undefined behavior, which comes at the cost of reduced expressiveness.
 
-\cc{They do not use the common constructs and patterns of a programming language, and combine unusual language features. By contrast, compiler developers wans minimal test-cases based on ``real'' code.}
+We introduce a new approach to random program generation. By framing the generation of random programs as a language modeling problem, we apply deep learning techniques over large corpuses of open source code fragments to learn models which describe the structure of real world codes. We use these models to generate tens of thousands of new programs, and show how established differential testing methodologies can be used to expose bugs in compilers which are symptomatic of real hand-written code.
 
-What is needed is a technique for the generation of random programs that capture the expressive
-
-What is needed is a technique for biasing the random generation of programs so that the generated codes are ``plausible'', and closely resemble that of real hand-written code.
-
-We present a new approach for the generation of \emph{plausible} compiler test-cases. We frame the generation of random programs as a language modeling problem --- applying deep learning techniques over large corpuses of open source code fragments to learn models which describe the structure of real world codes. We use these models to generate tens of thousands of new programs, and show how established differential testing methodologies can be used to expose bugs in compilers which are symptomatic of real hand-written code.
-
-We apply our technique to OpenCL, automatically exposing bugs in OpenCL compilers which are likely to arise from real world use cases, in a ways which are not possible using existing techniques. In over 1,000 hours of automated testing of commercial and open source compilers, we discover bugs in all of them, submitting XX bug reports. Our test-cases are on average two orders of magnitude smaller than the state-of-the-art, and are evaluated $X\times$ faster, while maintaining comparable ratio of bugs found.
+We apply our technique to OpenCL, automatically exposing bugs in OpenCL compilers which are likely to arise from real world use cases, in a ways which are not possible using existing techniques. In over 1,000 hours of automated testing of commercial and open source compilers, we discover bugs in all of them, submitting XX bug reports. Our test-cases are on average two orders of magnitude smaller than the state-of-the-art, require $X\times$ less time to generate and execute, and expose bugs which could not be found using existing techniques.
 
 % Our paper serves two purposes: first, we propose a novel methodology for compiler test-case generation, capable of finding bugs at a faster rate and covering more areas of the compiler than existing approaches; second, we report on the state of OpenCL implementations.
 \end{abstract}
