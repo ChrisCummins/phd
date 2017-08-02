@@ -26,12 +26,14 @@ from lib import *
 
 # paths to clreduce library
 CLREDUCE_DIR = fs.abspath('..', 'lib', 'clreduce')
-CREDUCE = fs.abspath(CLREDUCE_DIR, 'build_creduce', 'creduce', 'creduce')
-OCLGRIND = fs.abspath(CLREDUCE_DIR, 'build_oclgrind', 'oclgrind')
 CLSMITH_DIR = fs.abspath('..', 'lib', 'CLSmith', 'build')
-CLSMITH_RUNTIME_DIR = fs.abspath('..', 'lib', 'CLSmith', 'runtime')
+
 CL_LAUNCHER = fs.abspath(CLSMITH_DIR, 'cl_launcher')
+CLSMITH_HEADERS = [path for path in fs.ls(CLSMITH_DIR, abspaths=True) if path.endswith('.h')]
+CLSMITH_RUNTIME_DIR = fs.abspath('..', 'lib', 'CLSmith', 'runtime')
+CREDUCE = fs.abspath(CLREDUCE_DIR, 'build_creduce', 'creduce', 'creduce')
 INTERESTING_TEST = fs.abspath(CLREDUCE_DIR, 'interestingness_tests', 'wrong_code_bug.py')
+OCLGRIND = fs.abspath(CLREDUCE_DIR, 'build_oclgrind', 'oclgrind')
 
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'log', 'src'])
@@ -48,12 +50,16 @@ def get_device_name(platform_id, device_id):
     return device.get_info(cl.device_info.NAME)
 
 
-def get_num_results_to_reduce(session: db.session_t, testbed: Testbed):
-    num_ran = session.query(CLSmithReduction.id).join(CLSmithResult)\
-        .filter(CLSmithResult.testbed_id == testbed.id).count()
-    total = session.query(CLSmithResult.id)\
-        .filter(CLSmithResult.classification == 'w',
-                CLSmithResult.testbed_id == testbed.id).count()
+def get_num_results_to_reduce(session: db.session_t, tables: Tableset, testbed: Testbed):
+    num_ran = session.query(sql.sql.func.count(tables.reductions.id))\
+        .join(tables.results)\
+        .filter(tables.results.testbed_id == testbed.id)\
+        .scalar()
+    total = session.query(sql.sql.func.count(tables.results.id))\
+        .join(tables.classifications)\
+        .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT['w'],
+                tables.results.testbed_id == testbed.id)\
+        .scalar()
     return num_ran, total
 
 
@@ -67,47 +73,34 @@ def remove_preprocessor_comments(test_case_name):
 
 def run_reduction(s, result: CLSmithResult) -> return_t:
     """
-    Note as a side effect this method modified environment variables.
+    Note as a side effect this method modifies environment variables.
     """
-    start_time = time()
-    print("reduction")
-
-    oracle_testbed_id = s.query(Testbed.id).filter(Testbed.platform == "Oclgrind").filter()
-    assert oracle_testbed_id
-    oracle_run = s.query(CLSmithResult)\
-        .filter(CLSmithResult.testbed_id == oracle_testbed_id,
-                CLSmithResult.program_id == result.program_id,
-                CLSmithResult.params_id == result.params_id).first()
-    if oracle_run:
-        assert oracle_run.stdout != result.stdout
-    else:
-        print("warning: no oracle run on file", file=sys.stderr)
-
     with TemporaryDirectory(prefix='clreduce-') as tmpdir:
         path = fs.path(tmpdir, "kernel.cl")
 
         # move headers into place
-        for header in [x for x in fs.ls(CLSMITH_DIR, abspaths=True) if x.endswith('.h')]:
+        for header in CLSMITH_HEADERS:
             fs.cp(header, tmpdir)
 
-        # put kernel
+        # create kernel file
         kernel = fs.path(tmpdir, "kernel.cl")
         with open(kernel, 'w') as outfile:
-            print(result.program.src, file=outfile)
+            print(result.testcase.program.src, file=outfile)
 
+        # Preprocess to inline headers
         cmd = ["clang", "-I", CLSMITH_DIR, "-I", CLSMITH_RUNTIME_DIR,
                "-E", "-CC", "-o", kernel, path]
         pp = subprocess.run(cmd, timeout=60, check=True)
         remove_preprocessor_comments(kernel)
 
-        # Get OpenCL indexes
+        # Get OpenCL device and platform indexes
         env = cldrive.make_env(platform=result.testbed.platform,
                                device=result.testbed.device)
         platform_id, device_id = env.ids()
 
-        # setup env
+        # Setup env
         os.chdir(tmpdir)
-        optimized = 'optimised' if result.params.optimizations else 'unoptimised'
+        optimized = 'optimised' if result.testcase.params.optimizations else 'unoptimised'
         os.environ['CREDUCE_TEST_OPTIMISATION_LEVEL'] = optimized
         os.environ['CREDUCE_TEST_CASE'] = path
         os.environ['OCLGRIND'] = OCLGRIND
@@ -118,6 +111,7 @@ def run_reduction(s, result: CLSmithResult) -> return_t:
         cmd = ['perl', '--', CREDUCE, '--n', '4', '--timing', INTERESTING_TEST, path]
 
         # Run the actual reduction
+        start_time = time()
         out = []
         process = subprocess.Popen(cmd, universal_newlines=True, bufsize=1,
                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -128,11 +122,13 @@ def run_reduction(s, result: CLSmithResult) -> return_t:
         process.wait()
 
         status = process.returncode
+        runtime = time() - start_time
 
         with open(kernel) as infile:
             src = infile.read()
 
-    runtime = time() - start_time
+        fs.mv(tmpdir, fs.path("~/tmp/", fs.basename(tmpdir)))
+
     return CLSmithReduction(result=result, runtime=runtime, status=status,
                             src=src, log='\n'.join(out))
 
@@ -160,34 +156,36 @@ if __name__ == "__main__":
     devname = util.device_str(device_name)
     print(f"Reducing w-classified results for {devname} ...")
 
+    tables = CLSMITH_TABLES
+
     with Session(commit=False) as s:
         testbed = get_testbed(s, platform_name, device_name)
 
         # progress bar
-        num_ran, total = get_num_results_to_reduce(s, testbed)
+        num_ran, total = get_num_results_to_reduce(s, tables, testbed)
         bar = progressbar.ProgressBar(init_value=num_ran, max_value=total)
 
         # main execution loop:
         while True:
             # get the next result to reduce
-            done = s.query(CLSmithReduction.id)
-            result = s.query(CLSmithResult).filter(
-                CLSmithResult.testbed_id == testbed.id,
-                CLSmithResult.classification == "w",
-                ~CLSmithResult.id.in_(done)).order_by(CLSmithResult.id).first()
+            done = s.query(tables.reductions.id)
+            result = s.query(tables.results)\
+                .join(tables.classifications)\
+                .filter(tables.results.testbed_id == testbed.id,
+                        tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"],
+                        ~tables.results.id.in_(done)).order_by(tables.results.id)\
+                .first()
 
             if not result:
                 break
 
             reduction = run_reduction(s, result)
 
-            # record result if it was successful
-            if reduction.status == 0:
-                s.add(reduction)
-                s.commit()
+            s.add(reduction)
+            s.commit()
 
             # update progress bar
-            num_ran, total = get_num_results_to_reduce(s, testbed)
+            num_ran, total = get_num_results_to_reduce(s, tables, testbed)
             bar.max_value = total
             bar.update(min(num_ran, total))
 
