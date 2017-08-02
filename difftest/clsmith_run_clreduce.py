@@ -28,12 +28,12 @@ from lib import *
 CLREDUCE_DIR = fs.abspath('..', 'lib', 'clreduce')
 CLSMITH_DIR = fs.abspath('..', 'lib', 'CLSmith', 'build')
 
-CL_LAUNCHER = fs.abspath(CLSMITH_DIR, 'cl_launcher')
+CL_LAUNCHER = fs.abspath('../lib/CLSmith/build/cl_launcher')
 CLSMITH_HEADERS = [path for path in fs.ls(CLSMITH_DIR, abspaths=True) if path.endswith('.h')]
 CLSMITH_RUNTIME_DIR = fs.abspath('..', 'lib', 'CLSmith', 'runtime')
 CREDUCE = fs.abspath(CLREDUCE_DIR, 'build_creduce', 'creduce', 'creduce')
 INTERESTING_TEST = fs.abspath(CLREDUCE_DIR, 'interestingness_tests', 'wrong_code_bug.py')
-OCLGRIND = fs.abspath(CLREDUCE_DIR, 'build_oclgrind', 'oclgrind')
+OCLGRIND = fs.abspath('../lib/clgen/native/oclgrind/c3760d07365b74ccda04cd361e1b567a6d99dd8c/install/bin/oclgrind')
 
 status_t = NewType('status_t', int)
 return_t = namedtuple('return_t', ['runtime', 'status', 'log', 'src'])
@@ -108,11 +108,20 @@ def run_reduction(s, result: CLSmithResult) -> return_t:
         os.environ['CREDUCE_TEST_PLATFORM'] = str(platform_id)
         os.environ['CREDUCE_TEST_DEVICE'] = str(device_id)
 
-        cmd = ['perl', '--', CREDUCE, '--n', '4', '--timing', INTERESTING_TEST, path]
+        # Log the interestingness test once to check that everything is okay
+        out = []
+        cmd = ['timeout', '-s9', '60s', INTERESTING_TEST]
+        process = subprocess.Popen(cmd, universal_newlines=True, bufsize=1,
+                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        with process.stdout:
+            for line in process.stdout:
+                sys.stdout.write(line)
+                out.append(line)
+        process.wait()
 
         # Run the actual reduction
         start_time = time()
-        out = []
+        cmd = ['perl', '--', CREDUCE, '--n', '4', '--timing', INTERESTING_TEST, path]
         process = subprocess.Popen(cmd, universal_newlines=True, bufsize=1,
                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         with process.stdout:
