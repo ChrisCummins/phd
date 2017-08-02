@@ -73,29 +73,6 @@ This section reports on the results of extensive testing of OpenCL compilers usi
   \end{lstlisting}
 \end{lrbox}
 
-\newsavebox{\IntelPtrAssertion}
-\begin{lrbox}{\IntelPtrAssertion}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    __kernel void A(__global int* a, __global int* b) {
-      int c = (int)get_global_id(0);
-      a[c] += b;
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\IntelScalarAssertion}
-\begin{lrbox}{\IntelScalarAssertion}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    __kernel void A(__global float* a, __global float* b, __global float* c, __local float* d, unsigned int e, unsigned int f) {
-      for (unsigned int g = get_local_id(0) + get_local_size(0); g < get_local_size(0); g += get_local_size(0)) {
-        a[2 * get_local_id(0) + 1] = get_local_id(0);
-      }
-    }
-  \end{lstlisting}
-\end{lrbox}
-
 \begin{figure}
   \centering %
   \subfloat[Configs.\ $5\pm$ crash during vectorizer pass.]{%
@@ -118,14 +95,6 @@ This section reports on the results of extensive testing of OpenCL compilers usi
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSegfault}}}%
     \label{lst:xeon-phi-segfault}
   }\\%
-  \subfloat[Configs.\ $3\pm$ assertion during code generation for pointer assignment.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPtrAssertion}}}%
-    \label{lst:intel-ptr-assertion}
-  }\\%
-  \subfloat[Configs.\ $3\pm$ assertion in scalar type code generation.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelScalarAssertion}}}%
-    \label{lst:intel-scalar-assertion}
-  }\\%
   \caption{Example kernels which crash compilers.}%
   \label{lst:compiler-crashes}%
 \end{figure}
@@ -135,12 +104,11 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
 
 In the majority of cases, we found compiler crashes to be insensitive to OpenCL optimization setting.
 
+\paragraph{Front-end} We found the most compiler crash bugs in compiler frontends. Because there is no guarantee that DeepSmith programs well-formed, our approach is biased towards discovering bugs in the early stages of compilation: lexing and parsing.
 
-\paragraph{Front-end} We found the compiler crash bugs in compiler frontends. Because of the large volume of ill-formed test-cases, our approach is biased towards discovering bugs in the early stages of compilation: lexing and parsing.
+Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for configurations $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other configurations raise a build failure. Such test-cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random token enumeration, and impossible through grammar-based tools.
 
-Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for configurations $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other configurations raise a build failure. Such test-cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random string testing, and impossible through grammar-based tools.
-
-Parsers were a common source of errors. To date we have identified over 60 cases where unreachable code is executed due to parse error handling. We also found that relatively large code samples, containing many errors crashed multiple compiles \cc{that shared clang frontend?}.
+Parsers were a common source of errors. To date we have identified 207 distinct cases where unreachable code is executed during parsing.
 
 \paragraph{Middle-end} Figure~\ref{lst:intel-vectorizer-segfault} segfaults during vectorization.
 
@@ -243,7 +211,7 @@ A bug in \texttt{clang::sema} has been forwarded to the LLVM folks.
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelOptCompilerHang}}}%
     \label{lst:intel-opt-compiler-hang}
   }\\%
-  \subfloat[Configs.\ $7\pm$ spin consuming 100\% CPU usage during code generation.]{%
+  \subfloat[Configs.\ $7\pm$ stuck in infinite loop during code generation, consuming 100\% CPU usage.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSpin}}}%
     \label{lst:xeon-phi-spin}
   }\\%
@@ -256,6 +224,42 @@ A bug in \texttt{clang::sema} has been forwarded to the LLVM folks.
 \end{figure}
 
 Configs.\ $1+$ and $2+$ hang on large loop bounds. Configs.\ $3\pm$ hang while assigning a value from a pointer address. Configs.\ $4+$, $5+$, $6+$, $7+$ hang on non-terminating while loops.
+
+
+\subsection{Anomalous Outputs}
+
+\newsavebox{\IntelSizetInt}
+\begin{lrbox}{\IntelSizetInt}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(__global double* a, __global double* b, __global double* c, int d, int e) {
+      double f;
+      int g = get_global_id(0);
+      if (g < e - d - 1) {
+        c[g] = (((e) / d) % 5) % (e + d);
+      }
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\begin{figure}
+  \centering %
+  \subfloat[Configs.\ $4+$, $6+$ incorrectly execute \texttt{if} branch.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSizetInt}}}%
+    \label{lst:intel-size_t-int}
+  }\\%
+  \caption{Example kernels which are miscompiled.}%
+  \label{lst:wrong-code}%
+\end{figure}
+
+
+An error in the optimizer of Configs.\ $4+$, $6+$ causes the \texttt{if} statement of Figure~\ref{lst:compiler-crashes} to be executed.
+% cd ~/data/kernels/github-pp
+% ls | xargs egrep -l 'int [A-Z]+ = get_global_id\(' -- | wc -l
+% >> 2144
+% ls | wc -l
+% >> 4655
+This is troubling --- 46\% of kernels on GitHub use this \texttt{if} construct to guard against invalid memory accesses. Figure~\ref{lst:compiler-crashes} shows a hand-reduced minimal test-case.
 
 
 \subsection{Runtime Crashes}
@@ -288,21 +292,9 @@ Figure~\ref{lst:oclgrind-llvm-densemap-assertion} exposed a race condition in sw
 % https://github.com/jrprice/Oclgrind/commit/23eeaa602d63b7cbec286864c4180252dcde861e
 
 
-\subsection{Wrong-code Bugs}
+\subsection{Gray Areas}
 
-\newsavebox{\IntelSizetInt}
-\begin{lrbox}{\IntelSizetInt}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    __kernel void A(__global double* a, __global double* b, __global double* c, int d, int e) {
-      double f;
-      int g = get_global_id(0);
-      if (g < e - d - 1) {
-        c[g] = (((e) / d) % 5) % (e + d);
-      }
-    }
-  \end{lstlisting}
-\end{lrbox}
+Figure~\ref{lst:xeon-phi-invalid-write}.
 
 \newsavebox{\XeonPhiInvalidWrite}
 \begin{lrbox}{\XeonPhiInvalidWrite}
@@ -318,38 +310,33 @@ Figure~\ref{lst:oclgrind-llvm-densemap-assertion} exposed a race condition in sw
 
 \begin{figure}
   \centering %
-  \subfloat[Configs.\ $4+$, $6+$ incorrectly execute \texttt{if} branch.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSizetInt}}}%
-    \label{lst:intel-size_t-int}
-  }\\%
-  \subfloat[Invalid write \texttt{a[-1]} prevents \texttt{a[0]} writes in Configs.\ $7\pm$.]{%
+  \subfloat[The invalid write in line 3 does not affect execution of lines 2 and 4 for all configurations except $7\pm$. On configs.\ $7\pm$, lines 2 and 4 execute when the invalid write has an index < $44032$, but not if the index $\ge 44032$.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiInvalidWrite}}}%
     \label{lst:xeon-phi-invalid-write}
   }\\%
-  \caption{Example kernels for which compilers emit wrong-code.}%
-  \label{lst:wrong-code}%
+  \caption{Example kernels which mis-match.}%
+  \label{lst:gray-areas}%
 \end{figure}
 
 
-An error in the optimizer of Configs.\ $4+$, $6+$ causes the \texttt{if} statement of Figure~\ref{lst:compiler-crashes} to be executed.
-% cd ~/data/kernels/github-pp
-% ls | xargs egrep -l 'int [A-Z]+ = get_global_id\(' -- | wc -l
-% >> 2144
-% ls | wc -l
-% >> 4655
-This is troubling --- 46\% of kernels on GitHub use this \texttt{if} construct to guard against invalid memory accesses. Figure~\ref{lst:compiler-crashes} shows a hand-reduced minimal test-case.
-
-
-\subsection{False Positives}
+\newsavebox{\UninitRead}
+\begin{lrbox}{\UninitRead}
+  \hspace{1.5em}
+  \begin{lstlisting}
+      __kernel void A(__global int* a, __global int* b) {
+        int c[16];
+        int d = get_global_id(0);
+        a[d] = b[d] + c[d];
+      }
+  \end{lstlisting}
+\end{lrbox}
 
 \begin{figure}
-\begin{lstlisting}
-__kernel void A(__global int* a, __global int* b) {
-  int c[16];
-  int d = get_global_id(0);
-  a[d] = b[d] + c[d];
-}
-\end{lstlisting}
-\caption{Read of uninitialized automatic variable \texttt{c}.}
-\label{lst:uninit-read}
+  \centering %
+  \subfloat[Read of uninitialized automatic variable \texttt{c}.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\UninitRead}}}%
+    \label{lst:pocl-undefined-symbols}
+  }\\%
+  \caption{False positives.}%
+  \label{lst:uninit-read}%
 \end{figure}

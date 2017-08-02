@@ -1,10 +1,12 @@
 \section{Related Work}\label{sec:rw}
 
-% \subsection{Test Case Generation}
+\cc{structure:} Formative work in '98. Increasing complexity of generations: RandProg to CSmith. Then EMI testing, and SPE.
 
 The \emph{fuzz taming problem} is introduced in~\cite{Chen2013}. Compiler fuzz testers are indiscriminate - they tend to keep finding noncritical bugs which may already be known.
 
 \cc{TODO:} Compiler test-case generation survey~\cite{Boujarwah1997}. Empirical comparion of compiler testing techniques~\cite{Chen2014a}. Testing using programs at different levels of quality (random character sequence through model-conforming program)~\cite{McKeeman1998}. Analysis of bugs in GCC and LLVM finds 80\% of test-cases to be 45 lines~\cite{Sun2016}. \cc{TODO}~\cite{Godefroid2008a,Le2015,Sun2016a}.
+
+\cc{TODO:} Directed EMI testing~\cite{Le2015}.
 
 \citeauthor{McKeeman1998} use a lexeme generator to test C compilers by enumerating token sequences in~\cite{McKeeman1998}. Basically the same as DeepSmith, except we weight the generation so that sequences are plausible.
 

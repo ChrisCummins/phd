@@ -1,4 +1,4 @@
-\section{Motivation}
+\section{Motivation}\label{sec:methodology}
 
 \newsavebox{\IntelSizetIntReduced}
 \begin{lrbox}{\IntelSizetIntReduced}
@@ -44,15 +44,15 @@
 
 \begin{figure}
   \centering %
-  \subfloat[This widely used pattern of integer comparison to thread ID is miscompiled on two compilers when optimizations are enabled, causing the \texttt{if} statement to be executed (hand-reduced version of Figure~\ref{lst:intel-size_t-int}).]{%
+  \subfloat[This widely used pattern of integer comparison to thread ID is miscompiled on two compilers when optimizations are enabled and the integer literal is negative, causing the \texttt{if} statement to be executed (hand-reduced version of Figure~\ref{lst:intel-size_t-int}).]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSizetIntReduced}}}%
     \label{lst:intel-size_t-int-reduced}
   }\\%
-  \subfloat[A race condition in \texttt{switch} statement evaluation causes this program to sporadically crash when executed with one compiler and global size $> 1$, irrespective of optimization level.]{%
+  \subfloat[A race condition in \texttt{switch} statement evaluation causes Oclgrind to sporadically crash when executed with a global size $> 1$, irrespective of optimization level.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindRaceSwitch}}}%
     \label{lst:oclgrind-race-switch}
   }\\%
-  \subfloat[Of the 10 compilers we tested, 6 crash with segfault when compiling this malformed kernel. CLSmith does not generate erroneous code such as this.]{%
+  \subfloat[Of the 10 compilers we tested, 6 crash with segfault when compiling this malformed kernel.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\AlmostEverythingCrash}}}%
     \label{lst:almost-everything-crash}
   }\\%
@@ -74,5 +74,6 @@ causes the \texttt{if} statement of Figure~\ref{lst:intel-size_t-int-reduced} to
 This is troubling --- 46\% of kernels on GitHub use this ($tid \rightarrow$ int, \texttt{if}) pattern to guard against invalid memory accesses.
 
 
-\cc{TODO} Figure~\ref{lst:oclgrind-race-switch}.
-\cc{TODO} Figure~\ref{lst:almost-everything-crash}.
+\cc{TODO} Figure~\ref{lst:oclgrind-race-switch}. CLSmith does not support conditional control flow based on thread ID.
+
+\cc{TODO} Figure~\ref{lst:almost-everything-crash}. The behavior of compilers under invalid inputs is --- to the best of our knowledge --- a much lesser explored topic. While it is hard to quantify what constitutes a ``plausible'' error in code, we believe that our approach contributes a significant improvement for generating human-like code over current random-enumeration approaches. \cc{Maybe work on fuzzing JITs?}

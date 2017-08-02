@@ -20,7 +20,7 @@ An average of XX CLSmith and XX DeepSmith test-cases were evaluated on each devi
 
 Column \textbf{bc} is of immediate value for developers; for all other outcomes, voting heuristics are required to expose anomalous results. CLSmith crashed 8 of the 20 configurations, DeepSmith crashed all of them. See Section X for examples of bugs found from build crashes.
 
-The integrated GPU Conifgs.\ we tested ($3\pm$) frequently failed to compile CLSmith kernels, resulting in thousands of compiler crashes \textbf{bc} or timeouts \textbf{bc}. 
+The integrated GPU Conifgs.\ we tested ($3\pm$) frequently failed to compile CLSmith kernels, resulting in thousands of compiler crashes \textbf{bc} or timeouts \textbf{bc}.
 % SELECT stderr,COUNT(*) FROM CLSmithResults LEFT JOIN CLSmithMetas ON CLSmithResults.id=CLSmithMetas.id WHERE testbed_id=13 AND CLSmithResults.outcome='bc' AND cumtime < 48 * 3600 GROUP BY CLSmithResults.stderr;
 Of the build crashes, 68\% failed silently, and the remainder were caused by the same pointer assignment assertion for which DeepSmith generated a 4 line test-case in Figure~\ref{lst:intel-llvm-assertion}. \cc{We also generated silent build crashes, but with an average line count of XX, versus CLSmith's line count of XX.}
 
@@ -116,9 +116,54 @@ Average CLgen kernel is 20 lines long.
 % WHERE cumtime < 48 * 3600;
 Over the course of testing, a combined $3.39 \times 10^8$ of CLSmith code was evaluated, compared to $3.76 \times 10^6$ lines of DeepSmith code.
 
+% How many GitHub kernels contain 'struct's?
+% $ ls | xargs grep -l struct -- | wc -l
+% 331
+CLSmith is biased towards identifying struct miscompilations, though only 7.1\% of OpenCL kernels on GitHub use them.
+
+% Average GitHub charchounts: 1451
+% Average GitHub linecounts: 53
+
+\newsavebox{\IntelPtrAssertion}
+\begin{lrbox}{\IntelPtrAssertion}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(__global int* a, __global int* b) {
+      int c = (int)get_global_id(0);
+      a[c] += b;
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\IntelScalarAssertion}
+\begin{lrbox}{\IntelScalarAssertion}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    __kernel void A(__global float* a, __global float* b, __global float* c, __local float* d, unsigned int e, unsigned int f) {
+      for (unsigned int g = get_local_id(0) + get_local_size(0); g < get_local_size(0); g += get_local_size(0)) {
+        a[2 * get_local_id(0) + 1] = get_local_id(0);
+      }
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\begin{figure}
+  \centering %
+  \subfloat[Configs.\ $3\pm$ assertion during code generation for pointer assignment.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPtrAssertion}}}%
+    \label{lst:intel-ptr-assertion}
+  }\\%
+  \subfloat[Configs.\ $3\pm$ assertion in scalar type code generation.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelScalarAssertion}}}%
+    \label{lst:intel-scalar-assertion}
+  }\\%
+  \caption{Example kernels which crash compilers.}%
+  \label{lst:compiler-crashes}%
+\end{figure}
+
 In 48 hours of testing, DeepSmith triggered 9 distinct compiler assertions, CLSmith 2. Both of the assertions triggered by CLSmith were also triggered by CLgen.
 % Test-case sizes:
-% 
+%
 % SELECT assertion, AVG(linecount)
 % FROM CLSmithResults results
 % LEFT JOIN CLSmithTestCases testcases ON results.testcase_id = testcases.id
@@ -140,7 +185,7 @@ In 48 hours of testing, DeepSmith triggered 9 distinct compiler assertions, CLSm
 % ASSERTION FAILED: Not supported	4.7857
 % ASSERTION FAILED: sel.hasDoubleType()	4.6364
 % ASSERTION FAILED: srcType != ir::TYPE_U64	3.0000
-The CLSmith kernels which triggered the two assertions were on average 1411 and 889 lines respectively (excluding headers). The same assertions were triggered with DeepSmith kernels of average 13 lines and 10 lines, respectively.
+The CLSmith kernels which triggered the two assertions were on average 1411 and 889 lines respectively (excluding headers). The same assertions were triggered with DeepSmith kernels of average 13 lines and 10 lines, respectively. \cc{TODO: listings}
 %
 % SELECT num, src, assertion
 %FROM CLgenResults results
@@ -151,7 +196,7 @@ The CLSmith kernels which triggered the two assertions were on average 1411 and 
 %WHERE assertion = 'ASSERTION FAILED: srcType != ir::TYPE_U64';
 We were able to trigger the assertion \emph{srcType != ir::TYPE\_U64} in Configs.\ $3\pm$ with only a 3 line test-case.
 %
-DeepSmith also triggered 227 \emph{unreachable!} compiler errors, CLSmith triggered 0.
+DeepSmith also triggered \emph{unreachable!} compiler errors in 180 distinct test cases, CLSmith triggered 0.
 
 \cc{What is the bug rate per line of code?}
 

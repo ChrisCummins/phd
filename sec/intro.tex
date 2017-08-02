@@ -14,6 +14,10 @@ Differential testing is a promising methodology for identifying compiler bugs. F
 
 The current state of the art in compiler test-case generation is Csmith~\cite{Yang2011}. Csmith defines a probabilistic grammar over a large subset of the C programming language, and recursively instantiates a program, using rigorous and conservative static and dynamic analysis to ensure that programs are guaranteed to be free from the 191 undefined behaviors and 52 unspecified behaviors of the C language specification.
 
+Each new production rule is accompanied by exponential costs in developing the static and dynamic safety checks to ensure programs remain free from (or at least, are likely free from) undefined behaviour. As such, typically only a subset of the language is implemented --- to date, CLSmith does not support unions, dynamic memory allocation, strings, etc. EMI testing can simplify the production somewhat by reducing the generation only to program mutations, and deadcode insertions, but \ldots.
+
+Our observations are twofold: such rigorous and conservative methods may be artificially limiting, and that the wealth of code on the web can be used to seed the generation of codes. This paper describes our experiences in using the latter to test OpenCL.
+
 Because Csmith programs are free form undefined behavior, there is only a single interpretation. This allows oracle-less differential testing across compilers, using a voting heuristic to identify erroneous compiler outputs.
 
 \begin{figure}
