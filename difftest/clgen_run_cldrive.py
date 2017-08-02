@@ -130,9 +130,11 @@ if __name__ == "__main__":
     platform_id, device_id = env.ids()
 
     optimizations = None
-    if args.opt:
+    if args.opt and args.no_opt:
+        pass  # both flags
+    elif args.opt:
         optimizations = 1
-    if args.no_opt:
+    elif args.no_opt:
         optimizations = 0
 
     db.init(args.hostname)  # initialize db engine
