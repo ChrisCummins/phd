@@ -88,7 +88,7 @@ We extend this approach to describe not only miscompilations, but also anomalous
 
 A majority outcome exists if, for for a particular test-case ran on $n$ configurations, at least $\ceil{\frac{2}{3}n}$ configurations produce non-\textbf{\{bc,bto\}} results with the same outcome. We classify anomalous results with respect to the majority outcome for each test-case.
 
-An anomalous output (\textbf{ao}) occurs if, for a given test-case, the majority outcome is a pass \textbf{\cmark}, at least $\ceil{\frac{2}{3}n}$ configurations compute the same result, and a configuration yields a result which differs from this majority result. An \textbf{ao} result is indicative of a \emph{miscompilation}, a particularly hard to detect class of bug in which the compiler silently emits the wrong code. CSmith is designed specifically to target this class of bug.
+An anomalous output (\textbf{ao}) occurs if, for a given test-case, the majority outcome is \textbf{\cmark}, at least $\ceil{\frac{2}{3}n}$ configurations compute the same result, and a configuration yields a result which differs from this majority result. An \textbf{ao} result is indicative of a \emph{miscompilation}, a particularly hard to detect class of bug in which the compiler silently emits the wrong code. CSmith is designed specifically to target this class of bug.
 
 An anomalous build failure (\textbf{abf}), anomalous runtime crash (\textbf{ac}), or anomalous timeout (\textbf{ato}) result occurs if, for a given test-case, the majority outcome is non-\{\textbf{bf,c,to}\}, and a configuration yields a \textbf{bf,bc,to} result.
 
