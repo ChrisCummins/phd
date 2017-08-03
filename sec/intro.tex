@@ -6,15 +6,33 @@
 \hl{Hugh comment}
 
 \noindent
-Optimizing compilers are large and complex programs, with a practically infinite scope of possible inputs. Fixed test-suites are inadequate for ensuring correct behavior over such a range of inputs, and the lack of formal specifications for sections of compilers renders formal verification unusable beyond isolated subcomponents. Yet, compilers are a fundamental trusted technology, and identifying their bugs is of utmost importance. % whose reliability is critical
+Optimizing compilers are large and complex programs, with a practically infinite scope of possible inputs. Fixed test-suites are inadequate for ensuring correct behavior over such a range of inputs, and the lack of formal specifications for sections of compilers renders formal verification unusable beyond isolated subcomponents. Yet, compilers are a fundamental trusted technology, and identifying their bugs is of critical importance.
 
 % XSmith: It is difficult to create effective fuzzers for programming language compilers and interpreters because these systems have highly structured inputs, but it is important that such fuzzers exist. Programming language implementations are critical software infrastructure: defects in compilers and interpreters can potentially have great costs in terms of software correctness and reliability, human productivity, and computer security. This project seeks to reduce the time and human effort needed to create sophisticated fuzzers for programming language implementations. In so doing, this project is expected to advance the state of the art in random software testing, improve the quality of several programming language implementations selected for study, and produce new open-source software tools that programmers can use to develop new and more effective fuzz testers.
 
-Differential testing is a promising methodology for identifying compiler bugs. Figure~\ref{fig:difftest} shows the approach. A grammar is defined over a subset of a programming language, and used to probabilistically generate a large, random program (test-case). \cc{TODO: Each feature of the grammar must be painstakingly and expertly engineered, meaning that, in practice, only a subset of language features are supported} If a compiler crashes during compilation of a program, then a bug is found. Additionally, by collecting outcomes from multiple compilers, the outputs of the generated programs can be compared to determine if any of the compilers disagree; if so, a bug has been discovered. Typically, these generated programs are many hundreds or thousands of lines long. As such, an additional test-case reduction process is usually required, iteratively mutating the test-case in an attempt to produce a minimal working example which preserves the behavior of interest.
+Differential testing is an effective methodology for identifying compiler bugs. Figure~\ref{fig:difftest} shows the approach. A probabilistic grammar is used to enumerate a large, random program, which is then compiled and executed across a number of compilers. If any compiler crashes during compilation of a program, or if the output of the program differs between compilers, then a potential bug has been discovered. In this manner, CSmith~\cite{Yang2011}, a random program generator for the C programming language, has been used to identify hundreds of bugs in compilers. CSmith defines a probabilistic grammar over a large subset of the C programming language, and recursively instantiates a program, using rigorous and conservative static and dynamic analysis to ensure that programs are free from undefined behavior.
 
-The current state of the art in compiler test-case generation is Csmith~\cite{Yang2011}. Csmith defines a probabilistic grammar over a large subset of the C programming language, and recursively instantiates a program, using rigorous and conservative static and dynamic analysis to ensure that programs are guaranteed to be free from the 191 undefined behaviors and 52 unspecified behaviors of the C language specification.
+This expert-driven approach to random program generation is labor intensive -- CSmith was developed over the course of years, and consists of over 40k lines of handwritten C++ code. By tightly coupling the generation logic with the target programming language, each feature of the grammar must be painstakingly and expertly engineered, and is accompanied by exponential costs in developing the static and dynamic safety checks to ensure that generated programs remain free from (or at least, are likely free from) undefined behavior. For example, lifting CSmith from C to OpenCL~\cite{Lidbury2015a} took 9 months and 8k lines of code. As such, typically only a subset of the language is implemented, and the expressiveness of the grammar is bounded by the limits of static and dynamic analysis.  
+% --- to date, important language features such as strings, dynamic memory allocation, function pointers, and recursion are unsupported.
+% , despite the large overlap between C and OpenCL (which is C with extensions). This huge development cost is extended to the reduction tools too, with CLReduce~\cite{Pflanzer2016} requiring extensions to OCLgrind.
 
-Each new production rule is accompanied by exponential costs in developing the static and dynamic safety checks to ensure programs remain free from (or at least, are likely free from) undefined behaviour. As such, typically only a subset of the language is implemented --- to date, CLSmith does not support unions, dynamic memory allocation, strings, etc. EMI testing can simplify the production somewhat by reducing the generation only to program mutations, and deadcode insertions, but \ldots.
+We present a novel, data-driven approach to the generation of random programs for compile fuzzing.
+
+By design, the grammar-based approach specifically targets the compiler middle-end. Prior work \cite{McKeeman1998}
+
+
+
+Our implementation, DeepSmith, 
+we mine from open source code
+we do not guarantee 
+
+This approach focuses the 
+
+CSmith~\cite{Yang2011}, a popular random program generator for the C programming language, defines a probabilistic grammar over a large subset of the C programming language, and recursively instantiates a program, using rigorous and conservative static and dynamic analysis to ensure that programs are free from undefined behavior. 
+
+Typically, these generated programs are many hundreds or thousands of lines long. As such, an additional test-case reduction process is usually required, iteratively mutating the program in an attempt to produce a minimal working example which preserves the behavior of interest.
+
+--- to date, CLSmith does not support unions, dynamic memory allocation, strings, etc. EMI testing can simplify the production somewhat by reducing the generation only to program mutations, and deadcode insertions, but \ldots.
 
 Our observations are twofold: such rigorous and conservative methods may be artificially limiting, and that the wealth of code on the web can be used to seed the generation of codes. This paper describes our experiences in using the latter to test OpenCL.
 
@@ -30,9 +48,7 @@ Because Csmith programs are free form undefined behavior, there is only a single
 	\label{fig:difftest}
 \end{figure}
 
-Developing a random program generator is a huge undertaking, requiring expert knowledge of the target programming language. CSmith~\cite{Yang2011} was developed over a period of years, and consists of over 40k lines of hand-written C++. CSmith interleaves static analysis with code generation, and inserts runtime checks for cases where static analysis is inadequate. The ``shape'' of CSmith programs is dictated by 80 probabilities; these were extensively hand tuned so that programs ``look right''. Beyond this, the expressiveness of CSmith-generated programs is bounded by the limits of static and dynamic analysis --- to date, important language features such as strings, dynamic memory allocation, function pointers, and recursion are unsupported.
-
-Grammar-based program generation tightly couples the generator logic with the target programming language. This makes them inflexible tools. For example, lifting CSmith from C to OpenCL~\cite{Lidbury2015a} took 9 months (confirmed by developers) and is over 8k lines of code, despite the large overlap between C and OpenCL (which is C with extensions). This huge development cost is extended to the reduction tools too, with CLReduce~\cite{Pflanzer2016} requiring extensions to OCLgrind.
+Developing a random program generator is a huge undertaking, requiring expert knowledge of the target programming language. CSmith~\cite{Yang2011} was developed over a period of years, and consists of over 40k lines of hand-written C++. CSmith interleaves static analysis with code generation, and inserts runtime checks for cases where static analysis is inadequate. The ``shape'' of CSmith programs is dictated by 80 probabilities; these were extensively hand tuned so that programs ``look right''. Beyond this, the expressiveness of CSmith-generated programs is 
 
 \cc{We propose \ldots}
 
