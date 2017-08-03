@@ -82,21 +82,15 @@ When evaluating the outcomes of test-cases, \textbf{\{bc,bto\}} outcomes are of 
 
 \subsection{Voting Heuristics for Differential Testing}
 
-Voting is used to expose anomalous outcomes of test-cases. Prior works have formulated random program generation so as to minimize or eradicate the possibility of undefined and unspecified behaviour~\cite{Yang2011c,Le2013a,Le2015}. Recently, work in Skeletal Program Enumeration~\cite{Zhang2017a} has relied on handchecking of C programs and tools such as CompCert~\cite{Leroy2013} and UBsan to detect false-positives. Our approach provides no guarantees of generated program correctness, either with respect to a program being well formed or free from undefined behavior. Instead, we rely extensively on voting across configurations to reveal anomalous outputs.
-
-In prior work, voting on the output of programs across compilers has been used to circumvent the \emph{oracle problem} and determine wrong-code bugs.
+Voting on the output of programs across compilers has been used to circumvent the \emph{oracle problem} and detect miscompilations.
 % In~\cite{Lidbury2015a}, a configuration is determined to have produced a wrong code result for a kernel if there is a majority output of at least 3 among the \textbf{\cmark} results for the kernel, and the configuration yields a \textbf{\cmark} result that disagrees with the majority.
 We extend this approach to describe not only miscompilations, but also anomalous build failures, crashes, and timeouts.
 
 A majority outcome exists if, for for a particular test-case ran on $n$ configurations, at least $\ceil{\frac{2}{3}n}$ configurations produce non-\textbf{\{bc,bto\}} results with the same outcome. We classify anomalous results with respect to the majority outcome for each test-case.
 
-An anomalous output (\textbf{ao}) occurs if, for a given test-case, the majority outcome is a pass \textbf{\cmark}, at least $\ceil{\frac{2}{3}n}$ configurations compute the same result, and a configuration yields a result which differs from this majority result. An \textbf{ao} result is indicative of a \emph{miscompilation}, a particularly hard to detect class of bug in which the compiler silently emits the wrong code. CSmith is designed specifically to target this class of bug. On the other hand, if the result computed by a program depends on undefined or unspecified behavior, then the result is meaningless. Since DeepSmith programs are not guaranteed to be free from undefined behaviors, additional filtering of test-cases is required to prune false-positives, described in section~\ref{subsec:discussions}.
+An anomalous output (\textbf{ao}) occurs if, for a given test-case, the majority outcome is a pass \textbf{\cmark}, at least $\ceil{\frac{2}{3}n}$ configurations compute the same result, and a configuration yields a result which differs from this majority result. An \textbf{ao} result is indicative of a \emph{miscompilation}, a particularly hard to detect class of bug in which the compiler silently emits the wrong code. CSmith is designed specifically to target this class of bug.
 
-An anomalous build failure (\textbf{abf}) result occurs if, for a given test-case, the majority outcome not \textbf{bf}, and a configuration yields a \textbf{bf} result.
-
-An anomalous runtime crash (\textbf{ac}) result occurs if, for a given test-case, the majority outcome not \textbf{c}, and a configuration yields a \textbf{c} result.
-
-An anomalous timeout (\textbf{ato}) result occurs if, for a given test-case, the majority outcome not \textbf{to}, and a configuration yields a \textbf{to} result.
+An anomalous build failure (\textbf{abf}), anomalous runtime crash (\textbf{ac}), or anomalous timeout (\textbf{ato}) result occurs if, for a given test-case, the majority outcome is non-\{\textbf{bf,c,to}\}, and a configuration yields a \textbf{bf,bc,to} result.
 
 % Only 2.3\% of CLSmith programs with anomalous outputs are insensitive to optimization level.
 
@@ -111,7 +105,11 @@ An anomalous timeout (\textbf{ato}) result occurs if, for a given test-case, the
 
 \subsection{Discussions}\label{subsec:discussions}
 
-\paragraph{Undefined Behaviors} OpenCL doesn't have the rich tooling of C --- no CompCert and UBSan. GPUverify~\cite{Betts2012} and Oclgrind can catch some errors, but as we have shown in Section~\ref{sec:motivation}, this tool is not without flaws. Compiler warnings are useful for obvious missteps, but our approach still requires some manual inspection. There is much work to be done. We demand that the behavior of test-cases is \emph{portable} and \emph{reproducible}. In some respects this simplifies the execution process.
+\paragraph{Undefined Behaviors} If the output of a program depends on undefined or unspecified behavior, then comparing outputs across compilers is meaningless.  Prior works have formulated random program generation so as to minimize or eradicate the possibility of undefined and unspecified behavior~\cite{Yang2011c,Le2013a,Le2015}, at the expense of expressiveness. Recently, work in Skeletal Program Enumeration~\cite{Zhang2017a} has relied on handchecking of C programs and tools such as CompCert~\cite{Leroy2013} and UBsan to detect false-positives. Since DeepSmith programs are not guaranteed to be free from undefined behaviors, and we can only determine if a program is well-formed empirically, additional filtering of test-cases is required to prevent false-positives.
+
+OpenCL doesn't have the rich tooling of C --- no CompCert and UBSan, there is much work to be done. GPUverify~\cite{Betts2012} and Oclgrind can catch some errors, but as we have shown in Section~\ref{sec:motivation}, this tool is not without flaws. Compiler warnings are useful for obvious missteps (e.g. comparison between pointer and integer), but our approach still requires some manual inspection. DeepSmith programs are easily interpretable --- they are generally short programs built on common language constructs, so this process is not as bad as it could be. We have not yet discovered a test-case which was not detectable by automated filtering and a superficial handcheck.
+
+\paragraph{OpenCL Versions and Extensions} double-point precision in OpenCL 1.2 requires an extension. OpenCL 2.0 extends APIs. Compiler warnings were sufficient to prune these.
 
 \paragraph{Floating Points} The OpenCL specifications permit acceptable error bounds (ULP) for floating point operations and builtin functions. Some operations like addition, subtraction, and multiplication are precise; divide permits a small error, and builtins vary widely. Thus two implementation may give different answers that both fit within the allowed ranges (and because errors propagate through operations it's hard to even describe the ULP on the final output). \texttt{half\_} functions permit large error bounds. \texttt{native\_} functions have ``implementation defined'' error bounds. TODO: Denormal numbers may optionally be pushed to zero.
 
@@ -123,7 +121,5 @@ CSmith, and by extension, CLSmith, do not support floating point operations. In 
 \cc{If we ignore floats:}
 Given that not all vendors provide bounds for floating point imprecision, we excluded kernels containing floating points from the wrong-code check. Given knowledge about hardware imprecision, it would be possible to compute threshold for floating point difftests.
 % Section 7.4 of OpenCL 1.2 spec.
-
-\paragraph{OpenCL Versions and Extensions} double-point precision in OpenCL 1.2 requires an extension. OpenCL 2.0 extends APIs. Compiler warnings were sufficient to prune these.
 
 \paragraph{Implementation} The generative model itself is language-agnostic and requires less than 200 lines of Python --- a small fraction of that of grammar-based approaches, even excluding the static analysis.
