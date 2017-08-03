@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sqlalchemy as sql
+import sys
 from argparse import ArgumentParser
 from labm8 import crypto
 from progressbar import ProgressBar
@@ -130,7 +131,9 @@ GROUP BY stderr.id, stderr.stderr
 
     for stderr_id, stderr in ProgressBar()(q.fetchall()):
         lines = [line for line in stderr.split('\n') if "assertion" in line.lower()]
-        assert len(lines) == 1
+        if len(lines) != 1:
+            n = len(lines)
+            print(f"warnings: found {n} lines containing assertions in output: {stderr}", file=sys.stderr)
         msg = lines[0]
         assertion = tables.assertions(id=stderr_id, hash=crypto.sha1_str(msg),
                                       assertion=msg)
@@ -159,6 +162,6 @@ if __name__ == "__main__":
 
     with Session(commit=True) as s:
         for tableset in tables:
-            # set_metas(s, tableset)
-            # set_majorities(s, tableset)
+            set_metas(s, tableset)
+            set_majorities(s, tableset)
             get_assertions(s, tableset)
