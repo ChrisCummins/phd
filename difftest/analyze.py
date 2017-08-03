@@ -254,6 +254,10 @@ def testcase_raises_compiler_warnings(session: session_t, tables: Tableset, test
                 print(f"testcase {testcase.id}: comparison between pointer and")
                 testcase.compiler_warnings = True
                 break
+            elif "warning: array index" in stderr:
+                print(f"testcase {testcase.id}: array index")
+                testcase.compiler_warnings = True
+                break
             elif "warning" in stderr:
                 print("\n UNRECOGNIZED WARNINGS in testcase {testcase.id}:")
                 print("\n".join(f">> {line}" for line in stderr.split("\n")))
