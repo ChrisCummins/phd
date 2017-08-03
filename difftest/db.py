@@ -393,7 +393,7 @@ class Testbed(Base):
         raise KeyError(f"device {self.device} not found")
 
 
-class Configuration(Base):
+class TestbedConfig(Base):
     __tablename__ = 'Configurations'
     id = sql.Column(sql.Integer, sql.ForeignKey("Testbeds.id"),
                     primary_key=True)
