@@ -92,16 +92,11 @@ A majority outcome exists if, for for a particular test-case ran on $n$ configur
 
 An anomalous output (\textbf{ao}) occurs if, for a given test-case, the majority outcome is a pass \textbf{\cmark}, at least $\ceil{\frac{2}{3}n}$ configurations compute the same result, and a configuration yields a result which differs from this majority result. An \textbf{ao} result is indicative of a \emph{miscompilation}, a particularly hard to detect class of bug in which the compiler silently emits the wrong code. CSmith is designed specifically to target this class of bug. On the other hand, if the result computed by a program depends on undefined or unspecified behavior, then the result is meaningless. Since DeepSmith programs are not guaranteed to be free from undefined behaviors, additional filtering of test-cases is required to prune false-positives, described in section~\ref{subsec:discussions}.
 
-An anomalous build failure (\textbf{abf}) result occurs if, for a given test-case, the majority outcome not \textbf{bf}, and a configuration yields a \textbf{bf} result. Anomalous build failures
+An anomalous build failure (\textbf{abf}) result occurs if, for a given test-case, the majority outcome not \textbf{bf}, and a configuration yields a \textbf{bf} result.
 
-permissive
-\emph{integer literal is too large}
+An anomalous runtime crash (\textbf{ac}) result occurs if, for a given test-case, the majority outcome not \textbf{c}, and a configuration yields a \textbf{c} result.
 
-anomalous runtime crash (\textbf{ac}), and anomalous timeout (\textbf{ato})
-
-If the majority outcome is 
-
-If the majority outcome is a pass \textbf{\cmark}, the outputs are used to determine a majority \emph{output}. Again, a majority \emph{output} exists of $\ceil{\frac{2}{3}m}$ of the $m$ configurations with \cmark outcomes compute the same result. Any configuration which yields a \cmark outcome whose output differs from the majority is considered a candidate for miscompilation.
+An anomalous timeout (\textbf{ato}) result occurs if, for a given test-case, the majority outcome not \textbf{to}, and a configuration yields a \textbf{to} result.
 
 % Only 2.3\% of CLSmith programs with anomalous outputs are insensitive to optimization level.
 
