@@ -1,4 +1,4 @@
-\section{Motivation}\label{sec:methodology}
+\section{Motivation}\label{sec:motivation}
 
 \newsavebox{\IntelSizetIntReduced}
 \begin{lrbox}{\IntelSizetIntReduced}
@@ -78,6 +78,6 @@ This is troubling --- 46\% of kernels on GitHub use this ($tid \rightarrow$ int,
 
 \cc{TODO} Figure~\ref{lst:oclgrind-race-switch}. CLSmith does not support conditional control flow based on thread ID.
 
-Figure~\ref{lst:almost-everything-crash} demonstrates a bug of a different kind. 
+Figure~\ref{lst:almost-everything-crash} demonstrates a bug of a different kind.
 
 The behavior of compilers under invalid inputs is --- to the best of our knowledge --- a much lesser explored topic. While it is hard to quantify what constitutes a ``plausible'' error in code, we believe that our approach contributes a significant improvement for generating human-like code over current random-enumeration approaches. \cc{Maybe work on fuzzing JITs?}

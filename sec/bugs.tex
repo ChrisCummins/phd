@@ -222,7 +222,7 @@ A bug in \texttt{clang::sema} has been forwarded to the LLVM folks.
   }\\%
   \subfloat[Configs.\ $4+$, $5+$, $6+$, $7+$ hang during optimization \cc{why?}.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelOptLoopHang}}}%
-    \label{lst:xeon-phi-spin}
+    \label{lst:intel-inf-loop}
   }\\%
   \caption{Example kernels which hang compilers.}%
   \label{lst:compiler-hangs}%
@@ -331,7 +331,7 @@ In Configs.\ $1\pm$, an out-of-bounds reads and writes from one buffer argument 
   \centering %
   \subfloat[Read of uninitialized automatic variable \texttt{c}.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\UninitRead}}}%
-    \label{lst:pocl-undefined-symbols}
+    \label{lst:uninit-read}
   }\\%
   \caption{False positives.}%
   \label{lst:uninit-read}%
