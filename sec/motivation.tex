@@ -62,9 +62,9 @@
 \end{figure}
 
 
-We motivate the case for compiler fuzzing through deep learning using three example of bugs found using DeepSmith which cannot be generated using existing techniques.
+We motivate the case for compiler fuzzing through deep learning using three example of bugs found using DeepSmith: a miscompilation, a runtime crash, and a compiler crash.
 
-A common pattern in OpenCL is to obtain the thread identity, usually as an \texttt{int}, and to compare this against some fixed value to determine whether or not to complete a unit of work. DeepSmith, having modeled the frequency with which this pattern occurs in real handwritten code, will generate many permutations of this pattern. And in doing so, exposed an error in the optimizer of two of the compilers we tested
+A common pattern in OpenCL is to obtain the thread identity, often as an \texttt{int}, and to compare this against some fixed value to determine whether or not to complete a unit of work. DeepSmith, having modeled the frequency with which this pattern occurs in real handwritten code, generates many programs containing permutations of this pattern. And in doing so, exposed an error in the optimizer of two of the Intel compilers we tested
 % Configs.\ $4+$, $6+$
 which causes the \texttt{if} statement of Figure~\ref{lst:intel-size_t-int-reduced} to be executed when the kernel is compiled with optimizations enabled.
 %
@@ -73,11 +73,8 @@ which causes the \texttt{if} statement of Figure~\ref{lst:intel-size_t-int-reduc
 % >> 2144
 % ls | wc -l
 % >> 4655
-This is troubling --- 46\% of kernels on GitHub use this ($tid \rightarrow$ int, \texttt{if}) pattern to guard against invalid memory accesses. CLSmith prevents thread identity from influencing control flow in order to prevent barrier divergence.
+This is troubling --- 46\% of OpenCL kernels on GitHub use this ($tid \rightarrow$ int, \texttt{if (tid < \ldots) \{\ldots\}}) pattern to guard against invalid memory accesses. CLSmith does not support conditional control flow based on thread ID. % CLSmith prevents thread identity from influencing control flow in order to prevent barrier divergence.
 
+Figure~\ref{lst:oclgrind-race-switch} shows a simple program in which thread identity determines the program output. The listing is the verbatim output of DeepSmith. We found that this test-case would sporadically crash Oclgrind, an OpenCL device simulator and debugger. Upon reporting to the developers, the underlying cause was quickly diagnosed as a race condition in \texttt{switch} statement evaluation, and fixed within a week.
 
-\cc{TODO} Figure~\ref{lst:oclgrind-race-switch}. CLSmith does not support conditional control flow based on thread ID.
-
-Figure~\ref{lst:almost-everything-crash} demonstrates a bug of a different kind.
-
-The behavior of compilers under invalid inputs is --- to the best of our knowledge --- a much lesser explored topic. While it is hard to quantify what constitutes a ``plausible'' error in code, we believe that our approach contributes a significant improvement for generating human-like code over current random-enumeration approaches. \cc{Maybe work on fuzzing JITs?}
+Figure~\ref{lst:almost-everything-crash} demonstrates a bug of a different kind. Because our approach is based on syntactic-level modeling, DeepSmith can generate code containing errors. With this test-case, we found 6 of the 10 compilers we tested crashed with segmentation faults. The behavior of compilers under invalid inputs is --- to the best of our knowledge --- much less explored topic. We believe that our approach contributes a significant improvement for generating plausibly-erroneous code over prior random-enumeration approaches.
