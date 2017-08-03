@@ -7,7 +7,7 @@ This section reports on the results of extensive testing of OpenCL compilers usi
 
 We found numerous cases where kernels trigger a crash in the compiler (and as a result, the host process). Segmentation faults during compilation were a common source of crash.
 
-In the majority of cases, we found compiler crashes to be insensitive to OpenCL optimization setting.
+In the majority of cases, we found compiler crashes to be insensitive to OpenCL optimization setting. Figure~\cc{TODO shows an example of one which is not\ldots}
 
 \newsavebox{\IntelVectorizerSegfault}
 \begin{lrbox}{\IntelVectorizerSegfault}
@@ -78,11 +78,17 @@ In the majority of cases, we found compiler crashes to be insensitive to OpenCL 
 \end{lrbox}
 
 \begin{figure}
-  \centering %
+  \centering
   \subfloat[Configs.\ $5\pm$ crash during vectorizer pass.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelVectorizerSegfault}}}%
     \label{lst:intel-vectorizer-segfault}
   }\\%
+  \caption{Example kernels which crash vectorizers.}%
+  \label{lst:vectorizer-crashes}%
+\end{figure}
+
+\begin{figure}
+  \centering %
   \subfloat[Configs.\ $10\pm$ compiler assertion during semantic analysis.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindSemaAssertion}}}%
     \label{lst:oclgrind-sema-assertion}
