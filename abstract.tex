@@ -12,4 +12,10 @@ We introduce a new approach to random program generation. By framing the generat
 We apply our technique to OpenCL, automatically exposing bugs in OpenCL compilers which are likely to arise from real world use cases, in a ways which are not possible using existing techniques. In over 1,000 hours of automated testing of commercial and open source compilers, we discover bugs in all of them, submitting XX bug reports. Our test-cases are on average two orders of magnitude smaller than the state-of-the-art, require $X\times$ less time to generate and execute, and expose bugs which could not be found using existing techniques.
 
 % Our paper serves two purposes: first, we propose a novel methodology for compiler test-case generation, capable of finding bugs at a faster rate and covering more areas of the compiler than existing approaches; second, we report on the state of OpenCL implementations.
+
+We introduce DeepSmith, a novel approach to the compiler validation problem. While prior works require expert domain knowledge to craft random program generators from probabilistic grammars or program mutation, we instead frame the generation of random programs a language modeling problem. We apply deep learning techniques over millions of lines of handwritten code in order to automatically construct models capable of generating plausible, human-like code samples. Using existing differential testing techniques 
+
+We apply our technique to OpenCL, discovering dozens of compiler defects with a wide range of causes, from improper error handling in the presence of malformed code, to subtle race conditions and silent miscompilations arising from optimization.
+
+Our approach complements the desires of compiler developers, who desire small test-cases based on ``plausible'' language constructs.
 \end{abstract}

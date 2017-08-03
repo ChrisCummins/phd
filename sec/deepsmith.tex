@@ -1,15 +1,15 @@
 \section{DeepSmith}
 
-DeepSmith is our open source test-case generator for compiler fuzzing~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}}. Figure~\ref{fig:deeptune} provides an overview of the system. Our compiler test-case generation approach consists of two parts: first, a generative model for code samples inferred from open-source codes; the second, test-case construction..
+DeepSmith is our open source test-case generator for compiler fuzzing~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}}. Figure~\ref{fig:deeptune} provides an overview of the system. Our compiler test-case generation approach consists of two parts: first, a generative model for code samples inferred from open-source codes; the second, test-case construction.
 
 
 \subsection{Generative Model for Program Codes}
 
-We extend prior work on synthetic program generation using LSTM networks~\cite{Cummins2017a}. We frame the generation of programs as a language modeling problem. An initial seed corpus of 10k OpenCL kernels is mined from GitHub, using an oracle compiler (LLVM 3.9) to reject files that are not well-formed or do not contain instructions. The corpus is preprocessed: a uniform code style is enforced to ensure consitent use of braces, whitespace, identifier names, etc. The prepocessed corpus is encoded using a hybrid token/character-level encoding~\cite{Cummins2017b}. 
+We extend prior work on synthetic program generation using Long Short-Term Memory (LSTM) networks~\cite{Cummins2017a}. An initial seed corpus of 10k OpenCL kernels is mined from GitHub, using an oracle compiler (LLVM 3.9) to reject files that are not well-formed or do not contain instructions. The corpus is preprocessed using a custom LLVM pass to normalize syntactic choices --- a uniform code style is enforced to ensure consistent use of braces, whitespace, identifier names, etc. The preprocessed corpus is encoded using a hybrid token/character-level encoding~\cite{Cummins2017b}. \cc{More detail\ldots}
 
-LSTM networks model the vocabulary distribution over the encoded corpus. We use a two layer LSTM network of 512 nodes each, trained using Stochastic Gradient Descent for 50 epochs, with an initial learning rate of 0.002 and decaying by a factor of a half every 5 epochs.
+LSTM networks model the vocabulary distribution over the encoded corpus. We use a two layer LSTM network of 512 nodes each, trained using Stochastic Gradient Descent for 50 epochs, with an initial learning rate of 0.002 and decaying by a factor of a half every 5 epochs. % We use TensorFlow to implement the LSTM networks, with the entire generative model requiring less than 200 lines of Python, and is not specialized to OpenCL.
 
-The trained network is sampled to generate new programs. The model is seeded with the start of a kernel (\texttt{\_\_kernel void}), and sampled token-by-token until the brackets match, or until a pre-determined maximum number of tokens has been reached.
+The trained network is sampled to generate new programs. The model is seeded with the start of a kernel (\texttt{\_\_kernel void}), and sampled token-by-token. A ``bracket depth'' counter is incremented or decremented upon production of \texttt{\{} or \texttt{\}} tokens respectively, and sampling terminates once the bracket depth reaches zero. The generated sequence of tokens are then concatenated and used as the generated program.
 
 
 \begin{figure}
@@ -23,18 +23,20 @@ The trained network is sampled to generate new programs. The model is seeded wit
 \end{figure}
 
 
-\subsection{Test-harness Construction}
+\subsection{Test-case Construction}
 
-OpenCL is an embedded compute kernel language, requiring host code to compile, execute, and transfer data between the host and device. Kernels requires host code (\emph{test harness}) to compile the kernel and feed with it inputs, then to print the outputs.
+OpenCL is an embedded compute kernel language, requiring host code to compile, execute, and transfer data between the host and device. For the purpose of compiler fuzzing, this requires a \emph{test harness} to run the generated OpenCL programs.
 
-At first, we used the test harness of CLSmith. CLSmith kernels accept no inputs, and each thread computes the same value which is stored in a \texttt{unsigned long} buffer. The fixed function prototype means that they have a single re-usable test harness which compiles the kernel, runs it, and prints the results. We found this fixed harness to be too inflexible for our needs. This prototype is not a common OpenCL use case (only 5.6\% of GitHub kernels accept a single argument, of which 3.4\% are \texttt{ulong}, 0.2\% of the total).
+At first, we used the test harness of CLSmith. CLSmith kernels accept no inputs, and each thread computes the same value which is stored in a \texttt{unsigned long} buffer. The fixed function prototype means that they have a single re-usable test harness which may compile any CLSmith kernel, run it, and prints the output. We found this fixed harness to be too inflexible for our needs. This prototype is not a common OpenCL use case (only 5.6\% of GitHub kernels accept a single argument, of which 3.4\% are \texttt{ulong}, 0.2\% of the total).
 % $ grep -E '^__global (.*)\* A$' github-arguments.txt | wc -l     -> 294
 % $ grep '^__global ulong\* A$' ~/src/project_b/difftest/github-arguments.txt | wc -l     -> 10
-To test a more expressive range of kernels, we created \emph{cldrive}, a tool to generate test harnesses for arbitrary OpenCL kernels.
+To test a more expressive range of kernels, we created a tool to generate host code capable of driving arbitrary OpenCL kernels, allowing us to create a unique test harness for each generated program.
 
-We use cldrive to generate a unique test harness for every OpenCL sample we generate; the test harness has the OpenCL kernel embedded within it. If the sample is well-formed (i.e. it can be parsed), the test harness creates required input values to match the function signature; else if the sample is ill-formed we generate a compile-only stub. Input arrays are populated with values {$[1 \ldots n]$}; scalar values are given value $n$. The \emph{output} of a program is the values of all non-const buffers after kernel execution.
+For a given OpenCL kernel, we first parse the function prototype in order to determine the expected arguments. We then generate host data to feed to these arguments - supporting scalars and arrays of all primitive and vector types. We parameterize data generation with a single value $n$. Input arrays are populated with values {$[1 \ldots n]$}; scalar values are given value $n$. We then enqueue the kernel with $n$ threads. The \emph{output} of a program is the values of all non-const arguments after kernel execution. For each program, we generate two test harnesses, one where $n=1$ (i.e. a single thread computing a single result) and one where $n = 2048$.
 
-Cldrive is the only language-specific component of our software stack. We support a limited subset of data types for kernel inputs: no structs, no irregular data types (this is just an implementation detail, and can be addressed with more dev time). \cc{cldrive is XX lines of code}.
+Since we do not guarantee that the generative model samples are well-formed, it may not be possible to parse the function signature. In this case, a ``compile-only'' stub is generated, which only compile the kernel, without generating input data or executing the compiled kernel.
+
+We note that, unlike the generative model, this test harness construction is language-specific and the design stems domain knowledge. Still, it is a relatively simple procedure, consisting of a few hundred lines of Python.
 
 % SELECT (SUM(compile_only) / (
 % SELECT COUNT(*)
@@ -46,10 +48,10 @@ Cldrive is the only language-specific component of our software stack. We suppor
 % INNER JOIN CLgenMetas meta ON results.id = meta.id
 % INNER JOIN CLgenHarnesses harnesses on results.testcase_id = harnesses.id
 % WHERE cumtime < 48 * 3600;
-21.5\% of test-cases are compile-only stubs.
+% 21.5\% of test-cases are compile-only stubs.
 
 
-\subsection{Test-case Execution and Outcomes}
+\subsection{Test-case Execution}
 
 \begin{figure}
 	\centering %
@@ -61,6 +63,8 @@ Cldrive is the only language-specific component of our software stack. We suppor
 \end{figure}
 
 % We classify the result of executing a test-case into one of six classifications: build failure (\textbf{bf}), build crash (\textbf{bc}), runtime crash (\textbf{c}), or pass (\textbf{\cmark}). A \textbf{bf} occurs when compilation of a kernel fails, usually accompanied by an error message. A \textbf{bc} outcome occurs when the compiler crashes. A \textbf{c} outcome occurs when the program crashes during execution. The \textbf{bto} and \textbf{to} outcomes occur when the program compilation or execution time out, respectively.
+
+Executing a test-case on a configuration leads to one of six possible outcomes: \textbf{\{bf,bc,bto,c,to,\cmark\}}, illustrated in Figure~\ref{fig:test-process}.
 
 A \emph{build failure} (\textbf{bf}) occurs when online compilation of the OpenCL kernel fails, usually accompanied by an error diagnostic. A \emph{build crash} (\textbf{bc}) or \emph{build timeout} (\textbf{bto}) outcome occurs if the compiler crashes or fails to produce a binary within 60 seconds, respectively. For compile-only test-cases, a \emph{pass} (\textbf{\cmark}) is achieved if the compiler produces a binary. For test-cases in which the kernel is executed, kernel execution leads to one of three potential outcomes: \emph{runtime crash} (\textbf{c}) if the program crashes, \emph{timeout} (\textbf{to}) if the kernel fails to terminate within 60 seconds, or \emph{pass} (\textbf{\cmark}) if the kernel terminates gracefully and computes an output. 
 %
@@ -78,29 +82,30 @@ When evaluating the outcomes of test-cases, \textbf{\{bc,bto\}} outcomes are of 
 
 \subsection{Voting Heuristics for Differential Testing}
 
-Prior works have require random programs be free from undefined and unspecified behaviour~\cite{Yang2011c,Le2013a,Le2015}. Recently, work in Skeletal Program Enumeration has relied on handchecking of C programs and tools such as CompCert and UBsan~\cite{Zhang2017a}. Our approach is closer to the latter, except that we do not even guarantee that generated programs are well-formed. Instead, we rely extensively on voting across configurations to reveal anomalous outputs.
+Voting is used to expose anomalous outcomes of test-cases. Prior works have formulated random program generation so as to minimize or eradicate the possibility of undefined and unspecified behaviour~\cite{Yang2011c,Le2013a,Le2015}. Recently, work in Skeletal Program Enumeration~\cite{Zhang2017a} has relied on handchecking of C programs and tools such as CompCert~\cite{Leroy2013} and UBsan to detect false-positives. Our approach provides no guarantees of generated program correctness, either with respect to a program being well formed or free from undefined behavior. Instead, we rely extensively on voting across configurations to reveal anomalous outputs.
 
-Voting is used to expose anomalous outcomes from configurations. In prior work, voting has been used to determine wrong-code bugs. In~\cite{Lidbury2015a}, a configuration is determined to have produced a wrong code result for a kernel if there is a majority output of at least 3 among the \{\cmark\} results for the kernel, and the configuration yields a \{\cmark\} result that disagrees with the majority. We extend this approach to describe not only anomalous code bugs, but also anomalous build failures, crashes, and timeouts.
+In prior work, voting has been used to determine wrong-code bugs. In~\cite{Lidbury2015a}, a configuration is determined to have produced a wrong code result for a kernel if there is a majority output of at least 3 among the \textbf{\cmark} results for the kernel, and the configuration yields a \textbf{\cmark} result that disagrees with the majority. We extend this approach to describe not only miscompilations, but also anomalous build failures, crashes, and timeouts.
 
-A majority exists if, for $n$ configurations, at least $\ceil{2n/3}$ configurations produce non-\textbf{bc} results with the same outcome. For \cmark majority outcomes, the output of the program is used.
+A majority outcome exists if, for for a particular test-case ran on $n$ configurations, at least $\ceil{\frac{2}{3}n}$ configurations produce non-\textbf{\{bc,bto\}} results with the same outcome.
 
-Only 2.3\% of CLSmith programs with anomalous outputs are insensitive to optimization level.
+If the majority outcome is a pass \textbf{\cmark}, the outputs are used to determine a majority \emph{output}. Again, a majority \emph{output} exists of $\ceil{\frac{2}{3}m}$ of the $m$ configurations with \cmark outcomes compute the same result. Any configuration which yields a \cmark outcome whose output differs from the majority is considered a candidate for miscompilation.
+
+% Only 2.3\% of CLSmith programs with anomalous outputs are insensitive to optimization level.
 
 %
-\begin{enumerate}
-	\item \textbf{w} \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority output. For a DeepSmith result to be classified with \emph{wrong-code}, we require first that the program passes verification using GPUVerify~\cite{Betts2012}, and that a reference run with Oclgrind~\cite{Price2015} produces no warnings. \cc{Vote on compiler warnings, and optimization sensitivity. This means we way miss bugs which optimization level insensitive, though our experiences testing with CLSmith revelead only discovered 2 such cases}.
-	\item \textbf{bf} \emph{Build failure} Online compilation of OpenCL program fails, whereas the majority of configurations produce a binary. \cc{TODO: voting to exclude programs which rely on OpenCL 2.0 / compiler specific features}
-	\item \textbf{c} \emph{Runtime crash} One or more OpenCL API calls return an error status during the program execution, or the program crashes.
-	\item \textbf{to} \emph{Runtime timeout} Program execution exceeds the timeout of 60 second, whereas the majority of configurations produce an output.
-\end{enumerate}
+%\begin{enumerate}
+%	\item \textbf{w} \emph{Wrong code} Program terminates gracefully, but computes a result which differs from the majority output. For a DeepSmith result to be classified with \emph{wrong-code}, we require first that the program passes verification using GPUVerify~\cite{Betts2012}, and that a reference run with Oclgrind~\cite{Price2015} produces no warnings. \cc{Vote on compiler warnings, and optimization sensitivity. This means we way miss bugs which optimization level insensitive, though our experiences testing with CLSmith revealed only discovered 2 such cases}.
+%	\item \textbf{bf} \emph{Build failure} Online compilation of OpenCL program fails, whereas the majority of configurations produce a binary. \cc{TODO: with voting to exclude programs which rely on OpenCL 2.0 / compiler specific features}
+%	\item \textbf{c} \emph{Runtime crash} One or more OpenCL API calls return an error status during the program execution, or the program crashes.
+%	\item \textbf{to} \emph{Runtime timeout} Program execution exceeds the timeout of 60 second, whereas the majority of configurations produce an output.
+%\end{enumerate}
 
 
 \subsection{Discussions}
 
 \paragraph{Undefined Behaviors} OpenCL doesn't have the rich tooling of C --- no CompCert and UBSan. GPUverify~\cite{Betts2012} and Oclgrind can catch some errors, but as we have shown in Section~\ref{sec:motivation}, this tool is not without flaws. Compiler warnings are useful for obvious missteps, but our approach still requires some manual inspection. There is much work to be done. We demand that the behavior of test-cases is \emph{portable} and \emph{reproducible}. In some respects this simplifies the execution process.
 
-
-\paragraph{Floating Points} The OpenCL 1.2 specification permits acceptable error bounds (ULP) for floating point operations and builtin functions. Some operations like addition, subtraction, and multiplication are precise; divide permits a small error, and builtins vary widely. Thus two implementation may give different answers that both fit within the allowed ranges (and because errors propagate through operations it's hard to even describe the ULP on the final output). \texttt{half\_} functions permit large error bounds. \texttt{native\_} functions have ``implementation defined'' error bounds. TODO: Denormal numbers may optionally be pushed to zero.
+\paragraph{Floating Points} The OpenCL specifications permit acceptable error bounds (ULP) for floating point operations and builtin functions. Some operations like addition, subtraction, and multiplication are precise; divide permits a small error, and builtins vary widely. Thus two implementation may give different answers that both fit within the allowed ranges (and because errors propagate through operations it's hard to even describe the ULP on the final output). \texttt{half\_} functions permit large error bounds. \texttt{native\_} functions have ``implementation defined'' error bounds. TODO: Denormal numbers may optionally be pushed to zero.
 
 At the moment, we simply rely upon \texttt{printf()} rounding.
 
@@ -110,3 +115,7 @@ CSmith, and by extension, CLSmith, do not support floating point operations. In 
 \cc{If we ignore floats:}
 Given that not all vendors provide bounds for floating point imprecision, we excluded kernels containing floating points from the wrong-code check. Given knowledge about hardware imprecision, it would be possible to compute threshold for floating point difftests.
 % Section 7.4 of OpenCL 1.2 spec.
+
+\paragraph{OpenCL Versions and Extensions} double-point precision in OpenCL 1.2 requires an extension. OpenCL 2.0 extends APIs. Compiler warnings were sufficient to prune these.
+
+\paragraph{Implementation} The generative model itself is language-agnostic and requires less than 200 lines of Python --- a small fraction of that of grammar-based approaches, even excluding the static analysis.
