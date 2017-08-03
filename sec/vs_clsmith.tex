@@ -1,6 +1,6 @@
 \section{Comparison to State-of-the-art}\label{sec:vs_clsmith}
 
-In this section we compare our approach against CLSmith, the state-of-the-art in OpenCL fuzz testing. For each of the 10 OpenCL configurations, we run the  48 consecutive
+In this section we compare our approach against CLSmith, the state-of-the-art in OpenCL compiler testing. For each of the 10 OpenCL configurations, we run the 48 consecutive
 
 Total runtime for a test-cases consists of the generation time, the time to execute the test harness on a configuration.
 
@@ -86,6 +86,7 @@ Configs.\ $1\pm$, $2\pm$ reject kernels which \texttt{size\_t} parameters.
 
 \subsection{Comparison of test-cases}
 
+\paragraph{Test-case Size}
 %SELECT MIN(linecount) as minlen,
 %->    AVG(linecount) as meanlen,
 %->        MAX(linecount) as maxlen
