@@ -84,9 +84,22 @@ When evaluating the outcomes of test-cases, \textbf{\{bc,bto\}} outcomes are of 
 
 Voting is used to expose anomalous outcomes of test-cases. Prior works have formulated random program generation so as to minimize or eradicate the possibility of undefined and unspecified behaviour~\cite{Yang2011c,Le2013a,Le2015}. Recently, work in Skeletal Program Enumeration~\cite{Zhang2017a} has relied on handchecking of C programs and tools such as CompCert~\cite{Leroy2013} and UBsan to detect false-positives. Our approach provides no guarantees of generated program correctness, either with respect to a program being well formed or free from undefined behavior. Instead, we rely extensively on voting across configurations to reveal anomalous outputs.
 
-In prior work, voting has been used to determine wrong-code bugs. In~\cite{Lidbury2015a}, a configuration is determined to have produced a wrong code result for a kernel if there is a majority output of at least 3 among the \textbf{\cmark} results for the kernel, and the configuration yields a \textbf{\cmark} result that disagrees with the majority. We extend this approach to describe not only miscompilations, but also anomalous build failures, crashes, and timeouts.
+In prior work, voting on the output of programs across compilers has been used to circumvent the \emph{oracle problem} and determine wrong-code bugs.
+% In~\cite{Lidbury2015a}, a configuration is determined to have produced a wrong code result for a kernel if there is a majority output of at least 3 among the \textbf{\cmark} results for the kernel, and the configuration yields a \textbf{\cmark} result that disagrees with the majority.
+We extend this approach to describe not only miscompilations, but also anomalous build failures, crashes, and timeouts.
 
-A majority outcome exists if, for for a particular test-case ran on $n$ configurations, at least $\ceil{\frac{2}{3}n}$ configurations produce non-\textbf{\{bc,bto\}} results with the same outcome.
+A majority outcome exists if, for for a particular test-case ran on $n$ configurations, at least $\ceil{\frac{2}{3}n}$ configurations produce non-\textbf{\{bc,bto\}} results with the same outcome. We classify anomalous results with respect to the majority outcome for each test-case.
+
+An anomalous output (\textbf{ao}) occurs if, for a given test-case, the majority outcome is a pass \textbf{\cmark}, at least $\ceil{\frac{2}{3}n}$ configurations compute the same result, and a configuration yields a result which differs from this majority result. An \textbf{ao} result is indicative of a \emph{miscompilation}, a particularly hard to detect class of bug in which the compiler silently emits the wrong code. CSmith is designed specifically to target this class of bug. On the other hand, if the result computed by a program depends on undefined or unspecified behavior, then the result is meaningless. Since DeepSmith programs are not guaranteed to be free from undefined behaviors, additional filtering of test-cases is required to prune false-positives, described in section~\ref{subsec:discussions}.
+
+An anomalous build failure (\textbf{abf}) result occurs if, for a given test-case, the majority outcome not \textbf{bf}, and a configuration yields a \textbf{bf} result. Anomalous build failures
+
+permissive
+\emph{integer literal is too large}
+
+anomalous runtime crash (\textbf{ac}), and anomalous timeout (\textbf{ato})
+
+If the majority outcome is 
 
 If the majority outcome is a pass \textbf{\cmark}, the outputs are used to determine a majority \emph{output}. Again, a majority \emph{output} exists of $\ceil{\frac{2}{3}m}$ of the $m$ configurations with \cmark outcomes compute the same result. Any configuration which yields a \cmark outcome whose output differs from the majority is considered a candidate for miscompilation.
 
@@ -101,7 +114,7 @@ If the majority outcome is a pass \textbf{\cmark}, the outputs are used to deter
 %\end{enumerate}
 
 
-\subsection{Discussions}
+\subsection{Discussions}\label{subsec:discussions}
 
 \paragraph{Undefined Behaviors} OpenCL doesn't have the rich tooling of C --- no CompCert and UBSan. GPUverify~\cite{Betts2012} and Oclgrind can catch some errors, but as we have shown in Section~\ref{sec:motivation}, this tool is not without flaws. Compiler warnings are useful for obvious missteps, but our approach still requires some manual inspection. There is much work to be done. We demand that the behavior of test-cases is \emph{portable} and \emph{reproducible}. In some respects this simplifies the execution process.
 
