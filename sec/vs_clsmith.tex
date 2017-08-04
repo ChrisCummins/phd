@@ -34,7 +34,8 @@ CLSmith crashed 8 of the 20 compilers, DeepSmith crashed all of them. See Sectio
 
 For all except testbed $3\pm$, DeepSmith exposes more compiler crashes than CLSmith. On average, DeepSmith hangs the compiler more frequently. \cc{\ldots}
 
-The integrated GPU Conifgs.\ we tested ($3\pm$) frequently failed to compile CLSmith kernels, resulting in thousands of compiler crashes \textbf{bc} or timeouts \textbf{bc}.
+The integrated GPU Conifgs.\ we tested ($3\pm$) frequently failed to compile CLSmith kernels, resulting in over 10,000 compiler crashes \textbf{bc} or timeouts \textbf{bc}.
+% 10,318
 % SELECT stderr,COUNT(*) FROM CLSmithResults LEFT JOIN CLSmithMetas ON CLSmithResults.id=CLSmithMetas.id WHERE testbed_id=13 AND CLSmithResults.outcome='bc' AND cumtime < 48 * 3600 GROUP BY CLSmithResults.stderr;
 Of the build crashes, 68\% failed silently, and the remainder were caused by the same pointer assignment assertion for which DeepSmith generated a 4 line test-case in Figure~\ref{lst:intel-llvm-assertion}. \cc{We also generated silent build crashes, but with an average line count of XX, versus CLSmith's line count of XX.}
 

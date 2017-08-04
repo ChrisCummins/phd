@@ -115,7 +115,7 @@ We do not employ the rigorous static and dynamic analysis employed in prior prob
 
 \paragraph{Un-targeted Testings} Random token / grammar enumeration has previously been used to target parsers and lexers. CSmith creates huge, ``ugly'' programs with the intention of deliberately targeting bugs in IR transformations --- the middle-end.
 
-One might expect our approach --- generating small test cases in the style of handwritten programs --- is perhaps less likely to find bugs than CSmith, which generates huge, ``ugly'' programs pairing infrequently used language features. A code which is more likely to be written by a human is also more likely to be included in the compiler test suites, \cc{hmm what do we do about this} 
+One might expect our approach --- generating small test cases in the style of handwritten programs --- is perhaps less likely to find bugs than CSmith, which generates huge, ``ugly'' programs pairing infrequently used language features. DeepSmith rarely generates large OpenCL kernels because humans rarely write them. A code which is more likely to be written by a human is also more likely to be included in the compiler test suites, \cc{hmm what do we do about this} 
 
 Our approach is biased towards the front-end, since not all generated programs are well-formed and well-types.
 
