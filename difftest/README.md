@@ -18,7 +18,7 @@ $ ./clgen_fetch.py /tmp/export --delete
 Collect results for a device:
 
 ```sh
-$ ./run-programs.py 0 0 [--clgen|--clsmith] [--t6h] [--opt|--no-opt]
+$ ./run_programs.py 0 0 [--clgen|--clsmith] [--t6h] [--opt|--no-opt]
 ```
 
 Prepare results for analysis:
@@ -31,6 +31,12 @@ Analyze results:
 
 ```sh
 $ ./analyze.py [--clgen|--clsmith] [--prune]
+```
+
+Run automated reductions:
+
+```sh
+$ ./run_reductions 0 0 [--clgen|--clsmith]
 ```
 
 Generate bug reports:
