@@ -155,20 +155,15 @@ def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
     ids = env.ids()
     c = f"""
 /*
- * Usage: gcc -DPLATFORM_ID=0 -DDEVICE_ID=0 code.c -lOpenCL; ./a.out
+ * Usage:
+ *   gcc -std=c99 [-DPLATFORM_ID=<platform-id>] [-DDEVICE_ID=<device-id>] foo.c -lOpenCL
+ *   ./a.out [-p <platform-id>] [-d <device-id>]
  *
- * Code generated using cldrive <https://github.com/ChrisCummins/cldrive>
+ * Host code generated using cldrive <https://github.com/ChrisCummins/cldrive>
  */
-#ifndef PLATFORM_ID
-# define PLATFORM_ID {ids[0]}
-#endif
-
-#ifndef DEVICE_ID
-# define DEVICE_ID {ids[1]}
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
@@ -176,13 +171,21 @@ def emit_c(env: OpenCLEnvironment, src: str, inputs: np.array,
 #include <CL/cl.h>
 #endif
 
+const char *kernel_src = \\
+{src_string};
+
+#ifndef PLATFORM_ID
+# define PLATFORM_ID 0
+#endif
+
+#ifndef DEVICE_ID
+# define DEVICE_ID 0
+#endif
+
 #define True 1
 #define False 0
 typedef unsigned char bool;
 typedef unsigned short ushort;
-
-const char *kernel_src = \\
-{src_string};
 
 const char *clerror_string(cl_int err) {{
     /* written by @Selmar http://stackoverflow.com/a/24336429 */
@@ -269,44 +272,62 @@ void check_error(const char* api_call, cl_int err) {{
     }}
 }}
 
-int main() {{
+int help(char **argv) {{
+    printf("Usage: %s [-p <platform-id>] [-d <device-id>]\\n", argv[0]);
+    return 2;
+}}
+
+int main(int argc, char** argv) {{
     int err;
+    int platform_id = PLATFORM_ID;
+    int device_id = DEVICE_ID;
+
+    for (int i = 1; i < argc; i++) {{
+        if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help"))
+            return help(argv);
+        else if (!strcmp(argv[i], "-p"))
+            platform_id = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "-d"))
+            device_id = atoi(argv[++i]);
+        else
+            fprintf(stderr, "warning: unrecognized argument '%s'\\n", argv[i]);
+    }}
 
     cl_uint num_platforms;
-    cl_platform_id *platform_ids = (cl_platform_id*)malloc(sizeof(cl_platform_id) * (PLATFORM_ID + 1));
-    err = clGetPlatformIDs(PLATFORM_ID + 1, platform_ids, &num_platforms);
+    cl_platform_id *platform_ids = (cl_platform_id*)malloc(sizeof(cl_platform_id) * (platform_id + 1));
+    err = clGetPlatformIDs(platform_id + 1, platform_ids, &num_platforms);
     check_error("clGetPlatformIDs", err);
 
-    if (num_platforms <= PLATFORM_ID) {{
-        fprintf(stderr, "Platform ID %d not found\\n", PLATFORM_ID);
+    if (num_platforms <= platform_id) {{
+        fprintf(stderr, "Platform ID %d not found\\n", platform_id);
         return 1;
     }}
-    cl_platform_id platform_id = platform_ids[PLATFORM_ID];
+    cl_platform_id cl_platform_id = platform_ids[platform_id];
 
     char strbuf[256];
-    err = clGetPlatformInfo(platform_id, CL_PLATFORM_NAME, sizeof(strbuf), strbuf, NULL);
+    err = clGetPlatformInfo(cl_platform_id, CL_PLATFORM_NAME, sizeof(strbuf), strbuf, NULL);
     check_error("clGetPlatformInfo", err);
     fprintf(stderr, "[cldrive] Platform: %s\\n", strbuf);
 
     cl_uint num_devices;
-    cl_device_id *device_ids = (cl_device_id*)malloc(sizeof(cl_device_id) * (DEVICE_ID + 1));
-    err = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, DEVICE_ID + 1, device_ids, &num_devices);
+    cl_device_id *device_ids = (cl_device_id*)malloc(sizeof(cl_device_id) * (device_id + 1));
+    err = clGetDeviceIDs(cl_platform_id, CL_DEVICE_TYPE_ALL, device_id + 1, device_ids, &num_devices);
     check_error("clGetDeviceIDs", err);
 
-    if (num_devices <= DEVICE_ID) {{
-        fprintf(stderr, "Device ID %d not found\\n", DEVICE_ID);
+    if (num_devices <= device_id) {{
+        fprintf(stderr, "Device ID %d not found\\n", device_id);
         return 1;
     }}
-    cl_device_id device_id = device_ids[DEVICE_ID];
+    cl_device_id cl_device_id = device_ids[device_id];
 
-    err = clGetDeviceInfo(device_id, CL_DEVICE_NAME, sizeof(strbuf), strbuf, NULL);
+    err = clGetDeviceInfo(cl_device_id, CL_DEVICE_NAME, sizeof(strbuf), strbuf, NULL);
     check_error("clGetDeviceInfo", err);
     fprintf(stderr, "[cldrive] Device: %s\\n", strbuf);
 
-    cl_context ctx = clCreateContext(NULL, 1, &device_id, NULL, NULL, &err);
+    cl_context ctx = clCreateContext(NULL, 1, &cl_device_id, NULL, NULL, &err);
     check_error("clCreateContext", err);
 
-    cl_command_queue queue = clCreateCommandQueue(ctx, device_id, 0, &err);
+    cl_command_queue queue = clCreateCommandQueue(ctx, cl_device_id, 0, &err);
     check_error("clCreateCommandQueue", err);
 
     fprintf(stderr, "[cldrive] OpenCL optimizations: {optimizations_on_off}\\n");
@@ -317,12 +338,12 @@ int main() {{
     int build_err = clBuildProgram(program, 0, NULL, {clBuildProgram_opts}, NULL, NULL);
 
     size_t log_size;
-    err = clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+    err = clGetProgramBuildInfo(program, cl_device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
     check_error("clGetProgramBuildInfo", err);
 
     if (log_size > 2) {{
         char* log = (char*)malloc(sizeof(char) * (log_size + 1));
-        err = clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+        err = clGetProgramBuildInfo(program, cl_device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
         check_error("clGetProgramBuildInfo", err);
         fprintf(stderr, "%s", log);
     }}
@@ -357,7 +378,6 @@ int main() {{
 
 {print_block}
 
-    /* clReleaseMemObject(); */
     clReleaseProgram(program);
     clReleaseKernel(kernel);
     clReleaseCommandQueue(queue);
