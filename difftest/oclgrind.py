@@ -4,7 +4,6 @@ from tempfile import NamedTemporaryFile
 
 import clsmith
 import clgen_mkharness
-import clsmith_run_clreduce
 from db import *
 
 OCLGRIND = "../lib/clgen/native/oclgrind/c3760d07365b74ccda04cd361e1b567a6d99dd8c/install/bin/oclgrind"
