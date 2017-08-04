@@ -438,34 +438,33 @@ def verify_opencl_version(session: session_t, tables: Tableset, testcase) -> Non
 
 
 def prune_bf_classifications(session: session_t, tables: Tableset) -> None:
-    # Retract results where 'double' is not supported
-    ids_to_delete = [x[0] for x in session.query(tables.results.id)\
-        .join(tables.classifications)\
-        .join(tables.stderrs)\
-        .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["bf"],
-                tables.stderrs.stderr.like("%use of type 'double' requires cl_khr_fp64 extension%"))]
 
-    n = len(ids_to_delete)
-    if n:
-        print(f"retracting {n} bf-classified {tables.name} results in which 'double' is not supported ...")
-        session.query(tables.classifications)\
-            .filter(tables.classifications.id.in_(ids_to_delete))\
-            .delete(synchronize_session=False)
+    def prune_stderr_like(like):
+        ids_to_delete = [x[0] for x in session.query(tables.results.id)\
+            .join(tables.classifications)\
+            .join(tables.stderrs)\
+            .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["bf"],
+                    tables.stderrs.stderr.like(f"%{like}%"))]
 
-    # Retract results in which 'implicit function declaration'
-    ids_to_delete = [x[0] for x in session.query(tables.results.id)\
-        .join(tables.classifications)\
-        .join(tables.stderrs)\
-        .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["bf"],
-                tables.stderrs.stderr.like("%implicit declaration of function%"))]
+        n = len(ids_to_delete)
+        if n:
+            print(f"retracting {n} bf-classified {tables.name} results with msg {like[:30]}")
+            session.query(tables.classifications)\
+                .filter(tables.classifications.id.in_(ids_to_delete))\
+                .delete(synchronize_session=False)
 
-    n = len(ids_to_delete)
-    if n:
-        print(f"retracting {n} bf-classified {tables.name} results with implicit function declarations ...")
-        session.query(tables.classifications)\
-            .filter(tables.classifications.id.in_(ids_to_delete))\
-            .delete(synchronize_session=False)
-    session.commit()
+    prune_stderr_like("use of type 'double' requires cl_khr_fp64 extension")
+    prune_stderr_like("implicit declaration of function")
+    prune_stderr_like("function cannot have argument whose type is, or contains, type size_t")
+    prune_stderr_like("unresolved extern function")
+    prune_stderr_like("error: declaration does not declare anything")
+    prune_stderr_like("error: cannot increment value of type%")
+    prune_stderr_like("subscripted access is not allowed for OpenCL vectors")
+    prune_stderr_like("Images are not supported on given device")
+    prune_stderr_like("error: variables in function scope cannot be declared")
+    prune_stderr_like("error: implicit conversion ")
+    prune_stderr_like("error: automatic variable qualified with an address space ")
+    prune_stderr_like("Could not find a definition ")
 
     # Verify results
     q = session.query(tables.results.testcase_id)\
@@ -482,6 +481,8 @@ def prune_bf_classifications(session: session_t, tables: Tableset) -> None:
     print(f"Verifying {tables.name} bf-classified testcases ...", file=sys.stderr)
     for testcase in ProgressBar()(testcases_to_verify):
         verify_opencl_version(session, tables, testcase)
+
+    session.commit()
 
 
 def verify_c_testcase(session: session_t, tables: Tableset, testcase) -> None:
