@@ -136,8 +136,6 @@ def run_reduction(s, result: CLSmithResult) -> return_t:
         with open(kernel) as infile:
             src = infile.read()
 
-        fs.mv(tmpdir, fs.path("~/tmp/", fs.basename(tmpdir)))
-
     return CLSmithReduction(result=result, runtime=runtime, status=status,
                             src=src, log='\n'.join(out))
 
