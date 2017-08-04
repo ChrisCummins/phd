@@ -30,6 +30,8 @@ We present a novel, data-driven approach to the generation of random programs fo
 
 \cc{TODO: syntactic modeling trade-off}
 
+\cc{exhaustive testing is impossible - requiring enumeration of every sequence of characters, but grammar enumeration leaves too many bugs on the table. e.g. what happens? }
+
 Our implementation, DeepSmith, targets OpenCL, an open standard for programming heterogeneous systems, though our approach is language agnostic. We chose OpenCL for three reasons: it is a young, emerging standard which promises portability across a diverse range of heterogeneous hardware; OpenCL is compiled ``online'', meaning that compiler defects may not be discovered until a product is deployed to customers; and OpenCL is a hard programming language to test --- the data-parallel programming model increases the complexity of static and dynamic analysis, further limiting the expressiveness of grammar-based approaches.
 
 %The importance of sane compiler behavior is amplified for OpenCL since it is compiled online. OpenCL code is shipped by developers to customers for compilation online. OpenCL is increasingly used in safety critical software products such as automotive vision. Segmentation faults and other runtime crashes during online compilation can disrupt the execution of safety critical processes.

@@ -28,7 +28,7 @@ Optimization level generally does not affect testing throughput significantly, w
 83.8\% of CLSmith test-cases produce a majority \textbf{\cmark} outcome. Proportionally, DeepSmith test-cases are less likely to produce a majority outcome at 47.9\% of the total. Neither CLSmith or DeepTune guarantee program termination with XX\% of non-\textbf{\{bf,c\}} majority outcomes reaching 60 seconds timeouts.
 
 
-\subsection{Comparison of Configurations}
+\subsection{Comparison of Results}
 
 CLSmith crashed 8 of the 20 configurations, DeepSmith crashed all of them. See Section X for examples of bugs found from build crashes.
 
@@ -52,7 +52,11 @@ Table~\ref{tab:classifications} shows the results of applying voting heuristics 
 	\centering %
 	\includegraphics[width=\columnwidth]{build/img/runtimes}%
 	\caption{%
-		Test-case runtimes, excluding timeouts. On average, test-case generation and execution is $2.86\times$ and $4.70\times$ faster with DeepSmith than CLSmith, respectively. \cc{reduction times}%
+		Runtimes, excluding timeouts. On average, DeepSmith test-cases are evaluated $XX\times$ faster than CLSmith ($2.45\times$, $4.46\times$, and $66.54\times$ for generation, execution and reduction, respectively).%
+%    Total speedup is 3.03x
+%    CLgen generation is 2.45x faster than CLSmith
+%    CLgen execution is 4.46x faster than CLSmith
+%    CLgen reduction is 66.54x faster than CLSmith
 	}%
 	\label{fig:runtimes} %
 \end{figure}
@@ -74,7 +78,7 @@ Similarly, Intel Configs.\ 4--7 (but not 3) reject DeepSmith kernels which omit 
 Configs.\ $1\pm$, $2\pm$ reject kernels which \texttt{size\_t} parameters.
 
 
-\subsection{Comparison of test-cases}
+\subsection{Comparison of Test-cases}
 
 \begin{figure}
 	\centering %
@@ -213,7 +217,7 @@ Hard to quantify, but our results suggest the value of our syntactic approach.
 % 331
 CLSmith is biased towards identifying struct miscompilations, though only 7.1\% of OpenCL kernels on GitHub use them.
 
-By not explicitly stress-testing the middle-end, we discover a wider variety of bugs. E.g. compiler crashes, compiler timeouts, etc.
+Our approach is biased towards identifying bugs in compiler front-ends, since not all generated programms are well formed/well typed. Results suggest we cover more areas of the compiler, E.g. compiler crashes, compiler timeouts, etc.
 
 Oclgrind was resilient to CLSmith testing, yet we managed to trip it up during compilation, and discovered the switch race condition.
 
