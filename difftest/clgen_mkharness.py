@@ -15,7 +15,7 @@ from labm8 import fs
 from pathlib import Path
 from progressbar import ProgressBar
 from time import time
-from typing import List
+from typing import List, Tuple
 from tempfile import NamedTemporaryFile
 
 import db
@@ -27,10 +27,10 @@ class HarnessCompilationError(ValueError):
     pass
 
 
-def mkharness(s, env: cldrive.OpenCLEnvironment, testcase: CLgenTestCase):
+def mkharness_src(env: cldrive.OpenCLEnvironment, testcase: CLgenTestCase) -> Tuple[float, bool, str]:
     """ generate a self-contained C program for the given test case """
-    if testcase.harness:
-        return testcase.harness[0]
+    program = testcase.program
+    params = testcase.params
 
     data_generator = cldrive.Generator.from_str(params.generator)
     gsize = cldrive.NDRange(params.gsize_x, params.gsize_y, params.gsize_z)
@@ -65,6 +65,16 @@ def mkharness(s, env: cldrive.OpenCLEnvironment, testcase: CLgenTestCase):
 
     generation_time = time() - start_time
 
+    return generation_time, compile_only, src
+
+
+def mkharness(s, env: cldrive.OpenCLEnvironment, testcase: CLgenTestCase) -> CLgenHarness:
+    """ generate a self-contained C program for the given test case and add it to the database """
+    if testcase.harness:
+        return testcase.harness[0]
+
+    generation_time, compile_only, src = mkharness_src(env, testcase)
+
     try:
         with NamedTemporaryFile(prefix='cldrive-harness-') as tmpfile:
             start_time = time()
@@ -80,13 +90,11 @@ def mkharness(s, env: cldrive.OpenCLEnvironment, testcase: CLgenTestCase):
             compile_time=compile_time)
 
         s.add(harness)
-        s.commit()
+        s.flush()
 
         return harness
     except ValueError:
-        print("\nharness compilation failed!", file=sys.stderr)
-        print("program:", program.id, file=sys.stderr)
-        print("params:", params.id, file=sys.stderr)
+        print("\nharness compilation for testcase {testcase.id} failed!", file=sys.stderr)
         print(src, file=sys.stderr)
 
 

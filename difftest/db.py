@@ -653,6 +653,7 @@ class CLSmithReduction(Base):
     runtime = sql.Column(sql.Float, nullable=False)
 
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    linecount = sql.Column(sql.Integer, nullable=False)
     log = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     result = sql.orm.relationship("CLSmithResult")
@@ -666,6 +667,7 @@ class CLgenReduction(Base):
     runtime = sql.Column(sql.Float, nullable=False)
 
     src = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    linecount = sql.Column(sql.Integer, nullable=False)
     log = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
 
     result = sql.orm.relationship("CLgenResult")

@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 from collections import namedtuple
 from subprocess import Popen, PIPE
 from time import time
-from typing import Dict, List, Tuple, NewType
+from typing import Dict, List, Tuple, NewType, Union
 from tempfile import TemporaryDirectory
 from progressbar import ProgressBar
 
@@ -71,7 +71,8 @@ def remove_preprocessor_comments(test_case_name):
         print(line, end="")
 
 
-def run_reduction(s, result: CLSmithResult) -> return_t:
+def run_reduction(s: session_t, tables: Tableset,
+                  result: Union[CLSmithResult, CLgenResult]) -> Union[CLSmithReduction, CLgenReduction]:
     """
     Note as a side effect this method modifies environment variables.
     """
@@ -104,9 +105,18 @@ def run_reduction(s, result: CLSmithResult) -> return_t:
         os.environ['CREDUCE_TEST_OPTIMISATION_LEVEL'] = optimized
         os.environ['CREDUCE_TEST_CASE'] = path
         os.environ['OCLGRIND'] = OCLGRIND
-        os.environ['CREDUCE_TEST_CL_LAUNCHER'] = CL_LAUNCHER
         os.environ['CREDUCE_TEST_PLATFORM'] = str(platform_id)
         os.environ['CREDUCE_TEST_DEVICE'] = str(device_id)
+
+        if tables.name == "CLSmith":
+            # If reducing a CLSmith program, use the default cl_launcher
+            os.environ['CREDUCE_TEST_CL_LAUNCHER'] = CL_LAUNCHER
+        else:
+            # Else, generate a harness which will serve as a stand-in for cl_launcher
+            driver_path = fs.path(tmpdir, "driver")
+            generation_time, compile_only, src = clgen_mkharness.mkharness_src(env, result.testcase)
+            clgen_mkharness.compile_harness(src, driver_path)
+            os.environ['CREDUCE_TEST_CL_LAUNCHER'] = driver_path
 
         # Log the interestingness test once to check that everything is okay
         out = []
@@ -136,8 +146,13 @@ def run_reduction(s, result: CLSmithResult) -> return_t:
         with open(kernel) as infile:
             src = infile.read()
 
-    return CLSmithReduction(result=result, runtime=runtime, status=status,
-                            src=src, log='\n'.join(out))
+    if tables.name == "CLSmith":
+        reduction_t = CLSmithReduction
+    else:
+        reduction_t = CLgenReduction
+
+    return reduction_t(result=result, runtime=runtime, status=status,
+                       linecount=len(src.split('\n')), src=src, log='\n'.join(out))
 
 
 if __name__ == "__main__":
@@ -149,6 +164,10 @@ if __name__ == "__main__":
         "platform_id", type=int, metavar="<platform id>", help="OpenCL platform ID")
     parser.add_argument(
         "device_id", type=int, metavar="<device id>", help="OpenCL device ID")
+    parser.add_argument("--clsmith", action="store_true",
+                        help="Only reduce CLSmith results")
+    parser.add_argument("--clgen", action="store_true",
+                        help="Only reduce CLgen results")
     args = parser.parse_args()
 
     db.init(args.hostname)  # initialize db engine
@@ -161,39 +180,48 @@ if __name__ == "__main__":
     device_name = get_device_name(platform_id, device_id)
 
     devname = util.device_str(device_name)
-    print(f"Reducing w-classified results for {devname} ...")
 
-    tables = CLSMITH_TABLES
+    if args.clgen and args.clsmith:
+        tablesets = [CLSMITH_TABLES, CLGEN_TABLES]
+    elif args.clsmith:
+        tablesets = [CLSMITH_TABLES]
+    elif args.clgen:
+        tablesets = [CLGEN_TABLES]
+    else:
+        tablesets = [CLSMITH_TABLES, CLGEN_TABLES]
 
-    with Session(commit=False) as s:
+    with Session() as s:
         testbed = get_testbed(s, platform_name, device_name)
 
-        # progress bar
-        num_ran, total = get_num_results_to_reduce(s, tables, testbed)
-        bar = progressbar.ProgressBar(init_value=num_ran, max_value=total)
+        for tables in tablesets:
+            print(f"Reducing {tables.name} w-classified results for {devname} ...")
 
-        # main execution loop:
-        while True:
-            # get the next result to reduce
-            done = s.query(tables.reductions.id)
-            result = s.query(tables.results)\
-                .join(tables.classifications)\
-                .filter(tables.results.testbed_id == testbed.id,
-                        tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"],
-                        ~tables.results.id.in_(done)).order_by(tables.results.id)\
-                .first()
-
-            if not result:
-                break
-
-            reduction = run_reduction(s, result)
-
-            s.add(reduction)
-            s.commit()
-
-            # update progress bar
+            # progress bar
             num_ran, total = get_num_results_to_reduce(s, tables, testbed)
-            bar.max_value = total
-            bar.update(min(num_ran, total))
+            bar = progressbar.ProgressBar(init_value=num_ran, max_value=total)
 
+            # main execution loop:
+            while True:
+                # get the next result to reduce
+                done = s.query(tables.reductions.id)
+                result = s.query(tables.results)\
+                    .join(tables.classifications)\
+                    .filter(tables.results.testbed_id == testbed.id,
+                            tables.classifications.classification == CLASSIFICATIONS_TO_INT["w"],
+                            ~tables.results.id.in_(done))\
+                    .order_by(tables.results.date)\
+                    .first()
+
+                if not result:
+                    break
+
+                reduction = run_reduction(s, tables, result)
+
+                s.add(reduction)
+                s.commit()
+
+                # update progress bar
+                num_ran, total = get_num_results_to_reduce(s, tables, testbed)
+                bar.max_value = total
+                bar.update(min(num_ran, total))
     print("done.")
