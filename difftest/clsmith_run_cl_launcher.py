@@ -6,7 +6,7 @@ import pyopencl as cl
 import re
 from collections import deque, namedtuple
 from argparse import ArgumentParser
-from labm8 import fs
+from labm8 import crypto, fs
 from tempfile import NamedTemporaryFile
 from time import time, strftime
 from typing import Dict, List, Tuple
@@ -145,9 +145,11 @@ if __name__ == "__main__":
     driver_version = get_driver_version(platform_id, device_id)
 
     optimizations = None
-    if args.opt:
+    if args.opt and args.no_opt:
+        pass  # both flags
+    elif args.opt:
         optimizations = 1
-    if args.no_opt:
+    elif args.no_opt:
         optimizations = 0
 
     db.init(args.hostname)  # initialize db engine
@@ -155,7 +157,6 @@ if __name__ == "__main__":
     with Session() as session:
         testbed = get_testbed(session, platform_name, device_name)
         devname = util.device_str(testbed.device)
-        print(devname)
 
         # progress bar
         num_ran, num_to_run = get_num_to_run(session, testbed, optimizations)
@@ -163,12 +164,10 @@ if __name__ == "__main__":
 
         # programs to run, and results to push to database
         inbox = deque()
-        outbox = deque()
 
         def next_batch():
             """
-            Fill the inbox with jobs to run, empty the outbox of jobs we have
-            run.
+            Fill the inbox with jobs to run.
             """
             BATCH_SIZE = 100
             print(f"\nnext CLSmith batch for {devname} at", strftime("%H:%M:%S"))
@@ -193,14 +192,8 @@ if __name__ == "__main__":
                             .filter(cl_launcherParams.optimizations == optimizations)
 
             todo = todo.limit(BATCH_SIZE)
-
             for testcase in todo:
                 inbox.append(testcase)
-
-            # empty outbox
-            while len(outbox):
-                session.add(outbox.popleft())
-            session.commit()
 
         try:
             while True:
@@ -210,9 +203,6 @@ if __name__ == "__main__":
                 # we have no programs to run
                 if not len(inbox):
                     break
-
-                print(inbox)
-                sys.exit(0)
 
                 # get next program to run
                 testcase = inbox.popleft()
@@ -232,12 +222,28 @@ if __name__ == "__main__":
                               stderr=stderr)
 
                 # create new result
+                stdout_ = util.escape_stdout(stdout)
+                stdout = get_or_create(
+                    session, CLSmithStdout,
+                    hash=crypto.sha1_str(stdout_), stdout=stdout_)
+
+                stderr_ = util.escape_stderr(stderr)
+                stderr = get_or_create(
+                    session, CLSmithStderr,
+                    hash=crypto.sha1_str(stderr_), stderr=stderr_)
+                session.flush()
+
                 result = CLSmithResult(
-                    program=program, params=params, testbed=testbed,
-                    flags=" ".join(flags), status=status, runtime=runtime,
-                    stdout=stdout, stderr=stderr)
-                result.outcome = analyze.get_cl_launcher_outcome(result)
-                outbox.append(result)
+                    testbed_id=testbed.id,
+                    testcase_id=testcase.id,
+                    status=status,
+                    runtime=runtime,
+                    stdout_id=stdout.id,
+                    stderr_id=stderr.id,
+                    outcome=analyze.get_cl_launcher_outcome(status, runtime, stderr_))
+
+                session.add(result)
+                session.commit()
 
                 # update progress bar
                 num_ran += 1

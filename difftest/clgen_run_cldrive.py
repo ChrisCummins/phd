@@ -152,8 +152,7 @@ if __name__ == "__main__":
 
         def next_batch():
             """
-            Fill the inbox with jobs to run, empty the outbox of jobs we have
-            run.
+            Fill the inbox with jobs to run.
             """
             BATCH_SIZE = 100
             print(f"\nnext CLgen batch for {devname} at", strftime("%H:%M:%S"))

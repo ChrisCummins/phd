@@ -30,70 +30,56 @@ def get_majority_output(session, tables: Tableset, result):
     return majority_output, majority_count, len(outputs)
 
 
-def get_cl_launcher_outcome(result) -> None:
+def get_cl_launcher_outcome(status: int, runtime: float, stderr: str) -> None:
     """
     Given a cl_launcher result, determine and set it's outcome.
 
     See OUTCOMES for list of possible outcomes.
     """
     def crash_or_build_failure():
-        return "c" if "Compilation terminated successfully..." in result.stderr.stderr else "bf"
+        return OUTCOMES_TO_INT["c"] if "Compilation terminated successfully..." in stderr else OUTCOMES_TO_INT["bf"]
     def crash_or_build_crash():
-        return "c" if "Compilation terminated successfully..." in result.stderr.stderr else "bc"
+        return OUTCOMES_TO_INT["c"] if "Compilation terminated successfully..." in stderr else OUTCOMES_TO_INT["bc"]
     def timeout_or_build_timeout():
-        return "to" if "Compilation terminated successfully..." in result.stderr.stderr else "bto"
+        return OUTCOMES_TO_INT["to"] if "Compilation terminated successfully..." in stderr else OUTCOMES_TO_INT["bto"]
 
-    if result.status == 0:
-        return "pass"
+    if status == 0:
+        return OUTCOMES_TO_INT["pass"]
     # 139 is SIGSEV
-    elif result.status == 139 or result.status == -11:
-        result.status = 139
+    elif status == 139 or status == -11:
+        status = 139
         return crash_or_build_crash()
-    # Preproccessor or Unicode error
-    elif result.status == 1024 or result.status == 1025:
-        return "fail"
     # SIGTRAP
-    elif result.status == -5:
+    elif status == -5:
         return crash_or_build_crash()
     # SIGKILL
-    elif result.status == -9 and result.runtime >= 60:
+    elif status == -9 and runtime >= 60:
         return timeout_or_build_timeout()
-    elif result.status == -9:
-        print(f"SIGKILL, but only ran for {result.runtime:.2f}s")
+    elif status == -9:
+        print(f"SIGKILL, but only ran for {runtime:.2f}s")
         return crash_or_build_crash()
     # SIGILL
-    elif result.status == -4:
+    elif status == -4:
         return crash_or_build_crash()
     # SIGABRT
-    elif result.status == -6:
+    elif status == -6:
         return crash_or_build_crash()
     # SIGFPE
-    elif result.status == -8:
+    elif status == -8:
         return crash_or_build_crash()
     # SIGBUS
-    elif result.status == -7:
+    elif status == -7:
         return crash_or_build_crash()
     # cl_launcher error
-    elif result.status == 1:
+    elif status == 1:
         return crash_or_build_failure()
     else:
         print(result)
         try:
-            print(Signals(-result.status).name)
+            print(Signals(-status).name)
         except ValueError:
-            print(result.status)
-        raise LookupError(f"failed to determine outcome of cl_launcher result #{result.id}")
-
-
-def set_cl_launcher_outcomes(session, tables: Tableset, rerun: bool=False) -> None:
-    """ Set all cl_launcher outcomes. Set `rerun' to recompute outcomes for all results """
-    print("Determining CLSmith outcomes ...", file=sys.stderr)
-    q = session.query(tables.results)
-    if not rerun:
-        q = q.filter(tables.results.outcome == None)
-    ntodo = q.count()
-    for result in util.NamedProgressBar('cl_launcher outcomes')(q, max_value=ntodo):
-        result.outcome = get_cl_launcher_outcome(result)
+            print(status)
+        raise LookupError(f"failed to determine outcome of cl_launcher status {status} with stderr: {stderr}")
 
 
 def get_cldrive_outcome(status: int, runtime: float, stderr: str) -> int:
