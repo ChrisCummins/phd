@@ -103,7 +103,11 @@ An anomalous build failure (\textbf{abf}), anomalous runtime crash (\textbf{ac})
 %\end{enumerate}
 
 
-\subsection{Discussions}\label{subsec:discussions}
+\subsection{Design Trade-Offs}\label{subsec:discussions}
+% Discussions?
+
+% \paragraph{Design Trade-Offs}
+We do not employ the rigorous static and dynamic analysis employed in prior probabilistic grammar-based approaches. This greatly simplifies the implementation --- targeting a new language requires only a corpus of example programs and a test harness for generated codes. The generative model itself contains no language-specific code, and is implemented in less than 200 lines of Python --- a small fraction of that of grammar-based approaches, even excluding the static analysis. The trade-off of this makes significantly reduces the cost of development, but weakens the guarantees  \cc{\ldots}
 
 \paragraph{Undefined Behaviors} If the output of a program depends on undefined or unspecified behavior, then comparing outputs across compilers is meaningless.  Prior works have formulated random program generation so as to minimize or eradicate the possibility of undefined and unspecified behavior~\cite{Yang2011c,Le2013a,Le2015}, at the expense of expressiveness. Recently, work in Skeletal Program Enumeration~\cite{Zhang2017a} has relied on handchecking of C programs and tools such as CompCert~\cite{Leroy2013} and UBsan to detect false-positives. Since DeepSmith programs are not guaranteed to be free from undefined behaviors, and we can only determine if a program is well-formed empirically, additional filtering of test-cases is required to prevent false-positives.
 
@@ -116,5 +120,3 @@ OpenCL doesn't have the rich tooling of C --- no CompCert and UBSan, there is mu
 48\% of GitHub kernels use floating points. At the moment, we simply rely upon \texttt{printf()} rounding. Given knowledge about hardware imprecision, it would be possible to compute an acceptable error threshold for floating point results based on dynamic profiling.
 
 % Section 7.4 of OpenCL 1.2 spec.
-
-\paragraph{Implementation} The generative model itself is language-agnostic and requires less than 200 lines of Python --- a small fraction of that of grammar-based approaches, even excluding the static analysis. \cc{\ldots}
