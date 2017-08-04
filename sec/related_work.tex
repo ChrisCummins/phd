@@ -2,17 +2,17 @@
 
 The need to test compilers under invalid and unexpected input conditions has been long known~\cite{Boujarwah1997}.
 
-\citeauthor{McKeeman1998} a lexeme generator and to test C compilers by enumerating token sequences in~\cite{McKeeman1998}. Basically the same as DeepSmith, except we weight the generation so that sequences are plausible.
+Differential testing using test cases of ranked ``quality'' is presented in~\cite{McKeeman1998}. A lexeme generator and to test C compilers by enumerating token sequences. Similar to DeepSmith, except we weight the generation so that sequences are plausible.
 
 Increasing complexity of generations: RandProg to CSmith. Then EMI testing, and SPE.
 
-The \emph{fuzz taming problem} is introduced in~\cite{Chen2013}. Compiler fuzz testers are indiscriminate - they tend to keep finding noncritical bugs which may already be known.
+The \emph{fuzz taming problem} is addressed in~\cite{Chen2013}, in which a distance metric is used to rank test cases such that diverse, interesting test cases are highly ranked.
 
 Empirical comparion of compiler testing techniques~\cite{Chen2014a}
 
 Analysis of bugs in GCC and LLVM finds 80\% of test-cases to be 45 lines~\cite{Sun2016}.
 
-\cc{TODO}~\cite{Godefroid2008a,Le2015,Sun2016a}.
+\cc{TODO}~\cite{Godefroid2008a,Le2015,Sun2016a}~\cite{Kossatchev2005}.
 
 \cc{TODO:} Directed EMI testing~\cite{Le2015}.
 
