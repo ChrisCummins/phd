@@ -138,8 +138,8 @@ def get_classifications_table():
   \\toprule
   & & & \\multicolumn{{5}}{{c|}}{{\\textbf{{CLSmith}}}} & \\multicolumn{{5}}{{c}}{{\\textbf{{CLgen}}}} \\\\
   \\textbf{{\\#.}} & \\textbf{{Device}} & $\\pm$ &
-  \\textbf{{w}} & \\textbf{{bf}} & \\textbf{{c}} & \\textbf{{to}} & \\textbf{{total}} &
-  \\textbf{{w}} & \\textbf{{bf}} & \\textbf{{c}} & \\textbf{{to}} & \\textbf{{total}} \\\\
+  \\textbf{{ao}} & \\textbf{{abf}} & \\textbf{{ac}} & \\textbf{{ato}} & \\textbf{{total}} &
+  \\textbf{{ao}} & \\textbf{{abf}} & \\textbf{{ac}} & \\textbf{{ato}} & \\textbf{{total}} \\\\
   \\midrule""")
 
 
