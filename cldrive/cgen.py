@@ -281,16 +281,40 @@ int main(int argc, char** argv) {{
     int err;
     int platform_id = PLATFORM_ID;
     int device_id = DEVICE_ID;
+    const char *filename = NULL;
 
     for (int i = 1; i < argc; i++) {{
         if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help"))
             return help(argv);
+        else if (!strcmp(argv[i], "-f"))
+            filename = argv[++i];
         else if (!strcmp(argv[i], "-p"))
             platform_id = atoi(argv[++i]);
         else if (!strcmp(argv[i], "-d"))
             device_id = atoi(argv[++i]);
         else
             fprintf(stderr, "warning: unrecognized argument '%s'\\n", argv[i]);
+    }}
+
+    /* Optionally read kernel from file */
+    if (filename) {{
+        FILE *infile = fopen(filename, "rb");
+        if (infile == NULL) {{
+            fprintf(stderr, "fatal: Could not open '%s'\\n", filename);
+            return 3;
+        }}
+
+        fseek(infile, 0, SEEK_END);
+        long fsize = ftell(infile);
+        fseek(infile, 0, SEEK_SET);
+
+        char *buf = malloc(fsize + 1);
+        fread(buf, fsize, 1, infile);
+        fclose(infile);
+        buf[fsize] = 0;
+        fprintf(stderr, "read kernel from '%s'\\n", filename);
+
+        kernel_src = buf;
     }}
 
     cl_uint num_platforms;
@@ -354,9 +378,26 @@ int main(int argc, char** argv) {{
     if not compile_only or (compile_only and create_kernel):
         kernel_name_ = kernel_name(src)
         c += f"""
-    fprintf(stderr, "[cldrive] Kernel: \\\"{kernel_name_}\\\"\\n");
-    cl_kernel kernel = clCreateKernel(program, "{kernel_name_}", &err);
-    check_error("clCreateKernel", err);
+    cl_kernel kernels[128];
+    cl_uint num_kernels;
+    err = clCreateKernelsInProgram(program, 128, kernels, &num_kernels);
+    check_error("clCreateKernelsInProgram", err);
+
+    if (num_kernels != 1) {{
+        fprintf(stderr, "fatal: require 1 kernel, got %u\\n", num_kernels);
+        return 3;
+    }}
+
+    cl_kernel kernel = kernels[0];
+
+    char kernel_name[128];
+    err = clGetKernelInfo(kernel, CL_KERNEL_FUNCTION_NAME, 128, kernel_name, NULL);
+    check_error("clGetKernelInfo", err);
+
+    if (!filename && strcmp(kernel_name, "{kernel_name_}"))
+        fprintf(stderr, "fatal: expected kernel name \\\"{kernel_name_}\\\", got \\\"%s\\\"\\n", kernel_name);
+
+    fprintf(stderr, "[cldrive] Kernel: \\\"%s\\\"\\n", kernel_name);
 """
 
     if not compile_only:
