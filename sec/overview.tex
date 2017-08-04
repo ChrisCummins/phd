@@ -2,7 +2,7 @@
 
 \paragraph{Test-case generation} We mine GitHub for OpenCL programs, which we use to construct a corpus of representative code. We learn a generative model over this corpus, using syntactic level language modeling. DeepSmith, our deep learning program generator, automatically and rapidly synthesizes an unbounded number of programs for fuzz testing compilers.
 
-\paragraph{OpenCL configurations tested} We conducted testing of 10 different OpenCL configurations, summarized in Table~\ref{tab:platforms}. A \emph{configuration} refers to an OpenCL \emph{<device, driver>} pair. We covered the broadest range of hardware available to us: 3 GPUs, 4 CPUs, an Accelerator, and an Emulator. 8 of the compilers tested are commercial products, 2 of them are open source. Our suite of configurations includes both combinations of different drivers for the same device, and different devices using the same driver.
+\paragraph{OpenCL testbeds} We conducted testing of 10 OpenCL testbeds, summarized in Table~\ref{tab:platforms}. Each testbed consists of a \emph{<device, driver>} pair. We covered the broadest range of hardware available to us: 3 GPUs, 4 CPUs, an Accelerator, and an Emulator. 8 of the compilers tested are commercial products, 2 of them are open source. Our suite of testbeds includes both combinations of different drivers for the same device, and different devices using the same driver.
 
 
 \begin{table*}[t!]
@@ -10,9 +10,9 @@
 	\centering %
 	% \rowcolors{2}{white}{gray!25}
 	\input{build/tab/platforms}
-	\caption{OpenCL configurations we tested, the time spent in automated testing, and the number of bug reports submitted to date.}
+	\caption{OpenCL testbeds, the time spent in automated testing, and the number of bug reports submitted to date.}
 	\label{tab:platforms}
 \end{table*}
 
 
-\paragraph{Bugs found} All configurations yielded bugs. Every compiler crashed, and every compiler yielded anomalous results --- either programs which crash, or programs which silently compute the wrong result. To date, we have submitted XX bug reports to compiler vendors. Of those, 41\% are compiler crashes, XX\% are compiler hangs, and the remainder are cases where the generated program either silently emits wrong-code, or crashes at runtime. In comparing our approach against the state-of-the-art in OpenCL compiler test-case generation, we found our approach was able to \cc{\ldots}
+\paragraph{Bugs found} All compilers yielded bugs. Every compiler crashed, and every compiler yielded anomalous results --- either programs which crash, or programs which silently compute the wrong result. To date, we have submitted XX bug reports to compiler vendors. Of those, 41\% are compiler crashes, XX\% are compiler hangs, and the remainder are cases where the generated program either silently emits wrong-code, or crashes at runtime. In comparing our approach against the state-of-the-art in OpenCL compiler test-case generation, we found our approach was able to \cc{\ldots}

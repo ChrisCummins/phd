@@ -1,11 +1,13 @@
 \section{DeepSmith}
 
+Generating test-cases for compilers is hard because their inputs are highly structured.
+
 DeepSmith is our open source test-case generator for compiler fuzzing~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}}. Figure~\ref{fig:deeptune} provides an overview of the system. Our compiler test-case generation approach consists of two parts: first, a generative model for code samples inferred from open-source codes; the second, test-case construction.
 
 
 \subsection{Generative Model for Program Codes}
 
-Generating inputs for compilers is hard because their inputs are so structured.
+We use unsupervised learning to build syntactic-level sequence models over source code.
 
 We extend prior work on synthetic program generation using Long Short-Term Memory (LSTM) networks~\cite{Cummins2017a}. An initial seed corpus of 10k OpenCL kernels is mined from GitHub, using an oracle compiler (LLVM 3.9) to reject files that are not well-formed or do not contain instructions. The corpus is preprocessed using a custom LLVM pass to normalize syntactic choices --- a uniform code style is enforced to ensure consistent use of braces, whitespace, identifier names, etc. The preprocessed corpus is encoded using a hybrid token/character-level encoding~\cite{Cummins2017b}. \cc{More detail\ldots}
 
