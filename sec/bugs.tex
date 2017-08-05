@@ -162,9 +162,9 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
   \label{lst:compiler-crashes}%
 \end{figure}
 
-\paragraph{Front-end} We found the most compiler crash bugs in compiler frontends. Because DeepSmith generates syntactically incorrect code, some test-cases do not make it past the lexer, parser, and typechecker. This biases DeepSmith towards discovering bugs in compiler front-ends.
+\paragraph{Front-end} We found the most compiler crash bugs in compiler frontends. Because DeepSmith generates syntactically incorrect code, some test cases do not make it past the lexer, parser, and typechecker. This biases DeepSmith towards discovering bugs in compiler front-ends.
 
-Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for testbeds $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other testbeds raise a build failure. Such test-cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random token enumeration, and impossible through grammar-based tools.
+Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for testbeds $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other testbeds raise a build failure. Such test cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random token enumeration, and impossible through grammar-based tools.
 
 \cc{Anomalous build failures:} Some compilers are more permissive than others - \emph{integer literal is too large}
 
@@ -330,7 +330,7 @@ An error in the optimizer of Testbeds $4+$, $6+$ causes the \texttt{if} statemen
 % ls | wc -l
 % >> 4655
 
-Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in in which a kernel containing an undefined symbol will successfully compile without warning, then crash the program when attempting to run the kernel. Such a test-case is trivial to generate, yet could not be synthesized by CSmith.
+Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in in which a kernel containing an undefined symbol will successfully compile without warning, then crash the program when attempting to run the kernel. Such a test case is trivial to generate, yet could not be synthesized by CSmith.
 
 
 \subsubsection{Gray Areas}

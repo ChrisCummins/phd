@@ -1,8 +1,8 @@
 \section{DeepSmith}
 
-Generating test-cases for compilers is hard because their inputs are highly structured.
+Generating test cases for compilers is hard because their inputs are highly structured.
 
-DeepSmith is our open source test-case generator for compiler fuzzing~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}}. Figure~\ref{fig:deeptune} provides an overview of the system. Our compiler test-case generation approach consists of two parts: first, a generative model for code samples inferred from open-source codes; the second, test-case construction.
+DeepSmith is our open source test case generator for compiler fuzzing~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}}. Figure~\ref{fig:deeptune} provides an overview of the system. Our compiler test case generation approach consists of two parts: first, a generative model for code samples inferred from open-source codes; the second, test case construction.
 
 
 \subsection{Generative Model for Program Codes}
@@ -21,13 +21,13 @@ The trained network is sampled to generate new programs. The model is seeded wit
   \includegraphics[width=.80\columnwidth]{img/deepsmith} %
   % \vspace{-2em}%
   \caption{%
-    Test-case generation. An corpus of programs from GitHub is used to seed a generative model for program code, which are parameterized to construct test-cases.%
+    Test case generation. An corpus of programs from GitHub is used to seed a generative model for program code, which are parameterized to construct test cases.%
   }%
   \label{fig:deeptune}
 \end{figure}
 
 
-\subsection{Test-case Construction}
+\subsection{Test case Construction}
 
 OpenCL is an embedded compute kernel language, requiring host code to compile, execute, and transfer data between the host and device. For the purpose of compiler fuzzing, this requires a \emph{test harness} to run the generated OpenCL programs.
 
@@ -52,25 +52,25 @@ We note that, unlike the generative model, this test harness construction is lan
 % INNER JOIN CLgenMetas meta ON results.id = meta.id
 % INNER JOIN CLgenHarnesses harnesses on results.testcase_id = harnesses.id
 % WHERE cumtime < 48 * 3600;
-% 21.5\% of test-cases are compile-only stubs.
+% 21.5\% of test cases are compile-only stubs.
 
 
-\subsection{Test-case Execution}
+\subsection{Test case Execution}
 
 \begin{figure}
 	\centering %
 	\includegraphics[width=.62\columnwidth]{img/test_process}%
 	\caption{%
-		Test-case execution, and possible outcomes. Each test-case execution produces one of six possible outcomes: \{bf,bc,bto,c,to,\cmark\}.%
+		Test case execution, and possible outcomes. Each test case execution produces one of six possible outcomes: \{bf,bc,bto,c,to,\cmark\}.%
 	}%
 	\label{fig:test-process} %
 \end{figure}
 
-% We classify the result of executing a test-case into one of six classifications: build failure (\textbf{bf}), build crash (\textbf{bc}), runtime crash (\textbf{c}), or pass (\textbf{\cmark}). A \textbf{bf} occurs when compilation of a kernel fails, usually accompanied by an error message. A \textbf{bc} outcome occurs when the compiler crashes. A \textbf{c} outcome occurs when the program crashes during execution. The \textbf{bto} and \textbf{to} outcomes occur when the program compilation or execution time out, respectively.
+% We classify the result of executing a test case into one of six classifications: build failure (\textbf{bf}), build crash (\textbf{bc}), runtime crash (\textbf{c}), or pass (\textbf{\cmark}). A \textbf{bf} occurs when compilation of a kernel fails, usually accompanied by an error message. A \textbf{bc} outcome occurs when the compiler crashes. A \textbf{c} outcome occurs when the program crashes during execution. The \textbf{bto} and \textbf{to} outcomes occur when the program compilation or execution time out, respectively.
 
-Executing a test-case on a testbed leads to one of six possible outcomes: \textbf{\{bf,bc,bto,c,to,\cmark\}}, illustrated in Figure~\ref{fig:test-process}.
+Executing a test case on a testbed leads to one of six possible outcomes: \textbf{\{bf,bc,bto,c,to,\cmark\}}, illustrated in Figure~\ref{fig:test-process}.
 
-A \emph{build failure} (\textbf{bf}) occurs when online compilation of the OpenCL kernel fails, usually accompanied by an error diagnostic. A \emph{build crash} (\textbf{bc}) or \emph{build timeout} (\textbf{bto}) outcome occurs if the compiler crashes or fails to produce a binary within 60 seconds, respectively. For compile-only test-cases, a \emph{pass} (\textbf{\cmark}) is achieved if the compiler produces a binary. For test-cases in which the kernel is executed, kernel execution leads to one of three potential outcomes: \emph{runtime crash} (\textbf{c}) if the program crashes, \emph{timeout} (\textbf{to}) if the kernel fails to terminate within 60 seconds, or \emph{pass} (\textbf{\cmark}) if the kernel terminates gracefully and computes an output.
+A \emph{build failure} (\textbf{bf}) occurs when online compilation of the OpenCL kernel fails, usually accompanied by an error diagnostic. A \emph{build crash} (\textbf{bc}) or \emph{build timeout} (\textbf{bto}) outcome occurs if the compiler crashes or fails to produce a binary within 60 seconds, respectively. For compile-only test cases, a \emph{pass} (\textbf{\cmark}) is achieved if the compiler produces a binary. For test cases in which the kernel is executed, kernel execution leads to one of three potential outcomes: \emph{runtime crash} (\textbf{c}) if the program crashes, \emph{timeout} (\textbf{to}) if the kernel fails to terminate within 60 seconds, or \emph{pass} (\textbf{\cmark}) if the kernel terminates gracefully and computes an output.
 %
 %\begin{enumerate}
 %	\item \emph{Build failure} (\textbf{bf}) Online compilation of the OpenCL kernel fails, usually accompanied by an error diagnostic.
@@ -81,7 +81,7 @@ A \emph{build failure} (\textbf{bf}) occurs when online compilation of the OpenC
 %	\item \textbf{\cmark} \emph{Completion} The program terminates gracefully and produces an output.
 %\end{enumerate}
 
-When evaluating the outcomes of test-cases, \textbf{\{bc,bto\}} outcomes are of immediate interest, indicative of erroneous compiler behavior. For all other outcomes, \emph{differential tests} are required to expose anomalous behavior.
+When evaluating the outcomes of test cases, \textbf{\{bc,bto\}} outcomes are of immediate interest, indicative of erroneous compiler behavior. For all other outcomes, \emph{differential tests} are required to expose anomalous behavior.
 
 
 \subsection{Voting Heuristics for Differential Testing}
@@ -90,11 +90,11 @@ Voting on the output of programs across compilers has been used to circumvent th
 % In~\cite{Lidbury2015a}, a testbed is determined to have produced a wrong code result for a kernel if there is a majority output of at least 3 among the \textbf{\cmark} results for the kernel, and the testbed yields a \textbf{\cmark} result that disagrees with the majority.
 We extend this approach to describe not only miscompilations, but also anomalous build failures, crashes, and timeouts.
 
-A majority outcome exists if, for for a particular test-case ran on $n$ testbeds, at least $\ceil{\frac{2}{3}n}$ testbeds produce non-\textbf{\{bc,bto\}} results with the same outcome. We classify anomalous results with respect to the majority outcome for each test-case.
+A majority outcome exists if, for for a particular test case ran on $n$ testbeds, at least $\ceil{\frac{2}{3}n}$ testbeds produce non-\textbf{\{bc,bto\}} results with the same outcome. We classify anomalous results with respect to the majority outcome for each test case.
 
-An anomalous output (\textbf{ao}) occurs if, for a given test-case, the majority outcome is \textbf{\cmark}, at least $\ceil{\frac{2}{3}n}$ testbeds compute the same result, and a testbed yields a result which differs from this majority result. An \textbf{ao} result is indicative of a \emph{miscompilation}, a particularly hard to detect class of bug in which the compiler silently emits the wrong code. CSmith is designed specifically to target this class of bug.
+An anomalous output (\textbf{ao}) occurs if, for a given test case, the majority outcome is \textbf{\cmark}, at least $\ceil{\frac{2}{3}n}$ testbeds compute the same result, and a testbed yields a result which differs from this majority result. An \textbf{ao} result is indicative of a \emph{miscompilation}, a particularly hard to detect class of bug in which the compiler silently emits the wrong code. CSmith is designed specifically to target this class of bug.
 
-An anomalous build failure (\textbf{abf}), anomalous runtime crash (\textbf{ac}), or anomalous timeout (\textbf{ato}) result occurs if, for a given test-case, the majority outcome is non-\{\textbf{bf,c,to}\}, and a testbed yields a \textbf{bf,bc,to} result.
+An anomalous build failure (\textbf{abf}), anomalous runtime crash (\textbf{ac}), or anomalous timeout (\textbf{ato}) result occurs if, for a given test case, the majority outcome is non-\{\textbf{bf,c,to}\}, and a testbed yields a \textbf{bf,bc,to} result.
 
 % Only 2.3\% of CLSmith programs with anomalous outputs are insensitive to optimization level.
 
@@ -120,9 +120,9 @@ One might expect our approach --- generating small test cases in the style of ha
 Our approach is biased towards the front-end, since not all generated programs are well-formed and well-types.
 
 \paragraph{Undefined Behaviors} % aka. unambiguous observable behaviour
-If the output of a program depends on undefined or unspecified behavior, then comparing outputs across compilers is meaningless. Prior works have formulated random program generation so as to minimize or eradicate the possibility of undefined and unspecified behavior~\cite{Yang2011c,Le2013a,Le2015}, at the expense of expressiveness. Recently, work in Skeletal Program Enumeration~\cite{Zhang2017a} has relied on handchecking of C programs and tools such as CompCert~\cite{Leroy2013} and UBsan to detect false-positives. Since DeepSmith programs are not guaranteed to be free from undefined behaviors, and we can only determine if a program is well-formed empirically, additional filtering of test-cases is required to prevent false-positives.
+If the output of a program depends on undefined or unspecified behavior, then comparing outputs across compilers is meaningless. Prior works have formulated random program generation so as to minimize or eradicate the possibility of undefined and unspecified behavior~\cite{Yang2011c,Le2013a,Le2015}, at the expense of expressiveness. Recently, work in Skeletal Program Enumeration~\cite{Zhang2017a} has relied on handchecking of C programs and tools such as CompCert~\cite{Leroy2013} and UBsan to detect false-positives. Since DeepSmith programs are not guaranteed to be free from undefined behaviors, and we can only determine if a program is well-formed empirically, additional filtering of test cases is required to prevent false-positives.
 
-OpenCL doesn't have the rich tooling of C --- no CompCert and UBSan, there is much work to be done. GPUverify~\cite{Betts2012} and Oclgrind can catch some errors such as data races and out-of-bounds error checks, but as we have shown in Section~\ref{sec:motivation}, this tool is not without flaws. Compiler warnings are useful for obvious missteps (e.g. comparison between pointer and integer), but our approach does not rule out manual inspection. DeepSmith programs are easily interpretable --- they are generally short programs built on common language constructs, so this process is not as bad as it could be. We have not yet discovered a test-case which was not detectable by automated filtering and a superficial handcheck.
+OpenCL doesn't have the rich tooling of C --- no CompCert and UBSan, there is much work to be done. GPUverify~\cite{Betts2012} and Oclgrind can catch some errors such as data races and out-of-bounds error checks, but as we have shown in Section~\ref{sec:motivation}, this tool is not without flaws. Compiler warnings are useful for obvious missteps (e.g. comparison between pointer and integer), but our approach does not rule out manual inspection. DeepSmith programs are easily interpretable --- they are generally short programs built on common language constructs, so this process is not as bad as it could be. We have not yet discovered a test case which was not detectable by automated filtering and a superficial handcheck.
 
 \paragraph{OpenCL Versions and Extensions} OpenCL is a fast evolving language, with six major revisions in eight years. Additionally, support for optional language extensions is inconsistent between vendors. Since we do not version the GitHub corpus on which we built the DeepSmith models, this has the potential to lead to false-positive results for programs which depend upon features which are not supported by a testbed. For example, not all testbeds support the optional \texttt{cl\_khr\_fp64} extension which provides support for double-precision floating point. We found that such results were trivially detectable through compiler error messages, and used to prevent false-positives for anomalous build failures.
 

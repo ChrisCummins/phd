@@ -1,7 +1,7 @@
 \begin{abstract}
 %We introduce DeepSmith, a novel approach to the compiler validation problem. While prior works require expert domain knowledge to craft random program generators from probabilistic grammars or program mutation, we instead frame the generation of random programs a language modeling problem. We apply deep learning techniques over millions of lines of handwritten code in order to automatically construct models capable of generating plausible, human-like code samples.
 
-% Our approach complements the desires of compiler developers, who desire small test-cases based on ``plausible'' language constructs.
+% Our approach complements the desires of compiler developers, who desire small test cases based on ``plausible'' language constructs.
 
 Compilers should produce correct code for valid inputs, and produce meaningful errors when inputs are invalid. Fixed test-suites and formal verification techniques cannot ensure these properties over the enormous range of possible inputs and complexity of optimizing compilers, leading to the development of random program generators that attempt to find compiler bugs by comparing the outputs of programs across compilers.
 
@@ -11,7 +11,7 @@ Grammar-based random program generators require extensive development effort, an
 
 We introduce DeepSmith, a novel approach to the compiler validation problem. By framing the generation of random programs as a language modeling problem, we apply deep learning techniques over large corpuses of open source codes to learn models which describe the structure of real world codes. We use these models to generate tens of thousands of new programs, and show how established differential testing methodologies can be used to expose bugs in compilers which are symptomatic of real hand-written code.
 
-We apply our technique to OpenCL, automatically exposing bugs in OpenCL compilers which are likely to arise from real world use cases, in a ways which are not possible using existing techniques. In over 1,000 hours of automated testing of commercial and open source compilers, we discover bugs in all of them, submitting XX bug reports. Our test-cases are on average two orders of magnitude smaller than the state-of-the-art, require $3.03\times$ less time to generate and evaluate, and expose bugs which could not be found using existing techniques.
+We apply our technique to OpenCL, automatically exposing bugs in OpenCL compilers which are likely to arise from real world use cases, in a ways which are not possible using existing techniques. In over 1,000 hours of automated testing of commercial and open source compilers, we discover bugs in all of them, submitting XX bug reports. Our test cases are on average two orders of magnitude smaller than the state-of-the-art, require $3.03\times$ less time to generate and evaluate, and expose bugs which could not be found using existing techniques.
 
-% Our paper serves two purposes: first, we propose a novel methodology for compiler test-case generation, capable of finding bugs at a faster rate and covering more areas of the compiler than existing approaches; second, we report on the state of OpenCL implementations.
+% Our paper serves two purposes: first, we propose a novel methodology for compiler test case generation, capable of finding bugs at a faster rate and covering more areas of the compiler than existing approaches; second, we report on the state of OpenCL implementations.
 \end{abstract}

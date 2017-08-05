@@ -4,7 +4,7 @@ In this section we compare DeepSmith to CLSmith~\cite{Lidbury2015a}, the state-o
 
 \subsection{Experimental Setup}
 
-We ran each program generator using its default configuration for 48 hours on each of the 10 testbeds of Table~\ref{tab:platforms}. We ran the tests twice, first with optimizations disabled ($-$), then with optimizations enabled ($+$). Total runtime for a test-case consists of the generation time, and the time to execute the test-case. For DeepSmith, the time to generate test-harness is included.
+We ran each program generator using its default configuration for 48 hours on each of the 10 testbeds of Table~\ref{tab:platforms}. We ran the tests twice, first with optimizations disabled ($-$), then with optimizations enabled ($+$). Total runtime for a test case consists of the generation time, and the time to execute the test case. For DeepSmith, the time to generate test-harness is included.
 
 
 \subsection{Results Overview}
@@ -21,11 +21,11 @@ We ran each program generator using its default configuration for 48 hours on ea
 
 Table~\ref{tab:outcomes} shows the outcomes of 48 hours of consecutive testing for each of the platforms from Table~\ref{tab:platforms}, with compiler optimizations disabled ($-$) and optimizations enabled ($+$).
 
-An average of XX CLSmith and XX DeepSmith test-cases were evaluated on each device, with an average time per test-case of XX and XX respectively. The XX-fold increase in testing throughput achieved by DeepSmith is a result of XXX. Figure~\ref{fig:runtimes} shows the times taken to generate and execute test-cases. DeepSmith generation time is proportional to program length, benchmarked at an average 465 chars / second. For Clsmith, generation time depends on the number of rejections which are required before production of statically verified code is correct \cc{ldots}.
+An average of XX CLSmith and XX DeepSmith test cases were evaluated on each device, with an average time per test case of XX and XX respectively. The XX-fold increase in testing throughput achieved by DeepSmith is a result of XXX. Figure~\ref{fig:runtimes} shows the times taken to generate and execute test cases. DeepSmith generation time is proportional to program length, benchmarked at an average 465 chars / second. For Clsmith, generation time depends on the number of rejections which are required before production of statically verified code is correct \cc{ldots}.
 
-Optimization level generally does not affect testing throughput significantly, with the exception of testbed $7+$, in which the slow compilation of kernels containing structs greatly reduces the number of test-cases evaluated. This is a result of CLSmith's heavy reliance on structs, and is a known issue --- in XX the authors omnit testing on this testbed for this reason.
+Optimization level generally does not affect testing throughput significantly, with the exception of testbed $7+$, in which the slow compilation of kernels containing structs greatly reduces the number of test cases evaluated. This is a result of CLSmith's heavy reliance on structs, and is a known issue --- in XX the authors omnit testing on this testbed for this reason.
 
-83.8\% of CLSmith test-cases produce a majority \textbf{\cmark} outcome. Proportionally, DeepSmith test-cases are less likely to produce a majority outcome at 47.9\% of the total. Neither CLSmith or DeepTune guarantee program termination with XX\% of non-\textbf{\{bf,c\}} majority outcomes reaching 60 seconds timeouts.
+83.8\% of CLSmith test cases produce a majority \textbf{\cmark} outcome. Proportionally, DeepSmith test cases are less likely to produce a majority outcome at 47.9\% of the total. Neither CLSmith or DeepTune guarantee program termination with XX\% of non-\textbf{\{bf,c\}} majority outcomes reaching 60 seconds timeouts.
 
 
 \subsection{Comparison of Results}
@@ -37,7 +37,7 @@ For all except testbed $3\pm$, DeepSmith exposes more compiler crashes than CLSm
 The integrated GPU Conifgs.\ we tested ($3\pm$) frequently failed to compile CLSmith kernels, resulting in over 10,000 compiler crashes \textbf{bc} or timeouts \textbf{bc}.
 % 10,318
 % SELECT stderr,COUNT(*) FROM CLSmithResults LEFT JOIN CLSmithMetas ON CLSmithResults.id=CLSmithMetas.id WHERE testbed_id=13 AND CLSmithResults.outcome='bc' AND cumtime < 48 * 3600 GROUP BY CLSmithResults.stderr;
-Of the build crashes, 68\% failed silently, and the remainder were caused by the same pointer assignment assertion for which DeepSmith generated a 4 line test-case in Figure~\ref{lst:intel-llvm-assertion}. \cc{We also generated silent build crashes, but with an average line count of XX, versus CLSmith's line count of XX.}
+Of the build crashes, 68\% failed silently, and the remainder were caused by the same pointer assignment assertion for which DeepSmith generated a 4 line test case in Figure~\ref{lst:intel-llvm-assertion}. \cc{We also generated silent build crashes, but with an average line count of XX, versus CLSmith's line count of XX.}
 
 % 622 total bc
 Testbeds $4$, $5$, $6$, and $7$ have a number CLSmith bc outcomes when optimizations are enabled. Of the non-silent crashes, the cause is the OpenCL vectorizer pass, same as Figure~\ref{lst:intel-vectorizer-segfault}.
@@ -53,7 +53,7 @@ Table~\ref{tab:classifications} shows the results of applying voting heuristics 
 	\centering %
 	\includegraphics[width=\columnwidth]{build/img/runtimes}%
 	\caption{%
-		Runtimes, excluding timeouts. On average, DeepSmith test-cases are evaluated $XX\times$ faster than CLSmith ($2.45\times$, $4.46\times$, and $66.54\times$ for generation, execution and reduction, respectively).%
+		Runtimes, excluding timeouts. On average, DeepSmith test cases are evaluated $XX\times$ faster than CLSmith ($2.45\times$, $4.46\times$, and $66.54\times$ for generation, execution and reduction, respectively).%
 %    Total speedup is 3.03x
 %    CLgen generation is 2.45x faster than CLSmith
 %    CLgen execution is 4.46x faster than CLSmith
@@ -79,18 +79,18 @@ Similarly, Intel Testbeds 4--7 (but not 3) reject DeepSmith kernels which omit a
 Testbeds $1\pm$, $2\pm$ reject kernels which \texttt{size\_t} parameters.
 
 
-\subsection{Comparison of Test-cases}
+\subsection{Comparison of Test cases}
 
 \begin{figure}
 	\centering %
 	\includegraphics[width=\columnwidth]{build/img/kernel-sizes}%
 	\caption{%
-		Kernel line counts, grouped by outcome. DeepSmith test-cases are on average two orders of magnitude smaller than CLSmith.%
+		Kernel line counts, grouped by outcome. DeepSmith test cases are on average two orders of magnitude smaller than CLSmith.%
 	}%
 	\label{fig:kernel-sizes} %
 \end{figure}
 
-\paragraph{Test-case Size}
+\paragraph{Test case Size}
 %SELECT MIN(linecount) as minlen,
 %->    AVG(linecount) as meanlen,
 %->        MAX(linecount) as maxlen
@@ -104,7 +104,7 @@ Testbeds $1\pm$, $2\pm$ reject kernels which \texttt{size\_t} parameters.
 %+--------+-----------+--------+
 %|     56 | 1186.8496 |  11222 |
 %+--------+-----------+--------+
-The average CLSmith program is 1189 lines long (excluding headers). CLSmith kernels are unreadable, requiring automatic or manual test-case reduction.
+The average CLSmith program is 1189 lines long (excluding headers). CLSmith kernels are unreadable, requiring automatic or manual test case reduction.
 %SELECT MIN(linecount) as minlen,
 %->    AVG(linecount) as meanlen,
 %->        MAX(linecount) as maxlen
@@ -127,7 +127,7 @@ Average CLgen kernel is 20 lines long.
 % WHERE cumtime < 48 * 3600;
 Over the course of testing, a combined $3.39 \times 10^8$ of CLSmith code was evaluated, compared to $3.76 \times 10^6$ lines of DeepSmith code.
 
-\paragraph{Test-case Reduction} We used a modified version of C-Reduce which supports OpenCL~\cite{Pflanzer2016} to perform automatic test-case, using the default settings. The available implementation supports reduction only of anomalous-output test-cases, though this could be extended to support other outcomes (we did not do this). Test-case reduction is a time-consuming process, even with the parallelized implementation. Figure~\ref{fig:kernel-sizes} shows the runtimes of reductions, and Figure~\cc{TODO} shows the test-case sizes before and after reduction. For CLSmith-generated kernels, test case reduction is necessary to expose the problematic code from within the hundreds of lines of generated program. DeepSmith kernels are on average an order of magnitude smaller. We found that reduction \ldots
+\paragraph{Test case Reduction} We used a modified version of C-Reduce which supports OpenCL~\cite{Pflanzer2016} to perform automatic test case, using the default settings. The available implementation supports reduction only of anomalous-output test cases, though this could be extended to support other outcomes (we did not do this). Test case reduction is a time-consuming process, even with the parallelized implementation. Figure~\ref{fig:kernel-sizes} shows the runtimes of reductions, and Figure~\cc{TODO} shows the test case sizes before and after reduction. For CLSmith-generated kernels, test case reduction is necessary to expose the problematic code from within the hundreds of lines of generated program. DeepSmith kernels are on average an order of magnitude smaller. We found that reduction \ldots
 
 % Average GitHub charchounts: 1451
 % Average GitHub linecounts: 53
@@ -170,7 +170,7 @@ Over the course of testing, a combined $3.39 \times 10^8$ of CLSmith code was ev
 \end{figure}
 
 In 48 hours of testing, DeepSmith triggered 9 distinct compiler assertions, CLSmith 2. Both of the assertions triggered by CLSmith were also triggered by CLgen.
-% Test-case sizes:
+% Test case sizes:
 %
 % SELECT assertion, AVG(linecount)
 % FROM CLSmithResults results
@@ -202,7 +202,7 @@ The CLSmith kernels which triggered the two assertions were on average 1411 and 
 %LEFT JOIN Configurations ON results.testbed_id = Configurations.id
 %INNER JOIN CLgenAssertions assertions ON results.stderr_id = assertions.id
 %WHERE assertion = 'ASSERTION FAILED: srcType != ir::TYPE_U64';
-We were able to trigger the assertion \emph{srcType != ir::TYPE\_U64} in Testbeds $3\pm$ with only a 3 line test-case.
+We were able to trigger the assertion \emph{srcType != ir::TYPE\_U64} in Testbeds $3\pm$ with only a 3 line test case.
 %
 DeepSmith also triggered \emph{unreachable!} compiler errors in 180 distinct test cases, CLSmith triggered 0.
 
@@ -228,7 +228,7 @@ Overall, CLSmith is better at finding miscompilations. We believe our approach t
 %	\centering %
 %	\includegraphics[width=\columnwidth]{build/img/total-tests}%
 %	\caption{%
-%		Test-cases. \cc{TODO: Replot with the fastest and slowest device for each}%
+%		Test cases. \cc{TODO: Replot with the fastest and slowest device for each}%
 %	}%
 %	\label{fig:total-tests} %
 %\end{figure}
