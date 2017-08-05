@@ -26,8 +26,13 @@ def oclgrind_verify(cmd):
 
     if proc.returncode:
         return False
-
-    if "Oclgrind: 1 errors generated" in stderr:
+    elif "Oclgrind: 1 errors generated" in stderr:
+        return False
+    elif "warning: incompatible pointer" in stderr:
+        return False
+    elif "Invalid read of size" in stderr:
+        return False
+    elif "Invalid write of size" in stderr:
         return False
 
     return True

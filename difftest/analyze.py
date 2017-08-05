@@ -345,11 +345,8 @@ def verify_optimization_sensitive(session: session_t, tables: Tableset, result) 
             session.query(tables.classifications)\
                 .filter(tables.classifications.id.in_([result.id, complement_id]))\
                 .delete(synchronize_session=False)
-                # .filter(tables.classifications.id == result.id)\
     else:
         print(f"no complement result for {tables.name} result {result.id}")
-        # session.query(tables.classifications)\
-        #     .filter(tables.classifications.id == result.id).delete()
 
 
 def prune_w_classifications(session: session_t, tables: Tableset) -> None:
