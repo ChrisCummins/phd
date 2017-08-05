@@ -12,7 +12,7 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
 \begin{lrbox}{\OclgrindSemaAssertion}
   \hspace{1.5em}
   \begin{lstlisting}
-    __kernel void A(__global unsigned char* a, __global unsigned char* b) {
+    kernel void A(global unsigned char* a, global unsigned char* b) {
       unsigned long c = get_global_id(0);
       d[0] = (mad24(f, (int)(a[0], b[get_global_id(0)])) % (d * (d + 3)) + (c / 2))] * a[c + 1];
     }
@@ -33,6 +33,82 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
   \label{lst:bad-syntax}
 \end{figure}
 %%%%%%%%%% INVALID SYNTAX
+
+
+%%%%%%%%%% TYPE ERRORS
+\newsavebox{\NvidiaRecursionSegfault}
+\begin{lrbox}{\NvidiaRecursionSegfault}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(float4 a, global float4* b, global float4* c, unsigned int d, global double* e, global int2* f, global int4* g, constant int* h, constant int* i) {
+      A(a, b, c, d, d, e, f, g, h);
+    }
+  \end{lstlisting}
+\end{lrbox}
+% HAND REDUCED: kernel void A(constant int2* a, global int* b) { A(b, a); }
+
+\newsavebox{\OclgrindUncorrectedTypos}
+\begin{lrbox}{\OclgrindUncorrectedTypos}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(global float* a, global float* b) {
+      a[0] = max(a[c], b[2]);
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\begin{figure}
+  \centering
+  \subfloat[Testbeds $1\pm$, $2\pm$ segementation fault.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaRecursionSegfault}}}%
+    \label{lst:nvidia-recursion-segfault}
+  }\\%
+  \subfloat[Testbeds $10\pm$ assertion \emph{Uncorrected typos!} during semantic analysis.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindUncorrectedTypos}}}%
+    \label{lst:oclgrind-uncorrected-typos}
+  }\\%
+  \caption{Kernels with type errors which crash compilers.}
+  \label{}
+\end{figure}
+%%%%%%%%%% TYPE ERRORS
+
+\texttt{kernel void A(global float* a) { (float4)(a); }}
+
+\newsavebox{\NvidiaCompileSegfault}
+\begin{lrbox}{\NvidiaCompileSegfault}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(global float* a, local float* b, local float* c, int d, int e) {
+      int f, g;
+      int h = get_local_id(0);
+      int i = get_local_id(1);
+      int j = get_global_id(0);
+      global char* k = c + f * g + f;
+      if (f + 1 < h)
+        b[f * d + g * h + g] = g * f;
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\XeonPhiSegfault}
+\begin{lrbox}{\XeonPhiSegfault}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(void) {
+      global int* a;
+      unsigned int* b;
+      b = a[0];
+      a[0] = b;
+      a[0] = b;
+      barrier(1);
+      if (get_global_id(0) == 0) {
+        *a = 0;
+      }
+      a[get_local_id(0)] = 0;
+    }
+  \end{lstlisting}
+\end{lrbox}
+
 
 %%%%%%%%%% VECTORIZER
 \newsavebox{\IntelVectorizerSegfault}
@@ -58,60 +134,25 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
 \end{figure}
 %%%%%%%%%% VECTORIZER
 
-\newsavebox{\NvidiaCompileSegfault}
-\begin{lrbox}{\NvidiaCompileSegfault}
+\newsavebox{\IntelGtDoubleAssertion}
+\begin{lrbox}{\IntelGtDoubleAssertion}
   \hspace{1.5em}
   \begin{lstlisting}
-    __kernel void A(__global float* a, __local float* b, __local float* c, int d, int e) {
-      int f, g;
-      int h = get_local_id(0);
-      int i = get_local_id(1);
-      int j = get_global_id(0);
-      __global char* k = c + f * g + f;
-      if (f + 1 < h)
-        b[f * d + g * h + g] = g * f;
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\NvidiaRecursionSegfault}
-\begin{lrbox}{\NvidiaRecursionSegfault}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    __kernel void A(float4 a, __global float4* b, __global float4* c, unsigned int d, __global double* e, __global int2* f, __global int4* g, __constant int* h, __constant int* i) {
-      A(a, b, c, d, d, e, f, g, h);
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\XeonPhiSegfault}
-\begin{lrbox}{\XeonPhiSegfault}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    __kernel void A(void) {
-      __global int* a;
-      unsigned int* b;
-      b = a[0];
-      a[0] = b;
-      a[0] = b;
-      barrier(1);
-      if (get_global_id(0) == 0) {
-        *a = 0;
-      }
-      a[get_local_id(0)] = 0;
+    kernel void A(read_only image2d_t a, global double2* b) {
+      b[0] = get_global_id(0);
     }
   \end{lstlisting}
 \end{lrbox}
 
 \begin{figure}
   \centering %
+  \subfloat[Testbeds $3\pm$ assertion \emph{sel.hasDoubleType()} during code generation.]{%
+      \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelGtDoubleAssertion}}}%
+      \label{lst:intel-gt2-double-assertion}
+    }\\%
   \subfloat[Testbeds $1\pm$ segementation fault.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaCompileSegfault}}}%
     \label{lst:nvidia-compile-segfault}
-  }\\%
-  \subfloat[Testbeds $1\pm$, $2\pm$ segementation fault.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaRecursionSegfault}}}%
-    \label{lst:nvidia-recursion-segfault}
   }\\%
   \subfloat[Testbeds $7\pm$ segementation fault.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSegfault}}}%
@@ -297,6 +338,8 @@ Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in in which a kernel conta
 Figure~\ref{lst:xeon-phi-invalid-write}.
 
 In Testbeds $1\pm$, out-of-bounds memory reads and writes can be used to overflow into neighboring kernel arguments (\cc{Probably not interesting}).
+
+Out-of-bounds accesses to buffer arguments in testbeds $1\pm$, $2\pm$ bleed into the next buffer.
 
 
 \newsavebox{\XeonPhiInvalidWrite}
