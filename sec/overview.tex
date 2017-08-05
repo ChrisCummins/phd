@@ -2,7 +2,7 @@
 
 \paragraph{Test case generation} We mine GitHub for OpenCL programs, which we use to construct a corpus of representative code. We learn a generative model over this corpus, using syntactic level language modeling. DeepSmith, our deep learning program generator, automatically and rapidly synthesizes an unbounded number of programs for fuzz testing compilers.
 
-\paragraph{OpenCL testbeds} We conducted testing of 10 OpenCL testbeds, summarized in Table~\ref{tab:platforms}. Each testbed consists of a \emph{<device, driver>} pair. We covered the broadest range of hardware available to us: 3 GPUs, 4 CPUs, an Accelerator, and an Emulator. 8 of the compilers tested are commercial products, 2 of them are open source. Our suite of testbeds includes both combinations of different drivers for the same device, and different devices using the same driver.
+\paragraph{OpenCL testbeds} We conducted testing of 10 OpenCL testbeds, summarized in Table~\ref{tab:platforms}. Each testbed consists of a \emph{<device, driver>} pair. We covered the broadest range of hardware available to us: 3 GPUs, 4 CPUs, a co-processor, and an emulator. 7 of the compilers tested are commercial products, 3 of them are open source. Our suite of testbeds includes both combinations of different drivers for the same device, and different devices using the same driver.
 
 
 \begin{table*}[t!]

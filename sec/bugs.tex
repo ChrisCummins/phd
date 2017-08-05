@@ -285,7 +285,7 @@ Testbeds $1+$ and $2+$ hang on large loop bounds. Testbeds $3\pm$ hang while ass
 \begin{lrbox}{\IntelSizetIntUnreduced}
   \hspace{1.5em}
   \begin{lstlisting}
-    __kernel void A(__global double* a, __global double* b, __global double* c, int d, int e) {
+    kernel void A(global double* a, global double* b, global double* c, int d, int e) {
       double f;
       int g = get_global_id(0);
       if (g < e - d - 1) {
@@ -299,13 +299,29 @@ Testbeds $1+$ and $2+$ hang on large loop bounds. Testbeds $3\pm$ hang while ass
 \begin{lrbox}{\PoclUndefinedSymbols}
   \hspace{1.5em}
   \begin{lstlisting}
-    __kernel void A(__local int* a) {
+    kernel void A(local int* a) {
       for (int b = 0; b < 100; b++) {
         B(a);
       }
     }
   \end{lstlisting}
 \end{lrbox}
+
+
+\newsavebox{\IntelFloatCharCast}
+\begin{lrbox}{\IntelFloatCharCast}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(global float* a, global float* b, global float* c, const int d) {
+      int e = get_global_id(0);
+      if (e < d) {
+        c[e] = a[e] + b[e];
+      }
+      b[e] = (char)(c[e] + d);
+    }
+  \end{lstlisting}
+\end{lrbox}
+
 
 
 \begin{figure}
@@ -316,6 +332,10 @@ Testbeds $1+$ and $2+$ hang on large loop bounds. Testbeds $3\pm$ hang while ass
   }\\%
   \subfloat[Compilation should fail due to call to undefined function \texttt{B()}; Testbeds $6\pm$ silently succeed then crash upon kernel execution.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\PoclUndefinedSymbols}}}%
+    \label{lst:pocl-undefined-symbols}
+  }\\%
+  \subfloat[Testbeds $3\pm$ incorrectly cast yields \texttt{b[e] = 127}, not \texttt{b[e] = 0}.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelFloatCharCast}}}%
     \label{lst:pocl-undefined-symbols}
   }\\%
   \caption{Example kernels which are miscompiled.}%
