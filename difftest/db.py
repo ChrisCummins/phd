@@ -673,6 +673,34 @@ class CLgenReduction(Base):
     result = sql.orm.relationship("CLgenResult")
 
 
+# Clang-compile test ##########################################################
+
+class CLgenClangResult(Base):
+    """ params used by compile-only """
+    __tablename__ = "CLgenClangResults"
+    id = sql.Column(sql.Integer, primary_key=True)
+    program_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenPrograms.id"), nullable=False, index=True)
+    clang = sql.Column(sql.String(12), nullable=False, index=True)
+    status = sql.Column(sql.Integer, nullable=False, index=True)
+    runtime = sql.Column(sql.Float, nullable=False)
+    stderr_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenClangStderrs.id"), nullable=False)
+
+    stderr = sql.orm.relationship("CLgenClangStderr", back_populates="result")
+
+    __table_args__ = (
+        sql.UniqueConstraint('program_id', 'clang', name='program_clang_pair'),
+    )
+
+
+class CLgenClangStderr(Base):
+    __tablename__ = "CLgenClangStderrs"
+    id = sql.Column(sql.Integer, primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, unique=True)
+    stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+
+    result = sql.orm.relationship("CLgenClangResult", back_populates="stderr")
+
+
 # Compile-only tests ##########################################################
 
 
@@ -860,6 +888,8 @@ Tableset = namedtuple('Tableset', [
         'stderrs',
         'majorities',
         'assertions',
+        'clangs',
+        'clang_stderrs',
     ])
 
 CLSMITH_TABLES = Tableset(name="CLSmith",
@@ -868,14 +898,16 @@ CLSMITH_TABLES = Tableset(name="CLSmith",
     params=cl_launcherParams, reductions=CLSmithReduction,
     meta=CLSmithMeta, classifications=CLSmithClassification,
     stdouts=CLSmithStdout, stderrs=CLSmithStderr,
-    majorities=CLSmithMajority, assertions=CLSmithAssertion)
+    majorities=CLSmithMajority, assertions=CLSmithAssertion,
+    clangs=None, clang_stderrs=None)
 CLGEN_TABLES = Tableset(name="CLgen",
     results=CLgenResult, testcases=CLgenTestCase,
     programs=CLgenProgram, harnesses=CLgenHarness,
     params=cldriveParams, reductions=CLgenReduction,
     meta=CLgenMeta, classifications=CLgenClassification,
     stdouts=CLgenStdout, stderrs=CLgenStderr,
-    majorities=CLgenMajority, assertions=CLgenAssertion)
+    majorities=CLgenMajority, assertions=CLgenAssertion,
+    clangs=CLgenClangResult, clang_stderrs=CLgenClangStderr)
 
 
 class InsufficientDataError(ValueError):

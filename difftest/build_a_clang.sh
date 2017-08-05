@@ -4,8 +4,8 @@ build_a_clang() {
     git clone http://llvm.org/git/llvm.git $dest
     cd $dest/tools
     git clone http://llvm.org/git/clang.git
-    cd $dest/projects
+    cd ../projects
     git clone http://llvm.org/git/compiler-rt.git
 }
 
-build_a_clang llvm
+build_a_clang $1
