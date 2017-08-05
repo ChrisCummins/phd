@@ -25,7 +25,7 @@ An average of XX CLSmith and XX DeepSmith test cases were evaluated on each devi
 
 Optimization level generally does not affect testing throughput significantly, with the exception of testbed $7+$, in which the slow compilation of kernels containing structs greatly reduces the number of test cases evaluated. This is a result of CLSmith's heavy reliance on structs, and is a known issue --- in XX the authors omnit testing on this testbed for this reason. ``Compilation for the Xeon Phi co-processor is prohibitively slow when relatively large structs are used with op- timizations enabled.''
 
-83.8\% of CLSmith test cases produce a majority \textbf{\cmark} outcome. Proportionally, DeepSmith test cases are less likely to produce a majority outcome at 47.9\% of the total. Neither CLSmith or DeepTune guarantee program termination with XX\% of non-\textbf{\{bf,c\}} majority outcomes reaching 60 seconds timeouts.
+83.8\% of CLSmith test cases produce a majority \textbf{\cmark} outcome. Proportionally, DeepSmith test cases are less likely to produce a majority outcome at 47.9\% of the total. Neither CLSmith or DeepTune guarantee program termination, although DeepSmith programs more likely to terminate --- XX\% majority-\textbf{to} vs XX\% for CLSmith.
 
 
 \subsection{Comparison of Results}

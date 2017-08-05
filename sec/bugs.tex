@@ -184,20 +184,20 @@ We found the most compiler crash bugs in compiler frontends. Because DeepSmith g
   \label{lst:compiler-crashes}%
 \end{figure}
 
+\paragraph{Undeclared variables} Figure~\ref{lst:oclgrind-uncorrected-typos}
 
-Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for testbeds $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other testbeds raise a build failure. Such test cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random token enumeration, and impossible through grammar-based tools.
+\paragraph{Type errors} Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for testbeds $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other testbeds raise a build failure. Such test cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random token enumeration, and impossible through grammar-based tools.
 
-\paragraph{Unreachable code} To date we have identified 207 distinct cases where unreachable code is executed during parsing. \cc{How many *distinct* traces?}
+Figure~\ref{lst:nvidia-recursion-segfault} induces an error in handling of global to constant address qualifiers.
+
+\paragraph{Unreachable code} To date we have identified 207 distinct cases where unreachable code is executed. \cc{How many *distinct* traces?}
 
 \paragraph{Vectorizer Crashes} Figure~\ref{lst:intel-vectorizer-segfault} segfaults during vectorization. \cc{How many? Is there a pattern?}
 
 \paragraph{Code generation} Figures~\ref{lst:intel-llvm-assertion} and~\ref{lst:intel-scalartype-assertion} cause failures in the LLVM code generator backend.
 
-Occasionally, the cause of the crash is unclear, as in Figures~\ref{lst:nvidia-recursion-segfault} and~\ref{lst:nvidia-compile-segfault} which segfault the compiler without warning. We found the two commercial vendors NVIDIA and Intel were the most likely to fail silently. When a commerical compiler crashes without an error message, we can only report and move on.
 
-
-\paragraph{Compiler Hangs}
-Testbeds $1+$ and $2+$ hang on large loop bounds. Testbeds $3\pm$ hang while assigning a value from a pointer address. Testbeds $4+$, $5+$, $6+$, $7+$ hang on non-terminating while loops.
+\paragraph{Compiler Hangs} Testbeds $1+$ and $2+$ hang on large loop bounds \cc{how large does the loop bound have to be?}. Testbeds $3\pm$ hang while assigning a value from a pointer address. All Intel compilers (testbeds $4+$, $5+$, $6+$, $7+$) hang during optimization of non-terminating while loops.
 
 \newsavebox{\IntelPtrCompilerHang}
 \begin{lrbox}{\IntelPtrCompilerHang}
@@ -327,8 +327,8 @@ Testbeds $1+$ and $2+$ hang on large loop bounds. Testbeds $3\pm$ hang while ass
 \end{lrbox}
 
 
-\newsavebox{\IntelFloatCharCast}
-\begin{lrbox}{\IntelFloatCharCast}
+\newsavebox{\BeignetCastError}
+\begin{lrbox}{\BeignetCastError}
   \hspace{1.5em}
   \begin{lstlisting}
     kernel void A(global float* a, global float* b, global float* c, const int d) {
@@ -354,22 +354,24 @@ Testbeds $1+$ and $2+$ hang on large loop bounds. Testbeds $3\pm$ hang while ass
     \label{lst:pocl-undefined-symbols}
   }\\%
   \subfloat[Testbeds $3\pm$ incorrectly cast yields \texttt{b[e] = 127}, not \texttt{b[e] = 0}.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelFloatCharCast}}}%
-    \label{lst:pocl-undefined-symbols}
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetCastError}}}%
+    \label{lst:beignet-cast-error}
   }\\%
   \caption{Example kernels which are miscompiled.}%
   \label{lst:wrong-code}%
 \end{figure}
 
 
-An error in the optimizer of Testbeds $4+$, $6+$ causes the \texttt{if} statement of Figure~\ref{lst:intel-size_t-int-unreduced} to be executed.
+\paragraph{Thread-dependent flow control} An error in the optimizer of Testbeds $4+$, $6+$ causes the \texttt{if} statement of Figure~\ref{lst:intel-size_t-int-unreduced} to be executed.
 % cd ~/data/kernels/github-pp
 % ls | xargs egrep -l 'int [A-Z]+ = get_global_id\(' -- | wc -l
 % >> 2144
 % ls | wc -l
 % >> 4655
 
-Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in in which a kernel containing an undefined symbol will successfully compile without warning, then crash the program when attempting to run the kernel. Such a test case is trivial to generate, yet could not be synthesized by CSmith.
+\paragraph{Silently succeeding} Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in in which a kernel containing an undefined symbol will successfully compile without warning, then crash the program when attempting to run the kernel. Such a test case is trivial to generate, yet could not be synthesized by CSmith.
+
+\paragraph{Type conversion} Figure~\ref{lst:beignet-cast-error}. The code performs int and float addition, casting the result to a char, then storing in float. Changing any one of those 
 
 
 \subsection{Gray Areas and False Positives}
