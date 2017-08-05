@@ -151,25 +151,24 @@ def set_classifications(session, tables: Tableset) -> None:
     print(f"Determining {tables.name} wrong-code classifications ...", file=sys.stderr)
     session.execute(f"""
 INSERT INTO {tables.classifications.__tablename__}
-SELECT {tables.results.__tablename__}.id, {CLASSIFICATIONS_TO_INT["w"]}
-FROM {tables.results.__tablename__}
-LEFT JOIN {tables.testcases.__tablename__} ON {tables.results.__tablename__}.testcase_id={tables.testcases.__tablename__}.id
-LEFT JOIN {tables.majorities.__tablename__} ON {tables.testcases.__tablename__}.id={tables.majorities.__tablename__}.id
+SELECT results.id, {CLASSIFICATIONS_TO_INT["w"]}
+FROM {tables.results.__tablename__} results
+LEFT JOIN {tables.testcases.__tablename__} testcases ON results.testcase_id = testcases.id
+LEFT JOIN {tables.majorities.__tablename__} majorities ON results.testcase_id = majorities.id
 WHERE outcome = {OUTCOMES_TO_INT["pass"]}
 AND maj_outcome = {OUTCOMES_TO_INT["pass"]}
 AND outcome_majsize >= {min_majsize}
-AND stdout_majsize >= CEILING(2 * outcome_majsize / 3)
+AND stdout_majsize >= CEILING((2 * outcome_majsize) / 3)
 AND stdout_id <> maj_stdout_id
-AND oclverified = 1
 """)
 
     print(f"Determining {tables.name} anomalous build-failures ...", file=sys.stderr)
     session.execute(f"""
 INSERT INTO {tables.classifications.__tablename__}
-SELECT {tables.results.__tablename__}.id, {CLASSIFICATIONS_TO_INT["bf"]}
-FROM {tables.results.__tablename__}
-LEFT JOIN {tables.testcases.__tablename__} ON {tables.results.__tablename__}.testcase_id={tables.testcases.__tablename__}.id
-LEFT JOIN {tables.majorities.__tablename__} ON {tables.testcases.__tablename__}.id={tables.majorities.__tablename__}.id
+SELECT results.id, {CLASSIFICATIONS_TO_INT["bf"]}
+FROM {tables.results.__tablename__} results
+LEFT JOIN {tables.testcases.__tablename__} ON results.testcase_id = {tables.testcases.__tablename__}.id
+LEFT JOIN {tables.majorities.__tablename__} ON results.testcase_id = {tables.majorities.__tablename__}.id
 WHERE outcome = {OUTCOMES_TO_INT["bf"]}
 AND outcome_majsize >= {min_majsize}
 AND maj_outcome = {OUTCOMES_TO_INT["pass"]}
@@ -245,7 +244,7 @@ def testcase_raises_compiler_warnings(session: session_t, tables: Tableset, test
                 testcase.compiler_warnings = True
                 break
             elif "warning" in stderr:
-                print("\n UNRECOGNIZED WARNINGS in testcase {testcase.id}:")
+                print(f"\n UNRECOGNIZED WARNINGS in testcase {testcase.id}:")
                 print("\n".join(f">> {line}" for line in stderr.split("\n")))
 
     return testcase.compiler_warnings
@@ -286,12 +285,13 @@ def verify_w_testcase(session: session_t, tables: Tableset, testcase) -> None:
         if testcase.contains_floats == None:
             testcase.contains_floats = "float" in testcase.program.src
 
-        if testcase.contains_floats:
-            print(f"testcase {testcase.id}: contains floats")
-            # TODO: return fail()
+        # if testcase.contains_floats:
+        #     print(f"testcase {testcase.id}: contains floats")
+        #     TODO: return fail()
 
         for arg in cldrive.extract_args(testcase.program.src):
             if arg.is_vector:
+                # An error in my implementation of vector types:
                 print(f"testcase {testcase.id}: contains vector types")
                 return fail()
 
@@ -509,7 +509,7 @@ def prune_c_classifications(session: session_t, tables: Tableset) -> None:
             .distinct()\
             .all()
 
-    print(f"Verifying {tables.name} w-classified testcases ...", file=sys.stderr)
+    print(f"Verifying {tables.name} c-classified testcases ...", file=sys.stderr)
     for testcase in ProgressBar()(testcases_to_verify):
         verify_c_testcase(session, tables, testcase)
 

@@ -28,6 +28,7 @@ DRIVERS = {
 
 # shorthand platform names
 PLATFORMS = {
+    "Intel Gen OCL Driver": "Beignet",
     "Intel(R) OpenCL": "Intel OpenCL",
     "Portable Computing Language": "POCL",
 }

@@ -235,6 +235,6 @@ if __name__ == "__main__":
                     print("harness for program failed to compile:", program.id)
         finally:
             # flush any remaining results
-            next_batch()
+            s.commit()
 
     print("done.")
