@@ -5,7 +5,9 @@ This section reports on the results of extensive DeepSmith testing of the 10 Ope
 
 \subsection{Compile-time Defects}
 
-We found numerous cases where kernels trigger a crash in the compiler (and as a result, the host process). Segmentation faults during compilation were a common source of crash. In the majority of cases, we found compiler crashes to be insensitive to OpenCL optimization setting. Figure~\cc{TODO shows an example of one which is not\ldots}
+We found numerous cases where kernels trigger a crash in the compiler (and as a result, the host process), or the compiler to loop indefinitely. In the majority of cases, we found compiler crashes to be insensitive to OpenCL optimization setting. Figure~\cc{TODO shows an example of one which is not\ldots}
+
+We found the most compiler crash bugs in compiler frontends. Because DeepSmith generates syntactically incorrect code, some test cases do not make it past the lexer, parser, and typechecker. This biases DeepSmith towards discovering bugs in compiler front-ends.
 
 %%%%%%%%%% INVALID SYNTAX
 \newsavebox{\OclgrindSemaAssertion}
@@ -35,6 +37,10 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
 %%%%%%%%%% INVALID SYNTAX
 
 
+\paragraph{Syntax errors} Figure~\ref{lst:oclgrind-sema-assertion}.
+
+110 distinct test cases which crash testbed $9\pm$ during compilation, all silently. 
+
 %%%%%%%%%% TYPE ERRORS
 \newsavebox{\NvidiaRecursionSegfault}
 \begin{lrbox}{\NvidiaRecursionSegfault}
@@ -46,6 +52,16 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
   \end{lstlisting}
 \end{lrbox}
 % HAND REDUCED: kernel void A(constant int2* a, global int* b) { A(b, a); }
+
+\newsavebox{\BeignetScalarizeInsert}
+\begin{lrbox}{\BeignetScalarizeInsert}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(global float4* a) {
+      a[get_local_id(0) / 8][get_local_id(0)] = get_local_id(0);
+    }
+  \end{lstlisting}
+\end{lrbox}
 
 \newsavebox{\OclgrindUncorrectedTypos}
 \begin{lrbox}{\OclgrindUncorrectedTypos}
@@ -63,6 +79,10 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaRecursionSegfault}}}%
     \label{lst:nvidia-recursion-segfault}
   }\\%
+  \subfloat[Testbeds $3\pm$ assertion \emph{scalarizeInsert} during code generation.]{%
+      \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetScalarizeInsert}}}%
+      \label{lst:oclgrind-uncorrected-typos}
+    }\\%
   \subfloat[Testbeds $10\pm$ assertion \emph{Uncorrected typos!} during semantic analysis.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindUncorrectedTypos}}}%
     \label{lst:oclgrind-uncorrected-typos}
@@ -72,7 +92,9 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
 \end{figure}
 %%%%%%%%%% TYPE ERRORS
 
-\texttt{kernel void A(global float* a) { (float4)(a); }}
+
+
+% \texttt{kernel void A(global float* a) { (float4)(a); }}
 
 \newsavebox{\NvidiaCompileSegfault}
 \begin{lrbox}{\NvidiaCompileSegfault}
@@ -162,11 +184,8 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
   \label{lst:compiler-crashes}%
 \end{figure}
 
-\paragraph{Front-end} We found the most compiler crash bugs in compiler frontends. Because DeepSmith generates syntactically incorrect code, some test cases do not make it past the lexer, parser, and typechecker. This biases DeepSmith towards discovering bugs in compiler front-ends.
 
 Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for testbeds $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other testbeds raise a build failure. Such test cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random token enumeration, and impossible through grammar-based tools.
-
-\cc{Anomalous build failures:} Some compilers are more permissive than others - \emph{integer literal is too large}
 
 \paragraph{Unreachable code} To date we have identified 207 distinct cases where unreachable code is executed during parsing. \cc{How many *distinct* traces?}
 
@@ -353,14 +372,13 @@ An error in the optimizer of Testbeds $4+$, $6+$ causes the \texttt{if} statemen
 Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in in which a kernel containing an undefined symbol will successfully compile without warning, then crash the program when attempting to run the kernel. Such a test case is trivial to generate, yet could not be synthesized by CSmith.
 
 
-\subsubsection{Gray Areas}
+\subsection{Gray Areas and False Positives}
 
-Figure~\ref{lst:xeon-phi-invalid-write}.
+Some compilers are more permissive than others - some compilers will reject kernels with out-of-range literals \emph{integer literal is too large}.
 
-In Testbeds $1\pm$, out-of-bounds memory reads and writes can be used to overflow into neighboring kernel arguments (\cc{Probably not interesting}).
+None of the three statements in Figure~\ref{lst:xeon-phi-invalid-write} are executed by testbeds~$7\pm$, all other configurations return the final value. In testbeds $1\pm$ (but not $2\pm$), out-of-bounds memory reads and writes can be used to overflow into neighboring kernel arguments. In both cases, oclgrind can automatically catch the inalid accesses to prevent false-positives, but perhaps should results may be interesting for testing robustness / security.
 
-Out-of-bounds accesses to buffer arguments in testbeds $1\pm$, $2\pm$ bleed into the next buffer.
-
+The hardest false-positive to prevent was division by zero and related mathematical functions which require non-zero values. In all cases we discovered these can be prevented by simply changing the input values and checking to see if the output remains anomalous.
 
 \newsavebox{\XeonPhiInvalidWrite}
 \begin{lrbox}{\XeonPhiInvalidWrite}
