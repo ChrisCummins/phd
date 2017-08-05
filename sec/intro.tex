@@ -10,7 +10,7 @@
   \includegraphics[width=.85\columnwidth]{img/difftest} %
   % \vspace{-2em}%
   \caption{%
-    Differential testing compiler/hardware configurations across a single test-case. A test-case consists of a program source and its runtime parameters and data. % Outcomes may be the output of the program execution, a compiler crash, a runtime crash, or a timeout error.%
+    Differential testing a single test case across multiple testbeds. A test-case consists of a program source and its runtime parameters and data. % Outcomes may be the output of the program execution, a compiler crash, a runtime crash, or a timeout error.%
   }%
   \label{fig:difftest}
 \end{figure}
@@ -22,7 +22,7 @@ Optimizing compilers are large and complex programs, with a practically infinite
 
 Differential Testing is an effective and widely studied methodology for identifying compiler bugs~\cite{Chen2014a,Kossatchev2005}. Figure~\ref{fig:difftest} shows the approach. A \emph{test-case}, that is, a program code and any data required to execute it, is compiled and executed a cross a number of \emph{testbeds} (a <compiler, hardware> pair). If any of the compilers crash or loop indefinitely, or if the output of the programs differs between compilers, then a potential bug has been discovered. A probabilistic grammar is used to enumerate a large, random program, which is then compiled and executed across a number of compilers. In this manner, CSmith~\cite{Yang2011}, a random program generator for the C programming language, has been used to identify hundreds of bugs in compilers. CSmith defines a probabilistic grammar over a large subset of the C programming language, and recursively instantiates a program, using rigorous and conservative static and dynamic analysis to ensure that programs are free from undefined behavior.
 
-Developing a random program generation is a huge undertaking, requiring a deep understanding of the target programming language -- CSmith was developed over the course of years, and consists of over 40k lines of handwritten C++ code. By tightly coupling the generation logic with the target programming language, each feature of the grammar must be painstakingly and expertly engineered, and is accompanied by exponential costs in developing the static and dynamic safety checks to ensure that generated programs remain free from (or at least, are likely free from) undefined behavior. For example, lifting CSmith from C to OpenCL~\cite{Lidbury2015a} took 9 months and 8k lines of code. As such, typically only a subset of the language is implemented, and the expressiveness of the grammar is bounded by the limits of static and dynamic analysis.  
+Developing a random program generation is a huge undertaking, requiring a deep understanding of the target programming language -- CSmith was developed over the course of years, and consists of over 40k lines of handwritten C++ code. By tightly coupling the generation logic with the target programming language, each feature of the grammar must be painstakingly and expertly engineered, and is accompanied by exponential costs in developing the static and dynamic safety checks to ensure that generated programs remain free from (or at least, are likely free from) undefined behavior. For example, lifting CSmith from C to OpenCL~\cite{Lidbury2015a} took 9 months and 8k lines of code. As such, typically only a subset of the language is implemented, and the expressiveness of the grammar is bounded by the limits of static and dynamic analysis.
 % --- to date, important language features such as strings, dynamic memory allocation, function pointers, and recursion are unsupported.
 % , despite the large overlap between C and OpenCL (which is C with extensions). This huge development cost is extended to the reduction tools too, with CLReduce~\cite{Pflanzer2016} requiring extensions to OCLgrind.
 
@@ -38,9 +38,9 @@ Our implementation, DeepSmith, targets OpenCL, an open standard for programming 
 %
 %By design, the grammar-based approach specifically targets the compiler middle-end. Prior work \cite{McKeeman1998}
 %
-%This approach focuses the 
+%This approach focuses the
 %
-%CSmith~\cite{Yang2011}, a popular random program generator for the C programming language, defines a probabilistic grammar over a large subset of the C programming language, and recursively instantiates a program, using rigorous and conservative static and dynamic analysis to ensure that programs are free from undefined behavior. 
+%CSmith~\cite{Yang2011}, a popular random program generator for the C programming language, defines a probabilistic grammar over a large subset of the C programming language, and recursively instantiates a program, using rigorous and conservative static and dynamic analysis to ensure that programs are free from undefined behavior.
 %
 %Typically, these generated programs are many hundreds or thousands of lines long. As such, an additional test-case reduction process is usually required, iteratively mutating the program in an attempt to produce a minimal working example which preserves the behavior of interest.
 %
@@ -50,7 +50,7 @@ Our implementation, DeepSmith, targets OpenCL, an open standard for programming 
 %
 %Because Csmith programs are free form undefined behavior, there is only a single interpretation. This allows oracle-less differential testing across compilers, using a voting heuristic to identify erroneous compiler outputs.
 %
-%Developing a random program generator is a huge undertaking, requiring expert knowledge of the target programming language. CSmith~\cite{Yang2011} was developed over a period of years, and consists of over 40k lines of hand-written C++. CSmith interleaves static analysis with code generation, and inserts runtime checks for cases where static analysis is inadequate. The ``shape'' of CSmith programs is dictated by 80 probabilities; these were extensively hand tuned so that programs ``look right''. Beyond this, the expressiveness of CSmith-generated programs is 
+%Developing a random program generator is a huge undertaking, requiring expert knowledge of the target programming language. CSmith~\cite{Yang2011} was developed over a period of years, and consists of over 40k lines of hand-written C++. CSmith interleaves static analysis with code generation, and inserts runtime checks for cases where static analysis is inadequate. The ``shape'' of CSmith programs is dictated by 80 probabilities; these were extensively hand tuned so that programs ``look right''. Beyond this, the expressiveness of CSmith-generated programs is
 %
 %\cc{We propose \ldots}
 %

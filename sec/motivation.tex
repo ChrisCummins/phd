@@ -65,7 +65,7 @@
 We motivate the case for compiler fuzzing through deep learning using three example of bugs found using DeepSmith: a miscompilation, a runtime crash, and a compiler crash.
 
 A common pattern in OpenCL is to obtain the thread identity, often as an \texttt{int}, and to compare this against some fixed value to determine whether or not to complete a unit of work. DeepSmith, having modeled the frequency with which this pattern occurs in real handwritten code, generates many programs containing permutations of this pattern. And in doing so, exposed an error in the optimizer of two of the Intel compilers we tested
-% Configs.\ $4+$, $6+$
+% Testbeds $4+$, $6+$
 which causes the \texttt{if} statement of Figure~\ref{lst:intel-size_t-int-reduced} to be executed when the kernel is compiled with optimizations enabled.
 %
 % cd ~/data/kernels/github-pp

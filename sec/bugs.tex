@@ -164,7 +164,7 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
 
 \paragraph{Front-end} We found the most compiler crash bugs in compiler frontends. Because DeepSmith generates syntactically incorrect code, some test-cases do not make it past the lexer, parser, and typechecker. This biases DeepSmith towards discovering bugs in compiler front-ends.
 
-Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for testbeds $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other configurations raise a build failure. Such test-cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random token enumeration, and impossible through grammar-based tools.
+Figure~\ref{lst:oclgrind-sema-assertion} raises an assertion in the compiler frontend during semantic analysis of the AST for testbeds $10\pm$. Though the code \emph{plausibly} looks correct, it is ill-formed as the identifiers \texttt{d} and \texttt{f} are undefined; all other testbeds raise a build failure. Such test-cases (in which the code \emph{looks} right, but contains errors) are extremely unlikely through random token enumeration, and impossible through grammar-based tools.
 
 \cc{Anomalous build failures:} Some compilers are more permissive than others - \emph{integer literal is too large}
 
@@ -356,7 +356,7 @@ Out-of-bounds accesses to buffer arguments in testbeds $1\pm$, $2\pm$ bleed into
 
 \begin{figure}
   \centering %
-  \subfloat[The invalid write in line 3 does not affect execution of lines 2 and 4 for all configurations except $7\pm$. On Testbeds $7\pm$, lines 2 and 4 execute when the invalid write has an index < $44032$, but not if the index $\ge 44032$.]{%
+  \subfloat[The invalid write in line 3 does not affect execution of lines 2 and 4 for all testbeds except $7\pm$. On Testbeds $7\pm$, lines 2 and 4 execute when the invalid write has an index < $44032$, but not if the index $\ge 44032$.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiInvalidWrite}}}%
     \label{lst:xeon-phi-invalid-write}
   }\\%
