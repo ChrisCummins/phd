@@ -76,9 +76,7 @@ def create_stderr(s: session_t, tables: Tableset, stderr: str) -> CLgenClangStde
 
     errs = sum(1 if x else 0 for x in [assertion_, unreachable_, terminate_])
 
-    if errs == 0:
-        raise LookupError(f"No {{assertion,unreachable,termiante}} error found in: {stderr}")
-    elif errs > 1:
+    if errs > 1:
         raise LookupError(f"Multiple errors types found in: {stderr}\n\n" +
                           f"Assertion: {assertion_}\n" +
                           f"Unreachable: {unreachable_}\n" +
