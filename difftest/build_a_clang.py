@@ -33,6 +33,13 @@ def get_num_programs_to_build(session: db.session_t, tables: Tableset, clang: st
     return num_ran, total
 
 
+def get_assertion(stderr: str):
+    for line in stderr.split('\n'):
+        if "assert" in line.lower():
+            return line
+    raise LookupError(f"no assertion found in stderr: {stderr}")
+
+
 def build_with_clang(program: Union[CLgenProgram, CLSmithProgram],
                      clang: str) -> Tuple[int, float, str]:
     with NamedTemporaryFile(prefix='buildaclang-', delete=False) as tmpfile:
@@ -126,21 +133,29 @@ if __name__ == "__main__":
                 # get next program to run
                 program = inbox.popleft()
 
-                status, runtime, stderr = build_with_clang(program, clang)
+                status, runtime, stderr_ = build_with_clang(program, clang)
 
                 # create new result
-                stderr_ = util.escape_stderr(stderr)
-                stderr = get_or_create(
-                    s, tables.clang_stderrs,
-                    hash=crypto.sha1_str(stderr_), stderr=stderr_)
-                s.flush()
+                hash_ = crypto.sha1_str(stderr_)
+                q = s.query(tables.clang_stderrs.id)\
+                    .filter(tables.clang_stderrs.hash == hash_)\
+                    .first()
+
+                if q:
+                    stderr_id = q[0]
+                else:
+                    # TODO: Extract assertion
+                    stderr = tables.clang_stderrs(hash=hash_, stderr=stderr_)
+                    s.add(stderr)
+                    s.flush()
+                    stderr_id = stderr.id
 
                 result = tables.clangs(
                     program_id=program.id,
                     clang=args.clang,
                     status=status,
                     runtime=runtime,
-                    stderr_id=stderr.id)
+                    stderr_id=stderr_id)
 
                 s.add(result)
                 s.commit()
