@@ -697,10 +697,14 @@ class CLgenClangStderr(Base):
     id = sql.Column(sql.Integer, primary_key=True)
     hash = sql.Column(sql.String(40), nullable=False, unique=True)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
-    assertion_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenClangAssertions.id"), nullable=False)
+    assertion_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenClangAssertions.id"))
+    unreachable_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenClangUnreachables.id"))
+    terminate_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenClangTerminates.id"))
 
     result = sql.orm.relationship("CLgenClangResult", back_populates="stderr")
     assertion = sql.orm.relationship("CLgenClangAssertion", back_populates="stderr")
+    unreachable = sql.orm.relationship("CLgenClangUnreachable", back_populates="stderr")
+    terminate = sql.orm.relationship("CLgenClangTerminate", back_populates="stderr")
 
 
 class CLgenClangAssertion(Base):
@@ -710,6 +714,24 @@ class CLgenClangAssertion(Base):
     assertion = sql.Column(sql.UnicodeText(length=1024), nullable=False)
 
     stderr = sql.orm.relationship("CLgenClangStderr", back_populates="assertion")
+
+
+class CLgenClangUnreachable(Base):
+    __tablename__ = "CLgenClangUnreachables"
+    id = sql.Column(sql.Integer, primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, unique=True)
+    unreachable = sql.Column(sql.UnicodeText(length=1024), nullable=False)
+
+    stderr = sql.orm.relationship("CLgenClangStderr", back_populates="unreachable")
+
+
+class CLgenClangTerminate(Base):
+    __tablename__ = "CLgenClangTerminates"
+    id = sql.Column(sql.Integer, primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, unique=True)
+    terminate = sql.Column(sql.UnicodeText(length=1024), nullable=False)
+
+    stderr = sql.orm.relationship("CLgenClangStderr", back_populates="terminate")
 
 
 # Compile-only tests ##########################################################
@@ -902,6 +924,8 @@ Tableset = namedtuple('Tableset', [
         'clangs',
         'clang_stderrs',
         'clang_assertions',
+        'clang_unreachables',
+        'clang_terminates',
     ])
 
 CLSMITH_TABLES = Tableset(name="CLSmith",
@@ -911,7 +935,10 @@ CLSMITH_TABLES = Tableset(name="CLSmith",
     meta=CLSmithMeta, classifications=CLSmithClassification,
     stdouts=CLSmithStdout, stderrs=CLSmithStderr,
     majorities=CLSmithMajority, assertions=CLSmithAssertion,
-    clangs=None, clang_stderrs=None, clang_assertions=None)
+    clangs=None, clang_stderrs=None,
+    clang_assertions=None,
+    clang_unreachables=None,
+    clang_terminates=None)
 CLGEN_TABLES = Tableset(name="CLgen",
     results=CLgenResult, testcases=CLgenTestCase,
     programs=CLgenProgram, harnesses=CLgenHarness,
@@ -920,7 +947,9 @@ CLGEN_TABLES = Tableset(name="CLgen",
     stdouts=CLgenStdout, stderrs=CLgenStderr,
     majorities=CLgenMajority, assertions=CLgenAssertion,
     clangs=CLgenClangResult, clang_stderrs=CLgenClangStderr,
-    clang_assertions=CLgenClangAssertion)
+    clang_assertions=CLgenClangAssertion,
+    clang_unreachables=CLgenClangUnreachable,
+    clang_terminates=CLgenClangTerminate)
 
 
 class InsufficientDataError(ValueError):

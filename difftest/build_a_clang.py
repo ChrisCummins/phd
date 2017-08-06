@@ -33,11 +33,66 @@ def get_num_programs_to_build(session: db.session_t, tables: Tableset, clang: st
     return num_ran, total
 
 
-def get_assertion(stderr: str):
+def get_assertion(s: session_t, tables: Tableset, stderr: str):
     for line in stderr.split('\n'):
-        if "assert" in line.lower():
-            return line
-    raise LookupError(f"no assertion found in stderr: {stderr}")
+        if "assertion" in line.lower():
+            assertion = get_or_create(
+                s, tables.clang_assertions,
+                hash=crypto.sha1_str(line),
+                assertion=line)
+            s.add(assertion)
+            s.flush()
+            return assertion
+
+
+def get_unreachable(s: session_t, tables: Tableset, stderr: str):
+    for line in stderr.split('\n'):
+        if "unreachable executed at" in line.lower():
+            unreachable = get_or_create(
+                s, tables.clang_unreachables,
+                hash=crypto.sha1_str(line),
+                unreachable=line)
+            s.add(unreachable)
+            s.flush()
+            return unreachable
+
+
+def get_terminate(s: session_t, tables: Tableset, stderr: str):
+    for line in stderr.split('\n'):
+        if "terminate called after throwing an instance" in line.lower():
+            terminate = get_or_create(
+                s, tables.clang_terminates,
+                hash=crypto.sha1_str(line),
+                terminate=line)
+            s.add(terminate)
+            s.flush()
+            return terminate
+
+
+def create_stderr(s: session_t, tables: Tableset, stderr: str) -> CLgenClangStderr:
+    assertion_ = get_assertion(s, tables, stderr)
+    unreachable_ = get_unreachable(s, tables, stderr)
+    terminate_ = get_terminate(s, tables, stderr)
+
+    errs = sum(1 if x else 0 for x in [assertion_, unreachable_, terminate_])
+
+    if errs == 0:
+        raise LookupError(f"No {{assertion,unreachable,termiante}} error found in: {stderr}")
+    elif errs > 1:
+        raise LookupError(f"Multiple errors types found in: {stderr}\n\n" +
+                          f"Assertion: {assertion_}\n" +
+                          f"Unreachable: {unreachable_}\n" +
+                          f"Terminate: {terminate_}")
+
+    stderr = tables.clang_stderrs(
+        hash=hash_,
+        stderr=stderr,
+        assertion=assertion_,
+        unreachable=unreachable_,
+        terminate=terminate_)
+    s.add(stderr)
+    s.flush()
+    return stderr
 
 
 def build_with_clang(program: Union[CLgenProgram, CLSmithProgram],
@@ -117,7 +172,7 @@ if __name__ == "__main__":
         for tables in tablesets:
             # progress bar
             num_ran, num_to_run = get_num_programs_to_build(s, tables, clang)
-            bar = progressbar.ProgressBar(init_value=num_ran, max_value=num_to_run)
+            bar = ProgressBar(init_value=num_ran, max_value=num_to_run)
 
             # testcases to run
             inbox = deque()
@@ -144,12 +199,7 @@ if __name__ == "__main__":
                 if q:
                     stderr_id = q[0]
                 else:
-                    assertion = get_or_create(
-                        s, tables.clang_assertions)
-                    stderr = tables.clang_stderrs(hash=hash_, stderr=stderr_)
-                    s.add(stderr)
-                    s.flush()
-                    stderr_id = stderr.id
+                    stderr_id = create_stderr(s, tables, stderr_).id
 
                 result = tables.clangs(
                     program_id=program.id,
