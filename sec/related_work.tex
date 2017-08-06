@@ -10,6 +10,8 @@ Increasing complexity of generations: RandProg to CSmith. Then EMI testing, and 
 
 The \emph{fuzz taming problem} is addressed in~\cite{Chen2013}, in which a distance metric is used to rank test cases such that diverse, interesting test cases are highly ranked.
 
+\emph{LangFuzz} attempts a similar approach of learning to generate test cases from real code~\cite{Holler2012}. For LangFuzz, the input programs are codes known to have previously exposed bugs.
+
 Empirical comparison of compiler testing techniques~\cite{Chen2014a}
 
 Analysis of bugs in GCC and LLVM finds 80\% of test cases to be 45 lines~\cite{Sun2016}.
@@ -36,9 +38,11 @@ Fuzzing with code fragments~\cite{Holler2012}.
 
 A mutation-based approach for the Java Virtual Machine is demonstrated in~\cite{Chena}.
 
-TODO~\cite{White2016}.
+TODO~\cite{White2016},~\cite{Sheridan2007}.
 
 Grammar-base whitebox testing~\cite{Godefroid2008a}.
+
+Our work is the first to address the challenge of generating human-like, plausible random programs.
 
 \paragraph{GPU Testing} GPU Concurrency --- Small \emph{litmus tests}~\cite{Alglave2015}.
 

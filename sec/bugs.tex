@@ -378,7 +378,7 @@ Figure~\ref{lst:nvidia-recursion-segfault} induces an error in handling of globa
 
 Some compilers are more permissive than others - some compilers will reject kernels with out-of-range literals \emph{integer literal is too large}.
 
-None of the three statements in Figure~\ref{lst:xeon-phi-invalid-write} are executed by testbeds~$7\pm$, all other configurations return the final value. In testbeds $1\pm$ (but not $2\pm$), out-of-bounds memory reads and writes can be used to overflow into neighboring kernel arguments. In both cases, oclgrind can automatically catch the inalid accesses to prevent false-positives, but perhaps should results may be interesting for testing robustness / security.
+None of the three statements in Figure~\ref{lst:xeon-phi-invalid-write} are executed by testbeds~$7\pm$, all other configurations return the final value. In testbeds $1\pm$ (but not $2\pm$), out-of-bounds memory reads and writes can be used to overflow into neighboring kernel arguments. In both cases, oclgrind can automatically catch the inalid accesses to prevent false-positives, but perhaps should results may be interesting for testing robustness / security. E.g.~\cite{Holler2012}.
 
 The hardest false-positive to prevent was division by zero and related mathematical functions which require non-zero values. In all cases we discovered these can be prevented by simply changing the input values and checking to see if the output remains anomalous.
 
