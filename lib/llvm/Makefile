@@ -1,3 +1,8 @@
+build/3.3/bin/clang:
+	test -d src/3.3 || ./clone.sh src/3.3
+	./checkout.sh src/3.3 release_33
+	./build.sh src/3.3 build/3.3
+
 build/4.0.0/bin/clang:
 	wget http://releases.llvm.org/4.0.0/clang+llvm-4.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
 	tar xf clang+llvm-4.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
