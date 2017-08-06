@@ -34,7 +34,7 @@ def get_num_programs_to_build(session: db.session_t, tables: Tableset, clang: st
 
 
 def build_with_clang(program: Union[CLgenProgram, CLSmithProgram],
-                     clang: str, clang_include: str) -> Tuple[int, float, str]:
+                     clang: str) -> Tuple[int, float, str]:
     with NamedTemporaryFile(prefix='buildaclang-', delete=False) as tmpfile:
         src_path = tmpfile.name
     try:
@@ -42,11 +42,6 @@ def build_with_clang(program: Union[CLgenProgram, CLSmithProgram],
             print(program.src, file=outfile)
 
         cmd = ['timeout', '-s9', '60s', clang, '-cc1', '-xcl', src_path]
-
-        # if "/3." not in clang:  # earlier clangs didn't have a
-        #    cmd += ['-I', clang_include, '-finclude-default-header']
-        #
-        # cmd.append(src_path)
 
         start_time = time()
         process = subprocess.Popen(cmd, universal_newlines=True,
@@ -74,13 +69,9 @@ if __name__ == "__main__":
     db.init(args.hostname)  # initialize db engine
 
     clang = fs.abspath(f"../lib/llvm/build/{args.clang}/bin/clang")
-    clang_include = fs.abspath(f"../lib/llvm/build/{args.clang}/lib/clang/{args.clang}/include")
 
     if not fs.isfile(clang):
         print(f"fatal: clang '{clang}' does not exist")
-        sys.exit(1)
-    if not fs.isdir(clang_include):
-        print(f"fatal: include dir '{clang_include}' does not exist")
         sys.exit(1)
 
     if args.clgen and args.clsmith:
@@ -98,7 +89,7 @@ if __name__ == "__main__":
             """
             Fill the inbox with jobs to run.
             """
-            BATCH_SIZE = 100
+            BATCH_SIZE = 1000
             print(f"\nnext {tables.name} batch for clang {args.clang} at", strftime("%H:%M:%S"))
             # update the counters
             num_ran, num_to_run = get_num_programs_to_build(s, tables, args.clang)
@@ -135,7 +126,7 @@ if __name__ == "__main__":
                 # get next program to run
                 program = inbox.popleft()
 
-                status, runtime, stderr = build_with_clang(program, clang, clang_include)
+                status, runtime, stderr = build_with_clang(program, clang)
 
                 # create new result
                 stderr_ = util.escape_stderr(stderr)
