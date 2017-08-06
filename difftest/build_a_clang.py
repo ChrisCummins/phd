@@ -41,8 +41,12 @@ def build_with_clang(program: Union[CLgenProgram, CLSmithProgram],
         with open(src_path, "w") as outfile:
             print(program.src, file=outfile)
 
-        cmd = ['timeout', '-s9', '60s', clang, '-cc1', '-xcl',
-               '-I', clang_include, '-finclude-default-header', src_path]
+        cmd = ['timeout', '-s9', '60s', clang, '-cc1', '-xcl']
+
+        if "/3." not in clang:  # earlier clangs didn't have a
+           cmd += ['-I', clang_include, '-finclude-default-header']
+
+        cmd.append(src_path)
 
         start_time = time()
         process = subprocess.Popen(cmd, universal_newlines=True,
