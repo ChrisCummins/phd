@@ -4,7 +4,7 @@
 \begin{lrbox}{\IntelSizetIntReduced}
   \hspace{1.5em}
   \begin{lstlisting}
-    __kernel void A(__global double* a) {
+    kernel void A(global double* a) {
       int b = get_global_id(0);
       if (b < -1) {
         a[b] = 1;
@@ -17,7 +17,7 @@
 \begin{lrbox}{\OclgrindRaceSwitch}
   \hspace{1.5em}
   \begin{lstlisting}
-  __kernel void A(__global int* a, __global int* b) {
+  kernel void A(global int* a, global int* b) {
     switch (get_global_id(0)) {
       case 0:
         a[get_global_id(0)] = b[get_global_id(0) + 13];
@@ -37,7 +37,7 @@
 \begin{lrbox}{\AlmostEverythingCrash}
   \hspace{1.5em}
   \begin{lstlisting}
-    __kernel void A() {
+    kernel void A() {
       __builtin_astype(d, uint4);
     }
   \end{lstlisting}
