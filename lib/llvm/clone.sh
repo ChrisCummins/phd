@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-build_a_clang() {
+set -eux
+
+clone() {
     local dest=$1
     git clone http://llvm.org/git/llvm.git $dest
     cd $dest/tools
@@ -7,5 +9,4 @@ build_a_clang() {
     cd ../projects
     git clone http://llvm.org/git/compiler-rt.git
 }
-
-build_a_clang $1
+clone $@
