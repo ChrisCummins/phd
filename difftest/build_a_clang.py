@@ -144,7 +144,8 @@ if __name__ == "__main__":
                 if q:
                     stderr_id = q[0]
                 else:
-                    # TODO: Extract assertion
+                    assertion = get_or_create(
+                        s, tables.clang_assertions)
                     stderr = tables.clang_stderrs(hash=hash_, stderr=stderr_)
                     s.add(stderr)
                     s.flush()
