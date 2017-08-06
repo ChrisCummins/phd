@@ -124,13 +124,15 @@ if __name__ == "__main__":
                         help="Only reduce CLSmith results")
     parser.add_argument("--clgen", action="store_true",
                         help="Only reduce CLgen results")
+    parser.add_argument("--recheck", action="store_true",
+                        help="Re-check existing errors")
     args = parser.parse_args()
 
     db.init(args.hostname)  # initialize db engine
 
     clang = fs.abspath(f"../lib/llvm/build/{args.clang}/bin/clang")
 
-    if not fs.isfile(clang):
+    if not args.recheck and not fs.isfile(clang):
         print(f"fatal: clang '{clang}' does not exist")
         sys.exit(1)
 
@@ -168,48 +170,72 @@ if __name__ == "__main__":
                 inbox.append(program)
 
         for tables in tablesets:
-            # progress bar
-            num_ran, num_to_run = get_num_programs_to_build(s, tables, clang)
-            bar = ProgressBar(init_value=num_ran, max_value=num_to_run)
+            if args.recheck:
+                q = s.query(tables.clang_stderrs)
+                for stderr in ProgressBar(max_value=q.count())(q):
+                    assertion_ = get_assertion(s, tables, stderr.stderr)
+                    unreachable_ = get_unreachable(s, tables, stderr.stderr)
+                    terminate_ = get_terminate(s, tables, stderr.stderr)
 
-            # testcases to run
-            inbox = deque()
+                    errs = sum(1 if x else 0 for x in [assertion_, unreachable_, terminate_])
+                    if errs > 1:
+                        raise LookupError(f"Multiple errors types found in: {stderr}\n\n" +
+                                          f"Assertion: {assertion_}\n" +
+                                          f"Unreachable: {unreachable_}\n" +
+                                          f"Terminate: {terminate_}")
 
-            while True:
-                # get the next batch of programs to run
-                if not len(inbox):
-                    next_batch()
-                # we have no programs to run
-                if not len(inbox):
-                    break
+                    if assertion_ != stderr.assertion:
+                        print("updating assertion")
+                        stderr.assertion = assertion_
+                    if unreachable_ != stderr.unreachable:
+                        print("updating unreachable")
+                        stderr.unreachable = unreachable_
+                    if terminate_ != stderr.terminate:
+                        print("updating terminate")
+                        stderr.terminate = terminate_
+            else:
+                # progress bar
+                num_ran, num_to_run = get_num_programs_to_build(s, tables, clang)
+                bar = ProgressBar(init_value=num_ran, max_value=num_to_run)
 
-                # get next program to run
-                program = inbox.popleft()
+                # testcases to run
+                inbox = deque()
 
-                status, runtime, stderr_ = build_with_clang(program, clang)
+                while True:
+                    # get the next batch of programs to run
+                    if not len(inbox):
+                        next_batch()
+                    # we have no programs to run
+                    if not len(inbox):
+                        break
 
-                # create new result
-                hash_ = crypto.sha1_str(stderr_)
-                q = s.query(tables.clang_stderrs.id)\
-                    .filter(tables.clang_stderrs.hash == hash_)\
-                    .first()
+                    # get next program to run
+                    program = inbox.popleft()
 
-                if q:
-                    stderr_id = q[0]
-                else:
-                    stderr_id = create_stderr(s, tables, stderr_).id
+                    status, runtime, stderr_ = build_with_clang(program, clang)
 
-                result = tables.clangs(
-                    program_id=program.id,
-                    clang=args.clang,
-                    status=status,
-                    runtime=runtime,
-                    stderr_id=stderr_id)
+                    # create new result
+                    hash_ = crypto.sha1_str(stderr_)
+                    q = s.query(tables.clang_stderrs.id)\
+                        .filter(tables.clang_stderrs.hash == hash_)\
+                        .first()
 
-                s.add(result)
-                s.commit()
+                    if q:
+                        stderr_id = q[0]
+                    else:
+                        stderr_id = create_stderr(s, tables, stderr_).id
 
-                # update progress bar
-                num_ran += 1
-                bar.update(min(num_ran, num_to_run))
+                    result = tables.clangs(
+                        program_id=program.id,
+                        clang=args.clang,
+                        status=status,
+                        runtime=runtime,
+                        stderr_id=stderr_id)
+
+                    s.add(result)
+                    s.commit()
+
+                    # update progress bar
+                    num_ran += 1
+                    bar.update(min(num_ran, num_to_run))
     print("done.")
