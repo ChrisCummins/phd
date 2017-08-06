@@ -697,8 +697,19 @@ class CLgenClangStderr(Base):
     id = sql.Column(sql.Integer, primary_key=True)
     hash = sql.Column(sql.String(40), nullable=False, unique=True)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    assertion_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenClangAssertions.id"), nullable=False)
 
     result = sql.orm.relationship("CLgenClangResult", back_populates="stderr")
+    assertion = sql.orm.relationship("CLgenClangAssertion", back_populates="stderr")
+
+
+class CLgenClangAssertion(Base):
+    __tablename__ = "CLgenClangAssertions"
+    id = sql.Column(sql.Integer, primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, unique=True)
+    assertion = sql.Column(sql.UnicodeText(length=1024), nullable=False)
+
+    stderr = sql.orm.relationship("CLgenClangStderr", back_populates="assertion")
 
 
 # Compile-only tests ##########################################################
@@ -890,6 +901,7 @@ Tableset = namedtuple('Tableset', [
         'assertions',
         'clangs',
         'clang_stderrs',
+        'clang_assertions',
     ])
 
 CLSMITH_TABLES = Tableset(name="CLSmith",
@@ -899,7 +911,7 @@ CLSMITH_TABLES = Tableset(name="CLSmith",
     meta=CLSmithMeta, classifications=CLSmithClassification,
     stdouts=CLSmithStdout, stderrs=CLSmithStderr,
     majorities=CLSmithMajority, assertions=CLSmithAssertion,
-    clangs=None, clang_stderrs=None)
+    clangs=None, clang_stderrs=None, clang_assertions=None)
 CLGEN_TABLES = Tableset(name="CLgen",
     results=CLgenResult, testcases=CLgenTestCase,
     programs=CLgenProgram, harnesses=CLgenHarness,
@@ -907,7 +919,8 @@ CLGEN_TABLES = Tableset(name="CLgen",
     meta=CLgenMeta, classifications=CLgenClassification,
     stdouts=CLgenStdout, stderrs=CLgenStderr,
     majorities=CLgenMajority, assertions=CLgenAssertion,
-    clangs=CLgenClangResult, clang_stderrs=CLgenClangStderr)
+    clangs=CLgenClangResult, clang_stderrs=CLgenClangStderr,
+    clang_assertions=CLgenClangAssertion)
 
 
 class InsufficientDataError(ValueError):
