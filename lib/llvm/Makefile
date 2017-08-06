@@ -1,3 +1,15 @@
+build/4.0.0/bin/clang:
+	wget http://releases.llvm.org/4.0.0/clang+llvm-4.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+	tar xf clang+llvm-4.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+	mv clang+llvm-4.0.0-x86_64-linux-gnu-ubuntu-16.04 build/4.0.0
+	rm clang+llvm-4.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+
+build/3.9.0/bin/clang:
+	wget http://releases.llvm.org/3.9.0/clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+	tar xf clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+	mv clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-16.04 build/3.9.0
+	rm clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+
 build/3.8.0/bin/clang:
 	wget http://releases.llvm.org/3.8.0/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
 	tar xf clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
@@ -21,6 +33,12 @@ build/3.6.0/bin/clang:
 	tar xf clang+llvm-3.6.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
 	mv clang+llvm-3.6.0-x86_64-linux-gnu build/3.6.0
 	rm clang+llvm-3.6.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
+
+build/3.5.1/bin/clang:
+	wget http://releases.llvm.org/3.5.1/clang+llvm-3.5.1-x86_64-linux-gnu.tar.xz
+	tar xf clang+llvm-3.5.1-x86_64-linux-gnu.tar.xz
+	mv clang+llvm-3.5.1-x86_64-linux-gnu build/3.5.1
+	rm clang+llvm-3.5.1-x86_64-linux-gnu.tar.xz
 
 .PHONY: clean
 clean:
