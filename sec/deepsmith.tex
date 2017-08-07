@@ -64,14 +64,16 @@ We note that, unlike the generative model, this test harness construction is lan
 
 \begin{figure}
 	\centering %
-	\includegraphics[width=.62\columnwidth]{img/test_process}%
+	\includegraphics[width=.8\columnwidth]{img/test_process}%
 	\caption{%
-		Test case execution, and possible outcomes. Each test case execution produces one of six possible outcomes: \{bf,bc,bto,c,to,\cmark\}.%
+		Test case execution, and possible results. On each testbed, test case execution produces one of seven possible outcomes: \{bf,bc,bto,c,to,w,\cmark\}.%
 	}%
 	\label{fig:test-process} %
 \end{figure}
 
 % We classify the result of executing a test case into one of six classifications: build failure (\textbf{bf}), build crash (\textbf{bc}), runtime crash (\textbf{c}), or pass (\textbf{\cmark}). A \textbf{bf} occurs when compilation of a kernel fails, usually accompanied by an error message. A \textbf{bc} outcome occurs when the compiler crashes. A \textbf{c} outcome occurs when the program crashes during execution. The \textbf{bto} and \textbf{to} outcomes occur when the program compilation or execution time out, respectively.
+
+\cc{TODO: Rewrite with only bc,bto outcomes, else voting heuristic}
 
 Executing a test case on a testbed leads to one of six possible outcomes: \textbf{\{bf,bc,bto,c,to,\cmark\}}, illustrated in Figure~\ref{fig:test-process}.
 
