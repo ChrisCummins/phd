@@ -1,6 +1,6 @@
 \section{DeepSmith}
 
-DeepSmith is our open source framework for compiler fuzzing~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}} \cc{TODO: it's the entire stack, including harness and voting heuristics}. Figure~\ref{fig:deeptune} provides an overview of the system. Our compiler test case generation approach consists of two parts: first, a generative model for code samples inferred from open-source codes; the second, test case construction.
+DeepSmith is our open source framework for compiler fuzzing~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}}. Figure~\ref{fig:deeptune} provides an overview of the system. Our compiler test case generation approach consists of two parts: first, a generative model for code samples inferred from open-source codes; the second, test case construction.
 
 \cc{TODO: overview} We mine over a million lines of handwritten OpenCL code from GitHub, which we use to construct a corpus of representative programs. We learn a generative model over this corpus, using syntactic level language modeling. DeepSmith, our deep learning program generator, automatically and rapidly synthesizes an unbounded number of programs for fuzz testing compilers.
 
@@ -24,7 +24,7 @@ The trained network is sampled to generate new programs. The model is seeded wit
   \includegraphics[width=.80\columnwidth]{img/deepsmith} %
   % \vspace{-2em}%
   \caption{%
-    Test case generation. An corpus of programs from GitHub is used to seed a generative model for program code, which are parameterized to construct test cases.%
+    Test case generation. An corpus of programs from GitHub is used to seed a generative model for program code, which are parameterized to construct test cases. \cc{Add testbeds and comparison of outputs}%
   }%
   \label{fig:deeptune}
 \end{figure}

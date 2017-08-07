@@ -453,6 +453,9 @@ We believe that our approach contributes a significant improvement for generatin
 \paragraph{Silent crashes} 110 distinct test cases which crash testbed $9\pm$ during compilation, all silently.
 
 
+\paragraph{Build failures} Some compilers are more permissive then others. Testbed~$3\pm$ rejects address space qualifiers on automatic variables. Testbeds $1\pm$, $2\pm$ reject \texttt{size\_t} kernel arguments (this is right - OpenCL doesn't allow sizet parameters).
+
+
 \paragraph{Comparison of Clang Front-ends}%
 % \label{subsec:clangs}
 
