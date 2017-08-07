@@ -95,6 +95,32 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
     return " & ".join(str(counts.get(x, 0)) for x in ["bc", "bto", "bf", "c", "to", "w", "pass"])
 
 
+def get_classification_totals(tables: Tableset):
+    """
+    Return results for the specified time limit.
+    """
+    counts = dict((CLASSIFICATIONS[classification], count) for classification, count in
+        session.query(tables.classifications.classification, sql.sql.func.count(tables.classifications.classification))\
+                .join(tables.results)\
+                .join(tables.meta)\
+                .filter(tables.meta.cumtime < TIME_LIMIT)\
+                .group_by(tables.classifications.classification))
+
+    num_interesting = sum(counts.values())
+
+    num_results = session.query(sql.sql.func.count(tables.results.id))\
+                  .join(tables.meta)\
+                  .filter(tables.meta.cumtime < TIME_LIMIT)\
+                  .scalar()
+
+    counts["pass"] = num_results - num_interesting
+    # ratio = (num_interesting / num_results) * 100
+    # counts["ratio"] = f"{ratio:.2f}\\%"
+
+    print("  Totals", tables.name, counts)
+    return " & ".join("\\multirow{{ 2}}{{*}}{{{}}}".format(counts.get(x, 0)) for x in ["bc", "bto", "bf", "c", "to", "w", "pass"])
+
+
 def get_row(config_id, testbed_id, get_columns):
     """ get mega-table row """
     testbed = session.query(Testbed).filter(Testbed.id == testbed_id).first()
@@ -143,14 +169,30 @@ def get_classifications_table():
     cols = ['bc', 'bto', 'bf', 'c', 'to', 'w', '\\cmark']
     cols_string = ' & '.join(f"\\textbf{{{x}}}" for x in cols)
 
-    return mkmegatable(get_classification_columns, f"""\
+    clsmith_totals = get_classification_totals(CLSMITH_TABLES)
+    clgen_totals = get_classification_totals(CLGEN_TABLES)
+    total_row = f"""
+\\multirow{{ 2}}{{*}}{{}} & \\multirow{{ 2}}{{*}}{{Total}} & \\multirow{{ 2}}{{*}}{{}} &
+{clsmith_totals} & {clgen_totals} \\\\
+\\\\
+"""
+
+    rows = "\n\\hline\n".join(get_row(*x, get_classification_columns) for x in CONFIGURATIONS)
+
+    return f"""\
 \\begin{{tabular}}{{lll | {cols_format} | {cols_format} }}
   \\toprule
   & & & \\multicolumn{{{num_columns}}}{{c|}}{{\\textbf{{CLSmith}}}} & \\multicolumn{{{num_columns}}}{{c}}{{\\textbf{{DeepSmith}}}} \\\\
   \\textbf{{\\#.}} & \\textbf{{Device}} & $\\pm$ &
   {cols_string} &
   {cols_string} \\\\
-  \\midrule""")
+  \\midrule
+  {rows}
+  \\midrule
+  {total_row}
+  \\bottomrule
+\\end{{tabular}}
+"""
 
 
 def get_table():
