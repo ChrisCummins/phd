@@ -1,11 +1,11 @@
 \section{DeepSmith}
 
-Generating test cases for compilers is hard because their inputs are highly structured.
-
 DeepSmith is our open source test case generator for compiler fuzzing~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}}. Figure~\ref{fig:deeptune} provides an overview of the system. Our compiler test case generation approach consists of two parts: first, a generative model for code samples inferred from open-source codes; the second, test case construction.
 
 
 \subsection{Generative Model for Program Codes}
+
+Generating test cases for compilers is hard because their inputs are highly structured.
 
 We use unsupervised learning to build syntactic-level sequence models over source code.
 
@@ -15,6 +15,7 @@ LSTM networks model the vocabulary distribution over the encoded corpus. We use 
 
 The trained network is sampled to generate new programs. The model is seeded with the start of a kernel (\texttt{\_\_kernel void}), and sampled token-by-token. A ``bracket depth'' counter is incremented or decremented upon production of \texttt{\{} or \texttt{\}} tokens respectively, and sampling terminates once the bracket depth reaches zero. The generated sequence of tokens are then concatenated and used as the generated program.
 
+\cc{Add algorithm!}
 
 \begin{figure}
   \centering
@@ -31,12 +32,12 @@ The trained network is sampled to generate new programs. The model is seeded wit
 
 OpenCL is an embedded compute kernel language, requiring host code to compile, execute, and transfer data between the host and device. For the purpose of compiler fuzzing, this requires a \emph{test harness} to run the generated OpenCL programs.
 
-At first, we used the test harness of CLSmith. CLSmith kernels accept no inputs, and each thread computes the same value which is stored in a \texttt{unsigned long} buffer. The fixed function prototype means that they have a single re-usable test harness which may compile any CLSmith kernel, run it, and prints the output. We found this fixed harness to be too inflexible for our needs. This prototype is not a common OpenCL use case (only 5.6\% of GitHub kernels accept a single argument, of which 3.4\% are \texttt{ulong}, 0.2\% of the total).
+At first, we used the test harness of CLSmith. CLSmith kernels accept no inputs, and each thread computes the same value which is stored in a \texttt{ulong} buffer. The fixed function prototype means that they have a single re-usable test harness which may compile any CLSmith kernel, run it, and prints the output. We found this fixed harness to be too inflexible for our needs. This prototype is not a common OpenCL use case (only 5.6\% of GitHub kernels accept a single argument, and 0.2\% a single \texttt{ulong}).
 % $ grep -E '^__global (.*)\* A$' github-arguments.txt | wc -l     -> 294
 % $ grep '^__global ulong\* A$' ~/src/project_b/difftest/github-arguments.txt | wc -l     -> 10
 To test a more expressive range of kernels, we created a tool to generate host code capable of driving arbitrary OpenCL kernels, allowing us to create a unique test harness for each generated program.
 
-For a given OpenCL kernel, we first parse the function prototype in order to determine the expected arguments. We then generate host data to feed to these arguments - supporting scalars and arrays of all primitive and vector types. We parameterize data generation with a single value $n$. Input arrays are populated with values {$[1 \ldots n]$}; scalar values are given value $n$. We then enqueue the kernel with $n$ threads. The \emph{output} of a program is the values of all non-const arguments after kernel execution. For each program, we generate two test harnesses, one where $n=1$ (i.e. a single thread computing a single result) and one where $n = 2048$.
+OpenCL kernels are executed concurrently one or more threads. We parameterize test harness generation with a single value $n$. For each program, we generate two test harnesses, one where $n=1$ (i.e. a single thread computing a single result) and one where $n = 2048$. For a given OpenCL kernel, we first parse the function prototype in order to determine the expected arguments. We then generate host data to feed to these arguments --- supporting scalars and arrays of all OpenCL primitive and vector types. Input arrays are generated of size $n$ and populated with values {$[1 \ldots n]$}; scalar values are given value $n$. We then enqueue the kernel on $n$ threads. The \emph{output} of a program is the values of all non-const arguments after kernel execution.
 
 Since we do not guarantee that the generative model samples are well-formed, it may not be possible to parse the function signature. In this case, a ``compile-only'' stub is generated, which only compile the kernel, without generating input data or executing the compiled kernel.
 
@@ -81,20 +82,21 @@ A \emph{build failure} (\textbf{bf}) occurs when online compilation of the OpenC
 %	\item \textbf{\cmark} \emph{Completion} The program terminates gracefully and produces an output.
 %\end{enumerate}
 
-When evaluating the outcomes of test cases, \textbf{\{bc,bto\}} outcomes are of immediate interest, indicative of erroneous compiler behavior. For all other outcomes, \emph{differential tests} are required to expose anomalous behavior.
+When evaluating the outcomes of test cases, \textbf{\{bc,bto\}} outcomes are of immediate interest, indicative of erroneous compiler behavior \cc{examples in Section~\ref{subsec:compile-time-defects}}. For all other outcomes, \emph{differential tests} are required to expose anomalous behavior.
 
 
 \subsection{Voting Heuristics for Differential Testing}
 
-Voting on the output of programs across compilers has been used to circumvent the \emph{oracle problem} and detect miscompilations.
+As in prior work, voting on the output of programs across compilers has been used to circumvent the \emph{oracle problem} and detect miscompilations~\cite{McKeeman1998}.
 % In~\cite{Lidbury2015a}, a testbed is determined to have produced a wrong code result for a kernel if there is a majority output of at least 3 among the \textbf{\cmark} results for the kernel, and the testbed yields a \textbf{\cmark} result that disagrees with the majority.
-We extend this approach to describe not only miscompilations, but also anomalous build failures, crashes, and timeouts.
+We extend this approach to describe not only miscompilations, but also anomalous build failures, crashes, and timeouts \cc{do we?}.
 
 A majority outcome exists if, for for a particular test case ran on $n$ testbeds, at least $\ceil{\frac{2}{3}n}$ testbeds produce non-\textbf{\{bc,bto\}} results with the same outcome. We classify anomalous results with respect to the majority outcome for each test case.
 
-An anomalous output (\textbf{ao}) occurs if, for a given test case, the majority outcome is \textbf{\cmark}, at least $\ceil{\frac{2}{3}n}$ testbeds compute the same result, and a testbed yields a result which differs from this majority result. An \textbf{ao} result is indicative of a \emph{miscompilation}, a particularly hard to detect class of bug in which the compiler silently emits the wrong code. CSmith is designed specifically to target this class of bug.
-
 An anomalous build failure (\textbf{abf}), anomalous runtime crash (\textbf{ac}), or anomalous timeout (\textbf{ato}) result occurs if, for a given test case, the majority outcome is non-\{\textbf{bf,c,to}\}, and a testbed yields a \textbf{bf,bc,to} result.
+
+An anomalous output (\textbf{ao}) occurs if, for a given test case, the majority outcome is \textbf{\cmark}, at least $\ceil{\frac{2}{3}n}$ testbeds compute the same result, and a testbed yields a result which differs from this majority result. An \textbf{ao} result is indicative of a \emph{miscompilation}, a particularly hard to detect class of bug in which the compiler silently emits the wrong code (see below for a discussion on the implications of testing with undefined behavior). CSmith is designed specifically to target this class of bug.
+
 
 % Only 2.3\% of CLSmith programs with anomalous outputs are insensitive to optimization level.
 
@@ -113,21 +115,19 @@ An anomalous build failure (\textbf{abf}), anomalous runtime crash (\textbf{ac})
 % \paragraph{Design Trade-Offs}
 We do not employ the rigorous static and dynamic analysis employed in prior probabilistic grammar-based approaches. This greatly simplifies the implementation --- targeting a new language requires only a corpus of example programs and a test harness for generated codes. The generative model itself contains no language-specific code, and is implemented in less than 200 lines of Python --- a small fraction of that of grammar-based approaches, even excluding the static analysis. The trade-off of this makes significantly reduces the cost of development, but weakens the guarantees  \cc{\ldots}
 
-\paragraph{Un-targeted Testings} Random token / grammar enumeration has previously been used to target parsers and lexers. CSmith creates huge, ``ugly'' programs with the intention of deliberately targeting bugs in IR transformations --- the middle-end.
-
-One might expect our approach --- generating small test cases in the style of handwritten programs --- is perhaps less likely to find bugs than CSmith, which generates huge, ``ugly'' programs pairing infrequently used language features. DeepSmith rarely generates large OpenCL kernels because humans rarely write them. A code which is more likely to be written by a human is also more likely to be included in the compiler test suites, \cc{hmm what do we do about this}
-
-Our approach is biased towards the front-end, since not all generated programs are well-formed and well-types.
-
 \paragraph{Undefined Behaviors} % aka. unambiguous observable behaviour
 If the output of a program depends on undefined or unspecified behavior, then comparing outputs across compilers is meaningless. Prior works have formulated random program generation so as to minimize or eradicate the possibility of undefined and unspecified behavior~\cite{Yang2011c,Le2013a,Le2015}, at the expense of expressiveness. Recently, work in Skeletal Program Enumeration~\cite{Zhang2017a} has relied on handchecking of C programs and tools such as CompCert~\cite{Leroy2013} and UBsan to detect false-positives. Since DeepSmith programs are not guaranteed to be free from undefined behaviors, and we can only determine if a program is well-formed empirically, additional filtering of test cases is required to prevent false-positives.
 
-OpenCL doesn't have the rich tooling of C --- no CompCert and UBSan, there is much work to be done. GPUverify~\cite{Betts2012} and Oclgrind can catch some errors such as data races and out-of-bounds error checks, but as we have shown in Section~\ref{sec:motivation}, this tool is not without flaws. Compiler warnings are useful for obvious missteps (e.g. comparison between pointer and integer), but our approach does not rule out manual inspection. DeepSmith programs are easily interpretable --- they are generally short programs built on common language constructs, so this process is not as bad as it could be. We have not yet discovered a test case which was not detectable by automated filtering and a superficial handcheck.
+OpenCL doesn't have the rich tooling of C --- no CompCert and UBSan, there is much work to be done. GPUverify~\cite{Betts2012} and Oclgrind can catch some errors such as data races and out-of-bounds error checks, but as we have shown in Section~\ref{sec:motivation}, this tool is not without flaws. Compiler warnings are useful for obvious missteps (e.g. comparison between pointer and integer), but our approach does not rule out manual inspection. DeepSmith programs are easily interpretable --- they are generally short programs built on common language constructs, so this process is not as bad as it could be. We have not yet discovered an false-positive result which was not trivially detectable by automated filtering.
 
-\paragraph{OpenCL Versions and Extensions} OpenCL is a fast evolving language, with six major revisions in eight years. Additionally, support for optional language extensions is inconsistent between vendors. Since we do not version the GitHub corpus on which we built the DeepSmith models, this has the potential to lead to false-positive results for programs which depend upon features which are not supported by a testbed. For example, not all testbeds support the optional \texttt{cl\_khr\_fp64} extension which provides support for double-precision floating point. We found that such results were trivially detectable through compiler error messages, and used to prevent false-positives for anomalous build failures.
+\paragraph{OpenCL Versions and Extensions} OpenCL is a fast evolving language, with six standard revisions in eight years. Vendor support for standard versions is inconsistent, as is the support for optional language extensions. Since we do not version the GitHub corpus on which we built the DeepSmith models, this has the potential to lead to false-positive results for programs which depend upon features which are not supported by a testbed. For example, not all testbeds support the optional \texttt{cl\_khr\_fp64} extension which provides support for double-precision floating point. We found that such results were trivially detectable through compiler error messages, and used to prevent false-positives for anomalous build failures.
 
 \paragraph{Floating Points} The OpenCL specifications permit acceptable error bounds (ULP) for floating point operations and builtin functions. Some operations like addition, and multiplication are precise; divide permits a small error, and builtins vary widely. Thus two implementation may give different answers that both fit within the allowed ranges (and because errors propagate through operations it's hard to even describe the ULP on the final output). For this reason, CSmith, and by extension, CLSmith, do not support floating point operations. We believe this restriction to be artificially limiting, since floating point computations are dominant in the common uses of OpenCL --- %
 % $ ls | xargs grep -E -l '(float|double)' -- | wc -l  # 2245
-48\% of GitHub kernels use floating points. At the moment, we simply rely upon \texttt{printf()} rounding. Given knowledge about hardware imprecision, it would be possible to compute an acceptable error threshold for floating point results based on dynamic profiling.
+48\% of GitHub kernels use floating points. At the moment, we simply print floating values using \texttt{printf()} rounding. This will hide small rounding errors. Larger errors prevent us from difftesting on the output since no output majority will be possible. Given knowledge about hardware imprecision, it would be possible to compute an acceptable error threshold for floating point results based on dynamic profiling.
 
 % Section 7.4 of OpenCL 1.2 spec.
+
+\paragraph{Small, Human-like Test Cases} Random token / grammar enumeration has previously been used to target parsers and lexers. CSmith creates huge, ``ugly'' programs with the intention of deliberately targeting bugs in IR transformations --- the middle-end.
+
+One might expect our approach --- generating small test cases in the style of handwritten programs --- is perhaps less likely to find bugs than CSmith, which generates huge, ``ugly'' programs pairing infrequently used language features. DeepSmith rarely generates large OpenCL kernels because humans rarely write them. A code which is more likely to be written by a human is also more likely to be included in the compiler test suites, \cc{hmm what do we do about this}
