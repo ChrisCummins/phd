@@ -447,7 +447,7 @@ We believe that our approach contributes a significant improvement for generatin
 \paragraph{Unreachable code} To date we have identified 207 distinct cases which trigger unreachable code failures. \cc{How many *distinct* traces?}
 
 
-\paragraph{Silent crashes} 110 distinct test cases which crash testbed $9\pm$ during compilation, all silently. 
+\paragraph{Silent crashes} 110 distinct test cases which crash testbed $9\pm$ during compilation, all silently.
 
 
 \subsection{Runtime Defects}
@@ -477,7 +477,7 @@ EMI/CSmith/SPE extensive stress-test.
 \end{figure}
 
 
-\paragraph{Thread-dependent flow control} CLSmith does not support this (because of the risk of barrier divergence). 
+\paragraph{Thread-dependent flow control} CLSmith does not support this (because of the risk of barrier divergence).
 
 A common pattern in OpenCL is to obtain the thread identity, often as an \texttt{int}, and to compare this against some fixed value to determine whether or not to complete a unit of work. DeepSmith, having modeled the frequency with which this pattern occurs in real handwritten code, generates many programs containing permutations of this pattern. And in doing so, exposed an error in the optimizer of two Testbeds $4+$, $6+$ which causes the \texttt{if} statement of Figure~\ref{lst:intel-size_t-int-reduced} to be executed when the kernel is compiled with optimizations enabled.
 %
@@ -529,11 +529,21 @@ The hardest false-positive to prevent was division by zero and related mathemati
 \subsection{Comparison of Clang Versions}%
 \label{subsec:clangs}
 
+\begin{table}
+  \scriptsize %
+  \centering %
+  \input{build/tab/clang-asserts}
+  \caption{%
+    Distinct clang front assertions.%
+  }
+  \label{tab:clang-asserts}
+\end{table}
+
 Many compilers use a common Clang frontend. Perhaps that's why Figure~\ref{lst:almost-everything-crash} fails on so many testbeds.
 
 We found numerous crash bugs in compiler frontends. Because DeepSmith generates syntactically incorrect code, some test cases do not make it past the lexer, parser, and typechecker. This biases DeepSmith towards discovering bugs in compiler front-ends. Many compilers use Clang frontend.
 
-TODO: Using the clang frontend (debug + assert build), compile 75,000 DeepSmith kernels (frontend only, no code generation). Figure~\ref{fig:clangs}. 
+TODO: Using the clang frontend (debug + assert build), compile 75,000 DeepSmith kernels (frontend only, no code generation). Figure~\ref{fig:clangs}.
 
 \begin{figure}
   \centering %
