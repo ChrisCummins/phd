@@ -393,11 +393,11 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\AlmostEverythingCrash}}}%
     \label{lst:almost-everything-crash}
   }\\%
-  \subfloat[Testbeds $1\pm$ segementation fault.]{%
+  \subfloat[Testbeds $1\pm$ segmentation fault.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaCompileSegfault}}}%
     \label{lst:nvidia-compile-segfault}
   }\\%
-  \subfloat[Testbeds $7\pm$ segementation fault.]{%
+  \subfloat[Testbeds $7\pm$ segmentation fault.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSegfault}}}%
     \label{lst:xeon-phi-segfault}
   }\\%
@@ -468,7 +468,7 @@ EMI/CSmith/SPE extensive stress-test.
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\PoclUndefinedSymbols}}}%
     \label{lst:pocl-undefined-symbols}
   }\\%
-  \subfloat[Testbeds $3\pm$ incorrect cast yields \texttt{b[e] = 127}, not \texttt{b[e] = 0}.]{%
+  \subfloat[Testbeds $3\pm$ incorrect cast yields \texttt{b[e] = 127}, not \texttt{b[e] = 0}. \cc{TODO: Is char overflow defined?}]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetCastError}}}%
     \label{lst:beignet-cast-error}
   }\\%
