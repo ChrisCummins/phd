@@ -61,16 +61,6 @@ def get_outcome_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
 def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool):
     """
     Return results for the specified time limit.
-
-    Arguments:
-        results_table: SQLAlchemy table for results.
-        programs_table: SQLAlchemy table for programs.
-        params_table: SQLAlchemy table for params.
-        reduction_table: SQLAlchemy table for reduction results. If
-            provided, reductions will be added to the runtime of "w" classified
-            results, where possible.
-        testbed (db.Testbed): Testbed instance to return results for.
-        no_opt (bool): Testbed optimizations off?
     """
     optimizations = not no_opt
     param_ids = [x[0] for x in
@@ -87,10 +77,22 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
                         tables.meta.cumtime < TIME_LIMIT)\
                 .group_by(tables.classifications.classification))
 
-    counts['total'] = sum(counts.values())
+    num_interesting = sum(counts.values())
 
-    print(' ', device_str(testbed.device), tables.name, no_opt, counts)
-    return " & ".join(str(counts.get(x, 0)) for x in ["w", "bf", "c", "to", "total"])
+    num_results = session.query(sql.sql.func.count(tables.results.id))\
+                  .join(tables.meta)\
+                  .join(tables.testcases)\
+                  .filter(tables.results.testbed_id == testbed.id,
+                          tables.testcases.params_id.in_(param_ids),
+                          tables.meta.cumtime < TIME_LIMIT)\
+                  .scalar()
+
+    counts["pass"] = num_results - num_interesting
+    # ratio = (num_interesting / num_results) * 100
+    # counts["ratio"] = f"{ratio:.2f}\\%"
+
+    print(" ", device_str(testbed.device), tables.name, no_opt, counts)
+    return " & ".join(str(counts.get(x, 0)) for x in ["bc", "bto", "bf", "c", "to", "w", "pass"])
 
 
 def get_row(config_id, testbed_id, get_columns):
@@ -125,7 +127,8 @@ def mkmegatable(get_columns, header):
 """
 
 def get_outcomes_table():
-    return mkmegatable(get_outcome_columns, f"""\\begin{{tabular}}{{lll | rrrrrrr | rrrrrrr }}
+    return mkmegatable(get_outcome_columns, f"""\
+\\begin{{tabular}}{{lll | rrrrrrr | rrrrrrr }}
   \\toprule
   & & & \\multicolumn{{7}}{{c|}}{{\\textbf{{CLSmith}}}} & \\multicolumn{{7}}{{c}}{{\\textbf{{DeepSmith}}}} \\\\
   \\textbf{{\\#.}} & \\textbf{{Device}} & $\\pm$ &
@@ -133,13 +136,20 @@ def get_outcomes_table():
   \\textbf{{bf}} & \\textbf{{bc}} & \\textbf{{bto}} & \\textbf{{c}} & \\textbf{{to}} & \\cmark & \\textbf{{total}} \\\\
   \\midrule""")
 
+
 def get_classifications_table():
-    return mkmegatable(get_classification_columns, f"""\\begin{{tabular}}{{lll | rrrrr | rrrrr }}
+    num_columns = 7
+    cols_format = ''.join(['r'] * num_columns)
+    cols = ['bc', 'bto', 'bf', 'c', 'to', 'w', '\\cmark']
+    cols_string = ' & '.join(f"\\textbf{{{x}}}" for x in cols)
+
+    return mkmegatable(get_classification_columns, f"""\
+\\begin{{tabular}}{{lll | {cols_format} | {cols_format} }}
   \\toprule
-  & & & \\multicolumn{{5}}{{c|}}{{\\textbf{{CLSmith}}}} & \\multicolumn{{5}}{{c}}{{\\textbf{{DeepSmith}}}} \\\\
+  & & & \\multicolumn{{{num_columns}}}{{c|}}{{\\textbf{{CLSmith}}}} & \\multicolumn{{{num_columns}}}{{c}}{{\\textbf{{DeepSmith}}}} \\\\
   \\textbf{{\\#.}} & \\textbf{{Device}} & $\\pm$ &
-  \\textbf{{ao}} & \\textbf{{abf}} & \\textbf{{ac}} & \\textbf{{ato}} & \\textbf{{total}} &
-  \\textbf{{ao}} & \\textbf{{abf}} & \\textbf{{ac}} & \\textbf{{ato}} & \\textbf{{total}} \\\\
+  {cols_string} &
+  {cols_string} \\\\
   \\midrule""")
 
 
@@ -147,7 +157,7 @@ def get_table():
     # TODO:
     rows = "\n\\hline\n".join(get_row(*x, get_columns) for x in CONFIGURATIONS)
     return f"""\
-\\begin{{tabular}}{{lll | rrrrr | rrrrr }}
+\\begin{{tabular}}{{lll | rrrrrrr | rrrrr }}
   \\toprule
   & & & \\multicolumn{{5}}{{c|}}{{\\textbf{{CLSmith}}}} & \\multicolumn{{5}}{{c}}{{\\textbf{{DeepSmith}}}} \\\\
   \\textbf{{\\#.}} & \\textbf{{Device}} & $\\pm$ &
@@ -168,8 +178,8 @@ if __name__ == "__main__":
     # with open(os.path.expanduser("~/docs/paper-project_b/build/tab/outcomes.tex"), "w") as outfile:
     #     print(get_outcomes_table(), file=outfile)
 
-    # print("\nGenerating classifications table ...")
-    # with open(os.path.expanduser("~/docs/paper-project_b/build/tab/megatable.tex"), "w") as outfile:
-    #     print(get_classifications_table(), file=outfile)
+    print("\nGenerating classifications table ...")
+    with open(os.path.expanduser("~/docs/paper-project_b/build/tab/megatable.tex"), "w") as outfile:
+        print(get_classifications_table(), file=outfile)
 
     !cd ~/docs/paper-project_b/build && git add . && git commit -m "auto: build/tab: Megatables" && git push
