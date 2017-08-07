@@ -2,7 +2,9 @@
 Shared utility code for Jupyter notebooks.
 """
 from collections import Counter, namedtuple
+from labm8 import crypto
 from progressbar import ETA, ProgressBar
+
 
 from db import *
 
@@ -109,12 +111,15 @@ def escape_stderr(stderr):
                      if "no version information available" not in line)
 
 
-def get_assertion(s: session_t, table, stderr: str):
+def get_assertion(s: session_t, table, stderr: str, clang_assertion: bool=True):
     for line in stderr.split('\n'):
         if "assertion" in line.lower():
-            msg = ":".join(line.split(":")[3:])
+            if clang_assertion:
+                msg = ":".join(line.split(":")[3:])
+            else:
+                msg = line
             assertion = get_or_create(
-                s, tables.clang_assertions,
+                s, table,
                 hash=crypto.sha1_str(msg),
                 assertion=msg)
             s.add(assertion)
@@ -126,7 +131,7 @@ def get_unreachable(s: session_t, tables, stderr: str):
     for line in stderr.split('\n'):
         if "unreachable executed at" in line.lower():
             unreachable = get_or_create(
-                s, tables.clang_unreachables,
+                s, table,
                 hash=crypto.sha1_str(line),
                 unreachable=line)
             s.add(unreachable)
@@ -138,7 +143,7 @@ def get_terminate(s: session_t, tables, stderr: str):
     for line in stderr.split('\n'):
         if "terminate called after throwing an instance" in line.lower():
             terminate = get_or_create(
-                s, tables.clang_terminates,
+                s, table,
                 hash=crypto.sha1_str(line),
                 terminate=line)
             s.add(terminate)

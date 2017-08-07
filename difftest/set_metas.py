@@ -119,25 +119,16 @@ ORDER BY t1.maj_outcome DESC
 
 def get_assertions(session: session_t, tables: Tableset) -> None:
     print(f"Recording {tables.name} compiler assertions ...")
-    q = session.execute(f"DELETE FROM {tables.assertions.__tablename__}")
-    q = session.execute(f"""
-SELECT stderr.id, stderr.stderr
-FROM {tables.results.__tablename__} results
-INNER JOIN {tables.stderrs.__tablename__} stderr ON results.stderr_id = stderr.id
-WHERE status <> 0
-AND stderr LIKE '%assertion%'
-GROUP BY stderr.id, stderr.stderr
-""")
+    stderrs = session.query(tables.stderrs)\
+        .join(tables.results)\
+        .filter(tables.results.status != 0,
+                tables.stderrs.stderr.like("%assertion%"))\
+        .distinct()
 
-    for stderr_id, stderr in ProgressBar()(q.fetchall()):
-        lines = [line for line in stderr.split('\n') if "assertion" in line.lower()]
-        if len(lines) != 1:
-            n = len(lines)
-            print(f"warnings: found {n} lines containing assertions in output: {stderr}", file=sys.stderr)
-        msg = lines[0]
-        assertion = tables.assertions(id=stderr_id, hash=crypto.sha1_str(msg),
-                                      assertion=msg)
-        session.add(assertion)
+    for stderr in ProgressBar(max_value=stderrs.count())(stderrs):
+        assertion = util.get_assertion(session, tables.assertions, stderr.stderr,
+                                       clang_assertion=False)
+        stderr.assertion = assertion
 
 
 if __name__ == "__main__":
