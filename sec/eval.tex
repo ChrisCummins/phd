@@ -574,69 +574,6 @@ Testbeds $4$, $5$, $6$, and $7$ have a number CLSmith bc outcomes when optimizat
 \cc{Testbeds $4$, $6$ are the same driver on different hardware, and exhibit similar behavior}
 
 
-\begin{figure}
-	\centering %
-	\includegraphics[width=\columnwidth]{build/img/kernel-sizes}%
-	\caption{%
-		Kernel line counts, grouped by outcome. DeepSmith test cases are on average two orders of magnitude smaller than CLSmith.%
-	}%
-	\label{fig:kernel-sizes} %
-\end{figure}
-
-
-\paragraph{Differential Tests}
-
-Table~\ref{tab:classifications} shows the results of applying voting heuristics to the results of Table~\ref{tab:outcomes}.
-
-\begin{figure}
-	\centering %
-	\includegraphics[width=\columnwidth]{build/img/runtimes}%
-	\caption{%
-		Runtimes, excluding timeouts. On average, DeepSmith test cases are evaluated $XX\times$ faster than CLSmith ($2.45\times$, $4.46\times$, and $66.54\times$ for generation, execution and reduction, respectively).%
-%    Total speedup is 3.03x
-%    CLgen generation is 2.45x faster than CLSmith
-%    CLgen execution is 4.46x faster than CLSmith
-%    CLgen reduction is 66.54x faster than CLSmith
-	}%
-	\label{fig:runtimes} %
-\end{figure}
-
-
-\begin{table*}
-	\scriptsize %
-	\centering %
-	\input{build/tab/megatable}
-	\caption{Using voting heuristics to expose anomalous results from 48 hours of testing using CLSmith and DeepSmith. Columns denote anomalous-output (ao), anomalous build failure (\textbf{abf}), anomalous runtime crash (\textbf{ac}), and anomalous timeout (\textbf{ato}) classifications for CLSmith and DeepSmith, respectively. \cc{TODO: Add a distinct crashes column?}}
-	\label{tab:classifications}
-\end{table*}
-
-The 2357 \textbf{abf} results for CLSmith on Testbeds $4\pm$ and $6\pm$ are all a result of compilers rejecting empty declarations, (e.g. \texttt{int;}) which CLSmith occasionally emits. This is a known CLSmith issue which will likely be addressed.
-% https://github.com/ChrisLidbury/CLSmith/issues/7
-Similarly, Intel Testbeds 4--7 (but not 3) reject DeepSmith kernels which omit a type specified (e.g. \texttt{\_\_global* a}), whereas all other Testbeds (including 3) emit and warning and default to \texttt{int} type.
-
-% Anomalous build failures
-Testbeds $1\pm$, $2\pm$ reject kernels which \texttt{size\_t} parameters.
-
-
-\paragraph{Test case Reduction} We used a modified version of C-Reduce which supports OpenCL~\cite{Pflanzer2016} to perform automatic test case, using the default settings. The available implementation supports reduction only of anomalous-output test cases, though this could be extended to support other outcomes (we did not do this). Test case reduction is a time-consuming process, even with the parallelized implementation. Figure~\ref{fig:kernel-sizes} shows the runtimes of reductions, and Figure~\cc{TODO} shows the test case sizes before and after reduction. For CLSmith-generated kernels, test case reduction is necessary to expose the problematic code from within the hundreds of lines of generated program. DeepSmith kernels are on average an order of magnitude smaller. We found that reduction \ldots
-
-% Average GitHub charchounts: 1451
-% Average GitHub linecounts: 53
-
-\begin{figure}
-  \centering %
-  \subfloat[Testbeds $3\pm$ assertion during code generation for pointer assignment.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPtrAssertion}}}%
-    \label{lst:intel-ptr-assertion}
-  }\\%
-  \subfloat[Testbeds $3\pm$ assertion in scalar type code generation.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelScalarAssertion}}}%
-    \label{lst:intel-scalar-assertion}
-  }\\%
-  \caption{Kernels which trigger compiler assertions which both CLSmith and DeepSmith exposed.}%
-  \label{lst:clsmith-compiler-assertions}%
-\end{figure}
-
 In 48 hours of testing, DeepSmith triggered 9 distinct compiler assertions, CLSmith 2. Both of the assertions triggered by CLSmith were also triggered by CLgen.
 % Test case sizes:
 %
@@ -677,6 +614,70 @@ DeepSmith also triggered \emph{unreachable!} compiler errors in 180 distinct tes
 \cc{What is the bug rate per line of code?}
 
 
+\begin{figure}
+	\centering %
+	\includegraphics[width=\columnwidth]{build/img/kernel-sizes}%
+	\caption{%
+		Kernel line counts, grouped by outcome. DeepSmith test cases are on average two orders of magnitude smaller than CLSmith.%
+	}%
+	\label{fig:kernel-sizes} %
+\end{figure}
+
+
+\paragraph{Differential Tests}
+
+Table~\ref{tab:classifications} shows the results of applying voting heuristics to the results of Table~\ref{tab:outcomes}.
+
+\begin{figure}
+	\centering %
+	\includegraphics[width=\columnwidth]{build/img/runtimes}%
+	\caption{%
+		Runtimes, excluding timeouts. On average, DeepSmith test cases are evaluated $XX\times$ faster than CLSmith ($2.45\times$, $4.46\times$, and $66.54\times$ for generation, execution and reduction, respectively).%
+%    Total speedup is 3.03x
+%    CLgen generation is 2.45x faster than CLSmith
+%    CLgen execution is 4.46x faster than CLSmith
+%    CLgen reduction is 66.54x faster than CLSmith
+	}%
+	\label{fig:runtimes} %
+\end{figure}
+
+
+\begin{table*}
+	\scriptsize %
+	\centering %
+	\input{build/tab/megatable}
+	\caption{Using voting heuristics to expose anomalous results from 48 hours of testing using CLSmith and DeepSmith. Columns denote anomalous-output (ao), anomalous build failure (\textbf{abf}), anomalous runtime crash (\textbf{ac}), and anomalous timeout (\textbf{ato}) classifications for CLSmith and DeepSmith, respectively. \cc{TODO: Add a distinct crashes column? Bring back the size\_t and int; failures}}
+	\label{tab:classifications}
+\end{table*}
+
+The 2357 \textbf{abf} results for CLSmith on Testbeds $4\pm$ and $6\pm$ are all a result of compilers rejecting empty declarations, (e.g. \texttt{int;}) which CLSmith occasionally emits. This is a known CLSmith issue which will likely be addressed.
+% https://github.com/ChrisLidbury/CLSmith/issues/7
+Similarly, Intel Testbeds 4--7 (but not 3) reject DeepSmith kernels which omit a type specified (e.g. \texttt{\_\_global* a}), whereas all other Testbeds (including 3) emit and warning and default to \texttt{int} type.
+
+% Anomalous build failures
+Testbeds $1\pm$, $2\pm$ reject kernels which \texttt{size\_t} parameters.
+
+
+\paragraph{Test case Reduction} We used a modified version of C-Reduce which supports OpenCL~\cite{Pflanzer2016} to perform automatic test case, using the default settings. The available implementation supports reduction only of anomalous-output test cases, though this could be extended to support other outcomes (we did not do this). Test case reduction is a time-consuming process, even with the parallelized implementation. Figure~\ref{fig:kernel-sizes} shows the runtimes of reductions, and Figure~\cc{TODO} shows the test case sizes before and after reduction. For CLSmith-generated kernels, test case reduction is necessary to expose the problematic code from within the hundreds of lines of generated program. DeepSmith kernels are on average an order of magnitude smaller. We found that reduction \ldots
+
+% Average GitHub charchounts: 1451
+% Average GitHub linecounts: 53
+
+\begin{figure}
+  \centering %
+  \subfloat[Testbeds $3\pm$ assertion during code generation for pointer assignment.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelPtrAssertion}}}%
+    \label{lst:intel-ptr-assertion}
+  }\\%
+  \subfloat[Testbeds $3\pm$ assertion in scalar type code generation.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelScalarAssertion}}}%
+    \label{lst:intel-scalar-assertion}
+  }\\%
+  \caption{Kernels which trigger compiler assertions which both CLSmith and DeepSmith exposed.}%
+  \label{lst:clsmith-compiler-assertions}%
+\end{figure}
+
+
 \paragraph{Bug Diversity}
 
 Hard to quantify, but our results suggest the value of our syntactic approach.
@@ -684,7 +685,7 @@ Hard to quantify, but our results suggest the value of our syntactic approach.
 % How many GitHub kernels contain 'struct's?
 % $ ls | xargs grep -l struct -- | wc -l
 % 331
-CLSmith is biased towards identifying struct miscompilations, though only 7.1\% of OpenCL kernels on GitHub use them.
+CLSmith is biased towards identifying struct miscompilations, though only 7.1\% of OpenCL kernels on GitHub use them. \cc{is this supported in the data?}
 
 Our approach is biased towards identifying bugs in compiler front-ends, since not all generated programms are well formed/well typed. Results suggest we cover more areas of the compiler, E.g. compiler crashes, compiler timeouts, etc.
 
