@@ -127,7 +127,7 @@ def mkmegatable(get_columns, header):
 def get_outcomes_table():
     return mkmegatable(get_outcome_columns, f"""\\begin{{tabular}}{{lll | rrrrrrr | rrrrrrr }}
   \\toprule
-  & & & \\multicolumn{{7}}{{c|}}{{\\textbf{{CLSmith}}}} & \\multicolumn{{7}}{{c}}{{\\textbf{{CLgen}}}} \\\\
+  & & & \\multicolumn{{7}}{{c|}}{{\\textbf{{CLSmith}}}} & \\multicolumn{{7}}{{c}}{{\\textbf{{DeepSmith}}}} \\\\
   \\textbf{{\\#.}} & \\textbf{{Device}} & $\\pm$ &
   \\textbf{{bf}} & \\textbf{{bc}} & \\textbf{{bto}} & \\textbf{{c}} & \\textbf{{to}} & \\cmark & \\textbf{{total}} &
   \\textbf{{bf}} & \\textbf{{bc}} & \\textbf{{bto}} & \\textbf{{c}} & \\textbf{{to}} & \\cmark & \\textbf{{total}} \\\\
@@ -136,7 +136,7 @@ def get_outcomes_table():
 def get_classifications_table():
     return mkmegatable(get_classification_columns, f"""\\begin{{tabular}}{{lll | rrrrr | rrrrr }}
   \\toprule
-  & & & \\multicolumn{{5}}{{c|}}{{\\textbf{{CLSmith}}}} & \\multicolumn{{5}}{{c}}{{\\textbf{{CLgen}}}} \\\\
+  & & & \\multicolumn{{5}}{{c|}}{{\\textbf{{CLSmith}}}} & \\multicolumn{{5}}{{c}}{{\\textbf{{DeepSmith}}}} \\\\
   \\textbf{{\\#.}} & \\textbf{{Device}} & $\\pm$ &
   \\textbf{{ao}} & \\textbf{{abf}} & \\textbf{{ac}} & \\textbf{{ato}} & \\textbf{{total}} &
   \\textbf{{ao}} & \\textbf{{abf}} & \\textbf{{ac}} & \\textbf{{ato}} & \\textbf{{total}} \\\\
