@@ -450,18 +450,30 @@ class CLSmithStderr(Base):
     id = sql.Column(sql.Integer, primary_key=True)
     hash = sql.Column(sql.String(40), nullable=False, unique=True)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    assertion_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithAssertions.id"))
+    unreachable_id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithUnreachables.id"))
 
     result = sql.orm.relationship("CLSmithResult", back_populates="stderr")
     assertion = sql.orm.relationship("CLSmithAssertion", back_populates="stderr")
+    unreachable = sql.orm.relationship("CLSmithUnreachable", back_populates="stderr")
 
 
 class CLSmithAssertion(Base):
     __tablename__ = "CLSmithAssertions"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLSmithStderrs.id"), primary_key=True)
+    id = sql.Column(sql.Integer, primary_key=True)
     hash = sql.Column(sql.String(40), nullable=False, index=True)
     assertion = sql.Column(sql.UnicodeText(length=1024), nullable=False)
 
     stderr = sql.orm.relationship("CLSmithStderr", back_populates="assertion")
+
+
+class CLSmithUnreachable(Base):
+    __tablename__ = "CLSmithUnreachables"
+    id = sql.Column(sql.Integer, primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, index=True)
+    unreachable = sql.Column(sql.UnicodeText(length=1024), nullable=False)
+
+    stderr = sql.orm.relationship("CLSmithStderr", back_populates="unreachable")
 
 
 class CLSmithMeta(Base):
@@ -582,18 +594,30 @@ class CLgenStderr(Base):
     id = sql.Column(sql.Integer, primary_key=True)
     hash = sql.Column(sql.String(40), nullable=False, unique=True)
     stderr = sql.Column(sql.UnicodeText(length=2**31), nullable=False)
+    assertion_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenAssertions.id"))
+    unreachable_id = sql.Column(sql.Integer, sql.ForeignKey("CLgenUnreachables.id"))
 
     result = sql.orm.relationship("CLgenResult", back_populates="stderr")
     assertion = sql.orm.relationship("CLgenAssertion", back_populates="stderr")
+    unreachable = sql.orm.relationship("CLgenUnreachable", back_populates="stderr")
 
 
 class CLgenAssertion(Base):
     __tablename__ = "CLgenAssertions"
-    id = sql.Column(sql.Integer, sql.ForeignKey("CLgenStderrs.id"), primary_key=True)
+    id = sql.Column(sql.Integer, primary_key=True)
     hash = sql.Column(sql.String(40), nullable=False, index=True)
     assertion = sql.Column(sql.UnicodeText(length=1024), nullable=False)
 
     stderr = sql.orm.relationship("CLgenStderr", back_populates="assertion")
+
+
+class CLgenUnreachable(Base):
+    __tablename__ = "CLgenUnreachables"
+    id = sql.Column(sql.Integer, primary_key=True)
+    hash = sql.Column(sql.String(40), nullable=False, index=True)
+    unreachable = sql.Column(sql.UnicodeText(length=1024), nullable=False)
+
+    stderr = sql.orm.relationship("CLgenStderr", back_populates="unreachable")
 
 
 class CLgenMeta(Base):
