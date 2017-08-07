@@ -33,46 +33,10 @@ def get_num_programs_to_build(session: db.session_t, tables: Tableset, clang: st
     return num_ran, total
 
 
-def get_assertion(s: session_t, tables: Tableset, stderr: str):
-    for line in stderr.split('\n'):
-        if "assertion" in line.lower():
-            assertion = get_or_create(
-                s, tables.clang_assertions,
-                hash=crypto.sha1_str(line),
-                assertion=line)
-            s.add(assertion)
-            s.flush()
-            return assertion
-
-
-def get_unreachable(s: session_t, tables: Tableset, stderr: str):
-    for line in stderr.split('\n'):
-        if "unreachable executed at" in line.lower():
-            unreachable = get_or_create(
-                s, tables.clang_unreachables,
-                hash=crypto.sha1_str(line),
-                unreachable=line)
-            s.add(unreachable)
-            s.flush()
-            return unreachable
-
-
-def get_terminate(s: session_t, tables: Tableset, stderr: str):
-    for line in stderr.split('\n'):
-        if "terminate called after throwing an instance" in line.lower():
-            terminate = get_or_create(
-                s, tables.clang_terminates,
-                hash=crypto.sha1_str(line),
-                terminate=line)
-            s.add(terminate)
-            s.flush()
-            return terminate
-
-
 def create_stderr(s: session_t, tables: Tableset, stderr: str) -> CLgenClangStderr:
-    assertion_ = get_assertion(s, tables, stderr)
-    unreachable_ = get_unreachable(s, tables, stderr)
-    terminate_ = get_terminate(s, tables, stderr)
+    assertion_ = util.get_assertion(s, tables.clang_assertions, stderr)
+    unreachable_ = util.get_unreachable(s, tables.clang_unreachables, stderr)
+    terminate_ = util.get_terminate(s, tables.clang_terminates, stderr)
 
     errs = sum(1 if x else 0 for x in [assertion_, unreachable_, terminate_])
 
@@ -173,9 +137,9 @@ if __name__ == "__main__":
             if args.recheck:
                 q = s.query(tables.clang_stderrs)
                 for stderr in ProgressBar(max_value=q.count())(q):
-                    assertion_ = get_assertion(s, tables, stderr.stderr)
-                    unreachable_ = get_unreachable(s, tables, stderr.stderr)
-                    terminate_ = get_terminate(s, tables, stderr.stderr)
+                    assertion_ = util.get_assertion(s, tables.clang_assertions, stderr.stderr)
+                    unreachable_ = util.get_unreachable(s, tables.clang_unreachables, stderr.stderr)
+                    terminate_ = util.get_terminate(s, tables.clang_terminates, stderr.stderr)
 
                     errs = sum(1 if x else 0 for x in [assertion_, unreachable_, terminate_])
                     if errs > 1:

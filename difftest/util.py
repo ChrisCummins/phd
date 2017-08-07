@@ -4,6 +4,8 @@ Shared utility code for Jupyter notebooks.
 from collections import Counter, namedtuple
 from progressbar import ETA, ProgressBar
 
+from db import *
+
 
 HOSTS = {
     "CentOS Linux 7.1.1503 64bit": "CentOS 7.1 64bit"
@@ -105,3 +107,40 @@ def escape_stderr(stderr):
     """ filter noise from test harness stderr """
     return '\n'.join(line for line in stderr.split('\n')
                      if "no version information available" not in line)
+
+
+def get_assertion(s: session_t, table, stderr: str):
+    for line in stderr.split('\n'):
+        if "assertion" in line.lower():
+            msg = ":".join(line.split(":")[3:])
+            assertion = get_or_create(
+                s, tables.clang_assertions,
+                hash=crypto.sha1_str(msg),
+                assertion=msg)
+            s.add(assertion)
+            s.flush()
+            return assertion
+
+
+def get_unreachable(s: session_t, tables, stderr: str):
+    for line in stderr.split('\n'):
+        if "unreachable executed at" in line.lower():
+            unreachable = get_or_create(
+                s, tables.clang_unreachables,
+                hash=crypto.sha1_str(line),
+                unreachable=line)
+            s.add(unreachable)
+            s.flush()
+            return unreachable
+
+
+def get_terminate(s: session_t, tables, stderr: str):
+    for line in stderr.split('\n'):
+        if "terminate called after throwing an instance" in line.lower():
+            terminate = get_or_create(
+                s, tables.clang_terminates,
+                hash=crypto.sha1_str(line),
+                terminate=line)
+            s.add(terminate)
+            s.flush()
+            return terminate
