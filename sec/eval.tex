@@ -1,3 +1,46 @@
+\newsavebox{\IntelSizetIntReduced}
+\begin{lrbox}{\IntelSizetIntReduced}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(global double* a) {
+      int b = get_global_id(0);
+      if (b < -1) {
+        a[b] = 1;
+      }
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\OclgrindRaceSwitch}
+\begin{lrbox}{\OclgrindRaceSwitch}
+  \hspace{1.5em}
+  \begin{lstlisting}
+  kernel void A(global int* a, global int* b) {
+    switch (get_global_id(0)) {
+      case 0:
+        a[get_global_id(0)] = b[get_global_id(0) + 13];
+        break;
+      case 2:
+        a[get_global_id(0)] = b[get_global_id(0) + 11];
+        break;
+      case 6:
+        a[get_global_id(0)] = b[get_global_id(0) + 128];
+    }
+    barrier(2);
+  }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\AlmostEverythingCrash}
+\begin{lrbox}{\AlmostEverythingCrash}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A() {
+      __builtin_astype(d, uint4);
+    }
+  \end{lstlisting}
+\end{lrbox}
+
 \newsavebox{\OclgrindSemaAssertion}
 \begin{lrbox}{\OclgrindSemaAssertion}
   \hspace{1.5em}
@@ -349,6 +392,10 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
       \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelGtDoubleAssertion}}}%
       \label{lst:intel-gt2-double-assertion}
     }\\%
+  \subfloat[Of the 10 compilers we tested, 6 crash with segfault when compiling this malformed kernel.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\AlmostEverythingCrash}}}%
+    \label{lst:almost-everything-crash}
+  }\\%
   \subfloat[Testbeds $1\pm$ segementation fault.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaCompileSegfault}}}%
     \label{lst:nvidia-compile-segfault}
@@ -365,6 +412,9 @@ We found numerous cases where kernels trigger a crash in the compiler (and as a 
 
 Figure~\ref{lst:nvidia-recursion-segfault} induces an error in handling of global to constant address qualifiers.
 
+Figure~\ref{lst:almost-everything-crash} crashes 6 of the 10 compilers we tested crashed with segmentation faults.
+
+We believe that our approach contributes a significant improvement for generating plausibly-erroneous code over prior random-enumeration approaches.
 
 \paragraph{Vectorizer Crashes} Figure~\ref{lst:intel-vectorizer-segfault} segfaults during vectorization. \cc{How many? Is there a pattern?}
 
@@ -409,10 +459,14 @@ EMI/CSmith/SPE extensive stress-test.
 
 \begin{figure}
   \centering %
-  \subfloat[Testbeds $4+$, $6+$ incorrectly execute \texttt{if} branch.]{%
+  \subfloat[Testbeds $4+$, $6+$ incorrectly execute \texttt{if} branch. The pattern of integer comparison to thread ID is widely used.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSizetIntUnreduced}}}%
     \label{lst:intel-size_t-int-unreduced}
   }\\%
+  \subfloat[A race condition in \texttt{switch} statement evaluation causes $10\pm$ to sporadically crash when executed with a global size $> 1$.]{%
+      \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindRaceSwitch}}}%
+      \label{lst:oclgrind-race-switch}
+    }\\%
   \subfloat[Compilation should fail due to call to undefined function \texttt{B()}; Testbeds $6\pm$ silently succeed then crash upon kernel execution.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\PoclUndefinedSymbols}}}%
     \label{lst:pocl-undefined-symbols}
@@ -426,12 +480,18 @@ EMI/CSmith/SPE extensive stress-test.
 \end{figure}
 
 
-\paragraph{Thread-dependent flow control} CLSmith does not support this (because of the risk of barrier divergence). An error in the optimizer of Testbeds $4+$, $6+$ causes the \texttt{if} statement of Figure~\ref{lst:intel-size_t-int-unreduced} to be executed.
+\paragraph{Thread-dependent flow control} CLSmith does not support this (because of the risk of barrier divergence). 
+
+A common pattern in OpenCL is to obtain the thread identity, often as an \texttt{int}, and to compare this against some fixed value to determine whether or not to complete a unit of work. DeepSmith, having modeled the frequency with which this pattern occurs in real handwritten code, generates many programs containing permutations of this pattern. And in doing so, exposed an error in the optimizer of two Testbeds $4+$, $6+$ which causes the \texttt{if} statement of Figure~\ref{lst:intel-size_t-int-reduced} to be executed when the kernel is compiled with optimizations enabled.
+%
 % cd ~/data/kernels/github-pp
 % ls | xargs egrep -l 'int [A-Z]+ = get_global_id\(' -- | wc -l
 % >> 2144
 % ls | wc -l
 % >> 4655
+This is troubling --- 46\% of OpenCL kernels on GitHub use this ($tid \rightarrow$ int, \texttt{if (tid < \ldots) \{\ldots\}}) pattern to guard against invalid memory accesses. CLSmith does not support conditional control flow based on thread ID. % CLSmith prevents thread identity from influencing control flow in order to prevent barrier divergence.
+
+Figure~\ref{lst:oclgrind-race-switch} shows a simple program in which thread identity determines the program output. We found that this test case would sporadically crash Testbeds~$10\pm$, an OpenCL device simulator and debugger. Upon reporting to the developers, the underlying cause was quickly diagnosed as a race condition in \texttt{switch} statement evaluation, and fixed within a week.
 
 \paragraph{Latent compilation errors} Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in in which a kernel containing an undefined symbol will successfully compile without warning, then crash the program when attempting to run the kernel. Such a test case is trivial to generate, yet could not be synthesized by CSmith.
 
@@ -470,7 +530,7 @@ The hardest false-positive to prevent was division by zero and related mathemati
 \subsection{Comparison of Clang Versions}%
 \label{subsec:clangs}
 
-Many compilers use a common Clang frontend.
+Many compilers use a common Clang frontend. Perhaps that's why Figure~\ref{lst:almost-everything-crash} fails on so many testbeds.
 
 We found numerous crash bugs in compiler frontends. Because DeepSmith generates syntactically incorrect code, some test cases do not make it past the lexer, parser, and typechecker. This biases DeepSmith towards discovering bugs in compiler front-ends. Many compilers use Clang frontend.
 
@@ -618,7 +678,7 @@ DeepSmith also triggered \emph{unreachable!} compiler errors in 180 distinct tes
 	\centering %
 	\includegraphics[width=\columnwidth]{build/img/kernel-sizes}%
 	\caption{%
-		Kernel line counts, grouped by outcome. DeepSmith test cases are on average two orders of magnitude smaller than CLSmith.%
+		Kernel sizes, grouped by outcome. DeepSmith kernels are on average two orders of magnitude smaller than CLSmith.%
 	}%
 	\label{fig:kernel-sizes} %
 \end{figure}

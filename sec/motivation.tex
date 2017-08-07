@@ -1,47 +1,47 @@
 \section{Motivation}\label{sec:motivation}
 
-\newsavebox{\IntelSizetIntReduced}
-\begin{lrbox}{\IntelSizetIntReduced}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A(global double* a) {
-      int b = get_global_id(0);
-      if (b < -1) {
-        a[b] = 1;
-      }
-    }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\OclgrindRaceSwitch}
-\begin{lrbox}{\OclgrindRaceSwitch}
-  \hspace{1.5em}
-  \begin{lstlisting}
-  kernel void A(global int* a, global int* b) {
-    switch (get_global_id(0)) {
-      case 0:
-        a[get_global_id(0)] = b[get_global_id(0) + 13];
-        break;
-      case 2:
-        a[get_global_id(0)] = b[get_global_id(0) + 11];
-        break;
-      case 6:
-        a[get_global_id(0)] = b[get_global_id(0) + 128];
-    }
-    barrier(2);
-  }
-  \end{lstlisting}
-\end{lrbox}
-
-\newsavebox{\AlmostEverythingCrash}
-\begin{lrbox}{\AlmostEverythingCrash}
-  \hspace{1.5em}
-  \begin{lstlisting}
-    kernel void A() {
-      __builtin_astype(d, uint4);
-    }
-  \end{lstlisting}
-\end{lrbox}
+%\newsavebox{\IntelSizetIntReduced}
+%\begin{lrbox}{\IntelSizetIntReduced}
+%  \hspace{1.5em}
+%  \begin{lstlisting}
+%    kernel void A(global double* a) {
+%      int b = get_global_id(0);
+%      if (b < -1) {
+%        a[b] = 1;
+%      }
+%    }
+%  \end{lstlisting}
+%\end{lrbox}
+%
+%\newsavebox{\OclgrindRaceSwitch}
+%\begin{lrbox}{\OclgrindRaceSwitch}
+%  \hspace{1.5em}
+%  \begin{lstlisting}
+%  kernel void A(global int* a, global int* b) {
+%    switch (get_global_id(0)) {
+%      case 0:
+%        a[get_global_id(0)] = b[get_global_id(0) + 13];
+%        break;
+%      case 2:
+%        a[get_global_id(0)] = b[get_global_id(0) + 11];
+%        break;
+%      case 6:
+%        a[get_global_id(0)] = b[get_global_id(0) + 128];
+%    }
+%    barrier(2);
+%  }
+%  \end{lstlisting}
+%\end{lrbox}
+%
+%\newsavebox{\AlmostEverythingCrash}
+%\begin{lrbox}{\AlmostEverythingCrash}
+%  \hspace{1.5em}
+%  \begin{lstlisting}
+%    kernel void A() {
+%      __builtin_astype(d, uint4);
+%    }
+%  \end{lstlisting}
+%\end{lrbox}
 
 \begin{figure}
   \centering %
@@ -60,23 +60,3 @@
   \caption{Motivating bugs exposed using our approach.}%
   \label{lst:motivation}%
 \end{figure}
-
-
-\cc{TODO: Probably get rid of this. Move example bugs into evaluation section}
-
-We motivate the case for compiler fuzzing through deep learning using three example of bugs found using DeepSmith: a miscompilation, a runtime crash, and a compiler crash.
-
-A common pattern in OpenCL is to obtain the thread identity, often as an \texttt{int}, and to compare this against some fixed value to determine whether or not to complete a unit of work. DeepSmith, having modeled the frequency with which this pattern occurs in real handwritten code, generates many programs containing permutations of this pattern. And in doing so, exposed an error in the optimizer of two of the Intel compilers we tested
-% Testbeds $4+$, $6+$
-which causes the \texttt{if} statement of Figure~\ref{lst:intel-size_t-int-reduced} to be executed when the kernel is compiled with optimizations enabled.
-%
-% cd ~/data/kernels/github-pp
-% ls | xargs egrep -l 'int [A-Z]+ = get_global_id\(' -- | wc -l
-% >> 2144
-% ls | wc -l
-% >> 4655
-This is troubling --- 46\% of OpenCL kernels on GitHub use this ($tid \rightarrow$ int, \texttt{if (tid < \ldots) \{\ldots\}}) pattern to guard against invalid memory accesses. CLSmith does not support conditional control flow based on thread ID. % CLSmith prevents thread identity from influencing control flow in order to prevent barrier divergence.
-
-Figure~\ref{lst:oclgrind-race-switch} shows a simple program in which thread identity determines the program output. The listing is the verbatim output of DeepSmith. We found that this test case would sporadically crash Oclgrind, an OpenCL device simulator and debugger. Upon reporting to the developers, the underlying cause was quickly diagnosed as a race condition in \texttt{switch} statement evaluation, and fixed within a week.
-
-Figure~\ref{lst:almost-everything-crash} demonstrates a bug of a different kind. Because our approach is based on syntactic-level modeling, DeepSmith can generate code containing errors. With this test case, we found 6 of the 10 compilers we tested crashed with segmentation faults. The behavior of compilers under invalid inputs is --- to the best of our knowledge --- much less explored topic. We believe that our approach contributes a significant improvement for generating plausibly-erroneous code over prior random-enumeration approaches.
