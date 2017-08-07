@@ -450,6 +450,38 @@ We believe that our approach contributes a significant improvement for generatin
 \paragraph{Silent crashes} 110 distinct test cases which crash testbed $9\pm$ during compilation, all silently.
 
 
+\paragraph{Comparison of Clang Versions}%
+% \label{subsec:clangs}
+
+\begin{table}
+  \scriptsize %
+  \centering %
+  \input{build/tab/clang-asserts}
+  \caption{%
+    Distinct clang front assertions, and the number of distinct unreachables.%
+  }
+  \label{tab:clang-asserts}
+\end{table}
+
+Many compilers use a common Clang frontend. Perhaps that's why Figure~\ref{lst:almost-everything-crash} fails on so many testbeds.
+
+We found numerous crash bugs in compiler frontends. Because DeepSmith generates syntactically incorrect code, some test cases do not make it past the lexer, parser, and typechecker. This biases DeepSmith towards discovering bugs in compiler front-ends. Many compilers use Clang frontend.
+
+TODO: Using the clang frontend (debug + assert build), compile 75,000 DeepSmith kernels (frontend only, no code generation). Figure~\ref{fig:clangs}.
+
+\begin{figure}
+  \centering %
+  \includegraphics[width=.95\columnwidth]{build/img/clang-crashes}%
+  \caption{%
+    Clang frontend errors of every LLVM release in the past 24 months.% 2 years of development has lead to a tenfold decrease in crash rate.
+    \cc{TODO replace fig b with a table. Each row in table is a unique assertion / unreachable, and each column is an LLVM release. Put a cross in any cell in which that assertion is triggered on that LLVM version.}
+  }%
+  \label{fig:clangs} %
+\end{figure}
+
+TODO: Progress is good. Figure~\ref{fig:clangs}a shows a nearly tenfold decrease in crash rate in 2 years. Report the 5 distinct crashes in LLVM trunk. What programs crash all versions? What programs are regressions?
+
+
 \subsection{Runtime Defects}
 
 EMI/CSmith/SPE extensive stress-test.
@@ -524,38 +556,6 @@ The hardest false-positive to prevent was division by zero and related mathemati
 %  \caption{False positives.}%
 %  \label{lst:uninit-read}%
 %\end{figure}
-
-
-\subsection{Comparison of Clang Versions}%
-\label{subsec:clangs}
-
-\begin{table}
-  \scriptsize %
-  \centering %
-  \input{build/tab/clang-asserts}
-  \caption{%
-    Distinct clang front assertions, and the number of distinct unreachables.%
-  }
-  \label{tab:clang-asserts}
-\end{table}
-
-Many compilers use a common Clang frontend. Perhaps that's why Figure~\ref{lst:almost-everything-crash} fails on so many testbeds.
-
-We found numerous crash bugs in compiler frontends. Because DeepSmith generates syntactically incorrect code, some test cases do not make it past the lexer, parser, and typechecker. This biases DeepSmith towards discovering bugs in compiler front-ends. Many compilers use Clang frontend.
-
-TODO: Using the clang frontend (debug + assert build), compile 75,000 DeepSmith kernels (frontend only, no code generation). Figure~\ref{fig:clangs}.
-
-\begin{figure}
-  \centering %
-  \includegraphics[width=.95\columnwidth]{build/img/clang-crashes}%
-  \caption{%
-    Clang frontend errors of every LLVM release in the past 24 months.% 2 years of development has lead to a tenfold decrease in crash rate.
-    \cc{TODO replace fig b with a table. Each row in table is a unique assertion / unreachable, and each column is an LLVM release. Put a cross in any cell in which that assertion is triggered on that LLVM version.}
-  }%
-  \label{fig:clangs} %
-\end{figure}
-
-TODO: Progress is good. Figure~\ref{fig:clangs}a shows a nearly tenfold decrease in crash rate in 2 years. Report the 5 distinct crashes in LLVM trunk. What programs crash all versions? What programs are regressions?
 
 
 \subsection{Comparison to State-of-the-art}%
