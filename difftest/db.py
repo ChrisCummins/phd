@@ -41,17 +41,21 @@ OUTCOMES_TO_INT = {
 CLASSIFICATIONS = {
     1: "w",
     2: "bf",
-    3: "c",
-    4: "to",
-    5: "pass",
+    3: "bc",
+    4: "bto",
+    5: "c",
+    6: "to",
+    7: "pass",
 }
 
 CLASSIFICATIONS_TO_INT = {
     "w": 1,
     "bf": 2,
-    "c": 3,
-    "to": 4,
-    "pass": 5,
+    "bc": 3,
+    "bto": 4,
+    "c": 5,
+    "to": 6,
+    "pass": 7,
 }
 
 
@@ -358,6 +362,7 @@ class Testbed(Base):
     host = sql.Column(sql.String(255), nullable=False)
     opencl = sql.Column(sql.String(8), nullable=False)  # CL_PLATFORM_VERSION
     devtype = sql.Column(sql.String(12), nullable=False)  # CL_DEVICE_TYPE
+    open_source = sql.Column(sql.Boolean)
 
     __table_args__ = (
         sql.UniqueConstraint('platform', 'device', 'driver', 'host',

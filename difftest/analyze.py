@@ -148,6 +148,20 @@ def set_classifications(session, tables: Tableset) -> None:
 
     min_majsize = 7
 
+    print(f"Setting {tables.name} {{bc,bto}} classifications ...", file=sys.stderr)
+    session.execute(f"""
+INSERT INTO {tables.classifications.__tablename__}
+SELECT results.id, {CLASSIFICATIONS_TO_INT["bc"]}
+FROM {tables.results.__tablename__} results
+WHERE outcome = {OUTCOMES_TO_INT["bc"]}
+""")
+    session.execute(f"""
+INSERT INTO {tables.classifications.__tablename__}
+SELECT results.id, {CLASSIFICATIONS_TO_INT["bto"]}
+FROM {tables.results.__tablename__} results
+WHERE outcome = {OUTCOMES_TO_INT["bto"]}
+""")
+
     print(f"Determining {tables.name} wrong-code classifications ...", file=sys.stderr)
     session.execute(f"""
 INSERT INTO {tables.classifications.__tablename__}
