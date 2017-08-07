@@ -490,7 +490,7 @@ A common pattern in OpenCL is to obtain the thread identity, often as an \texttt
 
 Figure~\ref{lst:oclgrind-race-switch} shows a simple program in which thread identity determines the program output. We found that this test case would sporadically crash Testbeds~$10\pm$, an OpenCL device simulator and debugger. Upon reporting to the developers, the underlying cause was quickly diagnosed as a race condition in \texttt{switch} statement evaluation, and fixed within a week.
 
-\paragraph{Latent compilation errors} Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in in which a kernel containing an undefined symbol will successfully compile without warning, then crash the program when attempting to run the kernel. \cc{TODO: CLSmith does not catch this class of bugs (undefined symbols}}.
+\paragraph{Latent compilation errors} Figure~\ref{lst:pocl-undefined-symbols} exposes a bug in in which a kernel containing an undefined symbol will successfully compile without warning, then crash the program when attempting to run the kernel. \cc{TODO: CLSmith does not catch this class of bugs (undefined symbols}.
 
 \paragraph{Type conversion} Figure~\ref{lst:beignet-cast-error}. The code performs int and float addition, casting the result to a char, then storing in float. Changing any one of those makes the problem go away.
 
@@ -706,7 +706,7 @@ Table~\ref{tab:classifications} shows the results of applying voting heuristics 
 	\scriptsize %
 	\centering %
 	\input{build/tab/megatable}
-	\caption{Using voting heuristics to expose anomalous results from 48 hours of testing using CLSmith and DeepSmith. Columns denote anomalous-output (ao), anomalous build failure (\textbf{abf}), anomalous runtime crash (\textbf{ac}), and anomalous timeout (\textbf{ato}) classifications for CLSmith and DeepSmith, respectively. \cc{TODO: Add a distinct crashes column? Bring back the size\_t and int; failures}}
+	\caption{Using voting heuristics to expose anomalous results from 48 hours of testing using CLSmith and DeepSmith. Columns denote anomalous-output (ao), anomalous build failure (\textbf{abf}), anomalous runtime crash (\textbf{ac}), and anomalous timeout (\textbf{ato}) classifications for CLSmith and DeepSmith, respectively. \cc{TODO: Add a distinct crashes column? Bring back the size\_t and int; failures} \cc{TODO merge Table 3 and Table 2}}
 	\label{tab:classifications}
 \end{table*}
 
