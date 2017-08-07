@@ -1,6 +1,6 @@
 \section{DeepSmith}
 
-DeepSmith is our open source test case generator for compiler fuzzing~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}}. Figure~\ref{fig:deeptune} provides an overview of the system. Our compiler test case generation approach consists of two parts: first, a generative model for code samples inferred from open-source codes; the second, test case construction.
+DeepSmith is our open source test case generator for compiler fuzzing~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}} \cc{TODO: it's the entire stack, including harness and voting heuristics}. Figure~\ref{fig:deeptune} provides an overview of the system. Our compiler test case generation approach consists of two parts: first, a generative model for code samples inferred from open-source codes; the second, test case construction.
 
 
 \subsection{Generative Model for Program Codes}
@@ -109,14 +109,16 @@ An anomalous output (\textbf{ao}) occurs if, for a given test case, the majority
 %\end{enumerate}
 
 
-\subsection{Design Trade-Offs}\label{subsec:discussions}
+% \subsection{Design Trade-Offs}\label{subsec:discussions}
 % Discussions?
+
+\cc{TODO: compress and merge into heuristics discussion above:}
 
 % \paragraph{Design Trade-Offs}
 We do not employ the rigorous static and dynamic analysis employed in prior probabilistic grammar-based approaches. This greatly simplifies the implementation --- targeting a new language requires only a corpus of example programs and a test harness for generated codes. The generative model itself contains no language-specific code, and is implemented in less than 200 lines of Python --- a small fraction of that of grammar-based approaches, even excluding the static analysis. The trade-off of this makes significantly reduces the cost of development, but weakens the guarantees  \cc{\ldots}
 
 \paragraph{Undefined Behaviors} % aka. unambiguous observable behaviour
-If the output of a program depends on undefined or unspecified behavior, then comparing outputs across compilers is meaningless. Prior works have formulated random program generation so as to minimize or eradicate the possibility of undefined and unspecified behavior~\cite{Yang2011c,Le2013a,Le2015}, at the expense of expressiveness. Recently, work in Skeletal Program Enumeration~\cite{Zhang2017a} has relied on handchecking of C programs and tools such as CompCert~\cite{Leroy2013} and UBsan to detect false-positives. Since DeepSmith programs are not guaranteed to be free from undefined behaviors, and we can only determine if a program is well-formed empirically, additional filtering of test cases is required to prevent false-positives.
+\cc{Why are we drawing attention to this?} If the output of a program depends on undefined or unspecified behavior, then comparing outputs across compilers is meaningless. Prior works have formulated random program generation so as to minimize or eradicate the possibility of undefined and unspecified behavior~\cite{Yang2011c,Le2013a,Le2015}, at the expense of expressiveness. Recently, work in Skeletal Program Enumeration~\cite{Zhang2017a} has relied on handchecking of C programs and tools such as CompCert~\cite{Leroy2013} and UBsan to detect false-positives. Since DeepSmith programs are not guaranteed to be free from undefined behaviors, and we can only determine if a program is well-formed empirically, additional filtering of test cases is required to prevent false-positives. \cc{<< delete this para}
 
 OpenCL doesn't have the rich tooling of C --- no CompCert and UBSan, there is much work to be done. GPUverify~\cite{Betts2012} and Oclgrind can catch some errors such as data races and out-of-bounds error checks, but as we have shown in Section~\ref{sec:motivation}, this tool is not without flaws. Compiler warnings are useful for obvious missteps (e.g. comparison between pointer and integer), but our approach does not rule out manual inspection. DeepSmith programs are easily interpretable --- they are generally short programs built on common language constructs, so this process is not as bad as it could be. We have not yet discovered an false-positive result which was not trivially detectable by automated filtering.
 
@@ -125,6 +127,8 @@ OpenCL doesn't have the rich tooling of C --- no CompCert and UBSan, there is mu
 \paragraph{Floating Points} The OpenCL specifications permit acceptable error bounds (ULP) for floating point operations and builtin functions. Some operations like addition, and multiplication are precise; divide permits a small error, and builtins vary widely. Thus two implementation may give different answers that both fit within the allowed ranges (and because errors propagate through operations it's hard to even describe the ULP on the final output). For this reason, CSmith, and by extension, CLSmith, do not support floating point operations. We believe this restriction to be artificially limiting, since floating point computations are dominant in the common uses of OpenCL --- %
 % $ ls | xargs grep -E -l '(float|double)' -- | wc -l  # 2245
 48\% of GitHub kernels use floating points. At the moment, we simply print floating values using \texttt{printf()} rounding. This will hide small rounding errors. Larger errors prevent us from difftesting on the output since no output majority will be possible. Given knowledge about hardware imprecision, it would be possible to compute an acceptable error threshold for floating point results based on dynamic profiling.
+
+\paragraph{Divide-by zero} TODO
 
 % Section 7.4 of OpenCL 1.2 spec.
 
