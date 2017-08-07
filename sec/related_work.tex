@@ -14,6 +14,8 @@ The \emph{fuzz taming problem} is addressed in~\cite{Chen2013}, in which a dista
 
 Empirical comparison of compiler testing techniques~\cite{Chen2014a}
 
+\cc{is it wise to draw attention to this?} If the output of a program depends on undefined or unspecified behavior, then comparing outputs across compilers is meaningless. Prior works have formulated random program generation so as to minimize or eradicate the possibility of undefined and unspecified behavior~\cite{Yang2011c,Le2013a,Le2015}, at the expense of expressiveness. Recently, work in Skeletal Program Enumeration~\cite{Zhang2017a} has relied on handchecking of C programs and tools such as CompCert~\cite{Leroy2013} and UBsan to detect false-positives. Since DeepSmith programs are not guaranteed to be free from undefined behaviors, and we can only determine if a program is well-formed empirically, additional filtering of test cases is required to prevent false-positives.
+
 Analysis of bugs in GCC and LLVM finds 80\% of test cases to be 45 lines~\cite{Sun2016}.
 
 \cc{TODO}~\cite{Godefroid2008a,Le2015,Sun2016a}~\cite{Kossatchev2005}.
