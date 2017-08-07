@@ -28,7 +28,9 @@ The trained network is sampled to generate new programs. The model is seeded wit
 \end{figure}
 
 
-\subsection{Test case Construction}
+\subsection{Test Case Construction}
+
+\cc{reword - a single test harness accepts a string as input and generates input data}
 
 OpenCL is an embedded compute kernel language, requiring host code to compile, execute, and transfer data between the host and device. For the purpose of compiler fuzzing, this requires a \emph{test harness} to run the generated OpenCL programs.
 
@@ -56,7 +58,7 @@ We note that, unlike the generative model, this test harness construction is lan
 % 21.5\% of test cases are compile-only stubs.
 
 
-\subsection{Test case Execution}
+\subsection{Test Case Execution}
 
 \begin{figure}
 	\centering %
