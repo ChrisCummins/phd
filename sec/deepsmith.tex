@@ -7,11 +7,11 @@ DeepSmith is our open source framework for compiler fuzzing~\footnote{DeepSmith 
 
 \subsection{Generative Model for Program Codes}
 
-Generating test cases for compilers is hard because their inputs are highly structured.
+Generating test cases for compilers is hard because their inputs are highly structured. We employ state-of-the-art deep learning techniques to model program generation using unsupervised learning to build syntactic-level sequence models over source code. We extend prior work on synthetic program generation using Long Short-Term Memory (LSTM) networks~\cite{Cummins2017a}.
 
-We use unsupervised learning to build syntactic-level sequence models over source code.
+An initial seed corpus of 10k OpenCL kernels is mined from GitHub, using an oracle compiler (LLVM 3.9) to reject files that are not well-formed or do not contain instructions. The corpus is normalized using a custom LLVM pass to normalize syntactic choices --- identifier and function names.
 
-We extend prior work on synthetic program generation using Long Short-Term Memory (LSTM) networks~\cite{Cummins2017a}. An initial seed corpus of 10k OpenCL kernels is mined from GitHub, using an oracle compiler (LLVM 3.9) to reject files that are not well-formed or do not contain instructions. The corpus is preprocessed using a custom LLVM pass to normalize syntactic choices --- a uniform code style is enforced to ensure consistent use of braces, whitespace, identifier names, etc. The preprocessed corpus is encoded using a hybrid token/character-level encoding~\cite{Cummins2017b}. \cc{More detail\ldots}
+A uniform code style is enforced to ensure consistent use of braces, whitespace. The preprocessed corpus is encoded using a hybrid token/character-level encoding~\cite{Cummins2017b}. \cc{More detail\ldots}
 
 LSTM networks model the vocabulary distribution over the encoded corpus. We use a two layer LSTM network of 512 nodes each, trained using Stochastic Gradient Descent for 50 epochs, with an initial learning rate of 0.002 and decaying by a factor of a half every 5 epochs. % We use TensorFlow to implement the LSTM networks, with the entire generative model requiring less than 200 lines of Python, and is not specialized to OpenCL.
 
