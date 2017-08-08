@@ -2,6 +2,15 @@
 
 DeepSmith is our open source framework for compiler fuzzing~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}}. Figure~\ref{fig:deeptune} provides a high-level overview. This section describes the three key components: a generative model for random programs, a test harness, and voting heuristics for differential testing.
 
+\begin{figure}
+  \centering
+  \includegraphics[width=.80\columnwidth]{img/deepsmith} %
+  % \vspace{-2em}%
+  \caption{%
+    DeepSmith system overview.
+  }%
+  \label{fig:deeptune}
+\end{figure}
 
 \subsection{Generative Model}
 
@@ -11,19 +20,16 @@ Generating test cases for compilers is hard because their inputs are highly stru
 
 Rather than building a custom program generation tool for a particular programming language, the idea is to a use an artificial neural network to a generate streams of tokens. The network is trained on a corpus of example programs in the desired programming language, such that the stream of generated tokens closely resembles the probability distribution of tokens within the corpus. Sampling from the stream of generated tokens provides a means to generate new compiler test cases.
 
-\paragraph{Training Data} The generative model is trained using an initial seed corpus of 10k OpenCL kernels, mined from GitHub. These handwritten programs are used to\cc{\ldots} An \emph{oracle compiler} (LLVM 3.9) is used to reject files that are not well-formed.
+\paragraph{Handwritten Programs} The generative model is trained using an initial seed corpus of 10k OpenCL kernels, mined from GitHub. We reason that of millions of lines of code available on GitHub are a representative. These handwritten programs are used to . An \emph{oracle compiler} (LLVM 3.9) is used to statically check the source files, discarding any files that are not well-formed. This is a necessary precaution in presence of a noisy dataset such as GitHub.
 
-Code rewriting is used to normalize trivial syntactic differences between codes in order to make the code more amenable to machine learning. For example, the choice of identifier names, and the presence of comments.
+\paragraph{Rewriter} Before training on the handwritten source codes, they are rewritten. Rewriting is used to normalize trivial syntactic differences between codes in order to make the code more amenable to machine learning. For example, the choice of identifier names, and the presence of comments.
 
-For each source in the training data, the source is pre-processor to inline macros and remove conditional compilation and comments. Then, all user-declared identifiers and renamed using an arbitrary, but consistent pattern based on their order of appearance: $\{a,\allowbreak b,\allowbreak c,\allowbreak \ldots,\allowbreak aa,\allowbreak ab,\allowbreak ac,\allowbreak \ldots\}$ for variables and $\{A,\allowbreak B,\allowbreak C,\allowbreak \ldots,\allowbreak AA,\allowbreak AB,\allowbreak AC,\allowbreak \ldots\}$ for functions.
+Each source file is pre-processed to inline macros and remove conditional compilation and comments. Then, all user-declared identifiers and renamed using an arbitrary, but consistent pattern based on their order of declaration: $\{a,\allowbreak b,\allowbreak c,\allowbreak \ldots,\allowbreak aa,\allowbreak ab,\allowbreak ac,\allowbreak \ldots\}$ for variables and $\{A,\allowbreak B,\allowbreak C,\allowbreak \ldots,\allowbreak AA,\allowbreak AB,\allowbreak AC,\allowbreak \ldots\}$ for functions. This ensures a consistent naming convention, without modifying program behavior. Finally, a uniform code style is enforced to ensure consistent use of braces, parentheses, and white space.
 
-Finally, a uniform code style is enforced to ensure consistent use of braces, parentheses, and white space.
+\paragraph{Encoder} The textual representation of program codes must be encoded as numeric sequences for feeding as input to the machine learning model. Prior works in have used character-level encodings~\cite{Cummins2017a}, token-level encodings~\cite{TODO}, or fixed length feature vectors~\cite{TODO}. We extend the hybrid character/token-level encoding of~\cite{Cummins2017b}, in which a vocabulary.
+\cc{More detail\ldots}
 
-
-\paragraph{Encoding} The preprocessed corpus is encoded using a hybrid token/character-level encoding, extended from prior work in learning compiler optimizations~\cite{Cummins2017b}. \cc{More detail\ldots}
-
-
-\paragraph{Network Architecture} We use the Long Short-Term Memory (LSTM) architecture of Recurrent Neural Network to model program code~\cite{Hochreiter1997}. The LSTM architecture
+\paragraph{Neural Network} We use the Long Short-Term Memory (LSTM) architecture of Recurrent Neural Network to model program code~\cite{Hochreiter1997}. The LSTM architecture provides an efficient means for learning long-range dependencies in sequences, necessary 
 
 LSTMs implements a Recurrent Neural Network in which the activations of neurons are learned with respect not just to their current inputs, but to previous inputs in a sequence. Unlike regular recurrent networks in which the strength of learning decreases over time (a symptom of the \emph{vanishing gradients} problem~\cite{Pacanu2013}), LSTMs employ a \emph{forget gate} with a linear activation function, allowing them to retain activations for arbitrary durations. This makes them effective at learning complex relationships over long sequences~\cite{Lipton2015}, an especially important capability for modeling program code, as dependencies in sequences frequently occur over long ranges (for example, a variable may be declared as an argument to a function and used throughout).
 
@@ -34,16 +40,6 @@ LSTM networks model the vocabulary distribution over the encoded corpus. We use 
 \paragraph{Program Generation} The trained network is sampled to generate new programs. The model is seeded with the start of a kernel (identified in OpenCL using the keywords \texttt{kernel void}), and sampled token-by-token. A ``bracket depth'' counter is incremented or decremented upon production of \texttt{\{} or \texttt{\}} tokens respectively, and sampling terminates once the bracket depth reaches zero. The generated sequence of tokens are then concatenated and used as the generated program.
 
 \cc{Add algorithm!}
-
-\begin{figure}
-  \centering
-  \includegraphics[width=.80\columnwidth]{img/deepsmith} %
-  % \vspace{-2em}%
-  \caption{%
-    DeepSmith system overview.
-  }%
-  \label{fig:deeptune}
-\end{figure}
 
 
 \subsection{Test Harness}
