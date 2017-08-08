@@ -13,7 +13,6 @@ Fuzz testing is a more appropriate approach. When fuzzing, randomly generated va
 Compiler fuzzing boils down to efficiently generating test cases that trigger compiler bugs. The state of the art approach, CSmith~\cite{Yang2011}, generates large random programs by defining and sampling a probabilistic grammar which covers a large subset of the C programming language. Through this grammar, CSmith ensures that the generated code easily passes the compiler front-end and stresses the most complex part of the compiler, the middle end. A complex static and dynamic analysis makes sure that programs are free from undefined behavior. The programs are then differentially tested.
 
 While CSmith has been successfully used to identify hundreds of bugs in compilers, it and similar approaches have a significant drawback. They represent a huge undertaking and require a thorough understanding of the target programming language. CSmith was developed over the course of years, and consists of over 40k lines of handwritten C++ code. By tightly coupling the generation logic with the target programming language, each feature of the grammar must be painstakingly and expertly engineered for each new target language. For example, lifting CSmith from C to OpenCL~\cite{Lidbury2015a} --- a superficially simple task --- took 9 months and 8k lines of code. Given the difficulty of defining a new grammar, typically only a subset of the language is implemented.
-\pp{up to here, will continue after lunch}
 
 
 %Differential Testing is an effective and widely studied methodology for identifying compiler bugs~\cite{Chen2014a,Kossatchev2005,Chen2013}. %Figure~\ref{fig:difftest} shows the approach.
@@ -38,7 +37,7 @@ While CSmith has been successfully used to identify hundreds of bugs in compiler
 
 \cc{What is needed\ldots}
 
-We present a novel, data-driven approach to the generation of random programs for compiler fuzzing. Using a corpus of handwritten code in a particular programming language, we use deep neural networks to automatically construct probabilistic models for how humans write programs. The neural networks, without prior knowledge, infer both the syntax and semantics of the programming language, and the common constructs and patterns. By framing the generation of random programs as a language modeling problem, we greatly simplify the process of program generation, and the expressiveness of generated programs is limited only by what is contained in the corpus. Such a corpus can readily be assembled from open source repositories.
+What we propose instead is a novel, automated approach to the generation of random programs for compiler fuzzing. Using a corpus of handwritten code in a particular programming language, we use deep neural networks to automatically construct probabilistic models for how humans write programs. The neural networks, without prior knowledge, infer both the syntax and semantics of the programming language and the common constructs and patterns. By framing the generation of random programs as a language modeling problem, we greatly simplify the process of program generation, and the expressiveness of generated programs is limited only by what is contained in the corpus. Such a corpus can readily be assembled from open source repositories.
 
 \cc{TODO: syntactic modeling trade-off}
 
