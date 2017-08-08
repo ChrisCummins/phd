@@ -229,8 +229,8 @@ def testcase_raises_compiler_warnings(session: session_t, tables: Tableset, test
                 print(f"testcase {testcase.id}: incompatible pointer to to integer conversion")
                 testcase.compiler_warnings = True
                 break
-            elif "ordered comparison between pointer and integer" in stderr:
-                print(f"testcase {testcase.id}: ordered comparison between pointer and integer")
+            elif "comparison between pointer and integer" in stderr:
+                print(f"testcase {testcase.id}: comparison between pointer and integer")
                 testcase.compiler_warnings = True
                 break
             elif "warning: incompatible" in stderr:
@@ -255,6 +255,22 @@ def testcase_raises_compiler_warnings(session: session_t, tables: Tableset, test
                 break
             elif "warning: array index" in stderr:
                 print(f"testcase {testcase.id}: array index")
+                testcase.compiler_warnings = True
+                break
+            elif "warning: implicit conversion from" in stderr:
+                print(f"testcase {testcase.id}: implicit conversion")
+                testcase.compiler_warnings = True
+                break
+            elif "array index -1 is before the beginning of the array" in stderr:
+                print(f"testcase {testcase.id}: negative array index")
+                testcase.compiler_warnings = True
+                break
+            elif "incompatible pointer" in stderr:
+                print(f"testcase {testcase.id}: negative array index")
+                testcase.compiler_warnings = True
+                break
+            elif "incompatible integer to pointer " in stderr:
+                print(f"testcase {testcase.id}: incompatible integer to pointer")
                 testcase.compiler_warnings = True
                 break
             elif "warning" in stderr:
@@ -291,17 +307,16 @@ def verify_w_testcase(session: session_t, tables: Tableset, testcase) -> None:
     # CLgen-specific analysis. We can omit these checks for CLSmith, as they
     # will always pass.
     if tables.name == "CLgen":
-        if testcase_raises_compiler_warnings(session, tables, testcase):
-            print(f"testcase {testcase.id}: redflag compiler warnings")
-            return fail()
-
-        # Determine if kernel contains floats
         if testcase.contains_floats == None:
             testcase.contains_floats = "float" in testcase.program.src
 
-        # if testcase.contains_floats:
-        #     print(f"testcase {testcase.id}: contains floats")
-        #     TODO: return fail()
+        if testcase.contains_floats:
+            print(f"testcase {testcase.id}: contains floats")
+            # return fail()
+
+        if testcase_raises_compiler_warnings(session, tables, testcase):
+            print(f"testcase {testcase.id}: redflag compiler warnings")
+            return fail()
 
         for arg in cldrive.extract_args(testcase.program.src):
             if arg.is_vector:
@@ -343,7 +358,6 @@ def verify_optimization_sensitive(session: session_t, tables: Tableset, result) 
         .filter(tables.testcases.program_id == result.testcase.program_id,
                 tables.testcases.params_id == complement_params_id)
 
-    # print("RESULT", result.id, "COMPLEMENT_TESTCASE", complement_testcase.first())
     q = session.query(
             tables.results.id,
             tables.classifications.classification)\
@@ -378,7 +392,6 @@ def prune_w_classifications(session: session_t, tables: Tableset) -> None:
     for testcase in ProgressBar()(testcases_to_verify):
         verify_w_testcase(session, tables, testcase)
 
-    # FIXME:
     # print(f"Verifying {tables.name} w-classified optimization sensitivity ...", file=sys.stderr)
     # results_to_verify = session.query(tables.results)\
     #         .join(tables.classifications)\
