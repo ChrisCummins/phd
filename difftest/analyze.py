@@ -467,13 +467,13 @@ def prune_bf_classifications(session: session_t, tables: Tableset) -> None:
     prune_stderr_like("implicit declaration of function")
     prune_stderr_like("function cannot have argument whose type is, or contains, type size_t")
     prune_stderr_like("unresolved extern function")
-    prune_stderr_like("error: declaration does not declare anything")
+    # prune_stderr_like("error: declaration does not declare anything")
     prune_stderr_like("error: cannot increment value of type%")
     prune_stderr_like("subscripted access is not allowed for OpenCL vectors")
     prune_stderr_like("Images are not supported on given device")
     prune_stderr_like("error: variables in function scope cannot be declared")
     prune_stderr_like("error: implicit conversion ")
-    prune_stderr_like("error: automatic variable qualified with an address space ")
+    # This is fine: prune_stderr_like("error: automatic variable qualified with an address space ")
     prune_stderr_like("Could not find a definition ")
 
     # Verify results
@@ -524,8 +524,42 @@ def verify_c_testcase(session: session_t, tables: Tableset, testcase) -> None:
             print(f"testcase {testcase.id}: redflag compiler warnings")
             return fail()
 
+        # Run GPUverify on kernel
+        if testcase.gpuverified == None:
+            try:
+                clgen.gpuverify(testcase.program.src, ["--local_size=64", "--num_groups=128"])
+                testcase.gpuverified = 1
+            except clgen.GPUVerifyException:
+                testcase.gpuverified = 0
+
+        if not testcase.gpuverified:
+            print(f"testcase {testcase.id}: failed GPUVerify check")
+            return fail()
+
+    # Check that program runs with Oclgrind without error:
+    if not oclgrind.verify_testcase(session, tables, testcase):
+        print(f"testcase {testcase.id}: failed OCLgrind verification")
+        return fail()
+
 
 def prune_c_classifications(session: session_t, tables: Tableset) -> None:
+
+    def prune_stderr_like(like):
+        ids_to_delete = [x[0] for x in session.query(tables.results.id)\
+            .join(tables.classifications)\
+            .join(tables.stderrs)\
+            .filter(tables.classifications.classification == CLASSIFICATIONS_TO_INT["c"],
+                    tables.stderrs.stderr.like(f"%{like}%"))]
+
+        n = len(ids_to_delete)
+        if n:
+            print(f"retracting {n} c-classified {tables.name} results with msg {like[:30]}")
+            session.query(tables.classifications)\
+                .filter(tables.classifications.id.in_(ids_to_delete))\
+                .delete(synchronize_session=False)
+
+    prune_stderr_like("clFinish CL_INVALID_COMMAND_QUEUE")
+
     # Verify testcases
     q = session.query(tables.results.testcase_id)\
             .join(tables.classifications)\
