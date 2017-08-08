@@ -1,6 +1,6 @@
 \section{DeepSmith}
 
-DeepSmith is our open source framework for compiler fuzzing~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}}. Figure~\ref{fig:deeptune} provides a high-level overview. This section describes the three key components: a generative model for random programs, a test harness, and voting heuristics for differential testing.
+DeepSmith~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}} is our open source framework for compiler fuzzing. Figure~\ref{fig:deeptune} provides a high-level overview. This section describes the three key components: a generative model for random programs, a test harness, and voting heuristics for differential testing.
 
 \begin{figure}
   \centering
@@ -53,7 +53,7 @@ At first, we used the test harness of CLSmith. CLSmith kernels accept no inputs,
 % $ grep '^__global ulong\* A$' ~/src/project_b/difftest/github-arguments.txt | wc -l     -> 10
 To test a more expressive range of kernels, we created a test harness capable of driving arbitrary OpenCL kernels.
 
-OpenCL kernels are executed concurrently one or more threads. We parameterize test harness generation with a single value $n$. For each program, we generate two test harnesses, one where $n=1$ (i.e. a single thread computing a single result) and one where $n = 2048$. For a given OpenCL kernel, we first parse the function prototype in order to determine the expected arguments. We then generate host data to feed to these arguments --- supporting scalars and arrays of all OpenCL primitive and vector types. Input arrays are generated of size $n$ and populated with values {$[1 \ldots n]$}; scalar values are given value $n$. We then enqueue the kernel on $n$ threads. The \emph{output} of a program is the values of all non-const arguments after kernel execution.
+OpenCL kernels are executed concurrently one or more threads. We parameterize test harness generation with a single value $n$. For each program, we generate two test harnesses, one where $n=1$ (i.e. a single thread computing a single result) and one where $n = 2048$. For a given OpenCL kernel, we first parse the function prototype in order to determine the expected arguments. We then generate host data to feed to these arguments --- supporting scalars and arrays of all OpenCL primitive and vector types. Buffers of size $n$ are allocated for pointer arguments, and populated with values {$[1 \ldots n]$}; scalar inputs are given value $n$. We then enqueue the kernel on $n$ threads. The \emph{output} of a program is the values of all non-const arguments after kernel execution.
 
 Since we do not guarantee that the generative model samples are well-formed, it may not be possible to parse the function signature. In this case, a ``compile-only'' stub is generated, which only compile the kernel, without generating input data or executing the compiled kernel.
 
@@ -71,15 +71,6 @@ We note that, unlike the generative model, this test harness construction is lan
 % WHERE cumtime < 48 * 3600;
 % 21.5\% of test cases are compile-only stubs.
 
-
-\begin{figure}
-	\centering %
-	\includegraphics[width=.8\columnwidth]{img/test_process}%
-	\caption{%
-		Test case execution, and possible results. On each testbed, test case execution produces one of seven possible outcomes: \{bf,bc,bto,c,to,w,\cmark\}.%
-	}%
-	\label{fig:test-process} %
-\end{figure}
 
 % We classify the result of executing a test case into one of six classifications: build failure (\textbf{bf}), build crash (\textbf{bc}), runtime crash (\textbf{c}), or pass (\textbf{\cmark}). A \textbf{bf} occurs when compilation of a kernel fails, usually accompanied by an error message. A \textbf{bc} outcome occurs when the compiler crashes. A \textbf{c} outcome occurs when the program crashes during execution. The \textbf{bto} and \textbf{to} outcomes occur when the program compilation or execution time out, respectively.
 
@@ -102,6 +93,15 @@ When evaluating the outcomes of test cases, \textbf{\{bc,bto\}} outcomes are of 
 
 
 \subsection{Voting Heuristics for Differential Testing}
+
+\begin{figure}
+  \centering %
+  \includegraphics[width=.8\columnwidth]{img/test_process}%
+  \caption{%
+ 	  Test case execution, and possible results. For each testbed, test case execution produces one of seven possible outcomes: \{bf,bc,bto,c,to,w,\cmark\}.%
+  }%
+  \label{fig:test-process} %
+\end{figure}
 
 As in prior work, voting on the output of programs across compilers has been used to circumvent the \emph{oracle problem} and detect miscompilations~\cite{McKeeman1998}.
 % In~\cite{Lidbury2015a}, a testbed is determined to have produced a wrong code result for a kernel if there is a majority output of at least 3 among the \textbf{\cmark} results for the kernel, and the testbed yields a \textbf{\cmark} result that disagrees with the majority.
