@@ -1,8 +1,8 @@
 \section{Conclusions}\label{sec:conclusion}
 
-\ldots
+We have posed the generation of random programs as an unsupervised machine learning problem, and in doing so, have dramatically reduced the cost and human effort required to engineer a compiler fuzzer. Large parts of the stack are program language-agnostic, requiring only a corpus of example programs and a test harness to target a new programming language.
 
-Challenging many-core domain of OpenCL.
+We demonstrated our approach by targeting the challenging many-core domain of OpenCL. DeepSmith has uncovered dozens of bugs in commercial and open source OpenCL implementations.
 
 Furture work: Grammar variational autoencoder - Using masking to ensure sampling only from valid production rules. Both the grammars and the generated sequences are small, it's unclear if it would scale. For arithmetic expressions, the grammar includes not just the structure of equations, but it enumerates all the valid inteegr values. \cc{could be used for middle-end targeting?}~\cite{Kusner2017}.
 

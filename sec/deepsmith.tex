@@ -1,21 +1,37 @@
 \section{DeepSmith}
 
-DeepSmith is our open source framework for compiler fuzzing~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}}. Figure~\ref{fig:deeptune} provides an overview of the system. Our compiler test case generation approach consists of two parts: first, a generative model for code samples inferred from open-source codes; the second, test case construction.
-
-\cc{TODO: overview} We mine over a million lines of handwritten OpenCL code from GitHub, which we use to construct a corpus of representative programs. We learn a generative model over this corpus, using syntactic level language modeling. DeepSmith, our deep learning program generator, automatically and rapidly synthesizes an unbounded number of programs for fuzz testing compilers.
+DeepSmith is our open source framework for compiler fuzzing~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}}. Figure~\ref{fig:deeptune} provides a high-level overview. This section describes the three key components: a generative model for random programs, a test harness, and voting heuristics for differential testing.
 
 
-\subsection{Generative Model for Program Codes}
+\subsection{Generative Model}
 
-Generating test cases for compilers is hard because their inputs are highly structured. We employ state-of-the-art deep learning techniques to model program generation using unsupervised learning to build syntactic-level sequence models over source code. We extend prior work on synthetic program generation using Long Short-Term Memory (LSTM) networks~\cite{Cummins2017a}.
+Generating test cases for compilers is hard because their inputs are highly structured. We pose the problem as an unsupervised machine learning task, employing state-of-the-art deep learning techniques to builds models for how humans write programs, extending prior work on synthetic benchmark generation~\cite{Cummins2017a} and lifting it to the compiler testing domain.
 
-An initial seed corpus of 10k OpenCL kernels is mined from GitHub, using an oracle compiler (LLVM 3.9) to reject files that are not well-formed or do not contain instructions. The corpus is normalized using a custom LLVM pass to normalize syntactic choices --- identifier and function names.
+\cc{This renders the generation of programs language agnostic. The entire generative model is a few hundred lines of Python}
 
-A uniform code style is enforced to ensure consistent use of braces, whitespace. The preprocessed corpus is encoded using a hybrid token/character-level encoding~\cite{Cummins2017b}. \cc{More detail\ldots}
+Rather than building a custom program generation tool for a particular programming language, the idea is to a use an artificial neural network to a generate streams of tokens. The network is trained on a corpus of example programs in the desired programming language, such that the stream of generated tokens closely resembles the probability distribution of tokens within the corpus. Sampling from the stream of generated tokens provides a means to generate new compiler test cases.
+
+\paragraph{Training Data} The generative model is trained using an initial seed corpus of 10k OpenCL kernels, mined from GitHub. These handwritten programs are used to\cc{\ldots} An \emph{oracle compiler} (LLVM 3.9) is used to reject files that are not well-formed.
+
+Code rewriting is used to normalize trivial syntactic differences between codes in order to make the code more amenable to machine learning. For example, the choice of identifier names, and the presence of comments.
+
+For each source in the training data, the source is pre-processor to inline macros and remove conditional compilation and comments. Then, all user-declared identifiers and renamed using an arbitrary, but consistent pattern based on their order of appearance: $\{a,\allowbreak b,\allowbreak c,\allowbreak \ldots,\allowbreak aa,\allowbreak ab,\allowbreak ac,\allowbreak \ldots\}$ for variables and $\{A,\allowbreak B,\allowbreak C,\allowbreak \ldots,\allowbreak AA,\allowbreak AB,\allowbreak AC,\allowbreak \ldots\}$ for functions.
+
+Finally, a uniform code style is enforced to ensure consistent use of braces, parentheses, and white space.
+
+
+\paragraph{Encoding} The preprocessed corpus is encoded using a hybrid token/character-level encoding~\cite{Cummins2017b}. \cc{More detail\ldots}
+
+
+\paragraph{Network Architecture} We use the Long Short-Term Memory (LSTM) architecture of Recurrent Neural Network to model program code~\cite{Hochreiter1997}. The LSTM architecture
+
+LSTMs implements a Recurrent Neural Network in which the activations of neurons are learned with respect not just to their current inputs, but to previous inputs in a sequence. Unlike regular recurrent networks in which the strength of learning decreases over time (a symptom of the \emph{vanishing gradients} problem~\cite{Pacanu2013}), LSTMs employ a \emph{forget gate} with a linear activation function, allowing them to retain activations for arbitrary durations. This makes them effective at learning complex relationships over long sequences~\cite{Lipton2015}, an especially important capability for modeling program code, as dependencies in sequences frequently occur over long ranges (for example, a variable may be declared as an argument to a function and used throughout).
+
+% For the machine learning approach to work effectively it is essential that the model can capture long-range dependencies. For example, a function must be called with a number of arguments consistent with the function definition, which may have occurred much earlier in the program sequence. 
 
 LSTM networks model the vocabulary distribution over the encoded corpus. We use a two layer LSTM network of 512 nodes each, trained using Stochastic Gradient Descent for 50 epochs, with an initial learning rate of 0.002 and decaying by a factor of a half every 5 epochs. % We use TensorFlow to implement the LSTM networks, with the entire generative model requiring less than 200 lines of Python, and is not specialized to OpenCL.
 
-The trained network is sampled to generate new programs. The model is seeded with the start of a kernel (\texttt{\_\_kernel void}), and sampled token-by-token. A ``bracket depth'' counter is incremented or decremented upon production of \texttt{\{} or \texttt{\}} tokens respectively, and sampling terminates once the bracket depth reaches zero. The generated sequence of tokens are then concatenated and used as the generated program.
+\paragraph{Program Generation} The trained network is sampled to generate new programs. The model is seeded with the start of a kernel (identified in OpenCL using the keywords \texttt{kernel void}), and sampled token-by-token. A ``bracket depth'' counter is incremented or decremented upon production of \texttt{\{} or \texttt{\}} tokens respectively, and sampling terminates once the bracket depth reaches zero. The generated sequence of tokens are then concatenated and used as the generated program.
 
 \cc{Add algorithm!}
 
@@ -24,13 +40,13 @@ The trained network is sampled to generate new programs. The model is seeded wit
   \includegraphics[width=.80\columnwidth]{img/deepsmith} %
   % \vspace{-2em}%
   \caption{%
-    Test case generation. An corpus of programs from GitHub is used to seed a generative model for program code, which are parameterized to construct test cases. \cc{Add testbeds and comparison of outputs}%
+    DeepSmith system overview.
   }%
   \label{fig:deeptune}
 \end{figure}
 
 
-\subsection{Test Case Execution}
+\subsection{Test Harness}
 
 \cc{reword - a single test harness accepts a string as input and generates input data}
 
@@ -59,8 +75,6 @@ We note that, unlike the generative model, this test harness construction is lan
 % WHERE cumtime < 48 * 3600;
 % 21.5\% of test cases are compile-only stubs.
 
-
-\subsection{Test Case Execution}
 
 \begin{figure}
 	\centering %
@@ -130,7 +144,9 @@ Differential testing on the output of a generated program requires that the prog
 
 \paragraph{Floating Points} The OpenCL specifications permit acceptable error bounds (ULP) for floating point operations and builtin functions. Some operations like addition, and multiplication are precise; divide permits a small error, and builtins vary widely. Thus two implementation may give different answers that both fit within the allowed ranges (and because errors propagate through operations it's hard to even describe the ULP on the final output). For this reason, CSmith, and by extension, CLSmith, do not support floating point operations. We believe this restriction to be artificially limiting, since floating point computations are dominant in the common uses of OpenCL --- %
 % $ ls | xargs grep -E -l '(float|double)' -- | wc -l  # 2245
-48\% of GitHub kernels use floating points. At the moment, we simply print floating values using \texttt{printf()} rounding. This will hide small rounding errors. Larger errors prevent us from difftesting on the output since no output majority will be possible. Given knowledge about hardware imprecision, it would be possible to compute an acceptable error threshold for floating point results based on dynamic profiling.
+% 48\% of GitHub kernels use floating points.
+We exclude generated kernels containing floating points form difftesting. Given knowledge about hardware imprecision, it would be possible to compute an acceptable error threshold for floating point results based on dynamic profiling.
+
 
 \paragraph{Divide-by zero} \cc{TODO} The hardest false-positive to prevent was division by zero and related mathematical functions which require non-zero values. In all cases we discovered these can be detected by simply changing the input values and checking to see if the output remains anomalous.
 
