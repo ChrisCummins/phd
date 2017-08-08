@@ -745,10 +745,6 @@ DeepSmith also triggered \emph{unreachable!} compiler errors in 180 distinct tes
 \end{figure}
 
 
-\paragraph{Differential Tests}
-
-Table~\ref{tab:classifications} shows the results of applying voting heuristics to the results of Table~\ref{tab:outcomes}.
-
 \begin{figure}
   \centering %
   \includegraphics[width=.9\columnwidth]{build/img/runtimes}%
@@ -768,6 +764,8 @@ Similarly, Intel Testbeds 4--7 (but not 3) reject DeepSmith kernels which omit a
 
 % Anomalous build failures
 Testbeds $1\pm$, $2\pm$ reject kernels which \texttt{size\_t} parameters.
+
+CLSmith produced 33 distinct programs yielding \emph{wrong-output} programs. DeepSmith produced less, at 30.
 
 
 \paragraph{Test case Reduction} We used a modified version of C-Reduce which supports OpenCL~\cite{Pflanzer2016} to perform automatic test case, using the default settings. The available implementation supports reduction only of anomalous-output test cases, though this could be extended to support other outcomes (we did not do this). Test case reduction is a time-consuming process, even with the parallelized implementation. Figure~\ref{fig:kernel-sizes} shows the runtimes of reductions, and Figure~\cc{TODO} shows the test case sizes before and after reduction. For CLSmith-generated kernels, test case reduction is necessary to expose the problematic code from within the hundreds of lines of generated program. DeepSmith kernels are on average an order of magnitude smaller. We found that reduction \ldots
