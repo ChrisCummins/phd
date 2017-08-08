@@ -118,16 +118,16 @@
 \begin{lrbox}{\IntelOptLoopHang}
   \hspace{1.5em}
   \begin{lstlisting}
-    __kernel void A(long a, long b) {
-      while (a > 273444) { }
+    kernel void A(global int* a) {
+      int b = get_global_id(0);
+      while (b < 512) { }
     }
   \end{lstlisting}
 \end{lrbox}
 % Another example:
-% __kernel void A(__global int* a) {
-%   int b = get_global_id(0);
-%   while (b < 512) { }
-% }
+%   kernel void A(long a, long b) {
+%     while (a > 273444) { }
+%   }
 
 
 \newsavebox{\NvidiaRecursionSegfault}
@@ -139,7 +139,9 @@
     }
   \end{lstlisting}
 \end{lrbox}
-% HAND REDUCED: kernel void A(constant int2* a, global int* b) { A(b, a); }
+% HAND REDUCED:
+%
+%   kernel void A(constant int2* a, global int* b) { A(b, a); }
 
 \newsavebox{\BeignetScalarizeInsert}
 \begin{lrbox}{\BeignetScalarizeInsert}
@@ -207,8 +209,6 @@
   \end{lstlisting}
 \end{lrbox}
 
-
-%%%%%%%%%% VECTORIZER
 \newsavebox{\IntelVectorizerSegfault}
 \begin{lrbox}{\IntelVectorizerSegfault}
   \hspace{1.5em}
@@ -305,6 +305,36 @@
       for (unsigned int g = get_local_id(0) + get_local_size(0); g < get_local_size(0); g += get_local_size(0)) {
         a[2 * get_local_id(0) + 1] = get_local_id(0);
       }
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\BeignetTernary}
+\begin{lrbox}{\BeignetTernary}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(global int* a, global int* b, global int* c) {
+      c[0] = (a[0] > b[0]) ? a[0] : 0;
+      c[2] = (a[3] <= b[3]) ? a[4] : b[5];
+      c[4] = (a[4] <= b[5]) ? a[7] : b[7];
+      c[7] = (a[7] < b[0]) ? a[0] : (a[0] > b[1]);
+    }
+  \end{lstlisting}
+\end{lrbox}
+% HAND REDUCED:
+%
+%   kernel void A(global int* a, global int* b, global int* c) {
+%     c[0] = 100;
+%     c[1] = (a[3] <= b[4]) ? a[4] : b[5];
+%   }
+
+\newsavebox{\BeignetTernarySmaller}
+\begin{lrbox}{\BeignetTernarySmaller}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(global int* a, global int* b, global int* c) {
+      c[0] = (a[0] > 0) ? a[0] : b[1];
+      c[1] = (a[1] <= b[1]) ? a[0] : b[0];
     }
   \end{lstlisting}
 \end{lrbox}
@@ -495,9 +525,13 @@ EMI/CSmith/SPE extensive stress-test.
 
 \begin{figure}
   \centering %
-  \subfloat[Testbeds $4+$, $6+$ incorrectly execute \texttt{if} branch. The pattern of integer comparison to thread ID is widely used.]{%
+  \subfloat[Testbeds $4+$, $6+$ incorrectly execute \texttt{if} branch. This pattern of integer comparison to thread ID is widely used.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelSizetIntUnreduced}}}%
     \label{lst:intel-size_t-int-unreduced}
+  }\\%
+  \subfloat[Testbed $3\pm$ doesn't execute any of the ternary ops \cc{what is the cause? Seems to be something to do with the inputs, which CLSmith doesn't have}.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetTernary}}}%
+    \label{lst:pocl-undefined-symbols}
   }\\%
   \subfloat[A race condition in \texttt{switch} statement evaluation causes $10\pm$ to sporadically crash when executed with a global size $> 1$.]{%
       \noindent\mbox{\parbox{\columnwidth}{\usebox{\OclgrindRaceSwitch}}}%
@@ -534,26 +568,26 @@ Figure~\ref{lst:oclgrind-race-switch} shows a simple program in which thread ide
 \paragraph{Type conversion} Figure~\ref{lst:beignet-cast-error}. The code performs int and float addition, casting the result to a char, then storing in float. Changing any one of those makes the problem go away.
 
 
-\subsection{Gray Areas and False Positives}
-
-\cc{DELETE ME}
-
-Some compilers are more permissive than others - some compilers will reject kernels with out-of-range literals \emph{integer literal is too large}.
-
-None of the three statements in Figure~\ref{lst:xeon-phi-invalid-write} are executed by testbeds~$7\pm$, all other configurations return the final value. In testbeds $1\pm$ (but not $2\pm$), out-of-bounds memory reads and writes can be used to overflow into neighboring kernel arguments. In both cases, oclgrind can automatically catch the inalid accesses to prevent false-positives, but perhaps should results may be interesting for testing robustness / security. E.g.~\cite{Holler2012}.
-
-The hardest false-positive to prevent was division by zero and related mathematical functions which require non-zero values. In all cases we discovered these can be prevented by simply changing the input values and checking to see if the output remains anomalous.
-
-\begin{figure}
-  \centering %
-  \subfloat[The out-of-range write on line 3 is invalid, but does not affect execution of lines 2 and 4 for all testbeds except $7\pm$. On Testbeds $7\pm$, lines 2 and 4 execute when the invalid write has an index $1 \le i < 44032$, and not  when index $i \ge 44032$ or $i < 0$.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiInvalidWrite}}}%
-    \label{lst:xeon-phi-invalid-write}
-  }\\%
-  \caption{Example kernels which mis-match.}%
-  \label{lst:gray-areas}%
-\end{figure}
-
+%\subsection{Gray Areas and False Positives}
+%
+%\cc{DELETE ME}
+%
+%Some compilers are more permissive than others - some compilers will reject kernels with out-of-range literals \emph{integer literal is too large}.
+%
+%None of the three statements in Figure~\ref{lst:xeon-phi-invalid-write} are executed by testbeds~$7\pm$, all other configurations return the final value. In testbeds $1\pm$ (but not $2\pm$), out-of-bounds memory reads and writes can be used to overflow into neighboring kernel arguments. In both cases, oclgrind can automatically catch the inalid accesses to prevent false-positives, but perhaps should results may be interesting for testing robustness / security. E.g.~\cite{Holler2012}.
+%
+%
+%
+%\begin{figure}
+%  \centering %
+%  \subfloat[The out-of-range write on line 3 is invalid, but does not affect execution of lines 2 and 4 for all testbeds except $7\pm$. On Testbeds $7\pm$, lines 2 and 4 execute when the invalid write has an index $1 \le i < 44032$, and not  when index $i \ge 44032$ or $i < 0$.]{%
+%    \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiInvalidWrite}}}%
+%    \label{lst:xeon-phi-invalid-write}
+%  }\\%
+%  \caption{Example kernels which mis-match.}%
+%  \label{lst:gray-areas}%
+%\end{figure}
+%
 %\begin{figure}
 %  \centering %
 %  \subfloat[Read of uninitialized automatic variable \texttt{c}.]{%

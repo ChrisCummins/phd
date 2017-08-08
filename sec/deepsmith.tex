@@ -132,7 +132,7 @@ Differential testing on the output of a generated program requires that the prog
 % $ ls | xargs grep -E -l '(float|double)' -- | wc -l  # 2245
 48\% of GitHub kernels use floating points. At the moment, we simply print floating values using \texttt{printf()} rounding. This will hide small rounding errors. Larger errors prevent us from difftesting on the output since no output majority will be possible. Given knowledge about hardware imprecision, it would be possible to compute an acceptable error threshold for floating point results based on dynamic profiling.
 
-\paragraph{Divide-by zero} TODO
+\paragraph{Divide-by zero} \cc{TODO} The hardest false-positive to prevent was division by zero and related mathematical functions which require non-zero values. In all cases we discovered these can be detected by simply changing the input values and checking to see if the output remains anomalous.
 
 % Section 7.4 of OpenCL 1.2 spec.
 
