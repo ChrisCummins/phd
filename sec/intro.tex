@@ -6,7 +6,7 @@
 %\hl{Hugh comment}
 
 \noindent
-Optimizing compilers are large and complex programs, with a practically infinite scope of possible inputs. Fixed test-suites are inadequate for ensuring correct behavior over such a range of inputs, and the lack of formal specifications for sections of compilers renders formal verification unusable beyond isolated subcomponents. \cc{Not true, CompCert!} Yet, compilers are a fundamental trusted technology, and identifying their bugs is of critical importance.
+Compilers are a fundamental trusted technology. Bugs in them are particularly harmful. They can introduce extremely hard to identify errors in the generated binary. If we detect them early, this just increases development costs. If not, this can cause runtime failures in even carefully tested software. Identifying such bugs before compiler release is of critical importance but it is not a straightforward task. Modern optimizing compilers are large and complex programs with a practically infinite scope of possible inputs. Fixed test-suites are inadequate for ensuring correct behavior over such a range of inputs, and the lack of formal specifications for sections of compilers renders formal verification unusable beyond isolated subcomponents.
 
 \cc{TODO: define fuzzing}
 
