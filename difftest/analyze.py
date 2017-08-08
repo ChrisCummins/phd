@@ -312,7 +312,7 @@ def verify_w_testcase(session: session_t, tables: Tableset, testcase) -> None:
 
         if testcase.contains_floats:
             print(f"testcase {testcase.id}: contains floats")
-            # return fail()
+            return fail()
 
         if testcase_raises_compiler_warnings(session, tables, testcase):
             print(f"testcase {testcase.id}: redflag compiler warnings")

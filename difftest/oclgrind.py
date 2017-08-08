@@ -34,6 +34,8 @@ def oclgrind_verify(cmd):
         return False
     elif "Invalid write of size" in stderr:
         return False
+    elif "Uninitialized value" in stderr:
+        return False
 
     return True
 
