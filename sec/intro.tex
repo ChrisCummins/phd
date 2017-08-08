@@ -44,7 +44,9 @@ What we propose instead is a fast, easy, and low effort approach to the generati
 
 \cc{TODO: syntactic modeling trade-off}
 
-Our implementation, DeepSmith, targets OpenCL, an open standard for programming heterogeneous systems, though our approach is language agnostic. We chose OpenCL for three reasons: it is an emerging standard with the challenging promise of portability across a diverse range of heterogeneous hardware; OpenCL is compiled ``online'', meaning that compiler defects may not be discovered until a product is deployed to customers; and OpenCL is a hard programming language to test \cc{DELETE ME, not ``hard''} --- the data-parallel programming model increases the complexity of static and dynamic analysis, further limiting the expressiveness of grammar-based approaches.
+Our implementation, DeepSmith, targets OpenCL, an open standard for programming heterogeneous systems, though our approach is language agnostic. We chose OpenCL for three reasons: it is an emerging standard with the challenging promise of portability across a diverse range of heterogeneous hardware; OpenCL is compiled ``online'', meaning that compiler defects may not be discovered until a product is deployed to customers; and there has already been extensive work in hand written random program generators for OpenCL. 
+
+%OpenCL is a hard programming language to test \cc{DELETE ME, not ``hard''} --- the data-parallel programming model increases the complexity of static and dynamic analysis, further limiting the expressiveness of grammar-based approaches.
 
 %The importance of sane compiler behavior is amplified for OpenCL since it is compiled online. OpenCL code is shipped by developers to customers for compilation online. OpenCL is increasingly used in safety critical software products such as automotive vision. Segmentation faults and other runtime crashes during online compilation can disrupt the execution of safety critical processes.
 %
@@ -80,9 +82,9 @@ We make the following contributions:
 %
 \cc{Check against abstract"}
 \begin{itemize}
-\item A novel, data-drive approach for the generation of expressive random programs for compiler fuzzing. DeepSmith \emph{infers} programming language use from real-world examples in order to generate plausible compiler test cases; % CLSmith requires expert-driven development for every language feature supported. 40+k lines of C++ vs a few hundred lines of Python.
-\item through syntactic modeling of handwritten program code we discover bugs in compilers which the grammar-based approaches cannot, covering more components of the compiler;
+\item a novel, automatic, and fast approach for the generation of expressive random programs for compiler fuzzing. DeepSmith \emph{infers} programming language syntax, structure, and use from real-world examples not through a manually created probabilistic syntax; % CLSmith requires expert-driven development for every language feature supported. 40+k lines of C++ vs a few hundred lines of Python.
+\item through syntactic modeling of handwritten programs, we discover bugs in compilers which the grammar-based approaches cannot, covering more components of the compiler;
 % e.g. ill-formed
-\item we find bugs faster than the state-of-the-art. In 48 hours we discovered and report XX bugs in compiler and open source OpenCL implementations, XX\% more than CLSmith over the same time period;
+\item we find bugs faster than the state-of-the-art. In 48 hours we discovered and reported XX bugs in compiler and open source OpenCL implementations, XX\% more than CLSmith over the same time period;
 \item in modeling real handwritten code, our test cases are more interpretable than other approaches. Average test case size is two orders of magnitude smaller than state-of-the-art;
 \end{itemize}
