@@ -448,7 +448,21 @@
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelVectorizerSegfault}}}%
     \label{lst:intel-vectorizer-segfault}
   }\\%
-  \caption{Example kernels which crash Intel vectorizer pass.}%
+  % CLgen result ID 452598
+  \cc{TODO: Intel pass \emph{X86 DAG->DAG Instruction Selection}}
+  % kernel void A(global half* a) {
+  %   int b = get_global_id(0);
+  %   a[b] = b * b;
+  % }
+  
+  % CLgen result ID 1903475
+  \cc{TODO: Intel pass \emph{Intel OpenCL Barrier}}
+  % kernel void A(global float* a, global float* b, const int c) {
+  %   int d = get_global_id(8);
+  %   b[d] = a[d] + b[d];
+  % }
+  
+  \caption{Example kernels which induce failures in specific compiler passes. \cc{Pick out more examples, and a more diverse range}}%
 \end{figure}
 
 
@@ -511,12 +525,11 @@ Unless stated otherwise, all code listings are presented verbatim as generated b
 
 We found numerous cases where kernels trigger a crash in the compiler (and as a result, the host process), or the compiler to loop indefinitely.
 
-Many of the causes can be attributed to improper or missing error handling.
-
 % \texttt{kernel void A(global float* a) { (float4)(a); }}
 
 
-\paragraph{Semantic Analysis Failures} %
+\paragraph{Semantic Analysis Failures} We discovered many compiler crashes which can be attributed to improper or missing error handling. Testing compilers under invalid inputs is important.
+
 
 Figure~\ref{lst:nvidia-recursion-segfault} induces an error in handling of global to constant address qualifiers.
 
@@ -525,26 +538,12 @@ Figures~\ref{lst:oclgrind-sema-assertion} and~\ref{lst:oclgrind-uncorrected-typo
 % \paragraph{Type Errors}
 Testbed $3\pm$ hangs while assigning a value from a pointer address.
 
-Figure~\ref{lst:almost-everything-crash} crashes 6 of the 10 compilers we tested crashed with segmentation faults.
+Since the expressiveness of our approach is bounded only by the handwritten programs we train on, DeepSmith will occasionally emit compiler-specific code, such as invoking compiler builtins. Figure~\ref{lst:almost-everything-crash} crashes 6 of the 10 compilers we tested crashed with segmentation faults.
 
 We believe that our approach contributes a significant improvement for generating plausibly-erroneous code over prior random-enumeration approaches.
 
 
 \paragraph{Pass Failures} The vectorizer pass of Intel compilers was a frequent source of compile-time crashes. Figure~\ref{lst:intel-vectorizer-segfault} segfaults during vectorization.
-
-% CLgen result ID 452598
-\cc{Intel pass \emph{X86 DAG->DAG Instruction Selection}}
-% kernel void A(global half* a) {
-%   int b = get_global_id(0);
-%   a[b] = b * b;
-% }
-
-% CLgen result ID 1903475
-\cc{Intel pass \emph{Intel OpenCL Barrier}}
-% kernel void A(global float* a, global float* b, const int c) {
-%   int d = get_global_id(8);
-%   b[d] = a[d] + b[d];
-% }
 
 % CLgen result ID 994
 Testbed $3\pm$ assertion in \emph{gbe::GenEncoder::handleDouble}
