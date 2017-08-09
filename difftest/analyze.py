@@ -199,17 +199,6 @@ WHERE outcome = {OUTCOMES_TO_INT["c"]}
 AND outcome_majsize >= {min_majsize}
 AND maj_outcome = {OUTCOMES_TO_INT["pass"]}
 """)
-
-    print(f"Determining {tables.name} anomalous timeouts ...", file=sys.stderr)
-    session.execute(f"""
-INSERT INTO {tables.classifications.__tablename__}
-SELECT {tables.results.__tablename__}.id, {CLASSIFICATIONS_TO_INT["to"]}
-FROM {tables.results.__tablename__}
-LEFT JOIN {tables.majorities.__tablename__} ON {tables.results.__tablename__}.id={tables.majorities.__tablename__}.id
-WHERE outcome = {OUTCOMES_TO_INT["to"]}
-AND outcome_majsize = {min_majsize}
-AND maj_outcome = {OUTCOMES_TO_INT["pass"]}
-""")
     session.commit()
 
 
