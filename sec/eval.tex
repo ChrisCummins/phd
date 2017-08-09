@@ -490,13 +490,13 @@
 
 \begin{figure}
   \centering %
-  \subfloat[Testbeds $1\pm$, $2\pm$, $3\pm$ reject automatic variables with address-space qualifiers (line 4).]{%
+  \subfloat[Testbeds $1\pm$, $2\pm$, $3\pm$ reject address space-qualified automatic variables.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\AddressQualifiedAutoVar}}}%
     \label{lst:adress-qualified-autovar}
-  }\\%
-  
-  \subfloat[Testbeds $4\pm$, $6\pm$ reject anonymous declarations (line 4). %\emph{declaration doesn't declare anything}.
-    All other testbeds compile, some with a warning.]{%
+  }\\%  
+  \subfloat[Testbeds $4\pm$, $6\pm$ reject anonymous declarations. %\emph{declaration doesn't declare anything}.
+    % All other testbeds compile, some with a warning.
+    ]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelDeclDoesntDeclareAnything}}}%
     \label{lst:intel-decl-doesnt-declare-anything}
   }\\%
@@ -510,7 +510,7 @@
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelOptLoopHang}}}%
     \label{lst:intel-inf-loop}
   }\\%
-  \subfloat[Pointer to integer causes Testbeds $3\pm$ to loop indefinitely, consuming more memory, until the entire system memory is used and the process crashes. All other Testbeds compile in < 1s.]{%
+  \subfloat[Testbed $3\pm$ loop indefinitely, leaking memory until the entire system memory is depleted and the process crashes.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetPtrIntSpin}}}%
     \label{lst:oclgrind-uncorrected-typos}
   }\\%
@@ -548,6 +548,9 @@ Unless stated otherwise, all code listings are presented verbatim as generated b
 We found numerous cases where kernels trigger a crash in the compiler (and as a result, the host process), or the compiler to loop indefinitely.
 
 % \texttt{kernel void A(global float* a) { (float4)(a); }}
+
+
+\paragraph{Parsing Failures} \cc{TODO: Distinct DeepSmith programs / test cases which trigger stack dumps during parsing}
 
 
 \paragraph{Semantic Analysis Failures} We discovered many compiler crashes which can be attributed to improper or missing error handling. Testing compilers under invalid inputs is important.
@@ -729,6 +732,8 @@ We ran each program generator using its default configuration for 48 hours on ea
   \centering %
   \input{build/tab/megatable}
   \caption{%
+    % CLSmith total ``interesting'': 19415
+    % DeepSmith total ``interesting'': 8272
     Results from 48 hours of testing using CLSmith and DeepSmith. Testbed \#. as per Table~\ref{tab:platforms}. $\pm$ denotes optimizations off ($-$) vs on ($+$). The remaining columns denote the number of build crash (\textbf{bc}), build timeout (\textbf{bto}), build failure (\textbf{bf}), runtime crash (\textbf{c}), timeout (\textbf{to}), and pass (\textbf{\cmark}) results. \cc{remove ``Total'' row for submission}%
   }
   \label{tab:megatable}
@@ -800,9 +805,27 @@ Over the course of testing, a combined $3.39 \times 10^8$ of CLSmith code was ev
 
 \paragraph{Comparison of Results}
 
-CLSmith crashed 8 of the 20 compilers, DeepSmith crashed all of them. See Section X for examples of bugs found from build crashes.
+CLSmith crashed 8 of the 20 testbed configurations, DeepSmith crashed all of them. See Section X for examples of bugs found from build crashes.
 
-For all except testbed $3\pm$, DeepSmith exposes more compiler crashes than CLSmith. On average, DeepSmith hangs the compiler more frequently. \cc{\ldots}
+
+CLSmith triggered crashes in four Intel passes.
+% Combine Redundant instructions
+% Packetize function
+% Post-dominance Frontier Construction
+% Predicator
+DeepSmith triggered crashes in ten Intel passes, including three of the four which CLSmith triggered (the one missing one is \emph{Paketize function}).
+% Add SPIR related module scope metadata
+% Combine Redundant instructions <- CLSmith triggered this too
+% Intel OpenCL Barrier
+% LoopWIAnalysis
+% Post-dominance frontier construction <- CLSmith triggered this too
+% Predicator <- CLSmith triggered this too
+% PrepareKernelArgs
+% RemoveDuplicateBarrier
+% Simplify the CFG
+% X86 DAG
+
+CLSmith generated 33 programs with wrong-outputs. DeepSmith generated 30.
 
 The integrated GPU Testbed (3) frequently failed to compile CLSmith kernels, resulting in over 10k compiler crashes \textbf{bc} or timeouts \textbf{bc}.
 % 10,318

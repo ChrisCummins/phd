@@ -1,6 +1,6 @@
 \section{DeepSmith}
 
-DeepSmith~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}} is our open source framework for compiler fuzzing. Figure~\ref{fig:deeptune} provides a high-level overview. Our implementation targets the OpenCL programming language, though the approach is language agnostic. This section describes the three key components: a generative model for random programs, a test harness, and voting heuristics for differential testing.
+DeepSmith~\footnote{DeepSmith available at: \emph{[URL redacted for double-blind review]}} is our open source framework for compiler fuzzing. Figure~\ref{fig:deeptune} provides a high-level overview. In this work we target OpenCL, though the approach is language agnostic. This section describes the three key components: a generative model for random programs, a test harness, and voting heuristics for differential testing.
 
 \begin{figure}
   \centering
@@ -72,23 +72,6 @@ We note that, unlike the generative model, this test harness is language-specifi
 
 % We classify the result of executing a test case into one of six classifications: build failure (\textbf{bf}), build crash (\textbf{bc}), runtime crash (\textbf{c}), or pass (\textbf{\cmark}). A \textbf{bf} occurs when compilation of a kernel fails, usually accompanied by an error message. A \textbf{bc} outcome occurs when the compiler crashes. A \textbf{c} outcome occurs when the program crashes during execution. The \textbf{bto} and \textbf{to} outcomes occur when the program compilation or execution time out, respectively.
 
-\cc{TODO: Rewrite with only bc,bto outcomes, else voting heuristic}
-
-Executing a test case on a testbed leads to one of six possible outcomes: \textbf{\{bf,bc,bto,c,to,\cmark\}}, illustrated in Figure~\ref{fig:test-process}.
-
-A \emph{build failure} (\textbf{bf}) occurs when online compilation of the OpenCL kernel fails, usually accompanied by an error diagnostic. A \emph{build crash} (\textbf{bc}) or \emph{build timeout} (\textbf{bto}) outcome occurs if the compiler crashes or fails to produce a binary within 60 seconds, respectively. For compile-only test cases, a \emph{pass} (\textbf{\cmark}) is achieved if the compiler produces a binary. For test cases in which the kernel is executed, kernel execution leads to one of three potential outcomes: \emph{runtime crash} (\textbf{c}) if the program crashes, \emph{timeout} (\textbf{to}) if the kernel fails to terminate within 60 seconds, or \emph{pass} (\textbf{\cmark}) if the kernel terminates gracefully and computes an output.
-%
-%\begin{enumerate}
-%	\item \emph{Build failure} (\textbf{bf}) Online compilation of the OpenCL kernel fails, usually accompanied by an error diagnostic.
-%	\item \emph{Build crash} (\textbf{bc}) The compiler crashes during online compilation of the OpenCL kernel.
-%	\item \emph{Build timeout} (\textbf{bto}) Online compilation of the OpenCL kernel exceeds the timeout of 60 seconds.
-%	\item \emph{Runtime crash} (\textbf{c}) Compilation of the OpenCL kernel succeeds gracefully, but the program crashes during kernel execution.
-%	\item \emph{Runtime timeout} (\textbf{to}) Compilation of the OpenCL kernel succeeds gracefully, but program execution exceeds the timeout of 60 second.
-%	\item \textbf{\cmark} \emph{Completion} The program terminates gracefully and produces an output.
-%\end{enumerate}
-
-When evaluating the outcomes of test cases, \textbf{\{bc,bto\}} outcomes are of immediate interest, indicative of erroneous compiler behavior \cc{examples in Section~\ref{subsec:compile-time-defects}}. For all other outcomes, \emph{differential tests} are required to expose anomalous behavior.
-
 
 \subsection{Voting Heuristics for Differential Testing}
 
@@ -104,6 +87,21 @@ When evaluating the outcomes of test cases, \textbf{\{bc,bto\}} outcomes are of 
 As in prior work, voting on the output of programs across compilers has been used to circumvent the \emph{oracle problem} and detect miscompilations~\cite{McKeeman1998}.
 % In~\cite{Lidbury2015a}, a testbed is determined to have produced a wrong code result for a kernel if there is a majority output of at least 3 among the \textbf{\cmark} results for the kernel, and the testbed yields a \textbf{\cmark} result that disagrees with the majority.
 We extend this approach to describe not only miscompilations, but also anomalous build failures and crashes.
+
+Executing a test case on a testbed leads to one of six possible outcomes: \textbf{\{bf,bc,bto,c,to,\cmark\}}, illustrated in Figure~\ref{fig:test-process}.
+
+A \emph{build failure} (\textbf{bf}) occurs when online compilation of the OpenCL kernel fails, usually accompanied by an error diagnostic. A \emph{build crash} (\textbf{bc}) or \emph{build timeout} (\textbf{bto}) outcome occurs if the compiler crashes or fails to produce a binary within 60 seconds, respectively. For compile-only test cases, a \emph{pass} (\textbf{\cmark}) is achieved if the compiler produces a binary. For test cases in which the kernel is executed, kernel execution leads to one of three potential outcomes: \emph{runtime crash} (\textbf{c}) if the program crashes, \emph{timeout} (\textbf{to}) if the kernel fails to terminate within 60 seconds, or \emph{pass} (\textbf{\cmark}) if the kernel terminates gracefully and computes an output.
+%
+%\begin{enumerate}
+%	\item \emph{Build failure} (\textbf{bf}) Online compilation of the OpenCL kernel fails, usually accompanied by an error diagnostic.
+%	\item \emph{Build crash} (\textbf{bc}) The compiler crashes during online compilation of the OpenCL kernel.
+%	\item \emph{Build timeout} (\textbf{bto}) Online compilation of the OpenCL kernel exceeds the timeout of 60 seconds.
+%	\item \emph{Runtime crash} (\textbf{c}) Compilation of the OpenCL kernel succeeds gracefully, but the program crashes during kernel execution.
+%	\item \emph{Runtime timeout} (\textbf{to}) Compilation of the OpenCL kernel succeeds gracefully, but program execution exceeds the timeout of 60 second.
+%	\item \textbf{\cmark} \emph{Completion} The program terminates gracefully and produces an output.
+%\end{enumerate}
+
+When evaluating the outcomes of test cases, \textbf{\{bc,bto\}} outcomes are of immediate interest, indicative of erroneous compiler behavior \cc{examples in Section~\ref{subsec:compile-time-defects}}. For all other outcomes, \emph{differential tests} are required to expose anomalous behavior.
 
 A majority outcome exists if, for for a particular test case ran on $n$ testbeds, at least $\ceil{\frac{2}{3}n}$ testbeds produce non-\textbf{\{bc,bto\}} results with the same outcome. We classify anomalous results with respect to the majority outcome for each test case.
 
