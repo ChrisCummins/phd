@@ -399,6 +399,19 @@
   \end{lstlisting}
 \end{lrbox}
 
+\newsavebox{\NvidiaLocalSegfault}
+\begin{lrbox}{\NvidiaLocalSegfault}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(global uchar4* a, const int b) {
+      local int c[16];
+      local float8* d = a + 133;
+    
+      atomic_cmpxchg(c, 10, 13);
+    }
+  \end{lstlisting}
+\end{lrbox}
+
 %%% FIGURES
 
 \begin{figure}
@@ -431,15 +444,24 @@
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetScalarizeInsert}}}%
     \label{lst:oclgrind-uncorrected-typos}
   }\\%
-  \subfloat[Testbeds $1\pm$, $2\pm$ segmentation fault due to invalid pointer assignment.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaLocalGlobalSegfault}}}%
-    \label{lst:nvidia-local-global-sefault}
-  }\\%
   \subfloat[Testbeds $7\pm$ segmentation fault.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSegfault}}}%
     \label{lst:xeon-phi-segfault}
   }\\%
   \caption{Example kernels which crash compilers.}%
+\end{figure}
+
+\begin{figure}
+  \centering %
+  \subfloat[]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaLocalGlobalSegfault}}}%
+    \label{lst:nvidia-local-global-sefault}
+  }\\%
+  \subfloat[]{%
+      \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaLocalSegfault}}}%
+      \label{lst:nvidia-local-global-sefault}
+    }\\%
+  \caption{Kernels containing pointer assignments which segfault Nvidia compilers.}%
 \end{figure}
 
 \begin{figure}
