@@ -372,11 +372,38 @@
   \end{lstlisting}
 \end{lrbox}
 
+\newsavebox{\AddressQualifiedAutoVar}
+\begin{lrbox}{\AddressQualifiedAutoVar}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(global float4* a, global float4* b, global float4* c, global float4* d, global float4* e, float f) {
+      unsigned int g = get_global_id(0);
+      int h = get_global_size(0);
+      constant sampler_t i = 0x0000 | 0x0004 | 0x0000;
+    
+      unsigned int j = g * (1 << ((h % 4) - (2)));
+    }
+  \end{lstlisting}
+\end{lrbox}
+
+\newsavebox{\NvidiaLocalGlobalSegfault}
+\begin{lrbox}{\NvidiaLocalGlobalSegfault}
+  \hspace{1.5em}
+  \begin{lstlisting}
+    kernel void A(global int* a) {
+      local int b[2][3][4][5];
+      if (get_global_id(0) == 0) {
+        a = b[0];
+      }
+    }
+  \end{lstlisting}
+\end{lrbox}
+
 %%% FIGURES
 
 \begin{figure}
   \centering %
-  \subfloat[Testbeds $1\pm$, $2\pm$ segementation fault.]{%
+  \subfloat[Testbeds $1\pm$, $2\pm$ segementation fault due to implicit address space conversion.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaRecursionSegfault}}}%
     \label{lst:nvidia-recursion-segfault}
   }\\%
@@ -404,9 +431,9 @@
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\BeignetScalarizeInsert}}}%
     \label{lst:oclgrind-uncorrected-typos}
   }\\%
-  \subfloat[Testbeds $1\pm$ segmentation fault.]{%
-    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaCompileSegfault}}}%
-    \label{lst:nvidia-compile-segfault}
+  \subfloat[Testbeds $1\pm$, $2\pm$ segmentation fault due to invalid pointer assignment.]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\NvidiaLocalGlobalSegfault}}}%
+    \label{lst:nvidia-local-global-sefault}
   }\\%
   \subfloat[Testbeds $7\pm$ segmentation fault.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\XeonPhiSegfault}}}%
@@ -427,12 +454,13 @@
 
 \begin{figure}
   \centering %
-  \subfloat[Testbed $3\pm$ rejects automatic variables with address-space qualifiers.]{%
-    TODO
-    \label{lst:beignet-automatic-var}
+  \subfloat[Testbeds $1\pm$, $2\pm$, $3\pm$ reject automatic variables with address-space qualifiers (line 4).]{%
+    \noindent\mbox{\parbox{\columnwidth}{\usebox{\AddressQualifiedAutoVar}}}%
+    \label{lst:adress-qualified-autovar}
   }\\%
   
-  \subfloat[Testbeds $4\pm$, $6\pm$ error \emph{declaration doesn't declare anything}. All other testbeds compile, some with a warning.]{%
+  \subfloat[Testbeds $4\pm$, $6\pm$ reject anonymous declarations (line 4). %\emph{declaration doesn't declare anything}.
+    All other testbeds compile, some with a warning.]{%
     \noindent\mbox{\parbox{\columnwidth}{\usebox{\IntelDeclDoesntDeclareAnything}}}%
     \label{lst:intel-decl-doesnt-declare-anything}
   }\\%
@@ -483,12 +511,9 @@ Unless stated otherwise, all code listings are presented verbatim as generated b
 
 We found numerous cases where kernels trigger a crash in the compiler (and as a result, the host process), or the compiler to loop indefinitely.
 
-\cc{Many of the causes can be attributed to improper error handling}
+Many of the causes can be attributed to improper or missing error handling.
 
 % \texttt{kernel void A(global float* a) { (float4)(a); }}
-
-
-
 
 
 \paragraph{Semantic Analysis Failures} %
@@ -506,6 +531,25 @@ We believe that our approach contributes a significant improvement for generatin
 
 
 \paragraph{Pass Failures} The vectorizer pass of Intel compilers was a frequent source of compile-time crashes. Figure~\ref{lst:intel-vectorizer-segfault} segfaults during vectorization.
+
+% CLgen result ID 452598
+\cc{Intel pass \emph{X86 DAG->DAG Instruction Selection}}
+% kernel void A(global half* a) {
+%   int b = get_global_id(0);
+%   a[b] = b * b;
+% }
+
+% CLgen result ID 1903475
+\cc{Intel pass \emph{Intel OpenCL Barrier}}
+% kernel void A(global float* a, global float* b, const int c) {
+%   int d = get_global_id(8);
+%   b[d] = a[d] + b[d];
+% }
+
+% CLgen result ID 994
+Testbed $3\pm$ assertion in \emph{gbe::GenEncoder::handleDouble}
+
+
 
 
 \paragraph{Code generation} Figures~\ref{lst:intel-llvm-assertion} and~\ref{lst:intel-scalartype-assertion} cause failures in the LLVM code generator backend.
