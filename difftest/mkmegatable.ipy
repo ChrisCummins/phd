@@ -88,11 +88,12 @@ def get_classification_columns(tables: Tableset, testbed: Testbed, no_opt: bool)
                   .scalar()
 
     counts["pass"] = num_results - num_interesting
+    counts["total"] = num_results
     # ratio = (num_interesting / num_results) * 100
     # counts["ratio"] = f"{ratio:.2f}\\%"
 
     print(" ", device_str(testbed.device), tables.name, no_opt, counts)
-    return " & ".join(str(counts.get(x, 0)) for x in ["bc", "bto", "bf", "c", "to", "w", "pass"])
+    return " & ".join(str(counts.get(x, 0)) for x in ["bc", "bto", "bf", "c", "w", "pass", "total"])
 
 
 def get_classification_totals(tables: Tableset):
@@ -114,11 +115,12 @@ def get_classification_totals(tables: Tableset):
                   .scalar()
 
     counts["pass"] = num_results - num_interesting
+    counts["total"] = num_results
     # ratio = (num_interesting / num_results) * 100
     # counts["ratio"] = f"{ratio:.2f}\\%"
 
     print("  Totals", tables.name, counts)
-    return " & ".join("\\multirow{{ 2}}{{*}}{{{}}}".format(counts.get(x, 0)) for x in ["bc", "bto", "bf", "c", "to", "w", "pass"])
+    return " & ".join("\\multirow{{ 2}}{{*}}{{{}}}".format(counts.get(x, 0)) for x in ["bc", "bto", "bf", "c", "w", "pass", "total"])
 
 
 def get_row(config_id, testbed_id, get_columns):
@@ -166,7 +168,7 @@ def get_outcomes_table():
 def get_classifications_table():
     num_columns = 7
     cols_format = ''.join(['r'] * num_columns)
-    cols = ['bc', 'bto', 'bf', 'c', 'to', 'w', '\\cmark']
+    cols = ['bc', 'bto', 'bf', 'c', 'w', '\\cmark', 'total']
     cols_string = ' & '.join(f"\\textbf{{{x}}}" for x in cols)
 
     clsmith_totals = get_classification_totals(CLSMITH_TABLES)
