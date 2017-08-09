@@ -30,11 +30,9 @@ def oclgrind_verify(cmd):
         return False
     elif "warning: incompatible pointer" in stderr:
         return False
-    elif "Invalid read of size" in stderr:
+    elif "Invalid " in stderr:
         return False
-    elif "Invalid write of size" in stderr:
-        return False
-    elif "Uninitialized value" in stderr:
+    elif "Uninitialized " in stderr:
         return False
 
     return True
